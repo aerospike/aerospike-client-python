@@ -1,5 +1,11 @@
 # Aerospike Python Client
 
+## Dependencies
+
+This depends on the Aerospike C Client, and all its dependencies.
+
+This was tested on Python 2.6.6, but may work up through Python 3.x.
+
 ## Usage
 
 ### Build
