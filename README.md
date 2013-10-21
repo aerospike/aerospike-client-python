@@ -2,9 +2,9 @@
 
 ## Dependencies
 
-This depends on the Aerospike C Client, and all its dependencies.
+This depends on the Aerospike C Client, and all its dependencies. You will need to install Aerospike C Client development package.
 
-This was tested on Python 2.6.6, but may work up through Python 3.x.
+This was tested on Python 2.6.6, but may work up through Python 3.x. You will need to install Python development packages to build this.
 
 ## Usage
 
