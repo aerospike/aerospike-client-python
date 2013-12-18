@@ -21,7 +21,7 @@ typedef struct {
  * FUNCTIONS
  ******************************************************************************/
 
-bool AerospikeKey_Ready();
+bool AerospikeKey_Ready(void);
 
 PyObject * AerospikeKey_Create(PyObject * self, PyObject * args, PyObject * kwds);
 

@@ -19,14 +19,14 @@ struct aerospike_s;
 
 typedef struct {
 	PyObject_HEAD
-	aerospike_s * as;
+	struct aerospike_s * as;
 } AerospikeClient;
 
 /*******************************************************************************
  * FUNCTIONS
  ******************************************************************************/
 
-bool AerospikeClient_Ready();
+bool AerospikeClient_Ready(void);
 
 /**
  * Create a new Aerospike client object and connect to the database.

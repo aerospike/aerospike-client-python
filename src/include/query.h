@@ -21,7 +21,7 @@ typedef struct {
  * FUNCTIONS
  ******************************************************************************/
 
-bool AerospikeQuery_Ready();
+bool AerospikeQuery_Ready(void);
 
 PyObject * AerospikeQuery_Create(PyObject * self, PyObject * args, PyObject * kwds);
 

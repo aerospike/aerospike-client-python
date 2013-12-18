@@ -21,7 +21,7 @@ typedef struct {
  * FUNCTIONS
  ******************************************************************************/
 
-bool AerospikeScan_Ready();
+bool AerospikeScan_Ready(void);
 
 PyObject * AerospikeScan_Create(PyObject * self, PyObject * args, PyObject * kwds);
 
