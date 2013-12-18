@@ -15,11 +15,11 @@
  ******************************************************************************/
 
 struct aerospike_s;
-typedef struct aerospike_s aerospike;
+// typedef struct aerospike_s aerospike;
 
 typedef struct {
 	PyObject_HEAD
-	aerospike * as;
+	aerospike_s * as;
 } AerospikeClient;
 
 /*******************************************************************************
