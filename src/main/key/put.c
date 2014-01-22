@@ -30,8 +30,24 @@ PyObject * AerospikeKey_Put(AerospikeKey * self, PyObject * args, PyObject * kwd
 
 	as_key * key = &py_key->key;
 	
+	// Create the record object -- and then set the TTL if we have one.
+	// We think the ONLY possibility is an INT TTL, but the other code remains
+	// in there for a while, just in case.  (tjl)
 	as_record rec;
 	pyobject_to_record(&err, py_bins, &rec);
+	if( py_ttl != NULL ){
+		if ( PyInt_Check(py_ttl) ) {
+			rec.ttl = (uint32_t) PyInt_AsLong(py_ttl);
+//			printf("*************** CONVERTING INT TTL (%0x)", rec.ttl );
+		}
+		else if ( PyLong_Check(py_ttl) ) {
+			rec.ttl = (uint32_t) PyLong_AsLongLong(py_ttl);
+//			printf("**************** CONVERTING LONG TTL (%0x)", rec.ttl);
+		}
+//		else {
+//			printf("***************** Incorrect type transformation");
+//		}
+	}
 	
 	aerospike_key_put(py_client->as, &err, NULL, key, &rec);
 	
