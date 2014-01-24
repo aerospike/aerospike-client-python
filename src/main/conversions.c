@@ -122,7 +122,7 @@ as_status pyobject_to_val(as_error * err, PyObject * py_obj, as_val ** val)
  * Converts a PyObject into an as_record.
  * Returns AEROSPIKE_OK on success. On error, the err argument is populated.
  */
-as_status pyobject_to_record(as_error * err, PyObject * py_rec, as_record * rec)
+as_status pyobject_to_record(as_error * err, PyObject * py_rec, PyObject * py_meta, as_record * rec)
 {
 	as_error_reset(err);
 
@@ -182,6 +182,30 @@ as_status pyobject_to_record(as_error * err, PyObject * py_rec, as_record * rec)
 			else {
 			}
 		}
+
+		if ( py_meta && PyDict_Check(py_meta) ) {
+			PyObject * py_gen = PyDict_GetItemString(py_meta, "gen");
+			PyObject * py_ttl = PyDict_GetItemString(py_meta, "ttl");
+
+			if( py_ttl != NULL ){
+				if ( PyInt_Check(py_ttl) ) {
+					rec->ttl = (uint32_t) PyInt_AsLong(py_ttl);
+				}
+				else if ( PyLong_Check(py_ttl) ) {
+					rec->ttl = (uint32_t) PyLong_AsLongLong(py_ttl);
+				}
+			}
+
+			if( py_gen != NULL ){
+				if ( PyInt_Check(py_gen) ) {
+					rec->gen = (uint16_t) PyInt_AsLong(py_gen);
+				}
+				else if ( PyLong_Check(py_gen) ) {
+					rec->gen = (uint16_t) PyLong_AsLongLong(py_gen);
+				}
+			}
+		}
+	
 
 		if ( err->code != AEROSPIKE_OK ) {
 			as_record_destroy(rec);

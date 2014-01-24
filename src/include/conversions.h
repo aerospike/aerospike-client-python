@@ -20,7 +20,7 @@ as_status pyobject_to_list(as_error * err, PyObject * py_list, as_list ** list);
 
 as_status pyobject_to_key(as_error * err, PyObject * py_key, as_key * key);
 
-as_status pyobject_to_record(as_error * err, PyObject * py_rec, as_record * rec);
+as_status pyobject_to_record(as_error * err, PyObject * py_rec, PyObject * py_meta, as_record * rec);
 
 
 
