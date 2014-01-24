@@ -1,9 +1,9 @@
 #include <Python.h>
 #include <stdbool.h>
 
-#include <aerospike/aerospike_query.h>
+#include <aerospike/aerospike_scan.h>
 #include <aerospike/as_error.h>
-#include <aerospike/as_query.h>
+#include <aerospike/as_scan.h>
 
 #include "client.h"
 #include "conversions.h"
@@ -68,6 +68,13 @@ PyObject * AerospikeScan_Foreach(AerospikeScan * self, PyObject * args, PyObject
 
 	aerospike_scan_foreach(py_client->as, &err, NULL, &py_scan->scan, each_result, &data);
 
+	if ( err.code != AEROSPIKE_OK ) {
+		PyObject * py_err = NULL;
+		error_to_pyobject(&err, &py_err);
+		PyErr_SetObject(PyExc_Exception, py_err);
+		return NULL;
+	}
+	
 	Py_INCREF(Py_None);
 	return Py_None;
 }

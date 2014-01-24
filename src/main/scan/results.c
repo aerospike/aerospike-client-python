@@ -1,9 +1,9 @@
 #include <Python.h>
 #include <stdbool.h>
 
-#include <aerospike/aerospike_query.h>
+#include <aerospike/aerospike_scan.h>
 #include <aerospike/as_error.h>
-#include <aerospike/as_query.h>
+#include <aerospike/as_scan.h>
 
 #include "client.h"
 #include "conversions.h"

@@ -9,7 +9,8 @@
 #include "scan.h"
 
 static PyMethodDef Aerospike_Methods[] = {
-	{"connect",		(PyCFunction) AerospikeClient_Create,	METH_VARARGS | METH_KEYWORDS, "Create a new client and connect it to the cluster."},
+	// {"connect",		(PyCFunction) AerospikeClient_Create,	METH_VARARGS | METH_KEYWORDS, "Create a new client and connect it to the cluster."},
+	{"client",		(PyCFunction) AerospikeClient_Create,	METH_VARARGS | METH_KEYWORDS, "Create a new client."},
 	{NULL, NULL, 0, NULL}
 };
 

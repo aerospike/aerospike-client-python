@@ -18,6 +18,7 @@
  ******************************************************************************/
 
 static PyMethodDef AerospikeClientType_Methods[] = {
+    {"connect",	(PyCFunction) AerospikeClient_Connect,	METH_VARARGS | METH_KEYWORDS, "Connect to the cluster."},
     {"close",	(PyCFunction) AerospikeClient_Close,	METH_VARARGS | METH_KEYWORDS, "Close the connection(s) to the cluster."},
     {"key",		(PyCFunction) AerospikeClient_Key,		METH_VARARGS | METH_KEYWORDS, "Initialize a key object for performing key operations."},
     {"query",	(PyCFunction) AerospikeClient_Query,	METH_VARARGS | METH_KEYWORDS, "Initialize a query object for peforming queries."},
@@ -103,17 +104,17 @@ static int AerospikeClientType_Init(AerospikeClient * self, PyObject * args, PyO
     
     as_policies_init(&config.policies);
 
-	as_error err;
+	// as_error err;
 	// as_error_reset(&err);
-	TRACE();
+	// TRACE();
 
-	aerospike * as = aerospike_new(&config);
+	self->as = aerospike_new(&config);
 
-	TRACE();
+	// TRACE();
 	
-	if ( aerospike_connect(as, &err) == AEROSPIKE_OK ) {
-		self->as = as;
-	}
+	// if ( aerospike_connect(as, &err) == AEROSPIKE_OK ) {
+	// 	self->as = as;
+	// }
 
 
 	TRACE();

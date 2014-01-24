@@ -38,7 +38,12 @@ PyObject * AerospikeClient_Create(PyObject * self, PyObject * args, PyObject * k
  ******************************************************************************/
 
 /**
- * Close the connect to the database.
+ * Connect to the database.
+ */
+PyObject * AerospikeClient_Connect(AerospikeClient * self, PyObject * args, PyObject * kwds);
+
+/**
+ * Close the connections to the database.
  */
 PyObject * AerospikeClient_Close(AerospikeClient * self, PyObject * args, PyObject * kwds);
 

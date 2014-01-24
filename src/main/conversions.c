@@ -213,9 +213,14 @@ as_status val_to_pyobject(as_error * err, const as_val * val, PyObject ** py_val
 			*py_val = PyString_FromString(s->value);
 			break;
 		}
-		// case AS_BYTES: {
-		// 	break;
-		// }
+		case AS_BYTES: {
+			as_bytes * bval = as_bytes_fromval(val);
+			uint32_t bval_size = as_bytes_size(bval);
+			uint8_t * bval_bytes = malloc(bval_size * sizeof(uint8_t));
+			memcpy(bval_bytes, as_bytes_get(bval), bval_size);
+			*py_val = PyByteArray_FromStringAndSize((char *) bval_bytes, bval_size);
+			break;
+		}
 		case AS_LIST: {
 			as_list * l = as_list_fromval((as_val *) val);
 			if ( l != NULL ) {
@@ -242,7 +247,7 @@ as_status val_to_pyobject(as_error * err, const as_val * val, PyObject ** py_val
 			as_record * r = as_record_fromval(val);
 			if ( r != NULL ) {
 				PyObject * py_rec = NULL;
-				record_to_pyobject(err, r, &py_rec);
+				record_to_pyobject(err, r, NULL, &py_rec);
 				if ( err->code == AEROSPIKE_OK ) {
 					*py_val = py_rec;
 				}
@@ -352,7 +357,97 @@ as_status map_to_pyobject(as_error * err, const as_map * map, PyObject ** py_map
 	return err->code;
 }
 
-static bool record_to_pyobject_each(const char * name, const as_val * val, void * udata)
+as_status record_to_pyobject(as_error * err, const as_record * rec, const as_key * key, PyObject ** obj)
+{
+	as_error_reset(err);
+
+	if ( ! rec ) {
+		return as_error_update(err, AEROSPIKE_ERR_CLIENT, "record is null");
+	}
+
+	PyObject * py_rec = NULL;
+	PyObject * py_rec_key = NULL;
+	PyObject * py_rec_meta = NULL;
+	PyObject * py_rec_bins = NULL;
+
+	key_to_pyobject(err, key ? key : &rec->key, &py_rec_key);
+	metadata_to_pyobject(err, rec, &py_rec_meta);
+	bins_to_pyobject(err, rec, &py_rec_bins);
+
+	py_rec = PyTuple_New(3);
+	PyTuple_SetItem(py_rec, 0, py_rec_key);
+	PyTuple_SetItem(py_rec, 1, py_rec_meta);
+	PyTuple_SetItem(py_rec, 2, py_rec_bins);
+
+	*obj = py_rec;
+	
+	return err->code;
+}
+
+as_status key_to_pyobject(as_error * err, const as_key * key, PyObject ** obj)
+{
+	as_error_reset(err);
+
+	if ( ! key ) {
+		return as_error_update(err, AEROSPIKE_ERR_CLIENT, "key is null");
+	}
+
+	PyObject * py_key = PyDict_New();
+
+
+    if ( key->ns && strlen(key->ns) > 0 ) {
+		PyDict_SetItemString(py_key, "ns", PyString_FromString(key->ns));
+    }
+
+    if ( key->set && strlen(key->set) > 0 ) {
+		PyDict_SetItemString(py_key, "set", PyString_FromString(key->set));
+    }
+
+    if ( key->valuep ) {
+        as_val * val = (as_val *) key->valuep;
+        as_val_t type = as_val_type(val);
+        switch(type) {
+            case AS_INTEGER: {
+				as_integer * ival = as_integer_fromval(val);
+				PyObject * py_ival = PyInt_FromLong(as_integer_get(ival));
+				PyDict_SetItemString(py_key, "key", py_ival);
+				break;
+			}
+            case AS_STRING: {
+				as_string * sval = as_string_fromval(val);
+				PyObject * py_sval = PyString_FromString(as_string_get(sval));
+				PyDict_SetItemString(py_key, "key", py_sval);
+				break;
+			}
+            case AS_BYTES: {
+				as_bytes * bval = as_bytes_fromval(val);
+				if ( bval ) {
+					uint32_t bval_size = as_bytes_size(bval);
+					uint8_t * bval_bytes = malloc(bval_size * sizeof(uint8_t));
+					memcpy(bval_bytes, as_bytes_get(bval), bval_size);
+					PyObject * py_bval = PyByteArray_FromStringAndSize((char *) bval_bytes, bval_size);
+					PyDict_SetItemString(py_key, "key", py_bval);
+					break;
+				}
+			}
+            default:
+            	break;
+        }
+    }
+
+    if ( key->digest.init ) {
+		uint8_t * digest_bytes = malloc(AS_DIGEST_VALUE_SIZE * sizeof(uint8_t));
+		memcpy(digest_bytes, key->digest.value, AS_DIGEST_VALUE_SIZE);
+		PyObject * py_digest = PyByteArray_FromStringAndSize((char *) digest_bytes, AS_DIGEST_VALUE_SIZE);
+		PyDict_SetItemString(py_key, "digest", py_digest);
+    }
+
+	*obj = py_key;
+	
+	return err->code;
+}
+
+static bool bins_to_pyobject_each(const char * name, const as_val * val, void * udata)
 {
 	if ( name == NULL || val == NULL ) {
 		return false;
@@ -375,7 +470,7 @@ static bool record_to_pyobject_each(const char * name, const as_val * val, void 
 	return true;
 }
 
-as_status record_to_pyobject(as_error * err, const as_record * rec, PyObject ** obj)
+as_status bins_to_pyobject(as_error * err, const as_record * rec, PyObject ** obj)
 {
 	as_error_reset(err);
 
@@ -392,19 +487,32 @@ as_status record_to_pyobject(as_error * err, const as_record * rec, PyObject ** 
 		.udata = py_bins
 	};
 
-	as_record_foreach(rec, record_to_pyobject_each, &convd);
+	as_record_foreach(rec, bins_to_pyobject_each, &convd);
 
 	if ( err->code != AEROSPIKE_OK ) {
 		PyObject_Del(py_bins);
 		return err->code;
 	}
 
-	PyObject * py_rec = PyDict_New();
-	PyDict_SetItemString(py_rec, "ttl", PyInt_FromLong(rec->ttl));
-	PyDict_SetItemString(py_rec, "gen", PyInt_FromLong(rec->gen));
-	PyDict_SetItemString(py_rec, "bins", py_bins);
+	*obj = py_bins;
 
-	*obj = py_rec;
+	return err->code;
+}
+
+as_status metadata_to_pyobject(as_error * err, const as_record * rec, PyObject ** obj)
+{
+	as_error_reset(err);
+
+	if ( !rec ) {
+		// this should never happen, but if it did...
+		return as_error_update(err, AEROSPIKE_ERR_CLIENT, "record is null");
+	}
+
+	PyObject * py_meta = PyDict_New();
+	PyDict_SetItemString(py_meta, "ttl", PyInt_FromLong(rec->ttl));
+	PyDict_SetItemString(py_meta, "gen", PyInt_FromLong(rec->gen));
+
+	*obj = py_meta;
 
 	return err->code;
 }

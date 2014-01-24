@@ -6,11 +6,11 @@
 #include "client.h"
 #include "conversions.h"
 
-PyObject * AerospikeClient_Close(AerospikeClient * self, PyObject * args, PyObject * kwds)
+PyObject * AerospikeClient_Connect(AerospikeClient * self, PyObject * args, PyObject * kwds)
 {
 	as_error err;
 	
-	aerospike_close(self->as, &err);
+	aerospike_connect(self->as, &err);
 
 	if ( err.code != AEROSPIKE_OK ) {
 		PyObject * py_err = NULL;
@@ -18,10 +18,7 @@ PyObject * AerospikeClient_Close(AerospikeClient * self, PyObject * args, PyObje
 		PyErr_SetObject(PyExc_Exception, py_err);
 		return NULL;
 	}
-
-	aerospike_destroy(self->as);
-	self->as = NULL;
-
-	Py_INCREF(Py_None);
-	return Py_None;
+	
+	Py_INCREF(self);
+	return (PyObject *) self;
 }

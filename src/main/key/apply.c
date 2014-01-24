@@ -28,7 +28,7 @@ PyObject * AerospikeKey_Apply(AerospikeKey * self, PyObject * args, PyObject * k
 
 	as_error err;
 	as_error_init(&err);
-
+	
 	as_key * key = &py_key->key;
 	
 	char * module = PyString_AsString(py_module);

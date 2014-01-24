@@ -30,6 +30,12 @@ as_status map_to_pyobject(as_error * err, const as_map * map, PyObject ** py_map
 
 as_status list_to_pyobject(as_error * err, const as_list * list, PyObject ** py_list);
 
-as_status record_to_pyobject(as_error * err, const as_record * rec, PyObject ** obj);
+as_status record_to_pyobject(as_error * err, const as_record * rec, const as_key * key, PyObject ** obj);
+
+as_status key_to_pyobject(as_error * err, const as_key * key, PyObject ** obj);
+
+as_status metadata_to_pyobject(as_error * err, const as_record * rec, PyObject ** obj);
+
+as_status bins_to_pyobject(as_error * err, const as_record * rec, PyObject ** obj);
 
 bool error_to_pyobject(const as_error * err, PyObject ** obj);

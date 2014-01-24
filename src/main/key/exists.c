@@ -26,11 +26,41 @@ PyObject * AerospikeKey_Exists(AerospikeKey * self, PyObject * args, PyObject * 
 	as_error_init(&err);
 
 	as_key * key = &py_key->key;
+	as_record * rec = NULL;
 
-	bool exists = false;
+	aerospike_key_exists(py_client->as, &err, NULL, key, &rec);
 
-	aerospike_key_exists(py_client->as, &err, NULL, key, &exists);
+	PyObject * py_result = NULL;
 
+	if ( err.code == AEROSPIKE_OK ) {
+
+		PyObject * py_result_key = NULL;
+		PyObject * py_result_meta = NULL;
+
+		key_to_pyobject(&err, key, &py_result_key);
+		metadata_to_pyobject(&err, rec, &py_result_meta);
+		
+		py_result = PyTuple_New(2);
+		PyTuple_SetItem(py_result, 0, py_result_key);
+		PyTuple_SetItem(py_result, 1, py_result_meta);
+	}
+	else if ( err.code == AEROSPIKE_ERR_RECORD_NOT_FOUND ) {
+		as_error_reset(&err);
+
+		PyObject * py_result_key = NULL;
+		PyObject * py_result_meta = Py_None;
+
+		key_to_pyobject(&err, key, &py_result_key);
+		
+		py_result = PyTuple_New(2);
+		PyTuple_SetItem(py_result, 0, py_result_key);
+		PyTuple_SetItem(py_result, 1, py_result_meta);
+
+		Py_INCREF(py_result_meta);
+	}
+
+	as_record_destroy(rec);
+	
 	if ( err.code != AEROSPIKE_OK ) {
 		PyObject * py_err = NULL;
 		error_to_pyobject(&err, &py_err);
@@ -38,12 +68,5 @@ PyObject * AerospikeKey_Exists(AerospikeKey * self, PyObject * args, PyObject * 
 		return NULL;
 	}
 
-	if ( exists ) {
-		Py_INCREF(Py_True);
-		return Py_True;
-	}
-	else {
-		Py_INCREF(Py_False);
-		return Py_False;
-	}
+	return py_result;
 }

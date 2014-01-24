@@ -1,6 +1,8 @@
 from distutils.core import setup, Extension
 import os
 
+library_dirs = [x for x in os.environ['LD_LIBRARY_PATH'].split(':') if len(x) > 0]
+
 setup(
     name        = 'aerospike-client-python', 
     version     = '1.0', 
@@ -10,6 +12,7 @@ setup(
           'src/main/aerospike.c', 
           'src/main/client.c',
           'src/main/client/close.c',
+          'src/main/client/connect.c',
           'src/main/client/info.c',
           'src/main/client/key.c',
           'src/main/client/query.c',
@@ -34,8 +37,7 @@ setup(
         include_dirs = [ 
           'src/include',
         ],
-        library_dirs = [
-        ],
+        library_dirs = library_dirs,
         libraries = [ 
           'ssl',
           'crypto',

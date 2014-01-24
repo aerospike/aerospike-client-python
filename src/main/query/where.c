@@ -29,14 +29,14 @@ PyObject * AerospikeQuery_Where(AerospikeQuery * self, PyObject * args, PyObject
 	AerospikeQuery * py_query = self;
 	// AerospikeClient * py_client = self->client;
 	PyObject * py_bin = NULL;
-	PyObject * py_equals = NULL;
-	PyObject * py_range = NULL;
+	PyObject * py_operator = NULL;
+	PyObject * py_value = NULL;
 
-	static char * kwlist[] = {"bin", "equals", "range", NULL};
+	static char * kwlist[] = {"bin", "operator", "value", NULL};
 
 	TRACE();
 	
-	if ( PyArg_ParseTupleAndKeywords(args, kwds, "O|OO:get", kwlist, &py_bin, &py_equals, &py_range) == false ) {
+	if ( PyArg_ParseTupleAndKeywords(args, kwds, "OOO:where", kwlist, &py_bin, &py_operator, &py_value) == false ) {
 		return NULL;
 	}
 
@@ -62,64 +62,72 @@ PyObject * AerospikeQuery_Where(AerospikeQuery * self, PyObject * args, PyObject
 
 	TRACE();
 	
-	if ( py_equals != NULL ) {
-		if ( PyInt_Check(py_equals) || PyLong_Check(py_equals) ) {
-			int64_t i = pyobject_to_int64(py_equals);
-			as_query_where(&py_query->query, bin, AS_PREDICATE_INTEGER_EQUAL, i);
-			TRACE();
-		}
-		else if ( PyString_Check(py_equals) ) {
-			char * s = PyString_AsString(py_equals);
-			as_query_where(&py_query->query, bin, AS_PREDICATE_STRING_EQUAL, s);
-			TRACE();
-		}
-		else {
-			// raise exception
-			TRACE();
-		}
-	}
-	else if ( py_range != NULL ) {
-		if ( PyTuple_Check(py_range) ) {
-			Py_ssize_t size = PyTuple_Size(py_range);
-			if ( size == 2 ) {
-				PyObject * py_min = PyTuple_GetItem(py_range, 0);
-				PyObject * py_max = PyTuple_GetItem(py_range, 1);
-				int64_t min = 0;
-				int64_t max = 0;
+	if ( PyString_Check(py_operator) ) {
+		char * o = PyString_AsString(py_operator);
+		if ( strcmp(o, "equals") == 0 ) {
 
-				if ( PyInt_Check(py_min) || PyLong_Check(py_min) ) {
-					min = pyobject_to_int64(py_min);
-					TRACE();
-				}
-				else {
-					// raise exception
-					TRACE();
-				}
-
-				if ( PyInt_Check(py_max) || PyLong_Check(py_max) ) {
-					max = pyobject_to_int64(py_max);
-					TRACE();
-				}
-				else {
-					// raise exception
-					TRACE();
-				}
-
-				as_query_where(&py_query->query, bin, AS_PREDICATE_INTEGER_RANGE, min, max);
-
+			if ( PyInt_Check(py_value) || PyLong_Check(py_value) ) {
+				int64_t i = pyobject_to_int64(py_value);
+				as_query_where(&py_query->query, bin, integer_equals(i));
+				TRACE();
+			}
+			else if ( PyString_Check(py_value) ) {
+				char * s = PyString_AsString(py_value);
+				as_query_where(&py_query->query, bin, string_equals(s));
 				TRACE();
 			}
 			else {
-				// raise exception
+				// unhandled type
+				TRACE();
+			}
+		}
+		else if ( strcmp(o, "between") == 0 ) {
+			if ( PyTuple_Check(py_value) ) {
+				Py_ssize_t size = PyTuple_Size(py_value);
+				if ( size == 2 ) {
+					PyObject * py_min = PyTuple_GetItem(py_value, 0);
+					PyObject * py_max = PyTuple_GetItem(py_value, 1);
+					int64_t min = 0;
+					int64_t max = 0;
+
+					if ( PyInt_Check(py_min) || PyLong_Check(py_min) ) {
+						min = pyobject_to_int64(py_min);
+						TRACE();
+					}
+					else {
+						// raise exception
+						TRACE();
+					}
+
+					if ( PyInt_Check(py_max) || PyLong_Check(py_max) ) {
+						max = pyobject_to_int64(py_max);
+						TRACE();
+					}
+					else {
+						// raise exception
+						TRACE();
+					}
+					
+					as_query_where(&py_query->query, bin, integer_range(min, max));
+
+					TRACE();
+				}
+				else {
+					// should be a tuple(2)
+					TRACE();
+				}
+			}
+			else {
+				// must be a tuple
 				TRACE();
 			}
 		}
 		else {
-			// raise exception
-			TRACE();
+			// unknown operator
 		}
 	}
 	else {
+		// operator must be a string
 		TRACE();
 	}
 
