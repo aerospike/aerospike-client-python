@@ -67,6 +67,13 @@ PyObject * AerospikeQuery_Foreach(AerospikeQuery * self, PyObject * args, PyObje
 	as_error_init(&data.error);
 
 	aerospike_query_foreach(py_client->as, &err, NULL, &py_query->query, each_result, &data);
+	
+	if ( err.code != AEROSPIKE_OK ) {
+		PyObject * py_err = NULL;
+		error_to_pyobject(&err, &py_err);
+		PyErr_SetObject(PyExc_Exception, py_err);
+		return NULL;
+	}
 
 	Py_INCREF(Py_None);
 	return Py_None;

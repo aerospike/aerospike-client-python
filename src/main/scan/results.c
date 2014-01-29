@@ -53,6 +53,13 @@ PyObject * AerospikeScan_Results(AerospikeScan * self, PyObject * args, PyObject
 	PyObject * py_results = PyList_New(0);
 
 	aerospike_scan_foreach(py_client->as, &err, NULL, &py_scan->scan, each_result, py_results);
+	
+	if ( err.code != AEROSPIKE_OK ) {
+		PyObject * py_err = NULL;
+		error_to_pyobject(&err, &py_err);
+		PyErr_SetObject(PyExc_Exception, py_err);
+		return NULL;
+	}
 
 	return py_results;
 }
