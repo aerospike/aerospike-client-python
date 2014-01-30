@@ -9,6 +9,7 @@
 #include <aerospike/as_arraylist.h>
 #include <aerospike/as_map.h>
 #include <aerospike/as_hashmap.h>
+#include <aerospike/as_policy.h>
 
 #include "key.h"
 #include "conversions.h"
@@ -213,7 +214,86 @@ as_status pyobject_to_record(as_error * err, PyObject * py_rec, PyObject * py_me
 	}
 
 	return err->code;
-}
+} // end pyobject_to_record()
+
+// Policy names
+#define PY_POLICY_W_TIMEOUT "timeout"    // Number of milliseconds to wait
+#define PY_POLICY_W_RETRY   "retry"      // Behavior of failed operations
+#define PY_POLICY_W_KEY     "key"        // Behavior of the key
+#define PY_POLICY_W_GEN     "generation" // Behavior of the Generation value
+#define PY_POLICY_W_EXISTS  "exists"     // Behavior for record existence
+
+/**
+ * Converts a PyObject into an as_policy_write object.
+ * Returns AEROSPIKE_OK on success. On error, the err argument is populated.
+ * We assume that the error object and the policy object are already allocated
+ * and initialized (although, we do reset the error object here).
+ */
+as_status pyobject_to_policy_write(as_error * err_p, PyObject * py_policy,
+									as_policy_write * policy_p)
+{
+	static char * meth = "pyobject_to_policy_write()";
+	char * name;
+	int64_t value;
+
+	as_error_reset(err_p);
+
+	if (!policy_p) {
+		// this should never happen, but if it did...
+		return as_error_update(err_p, AEROSPIKE_ERR_CLIENT, "policy obj is null");
+	}
+
+	if (!py_policy) {
+		return AEROSPIKE_OK; // Not a problem.  Return quietly.
+	}
+
+	if ( PyDict_Check( py_policy ) ) {
+		PyObject *py_key = NULL, *py_value = NULL;
+		Py_ssize_t py_pos = 0;
+
+		// Get the values from the write policy dictionary
+		while (PyDict_Next(py_policy, &py_pos, &py_key, &py_value)) {
+			if (py_key && PyString_Check(py_key)) {
+				name = PyString_AsString(py_key);
+			} else {
+				as_error_update(err_p, AEROSPIKE_ERR_CLIENT,
+						"A policy name must be a string.");
+				continue;
+			}
+
+			if ( py_value && PyInt_Check(py_value)) {
+				value = (int64_t) PyInt_AsLong(py_value);
+			} else {
+				as_error_update(err_p, AEROSPIKE_ERR_CLIENT,
+						"Values must be integer types");
+				continue;
+			}
+
+			if (strcmp(PY_POLICY_W_TIMEOUT, name) == 0) {
+				policy_p->timeout = value;
+			} else if (strcmp(PY_POLICY_W_RETRY, name) == 0) {
+				policy_p->retry = value;
+			} else if (strcmp(PY_POLICY_W_KEY, name) == 0) {
+				policy_p->key = value;
+			} else if (strcmp(PY_POLICY_W_GEN, name) == 0) {
+				policy_p->gen = value;
+			} else if (strcmp(PY_POLICY_W_EXISTS, name) == 0) {
+				policy_p->exists = value;
+			} else {
+				printf("[ERROR]<%s> Unknown Policy Field(%s)\n", meth, name);
+			}
+		} // end while
+	} // end if valid dictionary object
+
+	// If there are any errors, then what's a good strategy?  Do we forget
+	// all we've seen, or do we return as much as we can?
+	if (err_p->code != AEROSPIKE_OK) {
+		printf("[ERROR]<%s>: Something goofy happened\n", meth);
+	}
+
+	return err_p->code;
+} // end pyobject_to_policy_write()
+
 
 typedef struct {
 	as_error * err;

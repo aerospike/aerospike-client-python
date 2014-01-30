@@ -27,13 +27,25 @@ PyObject * AerospikeKey_Put(AerospikeKey * self, PyObject * args, PyObject * kwd
 	as_error err;
 	as_error_init(&err);
 
-	as_key * key = &py_key->key;
-	
+	as_key * key_p = &py_key->key;
+
+	// Create the Aerospike record object from the Python pieces.
+	// The Bins and Meta objects are dictionaries.
 	as_record rec;
-	
 	pyobject_to_record(&err, py_bins, py_meta, &rec);
 
-	aerospike_key_put(py_client->as, &err, NULL, key, &rec);
+	// Create the Aerospike as_policy_write object from the Python pieces,
+	// assuming that one was initialized and passed in.  Otherwise, we'll just
+	// use the default.
+	as_policy_write policy;
+	as_policy_write * policy_p = NULL;
+	if ( py_policy ) {
+		as_policy_apply_init(&policy);
+		pyobject_to_policy_write(&err, py_policy, &policy);
+		policy_p = &policy;
+	}
+
+	aerospike_key_put(py_client->as, &err, policy_p, key_p, &rec);
 	
 	as_record_destroy(&rec);
 
