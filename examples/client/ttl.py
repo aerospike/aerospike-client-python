@@ -252,37 +252,39 @@ print("namespace parameters passed")
 # WRITE RECORDS
 ################################################################################
 
-print_header("WRITE RECORDS")
-
-print_histogram()
-print()
-
-try:
-  for key in KEYS:
-    ttl = SPECIAL_KEYS[key]['ttl'] if key in SPECIAL_KEYS else None
-
-    rec = {}
-    rec['key'] = key
-    rec['ttl'] = ttl if ttl else TTL_DEFAULT
-    rec['desc'] = SPECIAL_KEYS[key]['desc'] if key in SPECIAL_KEYS else 'default TTL'
-
-    try:
+def delete_records():
+  try:
+    for key in KEYS:
       # first remove the existing record
       client.key(options.namespace, options.set, key).remove()
+  except Exception as e:
+    print("error: {0}".format(e), file=sys.stderr)
+    sys.exit(1)
 
-      # write a new record
-      # ttl=None is equivalent to not setting a ttl
-      client.key(options.namespace, options.set, key).put(rec, {'ttl':ttl})
+def write_records():
+  try:
+    for key in KEYS:
+      ttl = SPECIAL_KEYS[key]['ttl'] if key in SPECIAL_KEYS else None
 
-    except Exception as e:
-      if ttl > TTL_MAX:
-        print('error: (correct) failed to write record with TTL(%d) > TTL_MAX(%d)' % (ttl, TTL_MAX))
-      else:
-        print('error: failed to write record with TTL = %d' % ttl)
+      rec = {}
+      rec['key'] = key
+      rec['ttl'] = ttl if ttl else TTL_DEFAULT
+      rec['desc'] = SPECIAL_KEYS[key]['desc'] if key in SPECIAL_KEYS else 'default TTL'
 
-except Exception as e:
-  print("error: {0}".format(e), file=sys.stderr)
-  sys.exit(1)
+      try:
+        # write a new record
+        # ttl=None is equivalent to not setting a ttl
+        client.key(options.namespace, options.set, key).put(rec, {'ttl':ttl})
+
+      except Exception as e:
+        if ttl > TTL_MAX:
+          print('error: (correct) failed to write record with TTL(%d) > TTL_MAX(%d)' % (ttl, TTL_MAX))
+        else:
+          print('error: failed to write record with TTL = %d' % ttl)
+
+  except Exception as e:
+    print("error: {0}".format(e), file=sys.stderr)
+    sys.exit(1)
 
 ################################################################################
 # CHECK RECORDS ON INTERVALS
@@ -290,8 +292,10 @@ except Exception as e:
 
 start = time.time()
 
-check_records(start)
-
+delete_records()
+check_records(start, 0, 'Clean state')
+write_records()
+check_records(start, 0, 'Initial state')
 check_records(start, 2, 'Expect all records with TTL-2')
 check_records(start, 6, 'Expect all records with TTL<=5 to be gone')
 check_records(start, 3, 'Expect all records with TTL<=10 to be gone')
