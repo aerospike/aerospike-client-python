@@ -183,16 +183,18 @@ def print_record((key, meta, record), prefix=''):
   ))
 
 def print_records(records, prefix=''):
+  header = "%s---- ---- -------- " % prefix
+  header = header.ljust(80,'-')
   print()
   print("%s%-4s %-4s %-8s %s" % (prefix, "key", "gen", "ttl", "record"))
-  print("%s---- ---- -------- ---------------------------------------" % prefix)
+  print(header)
   [print_record(r, prefix) for r in records]
 
 def print_histogram(prefix=''):
   request = ''.join(["hist-dump:ns=",options.namespace,";hist=ttl"])
 
   header = "%sHISTOGRAM (%s)" % (prefix,request)
-  border = prefix.ljust(len(header),'-')
+  border = prefix.ljust(80,'-')
 
   print()
   print(header)
@@ -203,7 +205,7 @@ def print_histogram(prefix=''):
     else:
       for line in textwrap.wrap(response,80-len(prefix)):
         print("%s%s" % (prefix,line))
-      
+
 
 def check_records(start, wait=0, message=None):
 
@@ -253,6 +255,7 @@ print("namespace parameters passed")
 print_header("WRITE RECORDS")
 
 print_histogram()
+print()
 
 try:
   for key in KEYS:
@@ -273,7 +276,7 @@ try:
 
     except Exception as e:
       if ttl > TTL_MAX:
-        print('error: (correct) failed to write record with TTL(%d) > TTL_MAX(%d)', ttl, TTL_MAX)
+        print('error: (correct) failed to write record with TTL(%d) > TTL_MAX(%d)' % (ttl, TTL_MAX))
       else:
         print('error: failed to write record with TTL = %d' % ttl)
 
