@@ -271,12 +271,13 @@ try:
     rec['desc'] = SPECIAL_KEYS[key]['desc'] if key in SPECIAL_KEYS else 'default TTL'
 
     try:
-      if ttl:
-        client.key(options.namespace, options.set, key).remove()
-        client.key(options.namespace, options.set, key).put(rec, {'ttl':ttl})
-      else:
-        client.key(options.namespace, options.set, key).remove()
-        client.key(options.namespace, options.set, key).put(rec)
+      # first remove the existing record
+      client.key(options.namespace, options.set, key).remove()
+
+      # write a new record
+      # ttl=None is equivalent to not setting a ttl
+      client.key(options.namespace, options.set, key).put(rec, {'ttl':ttl})
+
     except Exception as e:
       if ttl > TTL_MAX:
         print('error: (correct) failed to write record with TTL(%d) > TTL_MAX(%d)', ttl, TTL_MAX)
