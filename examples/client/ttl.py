@@ -46,13 +46,6 @@ optparser.add_option(
   "-s", "--set", dest="set", type="string", default="demo", metavar="<SET>",
   help="Port of the Aerospike server.")
 
-optparser.add_option(
-  "--gen", dest="gen", type="int", default=None, metavar="<GEN>",
-  help="Generation of the record being written.")
-
-optparser.add_option(
- "--ttl", dest="ttl", type="int", default=None, metavar="<TTL>",
-  help="TTL of the record being written.")
 
 
 (options, args) = optparser.parse_args()
