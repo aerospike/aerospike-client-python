@@ -228,30 +228,6 @@ def check_records(start, wait=0, message=None):
 
   print_histogram('  ')
 
-
-################################################################################
-# CONFIGURE SERVER
-################################################################################
-
-print_header("CONFIGURE THE SERVER")
-
-# Now go off and set the params
-print('Set Parameters for Service')
-for p in PARAMS_SERVICE:
-    test_params_for_stanza(p,"service",False)
-    time.sleep(1)
-print("service parameters passed")
-
-print('Set Parameters for Namespace')
-for p in PARAMS_NAMESPACE:        
-    test_params_for_stanza(p,options.namespace,True)
-    time.sleep(1)
-print("namespace parameters passed")
-
-################################################################################
-# WRITE RECORDS
-################################################################################
-
 def delete_records():
   try:
     for key in KEYS:
@@ -285,6 +261,25 @@ def write_records():
   except Exception as e:
     print("error: {0}".format(e), file=sys.stderr)
     sys.exit(1)
+
+################################################################################
+# CONFIGURE SERVER
+################################################################################
+
+print_header("CONFIGURE THE SERVER")
+
+# Now go off and set the params
+print('Set Parameters for Service')
+for p in PARAMS_SERVICE:
+    test_params_for_stanza(p,"service",False)
+    time.sleep(1)
+print("service parameters passed")
+
+print('Set Parameters for Namespace')
+for p in PARAMS_NAMESPACE:        
+    test_params_for_stanza(p,options.namespace,True)
+    time.sleep(1)
+print("namespace parameters passed")
 
 ################################################################################
 # CHECK RECORDS ON INTERVALS
