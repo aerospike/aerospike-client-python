@@ -60,7 +60,6 @@ static int AerospikeKeyType_Init(AerospikeKey * self, PyObject * args, PyObject 
 		
 	char * n = NULL;
 	char * s = NULL;
-	char * k = NULL;
 
 	if ( PyString_Check(py_namespace) ) {
 		n = PyString_AsString(py_namespace);
@@ -70,14 +69,22 @@ static int AerospikeKeyType_Init(AerospikeKey * self, PyObject * args, PyObject 
 		s = PyString_AsString(py_set);
 	}
 
-	if ( PyString_Check(py_key) ) {
-		k = PyString_AsString(py_key);
+	if ( PyInt_Check(py_key) ) {
+		int64_t k = (int64_t) PyInt_AsLong(py_key);
+		as_key_init_int64(&self->key, n, s, k);
+	}
+	else if ( PyLong_Check(py_key) ) {
+		int64_t k = (int64_t) PyLong_AsLongLong(py_key);
+		as_key_init_int64(&self->key, n, s, k);
+	}
+	else if ( PyString_Check(py_key) ) {
+		char * k = PyString_AsString(py_key);
+		as_key_init_strp(&self->key, n, s, k, false);
 	}
 
 	Py_INCREF(py_client);
 
 	self->client = (AerospikeClient *) py_client;
-	as_key_init(&self->key, n, s, k);
 
     return 0;
 }

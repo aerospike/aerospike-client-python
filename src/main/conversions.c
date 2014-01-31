@@ -220,7 +220,7 @@ as_status pyobject_to_record(as_error * err, PyObject * py_rec, PyObject * py_me
 #define PY_POLICY_W_TIMEOUT "timeout"    // Number of milliseconds to wait
 #define PY_POLICY_W_RETRY   "retry"      // Behavior of failed operations
 #define PY_POLICY_W_KEY     "key"        // Behavior of the key
-#define PY_POLICY_W_GEN     "generation" // Behavior of the Generation value
+#define PY_POLICY_W_GEN     "gen" 		 // Behavior of the Generation value
 #define PY_POLICY_W_EXISTS  "exists"     // Behavior for record existence
 
 /**
