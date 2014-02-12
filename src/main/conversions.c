@@ -1,6 +1,5 @@
 #include <Python.h>
 #include <stdbool.h>
-#include <pthread.h>
 
 #include <aerospike/as_key.h>
 #include <aerospike/as_error.h>
@@ -300,7 +299,6 @@ typedef struct {
 	as_error * err;
 	uint32_t count;
 	void * udata;
-	pthread_mutex_t lock;
 } conversion_data;
 
 
@@ -393,11 +391,7 @@ static bool list_to_pyobject_each(as_val * val, void * udata)
 		return false;
 	}
 
-   	pthread_mutex_lock(&convd->lock);
 	PyList_SetItem(py_list, convd->count, py_val);
-   	pthread_mutex_unlock(&convd->lock);
-
-	Py_DECREF(py_val);
 
 	convd->count++;
 	return true;
@@ -410,14 +404,14 @@ as_status list_to_pyobject(as_error * err, const as_list * list, PyObject ** py_
 	conversion_data convd = {
 		.err = err,
 		.count = 0,
-		.udata = *py_list,
-		.lock = PTHREAD_MUTEX_INITIALIZER
+		.udata = *py_list
 	};
 
 	as_list_foreach(list, list_to_pyobject_each, &convd);
 
 	if ( err->code != AEROSPIKE_OK ) {
 		PyObject_Del(*py_list);
+		*py_list = NULL;
 		return err->code;
 	}
 
@@ -449,9 +443,7 @@ static bool map_to_pyobject_each(const as_val * key, const as_val * val, void * 
 		return false;
 	}
 
-   	pthread_mutex_lock(&convd->lock);
 	PyDict_SetItem(py_dict, py_key, py_val);
-   	pthread_mutex_unlock(&convd->lock);
 
 	Py_DECREF(py_key);
 	Py_DECREF(py_val);
@@ -467,8 +459,7 @@ as_status map_to_pyobject(as_error * err, const as_map * map, PyObject ** py_map
 	conversion_data convd = {
 		.err = err,
 		.count = 0,
-		.udata = *py_map,
-		.lock = PTHREAD_MUTEX_INITIALIZER
+		.udata = *py_map
 	};
 
 	as_map_foreach(map, map_to_pyobject_each, &convd);
@@ -520,11 +511,15 @@ as_status key_to_pyobject(as_error * err, const as_key * key, PyObject ** obj)
 
 
     if ( key->ns && strlen(key->ns) > 0 ) {
-		PyDict_SetItemString(py_key, "ns", PyString_FromString(key->ns));
+    	PyObject * py_ns = PyString_FromString(key->ns);
+		PyDict_SetItemString(py_key, "ns", py_ns);
+		Py_DECREF(py_ns);
     }
 
     if ( key->set && strlen(key->set) > 0 ) {
-		PyDict_SetItemString(py_key, "set", PyString_FromString(key->set));
+    	PyObject * py_set = PyString_FromString(key->set);
+		PyDict_SetItemString(py_key, "set", py_set);
+		Py_DECREF(py_set);
     }
 
     if ( key->valuep ) {
@@ -577,7 +572,6 @@ as_status key_to_pyobject(as_error * err, const as_key * key, PyObject ** obj)
 
 static bool bins_to_pyobject_each(const char * name, const as_val * val, void * udata)
 {
-	return false;
 	if ( name == NULL || val == NULL ) {
 		return false;
 	}
@@ -593,9 +587,7 @@ static bool bins_to_pyobject_each(const char * name, const as_val * val, void * 
 		return false;
 	}
 
-   	pthread_mutex_lock(&convd->lock);
 	PyDict_SetItemString(py_bins, name, py_val);
-   	pthread_mutex_unlock(&convd->lock);
 
 	Py_DECREF(py_val);
 
@@ -617,14 +609,14 @@ as_status bins_to_pyobject(as_error * err, const as_record * rec, PyObject ** py
 	conversion_data convd = {
 		.err = err,
 		.count = 0,
-		.udata = py_bins,
-		.lock = PTHREAD_MUTEX_INITIALIZER
+		.udata = *py_bins
 	};
 
 	as_record_foreach(rec, bins_to_pyobject_each, &convd);
 
 	if ( err->code != AEROSPIKE_OK ) {
 		PyObject_Del(*py_bins);
+		*py_bins = NULL;
 		return err->code;
 	}
 
@@ -691,5 +683,9 @@ bool error_to_pyobject(const as_error * err, PyObject ** obj)
 	*obj = py_err;
 	return true;
 }
+
+
+
+
 
 

@@ -9,8 +9,8 @@
 #include "conversions.h"
 #include "query.h"
 
-#undef TRACE
-#define TRACE()
+// #undef TRACE
+// #define TRACE()
 
 typedef struct {
 	as_error error;
@@ -31,30 +31,47 @@ static bool each_result(const as_val * val, void * udata)
 	PyObject * py_arglist = NULL; 
 	PyObject * py_result = NULL;
 
+	PyGILState_STATE gstate;
+	gstate = PyGILState_Ensure();
+
+	TRACE();
+
 	val_to_pyobject(err, val, &py_result);
 
+	TRACE();
+
 	py_arglist = Py_BuildValue("(O)", py_result);
+	
+	TRACE();
+
+	PyGILState_Release(gstate);
+	
+	TRACE();
+
 	PyEval_CallObject(py_callback, py_arglist);
+	
+	TRACE();
+
+	gstate = PyGILState_Ensure();
+
+	TRACE();
 
 	Py_DECREF(py_arglist);
+
+	PyGILState_Release(gstate);
+	
 	return true;
 }
 
 PyObject * AerospikeQuery_Foreach(AerospikeQuery * self, PyObject * args, PyObject * kwds)
 {
-	TRACE();
-	
 	AerospikeQuery * py_query = self;
 	AerospikeClient * py_client = py_query->client;
 	PyObject * py_callback = NULL;
 	PyObject * py_policy = NULL;
 
-	TRACE();
-	
 	static char * kwlist[] = {"callback", "policy", NULL};
 
-	TRACE();
-	
 	if ( PyArg_ParseTupleAndKeywords(args, kwds, "O|O:foreach", kwlist, &py_callback, &py_policy) == false ) {
 		return NULL;
 	}
@@ -66,7 +83,11 @@ PyObject * AerospikeQuery_Foreach(AerospikeQuery * self, PyObject * args, PyObje
 	data.callback = py_callback;
 	as_error_init(&data.error);
 
+	PyThreadState * _save = PyEval_SaveThread();
+	
 	aerospike_query_foreach(py_client->as, &err, NULL, &py_query->query, each_result, &data);
+
+	PyEval_RestoreThread(_save);
 	
 	if ( err.code != AEROSPIKE_OK ) {
 		PyObject * py_err = NULL;
@@ -78,3 +99,9 @@ PyObject * AerospikeQuery_Foreach(AerospikeQuery * self, PyObject * args, PyObje
 	Py_INCREF(Py_None);
 	return Py_None;
 }
+
+
+
+
+
+

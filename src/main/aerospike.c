@@ -18,10 +18,13 @@ PyMODINIT_FUNC initaerospike()
 {
 	PyObject * m;
 
+	PyEval_InitThreads();
+
 	AerospikeClient_Ready();
 	AerospikeKey_Ready();
 	AerospikeQuery_Ready();
 	AerospikeScan_Ready();
+
 
 	m = Py_InitModule3("aerospike", Aerospike_Methods, "documentation string ....");
 
