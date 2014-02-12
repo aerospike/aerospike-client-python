@@ -1,5 +1,6 @@
 #include <Python.h>
 #include <stdbool.h>
+#include <pthread.h>
 
 #include <aerospike/as_key.h>
 #include <aerospike/as_error.h>
@@ -299,6 +300,7 @@ typedef struct {
 	as_error * err;
 	uint32_t count;
 	void * udata;
+	pthread_mutex_t lock;
 } conversion_data;
 
 
@@ -309,12 +311,19 @@ as_status val_to_pyobject(as_error * err, const as_val * val, PyObject ** py_val
 	switch( as_val_type(val) ) {
 		case AS_INTEGER: {
 			as_integer * i = as_integer_fromval(val);
-			*py_val = PyInt_FromLong(i->value);
+			*py_val = PyInt_FromLong(as_integer_get(i));
 			break;
 		}
 		case AS_STRING: {
 			as_string * s = as_string_fromval(val);
-			*py_val = PyString_FromString(s->value);
+			char * str = as_string_get(s);
+			if ( str != NULL ) {
+				*py_val = PyString_FromString(str);
+			}
+			else {
+				Py_INCREF(Py_None);
+				*py_val = Py_None;
+			}
 			break;
 		}
 		case AS_BYTES: {
@@ -360,7 +369,7 @@ as_status val_to_pyobject(as_error * err, const as_val * val, PyObject ** py_val
 		}
 		default: {
 			as_error_update(err, AEROSPIKE_ERR_CLIENT, "Unknown type for value");
-			return false;
+			return err->code;
 		}
 	}
 
@@ -384,7 +393,11 @@ static bool list_to_pyobject_each(as_val * val, void * udata)
 		return false;
 	}
 
+   	pthread_mutex_lock(&convd->lock);
 	PyList_SetItem(py_list, convd->count, py_val);
+   	pthread_mutex_unlock(&convd->lock);
+
+	Py_DECREF(py_val);
 
 	convd->count++;
 	return true;
@@ -397,7 +410,8 @@ as_status list_to_pyobject(as_error * err, const as_list * list, PyObject ** py_
 	conversion_data convd = {
 		.err = err,
 		.count = 0,
-		.udata = *py_list
+		.udata = *py_list,
+		.lock = PTHREAD_MUTEX_INITIALIZER
 	};
 
 	as_list_foreach(list, list_to_pyobject_each, &convd);
@@ -435,7 +449,12 @@ static bool map_to_pyobject_each(const as_val * key, const as_val * val, void * 
 		return false;
 	}
 
+   	pthread_mutex_lock(&convd->lock);
 	PyDict_SetItem(py_dict, py_key, py_val);
+   	pthread_mutex_unlock(&convd->lock);
+
+	Py_DECREF(py_key);
+	Py_DECREF(py_val);
 
 	convd->count++;
 	return true;
@@ -448,7 +467,8 @@ as_status map_to_pyobject(as_error * err, const as_map * map, PyObject ** py_map
 	conversion_data convd = {
 		.err = err,
 		.count = 0,
-		.udata = *py_map
+		.udata = *py_map,
+		.lock = PTHREAD_MUTEX_INITIALIZER
 	};
 
 	as_map_foreach(map, map_to_pyobject_each, &convd);
@@ -515,12 +535,14 @@ as_status key_to_pyobject(as_error * err, const as_key * key, PyObject ** obj)
 				as_integer * ival = as_integer_fromval(val);
 				PyObject * py_ival = PyInt_FromLong(as_integer_get(ival));
 				PyDict_SetItemString(py_key, "key", py_ival);
+				Py_DECREF(py_ival);
 				break;
 			}
             case AS_STRING: {
 				as_string * sval = as_string_fromval(val);
 				PyObject * py_sval = PyString_FromString(as_string_get(sval));
 				PyDict_SetItemString(py_key, "key", py_sval);
+				Py_DECREF(py_sval);
 				break;
 			}
             case AS_BYTES: {
@@ -531,6 +553,7 @@ as_status key_to_pyobject(as_error * err, const as_key * key, PyObject ** obj)
 					memcpy(bval_bytes, as_bytes_get(bval), bval_size);
 					PyObject * py_bval = PyByteArray_FromStringAndSize((char *) bval_bytes, bval_size);
 					PyDict_SetItemString(py_key, "key", py_bval);
+					Py_DECREF(py_bval);
 					break;
 				}
 			}
@@ -544,6 +567,7 @@ as_status key_to_pyobject(as_error * err, const as_key * key, PyObject ** obj)
 		memcpy(digest_bytes, key->digest.value, AS_DIGEST_VALUE_SIZE);
 		PyObject * py_digest = PyByteArray_FromStringAndSize((char *) digest_bytes, AS_DIGEST_VALUE_SIZE);
 		PyDict_SetItemString(py_key, "digest", py_digest);
+		Py_DECREF(py_digest);
     }
 
 	*obj = py_key;
@@ -553,6 +577,7 @@ as_status key_to_pyobject(as_error * err, const as_key * key, PyObject ** obj)
 
 static bool bins_to_pyobject_each(const char * name, const as_val * val, void * udata)
 {
+	return false;
 	if ( name == NULL || val == NULL ) {
 		return false;
 	}
@@ -568,13 +593,17 @@ static bool bins_to_pyobject_each(const char * name, const as_val * val, void * 
 		return false;
 	}
 
+   	pthread_mutex_lock(&convd->lock);
 	PyDict_SetItemString(py_bins, name, py_val);
+   	pthread_mutex_unlock(&convd->lock);
+
+	Py_DECREF(py_val);
 
 	convd->count++;
 	return true;
 }
 
-as_status bins_to_pyobject(as_error * err, const as_record * rec, PyObject ** obj)
+as_status bins_to_pyobject(as_error * err, const as_record * rec, PyObject ** py_bins)
 {
 	as_error_reset(err);
 
@@ -583,22 +612,21 @@ as_status bins_to_pyobject(as_error * err, const as_record * rec, PyObject ** ob
 		return as_error_update(err, AEROSPIKE_ERR_CLIENT, "record is null");
 	}
 
-	PyObject * py_bins = PyDict_New();
+	*py_bins = PyDict_New();
 
 	conversion_data convd = {
 		.err = err,
 		.count = 0,
-		.udata = py_bins
+		.udata = py_bins,
+		.lock = PTHREAD_MUTEX_INITIALIZER
 	};
 
 	as_record_foreach(rec, bins_to_pyobject_each, &convd);
 
 	if ( err->code != AEROSPIKE_OK ) {
-		PyObject_Del(py_bins);
+		PyObject_Del(*py_bins);
 		return err->code;
 	}
-
-	*obj = py_bins;
 
 	return err->code;
 }
@@ -612,9 +640,15 @@ as_status metadata_to_pyobject(as_error * err, const as_record * rec, PyObject *
 		return as_error_update(err, AEROSPIKE_ERR_CLIENT, "record is null");
 	}
 
+	PyObject * py_ttl = PyInt_FromLong(rec->ttl);
+	PyObject * py_gen = PyInt_FromLong(rec->gen);
+
 	PyObject * py_meta = PyDict_New();
-	PyDict_SetItemString(py_meta, "ttl", PyInt_FromLong(rec->ttl));
-	PyDict_SetItemString(py_meta, "gen", PyInt_FromLong(rec->gen));
+	PyDict_SetItemString(py_meta, "ttl", py_ttl);
+	PyDict_SetItemString(py_meta, "gen", py_gen);
+
+	Py_DECREF(py_ttl);
+	Py_DECREF(py_gen);
 
 	*obj = py_meta;
 
@@ -640,12 +674,22 @@ bool error_to_pyobject(const as_error * err, PyObject ** obj)
 		py_line = Py_None;
 	}
 
+	PyObject * py_code = PyLong_FromLongLong(err->code);
+	PyObject * py_message = PyString_FromString(err->message);
+
 	PyObject * py_err = PyDict_New();
 	PyDict_SetItemString(py_err, "file", py_file);
 	PyDict_SetItemString(py_err, "line", py_line);
-	PyDict_SetItemString(py_err, "code", PyLong_FromLongLong(err->code));
-	PyDict_SetItemString(py_err, "message", PyString_FromString(err->message));
+	PyDict_SetItemString(py_err, "code", py_code);
+	PyDict_SetItemString(py_err, "message", py_message);
+
+	Py_DECREF(py_file);
+	Py_DECREF(py_line);
+	Py_DECREF(py_code);
+	Py_DECREF(py_message);
 
 	*obj = py_err;
 	return true;
 }
+
+
