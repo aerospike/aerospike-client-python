@@ -1,7 +1,7 @@
 from distutils.core import setup, Extension
 import os
 
-library_dirs = [x for x in os.environ['LD_LIBRARY_PATH'].split(':') if len(x) > 0]
+library_dirs = [x for x in os.getenv('LD_LIBRARY_PATH', '').split(':') if len(x) > 0]
 
 setup(
     name        = 'aerospike-client-python', 
