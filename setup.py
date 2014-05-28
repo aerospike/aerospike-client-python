@@ -53,7 +53,8 @@ setup(
         extra_compile_args = [
           '-std=gnu99', '-g', '-rdynamic', '-Wall',
           '-fno-common', '-fno-strict-aliasing', '-fPIC',
-          '-D_FILE_OFFSET_BITS=64', '-D_REENTRANT', '-D_GNU_SOURCE'
+          '-D_FILE_OFFSET_BITS=64', '-D_REENTRANT', '-D_GNU_SOURCE', 
+          '-DMARCH_x86_64'
         ]
       )
     ]
