@@ -37,6 +37,7 @@ setup(
         include_dirs = [ 
           'src/include',
           '/usr/include/ck',
+          '/usr/local/include/ck',
         ],
         library_dirs = library_dirs,
         libraries = [ 
