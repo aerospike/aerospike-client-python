@@ -14,13 +14,19 @@ This depends on the Aerospike C Client, and all its dependencies. There are two 
 
 This was tested on Python 2.6.6, but may work up through Python 3.x. You will need to install Python development packages to build this.
 
+### For Ubuntu 12.04
+#### Install Python Development
+	sudo apt-get install build-essential python-dev
+#### Install Lua Development
+	sudo apt-get install lua5.1-dev
+
 ## Usage
 
 ### Build
 
 	python setup.py build --force
 	
-### Install on Lunix
+### Install on Linux
 	
 	sudo python setup.py install --force
 
@@ -38,28 +44,9 @@ Examples are in the `examples` directory. The following examples are available:
 * `info.py` — Info API Example
 * `simple.lua` — Simple UDF Example
 
-### Running Examples CentOS
+### Running Examples
 
 Simply call `python` with the path to the example
 
-	python examples/kvs.py
+	python examples/client/kvs.py
 
-### Running Examples Ububtu
-
-Install Python Development
-```bash
-sudo apt-get install build-essential python-dev libsqlite3-dev libreadline6-dev libgdbm-dev zlib1g-dev libbz2-dev sqlite3 zip
-```
-Install Lua Development
-```bash
-sudo apt-get install lua5.1-dev
-```
-Set the LD_PRELOAD environment variable
-```bash
-export LD_PRELOAD=/usr/lib/x86_64-linux-gnu/liblua5.1.so:/usr/lib/x86_64-linux-gnu/librt.so
-```
-
-Then run `python` with the path to the example
-
-	python examples/kvs.py
-	

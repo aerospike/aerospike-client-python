@@ -41,13 +41,13 @@ setup(
         ],
         library_dirs = library_dirs,
         libraries = [ 
+          'aerospike',
           'ssl',
           'crypto',
           'pthread',
           'm',
           'rt',
-          'lua',
-          'aerospike'
+          'lua'
         ],
         extra_objects = [
           # '/usr/lib/libaerospike.a'
