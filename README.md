@@ -22,15 +22,29 @@ This was tested on Python 2.6.6, but may work up through Python 3.x. You will ne
 
 ## Usage
 
-### Build
+### Linux Build
 
-	python setup.py build --force
-	
+###CentOS
+```bash
+python setup.py build --force
+```	
+####Ubuntu 
+Set the LD_PRELOAD environment variable
+```bash
+python setup.py build --force
+export LD_PRELOAD=/usr/lib/x86_64-linux-gnu/liblua5.1.so:/usr/lib/x86_64-linux-gnu/librt.so
+```
+In the Aerospike C Client Makefile, change the optomizer flag 'O' to O = 1. Follow the build instructions for the Aerospike C client.
+
+###OSX build (experimental)	
+```bash
+python setup_osx.py build --force
+```	
 ### Install on Linux
 	
 	sudo python setup.py install --force
 
-### Install on OSX
+### Install on OSX (experimental)
 	
 	sudo python setup_osx.py install --force
 

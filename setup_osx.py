@@ -1,7 +1,7 @@
 from distutils.core import setup, Extension
 import os
 
-library_dirs = [x for x in os.getenv('LD_LIBRARY_PATH', '').split(':') if len(x) > 0]
+library_dirs = [x for x in os.getenv('DYLD_LIBRARY_PATH', '').split(':') if len(x) > 0]
 
 setup(
     name        = 'aerospike-client-python', 
@@ -49,13 +49,13 @@ setup(
           'aerospike'
         ],
         extra_objects = [
-          # '/usr/lib/libaerospike.a'
+         # '/usr/lib/libaerospike.a'
         ],
         extra_compile_args = [
           '-std=gnu99', '-g', '-rdynamic', '-Wall',
-          '-fno-common', '-fno-strict-aliasing', '-fPIC',
+          '-fno-common', '-fno-strict-aliasing', '-march=nocona', '-DMARCH_i386' 
           '-D_FILE_OFFSET_BITS=64', '-D_REENTRANT', '-D_GNU_SOURCE', 
-          '-DMARCH_x86_64'
+          '-D_DARWIN_UNLIMITED_SELECT'
         ]
       )
     ]
