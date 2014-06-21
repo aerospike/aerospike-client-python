@@ -1,7 +1,43 @@
 from distutils.core import setup, Extension
 import os
+import platform
+
+ostype =  platform.platform()
+#linux = 'Linux' in ostype
+osx = 'Darwin' in ostype
 
 library_dirs = [x for x in os.getenv('LD_LIBRARY_PATH', '').split(':') if len(x) > 0]
+
+extra_compile_args = [
+          '-std=gnu99', '-g', '-Wall', '-fPIC', '-O1',
+          '-fno-common', '-fno-strict-aliasing', '-finline-functions', 
+          '-march=nocona', 
+          '-D_FILE_OFFSET_BITS=64', '-D_REENTRANT', '-D_GNU_SOURCE'
+        ]
+libraries = [ 
+  'aerospike',
+  'ssl',
+  'crypto',
+  'pthread',
+  'm',
+  'lua'
+  ]
+
+if osx:
+    extra_compile_args.append('-D_DARWIN_UNLIMITED_SELECT')
+    extra_compile_args.append('-undefined dynamic_lookup')
+    extra_compile_args.append('-DLUA_DEBUG_HOOK')
+    #extra_compile_args.append('-DMARCH_i386')
+    extra_compile_args.append('-DMARCH_x86_64')
+    
+    library_dirs = ['{L,R}/usr/local/lib','{L,R}/usr/lib']
+    
+else:
+    extra_compile_args.append('-rdynamic')
+    extra_compile_args.append('-DMARCH_x86_64')
+    
+    libraries.append('rt')
+#    library_dirs = ['{L,R}/usr/local/lib', '{L,R}/usr/lib/x86_64-linux-gnu/']
 
 setup(
     name        = 'aerospike-client-python', 
@@ -40,24 +76,11 @@ setup(
           '/usr/local/include/ck',
         ],
         library_dirs = library_dirs,
-        libraries = [ 
-          'aerospike',
-          'ssl',
-          'crypto',
-          'pthread',
-          'm',
-          'rt',
-          'lua'
-        ],
+        libraries = libraries,
         extra_objects = [
-          # '/usr/lib/libaerospike.a'
+          # '/usr/local/lib/liblua.dylib'
         ],
-        extra_compile_args = [
-          '-std=gnu99', '-g', '-rdynamic', '-Wall',
-          '-fno-common', '-fno-strict-aliasing', '-fPIC',
-          '-D_FILE_OFFSET_BITS=64', '-D_REENTRANT', '-D_GNU_SOURCE', 
-          '-DMARCH_x86_64'
-        ]
+        extra_compile_args = extra_compile_args
       )
     ]
   )
