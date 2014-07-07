@@ -3,7 +3,7 @@ import os
 import platform
 
 ostype =  platform.platform()
-#linux = 'Linux' in ostype
+linux = 'Linux' in ostype
 osx = 'Darwin' in ostype
 
 library_dirs = [x for x in os.getenv('LD_LIBRARY_PATH', '').split(':') if len(x) > 0]
@@ -14,6 +14,7 @@ extra_compile_args = [
           '-march=nocona', 
           '-D_FILE_OFFSET_BITS=64', '-D_REENTRANT', '-D_GNU_SOURCE'
         ]
+
 libraries = [ 
   'aerospike',
   'ssl',
@@ -27,17 +28,12 @@ if osx:
     extra_compile_args.append('-D_DARWIN_UNLIMITED_SELECT')
     extra_compile_args.append('-undefined dynamic_lookup')
     extra_compile_args.append('-DLUA_DEBUG_HOOK')
-    #extra_compile_args.append('-DMARCH_i386')
-    extra_compile_args.append('-DMARCH_x86_64')
-    
-    library_dirs = ['{L,R}/usr/local/lib','{L,R}/usr/lib']
-    
+    extra_compile_args.append('-DMARCH_x86_64 -arch x86_64')
+    # library_dirs = ['/usr/local/lib','/usr/lib']
 else:
     extra_compile_args.append('-rdynamic')
     extra_compile_args.append('-DMARCH_x86_64')
-    
     libraries.append('rt')
-#    library_dirs = ['{L,R}/usr/local/lib', '{L,R}/usr/lib/x86_64-linux-gnu/']
 
 setup(
     name        = 'aerospike-client-python', 

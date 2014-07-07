@@ -22,7 +22,7 @@ as_status pyobject_to_list(as_error * err, PyObject * py_list, as_list ** list)
 	Py_ssize_t size = PyList_Size(py_list);
 
 	if ( *list == NULL ) {
-		*list = (as_list *) as_arraylist_new(size, 0);
+		*list = (as_list *) as_arraylist_new((uint32_t) size, 0);
 	}
 
 	for ( int i = 0; i < size; i++ ) {
@@ -52,7 +52,7 @@ as_status pyobject_to_map(as_error * err, PyObject * py_dict, as_map ** map)
 	Py_ssize_t size = PyDict_Size(py_dict);
 
 	if ( *map == NULL ) {
-		*map = (as_map *) as_hashmap_new(size);
+		*map = (as_map *) as_hashmap_new((uint32_t) size);
 	}
 
 	while (PyDict_Next(py_dict, &pos, &py_key, &py_val)) {
@@ -270,15 +270,15 @@ as_status pyobject_to_policy_write(as_error * err_p, PyObject * py_policy,
 			}
 
 			if (strcmp(PY_POLICY_W_TIMEOUT, name) == 0) {
-				policy_p->timeout = value;
+				policy_p->timeout = (uint32_t) value;
 			} else if (strcmp(PY_POLICY_W_RETRY, name) == 0) {
-				policy_p->retry = value;
+				policy_p->retry = (as_policy_retry) value;
 			} else if (strcmp(PY_POLICY_W_KEY, name) == 0) {
-				policy_p->key = value;
+				policy_p->key = (as_policy_key) value;
 			} else if (strcmp(PY_POLICY_W_GEN, name) == 0) {
-				policy_p->gen = value;
+				policy_p->gen = (as_policy_gen) value;
 			} else if (strcmp(PY_POLICY_W_EXISTS, name) == 0) {
-				policy_p->exists = value;
+				policy_p->exists = (as_policy_exists) value;
 			} else {
 				printf("[ERROR]<%s> Unknown Policy Field(%s)\n", meth, name);
 			}
@@ -309,7 +309,7 @@ as_status val_to_pyobject(as_error * err, const as_val * val, PyObject ** py_val
 	switch( as_val_type(val) ) {
 		case AS_INTEGER: {
 			as_integer * i = as_integer_fromval(val);
-			*py_val = PyInt_FromLong(as_integer_get(i));
+			*py_val = PyInt_FromLong((long) as_integer_get(i));
 			break;
 		}
 		case AS_STRING: {
@@ -528,7 +528,7 @@ as_status key_to_pyobject(as_error * err, const as_key * key, PyObject ** obj)
         switch(type) {
             case AS_INTEGER: {
 				as_integer * ival = as_integer_fromval(val);
-				PyObject * py_ival = PyInt_FromLong(as_integer_get(ival));
+				PyObject * py_ival = PyInt_FromLong((long) as_integer_get(ival));
 				PyDict_SetItemString(py_key, "key", py_ival);
 				Py_DECREF(py_ival);
 				break;

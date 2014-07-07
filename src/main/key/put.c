@@ -43,7 +43,7 @@ PyObject * AerospikeKey_Put(AerospikeKey * self, PyObject * args, PyObject * kwd
 		// assuming that one was initialized and passed in.  Otherwise, we'll just
 		// use the default.
 		if ( py_policy ) {
-			as_policy_apply_init(&policy);
+			as_policy_write_init(&policy);
 			if ( pyobject_to_policy_write(&err, py_policy, &policy) == 0 ) {
 				policy_p = &policy;
 			}
