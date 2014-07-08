@@ -14,7 +14,9 @@
 typedef struct {
 	PyObject_HEAD
 	AerospikeClient * client;
-	as_key key;
+	PyObject * namespace;
+	PyObject * set;
+	PyObject * key;
 } AerospikeKey;
 
 /*******************************************************************************

@@ -64,7 +64,7 @@ rc = 0
 key = args.pop()
 
 try:
-  (key, metadata, record) = client.key(options.namespace, options.set, key).get()
+  (key, metadata, record) = client.get((options.namespace, options.set, key))
 
   if metadata != None:
     print(metadata)

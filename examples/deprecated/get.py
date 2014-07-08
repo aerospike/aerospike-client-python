@@ -64,11 +64,11 @@ rc = 0
 key = args.pop()
 
 try:
-
-  (key, metadata) = client.exists((options.namespace, options.set, key))
+  (key, metadata, record) = client.key(options.namespace, options.set, key).get()
 
   if metadata != None:
     print(metadata)
+    print(record)
     print("---")
     print("OK, 1 record found.")
   else:

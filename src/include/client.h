@@ -34,7 +34,7 @@ bool AerospikeClient_Ready(void);
 PyObject * AerospikeClient_Create(PyObject * self, PyObject * args, PyObject * kwds);
 
 /*******************************************************************************
- * OPERATIONS
+ * CONNECTION OPERATIONS
  ******************************************************************************/
 
 /**
@@ -46,6 +46,77 @@ PyObject * AerospikeClient_Connect(AerospikeClient * self, PyObject * args, PyOb
  * Close the connections to the database.
  */
 PyObject * AerospikeClient_Close(AerospikeClient * self, PyObject * args, PyObject * kwds);
+
+
+/*******************************************************************************
+ * KVS OPERATIONS
+ ******************************************************************************/
+
+/**
+ * Apply a UDF on a record in the database.
+ *
+ *		client.apply((x,y,z), module, function, args...)
+ *
+ */
+PyObject * AerospikeClient_Apply(AerospikeClient * self, PyObject * args, PyObject * kwds);
+
+/**
+ * Check existence of a record in the database.
+ *
+ *		client.exists((x,y,z))
+ *
+ */
+PyObject * AerospikeClient_Exists(AerospikeClient * self, PyObject * args, PyObject * kwds);
+
+/**
+ * Read a record from the database.
+ *
+ *		client.get((x,y,z))
+ *
+ */
+PyObject * AerospikeClient_Get(AerospikeClient * self, PyObject * args, PyObject * kwds);
+
+/**
+ * Write a record in the database.
+ *
+ *		client.put((x,y,z), ...)
+ *
+ */
+PyObject * AerospikeClient_Put(AerospikeClient * self, PyObject * args, PyObject * kwds);
+
+/**
+ * Remove a record from the database.
+ *
+ *		client.remove((x,y,z))
+ *
+ */
+PyObject * AerospikeClient_Remove(AerospikeClient * self, PyObject * args, PyObject * kwds);
+
+
+/*******************************************************************************
+ * INTENRAL (SHARED) OPERATIONS, FOR COMPATIBILITY W/ OLD API
+ ******************************************************************************/
+
+PyObject * AerospikeClient_Apply_Invoke(
+	AerospikeClient * self, 
+	PyObject * py_key, PyObject * py_module, PyObject * py_function, 
+	PyObject * py_arglist, PyObject * py_policy);
+
+PyObject * AerospikeClient_Exists_Invoke(
+	AerospikeClient * self, 
+	PyObject * py_key, PyObject * py_policy);
+
+PyObject * AerospikeClient_Get_Invoke(
+	AerospikeClient * self, 
+	PyObject * py_key, PyObject * py_policy);
+
+PyObject * AerospikeClient_Put_Invoke(
+	AerospikeClient * self, 
+	PyObject * py_key, PyObject * py_bins, PyObject * py_meta, PyObject * py_policy);
+
+PyObject * AerospikeClient_Remove_Invoke(
+	AerospikeClient * self, 
+	PyObject * py_key, PyObject * py_policy);
 
 /**
  * This will initialize a key object, which can be used to peform key 
@@ -59,8 +130,15 @@ PyObject * AerospikeClient_Close(AerospikeClient * self, PyObject * args, PyObje
  *
  *		rec = client.key(ns,set,key).get()
  *
+ * @deprecated
  */
 PyObject * AerospikeClient_Key(AerospikeClient * self, PyObject * args, PyObject * kwds);
+
+
+
+/*******************************************************************************
+ * SCAN OPERATIONS
+ ******************************************************************************/
 
 /**
  * Performs a `scan` operation. This will initialize a scan object, which can 
@@ -83,6 +161,10 @@ PyObject * AerospikeClient_Key(AerospikeClient * self, PyObject * args, PyObject
  */
 PyObject * AerospikeClient_Scan(AerospikeClient * self, PyObject * args, PyObject * kwds);
 
+/*******************************************************************************
+ * QUERY OPERATIONS
+ ******************************************************************************/
+
 /**
  * Performs a `query` operation. This will initialize a query object, which 
  * can be used to query records in specified namespace and/or set.
@@ -103,6 +185,10 @@ PyObject * AerospikeClient_Scan(AerospikeClient * self, PyObject * args, PyObjec
  *
  */
 PyObject * AerospikeClient_Query(AerospikeClient * self, PyObject * args, PyObject * kwds);
+
+/*******************************************************************************
+ * INFO OPERATIONS
+ ******************************************************************************/
 
 /**
  * Performs a `info` operation. This will invoke the info request against each

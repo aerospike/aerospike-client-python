@@ -64,7 +64,7 @@ rc = 0
 key = args.pop()
 
 try:
-  client.key(options.namespace, options.set, key).remove()
+  client.remove((options.namespace, options.set, key))
   print("OK, 1 record removed.")
 
 except Exception as e:

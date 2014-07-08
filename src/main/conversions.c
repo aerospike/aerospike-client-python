@@ -214,86 +214,89 @@ as_status pyobject_to_record(as_error * err, PyObject * py_rec, PyObject * py_me
 	}
 
 	return err->code;
-} // end pyobject_to_record()
+}
 
-// Policy names
-#define PY_POLICY_W_TIMEOUT "timeout"    // Number of milliseconds to wait
-#define PY_POLICY_W_RETRY   "retry"      // Behavior of failed operations
-#define PY_POLICY_W_KEY     "key"        // Behavior of the key
-#define PY_POLICY_W_GEN     "gen" 		 // Behavior of the Generation value
-#define PY_POLICY_W_EXISTS  "exists"     // Behavior for record existence
-
-/**
- * Converts a PyObject into an as_policy_write object.
- * Returns AEROSPIKE_OK on success. On error, the err argument is populated.
- * We assume that the error object and the policy object are already allocated
- * and initialized (although, we do reset the error object here).
- */
-as_status pyobject_to_policy_write(as_error * err_p, PyObject * py_policy,
-									as_policy_write * policy_p)
+as_status pyobject_to_key(as_error * err, PyObject * py_keytuple, as_key * key) 
 {
-	static char * meth = "pyobject_to_policy_write()";
-	char * name;
-	int64_t value;
+	as_error_reset(err);
 
-	as_error_reset(err_p);
+	PyObject * py_ns = NULL;
+	PyObject * py_set = NULL;
+	PyObject * py_key = NULL;
+	PyObject * py_digest = NULL;
 
-	if (!policy_p) {
+	char * ns = NULL;
+	char * set = NULL;
+
+	if ( !py_keytuple ) {
 		// this should never happen, but if it did...
-		return as_error_update(err_p, AEROSPIKE_ERR_CLIENT, "policy obj is null");
+		return as_error_update(err, AEROSPIKE_ERR_PARAM, "key is null");
+	}
+	else if ( PyTuple_Check(py_keytuple) ) {
+		py_ns = PyTuple_GetItem(py_keytuple, 0);
+		py_set = PyTuple_GetItem(py_keytuple, 1);
+		py_key = PyTuple_GetItem(py_keytuple, 2);
+		py_digest = PyTuple_GetItem(py_keytuple, 3);
+	}
+	else if ( PyDict_Check(py_keytuple) ) {
+		py_ns = PyDict_GetItemString(py_keytuple, "ns");
+		py_set = PyDict_GetItemString(py_keytuple, "set");
+		py_key = PyDict_GetItemString(py_keytuple, "key");
+		py_digest = PyDict_GetItemString(py_keytuple, "digest");
+	}
+	else {
+		return as_error_update(err, AEROSPIKE_ERR_PARAM, "key is invalid");
 	}
 
-	if (!py_policy) {
-		return AEROSPIKE_OK; // Not a problem.  Return quietly.
+
+	if ( ! py_ns ) {
+		return as_error_update(err, AEROSPIKE_ERR_PARAM, "namespace is required");
+	}
+	else if ( ! PyString_Check(py_ns) ) {
+		return as_error_update(err, AEROSPIKE_ERR_PARAM, "namespace must be a string");
+	}
+	else {
+		ns = PyString_AsString(py_ns);
 	}
 
-	if ( PyDict_Check( py_policy ) ) {
-		PyObject *py_key = NULL, *py_value = NULL;
-		Py_ssize_t py_pos = 0;
-
-		// Get the values from the write policy dictionary
-		while (PyDict_Next(py_policy, &py_pos, &py_key, &py_value)) {
-			if (py_key && PyString_Check(py_key)) {
-				name = PyString_AsString(py_key);
-			} else {
-				as_error_update(err_p, AEROSPIKE_ERR_CLIENT,
-						"A policy name must be a string.");
-				continue;
-			}
-
-			if ( py_value && PyInt_Check(py_value)) {
-				value = (int64_t) PyInt_AsLong(py_value);
-			} else {
-				as_error_update(err_p, AEROSPIKE_ERR_CLIENT,
-						"Values must be integer types");
-				continue;
-			}
-
-			if (strcmp(PY_POLICY_W_TIMEOUT, name) == 0) {
-				policy_p->timeout = (uint32_t) value;
-			} else if (strcmp(PY_POLICY_W_RETRY, name) == 0) {
-				policy_p->retry = (as_policy_retry) value;
-			} else if (strcmp(PY_POLICY_W_KEY, name) == 0) {
-				policy_p->key = (as_policy_key) value;
-			} else if (strcmp(PY_POLICY_W_GEN, name) == 0) {
-				policy_p->gen = (as_policy_gen) value;
-			} else if (strcmp(PY_POLICY_W_EXISTS, name) == 0) {
-				policy_p->exists = (as_policy_exists) value;
-			} else {
-				printf("[ERROR]<%s> Unknown Policy Field(%s)\n", meth, name);
-			}
-		} // end while
-	} // end if valid dictionary object
-
-	// If there are any errors, then what's a good strategy?  Do we forget
-	// all we've seen, or do we return as much as we can?
-	if (err_p->code != AEROSPIKE_OK) {
-		printf("[ERROR]<%s>: Something goofy happened\n", meth);
+	if ( py_set ) {
+		if ( PyString_Check(py_set) ) {
+			set = PyString_AsString(py_set);
+		}
+		else {
+			return as_error_update(err, AEROSPIKE_ERR_PARAM, "set must be a string");
+		}
+	}
+	
+	if ( py_key ) {
+		if ( PyString_Check(py_key) ) {
+			char * k = PyString_AsString(py_key);
+			as_key_init_strp(key, ns, set, k, true);
+		}
+		else if ( PyInt_Check(py_key) ) {
+			int64_t k = (int64_t) PyInt_AsLong(py_key);
+			as_key_init_int64(key, ns, set, k);
+		}
+		else if ( PyLong_Check(py_key) ) {
+			int64_t k = (int64_t) PyLong_AsLongLong(py_key);
+			as_key_init_int64(key, ns, set, k);
+		}
+		else if ( PyByteArray_Check(py_key) ) {
+			return as_error_update(err, AEROSPIKE_ERR_PARAM, "key as a byte array is not supported");
+		}
+		else {
+			return as_error_update(err, AEROSPIKE_ERR_PARAM, "key is invalid");
+		}
+	}
+	else if ( py_digest ) {
+		return as_error_update(err, AEROSPIKE_ERR_PARAM, "digest is not supported");
+	}
+	else {
+		return as_error_update(err, AEROSPIKE_ERR_PARAM, "either key or digest is required");
 	}
 
-	return err_p->code;
-} // end pyobject_to_policy_write()
-
+	return err->code;
+}
 
 typedef struct {
 	as_error * err;

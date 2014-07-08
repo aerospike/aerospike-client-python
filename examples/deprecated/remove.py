@@ -64,16 +64,8 @@ rc = 0
 key = args.pop()
 
 try:
-
-  (key, metadata) = client.exists((options.namespace, options.set, key))
-
-  if metadata != None:
-    print(metadata)
-    print("---")
-    print("OK, 1 record found.")
-  else:
-    print('error: Not Found.', file=sys.stderr)
-    rc = 1
+  client.key(options.namespace, options.set, key).remove()
+  print("OK, 1 record removed.")
 
 except Exception as e:
   print("error: {0}".format(e), file=sys.stderr)

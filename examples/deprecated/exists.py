@@ -65,7 +65,7 @@ key = args.pop()
 
 try:
 
-  (key, metadata) = client.exists((options.namespace, options.set, key))
+  (key, metadata) = client.key(options.namespace, options.set, key).exists()
 
   if metadata != None:
     print(metadata)

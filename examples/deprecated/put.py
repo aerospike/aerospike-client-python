@@ -34,6 +34,15 @@ optparser.add_option(
   "-s", "--set", dest="set", type="string", default="demo", metavar="<SET>",
   help="Port of the Aerospike server.")
 
+optparser.add_option(
+  "--gen", dest="gen", type="int", default=None, metavar="<GEN>",
+  help="Generation of the record being written.")
+
+optparser.add_option(
+ "--ttl", dest="ttl", type="int", default=None, metavar="<TTL>",
+  help="TTL of the record being written.")
+
+
 (options, args) = optparser.parse_args()
 
 if options.help:
@@ -63,17 +72,26 @@ client = aerospike.client(config).connect()
 rc = 0
 key = args.pop()
 
+record = {
+  'i': 123,
+  's': 'abc',
+  # 'b': bytearray(['d','e','f']),
+  # 'l': [123, 'abc', bytearray(['d','e','f']), ['x', 'y', 'z'], {'x': 1, 'y': 2, 'z': 3}],
+  # 'm': {'i': 123, 's': 'abc', 'b': bytearray(['d','e','f']), 'l': ['x', 'y', 'z'], 'd': {'x': 1, 'y': 2, 'z': 3}}
+  'l': [123, 'abc', ['x', 'y', 'z'], {'x': 1, 'y': 2, 'z': 3}],
+  'm': {'i': 123, 's': 'abc', 'l': ['x', 'y', 'z'], 'd': {'x': 1, 'y': 2, 'z': 3}}
+}
+
 try:
-
-  (key, metadata) = client.exists((options.namespace, options.set, key))
-
-  if metadata != None:
-    print(metadata)
-    print("---")
-    print("OK, 1 record found.")
-  else:
-    print('error: Not Found.', file=sys.stderr)
-    rc = 1
+  meta = {'ttl': options.ttl, 'gen': options.gen}
+  # meta = None
+  # policy = { 'gen': 0 }
+  policy = None
+  client.key(options.namespace, options.set, key).put(record, meta)
+  
+  print(record)
+  print("---")
+  print("OK, 1 record written.")
 
 except Exception as e:
   print("error: {0}".format(e), file=sys.stderr)

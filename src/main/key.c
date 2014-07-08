@@ -46,52 +46,60 @@ static int AerospikeKeyType_Init(AerospikeKey * self, PyObject * args, PyObject 
 {
 	PyObject * py_client = PyTuple_GetItem(args, 0);
 	PyObject * py_args = PyTuple_GetItem(args, 1);
-	PyObject * py_namespace = NULL;
-	PyObject * py_set = NULL;
-	PyObject * py_key = NULL;
-	PyObject * py_digest = NULL;
+	// PyObject * py_namespace = NULL;
+	// PyObject * py_set = NULL;
+	// PyObject * py_key = NULL;
+	// PyObject * py_digest = NULL;
 	
-	static char * kwlist[] = {"namespace", "set", "key", "digest", NULL};
+	// static char * kwlist[] = {"namespace", "set", "key", "digest", NULL};
 	
-	if ( PyArg_ParseTupleAndKeywords(py_args, kwds, "O|OOO:key", kwlist, 
-		&py_namespace, &py_set, &py_key, &py_digest) == false ) {
-		return 0;
-	}
-		
-	char * n = NULL;
-	char * s = NULL;
+	// if ( PyArg_ParseTupleAndKeywords(py_args, kwds, "O|OOO:key", kwlist, 
+	// 	&py_namespace, &py_set, &py_key, &py_digest) == false ) {
+	// 	return 0;
+	// }
 
-	if ( PyString_Check(py_namespace) ) {
-		n = PyString_AsString(py_namespace);
-	}
+	// char * n = NULL;
+	// char * s = NULL;
 
-	if ( PyString_Check(py_set) ) {
-		s = PyString_AsString(py_set);
-	}
+	// if ( PyString_Check(py_namespace) ) {
+	// 	n = PyString_AsString(py_namespace);
+	// }
 
-	if ( PyInt_Check(py_key) ) {
-		int64_t k = (int64_t) PyInt_AsLong(py_key);
-		as_key_init_int64(&self->key, n, s, k);
-	}
-	else if ( PyLong_Check(py_key) ) {
-		int64_t k = (int64_t) PyLong_AsLongLong(py_key);
-		as_key_init_int64(&self->key, n, s, k);
-	}
-	else if ( PyString_Check(py_key) ) {
-		char * k = PyString_AsString(py_key);
-		as_key_init_strp(&self->key, n, s, k, false);
-	}
+	// if ( PyString_Check(py_set) ) {
+	// 	s = PyString_AsString(py_set);
+	// }
 
+	// if ( PyInt_Check(py_key) ) {
+	// 	int64_t k = (int64_t) PyInt_AsLong(py_key);
+	// 	as_key_init_int64(&self->key, n, s, k);
+	// }
+	// else if ( PyLong_Check(py_key) ) {
+	// 	int64_t k = (int64_t) PyLong_AsLongLong(py_key);
+	// 	as_key_init_int64(&self->key, n, s, k);
+	// }
+	// else if ( PyString_Check(py_key) ) {
+	// 	char * k = PyString_AsString(py_key);
+	// 	as_key_init_strp(&self->key, n, s, k, false);
+	// }
+
+	// PyObject * py_keytuple = PyTuple_New(4);
+	// PyTuple_SetItem(py_keytuple, 0, py_namespace);
+	// PyTuple_SetItem(py_keytuple, 0, py_set);
+	// PyTuple_SetItem(py_keytuple, 0, py_key);
+	// PyTuple_SetItem(py_keytuple, 0, py_digest);
+	
 	Py_INCREF(py_client);
+	Py_INCREF(py_args);
 
 	self->client = (AerospikeClient *) py_client;
+	self->key = py_args;
 
     return 0;
 }
 
 static void AerospikeKeyType_Dealloc(AerospikeKey * self)
 {
-	as_key_destroy(&self->key);
+	// as_key_destroy(&self->key);
     self->ob_type->tp_free((PyObject *) self);
 }
 

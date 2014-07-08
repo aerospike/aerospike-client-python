@@ -87,7 +87,7 @@ try:
   # meta = None
   # policy = { 'gen': 0 }
   policy = None
-  client.key(options.namespace, options.set, key).put(record, meta)
+  client.put((options.namespace, options.set, key), record, meta)
   
   print(record)
   print("---")

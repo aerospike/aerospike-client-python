@@ -18,12 +18,30 @@
  ******************************************************************************/
 
 static PyMethodDef AerospikeClientType_Methods[] = {
+
+	// CONNECTION OPERATIONS
     {"connect",	(PyCFunction) AerospikeClient_Connect,	METH_VARARGS | METH_KEYWORDS, "Connect to the cluster."},
     {"close",	(PyCFunction) AerospikeClient_Close,	METH_VARARGS | METH_KEYWORDS, "Close the connection(s) to the cluster."},
+
+    // KVS OPERATIONS
+	{"exists",	(PyCFunction) AerospikeClient_Exists,	METH_VARARGS | METH_KEYWORDS, "Check the existence of a record in the database."},    
+	{"get",		(PyCFunction) AerospikeClient_Get,		METH_VARARGS | METH_KEYWORDS, "Read a record from the database."},    
+	{"put",		(PyCFunction) AerospikeClient_Put,		METH_VARARGS | METH_KEYWORDS, "Write a record into the database."},    
+	{"remove",	(PyCFunction) AerospikeClient_Remove,	METH_VARARGS | METH_KEYWORDS, "Remove a record from the database."},    
+	{"apply",	(PyCFunction) AerospikeClient_Apply,	METH_VARARGS | METH_KEYWORDS, "Apply a UDF on a record in the database."},    
+
+    // Deprecated key-based API
     {"key",		(PyCFunction) AerospikeClient_Key,		METH_VARARGS | METH_KEYWORDS, "Initialize a key object for performing key operations."},
+
+    // QUERY OPERATIONS
     {"query",	(PyCFunction) AerospikeClient_Query,	METH_VARARGS | METH_KEYWORDS, "Initialize a query object for peforming queries."},
+
+    // SCAN OPERATIONS
     {"scan",	(PyCFunction) AerospikeClient_Scan,		METH_VARARGS | METH_KEYWORDS, "Initialize a scan object for performing scans."},
+
+    // INFO OPERATIONS
     {"info",	(PyCFunction) AerospikeClient_Info,		METH_VARARGS | METH_KEYWORDS, "Send an info request to the cluster."},
+
 	{NULL}
 };
 
