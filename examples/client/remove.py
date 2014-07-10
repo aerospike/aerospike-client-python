@@ -6,9 +6,9 @@ import sys
 
 from optparse import OptionParser
 
-################################################################
-# Option Parsing
-################################################################
+################################################################################
+# Options Parsing
+################################################################################
 
 usage = "usage: %prog [options] key"
 
@@ -46,9 +46,9 @@ if len(args) != 1:
   print()
   sys.exit(1)
 
-################################################################
-# Connect to Cluster
-################################################################
+################################################################################
+# Client Configuration
+################################################################################
 
 config = {
   'hosts': [ (options.host, options.port) ]
@@ -56,32 +56,54 @@ config = {
 
 client = aerospike.client(config).connect()
 
-################################################################
-# Perform Operation
-################################################################
+################################################################################
+# Application
+################################################################################
 
-rc = 0
-key = args.pop()
+exitCode = 0
 
 try:
-  client.remove((options.namespace, options.set, key))
-  print("OK, 1 record removed.")
 
-except Exception, e:
-  if e[0]['code'] == 602:
-    print("error: Record not found")
-  else:
-    print("error: {0}".format(e), file=sys.stderr)
-    rc = 1
+  # ----------------------------------------------------------------------------
+  # Connect to Cluster
+  # ----------------------------------------------------------------------------
 
-################################################################
-# Close Connection to Cluster
-################################################################
+  client = aerospike.client(config).connect()
 
-client.close()
+  # ----------------------------------------------------------------------------
+  # Perform Operation
+  # ----------------------------------------------------------------------------
 
-################################################################
+  try:
+
+    namespace = options.namespace if options.namespace and options.namespace != 'None' else None
+    set = options.set if options.set and options.set != 'None' else None
+    key = args.pop()
+
+    client.remove((options.namespace, options.set, key))
+    
+    print("OK, 1 record removed.")
+
+  except Exception, e:
+    if e[0]['code'] == 602:
+      print("error: Record not found")
+    else:
+      print("error: {0}".format(e), file=sys.stderr)
+      rc = 1
+
+  # ----------------------------------------------------------------------------
+  # Close Connection to Cluster
+  # ----------------------------------------------------------------------------
+
+  client.close()
+
+except Exception, eargs:
+  print("error: {0}".format(eargs), file=sys.stderr)
+  exitCode = 3
+
+
+################################################################################
 # Exit
-################################################################
+################################################################################
 
 sys.exit(rc)

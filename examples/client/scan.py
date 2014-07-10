@@ -6,9 +6,9 @@ import sys
 
 from optparse import OptionParser
 
-################################################################
-# Option Parsing
-################################################################
+################################################################################
+# Options Parsing
+################################################################################
 
 usage = "usage: %prog [options]"
 
@@ -45,54 +45,75 @@ if options.help:
   print()
   sys.exit(1)
 
-################################################################
-# Connect to Cluster
-################################################################
+################################################################################
+# Client Configuration
+################################################################################
 
 config = {
   'hosts': [ (options.host, options.port) ]
 }
 
-client = aerospike.client(config).connect()
+################################################################################
+# Application
+################################################################################
 
-################################################################
-# Perform Operation
-################################################################
-
-rc = 0
+exitCode = 0
 
 try:
-  s = client.scan(options.namespace, options.set)
-  
-  if options.bins and len(options.bins) > 0:
-    s.select(*options.bins)
 
-  records = []
+  # ----------------------------------------------------------------------------
+  # Connect to Cluster
+  # ----------------------------------------------------------------------------
 
-  def callback((key, meta, record)):
-    records.append(record)
-    print(record)
+  client = aerospike.client(config).connect()
 
-  s.foreach(callback)
+  # ----------------------------------------------------------------------------
+  # Perform Operation
+  # ----------------------------------------------------------------------------
 
-  print("---")
-  if len(records) == 1:
-    print("OK, 1 record found.")
-  else:
-    print("OK, %d records found." % len(records))
+  try:
+    
+    namespace = options.namespace if options.namespace and options.namespace != 'None' else None
+    set = options.set if options.set and options.set != 'None' else None
+    
+    s = client.scan(namespace, set)
+    
+    if options.bins and len(options.bins) > 0:
+      # project specified bins
+      s.select(*options.bins)
 
-except Exception as e:
-  print("error: {0}".format(e), file=sys.stderr)
-  rc = 1
+    records = []
 
-################################################################
-# Close Connection to Cluster
-################################################################
+    # callback to be called for each record read
+    def callback((key, meta, record)):
+      records.append(record)
+      print(record)
 
-client.close()
+    # invoke the operations, and for each record invoke the callback
+    s.foreach(callback)
 
-################################################################
+    print("---")
+    if len(records) == 1:
+      print("OK, 1 record found.")
+    else:
+      print("OK, %d records found." % len(records))
+
+  except Exception as e:
+    print("error: {0}".format(e), file=sys.stderr)
+    rc = 1
+
+  # ----------------------------------------------------------------------------
+  # Close Connection to Cluster
+  # ----------------------------------------------------------------------------
+
+  client.close()
+
+except Exception, eargs:
+  print("error: {0}".format(eargs), file=sys.stderr)
+  exitCode = 3
+
+################################################################################
 # Exit
-################################################################
+################################################################################
 
-sys.exit(rc)
+sys.exit(exitCode)

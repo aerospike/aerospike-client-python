@@ -8,9 +8,9 @@ import sys
 from optparse import OptionParser
 from aerospike import predicates as p
 
-################################################################
+################################################################################
 # Option Parsing
-################################################################
+################################################################################
 
 usage = "usage: %prog [options] [where]"
 
@@ -56,93 +56,112 @@ if len(args) > 1:
   print()
   sys.exit(1)
 
-################################################################
-# Connect to Cluster
-################################################################
+################################################################################
+# Client Configuration
+################################################################################
 
 config = {
   'hosts': [ (options.host, options.port) ]
 }
 
-client = aerospike.client(config).connect()
+################################################################################
+# Application
+################################################################################
 
-################################################################
-# Perform Operation
-################################################################
-
-rc = 0
-re_bin = "(.{1,14})"
-re_str_eq = "\s+=\s*(?:(?:\"(.*)\")|(?:\'(.*)\'))"
-re_int_eq = "\s+=\s*(\d+)"
-re_int_rg = "\s+between\s+\(\s*(\d+)\s*,\s*(\d+)\s*\)"
-
-re_w = re.compile("%s(?:%s|%s|%s)" % (re_bin, re_str_eq, re_int_eq, re_int_rg))
+exitCode = 0
 
 try:
-  q = None
 
-  if len(args) == 1:
+  # ----------------------------------------------------------------------------
+  # Connect to Cluster
+  # ----------------------------------------------------------------------------
 
-    w = re_w.match(args[0])
-    if w != None:
+  client = aerospike.client(config).connect()
 
-      q = client.query(options.namespace, options.set)
+  # ----------------------------------------------------------------------------
+  # Perform Operation
+  # ----------------------------------------------------------------------------
 
-      if w.group(2):
-        b = w.group(1)
-        v = w.group(2)
-        q.where(p.equals(b, v))
-      elif w.group(3):
-        b = w.group(1)
-        v = w.group(3)
-        q.where(p.equals(b, v))
-      elif w.group(4):
-        b = w.group(1)
-        v = int(w.group(4))
-        q.where(p.equals(b, v))
-      elif w.group(5) and w.group(6):
-        b = w.group(1)
-        l = int(w.group(5))
-        u = int(w.group(6))
-        q.where(p.between(b, l, u))
+  try:
 
-  if q == None:
-    q = client.scan(options.namespace, options.set)
+    re_bin = "(.{1,14})"
+    re_str_eq = "\s+=\s*(?:(?:\"(.*)\")|(?:\'(.*)\'))"
+    re_int_eq = "\s+=\s*(\d+)"
+    re_int_rg = "\s+between\s+\(\s*(\d+)\s*,\s*(\d+)\s*\)"
+    re_w = re.compile("%s(?:%s|%s|%s)" % (re_bin, re_str_eq, re_int_eq, re_int_rg))
 
-  if options.bins and len(options.bins) > 0:
-    q.select(*options.bins)
+    namespace = options.namespace if options.namespace and options.namespace != 'None' else None
+    set = options.set if options.set and options.set != 'None' else None
 
-  records = []
+    q = None
 
-  def callback((key, meta, record)):
-    records.append(record)
-    print(record)
-  
-  q.foreach(callback)
+    if len(args) == 1:
 
-  # for (key,meta,record) in q.results():
-  #   records.append(record)
-  #   print(record)
+      w = re_w.match(args[0])
+      if w != None:
 
-  print("---")
-  if len(records) == 1:
-    print("OK, 1 record found.")
-  else:
-    print("OK, %d records found." % len(records))
+        # If predicate is provided, then perform a query
+        q = client.query(namespace, set)
 
-except Exception as e:
-  print("error: {0}".format(e), file=sys.stderr)
-  rc = 1
+        if w.group(2):
+          b = w.group(1)
+          v = w.group(2)
+          q.where(p.equals(b, v))
+        elif w.group(3):
+          b = w.group(1)
+          v = w.group(3)
+          q.where(p.equals(b, v))
+        elif w.group(4):
+          b = w.group(1)
+          v = int(w.group(4))
+          q.where(p.equals(b, v))
+        elif w.group(5) and w.group(6):
+          b = w.group(1)
+          l = int(w.group(5))
+          u = int(w.group(6))
+          q.where(p.between(b, l, u))
 
-################################################################
-# Close Connection to Cluster
-################################################################
+    if q == None:
+      # If predicate not provided, then perform a scan
+      q = client.scan(namespace, set)
 
-client.close()
+    if options.bins and len(options.bins) > 0:
+      # project specified bins
+      q.select(*options.bins)
+
+    records = []
+
+    # callback to be called for each record read
+    def callback((key, meta, record)):
+      records.append(record)
+      print(record)
+    
+    # invoke the operations, and for each record invoke the callback
+    q.foreach(callback)
+    
+    print("---")
+    if len(records) == 1:
+      print("OK, 1 record found.")
+    else:
+      print("OK, %d records found." % len(records))
+
+  except Exception, eargs:
+    print("error: {0}".format(eargs), file=sys.stderr)
+    exitCode = 2
+
+  # ----------------------------------------------------------------------------
+  # Close Connection to Cluster
+  # ----------------------------------------------------------------------------
+
+  client.close()
+
+except Exception, eargs:
+  print("error: {0}".format(eargs), file=sys.stderr)
+  exitCode = 3
 
 
-################################################################
+################################################################################
 # Exit
-################################################################
+################################################################################
 
 sys.exit(rc)

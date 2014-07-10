@@ -6,9 +6,9 @@ import sys
 
 from optparse import OptionParser
 
-################################################################
-# Option Parsing
-################################################################
+################################################################################
+# Options Parsing
+################################################################################
 
 usage = "usage: %prog [options] key"
 
@@ -46,53 +46,65 @@ if len(args) != 1:
   print()
   sys.exit(1)
 
-################################################################
-# Connect to Cluster
-################################################################
+################################################################################
+# Client Configuration
+################################################################################
 
 config = {
   'hosts': [ (options.host, options.port) ]
 }
 
-client = aerospike.client(config).connect()
+################################################################################
+# Application
+################################################################################
 
-################################################################
-# Perform Operation
-################################################################
-
-rc = 0
-
-namespace = options.namespace if options.namespace and options.namespace != 'None' else None
-set = options.set if options.set and options.set != 'None' else None
-key = args.pop()
-
+exitCode = 0
 
 try:
-  keyt = (namespace, set, key)
-  policy = None
-  (key, metadata, record) = client.get(keyt, policy)
 
-  if metadata != None:
-    print(metadata)
-    print(record)
-    print("---")
-    print("OK, 1 record found.")
-  else:
-    print('error: Not Found.', file=sys.stderr)
-    rc = 1
+  # ----------------------------------------------------------------------------
+  # Connect to Cluster
+  # ----------------------------------------------------------------------------
+
+  client = aerospike.client(config).connect()
+
+  # ----------------------------------------------------------------------------
+  # Perform Operation
+  # ----------------------------------------------------------------------------
+
+  try:
+    namespace = options.namespace if options.namespace and options.namespace != 'None' else None
+    set = options.set if options.set and options.set != 'None' else None
+    key = args.pop()
+    policy = None
+
+    (key, metadata, record) = client.get((namespace, set, key), policy)
+
+    if metadata != None:
+      print(metadata)
+      print(record)
+      print("---")
+      print("OK, 1 record found.")
+    else:
+      print('error: Not Found.', file=sys.stderr)
+      exitCode = 1
+
+  except Exception as e:
+    print("error: {0}".format(e), file=sys.stderr)
+    exitCode = 2
+
+  # ----------------------------------------------------------------------------
+  # Close Connection to Cluster
+  # ----------------------------------------------------------------------------
+
+  client.close()
 
 except Exception as e:
   print("error: {0}".format(e), file=sys.stderr)
-  rc = 1
+  exitCode = 3
 
-################################################################
-# Close Connection to Cluster
-################################################################
-
-client.close()
-
-################################################################
+################################################################################
 # Exit
-################################################################
+################################################################################
 
-sys.exit(rc)
+sys.exit(exitCode)
