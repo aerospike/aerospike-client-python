@@ -6,6 +6,7 @@ import re
 import sys
 
 from optparse import OptionParser
+from aerospike import predicates as p
 
 ################################################################
 # Option Parsing
@@ -40,7 +41,7 @@ optparser.add_option(
   help="Scan result processing mode.")
 
 optparser.add_option(
-  "--select", dest="select", type="string", action="append", 
+  "-b", "--bins", dest="bins", type="string", action="append", 
   help="Bins to select from each record.")
 
 (options, args) = optparser.parse_args()
@@ -90,31 +91,38 @@ try:
       if w.group(2):
         b = w.group(1)
         v = w.group(2)
-        q.where(b, "equals", v)
+        q.where(p.equals(b, v))
       elif w.group(3):
         b = w.group(1)
         v = w.group(3)
-        q.where(b, "equals", v)
+        q.where(p.equals(b, v))
       elif w.group(4):
         b = w.group(1)
         v = int(w.group(4))
-        q.where(b, "equals", v)
-      elif w.group(5) and w.group(5):
+        q.where(p.equals(b, v))
+      elif w.group(5) and w.group(6):
         b = w.group(1)
         l = int(w.group(5))
         u = int(w.group(6))
-        q.where(b, "between", (l,u))
-
-      if options.select and len(options.select) > 0:
-        q.select(*options.select)
+        q.where(p.between(b, l, u))
 
   if q == None:
     q = client.scan(options.namespace, options.set)
 
-  records = q.results()
+  if options.bins and len(options.bins) > 0:
+    q.select(*options.bins)
 
-  for (key,meta,record) in records:
+  records = []
+
+  def callback((key, meta, record)):
+    records.append(record)
     print(record)
+  
+  q.foreach(callback)
+
+  # for (key,meta,record) in q.results():
+  #   records.append(record)
+  #   print(record)
 
   print("---")
   if len(records) == 1:

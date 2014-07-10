@@ -5,19 +5,8 @@
 
 #include <aerospike/as_key.h>
 
+#include "types.h"
 #include "client.h"
-
-/*******************************************************************************
- * TYPES
- ******************************************************************************/
-
-typedef struct {
-	PyObject_HEAD
-	AerospikeClient * client;
-	PyObject * namespace;
-	PyObject * set;
-	PyObject * key;
-} AerospikeKey;
 
 /*******************************************************************************
  * FUNCTIONS
@@ -25,7 +14,7 @@ typedef struct {
 
 bool AerospikeKey_Ready(void);
 
-PyObject * AerospikeKey_Create(PyObject * self, PyObject * args, PyObject * kwds);
+AerospikeKey * AerospikeKey_New(AerospikeClient * client, PyObject * args, PyObject * kwds);
 
 /*******************************************************************************
  * OPERATIONS

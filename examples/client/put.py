@@ -70,6 +70,8 @@ client = aerospike.client(config).connect()
 ################################################################
 
 rc = 0
+namespace = options.namespace if options.namespace and options.namespace != 'None' else None
+set = options.set if options.set and options.set != 'None' else None
 key = args.pop()
 
 record = {
@@ -83,11 +85,10 @@ record = {
 }
 
 try:
+  keyt = (namespace, set, key)
   meta = {'ttl': options.ttl, 'gen': options.gen}
-  # meta = None
-  # policy = { 'gen': 0 }
   policy = None
-  client.put((options.namespace, options.set, key), record, meta)
+  client.put(keyt, record, meta, policy)
   
   print(record)
   print("---")

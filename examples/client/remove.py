@@ -67,9 +67,12 @@ try:
   client.remove((options.namespace, options.set, key))
   print("OK, 1 record removed.")
 
-except Exception as e:
-  print("error: {0}".format(e), file=sys.stderr)
-  rc = 1
+except Exception, e:
+  if e[0]['code'] == 602:
+    print("error: Record not found")
+  else:
+    print("error: {0}".format(e), file=sys.stderr)
+    rc = 1
 
 ################################################################
 # Close Connection to Cluster

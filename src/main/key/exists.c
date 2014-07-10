@@ -12,9 +12,6 @@
 
 PyObject * AerospikeKey_Exists(AerospikeKey * key, PyObject * args, PyObject * kwds)
 {
-	// Client Object
-	AerospikeClient * client = key->client;
-
 	// Python Function Arguments
 	PyObject * py_key = key->key;
 	PyObject * py_policy = NULL;
@@ -28,5 +25,5 @@ PyObject * AerospikeKey_Exists(AerospikeKey * key, PyObject * args, PyObject * k
 	}
 
 	// Invoke Operation
-	return AerospikeClient_Exists_Invoke(client, py_key, py_policy);
+	return AerospikeClient_Exists_Invoke(key->client, py_key, py_policy);
 }

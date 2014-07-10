@@ -12,7 +12,7 @@
 #include "policy.h"
 
 PyObject * AerospikeClient_Remove_Invoke(
-	AerospikeClient * client, 
+	AerospikeClient * self, 
 	PyObject * py_key, PyObject * py_policy)
 {
 
@@ -38,7 +38,7 @@ PyObject * AerospikeClient_Remove_Invoke(
 	}
 
 	// Invoke operation
-	aerospike_key_remove(client->as, &err, policy_p, &key);
+	aerospike_key_remove(self->as, &err, policy_p, &key);
 
 CLEANUP:
 	
@@ -52,7 +52,7 @@ CLEANUP:
 	return PyLong_FromLong(0);
 }
 
-PyObject * AerospikeClient_Remove(AerospikeClient * client, PyObject * args, PyObject * kwds)
+PyObject * AerospikeClient_Remove(AerospikeClient * self, PyObject * args, PyObject * kwds)
 {
 	// Python Function Arguments
 	PyObject * py_key = NULL;
@@ -68,5 +68,5 @@ PyObject * AerospikeClient_Remove(AerospikeClient * client, PyObject * args, PyO
 	}
 
 	// Invoke Operation
-	return AerospikeClient_Remove_Invoke(client, py_key, py_policy);
+	return AerospikeClient_Remove_Invoke(self, py_key, py_policy);
 }

@@ -9,27 +9,25 @@
 #undef TRACE
 #define TRACE()
 
-PyObject * AerospikeQuery_Select(AerospikeQuery * self, PyObject * args, PyObject * kwds)
+AerospikeQuery * AerospikeQuery_Select(AerospikeQuery * self, PyObject * args, PyObject * kwds)
 {
 	TRACE();
 	
-	AerospikeQuery * py_query = self;
-	
-	as_query_select_init(&py_query->query, 100);
+	as_query_select_init(&self->query, 100);
 
 	int nbins = (int) PyTuple_Size(args);
 	for ( int i = 0; i < nbins; i++ ) {
 		PyObject * py_bin = PyTuple_GetItem(args, i);
 		if ( PyString_Check(py_bin) ) {
-			TRACE();
+			// TRACE();
 			char * bin = PyString_AsString(py_bin);
-			as_query_select(&py_query->query, bin);
+			as_query_select(&self->query, bin);
 		}
 		else {
-			TRACE();
+			// TRACE();
 		}
 	}
 
 	Py_INCREF(self);
-	return (PyObject *) self;
+	return self;
 }

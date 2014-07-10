@@ -16,7 +16,7 @@
 
 #define POLICY_INIT(__policy) \
 	as_error_reset(err);\
-	if ( ! py_policy ) {\
+	if ( ! py_policy || py_policy == Py_None ) {\
 		return err->code;\
 	}\
 	if ( ! PyDict_Check(py_policy) ) {\

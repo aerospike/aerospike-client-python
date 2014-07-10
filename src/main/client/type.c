@@ -9,15 +9,13 @@
 
 #include "client.h"
 
-#undef TRACE
-#define TRACE()
 
 
 /*******************************************************************************
  * PYTHON TYPE METHODS
  ******************************************************************************/
 
-static PyMethodDef AerospikeClientType_Methods[] = {
+static PyMethodDef AerospikeClient_Type_Methods[] = {
 
 	// CONNECTION OPERATIONS
     {"connect",	(PyCFunction) AerospikeClient_Connect,	METH_VARARGS | METH_KEYWORDS, "Connect to the cluster."},
@@ -49,7 +47,7 @@ static PyMethodDef AerospikeClientType_Methods[] = {
  * PYTHON TYPE HOOKS
  ******************************************************************************/
 
-static PyObject * AerospikeClientType_New(PyTypeObject * type, PyObject * args, PyObject * kwds)
+static PyObject * AerospikeClient_Type_New(PyTypeObject * type, PyObject * args, PyObject * kwds)
 {
 	AerospikeClient * self = NULL;
 
@@ -62,7 +60,7 @@ static PyObject * AerospikeClientType_New(PyTypeObject * type, PyObject * args, 
 	return (PyObject *) self;
 }
 
-static int AerospikeClientType_Init(AerospikeClient * self, PyObject * args, PyObject * kwds)
+static int AerospikeClient_Type_Init(AerospikeClient * self, PyObject * args, PyObject * kwds)
 {
 	PyObject * py_config = NULL;
 
@@ -106,41 +104,15 @@ static int AerospikeClientType_Init(AerospikeClient * self, PyObject * args, PyO
     	}
     }
 
-    //  = {
-    //     .non_blocking = false,
-    //     .hosts = { 
-    //     	{ .addr = "localhost" , .port = 3000 },
-    //     	{ 0 }
-    //     },
-    //     .lua = {
-    //     	.cache_enabled = false,
-    //     	.system_path = "../aerospike-mod-lua/src/lua",
-    //     	.user_path = "src/test/lua"
-    //     }
-    // };
-	TRACE();
     
     as_policies_init(&config.policies);
 
-	// as_error err;
-	// as_error_reset(&err);
-	// TRACE();
-
 	self->as = aerospike_new(&config);
-
-	// TRACE();
-	
-	// if ( aerospike_connect(as, &err) == AEROSPIKE_OK ) {
-	// 	self->as = as;
-	// }
-
-
-	TRACE();
 
     return 0;
 }
 
-static void AerospikeClientType_Dealloc(PyObject * self)
+static void AerospikeClient_Type_Dealloc(PyObject * self)
 {
     self->ob_type->tp_free((PyObject *) self);
 }
@@ -149,14 +121,14 @@ static void AerospikeClientType_Dealloc(PyObject * self)
  * PYTHON TYPE DESCRIPTOR
  ******************************************************************************/
 
-static PyTypeObject AerospikeClientType = {
+static PyTypeObject AerospikeClient_Type = {
 	PyObject_HEAD_INIT(NULL)
 
     .ob_size			= 0,
     .tp_name			= "aerospike.client",
     .tp_basicsize		= sizeof(AerospikeClient),
     .tp_itemsize		= 0,
-    .tp_dealloc			= (destructor) AerospikeClientType_Dealloc,
+    .tp_dealloc			= (destructor) AerospikeClient_Type_Dealloc,
     .tp_print			= 0,
     .tp_getattr			= 0,
     .tp_setattr			= 0,
@@ -179,7 +151,7 @@ static PyTypeObject AerospikeClientType = {
     .tp_weaklistoffset	= 0,
     .tp_iter			= 0,
     .tp_iternext		= 0,
-    .tp_methods			= AerospikeClientType_Methods,
+    .tp_methods			= AerospikeClient_Type_Methods,
     .tp_members			= 0,
     .tp_getset			= 0,
     .tp_base			= 0,
@@ -187,9 +159,9 @@ static PyTypeObject AerospikeClientType = {
     .tp_descr_get		= 0,
     .tp_descr_set		= 0,
     .tp_dictoffset		= 0,
-    .tp_init			= (initproc) AerospikeClientType_Init,
+    .tp_init			= (initproc) AerospikeClient_Type_Init,
     .tp_alloc			= 0,
-    .tp_new				= AerospikeClientType_New
+    .tp_new				= AerospikeClient_Type_New
 };
 
 /*******************************************************************************
@@ -198,12 +170,12 @@ static PyTypeObject AerospikeClientType = {
 
 bool AerospikeClient_Ready()
 {
-	return PyType_Ready(&AerospikeClientType) < 0;
+	return PyType_Ready(&AerospikeClient_Type) < 0;
 }
 
-PyObject * AerospikeClient_Create(PyObject * self, PyObject * args, PyObject * kwds)
+AerospikeClient * AerospikeClient_New(PyObject * parent, PyObject * args, PyObject * kwds)
 {
-    PyObject * client = AerospikeClientType.tp_new(&AerospikeClientType, args, kwds);
-    AerospikeClientType.tp_init(client, args, kwds);
-	return client;
+    AerospikeClient * self = (AerospikeClient *) AerospikeClient_Type.tp_new(&AerospikeClient_Type, args, kwds);
+    AerospikeClient_Type.tp_init((PyObject *) self, args, kwds);
+	return self;
 }

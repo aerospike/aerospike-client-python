@@ -5,17 +5,8 @@
 
 #include <aerospike/as_query.h>
 
+#include "types.h"
 #include "client.h"
-
-/*******************************************************************************
- * TYPES
- ******************************************************************************/
-
-typedef struct {
-	PyObject_HEAD
-	AerospikeClient * client;
-	as_query query;
-} AerospikeQuery;
 
 /*******************************************************************************
  * FUNCTIONS
@@ -23,7 +14,7 @@ typedef struct {
 
 bool AerospikeQuery_Ready(void);
 
-PyObject * AerospikeQuery_Create(PyObject * self, PyObject * args, PyObject * kwds);
+AerospikeQuery * AerospikeQuery_New(AerospikeClient * client, PyObject * args, PyObject * kwds);
 
 /*******************************************************************************
  * OPERATIONS
@@ -41,7 +32,7 @@ PyObject * AerospikeQuery_Create(PyObject * self, PyObject * args, PyObject * kw
  *		query.select(bin, bin, bin)
  *
  */
-PyObject * AerospikeQuery_Select(AerospikeQuery * self, PyObject * args, PyObject * kwds);
+AerospikeQuery * AerospikeQuery_Select(AerospikeQuery * self, PyObject * args, PyObject * kwds);
 
 /**
  * Add a where predicate to the query.
@@ -49,7 +40,7 @@ PyObject * AerospikeQuery_Select(AerospikeQuery * self, PyObject * args, PyObjec
  *		query.where(bin, predicate)
  *
  */
-PyObject * AerospikeQuery_Where(AerospikeQuery * self, PyObject * args, PyObject * kwds);
+AerospikeQuery * AerospikeQuery_Where(AerospikeQuery * self, PyObject * args);
 
 /**
  * Apply the specified udf on the results of the query.
@@ -57,7 +48,7 @@ PyObject * AerospikeQuery_Where(AerospikeQuery * self, PyObject * args, PyObject
  *		query.apply(module, function, arglist)
  *
  */
-PyObject * AerospikeQuery_Apply(AerospikeQuery * self, PyObject * args, PyObject * kwds);
+AerospikeQuery * AerospikeQuery_Apply(AerospikeQuery * self, PyObject * args, PyObject * kwds);
 
 /**
  * Execute the query and call the callback for each result returned.

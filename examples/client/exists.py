@@ -65,7 +65,7 @@ key = args.pop()
 
 try:
 
-  (key, metadata) = client.exists((options.namespace, options.set, key))
+  (key, metadata) = client.exists((options.namespace, None, key))
 
   if metadata != None:
     print(metadata)
@@ -75,8 +75,8 @@ try:
     print('error: Not Found.', file=sys.stderr)
     rc = 1
 
-except Exception as e:
-  print("error: {0}".format(e), file=sys.stderr)
+except Exception, eargs:
+  print("error: {0}".format(eargs), file=sys.stderr)
   rc = 1
 
 ################################################################

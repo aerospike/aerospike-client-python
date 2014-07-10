@@ -220,6 +220,7 @@ as_status pyobject_to_key(as_error * err, PyObject * py_keytuple, as_key * key)
 {
 	as_error_reset(err);
 
+	Py_ssize_t size = 0;
 	PyObject * py_ns = NULL;
 	PyObject * py_set = NULL;
 	PyObject * py_key = NULL;
@@ -233,10 +234,19 @@ as_status pyobject_to_key(as_error * err, PyObject * py_keytuple, as_key * key)
 		return as_error_update(err, AEROSPIKE_ERR_PARAM, "key is null");
 	}
 	else if ( PyTuple_Check(py_keytuple) ) {
+		size = PyTuple_Size(py_keytuple);
+
+		if ( size < 3 || size > 4 ) {
+			return as_error_update(err, AEROSPIKE_ERR_PARAM, "key tuple must be (Namespace, Set, Key) or (Namespace, Set, None, Digest)");
+		}
+
 		py_ns = PyTuple_GetItem(py_keytuple, 0);
 		py_set = PyTuple_GetItem(py_keytuple, 1);
 		py_key = PyTuple_GetItem(py_keytuple, 2);
-		py_digest = PyTuple_GetItem(py_keytuple, 3);
+
+		if ( size == 4 ) {
+			py_digest = PyTuple_GetItem(py_keytuple, 3);
+		}
 	}
 	else if ( PyDict_Check(py_keytuple) ) {
 		py_ns = PyDict_GetItemString(py_keytuple, "ns");
@@ -259,7 +269,7 @@ as_status pyobject_to_key(as_error * err, PyObject * py_keytuple, as_key * key)
 		ns = PyString_AsString(py_ns);
 	}
 
-	if ( py_set ) {
+	if ( py_set && py_set != Py_None ) {
 		if ( PyString_Check(py_set) ) {
 			set = PyString_AsString(py_set);
 		}

@@ -3,27 +3,12 @@
 #include <Python.h>
 #include <stdbool.h>
 
-// #include <aerospike/aerospike.h>
-// #include <aerospike/as_config.h>
-// #include <aerospike/as_error.h>
-// #include <aerospike/as_policy.h>
+#include "types.h"
 
 #define TRACE() printf("%s:%d\n",__FILE__,__LINE__)
 
 /*******************************************************************************
- * TYPES
- ******************************************************************************/
-
-struct aerospike_s;
-// typedef struct aerospike_s aerospike;
-
-typedef struct {
-	PyObject_HEAD
-	struct aerospike_s * as;
-} AerospikeClient;
-
-/*******************************************************************************
- * FUNCTIONS
+ * CLIENT TYPE
  ******************************************************************************/
 
 bool AerospikeClient_Ready(void);
@@ -31,7 +16,7 @@ bool AerospikeClient_Ready(void);
 /**
  * Create a new Aerospike client object and connect to the database.
  */
-PyObject * AerospikeClient_Create(PyObject * self, PyObject * args, PyObject * kwds);
+AerospikeClient * AerospikeClient_New(PyObject * self, PyObject * args, PyObject * kwds);
 
 /*******************************************************************************
  * CONNECTION OPERATIONS
@@ -118,6 +103,11 @@ PyObject * AerospikeClient_Remove_Invoke(
 	AerospikeClient * self, 
 	PyObject * py_key, PyObject * py_policy);
 
+
+/*******************************************************************************
+ * KEY OPERATIONS (DEPRECATED)
+ ******************************************************************************/
+
 /**
  * This will initialize a key object, which can be used to peform key 
  * operations.
@@ -132,9 +122,7 @@ PyObject * AerospikeClient_Remove_Invoke(
  *
  * @deprecated
  */
-PyObject * AerospikeClient_Key(AerospikeClient * self, PyObject * args, PyObject * kwds);
-
-
+AerospikeKey * AerospikeClient_Key(AerospikeClient * self, PyObject * args, PyObject * kwds);
 
 /*******************************************************************************
  * SCAN OPERATIONS
@@ -159,7 +147,7 @@ PyObject * AerospikeClient_Key(AerospikeClient * self, PyObject * args, PyObject
  *			print record
  *
  */
-PyObject * AerospikeClient_Scan(AerospikeClient * self, PyObject * args, PyObject * kwds);
+AerospikeScan * AerospikeClient_Scan(AerospikeClient * self, PyObject * args, PyObject * kwds);
 
 /*******************************************************************************
  * QUERY OPERATIONS
@@ -184,7 +172,7 @@ PyObject * AerospikeClient_Scan(AerospikeClient * self, PyObject * args, PyObjec
  *			print result
  *
  */
-PyObject * AerospikeClient_Query(AerospikeClient * self, PyObject * args, PyObject * kwds);
+AerospikeQuery * AerospikeClient_Query(AerospikeClient * self, PyObject * args, PyObject * kwds);
 
 /*******************************************************************************
  * INFO OPERATIONS

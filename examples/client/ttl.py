@@ -141,7 +141,7 @@ config = {
   'hosts': [ (options.host, options.port) ]
 }
 
-print('Connect to Server: %s', config)
+print('Connect to Server: ', config)
 client = aerospike.client(config).connect()
 
 ################################################################################
@@ -212,16 +212,13 @@ def check_records(start, wait=0, message=None):
   if wait:
     time.sleep(wait)
 
-  n = options.namespace
-  s = options.set
-
   stop = time.time()
   duration = int(stop - start)
 
   print_header('CHECK :: wait=%s duration=%s' % (wait, duration), message)
 
   try:
-    print_records([client.key(n, s, k).get() for k in KEYS],'  ')
+    print_records([client.get((options.namespace, options.set, k)) for k in KEYS],'  ')
   except Exception as e:
     print("error: {0}".format(e), file=sys.stderr)
     sys.exit(1)
@@ -232,10 +229,11 @@ def delete_records():
   try:
     for key in KEYS:
       # first remove the existing record
-      client.key(options.namespace, options.set, key).remove()
-  except Exception as e:
-    print("error: {0}".format(e), file=sys.stderr)
-    sys.exit(1)
+      client.remove((options.namespace, options.set, key))
+  except Exception, err:
+    if err[0]['code'] != 602:
+      print("delete_records() error: {0}".format(err[0]), file=sys.stderr)
+      sys.exit(1)
 
 def write_records():
   try:
@@ -250,7 +248,8 @@ def write_records():
       try:
         # write a new record
         # ttl=None is equivalent to not setting a ttl
-        client.key(options.namespace, options.set, key).put(rec, {'ttl':ttl})
+        print("wirting key :=", key)
+        client.put((options.namespace, options.set, key), rec, {'ttl':ttl})
 
       except Exception as e:
         if ttl > TTL_MAX:

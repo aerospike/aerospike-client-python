@@ -61,10 +61,16 @@ client = aerospike.client(config).connect()
 ################################################################
 
 rc = 0
+
+namespace = options.namespace if options.namespace and options.namespace != 'None' else None
+set = options.set if options.set and options.set != 'None' else None
 key = args.pop()
 
+
 try:
-  (key, metadata, record) = client.get((options.namespace, options.set, key))
+  keyt = (namespace, set, key)
+  policy = None
+  (key, metadata, record) = client.get(keyt, policy)
 
   if metadata != None:
     print(metadata)

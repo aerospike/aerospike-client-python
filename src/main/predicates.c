@@ -1,0 +1,79 @@
+/**
+ * from aerospike import predicates as p
+ *
+ * q = client.query(ns,set).where(p.equals("bin",1))
+ */
+
+#include <Python.h>
+#include <aerospike/as_query.h>
+#include <aerospike/as_error.h>
+
+#include "conversions.h"
+
+static PyObject * AerospikePredicates_Equals(PyObject * self, PyObject * args)
+{
+	PyObject * py_bin = NULL;
+	PyObject * py_val = NULL;
+
+	if ( PyArg_ParseTuple(args, "OO:equals", 
+			&py_bin, &py_val) == false ) {
+		return NULL;
+	}
+
+	if ( PyInt_Check(py_val) || PyLong_Check(py_val) ) {
+		return Py_BuildValue("iOO", AS_PREDICATE_INTEGER_EQUAL, py_bin, py_val);
+	}
+	else if ( PyString_Check(py_val) ) {
+		return Py_BuildValue("iOO", AS_PREDICATE_STRING_EQUAL, py_bin, py_val);
+	}
+
+	// Return an error
+	as_error err;
+	as_error_update(&err, AEROSPIKE_ERR_PARAM, "equals() expects either an integer or string value.");
+
+	PyObject * py_err = NULL;
+	error_to_pyobject(&err, &py_err);
+	PyErr_SetObject(PyExc_Exception, py_err);
+
+	return NULL;
+
+}
+
+static PyObject * AerospikePredicates_Between(PyObject * self, PyObject * args)
+{
+	PyObject * py_bin = NULL;
+	PyObject * py_min = NULL;
+	PyObject * py_max = NULL;
+
+	if ( PyArg_ParseTuple(args, "OOO:between", 
+			&py_bin, &py_min, &py_max) == false ) {
+		return NULL;
+	}
+
+	if ( (PyInt_Check(py_min) || PyLong_Check(py_min)) && (PyInt_Check(py_max) || PyLong_Check(py_max)) ) {
+		return Py_BuildValue("iOOO", AS_PREDICATE_INTEGER_RANGE, py_bin, py_min, py_max);
+	}
+
+	// Return an error
+	as_error err;
+	as_error_update(&err, AEROSPIKE_ERR_PARAM, "between() expects two integer values.");
+
+	PyObject * py_err = NULL;
+	error_to_pyobject(&err, &py_err);
+	PyErr_SetObject(PyExc_Exception, py_err);
+
+	return NULL;
+}
+
+static PyMethodDef AerospikePredicates_Methods[] = {
+	{"equals",		(PyCFunction) AerospikePredicates_Equals,	METH_VARARGS, "Tests whether a bin's value equals the specified value."},
+	{"between",		(PyCFunction) AerospikePredicates_Between,	METH_VARARGS, "Tests whether a bin's value is within the specified range."},
+	{NULL, NULL, 0, NULL}
+};
+
+
+PyObject * AerospikePredicates_New()
+{
+	PyObject * module = Py_InitModule("predicates", AerospikePredicates_Methods);
+	return module;
+}

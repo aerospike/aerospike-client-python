@@ -12,7 +12,7 @@
 #include "policy.h"
 
 PyObject * AerospikeClient_Put_Invoke(
-	AerospikeClient * client, 
+	AerospikeClient * self, 
 	PyObject * py_key, PyObject * py_bins, PyObject * py_meta, PyObject * py_policy)
 {
 	// Aerospike Client Arguments
@@ -44,7 +44,7 @@ PyObject * AerospikeClient_Put_Invoke(
 	}
 
 	// Invoke operation
-	aerospike_key_put(client->as, &err, policy_p, &key, &rec);
+	aerospike_key_put(self->as, &err, policy_p, &key, &rec);
 	
 CLEANUP:
 
@@ -61,7 +61,7 @@ CLEANUP:
 	return PyLong_FromLong(0);
 }
 
-PyObject * AerospikeClient_Put(AerospikeClient * client, PyObject * args, PyObject * kwds)
+PyObject * AerospikeClient_Put(AerospikeClient * self, PyObject * args, PyObject * kwds)
 {
 	// Python Function Arguments
 	PyObject * py_key = NULL;
@@ -79,7 +79,7 @@ PyObject * AerospikeClient_Put(AerospikeClient * client, PyObject * args, PyObje
 	}
 
 	// Invoke Operation
-	return AerospikeClient_Put_Invoke(client, 
+	return AerospikeClient_Put_Invoke(self, 
 		py_key, py_bins, py_meta, py_policy
 		);
 }

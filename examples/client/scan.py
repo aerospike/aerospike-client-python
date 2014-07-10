@@ -34,6 +34,10 @@ optparser.add_option(
   "-s", "--set", dest="set", type="string", default="demo", metavar="<SET>",
   help="Port of the Aerospike server.")
 
+optparser.add_option(
+  "-b", "--bins", dest="bins", type="string", action="append", 
+  help="Bins to select from each record.")
+
 (options, args) = optparser.parse_args()
 
 if options.help:
@@ -59,11 +63,17 @@ rc = 0
 
 try:
   s = client.scan(options.namespace, options.set)
+  
+  if options.bins and len(options.bins) > 0:
+    s.select(*options.bins)
 
-  records = s.results()
+  records = []
 
-  for (key,meta,record) in records:
+  def callback((key, meta, record)):
+    records.append(record)
     print(record)
+
+  s.foreach(callback)
 
   print("---")
   if len(records) == 1:

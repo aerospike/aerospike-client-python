@@ -12,7 +12,7 @@
 #include "policy.h"
 
 PyObject * AerospikeClient_Get_Invoke(
-	AerospikeClient * client, 
+	AerospikeClient * self, 
 	PyObject * py_key, PyObject * py_policy)
 {
 	// Python Return Value
@@ -44,7 +44,7 @@ PyObject * AerospikeClient_Get_Invoke(
 	as_record_init(rec, 0);
 
 	// Invoke operation
-	aerospike_key_get(client->as, &err, NULL, &key, &rec);
+	aerospike_key_get(self->as, &err, NULL, &key, &rec);
 
 	if ( err.code == AEROSPIKE_OK ) {
 		record_to_pyobject(&err, rec, &key, &py_rec);
@@ -81,7 +81,7 @@ CLEANUP:
 	return py_rec;
 }
 
-PyObject * AerospikeClient_Get(AerospikeClient * client, PyObject * args, PyObject * kwds)
+PyObject * AerospikeClient_Get(AerospikeClient * self, PyObject * args, PyObject * kwds)
 {
 	// Python Function Arguments
 	PyObject * py_key = NULL;
@@ -97,5 +97,5 @@ PyObject * AerospikeClient_Get(AerospikeClient * client, PyObject * args, PyObje
 	}
 
 	// Invoke Operation
-	return AerospikeClient_Get_Invoke(client, py_key, py_policy);
+	return AerospikeClient_Get_Invoke(self, py_key, py_policy);
 }

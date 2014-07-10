@@ -7,29 +7,27 @@
 #include "key.h"
 #include "query.h"
 #include "scan.h"
+#include "predicates.h"
 
 static PyMethodDef Aerospike_Methods[] = {
-	
-	// Create a new client object to the database
-	{"client",		(PyCFunction) AerospikeClient_Create,	METH_VARARGS | METH_KEYWORDS, "Create a new client."},
-	
+	{"client",		(PyCFunction) AerospikeClient_New,	METH_VARARGS | METH_KEYWORDS, "Create a new client."},	
 	{NULL, NULL, 0, NULL}
 };
 
 PyMODINIT_FUNC initaerospike()
 {
-	PyObject * m;
-
+	// Makes things "thread-safe"
 	PyEval_InitThreads();
 
+	// Make ann types, ready
 	AerospikeClient_Ready();
 	AerospikeKey_Ready();
 	AerospikeQuery_Ready();
 	AerospikeScan_Ready();
 
 
-	m = Py_InitModule3("aerospike", Aerospike_Methods, "documentation string ....");
+	PyObject * aerospike = Py_InitModule3("aerospike", Aerospike_Methods, "documentation string ....");
 
-	if (m == NULL)
-		return;
+	PyObject * predicates = AerospikePredicates_New();
+	PyModule_AddObject(aerospike, PyModule_GetName(predicates), predicates);
 }

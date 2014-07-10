@@ -12,9 +12,6 @@
 
 PyObject * AerospikeKey_Apply(AerospikeKey * key, PyObject * args, PyObject * kwds)
 {
-	// Client Object
-	AerospikeClient * client = key->client;
-
 	// Python Function Arguments
 	PyObject * py_key = key->key;
 	PyObject * py_module = NULL;
@@ -32,6 +29,6 @@ PyObject * AerospikeKey_Apply(AerospikeKey * key, PyObject * args, PyObject * kw
 	}
 
 	// Invoke Operation
-	return AerospikeClient_Apply_Invoke(client, py_key, py_module, py_function, 
+	return AerospikeClient_Apply_Invoke(key->client, py_key, py_module, py_function, 
 		py_arglist, py_policy);
 }

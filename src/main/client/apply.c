@@ -12,7 +12,7 @@
 #include "policy.h"
 
 PyObject * AerospikeClient_Apply_Invoke(
-	AerospikeClient * client, 
+	AerospikeClient * self, 
 	PyObject * py_key, PyObject * py_module, PyObject * py_function, 
 	PyObject * py_arglist, PyObject * py_policy)
 {
@@ -54,7 +54,7 @@ PyObject * AerospikeClient_Apply_Invoke(
 	function = PyString_AsString(py_function);
 
 	// Invoke operation
-	aerospike_key_apply(client->as, &err, policy_p, &key, module, function, arglist, &result);
+	aerospike_key_apply(self->as, &err, policy_p, &key, module, function, arglist, &result);
 
 	if ( err.code == AEROSPIKE_OK ) {
 		val_to_pyobject(&err, result, &py_result);
@@ -76,7 +76,7 @@ CLEANUP:
 }
 
 
-PyObject * AerospikeClient_Apply(AerospikeClient * client, PyObject * args, PyObject * kwds)
+PyObject * AerospikeClient_Apply(AerospikeClient * self, PyObject * args, PyObject * kwds)
 {
 	// Python Function Arguments
 	PyObject * py_key = NULL;
@@ -95,6 +95,6 @@ PyObject * AerospikeClient_Apply(AerospikeClient * client, PyObject * args, PyOb
 	}
 
 	// Invoke Operation
-	return AerospikeClient_Apply_Invoke(client, py_key, py_module, py_function, 
+	return AerospikeClient_Apply_Invoke(self, py_key, py_module, py_function, 
 		py_arglist, py_policy);
 }

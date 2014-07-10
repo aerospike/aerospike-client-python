@@ -12,7 +12,7 @@
 #include "policy.h"
 
 PyObject * AerospikeClient_Exists_Invoke(
-	AerospikeClient * client, 
+	AerospikeClient * self, 
 	PyObject * py_key, PyObject * py_policy)
 {
 	// Python Return Value
@@ -41,7 +41,7 @@ PyObject * AerospikeClient_Exists_Invoke(
 	}
 
 	// Invoke operation
-	aerospike_key_exists(client->as, &err, policy_p, &key, &rec);
+	aerospike_key_exists(self->as, &err, policy_p, &key, &rec);
 
 	if ( err.code == AEROSPIKE_OK ) {
 
@@ -84,7 +84,7 @@ CLEANUP:
 	return py_result;
 }
 
-PyObject * AerospikeClient_Exists(AerospikeClient * client, PyObject * args, PyObject * kwds)
+PyObject * AerospikeClient_Exists(AerospikeClient * self, PyObject * args, PyObject * kwds)
 {
 	// Python Function Arguments
 	PyObject * py_key = NULL;
@@ -100,5 +100,5 @@ PyObject * AerospikeClient_Exists(AerospikeClient * client, PyObject * args, PyO
 	}
 
 	// Invoke Operation
-	return AerospikeClient_Exists_Invoke(client, py_key, py_policy);
+	return AerospikeClient_Exists_Invoke(self, py_key, py_policy);
 }

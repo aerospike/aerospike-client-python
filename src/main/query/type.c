@@ -15,12 +15,12 @@
  * PYTHON TYPE METHODS
  ******************************************************************************/
 
-static PyMethodDef AerospikeQueryType_Methods[] = {
+static PyMethodDef AerospikeQuery_Type_Methods[] = {
     {"apply",	(PyCFunction) AerospikeQuery_Apply,		METH_VARARGS | METH_KEYWORDS, "Apply a UDF on the results of the query."},
     {"foreach",	(PyCFunction) AerospikeQuery_Foreach,	METH_VARARGS | METH_KEYWORDS, "Iterate over each result and call the callback function."},
     {"results",	(PyCFunction) AerospikeQuery_Results,	METH_VARARGS | METH_KEYWORDS, "Get a record."},
     {"select",	(PyCFunction) AerospikeQuery_Select,	METH_VARARGS | METH_KEYWORDS, "Add bins to select in the query."},
-    {"where",	(PyCFunction) AerospikeQuery_Where,		METH_VARARGS | METH_KEYWORDS, "Add a where predicate to the query."},
+    {"where",	(PyCFunction) AerospikeQuery_Where,		METH_VARARGS, "Add a where predicate to the query."},
 	{NULL}
 };
 
@@ -28,7 +28,7 @@ static PyMethodDef AerospikeQueryType_Methods[] = {
  * PYTHON TYPE HOOKS
  ******************************************************************************/
 
-static PyObject * AerospikeQueryType_New(PyTypeObject * type, PyObject * args, PyObject * kwds)
+static PyObject * AerospikeQuery_Type_New(PyTypeObject * type, PyObject * args, PyObject * kwds)
 {
 	AerospikeQuery * self = NULL;
 
@@ -41,16 +41,14 @@ static PyObject * AerospikeQueryType_New(PyTypeObject * type, PyObject * args, P
 	return (PyObject *) self;
 }
 
-static int AerospikeQueryType_Init(AerospikeQuery * self, PyObject * args, PyObject * kwds)
+static int AerospikeQuery_Type_Init(AerospikeQuery * self, PyObject * args, PyObject * kwds)
 {
-	PyObject * py_client = PyTuple_GetItem(args, 0);
-	PyObject * py_args = PyTuple_GetItem(args, 1);
 	PyObject * py_namespace = NULL;
 	PyObject * py_set = NULL;
 	
 	static char * kwlist[] = {"namespace", "set", NULL};
 
-	if ( PyArg_ParseTupleAndKeywords(py_args, kwds, "O|O:key", kwlist, 
+	if ( PyArg_ParseTupleAndKeywords(args, kwds, "O|O:key", kwlist, 
 		&py_namespace, &py_set) == false ) {
 		return 0;
 	}
@@ -66,15 +64,12 @@ static int AerospikeQueryType_Init(AerospikeQuery * self, PyObject * args, PyObj
 		set = PyString_AsString(py_set);
 	}
 
-	Py_INCREF(py_client);
-
-	self->client = (AerospikeClient *) py_client;
 	as_query_init(&self->query, namespace, set);
 
     return 0;
 }
 
-static void AerospikeQueryType_Dealloc(PyObject * self)
+static void AerospikeQuery_Type_Dealloc(PyObject * self)
 {
     self->ob_type->tp_free((PyObject *) self);
 }
@@ -83,14 +78,14 @@ static void AerospikeQueryType_Dealloc(PyObject * self)
  * PYTHON TYPE DESCRIPTOR
  ******************************************************************************/
 
-static PyTypeObject AerospikeQueryType = {
+static PyTypeObject AerospikeQuery_Type = {
 	PyObject_HEAD_INIT(NULL)
 
     .ob_size			= 0,
     .tp_name			= "aerospike.query",
     .tp_basicsize		= sizeof(AerospikeQuery),
     .tp_itemsize		= 0,
-    .tp_dealloc			= (destructor) AerospikeQueryType_Dealloc,
+    .tp_dealloc			= (destructor) AerospikeQuery_Type_Dealloc,
     .tp_print			= 0,
     .tp_getattr			= 0,
     .tp_setattr			= 0,
@@ -113,7 +108,7 @@ static PyTypeObject AerospikeQueryType = {
     .tp_weaklistoffset	= 0,
     .tp_iter			= 0,
     .tp_iternext		= 0,
-    .tp_methods			= AerospikeQueryType_Methods,
+    .tp_methods			= AerospikeQuery_Type_Methods,
     .tp_members			= 0,
     .tp_getset			= 0,
     .tp_base			= 0,
@@ -121,9 +116,9 @@ static PyTypeObject AerospikeQueryType = {
     .tp_descr_get		= 0,
     .tp_descr_set		= 0,
     .tp_dictoffset		= 0,
-    .tp_init			= (initproc) AerospikeQueryType_Init,
+    .tp_init			= (initproc) AerospikeQuery_Type_Init,
     .tp_alloc			= 0,
-    .tp_new				= AerospikeQueryType_New
+    .tp_new				= AerospikeQuery_Type_New
 };
 
 /*******************************************************************************
@@ -132,12 +127,14 @@ static PyTypeObject AerospikeQueryType = {
 
 bool AerospikeQuery_Ready()
 {
-	return PyType_Ready(&AerospikeQueryType) < 0;
+	return PyType_Ready(&AerospikeQuery_Type) < 0;
 }
 
-PyObject * AerospikeQuery_Create(PyObject * self, PyObject * args, PyObject * kwds)
+AerospikeQuery * AerospikeQuery_New(AerospikeClient * client, PyObject * args, PyObject * kwds)
 {
-    PyObject * query = AerospikeQueryType.tp_new(&AerospikeQueryType, args, kwds);
-    AerospikeQueryType.tp_init(query, args, kwds);
-	return query;
+    AerospikeQuery * self = (AerospikeQuery *) AerospikeQuery_Type.tp_new(&AerospikeQuery_Type, args, kwds);
+    self->client = client;
+	Py_INCREF(client);
+    AerospikeQuery_Type.tp_init((PyObject *) self, args, kwds);
+	return self;
 }

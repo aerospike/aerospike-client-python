@@ -37,6 +37,7 @@ static bool each_result(const as_val * val, void * udata)
 	val_to_pyobject(err, val, &py_result);
 
 	py_arglist = Py_BuildValue("(O)", py_result);
+
 	PyEval_CallObject(py_callback, py_arglist);
 
 	Py_DECREF(py_arglist);
@@ -50,8 +51,6 @@ PyObject * AerospikeScan_Foreach(AerospikeScan * self, PyObject * args, PyObject
 {
 	TRACE();
 	
-	AerospikeScan * py_scan = self;
-	AerospikeClient * py_client = py_scan->client;
 	PyObject * py_callback = NULL;
 	PyObject * py_policy = NULL;
 
@@ -74,7 +73,7 @@ PyObject * AerospikeScan_Foreach(AerospikeScan * self, PyObject * args, PyObject
 	
 	PyThreadState * _save = PyEval_SaveThread();
 
-	aerospike_scan_foreach(py_client->as, &err, NULL, &py_scan->scan, each_result, &data);
+	aerospike_scan_foreach(self->client->as, &err, NULL, &self->scan, each_result, &data);
 
 	PyEval_RestoreThread(_save);
 	
