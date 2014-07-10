@@ -78,11 +78,10 @@ try:
     key = args.pop()
     policy = None
 
-    (key, metadata, record) = client.get((namespace, set, key), policy)
+    (key, metadata, record)= client.get((namespace, set, key), policy)
 
     if metadata != None:
-      print(metadata)
-      print(record)
+      print(key, metadata, record)
       print("---")
       print("OK, 1 record found.")
     else:

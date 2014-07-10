@@ -84,11 +84,11 @@ try:
     
     print("OK, 1 record removed.")
 
-  except Exception, e:
-    if e[0]['code'] == 602:
+  except Exception, (code,msg,file,line):
+    if code == 602:
       print("error: Record not found")
     else:
-      print("error: {0}".format(e), file=sys.stderr)
+      print("error: {0}".format((code,msg,file,line)), file=sys.stderr)
       rc = 1
 
   # ----------------------------------------------------------------------------
@@ -101,9 +101,8 @@ except Exception, eargs:
   print("error: {0}".format(eargs), file=sys.stderr)
   exitCode = 3
 
-
 ################################################################################
 # Exit
 ################################################################################
 
-sys.exit(rc)
+sys.exit(exitCode)

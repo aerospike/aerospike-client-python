@@ -88,13 +88,13 @@ try:
     key = args.pop()
 
     record = {
-      'i': 123,
-      's': 'abc',
-      # 'b': bytearray(['d','e','f']),
+      # 'i': 123,
+      # 's': 'abc',
+      'b': bytearray(['d','e','f']),
       # 'l': [123, 'abc', bytearray(['d','e','f']), ['x', 'y', 'z'], {'x': 1, 'y': 2, 'z': 3}],
       # 'm': {'i': 123, 's': 'abc', 'b': bytearray(['d','e','f']), 'l': ['x', 'y', 'z'], 'd': {'x': 1, 'y': 2, 'z': 3}}
-      'l': [123, 'abc', ['x', 'y', 'z'], {'x': 1, 'y': 2, 'z': 3}],
-      'm': {'i': 123, 's': 'abc', 'l': ['x', 'y', 'z'], 'd': {'x': 1, 'y': 2, 'z': 3}}
+      # 'l': [123, 'abc', ['x', 'y', 'z'], {'x': 1, 'y': 2, 'z': 3}],
+      # 'm': {'i': 123, 's': 'abc', 'l': ['x', 'y', 'z'], 'd': {'x': 1, 'y': 2, 'z': 3}}
     }
 
     meta = {'ttl': options.ttl, 'gen': options.gen}

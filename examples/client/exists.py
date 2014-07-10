@@ -82,7 +82,7 @@ try:
     (key, metadata) = client.exists((namespace, set, key), policy)
 
     if metadata != None:
-      print(metadata)
+      print(key, metadata)
       print("---")
       print("OK, 1 record found.")
     else:
