@@ -2,9 +2,13 @@
 
 ## Dependencies
 
-The Aerospike Python client depends on the Aerospike C client and Lua.
+The Aerospike Python client depends on:
 
-This was tested on Python 2.6.6, but may work up through Python 3.x. You will need to install Python development packages to build this.
+- The Aerospike C client 
+- Lua 5.1.5
+- Python devel Package
+
+The Aerospike Python Client works on Python 2.6.*, 2.7.* 
 
 
 ### Aerospike C Client
