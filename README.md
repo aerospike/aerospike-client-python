@@ -23,18 +23,18 @@ When downloaded, you will want to extract the contents of the archive and instal
 
 If you are building the Aerospike C Client from source, then set the `AEROSPIKE_C_HOME` to point to the directory containing the C client repository. 
 
-	$ export AEROSPIKE_C_HOME={{path to c client source}}
+	export AEROSPIKE_C_HOME={{path to c client source}}
 
 For example, to get the source code, you can `git clone` the source repository into your home directory:
 
-	$ cd ~
-	$ git clone https://github.com/aerospike/aerospike-client-c
+	cd ~
+	git clone https://github.com/aerospike/aerospike-client-c
 
 Then build the Aerospike C Client library per the instructions provided in the README.md in the repository.
 
 Then you can set the environment variable:
 
-	$ export AEROSPIKE_C_HOME=~/aerospike-client-c
+	export AEROSPIKE_C_HOME=~/aerospike-client-c
 
 
 ### RedHat 6+ and CentOS 6+
@@ -84,13 +84,13 @@ We recommend building Lua from source. To download the source code and build the
 
 To build the library:
 
-	$ python setup.py build --force
+	python setup.py build --force
 
 ### Install
 
 To install the library:
 
-	$ sudo python setup.py install --force
+	sudo python setup.py install --force
 
 ## Examples
 
@@ -107,7 +107,7 @@ Examples are in the `examples` directory. The following examples are available:
 
 Each example provides help/usage information when you specify the `--help` option. For example, for help on the `kvs.py` example, then run:
 
-	$ python examples/client/kvs.py --help
+	python examples/client/kvs.py --help
 
 
 ### Running Examples
