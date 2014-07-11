@@ -7,27 +7,40 @@
 #include "key.h"
 #include "query.h"
 #include "scan.h"
+#include "predicates.h"
 
 static PyMethodDef Aerospike_Methods[] = {
-	// {"connect",		(PyCFunction) AerospikeClient_Create,	METH_VARARGS | METH_KEYWORDS, "Create a new client and connect it to the cluster."},
-	{"client",		(PyCFunction) AerospikeClient_Create,	METH_VARARGS | METH_KEYWORDS, "Create a new client."},
-	{NULL, NULL, 0, NULL}
+
+	{"client",		(PyCFunction) AerospikeClient_New,	METH_VARARGS | METH_KEYWORDS, 
+					"Create a new instance of Client class."},	
+	
+	{NULL}
 };
 
 PyMODINIT_FUNC initaerospike()
 {
-	PyObject * m;
-
+	// Makes things "thread-safe"
 	PyEval_InitThreads();
 
-	AerospikeClient_Ready();
-	AerospikeKey_Ready();
-	AerospikeQuery_Ready();
-	AerospikeScan_Ready();
+	// aerospike Module
+	PyObject * aerospike = Py_InitModule3("aerospike", Aerospike_Methods, "documentation string ....");
+	
+	PyTypeObject * client = AerospikeClient_Ready();
+	Py_INCREF(client);
+	PyModule_AddObject(aerospike, "Client", (PyObject *) client);
 
+	PyTypeObject * key = AerospikeKey_Ready();
+	Py_INCREF(key);
+	PyModule_AddObject(aerospike, "Key", (PyObject *) key);
 
-	m = Py_InitModule3("aerospike", Aerospike_Methods, "documentation string ....");
+	PyTypeObject * query = AerospikeQuery_Ready();
+	Py_INCREF(query);
+	PyModule_AddObject(aerospike, "Query", (PyObject *) query);
 
-	if (m == NULL)
-		return;
+	PyTypeObject * scan = AerospikeScan_Ready();
+	Py_INCREF(scan);
+	PyModule_AddObject(aerospike, "Scan", (PyObject *) scan);
+
+	PyObject * predicates = AerospikePredicates_New();
+	PyModule_AddObject(aerospike, PyModule_GetName(predicates), predicates);
 }

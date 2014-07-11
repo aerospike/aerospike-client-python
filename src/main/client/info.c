@@ -10,7 +10,7 @@
 #include "client.h"
 #include "conversions.h"
 
-bool AerospikeClient_Info_each(const as_error * err, const as_node * node, const char * req, char * res, void * udata)
+static bool AerospikeClient_Info_each(const as_error * err, const as_node * node, const char * req, char * res, void * udata)
 {
 	PyObject * py_err = NULL;
 	PyObject * py_out = NULL;

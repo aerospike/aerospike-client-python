@@ -9,8 +9,8 @@
 #include "conversions.h"
 #include "query.h"
 
-// #undef TRACE
-// #define TRACE()
+#undef TRACE
+#define TRACE()
 
 typedef struct {
 	as_error error;
@@ -34,27 +34,11 @@ static bool each_result(const as_val * val, void * udata)
 	PyGILState_STATE gstate;
 	gstate = PyGILState_Ensure();
 
-	TRACE();
-
 	val_to_pyobject(err, val, &py_result);
-
-	TRACE();
 
 	py_arglist = Py_BuildValue("(O)", py_result);
 	
-	TRACE();
-
-	PyGILState_Release(gstate);
-	
-	TRACE();
-
 	PyEval_CallObject(py_callback, py_arglist);
-	
-	TRACE();
-
-	gstate = PyGILState_Ensure();
-
-	TRACE();
 
 	Py_DECREF(py_arglist);
 
@@ -65,8 +49,6 @@ static bool each_result(const as_val * val, void * udata)
 
 PyObject * AerospikeQuery_Foreach(AerospikeQuery * self, PyObject * args, PyObject * kwds)
 {
-	AerospikeQuery * py_query = self;
-	AerospikeClient * py_client = py_query->client;
 	PyObject * py_callback = NULL;
 	PyObject * py_policy = NULL;
 
@@ -85,7 +67,7 @@ PyObject * AerospikeQuery_Foreach(AerospikeQuery * self, PyObject * args, PyObje
 
 	PyThreadState * _save = PyEval_SaveThread();
 	
-	aerospike_query_foreach(py_client->as, &err, NULL, &py_query->query, each_result, &data);
+	aerospike_query_foreach(self->client->as, &err, NULL, &self->query, each_result, &data);
 
 	PyEval_RestoreThread(_save);
 	

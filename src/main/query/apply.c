@@ -4,7 +4,7 @@
 #include "client.h"
 #include "query.h"
 
-PyObject * AerospikeQuery_Apply(AerospikeQuery * self, PyObject * args, PyObject * kwds)
+AerospikeQuery * AerospikeQuery_Apply(AerospikeQuery * self, PyObject * args, PyObject * kwds)
 {
 	TRACE();
 	

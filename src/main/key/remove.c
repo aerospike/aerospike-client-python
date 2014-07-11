@@ -10,27 +10,20 @@
 #include "conversions.h"
 #include "key.h"
 
-PyObject * AerospikeKey_Remove(AerospikeKey * self, PyObject * args, PyObject * kwds)
+PyObject * AerospikeKey_Remove(AerospikeKey * key, PyObject * args, PyObject * kwds)
 {
-	AerospikeKey * py_key = self;
-	AerospikeClient * py_client = py_key->client;
+	// Python Function Arguments
+	PyObject * py_key = key->key;
 	PyObject * py_policy = NULL;
 
+	// Python Function Keyword Arguments
 	static char * kwlist[] = {"policy", NULL};
-
+	
+	// Python Function Argument Parsing
 	if ( PyArg_ParseTupleAndKeywords(args, kwds, "|O:get", kwlist, &py_policy) == false ) {
 		return NULL;
 	}
 
-	as_error err;
-	as_error_init(&err);
-
-	as_key * key = &py_key->key;
-
-	aerospike_key_remove(py_client->as, &err, NULL, key);
-
-	if ( err.code != AEROSPIKE_OK ) {
-	}
-
-	return PyLong_FromLong(0);
+	// Invoke Operation
+	return AerospikeClient_Remove_Invoke(key->client, py_key, py_policy);
 }

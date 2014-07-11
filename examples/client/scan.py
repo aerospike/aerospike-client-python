@@ -6,83 +6,114 @@ import sys
 
 from optparse import OptionParser
 
-################################################################
-# Option Parsing
-################################################################
+################################################################################
+# Options Parsing
+################################################################################
 
 usage = "usage: %prog [options]"
 
 optparser = OptionParser(usage=usage, add_help_option=False)
 
 optparser.add_option(
-  "-h", "--host", dest="host", type="string", default="127.0.0.1", metavar="<ADDRESS>",
-  help="Address of Aerospike server.")
+	"-h", "--host", dest="host", type="string", default="127.0.0.1", metavar="<ADDRESS>",
+	help="Address of Aerospike server.")
 
 optparser.add_option(
-  "-p", "--port", dest="port", type="int", default=3000, metavar="<PORT>",
-  help="Port of the Aerospike server.")
+	"-p", "--port", dest="port", type="int", default=3000, metavar="<PORT>",
+	help="Port of the Aerospike server.")
 
 optparser.add_option(
-  "--help", dest="help", action="store_true",
-  help="Displays this message.")
+	"--help", dest="help", action="store_true",
+	help="Displays this message.")
 
 optparser.add_option(
-  "-n", "--namespace", dest="namespace", type="string", default="test", metavar="<NS>",
-  help="Port of the Aerospike server.")
+	"-n", "--namespace", dest="namespace", type="string", default="test", metavar="<NS>",
+	help="Port of the Aerospike server.")
 
 optparser.add_option(
-  "-s", "--set", dest="set", type="string", default="demo", metavar="<SET>",
-  help="Port of the Aerospike server.")
+	"-s", "--set", dest="set", type="string", default="demo", metavar="<SET>",
+	help="Port of the Aerospike server.")
+
+optparser.add_option(
+	"-b", "--bins", dest="bins", type="string", action="append", 
+	help="Bins to select from each record.")
 
 (options, args) = optparser.parse_args()
 
 if options.help:
-  optparser.print_help()
-  print()
-  sys.exit(1)
+	optparser.print_help()
+	print()
+	sys.exit(1)
 
-################################################################
-# Connect to Cluster
-################################################################
+################################################################################
+# Client Configuration
+################################################################################
 
 config = {
-  'hosts': [ (options.host, options.port) ]
+	'hosts': [ (options.host, options.port) ]
 }
 
-client = aerospike.client(config).connect()
+################################################################################
+# Application
+################################################################################
 
-################################################################
-# Perform Operation
-################################################################
-
-rc = 0
+exitCode = 0
 
 try:
-  s = client.scan(options.namespace, options.set)
 
-  records = s.results()
+	# ----------------------------------------------------------------------------
+	# Connect to Cluster
+	# ----------------------------------------------------------------------------
 
-  for (key,meta,record) in records:
-    print(record)
+	client = aerospike.client(config).connect()
 
-  print("---")
-  if len(records) == 1:
-    print("OK, 1 record found.")
-  else:
-    print("OK, %d records found." % len(records))
+	# ----------------------------------------------------------------------------
+	# Perform Operation
+	# ----------------------------------------------------------------------------
 
-except Exception as e:
-  print("error: {0}".format(e), file=sys.stderr)
-  rc = 1
+	try:
+		
+		namespace = options.namespace if options.namespace and options.namespace != 'None' else None
+		set = options.set if options.set and options.set != 'None' else None
+		
+		s = client.scan(namespace, set)
+		
+		if options.bins and len(options.bins) > 0:
+			# project specified bins
+			s.select(*options.bins)
 
-################################################################
-# Close Connection to Cluster
-################################################################
+		records = []
 
-client.close()
+		# callback to be called for each record read
+		def callback((key, meta, record)):
+			records.append(record)
+			print(record)
 
-################################################################
+		# invoke the operations, and for each record invoke the callback
+		s.foreach(callback)
+
+		print("---")
+		if len(records) == 1:
+			print("OK, 1 record found.")
+		else:
+			print("OK, %d records found." % len(records))
+
+	except Exception as e:
+		print("error: {0}".format(e), file=sys.stderr)
+		rc = 1
+
+	# ----------------------------------------------------------------------------
+	# Close Connection to Cluster
+	# ----------------------------------------------------------------------------
+
+	client.close()
+
+except Exception, eargs:
+	print("error: {0}".format(eargs), file=sys.stderr)
+	exitCode = 3
+
+################################################################################
 # Exit
-################################################################
+################################################################################
 
-sys.exit(rc)
+sys.exit(exitCode)

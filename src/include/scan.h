@@ -5,25 +5,16 @@
 
 #include <aerospike/as_scan.h>
 
+#include "types.h"
 #include "client.h"
-
-/*******************************************************************************
- * TYPES
- ******************************************************************************/
-
-typedef struct {
-  PyObject_HEAD
-  AerospikeClient * client;
-  as_scan scan;
-} AerospikeScan;
 
 /*******************************************************************************
  * FUNCTIONS
  ******************************************************************************/
 
-bool AerospikeScan_Ready(void);
+PyTypeObject * AerospikeScan_Ready(void);
 
-PyObject * AerospikeScan_Create(PyObject * self, PyObject * args, PyObject * kwds);
+AerospikeScan * AerospikeScan_New(AerospikeClient * client, PyObject * args, PyObject * kwds);
 
 /*******************************************************************************
  * OPERATIONS
@@ -41,7 +32,7 @@ PyObject * AerospikeScan_Create(PyObject * self, PyObject * args, PyObject * kwd
  *    query.select(bin, bin, bin)
  *
  */
-// PyObject * AerospikeScan_Select(AerospikeScan * self, PyObject * args, PyObject * kwds);
+AerospikeScan * AerospikeScan_Select(AerospikeScan * self, PyObject * args, PyObject * kwds);
 
 /**
  * Apply the specified udf on the results of the query.

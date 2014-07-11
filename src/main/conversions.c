@@ -14,6 +14,16 @@
 #include "key.h"
 #include "conversions.h"
 
+#define PY_KEYT_NAMESPACE 0
+#define PY_KEYT_SET 1
+#define PY_KEYT_KEY 2
+#define PY_KEYT_DIGEST 3
+
+#define PY_EXCEPTION_CODE 0
+#define PY_EXCEPTION_MSG 1
+#define PY_EXCEPTION_FILE 2
+#define PY_EXCEPTION_LINE 3
+
 
 as_status pyobject_to_list(as_error * err, PyObject * py_list, as_list ** list)
 {
@@ -97,6 +107,9 @@ as_status pyobject_to_val(as_error * err, PyObject * py_obj, as_val ** val)
 		*val = (as_val *) as_string_new(s, false);
 	}
 	else if ( PyByteArray_Check(py_obj) ) {
+		uint8_t * b = (uint8_t *) PyByteArray_AsString(py_obj);
+		uint32_t z = (uint32_t) PyByteArray_Size(py_obj);
+		*val = (as_val *) as_bytes_new_wrap(b, z, false);
 	}
 	else if ( PyList_Check(py_obj) ) {
 		as_list * list = NULL;
@@ -158,9 +171,13 @@ as_status pyobject_to_record(as_error * err, PyObject * py_rec, PyObject * py_me
 				as_record_set_int64(rec, name, val);
 			}
 			else if ( PyString_Check(value) ) {
-				as_record_set_strp(rec, name, PyString_AsString(value), false);
+				char * val = PyString_AsString(value);
+				as_record_set_strp(rec, name, val, false);
 			}
 			else if ( PyByteArray_Check(value) ) {
+				uint8_t * val = (uint8_t *) PyByteArray_AsString(value);
+				uint32_t sz = (uint32_t) PyByteArray_Size(value);
+				as_record_set_rawp(rec, name, val, sz, false);
 			}
 			else if ( PyList_Check(value) ) {
 				// as_list
@@ -214,86 +231,99 @@ as_status pyobject_to_record(as_error * err, PyObject * py_rec, PyObject * py_me
 	}
 
 	return err->code;
-} // end pyobject_to_record()
+}
 
-// Policy names
-#define PY_POLICY_W_TIMEOUT "timeout"    // Number of milliseconds to wait
-#define PY_POLICY_W_RETRY   "retry"      // Behavior of failed operations
-#define PY_POLICY_W_KEY     "key"        // Behavior of the key
-#define PY_POLICY_W_GEN     "gen" 		 // Behavior of the Generation value
-#define PY_POLICY_W_EXISTS  "exists"     // Behavior for record existence
-
-/**
- * Converts a PyObject into an as_policy_write object.
- * Returns AEROSPIKE_OK on success. On error, the err argument is populated.
- * We assume that the error object and the policy object are already allocated
- * and initialized (although, we do reset the error object here).
- */
-as_status pyobject_to_policy_write(as_error * err_p, PyObject * py_policy,
-									as_policy_write * policy_p)
+as_status pyobject_to_key(as_error * err, PyObject * py_keytuple, as_key * key) 
 {
-	static char * meth = "pyobject_to_policy_write()";
-	char * name;
-	int64_t value;
+	as_error_reset(err);
 
-	as_error_reset(err_p);
+	Py_ssize_t size = 0;
+	PyObject * py_ns = NULL;
+	PyObject * py_set = NULL;
+	PyObject * py_key = NULL;
+	PyObject * py_digest = NULL;
 
-	if (!policy_p) {
+	char * ns = NULL;
+	char * set = NULL;
+
+	if ( !py_keytuple ) {
 		// this should never happen, but if it did...
-		return as_error_update(err_p, AEROSPIKE_ERR_CLIENT, "policy obj is null");
+		return as_error_update(err, AEROSPIKE_ERR_PARAM, "key is null");
+	}
+	else if ( PyTuple_Check(py_keytuple) ) {
+		size = PyTuple_Size(py_keytuple);
+
+		if ( size < 3 || size > 4 ) {
+			return as_error_update(err, AEROSPIKE_ERR_PARAM, "key tuple must be (Namespace, Set, Key) or (Namespace, Set, None, Digest)");
+		}
+
+		py_ns = PyTuple_GetItem(py_keytuple, 0);
+		py_set = PyTuple_GetItem(py_keytuple, 1);
+		py_key = PyTuple_GetItem(py_keytuple, 2);
+
+		if ( size == 4 ) {
+			py_digest = PyTuple_GetItem(py_keytuple, 3);
+		}
+	}
+	else if ( PyDict_Check(py_keytuple) ) {
+		py_ns = PyDict_GetItemString(py_keytuple, "ns");
+		py_set = PyDict_GetItemString(py_keytuple, "set");
+		py_key = PyDict_GetItemString(py_keytuple, "key");
+		py_digest = PyDict_GetItemString(py_keytuple, "digest");
+	}
+	else {
+		return as_error_update(err, AEROSPIKE_ERR_PARAM, "key is invalid");
 	}
 
-	if (!py_policy) {
-		return AEROSPIKE_OK; // Not a problem.  Return quietly.
+
+	if ( ! py_ns ) {
+		return as_error_update(err, AEROSPIKE_ERR_PARAM, "namespace is required");
+	}
+	else if ( ! PyString_Check(py_ns) ) {
+		return as_error_update(err, AEROSPIKE_ERR_PARAM, "namespace must be a string");
+	}
+	else {
+		ns = PyString_AsString(py_ns);
 	}
 
-	if ( PyDict_Check( py_policy ) ) {
-		PyObject *py_key = NULL, *py_value = NULL;
-		Py_ssize_t py_pos = 0;
-
-		// Get the values from the write policy dictionary
-		while (PyDict_Next(py_policy, &py_pos, &py_key, &py_value)) {
-			if (py_key && PyString_Check(py_key)) {
-				name = PyString_AsString(py_key);
-			} else {
-				as_error_update(err_p, AEROSPIKE_ERR_CLIENT,
-						"A policy name must be a string.");
-				continue;
-			}
-
-			if ( py_value && PyInt_Check(py_value)) {
-				value = (int64_t) PyInt_AsLong(py_value);
-			} else {
-				as_error_update(err_p, AEROSPIKE_ERR_CLIENT,
-						"Values must be integer types");
-				continue;
-			}
-
-			if (strcmp(PY_POLICY_W_TIMEOUT, name) == 0) {
-				policy_p->timeout = (uint32_t) value;
-			} else if (strcmp(PY_POLICY_W_RETRY, name) == 0) {
-				policy_p->retry = (as_policy_retry) value;
-			} else if (strcmp(PY_POLICY_W_KEY, name) == 0) {
-				policy_p->key = (as_policy_key) value;
-			} else if (strcmp(PY_POLICY_W_GEN, name) == 0) {
-				policy_p->gen = (as_policy_gen) value;
-			} else if (strcmp(PY_POLICY_W_EXISTS, name) == 0) {
-				policy_p->exists = (as_policy_exists) value;
-			} else {
-				printf("[ERROR]<%s> Unknown Policy Field(%s)\n", meth, name);
-			}
-		} // end while
-	} // end if valid dictionary object
-
-	// If there are any errors, then what's a good strategy?  Do we forget
-	// all we've seen, or do we return as much as we can?
-	if (err_p->code != AEROSPIKE_OK) {
-		printf("[ERROR]<%s>: Something goofy happened\n", meth);
+	if ( py_set && py_set != Py_None ) {
+		if ( PyString_Check(py_set) ) {
+			set = PyString_AsString(py_set);
+		}
+		else {
+			return as_error_update(err, AEROSPIKE_ERR_PARAM, "set must be a string");
+		}
+	}
+	
+	if ( py_key ) {
+		if ( PyString_Check(py_key) ) {
+			char * k = PyString_AsString(py_key);
+			as_key_init_strp(key, ns, set, k, true);
+		}
+		else if ( PyInt_Check(py_key) ) {
+			int64_t k = (int64_t) PyInt_AsLong(py_key);
+			as_key_init_int64(key, ns, set, k);
+		}
+		else if ( PyLong_Check(py_key) ) {
+			int64_t k = (int64_t) PyLong_AsLongLong(py_key);
+			as_key_init_int64(key, ns, set, k);
+		}
+		else if ( PyByteArray_Check(py_key) ) {
+			return as_error_update(err, AEROSPIKE_ERR_PARAM, "key as a byte array is not supported");
+		}
+		else {
+			return as_error_update(err, AEROSPIKE_ERR_PARAM, "key is invalid");
+		}
+	}
+	else if ( py_digest ) {
+		return as_error_update(err, AEROSPIKE_ERR_PARAM, "digest is not supported");
+	}
+	else {
+		return as_error_update(err, AEROSPIKE_ERR_PARAM, "either key or digest is required");
 	}
 
-	return err_p->code;
-} // end pyobject_to_policy_write()
-
+	return err->code;
+}
 
 typedef struct {
 	as_error * err;
@@ -503,23 +533,23 @@ as_status key_to_pyobject(as_error * err, const as_key * key, PyObject ** obj)
 {
 	as_error_reset(err);
 
+	*obj = NULL;
+
 	if ( ! key ) {
 		return as_error_update(err, AEROSPIKE_ERR_CLIENT, "key is null");
 	}
 
-	PyObject * py_key = PyDict_New();
-
+	PyObject * py_namespace = NULL;
+	PyObject * py_set = NULL;
+	PyObject * py_key = NULL;
+	PyObject * py_digest = NULL;
 
     if ( key->ns && strlen(key->ns) > 0 ) {
-    	PyObject * py_ns = PyString_FromString(key->ns);
-		PyDict_SetItemString(py_key, "ns", py_ns);
-		Py_DECREF(py_ns);
+    	py_namespace = PyString_FromString(key->ns);
     }
 
     if ( key->set && strlen(key->set) > 0 ) {
-    	PyObject * py_set = PyString_FromString(key->set);
-		PyDict_SetItemString(py_key, "set", py_set);
-		Py_DECREF(py_set);
+    	py_set = PyString_FromString(key->set);
     }
 
     if ( key->valuep ) {
@@ -528,16 +558,12 @@ as_status key_to_pyobject(as_error * err, const as_key * key, PyObject ** obj)
         switch(type) {
             case AS_INTEGER: {
 				as_integer * ival = as_integer_fromval(val);
-				PyObject * py_ival = PyInt_FromLong((long) as_integer_get(ival));
-				PyDict_SetItemString(py_key, "key", py_ival);
-				Py_DECREF(py_ival);
+				py_key = PyInt_FromLong((long) as_integer_get(ival));
 				break;
 			}
             case AS_STRING: {
 				as_string * sval = as_string_fromval(val);
-				PyObject * py_sval = PyString_FromString(as_string_get(sval));
-				PyDict_SetItemString(py_key, "key", py_sval);
-				Py_DECREF(py_sval);
+				py_key = PyString_FromString(as_string_get(sval));
 				break;
 			}
             case AS_BYTES: {
@@ -546,27 +572,31 @@ as_status key_to_pyobject(as_error * err, const as_key * key, PyObject ** obj)
 					uint32_t bval_size = as_bytes_size(bval);
 					uint8_t * bval_bytes = malloc(bval_size * sizeof(uint8_t));
 					memcpy(bval_bytes, as_bytes_get(bval), bval_size);
-					PyObject * py_bval = PyByteArray_FromStringAndSize((char *) bval_bytes, bval_size);
-					PyDict_SetItemString(py_key, "key", py_bval);
-					Py_DECREF(py_bval);
-					break;
+					py_key = PyByteArray_FromStringAndSize((char *) bval_bytes, bval_size);
 				}
+				break;
 			}
-            default:
-            	break;
+			default: {
+				break;
+			}
         }
     }
 
     if ( key->digest.init ) {
 		uint8_t * digest_bytes = malloc(AS_DIGEST_VALUE_SIZE * sizeof(uint8_t));
 		memcpy(digest_bytes, key->digest.value, AS_DIGEST_VALUE_SIZE);
-		PyObject * py_digest = PyByteArray_FromStringAndSize((char *) digest_bytes, AS_DIGEST_VALUE_SIZE);
-		PyDict_SetItemString(py_key, "digest", py_digest);
-		Py_DECREF(py_digest);
+		py_digest = PyByteArray_FromStringAndSize((char *) digest_bytes, AS_DIGEST_VALUE_SIZE);
     }
 
-	*obj = py_key;
+	PyObject * py_keyobj = PyTuple_New(4);
+
+	PyTuple_SetItem(py_keyobj, PY_KEYT_NAMESPACE, py_namespace == NULL ? Py_None : py_namespace);
+	PyTuple_SetItem(py_keyobj, PY_KEYT_SET, py_set == NULL ? Py_None : py_set);
+	PyTuple_SetItem(py_keyobj, PY_KEYT_KEY, py_key == NULL ? Py_None : py_key);
+	PyTuple_SetItem(py_keyobj, PY_KEYT_DIGEST, py_digest == NULL ? Py_None : py_digest);
 	
+	*obj = py_keyobj;
+
 	return err->code;
 }
 
@@ -669,16 +699,11 @@ bool error_to_pyobject(const as_error * err, PyObject ** obj)
 	PyObject * py_code = PyLong_FromLongLong(err->code);
 	PyObject * py_message = PyString_FromString(err->message);
 
-	PyObject * py_err = PyDict_New();
-	PyDict_SetItemString(py_err, "file", py_file);
-	PyDict_SetItemString(py_err, "line", py_line);
-	PyDict_SetItemString(py_err, "code", py_code);
-	PyDict_SetItemString(py_err, "message", py_message);
-
-	Py_DECREF(py_file);
-	Py_DECREF(py_line);
-	Py_DECREF(py_code);
-	Py_DECREF(py_message);
+	PyObject * py_err = PyTuple_New(4);
+	PyTuple_SetItem(py_err, PY_EXCEPTION_CODE, py_code);
+	PyTuple_SetItem(py_err, PY_EXCEPTION_MSG, py_message);
+	PyTuple_SetItem(py_err, PY_EXCEPTION_FILE, py_file);
+	PyTuple_SetItem(py_err, PY_EXCEPTION_LINE, py_line);
 
 	*obj = py_err;
 	return true;

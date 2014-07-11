@@ -54,8 +54,6 @@ static bool each_result(const as_val * val, void * udata)
 
 PyObject * AerospikeQuery_Results(AerospikeQuery * self, PyObject * args, PyObject * kwds)
 {
-	AerospikeQuery * py_query = self;
-	AerospikeClient * py_client = py_query->client;
 	PyObject * py_policy = NULL;
 	
 	static char * kwlist[] = {"policy", NULL};
@@ -74,7 +72,7 @@ PyObject * AerospikeQuery_Results(AerospikeQuery * self, PyObject * args, PyObje
 	PyThreadState * _save = PyEval_SaveThread();
 	
 	TRACE();
-    aerospike_query_foreach(py_client->as, &err, NULL, &py_query->query, each_result, py_results);
+    aerospike_query_foreach(self->client->as, &err, NULL, &self->query, each_result, py_results);
     
 	TRACE();
 	PyEval_RestoreThread(_save);
