@@ -16,11 +16,22 @@
  ******************************************************************************/
 
 static PyMethodDef AerospikeQuery_Type_Methods[] = {
-    {"apply",	(PyCFunction) AerospikeQuery_Apply,		METH_VARARGS | METH_KEYWORDS, "Apply a UDF on the results of the query."},
-    {"foreach",	(PyCFunction) AerospikeQuery_Foreach,	METH_VARARGS | METH_KEYWORDS, "Iterate over each result and call the callback function."},
-    {"results",	(PyCFunction) AerospikeQuery_Results,	METH_VARARGS | METH_KEYWORDS, "Get a record."},
-    {"select",	(PyCFunction) AerospikeQuery_Select,	METH_VARARGS | METH_KEYWORDS, "Add bins to select in the query."},
-    {"where",	(PyCFunction) AerospikeQuery_Where,		METH_VARARGS, "Add a where predicate to the query."},
+    
+    {"apply",	(PyCFunction) AerospikeQuery_Apply,		METH_VARARGS | METH_KEYWORDS,	
+    			"Apply a Stream UDF on the resultset of the query."},
+    
+    {"foreach",	(PyCFunction) AerospikeQuery_Foreach,	METH_VARARGS | METH_KEYWORDS,	
+    			"Iterate over each record in the resultset and call the callback function."},
+
+    {"results",	(PyCFunction) AerospikeQuery_Results,	METH_VARARGS | METH_KEYWORDS,
+    			"Return a list of all records in the resultset."},
+    
+    {"select",	(PyCFunction) AerospikeQuery_Select,	METH_VARARGS | METH_KEYWORDS,
+    			"Bins to project in the query."},
+
+    {"where",	(PyCFunction) AerospikeQuery_Where,		METH_VARARGS,
+    			"Predicate to be applied to the query."},
+    
 	{NULL}
 };
 
@@ -82,7 +93,7 @@ static PyTypeObject AerospikeQuery_Type = {
 	PyObject_HEAD_INIT(NULL)
 
     .ob_size			= 0,
-    .tp_name			= "aerospike.query",
+    .tp_name			= "aerospike.Query",
     .tp_basicsize		= sizeof(AerospikeQuery),
     .tp_itemsize		= 0,
     .tp_dealloc			= (destructor) AerospikeQuery_Type_Dealloc,
@@ -101,7 +112,10 @@ static PyTypeObject AerospikeQuery_Type = {
     .tp_setattro		= 0,
     .tp_as_buffer		= 0,
     .tp_flags			= Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE,
-    .tp_doc				= "aerospike.query doc",
+    .tp_doc				= 
+    		"The Query class assists in populating the parameters of a query\n"
+    		"operation. To create a new instance of the Query class, call the\n"
+    		"query() method on an instance of a Client class.\n",
     .tp_traverse		= 0,
     .tp_clear			= 0,
     .tp_richcompare		= 0,
@@ -125,9 +139,9 @@ static PyTypeObject AerospikeQuery_Type = {
  * PUBLIC FUNCTIONS
  ******************************************************************************/
 
-bool AerospikeQuery_Ready()
+PyTypeObject * AerospikeQuery_Ready()
 {
-	return PyType_Ready(&AerospikeQuery_Type) < 0;
+	return PyType_Ready(&AerospikeQuery_Type) == 0 ? &AerospikeQuery_Type : NULL;
 }
 
 AerospikeQuery * AerospikeQuery_New(AerospikeClient * client, PyObject * args, PyObject * kwds)

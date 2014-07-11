@@ -12,7 +12,7 @@
  * FUNCTIONS
  ******************************************************************************/
 
-bool AerospikeScan_Ready(void);
+PyTypeObject * AerospikeScan_Ready(void);
 
 AerospikeScan * AerospikeScan_New(AerospikeClient * client, PyObject * args, PyObject * kwds);
 

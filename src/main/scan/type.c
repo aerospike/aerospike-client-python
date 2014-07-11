@@ -16,9 +16,16 @@
  ******************************************************************************/
 
 static PyMethodDef AerospikeScan_Type_Methods[] = {
-    {"foreach",	(PyCFunction) AerospikeScan_Foreach,	METH_VARARGS | METH_KEYWORDS, "Iterate over each result and call the callback function."},
-    {"select",	(PyCFunction) AerospikeScan_Select,		METH_VARARGS | METH_KEYWORDS, "Add bins to select in the query."},
-    {"results",	(PyCFunction) AerospikeScan_Results,	METH_VARARGS | METH_KEYWORDS, "Get a record."},
+    
+    {"foreach",	(PyCFunction) AerospikeScan_Foreach,	METH_VARARGS | METH_KEYWORDS,
+    			"Iterate over each result and call the callback function."},
+    
+    {"select",	(PyCFunction) AerospikeScan_Select,		METH_VARARGS | METH_KEYWORDS, 
+    			"Add bins to select in the query."},
+
+    {"results",	(PyCFunction) AerospikeScan_Results,	METH_VARARGS | METH_KEYWORDS,
+    			"Get a record."},
+	
 	{NULL}
 };
 
@@ -80,7 +87,7 @@ static PyTypeObject AerospikeScan_Type = {
 	PyObject_HEAD_INIT(NULL)
 
     .ob_size			= 0,
-    .tp_name			= "aerospike.scan",
+    .tp_name			= "aerospike.Scan",
     .tp_basicsize		= sizeof(AerospikeScan),
     .tp_itemsize		= 0,
     .tp_dealloc			= (destructor) AerospikeScan_Type_Dealloc,
@@ -99,7 +106,10 @@ static PyTypeObject AerospikeScan_Type = {
     .tp_setattro		= 0,
     .tp_as_buffer		= 0,
     .tp_flags			= Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE,
-    .tp_doc				= "aerospike.scan doc",
+    .tp_doc				= 
+    		"The Scan class assists in populating the parameters of a scan\n"
+    		"operation. To create a new instance of the Scan class, call the\n"
+    		"scan() method on an instance of a Client class.\n",
     .tp_traverse		= 0,
     .tp_clear			= 0,
     .tp_richcompare		= 0,
@@ -123,9 +133,9 @@ static PyTypeObject AerospikeScan_Type = {
  * PUBLIC FUNCTIONS
  ******************************************************************************/
 
-bool AerospikeScan_Ready()
+PyTypeObject * AerospikeScan_Ready()
 {
-	return PyType_Ready(&AerospikeScan_Type) < 0;
+	return PyType_Ready(&AerospikeScan_Type) == 0 ? &AerospikeScan_Type : NULL;
 }
 
 AerospikeScan * AerospikeScan_New(AerospikeClient * client, PyObject * args, PyObject * kwds)

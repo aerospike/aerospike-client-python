@@ -14,10 +14,10 @@
 #include "key.h"
 #include "conversions.h"
 
-#define PY_KEY_NAMESPACE 0
-#define PY_KEY_SET 1
-#define PY_KEY_KEY 2
-#define PY_KEY_DIGEST 3
+#define PY_KEYT_NAMESPACE 0
+#define PY_KEYT_SET 1
+#define PY_KEYT_KEY 2
+#define PY_KEYT_DIGEST 3
 
 #define PY_EXCEPTION_CODE 0
 #define PY_EXCEPTION_MSG 1
@@ -109,7 +109,7 @@ as_status pyobject_to_val(as_error * err, PyObject * py_obj, as_val ** val)
 	else if ( PyByteArray_Check(py_obj) ) {
 		uint8_t * b = (uint8_t *) PyByteArray_AsString(py_obj);
 		uint32_t z = (uint32_t) PyByteArray_Size(py_obj);
-		*val = (as_val *) as_bytes_new_wrap(b, z, true);
+		*val = (as_val *) as_bytes_new_wrap(b, z, false);
 	}
 	else if ( PyList_Check(py_obj) ) {
 		as_list * list = NULL;
@@ -533,21 +533,23 @@ as_status key_to_pyobject(as_error * err, const as_key * key, PyObject ** obj)
 {
 	as_error_reset(err);
 
+	*obj = NULL;
+
 	if ( ! key ) {
 		return as_error_update(err, AEROSPIKE_ERR_CLIENT, "key is null");
 	}
 
-	PyObject * py_key = PyTuple_New(4);
-
+	PyObject * py_namespace = NULL;
+	PyObject * py_set = NULL;
+	PyObject * py_key = NULL;
+	PyObject * py_digest = NULL;
 
     if ( key->ns && strlen(key->ns) > 0 ) {
-    	PyObject * py_ns = PyString_FromString(key->ns);
-		PyTuple_SetItem(py_key, PY_KEY_NAMESPACE, py_ns);
+    	py_namespace = PyString_FromString(key->ns);
     }
 
     if ( key->set && strlen(key->set) > 0 ) {
-    	PyObject * py_set = PyString_FromString(key->set);
-		PyTuple_SetItem(py_key, PY_KEY_SET, py_set);
+    	py_set = PyString_FromString(key->set);
     }
 
     if ( key->valuep ) {
@@ -556,14 +558,12 @@ as_status key_to_pyobject(as_error * err, const as_key * key, PyObject ** obj)
         switch(type) {
             case AS_INTEGER: {
 				as_integer * ival = as_integer_fromval(val);
-				PyObject * py_ival = PyInt_FromLong((long) as_integer_get(ival));
-				PyTuple_SetItem(py_key, PY_KEY_KEY, py_ival);
+				py_key = PyInt_FromLong((long) as_integer_get(ival));
 				break;
 			}
             case AS_STRING: {
 				as_string * sval = as_string_fromval(val);
-				PyObject * py_sval = PyString_FromString(as_string_get(sval));
-				PyTuple_SetItem(py_key, PY_KEY_KEY, py_sval);
+				py_key = PyString_FromString(as_string_get(sval));
 				break;
 			}
             case AS_BYTES: {
@@ -572,26 +572,31 @@ as_status key_to_pyobject(as_error * err, const as_key * key, PyObject ** obj)
 					uint32_t bval_size = as_bytes_size(bval);
 					uint8_t * bval_bytes = malloc(bval_size * sizeof(uint8_t));
 					memcpy(bval_bytes, as_bytes_get(bval), bval_size);
-					PyObject * py_bval = PyByteArray_FromStringAndSize((char *) bval_bytes, bval_size);
-					PyTuple_SetItem(py_key, PY_KEY_KEY, py_bval);
-					break;
+					py_key = PyByteArray_FromStringAndSize((char *) bval_bytes, bval_size);
 				}
+				break;
 			}
-            default:
-				PyTuple_SetItem(py_key, PY_KEY_DIGEST, Py_None);
-            	break;
+			default: {
+				break;
+			}
         }
     }
 
     if ( key->digest.init ) {
 		uint8_t * digest_bytes = malloc(AS_DIGEST_VALUE_SIZE * sizeof(uint8_t));
 		memcpy(digest_bytes, key->digest.value, AS_DIGEST_VALUE_SIZE);
-		PyObject * py_digest = PyByteArray_FromStringAndSize((char *) digest_bytes, AS_DIGEST_VALUE_SIZE);
-		PyTuple_SetItem(py_key, PY_KEY_DIGEST, py_digest);
+		py_digest = PyByteArray_FromStringAndSize((char *) digest_bytes, AS_DIGEST_VALUE_SIZE);
     }
 
-	*obj = py_key;
+	PyObject * py_keyobj = PyTuple_New(4);
+
+	PyTuple_SetItem(py_keyobj, PY_KEYT_NAMESPACE, py_namespace == NULL ? Py_None : py_namespace);
+	PyTuple_SetItem(py_keyobj, PY_KEYT_SET, py_set == NULL ? Py_None : py_set);
+	PyTuple_SetItem(py_keyobj, PY_KEYT_KEY, py_key == NULL ? Py_None : py_key);
+	PyTuple_SetItem(py_keyobj, PY_KEYT_DIGEST, py_digest == NULL ? Py_None : py_digest);
 	
+	*obj = py_keyobj;
+
 	return err->code;
 }
 
@@ -699,11 +704,6 @@ bool error_to_pyobject(const as_error * err, PyObject ** obj)
 	PyTuple_SetItem(py_err, PY_EXCEPTION_MSG, py_message);
 	PyTuple_SetItem(py_err, PY_EXCEPTION_FILE, py_file);
 	PyTuple_SetItem(py_err, PY_EXCEPTION_LINE, py_line);
-
-	// Py_DECREF(py_file);
-	// Py_DECREF(py_line);
-	// Py_DECREF(py_code);
-	// Py_DECREF(py_message);
 
 	*obj = py_err;
 	return true;

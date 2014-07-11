@@ -15,43 +15,43 @@ usage = "usage: %prog [options] key"
 optparser = OptionParser(usage=usage, add_help_option=False)
 
 optparser.add_option(
-  "--help", dest="help", action="store_true",
-  help="Displays this message.")
+    "--help", dest="help", action="store_true",
+    help="Displays this message.")
 
 optparser.add_option(
-  "-h", "--host", dest="host", type="string", default="127.0.0.1", metavar="<ADDRESS>",
-  help="Address of Aerospike server.")
+    "-h", "--host", dest="host", type="string", default="127.0.0.1", metavar="<ADDRESS>",
+    help="Address of Aerospike server.")
 
 optparser.add_option(
-  "-p", "--port", dest="port", type="int", default=3000, metavar="<PORT>",
-  help="Port of the Aerospike server.")
+    "-p", "--port", dest="port", type="int", default=3000, metavar="<PORT>",
+    help="Port of the Aerospike server.")
 
 optparser.add_option(
-  "-n", "--namespace", dest="namespace", type="string", default="test", metavar="<NS>",
-  help="Port of the Aerospike server.")
+    "-n", "--namespace", dest="namespace", type="string", default="test", metavar="<NS>",
+    help="Port of the Aerospike server.")
 
 optparser.add_option(
-  "-s", "--set", dest="set", type="string", default="demo", metavar="<SET>",
-  help="Port of the Aerospike server.")
+    "-s", "--set", dest="set", type="string", default="demo", metavar="<SET>",
+    help="Port of the Aerospike server.")
 
 (options, args) = optparser.parse_args()
 
 if options.help:
-  optparser.print_help()
-  print()
-  sys.exit(1)
+    optparser.print_help()
+    print()
+    sys.exit(1)
 
 if len(args) != 1:
-  optparser.print_help()
-  print()
-  sys.exit(1)
+    optparser.print_help()
+    print()
+    sys.exit(1)
 
 ################################################################################
 # Client Configuration
 ################################################################################
 
 config = {
-  'hosts': [ (options.host, options.port) ]
+    'hosts': [ (options.host, options.port) ]
 }
 
 ################################################################################
@@ -62,46 +62,46 @@ exitCode = 0
 
 try:
 
-  # ----------------------------------------------------------------------------
-  # Connect to Cluster
-  # ----------------------------------------------------------------------------
+    # ----------------------------------------------------------------------------
+    # Connect to Cluster
+    # ----------------------------------------------------------------------------
 
-  client = aerospike.client(config).connect()
+    client = aerospike.client(config).connect()
 
-  # ----------------------------------------------------------------------------
-  # Perform Operation
-  # ----------------------------------------------------------------------------
+    # ----------------------------------------------------------------------------
+    # Perform Operation
+    # ----------------------------------------------------------------------------
 
-  try:
-    
-    namespace = options.namespace if options.namespace and options.namespace != 'None' else None
-    set = options.set if options.set and options.set != 'None' else None
-    key = args.pop()
-    policy = None
+    try:
+        
+        namespace = options.namespace if options.namespace and options.namespace != 'None' else None
+        set = options.set if options.set and options.set != 'None' else None
+        key = args.pop()
+        policy = None
 
-    (key, metadata) = client.exists((namespace, set, key), policy)
+        (key, metadata) = client.exists((namespace, set, key), policy)
 
-    if metadata != None:
-      print(key, metadata)
-      print("---")
-      print("OK, 1 record found.")
-    else:
-      print('error: Not Found.', file=sys.stderr)
-      exitCode = 1
+        if metadata != None:
+            print(key, metadata)
+            print("---")
+            print("OK, 1 record found.")
+        else:
+            print('error: Not Found.', file=sys.stderr)
+            exitCode = 1
 
-  except Exception, eargs:
-    print("error: {0}".format(eargs), file=sys.stderr)
-    exitCode = 2
+    except Exception, eargs:
+        print("error: {0}".format(eargs), file=sys.stderr)
+        exitCode = 2
 
-  # ----------------------------------------------------------------------------
-  # Close Connection to Cluster
-  # ----------------------------------------------------------------------------
+    # ----------------------------------------------------------------------------
+    # Close Connection to Cluster
+    # ----------------------------------------------------------------------------
 
-  client.close()
+    client.close()
 
 except Exception, eargs:
-  print("error: {0}".format(eargs), file=sys.stderr)
-  exitCode = 3
+    print("error: {0}".format(eargs), file=sys.stderr)
+    exitCode = 3
 
 ################################################################################
 # Exit

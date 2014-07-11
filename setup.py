@@ -6,11 +6,6 @@ ostype =  platform.platform(1)
 linux = 'Linux' in ostype
 osx = 'Darwin' in ostype
 
-# BUILDING:
-#
-#   ARCHFLAGS="-arch x86_64" python setup.py build
-#
-
 extra_compile_args = [
           '-std=gnu99', '-g', '-Wall', '-fPIC', '-O1',
           '-fno-common', '-fno-strict-aliasing', '-finline-functions', 
@@ -37,8 +32,6 @@ libraries = [
   'm'
   ]
 
-lua_aliases = ['lua','lua5.1']
-library_extname = '.so'
 
 if osx:
     
@@ -60,7 +53,10 @@ else:
     
     library_dirs = ['/usr/local/lib','/usr/lib'] + library_dirs
     libraries = libraries + ['rt']
+    library_extname = '.so'
     
+    lua_aliases = ['lua','lua5.1']
+
     liblua = None
     for d in library_dirs:
       for f in lua_aliases:

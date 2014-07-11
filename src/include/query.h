@@ -12,7 +12,7 @@
  * FUNCTIONS
  ******************************************************************************/
 
-bool AerospikeQuery_Ready(void);
+PyTypeObject * AerospikeQuery_Ready(void);
 
 AerospikeQuery * AerospikeQuery_New(AerospikeClient * client, PyObject * args, PyObject * kwds);
 

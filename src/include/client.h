@@ -11,7 +11,7 @@
  * CLIENT TYPE
  ******************************************************************************/
 
-bool AerospikeClient_Ready(void);
+PyTypeObject * AerospikeClient_Ready(void);
 
 /**
  * Create a new Aerospike client object and connect to the database.

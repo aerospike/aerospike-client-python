@@ -12,7 +12,7 @@
  * FUNCTIONS
  ******************************************************************************/
 
-bool AerospikeKey_Ready(void);
+PyTypeObject * AerospikeKey_Ready(void);
 
 AerospikeKey * AerospikeKey_New(AerospikeClient * client, PyObject * args, PyObject * kwds);
 

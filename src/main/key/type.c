@@ -16,12 +16,24 @@
  ******************************************************************************/
 
 static PyMethodDef AerospikeKey_Type_Methods[] = {
-    {"apply",	(PyCFunction) AerospikeKey_Apply,	METH_VARARGS | METH_KEYWORDS, "Apply a UDF on a record."},
-    {"exists",	(PyCFunction) AerospikeKey_Exists,	METH_VARARGS | METH_KEYWORDS, "Check existence of the record."},
-    {"get",		(PyCFunction) AerospikeKey_Get,		METH_VARARGS | METH_KEYWORDS, "Get all bins of the record."},
-    {"put",		(PyCFunction) AerospikeKey_Put,		METH_VARARGS | METH_KEYWORDS, "Update a record."},
-    {"remove",	(PyCFunction) AerospikeKey_Remove,	METH_VARARGS | METH_KEYWORDS, "Remove a record."},
+
+    {"apply",	(PyCFunction) AerospikeKey_Apply,	METH_VARARGS | METH_KEYWORDS, 
+    			"Apply a UDF on a record."},
+    
+    {"exists",	(PyCFunction) AerospikeKey_Exists,	METH_VARARGS | METH_KEYWORDS, 
+    			"Check existence of the record."},
+
+    {"get",		(PyCFunction) AerospikeKey_Get,		METH_VARARGS | METH_KEYWORDS, 
+    			"Get all bins of the record."},
+    
+    {"put",		(PyCFunction) AerospikeKey_Put,		METH_VARARGS | METH_KEYWORDS,
+    			"Update a record."},
+    
+    {"remove",	(PyCFunction) AerospikeKey_Remove,	METH_VARARGS | METH_KEYWORDS,
+    			"Remove a record."},
+    
     // {"select",	(PyCFunction) AerospikeKey_Select,	METH_VARARGS | METH_KEYWORDS, "Select specific bins of the record."},
+	
 	{NULL}
 };
 
@@ -61,7 +73,7 @@ static PyTypeObject AerospikeKey_Type = {
 	PyObject_HEAD_INIT(NULL)
 
     .ob_size			= 0,
-    .tp_name			= "aerospike.key",
+    .tp_name			= "aerospike.Key",
     .tp_basicsize		= sizeof(AerospikeKey),
     .tp_itemsize		= 0,
     .tp_dealloc			= (destructor) AerospikeKey_Type_Dealloc,
@@ -80,7 +92,10 @@ static PyTypeObject AerospikeKey_Type = {
     .tp_setattro		= 0,
     .tp_as_buffer		= 0,
     .tp_flags			= Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE,
-    .tp_doc				= "aerospike.key doc",
+    .tp_doc				= 
+    		"[DEPRECATED] The Key class assists in creating a key object for use with kvs\n"
+    		"operations. To create a new instance of the Key class, call the\n"
+    		"key() method on an instance of a Client class.\n",
     .tp_traverse		= 0,
     .tp_clear			= 0,
     .tp_richcompare		= 0,
@@ -104,9 +119,9 @@ static PyTypeObject AerospikeKey_Type = {
  * PUBLIC FUNCTIONS
  ******************************************************************************/
 
-bool AerospikeKey_Ready()
+PyTypeObject * AerospikeKey_Ready()
 {
-	return PyType_Ready(&AerospikeKey_Type) < 0;
+	return PyType_Ready(&AerospikeKey_Type) == 0 ? &AerospikeKey_Type : NULL;
 }
 
 AerospikeKey * AerospikeKey_New(AerospikeClient * client, PyObject * args, PyObject * kwds)

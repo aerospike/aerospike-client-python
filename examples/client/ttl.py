@@ -27,33 +27,31 @@ usage = "usage: %prog [options]"
 optparser = OptionParser(usage=usage, add_help_option=False)
 
 optparser.add_option(
-  "--help", dest="help", action="store_true",
-  help="Displays this message.")
+	"--help", dest="help", action="store_true",
+	help="Displays this message.")
 
 optparser.add_option(
-  "-h", "--host", dest="host", type="string", default="127.0.0.1", metavar="<ADDRESS>",
-  help="Address of Aerospike server.")
+	"-h", "--host", dest="host", type="string", default="127.0.0.1", metavar="<ADDRESS>",
+	help="Address of Aerospike server.")
 
 optparser.add_option(
-  "-p", "--port", dest="port", type="int", default=3000, metavar="<PORT>",
-  help="Port of the Aerospike server.")
+	"-p", "--port", dest="port", type="int", default=3000, metavar="<PORT>",
+	help="Port of the Aerospike server.")
 
 optparser.add_option(
-  "-n", "--namespace", dest="namespace", type="string", default="test", metavar="<NS>",
-  help="Port of the Aerospike server.")
+	"-n", "--namespace", dest="namespace", type="string", default="test", metavar="<NS>",
+	help="Port of the Aerospike server.")
 
 optparser.add_option(
-  "-s", "--set", dest="set", type="string", default="demo", metavar="<SET>",
-  help="Port of the Aerospike server.")
-
-
+	"-s", "--set", dest="set", type="string", default="demo", metavar="<SET>",
+	help="Port of the Aerospike server.")
 
 (options, args) = optparser.parse_args()
 
 if options.help:
-  optparser.print_help()
-  print()
-  sys.exit(1)
+	optparser.print_help()
+	print()
+	sys.exit(1)
 
 ################################################################################
 # CONSTANTS
@@ -89,7 +87,7 @@ AS_POLICY_RETRY_ONCE  = 2 # Retry Once
 
 AS_POLICY_W_KEY        = "key"
 AS_POLICY_KEY_UNDEF    = 0 # If set, then the value will default to either
-                           # as_config.policies.key or `AS_POLICY_KEY_DEFAULT`.
+													 # as_config.policies.key or `AS_POLICY_KEY_DEFAULT`.
 AS_POLICY_KEY_DIGEST   = 1 # Send the digest value of the key.
 AS_POLICY_KEY_SEND     = 2 # Send the key, but do not store it.
 AS_POLICY_KEY_STORE    = 3 # Store the key (NOT YET IMPLEMENTED)
@@ -99,9 +97,9 @@ AS_POLICY_GEN_UNDEF    = 0 # Use default value
 AS_POLICY_GEN_IGNORE   = 1 # Write a record, regardless of generation.
 AS_POLICY_GEN_EQ       = 2 # Write a record, ONLY if generations are equal 
 AS_POLICY_GEN_GT       = 3 # Write a record, ONLY if local generation is 
-                           # greater-than remote generation.
+													 # greater-than remote generation.
 AS_POLICY_GEN_DUP      = 4 # Write a record creating a duplicate, ONLY if
-                           # the generation collides (?)
+													 # the generation collides (?)
 
 AS_POLICY_W_EXISTS     = "exists"
 AS_POLICY_EXISTS_UNDEF = 0 # Use default value
@@ -111,24 +109,24 @@ AS_POLICY_EXISTS_UPDATE= 3 # Update a record, ONLY if it exist (NOT YET IMPL).
 
 # Setup write policy
 wr_policy = {
-    AS_POLICY_W_TIMEOUT: 5000,
-    AS_POLICY_W_RETRY:   AS_POLICY_RETRY_NONE,
-    AS_POLICY_W_KEY:     AS_POLICY_KEY_DIGEST,
-    AS_POLICY_W_GEN:     AS_POLICY_GEN_IGNORE,
-    AS_POLICY_W_EXISTS:  AS_POLICY_EXISTS_IGNORE
+		AS_POLICY_W_TIMEOUT: 5000,
+		AS_POLICY_W_RETRY:   AS_POLICY_RETRY_NONE,
+		AS_POLICY_W_KEY:     AS_POLICY_KEY_DIGEST,
+		AS_POLICY_W_GEN:     AS_POLICY_GEN_IGNORE,
+		AS_POLICY_W_EXISTS:  AS_POLICY_EXISTS_IGNORE
 }
 
 BASE_KEY_RANGE = range(1,11)
 
 SPECIAL_KEYS = {
-  20: { 'ttl': 5,
-        'desc': '5 sec TTL' },
-  40: { 'ttl': 15,
-        'desc': '15 sec TTL' },
-  60: { 'ttl': TTL_NO_EXPIRE,
-        'desc': 'NO_EXPIRE TTL' },
-  80: { 'ttl': TTL_MAX+1,
-        'desc': 'Larger than MAX TTL' }
+	20: { 'ttl': 5,
+				'desc': '5 sec TTL' },
+	40: { 'ttl': 15,
+				'desc': '15 sec TTL' },
+	60: { 'ttl': TTL_NO_EXPIRE,
+				'desc': 'NO_EXPIRE TTL' },
+	80: { 'ttl': TTL_MAX+1,
+				'desc': 'Larger than MAX TTL' }
 }
 
 KEYS = BASE_KEY_RANGE + SPECIAL_KEYS.keys()
@@ -138,7 +136,7 @@ KEYS = BASE_KEY_RANGE + SPECIAL_KEYS.keys()
 ################################################################################
 
 config = {
-  'hosts': [ (options.host, options.port) ]
+	'hosts': [ (options.host, options.port) ]
 }
 
 print('Connect to Server: ', config)
@@ -150,116 +148,116 @@ client = aerospike.client(config).connect()
 
 
 def test_params_for_stanza(p,contx,is_namespace):
-  for t in p:
-    if is_namespace:
-      info_code = "set-config:context=namespace;id="+contx+";"+t[0]+"="+str(t[1])
-    else:
-      info_code = "set-config:context="+contx+";"+t[0]+"="+str(t[1])
-    try:
-      v = client.info(info_code).items()
-      res = v[0][1][1]
-      if res!="ok\n":
-        print("setting {0} to {1} failed. Got result({2})".format(t[0],t[1],res))
-        sys.exit(1)
-      else:
-        print("setting {0} to {1} succeeded".format(t[0],t[1]))
-    except:
-        print("error: info_code({0}) result({1})".format(info_code,v))
+	for t in p:
+		if is_namespace:
+			info_code = "set-config:context=namespace;id="+contx+";"+t[0]+"="+str(t[1])
+		else:
+			info_code = "set-config:context="+contx+";"+t[0]+"="+str(t[1])
+		try:
+			v = client.info(info_code).items()
+			res = v[0][1][1]
+			if res!="ok\n":
+				print("setting {0} to {1} failed. Got result({2})".format(t[0],t[1],res))
+				sys.exit(1)
+			else:
+				print("setting {0} to {1} succeeded".format(t[0],t[1]))
+		except:
+				print("error: info_code({0}) result({1})".format(info_code,v))
 
 def print_header(header,message=None):
-  print()
-  print(''.ljust(80,'='))
-  print(header)
-  print(message) if message else None
-  print(''.ljust(80,'-'))
+	print()
+	print(''.ljust(80,'='))
+	print(header)
+	print(message) if message else None
+	print(''.ljust(80,'-'))
 
 def print_record((key, meta, record), prefix=''):
-  print("%s%-4d %-4s %-8s %s" % (
-    prefix,
-    key['key'], 
-    meta.get('gen') if meta and 'gen' in meta else '-', 
-    meta.get('ttl') if meta and 'ttl' in meta else '-', 
-    record if record else '-'
-  ))
+	print("%s%-4d %-4s %-8s %s" % (
+		prefix,
+		key['key'], 
+		meta.get('gen') if meta and 'gen' in meta else '-', 
+		meta.get('ttl') if meta and 'ttl' in meta else '-', 
+		record if record else '-'
+	))
 
 def print_records(records, prefix=''):
-  header = "%s---- ---- -------- " % prefix
-  header = header.ljust(80,'-')
-  print()
-  print("%s%-4s %-4s %-8s %s" % (prefix, "key", "gen", "ttl", "record"))
-  print(header)
-  [print_record(r, prefix) for r in records]
+	header = "%s---- ---- -------- " % prefix
+	header = header.ljust(80,'-')
+	print()
+	print("%s%-4s %-4s %-8s %s" % (prefix, "key", "gen", "ttl", "record"))
+	print(header)
+	[print_record(r, prefix) for r in records]
 
 def print_histogram(prefix=''):
-  request = ''.join(["hist-dump:ns=",options.namespace,";hist=ttl"])
+	request = ''.join(["hist-dump:ns=",options.namespace,";hist=ttl"])
 
-  header = "%sHISTOGRAM (%s)" % (prefix,request)
-  border = prefix.ljust(80,'-')
+	header = "%sHISTOGRAM (%s)" % (prefix,request)
+	border = prefix.ljust(80,'-')
 
-  print()
-  print(header)
-  print(border)
-  for node,(error,response) in client.info(request).items():
-    if error:
-      print('%serror: %s' % (prefix, error))
-    else:
-      for line in textwrap.wrap(response,80-len(prefix)):
-        print("%s%s" % (prefix,line))
+	print()
+	print(header)
+	print(border)
+	for node,(error,response) in client.info(request).items():
+		if error:
+			print('%serror: %s' % (prefix, error))
+		else:
+			for line in textwrap.wrap(response,80-len(prefix)):
+				print("%s%s" % (prefix,line))
 
 
 def check_records(start, wait=0, message=None):
 
-  if wait:
-    time.sleep(wait)
+	if wait:
+		time.sleep(wait)
 
-  stop = time.time()
-  duration = int(stop - start)
+	stop = time.time()
+	duration = int(stop - start)
 
-  print_header('CHECK :: wait=%s duration=%s' % (wait, duration), message)
+	print_header('CHECK :: wait=%s duration=%s' % (wait, duration), message)
 
-  try:
-    print_records([client.get((options.namespace, options.set, k)) for k in KEYS],'  ')
-  except Exception as e:
-    print("error: {0}".format(e), file=sys.stderr)
-    sys.exit(1)
+	try:
+		print_records([client.get((options.namespace, options.set, k)) for k in KEYS],'  ')
+	except Exception as e:
+		print("error: {0}".format(e), file=sys.stderr)
+		sys.exit(1)
 
-  print_histogram('  ')
+	print_histogram('  ')
 
 def delete_records():
-  try:
-    for key in KEYS:
-      # first remove the existing record
-      client.remove((options.namespace, options.set, key))
-  except Exception, err:
-    if err[0]['code'] != 602:
-      print("delete_records() error: {0}".format(err[0]), file=sys.stderr)
-      sys.exit(1)
+	try:
+		for key in KEYS:
+			# first remove the existing record
+			client.remove((options.namespace, options.set, key))
+	except Exception, err:
+		if err[0]['code'] != 602:
+			print("delete_records() error: {0}".format(err[0]), file=sys.stderr)
+			sys.exit(1)
 
 def write_records():
-  try:
-    for key in KEYS:
-      ttl = SPECIAL_KEYS[key]['ttl'] if key in SPECIAL_KEYS else None
+	try:
+		for key in KEYS:
+			ttl = SPECIAL_KEYS[key]['ttl'] if key in SPECIAL_KEYS else None
 
-      rec = {}
-      rec['key'] = key
-      rec['ttl'] = ttl if ttl else TTL_DEFAULT
-      rec['desc'] = SPECIAL_KEYS[key]['desc'] if key in SPECIAL_KEYS else 'default TTL'
+			rec = {}
+			rec['key'] = key
+			rec['ttl'] = ttl if ttl else TTL_DEFAULT
+			rec['desc'] = SPECIAL_KEYS[key]['desc'] if key in SPECIAL_KEYS else 'default TTL'
 
-      try:
-        # write a new record
-        # ttl=None is equivalent to not setting a ttl
-        print("wirting key :=", key)
-        client.put((options.namespace, options.set, key), rec, {'ttl':ttl})
+			try:
+				# write a new record
+				# ttl=None is equivalent to not setting a ttl
+				print("wirting key :=", key)
+				client.put((options.namespace, options.set, key), rec, {'ttl':ttl})
 
-      except Exception as e:
-        if ttl > TTL_MAX:
-          print('error: (correct) failed to write record with TTL(%d) > TTL_MAX(%d)' % (ttl, TTL_MAX))
-        else:
-          print('error: failed to write record with TTL = %d' % ttl)
+			except Exception as e:
+				if ttl > TTL_MAX:
+					print('error: (correct) failed to write record with TTL(%d) > TTL_MAX(%d)' % (ttl, TTL_MAX))
+				else:
+					print('error: failed to write record with TTL = %d' % ttl)
 
-  except Exception as e:
-    print("error: {0}".format(e), file=sys.stderr)
-    sys.exit(1)
+	except Exception as e:
+		print("error: {0}".format(e), file=sys.stderr)
+		sys.exit(1)
 
 ################################################################################
 # CONFIGURE SERVER
@@ -270,14 +268,14 @@ print_header("CONFIGURE THE SERVER")
 # Now go off and set the params
 print('Set Parameters for Service')
 for p in PARAMS_SERVICE:
-    test_params_for_stanza(p,"service",False)
-    time.sleep(1)
+		test_params_for_stanza(p,"service",False)
+		time.sleep(1)
 print("service parameters passed")
 
 print('Set Parameters for Namespace')
 for p in PARAMS_NAMESPACE:        
-    test_params_for_stanza(p,options.namespace,True)
-    time.sleep(1)
+		test_params_for_stanza(p,options.namespace,True)
+		time.sleep(1)
 print("namespace parameters passed")
 
 ################################################################################

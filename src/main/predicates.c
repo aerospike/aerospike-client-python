@@ -74,6 +74,6 @@ static PyMethodDef AerospikePredicates_Methods[] = {
 
 PyObject * AerospikePredicates_New()
 {
-	PyObject * module = Py_InitModule("predicates", AerospikePredicates_Methods);
+	PyObject * module = Py_InitModule3("aerospike.predicates", AerospikePredicates_Methods, "Query Predicates");
 	return module;
 }
