@@ -164,4 +164,4 @@ except Exception, eargs:
 # Exit
 ################################################################################
 
-sys.exit(rc)
+sys.exit(exitCode)

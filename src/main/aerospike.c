@@ -42,5 +42,5 @@ PyMODINIT_FUNC initaerospike()
 	PyModule_AddObject(aerospike, "Scan", (PyObject *) scan);
 
 	PyObject * predicates = AerospikePredicates_New();
-	PyModule_AddObject(aerospike, PyModule_GetName(predicates), predicates);
+	PyModule_AddObject(aerospike, "predicates", predicates);
 }
