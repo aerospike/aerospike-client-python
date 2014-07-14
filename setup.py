@@ -177,7 +177,7 @@ if not os.path.isdir(aerospike_c_prefix):
 aerospike_h = aerospike_c_prefix + '/include/aerospike/aerospike.h'
 
 if not os.path.isfile(aerospike_h):
-    print("error: File not found:", PLATFORM, file=sys.stderr)
+    print("error: aerospike.h not found:", aerospike_h, file=sys.stderr)
     sys.exit(1)
 
 include_dirs = [
@@ -193,10 +193,10 @@ include_dirs = [
 aerospike_a = aerospike_c_prefix + '/lib/libaerospike.a'
 
 if not os.path.isfile(aerospike_a):
-    print("error: Not able to find libaerospike.a:", aerospike_a, file=sys.stderr)
+    print("error: libaerospike.a not found:", aerospike_a, file=sys.stderr)
     sys.exit(1)
 
-print("info: Linking libaerospike.a:", aerospike_a, file=sys.stdout)
+print("info: libaerospike.a found:", aerospike_a, file=sys.stdout)
 extra_objects = [aerospike_a] + extra_objects
 
 #---------------------------------------------------------------------------
