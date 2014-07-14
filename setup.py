@@ -30,9 +30,14 @@ PLATFORM =  platform.platform(1)
 LINUX = 'Linux' in PLATFORM
 DARWIN = 'Darwin' in PLATFORM
 
-library_dirs = ['/usr/local/lib','/usr/lib'] + [x for x in os.getenv('LD_LIBRARY_PATH', '').split(':') if len(x) > 0]
+library_dirs = [
+    '/usr/local/lib',
+    '/usr/lib'
+    ] + [x for x in os.getenv('LD_LIBRARY_PATH', '').split(':') if len(x) > 0]
 
-include_dirs = ['src/include'] + [x for x in os.getenv('CPATH', '').split(':') if len(x) > 0]
+include_dirs = [
+    'src/include'
+    ] + [x for x in os.getenv('CPATH', '').split(':') if len(x) > 0]
 
 extra_objects = []
 
@@ -130,7 +135,7 @@ elif LINUX:
     # The following will attempt to resolve the Lua 5.1 library dependency
     #---------------------------------------------------------------------------
 
-    lua_aliases = ['lua','lua5.1']
+    lua_aliases = ['lua','lua5.1','lua-5.1']
 
     liblua = None
     for directory in library_search:
