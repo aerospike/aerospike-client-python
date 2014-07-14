@@ -117,21 +117,17 @@ detect_linux()
         esac
         ;;
 
+      "amazon linux"* )
+        echo "el6" "rpm"
+        return 0
+        ;;
+
       * )
         echo "error: ${DIST_NAME} is not supported."
         return 1
         ;;
 
     esac
-  fi
-
-  if [ -f /etc/system-release ]; then
-    # Check for Amazon Linux
-    dist=$(cat /etc/system-release | grep "Amazon Linux")
-    if [ ! -z "$dist" ]; then
-      echo "el6" "rpm"
-      return 0
-    fi
   fi
 
   echo "error: Linux Distro not supported"
