@@ -5,6 +5,7 @@ from distutils.core import setup, Extension
 
 import os
 import platform
+from subprocess import call
 import sys
 
 
@@ -50,11 +51,16 @@ library_ext = '.so'
 
 
 # Prefix for Aerospike C client libraries and headers
-aerospike_c_prefix = None
+aerospike_c_prefix = './aerospike-client-c'
 
-# If True, then link libaerospike statically, otherwise it will be dynamically linked
-aerospike_c_static = True
-
+# Execute Aerospike C Client Resolver
+if AEROSPIKE_C_HOME:
+    rc = call(['PREFIX=' + AEROSPIKE_C_HOME, './scripts/aerospike-client-c.sh'])
+else:
+    rc = call(['./scripts/aerospike-client-c.sh'])
+if rc != 0 :
+    print("error: scripts/aerospike-client-c.sh", rc, file=sys.stderr)
+    sys.exit(1)
 
 ################################################################################
 # PLATFORM SPECIFIC SETTINGS
@@ -62,10 +68,12 @@ aerospike_c_static = True
 
 if DARWIN:
 
-    if AEROSPIKE_C_HOME:
-        aerospike_c_prefix = AEROSPIKE_C_HOME + '/target/Darwin-x86_64'
-    else:
-        aerospike_c_prefix = '/usr/local'
+    # if AEROSPIKE_C_HOME and os.path.isfile(AEROSPIKE_C_HOME + '/target/Darwin-x86_64/lib/libaerospike.a'):
+    #     aerospike_c_prefix = AEROSPIKE_C_HOME + '/target/Darwin-x86_64'
+    # elif os.path.isdir('./aerospike-client-c/lib/libaerospike.a'):
+    #     aerospike_c_prefix = './aerospike-client-c'
+    # elif os.path.isfile('/usr/local/lib/libaerospike.a'):
+    #     aerospike_c_prefix = '/usr/local'
 
     #---------------------------------------------------------------------------
     # Mac Specific Compiler and Linker Settings
@@ -84,13 +92,15 @@ if DARWIN:
 
 elif LINUX:
 
-    if AEROSPIKE_C_HOME:
-        aerospike_c_prefix = AEROSPIKE_C_HOME + '/target/Linux-x86_64'
-    else:
-        aerospike_c_prefix = '/usr'
+    # if AEROSPIKE_C_HOME and os.path.isfile(AEROSPIKE_C_HOME + '/target/Linux-x86_64/lib/libaerospike.a'):
+    #     aerospike_c_prefix = AEROSPIKE_C_HOME + '/target/Linux-x86_64'
+    # elif os.path.isdir('./aerospike-client-c/lib/libaerospike.a'):
+    #     aerospike_c_prefix = './aerospike-client-c'
+    # elif os.path.isfile('/usr/lib/libaerospike.a'):
+    #     aerospike_c_prefix = '/usr'
 
     #---------------------------------------------------------------------------
-    # Mac Specific Compiler and Linker Settings
+    # Linux Specific Compiler and Linker Settings
     #---------------------------------------------------------------------------
 
     extra_compile_args = extra_compile_args + [
@@ -131,6 +141,10 @@ else:
 # RESOLVE AEROSPIKE C CLIENT DEPENDNECY
 ################################################################################
 
+if not aerospike_c_prefix:
+    print("error: Not able to find libaerospike.a and associated header files.", file=sys.stderr)
+    sys.exit(1)
+
 if not os.path.isdir(aerospike_c_prefix):
     print("error: Directory not found:", aerospike_c_prefix, file=sys.stderr)
     sys.exit(1)
@@ -152,51 +166,17 @@ include_dirs = [
 
 
 #-------------------------------------------------------------------------------
-# Check for libaerospike
+# Check for libaerospike.a
 #-------------------------------------------------------------------------------
 
 aerospike_a = aerospike_c_prefix + '/lib/libaerospike.a'
-aerospike_a_found = False
 
-aerospike_so = aerospike_c_prefix + '/lib/libaerospike' + library_ext
-aerospike_so_found = False
-
-if os.path.isfile(aerospike_a):
-    aerospike_a_found = True
-    print("info: libaerospike found:", aerospike_a, file=sys.stdout)
-
-if os.path.isfile(aerospike_so):
-    aerospike_so_found = True
-    print("info: libaerospike found:", aerospike_so, file=sys.stdout)
-
-if aerospike_a_found and aerospike_c_static :
-
-    #---------------------------------------------------------------------------
-    # Using libaerospike.a
-    #---------------------------------------------------------------------------
-
-    print("info: Linking libaerospike statically:", aerospike_a, file=sys.stdout)
-
-    extra_objects = [aerospike_a] + extra_objects
-
-elif aerospike_so_found:
-
-    #---------------------------------------------------------------------------
-    # Using libaerospike.so
-    #---------------------------------------------------------------------------
-
-    print("info: Linking libaerospike dynamically:", aerospike_so, file=sys.stdout)
-
-    library_dirs = [
-        aerospike_c_prefix + '/lib'
-    ] + library_dirs
-
-    libraries = ['aerospike'] + libraries
-
-else:
-
-    print("error: Not able to find libaerospike: ", aerospike_so, aerospike_a, file=sys.stderr)
+if not os.path.isfile(aerospike_a):
+    print("error: Not able to find libaerospike.a:", aerospike_a, file=sys.stderr)
     sys.exit(1)
+
+print("info: Linking libaerospike.a:", aerospike_a, file=sys.stdout)
+extra_objects = [aerospike_a] + extra_objects
 
 #---------------------------------------------------------------------------
 # Environment Variables

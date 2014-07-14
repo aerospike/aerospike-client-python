@@ -3,3 +3,4 @@ build/
 env.sh
 /.cproject
 /.project
+aerospike-client-c/
