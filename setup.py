@@ -213,7 +213,7 @@ os.putenv('DYLD_LIBRARY_PATH', ':'.join(library_dirs))
 ################################################################################
 
 setup(
-    name        = 'aerospike-client-python', 
+    name        = 'aerospike', 
     version     = '1.0', 
     ext_modules = [
       Extension( 'aerospike', 
