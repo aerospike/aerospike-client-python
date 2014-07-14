@@ -31,6 +31,8 @@ extra_link_args = []
 library_search = library_dirs + [
   '/usr/local/lib',
   '/usr/lib',
+  '/usr/local/lib64',
+  '/usr/lib64',
   '/usr/local/lib/x86_64-linux-gnu',
   '/usr/lib/x86_64-linux-gnu',
   '/lib/x86_64-linux-gnu',
