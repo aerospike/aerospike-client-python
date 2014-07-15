@@ -61,6 +61,23 @@ Build
 Instructions for building Aerospike Python Client, please refer to the 
 ``BUILD.md`` file for details.
 
+Examples
+--------
+
+Example applications are provided in the `examples directory of the GitHub repository <https://github.com/citrusleaf/aerospike-client-python/tree/master/examples/client>`__
+
+Prior to running examples, be sure to install ``Aerospike Python Client``. 
+
+For assistance with an example, provide the ``--help`` option.
+
+To run the example, simply execute it. For examples, to run the ``kvs.py``
+example, run:
+
+::
+
+    python examples/client/kvs.py
+
+
 License
 -------
 
