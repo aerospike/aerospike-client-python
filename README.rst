@@ -59,7 +59,7 @@ Build
 -----
 
 Instructions for building Aerospike Python Client, please refer to the 
-`BUILD.md` file for details.
+``BUILD.md`` file for details.
 
 License
 -------
