@@ -207,9 +207,9 @@ os.putenv('DYLD_LIBRARY_PATH', ':'.join(library_dirs))
 ################################################################################
 
 # Get the long description from the relevant file
-# with open(path.join(CWD, 'README.md')) as f:
-#     long_description = f.read()
-long_description = None
+with open(path.join(CWD, 'README.rst')) as f:
+    long_description = f.read()
+# long_description = None
 
 setup(
     name = 'aerospike', 
