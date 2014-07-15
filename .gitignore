@@ -1,6 +1,7 @@
 .DS_Store
+MANIFEST
 build/
-env.sh
+dist/
 /.cproject
 /.project
 aerospike-client-c/
