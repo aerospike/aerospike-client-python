@@ -19,15 +19,15 @@
 
 #include <aerospike/aerospike_query.h>
 #include <aerospike/as_error.h>
+#include <aerospike/as_policy.h>
 #include <aerospike/as_query.h>
 
 #include "client.h"
 #include "conversions.h"
 #include "query.h"
+#include "policy.h"
 
-#undef TRACE
-#define TRACE()
-
+// Struct for Python User-Data for the Callback
 typedef struct {
 	as_error error;
 	PyObject * callback;
@@ -40,53 +40,83 @@ static bool each_result(const as_val * val, void * udata)
 		return false;
 	}
 
+	// Extract callback user-data
 	LocalData * data = (LocalData *) udata;
 	as_error * err = &data->error;
 	PyObject * py_callback = data->callback;
 
+	// Python Function Arguments and Result Value
 	PyObject * py_arglist = NULL; 
 	PyObject * py_result = NULL;
 
+	// Lock Python State
 	PyGILState_STATE gstate;
 	gstate = PyGILState_Ensure();
 
+	// Convert as_val to a Python Object
 	val_to_pyobject(err, val, &py_result);
 
+	// Build Python Function Arguments
 	py_arglist = Py_BuildValue("(O)", py_result);
 	
+	// Invoke Python Callback
 	PyEval_CallObject(py_callback, py_arglist);
 
+	// TODO: handle return value
+
+	// Release Python Function Arguments
 	Py_DECREF(py_arglist);
 
+	// Release Python State
 	PyGILState_Release(gstate);
-	
+
 	return true;
 }
 
 PyObject * AerospikeQuery_Foreach(AerospikeQuery * self, PyObject * args, PyObject * kwds)
 {
+	// Python Function Arguments
 	PyObject * py_callback = NULL;
 	PyObject * py_policy = NULL;
 
+	// Python Function Keyword Arguments
 	static char * kwlist[] = {"callback", "policy", NULL};
 
+	// Python Function Argument Parsing
 	if ( PyArg_ParseTupleAndKeywords(args, kwds, "O|O:foreach", kwlist, &py_callback, &py_policy) == false ) {
 		return NULL;
 	}
 
+	// Aerospike Client Arguments
 	as_error err;
+	as_policy_query policy;
+	as_policy_query * policy_p = NULL;
+
+	// Initialize error
 	as_error_init(&err);
 
+	// Convert python policy object to as_policy_exists
+	pyobject_to_policy_query(&err, py_policy, &policy, &policy_p);
+	if ( err.code != AEROSPIKE_OK ) {
+		goto CLEANUP;
+	}
+
+	// Create and initialize callback user-data
 	LocalData data;
 	data.callback = py_callback;
 	as_error_init(&data.error);
 
+	// We are spawning multiple threads
 	PyThreadState * _save = PyEval_SaveThread();
 	
-	aerospike_query_foreach(self->client->as, &err, NULL, &self->query, each_result, &data);
+	// Invoke operation
+	aerospike_query_foreach(self->client->as, &err, policy_p, &self->query, each_result, &data);
 
+	// We are done using multiple threads
 	PyEval_RestoreThread(_save);
 	
+CLEANUP:
+
 	if ( err.code != AEROSPIKE_OK ) {
 		PyObject * py_err = NULL;
 		error_to_pyobject(&err, &py_err);
