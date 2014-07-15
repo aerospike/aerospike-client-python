@@ -343,23 +343,6 @@ fi
 printf "\n" >&1
 
 if [ $FAILED ]; then
-
-  printf "error: It appears as though one or more files cannot be found.\n" >&1
-  printf "error: \n" >&1
-  printf "error: You can either:\n" >&1
-  printf "error: \n" >&1
-  printf "error:    a. Re-run with 'DOWNLOAD=1'\n" >&1
-  printf "error:    \n" >&1
-  printf "error:       $ DOWNLOAD=1 npm install\n" >&1
-  printf "error: \n" >&1
-  printf "error:    b. Set the 'PREFIX' variable to the path containing the files\n" >&1
-  printf "error:    \n" >&1
-  printf "error:       $ PREFIX=/usr npm install\n" >&1
-  printf "error: \n" >&1
-  printf "error:    c. Download and install the the Aerospike C Client development package,\n" >&1
-  printf "error:       then retry the command.\n" >&1
-  printf "error: \n" >&1
-
   exit 1
 fi
 
