@@ -39,7 +39,8 @@ PyMODINIT_FUNC initaerospike()
 	PyEval_InitThreads();
 
 	// aerospike Module
-	PyObject * aerospike = Py_InitModule3("aerospike", Aerospike_Methods, "documentation string ....");
+	PyObject * aerospike = Py_InitModule3("aerospike", Aerospike_Methods, 
+		"Aerospike Python Client");
 	
 	PyTypeObject * client = AerospikeClient_Ready();
 	Py_INCREF(client);
