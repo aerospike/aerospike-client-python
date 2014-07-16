@@ -91,14 +91,14 @@ try:
                 'd': {'a': i, 'b': 'x', 'c': ['y', 'z'], 'd': {'v': 20, 'w': 21}}
             }
             print(rec)
-            client.key('test','demo','key{0}'.format(i)).put(rec)
+            client.put(('test','demo',i), rec)
 
         print('########################################################################')
         print('EXISTS')
         print('########################################################################')
 
         for i in range(1,1000):
-            (key, metadata) = client.key('test','demo','key{0}'.format(i)).exists()
+            (key, metadata) = client.exists(('test','demo',i))
             print(key, metadata)
 
 
@@ -107,7 +107,7 @@ try:
         print('########################################################################')
 
         for i in range(1,1000):
-            (key, metadata, record) =  client.key('test','demo','key{0}'.format(i)).get()
+            (key, metadata, record) = client.get(('test','demo',i))
             print(key, metadata, record)
 
         # print('########################################################################')
@@ -123,14 +123,14 @@ try:
         print('########################################################################')
 
         for i in range(1,1000):
-            client.key('test','demo','key{0}'.format(i)).remove()
+            client.remove(('test','demo',i))
 
         print('########################################################################')
         print('GET')
         print('########################################################################')
 
         for i in range(1,1000):
-            rec1 = client.key('test','demo','key{0}'.format(i)).get()
+            rec1 = client.get(('test','demo',i))
             print(rec1)
 
     except Exception, eargs:
