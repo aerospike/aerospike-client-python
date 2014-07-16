@@ -76,12 +76,21 @@ def operations(k, n, r, w):
     rn = long(n * (float(r)/float(100)))
     wn = long(n * (float(w)/float(100)))
     while rn + wn > 0:
-        op = random.choice(CHOICE_OP)
-        if op == READ_OP and rn > 0:
+        if rn > 0 and wn > 0:
+            op = random.choice(CHOICE_OP)
+            if op == READ_OP:
+                rn -= 1
+            else:
+                wn -= 1
+        elif rn > 0:
+            op = READ_OP
             rn -= 1
         else:
+            op = WRITE_OP
             wn -= 1
+        
         yield (op, random.randrange(1, k, 1))
+
 
 ################################################################################
 # Application
