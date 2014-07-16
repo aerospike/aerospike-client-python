@@ -30,6 +30,7 @@ from subprocess import call
 ################################################################################
 
 AEROSPIKE_C_HOME = os.getenv('AEROSPIKE_C_HOME')
+PREFIX = None
 PLATFORM =  platform.platform(1)
 LINUX = 'Linux' in PLATFORM
 DARWIN = 'Darwin' in PLATFORM
@@ -72,13 +73,16 @@ if DARWIN:
     #---------------------------------------------------------------------------
 
     extra_compile_args = extra_compile_args + [
-      '-D_DARWIN_UNLIMITED_SELECT',
-      '-undefined','dynamic_lookup',
-      '-DLUA_DEBUG_HOOK',
-      '-DMARCH_x86_64'
-      ]
+        '-D_DARWIN_UNLIMITED_SELECT',
+        '-undefined','dynamic_lookup',
+        '-DLUA_DEBUG_HOOK',
+        '-DMARCH_x86_64'
+        ]
     
     libraries = libraries + ['lua']
+
+    if AEROSPIKE_C_HOME:
+        PREFIX = AEROSPIKE_C_HOME + '/target/Darwin-x86_64'
 
 elif LINUX:
 
@@ -92,6 +96,9 @@ elif LINUX:
         ]
 
     libraries = libraries + ['rt']
+
+    if AEROSPIKE_C_HOME:
+        PREFIX = AEROSPIKE_C_HOME + '/target/Linux-x86_64'
 
     #---------------------------------------------------------------------------
     # The following will attempt to resolve the Lua 5.1 library dependency
@@ -148,10 +155,10 @@ if 'build' in sys.argv or 'install' in sys.argv :
 
     os.chmod('./scripts/aerospike-client-c.sh',0755)
 
-    if AEROSPIKE_C_HOME:
-        rc = call(['PREFIX=' + AEROSPIKE_C_HOME, './scripts/aerospike-client-c.sh'])
-    else:
-        rc = call(['./scripts/aerospike-client-c.sh'])
+    if PREFIX:
+        os.putenv('PREFIX', PREFIX)
+    
+    rc = call(['./scripts/aerospike-client-c.sh'])
     if rc != 0 :
         print("error: scripts/aerospike-client-c.sh", rc, file=sys.stderr)
         sys.exit(1)
@@ -196,10 +203,10 @@ if 'build' in sys.argv or 'install' in sys.argv :
     #---------------------------------------------------------------------------
     # Environment Variables
     #---------------------------------------------------------------------------
-
-os.putenv('CPATH', ':'.join(include_dirs))
-os.putenv('LD_LIBRARY_PATH', ':'.join(library_dirs))
-os.putenv('DYLD_LIBRARY_PATH', ':'.join(library_dirs))
+    
+    os.putenv('CPATH', ':'.join(include_dirs))
+    os.putenv('LD_LIBRARY_PATH', ':'.join(library_dirs))
+    os.putenv('DYLD_LIBRARY_PATH', ':'.join(library_dirs))
 
 
 ################################################################################
@@ -243,38 +250,39 @@ setup(
 
         # Source Files
         [ 
-          'src/main/aerospike.c', 
-          'src/main/client/type.c',
-          'src/main/client/apply.c',
-          'src/main/client/close.c',
-          'src/main/client/connect.c',
-          'src/main/client/exists.c',
-          'src/main/client/get.c',
-          'src/main/client/info.c',
-          'src/main/client/key.c',
-          'src/main/client/put.c',
-          'src/main/client/query.c',
-          'src/main/client/remove.c',
-          'src/main/client/scan.c',
-          'src/main/key/type.c',
-          'src/main/key/apply.c',
-          'src/main/key/exists.c',
-          'src/main/key/get.c',
-          'src/main/key/put.c',
-          'src/main/key/remove.c',
-          'src/main/query/type.c',
-          'src/main/query/apply.c',
-          'src/main/query/foreach.c',
-          'src/main/query/results.c',
-          'src/main/query/select.c',
-          'src/main/query/where.c',
-          'src/main/scan/type.c',
-          'src/main/scan/foreach.c',
-          'src/main/scan/results.c',
-          'src/main/scan/select.c',
-          'src/main/conversions.c',
-          'src/main/policy.c',
-          'src/main/predicates.c'
+            'src/main/aerospike.c', 
+            'src/main/client/type.c',
+            'src/main/client/apply.c',
+            'src/main/client/close.c',
+            'src/main/client/connect.c',
+            'src/main/client/exists.c',
+            'src/main/client/get.c',
+            'src/main/client/info.c',
+            'src/main/client/key.c',
+            'src/main/client/put.c',
+            'src/main/client/query.c',
+            'src/main/client/remove.c',
+            'src/main/client/scan.c',
+            'src/main/client/admin.c',
+            'src/main/key/type.c',
+            'src/main/key/apply.c',
+            'src/main/key/exists.c',
+            'src/main/key/get.c',
+            'src/main/key/put.c',
+            'src/main/key/remove.c',
+            'src/main/query/type.c',
+            'src/main/query/apply.c',
+            'src/main/query/foreach.c',
+            'src/main/query/results.c',
+            'src/main/query/select.c',
+            'src/main/query/where.c',
+            'src/main/scan/type.c',
+            'src/main/scan/foreach.c',
+            'src/main/scan/results.c',
+            'src/main/scan/select.c',
+            'src/main/conversions.c',
+            'src/main/policy.c',
+            'src/main/predicates.c'
         ], 
 
         # Compile
