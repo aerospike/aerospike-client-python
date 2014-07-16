@@ -203,7 +203,7 @@ if 'build' in sys.argv or 'install' in sys.argv :
     #---------------------------------------------------------------------------
     # Environment Variables
     #---------------------------------------------------------------------------
-    
+
     os.putenv('CPATH', ':'.join(include_dirs))
     os.putenv('LD_LIBRARY_PATH', ':'.join(library_dirs))
     os.putenv('DYLD_LIBRARY_PATH', ':'.join(library_dirs))
@@ -216,12 +216,15 @@ if 'build' in sys.argv or 'install' in sys.argv :
 # Get the long description from the relevant file
 with open(path.join(CWD, 'README.rst')) as f:
     long_description = f.read()
-# long_description = None
+
+# Get the version from the relevant file
+with open(path.join(CWD, 'VERSION')) as f:
+    version = f.read()
 
 setup(
     name = 'aerospike', 
     
-    version = '1.0.0', 
+    version = version, 
 
     description = 'Aerospike Client Library for Python',
     long_description = long_description,
@@ -263,7 +266,6 @@ setup(
             'src/main/client/query.c',
             'src/main/client/remove.c',
             'src/main/client/scan.c',
-            'src/main/client/admin.c',
             'src/main/key/type.c',
             'src/main/key/apply.c',
             'src/main/key/exists.c',
