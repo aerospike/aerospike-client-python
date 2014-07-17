@@ -83,7 +83,7 @@ PyObject * AerospikeClient_create_user( AerospikeClient * self, PyObject *args )
 CLEANUP:
 	for(int i = 0; i < roles_size; i++) {
 		if( roles[i] != NULL)
-			free(roles[i]);
+			cf_free(roles[i]);
 	}
 
 	if ( err.code != AEROSPIKE_OK ) {
