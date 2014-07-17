@@ -30,6 +30,7 @@ from subprocess import call
 ################################################################################
 
 AEROSPIKE_C_HOME = os.getenv('AEROSPIKE_C_HOME')
+PREFIX = None
 PLATFORM =  platform.platform(1)
 LINUX = 'Linux' in PLATFORM
 DARWIN = 'Darwin' in PLATFORM
@@ -72,13 +73,16 @@ if DARWIN:
     #---------------------------------------------------------------------------
 
     extra_compile_args = extra_compile_args + [
-      '-D_DARWIN_UNLIMITED_SELECT',
-      '-undefined','dynamic_lookup',
-      '-DLUA_DEBUG_HOOK',
-      '-DMARCH_x86_64'
-      ]
+        '-D_DARWIN_UNLIMITED_SELECT',
+        '-undefined','dynamic_lookup',
+        '-DLUA_DEBUG_HOOK',
+        '-DMARCH_x86_64'
+        ]
     
     libraries = libraries + ['lua']
+
+    if AEROSPIKE_C_HOME:
+        PREFIX = AEROSPIKE_C_HOME + '/target/Darwin-x86_64'
 
 elif LINUX:
 
@@ -92,6 +96,9 @@ elif LINUX:
         ]
 
     libraries = libraries + ['rt']
+
+    if AEROSPIKE_C_HOME:
+        PREFIX = AEROSPIKE_C_HOME + '/target/Linux-x86_64'
 
     #---------------------------------------------------------------------------
     # The following will attempt to resolve the Lua 5.1 library dependency
@@ -148,10 +155,10 @@ if 'build' in sys.argv or 'install' in sys.argv :
 
     os.chmod('./scripts/aerospike-client-c.sh',0755)
 
-    if AEROSPIKE_C_HOME:
-        rc = call(['PREFIX=' + AEROSPIKE_C_HOME, './scripts/aerospike-client-c.sh'])
-    else:
-        rc = call(['./scripts/aerospike-client-c.sh'])
+    if PREFIX:
+        os.putenv('PREFIX', PREFIX)
+    
+    rc = call(['./scripts/aerospike-client-c.sh'])
     if rc != 0 :
         print("error: scripts/aerospike-client-c.sh", rc, file=sys.stderr)
         sys.exit(1)
@@ -256,6 +263,7 @@ setup(
           'src/main/client/query.c',
           'src/main/client/remove.c',
           'src/main/client/scan.c',
+	  'src/main/client/admin.c',
           'src/main/key/type.c',
           'src/main/key/apply.c',
           'src/main/key/exists.c',
