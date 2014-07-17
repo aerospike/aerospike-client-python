@@ -18,8 +18,12 @@
 from __future__ import print_function
 
 import aerospike
+import random
+import signal
 import sys
+import time
 
+from threading import Timer
 from optparse import OptionParser
 
 ################################################################################
@@ -37,6 +41,10 @@ optparser.add_option(
 optparser.add_option(
     "-p", "--port", dest="port", type="int", default=3000, metavar="<PORT>",
     help="Port of the Aerospike server.")
+
+optparser.add_option(
+    "-v", "--verbose", dest="verbose", action="store_true", metavar="<PORT>",
+    help="Verbose output.")
 
 optparser.add_option(
     "--help", dest="help", action="store_true",
@@ -58,10 +66,75 @@ config = {
 }
 
 ################################################################################
+# Generators
+################################################################################
+
+READ_OP = 0
+WRITE_OP = 1
+CHOICE_OP = [READ_OP, WRITE_OP]
+
+# Generator for operations
+def operation(r, w):
+    rn = r
+    wn = w
+    while rn + wn > 0:
+        if rn > 0 and wn > 0:
+            op = random.randint(0,100)
+            if op <= r:
+                op = READ_OP
+                rn -= 1
+            else:
+                op = WRITE_OP
+                wn -= 1
+            if wn == 0 and rn == 0:
+                rn = r
+                wn = w
+            yield op
+        elif rn > 0:
+            op = READ_OP
+            rn -= 1
+            if wn == 0 and rn == 0:
+                rn = r
+                wn = w
+            yield op
+        elif wn > 0:
+            op = WRITE_OP
+            wn -= 1
+            if wn == 0 and rn == 0:
+                rn = r
+                wn = w
+            yield op
+
+
+################################################################################
 # Application
 ################################################################################
 
 exitCode = 0
+
+k = 1000000
+r = 80
+w = 20
+
+count = 0
+start = 0
+intervals = []
+
+def total_summary():
+
+    # stop time
+    stop = time.time()
+
+    # elapse time
+    elapse = (stop - start)
+
+    print()
+    print("Summary:")
+    print("     {0} seconds for {1} operations".format(elapse, count))
+    print("     {0} operations per second".format(count / elapse))
+    print()
+
+    sys.exit(0)
 
 try:
 
@@ -77,78 +150,52 @@ try:
 
     try:
 
-        print('########################################################################')
-        print('PUT')
-        print('########################################################################')
+        signal.signal(signal.SIGTERM, total_summary)
 
-        for i in range(1000):
-            # print 'a'
-            # j = igloo
-            rec = {
-                'a': i,
-                'b': 'xyz',
-                'c': [i, 'x', ['y', 'z'], {'v': 20, 'w': 21}],
-                'd': {'a': i, 'b': 'x', 'c': ['y', 'z'], 'd': {'v': 20, 'w': 21}}
-            }
-            print(rec)
-            client.put(('test','demo',i), rec)
+        print()
+        print("Press CTRL+C to quit.")
+        print()
 
-        print('########################################################################')
-        print('EXISTS')
-        print('########################################################################')
+        start = time.time()
 
-        for i in range(1,1000):
-            (key, metadata) = client.exists(('test','demo',i))
-            print(key, metadata)
+        # run the operatons
+        for op in operation(r, w):
+
+            if op == READ_OP:
+
+                key = random.randrange(1, k, 1)
+                
+                print('[READ] ', key) if options.verbose else 0
+                
+                (key, metadata, rec) = client.get(('test','demo',key))
+                count += 1
+
+            elif op == WRITE_OP:
+
+                key = random.randrange(1, k, 1)
+
+                print('[WRITE]', key) if options.verbose else 0
+
+                rec = {
+                    'key': key
+                }
+
+                client.put(('test','demo',key), rec)
+                count += 1
 
 
-        print('########################################################################')
-        print('GET')
-        print('########################################################################')
-
-        for i in range(1,1000):
-            (key, metadata, record) = client.get(('test','demo',i))
-            print(key, metadata, record)
-
-        # print('########################################################################')
-        # print('APPLY')
-        # print('########################################################################')
-
-        # for i in range(1,1000):
-        #   val1 = client.key('test','demo','key{0}'.format(i)).apply('simple', 'add', ['a', 30000])
-        #   print val1
-
-        print('########################################################################')
-        print('REMOVE')
-        print('########################################################################')
-
-        for i in range(1,1000):
-            client.remove(('test','demo',i))
-
-        print('########################################################################')
-        print('GET')
-        print('########################################################################')
-
-        for i in range(1,1000):
-            rec1 = client.get(('test','demo',i))
-            print(rec1)
-
+    except KeyboardInterrupt:
+        total_summary()
     except Exception, eargs:
         print("error: {0}".format(eargs), file=sys.stderr)
-        exitCode = 2
-
-    # ----------------------------------------------------------------------------
-    # Close Connection to Cluster
-    # ----------------------------------------------------------------------------
-
-    client.close()
+        sys.exit(2)
 
 except Exception, eargs:
     print("error: {0}".format(eargs), file=sys.stderr)
-    exitCode = 3
+    sys.exit(3)
 
 ################################################################################
 # Exit
 ################################################################################
 
-sys.exit(exitCode)
+sys.exit(0)

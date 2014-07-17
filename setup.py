@@ -204,9 +204,9 @@ if 'build' in sys.argv or 'install' in sys.argv :
     # Environment Variables
     #---------------------------------------------------------------------------
 
-os.putenv('CPATH', ':'.join(include_dirs))
-os.putenv('LD_LIBRARY_PATH', ':'.join(library_dirs))
-os.putenv('DYLD_LIBRARY_PATH', ':'.join(library_dirs))
+    os.putenv('CPATH', ':'.join(include_dirs))
+    os.putenv('LD_LIBRARY_PATH', ':'.join(library_dirs))
+    os.putenv('DYLD_LIBRARY_PATH', ':'.join(library_dirs))
 
 
 ################################################################################
@@ -216,12 +216,15 @@ os.putenv('DYLD_LIBRARY_PATH', ':'.join(library_dirs))
 # Get the long description from the relevant file
 with open(path.join(CWD, 'README.rst')) as f:
     long_description = f.read()
-# long_description = None
+
+# Get the version from the relevant file
+with open(path.join(CWD, 'VERSION')) as f:
+    version = f.read()
 
 setup(
     name = 'aerospike', 
     
-    version = '1.0.0', 
+    version = version, 
 
     description = 'Aerospike Client Library for Python',
     long_description = long_description,
