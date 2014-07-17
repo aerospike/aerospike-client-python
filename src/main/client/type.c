@@ -23,6 +23,7 @@
 #include <aerospike/as_error.h>
 #include <aerospike/as_policy.h>
 
+#include "admin.h"
 #include "client.h"
 
 /*******************************************************************************
@@ -37,7 +38,16 @@ static PyMethodDef AerospikeClient_Type_Methods[] = {
 
     {"close",	(PyCFunction) AerospikeClient_Close,	METH_VARARGS | METH_KEYWORDS, 
     			"Close the connection(s) to the cluster."},
-
+// ADMIN OPERATIONS
+    {"admin_create_user",	(PyCFunction) AerospikeClient_create_user,	METH_VARARGS,	"Create a new user."},
+    {"admin_drop_user", (PyCFunction) AerospikeClient_drop_user, METH_VARARGS , "Drop a user."},
+    {"admin_set_password", (PyCFunction) AerospikeClient_set_password, METH_VARARGS , "Set password"},
+    {"admin_change_password", (PyCFunction) AerospikeClient_change_password, METH_VARARGS, "Change password."},
+    {"admin_grant_roles", (PyCFunction) AerospikeClient_grant_roles, METH_VARARGS , "Grant Roles."},
+    {"admin_revoke_roles", (PyCFunction) AerospikeClient_revoke_roles, METH_VARARGS , "Revoke roles"},
+    {"admin_replace_roles", (PyCFunction) AerospikeClient_replace_roles, METH_VARARGS, "Replace roles."},
+    {"admin_query_user",	(PyCFunction) AerospikeClient_query_user,	METH_VARARGS,	"Query a user for roles."},
+    {"admin_query_users",	(PyCFunction) AerospikeClient_query_users,	METH_VARARGS,	"Query all users for roles."},
     // KVS OPERATIONS
 	{"exists",	(PyCFunction) AerospikeClient_Exists,	METH_VARARGS | METH_KEYWORDS, 
 				"Check the existence of a record in the database."},
@@ -106,6 +116,7 @@ static int AerospikeClient_Type_Init(AerospikeClient * self, PyObject * args, Py
 
     as_config config;
     as_config_init(&config);
+    as_config_set_user(&config, "admin", "admin");
 
     PyObject * py_hosts = PyDict_GetItemString(py_config, "hosts");
     if ( py_hosts && PyList_Check(py_hosts) ) {
