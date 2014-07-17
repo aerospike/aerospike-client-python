@@ -43,7 +43,7 @@
 
 
 
-as_status strArray_to_pyobject(as_error * err, char str_array_ptr[][AS_ROLE_SIZE], PyObject **py_list, int roles_size)
+as_status strArray_to_pyobject( as_error * err, char str_array_ptr[][AS_ROLE_SIZE], PyObject **py_list, int roles_size )
 {
 	as_error_reset(err);
 	int i;
@@ -56,34 +56,17 @@ as_status strArray_to_pyobject(as_error * err, char str_array_ptr[][AS_ROLE_SIZE
 		role = str_array_ptr[i];
 		PyList_Append(*py_list, Py_BuildValue("s", role));
 	}
-	/*
-	if(PyList_Check(*py_list))
-	{
-		printf("is a list but in called func\n");
-	}
-	*/
-	/*
-	   char *s;
-	   for ( int i = 0; i < PyList_Size(py_list); i++ ) {
-	   PyObject * py_val = PyList_GetItem(py_list, i);
-	   if( PyString_Check(py_val) ) {
-	   s = PyString_AsString(py_val);
 
-	   }	
-	   printf("chaeckingthe string is %s\n", s);
-	   }
-	   */
 	return err->code;
 }
 
-as_status as_user_roles_array_to_pyobject(as_error *err, as_user_roles **user_roles, PyObject **py_as_user_roles, int users)
+as_status as_user_roles_array_to_pyobject( as_error *err, as_user_roles **user_roles, PyObject **py_as_user_roles, int users )
 {
 	as_error_reset(err);
 	int i;
 	*py_as_user_roles = PyList_New(0);	
 	for(i = 0; i < users; i++)
 	{
-
 		PyObject * py_user = PyString_FromString(user_roles[i]->user);
 		PyObject * py_roles_size = PyInt_FromLong(user_roles[i]->roles_size);
 		PyObject * py_roles;
@@ -94,9 +77,6 @@ as_status as_user_roles_array_to_pyobject(as_error *err, as_user_roles **user_ro
 		PyDict_SetItemString(py_user_roles, "roles_size", py_roles_size);
 		PyDict_SetItemString(py_user_roles, "roles", py_roles);
 
-//		Py_DECREF(py_ttl);//?? TODO
-//		Py_DECREF(py_gen);// ?? TODO
-
 		PyList_Append(*py_as_user_roles, py_user_roles);
 	}
 
@@ -104,7 +84,7 @@ as_status as_user_roles_array_to_pyobject(as_error *err, as_user_roles **user_ro
 }
 
 
-as_status as_user_roles_to_pyobject(as_error *err, as_user_roles *user_roles, PyObject **py_as_user_roles)
+as_status as_user_roles_to_pyobject( as_error * err, as_user_roles * user_roles, PyObject ** py_as_user_roles )
 {
 	as_error_reset(err);	
 
@@ -115,35 +95,29 @@ as_status as_user_roles_to_pyobject(as_error *err, as_user_roles *user_roles, Py
 	strArray_to_pyobject(err, user_roles->roles, &py_roles, user_roles->roles_size);
 	
 	PyObject * py_user_roles = PyDict_New();
-	if( !PyDict_Check(py_user_roles))
-	{
-		//TODO error
+	if( !PyDict_Check(py_user_roles)) {
+		return PyLong_FromLong(-1);
 	}
 	
 	PyDict_SetItemString(py_user_roles, "user", py_user);
 	PyDict_SetItemString(py_user_roles, "roles_size", py_roles_size);
 	PyDict_SetItemString(py_user_roles, "roles", py_roles);
 
-	//	Py_DECREF(py_ttl);//?? TODO
-	//	Py_DECREF(py_gen);// ?? TODO
-
 	*py_as_user_roles = PyList_New(0);
 	PyList_Append(*py_as_user_roles, py_user_roles);
+
 	return err->code;
 }
 
-as_status pyobject_to_strArray(as_error * err, PyObject * py_list,  char **arr)
+as_status pyobject_to_strArray( as_error * err, PyObject * py_list,  char ** arr )
 {	
-
 	as_error_reset(err);
+	
 	Py_ssize_t size = PyList_Size(py_list);
-	if(!PyList_Check(py_list))
-	{
-		printf("not  a list \n\n");
-		//TODO error 
+	if(!PyList_Check(py_list)) {
+		return PyLong_FromLong(-1);
 	}
 
-	//Py_ssize_t size = PyList_Size(py_list);
 	char *s;
 	for ( int i = 0; i < size; i++ ) {
 		PyObject * py_val = PyList_GetItem(py_list, i);
@@ -152,6 +126,7 @@ as_status pyobject_to_strArray(as_error * err, PyObject * py_list,  char **arr)
 			strcpy(arr[i], s);
 		}	
 	}
+
 	return err->code;
 }
 
