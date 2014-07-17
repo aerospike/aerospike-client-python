@@ -19,9 +19,11 @@ from __future__ import print_function
 
 import aerospike
 import random
+import signal
 import sys
 import time
 
+from threading import Timer
 from optparse import OptionParser
 
 ################################################################################
@@ -72,24 +74,36 @@ WRITE_OP = 1
 CHOICE_OP = [READ_OP, WRITE_OP]
 
 # Generator for operations
-def operations(k, n, r, w):
-    rn = long(n * (float(r)/float(100)))
-    wn = long(n * (float(w)/float(100)))
+def operation(r, w):
+    rn = r
+    wn = w
     while rn + wn > 0:
         if rn > 0 and wn > 0:
-            op = random.choice(CHOICE_OP)
-            if op == READ_OP:
+            op = random.randint(0,100)
+            if op <= r:
+                op = READ_OP
                 rn -= 1
             else:
+                op = WRITE_OP
                 wn -= 1
+            if wn == 0 and rn == 0:
+                rn = r
+                wn = w
+            yield op
         elif rn > 0:
             op = READ_OP
             rn -= 1
-        else:
+            if wn == 0 and rn == 0:
+                rn = r
+                wn = w
+            yield op
+        elif wn > 0:
             op = WRITE_OP
             wn -= 1
-        
-        yield (op, random.randrange(1, k, 1))
+            if wn == 0 and rn == 0:
+                rn = r
+                wn = w
+            yield op
 
 
 ################################################################################
@@ -97,6 +111,30 @@ def operations(k, n, r, w):
 ################################################################################
 
 exitCode = 0
+
+k = 1000000
+r = 80
+w = 20
+
+count = 0
+start = 0
+intervals = []
+
+def total_summary():
+
+    # stop time
+    stop = time.time()
+
+    # elapse time
+    elapse = (stop - start)
+
+    print()
+    print("Summary:")
+    print("     {0} seconds for {1} operations".format(elapse, count))
+    print("     {0} operations per second".format(count / elapse))
+    print()
+
+    sys.exit(0)
 
 try:
 
@@ -112,23 +150,29 @@ try:
 
     try:
 
-        k = 1000000
-        n = 100000
-        r = 80
-        w = 20
+        signal.signal(signal.SIGTERM, total_summary)
 
-        # start time
+        print()
+        print("Press CTRL+C to quit.")
+        print()
+
         start = time.time()
 
         # run the operatons
-        for (op, key) in operations(k, n, r, w):
+        for op in operation(r, w):
 
             if op == READ_OP:
 
+                key = random.randrange(1, k, 1)
+                
                 print('[READ] ', key) if options.verbose else 0
+                
                 (key, metadata, rec) = client.get(('test','demo',key))
+                count += 1
 
             elif op == WRITE_OP:
+
+                key = random.randrange(1, k, 1)
 
                 print('[WRITE]', key) if options.verbose else 0
 
@@ -137,33 +181,21 @@ try:
                 }
 
                 client.put(('test','demo',key), rec)
+                count += 1
 
-        # stop time
-        stop = time.time()
 
-        # elapse time
-        elapse = (stop - start)
-
-        print("Summary:")
-        print("     {0} seconds for {1} operations".format(elapse, n))
-        print("     {0} operations per second".format(n / elapse))
-
+    except KeyboardInterrupt:
+        total_summary()
     except Exception, eargs:
         print("error: {0}".format(eargs), file=sys.stderr)
-        exitCode = 2
-
-    # ----------------------------------------------------------------------------
-    # Close Connection to Cluster
-    # ----------------------------------------------------------------------------
-
-    client.close()
+        sys.exit(2)
 
 except Exception, eargs:
     print("error: {0}".format(eargs), file=sys.stderr)
-    exitCode = 3
+    sys.exit(3)
 
 ################################################################################
 # Exit
 ################################################################################
 
-sys.exit(exitCode)
+sys.exit(0)
