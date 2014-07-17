@@ -112,13 +112,13 @@ try:
 
     try:
 
-        k = 1000
+        k = 1000000
         n = 100000
         r = 80
         w = 20
 
-        # start time 
-        start = time.clock()
+        # start time
+        start = time.time()
 
         # run the operatons
         for (op, key) in operations(k, n, r, w):
@@ -139,7 +139,7 @@ try:
                 client.put(('test','demo',key), rec)
 
         # stop time
-        stop = time.clock()
+        stop = time.time()
 
         # elapse time
         elapse = (stop - start)
