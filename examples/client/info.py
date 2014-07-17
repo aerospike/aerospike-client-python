@@ -62,7 +62,6 @@ config = {
 ################################################################################
 
 exitCode = 0
-
 try:
 
     # ----------------------------------------------------------------------------
@@ -70,7 +69,25 @@ try:
     # ----------------------------------------------------------------------------
 
     client = aerospike.client(config).connect()
+    policy = {}
+    user = "foo"
+    password = "bar"
+    roles = ["read-write"]
+    roles_size = 1
+    #client.admin_create_user(policy, user, password, roles, roles_size)
+    #client.admin_set_password(policy, user, password)
+    #client.admin_change_password(policy, user, password)
+    
+    #client.admin_grant_roles(policy, user, roles, roles_size)
+    #client.admin_revoke_roles(policy, user, roles, roles_size)
+    #client.admin_replace_roles(policy, user, roles, roles_size)
 
+    #query_user = client.admin_query_user(policy, user)
+    #print(client.admin_query_users(policy))
+
+    #print(query_user)
+    
+    #client.admin_drop_user(policy, user)
     # ----------------------------------------------------------------------------
     # Perform Operation
     # ----------------------------------------------------------------------------
@@ -78,7 +95,6 @@ try:
     try:
 
         request = "statistics"
-
         if len(args) > 0:
             request = ' '.join(args)
 
