@@ -96,7 +96,7 @@ as_status as_user_roles_to_pyobject( as_error * err, as_user_roles * user_roles,
 	
 	PyObject * py_user_roles = PyDict_New();
 	if( !PyDict_Check(py_user_roles)) {
-		return PyLong_FromLong(-1);
+		return as_error_update(err, AEROSPIKE_ERR_CLIENT, "failed to create dictionary");
 	}
 	
 	PyDict_SetItemString(py_user_roles, "user", py_user);
@@ -115,7 +115,7 @@ as_status pyobject_to_strArray( as_error * err, PyObject * py_list,  char ** arr
 	
 	Py_ssize_t size = PyList_Size(py_list);
 	if(!PyList_Check(py_list)) {
-		return PyLong_FromLong(-1);
+		return as_error_update(err, AEROSPIKE_ERR_CLIENT, "not a list");
 	}
 
 	char *s;
