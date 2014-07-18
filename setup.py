@@ -17,6 +17,7 @@
 
 from __future__ import print_function
 
+import distutils
 import os
 import platform
 import sys
@@ -245,6 +246,22 @@ setup(
         'Topic :: Database'
     ],
 
+
+    zip_safe = False,
+
+    include_package_data = True,
+
+    # Data Files
+    data_files = [
+        ('aerospike/lua', [
+            'aerospike-client-c/lua/aerospike.lua',
+            'aerospike-client-c/lua/as.lua',
+            'aerospike-client-c/lua/stream_ops.lua',
+            ]
+        )
+    ],
+
+
     ext_modules = [
       Extension( 
 
@@ -285,7 +302,7 @@ setup(
             'src/main/conversions.c',
             'src/main/policy.c',
             'src/main/predicates.c'
-        ], 
+        ],
 
         # Compile
         include_dirs = include_dirs,

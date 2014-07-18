@@ -3,3 +3,4 @@ include LICENSE
 include VERSION
 recursive-include scripts *
 recursive-include src *
+recursive-include aerospike-client-c/lua *
