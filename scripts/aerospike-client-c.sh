@@ -218,6 +218,7 @@ if [ $DOWNLOAD ] && [ $DOWNLOAD == 1 ]; then
 
       IFS=" " read PKG_DIST PKG_TYPE <<< "${result}"
       PKG_PATH=${AEROSPIKE}/package/usr
+      LUA_PATH=${AEROSPIKE}/package/opt/aerospike/client/sys/udf/lua
       ;;
 
     ############################################################################
@@ -227,6 +228,7 @@ if [ $DOWNLOAD ] && [ $DOWNLOAD == 1 ]; then
       PKG_DIST="mac"
       PKG_TYPE="pkg"
       PKG_PATH=${AEROSPIKE}/package/usr/local
+      LUA_PATH=${AEROSPIKE}/package/usr/local/aerospike/client/sys/udf/lua
       ;;
 
     ############################################################################
@@ -301,7 +303,7 @@ if [ $DOWNLOAD ] && [ $DOWNLOAD == 1 ]; then
       "pkg" )
         printf "info: extracting files from '${INST_PATH}'\n"
         xar -xf aerospike-client-c-devel-*.pkg
-        cat Payload | gunzip -dc |cpio -i
+        cat Payload | gunzip -dc | cpio -i
         rm Bom PackageInfo Payload
         ;;
     esac
@@ -321,6 +323,7 @@ fi
 
 AEROSPIKE_LIBRARY=${PREFIX}/lib/libaerospike.a
 AEROSPIKE_INCLUDE=${PREFIX}/include/aerospike
+AEROSPIKE_LUA=${LUA_PATH}
 
 printf "\n" >&1
 
@@ -340,6 +343,13 @@ else
   FAILED=1
 fi
 
+if [ -f ${AEROSPIKE_LUA}/aerospike.lua ]; then
+  printf "   [✓] ${AEROSPIKE_LUA}/aerospike.lua\n" >&1
+else
+  printf "   [✗] ${AEROSPIKE_LUA}/aerospike.lua\n" >&1
+  FAILED=1
+fi
+
 printf "\n" >&1
 
 if [ $FAILED ]; then
@@ -353,3 +363,7 @@ cp ${PREFIX}/lib/libaerospike.a ${AEROSPIKE}/lib/.
 rm -rf ${AEROSPIKE}/include
 mkdir -p ${AEROSPIKE}/include
 cp -R ${PREFIX}/include ${AEROSPIKE}
+
+rm -rf ${AEROSPIKE}/lua
+mkdir -p ${AEROSPIKE}/lua
+cp -R ${AEROSPIKE_LUA}/* ${AEROSPIKE}/lua
