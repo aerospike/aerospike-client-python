@@ -25,7 +25,31 @@
 PyObject * AerospikeClient_Connect(AerospikeClient * self, PyObject * args, PyObject * kwds)
 {
 	as_error err;
+	as_error_init(&err);
+
+	PyObject * py_username = NULL;
+	PyObject * py_password = NULL;
 	
+	if ( PyArg_ParseTuple(args, "OO:connect", &py_username, &py_password) == false ) {
+		return PyLong_FromLong(-1);
+	}
+	
+	char *username, *password;
+	if( PyString_Check(py_username) ) {
+		username = PyString_AsString(py_username);		
+	}
+	else {
+		return PyLong_FromLong(-1);
+	}
+
+	if( PyString_Check(py_password) ) {
+		password = PyString_AsString(py_password);		
+	}
+	else {
+		return PyLong_FromLong(-1);
+	}
+
+    	as_config_set_user(&self->as->config, username, password);
 	aerospike_connect(self->as, &err);
 
 	if ( err.code != AEROSPIKE_OK ) {

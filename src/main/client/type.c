@@ -116,7 +116,6 @@ static int AerospikeClient_Type_Init(AerospikeClient * self, PyObject * args, Py
 
     as_config config;
     as_config_init(&config);
-    as_config_set_user(&config, "admin", "admin");
 
     PyObject * py_hosts = PyDict_GetItemString(py_config, "hosts");
     if ( py_hosts && PyList_Check(py_hosts) ) {
