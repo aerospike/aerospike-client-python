@@ -253,7 +253,7 @@ setup(
 
     # Data Files
     data_files = [
-        ('lua', [
+        ('aerospike/lua', [
             'aerospike-client-c/lua/aerospike.lua',
             'aerospike-client-c/lua/as.lua',
             'aerospike-client-c/lua/stream_ops.lua',
