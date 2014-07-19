@@ -54,8 +54,16 @@ optparser.add_option(
     help="Port of the Aerospike server.")
 
 optparser.add_option(
-    "-m", "--mode", dest="mode", type="choice", choices=["foreach","results"], default="foreach",
-    help="Scan result processing mode.")
+    "-m", "--module", dest="module", type="string",
+    help="UDF Module.")
+
+optparser.add_option(
+    "-f", "--function", dest="function", type="string",
+    help="UDF Function.")
+
+optparser.add_option(
+    "-a", "--arg", dest="arguments", action="append", type="string",
+    help="UDF Arguments.")
 
 optparser.add_option(
     "-b", "--bins", dest="bins", type="string", action="append", 
@@ -149,7 +157,11 @@ try:
             # project specified bins
             q.select(*options.bins)
 
-        q.apply("example","ones")
+        if options.module and options.function:
+            if options.arguments:
+                q.apply(options.module, options.function, *options.arguments)
+            else:
+                q.apply(options.module, options.function)
 
         results = []
 
