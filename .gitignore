@@ -5,3 +5,4 @@ dist/
 /.cproject
 /.project
 aerospike-client-c/
+aerospike.egg-info/

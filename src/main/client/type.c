@@ -107,6 +107,46 @@ static int AerospikeClient_Type_Init(AerospikeClient * self, PyObject * args, Py
     as_config config;
     as_config_init(&config);
 
+    bool lua_system_path = FALSE;
+    bool lua_user_path = FALSE;
+
+    PyObject * py_lua = PyDict_GetItemString(py_config, "lua");
+    if ( py_lua && PyDict_Check(py_lua) ) {
+
+    	PyObject * py_lua_system_path = PyDict_GetItemString(py_lua, "system_path");
+    	if ( py_lua_system_path && PyString_Check(py_lua_system_path) ) {
+    		lua_system_path = TRUE;
+			memcpy(config.lua.system_path, PyString_AsString(py_lua_system_path), AS_CONFIG_PATH_MAX_LEN);
+    	}
+
+    	PyObject * py_lua_user_path = PyDict_GetItemString(py_lua, "user_path");
+    	if ( py_lua_user_path && PyString_Check(py_lua_user_path) ) {
+    		lua_user_path = TRUE;
+			memcpy(config.lua.user_path, PyString_AsString(py_lua_user_path), AS_CONFIG_PATH_MAX_LEN);
+    	}
+    	
+    }
+
+    if ( ! lua_system_path ) {
+
+	    PyObject * pkg_resources = PyImport_ImportModule("pkg_resources");
+	    PyObject* resource_filename = PyObject_GetAttrString(pkg_resources,"resource_filename");
+	    PyObject* resource_filename_in = PyTuple_Pack(2,PyString_FromString("aerospike"),PyString_FromString("lua/"));
+	    PyObject* resource_filename_out = PyObject_CallObject(resource_filename, resource_filename_in);
+	    char * lua_path = PyString_AsString(resource_filename_out);
+
+		memcpy(config.lua.system_path, lua_path, AS_CONFIG_PATH_MAX_LEN);
+
+		Py_DECREF(resource_filename_out);
+		Py_DECREF(resource_filename_in);
+		Py_DECREF(resource_filename);
+		Py_DECREF(pkg_resources);
+	}
+
+	if ( ! lua_user_path ) {
+		memcpy(config.lua.user_path, ".", AS_CONFIG_PATH_MAX_LEN);
+	}
+
     PyObject * py_hosts = PyDict_GetItemString(py_config, "hosts");
     if ( py_hosts && PyList_Check(py_hosts) ) {
     	int size = (int) PyList_Size(py_hosts);

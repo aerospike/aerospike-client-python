@@ -17,12 +17,12 @@
 
 from __future__ import print_function
 
-import distutils
 import os
 import platform
 import sys
 
-from distutils.core import setup, Extension
+# from distutils.core import setup, Extension
+from setuptools import setup, Extension
 from os import path
 from subprocess import call
 
@@ -253,7 +253,7 @@ setup(
 
     # Data Files
     data_files = [
-        ('aerospike/lua', [
+        ('lua', [
             'aerospike-client-c/lua/aerospike.lua',
             'aerospike-client-c/lua/as.lua',
             'aerospike-client-c/lua/stream_ops.lua',

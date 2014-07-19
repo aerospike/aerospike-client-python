@@ -20,6 +20,7 @@ from __future__ import print_function
 import aerospike
 import re
 import sys
+import os.path
 
 from optparse import OptionParser
 from aerospike import predicates as p
@@ -77,7 +78,10 @@ if len(args) > 1:
 ################################################################################
 
 config = {
-    'hosts': [ (options.host, options.port) ]
+    'hosts': [ (options.host, options.port) ],
+    'lua': {
+        'user_path': os.path.abspath(os.path.dirname(__file__))
+    }
 }
 
 ################################################################################
@@ -145,21 +149,23 @@ try:
             # project specified bins
             q.select(*options.bins)
 
-        records = []
+        q.apply("example","ones")
+
+        results = []
 
         # callback to be called for each record read
-        def callback((key, meta, record)):
-            records.append(record)
-            print(record)
+        def callback(result):
+            results.append(result)
+            print(result)
         
         # invoke the operations, and for each record invoke the callback
         q.foreach(callback)
         
         print("---")
-        if len(records) == 1:
-            print("OK, 1 record found.")
+        if len(results) == 1:
+            print("OK, 1 result found.")
         else:
-            print("OK, %d records found." % len(records))
+            print("OK, %d results found." % len(results))
 
     except Exception, eargs:
         print("error: {0}".format(eargs), file=sys.stderr)
