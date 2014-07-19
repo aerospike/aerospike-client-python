@@ -31,6 +31,8 @@ unset PKG_DIST
 unset PKG_TYPE
 unset PKG_PATH
 
+LUA_PATH=
+
 ################################################################################
 #
 # FUNCTIONS
@@ -185,9 +187,19 @@ if [ ! $DOWNLOAD ] && [ ! $PREFIX ]; then
   if [ -d ${AEROSPIKE} ] && [ -f ${AEROSPIKE}/package/usr/lib/libaerospike.a ] && [ -f ${AEROSPIKE}/package/usr/include/aerospike/aerospike.h ]; then
     # first, check to see if there is a local client
     PREFIX=${AEROSPIKE}/package/usr
+    if [ -f ${AEROSPIKE}/package/opt/aerospike/client/sys/udf/lua/aerospike.lua ]; then
+      LUA_PATH=${AEROSPIKE}/package/opt/aerospike/client/sys/udf/lua
+    elif [ -f ${AEROSPIKE}/package/usr/local/aerospike/client/sys/udf/lua/aerospike.lua ]; then
+      LUA_PATH=${AEROSPIKE}/package/usr/local/aerospike/client/sys/udf/lua
+    fi
   elif [ -f /usr/lib/libaerospike.a ] && [ -f /usr/include/aerospike/aerospike.h ]; then
     # next, check to see if there is an installed client
     PREFIX=/usr
+    if [ -f /opt/aerospike/client/sys/udf/lua/aerospike.lua ]; then
+      LUA_PATH=/opt/aerospike/client/sys/udf/lua
+    elif [ -f /usr/local/aerospike/client/sys/udf/lua/aerospike.lua ]; then
+      LUA_PATH=/usr/local/aerospike/client/sys/udf/lua
+    fi
   fi
 
   # If we can't find it, then download it.
@@ -362,7 +374,7 @@ cp ${PREFIX}/lib/libaerospike.a ${AEROSPIKE}/lib/.
 
 rm -rf ${AEROSPIKE}/include
 mkdir -p ${AEROSPIKE}/include
-cp -R ${PREFIX}/include ${AEROSPIKE}
+cp -R ${PREFIX}/include/* ${AEROSPIKE}/include
 
 rm -rf ${AEROSPIKE}/lua
 mkdir -p ${AEROSPIKE}/lua
