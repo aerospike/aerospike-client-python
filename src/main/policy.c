@@ -32,28 +32,28 @@
 
 #define POLICY_INIT(__policy) \
 	as_error_reset(err);\
-	if ( ! py_policy || py_policy == Py_None ) {\
-		return err->code;\
-	}\
-	if ( ! PyDict_Check(py_policy) ) {\
-		return as_error_update(err, AEROSPIKE_ERR_PARAM, "policy must be a dict");\
-	}\
-	__policy##_init(policy);\
+if ( ! py_policy || py_policy == Py_None ) {\
+	return err->code;\
+}\
+if ( ! PyDict_Check(py_policy) ) {\
+	return as_error_update(err, AEROSPIKE_ERR_PARAM, "policy must be a dict");\
+}\
+__policy##_init(policy);\
 
 #define POLICY_UPDATE() \
 	*policy_p = policy;
 
 #define POLICY_SET_FIELD(__field, __type) { \
-		PyObject * py_field = PyDict_GetItemString(py_policy, #__field);\
-		if ( py_field ) {\
-			if ( PyInt_Check(py_field) ) {\
-				policy->__field = (__type) PyInt_AsLong(py_field);\
-			}\
-			else {\
-				return as_error_update(err, AEROSPIKE_ERR_PARAM, "%s is invalid", #__field);\
-			}\
+	PyObject * py_field = PyDict_GetItemString(py_policy, #__field);\
+	if ( py_field ) {\
+		if ( PyInt_Check(py_field) ) {\
+			policy->__field = (__type) PyInt_AsLong(py_field);\
 		}\
-	}
+		else {\
+			return as_error_update(err, AEROSPIKE_ERR_PARAM, "%s is invalid", #__field);\
+		}\
+	}\
+}
 
 /**
  * Converts a PyObject into an as_policy_admin object.
@@ -85,8 +85,8 @@ as_status pyobject_to_policy_admin(as_error * err, PyObject * py_policy,
  * and initialized (although, we do reset the error object here).
  */
 as_status pyobject_to_policy_apply(as_error * err, PyObject * py_policy,
-									as_policy_apply * policy,
-									as_policy_apply ** policy_p)
+		as_policy_apply * policy,
+		as_policy_apply ** policy_p)
 {
 	// Initialize Policy
 	POLICY_INIT(as_policy_apply);
@@ -108,12 +108,12 @@ as_status pyobject_to_policy_apply(as_error * err, PyObject * py_policy,
  * and initialized (although, we do reset the error object here).
  */
 as_status pyobject_to_policy_info(as_error * err, PyObject * py_policy,
-									as_policy_info * policy,
-									as_policy_info ** policy_p)
+		as_policy_info * policy,
+		as_policy_info ** policy_p)
 {
 	// Initialize Policy
 	POLICY_INIT(as_policy_info);
-	
+
 	// Set policy fields
 	POLICY_SET_FIELD(timeout, uint32_t);
 	POLICY_SET_FIELD(send_as_is, as_policy_bool);
@@ -132,8 +132,8 @@ as_status pyobject_to_policy_info(as_error * err, PyObject * py_policy,
  * and initialized (although, we do reset the error object here).
  */
 as_status pyobject_to_policy_query(as_error * err, PyObject * py_policy,
-									as_policy_query * policy,
-									as_policy_query ** policy_p)
+		as_policy_query * policy,
+		as_policy_query ** policy_p)
 {
 	// Initialize Policy
 	POLICY_INIT(as_policy_query);
@@ -154,8 +154,8 @@ as_status pyobject_to_policy_query(as_error * err, PyObject * py_policy,
  * and initialized (although, we do reset the error object here).
  */
 as_status pyobject_to_policy_read(as_error * err, PyObject * py_policy,
-									as_policy_read * policy,
-									as_policy_read ** policy_p)
+		as_policy_read * policy,
+		as_policy_read ** policy_p)
 {
 	// Initialize Policy
 	POLICY_INIT(as_policy_read);
@@ -177,8 +177,8 @@ as_status pyobject_to_policy_read(as_error * err, PyObject * py_policy,
  * and initialized (although, we do reset the error object here).
  */
 as_status pyobject_to_policy_remove(as_error * err, PyObject * py_policy,
-									as_policy_remove * policy,
-									as_policy_remove ** policy_p)
+		as_policy_remove * policy,
+		as_policy_remove ** policy_p)
 {
 	// Initialize Policy
 	POLICY_INIT(as_policy_remove);
@@ -203,8 +203,8 @@ as_status pyobject_to_policy_remove(as_error * err, PyObject * py_policy,
  * and initialized (although, we do reset the error object here).
  */
 as_status pyobject_to_policy_scan(as_error * err, PyObject * py_policy,
-									as_policy_scan * policy,
-									as_policy_scan ** policy_p)
+		as_policy_scan * policy,
+		as_policy_scan ** policy_p)
 {
 	// Initialize Policy
 	POLICY_INIT(as_policy_scan);
@@ -226,8 +226,8 @@ as_status pyobject_to_policy_scan(as_error * err, PyObject * py_policy,
  * and initialized (although, we do reset the error object here).
  */
 as_status pyobject_to_policy_write(as_error * err, PyObject * py_policy,
-									as_policy_write * policy,
-									as_policy_write ** policy_p)
+		as_policy_write * policy,
+		as_policy_write ** policy_p)
 {
 	// Initialize Policy
 	POLICY_INIT(as_policy_write);

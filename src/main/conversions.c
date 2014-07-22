@@ -18,18 +18,18 @@
 #include <stdbool.h>
 
 #include <aerospike/as_admin.h>
-#include <aerospike/as_key.h>
 #include <aerospike/as_error.h>
+#include <aerospike/as_key.h>
 #include <aerospike/as_record.h>
 
-#include <aerospike/as_list.h>
 #include <aerospike/as_arraylist.h>
-#include <aerospike/as_map.h>
 #include <aerospike/as_hashmap.h>
+#include <aerospike/as_list.h>
+#include <aerospike/as_map.h>
 #include <aerospike/as_policy.h>
 
-#include "key.h"
 #include "conversions.h"
+#include "key.h"
 
 #define PY_KEYT_NAMESPACE 0
 #define PY_KEYT_SET 1
@@ -40,7 +40,6 @@
 #define PY_EXCEPTION_MSG 1
 #define PY_EXCEPTION_FILE 2
 #define PY_EXCEPTION_LINE 3
-
 
 
 as_status strArray_to_pyobject( as_error * err, char str_array_ptr[][AS_ROLE_SIZE], PyObject **py_list, int roles_size )
@@ -74,6 +73,9 @@ as_status as_user_roles_array_to_pyobject( as_error *err, as_user_roles **user_r
 		PyObject * py_roles_size = PyInt_FromLong(user_roles[i]->roles_size);
 		PyObject * py_roles;
 		strArray_to_pyobject(err, user_roles[i]->roles, &py_roles, user_roles[i]->roles_size);
+		if( err->code != AEROSPIKE_OK) {
+			break;
+		}		
 
 		PyObject * py_user_roles = PyDict_New();
 		PyDict_SetItemString(py_user_roles, "user", py_user);
@@ -85,10 +87,10 @@ as_status as_user_roles_array_to_pyobject( as_error *err, as_user_roles **user_r
 		Py_DECREF(py_roles);
 
 		PyList_Append(*py_as_user_roles, py_user_roles);
-		
+
 		Py_DECREF(py_user_roles);
 	}
-	
+
 	return err->code;
 }
 
@@ -100,14 +102,14 @@ as_status as_user_roles_to_pyobject( as_error * err, as_user_roles * user_roles,
 	PyObject * py_user = PyString_FromString(user_roles->user);
 	PyObject * py_roles_size = PyInt_FromLong(user_roles->roles_size);
 	PyObject * py_roles;
-	
+
 	strArray_to_pyobject(err, user_roles->roles, &py_roles, user_roles->roles_size);
-	
+	if( err->code != AEROSPIKE_OK) {
+		goto END;
+	}		
+
 	PyObject * py_user_roles = PyDict_New();
-	if( !PyDict_Check(py_user_roles)) {
-		return as_error_update(err, AEROSPIKE_ERR_CLIENT, "failed to create dictionary");
-	}
-	
+
 	PyDict_SetItemString(py_user_roles, "user", py_user);
 	PyDict_SetItemString(py_user_roles, "roles_size", py_roles_size);
 	PyDict_SetItemString(py_user_roles, "roles", py_roles);
@@ -115,19 +117,20 @@ as_status as_user_roles_to_pyobject( as_error * err, as_user_roles * user_roles,
 	Py_DECREF(py_user);
 	Py_DECREF(py_roles_size);
 	Py_DECREF(py_roles);
-	
+
 	*py_as_user_roles = PyList_New(0);
 	PyList_Append(*py_as_user_roles, py_user_roles);
-	
+
 	Py_DECREF(py_user_roles);
 
+END:
 	return err->code;
 }
 
 as_status pyobject_to_strArray( as_error * err, PyObject * py_list,  char ** arr )
 {	
 	as_error_reset(err);
-	
+
 	Py_ssize_t size = PyList_Size(py_list);
 	if(!PyList_Check(py_list)) {
 		return as_error_update(err, AEROSPIKE_ERR_CLIENT, "not a list");
@@ -156,13 +159,13 @@ as_status pyobject_to_list(as_error * err, PyObject * py_list, as_list ** list)
 	}
 
 	for ( int i = 0; i < size; i++ ) {
-		 PyObject * py_val = PyList_GetItem(py_list, i);
-		 as_val * val = NULL;
-		 pyobject_to_val(err, py_val, &val);
-		 if ( err->code != AEROSPIKE_OK ) {
-		 	break;
-		 }
-		 as_list_append(*list, val);
+		PyObject * py_val = PyList_GetItem(py_list, i);
+		as_val * val = NULL;
+		pyobject_to_val(err, py_val, &val);
+		if ( err->code != AEROSPIKE_OK ) {
+			break;
+		}
+		as_list_append(*list, val);
 	}
 
 	if ( err->code != AEROSPIKE_OK ) {
@@ -343,7 +346,7 @@ as_status pyobject_to_record(as_error * err, PyObject * py_rec, PyObject * py_me
 				}
 			}
 		}
-	
+
 
 		if ( err->code != AEROSPIKE_OK ) {
 			as_record_destroy(rec);
@@ -414,7 +417,7 @@ as_status pyobject_to_key(as_error * err, PyObject * py_keytuple, as_key * key)
 			return as_error_update(err, AEROSPIKE_ERR_PARAM, "set must be a string");
 		}
 	}
-	
+
 	if ( py_key ) {
 		if ( PyString_Check(py_key) ) {
 			char * k = PyString_AsString(py_key);
@@ -458,67 +461,67 @@ as_status val_to_pyobject(as_error * err, const as_val * val, PyObject ** py_val
 
 	switch( as_val_type(val) ) {
 		case AS_INTEGER: {
-			as_integer * i = as_integer_fromval(val);
-			*py_val = PyInt_FromLong((long) as_integer_get(i));
-			break;
-		}
+					 as_integer * i = as_integer_fromval(val);
+					 *py_val = PyInt_FromLong((long) as_integer_get(i));
+					 break;
+				 }
 		case AS_STRING: {
-			as_string * s = as_string_fromval(val);
-			char * str = as_string_get(s);
-			if ( str != NULL ) {
-				*py_val = PyString_FromString(str);
-			}
-			else {
-				Py_INCREF(Py_None);
-				*py_val = Py_None;
-			}
-			break;
-		}
+					as_string * s = as_string_fromval(val);
+					char * str = as_string_get(s);
+					if ( str != NULL ) {
+						*py_val = PyString_FromString(str);
+					}
+					else {
+						Py_INCREF(Py_None);
+						*py_val = Py_None;
+					}
+					break;
+				}
 		case AS_BYTES: {
-			as_bytes * bval = as_bytes_fromval(val);
-			uint32_t bval_size = as_bytes_size(bval);
-			uint8_t * bval_bytes = malloc(bval_size * sizeof(uint8_t));
-			memcpy(bval_bytes, as_bytes_get(bval), bval_size);
-			*py_val = PyByteArray_FromStringAndSize((char *) bval_bytes, bval_size);
-			break;
-		}
+				       as_bytes * bval = as_bytes_fromval(val);
+				       uint32_t bval_size = as_bytes_size(bval);
+				       uint8_t * bval_bytes = malloc(bval_size * sizeof(uint8_t));
+				       memcpy(bval_bytes, as_bytes_get(bval), bval_size);
+				       *py_val = PyByteArray_FromStringAndSize((char *) bval_bytes, bval_size);
+				       break;
+			       }
 		case AS_LIST: {
-			as_list * l = as_list_fromval((as_val *) val);
-			if ( l != NULL ) {
-				PyObject * py_list = NULL;
-				list_to_pyobject(err, l, &py_list);
-				if ( err->code == AEROSPIKE_OK ) {
-					*py_val = py_list;
-				}
-			}
-			break;
-		}
+				      as_list * l = as_list_fromval((as_val *) val);
+				      if ( l != NULL ) {
+					      PyObject * py_list = NULL;
+					      list_to_pyobject(err, l, &py_list);
+					      if ( err->code == AEROSPIKE_OK ) {
+						      *py_val = py_list;
+					      }
+				      }
+				      break;
+			      }
 		case AS_MAP: {
-			as_map * m = as_map_fromval(val);
-			if ( m != NULL ) {
-				PyObject * py_map = NULL;
-				map_to_pyobject(err, m, &py_map);
-				if ( err->code == AEROSPIKE_OK ) {
-					*py_val = py_map;
-				}
-			}
-			break;
-		}
+				     as_map * m = as_map_fromval(val);
+				     if ( m != NULL ) {
+					     PyObject * py_map = NULL;
+					     map_to_pyobject(err, m, &py_map);
+					     if ( err->code == AEROSPIKE_OK ) {
+						     *py_val = py_map;
+					     }
+				     }
+				     break;
+			     }
 		case AS_REC: {
-			as_record * r = as_record_fromval(val);
-			if ( r != NULL ) {
-				PyObject * py_rec = NULL;
-				record_to_pyobject(err, r, NULL, &py_rec);
-				if ( err->code == AEROSPIKE_OK ) {
-					*py_val = py_rec;
-				}
-			}
-			break;
-		}
+				     as_record * r = as_record_fromval(val);
+				     if ( r != NULL ) {
+					     PyObject * py_rec = NULL;
+					     record_to_pyobject(err, r, NULL, &py_rec);
+					     if ( err->code == AEROSPIKE_OK ) {
+						     *py_val = py_rec;
+					     }
+				     }
+				     break;
+			     }
 		default: {
-			as_error_update(err, AEROSPIKE_ERR_CLIENT, "Unknown type for value");
-			return err->code;
-		}
+				 as_error_update(err, AEROSPIKE_ERR_CLIENT, "Unknown type for value");
+				 return err->code;
+			 }
 	}
 
 	return err->code;
@@ -645,7 +648,7 @@ as_status record_to_pyobject(as_error * err, const as_record * rec, const as_key
 	PyTuple_SetItem(py_rec, 2, py_rec_bins);
 
 	*obj = py_rec;
-	
+
 	return err->code;
 }
 
@@ -664,49 +667,49 @@ as_status key_to_pyobject(as_error * err, const as_key * key, PyObject ** obj)
 	PyObject * py_key = NULL;
 	PyObject * py_digest = NULL;
 
-    if ( key->ns && strlen(key->ns) > 0 ) {
-    	py_namespace = PyString_FromString(key->ns);
-    }
+	if ( key->ns && strlen(key->ns) > 0 ) {
+		py_namespace = PyString_FromString(key->ns);
+	}
 
-    if ( key->set && strlen(key->set) > 0 ) {
-    	py_set = PyString_FromString(key->set);
-    }
+	if ( key->set && strlen(key->set) > 0 ) {
+		py_set = PyString_FromString(key->set);
+	}
 
-    if ( key->valuep ) {
-        as_val * val = (as_val *) key->valuep;
-        as_val_t type = as_val_type(val);
-        switch(type) {
-            case AS_INTEGER: {
-				as_integer * ival = as_integer_fromval(val);
-				py_key = PyInt_FromLong((long) as_integer_get(ival));
-				break;
-			}
-            case AS_STRING: {
-				as_string * sval = as_string_fromval(val);
-				py_key = PyString_FromString(as_string_get(sval));
-				break;
-			}
-            case AS_BYTES: {
-				as_bytes * bval = as_bytes_fromval(val);
-				if ( bval ) {
-					uint32_t bval_size = as_bytes_size(bval);
-					uint8_t * bval_bytes = malloc(bval_size * sizeof(uint8_t));
-					memcpy(bval_bytes, as_bytes_get(bval), bval_size);
-					py_key = PyByteArray_FromStringAndSize((char *) bval_bytes, bval_size);
-				}
-				break;
-			}
+	if ( key->valuep ) {
+		as_val * val = (as_val *) key->valuep;
+		as_val_t type = as_val_type(val);
+		switch(type) {
+			case AS_INTEGER: {
+						 as_integer * ival = as_integer_fromval(val);
+						 py_key = PyInt_FromLong((long) as_integer_get(ival));
+						 break;
+					 }
+			case AS_STRING: {
+						as_string * sval = as_string_fromval(val);
+						py_key = PyString_FromString(as_string_get(sval));
+						break;
+					}
+			case AS_BYTES: {
+					       as_bytes * bval = as_bytes_fromval(val);
+					       if ( bval ) {
+						       uint32_t bval_size = as_bytes_size(bval);
+						       uint8_t * bval_bytes = malloc(bval_size * sizeof(uint8_t));
+						       memcpy(bval_bytes, as_bytes_get(bval), bval_size);
+						       py_key = PyByteArray_FromStringAndSize((char *) bval_bytes, bval_size);
+					       }
+					       break;
+				       }
 			default: {
-				break;
-			}
-        }
-    }
+					 break;
+				 }
+		}
+	}
 
-    if ( key->digest.init ) {
+	if ( key->digest.init ) {
 		uint8_t * digest_bytes = malloc(AS_DIGEST_VALUE_SIZE * sizeof(uint8_t));
 		memcpy(digest_bytes, key->digest.value, AS_DIGEST_VALUE_SIZE);
 		py_digest = PyByteArray_FromStringAndSize((char *) digest_bytes, AS_DIGEST_VALUE_SIZE);
-    }
+	}
 
 	PyObject * py_keyobj = PyTuple_New(4);
 
@@ -714,7 +717,7 @@ as_status key_to_pyobject(as_error * err, const as_key * key, PyObject ** obj)
 	PyTuple_SetItem(py_keyobj, PY_KEYT_SET, py_set == NULL ? Py_None : py_set);
 	PyTuple_SetItem(py_keyobj, PY_KEYT_KEY, py_key == NULL ? Py_None : py_key);
 	PyTuple_SetItem(py_keyobj, PY_KEYT_DIGEST, py_digest == NULL ? Py_None : py_digest);
-	
+
 	*obj = py_keyobj;
 
 	return err->code;
