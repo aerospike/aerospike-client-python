@@ -529,6 +529,7 @@ PyObject * AerospikeClient_query_user( AerospikeClient * self, PyObject * args, 
 		return NULL;
 	}
 
+	as_user_roles *user_roles = NULL;
 	// Convert python object to policy_admin 
 	as_policy_admin *policy, policy_struct;
 	pyobject_to_policy_admin(&err, py_policy, &policy_struct, &policy);
@@ -545,7 +546,6 @@ PyObject * AerospikeClient_query_user( AerospikeClient * self, PyObject * args, 
 
 	user = PyString_AsString(py_user);		
 
-	as_user_roles *user_roles = NULL;
 	// Invoke operation 
 	int success = -1;
 	success = aerospike_query_user(self->as, policy, user, &user_roles);
@@ -592,15 +592,15 @@ PyObject * AerospikeClient_query_users( AerospikeClient * self, PyObject * args,
 		return NULL;
 	}
 
+	int users = 0;
+	as_user_roles **user_roles = NULL;
+
 	// Convert python object to policy_admin 
 	as_policy_admin *policy, policy_struct;
 	pyobject_to_policy_admin(&err, py_policy, &policy_struct, &policy);
 	if ( err.code != AEROSPIKE_OK ) {
 		goto CLEANUP;
 	}
-
-	int users;
-	as_user_roles **user_roles;
 
 	// Invoke operation 
 	int success = -1;
