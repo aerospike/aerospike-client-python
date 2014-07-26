@@ -50,7 +50,7 @@ PyObject * AerospikeClient_Apply_Invoke(
 
 	// Convert python key object to as_key
 	pyobject_to_key(&err, py_key, &key);
-	if ( err.code == AEROSPIKE_OK ) {
+	if ( err.code != AEROSPIKE_OK ) {
 		goto CLEANUP;
 	}
 	
