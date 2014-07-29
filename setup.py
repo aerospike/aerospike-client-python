@@ -143,71 +143,75 @@ else:
 # RESOLVE C CLIENT DEPENDENCY
 ################################################################################
 
-if 'build' in sys.argv or 'install' in sys.argv :
+# If the C client is packaged elsewhere, assume the libraries are available
+if os.environ.get('NO_RESOLVE_C_CLIENT_DEP', None):
+    libraries = libraries + ['aerospike']
+else:
+    if 'build' in sys.argv or 'install' in sys.argv :
 
-    # Prefix for Aerospike C client libraries and headers
-    aerospike_c_prefix = './aerospike-client-c'
+        # Prefix for Aerospike C client libraries and headers
+        aerospike_c_prefix = './aerospike-client-c'
 
-    #-------------------------------------------------------------------------------
-    # Execute Aerospike C Client Resolver
-    #-------------------------------------------------------------------------------
+        #-------------------------------------------------------------------------------
+        # Execute Aerospike C Client Resolver
+        #-------------------------------------------------------------------------------
 
-    print('info: Executing','./scripts/aerospike-client-c.sh', file=sys.stdout)
+        print('info: Executing','./scripts/aerospike-client-c.sh', file=sys.stdout)
 
-    os.chmod('./scripts/aerospike-client-c.sh',0755)
+        os.chmod('./scripts/aerospike-client-c.sh',0755)
 
-    if PREFIX:
-        os.putenv('PREFIX', PREFIX)
-    
-    rc = call(['./scripts/aerospike-client-c.sh'])
-    if rc != 0 :
-        print("error: scripts/aerospike-client-c.sh", rc, file=sys.stderr)
-        sys.exit(1)
+        if PREFIX:
+            os.putenv('PREFIX', PREFIX)
+        
+        rc = call(['./scripts/aerospike-client-c.sh'])
+        if rc != 0 :
+            print("error: scripts/aerospike-client-c.sh", rc, file=sys.stderr)
+            sys.exit(1)
 
 
-    if not os.path.isdir(aerospike_c_prefix):
-        print("error: Directory not found:", aerospike_c_prefix, file=sys.stderr)
-        sys.exit(1)
+        if not os.path.isdir(aerospike_c_prefix):
+            print("error: Directory not found:", aerospike_c_prefix, file=sys.stderr)
+            sys.exit(1)
 
-    #-------------------------------------------------------------------------------
-    # Check for aerospike.h
-    #-------------------------------------------------------------------------------
+        #-------------------------------------------------------------------------------
+        # Check for aerospike.h
+        #-------------------------------------------------------------------------------
 
-    aerospike_h = aerospike_c_prefix + '/include/aerospike/aerospike.h'
+        aerospike_h = aerospike_c_prefix + '/include/aerospike/aerospike.h'
 
-    if not os.path.isfile(aerospike_h):
-        print("error: aerospike.h not found:", aerospike_h, file=sys.stderr)
-        sys.exit(1)
+        if not os.path.isfile(aerospike_h):
+            print("error: aerospike.h not found:", aerospike_h, file=sys.stderr)
+            sys.exit(1)
 
-    print("info: aerospike.h found:", aerospike_h, file=sys.stdout)
+        print("info: aerospike.h found:", aerospike_h, file=sys.stdout)
 
-    include_dirs = [
-        aerospike_c_prefix + '/include', 
-        aerospike_c_prefix + '/include/ck'
-        ] + include_dirs
+        include_dirs = [
+            aerospike_c_prefix + '/include', 
+            aerospike_c_prefix + '/include/ck'
+            ] + include_dirs
 
-    #-------------------------------------------------------------------------------
-    # Check for libaerospike.a
-    #-------------------------------------------------------------------------------
+        #-------------------------------------------------------------------------------
+        # Check for libaerospike.a
+        #-------------------------------------------------------------------------------
 
-    aerospike_a = aerospike_c_prefix + '/lib/libaerospike.a'
+        aerospike_a = aerospike_c_prefix + '/lib/libaerospike.a'
 
-    if not os.path.isfile(aerospike_a):
-        print("error: libaerospike.a not found:", aerospike_a, file=sys.stderr)
-        sys.exit(1)
+        if not os.path.isfile(aerospike_a):
+            print("error: libaerospike.a not found:", aerospike_a, file=sys.stderr)
+            sys.exit(1)
 
-    print("info: libaerospike.a found:", aerospike_a, file=sys.stdout)
-    extra_objects = [
-        aerospike_a
-        ] + extra_objects
+        print("info: libaerospike.a found:", aerospike_a, file=sys.stdout)
+        extra_objects = [
+            aerospike_a
+            ] + extra_objects
 
-    #---------------------------------------------------------------------------
-    # Environment Variables
-    #---------------------------------------------------------------------------
+        #---------------------------------------------------------------------------
+        # Environment Variables
+        #---------------------------------------------------------------------------
 
-    os.putenv('CPATH', ':'.join(include_dirs))
-    os.putenv('LD_LIBRARY_PATH', ':'.join(library_dirs))
-    os.putenv('DYLD_LIBRARY_PATH', ':'.join(library_dirs))
+        os.putenv('CPATH', ':'.join(include_dirs))
+        os.putenv('LD_LIBRARY_PATH', ':'.join(library_dirs))
+        os.putenv('DYLD_LIBRARY_PATH', ':'.join(library_dirs))
 
 
 ################################################################################
