@@ -55,6 +55,7 @@ To install the library:
 	sudo python setup.py install --force
 
 **Note** If you have already installed the Aerospike C Client and it is on your linker path you can build using:
+
     AEROSPIKE_LUA_PATH="path/to/lua-core/src" NO_RESOLVE_C_CLIENT_DEP=True python setup.py {build,install} --force
 
 
