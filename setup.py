@@ -160,6 +160,7 @@ if os.environ.get('NO_RESOLVE_C_CLIENT_DEP', None):
 
 else:
     data_files = []
+    lua_path = "aerospike-client-c/lua"
     if 'build' in sys.argv or 'install' in sys.argv :
 
         # Prefix for Aerospike C client libraries and headers
