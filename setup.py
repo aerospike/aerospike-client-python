@@ -146,9 +146,20 @@ else:
 # If the C client is packaged elsewhere, assume the libraries are available
 if os.environ.get('NO_RESOLVE_C_CLIENT_DEP', None):
     libraries = libraries + ['aerospike']
-    lua_path = "/usr/local/share/aerospike/lua"
+    # Can override the lua path
+    lua_path = os.environ.get('AEROSPIKE_LUA_PATH', "/usr/local/share/aerospike/lua")
+    data_files = [
+        ('aerospike', []),
+        ('aerospike/lua', [
+            lua_path + '/aerospike.lua',
+            lua_path + '/as.lua',
+            lua_path + '/stream_ops.lua',
+            ]
+        )
+    ]
+
 else:
-    lua_path = "aerospike-client-c/lua"
+    data_files = []
     if 'build' in sys.argv or 'install' in sys.argv :
 
         # Prefix for Aerospike C client libraries and headers
@@ -265,15 +276,7 @@ setup(
     },
 
     # Data files
-    data_files = [
-        ('aerospike', []),
-        ('aerospike/lua', [
-            lua_path + '/aerospike.lua',
-            lua_path + '/as.lua',
-            lua_path + '/stream_ops.lua',
-            ]
-        )
-    ],
+    data_files = data_files,
 
 
     ext_modules = [
