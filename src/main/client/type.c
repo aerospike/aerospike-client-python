@@ -131,7 +131,7 @@ static int AerospikeClient_Type_Init(AerospikeClient * self, PyObject * args, Py
 
 	    PyObject * pkg_resources = PyImport_ImportModule("pkg_resources");
 	    PyObject* resource_filename = PyObject_GetAttrString(pkg_resources,"resource_filename");
-	    PyObject* resource_filename_in = PyTuple_Pack(2,PyString_FromString("aerospike"),PyString_FromString("aerospike/lua/"));
+	    PyObject* resource_filename_in = PyTuple_Pack(2,PyString_FromString("aerospike"),PyString_FromString("aerospike-client-c/lua/"));
 	    PyObject* resource_filename_out = PyObject_CallObject(resource_filename, resource_filename_in);
 	    char * lua_path = PyString_AsString(resource_filename_out);
 

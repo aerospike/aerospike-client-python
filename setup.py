@@ -249,18 +249,25 @@ setup(
 
     zip_safe = False,
 
-    include_package_data = True,
+    # include_package_data = True,
 
-    # Data Files
-    data_files = [
-        ('aerospike', []),
-        ('aerospike/lua', [
-            'aerospike-client-c/lua/aerospike.lua',
-            'aerospike-client-c/lua/as.lua',
-            'aerospike-client-c/lua/stream_ops.lua',
+    # Package Data Files
+    package_data = {
+        'aerospike': [
+            'aerospike-client-c/lua/*.lua',
             ]
-        )
-    ],
+    },
+
+    # Data files
+    # data_files = [
+    #     ('aerospike', []),
+    #     ('aerospike/lua', [
+    #         'aerospike-client-c/lua/aerospike.lua',
+    #         'aerospike-client-c/lua/as.lua',
+    #         'aerospike-client-c/lua/stream_ops.lua',
+    #         ]
+    #     )
+    # ],
 
 
     ext_modules = [
