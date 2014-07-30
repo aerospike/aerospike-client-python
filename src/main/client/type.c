@@ -23,6 +23,7 @@
 #include <aerospike/as_error.h>
 #include <aerospike/as_policy.h>
 
+#include "admin.h"
 #include "client.h"
 
 /*******************************************************************************
@@ -32,43 +33,107 @@
 static PyMethodDef AerospikeClient_Type_Methods[] = {
 
 	// CONNECTION OPERATIONS
-    {"connect",	(PyCFunction) AerospikeClient_Connect,	METH_VARARGS | METH_KEYWORDS, 
-    			"Opens connection(s) to the cluster."},
 
-    {"close",	(PyCFunction) AerospikeClient_Close,	METH_VARARGS | METH_KEYWORDS, 
-    			"Close the connection(s) to the cluster."},
+	{"connect",
+		(PyCFunction) AerospikeClient_Connect, METH_VARARGS | METH_KEYWORDS,
+		"Opens connection(s) to the cluster."},
+	{"close",
+		(PyCFunction) AerospikeClient_Close, METH_VARARGS | METH_KEYWORDS,
+		"Close the connection(s) to the cluster."},
 
-    // KVS OPERATIONS
-	{"exists",	(PyCFunction) AerospikeClient_Exists,	METH_VARARGS | METH_KEYWORDS, 
-				"Check the existence of a record in the database."},
+	// ADMIN OPERATIONS
 
-	{"get",		(PyCFunction) AerospikeClient_Get,		METH_VARARGS | METH_KEYWORDS, 
-				"Read a record from the database."},
+	{"admin_create_user",
+		(PyCFunction) AerospikeClient_create_user, METH_VARARGS | METH_KEYWORDS,
+		"Create a new user."},
+	{"admin_drop_user",	(PyCFunction) AerospikeClient_drop_user, METH_VARARGS | METH_KEYWORDS,
+		"Drop a user."},
+	{"admin_set_password",
+		(PyCFunction) AerospikeClient_set_password,	METH_VARARGS | METH_KEYWORDS,
+		"Set password"},
+	{"admin_change_password",
+		(PyCFunction) AerospikeClient_change_password, METH_VARARGS | METH_KEYWORDS,
+		"Change password."},
+	{"admin_grant_roles",
+		(PyCFunction) AerospikeClient_grant_roles, METH_VARARGS | METH_KEYWORDS,
+		"Grant Roles."},
+	{"admin_revoke_roles",
+		(PyCFunction) AerospikeClient_revoke_roles,	METH_VARARGS | METH_KEYWORDS,
+		"Revoke roles"},
+	{"admin_replace_roles",
+		(PyCFunction) AerospikeClient_replace_roles, METH_VARARGS | METH_KEYWORDS,
+		"Replace roles."},
+	{"admin_query_user",
+		(PyCFunction) AerospikeClient_query_user, METH_VARARGS | METH_KEYWORDS,
+		"Query a user for roles."},
+	{"admin_query_users",	(PyCFunction) AerospikeClient_query_users, METH_VARARGS | METH_KEYWORDS,
+		"Query all users for roles."},
 
-	{"put",		(PyCFunction) AerospikeClient_Put,		METH_VARARGS | METH_KEYWORDS, 
-				"Write a record into the database."},
+	// KVS OPERATIONS
 
-	{"remove",	(PyCFunction) AerospikeClient_Remove,	METH_VARARGS | METH_KEYWORDS, 
-				"Remove a record from the database."},
+	{"exists",
+		(PyCFunction) AerospikeClient_Exists, METH_VARARGS | METH_KEYWORDS,
+		"Check the existence of a record in the database."},
+	{"get",
+		(PyCFunction) AerospikeClient_Get, METH_VARARGS | METH_KEYWORDS,
+		"Read a record from the database."},
+	{"put",
+		(PyCFunction) AerospikeClient_Put, METH_VARARGS | METH_KEYWORDS,
+		"Write a record into the database."},
+	{"remove",
+		(PyCFunction) AerospikeClient_Remove, METH_VARARGS | METH_KEYWORDS,
+		"Remove a record from the database."},
+	{"apply",
+		(PyCFunction) AerospikeClient_Apply, METH_VARARGS | METH_KEYWORDS,
+		"Apply a UDF on a record in the database."},
 
-	{"apply",	(PyCFunction) AerospikeClient_Apply,	METH_VARARGS | METH_KEYWORDS, 
-				"Apply a UDF on a record in the database."},
+	// Deprecated key-based API
 
-    // Deprecated key-based API
-    {"key",		(PyCFunction) AerospikeClient_Key,		METH_VARARGS | METH_KEYWORDS, 
-    			"**[DEPRECATED]** Create a new Key object for performing key operations."},
+	{"key",
+		(PyCFunction) AerospikeClient_Key, METH_VARARGS | METH_KEYWORDS,
+		"**[DEPRECATED]** Create a new Key object for performing key operations."},
 
-    // QUERY OPERATIONS
-    {"query",	(PyCFunction) AerospikeClient_Query,	METH_VARARGS | METH_KEYWORDS, 
-    			"Create a new Query object for peforming queries."},
+	// QUERY OPERATIONS
 
-    // SCAN OPERATIONS
-    {"scan",	(PyCFunction) AerospikeClient_Scan,		METH_VARARGS | METH_KEYWORDS, 
-    			"Create a new Scan object for performing scans."},
-			
-    // INFO OPERATIONS
-	{"info",	(PyCFunction) AerospikeClient_Info,		METH_VARARGS | METH_KEYWORDS, 
-    			"Send an info request to the cluster."},
+	{"query",
+		(PyCFunction) AerospikeClient_Query, METH_VARARGS | METH_KEYWORDS,
+		"Create a new Query object for peforming queries."},
+
+	// SCAN OPERATIONS
+
+	{"scan",
+		(PyCFunction) AerospikeClient_Scan, METH_VARARGS | METH_KEYWORDS,
+		"Create a new Scan object for performing scans."},
+
+	// INFO OPERATIONS
+
+	{"info",
+		(PyCFunction) AerospikeClient_Info, METH_VARARGS | METH_KEYWORDS,
+		"Send an info request to the cluster."},
+
+	// UDF OPERATIONS
+
+	{"aerospike_udf_put",
+		(PyCFunction)AerospikeClient_aerospike_udf_put,	METH_VARARGS | METH_KEYWORDS,
+		"Registers a UDF"},
+	{"aerospike_udf_remove",
+		(PyCFunction)AerospikeClient_aerospike_udf_remove, METH_VARARGS | METH_KEYWORDS,
+		"De-registers a UDF"},
+	{"aerospike_udf_list",
+		(PyCFunction)AerospikeClient_aerospike_udf_list, METH_VARARGS | METH_KEYWORDS,
+		"Lists the UDFs"},
+
+	// SECONDARY INDEX OPERATONS
+
+	{"aerospike_index_integer_create",
+		(PyCFunction)AerospikeClient_aerospike_index_integer_create, METH_VARARGS | METH_KEYWORDS,
+		"Creates a secondary integer index"},
+	{"aerospike_index_string_create",
+		(PyCFunction)AerospikeClient_aerospike_index_string_create,	METH_VARARGS | METH_KEYWORDS,
+		"Creates a secondary string index"},
+	{"aerospike_index_remove",
+		(PyCFunction)AerospikeClient_aerospike_index_remove, METH_VARARGS | METH_KEYWORDS,
+		"Remove a secondary index"},
 
 	{NULL}
 };
@@ -81,11 +146,11 @@ static PyObject * AerospikeClient_Type_New(PyTypeObject * type, PyObject * args,
 {
 	AerospikeClient * self = NULL;
 
-    self = (AerospikeClient *) type->tp_alloc(type, 0);
+	self = (AerospikeClient *) type->tp_alloc(type, 0);
 
-    if ( self == NULL ) {
-    	return NULL;
-    }
+	if ( self == NULL ) {
+		return NULL;
+	}
 
 	return (PyObject *) self;
 }
@@ -95,7 +160,7 @@ static int AerospikeClient_Type_Init(AerospikeClient * self, PyObject * args, Py
 	PyObject * py_config = NULL;
 
 	static char * kwlist[] = {"config", NULL};
-	
+
 	if ( PyArg_ParseTupleAndKeywords(args, kwds, "O:client", kwlist, &py_config) == false ) {
 		return 0;
 	}
@@ -124,7 +189,7 @@ static int AerospikeClient_Type_Init(AerospikeClient * self, PyObject * args, Py
     		lua_user_path = TRUE;
 			memcpy(config.lua.user_path, PyString_AsString(py_lua_user_path), AS_CONFIG_PATH_MAX_LEN);
     	}
-    	
+
     }
 
     if ( ! lua_system_path ) {
@@ -170,21 +235,21 @@ static int AerospikeClient_Type_Init(AerospikeClient * self, PyObject * args, Py
 				char * addr = PyString_AsString(py_host);
 				config.hosts[i].addr = addr;
 				config.hosts[i].port = 3000;
-    		}
-    	}
-    }
+			}
+		}
+	}
 
-    
-    as_policies_init(&config.policies);
+
+	as_policies_init(&config.policies);
 
 	self->as = aerospike_new(&config);
 
-    return 0;
+	return 0;
 }
 
 static void AerospikeClient_Type_Dealloc(PyObject * self)
 {
-    self->ob_type->tp_free((PyObject *) self);
+	self->ob_type->tp_free((PyObject *) self);
 }
 
 /*******************************************************************************
@@ -194,46 +259,46 @@ static void AerospikeClient_Type_Dealloc(PyObject * self)
 static PyTypeObject AerospikeClient_Type = {
 	PyObject_HEAD_INIT(NULL)
 
-    .ob_size			= 0,
-    .tp_name			= "aerospike.Client",
-    .tp_basicsize		= sizeof(AerospikeClient),
-    .tp_itemsize		= 0,
-    .tp_dealloc			= (destructor) AerospikeClient_Type_Dealloc,
-    .tp_print			= 0,
-    .tp_getattr			= 0,
-    .tp_setattr			= 0,
-    .tp_compare			= 0,
-    .tp_repr			= 0,
-    .tp_as_number		= 0,
-    .tp_as_sequence		= 0,
-    .tp_as_mapping		= 0,
-    .tp_hash			= 0,
-    .tp_call			= 0,
-    .tp_str				= 0,
-    .tp_getattro		= 0,
-    .tp_setattro		= 0,
-    .tp_as_buffer		= 0,
-    .tp_flags			= Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE,
-    .tp_doc				= 
-    		"The Client class manages the connections and trasactions against\n"
-    		"an Aerospike cluster.\n",
-    .tp_traverse		= 0,
-    .tp_clear			= 0,
-    .tp_richcompare		= 0,
-    .tp_weaklistoffset	= 0,
-    .tp_iter			= 0,
-    .tp_iternext		= 0,
-    .tp_methods			= AerospikeClient_Type_Methods,
-    .tp_members			= 0,
-    .tp_getset			= 0,
-    .tp_base			= 0,
-    .tp_dict			= 0,
-    .tp_descr_get		= 0,
-    .tp_descr_set		= 0,
-    .tp_dictoffset		= 0,
-    .tp_init			= (initproc) AerospikeClient_Type_Init,
-    .tp_alloc			= 0,
-    .tp_new				= AerospikeClient_Type_New
+		.ob_size			= 0,
+	.tp_name			= "aerospike.Client",
+	.tp_basicsize		= sizeof(AerospikeClient),
+	.tp_itemsize		= 0,
+	.tp_dealloc			= (destructor) AerospikeClient_Type_Dealloc,
+	.tp_print			= 0,
+	.tp_getattr			= 0,
+	.tp_setattr			= 0,
+	.tp_compare			= 0,
+	.tp_repr			= 0,
+	.tp_as_number		= 0,
+	.tp_as_sequence		= 0,
+	.tp_as_mapping		= 0,
+	.tp_hash			= 0,
+	.tp_call			= 0,
+	.tp_str				= 0,
+	.tp_getattro		= 0,
+	.tp_setattro		= 0,
+	.tp_as_buffer		= 0,
+	.tp_flags			= Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE,
+	.tp_doc				=
+		"The Client class manages the connections and trasactions against\n"
+		"an Aerospike cluster.\n",
+	.tp_traverse		= 0,
+	.tp_clear			= 0,
+	.tp_richcompare		= 0,
+	.tp_weaklistoffset	= 0,
+	.tp_iter			= 0,
+	.tp_iternext		= 0,
+	.tp_methods			= AerospikeClient_Type_Methods,
+	.tp_members			= 0,
+	.tp_getset			= 0,
+	.tp_base			= 0,
+	.tp_dict			= 0,
+	.tp_descr_get		= 0,
+	.tp_descr_set		= 0,
+	.tp_dictoffset		= 0,
+	.tp_init			= (initproc) AerospikeClient_Type_Init,
+	.tp_alloc			= 0,
+	.tp_new				= AerospikeClient_Type_New
 };
 
 /*******************************************************************************
@@ -247,7 +312,7 @@ PyTypeObject * AerospikeClient_Ready()
 
 AerospikeClient * AerospikeClient_New(PyObject * parent, PyObject * args, PyObject * kwds)
 {
-    AerospikeClient * self = (AerospikeClient *) AerospikeClient_Type.tp_new(&AerospikeClient_Type, args, kwds);
-    AerospikeClient_Type.tp_init((PyObject *) self, args, kwds);
+	AerospikeClient * self = (AerospikeClient *) AerospikeClient_Type.tp_new(&AerospikeClient_Type, args, kwds);
+	AerospikeClient_Type.tp_init((PyObject *) self, args, kwds);
 	return self;
 }

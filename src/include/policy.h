@@ -18,6 +18,10 @@
 #include <aerospike/as_error.h>
 #include <aerospike/as_policy.h>
 
+as_status pyobject_to_policy_admin(as_error * err, PyObject * py_policy,
+									as_policy_admin * policy,
+									as_policy_admin ** policy_p);
+
 as_status pyobject_to_policy_apply(as_error * err, PyObject * py_policy,
 									as_policy_apply * policy,
 									as_policy_apply ** policy_p);

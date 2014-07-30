@@ -211,3 +211,58 @@ AerospikeQuery * AerospikeClient_Query(AerospikeClient * self, PyObject * args, 
  */
 PyObject * AerospikeClient_Info(AerospikeClient * self, PyObject * args, PyObject * kwds);
 
+
+/*******************************************************************************
+ * UDF OPERATIONS
+ ******************************************************************************/
+/**
+ * Registers a new UDF.
+ *
+ *		client.aerospike_udf_put(policy, filename, udf_type)
+ *
+ */
+PyObject * AerospikeClient_aerospike_udf_put(AerospikeClient * self, PyObject *args, PyObject * kwds);
+
+/**
+ * De-registers a UDF.
+ *
+ *		client.aerospike_udf_remove(policy, filename)
+ *
+ */
+PyObject * AerospikeClient_aerospike_udf_remove(AerospikeClient * self, PyObject *args, PyObject * kwds);
+
+/**
+ * Lists the UDFs
+ *
+ *		client.aerospike_udf_list(policy)
+ *
+ */
+PyObject * AerospikeClient_aerospike_udf_list(AerospikeClient * self, PyObject *args, PyObject * kwds);
+
+
+/*******************************************************************************
+ * SECONDARY INDEX OPERATIONS
+ ******************************************************************************/
+/**
+ * Create secondary integer index
+ *
+ *		client.aerospike_index_integer_create(policy, namespace, set, bin, index_name)
+ *
+ */
+PyObject * AerospikeClient_aerospike_index_integer_create(AerospikeClient * self, PyObject *args, PyObject * kwds);
+
+/**
+ * Create secondary string index
+ *
+ *		client.aerospike_index_string_create(policy, namespace, set, bin, index_name)
+ *
+ */
+PyObject * AerospikeClient_aerospike_index_string_create(AerospikeClient * self, PyObject *args, PyObject * kwds);
+
+/**
+ * Remove secondary index
+ *
+ *		client.aerospike_index_remove(policy, namespace, index_name)
+ *
+ */
+PyObject * AerospikeClient_aerospike_index_remove(AerospikeClient * self, PyObject *args, PyObject * kwds);
