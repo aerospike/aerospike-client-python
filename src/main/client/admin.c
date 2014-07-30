@@ -27,7 +27,7 @@
 #include "conversions.h"
 #include "policy.h"
 
-PyObject * AerospikeClient_create_user(AerospikeClient * self, PyObject *args, PyObject * kwds)
+PyObject * AerospikeClient_Admin_Create_User(AerospikeClient * self, PyObject *args, PyObject * kwds)
 {
 	// Initialize error
 	as_error err;
@@ -112,7 +112,7 @@ CLEANUP:
 }
 
 
-PyObject * AerospikeClient_drop_user( AerospikeClient *self, PyObject *args, PyObject *kwds )
+PyObject * AerospikeClient_Admin_Drop_User( AerospikeClient *self, PyObject *args, PyObject *kwds )
 {
 	// Initialize error
 	as_error err;
@@ -169,7 +169,7 @@ CLEANUP:
 }
 
 
-PyObject * AerospikeClient_set_password( AerospikeClient *self, PyObject *args, PyObject *kwds )
+PyObject * AerospikeClient_Admin_Set_Password( AerospikeClient *self, PyObject *args, PyObject *kwds )
 {
 	// Initialize error
 	as_error err;
@@ -234,7 +234,7 @@ CLEANUP:
 }
 
 
-PyObject * AerospikeClient_change_password( AerospikeClient *self, PyObject *args, PyObject *kwds )
+PyObject * AerospikeClient_Admin_Change_Password( AerospikeClient *self, PyObject *args, PyObject *kwds )
 {
 	// Initialize error
 	as_error err;
@@ -299,7 +299,7 @@ CLEANUP:
 }
 
 
-PyObject * AerospikeClient_grant_roles( AerospikeClient *self, PyObject *args, PyObject *kwds )
+PyObject * AerospikeClient_Admin_Grant_Roles( AerospikeClient *self, PyObject *args, PyObject *kwds )
 {
 	// Initialize error
 	as_error err;
@@ -378,7 +378,7 @@ CLEANUP:
 }
 
 
-PyObject * AerospikeClient_revoke_roles( AerospikeClient *self, PyObject *args, PyObject *kwds )
+PyObject * AerospikeClient_Admin_Revoke_Roles( AerospikeClient *self, PyObject *args, PyObject *kwds )
 {
 	// Initialize error
 	as_error err;
@@ -457,7 +457,7 @@ CLEANUP:
 }
 
 
-PyObject * AerospikeClient_replace_roles( AerospikeClient *self, PyObject *args, PyObject *kwds )
+PyObject * AerospikeClient_Admin_Replace_Roles( AerospikeClient *self, PyObject *args, PyObject *kwds )
 {
 	// Initialize error
 	as_error err;
@@ -535,7 +535,7 @@ CLEANUP:
 	return PyLong_FromLong(0);
 }
 
-PyObject * AerospikeClient_query_user( AerospikeClient * self, PyObject * args, PyObject *kwds )
+PyObject * AerospikeClient_Admin_Query_User( AerospikeClient * self, PyObject * args, PyObject *kwds )
 {
 	// Initialize error
 	as_error err;
@@ -605,7 +605,7 @@ CLEANUP:
 	return py_user_roles;
 }
 
-PyObject * AerospikeClient_query_users( AerospikeClient * self, PyObject * args, PyObject *kwds )
+PyObject * AerospikeClient_Admin_Query_Users( AerospikeClient * self, PyObject * args, PyObject *kwds )
 {
 	// Initialize error
 	as_error err;

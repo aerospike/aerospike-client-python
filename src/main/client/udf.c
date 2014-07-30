@@ -30,7 +30,7 @@
 
 #define SCRIPT_LEN_MAX 1048576
 
-PyObject * AerospikeClient_aerospike_udf_put(AerospikeClient * self, PyObject *args, PyObject * kwds)
+PyObject * AerospikeClient_UDF_Put(AerospikeClient * self, PyObject *args, PyObject * kwds)
 {
 	// Initialize error
 	as_error err;
@@ -45,7 +45,7 @@ PyObject * AerospikeClient_aerospike_udf_put(AerospikeClient * self, PyObject *a
 	static char * kwlist[] = {"policy", "filename", "udf_type", NULL};
 
 	// Python Function Argument Parsing
-	if ( PyArg_ParseTupleAndKeywords(args, kwds, "OOO:aerospike_udf_put", kwlist, 
+	if ( PyArg_ParseTupleAndKeywords(args, kwds, "OOO:udf_put", kwlist, 
 				&py_policy, &py_filename, &py_udf_type) == false ) {
 		return NULL;
 	}
@@ -118,7 +118,7 @@ CLEANUP:
 }
 
 
-PyObject * AerospikeClient_aerospike_udf_remove(AerospikeClient * self, PyObject *args, PyObject * kwds)
+PyObject * AerospikeClient_UDF_Remove(AerospikeClient * self, PyObject *args, PyObject * kwds)
 {
 	// Initialize error
 	as_error err;
@@ -132,7 +132,7 @@ PyObject * AerospikeClient_aerospike_udf_remove(AerospikeClient * self, PyObject
 	static char * kwlist[] = {"policy", "filename", NULL};
 
 	// Python Function Argument Parsing
-	if ( PyArg_ParseTupleAndKeywords(args, kwds, "OO:aerospike_udf_remove", kwlist, 
+	if ( PyArg_ParseTupleAndKeywords(args, kwds, "OO:udf_remove", kwlist, 
 				&py_policy, &py_filename) == false ) {
 		return NULL;
 	}
@@ -171,7 +171,7 @@ CLEANUP:
 	return PyLong_FromLong(0);
 }
 
-PyObject * AerospikeClient_aerospike_udf_list(AerospikeClient * self, PyObject *args, PyObject * kwds)
+PyObject * AerospikeClient_UDF_List(AerospikeClient * self, PyObject *args, PyObject * kwds)
 {
 	// Initialize error
 	as_error err;
@@ -184,7 +184,7 @@ PyObject * AerospikeClient_aerospike_udf_list(AerospikeClient * self, PyObject *
 	static char * kwlist[] = {"policy", NULL};
 
 	// Python Function Argument Parsing
-	if ( PyArg_ParseTupleAndKeywords(args, kwds, "O:aerospike_udf_list", kwlist, &py_policy) == false ) {
+	if ( PyArg_ParseTupleAndKeywords(args, kwds, "O:udf_list", kwlist, &py_policy) == false ) {
 		return NULL;
 	}
 

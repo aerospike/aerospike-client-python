@@ -72,7 +72,7 @@ PyObject * AerospikeClient_Info(AerospikeClient * self, PyObject * args, PyObjec
 
 	static char * kwlist[] = {"req", "policy", NULL};
 
-	if ( PyArg_ParseTupleAndKeywords(args, kwds, "O|O:get", kwlist, &py_req, &py_policy) == false ) {
+	if ( PyArg_ParseTupleAndKeywords(args, kwds, "O|O:info", kwlist, &py_req, &py_policy) == false ) {
 		return NULL;
 	}
 

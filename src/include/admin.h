@@ -32,7 +32,7 @@
  *		client.admin_create_user(policy, user, password, roles, roles_size)
  *
  */
-PyObject * AerospikeClient_create_user(AerospikeClient * self, PyObject *args, PyObject *kwds);
+PyObject * AerospikeClient_Admin_Create_User(AerospikeClient * self, PyObject *args, PyObject *kwds);
 
 /**
  * Drop an existing user from the database.
@@ -40,7 +40,7 @@ PyObject * AerospikeClient_create_user(AerospikeClient * self, PyObject *args, P
  *		client.admin_drop_user(policy, user)
  *
  */
-PyObject * AerospikeClient_drop_user(AerospikeClient *self, PyObject *args, PyObject *kwds);
+PyObject * AerospikeClient_Admin_Drop_User(AerospikeClient *self, PyObject *args, PyObject *kwds);
 
 /**
  * Set the password for an existing user.
@@ -48,7 +48,7 @@ PyObject * AerospikeClient_drop_user(AerospikeClient *self, PyObject *args, PyOb
  *		client.admin_set_password(policy, user, password)
  *
  */
-PyObject * AerospikeClient_set_password(AerospikeClient *self, PyObject *args, PyObject *kwds);
+PyObject * AerospikeClient_Admin_Set_Password(AerospikeClient *self, PyObject *args, PyObject *kwds);
 
 /**
  * Change the password for an existing user.
@@ -56,7 +56,7 @@ PyObject * AerospikeClient_set_password(AerospikeClient *self, PyObject *args, P
  *		client.admin_change_password(policy, user, password)
  *
  */
-PyObject * AerospikeClient_change_password(AerospikeClient *self, PyObject *args, PyObject *kwds);
+PyObject * AerospikeClient_Admin_Change_Password(AerospikeClient *self, PyObject *args, PyObject *kwds);
 
 /**
  * Grant security roles to an existing user.
@@ -64,7 +64,7 @@ PyObject * AerospikeClient_change_password(AerospikeClient *self, PyObject *args
  *		client.admin_grant_roles(policy, user, roles, roles_size)
  *
  */
-PyObject * AerospikeClient_grant_roles(AerospikeClient *self, PyObject *args, PyObject *kwds);
+PyObject * AerospikeClient_Admin_Grant_Roles(AerospikeClient *self, PyObject *args, PyObject *kwds);
 
 /**
  * Revoke the roles specified from an existing user.
@@ -72,7 +72,7 @@ PyObject * AerospikeClient_grant_roles(AerospikeClient *self, PyObject *args, Py
  *		client.admin_revoke_roles(policy, user, roles, roles_size)
  *
  */
-PyObject * AerospikeClient_revoke_roles(AerospikeClient *self, PyObject *args, PyObject *kwds);
+PyObject * AerospikeClient_Admin_Revoke_Roles(AerospikeClient *self, PyObject *args, PyObject *kwds);
 
 /**
  * Replace the current roles by the new roles specified, for an existing user.
@@ -80,7 +80,7 @@ PyObject * AerospikeClient_revoke_roles(AerospikeClient *self, PyObject *args, P
  *		client.admin_replace_roles(policy, user, roles, roles_size)
  *
  */
-PyObject * AerospikeClient_replace_roles(AerospikeClient *self, PyObject *args, PyObject *kwds);
+PyObject * AerospikeClient_Admin_Replace_Roles(AerospikeClient *self, PyObject *args, PyObject *kwds);
 
 /**
  * Retrieve the roles of an existing user.
@@ -88,7 +88,7 @@ PyObject * AerospikeClient_replace_roles(AerospikeClient *self, PyObject *args, 
  *		client.admin_query_user(policy, user)
  *
  */
-PyObject * AerospikeClient_query_user(AerospikeClient *self, PyObject *args, PyObject *kwds);
+PyObject * AerospikeClient_Admin_Query_User(AerospikeClient *self, PyObject *args, PyObject *kwds);
 
 /**
  * Retrieve the roles for all existing users in the database.
@@ -96,5 +96,5 @@ PyObject * AerospikeClient_query_user(AerospikeClient *self, PyObject *args, PyO
  *		client.admin_query_users(policy)
  *
  */
-PyObject * AerospikeClient_query_users(AerospikeClient *self, PyObject *args, PyObject *kwds);
+PyObject * AerospikeClient_Admin_Query_Users(AerospikeClient *self, PyObject *args, PyObject *kwds);
 

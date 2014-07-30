@@ -29,7 +29,7 @@
 #include "policy.h"
 
 
-PyObject * AerospikeClient_aerospike_index_integer_create(AerospikeClient * self, PyObject *args, PyObject * kwds)
+PyObject * AerospikeClient_Index_Integer_Create(AerospikeClient * self, PyObject *args, PyObject * kwds)
 {
 	// Initialize error
 	as_error err;
@@ -46,7 +46,7 @@ PyObject * AerospikeClient_aerospike_index_integer_create(AerospikeClient * self
 	static char * kwlist[] = {"policy", "ns", "set", "bin", "name", NULL};
 
 	// Python Function Argument Parsing
-	if ( PyArg_ParseTupleAndKeywords(args, kwds, "OOOOO:aerospike_index_integer_create", kwlist, 
+	if ( PyArg_ParseTupleAndKeywords(args, kwds, "OOOOO:index_integer_create", kwlist, 
 				&py_policy, &py_ns, &py_set, &py_bin, &py_name) == false ) {
 		return NULL;
 	}
@@ -113,7 +113,7 @@ CLEANUP:
 }
 
 
-PyObject * AerospikeClient_aerospike_index_string_create(AerospikeClient * self, PyObject *args, PyObject * kwds)
+PyObject * AerospikeClient_Index_String_Create(AerospikeClient * self, PyObject *args, PyObject * kwds)
 {
 	// Initialize error
 	as_error err;
@@ -130,7 +130,7 @@ PyObject * AerospikeClient_aerospike_index_string_create(AerospikeClient * self,
 	static char * kwlist[] = {"policy", "ns", "set", "bin", "name", NULL};
 
 	// Python Function Argument Parsing
-	if ( PyArg_ParseTupleAndKeywords(args, kwds, "OOOOO:aerospike_index_string_create", kwlist, 
+	if ( PyArg_ParseTupleAndKeywords(args, kwds, "OOOOO:index_string_create", kwlist, 
 				&py_policy, &py_ns, &py_set, &py_bin, &py_name) == false ) {
 		return NULL;
 	}
@@ -197,7 +197,7 @@ CLEANUP:
 }
 
 
-PyObject * AerospikeClient_aerospike_index_remove(AerospikeClient * self, PyObject *args, PyObject * kwds)
+PyObject * AerospikeClient_Index_Remove(AerospikeClient * self, PyObject *args, PyObject * kwds)
 {
 	// Initialize error
 	as_error err;
@@ -212,7 +212,7 @@ PyObject * AerospikeClient_aerospike_index_remove(AerospikeClient * self, PyObje
 	static char * kwlist[] = {"policy", "ns", "name", NULL};
 
 	// Python Function Argument Parsing
-	if ( PyArg_ParseTupleAndKeywords(args, kwds, "OOO:aerospike_index_remove", kwlist, 
+	if ( PyArg_ParseTupleAndKeywords(args, kwds, "OOO:index_remove", kwlist, 
 				&py_policy, &py_ns, &py_name) == false ) {
 		return NULL;
 	}

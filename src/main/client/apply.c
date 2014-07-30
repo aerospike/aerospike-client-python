@@ -105,7 +105,7 @@ PyObject * AerospikeClient_Apply(AerospikeClient * self, PyObject * args, PyObje
 	static char * kwlist[] = {"key", "module", "function", "args", "policy", NULL};
 
 	// Python Function Argument Parsing
-	if ( PyArg_ParseTupleAndKeywords(args, kwds, "OOOO|O:get", kwlist, 
+	if ( PyArg_ParseTupleAndKeywords(args, kwds, "OOOO|O:apply", kwlist, 
 			&py_key, &py_module, &py_function, &py_arglist, &py_policy) == false ) {
 		return NULL;
 	}

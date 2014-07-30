@@ -89,7 +89,7 @@ PyObject * AerospikeClient_Put(AerospikeClient * self, PyObject * args, PyObject
 	static char * kwlist[] = {"key", "record", "metadata", "policy", NULL};
 
 	// Python Function Argument Parsing
-	if ( PyArg_ParseTupleAndKeywords(args, kwds, "OO|OO:get", kwlist, 
+	if ( PyArg_ParseTupleAndKeywords(args, kwds, "OO|OO:put", kwlist, 
 			&py_key, &py_bins, &py_meta, &py_policy) == false ) {
 		return NULL;
 	}

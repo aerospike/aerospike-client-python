@@ -26,7 +26,7 @@ from optparse import OptionParser
 # Options Parsing
 ################################################################################
 
-usage = "usage: %prog [options] [REQUEST]"
+usage = "usage: %prog [options] key"
 
 optparser = OptionParser(usage=usage, add_help_option=False)
 
@@ -42,9 +42,22 @@ optparser.add_option(
     "-p", "--port", dest="port", type="int", default=3000, metavar="<PORT>",
     help="Port of the Aerospike server.")
 
+optparser.add_option(
+    "-U", "--username", dest="username", type="string", metavar="<USERNAME>",
+    help="Username to connect to database.")
+
+optparser.add_option(
+    "-P", "--password", dest="password", type="string", metavar="<PASSWORD>",
+    help="Password to connect to database.")
+
 (options, args) = optparser.parse_args()
 
 if options.help:
+    optparser.print_help()
+    print()
+    sys.exit(1)
+
+if options.username == None or options.password == None:
     optparser.print_help()
     print()
     sys.exit(1)
@@ -62,49 +75,31 @@ config = {
 ################################################################################
 
 exitCode = 0
+
 try:
 
     # ----------------------------------------------------------------------------
     # Connect to Cluster
     # ----------------------------------------------------------------------------
 
-    client = aerospike.client(config).connect()
+    client = aerospike.client(config).connect(options.username, options.password)
 
     # ----------------------------------------------------------------------------
     # Perform Operation
     # ----------------------------------------------------------------------------
-
+     
     try:
 
-        request = "statistics"
-        if len(args) > 0:
-            request = ' '.join(args)
-
-        for node,(err,res) in client.info(request).items():
-            if res != None:
-                res = res.strip()
-                if len(res) > 0:
-                    entries = res.split(';')
-                    if len(entries) > 1:
-                        print("{0}:".format(node))
-                        for entry in entries:
-                            entry = entry.strip()
-                            if len(entry) > 0:
-                                count = 0
-                                for field in entry.split(','):
-                                    (name,value) = field.split('=')
-                                    if count > 0:
-                                        print("      {0}: {1}".format(name, value))
-                                    else:
-                                        print("    - {0}: {1}".format(name, value))
-                                    count += 1
-                    else:
-                        print("{0}: {1}".format(node, res))
+   	policy = {}
+	filename = "simple_udf.lua"
+    	
+	client.udf_remove(policy, filename)
+	print("OK, 1 UDF de-registered")
 
     except Exception as e:
         print("error: {0}".format(e), file=sys.stderr)
         exitCode = 2
-
+    
     # ----------------------------------------------------------------------------
     # Close Connection to Cluster
     # ----------------------------------------------------------------------------
