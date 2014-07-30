@@ -267,6 +267,8 @@ setup(
           'src/main/client/remove.c',
           'src/main/client/scan.c',
 	  'src/main/client/admin.c',
+	  'src/main/client/udf.c',
+	  'src/main/client/sec_index.c',
           'src/main/key/type.c',
           'src/main/key/apply.c',
           'src/main/key/exists.c',

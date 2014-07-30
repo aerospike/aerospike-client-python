@@ -31,7 +31,6 @@
  ******************************************************************************/
 
 static PyMethodDef AerospikeClient_Type_Methods[] = {
-
 	// CONNECTION OPERATIONS
 	{"connect",	(PyCFunction) AerospikeClient_Connect,	METH_VARARGS | METH_KEYWORDS, 
 		"Opens connection(s) to the cluster."},
@@ -80,6 +79,15 @@ static PyMethodDef AerospikeClient_Type_Methods[] = {
 	{"info",	(PyCFunction) AerospikeClient_Info,		METH_VARARGS | METH_KEYWORDS, 
 		"Send an info request to the cluster."},
 
+	// UDF OPERATIONS
+	{"aerospike_udf_put",	(PyCFunction)AerospikeClient_aerospike_udf_put,	METH_VARARGS | METH_KEYWORDS,	"Registers a UDF"},
+	{"aerospike_udf_remove",	(PyCFunction)AerospikeClient_aerospike_udf_remove,	METH_VARARGS | METH_KEYWORDS,	"De-registers a UDF"},
+	{"aerospike_udf_list",	(PyCFunction)AerospikeClient_aerospike_udf_list,	METH_VARARGS | METH_KEYWORDS,	"Lists the UDFs"},
+	
+	// SECONDARY INDEX OPERATONS
+	{"aerospike_index_integer_create",	(PyCFunction)AerospikeClient_aerospike_index_integer_create,	METH_VARARGS | METH_KEYWORDS,	"Creates a secondary integer index"},
+	{"aerospike_index_string_create",	(PyCFunction)AerospikeClient_aerospike_index_string_create,	METH_VARARGS | METH_KEYWORDS,	"Creates a secondary string index"},
+	{"aerospike_index_remove",	(PyCFunction)AerospikeClient_aerospike_index_remove,	METH_VARARGS | METH_KEYWORDS,	"Remove a secondary index"},
 	{NULL}
 };
 

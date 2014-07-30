@@ -23,8 +23,14 @@
 #include <aerospike/as_key.h>
 #include <aerospike/as_error.h>
 #include <aerospike/as_record.h>
+#include <aerospike/as_udf.h>
 
 #include "key.h"
+
+as_status as_udf_file_to_pyobject(as_error *err, as_udf_file * entries, uint32_t size, PyObject ** py_entries);
+
+as_status as_udf_files_to_pyobject(as_error *err, as_udf_files *files, PyObject **py_files);
+
 as_status strArray_to_pyobject(as_error * err, char str_array_ptr[][AS_ROLE_SIZE], PyObject **py_list, int roles_size);
 
 as_status as_user_roles_to_pyobject(as_error *err, as_user_roles *user_roles, PyObject **py_as_user_roles);
