@@ -55,7 +55,6 @@ as_status as_udf_file_to_pyobject( as_error *err, as_udf_file * entry, PyObject 
 	PyDict_SetItemString(*py_file, "hash", py_hash);
 	Py_DECREF(py_hash);
 
-
 	PyObject * py_type = PyInt_FromLong(entry->type);
 	PyDict_SetItemString(*py_file, "type", py_type);
 	Py_DECREF(py_type);
