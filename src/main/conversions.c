@@ -51,13 +51,7 @@ as_status as_udf_file_to_pyobject( as_error *err, as_udf_file * entry, PyObject 
 	PyDict_SetItemString(*py_file, "name", py_name);
 	Py_DECREF(py_name);
 
-	PyObject * py_hash = PyList_New(0);
-	for(int j = 0; j < AS_UDF_FILE_HASH_SIZE; j++)
-	{
-		PyObject * hash = PyInt_FromLong(entry->hash[j]);
-		PyList_Append(py_hash, hash);		
-		Py_DECREF(hash);
-	}
+	PyObject * py_hash = PyByteArray_FromStringAndSize((char *) entry->hash, AS_UDF_FILE_HASH_SIZE);
 	PyDict_SetItemString(*py_file, "hash", py_hash);
 	Py_DECREF(py_hash);
 
@@ -66,16 +60,7 @@ as_status as_udf_file_to_pyobject( as_error *err, as_udf_file * entry, PyObject 
 	PyDict_SetItemString(*py_file, "type", py_type);
 	Py_DECREF(py_type);
 
-	PyObject * py_content = PyDict_New();
-
-	PyObject * py_content_size = PyInt_FromLong(entry->content.size);
-	PyDict_SetItemString(py_content, "size", py_content_size);
-	Py_DECREF(py_content_size);
-
-	PyObject * py_content_bytes = PyInt_FromLong((intptr_t)(entry->content.bytes));
-	PyDict_SetItemString(py_content, "bytes", py_content_bytes);
-	Py_DECREF(py_content_bytes);
-
+	PyObject * py_content = PyByteArray_FromStringAndSize((char *) entry->content.bytes, entry->content.size);
 	PyDict_SetItemString(*py_file, "content", py_content);
 	Py_DECREF(py_content);
 
@@ -86,13 +71,7 @@ as_status as_udf_files_to_pyobject( as_error *err, as_udf_files *files, PyObject
 {
 	as_error_reset(err);
 
-	*py_files = PyDict_New();	
-
-	PyObject * py_size = PyInt_FromLong(files->size);
-	PyDict_SetItemString(*py_files, "size", py_size);
-	Py_DECREF(py_size);
-
-	PyObject * py_entries = PyList_New(0);
+	*py_files = PyList_New(0);
 
 	for(int i = 0; i < files->size; i++) {
 		
@@ -102,13 +81,10 @@ as_status as_udf_files_to_pyobject( as_error *err, as_udf_files *files, PyObject
 			goto END;
 		}	
 
-		PyList_Append(py_entries, py_file);
+		PyList_Append(*py_files, py_file);
 		Py_DECREF(py_file);
 	}	
 
-	PyDict_SetItemString(*py_files, "entries", py_entries);
-	Py_DECREF(py_entries);
-	
 END:
 	return err->code;
 }
