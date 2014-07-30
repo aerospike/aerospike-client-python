@@ -31,84 +31,108 @@
  ******************************************************************************/
 
 static PyMethodDef AerospikeClient_Type_Methods[] = {
-	
+
 	// CONNECTION OPERATIONS
 
-	{"connect",	(PyCFunction) AerospikeClient_Connect,	METH_VARARGS | METH_KEYWORDS, 
+	{"connect",
+		(PyCFunction) AerospikeClient_Connect, METH_VARARGS | METH_KEYWORDS,
 		"Opens connection(s) to the cluster."},
-	{"close",	(PyCFunction) AerospikeClient_Close,	METH_VARARGS | METH_KEYWORDS, 
+	{"close",
+		(PyCFunction) AerospikeClient_Close, METH_VARARGS | METH_KEYWORDS,
 		"Close the connection(s) to the cluster."},
 
 	// ADMIN OPERATIONS
 
-	{"admin_create_user",	(PyCFunction) AerospikeClient_create_user,	METH_VARARGS | METH_KEYWORDS,
+	{"admin_create_user",
+		(PyCFunction) AerospikeClient_create_user, METH_VARARGS | METH_KEYWORDS,
 		"Create a new user."},
-	{"admin_drop_user",	(PyCFunction) AerospikeClient_drop_user,	METH_VARARGS | METH_KEYWORDS
+	{"admin_drop_user",	(PyCFunction) AerospikeClient_drop_user, METH_VARARGS | METH_KEYWORDS,
 		"Drop a user."},
-	{"admin_set_password",	(PyCFunction) AerospikeClient_set_password,	METH_VARARGS | METH_KEYWORDS,
+	{"admin_set_password",
+		(PyCFunction) AerospikeClient_set_password,	METH_VARARGS | METH_KEYWORDS,
 		"Set password"},
-	{"admin_change_password",	(PyCFunction) AerospikeClient_change_password,	METH_VARARGS | METH_KEYWORDS
+	{"admin_change_password",
+		(PyCFunction) AerospikeClient_change_password, METH_VARARGS | METH_KEYWORDS,
 		"Change password."},
-	{"admin_grant_roles",	(PyCFunction) AerospikeClient_grant_roles,	METH_VARARGS | METH_KEYWORDS
+	{"admin_grant_roles",
+		(PyCFunction) AerospikeClient_grant_roles, METH_VARARGS | METH_KEYWORDS,
 		"Grant Roles."},
-	{"admin_revoke_roles",	(PyCFunction) AerospikeClient_revoke_roles,	METH_VARARGS | METH_KEYWORDS
+	{"admin_revoke_roles",
+		(PyCFunction) AerospikeClient_revoke_roles,	METH_VARARGS | METH_KEYWORDS,
 		"Revoke roles"},
-	{"admin_replace_roles",	(PyCFunction) AerospikeClient_replace_roles,	METH_VARARGS | METH_KEYWORDS
+	{"admin_replace_roles",
+		(PyCFunction) AerospikeClient_replace_roles, METH_VARARGS | METH_KEYWORDS,
 		"Replace roles."},
-	{"admin_query_user",	(PyCFunction) AerospikeClient_query_user,	METH_VARARGS | METH_KEYWORDS
+	{"admin_query_user",
+		(PyCFunction) AerospikeClient_query_user, METH_VARARGS | METH_KEYWORDS,
 		"Query a user for roles."},
-	{"admin_query_users",	(PyCFunction) AerospikeClient_query_users,	METH_VARARGS | METH_KEYWORDS
+	{"admin_query_users",	(PyCFunction) AerospikeClient_query_users, METH_VARARGS | METH_KEYWORDS,
 		"Query all users for roles."},
 
 	// KVS OPERATIONS
-	
-	{"exists",	(PyCFunction) AerospikeClient_Exists,	METH_VARARGS | METH_KEYWORDS, 
+
+	{"exists",
+		(PyCFunction) AerospikeClient_Exists, METH_VARARGS | METH_KEYWORDS,
 		"Check the existence of a record in the database."},
-	{"get",		(PyCFunction) AerospikeClient_Get,		METH_VARARGS | METH_KEYWORDS, 
+	{"get",
+		(PyCFunction) AerospikeClient_Get, METH_VARARGS | METH_KEYWORDS,
 		"Read a record from the database."},
-	{"put",		(PyCFunction) AerospikeClient_Put,		METH_VARARGS | METH_KEYWORDS, 
+	{"put",
+		(PyCFunction) AerospikeClient_Put, METH_VARARGS | METH_KEYWORDS,
 		"Write a record into the database."},
-	{"remove",	(PyCFunction) AerospikeClient_Remove,	METH_VARARGS | METH_KEYWORDS, 
+	{"remove",
+		(PyCFunction) AerospikeClient_Remove, METH_VARARGS | METH_KEYWORDS,
 		"Remove a record from the database."},
-	{"apply",	(PyCFunction) AerospikeClient_Apply,	METH_VARARGS | METH_KEYWORDS, 
+	{"apply",
+		(PyCFunction) AerospikeClient_Apply, METH_VARARGS | METH_KEYWORDS,
 		"Apply a UDF on a record in the database."},
 
 	// Deprecated key-based API
-	
-	{"key",		(PyCFunction) AerospikeClient_Key,		METH_VARARGS | METH_KEYWORDS, 
+
+	{"key",
+		(PyCFunction) AerospikeClient_Key, METH_VARARGS | METH_KEYWORDS,
 		"**[DEPRECATED]** Create a new Key object for performing key operations."},
 
 	// QUERY OPERATIONS
 
-	{"query",	(PyCFunction) AerospikeClient_Query,	METH_VARARGS | METH_KEYWORDS, 
+	{"query",
+		(PyCFunction) AerospikeClient_Query, METH_VARARGS | METH_KEYWORDS,
 		"Create a new Query object for peforming queries."},
 
 	// SCAN OPERATIONS
 
-	{"scan",	(PyCFunction) AerospikeClient_Scan,		METH_VARARGS | METH_KEYWORDS, 
+	{"scan",
+		(PyCFunction) AerospikeClient_Scan, METH_VARARGS | METH_KEYWORDS,
 		"Create a new Scan object for performing scans."},
 
 	// INFO OPERATIONS
 
-	{"info",	(PyCFunction) AerospikeClient_Info,		METH_VARARGS | METH_KEYWORDS, 
+	{"info",
+		(PyCFunction) AerospikeClient_Info, METH_VARARGS | METH_KEYWORDS,
 		"Send an info request to the cluster."},
 
 	// UDF OPERATIONS
 
-	{"aerospike_udf_put",	(PyCFunction)AerospikeClient_aerospike_udf_put,	METH_VARARGS | METH_KEYWORDS
+	{"aerospike_udf_put",
+		(PyCFunction)AerospikeClient_aerospike_udf_put,	METH_VARARGS | METH_KEYWORDS,
 		"Registers a UDF"},
-	{"aerospike_udf_remove",	(PyCFunction)AerospikeClient_aerospike_udf_remove,	METH_VARARGS | METH_KEYWORDS
+	{"aerospike_udf_remove",
+		(PyCFunction)AerospikeClient_aerospike_udf_remove, METH_VARARGS | METH_KEYWORDS,
 		"De-registers a UDF"},
-	{"aerospike_udf_list",	(PyCFunction)AerospikeClient_aerospike_udf_list,	METH_VARARGS | METH_KEYWORDS
+	{"aerospike_udf_list",
+		(PyCFunction)AerospikeClient_aerospike_udf_list, METH_VARARGS | METH_KEYWORDS,
 		"Lists the UDFs"},
-	
+
 	// SECONDARY INDEX OPERATONS
 
-	{"aerospike_index_integer_create",	(PyCFunction)AerospikeClient_aerospike_index_integer_create,	METH_VARARGS | METH_KEYWORDS
+	{"aerospike_index_integer_create",
+		(PyCFunction)AerospikeClient_aerospike_index_integer_create, METH_VARARGS | METH_KEYWORDS,
 		"Creates a secondary integer index"},
-	{"aerospike_index_string_create",	(PyCFunction)AerospikeClient_aerospike_index_string_create,	METH_VARARGS | METH_KEYWORDS
+	{"aerospike_index_string_create",
+		(PyCFunction)AerospikeClient_aerospike_index_string_create,	METH_VARARGS | METH_KEYWORDS,
 		"Creates a secondary string index"},
-	{"aerospike_index_remove",	(PyCFunction)AerospikeClient_aerospike_index_remove,	METH_VARARGS | METH_KEYWORDS
+	{"aerospike_index_remove",
+		(PyCFunction)AerospikeClient_aerospike_index_remove, METH_VARARGS | METH_KEYWORDS,
 		"Remove a secondary index"},
 
 	{NULL}
@@ -145,29 +169,69 @@ static int AerospikeClient_Type_Init(AerospikeClient * self, PyObject * args, Py
 		return 0;
 	}
 
-	as_config config;
-	as_config_init(&config);
+    as_config config;
+    as_config_init(&config);
 
-	PyObject * py_hosts = PyDict_GetItemString(py_config, "hosts");
-	if ( py_hosts && PyList_Check(py_hosts) ) {
-		int size = (int) PyList_Size(py_hosts);
-		for ( int i = 0; i < size && i < AS_CONFIG_HOSTS_SIZE; i++ ) {
-			PyObject * py_host = PyList_GetItem(py_hosts, i);
-			if ( PyTuple_Check(py_host) && PyTuple_Size(py_host) == 2 ) {
-				PyObject * py_addr = PyTuple_GetItem(py_host,0);
-				PyObject * py_port = PyTuple_GetItem(py_host,1);
-				if ( PyString_Check(py_addr) ) {
-					char * addr = PyString_AsString(py_addr);
-					config.hosts[i].addr = addr;
-				}
-				if ( PyInt_Check(py_port) ) {
-					config.hosts[i].port = (uint16_t) PyInt_AsLong(py_port);
-				}
-				else if ( PyLong_Check(py_port) ) {
-					config.hosts[i].port = (uint16_t) PyLong_AsLong(py_port);
-				}
-			}
-			else if ( PyString_Check(py_host) ) {
+    bool lua_system_path = FALSE;
+    bool lua_user_path = FALSE;
+
+    PyObject * py_lua = PyDict_GetItemString(py_config, "lua");
+    if ( py_lua && PyDict_Check(py_lua) ) {
+
+    	PyObject * py_lua_system_path = PyDict_GetItemString(py_lua, "system_path");
+    	if ( py_lua_system_path && PyString_Check(py_lua_system_path) ) {
+    		lua_system_path = TRUE;
+			memcpy(config.lua.system_path, PyString_AsString(py_lua_system_path), AS_CONFIG_PATH_MAX_LEN);
+    	}
+
+    	PyObject * py_lua_user_path = PyDict_GetItemString(py_lua, "user_path");
+    	if ( py_lua_user_path && PyString_Check(py_lua_user_path) ) {
+    		lua_user_path = TRUE;
+			memcpy(config.lua.user_path, PyString_AsString(py_lua_user_path), AS_CONFIG_PATH_MAX_LEN);
+    	}
+
+    }
+
+    if ( ! lua_system_path ) {
+
+	    PyObject * pkg_resources = PyImport_ImportModule("pkg_resources");
+	    PyObject* resource_filename = PyObject_GetAttrString(pkg_resources,"resource_filename");
+	    PyObject* resource_filename_in = PyTuple_Pack(2,PyString_FromString("aerospike"),PyString_FromString("aerospike-client-c/lua/"));
+	    PyObject* resource_filename_out = PyObject_CallObject(resource_filename, resource_filename_in);
+	    char * lua_path = PyString_AsString(resource_filename_out);
+
+		memcpy(config.lua.system_path, lua_path, AS_CONFIG_PATH_MAX_LEN);
+
+		Py_DECREF(resource_filename_out);
+		Py_DECREF(resource_filename_in);
+		Py_DECREF(resource_filename);
+		Py_DECREF(pkg_resources);
+	}
+
+	if ( ! lua_user_path ) {
+		memcpy(config.lua.user_path, ".", AS_CONFIG_PATH_MAX_LEN);
+	}
+
+    PyObject * py_hosts = PyDict_GetItemString(py_config, "hosts");
+    if ( py_hosts && PyList_Check(py_hosts) ) {
+    	int size = (int) PyList_Size(py_hosts);
+    	for ( int i = 0; i < size && i < AS_CONFIG_HOSTS_SIZE; i++ ) {
+    		PyObject * py_host = PyList_GetItem(py_hosts, i);
+    		if ( PyTuple_Check(py_host) && PyTuple_Size(py_host) == 2 ) {
+    			PyObject * py_addr = PyTuple_GetItem(py_host,0);
+    			PyObject * py_port = PyTuple_GetItem(py_host,1);
+    			if ( PyString_Check(py_addr) ) {
+    				char * addr = PyString_AsString(py_addr);
+    				config.hosts[i].addr = addr;
+    			}
+    			if ( PyInt_Check(py_port) ) {
+    				config.hosts[i].port = (uint16_t) PyInt_AsLong(py_port);
+    			}
+    			else if ( PyLong_Check(py_port) ) {
+    				config.hosts[i].port = (uint16_t) PyLong_AsLong(py_port);
+    			}
+    		}
+    		else if ( PyString_Check(py_host) ) {
 				char * addr = PyString_AsString(py_host);
 				config.hosts[i].addr = addr;
 				config.hosts[i].port = 3000;
@@ -215,7 +279,7 @@ static PyTypeObject AerospikeClient_Type = {
 	.tp_setattro		= 0,
 	.tp_as_buffer		= 0,
 	.tp_flags			= Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE,
-	.tp_doc				= 
+	.tp_doc				=
 		"The Client class manages the connections and trasactions against\n"
 		"an Aerospike cluster.\n",
 	.tp_traverse		= 0,

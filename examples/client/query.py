@@ -20,6 +20,7 @@ from __future__ import print_function
 import aerospike
 import re
 import sys
+import os.path
 
 from optparse import OptionParser
 from aerospike import predicates as p
@@ -53,8 +54,16 @@ optparser.add_option(
     help="Port of the Aerospike server.")
 
 optparser.add_option(
-    "-m", "--mode", dest="mode", type="choice", choices=["foreach","results"], default="foreach",
-    help="Scan result processing mode.")
+    "-m", "--module", dest="module", type="string",
+    help="UDF Module.")
+
+optparser.add_option(
+    "-f", "--function", dest="function", type="string",
+    help="UDF Function.")
+
+optparser.add_option(
+    "-a", "--arg", dest="arguments", action="append", type="string",
+    help="UDF Arguments.")
 
 optparser.add_option(
     "-b", "--bins", dest="bins", type="string", action="append", 
@@ -77,7 +86,10 @@ if len(args) > 1:
 ################################################################################
 
 config = {
-    'hosts': [ (options.host, options.port) ]
+    'hosts': [ (options.host, options.port) ],
+    'lua': {
+        'user_path': os.path.abspath(os.path.dirname(__file__))
+    }
 }
 
 ################################################################################
@@ -145,21 +157,27 @@ try:
             # project specified bins
             q.select(*options.bins)
 
-        records = []
+        if options.module and options.function:
+            if options.arguments:
+                q.apply(options.module, options.function, *options.arguments)
+            else:
+                q.apply(options.module, options.function)
+
+        results = []
 
         # callback to be called for each record read
-        def callback((key, meta, record)):
-            records.append(record)
-            print(record)
+        def callback(result):
+            results.append(result)
+            print(result)
         
         # invoke the operations, and for each record invoke the callback
         q.foreach(callback)
         
         print("---")
-        if len(records) == 1:
-            print("OK, 1 record found.")
+        if len(results) == 1:
+            print("OK, 1 result found.")
         else:
-            print("OK, %d records found." % len(records))
+            print("OK, %d results found." % len(results))
 
     except Exception, eargs:
         print("error: {0}".format(eargs), file=sys.stderr)
