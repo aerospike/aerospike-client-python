@@ -41,63 +41,44 @@
 #define PY_EXCEPTION_FILE 2
 #define PY_EXCEPTION_LINE 3
 
-as_status as_udf_file_to_pyobject( as_error *err, as_udf_file * entries, uint32_t size, PyObject ** py_entries )
+as_status as_udf_file_to_pyobject( as_error *err, as_udf_file * entry, PyObject ** py_file )
 {
 	as_error_reset(err);
 
-	// List of UDF file entries 
-	*py_entries = PyList_New(0);
-	for(int i = 0; i < size; i++)
+	*py_file = PyDict_New();	
+
+	PyObject * py_name = PyString_FromString(entry->name);
+	PyDict_SetItemString(*py_file, "name", py_name);
+	Py_DECREF(py_name);
+
+	PyObject * py_hash = PyList_New(0);
+	for(int j = 0; j < AS_UDF_FILE_HASH_SIZE; j++)
 	{
-		PyObject * temp_file = PyDict_New();	
-
-		PyObject * py_free = PyBool_FromLong(entries[i]._free);
-		PyDict_SetItemString(temp_file, "_free", py_free);
-		Py_DECREF(py_free);
-
-		PyObject * py_name = PyString_FromString(entries[i].name);
-		PyDict_SetItemString(temp_file, "name", py_name);
-		Py_DECREF(py_name);
-
-		PyObject * py_hash = PyList_New(0);
-		for(int j = 0; j < AS_UDF_FILE_HASH_SIZE; j++)
-		{
-			PyObject * hash = PyInt_FromLong(entries[i].hash[j]);
-			PyList_Append(py_hash, hash);		
-			Py_DECREF(hash);
-		}
-		PyDict_SetItemString(temp_file, "hash", py_hash);
-		Py_DECREF(py_hash);
-
-
-		PyObject * py_type = PyInt_FromLong(entries[i].type);
-		PyDict_SetItemString(temp_file, "type", py_type);
-		Py_DECREF(py_type);
-
-		PyObject * py_content = PyDict_New();
-
-		PyObject * py_content_free = PyBool_FromLong(entries[i].content._free);
-		PyDict_SetItemString(py_content, "_free", py_content_free);
-		Py_DECREF(py_content_free);
-
-		PyObject * py_content_capacity = PyInt_FromLong(entries[i].content.capacity);
-		PyDict_SetItemString(py_content, "capacity", py_content_capacity);
-		Py_DECREF(py_content_capacity);
-
-		PyObject * py_content_size = PyInt_FromLong(entries[i].content.size);
-		PyDict_SetItemString(py_content, "size", py_content_size);
-		Py_DECREF(py_content_size);
-
-		PyObject * py_content_bytes = PyInt_FromLong((intptr_t)(entries[i].content.bytes));
-		PyDict_SetItemString(py_content, "bytes", py_content_bytes);
-		Py_DECREF(py_content_bytes);
-
-		PyDict_SetItemString(temp_file, "content", py_content);
-		Py_DECREF(py_content);
-
-		PyList_Append(*py_entries, temp_file);
-		Py_DECREF(temp_file);
+		PyObject * hash = PyInt_FromLong(entry->hash[j]);
+		PyList_Append(py_hash, hash);		
+		Py_DECREF(hash);
 	}
+	PyDict_SetItemString(*py_file, "hash", py_hash);
+	Py_DECREF(py_hash);
+
+
+	PyObject * py_type = PyInt_FromLong(entry->type);
+	PyDict_SetItemString(*py_file, "type", py_type);
+	Py_DECREF(py_type);
+
+	PyObject * py_content = PyDict_New();
+
+	PyObject * py_content_size = PyInt_FromLong(entry->content.size);
+	PyDict_SetItemString(py_content, "size", py_content_size);
+	Py_DECREF(py_content_size);
+
+	PyObject * py_content_bytes = PyInt_FromLong((intptr_t)(entry->content.bytes));
+	PyDict_SetItemString(py_content, "bytes", py_content_bytes);
+	Py_DECREF(py_content_bytes);
+
+	PyDict_SetItemString(*py_file, "content", py_content);
+	Py_DECREF(py_content);
+
 	return err->code;
 }
 
@@ -107,23 +88,24 @@ as_status as_udf_files_to_pyobject( as_error *err, as_udf_files *files, PyObject
 
 	*py_files = PyDict_New();	
 
-	PyObject * py_free = PyBool_FromLong(files->_free);
-	PyDict_SetItemString(*py_files, "_free", py_free);
-	Py_DECREF(py_free);
-		
-	PyObject * py_capacity = PyInt_FromLong(files->capacity);
-	PyDict_SetItemString(*py_files, "capacity", py_capacity);
-	Py_DECREF(py_capacity);
-
 	PyObject * py_size = PyInt_FromLong(files->size);
 	PyDict_SetItemString(*py_files, "size", py_size);
 	Py_DECREF(py_size);
 
-	PyObject * py_entries;
-	as_udf_file_to_pyobject( err, files->entries, files->size, &py_entries );
-	if( err->code != AEROSPIKE_OK) {
-		goto END;
-	}		
+	PyObject * py_entries = PyList_New(0);
+
+	for(int i = 0; i < files->size; i++) {
+		
+		PyObject * py_file;
+		as_udf_file_to_pyobject( err, &((files->entries)[i]), &py_file );
+		if( err->code != AEROSPIKE_OK) {
+			goto END;
+		}	
+
+		PyList_Append(py_entries, py_file);
+		Py_DECREF(py_file);
+	}	
+
 	PyDict_SetItemString(*py_files, "entries", py_entries);
 	Py_DECREF(py_entries);
 	
