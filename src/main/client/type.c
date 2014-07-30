@@ -31,63 +31,86 @@
  ******************************************************************************/
 
 static PyMethodDef AerospikeClient_Type_Methods[] = {
+	
 	// CONNECTION OPERATIONS
+
 	{"connect",	(PyCFunction) AerospikeClient_Connect,	METH_VARARGS | METH_KEYWORDS, 
 		"Opens connection(s) to the cluster."},
-
 	{"close",	(PyCFunction) AerospikeClient_Close,	METH_VARARGS | METH_KEYWORDS, 
 		"Close the connection(s) to the cluster."},
+
 	// ADMIN OPERATIONS
-	{"admin_create_user",	(PyCFunction) AerospikeClient_create_user,	METH_VARARGS | METH_KEYWORDS,	"Create a new user."},
-	{"admin_drop_user",	(PyCFunction) AerospikeClient_drop_user,	METH_VARARGS | METH_KEYWORDS,	"Drop a user."},
-	{"admin_set_password",	(PyCFunction) AerospikeClient_set_password,	METH_VARARGS | METH_KEYWORDS,	"Set password"},
-	{"admin_change_password",	(PyCFunction) AerospikeClient_change_password,	METH_VARARGS | METH_KEYWORDS,	"Change password."},
-	{"admin_grant_roles",	(PyCFunction) AerospikeClient_grant_roles,	METH_VARARGS | METH_KEYWORDS,	"Grant Roles."},
-	{"admin_revoke_roles",	(PyCFunction) AerospikeClient_revoke_roles,	METH_VARARGS | METH_KEYWORDS,	"Revoke roles"},
-	{"admin_replace_roles",	(PyCFunction) AerospikeClient_replace_roles,	METH_VARARGS | METH_KEYWORDS,	"Replace roles."},
-	{"admin_query_user",	(PyCFunction) AerospikeClient_query_user,	METH_VARARGS | METH_KEYWORDS,	"Query a user for roles."},
-	{"admin_query_users",	(PyCFunction) AerospikeClient_query_users,	METH_VARARGS | METH_KEYWORDS,	"Query all users for roles."},
+
+	{"admin_create_user",	(PyCFunction) AerospikeClient_create_user,	METH_VARARGS | METH_KEYWORDS,
+		"Create a new user."},
+	{"admin_drop_user",	(PyCFunction) AerospikeClient_drop_user,	METH_VARARGS | METH_KEYWORDS
+		"Drop a user."},
+	{"admin_set_password",	(PyCFunction) AerospikeClient_set_password,	METH_VARARGS | METH_KEYWORDS,
+		"Set password"},
+	{"admin_change_password",	(PyCFunction) AerospikeClient_change_password,	METH_VARARGS | METH_KEYWORDS
+		"Change password."},
+	{"admin_grant_roles",	(PyCFunction) AerospikeClient_grant_roles,	METH_VARARGS | METH_KEYWORDS
+		"Grant Roles."},
+	{"admin_revoke_roles",	(PyCFunction) AerospikeClient_revoke_roles,	METH_VARARGS | METH_KEYWORDS
+		"Revoke roles"},
+	{"admin_replace_roles",	(PyCFunction) AerospikeClient_replace_roles,	METH_VARARGS | METH_KEYWORDS
+		"Replace roles."},
+	{"admin_query_user",	(PyCFunction) AerospikeClient_query_user,	METH_VARARGS | METH_KEYWORDS
+		"Query a user for roles."},
+	{"admin_query_users",	(PyCFunction) AerospikeClient_query_users,	METH_VARARGS | METH_KEYWORDS
+		"Query all users for roles."},
+
 	// KVS OPERATIONS
+	
 	{"exists",	(PyCFunction) AerospikeClient_Exists,	METH_VARARGS | METH_KEYWORDS, 
 		"Check the existence of a record in the database."},
-
 	{"get",		(PyCFunction) AerospikeClient_Get,		METH_VARARGS | METH_KEYWORDS, 
 		"Read a record from the database."},
-
 	{"put",		(PyCFunction) AerospikeClient_Put,		METH_VARARGS | METH_KEYWORDS, 
 		"Write a record into the database."},
-
 	{"remove",	(PyCFunction) AerospikeClient_Remove,	METH_VARARGS | METH_KEYWORDS, 
 		"Remove a record from the database."},
-
 	{"apply",	(PyCFunction) AerospikeClient_Apply,	METH_VARARGS | METH_KEYWORDS, 
 		"Apply a UDF on a record in the database."},
 
 	// Deprecated key-based API
+	
 	{"key",		(PyCFunction) AerospikeClient_Key,		METH_VARARGS | METH_KEYWORDS, 
 		"**[DEPRECATED]** Create a new Key object for performing key operations."},
 
 	// QUERY OPERATIONS
+
 	{"query",	(PyCFunction) AerospikeClient_Query,	METH_VARARGS | METH_KEYWORDS, 
 		"Create a new Query object for peforming queries."},
 
 	// SCAN OPERATIONS
+
 	{"scan",	(PyCFunction) AerospikeClient_Scan,		METH_VARARGS | METH_KEYWORDS, 
 		"Create a new Scan object for performing scans."},
 
 	// INFO OPERATIONS
+
 	{"info",	(PyCFunction) AerospikeClient_Info,		METH_VARARGS | METH_KEYWORDS, 
 		"Send an info request to the cluster."},
 
 	// UDF OPERATIONS
-	{"aerospike_udf_put",	(PyCFunction)AerospikeClient_aerospike_udf_put,	METH_VARARGS | METH_KEYWORDS,	"Registers a UDF"},
-	{"aerospike_udf_remove",	(PyCFunction)AerospikeClient_aerospike_udf_remove,	METH_VARARGS | METH_KEYWORDS,	"De-registers a UDF"},
-	{"aerospike_udf_list",	(PyCFunction)AerospikeClient_aerospike_udf_list,	METH_VARARGS | METH_KEYWORDS,	"Lists the UDFs"},
+
+	{"aerospike_udf_put",	(PyCFunction)AerospikeClient_aerospike_udf_put,	METH_VARARGS | METH_KEYWORDS
+		"Registers a UDF"},
+	{"aerospike_udf_remove",	(PyCFunction)AerospikeClient_aerospike_udf_remove,	METH_VARARGS | METH_KEYWORDS
+		"De-registers a UDF"},
+	{"aerospike_udf_list",	(PyCFunction)AerospikeClient_aerospike_udf_list,	METH_VARARGS | METH_KEYWORDS
+		"Lists the UDFs"},
 	
 	// SECONDARY INDEX OPERATONS
-	{"aerospike_index_integer_create",	(PyCFunction)AerospikeClient_aerospike_index_integer_create,	METH_VARARGS | METH_KEYWORDS,	"Creates a secondary integer index"},
-	{"aerospike_index_string_create",	(PyCFunction)AerospikeClient_aerospike_index_string_create,	METH_VARARGS | METH_KEYWORDS,	"Creates a secondary string index"},
-	{"aerospike_index_remove",	(PyCFunction)AerospikeClient_aerospike_index_remove,	METH_VARARGS | METH_KEYWORDS,	"Remove a secondary index"},
+
+	{"aerospike_index_integer_create",	(PyCFunction)AerospikeClient_aerospike_index_integer_create,	METH_VARARGS | METH_KEYWORDS
+		"Creates a secondary integer index"},
+	{"aerospike_index_string_create",	(PyCFunction)AerospikeClient_aerospike_index_string_create,	METH_VARARGS | METH_KEYWORDS
+		"Creates a secondary string index"},
+	{"aerospike_index_remove",	(PyCFunction)AerospikeClient_aerospike_index_remove,	METH_VARARGS | METH_KEYWORDS
+		"Remove a secondary index"},
+
 	{NULL}
 };
 
