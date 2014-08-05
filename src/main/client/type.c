@@ -169,69 +169,84 @@ static int AerospikeClient_Type_Init(AerospikeClient * self, PyObject * args, Py
 		return 0;
 	}
 
-    as_config config;
-    as_config_init(&config);
+	as_config config;
+	as_config_init(&config);
 
-    bool lua_system_path = FALSE;
-    bool lua_user_path = FALSE;
+	bool lua_system_path = FALSE;
+	bool lua_user_path = FALSE;
 
-    PyObject * py_lua = PyDict_GetItemString(py_config, "lua");
-    if ( py_lua && PyDict_Check(py_lua) ) {
+	PyObject * py_lua = PyDict_GetItemString(py_config, "lua");
+	if ( py_lua && PyDict_Check(py_lua) ) {
 
-    	PyObject * py_lua_system_path = PyDict_GetItemString(py_lua, "system_path");
-    	if ( py_lua_system_path && PyString_Check(py_lua_system_path) ) {
-    		lua_system_path = TRUE;
+		PyObject * py_lua_system_path = PyDict_GetItemString(py_lua, "system_path");
+		if ( py_lua_system_path && PyString_Check(py_lua_system_path) ) {
+			lua_system_path = TRUE;
 			memcpy(config.lua.system_path, PyString_AsString(py_lua_system_path), AS_CONFIG_PATH_MAX_LEN);
-    	}
+		}
 
-    	PyObject * py_lua_user_path = PyDict_GetItemString(py_lua, "user_path");
-    	if ( py_lua_user_path && PyString_Check(py_lua_user_path) ) {
-    		lua_user_path = TRUE;
+		PyObject * py_lua_user_path = PyDict_GetItemString(py_lua, "user_path");
+		if ( py_lua_user_path && PyString_Check(py_lua_user_path) ) {
+			lua_user_path = TRUE;
 			memcpy(config.lua.user_path, PyString_AsString(py_lua_user_path), AS_CONFIG_PATH_MAX_LEN);
-    	}
+		}
 
-    }
+	}
 
-    if ( ! lua_system_path ) {
+	if ( ! lua_system_path ) {
+		
+		PyObject * py_prefix = PySys_GetObject("prefix");
+		if ( py_prefix && PyString_Check(py_prefix) ) {
+			char * prefix = PyString_AsString(py_prefix);
+			size_t prefix_len = strlen(prefix);
 
-	    PyObject * pkg_resources = PyImport_ImportModule("pkg_resources");
-	    PyObject* resource_filename = PyObject_GetAttrString(pkg_resources,"resource_filename");
-	    PyObject* resource_filename_in = PyTuple_Pack(2,PyString_FromString("aerospike"),PyString_FromString("aerospike-client-c/lua/"));
-	    PyObject* resource_filename_out = PyObject_CallObject(resource_filename, resource_filename_in);
-	    char * lua_path = PyString_AsString(resource_filename_out);
+			char system_path[AS_CONFIG_PATH_MAX_LEN] = {0};
+			memcpy(system_path, prefix, AS_CONFIG_PATH_MAX_LEN);
+			memcpy(system_path + prefix_len, "/aerospike/lua", AS_CONFIG_PATH_MAX_LEN - prefix_len);
+			system_path[prefix_len + strlen("/aerospike/lua")] = '\0';
 
-		memcpy(config.lua.system_path, lua_path, AS_CONFIG_PATH_MAX_LEN);
+			struct stat info;
 
-		Py_DECREF(resource_filename_out);
-		Py_DECREF(resource_filename_in);
-		Py_DECREF(resource_filename);
-		Py_DECREF(pkg_resources);
+			if( stat( system_path, &info ) == 0 && (info.st_mode & S_IFDIR) ) {
+				memcpy(config.lua.system_path, system_path, AS_CONFIG_PATH_MAX_LEN);
+			}
+			else {
+				memcpy(system_path + prefix_len, "/local/aerospike/lua", AS_CONFIG_PATH_MAX_LEN - prefix_len);
+				system_path[prefix_len + strlen("/local/aerospike/lua")] = '\0';
+
+				if( stat( system_path, &info ) == 0 && (info.st_mode & S_IFDIR) ) {
+					memcpy(config.lua.system_path, system_path, AS_CONFIG_PATH_MAX_LEN);
+				}
+				else {
+					config.lua.system_path[0] = '\0';
+				}
+			}
+		}
 	}
 
 	if ( ! lua_user_path ) {
 		memcpy(config.lua.user_path, ".", AS_CONFIG_PATH_MAX_LEN);
 	}
 
-    PyObject * py_hosts = PyDict_GetItemString(py_config, "hosts");
-    if ( py_hosts && PyList_Check(py_hosts) ) {
-    	int size = (int) PyList_Size(py_hosts);
-    	for ( int i = 0; i < size && i < AS_CONFIG_HOSTS_SIZE; i++ ) {
-    		PyObject * py_host = PyList_GetItem(py_hosts, i);
-    		if ( PyTuple_Check(py_host) && PyTuple_Size(py_host) == 2 ) {
-    			PyObject * py_addr = PyTuple_GetItem(py_host,0);
-    			PyObject * py_port = PyTuple_GetItem(py_host,1);
-    			if ( PyString_Check(py_addr) ) {
-    				char * addr = PyString_AsString(py_addr);
-    				config.hosts[i].addr = addr;
-    			}
-    			if ( PyInt_Check(py_port) ) {
-    				config.hosts[i].port = (uint16_t) PyInt_AsLong(py_port);
-    			}
-    			else if ( PyLong_Check(py_port) ) {
-    				config.hosts[i].port = (uint16_t) PyLong_AsLong(py_port);
-    			}
-    		}
-    		else if ( PyString_Check(py_host) ) {
+	PyObject * py_hosts = PyDict_GetItemString(py_config, "hosts");
+	if ( py_hosts && PyList_Check(py_hosts) ) {
+		int size = (int) PyList_Size(py_hosts);
+		for ( int i = 0; i < size && i < AS_CONFIG_HOSTS_SIZE; i++ ) {
+			PyObject * py_host = PyList_GetItem(py_hosts, i);
+			if ( PyTuple_Check(py_host) && PyTuple_Size(py_host) == 2 ) {
+				PyObject * py_addr = PyTuple_GetItem(py_host,0);
+				PyObject * py_port = PyTuple_GetItem(py_host,1);
+				if ( PyString_Check(py_addr) ) {
+					char * addr = PyString_AsString(py_addr);
+					config.hosts[i].addr = addr;
+				}
+				if ( PyInt_Check(py_port) ) {
+					config.hosts[i].port = (uint16_t) PyInt_AsLong(py_port);
+				}
+				else if ( PyLong_Check(py_port) ) {
+					config.hosts[i].port = (uint16_t) PyLong_AsLong(py_port);
+				}
+			}
+			else if ( PyString_Check(py_host) ) {
 				char * addr = PyString_AsString(py_host);
 				config.hosts[i].addr = addr;
 				config.hosts[i].port = 3000;

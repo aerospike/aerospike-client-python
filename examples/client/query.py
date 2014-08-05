@@ -88,7 +88,7 @@ if len(args) > 1:
 config = {
     'hosts': [ (options.host, options.port) ],
     'lua': {
-        'user_path': os.path.abspath(os.path.dirname(__file__))
+        'user_path': os.path.dirname(__file__)
     }
 }
 

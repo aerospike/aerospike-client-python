@@ -159,8 +159,18 @@ if os.environ.get('NO_RESOLVE_C_CLIENT_DEP', None):
     ]
 
 else:
-    data_files = []
     lua_path = "aerospike-client-c/lua"
+
+    data_files = [
+        ('aerospike', []),
+        ('aerospike/lua', [
+            lua_path + '/aerospike.lua',
+            lua_path + '/as.lua',
+            lua_path + '/stream_ops.lua',
+            ]
+        )
+    ]
+    
     if 'build' in sys.argv or 'install' in sys.argv :
 
         # Prefix for Aerospike C client libraries and headers
@@ -267,17 +277,23 @@ setup(
 
     zip_safe = False,
 
-    # include_package_data = True,
+    include_package_data = True,
 
     # Package Data Files
     package_data = {
         'aerospike': [
             lua_path + '/*.lua',
-            ]
+        ]
     },
 
     # Data files
     data_files = data_files,
+
+    eager_resources = [
+        lua_path + '/aerospike.lua',
+        lua_path + '/as.lua',
+        lua_path + '/stream_ops.lua',
+    ],
 
     ext_modules = [
         Extension( 
