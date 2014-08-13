@@ -30,6 +30,7 @@ from subprocess import call
 # ENVIRONMENT VARIABLES
 ################################################################################
 
+AEROSPIKE_C_VERSION = os.getenv('AEROSPIKE_C_VERSION')
 AEROSPIKE_C_HOME = os.getenv('AEROSPIKE_C_HOME')
 PREFIX = None
 PLATFORM =  platform.platform(1)
@@ -186,6 +187,7 @@ else:
 
         if PREFIX:
             os.putenv('PREFIX', PREFIX)
+            os.putenv('AEROSPIKE_C_VERSION', AEROSPIKE_C_VERSION)
         
         rc = call(['./scripts/aerospike-client-c.sh'])
         if rc != 0 :

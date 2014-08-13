@@ -15,7 +15,7 @@
 # limitations under the License.
 ################################################################################
 
-AEROSPIKE_C_VERSION=${AEROSPIKE_C_CLIENT:-'latest'}
+AEROSPIKE_C_VERSION=${AEROSPIKE_C_VERSION:-'latest'}
 
 ################################################################################
 #
@@ -31,7 +31,7 @@ unset PKG_DIST
 unset PKG_TYPE
 unset PKG_PATH
 
-LUA_PATH=
+LUA_PATH=${AEROSPIKE_LUA_PATH}
 
 ################################################################################
 #
