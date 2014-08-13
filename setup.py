@@ -187,6 +187,8 @@ else:
 
         if PREFIX:
             os.putenv('PREFIX', PREFIX)
+        
+        if AEROSPIKE_C_VERSION:
             os.putenv('AEROSPIKE_C_VERSION', AEROSPIKE_C_VERSION)
         
         rc = call(['./scripts/aerospike-client-c.sh'])
