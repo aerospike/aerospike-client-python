@@ -1,16 +1,15 @@
 language: python
-
 python:
-  - 2.6
-  - 2.7
-
+- 2.6
+- 2.7
 os:
-  - linux
-  - osx
-
+- linux
+- osx
 before_install:
-  - sudo apt-get install libssl-dev
-  - sudo apt-get install liblua5.1-dev
-
-script: 
-  - python setup.py build
+- sudo apt-get install libssl-dev
+- sudo apt-get install liblua5.1-dev
+script:
+- python setup.py build
+notifications:
+  slack:
+    secure: QaCE4lTfpv57X921q5oCrHrB1qqkLsnGM2+L/zCTEQKc20tNnfNjrDsFJGrLibZbEvZCcVOfr1xH0WhaPurngG6uTRLUqWBf3evwnMgTWDxFU0wcZlKR/Vww3zNXBuD4tDafC1bEa/fm+9xDDmtlV8AaySpiwQazLtwqOatoTD8=
