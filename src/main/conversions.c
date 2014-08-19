@@ -276,6 +276,11 @@ as_status pyobject_to_val(as_error * err, PyObject * py_obj, as_val ** val)
 		char * s = PyString_AsString(py_obj);
 		*val = (as_val *) as_string_new(s, false);
 	}
+	else if ( PyUnicode_Check(py_obj) ) {
+		PyObject * py_ustr = PyUnicode_AsUTF8String(py_obj);
+		char * str = PyString_AsString(py_ustr);
+		*val = (as_val *) as_string_new(str, true);
+	}
 	else if ( PyByteArray_Check(py_obj) ) {
 		uint8_t * b = (uint8_t *) PyByteArray_AsString(py_obj);
 		uint32_t z = (uint32_t) PyByteArray_Size(py_obj);
@@ -339,6 +344,11 @@ as_status pyobject_to_record(as_error * err, PyObject * py_rec, PyObject * py_me
 			else if ( PyLong_Check(value) ) {
 				int64_t val = (int64_t) PyLong_AsLongLong(value);
 				as_record_set_int64(rec, name, val);
+			}
+			else if ( PyUnicode_Check(value) ) {
+				PyObject * py_ustr = PyUnicode_AsUTF8String(value);
+				char * val = PyString_AsString(py_ustr);
+				as_record_set_strp(rec, name, val, false);
 			}
 			else if ( PyString_Check(value) ) {
 				char * val = PyString_AsString(value);
@@ -460,6 +470,10 @@ as_status pyobject_to_key(as_error * err, PyObject * py_keytuple, as_key * key)
 		if ( PyString_Check(py_set) ) {
 			set = PyString_AsString(py_set);
 		}
+		else if ( PyUnicode_Check(py_set) ) {
+			PyObject * py_ustr = PyUnicode_AsUTF8String(py_set);
+			set = PyString_AsString(py_ustr);
+		}
 		else {
 			return as_error_update(err, AEROSPIKE_ERR_PARAM, "set must be a string");
 		}
@@ -477,6 +491,11 @@ as_status pyobject_to_key(as_error * err, PyObject * py_keytuple, as_key * key)
 		else if ( PyLong_Check(py_key) ) {
 			int64_t k = (int64_t) PyLong_AsLongLong(py_key);
 			as_key_init_int64(key, ns, set, k);
+		}
+		else if ( PyUnicode_Check(py_key) ) {
+			PyObject * py_ustr = PyUnicode_AsUTF8String(py_key);
+			char * k = PyString_AsString(py_ustr);
+			as_key_init_strp(key, ns, set, k, true);
 		}
 		else if ( PyByteArray_Check(py_key) ) {
 			return as_error_update(err, AEROSPIKE_ERR_PARAM, "key as a byte array is not supported");
@@ -516,7 +535,8 @@ as_status val_to_pyobject(as_error * err, const as_val * val, PyObject ** py_val
 					as_string * s = as_string_fromval(val);
 					char * str = as_string_get(s);
 					if ( str != NULL ) {
-						*py_val = PyString_FromString(str);
+						size_t sz = strlen(str);
+						*py_val = PyUnicode_DecodeUTF8(str, sz, NULL);
 					}
 					else {
 						Py_INCREF(Py_None);
@@ -733,7 +753,7 @@ as_status key_to_pyobject(as_error * err, const as_key * key, PyObject ** obj)
 					 }
 			case AS_STRING: {
 						as_string * sval = as_string_fromval(val);
-						py_key = PyString_FromString(as_string_get(sval));
+						py_key = PyUnicode_DecodeUTF8(as_string_get(sval), as_string_len(sval), NULL);
 						break;
 					}
 			case AS_BYTES: {
