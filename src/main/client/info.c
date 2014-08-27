@@ -86,10 +86,6 @@ PyObject * AerospikeClient_Info(AerospikeClient * self, PyObject * args, PyObjec
 	aerospike_info_foreach(self->as, &err, NULL, req, AerospikeClient_Info_each, py_nodes);
 
 	if ( err.code != AEROSPIKE_OK ) {
-		PyObject_Free(py_nodes);
-	}
-
-	if ( err.code != AEROSPIKE_OK ) {
 		PyObject * py_err = NULL;
 		error_to_pyobject(&err, &py_err);
 		PyErr_SetObject(PyExc_Exception, py_err);
