@@ -114,10 +114,10 @@ try:
         re_int_rg = "\s+between\s+\(\s*(\d+)\s*,\s*(\d+)\s*\)"
         re_w = re.compile("%s(?:%s|%s|%s)" % (re_bin, re_str_eq, re_int_eq, re_int_rg))
 
-        args.reverse()
-
         namespace = options.namespace if options.namespace and options.namespace != 'None' else None
         set = options.set if options.set and options.set != 'None' else None
+        
+        args.reverse()
         where = args.pop()
         module = args.pop()
         function = args.pop()
@@ -149,7 +149,9 @@ try:
             # project specified bins
             q.select(*options.bins)
 
+        args.reverse()
         argl = map(parse_arg, args)
+        print("argl == ", argl)
         q.apply(module, function, *argl)
 
         results = []

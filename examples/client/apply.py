@@ -116,12 +116,14 @@ try:
 
         namespace = options.namespace if options.namespace and options.namespace != 'None' else None
         set = options.set if options.set and options.set != 'None' else None
+        
         args.reverse()
         key = args.pop()
         module = args.pop()
         function = args.pop()
 
         # invoke operation
+        args.reverse()
         argl = map(parse_arg, args)
         res = client.apply((namespace, set, key), module, function, argl)
             

@@ -102,7 +102,7 @@ try:
     # ----------------------------------------------------------------------------
      
     try:
-
+        args.reverse()
         policy = {}
         namespace = options.namespace
         set = options.set
