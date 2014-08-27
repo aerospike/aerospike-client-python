@@ -21,8 +21,10 @@ import aerospike
 import random
 import signal
 import sys
+import string
 import time
 
+from guppy import hpy
 from threading import Timer
 from optparse import OptionParser
 
@@ -35,6 +37,18 @@ usage = "usage: %prog [options]"
 optparser = OptionParser(usage=usage, add_help_option=False)
 
 optparser.add_option(
+    "--help", dest="help", action="store_true",
+    help="Displays this message.")
+
+optparser.add_option(
+    "-U", "--username", dest="username", type="string", metavar="<USERNAME>",
+    help="Username to connect to database.")
+
+optparser.add_option(
+    "-P", "--password", dest="password", type="string", metavar="<PASSWORD>",
+    help="Password to connect to database.")
+
+optparser.add_option(
     "-h", "--host", dest="host", type="string", default="127.0.0.1", metavar="<ADDRESS>",
     help="Address of Aerospike server.")
 
@@ -43,12 +57,60 @@ optparser.add_option(
     help="Port of the Aerospike server.")
 
 optparser.add_option(
+    "-n", "--namespace", dest="namespace", type="string", default="test", metavar="<NS>",
+    help="Port of the Aerospike server.")
+
+optparser.add_option(
+    "-s", "--set", dest="set", type="string", default="demo", metavar="<SET>",
+    help="Port of the Aerospike server.")
+
+optparser.add_option(
     "-v", "--verbose", dest="verbose", action="store_true", metavar="<PORT>",
     help="Verbose output.")
 
 optparser.add_option(
-    "--help", dest="help", action="store_true",
-    help="Displays this message.")
+    "--gen", dest="gen", type="string", default="int",
+    help="Key and value generator: int | str")
+
+optparser.add_option(
+    "--str-min", dest="str_min", type="int", default=10,
+    help="Minimum length for generated strings.")
+
+optparser.add_option(
+    "--str-max", dest="str_max", type="int", default=30,
+    help="Maximum length for generated strings.")
+
+optparser.add_option(
+    "--str-chars", dest="str_chars", type="string", default=string.ascii_uppercase + string.digits,
+    help="Charset for generated strings.")
+
+optparser.add_option(
+    "--int-min", dest="int_min", type="int", default=0,
+    help="Minimum value for generated integers.")
+
+optparser.add_option(
+    "--int-max", dest="int_max", type="int", default=sys.maxint,
+    help="Maximum value for generated integere.")
+
+optparser.add_option(
+    "--heap", dest="heap", action="store_true",
+    help="Check the heap. Produce a heap report at the end of the run.")
+
+optparser.add_option(
+    "--heap-interval", dest="heap_interval", type="int", default=0,
+    help="Display heap report after every n operations.")
+
+optparser.add_option(
+    "--reads", dest="reads", type="int", default=80,
+    help="Read ratio, as an integer between 0 and 100")
+
+optparser.add_option(
+    "--writes", dest="writes", type="int", default=20,
+    help="Write ratio, as an integer between 0 and 100")
+
+optparser.add_option(
+    "--keys", dest="keys", type="int", default=1000000,
+    help="Number of unique keys")
 
 (options, args) = optparser.parse_args()
 
@@ -105,6 +167,12 @@ def operation(r, w):
                 wn = w
             yield op
 
+def genstr():
+    return ''.join(random.choice(options.str_chars) for _ in range(random.randrange(options.str_min, options.str_max, 1)))
+
+def genint():
+    return random.randrange(options.int_min, options.int_max, 1)
+
 
 ################################################################################
 # Application
@@ -112,13 +180,14 @@ def operation(r, w):
 
 exitCode = 0
 
-k = 1000000
-r = 80
-w = 20
+k = options.keys
+r = options.reads
+w = options.writes
 
 count = 0
 start = 0
 intervals = []
+heapy = hpy()
 
 def total_summary():
 
@@ -130,19 +199,36 @@ def total_summary():
 
     print()
     print("Summary:")
+    print("     {0} keys generated".format(k))
     print("     {0} seconds for {1} operations".format(elapse, count))
     print("     {0} operations per second".format(count / elapse))
     print()
+    print("Heap: ")
+    print(heapy.heap())
 
     sys.exit(0)
 
 try:
 
     # ----------------------------------------------------------------------------
+    # Generate Keys
+    # ----------------------------------------------------------------------------
+
+    if options.gen == 'str':
+        gen = genstr
+    else:
+        gen = genint
+
+    print("Generating keys: ", k)
+    keys = [gen() for _ in range(k)]
+    print("done.")
+    print()
+
+    # ----------------------------------------------------------------------------
     # Connect to Cluster
     # ----------------------------------------------------------------------------
 
-    client = aerospike.client(config).connect()
+    client = aerospike.client(config).connect(options.username, options.password)
 
     # ----------------------------------------------------------------------------
     # Perform Operation
@@ -158,31 +244,28 @@ try:
 
         start = time.time()
 
+        print("HEAP@{0}: {1}".format(0, heapy.heap()))
+
         # run the operatons
         for op in operation(r, w):
 
-            if op == READ_OP:
+            key = (options.namespace, options.set, keys[random.randint(0,k)])
 
-                key = random.randrange(1, k, 1)
-                
+            if op == READ_OP:
                 print('[READ] ', key) if options.verbose else 0
-                
-                (key, metadata, rec) = client.get(('test','demo',key))
+                result = client.exists(key)
                 count += 1
 
             elif op == WRITE_OP:
-
-                key = random.randrange(1, k, 1)
-
                 print('[WRITE]', key) if options.verbose else 0
-
                 rec = {
-                    'key': key
+                    'key': key[2]
                 }
-
-                client.put(('test','demo',key), rec)
+                client.put(key, rec)
                 count += 1
 
+            if options.heap_interval > 0 and (count % options.heap_interval) == 0:
+                print("HEAP@{0}: {1}".format(count, heapy.heap()))
 
     except KeyboardInterrupt:
         total_summary()

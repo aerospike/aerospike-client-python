@@ -6,3 +6,5 @@ dist/
 /.project
 aerospike-client-c/
 aerospike.egg-info/
+*.log
+tmp

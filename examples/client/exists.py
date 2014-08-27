@@ -101,9 +101,8 @@ try:
         namespace = options.namespace if options.namespace and options.namespace != 'None' else None
         set = options.set if options.set and options.set != 'None' else None
         key = args.pop()
-        policy = None
 
-        (key, metadata) = client.exists((namespace, set, key), policy)
+        (key, metadata) = client.exists((namespace, set, key))
 
         if metadata != None:
             print(key, metadata)
