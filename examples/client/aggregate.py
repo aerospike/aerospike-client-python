@@ -18,29 +18,22 @@
 from __future__ import print_function
 
 import aerospike
+import ast
+import json
+import re
 import sys
+import os.path
 
 from optparse import OptionParser
+from aerospike import predicates as p
 
 ################################################################################
-# Options Parsing
+# Option Parsing
 ################################################################################
 
-usage = "usage: %prog [options] key"
+usage = "usage: %prog [options] where module function [args...]"
 
 optparser = OptionParser(usage=usage, add_help_option=False)
-
-optparser.add_option(
-    "--help", dest="help", action="store_true",
-    help="Displays this message.")
-
-optparser.add_option(
-    "-U", "--username", dest="username", type="string", metavar="<USERNAME>",
-    help="Username to connect to database.")
-
-optparser.add_option(
-    "-P", "--password", dest="password", type="string", metavar="<PASSWORD>",
-    help="Password to connect to database.")
 
 optparser.add_option(
     "-h", "--host", dest="host", type="string", default="127.0.0.1", metavar="<ADDRESS>",
@@ -51,12 +44,20 @@ optparser.add_option(
     help="Port of the Aerospike server.")
 
 optparser.add_option(
+    "--help", dest="help", action="store_true",
+    help="Displays this message.")
+
+optparser.add_option(
     "-n", "--namespace", dest="namespace", type="string", default="test", metavar="<NS>",
     help="Port of the Aerospike server.")
 
 optparser.add_option(
     "-s", "--set", dest="set", type="string", default="demo", metavar="<SET>",
     help="Port of the Aerospike server.")
+
+optparser.add_option(
+    "-b", "--bins", dest="bins", type="string", action="append", 
+    help="Bins to select from each record.")
 
 (options, args) = optparser.parse_args()
 
@@ -65,7 +66,7 @@ if options.help:
     print()
     sys.exit(1)
 
-if len(args) != 1:
+if len(args) < 3:
     optparser.print_help()
     print()
     sys.exit(1)
@@ -75,7 +76,10 @@ if len(args) != 1:
 ################################################################################
 
 config = {
-    'hosts': [ (options.host, options.port) ]
+    'hosts': [ (options.host, options.port) ],
+    'lua': {
+        'user_path': os.path.dirname(__file__)
+    }
 }
 
 ################################################################################
@@ -84,34 +88,85 @@ config = {
 
 exitCode = 0
 
+def parse_arg(s):
+    try:
+        return json.loads(s)
+    except ValueError:
+        return s
+
 try:
 
     # ----------------------------------------------------------------------------
     # Connect to Cluster
     # ----------------------------------------------------------------------------
 
-    client = aerospike.client(config).connect(options.username, options.password)
+    client = aerospike.client(config).connect()
 
     # ----------------------------------------------------------------------------
     # Perform Operation
     # ----------------------------------------------------------------------------
 
     try:
-        
+
+        re_bin = "(.{1,14})"
+        re_str_eq = "\s+=\s*(?:(?:\"(.*)\")|(?:\'(.*)\'))"
+        re_int_eq = "\s+=\s*(\d+)"
+        re_int_rg = "\s+between\s+\(\s*(\d+)\s*,\s*(\d+)\s*\)"
+        re_w = re.compile("%s(?:%s|%s|%s)" % (re_bin, re_str_eq, re_int_eq, re_int_rg))
+
+        args.reverse()
+
         namespace = options.namespace if options.namespace and options.namespace != 'None' else None
         set = options.set if options.set and options.set != 'None' else None
-        key = args.pop()
-        policy = None
+        where = args.pop()
+        module = args.pop()
+        function = args.pop()
 
-        (key, metadata) = client.exists((namespace, set, key), policy)
+        # If predicate is provided, then perform a query
+        q = client.query(namespace, set)
 
-        if metadata != None:
-            print(key, metadata)
-            print("---")
-            print("OK, 1 record found.")
+        w = re_w.match(where)
+        if w != None:
+            if w.group(2):
+                b = w.group(1)
+                v = w.group(2)
+                q.where(p.equals(b, v))
+            elif w.group(3):
+                b = w.group(1)
+                v = w.group(3)
+                q.where(p.equals(b, v))
+            elif w.group(4):
+                b = w.group(1)
+                v = int(w.group(4))
+                q.where(p.equals(b, v))
+            elif w.group(5) and w.group(6):
+                b = w.group(1)
+                l = int(w.group(5))
+                u = int(w.group(6))
+                q.where(p.between(b, l, u))
+
+        if options.bins and len(options.bins) > 0:
+            # project specified bins
+            q.select(*options.bins)
+
+        argl = map(parse_arg, args)
+        q.apply(module, function, *argl)
+
+        results = []
+
+        # callback to be called for each record read
+        def callback(result):
+            results.append(result)
+            print(result)
+        
+        # invoke the operations, and for each record invoke the callback
+        q.foreach(callback)
+        
+        print("---")
+        if len(results) == 1:
+            print("OK, 1 result found.")
         else:
-            print('error: Not Found.', file=sys.stderr)
-            exitCode = 1
+            print("OK, %d results found." % len(results))
 
     except Exception, eargs:
         print("error: {0}".format(eargs), file=sys.stderr)
@@ -126,6 +181,7 @@ try:
 except Exception, eargs:
     print("error: {0}".format(eargs), file=sys.stderr)
     exitCode = 3
+
 
 ################################################################################
 # Exit

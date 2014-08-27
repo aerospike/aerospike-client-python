@@ -18,21 +18,30 @@
 from __future__ import print_function
 
 import aerospike
+import json
 import sys
 
 from optparse import OptionParser
 
 ################################################################################
-# Options Parsing
+# Option Parsing
 ################################################################################
 
-usage = "usage: %prog [options] key"
+usage = "usage: %prog [options] key module function [args...]"
 
 optparser = OptionParser(usage=usage, add_help_option=False)
 
 optparser.add_option(
     "--help", dest="help", action="store_true",
     help="Displays this message.")
+
+optparser.add_option(
+    "-U", "--username", dest="username", type="string", metavar="<USERNAME>",
+    help="Username to connect to database.")
+
+optparser.add_option(
+    "-P", "--password", dest="password", type="string", metavar="<PASSWORD>",
+    help="Password to connect to database.")
 
 optparser.add_option(
     "-h", "--host", dest="host", type="string", default="127.0.0.1", metavar="<ADDRESS>",
@@ -43,12 +52,21 @@ optparser.add_option(
     help="Port of the Aerospike server.")
 
 optparser.add_option(
-    "-U", "--username", dest="username", type="string", metavar="<USERNAME>",
-    help="Username to connect to database.")
+    "-n", "--namespace", dest="namespace", type="string", default="test", metavar="<NS>",
+    help="Port of the Aerospike server.")
 
 optparser.add_option(
-    "-P", "--password", dest="password", type="string", metavar="<PASSWORD>",
-    help="Password to connect to database.")
+    "-s", "--set", dest="set", type="string", default="demo", metavar="<SET>",
+    help="Port of the Aerospike server.")
+
+optparser.add_option(
+    "--gen", dest="gen", type="int", default=None, metavar="<GEN>",
+    help="Generation of the record being written.")
+
+optparser.add_option(
+    "--ttl", dest="ttl", type="int", default=None, metavar="<TTL>",
+    help="TTL of the record being written.")
+
 
 (options, args) = optparser.parse_args()
 
@@ -57,7 +75,7 @@ if options.help:
     print()
     sys.exit(1)
 
-if options.username == None or options.password == None:
+if len(args) < 3:
     optparser.print_help()
     print()
     sys.exit(1)
@@ -76,6 +94,12 @@ config = {
 
 exitCode = 0
 
+def parse_arg(s):
+    try:
+        return json.loads(s)
+    except ValueError:
+        return s
+
 try:
 
     # ----------------------------------------------------------------------------
@@ -87,25 +111,28 @@ try:
     # ----------------------------------------------------------------------------
     # Perform Operation
     # ----------------------------------------------------------------------------
-     
+
     try:
 
-   	policy = {}
-	namespace = "test"
-	set = "demo"
-	bin = "bina"
-	index_name = "foo_int"
-    	
- 	client.index_integer_create(policy, namespace, set, bin, index_name)
-        print("OK, 1 Integer Secondary Index Created ")
- 
-	client.index_remove(policy, namespace, index_name)
-	print("OK, 1 Integer Secondary Index Removed ")
+        namespace = options.namespace if options.namespace and options.namespace != 'None' else None
+        set = options.set if options.set and options.set != 'None' else None
+        args.reverse()
+        key = args.pop()
+        module = args.pop()
+        function = args.pop()
+
+        # invoke operation
+        argl = map(parse_arg, args)
+        res = client.apply((namespace, set, key), module, function, argl)
+            
+        print(res)
+        print("---")
+        print("OK, 1 UDF applied.")
 
     except Exception as e:
         print("error: {0}".format(e), file=sys.stderr)
         exitCode = 2
-    
+
     # ----------------------------------------------------------------------------
     # Close Connection to Cluster
     # ----------------------------------------------------------------------------

@@ -63,7 +63,7 @@ static bool each_result(const as_val * val, void * udata)
 	PyEval_CallObject(py_callback, py_arglist);
 
 	// TODO: handle return value
-
+	
 	// Release Python Function Arguments
 	Py_DECREF(py_arglist);
 

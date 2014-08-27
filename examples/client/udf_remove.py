@@ -26,21 +26,13 @@ from optparse import OptionParser
 # Options Parsing
 ################################################################################
 
-usage = "usage: %prog [options] key"
+usage = "usage: %prog [options] module"
 
 optparser = OptionParser(usage=usage, add_help_option=False)
 
 optparser.add_option(
     "--help", dest="help", action="store_true",
     help="Displays this message.")
-
-optparser.add_option(
-    "-h", "--host", dest="host", type="string", default="127.0.0.1", metavar="<ADDRESS>",
-    help="Address of Aerospike server.")
-
-optparser.add_option(
-    "-p", "--port", dest="port", type="int", default=3000, metavar="<PORT>",
-    help="Port of the Aerospike server.")
 
 optparser.add_option(
     "-U", "--username", dest="username", type="string", metavar="<USERNAME>",
@@ -50,6 +42,14 @@ optparser.add_option(
     "-P", "--password", dest="password", type="string", metavar="<PASSWORD>",
     help="Password to connect to database.")
 
+optparser.add_option(
+    "-h", "--host", dest="host", type="string", default="127.0.0.1", metavar="<ADDRESS>",
+    help="Address of Aerospike server.")
+
+optparser.add_option(
+    "-p", "--port", dest="port", type="int", default=3000, metavar="<PORT>",
+    help="Port of the Aerospike server.")
+
 (options, args) = optparser.parse_args()
 
 if options.help:
@@ -57,7 +57,7 @@ if options.help:
     print()
     sys.exit(1)
 
-if options.username == None or options.password == None:
+if len(args) != 1:
     optparser.print_help()
     print()
     sys.exit(1)
@@ -90,11 +90,11 @@ try:
      
     try:
 
-   	policy = {}
-	filename = "simple_udf.lua"
-    	
-	client.udf_remove(policy, filename)
-	print("OK, 1 UDF de-registered")
+        policy = {}
+        module = args.pop()
+        
+        client.udf_remove(policy, module)
+        print("OK, 1 UDF de-registered")
 
     except Exception as e:
         print("error: {0}".format(e), file=sys.stderr)

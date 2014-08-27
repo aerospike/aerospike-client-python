@@ -40,7 +40,8 @@ AerospikeQuery * AerospikeQuery_Apply(AerospikeQuery * self, PyObject * args, Py
 
 	// too few args
 	if ( nargs < 2 ) {
-		// some error
+		as_error_update(&err, AEROSPIKE_ERR_CLIENT, "udf module and function names are required.");
+		goto CLEANUP;
 	}
 
 	// Python Arguments
@@ -64,14 +65,16 @@ AerospikeQuery * AerospikeQuery_Apply(AerospikeQuery * self, PyObject * args, Py
 	}
 
 	if ( nargs > 2 ) {
-		arglist = as_arraylist_new(nargs, 0);
+		arglist = as_arraylist_new(nargs-2, 0);
 		for ( int i = 2; i < nargs; i++ ) {
 			PyObject * py_val = PyTuple_GetItem(args, i);
 			as_val * val = NULL;
 			pyobject_to_val(&err, py_val, &val);
-
 			if ( err.code != AEROSPIKE_OK ) {
 				goto CLEANUP;
+			}
+			else {
+				as_arraylist_append(arglist, val);
 			}
 		}
 	}

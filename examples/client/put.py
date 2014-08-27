@@ -35,6 +35,14 @@ optparser.add_option(
     help="Displays this message.")
 
 optparser.add_option(
+    "-U", "--username", dest="username", type="string", metavar="<USERNAME>",
+    help="Username to connect to database.")
+
+optparser.add_option(
+    "-P", "--password", dest="password", type="string", metavar="<PASSWORD>",
+    help="Password to connect to database.")
+
+optparser.add_option(
     "-h", "--host", dest="host", type="string", default="127.0.0.1", metavar="<ADDRESS>",
     help="Address of Aerospike server.")
 
@@ -55,7 +63,7 @@ optparser.add_option(
     help="Generation of the record being written.")
 
 optparser.add_option(
- "--ttl", dest="ttl", type="int", default=None, metavar="<TTL>",
+    "--ttl", dest="ttl", type="int", default=None, metavar="<TTL>",
     help="TTL of the record being written.")
 
 
@@ -91,7 +99,7 @@ try:
     # Connect to Cluster
     # ----------------------------------------------------------------------------
 
-    client = aerospike.client(config).connect()
+    client = aerospike.client(config).connect(options.username, options.password)
 
     # ----------------------------------------------------------------------------
     # Perform Operation
@@ -109,9 +117,9 @@ try:
             'u': u'안녕하세요',
             'b': bytearray(['d','e','f']),
             'l': [123, 'abc', bytearray(['d','e','f']), ['x', 'y', 'z'], {'x': 1, 'y': 2, 'z': 3}],
-            'm': {'i': 123, 's': 'abc', 'b': bytearray(['d','e','f']), 'l': ['x', 'y', 'z'], 'd': {'x': 1, 'y': 2, 'z': 3}},
-            'l': [123, 'abc', ['x', 'y', 'z'], {'x': 1, 'y': 2, 'z': 3}],
-            'm': {'i': 123, 's': 'abc', 'l': ['x', 'y', 'z'], 'd': {'x': 1, 'y': 2, 'z': 3}}
+            'm': {'i': 123, 's': 'abc', 'u': u'안녕하세요', 'b': bytearray(['d','e','f']), 'l': ['x', 'y', 'z'], 'd': {'x': 1, 'y': 2, 'z': 3}},
+            'l': [123, 'abc', u'안녕하세요', ['x', 'y', 'z'], {'x': 1, 'y': 2, 'z': 3}],
+            'm': {'i': 123, 's': 'abc', 'u': u'안녕하세요', 'l': ['x', 'y', 'z'], 'd': {'x': 1, 'y': 2, 'z': 3}}
         }
 
         meta = {'ttl': options.ttl, 'gen': options.gen}

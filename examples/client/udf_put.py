@@ -26,21 +26,13 @@ from optparse import OptionParser
 # Options Parsing
 ################################################################################
 
-usage = "usage: %prog [options] key"
+usage = "usage: %prog [options] filename"
 
 optparser = OptionParser(usage=usage, add_help_option=False)
 
 optparser.add_option(
     "--help", dest="help", action="store_true",
     help="Displays this message.")
-
-optparser.add_option(
-    "-h", "--host", dest="host", type="string", default="127.0.0.1", metavar="<ADDRESS>",
-    help="Address of Aerospike server.")
-
-optparser.add_option(
-    "-p", "--port", dest="port", type="int", default=3000, metavar="<PORT>",
-    help="Port of the Aerospike server.")
 
 optparser.add_option(
     "-U", "--username", dest="username", type="string", metavar="<USERNAME>",
@@ -50,6 +42,14 @@ optparser.add_option(
     "-P", "--password", dest="password", type="string", metavar="<PASSWORD>",
     help="Password to connect to database.")
 
+optparser.add_option(
+    "-h", "--host", dest="host", type="string", default="127.0.0.1", metavar="<ADDRESS>",
+    help="Address of Aerospike server.")
+
+optparser.add_option(
+    "-p", "--port", dest="port", type="int", default=3000, metavar="<PORT>",
+    help="Port of the Aerospike server.")
+
 (options, args) = optparser.parse_args()
 
 if options.help:
@@ -57,10 +57,10 @@ if options.help:
     print()
     sys.exit(1)
 
-# if options.username == None or options.password == None:
-#     optparser.print_help()
-#     print()
-#     sys.exit(1)
+if len(args) != 1:
+    optparser.print_help()
+    print()
+    sys.exit(1)
 
 ################################################################################
 # Client Configuration
@@ -90,11 +90,11 @@ try:
      
     try:
 
-   	policy = {}
-	filename = "./examples/client/example.lua"
-	udf_type = 0 # 0 for LUA 
-    	
-  	client.udf_put(policy, filename, udf_type)
+       	policy = {}
+        filename = args.pop()
+        udf_type = 0 # 0 for LUA 
+    
+      	client.udf_put(policy, filename, udf_type)
         print("OK, 1 new UDF registered")
 
     except Exception as e:

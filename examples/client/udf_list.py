@@ -26,7 +26,7 @@ from optparse import OptionParser
 # Options Parsing
 ################################################################################
 
-usage = "usage: %prog [options] key"
+usage = "usage: %prog [options]"
 
 optparser = OptionParser(usage=usage, add_help_option=False)
 
@@ -35,20 +35,20 @@ optparser.add_option(
     help="Displays this message.")
 
 optparser.add_option(
-    "-h", "--host", dest="host", type="string", default="127.0.0.1", metavar="<ADDRESS>",
-    help="Address of Aerospike server.")
-
-optparser.add_option(
-    "-p", "--port", dest="port", type="int", default=3000, metavar="<PORT>",
-    help="Port of the Aerospike server.")
-
-optparser.add_option(
     "-U", "--username", dest="username", type="string", metavar="<USERNAME>",
     help="Username to connect to database.")
 
 optparser.add_option(
     "-P", "--password", dest="password", type="string", metavar="<PASSWORD>",
     help="Password to connect to database.")
+
+optparser.add_option(
+    "-h", "--host", dest="host", type="string", default="127.0.0.1", metavar="<ADDRESS>",
+    help="Address of Aerospike server.")
+
+optparser.add_option(
+    "-p", "--port", dest="port", type="int", default=3000, metavar="<PORT>",
+    help="Port of the Aerospike server.")
 
 (options, args) = optparser.parse_args()
 
@@ -90,10 +90,10 @@ try:
      
     try:
 
-   	policy = {}
+       	policy = {}
 
-	list = client.udf_list(policy)
-	print(list)
+    	list = client.udf_list(policy)
+    	print(list)
 
     except Exception as e:
         print("error: {0}".format(e), file=sys.stderr)

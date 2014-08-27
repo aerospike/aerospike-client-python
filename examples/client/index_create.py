@@ -26,13 +26,21 @@ from optparse import OptionParser
 # Options Parsing
 ################################################################################
 
-usage = "usage: %prog [options] key"
+usage = "usage: %prog [options] bin index_name"
 
 optparser = OptionParser(usage=usage, add_help_option=False)
 
 optparser.add_option(
     "--help", dest="help", action="store_true",
     help="Displays this message.")
+
+optparser.add_option(
+    "-U", "--username", dest="username", type="string", metavar="<USERNAME>",
+    help="Username to connect to database.")
+
+optparser.add_option(
+    "-P", "--password", dest="password", type="string", metavar="<PASSWORD>",
+    help="Password to connect to database.")
 
 optparser.add_option(
     "-h", "--host", dest="host", type="string", default="127.0.0.1", metavar="<ADDRESS>",
@@ -43,12 +51,17 @@ optparser.add_option(
     help="Port of the Aerospike server.")
 
 optparser.add_option(
-    "-U", "--username", dest="username", type="string", metavar="<USERNAME>",
-    help="Username to connect to database.")
+    "-n", "--namespace", dest="namespace", type="string", default="test", metavar="<NS>",
+    help="Port of the Aerospike server.")
 
 optparser.add_option(
-    "-P", "--password", dest="password", type="string", metavar="<PASSWORD>",
-    help="Password to connect to database.")
+    "-s", "--set", dest="set", type="string", default="demo", metavar="<SET>",
+    help="Port of the Aerospike server.")
+
+optparser.add_option(
+    "-t", "--type", dest="type", type="string", default="string", metavar="<INDEX_TYPE>",
+    help="The type of index to create")
+
 
 (options, args) = optparser.parse_args()
 
@@ -57,7 +70,7 @@ if options.help:
     print()
     sys.exit(1)
 
-if options.username == None or options.password == None:
+if len(args) != 2:
     optparser.print_help()
     print()
     sys.exit(1)
@@ -90,12 +103,19 @@ try:
      
     try:
 
-   	policy = {}
-	filename = "./examples/client/simple_udf.lua"
-	udf_type = 0 # 0 for LUA 
-    	
-  	client.udf_put(policy, filename, udf_type)
-        print("OK, 1 new UDF registered")
+        policy = {}
+        namespace = options.namespace
+        set = options.set
+        type = options.type
+        bin = args.pop()
+        index_name = args.pop()
+
+        if type == 'string':
+            client.index_string_create(policy, namespace, set, bin, index_name)
+            print("OK, 1 Secondary Index Created ")
+        elif type == 'integer':
+            client.index_integer_create(policy, namespace, set, bin, index_name)
+            print("OK, 1 Secondary Index Created ")
 
     except Exception as e:
         print("error: {0}".format(e), file=sys.stderr)

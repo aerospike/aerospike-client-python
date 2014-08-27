@@ -26,6 +26,7 @@
 #include <aerospike/as_hashmap.h>
 #include <aerospike/as_list.h>
 #include <aerospike/as_map.h>
+#include <aerospike/as_nil.h>
 #include <aerospike/as_policy.h>
 
 #include "conversions.h"
@@ -264,6 +265,9 @@ as_status pyobject_to_val(as_error * err, PyObject * py_obj, as_val ** val)
 		// this should never happen, but if it did...
 		return as_error_update(err, AEROSPIKE_ERR_CLIENT, "value is null");
 	}
+	else if ( py_obj == Py_None ) {
+		*val = (as_val *) &as_nil;
+	}
 	else if ( PyInt_Check(py_obj) ) {
 		int64_t i = (int64_t) PyInt_AsLong(py_obj);
 		*val = (as_val *) as_integer_new(i);
@@ -336,6 +340,9 @@ as_status pyobject_to_record(as_error * err, PyObject * py_rec, PyObject * py_me
 			if ( !value ) {
 				// this should never happen, but if it did...
 				return as_error_update(err, AEROSPIKE_ERR_CLIENT, "record is null");
+			}
+			else if ( value == Py_None ) {
+				as_record_set_nil(rec, name);
 			}
 			else if ( PyInt_Check(value) ) {
 				int64_t val = (int64_t) PyInt_AsLong(value);
@@ -527,68 +534,72 @@ as_status val_to_pyobject(as_error * err, const as_val * val, PyObject ** py_val
 
 	switch( as_val_type(val) ) {
 		case AS_INTEGER: {
-					 as_integer * i = as_integer_fromval(val);
-					 *py_val = PyInt_FromLong((long) as_integer_get(i));
-					 break;
-				 }
+				as_integer * i = as_integer_fromval(val);
+				*py_val = PyInt_FromLong((long) as_integer_get(i));
+				break;
+			}
 		case AS_STRING: {
-					as_string * s = as_string_fromval(val);
-					char * str = as_string_get(s);
-					if ( str != NULL ) {
-						size_t sz = strlen(str);
-						*py_val = PyUnicode_DecodeUTF8(str, sz, NULL);
-					}
-					else {
-						Py_INCREF(Py_None);
-						*py_val = Py_None;
-					}
-					break;
+				as_string * s = as_string_fromval(val);
+				char * str = as_string_get(s);
+				if ( str != NULL ) {
+					size_t sz = strlen(str);
+					*py_val = PyUnicode_DecodeUTF8(str, sz, NULL);
 				}
+				else {
+					Py_INCREF(Py_None);
+					*py_val = Py_None;
+				}
+				break;
+			}
 		case AS_BYTES: {
-				       as_bytes * bval = as_bytes_fromval(val);
-				       uint32_t bval_size = as_bytes_size(bval);
-				       uint8_t * bval_bytes = malloc(bval_size * sizeof(uint8_t));
-				       memcpy(bval_bytes, as_bytes_get(bval), bval_size);
-				       *py_val = PyByteArray_FromStringAndSize((char *) bval_bytes, bval_size);
-				       break;
-			       }
+				as_bytes * bval = as_bytes_fromval(val);
+				uint32_t bval_size = as_bytes_size(bval);
+				uint8_t * bval_bytes = malloc(bval_size * sizeof(uint8_t));
+				memcpy(bval_bytes, as_bytes_get(bval), bval_size);
+				*py_val = PyByteArray_FromStringAndSize((char *) bval_bytes, bval_size);
+				break;
+			}
 		case AS_LIST: {
-				      as_list * l = as_list_fromval((as_val *) val);
-				      if ( l != NULL ) {
-					      PyObject * py_list = NULL;
-					      list_to_pyobject(err, l, &py_list);
-					      if ( err->code == AEROSPIKE_OK ) {
-						      *py_val = py_list;
-					      }
-				      }
-				      break;
-			      }
+				as_list * l = as_list_fromval((as_val *) val);
+				if ( l != NULL ) {
+					PyObject * py_list = NULL;
+					list_to_pyobject(err, l, &py_list);
+					if ( err->code == AEROSPIKE_OK ) {
+						*py_val = py_list;
+					}
+				}
+				break;
+			}
 		case AS_MAP: {
-				     as_map * m = as_map_fromval(val);
-				     if ( m != NULL ) {
-					     PyObject * py_map = NULL;
-					     map_to_pyobject(err, m, &py_map);
-					     if ( err->code == AEROSPIKE_OK ) {
-						     *py_val = py_map;
-					     }
-				     }
-				     break;
-			     }
+				as_map * m = as_map_fromval(val);
+				if ( m != NULL ) {
+					PyObject * py_map = NULL;
+					map_to_pyobject(err, m, &py_map);
+					if ( err->code == AEROSPIKE_OK ) {
+						*py_val = py_map;
+					}
+				}
+				break;
+			}
 		case AS_REC: {
-				     as_record * r = as_record_fromval(val);
-				     if ( r != NULL ) {
-					     PyObject * py_rec = NULL;
-					     record_to_pyobject(err, r, NULL, &py_rec);
-					     if ( err->code == AEROSPIKE_OK ) {
-						     *py_val = py_rec;
-					     }
-				     }
-				     break;
-			     }
+				as_record * r = as_record_fromval(val);
+				if ( r != NULL ) {
+					PyObject * py_rec = NULL;
+					record_to_pyobject(err, r, NULL, &py_rec);
+					if ( err->code == AEROSPIKE_OK ) {
+						*py_val = py_rec;
+					}
+				}
+				break;
+			}
+		case AS_NIL: {
+				*py_val = Py_None;
+				break;
+			}
 		default: {
-				 as_error_update(err, AEROSPIKE_ERR_CLIENT, "Unknown type for value");
-				 return err->code;
-			 }
+				as_error_update(err, AEROSPIKE_ERR_CLIENT, "Unknown type for value");
+				return err->code;
+			}
 	}
 
 	return err->code;
@@ -757,15 +768,15 @@ as_status key_to_pyobject(as_error * err, const as_key * key, PyObject ** obj)
 						break;
 					}
 			case AS_BYTES: {
-					       as_bytes * bval = as_bytes_fromval(val);
-					       if ( bval ) {
-						       uint32_t bval_size = as_bytes_size(bval);
-						       uint8_t * bval_bytes = malloc(bval_size * sizeof(uint8_t));
-						       memcpy(bval_bytes, as_bytes_get(bval), bval_size);
-						       py_key = PyByteArray_FromStringAndSize((char *) bval_bytes, bval_size);
-					       }
-					       break;
-				       }
+						   as_bytes * bval = as_bytes_fromval(val);
+						   if ( bval ) {
+							   uint32_t bval_size = as_bytes_size(bval);
+							   uint8_t * bval_bytes = malloc(bval_size * sizeof(uint8_t));
+							   memcpy(bval_bytes, as_bytes_get(bval), bval_size);
+							   py_key = PyByteArray_FromStringAndSize((char *) bval_bytes, bval_size);
+						   }
+						   break;
+					   }
 			default: {
 					 break;
 				 }
