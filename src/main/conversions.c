@@ -284,6 +284,7 @@ as_status pyobject_to_val(as_error * err, PyObject * py_obj, as_val ** val)
 		PyObject * py_ustr = PyUnicode_AsUTF8String(py_obj);
 		char * str = PyString_AsString(py_ustr);
 		*val = (as_val *) as_string_new(str, false);
+		Py_DECREF(py_ustr);
 	}
 	else if ( PyByteArray_Check(py_obj) ) {
 		uint8_t * b = (uint8_t *) PyByteArray_AsString(py_obj);
@@ -356,6 +357,7 @@ as_status pyobject_to_record(as_error * err, PyObject * py_rec, PyObject * py_me
 				PyObject * py_ustr = PyUnicode_AsUTF8String(value);
 				char * val = PyString_AsString(py_ustr);
 				as_record_set_strp(rec, name, val, false);
+				Py_DECREF(py_ustr);
 			}
 			else if ( PyString_Check(value) ) {
 				char * val = PyString_AsString(value);
@@ -480,6 +482,7 @@ as_status pyobject_to_key(as_error * err, PyObject * py_keytuple, as_key * key)
 		else if ( PyUnicode_Check(py_set) ) {
 			PyObject * py_ustr = PyUnicode_AsUTF8String(py_set);
 			set = PyString_AsString(py_ustr);
+			Py_DECREF(py_ustr);
 		}
 		else {
 			return as_error_update(err, AEROSPIKE_ERR_PARAM, "set must be a string");
@@ -503,6 +506,7 @@ as_status pyobject_to_key(as_error * err, PyObject * py_keytuple, as_key * key)
 			PyObject * py_ustr = PyUnicode_AsUTF8String(py_key);
 			char * k = PyString_AsString(py_ustr);
 			as_key_init_strp(key, ns, set, k, true);
+			Py_DECREF(py_ustr);
 		}
 		else if ( PyByteArray_Check(py_key) ) {
 			return as_error_update(err, AEROSPIKE_ERR_PARAM, "key as a byte array is not supported");
@@ -758,28 +762,26 @@ as_status key_to_pyobject(as_error * err, const as_key * key, PyObject ** obj)
 		as_val_t type = as_val_type(val);
 		switch(type) {
 			case AS_INTEGER: {
-						 as_integer * ival = as_integer_fromval(val);
-						 py_key = PyInt_FromLong((long) as_integer_get(ival));
-						 break;
-					 }
+						as_integer * ival = as_integer_fromval(val);
+						py_key = PyInt_FromLong((long) as_integer_get(ival));
+						break;
+					}
 			case AS_STRING: {
 						as_string * sval = as_string_fromval(val);
 						py_key = PyUnicode_DecodeUTF8(as_string_get(sval), as_string_len(sval), NULL);
 						break;
 					}
 			case AS_BYTES: {
-						   as_bytes * bval = as_bytes_fromval(val);
-						   if ( bval ) {
-							   uint32_t bval_size = as_bytes_size(bval);
-							   uint8_t * bval_bytes = malloc(bval_size * sizeof(uint8_t));
-							   memcpy(bval_bytes, as_bytes_get(bval), bval_size);
-							   py_key = PyByteArray_FromStringAndSize((char *) bval_bytes, bval_size);
-						   }
-						   break;
-					   }
+						as_bytes * bval = as_bytes_fromval(val);
+						if ( bval ) {
+							uint32_t bval_size = as_bytes_size(bval);
+							py_key = PyByteArray_FromStringAndSize((char *) as_bytes_get(bval), bval_size);
+						}
+						break;
+					}
 			default: {
-					 break;
-				 }
+						break;
+					}
 		}
 	}
 

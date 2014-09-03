@@ -85,6 +85,7 @@ PyObject * AerospikeClient_Get_Invoke(
 
 CLEANUP:
 	
+	// as_key_destroy(&key);
 	as_record_destroy(rec);
 	
 	if ( err.code != AEROSPIKE_OK ) {
