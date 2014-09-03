@@ -784,9 +784,7 @@ as_status key_to_pyobject(as_error * err, const as_key * key, PyObject ** obj)
 	}
 
 	if ( key->digest.init ) {
-		uint8_t * digest_bytes = malloc(AS_DIGEST_VALUE_SIZE * sizeof(uint8_t));
-		memcpy(digest_bytes, key->digest.value, AS_DIGEST_VALUE_SIZE);
-		py_digest = PyByteArray_FromStringAndSize((char *) digest_bytes, AS_DIGEST_VALUE_SIZE);
+		py_digest = PyByteArray_FromStringAndSize((char *) key->digest.value, AS_DIGEST_VALUE_SIZE);
 	}
 
 	PyObject * py_keyobj = PyTuple_New(4);
