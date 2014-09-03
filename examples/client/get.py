@@ -58,6 +58,14 @@ optparser.add_option(
     "-s", "--set", dest="set", type="string", default="demo", metavar="<SET>",
     help="Port of the Aerospike server.")
 
+optparser.add_option(
+    "--no-key", dest="nokey", action="store_true",
+    help="Do not return the key")
+
+optparser.add_option(
+    "--no-metadata", dest="nometadata", action="store_true",
+    help="Do not return the metadata")
+
 (options, args) = optparser.parse_args()
 
 if options.help:
@@ -105,7 +113,14 @@ try:
         (key, metadata, record)= client.get((namespace, set, key), policy)
 
         if metadata != None:
-            print(key, metadata, record)
+            if options.nometadata and options.nokey:
+                print(record)
+            elif options.nometadata:
+                print(key, record)
+            elif options.nokey:
+                print(metadata, record)
+            else:
+                print(key, metadata, record)
             print("---")
             print("OK, 1 record found.")
         else:
