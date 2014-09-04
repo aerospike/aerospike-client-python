@@ -558,9 +558,7 @@ as_status val_to_pyobject(as_error * err, const as_val * val, PyObject ** py_val
 		case AS_BYTES: {
 				as_bytes * bval = as_bytes_fromval(val);
 				uint32_t bval_size = as_bytes_size(bval);
-				uint8_t * bval_bytes = malloc(bval_size * sizeof(uint8_t));
-				memcpy(bval_bytes, as_bytes_get(bval), bval_size);
-				*py_val = PyByteArray_FromStringAndSize((char *) bval_bytes, bval_size);
+				*py_val = PyByteArray_FromStringAndSize((char *) as_bytes_get(bval), bval_size);
 				break;
 			}
 		case AS_LIST: {
