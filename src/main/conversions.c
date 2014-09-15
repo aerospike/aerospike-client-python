@@ -595,6 +595,7 @@ as_status val_to_pyobject(as_error * err, const as_val * val, PyObject ** py_val
 				break;
 			}
 		case AS_NIL: {
+				Py_INCREF(Py_None);
 				*py_val = Py_None;
 				break;
 			}
@@ -722,6 +723,21 @@ as_status record_to_pyobject(as_error * err, const as_record * rec, const as_key
 	metadata_to_pyobject(err, rec, &py_rec_meta);
 	bins_to_pyobject(err, rec, &py_rec_bins);
 
+	if ( py_rec_key == NULL ) {
+		Py_INCREF(Py_None);
+		py_rec_key = Py_None;
+	}
+
+	if ( py_rec_meta == NULL ) {
+		Py_INCREF(Py_None);
+		py_rec_meta = Py_None;
+	}
+
+	if ( py_rec_bins == NULL ) {
+		Py_INCREF(Py_None);
+		py_rec_bins = Py_None;
+	}
+
 	py_rec = PyTuple_New(3);
 	PyTuple_SetItem(py_rec, 0, py_rec_key);
 	PyTuple_SetItem(py_rec, 1, py_rec_meta);
@@ -760,39 +776,60 @@ as_status key_to_pyobject(as_error * err, const as_key * key, PyObject ** obj)
 		as_val_t type = as_val_type(val);
 		switch(type) {
 			case AS_INTEGER: {
-						as_integer * ival = as_integer_fromval(val);
-						py_key = PyInt_FromLong((long) as_integer_get(ival));
-						break;
-					}
+				as_integer * ival = as_integer_fromval(val);
+				py_key = PyInt_FromLong((long) as_integer_get(ival));
+				break;
+			}
 			case AS_STRING: {
-						as_string * sval = as_string_fromval(val);
-						py_key = PyUnicode_DecodeUTF8(as_string_get(sval), as_string_len(sval), NULL);
-						break;
-					}
+				as_string * sval = as_string_fromval(val);
+				py_key = PyUnicode_DecodeUTF8(as_string_get(sval), as_string_len(sval), NULL);
+				break;
+			}
 			case AS_BYTES: {
-						as_bytes * bval = as_bytes_fromval(val);
-						if ( bval ) {
-							uint32_t bval_size = as_bytes_size(bval);
-							py_key = PyByteArray_FromStringAndSize((char *) as_bytes_get(bval), bval_size);
-						}
-						break;
-					}
+				as_bytes * bval = as_bytes_fromval(val);
+				if ( bval ) {
+					uint32_t bval_size = as_bytes_size(bval);
+					py_key = PyByteArray_FromStringAndSize((char *) as_bytes_get(bval), bval_size);
+				}
+				break;
+			}
 			default: {
-						break;
-					}
+				break;
+			}
 		}
 	}
 
 	if ( key->digest.init ) {
-		py_digest = PyByteArray_FromStringAndSize((char *) key->digest.value, AS_DIGEST_VALUE_SIZE);
+		// py_digest = PyByteArray_FromStringAndSize((char *) key->digest.value, AS_DIGEST_VALUE_SIZE);
+	}
+
+
+	if ( py_namespace == NULL ) {
+		Py_INCREF(Py_None);
+		py_namespace = Py_None;
+	}
+
+	if ( py_set == NULL ) {
+		Py_INCREF(Py_None);
+		py_set = Py_None;
+	}
+
+	if ( py_key == NULL ) {
+		Py_INCREF(Py_None);
+		py_key = Py_None;
+	}
+
+
+	if ( py_digest == NULL ) {
+		Py_INCREF(Py_None);
+		py_digest = Py_None;
 	}
 
 	PyObject * py_keyobj = PyTuple_New(4);
-
-	PyTuple_SetItem(py_keyobj, PY_KEYT_NAMESPACE, py_namespace == NULL ? Py_None : py_namespace);
-	PyTuple_SetItem(py_keyobj, PY_KEYT_SET, py_set == NULL ? Py_None : py_set);
-	PyTuple_SetItem(py_keyobj, PY_KEYT_KEY, py_key == NULL ? Py_None : py_key);
-	PyTuple_SetItem(py_keyobj, PY_KEYT_DIGEST, py_digest == NULL ? Py_None : py_digest);
+	PyTuple_SetItem(py_keyobj, PY_KEYT_NAMESPACE, py_namespace);
+	PyTuple_SetItem(py_keyobj, PY_KEYT_SET, py_set);
+	PyTuple_SetItem(py_keyobj, PY_KEYT_KEY, py_key);
+	PyTuple_SetItem(py_keyobj, PY_KEYT_DIGEST, py_digest);
 
 	*obj = py_keyobj;
 

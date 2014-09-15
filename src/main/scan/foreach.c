@@ -56,15 +56,16 @@ static bool each_result(const as_val * val, void * udata)
 	val_to_pyobject(err, val, &py_result);
 
 	// Build Python Function Arguments
-	py_arglist = Py_BuildValue("(O)", py_result);
+	py_arglist = PyTuple_New(1);
+	PyTuple_SetItem(py_arglist, 0, py_result);
 
 	// Invoke Python Callback
 	PyEval_CallObject(py_callback, py_arglist);
 
-	// TODO: handle return value
-
 	// Release Python Function Arguments
 	Py_DECREF(py_arglist);
+
+	// TODO: handle return value
 
 	// Release Python State
 	PyGILState_Release(gstate);
