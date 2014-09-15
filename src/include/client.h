@@ -78,6 +78,14 @@ PyObject * AerospikeClient_Exists(AerospikeClient * self, PyObject * args, PyObj
 PyObject * AerospikeClient_Get(AerospikeClient * self, PyObject * args, PyObject * kwds);
 
 /**
+ * Project specific bins of a record from the database.
+ *
+ *		client.select((x,y,z), (bin1, bin2, bin3))
+ *
+ */
+PyObject * AerospikeClient_Select(AerospikeClient * self, PyObject * args, PyObject * kwds);
+
+/**
  * Write a record in the database.
  *
  *		client.put((x,y,z), ...)
