@@ -63,7 +63,6 @@ PyObject * AerospikeClient_Select_Invoke(
 			bins[i] = (char *) alloca(sizeof(char) * AS_BIN_NAME_MAX_SIZE);
 			if ( PyString_Check(py_val) ) {
 				strncpy(bins[i], PyString_AsString(py_val), AS_BIN_NAME_MAX_LEN);
-				printf("fucking str: %s\n", bins[i]);
 				bins[i][AS_BIN_NAME_MAX_LEN] = '\0';
 			}
 		}
@@ -95,8 +94,7 @@ PyObject * AerospikeClient_Select_Invoke(
 
 	// Initialize record
 	as_record_init(rec, 0);
-
-	printf("fucking bin: %s\n", bins[0]);
+	
 	// Invoke operation
 	aerospike_key_select(self->as, &err, policy_p, &key, (const char **) bins, &rec);
 
