@@ -98,7 +98,7 @@ PyObject * AerospikeClient_Select_Invoke(
 
 	printf("fucking bin: %s\n", bins[0]);
 	// Invoke operation
-	aerospike_key_select(self->as, &err, NULL, &key, (const char **) bins, &rec);
+	aerospike_key_select(self->as, &err, policy_p, &key, (const char **) bins, &rec);
 
 	if ( err.code == AEROSPIKE_OK ) {
 		record_to_pyobject(&err, rec, &key, &py_rec);

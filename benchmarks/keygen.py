@@ -18,15 +18,21 @@
 from __future__ import print_function
 
 import aerospike
+import random
+import signal
 import sys
+import string
+import time
 
+from guppy import hpy
+from threading import Timer
 from optparse import OptionParser
 
 ################################################################################
 # Options Parsing
 ################################################################################
 
-usage = "usage: %prog [options] key"
+usage = "usage: %prog [options]"
 
 optparser = OptionParser(usage=usage, add_help_option=False)
 
@@ -51,14 +57,6 @@ optparser.add_option(
     help="Port of the Aerospike server.")
 
 optparser.add_option(
-    "--timeout", dest="timeout", type="int", default=1000, metavar="<MS>",
-    help="Client timeout")
-
-optparser.add_option(
-    "--read-timeout", dest="read_timeout", type="int", default=1000, metavar="<MS>",
-    help="Client read timeout")
-
-optparser.add_option(
     "-n", "--namespace", dest="namespace", type="string", default="test", metavar="<NS>",
     help="Port of the Aerospike server.")
 
@@ -67,21 +65,13 @@ optparser.add_option(
     help="Port of the Aerospike server.")
 
 optparser.add_option(
-    "--no-key", dest="nokey", action="store_true",
-    help="Do not return the key")
+    "-v", "--verbose", dest="verbose", action="store_true", metavar="<PORT>",
+    help="Verbose output.")
 
-optparser.add_option(
-    "--no-metadata", dest="nometadata", action="store_true",
-    help="Do not return the metadata")
 
 (options, args) = optparser.parse_args()
 
 if options.help:
-    optparser.print_help()
-    print()
-    sys.exit(1)
-
-if len(args) != 1:
     optparser.print_help()
     print()
     sys.exit(1)
@@ -91,10 +81,7 @@ if len(args) != 1:
 ################################################################################
 
 config = {
-    'hosts': [ (options.host, options.port) ],
-    'policies': {
-        'timeout': options.timeout
-    }
+    'hosts': [ (options.host, options.port) ]
 }
 
 ################################################################################
@@ -103,8 +90,29 @@ config = {
 
 exitCode = 0
 
-try:
+count = 0
+start = 0
 
+def total_summary():
+
+    # stop time
+    stop = time.time()
+
+    # elapse time
+    elapse = (stop - start)
+
+    print()
+    print("Summary:")
+    print("     {0} keys generated".format(count))
+    print("     {0} seconds for {1} operations".format(elapse, count))
+    print("     {0} operations per second".format(count / elapse))
+    print()
+    # print("Heap: ")
+    # print(heapy.heap())
+
+    sys.exit(0)
+
+try:
     # ----------------------------------------------------------------------------
     # Connect to Cluster
     # ----------------------------------------------------------------------------
@@ -116,46 +124,33 @@ try:
     # ----------------------------------------------------------------------------
 
     try:
-        namespace = options.namespace if options.namespace and options.namespace != 'None' else None
-        set = options.set if options.set and options.set != 'None' else None
-        key = args.pop()
-        policy = {
-            'timeout': options.read_timeout
-        }
 
-        (key, metadata, record)= client.get((namespace, set, key), policy)
+        signal.signal(signal.SIGTERM, total_summary)
 
-        if metadata != None:
-            if options.nometadata and options.nokey:
-                print(record)
-            elif options.nometadata:
-                print(key, record)
-            elif options.nokey:
-                print(metadata, record)
-            else:
-                print(key, metadata, record)
-            print("---")
-            print("OK, 1 record found.")
-        else:
-            print('error: Not Found.', file=sys.stderr)
-            exitCode = 1
+        print()
+        print("Press CTRL+C to quit.")
+        print()
 
-    except Exception as e:
-        print("error: {0}".format(e), file=sys.stderr)
-        exitCode = 2
+        start = time.time()
 
-    # ----------------------------------------------------------------------------
-    # Close Connection to Cluster
-    # ----------------------------------------------------------------------------
+        # run the operatons
+        while True:
+            count += 1
+            keyt = (options.namespace, options.set, count)
+            client.put(keyt, {'key': count})
 
-    client.close()
+    except KeyboardInterrupt:
+        total_summary()
+    except Exception, eargs:
+        print("error: {0}".format(eargs), file=sys.stderr)
+        sys.exit(2)
 
-except Exception as e:
-    print("error: {0}".format(e), file=sys.stderr)
-    exitCode = 3
+except Exception, eargs:
+    print("error: {0}".format(eargs), file=sys.stderr)
+    sys.exit(3)
 
 ################################################################################
 # Exit
 ################################################################################
 
-sys.exit(exitCode)
+sys.exit(0)
