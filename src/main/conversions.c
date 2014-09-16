@@ -281,10 +281,8 @@ as_status pyobject_to_val(as_error * err, PyObject * py_obj, as_val ** val)
 		*val = (as_val *) as_string_new(s, false);
 	}
 	else if ( PyUnicode_Check(py_obj) ) {
-		PyObject * py_ustr = PyUnicode_AsUTF8String(py_obj);
-		char * str = PyString_AsString(py_ustr);
+		char * str = PyString_AsString(py_obj);
 		*val = (as_val *) as_string_new(str, false);
-		Py_DECREF(py_ustr);
 	}
 	else if ( PyByteArray_Check(py_obj) ) {
 		uint8_t * b = (uint8_t *) PyByteArray_AsString(py_obj);
@@ -354,10 +352,8 @@ as_status pyobject_to_record(as_error * err, PyObject * py_rec, PyObject * py_me
 				as_record_set_int64(rec, name, val);
 			}
 			else if ( PyUnicode_Check(value) ) {
-				PyObject * py_ustr = PyUnicode_AsUTF8String(value);
-				char * val = PyString_AsString(py_ustr);
+				char * val = PyString_AsString(value);
 				as_record_set_strp(rec, name, val, false);
-				Py_DECREF(py_ustr);
 			}
 			else if ( PyString_Check(value) ) {
 				char * val = PyString_AsString(value);
@@ -480,9 +476,7 @@ as_status pyobject_to_key(as_error * err, PyObject * py_keytuple, as_key * key)
 			set = PyString_AsString(py_set);
 		}
 		else if ( PyUnicode_Check(py_set) ) {
-			PyObject * py_ustr = PyUnicode_AsUTF8String(py_set);
-			set = PyString_AsString(py_ustr);
-			Py_DECREF(py_ustr);
+			set = PyString_AsString(py_set);
 		}
 		else {
 			return as_error_update(err, AEROSPIKE_ERR_PARAM, "set must be a string");
