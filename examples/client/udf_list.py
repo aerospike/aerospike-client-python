@@ -57,11 +57,6 @@ if options.help:
     print()
     sys.exit(1)
 
-if options.username == None or options.password == None:
-    optparser.print_help()
-    print()
-    sys.exit(1)
-
 ################################################################################
 # Client Configuration
 ################################################################################
