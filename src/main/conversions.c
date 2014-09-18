@@ -352,8 +352,10 @@ as_status pyobject_to_record(as_error * err, PyObject * py_rec, PyObject * py_me
 				as_record_set_int64(rec, name, val);
 			}
 			else if ( PyUnicode_Check(value) ) {
-				char * val = PyString_AsString(value);
+				PyObject * py_ustr = PyUnicode_AsUTF8String(value);
+				char * val = PyString_AsString(py_ustr);
 				as_record_set_strp(rec, name, val, false);
+				Py_DECREF(py_ustr);
 			}
 			else if ( PyString_Check(value) ) {
 				char * val = PyString_AsString(value);
