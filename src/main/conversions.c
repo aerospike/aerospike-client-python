@@ -485,7 +485,7 @@ as_status pyobject_to_key(as_error * err, PyObject * py_keytuple, as_key * key)
 		}
 	}
 
-	if ( py_key ) {
+	if ( py_key && py_key != Py_None ) {
 		if ( PyString_Check(py_key) ) {
 			char * k = PyString_AsString(py_key);
 			as_key_init_strp(key, ns, set, k, true);
@@ -511,8 +511,20 @@ as_status pyobject_to_key(as_error * err, PyObject * py_keytuple, as_key * key)
 			return as_error_update(err, AEROSPIKE_ERR_PARAM, "key is invalid");
 		}
 	}
-	else if ( py_digest ) {
-		return as_error_update(err, AEROSPIKE_ERR_PARAM, "digest is not supported");
+	else if ( py_digest && py_digest != Py_None ) {
+		if ( PyByteArray_Check(py_digest) ) {
+			uint32_t sz = (uint32_t) PyByteArray_Size(py_digest);
+
+			if ( sz != AS_DIGEST_VALUE_SIZE ) {
+				return as_error_update(err, AEROSPIKE_ERR_PARAM, "digest size is invalid. should be 20 bytes, but received %d", sz);
+			}
+
+			uint8_t * digest = (uint8_t *) PyByteArray_AsString(py_digest);
+			as_key_init_digest(key, ns, set, digest);
+		}
+		else {
+			return as_error_update(err, AEROSPIKE_ERR_PARAM, "digest is invalid. expected a bytearray");
+		}
 	}
 	else {
 		return as_error_update(err, AEROSPIKE_ERR_PARAM, "either key or digest is required");
