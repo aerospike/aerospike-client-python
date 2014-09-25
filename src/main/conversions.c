@@ -796,7 +796,7 @@ as_status key_to_pyobject(as_error * err, const as_key * key, PyObject ** obj)
 	}
 
 	if ( key->digest.init ) {
-		// py_digest = PyByteArray_FromStringAndSize((char *) key->digest.value, AS_DIGEST_VALUE_SIZE);
+		py_digest = PyByteArray_FromStringAndSize((char *) key->digest.value, AS_DIGEST_VALUE_SIZE);
 	}
 
 
