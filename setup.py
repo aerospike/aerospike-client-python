@@ -118,7 +118,7 @@ elif LINUX:
       '/lib',
       ]
 
-    lua_aliases = ['lua','lua5.1','lua-5.1']
+    lua_aliases = ['lua5.1','lua-5.1','lua']
 
     liblua = None
     for directory in lua_dirs:
