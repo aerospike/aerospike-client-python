@@ -354,7 +354,7 @@ as_status pyobject_to_record(as_error * err, PyObject * py_rec, PyObject * py_me
 			else if ( PyUnicode_Check(value) ) {
 				PyObject * py_ustr = PyUnicode_AsUTF8String(value);
 				char * val = PyString_AsString(py_ustr);
-				as_record_set_strp(rec, name, val, false);
+				as_record_set_strp(rec, name, strdup(val), true);
 				Py_DECREF(py_ustr);
 			}
 			else if ( PyString_Check(value) ) {
