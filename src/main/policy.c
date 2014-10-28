@@ -116,8 +116,8 @@ as_status pyobject_to_policy_info(as_error * err, PyObject * py_policy,
 
 	// Set policy fields
 	POLICY_SET_FIELD(timeout, uint32_t);
-	POLICY_SET_FIELD(send_as_is, as_policy_bool);
-	POLICY_SET_FIELD(check_bounds, as_policy_bool);
+	POLICY_SET_FIELD(send_as_is, bool);
+	POLICY_SET_FIELD(check_bounds, bool);
 
 	// Update the policy
 	POLICY_UPDATE();
@@ -211,7 +211,7 @@ as_status pyobject_to_policy_scan(as_error * err, PyObject * py_policy,
 
 	// Set policy fields
 	POLICY_SET_FIELD(timeout, uint32_t);
-	POLICY_SET_FIELD(fail_on_cluster_change, as_policy_bool);
+	POLICY_SET_FIELD(fail_on_cluster_change, bool);
 
 	// Update the policy
 	POLICY_UPDATE();
