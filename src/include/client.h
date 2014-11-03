@@ -101,6 +101,13 @@ PyObject * AerospikeClient_Put(AerospikeClient * self, PyObject * args, PyObject
  */
 PyObject * AerospikeClient_Remove(AerospikeClient * self, PyObject * args, PyObject * kwds);
 
+/**
+ * Prepend a record to the database.
+ *
+ *		client.prepend((x,y,z))
+ *
+ */
+PyObject * AerospikeClient_Prepend(AerospikeClient * self, PyObject * args, PyObject * kwds);
 
 /*******************************************************************************
  * INTENRAL (SHARED) OPERATIONS, FOR COMPATIBILITY W/ OLD API

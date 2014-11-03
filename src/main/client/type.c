@@ -89,6 +89,9 @@ static PyMethodDef AerospikeClient_Type_Methods[] = {
 	{"apply",
 		(PyCFunction) AerospikeClient_Apply, METH_VARARGS | METH_KEYWORDS,
 		"Apply a UDF on a record in the database."},
+	{"prepend",
+		(PyCFunction) AerospikeClient_Prepend, METH_VARARGS | METH_KEYWORDS,
+		"Prepend a record to the database"},
 
 	// Deprecated key-based API
 
