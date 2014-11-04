@@ -49,3 +49,8 @@ as_status pyobject_to_policy_scan(as_error * err, PyObject * py_policy,
 as_status pyobject_to_policy_write(as_error * err, PyObject * py_policy,
 									as_policy_write * policy,
 									as_policy_write ** policy_p);
+
+as_status pyobject_to_policy_operate(as_error * err, PyObject * py_policy,
+                                    as_policy_operate * policy,
+                                    as_policy_operate ** policy_p);
+

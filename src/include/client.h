@@ -102,12 +102,26 @@ PyObject * AerospikeClient_Put(AerospikeClient * self, PyObject * args, PyObject
 PyObject * AerospikeClient_Remove(AerospikeClient * self, PyObject * args, PyObject * kwds);
 
 /**
+ * Append a record to the database.
+ *
+ *		client.append((x,y,z))
+ *
+ */
+PyObject * AerospikeClient_Append(AerospikeClient * self, PyObject * args, PyObject * kwds);
+/**
  * Prepend a record to the database.
  *
  *		client.prepend((x,y,z))
  *
  */
 PyObject * AerospikeClient_Prepend(AerospikeClient * self, PyObject * args, PyObject * kwds);
+/**
+ * Increment bin value of a record to the database.
+ *
+ *		client.increment((x,y,z))
+ *
+ */
+PyObject * AerospikeClient_Increment(AerospikeClient * self, PyObject * args, PyObject * kwds);
 /**
  * Touch a record in the database.
  *
@@ -141,14 +155,15 @@ PyObject * AerospikeClient_Remove_Invoke(
 	AerospikeClient * self, 
 	PyObject * py_key, PyObject * py_policy);
 
-/*PyObject * AerospikeClient_Operate_Invoke(
-    AerospikeClient * self, 
-    PyObject * py_key, PyObject * py_bin, char* val, PyObject * py_policy,
-as_error * err, as_operations * ops);*/
 PyObject * AerospikeClient_Operate_Invoke(
     AerospikeClient * self,
-    as_key * key, PyObject * py_bin, char* val, as_policy_read * policy,
-as_error * err, long ttl, long operation, as_operations * ops);
+    as_key * key, PyObject * py_bin, char* val, as_error * err, long ttl,
+    long initial_value, long offset, long operation, as_operations * ops);
+
+PyObject * AerospikeClient_convert_pythonObj_to_asType(
+    AerospikeClient * self,
+    as_error *err, PyObject* py_key, PyObject* py_policy,
+    as_key* key_p, as_policy_operate** operate_policy_pp);
 
 /*******************************************************************************
  * KEY OPERATIONS (DEPRECATED)

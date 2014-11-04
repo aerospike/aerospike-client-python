@@ -320,6 +320,7 @@ setup(
                 'src/main/client/operate.c',
                 'src/main/client/query.c',
                 'src/main/client/remove.c',
+                'src/main/client/append.c',
                 'src/main/client/scan.c',
                 'src/main/client/select.c',
                 'src/main/client/admin.c',

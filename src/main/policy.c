@@ -244,3 +244,28 @@ as_status pyobject_to_policy_write(as_error * err, PyObject * py_policy,
 
 	return err->code;
 }
+
+/**
+ * Converts a PyObject into an as_policy_operate object.
+ * Returns AEROSPIKE_OK on success. On error, the err argument is populated.
+ * We assume that the error object and the policy object are already allocated
+ * and initialized (although, we do reset the error object here).
+ */
+as_status pyobject_to_policy_operate(as_error * err, PyObject * py_policy,
+		as_policy_operate * policy,
+		as_policy_operate ** policy_p)
+{
+	// Initialize Policy
+	POLICY_INIT(as_policy_operate);
+
+	// Set policy fields
+	POLICY_SET_FIELD(timeout, uint32_t);
+	POLICY_SET_FIELD(retry, as_policy_retry);
+	POLICY_SET_FIELD(key, as_policy_key);
+	POLICY_SET_FIELD(gen, as_policy_gen);
+
+	// Update the policy
+	POLICY_UPDATE();
+
+	return err->code;
+}
