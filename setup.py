@@ -258,7 +258,7 @@ with open(path.join(CWD, 'VERSION')) as f:
 setup(
     name = 'aerospike', 
     
-    version = version, 
+    version = version.strip(), 
 
     description = 'Aerospike Client Library for Python',
     long_description = long_description,
