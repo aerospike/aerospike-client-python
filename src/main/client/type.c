@@ -92,6 +92,9 @@ static PyMethodDef AerospikeClient_Type_Methods[] = {
 	{"prepend",
 		(PyCFunction) AerospikeClient_Prepend, METH_VARARGS | METH_KEYWORDS,
 		"Prepend a record to the database"},
+	{"touch",
+		(PyCFunction) AerospikeClient_Touch, METH_VARARGS | METH_KEYWORDS,
+		"Touch a record in the database"},
 
 	// Deprecated key-based API
 

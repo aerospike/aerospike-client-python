@@ -18,7 +18,7 @@
 
 #include <Python.h>
 #include <stdbool.h>
-
+#include "aerospike/as_operations.h"
 #include "types.h"
 
 #define TRACE() printf("%s:%d\n",__FILE__,__LINE__)
@@ -108,6 +108,13 @@ PyObject * AerospikeClient_Remove(AerospikeClient * self, PyObject * args, PyObj
  *
  */
 PyObject * AerospikeClient_Prepend(AerospikeClient * self, PyObject * args, PyObject * kwds);
+/**
+ * Touch a record in the database.
+ *
+ *		client.touch((x,y,z))
+ *
+ */
+PyObject * AerospikeClient_Touch(AerospikeClient * self, PyObject * args, PyObject * kwds);
 
 /*******************************************************************************
  * INTENRAL (SHARED) OPERATIONS, FOR COMPATIBILITY W/ OLD API
@@ -134,6 +141,14 @@ PyObject * AerospikeClient_Remove_Invoke(
 	AerospikeClient * self, 
 	PyObject * py_key, PyObject * py_policy);
 
+/*PyObject * AerospikeClient_Operate_Invoke(
+    AerospikeClient * self, 
+    PyObject * py_key, PyObject * py_bin, char* val, PyObject * py_policy,
+as_error * err, as_operations * ops);*/
+PyObject * AerospikeClient_Operate_Invoke(
+    AerospikeClient * self,
+    as_key * key, PyObject * py_bin, char* val, as_policy_read * policy,
+as_error * err, long ttl, long operation, as_operations * ops);
 
 /*******************************************************************************
  * KEY OPERATIONS (DEPRECATED)
