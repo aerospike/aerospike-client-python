@@ -163,7 +163,7 @@ PyObject * AerospikeClient_Operate_Invoke(
 PyObject * AerospikeClient_convert_pythonObj_to_asType(
     AerospikeClient * self,
     as_error *err, PyObject* py_key, PyObject* py_policy,
-    as_key* key_p, as_policy_operate** operate_policy_pp);
+    as_key* key_p, as_policy_operate* operate_policy_pp);
 
 /*******************************************************************************
  * KEY OPERATIONS (DEPRECATED)
