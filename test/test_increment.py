@@ -91,9 +91,12 @@ class TestIncrement(object):
         Invoke increment() with non-existent key
         """
         key = ('test', 'demo', 1000)
-        status = self.client.increment(key, "age", 5)
+        with pytest.raises(Exception) as exception:
+            status = self.client.increment(key, "age", 5)
 
-        assert status == 0L
+        assert exception.value[0] == 2
+        assert exception.value[1] == "AEROSPIKE_ERR_RECORD_NOT_FOUND"
+
 
     def test_increment_with_nonexistent_bin(self):
         """

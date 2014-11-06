@@ -83,9 +83,11 @@ class TestTouch(object):
         """
         key = ('test', 'demo', 1000)
 
-        status = self.client.touch(key, 120)
+        with pytest.raises(Exception) as exception:
+            status = self.client.touch(key, 120)
 
-        assert status == 0
+        assert exception.value[0] == 2
+        assert exception.value[1] == "AEROSPIKE_ERR_RECORD_NOT_FOUND"
 
 
     def test_touch_value_string(self):
@@ -93,11 +95,10 @@ class TestTouch(object):
         Invoke touch() not a string
         """
         key = ('test', 'demo', 1)
-        with pytest.raises(Exception) as exception:
+        with pytest.raises(TypeError) as typeError:
             self.client.touch(key, "name")
 
-        assert exception.value[0] == -2
-        assert exception.value[1] == "Value should be a integer or long"
+        assert "an integer is required" in typeError.value
 
     def test_touch_with_extra_parameter(self):
         """
