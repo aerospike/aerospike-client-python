@@ -58,11 +58,12 @@ PyMODINIT_FUNC initaerospike()
 	Py_INCREF(scan);
 	PyModule_AddObject(aerospike, "Scan", (PyObject *) scan);
 
-        PyModule_AddIntMacro(aerospike, OPERATOR_PREPEND);
-        PyModule_AddIntMacro(aerospike, OPERATOR_APPEND);
-        PyModule_AddIntMacro(aerospike, OPERATOR_READ);
-        PyModule_AddIntMacro(aerospike, OPERATOR_WRITE);
-        PyModule_AddIntMacro(aerospike, OPERATOR_TOUCH);
+    PyModule_AddIntMacro(aerospike, OPERATOR_PREPEND);
+    PyModule_AddIntMacro(aerospike, OPERATOR_APPEND);
+    PyModule_AddIntMacro(aerospike, OPERATOR_READ);
+    PyModule_AddIntMacro(aerospike, OPERATOR_WRITE);
+    PyModule_AddIntMacro(aerospike, OPERATOR_TOUCH);
+    PyModule_AddIntMacro(aerospike, OPERATOR_INCR);
 
 	PyObject * predicates = AerospikePredicates_New();
 	Py_INCREF(predicates);
