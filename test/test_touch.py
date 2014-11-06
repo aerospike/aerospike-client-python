@@ -41,7 +41,7 @@ class TestTouch(object):
         """
         with pytest.raises(TypeError) as typeError:
             self.client.touch()
-        assert "Required argument 'key'" in typeError.value.message
+        assert "Required argument 'key' (pos 1) not found" in typeError.value
 
     def test_touch_with_correct_paramters(self):
         """
@@ -83,11 +83,10 @@ class TestTouch(object):
         """
         key = ('test', 'demo', 1000)
 
-        with pytest.raises(Exception) as exception:
-            self.client.touch(key, 120)
+        status = self.client.touch(key, 120)
 
-        assert exception.value[0] == 2
-        assert exception.value[1] == "AEROSPIKE_ERR_RECORD_NOT_FOUND"
+        assert status == 0
+
 
     def test_touch_value_string(self):
         """
@@ -111,7 +110,7 @@ class TestTouch(object):
         with pytest.raises(TypeError) as typeError:
             self.client.touch(key, 120, policy, "")
 
-        assert "touch() takes at most 3 arguments (4 given)" in typeError.value.message
+        assert "touch() takes at most 3 arguments (4 given)" in typeError.value
 
     def test_touch_policy_is_string(self):
         """

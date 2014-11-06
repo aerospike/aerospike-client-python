@@ -41,7 +41,7 @@ class TestIncrement(object):
         """
         with pytest.raises(TypeError) as typeError:
             self.client.increment()
-        assert "Required argument 'key'" in typeError.value.message
+        assert "Required argument 'key' (pos 1) not found" in typeError.value
 
     def test_increment_with_correct_parameters(self):
         """
@@ -112,7 +112,7 @@ class TestIncrement(object):
         with pytest.raises(TypeError) as typeError:
             self.client.increment(key, "age", "str")
 
-        assert "an integer is required" in typeError.value.message
+        assert "an integer is required" in typeError.value
 
     def test_increment_with_extra_parameter(self):
         """
@@ -125,7 +125,7 @@ class TestIncrement(object):
         with pytest.raises(TypeError) as typeError:
             self.client.increment(key, "age", 2, 0, policy, "")
 
-        assert "increment() takes at most 5 arguments (6 given)" in typeError.value.message
+        assert "increment() takes at most 5 arguments (6 given)" in typeError.value
 
     def test_increment_policy_is_string(self):
         """

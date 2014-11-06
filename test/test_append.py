@@ -41,7 +41,7 @@ class TestAppend(object):
         """
         with pytest.raises(TypeError) as typeError:
             self.client.append()
-        assert "Required argument 'key'" in typeError.value.message
+        assert "Required argument 'key' (pos 1) not found" in typeError.value
 
     def test_append_with_correct_paramters(self):
         """
@@ -112,7 +112,7 @@ class TestAppend(object):
         with pytest.raises(TypeError) as typeError:
             self.client.append(key, "name", 2)
 
-        assert "append() argument 3 must be string, not int" in typeError.value.message
+        assert "append() argument 3 must be string, not int" in typeError.value
 
     def test_append_with_extra_parameter(self):
         """
@@ -125,7 +125,7 @@ class TestAppend(object):
         with pytest.raises(TypeError) as typeError:
             self.client.append(key, "name", "str", policy, "")
 
-        assert "append() takes at most 4 arguments (5 given)" in typeError.value.message
+        assert "append() takes at most 4 arguments (5 given)" in typeError.value
 
     def test_append_policy_is_string(self):
         """
