@@ -101,6 +101,9 @@ static PyMethodDef AerospikeClient_Type_Methods[] = {
 	{"increment",
 		(PyCFunction) AerospikeClient_Increment, METH_VARARGS | METH_KEYWORDS,
 		"Increments a numeric value in a bin"},
+	{"operate",
+		(PyCFunction) AerospikeClient_Operate, METH_VARARGS | METH_KEYWORDS,
+		"Performs operate operation"},
 
 	// Deprecated key-based API
 

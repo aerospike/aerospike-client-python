@@ -129,6 +129,13 @@ PyObject * AerospikeClient_Increment(AerospikeClient * self, PyObject * args, Py
  *
  */
 PyObject * AerospikeClient_Touch(AerospikeClient * self, PyObject * args, PyObject * kwds);
+/**
+ * Performs operate operations
+ *
+ *		client.operate((x,y,z))
+ *
+ */
+PyObject * AerospikeClient_Operate(AerospikeClient * self, PyObject * args, PyObject * kwds);
 
 /*******************************************************************************
  * INTENRAL (SHARED) OPERATIONS, FOR COMPATIBILITY W/ OLD API
@@ -311,3 +318,11 @@ PyObject * AerospikeClient_Index_String_Create(AerospikeClient * self, PyObject 
  *
  */
 PyObject * AerospikeClient_Index_Remove(AerospikeClient * self, PyObject *args, PyObject * kwds);
+
+#define OPERATOR_PREPEND 4
+#define OPERATOR_APPEND  5
+#define OPERATOR_TOUCH   8
+#define OPERATOR_INCR    2
+#define OPERATOR_READ    1
+#define OPERATOR_WRITE   0
+
