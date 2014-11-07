@@ -270,16 +270,30 @@ as_status pyobject_to_policy_operate(as_error * err, PyObject * py_policy,
 	return err->code;
 }
 
-void declare_policy_constants(PyObject *aerospike)
+/**
+ * Declares policy constants.
+ */
+as_status declare_policy_constants(PyObject *aerospike)
 {
+    as_status status = AEROSPIKE_OK;
     int i;
+
+    if (!aerospike) {
+        status = AEROSPIKE_ERR;
+        goto exit;
+    }
     for (i = 0; i <= AEROSPIKE_CONSTANTS_ARR_SIZE; i++) {
         PyModule_AddIntConstant(aerospike,
                 aerospike_constants[i].constant_str,
                 aerospike_constants[i].constantno);
     }
+exit:
+    return status;
 }
 
+/**
+ * Set policy values.
+ */
 as_status set_policy(as_error *err, PyObject * py_policy, as_policy_operate* operate_policy_p)
 {
     if (PyDict_Check(py_policy)) {
@@ -297,6 +311,7 @@ as_status set_policy(as_error *err, PyObject * py_policy, as_policy_operate* ope
 
             char *key_name = PyString_AsString(key);
             if (strcmp("timeout", key_name) == 0) {
+                val = (int64_t) PyInt_AsLong(value);
 
             } else if (strcmp("exists", key_name) == 0) {
                 val = (int64_t) PyInt_AsLong(value);
@@ -318,8 +333,8 @@ as_status set_policy(as_error *err, PyObject * py_policy, as_policy_operate* ope
                 }
                 if (operate_policy_p) {
                     PyObject *py_key = PyDict_GetItemString(py_policy, "retry");
-                    long keyval = PyInt_AsLong(py_key) - AS_POLICY_KEY_DIGEST + 1;
-                    PyObject * py_keyval = PyLong_FromLong(keyval);
+                    long keyval = PyInt_AsLong(py_key) - AS_POLICY_RETRY;
+                    PyObject * py_keyval = PyInt_FromLong(keyval);
                     PyDict_SetItemString(py_policy, "retry", py_keyval);
                 } else {
                     return as_error_update(err, AEROSPIKE_ERR_CLIENT, "Invalid value for OPT_POLICY_KEY_GEN");
@@ -332,10 +347,8 @@ as_status set_policy(as_error *err, PyObject * py_policy, as_policy_operate* ope
                 if (operate_policy_p) {
                     PyObject *py_key = PyDict_GetItemString(py_policy, "key");
                     long keyval = PyInt_AsLong(py_key) - AS_POLICY_KEY_DIGEST;
-                    printf("key val is %ld\n", keyval); 
                     PyObject * py_keyval = PyInt_FromLong(keyval);
                     int status = PyDict_SetItemString(py_policy, "key", py_keyval);
-                    printf("Status is %d\n", status); 
                 } else {
                     return as_error_update(err, AEROSPIKE_ERR_CLIENT, "Invalid value for OPT_POLICY_KEY_GEN");
                 }
@@ -347,7 +360,7 @@ as_status set_policy(as_error *err, PyObject * py_policy, as_policy_operate* ope
                 if (operate_policy_p) {
                     PyObject *py_key = PyDict_GetItemString(py_policy, "gen");
                     long keyval = PyInt_AsLong(py_key) - AS_POLICY_KEY_GEN + 1;
-                    PyObject * py_keyval = PyLong_FromLong(keyval);
+                    PyObject * py_keyval = PyInt_FromLong(keyval);
                     PyDict_SetItemString(py_policy, "gen", py_keyval);
                 } else {
                     return as_error_update(err, AEROSPIKE_ERR_CLIENT, "Invalid value for OPT_POLICY_KEY_GEN");

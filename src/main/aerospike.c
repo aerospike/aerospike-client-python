@@ -69,12 +69,6 @@ PyMODINIT_FUNC initaerospike()
     /*
      * Add constants to module.
      */
-    /*int i;
-    for (i = 0; i <= AEROSPIKE_CONSTANTS_ARR_SIZE; i++) {
-        PyModule_AddIntConstant(aerospike,
-                aerospike_constants[i].constant_str,
-                aerospike_constants[i].constantno);
-    }*/
     declare_policy_constants(aerospike);
 
 	PyObject * predicates = AerospikePredicates_New();

@@ -18,16 +18,6 @@
 #include <aerospike/as_error.h>
 #include <aerospike/as_policy.h>
 
-enum Aerospike_constants {
-    OPT_CONNECT_TIMEOUT = 1,
-    OPT_READ_TIMEOUT,
-    OPT_WRITE_TIMEOUT,
-    OPT_POLICY_RETRY,
-    OPT_POLICY_EXISTS,
-    OPT_POLICY_KEY,
-    OPT_POLICY_GEN
-};
-
 #define AS_POLICY_RETRY 0x00000010
 #define AS_POLICY_EXISTS 0x00000100
 #define AS_UDF_TYPE 0x00010000
@@ -89,14 +79,7 @@ AerospikeConstants aerospike_constants[] = {
     { POLICY_KEY_SEND                   ,   "POLICY_KEY_SEND" },
     { POLICY_GEN_IGNORE                 ,   "POLICY_GEN_IGNORE" },
     { POLICY_GEN_EQ                     ,   "POLICY_GEN_EQ" },
-    { POLICY_GEN_GT                     ,   "POLICY_GEN_GT" },
-    { OPT_CONNECT_TIMEOUT               ,   "OPT_CONNECT_TIMEOUT" },
-    { OPT_READ_TIMEOUT                  ,   "OPT_READ_TIMEOUT" },
-    { OPT_WRITE_TIMEOUT                 ,   "OPT_WRITE_TIMEOUT" },
-    { OPT_POLICY_RETRY                  ,   "OPT_POLICY_RETRY" },
-    { OPT_POLICY_EXISTS                 ,   "OPT_POLICY_EXISTS" },
-    { OPT_POLICY_KEY                    ,   "OPT_POLICY_KEY" },
-    { OPT_POLICY_GEN                    ,   "OPT_POLICY_GEN" }
+    { POLICY_GEN_GT                     ,   "POLICY_GEN_GT" }
 };
 
 as_status pyobject_to_policy_admin(as_error * err, PyObject * py_policy,
@@ -138,4 +121,4 @@ as_status pyobject_to_policy_operate(as_error * err, PyObject * py_policy,
 as_status set_policy(as_error *err, PyObject * py_policy, 
         as_policy_operate* operate_policy);
 
-void declare_poliy_constants(PyObject *aerospike);
+as_status declare_poliy_constants(PyObject *aerospike);

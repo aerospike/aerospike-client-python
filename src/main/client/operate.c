@@ -246,6 +246,13 @@ PyObject * AerospikeClient_Prepend(AerospikeClient * self, PyObject * args, PyOb
         return NULL;
     }
 
+    if (py_policy) {
+        set_policy(&err, py_policy, &operate_policy);
+    }
+    if (err.code != AEROSPIKE_OK) {
+        goto CLEANUP;
+    }
+
     py_result = AerospikeClient_convert_pythonObj_to_asType(self, &err,
             py_key, py_policy, &key, &operate_policy);
     if (!py_result) {
@@ -306,6 +313,13 @@ PyObject * AerospikeClient_Increment(AerospikeClient * self, PyObject * args, Py
         return NULL;
     }
 
+    if (py_policy) {
+        set_policy(&err, py_policy, &operate_policy);
+    }
+    if (err.code != AEROSPIKE_OK) {
+        goto CLEANUP;
+    }
+
     py_result = AerospikeClient_convert_pythonObj_to_asType(self, &err,
                           py_key, py_policy, &key, &operate_policy);
     
@@ -362,6 +376,13 @@ PyObject * AerospikeClient_Touch(AerospikeClient * self, PyObject * args, PyObje
     if ( PyArg_ParseTupleAndKeywords(args, kwds, "Ol|O:touch", kwlist, 
     		&py_key, &touchvalue, &py_policy) == false ) {
         return NULL;
+    }
+
+    if (py_policy) {
+        set_policy(&err, py_policy, &operate_policy);
+    }
+    if (err.code != AEROSPIKE_OK) {
+        goto CLEANUP;
     }
 
     py_result = AerospikeClient_convert_pythonObj_to_asType(self, &err,
