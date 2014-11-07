@@ -269,3 +269,94 @@ as_status pyobject_to_policy_operate(as_error * err, PyObject * py_policy,
 
 	return err->code;
 }
+
+void declare_policy_constants(PyObject *aerospike)
+{
+    int i;
+    for (i = 0; i <= AEROSPIKE_CONSTANTS_ARR_SIZE; i++) {
+        PyModule_AddIntConstant(aerospike,
+                aerospike_constants[i].constant_str,
+                aerospike_constants[i].constantno);
+    }
+}
+
+as_status set_policy(as_error *err, PyObject * py_policy, as_policy_operate* operate_policy_p)
+{
+    if (PyDict_Check(py_policy)) {
+        PyObject *key = NULL, *value = NULL;
+        Py_ssize_t pos = 0;
+        int64_t val = 0;
+        
+        while (PyDict_Next(py_policy, &pos, &key, &value)) {
+            if (!PyString_Check(key)) {
+                return as_error_update(err, AEROSPIKE_ERR_CLIENT, "Policy key must be string");
+            }
+            if (!PyInt_Check(value)) {
+                return as_error_update(err, AEROSPIKE_ERR_CLIENT, "Invalid value(type) for policy key");
+            }
+
+            char *key_name = PyString_AsString(key);
+            if (strcmp("timeout", key_name) == 0) {
+
+            } else if (strcmp("exists", key_name) == 0) {
+                val = (int64_t) PyInt_AsLong(value);
+                if ((val & AS_POLICY_EXISTS) != AS_POLICY_EXISTS) {
+                    return as_error_update(err, AEROSPIKE_ERR_CLIENT, "Invalid value for OPT_POLICY_EXISTS");
+                }
+                if (operate_policy_p) {
+                    PyObject *py_key = PyDict_GetItemString(py_policy, "exists");
+                    long keyval = PyInt_AsLong(py_key) - AS_POLICY_EXISTS + 1;
+                    PyObject * py_keyval = PyLong_FromLong(keyval);
+                    PyDict_SetItemString(py_policy, "exists", py_keyval);
+                } else {
+                    return as_error_update(err, AEROSPIKE_ERR_CLIENT, "Invalid value for OPT_POLICY_KEY_GEN");
+                }
+            } else if (strcmp("retry", key_name) == 0) {
+                val = (int64_t) PyInt_AsLong(value);
+                if ((val & AS_POLICY_RETRY) != AS_POLICY_RETRY) {
+                    return as_error_update(err, AEROSPIKE_ERR_CLIENT, "Invalid value for OPT_POLICY_KEY");
+                }
+                if (operate_policy_p) {
+                    PyObject *py_key = PyDict_GetItemString(py_policy, "retry");
+                    long keyval = PyInt_AsLong(py_key) - AS_POLICY_KEY_DIGEST + 1;
+                    PyObject * py_keyval = PyLong_FromLong(keyval);
+                    PyDict_SetItemString(py_policy, "retry", py_keyval);
+                } else {
+                    return as_error_update(err, AEROSPIKE_ERR_CLIENT, "Invalid value for OPT_POLICY_KEY_GEN");
+                }
+            } else if (strcmp("key", key_name) == 0) {
+                val = (int64_t) PyInt_AsLong(value);
+                if ((val & AS_POLICY_KEY_DIGEST) != AS_POLICY_KEY_DIGEST) {
+                    return as_error_update(err, AEROSPIKE_ERR_CLIENT, "Invalid value for OPT_POLICY_KEY");
+                }
+                if (operate_policy_p) {
+                    PyObject *py_key = PyDict_GetItemString(py_policy, "key");
+                    long keyval = PyInt_AsLong(py_key) - AS_POLICY_KEY_DIGEST;
+                    printf("key val is %ld\n", keyval); 
+                    PyObject * py_keyval = PyInt_FromLong(keyval);
+                    int status = PyDict_SetItemString(py_policy, "key", py_keyval);
+                    printf("Status is %d\n", status); 
+                } else {
+                    return as_error_update(err, AEROSPIKE_ERR_CLIENT, "Invalid value for OPT_POLICY_KEY_GEN");
+                }
+            } else if (strcmp("gen", key_name) == 0) {
+                val = (int64_t) PyInt_AsLong(value);
+                if ((val & AS_POLICY_KEY_GEN) != AS_POLICY_KEY_GEN) {
+                    return as_error_update(err, AEROSPIKE_ERR_CLIENT, "Invalid value for OPT_POLICY_KEY_GEN");
+                }
+                if (operate_policy_p) {
+                    PyObject *py_key = PyDict_GetItemString(py_policy, "gen");
+                    long keyval = PyInt_AsLong(py_key) - AS_POLICY_KEY_GEN + 1;
+                    PyObject * py_keyval = PyLong_FromLong(keyval);
+                    PyDict_SetItemString(py_policy, "gen", py_keyval);
+                } else {
+                    return as_error_update(err, AEROSPIKE_ERR_CLIENT, "Invalid value for OPT_POLICY_KEY_GEN");
+                }
+            } else {
+                return as_error_update(err, AEROSPIKE_ERR_CLIENT, "Invalid value for policy key");
+            }
+        }
+    }
+    
+    return err->code;
+}

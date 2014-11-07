@@ -24,6 +24,7 @@
 #include "query.h"
 #include "scan.h"
 #include "predicates.h"
+#include "policy.h"
 
 static PyMethodDef Aerospike_Methods[] = {
 
@@ -64,6 +65,17 @@ PyMODINIT_FUNC initaerospike()
     PyModule_AddIntMacro(aerospike, OPERATOR_WRITE);
     PyModule_AddIntMacro(aerospike, OPERATOR_TOUCH);
     PyModule_AddIntMacro(aerospike, OPERATOR_INCR);
+
+    /*
+     * Add constants to module.
+     */
+    /*int i;
+    for (i = 0; i <= AEROSPIKE_CONSTANTS_ARR_SIZE; i++) {
+        PyModule_AddIntConstant(aerospike,
+                aerospike_constants[i].constant_str,
+                aerospike_constants[i].constantno);
+    }*/
+    declare_policy_constants(aerospike);
 
 	PyObject * predicates = AerospikePredicates_New();
 	Py_INCREF(predicates);
