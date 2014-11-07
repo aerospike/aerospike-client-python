@@ -62,7 +62,8 @@ class TestPrepend(object):
         """
         key = ('test', 'demo', 1)
         policy = {
-            'timeout': 1000
+            'timeout': 1000,
+            'key' : aerospike.POLICY_KEY_SEND
         }
         self.client.prepend(key, "name", "str", policy)
 

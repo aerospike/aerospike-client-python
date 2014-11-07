@@ -58,7 +58,8 @@ class TestTouch(object):
         """
         key = ('test', 'demo', 1)
         policy = {
-            'timeout': 1000
+            'timeout': 1000,
+            'retry' : aerospike.POLICY_RETRY_ONCE 
         }
         response = self.client.touch(key, 120, policy)
         assert response == 0

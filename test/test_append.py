@@ -62,7 +62,8 @@ class TestAppend(object):
         """
         key = ('test', 'demo', 1)
         policy = {
-            'timeout': 1000
+            'timeout': 1000,
+            'retry' : aerospike.POLICY_RETRY_ONCE
         }
         self.client.append(key, "name", "str", policy)
 

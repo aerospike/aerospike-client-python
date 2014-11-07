@@ -62,7 +62,8 @@ class TestIncrement(object):
         """
         key = ('test', 'demo', 1)
         policy = {
-            'timeout': 1000
+            'timeout': 1000,
+            'key' : aerospike.POLICY_KEY_SEND
         }
         self.client.increment(key, "age", 5, 0, policy)
 

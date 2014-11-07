@@ -450,6 +450,13 @@ PyObject * AerospikeClient_Operate(AerospikeClient * self, PyObject * args, PyOb
         return NULL;
     }
 
+    if (py_policy) {
+        set_policy(&err, py_policy, &operate_policy);
+    }
+    if (err.code != AEROSPIKE_OK) {
+        goto CLEANUP;
+    }
+
     py_result = AerospikeClient_convert_pythonObj_to_asType(self, &err,
                           py_key, py_policy, &key, &operate_policy);
     if (!py_result) {

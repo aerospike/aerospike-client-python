@@ -77,7 +77,8 @@ class TestOperate(object):
         """
         key = ('test', 'demo', 1)
         policy = {
-            'timeout': 1000
+            'timeout': 1000,
+            'key' : aerospike.POLICY_KEY_SEND
         }
 
         list = [
