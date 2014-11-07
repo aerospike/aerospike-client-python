@@ -41,7 +41,7 @@ class TestOperate(object):
         """
         with pytest.raises(TypeError) as typeError:
             self.client.operate()
-        assert "Required argument 'key'" in typeError.value.message
+        assert "Required argument 'key' (pos 1) not found" in typeError.value
 
     def test_operate_with_correct_paramters_positive(self):
         """
@@ -100,9 +100,6 @@ class TestOperate(object):
         key, meta, bins = self.client.operate(key, list, policy)
 
         time.sleep(2)
-
-        #(key , meta, bins) = self.client.get(key)
-        #assert bins == { 'age': 4, 'name': 'ramname1straa'}
         assert bins == { 'name': 'name1aa'}
 
     def test_opearte_with_incorrect_policy_negative(self):
@@ -238,8 +235,6 @@ class TestOperate(object):
         assert exception.value[0] == -2
         assert exception.value[1] == "key is invalid"
 
-        #assert "operate() argument 3 must be string, not int" in typeError.value.message
-
     def test_operate_with_extra_parameter_negative(self):
         """
         Invoke operate() with extra parameter.
@@ -258,7 +253,7 @@ class TestOperate(object):
         with pytest.raises(TypeError) as typeError:
             self.client.operate(key, list, policy, "")
 
-        assert "operate() takes at most 3 arguments (4 given)" in typeError.value.message
+        assert "operate() takes at most 3 arguments (4 given)" in typeError.value
 
     def test_operate_policy_is_string_negative(self):
         """
