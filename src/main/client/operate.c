@@ -179,7 +179,7 @@ PyObject * AerospikeClient_Append(AerospikeClient * self, PyObject * args, PyObj
     as_operations_inita(&ops, 1);
 
     if (py_policy) {
-        set_policy(&err, py_policy, &operate_policy);
+        set_policy_operate(&err, py_policy, &operate_policy);
     }
     if (err.code != AEROSPIKE_OK) {
         goto CLEANUP;
@@ -247,7 +247,7 @@ PyObject * AerospikeClient_Prepend(AerospikeClient * self, PyObject * args, PyOb
     }
 
     if (py_policy) {
-        set_policy(&err, py_policy, &operate_policy);
+        set_policy_operate(&err, py_policy, &operate_policy);
     }
     if (err.code != AEROSPIKE_OK) {
         goto CLEANUP;
@@ -314,7 +314,7 @@ PyObject * AerospikeClient_Increment(AerospikeClient * self, PyObject * args, Py
     }
 
     if (py_policy) {
-        set_policy(&err, py_policy, &operate_policy);
+        set_policy_operate(&err, py_policy, &operate_policy);
     }
     if (err.code != AEROSPIKE_OK) {
         goto CLEANUP;
@@ -379,7 +379,7 @@ PyObject * AerospikeClient_Touch(AerospikeClient * self, PyObject * args, PyObje
     }
 
     if (py_policy) {
-        set_policy(&err, py_policy, &operate_policy);
+        set_policy_operate(&err, py_policy, &operate_policy);
     }
     if (err.code != AEROSPIKE_OK) {
         goto CLEANUP;
@@ -451,7 +451,7 @@ PyObject * AerospikeClient_Operate(AerospikeClient * self, PyObject * args, PyOb
     }
 
     if (py_policy) {
-        set_policy(&err, py_policy, &operate_policy);
+        set_policy_operate(&err, py_policy, &operate_policy);
     }
     if (err.code != AEROSPIKE_OK) {
         goto CLEANUP;

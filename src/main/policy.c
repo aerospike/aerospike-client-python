@@ -291,10 +291,18 @@ exit:
     return status;
 }
 
+void set_policy_operate(as_error *err, PyObject * py_policy, as_policy_operate* operate_policy_p)
+{
+    set_policy(err, py_policy, NULL, NULL, operate_policy_p, NULL, NULL, NULL, NULL);
+}
+
 /**
  * Set policy values.
  */
-as_status set_policy(as_error *err, PyObject * py_policy, as_policy_operate* operate_policy_p)
+as_status set_policy(as_error *err, PyObject * py_policy, as_policy_read* read_policy_p,
+        as_policy_write* write_policy_p, as_policy_operate* operate_policy_p,
+        as_policy_remove* remove_policy_p, as_policy_info* info_policy_p,
+        as_policy_scan* scan_policy_p, as_policy_query* query_policy_p)
 {
     if (PyDict_Check(py_policy)) {
         PyObject *key = NULL, *value = NULL;
@@ -312,15 +320,17 @@ as_status set_policy(as_error *err, PyObject * py_policy, as_policy_operate* ope
             char *key_name = PyString_AsString(key);
             if (strcmp("timeout", key_name) == 0) {
                 val = (int64_t) PyInt_AsLong(value);
-
+                if (val < 0) {
+                    return as_error_update(err, AEROSPIKE_ERR_CLIENT, "Invalid value for timeout");
+                }
             } else if (strcmp("exists", key_name) == 0) {
                 val = (int64_t) PyInt_AsLong(value);
                 if ((val & AS_POLICY_EXISTS) != AS_POLICY_EXISTS) {
                     return as_error_update(err, AEROSPIKE_ERR_CLIENT, "Invalid value for OPT_POLICY_EXISTS");
                 }
-                if (operate_policy_p) {
+                if (write_policy_p) {
                     PyObject *py_key = PyDict_GetItemString(py_policy, "exists");
-                    long keyval = PyInt_AsLong(py_key) - AS_POLICY_EXISTS + 1;
+                    long keyval = PyInt_AsLong(py_key) - AS_POLICY_EXISTS;
                     PyObject * py_keyval = PyLong_FromLong(keyval);
                     PyDict_SetItemString(py_policy, "exists", py_keyval);
                 } else {
@@ -331,7 +341,7 @@ as_status set_policy(as_error *err, PyObject * py_policy, as_policy_operate* ope
                 if ((val & AS_POLICY_RETRY) != AS_POLICY_RETRY) {
                     return as_error_update(err, AEROSPIKE_ERR_CLIENT, "Invalid value for OPT_POLICY_KEY");
                 }
-                if (operate_policy_p) {
+                if (write_policy_p || operate_policy_p || remove_policy_p) {
                     PyObject *py_key = PyDict_GetItemString(py_policy, "retry");
                     long keyval = PyInt_AsLong(py_key) - AS_POLICY_RETRY;
                     PyObject * py_keyval = PyInt_FromLong(keyval);
@@ -344,11 +354,11 @@ as_status set_policy(as_error *err, PyObject * py_policy, as_policy_operate* ope
                 if ((val & AS_POLICY_KEY_DIGEST) != AS_POLICY_KEY_DIGEST) {
                     return as_error_update(err, AEROSPIKE_ERR_CLIENT, "Invalid value for OPT_POLICY_KEY");
                 }
-                if (operate_policy_p) {
+                if (read_policy_p || write_policy_p || operate_policy_p || remove_policy_p) {
                     PyObject *py_key = PyDict_GetItemString(py_policy, "key");
                     long keyval = PyInt_AsLong(py_key) - AS_POLICY_KEY_DIGEST;
                     PyObject * py_keyval = PyInt_FromLong(keyval);
-                    int status = PyDict_SetItemString(py_policy, "key", py_keyval);
+                    PyDict_SetItemString(py_policy, "key", py_keyval);
                 } else {
                     return as_error_update(err, AEROSPIKE_ERR_CLIENT, "Invalid value for OPT_POLICY_KEY_GEN");
                 }
@@ -357,9 +367,9 @@ as_status set_policy(as_error *err, PyObject * py_policy, as_policy_operate* ope
                 if ((val & AS_POLICY_KEY_GEN) != AS_POLICY_KEY_GEN) {
                     return as_error_update(err, AEROSPIKE_ERR_CLIENT, "Invalid value for OPT_POLICY_KEY_GEN");
                 }
-                if (operate_policy_p) {
+                if (write_policy_p || operate_policy_p || remove_policy_p) {
                     PyObject *py_key = PyDict_GetItemString(py_policy, "gen");
-                    long keyval = PyInt_AsLong(py_key) - AS_POLICY_KEY_GEN + 1;
+                    long keyval = PyInt_AsLong(py_key) - AS_POLICY_KEY_GEN;
                     PyObject * py_keyval = PyInt_FromLong(keyval);
                     PyDict_SetItemString(py_policy, "gen", py_keyval);
                 } else {
