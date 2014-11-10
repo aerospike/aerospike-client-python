@@ -85,7 +85,6 @@ class TestPrepend(object):
             self.client.prepend(key, "name", "str", policy)
 
         assert exception.value[0] == -1
-        #assert exception.value[1] == "timeout is invalid"
         assert exception.value[1] == "Invalid value(type) for policy"
 
     def test_prepend_with_nonexistent_key(self):

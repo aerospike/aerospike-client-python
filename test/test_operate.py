@@ -132,7 +132,6 @@ class TestOperate(object):
             (bins) = self.client.operate(key, list, policy)
 
         assert exception.value[0] == -1
-        #assert exception.value[1] == "timeout is invalid"
         assert exception.value[1] == "Invalid value(type) for policy"
 
     def test_opearte_on_same_bin_negative(self):
