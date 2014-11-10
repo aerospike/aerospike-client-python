@@ -314,15 +314,12 @@ as_status set_policy(as_error *err, PyObject * py_policy, as_policy_read* read_p
                 return as_error_update(err, AEROSPIKE_ERR_CLIENT, "Policy key must be string");
             }
             if (!PyInt_Check(value)) {
-                return as_error_update(err, AEROSPIKE_ERR_CLIENT, "Invalid value(type) for policy key");
+                return as_error_update(err, AEROSPIKE_ERR_CLIENT, "Invalid value(type) for policy");
             }
 
             char *key_name = PyString_AsString(key);
             if (strcmp("timeout", key_name) == 0) {
                 val = (int64_t) PyInt_AsLong(value);
-                if (val < 0) {
-                    return as_error_update(err, AEROSPIKE_ERR_CLIENT, "Invalid value for timeout");
-                }
             } else if (strcmp("exists", key_name) == 0) {
                 val = (int64_t) PyInt_AsLong(value);
                 if ((val & AS_POLICY_EXISTS) != AS_POLICY_EXISTS) {
