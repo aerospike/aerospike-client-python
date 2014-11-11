@@ -40,6 +40,9 @@ static PyMethodDef AerospikeClient_Type_Methods[] = {
 	{"close",
 		(PyCFunction) AerospikeClient_Close, METH_VARARGS | METH_KEYWORDS,
 		"Close the connection(s) to the cluster."},
+	{"isConnected",
+		(PyCFunction) AerospikeClient_isConnected, METH_VARARGS | METH_KEYWORDS,
+		"Checks current connection state."},
 
 	// ADMIN OPERATIONS
 
@@ -89,6 +92,9 @@ static PyMethodDef AerospikeClient_Type_Methods[] = {
 	{"apply",
 		(PyCFunction) AerospikeClient_Apply, METH_VARARGS | METH_KEYWORDS,
 		"Apply a UDF on a record in the database."},
+        {"removeBin",
+		(PyCFunction) AerospikeClient_RemoveBin, METH_VARARGS | METH_KEYWORDS,
+		"Remove a bin from the database."},
 
 	// Deprecated key-based API
 
@@ -107,6 +113,13 @@ static PyMethodDef AerospikeClient_Type_Methods[] = {
 	{"scan",
 		(PyCFunction) AerospikeClient_Scan, METH_VARARGS | METH_KEYWORDS,
 		"Create a new Scan object for performing scans."},
+	{"scanApply",
+		(PyCFunction) AerospikeClient_ScanApply, METH_VARARGS | METH_KEYWORDS,
+		"Applies Scan object for performing scans."},
+	
+	{"scanInfo",
+		(PyCFunction) AerospikeClient_ScanInfo, METH_VARARGS | METH_KEYWORDS,
+		"Gets Scan Info."},
 
 	// INFO OPERATIONS
 
@@ -125,6 +138,9 @@ static PyMethodDef AerospikeClient_Type_Methods[] = {
 	{"udf_list",
 		(PyCFunction)AerospikeClient_UDF_List, METH_VARARGS | METH_KEYWORDS,
 		"Lists the UDFs"},
+	{"udf_getRegistered",
+		(PyCFunction)AerospikeClient_UDF_Get_Registered_UDF, METH_VARARGS | METH_KEYWORDS,
+		"Get Registered UDFs"},
 
 	// SECONDARY INDEX OPERATONS
 
@@ -137,6 +153,15 @@ static PyMethodDef AerospikeClient_Type_Methods[] = {
 	{"index_remove",
 		(PyCFunction)AerospikeClient_Index_Remove, METH_VARARGS | METH_KEYWORDS,
 		"Remove a secondary index"},
+
+	// SECONDARY INDEX OPERATONS
+
+	{"setLogLevel",
+		(PyCFunction)AerospikeClient_Set_Log_Level, METH_VARARGS | METH_KEYWORDS,
+		"Sets the log level"},
+	{"setLogHandler",
+		(PyCFunction)AerospikeClient_Set_Log_Handler,	METH_VARARGS | METH_KEYWORDS,
+		"Sets the log handler"},
 
 	{NULL}
 };
@@ -332,5 +357,7 @@ AerospikeClient * AerospikeClient_New(PyObject * parent, PyObject * args, PyObje
 {
 	AerospikeClient * self = (AerospikeClient *) AerospikeClient_Type.tp_new(&AerospikeClient_Type, args, kwds);
 	AerospikeClient_Type.tp_init((PyObject *) self, args, kwds);
+	// Initialize connection flag
+	self->is_conn_16 = false;
 	return self;
 }

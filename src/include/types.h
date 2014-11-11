@@ -28,6 +28,7 @@
 typedef struct {
 	PyObject_HEAD
 	aerospike * as;
+	int is_conn_16;
 } AerospikeClient;
 
 typedef struct {

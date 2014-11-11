@@ -48,7 +48,20 @@ PyObject * AerospikeClient_Connect(AerospikeClient * self, PyObject * args, PyOb
 		PyErr_SetObject(PyExc_Exception, py_err);
 		return NULL;
 	}
-	
+	self->is_conn_16 = true;
 	Py_INCREF(self);
 	return (PyObject *) self;
+}
+
+
+PyObject * AerospikeClient_isConnected(AerospikeClient * self, PyObject * args, PyObject * kwds)
+{
+		
+	if (1 == self->is_conn_16) //Need to define a macro AEROSPIKE_CONN_STATE
+	{
+	  return Py_True;	
+	}
+
+	return Py_False;
+	
 }

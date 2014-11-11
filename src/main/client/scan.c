@@ -19,8 +19,155 @@
 
 #include "client.h"
 #include "scan.h"
+#include <aerospike/as_arraylist.h>
+#include <aerospike/as_scan.h>
+
+#define PROGRESS_PCT "progress_pct"
+#define RECORDS_SCANNED "records_scanned"
+#define STATUS "status"
 
 AerospikeScan * AerospikeClient_Scan(AerospikeClient * self, PyObject * args, PyObject * kwds)
 {
 	return AerospikeScan_New(self, args, kwds);
+}
+
+PyObject * AerospikeClient_ScanApply(AerospikeClient * self, PyObject * args, PyObject * kwds)
+{
+	// Initialize error
+	as_error err;
+	as_error_init(&err);
+	
+	// Python Function Arguments
+	PyObject * py_policy = NULL;
+	PyObject * py_List = NULL;
+	char* strNamespace = NULL;
+	char* strSet = NULL;
+	char* strModule = NULL;
+	char* strFuncName = NULL;
+	long lscanId = 0;
+ 	as_arraylist argsList;
+	as_arraylist * argsList_p = NULL;
+	as_scan scan;
+
+	// Python Function Keyword Arguments
+	static char * kwlist[] = {"namespace","set","module","function","list","scanid","policy",NULL};
+
+	// Python Function Argument Parsing
+	if ( PyArg_ParseTupleAndKeywords(args, kwds, "ssssl0|0:scanApply", kwlist, 
+			&strNamespace,&strSet,&strModule,&strFuncName,&lscanId,&py_List ,&py_policy) == false ) {
+		return NULL;
+	}
+	
+	if(!PyList_Check(py_List))
+	{
+		goto CLEANUP;
+	}
+
+	
+	as_arraylist_inita(&argsList,PyList_Size(py_List));
+	
+	argsList_p = &argsList;
+
+	pyobject_to_list(&err,py_List,&argsList_p);
+	if ( err.code != AEROSPIKE_OK ) {
+		goto CLEANUP;
+	}
+
+	
+
+	as_scan_init(&scan,strNamespace,strSet);
+
+	// Convert python object to policy_info 
+	as_policy_scan *policy, policy_struct;
+	pyobject_to_policy_scan(&err, py_policy, &policy_struct, &policy );
+	if ( err.code != AEROSPIKE_OK ) {
+		goto CLEANUP;
+	}
+	
+	if(strModule && strFuncName && (!as_scan_apply_each(&scan,strModule,strFuncName,(as_list*)argsList_p)))
+	{
+		goto CLEANUP;
+	}
+
+	if(AEROSPIKE_OK != aerospike_scan_background(self->as,&err, policy, &scan, &lscanId))
+	{
+		goto CLEANUP;
+	}
+	
+	
+CLEANUP:
+	
+	if(argsList_p)
+	{
+		as_arraylist_destroy(argsList_p);
+	}
+
+	as_scan_destroy(&scan);
+
+	if ( err.code != AEROSPIKE_OK ) {
+		PyObject * py_err = NULL;
+		error_to_pyobject(&err, &py_err);
+		PyErr_SetObject(PyExc_Exception, py_err);
+		return NULL;
+	}
+
+	return PyLong_FromLong(0);
+	
+}
+
+
+PyObject * AerospikeClient_ScanInfo(AerospikeClient * self, PyObject * args, PyObject * kwds)
+{
+	// Initialize error
+	as_error err;
+	as_error_init(&err);
+	
+	// Python Function Arguments
+	PyObject * py_policy = NULL;
+	long lscanId = 0;
+
+ 	as_scan_info                scan_info;
+	PyObject * retObj = PyDict_New();
+
+	// Python Function Keyword Arguments
+	static char * kwlist[] = {"scanid","policy",NULL};
+
+	// Python Function Argument Parsing
+	if ( PyArg_ParseTupleAndKeywords(args, kwds, "l|0:scanInfo", kwlist,&lscanId,&py_policy) == false ) {
+		return NULL;
+	}
+	
+	
+	// Convert python object to policy_info 
+	as_policy_info *policy, policy_struct;
+	pyobject_to_policy_info( &err, py_policy, &policy_struct, &policy );
+	if ( err.code != AEROSPIKE_OK ) {
+		goto CLEANUP;
+	}
+	
+	if (AEROSPIKE_OK != (aerospike_scan_info(self->as, &err,
+                    policy, lscanId, &scan_info))) {
+        goto CLEANUP;
+    }
+
+ 	if(retObj)
+	{
+		PyDict_SetItem(retObj,Py_BuildValue("s",PROGRESS_PCT),PyLong_FromLong(scan_info.progress_pct) );
+		PyDict_SetItem(retObj,Py_BuildValue("s",RECORDS_SCANNED),PyLong_FromLong(scan_info.records_scanned) );	
+		PyDict_SetItem(retObj,Py_BuildValue("s",STATUS), PyLong_FromLong(scan_info.status + 16777216)); // Need to define macro AS_SCAN_STATUS
+    		
+	}
+	
+	
+CLEANUP:
+	
+	if ( err.code != AEROSPIKE_OK ) {
+		PyObject * py_err = NULL;
+		error_to_pyobject(&err, &py_err);
+		PyErr_SetObject(PyExc_Exception, py_err);
+		return NULL;
+	}
+
+	return retObj;
+	
 }

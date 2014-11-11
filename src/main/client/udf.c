@@ -224,4 +224,70 @@ CLEANUP:
 	return py_files;
 }
 
+PyObject * AerospikeClient_UDF_Get_Registered_UDF(AerospikeClient * self, PyObject *args, PyObject * kwds)
+{
+	// Initialize error
+	as_error err;
+	as_error_init(&err);
+
+	// Python Function Arguments
+	PyObject * py_module = NULL;
+	PyObject * py_policy = NULL;
+	long language = 65536;
+	bool init_udf_file = false;
+	// Python Function Keyword Arguments 
+	static char * kwlist[] = {"module","policy","language", NULL};
+
+	// Python Function Argument Parsing
+	if ( PyArg_ParseTupleAndKeywords(args, kwds, "O|0l:udf_getRegistered", kwlist,&py_module ,&py_policy,&language) == false ) {
+		return NULL;
+	}
+
+	if((language & 65536) != 65536)
+	{
+		goto CLEANUP; 
+	}
+	char* strModule = NULL;	
+	if(!PyString_Check(py_module))
+	{
+		goto CLEANUP;		
+	}
+	
+	strModule = PyString_AsString(py_module);
+
+	// Convert python object to policy_info 
+	as_policy_info *policy, policy_struct;
+	pyobject_to_policy_info( &err, py_policy, &policy_struct, &policy );
+	if ( err.code != AEROSPIKE_OK ) {
+		goto CLEANUP;
+	}
+
+	as_udf_file file;
+	as_udf_file_init(&file);
+	init_udf_file=true;
+
+	// Invoke operation 
+	aerospike_udf_get(self->as, &err, policy,strModule,(language - 65536) ,&file);
+	if ( err.code != AEROSPIKE_OK ) {
+		goto CLEANUP;
+	}
+
+	
+
+CLEANUP:
+
+	if(init_udf_file)
+	{
+		as_udf_file_destroy(&file);
+	}
+	if ( err.code != AEROSPIKE_OK ) {
+		PyObject * py_err = NULL;
+		error_to_pyobject(&err, &py_err);
+		PyErr_SetObject(PyExc_Exception, py_err);
+		return NULL;
+	}
+
+	return Py_BuildValue("s#",file.content.bytes,file.content.size);
+}
+
 

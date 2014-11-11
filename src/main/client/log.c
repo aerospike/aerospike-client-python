@@ -15,29 +15,39 @@
  ******************************************************************************/
 
 #include <Python.h>
-
-#include <aerospike/aerospike.h>
-#include <aerospike/as_error.h>
+#include <stdbool.h>
 
 #include "client.h"
-#include "conversions.h"
 
-PyObject * AerospikeClient_Close(AerospikeClient * self, PyObject * args, PyObject * kwds)
+
+PyObject * AerospikeClient_Set_Log_Level(AerospikeClient * self, PyObject *args, PyObject * kwds)
 {
-	as_error err;
-	
-	aerospike_close(self->as, &err);
+	as_status status = AEROSPIKE_OK;
+	// Python Function Arguments
+	long lLogLevel = 0;
+ 	
 
-	if ( err.code != AEROSPIKE_OK ) {
-		PyObject * py_err = NULL;
-		error_to_pyobject(&err, &py_err);
-		PyErr_SetObject(PyExc_Exception, py_err);
+	// Python Function Keyword Arguments
+	static char * kwlist[] = {"loglevel",NULL};
+
+	// Python Function Argument Parsing
+	if ( PyArg_ParseTupleAndKeywords(args, kwds, "l:setLogLevel", kwlist,&lLogLevel) == false ) {
 		return NULL;
 	}
-	self->is_conn_16 = false;
-	aerospike_destroy(self->as);
-	self->as = NULL;
+	
+	if(AEROSPIKE_OK != as_log_set_level(self->as->log,lLogLevel))
+	{
+		status = AEROSPIKE_ERR_PARAM;
+		goto CLEANUP;
+	}
+	
+	
+CLEANUP:
 
-	Py_INCREF(Py_None);
-	return Py_None;
+	return PyLong_FromLong(status);
+
+}
+
+PyObject * AerospikeClient_Set_Log_Handler(AerospikeClient * self, PyObject *args, PyObject * kwds)
+{
 }
