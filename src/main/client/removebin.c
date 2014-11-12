@@ -22,49 +22,42 @@
 #include <aerospike/as_error.h>
 #include <aerospike/as_record.h>
 
-#include "client.h"
+//#include "client.h"
 #include "conversions.h"
 #include "key.h"
 #include "policy.h"
 
 PyObject * AerospikeClient_RemoveBin_Invoke(
         AerospikeClient * self, 
-        PyObject * py_key,PyObject* py_binList ,PyObject * py_policy)
+        PyObject * py_key,PyObject* py_binList ,PyObject * py_policy, as_error *err)
 {
 
     // Aerospike Client Arguments
-    as_error err;
+    //as_error err;
     as_policy_write policy;
     as_policy_write * policy_p = NULL;
     as_key key;
     as_record rec;
     char* binName = NULL;
-    int count = 0; 
+    int count = 0;
 
     // Initialize error
-    as_error_init(&err);
-
-    if(!PyList_Check(py_binList))
-    {
-        as_error_update(&err, AEROSPIKE_ERR_PARAM, "Bins should be a list");
-        goto CLEANUP;
-    }
+    //as_error_init(&err);
 
     // Get the bin list size;	
     Py_ssize_t size = PyList_Size(py_binList);
-
     // Initialize record
     as_record_inita(&rec, size);
 
     // Convert python key object to as_key
-    pyobject_to_key(&err, py_key, &key);
-    if ( err.code != AEROSPIKE_OK ) {
+    pyobject_to_key(err, py_key, &key);
+    if ( err->code != AEROSPIKE_OK ) {
         goto CLEANUP;
     }
 
     // Convert python policy object to as_policy_write
-    pyobject_to_policy_write(&err, py_policy, &policy, &policy_p);
-    if ( err.code != AEROSPIKE_OK ) {
+    pyobject_to_policy_write(err, py_policy, &policy, &policy_p);
+    if ( err->code != AEROSPIKE_OK ) {
         goto CLEANUP;
     }
 
@@ -85,7 +78,7 @@ PyObject * AerospikeClient_RemoveBin_Invoke(
         }
     }
 
-    if (AEROSPIKE_OK != aerospike_key_put(self->as, &err,NULL, &key, &rec)) 
+    if (AEROSPIKE_OK != aerospike_key_put(self->as, err, NULL, &key, &rec)) 
     {
         goto CLEANUP;
     }
@@ -94,13 +87,12 @@ CLEANUP:
 
     as_record_destroy(&rec);
 
-    if ( err.code != AEROSPIKE_OK ) {
+    if ( err->code != AEROSPIKE_OK ) {
         PyObject * py_err = NULL;
-        error_to_pyobject(&err, &py_err);
+        error_to_pyobject(err, &py_err);
         PyErr_SetObject(PyExc_Exception, py_err);
         return NULL;
     }
-
     return PyLong_FromLong(0);
 }
 
@@ -111,6 +103,9 @@ PyObject * AerospikeClient_RemoveBin(AerospikeClient * self, PyObject * args, Py
     PyObject * py_policy = NULL;
     PyObject * py_binList = NULL;
 
+    as_error err;
+    // Initialize error
+    as_error_init(&err);
     // Python Function Keyword Arguments
     static char * kwlist[] = {"key", "list", "policy", NULL};
 
@@ -120,7 +115,19 @@ PyObject * AerospikeClient_RemoveBin(AerospikeClient * self, PyObject * args, Py
         return NULL;
     }
 
+    if(!PyList_Check(py_binList)) {
+        as_error_update(&err, AEROSPIKE_ERR_PARAM, "Bins should be a list");
+        goto CLEANUP;
+    }
     // Invoke Operation
-    return AerospikeClient_RemoveBin_Invoke(self, py_key, py_binList, py_policy);
+    return AerospikeClient_RemoveBin_Invoke(self, py_key, py_binList, py_policy, &err);
+CLEANUP:
+
+    if ( err.code != AEROSPIKE_OK ) {
+        PyObject * py_err = NULL;
+        error_to_pyobject(&err, &py_err);
+        PyErr_SetObject(PyExc_Exception, py_err);
+        return NULL;
+    }
 }
 

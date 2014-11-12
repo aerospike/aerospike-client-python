@@ -112,7 +112,7 @@ PyObject * AerospikeClient_Remove(AerospikeClient * self, PyObject * args, PyObj
  *		client.removebin((x,y,z))
  *
  */
-PyObject * AerospikeClient_RemoveBin(AerospikeClient * self, PyObject * args, PyObject * kwds);
+extern PyObject * AerospikeClient_RemoveBin(AerospikeClient * self, PyObject * args, PyObject * kwds);
 
 /*******************************************************************************
  * INTENRAL (SHARED) OPERATIONS, FOR COMPATIBILITY W/ OLD API

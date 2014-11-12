@@ -92,7 +92,7 @@ static PyMethodDef AerospikeClient_Type_Methods[] = {
 	{"apply",
 		(PyCFunction) AerospikeClient_Apply, METH_VARARGS | METH_KEYWORDS,
 		"Apply a UDF on a record in the database."},
-    {"remove_bin",
+        {"remove_bin",
 		(PyCFunction) AerospikeClient_RemoveBin, METH_VARARGS | METH_KEYWORDS,
 		"Remove a bin from the database."},
 
@@ -228,7 +228,7 @@ static int AerospikeClient_Type_Init(AerospikeClient * self, PyObject * args, Py
 			size_t prefix_len = strlen(prefix);
 
 			char system_path[AS_CONFIG_PATH_MAX_LEN] = {0};
-			memcpy(system_path, prefix, AS_CONFIG_PATH_MAX_LEN);
+			memcpy(system_path, prefix, strlen(prefix));
 			memcpy(system_path + prefix_len, "/aerospike/lua", AS_CONFIG_PATH_MAX_LEN - prefix_len);
 			system_path[prefix_len + strlen("/aerospike/lua")] = '\0';
 
