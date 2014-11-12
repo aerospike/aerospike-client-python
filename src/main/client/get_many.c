@@ -31,14 +31,18 @@
 
 static bool batch_get_cb(const as_batch_read* results, uint32_t n, void* udata)
 {
+	// Typecast udata back to PyObject
 	PyObject * py_recs = (PyObject *) udata;
 
+	// Initialize error object
 	as_error err;
 	
 	as_error_init(&err);
 
+	// Loop over results array
 	for ( uint32_t i =0; i < n; i++ ){
 
+		// Check record status
 		if ( results[i].result == AEROSPIKE_OK ){
 
 			PyObject * rec = NULL;
@@ -58,12 +62,10 @@ static bool batch_get_cb(const as_batch_read* results, uint32_t n, void* udata)
 
 			record_to_pyobject(&err, &results[i].record, results[i].key, &rec);
 
+			// Set return value in return Dict
 			if ( PyDict_SetItem( py_recs, p_key, rec ) ){
 				return false;				
 			}
-		}
-		else if (results[i].result == AEROSPIKE_ERR_RECORD_NOT_FOUND){
-			return false;
 		}
 	}
 	return true;
@@ -88,7 +90,8 @@ PyObject * AerospikeClient_Get_Many_Invoke(
 	// Initialize error
 	as_error_init(&err);
 
-	// Convert python bins list to char ** bins
+	// Convert python keys list to as_key ** and add it to as_batch.keys
+	// keys can be specified in PyList or PyTuple
 	if ( py_keys != NULL && PyList_Check(py_keys) ) {
 		Py_ssize_t size = PyList_Size(py_keys);
 		
@@ -127,12 +130,13 @@ PyObject * AerospikeClient_Get_Many_Invoke(
 		goto CLEANUP;
 	}
 
-	// Convert python policy object to as_policy_exists
+	// Convert python policy object to as_policy_batch
 	pyobject_to_policy_batch(&err, py_policy, &policy, &policy_p);
 	if ( err.code != AEROSPIKE_OK ) {
 		goto CLEANUP;
 	}
 
+	// Invoke C-client API
 	aerospike_batch_get(self->as, &err, policy_p,
 		&batch, (aerospike_batch_read_callback) batch_get_cb,
 		py_recs);
