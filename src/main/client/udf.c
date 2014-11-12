@@ -233,17 +233,19 @@ PyObject * AerospikeClient_UDF_Get_Registered_UDF(AerospikeClient * self, PyObje
 	// Python Function Arguments
 	PyObject * py_module = NULL;
 	PyObject * py_policy = NULL;
-	long language = 65536;
+	long language = 0;
 	bool init_udf_file = false;
+    PyObject * udf_content = NULL;
+
 	// Python Function Keyword Arguments 
-	static char * kwlist[] = {"module","policy","language", NULL};
+	static char * kwlist[] = {"module", "policy", "language", NULL};
 
 	// Python Function Argument Parsing
-	if ( PyArg_ParseTupleAndKeywords(args, kwds, "O|0l:udf_getRegistered", kwlist,&py_module ,&py_policy,&language) == false ) {
+	if ( PyArg_ParseTupleAndKeywords(args, kwds, "O|Ol:udf_getRegistered", kwlist, &py_module ,&py_policy, &language) == false ) {
 		return NULL;
 	}
 
-	if((language & 65536) != 65536)
+	if((language & AS_UDF_TYPE) != AS_UDF_TYPE)
 	{
 		goto CLEANUP; 
 	}
@@ -256,8 +258,15 @@ PyObject * AerospikeClient_UDF_Get_Registered_UDF(AerospikeClient * self, PyObje
 	strModule = PyString_AsString(py_module);
 
 	// Convert python object to policy_info 
-	as_policy_info *policy, policy_struct;
-	pyobject_to_policy_info( &err, py_policy, &policy_struct, &policy );
+	as_policy_info *policy = NULL, policy_struct;
+    if (py_policy) {
+        set_policy_info(&err, py_policy, &policy_struct);
+    }
+	if ( err.code != AEROSPIKE_OK ) {
+		goto CLEANUP;
+	}
+
+	pyobject_to_policy_info( &err, py_policy, &policy_struct, &policy);
 	if ( err.code != AEROSPIKE_OK ) {
 		goto CLEANUP;
 	}
@@ -267,12 +276,11 @@ PyObject * AerospikeClient_UDF_Get_Registered_UDF(AerospikeClient * self, PyObje
 	init_udf_file=true;
 
 	// Invoke operation 
-	aerospike_udf_get(self->as, &err, policy,strModule,(language - 65536) ,&file);
+	aerospike_udf_get(self->as, &err, policy, strModule, (language - AS_UDF_TYPE) , &file);
 	if ( err.code != AEROSPIKE_OK ) {
 		goto CLEANUP;
 	}
-
-	
+    udf_content = Py_BuildValue("s#", file.content.bytes, file.content.size);
 
 CLEANUP:
 
@@ -287,7 +295,7 @@ CLEANUP:
 		return NULL;
 	}
 
-	return Py_BuildValue("s#",file.content.bytes,file.content.size);
+	return udf_content;
 }
 
 
