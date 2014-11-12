@@ -102,7 +102,7 @@ PyObject * AerospikeClient_Exists_Many_Invoke(
 			PyObject * py_key = PyList_GetItem(py_keys, i);
 
 			if ( !PyTuple_Check(py_key) ){
-				as_error_update(&err, AEROSPIKE_ERR_CLIENT, "Key is not tuple.");
+				as_error_update(&err, AEROSPIKE_ERR_CLIENT, "Key should be a tuple.");
 				goto CLEANUP;
 			}
 
@@ -123,7 +123,7 @@ PyObject * AerospikeClient_Exists_Many_Invoke(
 			PyObject * py_key = PyTuple_GetItem(py_keys, i);
 
 			if ( !PyTuple_Check(py_key) ){
-				as_error_update(&err, AEROSPIKE_ERR_CLIENT, "Key is not tuple.");
+				as_error_update(&err, AEROSPIKE_ERR_CLIENT, "Key should be a tuple.");
 				goto CLEANUP;
 			}
 
@@ -135,7 +135,7 @@ PyObject * AerospikeClient_Exists_Many_Invoke(
 		}
 	}
 	else {
-		as_error_update(&err, AEROSPIKE_ERR_CLIENT, "not a list");
+		as_error_update(&err, AEROSPIKE_ERR_CLIENT, "Keys should be specified as a list or tuple.");
 		goto CLEANUP;
 	}
 
