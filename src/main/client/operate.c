@@ -520,11 +520,11 @@ PyObject * AerospikeClient_Operate(AerospikeClient * self, PyObject * args, PyOb
         }
         if(rec) {
             record_to_pyobject(&err, rec, &key, &py_rec);
-            as_record_destroy(rec);
             return py_rec;
         }
     }
 CLEANUP:
+    as_record_destroy(rec);
     if ( err.code != AEROSPIKE_OK ) {
         PyObject * py_err = NULL;
         error_to_pyobject(&err, &py_err);
