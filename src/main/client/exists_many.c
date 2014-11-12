@@ -152,9 +152,6 @@ PyObject * AerospikeClient_Exists_Many_Invoke(
 
 CLEANUP:
 	
-	if (is_batch_init) {
-		as_batch_destroy(&batch);	
-	}
 	if ( err.code != AEROSPIKE_OK ) {
 		PyObject * py_err = NULL;
 		error_to_pyobject(&err, &py_err);
