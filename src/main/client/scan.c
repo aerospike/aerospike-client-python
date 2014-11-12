@@ -148,7 +148,6 @@ PyObject * AerospikeClient_ScanInfo(AerospikeClient * self, PyObject * args, PyO
         return NULL;
     }
 
-
     // Convert python object to policy_info 
     pyobject_to_policy_info( &err, py_policy, &policy_struct, &policy );
     if ( err.code != AEROSPIKE_OK ) {
@@ -166,7 +165,6 @@ PyObject * AerospikeClient_ScanInfo(AerospikeClient * self, PyObject * args, PyO
         PyDict_SetItem(retObj, Py_BuildValue("s",RECORDS_SCANNED), PyLong_FromLong(scan_info.records_scanned) );	
         PyDict_SetItem(retObj, Py_BuildValue("s",STATUS), PyLong_FromLong(scan_info.status + AS_SCAN_STATUS));
     }
-
 
 CLEANUP:
 
