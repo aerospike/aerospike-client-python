@@ -178,11 +178,12 @@ class TestScanApply(object):
             "concurrent" : False,
             "priority" : aerospike.SCAN_PRIORITY_HIGH
         }
-        with pytest.raises(TypeError) as typeError:
+        with pytest.raises(Exception) as exception:
             scan_id = self.client.scan_apply("test", "demo", "bin_lua",
-"mytransform_incorrect", ['age', 2], policy, options, "")
+"mytransform_incorrect", ['age', 2], policy, options)
 
-        assert "scan_apply() takes at most 7 arguments (8 given)" in typeError.value
+        assert exception.value[0] == -1
+        assert exception.value[1] == "Invalid value(type) for percent"
 
     def test_scan_apply_with_priority_string(self):
         """
@@ -196,11 +197,12 @@ class TestScanApply(object):
             "concurrent" : False,
             "priority" : "aerospike.SCAN_PRIORITY_HIGH"
         }
-        with pytest.raises(TypeError) as typeError:
+        with pytest.raises(Exception) as exception:
             scan_id = self.client.scan_apply("test", "demo", "bin_lua",
-"mytransform_incorrect", ['age', 2], policy, options, "")
+"mytransform_incorrect", ['age', 2], policy, options)
 
-        assert "scan_apply() takes at most 7 arguments (8 given)" in typeError.value
+        assert exception.value[0] == -1
+        assert exception.value[1] == "Invalid value(type) for priority"
 
     def test_scan_apply_with_concurrent_int(self):
         """
@@ -214,11 +216,13 @@ class TestScanApply(object):
             "concurrent" : 5,
             "priority" : aerospike.SCAN_PRIORITY_HIGH
         }
-        with pytest.raises(TypeError) as typeError:
+        with pytest.raises(Exception) as exception:
             scan_id = self.client.scan_apply("test", "demo", "bin_lua",
-"mytransform_incorrect", ['age', 2], policy, options, "")
+"mytransform_incorrect", ['age', 2], policy, options)
 
-        assert "scan_apply() takes at most 7 arguments (8 given)" in typeError.value
+        assert exception.value[0] == -1
+        assert exception.value[1] == "Invalid value(type) for concurrent"
+
     def test_scan_apply_with_extra_argument(self):
         """
         Invoke scan_apply() with extra argument
