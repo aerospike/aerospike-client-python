@@ -238,10 +238,11 @@ PyObject * AerospikeClient_UDF_Get_Registered_UDF(AerospikeClient * self, PyObje
     PyObject * udf_content = NULL;
 
 	// Python Function Keyword Arguments 
-	static char * kwlist[] = {"module", "policy", "language", NULL};
+	static char * kwlist[] = {"module", "language", "policy", NULL};
 
 	// Python Function Argument Parsing
-	if ( PyArg_ParseTupleAndKeywords(args, kwds, "O|Ol:udf_getRegistered", kwlist, &py_module ,&py_policy, &language) == false ) {
+	if ( PyArg_ParseTupleAndKeywords(args, kwds, "O|lO:udf_getRegistered", kwlist,
+                &py_module ,&language, &py_policy) == false ) {
 		return NULL;
 	}
 
@@ -252,6 +253,7 @@ PyObject * AerospikeClient_UDF_Get_Registered_UDF(AerospikeClient * self, PyObje
 	char* strModule = NULL;	
 	if(!PyString_Check(py_module))
 	{
+		as_error_update(&err, AEROSPIKE_ERR_CLIENT, "Module name should be a string");
 		goto CLEANUP;		
 	}
 	
