@@ -21,6 +21,7 @@
 #define AS_POLICY_RETRY 0x00000010
 #define AS_POLICY_EXISTS 0x00000100
 #define AS_UDF_TYPE 0x00010000
+#define AS_SCAN_PRIORITY 0x00100000
 #define AS_SCAN_STATUS 0x01000000
 #define AS_POLICY_KEY_DIGEST 0x10000000
 #define AS_POLICY_KEY_GEN 0x100000000
@@ -32,21 +33,25 @@
  */
 
 enum Aerospike_values {
-    POLICY_RETRY_NONE      	= AS_POLICY_RETRY,
+    POLICY_RETRY_NONE      = AS_POLICY_RETRY,
     POLICY_RETRY_ONCE,
-    POLICY_EXISTS_IGNORE   	= AS_POLICY_EXISTS,
+    POLICY_EXISTS_IGNORE   = AS_POLICY_EXISTS,
     POLICY_EXISTS_CREATE,
     POLICY_EXISTS_UPDATE,
     POLICY_EXISTS_REPLACE,
     POLICY_EXISTS_CREATE_OR_REPLACE,
-    UDF_TYPE_LUA           	= AS_UDF_TYPE,
-	SCAN_STATUS_UNDEF 		= AS_SCAN_STATUS, 	/* Undefined scan status likely due to the status not being properly checked */
-	SCAN_STATUS_INPROGRESS, 					/* The scan is currently running*/
-	SCAN_STATUS_ABORTED, 						/* The scan was aborted due to failure or the user */
-	SCAN_STATUS_COMPLETED, 						/* The scan completed successfully */
-    POLICY_KEY_DIGEST      	= AS_POLICY_KEY_DIGEST,
+    UDF_TYPE_LUA           = AS_UDF_TYPE,
+    SCAN_PRIORITY_AUTO     = AS_SCAN_PRIORITY,
+    SCAN_PRIORITY_LOW,
+    SCAN_PRIORITY_MEDIUM,
+    SCAN_PRIORITY_HIGH,
+    SCAN_STATUS_UNDEF       = AS_SCAN_STATUS,   /* Undefined scan status likely due to the status not being properly checked */
+    SCAN_STATUS_INPROGRESS,                     /* The scan is currently running*/
+    SCAN_STATUS_ABORTED,                        /* The scan was aborted due to failure or the user */
+    SCAN_STATUS_COMPLETED,                      /* The scan completed successfully */
+    POLICY_KEY_DIGEST      = AS_POLICY_KEY_DIGEST,
     POLICY_KEY_SEND,
-    POLICY_GEN_IGNORE      	= AS_POLICY_KEY_GEN,
+    POLICY_GEN_IGNORE      = AS_POLICY_KEY_GEN,
     POLICY_GEN_EQ,
     POLICY_GEN_GT
 };
@@ -85,10 +90,14 @@ AerospikeConstants aerospike_constants[] = {
     { POLICY_GEN_IGNORE                 ,   "POLICY_GEN_IGNORE" },
     { POLICY_GEN_EQ                     ,   "POLICY_GEN_EQ" },
     { POLICY_GEN_GT                     ,   "POLICY_GEN_GT" },
-	{ SCAN_STATUS_COMPLETED 			, 	"SCAN_STATUS_COMPLETED" },
-	{ SCAN_STATUS_ABORTED 				, 	"SCAN_STATUS_ABORTED" },
-	{ SCAN_STATUS_UNDEF 				,	"SCAN_STATUS_UNDEF" },
-	{ SCAN_STATUS_INPROGRESS 			, 	"SCAN_STATUS_INPROGRESS" }
+    { SCAN_PRIORITY_AUTO                ,   "SCAN_PRIORITY_AUTO" },
+    { SCAN_PRIORITY_LOW                 ,   "SCAN_PRIORITY_AUTO" },
+    { SCAN_PRIORITY_MEDIUM              ,   "SCAN_PRIORITY_MEDIUM" },
+    { SCAN_PRIORITY_HIGH                ,   "SCAN_PRIORITY_HIGH" },
+    { SCAN_STATUS_COMPLETED             ,   "SCAN_STATUS_COMPLETED" },
+    { SCAN_STATUS_ABORTED               ,   "SCAN_STATUS_ABORTED" },
+    { SCAN_STATUS_UNDEF                 ,   "SCAN_STATUS_UNDEF" },
+    { SCAN_STATUS_INPROGRESS            ,   "SCAN_STATUS_INPROGRESS" }
 };
 
 as_status pyobject_to_policy_admin(as_error * err, PyObject * py_policy,
@@ -132,11 +141,15 @@ as_status declare_poliy_constants(PyObject *aerospike);
 as_status set_policy(as_error *err, PyObject * py_policy, as_policy_read* read_policy_p,
         as_policy_write* write_policy_p, as_policy_operate* operate_policy_p,
         as_policy_remove* remove_policy_p, as_policy_info* info_policy_p,
-        as_policy_scan* scan_policy_p, as_policy_query* query_policy_p,
-        as_scan* scan_p);
+        as_policy_scan* scan_policy_p, as_policy_query* query_policy_p);
 
 void set_policy_operate(as_error *err, PyObject * py_policy,
         as_policy_operate* operate_policy_p);
 
 void set_policy_scan(as_error *err, PyObject * py_policy,
-        as_policy_scan* scan_policy_p, as_scan* scan_p);
+        as_policy_scan* scan_policy_p);
+
+as_status set_scan_options(as_error *err, as_scan* scan_p, PyObject * py_options);
+
+void set_policy_info(as_error *err, PyObject * py_policy,
+        as_policy_info* info_policy_p);

@@ -292,23 +292,97 @@ exit:
     return status;
 }
 
-void set_policy_scan(as_error *err, PyObject * py_policy, as_policy_scan* scan_policy_p, as_scan* scan_p)
+/**
+ * Wrapper function for checking scan policy parameters.
+ */
+void set_policy_scan(as_error *err, PyObject * py_policy, as_policy_scan* scan_policy_p)
 {
-    set_policy(err, py_policy, NULL, NULL, NULL, NULL, NULL, scan_policy_p, NULL, NULL);
-}
-
-void set_policy_operate(as_error *err, PyObject * py_policy, as_policy_operate* operate_policy_p)
-{
-    set_policy(err, py_policy, NULL, NULL, operate_policy_p, NULL, NULL, NULL, NULL, NULL);
+    set_policy(err, py_policy, NULL, NULL, NULL, NULL, NULL, scan_policy_p, NULL);
 }
 
 /**
- * Set policy values.
+ * Wrapper function for checking operate policy parameters.
+ */
+void set_policy_operate(as_error *err, PyObject * py_policy, as_policy_operate* operate_policy_p)
+{
+    set_policy(err, py_policy, NULL, NULL, operate_policy_p, NULL, NULL, NULL, NULL);
+}
+
+void set_policy_info(as_error *err, PyObject * py_policy, as_policy_info* info_policy_p)
+{
+    set_policy(err, py_policy, NULL, NULL, NULL, NULL, info_policy_p, NULL, NULL);
+}
+
+/**
+ * Function for setting scan parameters in scan.
+ * Like Scan Priority, Percentage, Concurrent, Nobins
+ */
+as_status set_scan_options(as_error *err, as_scan* scan_p, PyObject * py_options)
+{
+    if (!scan_p) {
+        return as_error_update(err, AEROSPIKE_ERR_CLIENT, "Scan is not initialized");
+    }
+    
+    PyObject *key = NULL, *value = NULL;
+    Py_ssize_t pos = 0;
+    int64_t val = 0;
+    while (PyDict_Next(py_options, &pos, &key, &value)) {
+        char *key_name = PyString_AsString(key);
+        if (!PyString_Check(key)) {
+            return as_error_update(err, AEROSPIKE_ERR_CLIENT, "Policy key must be string");
+        } 
+
+        if (strcmp("priority", key_name) == 0) {
+            if (!PyInt_Check(value)) {
+                return as_error_update(err, AEROSPIKE_ERR_CLIENT, "Invalid value(type) for priority");
+            }
+            val = (int64_t) PyInt_AsLong(value);
+            if ((val & AS_SCAN_PRIORITY) != AS_SCAN_PRIORITY) {
+                return as_error_update(err, AEROSPIKE_ERR_CLIENT, "Invalid value for priority");
+            } else if (!as_scan_set_priority(scan_p, (val - AS_SCAN_PRIORITY))) {
+                return as_error_update(err, AEROSPIKE_ERR_CLIENT, "Unable to set scan priority");
+            }
+        } else if (strcmp("percent", key_name) == 0) {
+            if (!PyInt_Check(value)) {
+                return as_error_update(err, AEROSPIKE_ERR_CLIENT, "Invalid value(type) for percent");
+            }
+            val = (int64_t) PyInt_AsLong(value);
+            if (val<0 || val>100) {
+                return as_error_update(err, AEROSPIKE_ERR_CLIENT, "Invalid value for scan percentage");
+            }
+            else if (!as_scan_set_percent(scan_p, val)) {
+                return as_error_update(err, AEROSPIKE_ERR_CLIENT, "Unable to set scan percentage");
+            }
+        } else if (strcmp("concurrent", key_name) == 0) {
+            if (!PyBool_Check(value)) {
+                return as_error_update(err, AEROSPIKE_ERR_CLIENT, "Invalid value(type) for concurrent");
+            }
+            val = (int64_t)PyObject_IsTrue(value);
+            if (val == -1 || (!as_scan_set_concurrent(scan_p, val))) {
+                return as_error_update(err, AEROSPIKE_ERR_CLIENT, "Unable to set scan percentage");
+            }
+        } else if (strcmp("nobins", key_name) == 0) {
+            if (!PyBool_Check(value)) {
+                return as_error_update(err, AEROSPIKE_ERR_CLIENT, "Invalid value(type) for nobins");
+            }
+            val = (int64_t)PyObject_IsTrue(value);
+            if (val == -1 || (!as_scan_set_nobins(scan_p, val))) {
+                return as_error_update(err, AEROSPIKE_ERR_CLIENT, "Unable to set scan nobins");
+            }
+        } else {
+            return as_error_update(err, AEROSPIKE_ERR_CLIENT, "Invalid value for scan options");
+        }
+    }
+    return err->code;
+}
+
+/**
+ * Function for setting aerospike policies.  
  */
 as_status set_policy(as_error *err, PyObject * py_policy, as_policy_read* read_policy_p,
         as_policy_write* write_policy_p, as_policy_operate* operate_policy_p,
         as_policy_remove* remove_policy_p, as_policy_info* info_policy_p,
-        as_policy_scan* scan_policy_p, as_policy_query* query_policy_p, as_scan* scan_p)
+        as_policy_scan* scan_policy_p, as_policy_query* query_policy_p)
 {
     if (PyDict_Check(py_policy)) {
         PyObject *key = NULL, *value = NULL;
@@ -377,15 +451,7 @@ as_status set_policy(as_error *err, PyObject * py_policy, as_policy_read* read_p
                 } else {
                     return as_error_update(err, AEROSPIKE_ERR_CLIENT, "Invalid value for OPT_POLICY_KEY_GEN");
                 }
-            } /*else if(strcmp("percentage", key_name) == 0) {
-                val = (int64_t) PyInt_AsLong(value);
-                if (val<0 || val>100) {
-                    return as_error_update(err, AEROSPIKE_ERR_CLIENT, "Invalid value for scan percentage");
-                }
-                else if (!as_scan_set_percent(scan_p, val)) {
-                    return as_error_update(err, AEROSPIKE_ERR_CLIENT, "Unable to set scan percentage");
-                }
-            }*/else {
+            } else {
                 return as_error_update(err, AEROSPIKE_ERR_CLIENT, "Invalid value for policy key");
             }
         }
