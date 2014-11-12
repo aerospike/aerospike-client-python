@@ -166,6 +166,59 @@ class TestScanApply(object):
 
         assert "scan_apply() argument 3 must be string, not None" in typeError.value
 
+    def test_scan_apply_with_percent_string(self):
+        """
+        Invoke scan_apply() with percent string
+        """
+        policy = {
+            'timeout': 1000
+        }
+        options = {
+            "percent" : "80",
+            "concurrent" : False,
+            "priority" : aerospike.SCAN_PRIORITY_HIGH
+        }
+        with pytest.raises(TypeError) as typeError:
+            scan_id = self.client.scan_apply("test", "demo", "bin_lua",
+"mytransform_incorrect", ['age', 2], policy, options, "")
+
+        assert "scan_apply() takes at most 7 arguments (8 given)" in typeError.value
+
+    def test_scan_apply_with_priority_string(self):
+        """
+        Invoke scan_apply() with priority string
+        """
+        policy = {
+            'timeout': 1000
+        }
+        options = {
+            "percent" : 80,
+            "concurrent" : False,
+            "priority" : "aerospike.SCAN_PRIORITY_HIGH"
+        }
+        with pytest.raises(TypeError) as typeError:
+            scan_id = self.client.scan_apply("test", "demo", "bin_lua",
+"mytransform_incorrect", ['age', 2], policy, options, "")
+
+        assert "scan_apply() takes at most 7 arguments (8 given)" in typeError.value
+
+    def test_scan_apply_with_concurrent_int(self):
+        """
+        Invoke scan_apply() with concurrent int
+        """
+        policy = {
+            'timeout': 1000
+        }
+        options = {
+            "percent" : 80,
+            "concurrent" : 5,
+            "priority" : aerospike.SCAN_PRIORITY_HIGH
+        }
+        with pytest.raises(TypeError) as typeError:
+            scan_id = self.client.scan_apply("test", "demo", "bin_lua",
+"mytransform_incorrect", ['age', 2], policy, options, "")
+
+        assert "scan_apply() takes at most 7 arguments (8 given)" in typeError.value
     def test_scan_apply_with_extra_argument(self):
         """
         Invoke scan_apply() with extra argument
@@ -173,11 +226,16 @@ class TestScanApply(object):
         policy = {
             'timeout': 1000
         }
+        options = {
+            "percent" : 80,
+            "concurrent" : False,
+            "priority" : aerospike.SCAN_PRIORITY_HIGH
+        }
         with pytest.raises(TypeError) as typeError:
             scan_id = self.client.scan_apply("test", "demo", "bin_lua",
-"mytransform_incorrect", ['age', 2], policy, "")
+"mytransform_incorrect", ['age', 2], policy, options, "")
 
-        assert "scan_apply() takes at most 6 arguments (7 given)" in typeError.value
+        assert "scan_apply() takes at most 7 arguments (8 given)" in typeError.value
 
     def test_scan_apply_with_argument_is_string(self):
         """

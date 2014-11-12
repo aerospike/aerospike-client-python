@@ -212,9 +212,10 @@ PyObject * AerospikeClient_ScanApply_Invoke(
     }
 
     if (!PyList_Check(py_args)) {
-		as_error_update(&err, AEROSPIKE_ERR_CLIENT, "not a list");
+		as_error_update(&err, AEROSPIKE_ERR_PARAM, "Arguments should be a list");
         goto CLEANUP;
     }
+
     pyobject_to_list(&err, py_args, &arglist);
     if (err.code != AEROSPIKE_OK) {
         goto CLEANUP;
