@@ -415,7 +415,8 @@ CLEANUP:
     return PyLong_FromLong(0);
 }
 
-PyObject * AerospikeClient_Operate(AerospikeClient * self, PyObject * args, PyObject * kwds) {
+PyObject * AerospikeClient_Operate(AerospikeClient * self, PyObject * args, PyObject * kwds)
+{
     // Initialize error
     as_error err;
     as_error_init(&err);
@@ -426,15 +427,14 @@ PyObject * AerospikeClient_Operate(AerospikeClient * self, PyObject * args, PyOb
     PyObject * py_policy = NULL;
     PyObject * py_result = NULL;
     PyObject * py_rec = NULL;
+    PyObject * bin_name = NULL;
 
     as_operations ops;
     as_policy_operate operate_policy;
     as_key key;
     as_record * rec = NULL;
 
-    long touchvalue = 0;
     long op;
-    PyObject * bin_name = NULL;
     char * str = NULL;
     long offset;
 
@@ -470,7 +470,7 @@ PyObject * AerospikeClient_Operate(AerospikeClient * self, PyObject * args, PyOb
             PyObject * py_val = PyList_GetItem(py_list, i);
             op = -1;
             str = NULL;
-            bin_name = "";
+            bin_name = NULL;
             offset = 0;
             if ( PyDict_Check(py_val) ) {
                 PyObject *key_op = NULL, *value = NULL;
