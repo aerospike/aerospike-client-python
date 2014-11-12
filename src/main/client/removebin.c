@@ -120,8 +120,6 @@ PyObject * AerospikeClient_RemoveBin(AerospikeClient * self, PyObject * args, Py
         return NULL;
     }
 
-
-
     // Invoke Operation
     return AerospikeClient_RemoveBin_Invoke(self, py_key, py_binList, py_policy);
 }
