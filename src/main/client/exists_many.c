@@ -101,6 +101,11 @@ PyObject * AerospikeClient_Exists_Many_Invoke(
 
 			PyObject * py_key = PyList_GetItem(py_keys, i);
 
+			if ( !PyTuple_Check(py_key) ){
+				as_error_update(&err, AEROSPIKE_ERR_CLIENT, "Key is not tuple.");
+				goto CLEANUP;
+			}
+
 			pyobject_to_key(&err, py_key, as_batch_keyat(&batch, i));
 
 			if ( err.code != AEROSPIKE_OK ) {
@@ -116,6 +121,11 @@ PyObject * AerospikeClient_Exists_Many_Invoke(
 		
 		for ( int i = 0; i < size; i++ ) {
 			PyObject * py_key = PyTuple_GetItem(py_keys, i);
+
+			if ( !PyTuple_Check(py_key) ){
+				as_error_update(&err, AEROSPIKE_ERR_CLIENT, "Key is not tuple.");
+				goto CLEANUP;
+			}
 
 			pyobject_to_key(&err, py_key, as_batch_keyat(&batch, i));
 
