@@ -54,6 +54,8 @@ PyMODINIT_FUNC initaerospike()
 	Py_INCREF(query);
 	PyModule_AddObject(aerospike, "Query", (PyObject *) query);
 
+	declare_policy_constants(aerospike);
+
 	PyTypeObject * scan = AerospikeScan_Ready();
 	Py_INCREF(scan);
 	PyModule_AddObject(aerospike, "Scan", (PyObject *) scan);

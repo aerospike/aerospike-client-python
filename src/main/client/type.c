@@ -92,7 +92,7 @@ static PyMethodDef AerospikeClient_Type_Methods[] = {
 	{"apply",
 		(PyCFunction) AerospikeClient_Apply, METH_VARARGS | METH_KEYWORDS,
 		"Apply a UDF on a record in the database."},
-        {"removeBin",
+    {"remove_bin",
 		(PyCFunction) AerospikeClient_RemoveBin, METH_VARARGS | METH_KEYWORDS,
 		"Remove a bin from the database."},
 
@@ -113,11 +113,11 @@ static PyMethodDef AerospikeClient_Type_Methods[] = {
 	{"scan",
 		(PyCFunction) AerospikeClient_Scan, METH_VARARGS | METH_KEYWORDS,
 		"Create a new Scan object for performing scans."},
-	{"scanApply",
+	{"scan_apply",
 		(PyCFunction) AerospikeClient_ScanApply, METH_VARARGS | METH_KEYWORDS,
 		"Applies Scan object for performing scans."},
 	
-	{"scanInfo",
+	{"scan_info",
 		(PyCFunction) AerospikeClient_ScanInfo, METH_VARARGS | METH_KEYWORDS,
 		"Gets Scan Info."},
 
@@ -156,12 +156,12 @@ static PyMethodDef AerospikeClient_Type_Methods[] = {
 
 	// SECONDARY INDEX OPERATONS
 
-	{"setLogLevel",
+/*	{"setLogLevel",
 		(PyCFunction)AerospikeClient_Set_Log_Level, METH_VARARGS | METH_KEYWORDS,
 		"Sets the log level"},
 	{"setLogHandler",
 		(PyCFunction)AerospikeClient_Set_Log_Handler,	METH_VARARGS | METH_KEYWORDS,
-		"Sets the log handler"},
+		"Sets the log handler"},*/
 
 	{NULL}
 };
