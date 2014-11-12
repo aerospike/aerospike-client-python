@@ -138,6 +138,14 @@ static PyMethodDef AerospikeClient_Type_Methods[] = {
 		(PyCFunction)AerospikeClient_Index_Remove, METH_VARARGS | METH_KEYWORDS,
 		"Remove a secondary index"},
 
+	// BATCH OPERATIONS
+	{"get_many",
+		(PyCFunction)AerospikeClient_Get_Many, METH_VARARGS | METH_KEYWORDS,
+		"Get many records at a time."},
+	{"exists_many",
+		(PyCFunction)AerospikeClient_Exists_Many, METH_VARARGS | METH_KEYWORDS,
+		"Get many records at a time."},
+
 	{NULL}
 };
 

@@ -274,3 +274,6 @@ PyObject * AerospikeClient_Index_String_Create(AerospikeClient * self, PyObject 
  *
  */
 PyObject * AerospikeClient_Index_Remove(AerospikeClient * self, PyObject *args, PyObject * kwds);
+
+PyObject * AerospikeClient_Get_Many(AerospikeClient * self, PyObject *args, PyObject * kwds);
+PyObject * AerospikeClient_Exists_Many(AerospikeClient * self, PyObject *args, PyObject * kwds);

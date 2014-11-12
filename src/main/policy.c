@@ -244,3 +244,19 @@ as_status pyobject_to_policy_write(as_error * err, PyObject * py_policy,
 
 	return err->code;
 }
+
+as_status pyobject_to_policy_batch(as_error * err, PyObject * py_policy,
+		as_policy_batch * policy,
+		as_policy_batch ** policy_p){
+
+	// Initialize Policy
+	POLICY_INIT(as_policy_batch);
+
+	// Set policy fields
+	POLICY_SET_FIELD(timeout, uint32_t);
+
+	// Update the policy
+	POLICY_UPDATE();
+
+	return err->code;
+}
