@@ -18,4 +18,4 @@
 
 #include <Python.h>
 
-PyObject * AerospikePredicates_New();
+PyObject * AerospikePredicates_New(void);
