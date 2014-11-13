@@ -24,6 +24,7 @@
 #include "query.h"
 #include "scan.h"
 #include "predicates.h"
+#include "policy.h"
 
 static PyMethodDef Aerospike_Methods[] = {
 
@@ -33,7 +34,7 @@ static PyMethodDef Aerospike_Methods[] = {
 	{NULL}
 };
 
-PyMODINIT_FUNC initaerospike()
+PyMODINIT_FUNC initaerospike(void)
 {
 	// Makes things "thread-safe"
 	PyEval_InitThreads();
