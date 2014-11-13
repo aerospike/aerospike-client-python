@@ -107,7 +107,7 @@ class TestGetRegistered(object):
         Invoke getRegistered() with random language
         """
         module = "bin_lua.lua"
-        language = aerospike.UDF_TYPE_LUAa
+        language = 85
         policy = {
                 'timeout' : 1000
                 }
@@ -116,7 +116,7 @@ class TestGetRegistered(object):
             self.client.udf_getRegistered(module, language, policy)
 
         assert exception.value[0] == -1
-        assert exception.value[1] == "Invalid language(type)"
+        assert exception.value[1] == "Invalid language"
 
     def test_getRegistered_with_extra_parameter(self):
         """
@@ -144,8 +144,8 @@ class TestGetRegistered(object):
         with pytest.raises(Exception) as exception:
             self.client.udf_getRegistered(module, language, "")
 
-        assert exception.value[0] == -2
-        assert exception.value[1] == "policy must be a dict"
+        assert exception.value[0] == -1
+        assert exception.value[1] == "Invalid policy(type)"
 
     def test_getRegistered_module_is_none(self):
         """

@@ -248,7 +248,7 @@ PyObject * AerospikeClient_UDF_Get_Registered_UDF(AerospikeClient * self, PyObje
 
 	if((language & AS_UDF_TYPE) != AS_UDF_TYPE)
 	{
-		as_error_update(&err, AEROSPIKE_ERR_CLIENT, "Invalid language type");
+		as_error_update(&err, AEROSPIKE_ERR_CLIENT, "Invalid language");
 		goto CLEANUP; 
 	}
 	char* strModule = NULL;	
