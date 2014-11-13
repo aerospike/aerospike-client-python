@@ -44,7 +44,7 @@ PyObject * AerospikeClient_ScanApply_Invoke(
     as_policy_scan* scan_policy_p = NULL;
     as_error err;
     as_scan scan;
-    long scan_id = 0;
+    uint64_t scan_id = 0;
 
 	// Initialize error
 	as_error_init(&err);

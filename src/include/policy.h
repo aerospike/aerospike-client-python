@@ -70,36 +70,6 @@ typedef struct Aerospike_Constants {
 
 #define AEROSPIKE_CONSTANTS_ARR_SIZE (sizeof(aerospike_constants)/sizeof(AerospikeConstants))
 
-/*
- *******************************************************************************************************
- * Mapping of constant number to constant name string.
- *******************************************************************************************************
- */
-static
-AerospikeConstants aerospike_constants[] = {
-    { POLICY_RETRY_NONE                 ,   "POLICY_RETRY_NONE" },
-    { POLICY_RETRY_ONCE                 ,   "POLICY_RETRY_ONCE" },
-    { POLICY_EXISTS_IGNORE              ,   "POLICY_EXISTS_IGNORE" },
-    { POLICY_EXISTS_CREATE              ,   "POLICY_EXISTS_CREATE" },
-    { POLICY_EXISTS_UPDATE              ,   "POLICY_EXISTS_UPDATE" },
-    { POLICY_EXISTS_REPLACE             ,   "POLICY_EXISTS_REPLACE" },
-    { POLICY_EXISTS_CREATE_OR_REPLACE   ,   "POLICY_EXISTS_CREATE_OR_REPLACE" },
-    { UDF_TYPE_LUA                      ,   "UDF_TYPE_LUA" },
-    { POLICY_KEY_DIGEST                 ,   "POLICY_KEY_DIGEST" },
-    { POLICY_KEY_SEND                   ,   "POLICY_KEY_SEND" },
-    { POLICY_GEN_IGNORE                 ,   "POLICY_GEN_IGNORE" },
-    { POLICY_GEN_EQ                     ,   "POLICY_GEN_EQ" },
-    { POLICY_GEN_GT                     ,   "POLICY_GEN_GT" },
-    { SCAN_PRIORITY_AUTO                ,   "SCAN_PRIORITY_AUTO" },
-    { SCAN_PRIORITY_LOW                 ,   "SCAN_PRIORITY_AUTO" },
-    { SCAN_PRIORITY_MEDIUM              ,   "SCAN_PRIORITY_MEDIUM" },
-    { SCAN_PRIORITY_HIGH                ,   "SCAN_PRIORITY_HIGH" },
-    { SCAN_STATUS_COMPLETED             ,   "SCAN_STATUS_COMPLETED" },
-    { SCAN_STATUS_ABORTED               ,   "SCAN_STATUS_ABORTED" },
-    { SCAN_STATUS_UNDEF                 ,   "SCAN_STATUS_UNDEF" },
-    { SCAN_STATUS_INPROGRESS            ,   "SCAN_STATUS_INPROGRESS" }
-};
-
 as_status pyobject_to_policy_admin(as_error * err, PyObject * py_policy,
 									as_policy_admin * policy,
 									as_policy_admin ** policy_p);
@@ -136,7 +106,7 @@ as_status pyobject_to_policy_operate(as_error * err, PyObject * py_policy,
                                     as_policy_operate * policy,
                                     as_policy_operate ** policy_p);
 
-as_status declare_poliy_constants(PyObject *aerospike);
+as_status declare_policy_constants(PyObject *aerospike);
 
 as_status set_policy(as_error *err, PyObject * py_policy, as_policy_read* read_policy_p,
         as_policy_write* write_policy_p, as_policy_operate* operate_policy_p,
