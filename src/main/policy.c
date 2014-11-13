@@ -55,6 +55,29 @@ __policy##_init(policy);\
 	}\
 }
 
+/*
+ *******************************************************************************************************
+ * Mapping of constant number to constant name string.
+ *******************************************************************************************************
+ */
+
+static
+AerospikeConstants aerospike_constants[] = {
+    { POLICY_RETRY_NONE                 ,   "POLICY_RETRY_NONE" },
+    { POLICY_RETRY_ONCE                 ,   "POLICY_RETRY_ONCE" },
+    { POLICY_EXISTS_IGNORE              ,   "POLICY_EXISTS_IGNORE" },
+    { POLICY_EXISTS_CREATE              ,   "POLICY_EXISTS_CREATE" },
+    { POLICY_EXISTS_UPDATE              ,   "POLICY_EXISTS_UPDATE" },
+    { POLICY_EXISTS_REPLACE             ,   "POLICY_EXISTS_REPLACE" },
+    { POLICY_EXISTS_CREATE_OR_REPLACE   ,   "POLICY_EXISTS_CREATE_OR_REPLACE" },
+    { UDF_TYPE_LUA                      ,   "UDF_TYPE_LUA" },
+    { POLICY_KEY_DIGEST                 ,   "POLICY_KEY_DIGEST" },
+    { POLICY_KEY_SEND                   ,   "POLICY_KEY_SEND" },
+    { POLICY_GEN_IGNORE                 ,   "POLICY_GEN_IGNORE" },
+    { POLICY_GEN_EQ                     ,   "POLICY_GEN_EQ" },
+    { POLICY_GEN_GT                     ,   "POLICY_GEN_GT" }
+};
+
 /**
  * Converts a PyObject into an as_policy_admin object.
  * Returns AEROSPIKE_OK on success. On error, the err argument is populated.
