@@ -323,56 +323,60 @@ as_status set_scan_options(as_error *err, as_scan* scan_p, PyObject * py_options
         return as_error_update(err, AEROSPIKE_ERR_CLIENT, "Scan is not initialized");
     }
     
-    PyObject *key = NULL, *value = NULL;
-    Py_ssize_t pos = 0;
-    int64_t val = 0;
-    while (PyDict_Next(py_options, &pos, &key, &value)) {
-        char *key_name = PyString_AsString(key);
-        if (!PyString_Check(key)) {
-            return as_error_update(err, AEROSPIKE_ERR_CLIENT, "Policy key must be string");
-        } 
+    if (PyDict_Check(py_options)) {
+        PyObject *key = NULL, *value = NULL;
+        Py_ssize_t pos = 0;
+        int64_t val = 0;
+        while (PyDict_Next(py_options, &pos, &key, &value)) {
+            char *key_name = PyString_AsString(key);
+            if (!PyString_Check(key)) {
+                return as_error_update(err, AEROSPIKE_ERR_CLIENT, "Policy key must be string");
+            }
 
-        if (strcmp("priority", key_name) == 0) {
-            if (!PyInt_Check(value)) {
-                return as_error_update(err, AEROSPIKE_ERR_CLIENT, "Invalid value(type) for priority");
+            if (strcmp("priority", key_name) == 0) {
+                if (!PyInt_Check(value)) {
+                    return as_error_update(err, AEROSPIKE_ERR_CLIENT, "Invalid value(type) for priority");
+                }
+                val = (int64_t) PyInt_AsLong(value);
+                if ((val & AS_SCAN_PRIORITY) != AS_SCAN_PRIORITY) {
+                    return as_error_update(err, AEROSPIKE_ERR_CLIENT, "Invalid value for priority");
+                } else if (!as_scan_set_priority(scan_p, (val - AS_SCAN_PRIORITY))) {
+                    return as_error_update(err, AEROSPIKE_ERR_CLIENT, "Unable to set scan priority");
+                }
+            } else if (strcmp("percent", key_name) == 0) {
+                if (!PyInt_Check(value)) {
+                    return as_error_update(err, AEROSPIKE_ERR_CLIENT, "Invalid value(type) for percent");
+                }
+                val = (int64_t) PyInt_AsLong(value);
+                if (val<0 || val>100) {
+                    return as_error_update(err, AEROSPIKE_ERR_CLIENT, "Invalid value for scan percentage");
+                }
+                else if (!as_scan_set_percent(scan_p, val)) {
+                    return as_error_update(err, AEROSPIKE_ERR_CLIENT, "Unable to set scan percentage");
+                }
+            } else if (strcmp("concurrent", key_name) == 0) {
+                if (!PyBool_Check(value)) {
+                    return as_error_update(err, AEROSPIKE_ERR_CLIENT, "Invalid value(type) for concurrent");
+                }
+                val = (int64_t)PyObject_IsTrue(value);
+                if (val == -1 || (!as_scan_set_concurrent(scan_p, val))) {
+                    return as_error_update(err, AEROSPIKE_ERR_CLIENT, "Unable to set scan percentage");
+                }
+            } else if (strcmp("nobins", key_name) == 0) {
+                if (!PyBool_Check(value)) {
+                    return as_error_update(err, AEROSPIKE_ERR_CLIENT, "Invalid value(type) for nobins");
+                }
+                val = (int64_t)PyObject_IsTrue(value);
+                if (val == -1 || (!as_scan_set_nobins(scan_p, val))) {
+                    return as_error_update(err, AEROSPIKE_ERR_CLIENT, "Unable to set scan nobins");
+                }
+            } else {
+                return as_error_update(err, AEROSPIKE_ERR_CLIENT, "Invalid value for scan options");
             }
-            val = (int64_t) PyInt_AsLong(value);
-            if ((val & AS_SCAN_PRIORITY) != AS_SCAN_PRIORITY) {
-                return as_error_update(err, AEROSPIKE_ERR_CLIENT, "Invalid value for priority");
-            } else if (!as_scan_set_priority(scan_p, (val - AS_SCAN_PRIORITY))) {
-                return as_error_update(err, AEROSPIKE_ERR_CLIENT, "Unable to set scan priority");
-            }
-        } else if (strcmp("percent", key_name) == 0) {
-            if (!PyInt_Check(value)) {
-                return as_error_update(err, AEROSPIKE_ERR_CLIENT, "Invalid value(type) for percent");
-            }
-            val = (int64_t) PyInt_AsLong(value);
-            if (val<0 || val>100) {
-                return as_error_update(err, AEROSPIKE_ERR_CLIENT, "Invalid value for scan percentage");
-            }
-            else if (!as_scan_set_percent(scan_p, val)) {
-                return as_error_update(err, AEROSPIKE_ERR_CLIENT, "Unable to set scan percentage");
-            }
-        } else if (strcmp("concurrent", key_name) == 0) {
-            if (!PyBool_Check(value)) {
-                return as_error_update(err, AEROSPIKE_ERR_CLIENT, "Invalid value(type) for concurrent");
-            }
-            val = (int64_t)PyObject_IsTrue(value);
-            if (val == -1 || (!as_scan_set_concurrent(scan_p, val))) {
-                return as_error_update(err, AEROSPIKE_ERR_CLIENT, "Unable to set scan percentage");
-            }
-        } else if (strcmp("nobins", key_name) == 0) {
-            if (!PyBool_Check(value)) {
-                return as_error_update(err, AEROSPIKE_ERR_CLIENT, "Invalid value(type) for nobins");
-            }
-            val = (int64_t)PyObject_IsTrue(value);
-            if (val == -1 || (!as_scan_set_nobins(scan_p, val))) {
-                return as_error_update(err, AEROSPIKE_ERR_CLIENT, "Unable to set scan nobins");
-            }
-        } else {
-            return as_error_update(err, AEROSPIKE_ERR_CLIENT, "Invalid value for scan options");
         }
-    }
+    } else {
+        return as_error_update(err, AEROSPIKE_ERR_CLIENT, "Invalid option(type)");
+    } 
     return err->code;
 }
 
@@ -455,6 +459,8 @@ as_status set_policy(as_error *err, PyObject * py_policy, as_policy_read* read_p
                 return as_error_update(err, AEROSPIKE_ERR_CLIENT, "Invalid value for policy key");
             }
         }
+    } else {
+        return as_error_update(err, AEROSPIKE_ERR_CLIENT, "Invalid policy(type)");
     }
     
     return err->code;
