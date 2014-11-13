@@ -82,16 +82,18 @@ PyObject * AerospikeClient_ScanApply_Invoke(
         goto CLEANUP;
     }
 
-    as_scan_apply_each(&scan, module_p, function_p, arglist);
-    aerospike_scan_background(self->as, &err, scan_policy_p, &scan, &scan_id);
-    if (err.code != AEROSPIKE_OK) {
+    if (!as_scan_apply_each(&scan, module_p, function_p, arglist)) {
+		as_error_update(&err, AEROSPIKE_ERR_PARAM, "Unable to apply UDF on the scan");
         goto CLEANUP;
     }
+    aerospike_scan_background(self->as, &err, scan_policy_p, &scan, &scan_id);
 
 CLEANUP:
     if (arglist) {
         as_list_destroy(arglist);
     }
+
+    as_scan_destroy(&scan);
 
 	if ( err.code != AEROSPIKE_OK ) {
 		PyObject * py_err = NULL;
