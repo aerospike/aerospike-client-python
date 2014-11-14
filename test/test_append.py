@@ -84,8 +84,8 @@ class TestAppend(object):
         with pytest.raises(Exception) as exception:
             self.client.append(key, "name", "str", policy)
 
-        assert exception.value[0] == -2
-        assert exception.value[1] == "timeout is invalid"
+        assert exception.value[0] == -1
+        assert exception.value[1] == "Invalid value(type) for policy"
 
     def test_append_with_nonexistent_key(self):
         """
@@ -95,6 +95,7 @@ class TestAppend(object):
         status = self.client.append(key, "name", "str")
 
         assert status == 0L
+        self.client.remove(key)
 
     def test_append_with_nonexistent_bin(self):
         """

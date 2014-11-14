@@ -55,6 +55,29 @@ __policy##_init(policy);\
 	}\
 }
 
+/*
+ *******************************************************************************************************
+ * Mapping of constant number to constant name string.
+ *******************************************************************************************************
+ */
+
+static
+AerospikeConstants aerospike_constants[] = {
+    { POLICY_RETRY_NONE                 ,   "POLICY_RETRY_NONE" },
+    { POLICY_RETRY_ONCE                 ,   "POLICY_RETRY_ONCE" },
+    { POLICY_EXISTS_IGNORE              ,   "POLICY_EXISTS_IGNORE" },
+    { POLICY_EXISTS_CREATE              ,   "POLICY_EXISTS_CREATE" },
+    { POLICY_EXISTS_UPDATE              ,   "POLICY_EXISTS_UPDATE" },
+    { POLICY_EXISTS_REPLACE             ,   "POLICY_EXISTS_REPLACE" },
+    { POLICY_EXISTS_CREATE_OR_REPLACE   ,   "POLICY_EXISTS_CREATE_OR_REPLACE" },
+    { UDF_TYPE_LUA                      ,   "UDF_TYPE_LUA" },
+    { POLICY_KEY_DIGEST                 ,   "POLICY_KEY_DIGEST" },
+    { POLICY_KEY_SEND                   ,   "POLICY_KEY_SEND" },
+    { POLICY_GEN_IGNORE                 ,   "POLICY_GEN_IGNORE" },
+    { POLICY_GEN_EQ                     ,   "POLICY_GEN_EQ" },
+    { POLICY_GEN_GT                     ,   "POLICY_GEN_GT" }
+};
+
 /**
  * Converts a PyObject into an as_policy_admin object.
  * Returns AEROSPIKE_OK on success. On error, the err argument is populated.
@@ -314,15 +337,12 @@ as_status set_policy(as_error *err, PyObject * py_policy, as_policy_read* read_p
                 return as_error_update(err, AEROSPIKE_ERR_CLIENT, "Policy key must be string");
             }
             if (!PyInt_Check(value)) {
-                return as_error_update(err, AEROSPIKE_ERR_CLIENT, "Invalid value(type) for policy key");
+                return as_error_update(err, AEROSPIKE_ERR_CLIENT, "Invalid value(type) for policy");
             }
 
             char *key_name = PyString_AsString(key);
             if (strcmp("timeout", key_name) == 0) {
                 val = (int64_t) PyInt_AsLong(value);
-                if (val < 0) {
-                    return as_error_update(err, AEROSPIKE_ERR_CLIENT, "Invalid value for timeout");
-                }
             } else if (strcmp("exists", key_name) == 0) {
                 val = (int64_t) PyInt_AsLong(value);
                 if ((val & AS_POLICY_EXISTS) != AS_POLICY_EXISTS) {

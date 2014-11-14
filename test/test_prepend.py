@@ -84,8 +84,8 @@ class TestPrepend(object):
         with pytest.raises(Exception) as exception:
             self.client.prepend(key, "name", "str", policy)
 
-        assert exception.value[0] == -2
-        assert exception.value[1] == "timeout is invalid"
+        assert exception.value[0] == -1
+        assert exception.value[1] == "Invalid value(type) for policy"
 
     def test_prepend_with_nonexistent_key(self):
         """
@@ -95,6 +95,7 @@ class TestPrepend(object):
         status = self.client.prepend(key, "name", "str")
 
         assert status == 0L
+        self.client.remove(key)
 
     def test_prepend_with_nonexistent_bin(self):
         """
