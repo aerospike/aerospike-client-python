@@ -47,6 +47,7 @@
  * Returns 0 on success.
  *******************************************************************************************************
  */
+static
 PyObject *  AerospikeClient_Operate_Invoke(
         AerospikeClient * self,
         as_key * key, PyObject * py_bin, char* val, as_error * err, long ttl,
@@ -84,9 +85,11 @@ PyObject *  AerospikeClient_Operate_Invoke(
                 goto CLEANUP;
             }
             bin = PyString_AsString(py_bin);
+
             as_val* value_p = NULL;
             const char* select[] = {bin, NULL};
             as_record* get_rec = NULL;
+
             aerospike_key_select(self->as,
                     err, NULL, key, select, &get_rec);
             if (err->code != AEROSPIKE_OK) {
@@ -135,6 +138,8 @@ PyObject *  AerospikeClient_Operate_Invoke(
                 as_operations_add_write_int64(ops, bin, offset);
             }
             break;
+        default:
+            as_error_update(err, AEROSPIKE_ERR, "Invalid operation.");
     }
 
 CLEANUP:
