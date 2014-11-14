@@ -27,12 +27,37 @@
 #include "key.h"
 #include "policy.h"
 
+/**
+ *******************************************************************************************************
+ * This function invokes csdk's API's.
+ * 
+ * @param self                  AerospikeClient object
+ * @param key                   The C client's as_key that identifies the record.
+ * @param py_bin                The bin name to perform operation upon.
+ * @param val                   The value to append, prepend.
+ * @param err                   The as_error to be populated by the function
+ *                              with the encountered error if any.
+ * @param ttl                   The time to live
+ * @param initial_value         Initial value for a bin
+ * @param offset                The value with which you want to increment bin
+ *                              value.
+ * @param operation             Operation to perform.
+ * @param ops                   as_operations object.
+ *
+ * Returns 0 on success.
+ *******************************************************************************************************
+ */
 PyObject *  AerospikeClient_Operate_Invoke(
         AerospikeClient * self,
         as_key * key, PyObject * py_bin, char* val, as_error * err, long ttl,
         long initial_value, long offset, long operation, as_operations * ops)
 {
     char* bin = NULL;
+
+    if (!self || !self->as) {
+        as_error_update(err, AEROSPIKE_ERR_PARAM, "Invalid aerospike object");
+        goto CLEANUP;
+    }
 
     switch(operation) {
         case AS_OPERATOR_APPEND:
@@ -122,10 +147,25 @@ CLEANUP:
     return PyLong_FromLong(0);
 }
 
+/**
+ *******************************************************************************************************
+ * This function converts PyObject key to as_key object, Also converts PyObject
+ * policy to as_policy_operate object.
+ *
+ * @param err                   The as_error to be populated by the function
+ *                              with the encountered error if any.
+ * @param py_key                The PyObject key.
+ * @param py_policy             The PyObject policy.
+ * @param key_p                 The C client's as_key that identifies the record.
+ * @param operate_policy_p      The as_policy_operate type pointer.
+ * @param operate_policy_pp     The as_policy_operate type pointer to pointer.
+ *******************************************************************************************************
+ */
+static
 PyObject * AerospikeClient_convert_pythonObj_to_asType(
-        AerospikeClient * self,
         as_error *err, PyObject* py_key, PyObject* py_policy,
-        as_key* key_p, as_policy_operate* operate_policy_pp)
+        as_key* key_p, as_policy_operate* operate_policy_p,
+        as_policy_operate** operate_policy_pp)
 {
     pyobject_to_key(err, py_key, key_p);
     if ( err->code != AEROSPIKE_OK ) {
@@ -133,11 +173,10 @@ PyObject * AerospikeClient_convert_pythonObj_to_asType(
     }
 
     if (py_policy) {
-        // Convert python policy object to as_policy_operate
-        pyobject_to_policy_operate(err, py_policy, operate_policy_pp, &operate_policy_pp);
-        if ( err->code != AEROSPIKE_OK ) {
-            goto CLEANUP;
-        }
+        /* Convert python policy object
+         * to as_policy_operate
+         */
+        pyobject_to_policy_operate(err, py_policy, operate_policy_p, operate_policy_pp);
     }
 
 CLEANUP:
@@ -150,6 +189,19 @@ CLEANUP:
     return PyLong_FromLong(0);
 }
 
+/**
+ *******************************************************************************************************
+ * Appends a string to the string value in a bin.
+ *
+ * @param self                  AerospikeClient object
+ * @param args                  The args is a tuple object containing an argument
+ *                              list passed from Python to a C function
+ * @param kwds                  Dictionary of keywords
+ *
+ * Returns an integer status. 0(Zero) is success value.
+ * In case of error,appropriate exceptions will be raised.
+ *******************************************************************************************************
+ */
 PyObject * AerospikeClient_Append(AerospikeClient * self, PyObject * args, PyObject * kwds)
 {
     // Initialize error
@@ -165,6 +217,7 @@ PyObject * AerospikeClient_Append(AerospikeClient * self, PyObject * args, PyObj
 
     as_operations ops;
     as_policy_operate operate_policy;
+    as_policy_operate *operate_policy_p = NULL;
     as_key key;
 
     // Python Function Keyword Arguments
@@ -176,17 +229,22 @@ PyObject * AerospikeClient_Append(AerospikeClient * self, PyObject * args, PyObj
         return NULL;
     }
 
+    if (!self || !self->as) {
+        as_error_update(&err, AEROSPIKE_ERR_PARAM, "Invalid aerospike object");
+        goto CLEANUP;
+    }
+
     as_operations_inita(&ops, 1);
 
     if (py_policy) {
-        set_policy_operate(&err, py_policy, &operate_policy);
+        validate_policy_operate(&err, py_policy, &operate_policy);
     }
     if (err.code != AEROSPIKE_OK) {
         goto CLEANUP;
     }
 
-    py_result = AerospikeClient_convert_pythonObj_to_asType(self, &err,
-            py_key, py_policy, &key, &operate_policy);
+    py_result = AerospikeClient_convert_pythonObj_to_asType(&err,
+            py_key, py_policy, &key, &operate_policy, &operate_policy_p);
     if (!py_result) {
         goto CLEANUP;
     }
@@ -196,7 +254,7 @@ PyObject * AerospikeClient_Append(AerospikeClient * self, PyObject * args, PyObj
     if (py_result)
     {
         if (py_policy) {
-            aerospike_key_operate(self->as, &err, &operate_policy, &key, &ops, NULL);
+            aerospike_key_operate(self->as, &err, operate_policy_p, &key, &ops, NULL);
         } else {
             aerospike_key_operate(self->as, &err, NULL, &key, &ops, NULL);
         }
@@ -217,6 +275,19 @@ CLEANUP:
     return PyLong_FromLong(0);
 }
 
+/**
+ *******************************************************************************************************
+ * Prepends a string to the string value in a bin
+ * 
+ * @param self                  AerospikeClient object
+ * @param args                  The args is a tuple object containing an argument
+ *                              list passed from Python to a C function
+ * @param kwds                  Dictionary of keywords
+ *
+ * Returns an integer status. 0(Zero) is success value.
+ * In case of error,appropriate exceptions will be raised.
+ *******************************************************************************************************
+ */
 PyObject * AerospikeClient_Prepend(AerospikeClient * self, PyObject * args, PyObject * kwds)
 {
     // Initialize error
@@ -233,6 +304,7 @@ PyObject * AerospikeClient_Prepend(AerospikeClient * self, PyObject * args, PyOb
 
     as_operations ops;
     as_policy_operate operate_policy;
+    as_policy_operate *operate_policy_p = NULL;
     as_key key;
 
     as_operations_inita(&ops, 1);
@@ -246,15 +318,20 @@ PyObject * AerospikeClient_Prepend(AerospikeClient * self, PyObject * args, PyOb
         return NULL;
     }
 
+    if (!self || !self->as) {
+        as_error_update(&err, AEROSPIKE_ERR_PARAM, "Invalid aerospike object");
+        goto CLEANUP;
+    }
+
     if (py_policy) {
-        set_policy_operate(&err, py_policy, &operate_policy);
+        validate_policy_operate(&err, py_policy, &operate_policy);
     }
     if (err.code != AEROSPIKE_OK) {
         goto CLEANUP;
     }
 
-    py_result = AerospikeClient_convert_pythonObj_to_asType(self, &err,
-            py_key, py_policy, &key, &operate_policy);
+    py_result = AerospikeClient_convert_pythonObj_to_asType(&err,
+            py_key, py_policy, &key, &operate_policy, &operate_policy_p);
     if (!py_result) {
         goto CLEANUP;
     }
@@ -264,7 +341,7 @@ PyObject * AerospikeClient_Prepend(AerospikeClient * self, PyObject * args, PyOb
     if (py_result)
     {
         if (py_policy) {
-            aerospike_key_operate(self->as, &err, &operate_policy, &key, &ops, NULL);
+            aerospike_key_operate(self->as, &err, operate_policy_p, &key, &ops, NULL);
         } else {
             aerospike_key_operate(self->as, &err, NULL, &key, &ops, NULL);
         }
@@ -284,6 +361,19 @@ CLEANUP:
     return PyLong_FromLong(0);
 }
 
+/**
+ *******************************************************************************************************
+ * Increments a numeric value in a bin.
+ * 
+ * @param self                  AerospikeClient object
+ * @param args                  The args is a tuple object containing an argument
+ *                              list passed from Python to a C function
+ * @param kwds                  Dictionary of keywords
+ *
+ * Returns an integer status. 0(Zero) is success value.
+ * In case of error,appropriate exceptions will be raised.
+ *******************************************************************************************************
+ */
 PyObject * AerospikeClient_Increment(AerospikeClient * self, PyObject * args, PyObject * kwds)
 {
     // Initialize error
@@ -299,6 +389,7 @@ PyObject * AerospikeClient_Increment(AerospikeClient * self, PyObject * args, Py
     as_operations ops;
     as_key key;
     as_policy_operate operate_policy;
+    as_policy_operate *operate_policy_p = NULL;
 
     long offset_val = 0;
     long initial_val = 0;
@@ -313,15 +404,20 @@ PyObject * AerospikeClient_Increment(AerospikeClient * self, PyObject * args, Py
         return NULL;
     }
 
+    if (!self || !self->as) {
+        as_error_update(&err, AEROSPIKE_ERR_PARAM, "Invalid aerospike object");
+        goto CLEANUP;
+    }
+
     if (py_policy) {
-        set_policy_operate(&err, py_policy, &operate_policy);
+        validate_policy_operate(&err, py_policy, &operate_policy);
     }
     if (err.code != AEROSPIKE_OK) {
         goto CLEANUP;
     }
 
-    py_result = AerospikeClient_convert_pythonObj_to_asType(self, &err,
-            py_key, py_policy, &key, &operate_policy);
+    py_result = AerospikeClient_convert_pythonObj_to_asType(&err,
+            py_key, py_policy, &key, &operate_policy, &operate_policy_p);
 
     if (!py_result) {
         goto CLEANUP;
@@ -332,7 +428,7 @@ PyObject * AerospikeClient_Increment(AerospikeClient * self, PyObject * args, Py
     if (py_result)
     {
         if (py_policy) {
-            aerospike_key_operate(self->as, &err, &operate_policy, &key, &ops, NULL);
+            aerospike_key_operate(self->as, &err, operate_policy_p, &key, &ops, NULL);
         } else {
             aerospike_key_operate(self->as, &err, NULL, &key, &ops, NULL);
         }
@@ -351,6 +447,19 @@ CLEANUP:
     return PyLong_FromLong(0);
 }
 
+/**
+ *******************************************************************************************************
+ * Touch a record in the Aerospike DB
+ * 
+ * @param self                  AerospikeClient object
+ * @param args                  The args is a tuple object containing an argument
+ *                              list passed from Python to a C function
+ * @param kwds                  Dictionary of keywords
+ *
+ * Returns an integer status. 0(Zero) is success value.
+ * In case of error,appropriate exceptions will be raised.
+ *******************************************************************************************************
+ */
 PyObject * AerospikeClient_Touch(AerospikeClient * self, PyObject * args, PyObject * kwds)
 {
     // Initialize error
@@ -365,6 +474,7 @@ PyObject * AerospikeClient_Touch(AerospikeClient * self, PyObject * args, PyObje
     as_operations ops;
     as_key key;
     as_policy_operate operate_policy;
+    as_policy_operate *operate_policy_p = NULL;
     long touchvalue = 0;
 
     as_operations_inita(&ops, 1);
@@ -378,15 +488,20 @@ PyObject * AerospikeClient_Touch(AerospikeClient * self, PyObject * args, PyObje
         return NULL;
     }
 
+    if (!self || !self->as) {
+        as_error_update(&err, AEROSPIKE_ERR_PARAM, "Invalid aerospike object");
+        goto CLEANUP;
+    }
+
     if (py_policy) {
-        set_policy_operate(&err, py_policy, &operate_policy);
+        validate_policy_operate(&err, py_policy, &operate_policy);
     }
     if (err.code != AEROSPIKE_OK) {
         goto CLEANUP;
     }
 
-    py_result = AerospikeClient_convert_pythonObj_to_asType(self, &err,
-            py_key, py_policy, &key, &operate_policy);
+    py_result = AerospikeClient_convert_pythonObj_to_asType(&err,
+            py_key, py_policy, &key, &operate_policy, &operate_policy_p);
     if (!py_result) {
         goto CLEANUP;
     }
@@ -396,7 +511,7 @@ PyObject * AerospikeClient_Touch(AerospikeClient * self, PyObject * args, PyObje
     if (py_result)
     {
         if (py_policy) {
-            aerospike_key_operate(self->as, &err, &operate_policy, &key, &ops, NULL);
+            aerospike_key_operate(self->as, &err, operate_policy_p, &key, &ops, NULL);
         } else {
             aerospike_key_operate(self->as, &err, NULL, &key, &ops, NULL);
         }
@@ -415,6 +530,18 @@ CLEANUP:
     return PyLong_FromLong(0);
 }
 
+/**
+ *******************************************************************************************************
+ * Multiple operations on a single record
+ * 
+ * @param self                  AerospikeClient object
+ * @param args                  The args is a tuple object containing an argument
+ *                              list passed from Python to a C function
+ * @param kwds                  Dictionary of keywords
+ *
+ * Returns tuple of bins retrieved by read operations on success.
+ *******************************************************************************************************
+ */
 PyObject * AerospikeClient_Operate(AerospikeClient * self, PyObject * args, PyObject * kwds)
 {
     // Initialize error
@@ -431,6 +558,7 @@ PyObject * AerospikeClient_Operate(AerospikeClient * self, PyObject * args, PyOb
 
     as_operations ops;
     as_policy_operate operate_policy;
+    as_policy_operate *operate_policy_p = NULL;
     as_key key;
     as_record * rec = NULL;
 
@@ -450,15 +578,20 @@ PyObject * AerospikeClient_Operate(AerospikeClient * self, PyObject * args, PyOb
         return NULL;
     }
 
+    if (!self || !self->as) {
+        as_error_update(&err, AEROSPIKE_ERR_PARAM, "Invalid aerospike object");
+        goto CLEANUP;
+    }
+
     if (py_policy) {
-        set_policy_operate(&err, py_policy, &operate_policy);
+        validate_policy_operate(&err, py_policy, &operate_policy);
     }
     if (err.code != AEROSPIKE_OK) {
         goto CLEANUP;
     }
 
-    py_result = AerospikeClient_convert_pythonObj_to_asType(self, &err,
-            py_key, py_policy, &key, &operate_policy);
+    py_result = AerospikeClient_convert_pythonObj_to_asType(&err,
+            py_key, py_policy, &key, &operate_policy, &operate_policy_p);
     if (!py_result) {
         goto CLEANUP;
     }
@@ -511,7 +644,7 @@ PyObject * AerospikeClient_Operate(AerospikeClient * self, PyObject * args, PyOb
     if (py_result)
     {
         if (py_policy) {
-            aerospike_key_operate(self->as, &err, &operate_policy, &key, &ops, &rec);
+            aerospike_key_operate(self->as, &err, operate_policy_p, &key, &ops, &rec);
         } else {
             aerospike_key_operate(self->as, &err, NULL, &key, &ops, &rec);
         }
