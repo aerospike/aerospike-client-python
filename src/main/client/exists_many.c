@@ -29,15 +29,11 @@
 #include "key.h"
 #include "policy.h"
 
-static bool batch_get_cb(const as_batch_read* results, uint32_t n, void* udata)
+static
+bool batch_exists_cb(const as_batch_read* results, uint32_t n, void* udata)
 {
 	// Typecast udata back to PyObject
 	PyObject * py_recs = (PyObject *) udata;
-
-	// Initialise error objects
-	as_error err;
-	
-	as_error_init(&err);
 
 	// Loop over results array
 	for ( uint32_t i =0; i < n; i++ ){
@@ -70,6 +66,7 @@ static bool batch_get_cb(const as_batch_read* results, uint32_t n, void* udata)
 	return true;
 }
 
+static
 PyObject * AerospikeClient_Exists_Many_Invoke(
 	AerospikeClient * self, 
 	PyObject * py_keys, PyObject * py_policy)
@@ -147,7 +144,7 @@ PyObject * AerospikeClient_Exists_Many_Invoke(
 
 	// Invoke C-client API
 	aerospike_batch_exists(self->as, &err, policy_p,
-		&batch, (aerospike_batch_read_callback) batch_get_cb,
+		&batch, (aerospike_batch_read_callback) batch_exists_cb,
 		py_recs);
 
 CLEANUP:

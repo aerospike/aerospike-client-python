@@ -29,6 +29,7 @@
 #include "key.h"
 #include "policy.h"
 
+// Callback method
 static bool batch_get_cb(const as_batch_read* results, uint32_t n, void* udata)
 {
 	// Typecast udata back to PyObject
@@ -71,6 +72,7 @@ static bool batch_get_cb(const as_batch_read* results, uint32_t n, void* udata)
 	return true;
 }
 
+static
 PyObject * AerospikeClient_Get_Many_Invoke(
 	AerospikeClient * self, 
 	PyObject * py_keys, PyObject * py_policy)
