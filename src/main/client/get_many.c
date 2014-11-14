@@ -84,7 +84,7 @@ PyObject * AerospikeClient_Get_Many_Invoke(
 	as_error err;
 	as_batch batch;
 	as_policy_batch policy;
-	as_policy_batch * policy_p = NULL;
+	as_policy_batch * batch_policy_p = NULL;
 	as_key * keys;
 	as_record * rec = NULL;
 	bool is_batch_init = false;
@@ -142,14 +142,21 @@ PyObject * AerospikeClient_Get_Many_Invoke(
 		goto CLEANUP;
 	}
 
+	if (py_policy) {
+		validate_policy_batch(&err, py_policy, &batch_policy_p);
+	}
+	if ( err.code != AEROSPIKE_OK ) {
+		goto CLEANUP;
+	}
+
 	// Convert python policy object to as_policy_batch
-	pyobject_to_policy_batch(&err, py_policy, &policy, &policy_p);
+	pyobject_to_policy_batch(&err, py_policy, &policy, &batch_policy_p);
 	if ( err.code != AEROSPIKE_OK ) {
 		goto CLEANUP;
 	}
 
 	// Invoke C-client API
-	aerospike_batch_get(self->as, &err, policy_p,
+	aerospike_batch_get(self->as, &err, batch_policy_p,
 		&batch, (aerospike_batch_read_callback) batch_get_cb,
 		py_recs);
 

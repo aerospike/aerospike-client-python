@@ -324,6 +324,15 @@ void validate_policy_info(as_error *err, PyObject * py_policy, as_policy_info* i
 {
     validate_policy(err, py_policy, NULL, NULL, NULL, NULL);
 }
+
+/**
+ * Wrapper function for checking info policy parameters.
+ */
+void validate_policy_batch(as_error *err, PyObject * py_policy, as_policy_info* batch_policy_p)
+{
+    validate_policy(err, py_policy, NULL, NULL, NULL, NULL);
+}
+
 /**
  * Converts a PyObject into an as_policy_admin object.
  * Returns AEROSPIKE_OK on success. On error, the err argument is populated.
