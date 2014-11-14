@@ -20,6 +20,7 @@
 #include <aerospike/as_error.h>
 #include <aerospike/as_policy.h>
 #include <aerospike/as_status.h>
+#include "aerospike/as_scan.h"
 
 #include "policy.h"
 
@@ -323,7 +324,6 @@ void validate_policy_info(as_error *err, PyObject * py_policy, as_policy_info* i
 {
     validate_policy(err, py_policy, NULL, NULL, NULL, NULL);
 }
-
 /**
  * Converts a PyObject into an as_policy_admin object.
  * Returns AEROSPIKE_OK on success. On error, the err argument is populated.
@@ -514,10 +514,41 @@ as_status pyobject_to_policy_write(as_error * err, PyObject * py_policy,
 	return err->code;
 }
 
-as_status pyobject_to_policy_batch(as_error * err, PyObject * py_policy,
-		as_policy_batch * policy,
-		as_policy_batch ** policy_p){
+/**
+ * Converts a PyObject into an as_policy_operate object.
+ * Returns AEROSPIKE_OK on success. On error, the err argument is populated.
+ * We assume that the error object and the policy object are already allocated
+ * and initialized (although, we do reset the error object here).
+ */
+as_status pyobject_to_policy_operate(as_error * err, PyObject * py_policy,
+		as_policy_operate * policy,
+		as_policy_operate ** policy_p)
+{
+	// Initialize Policy
+	POLICY_INIT(as_policy_operate);
 
+	// Set policy fields
+	POLICY_SET_FIELD(timeout, uint32_t);
+	POLICY_SET_FIELD(retry, as_policy_retry);
+	POLICY_SET_FIELD(key, as_policy_key);
+	POLICY_SET_FIELD(gen, as_policy_gen);
+
+	// Update the policy
+	POLICY_UPDATE();
+
+	return err->code;
+}
+
+/**
+ * Converts a PyObject into an as_policy_batch object.
+ * Returns AEROSPIKE_OK on success. On error, the err argument is populated.
+ * We assume that the error object and the policy object are already allocated
+ * and initialized (although, we do reset the error object here).
+ */
+as_status pyobject_to_policy_batch(as_error * err, PyObject * py_policy,
+                                   as_policy_batch * policy,
+                                   as_policy_batch ** policy_p)
+{
 	// Initialize Policy
 	POLICY_INIT(as_policy_batch);
 
@@ -528,4 +559,5 @@ as_status pyobject_to_policy_batch(as_error * err, PyObject * py_policy,
 	POLICY_UPDATE();
 
 	return err->code;
+
 }
