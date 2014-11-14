@@ -87,7 +87,7 @@ AerospikeConstants aerospike_constants[] = {
 };
 
 /**
- * Function for setting aerospike policies.
+ * Function for validating aerospike policies.
  *
  * @param err                   The as_error to be populated by the function
  *                              with the encountered error if any.
@@ -100,19 +100,11 @@ AerospikeConstants aerospike_constants[] = {
  *                              and operate.
  * @param remove_policy_p       The as_policy_remove to be passed in case of
  *                              remove.
- * @param info_policy_p         The as_policy_info to be passed in case of
- *                              scan_info, udf_put, udf_remove, udf_getRegistered,
- *                              udf_listRegistered udfs.
- * @param scan_policy_p         The as_policy_scan to be passed in case of scan()
- *                              and scan_apply()
- * @param query_policy_p        The as_policy_query to be passed in case of
- *                              as_query_for_each.
  */
 static
-void set_policy(as_error *err, PyObject * py_policy, as_policy_read* read_policy_p,
+void validate_policy(as_error *err, PyObject * py_policy, as_policy_read* read_policy_p,
         as_policy_write* write_policy_p, as_policy_operate* operate_policy_p,
-        as_policy_remove* remove_policy_p, as_policy_info* info_policy_p,
-        as_policy_scan* scan_policy_p, as_policy_query* query_policy_p)
+        as_policy_remove* remove_policy_p)
 {
     if (PyDict_Check(py_policy)) {
         PyObject *key = NULL, *value = NULL;
@@ -312,25 +304,25 @@ exit:
 /**
  * Wrapper function for checking scan policy parameters.
  */
-void set_policy_scan(as_error *err, PyObject * py_policy, as_policy_scan* scan_policy_p)
+void validate_policy_scan(as_error *err, PyObject * py_policy, as_policy_scan* scan_policy_p)
 {
-    set_policy(err, py_policy, NULL, NULL, NULL, NULL, NULL, scan_policy_p, NULL);
+    validate_policy(err, py_policy, NULL, NULL, NULL, NULL);
 }
 
 /**
  * Wrapper function for checking operate policy parameters.
  */
-void set_policy_operate(as_error *err, PyObject * py_policy, as_policy_operate* operate_policy_p)
+void validate_policy_operate(as_error *err, PyObject * py_policy, as_policy_operate* operate_policy_p)
 {
-    set_policy(err, py_policy, NULL, NULL, operate_policy_p, NULL, NULL, NULL, NULL);
+    validate_policy(err, py_policy, NULL, NULL, operate_policy_p, NULL);
 }
 
 /**
  * Wrapper function for checking info policy parameters.
  */
-void set_policy_info(as_error *err, PyObject * py_policy, as_policy_info* info_policy_p)
+void validate_policy_info(as_error *err, PyObject * py_policy, as_policy_info* info_policy_p)
 {
-    set_policy(err, py_policy, NULL, NULL, NULL, NULL, info_policy_p, NULL, NULL);
+    validate_policy(err, py_policy, NULL, NULL, NULL, NULL);
 }
 /**
  * Converts a PyObject into an as_policy_admin object.
