@@ -53,3 +53,20 @@ as_status pyobject_to_policy_write(as_error * err, PyObject * py_policy,
 as_status pyobject_to_policy_batch(as_error * err, PyObject * py_policy,
 									as_policy_batch * policy,
 									as_policy_batch ** policy_p);
+
+as_status pyobject_to_policy_operate(as_error * err, PyObject * py_policy,
+                                    as_policy_operate * policy,
+                                    as_policy_operate ** policy_p);
+
+as_status declare_policy_constants(PyObject *aerospike);
+
+void validate_policy_operate(as_error *err, PyObject * py_policy,
+        as_policy_operate* operate_policy_p);
+
+void validate_policy_scan(as_error *err, PyObject * py_policy,
+        as_policy_scan* scan_policy_p);
+
+void set_scan_options(as_error *err, as_scan* scan_p, PyObject * py_options);
+
+void validate_policy_info(as_error *err, PyObject * py_policy,
+        as_policy_info* info_policy_p);
