@@ -85,8 +85,8 @@ class TestRemovebin(object):
         with pytest.raises(Exception) as exception:
             self.client.remove_bin(key, ["age"], policy)
 
-        assert exception.value[0] == -2
-        assert exception.value[1] == "timeout is invalid"
+        assert exception.value[0] == -1
+        assert exception.value[1] == "Invalid value(type) for policy key"
 
     def test_remove_bin_with_nonexistent_key(self):
         """

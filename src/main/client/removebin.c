@@ -69,6 +69,13 @@ PyObject * AerospikeClient_RemoveBin_Invoke(
         goto CLEANUP;
     }
 
+    if (py_policy) {
+        validate_policy_write(err, py_policy, &write_policy_p);
+    }
+	if ( err->code != AEROSPIKE_OK ) {
+		goto CLEANUP;
+	}
+
     // Convert python policy object to as_policy_write
     pyobject_to_policy_write(err, py_policy, &write_policy, &write_policy_p);
     if ( err->code != AEROSPIKE_OK ) {
