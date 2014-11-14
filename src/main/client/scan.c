@@ -60,6 +60,7 @@ PyObject * AerospikeClient_ScanApply_Invoke(
     as_error err;
     as_scan scan;
     uint64_t scan_id = 0;
+    bool is_scan_init = false;
 
 	// Initialize error
 	as_error_init(&err);
@@ -85,6 +86,8 @@ PyObject * AerospikeClient_ScanApply_Invoke(
     }
 
     as_scan_init(&scan, namespace_p, set_p);
+    is_scan_init = true;
+
     if (py_policy) {
         validate_policy_scan(&err, py_policy, &scan_policy);
     }
@@ -113,8 +116,10 @@ CLEANUP:
     if (arglist) {
         as_list_destroy(arglist);
     }
-
-    as_scan_destroy(&scan);
+    
+    if (is_scan_init){
+        as_scan_destroy(&scan);
+    }
 
 	if ( err.code != AEROSPIKE_OK ) {
 		PyObject * py_err = NULL;
