@@ -143,7 +143,7 @@ PyObject * AerospikeClient_Get_Many_Invoke(
 	}
 
 	if (py_policy) {
-		validate_policy_batch(&err, py_policy, &batch_policy_p);
+		validate_policy_batch(&err, py_policy, &policy);
 	}
 	if ( err.code != AEROSPIKE_OK ) {
 		goto CLEANUP;
