@@ -34,6 +34,21 @@ AerospikeScan * AerospikeClient_Scan(AerospikeClient * self, PyObject * args, Py
     return AerospikeScan_New(self, args, kwds);
 }
 
+/**
+ * Scans a set in the Aerospike DB and applies UDF on it.
+ *
+ * @param self                  The c client's aerospike object.
+ * @param namespace_p           The namespace to scan.
+ * @param set_p                 The set to scan.
+ * @param module_p              The name of UDF module containing the
+ *                              function to execute.
+ * @param function_p            The name of the function to be applied
+ *                              to the record.
+ * @param py_args               An array of arguments for the UDF.
+ * @py_policy                   The optional policy.
+ * @py_options                  The optional scan options to set.
+ */
+static
 PyObject * AerospikeClient_ScanApply_Invoke(
 	AerospikeClient * self, 
 	char* namespace_p, char* set_p, char* module_p, char* function_p,
@@ -49,7 +64,13 @@ PyObject * AerospikeClient_ScanApply_Invoke(
 	// Initialize error
 	as_error_init(&err);
 
+    if (!self || !self->as) {
+		as_error_update(&err, AEROSPIKE_ERR_PARAM, "Invalid aerospike object");
+        goto CLEANUP;
+    }
+
     if (!(namespace_p) || !(set_p) || !(module_p) || !(function_p)) {
+		as_error_update(&err, AEROSPIKE_ERR_PARAM, "Parameter should not be null");
         goto CLEANUP;
     }
 
@@ -65,7 +86,7 @@ PyObject * AerospikeClient_ScanApply_Invoke(
 
     as_scan_init(&scan, namespace_p, set_p);
     if (py_policy) {
-        set_policy_scan(&err, py_policy, &scan_policy);
+        validate_policy_scan(&err, py_policy, &scan_policy);
     }
     if (err.code != AEROSPIKE_OK) {
         goto CLEANUP;
@@ -105,6 +126,18 @@ CLEANUP:
 	return PyLong_FromLong(scan_id);
 }
 
+/**
+ ******************************************************************************************************
+ * Apply a record UDF to each record in a background scan.
+ * 
+ * @param self                  AerospikeClient object
+ * @param args                  The args is a tuple object containing an argument
+ *                              list passed from Python to a C function
+ * @param kwds                  Dictionary of keywords
+ *
+ * Returns  integer handle for the initiated background scan.
+ *******************************************************************************************************
+ */
 PyObject * AerospikeClient_ScanApply(AerospikeClient * self, PyObject * args, PyObject * kwds)
 {
 	// Python Function Arguments
@@ -126,6 +159,19 @@ PyObject * AerospikeClient_ScanApply(AerospikeClient * self, PyObject * args, Py
             function, py_args, py_policy, py_options);
 }
 
+/**
+ *******************************************************************************************************
+ * Gets the status of a background scan triggered by scanApply()
+ * 
+ * @param self                  AerospikeClient object
+ * @param args                  The args is a tuple object containing an argument
+ *                              list passed from Python to a C function
+ * @param kwds                  Dictionary of keywords
+ *
+ * Returns status of the background scan returned as a tuple containing
+ * progress_pct, records_scanned, status.
+ *******************************************************************************************************
+ */
 PyObject * AerospikeClient_ScanInfo(AerospikeClient * self, PyObject * args, PyObject * kwds)
 {
     // Initialize error
@@ -138,8 +184,8 @@ PyObject * AerospikeClient_ScanInfo(AerospikeClient * self, PyObject * args, PyO
 
     long lscanId = 0;
 
-    as_policy_info policy_struct;
-    as_policy_info *policy = NULL;
+    as_policy_info info_policy;
+    as_policy_info *info_policy_p = NULL;
     as_scan_info scan_info;
 
     // Python Function Keyword Arguments
@@ -150,14 +196,25 @@ PyObject * AerospikeClient_ScanInfo(AerospikeClient * self, PyObject * args, PyO
         return NULL;
     }
 
+    if (!self || !self->as) {
+		as_error_update(&err, AEROSPIKE_ERR_PARAM, "Invalid aerospike object");
+        goto CLEANUP;
+    }
+
+    if (py_policy) {
+        validate_policy_scan(&err, py_policy, &info_policy);
+    }
+    if (err.code != AEROSPIKE_OK) {
+        goto CLEANUP;
+    }
     // Convert python object to policy_info 
-    pyobject_to_policy_info( &err, py_policy, &policy_struct, &policy );
+    pyobject_to_policy_info( &err, py_policy, &info_policy, &info_policy_p );
     if ( err.code != AEROSPIKE_OK ) {
         goto CLEANUP;
     }
 
     if (AEROSPIKE_OK != (aerospike_scan_info(self->as, &err,
-                    policy, lscanId, &scan_info))) {
+                    info_policy_p, lscanId, &scan_info))) {
         goto CLEANUP;
     }
 

@@ -22,6 +22,18 @@
 #include "client.h"
 #include "conversions.h"
 
+/**
+ *******************************************************************************************************
+ * Connects to the Aerospike DB.
+ *
+ * @param self                  AerospikeClient object
+ * @param args                  The args is a tuple object containing an argument
+ *                              list passed from Python to a C function
+ * @param kwds                  Dictionary of keywords
+ *
+ * Returns object.
+ *******************************************************************************************************
+ */
 PyObject * AerospikeClient_Connect(AerospikeClient * self, PyObject * args, PyObject * kwds)
 {
 	as_error err;
@@ -53,7 +65,18 @@ PyObject * AerospikeClient_Connect(AerospikeClient * self, PyObject * args, PyOb
 	return (PyObject *) self;
 }
 
-
+/**
+ *******************************************************************************************************
+ * Tests the connection to the Aerospike DB
+ *
+ * @param self                  AerospikeClient object
+ * @param args                  The args is a tuple object containing an argument
+ *                              list passed from Python to a C function
+ * @param kwds                  Dictionary of keywords
+ *
+ * Returns true or false.
+ *******************************************************************************************************
+ */
 PyObject * AerospikeClient_isConnected(AerospikeClient * self, PyObject * args, PyObject * kwds)
 {
 		

@@ -30,6 +30,18 @@
 
 #define SCRIPT_LEN_MAX 1048576
 
+/**
+ *******************************************************************************************************
+ * Registers a UDF module with the Aerospike DB.
+ * @param self                  AerospikeClient object
+ * @param args                  The args is a tuple object containing an argument
+ *                              list passed from Python to a C function
+ * @param kwds                  Dictionary of keywords
+ *
+ * Returns an integer status. 0(Zero) is success value.
+ * In case of error,appropriate exceptions will be raised.
+ *******************************************************************************************************
+ */
 PyObject * AerospikeClient_UDF_Put(AerospikeClient * self, PyObject *args, PyObject * kwds)
 {
 	// Initialize error
@@ -117,7 +129,19 @@ CLEANUP:
 	return PyLong_FromLong(0);
 }
 
-
+/**
+ *******************************************************************************************************
+ * Removes a UDF module from the Aerospike DB
+ * 
+ * @param self                  AerospikeClient object
+ * @param args                  The args is a tuple object containing an argument
+ *                              list passed from Python to a C function
+ * @param kwds                  Dictionary of keywords
+ *
+ * Returns an integer status. 0(Zero) is success value.
+ * In case of error,appropriate exceptions will be raised.
+ *******************************************************************************************************
+ */
 PyObject * AerospikeClient_UDF_Remove(AerospikeClient * self, PyObject *args, PyObject * kwds)
 {
 	// Initialize error
@@ -171,6 +195,18 @@ CLEANUP:
 	return PyLong_FromLong(0);
 }
 
+/**
+ *******************************************************************************************************
+ * Lists the UDF modules registered with the server
+ * 
+ * @param self                  AerospikeClient object
+ * @param args                  The args is a tuple object containing an argument
+ *                              list passed from Python to a C function
+ * @param kwds                  Dictionary of keywords
+ *
+ * Returns list of modules that are registered with Aerospike DB.
+ *******************************************************************************************************
+ */
 PyObject * AerospikeClient_UDF_List(AerospikeClient * self, PyObject *args, PyObject * kwds)
 {
 	// Initialize error
@@ -224,6 +260,18 @@ CLEANUP:
 	return py_files;
 }
 
+/**
+ *******************************************************************************************************
+ * Gets the code for a UDF module registered with the server
+ * 
+ * @param self                  AerospikeClient object
+ * @param args                  The args is a tuple object containing an argument
+ *                              list passed from Python to a C function
+ * @param kwds                  Dictionary of keywords
+ *
+ * Returns the content of the UDF module.
+ *******************************************************************************************************
+ */
 PyObject * AerospikeClient_UDF_Get_Registered_UDF(AerospikeClient * self, PyObject *args, PyObject * kwds)
 {
 	// Initialize error
@@ -261,15 +309,15 @@ PyObject * AerospikeClient_UDF_Get_Registered_UDF(AerospikeClient * self, PyObje
 	strModule = PyString_AsString(py_module);
 
 	// Convert python object to policy_info 
-	as_policy_info *policy = NULL, policy_struct;
+	as_policy_info *info_policy_p = NULL, info_policy;
     if (py_policy) {
-        set_policy_info(&err, py_policy, &policy_struct);
+        validate_policy_info(&err, py_policy, &info_policy_p);
     }
 	if ( err.code != AEROSPIKE_OK ) {
 		goto CLEANUP;
 	}
 
-	pyobject_to_policy_info( &err, py_policy, &policy_struct, &policy);
+	pyobject_to_policy_info( &err, py_policy, &info_policy, &info_policy_p);
 	if ( err.code != AEROSPIKE_OK ) {
 		goto CLEANUP;
 	}
@@ -279,7 +327,7 @@ PyObject * AerospikeClient_UDF_Get_Registered_UDF(AerospikeClient * self, PyObje
 	init_udf_file=true;
 
 	// Invoke operation 
-	aerospike_udf_get(self->as, &err, policy, strModule, (language - AS_UDF_TYPE) , &file);
+	aerospike_udf_get(self->as, &err, info_policy_p, strModule, (language - AS_UDF_TYPE) , &file);
 	if ( err.code != AEROSPIKE_OK ) {
 		goto CLEANUP;
 	}

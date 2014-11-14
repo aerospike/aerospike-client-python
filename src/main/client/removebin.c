@@ -22,11 +22,25 @@
 #include <aerospike/as_error.h>
 #include <aerospike/as_record.h>
 
-//#include "client.h"
+#include "client.h"
 #include "conversions.h"
 #include "key.h"
 #include "policy.h"
 
+/**
+ ******************************************************************************************************
+ * Removes a bin from a record.
+ *
+ * @param self                  AerospikeClient object
+ * @prama py_key                The key for the record.
+ * @pram py_binList             The name of the bins to be removed from the record.
+ * @param py_policy             The optional policies.
+ * @param err                   The C client's as_error to be set to the encountered error.
+ *
+ * Returns an integer status. 0(Zero) is success value.
+ * In case of error,appropriate exceptions will be raised.
+ *******************************************************************************************************
+ */
 PyObject * AerospikeClient_RemoveBin_Invoke(
         AerospikeClient * self, 
         PyObject * py_key,PyObject* py_binList ,PyObject * py_policy, as_error *err)
@@ -34,8 +48,8 @@ PyObject * AerospikeClient_RemoveBin_Invoke(
 
     // Aerospike Client Arguments
     //as_error err;
-    as_policy_write policy;
-    as_policy_write * policy_p = NULL;
+    as_policy_write write_policy;
+    as_policy_write * write_policy_p = NULL;
     as_key key;
     as_record rec;
     char* binName = NULL;
@@ -56,7 +70,7 @@ PyObject * AerospikeClient_RemoveBin_Invoke(
     }
 
     // Convert python policy object to as_policy_write
-    pyobject_to_policy_write(err, py_policy, &policy, &policy_p);
+    pyobject_to_policy_write(err, py_policy, &write_policy, &write_policy_p);
     if ( err->code != AEROSPIKE_OK ) {
         goto CLEANUP;
     }
@@ -78,7 +92,7 @@ PyObject * AerospikeClient_RemoveBin_Invoke(
         }
     }
 
-    if (AEROSPIKE_OK != aerospike_key_put(self->as, err, NULL, &key, &rec)) 
+    if (AEROSPIKE_OK != aerospike_key_put(self->as, err, write_policy_p, &key, &rec)) 
     {
         goto CLEANUP;
     }
@@ -96,6 +110,19 @@ CLEANUP:
     return PyLong_FromLong(0);
 }
 
+/**
+ ******************************************************************************************************
+ * Removes a bin from a record.
+ * 
+ * @param self                  AerospikeClient object
+ * @param args                  The args is a tuple object containing an argument
+ *                              list passed from Python to a C function
+ * @param kwds                  Dictionary of keywords
+ *
+ * Returns an integer status. 0(Zero) is success value.
+ * In case of error,appropriate exceptions will be raised.
+ *******************************************************************************************************
+ */
 PyObject * AerospikeClient_RemoveBin(AerospikeClient * self, PyObject * args, PyObject * kwds)
 {
     // Python Function Arguments
