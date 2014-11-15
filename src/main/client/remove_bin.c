@@ -73,12 +73,14 @@ PyObject * AerospikeClient_RemoveBin_Invoke(
         validate_policy_write(err, py_policy, &write_policy_p);
     }
 	if ( err->code != AEROSPIKE_OK ) {
+        as_error_update(err, AEROSPIKE_ERR_CLIENT, "Incorrect policy");
 		goto CLEANUP;
 	}
 
     // Convert python policy object to as_policy_write
     pyobject_to_policy_write(err, py_policy, &write_policy, &write_policy_p);
     if ( err->code != AEROSPIKE_OK ) {
+        as_error_update(err, AEROSPIKE_ERR_CLIENT, "Incorrect policy");
         goto CLEANUP;
     }
 
@@ -136,7 +138,7 @@ PyObject * AerospikeClient_RemoveBin(AerospikeClient * self, PyObject * args, Py
     PyObject * py_key = NULL;
     PyObject * py_policy = NULL;
     PyObject * py_binList = NULL;
-
+    PyObject * py_result = NULL;
     as_error err;
     // Initialize error
     as_error_init(&err);
@@ -154,14 +156,22 @@ PyObject * AerospikeClient_RemoveBin(AerospikeClient * self, PyObject * args, Py
         goto CLEANUP;
     }
     // Invoke Operation
-    return AerospikeClient_RemoveBin_Invoke(self, py_key, py_binList, py_policy, &err);
+    py_result = AerospikeClient_RemoveBin_Invoke(self, py_key, py_binList, py_policy, &err);
+    goto EXIT;
 CLEANUP:
 
-    if ( err.code != AEROSPIKE_OK ) {
+    if ( err.code != AEROSPIKE_OK || !py_result) {
         PyObject * py_err = NULL;
         error_to_pyobject(&err, &py_err);
         PyErr_SetObject(PyExc_Exception, py_err);
     }
-    return NULL;
+
+EXIT:
+    if(py_result) {
+        Py_DECREF(py_result);
+    } else {
+       return NULL;
+    }
+    return PyLong_FromLong(0);
 }
 

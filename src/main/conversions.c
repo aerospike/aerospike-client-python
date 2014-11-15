@@ -949,6 +949,7 @@ bool error_to_pyobject(const as_error * err, PyObject ** obj)
 	PyTuple_SetItem(py_err, PY_EXCEPTION_FILE, py_file);
 	PyTuple_SetItem(py_err, PY_EXCEPTION_LINE, py_line);
 
+    //Py_DECREF(py_err);
 	*obj = py_err;
 	return true;
 }

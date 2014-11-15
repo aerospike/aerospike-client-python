@@ -113,14 +113,14 @@ PyObject * AerospikeClient_ScanApply_Invoke(
     aerospike_scan_background(self->as, &err, scan_policy_p, &scan, &scan_id);
 
 CLEANUP:
+    
+    /*if (is_scan_init){
+        as_scan_destroy(&scan);
+    }*/
+
     if (arglist) {
         as_list_destroy(arglist);
     }
-    
-    if (is_scan_init){
-        as_scan_destroy(&scan);
-    }
-
 	if ( err.code != AEROSPIKE_OK ) {
 		PyObject * py_err = NULL;
 		error_to_pyobject(&err, &py_err);

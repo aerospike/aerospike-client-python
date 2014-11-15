@@ -86,7 +86,8 @@ class TestRemovebin(object):
             self.client.remove_bin(key, ["age"], policy)
 
         assert exception.value[0] == -1
-        assert exception.value[1] == "Invalid value(type) for policy key"
+        #assert exception.value[1] == "Invalid value(type) for policy key"
+        assert exception.value[1] == "Incorrect policy"
 
     def test_remove_bin_with_nonexistent_key(self):
         """
