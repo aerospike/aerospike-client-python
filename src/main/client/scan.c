@@ -59,6 +59,7 @@ PyObject * AerospikeClient_ScanApply_Invoke(
     as_policy_scan* scan_policy_p = NULL;
     as_error err;
     as_scan scan;
+    as_scan* scan_p;
     uint64_t scan_id = 0;
     bool is_scan_init = false;
 
@@ -85,12 +86,12 @@ PyObject * AerospikeClient_ScanApply_Invoke(
         goto CLEANUP;
     }
 
-    as_scan_init(&scan, namespace_p, set_p);
+    scan_p = &scan;
+    as_scan_init(scan_p, namespace_p, set_p);
     is_scan_init = true;
 
     if (py_policy) {
         validate_policy_scan(&err, py_policy, &scan_policy);
-    }
     if (err.code != AEROSPIKE_OK) {
         goto CLEANUP;
     }
@@ -98,34 +99,36 @@ PyObject * AerospikeClient_ScanApply_Invoke(
     if (err.code != AEROSPIKE_OK) {
         goto CLEANUP;
     }
+    }
 
     if (py_options) {
-        set_scan_options(&err, &scan, py_options);
+        set_scan_options(&err, scan_p, py_options);
     }
     if (err.code != AEROSPIKE_OK) {
         goto CLEANUP;
     }
 
-    if (!as_scan_apply_each(&scan, module_p, function_p, arglist)) {
+    if (!as_scan_apply_each(scan_p, module_p, function_p, arglist)) {
 		as_error_update(&err, AEROSPIKE_ERR_PARAM, "Unable to apply UDF on the scan");
         goto CLEANUP;
     }
-    aerospike_scan_background(self->as, &err, scan_policy_p, &scan, &scan_id);
+    aerospike_scan_background(self->as, &err, scan_policy_p, scan_p, &scan_id);
 
 CLEANUP:
     
-    /*if (is_scan_init){
-        as_scan_destroy(&scan);
-    }*/
-
     if (arglist) {
         as_list_destroy(arglist);
     }
+    /*if (is_scan_init){
+        as_scan_destroy(scan_p);
+    }*/
+
 	if ( err.code != AEROSPIKE_OK ) {
 		PyObject * py_err = NULL;
 		error_to_pyobject(&err, &py_err);
 		PyErr_SetObject(PyExc_Exception, py_err);
-		return NULL;
+	    Py_DECREF(py_err);
+        return NULL;
 	}
 	
 	return PyLong_FromLong(scan_id);
@@ -185,6 +188,7 @@ PyObject * AerospikeClient_ScanInfo(AerospikeClient * self, PyObject * args, PyO
 
     // Python Function Arguments
     PyObject * py_policy = NULL;
+    PyObject * py_longobject = NULL;
     PyObject * retObj = PyDict_New();
 
     long lscanId = 0;
@@ -225,9 +229,15 @@ PyObject * AerospikeClient_ScanInfo(AerospikeClient * self, PyObject * args, PyO
 
     if(retObj)
     {
-        PyDict_SetItem(retObj, Py_BuildValue("s",PROGRESS_PCT), PyLong_FromLong(scan_info.progress_pct) );
-        PyDict_SetItem(retObj, Py_BuildValue("s",RECORDS_SCANNED), PyLong_FromLong(scan_info.records_scanned) );	
-        PyDict_SetItem(retObj, Py_BuildValue("s",STATUS), PyLong_FromLong(scan_info.status + AS_SCAN_STATUS));
+        py_longobject = PyLong_FromLong(scan_info.progress_pct);
+        PyDict_SetItemString(retObj, PROGRESS_PCT, py_longobject );
+        Py_DECREF(py_longobject);
+        py_longobject = PyLong_FromLong(scan_info.records_scanned);
+        PyDict_SetItemString(retObj, RECORDS_SCANNED, py_longobject );
+        Py_DECREF(py_longobject);
+        py_longobject = PyLong_FromLong(scan_info.status + AS_SCAN_STATUS);
+        PyDict_SetItemString(retObj, STATUS, py_longobject );
+        Py_DECREF(py_longobject);
     }
 
 CLEANUP:
@@ -236,6 +246,7 @@ CLEANUP:
         PyObject * py_err = NULL;
         error_to_pyobject(&err, &py_err);
         PyErr_SetObject(PyExc_Exception, py_err);
+        Py_DECREF(py_err);
         return NULL;
     }
 

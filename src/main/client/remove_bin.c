@@ -114,6 +114,7 @@ CLEANUP:
         PyObject * py_err = NULL;
         error_to_pyobject(err, &py_err);
         PyErr_SetObject(PyExc_Exception, py_err);
+        Py_DECREF(py_err);
         return NULL;
     }
     return PyLong_FromLong(0);
@@ -156,22 +157,15 @@ PyObject * AerospikeClient_RemoveBin(AerospikeClient * self, PyObject * args, Py
         goto CLEANUP;
     }
     // Invoke Operation
-    py_result = AerospikeClient_RemoveBin_Invoke(self, py_key, py_binList, py_policy, &err);
-    goto EXIT;
+    return AerospikeClient_RemoveBin_Invoke(self, py_key, py_binList, py_policy, &err);
 CLEANUP:
 
     if ( err.code != AEROSPIKE_OK || !py_result) {
         PyObject * py_err = NULL;
         error_to_pyobject(&err, &py_err);
         PyErr_SetObject(PyExc_Exception, py_err);
+        Py_DECREF(py_err);
     }
-
-EXIT:
-    if(py_result) {
-        Py_DECREF(py_result);
-    } else {
-       return NULL;
-    }
-    return PyLong_FromLong(0);
+    return NULL;
 }
 
