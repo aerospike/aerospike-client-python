@@ -61,6 +61,8 @@ bool batch_exists_cb(const as_batch_read* results, uint32_t n, void* udata)
 			if ( PyDict_SetItem( py_recs, p_key, rec ) ){
 				return false;
 			}
+			Py_DECREF(rec);
+			Py_DECREF(p_key);
 		}
 	}
 	return true;
@@ -160,6 +162,7 @@ CLEANUP:
 		PyObject * py_err = NULL;
 		error_to_pyobject(&err, &py_err);
 		PyErr_SetObject(PyExc_Exception, py_err);
+		Py_DECREF(py_err);
 		return NULL;
 	}
 	
