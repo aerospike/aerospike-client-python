@@ -85,7 +85,7 @@ class TestPrepend(object):
             self.client.prepend(key, "name", "str", policy)
 
         assert exception.value[0] == -1
-        assert exception.value[1] == "Invalid value(type) for policy"
+        assert exception.value[1] == "Invalid value(type) for policy key"
 
     def test_prepend_with_nonexistent_key(self):
         """
@@ -137,8 +137,8 @@ class TestPrepend(object):
         with pytest.raises(Exception) as exception:
             self.client.prepend(key, "name", "abc", "")
 
-        assert exception.value[0] == -2
-        assert exception.value[1] == "policy must be a dict"
+        assert exception.value[0] == -1
+        assert exception.value[1] == "Invalid policy(type)"
 
     def test_prepend_key_is_none(self):
         """

@@ -85,7 +85,7 @@ class TestIncrement(object):
             self.client.increment(key, "age", 5, 0, policy)
 
         assert exception.value[0] == -1
-        assert exception.value[1] == "Invalid value(type) for policy"
+        assert exception.value[1] == "Invalid value(type) for policy key"
 
     def test_increment_with_nonexistent_key(self):
         """
@@ -139,8 +139,8 @@ class TestIncrement(object):
         with pytest.raises(Exception) as exception:
             self.client.increment(key, "age", 2, 0, "")
 
-        assert exception.value[0] == -2
-        assert exception.value[1] == "policy must be a dict"
+        assert exception.value[0] == -1
+        assert exception.value[1] == "Invalid policy(type)"
 
     def test_increment_key_is_none(self):
         """

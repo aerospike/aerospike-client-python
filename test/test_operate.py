@@ -132,7 +132,7 @@ class TestOperate(object):
             (bins) = self.client.operate(key, list, policy)
 
         assert exception.value[0] == -1
-        assert exception.value[1] == "Invalid value(type) for policy"
+        assert exception.value[1] == "Invalid value(type) for policy key"
 
     def test_opearte_on_same_bin_negative(self):
         """
@@ -271,8 +271,8 @@ class TestOperate(object):
         with pytest.raises(Exception) as exception:
             self.client.operate(key, list, "")
 
-        assert exception.value[0] == -2
-        assert exception.value[1] == "policy must be a dict"
+        assert exception.value[0] == -1
+        assert exception.value[1] == "Invalid policy(type)"
 
     def test_operate_key_is_none_negative(self):
         """
