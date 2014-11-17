@@ -47,6 +47,7 @@
  * Returns 0 on success.
  *******************************************************************************************************
  */
+static
 PyObject *  AerospikeClient_Operate_Invoke(
         AerospikeClient * self,
         as_key * key, PyObject * py_bin, char* val, as_error * err, long ttl,
@@ -84,9 +85,11 @@ PyObject *  AerospikeClient_Operate_Invoke(
                 goto CLEANUP;
             }
             bin = PyString_AsString(py_bin);
+
             as_val* value_p = NULL;
             const char* select[] = {bin, NULL};
             as_record* get_rec = NULL;
+
             aerospike_key_select(self->as,
                     err, NULL, key, select, &get_rec);
             if (err->code != AEROSPIKE_OK) {
@@ -106,6 +109,7 @@ PyObject *  AerospikeClient_Operate_Invoke(
                 } else {
                     goto CLEANUP;
                 }
+                as_record_destroy(get_rec);
             }
             break;
 
@@ -135,6 +139,8 @@ PyObject *  AerospikeClient_Operate_Invoke(
                 as_operations_add_write_int64(ops, bin, offset);
             }
             break;
+        default:
+            as_error_update(err, AEROSPIKE_ERR, "Invalid operation.");
     }
 
 CLEANUP:
@@ -142,6 +148,7 @@ CLEANUP:
         PyObject * py_err = NULL;
         error_to_pyobject(err, &py_err);
         PyErr_SetObject(PyExc_Exception, py_err);
+        Py_DECREF(py_err);
         return NULL;
     }
     return PyLong_FromLong(0);
@@ -184,6 +191,7 @@ CLEANUP:
         PyObject * py_err = NULL;
         error_to_pyobject(err, &py_err);
         PyErr_SetObject(PyExc_Exception, py_err);
+        Py_DECREF(py_err);
         return NULL;
     }
     return PyLong_FromLong(0);
@@ -247,12 +255,15 @@ PyObject * AerospikeClient_Append(AerospikeClient * self, PyObject * args, PyObj
             py_key, py_policy, &key, &operate_policy, &operate_policy_p);
     if (!py_result) {
         goto CLEANUP;
+    } else {
+        Py_DECREF(py_result);
     }
 
     py_result = AerospikeClient_Operate_Invoke(self, &key, py_bin, append_str,
             &err, 0, 0, 0, AS_OPERATOR_APPEND, &ops);
     if (py_result)
     {
+        Py_DECREF(py_result);
         if (py_policy) {
             aerospike_key_operate(self->as, &err, operate_policy_p, &key, &ops, NULL);
         } else {
@@ -270,6 +281,7 @@ CLEANUP:
         PyObject * py_err = NULL;
         error_to_pyobject(&err, &py_err);
         PyErr_SetObject(PyExc_Exception, py_err);
+        Py_DECREF(py_err);
         return NULL;
     }
     return PyLong_FromLong(0);
@@ -334,12 +346,15 @@ PyObject * AerospikeClient_Prepend(AerospikeClient * self, PyObject * args, PyOb
             py_key, py_policy, &key, &operate_policy, &operate_policy_p);
     if (!py_result) {
         goto CLEANUP;
+    } else {
+        Py_DECREF(py_result);
     }
 
     py_result = AerospikeClient_Operate_Invoke(self, &key, py_bin, prepend_str,
             &err, 0, 0, 0, AS_OPERATOR_PREPEND, &ops);
     if (py_result)
     {
+        Py_DECREF(py_result);
         if (py_policy) {
             aerospike_key_operate(self->as, &err, operate_policy_p, &key, &ops, NULL);
         } else {
@@ -355,6 +370,7 @@ CLEANUP:
         PyObject * py_err = NULL;
         error_to_pyobject(&err, &py_err);
         PyErr_SetObject(PyExc_Exception, py_err);
+        Py_DECREF(py_err);
         return NULL;
     }
 
@@ -421,12 +437,15 @@ PyObject * AerospikeClient_Increment(AerospikeClient * self, PyObject * args, Py
 
     if (!py_result) {
         goto CLEANUP;
+    } else {
+        Py_DECREF(py_result);
     }
 
     py_result = AerospikeClient_Operate_Invoke(self, &key, py_bin, NULL,
             &err, 0, initial_val, offset_val, AS_OPERATOR_INCR, &ops);
     if (py_result)
     {
+        Py_DECREF(py_result);
         if (py_policy) {
             aerospike_key_operate(self->as, &err, operate_policy_p, &key, &ops, NULL);
         } else {
@@ -442,6 +461,7 @@ CLEANUP:
         PyObject * py_err = NULL;
         error_to_pyobject(&err, &py_err);
         PyErr_SetObject(PyExc_Exception, py_err);
+        Py_DECREF(py_err);
         return NULL;
     }
     return PyLong_FromLong(0);
@@ -475,7 +495,7 @@ PyObject * AerospikeClient_Touch(AerospikeClient * self, PyObject * args, PyObje
     as_key key;
     as_policy_operate operate_policy;
     as_policy_operate *operate_policy_p = NULL;
-    long touchvalue = 0;
+    uint64_t touchvalue = 0;
 
     as_operations_inita(&ops, 1);
 
@@ -504,12 +524,15 @@ PyObject * AerospikeClient_Touch(AerospikeClient * self, PyObject * args, PyObje
             py_key, py_policy, &key, &operate_policy, &operate_policy_p);
     if (!py_result) {
         goto CLEANUP;
+    } else {
+        Py_DECREF(py_result);
     }
 
     py_result = AerospikeClient_Operate_Invoke(self, &key, NULL, NULL,
             &err, touchvalue, 0, 0, AS_OPERATOR_TOUCH, &ops);
     if (py_result)
     {
+        Py_DECREF(py_result);
         if (py_policy) {
             aerospike_key_operate(self->as, &err, operate_policy_p, &key, &ops, NULL);
         } else {
@@ -525,6 +548,7 @@ CLEANUP:
         PyObject * py_err = NULL;
         error_to_pyobject(&err, &py_err);
         PyErr_SetObject(PyExc_Exception, py_err);
+        Py_DECREF(py_err);
         return NULL;
     }
     return PyLong_FromLong(0);
@@ -594,6 +618,8 @@ PyObject * AerospikeClient_Operate(AerospikeClient * self, PyObject * args, PyOb
             py_key, py_policy, &key, &operate_policy, &operate_policy_p);
     if (!py_result) {
         goto CLEANUP;
+    } else {
+        Py_DECREF(py_result);
     }
 
     if ( py_list != NULL && PyList_Check(py_list) ) {
@@ -635,6 +661,8 @@ PyObject * AerospikeClient_Operate(AerospikeClient * self, PyObject * args, PyOb
                 }
                 py_result = AerospikeClient_Operate_Invoke(self, &key, bin_name,
                         str, &err, offset, offset, offset, op, &ops);
+                if(py_result)
+                    Py_DECREF(py_result);
             }
         }
     } else {
@@ -653,7 +681,7 @@ PyObject * AerospikeClient_Operate(AerospikeClient * self, PyObject * args, PyOb
         }
         if(rec) {
             record_to_pyobject(&err, rec, &key, &py_rec);
-            return py_rec;
+            //return py_rec;
         }
     }
 CLEANUP:
@@ -662,7 +690,8 @@ CLEANUP:
         PyObject * py_err = NULL;
         error_to_pyobject(&err, &py_err);
         PyErr_SetObject(PyExc_Exception, py_err);
+        Py_DECREF(py_err);
         return NULL;
     }
-    return PyLong_FromLong(0);
+    return py_rec;
 }

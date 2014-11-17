@@ -162,11 +162,6 @@ PyObject * AerospikeClient_Remove_Invoke(
 	AerospikeClient * self, 
 	PyObject * py_key, PyObject * py_policy);
 
-PyObject * AerospikeClient_Operate_Invoke(
-    AerospikeClient * self,
-    as_key * key, PyObject * py_bin, char* val, as_error * err, long ttl,
-    long initial_value, long offset, long operation, as_operations * ops);
-
 /*******************************************************************************
  * KEY OPERATIONS (DEPRECATED)
  ******************************************************************************/

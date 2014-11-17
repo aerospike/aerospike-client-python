@@ -34,6 +34,7 @@ class TestAppend(object):
         for i in xrange(5):
             key = ('test', 'demo', i)
             self.client.remove(key)
+        self.client.close()
 
     def test_append_with_no_parameters(self):
         """
