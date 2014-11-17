@@ -85,18 +85,22 @@ PyObject * AerospikeClient_ScanApply_Invoke(
 
     if (py_policy) {
         validate_policy_scan(&err, py_policy, &scan_policy);
-    if (err.code != AEROSPIKE_OK) {
-        goto CLEANUP;
-    }
-    pyobject_to_policy_scan(&err, py_policy, &scan_policy, &scan_policy_p);
-    if (err.code != AEROSPIKE_OK) {
-        goto CLEANUP;
-    }
+
+        if (err.code != AEROSPIKE_OK) {
+            goto CLEANUP;
+        }
+
+        pyobject_to_policy_scan(&err, py_policy, &scan_policy, &scan_policy_p);
+
+        if (err.code != AEROSPIKE_OK) {
+            goto CLEANUP;
+        }
     }
 
     if (py_options) {
         set_scan_options(&err, &scan, py_options);
     }
+
     if (err.code != AEROSPIKE_OK) {
         goto CLEANUP;
     }
@@ -110,6 +114,7 @@ PyObject * AerospikeClient_ScanApply_Invoke(
 		as_error_update(&err, AEROSPIKE_ERR_PARAM, "Unable to apply UDF on the scan");
         goto CLEANUP;
     }
+
     aerospike_scan_background(self->as, &err, scan_policy_p, &scan, &scan_id);
     arglist = NULL;
 
@@ -156,6 +161,7 @@ PyObject * AerospikeClient_ScanApply(AerospikeClient * self, PyObject * args, Py
 	// Python Function Keyword Arguments
 	static char * kwlist[] = {"ns", "set", "module", "function", "args", "policy", "options", NULL};
     char *namespace = NULL, *set = NULL, *module = NULL, *function = NULL;
+
 	// Python Function Argument Parsing
 	if ( PyArg_ParseTupleAndKeywords(args, kwds, "ssssO|OO:scan_apply", kwlist, &namespace, &set,
                 &module, &function, &py_args, &py_policy, &py_options) == false ) {
@@ -188,7 +194,6 @@ PyObject * AerospikeClient_ScanInfo(AerospikeClient * self, PyObject * args, PyO
 
     // Python Function Arguments
     PyObject * py_policy = NULL;
-    PyObject * py_longobject = NULL;
     PyObject * retObj = PyDict_New();
 
     long lscanId = 0;
@@ -229,6 +234,7 @@ PyObject * AerospikeClient_ScanInfo(AerospikeClient * self, PyObject * args, PyO
 
     if(retObj)
     {
+        PyObject * py_longobject = NULL;
         py_longobject = PyLong_FromLong(scan_info.progress_pct);
         PyDict_SetItemString(retObj, PROGRESS_PCT, py_longobject );
         Py_DECREF(py_longobject);

@@ -41,6 +41,7 @@
  * In case of error,appropriate exceptions will be raised.
  *******************************************************************************************************
  */
+static 
 PyObject * AerospikeClient_RemoveBin_Invoke(
         AerospikeClient * self, 
         PyObject * py_key,PyObject* py_binList ,PyObject * py_policy, as_error *err)
@@ -72,10 +73,11 @@ PyObject * AerospikeClient_RemoveBin_Invoke(
     if (py_policy) {
         validate_policy_write(err, py_policy, &write_policy_p);
     }
-	if ( err->code != AEROSPIKE_OK ) {
+
+    if ( err->code != AEROSPIKE_OK ) {
         as_error_update(err, AEROSPIKE_ERR_CLIENT, "Incorrect policy");
-		goto CLEANUP;
-	}
+        goto CLEANUP;
+    }
 
     // Convert python policy object to as_policy_write
     pyobject_to_policy_write(err, py_policy, &write_policy, &write_policy_p);
@@ -143,6 +145,7 @@ PyObject * AerospikeClient_RemoveBin(AerospikeClient * self, PyObject * args, Py
     as_error err;
     // Initialize error
     as_error_init(&err);
+
     // Python Function Keyword Arguments
     static char * kwlist[] = {"key", "list", "policy", NULL};
 
@@ -156,8 +159,10 @@ PyObject * AerospikeClient_RemoveBin(AerospikeClient * self, PyObject * args, Py
         as_error_update(&err, AEROSPIKE_ERR_PARAM, "Bins should be a list");
         goto CLEANUP;
     }
+
     // Invoke Operation
     return AerospikeClient_RemoveBin_Invoke(self, py_key, py_binList, py_policy, &err);
+
 CLEANUP:
 
     if ( err.code != AEROSPIKE_OK || !py_result) {
