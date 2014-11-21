@@ -25,12 +25,19 @@
 #include "scan.h"
 #include "predicates.h"
 #include "policy.h"
+#include "log.h"
 
 static PyMethodDef Aerospike_Methods[] = {
 
-	{"client",		(PyCFunction) AerospikeClient_New,	METH_VARARGS | METH_KEYWORDS, 
-					"Create a new instance of Client class."},	
-	
+	{"client", (PyCFunction) AerospikeClient_New,	                METH_VARARGS | METH_KEYWORDS,
+			"Create a new instance of Client class."},
+
+	{"set_log_level",	(PyCFunction)Aerospike_Set_Log_Level,       METH_VARARGS | METH_KEYWORDS,
+		    "Sets the log level"},
+
+	{"set_log_handler", (PyCFunction)Aerospike_Set_Log_Handler,	    METH_VARARGS | METH_KEYWORDS,
+		    "Sets the log handler"},
+
 	{NULL}
 };
 
@@ -56,6 +63,7 @@ PyMODINIT_FUNC initaerospike(void)
 	PyModule_AddObject(aerospike, "Query", (PyObject *) query);
 
 	declare_policy_constants(aerospike);
+	declare_log_constants(aerospike);
 
 	PyTypeObject * scan = AerospikeScan_Ready();
 	Py_INCREF(scan);

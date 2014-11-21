@@ -308,6 +308,7 @@ setup(
             # Source Files
             [
                 'src/main/aerospike.c', 
+                'src/main/log.c', 
                 'src/main/client/type.c',
                 'src/main/client/apply.c',
                 'src/main/client/close.c',

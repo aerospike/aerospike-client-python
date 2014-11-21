@@ -28,7 +28,7 @@
 
 /*
  *******************************************************************************************************
- * Enum for PHP client's optional policy constant values. (POLICY_*)
+ * Enum for Python client's optional policy constant values. (POLICY_*)
  *******************************************************************************************************
  */
 

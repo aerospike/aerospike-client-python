@@ -154,15 +154,6 @@ static PyMethodDef AerospikeClient_Type_Methods[] = {
 		(PyCFunction)AerospikeClient_Index_Remove, METH_VARARGS | METH_KEYWORDS,
 		"Remove a secondary index"},
 
-	// SECONDARY INDEX OPERATONS
-
-/*	{"setLogLevel",
-		(PyCFunction)AerospikeClient_Set_Log_Level, METH_VARARGS | METH_KEYWORDS,
-		"Sets the log level"},
-	{"setLogHandler",
-		(PyCFunction)AerospikeClient_Set_Log_Handler,	METH_VARARGS | METH_KEYWORDS,
-		"Sets the log handler"},*/
-
 	{NULL}
 };
 
