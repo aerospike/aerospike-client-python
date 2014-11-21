@@ -163,5 +163,5 @@ PyObject * Aerospike_Set_Log_Handler(PyObject *parent, PyObject *args, PyObject 
     // Register callback to C-SDK
     as_log_set_callback((as_log_callback) log_cb);
 
-	return PyLong_FromLong(status);
+    return PyLong_FromLong(0);
 }
