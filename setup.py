@@ -340,6 +340,8 @@ setup(
                 'src/main/scan/foreach.c',
                 'src/main/scan/results.c',
                 'src/main/scan/select.c',
+                'src/main/lstack/type.c',
+                'src/main/lstack/lstack_operations.c',
                 'src/main/conversions.c',
                 'src/main/policy.c',
                 'src/main/predicates.c'
