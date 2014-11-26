@@ -22,6 +22,7 @@
 #include <aerospike/as_key.h>
 #include <aerospike/as_record.h>
 
+#include <aerospike/as_ldt.h>
 #include <aerospike/as_arraylist.h>
 #include <aerospike/as_hashmap.h>
 #include <aerospike/as_list.h>
@@ -953,6 +954,15 @@ bool error_to_pyobject(const as_error * err, PyObject ** obj)
 	return true;
 }
 
+bool initialize_ldt(as_error *error, as_ldt* ldt_p, char* bin_name, int type)
+{
+	as_error_reset(error);
+    if (bin_name == NULL) {
+		return as_error_update(error, AEROSPIKE_ERR_PARAM, "Bin name is null");
+    }
+    as_ldt_init(ldt_p, bin_name, type, NULL);
+    return true;
+}
 
 
 

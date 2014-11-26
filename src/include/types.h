@@ -24,6 +24,7 @@
 #include <aerospike/as_query.h>
 #include <aerospike/as_scan.h>
 #include <aerospike/as_bin.h>
+#include <aerospike/as_ldt.h>
 
 
 typedef struct {
@@ -54,6 +55,7 @@ typedef struct {
 typedef struct {
     PyObject_HEAD
     AerospikeClient * client;
-    PyObject * key;
+    as_ldt lstack;
+    as_key key;
     char bin_name[AS_BIN_NAME_MAX_LEN];
 } AerospikeLStack;

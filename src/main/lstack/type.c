@@ -25,6 +25,7 @@
 #include <aerospike/as_ldt.h>
 
 #include "client.h"
+#include "conversions.h"
 #include "lstack.h"
 
 /*******************************************************************************
@@ -86,28 +87,44 @@ static PyObject * AerospikeLStack_Type_New(PyTypeObject * type, PyObject * args,
 static int AerospikeLStack_Type_Init(AerospikeLStack * self, PyObject * args, PyObject * kwds)
 {
 	PyObject * py_key = NULL;
-	PyObject * py_client = NULL;
     char* bin_name = NULL;
 
-	static char * kwlist[] = {"client", "key", "bin", NULL};
+	static char * kwlist[] = {"key", "bin", NULL};
 
-	if ( PyArg_ParseTupleAndKeywords(args, kwds, "OOs:lstack", kwlist, &py_client, &py_key, &bin_name) == false ) {
+	if ( PyArg_ParseTupleAndKeywords(args, kwds, "Os:lstack", kwlist, &py_key, &bin_name) == false ) {
 		return -1;
 	}
 
     /*
      * Convert pyobject to as_key type.
      */
-    /*as_error error;
+    as_error error;
     as_error_init(&error);
     as_key key;
-    pyobject_to_key(&error, &py_key, &key);
+    as_ldt lstack;
+
+    pyobject_to_key(&error, py_key, &key);
     if (error.code != AEROSPIKE_OK) {
         return -1;
-    }*/
+    }
 
-    self->key = py_key;
+    int bin_name_len = strlen(bin_name);
+    if ((bin_name_len == 0) || (bin_name_len > AS_BIN_NAME_MAX_LEN)) {
+        return -1;
+    }
+
+    self->key = key;
     strcpy(self->bin_name, bin_name);
+
+    /*
+     * LDT Initialization
+     */
+    initialize_ldt(&error, &lstack, self->bin_name, AS_LDT_LSTACK);
+    if (error.code != AEROSPIKE_OK) {
+        return -1;
+    }
+
+    self->lstack = lstack;
 
 	return 0;
 }
