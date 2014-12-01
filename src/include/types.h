@@ -59,3 +59,19 @@ typedef struct {
     as_key key;
     char bin_name[AS_BIN_NAME_MAX_LEN];
 } AerospikeLStack;
+
+typedef struct {
+    PyObject_HEAD
+    AerospikeClient * client;
+    as_ldt lset;
+    as_key key;
+    char bin_name[AS_BIN_NAME_MAX_LEN];
+} AerospikeLSet;
+
+typedef struct {
+    PyObject_HEAD
+    AerospikeClient * client;
+    as_ldt llist;
+    as_key key;
+    char bin_name[AS_BIN_NAME_MAX_LEN];
+} AerospikeLList;

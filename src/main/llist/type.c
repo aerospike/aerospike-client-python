@@ -26,43 +26,40 @@
 
 #include "client.h"
 #include "conversions.h"
-#include "lstack.h"
+#include "llist.h"
 
 /*******************************************************************************
  * PYTHON TYPE METHODS
  ******************************************************************************/
 
-static PyMethodDef AerospikeLStack_Type_Methods[] = {
+static PyMethodDef AerospikeLList_Type_Methods[] = {
 
-	// LSTACK OPERATIONS
+	// LLIST OPERATIONS
 
-	{"push",
-		(PyCFunction) AerospikeLStack_Push, METH_VARARGS | METH_KEYWORDS,
-		"Push the value onto the stack."},
-	{"push_many",
-		(PyCFunction) AerospikeLStack_Push_Many, METH_VARARGS | METH_KEYWORDS,
-		"Push multiple values onto the stack."},
-	{"peek",
-		(PyCFunction) AerospikeLStack_Peek, METH_VARARGS | METH_KEYWORDS,
-		"Peek few values back from the stack."},
+	{"add",
+		(PyCFunction) AerospikeLList_Add, METH_VARARGS | METH_KEYWORDS,
+		"Adds a value to the LList."},
+	{"add_all",
+		(PyCFunction) AerospikeLList_Add_All, METH_VARARGS | METH_KEYWORDS,
+		"Adds multiple values to the LList."},
+	{"remove",
+		(PyCFunction) AerospikeLList_Remove, METH_VARARGS | METH_KEYWORDS,
+		"Find and remove the element matching the given value from the LList."},
+	{"get",
+		(PyCFunction) AerospikeLList_Get, METH_VARARGS | METH_KEYWORDS,
+		"Get an object from the list."},
 	{"filter",
-		(PyCFunction) AerospikeLStack_Filter, METH_VARARGS | METH_KEYWORDS,
-		"Scan the stack and apply a predicate filter."},
+		(PyCFunction) AerospikeLList_Filter, METH_VARARGS | METH_KEYWORDS,
+		"scan the list and apply a predicate filter."},
 	{"destroy",
-		(PyCFunction) AerospikeLStack_Destroy, METH_VARARGS | METH_KEYWORDS,
-		"Delete the entire stack (LDT Remove)."},
-	{"getCapacity",
-		(PyCFunction) AerospikeLStack_Get_Capacity, METH_VARARGS | METH_KEYWORDS,
-		"Get the current capacity limit setting."},
-	{"setCapacity",
-		(PyCFunction) AerospikeLStack_Set_Capacity, METH_VARARGS | METH_KEYWORDS,
-		"Set the max capacity for the stack."},
+		(PyCFunction) AerospikeLList_Destroy, METH_VARARGS | METH_KEYWORDS,
+		"Delete the entire list (LDT Remove)."},
 	{"size",
-		(PyCFunction) AerospikeLStack_Size, METH_VARARGS | METH_KEYWORDS,
-		"Get the current item count of the stack."},
+		(PyCFunction) AerospikeLList_Size, METH_VARARGS | METH_KEYWORDS,
+		"Get the current item count of the list."},
 	{"config",
-		(PyCFunction) AerospikeLStack_Config, METH_VARARGS | METH_KEYWORDS,
-		"Get the configuration parameters of the stack."},
+		(PyCFunction) AerospikeLList_Config, METH_VARARGS | METH_KEYWORDS,
+		"Get the configuration parameters of the list."},
     
 	{NULL}
 };
@@ -71,11 +68,11 @@ static PyMethodDef AerospikeLStack_Type_Methods[] = {
  * PYTHON TYPE HOOKS
  ******************************************************************************/
 
-static PyObject * AerospikeLStack_Type_New(PyTypeObject * type, PyObject * args, PyObject * kwds)
+static PyObject * AerospikeLList_Type_New(PyTypeObject * type, PyObject * args, PyObject * kwds)
 {
-	AerospikeLStack * self = NULL;
+	AerospikeLList * self = NULL;
 
-	self = (AerospikeLStack *) type->tp_alloc(type, 0);
+	self = (AerospikeLList *) type->tp_alloc(type, 0);
 
 	if ( self == NULL ) {
 		return NULL;
@@ -84,15 +81,15 @@ static PyObject * AerospikeLStack_Type_New(PyTypeObject * type, PyObject * args,
 	return (PyObject *) self;
 }
 
-static int AerospikeLStack_Type_Init(AerospikeLStack * self, PyObject * args, PyObject * kwds)
+static int AerospikeLList_Type_Init(AerospikeLList * self, PyObject * args, PyObject * kwds)
 {
 	PyObject * py_key = NULL;
     char* bin_name = NULL;
     char* module = NULL;
 
-	static char * kwlist[] = {"key", "bin", NULL};
+	static char * kwlist[] = {"key", "bin", "module", NULL};
 
-	if ( PyArg_ParseTupleAndKeywords(args, kwds, "Os|s:lstack", kwlist, &py_key,
+	if ( PyArg_ParseTupleAndKeywords(args, kwds, "Os|s:llist", kwlist, &py_key,
                 &bin_name, &module) == false ) {
 		return -1;
 	}
@@ -103,7 +100,7 @@ static int AerospikeLStack_Type_Init(AerospikeLStack * self, PyObject * args, Py
     as_error error;
     as_error_init(&error);
     as_key key;
-    as_ldt lstack;
+    as_ldt llist;
 
     pyobject_to_key(&error, py_key, &key);
     if (error.code != AEROSPIKE_OK) {
@@ -121,17 +118,17 @@ static int AerospikeLStack_Type_Init(AerospikeLStack * self, PyObject * args, Py
     /*
      * LDT Initialization
      */
-    initialize_ldt(&error, &lstack, self->bin_name, AS_LDT_LSTACK, module);
+    initialize_ldt(&error, &llist, self->bin_name, AS_LDT_LLIST, module);
     if (error.code != AEROSPIKE_OK) {
         return -1;
     }
 
-    self->lstack = lstack;
+    self->llist = llist;
 
 	return 0;
 }
 
-static void AerospikeLStack_Type_Dealloc(PyObject * self)
+static void AerospikeLList_Type_Dealloc(PyObject * self)
 {
 	self->ob_type->tp_free((PyObject *) self);
 }
@@ -140,14 +137,14 @@ static void AerospikeLStack_Type_Dealloc(PyObject * self)
  * PYTHON TYPE DESCRIPTOR
  ******************************************************************************/
 
-static PyTypeObject AerospikeLStack_Type = {
+static PyTypeObject AerospikeLList_Type = {
 	PyObject_HEAD_INIT(NULL)
 
 		.ob_size			= 0,
-	.tp_name			= "aerospike.LStack",
-	.tp_basicsize		= sizeof(AerospikeLStack),
+	.tp_name			= "aerospike.LList",
+	.tp_basicsize		= sizeof(AerospikeLList),
 	.tp_itemsize		= 0,
-	.tp_dealloc			= (destructor) AerospikeLStack_Type_Dealloc,
+	.tp_dealloc			= (destructor) AerospikeLList_Type_Dealloc,
 	.tp_print			= 0,
 	.tp_getattr			= 0,
 	.tp_setattr			= 0,
@@ -164,14 +161,14 @@ static PyTypeObject AerospikeLStack_Type = {
 	.tp_as_buffer		= 0,
 	.tp_flags			= Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE,
 	.tp_doc				=
-		"The LStack class assists in populating the parameters of a LStack.\n",
+		"The LList class assists in populating the parameters of a LList.\n",
 	.tp_traverse		= 0,
 	.tp_clear			= 0,
 	.tp_richcompare		= 0,
 	.tp_weaklistoffset	= 0,
 	.tp_iter			= 0,
 	.tp_iternext		= 0,
-	.tp_methods			= AerospikeLStack_Type_Methods,
+	.tp_methods			= AerospikeLList_Type_Methods,
 	.tp_members			= 0,
 	.tp_getset			= 0,
 	.tp_base			= 0,
@@ -179,26 +176,26 @@ static PyTypeObject AerospikeLStack_Type = {
 	.tp_descr_get		= 0,
 	.tp_descr_set		= 0,
 	.tp_dictoffset		= 0,
-	.tp_init			= (initproc) AerospikeLStack_Type_Init,
+	.tp_init			= (initproc) AerospikeLList_Type_Init,
 	.tp_alloc			= 0,
-	.tp_new				= AerospikeLStack_Type_New
+	.tp_new				= AerospikeLList_Type_New
 };
 
 /*******************************************************************************
  * PUBLIC FUNCTIONS
  ******************************************************************************/
 
-PyTypeObject * AerospikeLStack_Ready()
+PyTypeObject * AerospikeLList_Ready()
 {
-	return PyType_Ready(&AerospikeLStack_Type) == 0 ? &AerospikeLStack_Type : NULL;
+	return PyType_Ready(&AerospikeLList_Type) == 0 ? &AerospikeLList_Type : NULL;
 }
 
-AerospikeLStack * AerospikeLStack_New(AerospikeClient * client, PyObject * args, PyObject * kwds)
+AerospikeLList * AerospikeLList_New(AerospikeClient * client, PyObject * args, PyObject * kwds)
 {
-    AerospikeLStack * self = (AerospikeLStack *) AerospikeLStack_Type.tp_new(&AerospikeLStack_Type, args, kwds);
+    AerospikeLList * self = (AerospikeLList *) AerospikeLList_Type.tp_new(&AerospikeLList_Type, args, kwds);
     self->client = client;
     Py_INCREF(client);
-    AerospikeLStack_Type.tp_init((PyObject *) self, args, kwds);
+    AerospikeLList_Type.tp_init((PyObject *) self, args, kwds);
     return self;
 
 }

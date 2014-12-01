@@ -28,37 +28,37 @@
  * FUNCTIONS
  ******************************************************************************/
 
-PyTypeObject * AerospikeLStack_Ready(void);
+PyTypeObject * AerospikeLSet_Ready(void);
 
-AerospikeLStack * AerospikeLStack_New(AerospikeClient * client, PyObject * args, PyObject * kwds);
+AerospikeLSet * AerospikeLSet_New(AerospikeClient * client, PyObject * args, PyObject * kwds);
 
 /*******************************************************************************
  * OPERATIONS
  ******************************************************************************/
 
 /**
- * LSTACK : Push operation
+ * LSET : Add operation
  */
-PyObject * AerospikeLStack_Push(AerospikeLStack * self, PyObject * args, PyObject * kwds);
+PyObject * AerospikeLSet_Add(AerospikeLSet * self, PyObject * args, PyObject * kwds);
 
 /**
- * LSTACK : PushMany operation
+ * LSET : Add_all operation
  */
-PyObject * AerospikeLStack_Push_Many(AerospikeLStack * self, PyObject * args, PyObject * kwds);
+PyObject * AerospikeLSet_Add_All(AerospikeLSet * self, PyObject * args, PyObject * kwds);
 
 /**
- * LSTACK : Peek operation
+ * LSET : Get operation
  */
-PyObject * AerospikeLStack_Peek(AerospikeLStack * self, PyObject * args, PyObject * kwds);
+PyObject * AerospikeLSet_Get(AerospikeLSet * self, PyObject * args, PyObject * kwds);
 
-PyObject * AerospikeLStack_Filter(AerospikeLStack * self, PyObject * args, PyObject * kwds);
+PyObject * AerospikeLSet_Filter(AerospikeLSet * self, PyObject * args, PyObject * kwds);
 
-PyObject * AerospikeLStack_Destroy(AerospikeLStack * self, PyObject * args, PyObject * kwds);
+PyObject * AerospikeLSet_Destroy(AerospikeLSet * self, PyObject * args, PyObject * kwds);
 
-PyObject * AerospikeLStack_Get_Capacity(AerospikeLStack * self, PyObject * args, PyObject * kwds);
+PyObject * AerospikeLSet_Exists(AerospikeLSet * self, PyObject * args, PyObject * kwds);
 
-PyObject * AerospikeLStack_Set_Capacity(AerospikeLStack * self, PyObject * args, PyObject * kwds);
+PyObject * AerospikeLSet_Remove(AerospikeLSet * self, PyObject * args, PyObject * kwds);
 
-PyObject * AerospikeLStack_Size(AerospikeLStack * self, PyObject * args, PyObject * kwds);
+PyObject * AerospikeLSet_Size(AerospikeLSet * self, PyObject * args, PyObject * kwds);
 
-PyObject * AerospikeLStack_Config(AerospikeLStack * self, PyObject * args, PyObject * kwds);
+PyObject * AerospikeLSet_Config(AerospikeLSet * self, PyObject * args, PyObject * kwds);

@@ -282,3 +282,19 @@ PyObject * AerospikeClient_Index_Remove(AerospikeClient * self, PyObject *args, 
  *
  */
 AerospikeLStack * AerospikeClient_LStack(AerospikeClient * self, PyObject * args, PyObject * kwds);
+
+/**
+ * LSET Operations
+ *
+ *		client.lset(key, bin)
+ *
+ */
+AerospikeLSet * AerospikeClient_LSet(AerospikeClient * self, PyObject * args, PyObject * kwds);
+
+/**
+ * LLIST Operations
+ *
+ *		client.llist(key, bin)
+ *
+ */
+AerospikeLList * AerospikeClient_LList(AerospikeClient * self, PyObject * args, PyObject * kwds);

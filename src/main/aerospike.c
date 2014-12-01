@@ -25,6 +25,7 @@
 #include "scan.h"
 #include "predicates.h"
 #include "lstack.h"
+#include "lset.h"
 
 static PyMethodDef Aerospike_Methods[] = {
 
@@ -66,4 +67,12 @@ PyMODINIT_FUNC initaerospike()
 	PyTypeObject * lstack = AerospikeLStack_Ready();
 	Py_INCREF(lstack);
 	PyModule_AddObject(aerospike, "lstack", (PyObject *) lstack);
+
+	PyTypeObject * lset = AerospikeLSet_Ready();
+	Py_INCREF(lset);
+	PyModule_AddObject(aerospike, "lset", (PyObject *) lset);
+
+	PyTypeObject * llist = AerospikeLList_Ready();
+	Py_INCREF(llist);
+	PyModule_AddObject(aerospike, "llist", (PyObject *) llist);
 }

@@ -17,16 +17,16 @@
 #include <Python.h>
 #include <stdbool.h>
 
-#include <aerospike/aerospike_lstack.h>
+#include <aerospike/aerospike_llist.h>
 #include <aerospike/as_error.h>
 #include <aerospike/as_ldt.h>
 
 #include "client.h"
 #include "conversions.h"
-#include "lstack.h"
+#include "llist.h"
 #include "policy.h"
 
-PyObject * AerospikeLStack_Push(AerospikeLStack * self, PyObject * args, PyObject * kwds)
+PyObject * AerospikeLList_Add(AerospikeLList * self, PyObject * args, PyObject * kwds)
 {
     PyObject* py_value = NULL;
     as_error err;
@@ -35,7 +35,7 @@ PyObject * AerospikeLStack_Push(AerospikeLStack * self, PyObject * args, PyObjec
 	static char * kwlist[] = {"value", NULL};
 
 	// Python Function Argument Parsing
-	if ( PyArg_ParseTupleAndKeywords(args, kwds, "O:push", kwlist, 
+	if ( PyArg_ParseTupleAndKeywords(args, kwds, "O:add", kwlist, 
 			&py_value) == false ) {
 		return NULL;
 	}
@@ -46,7 +46,7 @@ PyObject * AerospikeLStack_Push(AerospikeLStack * self, PyObject * args, PyObjec
         goto CLEANUP;
     }
 
-    aerospike_lstack_push(self->client->as, &err, NULL, &self->key, &self->lstack, val);
+    aerospike_llist_add(self->client->as, &err, NULL, &self->key, &self->llist, val);
 
 CLEANUP:
 
@@ -59,7 +59,7 @@ CLEANUP:
 	return PyLong_FromLong(0);
 }
 
-PyObject * AerospikeLStack_Push_Many(AerospikeLStack * self, PyObject * args, PyObject * kwds)
+PyObject * AerospikeLList_Add_All(AerospikeLList * self, PyObject * args, PyObject * kwds)
 {
     PyObject* py_arglist = NULL;
     as_error err;
@@ -68,7 +68,7 @@ PyObject * AerospikeLStack_Push_Many(AerospikeLStack * self, PyObject * args, Py
 	static char * kwlist[] = {"values", NULL};
 
 	// Python Function Argument Parsing
-	if ( PyArg_ParseTupleAndKeywords(args, kwds, "O:push_many", kwlist, 
+	if ( PyArg_ParseTupleAndKeywords(args, kwds, "O:add_all", kwlist, 
 			&py_arglist)== false ) {
 		return NULL;
 	}
@@ -82,8 +82,8 @@ PyObject * AerospikeLStack_Push_Many(AerospikeLStack * self, PyObject * args, Py
         goto CLEANUP;
     }
 
-    aerospike_lstack_push_all(self->client->as, &err, NULL,
-            &self->key, &self->lstack, arglist);
+    aerospike_llist_add_all(self->client->as, &err, NULL,
+            &self->key, &self->llist, arglist);
 
 CLEANUP:
 
@@ -93,75 +93,63 @@ CLEANUP:
 		PyErr_SetObject(PyExc_Exception, py_err);
 		return NULL;
 	}
+
 	return PyLong_FromLong(0);
 }
 
-PyObject * AerospikeLStack_Peek(AerospikeLStack * self, PyObject * args, PyObject * kwds)
+PyObject * AerospikeLList_Get(AerospikeLList * self, PyObject * args, PyObject * kwds)
 {
-    long peek_count = 0;
+    PyObject* py_value = NULL;
     as_error err;
     as_error_init(&err);
 
 	static char * kwlist[] = {"value", NULL};
 
 	// Python Function Argument Parsing
-	if ( PyArg_ParseTupleAndKeywords(args, kwds, "l:peek", kwlist, 
-			&peek_count) == false ) {
+	if ( PyArg_ParseTupleAndKeywords(args, kwds, "O:get", kwlist, 
+			&py_value) == false ) {
 		return NULL;
 	}
-    
-    /*
-     * Size of stack
-     */
-    uint32_t size_of_stack = 0;
-    aerospike_lstack_size(self->client->as, &err, NULL, &self->key, &self->lstack, &size_of_stack);
+
+    as_val * val = NULL;
+    pyobject_to_val(&err, py_value, &val);
     if (err.code != AEROSPIKE_OK) {
         goto CLEANUP;
     }
 
-    if (peek_count > size_of_stack) {
-        goto CLEANUP;
-    }
+    as_list* list_p = NULL;
+    aerospike_llist_find(self->client->as, &err, NULL, &self->key, &self->llist, val, &list_p);
 
-    /*
-     * Peek values from stack
-     */
-    as_list* list = NULL; 
-    aerospike_lstack_peek(self->client->as, &err, NULL, &self->key, &self->lstack, peek_count, &list);
     if (err.code != AEROSPIKE_OK) {
         goto CLEANUP;
     }
 
-    PyObject* py_list = NULL;
-    list_to_pyobject(&err, list, &py_list);
+    PyObject * py_list = NULL;
+    list_to_pyobject(&err, list_p, &py_list);
 
 CLEANUP:
 
-    if (list) {
-        as_list_destroy(list);
-    }
 	if ( err.code != AEROSPIKE_OK ) {
 		PyObject * py_err = NULL;
 		error_to_pyobject(&err, &py_err);
 		PyErr_SetObject(PyExc_Exception, py_err);
 		return NULL;
 	}
-	return py_list;
+    return py_list;
 }
 
-PyObject * AerospikeLStack_Filter(AerospikeLStack * self, PyObject * args, PyObject * kwds)
+PyObject * AerospikeLList_Filter(AerospikeLList * self, PyObject * args, PyObject * kwds)
 {
-    long peek_count = 0;
     char* filter_name = NULL;
     PyObject * py_args = NULL; 
     as_error err;
     as_error_init(&err);
 
-	static char * kwlist[] = {"peek_count", "udf_function_name", "args", NULL};
+	static char * kwlist[] = {"udf_function_name", "args", NULL};
 
 	// Python Function Argument Parsing
-	if ( PyArg_ParseTupleAndKeywords(args, kwds, "lsO:filter", kwlist, 
-			&peek_count, &filter_name, &py_args) == false ) {
+	if ( PyArg_ParseTupleAndKeywords(args, kwds, "|sO:filter", kwlist, 
+			&filter_name, &py_args) == false ) {
 		return NULL;
 	}
 
@@ -169,8 +157,8 @@ PyObject * AerospikeLStack_Filter(AerospikeLStack * self, PyObject * args, PyObj
     pyobject_to_list(&err, py_args, &arg_list);
 
     as_list* elements_list = NULL;
-    aerospike_lstack_filter(self->client->as, &err, NULL, &self->key,
-            &self->lstack, peek_count, filter_name, arg_list, &elements_list);
+    aerospike_llist_filter(self->client->as, &err, NULL, &self->key,
+            &self->llist, filter_name, arg_list, &elements_list);
 
     if (err.code != AEROSPIKE_OK) {
         goto CLEANUP;
@@ -194,12 +182,12 @@ CLEANUP:
 	return py_list;
 }
 
-PyObject * AerospikeLStack_Destroy(AerospikeLStack * self, PyObject * args, PyObject * kwds)
+PyObject * AerospikeLList_Destroy(AerospikeLList * self, PyObject * args, PyObject * kwds)
 {
     as_error err;
     as_error_init(&err);
 
-    aerospike_lstack_destroy(self->client->as, &err, NULL, &self->key, &self->lstack);
+    aerospike_llist_destroy(self->client->as, &err, NULL, &self->key, &self->llist);
 
 CLEANUP:
 
@@ -209,43 +197,31 @@ CLEANUP:
 		PyErr_SetObject(PyExc_Exception, py_err);
 		return NULL;
 	}
+
 	return PyLong_FromLong(0);
 }
 
-PyObject * AerospikeLStack_Get_Capacity(AerospikeLStack * self, PyObject * args, PyObject * kwds)
+PyObject * AerospikeLList_Remove(AerospikeLList * self, PyObject * args, PyObject * kwds)
 {
-    long capacity = 0;
+    PyObject* py_value = NULL;
     as_error err;
     as_error_init(&err);
 
-    aerospike_lstack_get_capacity(self->client->as, &err, NULL, &self->key, &self->lstack, &capacity);
-CLEANUP:
-
-	if ( err.code != AEROSPIKE_OK ) {
-		PyObject * py_err = NULL;
-		error_to_pyobject(&err, &py_err);
-		PyErr_SetObject(PyExc_Exception, py_err);
-		return NULL;
-	}
-
-	return PyLong_FromLong(capacity);
-}
-
-PyObject * AerospikeLStack_Set_Capacity(AerospikeLStack * self, PyObject * args, PyObject * kwds)
-{
-    long capacity = 0;
-    as_error err;
-    as_error_init(&err);
-
-	static char * kwlist[] = {"capacity", NULL};
+	static char * kwlist[] = {"element", NULL};
 
 	// Python Function Argument Parsing
-	if ( PyArg_ParseTupleAndKeywords(args, kwds, "l:set_capacity", kwlist, 
-			&capacity) == false ) {
+	if ( PyArg_ParseTupleAndKeywords(args, kwds, "O:remove", kwlist, 
+			&py_value) == false ) {
 		return NULL;
 	}
 
-    aerospike_lstack_set_capacity(self->client->as, &err, NULL, &self->key, &self->lstack, capacity);
+    as_val * val = NULL;
+    pyobject_to_val(&err, py_value, &val);
+    if (err.code != AEROSPIKE_OK) {
+        goto CLEANUP;
+    }
+
+    aerospike_llist_remove(self->client->as, &err, NULL, &self->key, &self->llist, val);
 
 CLEANUP:
 
@@ -255,17 +231,16 @@ CLEANUP:
 		PyErr_SetObject(PyExc_Exception, py_err);
 		return NULL;
 	}
-
 	return PyLong_FromLong(0);
 }
 
-PyObject * AerospikeLStack_Size(AerospikeLStack * self, PyObject * args, PyObject * kwds)
+PyObject * AerospikeLList_Size(AerospikeLList * self, PyObject * args, PyObject * kwds)
 {
-    uint32_t size = 0;
+    long size = 0;
     as_error err;
     as_error_init(&err);
-    
-    aerospike_lstack_size(self->client->as, &err, NULL, &self->key, &self->lstack, &size);
+
+    aerospike_llist_size(self->client->as, &err, NULL, &self->key, &self->llist, &size);
 
 CLEANUP:
 
@@ -275,15 +250,12 @@ CLEANUP:
 		PyErr_SetObject(PyExc_Exception, py_err);
 		return NULL;
 	}
-
-	return PyLong_FromLong(size);
+    return PyLong_FromLong(size);
 }
 
-PyObject * AerospikeLStack_Config(AerospikeLStack * self, PyObject * args, PyObject * kwds)
+PyObject * AerospikeLList_Config(AerospikeLList * self, PyObject * args, PyObject * kwds)
 {
     /*
-     * To be implemented
-     * CSDK API is not present.
+     * To be implemented.
      */
-	return PyLong_FromLong(0);
 }
