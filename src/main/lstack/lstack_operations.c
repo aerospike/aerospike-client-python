@@ -76,6 +76,14 @@ PyObject * AerospikeLStack_Push_Many(AerospikeLStack * self, PyObject * args, Py
     /*
      * Convert python list to as list 
      */
+    if ( !PyList_Check(py_arglist)) {
+        goto CLEANUP;
+    }
+
+    if ( !PyList_Check(py_arglist)) {
+        goto CLEANUP;
+    }
+
     as_list* arglist = NULL;
     pyobject_to_list(&err, py_arglist, &arglist);
     if (err.code != AEROSPIKE_OK) {
@@ -165,6 +173,9 @@ PyObject * AerospikeLStack_Filter(AerospikeLStack * self, PyObject * args, PyObj
 		return NULL;
 	}
 
+    if ( !PyList_Check(py_args)) {
+        goto CLEANUP;
+    }
     as_list* arg_list = NULL;
     pyobject_to_list(&err, py_args, &arg_list);
 

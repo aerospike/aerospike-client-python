@@ -26,6 +26,8 @@
 #include "predicates.h"
 #include "lstack.h"
 #include "lset.h"
+#include "llist.h"
+#include "lmap.h"
 
 static PyMethodDef Aerospike_Methods[] = {
 
@@ -75,4 +77,8 @@ PyMODINIT_FUNC initaerospike()
 	PyTypeObject * llist = AerospikeLList_Ready();
 	Py_INCREF(llist);
 	PyModule_AddObject(aerospike, "llist", (PyObject *) llist);
+
+	PyTypeObject * lmap = AerospikeLMap_Ready();
+	Py_INCREF(lmap);
+	PyModule_AddObject(aerospike, "lmap", (PyObject *) lmap);
 }

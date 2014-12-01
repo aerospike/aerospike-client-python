@@ -75,3 +75,11 @@ typedef struct {
     as_key key;
     char bin_name[AS_BIN_NAME_MAX_LEN];
 } AerospikeLList;
+
+typedef struct {
+    PyObject_HEAD
+    AerospikeClient * client;
+    as_ldt lmap;
+    as_key key;
+    char bin_name[AS_BIN_NAME_MAX_LEN];
+} AerospikeLMap;

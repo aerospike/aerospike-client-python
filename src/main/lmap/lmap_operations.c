@@ -17,36 +17,44 @@
 #include <Python.h>
 #include <stdbool.h>
 
-#include <aerospike/aerospike_llist.h>
+#include <aerospike/aerospike_lmap.h>
 #include <aerospike/as_error.h>
 #include <aerospike/as_ldt.h>
 
 #include "client.h"
 #include "conversions.h"
-#include "llist.h"
+#include "lmap.h"
 #include "policy.h"
 
-PyObject * AerospikeLList_Add(AerospikeLList * self, PyObject * args, PyObject * kwds)
+PyObject * AerospikeLMap_Add(AerospikeLMap * self, PyObject * args, PyObject * kwds)
 {
-    PyObject* py_value = NULL;
+    PyObject* py_map_key = NULL;
+    PyObject* py_map_value = NULL;
     as_error err;
     as_error_init(&err);
 
-	static char * kwlist[] = {"value", NULL};
+	static char * kwlist[] = {"key", "value", NULL};
 
 	// Python Function Argument Parsing
-	if ( PyArg_ParseTupleAndKeywords(args, kwds, "O:add", kwlist, 
-			&py_value) == false ) {
+	if ( PyArg_ParseTupleAndKeywords(args, kwds, "OO:add", kwlist, 
+			&py_map_key, &py_map_value) == false ) {
 		return NULL;
 	}
 
-    as_val * val = NULL;
-    pyobject_to_val(&err, py_value, &val);
+    as_val * map_key = NULL;
+    pyobject_to_val(&err, py_map_key, &map_key);
     if (err.code != AEROSPIKE_OK) {
         goto CLEANUP;
     }
 
-    aerospike_llist_add(self->client->as, &err, NULL, &self->key, &self->llist, val);
+    as_val * map_value = NULL;
+    pyobject_to_val(&err, py_map_value, &map_value);
+    if (err.code != AEROSPIKE_OK) {
+        goto CLEANUP;
+    }
+
+    aerospike_lmap_put(self->client->as, &err, NULL, &self->key,
+            &self->lmap, map_key, map_value);
 
 CLEANUP:
 
@@ -59,9 +67,9 @@ CLEANUP:
 	return PyLong_FromLong(0);
 }
 
-PyObject * AerospikeLList_Add_All(AerospikeLList * self, PyObject * args, PyObject * kwds)
+PyObject * AerospikeLMap_Add_All(AerospikeLMap * self, PyObject * args, PyObject * kwds)
 {
-    PyObject* py_arglist = NULL;
+    PyObject* py_values = NULL;
     as_error err;
     as_error_init(&err);
 
@@ -69,25 +77,24 @@ PyObject * AerospikeLList_Add_All(AerospikeLList * self, PyObject * args, PyObje
 
 	// Python Function Argument Parsing
 	if ( PyArg_ParseTupleAndKeywords(args, kwds, "O:add_all", kwlist, 
-			&py_arglist)== false ) {
+			&py_values)== false ) {
 		return NULL;
 	}
 
-    /*
-     * Convert python list to as list 
-     */
-    if ( !PyList_Check(py_arglist)) {
+    if (!PyDict_Check(py_values)) {
         goto CLEANUP;
     }
-
-    as_list* arglist = NULL;
-    pyobject_to_list(&err, py_arglist, &arglist);
+    /*
+     * Convert python map to as map
+     */
+    as_map* map_values = NULL;
+    pyobject_to_map(&err, py_values, &map_values);
     if (err.code != AEROSPIKE_OK) {
         goto CLEANUP;
     }
 
-    aerospike_llist_add_all(self->client->as, &err, NULL,
-            &self->key, &self->llist, arglist);
+    aerospike_lmap_put_all(self->client->as, &err, NULL,
+            &self->key, &self->lmap, map_values);
 
 CLEANUP:
 
@@ -101,35 +108,36 @@ CLEANUP:
 	return PyLong_FromLong(0);
 }
 
-PyObject * AerospikeLList_Get(AerospikeLList * self, PyObject * args, PyObject * kwds)
+PyObject * AerospikeLMap_Get(AerospikeLMap * self, PyObject * args, PyObject * kwds)
 {
-    PyObject* py_value = NULL;
+    PyObject* py_map_key = NULL;
     as_error err;
     as_error_init(&err);
 
-	static char * kwlist[] = {"value", NULL};
+	static char * kwlist[] = {"key", NULL};
 
 	// Python Function Argument Parsing
 	if ( PyArg_ParseTupleAndKeywords(args, kwds, "O:get", kwlist, 
-			&py_value) == false ) {
+			&py_map_key) == false ) {
 		return NULL;
 	}
 
-    as_val * val = NULL;
-    pyobject_to_val(&err, py_value, &val);
+    as_val * map_key = NULL;
+    pyobject_to_val(&err, py_map_key, &map_key);
     if (err.code != AEROSPIKE_OK) {
         goto CLEANUP;
     }
 
-    as_list* list_p = NULL;
-    aerospike_llist_find(self->client->as, &err, NULL, &self->key, &self->llist, val, &list_p);
+    as_val* map_value = NULL;
+    aerospike_lmap_get(self->client->as, &err, NULL, &self->key,
+            &self->lmap, map_key, &map_value);
 
     if (err.code != AEROSPIKE_OK) {
         goto CLEANUP;
     }
 
-    PyObject * py_list = NULL;
-    list_to_pyobject(&err, list_p, &py_list);
+    PyObject * py_map_val = NULL;
+    val_to_pyobject(&err, map_value, &py_map_val);
 
 CLEANUP:
 
@@ -139,10 +147,10 @@ CLEANUP:
 		PyErr_SetObject(PyExc_Exception, py_err);
 		return NULL;
 	}
-    return py_list;
+    return py_map_val;
 }
 
-PyObject * AerospikeLList_Filter(AerospikeLList * self, PyObject * args, PyObject * kwds)
+PyObject * AerospikeLMap_Filter(AerospikeLMap * self, PyObject * args, PyObject * kwds)
 {
     char* filter_name = NULL;
     PyObject * py_args = NULL; 
@@ -164,21 +172,21 @@ PyObject * AerospikeLList_Filter(AerospikeLList * self, PyObject * args, PyObjec
     as_list* arg_list = NULL;
     pyobject_to_list(&err, py_args, &arg_list);
 
-    as_list* elements_list = NULL;
-    aerospike_llist_filter(self->client->as, &err, NULL, &self->key,
-            &self->llist, filter_name, arg_list, &elements_list);
+    as_map* elements = NULL;
+    aerospike_lmap_filter(self->client->as, &err, NULL, &self->key,
+            &self->lmap, filter_name, arg_list, &elements);
 
     if (err.code != AEROSPIKE_OK) {
         goto CLEANUP;
     }
 
-    PyObject* py_list = NULL;
-    list_to_pyobject(&err, elements_list, &py_list);
+    PyObject* py_map = NULL;
+    map_to_pyobject(&err, elements, &py_map);
     
 CLEANUP:
 
-    if (elements_list) {
-        as_list_destroy(elements_list);
+    if (elements) {
+        as_map_destroy(elements);
     }
 
 	if ( err.code != AEROSPIKE_OK ) {
@@ -187,15 +195,15 @@ CLEANUP:
 		PyErr_SetObject(PyExc_Exception, py_err);
 		return NULL;
 	}
-	return py_list;
+	return py_map;
 }
 
-PyObject * AerospikeLList_Destroy(AerospikeLList * self, PyObject * args, PyObject * kwds)
+PyObject * AerospikeLMap_Destroy(AerospikeLMap * self, PyObject * args, PyObject * kwds)
 {
     as_error err;
     as_error_init(&err);
 
-    aerospike_llist_destroy(self->client->as, &err, NULL, &self->key, &self->llist);
+    aerospike_lmap_destroy(self->client->as, &err, NULL, &self->key, &self->lmap);
 
 CLEANUP:
 
@@ -209,27 +217,28 @@ CLEANUP:
 	return PyLong_FromLong(0);
 }
 
-PyObject * AerospikeLList_Remove(AerospikeLList * self, PyObject * args, PyObject * kwds)
+PyObject * AerospikeLMap_Remove(AerospikeLMap * self, PyObject * args, PyObject * kwds)
 {
-    PyObject* py_value = NULL;
+    PyObject* py_map_key = NULL;
     as_error err;
     as_error_init(&err);
 
-	static char * kwlist[] = {"element", NULL};
+	static char * kwlist[] = {"key", NULL};
 
 	// Python Function Argument Parsing
 	if ( PyArg_ParseTupleAndKeywords(args, kwds, "O:remove", kwlist, 
-			&py_value) == false ) {
+			&py_map_key) == false ) {
 		return NULL;
 	}
 
-    as_val * val = NULL;
-    pyobject_to_val(&err, py_value, &val);
+    as_val * map_key = NULL;
+    pyobject_to_val(&err, py_map_key, &map_key);
     if (err.code != AEROSPIKE_OK) {
         goto CLEANUP;
     }
 
-    aerospike_llist_remove(self->client->as, &err, NULL, &self->key, &self->llist, val);
+    aerospike_lmap_remove(self->client->as, &err, NULL, &self->key,
+            &self->lmap, map_key);
 
 CLEANUP:
 
@@ -242,13 +251,13 @@ CLEANUP:
 	return PyLong_FromLong(0);
 }
 
-PyObject * AerospikeLList_Size(AerospikeLList * self, PyObject * args, PyObject * kwds)
+PyObject * AerospikeLMap_Size(AerospikeLMap * self, PyObject * args, PyObject * kwds)
 {
     long size = 0;
     as_error err;
     as_error_init(&err);
 
-    aerospike_llist_size(self->client->as, &err, NULL, &self->key, &self->llist, &size);
+    aerospike_lmap_size(self->client->as, &err, NULL, &self->key, &self->lmap, &size);
 
 CLEANUP:
 
@@ -261,7 +270,7 @@ CLEANUP:
     return PyLong_FromLong(size);
 }
 
-PyObject * AerospikeLList_Config(AerospikeLList * self, PyObject * args, PyObject * kwds)
+PyObject * AerospikeLMap_Config(AerospikeLMap * self, PyObject * args, PyObject * kwds)
 {
     /*
      * To be implemented.

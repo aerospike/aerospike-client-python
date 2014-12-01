@@ -326,6 +326,7 @@ setup(
                 'src/main/client/sec_index.c',
                 'src/main/client/lstack.c',
                 'src/main/client/lset.c',
+                'src/main/client/lmap.c',
                 'src/main/client/llist.c',
                 'src/main/key/type.c',
                 'src/main/key/apply.c',
@@ -349,6 +350,8 @@ setup(
                 'src/main/lset/lset_operations.c',
                 'src/main/llist/type.c',
                 'src/main/llist/llist_operations.c',
+                'src/main/lmap/type.c',
+                'src/main/lmap/lmap_operations.c',
                 'src/main/conversions.c',
                 'src/main/policy.c',
                 'src/main/predicates.c'

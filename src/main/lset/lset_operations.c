@@ -76,6 +76,10 @@ PyObject * AerospikeLSet_Add_All(AerospikeLSet * self, PyObject * args, PyObject
     /*
      * Convert python list to as list 
      */
+    if ( !PyList_Check(py_arglist)) {
+        goto CLEANUP;
+    }
+
     as_list* arglist = NULL;
     pyobject_to_list(&err, py_arglist, &arglist);
     if (err.code != AEROSPIKE_OK) {
@@ -152,6 +156,10 @@ PyObject * AerospikeLSet_Filter(AerospikeLSet * self, PyObject * args, PyObject 
 			&filter_name, &py_args) == false ) {
 		return NULL;
 	}
+
+    if ( !PyList_Check(py_args)) {
+        goto CLEANUP;
+    }
 
     as_list* arg_list = NULL;
     pyobject_to_list(&err, py_args, &arg_list);

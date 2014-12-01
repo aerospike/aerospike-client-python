@@ -156,6 +156,12 @@ static PyMethodDef AerospikeClient_Type_Methods[] = {
 		(PyCFunction) AerospikeClient_LList, METH_VARARGS | METH_KEYWORDS,
 		"LLIST operations"},
 
+    // LMAP OPERATIONS
+
+	{"lmap",
+		(PyCFunction) AerospikeClient_LMap, METH_VARARGS | METH_KEYWORDS,
+		"LMAP operations"},
+
 	{NULL}
 };
 

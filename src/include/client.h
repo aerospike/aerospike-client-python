@@ -298,3 +298,11 @@ AerospikeLSet * AerospikeClient_LSet(AerospikeClient * self, PyObject * args, Py
  *
  */
 AerospikeLList * AerospikeClient_LList(AerospikeClient * self, PyObject * args, PyObject * kwds);
+
+/**
+ * LMAP Operations
+ *
+ *		client.lmap(key, bin)
+ *
+ */
+AerospikeLMap * AerospikeClient_LMap(AerospikeClient * self, PyObject * args, PyObject * kwds);
