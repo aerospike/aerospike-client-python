@@ -481,8 +481,7 @@ as_status pyobject_to_key(as_error * err, PyObject * py_keytuple, as_key * key)
 		}
 		else if ( PyUnicode_Check(py_set) ) {
 			PyObject * py_ustr = PyUnicode_AsUTF8String(py_set);
-			char * val = PyString_AsString(py_ustr);
-			set = PyString_AsString(py_set);
+			set = PyString_AsString(py_ustr);
 			Py_DECREF(py_ustr);
 		}
 		else {
