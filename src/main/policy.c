@@ -136,7 +136,7 @@ void validate_policy(as_error *err, PyObject * py_policy, as_policy_read* read_p
                 if (write_policy_p) {
                     PyObject *py_key = PyDict_GetItemString(py_policy, "exists");
                     long keyval = PyInt_AsLong(py_key) - AS_POLICY_EXISTS;
-                    PyObject * py_keyval = PyLong_FromLong(keyval);
+                    PyObject * py_keyval = PyInt_FromLong(keyval);
                     PyDict_SetItemString(py_policy, "exists", py_keyval);
                 } else {
                     as_error_update(err, AEROSPIKE_ERR_PARAM, "Invalid value for OPT_POLICY_KEY_GEN");

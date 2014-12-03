@@ -70,7 +70,9 @@ PyObject * AerospikeLStack_Push(AerospikeLStack * self, PyObject * args, PyObjec
         goto CLEANUP;
     }
 
-    aerospike_lstack_push(self->client->as, &err, apply_policy_p, &self->key,
+    //aerospike_lstack_push(self->client->as, &err, apply_policy_p, &self->key,
+            //&self->lstack, val);
+    aerospike_lstack_push(self->client->as, &err, NULL, &self->key,
             &self->lstack, val);
 
 CLEANUP:
@@ -229,7 +231,7 @@ PyObject * AerospikeLStack_Filter(AerospikeLStack * self, PyObject * args, PyObj
     as_error err;
     as_error_init(&err);
 
-	static char * kwlist[] = {"peek_count", "udf_function_name", "args", "policy", NULL};
+	/*static char * kwlist[] = {"peek_count", "udf_function_name", "args", "policy", NULL};
 
 	// Python Function Argument Parsing
 	if ( PyArg_ParseTupleAndKeywords(args, kwds, "lsO|O:filter", kwlist, 
@@ -259,11 +261,13 @@ PyObject * AerospikeLStack_Filter(AerospikeLStack * self, PyObject * args, PyObj
         goto CLEANUP;
     }
     as_list* arg_list = NULL;
-    pyobject_to_list(&err, py_args, &arg_list);
+    pyobject_to_list(&err, py_args, &arg_list);*/
 
     as_list* elements_list = NULL;
+    //aerospike_lstack_filter(self->client->as, &err, apply_policy_p, &self->key,
+    //        &self->lstack, peek_count, filter_name, arg_list, &elements_list);
     aerospike_lstack_filter(self->client->as, &err, apply_policy_p, &self->key,
-            &self->lstack, peek_count, filter_name, arg_list, &elements_list);
+            &self->lstack, 1, NULL, NULL, &elements_list);
 
     if (err.code != AEROSPIKE_OK) {
         goto CLEANUP;
@@ -451,7 +455,7 @@ PyObject * AerospikeLStack_Size(AerospikeLStack * self, PyObject * args, PyObjec
 	static char * kwlist[] = {"policy", NULL};
 
 	// Python Function Argument Parsing
-	if ( PyArg_ParseTupleAndKeywords(args, kwds, "l|O:size", kwlist, 
+	if ( PyArg_ParseTupleAndKeywords(args, kwds, "|O:size", kwlist, 
 			&py_policy) == false ) {
 		return NULL;
 	}

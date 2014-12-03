@@ -90,7 +90,7 @@ static int AerospikeLStack_Type_Init(AerospikeLStack * self, PyObject * args, Py
     char* bin_name = NULL;
     char* module = NULL;
 
-	static char * kwlist[] = {"key", "bin", NULL};
+	static char * kwlist[] = {"key", "bin", "module", NULL};
 
 	if ( PyArg_ParseTupleAndKeywords(args, kwds, "Os|s:lstack", kwlist, &py_key,
                 &bin_name, &module) == false ) {
@@ -111,6 +111,7 @@ static int AerospikeLStack_Type_Init(AerospikeLStack * self, PyObject * args, Py
     }
 
     int bin_name_len = strlen(bin_name);
+    printf("Bin name len is %d\n", bin_name_len);
     if ((bin_name_len == 0) || (bin_name_len > AS_BIN_NAME_MAX_LEN)) {
         return -1;
     }
