@@ -16,7 +16,6 @@
 
 #include <Python.h>
 #include <stdbool.h>
-
 #include "client.h"
 #include "lstack.h"
 
