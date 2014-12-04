@@ -70,9 +70,7 @@ PyObject * AerospikeLStack_Push(AerospikeLStack * self, PyObject * args, PyObjec
         goto CLEANUP;
     }
 
-    //aerospike_lstack_push(self->client->as, &err, apply_policy_p, &self->key,
-            //&self->lstack, val);
-    aerospike_lstack_push(self->client->as, &err, NULL, &self->key,
+    aerospike_lstack_push(self->client->as, &err, apply_policy_p, &self->key,
             &self->lstack, val);
 
 CLEANUP:

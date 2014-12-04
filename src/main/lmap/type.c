@@ -99,10 +99,8 @@ static int AerospikeLMap_Type_Init(AerospikeLMap * self, PyObject * args, PyObje
      */
     as_error error;
     as_error_init(&error);
-    as_key key;
-    as_ldt lmap;
 
-    pyobject_to_key(&error, py_key, &key);
+    pyobject_to_key(&error, py_key, &self->key);
     if (error.code != AEROSPIKE_OK) {
         return -1;
     }
@@ -112,18 +110,15 @@ static int AerospikeLMap_Type_Init(AerospikeLMap * self, PyObject * args, PyObje
         return -1;
     }
 
-    self->key = key;
     strcpy(self->bin_name, bin_name);
 
     /*
      * LDT Initialization
      */
-    initialize_ldt(&error, &lmap, self->bin_name, AS_LDT_LMAP, module);
+    initialize_ldt(&error, &self->lmap, self->bin_name, AS_LDT_LMAP, module);
     if (error.code != AEROSPIKE_OK) {
         return -1;
     }
-
-    self->lmap = lmap;
 
 	return 0;
 }

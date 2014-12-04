@@ -102,32 +102,27 @@ static int AerospikeLStack_Type_Init(AerospikeLStack * self, PyObject * args, Py
      */
     as_error error;
     as_error_init(&error);
-    as_key key;
-    as_ldt lstack;
 
-    pyobject_to_key(&error, py_key, &key);
+    pyobject_to_key(&error, py_key, &self->key);
     if (error.code != AEROSPIKE_OK) {
         return -1;
     }
 
     int bin_name_len = strlen(bin_name);
-    printf("Bin name len is %d\n", bin_name_len);
     if ((bin_name_len == 0) || (bin_name_len > AS_BIN_NAME_MAX_LEN)) {
         return -1;
     }
 
-    self->key = key;
-    strcpy(self->bin_name, bin_name);
+    memset(self->bin_name, '\0', AS_BIN_NAME_MAX_LEN);
+    memcpy(self->bin_name, bin_name, bin_name_len);
 
     /*
      * LDT Initialization
      */
-    initialize_ldt(&error, &lstack, self->bin_name, AS_LDT_LSTACK, module);
+    initialize_ldt(&error, &self->lstack, self->bin_name, AS_LDT_LSTACK, module);
     if (error.code != AEROSPIKE_OK) {
         return -1;
     }
-
-    self->lstack = lstack;
 
 	return 0;
 }
@@ -199,7 +194,7 @@ AerospikeLStack * AerospikeLStack_New(AerospikeClient * client, PyObject * args,
     AerospikeLStack * self = (AerospikeLStack *) AerospikeLStack_Type.tp_new(&AerospikeLStack_Type, args, kwds);
     self->client = client;
     Py_INCREF(client);
-    AerospikeLStack_Type.tp_init((PyObject *) self, args, kwds);
+    AerospikeLStack_Type.tp_init(self, args, kwds);
     return self;
 
 }

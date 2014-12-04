@@ -99,10 +99,8 @@ static int AerospikeLList_Type_Init(AerospikeLList * self, PyObject * args, PyOb
      */
     as_error error;
     as_error_init(&error);
-    as_key key;
-    as_ldt llist;
 
-    pyobject_to_key(&error, py_key, &key);
+    pyobject_to_key(&error, py_key, &self->key);
     if (error.code != AEROSPIKE_OK) {
         return -1;
     }
@@ -112,18 +110,15 @@ static int AerospikeLList_Type_Init(AerospikeLList * self, PyObject * args, PyOb
         return -1;
     }
 
-    self->key = key;
     strcpy(self->bin_name, bin_name);
 
     /*
      * LDT Initialization
      */
-    initialize_ldt(&error, &llist, self->bin_name, AS_LDT_LLIST, module);
+    initialize_ldt(&error, &self->llist, self->bin_name, AS_LDT_LLIST, module);
     if (error.code != AEROSPIKE_OK) {
         return -1;
     }
-
-    self->llist = llist;
 
 	return 0;
 }
