@@ -90,6 +90,7 @@ CLEANUP:
 		PyObject * py_err = NULL;
 		error_to_pyobject(&err, &py_err);
 		PyErr_SetObject(PyExc_Exception, py_err);
+        Py_DECREF(py_err);
 		return NULL;
 	}
 	return PyLong_FromLong(0);
@@ -166,6 +167,7 @@ CLEANUP:
 		PyObject * py_err = NULL;
 		error_to_pyobject(&err, &py_err);
 		PyErr_SetObject(PyExc_Exception, py_err);
+        Py_DECREF(py_err);
 		return NULL;
 	}
 
@@ -244,6 +246,7 @@ CLEANUP:
 		PyObject * py_err = NULL;
 		error_to_pyobject(&err, &py_err);
 		PyErr_SetObject(PyExc_Exception, py_err);
+        Py_DECREF(py_err);
 		return NULL;
 	}
     return py_return_val;
@@ -327,6 +330,7 @@ CLEANUP:
 		PyObject * py_err = NULL;
 		error_to_pyobject(&err, &py_err);
 		PyErr_SetObject(PyExc_Exception, py_err);
+        Py_DECREF(py_err);
 		return NULL;
 	}
 	return py_list;
@@ -389,6 +393,7 @@ CLEANUP:
 		PyObject * py_err = NULL;
 		error_to_pyobject(&err, &py_err);
 		PyErr_SetObject(PyExc_Exception, py_err);
+        Py_DECREF(py_err);
 		return NULL;
 	}
 
@@ -459,6 +464,7 @@ CLEANUP:
 		PyObject * py_err = NULL;
 		error_to_pyobject(&err, &py_err);
 		PyErr_SetObject(PyExc_Exception, py_err);
+        Py_DECREF(py_err);
 		return NULL;
 	}
     return PyBool_FromLong(exists);
@@ -528,6 +534,7 @@ CLEANUP:
 		PyObject * py_err = NULL;
 		error_to_pyobject(&err, &py_err);
 		PyErr_SetObject(PyExc_Exception, py_err);
+        Py_DECREF(py_err);
 		return NULL;
 	}
 	return PyLong_FromLong(0);
@@ -591,6 +598,7 @@ CLEANUP:
 		PyObject * py_err = NULL;
 		error_to_pyobject(&err, &py_err);
 		PyErr_SetObject(PyExc_Exception, py_err);
+        Py_DECREF(py_err);
 		return NULL;
 	}
     return PyLong_FromLong(size);
