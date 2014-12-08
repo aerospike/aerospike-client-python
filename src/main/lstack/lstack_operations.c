@@ -26,6 +26,20 @@
 #include "lstack.h"
 #include "policy.h"
 
+/**
+ ********************************************************************************************************
+ * Push new object onto the stack.
+ *
+ * @param self                  AerospikeLStack object
+ * @param args                  The args is a tuple object containing an argument
+ *                              list passed from Python to a C function
+ * @param kwds                  Dictionary of keywords
+ * 
+ * Returns an integer status. 0(Zero) is success value.
+ * In case of error,appropriate exceptions will be raised.
+ ********************************************************************************************************
+ */
+
 PyObject * AerospikeLStack_Push(AerospikeLStack * self, PyObject * args, PyObject * kwds)
 {
     PyObject* py_value = NULL;
@@ -84,6 +98,19 @@ CLEANUP:
 	return PyLong_FromLong(0);
 }
 
+/**
+ ********************************************************************************************************
+ * Push a list of objects on the stack.
+ *
+ * @param self                  AerospikeLStack object
+ * @param args                  The args is a tuple object containing an argument
+ *                              list passed from Python to a C function
+ * @param kwds                  Dictionary of keywords
+ * 
+ * Returns an integer status. 0(Zero) is success value.
+ * In case of error,appropriate exceptions will be raised.
+ ********************************************************************************************************
+ */
 PyObject * AerospikeLStack_Push_Many(AerospikeLStack * self, PyObject * args, PyObject * kwds)
 {
     PyObject* py_arglist = NULL;
@@ -152,6 +179,19 @@ CLEANUP:
 	return PyLong_FromLong(0);
 }
 
+/**
+ ********************************************************************************************************
+ * Fetch the top N elements from the stack.
+ *
+ * @param self                  AerospikeLStack object
+ * @param args                  The args is a tuple object containing an argument
+ *                              list passed from Python to a C function
+ * @param kwds                  Dictionary of keywords
+ * 
+ * Returns a list of elements.
+ * In case of error,appropriate exceptions will be raised.
+ ********************************************************************************************************
+ */
 PyObject * AerospikeLStack_Peek(AerospikeLStack * self, PyObject * args, PyObject * kwds)
 {
     long peek_count = 0;
@@ -163,7 +203,7 @@ PyObject * AerospikeLStack_Peek(AerospikeLStack * self, PyObject * args, PyObjec
     as_error err;
     as_error_init(&err);
 
-	static char * kwlist[] = {"value", "policy", NULL};
+	static char * kwlist[] = {"peek_count", "policy", NULL};
 
 	// Python Function Argument Parsing
 	if ( PyArg_ParseTupleAndKeywords(args, kwds, "l|O:peek", kwlist, 
@@ -216,6 +256,19 @@ CLEANUP:
 	return py_list;
 }
 
+/**
+ ********************************************************************************************************
+ * Scan the stack and apply a predicate filter.
+ *
+ * @param self                  AerospikeLStack object
+ * @param args                  The args is a tuple object containing an argument
+ *                              list passed from Python to a C function
+ * @param kwds                  Dictionary of keywords
+ * 
+ * Returns a list of elements(peek_count) from the stack after applying predicate.
+ * In case of error,appropriate exceptions will be raised.
+ ********************************************************************************************************
+ */
 PyObject * AerospikeLStack_Filter(AerospikeLStack * self, PyObject * args, PyObject * kwds)
 {
     long peek_count = 0;
@@ -229,7 +282,7 @@ PyObject * AerospikeLStack_Filter(AerospikeLStack * self, PyObject * args, PyObj
     as_error err;
     as_error_init(&err);
 
-	/*static char * kwlist[] = {"peek_count", "udf_function_name", "args", "policy", NULL};
+	static char * kwlist[] = {"peek_count", "udf_function_name", "args", "policy", NULL};
 
 	// Python Function Argument Parsing
 	if ( PyArg_ParseTupleAndKeywords(args, kwds, "lsO|O:filter", kwlist, 
@@ -259,13 +312,11 @@ PyObject * AerospikeLStack_Filter(AerospikeLStack * self, PyObject * args, PyObj
         goto CLEANUP;
     }
     as_list* arg_list = NULL;
-    pyobject_to_list(&err, py_args, &arg_list);*/
+    pyobject_to_list(&err, py_args, &arg_list);
 
     as_list* elements_list = NULL;
-    //aerospike_lstack_filter(self->client->as, &err, apply_policy_p, &self->key,
-    //        &self->lstack, peek_count, filter_name, arg_list, &elements_list);
     aerospike_lstack_filter(self->client->as, &err, apply_policy_p, &self->key,
-            &self->lstack, 1, NULL, NULL, &elements_list);
+            &self->lstack, peek_count, filter_name, arg_list, &elements_list);
 
     if (err.code != AEROSPIKE_OK) {
         goto CLEANUP;
@@ -289,6 +340,19 @@ CLEANUP:
 	return py_list;
 }
 
+/**
+ ********************************************************************************************************
+ * Delete the entire stack(LDT Remove).
+ *
+ * @param self                  AerospikeLStack object
+ * @param args                  The args is a tuple object containing an argument
+ *                              list passed from Python to a C function
+ * @param kwds                  Dictionary of keywords
+ * 
+ * Returns an integer status. 0(Zero) is success value.
+ * In case of error,appropriate exceptions will be raised.
+ ********************************************************************************************************
+ */
 PyObject * AerospikeLStack_Destroy(AerospikeLStack * self, PyObject * args, PyObject * kwds)
 {
     PyObject* py_policy = NULL;
@@ -338,6 +402,19 @@ CLEANUP:
 	return PyLong_FromLong(0);
 }
 
+/**
+ ********************************************************************************************************
+ * Get the current capacity limit setting.
+ *
+ * @param self                  AerospikeLStack object
+ * @param args                  The args is a tuple object containing an argument
+ *                              list passed from Python to a C function
+ * @param kwds                  Dictionary of keywords
+ * 
+ * Returns current capacity of the stack.
+ * In case of error,appropriate exceptions will be raised.
+ ********************************************************************************************************
+ */
 PyObject * AerospikeLStack_Get_Capacity(AerospikeLStack * self, PyObject * args, PyObject * kwds)
 {
     long capacity = 0;
@@ -389,6 +466,19 @@ CLEANUP:
 	return PyLong_FromLong(capacity);
 }
 
+/**
+ ********************************************************************************************************
+ * Set the maximum capacity for the stack.
+ *
+ * @param self                  AerospikeLStack object
+ * @param args                  The args is a tuple object containing an argument
+ *                              list passed from Python to a C function
+ * @param kwds                  Dictionary of keywords
+ * 
+ * Returns an integer status. 0(Zero) is success value.
+ * In case of error,appropriate exceptions will be raised.
+ ********************************************************************************************************
+ */
 PyObject * AerospikeLStack_Set_Capacity(AerospikeLStack * self, PyObject * args, PyObject * kwds)
 {
     long capacity = 0;
@@ -440,6 +530,19 @@ CLEANUP:
 	return PyLong_FromLong(0);
 }
 
+/**
+ ********************************************************************************************************
+ * Get the current item count of the stack.
+ *
+ * @param self                  AerospikeLStack object
+ * @param args                  The args is a tuple object containing an argument
+ *                              list passed from Python to a C function
+ * @param kwds                  Dictionary of keywords
+ * 
+ * Returns the size of stack.
+ * In case of error,appropriate exceptions will be raised.
+ ********************************************************************************************************
+ */
 PyObject * AerospikeLStack_Size(AerospikeLStack * self, PyObject * args, PyObject * kwds)
 {
     uint32_t size = 0;
@@ -491,6 +594,19 @@ CLEANUP:
 	return PyLong_FromLong(size);
 }
 
+/**
+ ********************************************************************************************************
+ * Get the configuration parameters of the stack.
+ *
+ * @param self                  AerospikeLStack object
+ * @param args                  The args is a tuple object containing an argument
+ *                              list passed from Python to a C function
+ * @param kwds                  Dictionary of keywords
+ * 
+ * Returns the configuration parameters of the stack.
+ * In case of error,appropriate exceptions will be raised.
+ ********************************************************************************************************
+ */
 PyObject * AerospikeLStack_Config(AerospikeLStack * self, PyObject * args, PyObject * kwds)
 {
     /*

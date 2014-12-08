@@ -26,6 +26,19 @@
 #include "llist.h"
 #include "policy.h"
 
+/**
+ ********************************************************************************************************
+ * Add an object to the list.
+ *
+ * @param self                  AerospikeLList object
+ * @param args                  The args is a tuple object containing an argument
+ *                              list passed from Python to a C function
+ * @param kwds                  Dictionary of keywords
+ * 
+ * Returns an integer status. 0(Zero) is success value.
+ * In case of error,appropriate exceptions will be raised.
+ ********************************************************************************************************
+ */
 PyObject * AerospikeLList_Add(AerospikeLList * self, PyObject * args, PyObject * kwds)
 {
     PyObject* py_value = NULL;
@@ -82,6 +95,19 @@ CLEANUP:
 	return PyLong_FromLong(0);
 }
 
+/**
+ ********************************************************************************************************
+ * Add a list of objects to the list.
+ *
+ * @param self                  AerospikeLList object
+ * @param args                  The args is a tuple object containing an argument
+ *                              list passed from Python to a C function
+ * @param kwds                  Dictionary of keywords
+ * 
+ * Returns an integer status. 0(Zero) is success value.
+ * In case of error,appropriate exceptions will be raised.
+ ********************************************************************************************************
+ */
 PyObject * AerospikeLList_Add_All(AerospikeLList * self, PyObject * args, PyObject * kwds)
 {
     PyObject* py_arglist = NULL;
@@ -146,6 +172,19 @@ CLEANUP:
 	return PyLong_FromLong(0);
 }
 
+/**
+ ********************************************************************************************************
+ * Get an object from the list.
+ *
+ * @param self                  AerospikeLList object
+ * @param args                  The args is a tuple object containing an argument
+ *                              list passed from Python to a C function
+ * @param kwds                  Dictionary of keywords
+ * 
+ * Returns an object from the list.
+ * In case of error,appropriate exceptions will be raised.
+ ********************************************************************************************************
+ */
 PyObject * AerospikeLList_Get(AerospikeLList * self, PyObject * args, PyObject * kwds)
 {
     PyObject* py_value = NULL;
@@ -210,6 +249,19 @@ CLEANUP:
     return py_list;
 }
 
+/**
+ ********************************************************************************************************
+ * Scan the list and apply a predicate filter.
+ *
+ * @param self                  AerospikeLList object
+ * @param args                  The args is a tuple object containing an argument
+ *                              list passed from Python to a C function
+ * @param kwds                  Dictionary of keywords
+ * 
+ * Returns a list of elements from the list after applying predicate.
+ * In case of error,appropriate exceptions will be raised.
+ ********************************************************************************************************
+ */
 PyObject * AerospikeLList_Filter(AerospikeLList * self, PyObject * args, PyObject * kwds)
 {
     char* filter_name = NULL;
@@ -280,6 +332,19 @@ CLEANUP:
 	return py_list;
 }
 
+/**
+ ********************************************************************************************************
+ * Delete the entire list(LDT Remove).
+ *
+ * @param self                  AerospikeLList object
+ * @param args                  The args is a tuple object containing an argument
+ *                              list passed from Python to a C function
+ * @param kwds                  Dictionary of keywords
+ * 
+ * Returns an integer status. 0(Zero) is success value.
+ * In case of error,appropriate exceptions will be raised.
+ ********************************************************************************************************
+ */
 PyObject * AerospikeLList_Destroy(AerospikeLList * self, PyObject * args, PyObject * kwds)
 {
     PyObject* py_policy = NULL;
@@ -330,6 +395,19 @@ CLEANUP:
 	return PyLong_FromLong(0);
 }
 
+/**
+ ********************************************************************************************************
+ * Remove an object from the list.
+ *
+ * @param self                  AerospikeLList object
+ * @param args                  The args is a tuple object containing an argument
+ *                              list passed from Python to a C function
+ * @param kwds                  Dictionary of keywords
+ * 
+ * Returns an integer status. 0(Zero) is success value.
+ * In case of error,appropriate exceptions will be raised.
+ ********************************************************************************************************
+ */
 PyObject * AerospikeLList_Remove(AerospikeLList * self, PyObject * args, PyObject * kwds)
 {
     PyObject* py_value = NULL;
@@ -386,6 +464,19 @@ CLEANUP:
 	return PyLong_FromLong(0);
 }
 
+/**
+ ********************************************************************************************************
+ * Get the current item count of the list.
+ *
+ * @param self                  AerospikeLList object
+ * @param args                  The args is a tuple object containing an argument
+ *                              list passed from Python to a C function
+ * @param kwds                  Dictionary of keywords
+ * 
+ * Returns the size of list.
+ * In case of error,appropriate exceptions will be raised.
+ ********************************************************************************************************
+ */
 PyObject * AerospikeLList_Size(AerospikeLList * self, PyObject * args, PyObject * kwds)
 {
     long size = 0;
@@ -436,6 +527,19 @@ CLEANUP:
     return PyLong_FromLong(size);
 }
 
+/**
+ ********************************************************************************************************
+ * Get the configuration parameters of the list.
+ *
+ * @param self                  AerospikeLList object
+ * @param args                  The args is a tuple object containing an argument
+ *                              list passed from Python to a C function
+ * @param kwds                  Dictionary of keywords
+ * 
+ * Returns the configuration parameters of the list.
+ * In case of error,appropriate exceptions will be raised.
+ ********************************************************************************************************
+ */
 PyObject * AerospikeLList_Config(AerospikeLList * self, PyObject * args, PyObject * kwds)
 {
     /*

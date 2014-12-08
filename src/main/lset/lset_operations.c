@@ -26,6 +26,19 @@
 #include "lset.h"
 #include "policy.h"
 
+/**
+ ********************************************************************************************************
+ * Add an object to the set.
+ *
+ * @param self                  AerospikeLSet object
+ * @param args                  The args is a tuple object containing an argument
+ *                              list passed from Python to a C function
+ * @param kwds                  Dictionary of keywords
+ * 
+ * Returns an integer status. 0(Zero) is success value.
+ * In case of error,appropriate exceptions will be raised.
+ ********************************************************************************************************
+ */
 PyObject * AerospikeLSet_Add(AerospikeLSet * self, PyObject * args, PyObject * kwds)
 {
     PyObject* py_value = NULL;
@@ -82,6 +95,19 @@ CLEANUP:
 	return PyLong_FromLong(0);
 }
 
+/**
+ ********************************************************************************************************
+ * Add a list of objects to the set.
+ *
+ * @param self                  AerospikeLSet object
+ * @param args                  The args is a tuple object containing an argument
+ *                              list passed from Python to a C function
+ * @param kwds                  Dictionary of keywords
+ * 
+ * Returns an integer status. 0(Zero) is success value.
+ * In case of error,appropriate exceptions will be raised.
+ ********************************************************************************************************
+ */
 PyObject * AerospikeLSet_Add_All(AerospikeLSet * self, PyObject * args, PyObject * kwds)
 {
     PyObject* py_arglist = NULL;
@@ -146,6 +172,19 @@ CLEANUP:
 	return PyLong_FromLong(0);
 }
 
+/**
+ ********************************************************************************************************
+ * Get an object from the set.
+ *
+ * @param self                  AerospikeLSet object
+ * @param args                  The args is a tuple object containing an argument
+ *                              list passed from Python to a C function
+ * @param kwds                  Dictionary of keywords
+ * 
+ * Returns an object from the set.
+ * In case of error,appropriate exceptions will be raised.
+ ********************************************************************************************************
+ */
 PyObject * AerospikeLSet_Get(AerospikeLSet * self, PyObject * args, PyObject * kwds)
 {
     PyObject* py_value = NULL;
@@ -210,6 +249,19 @@ CLEANUP:
     return py_return_val;
 }
 
+/**
+ ********************************************************************************************************
+ * Scan the set and apply a predicate filter.
+ *
+ * @param self                  AerospikeLSet object
+ * @param args                  The args is a tuple object containing an argument
+ *                              list passed from Python to a C function
+ * @param kwds                  Dictionary of keywords
+ * 
+ * Returns a list of elements from the set after applying predicate.
+ * In case of error,appropriate exceptions will be raised.
+ ********************************************************************************************************
+ */
 PyObject * AerospikeLSet_Filter(AerospikeLSet * self, PyObject * args, PyObject * kwds)
 {
     char* filter_name = NULL;
@@ -280,6 +332,19 @@ CLEANUP:
 	return py_list;
 }
 
+/**
+ ********************************************************************************************************
+ * Delete the entire set(LDT Remove).
+ *
+ * @param self                  AerospikeLSet object
+ * @param args                  The args is a tuple object containing an argument
+ *                              list passed from Python to a C function
+ * @param kwds                  Dictionary of keywords
+ * 
+ * Returns an integer status. 0(Zero) is success value.
+ * In case of error,appropriate exceptions will be raised.
+ ********************************************************************************************************
+ */
 PyObject * AerospikeLSet_Destroy(AerospikeLSet * self, PyObject * args, PyObject * kwds)
 {
     PyObject* py_policy = NULL;
@@ -330,6 +395,19 @@ CLEANUP:
 	return PyLong_FromLong(0);
 }
 
+/**
+ ********************************************************************************************************
+ * Test existence of an object in the set.
+ *
+ * @param self                  AerospikeLSet object
+ * @param args                  The args is a tuple object containing an argument
+ *                              list passed from Python to a C function
+ * @param kwds                  Dictionary of keywords
+ * 
+ * Returns true on success, Otherwise false is returned.
+ * In case of error,appropriate exceptions will be raised.
+ ********************************************************************************************************
+ */
 PyObject * AerospikeLSet_Exists(AerospikeLSet * self, PyObject * args, PyObject * kwds)
 {
     PyObject * py_value = NULL;
@@ -386,6 +464,19 @@ CLEANUP:
     return PyBool_FromLong(exists);
 }
 
+/**
+ ********************************************************************************************************
+ * Remove an object from the set.
+ *
+ * @param self                  AerospikeLSet object
+ * @param args                  The args is a tuple object containing an argument
+ *                              list passed from Python to a C function
+ * @param kwds                  Dictionary of keywords
+ * 
+ * Returns an integer status. 0(Zero) is success value.
+ * In case of error,appropriate exceptions will be raised.
+ ********************************************************************************************************
+ */
 PyObject * AerospikeLSet_Remove(AerospikeLSet * self, PyObject * args, PyObject * kwds)
 {
     PyObject* py_value = NULL;
@@ -442,6 +533,19 @@ CLEANUP:
 	return PyLong_FromLong(0);
 }
 
+/**
+ ********************************************************************************************************
+ * Get the current item count of the set.
+ *
+ * @param self                  AerospikeLSet object
+ * @param args                  The args is a tuple object containing an argument
+ *                              list passed from Python to a C function
+ * @param kwds                  Dictionary of keywords
+ * 
+ * Returns the size of set.
+ * In case of error,appropriate exceptions will be raised.
+ ********************************************************************************************************
+ */
 PyObject * AerospikeLSet_Size(AerospikeLSet * self, PyObject * args, PyObject * kwds)
 {
     long size = 0;
@@ -492,6 +596,19 @@ CLEANUP:
     return PyLong_FromLong(size);
 }
 
+/**
+ ********************************************************************************************************
+ * Get the configuration parameters of the set.
+ *
+ * @param self                  AerospikeLSet object
+ * @param args                  The args is a tuple object containing an argument
+ *                              list passed from Python to a C function
+ * @param kwds                  Dictionary of keywords
+ * 
+ * Returns the configuration parameters of the set.
+ * In case of error,appropriate exceptions will be raised.
+ ********************************************************************************************************
+ */
 PyObject * AerospikeLSet_Config(AerospikeLSet * self, PyObject * args, PyObject * kwds)
 {
     /*

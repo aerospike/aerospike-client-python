@@ -26,6 +26,19 @@
 #include "lmap.h"
 #include "policy.h"
 
+/**
+ ********************************************************************************************************
+ * Add an object to the map.
+ *
+ * @param self                  AerospikeLMap object
+ * @param args                  The args is a tuple object containing an argument
+ *                              list passed from Python to a C function
+ * @param kwds                  Dictionary of keywords
+ * 
+ * Returns an integer status. 0(Zero) is success value.
+ * In case of error,appropriate exceptions will be raised.
+ ********************************************************************************************************
+ */
 PyObject * AerospikeLMap_Add(AerospikeLMap * self, PyObject * args, PyObject * kwds)
 {
     PyObject* py_map_key = NULL;
@@ -89,6 +102,19 @@ CLEANUP:
 	return PyLong_FromLong(0);
 }
 
+/**
+ ********************************************************************************************************
+ * Add a list of objects to the map.
+ *
+ * @param self                  AerospikeLMap object
+ * @param args                  The args is a tuple object containing an argument
+ *                              list passed from Python to a C function
+ * @param kwds                  Dictionary of keywords
+ * 
+ * Returns an integer status. 0(Zero) is success value.
+ * In case of error,appropriate exceptions will be raised.
+ ********************************************************************************************************
+ */
 PyObject * AerospikeLMap_Add_All(AerospikeLMap * self, PyObject * args, PyObject * kwds)
 {
     PyObject* py_values = NULL;
@@ -152,6 +178,19 @@ CLEANUP:
 	return PyLong_FromLong(0);
 }
 
+/**
+ ********************************************************************************************************
+ * Get an object from the map.
+ *
+ * @param self                  AerospikeLMap object
+ * @param args                  The args is a tuple object containing an argument
+ *                              list passed from Python to a C function
+ * @param kwds                  Dictionary of keywords
+ * 
+ * Returns that entry with key,value pair.
+ * In case of error,appropriate exceptions will be raised.
+ ********************************************************************************************************
+ */
 PyObject * AerospikeLMap_Get(AerospikeLMap * self, PyObject * args, PyObject * kwds)
 {
     PyObject* py_map_key = NULL;
@@ -216,6 +255,19 @@ CLEANUP:
     return py_map_val;
 }
 
+/**
+ ********************************************************************************************************
+ * Scan the map and apply a predicate filter.
+ *
+ * @param self                  AerospikeLMap object
+ * @param args                  The args is a tuple object containing an argument
+ *                              list passed from Python to a C function
+ * @param kwds                  Dictionary of keywords
+ * 
+ * Returns a list of elements from the map after applying predicate.
+ * In case of error,appropriate exceptions will be raised.
+ ********************************************************************************************************
+ */
 PyObject * AerospikeLMap_Filter(AerospikeLMap * self, PyObject * args, PyObject * kwds)
 {
     char* filter_name = NULL;
@@ -286,6 +338,19 @@ CLEANUP:
 	return py_map;
 }
 
+/**
+ ********************************************************************************************************
+ * Delete the entire map(LDT Remove).
+ *
+ * @param self                  AerospikeLMap object
+ * @param args                  The args is a tuple object containing an argument
+ *                              list passed from Python to a C function
+ * @param kwds                  Dictionary of keywords
+ * 
+ * Returns an integer status. 0(Zero) is success value.
+ * In case of error,appropriate exceptions will be raised.
+ ********************************************************************************************************
+ */
 PyObject * AerospikeLMap_Destroy(AerospikeLMap * self, PyObject * args, PyObject * kwds)
 {
     PyObject* py_policy = NULL;
@@ -336,6 +401,19 @@ CLEANUP:
 	return PyLong_FromLong(0);
 }
 
+/**
+ ********************************************************************************************************
+ * Remove an object from the map.
+ *
+ * @param self                  AerospikeLMap object
+ * @param args                  The args is a tuple object containing an argument
+ *                              list passed from Python to a C function
+ * @param kwds                  Dictionary of keywords
+ * 
+ * Returns an integer status. 0(Zero) is success value.
+ * In case of error,appropriate exceptions will be raised.
+ ********************************************************************************************************
+ */
 PyObject * AerospikeLMap_Remove(AerospikeLMap * self, PyObject * args, PyObject * kwds)
 {
     PyObject* py_map_key = NULL;
@@ -392,6 +470,19 @@ CLEANUP:
 	return PyLong_FromLong(0);
 }
 
+/**
+ ********************************************************************************************************
+ * Get the current item count of the map.
+ *
+ * @param self                  AerospikeLMap object
+ * @param args                  The args is a tuple object containing an argument
+ *                              list passed from Python to a C function
+ * @param kwds                  Dictionary of keywords
+ * 
+ * Returns the size of map.
+ * In case of error,appropriate exceptions will be raised.
+ ********************************************************************************************************
+ */
 PyObject * AerospikeLMap_Size(AerospikeLMap * self, PyObject * args, PyObject * kwds)
 {
     long size = 0;
@@ -442,6 +533,19 @@ CLEANUP:
     return PyLong_FromLong(size);
 }
 
+/**
+ ********************************************************************************************************
+ * Get the configuration parameters of the map.
+ *
+ * @param self                  AerospikeLMap object
+ * @param args                  The args is a tuple object containing an argument
+ *                              list passed from Python to a C function
+ * @param kwds                  Dictionary of keywords
+ * 
+ * Returns the configuration parameters of the map.
+ * In case of error,appropriate exceptions will be raised.
+ ********************************************************************************************************
+ */
 PyObject * AerospikeLMap_Config(AerospikeLMap * self, PyObject * args, PyObject * kwds)
 {
     /*
