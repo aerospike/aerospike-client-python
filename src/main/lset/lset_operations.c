@@ -86,6 +86,10 @@ PyObject * AerospikeLSet_Add(AerospikeLSet * self, PyObject * args, PyObject * k
 
 CLEANUP:
 
+    if (val) {
+        as_val_destroy(val);
+    }
+
 	if ( err.code != AEROSPIKE_OK ) {
 		PyObject * py_err = NULL;
 		error_to_pyobject(&err, &py_err);
@@ -162,6 +166,10 @@ PyObject * AerospikeLSet_Add_All(AerospikeLSet * self, PyObject * args, PyObject
             &self->key, &self->lset, arglist);
 
 CLEANUP:
+
+    if (arglist) {
+        as_list_destroy(arglist);
+    }
 
 	if ( err.code != AEROSPIKE_OK ) {
 		PyObject * py_err = NULL;
@@ -241,6 +249,10 @@ PyObject * AerospikeLSet_Get(AerospikeLSet * self, PyObject * args, PyObject * k
     val_to_pyobject(&err, return_val_p, &py_return_val);
 
 CLEANUP:
+
+    if (val) {
+        as_val_destroy(val);
+    }
 
     if (return_val_p) {
         as_val_destroy(return_val_p);
@@ -465,6 +477,11 @@ PyObject * AerospikeLSet_Exists(AerospikeLSet * self, PyObject * args, PyObject 
             &self->lset, val, &exists);
 
 CLEANUP:
+    
+    if (val) {
+        as_val_destroy(val);
+    }
+
 	if ( err.code != AEROSPIKE_OK ) {
 		PyObject * py_err = NULL;
 		error_to_pyobject(&err, &py_err);
@@ -538,6 +555,10 @@ PyObject * AerospikeLSet_Remove(AerospikeLSet * self, PyObject * args, PyObject 
             &self->lset, val);
 
 CLEANUP:
+
+    if (val) {
+        as_val_destroy(val);
+    }
 
 	if ( err.code != AEROSPIKE_OK ) {
 		PyObject * py_err = NULL;

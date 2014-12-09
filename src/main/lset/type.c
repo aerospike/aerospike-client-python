@@ -197,14 +197,12 @@ AerospikeLSet * AerospikeLSet_New(AerospikeClient * client, PyObject * args, PyO
     if (AerospikeLSet_Type.tp_init((PyObject *) self, args, kwds) != -1) {
         return self;
     } else {
-        Py_DECREF(self);
         as_error err;
         as_error_init(&err);
         as_error_update(&err, AEROSPIKE_ERR, "Prameters are incorrect");
         PyObject * py_err = NULL;
         error_to_pyobject(&err, &py_err);
         PyErr_SetObject(PyExc_Exception, py_err);
-        Py_DECREF(py_err);
         return NULL;
     }
 }
