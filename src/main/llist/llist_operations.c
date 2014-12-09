@@ -242,6 +242,10 @@ PyObject * AerospikeLList_Get(AerospikeLList * self, PyObject * args, PyObject *
 
 CLEANUP:
 
+    if (list_p) {
+        as_list_destroy(list_p);
+    }
+
 	if ( err.code != AEROSPIKE_OK ) {
 		PyObject * py_err = NULL;
 		error_to_pyobject(&err, &py_err);

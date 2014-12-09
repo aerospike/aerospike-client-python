@@ -93,6 +93,8 @@ PyObject * AerospikeLMap_Add(AerospikeLMap * self, PyObject * args, PyObject * k
 
 CLEANUP:
 
+    as_val_destroy(map_key);
+    as_val_destroy(map_value);
 	if ( err.code != AEROSPIKE_OK ) {
 		PyObject * py_err = NULL;
 		error_to_pyobject(&err, &py_err);
@@ -235,18 +237,22 @@ PyObject * AerospikeLMap_Get(AerospikeLMap * self, PyObject * args, PyObject * k
         goto CLEANUP;
     }
 
-    as_val* map_value = NULL;
+    as_val* map_key_value = NULL;
     aerospike_lmap_get(self->client->as, &err, apply_policy_p, &self->key,
-            &self->lmap, map_key, &map_value);
+            &self->lmap, map_key, &map_key_value);
 
     if (err.code != AEROSPIKE_OK) {
         goto CLEANUP;
     }
 
     PyObject * py_map_val = NULL;
-    val_to_pyobject(&err, map_value, &py_map_val);
+    val_to_pyobject(&err, map_key_value, &py_map_val);
 
 CLEANUP:
+
+    if (map_key_value) {
+        as_val_destroy(map_key_value);
+    }
 
 	if ( err.code != AEROSPIKE_OK ) {
 		PyObject * py_err = NULL;

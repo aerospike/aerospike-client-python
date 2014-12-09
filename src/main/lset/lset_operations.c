@@ -242,6 +242,10 @@ PyObject * AerospikeLSet_Get(AerospikeLSet * self, PyObject * args, PyObject * k
 
 CLEANUP:
 
+    if (return_val_p) {
+        as_val_destroy(return_val_p);
+    }
+
 	if ( err.code != AEROSPIKE_OK ) {
 		PyObject * py_err = NULL;
 		error_to_pyobject(&err, &py_err);
@@ -417,7 +421,6 @@ PyObject * AerospikeLSet_Exists(AerospikeLSet * self, PyObject * args, PyObject 
 {
     PyObject * py_value = NULL;
     PyObject* py_policy = NULL;
-    bool exists = false;
     as_policy_apply apply_policy;
     as_policy_apply* apply_policy_p = NULL;
 
@@ -456,6 +459,8 @@ PyObject * AerospikeLSet_Exists(AerospikeLSet * self, PyObject * args, PyObject 
         goto CLEANUP;
     }
 
+    as_boolean exists;
+    as_boolean_init(&exists, false);
     aerospike_lset_exists(self->client->as, &err, apply_policy_p, &self->key,
             &self->lset, val, &exists);
 
@@ -467,7 +472,11 @@ CLEANUP:
         Py_DECREF(py_err);
 		return NULL;
 	}
-    return PyBool_FromLong(exists);
+
+    if (as_boolean_get(&exists))
+        return Py_True;
+    else
+        return Py_False;
 }
 
 /**

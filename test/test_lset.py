@@ -189,7 +189,7 @@ class TestLSet(object):
             Invoke exists() on lset where non-existent element is passed.
         """
         # Should return false but(csdk givin true)
-        assert True == TestLSet.lset.exists(803)
+        assert False == TestLSet.lset.exists(44)
 
     #Size() - Get the current item count of the set.
     def test_lset_size_positive(self):
