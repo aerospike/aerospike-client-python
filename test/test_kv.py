@@ -11,6 +11,11 @@ def count_records((key, meta, rec)):
     global count
     count += 1
 
+def count_records_false((key, meta, rec)):
+    global count
+    count += 1
+    return False
+
 def digest_only(key):
     return (key[0], key[1], None, key[3])
 
@@ -86,7 +91,6 @@ class KVTestCase(unittest.TestCase):
         self.client.scan("test","unittest").foreach(count_records)
         self.assertEqual(count, 0, 'set should be empty')
 
-
     def test_2(self):
         '''
         Using a single key, with digest only.
@@ -150,6 +154,41 @@ class KVTestCase(unittest.TestCase):
         self.client.scan("test","unittest").foreach(count_records)
         self.assertEqual(count, 0, 'set should be empty')
 
+    def test_3(self):
+        """
+        Using multiple keys
+        """
+        from aerospike import predicates as p
+        from time import sleep
+        global count
 
+        for i in xrange(2):
+            key = ('test', 'unittest', i)
+            rec = {
+                'name' : 'name%s' % (str(i)),
+                'addr' : 'name%s' % (str(i)),
+                'age'  : i,
+                'no'   : i
+            }
+            self.client.put(key, rec)
+
+        self.client.index_integer_create({}, 'test', 'unittest', 'age', 'age_index')
+        sleep(1)
+
+        query = self.client.query('test', 'unittest')
+
+        query.select("name", "age")
+        count = 0
+        query.where(p.between('age', 1, 3))
+
+        query.foreach(count_records_false)
+
+        self.assertEqual(count, 1, "foreach failed")
+
+        for i in xrange(2):
+            key = ('test', 'unittest', i)
+            self.client.remove(key)
+
+        self.client.index_remove({}, 'test', 'age_index');
 
 suite = unittest.TestLoader().loadTestsFromTestCase(KVTestCase)
