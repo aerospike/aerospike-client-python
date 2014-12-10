@@ -36,6 +36,8 @@ typedef struct {
 
 static bool each_result(const as_val * val, void * udata)
 {
+	bool rval = true;
+
 	if ( !val ) {
 		return false;
 	}
@@ -47,7 +49,8 @@ static bool each_result(const as_val * val, void * udata)
 
 	// Python Function Arguments and Result Value
 	PyObject * py_arglist = NULL; 
-	PyObject * py_result = NULL;
+	PyObject * py_result  = NULL;
+	PyObject * py_return  = NULL;
 
 	// Lock Python State
 	PyGILState_STATE gstate;
@@ -61,17 +64,35 @@ static bool each_result(const as_val * val, void * udata)
 	PyTuple_SetItem(py_arglist, 0, py_result);
 	
 	// Invoke Python Callback
-	PyEval_CallObject(py_callback, py_arglist);
+	py_return = PyEval_CallObject(py_callback, py_arglist);
 
-	// TODO: handle return value
-	
 	// Release Python Function Arguments
 	Py_DECREF(py_arglist);
 
-	// Release Python State
+	// handle return value
+	if ( py_return == NULL ) {
+		// an exception was raised, handle it (someday)
+		// for now, we bail from the loop
+		rval = false;
+	}
+	else if (  PyBool_Check(py_return) ) {
+		if ( Py_False == py_return ) {
+			rval = false;
+		}
+		else {
+			rval = true;
+		}
+	}
+	else {
+		rval = true;
+	}
+
+	Py_DECREF(py_return);
+
+    // Release Python State
 	PyGILState_Release(gstate);
 
-	return true;
+	return rval;
 }
 
 PyObject * AerospikeQuery_Foreach(AerospikeQuery * self, PyObject * args, PyObject * kwds)
