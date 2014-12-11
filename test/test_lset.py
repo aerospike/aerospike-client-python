@@ -43,8 +43,6 @@ class TestLSet(object):
             Invoke add() integer type data.
         """
 
-        print  TestLSet.key
-
         assert 0 == TestLSet.lset.add(566)
 
     def test_lset_add_string_positive(self):
@@ -215,7 +213,7 @@ class TestLSet(object):
         """
         key = ('test', 'demo', 'remove')
 
-        lset = self.client.lset(key, 'lset_add')
+        lset = self.client.lset(key, 'lset_ad')
 
         lset.add(876)
 

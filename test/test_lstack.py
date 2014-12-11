@@ -159,6 +159,13 @@ class TestLStack(object):
             Invoke peek() to get elements from the stack.
         """
 
+        list = [100, 200, 'z']
+        map = {
+                'k78' : 66,
+                'pqr' : 202
+                }
+        assert 0 == TestLStack.lstack.push_many([12, 56, 'as',
+            bytearray("asd;as[d'as;d", "utf-8"), list, map])
         assert [{'k78' : 66, 'pqr' : 202}, [100, 200, 'z']] == TestLStack.lstack.peek(2)
 
     def test_lstack_get_element_negative(self):
@@ -184,7 +191,7 @@ class TestLStack(object):
         """
             Invoke size() on lstack.
         """
-        assert 12 == TestLStack.lstack.size()
+        assert 18 == TestLStack.lstack.size()
 
     #Destroy() - Delete the entire set(LDT Remove).
     def test_lstack_destroy_positive(self):
@@ -194,7 +201,7 @@ class TestLStack(object):
         """
         key = ('test', 'demo', 'remove')
 
-        lstack = self.client.lstack(key, 'lstack_add')
+        lstack = self.client.lstack(key, 'lstack_ad')
 
         lstack.push(876)
 

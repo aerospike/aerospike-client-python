@@ -127,6 +127,7 @@ class TestLMap(object):
                 'k78' : 66,
                 'pqr' : 202
                 }
+        assert 0 == TestLMap.lmap.add('k1', 89)
         assert 0 == TestLMap.lmap.add_all([12, 56, 'as',
             bytearray("asd;as[d'as;d", "utf-8"), list, map])
 
@@ -137,6 +138,7 @@ class TestLMap(object):
             Invoke get() to get list from set.
         """
 
+        assert 0 == TestLMap.lmap.add(12, "a")
         assert {12 : 'a'} == TestLMap.lmap.get(12)
 
     def test_lmap_get_element_negative(self):
@@ -174,6 +176,8 @@ class TestLMap(object):
         """
             Invoke remove() to remove element.
         """
+        
+        assert 0 == TestLMap.lmap.add('k', 'a')
         assert 0 == TestLMap.lmap.remove('k')
 
     #Destroy() - Delete the entire set(LDT Remove).

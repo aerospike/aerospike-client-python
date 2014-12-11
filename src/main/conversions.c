@@ -246,6 +246,7 @@ as_status pyobject_to_map(as_error * err, PyObject * py_dict, as_map ** map)
 		}
 		pyobject_to_val(err, py_val, &val);
 		if ( err->code != AEROSPIKE_OK ) {
+            as_val_destroy(key);
 			break;
 		}
 		as_map_set(*map, key, val);
