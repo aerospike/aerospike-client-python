@@ -26,7 +26,7 @@ class TestLStack(object):
 
         TestLStack.key = ('test', 'demo', 'lstack_push_key')
 
-        TestLStack.lstack = TestLStack.client.lstack(TestLStack.key, 'lstack_pu')
+        TestLStack.lstack = TestLStack.client.lstack(TestLStack.key, 'lstack_push')
 
 
     def teardown_class(cls):
@@ -36,6 +36,7 @@ class TestLStack(object):
 
         cls.client.close()
 
+    #Peek - Peek element from empty stack.
     def test_lstack_peek_from_empty_stack_positive(self):
 
         """
@@ -48,32 +49,25 @@ class TestLStack(object):
         assert exception.value[0] == 100
         assert exception.value[1] == "/opt/aerospike/sys/udf/lua/ldt/lib_lstack.lua:3039: 1415:LDT-Top Record Not Found"
 
-    #push() - push an object to the set.
-    def test_lstack_push_integer_positive(self):
+    #Push() - push an object(integer, string, byte, map) onto the stack.
+    def test_lstack_push_peek_positive(self):
 
         """
-            Invoke push() integer type data.
+            Invoke push() data onto the stack.
         """
 
-        print  TestLStack.key
-
+        assert 0 == TestLStack.lstack.push('')
         assert 0 == TestLStack.lstack.push(566)
+        map = {
+                'a' : 12,
+                '!@#@#$QSDAsd;as' : bytearray("asd;as[d'as;d", "utf-8")
+                }
+        assert 0 == TestLStack.lstack.push(map)
+        
+        assert [{'a' : 12, '!@#@#$QSDAsd;as' : bytearray("asd;as[d'as;d",
+            "utf-8")}, 566, u''] == TestLStack.lstack.peek(3)
 
-    def test_lstack_push_string_positive(self):
-
-        """
-            Invoke push() for string type data.
-        """
-
-        assert 0 == TestLStack.lstack.push("lsrack_string")
-
-    def test_lstack_push_char_positive(self):
-
-        """
-            Invoke push() char type data.
-        """
-        assert 0 == TestLStack.lstack.push('k')
-
+    #Push() - Push an object(float) onto the stack.
     def test_lstack_push_float_positive(self):
 
         """
@@ -89,42 +83,7 @@ class TestLStack(object):
         assert exception.value[0] == -1
         assert exception.value[1] == "value is not a supported type."
 
-    #Set_capacity() - Set the capacity of the stack.
-    def test_lstack_set_capacity_positive(self):
-
-        """
-            Invoke set_capacity() of lstack.
-        """
-        assert 0 == TestLStack.lstack.set_capacity(25)
-
-    def test_lstack_push_list_positive(self):
-
-        """
-            Invoke push() method for list.
-        """
-        list = [12, 'a', bytearray("asd;as[d'as;d", "utf-8")]
-
-        assert 0 == TestLStack.lstack.push(list)
-
-    def test_lstack_push_map_positive(self):
-
-        """
-            Invoke push() method for map.
-        """
-        map = {
-                'a' : 12,
-                '!@#@#$QSDAsd;as' : bytearray("asd;as[d'as;d", "utf-8")
-                }
-
-        assert 0 == TestLStack.lstack.push(map)
-
-    def test_lstack_push_empty_string_positive(self):
-
-        """
-            Invoke push() empty string.
-        """
-        assert 0 == TestLStack.lstack.push('')
-    
+    #Push - Push without any mandatory parameters.
     def test_lstack_push_no_parameter_negative(self):
 
         """
@@ -136,8 +95,7 @@ class TestLStack(object):
 
         assert "Required argument 'value' (pos 1) not found" in typeError.value
 
-
-    #Push_many() - list of objects to the set.
+    #Push_many() - List of objects to the stack.
     def test_lstack_push_many_positive(self):
 
         """
@@ -146,52 +104,31 @@ class TestLStack(object):
 
         list = [100, 200, 'z']
         map = {
-                'k78' : 66,
-                'pqr' : 202
+                 'k78' : 66,
+                 'pqr' : 202
                 }
         assert 0 == TestLStack.lstack.push_many([12, 56, 'as',
             bytearray("asd;as[d'as;d", "utf-8"), list, map])
-
-    #Peek() - Peek an object from the lstack.
-    def test_lstack_get_element_positive(self):
-
-        """
-            Invoke peek() to get elements from the stack.
-        """
-
-        list = [100, 200, 'z']
-        map = {
-                'k78' : 66,
-                'pqr' : 202
-                }
-        assert 0 == TestLStack.lstack.push_many([12, 56, 'as',
-            bytearray("asd;as[d'as;d", "utf-8"), list, map])
-        assert [{'k78' : 66, 'pqr' : 202}, [100, 200, 'z']] == TestLStack.lstack.peek(2)
-
-    def test_lstack_get_element_negative(self):
-
-        """
-            Invoke peek() without any mandatory parameters.
-        """
-
-        with pytest.raises(TypeError) as typeError: 
-            TestLStack.lstack.peek()
-
-    #Get_capacity() - Get the capacity of the stack.
-    def test_lstack_get_capacity_positive(self):
-
-        """
-            Invoke get_capacity() of lstack.
-        """
-        assert 25 == TestLStack.lstack.get_capacity()
-
+    
+        assert [{u'k78': 66, u'pqr': 202}, [100, 200, u'z'],
+                bytearray(b"asd;as[d\'as;d"), u'as', 56, 12] == TestLStack.lstack.peek(6)
+    
     #Size() - Get the current item count of the stack.
     def test_lstack_size_positive(self):
 
         """
             Invoke size() on lstack.
         """
-        assert 18 == TestLStack.lstack.size()
+        assert 9 == TestLStack.lstack.size()
+
+    #Set_capacity() - Set the capacity of the stack.
+    def test_lstack_set_and_get_capacity_positive(self):
+
+        """
+            Invoke set_capacity() of lstack.
+        """
+        assert 0 == TestLStack.lstack.set_capacity(10)
+        assert 10 == TestLStack.lstack.get_capacity()
 
     #Destroy() - Delete the entire set(LDT Remove).
     def test_lstack_destroy_positive(self):
@@ -201,7 +138,7 @@ class TestLStack(object):
         """
         key = ('test', 'demo', 'remove')
 
-        lstack = self.client.lstack(key, 'lstack_ad')
+        lstack = self.client.lstack(key, 'lstack_rem')
 
         lstack.push(876)
 

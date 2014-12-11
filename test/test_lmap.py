@@ -36,31 +36,26 @@ class TestLMap(object):
 
         cls.client.close()
 
-    #add() - Add an object to the set.
+    #add() - Add an object to the map.
     def test_lmap_add_integer_positive(self):
 
         """
             Invoke add() integer type data.
         """
 
-        print  TestLMap.key
+        assert 0 == TestLMap.lmap.add('k1', 8) 
+        assert {u'k1' : 8} == TestLMap.lmap.get('k1')
 
-        assert 0 == TestLMap.lmap.add('k1', 89)
+        assert 0 == TestLMap.lmap.add('k2', 86)
+        assert {u'k2' : 86} == TestLMap.lmap.get('k2')
 
-    def test_lmap_add_string_positive(self):
+        assert 0 == TestLMap.lmap.add(12, 'a')
+        assert {12 : u'a'} == TestLMap.lmap.get(12)
 
-        """
-            Invoke add() string type data.
-        """
-        assert 0 == TestLMap.lmap.add(12, "a")
-
-    def test_lmap_add_char_positive(self):
-
-        """
-            Invoke add() char type data.
-        """
         assert 0 == TestLMap.lmap.add('k', 'a')
+        assert {u'k' : u'a'} == TestLMap.lmap.get('k')
 
+    #Add() - Add unsupported datatype to lmap.
     def test_lmap_add_float_positive(self):
 
         """
@@ -76,15 +71,18 @@ class TestLMap(object):
         assert exception.value[0] == -1
         assert exception.value[1] == "value is not a supported type."
 
-    def test_lmap_add_list_positive(self):
+    #Add() and Get() - Add list to lmap.  
+    def test_lmap_add_get_list_positive(self):
 
         """
             Invoke add() method for list.
         """
         list = [12, 'a', bytearray("asd;as[d'as;d", "utf-8")]
 
-        assert 0 == TestLMap.lmap.add(list, 'abc')
+        assert 0 == TestLMap.lmap.add('list', list)
+        assert {u'list' : [12, 'a', bytearray("asd;as[d'as;d", "utf-8")]} == TestLMap.lmap.get('list')
 
+    #Add() and Get() - Add map to lmap.
     def test_lmap_add_map_positive(self):
 
         """
@@ -92,11 +90,24 @@ class TestLMap(object):
         """
         map = {
                 'a' : 12,
-                '!@#@#$QSDAsd;as' : bytearray("asd;as[d'as;d", "utf-8")
+                '!@#@#$QSDAsd;as' : bytearray("asd;as[d'as;d", "utf-8"),
                 }
 
         assert 0 == TestLMap.lmap.add('', map)
+        assert {u'' : {'a' : 12, '!@#@#$QSDAsd;as' : bytearray("asd;as[d'as;d",
+            "utf-8")}} == TestLMap.lmap.get('')
 
+    #Add() - LMap add duplicate key parameter.
+    def test_lmap_add_duplicate_key(self):
+
+        """
+            Invoke add() method with duplicate key.
+        """
+        assert 0 == TestLMap.lmap.add('name', 'aa')
+        assert 0 == TestLMap.lmap.add('name', 'bb')
+        assert {u'name' : u'aa'} == TestLMap.lmap.get('name')
+
+    #Add() - Add() without any mandatory parameters.
     def test_lmap_no_parameter_negative(self):
 
         """
@@ -107,40 +118,26 @@ class TestLMap(object):
             TestLMap.lmap.add()
 
         assert "Required argument 'key' (pos 1) not found" in typeError.value
-
-    def test_lmap_empty_string_positive(self):
-
-        """
-            Invoke add() integer type data.
-        """
-        assert 0 == TestLMap.lmap.add('', '')
-
+    
     #Add_all() - Add a list of objects to the set.
-    def test_lmap_add_all_positive(self):
+    def test_lmap_put_all_positive(self):
 
         """
-            Invoke add_all() to add a list of objects to the set.
+            Invoke put_all() to add a map of objects to the set.
         """
 
-        list = [100, 200, 'z']
-        map = {
-                'k78' : 66,
-                'pqr' : 202
+        map1 = {
+                'k76' : 662,
+                'pq' : 2022
                 }
-        assert 0 == TestLMap.lmap.add('k1', 89)
-        assert 0 == TestLMap.lmap.add_all([12, 56, 'as',
-            bytearray("asd;as[d'as;d", "utf-8"), list, map])
 
-    #Get() - Get an object to the set.
-    def test_lmap_get_element_positive(self):
-
-        """
-            Invoke get() to get list from set.
-        """
-
-        assert 0 == TestLMap.lmap.add(12, "a")
-        assert {12 : 'a'} == TestLMap.lmap.get(12)
-
+        map2 = {
+                53 : bytearray("aassd;as[d'as;d", "utf-8"),
+                'k98' : map1
+                }
+        assert 0 == TestLMap.lmap.add_all(map2)
+   
+    #Get() - Get() without any mandatory parameters.
     def test_lmap_get_element_negative(self):
 
         """
@@ -150,6 +147,7 @@ class TestLMap(object):
         with pytest.raises(TypeError) as typeError: 
             TestLMap.lmap.get()
 
+    #Get() - Get() on non-existent key.
     def test_lmap_get_non_existent_element_positive(self):
 
         """
@@ -168,7 +166,7 @@ class TestLMap(object):
         """
             Invoke size() on lmap.
         """
-        assert 5 == TestLMap.lmap.size()
+        assert 9 == TestLMap.lmap.size()
 
     #Remove() - Remove an object from the set.
     def test_lmap_remove_element_positive(self):
@@ -177,10 +175,10 @@ class TestLMap(object):
             Invoke remove() to remove element.
         """
         
-        assert 0 == TestLMap.lmap.add('k', 'a')
-        assert 0 == TestLMap.lmap.remove('k')
+        assert 0 == TestLMap.lmap.add('k47', 'aa')
+        assert 0 == TestLMap.lmap.remove('k47')
 
-    #Destroy() - Delete the entire set(LDT Remove).
+    #Destroy() - Delete the entire lmap(LDT Remove).
     def test_lmap_destroy_positive(self):
 
         """

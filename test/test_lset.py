@@ -36,29 +36,23 @@ class TestLSet(object):
 
         cls.client.close()
 
-    #add() - Add an object to the set.
-    def test_lset_add_integer_positive(self):
+    #Add() and Get() - Add and Get an object from the set.
+    def test_lset_add_get_positive(self):
 
         """
-            Invoke add() integer type data.
+            Invoke add() to add object to the set.
         """
-
+        
         assert 0 == TestLSet.lset.add(566)
+        assert 566 == TestLSet.lset.get(566)
 
-    def test_lset_add_string_positive(self):
-
-        """
-            Invoke add() string type data.
-        """
         assert 0 == TestLSet.lset.add("abc")
+        assert "abc" == TestLSet.lset.get("abc")
 
-    def test_lset_add_char_positive(self):
-
-        """
-            Invoke add() char type data.
-        """
         assert 0 == TestLSet.lset.add('k')
+        assert 'k' == TestLSet.lset.get('k')
 
+    #Add() - Add float type data to the set.
     def test_lset_add_float_positive(self):
 
         """
@@ -74,6 +68,7 @@ class TestLSet(object):
         assert exception.value[0] == -1
         assert exception.value[1] == "value is not a supported type."
 
+    #Add and Get list from lset.
     def test_lset_add_list_positive(self):
 
         """
@@ -82,7 +77,9 @@ class TestLSet(object):
         list = [12, 'a', bytearray("asd;as[d'as;d", "utf-8")]
 
         assert 0 == TestLSet.lset.add(list)
+        assert [12, u'a', bytearray("asd;as[d'as;d", "utf-8")] == TestLSet.lset.get(list)
 
+    #Add and Get map from lset.
     def test_lset_add_map_positive(self):
 
         """
@@ -94,7 +91,10 @@ class TestLSet(object):
                 }
 
         assert 0 == TestLSet.lset.add(map)
+        assert {u'a' : 12, u'!@#@#$QSDAsd;as' : bytearray("asd;as[d'as;d",
+            "utf-8")} == TestLSet.lset.get(map)
 
+    #Add() - add without any mandatory parameters.
     def test_lset_no_parameter_negative(self):
 
         """
@@ -106,14 +106,8 @@ class TestLSet(object):
 
         assert "Required argument 'value' (pos 1) not found" in typeError.value
 
-    def test_lset_empty_string_positive(self):
-
-        """
-            Invoke add() integer type data.
-        """
-        assert 0 == TestLSet.lset.add('')
-
-    def test_lset_add_duplicate_element_positive(self):
+    #Add - Add an object to the lset which is already present.
+    def test_lset_add_duplicate_element_negative(self):
 
         """
             Invoke add() duplicate element into the set.
@@ -139,19 +133,11 @@ class TestLSet(object):
                 'k78' : 66,
                 'pqr' : 202
                 }
-        assert 0 == TestLSet.lset.add_all([12, 56, 'as',
-            bytearray("asd;as[d'as;d", "utf-8"), list, map])
+        add_all = ['', 12, 56, 'as', bytearray("asd;as[d'as;d", "utf-8"), list, map]
+        assert 0 == TestLSet.lset.add_all(add_all)
+        assert u'as' == TestLSet.lset.get('as')
 
-    #Get() - Get an object to the set.
-    def test_lset_get_element_positive(self):
-
-        """
-            Invoke get() to get list from set.
-        """
-        list = [12, 'a', bytearray("asd;as[d'as;d", "utf-8")]
-
-        assert [12, u'a', bytearray(b"asd;as[d\'as;d")] == TestLSet.lset.get(list)
-
+    #Get() - Get an object from the lset without any mandatory parameters.
     def test_lset_get_element_negative(self):
 
         """
@@ -161,6 +147,7 @@ class TestLSet(object):
         with pytest.raises(TypeError) as typeError: 
             TestLSet.lset.get()
 
+    #Get() - Get non-existent element from lset.
     def test_lset_get_non_existent_element_positive(self):
 
         """
@@ -173,21 +160,24 @@ class TestLSet(object):
         assert exception.value[0] == 100
         assert exception.value[1] == "/opt/aerospike/sys/udf/lua/ldt/lib_lset.lua:3931: 1401:LDT-Item Not Found"
 
-    #Exists() - Test existence of an object in the set.
+    #Exists() and Remove() - Test existence of an object and remove from the set.
     def test_lset_exists_element_positive(self):
 
         """
             Invoke exists() on lset.
         """
-        assert True == TestLSet.lset.exists(566)
+
+        assert 0 == TestLSet.lset.add(999)
+        assert True == TestLSet.lset.exists(999)
+        assert 0 == TestLSet.lset.remove(999)
 
     def test_lset_exists_random_element_positive(self):
 
         """
             Invoke exists() on lset where non-existent element is passed.
         """
-        # Should return false but(csdk givin true)
-        assert False == TestLSet.lset.exists(44)
+
+        assert False == TestLSet.lset.exists(444)
 
     #Size() - Get the current item count of the set.
     def test_lset_size_positive(self):
@@ -196,14 +186,6 @@ class TestLSet(object):
             Invoke size() on lset.
         """
         assert 12 == TestLSet.lset.size()
-
-    #Remove() - Remove an object from the set.
-    def test_lset_remove_element_positive(self):
-
-        """
-            Invoke remove() to remove element.
-        """
-        assert 0 == TestLSet.lset.remove('k')
 
     #Destroy() - Delete the entire set(LDT Remove).
     def test_lset_destroy_positive(self):

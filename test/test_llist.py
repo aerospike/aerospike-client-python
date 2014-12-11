@@ -26,12 +26,12 @@ class TestLList(object):
 
         TestLList.client = aerospike.client(config).connect()
 
-        TestLList.key1 = ('test', 'demo', 'integer_llist_key1')
+        TestLList.key1 = ('test', 'demo', 'integer_llist_ky')
 
         TestLList.llist_integer = TestLList.client.llist(TestLList.key1,
                 'integer_bin')
 
-        TestLList.key2 = ('test', 'demo', 'string_llist_key1')
+        TestLList.key2 = ('test', 'demo', 'string_llist_ky')
 
         TestLList.llist_string = TestLList.client.llist(TestLList.key2,
                 'string_bin')
@@ -46,30 +46,21 @@ class TestLList(object):
 
         cls.client.close()
 
-    #add() - Add an object to the set.
+    #Add() - Add an object to the llist.
     def test_llist_add_integer_positive(self):
 
         """
-            Invoke add() integer type data.
+            Invoke add() an object to LList.
         """
 
         assert 0 == TestLList.llist_integer.add(11)
-
-    def test_llist_add_string_positive(self):
-
-        """
-            Invoke add() string type data.
-        """
+        assert [11] == TestLList.llist_integer.get(11)
 
         assert 0 == TestLList.llist_string.add("abc")
+        assert ['abc'] == TestLList.llist_string.get('abc')
 
-    def test_llist_add_char_positive(self):
 
-        """
-            Invoke add() char type data.
-        """
-        assert 0 == TestLList.llist_string.add('k')
-
+    #Add() - Add() unsupported type data to llist.
     def test_llist_add_float_positive(self):
 
         """
@@ -85,6 +76,7 @@ class TestLList(object):
         assert exception.value[0] == -1
         assert exception.value[1] == "value is not a supported type."
 
+    #Add() - Add() without any mandatory parameters. 
     def test_llist_no_parameter_negative(self):
 
         """
@@ -96,13 +88,6 @@ class TestLList(object):
 
         assert "Required argument 'value' (pos 1) not found" in typeError.value
 
-    def test_llist_empty_string_positive(self):
-
-        """
-            Invoke add() integer type data.
-        """
-        assert 0 == TestLList.llist_string.add('')
-
     #Add_all() - Add a list of objects to the set.
     def test_llist_add_all_positive(self):
 
@@ -112,15 +97,11 @@ class TestLList(object):
 
         assert 0 == TestLList.llist_integer.add_all([122, 56, 871])
 
-    #Get() - Get an object from the llist.
-    def test_llist_get_element_positive(self):
+        assert [122] == TestLList.llist_integer.get(122)
+        assert [56] == TestLList.llist_integer.get(56)
+        assert [871] == TestLList.llist_integer.get(871)
 
-        """
-            Invoke get() to get list from set.
-        """
-
-        assert ['abc'] == TestLList.llist_string.get('abc')
-
+    #Get() - Get without any mandatory parameters.
     def test_llist_get_element_negative(self):
 
         """
@@ -130,19 +111,7 @@ class TestLList(object):
         with pytest.raises(TypeError) as typeError: 
             TestLList.llist_integer.get()
 
-    def test_llist_get_non_existent_element_positive(self):
-
-        """
-            Invoke get() non-existent element from set.
-        """
-
-        with pytest.raises(Exception) as exception: 
-            TestLList.llist_integer.get(1000)
-
-        assert exception.value[0] == 100
-        assert exception.value[1] == "/opt/aerospike/sys/udf/lua/ldt/lib_llist.lua:5085: 1401:LDT-Item Not Found"
-
-    #Size() - Get the current item count of the set.
+    #Size() - Get the current item count of the llist.
     def test_llist_size_positive(self):
 
         """
@@ -150,15 +119,23 @@ class TestLList(object):
         """
         assert 4 == TestLList.llist_integer.size()
 
-    #Remove() - Remove an object from the set.
-    def test_llist_remove_element_positive(self):
+    #Remove() and Get()- Remove an object from the set and get non-existent element.
+    def test_llist_remove_positive(self):
 
         """
             Invoke remove() to remove element.
         """
-        assert 0 == TestLList.llist_string.remove('k')
 
-    #Remove() - Remove non-existent object from the set.
+        assert 0 == TestLList.llist_string.add('remove')
+        assert 0 == TestLList.llist_string.remove('remove')
+
+        with pytest.raises(Exception) as exception: 
+            TestLList.llist_string.get('remove')
+
+        assert exception.value[0] == 100
+        assert exception.value[1] == "/opt/aerospike/sys/udf/lua/ldt/lib_llist.lua:5085: 1401:LDT-Item Not Found"
+
+    #Remove() - Remove non-existent object from the llist.
     def test_llist_remove_element_negative(self):
 
         """
@@ -171,7 +148,7 @@ class TestLList(object):
         assert exception.value[0] == 100
         assert exception.value[1] == '/opt/aerospike/sys/udf/lua/ldt/lib_llist.lua:5454: 1401:LDT-Item Not Found'
 
-    #Destroy() - Delete the entire set(LDT Remove).
+    #Destroy() - Delete the entire LList(LDT Remove).
     def test_llist_destroy_positive(self):
 
         """
@@ -183,5 +160,4 @@ class TestLList(object):
 
         llist.add(876)
 
-        assert 0 == llist.destroy()
-        
+        assert 0 == llist.destroy()        
