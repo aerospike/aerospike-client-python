@@ -119,7 +119,7 @@ class TestLMap(object):
 
         assert "Required argument 'key' (pos 1) not found" in typeError.value
     
-    #Add_all() - Add a list of objects to the set.
+    #Add_all() - Add a map containing the entries to add to the lmap.
     def test_lmap_put_all_positive(self):
 
         """

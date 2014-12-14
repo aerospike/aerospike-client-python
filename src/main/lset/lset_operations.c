@@ -153,6 +153,7 @@ PyObject * AerospikeLSet_Add_All(AerospikeLSet * self, PyObject * args, PyObject
      * Convert python list to as list 
      */
     if ( !PyList_Check(py_arglist)) {
+        as_error_update(&err, AEROSPIKE_ERR_PARAM, "Invalid argument(type)");
         goto CLEANUP;
     }
 
@@ -318,12 +319,20 @@ PyObject * AerospikeLSet_Filter(AerospikeLSet * self, PyObject * args, PyObject 
 		goto CLEANUP;
 	}
 
-    if ( !PyList_Check(py_args)) {
+    if ( py_args && !filter_name) {
+        as_error_update(&err, AEROSPIKE_ERR_PARAM, "Filter arguments without filter name");
+        goto CLEANUP;
+    }
+
+    if ( py_args && !PyList_Check(py_args)) {
+        as_error_update(&err, AEROSPIKE_ERR_PARAM, "Invalid filter argument(type)");
         goto CLEANUP;
     }
 
     as_list* arg_list = NULL;
-    pyobject_to_list(&err, py_args, &arg_list);
+    if (py_args) {
+        pyobject_to_list(&err, py_args, &arg_list);
+    }
 
     as_list* elements_list = NULL;
     aerospike_lset_filter(self->client->as, &err, apply_policy_p, &self->key,

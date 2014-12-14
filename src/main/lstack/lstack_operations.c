@@ -157,10 +157,7 @@ PyObject * AerospikeLStack_Push_Many(AerospikeLStack * self, PyObject * args, Py
      * Convert python list to as list 
      */
     if ( !PyList_Check(py_arglist)) {
-        goto CLEANUP;
-    }
-
-    if ( !PyList_Check(py_arglist)) {
+        as_error_update(&err, AEROSPIKE_ERR_PARAM, "Invalid argument(type)");
         goto CLEANUP;
     }
 
@@ -297,7 +294,7 @@ PyObject * AerospikeLStack_Filter(AerospikeLStack * self, PyObject * args, PyObj
 	static char * kwlist[] = {"peek_count", "udf_function_name", "args", "policy", NULL};
 
 	// Python Function Argument Parsing
-	if ( PyArg_ParseTupleAndKeywords(args, kwds, "lsO|O:filter", kwlist, 
+	if ( PyArg_ParseTupleAndKeywords(args, kwds, "|lsOO:filter", kwlist, 
 			&peek_count, &filter_name, &py_args, &py_policy) == false ) {
 		return NULL;
 	}
@@ -320,11 +317,20 @@ PyObject * AerospikeLStack_Filter(AerospikeLStack * self, PyObject * args, PyObj
 		goto CLEANUP;
 	}
 
-    if ( !PyList_Check(py_args)) {
+    if ( py_args && !filter_name) {
+        as_error_update(&err, AEROSPIKE_ERR_PARAM, "Filter arguments without filter name");
         goto CLEANUP;
     }
+
+    if ( py_args && !PyList_Check(py_args)) {
+        as_error_update(&err, AEROSPIKE_ERR_PARAM, "Invalid filter argument(type)");
+        goto CLEANUP;
+    }
+
     as_list* arg_list = NULL;
-    pyobject_to_list(&err, py_args, &arg_list);
+    if (py_args) {
+        pyobject_to_list(&err, py_args, &arg_list);
+    }
 
     as_list* elements_list = NULL;
     aerospike_lstack_filter(self->client->as, &err, apply_policy_p, &self->key,
