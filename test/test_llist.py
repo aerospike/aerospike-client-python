@@ -47,7 +47,9 @@ class TestLList(object):
         cls.client.close()
 
     #Add() - Add an object to the llist.
-    def test_llist_add_integer_positive(self):
+    #Get() - Get an object from the llist.
+    #Size() - Get the current item count of the llist.
+    def test_llist_add_get_size_positive(self):
 
         """
             Invoke add() an object to LList.
@@ -59,6 +61,7 @@ class TestLList(object):
         assert 0 == TestLList.llist_string.add("abc")
         assert ['abc'] == TestLList.llist_string.get('abc')
 
+        assert 1 == TestLList.llist_integer.size()
 
     #Add() - Add() unsupported type data to llist.
     def test_llist_add_float_positive(self):
@@ -114,14 +117,6 @@ class TestLList(object):
         with pytest.raises(TypeError) as typeError: 
             TestLList.llist_integer.get()
 
-    #Size() - Get the current item count of the llist.
-    def test_llist_size_positive(self):
-
-        """
-            Invoke size() on llist.
-        """
-        assert 4 == TestLList.llist_integer.size()
-
     #Remove() and Get()- Remove an object from the set and get non-existent element.
     def test_llist_remove_positive(self):
 
@@ -164,3 +159,16 @@ class TestLList(object):
         llist.add(876)
 
         assert 0 == llist.destroy()        
+
+    def test_llist_ldt_initialize_negative(self):
+
+        """
+            Initialize ldt with wrong key.
+        """
+        key = ('test', 'demo', 12.3)
+
+        with pytest.raises(Exception) as exception: 
+            llist = self.client.llist(key, 'ldt_stk')
+
+        assert exception.value[0] == -1
+        assert exception.value[1] == "Parameters are incorrect"

@@ -50,7 +50,9 @@ class TestLStack(object):
         assert exception.value[1] == "/opt/aerospike/sys/udf/lua/ldt/lib_lstack.lua:3039: 1415:LDT-Top Record Not Found"
 
     #Push() - push an object(integer, string, byte, map) onto the stack.
-    def test_lstack_push_peek_positive(self):
+    #Size() - Get the current item count of the stack.
+    #Peek - Peek element from empty stack.
+    def test_lstack_push_peek_size_positive(self):
 
         """
             Invoke push() data onto the stack.
@@ -63,6 +65,12 @@ class TestLStack(object):
                 '!@#@#$QSDAsd;as' : bytearray("asd;as[d'as;d", "utf-8")
                 }
         assert 0 == TestLStack.lstack.push(map)
+        
+        policy = {
+                'timeout' : 9000,
+                'key' : aerospike.POLICY_KEY_SEND
+                }
+        assert 3 == TestLStack.lstack.size(policy)
         
         assert [{'a' : 12, '!@#@#$QSDAsd;as' : bytearray("asd;as[d'as;d",
             "utf-8")}, 566, u''] == TestLStack.lstack.peek(3)
@@ -116,18 +124,6 @@ class TestLStack(object):
         assert [{u'k78': 66, u'pqr': 202}, [100, 200, u'z'],
                 bytearray(b"asd;as[d\'as;d"), u'as', 56, 12] == TestLStack.lstack.peek(6)
     
-    #Size() - Get the current item count of the stack.
-    def test_lstack_size_positive(self):
-
-        """
-            Invoke size() on lstack.
-        """
-        policy = {
-                'timeout' : 9000,
-                'key' : aerospike.POLICY_KEY_SEND
-                }
-        assert 9 == TestLStack.lstack.size(policy)
-
     #Set_capacity() - Set the capacity of the stack.
     def test_lstack_set_and_get_capacity_positive(self):
 
@@ -137,6 +133,18 @@ class TestLStack(object):
         assert 0 == TestLStack.lstack.set_capacity(10)
         assert 10 == TestLStack.lstack.get_capacity()
 
+    #Set_capacity() - Set the capacity of the stack to 0.
+    def test_lstack_set_capacity_with_zero_positive(self):
+
+        """
+            Invoke set_capacity() of lstack with zero value.
+        """
+        with pytest.raises(Exception) as exception: 
+            TestLStack.lstack.set_capacity(0)
+
+        assert exception.value[0] == -2
+        assert exception.value[1] == "invalid parameter. as/key/ldt/capacity cannot be null"
+    
     #Destroy() - Delete the entire set(LDT Remove).
     def test_lstack_destroy_positive(self):
 
@@ -150,3 +158,17 @@ class TestLStack(object):
         lstack.push(876)
 
         assert 0 == lstack.destroy()
+
+    def test_lstack_ldt_initialize_negative(self):
+
+        """
+            Initialize ldt with wrong key.
+        """
+        key = ('test', 'demo', 12.3)
+
+        with pytest.raises(Exception) as exception: 
+            lstack = self.client.lstack(key, 'ldt_stk')
+
+        assert exception.value[0] == -1
+        assert exception.value[1] == "Parameters are incorrect"
+

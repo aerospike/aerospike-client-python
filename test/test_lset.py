@@ -37,7 +37,8 @@ class TestLSet(object):
         cls.client.close()
 
     #Add() and Get() - Add and Get an object from the set.
-    def test_lset_add_get_positive(self):
+    #Size() - Get the current item count of the set.
+    def test_lset_add_get_size_positive(self):
 
         """
             Invoke add() to add object to the set.
@@ -51,6 +52,8 @@ class TestLSet(object):
 
         assert 0 == TestLSet.lset.add('k')
         assert 'k' == TestLSet.lset.get('k')
+
+        assert 3 == TestLSet.lset.size()
 
     #Add() - Add float type data to the set.
     def test_lset_add_float_positive(self):
@@ -182,15 +185,7 @@ class TestLSet(object):
         """
 
         assert False == TestLSet.lset.exists(444)
-
-    #Size() - Get the current item count of the set.
-    def test_lset_size_positive(self):
-
-        """
-            Invoke size() on lset.
-        """
-        assert 12 == TestLSet.lset.size()
-
+    
     #Destroy() - Delete the entire set(LDT Remove).
     def test_lset_destroy_positive(self):
 
@@ -204,3 +199,16 @@ class TestLSet(object):
         lset.add(876)
 
         assert 0 == lset.destroy()
+    
+    def test_lset_ldt_initialize_negative(self):
+
+        """
+            Initialize ldt with wrong key.
+        """
+        key = ('test', 'demo', 12.3)
+
+        with pytest.raises(Exception) as exception: 
+            lset = self.client.lset(key, 'ldt_stk')
+
+        assert exception.value[0] == -1
+        assert exception.value[1] == "Parameters are incorrect"

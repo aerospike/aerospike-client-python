@@ -191,16 +191,15 @@ PyTypeObject * AerospikeLStack_Ready()
 AerospikeLStack * AerospikeLStack_New(AerospikeClient * client, PyObject * args, PyObject * kwds)
 {
     AerospikeLStack * self = (AerospikeLStack *) AerospikeLStack_Type.tp_new(&AerospikeLStack_Type, args, kwds);
-    /*if (client) { */
-        self->client = client;
-    /*} */
+    self->client = client;
     Py_INCREF(client);
+
     if (AerospikeLStack_Type.tp_init(self, args, kwds) == 0) {
         return self;
     } else {
         as_error err;
         as_error_init(&err);
-        as_error_update(&err, AEROSPIKE_ERR, "Prameters are incorrect");
+        as_error_update(&err, AEROSPIKE_ERR, "Parameters are incorrect");
         PyObject * py_err = NULL;
         error_to_pyobject(&err, &py_err);
         PyErr_SetObject(PyExc_Exception, py_err);

@@ -37,7 +37,9 @@ class TestLMap(object):
         cls.client.close()
 
     #Put() - put an object to the map.
-    def test_lmap_put_integer_positive(self):
+    #Get() - Get an object to the map.
+    #Size() - Get the current item count of the set.
+    def test_lmap_put_get_size_positive(self):
 
         """
             Invoke put() integer type data.
@@ -54,6 +56,12 @@ class TestLMap(object):
 
         assert 0 == TestLMap.lmap.put('k', 'a')
         assert {u'k' : u'a'} == TestLMap.lmap.get('k')
+        
+        policy = {
+                'key' : aerospike.POLICY_KEY_SEND 
+                }
+
+        assert 4 == TestLMap.lmap.size(policy)
 
     #put() - put unsupported datatype to lmap.
     def test_lmap_put_float_positive(self):
@@ -159,18 +167,7 @@ class TestLMap(object):
 
         assert exception.value[0] == 100
         assert exception.value[1] == "/opt/aerospike/sys/udf/lua/ldt/lib_lmap.lua:2999: 1401:LDT-Item Not Found"
-
-    #Size() - Get the current item count of the set.
-    def test_lmap_size_positive(self):
-
-        """
-            Invoke size() on lmap.
-        """
-        policy = {
-                'key' : aerospike.POLICY_KEY_SEND 
-                }
-        assert 9 == TestLMap.lmap.size(policy)
-
+    
     #Remove() - Remove an object from the set.
     def test_lmap_remove_element_positive(self):
 
@@ -194,3 +191,16 @@ class TestLMap(object):
         lmap.put('k67', 876)
 
         assert 0 == lmap.destroy()
+
+    def test_lmap_ldt_initialize_negative(self):
+
+        """
+            Initialize ldt with wrong key.
+        """
+        key = ('test', 'demo', 12.3)
+
+        with pytest.raises(Exception) as exception: 
+            lmap = self.client.lmap(key, 'ldt_stk')
+
+        assert exception.value[0] == -1
+        assert exception.value[1] == "Parameters are incorrect"
