@@ -5,13 +5,13 @@ Add a list of objects to the lset.
 ## Description
 
 ```
-status = lset.add_many(list, policies)
+status = lset.add_many(values, policies)
 ```
 **lset.add_many()** will add a list of objects on the lstack.    
 
 ## Parameters
 
-**list**, the list of objects.   
+**values**, the list of objects.   
 
 **policies**, the dictionary of policies to be given while add_many.   
 

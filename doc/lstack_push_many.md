@@ -7,13 +7,13 @@ a very large collection of data.
 ## Description
 
 ```
-status = lstack.push_many(list, policies)
+status = lstack.push_many(values, policies)
 ```
 **lstack.push_many()** will push list of objects on the lstack.    
 
 ## Parameters
 
-**list**, the list of objects push on the stack.   
+**values**, the list of objects push on the stack.   
 
 **policies**, the dictionary of policies to be given while push_many.   
 

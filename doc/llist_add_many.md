@@ -5,13 +5,13 @@ Add a list of objects to the llist.
 ## Description
 
 ```
-status = llist.add_many(list, policies)
+status = llist.add_many(values, policies)
 ```
 **llist.add_many()** will add a list of objects to the llist.    
 
 ## Parameters
 
-**list**, the list of objects.   
+**values**, the list of objects.   
 
 **policies**, the dictionary of policies to be given while add_many.   
 
