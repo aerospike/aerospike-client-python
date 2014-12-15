@@ -179,9 +179,9 @@ PyObject * AerospikeLMap_Put_Many(AerospikeLMap * self, PyObject * args, PyObjec
 
 CLEANUP:
 
-    /*if (map_values) {
+    if (map_values) {
         as_map_destroy(map_values);
-    }*/
+    }
 
 	if ( err.code != AEROSPIKE_OK ) {
 		PyObject * py_err = NULL;
