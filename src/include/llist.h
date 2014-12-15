@@ -33,30 +33,69 @@ PyTypeObject * AerospikeLList_Ready(void);
 AerospikeLList * AerospikeLList_New(AerospikeClient * client, PyObject * args, PyObject * kwds);
 
 /*******************************************************************************
- * OPERATIONS
+ * LLIST OPERATIONS
  ******************************************************************************/
 
 /**
- * LList : Add operation
+ * Performs `add` operation. This will add an object
+ * to the llist.
+ *
+ * llist.add(value)
  */
 PyObject * AerospikeLList_Add(AerospikeLList * self, PyObject * args, PyObject * kwds);
 
 /**
- * LList : Add_all operation
+ * Performs `add_many` operation. This will add
+ * a list of objects to the list.
+ *
+ * llist.add_many(values)
  */
-PyObject * AerospikeLList_Add_All(AerospikeLList * self, PyObject * args, PyObject * kwds);
+PyObject * AerospikeLList_Add_Many(AerospikeLList * self, PyObject * args, PyObject * kwds);
 
 /**
- * LList : Get operation
+ * Performs `get` operation. This will get
+ * an object from the list.
+ *
+ * llist.get(value)
  */
 PyObject * AerospikeLList_Get(AerospikeLList * self, PyObject * args, PyObject * kwds);
 
+/**
+ * Performs `filter` operation. This will scan the list
+ * and apply a predicate filter.
+ *
+ * llist.filter(udf_name, args)
+ */
 PyObject * AerospikeLList_Filter(AerospikeLList * self, PyObject * args, PyObject * kwds);
 
+/**
+ * Performs `destroy` operation. This will delete the entire
+ * llist.
+ *
+ * llist.destroy()
+ */
 PyObject * AerospikeLList_Destroy(AerospikeLList * self, PyObject * args, PyObject * kwds);
 
+/**
+ * Performs `remove` operation. This will remove an object
+ * from the list.
+ *
+ * llist.remove(element)
+ */
 PyObject * AerospikeLList_Remove(AerospikeLList * self, PyObject * args, PyObject * kwds);
 
+/**
+ * Performs `size` operation. This will get the current item
+ * count of the list.
+ *
+ * llist.size()
+ */
 PyObject * AerospikeLList_Size(AerospikeLList * self, PyObject * args, PyObject * kwds);
 
+/**
+ * Performs `config` operation. This will get the configuration
+ * parameters of the list.
+ *
+ * llist.config()
+ */
 PyObject * AerospikeLList_Config(AerospikeLList * self, PyObject * args, PyObject * kwds);

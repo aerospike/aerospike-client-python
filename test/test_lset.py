@@ -89,10 +89,14 @@ class TestLSet(object):
                 'a' : 12,
                 '!@#@#$QSDAsd;as' : bytearray("asd;as[d'as;d", "utf-8")
                 }
+        policy = {
+                'timeout' : 4000,
+                'key' : aerospike.POLICY_KEY_SEND
+                }
 
         assert 0 == TestLSet.lset.add(map)
         assert {u'a' : 12, u'!@#@#$QSDAsd;as' : bytearray("asd;as[d'as;d",
-            "utf-8")} == TestLSet.lset.get(map)
+            "utf-8")} == TestLSet.lset.get(map, policy)
 
     #Add() - add without any mandatory parameters.
     def test_lset_no_parameter_negative(self):
@@ -121,11 +125,11 @@ class TestLSet(object):
         assert exception.value[0] == 100
         assert exception.value[1] == "/opt/aerospike/sys/udf/lua/ldt/lib_lset.lua:2459: 1402:LDT-Unique Key or Value Violation"
 
-    #Add_all() - Add a list of objects to the set.
-    def test_lset_add_all_positive(self):
+    #Add_many() - Add a list of objects to the set.
+    def test_lset_add_many_positive(self):
 
         """
-            Invoke add_all() to add a list of objects to the set.
+            Invoke add_many() to add a list of objects to the set.
         """
 
         list = [100, 200, 'z']
@@ -133,8 +137,8 @@ class TestLSet(object):
                 'k78' : 66,
                 'pqr' : 202
                 }
-        add_all = ['', 12, 56, 'as', bytearray("asd;as[d'as;d", "utf-8"), list, map]
-        assert 0 == TestLSet.lset.add_all(add_all)
+        add_many = ['', 12, 56, 'as', bytearray("asd;as[d'as;d", "utf-8"), list, map]
+        assert 0 == TestLSet.lset.add_many(add_many)
         assert u'as' == TestLSet.lset.get('as')
 
     #Get() - Get an object from the lset without any mandatory parameters.

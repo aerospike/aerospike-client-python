@@ -275,7 +275,7 @@ CLEANUP:
  * @param kwds                  Dictionary of keywords
  * 
  * Returns a list of elements(peek_count) from the stack after applying predicate.
- * In case of error,appropriate exceptions will be raised.
+ * In case of error, Appropriate exceptions will be raised.
  ********************************************************************************************************
  */
 PyObject * AerospikeLStack_Filter(AerospikeLStack * self, PyObject * args, PyObject * kwds)

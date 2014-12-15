@@ -107,8 +107,11 @@ class TestLStack(object):
                  'k78' : 66,
                  'pqr' : 202
                 }
+        policy = {
+                'timeout' : 8000
+                }
         assert 0 == TestLStack.lstack.push_many([12, 56, 'as',
-            bytearray("asd;as[d'as;d", "utf-8"), list, map])
+            bytearray("asd;as[d'as;d", "utf-8"), list, map], policy)
     
         assert [{u'k78': 66, u'pqr': 202}, [100, 200, u'z'],
                 bytearray(b"asd;as[d\'as;d"), u'as', 56, 12] == TestLStack.lstack.peek(6)
@@ -119,7 +122,11 @@ class TestLStack(object):
         """
             Invoke size() on lstack.
         """
-        assert 9 == TestLStack.lstack.size()
+        policy = {
+                'timeout' : 9000,
+                'key' : aerospike.POLICY_KEY_SEND
+                }
+        assert 9 == TestLStack.lstack.size(policy)
 
     #Set_capacity() - Set the capacity of the stack.
     def test_lstack_set_and_get_capacity_positive(self):

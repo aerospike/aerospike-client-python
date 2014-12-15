@@ -33,30 +33,69 @@ PyTypeObject * AerospikeLMap_Ready(void);
 AerospikeLMap * AerospikeLMap_New(AerospikeClient * client, PyObject * args, PyObject * kwds);
 
 /*******************************************************************************
- * OPERATIONS
+ * LMAP OPERATIONS
  ******************************************************************************/
 
 /**
- * LMAP : Add operation
+ * Performs `put` operation. This will put an object
+ * to the lmap.
+ *
+ * lmap.put(key, value)
  */
-PyObject * AerospikeLMap_Add(AerospikeLMap * self, PyObject * args, PyObject * kwds);
+PyObject * AerospikeLMap_Put(AerospikeLMap * self, PyObject * args, PyObject * kwds);
 
 /**
- * LMAP : Add_all operation
+ * Performs `put_many` operation. This will put a map containing
+ * values to put to the lmap.
+ *
+ * llist.put_many(values)
  */
-PyObject * AerospikeLMap_Add_All(AerospikeLMap * self, PyObject * args, PyObject * kwds);
+PyObject * AerospikeLMap_Put_Many(AerospikeLMap * self, PyObject * args, PyObject * kwds);
 
 /**
- * LMAP : Get operation
+ * Performs `get` operation. This will get
+ * an object from the map.
+ *
+ * lmap.get(key)
  */
 PyObject * AerospikeLMap_Get(AerospikeLMap * self, PyObject * args, PyObject * kwds);
 
+/**
+ * Performs `filter` operation. This will scan the map
+ * and apply a predicate filter.
+ *
+ * lmap.filter(udf_name, args)
+ */
 PyObject * AerospikeLMap_Filter(AerospikeLMap * self, PyObject * args, PyObject * kwds);
 
+/**
+ * Performs `destroy` operation. This will delete the entire
+ * lmap.
+ *
+ * lmap.destroy()
+ */
 PyObject * AerospikeLMap_Destroy(AerospikeLMap * self, PyObject * args, PyObject * kwds);
 
+/**
+ * Performs `remove` operation. This will remove an object
+ * from the map.
+ *
+ * lmap.remove(key)
+ */
 PyObject * AerospikeLMap_Remove(AerospikeLMap * self, PyObject * args, PyObject * kwds);
 
+/**
+ * Performs `size` operation. This will get the current item
+ * count of the map.
+ *
+ * lmap.size()
+ */
 PyObject * AerospikeLMap_Size(AerospikeLMap * self, PyObject * args, PyObject * kwds);
 
+/**
+ * Performs `config` operation. This will get the configuration
+ * parameters of the map.
+ *
+ * lmap.config()
+ */
 PyObject * AerospikeLMap_Config(AerospikeLMap * self, PyObject * args, PyObject * kwds);

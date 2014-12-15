@@ -33,32 +33,78 @@ PyTypeObject * AerospikeLSet_Ready(void);
 AerospikeLSet * AerospikeLSet_New(AerospikeClient * client, PyObject * args, PyObject * kwds);
 
 /*******************************************************************************
- * OPERATIONS
+ * LSET OPERATIONS
  ******************************************************************************/
 
 /**
- * LSET : Add operation
+ * Performs `add` operation. This will add an object
+ * to the lset.
+ *
+ * lset.add(value)
  */
 PyObject * AerospikeLSet_Add(AerospikeLSet * self, PyObject * args, PyObject * kwds);
 
 /**
- * LSET : Add_all operation
+ * Performs `add_many` operation. This will add
+ * a list of objects to the set.
+ *
+ * lset.add_many(values)
  */
-PyObject * AerospikeLSet_Add_All(AerospikeLSet * self, PyObject * args, PyObject * kwds);
+PyObject * AerospikeLSet_Add_Many(AerospikeLSet * self, PyObject * args, PyObject * kwds);
 
 /**
- * LSET : Get operation
+ * Performs `get` operation. This will get
+ * an object from the set.
+ *
+ * lset.get(value)
  */
 PyObject * AerospikeLSet_Get(AerospikeLSet * self, PyObject * args, PyObject * kwds);
 
+/**
+ * Performs `filter` operation. This will scan the set
+ * and apply a predicate filter.
+ *
+ * lset.filter(udf_name, args)
+ */
 PyObject * AerospikeLSet_Filter(AerospikeLSet * self, PyObject * args, PyObject * kwds);
 
+/**
+ * Performs `destroy` operation. This will delete the entire
+ * lset.
+ *
+ * lset.destroy()
+ */
 PyObject * AerospikeLSet_Destroy(AerospikeLSet * self, PyObject * args, PyObject * kwds);
 
+/**
+ * Performs `exists` operation. Test existence of an object
+ * in the lset.
+ *
+ * lset.exists(element)
+ */
 PyObject * AerospikeLSet_Exists(AerospikeLSet * self, PyObject * args, PyObject * kwds);
 
+/**
+ * Performs `remove` operation. This will remove an object
+ * from the set.
+ *
+ * lset.remove(element)
+ */
 PyObject * AerospikeLSet_Remove(AerospikeLSet * self, PyObject * args, PyObject * kwds);
 
+/**
+ * Performs `size` operation. This will get the current item
+ * count of the set.
+ *
+ * lset.size()
+ */
 PyObject * AerospikeLSet_Size(AerospikeLSet * self, PyObject * args, PyObject * kwds);
 
+
+/**
+ * Performs `config` operation. This will get the configuration
+ * parameters of the set.
+ *
+ * lset.config()
+ */
 PyObject * AerospikeLSet_Config(AerospikeLSet * self, PyObject * args, PyObject * kwds);

@@ -955,6 +955,15 @@ bool error_to_pyobject(const as_error * err, PyObject ** obj)
 	return true;
 }
 
+/**
+ * This method will initialize ldt.
+ *
+ * @param error                 The error parameter
+ * @param ldt_p                 The LDT instance
+ * @param bin_name              The ldt bin name
+ * @param type                  The type of LDT
+ * @param module                The UDF module
+ */
 void initialize_ldt(as_error *error, as_ldt* ldt_p, char* bin_name,
         int type, char* module)
 {

@@ -36,11 +36,11 @@ static PyMethodDef AerospikeLMap_Type_Methods[] = {
 
 	// LMAP OPERATIONS
 
-	{"add",
-		(PyCFunction) AerospikeLMap_Add, METH_VARARGS | METH_KEYWORDS,
+	{"put",
+		(PyCFunction) AerospikeLMap_Put, METH_VARARGS | METH_KEYWORDS,
 		"Adds a value to the LMap."},
-	{"add_all",
-		(PyCFunction) AerospikeLMap_Add_All, METH_VARARGS | METH_KEYWORDS,
+	{"put_many",
+		(PyCFunction) AerospikeLMap_Put_Many, METH_VARARGS | METH_KEYWORDS,
 		"Adds multiple values to the LMap."},
 	{"remove",
 		(PyCFunction) AerospikeLMap_Remove, METH_VARARGS | METH_KEYWORDS,

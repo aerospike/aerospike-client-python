@@ -88,14 +88,17 @@ class TestLList(object):
 
         assert "Required argument 'value' (pos 1) not found" in typeError.value
 
-    #Add_all() - Add a list of objects to the set.
-    def test_llist_add_all_positive(self):
+    #Add_many() - Add a list of objects to the set.
+    def test_llist_add_many_positive(self):
 
         """
-            Invoke add_all() to add a list of objects to the set.
+            Invoke add_many() to add a list of objects to the set.
         """
 
-        assert 0 == TestLList.llist_integer.add_all([122, 56, 871])
+        policy = {
+                'timeout' : 7000
+                }
+        assert 0 == TestLList.llist_integer.add_many([122, 56, 871], policy)
 
         assert [122] == TestLList.llist_integer.get(122)
         assert [56] == TestLList.llist_integer.get(56)

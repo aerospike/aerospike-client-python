@@ -120,7 +120,7 @@ static int AerospikeLStack_Type_Init(AerospikeLStack * self, PyObject * args, Py
      * LDT Initialization
      */
     initialize_ldt(&error, &self->lstack, self->bin_name, AS_LDT_LSTACK, module);
-    if (error.code != AEROSPIKE_OK) {
+    if ( error.code != AEROSPIKE_OK) {
         return -1;
     }
 

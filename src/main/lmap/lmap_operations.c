@@ -39,7 +39,7 @@
  * In case of error,appropriate exceptions will be raised.
  ********************************************************************************************************
  */
-PyObject * AerospikeLMap_Add(AerospikeLMap * self, PyObject * args, PyObject * kwds)
+PyObject * AerospikeLMap_Put(AerospikeLMap * self, PyObject * args, PyObject * kwds)
 {
     PyObject* py_map_key = NULL;
     PyObject* py_map_value = NULL;
@@ -53,7 +53,7 @@ PyObject * AerospikeLMap_Add(AerospikeLMap * self, PyObject * args, PyObject * k
 	static char * kwlist[] = {"key", "value", "policy", NULL};
 
 	// Python Function Argument Parsing
-	if ( PyArg_ParseTupleAndKeywords(args, kwds, "OO|O:add", kwlist, 
+	if ( PyArg_ParseTupleAndKeywords(args, kwds, "OO|O:put", kwlist, 
 			&py_map_key, &py_map_value, &py_policy) == false ) {
 		return NULL;
 	}
@@ -124,7 +124,7 @@ CLEANUP:
  * In case of error,appropriate exceptions will be raised.
  ********************************************************************************************************
  */
-PyObject * AerospikeLMap_Add_All(AerospikeLMap * self, PyObject * args, PyObject * kwds)
+PyObject * AerospikeLMap_Put_Many(AerospikeLMap * self, PyObject * args, PyObject * kwds)
 {
     PyObject* py_values = NULL;
     PyObject* py_policy = NULL;
@@ -137,7 +137,7 @@ PyObject * AerospikeLMap_Add_All(AerospikeLMap * self, PyObject * args, PyObject
 	static char * kwlist[] = {"values", "policy", NULL};
 
 	// Python Function Argument Parsing
-	if ( PyArg_ParseTupleAndKeywords(args, kwds, "O|O:add_all", kwlist, 
+	if ( PyArg_ParseTupleAndKeywords(args, kwds, "O|O:put_many", kwlist, 
 			&py_values, &py_policy)== false ) {
 		return NULL;
 	}

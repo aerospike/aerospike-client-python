@@ -36,94 +36,94 @@ class TestLMap(object):
 
         cls.client.close()
 
-    #add() - Add an object to the map.
-    def test_lmap_add_integer_positive(self):
+    #Put() - put an object to the map.
+    def test_lmap_put_integer_positive(self):
 
         """
-            Invoke add() integer type data.
+            Invoke put() integer type data.
         """
 
-        assert 0 == TestLMap.lmap.add('k1', 8) 
+        assert 0 == TestLMap.lmap.put('k1', 8) 
         assert {u'k1' : 8} == TestLMap.lmap.get('k1')
 
-        assert 0 == TestLMap.lmap.add('k2', 86)
+        assert 0 == TestLMap.lmap.put('k2', 86)
         assert {u'k2' : 86} == TestLMap.lmap.get('k2')
 
-        assert 0 == TestLMap.lmap.add(12, 'a')
+        assert 0 == TestLMap.lmap.put(12, 'a')
         assert {12 : u'a'} == TestLMap.lmap.get(12)
 
-        assert 0 == TestLMap.lmap.add('k', 'a')
+        assert 0 == TestLMap.lmap.put('k', 'a')
         assert {u'k' : u'a'} == TestLMap.lmap.get('k')
 
-    #Add() - Add unsupported datatype to lmap.
-    def test_lmap_add_float_positive(self):
+    #put() - put unsupported datatype to lmap.
+    def test_lmap_put_float_positive(self):
 
         """
-            Invoke add() float type data.
+            Invoke put() float type data.
         """
         rec = {
                 "pi" : 3.14
                 }
 
         with pytest.raises(Exception) as exception: 
-            TestLMap.lmap.add('k11', rec)
+            TestLMap.lmap.put('k11', rec)
 
         assert exception.value[0] == -1
         assert exception.value[1] == "value is not a supported type."
 
-    #Add() and Get() - Add list to lmap.  
-    def test_lmap_add_get_list_positive(self):
+    #put() and Get() - put list to lmap.  
+    def test_lmap_put_get_list_positive(self):
 
         """
-            Invoke add() method for list.
+            Invoke put() method for list.
         """
         list = [12, 'a', bytearray("asd;as[d'as;d", "utf-8")]
 
-        assert 0 == TestLMap.lmap.add('list', list)
+        assert 0 == TestLMap.lmap.put('list', list)
         assert {u'list' : [12, 'a', bytearray("asd;as[d'as;d", "utf-8")]} == TestLMap.lmap.get('list')
 
-    #Add() and Get() - Add map to lmap.
-    def test_lmap_add_map_positive(self):
+    #put() and Get() - put map to lmap.
+    def test_lmap_put_map_positive(self):
 
         """
-            Invoke add() method for map.
+            Invoke put() method for map.
         """
         map = {
                 'a' : 12,
                 '!@#@#$QSDAsd;as' : bytearray("asd;as[d'as;d", "utf-8"),
                 }
 
-        assert 0 == TestLMap.lmap.add('', map)
+        assert 0 == TestLMap.lmap.put('', map)
         assert {u'' : {'a' : 12, '!@#@#$QSDAsd;as' : bytearray("asd;as[d'as;d",
             "utf-8")}} == TestLMap.lmap.get('')
 
-    #Add() - LMap add duplicate key parameter.
-    def test_lmap_add_duplicate_key(self):
+    #put() - LMap put duplicate key parameter.
+    def test_lmap_put_duplicate_key(self):
 
         """
-            Invoke add() method with duplicate key.
+            Invoke put() method with duplicate key.
         """
-        assert 0 == TestLMap.lmap.add('name', 'aa')
-        assert 0 == TestLMap.lmap.add('name', 'bb')
+        assert 0 == TestLMap.lmap.put('name', 'aa')
+        assert 0 == TestLMap.lmap.put('name', 'bb')
         assert {u'name' : u'aa'} == TestLMap.lmap.get('name')
 
-    #Add() - Add() without any mandatory parameters.
+    #put() - put() without any mandatory parameters.
     def test_lmap_no_parameter_negative(self):
 
         """
-            Invoke add() without any mandatory parameters.
+            Invoke put() without any mandatory parameters.
         """
 
         with pytest.raises(TypeError) as typeError:
-            TestLMap.lmap.add()
+            TestLMap.lmap.put()
 
         assert "Required argument 'key' (pos 1) not found" in typeError.value
     
-    #Add_all() - Add a map containing the entries to add to the lmap.
-    def test_lmap_put_all_positive(self):
+    #Put_many() - put a map containing the entries to put to the lmap.
+    def test_lmap_put_many_positive(self):
 
         """
-            Invoke put_all() to add a map of objects to the set.
+            Invoke put_many() to put a map of objects to the set.
         """
 
         map1 = {
@@ -135,7 +135,7 @@ class TestLMap(object):
                 53 : bytearray("aassd;as[d'as;d", "utf-8"),
                 'k98' : map1
                 }
-        assert 0 == TestLMap.lmap.add_all(map2)
+        assert 0 == TestLMap.lmap.put_many(map2)
    
     #Get() - Get() without any mandatory parameters.
     def test_lmap_get_element_negative(self):
@@ -166,7 +166,10 @@ class TestLMap(object):
         """
             Invoke size() on lmap.
         """
-        assert 9 == TestLMap.lmap.size()
+        policy = {
+                'key' : aerospike.POLICY_KEY_SEND 
+                }
+        assert 9 == TestLMap.lmap.size(policy)
 
     #Remove() - Remove an object from the set.
     def test_lmap_remove_element_positive(self):
@@ -175,7 +178,7 @@ class TestLMap(object):
             Invoke remove() to remove element.
         """
         
-        assert 0 == TestLMap.lmap.add('k47', 'aa')
+        assert 0 == TestLMap.lmap.put('k47', 'aa')
         assert 0 == TestLMap.lmap.remove('k47')
 
     #Destroy() - Delete the entire lmap(LDT Remove).
@@ -186,8 +189,8 @@ class TestLMap(object):
         """
         key = ('test', 'demo', 'remove')
 
-        lmap = self.client.lmap(key, 'lmap_add')
+        lmap = self.client.lmap(key, 'lmap_put')
 
-        lmap.add('k67', 876)
+        lmap.put('k67', 876)
 
         assert 0 == lmap.destroy()

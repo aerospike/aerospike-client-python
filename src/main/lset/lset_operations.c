@@ -113,7 +113,7 @@ CLEANUP:
  * In case of error,appropriate exceptions will be raised.
  ********************************************************************************************************
  */
-PyObject * AerospikeLSet_Add_All(AerospikeLSet * self, PyObject * args, PyObject * kwds)
+PyObject * AerospikeLSet_Add_Many(AerospikeLSet * self, PyObject * args, PyObject * kwds)
 {
     PyObject* py_arglist = NULL;
     PyObject* py_policy = NULL;
@@ -126,7 +126,7 @@ PyObject * AerospikeLSet_Add_All(AerospikeLSet * self, PyObject * args, PyObject
 	static char * kwlist[] = {"values", "policy", NULL};
 
 	// Python Function Argument Parsing
-	if ( PyArg_ParseTupleAndKeywords(args, kwds, "O|O:add_all", kwlist, 
+	if ( PyArg_ParseTupleAndKeywords(args, kwds, "O|O:add_many", kwlist, 
 			&py_arglist, &py_policy)== false ) {
 		return NULL;
 	}
