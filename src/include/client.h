@@ -274,3 +274,19 @@ PyObject * AerospikeClient_Index_String_Create(AerospikeClient * self, PyObject 
  *
  */
 PyObject * AerospikeClient_Index_Remove(AerospikeClient * self, PyObject *args, PyObject * kwds);
+
+/**
+ * Get records in a batch
+ *
+ *		client.get_many([keys], policies)
+ *
+ */
+PyObject * AerospikeClient_Get_Many(AerospikeClient * self, PyObject *args, PyObject * kwds);
+
+/**
+ * Check existence of given keys
+ *
+ *		client.exists_many([keys], policies)
+ *
+ */
+PyObject * AerospikeClient_Exists_Many(AerospikeClient * self, PyObject *args, PyObject * kwds);
