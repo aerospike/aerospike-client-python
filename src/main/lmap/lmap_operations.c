@@ -362,6 +362,10 @@ CLEANUP:
         as_map_destroy(elements);
     }
 
+    if (arg_list) {
+        as_list_destroy(arg_list);
+    }
+
 	if ( err.code != AEROSPIKE_OK ) {
 		PyObject * py_err = NULL;
 		error_to_pyobject(&err, &py_err);

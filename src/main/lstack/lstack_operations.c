@@ -60,7 +60,7 @@ PyObject * AerospikeLStack_Push(AerospikeLStack * self, PyObject * args, PyObjec
 		return NULL;
 	}
 
-    if (!self || !self->client->as) {
+    if (!self || !self->client || !self->client->as) {
         as_error_update(&err, AEROSPIKE_ERR_PARAM, "Invalid aerospike object");
         goto CLEANUP;
     }
@@ -135,7 +135,7 @@ PyObject * AerospikeLStack_Push_Many(AerospikeLStack * self, PyObject * args, Py
 		return NULL;
 	}
 
-    if (!self || !self->client->as) {
+    if (!self || !self->client || !self->client->as) {
         as_error_update(&err, AEROSPIKE_ERR_PARAM, "Invalid aerospike object");
         goto CLEANUP;
     }
@@ -218,7 +218,7 @@ PyObject * AerospikeLStack_Peek(AerospikeLStack * self, PyObject * args, PyObjec
 		return NULL;
 	}
     
-    if (!self || !self->client->as) {
+    if (!self || !self->client || !self->client->as) {
         as_error_update(&err, AEROSPIKE_ERR_PARAM, "Invalid aerospike object");
         goto CLEANUP;
     }
@@ -299,7 +299,7 @@ PyObject * AerospikeLStack_Filter(AerospikeLStack * self, PyObject * args, PyObj
 		return NULL;
 	}
 
-    if (!self || !self->client->as) {
+    if (!self || !self->client || !self->client->as) {
         as_error_update(&err, AEROSPIKE_ERR_PARAM, "Invalid aerospike object");
         goto CLEANUP;
     }
@@ -349,6 +349,10 @@ CLEANUP:
         as_list_destroy(elements_list);
     }
 
+    if (arg_list) {
+        as_list_destroy(arg_list);
+    }
+
 	if ( err.code != AEROSPIKE_OK ) {
 		PyObject * py_err = NULL;
 		error_to_pyobject(&err, &py_err);
@@ -389,7 +393,7 @@ PyObject * AerospikeLStack_Destroy(AerospikeLStack * self, PyObject * args, PyOb
 		return NULL;
 	}
 
-    if (!self || !self->client->as) {
+    if (!self || !self->client || !self->client->as) {
         as_error_update(&err, AEROSPIKE_ERR_PARAM, "Invalid aerospike object");
         goto CLEANUP;
     }
@@ -453,7 +457,7 @@ PyObject * AerospikeLStack_Get_Capacity(AerospikeLStack * self, PyObject * args,
 		return NULL;
 	}
 
-    if (!self || !self->client->as) {
+    if (!self || !self->client || !self->client->as) {
         as_error_update(&err, AEROSPIKE_ERR_PARAM, "Invalid aerospike object");
         goto CLEANUP;
     }
@@ -518,7 +522,7 @@ PyObject * AerospikeLStack_Set_Capacity(AerospikeLStack * self, PyObject * args,
 		return NULL;
 	}
 
-    if (!self || !self->client->as) {
+    if (!self || !self->client || !self->client->as) {
         as_error_update(&err, AEROSPIKE_ERR_PARAM, "Invalid aerospike object");
         goto CLEANUP;
     }
@@ -583,7 +587,7 @@ PyObject * AerospikeLStack_Size(AerospikeLStack * self, PyObject * args, PyObjec
 		return NULL;
 	}
 
-    if (!self || !self->client->as) {
+    if (!self || !self->client || !self->client->as) {
         as_error_update(&err, AEROSPIKE_ERR_PARAM, "Invalid aerospike object");
         goto CLEANUP;
     }

@@ -190,7 +190,16 @@ AerospikeLList * AerospikeLList_New(AerospikeClient * client, PyObject * args, P
     AerospikeLList * self = (AerospikeLList *) AerospikeLList_Type.tp_new(&AerospikeLList_Type, args, kwds);
     self->client = client;
     Py_INCREF(client);
-    AerospikeLList_Type.tp_init((PyObject *) self, args, kwds);
-    return self;
 
+    if (AerospikeLList_Type.tp_init(self, args, kwds) == 0) {
+        return self;
+    } else {
+        as_error err;
+        as_error_init(&err);
+        as_error_update(&err, AEROSPIKE_ERR, "Prameters are incorrect");
+        PyObject * py_err = NULL;
+        error_to_pyobject(&err, &py_err);
+        PyErr_SetObject(PyExc_Exception, py_err);
+        return NULL;
+    }
 }

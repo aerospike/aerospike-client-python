@@ -194,7 +194,7 @@ AerospikeLSet * AerospikeLSet_New(AerospikeClient * client, PyObject * args, PyO
     self->client = client;
     Py_INCREF(client);
 
-    if (AerospikeLSet_Type.tp_init((PyObject *) self, args, kwds) == 0) {
+    if (AerospikeLSet_Type.tp_init(self, args, kwds) == 0) {
         return self;
     } else {
         as_error err;

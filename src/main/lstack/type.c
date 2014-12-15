@@ -113,8 +113,7 @@ static int AerospikeLStack_Type_Init(AerospikeLStack * self, PyObject * args, Py
         return -1;
     }
 
-    memset(self->bin_name, '\0', AS_BIN_NAME_MAX_LEN);
-    memcpy(self->bin_name, bin_name, bin_name_len);
+    strcpy(self->bin_name, bin_name);
 
     /*
      * LDT Initialization
@@ -192,9 +191,19 @@ PyTypeObject * AerospikeLStack_Ready()
 AerospikeLStack * AerospikeLStack_New(AerospikeClient * client, PyObject * args, PyObject * kwds)
 {
     AerospikeLStack * self = (AerospikeLStack *) AerospikeLStack_Type.tp_new(&AerospikeLStack_Type, args, kwds);
-    self->client = client;
+    /*if (client) { */
+        self->client = client;
+    /*} */
     Py_INCREF(client);
-    AerospikeLStack_Type.tp_init(self, args, kwds);
-    return self;
-
+    if (AerospikeLStack_Type.tp_init(self, args, kwds) == 0) {
+        return self;
+    } else {
+        as_error err;
+        as_error_init(&err);
+        as_error_update(&err, AEROSPIKE_ERR, "Prameters are incorrect");
+        PyObject * py_err = NULL;
+        error_to_pyobject(&err, &py_err);
+        PyErr_SetObject(PyExc_Exception, py_err);
+        return NULL;
+    }
 }
