@@ -46,8 +46,6 @@ class KVTestCase(unittest.TestCase):
             "b": bytearray("efgh","utf-8"),
             "l": [1357, "aceg", bytearray("aceg","utf-8"), [1,3,5,7], {"a": 1, "c": 3, "e": 5, "g": 7}],
             "m": {"i": 2468, "s": "bdfh", "l": [2468, "bdfh", bytearray("bdfh","utf-8")], "m": {"b": 2, "d": 4, "f": 6, "h": 8}},
-            "n": {"t" : u"\ud83d\ude04"},
-            "o": u"\ud83d\ude04"
         }
 
         # create the record
@@ -110,7 +108,11 @@ class KVTestCase(unittest.TestCase):
             "s": "abcd",
             "b": bytearray("efgh","utf-8"),
             "l": [1357, "aceg", bytearray("aceg","utf-8"), [1,3,5,7], {"a": 1, "c": 3, "e": 5, "g": 7}],
-            "m": {"i": 2468, "s": "bdfh", "l": [2468, "bdfh", bytearray("bdfh","utf-8")], "m": {"b": 2, "d": 4, "f": 6, "h": 8}}
+            "m": {"i": 2468, "s": "bdfh", "l": [2468, "bdfh",
+                bytearray("bdfh","utf-8")], "m": {"b": 2, "d": 4, "f": 6, "h":
+                    8}},
+            'a': {u'aa': u'11'}, 
+            'k': {u'kk': u'22'}
         }
         
         # create the record
