@@ -116,7 +116,7 @@ class TestExistsMany(object):
 
         assert exception.value[0] == -2
         assert exception.value[1] == "Invalid value(type) for policy key"
-
+    
     def test_exists_many_with_non_existent_keys_in_middle(self):
 
         self.keys.append( ('test', 'demo', 10) )
@@ -138,3 +138,4 @@ class TestExistsMany(object):
 
         assert type(records) == dict
         assert len(records.keys()) == 10
+

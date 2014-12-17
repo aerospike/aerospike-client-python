@@ -156,7 +156,7 @@ class TestAggregate(object):
             query.foreach(print_result)
 
         assert exception.value[0] == -2L
-        assert exception.value[1] == 'equals() expects either an integer or string value.'
+        assert exception.value[1] == 'predicate is invalid.'
 
     def test_aggregate_with_where_bool_value(self):
         """
