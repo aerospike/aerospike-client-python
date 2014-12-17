@@ -70,7 +70,7 @@ bool batch_exists_cb(const as_batch_read* results, uint32_t n, void* udata)
 
 static
 PyObject * AerospikeClient_Exists_Many_Invoke(
-	AerospikeClient * self, 
+	AerospikeClient * self,
 	PyObject * py_keys, PyObject * py_policy)
 {
 	// Python Return Value
@@ -81,9 +81,6 @@ PyObject * AerospikeClient_Exists_Many_Invoke(
 	as_batch batch;
 	as_policy_batch policy;
 	as_policy_batch * batch_policy_p = NULL;
-	as_key * keys;
-	as_record * rec = NULL;
-	bool is_batch_init = false;
 
 	// Initialize error
 	as_error_init(&err);
@@ -92,10 +89,9 @@ PyObject * AerospikeClient_Exists_Many_Invoke(
 	// keys can be specified in PyList and PyTuple
 	if ( py_keys != NULL && PyList_Check(py_keys) ) {
 		Py_ssize_t size = PyList_Size(py_keys);
-		
+
 		as_batch_inita(&batch, size);
-		is_batch_init = true;
-		
+
 		for ( int i = 0; i < size; i++ ) {
 
 			PyObject * py_key = PyList_GetItem(py_keys, i);
@@ -116,8 +112,7 @@ PyObject * AerospikeClient_Exists_Many_Invoke(
 		Py_ssize_t size = PyTuple_Size(py_keys);
 
 		as_batch_inita(&batch, size);
-		is_batch_init = true;
-		
+
 		for ( int i = 0; i < size; i++ ) {
 			PyObject * py_key = PyTuple_GetItem(py_keys, i);
 
@@ -157,7 +152,7 @@ PyObject * AerospikeClient_Exists_Many_Invoke(
 		py_recs);
 
 CLEANUP:
-	
+
 	if ( err.code != AEROSPIKE_OK ) {
 		PyObject * py_err = NULL;
 		error_to_pyobject(&err, &py_err);
@@ -165,7 +160,7 @@ CLEANUP:
 		Py_DECREF(py_err);
 		return NULL;
 	}
-	
+
 	return py_recs;
 }
 
@@ -179,7 +174,7 @@ PyObject * AerospikeClient_Exists_Many(AerospikeClient * self, PyObject * args, 
 	static char * kwlist[] = {"keys", "policy", NULL};
 
 	// Python Function Argument Parsing
-	if ( PyArg_ParseTupleAndKeywords(args, kwds, "O|O:get", kwlist, 
+	if ( PyArg_ParseTupleAndKeywords(args, kwds, "O|O:get", kwlist,
 			&py_keys, &py_policy) == false ) {
 		return NULL;
 	}

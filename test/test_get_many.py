@@ -10,16 +10,19 @@ except:
     sys.exit(1)
 
 class TestGetMany(object):
-
-    def setup_method(self, method):
-
+    def setup_class(cls):
         """
         Setup method.
         """
         config = {
                 'hosts': [('127.0.0.1', 3000)]
                 }
-        self.client = aerospike.client(config).connect()
+        TestGetMany.client = aerospike.client(config).connect()
+
+    def teardown_class(cls):
+        TestGetMany.client.close()
+
+    def setup_method(self, method):
         self.keys = []
 
         for i in xrange(5):
@@ -28,55 +31,61 @@ class TestGetMany(object):
                     'name' : 'name%s' % (str(i)),
                     'age'  : i
                     }
-            self.client.put(key, rec)
+            TestGetMany.client.put(key, rec)
             self.keys.append(key)
 
 
     def teardown_method(self, method):
-        
+
         """
         Teardown method.
         """
         for i in xrange(5):
             key = ('test', 'demo', i)
-            self.client.remove(key)
-
-        self.client.close()
+            TestGetMany.client.remove(key)
 
     def test_get_many_without_any_parameter(self):
 
         with pytest.raises(TypeError) as typeError:
-            self.client.get_many()
+            TestGetMany.client.get_many()
 
         assert typeError.value.message == "Required argument 'keys' (pos 1) not found"
 
+    def test_get_many_without_policy(self):
+
+        records = TestGetMany.client.get_many( self.keys )
+
+        assert type(records) == dict
+        assert len(records.keys()) == 5
+
     def test_get_many_with_proper_parameters(self):
 
-        records = self.client.get_many( self.keys, { 'timeout': 3 } )
+        records = TestGetMany.client.get_many( self.keys, { 'timeout': 3 } )
 
         assert type(records) == dict
         assert len(records.keys()) == 5
 
     def test_get_many_with_none_policy(self):
 
-        records = self.client.get_many( self.keys, None )
+        with pytest.raises(Exception) as exception:
+            records = TestGetMany.client.get_many( self.keys, None )
 
-        assert type(records) == dict
-        assert len(records.keys()) == 5
+        assert exception.value[0] == -2
+        assert exception.value[1] == "Invalid policy(type)"
 
     def test_get_many_with_none_keys(self):
 
         with pytest.raises(Exception) as exception:
-            self.client.get_many( None, {} )
+            TestGetMany.client.get_many( None, {} )
 
         assert exception.value[0] == -1
         assert exception.value[1] == "Keys should be specified as a list or tuple."
 
     def test_get_many_with_non_existent_keys(self):
 
-        self.keys.append( ('test', 'demo', 10) )
+        self.keys.append( ('test', 'demo', 'non-existent') )
 
-        records = self.client.get_many( self.keys )
+        records = TestGetMany.client.get_many( self.keys )
 
         assert type(records) == dict
         assert len(records.keys()) == 5
@@ -85,7 +94,7 @@ class TestGetMany(object):
 
         keys = [( 'test', 'demo', 'key' )]
 
-        records = self.client.get_many( keys )
+        records = TestGetMany.client.get_many( keys )
 
         assert len(records.keys()) == 0
         assert records == {}
@@ -93,7 +102,7 @@ class TestGetMany(object):
     def test_get_many_with_invalid_key(self):
 
         with pytest.raises(Exception) as exception:
-            records = self.client.get_many( "key" )
+            records = TestGetMany.client.get_many( "key" )
 
         assert exception.value[0] == -1
         assert exception.value[1] == "Keys should be specified as a list or tuple."
@@ -102,7 +111,29 @@ class TestGetMany(object):
 
         policies = { 'timeout' : 0.2 }
         with pytest.raises(Exception) as exception:
-            records = self.client.get_many(self.keys, policies)
+            records = TestGetMany.client.get_many(self.keys, policies)
 
         assert exception.value[0] == -2
-        assert exception.value[1] == "timeout is invalid"
+        assert exception.value[1] == "Invalid value(type) for policy key"
+
+    def test_get_many_with_non_existent_keys_in_middle(self):
+
+        self.keys.append( ('test', 'demo', 10) )
+
+        for i in xrange(15,20):
+            key = ('test', 'demo', i)
+            rec = {
+                    'name' : 'name%s' % (str(i)),
+                    'age'  : i
+                    }
+            TestGetMany.client.put(key, rec)
+            self.keys.append(key)
+
+        records = TestGetMany.client.get_many( self.keys )
+
+        for i in xrange(15,20):
+            key = ('test', 'demo', i)
+            TestGetMany.client.remove(key)
+
+        assert type(records) == dict
+        assert len(records.keys()) == 10
