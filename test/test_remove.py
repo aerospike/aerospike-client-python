@@ -83,8 +83,7 @@ class TestRemove(object):
         """
         key = ('test', 'demo', 1)
         policy = {
-            'timeout': 1000,
-            'commit_level': aerospike.POLICY_COMMIT_LEVEL_MASTER
+            'timeout': 1000
         }
         retobj = TestRemove.client.remove(key, 0, policy)
 

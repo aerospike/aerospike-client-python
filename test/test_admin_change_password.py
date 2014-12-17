@@ -22,7 +22,7 @@ class TestChangePassword(object):
                 }
         self.client = aerospike.client(config).connect( "admin", "admin" )
 
-        self.client.admin_create_user( {}, "testreaduser", "aerospike", ["read"], 1)
+        self.client.admin_create_user( {}, "testchangepassworduser", "aerospike", ["read"], 1)
 
         self.delete_users = []
 
@@ -32,7 +32,7 @@ class TestChangePassword(object):
         Teardown method
         """
 
-        self.client.admin_drop_user( {}, "testreaduser" )
+        self.client.admin_drop_user( {}, "testchangepassworduser" )
 
         self.client.close()
 
@@ -46,7 +46,7 @@ class TestChangePassword(object):
     def test_change_password_with_proper_parameters(self):
 
     	policy = {}
-    	user = "testreaduser"
+    	user = "testchangepassworduser"
     	password = "newpassword"
 
     	status = self.client.admin_change_password( policy, user, password )
@@ -56,19 +56,19 @@ class TestChangePassword(object):
     def test_change_password_with_invalid_timeout_policy_value(self):
 
     	policy = { 'timeout' : 0.1 }
-    	user = "testreaduser"
+    	user = "testchangepassworduser"
     	password = "newpassword"
 
     	with pytest.raises(Exception) as exception :
     		status = self.client.admin_change_password( policy, user, password )
 
     	assert exception.value[0] == -2
-    	assert exception.value[1] == "timeout is invalid"
+    	assert exception.value[1] == "Invalid value(type) for policy key"
 
     def test_change_password_with_proper_timeout_policy_value(self):
 
     	policy = { 'timeout' : 3 }
-    	user = "testreaduser"
+    	user = "testchangepassworduser"
     	password = "newpassword"
     	status = self.client.admin_change_password( policy, user, password ) 
 
@@ -89,7 +89,7 @@ class TestChangePassword(object):
     def test_change_password_with_none_password(self):
 
     	policy = {}
-    	user = "testreaduser"
+    	user = "testchangepassworduser"
     	password = None
 
     	with pytest.raises(Exception) as exception:
@@ -113,7 +113,7 @@ class TestChangePassword(object):
     def test_change_password_with_too_long_password(self):
 
     	policy = {}
-    	user = "testreaduser"
+    	user = "testchangepassworduser"
     	password = "password"*1000
     	status = self.client.admin_change_password( policy, user, password )
 

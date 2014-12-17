@@ -22,7 +22,7 @@ class TestSetPassword(object):
                 }
         self.client = aerospike.client(config).connect( "admin", "admin" )
 
-        self.client.admin_create_user( {}, "testreaduser", "aerospike", ["read"], 1)
+        self.client.admin_create_user( {}, "testsetpassworduser", "aerospike", ["read"], 1)
 
         self.delete_users = []
 
@@ -32,7 +32,7 @@ class TestSetPassword(object):
         Teardown method
         """
 
-        self.client.admin_drop_user( {}, "testreaduser" )
+        self.client.admin_drop_user( {}, "testsetpassworduser" )
 
         self.client.close()
 
@@ -46,7 +46,7 @@ class TestSetPassword(object):
     def test_set_password_with_proper_parameters(self):
 
         policy = { 'timeout' : 0 }
-        user = "testreaduser"
+        user = "testsetpassworduser"
         password = "newpassword"
 
         status = self.client.admin_set_password( policy, user, password )
@@ -56,7 +56,7 @@ class TestSetPassword(object):
     def test_set_password_with_invalid_timeout_policy_value(self):
 
         policy = { 'timeout' : 0.1 }
-        user = "testreaduser"
+        user = "testsetpassworduser"
         password = "newpassword"
 
         with pytest.raises(Exception) as exception:
@@ -68,7 +68,7 @@ class TestSetPassword(object):
     def test_set_password_with_proper_timeout_policy_value(self):
 
         policy = {'timeout' : 4}
-        user = "testreaduser"
+        user = "testsetpassworduser"
         password = "newpassword"
 
         status = self.client.admin_set_password( policy, user, password )
@@ -90,7 +90,7 @@ class TestSetPassword(object):
     def test_set_password_with_none_password(self):
 
         policy = {}
-        user = "testreaduser"
+        user = "testsetpassworduser"
         password = None
 
         with pytest.raises(Exception) as exception:
@@ -114,7 +114,7 @@ class TestSetPassword(object):
     def test_set_password_with_too_long_password(self):
 
         policy = {}
-        user = "testreaduser"
+        user = "testsetpassworduser"
         password = "newpassword$"*1000
 
         status = self.client.admin_set_password( policy, user, password )

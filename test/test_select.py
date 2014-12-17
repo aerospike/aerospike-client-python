@@ -128,8 +128,6 @@ class TestSelect(object):
         assert meta == None
         assert bins == None
 
-        self.client.remove(key)
-
     def test_select_with_key_and_single_bin_to_select_not_a_list(self):
 
         key = ( "test", "demo", 1 )

@@ -4,6 +4,8 @@
 import pytest
 import sys
 import cPickle as pickle
+import time
+
 try:
     import aerospike
 except:
@@ -24,6 +26,7 @@ class TestQuery(object):
         policy = {}
         TestQuery.client.index_integer_create(policy, 'test', 'demo',
 'age1', 'age_index1')
+        time.sleep(2)
 
     def teardown_class(cls):
         policy = {}
@@ -168,7 +171,7 @@ class TestQuery(object):
             query.where(p.equals('test_age', None))
 
         assert exception.value[0] == -2L
-        assert exception.value[1] == 'predicate is invalid.'
+        assert exception.value[1] == 'equals() expects either an integer or string value.'
 
     def test_query_with_policy(self):
         """

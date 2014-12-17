@@ -18,8 +18,7 @@ class TestPut(object):
             Setup class
         """
         config = {
-                #"hosts": [("127.0.0.1", 3000)]
-                "hosts": [("172.20.25.24", 3000)]
+                "hosts": [("127.0.0.1", 3000)]
                 }
         TestPut.client = aerospike.client(config).connect()
 
@@ -215,8 +214,8 @@ class TestPut(object):
         with pytest.raises(Exception) as exception:
             res = TestPut.client.put( key, rec )
 
-        assert exception.value[0] == 20
-        assert exception.value[1] == 'AEROSPIKE_ERR_NAMESPACE_NOT_FOUND'
+        assert exception.value[0] == 4
+        assert exception.value[1] == 'AEROSPIKE_ERR_REQUEST_INVALID'
 
     def test_put_with_nonexistent_set(self):
 
@@ -520,7 +519,6 @@ class TestPut(object):
         policy = {
             'timeout': 1000,
             'gen': aerospike.POLICY_GEN_EQ,
-            'commit_level': aerospike.POLICY_COMMIT_LEVEL_ALL
         }
         meta = {
             'gen': gen

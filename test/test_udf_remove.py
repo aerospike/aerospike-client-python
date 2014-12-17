@@ -34,6 +34,7 @@ class TestUdfRemove(object):
         Setup method
         """
         TestUdfRemove.client.udf_put( {}, 'example.lua', 0 )
+        time.sleep(2)
 
     def teardown_method(self,method):
         """
@@ -65,7 +66,7 @@ class TestUdfRemove(object):
 
         assert status == 0
 
-        time.sleep(2)
+        time.sleep(4)
         udf_list = TestUdfRemove.client.udf_list( {'timeout' : 0} )
 
         present = False
@@ -94,7 +95,7 @@ class TestUdfRemove(object):
         status = TestUdfRemove.client.udf_remove( policy, module )
 
         assert status == 0
-        time.sleep(2)
+        time.sleep(3)
 
         udf_list = TestUdfRemove.client.udf_list( {'timeout' : 0} )
        

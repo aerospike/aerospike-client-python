@@ -53,7 +53,7 @@ class TestUdfPut(object):
         status = TestUdfPut.client.udf_put( policy, filename, udf_type )
 
         assert status == 0
-
+        time.sleep(2)
         udf_list = TestUdfPut.client.udf_list( {} )
 
         present = False

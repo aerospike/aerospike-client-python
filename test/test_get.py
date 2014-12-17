@@ -241,7 +241,7 @@ class TestGet(object):
         """
             Invoke get() for non-existent key.
         """
-        key = ('test', 'demo', 13)
+        key = ('test', 'demo', 'non-existent')
 
         key, meta, bins = TestGet.client.get( key )
 
@@ -365,9 +365,7 @@ class TestGet(object):
                 }
 
         policy = {
-                'key' : aerospike.POLICY_KEY_SEND,
-                'replica': aerospike.POLICY_REPLICA_ANY,
-                'consistency': aerospike.POLICY_CONSISTENCY_ONE
+                'key' : aerospike.POLICY_KEY_SEND
                 }
 
         status = TestGet.client.put(key, rec, policy)

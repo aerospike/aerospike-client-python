@@ -23,7 +23,7 @@ class TestDropUser(object):
         Setup method.
         """
         config = {
-                'hosts': [('172.20.25.176', 3000)]
+                'hosts': [('127.0.0.1', 3000)]
                 }
         self.client = aerospike.client(config).connect( "admin", "admin" )
 
@@ -141,7 +141,7 @@ class TestDropUser(object):
         policy = {
             'timeout': 1000
         }
-        user = "foo"
+        user = "incorrect-policy"
         password = "foo1"
         roles = ["read", "read-write", "sys-admin"]
 
@@ -153,7 +153,7 @@ class TestDropUser(object):
         user_details = self.client.admin_query_user( policy, user )
 
         assert user_details == [{'roles': ['sys-admin', 'read', 'read-write',
-], 'roles_size': 3, 'user': 'foo'}]
+], 'roles_size': 3, 'user': 'incorrect-policy'}]
         policy = {
             'timeout': 0.2
         }
@@ -162,6 +162,8 @@ class TestDropUser(object):
 
         assert exception.value[0] == -2L
         assert exception.value[1] == 'Invalid value(type) for policy key'
+
+        status = self.client.admin_drop_user( {}, user )
 
     def test_drop_user_with_extra_argument(self):
 
