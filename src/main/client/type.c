@@ -352,6 +352,7 @@ AerospikeClient * AerospikeClient_New(PyObject * parent, PyObject * args, PyObje
         PyObject * py_err = NULL;
         error_to_pyobject( &err, &py_err);
         PyErr_SetObject( PyExc_Exception, py_err);
+        Py_DECREF(py_err);
         return NULL;
     }
 	/*AerospikeClient_Type.tp_init((PyObject *) self, args, kwds);
