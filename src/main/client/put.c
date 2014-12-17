@@ -28,7 +28,7 @@
 #include "policy.h"
 
 PyObject * AerospikeClient_Put_Invoke(
-	AerospikeClient * self, 
+	AerospikeClient * self,
 	PyObject * py_key, PyObject * py_bins, PyObject * py_meta, PyObject * py_policy)
 {
 	// Aerospike Client Arguments
@@ -98,18 +98,18 @@ PyObject * AerospikeClient_Put(AerospikeClient * self, PyObject * args, PyObject
 	PyObject * py_bins = NULL;
 	PyObject * py_meta = NULL;
 	PyObject * py_policy = NULL;
-	
+
 	// Python Function Keyword Arguments
 	static char * kwlist[] = {"key", "record", "metadata", "policy", NULL};
 
 	// Python Function Argument Parsing
-	if ( PyArg_ParseTupleAndKeywords(args, kwds, "OO|OO:put", kwlist, 
+	if ( PyArg_ParseTupleAndKeywords(args, kwds, "OO|OO:put", kwlist,
 			&py_key, &py_bins, &py_meta, &py_policy) == false ) {
 		return NULL;
 	}
 
 	// Invoke Operation
-	return AerospikeClient_Put_Invoke(self, 
+	return AerospikeClient_Put_Invoke(self,
 		py_key, py_bins, py_meta, py_policy
 		);
 }

@@ -33,22 +33,22 @@
  ******************************************************************************/
 
 static PyMethodDef AerospikeQuery_Type_Methods[] = {
-    
-    {"apply",	(PyCFunction) AerospikeQuery_Apply,		METH_VARARGS | METH_KEYWORDS,	
+
+    {"apply",	(PyCFunction) AerospikeQuery_Apply,		METH_VARARGS | METH_KEYWORDS,
     			"Apply a Stream UDF on the resultset of the query."},
-    
-    {"foreach",	(PyCFunction) AerospikeQuery_Foreach,	METH_VARARGS | METH_KEYWORDS,	
+
+    {"foreach",	(PyCFunction) AerospikeQuery_Foreach,	METH_VARARGS | METH_KEYWORDS,
     			"Iterate over each record in the resultset and call the callback function."},
 
     {"results",	(PyCFunction) AerospikeQuery_Results,	METH_VARARGS | METH_KEYWORDS,
     			"Return a list of all records in the resultset."},
-    
+
     {"select",	(PyCFunction) AerospikeQuery_Select,	METH_VARARGS | METH_KEYWORDS,
     			"Bins to project in the query."},
 
     {"where",	(PyCFunction) AerospikeQuery_Where,		METH_VARARGS,
     			"Predicate to be applied to the query."},
-    
+
 	{NULL}
 };
 
@@ -73,15 +73,15 @@ static int AerospikeQuery_Type_Init(AerospikeQuery * self, PyObject * args, PyOb
 {
 	PyObject * py_namespace = NULL;
 	PyObject * py_set = NULL;
-	
+
 	static char * kwlist[] = {"namespace", "set", NULL};
 
-	if ( PyArg_ParseTupleAndKeywords(args, kwds, "O|O:key", kwlist, 
+	if ( PyArg_ParseTupleAndKeywords(args, kwds, "O|O:key", kwlist,
 		&py_namespace, &py_set) == false ) {
         as_query_destroy(&self->query);
 		return -1;
 	}
-	
+
 	char * namespace = NULL;
 	char * set = NULL;
 
@@ -130,7 +130,7 @@ static PyTypeObject AerospikeQuery_Type = {
     .tp_setattro		= 0,
     .tp_as_buffer		= 0,
     .tp_flags			= Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE,
-    .tp_doc				= 
+    .tp_doc				=
     		"The Query class assists in populating the parameters of a query\n"
     		"operation. To create a new instance of the Query class, call the\n"
     		"query() method on an instance of a Client class.\n",

@@ -105,7 +105,7 @@ PyObject * AerospikeClient_Select_Invoke(
 
 	// Initialize record
 	as_record_init(rec, 0);
-	
+
 	// Invoke operation
     aerospike_key_select(self->as, &err, read_policy_p, &key, (const char **) bins, &rec);
 
@@ -120,7 +120,7 @@ PyObject * AerospikeClient_Select_Invoke(
 		PyObject * py_rec_bins = Py_None;
 
 		key_to_pyobject(&err, &key, &py_rec_key);
-	
+
 		py_rec = PyTuple_New(3);
 		PyTuple_SetItem(py_rec, 0, py_rec_key);
 		PyTuple_SetItem(py_rec, 1, py_rec_meta);
@@ -142,7 +142,7 @@ CLEANUP:
         Py_DECREF(py_err);
 		return NULL;
 	}
-	
+
 	return py_rec;
 }
 
@@ -157,7 +157,7 @@ PyObject * AerospikeClient_Select(AerospikeClient * self, PyObject * args, PyObj
 	static char * kwlist[] = {"key", "bins", "policy", NULL};
 
 	// Python Function Argument Parsing
-	if ( PyArg_ParseTupleAndKeywords(args, kwds, "OO|O:select", kwlist, 
+	if ( PyArg_ParseTupleAndKeywords(args, kwds, "OO|O:select", kwlist,
 			&py_key, &py_bins, &py_policy) == false ) {
 		return NULL;
 	}

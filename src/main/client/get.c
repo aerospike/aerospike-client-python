@@ -28,7 +28,7 @@
 #include "policy.h"
 
 PyObject * AerospikeClient_Get_Invoke(
-	AerospikeClient * self, 
+	AerospikeClient * self,
 	PyObject * py_key, PyObject * py_policy)
 {
 	// Python Return Value

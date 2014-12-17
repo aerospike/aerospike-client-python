@@ -140,7 +140,7 @@ PyObject * AerospikeClient_InfoMany(AerospikeClient * self, PyObject * args, PyO
 	char * req = PyString_AsString(py_req);
 
     py_nodes = PyDict_New();
-    
+
     info_callback_udata.udata_p = py_nodes;
     info_callback_udata.host_lookup_p = py_config;
 

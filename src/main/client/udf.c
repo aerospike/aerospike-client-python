@@ -45,7 +45,7 @@ PyObject * AerospikeClient_UDF_Put(AerospikeClient * self, PyObject *args, PyObj
     as_policy_info *info_policy_p = NULL;
 
 
-	// Python Function Keyword Arguments 
+	// Python Function Keyword Arguments
 	static char * kwlist[] = {"policy", "filename", "udf_type", NULL};
 
 	// Python Function Argument Parsing
@@ -60,14 +60,14 @@ PyObject * AerospikeClient_UDF_Put(AerospikeClient * self, PyObject *args, PyObj
     }
 
 
-	// Convert PyObject into a filename string 
+	// Convert PyObject into a filename string
 	char *filename;
 	if( !PyString_Check(py_filename) ) {
 		as_error_update(&err, AEROSPIKE_ERR_PARAM, "Filename should be a string");
 		goto CLEANUP;
 	}
 
-	filename = PyString_AsString(py_filename);	
+	filename = PyString_AsString(py_filename);
 
     if (py_policy) {
         validate_policy_info(&err, py_policy, &info_policy);
@@ -84,7 +84,7 @@ PyObject * AerospikeClient_UDF_Put(AerospikeClient * self, PyObject *args, PyObj
 	}
 	as_udf_type udf_type = (as_udf_type)PyInt_AsLong(py_udf_type);
 
-	// Convert lua file to content 
+	// Convert lua file to content
     as_bytes content;
 	FILE * file = fopen(filename,"r");
 
@@ -112,7 +112,7 @@ PyObject * AerospikeClient_UDF_Put(AerospikeClient * self, PyObject *args, PyObj
 
     as_bytes_init_wrap(&content, bytes, size, true);
 
-	// Invoke operation 
+	// Invoke operation
 	aerospike_udf_put(self->as, &err, info_policy_p, filename, udf_type, &content);
 	if( err.code != AEROSPIKE_OK ) {
 		goto CLEANUP;
@@ -120,7 +120,7 @@ PyObject * AerospikeClient_UDF_Put(AerospikeClient * self, PyObject *args, PyObj
 
 CLEANUP:
 	if(bytes)
-		free(bytes);	
+		free(bytes);
 
 	if ( err.code != AEROSPIKE_OK ) {
 		PyObject * py_err = NULL;
@@ -146,11 +146,11 @@ PyObject * AerospikeClient_UDF_Remove(AerospikeClient * self, PyObject *args, Py
     as_policy_info info_policy;
     as_policy_info *info_policy_p = NULL;
 
-	// Python Function Keyword Arguments 
+	// Python Function Keyword Arguments
 	static char * kwlist[] = {"policy", "filename", NULL};
 
 	// Python Function Argument Parsing
-	if ( PyArg_ParseTupleAndKeywords(args, kwds, "OO:udf_remove", kwlist, 
+	if ( PyArg_ParseTupleAndKeywords(args, kwds, "OO:udf_remove", kwlist,
 				&py_policy, &py_filename) == false ) {
 		return NULL;
 	}
@@ -164,7 +164,7 @@ PyObject * AerospikeClient_UDF_Remove(AerospikeClient * self, PyObject *args, Py
 		goto CLEANUP;
 	}
 
-	// Convert PyObject into a filename string 
+	// Convert PyObject into a filename string
 	char *filename;
 	if( !PyString_Check(py_filename) ) {
 		as_error_update(&err, AEROSPIKE_ERR_PARAM, "Filename should be a string");
@@ -179,12 +179,12 @@ PyObject * AerospikeClient_UDF_Remove(AerospikeClient * self, PyObject *args, Py
         goto CLEANUP;
     }
 
-	filename = PyString_AsString(py_filename);		
+	filename = PyString_AsString(py_filename);
 
     // Convert python object to policy_info
     pyobject_to_policy_info( &err, py_policy, &info_policy, &info_policy_p);
 
-	// Invoke operation 
+	// Invoke operation
     aerospike_udf_remove(self->as, &err, info_policy_p, filename);
 	if ( err.code != AEROSPIKE_OK ) {
 		goto CLEANUP;
@@ -215,7 +215,7 @@ PyObject * AerospikeClient_UDF_List(AerospikeClient * self, PyObject *args, PyOb
     as_policy_info info_policy;
     as_policy_info *info_policy_p = NULL;
 
-	// Python Function Keyword Arguments 
+	// Python Function Keyword Arguments
 	static char * kwlist[] = {"policy", NULL};
 
 	// Python Function Argument Parsing
@@ -236,7 +236,7 @@ PyObject * AerospikeClient_UDF_List(AerospikeClient * self, PyObject *args, PyOb
         goto CLEANUP;
     }
 
-	// Convert python object to policy_info 
+	// Convert python object to policy_info
     pyobject_to_policy_info( &err, py_policy, &info_policy, &info_policy_p);
 	if ( err.code != AEROSPIKE_OK ) {
 		goto CLEANUP;
@@ -246,7 +246,7 @@ PyObject * AerospikeClient_UDF_List(AerospikeClient * self, PyObject *args, PyOb
 	as_udf_files_init(&files, 0);
     init_udf_files = 1;
 
-	// Invoke operation 
+	// Invoke operation
     aerospike_udf_list(self->as, &err, info_policy_p, &files);
 	if ( err.code != AEROSPIKE_OK ) {
 		goto CLEANUP;
@@ -255,7 +255,7 @@ PyObject * AerospikeClient_UDF_List(AerospikeClient * self, PyObject *args, PyOb
 	// Convert as_udf_files struct into python object
 	PyObject * py_files;
     as_udf_files_to_pyobject(&err, &files, &py_files);
-	
+
 	if ( err.code != AEROSPIKE_OK ) {
 		goto CLEANUP;
 	}
@@ -276,5 +276,3 @@ CLEANUP:
 
 	return py_files;
 }
-
-

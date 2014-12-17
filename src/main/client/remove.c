@@ -28,7 +28,7 @@
 #include "policy.h"
 
 PyObject * AerospikeClient_Remove_Invoke(
-	AerospikeClient * self, 
+	AerospikeClient * self,
 	PyObject * py_key, long generation, PyObject * py_policy)
 {
 
@@ -96,7 +96,7 @@ PyObject * AerospikeClient_Remove(AerospikeClient * self, PyObject * args, PyObj
 	static char * kwlist[] = {"key", "policy", "generation", NULL};
 
 	// Python Function Argument Parsing
-	if ( PyArg_ParseTupleAndKeywords(args, kwds, "O|lO:remove", kwlist, 
+	if ( PyArg_ParseTupleAndKeywords(args, kwds, "O|lO:remove", kwlist,
 			&py_key, &generation, &py_policy) == false ) {
 		return NULL;
 	}

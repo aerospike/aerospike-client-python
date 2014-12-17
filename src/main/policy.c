@@ -110,7 +110,7 @@ void validate_policy(as_error *err, PyObject * py_policy, as_policy_read* read_p
         PyObject *key = NULL, *value = NULL;
         Py_ssize_t pos = 0;
         int64_t val = 0;
-        
+
         while (PyDict_Next(py_policy, &pos, &key, &value)) {
             if (!PyString_Check(key)) {
                 as_error_update(err, AEROSPIKE_ERR_PARAM, "Policy key must be string");
@@ -208,7 +208,7 @@ void set_scan_options(as_error *err, as_scan* scan_p, PyObject * py_options)
         as_error_update(err, AEROSPIKE_ERR_CLIENT, "Scan is not initialized");
         return ;
     }
-    
+
     if (PyDict_Check(py_options)) {
         PyObject *key = NULL, *value = NULL;
         Py_ssize_t pos = 0;

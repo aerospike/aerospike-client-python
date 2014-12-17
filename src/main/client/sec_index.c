@@ -44,11 +44,11 @@ PyObject * AerospikeClient_Index_Integer_Create(AerospikeClient * self, PyObject
     as_policy_info info_policy;
     as_policy_info *info_policy_p = NULL;
 
-	// Python Function Keyword Arguments 
+	// Python Function Keyword Arguments
 	static char * kwlist[] = {"policy", "ns", "set", "bin", "name", NULL};
 
 	// Python Function Argument Parsing
-	if ( PyArg_ParseTupleAndKeywords(args, kwds, "OOOOO:index_integer_create", kwlist, 
+	if ( PyArg_ParseTupleAndKeywords(args, kwds, "OOOOO:index_integer_create", kwlist,
 				&py_policy, &py_ns, &py_set, &py_bin, &py_name) == false ) {
 		return NULL;
 	}
@@ -60,12 +60,12 @@ PyObject * AerospikeClient_Index_Integer_Create(AerospikeClient * self, PyObject
     if (py_policy) {
         validate_policy_info(&err, py_policy, &info_policy);
     }
-    
+
     if (err.code != AEROSPIKE_OK) {
         goto CLEANUP;
     }
 
-	// Convert python object to policy_info 
+	// Convert python object to policy_info
     pyobject_to_policy_info( &err, py_policy, &info_policy, &info_policy_p);
 	if ( err.code != AEROSPIKE_OK ) {
 		goto CLEANUP;
@@ -107,7 +107,7 @@ PyObject * AerospikeClient_Index_Integer_Create(AerospikeClient * self, PyObject
 
 	name = PyString_AsString(py_name);
 
-	// Invoke operation 
+	// Invoke operation
 	aerospike_index_integer_create(self->as, &err, info_policy_p, ns, set, bin, name);
 	if ( err.code != AEROSPIKE_OK ) {
 		goto CLEANUP;
@@ -143,7 +143,7 @@ PyObject * AerospikeClient_Index_String_Create(AerospikeClient * self, PyObject 
     as_policy_info info_policy;
     as_policy_info *info_policy_p = NULL;
 
-	// Python Function Keyword Arguments 
+	// Python Function Keyword Arguments
 	static char * kwlist[] = {"policy", "ns", "set", "bin", "name", NULL};
 
 	// Python Function Argument Parsing
@@ -240,7 +240,7 @@ PyObject * AerospikeClient_Index_Remove(AerospikeClient * self, PyObject *args, 
     as_policy_info *info_policy_p = NULL;
 
 
-	// Python Function Keyword Arguments 
+	// Python Function Keyword Arguments
 	static char * kwlist[] = {"policy", "ns", "name", NULL};
 
 	// Python Function Argument Parsing

@@ -28,9 +28,9 @@
 
 static PyMethodDef Aerospike_Methods[] = {
 
-	{"client",		(PyCFunction) AerospikeClient_New,	METH_VARARGS | METH_KEYWORDS, 
-					"Create a new instance of Client class."},	
-	
+	{"client",		(PyCFunction) AerospikeClient_New,	METH_VARARGS | METH_KEYWORDS,
+					"Create a new instance of Client class."},
+
 	{NULL}
 };
 
@@ -41,9 +41,9 @@ PyMODINIT_FUNC initaerospike(void)
 
 
 	// aerospike Module
-	PyObject * aerospike = Py_InitModule3("aerospike", Aerospike_Methods, 
+	PyObject * aerospike = Py_InitModule3("aerospike", Aerospike_Methods,
 		"Aerospike Python Client");
-	
+
     declare_policy_constants(aerospike);
 
 	PyTypeObject * client = AerospikeClient_Ready();

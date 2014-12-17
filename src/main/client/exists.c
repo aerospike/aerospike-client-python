@@ -124,7 +124,7 @@ PyObject * AerospikeClient_Exists(AerospikeClient * self, PyObject * args, PyObj
 	static char * kwlist[] = {"key", "policy", NULL};
 
 	// Python Function Argument Parsing
-	if ( PyArg_ParseTupleAndKeywords(args, kwds, "O|O:exists", kwlist, 
+	if ( PyArg_ParseTupleAndKeywords(args, kwds, "O|O:exists", kwlist,
 			&py_key, &py_policy) == false ) {
 		return NULL;
 	}

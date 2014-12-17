@@ -396,7 +396,7 @@ PyObject * AerospikeClient_Admin_Grant_Roles( AerospikeClient *self, PyObject *a
 
 	// Aerospike Operation Result
 	int success = -1;
-    
+
     if (!self || !self->as) {
         as_error_update(&err, AEROSPIKE_ERR_PARAM, "Invalid aerospike object");
         goto CLEANUP;
@@ -593,7 +593,7 @@ PyObject * AerospikeClient_Admin_Replace_Roles( AerospikeClient *self, PyObject 
 
 	// Aerospike Operation Result
 	int success = -1;
-	
+
     if (!self || !self->as) {
         as_error_update(&err, AEROSPIKE_ERR_PARAM, "Invalid aerospike object");
         goto CLEANUP;
@@ -772,7 +772,7 @@ PyObject * AerospikeClient_Admin_Query_Users( AerospikeClient * self, PyObject *
 
 	// Aerospike Operation Result
 	int success = -1;
-    
+
     if (!self || !self->as) {
         as_error_update(&err, AEROSPIKE_ERR_PARAM, "Invalid aerospike object");
         goto CLEANUP;

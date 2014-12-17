@@ -46,7 +46,7 @@ as_status as_udf_file_to_pyobject( as_error *err, as_udf_file * entry, PyObject 
 {
 	as_error_reset(err);
 
-	*py_file = PyDict_New();	
+	*py_file = PyDict_New();
 
 	PyObject * py_name = PyString_FromString(entry->name);
 	PyDict_SetItemString(*py_file, "name", py_name);
@@ -74,16 +74,16 @@ as_status as_udf_files_to_pyobject( as_error *err, as_udf_files *files, PyObject
 	*py_files = PyList_New(0);
 
 	for(int i = 0; i < files->size; i++) {
-		
+
 		PyObject * py_file;
 		as_udf_file_to_pyobject( err, &((files->entries)[i]), &py_file );
 		if( err->code != AEROSPIKE_OK) {
 			goto END;
-		}	
+		}
 
 		PyList_Append(*py_files, py_file);
 		Py_DECREF(py_file);
-	}	
+	}
 
 END:
 	return err->code;
@@ -113,7 +113,7 @@ as_status as_user_roles_array_to_pyobject( as_error *err, as_user_roles **user_r
 {
 	as_error_reset(err);
 	int i;
-	*py_as_user_roles = PyList_New(0);	
+	*py_as_user_roles = PyList_New(0);
 
 	for(i = 0; i < users; i++) {
 
@@ -123,7 +123,7 @@ as_status as_user_roles_array_to_pyobject( as_error *err, as_user_roles **user_r
 		strArray_to_pyobject(err, user_roles[i]->roles, &py_roles, user_roles[i]->roles_size);
 		if( err->code != AEROSPIKE_OK) {
 			break;
-		}		
+		}
 
 		PyObject * py_user_roles = PyDict_New();
 		PyDict_SetItemString(py_user_roles, "user", py_user);
@@ -145,7 +145,7 @@ as_status as_user_roles_array_to_pyobject( as_error *err, as_user_roles **user_r
 
 as_status as_user_roles_to_pyobject( as_error * err, as_user_roles * user_roles, PyObject ** py_as_user_roles )
 {
-	as_error_reset(err);	
+	as_error_reset(err);
 
 	PyObject * py_user = PyString_FromString(user_roles->user);
 	PyObject * py_roles_size = PyInt_FromLong(user_roles->roles_size);
@@ -154,7 +154,7 @@ as_status as_user_roles_to_pyobject( as_error * err, as_user_roles * user_roles,
 	strArray_to_pyobject(err, user_roles->roles, &py_roles, user_roles->roles_size);
 	if( err->code != AEROSPIKE_OK) {
 		goto END;
-	}		
+	}
 
 	PyObject * py_user_roles = PyDict_New();
 
@@ -176,7 +176,7 @@ END:
 }
 
 as_status pyobject_to_strArray( as_error * err, PyObject * py_list,  char ** arr )
-{	
+{
 	as_error_reset(err);
 
 	Py_ssize_t size = PyList_Size(py_list);
@@ -190,7 +190,7 @@ as_status pyobject_to_strArray( as_error * err, PyObject * py_list,  char ** arr
 		if( PyString_Check(py_val) ) {
 			s = PyString_AsString(py_val);
 			strcpy(arr[i], s);
-		}	
+		}
 	}
 
 	return err->code;
@@ -255,7 +255,7 @@ as_status pyobject_to_map(as_error * err, PyObject * py_dict, as_map ** map)
 
 	if ( err->code != AEROSPIKE_OK ) {
 		as_map_destroy(*map);
-	}	
+	}
 
 	return err->code;
 }
@@ -965,9 +965,3 @@ bool error_to_pyobject(const as_error * err, PyObject ** obj)
 	*obj = py_err;
 	return true;
 }
-
-
-
-
-
-

@@ -47,7 +47,7 @@ static bool each_result(const as_val * val, void * udata)
 	PyObject * py_callback = data->callback;
 
 	// Python Function Arguments and Result Value
-	PyObject * py_arglist = NULL; 
+	PyObject * py_arglist = NULL;
 	PyObject * py_result = NULL;
 	PyObject * py_return = NULL;
 
@@ -85,7 +85,7 @@ static bool each_result(const as_val * val, void * udata)
 	else {
 		rval = TRUE;
 	}
-	
+
 	// Release Python State
 	PyGILState_Release(gstate);
 
@@ -137,7 +137,7 @@ PyObject * AerospikeScan_Foreach(AerospikeScan * self, PyObject * args, PyObject
 	LocalData data;
 	data.callback = py_callback;
 	as_error_init(&data.error);
-	
+
 	// We are spawning multiple threads
 	PyThreadState * _save = PyEval_SaveThread();
 
@@ -146,7 +146,7 @@ PyObject * AerospikeScan_Foreach(AerospikeScan * self, PyObject * args, PyObject
 
 	// We are done using multiple threads
 	PyEval_RestoreThread(_save);
-	
+
 CLEANUP:
 
 	if ( err.code != AEROSPIKE_OK ) {
@@ -156,7 +156,7 @@ CLEANUP:
         Py_DECREF(py_err);
 		return NULL;
 	}
-	
+
 	Py_INCREF(Py_None);
 	return Py_None;
 }

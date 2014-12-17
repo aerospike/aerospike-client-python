@@ -49,7 +49,7 @@ static bool each_result(const as_val * val, void * udata)
 	PyObject * py_callback = data->callback;
 
 	// Python Function Arguments and Result Value
-	PyObject * py_arglist = NULL; 
+	PyObject * py_arglist = NULL;
 	PyObject * py_result  = NULL;
     PyObject * py_return = NULL;
 
@@ -63,7 +63,7 @@ static bool each_result(const as_val * val, void * udata)
 	// Build Python Function Arguments
 	py_arglist = PyTuple_New(1);
 	PyTuple_SetItem(py_arglist, 0, py_result);
-	
+
 	// Invoke Python Callback
 	py_return = PyEval_CallObject(py_callback, py_arglist);
 
@@ -144,13 +144,13 @@ PyObject * AerospikeQuery_Foreach(AerospikeQuery * self, PyObject * args, PyObje
 
 	// We are spawning multiple threads
 	PyThreadState * _save = PyEval_SaveThread();
-	
+
 	// Invoke operation
     aerospike_query_foreach(self->client->as, &err, query_policy_p, &self->query, each_result, &data);
 
 	// We are done using multiple threads
 	PyEval_RestoreThread(_save);
-	
+
 CLEANUP:
     as_query_destroy(&self->query);
 	if ( err.code != AEROSPIKE_OK ) {
