@@ -286,7 +286,7 @@ as_status pyobject_to_val(as_error * err, PyObject * py_obj, as_val ** val)
 	else if ( PyUnicode_Check(py_obj) ) {
 		PyObject * py_ustr = PyUnicode_AsUTF8String(py_obj);
 		char * str = PyString_AsString(py_ustr);
-		*val = (as_val *) as_string_new(strdup(str), false);
+		*val = (as_val *) as_string_new(strdup(str), true);
 		Py_DECREF(py_ustr);
 	}
 	else if ( PyByteArray_Check(py_obj) ) {
