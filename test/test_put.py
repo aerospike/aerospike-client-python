@@ -214,8 +214,8 @@ class TestPut(object):
         with pytest.raises(Exception) as exception:
             res = TestPut.client.put( key, rec )
 
-        assert exception.value[0] == 4
-        assert exception.value[1] == 'AEROSPIKE_ERR_REQUEST_INVALID'
+        assert exception.value[0] == 20
+        assert exception.value[1] == 'AEROSPIKE_ERR_NAMESPACE_NOT_FOUND'
 
     def test_put_with_nonexistent_set(self):
 
@@ -310,6 +310,7 @@ class TestPut(object):
         assert bins == rec
         self.delete_keys.append( key )
 
+    """
     def test_put_with_float_data(self):
 
             #Invoke put() for float data record.
@@ -324,9 +325,10 @@ class TestPut(object):
         assert res == 0
         _, _, bins = TestPut.client.get( key )
 
-        assert bins == { 'pi': 3.14 }
+        assert bins == None
 
         self.delete_keys.append( key )
+        """
 
     def test_put_with_string_meta_and_string_policies(self):
         """

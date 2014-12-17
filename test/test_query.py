@@ -171,7 +171,7 @@ class TestQuery(object):
             query.where(p.equals('test_age', None))
 
         assert exception.value[0] == -2L
-        assert exception.value[1] == 'equals() expects either an integer or string value.'
+        assert exception.value[1] == 'predicate is invalid.'
 
     def test_query_with_policy(self):
         """
@@ -248,9 +248,11 @@ class TestQuery(object):
             TestQuery.client.put(key, rec)
 
         query.foreach(print_result, policy)
-        key = ('test', 'demo', 'put_in_callback')
 
-        key, meta, bins = TestQuery.client.get( key )
+        key = ('test', 'demo', 'put_in_callback')
+        key1, meta, bins = TestQuery.client.get( key )
+
+        key = ('test', 'demo', 'put_in_callback')
         TestQuery.client.remove(key)
         assert bins == { 'test_age': 8, 'name': 'name8'}
 
