@@ -26,6 +26,7 @@
 
 #include "client.h"
 #include "query.h"
+#include "policy.h"
 
 /*******************************************************************************
  * PYTHON TYPE METHODS
@@ -77,9 +78,10 @@ static int AerospikeQuery_Type_Init(AerospikeQuery * self, PyObject * args, PyOb
 
 	if ( PyArg_ParseTupleAndKeywords(args, kwds, "O|O:key", kwlist, 
 		&py_namespace, &py_set) == false ) {
-		return 0;
+        as_query_destroy(&self->query);
+		return -1;
 	}
-		
+	
 	char * namespace = NULL;
 	char * set = NULL;
 
@@ -165,6 +167,15 @@ AerospikeQuery * AerospikeQuery_New(AerospikeClient * client, PyObject * args, P
     AerospikeQuery * self = (AerospikeQuery *) AerospikeQuery_Type.tp_new(&AerospikeQuery_Type, args, kwds);
     self->client = client;
 	Py_INCREF(client);
-    AerospikeQuery_Type.tp_init((PyObject *) self, args, kwds);
-	return self;
+    if (AerospikeQuery_Type.tp_init((PyObject *) self, args, kwds) == 0) {
+        return self;
+    } else {
+        as_error err;
+        as_error_init(&err);
+        as_error_update(&err, AEROSPIKE_ERR_PARAM, "query() expects atleast 1 parameter");
+        PyObject * py_err = NULL;
+        error_to_pyobject(&err, &py_err);
+        PyErr_SetObject(PyExc_Exception, py_err);
+        return NULL;
+    }
 }

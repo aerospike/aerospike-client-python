@@ -36,13 +36,26 @@ PyObject * AerospikeClient_Get_Invoke(
 
 	// Aerospike Client Arguments
 	as_error err;
-	as_policy_read policy;
-	as_policy_read * policy_p = NULL;
+    as_policy_read read_policy;
+    as_policy_read * read_policy_p = NULL;
 	as_key key;
 	as_record * rec = NULL;
 
 	// Initialize error
 	as_error_init(&err);
+
+    if (!self || !self->as) {
+        as_error_update(&err, AEROSPIKE_ERR_PARAM, "Invalid aerospike object");
+        goto CLEANUP;
+    }
+
+    if (py_policy) {
+        validate_policy_read(&err, py_policy, &read_policy);
+    }
+
+    if (err.code != AEROSPIKE_OK) {
+        goto CLEANUP;
+    }
 
 	// Convert python key object to as_key
 	pyobject_to_key(&err, py_key, &key);
@@ -51,7 +64,7 @@ PyObject * AerospikeClient_Get_Invoke(
 	}
 
 	// Convert python policy object to as_policy_exists
-	pyobject_to_policy_read(&err, py_policy, &policy, &policy_p);
+    pyobject_to_policy_read(&err, py_policy, &read_policy, &read_policy_p);
 	if ( err.code != AEROSPIKE_OK ) {
 		goto CLEANUP;
 	}
@@ -60,7 +73,7 @@ PyObject * AerospikeClient_Get_Invoke(
 	as_record_init(rec, 0);
 
 	// Invoke operation
-	aerospike_key_get(self->as, &err, policy_p, &key, &rec);
+    aerospike_key_get(self->as, &err, read_policy_p, &key, &rec);
 
 	if ( err.code == AEROSPIKE_OK ) {
 		record_to_pyobject(&err, rec, &key, &py_rec);
@@ -73,7 +86,7 @@ PyObject * AerospikeClient_Get_Invoke(
 		PyObject * py_rec_bins = Py_None;
 
 		key_to_pyobject(&err, &key, &py_rec_key);
-		
+
 		py_rec = PyTuple_New(3);
 		PyTuple_SetItem(py_rec, 0, py_rec_key);
 		PyTuple_SetItem(py_rec, 1, py_rec_meta);
@@ -84,17 +97,18 @@ PyObject * AerospikeClient_Get_Invoke(
 	}
 
 CLEANUP:
-	
+
 	// as_key_destroy(&key);
 	as_record_destroy(rec);
-	
+
 	if ( err.code != AEROSPIKE_OK ) {
 		PyObject * py_err = NULL;
 		error_to_pyobject(&err, &py_err);
 		PyErr_SetObject(PyExc_Exception, py_err);
+        Py_DECREF(py_err);
 		return NULL;
 	}
-	
+
 	return py_rec;
 }
 
@@ -108,7 +122,7 @@ PyObject * AerospikeClient_Get(AerospikeClient * self, PyObject * args, PyObject
 	static char * kwlist[] = {"key", "policy", NULL};
 
 	// Python Function Argument Parsing
-	if ( PyArg_ParseTupleAndKeywords(args, kwds, "O|O:get", kwlist, 
+	if ( PyArg_ParseTupleAndKeywords(args, kwds, "O|O:get", kwlist,
 			&py_key, &py_policy) == false ) {
 		return NULL;
 	}

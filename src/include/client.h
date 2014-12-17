@@ -125,7 +125,7 @@ PyObject * AerospikeClient_Put_Invoke(
 
 PyObject * AerospikeClient_Remove_Invoke(
 	AerospikeClient * self, 
-	PyObject * py_key, PyObject * py_policy);
+	PyObject * py_key, long generation, PyObject * py_policy);
 
 
 /*******************************************************************************
@@ -217,7 +217,7 @@ AerospikeQuery * AerospikeClient_Query(AerospikeClient * self, PyObject * args, 
  *				print "{0} - ERR: {1}".format(record,err)
  *
  */
-PyObject * AerospikeClient_Info(AerospikeClient * self, PyObject * args, PyObject * kwds);
+PyObject * AerospikeClient_InfoMany(AerospikeClient * self, PyObject * args, PyObject * kwds);
 
 
 /*******************************************************************************

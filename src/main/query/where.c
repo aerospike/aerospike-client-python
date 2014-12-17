@@ -163,7 +163,7 @@ AerospikeQuery * AerospikeQuery_Where(AerospikeQuery * self, PyObject * args)
 			);
 		}
 	}
-	else if ( PyString_Check(py_arg1) && PyString_Check(py_arg2) ) {
+	else if ( (py_arg2) && PyString_Check(py_arg1) && (py_arg2) && PyString_Check(py_arg2) ) {
 
 		char * op = PyString_AsString(py_arg2);
 
@@ -226,6 +226,8 @@ AerospikeQuery * AerospikeQuery_Where(AerospikeQuery * self, PyObject * args)
 		PyObject * py_err = NULL;
 		error_to_pyobject(&err, &py_err);
 		PyErr_SetObject(PyExc_Exception, py_err);
+        Py_DECREF(py_err);
+        as_query_destroy(&self->query);
 		rc = 1;
 	}
 

@@ -24,6 +24,7 @@
 #include "query.h"
 #include "scan.h"
 #include "predicates.h"
+#include "policy.h"
 
 static PyMethodDef Aerospike_Methods[] = {
 
@@ -33,15 +34,18 @@ static PyMethodDef Aerospike_Methods[] = {
 	{NULL}
 };
 
-PyMODINIT_FUNC initaerospike()
+PyMODINIT_FUNC initaerospike(void)
 {
 	// Makes things "thread-safe"
 	PyEval_InitThreads();
+
 
 	// aerospike Module
 	PyObject * aerospike = Py_InitModule3("aerospike", Aerospike_Methods, 
 		"Aerospike Python Client");
 	
+    declare_policy_constants(aerospike);
+
 	PyTypeObject * client = AerospikeClient_Ready();
 	Py_INCREF(client);
 	PyModule_AddObject(aerospike, "Client", (PyObject *) client);
@@ -59,5 +63,6 @@ PyMODINIT_FUNC initaerospike()
 	PyModule_AddObject(aerospike, "Scan", (PyObject *) scan);
 
 	PyObject * predicates = AerospikePredicates_New();
+    Py_INCREF(predicates);
 	PyModule_AddObject(aerospike, "predicates", predicates);
 }

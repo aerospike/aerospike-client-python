@@ -97,6 +97,8 @@ PyObject * AerospikeScan_Foreach(AerospikeScan * self, PyObject * args, PyObject
 	// Python Function Arguments
 	PyObject * py_callback = NULL;
 	PyObject * py_policy = NULL;
+    as_policy_scan scan_policy;
+    as_policy_scan * scan_policy_p = NULL;
 
 	// Python Function Keyword Arguments
 	static char * kwlist[] = {"callback", "policy", NULL};
@@ -108,14 +110,25 @@ PyObject * AerospikeScan_Foreach(AerospikeScan * self, PyObject * args, PyObject
 
 	// Aerospike Client Arguments
 	as_error err;
-	as_policy_scan policy;
-	as_policy_scan * policy_p = NULL;
 
 	// Initialize error
 	as_error_init(&err);
 
+    if (!self || !self->client->as) {
+        as_error_update(&err, AEROSPIKE_ERR_PARAM, "Invalid aerospike object");
+        goto CLEANUP;
+    }
+
+    if (py_policy) {
+        validate_policy_scan(&err, py_policy, &scan_policy);
+    }
+
+    if (err.code != AEROSPIKE_OK) {
+        goto CLEANUP;
+    }
+
 	// Convert python policy object to as_policy_exists
-	pyobject_to_policy_scan(&err, py_policy, &policy, &policy_p);
+    pyobject_to_policy_scan(&err, py_policy, &scan_policy, &scan_policy_p);
 	if ( err.code != AEROSPIKE_OK ) {
 		goto CLEANUP;
 	}
@@ -129,7 +142,7 @@ PyObject * AerospikeScan_Foreach(AerospikeScan * self, PyObject * args, PyObject
 	PyThreadState * _save = PyEval_SaveThread();
 
 	// Invoke operation
-	aerospike_scan_foreach(self->client->as, &err, policy_p, &self->scan, each_result, &data);
+    aerospike_scan_foreach(self->client->as, &err, scan_policy_p, &self->scan, each_result, &data);
 
 	// We are done using multiple threads
 	PyEval_RestoreThread(_save);
@@ -140,6 +153,7 @@ CLEANUP:
 		PyObject * py_err = NULL;
 		error_to_pyobject(&err, &py_err);
 		PyErr_SetObject(PyExc_Exception, py_err);
+        Py_DECREF(py_err);
 		return NULL;
 	}
 	

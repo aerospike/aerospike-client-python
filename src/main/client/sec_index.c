@@ -41,6 +41,8 @@ PyObject * AerospikeClient_Index_Integer_Create(AerospikeClient * self, PyObject
 	PyObject * py_set = NULL;
 	PyObject * py_bin = NULL;
 	PyObject * py_name = NULL;
+    as_policy_info info_policy;
+    as_policy_info *info_policy_p = NULL;
 
 	// Python Function Keyword Arguments 
 	static char * kwlist[] = {"policy", "ns", "set", "bin", "name", NULL};
@@ -51,14 +53,25 @@ PyObject * AerospikeClient_Index_Integer_Create(AerospikeClient * self, PyObject
 		return NULL;
 	}
 
+    if (!self || !self->as) {
+        as_error_update(&err, AEROSPIKE_ERR_PARAM, "Invalid aerospike object");
+        goto CLEANUP;
+    }
+    if (py_policy) {
+        validate_policy_info(&err, py_policy, &info_policy);
+    }
+    
+    if (err.code != AEROSPIKE_OK) {
+        goto CLEANUP;
+    }
+
 	// Convert python object to policy_info 
-	as_policy_info *policy, policy_struct;
-	pyobject_to_policy_info( &err, py_policy, &policy_struct, &policy );
+    pyobject_to_policy_info( &err, py_policy, &info_policy, &info_policy_p);
 	if ( err.code != AEROSPIKE_OK ) {
 		goto CLEANUP;
 	}
 
-	// Convert python object into namespace string  
+	// Convert python object into namespace string
 	char ns[AS_NAMESPACE_MAX_SIZE];
 	if( !PyString_Check(py_ns) ) {
 		as_error_update(&err, AEROSPIKE_ERR_PARAM, "Namespace should be a string");
@@ -67,7 +80,7 @@ PyObject * AerospikeClient_Index_Integer_Create(AerospikeClient * self, PyObject
 	char *namespace = PyString_AsString(py_ns);
 	strncpy(ns, namespace, AS_NAMESPACE_MAX_SIZE);
 
-	// Convert python object into set string  
+	// Convert python object into set string
 	char set[AS_SET_MAX_SIZE];
 	if( !PyString_Check(py_set) ) {
 		as_error_update(&err, AEROSPIKE_ERR_PARAM, "Set should be a string");
@@ -76,7 +89,7 @@ PyObject * AerospikeClient_Index_Integer_Create(AerospikeClient * self, PyObject
 	char *set_ptr = PyString_AsString(py_set);
 	strncpy(set, set_ptr, AS_SET_MAX_SIZE);
 
-	// Convert python object into bin string  
+	// Convert python object into bin string
 	char bin[AS_BIN_NAME_MAX_SIZE];
 	if( !PyString_Check(py_bin) ) {
 		as_error_update(&err, AEROSPIKE_ERR_PARAM, "Bin should be a string");
@@ -85,17 +98,17 @@ PyObject * AerospikeClient_Index_Integer_Create(AerospikeClient * self, PyObject
 	char *bin_ptr = PyString_AsString(py_bin);
 	strncpy(bin, bin_ptr, AS_BIN_NAME_MAX_SIZE);
 
-	// Convert PyObject into the name of the index  
+	// Convert PyObject into the name of the index
 	char *name;
 	if( !PyString_Check(py_name) ) {
 		as_error_update(&err, AEROSPIKE_ERR_PARAM, "Index name should be a string");
 		goto CLEANUP;
 	}
 
-	name = PyString_AsString(py_name);		
+	name = PyString_AsString(py_name);
 
 	// Invoke operation 
-	aerospike_index_integer_create(self->as, &err, policy, ns, set, bin, name);
+	aerospike_index_integer_create(self->as, &err, info_policy_p, ns, set, bin, name);
 	if ( err.code != AEROSPIKE_OK ) {
 		goto CLEANUP;
 	}
@@ -106,6 +119,7 @@ CLEANUP:
 		PyObject * py_err = NULL;
 		error_to_pyobject(&err, &py_err);
 		PyErr_SetObject(PyExc_Exception, py_err);
+        Py_DECREF(py_err);
 		return NULL;
 	}
 
@@ -126,23 +140,36 @@ PyObject * AerospikeClient_Index_String_Create(AerospikeClient * self, PyObject 
 	PyObject * py_bin = NULL;
 	PyObject * py_name = NULL;
 
+    as_policy_info info_policy;
+    as_policy_info *info_policy_p = NULL;
+
 	// Python Function Keyword Arguments 
 	static char * kwlist[] = {"policy", "ns", "set", "bin", "name", NULL};
 
 	// Python Function Argument Parsing
-	if ( PyArg_ParseTupleAndKeywords(args, kwds, "OOOOO:index_string_create", kwlist, 
+	if ( PyArg_ParseTupleAndKeywords(args, kwds, "OOOOO:index_string_create", kwlist,
 				&py_policy, &py_ns, &py_set, &py_bin, &py_name) == false ) {
 		return NULL;
 	}
 
-	// Convert python object to policy_info 
-	as_policy_info *policy, policy_struct;
-	pyobject_to_policy_info( &err, py_policy, &policy_struct, &policy );
+    if (!self || !self->as) {
+        as_error_update(&err, AEROSPIKE_ERR_PARAM, "Invalid aerospike object");
+        goto CLEANUP;
+    }
+    if (py_policy) {
+        validate_policy_info(&err, py_policy, &info_policy);
+    }
+    if (err.code != AEROSPIKE_OK) {
+        goto CLEANUP;
+    }
+
+	// Convert python object to policy_info
+    pyobject_to_policy_info( &err, py_policy, &info_policy, &info_policy_p);
 	if ( err.code != AEROSPIKE_OK ) {
 		goto CLEANUP;
 	}
 
-	// Convert python object into namespace string  
+	// Convert python object into namespace string
 	char ns[AS_NAMESPACE_MAX_SIZE];
 	if( !PyString_Check(py_ns) ) {
 		as_error_update(&err, AEROSPIKE_ERR_PARAM, "Namespace should be a string");
@@ -151,7 +178,7 @@ PyObject * AerospikeClient_Index_String_Create(AerospikeClient * self, PyObject 
 	char *namespace = PyString_AsString(py_ns);
 	strncpy(ns, namespace, AS_NAMESPACE_MAX_SIZE);
 
-	// Convert python object into set string  
+	// Convert python object into set string
 	char set[AS_SET_MAX_SIZE];
 	if( !PyString_Check(py_set) ) {
 		as_error_update(&err, AEROSPIKE_ERR_PARAM, "Set should be a string");
@@ -160,7 +187,7 @@ PyObject * AerospikeClient_Index_String_Create(AerospikeClient * self, PyObject 
 	char *set_ptr = PyString_AsString(py_set);
 	strncpy(set, set_ptr, AS_SET_MAX_SIZE);
 
-	// Convert python object into bin string  
+	// Convert python object into bin string
 	char bin[AS_BIN_NAME_MAX_SIZE];
 	if( !PyString_Check(py_bin) ) {
 		as_error_update(&err, AEROSPIKE_ERR_PARAM, "Bin should be a string");
@@ -169,17 +196,17 @@ PyObject * AerospikeClient_Index_String_Create(AerospikeClient * self, PyObject 
 	char *bin_ptr = PyString_AsString(py_bin);
 	strncpy(bin, bin_ptr, AS_BIN_NAME_MAX_SIZE);
 
-	// Convert PyObject into the name of the index  
+	// Convert PyObject into the name of the index
 	char *name;
 	if( !PyString_Check(py_name) ) {
 		as_error_update(&err, AEROSPIKE_ERR_PARAM, "Index name should be a string");
 		goto CLEANUP;
 	}
 
-	name = PyString_AsString(py_name);		
+	name = PyString_AsString(py_name);
 
-	// Invoke operation 
-	aerospike_index_string_create(self->as, &err, policy, ns, set, bin, name);
+	// Invoke operation
+	aerospike_index_string_create(self->as, &err, info_policy_p, ns, set, bin, name);
 	if ( err.code != AEROSPIKE_OK ) {
 		goto CLEANUP;
 	}
@@ -190,6 +217,7 @@ CLEANUP:
 		PyObject * py_err = NULL;
 		error_to_pyobject(&err, &py_err);
 		PyErr_SetObject(PyExc_Exception, py_err);
+        Py_DECREF(py_err);
 		return NULL;
 	}
 
@@ -208,23 +236,40 @@ PyObject * AerospikeClient_Index_Remove(AerospikeClient * self, PyObject *args, 
 	PyObject * py_ns = NULL;
 	PyObject * py_name = NULL;
 
+    as_policy_info info_policy;
+    as_policy_info *info_policy_p = NULL;
+
+
 	// Python Function Keyword Arguments 
 	static char * kwlist[] = {"policy", "ns", "name", NULL};
 
 	// Python Function Argument Parsing
-	if ( PyArg_ParseTupleAndKeywords(args, kwds, "OOO:index_remove", kwlist, 
+	if ( PyArg_ParseTupleAndKeywords(args, kwds, "OOO:index_remove", kwlist,
 				&py_policy, &py_ns, &py_name) == false ) {
 		return NULL;
 	}
 
-	// Convert python object to policy_info 
-	as_policy_info *policy, policy_struct;
-	pyobject_to_policy_info( &err, py_policy, &policy_struct, &policy );
+    if (!self || !self->as) {
+        as_error_update(&err, AEROSPIKE_ERR_PARAM, "Invalid aerospike object");
+        goto CLEANUP;
+    }
+
+    if (py_policy) {
+        validate_policy_info(&err, py_policy, &info_policy);
+    }
+
+    if (err.code != AEROSPIKE_OK) {
+        goto CLEANUP;
+    }
+
+
+	// Convert python object to policy_info
+    pyobject_to_policy_info( &err, py_policy, &info_policy, &info_policy_p);
 	if ( err.code != AEROSPIKE_OK ) {
 		goto CLEANUP;
 	}
 
-	// Convert python object into namespace string  
+	// Convert python object into namespace string
 	char ns[AS_NAMESPACE_MAX_SIZE];
 	if( !PyString_Check(py_ns) ) {
 		as_error_update(&err, AEROSPIKE_ERR_PARAM, "Namespace should be a string");
@@ -233,17 +278,17 @@ PyObject * AerospikeClient_Index_Remove(AerospikeClient * self, PyObject *args, 
 	char *namespace = PyString_AsString(py_ns);
 	strncpy(ns, namespace, AS_NAMESPACE_MAX_SIZE);
 
-	// Convert PyObject into the name of the index  
+	// Convert PyObject into the name of the index
 	char *name;
 	if( !PyString_Check(py_name) ) {
 		as_error_update(&err, AEROSPIKE_ERR_PARAM, "Index name should be a string");
 		goto CLEANUP;
 	}
 
-	name = PyString_AsString(py_name);		
+	name = PyString_AsString(py_name);
 
-	// Invoke operation 
-	aerospike_index_remove(self->as, &err, policy, ns, name);
+	// Invoke operation
+	aerospike_index_remove(self->as, &err, info_policy_p, ns, name);
 	if ( err.code != AEROSPIKE_OK ) {
 		goto CLEANUP;
 	}
@@ -254,6 +299,7 @@ CLEANUP:
 		PyObject * py_err = NULL;
 		error_to_pyobject(&err, &py_err);
 		PyErr_SetObject(PyExc_Exception, py_err);
+        Py_DECREF(py_err);
 		return NULL;
 	}
 

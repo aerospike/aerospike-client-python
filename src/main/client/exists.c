@@ -28,7 +28,7 @@
 #include "policy.h"
 
 PyObject * AerospikeClient_Exists_Invoke(
-	AerospikeClient * self, 
+	AerospikeClient * self,
 	PyObject * py_key, PyObject * py_policy)
 {
 	// Python Return Value
@@ -36,13 +36,26 @@ PyObject * AerospikeClient_Exists_Invoke(
 
 	// Aerospike Client Arguments
 	as_error err;
-	as_policy_read policy;
-	as_policy_read * policy_p = NULL;
+    as_policy_read read_policy;
+    as_policy_read * read_policy_p = NULL;
 	as_key key;
 	as_record * rec = NULL;
 
 	// Initialize error
 	as_error_init(&err);
+
+    if (!self || !self->as) {
+        as_error_update(&err, AEROSPIKE_ERR_PARAM, "Invalid aerospike object");
+        goto CLEANUP;
+    }
+
+    if (py_policy) {
+        validate_policy_read(&err, py_policy, &read_policy);
+    }
+
+    if (err.code != AEROSPIKE_OK) {
+        goto CLEANUP;
+    }
 
 	// Convert python key object to as_key
 	pyobject_to_key(&err, py_key, &key);
@@ -51,13 +64,13 @@ PyObject * AerospikeClient_Exists_Invoke(
 	}
 
 	// Convert python policy object to as_policy_exists
-	pyobject_to_policy_read(&err, py_policy, &policy, &policy_p);
+    pyobject_to_policy_read(&err, py_policy, &read_policy, &read_policy_p);
 	if ( err.code != AEROSPIKE_OK ) {
 		goto CLEANUP;
 	}
 
 	// Invoke operation
-	aerospike_key_exists(self->as, &err, policy_p, &key, &rec);
+    aerospike_key_exists(self->as, &err, read_policy_p, &key, &rec);
 
 	if ( err.code == AEROSPIKE_OK ) {
 
@@ -66,7 +79,7 @@ PyObject * AerospikeClient_Exists_Invoke(
 
 		key_to_pyobject(&err, &key, &py_result_key);
 		metadata_to_pyobject(&err, rec, &py_result_meta);
-		
+
 		py_result = PyTuple_New(2);
 		PyTuple_SetItem(py_result, 0, py_result_key);
 		PyTuple_SetItem(py_result, 1, py_result_meta);
@@ -78,7 +91,7 @@ PyObject * AerospikeClient_Exists_Invoke(
 		PyObject * py_result_meta = Py_None;
 
 		key_to_pyobject(&err, &key, &py_result_key);
-		
+
 		py_result = PyTuple_New(2);
 		PyTuple_SetItem(py_result, 0, py_result_key);
 		PyTuple_SetItem(py_result, 1, py_result_meta);
@@ -89,11 +102,12 @@ PyObject * AerospikeClient_Exists_Invoke(
 CLEANUP:
 
 	as_record_destroy(rec);
-	
+
 	if ( err.code != AEROSPIKE_OK ) {
 		PyObject * py_err = NULL;
 		error_to_pyobject(&err, &py_err);
 		PyErr_SetObject(PyExc_Exception, py_err);
+        Py_DECREF(py_err);
 		return NULL;
 	}
 
