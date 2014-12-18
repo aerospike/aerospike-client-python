@@ -49,7 +49,7 @@ class TestGetMany(object):
         with pytest.raises(TypeError) as typeError:
             TestGetMany.client.get_many()
 
-        assert typeError.value.message == "Required argument 'keys' (pos 1) not found"
+        assert "Required argument 'keys' (pos 1) not found" in typeError.value
 
     def test_get_many_without_policy(self):
 

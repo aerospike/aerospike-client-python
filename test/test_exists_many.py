@@ -50,7 +50,7 @@ class TestExistsMany(object):
         with pytest.raises(TypeError) as typeError:
             TestExistsMany.client.exists_many()
 
-        assert typeError.value.message == "Required argument 'keys' (pos 1) not found"
+        assert "Required argument 'keys' (pos 1) not found" in typeError.value
 
     def test_exists_many_without_policy(self):
 

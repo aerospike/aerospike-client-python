@@ -111,5 +111,5 @@ PyObject * AerospikeClient_Put(AerospikeClient * self, PyObject * args, PyObject
 	// Invoke Operation
 	return AerospikeClient_Put_Invoke(self,
 		py_key, py_bins, py_meta, py_policy
-			);
+		);
 }
