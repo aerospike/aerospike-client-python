@@ -10,22 +10,26 @@ except:
     sys.exit(1)
 
 class TestOperate(object):
-
-    def setup_method(self, method):
+    def setup_class(cls):
         """
         Setup method.
         """
         config = {
             'hosts': [('127.0.0.1', 3000)]
         }
-        self.client = aerospike.client(config).connect()
+        TestOperate.client = aerospike.client(config).connect()
+
+    def teardown_class(cls):
+        TestOperate.client.close()
+
+    def setup_method(self, method):
         for i in xrange(5):
             key = ('test', 'demo', i)
             rec = {
                 'name' : 'name%s' % (str(i)),
                 'age' : i
             }
-            self.client.put(key, rec)
+            TestOperate.client.put(key, rec)
 
     def teardown_method(self, method):
         """
@@ -33,14 +37,14 @@ class TestOperate(object):
         """
         for i in xrange(5):
             key = ('test', 'demo', i)
-            self.client.remove(key)
+            TestOperate.client.remove(key)
 
     def test_operate_with_no_parameters_negative(self):
         """
         Invoke opearte() without any mandatory parameters.
         """
         with pytest.raises(TypeError) as typeError:
-            self.client.operate()
+            TestOperate.client.operate()
         assert "Required argument 'key' (pos 1) not found" in typeError.value
 
     def test_operate_with_correct_paramters_positive(self):
@@ -64,10 +68,9 @@ class TestOperate(object):
                     "bin" : "name"
                     }
                 ]
-        
-        key, meta, bins = self.client.operate(key, list)
 
-        time.sleep(2)
+        key, meta, bins = TestOperate.client.operate(key, list)
+
 
         assert bins == { 'name': 'ramname1'}
 
@@ -97,11 +100,265 @@ class TestOperate(object):
                     "bin" : "name"
                     }
                 ]
-        
-        key, meta, bins = self.client.operate(key, list, policy)
 
-        time.sleep(2)
+        key, meta, bins = TestOperate.client.operate(key, list, {}, policy)
+
+
         assert bins == { 'name': 'name1aa'}
+        assert key == ('test', 'demo', 1,
+                bytearray(b'\xb7\xf4\xb88\x89\xe2\xdag\xdeh>\x1d\xf6\x91\x9a\x1e\xac\xc4F\xc8'))
+
+    def test_operate_with_policy_key_digest(self):
+        """
+        Invoke operate() with correct policy
+        """
+        key = ( 'test', 'demo', None, bytearray("asd;as[d'as;djk;uyfl",
+               "utf-8"))
+        rec = {
+            'name' : 'name%s' % (str(1)),
+            'age' : 1,
+        }
+        policy = {
+            'timeout': 1000,
+            'key' : aerospike.POLICY_KEY_DIGEST
+        }
+        TestOperate.client.put(key, rec)
+
+        list = [
+                {
+                    "op" : aerospike.OPERATOR_APPEND,
+                    "bin" : "name",
+                    "val" : "aa"
+                    },
+                {
+                    "op" : aerospike.OPERATOR_INCR,
+                    "bin" : "age",
+                    "val" : 3
+                    },
+                {
+                    "op" : aerospike.OPERATOR_READ,
+                    "bin" : "name"
+                    }
+                ]
+
+        key, meta, bins = TestOperate.client.operate(key, list, {}, policy)
+
+
+        assert bins == { 'name': 'name1aa'}
+        assert key == ('test', 'demo', None,
+                bytearray(b"asd;as[d\'as;djk;uyfl"))
+
+    def test_operate_with_policy_gen_ignore(self):
+        """
+        Invoke operate() with gen ignore.
+        """
+        key = ('test', 'demo', 1)
+        policy = {
+            'timeout': 1000,
+            'key' : aerospike.POLICY_KEY_SEND,
+            'gen' : aerospike.POLICY_GEN_IGNORE
+        }
+
+        meta = {
+            'gen': 10,
+            'ttl': 1200
+        }
+
+        list = [
+                {
+                    "op" : aerospike.OPERATOR_APPEND,
+                    "bin" : "name",
+                    "val" : "aa"
+                    },
+                {
+                    "op" : aerospike.OPERATOR_INCR,
+                    "bin" : "age",
+                    "val" : 3
+                    },
+                {
+                    "op" : aerospike.OPERATOR_READ,
+                    "bin" : "name"
+                    }
+                ]
+
+        key, meta, bins = TestOperate.client.operate(key, list, meta, policy)
+
+
+        assert bins == { 'name': 'name1aa'}
+        assert key == ('test', 'demo', 1,
+                bytearray(b'\xb7\xf4\xb88\x89\xe2\xdag\xdeh>\x1d\xf6\x91\x9a\x1e\xac\xc4F\xc8'))
+
+    def test_operate_with_policy_gen_EQ_positive(self):
+        """
+        Invoke operate() with gen EQ positive.
+        """
+        key = ('test', 'demo', 1)
+        policy = {
+            'timeout': 1000,
+            'key' : aerospike.POLICY_KEY_SEND,
+            'gen' : aerospike.POLICY_GEN_EQ
+        }
+        (key, meta) = TestOperate.client.exists(key)
+        gen = meta['gen']
+        meta = {
+            'gen': gen,
+            'ttl': 1200
+        }
+
+        list = [
+                {
+                    "op" : aerospike.OPERATOR_APPEND,
+                    "bin" : "name",
+                    "val" : "aa"
+                    },
+                {
+                    "op" : aerospike.OPERATOR_INCR,
+                    "bin" : "age",
+                    "val" : 3
+                    },
+                {
+                    "op" : aerospike.OPERATOR_READ,
+                    "bin" : "name"
+                    }
+                ]
+
+        (key, meta, bins) = TestOperate.client.operate(key, list, meta, policy)
+
+
+        assert bins == { 'name': 'name1aa'}
+        assert key == ('test', 'demo', 1,
+                bytearray(b'\xb7\xf4\xb88\x89\xe2\xdag\xdeh>\x1d\xf6\x91\x9a\x1e\xac\xc4F\xc8'))
+
+    def test_operate_with_policy_gen_EQ_not_equal(self):
+        """
+        Invoke operate() with gen not equal.
+        """
+        key = ('test', 'demo', 1)
+        policy = {
+            'timeout': 1000,
+            'key' : aerospike.POLICY_KEY_SEND,
+            'gen' : aerospike.POLICY_GEN_EQ
+        }
+
+        (key, meta) = TestOperate.client.exists(key)
+        gen = meta['gen']
+        meta = {
+            'gen': gen + 5,
+            'ttl': 1200
+        }
+        list = [
+                {
+                    "op" : aerospike.OPERATOR_APPEND,
+                    "bin" : "name",
+                    "val" : "aa"
+                    },
+                {
+                    "op" : aerospike.OPERATOR_INCR,
+                    "bin" : "age",
+                    "val" : 3
+                    },
+                {
+                    "op" : aerospike.OPERATOR_READ,
+                    "bin" : "name"
+                    }
+                ]
+
+        with pytest.raises(Exception) as exception:
+            key, meta, bins = TestOperate.client.operate(key, list, meta, policy)
+
+        assert exception.value[0] == -1
+        assert exception.value[1] == "expected 1 bins, got 0"
+       
+        (key , meta, bins) = TestOperate.client.get(key)
+        assert bins == { "age": 1, 'name': 'name1'}
+        assert key == ('test', 'demo', 1,
+                bytearray(b'\xb7\xf4\xb88\x89\xe2\xdag\xdeh>\x1d\xf6\x91\x9a\x1e\xac\xc4F\xc8'))
+        
+    def test_operate_with_policy_gen_GT_lesser(self):
+        """
+        Invoke operate() with gen GT lesser.
+        """
+        key = ('test', 'demo', 1)
+        policy = {
+            'timeout': 1000,
+            'key' : aerospike.POLICY_KEY_SEND,
+            'gen' : aerospike.POLICY_GEN_GT
+        }
+        (key, meta) = TestOperate.client.exists(key)
+        gen = meta['gen']
+        meta = {
+            'gen': gen,
+            'ttl': 1200
+        }
+
+        list = [
+                {
+                    "op" : aerospike.OPERATOR_APPEND,
+                    "bin" : "name",
+                    "val" : "aa"
+                    },
+                {
+                    "op" : aerospike.OPERATOR_INCR,
+                    "bin" : "age",
+                    "val" : 3
+                    },
+                {
+                    "op" : aerospike.OPERATOR_READ,
+                    "bin" : "name"
+                    }
+                ]
+
+        with pytest.raises(Exception) as exception:
+            (key, meta, bins) = TestOperate.client.operate(key, list, meta, policy)
+
+        assert exception.value[0] == -1
+        assert exception.value[1] == "expected 1 bins, got 0"
+        
+        (key , meta, bins) = TestOperate.client.get(key)
+        assert bins == { 'age' : 1, 'name': 'name1'}
+        assert key == ('test', 'demo', 1,
+                bytearray(b'\xb7\xf4\xb88\x89\xe2\xdag\xdeh>\x1d\xf6\x91\x9a\x1e\xac\xc4F\xc8'))
+
+    def test_operate_with_policy_gen_GT_positive(self):
+        """
+        Invoke operate() with gen GT positive.
+        """
+        key = ('test', 'demo', 1)
+        policy = {
+            'timeout': 1000,
+            'key' : aerospike.POLICY_KEY_SEND,
+            'gen' : aerospike.POLICY_GEN_GT
+        }
+        (key, meta) = TestOperate.client.exists(key)
+        gen = meta['gen']
+        meta = {
+            'gen': gen + 5,
+            'ttl': 1200
+        }
+
+        list = [
+                {
+                    "op" : aerospike.OPERATOR_APPEND,
+                    "bin" : "name",
+                    "val" : "aa"
+                    },
+                {
+                    "op" : aerospike.OPERATOR_INCR,
+                    "bin" : "age",
+                    "val" : 3
+                    },
+                {
+                    "op" : aerospike.OPERATOR_READ,
+                    "bin" : "name"
+                    }
+                ]
+
+        (key, meta, bins) = TestOperate.client.operate(key, list, meta, policy)
+
+
+        assert bins == { 'name': 'name1aa'}
+        assert key == ('test', 'demo', 1,
+                bytearray(b'\xb7\xf4\xb88\x89\xe2\xdag\xdeh>\x1d\xf6\x91\x9a\x1e\xac\xc4F\xc8'))
 
     def test_opearte_with_incorrect_policy_negative(self):
         """
@@ -127,11 +384,11 @@ class TestOperate(object):
                     "bin" : "name"
                     }
                 ]
-        
-        with pytest.raises(Exception) as exception:
-            (bins) = self.client.operate(key, list, policy)
 
-        assert exception.value[0] == -1
+        with pytest.raises(Exception) as exception:
+            (bins) = TestOperate.client.operate(key, list, {}, policy)
+
+        assert exception.value[0] == -2
         assert exception.value[1] == "Invalid value(type) for policy key"
 
     def test_opearte_on_same_bin_negative(self):
@@ -163,9 +420,9 @@ class TestOperate(object):
                     "bin" : "name"
                     }
                 ]
-        
+
         with pytest.raises(Exception) as exception:
-            (bins) = self.client.operate(key, list, policy)
+            (bins) = TestOperate.client.operate(key, list, {}, policy)
 
         assert exception.value[0] == -1
         assert exception.value[1] == "expected 1 bins, got 0"
@@ -186,12 +443,11 @@ class TestOperate(object):
                     "bin" : "loc"
                     }
                 ]
-        key, meta, bins = self.client.operate(key1, list)
+        key, meta, bins = TestOperate.client.operate(key1, list)
 
-        time.sleep(2)
 
         assert bins == { 'loc' : 'mumbai'}
-        self.client.remove(key1)
+        TestOperate.client.remove(key1)
 
     def test_operate_with_nonexistent_bin_positive(self):
         """
@@ -209,9 +465,8 @@ class TestOperate(object):
                     "bin" : "addr"
                     }
                 ]
-        key, meta, bins = self.client.operate(key, list)
+        key, meta, bins = TestOperate.client.operate(key, list)
 
-        time.sleep(2)
 
         assert bins == { 'addr': 'pune'}
 
@@ -231,7 +486,7 @@ class TestOperate(object):
                     }
                 ]
         with pytest.raises(Exception) as exception:
-            self.client.operate("", list)
+            TestOperate.client.operate("", list)
 
         assert exception.value[0] == -2
         assert exception.value[1] == "key is invalid"
@@ -252,9 +507,9 @@ class TestOperate(object):
                     }
                 ]
         with pytest.raises(TypeError) as typeError:
-            self.client.operate(key, list, policy, "")
+            TestOperate.client.operate(key, list, {}, policy, "")
 
-        assert "operate() takes at most 3 arguments (4 given)" in typeError.value
+        assert "operate() takes at most 4 arguments (5 given)" in typeError.value
 
     def test_operate_policy_is_string_negative(self):
         """
@@ -269,9 +524,9 @@ class TestOperate(object):
                     }
                 ]
         with pytest.raises(Exception) as exception:
-            self.client.operate(key, list, "")
+            TestOperate.client.operate(key, list, {}, "")
 
-        assert exception.value[0] == -1
+        assert exception.value[0] == -2
         assert exception.value[1] == "Invalid policy(type)"
 
     def test_operate_key_is_none_negative(self):
@@ -286,7 +541,7 @@ class TestOperate(object):
                     }
                 ]
         with pytest.raises(Exception) as exception:
-            self.client.operate(None, list)
+            TestOperate.client.operate(None, list)
 
         assert exception.value[0] == -2
         assert exception.value[1] == "key is invalid"

@@ -10,22 +10,26 @@ except:
     sys.exit(1)
 
 class TestAppend(object):
-
-    def setup_method(self, method):
+    def setup_class(cls):
         """
         Setup method.
         """
         config = {
             'hosts': [('127.0.0.1', 3000)]
         }
-        self.client = aerospike.client(config).connect()
+        TestAppend.client = aerospike.client(config).connect()
+
+    def teardown_class(cls):
+        TestAppend.client.close()
+
+    def setup_method(self, method):
         for i in xrange(5):
             key = ('test', 'demo', i)
             rec = {
                 'name' : 'name%s' % (str(i)),
                 'age' : i
             }
-            self.client.put(key, rec)
+            TestAppend.client.put(key, rec)
 
     def teardown_method(self, method):
         """
@@ -33,15 +37,14 @@ class TestAppend(object):
         """
         for i in xrange(5):
             key = ('test', 'demo', i)
-            self.client.remove(key)
-        self.client.close()
+            TestAppend.client.remove(key)
 
     def test_append_with_no_parameters(self):
         """
         Invoke append() without any mandatory parameters.
         """
         with pytest.raises(TypeError) as typeError:
-            self.client.append()
+            TestAppend.client.append()
         assert "Required argument 'key' (pos 1) not found" in typeError.value
 
     def test_append_with_correct_paramters(self):
@@ -49,11 +52,10 @@ class TestAppend(object):
         Invoke append() with correct parameters
         """
         key = ('test', 'demo', 1)
-        self.client.append(key, "name", "str")
+        TestAppend.client.append(key, "name", "str")
 
-        time.sleep(2)
 
-        (key , meta, bins) = self.client.get(key)
+        (key , meta, bins) = TestAppend.client.get(key)
 
         assert bins == { 'age': 1, 'name': 'name1str'}
 
@@ -66,13 +68,205 @@ class TestAppend(object):
             'timeout': 1000,
             'retry' : aerospike.POLICY_RETRY_ONCE
         }
-        self.client.append(key, "name", "str", policy)
+        TestAppend.client.append(key, "name", "str", {}, policy)
 
-        time.sleep(2)
 
-        (key , meta, bins) = self.client.get(key)
+        (key , meta, bins) = TestAppend.client.get(key)
 
         assert bins == { 'age': 1, 'name': 'name1str'}
+
+
+    def test_append_with_policy_key_send(self):
+        """
+        Invoke append() with policy key send
+        """
+        key = ('test', 'demo', 1)
+        policy = {
+            'timeout': 1000,
+            'key' : aerospike.POLICY_KEY_SEND,
+            'retry': aerospike.POLICY_RETRY_ONCE
+        }
+        TestAppend.client.append(key, "name", "str", {}, policy)
+
+
+        (key , meta, bins) = TestAppend.client.get(key)
+
+        assert bins == { 'age': 1, 'name': 'name1str'}
+        assert key == ('test', 'demo', 1,
+                bytearray(b'\xb7\xf4\xb88\x89\xe2\xdag\xdeh>\x1d\xf6\x91\x9a\x1e\xac\xc4F\xc8'))
+
+    def test_append_with_policy_key_digest(self):
+        """
+        Invoke append() with policy key digest
+        """
+        key = ( 'test', 'demo', None, bytearray("asd;as[d'as;djk;uyfl",
+               "utf-8"))
+        rec = {
+            'name' : 'name%s' % (str(1)),
+            'age' : 1,
+            'nolist': [1, 2, 3]
+        }
+        TestAppend.client.put(key, rec)
+
+        policy = {
+            'timeout': 1000,
+            'key' : aerospike.POLICY_KEY_DIGEST,
+            'retry' : aerospike.POLICY_RETRY_NONE
+        }
+        TestAppend.client.append(key, "name", "str", {}, policy)
+
+
+        (key , meta, bins) = TestAppend.client.get(key)
+
+        assert bins == { 'age': 1, 'name': 'name1str', 'nolist': [1, 2, 3]}
+        assert key == ('test', 'demo', None,
+                bytearray(b"asd;as[d\'as;djk;uyfl"))
+
+        TestAppend.client.remove(key)
+
+    def test_append_with_policy_key_gen_EQ_ignore(self):
+        """
+        Invoke append() with gen eq positive ignore
+        """
+        key = ('test', 'demo', 1)
+        policy = {
+            'timeout': 1000,
+            'key' : aerospike.POLICY_KEY_SEND,
+            'retry': aerospike.POLICY_RETRY_ONCE,
+            'gen': aerospike.POLICY_GEN_IGNORE
+        }
+
+        meta = {
+            'gen': 10,
+            'ttl': 1200
+        }
+        TestAppend.client.append(key, "name", "str", meta, policy)
+
+
+        (key , meta, bins) = TestAppend.client.get(key)
+
+        assert bins == { 'age': 1, 'name': 'name1str'}
+        assert key == ('test', 'demo', 1,
+                bytearray(b'\xb7\xf4\xb88\x89\xe2\xdag\xdeh>\x1d\xf6\x91\x9a\x1e\xac\xc4F\xc8'))
+
+    def test_append_with_policy_key_gen_EQ_positive(self):
+        """
+        Invoke append() with gen eq positive
+        """
+        key = ('test', 'demo', 1)
+        policy = {
+            'timeout': 1000,
+            'key' : aerospike.POLICY_KEY_SEND,
+            'retry': aerospike.POLICY_RETRY_ONCE,
+            'gen': aerospike.POLICY_GEN_EQ
+        }
+        (key, meta) = TestAppend.client.exists(key) 
+
+        gen = meta['gen']
+
+        meta = {
+            'gen': gen,
+            'ttl': 1200
+        }
+        TestAppend.client.append(key, "name", "str", meta, policy)
+
+
+        (key , meta, bins) = TestAppend.client.get(key)
+
+        assert bins == { 'age': 1, 'name': 'name1str'}
+        assert key == ('test', 'demo', 1,
+                bytearray(b'\xb7\xf4\xb88\x89\xe2\xdag\xdeh>\x1d\xf6\x91\x9a\x1e\xac\xc4F\xc8'))
+
+    def test_append_with_policy_key_gen_GT_lesser(self):
+        """
+        Invoke append() with gen GT lesser
+        """
+        key = ('test', 'demo', 1)
+        policy = {
+            'timeout': 1000,
+            'key' : aerospike.POLICY_KEY_SEND,
+            'retry': aerospike.POLICY_RETRY_ONCE,
+            'gen': aerospike.POLICY_GEN_GT
+        }
+        (key, meta) = TestAppend.client.exists(key) 
+
+        gen = meta['gen']
+
+        meta = {
+            'gen': gen,
+            'ttl': 1200
+        }
+        with pytest.raises(Exception) as exception:
+            TestAppend.client.append(key, "name", "str", meta, policy)
+
+        assert exception.value[0] == 3
+        assert exception.value[1] == "AEROSPIKE_ERR_RECORD_GENERATION"
+
+
+        (key , meta, bins) = TestAppend.client.get(key)
+
+        assert bins == { 'age': 1, 'name': 'name1'}
+        assert key == ('test', 'demo', 1,
+                bytearray(b'\xb7\xf4\xb88\x89\xe2\xdag\xdeh>\x1d\xf6\x91\x9a\x1e\xac\xc4F\xc8'))
+
+    def test_append_with_policy_key_gen_GT_positive(self):
+        """
+        Invoke append() with gen GT positive
+        """
+        key = ('test', 'demo', 1)
+        policy = {
+            'timeout': 1000,
+            'key' : aerospike.POLICY_KEY_SEND,
+            'retry': aerospike.POLICY_RETRY_ONCE,
+            'gen': aerospike.POLICY_GEN_GT
+        }
+        (key, meta) = TestAppend.client.exists(key) 
+
+        gen = meta['gen']
+
+        meta = {
+            'gen': gen+2,
+            'ttl': 1200
+        }
+        TestAppend.client.append(key, "name", "str", meta, policy)
+
+
+        (key , meta, bins) = TestAppend.client.get(key)
+
+        assert bins == { 'age': 1, 'name': 'name1str'}
+        assert key == ('test', 'demo', 1,
+                bytearray(b'\xb7\xf4\xb88\x89\xe2\xdag\xdeh>\x1d\xf6\x91\x9a\x1e\xac\xc4F\xc8'))
+
+    def test_append_with_policy_key_gen_EQ_not_equal(self):
+        """
+        Invoke append() with policy key EQ not equal
+        """
+        key = ('test', 'demo', 1)
+        policy = {
+            'timeout': 1000,
+            'key' : aerospike.POLICY_KEY_SEND,
+            'retry': aerospike.POLICY_RETRY_ONCE,
+            'gen': aerospike.POLICY_GEN_EQ
+        }
+        (key, meta) = TestAppend.client.exists(key) 
+        gen = meta['gen']
+
+        meta = {
+            'gen': gen + 5,
+            'ttl': 1200
+        }
+        with pytest.raises(Exception) as exception:
+            TestAppend.client.append(key, "name", "str", meta, policy)
+
+        assert exception.value[0] == 3
+        assert exception.value[1] == "AEROSPIKE_ERR_RECORD_GENERATION"
+
+
+        (key , meta, bins) = TestAppend.client.get(key)
+
+        assert bins == { 'age': 1, 'name': 'name1'}
+        assert key == ('test', 'demo', 1,
+                bytearray(b'\xb7\xf4\xb88\x89\xe2\xdag\xdeh>\x1d\xf6\x91\x9a\x1e\xac\xc4F\xc8'))
 
     def test_append_with_incorrect_policy(self):
         """
@@ -83,9 +277,9 @@ class TestAppend(object):
             'timeout': 0.5
         }
         with pytest.raises(Exception) as exception:
-            self.client.append(key, "name", "str", policy)
+            TestAppend.client.append(key, "name", "str", {}, policy)
 
-        assert exception.value[0] == -1
+        assert exception.value[0] == -2
         assert exception.value[1] == "Invalid value(type) for policy key"
 
     def test_append_with_nonexistent_key(self):
@@ -93,17 +287,17 @@ class TestAppend(object):
         Invoke append() with non-existent key
         """
         key = ('test', 'demo', 1000)
-        status = self.client.append(key, "name", "str")
+        status = TestAppend.client.append(key, "name", "str")
 
         assert status == 0L
-        self.client.remove(key)
+        TestAppend.client.remove(key)
 
     def test_append_with_nonexistent_bin(self):
         """
         Invoke append() with non-existent bin
         """
         key = ('test', 'demo', 1)
-        status = self.client.append(key, "name1", "str")
+        status = TestAppend.client.append(key, "name1", "str")
 
         assert status == 0L
 
@@ -113,7 +307,7 @@ class TestAppend(object):
         """
         key = ('test', 'demo', 1)
         with pytest.raises(TypeError) as typeError:
-            self.client.append(key, "name", 2)
+            TestAppend.client.append(key, "name", 2)
 
         assert "append() argument 3 must be string, not int" in typeError.value
 
@@ -126,9 +320,9 @@ class TestAppend(object):
             'timeout': 1000
         }
         with pytest.raises(TypeError) as typeError:
-            self.client.append(key, "name", "str", policy, "")
+            TestAppend.client.append(key, "name", "str", {}, policy, "")
 
-        assert "append() takes at most 4 arguments (5 given)" in typeError.value
+        assert "append() takes at most 5 arguments (6 given)" in typeError.value
 
     def test_append_policy_is_string(self):
         """
@@ -136,9 +330,9 @@ class TestAppend(object):
         """
         key = ('test', 'demo', 1)
         with pytest.raises(Exception) as exception:
-            self.client.append(key, "name", "pqr", "")
+            TestAppend.client.append(key, "name", "pqr", {}, "")
 
-        assert exception.value[0] == -1
+        assert exception.value[0] == -2
         assert exception.value[1] == "Invalid policy(type)"
 
     def test_append_key_is_none(self):
@@ -146,7 +340,7 @@ class TestAppend(object):
         Invoke append() with key is none
         """
         with pytest.raises(Exception) as exception:
-            self.client.append(None, "name", "str")
+            TestAppend.client.append(None, "name", "str")
 
         assert exception.value[0] == -2
         assert exception.value[1] == "key is invalid"
@@ -157,7 +351,7 @@ class TestAppend(object):
         """
         key = ('test', 'demo', 1)
         with pytest.raises(Exception) as exception:
-            self.client.append(key, None, "str")
+            TestAppend.client.append(key, None, "str")
 
         assert exception.value[0] == -2
         assert exception.value[1] == "Bin should be a string"
