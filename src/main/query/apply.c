@@ -80,7 +80,7 @@ AerospikeQuery * AerospikeQuery_Apply(AerospikeQuery * self, PyObject * args, Py
 	}
 
 
- 	as_query_apply(&self->query, module, function, (as_list *) arglist);
+	as_query_apply(&self->query, module, function, (as_list *) arglist);
 
 CLEANUP:
 
@@ -88,7 +88,7 @@ CLEANUP:
 		PyObject * py_err = NULL;
 		error_to_pyobject(&err, &py_err);
 		PyErr_SetObject(PyExc_Exception, py_err);
-        Py_DECREF(py_err);
+		Py_DECREF(py_err);
 		return NULL;
 	}
 

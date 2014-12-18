@@ -44,7 +44,7 @@ PyMODINIT_FUNC initaerospike(void)
 	PyObject * aerospike = Py_InitModule3("aerospike", Aerospike_Methods,
 		"Aerospike Python Client");
 
-    declare_policy_constants(aerospike);
+	declare_policy_constants(aerospike);
 
 	PyTypeObject * client = AerospikeClient_Ready();
 	Py_INCREF(client);
@@ -63,6 +63,6 @@ PyMODINIT_FUNC initaerospike(void)
 	PyModule_AddObject(aerospike, "Scan", (PyObject *) scan);
 
 	PyObject * predicates = AerospikePredicates_New();
-    Py_INCREF(predicates);
+	Py_INCREF(predicates);
 	PyModule_AddObject(aerospike, "predicates", predicates);
 }
