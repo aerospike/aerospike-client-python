@@ -336,7 +336,7 @@ class TestRemove(object):
             retobj = TestRemove.client.remove(key, 0, "")
 
         assert exception.value[0] == -2
-        assert exception.value[1] == 'Invalid policy(type)'
+        assert exception.value[1] == 'policy must be a dict'
 
     def test_remove_with_extra_parameter(self):
         """

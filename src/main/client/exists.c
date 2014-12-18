@@ -49,14 +49,6 @@ PyObject * AerospikeClient_Exists_Invoke(
 		goto CLEANUP;
 	}
 
-	if (py_policy) {
-		validate_policy_read(&err, py_policy, &read_policy);
-	}
-
-	if (err.code != AEROSPIKE_OK) {
-		goto CLEANUP;
-	}
-
 	// Convert python key object to as_key
 	pyobject_to_key(&err, py_key, &key);
 	if ( err.code != AEROSPIKE_OK ) {

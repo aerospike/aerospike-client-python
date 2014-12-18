@@ -90,7 +90,7 @@ class TestRevokeRoles(object):
             status = self.client.admin_replace_roles( policy, user, roles, len(roles) )
 
         assert exception.value[0] == -2
-        assert exception.value[1] == "Invalid value(type) for policy key"
+        assert exception.value[1] == "timeout is invalid"
 
     def test_revoke_roles_with_proper_timeout_policy_value(self):
 

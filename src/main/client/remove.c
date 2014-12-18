@@ -46,13 +46,6 @@ PyObject * AerospikeClient_Remove_Invoke(
 		goto CLEANUP;
 	}
 
-	if (py_policy) {
-		validate_policy_remove(&err, py_policy, &remove_policy);
-	}
-	if (err.code != AEROSPIKE_OK) {
-		goto CLEANUP;
-	}
-
 	// Convert python key object to as_key
 	pyobject_to_key(&err, py_key, &key);
 	if ( err.code != AEROSPIKE_OK ) {

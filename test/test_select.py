@@ -98,11 +98,13 @@ class TestSelect(object):
 
         bins_to_select = [ 'b' ]
 
-        with pytest.raises(Exception) as exception:
-            key, meta, bins = TestSelect.client.select( key, bins_to_select, None )
+        key, meta, bins = TestSelect.client.select( key, bins_to_select, None )
 
-        assert exception.value[0] == -2
-        assert exception.value[1] == 'Invalid policy(type)'
+        assert bins == { 'b': { "key": "asd';q;'1';" }, }
+
+        assert meta != None
+
+        assert key != None
 
     def test_select_with_none_bins_to_select(self):
 

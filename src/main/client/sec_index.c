@@ -57,13 +57,6 @@ PyObject * AerospikeClient_Index_Integer_Create(AerospikeClient * self, PyObject
 		as_error_update(&err, AEROSPIKE_ERR_PARAM, "Invalid aerospike object");
 		goto CLEANUP;
 	}
-	if (py_policy) {
-		validate_policy_info(&err, py_policy, &info_policy);
-	}
-
-	if (err.code != AEROSPIKE_OK) {
-		goto CLEANUP;
-	}
 
 	// Convert python object to policy_info
 	pyobject_to_policy_info( &err, py_policy, &info_policy, &info_policy_p);
@@ -156,12 +149,6 @@ PyObject * AerospikeClient_Index_String_Create(AerospikeClient * self, PyObject 
 		as_error_update(&err, AEROSPIKE_ERR_PARAM, "Invalid aerospike object");
 		goto CLEANUP;
 	}
-	if (py_policy) {
-		validate_policy_info(&err, py_policy, &info_policy);
-	}
-	if (err.code != AEROSPIKE_OK) {
-		goto CLEANUP;
-	}
 
 	// Convert python object to policy_info
 	pyobject_to_policy_info( &err, py_policy, &info_policy, &info_policy_p);
@@ -250,14 +237,6 @@ PyObject * AerospikeClient_Index_Remove(AerospikeClient * self, PyObject *args, 
 
 	if (!self || !self->as) {
 		as_error_update(&err, AEROSPIKE_ERR_PARAM, "Invalid aerospike object");
-		goto CLEANUP;
-	}
-
-	if (py_policy) {
-		validate_policy_info(&err, py_policy, &info_policy);
-	}
-
-	if (err.code != AEROSPIKE_OK) {
 		goto CLEANUP;
 	}
 

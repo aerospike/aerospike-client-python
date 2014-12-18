@@ -67,14 +67,6 @@ PyObject * AerospikeClient_UDF_Put(AerospikeClient * self, PyObject *args, PyObj
 
 	filename = PyString_AsString(py_filename);
 
-	if (py_policy) {
-		validate_policy_info(&err, py_policy, &info_policy);
-	}
-
-	if (err.code != AEROSPIKE_OK) {
-		goto CLEANUP;
-	}
-
 	// Convert python object to policy_info
 	pyobject_to_policy_info( &err, py_policy, &info_policy, &info_policy_p);
 	if ( err.code != AEROSPIKE_OK ) {
@@ -169,14 +161,6 @@ PyObject * AerospikeClient_UDF_Remove(AerospikeClient * self, PyObject *args, Py
 		goto CLEANUP;
 	}
 
-	if (py_policy) {
-		validate_policy_info(&err, py_policy, &info_policy);
-	}
-
-	if (err.code != AEROSPIKE_OK) {
-		goto CLEANUP;
-	}
-
 	filename = PyString_AsString(py_filename);
 
 	// Convert python object to policy_info
@@ -223,14 +207,6 @@ PyObject * AerospikeClient_UDF_List(AerospikeClient * self, PyObject *args, PyOb
 
 	if (!self || !self->as) {
 		as_error_update(&err, AEROSPIKE_ERR_PARAM, "Invalid aerospike object");
-		goto CLEANUP;
-	}
-
-	if (py_policy) {
-		validate_policy_info(&err, py_policy, &info_policy);
-	}
-
-	if (err.code != AEROSPIKE_OK) {
 		goto CLEANUP;
 	}
 

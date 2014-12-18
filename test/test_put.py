@@ -344,7 +344,7 @@ class TestPut(object):
             res = TestPut.client.put( key, rec, "meta", "policies")
 
         assert exception.value[0] == -2
-        assert exception.value[1] == "Invalid policy(type)"
+        assert exception.value[1] == "policy must be a dict"
 
     def test_put_with_string_record_generation(self):
 
@@ -490,7 +490,7 @@ class TestPut(object):
             TestPut.client.put( key, rec, meta, policy )
 
         assert exception.value[0] == -2
-        assert exception.value[1] == 'Invalid value(type) for policy key'
+        assert exception.value[1] == 'timeout is invalid'
 
     def test_put_with_policy_gen_EQ_positive(self):
 

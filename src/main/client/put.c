@@ -47,13 +47,6 @@ PyObject * AerospikeClient_Put_Invoke(
 		as_error_update(&err, AEROSPIKE_ERR_PARAM, "Invalid aerospike object");
 		goto CLEANUP;
 	}
-	if (py_policy) {
-		validate_policy_write(&err, py_policy, &write_policy);
-	}
-	if (err.code != AEROSPIKE_OK) {
-		goto CLEANUP;
-	}
-
 	// Convert python key object to as_key
 	pyobject_to_key(&err, py_key, &key);
 	if ( err.code != AEROSPIKE_OK ) {

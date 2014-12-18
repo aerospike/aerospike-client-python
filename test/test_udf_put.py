@@ -27,13 +27,16 @@ class TestUdfPut(object):
         """
         Setup method
         """
+        time.sleep(2)
 
     def teardown_method(self, method):
 
         """
         Teardown method
         """
-        for udf in TestUdfPut.client.udf_list( { 'timeout' : 0 } ):
+        udf_list = TestUdfPut.client.udf_list( { 'timeout' : 0 } )
+        #time.sleep(2)
+        for udf in udf_list:
             if udf['name'] == 'example.lua':
                 TestUdfPut.client.udf_remove({}, "example.lua")
 
@@ -73,7 +76,7 @@ class TestUdfPut(object):
             status = TestUdfPut.client.udf_put( policy, filename, udf_type )
 
         assert exception.value[0] == -2
-        assert exception.value[1] == "Invalid value(type) for policy key"
+        assert exception.value[1] == "timeout is invalid"
 
     def test_udf_put_with_proper_timeout_policy_value(self):
 
