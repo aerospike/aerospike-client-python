@@ -40,7 +40,9 @@ class TestUdfRemove(object):
         """
         Teardown method
         """
-        for udf in TestUdfRemove.client.udf_list( { 'timeout' : 0 } ):
+        udf_list = TestUdfRemove.client.udf_list( { 'timeout' : 0 } )
+        time.sleep(2)
+        for udf in udf_list:
             if udf['name'] == 'example.lua':
                 TestUdfRemove.client.udf_remove({}, "example.lua")
 

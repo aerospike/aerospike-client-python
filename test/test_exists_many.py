@@ -65,6 +65,7 @@ class TestExistsMany(object):
 
         assert type(records) == dict
         assert len(records.keys()) == 5
+        assert records.keys() == [0, 1, 2, 3, 4]
 
     def test_exists_many_with_none_policy(self):
 
@@ -72,6 +73,7 @@ class TestExistsMany(object):
 
         assert type(records) == dict
         assert len(records.keys()) == 5
+        assert records.keys() == [0, 1, 2, 3, 4]
 
     def test_exists_many_with_none_keys(self):
 
@@ -89,6 +91,7 @@ class TestExistsMany(object):
 
         assert type(records) == dict
         assert len(records.keys()) == 5
+        assert records.keys() == [0, 1, 2, 3, 4]
 
     def test_exists_many_with_all_non_existent_keys(self):
 
@@ -137,4 +140,4 @@ class TestExistsMany(object):
 
         assert type(records) == dict
         assert len(records.keys()) == 10
-
+        assert records.keys() == [0, 1, 2, 3, 4, 15, 16, 17, 18, 19]

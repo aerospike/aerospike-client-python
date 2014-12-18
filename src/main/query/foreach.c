@@ -143,6 +143,7 @@ PyObject * AerospikeQuery_Foreach(AerospikeQuery * self, PyObject * args, PyObje
 	PyEval_RestoreThread(_save);
 
 CLEANUP:
+	self->query.apply.arglist = NULL;
 	as_query_destroy(&self->query);
 	if ( err.code != AEROSPIKE_OK ) {
 		PyObject * py_err = NULL;

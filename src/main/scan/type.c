@@ -26,7 +26,7 @@
 
 #include "client.h"
 #include "scan.h"
-#include "policy.h"
+#include "conversions.h"
 
 /*******************************************************************************
  * PYTHON TYPE METHODS

@@ -226,8 +226,8 @@ AerospikeQuery * AerospikeQuery_Where(AerospikeQuery * self, PyObject * args)
 		PyObject * py_err = NULL;
 		error_to_pyobject(&err, &py_err);
 		PyErr_SetObject(PyExc_Exception, py_err);
-        Py_DECREF(py_err);
-        as_query_destroy(&self->query);
+		Py_DECREF(py_err);
+		as_query_destroy(&self->query);
 		rc = 1;
 	}
 

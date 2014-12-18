@@ -72,8 +72,6 @@ as_status pyobject_to_policy_batch(as_error * err, PyObject * py_policy,
                                    as_policy_batch * policy,
                                    as_policy_batch ** policy_p);
 
-bool error_to_pyobject(const as_error * err, PyObject ** obj);
-
 as_status declare_policy_constants(PyObject *aerospike);
 
 void set_scan_options(as_error *err, as_scan* scan_p, PyObject * py_options);
