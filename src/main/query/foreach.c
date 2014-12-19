@@ -72,6 +72,7 @@ static bool each_result(const as_val * val, void * udata)
 	if ( py_return == NULL ) {
 		// an exception was raised, handle it (someday)
 		// for now, we bail from the loop
+		as_error_update(err, AEROSPIKE_ERR_PARAM, "Callback function contains an error");
 		rval = false;
 	}
 	else if (  PyBool_Check(py_return) ) {
@@ -81,12 +82,12 @@ static bool each_result(const as_val * val, void * udata)
 		else {
 			rval = true;
 		}
+		Py_DECREF(py_return);
 	}
 	else {
 		rval = true;
+		Py_DECREF(py_return);
 	}
-
-	Py_DECREF(py_return);
 
 	// Release Python State
 	PyGILState_Release(gstate);
@@ -141,6 +142,9 @@ PyObject * AerospikeQuery_Foreach(AerospikeQuery * self, PyObject * args, PyObje
 
 	// We are done using multiple threads
 	PyEval_RestoreThread(_save);
+	if (data.error.code != AEROSPIKE_OK) {
+		goto CLEANUP;
+	}
 
 CLEANUP:
 	self->query.apply.arglist = NULL;

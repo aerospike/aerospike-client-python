@@ -35,10 +35,10 @@ typedef struct {
 
 static bool each_result(const as_val * val, void * udata)
 {
-	bool rval = TRUE;
+	bool rval = true;
 
 	if ( !val ) {
-		return FALSE;
+		return false;
 	}
 
 	// Extract callback user-data
@@ -72,18 +72,21 @@ static bool each_result(const as_val * val, void * udata)
 	if ( py_return == NULL ) {
 		// an exception was raised, handle it (someday)
 		// for now, we bail from the loop
-		rval = FALSE;
+		as_error_update(err, AEROSPIKE_ERR_PARAM, "Callback function contains an error");
+		rval = false;
 	}
 	else if (  PyBool_Check(py_return) ) {
 		if ( Py_False == py_return ) {
-			rval = FALSE;
+			rval = false;
 		}
 		else {
-			rval = TRUE;
+			rval = true;
 		}
+		Py_DECREF(py_return);
 	}
 	else {
-		rval = TRUE;
+		rval = true;
+		Py_DECREF(py_return);
 	}
 
 	// Release Python State
@@ -138,6 +141,9 @@ PyObject * AerospikeScan_Foreach(AerospikeScan * self, PyObject * args, PyObject
 
 	// We are done using multiple threads
 	PyEval_RestoreThread(_save);
+	if (data.error.code != AEROSPIKE_OK) {
+		goto CLEANUP;
+	}
 
 CLEANUP:
 

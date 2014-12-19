@@ -114,3 +114,43 @@ class TestScan(object):
         scan_obj.foreach(callback, { 'timeout' : 1000 })
 
         assert len(records) != 0
+
+    def test_scan_with_callback_contains_error(self):
+
+        """
+            Invoke scan() with callback function returns false
+        """
+        ns = 'test'
+        st = 'demo'
+
+        records = []
+        val = 1
+        def callback( (key, meta, bins) ):
+            val += 1
+            records.append(bins)
+
+        scan_obj = self.client.scan(ns, st)
+
+        scan_obj.foreach(callback, { 'timeout' : 1000 })
+
+        assert len(records) == 0
+
+    def test_scan_with_callback_returning_false(self):
+
+        """
+            Invoke scan() with callback function returns false
+        """
+        ns = 'test'
+        st = 'demo'
+
+        records = []
+
+        def callback( (key, meta, bins) ):
+            records.append(bins)
+            return False
+
+        scan_obj = self.client.scan(ns, st)
+
+        scan_obj.foreach(callback, { 'timeout' : 1000 })
+
+        assert len(records) == 1
