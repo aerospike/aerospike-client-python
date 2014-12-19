@@ -54,7 +54,7 @@ class KVTestCase(unittest.TestCase):
 
         # ensure existence
         (key, meta) = self.client.exists(key)
-        self.assertIsNotNone(meta, 'record should exist')
+        self.assertTrue(meta is not None)
 
         # count records
         count = 0
@@ -82,7 +82,7 @@ class KVTestCase(unittest.TestCase):
 
         # ensure not existent
         (key, meta) = self.client.exists(key)
-        self.assertIsNone(meta, 'record should not exist')
+        self.assertTrue(meta is None)
 
         # count records
         count = 0
@@ -121,7 +121,7 @@ class KVTestCase(unittest.TestCase):
 
         # ensure existence
         (key, meta) = self.client.exists(key)
-        self.assertIsNotNone(meta, 'record should exist')
+        self.assertTrue(meta is not None)
 
         # count records
         count = 0
@@ -149,7 +149,7 @@ class KVTestCase(unittest.TestCase):
 
         # ensure not existent
         (key, meta) = self.client.exists(digest_only(key))
-        self.assertIsNone(meta, 'record should not exist')
+        self.assertTrue(meta is None)
 
         # count records
         count = 0
