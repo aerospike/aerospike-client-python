@@ -43,7 +43,7 @@ class TestConnect(object):
             Invoke connect() with multiple hosts.
         """
         config = {
-                'hosts': [('127.0.0.1', 3000),('172.20.25.176', 3000)],
+                'hosts': [('127.0.0.1', 3000),('127.0.0.1', 3010)],
                 }
         self.client = aerospike.client(config).connect()
         assert self.client != None

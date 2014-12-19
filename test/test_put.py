@@ -310,6 +310,23 @@ class TestPut(object):
         assert bins == rec
         self.delete_keys.append( key )
 
+    def test_put_unicode_string_in_list(self):
+            #Invoke put() for unicode record.
+        key = ('test', 'demo', 1)
+
+        rec = {'a': [u'aa', u'bb', 1, u'bb', u'aa']}
+        
+        res = TestPut.client.put( key, rec )
+
+        assert res == 0
+
+
+        (key , meta, bins) = TestPut.client.get(key)
+
+        assert bins == rec
+
+        self.delete_keys.append( key )
+
     """
     def test_put_with_float_data(self):
 
