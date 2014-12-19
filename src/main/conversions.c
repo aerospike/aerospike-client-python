@@ -512,7 +512,7 @@ as_status pyobject_to_key(as_error * err, PyObject * py_keytuple, as_key * key)
 		else if ( PyUnicode_Check(py_key) ) {
 			PyObject * py_ustr = PyUnicode_AsUTF8String(py_key);
 			char * k = PyString_AsString(py_ustr);
-			as_key_init_strp(key, ns, set, k, true);
+			as_key_init_strp(key, ns, set, strdup(k), true);
 			Py_DECREF(py_ustr);
 		}
 		else if ( PyByteArray_Check(py_key) ) {

@@ -327,6 +327,22 @@ class TestPut(object):
 
         self.delete_keys.append( key )
 
+    def test_put_unicode_string_in_key(self):
+            #Invoke put() for unicode record.
+        key = ('test', 'demo', u"bb")
+
+        rec = { 'a': [u'aa', 2, u'aa', 4, u'cc', 3, 2, 1] } 
+        res = TestPut.client.put( key, rec )
+
+        assert res == 0
+
+
+        (key , meta, bins) = TestPut.client.get(key)
+
+        assert bins == rec
+
+        self.delete_keys.append( key )
+
     """
     def test_put_with_float_data(self):
 
