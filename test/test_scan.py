@@ -146,11 +146,12 @@ class TestScan(object):
         records = []
 
         def callback( (key, meta, bins) ):
+            if len(records) == 10:
+                return False
             records.append(bins)
-            return False
 
         scan_obj = self.client.scan(ns, st)
 
         scan_obj.foreach(callback, { 'timeout' : 1000 })
 
-        assert len(records) == 1
+        assert len(records) == 10
