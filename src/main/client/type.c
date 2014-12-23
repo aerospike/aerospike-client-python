@@ -110,10 +110,15 @@ static PyMethodDef AerospikeClient_Type_Methods[] = {
 		"Create a new Scan object for performing scans."},
 
 	// INFO OPERATIONS
-
+	{"info",
+		(PyCFunction) AerospikeClient_Info, METH_VARARGS | METH_KEYWORDS,
+		"Send an info request to the cluster."},
 	{"info_many",
 		(PyCFunction) AerospikeClient_InfoMany, METH_VARARGS | METH_KEYWORDS,
 		"Send an info request to the cluster."},
+	{"get_nodes",
+		(PyCFunction) AerospikeClient_GetNodes, METH_VARARGS | METH_KEYWORDS,
+		"Gets information about the nodes of the cluster."},
 
 	// UDF OPERATIONS
 

@@ -317,6 +317,7 @@ setup(
                 'src/main/client/get.c',
                 'src/main/client/get_many.c',
                 'src/main/client/info_many.c',
+                'src/main/client/info.c',
                 'src/main/client/key.c',
                 'src/main/client/put.c',
                 'src/main/client/query.c',

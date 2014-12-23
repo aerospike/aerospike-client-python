@@ -290,3 +290,18 @@ PyObject * AerospikeClient_Get_Many(AerospikeClient * self, PyObject *args, PyOb
  *
  */
 PyObject * AerospikeClient_Exists_Many(AerospikeClient * self, PyObject *args, PyObject * kwds);
+/**
+* Perform info operation on the database.
+*
+* client.info((x,y,z))
+*
+*/
+PyObject * AerospikeClient_Info(AerospikeClient * self, PyObject * args, PyObject * kwds);
+
+/**
+* Perforrm get nodes operation on the database.
+*
+* client.get_nodes((x,y,z))
+*
+*/
+PyObject * AerospikeClient_GetNodes(AerospikeClient * self, PyObject * args, PyObject * kwds);
