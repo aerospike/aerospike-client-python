@@ -3,6 +3,7 @@
 import pytest
 import sys
 import cPickle as pickle
+from test_base_class import TestBaseClass
 
 try:
     import aerospike
@@ -10,16 +11,20 @@ except:
     print "Please install aerospike python client."
     sys.exit(1)
 
-class TestSelect(object):
+class TestSelect(TestBaseClass):
 
     def setup_class(cls):
         """
         Setup class.
         """
+        hostlist, user, password = TestBaseClass.get_hosts()
         config = {
-                'hosts': [('127.0.0.1', 3000)]
+                'hosts': hostlist
                 }
-        TestSelect.client = aerospike.client(config).connect()
+        if user == None and password == None:
+            TestSelect.client = aerospike.client(config).connect()
+        else:
+            TestSelect.client = aerospike.client(config).connect(user, password)
 
     def teardown_class(cls):
         TestSelect.client.close()

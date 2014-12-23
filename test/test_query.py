@@ -5,6 +5,7 @@ import pytest
 import sys
 import cPickle as pickle
 import time
+from test_base_class import TestBaseClass
 
 try:
     import aerospike
@@ -17,16 +18,21 @@ from aerospike import predicates as p
 class TestQuery(object):
 
     def setup_class(cls):
+        hostlist, user, password = TestBaseClass.get_hosts()
         config = {
-                'hosts': [('127.0.0.1', 3000)]
+                'hosts': hostlist
                 }
-        TestQuery.client = aerospike.client(config).connect()
+        if user == None and password == None:
+            TestQuery.client = aerospike.client(config).connect()
+        else:
+            TestQuery.client = aerospike.client(config).connect(user, password)
+
         policy = {}
         TestQuery.client.index_integer_create(policy, 'test', 'demo', 'test_age', 'age_index')
         policy = {}
         TestQuery.client.index_integer_create(policy, 'test', 'demo',
 'age1', 'age_index1')
-        time.sleep(2)
+        time.sleep(4)
 
     def teardown_class(cls):
         policy = {}

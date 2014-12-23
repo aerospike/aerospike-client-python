@@ -2,6 +2,7 @@
 
 import pytest
 import sys
+from test_base_class import TestBaseClass
 
 try:
     import aerospike
@@ -10,18 +11,22 @@ except:
     sys.exit(1)
 
 
-class TestScan(object):
+class TestScan(TestBaseClass):
 
     def setup_method(self, method):
 
         """
         Setup method.
         """
+        hostlist, user, password = TestBaseClass.get_hosts()
         config = {
-                'hosts': [('127.0.0.1', 3000)]
+                'hosts': hostlist
                 }
-        self.client = aerospike.client(config).connect()
-
+        if user == None and password == None:
+            self.client = aerospike.client(config).connect()
+        else:
+            self.client = aerospike.client(config).connect(user, password)
+    
         for i in xrange(20):
             key = ('test', 'demo', i)
             rec = {

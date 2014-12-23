@@ -4,6 +4,8 @@ import pytest
 import sys
 import time
 import cPickle as pickle
+from test_base_class import TestBaseClass
+
 try:
     import aerospike
 except:
@@ -15,17 +17,18 @@ class SomeClass(object):
     pass
 
 
-class TestDropUser(object):
+class TestDropUser(TestBaseClass):
 
     def setup_method(self, method):
 
         """
         Setup method.
         """
+        hostlist, user, password = TestBaseClass().get_hosts()
         config = {
-                'hosts': [('127.0.0.1', 3000)]
+                'hosts': hostlist
                 }
-        self.client = aerospike.client(config).connect( "admin", "admin" )
+        self.client = aerospike.client(config).connect( user, password )
 
     def teardown_method(self, method):
         """

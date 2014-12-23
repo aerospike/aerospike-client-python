@@ -3,6 +3,7 @@
 import pytest
 import sys
 import cPickle as pickle
+from test_base_class import TestBaseClass
 
 try:
     import aerospike
@@ -15,15 +16,19 @@ class SomeClass(object):
     pass
 
 
-class TestGet(object):
+class TestGet(TestBaseClass):
     def setup_class(cls):
         """
         Setup method.
         """
+        hostlist, user, password = TestBaseClass.get_hosts()
         config = {
-                'hosts': [('127.0.0.1', 3000)]
+                'hosts': hostlist
                 }
-        TestGet.client = aerospike.client(config).connect()
+        if user == None and password == None:
+            TestGet.client = aerospike.client(config).connect()
+        else:
+            TestGet.client = aerospike.client(config).connect(user, password)
 
     def teardown_class(cls):
         TestGet.client.close()

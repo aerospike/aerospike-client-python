@@ -4,21 +4,27 @@
 import pytest
 import sys
 import cPickle as pickle
+from test_base_class import TestBaseClass
+
 try:
     import aerospike
 except:
     print "Please install aerospike python client."
     sys.exit(1)
 
-class TestIndex(object):
+class TestIndex(TestBaseClass):
     def setup_class(cls):
         """
         Setup method.
         """
+        hostlist, user, password = TestBaseClass.get_hosts()
         config = {
-                'hosts': [('127.0.0.1', 3000)]
+                'hosts': hostlist
                 }
-        TestIndex.client = aerospike.client(config).connect()
+        if user == None and password == None:
+            TestIndex.client = aerospike.client(config).connect()
+        else:
+            TestIndex.client = aerospike.client(config).connect(user, password)
     
     def teardown_class(cls):
         TestIndex.client.close()
