@@ -41,9 +41,14 @@ class TestAggregate(TestBaseClass):
 
     def teardown_class(cls):
         config = {
-                'hosts': [('127.0.0.1', 3000)]
+                'hosts': TestBaseClass.hostlist
                 }
-        client = aerospike.client(config).connect()
+        if TestBaseClass.user == None and TestBaseClass.password == None:
+            client = aerospike.client(config).connect()
+	else:
+            client = aerospike.client(config).connect(TestBaseClass.user,
+                    TestBaseClass.password)
+
         policy = {}
         client.index_remove(policy, 'test', 'age_index');
         client.index_remove(policy, 'test', 'age_index1');
