@@ -3,6 +3,7 @@
 import pytest
 import sys
 import time
+from test_base_class import TestBaseClass
 
 try:
     import aerospike
@@ -10,17 +11,20 @@ except:
     print "Please install aerospike python client."
     sys.exit(1)
 
-class TestUdfList(object):
+class TestUdfList(TestBaseClass):
 
     def setup_class(cls):
 
         """
         Setup class
         """
+        hostlist, user, password = TestBaseClass.get_hosts()
+        config = { 'hosts' : hostlist }
 
-        config = { 'hosts' : [ ('127.0.0.1', 3000) ] }
-
-        TestUdfList.client = aerospike.client(config).connect()
+        if user == None and password == None:
+            TestUdfList.client = aerospike.client(config).connect()
+        else:
+            TestUdfList.client = aerospike.client(config).connect(user, password)
 
         TestUdfList.client.udf_put( {}, 'example.lua', 0 )
 

@@ -3,6 +3,8 @@
 import pytest
 import sys
 import cPickle as pickle
+from test_base_class import TestBaseClass
+
 try:
     import aerospike
 except:
@@ -10,13 +12,18 @@ except:
     sys.exit(1)
 
 from aerospike import predicates as p
-class TestAggregate(object):
+class TestAggregate(TestBaseClass):
 
     def setup_class(cls):
+        hostlist, user, password = TestBaseClass.get_hosts()
         config = {
-                'hosts': [('127.0.0.1', 3000)]
+                'hosts': hostlist
                 }
-        client = aerospike.client(config).connect()
+        if user == None and password == None:
+            client = aerospike.client(config).connect()
+        else:
+            client = aerospike.client(config).connect(user, password)
+
         policy = {}
         client.index_integer_create(policy, 'test', 'demo',
 'test_age', 'age_index')
@@ -53,9 +60,14 @@ class TestAggregate(object):
         """
 
         config = {
-                'hosts': [('127.0.0.1', 3000)]
+                'hosts': TestBaseClass.hostlist
                 }
-        self.client = aerospike.client(config).connect()
+        if TestBaseClass.user == None and TestBaseClass.password == None:
+            self.client = aerospike.client(config).connect()
+        else:
+            self.client = aerospike.client(config).connect(TestBaseClass.user,
+                    TestBaseClass.password)
+
         for i in xrange(5):
             key = ('test', 'demo', i)
             rec = {
