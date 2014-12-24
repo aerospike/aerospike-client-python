@@ -50,7 +50,7 @@ class TestExistsMany(object):
         with pytest.raises(TypeError) as typeError:
             TestExistsMany.client.exists_many()
 
-        assert typeError.value.message == "Required argument 'keys' (pos 1) not found"
+        assert "Required argument 'keys' (pos 1) not found" in typeError.value
 
     def test_exists_many_without_policy(self):
 
@@ -65,14 +65,15 @@ class TestExistsMany(object):
 
         assert type(records) == dict
         assert len(records.keys()) == 5
+        assert records.keys() == [0, 1, 2, 3, 4]
 
     def test_exists_many_with_none_policy(self):
 
-        with pytest.raises(Exception) as exception:
-            records = TestExistsMany.client.exists_many( self.keys, None )
+        records = TestExistsMany.client.exists_many( self.keys, None )
 
-        assert exception.value[0] == -2
-        assert exception.value[1] == "Invalid policy(type)"
+        assert type(records) == dict
+        assert len(records.keys()) == 5
+        assert records.keys() == [0, 1, 2, 3, 4]
 
     def test_exists_many_with_none_keys(self):
 
@@ -90,6 +91,7 @@ class TestExistsMany(object):
 
         assert type(records) == dict
         assert len(records.keys()) == 5
+        assert records.keys() == [0, 1, 2, 3, 4]
 
     def test_exists_many_with_all_non_existent_keys(self):
 
@@ -115,7 +117,7 @@ class TestExistsMany(object):
             records = TestExistsMany.client.exists_many(self.keys, policies)
 
         assert exception.value[0] == -2
-        assert exception.value[1] == "Invalid value(type) for policy key"
+        assert exception.value[1] == "timeout is invalid"
     
     def test_exists_many_with_non_existent_keys_in_middle(self):
 
@@ -138,4 +140,4 @@ class TestExistsMany(object):
 
         assert type(records) == dict
         assert len(records.keys()) == 10
-
+        assert records.keys() == [0, 1, 2, 3, 4, 15, 16, 17, 18, 19]

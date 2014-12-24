@@ -40,7 +40,9 @@ class TestUdfRemove(object):
         """
         Teardown method
         """
-        for udf in TestUdfRemove.client.udf_list( { 'timeout' : 0 } ):
+        udf_list = TestUdfRemove.client.udf_list( { 'timeout' : 0 } )
+        time.sleep(2)
+        for udf in udf_list:
             if udf['name'] == 'example.lua':
                 TestUdfRemove.client.udf_remove({}, "example.lua")
 
@@ -81,11 +83,9 @@ class TestUdfRemove(object):
         policy = { 'timeout' : 0.1 }
         module = "example.lua"
 
-        with pytest.raises(Exception) as exception:
-            status = TestUdfRemove.client.udf_remove( policy, module )
+        status = TestUdfRemove.client.udf_remove( policy, module )
 
-        assert exception.value[0] == -2
-        assert exception.value[1] == "Invalid value(type) for policy key"
+        assert status == 0
 
     def test_udf_remove_with_proper_timeout_policy_value(self):
 

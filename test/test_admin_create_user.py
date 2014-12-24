@@ -74,7 +74,7 @@ class TestCreateUser(object):
             status = self.client.admin_create_user( policy, user, password, roles, len(roles) )
 
         assert exception.value[0] == -2
-        assert exception.value[1] == "Invalid value(type) for policy key"
+        assert exception.value[1] == "timeout is invalid"
 
     def test_create_user_with_proper_timeout_policy_value(self):
 

@@ -34,24 +34,17 @@ PyObject * AerospikeClient_Remove_Invoke(
 
 	// Aerospike Client Arguments
 	as_error err;
-    as_policy_remove remove_policy;
-    as_policy_remove * remove_policy_p = NULL;
+	as_policy_remove remove_policy;
+	as_policy_remove * remove_policy_p = NULL;
 	as_key key;
 
 	// Initialize error
 	as_error_init(&err);
 
-    if (!self || !self->as) {
-        as_error_update(&err, AEROSPIKE_ERR_PARAM, "Invalid aerospike object");
-        goto CLEANUP;
-    }
-
-    if (py_policy) {
-        validate_policy_remove(&err, py_policy, &remove_policy);
-    }
-    if (err.code != AEROSPIKE_OK) {
-        goto CLEANUP;
-    }
+	if (!self || !self->as) {
+		as_error_update(&err, AEROSPIKE_ERR_PARAM, "Invalid aerospike object");
+		goto CLEANUP;
+	}
 
 	// Convert python key object to as_key
 	pyobject_to_key(&err, py_key, &key);
@@ -60,17 +53,17 @@ PyObject * AerospikeClient_Remove_Invoke(
 	}
 
 	// Convert python policy object to as_policy_exists
-    if(py_policy) {
-        pyobject_to_policy_remove(&err, py_policy, &remove_policy, &remove_policy_p);
-	    if ( err.code != AEROSPIKE_OK ) {
-		    goto CLEANUP;
-	    } else {
-            remove_policy_p->generation = generation;
-        }
-    }
+	if(py_policy) {
+		pyobject_to_policy_remove(&err, py_policy, &remove_policy, &remove_policy_p);
+		if ( err.code != AEROSPIKE_OK ) {
+			goto CLEANUP;
+		} else {
+			remove_policy_p->generation = generation;
+		}
+	}
 
 	// Invoke operation
-    aerospike_key_remove(self->as, &err, remove_policy_p, &key);
+	aerospike_key_remove(self->as, &err, remove_policy_p, &key);
 
 CLEANUP:
 
@@ -78,7 +71,7 @@ CLEANUP:
 		PyObject * py_err = NULL;
 		error_to_pyobject(&err, &py_err);
 		PyErr_SetObject(PyExc_Exception, py_err);
-        Py_DECREF(py_err);
+		Py_DECREF(py_err);
 		return NULL;
 	}
 
@@ -90,7 +83,7 @@ PyObject * AerospikeClient_Remove(AerospikeClient * self, PyObject * args, PyObj
 	// Python Function Arguments
 	PyObject * py_key = NULL;
 	PyObject * py_policy = NULL;
-    long generation = 0;
+	long generation = 0;
 
 	// Python Function Keyword Arguments
 	static char * kwlist[] = {"key", "policy", "generation", NULL};

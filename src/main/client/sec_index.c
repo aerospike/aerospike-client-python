@@ -41,8 +41,8 @@ PyObject * AerospikeClient_Index_Integer_Create(AerospikeClient * self, PyObject
 	PyObject * py_set = NULL;
 	PyObject * py_bin = NULL;
 	PyObject * py_name = NULL;
-    as_policy_info info_policy;
-    as_policy_info *info_policy_p = NULL;
+	as_policy_info info_policy;
+	as_policy_info *info_policy_p = NULL;
 
 	// Python Function Keyword Arguments
 	static char * kwlist[] = {"policy", "ns", "set", "bin", "name", NULL};
@@ -53,20 +53,13 @@ PyObject * AerospikeClient_Index_Integer_Create(AerospikeClient * self, PyObject
 		return NULL;
 	}
 
-    if (!self || !self->as) {
-        as_error_update(&err, AEROSPIKE_ERR_PARAM, "Invalid aerospike object");
-        goto CLEANUP;
-    }
-    if (py_policy) {
-        validate_policy_info(&err, py_policy, &info_policy);
-    }
-
-    if (err.code != AEROSPIKE_OK) {
-        goto CLEANUP;
-    }
+	if (!self || !self->as) {
+		as_error_update(&err, AEROSPIKE_ERR_PARAM, "Invalid aerospike object");
+		goto CLEANUP;
+	}
 
 	// Convert python object to policy_info
-    pyobject_to_policy_info( &err, py_policy, &info_policy, &info_policy_p);
+	pyobject_to_policy_info( &err, py_policy, &info_policy, &info_policy_p);
 	if ( err.code != AEROSPIKE_OK ) {
 		goto CLEANUP;
 	}
@@ -119,7 +112,7 @@ CLEANUP:
 		PyObject * py_err = NULL;
 		error_to_pyobject(&err, &py_err);
 		PyErr_SetObject(PyExc_Exception, py_err);
-        Py_DECREF(py_err);
+		Py_DECREF(py_err);
 		return NULL;
 	}
 
@@ -140,8 +133,8 @@ PyObject * AerospikeClient_Index_String_Create(AerospikeClient * self, PyObject 
 	PyObject * py_bin = NULL;
 	PyObject * py_name = NULL;
 
-    as_policy_info info_policy;
-    as_policy_info *info_policy_p = NULL;
+	as_policy_info info_policy;
+	as_policy_info *info_policy_p = NULL;
 
 	// Python Function Keyword Arguments
 	static char * kwlist[] = {"policy", "ns", "set", "bin", "name", NULL};
@@ -152,19 +145,13 @@ PyObject * AerospikeClient_Index_String_Create(AerospikeClient * self, PyObject 
 		return NULL;
 	}
 
-    if (!self || !self->as) {
-        as_error_update(&err, AEROSPIKE_ERR_PARAM, "Invalid aerospike object");
-        goto CLEANUP;
-    }
-    if (py_policy) {
-        validate_policy_info(&err, py_policy, &info_policy);
-    }
-    if (err.code != AEROSPIKE_OK) {
-        goto CLEANUP;
-    }
+	if (!self || !self->as) {
+		as_error_update(&err, AEROSPIKE_ERR_PARAM, "Invalid aerospike object");
+		goto CLEANUP;
+	}
 
 	// Convert python object to policy_info
-    pyobject_to_policy_info( &err, py_policy, &info_policy, &info_policy_p);
+	pyobject_to_policy_info( &err, py_policy, &info_policy, &info_policy_p);
 	if ( err.code != AEROSPIKE_OK ) {
 		goto CLEANUP;
 	}
@@ -217,7 +204,7 @@ CLEANUP:
 		PyObject * py_err = NULL;
 		error_to_pyobject(&err, &py_err);
 		PyErr_SetObject(PyExc_Exception, py_err);
-        Py_DECREF(py_err);
+		Py_DECREF(py_err);
 		return NULL;
 	}
 
@@ -236,9 +223,8 @@ PyObject * AerospikeClient_Index_Remove(AerospikeClient * self, PyObject *args, 
 	PyObject * py_ns = NULL;
 	PyObject * py_name = NULL;
 
-    as_policy_info info_policy;
-    as_policy_info *info_policy_p = NULL;
-
+	as_policy_info info_policy;
+	as_policy_info *info_policy_p = NULL;
 
 	// Python Function Keyword Arguments
 	static char * kwlist[] = {"policy", "ns", "name", NULL};
@@ -249,22 +235,13 @@ PyObject * AerospikeClient_Index_Remove(AerospikeClient * self, PyObject *args, 
 		return NULL;
 	}
 
-    if (!self || !self->as) {
-        as_error_update(&err, AEROSPIKE_ERR_PARAM, "Invalid aerospike object");
-        goto CLEANUP;
-    }
-
-    if (py_policy) {
-        validate_policy_info(&err, py_policy, &info_policy);
-    }
-
-    if (err.code != AEROSPIKE_OK) {
-        goto CLEANUP;
-    }
-
+	if (!self || !self->as) {
+		as_error_update(&err, AEROSPIKE_ERR_PARAM, "Invalid aerospike object");
+		goto CLEANUP;
+	}
 
 	// Convert python object to policy_info
-    pyobject_to_policy_info( &err, py_policy, &info_policy, &info_policy_p);
+	pyobject_to_policy_info( &err, py_policy, &info_policy, &info_policy_p);
 	if ( err.code != AEROSPIKE_OK ) {
 		goto CLEANUP;
 	}
@@ -299,7 +276,7 @@ CLEANUP:
 		PyObject * py_err = NULL;
 		error_to_pyobject(&err, &py_err);
 		PyErr_SetObject(PyExc_Exception, py_err);
-        Py_DECREF(py_err);
+		Py_DECREF(py_err);
 		return NULL;
 	}
 

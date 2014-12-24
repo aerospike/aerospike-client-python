@@ -62,11 +62,28 @@ class TestDropUser(object):
         """
         policy = None
         user = "foo"
-        with pytest.raises(Exception) as exception:
-            status = self.client.admin_drop_user( policy, user )
+        password = "foo1"
+        roles = ["read", "read-write", "sys-admin"]
 
-        assert exception.value[0] == -2L
-        assert exception.value[1] == 'Invalid policy(type)'
+        status = self.client.admin_create_user( policy, user, password, roles, len(roles) )
+
+        time.sleep(2)
+
+        assert status == 0
+        user_details = self.client.admin_query_user( policy, user )
+
+        assert user_details == [{'roles': ['sys-admin', 'read', 'read-write',
+], 'roles_size': 3, 'user': 'foo'}]
+
+        status = self.client.admin_drop_user( policy, user )
+
+        assert status == 0
+
+        with pytest.raises(Exception) as exception:
+            user_details = self.client.admin_query_user( policy, user )
+
+        assert exception.value[0] == 60L
+        assert exception.value[1] == 'aerospike query user failed'
 
     def test_drop_user_with_user_none(self):
 
@@ -161,7 +178,7 @@ class TestDropUser(object):
             status = self.client.admin_drop_user( policy, user )
 
         assert exception.value[0] == -2L
-        assert exception.value[1] == 'Invalid value(type) for policy key'
+        assert exception.value[1] == 'timeout is invalid'
 
         status = self.client.admin_drop_user( {}, user )
 

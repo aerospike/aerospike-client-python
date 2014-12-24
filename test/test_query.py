@@ -225,7 +225,7 @@ class TestQuery(object):
             query.foreach(print_result, policy)
 
         assert exception.value[0] == -2L
-        assert exception.value[1] == 'Invalid value(type) for policy key'
+        assert exception.value[1] == 'timeout is invalid'
 
     def test_query_with_put_in_callback(self):
         """
@@ -280,3 +280,35 @@ class TestQuery(object):
 
         assert exception.value[0] == -2
         assert exception.value[1] == "predicate is invalid."
+
+    def test_query_with_callback_contains_error(self):
+        """
+            Invoke query() with callback function contains an error
+        """
+        query = TestQuery.client.query('test', 'demo')
+        query.select('name', 'test_age')
+        query.where(p.equals('test_age', 1))
+
+        records = []
+        def print_result((key,metadata,record)):
+            val += 1
+            records.append(key)
+
+        result = query.foreach(print_result)
+        assert len(records) == 0
+
+    def test_query_with_callback_returning_false(self):
+        """
+            Invoke query() with callback function returns false
+        """
+        query = TestQuery.client.query('test', 'demo')
+        query.select('name', 'test_age')
+        query.where(p.equals('test_age', 1))
+
+        records = []
+        def print_result((key,metadata,record)):
+            records.append(key)
+            return False
+
+        result = query.foreach(print_result)
+        assert len(records) == 1

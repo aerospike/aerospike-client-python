@@ -81,7 +81,8 @@ class TestOperate(object):
         key = ('test', 'demo', 1)
         policy = {
             'timeout': 1000,
-            'key' : aerospike.POLICY_KEY_SEND
+            'key' : aerospike.POLICY_KEY_SEND,
+            'commit_level': aerospike.POLICY_COMMIT_LEVEL_MASTER
         }
 
         list = [
@@ -156,7 +157,8 @@ class TestOperate(object):
         policy = {
             'timeout': 1000,
             'key' : aerospike.POLICY_KEY_SEND,
-            'gen' : aerospike.POLICY_GEN_IGNORE
+            'gen' : aerospike.POLICY_GEN_IGNORE,
+            'commit_level': aerospike.POLICY_COMMIT_LEVEL_ALL
         }
 
         meta = {
@@ -389,7 +391,7 @@ class TestOperate(object):
             (bins) = TestOperate.client.operate(key, list, {}, policy)
 
         assert exception.value[0] == -2
-        assert exception.value[1] == "Invalid value(type) for policy key"
+        assert exception.value[1] == "timeout is invalid"
 
     def test_opearte_on_same_bin_negative(self):
         """
@@ -527,7 +529,7 @@ class TestOperate(object):
             TestOperate.client.operate(key, list, {}, "")
 
         assert exception.value[0] == -2
-        assert exception.value[1] == "Invalid policy(type)"
+        assert exception.value[1] == "policy must be a dict"
 
     def test_operate_key_is_none_negative(self):
         """

@@ -66,7 +66,8 @@ class TestAppend(object):
         key = ('test', 'demo', 1)
         policy = {
             'timeout': 1000,
-            'retry' : aerospike.POLICY_RETRY_ONCE
+            'retry' : aerospike.POLICY_RETRY_ONCE,
+            'commit_level': aerospike.POLICY_COMMIT_LEVEL_MASTER
         }
         TestAppend.client.append(key, "name", "str", {}, policy)
 
@@ -84,7 +85,8 @@ class TestAppend(object):
         policy = {
             'timeout': 1000,
             'key' : aerospike.POLICY_KEY_SEND,
-            'retry': aerospike.POLICY_RETRY_ONCE
+            'retry': aerospike.POLICY_RETRY_ONCE,
+            'commit_level': aerospike.POLICY_COMMIT_LEVEL_ALL
         }
         TestAppend.client.append(key, "name", "str", {}, policy)
 
@@ -280,7 +282,7 @@ class TestAppend(object):
             TestAppend.client.append(key, "name", "str", {}, policy)
 
         assert exception.value[0] == -2
-        assert exception.value[1] == "Invalid value(type) for policy key"
+        assert exception.value[1] == "timeout is invalid"
 
     def test_append_with_nonexistent_key(self):
         """
@@ -333,7 +335,7 @@ class TestAppend(object):
             TestAppend.client.append(key, "name", "pqr", {}, "")
 
         assert exception.value[0] == -2
-        assert exception.value[1] == "Invalid policy(type)"
+        assert exception.value[1] == "policy must be a dict"
 
     def test_append_key_is_none(self):
         """

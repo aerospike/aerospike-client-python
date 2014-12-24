@@ -355,21 +355,18 @@ PyTypeObject * AerospikeClient_Ready()
 AerospikeClient * AerospikeClient_New(PyObject * parent, PyObject * args, PyObject * kwds)
 {
 	AerospikeClient * self = (AerospikeClient *) AerospikeClient_Type.tp_new(&AerospikeClient_Type, args, kwds);
-
-    if ( AerospikeClient_Type.tp_init((PyObject *) self, args, kwds) == 0 ){
-        // Initialize connection flag
-        return self;
-    }
-    else {
-        as_error err;
-        as_error_init(&err);
-        as_error_update(&err, AEROSPIKE_ERR, "Parameters are incorrect");
-        PyObject * py_err = NULL;
-        error_to_pyobject( &err, &py_err);
-        PyErr_SetObject( PyExc_Exception, py_err);
-        Py_DECREF(py_err);
-        return NULL;
-    }
-	/*AerospikeClient_Type.tp_init((PyObject *) self, args, kwds);
-	return self;*/
+	if ( AerospikeClient_Type.tp_init((PyObject *) self, args, kwds) == 0 ){
+		// Initialize connection flag
+		return self;
+	}
+	else {
+		as_error err;
+		as_error_init(&err);
+		as_error_update(&err, AEROSPIKE_ERR, "Parameters are incorrect");
+		PyObject * py_err = NULL;
+		error_to_pyobject( &err, &py_err);
+		PyErr_SetObject( PyExc_Exception, py_err);
+		Py_DECREF(py_err);
+		return NULL;
+	}
 }

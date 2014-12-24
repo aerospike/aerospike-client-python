@@ -26,7 +26,7 @@
 
 #include "client.h"
 #include "scan.h"
-#include "policy.h"
+#include "conversions.h"
 
 /*******************************************************************************
  * PYTHON TYPE METHODS
@@ -80,14 +80,14 @@ static int AerospikeScan_Type_Init(AerospikeScan * self, PyObject * args, PyObje
 	if (py_namespace && PyString_Check(py_namespace) ) {
 		namespace = PyString_AsString(py_namespace);
 	} else {
-        return -1;
-    }
+		return -1;
+	}
 
 	if ( py_set && PyString_Check(py_set) ) {
 		set = PyString_AsString(py_set);
 	} else {
-        return -1;
-    }
+		return -1;
+	}
 
 	as_scan_init(&self->scan, namespace, set);
 
@@ -160,21 +160,21 @@ PyTypeObject * AerospikeScan_Ready()
 
 AerospikeScan * AerospikeScan_New(AerospikeClient * client, PyObject * args, PyObject * kwds)
 {
-    AerospikeScan * self  = (AerospikeScan *) AerospikeScan_Type.tp_new(&AerospikeScan_Type, args, kwds);
-    self->client = client;
+	AerospikeScan * self  = (AerospikeScan *) AerospikeScan_Type.tp_new(&AerospikeScan_Type, args, kwds);
+	self->client = client;
 	Py_INCREF(client);
-    if ( AerospikeScan_Type.tp_init((PyObject *) self, args, kwds) != -1 ) {
-        return self;
-    }
-    else {
-        Py_DECREF(self);
-        as_error err;
-        as_error_init(&err);
-        as_error_update(&err, AEROSPIKE_ERR, "Parameters are incorrect");
-        PyObject * py_err = NULL;
-        error_to_pyobject(&err, &py_err);
-        PyErr_SetObject(PyExc_Exception, py_err);
-        Py_DECREF(py_err);
-        return NULL;
-    }
+	if ( AerospikeScan_Type.tp_init((PyObject *) self, args, kwds) != -1 ) {
+		return self;
+	}
+	else {
+		Py_DECREF(self);
+		as_error err;
+		as_error_init(&err);
+		as_error_update(&err, AEROSPIKE_ERR, "Parameters are incorrect");
+		PyObject * py_err = NULL;
+		error_to_pyobject(&err, &py_err);
+		PyErr_SetObject(PyExc_Exception, py_err);
+		Py_DECREF(py_err);
+		return NULL;
+	}
 }

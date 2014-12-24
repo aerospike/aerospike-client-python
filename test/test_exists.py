@@ -138,6 +138,8 @@ class TestExists(object):
         key = ('test', 'demo', 1)
         policy = {
             'timeout' : 1000,
+            'replica': aerospike.POLICY_REPLICA_MASTER,
+            'consistency': aerospike.POLICY_CONSISTENCY_ONE
         }
 
         key, meta = TestExists.client.exists( key, policy )
@@ -157,7 +159,7 @@ class TestExists(object):
             key, meta = TestExists.client.exists( key, policy )
 
         assert exception.value[0] == -2
-        assert exception.value[1] == 'Invalid policy(type)'
+        assert exception.value[1] == 'policy must be a dict'
 
     def test_exists_with_timeout_is_string(self):
 
@@ -173,7 +175,7 @@ class TestExists(object):
             key, meta = TestExists.client.exists( key, policy )
 
         assert exception.value[0] == -2
-        assert exception.value[1] == 'Invalid value(type) for policy key'
+        assert exception.value[1] == 'timeout is invalid'
 
     def test_exists_for_list_type_record(self):
 

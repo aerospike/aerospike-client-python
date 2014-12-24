@@ -31,7 +31,7 @@ PyObject * AerospikeKey_Remove(AerospikeKey * key, PyObject * args, PyObject * k
 	// Python Function Arguments
 	PyObject * py_key = key->key;
 	PyObject * py_policy = NULL;
-    long generation = 0;
+	long generation = 0;
 
 	// Python Function Keyword Arguments
 	static char * kwlist[] = {"policy", NULL};

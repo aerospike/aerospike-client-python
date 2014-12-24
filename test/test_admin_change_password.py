@@ -23,7 +23,7 @@ class TestChangePassword(object):
         self.client = aerospike.client(config).connect( "admin", "admin" )
 
         self.client.admin_create_user( {}, "testchangepassworduser", "aerospike", ["read"], 1)
-
+        time.sleep(2)
         self.delete_users = []
 
     def teardown_method(self, method):
@@ -45,13 +45,34 @@ class TestChangePassword(object):
 
     def test_change_password_with_proper_parameters(self):
 
-    	policy = {}
     	user = "testchangepassworduser"
+        config = {
+                "hosts": [("127.0.0.1", 3000)]
+                }
+        self.clientreaduser = aerospike.client(config).connect( user, "aerospike" )
+
+    	policy = {}
     	password = "newpassword"
 
-    	status = self.client.admin_change_password( policy, user, password )
+    	status = self.clientreaduser.admin_change_password( policy, user, password )
 
     	assert status == 0
+
+        config = {
+                "hosts": [("127.0.0.1", 3000)]
+                }
+        with pytest.raises(Exception) as exception:
+            self.clientreaduserwrong = aerospike.client(config).connect( user, "aerospike" )
+
+    	assert exception.value[0] == 62
+    	assert exception.value[1] == "AEROSPIKE_INVALID_PASSWORD"
+
+        self.clientreaduserright = aerospike.client(config).connect( user, "newpassword" )
+
+        assert self.clientreaduserright != None
+
+        self.clientreaduserright.close()
+        self.clientreaduser.close()       
 
     def test_change_password_with_invalid_timeout_policy_value(self):
 
@@ -63,16 +84,38 @@ class TestChangePassword(object):
     		status = self.client.admin_change_password( policy, user, password )
 
     	assert exception.value[0] == -2
-    	assert exception.value[1] == "Invalid value(type) for policy key"
+    	assert exception.value[1] == "timeout is invalid"
 
     def test_change_password_with_proper_timeout_policy_value(self):
 
-    	policy = { 'timeout' : 3 }
     	user = "testchangepassworduser"
-    	password = "newpassword"
-    	status = self.client.admin_change_password( policy, user, password ) 
+        config = {
+                "hosts": [("127.0.0.1", 3000)]
+                }
+        self.clientreaduser = aerospike.client(config).connect( user, "aerospike" )
+
+        policy = {'timeout': 10}
+        password = "newpassword"
+
+    	status = self.clientreaduser.admin_change_password( policy, user, password )
 
     	assert status == 0
+
+        config = {
+                "hosts": [("127.0.0.1", 3000)]
+                }
+        with pytest.raises(Exception) as exception:
+            self.clientreaduserwrong = aerospike.client(config).connect( user, "aerospike" )
+
+    	assert exception.value[0] == 62
+    	assert exception.value[1] == "AEROSPIKE_INVALID_PASSWORD"
+
+        self.clientreaduserright = aerospike.client(config).connect( user, "newpassword" )
+
+        assert self.clientreaduserright != None
+
+        self.clientreaduserright.close()
+        self.clientreaduser.close()
 
     def test_change_password_with_none_username(self):
 
@@ -112,9 +155,31 @@ class TestChangePassword(object):
 
     def test_change_password_with_too_long_password(self):
 
-    	policy = {}
     	user = "testchangepassworduser"
-    	password = "password"*1000
-    	status = self.client.admin_change_password( policy, user, password )
+        config = {
+                "hosts": [("127.0.0.1", 3000)]
+                }
+        self.clientreaduser = aerospike.client(config).connect( user, "aerospike" )
+
+        policy = {'timeout': 10}
+        password = "password"*1000
+
+    	status = self.clientreaduser.admin_change_password( policy, user, password )
 
     	assert status == 0
+
+        config = {
+                "hosts": [("127.0.0.1", 3000)]
+                }
+        with pytest.raises(Exception) as exception:
+            self.clientreaduserwrong = aerospike.client(config).connect( user, "aerospike" )
+
+    	assert exception.value[0] == 62
+    	assert exception.value[1] == "AEROSPIKE_INVALID_PASSWORD"
+
+        self.clientreaduserright = aerospike.client(config).connect( user, password )
+
+        assert self.clientreaduserright != None
+
+        self.clientreaduserright.close()
+        self.clientreaduser.close()

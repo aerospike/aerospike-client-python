@@ -79,7 +79,8 @@ class TestIncrement(object):
         policy = {
             'timeout': 1000,
             'key' : aerospike.POLICY_KEY_SEND,
-            'retry': aerospike.POLICY_RETRY_ONCE
+            'retry': aerospike.POLICY_RETRY_ONCE,
+            'commit_level': aerospike.POLICY_COMMIT_LEVEL_MASTER
         }
         TestIncrement.client.increment(key, "age", 5, 0, {}, policy)
 
@@ -286,7 +287,7 @@ class TestIncrement(object):
             TestIncrement.client.increment(key, "age", 5, 0, {}, policy)
 
         assert exception.value[0] == -2
-        assert exception.value[1] == "Invalid value(type) for policy key"
+        assert exception.value[1] == "timeout is invalid"
 
     def test_increment_with_nonexistent_key(self):
         """
@@ -341,7 +342,7 @@ class TestIncrement(object):
             TestIncrement.client.increment(key, "age", 2, 0, {}, "")
 
         assert exception.value[0] == -2
-        assert exception.value[1] == "Invalid policy(type)"
+        assert exception.value[1] == "policy must be a dict"
 
     def test_increment_key_is_none(self):
         """

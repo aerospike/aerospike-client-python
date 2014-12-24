@@ -310,6 +310,39 @@ class TestPut(object):
         assert bins == rec
         self.delete_keys.append( key )
 
+    def test_put_unicode_string_in_list(self):
+            #Invoke put() for unicode record.
+        key = ('test', 'demo', 1)
+
+        rec = {'a': [u'aa', u'bb', 1, u'bb', u'aa']}
+        
+        res = TestPut.client.put( key, rec )
+
+        assert res == 0
+
+
+        (key , meta, bins) = TestPut.client.get(key)
+
+        assert bins == rec
+
+        self.delete_keys.append( key )
+
+    def test_put_unicode_string_in_key(self):
+            #Invoke put() for unicode record.
+        key = ('test', 'demo', u"bb")
+
+        rec = { 'a': [u'aa', 2, u'aa', 4, u'cc', 3, 2, 1] } 
+        res = TestPut.client.put( key, rec )
+
+        assert res == 0
+
+
+        (key , meta, bins) = TestPut.client.get(key)
+
+        assert bins == rec
+
+        self.delete_keys.append( key )
+
     """
     def test_put_with_float_data(self):
 
@@ -344,7 +377,7 @@ class TestPut(object):
             res = TestPut.client.put( key, rec, "meta", "policies")
 
         assert exception.value[0] == -2
-        assert exception.value[1] == "Invalid policy(type)"
+        assert exception.value[1] == "policy must be a dict"
 
     def test_put_with_string_record_generation(self):
 
@@ -490,7 +523,7 @@ class TestPut(object):
             TestPut.client.put( key, rec, meta, policy )
 
         assert exception.value[0] == -2
-        assert exception.value[1] == 'Invalid value(type) for policy key'
+        assert exception.value[1] == 'timeout is invalid'
 
     def test_put_with_policy_gen_EQ_positive(self):
 
@@ -521,6 +554,7 @@ class TestPut(object):
         policy = {
             'timeout': 1000,
             'gen': aerospike.POLICY_GEN_EQ,
+            'commit_level': aerospike.POLICY_COMMIT_LEVEL_ALL
         }
         meta = {
             'gen': gen
@@ -645,7 +679,8 @@ class TestPut(object):
             'exists': aerospike.POLICY_EXISTS_CREATE,
             'gen': aerospike.POLICY_GEN_IGNORE,
             'retry': aerospike.POLICY_RETRY_ONCE,
-            'key': aerospike.POLICY_KEY_SEND
+            'key': aerospike.POLICY_KEY_SEND,
+            'commit_level': aerospike.POLICY_COMMIT_LEVEL_MASTER
         }
         assert 0 == TestPut.client.put( key, rec, meta, policy )
         

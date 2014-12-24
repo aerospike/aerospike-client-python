@@ -63,7 +63,7 @@ class TestSetPassword(object):
             status = self.client.admin_set_password( policy, user, password )
 
         assert exception.value[0] == -2
-        assert exception.value[1] == "Invalid value(type) for policy key"
+        assert exception.value[1] == "timeout is invalid"
 
     def test_set_password_with_proper_timeout_policy_value(self):
 

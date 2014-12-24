@@ -71,7 +71,7 @@ class TestQueryUser(object):
             status = self.client.admin_query_user( policy, user )
 
         assert exception.value[0] == -2
-        assert exception.value[1] == "Invalid value(type) for policy key"
+        assert exception.value[1] == "timeout is invalid"
 
     def test_query_user_with_proper_timeout_policy_value(self):
 
@@ -155,4 +155,4 @@ class TestQueryUser(object):
             self.client.admin_query_user( policy, "foo")
 
         assert exception.value[0] == -2L
-        assert exception.value[1] == "Invalid policy(type)"
+        assert exception.value[1] == "policy must be a dict"

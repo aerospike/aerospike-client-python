@@ -245,9 +245,9 @@ as_status pyobject_to_map(as_error * err, PyObject * py_dict, as_map ** map)
 		}
 		pyobject_to_val(err, py_val, &val);
 		if ( err->code != AEROSPIKE_OK ) {
-            if (key) {
-                as_val_destroy(key);
-            }
+			if (key) {
+				as_val_destroy(key);
+			}
 			break;
 		}
 		as_map_set(*map, key, val);
@@ -404,8 +404,8 @@ as_status pyobject_to_record(as_error * err, PyObject * py_rec, PyObject * py_me
 				else if ( PyLong_Check(py_ttl) ) {
 					rec->ttl = (uint32_t) PyLong_AsLongLong(py_ttl);
 				} else {
-                    as_error_update(err, AEROSPIKE_ERR_PARAM, "Ttl should be an int or long");
-                }
+					as_error_update(err, AEROSPIKE_ERR_PARAM, "Ttl should be an int or long");
+				}
 			}
 
 			if( py_gen != NULL ){
@@ -415,8 +415,8 @@ as_status pyobject_to_record(as_error * err, PyObject * py_rec, PyObject * py_me
 				else if ( PyLong_Check(py_gen) ) {
 					rec->gen = (uint16_t) PyLong_AsLongLong(py_gen);
 				} else {
-                    as_error_update(err, AEROSPIKE_ERR_PARAM, "Generation should be an int or long");
-                }
+					as_error_update(err, AEROSPIKE_ERR_PARAM, "Generation should be an int or long");
+				}
 			}
 		}
 
@@ -512,7 +512,7 @@ as_status pyobject_to_key(as_error * err, PyObject * py_keytuple, as_key * key)
 		else if ( PyUnicode_Check(py_key) ) {
 			PyObject * py_ustr = PyUnicode_AsUTF8String(py_key);
 			char * k = PyString_AsString(py_ustr);
-			as_key_init_strp(key, ns, set, k, true);
+			as_key_init_strp(key, ns, set, strdup(k), true);
 			Py_DECREF(py_ustr);
 		}
 		else if ( PyByteArray_Check(py_key) ) {
@@ -663,7 +663,7 @@ as_status list_to_pyobject(as_error * err, const as_list * list, PyObject ** py_
 	as_list_foreach(list, list_to_pyobject_each, &convd);
 
 	if ( err->code != AEROSPIKE_OK ) {
-        Py_DECREF(*py_list);
+		Py_DECREF(*py_list);
 		return err->code;
 	}
 
@@ -897,7 +897,7 @@ as_status bins_to_pyobject(as_error * err, const as_record * rec, PyObject ** py
 	as_record_foreach(rec, bins_to_pyobject_each, &convd);
 
 	if ( err->code != AEROSPIKE_OK ) {
-        Py_DECREF(*py_bins);
+		Py_DECREF(*py_bins);
 		return err->code;
 	}
 

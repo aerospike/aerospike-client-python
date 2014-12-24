@@ -74,4 +74,4 @@ class TestUdfList(object):
 
         assert exception.value[0] == -2
 
-        assert exception.value[1] == 'Invalid value(type) for policy key'
+        assert exception.value[1] == 'timeout is invalid'

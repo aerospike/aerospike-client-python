@@ -44,11 +44,8 @@ static PyObject * AerospikePredicates_Equals(PyObject * self, PyObject * args)
 	}
 
 exit:
-    Py_INCREF(Py_None);
-    return Py_None;
-
-	//return NULL;
-
+	Py_INCREF(Py_None);
+	return Py_None;
 }
 
 static PyObject * AerospikePredicates_Between(PyObject * self, PyObject * args)
@@ -67,8 +64,8 @@ static PyObject * AerospikePredicates_Between(PyObject * self, PyObject * args)
 	}
 
 exit:
-    Py_INCREF(Py_None);
-    return Py_None;
+	Py_INCREF(Py_None);
+	return Py_None;
 }
 
 static PyMethodDef AerospikePredicates_Methods[] = {
