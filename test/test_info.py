@@ -3,6 +3,8 @@ import pytest
 import time
 import sys
 import cPickle as pickle
+import socket
+
 try:
     import aerospike
 except:
@@ -38,8 +40,79 @@ class TestInfo(object):
         """
         Test info with correct arguments
         """
+        key = ('test', 'demo', 'list_key')
+
+        rec = {
+                'names': ['John', 'Marlen', 'Steve']
+            }
+
+        TestInfo.client.put(key, rec)
         response = TestInfo.client.info('bins')
-        assert response != None
+        TestInfo.client.remove(key)
+        if 'names' in  response:
+            assert True == True
+        else:
+            assert True == False
+
+    def test_info_positive_for_namespace(self):
+        """
+        Test info with correct arguments
+        """
+        key = ('test', 'demo', 'list_key')
+
+        rec = {
+                'names': ['John', 'Marlen', 'Steve']
+            }
+
+        TestInfo.client.put(key, rec)
+        response = TestInfo.client.info('namespaces')
+        TestInfo.client.remove(key)
+        if 'test' in  response:
+            assert True == True
+        else:
+            assert True == False
+
+    def test_info_positive_for_sets(self):
+        """
+        Test info with correct arguments
+        """
+        key = ('test', 'demo', 'list_key')
+
+        rec = {
+                'names': ['John', 'Marlen', 'Steve']
+            }
+
+        TestInfo.client.put(key, rec)
+        response = TestInfo.client.info('sets')
+        TestInfo.client.remove(key)
+        if 'demo' in  response:
+            assert True == True
+        else:
+            assert True == False
+
+    def test_info_positive_for_sindex_creation(self):
+        """
+        Test info with correct arguments
+        """
+        key = ('test', 'demo', 'list_key')
+
+        rec = {
+                'names': ['John', 'Marlen', 'Steve']
+            }
+        policy = {}
+        TestInfo.client.put(key, rec)
+        response = TestInfo.client.info('sindex-create:ns=test;set=demo;indexname=names_test_index;indexdata=names,string')
+        time.sleep(2)
+        TestInfo.client.remove(key)
+        response = TestInfo.client.info('sindex')
+        TestInfo.client.info('sindex-delete:ns=test;indexname=names_test_index')
+
+        if 'names_test_index' in  response:
+            assert True == True
+        else:
+            assert True == False
+
+        
 
     def test_info_for_incorrect_command(self):
         """
@@ -56,13 +129,23 @@ class TestInfo(object):
         """
         Test info with correct policy
         """
+        key = ('test', 'demo', 'list_key')
+
+        rec = {
+                'names': ['John', 'Marlen', 'Steve']
+            }
+        TestInfo.client.put(key, rec)
+
         host = {}
         policy = {
             'timeout': 1000
         }
         response = TestInfo.client.info('bins', host, policy)
-
-        assert response != None
+        TestInfo.client.remove(key)
+        if 'names' in  response:
+            assert True == True
+        else:
+            assert True == False
 
     def test_info_positive_with_incorrect_policy(self):
         """
@@ -82,10 +165,20 @@ class TestInfo(object):
         """
         Test info with correct host
         """
+        key = ('test', 'demo', 'list_key')
+
+        rec = {
+                'names': ['John', 'Marlen', 'Steve']
+            }
+        TestInfo.client.put(key, rec)
         host = {"addr": "127.0.0.1", "port": 3000}
         response = TestInfo.client.info('bins', host)
 
-        assert response != None
+        TestInfo.client.remove(key)
+        if 'names' in  response:
+            assert True == True
+        else:
+            assert True == False
 
     def test_info_positive_with_incorrect_host(self):
         """
