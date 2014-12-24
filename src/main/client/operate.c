@@ -47,7 +47,7 @@
  * Returns 0 on success.
  *******************************************************************************************************
  */
-	static
+static
 PyObject *  AerospikeClient_Operate_Invoke(
 	AerospikeClient * self,
 	as_key * key, PyObject * py_bin, char* val, as_error * err, long ttl,
@@ -202,7 +202,7 @@ static void AerospikeClient_CheckForMeta(PyObject * py_meta, as_operations * ops
  * @param operate_policy_pp     The as_policy_operate type pointer to pointer.
  *******************************************************************************************************
  */
-	static
+static
 PyObject * AerospikeClient_convert_pythonObj_to_asType(
 	as_error *err, PyObject* py_key, PyObject* py_policy,
 	as_key* key_p, as_policy_operate* operate_policy_p,
