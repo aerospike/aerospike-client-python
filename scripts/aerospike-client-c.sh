@@ -67,7 +67,7 @@ detect_linux()
         ;;
 
       "linuxmint17" )
-        echo "linuxmint"  "deb"
+        echo "ubuntu12"  "deb"
         return 0
         ;;
 
