@@ -117,7 +117,7 @@ static PyMethodDef AerospikeClient_Type_Methods[] = {
 	{"scan_apply",
 		(PyCFunction) AerospikeClient_ScanApply, METH_VARARGS | METH_KEYWORDS,
 		"Applies Scan object for performing scans."},
-	
+
 	{"scan_info",
 		(PyCFunction) AerospikeClient_ScanInfo, METH_VARARGS | METH_KEYWORDS,
 		"Gets Scan Info."},

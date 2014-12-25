@@ -140,7 +140,7 @@ CLEANUP:
 /**
  *******************************************************************************************************
  * Removes a UDF module from the Aerospike DB
- * 
+ *
  * @param self                  AerospikeClient object
  * @param args                  The args is a tuple object containing an argument
  *                              list passed from Python to a C function
@@ -214,7 +214,7 @@ CLEANUP:
 /**
  *******************************************************************************************************
  * Lists the UDF modules registered with the server
- * 
+ *
  * @param self                  AerospikeClient object
  * @param args                  The args is a tuple object containing an argument
  *                              list passed from Python to a C function
@@ -292,7 +292,7 @@ CLEANUP:
 /**
  *******************************************************************************************************
  * Gets the code for a UDF module registered with the server
- * 
+ *
  * @param self                  AerospikeClient object
  * @param args                  The args is a tuple object containing an argument
  *                              list passed from Python to a C function
@@ -314,7 +314,7 @@ PyObject * AerospikeClient_UDF_Get_Registered_UDF(AerospikeClient * self, PyObje
 	bool init_udf_file = false;
 	PyObject * udf_content = NULL;
 
-	// Python Function Keyword Arguments 
+	// Python Function Keyword Arguments
 	static char * kwlist[] = {"module", "language", "policy", NULL};
 
 	// Python Function Argument Parsing
@@ -331,18 +331,18 @@ PyObject * AerospikeClient_UDF_Get_Registered_UDF(AerospikeClient * self, PyObje
 	if(language != AS_UDF_TYPE_LUA)
 	{
 		as_error_update(&err, AEROSPIKE_ERR_CLIENT, "Invalid language");
-		goto CLEANUP; 
+		goto CLEANUP;
 	}
-	char* strModule = NULL;	
+	char* strModule = NULL;
 	if(!PyString_Check(py_module))
 	{
 		as_error_update(&err, AEROSPIKE_ERR_CLIENT, "Module name should be a string");
-		goto CLEANUP;		
+		goto CLEANUP;
 	}
 
 	strModule = PyString_AsString(py_module);
 
-	// Convert python object to policy_info 
+	// Convert python object to policy_info
 	as_policy_info *info_policy_p = NULL, info_policy;
 
 	pyobject_to_policy_info( &err, py_policy, &info_policy, &info_policy_p);
@@ -354,7 +354,7 @@ PyObject * AerospikeClient_UDF_Get_Registered_UDF(AerospikeClient * self, PyObje
 	as_udf_file_init(&file);
 	init_udf_file=true;
 
-	// Invoke operation 
+	// Invoke operation
 	aerospike_udf_get(self->as, &err, info_policy_p, strModule, (language - AS_UDF_TYPE_LUA) , &file);
 	if ( err.code != AEROSPIKE_OK ) {
 		goto CLEANUP;

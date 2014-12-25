@@ -114,18 +114,21 @@ PyObject * AerospikeClient_ScanApply_Invoke(
 
 	aerospike_scan_background(self->as, &err, scan_policy_p, &scan, &scan_id);
 	arglist = NULL;
-
-	if(block) {
-		if (py_policy) {
-			pyobject_to_policy_info(&err, py_policy, &info_policy, &info_policy_p);
-			if (err.code != AEROSPIKE_OK) {
-				goto CLEANUP;
+	if(err.code == AEROSPIKE_OK) {
+		if(block) {
+			if (py_policy) {
+				pyobject_to_policy_info(&err, py_policy, &info_policy, &info_policy_p);
+				if (err.code != AEROSPIKE_OK) {
+					goto CLEANUP;
+				}
+			}
+			aerospike_scan_wait(self->as, &err, info_policy_p, scan_id, 0);
+			if(err.code != AEROSPIKE_OK) {
+				as_error_update(&err, AEROSPIKE_ERR_PARAM, "Unable to perform scan_wait on the scan");
 			}
 		}
-		aerospike_scan_wait(self->as, &err, info_policy_p, scan_id, 0);
-		if(err.code != AEROSPIKE_OK) {
-			as_error_update(&err, AEROSPIKE_ERR_PARAM, "Unable to perform scan_wait on the scan");
-		}
+	} else {
+		goto CLEANUP;
 	}
 
 CLEANUP:

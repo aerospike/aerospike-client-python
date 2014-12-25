@@ -41,17 +41,17 @@ as_status declare_log_constants(PyObject *aerospike){
 	}
 
 	// Add incidividual constants to aerospike module.
-	PyModule_AddIntConstant( aerospike, 
+	PyModule_AddIntConstant( aerospike,
 			"LOG_LEVEL_OFF", LOG_LEVEL_OFF);
-	PyModule_AddIntConstant( aerospike, 
+	PyModule_AddIntConstant( aerospike,
 			"LOG_LEVEL_ERROR", LOG_LEVEL_ERROR);
-	PyModule_AddIntConstant( aerospike, 
+	PyModule_AddIntConstant( aerospike,
 			"LOG_LEVEL_WARN", LOG_LEVEL_WARN);
-	PyModule_AddIntConstant( aerospike, 
+	PyModule_AddIntConstant( aerospike,
 			"LOG_LEVEL_INFO", LOG_LEVEL_INFO);
-	PyModule_AddIntConstant( aerospike, 
+	PyModule_AddIntConstant( aerospike,
 			"LOG_LEVEL_DEBUG", LOG_LEVEL_DEBUG);
-	PyModule_AddIntConstant( aerospike, 
+	PyModule_AddIntConstant( aerospike,
 			"LOG_LEVEL_TRACE", LOG_LEVEL_TRACE);
 exit:
 	return status;
@@ -103,10 +103,10 @@ CLEANUP:
 	return PyLong_FromLong(status);
 }
 
-static bool log_cb(as_log_level level, const char * func, 
+static bool log_cb(as_log_level level, const char * func,
 		const char * file, uint32_t line, const char * fmt, ...){
 
-	// Extract pyhton user callback 
+	// Extract pyhton user callback
 	PyObject *py_callback = user_callback.callback;
 	// User callback's argument list
 	PyObject *py_arglist = NULL;
