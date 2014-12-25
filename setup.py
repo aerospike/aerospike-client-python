@@ -258,7 +258,7 @@ with open(path.join(CWD, 'VERSION')) as f:
 setup(
     name = 'aerospike', 
     
-    version = version, 
+    version = version.strip(), 
 
     description = 'Aerospike Client Library for Python',
     long_description = long_description,
@@ -314,8 +314,10 @@ setup(
                 'src/main/client/close.c',
                 'src/main/client/connect.c',
                 'src/main/client/exists.c',
+                'src/main/client/exists_many.c',
                 'src/main/client/get.c',
-                'src/main/client/info.c',
+                'src/main/client/get_many.c',
+                'src/main/client/info_many.c',
                 'src/main/client/key.c',
                 'src/main/client/put.c',
                 'src/main/client/query.c',
@@ -325,7 +327,7 @@ setup(
                 'src/main/client/admin.c',
                 'src/main/client/udf.c',
                 'src/main/client/sec_index.c',
-		        'src/main/client/remove_bin.c',
+                'src/main/client/remove_bin.c',
                 'src/main/key/type.c',
                 'src/main/key/apply.c',
                 'src/main/key/exists.c',

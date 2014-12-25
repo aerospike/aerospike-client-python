@@ -11,21 +11,29 @@ except:
     sys.exit(1)
 
 class TestRemovebin(object):
-    def setup_method(self, method):
+    def setup_class(cls):
         """
-        Setup method.
+        Setup class.
         """
         config = {
             'hosts': [('127.0.0.1', 3000)]
         }
-        self.client = aerospike.client(config).connect()
+        TestRemovebin.client = aerospike.client(config).connect()
+
+    def teardown_class(cls):
+        TestRemovebin.client.close()
+
+    def setup_method(self, method):
+        """
+        Setup method.
+        """
         for i in xrange(5):
             key = ('test', 'demo', i)
             rec = {
                 'name' : 'name%s' % (str(i)),
                 'age' : i
             }
-            self.client.put(key, rec)
+            TestRemovebin.client.put(key, rec)
 
     def teardown_method(self, method):
         """
@@ -33,16 +41,16 @@ class TestRemovebin(object):
         """
         for i in xrange(5):
             key = ('test', 'demo', i)
-            (key , meta, bins) = self.client.get(key)
+            (key , meta, bins) = TestRemovebin.client.get(key)
             if bins != None:
-                self.client.remove(key)
+                TestRemovebin.client.remove(key)
 
     def test_remove_bin_with_no_parameters(self):
         """
         Invoke remove_bin() without any mandatory parameters.
         """
         with pytest.raises(TypeError) as typeError:
-            self.client.remove_bin()
+            TestRemovebin.client.remove_bin()
         assert "Required argument 'key' (pos 1) not found" in typeError.value
 
     def test_remove_bin_with_correct_parameters(self):
@@ -50,11 +58,10 @@ class TestRemovebin(object):
         Invoke remove_bin() with correct parameters
         """
         key = ('test', 'demo', 1)
-        self.client.remove_bin(key, ["age"])
+        TestRemovebin.client.remove_bin(key, ["age"])
 
-        time.sleep(2)
 
-        (key , meta, bins) = self.client.get(key)
+        (key , meta, bins) = TestRemovebin.client.get(key)
 
         assert bins == { 'name': 'name1'}
 
@@ -66,13 +73,181 @@ class TestRemovebin(object):
         policy = {
             'timeout': 1000
         }
-        self.client.remove_bin(key, ["age"], policy)
+        TestRemovebin.client.remove_bin(key, ["age"], {}, policy)
 
-        time.sleep(2)
 
-        (key , meta, bins) = self.client.get(key)
+        (key , meta, bins) = TestRemovebin.client.get(key)
 
         assert bins == { 'name': 'name1'}
+
+    def test_remove_bin_with_policy_send_gen_ignore(self):
+        """
+        Invoke remove_bin() with policy send
+        """
+        key = ('test', 'demo', 1)
+        policy = {
+            'timeout': 1000,
+            'retry': aerospike.POLICY_RETRY_ONCE,
+            'key': aerospike.POLICY_KEY_SEND,
+            'gen': aerospike.POLICY_GEN_IGNORE
+        }
+        meta = {
+            'gen': 2,
+            'ttl': 1000
+        }
+        TestRemovebin.client.remove_bin(key, ["age"], meta, policy)
+
+
+        (key , meta, bins) = TestRemovebin.client.get(key)
+
+        assert bins == { 'name': 'name1'}
+        assert key == ('test', 'demo', 1,
+                bytearray(b'\xb7\xf4\xb88\x89\xe2\xdag\xdeh>\x1d\xf6\x91\x9a\x1e\xac\xc4F\xc8'))
+
+    def test_remove_bin_with_policy_send_gen_eq_positive(self):
+        """
+        Invoke remove_bin() with policy gen eq less
+        """
+        key = ('test', 'demo', 1)
+        policy = {
+            'timeout': 1000,
+            'retry': aerospike.POLICY_RETRY_ONCE,
+            'key': aerospike.POLICY_KEY_SEND,
+            'gen': aerospike.POLICY_GEN_EQ
+        }
+
+        (key, meta) = TestRemovebin.client.exists(key)
+        gen = meta['gen']
+        meta = {
+            'gen': gen,
+            'ttl': 1000
+        }
+
+        TestRemovebin.client.remove_bin(key, ["age"], meta, policy)
+
+
+        (key , meta, bins) = TestRemovebin.client.get(key)
+
+        assert bins == { 'name': 'name1'}
+        assert key == ('test', 'demo', 1,
+                bytearray(b'\xb7\xf4\xb88\x89\xe2\xdag\xdeh>\x1d\xf6\x91\x9a\x1e\xac\xc4F\xc8'))
+
+    def test_remove_bin_with_policy_send_gen_eq_not_equal(self):
+        """
+        Invoke remove_bin() with policy gen eq not equal
+        """
+        key = ('test', 'demo', 1)
+        policy = {
+            'timeout': 1000,
+            'retry': aerospike.POLICY_RETRY_ONCE,
+            'key': aerospike.POLICY_KEY_SEND,
+            'gen': aerospike.POLICY_GEN_EQ
+        }
+        (key, meta) = TestRemovebin.client.exists(key)
+        gen = meta['gen']
+        meta = {
+            'gen': gen + 5,
+            'ttl': 1000
+        }
+
+        with pytest.raises(Exception) as exception:
+            TestRemovebin.client.remove_bin(key, ["age"], meta, policy)
+
+        assert exception.value[0] == 3
+        assert exception.value[1] == "AEROSPIKE_ERR_RECORD_GENERATION"
+
+
+        (key , meta, bins) = TestRemovebin.client.get(key)
+
+        assert bins == { 'age': 1, 'name': 'name1'}
+        assert key == ('test', 'demo', 1,
+                bytearray(b'\xb7\xf4\xb88\x89\xe2\xdag\xdeh>\x1d\xf6\x91\x9a\x1e\xac\xc4F\xc8'))
+
+    def test_remove_bin_with_policy_send_gen_GT_lesser(self):
+        """
+        Invoke remove_bin() with policy gen GT lesser
+        """
+        key = ('test', 'demo', 1)
+        policy = {
+            'timeout': 1000,
+            'retry': aerospike.POLICY_RETRY_ONCE,
+            'key': aerospike.POLICY_KEY_SEND,
+            'gen': aerospike.POLICY_GEN_GT
+        }
+
+        (key, meta) = TestRemovebin.client.exists(key)
+        gen = meta['gen']
+        meta = {
+            'gen': gen,
+            'ttl': 1000
+        }
+
+        with pytest.raises(Exception) as exception:
+            TestRemovebin.client.remove_bin(key, ["age"], meta, policy)
+
+        assert exception.value[0] == 3
+        assert exception.value[1] == "AEROSPIKE_ERR_RECORD_GENERATION"
+
+
+        (key , meta, bins) = TestRemovebin.client.get(key)
+
+        assert bins == { 'age': 1, 'name': 'name1'}
+        assert key == ('test', 'demo', 1,
+                bytearray(b'\xb7\xf4\xb88\x89\xe2\xdag\xdeh>\x1d\xf6\x91\x9a\x1e\xac\xc4F\xc8'))
+
+    def test_remove_bin_with_policy_send_gen_GT_positive(self):
+        """
+        Invoke remove_bin() with policy gen GT positive
+        """
+        key = ('test', 'demo', 1)
+        policy = {
+            'timeout': 1000,
+            'retry': aerospike.POLICY_RETRY_ONCE,
+            'key': aerospike.POLICY_KEY_SEND,
+            'gen': aerospike.POLICY_GEN_GT
+        }
+
+        (key, meta) = TestRemovebin.client.exists(key)
+        gen = meta['gen']
+        meta = {
+            'gen': gen + 5,
+            'ttl': 1000
+        }
+
+        TestRemovebin.client.remove_bin(key, ["age"], meta, policy)
+
+
+        (key , meta, bins) = TestRemovebin.client.get(key)
+
+        assert bins == { 'name': 'name1'}
+        assert key == ('test', 'demo', 1,
+                bytearray(b'\xb7\xf4\xb88\x89\xe2\xdag\xdeh>\x1d\xf6\x91\x9a\x1e\xac\xc4F\xc8'))
+
+    def test_remove_bin_with_policy_key_digest(self):
+        """
+        Invoke remove_bin() with policy key digest
+        """
+        key = ( 'test', 'demo', None, bytearray("asd;as[d'as;djk;uyfl",
+               "utf-8"))
+        rec = {
+            'age': 1,
+            'name': 'name1'
+        }
+        TestRemovebin.client.put(key, rec)
+        policy = {
+            'timeout': 1000,
+            'key': aerospike.POLICY_KEY_DIGEST
+        }
+        TestRemovebin.client.remove_bin(key, ["age"], {}, policy)
+
+
+        (key , meta, bins) = TestRemovebin.client.get(key)
+
+        assert bins == { 'name': 'name1'}
+        assert key == ('test', 'demo', None,
+                bytearray(b"asd;as[d\'as;djk;uyfl"))
+
+        TestRemovebin.client.remove(key)
 
     def test_remove_bin_with_incorrect_policy(self):
         """
@@ -83,7 +258,7 @@ class TestRemovebin(object):
             'timeout': 0.5
         }
         with pytest.raises(Exception) as exception:
-            self.client.remove_bin(key, ["age"], policy)
+            TestRemovebin.client.remove_bin(key, ["age"], {}, policy)
 
         assert exception.value[0] == -1
         #assert exception.value[1] == "Invalid value(type) for policy key"
@@ -94,7 +269,7 @@ class TestRemovebin(object):
         Invoke remove_bin() with non-existent key
         """
         key = ('test', 'demo', "non-existent")
-        status = self.client.remove_bin(key, ["age"])
+        status = TestRemovebin.client.remove_bin(key, ["age"])
 
         assert status == 0L
 
@@ -103,7 +278,7 @@ class TestRemovebin(object):
         Invoke remove_bin() with non-existent bin
         """
         key = ('test', 'demo', 1)
-        status = self.client.remove_bin(key, ["non-existent"])
+        status = TestRemovebin.client.remove_bin(key, ["non-existent"])
 
         assert status == 0L
 
@@ -116,16 +291,16 @@ class TestRemovebin(object):
             'timeout': 1000
         }
         with pytest.raises(TypeError) as typeError:
-            self.client.remove_bin(key, ["age"], policy, "")
+            TestRemovebin.client.remove_bin(key, ["age"], {}, policy, "")
 
-        assert "remove_bin() takes at most 3 arguments (4 given)" in typeError.value
+        assert "remove_bin() takes at most 4 arguments (5 given)" in typeError.value
 
     def test_remove_bin_key_is_none(self):
         """
         Invoke remove_bin() with key is none
         """
         with pytest.raises(Exception) as exception:
-            self.client.remove_bin(None, ["age"])
+            TestRemovebin.client.remove_bin(None, ["age"])
 
         assert exception.value[0] == -2
         assert exception.value[1] == "key is invalid"
@@ -136,7 +311,7 @@ class TestRemovebin(object):
         """
         key = ('test', 'demo', 1)
         with pytest.raises(Exception) as exception:
-            self.client.remove_bin(key, None)
+            TestRemovebin.client.remove_bin(key, None)
 
         assert exception.value[0] == -2
         assert exception.value[1] == "Bins should be a list"
@@ -146,11 +321,10 @@ class TestRemovebin(object):
         Invoke remove_bin() no bin
         """
         key = ('test', 'demo', 1)
-        self.client.remove_bin(key, [])
+        TestRemovebin.client.remove_bin(key, [])
 
-        time.sleep(2)
 
-        (key , meta, bins) = self.client.get(key)
+        (key , meta, bins) = TestRemovebin.client.get(key)
 
         assert bins == { 'name': 'name1', 'age': 1}
 
@@ -159,10 +333,9 @@ class TestRemovebin(object):
         Invoke remove_bin() all bins
         """
         key = ('test', 'demo', 1)
-        self.client.remove_bin(key, ["name", "age"])
+        TestRemovebin.client.remove_bin(key, ["name", "age"])
 
-        time.sleep(2)
 
-        (key , meta, bins) = self.client.get(key)
+        (key , meta, bins) = TestRemovebin.client.get(key)
 
         assert bins == None

@@ -1,0 +1,19 @@
+local function one(rec)
+    return 1
+end
+
+local function add(a, b)
+    return a + b
+end
+
+function count(stream)
+    return stream : map(one) : reduce(add);
+end
+
+function count_extra(stream, extra_parameter)
+    return stream : map(one) : reduce(add);
+end
+
+function count_less()
+    return stream : map(one) : reduce(add);
+end

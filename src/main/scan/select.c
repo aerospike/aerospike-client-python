@@ -28,7 +28,7 @@
 AerospikeScan * AerospikeScan_Select(AerospikeScan * self, PyObject * args, PyObject * kwds)
 {
 	TRACE();
-	
+
 	as_scan_select_init(&self->scan, 100);
 
 	int nbins = (int) PyTuple_Size(args);

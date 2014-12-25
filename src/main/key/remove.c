@@ -31,15 +31,16 @@ PyObject * AerospikeKey_Remove(AerospikeKey * key, PyObject * args, PyObject * k
 	// Python Function Arguments
 	PyObject * py_key = key->key;
 	PyObject * py_policy = NULL;
+	long generation = 0;
 
 	// Python Function Keyword Arguments
 	static char * kwlist[] = {"policy", NULL};
 	
 	// Python Function Argument Parsing
-	if ( PyArg_ParseTupleAndKeywords(args, kwds, "|O:get", kwlist, &py_policy) == false ) {
+	if ( PyArg_ParseTupleAndKeywords(args, kwds, "|lO:get", kwlist, generation, &py_policy) == false ) {
 		return NULL;
 	}
 
 	// Invoke Operation
-	return AerospikeClient_Remove_Invoke(key->client, py_key, py_policy);
+	return AerospikeClient_Remove_Invoke(key->client, py_key, generation, py_policy);
 }

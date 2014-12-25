@@ -52,8 +52,6 @@ class TestScanApply(object):
         """
         scan_id = self.client.scan_apply("test", "demo", "bin_lua", "mytransform", ['age', 2])
 
-        time.sleep(2)
-
         while True:
             response = self.client.scan_info(scan_id)
             if response['status'] == aerospike.SCAN_STATUS_COMPLETED:
@@ -75,8 +73,6 @@ class TestScanApply(object):
         }
         scan_id = self.client.scan_apply("test", "demo", "bin_lua",
 "mytransform", ['age', 2], policy)
-
-        time.sleep(2)
 
         while True:
             response = self.client.scan_info(scan_id)
@@ -100,8 +96,8 @@ class TestScanApply(object):
         with pytest.raises(Exception) as exception:
             scan_id = self.client.scan_apply("test", "demo", "bin_lua", "mytransform", ['age', 2], policy)
 
-        assert exception.value[0] == -1
-        assert exception.value[1] == "Invalid value(type) for policy key"
+        assert exception.value[0] == -2
+        assert exception.value[1] == "timeout is invalid"
 
     def test_scan_apply_with_incorrect_ns_set(self):
         """
@@ -183,7 +179,7 @@ class TestScanApply(object):
             scan_id = self.client.scan_apply("test", "demo", "bin_lua",
 "mytransform_incorrect", ['age', 2], policy, options)
 
-        assert exception.value[0] == -1
+        assert exception.value[0] == -2
         assert exception.value[1] == "Invalid value(type) for percent"
 
     def test_scan_apply_with_priority_string(self):
@@ -202,7 +198,7 @@ class TestScanApply(object):
             scan_id = self.client.scan_apply("test", "demo", "bin_lua",
 "mytransform_incorrect", ['age', 2], policy, options)
 
-        assert exception.value[0] == -1
+        assert exception.value[0] == -2
         assert exception.value[1] == "Invalid value(type) for priority"
 
     def test_scan_apply_with_concurrent_int(self):
@@ -221,7 +217,7 @@ class TestScanApply(object):
             scan_id = self.client.scan_apply("test", "demo", "bin_lua",
 "mytransform_incorrect", ['age', 2], policy, options)
 
-        assert exception.value[0] == -1
+        assert exception.value[0] == -2
         assert exception.value[1] == "Invalid value(type) for concurrent"
 
     def test_scan_apply_with_extra_argument(self):
@@ -268,7 +264,7 @@ class TestScanApply(object):
         """
         scan_id = self.client.scan_apply("test", "demo", "bin_lua", "mytransform", ['age', 2, 3])
 
-        time.sleep(2)
+        #time.sleep(2)
 
         while True:
             response = self.client.scan_info(scan_id)
@@ -288,7 +284,7 @@ class TestScanApply(object):
         """
         scan_id = self.client.scan_apply("test", "demo", "bin_lua", "mytransformextra", ['age', 2])
 
-        time.sleep(2)
+        #time.sleep(2)
 
         while True:
             response = self.client.scan_info(scan_id)
@@ -308,7 +304,7 @@ class TestScanApply(object):
         """
         scan_id = self.client.scan_apply("test", "demo", "bin_lua", "mytransformless", ['age', 2])
 
-        time.sleep(2)
+        #time.sleep(2)
 
         while True:
             response = self.client.scan_info(scan_id)
@@ -321,3 +317,30 @@ class TestScanApply(object):
                 assert True == False
             else:
                 assert True == True
+
+    def test_scan_apply_with_options_positive(self):
+        """
+        Invoke scan_apply() with options positive
+        """
+        policy = {
+            'timeout': 1000
+        }
+        options = {
+            "percent" : 100,
+            "concurrent" : False,
+            "priority" : aerospike.SCAN_PRIORITY_HIGH
+        }
+        scan_id = self.client.scan_apply("test", "demo", "bin_lua",
+"mytransform", ['age', 2], policy, options)
+
+        while True:
+            response = self.client.scan_info(scan_id)
+            if response['status'] == aerospike.SCAN_STATUS_COMPLETED:
+                break
+        for i in xrange(5):
+            key = ('test', 'demo', i)
+            (key, meta, bins) = self.client.get(key)
+            if bins['age'] != i + 2:
+                assert True == False
+
+        assert True == True

@@ -25,6 +25,7 @@
 
 #include "admin.h"
 #include "client.h"
+#include "policy.h"
 
 /*******************************************************************************
  * PYTHON TYPE METHODS
@@ -123,8 +124,8 @@ static PyMethodDef AerospikeClient_Type_Methods[] = {
 
 	// INFO OPERATIONS
 
-	{"info",
-		(PyCFunction) AerospikeClient_Info, METH_VARARGS | METH_KEYWORDS,
+	{"info_many",
+		(PyCFunction) AerospikeClient_InfoMany, METH_VARARGS | METH_KEYWORDS,
 		"Send an info request to the cluster."},
 
 	// UDF OPERATIONS
@@ -154,6 +155,14 @@ static PyMethodDef AerospikeClient_Type_Methods[] = {
 		(PyCFunction)AerospikeClient_Index_Remove, METH_VARARGS | METH_KEYWORDS,
 		"Remove a secondary index"},
 
+	// BATCH OPERATIONS
+	{"get_many",
+		(PyCFunction)AerospikeClient_Get_Many, METH_VARARGS | METH_KEYWORDS,
+		"Get many records at a time."},
+	{"exists_many",
+		(PyCFunction)AerospikeClient_Exists_Many, METH_VARARGS | METH_KEYWORDS,
+		"Get many records at a time."},
+
 	{NULL}
 };
 
@@ -181,11 +190,11 @@ static int AerospikeClient_Type_Init(AerospikeClient * self, PyObject * args, Py
 	static char * kwlist[] = {"config", NULL};
 
 	if ( PyArg_ParseTupleAndKeywords(args, kwds, "O:client", kwlist, &py_config) == false ) {
-		return 0;
+		return -1;
 	}
 
 	if ( ! PyDict_Check(py_config) ) {
-		return 0;
+		return -1;
 	}
 
 	as_config config;
@@ -212,7 +221,7 @@ static int AerospikeClient_Type_Init(AerospikeClient * self, PyObject * args, Py
 	}
 
 	if ( ! lua_system_path ) {
-		
+
 		PyObject * py_prefix = PySys_GetObject("prefix");
 		if ( py_prefix && PyString_Check(py_prefix) ) {
 			char * prefix = PyString_AsString(py_prefix);
@@ -347,8 +356,22 @@ PyTypeObject * AerospikeClient_Ready()
 AerospikeClient * AerospikeClient_New(PyObject * parent, PyObject * args, PyObject * kwds)
 {
 	AerospikeClient * self = (AerospikeClient *) AerospikeClient_Type.tp_new(&AerospikeClient_Type, args, kwds);
-	AerospikeClient_Type.tp_init((PyObject *) self, args, kwds);
-	// Initialize connection flag
-	self->is_conn_16 = false;
-	return self;
+
+	if ( AerospikeClient_Type.tp_init((PyObject *) self, args, kwds) == 0 ){
+		// Initialize connection flag
+		self->is_conn_16 = false;
+		return self;
+	}
+	else {
+		as_error err;
+		as_error_init(&err);
+		as_error_update(&err, AEROSPIKE_ERR, "Parameters are incorrect");
+		PyObject * py_err = NULL;
+		error_to_pyobject( &err, &py_err);
+		PyErr_SetObject( PyExc_Exception, py_err);
+		Py_DECREF(py_err);
+		return NULL;
+	}
+	/*AerospikeClient_Type.tp_init((PyObject *) self, args, kwds);
+	  return self;*/
 }

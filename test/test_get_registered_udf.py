@@ -11,9 +11,9 @@ except:
 
 class TestGetRegistered(object):
 
-    def setup_method(self, method):
+    def setup_class(cls):
 	"""
-        Setup method.
+        Setup class.
         """
         config = {
             'hosts': [('127.0.0.1', 3000)]
@@ -21,24 +21,24 @@ class TestGetRegistered(object):
         policy = {
                 'timeout' : 5000
                 }
-        self.client = aerospike.client(config).connect()
-	self.client.udf_put(policy, "bin_lua.lua", 0)
+        TestGetRegistered.client = aerospike.client(config).connect()
+	TestGetRegistered.client.udf_put(policy, "bin_lua.lua", 0)
 
-    def teardown_method(self, method):
+    def teardown_class(cls):
         """
-        Teardoen method.
+        Teardoen class.
         """
         policy = {
                 'timeout' : 5000
                 }
-        self.client.udf_remove(policy, "bin_lua.lua")
+        TestGetRegistered.client.udf_remove(policy, "bin_lua.lua")
 
     def test_getRegistered_with_no_parameters(self):
         """
         Invoke getRegistered() without any mandatory parameters.
         """
         with pytest.raises(TypeError) as typeError:
-            self.client.udf_getRegistered()
+            TestGetRegistered.client.udf_getRegistered()
 
         assert "Required argument 'module' (pos 1) not found" in typeError.value
 
@@ -51,12 +51,15 @@ class TestGetRegistered(object):
         policy = {
                 'timeout' : 5000
                 }
-        
-        udf_contents = self.client.udf_getRegistered(module, language, policy)
 
-        time.sleep(2)
+        udf_contents = TestGetRegistered.client.udf_getRegistered(module, language, policy)
+
+
         #Check for udf file contents
-
+        fo = open("bin_lua.lua","r")
+        contents = fo.read()
+        assert contents == udf_contents
+        fo.close()
 
     def test_getRegistered_with_correct_policy(self):
         """
@@ -67,24 +70,29 @@ class TestGetRegistered(object):
         policy = {
                 'timeout' : 5000
                 }
-        
-        udf_contents = self.client.udf_getRegistered(module, language, policy)
+        udf_contents = TestGetRegistered.client.udf_getRegistered(module, language, policy)
 
-    def test_append_with_incorrect_policy(self):
+        #Check for udf file contents
+        fo = open("bin_lua.lua","r")
+        contents = fo.read()
+        assert contents == udf_contents
+        fo.close()
+
+    def test_getRegistered_with_incorrect_policy(self):
         """
-        Invoke append() with incorrect policy
+        Invoke getRegistered() with incorrect policy
         """
         module = "bin_lua.lua"
         language = aerospike.UDF_TYPE_LUA
         policy = {
                 'timeout' : 0.5
                 }
-        
-        with pytest.raises(Exception) as exception:
-            self.client.udf_getRegistered(module, language, policy)
 
-        assert exception.value[0] == -1
-        assert exception.value[1] == "Invalid value(type) for policy key"
+        with pytest.raises(Exception) as exception:
+            TestGetRegistered.client.udf_getRegistered(module, language, policy)
+
+        assert exception.value[0] == -2
+        assert exception.value[1] == "timeout is invalid"
 
     def test_getRegistered_with_nonexistent_module(self):
         """
@@ -95,9 +103,9 @@ class TestGetRegistered(object):
         policy = {
                 'timeout' : 1000
                 }
-       
+
         with pytest.raises(Exception) as exception:
-            self.client.udf_getRegistered(module, language, policy)
+            TestGetRegistered.client.udf_getRegistered(module, language, policy)
 
         assert exception.value[0] == 100
         assert exception.value[1] == "AEROSPIKE_ERR_UDF"
@@ -111,9 +119,9 @@ class TestGetRegistered(object):
         policy = {
                 'timeout' : 1000
                 }
-       
+
         with pytest.raises(Exception) as exception:
-            self.client.udf_getRegistered(module, language, policy)
+            TestGetRegistered.client.udf_getRegistered(module, language, policy)
 
         assert exception.value[0] == -1
         assert exception.value[1] == "Invalid language"
@@ -127,14 +135,14 @@ class TestGetRegistered(object):
         policy = {
                 'timeout' : 1000
                 }
-       
+
         #Check for status or empty udf contents
         with pytest.raises(TypeError) as typeError:
-            self.client.udf_getRegistered(module, language, policy, "")
+            TestGetRegistered.client.udf_getRegistered(module, language, policy, "")
 
         assert "udf_getRegistered() takes at most 3 arguments (4 given)" in typeError.value
 
-    def test_append_policy_is_string(self):
+    def test_getRegistered_policy_is_string(self):
         """
         Invoke getRegistered() with policy is string
         """
@@ -142,10 +150,10 @@ class TestGetRegistered(object):
         language = aerospike.UDF_TYPE_LUA
 
         with pytest.raises(Exception) as exception:
-            self.client.udf_getRegistered(module, language, "")
+            TestGetRegistered.client.udf_getRegistered(module, language, "")
 
-        assert exception.value[0] == -1
-        assert exception.value[1] == "Invalid policy(type)"
+        assert exception.value[0] == -2
+        assert exception.value[1] == "policy must be a dict"
 
     def test_getRegistered_module_is_none(self):
         """
@@ -154,7 +162,7 @@ class TestGetRegistered(object):
         language = aerospike.UDF_TYPE_LUA
 
         with pytest.raises(Exception) as exception:
-            self.client.udf_getRegistered(None, language)
+            TestGetRegistered.client.udf_getRegistered(None, language)
 
         assert exception.value[0] == -1
         assert exception.value[1] == "Module name should be a string"

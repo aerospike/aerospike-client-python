@@ -25,7 +25,7 @@
 PyObject * AerospikeClient_Close(AerospikeClient * self, PyObject * args, PyObject * kwds)
 {
 	as_error err;
-	
+
 	aerospike_close(self->as, &err);
 
 	if ( err.code != AEROSPIKE_OK ) {

@@ -31,43 +31,43 @@ static AerospikeLogCallback user_callback;
  */
 as_status declare_log_constants(PyObject *aerospike){
 
-    // Status to be returned.
-    as_status status = AEROSPIKE_OK;
-    
-    // Check if aerospike object is present or no.
-    if (!aerospike){
-        status = AEROSPIKE_ERR;
-        goto exit;
-    }
+	// Status to be returned.
+	as_status status = AEROSPIKE_OK;
 
-    // Add incidividual constants to aerospike module.
-    PyModule_AddIntConstant( aerospike, 
-            "LOG_LEVEL_OFF", LOG_LEVEL_OFF);
-    PyModule_AddIntConstant( aerospike, 
-            "LOG_LEVEL_ERROR", LOG_LEVEL_ERROR);
-    PyModule_AddIntConstant( aerospike, 
-            "LOG_LEVEL_WARN", LOG_LEVEL_WARN);
-    PyModule_AddIntConstant( aerospike, 
-            "LOG_LEVEL_INFO", LOG_LEVEL_INFO);
-    PyModule_AddIntConstant( aerospike, 
-            "LOG_LEVEL_DEBUG", LOG_LEVEL_DEBUG);
-    PyModule_AddIntConstant( aerospike, 
-            "LOG_LEVEL_TRACE", LOG_LEVEL_TRACE);
+	// Check if aerospike object is present or no.
+	if (!aerospike){
+		status = AEROSPIKE_ERR;
+		goto exit;
+	}
+
+	// Add incidividual constants to aerospike module.
+	PyModule_AddIntConstant( aerospike, 
+			"LOG_LEVEL_OFF", LOG_LEVEL_OFF);
+	PyModule_AddIntConstant( aerospike, 
+			"LOG_LEVEL_ERROR", LOG_LEVEL_ERROR);
+	PyModule_AddIntConstant( aerospike, 
+			"LOG_LEVEL_WARN", LOG_LEVEL_WARN);
+	PyModule_AddIntConstant( aerospike, 
+			"LOG_LEVEL_INFO", LOG_LEVEL_INFO);
+	PyModule_AddIntConstant( aerospike, 
+			"LOG_LEVEL_DEBUG", LOG_LEVEL_DEBUG);
+	PyModule_AddIntConstant( aerospike, 
+			"LOG_LEVEL_TRACE", LOG_LEVEL_TRACE);
 exit:
-    return status;
+	return status;
 }
 
 
 PyObject * Aerospike_Set_Log_Level(PyObject *parent, PyObject *args, PyObject * kwds)
 {
-    // Aerospike vaiables
+	// Aerospike vaiables
 	as_error err;
 	as_status status = AEROSPIKE_OK;
 
 	// Python Function Arguments
 	PyObject * py_log_level = NULL;
- 	
-    // Initialise error object.
+
+	// Initialise error object.
 	as_error_init(&err);
 
 	// Python Function Keyword Arguments
@@ -75,93 +75,93 @@ PyObject * Aerospike_Set_Log_Level(PyObject *parent, PyObject *args, PyObject * 
 
 	// Python Function Argument Parsing
 	if ( PyArg_ParseTupleAndKeywords(args, kwds, "O|:setLogLevel", kwlist, &py_log_level) == false ) {
-        return NULL;
+		return NULL;
 	}
-	
-    // Type check for incoming parameters
-    if ( !PyInt_Check(py_log_level) ){
-        as_error_update(&err, AEROSPIKE_ERR_PARAM, "Invalid log level" );
-        goto CLEANUP;
-    }
 
-    long lLogLevel = PyInt_AsLong(py_log_level);
+	// Type check for incoming parameters
+	if ( !PyInt_Check(py_log_level) ){
+		as_error_update(&err, AEROSPIKE_ERR_PARAM, "Invalid log level" );
+		goto CLEANUP;
+	}
 
-    // Invoke C API to set log level
+	long lLogLevel = PyInt_AsLong(py_log_level);
+
+	// Invoke C API to set log level
 	as_log_set_level((as_log_level)lLogLevel);
 
 CLEANUP:
 
-    // Check error object and act accordingly
+	// Check error object and act accordingly
 	if ( err.code != AEROSPIKE_OK ) {
 		PyObject * py_err = NULL;
 		error_to_pyobject(&err, &py_err);
 		PyErr_SetObject(PyExc_Exception, py_err);
 		Py_DECREF(py_err);
 		return NULL;
-    }
+	}
 
 	return PyLong_FromLong(status);
 }
 
 static bool log_cb(as_log_level level, const char * func, 
-					const char * file, uint32_t line, const char * fmt, ...){
+		const char * file, uint32_t line, const char * fmt, ...){
 
-    // Extract pyhton user callback 
-    PyObject *py_callback = user_callback.callback;
-    // User callback's argument list
-    PyObject *py_arglist = NULL;
+	// Extract pyhton user callback 
+	PyObject *py_callback = user_callback.callback;
+	// User callback's argument list
+	PyObject *py_arglist = NULL;
 
-    // Lock python state
-    PyGILState_STATE gstate;
-    gstate = PyGILState_Ensure();
+	// Lock python state
+	PyGILState_STATE gstate;
+	gstate = PyGILState_Ensure();
 
-    // Create a tuple of argument list
-    py_arglist = PyTuple_New(4);
+	// Create a tuple of argument list
+	py_arglist = PyTuple_New(4);
 
-    // Initialise argument variables
-    PyObject *log_level = PyInt_FromLong((long)level);
-    PyObject *func_name = PyString_FromString(func);
-    PyObject *file_name = PyString_FromString(file);
-    PyObject *line_no   = PyInt_FromLong((long)line);
+	// Initialise argument variables
+	PyObject *log_level = PyInt_FromLong((long)level);
+	PyObject *func_name = PyString_FromString(func);
+	PyObject *file_name = PyString_FromString(file);
+	PyObject *line_no   = PyInt_FromLong((long)line);
 
-    // Set argument list
-    PyTuple_SetItem(py_arglist, 0, log_level);
-    PyTuple_SetItem(py_arglist, 1, func_name);
-    PyTuple_SetItem(py_arglist, 2, file_name);
-    PyTuple_SetItem(py_arglist, 3, line_no);
+	// Set argument list
+	PyTuple_SetItem(py_arglist, 0, log_level);
+	PyTuple_SetItem(py_arglist, 1, func_name);
+	PyTuple_SetItem(py_arglist, 2, file_name);
+	PyTuple_SetItem(py_arglist, 3, line_no);
 
-    // Invoke user callback, passing in argument's list
-    PyEval_CallObject(py_callback, py_arglist);
+	// Invoke user callback, passing in argument's list
+	PyEval_CallObject(py_callback, py_arglist);
 
-    Py_DECREF(py_arglist);
+	Py_DECREF(py_arglist);
 
-    // Release python state
-    PyGILState_Release(gstate);
+	// Release python state
+	PyGILState_Release(gstate);
 
-    return true;
+	return true;
 }
 
 PyObject * Aerospike_Set_Log_Handler(PyObject *parent, PyObject *args, PyObject * kwds)
 {
-    // Python variables
-    PyObject *py_callback = NULL;
+	// Python variables
+	PyObject *py_callback = NULL;
 
-    // Aerospike client variables
-    as_error err;
+	// Aerospike client variables
+	as_error err;
 
-    // Python function keyword arguments
-    static char * kwlist[] = {"log_handler", NULL};
+	// Python function keyword arguments
+	static char * kwlist[] = {"log_handler", NULL};
 
-    // Python function arguments parsing
-    if ( PyArg_ParseTupleAndKeywords(args, kwds, "O|:setLogHandler", kwlist, &py_callback) == false){
-        return NULL;
-    }
+	// Python function arguments parsing
+	if ( PyArg_ParseTupleAndKeywords(args, kwds, "O|:setLogHandler", kwlist, &py_callback) == false){
+		return NULL;
+	}
 
-    // Store user callback
-    user_callback.callback = py_callback;
+	// Store user callback
+	user_callback.callback = py_callback;
 
-    // Register callback to C-SDK
-    as_log_set_callback((as_log_callback) log_cb);
+	// Register callback to C-SDK
+	as_log_set_callback((as_log_callback) log_cb);
 
-    return PyLong_FromLong(0);
+	return PyLong_FromLong(0);
 }
