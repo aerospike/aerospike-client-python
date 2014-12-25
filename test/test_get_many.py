@@ -2,7 +2,6 @@
 
 import pytest
 import sys
-from test_base_class import TestBaseClass
 
 try:
     import aerospike
@@ -10,19 +9,15 @@ except:
     print "Please install aerospike python client."
     sys.exit(1)
 
-class TestGetMany(TestBaseClass):
+class TestGetMany(object):
     def setup_class(cls):
         """
         Setup method.
         """
-        hostlist, user, password = TestBaseClass.get_hosts()
         config = {
-                'hosts': hostlist
+                'hosts': [('127.0.0.1', 3000)]
                 }
-        if user == None and password == None:
-            TestGetMany.client = aerospike.client(config).connect()
-        else:
-            TestGetMany.client = aerospike.client(config).connect(user, password)
+        TestGetMany.client = aerospike.client(config).connect()
 
     def teardown_class(cls):
         TestGetMany.client.close()
@@ -125,7 +120,7 @@ class TestGetMany(TestBaseClass):
 
     def test_get_many_with_non_existent_keys_in_middle(self):
 
-        self.keys.append( ('test', 'demo', 'non-existent') )
+        self.keys.append( ('test', 'demo', 10) )
 
         for i in xrange(15,20):
             key = ('test', 'demo', i)

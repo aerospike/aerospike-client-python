@@ -2,7 +2,6 @@
 
 import pytest
 import sys
-from test_base_class import TestBaseClass
 
 try:
     import aerospike
@@ -10,19 +9,15 @@ except:
     print "Please install aerospike python client."
     sys.exit(1)
 
-class TestExistsMany(TestBaseClass):
+class TestExistsMany(object):
     def setup_class(cls):
         """
         Setup method.
         """
-        hostlist, user, password = TestBaseClass.get_hosts()
         config = {
-                'hosts': TestBaseClass.hostlist
+                'hosts': [('127.0.0.1', 3000)]
                 }
-        if user == None and password == None:
-            TestExistsMany.client = aerospike.client(config).connect()
-        else:
-            TestExistsMany.client = aerospike.client(config).connect(user, password)
+        TestExistsMany.client = aerospike.client(config).connect()
 
     def teardwon_class(cls):
         TestExistsMany.client.close()
@@ -90,7 +85,7 @@ class TestExistsMany(TestBaseClass):
 
     def test_exists_many_with_non_existent_keys(self):
 
-        self.keys.append( ('test', 'demo', 'non-existent') )
+        self.keys.append( ('test', 'demo', 10) )
 
         records = TestExistsMany.client.exists_many( self.keys )
 
@@ -126,7 +121,7 @@ class TestExistsMany(TestBaseClass):
     
     def test_exists_many_with_non_existent_keys_in_middle(self):
 
-        self.keys.append( ('test', 'demo', 'non-existent') )
+        self.keys.append( ('test', 'demo', 10) )
 
         for i in xrange(15,20):
             key = ('test', 'demo', i)

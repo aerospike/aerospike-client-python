@@ -4,8 +4,6 @@
 import pytest
 import sys
 import cPickle as pickle
-from test_base_class import TestBaseClass
-
 try:
     import aerospike
 except:
@@ -13,18 +11,13 @@ except:
     sys.exit(1)
 
 from aerospike import predicates as p
-class TestApply(TestBaseClass):
+class TestApply(object):
 
     def setup_class(cls):
-        hostlist, user, password = TestBaseClass.get_hosts()
         config = {
-                'hosts': hostlist
+                'hosts': [('127.0.0.1', 3000)]
                 }
-        if user == None and password == None:
-            TestApply.client = aerospike.client(config).connect()
-        else:
-            TestApply.client = aerospike.client(config).connect(user, password)
-
+        TestApply.client = aerospike.client(config).connect()
         policy = {}
         TestApply.client.index_integer_create(policy, 'test', 'demo',
 'age', 'age_index')

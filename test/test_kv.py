@@ -1,6 +1,9 @@
 import unittest
 import aerospike
-from test_base_class import TestBaseClass
+
+config = {
+    "hosts": [("localhost",3000)]
+}
 
 # count records
 count = 0
@@ -16,19 +19,9 @@ def count_records_false((key, meta, rec)):
 def digest_only(key):
     return (key[0], key[1], None, key[3])
 
-class KVTestCase(unittest.TestCase, TestBaseClass):
-    def setup_class(cls):
-        hostlist, user, password = TestBaseClass.get_hosts()
-
+class KVTestCase(unittest.TestCase):
     def setUp(self):
-        config = {
-            "hosts": KVTestCase.hostlist
-        }
-        if KVTestCase.user == None and KVTestCase.password == None:
-            self.client = aerospike.client(config).connect()
-        else:
-            self.client = aerospike.client(config).connect(KVTestCase.user,
-                    KVTestCase.password)
+        self.client = aerospike.client(config).connect()
 
     def tearDown(self):
         self.client.close()
@@ -40,12 +33,12 @@ class KVTestCase(unittest.TestCase, TestBaseClass):
 
         global count
 
-        key = ("test","demo","1")
+        key = ("test","unittest","1")
 
         # cleanup records
         def remove_record((key, meta, rec)):
             self.client.remove(key)
-        self.client.scan("test","demo").foreach(remove_record)
+        self.client.scan("test","unittest").foreach(remove_record)
 
         recIn = {
             "i": 1234,
@@ -65,8 +58,7 @@ class KVTestCase(unittest.TestCase, TestBaseClass):
 
         # count records
         count = 0
-        self.client.scan("test","demo").foreach(count_records)
-        assert count == 1
+        self.client.scan("test","unittest").foreach(count_records)
         self.assertEqual(count, 1, 'set should have 1 record')
 
         # read it
@@ -94,7 +86,7 @@ class KVTestCase(unittest.TestCase, TestBaseClass):
 
         # count records
         count = 0
-        self.client.scan("test","demo").foreach(count_records)
+        self.client.scan("test","unittest").foreach(count_records)
         self.assertEqual(count, 0, 'set should be empty')
 
     def test_2(self):
@@ -104,12 +96,12 @@ class KVTestCase(unittest.TestCase, TestBaseClass):
 
         global count
 
-        key = ("test","demo","1")
+        key = ("test","unittest","1")
 
         # cleanup records
         def each_record((key, meta, rec)):
             self.client.remove(key)
-        self.client.scan("test","demo").foreach(each_record)
+        self.client.scan("test","unittest").foreach(each_record)
 
         recIn = {
             "i": 1234,
@@ -133,7 +125,7 @@ class KVTestCase(unittest.TestCase, TestBaseClass):
 
         # count records
         count = 0
-        self.client.scan("test","demo").foreach(count_records)
+        self.client.scan("test","unittest").foreach(count_records)
         self.assertEqual(count, 1, 'set should have 1 record')
 
         # read it
@@ -161,7 +153,7 @@ class KVTestCase(unittest.TestCase, TestBaseClass):
 
         # count records
         count = 0
-        self.client.scan("test","demo").foreach(count_records)
+        self.client.scan("test","unittest").foreach(count_records)
         self.assertEqual(count, 0, 'set should be empty')
 
     def test_3(self):
@@ -173,7 +165,7 @@ class KVTestCase(unittest.TestCase, TestBaseClass):
         global count
 
         for i in xrange(2):
-            key = ('test', 'demo', i)
+            key = ('test', 'unittest', i)
             rec = {
                 'name' : 'name%s' % (str(i)),
                 'addr' : 'name%s' % (str(i)),
@@ -182,10 +174,10 @@ class KVTestCase(unittest.TestCase, TestBaseClass):
             }
             self.client.put(key, rec)
 
-        self.client.index_integer_create({}, 'test', 'demo', 'age', 'age_index')
+        self.client.index_integer_create({}, 'test', 'unittest', 'age', 'age_index')
         sleep(1)
 
-        query = self.client.query('test', 'demo')
+        query = self.client.query('test', 'unittest')
 
         query.select("name", "age")
         count = 0
@@ -196,7 +188,7 @@ class KVTestCase(unittest.TestCase, TestBaseClass):
         self.assertEqual(count, 1, "foreach failed")
 
         for i in xrange(2):
-            key = ('test', 'demo', i)
+            key = ('test', 'unittest', i)
             self.client.remove(key)
 
         self.client.index_remove({}, 'test', 'age_index');

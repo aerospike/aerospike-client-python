@@ -3,7 +3,6 @@
 import pytest
 import sys
 import time
-from test_base_class import TestBaseClass
 
 try:
     import aerospike
@@ -11,18 +10,17 @@ except:
     print "Please install aerospike python client."
     sys.exit(1)
 
-class TestChangePassword(TestBaseClass):
+class TestChangePassword(object):
 
     def setup_method(self, method):
         
         """
         Setup method
         """
-        hostlist, user, password = TestBaseClass().get_hosts()
         config = {
-                "hosts": hostlist
+                "hosts": [("127.0.0.1", 3000)]
                 }
-        self.client = aerospike.client(config).connect( user, password )
+        self.client = aerospike.client(config).connect( "admin", "admin" )
 
         self.client.admin_create_user( {}, "testchangepassworduser", "aerospike", ["read"], 1)
         time.sleep(2)
@@ -49,7 +47,7 @@ class TestChangePassword(TestBaseClass):
 
     	user = "testchangepassworduser"
         config = {
-                "hosts": TestChangePassword.hostlist
+                "hosts": [("127.0.0.1", 3000)]
                 }
         self.clientreaduser = aerospike.client(config).connect( user, "aerospike" )
 
@@ -61,7 +59,7 @@ class TestChangePassword(TestBaseClass):
     	assert status == 0
 
         config = {
-                "hosts": TestChangePassword.hostlist
+                "hosts": [("127.0.0.1", 3000)]
                 }
         with pytest.raises(Exception) as exception:
             self.clientreaduserwrong = aerospike.client(config).connect( user, "aerospike" )
@@ -92,7 +90,7 @@ class TestChangePassword(TestBaseClass):
 
     	user = "testchangepassworduser"
         config = {
-                "hosts": TestChangePassword.hostlist
+                "hosts": [("127.0.0.1", 3000)]
                 }
         self.clientreaduser = aerospike.client(config).connect( user, "aerospike" )
 
@@ -104,7 +102,7 @@ class TestChangePassword(TestBaseClass):
     	assert status == 0
 
         config = {
-                "hosts": TestChangePassword.hostlist
+                "hosts": [("127.0.0.1", 3000)]
                 }
         with pytest.raises(Exception) as exception:
             self.clientreaduserwrong = aerospike.client(config).connect( user, "aerospike" )
@@ -159,7 +157,7 @@ class TestChangePassword(TestBaseClass):
 
     	user = "testchangepassworduser"
         config = {
-                "hosts": TestChangePassword.hostlist
+                "hosts": [("127.0.0.1", 3000)]
                 }
         self.clientreaduser = aerospike.client(config).connect( user, "aerospike" )
 
@@ -171,7 +169,7 @@ class TestChangePassword(TestBaseClass):
     	assert status == 0
 
         config = {
-                "hosts": TestChangePassword.hostlist
+                "hosts": [("127.0.0.1", 3000)]
                 }
         with pytest.raises(Exception) as exception:
             self.clientreaduserwrong = aerospike.client(config).connect( user, "aerospike" )
