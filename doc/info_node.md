@@ -1,24 +1,24 @@
 
-# aerospike.Client.info
+# aerospike.Client.info_node
 
-aerospike.Client.info - sends an info request to all the nodes in a cluster.
+aerospike.Client.info_node - sends an info request to a single cluster node.
 
 ## Description
 
 ```
-response = aerospike.Client.info( request, config, policies )
+response = aerospike.Client.info_node( request , host , policies )
 
 ```
 
-**aerospike.Client.info()** returns a *response* for a particular *request* string for all nodes of a cluster.
+**aerospike.Client.info_node()** returns a *response* for a particular *request* string
 
 ## Parameters
 
 **request**, a string representing a command and control operation.
 
-**config**. a dictionary containing the list of hosts for which the response should be returned.
+**host**, the dictionary specifying the host.
 
-**policies**, the dictionary of policies to be given while returning the info.   
+**policies**, the dictionary of policies to be given while retreiving information about a particular host. 
 
 **[policies](aerospike.md)** including,    
 - **timeout**
@@ -38,8 +38,8 @@ config = {
 client = aerospike.client(config).connect()
 
 request = "statistics"
-
-response = client.info( request, config )
+host = {"addr": "127.0.0.1", "port": 3000}   
+response = client.info_node( request, host )
 
 print response
 
