@@ -217,7 +217,7 @@ AerospikeQuery * AerospikeClient_Query(AerospikeClient * self, PyObject * args, 
  *				print "{0} - ERR: {1}".format(record,err)
  *
  */
-PyObject * AerospikeClient_InfoMany(AerospikeClient * self, PyObject * args, PyObject * kwds);
+PyObject * AerospikeClient_InfoNode(AerospikeClient * self, PyObject * args, PyObject * kwds);
 
 
 /*******************************************************************************

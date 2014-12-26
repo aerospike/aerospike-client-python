@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
+
 import pytest
-import time
 import sys
 import cPickle as pickle
-import socket
+import time
 
 try:
     import aerospike
@@ -14,49 +14,36 @@ except:
 class TestInfo(object):
 
     def setup_class(cls):
+
         """
         Setup class.
         """
         config = {
-            'hosts': [('127.0.0.1', 3000)]
-        }
+                'hosts': [('127.0.0.1', 3000)]
+                }
         TestInfo.client = aerospike.client(config).connect()
 
     def teardown_class(cls):
+
         """
-        Teardown class.
+        Teardoen class.
         """
+
         TestInfo.client.close()
 
-    def test_info_no_parameters(self):
-        """
-        Test info with no parameters.
-        """
-        with pytest.raises(TypeError) as typeError:
-            response = TestInfo.client.info()
-        assert "Required argument 'req' (pos 1) not found" in typeError.value
+    def test_info_for_statistics(self):
 
-    def test_info_positive(self):
-        """
-        Test info with correct arguments
-        """
-        key = ('test', 'demo', 'list_key')
+        request = "statistics"
 
-        rec = {
-                'names': ['John', 'Marlen', 'Steve']
-            }
+        nodes_info = TestInfo.client.info(request)
 
-        TestInfo.client.put(key, rec)
-        response = TestInfo.client.info('bins')
-        TestInfo.client.remove(key)
-        if 'names' in  response:
-            assert True == True
-        else:
-            assert True == False
+        assert nodes_info != None
+
+        assert type(nodes_info) == dict
 
     def test_info_positive_for_namespace(self):
         """
-        Test info with correct arguments
+        Test info positive for namespace
         """
         key = ('test', 'demo', 'list_key')
 
@@ -67,14 +54,20 @@ class TestInfo(object):
         TestInfo.client.put(key, rec)
         response = TestInfo.client.info('namespaces')
         TestInfo.client.remove(key)
-        if 'test' in  response:
+        flag = 0
+        for keys in response.keys():
+            for value in response[keys]:
+                if value != None:
+                    if 'test' in value:
+                        flag = 1
+        if flag:
             assert True == True
         else:
             assert True == False
 
     def test_info_positive_for_sets(self):
         """
-        Test info with correct arguments
+        Test info positive for sets
         """
         key = ('test', 'demo', 'list_key')
 
@@ -85,14 +78,44 @@ class TestInfo(object):
         TestInfo.client.put(key, rec)
         response = TestInfo.client.info('sets')
         TestInfo.client.remove(key)
-        if 'demo' in  response:
+        flag = 0
+        for keys in response.keys():
+            for value in response[keys]:
+                if value != None:
+                    if 'demo' in value:
+                        flag = 1
+        if flag:
+            assert True == True
+        else:
+            assert True == False
+
+    def test_info_positive_for_bins(self):
+        """
+        Test info positive for bins
+        """
+        key = ('test', 'demo', 'list_key')
+
+        rec = {
+                'names': ['John', 'Marlen', 'Steve']
+            }
+
+        TestInfo.client.put(key, rec)
+        response = TestInfo.client.info('bins')
+        TestInfo.client.remove(key)
+        flag = 0
+        for keys in response.keys():
+            for value in response[keys]:
+                if value != None:
+                    if 'names' in value:
+                        flag = 1
+        if flag:
             assert True == True
         else:
             assert True == False
 
     def test_info_positive_for_sindex_creation(self):
         """
-        Test info with correct arguments
+        Test info for secondary index creation
         """
         key = ('test', 'demo', 'list_key')
 
@@ -107,121 +130,69 @@ class TestInfo(object):
         response = TestInfo.client.info('sindex')
         TestInfo.client.info('sindex-delete:ns=test;indexname=names_test_index')
 
-        if 'names_test_index' in  response:
+        flag = 0
+        for keys in response.keys():
+            for value in response[keys]:
+                if value != None:
+                    if 'demo' in value:
+                        flag = 1
+        if flag:
             assert True == True
         else:
             assert True == False
 
-        
+    def test_info_with_config_for_statistics(self):
 
-    def test_info_for_incorrect_command(self):
-        """
-        Test info for incorrect command
-        """
-        response = None
-        with pytest.raises(Exception) as exception:
-            response = TestInfo.client.info('abcd')
+        request = "statistics"
 
-        assert exception.value[0] == -1
-        assert exception.value[1] == "Info operation failed"
+        config = {
+                'hosts': [('127.0.0.1', 3000)]
+                }
+        nodes_info = TestInfo.client.info(request, config)
 
-    def test_info_positive_with_correct_policy(self):
-        """
-        Test info with correct policy
-        """
-        key = ('test', 'demo', 'list_key')
+        assert nodes_info != None
 
-        rec = {
-                'names': ['John', 'Marlen', 'Steve']
-            }
-        TestInfo.client.put(key, rec)
+        assert type(nodes_info) == dict
 
-        host = {}
+    def test_info_with_config_for_statistics_and_policy(self):
+
+        request = "statistics"
+
+        config = {
+                'hosts': [('127.0.0.1', 3000)]
+                }
         policy = {
-            'timeout': 1000
+                'timeout': 1000
         }
-        response = TestInfo.client.info('bins', host, policy)
-        TestInfo.client.remove(key)
-        if 'names' in  response:
-            assert True == True
-        else:
-            assert True == False
+        nodes_info = TestInfo.client.info(request, config, policy)
 
-    def test_info_positive_with_incorrect_policy(self):
-        """
-        Test info with incorrect policy
-        """
-        host = {}
-        policy = {
-            'timeout': 0.5
-        }
+        assert nodes_info != None
+
+        assert type(nodes_info) == dict
+
+    def test_info_for_invalid_request(self):
+
+        request = "no_info"
+
+        nodes_info = TestInfo.client.info(request)
+
+        assert type(nodes_info) == dict
+
+        assert nodes_info.values() != None
+
+    def test_info_with_none_request(self):
+
+        request = None
+
         with pytest.raises(Exception) as exception:
-            response = TestInfo.client.info('bins', host, policy)
+            nodes_info = TestInfo.client.info(request)
 
         assert exception.value[0] == -2
-        assert exception.value[1] == "timeout is invalid"
+        assert exception.value[1] == "Request must be a string"
 
-    def test_info_positive_with_host(self):
-        """
-        Test info with correct host
-        """
-        key = ('test', 'demo', 'list_key')
+    def test_info_without_parameters(self):
 
-        rec = {
-                'names': ['John', 'Marlen', 'Steve']
-            }
-        TestInfo.client.put(key, rec)
-        host = {"addr": "127.0.0.1", "port": 3000}
-        response = TestInfo.client.info('bins', host)
-
-        TestInfo.client.remove(key)
-        if 'names' in  response:
-            assert True == True
-        else:
-            assert True == False
-
-    def test_info_positive_with_incorrect_host(self):
-        """
-        Test info with incorrect host
-        """
-        host = {"addr": "122.0.0.1", "port": 3000}
-        with pytest.raises(Exception) as exception:
-            response = TestInfo.client.info('bins', host)
-
-        assert exception.value[0] == -1
-        assert exception.value[1] == "AEROSPIKE_ERR_CLIENT"
-
-    def test_info_positive_with_all_parameters(self):
-        """
-        Test info with all parameters
-        """
-        host = {"addr": "127.0.0.1", "port": 3000}
-        policy = {
-            'timeout': 1000
-        }
-        response = TestInfo.client.info('logs', host, policy)
-
-        assert response != None
-
-    def test_info_positive_with_extra_parameters(self):
-        """
-        Test info with extra parameters
-        """
-        host = {"addr": "127.0.0.1", "port": 3000}
-        policy = {
-            'timeout': 1000
-        }
         with pytest.raises(TypeError) as typeError:
-            response = TestInfo.client.info('bins', host, policy, "")
+            nodes_info = TestInfo.client.info()
 
-        assert "info() takes at most 3 arguments (4 given)" in typeError.value
-
-    def test_info_for_none_command(self):
-        """
-        Test info for None command
-        """
-        response = None
-        with pytest.raises(TypeError) as typeError:
-            response = TestInfo.client.info(None)
-
-        assert "info() argument 1 must be string, not None" in typeError.value
+        assert "Required argument 'req' (pos 1) not found" in typeError.value
