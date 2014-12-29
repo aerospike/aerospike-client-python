@@ -18,7 +18,6 @@
 
 #include <Python.h>
 #include <stdbool.h>
-#include "aerospike/as_operations.h"
 #include "types.h"
 
 #define TRACE() printf("%s:%d\n",__FILE__,__LINE__)
