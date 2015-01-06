@@ -28,18 +28,23 @@
 #include "policy.h"
 
 PyObject * AerospikeClient_Remove_Invoke(
-	AerospikeClient * self, 
-	PyObject * py_key, PyObject * py_policy)
+	AerospikeClient * self,
+	PyObject * py_key, long generation, PyObject * py_policy)
 {
 
 	// Aerospike Client Arguments
 	as_error err;
-	as_policy_remove policy;
-	as_policy_remove * policy_p = NULL;
+	as_policy_remove remove_policy;
+	as_policy_remove * remove_policy_p = NULL;
 	as_key key;
-	
+
 	// Initialize error
 	as_error_init(&err);
+
+	if (!self || !self->as) {
+		as_error_update(&err, AEROSPIKE_ERR_PARAM, "Invalid aerospike object");
+		goto CLEANUP;
+	}
 
 	// Convert python key object to as_key
 	pyobject_to_key(&err, py_key, &key);
@@ -48,20 +53,25 @@ PyObject * AerospikeClient_Remove_Invoke(
 	}
 
 	// Convert python policy object to as_policy_exists
-	pyobject_to_policy_remove(&err, py_policy, &policy, &policy_p);
-	if ( err.code != AEROSPIKE_OK ) {
-		goto CLEANUP;
+	if(py_policy) {
+		pyobject_to_policy_remove(&err, py_policy, &remove_policy, &remove_policy_p);
+		if ( err.code != AEROSPIKE_OK ) {
+			goto CLEANUP;
+		} else {
+			remove_policy_p->generation = generation;
+		}
 	}
 
 	// Invoke operation
-	aerospike_key_remove(self->as, &err, policy_p, &key);
+	aerospike_key_remove(self->as, &err, remove_policy_p, &key);
 
 CLEANUP:
-	
+
 	if ( err.code != AEROSPIKE_OK ) {
 		PyObject * py_err = NULL;
 		error_to_pyobject(&err, &py_err);
 		PyErr_SetObject(PyExc_Exception, py_err);
+		Py_DECREF(py_err);
 		return NULL;
 	}
 
@@ -73,16 +83,17 @@ PyObject * AerospikeClient_Remove(AerospikeClient * self, PyObject * args, PyObj
 	// Python Function Arguments
 	PyObject * py_key = NULL;
 	PyObject * py_policy = NULL;
+	long generation = 0;
 
 	// Python Function Keyword Arguments
-	static char * kwlist[] = {"key", "policy", NULL};
+	static char * kwlist[] = {"key", "policy", "generation", NULL};
 
 	// Python Function Argument Parsing
-	if ( PyArg_ParseTupleAndKeywords(args, kwds, "O|O:remove", kwlist, 
-			&py_key, &py_policy) == false ) {
+	if ( PyArg_ParseTupleAndKeywords(args, kwds, "O|lO:remove", kwlist,
+			&py_key, &generation, &py_policy) == false ) {
 		return NULL;
 	}
 
 	// Invoke Operation
-	return AerospikeClient_Remove_Invoke(self, py_key, py_policy);
+	return AerospikeClient_Remove_Invoke(self, py_key, generation, py_policy);
 }

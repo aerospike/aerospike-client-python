@@ -63,7 +63,7 @@ static PyMethodDef AerospikeLSet_Type_Methods[] = {
 	{"config",
 		(PyCFunction) AerospikeLSet_Config, METH_VARARGS | METH_KEYWORDS,
 		"Get the configuration parameters of the set."},
-    
+
 	{NULL}
 };
 
@@ -87,41 +87,41 @@ static PyObject * AerospikeLSet_Type_New(PyTypeObject * type, PyObject * args, P
 static int AerospikeLSet_Type_Init(AerospikeLSet * self, PyObject * args, PyObject * kwds)
 {
 	PyObject * py_key = NULL;
-    char* bin_name = NULL;
-    char* module = NULL;
+	char* bin_name = NULL;
+	char* module = NULL;
 
 	static char * kwlist[] = {"key", "bin", "module", NULL};
 
 	if ( PyArg_ParseTupleAndKeywords(args, kwds, "Os|s:lset", kwlist, &py_key,
-                &bin_name, &module) == false ) {
+				&bin_name, &module) == false ) {
 		return -1;
 	}
 
-    /*
-     * Convert pyobject to as_key type.
-     */
-    as_error error;
-    as_error_init(&error);
+	/*
+	 * Convert pyobject to as_key type.
+	 */
+	as_error error;
+	as_error_init(&error);
 
-    pyobject_to_key(&error, py_key, &self->key);
-    if (error.code != AEROSPIKE_OK) {
-        return -1;
-    }
+	pyobject_to_key(&error, py_key, &self->key);
+	if (error.code != AEROSPIKE_OK) {
+		return -1;
+	}
 
-    int bin_name_len = strlen(bin_name);
-    if ((bin_name_len == 0) || (bin_name_len > AS_BIN_NAME_MAX_LEN)) {
-        return -1;
-    }
+	int bin_name_len = strlen(bin_name);
+	if ((bin_name_len == 0) || (bin_name_len > AS_BIN_NAME_MAX_LEN)) {
+		return -1;
+	}
 
-    strcpy(self->bin_name, bin_name);
+	strcpy(self->bin_name, bin_name);
 
-    /*
-     * LDT Initialization
-     */
-    initialize_ldt(&error, &self->lset, self->bin_name, AS_LDT_LSET, module);
-    if (error.code != AEROSPIKE_OK) {
-        return -1;
-    }
+	/*
+	 * LDT Initialization
+	 */
+	initialize_ldt(&error, &self->lset, self->bin_name, AS_LDT_LSET, module);
+	if (error.code != AEROSPIKE_OK) {
+		return -1;
+	}
 
 	return 0;
 }
@@ -190,19 +190,19 @@ PyTypeObject * AerospikeLSet_Ready()
 
 AerospikeLSet * AerospikeLSet_New(AerospikeClient * client, PyObject * args, PyObject * kwds)
 {
-    AerospikeLSet * self = (AerospikeLSet *) AerospikeLSet_Type.tp_new(&AerospikeLSet_Type, args, kwds);
-    self->client = client;
-    Py_INCREF(client);
+	AerospikeLSet * self = (AerospikeLSet *) AerospikeLSet_Type.tp_new(&AerospikeLSet_Type, args, kwds);
+	self->client = client;
+	Py_INCREF(client);
 
-    if (AerospikeLSet_Type.tp_init(self, args, kwds) == 0) {
-        return self;
-    } else {
-        as_error err;
-        as_error_init(&err);
-        as_error_update(&err, AEROSPIKE_ERR, "Parameters are incorrect");
-        PyObject * py_err = NULL;
-        error_to_pyobject(&err, &py_err);
-        PyErr_SetObject(PyExc_Exception, py_err);
-        return NULL;
-    }
+	if (AerospikeLSet_Type.tp_init((PyObject *)self, args, kwds) == 0) {
+		return self;
+	} else {
+		as_error err;
+		as_error_init(&err);
+		as_error_update(&err, AEROSPIKE_ERR, "Parameters are incorrect");
+		PyObject * py_err = NULL;
+		error_to_pyobject(&err, &py_err);
+		PyErr_SetObject(PyExc_Exception, py_err);
+		return NULL;
+	}
 }

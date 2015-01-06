@@ -42,35 +42,28 @@
 
 PyObject * AerospikeLStack_Push(AerospikeLStack * self, PyObject * args, PyObject * kwds)
 {
-    PyObject* py_value = NULL;
-    PyObject* py_policy = NULL;
+	PyObject* py_value = NULL;
+	PyObject* py_policy = NULL;
 
-    as_policy_apply apply_policy;
-    as_policy_apply* apply_policy_p = NULL;
+	as_policy_apply apply_policy;
+	as_policy_apply* apply_policy_p = NULL;
 
-    //Error Initialization
-    as_error err;
-    as_error_init(&err);
+	//Error Initialization
+	as_error err;
+	as_error_init(&err);
 
 	static char * kwlist[] = {"value", "policy", NULL};
 
 	// Python Function Argument Parsing
 	if ( PyArg_ParseTupleAndKeywords(args, kwds, "O|O:push", kwlist, 
-			&py_value, &py_policy) == false ) {
+				&py_value, &py_policy) == false ) {
 		return NULL;
 	}
 
-    if (!self || !self->client || !self->client->as) {
-        as_error_update(&err, AEROSPIKE_ERR_PARAM, "Invalid aerospike object");
-        goto CLEANUP;
-    }
-
-    if (py_policy) {
-        validate_policy_apply(&err, py_policy, &apply_policy);
-    }
-    if (err.code != AEROSPIKE_OK) {
-        goto CLEANUP;
-    }
+	if (!self || !self->client || !self->client->as) {
+		as_error_update(&err, AEROSPIKE_ERR_PARAM, "Invalid aerospike object");
+		goto CLEANUP;
+	}
 
 	// Convert python policy object to as_policy_apply
 	pyobject_to_policy_apply(&err, py_policy, &apply_policy, &apply_policy_p);
@@ -78,26 +71,26 @@ PyObject * AerospikeLStack_Push(AerospikeLStack * self, PyObject * args, PyObjec
 		goto CLEANUP;
 	}
 
-    as_val * val = NULL;
-    pyobject_to_val(&err, py_value, &val);
-    if (err.code != AEROSPIKE_OK) {
-        goto CLEANUP;
-    }
+	as_val * val = NULL;
+	pyobject_to_val(&err, py_value, &val);
+	if (err.code != AEROSPIKE_OK) {
+		goto CLEANUP;
+	}
 
-    aerospike_lstack_push(self->client->as, &err, apply_policy_p, &self->key,
-            &self->lstack, val);
+	aerospike_lstack_push(self->client->as, &err, apply_policy_p, &self->key,
+			&self->lstack, val);
 
 CLEANUP:
 
-    if (val) {
-        as_val_destroy(val);
-    }
+	if (val) {
+		as_val_destroy(val);
+	}
 
 	if ( err.code != AEROSPIKE_OK ) {
 		PyObject * py_err = NULL;
 		error_to_pyobject(&err, &py_err);
 		PyErr_SetObject(PyExc_Exception, py_err);
-        Py_DECREF(py_err);
+		Py_DECREF(py_err);
 		return NULL;
 	}
 	return PyLong_FromLong(0);
@@ -118,34 +111,27 @@ CLEANUP:
  */
 PyObject * AerospikeLStack_Push_Many(AerospikeLStack * self, PyObject * args, PyObject * kwds)
 {
-    PyObject* py_arglist = NULL;
-    PyObject* py_policy = NULL;
+	PyObject* py_arglist = NULL;
+	PyObject* py_policy = NULL;
 
-    as_error err;
-    as_error_init(&err);
+	as_error err;
+	as_error_init(&err);
 
-    as_policy_apply apply_policy;
-    as_policy_apply* apply_policy_p = NULL;
+	as_policy_apply apply_policy;
+	as_policy_apply* apply_policy_p = NULL;
 
 	static char * kwlist[] = {"values", "policy", NULL};
 
 	// Python Function Argument Parsing
 	if ( PyArg_ParseTupleAndKeywords(args, kwds, "O|O:push_many", kwlist, 
-			&py_arglist, &py_policy)== false ) {
+				&py_arglist, &py_policy)== false ) {
 		return NULL;
 	}
 
-    if (!self || !self->client || !self->client->as) {
-        as_error_update(&err, AEROSPIKE_ERR_PARAM, "Invalid aerospike object");
-        goto CLEANUP;
-    }
-
-    if (py_policy) {
-        validate_policy_apply(&err, py_policy, &apply_policy);
-    }
-    if (err.code != AEROSPIKE_OK) {
-        goto CLEANUP;
-    }
+	if (!self || !self->client || !self->client->as) {
+		as_error_update(&err, AEROSPIKE_ERR_PARAM, "Invalid aerospike object");
+		goto CLEANUP;
+	}
 
 	// Convert python policy object to as_policy_apply
 	pyobject_to_policy_apply(&err, py_policy, &apply_policy, &apply_policy_p);
@@ -153,34 +139,34 @@ PyObject * AerospikeLStack_Push_Many(AerospikeLStack * self, PyObject * args, Py
 		goto CLEANUP;
 	}
 
-    /*
-     * Convert python list to as list 
-     */
-    if ( !PyList_Check(py_arglist)) {
-        as_error_update(&err, AEROSPIKE_ERR_PARAM, "Invalid argument(type)");
-        goto CLEANUP;
-    }
+	/*
+	 * Convert python list to as list 
+	 */
+	if ( !PyList_Check(py_arglist)) {
+		as_error_update(&err, AEROSPIKE_ERR_PARAM, "Invalid argument(type)");
+		goto CLEANUP;
+	}
 
-    as_list* arglist = NULL;
-    pyobject_to_list(&err, py_arglist, &arglist);
-    if (err.code != AEROSPIKE_OK) {
-        goto CLEANUP;
-    }
+	as_list* arglist = NULL;
+	pyobject_to_list(&err, py_arglist, &arglist);
+	if (err.code != AEROSPIKE_OK) {
+		goto CLEANUP;
+	}
 
-    aerospike_lstack_push_all(self->client->as, &err, apply_policy_p,
-            &self->key, &self->lstack, arglist);
+	aerospike_lstack_push_all(self->client->as, &err, apply_policy_p,
+			&self->key, &self->lstack, arglist);
 
 CLEANUP:
 
-    if (arglist) {
-        as_list_destroy(arglist);
-    }
+	if (arglist) {
+		as_list_destroy(arglist);
+	}
 
 	if ( err.code != AEROSPIKE_OK ) {
 		PyObject * py_err = NULL;
 		error_to_pyobject(&err, &py_err);
 		PyErr_SetObject(PyExc_Exception, py_err);
-        Py_DECREF(py_err);
+		Py_DECREF(py_err);
 		return NULL;
 	}
 	return PyLong_FromLong(0);
@@ -201,34 +187,27 @@ CLEANUP:
  */
 PyObject * AerospikeLStack_Peek(AerospikeLStack * self, PyObject * args, PyObject * kwds)
 {
-    long peek_count = 0;
-    PyObject* py_policy = NULL;
+	long peek_count = 0;
+	PyObject* py_policy = NULL;
 
-    as_policy_apply apply_policy;
-    as_policy_apply* apply_policy_p = NULL;
+	as_policy_apply apply_policy;
+	as_policy_apply* apply_policy_p = NULL;
 
-    as_error err;
-    as_error_init(&err);
+	as_error err;
+	as_error_init(&err);
 
 	static char * kwlist[] = {"peek_count", "policy", NULL};
 
 	// Python Function Argument Parsing
 	if ( PyArg_ParseTupleAndKeywords(args, kwds, "l|O:peek", kwlist, 
-			&peek_count, &py_policy) == false ) {
+				&peek_count, &py_policy) == false ) {
 		return NULL;
 	}
-    
-    if (!self || !self->client || !self->client->as) {
-        as_error_update(&err, AEROSPIKE_ERR_PARAM, "Invalid aerospike object");
-        goto CLEANUP;
-    }
 
-    if (py_policy) {
-        validate_policy_apply(&err, py_policy, &apply_policy);
-    }
-    if (err.code != AEROSPIKE_OK) {
-        goto CLEANUP;
-    }
+	if (!self || !self->client || !self->client->as) {
+		as_error_update(&err, AEROSPIKE_ERR_PARAM, "Invalid aerospike object");
+		goto CLEANUP;
+	}
 
 	// Convert python policy object to as_policy_apply
 	pyobject_to_policy_apply(&err, py_policy, &apply_policy, &apply_policy_p);
@@ -236,30 +215,30 @@ PyObject * AerospikeLStack_Peek(AerospikeLStack * self, PyObject * args, PyObjec
 		goto CLEANUP;
 	}
 
-    /*
-     * Peek values from stack
-     */
-    as_list* list = NULL; 
-    aerospike_lstack_peek(self->client->as, &err, apply_policy_p, &self->key,
-            &self->lstack, peek_count, &list);
-    if (err.code != AEROSPIKE_OK) {
-        goto CLEANUP;
-    }
+	/*
+	 * Peek values from stack
+	 */
+	as_list* list = NULL; 
+	aerospike_lstack_peek(self->client->as, &err, apply_policy_p, &self->key,
+			&self->lstack, peek_count, &list);
+	if (err.code != AEROSPIKE_OK) {
+		goto CLEANUP;
+	}
 
-    PyObject* py_list = NULL;
-    list_to_pyobject(&err, list, &py_list);
+	PyObject* py_list = NULL;
+	list_to_pyobject(&err, list, &py_list);
 
 CLEANUP:
 
-    if (list) {
-        as_list_destroy(list);
-    }
+	if (list) {
+		as_list_destroy(list);
+	}
 
 	if ( err.code != AEROSPIKE_OK ) {
 		PyObject * py_err = NULL;
 		error_to_pyobject(&err, &py_err);
 		PyErr_SetObject(PyExc_Exception, py_err);
-        Py_DECREF(py_err);
+		Py_DECREF(py_err);
 		return NULL;
 	}
 	return py_list;
@@ -280,36 +259,29 @@ CLEANUP:
  */
 PyObject * AerospikeLStack_Filter(AerospikeLStack * self, PyObject * args, PyObject * kwds)
 {
-    long peek_count = 0;
-    char* filter_name = NULL;
-    PyObject * py_args = NULL; 
-    PyObject* py_policy = NULL;
+	long peek_count = 0;
+	char* filter_name = NULL;
+	PyObject * py_args = NULL; 
+	PyObject* py_policy = NULL;
 
-    as_policy_apply apply_policy;
-    as_policy_apply* apply_policy_p = NULL;
+	as_policy_apply apply_policy;
+	as_policy_apply* apply_policy_p = NULL;
 
-    as_error err;
-    as_error_init(&err);
+	as_error err;
+	as_error_init(&err);
 
 	static char * kwlist[] = {"peek_count", "udf_function_name", "args", "policy", NULL};
 
 	// Python Function Argument Parsing
 	if ( PyArg_ParseTupleAndKeywords(args, kwds, "|lsOO:filter", kwlist, 
-			&peek_count, &filter_name, &py_args, &py_policy) == false ) {
+				&peek_count, &filter_name, &py_args, &py_policy) == false ) {
 		return NULL;
 	}
 
-    if (!self || !self->client || !self->client->as) {
-        as_error_update(&err, AEROSPIKE_ERR_PARAM, "Invalid aerospike object");
-        goto CLEANUP;
-    }
-
-    if (py_policy) {
-        validate_policy_apply(&err, py_policy, &apply_policy);
-    }
-    if (err.code != AEROSPIKE_OK) {
-        goto CLEANUP;
-    }
+	if (!self || !self->client || !self->client->as) {
+		as_error_update(&err, AEROSPIKE_ERR_PARAM, "Invalid aerospike object");
+		goto CLEANUP;
+	}
 
 	// Convert python policy object to as_policy_apply
 	pyobject_to_policy_apply(&err, py_policy, &apply_policy, &apply_policy_p);
@@ -317,47 +289,47 @@ PyObject * AerospikeLStack_Filter(AerospikeLStack * self, PyObject * args, PyObj
 		goto CLEANUP;
 	}
 
-    if ( py_args && !filter_name) {
-        as_error_update(&err, AEROSPIKE_ERR_PARAM, "Filter arguments without filter name");
-        goto CLEANUP;
-    }
+	if ( py_args && !filter_name) {
+		as_error_update(&err, AEROSPIKE_ERR_PARAM, "Filter arguments without filter name");
+		goto CLEANUP;
+	}
 
-    if ( py_args && !PyList_Check(py_args)) {
-        as_error_update(&err, AEROSPIKE_ERR_PARAM, "Invalid filter argument(type)");
-        goto CLEANUP;
-    }
+	if ( py_args && !PyList_Check(py_args)) {
+		as_error_update(&err, AEROSPIKE_ERR_PARAM, "Invalid filter argument(type)");
+		goto CLEANUP;
+	}
 
-    as_list* arg_list = NULL;
-    if (py_args) {
-        pyobject_to_list(&err, py_args, &arg_list);
-    }
+	as_list* arg_list = NULL;
+	if (py_args) {
+		pyobject_to_list(&err, py_args, &arg_list);
+	}
 
-    as_list* elements_list = NULL;
-    aerospike_lstack_filter(self->client->as, &err, apply_policy_p, &self->key,
-            &self->lstack, peek_count, filter_name, arg_list, &elements_list);
+	as_list* elements_list = NULL;
+	aerospike_lstack_filter(self->client->as, &err, apply_policy_p, &self->key,
+			&self->lstack, peek_count, filter_name, arg_list, &elements_list);
 
-    if (err.code != AEROSPIKE_OK) {
-        goto CLEANUP;
-    }
+	if (err.code != AEROSPIKE_OK) {
+		goto CLEANUP;
+	}
 
-    PyObject* py_list = NULL;
-    list_to_pyobject(&err, elements_list, &py_list);
-    
+	PyObject* py_list = NULL;
+	list_to_pyobject(&err, elements_list, &py_list);
+
 CLEANUP:
 
-    if (elements_list) {
-        as_list_destroy(elements_list);
-    }
+	if (elements_list) {
+		as_list_destroy(elements_list);
+	}
 
-    if (arg_list) {
-        as_list_destroy(arg_list);
-    }
+	if (arg_list) {
+		as_list_destroy(arg_list);
+	}
 
 	if ( err.code != AEROSPIKE_OK ) {
 		PyObject * py_err = NULL;
 		error_to_pyobject(&err, &py_err);
 		PyErr_SetObject(PyExc_Exception, py_err);
-        Py_DECREF(py_err);
+		Py_DECREF(py_err);
 		return NULL;
 	}
 	return py_list;
@@ -378,32 +350,25 @@ CLEANUP:
  */
 PyObject * AerospikeLStack_Destroy(AerospikeLStack * self, PyObject * args, PyObject * kwds)
 {
-    PyObject* py_policy = NULL;
-    as_policy_apply apply_policy;
-    as_policy_apply* apply_policy_p = NULL;
+	PyObject* py_policy = NULL;
+	as_policy_apply apply_policy;
+	as_policy_apply* apply_policy_p = NULL;
 
-    as_error err;
-    as_error_init(&err);
+	as_error err;
+	as_error_init(&err);
 
 	static char * kwlist[] = {"policy", NULL};
 
 	// Python Function Argument Parsing
 	if ( PyArg_ParseTupleAndKeywords(args, kwds, "|O:destroy", kwlist, 
-			&py_policy) == false ) {
+				&py_policy) == false ) {
 		return NULL;
 	}
 
-    if (!self || !self->client || !self->client->as) {
-        as_error_update(&err, AEROSPIKE_ERR_PARAM, "Invalid aerospike object");
-        goto CLEANUP;
-    }
-
-    if (py_policy) {
-        validate_policy_apply(&err, py_policy, &apply_policy);
-    }
-    if (err.code != AEROSPIKE_OK) {
-        goto CLEANUP;
-    }
+	if (!self || !self->client || !self->client->as) {
+		as_error_update(&err, AEROSPIKE_ERR_PARAM, "Invalid aerospike object");
+		goto CLEANUP;
+	}
 
 	// Convert python policy object to as_policy_apply
 	pyobject_to_policy_apply(&err, py_policy, &apply_policy, &apply_policy_p);
@@ -411,8 +376,8 @@ PyObject * AerospikeLStack_Destroy(AerospikeLStack * self, PyObject * args, PyOb
 		goto CLEANUP;
 	}
 
-    aerospike_lstack_destroy(self->client->as, &err, apply_policy_p, &self->key,
-            &self->lstack);
+	aerospike_lstack_destroy(self->client->as, &err, apply_policy_p, &self->key,
+			&self->lstack);
 
 CLEANUP:
 
@@ -420,7 +385,7 @@ CLEANUP:
 		PyObject * py_err = NULL;
 		error_to_pyobject(&err, &py_err);
 		PyErr_SetObject(PyExc_Exception, py_err);
-        Py_DECREF(py_err);
+		Py_DECREF(py_err);
 		return NULL;
 	}
 	return PyLong_FromLong(0);
@@ -441,33 +406,26 @@ CLEANUP:
  */
 PyObject * AerospikeLStack_Get_Capacity(AerospikeLStack * self, PyObject * args, PyObject * kwds)
 {
-    long capacity = 0;
-    PyObject* py_policy = NULL;
-    as_policy_apply apply_policy;
-    as_policy_apply* apply_policy_p = NULL;
+	long capacity = 0;
+	PyObject* py_policy = NULL;
+	as_policy_apply apply_policy;
+	as_policy_apply* apply_policy_p = NULL;
 
-    as_error err;
-    as_error_init(&err);
+	as_error err;
+	as_error_init(&err);
 
 	static char * kwlist[] = {"policy", NULL};
 
 	// Python Function Argument Parsing
 	if ( PyArg_ParseTupleAndKeywords(args, kwds, "|O:get_capacity", kwlist, 
-			&py_policy) == false ) {
+				&py_policy) == false ) {
 		return NULL;
 	}
 
-    if (!self || !self->client || !self->client->as) {
-        as_error_update(&err, AEROSPIKE_ERR_PARAM, "Invalid aerospike object");
-        goto CLEANUP;
-    }
-
-    if (py_policy) {
-        validate_policy_apply(&err, py_policy, &apply_policy);
-    }
-    if (err.code != AEROSPIKE_OK) {
-        goto CLEANUP;
-    }
+	if (!self || !self->client || !self->client->as) {
+		as_error_update(&err, AEROSPIKE_ERR_PARAM, "Invalid aerospike object");
+		goto CLEANUP;
+	}
 
 	// Convert python policy object to as_policy_apply
 	pyobject_to_policy_apply(&err, py_policy, &apply_policy, &apply_policy_p);
@@ -475,8 +433,8 @@ PyObject * AerospikeLStack_Get_Capacity(AerospikeLStack * self, PyObject * args,
 		goto CLEANUP;
 	}
 
-    aerospike_lstack_get_capacity(self->client->as, &err, apply_policy_p, &self->key,
-            &self->lstack, &capacity);
+	aerospike_lstack_get_capacity(self->client->as, &err, apply_policy_p, &self->key,
+			&self->lstack, (uint32_t *)&capacity);
 
 CLEANUP:
 
@@ -484,7 +442,7 @@ CLEANUP:
 		PyObject * py_err = NULL;
 		error_to_pyobject(&err, &py_err);
 		PyErr_SetObject(PyExc_Exception, py_err);
-        Py_DECREF(py_err);
+		Py_DECREF(py_err);
 		return NULL;
 	}
 
@@ -506,33 +464,26 @@ CLEANUP:
  */
 PyObject * AerospikeLStack_Set_Capacity(AerospikeLStack * self, PyObject * args, PyObject * kwds)
 {
-    long capacity = 0;
-    PyObject* py_policy = NULL;
-    as_policy_apply apply_policy;
-    as_policy_apply* apply_policy_p = NULL;
+	long capacity = 0;
+	PyObject* py_policy = NULL;
+	as_policy_apply apply_policy;
+	as_policy_apply* apply_policy_p = NULL;
 
-    as_error err;
-    as_error_init(&err);
+	as_error err;
+	as_error_init(&err);
 
 	static char * kwlist[] = {"capacity", "policy", NULL};
 
 	// Python Function Argument Parsing
 	if ( PyArg_ParseTupleAndKeywords(args, kwds, "l|O:set_capacity", kwlist, 
-			&capacity, &py_policy) == false ) {
+				&capacity, &py_policy) == false ) {
 		return NULL;
 	}
 
-    if (!self || !self->client || !self->client->as) {
-        as_error_update(&err, AEROSPIKE_ERR_PARAM, "Invalid aerospike object");
-        goto CLEANUP;
-    }
-
-    if (py_policy) {
-        validate_policy_apply(&err, py_policy, &apply_policy);
-    }
-    if (err.code != AEROSPIKE_OK) {
-        goto CLEANUP;
-    }
+	if (!self || !self->client || !self->client->as) {
+		as_error_update(&err, AEROSPIKE_ERR_PARAM, "Invalid aerospike object");
+		goto CLEANUP;
+	}
 
 	// Convert python policy object to as_policy_apply
 	pyobject_to_policy_apply(&err, py_policy, &apply_policy, &apply_policy_p);
@@ -540,8 +491,8 @@ PyObject * AerospikeLStack_Set_Capacity(AerospikeLStack * self, PyObject * args,
 		goto CLEANUP;
 	}
 
-    aerospike_lstack_set_capacity(self->client->as, &err, apply_policy_p, &self->key,
-            &self->lstack, capacity);
+	aerospike_lstack_set_capacity(self->client->as, &err, apply_policy_p, &self->key,
+			&self->lstack, capacity);
 
 CLEANUP:
 
@@ -549,7 +500,7 @@ CLEANUP:
 		PyObject * py_err = NULL;
 		error_to_pyobject(&err, &py_err);
 		PyErr_SetObject(PyExc_Exception, py_err);
-        Py_DECREF(py_err);
+		Py_DECREF(py_err);
 		return NULL;
 	}
 
@@ -571,33 +522,26 @@ CLEANUP:
  */
 PyObject * AerospikeLStack_Size(AerospikeLStack * self, PyObject * args, PyObject * kwds)
 {
-    uint32_t size = 0;
-    PyObject* py_policy = NULL;
-    as_policy_apply apply_policy;
-    as_policy_apply* apply_policy_p = NULL;
+	uint32_t size = 0;
+	PyObject* py_policy = NULL;
+	as_policy_apply apply_policy;
+	as_policy_apply* apply_policy_p = NULL;
 
-    as_error err;
-    as_error_init(&err);
-    
+	as_error err;
+	as_error_init(&err);
+
 	static char * kwlist[] = {"policy", NULL};
 
 	// Python Function Argument Parsing
 	if ( PyArg_ParseTupleAndKeywords(args, kwds, "|O:size", kwlist, 
-			&py_policy) == false ) {
+				&py_policy) == false ) {
 		return NULL;
 	}
 
-    if (!self || !self->client || !self->client->as) {
-        as_error_update(&err, AEROSPIKE_ERR_PARAM, "Invalid aerospike object");
-        goto CLEANUP;
-    }
-
-    if (py_policy) {
-        validate_policy_apply(&err, py_policy, &apply_policy);
-    }
-    if (err.code != AEROSPIKE_OK) {
-        goto CLEANUP;
-    }
+	if (!self || !self->client || !self->client->as) {
+		as_error_update(&err, AEROSPIKE_ERR_PARAM, "Invalid aerospike object");
+		goto CLEANUP;
+	}
 
 	// Convert python policy object to as_policy_apply
 	pyobject_to_policy_apply(&err, py_policy, &apply_policy, &apply_policy_p);
@@ -605,8 +549,8 @@ PyObject * AerospikeLStack_Size(AerospikeLStack * self, PyObject * args, PyObjec
 		goto CLEANUP;
 	}
 
-    aerospike_lstack_size(self->client->as, &err, apply_policy_p, &self->key,
-            &self->lstack, &size);
+	aerospike_lstack_size(self->client->as, &err, apply_policy_p, &self->key,
+			&self->lstack, &size);
 
 CLEANUP:
 
@@ -614,7 +558,7 @@ CLEANUP:
 		PyObject * py_err = NULL;
 		error_to_pyobject(&err, &py_err);
 		PyErr_SetObject(PyExc_Exception, py_err);
-        Py_DECREF(py_err);
+		Py_DECREF(py_err);
 		return NULL;
 	}
 
@@ -636,9 +580,9 @@ CLEANUP:
  */
 PyObject * AerospikeLStack_Config(AerospikeLStack * self, PyObject * args, PyObject * kwds)
 {
-    /*
-     * To be implemented
-     * CSDK API is not present.
-     */
+	/*
+	 * To be implemented
+	 * CSDK API is not present.
+	 */
 	return PyLong_FromLong(0);
 }

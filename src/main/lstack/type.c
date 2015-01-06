@@ -63,7 +63,7 @@ static PyMethodDef AerospikeLStack_Type_Methods[] = {
 	{"config",
 		(PyCFunction) AerospikeLStack_Config, METH_VARARGS | METH_KEYWORDS,
 		"Get the configuration parameters of the stack."},
-    
+
 	{NULL}
 };
 
@@ -87,41 +87,41 @@ static PyObject * AerospikeLStack_Type_New(PyTypeObject * type, PyObject * args,
 static int AerospikeLStack_Type_Init(AerospikeLStack * self, PyObject * args, PyObject * kwds)
 {
 	PyObject * py_key = NULL;
-    char* bin_name = NULL;
-    char* module = NULL;
+	char* bin_name = NULL;
+	char* module = NULL;
 
 	static char * kwlist[] = {"key", "bin", "module", NULL};
 
 	if ( PyArg_ParseTupleAndKeywords(args, kwds, "Os|s:lstack", kwlist, &py_key,
-                &bin_name, &module) == false ) {
+				&bin_name, &module) == false ) {
 		return -1;
 	}
 
-    /*
-     * Convert pyobject to as_key type.
-     */
-    as_error error;
-    as_error_init(&error);
+	/*
+	 * Convert pyobject to as_key type.
+	 */
+	as_error error;
+	as_error_init(&error);
 
-    pyobject_to_key(&error, py_key, &self->key);
-    if (error.code != AEROSPIKE_OK) {
-        return -1;
-    }
+	pyobject_to_key(&error, py_key, &self->key);
+	if (error.code != AEROSPIKE_OK) {
+		return -1;
+	}
 
-    int bin_name_len = strlen(bin_name);
-    if ((bin_name_len == 0) || (bin_name_len > AS_BIN_NAME_MAX_LEN)) {
-        return -1;
-    }
+	int bin_name_len = strlen(bin_name);
+	if ((bin_name_len == 0) || (bin_name_len > AS_BIN_NAME_MAX_LEN)) {
+		return -1;
+	}
 
-    strcpy(self->bin_name, bin_name);
+	strcpy(self->bin_name, bin_name);
 
-    /*
-     * LDT Initialization
-     */
-    initialize_ldt(&error, &self->lstack, self->bin_name, AS_LDT_LSTACK, module);
-    if ( error.code != AEROSPIKE_OK) {
-        return -1;
-    }
+	/*
+	 * LDT Initialization
+	 */
+	initialize_ldt(&error, &self->lstack, self->bin_name, AS_LDT_LSTACK, module);
+	if ( error.code != AEROSPIKE_OK) {
+		return -1;
+	}
 
 	return 0;
 }
@@ -190,19 +190,19 @@ PyTypeObject * AerospikeLStack_Ready()
 
 AerospikeLStack * AerospikeLStack_New(AerospikeClient * client, PyObject * args, PyObject * kwds)
 {
-    AerospikeLStack * self = (AerospikeLStack *) AerospikeLStack_Type.tp_new(&AerospikeLStack_Type, args, kwds);
-    self->client = client;
-    Py_INCREF(client);
+	AerospikeLStack * self = (AerospikeLStack *) AerospikeLStack_Type.tp_new(&AerospikeLStack_Type, args, kwds);
+	self->client = client;
+	Py_INCREF(client);
 
-    if (AerospikeLStack_Type.tp_init(self, args, kwds) == 0) {
-        return self;
-    } else {
-        as_error err;
-        as_error_init(&err);
-        as_error_update(&err, AEROSPIKE_ERR, "Parameters are incorrect");
-        PyObject * py_err = NULL;
-        error_to_pyobject(&err, &py_err);
-        PyErr_SetObject(PyExc_Exception, py_err);
-        return NULL;
-    }
+	if (AerospikeLStack_Type.tp_init((PyObject *)self, args, kwds) == 0) {
+		return self;
+	} else {
+		as_error err;
+		as_error_init(&err);
+		as_error_update(&err, AEROSPIKE_ERR, "Parameters are incorrect");
+		PyObject * py_err = NULL;
+		error_to_pyobject(&err, &py_err);
+		PyErr_SetObject(PyExc_Exception, py_err);
+		return NULL;
+	}
 }

@@ -21,7 +21,7 @@ The following are dependencies for:
 **Dependencies**
 
 	sudo yum install lua-devel python26-devel
-
+    sudo yum install python-devel # on CentOS 7 and variants
 
 ### Debian 6+ and Ubuntu 12.04+
 

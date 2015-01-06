@@ -28,9 +28,9 @@
 AerospikeQuery * AerospikeQuery_Select(AerospikeQuery * self, PyObject * args, PyObject * kwds)
 {
 	TRACE();
-	
+
 	int nbins = (int) PyTuple_Size(args);
-	
+
 	as_query_select_init(&self->query, nbins);
 
 	for ( int i = 0; i < nbins; i++ ) {

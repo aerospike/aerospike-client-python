@@ -49,7 +49,7 @@ static bool each_result(const as_val * val, void * udata)
 		PyList_Append(py_results, py_result);
 		Py_DECREF(py_result);
 	}
-	
+
 	PyGILState_Release(gstate);
 
 	return true;
@@ -58,9 +58,9 @@ static bool each_result(const as_val * val, void * udata)
 PyObject * AerospikeScan_Results(AerospikeScan * self, PyObject * args, PyObject * kwds)
 {
 	PyObject * py_policy = NULL;
-	
+
 	static char * kwlist[] = {"policy", NULL};
-	
+
 	if ( PyArg_ParseTupleAndKeywords(args, kwds, "|O:foreach", kwlist, &py_policy) == false ) {
 		return NULL;
 	}
@@ -73,7 +73,7 @@ PyObject * AerospikeScan_Results(AerospikeScan * self, PyObject * args, PyObject
 	PyThreadState * _save = PyEval_SaveThread();
 
 	aerospike_scan_foreach(self->client->as, &err, NULL, &self->scan, each_result, py_results);
-	
+
 	PyEval_RestoreThread(_save);
 
 	if ( err.code != AEROSPIKE_OK ) {
@@ -85,6 +85,3 @@ PyObject * AerospikeScan_Results(AerospikeScan * self, PyObject * args, PyObject
 
 	return py_results;
 }
-
-
-

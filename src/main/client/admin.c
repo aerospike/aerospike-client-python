@@ -40,6 +40,9 @@ PyObject * AerospikeClient_Admin_Create_User(AerospikeClient * self, PyObject *a
 	PyObject * py_roles = NULL;
 	PyObject * py_roles_size = NULL;
 
+	as_policy_admin admin_policy;
+	as_policy_admin *admin_policy_p = NULL;
+
 	// Python Function Keyword Arguments
 	static char * kwlist[] = {"policy", "user", "password", "roles", "roles_size", NULL};
 
@@ -54,13 +57,18 @@ PyObject * AerospikeClient_Admin_Create_User(AerospikeClient * self, PyObject *a
 	int roles_size = 0;
 	char **roles = NULL;
 	char *user = NULL, *password = NULL;
-	as_policy_admin *policy = NULL, policy_struct;
+
+	if (!self || !self->as) {
+		as_error_update(&err, AEROSPIKE_ERR_PARAM, "Invalid aerospike object");
+		goto CLEANUP;
+	}
 
 	// Convert python object to an array of roles
 	roles_size = (int) PyInt_AsLong(py_roles_size);
 	roles = alloca(sizeof(char *) * roles_size);
 	for (int i = 0; i < roles_size; i++) {
 		roles[i] = cf_malloc(sizeof(char) * AS_ROLE_SIZE);
+		memset(roles[i], 0, sizeof(char) * AS_ROLE_SIZE);
 	}
 
 	pyobject_to_strArray(&err, py_roles, roles);
@@ -84,13 +92,13 @@ PyObject * AerospikeClient_Admin_Create_User(AerospikeClient * self, PyObject *a
 	password = PyString_AsString(py_password);
 
 	// Convert python object to policy_admin
-	pyobject_to_policy_admin( &err, py_policy, &policy_struct, &policy );
+	pyobject_to_policy_admin( &err, py_policy, &admin_policy, &admin_policy_p);
 	if ( err.code != AEROSPIKE_OK ) {
 		goto CLEANUP;
 	}
 
 	// Invoke operation
-	success = aerospike_create_user(self->as, policy, user, password, (const char**)roles, roles_size);
+	success = aerospike_create_user(self->as, admin_policy_p, user, password, (const char**)roles, roles_size);
 	if ( success ) {
 		as_error_update(&err, success, "aerospike create user failed");
 	}
@@ -105,6 +113,7 @@ CLEANUP:
 		PyObject * py_err = NULL;
 		error_to_pyobject(&err, &py_err);
 		PyErr_SetObject(PyExc_Exception, py_err);
+		Py_DECREF(py_err);
 		return NULL;
 	}
 
@@ -122,6 +131,9 @@ PyObject * AerospikeClient_Admin_Drop_User( AerospikeClient *self, PyObject *arg
 	PyObject * py_policy = NULL;
 	PyObject * py_user = NULL;
 
+	as_policy_admin admin_policy;
+	as_policy_admin *admin_policy_p = NULL;
+
 	// Python Function Keyword Arguments
 	static char * kwlist[] = {"policy", "user", NULL};
 
@@ -131,13 +143,17 @@ PyObject * AerospikeClient_Admin_Drop_User( AerospikeClient *self, PyObject *arg
 		return NULL;
 	}
 
+	if (!self || !self->as) {
+		as_error_update(&err, AEROSPIKE_ERR_PARAM, "Invalid aerospike object");
+		goto CLEANUP;
+	}
+
 	// Aerospike Operation Arguments
 	int success = -1;
 	char *user = NULL;
-	as_policy_admin *policy = NULL, policy_struct;
 
 	// Convert python object to policy_admin
-	pyobject_to_policy_admin(&err, py_policy, &policy_struct, &policy);
+	pyobject_to_policy_admin(&err, py_policy, &admin_policy, &admin_policy_p);
 	if ( err.code != AEROSPIKE_OK ) {
 		goto CLEANUP;
 	}
@@ -151,7 +167,7 @@ PyObject * AerospikeClient_Admin_Drop_User( AerospikeClient *self, PyObject *arg
 	user = PyString_AsString(py_user);
 
 	//Invoke operation
-	success = aerospike_drop_user(self->as, policy, user);
+	success = aerospike_drop_user(self->as, admin_policy_p, user);
 	if ( success ) {
 		as_error_update(&err, success, "aerospike drop user failed");
 	}
@@ -162,6 +178,7 @@ CLEANUP:
 		PyObject * py_err = NULL;
 		error_to_pyobject(&err, &py_err);
 		PyErr_SetObject(PyExc_Exception, py_err);
+		Py_DECREF(py_err);
 		return NULL;
 	}
 
@@ -180,6 +197,9 @@ PyObject * AerospikeClient_Admin_Set_Password( AerospikeClient *self, PyObject *
 	PyObject * py_user = NULL;
 	PyObject * py_password = NULL;
 
+	as_policy_admin admin_policy;
+	as_policy_admin *admin_policy_p = NULL;
+
 	// Python Function Keyword Arguments
 	static char * kwlist[] = {"policy", "user", "password", NULL};
 
@@ -189,13 +209,17 @@ PyObject * AerospikeClient_Admin_Set_Password( AerospikeClient *self, PyObject *
 		return NULL;
 	}
 
+	if (!self || !self->as) {
+		as_error_update(&err, AEROSPIKE_ERR_PARAM, "Invalid aerospike object");
+		goto CLEANUP;
+	}
+
 	// Aerospike Operation Arguments
 	int success = -1;
 	char *user = NULL, *password = NULL;
-	as_policy_admin *policy = NULL, policy_struct;
 
 	// Convert python object to policy_admin
-	pyobject_to_policy_admin(&err, py_policy, &policy_struct, &policy);
+	pyobject_to_policy_admin(&err, py_policy, &admin_policy, &admin_policy_p);
 	if ( err.code != AEROSPIKE_OK ) {
 		goto CLEANUP;
 	}
@@ -216,7 +240,7 @@ PyObject * AerospikeClient_Admin_Set_Password( AerospikeClient *self, PyObject *
 	password = PyString_AsString(py_password);
 
 	// Invoke operation
-	success = aerospike_set_password( self->as, policy, user, password );
+	success = aerospike_set_password( self->as, admin_policy_p, user, password );
 	if ( success ) {
 		as_error_update(&err, success, "aerospike set password failed");
 	}
@@ -227,6 +251,7 @@ CLEANUP:
 		PyObject * py_err = NULL;
 		error_to_pyobject(&err, &py_err);
 		PyErr_SetObject(PyExc_Exception, py_err);
+		Py_DECREF(py_err);
 		return NULL;
 	}
 
@@ -245,6 +270,9 @@ PyObject * AerospikeClient_Admin_Change_Password( AerospikeClient *self, PyObjec
 	PyObject * py_user = NULL;
 	PyObject * py_password = NULL;
 
+	as_policy_admin admin_policy;
+	as_policy_admin *admin_policy_p = NULL;
+
 	// Python Function Keyword Arguments
 	static char * kwlist[] = {"policy", "user", "password", NULL};
 
@@ -254,13 +282,17 @@ PyObject * AerospikeClient_Admin_Change_Password( AerospikeClient *self, PyObjec
 		return NULL;
 	}
 
+	if (!self || !self->as) {
+		as_error_update(&err, AEROSPIKE_ERR_PARAM, "Invalid aerospike object");
+		goto CLEANUP;
+	}
+
 	// Aerospike Operation Arguments
 	int success = -1;
 	char *user = NULL, *password = NULL;
-	as_policy_admin *policy = NULL, policy_struct;
 
 	// Convert python object to policy_admin
-	pyobject_to_policy_admin(&err, py_policy, &policy_struct, &policy);
+	pyobject_to_policy_admin(&err, py_policy, &admin_policy, &admin_policy_p);
 	if ( err.code != AEROSPIKE_OK ) {
 		goto CLEANUP;
 	}
@@ -281,7 +313,7 @@ PyObject * AerospikeClient_Admin_Change_Password( AerospikeClient *self, PyObjec
 	password = PyString_AsString(py_password);
 
 	// Invoke operation
-	success = aerospike_change_password( self->as, policy, user, password );
+	success = aerospike_change_password( self->as, admin_policy_p, user, password );
 	if ( success ) {
 		as_error_update(&err, success, "aerospike change password failed");
 	}
@@ -292,6 +324,7 @@ CLEANUP:
 		PyObject * py_err = NULL;
 		error_to_pyobject(&err, &py_err);
 		PyErr_SetObject(PyExc_Exception, py_err);
+		Py_DECREF(py_err);
 		return NULL;
 	}
 
@@ -311,6 +344,9 @@ PyObject * AerospikeClient_Admin_Grant_Roles( AerospikeClient *self, PyObject *a
 	PyObject * py_roles = NULL;
 	PyObject * py_roles_size = NULL;
 
+	as_policy_admin admin_policy;
+	as_policy_admin *admin_policy_p = NULL;
+
 	// Python Function Keyword Arguments
 	static char * kwlist[] = {"policy", "user", "roles", "roles_size", NULL};
 
@@ -321,7 +357,6 @@ PyObject * AerospikeClient_Admin_Grant_Roles( AerospikeClient *self, PyObject *a
 	}
 
 	// Aerospike Operation Arguments
-	as_policy_admin *policy = NULL, policy_struct;
 	int roles_size = 0;
 	char **roles = NULL;
 	char *user = NULL;
@@ -329,11 +364,17 @@ PyObject * AerospikeClient_Admin_Grant_Roles( AerospikeClient *self, PyObject *a
 	// Aerospike Operation Result
 	int success = -1;
 
+	if (!self || !self->as) {
+		as_error_update(&err, AEROSPIKE_ERR_PARAM, "Invalid aerospike object");
+		goto CLEANUP;
+	}
+
 	// Convert python object to array of roles
 	roles_size = (int) PyInt_AsLong(py_roles_size);
 	roles = alloca(sizeof(char *) * roles_size);
 	for (int i = 0; i < roles_size; i++) {
 		roles[i] = cf_malloc(sizeof(char) * AS_ROLE_SIZE);
+		memset(roles[i], 0, sizeof(char) * AS_ROLE_SIZE);
 	}
 
 	pyobject_to_strArray(&err, py_roles, roles);
@@ -350,13 +391,13 @@ PyObject * AerospikeClient_Admin_Grant_Roles( AerospikeClient *self, PyObject *a
 	user = PyString_AsString(py_user);
 
 	// Convert python object to policy_admin
-	pyobject_to_policy_admin(&err, py_policy, &policy_struct, &policy);
+	pyobject_to_policy_admin(&err, py_policy, &admin_policy, &admin_policy_p);
 	if ( err.code != AEROSPIKE_OK ) {
 		goto CLEANUP;
 	}
 
 	// Invoke operation
-	success = aerospike_grant_roles(self->as, policy, user, (const char**)roles, roles_size);
+	success = aerospike_grant_roles(self->as, admin_policy_p, user, (const char**)roles, roles_size);
 	if ( success ) {
 		as_error_update(&err, success, "aerospike grant roles failed");
 	}
@@ -371,6 +412,7 @@ CLEANUP:
 		PyObject * py_err = NULL;
 		error_to_pyobject(&err, &py_err);
 		PyErr_SetObject(PyExc_Exception, py_err);
+		Py_DECREF(py_err);
 		return NULL;
 	}
 
@@ -390,6 +432,9 @@ PyObject * AerospikeClient_Admin_Revoke_Roles( AerospikeClient *self, PyObject *
 	PyObject * py_roles = NULL;
 	PyObject * py_roles_size = NULL;
 
+	as_policy_admin admin_policy;
+	as_policy_admin *admin_policy_p = NULL;
+
 	// Python Function Keyword Arguments
 	static char * kwlist[] = {"policy", "user", "roles", "roles_size", NULL};
 
@@ -400,7 +445,6 @@ PyObject * AerospikeClient_Admin_Revoke_Roles( AerospikeClient *self, PyObject *
 	}
 
 	// Aerospike Operation Arguments
-	as_policy_admin *policy, policy_struct;
 	char *user = NULL;
 	int roles_size = 0;
 	char **roles = NULL;
@@ -408,16 +452,26 @@ PyObject * AerospikeClient_Admin_Revoke_Roles( AerospikeClient *self, PyObject *
 	// Aerospike Operation Result
 	int success = -1;
 
+	if (!self || !self->as) {
+		as_error_update(&err, AEROSPIKE_ERR_PARAM, "Invalid aerospike object");
+		goto CLEANUP;
+	}
+
 	// Convert python object to array of roles
 	roles_size = (int) PyInt_AsLong(py_roles_size);
 	roles = alloca(sizeof(char *) * roles_size);
 	for (int i = 0; i < roles_size; i++) {
 		roles[i] = cf_malloc(sizeof(char) * AS_ROLE_SIZE);
+		memset(roles[i], 0, sizeof(char) * AS_ROLE_SIZE);
 	}
 
 	pyobject_to_strArray(&err, py_roles, roles);
 	if ( err.code != AEROSPIKE_OK ) {
 		goto CLEANUP;
+	}
+
+	if ( py_policy == Py_None ) {
+		py_policy = PyDict_New();
 	}
 
 	// Convert python object to username string
@@ -429,13 +483,13 @@ PyObject * AerospikeClient_Admin_Revoke_Roles( AerospikeClient *self, PyObject *
 	user = PyString_AsString(py_user);
 
 	// Convert python object to policy_admin
-	pyobject_to_policy_admin(&err, py_policy, &policy_struct, &policy);
+	pyobject_to_policy_admin(&err, py_policy, &admin_policy, &admin_policy_p);
 	if ( err.code != AEROSPIKE_OK ) {
 		goto CLEANUP;
 	}
 
 	// Invoke operation
-	success = aerospike_revoke_roles(self->as, policy, user, (const char**)roles, roles_size);
+	success = aerospike_revoke_roles(self->as, admin_policy_p, user, (const char**)roles, roles_size);
 	if ( success ) {
 		as_error_update(&err, success, "aerospike revoke roles failed");
 	}
@@ -450,6 +504,7 @@ CLEANUP:
 		PyObject * py_err = NULL;
 		error_to_pyobject(&err, &py_err);
 		PyErr_SetObject(PyExc_Exception, py_err);
+		Py_DECREF(py_err);
 		return NULL;
 	}
 
@@ -469,8 +524,12 @@ PyObject * AerospikeClient_Admin_Replace_Roles( AerospikeClient *self, PyObject 
 	PyObject * py_roles = NULL;
 	PyObject * py_roles_size = NULL;
 
+	as_policy_admin admin_policy;
+	as_policy_admin *admin_policy_p = NULL;
+
 	// Python Function Keyword Arguments
 	static char * kwlist[] = {"policy", "user", "roles", "roles_size", NULL};
+
 
 	// Python Function Argument Parsing
 	if ( PyArg_ParseTupleAndKeywords(args, kwds, "OOOO:admin_replace_roles", kwlist,
@@ -479,19 +538,24 @@ PyObject * AerospikeClient_Admin_Replace_Roles( AerospikeClient *self, PyObject 
 	}
 
 	// Aerospike Operation Arguments
-	as_policy_admin *policy = NULL, policy_struct;
 	char *user = NULL;
 	int roles_size = 0;
 	char **roles = NULL;
 
 	// Aerospike Operation Result
 	int success = -1;
-	
+
+	if (!self || !self->as) {
+		as_error_update(&err, AEROSPIKE_ERR_PARAM, "Invalid aerospike object");
+		goto CLEANUP;
+	}
+
 	// Convert python object to array of roles
 	roles_size = (int) PyInt_AsLong(py_roles_size);
 	roles = alloca(sizeof(char *) * roles_size);
 	for ( int i = 0; i < roles_size; i++ ) {
 		roles[i] = cf_malloc(sizeof(char) * AS_ROLE_SIZE);
+		memset(roles[i], 0, sizeof(char) * AS_ROLE_SIZE);
 	}
 
 	pyobject_to_strArray(&err, py_roles, roles);
@@ -508,13 +572,13 @@ PyObject * AerospikeClient_Admin_Replace_Roles( AerospikeClient *self, PyObject 
 	user = PyString_AsString(py_user);
 
 	// Convert python object to policy_admin
-	pyobject_to_policy_admin(&err, py_policy, &policy_struct, &policy);
+	pyobject_to_policy_admin(&err, py_policy, &admin_policy, &admin_policy_p);
 	if ( err.code != AEROSPIKE_OK ) {
 		goto CLEANUP;
 	}
 
 	// Invoke operation
-	success = aerospike_replace_roles(self->as, policy, user, (const char**)roles, roles_size);
+	success = aerospike_replace_roles(self->as, admin_policy_p, user, (const char**)roles, roles_size);
 	if ( success ) {
 		as_error_update(&err, success, "aerospike replace roles failed");
 	}
@@ -529,6 +593,7 @@ CLEANUP:
 		PyObject * py_err = NULL;
 		error_to_pyobject(&err, &py_err);
 		PyErr_SetObject(PyExc_Exception, py_err);
+		Py_DECREF(py_err);
 		return NULL;
 	}
 
@@ -548,6 +613,9 @@ PyObject * AerospikeClient_Admin_Query_User( AerospikeClient * self, PyObject * 
 	// Python Function Result
 	PyObject * py_user_roles = NULL;
 
+	as_policy_admin admin_policy;
+	as_policy_admin *admin_policy_p = NULL;
+
 	// Python Function Keyword Arguments
 	static char * kwlist[] = {"policy", "user", NULL};
 
@@ -557,15 +625,19 @@ PyObject * AerospikeClient_Admin_Query_User( AerospikeClient * self, PyObject * 
 	}
 
 	// Aerospike Operation Arguments
-	as_policy_admin *policy = NULL, policy_struct;
 	char *user = NULL;
 	as_user_roles *user_roles = NULL;
 
 	// Aerospike Operation Result
 	int success = -1;
 
+	if (!self || !self->as) {
+		as_error_update(&err, AEROSPIKE_ERR_PARAM, "Invalid aerospike object");
+		goto CLEANUP;
+	}
+
 	// Convert python object to policy_admin
-	pyobject_to_policy_admin(&err, py_policy, &policy_struct, &policy);
+	pyobject_to_policy_admin(&err, py_policy, &admin_policy, &admin_policy_p);
 	if ( err.code != AEROSPIKE_OK ) {
 		goto CLEANUP;
 	}
@@ -579,7 +651,7 @@ PyObject * AerospikeClient_Admin_Query_User( AerospikeClient * self, PyObject * 
 	user = PyString_AsString(py_user);
 
 	// Invoke operation
-	success = aerospike_query_user(self->as, policy, user, &user_roles);
+	success = aerospike_query_user(self->as, admin_policy_p, user, &user_roles);
 	if ( success ) {
 		as_error_update(&err, success, "aerospike query user failed");
 		goto CLEANUP;
@@ -599,6 +671,7 @@ CLEANUP:
 		PyObject * py_err = NULL;
 		error_to_pyobject(&err, &py_err);
 		PyErr_SetObject(PyExc_Exception, py_err);
+		Py_DECREF(py_err);
 		return NULL;
 	}
 
@@ -617,6 +690,9 @@ PyObject * AerospikeClient_Admin_Query_Users( AerospikeClient * self, PyObject *
 	// Python Function Result
 	PyObject * py_user_roles = NULL;
 
+	as_policy_admin admin_policy;
+	as_policy_admin *admin_policy_p = NULL;
+
 	// Python Function Keyword Arguments
 	static char * kwlist[] = {"policy", NULL};
 
@@ -626,21 +702,25 @@ PyObject * AerospikeClient_Admin_Query_Users( AerospikeClient * self, PyObject *
 	}
 
 	// Aerospike Operation Arguments
-	as_policy_admin *policy = NULL, policy_struct;
 	int users = 0;
 	as_user_roles **user_roles = NULL;
 
 	// Aerospike Operation Result
 	int success = -1;
 
+	if (!self || !self->as) {
+		as_error_update(&err, AEROSPIKE_ERR_PARAM, "Invalid aerospike object");
+		goto CLEANUP;
+	}
+
 	// Convert python object to policy_admin
-	pyobject_to_policy_admin(&err, py_policy, &policy_struct, &policy);
+	pyobject_to_policy_admin(&err, py_policy, &admin_policy, &admin_policy_p);
 	if ( err.code != AEROSPIKE_OK ) {
 		goto CLEANUP;
 	}
 
 	// Invoke operation
-	success = aerospike_query_users(self->as, policy, &user_roles, &users);
+	success = aerospike_query_users(self->as, admin_policy_p, &user_roles, &users);
 	if ( success ) {
 		as_error_update(&err, success, "aerospike query users failed");
 		goto CLEANUP;
@@ -659,10 +739,9 @@ CLEANUP:
 		PyObject * py_err = NULL;
 		error_to_pyobject(&err, &py_err);
 		PyErr_SetObject(PyExc_Exception, py_err);
+		Py_DECREF(py_err);
 		return NULL;
 	}
 
 	return py_user_roles;
 }
-
-

@@ -163,15 +163,15 @@ AerospikeQuery * AerospikeQuery_Where(AerospikeQuery * self, PyObject * args)
 			);
 		}
 	}
-	else if ( PyString_Check(py_arg1) && PyString_Check(py_arg2) ) {
+	else if ( (py_arg2) && PyString_Check(py_arg1) && (py_arg2) && PyString_Check(py_arg2) ) {
 
 		char * op = PyString_AsString(py_arg2);
 
 		if ( strcmp(op, "equals") == 0 ) {
 			if ( PyInt_Check(py_arg3) || PyLong_Check(py_arg3) ) {
 				rc = AerospikeQuery_Where_Add(
-					&self->query, 
-					AS_PREDICATE_INTEGER_EQUAL, 
+					&self->query,
+					AS_PREDICATE_INTEGER_EQUAL,
 					py_arg1,
 					py_arg3,
 					Py_None
@@ -179,7 +179,7 @@ AerospikeQuery * AerospikeQuery_Where(AerospikeQuery * self, PyObject * args)
 			}
 			else if ( PyString_Check(py_arg3) ) {
 				rc = AerospikeQuery_Where_Add(
-					&self->query, 
+					&self->query,
 					AS_PREDICATE_STRING_EQUAL,
 					py_arg1,
 					py_arg3,
@@ -196,8 +196,8 @@ AerospikeQuery * AerospikeQuery_Where(AerospikeQuery * self, PyObject * args)
 		}
 		else if ( strcmp(op, "between") == 0 ) {
 			rc = AerospikeQuery_Where_Add(
-				&self->query, 
-				AS_PREDICATE_INTEGER_RANGE, 
+				&self->query,
+				AS_PREDICATE_INTEGER_RANGE,
 				py_arg1,
 				py_arg3,
 				py_arg4
@@ -213,8 +213,8 @@ AerospikeQuery * AerospikeQuery_Where(AerospikeQuery * self, PyObject * args)
 
 		// if ( PyInt_Check(py_op) ) {
 		// 	rc = AerospikeQuery_Where_Add(
-		// 		&self->query, 
-		// 		PyInt_AsLong(py_op), 
+		// 		&self->query,
+		// 		PyInt_AsLong(py_op),
 		// 		size > 1 ? PyTuple_GetItem(py_predicate, 1) : Py_None,
 		// 		size > 2 ? PyTuple_GetItem(py_predicate, 2) : Py_None,
 		// 		size > 3 ? PyTuple_GetItem(py_predicate, 3) : Py_None
@@ -226,6 +226,8 @@ AerospikeQuery * AerospikeQuery_Where(AerospikeQuery * self, PyObject * args)
 		PyObject * py_err = NULL;
 		error_to_pyobject(&err, &py_err);
 		PyErr_SetObject(PyExc_Exception, py_err);
+		Py_DECREF(py_err);
+		as_query_destroy(&self->query);
 		rc = 1;
 	}
 

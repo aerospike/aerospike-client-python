@@ -25,6 +25,8 @@
 
 #include "admin.h"
 #include "client.h"
+#include "policy.h"
+#include "conversions.h"
 
 /*******************************************************************************
  * PYTHON TYPE METHODS
@@ -89,6 +91,21 @@ static PyMethodDef AerospikeClient_Type_Methods[] = {
 	{"apply",
 		(PyCFunction) AerospikeClient_Apply, METH_VARARGS | METH_KEYWORDS,
 		"Apply a UDF on a record in the database."},
+    {"append",
+        (PyCFunction) AerospikeClient_Append, METH_VARARGS | METH_KEYWORDS,
+        "Appends a string to the string value in a bin"},
+	{"prepend",
+		(PyCFunction) AerospikeClient_Prepend, METH_VARARGS | METH_KEYWORDS,
+		"Prepend a record to the database"},
+	{"touch",
+		(PyCFunction) AerospikeClient_Touch, METH_VARARGS | METH_KEYWORDS,
+		"Touch a record in the database"},
+	{"increment",
+		(PyCFunction) AerospikeClient_Increment, METH_VARARGS | METH_KEYWORDS,
+		"Increments a numeric value in a bin"},
+	{"operate",
+		(PyCFunction) AerospikeClient_Operate, METH_VARARGS | METH_KEYWORDS,
+		"Performs operate operation"},
 
 	// Deprecated key-based API
 
@@ -109,10 +126,15 @@ static PyMethodDef AerospikeClient_Type_Methods[] = {
 		"Create a new Scan object for performing scans."},
 
 	// INFO OPERATIONS
-
 	{"info",
 		(PyCFunction) AerospikeClient_Info, METH_VARARGS | METH_KEYWORDS,
 		"Send an info request to the cluster."},
+	{"info_node",
+		(PyCFunction) AerospikeClient_InfoNode, METH_VARARGS | METH_KEYWORDS,
+		"Send an info request to the cluster."},
+	{"get_nodes",
+		(PyCFunction) AerospikeClient_GetNodes, METH_VARARGS | METH_KEYWORDS,
+		"Gets information about the nodes of the cluster."},
 
 	// UDF OPERATIONS
 
@@ -162,6 +184,14 @@ static PyMethodDef AerospikeClient_Type_Methods[] = {
 		(PyCFunction) AerospikeClient_LMap, METH_VARARGS | METH_KEYWORDS,
 		"LMAP operations"},
 
+	// BATCH OPERATIONS
+	{"get_many",
+		(PyCFunction)AerospikeClient_Get_Many, METH_VARARGS | METH_KEYWORDS,
+		"Get many records at a time."},
+	{"exists_many",
+		(PyCFunction)AerospikeClient_Exists_Many, METH_VARARGS | METH_KEYWORDS,
+		"Get many records at a time."},
+
 	{NULL}
 };
 
@@ -189,11 +219,11 @@ static int AerospikeClient_Type_Init(AerospikeClient * self, PyObject * args, Py
 	static char * kwlist[] = {"config", NULL};
 
 	if ( PyArg_ParseTupleAndKeywords(args, kwds, "O:client", kwlist, &py_config) == false ) {
-		return 0;
+		return -1;
 	}
 
 	if ( ! PyDict_Check(py_config) ) {
-		return 0;
+		return -1;
 	}
 
 	as_config config;
@@ -220,14 +250,14 @@ static int AerospikeClient_Type_Init(AerospikeClient * self, PyObject * args, Py
 	}
 
 	if ( ! lua_system_path ) {
-		
+
 		PyObject * py_prefix = PySys_GetObject("prefix");
 		if ( py_prefix && PyString_Check(py_prefix) ) {
 			char * prefix = PyString_AsString(py_prefix);
 			size_t prefix_len = strlen(prefix);
 
 			char system_path[AS_CONFIG_PATH_MAX_LEN] = {0};
-			memcpy(system_path, prefix, AS_CONFIG_PATH_MAX_LEN);
+			memcpy(system_path, prefix, strlen(prefix));
 			memcpy(system_path + prefix_len, "/aerospike/lua", AS_CONFIG_PATH_MAX_LEN - prefix_len);
 			system_path[prefix_len + strlen("/aerospike/lua")] = '\0';
 
@@ -355,6 +385,18 @@ PyTypeObject * AerospikeClient_Ready()
 AerospikeClient * AerospikeClient_New(PyObject * parent, PyObject * args, PyObject * kwds)
 {
 	AerospikeClient * self = (AerospikeClient *) AerospikeClient_Type.tp_new(&AerospikeClient_Type, args, kwds);
-	AerospikeClient_Type.tp_init((PyObject *) self, args, kwds);
-	return self;
+	if ( AerospikeClient_Type.tp_init((PyObject *) self, args, kwds) == 0 ){
+		// Initialize connection flag
+		return self;
+	}
+	else {
+		as_error err;
+		as_error_init(&err);
+		as_error_update(&err, AEROSPIKE_ERR, "Parameters are incorrect");
+		PyObject * py_err = NULL;
+		error_to_pyobject( &err, &py_err);
+		PyErr_SetObject( PyExc_Exception, py_err);
+		Py_DECREF(py_err);
+		return NULL;
+	}
 }

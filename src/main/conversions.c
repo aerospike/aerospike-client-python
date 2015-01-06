@@ -47,7 +47,7 @@ as_status as_udf_file_to_pyobject( as_error *err, as_udf_file * entry, PyObject 
 {
 	as_error_reset(err);
 
-	*py_file = PyDict_New();	
+	*py_file = PyDict_New();
 
 	PyObject * py_name = PyString_FromString(entry->name);
 	PyDict_SetItemString(*py_file, "name", py_name);
@@ -75,16 +75,16 @@ as_status as_udf_files_to_pyobject( as_error *err, as_udf_files *files, PyObject
 	*py_files = PyList_New(0);
 
 	for(int i = 0; i < files->size; i++) {
-		
+
 		PyObject * py_file;
 		as_udf_file_to_pyobject( err, &((files->entries)[i]), &py_file );
 		if( err->code != AEROSPIKE_OK) {
 			goto END;
-		}	
+		}
 
 		PyList_Append(*py_files, py_file);
 		Py_DECREF(py_file);
-	}	
+	}
 
 END:
 	return err->code;
@@ -114,7 +114,7 @@ as_status as_user_roles_array_to_pyobject( as_error *err, as_user_roles **user_r
 {
 	as_error_reset(err);
 	int i;
-	*py_as_user_roles = PyList_New(0);	
+	*py_as_user_roles = PyList_New(0);
 
 	for(i = 0; i < users; i++) {
 
@@ -124,7 +124,7 @@ as_status as_user_roles_array_to_pyobject( as_error *err, as_user_roles **user_r
 		strArray_to_pyobject(err, user_roles[i]->roles, &py_roles, user_roles[i]->roles_size);
 		if( err->code != AEROSPIKE_OK) {
 			break;
-		}		
+		}
 
 		PyObject * py_user_roles = PyDict_New();
 		PyDict_SetItemString(py_user_roles, "user", py_user);
@@ -146,7 +146,7 @@ as_status as_user_roles_array_to_pyobject( as_error *err, as_user_roles **user_r
 
 as_status as_user_roles_to_pyobject( as_error * err, as_user_roles * user_roles, PyObject ** py_as_user_roles )
 {
-	as_error_reset(err);	
+	as_error_reset(err);
 
 	PyObject * py_user = PyString_FromString(user_roles->user);
 	PyObject * py_roles_size = PyInt_FromLong(user_roles->roles_size);
@@ -155,7 +155,7 @@ as_status as_user_roles_to_pyobject( as_error * err, as_user_roles * user_roles,
 	strArray_to_pyobject(err, user_roles->roles, &py_roles, user_roles->roles_size);
 	if( err->code != AEROSPIKE_OK) {
 		goto END;
-	}		
+	}
 
 	PyObject * py_user_roles = PyDict_New();
 
@@ -177,7 +177,7 @@ END:
 }
 
 as_status pyobject_to_strArray( as_error * err, PyObject * py_list,  char ** arr )
-{	
+{
 	as_error_reset(err);
 
 	Py_ssize_t size = PyList_Size(py_list);
@@ -191,7 +191,7 @@ as_status pyobject_to_strArray( as_error * err, PyObject * py_list,  char ** arr
 		if( PyString_Check(py_val) ) {
 			s = PyString_AsString(py_val);
 			strcpy(arr[i], s);
-		}	
+		}
 	}
 
 	return err->code;
@@ -246,7 +246,9 @@ as_status pyobject_to_map(as_error * err, PyObject * py_dict, as_map ** map)
 		}
 		pyobject_to_val(err, py_val, &val);
 		if ( err->code != AEROSPIKE_OK ) {
-            as_val_destroy(key);
+			if (key) {
+				as_val_destroy(key);
+			}
 			break;
 		}
 		as_map_set(*map, key, val);
@@ -254,7 +256,7 @@ as_status pyobject_to_map(as_error * err, PyObject * py_dict, as_map ** map)
 
 	if ( err->code != AEROSPIKE_OK ) {
 		as_map_destroy(*map);
-	}	
+	}
 
 	return err->code;
 }
@@ -283,8 +285,10 @@ as_status pyobject_to_val(as_error * err, PyObject * py_obj, as_val ** val)
 		*val = (as_val *) as_string_new(s, false);
 	}
 	else if ( PyUnicode_Check(py_obj) ) {
-		char * str = PyString_AsString(py_obj);
-		*val = (as_val *) as_string_new(str, false);
+		PyObject * py_ustr = PyUnicode_AsUTF8String(py_obj);
+		char * str = PyString_AsString(py_ustr);
+		*val = (as_val *) as_string_new(strdup(str), true);
+		Py_DECREF(py_ustr);
 	}
 	else if ( PyByteArray_Check(py_obj) ) {
 		uint8_t * b = (uint8_t *) PyByteArray_AsString(py_obj);
@@ -400,6 +404,8 @@ as_status pyobject_to_record(as_error * err, PyObject * py_rec, PyObject * py_me
 				}
 				else if ( PyLong_Check(py_ttl) ) {
 					rec->ttl = (uint32_t) PyLong_AsLongLong(py_ttl);
+				} else {
+					as_error_update(err, AEROSPIKE_ERR_PARAM, "Ttl should be an int or long");
 				}
 			}
 
@@ -409,6 +415,8 @@ as_status pyobject_to_record(as_error * err, PyObject * py_rec, PyObject * py_me
 				}
 				else if ( PyLong_Check(py_gen) ) {
 					rec->gen = (uint16_t) PyLong_AsLongLong(py_gen);
+				} else {
+					as_error_update(err, AEROSPIKE_ERR_PARAM, "Generation should be an int or long");
 				}
 			}
 		}
@@ -480,7 +488,9 @@ as_status pyobject_to_key(as_error * err, PyObject * py_keytuple, as_key * key)
 			set = PyString_AsString(py_set);
 		}
 		else if ( PyUnicode_Check(py_set) ) {
-			set = PyString_AsString(py_set);
+			PyObject * py_ustr = PyUnicode_AsUTF8String(py_set);
+			set = PyString_AsString(py_ustr);
+			Py_DECREF(py_ustr);
 		}
 		else {
 			return as_error_update(err, AEROSPIKE_ERR_PARAM, "set must be a string");
@@ -503,7 +513,7 @@ as_status pyobject_to_key(as_error * err, PyObject * py_keytuple, as_key * key)
 		else if ( PyUnicode_Check(py_key) ) {
 			PyObject * py_ustr = PyUnicode_AsUTF8String(py_key);
 			char * k = PyString_AsString(py_ustr);
-			as_key_init_strp(key, ns, set, k, true);
+			as_key_init_strp(key, ns, set, strdup(k), true);
 			Py_DECREF(py_ustr);
 		}
 		else if ( PyByteArray_Check(py_key) ) {
@@ -654,8 +664,7 @@ as_status list_to_pyobject(as_error * err, const as_list * list, PyObject ** py_
 	as_list_foreach(list, list_to_pyobject_each, &convd);
 
 	if ( err->code != AEROSPIKE_OK ) {
-		PyObject_Del(*py_list);
-		*py_list = NULL;
+		Py_DECREF(*py_list);
 		return err->code;
 	}
 
@@ -754,7 +763,6 @@ as_status record_to_pyobject(as_error * err, const as_record * rec, const as_key
 	PyTuple_SetItem(py_rec, 2, py_rec_bins);
 
 	*obj = py_rec;
-
 	return err->code;
 }
 
@@ -842,7 +850,6 @@ as_status key_to_pyobject(as_error * err, const as_key * key, PyObject ** obj)
 	PyTuple_SetItem(py_keyobj, PY_KEYT_DIGEST, py_digest);
 
 	*obj = py_keyobj;
-
 	return err->code;
 }
 
@@ -891,8 +898,7 @@ as_status bins_to_pyobject(as_error * err, const as_record * rec, PyObject ** py
 	as_record_foreach(rec, bins_to_pyobject_each, &convd);
 
 	if ( err->code != AEROSPIKE_OK ) {
-		PyObject_Del(*py_bins);
-		*py_bins = NULL;
+		Py_DECREF(*py_bins);
 		return err->code;
 	}
 
@@ -919,7 +925,6 @@ as_status metadata_to_pyobject(as_error * err, const as_record * rec, PyObject *
 	Py_DECREF(py_gen);
 
 	*obj = py_meta;
-
 	return err->code;
 }
 
@@ -950,7 +955,6 @@ bool error_to_pyobject(const as_error * err, PyObject ** obj)
 	PyTuple_SetItem(py_err, PY_EXCEPTION_MSG, py_message);
 	PyTuple_SetItem(py_err, PY_EXCEPTION_FILE, py_file);
 	PyTuple_SetItem(py_err, PY_EXCEPTION_LINE, py_line);
-
 	*obj = py_err;
 	return true;
 }
@@ -977,8 +981,3 @@ void initialize_ldt(as_error *error, as_ldt* ldt_p, char* bin_name,
 		as_error_update(error, AEROSPIKE_ERR_PARAM, "Unable to initialize LDT");
     }
 }
-
-
-
-
-

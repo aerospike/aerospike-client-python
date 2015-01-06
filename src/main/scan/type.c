@@ -26,22 +26,22 @@
 
 #include "client.h"
 #include "scan.h"
+#include "conversions.h"
 
 /*******************************************************************************
  * PYTHON TYPE METHODS
  ******************************************************************************/
 
 static PyMethodDef AerospikeScan_Type_Methods[] = {
-    
+
     {"foreach",	(PyCFunction) AerospikeScan_Foreach,	METH_VARARGS | METH_KEYWORDS,
     			"Iterate over each result and call the callback function."},
-    
-    {"select",	(PyCFunction) AerospikeScan_Select,		METH_VARARGS | METH_KEYWORDS, 
+
+    {"select",	(PyCFunction) AerospikeScan_Select,		METH_VARARGS | METH_KEYWORDS,
     			"Add bins to select in the query."},
 
     {"results",	(PyCFunction) AerospikeScan_Results,	METH_VARARGS | METH_KEYWORDS,
     			"Get a record."},
-	
 	{NULL}
 };
 
@@ -66,25 +66,29 @@ static int AerospikeScan_Type_Init(AerospikeScan * self, PyObject * args, PyObje
 {
 	PyObject * py_namespace = NULL;
 	PyObject * py_set = NULL;
-	
+
 	static char * kwlist[] = {"namespace", "set", NULL};
 
-	if ( PyArg_ParseTupleAndKeywords(args, kwds, "O|O:key", kwlist, 
+	if ( PyArg_ParseTupleAndKeywords(args, kwds, "O|O:key", kwlist,
 		&py_namespace, &py_set) == false ) {
 		return 0;
 	}
-		
+
 	char * namespace = NULL;
 	char * set = NULL;
 
-	if ( PyString_Check(py_namespace) ) {
+	if (py_namespace && PyString_Check(py_namespace) ) {
 		namespace = PyString_AsString(py_namespace);
+	} else {
+		return -1;
 	}
 
-	if ( PyString_Check(py_set) ) {
+	if ( py_set && PyString_Check(py_set) ) {
 		set = PyString_AsString(py_set);
+	} else {
+		return -1;
 	}
-	
+
 	as_scan_init(&self->scan, namespace, set);
 
     return 0;
@@ -122,7 +126,7 @@ static PyTypeObject AerospikeScan_Type = {
     .tp_setattro		= 0,
     .tp_as_buffer		= 0,
     .tp_flags			= Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE,
-    .tp_doc				= 
+    .tp_doc				=
     		"The Scan class assists in populating the parameters of a scan\n"
     		"operation. To create a new instance of the Scan class, call the\n"
     		"scan() method on an instance of a Client class.\n",
@@ -156,9 +160,21 @@ PyTypeObject * AerospikeScan_Ready()
 
 AerospikeScan * AerospikeScan_New(AerospikeClient * client, PyObject * args, PyObject * kwds)
 {
-    AerospikeScan * self  = (AerospikeScan *) AerospikeScan_Type.tp_new(&AerospikeScan_Type, args, kwds);
-    self->client = client;
+	AerospikeScan * self  = (AerospikeScan *) AerospikeScan_Type.tp_new(&AerospikeScan_Type, args, kwds);
+	self->client = client;
 	Py_INCREF(client);
-    AerospikeScan_Type.tp_init((PyObject *) self, args, kwds);
-	return self;
+	if ( AerospikeScan_Type.tp_init((PyObject *) self, args, kwds) != -1 ) {
+		return self;
+	}
+	else {
+		Py_DECREF(self);
+		as_error err;
+		as_error_init(&err);
+		as_error_update(&err, AEROSPIKE_ERR, "Parameters are incorrect");
+		PyObject * py_err = NULL;
+		error_to_pyobject(&err, &py_err);
+		PyErr_SetObject(PyExc_Exception, py_err);
+		Py_DECREF(py_err);
+		return NULL;
+	}
 }

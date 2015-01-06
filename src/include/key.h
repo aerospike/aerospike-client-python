@@ -37,7 +37,7 @@ AerospikeKey * AerospikeKey_New(AerospikeClient * client, PyObject * args, PyObj
  ******************************************************************************/
 
 /**
- * Performs a `remove` operation. This will remove the record with the 
+ * Performs a `remove` operation. This will remove the record with the
  * specified key.
  *
  *		client.key(ns,set,key).apply(module, function, arglist)
@@ -46,7 +46,7 @@ AerospikeKey * AerospikeKey_New(AerospikeClient * client, PyObject * args, PyObj
 PyObject * AerospikeKey_Apply(AerospikeKey * self, PyObject * args, PyObject * kwds);
 
 /**
- * Performs a `exists` operation. This will check the existence of the record 
+ * Performs a `exists` operation. This will check the existence of the record
  * with the specified key.
  *
  *		client.key(ns,set,key).exists()
@@ -63,7 +63,7 @@ PyObject * AerospikeKey_Exists(AerospikeKey * self, PyObject * args, PyObject * 
 PyObject * AerospikeKey_Get(AerospikeKey * self, PyObject * args, PyObject * kwds);
 
 /**
- * Performs a `select` operation. This will select specified bins of 
+ * Performs a `select` operation. This will select specified bins of
  * the requested record.
  *
  *		client.key(ns,set,key).select("a","b","c")
@@ -71,7 +71,7 @@ PyObject * AerospikeKey_Get(AerospikeKey * self, PyObject * args, PyObject * kwd
 // PyObject * AerospikeKey_Select(AerospikeKey * self, PyObject * args, PyObject * kwds);
 
 /**
- * Performs a `put` operation. This will select specified bins of the 
+ * Performs a `put` operation. This will select specified bins of the
  * requested record.
  *
  *		client.key(ns,set,key).put({
@@ -84,7 +84,7 @@ PyObject * AerospikeKey_Get(AerospikeKey * self, PyObject * args, PyObject * kwd
 PyObject * AerospikeKey_Put(AerospikeKey * self, PyObject * args, PyObject * kwds);
 
 /**
- * Performs a `remove` operation. This will remove the record with the 
+ * Performs a `remove` operation. This will remove the record with the
  * specified key.
  *
  *		client.key(ns,set,key).remove()

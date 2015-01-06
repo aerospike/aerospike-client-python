@@ -39,7 +39,7 @@ static bool each_result(const as_val * val, void * udata)
 	PyObject * py_result = NULL;
 
 	as_error err;
-	
+
 	TRACE();
 
 	PyGILState_STATE gstate;
@@ -52,14 +52,14 @@ static bool each_result(const as_val * val, void * udata)
 	TRACE();
 
 	if ( py_result ) {
-	
+
 		TRACE();
 		PyList_Append(py_results, py_result);
-	
+
 		TRACE();
 		Py_DECREF(py_result);
 	}
-	
+
 	TRACE();
 
 	PyGILState_Release(gstate);
@@ -71,7 +71,7 @@ static bool each_result(const as_val * val, void * udata)
 PyObject * AerospikeQuery_Results(AerospikeQuery * self, PyObject * args, PyObject * kwds)
 {
 	PyObject * py_policy = NULL;
-	
+
 	static char * kwlist[] = {"policy", NULL};
 
 	if ( PyArg_ParseTupleAndKeywords(args, kwds, "|O:foreach", kwlist, &py_policy) == false ) {
@@ -83,16 +83,16 @@ PyObject * AerospikeQuery_Results(AerospikeQuery * self, PyObject * args, PyObje
 
 	TRACE();
 	PyObject * py_results = PyList_New(0);
-	
+
 	TRACE();
 	PyThreadState * _save = PyEval_SaveThread();
-	
+
 	TRACE();
     aerospike_query_foreach(self->client->as, &err, NULL, &self->query, each_result, py_results);
-    
+
 	TRACE();
 	PyEval_RestoreThread(_save);
-  	
+
 	TRACE();
 	if ( err.code != AEROSPIKE_OK ) {
 		PyObject * py_err = NULL;
@@ -105,5 +105,3 @@ PyObject * AerospikeQuery_Results(AerospikeQuery * self, PyObject * args, PyObje
 	TRACE();
 	return py_results;
 }
-
-

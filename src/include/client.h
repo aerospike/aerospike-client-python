@@ -18,7 +18,6 @@
 
 #include <Python.h>
 #include <stdbool.h>
-
 #include "types.h"
 
 #define TRACE() printf("%s:%d\n",__FILE__,__LINE__)
@@ -101,39 +100,73 @@ PyObject * AerospikeClient_Put(AerospikeClient * self, PyObject * args, PyObject
  */
 PyObject * AerospikeClient_Remove(AerospikeClient * self, PyObject * args, PyObject * kwds);
 
+/**
+ * Append a record to the database.
+ *
+ *		client.append((x,y,z))
+ *
+ */
+PyObject * AerospikeClient_Append(AerospikeClient * self, PyObject * args, PyObject * kwds);
+/**
+ * Prepend a record to the database.
+ *
+ *		client.prepend((x,y,z))
+ *
+ */
+PyObject * AerospikeClient_Prepend(AerospikeClient * self, PyObject * args, PyObject * kwds);
+/**
+ * Increment bin value of a record to the database.
+ *
+ *		client.increment((x,y,z))
+ *
+ */
+PyObject * AerospikeClient_Increment(AerospikeClient * self, PyObject * args, PyObject * kwds);
+/**
+ * Touch a record in the database.
+ *
+ *		client.touch((x,y,z))
+ *
+ */
+PyObject * AerospikeClient_Touch(AerospikeClient * self, PyObject * args, PyObject * kwds);
+/**
+ * Performs operate operations
+ *
+ *		client.operate((x,y,z))
+ *
+ */
+PyObject * AerospikeClient_Operate(AerospikeClient * self, PyObject * args, PyObject * kwds);
 
 /*******************************************************************************
  * INTENRAL (SHARED) OPERATIONS, FOR COMPATIBILITY W/ OLD API
  ******************************************************************************/
 
 PyObject * AerospikeClient_Apply_Invoke(
-	AerospikeClient * self, 
-	PyObject * py_key, PyObject * py_module, PyObject * py_function, 
+	AerospikeClient * self,
+	PyObject * py_key, PyObject * py_module, PyObject * py_function,
 	PyObject * py_arglist, PyObject * py_policy);
 
 PyObject * AerospikeClient_Exists_Invoke(
-	AerospikeClient * self, 
+	AerospikeClient * self,
 	PyObject * py_key, PyObject * py_policy);
 
 PyObject * AerospikeClient_Get_Invoke(
-	AerospikeClient * self, 
+	AerospikeClient * self,
 	PyObject * py_key, PyObject * py_policy);
 
 PyObject * AerospikeClient_Put_Invoke(
-	AerospikeClient * self, 
+	AerospikeClient * self,
 	PyObject * py_key, PyObject * py_bins, PyObject * py_meta, PyObject * py_policy);
 
 PyObject * AerospikeClient_Remove_Invoke(
-	AerospikeClient * self, 
-	PyObject * py_key, PyObject * py_policy);
-
+	AerospikeClient * self,
+	PyObject * py_key, long generation, PyObject * py_policy);
 
 /*******************************************************************************
  * KEY OPERATIONS (DEPRECATED)
  ******************************************************************************/
 
 /**
- * This will initialize a key object, which can be used to peform key 
+ * This will initialize a key object, which can be used to peform key
  * operations.
  *
  *		client.key(ns,set,key).put({
@@ -153,10 +186,10 @@ AerospikeKey * AerospikeClient_Key(AerospikeClient * self, PyObject * args, PyOb
  ******************************************************************************/
 
 /**
- * Performs a `scan` operation. This will initialize a scan object, which can 
+ * Performs a `scan` operation. This will initialize a scan object, which can
  * be used to scan records in specified namespace and/or set.
  *
- * A scan can be executed by calling `foreach`, which will call a callback 
+ * A scan can be executed by calling `foreach`, which will call a callback
  * each result returned:
  *
  *		def each_result(record):
@@ -178,15 +211,15 @@ AerospikeScan * AerospikeClient_Scan(AerospikeClient * self, PyObject * args, Py
  ******************************************************************************/
 
 /**
- * Performs a `query` operation. This will initialize a query object, which 
+ * Performs a `query` operation. This will initialize a query object, which
  * can be used to query records in specified namespace and/or set.
  *
- * A query can be executed by calling `foreach`, which will call a callback 
+ * A query can be executed by calling `foreach`, which will call a callback
  * each result returned:
  *
  *		def each_result(result):
  *			print result
- *		
+ *
  *		scan = client.query(ns,set).where("a", between(1,100)).foreach(each_result)
  *
  * Alternatively, you can use `results()` which is a generator that will yield a
@@ -204,10 +237,10 @@ AerospikeQuery * AerospikeClient_Query(AerospikeClient * self, PyObject * args, 
 
 /**
  * Performs a `info` operation. This will invoke the info request against each
- * node in the cluster. The return value is a dict where the key is the node 
+ * node in the cluster. The return value is a dict where the key is the node
  * name and the value is a tuple of (Error,Response). If an error occurred on
  * the node, the Error will be an object containing details, otherwise it is
- * None. If the request was successful, then the Response will contain the 
+ * None. If the request was successful, then the Response will contain the
  * string response from the node, otherwise it is None.
  *
  *		for node,(err,res) in client.info('statistics').items():
@@ -217,7 +250,7 @@ AerospikeQuery * AerospikeClient_Query(AerospikeClient * self, PyObject * args, 
  *				print "{0} - ERR: {1}".format(record,err)
  *
  */
-PyObject * AerospikeClient_Info(AerospikeClient * self, PyObject * args, PyObject * kwds);
+PyObject * AerospikeClient_InfoNode(AerospikeClient * self, PyObject * args, PyObject * kwds);
 
 
 /*******************************************************************************
@@ -306,3 +339,41 @@ AerospikeLList * AerospikeClient_LList(AerospikeClient * self, PyObject * args, 
  *
  */
 AerospikeLMap * AerospikeClient_LMap(AerospikeClient * self, PyObject * args, PyObject * kwds);
+
+#define OPERATOR_PREPEND 4
+#define OPERATOR_APPEND  5
+#define OPERATOR_TOUCH   8
+#define OPERATOR_INCR    2
+#define OPERATOR_READ    1
+#define OPERATOR_WRITE   0
+
+/**
+ * Get records in a batch
+ *
+ *		client.get_many([keys], policies)
+ *
+ */
+PyObject * AerospikeClient_Get_Many(AerospikeClient * self, PyObject *args, PyObject * kwds);
+
+/**
+ * Check existence of given keys
+ *
+ *		client.exists_many([keys], policies)
+ *
+ */
+PyObject * AerospikeClient_Exists_Many(AerospikeClient * self, PyObject *args, PyObject * kwds);
+/**
+* Perform info operation on the database.
+*
+* client.info((x,y,z))
+*
+*/
+PyObject * AerospikeClient_Info(AerospikeClient * self, PyObject * args, PyObject * kwds);
+
+/**
+* Perforrm get nodes operation on the database.
+*
+* client.get_nodes((x,y,z))
+*
+*/
+PyObject * AerospikeClient_GetNodes(AerospikeClient * self, PyObject * args, PyObject * kwds);
