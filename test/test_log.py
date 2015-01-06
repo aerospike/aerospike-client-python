@@ -9,6 +9,9 @@ try:
 except:
     print "Please install aerospike python client."
     sys.exit(1)
+        
+def handler(level, func, myfile, line):
+    assert 1 == 1
 
 class TestLog(object):
 
@@ -27,8 +30,6 @@ class TestLog(object):
         """
 
         response = aerospike.set_log_level(aerospike.LOG_LEVEL_DEBUG)
-        def handler(level, func, myfile, line):
-            assert 1 == 1
 
         aerospike.set_log_handler(handler)
 
