@@ -18,7 +18,6 @@
 
 #include <Python.h>
 #include <stdbool.h>
-
 #include "types.h"
 
 #define TRACE() printf("%s:%d\n",__FILE__,__LINE__)
@@ -113,6 +112,41 @@ PyObject * AerospikeClient_Remove(AerospikeClient * self, PyObject * args, PyObj
  *
  */
 extern PyObject * AerospikeClient_RemoveBin(AerospikeClient * self, PyObject * args, PyObject * kwds);
+/**
+ * Append a record to the database.
+ *
+ *		client.append((x,y,z))
+ *
+ */
+PyObject * AerospikeClient_Append(AerospikeClient * self, PyObject * args, PyObject * kwds);
+/**
+ * Prepend a record to the database.
+ *
+ *		client.prepend((x,y,z))
+ *
+ */
+PyObject * AerospikeClient_Prepend(AerospikeClient * self, PyObject * args, PyObject * kwds);
+/**
+ * Increment bin value of a record to the database.
+ *
+ *		client.increment((x,y,z))
+ *
+ */
+PyObject * AerospikeClient_Increment(AerospikeClient * self, PyObject * args, PyObject * kwds);
+/**
+ * Touch a record in the database.
+ *
+ *		client.touch((x,y,z))
+ *
+ */
+PyObject * AerospikeClient_Touch(AerospikeClient * self, PyObject * args, PyObject * kwds);
+/**
+ * Performs operate operations
+ *
+ *		client.operate((x,y,z))
+ *
+ */
+PyObject * AerospikeClient_Operate(AerospikeClient * self, PyObject * args, PyObject * kwds);
 
 /*******************************************************************************
  * INTENRAL (SHARED) OPERATIONS, FOR COMPATIBILITY W/ OLD API
@@ -317,6 +351,14 @@ PyObject * AerospikeClient_Set_Log_Level(AerospikeClient * self, PyObject *args,
  *
  */
 PyObject * AerospikeClient_Set_Log_Handler(AerospikeClient * self, PyObject *args, PyObject * kwds);
+
+#define OPERATOR_PREPEND 4
+#define OPERATOR_APPEND  5
+#define OPERATOR_TOUCH   8
+#define OPERATOR_INCR    2
+#define OPERATOR_READ    1
+#define OPERATOR_WRITE   0
+
 /**
  * Get records in a batch
  *

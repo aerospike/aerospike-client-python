@@ -554,6 +554,7 @@ class TestPut(object):
         policy = {
             'timeout': 1000,
             'gen': aerospike.POLICY_GEN_EQ,
+            'commit_level': aerospike.POLICY_COMMIT_LEVEL_ALL
         }
         meta = {
             'gen': gen
@@ -678,7 +679,8 @@ class TestPut(object):
             'exists': aerospike.POLICY_EXISTS_CREATE,
             'gen': aerospike.POLICY_GEN_IGNORE,
             'retry': aerospike.POLICY_RETRY_ONCE,
-            'key': aerospike.POLICY_KEY_SEND
+            'key': aerospike.POLICY_KEY_SEND,
+            'commit_level': aerospike.POLICY_COMMIT_LEVEL_MASTER
         }
         assert 0 == TestPut.client.put( key, rec, meta, policy )
         

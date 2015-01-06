@@ -93,9 +93,24 @@ static PyMethodDef AerospikeClient_Type_Methods[] = {
 	{"apply",
 		(PyCFunction) AerospikeClient_Apply, METH_VARARGS | METH_KEYWORDS,
 		"Apply a UDF on a record in the database."},
-        {"remove_bin",
+	{"remove_bin",
 		(PyCFunction) AerospikeClient_RemoveBin, METH_VARARGS | METH_KEYWORDS,
 		"Remove a bin from the database."},
+	{"append",
+		(PyCFunction) AerospikeClient_Append, METH_VARARGS | METH_KEYWORDS,
+		"Appends a string to the string value in a bin"},
+	{"prepend",
+		(PyCFunction) AerospikeClient_Prepend, METH_VARARGS | METH_KEYWORDS,
+		"Prepend a record to the database"},
+	{"touch",
+		(PyCFunction) AerospikeClient_Touch, METH_VARARGS | METH_KEYWORDS,
+		"Touch a record in the database"},
+	{"increment",
+		(PyCFunction) AerospikeClient_Increment, METH_VARARGS | METH_KEYWORDS,
+		"Increments a numeric value in a bin"},
+	{"operate",
+		(PyCFunction) AerospikeClient_Operate, METH_VARARGS | METH_KEYWORDS,
+		"Performs operate operation"},
 
 	// Deprecated key-based API
 
@@ -361,7 +376,6 @@ PyTypeObject * AerospikeClient_Ready()
 AerospikeClient * AerospikeClient_New(PyObject * parent, PyObject * args, PyObject * kwds)
 {
 	AerospikeClient * self = (AerospikeClient *) AerospikeClient_Type.tp_new(&AerospikeClient_Type, args, kwds);
-
 	if ( AerospikeClient_Type.tp_init((PyObject *) self, args, kwds) == 0 ){
 		// Initialize connection flag
 		self->is_conn_16 = false;
@@ -377,6 +391,4 @@ AerospikeClient * AerospikeClient_New(PyObject * parent, PyObject * args, PyObje
 		Py_DECREF(py_err);
 		return NULL;
 	}
-	/*AerospikeClient_Type.tp_init((PyObject *) self, args, kwds);
-	  return self;*/
 }
