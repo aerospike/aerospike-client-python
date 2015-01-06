@@ -119,7 +119,7 @@ static bool AerospikeClient_Info_each(const as_error * err, const as_node * node
 	return true;
 }
 
-PyObject * AerospikeClient_InfoMany(AerospikeClient * self, PyObject * args, PyObject * kwds)
+PyObject * AerospikeClient_Info(AerospikeClient * self, PyObject * args, PyObject * kwds)
 {
 	PyObject * py_req = NULL;
 	PyObject * py_policy = NULL;
@@ -129,7 +129,7 @@ PyObject * AerospikeClient_InfoMany(AerospikeClient * self, PyObject * args, PyO
 
 	static char * kwlist[] = {"req", "config", "policy", NULL};
 
-	if ( PyArg_ParseTupleAndKeywords(args, kwds, "O|OO:info_many", kwlist, &py_req, &py_config, &py_policy) == false ) {
+	if ( PyArg_ParseTupleAndKeywords(args, kwds, "O|OO:info", kwlist, &py_req, &py_config, &py_policy) == false ) {
 		return NULL;
 	}
 

@@ -123,10 +123,15 @@ static PyMethodDef AerospikeClient_Type_Methods[] = {
 		"Gets Scan Info."},
 
 	// INFO OPERATIONS
-
-	{"info_many",
-		(PyCFunction) AerospikeClient_InfoMany, METH_VARARGS | METH_KEYWORDS,
+	{"info",
+		(PyCFunction) AerospikeClient_Info, METH_VARARGS | METH_KEYWORDS,
 		"Send an info request to the cluster."},
+	{"info_node",
+		(PyCFunction) AerospikeClient_InfoNode, METH_VARARGS | METH_KEYWORDS,
+		"Send an info request to the cluster."},
+	{"get_nodes",
+		(PyCFunction) AerospikeClient_GetNodes, METH_VARARGS | METH_KEYWORDS,
+		"Gets information about the nodes of the cluster."},
 
 	// UDF OPERATIONS
 
