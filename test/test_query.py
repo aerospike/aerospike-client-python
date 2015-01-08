@@ -79,10 +79,10 @@ class TestQuery(object):
         query.where(p.equals('test_age', 1))
 
         records = []
-        def print_result((key,metadata,record)):
+        def callback((key,metadata,record)):
             records.append(key)
 
-        query.foreach(print_result)
+        query.foreach(callback)
         assert records
         assert len(records) == 1
 
@@ -94,10 +94,10 @@ class TestQuery(object):
             query = TestQuery.client.query('test1', 'demo1')
             query.select('name', 'test_age')
             query.where(p.equals('test_age', 1))
-            def print_result((key,metadata,record)):
+            def callback((key,metadata,record)):
                 assert metadata['gen'] != None
 
-            query.foreach(print_result)
+            query.foreach(callback)
 
         assert exception.value[0] == 4L
         assert exception.value[1] == 'AEROSPIKE_ERR_REQUEST_INVALID'
@@ -110,10 +110,10 @@ class TestQuery(object):
         query.select('name1', 'age1')
         query.where(p.equals('age1', 1))
         records = []
-        def print_result((key,metadata,record)):
+        def callback((key,metadata,record)):
             records.append(record)
 
-        query.foreach(print_result)
+        query.foreach(callback)
         assert len(records) == 0
 
     def test_query_without_callback_parameter(self):
@@ -123,7 +123,7 @@ class TestQuery(object):
         query = TestQuery.client.query('test', 'demo')
         query.select('name', 'test_age')
         query.where(p.equals('test_age', 1))
-        def print_result((key,metadata,record)):
+        def callback((key,metadata,record)):
             assert metadata['gen'] != None
 
         with pytest.raises(TypeError) as typeError:
@@ -139,10 +139,10 @@ class TestQuery(object):
             query = TestQuery.client.query('test', 'demo')
             query.select('name', 'no')
             query.where(p.equals('no', 1))
-            def print_result((key,metadata,record)):
+            def callback((key,metadata,record)):
                 assert metadata['gen'] != None
 
-            query.foreach(print_result)
+            query.foreach(callback)
 
         assert exception.value[0] == 201L
         assert exception.value[1] == 'AEROSPIKE_ERR_INDEX_NOT_FOUND'
@@ -155,10 +155,10 @@ class TestQuery(object):
         query.select('name', 'test_age')
         query.where(p.equals('test_age', 165))
         records = []
-        def print_result((key,metadata,record)):
+        def callback((key,metadata,record)):
             records.append(record)
 
-        query.foreach(print_result)
+        query.foreach(callback)
         assert len(records) == 0
 
     def test_query_with_where_none_value(self):
@@ -184,10 +184,10 @@ class TestQuery(object):
         query.select('name', 'test_age')
         query.where(p.equals('test_age', 1))
         records = []
-        def print_result((key,metadata,record)):
+        def callback((key,metadata,record)):
             records.append(record)
 
-        query.foreach(print_result, policy)
+        query.foreach(callback, policy)
         assert len(records) == 1
 
     def test_query_with_extra_argument(self):
@@ -200,11 +200,11 @@ class TestQuery(object):
         query = TestQuery.client.query('test', 'demo')
         query.select('name', 'test_age')
         query.where(p.equals('test_age', 1))
-        def print_result((key,metadata,record)):
+        def callback((key,metadata,record)):
             assert metadata['gen'] != None
 
         with pytest.raises(TypeError) as typeError:
-            query.foreach(print_result, policy, "")
+            query.foreach(callback, policy, "")
 
         assert "foreach() takes at most 2 arguments (3 given)" in typeError.value
 
@@ -218,11 +218,11 @@ class TestQuery(object):
         query = TestQuery.client.query('test', 'demo')
         query.select('name', 'test_age')
         query.where(p.equals('test_age', 1))
-        def print_result((key,metadata,record)):
+        def callback((key,metadata,record)):
             assert metadata['gen'] != None
 
         with pytest.raises(Exception) as exception:
-            query.foreach(print_result, policy)
+            query.foreach(callback, policy)
 
         assert exception.value[0] == -2L
         assert exception.value[1] == 'timeout is invalid'
@@ -238,7 +238,7 @@ class TestQuery(object):
         query.select('name', 'test_age')
         query.where(p.equals('test_age', 1))
         records = []
-        def print_result((key,metadata,record)):
+        def callback((key,metadata,record)):
             records.append(record)
             key = ('test', 'demo', 'put_in_callback')
             rec = {
@@ -247,7 +247,7 @@ class TestQuery(object):
                     }
             TestQuery.client.put(key, rec)
 
-        query.foreach(print_result, policy)
+        query.foreach(callback, policy)
 
         key = ('test', 'demo', 'put_in_callback')
         key1, meta, bins = TestQuery.client.get( key )
@@ -265,10 +265,10 @@ class TestQuery(object):
         query.where(p.between('test_age', 1, 4))
 
         records = []
-        def print_result((key,metadata,record)):
+        def callback((key,metadata,record)):
             records.append(record)
 
-        query.foreach(print_result)
+        query.foreach(callback)
         assert len(records) == 4
     
     def test_query_with_where_is_null(self):
@@ -290,11 +290,11 @@ class TestQuery(object):
         query.where(p.equals('test_age', 1))
 
         records = []
-        def print_result((key,metadata,record)):
+        def callback((key,metadata,record)):
             val += 1
             records.append(key)
 
-        result = query.foreach(print_result)
+        result = query.foreach(callback)
         assert len(records) == 0
 
     def test_query_with_callback_returning_false(self):
@@ -303,12 +303,13 @@ class TestQuery(object):
         """
         query = TestQuery.client.query('test', 'demo')
         query.select('name', 'test_age')
-        query.where(p.equals('test_age', 1))
+        query.where(p.between('test_age', 1, 5))
 
         records = []
-        def print_result((key,metadata,record)):
+        def callback((key,metadata,record)):
+            if len(records) == 2:
+                return False
             records.append(key)
-            return False
 
-        result = query.foreach(print_result)
-        assert len(records) == 1
+        result = query.foreach(callback)
+        assert len(records) == 2

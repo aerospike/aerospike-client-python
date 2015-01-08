@@ -100,10 +100,10 @@ class TestAggregate(object):
             query.apply('stream_example', 'count');
 
             result = None
-            def print_result(value):
+            def user_callback(value):
                 result = value
 
-            query.foreach(print_result)
+            query.foreach(user_callback)
         assert exception.value[0] == 201L
         assert exception.value[1] == 'AEROSPIKE_ERR_INDEX_NOT_FOUND'
 
@@ -117,10 +117,10 @@ class TestAggregate(object):
             query.where(p.equals('test_age', 1))
             query.apply('stream_example', 'count')
             result = 1
-            def print_result(value):
+            def user_callback(value):
                 result = value
 
-            query.foreach(print_result)
+            query.foreach(user_callback)
 
         assert exception.value[0] == 4L
         assert exception.value[1] == 'AEROSPIKE_ERR_REQUEST_INVALID'
@@ -134,10 +134,10 @@ class TestAggregate(object):
         query.where(p.equals('test_age', 165))
         query.apply('stream_example', 'count')
         records = []
-        def print_result(value):
+        def user_callback(value):
             records.append(value)
 
-        query.foreach(print_result)
+        query.foreach(user_callback)
         assert records == []
 
     def test_aggregate_with_where_none_value(self):
@@ -150,10 +150,10 @@ class TestAggregate(object):
             query.where(p.equals('test_age', None))
             query.apply('stream_example', 'count')
             result = 1
-            def print_result(value):
+            def user_callback(value):
                 result = value
 
-            query.foreach(print_result)
+            query.foreach(user_callback)
 
         assert exception.value[0] == -2L
         assert exception.value[1] == 'predicate is invalid.'
@@ -167,10 +167,10 @@ class TestAggregate(object):
         query.where(p.between('test_age', True, True))
         query.apply('stream_example', 'count')
         records = []
-        def print_result(value):
+        def user_callback(value):
             records.append(value)
 
-        query.foreach(print_result)
+        query.foreach(user_callback)
         assert records[0] == 1
 
     def test_aggregate_with_where_equals_value(self):
@@ -182,10 +182,10 @@ class TestAggregate(object):
         query.where(p.equals('test_age', 2))
         query.apply('stream_example', 'count')
         records = []
-        def print_result(value):
+        def user_callback(value):
             records.append(value)
 
-        query.foreach(print_result)
+        query.foreach(user_callback)
         assert records[0] == 1
 
     def test_aggregate_with_empty_module_function(self):
@@ -198,10 +198,10 @@ class TestAggregate(object):
         query.apply('', '')
 
         result = None
-        def print_result(value):
+        def user_callback(value):
             result = value
 
-        query.foreach(print_result)
+        query.foreach(user_callback)
         assert result == None
 
     def test_aggregate_with_incorrect_module(self):
@@ -215,10 +215,10 @@ class TestAggregate(object):
             query.apply('streamwrong', 'count')
 
             result = None
-            def print_result(value):
+            def user_callback(value):
                 result = value
 
-            query.foreach(print_result)
+            query.foreach(user_callback)
 
         assert exception.value[0] == 1L
         assert exception.value[1] == 'AEROSPIKE_ERR_SERVER : "UDF: Execution Error 1"'
@@ -234,10 +234,10 @@ class TestAggregate(object):
             query.apply('stream_example', 'countno')
 
             records = []
-            def print_result(value):
+            def user_callback(value):
                 records.append(value)
 
-            query.foreach(print_result)
+            query.foreach(user_callback)
         assert exception.value[0] == 1L
         assert exception.value[1] == 'AEROSPIKE_ERR_SERVER : "UDF: Execution Error 2 : function not found"'
 
@@ -251,10 +251,10 @@ class TestAggregate(object):
         query.apply('stream_example', 'count')
 
         records = []
-        def print_result(value):
+        def user_callback(value):
             records.append(value)
 
-        query.foreach(print_result)
+        query.foreach(user_callback)
         assert records[0] == 4
 
     def test_aggregate_with_policy(self):
@@ -270,10 +270,10 @@ class TestAggregate(object):
         query.apply('stream_example', 'count')
 
         records = []
-        def print_result(value):
+        def user_callback(value):
             records.append(value)
 
-        query.foreach(print_result, policy)
+        query.foreach(user_callback, policy)
         assert records[0] == 4
 
     def test_aggregate_with_extra_parameter(self):
@@ -291,10 +291,10 @@ class TestAggregate(object):
             query.apply('stream_example', 'count')
 
             result = None
-            def print_result(value):
+            def user_callback(value):
                 result = value
 
-            query.foreach(print_result, policy, "")
+            query.foreach(user_callback, policy, "")
 
         assert "foreach() takes at most 2 arguments (3 given)" in typeError.value
 
@@ -309,10 +309,10 @@ class TestAggregate(object):
         query.apply('stream_example', 'count', [stream])
 
         records = []
-        def print_result(value):
+        def user_callback(value):
             records.append(value)
 
-        query.foreach(print_result)
+        query.foreach(user_callback)
         assert records[0] == 4
 
     def test_aggregate_with_extra_parameter_in_lua(self):
@@ -325,10 +325,10 @@ class TestAggregate(object):
         query.apply('stream_example', 'count_extra')
 
         records = []
-        def print_result(value):
+        def user_callback(value):
             records.append(value)
 
-        query.foreach(print_result)
+        query.foreach(user_callback)
         assert records[0] == 4
 
     def test_aggregate_with_less_parameter_in_lua(self):
@@ -342,9 +342,9 @@ class TestAggregate(object):
             query.apply('stream_example', 'count_less')
 
             records = []
-            def print_result(value):
+            def user_callback(value):
                 records.append(value)
 
-            query.foreach(print_result)
+            query.foreach(user_callback)
 
         assert exception.value[0] == 1L
