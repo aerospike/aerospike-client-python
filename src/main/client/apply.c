@@ -48,6 +48,18 @@ PyObject * AerospikeClient_Apply_Invoke(
 	// Initialize error
 	as_error_init(&err);
 
+	if( !PyList_Check(py_arglist) ){
+		PyErr_SetString(PyExc_TypeError, "expected UDF method arguments in a 'list'");
+		return NULL;
+	}
+	if( !PyString_Check(py_module) ){
+		PyErr_SetString(PyExc_TypeError, "expected 'str' type module name");
+		return NULL;
+	}
+	if( !PyString_Check(py_function) ){
+		PyErr_SetString(PyExc_TypeError, "expected 'str' type UDF method name");
+		return NULL;
+	}
 	if (!self || !self->as) {
 		as_error_update(&err, AEROSPIKE_ERR_PARAM, "Invalid aerospike object");
 		goto CLEANUP;
