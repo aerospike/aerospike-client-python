@@ -17,8 +17,9 @@ def digest_only(key):
     return (key[0], key[1], None, key[3])
 
 class KVTestCase(unittest.TestCase, TestBaseClass):
+
     def setup_class(cls):
-        hostlist, user, password = TestBaseClass.get_hosts()
+        KVTestCase.hostlist, KVTestCase.user, KVTestCase.password = TestBaseClass.get_hosts()
 
     def setUp(self):
         config = {

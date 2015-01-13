@@ -370,7 +370,9 @@ class TestGet(TestBaseClass):
                 }
 
         policy = {
-                'key' : aerospike.POLICY_KEY_SEND
+                'key' : aerospike.POLICY_KEY_SEND,
+                'replica': aerospike.POLICY_REPLICA_ANY,
+                'consistency': aerospike.POLICY_CONSISTENCY_ONE
                 }
 
         status = TestGet.client.put(key, rec, policy)

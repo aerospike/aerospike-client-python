@@ -18,6 +18,7 @@
 from __future__ import print_function
 
 import aerospike
+import traceback
 import random
 import signal
 import sys
@@ -248,34 +249,36 @@ try:
 
         # run the operatons
         for op in operation(r, w):
+            try:
+                key = (options.namespace, options.set, keys[random.randint(0,k-1)])
 
-            key = (options.namespace, options.set, keys[random.randint(0,k)])
+                if op == READ_OP:
+                    print('[READ] ', key) if options.verbose else 0
+                    result = client.exists(key)
+                    count += 1
 
-            if op == READ_OP:
-                print('[READ] ', key) if options.verbose else 0
-                result = client.exists(key)
-                count += 1
+                elif op == WRITE_OP:
+                    print('[WRITE]', key) if options.verbose else 0
+                    rec = {
+                            'key': key[2]
+                    }
+                    client.put(key, rec)
+                    count += 1
 
-            elif op == WRITE_OP:
-                print('[WRITE]', key) if options.verbose else 0
-                rec = {
-                    'key': key[2]
-                }
-                client.put(key, rec)
-                count += 1
+                if options.heap_interval > 0 and (count % options.heap_interval) == 0:
+                    print("HEAP@{0}: {1}".format(count, heapy.heap()))
 
-            if options.heap_interval > 0 and (count % options.heap_interval) == 0:
-                print("HEAP@{0}: {1}".format(count, heapy.heap()))
+            except Exception, eargs:
+                traceback.print_exc()
+                print("error: {0}".format(eargs), file=sys.stderr)
+                continue
 
     except KeyboardInterrupt:
         total_summary()
-    except Exception, eargs:
-        print("error: {0}".format(eargs), file=sys.stderr)
-        sys.exit(2)
 
 except Exception, eargs:
     print("error: {0}".format(eargs), file=sys.stderr)
-    sys.exit(3)
+    #sys.exit(3)
 
 ################################################################################
 # Exit

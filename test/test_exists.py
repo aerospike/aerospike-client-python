@@ -144,6 +144,8 @@ class TestExists(TestBaseClass):
         key = ('test', 'demo', 1)
         policy = {
             'timeout' : 1000,
+            'replica': aerospike.POLICY_REPLICA_MASTER,
+            'consistency': aerospike.POLICY_CONSISTENCY_ONE
         }
 
         key, meta = TestExists.client.exists( key, policy )

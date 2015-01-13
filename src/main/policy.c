@@ -83,7 +83,13 @@ AerospikeConstants aerospike_constants[] = {
     { AS_SCAN_STATUS_COMPLETED             ,   "SCAN_STATUS_COMPLETED" },
     { AS_SCAN_STATUS_ABORTED               ,   "SCAN_STATUS_ABORTED" },
     { AS_SCAN_STATUS_UNDEF                 ,   "SCAN_STATUS_UNDEF" },
-    { AS_SCAN_STATUS_INPROGRESS            ,   "SCAN_STATUS_INPROGRESS" }
+    { AS_SCAN_STATUS_INPROGRESS            ,   "SCAN_STATUS_INPROGRESS" },
+	{ AS_POLICY_REPLICA_MASTER             ,   "POLICY_REPLICA_MASTER" },
+    { AS_POLICY_REPLICA_ANY                 ,   "POLICY_REPLICA_ANY" },
+    { AS_POLICY_CONSISTENCY_LEVEL_ONE       ,   "POLICY_CONSISTENCY_ONE" },
+    { AS_POLICY_CONSISTENCY_LEVEL_ALL       ,   "POLICY_CONSISTENCY_ALL" },
+    { AS_POLICY_COMMIT_LEVEL_ALL            ,   "POLICY_COMMIT_LEVEL_ALL" },
+    { AS_POLICY_COMMIT_LEVEL_MASTER         ,   "POLICY_COMMIT_LEVEL_MASTER" }
 };
 
 /**
@@ -296,6 +302,8 @@ as_status pyobject_to_policy_read(as_error * err, PyObject * py_policy,
 	// Set policy fields
 	POLICY_SET_FIELD(timeout, uint32_t);
 	POLICY_SET_FIELD(key, as_policy_key);
+	POLICY_SET_FIELD(consistency_level, as_policy_consistency_level);
+	POLICY_SET_FIELD(replica, as_policy_replica);
 
 	// Update the policy
 	POLICY_UPDATE();
@@ -322,6 +330,7 @@ as_status pyobject_to_policy_remove(as_error * err, PyObject * py_policy,
 	POLICY_SET_FIELD(retry, as_policy_retry);
 	POLICY_SET_FIELD(key, as_policy_key);
 	POLICY_SET_FIELD(gen, as_policy_gen);
+	POLICY_SET_FIELD(commit_level, as_policy_commit_level);
 
 	// Update the policy
 	POLICY_UPDATE();
@@ -371,6 +380,7 @@ as_status pyobject_to_policy_write(as_error * err, PyObject * py_policy,
 	POLICY_SET_FIELD(key, as_policy_key);
 	POLICY_SET_FIELD(gen, as_policy_gen);
 	POLICY_SET_FIELD(exists, as_policy_exists);
+	POLICY_SET_FIELD(commit_level, as_policy_commit_level);
 
 	// Update the policy
 	POLICY_UPDATE();
@@ -396,6 +406,9 @@ as_status pyobject_to_policy_operate(as_error * err, PyObject * py_policy,
 	POLICY_SET_FIELD(retry, as_policy_retry);
 	POLICY_SET_FIELD(key, as_policy_key);
 	POLICY_SET_FIELD(gen, as_policy_gen);
+	POLICY_SET_FIELD(commit_level, as_policy_commit_level);
+	POLICY_SET_FIELD(consistency_level, as_policy_consistency_level);
+	POLICY_SET_FIELD(replica, as_policy_replica);
 
 	// Update the policy
 	POLICY_UPDATE();
