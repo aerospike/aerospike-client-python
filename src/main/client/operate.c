@@ -263,6 +263,9 @@ PyObject * AerospikeClient_Append(AerospikeClient * self, PyObject * args, PyObj
 	as_policy_operate *operate_policy_p = NULL;
 	as_key key;
 
+	// Initialisation flags
+	bool key_initialised = false;
+
 	// Python Function Keyword Arguments
 	static char * kwlist[] = {"key", "bin", "val", "meta", "policy", NULL};
 
@@ -289,6 +292,8 @@ PyObject * AerospikeClient_Append(AerospikeClient * self, PyObject * args, PyObj
 	} else {
 		Py_DECREF(py_result);
 	}
+	// Key is initialised successfully.
+	key_initialised = true;
 
 	py_result = AerospikeClient_Operate_Invoke(self, &key, py_bin, append_str,
 			&err, 0, 0, 0, AS_OPERATOR_APPEND, &ops);
@@ -308,6 +313,12 @@ PyObject * AerospikeClient_Append(AerospikeClient * self, PyObject * args, PyObj
 		goto CLEANUP;
 
 CLEANUP:
+
+	if (key_initialised == true){
+		// Destroy the key if it is initiliased.
+		as_key_destroy(&key);
+	}
+
 	if ( err.code != AEROSPIKE_OK ) {
 		PyObject * py_err = NULL;
 		error_to_pyobject(&err, &py_err);
@@ -351,6 +362,9 @@ PyObject * AerospikeClient_Prepend(AerospikeClient * self, PyObject * args, PyOb
 	as_policy_operate *operate_policy_p = NULL;
 	as_key key;
 
+	// Initialisation flags
+	bool key_initialised = false;
+
 	as_operations_inita(&ops, 1);
 
 	// Python Function Keyword Arguments
@@ -377,6 +391,8 @@ PyObject * AerospikeClient_Prepend(AerospikeClient * self, PyObject * args, PyOb
 	} else {
 		Py_DECREF(py_result);
 	}
+	// key is initialised successfully
+	key_initialised = true;
 
 	py_result = AerospikeClient_Operate_Invoke(self, &key, py_bin, prepend_str,
 			&err, 0, 0, 0, AS_OPERATOR_PREPEND, &ops);
@@ -394,6 +410,12 @@ PyObject * AerospikeClient_Prepend(AerospikeClient * self, PyObject * args, PyOb
 	}
 
 CLEANUP:
+
+	if (key_initialised == true){
+		// Destroy the key if it is initialised.
+		as_key_destroy(&key);
+	}
+
 	if ( err.code != AEROSPIKE_OK ) {
 		PyObject * py_err = NULL;
 		error_to_pyobject(&err, &py_err);
@@ -438,6 +460,10 @@ PyObject * AerospikeClient_Increment(AerospikeClient * self, PyObject * args, Py
 
 	long offset_val = 0;
 	long initial_val = 0;
+
+	// Initialisation flags
+	bool key_initialised = false;
+
 	as_operations_inita(&ops, 1);
 
 	// Python Function Keyword Arguments
@@ -465,6 +491,8 @@ PyObject * AerospikeClient_Increment(AerospikeClient * self, PyObject * args, Py
 	} else {
 		Py_DECREF(py_result);
 	}
+	// Key initialisation is successful
+	key_initialised = true;
 
 	py_result = AerospikeClient_Operate_Invoke(self, &key, py_bin, NULL,
 			&err, 0, initial_val, offset_val, AS_OPERATOR_INCR, &ops);
@@ -482,6 +510,12 @@ PyObject * AerospikeClient_Increment(AerospikeClient * self, PyObject * args, Py
 	}
 
 CLEANUP:
+
+	if (key_initialised == true){
+		// Destroy the key if it is initialised successfully.
+		as_key_destroy(&key);
+	}
+
 	if ( err.code != AEROSPIKE_OK ) {
 		PyObject * py_err = NULL;
 		error_to_pyobject(&err, &py_err);
@@ -523,6 +557,9 @@ PyObject * AerospikeClient_Touch(AerospikeClient * self, PyObject * args, PyObje
 	as_policy_operate *operate_policy_p = NULL;
 	uint64_t touchvalue = 0;
 
+	// Initialisation flags
+	bool key_initialised = false;
+
 	as_operations_inita(&ops, 1);
 
 	// Python Function Keyword Arguments
@@ -549,6 +586,8 @@ PyObject * AerospikeClient_Touch(AerospikeClient * self, PyObject * args, PyObje
 	} else {
 		Py_DECREF(py_result);
 	}
+	// key is initialised successfully
+	key_initialised = true;
 
 	py_result = AerospikeClient_Operate_Invoke(self, &key, NULL, NULL,
 			&err, touchvalue, 0, 0, AS_OPERATOR_TOUCH, &ops);
@@ -566,6 +605,12 @@ PyObject * AerospikeClient_Touch(AerospikeClient * self, PyObject * args, PyObje
 	}
 
 CLEANUP:
+
+	if (key_initialised == true){
+		// Destroy the key if it is initialised successfully.
+		as_key_destroy(&key);
+	}
+
 	if ( err.code != AEROSPIKE_OK ) {
 		PyObject * py_err = NULL;
 		error_to_pyobject(&err, &py_err);
@@ -613,6 +658,9 @@ PyObject * AerospikeClient_Operate(AerospikeClient * self, PyObject * args, PyOb
 	char * str = NULL;
 	long offset;
 
+	// Initialisation flags
+	bool key_initialised = false;
+
 	// Initialize record
 	as_record_init(rec, 0);
 
@@ -637,6 +685,8 @@ PyObject * AerospikeClient_Operate(AerospikeClient * self, PyObject * args, PyOb
 	} else {
 		Py_DECREF(py_result);
 	}
+	// Key is initialised successfully
+	key_initialised = true;
 
 	if ( py_list != NULL && PyList_Check(py_list) ) {
 		Py_ssize_t size = PyList_Size(py_list);
@@ -703,6 +753,12 @@ PyObject * AerospikeClient_Operate(AerospikeClient * self, PyObject * args, PyOb
 		}
 	}
 CLEANUP:
+
+	if (key_initialised == true){
+		// Destroy the key if it is initialised successfully.
+		as_key_destroy(&key);
+	}
+
 	as_record_destroy(rec);
 	if ( err.code != AEROSPIKE_OK ) {
 		PyObject * py_err = NULL;
