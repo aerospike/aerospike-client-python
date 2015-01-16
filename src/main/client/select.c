@@ -42,6 +42,9 @@ PyObject * AerospikeClient_Select_Invoke(
 	as_record * rec = NULL;
 	char ** bins = NULL;
 
+	// Initialisation flags
+	bool key_initialised = false;
+
 	// Initialize error
 	as_error_init(&err);
 
@@ -55,7 +58,8 @@ PyObject * AerospikeClient_Select_Invoke(
 	if ( err.code != AEROSPIKE_OK ) {
 		goto CLEANUP;
 	}
-
+	// key is initialised successfully
+	key_initialised = true;
 
 	// Convert python bins list to char ** bins
 	if ( py_bins != NULL && PyList_Check(py_bins) ) {
@@ -124,7 +128,11 @@ PyObject * AerospikeClient_Select_Invoke(
 
 CLEANUP:
 
-	// as_key_destroy(&key);
+	if (key_initialised == true){
+		// Destroy the key if it is initialised successfully.
+		as_key_destroy(&key);
+	}
+
 	as_record_destroy(rec);
 
 	if ( err.code != AEROSPIKE_OK ) {
