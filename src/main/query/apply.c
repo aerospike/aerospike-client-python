@@ -94,6 +94,11 @@ AerospikeQuery * AerospikeQuery_Apply(AerospikeQuery * self, PyObject * args, Py
 
 CLEANUP:
 
+	if (arglist){
+		// Destroy the arglist and it's associated resources.
+		as_arraylist_destroy(arglist);
+	}
+
 	if ( err.code != AEROSPIKE_OK ) {
 		PyObject * py_err = NULL;
 		error_to_pyobject(&err, &py_err);
