@@ -31,6 +31,8 @@ from subprocess import call
 ################################################################################
 
 AEROSPIKE_C_VERSION = os.getenv('AEROSPIKE_C_VERSION')
+if not AEROSPIKE_C_VERSION:
+    AEROSPIKE_C_VERSION = '3.0.94'
 AEROSPIKE_C_HOME = os.getenv('AEROSPIKE_C_HOME')
 PREFIX = None
 PLATFORM =  platform.platform(1)
