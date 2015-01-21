@@ -497,9 +497,15 @@ as_status pyobject_to_key(as_error * err, PyObject * py_keytuple, as_key * key)
 	}
 
 	if ( py_key && py_key != Py_None ) {
-		if ( PyString_Check(py_key) ) {
+		if ( PyUnicode_Check(py_key) ) {
+			PyObject * py_ustr = PyUnicode_AsUTF8String(py_key);
+			char * k = PyString_AsString(py_ustr);
+			as_key_init_strp(key, ns, set, strdup(k), true);
+			Py_DECREF(py_ustr);
+		}
+		else if ( PyString_Check(py_key) ) {
 			char * k = PyString_AsString(py_key);
-			as_key_init_strp(key, ns, set, k, true);
+			as_key_init_strp(key, ns, set, k, false);
 		}
 		else if ( PyInt_Check(py_key) ) {
 			int64_t k = (int64_t) PyInt_AsLong(py_key);
@@ -508,12 +514,6 @@ as_status pyobject_to_key(as_error * err, PyObject * py_keytuple, as_key * key)
 		else if ( PyLong_Check(py_key) ) {
 			int64_t k = (int64_t) PyLong_AsLongLong(py_key);
 			as_key_init_int64(key, ns, set, k);
-		}
-		else if ( PyUnicode_Check(py_key) ) {
-			PyObject * py_ustr = PyUnicode_AsUTF8String(py_key);
-			char * k = PyString_AsString(py_ustr);
-			as_key_init_strp(key, ns, set, strdup(k), true);
-			Py_DECREF(py_ustr);
 		}
 		else if ( PyByteArray_Check(py_key) ) {
 			return as_error_update(err, AEROSPIKE_ERR_PARAM, "key as a byte array is not supported");
