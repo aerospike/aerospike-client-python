@@ -16,7 +16,7 @@ The Aerospike Python client depends on:
 -  Lua 5.1.5
 -  Python devel Package
 
-The Aerospike Python Client works on Python 2.6.\ *, 2.7.*
+The Aerospike Python Client works on Python 2.6.\ *, 2.7.* and not compatible with "from __future__" imports.
 
 RedHat 6+ and CentOS 6+
 ~~~~~~~~~~~~~~~~~~~~~~~
