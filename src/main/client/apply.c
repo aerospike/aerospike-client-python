@@ -45,9 +45,24 @@ PyObject * AerospikeClient_Apply_Invoke(
 	as_list * arglist = NULL;
 	as_val * result = NULL;
 
+	// Initialisation flags
+	bool key_initialised = false;
+
 	// Initialize error
 	as_error_init(&err);
 
+	if( !PyList_Check(py_arglist) ){
+		PyErr_SetString(PyExc_TypeError, "expected UDF method arguments in a 'list'");
+		return NULL;
+	}
+	if( !PyString_Check(py_module) ){
+		PyErr_SetString(PyExc_TypeError, "expected 'str' type module name");
+		return NULL;
+	}
+	if( !PyString_Check(py_function) ){
+		PyErr_SetString(PyExc_TypeError, "expected 'str' type UDF method name");
+		return NULL;
+	}
 	if (!self || !self->as) {
 		as_error_update(&err, AEROSPIKE_ERR_PARAM, "Invalid aerospike object");
 		goto CLEANUP;
@@ -58,6 +73,8 @@ PyObject * AerospikeClient_Apply_Invoke(
 	if ( err.code != AEROSPIKE_OK ) {
 		goto CLEANUP;
 	}
+	// Key is initialiased successfully
+	key_initialised = true;
 
 	// Convert python list to as_list
 	pyobject_to_list(&err, py_arglist, &arglist);
@@ -83,6 +100,10 @@ PyObject * AerospikeClient_Apply_Invoke(
 
 CLEANUP:
 
+	if (key_initialised == true){
+		// Destroy the key if it is initialised successfully.
+		as_key_destroy(&key);
+	}
 	as_list_destroy(arglist);
 	as_val_destroy(result);
 

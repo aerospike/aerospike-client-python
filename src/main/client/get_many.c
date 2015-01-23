@@ -88,6 +88,9 @@ PyObject * AerospikeClient_Get_Many_Invoke(
 	as_policy_batch policy;
 	as_policy_batch * batch_policy_p = NULL;
 
+	// Initialisation flags
+	bool batch_initialised = false;
+
 	// Initialize error
 	as_error_init(&err);
 
@@ -96,7 +99,9 @@ PyObject * AerospikeClient_Get_Many_Invoke(
 	if ( py_keys != NULL && PyList_Check(py_keys) ) {
 		Py_ssize_t size = PyList_Size(py_keys);
 
-		as_batch_inita(&batch, size);
+		as_batch_init(&batch, size);
+		// Batch object initialised
+		batch_initialised = true;
 
 		for ( int i = 0; i < size; i++ ) {
 
@@ -117,7 +122,9 @@ PyObject * AerospikeClient_Get_Many_Invoke(
 	else if ( py_keys != NULL && PyTuple_Check(py_keys) ) {
 		Py_ssize_t size = PyTuple_Size(py_keys);
 
-		as_batch_inita(&batch, size);
+		as_batch_init(&batch, size);
+		// Batch object initialised.
+		batch_initialised = true;
 
 		for ( int i = 0; i < size; i++ ) {
 			PyObject * py_key = PyTuple_GetItem(py_keys, i);
@@ -151,6 +158,13 @@ PyObject * AerospikeClient_Get_Many_Invoke(
 		py_recs);
 
 CLEANUP:
+
+	if (batch_initialised == true){
+		// We should destroy batch object as we are using 'as_batch_init' for initialisation
+		// Also, pyobject_to_key is soing strdup() in case of Unicode. So, object destruction
+		// is necessary.
+		as_batch_destroy(&batch);
+	}
 
 	if ( err.code != AEROSPIKE_OK ) {
 		PyObject * py_err = NULL;

@@ -66,8 +66,8 @@ class TestScan(object):
         with pytest.raises(Exception) as exception:
             scan_obj.foreach(callback)
 
-        assert exception.value[0] == 1
-        assert exception.value[1] == 'AEROSPIKE_ERR_SERVER'
+        assert exception.value[0] == 20L
+        assert exception.value[1] == 'AEROSPIKE_ERR_NAMESPACE_NOT_FOUND'
 
     def test_scan_with_none_ns_and_set(self):
 
@@ -145,11 +145,12 @@ class TestScan(object):
         records = []
 
         def callback( (key, meta, bins) ):
+            if len(records) == 10:
+                return False
             records.append(bins)
-            return False
 
         scan_obj = self.client.scan(ns, st)
 
         scan_obj.foreach(callback, { 'timeout' : 1000 })
 
-        assert len(records) == 1
+        assert len(records) == 10
