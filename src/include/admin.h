@@ -75,14 +75,6 @@ PyObject * AerospikeClient_Admin_Grant_Roles(AerospikeClient *self, PyObject *ar
 PyObject * AerospikeClient_Admin_Revoke_Roles(AerospikeClient *self, PyObject *args, PyObject *kwds);
 
 /**
- * Replace the current roles by the new roles specified, for an existing user.
- *
- *		client.admin_replace_roles(policy, user, roles, roles_size)
- *
- */
-PyObject * AerospikeClient_Admin_Replace_Roles(AerospikeClient *self, PyObject *args, PyObject *kwds);
-
-/**
  * Retrieve the roles of an existing user.
  *
  *		client.admin_query_user(policy, user)

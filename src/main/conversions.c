@@ -109,67 +109,67 @@ as_status strArray_to_pyobject( as_error * err, char str_array_ptr[][AS_ROLE_SIZ
 	return err->code;
 }
 
-as_status as_user_roles_array_to_pyobject( as_error *err, as_user_roles **user_roles, PyObject **py_as_user_roles, int users )
+as_status as_user_array_to_pyobject( as_error *err, as_user **users, PyObject **py_as_users, int users_size )
 {
 	as_error_reset(err);
 	int i;
-	*py_as_user_roles = PyList_New(0);
+	*py_as_users = PyList_New(0);
 
-	for(i = 0; i < users; i++) {
+	for(i = 0; i < users_size; i++) {
 
-		PyObject * py_user = PyString_FromString(user_roles[i]->user);
-		PyObject * py_roles_size = PyInt_FromLong(user_roles[i]->roles_size);
+		PyObject * py_user = PyString_FromString(users[i]->user);
+		PyObject * py_roles_size = PyInt_FromLong(users[i]->roles_size);
 		PyObject * py_roles;
-		strArray_to_pyobject(err, user_roles[i]->roles, &py_roles, user_roles[i]->roles_size);
+		strArray_to_pyobject(err, users[i]->roles, &py_roles, users[i]->roles_size);
 		if( err->code != AEROSPIKE_OK) {
 			break;
 		}
 
-		PyObject * py_user_roles = PyDict_New();
-		PyDict_SetItemString(py_user_roles, "user", py_user);
-		PyDict_SetItemString(py_user_roles, "roles_size", py_roles_size);
-		PyDict_SetItemString(py_user_roles, "roles", py_roles);
+		PyObject * py_users = PyDict_New();
+		PyDict_SetItemString(py_users, "user", py_user);
+		PyDict_SetItemString(py_users, "roles_size", py_roles_size);
+		PyDict_SetItemString(py_users, "roles", py_roles);
 
 		Py_DECREF(py_user);
 		Py_DECREF(py_roles_size);
 		Py_DECREF(py_roles);
 
-		PyList_Append(*py_as_user_roles, py_user_roles);
+		PyList_Append(*py_as_users, py_users);
 
-		Py_DECREF(py_user_roles);
+		Py_DECREF(py_users);
 	}
 
 	return err->code;
 }
 
 
-as_status as_user_roles_to_pyobject( as_error * err, as_user_roles * user_roles, PyObject ** py_as_user_roles )
+as_status as_user_to_pyobject( as_error * err, as_user * user, PyObject ** py_as_user )
 {
 	as_error_reset(err);
 
-	PyObject * py_user = PyString_FromString(user_roles->user);
-	PyObject * py_roles_size = PyInt_FromLong(user_roles->roles_size);
+	PyObject * py_user = PyString_FromString(user->user);
+	PyObject * py_roles_size = PyInt_FromLong(user->roles_size);
 	PyObject * py_roles;
 
-	strArray_to_pyobject(err, user_roles->roles, &py_roles, user_roles->roles_size);
+	strArray_to_pyobject(err, user->roles, &py_roles, user->roles_size);
 	if( err->code != AEROSPIKE_OK) {
 		goto END;
 	}
 
-	PyObject * py_user_roles = PyDict_New();
+	PyObject * py_user = PyDict_New();
 
-	PyDict_SetItemString(py_user_roles, "user", py_user);
-	PyDict_SetItemString(py_user_roles, "roles_size", py_roles_size);
-	PyDict_SetItemString(py_user_roles, "roles", py_roles);
+	PyDict_SetItemString(py_user, "user", py_user);
+	PyDict_SetItemString(py_user, "roles_size", py_roles_size);
+	PyDict_SetItemString(py_user, "roles", py_roles);
 
 	Py_DECREF(py_user);
 	Py_DECREF(py_roles_size);
 	Py_DECREF(py_roles);
 
-	*py_as_user_roles = PyList_New(0);
-	PyList_Append(*py_as_user_roles, py_user_roles);
+	*py_as_user = PyList_New(0);
+	PyList_Append(*py_as_user, py_user);
 
-	Py_DECREF(py_user_roles);
+	Py_DECREF(py_user);
 
 END:
 	return err->code;
