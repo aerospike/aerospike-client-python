@@ -24,6 +24,7 @@
 #include <aerospike/as_error.h>
 #include <aerospike/as_record.h>
 #include <aerospike/as_udf.h>
+#include <aerospike/as_operations.h>
 
 #include "key.h"
 
@@ -67,3 +68,5 @@ as_status metadata_to_pyobject(as_error * err, const as_record * rec, PyObject *
 as_status bins_to_pyobject(as_error * err, const as_record * rec, PyObject ** obj);
 
 bool error_to_pyobject(const as_error * err, PyObject ** obj);
+
+as_status pyobject_to_astype_write(as_error * err, char *bin_name,  PyObject * py_value, as_val **val, as_operations * ops);
