@@ -71,7 +71,6 @@ class TestOperate(object):
 
         key, meta, bins = TestOperate.client.operate(key, list)
 
-
         assert bins == { 'name': 'ramname1'}
 
     def test_operate_with_correct_policy_positive(self):
@@ -143,7 +142,6 @@ class TestOperate(object):
                 ]
 
         key, meta, bins = TestOperate.client.operate(key, list, {}, policy)
-
 
         assert bins == { 'name': 'name1aa'}
         assert key == ('test', 'demo', None,
@@ -225,7 +223,6 @@ class TestOperate(object):
                 ]
 
         (key, meta, bins) = TestOperate.client.operate(key, list, meta, policy)
-
 
         assert bins == { 'name': 'name1aa'}
         assert key == ('test', 'demo', 1,
@@ -357,7 +354,6 @@ class TestOperate(object):
 
         (key, meta, bins) = TestOperate.client.operate(key, list, meta, policy)
 
-
         assert bins == { 'name': 'name1aa'}
         assert key == ('test', 'demo', 1,
                 bytearray(b'\xb7\xf4\xb88\x89\xe2\xdag\xdeh>\x1d\xf6\x91\x9a\x1e\xac\xc4F\xc8'))
@@ -446,7 +442,6 @@ class TestOperate(object):
                     }
                 ]
         key, meta, bins = TestOperate.client.operate(key1, list)
-
 
         assert bins == { 'loc' : 'mumbai'}
         TestOperate.client.remove(key1)
@@ -548,3 +543,121 @@ class TestOperate(object):
         assert exception.value[0] == -2
         assert exception.value[1] == "key is invalid"
 
+    def test_operate_append_withot_value_parameter_negative(self):
+        """
+        Invoke operate() with append operation and append val is not given
+        """
+        key = ('test', 'demo', 1)
+        policy = {
+            'timeout': 1000
+        }
+
+        list = [
+                {
+                    "op" : aerospike.OPERATOR_APPEND,
+                    "bin" : "name"
+                    },
+                {
+                    "op" : aerospike.OPERATOR_INCR,
+                    "bin" : "age",
+                    "val" : 3
+                    }
+                ]
+
+        with pytest.raises(Exception) as exception:
+            TestOperate.client.operate(key, list, {}, policy)
+
+        assert exception.value[0] == -2
+        assert exception.value[1] == "Value should be given"
+
+    def test_operate_with_extra_parameter_negative(self):
+        """
+        Invoke operate() with more than 3 parameters given
+        """
+        key = ('test', 'demo', 1)
+        policy = {
+            'timeout': 1000
+        }
+
+        list = [
+                {
+                    "op" : aerospike.OPERATOR_APPEND,
+                    "bin" : "name",
+                    "val" : 3,
+                    "aa" : 89
+                    },
+                ]
+
+        with pytest.raises(Exception) as exception:
+            TestOperate.client.operate(key, list, {}, policy)
+
+        assert exception.value[0] == -2
+        assert exception.value[1] == "operation can contain only op, bin and val keys"
+
+    def test_operate_append_value_integer_negative(self):
+        """
+        Invoke operate() with append value is of type integer
+        """
+        key = ('test', 'demo', 1)
+        list = [
+                {
+                    "op" : aerospike.OPERATOR_APPEND,
+                    "bin" : "name",
+                    "val" : 12
+                    },
+                {
+                    "op" : aerospike.OPERATOR_INCR,
+                    "bin" : "age",
+                    "val" : 3
+                    },
+                {
+                    "op" : aerospike.OPERATOR_READ,
+                    "bin" : "name"
+                    }
+                ]
+
+        with pytest.raises(TypeError) as typeError:
+            TestOperate.client.operate(key, list)
+        assert "Cannot concatenate 'str' and 'int' objects" in typeError.value
+
+    def test_operate_increment_value_string_negative(self):
+        """
+        Invoke operate() with increment value is of type string
+        """
+        key = ('test', 'demo', 1)
+        list = [
+                {
+                    "op" : aerospike.OPERATOR_INCR,
+                    "bin" : "age",
+                    "val" : "lllllll"
+                    },
+                {
+                    "op" : aerospike.OPERATOR_READ,
+                    "bin" : "name"
+                    }
+                ]
+
+        with pytest.raises(TypeError) as typeError:
+            TestOperate.client.operate(key, list)
+        assert "Unsupported operand type(s) for +: 'int' and 'str'" in typeError.value
+
+    def test_operate_with_write_positive(self):
+        """
+        Invoke operate() with write operation
+        """
+        key = ('test', 'demo', 1)
+        list = [
+                {
+                    "op" : aerospike.OPERATOR_WRITE,
+                    "bin" : "write_bin",
+                    "val" : {"no" : 89}
+                    },
+                {
+                    "op" : aerospike.OPERATOR_READ,
+                    "bin" : "write_bin"
+                    }
+                ]
+
+        key, meta, bins = TestOperate.client.operate(key, list)
+
+        assert bins == {'write_bin': {u'no': 89}}

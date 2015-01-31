@@ -311,7 +311,7 @@ class TestAppend(object):
         with pytest.raises(TypeError) as typeError:
             TestAppend.client.append(key, "name", 2)
 
-        assert "append() argument 3 must be string, not int" in typeError.value
+        assert "Cannot concatenate 'str' and 'int' objects" in typeError.value
 
     def test_append_with_extra_parameter(self):
         """
@@ -356,4 +356,24 @@ class TestAppend(object):
             TestAppend.client.append(key, None, "str")
 
         assert exception.value[0] == -2
-        assert exception.value[1] == "Bin should be a string"
+        assert exception.value[1] == "Bin name should be of type string"
+    
+    def test_append_unicode_value(self):
+        """
+        Invoke append() with unicode string
+        """
+        key = ('test', 'demo', 1)
+        res = TestAppend.client.append( key, "name", u"address")
+
+        key, meta, bins = TestAppend.client.get(key)
+        assert bins['name'] == 'name1address'
+    
+    def test_append_unicode_bin_name(self):
+        """
+        Invoke append() with unicode string
+        """
+        key = ('test', 'demo', 1)
+        res = TestAppend.client.append( key, u"add", u"address")
+
+        key, meta, bins = TestAppend.client.get(key)
+        assert bins['add'] == 'address'

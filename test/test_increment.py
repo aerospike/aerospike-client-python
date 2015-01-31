@@ -318,7 +318,7 @@ class TestIncrement(object):
         with pytest.raises(TypeError) as typeError:
             TestIncrement.client.increment(key, "age", "str")
 
-        assert "an integer is required" in typeError.value
+        assert "Unsupported operand type(s) for +: 'int' and 'str'" in typeError.value
 
     def test_increment_with_extra_parameter(self):
         """
@@ -363,4 +363,4 @@ class TestIncrement(object):
             TestIncrement.client.increment(key, None, 2)
 
         assert exception.value[0] == -2
-        assert exception.value[1] == "Bin should be a string"
+        assert exception.value[1] == "Bin name should be of type string"
