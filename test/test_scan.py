@@ -66,8 +66,8 @@ class TestScan(object):
         with pytest.raises(Exception) as exception:
             scan_obj.foreach(callback)
 
-        assert exception.value[0] == 1
-        assert exception.value[1] == 'AEROSPIKE_ERR_SERVER'
+        assert exception.value[0] == 20L
+        assert exception.value[1] == 'AEROSPIKE_ERR_NAMESPACE_NOT_FOUND'
 
     def test_scan_with_none_ns_and_set(self):
 

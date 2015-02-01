@@ -38,6 +38,9 @@ PyObject * AerospikeClient_Remove_Invoke(
 	as_policy_remove * remove_policy_p = NULL;
 	as_key key;
 
+	// Initialisation flags
+	bool key_initialised = false;
+
 	// Initialize error
 	as_error_init(&err);
 
@@ -51,6 +54,8 @@ PyObject * AerospikeClient_Remove_Invoke(
 	if ( err.code != AEROSPIKE_OK ) {
 		goto CLEANUP;
 	}
+	// Key is initialised successfully
+	key_initialised = true;
 
 	// Convert python policy object to as_policy_exists
 	if(py_policy) {
@@ -66,6 +71,11 @@ PyObject * AerospikeClient_Remove_Invoke(
 	aerospike_key_remove(self->as, &err, remove_policy_p, &key);
 
 CLEANUP:
+
+	if (key_initialised == true){
+		// Destroy the key if it is initialised successfully.
+		as_key_destroy(&key);
+	}
 
 	if ( err.code != AEROSPIKE_OK ) {
 		PyObject * py_err = NULL;

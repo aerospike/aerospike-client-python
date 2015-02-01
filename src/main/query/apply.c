@@ -26,27 +26,34 @@
 
 AerospikeQuery * AerospikeQuery_Apply(AerospikeQuery * self, PyObject * args, PyObject * kwds)
 {
-	as_error err;
 
-	// Initialize error
+	// Python function arguments
+	PyObject * py_module = NULL;
+	PyObject * py_function = NULL;
+	PyObject * py_args = NULL;
+	PyObject * py_policy = NULL;
+
+	// Python function keyword arguments
+	static char * kwlist[] = {"module", "function", "arguments", "policy", NULL};
+
+	if ( PyArg_ParseTupleAndKeywords(args, kwds, "OO|OO:apply", kwlist, &py_module, &py_function, &py_args, &py_policy) == false ){
+		return NULL;
+	}
+
+	// Aerospike error object
+	as_error err;
+	// Initialize error object
 	as_error_init(&err);
 
-	int nargs = (int) PyTuple_Size(args);
+	if ( !self || !self->client->as ){
+		as_error_update(&err, AEROSPIKE_ERR_PARAM, "Invalid query object");
+		goto CLEANUP;
+	}
 
 	// Aerospike API Arguments
 	char * module = NULL;
 	char * function = NULL;
 	as_arraylist * arglist = NULL;
-
-	// too few args
-	if ( nargs < 2 ) {
-		as_error_update(&err, AEROSPIKE_ERR_CLIENT, "udf module and function names are required.");
-		goto CLEANUP;
-	}
-
-	// Python Arguments
-	PyObject * py_module = PyTuple_GetItem(args, 0);
-	PyObject * py_function = PyTuple_GetItem(args, 1);
 
 	if ( PyString_Check(py_module) ) {
 		module = PyString_AsString(py_module);
@@ -64,10 +71,13 @@ AerospikeQuery * AerospikeQuery_Apply(AerospikeQuery * self, PyObject * args, Py
 		goto CLEANUP;
 	}
 
-	if ( nargs > 2 ) {
-		arglist = as_arraylist_new(nargs-2, 0);
-		for ( int i = 2; i < nargs; i++ ) {
-			PyObject * py_val = PyTuple_GetItem(args, i);
+	if ( py_args && PyList_Check(py_args) ){
+		Py_ssize_t size = PyList_Size(py_args);
+
+		arglist = as_arraylist_new(size, 0);
+
+		for ( int i = 0; i < size; i++ ) {
+			PyObject * py_val = PyList_GetItem(py_args, (Py_ssize_t)i);
 			as_val * val = NULL;
 			pyobject_to_val(&err, py_val, &val);
 			if ( err.code != AEROSPIKE_OK ) {
