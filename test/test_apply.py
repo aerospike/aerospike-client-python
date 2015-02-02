@@ -274,7 +274,7 @@ class TestApply(object):
         key = ('test', 'demo', 1)
         retval = TestApply.client.apply(key, 'test_record_udf',
                 'udf_returns_record',
-                None)
+                [])
         assert retval != None
 
     def test_apply_with_extra_argument_to_lua(self):

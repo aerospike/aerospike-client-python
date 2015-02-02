@@ -22,6 +22,7 @@
 #include <aerospike/as_key.h>
 #include <aerospike/as_record.h>
 
+#include <aerospike/as_ldt.h>
 #include <aerospike/as_arraylist.h>
 #include <aerospike/as_hashmap.h>
 #include <aerospike/as_list.h>
@@ -109,67 +110,67 @@ as_status strArray_to_pyobject( as_error * err, char str_array_ptr[][AS_ROLE_SIZ
 	return err->code;
 }
 
-as_status as_user_roles_array_to_pyobject( as_error *err, as_user_roles **user_roles, PyObject **py_as_user_roles, int users )
+as_status as_user_array_to_pyobject( as_error *err, as_user **users, PyObject **py_as_users, int users_size )
 {
 	as_error_reset(err);
 	int i;
-	*py_as_user_roles = PyList_New(0);
+	*py_as_users = PyList_New(0);
 
-	for(i = 0; i < users; i++) {
+	for(i = 0; i < users_size; i++) {
 
-		PyObject * py_user = PyString_FromString(user_roles[i]->user);
-		PyObject * py_roles_size = PyInt_FromLong(user_roles[i]->roles_size);
+		PyObject * py_user = PyString_FromString(users[i]->user);
+		PyObject * py_roles_size = PyInt_FromLong(users[i]->roles_size);
 		PyObject * py_roles;
-		strArray_to_pyobject(err, user_roles[i]->roles, &py_roles, user_roles[i]->roles_size);
+		strArray_to_pyobject(err, users[i]->roles, &py_roles, users[i]->roles_size);
 		if( err->code != AEROSPIKE_OK) {
 			break;
 		}
 
-		PyObject * py_user_roles = PyDict_New();
-		PyDict_SetItemString(py_user_roles, "user", py_user);
-		PyDict_SetItemString(py_user_roles, "roles_size", py_roles_size);
-		PyDict_SetItemString(py_user_roles, "roles", py_roles);
+		PyObject * py_users = PyDict_New();
+		PyDict_SetItemString(py_users, "user", py_user);
+		PyDict_SetItemString(py_users, "roles_size", py_roles_size);
+		PyDict_SetItemString(py_users, "roles", py_roles);
 
 		Py_DECREF(py_user);
 		Py_DECREF(py_roles_size);
 		Py_DECREF(py_roles);
 
-		PyList_Append(*py_as_user_roles, py_user_roles);
+		PyList_Append(*py_as_users, py_users);
 
-		Py_DECREF(py_user_roles);
+		Py_DECREF(py_users);
 	}
 
 	return err->code;
 }
 
 
-as_status as_user_roles_to_pyobject( as_error * err, as_user_roles * user_roles, PyObject ** py_as_user_roles )
+as_status as_user_to_pyobject( as_error * err, as_user * user, PyObject ** py_as_user )
 {
 	as_error_reset(err);
 
-	PyObject * py_user = PyString_FromString(user_roles->user);
-	PyObject * py_roles_size = PyInt_FromLong(user_roles->roles_size);
+	PyObject * py_user = PyString_FromString(user->user);
+	PyObject * py_roles_size = PyInt_FromLong(user->roles_size);
 	PyObject * py_roles;
 
-	strArray_to_pyobject(err, user_roles->roles, &py_roles, user_roles->roles_size);
+	strArray_to_pyobject(err, user->roles, &py_roles, user->roles_size);
 	if( err->code != AEROSPIKE_OK) {
 		goto END;
 	}
 
-	PyObject * py_user_roles = PyDict_New();
+	PyObject * py_user = PyDict_New();
 
-	PyDict_SetItemString(py_user_roles, "user", py_user);
-	PyDict_SetItemString(py_user_roles, "roles_size", py_roles_size);
-	PyDict_SetItemString(py_user_roles, "roles", py_roles);
+	PyDict_SetItemString(py_user, "user", py_user);
+	PyDict_SetItemString(py_user, "roles_size", py_roles_size);
+	PyDict_SetItemString(py_user, "roles", py_roles);
 
 	Py_DECREF(py_user);
 	Py_DECREF(py_roles_size);
 	Py_DECREF(py_roles);
 
-	*py_as_user_roles = PyList_New(0);
-	PyList_Append(*py_as_user_roles, py_user_roles);
+	*py_as_user = PyList_New(0);
+	PyList_Append(*py_as_user, py_user);
 
-	Py_DECREF(py_user_roles);
+	Py_DECREF(py_user);
 
 END:
 	return err->code;
@@ -497,9 +498,21 @@ as_status pyobject_to_key(as_error * err, PyObject * py_keytuple, as_key * key)
 	}
 
 	if ( py_key && py_key != Py_None ) {
-		if ( PyString_Check(py_key) ) {
+		if ( PyUnicode_Check(py_key) ) {
+			PyObject * py_ustr = PyUnicode_AsUTF8String(py_key);
+			char * k = PyString_AsString(py_ustr);
+			// free flag has to be true. Because, we are creating a new memory
+			// for a primary key string using strdup()
+			// This memory is destroyed when we call as_key_destroy()
+			as_key_init_strp(key, ns, set, strdup(k), true);
+			Py_DECREF(py_ustr);
+		}
+		else if ( PyString_Check(py_key) ) {
 			char * k = PyString_AsString(py_key);
-			as_key_init_strp(key, ns, set, k, true);
+			// free flag is set to false, as char *k is an user memory
+			// when as_key_destroy is called, it will try to free this memory
+			// which is invalid.
+			as_key_init_strp(key, ns, set, k, false);
 		}
 		else if ( PyInt_Check(py_key) ) {
 			int64_t k = (int64_t) PyInt_AsLong(py_key);
@@ -508,12 +521,6 @@ as_status pyobject_to_key(as_error * err, PyObject * py_keytuple, as_key * key)
 		else if ( PyLong_Check(py_key) ) {
 			int64_t k = (int64_t) PyLong_AsLongLong(py_key);
 			as_key_init_int64(key, ns, set, k);
-		}
-		else if ( PyUnicode_Check(py_key) ) {
-			PyObject * py_ustr = PyUnicode_AsUTF8String(py_key);
-			char * k = PyString_AsString(py_ustr);
-			as_key_init_strp(key, ns, set, strdup(k), true);
-			Py_DECREF(py_ustr);
 		}
 		else if ( PyByteArray_Check(py_key) ) {
 			return as_error_update(err, AEROSPIKE_ERR_PARAM, "key as a byte array is not supported");
@@ -956,4 +963,27 @@ bool error_to_pyobject(const as_error * err, PyObject ** obj)
 	PyTuple_SetItem(py_err, PY_EXCEPTION_LINE, py_line);
 	*obj = py_err;
 	return true;
+}
+
+/**
+ * This method will initialize ldt.
+ *
+ * @param error                 The error parameter
+ * @param ldt_p                 The LDT instance
+ * @param bin_name              The ldt bin name
+ * @param type                  The type of LDT
+ * @param module                The UDF module
+ *
+ * On failure it will set an error.
+ */
+void initialize_ldt(as_error *error, as_ldt* ldt_p, char* bin_name,
+        int type, char* module)
+{
+	as_error_reset(error);
+    if (bin_name == NULL) {
+		as_error_update(error, AEROSPIKE_ERR_PARAM, "Bin name is null");
+    }
+    if ( !as_ldt_init(ldt_p, bin_name, type, module) ){
+		as_error_update(error, AEROSPIKE_ERR_PARAM, "Unable to initialize LDT");
+    }
 }

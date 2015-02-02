@@ -24,6 +24,10 @@
 #include "query.h"
 #include "scan.h"
 #include "predicates.h"
+#include "lstack.h"
+#include "lset.h"
+#include "llist.h"
+#include "lmap.h"
 #include "policy.h"
 #include "log.h"
 
@@ -86,4 +90,20 @@ PyMODINIT_FUNC initaerospike(void)
 	PyObject * predicates = AerospikePredicates_New();
 	Py_INCREF(predicates);
 	PyModule_AddObject(aerospike, "predicates", predicates);
+
+	PyTypeObject * lstack = AerospikeLStack_Ready();
+	Py_INCREF(lstack);
+	PyModule_AddObject(aerospike, "lstack", (PyObject *) lstack);
+
+	PyTypeObject * lset = AerospikeLSet_Ready();
+	Py_INCREF(lset);
+	PyModule_AddObject(aerospike, "lset", (PyObject *) lset);
+
+	PyTypeObject * llist = AerospikeLList_Ready();
+	Py_INCREF(llist);
+	PyModule_AddObject(aerospike, "llist", (PyObject *) llist);
+
+	PyTypeObject * lmap = AerospikeLMap_Ready();
+	Py_INCREF(lmap);
+	PyModule_AddObject(aerospike, "lmap", (PyObject *) lmap);
 }

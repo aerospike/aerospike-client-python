@@ -12,7 +12,7 @@ status = aerospike.Client.admin_drop_user ( policies, username )
 
 **aerospike.Client.admin_drop_user()** will drop a *user* with a given *username*, and return the *status*
 
-of the user drop.   
+of dropping the user from the database.   
 
 ## Parameters
 
@@ -33,7 +33,7 @@ import aerospike
 config = {
             'hosts': [('127.0.0.1', 3000)]
          }
-client = aerospike.client(config).connect()
+client = aerospike.client(config).connect('admin', 'admin')
 
 policy = {
 	    'timeout': 1000

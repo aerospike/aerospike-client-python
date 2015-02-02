@@ -41,6 +41,9 @@ PyObject * AerospikeClient_Exists_Invoke(
 	as_key key;
 	as_record * rec = NULL;
 
+	// Initialisation flags
+	bool key_initialised = false;
+
 	// Initialize error
 	as_error_init(&err);
 
@@ -54,6 +57,8 @@ PyObject * AerospikeClient_Exists_Invoke(
 	if ( err.code != AEROSPIKE_OK ) {
 		goto CLEANUP;
 	}
+	// key is initialised successfully
+	key_initialised = true;
 
 	// Convert python policy object to as_policy_exists
 	pyobject_to_policy_read(&err, py_policy, &read_policy, &read_policy_p);
@@ -93,6 +98,10 @@ PyObject * AerospikeClient_Exists_Invoke(
 
 CLEANUP:
 
+	if (key_initialised == true){
+		// Destroy the key if it is initialised successfully.
+		as_key_destroy(&key);
+	}
 	as_record_destroy(rec);
 
 	if ( err.code != AEROSPIKE_OK ) {

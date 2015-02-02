@@ -31,6 +31,8 @@ from subprocess import call
 ################################################################################
 
 AEROSPIKE_C_VERSION = os.getenv('AEROSPIKE_C_VERSION')
+if not AEROSPIKE_C_VERSION:
+    AEROSPIKE_C_VERSION = '3.0.94'
 AEROSPIKE_C_HOME = os.getenv('AEROSPIKE_C_HOME')
 PREFIX = None
 PLATFORM =  platform.platform(1)
@@ -330,6 +332,10 @@ setup(
                 'src/main/client/udf.c',
                 'src/main/client/sec_index.c',
                 'src/main/client/remove_bin.c',
+                'src/main/client/lstack.c',
+                'src/main/client/lset.c',
+                'src/main/client/lmap.c',
+                'src/main/client/llist.c',
                 'src/main/key/type.c',
                 'src/main/key/apply.c',
                 'src/main/key/exists.c',
@@ -346,6 +352,14 @@ setup(
                 'src/main/scan/foreach.c',
                 'src/main/scan/results.c',
                 'src/main/scan/select.c',
+                'src/main/lstack/type.c',
+                'src/main/lstack/lstack_operations.c',
+                'src/main/lset/type.c',
+                'src/main/lset/lset_operations.c',
+                'src/main/llist/type.c',
+                'src/main/llist/llist_operations.c',
+                'src/main/lmap/type.c',
+                'src/main/lmap/lmap_operations.c',
                 'src/main/conversions.c',
                 'src/main/policy.c',
                 'src/main/predicates.c'

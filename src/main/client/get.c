@@ -41,6 +41,10 @@ PyObject * AerospikeClient_Get_Invoke(
 	as_key key;
 	as_record * rec = NULL;
 
+	// Initialised flags
+	bool key_initialised = false;
+	bool record_initialised = false;
+
 	// Initialize error
 	as_error_init(&err);
 
@@ -54,6 +58,8 @@ PyObject * AerospikeClient_Get_Invoke(
 	if ( err.code != AEROSPIKE_OK ) {
 		goto CLEANUP;
 	}
+	// Key is successfully initialised.
+	key_initialised = true;
 
 	// Convert python policy object to as_policy_exists
 	pyobject_to_policy_read(&err, py_policy, &read_policy, &read_policy_p);
@@ -63,6 +69,8 @@ PyObject * AerospikeClient_Get_Invoke(
 
 	// Initialize record
 	as_record_init(rec, 0);
+	// Record initialised successfully.
+	record_initialised = true;
 
 	// Invoke operation
 	aerospike_key_get(self->as, &err, read_policy_p, &key, &rec);
@@ -90,8 +98,14 @@ PyObject * AerospikeClient_Get_Invoke(
 
 CLEANUP:
 
-	// as_key_destroy(&key);
-	as_record_destroy(rec);
+	if (key_initialised == true){
+		// Destroy key only if it is initialised.
+		as_key_destroy(&key);
+	}
+	if (record_initialised == true){
+		// Destroy record only if it is initialised.
+		as_record_destroy(rec);
+	}
 
 	if ( err.code != AEROSPIKE_OK ) {
 		PyObject * py_err = NULL;

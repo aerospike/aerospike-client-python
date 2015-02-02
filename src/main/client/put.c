@@ -37,8 +37,14 @@ PyObject * AerospikeClient_Put_Invoke(
 	as_policy_write * write_policy_p = NULL;
 	as_key key;
 	as_record rec;
+
+	// Initialisation flags
+	bool key_initialised = false;
+	bool record_initialised = false;
+
 	// Initialize record
 	as_record_init(&rec, 0);
+	record_initialised = true;
 
 	// Initialize error
 	as_error_init(&err);
@@ -52,6 +58,8 @@ PyObject * AerospikeClient_Put_Invoke(
 	if ( err.code != AEROSPIKE_OK ) {
 		goto CLEANUP;
 	}
+	// Key is initialised successfully.
+	key_initialised = true;
 
 	// Convert python bins and metadata objects to as_record
 	pyobject_to_record(&err, py_bins, py_meta, &rec);
@@ -70,7 +78,14 @@ PyObject * AerospikeClient_Put_Invoke(
 
 CLEANUP:
 
-	as_record_destroy(&rec);
+	if (key_initialised == true){
+		// Destroy the key if it is initialised.
+		as_key_destroy(&key);
+	}
+	if (record_initialised == true){
+		// Destroy the record if it is initialised.
+		as_record_destroy(&rec);
+	}
 
 	// If an error occurred, tell Python.
 	if ( err.code != AEROSPIKE_OK ) {

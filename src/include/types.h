@@ -23,6 +23,8 @@
 #include <aerospike/as_key.h>
 #include <aerospike/as_query.h>
 #include <aerospike/as_scan.h>
+#include <aerospike/as_bin.h>
+#include <aerospike/as_ldt.h>
 
 
 typedef struct {
@@ -50,3 +52,35 @@ typedef struct {
   AerospikeClient * client;
   as_scan scan;
 } AerospikeScan;
+
+typedef struct {
+    PyObject_HEAD
+    AerospikeClient * client;
+    as_ldt lstack;
+    as_key key;
+    char bin_name[AS_BIN_NAME_MAX_LEN];
+} AerospikeLStack;
+
+typedef struct {
+    PyObject_HEAD
+    AerospikeClient * client;
+    as_ldt lset;
+    as_key key;
+    char bin_name[AS_BIN_NAME_MAX_LEN];
+} AerospikeLSet;
+
+typedef struct {
+    PyObject_HEAD
+    AerospikeClient * client;
+    as_ldt llist;
+    as_key key;
+    char bin_name[AS_BIN_NAME_MAX_LEN];
+} AerospikeLList;
+
+typedef struct {
+    PyObject_HEAD
+    AerospikeClient * client;
+    as_ldt lmap;
+    as_key key;
+    char bin_name[AS_BIN_NAME_MAX_LEN];
+} AerospikeLMap;

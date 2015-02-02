@@ -34,7 +34,7 @@ import aerospike
 config = {
             'hosts': [('127.0.0.1', 3000)]
          }
-client = aerospike.client(config).connect()
+client = aerospike.client(config).connect('admin', 'admin')
 policy = {
             'timeout': 1000
 	 }

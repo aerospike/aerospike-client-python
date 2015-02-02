@@ -10,7 +10,7 @@ status = aerospike.Client.admin_change_password ( policies, username, password )
 
 ```
 
-**aerospike.Client.admin_change_password()** will change the *password* of a particular *user* int the aerospike database and return the *status* of the password modification. 
+**aerospike.Client.admin_change_password()** will change the *password* of a particular *user* in the aerospike database and return the *status* of the password modification. Only the password of the user whom the client object is pertained to can be changed.
 
 ## Parameters
 
@@ -32,7 +32,7 @@ import aerospike
 config = {
             'hosts': [('127.0.0.1', 3000)]
          }
-client = aerospike.client(config).connect()
+client = aerospike.client(config).connect('example', 'example123')
 policy = {
             'timeout': 1000
 	 }

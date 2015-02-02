@@ -26,6 +26,7 @@
 #include "admin.h"
 #include "client.h"
 #include "policy.h"
+#include "conversions.h"
 
 /*******************************************************************************
  * PYTHON TYPE METHODS
@@ -64,9 +65,6 @@ static PyMethodDef AerospikeClient_Type_Methods[] = {
 	{"admin_revoke_roles",
 		(PyCFunction) AerospikeClient_Admin_Revoke_Roles,	METH_VARARGS | METH_KEYWORDS,
 		"Revoke roles"},
-	{"admin_replace_roles",
-		(PyCFunction) AerospikeClient_Admin_Replace_Roles, METH_VARARGS | METH_KEYWORDS,
-		"Replace roles."},
 	{"admin_query_user",
 		(PyCFunction) AerospikeClient_Admin_Query_User, METH_VARARGS | METH_KEYWORDS,
 		"Query a user for roles."},
@@ -174,6 +172,30 @@ static PyMethodDef AerospikeClient_Type_Methods[] = {
 	{"index_remove",
 		(PyCFunction)AerospikeClient_Index_Remove, METH_VARARGS | METH_KEYWORDS,
 		"Remove a secondary index"},
+	
+    // LSTACK OPERATIONS
+
+	{"lstack",
+		(PyCFunction) AerospikeClient_LStack, METH_VARARGS | METH_KEYWORDS,
+		"LSTACK operations"},
+
+    // LSET OPERATIONS
+
+	{"lset",
+		(PyCFunction) AerospikeClient_LSet, METH_VARARGS | METH_KEYWORDS,
+		"LSET operations"},
+
+    // LLIST OPERATIONS
+
+	{"llist",
+		(PyCFunction) AerospikeClient_LList, METH_VARARGS | METH_KEYWORDS,
+		"LLIST operations"},
+
+    // LMAP OPERATIONS
+
+	{"lmap",
+		(PyCFunction) AerospikeClient_LMap, METH_VARARGS | METH_KEYWORDS,
+		"LMAP operations"},
 
 	// BATCH OPERATIONS
 	{"get_many",

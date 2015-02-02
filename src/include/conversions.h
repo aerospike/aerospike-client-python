@@ -33,10 +33,9 @@ as_status as_udf_files_to_pyobject(as_error *err, as_udf_files *files, PyObject 
 
 as_status strArray_to_pyobject(as_error * err, char str_array_ptr[][AS_ROLE_SIZE], PyObject **py_list, int roles_size);
 
-as_status as_user_roles_to_pyobject(as_error *err, as_user_roles *user_roles, PyObject **py_as_user_roles);
+as_status as_user_to_pyobject(as_error *err, as_user *user, PyObject **py_as_user);
 
-
-as_status as_user_roles_array_to_pyobject(as_error *err, as_user_roles **user_roles, PyObject **py_as_user_roles, int users);
+as_status as_user_array_to_pyobject(as_error *err, as_user **users, PyObject **py_as_users, int users_size);
 
 as_status pyobject_to_strArray(as_error * err, PyObject * py_list,  char **arr);
 
@@ -67,3 +66,5 @@ as_status metadata_to_pyobject(as_error * err, const as_record * rec, PyObject *
 as_status bins_to_pyobject(as_error * err, const as_record * rec, PyObject ** obj);
 
 bool error_to_pyobject(const as_error * err, PyObject ** obj);
+
+void initialize_ldt(as_error *error, as_ldt* ldt_p, char* bin_name, int type, char* module);

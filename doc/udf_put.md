@@ -29,7 +29,7 @@ Dict:
 **udf_type**, an integer value to specify type of udf module. **0** for lua module.
 
 ## Return Values
-Returns an integer status or throws ena exception in case of errors.
+Returns an integer status or throws an exception in case of errors.
 
 ## Examples
 

@@ -29,7 +29,7 @@ Dict:
         "bin-name" : "bin-value"
     }
 ```
-**meta**, the dictionary which will be combined with bins to write a record.
+**meta**, the dictionary which will be combined with bins to write a record. The dictionary should contain the generation value etc.
 
 **policies**, the dictionary of policies to be given while reading a record.   
 

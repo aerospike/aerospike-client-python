@@ -360,6 +360,45 @@ PyObject * AerospikeClient_Set_Log_Handler(AerospikeClient * self, PyObject *arg
 #define OPERATOR_WRITE   0
 
 /**
+ * LSTACK Operations
+ *
+ *		client.lstack(key, bin)
+ *
+ */
+AerospikeLStack * AerospikeClient_LStack(AerospikeClient * self, PyObject * args, PyObject * kwds);
+
+/**
+ * LSET Operations
+ *
+ *		client.lset(key, bin)
+ *
+ */
+AerospikeLSet * AerospikeClient_LSet(AerospikeClient * self, PyObject * args, PyObject * kwds);
+
+/**
+ * LLIST Operations
+ *
+ *		client.llist(key, bin)
+ *
+ */
+AerospikeLList * AerospikeClient_LList(AerospikeClient * self, PyObject * args, PyObject * kwds);
+
+/**
+ * LMAP Operations
+ *
+ *		client.lmap(key, bin)
+ *
+ */
+AerospikeLMap * AerospikeClient_LMap(AerospikeClient * self, PyObject * args, PyObject * kwds);
+
+#define OPERATOR_PREPEND 4
+#define OPERATOR_APPEND  5
+#define OPERATOR_TOUCH   8
+#define OPERATOR_INCR    2
+#define OPERATOR_READ    1
+#define OPERATOR_WRITE   0
+
+/**
  * Get records in a batch
  *
  *		client.get_many([keys], policies)
