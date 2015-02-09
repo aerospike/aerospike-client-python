@@ -268,8 +268,8 @@ class TestOperate(object):
         with pytest.raises(Exception) as exception:
             key, meta, bins = TestOperate.client.operate(key, list, meta, policy)
 
-        assert exception.value[0] == -1
-        assert exception.value[1] == "expected 1 bins, got 0"
+        assert exception.value[0] == 3L
+        assert exception.value[1] == "AEROSPIKE_ERR_RECORD_GENERATION"
        
         (key , meta, bins) = TestOperate.client.get(key)
         assert bins == { "age": 1, 'name': 'name1'}
@@ -313,8 +313,8 @@ class TestOperate(object):
         with pytest.raises(Exception) as exception:
             (key, meta, bins) = TestOperate.client.operate(key, list, meta, policy)
 
-        assert exception.value[0] == -1
-        assert exception.value[1] == "expected 1 bins, got 0"
+        assert exception.value[0] == 3L
+        assert exception.value[1] == "AEROSPIKE_ERR_RECORD_GENERATION"
         
         (key , meta, bins) = TestOperate.client.get(key)
         assert bins == { 'age' : 1, 'name': 'name1'}
@@ -426,8 +426,8 @@ class TestOperate(object):
         with pytest.raises(Exception) as exception:
             (bins) = TestOperate.client.operate(key, list, {}, policy)
 
-        assert exception.value[0] == -1
-        assert exception.value[1] == "expected 1 bins, got 0"
+        assert exception.value[0] == 4L
+        assert exception.value[1] == "AEROSPIKE_ERR_REQUEST_INVALID"
 
     def test_operate_with_nonexistent_key_positive(self):
         """

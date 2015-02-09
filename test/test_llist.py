@@ -21,7 +21,7 @@ class TestLList(object):
 
         print "setup class invoked..."
         config = {
-                "hosts": [("172.20.25.24", 3000)]
+                "hosts": [("127.0.0.1", 3000)]
                 }
 
         TestLList.client = aerospike.client(config).connect()
@@ -130,7 +130,7 @@ class TestLList(object):
         with pytest.raises(Exception) as exception: 
             TestLList.llist_string.get('remove')
 
-        assert exception.value[0] == 100
+        assert exception.value[0] == 125L
         assert exception.value[1] == "/opt/aerospike/sys/udf/lua/ldt/lib_llist.lua:5085: 1401:LDT-Item Not Found"
 
     #Remove() - Remove non-existent object from the llist.
@@ -143,7 +143,7 @@ class TestLList(object):
         with pytest.raises(Exception) as exception:
             TestLList.llist_string.remove('kk')
 
-        assert exception.value[0] == 100
+        assert exception.value[0] == 125L
         assert exception.value[1] == '/opt/aerospike/sys/udf/lua/ldt/lib_llist.lua:5454: 1401:LDT-Item Not Found'
 
     #Destroy() - Delete the entire LList(LDT Remove).

@@ -82,7 +82,7 @@ class TestIndex(object):
             retobj = TestIndex.client.index_integer_create( policy, 'test1', 'demo',
 'age', 'age_index'  )
         assert exception.value[0] == 4
-        assert exception.value[1] == 'AEROSPIKE_ERR_REQUEST_INVALID'
+        assert exception.value[1] == 'Namespace Not Found'
 
     def test_createindex_with_incorrect_set(self):
         """
@@ -230,7 +230,7 @@ name
             retobj = TestIndex.client.index_string_create( policy, 'test1', 'demo',
 'name', 'name_index'  )
         assert exception.value[0] == 4
-        assert exception.value[1] == 'AEROSPIKE_ERR_REQUEST_INVALID'
+        assert exception.value[1] == 'Namespace Not Found'
 
     def test_create_string_index_with_incorrect_set(self):
         """

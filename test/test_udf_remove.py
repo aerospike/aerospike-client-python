@@ -115,4 +115,4 @@ class TestUdfRemove(object):
             status = TestUdfRemove.client.udf_remove( policy, module )
 
         assert exception.value[0] == 100
-        assert exception.value[1] == "AEROSPIKE_ERR_UDF"
+        assert exception.value[1] == "error=file_not_found\n"

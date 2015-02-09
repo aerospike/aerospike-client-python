@@ -108,7 +108,7 @@ class TestGetRegistered(object):
             TestGetRegistered.client.udf_getRegistered(module, language, policy)
 
         assert exception.value[0] == 100
-        assert exception.value[1] == "AEROSPIKE_ERR_UDF"
+        assert exception.value[1] == "error=not_found\n"
 
     def test_getRegistered_with_random_language(self):
         """

@@ -73,7 +73,7 @@ static bool each_result(const as_val * val, void * udata)
 		// an exception was raised, handle it (someday)
 		// for now, we bail from the loop
 		as_error_update(err, AEROSPIKE_ERR_PARAM, "Callback function contains an error");
-		rval = false;
+		rval = true;
 	}
 	else if (  PyBool_Check(py_return) ) {
 		if ( Py_False == py_return ) {
@@ -111,6 +111,11 @@ PyObject * AerospikeScan_Foreach(AerospikeScan * self, PyObject * args, PyObject
 		return NULL;
 	}
 
+	// Create and initialize callback user-data
+	LocalData data;
+	data.callback = py_callback;
+	as_error_init(&data.error);
+
 	// Aerospike Client Arguments
 	as_error err;
 
@@ -128,11 +133,6 @@ PyObject * AerospikeScan_Foreach(AerospikeScan * self, PyObject * args, PyObject
 		goto CLEANUP;
 	}
 
-	// Create and initialize callback user-data
-	LocalData data;
-	data.callback = py_callback;
-	as_error_init(&data.error);
-
 	// We are spawning multiple threads
 	PyThreadState * _save = PyEval_SaveThread();
 
@@ -147,9 +147,14 @@ PyObject * AerospikeScan_Foreach(AerospikeScan * self, PyObject * args, PyObject
 
 CLEANUP:
 
-	if ( err.code != AEROSPIKE_OK ) {
+	if ( err.code != AEROSPIKE_OK || data.error.code != AEROSPIKE_OK) {
 		PyObject * py_err = NULL;
-		error_to_pyobject(&err, &py_err);
+		if ( err.code != AEROSPIKE_OK ){
+			error_to_pyobject(&err, &py_err);
+		}
+		if ( data.error.code != AEROSPIKE_OK){
+			error_to_pyobject(&data.error, &py_err);
+		}
 		PyErr_SetObject(PyExc_Exception, py_err);
 		Py_DECREF(py_err);
 		return NULL;

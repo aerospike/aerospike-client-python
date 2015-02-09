@@ -104,7 +104,7 @@ class TestQueryUser(object):
             status = self.client.admin_query_user( policy, user )
 
         assert exception.value[0] == 60
-        assert exception.value[1] == "aerospike query user failed"
+        assert exception.value[1] == "AEROSPIKE_INVALID_USER"
 
     def test_query_user_with_nonexistent_username(self):
 
@@ -115,7 +115,7 @@ class TestQueryUser(object):
             status = self.client.admin_query_user( policy, user )
 
         assert exception.value[0] == 60
-        assert exception.value[1] == "aerospike query user failed"
+        assert exception.value[1] == "AEROSPIKE_INVALID_USER"
 
     def test_query_user_with_no_roles(self):
 

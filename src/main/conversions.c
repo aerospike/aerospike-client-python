@@ -118,7 +118,7 @@ as_status as_user_array_to_pyobject( as_error *err, as_user **users, PyObject **
 
 	for(i = 0; i < users_size; i++) {
 
-		PyObject * py_user = PyString_FromString(users[i]->user);
+		PyObject * py_user       = PyString_FromString(users[i]->name);
 		PyObject * py_roles_size = PyInt_FromLong(users[i]->roles_size);
 		PyObject * py_roles;
 		strArray_to_pyobject(err, users[i]->roles, &py_roles, users[i]->roles_size);
@@ -148,7 +148,7 @@ as_status as_user_to_pyobject( as_error * err, as_user * user, PyObject ** py_as
 {
 	as_error_reset(err);
 
-	PyObject * py_user = PyString_FromString(user->user);
+	PyObject * py_user = PyString_FromString(user->name);
 	PyObject * py_roles_size = PyInt_FromLong(user->roles_size);
 	PyObject * py_roles;
 
@@ -157,20 +157,20 @@ as_status as_user_to_pyobject( as_error * err, as_user * user, PyObject ** py_as
 		goto END;
 	}
 
-	PyObject * py_user = PyDict_New();
+	PyObject * py_users = PyDict_New();
 
-	PyDict_SetItemString(py_user, "user", py_user);
-	PyDict_SetItemString(py_user, "roles_size", py_roles_size);
-	PyDict_SetItemString(py_user, "roles", py_roles);
+	PyDict_SetItemString(py_users, "user", py_user);
+	PyDict_SetItemString(py_users, "roles_size", py_roles_size);
+	PyDict_SetItemString(py_users, "roles", py_roles);
 
 	Py_DECREF(py_user);
 	Py_DECREF(py_roles_size);
 	Py_DECREF(py_roles);
 
 	*py_as_user = PyList_New(0);
-	PyList_Append(*py_as_user, py_user);
+	PyList_Append(*py_as_user, py_users);
 
-	Py_DECREF(py_user);
+	Py_DECREF(py_users);
 
 END:
 	return err->code;

@@ -55,6 +55,7 @@ static PyObject * AerospikeClient_InfoNode_Invoke(
 	long                        port_no = self->as->config.hosts[0].port;
 	char*                       response_p = NULL;
 	PyObject *key_op = NULL, *value = NULL;
+	as_status status = AEROSPIKE_OK;
 
 	as_error err;
 	as_error_init(&err);
@@ -95,15 +96,15 @@ static PyObject * AerospikeClient_InfoNode_Invoke(
 			goto CLEANUP;
 		}
 	}
-	aerospike_info_host(self->as, &err, info_policy_p,
+	status = aerospike_info_host(self->as, &err, info_policy_p,
 		(const char *) address, (uint16_t) port_no, request_str_p,
 		&response_p);
 	if( err.code == AEROSPIKE_OK ) {
-		if (response_p)	{
+		if (response_p && status == AEROSPIKE_OK){
 			py_response = PyString_FromString(response_p);
 			free(response_p);
 		} else {
-			as_error_update(&err, AEROSPIKE_ERR_CLIENT, "Info operation failed");
+			as_error_update(&err, status, "Info operation failed");
 			goto CLEANUP;
 		}
 	} else {

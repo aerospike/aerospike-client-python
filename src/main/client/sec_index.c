@@ -102,7 +102,7 @@ PyObject * AerospikeClient_Index_Integer_Create(AerospikeClient * self, PyObject
 	name = PyString_AsString(py_name);
 
 	// Invoke operation
-	aerospike_index_create(self->as, &err, &task, info_policy_p, ns, set, bin, name, AS_INDEX_NUMERIC);
+	aerospike_index_create_complex(self->as, &err, &task, info_policy_p, ns, set, bin, name, AS_INDEX_TYPE_DEFAULT, AS_INDEX_NUMERIC);
 	if ( err.code != AEROSPIKE_OK ) {
 		goto CLEANUP;
 	} else {
@@ -197,7 +197,7 @@ PyObject * AerospikeClient_Index_String_Create(AerospikeClient * self, PyObject 
 	name = PyString_AsString(py_name);
 
 	// Invoke operation
-	aerospike_index_create(self->as, &err, &task, info_policy_p, ns, set, bin, name, AS_INDEX_STRING);
+	aerospike_index_create_complex(self->as, &err, &task, info_policy_p, ns, set, bin, name, AS_INDEX_TYPE_DEFAULT, AS_INDEX_STRING);
 	if ( err.code != AEROSPIKE_OK ) {
 		goto CLEANUP;
 	} else {

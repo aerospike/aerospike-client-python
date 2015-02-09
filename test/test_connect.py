@@ -120,7 +120,7 @@ class TestConnect(object):
             self.client = aerospike.client(config).connect()
 
         assert exception.value[0] == -1
-        assert exception.value[1] == 'AEROSPIKE_ERR_CLIENT'
+        assert exception.value[1] == 'Failed to connect to cluster: AEROSPIKE_ERR_CLIENT'
 
     def test_connect_port_is_string(self):
         """
@@ -133,4 +133,4 @@ class TestConnect(object):
             self.client = aerospike.client(config).connect()
 
         assert exception.value[0] == -1
-        assert exception.value[1] == 'AEROSPIKE_ERR_CLIENT'
+        assert exception.value[1] == 'Failed to connect to cluster: AEROSPIKE_ERR_CLIENT'

@@ -188,7 +188,7 @@ class TestInfoNode(object):
         with pytest.raises(Exception) as exception:
             response = TestInfoNode.client.info_node('bins', host)
 
-        assert exception.value[0] == -1
+        assert exception.value[0] == 9L
         assert exception.value[1] == "AEROSPIKE_ERR_CLIENT"
 
     def test_info_node_positive_with_all_parameters(self):

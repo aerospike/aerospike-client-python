@@ -114,8 +114,8 @@ class TestUdfPut(object):
         with pytest.raises(Exception) as exception:
             status = TestUdfPut.client.udf_put( policy, filename, udf_type )
 
-        assert exception.value[0] == 4
-        assert exception.value[1] == "AEROSPIKE_ERR_REQUEST_INVALID"
+        assert exception.value[0] == -2L
+        assert exception.value[1] == "Invalid udf type: 1"
 
     def test_udf_put_with_all_none_parameters(self):
 

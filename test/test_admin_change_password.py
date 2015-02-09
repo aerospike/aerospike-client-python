@@ -38,25 +38,25 @@ class TestChangePassword(object):
 
     def test_change_password_without_any_parameters(self):
 
-    	with pytest.raises(TypeError) as typeError:
-    		status = self.client.admin_change_password()
+        with pytest.raises(TypeError) as typeError:
+            status = self.client.admin_change_password()
 
-    	assert "Required argument 'policy' (pos 1) not found" in typeError.value
+        assert "Required argument 'policy' (pos 1) not found" in typeError.value
 
     def test_change_password_with_proper_parameters(self):
 
-    	user = "testchangepassworduser"
+        user = "testchangepassworduser"
         config = {
                 "hosts": [("127.0.0.1", 3000)]
                 }
         self.clientreaduser = aerospike.client(config).connect( user, "aerospike" )
 
-    	policy = {}
-    	password = "newpassword"
+        policy = {}
+        password = "newpassword"
 
-    	status = self.clientreaduser.admin_change_password( policy, user, password )
+        status = self.clientreaduser.admin_change_password( policy, user, password )
 
-    	assert status == 0
+        assert status == 0
 
         config = {
                 "hosts": [("127.0.0.1", 3000)]
@@ -64,8 +64,8 @@ class TestChangePassword(object):
         with pytest.raises(Exception) as exception:
             self.clientreaduserwrong = aerospike.client(config).connect( user, "aerospike" )
 
-    	assert exception.value[0] == 62
-    	assert exception.value[1] == "AEROSPIKE_INVALID_PASSWORD"
+        assert exception.value[0] == 62
+        assert exception.value[1] == "Failed to connect to cluster: AEROSPIKE_INVALID_PASSWORD"
 
         self.clientreaduserright = aerospike.client(config).connect( user, "newpassword" )
 
@@ -76,19 +76,19 @@ class TestChangePassword(object):
 
     def test_change_password_with_invalid_timeout_policy_value(self):
 
-    	policy = { 'timeout' : 0.1 }
-    	user = "testchangepassworduser"
-    	password = "newpassword"
+        policy = { 'timeout' : 0.1 }
+        user = "testchangepassworduser"
+        password = "newpassword"
 
-    	with pytest.raises(Exception) as exception :
-    		status = self.client.admin_change_password( policy, user, password )
+        with pytest.raises(Exception) as exception :
+            status = self.client.admin_change_password( policy, user, password )
 
-    	assert exception.value[0] == -2
-    	assert exception.value[1] == "timeout is invalid"
+        assert exception.value[0] == -2
+        assert exception.value[1] == "timeout is invalid"
 
     def test_change_password_with_proper_timeout_policy_value(self):
 
-    	user = "testchangepassworduser"
+        user = "testchangepassworduser"
         config = {
                 "hosts": [("127.0.0.1", 3000)]
                 }
@@ -97,9 +97,9 @@ class TestChangePassword(object):
         policy = {'timeout': 10}
         password = "newpassword"
 
-    	status = self.clientreaduser.admin_change_password( policy, user, password )
+        status = self.clientreaduser.admin_change_password( policy, user, password )
 
-    	assert status == 0
+        assert status == 0
 
         config = {
                 "hosts": [("127.0.0.1", 3000)]
@@ -107,8 +107,8 @@ class TestChangePassword(object):
         with pytest.raises(Exception) as exception:
             self.clientreaduserwrong = aerospike.client(config).connect( user, "aerospike" )
 
-    	assert exception.value[0] == 62
-    	assert exception.value[1] == "AEROSPIKE_INVALID_PASSWORD"
+        assert exception.value[0] == 62
+        assert exception.value[1] == "Failed to connect to cluster: AEROSPIKE_INVALID_PASSWORD"
 
         self.clientreaduserright = aerospike.client(config).connect( user, "newpassword" )
 
@@ -119,43 +119,43 @@ class TestChangePassword(object):
 
     def test_change_password_with_none_username(self):
 
-    	policy = {}
-    	user = None
-    	password = "newpassword"
+        policy = {}
+        user = None
+        password = "newpassword"
 
-    	with pytest.raises(Exception) as exception:
-    		status = self.client.admin_change_password( policy, user, password )
+        with pytest.raises(Exception) as exception:
+            status = self.client.admin_change_password( policy, user, password )
 
-    	assert exception.value[0] == -2
-    	assert exception.value[1] == "Username should be a string"
+        assert exception.value[0] == -2
+        assert exception.value[1] == "Username should be a string"
 
     def test_change_password_with_none_password(self):
 
-    	policy = {}
-    	user = "testchangepassworduser"
-    	password = None
+        policy = {}
+        user = "testchangepassworduser"
+        password = None
 
-    	with pytest.raises(Exception) as exception:
-    		status = self.client.admin_change_password( policy, user, password )
+        with pytest.raises(Exception) as exception:
+            status = self.client.admin_change_password( policy, user, password )
 
-    	assert exception.value[0] == -2
-    	assert exception.value[1] == "Password should be a string"
+        assert exception.value[0] == -2
+        assert exception.value[1] == "Password should be a string"
 
     def test_change_password_with_non_existent_user(self):
 
-    	policy = {}
-    	user = "readwriteuser"
-    	password = "newpassword"
+        policy = {}
+        user = "readwriteuser"
+        password = "newpassword"
 
-    	with pytest.raises(Exception) as exception:
-    		status = self.client.admin_change_password( policy, user, password )
+        with pytest.raises(Exception) as exception:
+            status = self.client.admin_change_password( policy, user, password )
 
-    	assert exception.value[0] == 60
-    	assert exception.value[1] == "aerospike change password failed"
+        assert exception.value[0] == 60
+        assert exception.value[1] == "AEROSPIKE_INVALID_USER"
 
     def test_change_password_with_too_long_password(self):
 
-    	user = "testchangepassworduser"
+        user = "testchangepassworduser"
         config = {
                 "hosts": [("127.0.0.1", 3000)]
                 }
@@ -164,9 +164,9 @@ class TestChangePassword(object):
         policy = {'timeout': 10}
         password = "password"*1000
 
-    	status = self.clientreaduser.admin_change_password( policy, user, password )
+        status = self.clientreaduser.admin_change_password( policy, user, password )
 
-    	assert status == 0
+        assert status == 0
 
         config = {
                 "hosts": [("127.0.0.1", 3000)]
@@ -174,8 +174,8 @@ class TestChangePassword(object):
         with pytest.raises(Exception) as exception:
             self.clientreaduserwrong = aerospike.client(config).connect( user, "aerospike" )
 
-    	assert exception.value[0] == 62
-    	assert exception.value[1] == "AEROSPIKE_INVALID_PASSWORD"
+        assert exception.value[0] == 62
+        assert exception.value[1] == "Failed to connect to cluster: AEROSPIKE_INVALID_PASSWORD"
 
         self.clientreaduserright = aerospike.client(config).connect( user, password )
 

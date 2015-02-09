@@ -13,9 +13,7 @@ from aerospike import predicates as p
 class TestAggregate(object):
 
     def setup_class(cls):
-        config = {
-                'hosts': [('127.0.0.1', 3000)]
-                }
+        config = { 'hosts' : [('127.0.0.1', 3000)] }
         client = aerospike.client(config).connect()
         policy = {}
         client.index_integer_create(policy, 'test', 'demo',
@@ -35,7 +33,7 @@ class TestAggregate(object):
     def teardown_class(cls):
         config = {
                 'hosts': [('127.0.0.1', 3000)]
-                }
+        }
         client = aerospike.client(config).connect()
         policy = {}
         client.index_remove(policy, 'test', 'age_index');
@@ -220,8 +218,8 @@ class TestAggregate(object):
 
             query.foreach(user_callback)
 
-        assert exception.value[0] == 1L
-        assert exception.value[1] == 'AEROSPIKE_ERR_SERVER : "UDF: Execution Error 1"'
+        assert exception.value[0] == -1L
+        assert exception.value[1] == 'AEROSPIKE_ERR_CLIENT'
 
     def test_aggregate_with_incorrect_function(self):
         """
@@ -238,8 +236,8 @@ class TestAggregate(object):
                 records.append(value)
 
             query.foreach(user_callback)
-        assert exception.value[0] == 1L
-        assert exception.value[1] == 'AEROSPIKE_ERR_SERVER : "UDF: Execution Error 2 : function not found"'
+        assert exception.value[0] == -1L
+        assert exception.value[1] == 'AEROSPIKE_ERR_CLIENT'
 
     def test_aggregate_with_correct_parameters(self):
         """
@@ -347,7 +345,7 @@ class TestAggregate(object):
 
             query.foreach(user_callback)
 
-        assert exception.value[0] == 1L
+        assert exception.value[0] == -1L
 
     def test_aggregate_with_arguments_to_lua_function(self):
         """

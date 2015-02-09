@@ -37,10 +37,10 @@ static PyObject * AerospikePredicates_Equals(PyObject * self, PyObject * args)
 	}
 
 	if ( PyInt_Check(py_val) || PyLong_Check(py_val) ) {
-		return Py_BuildValue("iOO", AS_PREDICATE_INTEGER_EQUAL, py_bin, py_val);
+		return Py_BuildValue("iiOO", AS_PREDICATE_EQUAL, AS_INDEX_NUMERIC, py_bin, py_val);
 	}
 	else if ( PyString_Check(py_val) ) {
-		return Py_BuildValue("iOO", AS_PREDICATE_STRING_EQUAL, py_bin, py_val);
+		return Py_BuildValue("iiOO", AS_PREDICATE_EQUAL, AS_INDEX_STRING, py_bin, py_val);
 	}
 
 exit:
@@ -60,7 +60,7 @@ static PyObject * AerospikePredicates_Between(PyObject * self, PyObject * args)
 	}
 
 	if ( (PyInt_Check(py_min) || PyLong_Check(py_min)) && (PyInt_Check(py_max) || PyLong_Check(py_max)) ) {
-		return Py_BuildValue("iOOO", AS_PREDICATE_INTEGER_RANGE, py_bin, py_min, py_max);
+		return Py_BuildValue("iiOOO", AS_PREDICATE_RANGE, AS_INDEX_NUMERIC, py_bin, py_min, py_max);
 	}
 
 exit:

@@ -19,7 +19,7 @@ class TestLSet(object):
 
         print "setup class invoked..."
         config = {
-                "hosts": [("172.20.25.24", 3000)]
+                "hosts": [("127.0.0.1", 3000)]
                 }
 
         TestLSet.client = aerospike.client(config).connect()
@@ -126,7 +126,6 @@ class TestLSet(object):
             TestLSet.lset.add(566)
 
         assert exception.value[0] == 100
-        assert exception.value[1] == "/opt/aerospike/sys/udf/lua/ldt/lib_lset.lua:2459: 1402:LDT-Unique Key or Value Violation"
 
     #Add_many() - Add a list of objects to the set.
     def test_lset_add_many_positive(self):
@@ -164,8 +163,7 @@ class TestLSet(object):
         with pytest.raises(Exception) as exception: 
             TestLSet.lset.get(1000)
 
-        assert exception.value[0] == 100
-        assert exception.value[1] == "/opt/aerospike/sys/udf/lua/ldt/lib_lset.lua:3931: 1401:LDT-Item Not Found"
+        assert exception.value[0] == 125L
 
     #Exists() and Remove() - Test existence of an object and remove from the set.
     def test_lset_exists_element_positive(self):

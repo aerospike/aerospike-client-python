@@ -293,8 +293,10 @@ class TestQuery(object):
             val += 1
             records.append(key)
 
-        result = query.foreach(callback)
-        assert len(records) == 0
+        with pytest.raises(Exception) as exception:
+            result = query.foreach(callback)
+        assert exception.value[0] == -2L
+        assert exception.value[1] == "Callback function contains an error"
 
     def test_query_with_callback_returning_false(self):
         """

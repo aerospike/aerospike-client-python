@@ -85,7 +85,7 @@ class TestExistsMany(object):
 
     def test_exists_many_with_non_existent_keys(self):
 
-        self.keys.append( ('test', 'demo', 10) )
+        self.keys.append( ('test', 'demo', 'some_key') )
 
         records = TestExistsMany.client.exists_many( self.keys )
 
@@ -121,7 +121,7 @@ class TestExistsMany(object):
     
     def test_exists_many_with_non_existent_keys_in_middle(self):
 
-        self.keys.append( ('test', 'demo', 10) )
+        self.keys.append( ('test', 'demo', 'some_key') )
 
         for i in xrange(15,20):
             key = ('test', 'demo', i)

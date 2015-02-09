@@ -19,7 +19,7 @@ class TestLMap(object):
 
         print "setup class invoked..."
         config = {
-                "hosts": [("172.20.25.24", 3000)]
+                "hosts": [("127.0.0.1", 3000)]
                 }
 
         TestLMap.client = aerospike.client(config).connect()
@@ -113,7 +113,7 @@ class TestLMap(object):
         """
         assert 0 == TestLMap.lmap.put('name', 'aa')
         assert 0 == TestLMap.lmap.put('name', 'bb')
-        assert {u'name' : u'aa'} == TestLMap.lmap.get('name')
+        assert {u'name' : u'bb'} == TestLMap.lmap.get('name')
 
     #put() - put() without any mandatory parameters.
     def test_lmap_no_parameter_negative(self):
@@ -162,12 +162,8 @@ class TestLMap(object):
             Invoke get() non-existent element from set.
         """
 
-        with pytest.raises(Exception) as exception: 
-            TestLMap.lmap.get(1000)
+        assert {} == TestLMap.lmap.get(1000)
 
-        assert exception.value[0] == 100
-        assert exception.value[1] == "/opt/aerospike/sys/udf/lua/ldt/lib_lmap.lua:2999: 1401:LDT-Item Not Found"
-    
     #Remove() - Remove an object from the set.
     def test_lmap_remove_element_positive(self):
 

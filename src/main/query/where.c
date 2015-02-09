@@ -50,7 +50,7 @@ static char * pyobject_to_str(PyObject * py_obj)
 	}
 }
 
-static int AerospikeQuery_Where_Add(as_query * query, as_predicate_type predicate, PyObject * py_bin, PyObject * py_val1, PyObject * py_val2)
+static int AerospikeQuery_Where_Add(as_query * query, as_predicate_type predicate, as_index_datatype in_datatype, PyObject * py_bin, PyObject * py_val1, PyObject * py_val2)
 {
 	as_error err;
 
@@ -64,42 +64,44 @@ static int AerospikeQuery_Where_Add(as_query * query, as_predicate_type predicat
 	}
 
 	switch (predicate) {
-		case AS_PREDICATE_STRING_EQUAL: {
-			if ( ! PyString_Check(py_val1) ) {
+		case AS_PREDICATE_EQUAL: {
+			if ( in_datatype == AS_INDEX_STRING ){
+				char * bin = pyobject_to_str(py_bin);
+				char * val = pyobject_to_str(py_val1);
+
+				as_query_where_init(query, 1);
+				as_query_where(query, bin, as_equals( STRING, val ));
+			}
+			else if ( in_datatype == AS_INDEX_NUMERIC ){
+				char * bin = pyobject_to_str(py_bin);
+				int64_t val = pyobject_to_int64(py_val1);
+
+				as_query_where_init(query, 1);
+				as_query_where(query, bin, as_equals( NUMERIC, val ));
+			}
+			else {
 				// If it ain't expected, raise and error
-				as_error_update(&err, AEROSPIKE_ERR_PARAM, "predicate 'equals' expects a string value.");
+				as_error_update(&err, AEROSPIKE_ERR_PARAM, "predicate 'equals' expects a string or integer value.");
 				PyObject * py_err = NULL;
 				error_to_pyobject(&err, &py_err);
 				PyErr_SetObject(PyExc_Exception, py_err);
 				return 1;
 			}
-
-			char * bin = pyobject_to_str(py_bin);
-			char * val = pyobject_to_str(py_val1);
-
-			as_query_where_init(query, 1);
-			as_query_where(query, bin, string_equals(val));
 			break;
 		}
-		case AS_PREDICATE_INTEGER_EQUAL: {
-			if ( ! PyInt_Check(py_val1) && ! PyLong_Check(py_val1) ) {
-				// If it ain't good, raise and error
-				as_error_update(&err, AEROSPIKE_ERR_PARAM, "predicate 'equals' expects a bin and an integer value.");
-				PyObject * py_err = NULL;
-				error_to_pyobject(&err, &py_err);
-				PyErr_SetObject(PyExc_Exception, py_err);
-				return 1;
+		case AS_PREDICATE_RANGE: {
+			if ( in_datatype == AS_INDEX_NUMERIC) {
+				char * bin  = pyobject_to_str(py_bin);
+				int64_t min = pyobject_to_int64(py_val1);
+				int64_t max = pyobject_to_int64(py_val2);
+
+				as_query_where_init(query, 1);
+				as_query_where(query, bin, as_range( DEFAULT, NUMERIC, min, max ));
 			}
-
-			char * bin = pyobject_to_str(py_bin);
-			int64_t val = pyobject_to_int64(py_val1);
-
-			as_query_where_init(query, 1);
-			as_query_where(query, bin, integer_equals(val));
-			break;
-		}
-		case AS_PREDICATE_INTEGER_RANGE: {
-			if ( (! PyInt_Check(py_val1) && ! PyLong_Check(py_val1)) || (! PyInt_Check(py_val2) && ! PyLong_Check(py_val2)) ) {
+			else if ( in_datatype == AS_INDEX_STRING) {
+				// NOT IMPLEMENTED
+			}
+			else {
 				// If it ain't right, raise and error
 				as_error_update(&err, AEROSPIKE_ERR_PARAM, "predicate 'between' expects two integer values.");
 				PyObject * py_err = NULL;
@@ -107,13 +109,6 @@ static int AerospikeQuery_Where_Add(as_query * query, as_predicate_type predicat
 				PyErr_SetObject(PyExc_Exception, py_err);
 				return 1;
 			}
-
-			char * bin = pyobject_to_str(py_bin);
-			int64_t min = pyobject_to_int64(py_val1);
-			int64_t max = pyobject_to_int64(py_val2);
-
-			as_query_where_init(query, 1);
-			as_query_where(query, bin, integer_range(min, max));
 			break;
 		}
 		default: {
@@ -151,19 +146,22 @@ AerospikeQuery * AerospikeQuery_Where(AerospikeQuery * self, PyObject * args)
 		}
 
 		PyObject * py_op = PyTuple_GetItem(py_arg1, 0);
+		PyObject * py_op_data = PyTuple_GetItem(py_arg1, 1);
 
-		if ( PyInt_Check(py_op) ) {
+		if ( PyInt_Check(py_op) && PyInt_Check(py_op_data)) {
 			as_predicate_type op = (as_predicate_type) PyInt_AsLong(py_op);
+			as_index_datatype op_data = (as_index_datatype) PyInt_AsLong(py_op_data);
 			rc = AerospikeQuery_Where_Add(
 				&self->query,
 				op,
-				size > 1 ? PyTuple_GetItem(py_arg1, 1) : Py_None,
+				op_data,
 				size > 2 ? PyTuple_GetItem(py_arg1, 2) : Py_None,
-				size > 3 ? PyTuple_GetItem(py_arg1, 3) : Py_None
+				size > 3 ? PyTuple_GetItem(py_arg1, 3) : Py_None,
+				size > 4 ? PyTuple_GetItem(py_arg1, 4) : Py_None
 			);
 		}
 	}
-	else if ( (py_arg2) && PyString_Check(py_arg1) && (py_arg2) && PyString_Check(py_arg2) ) {
+	else if ( (py_arg1) && PyString_Check(py_arg1) && (py_arg2) && PyString_Check(py_arg2) ) {
 
 		char * op = PyString_AsString(py_arg2);
 
@@ -171,7 +169,8 @@ AerospikeQuery * AerospikeQuery_Where(AerospikeQuery * self, PyObject * args)
 			if ( PyInt_Check(py_arg3) || PyLong_Check(py_arg3) ) {
 				rc = AerospikeQuery_Where_Add(
 					&self->query,
-					AS_PREDICATE_INTEGER_EQUAL,
+					AS_PREDICATE_EQUAL,
+					AS_INDEX_NUMERIC,
 					py_arg1,
 					py_arg3,
 					Py_None
@@ -180,7 +179,8 @@ AerospikeQuery * AerospikeQuery_Where(AerospikeQuery * self, PyObject * args)
 			else if ( PyString_Check(py_arg3) ) {
 				rc = AerospikeQuery_Where_Add(
 					&self->query,
-					AS_PREDICATE_STRING_EQUAL,
+					AS_PREDICATE_EQUAL,
+					AS_INDEX_STRING,
 					py_arg1,
 					py_arg3,
 					Py_None
@@ -197,7 +197,8 @@ AerospikeQuery * AerospikeQuery_Where(AerospikeQuery * self, PyObject * args)
 		else if ( strcmp(op, "between") == 0 ) {
 			rc = AerospikeQuery_Where_Add(
 				&self->query,
-				AS_PREDICATE_INTEGER_RANGE,
+				AS_PREDICATE_RANGE,
+				AS_INDEX_NUMERIC,
 				py_arg1,
 				py_arg3,
 				py_arg4

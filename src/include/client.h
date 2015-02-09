@@ -352,13 +352,6 @@ PyObject * AerospikeClient_Set_Log_Level(AerospikeClient * self, PyObject *args,
  */
 PyObject * AerospikeClient_Set_Log_Handler(AerospikeClient * self, PyObject *args, PyObject * kwds);
 
-#define OPERATOR_PREPEND 4
-#define OPERATOR_APPEND  5
-#define OPERATOR_TOUCH   8
-#define OPERATOR_INCR    2
-#define OPERATOR_READ    1
-#define OPERATOR_WRITE   0
-
 /**
  * LSTACK Operations
  *
@@ -391,12 +384,6 @@ AerospikeLList * AerospikeClient_LList(AerospikeClient * self, PyObject * args, 
  */
 AerospikeLMap * AerospikeClient_LMap(AerospikeClient * self, PyObject * args, PyObject * kwds);
 
-#define OPERATOR_PREPEND 4
-#define OPERATOR_APPEND  5
-#define OPERATOR_TOUCH   8
-#define OPERATOR_INCR    2
-#define OPERATOR_READ    1
-#define OPERATOR_WRITE   0
 
 /**
  * Get records in a batch

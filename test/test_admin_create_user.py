@@ -121,7 +121,7 @@ class TestCreateUser(object):
             status = self.client.admin_create_user( policy, user, password, roles, len(roles) )
 
         assert exception.value[0] == 60
-        assert exception.value[1] == "aerospike create user failed"
+        assert exception.value[1] == "AEROSPIKE_INVALID_USER"
 
     def test_create_user_with_special_characters_in_username(self):
 
@@ -185,7 +185,7 @@ class TestCreateUser(object):
             status = self.client.admin_create_user( policy, user, password, roles, len(roles) )
 
         assert exception.value[0] == 60
-        assert exception.value[1] == "aerospike create user failed"
+        assert exception.value[1] == "AEROSPIKE_INVALID_USER"
 
 
     def test_create_user_with_too_long_password(self):
@@ -217,7 +217,7 @@ class TestCreateUser(object):
             status = self.client.admin_create_user( policy, user, password, roles, len(roles) )
 
         assert exception.value[0] == 70
-        assert exception.value[1] == "aerospike create user failed"
+        assert exception.value[1] == "AEROSPIKE_INVALID_ROLE"
 
     def test_create_user_with_invalid_role(self):
 
@@ -230,7 +230,7 @@ class TestCreateUser(object):
             status = self.client.admin_create_user( policy, user, password, roles, len(roles) )
 
         assert exception.value[0] == 70
-        assert exception.value[1] == "aerospike create user failed"
+        assert exception.value[1] == "AEROSPIKE_INVALID_ROLE"
 
     def test_create_user_with_different_roles_and_roles_size(self):
 
@@ -243,7 +243,7 @@ class TestCreateUser(object):
             status = self.client.admin_create_user(policy, user, password, roles, 2)
 
         assert exception.value[0] == 70
-        assert exception.value[1] == "aerospike create user failed"
+        assert exception.value[1] == "AEROSPIKE_INVALID_ROLE"
 
     def test_create_user_with_non_user_admin_user(self):
 
@@ -252,7 +252,11 @@ class TestCreateUser(object):
         password = "non_admin"
         roles = ["read-write"]
 
-        self.client.admin_drop_user( policy, user )
+        try:
+            self.client.admin_drop_user( policy, user )
+        except:
+            pass
+
         status = self.client.admin_create_user( policy, user, password, roles, len(roles) )
 
         assert status == 0
@@ -264,6 +268,8 @@ class TestCreateUser(object):
         with pytest.raises(Exception) as exception:
             non_admin_client = aerospike.client(config).connect( "non_admin", "non_admin" )
             status = non_admin_client.admin_create_user( policy, "user78", password, roles, len(roles) )
+            non_admin_client.close()
 
         assert exception.value[0] == 81
 
+        self.delete_users.append("non_admin")

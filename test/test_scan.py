@@ -77,8 +77,8 @@ class TestScan(object):
         with pytest.raises(Exception) as exception:
             scan_obj = self.client.scan( ns, st )
 
-        #assert exception.value[0] == 501
-        assert 1 == 1
+        assert exception.value[0] == 501
+        #assert 1 == 1
 
 
     def test_scan_with_existent_ns_and_set(self):
@@ -111,7 +111,7 @@ class TestScan(object):
 
         scan_obj = self.client.scan(ns, st)
 
-        scan_obj.foreach(callback, { 'timeout' : 1000 })
+        scan_obj.foreach(callback, { 'timeout' : 2000 })
 
         assert len(records) != 0
     """
@@ -132,7 +132,7 @@ class TestScan(object):
         scan_obj.foreach(callback, { 'timeout' : 1000 })
 
         assert len(records) == 0
-        """
+    """
 
     def test_scan_with_callback_returning_false(self):
 
@@ -151,6 +151,5 @@ class TestScan(object):
 
         scan_obj = self.client.scan(ns, st)
 
-        scan_obj.foreach(callback, { 'timeout' : 1000 })
-
+        scan_obj.foreach(callback , {'timeout' : 1000})
         assert len(records) == 10
