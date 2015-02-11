@@ -538,14 +538,14 @@ as_status pyobject_to_key(as_error * err, PyObject * py_keytuple, as_key * key)
 		ns = PyString_AsString(py_ns);
 	}
 
+	PyObject * py_ustr = NULL;
 	if ( py_set && py_set != Py_None ) {
 		if ( PyString_Check(py_set) ) {
 			set = PyString_AsString(py_set);
 		}
 		else if ( PyUnicode_Check(py_set) ) {
-			PyObject * py_ustr = PyUnicode_AsUTF8String(py_set);
+			py_ustr = PyUnicode_AsUTF8String(py_set);
 			set = PyString_AsString(py_ustr);
-			Py_DECREF(py_ustr);
 		}
 		else {
 			return as_error_update(err, AEROSPIKE_ERR_PARAM, "set must be a string");
@@ -601,6 +601,9 @@ as_status pyobject_to_key(as_error * err, PyObject * py_keytuple, as_key * key)
 	}
 	else {
 		return as_error_update(err, AEROSPIKE_ERR_PARAM, "either key or digest is required");
+	}
+	if (py_ustr) {
+		Py_DECREF(py_ustr);
 	}
 
 	return err->code;
