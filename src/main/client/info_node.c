@@ -103,7 +103,10 @@ static PyObject * AerospikeClient_InfoNode_Invoke(
 		if (response_p && status == AEROSPIKE_OK){
 			py_response = PyString_FromString(response_p);
 			free(response_p);
-		} else {
+		} else if ( response_p == NULL){
+			as_error_update(&err, AEROSPIKE_ERR_CLIENT, "Invalid info operation");
+			goto CLEANUP;
+		} else if ( status != AEROSPIKE_OK ){
 			as_error_update(&err, status, "Info operation failed");
 			goto CLEANUP;
 		}

@@ -12,7 +12,7 @@ except:
 class TestGetRegistered(object):
 
     def setup_class(cls):
-	"""
+        """
         Setup class.
         """
         config = {
@@ -22,7 +22,7 @@ class TestGetRegistered(object):
                 'timeout' : 5000
                 }
         TestGetRegistered.client = aerospike.client(config).connect()
-	TestGetRegistered.client.udf_put(policy, "bin_lua.lua", 0)
+        TestGetRegistered.client.udf_put(policy, "bin_lua.lua", 0)
 
     def teardown_class(cls):
         """
@@ -32,6 +32,7 @@ class TestGetRegistered(object):
                 'timeout' : 5000
                 }
         TestGetRegistered.client.udf_remove(policy, "bin_lua.lua")
+        TestGetRegistered.client.close()
 
     def test_getRegistered_with_no_parameters(self):
         """

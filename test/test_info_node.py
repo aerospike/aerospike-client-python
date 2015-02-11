@@ -123,7 +123,7 @@ class TestInfoNode(object):
             response = TestInfoNode.client.info_node('abcd')
 
         assert exception.value[0] == -1
-        assert exception.value[1] == "Info operation failed"
+        assert exception.value[1] == "Invalid info operation"
 
     def test_info_node_positive_with_correct_policy(self):
         """

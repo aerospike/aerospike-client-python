@@ -219,7 +219,7 @@ class TestAggregate(object):
             query.foreach(user_callback)
 
         assert exception.value[0] == -1L
-        assert exception.value[1] == 'AEROSPIKE_ERR_CLIENT'
+        assert exception.value[1] == 'UDF: Execution Error 1'
 
     def test_aggregate_with_incorrect_function(self):
         """
@@ -237,7 +237,7 @@ class TestAggregate(object):
 
             query.foreach(user_callback)
         assert exception.value[0] == -1L
-        assert exception.value[1] == 'AEROSPIKE_ERR_CLIENT'
+        assert exception.value[1] == 'UDF: Execution Error 2 : function not found'
 
     def test_aggregate_with_correct_parameters(self):
         """

@@ -77,7 +77,7 @@ class TestScan(object):
         with pytest.raises(Exception) as exception:
             scan_obj = self.client.scan( ns, st )
 
-        assert exception.value[0] == 501
+        assert exception.value[0] == -1
         #assert 1 == 1
 
 

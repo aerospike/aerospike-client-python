@@ -72,7 +72,7 @@ class TestChangePassword(object):
         assert self.clientreaduserright != None
 
         self.clientreaduserright.close()
-        self.clientreaduser.close()       
+        self.clientreaduser.close()
 
     def test_change_password_with_invalid_timeout_policy_value(self):
 

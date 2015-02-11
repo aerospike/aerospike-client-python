@@ -131,7 +131,6 @@ class TestLList(object):
             TestLList.llist_string.get('remove')
 
         assert exception.value[0] == 125L
-        assert exception.value[1] == "/opt/aerospike/sys/udf/lua/ldt/lib_llist.lua:5085: 1401:LDT-Item Not Found"
 
     #Remove() - Remove non-existent object from the llist.
     def test_llist_remove_element_negative(self):
@@ -144,7 +143,6 @@ class TestLList(object):
             TestLList.llist_string.remove('kk')
 
         assert exception.value[0] == 125L
-        assert exception.value[1] == '/opt/aerospike/sys/udf/lua/ldt/lib_llist.lua:5454: 1401:LDT-Item Not Found'
 
     #Destroy() - Delete the entire LList(LDT Remove).
     def test_llist_destroy_positive(self):
