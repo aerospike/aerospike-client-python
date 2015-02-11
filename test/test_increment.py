@@ -54,7 +54,6 @@ class TestIncrement(object):
         key = ('test', 'demo', 1)
         TestIncrement.client.increment(key, "age", 5)
 
-
         (key , meta, bins) = TestIncrement.client.get(key)
 
         assert bins == { 'age': 6, 'name': 'name1'}
@@ -364,3 +363,14 @@ class TestIncrement(object):
 
         assert exception.value[0] == -2
         assert exception.value[1] == "Bin name should be of type string"
+
+    def test_increment_with_unicode_bin(self):
+        """
+        Invoke increment() with bin is unicode string
+        """
+        key = ('test', 'demo', 1)
+        TestIncrement.client.increment(key, u"age", 10)
+
+        (key , meta, bins) = TestIncrement.client.get(key)
+
+        assert bins == { 'age': 11, 'name': 'name1'}

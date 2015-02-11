@@ -56,7 +56,7 @@ class TestOperate(object):
                 {
                     "op" : aerospike.OPERATOR_PREPEND,
                     "bin" : "name",
-                    "val" : "ram"
+                    "val" : u"ram"
                     },
                 {
                     "op" : aerospike.OPERATOR_INCR,
@@ -429,7 +429,7 @@ class TestOperate(object):
         """
         Invoke operate() with non-existent key
         """
-        key1 = ('test', 'demo', "key78")
+        key1 = ('test', 'demo', "key11")
         list = [
                 {
                     "op" : aerospike.OPERATOR_PREPEND,

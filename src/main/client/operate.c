@@ -31,6 +31,40 @@
  * This function will check whether operation can be performed
  * based on operation and value type.
  *
+ * @param py_list               The List.
+ * @param operation             The operation to perform.
+ * @param py_bin                The bin name to perform operation.
+ * @param py_value              The value to perform operation.
+ * @param py_initial_val        The initial value for increment operation.
+ *
+ * Returns 0 if operation can be performed.
+ *******************************************************************************************************
+ */
+PyObject * create_pylist(PyObject * py_list, long operation, PyObject * py_bin,
+		PyObject * py_value, PyObject * py_initial_val)
+{
+	PyObject * dict = PyDict_New();
+	py_list = PyList_New(0);
+	PyDict_SetItemString(dict, "op", PyInt_FromLong(operation));
+	if (operation != AS_OPERATOR_TOUCH) {
+		PyDict_SetItemString(dict, "bin", py_bin);
+	}
+	PyDict_SetItemString(dict, "val", py_value);
+	if (operation == AS_OPERATOR_INCR && py_initial_val && PyInt_Check(py_initial_val)) {
+		PyDict_SetItemString(dict, "initial_value", py_initial_val);
+	}
+
+	PyList_Append(py_list, dict);
+	Py_DECREF(dict);
+
+	return py_list;
+}
+
+/**
+ *******************************************************************************************************
+ * This function will check whether operation can be performed
+ * based on operation and value type.
+ *
  * @param py_value              The value to perform operations.
  * @param op                    The operation to perform.
  *
@@ -73,165 +107,19 @@ int check_type(PyObject * py_value, int op)
 
 /**
  *******************************************************************************************************
- * This function invokes csdk's API's.
+ * This function will set the metadata fields inside operation.
+ * Like genertion value, ttl.
  *
- * @param self                  AerospikeClient object
- * @param key                   The C client's as_key that identifies the record.
- * @param py_bin                The bin name to perform operation upon.
- * @param py_value              The value to perform operations.
- * @param err                   The as_error to be populated by the function
- *                              with the encountered error if any.
- * @param initial_value         Initial value for a bin
- * @param operation             Operation to perform.
- * @param ops                   as_operations object.
+ * @param py_meta              The value to perform operations.
+ * @param op                   The operation to perform.
+ * @param err                  The as_error to be populated by the function
+ *                             with the encountered error if any.
  *
- * Returns 0 on success.
+ * Returns nothing.
  *******************************************************************************************************
  */
 static
-PyObject *  AerospikeClient_Operate_Invoke(
-	AerospikeClient * self,
-	as_key * key, PyObject * py_bin, PyObject * py_value, as_error * err,
-	long initial_value, long operation, as_operations * ops)
-{
-	as_val* put_val = NULL;
-	char* bin = NULL;
-	char* val = NULL;
-	long offset;
-	long ttl;
-	PyObject * py_ustr = NULL;
-	PyObject * py_ustr1 = NULL;
-
-	if (!self || !self->as) {
-		as_error_update(err, AEROSPIKE_ERR_PARAM, "Invalid aerospike object");
-		goto CLEANUP;
-	}
-
-	/*
-	 * Check for py_bin whether it is of string or unicode type
-	 * otherwise goto CLEANUP.
-	 */
-
-	if (py_bin) {
-		if (PyString_Check(py_bin)) {
-			bin = PyString_AsString(py_bin);
-		} else if (PyUnicode_Check(py_bin)) {
-			py_ustr = PyUnicode_AsUTF8String(py_bin);
-			bin = PyString_AsString(py_ustr);
-		} else {
-			as_error_update(err, AEROSPIKE_ERR_PARAM, "Bin name should be of type string");
-			goto CLEANUP;
-		}
-	} else if (!py_bin && operation != AS_OPERATOR_TOUCH) {
-			as_error_update(err, AEROSPIKE_ERR_PARAM, "Bin is not given");
-			goto CLEANUP;
-	}
-
-	/*
-	 * Call function to check for type of value
-	 */
-	if (py_value) {
-		if (check_type(py_value, operation)) {
-			return NULL;
-		}
-	} else if ((!py_value) && (operation != AS_OPERATOR_READ)) {
-		as_error_update(err, AEROSPIKE_ERR_PARAM, "Value should be given");
-		goto CLEANUP;
-	}
-
-	switch(operation) {
-		case AS_OPERATOR_APPEND:
-			if (PyUnicode_Check(py_value)) {
-				py_ustr1 = PyUnicode_AsUTF8String(py_value);
-				val = PyString_AsString(py_ustr1);
-			} else {
-				val = PyString_AsString(py_value);
-			}
-			as_operations_add_append_str(ops, bin, val);
-			break;
-
-		case AS_OPERATOR_PREPEND:
-			if (PyUnicode_Check(py_value)) {
-				py_ustr1 = PyUnicode_AsUTF8String(py_value);
-				val = PyString_AsString(py_ustr1);
-			} else {
-				val = PyString_AsString(py_value);
-			}
-			as_operations_add_prepend_str(ops, bin, val);
-			break;
-
-		case AS_OPERATOR_INCR:
-			offset = PyInt_AsLong(py_value);
-			const char* select[] = {bin, NULL};
-			as_record* get_rec = NULL;
-
-			as_val* value_p = NULL;
-			aerospike_key_select(self->as,
-					err, NULL, key, select, &get_rec);
-			if (err->code != AEROSPIKE_OK) {
-				goto CLEANUP;
-			}
-			else
-			{
-				if (NULL != (value_p = (as_val *) as_record_get (get_rec, bin))) {
-					if (AS_NIL == value_p->type) {
-						if (!as_operations_add_write_int64(ops, bin,
-									initial_value)) {
-							goto CLEANUP;
-						}
-					} else {
-						as_operations_add_incr(ops, bin, offset);
-					}
-				} else {
-				}
-				as_record_destroy(get_rec);
-			}
-			break;
-
-		case AS_OPERATOR_TOUCH:
-			ttl = PyInt_AsLong(py_value);
-			ops->ttl = ttl;
-			as_operations_add_touch(ops);
-			break;
-
-		case AS_OPERATOR_READ:
-			as_operations_add_read(ops, bin);
-			break;
-
-		case AS_OPERATOR_WRITE:
-			/*
-			 * Val can be of any type.
-			 * string, integer
-			 * Check for py_value type and then call write_*
-			 */
-			pyobject_to_astype_write(err, bin, py_value, &put_val, ops);
-			if (err->code != AEROSPIKE_OK) {
-				goto CLEANUP;
-			}
-			as_operations_add_write(ops, bin, (as_bin_value *) put_val);
-			break;
-		default:
-			as_error_update(err, AEROSPIKE_ERR_PARAM, "Invalid operation given");
-	}
-
-CLEANUP:
-	if (py_ustr) {
-		Py_DECREF(py_ustr);
-	}
-	if (py_ustr1) {
-		Py_DECREF(py_ustr1);
-	}
-	if ( err->code != AEROSPIKE_OK ) {
-		PyObject * py_err = NULL;
-		error_to_pyobject(err, &py_err);
-		PyErr_SetObject(PyExc_Exception, py_err);
-		Py_DECREF(py_err);
-		return NULL;
-	}
-	return PyLong_FromLong(0);
-}
-
-static void AerospikeClient_CheckForMeta(PyObject * py_meta, as_operations * ops, as_error *err) {
+void AerospikeClient_CheckForMeta(PyObject * py_meta, as_operations * ops, as_error *err) {
 	if ( py_meta && PyDict_Check(py_meta) ) {
 		PyObject * py_gen = PyDict_GetItemString(py_meta, "gen");
 		PyObject * py_ttl = PyDict_GetItemString(py_meta, "ttl");
@@ -264,6 +152,221 @@ static void AerospikeClient_CheckForMeta(PyObject * py_meta, as_operations * ops
 	}
 }
 
+/**
+ *******************************************************************************************************
+ * This function invokes csdk's API's.
+ *
+ * @param self                  AerospikeClient object
+ * @param err                   The as_error to be populated by the function
+ *                              with the encountered error if any.
+ * @param key                   The C client's as_key that identifies the record.
+ * @param py_list               The list containing op, bin and value.
+ * @param py_meta               The metadata for the operation.
+ * @param operate_policy_p      The value for operate policy.
+ *
+ * Returns 0 on success.
+ *******************************************************************************************************
+ */
+static
+PyObject *  AerospikeClient_Operate_Invoke(
+	AerospikeClient * self, as_error *err,
+	as_key * key, PyObject * py_list, PyObject * py_meta,
+	as_policy_operate * operate_policy_p)
+{
+	as_val* put_val = NULL;
+	char* bin = NULL;
+	char* val = NULL;
+	long offset;
+	long initial_value;
+	long ttl;
+	long operation;
+	int i;
+	PyObject * py_rec = NULL;
+	PyObject * py_ustr = NULL;
+	PyObject * py_ustr1 = NULL;
+	PyObject * py_bin = NULL;
+	as_record * rec = NULL;
+
+	as_operations ops;
+	Py_ssize_t size = PyList_Size(py_list);
+	as_operations_inita(&ops, size);
+
+	if (!self || !self->as) {
+		as_error_update(err, AEROSPIKE_ERR_PARAM, "Invalid aerospike object");
+		goto CLEANUP;
+	}
+
+	if(py_meta) {
+		AerospikeClient_CheckForMeta(py_meta, &ops, err);
+	}
+
+	if (err->code != AEROSPIKE_OK) {
+		goto CLEANUP;
+	}
+
+	for ( i = 0; i < size; i++) {
+		PyObject * py_val = PyList_GetItem(py_list, i);
+		operation = -1;
+		offset = 0;
+		if ( PyDict_Check(py_val) ) {
+			PyObject *key_op = NULL, *value = NULL;
+			PyObject * py_value = NULL;
+			PyObject * py_initial_value = NULL;
+			Py_ssize_t pos = 0;
+			while (PyDict_Next(py_val, &pos, &key_op, &value)) {
+				if ( ! PyString_Check(key_op) ) {
+					as_error_update(err, AEROSPIKE_ERR_CLIENT, "A operation key must be a string.");
+					goto CLEANUP;
+				} else {
+					char * name = PyString_AsString(key_op);
+					if(!strcmp(name,"op") && (PyInt_Check(value) || PyLong_Check(value))) {
+						operation = PyInt_AsLong(value);
+					} else if (!strcmp(name, "bin")) {
+						py_bin = value;
+					} else if(!strcmp(name, "val")) {
+						py_value = value;
+					} else if (!strcmp(name, "initial_value")) {
+						py_initial_value = value;
+					} else {
+						as_error_update(err, AEROSPIKE_ERR_PARAM, "operation can contain only op, bin and val keys");
+						goto CLEANUP;
+					}
+				}
+			}
+
+			if (py_bin) {
+				if (PyUnicode_Check(py_bin)) {
+					py_ustr = PyUnicode_AsUTF8String(py_bin);
+					bin = PyString_AsString(py_ustr);
+				} else if (PyString_Check(py_bin)) {
+					bin = PyString_AsString(py_bin);
+				} else {
+					as_error_update(err, AEROSPIKE_ERR_PARAM, "Bin name should be of type string");
+					goto CLEANUP;
+				}
+			} else if (!py_bin && operation != AS_OPERATOR_TOUCH) {
+				as_error_update(err, AEROSPIKE_ERR_PARAM, "Bin is not given");
+				goto CLEANUP;
+			}
+			if (py_value) {
+				if (check_type(py_value, operation)) {
+					return NULL;
+				}
+			} else if ((!py_value) && (operation != AS_OPERATOR_READ)) {
+				as_error_update(err, AEROSPIKE_ERR_PARAM, "Value should be given");
+				goto CLEANUP;
+			}
+
+			switch(operation) {
+				case AS_OPERATOR_APPEND:
+					if (PyUnicode_Check(py_value)) {
+						py_ustr1 = PyUnicode_AsUTF8String(py_value);
+						val = PyString_AsString(py_ustr1);
+					} else {
+						val = PyString_AsString(py_value);
+					}
+					as_operations_add_append_str(&ops, bin, val);
+					break;
+				case AS_OPERATOR_PREPEND:
+					if (PyUnicode_Check(py_value)) {
+						py_ustr1 = PyUnicode_AsUTF8String(py_value);
+						val = PyString_AsString(py_ustr1);
+					} else {
+						val = PyString_AsString(py_value);
+					}
+					as_operations_add_prepend_str(&ops, bin, val);
+					break;
+				case AS_OPERATOR_INCR:
+					offset = PyInt_AsLong(py_value);
+					if (py_initial_value) {
+						initial_value = PyInt_AsLong(py_initial_value);
+					}
+					const char* select[] = {bin, NULL};
+					as_record* get_rec = NULL;
+
+					as_val* value_p = NULL;
+					aerospike_key_select(self->as,
+							err, NULL, key, select, &get_rec);
+					if (err->code != AEROSPIKE_OK) {
+						goto CLEANUP;
+					} else {
+						if (NULL != (value_p = (as_val *) as_record_get (get_rec, bin))) {
+							if (AS_NIL == value_p->type) {
+								if (!as_operations_add_write_int64(&ops, bin,
+											initial_value)) {
+									goto CLEANUP;
+								}
+							} else {
+								as_operations_add_incr(&ops, bin, offset);
+							}
+						} else {
+						}
+						as_record_destroy(get_rec);
+					}
+					break;
+				case AS_OPERATOR_TOUCH:
+					ttl = PyInt_AsLong(py_value);
+					ops.ttl = ttl;
+					as_operations_add_touch(&ops);
+					break;
+				case AS_OPERATOR_READ:
+					as_operations_add_read(&ops, bin);
+					break;
+				case AS_OPERATOR_WRITE:
+					pyobject_to_astype_write(err, bin, py_value, &put_val, &ops);
+					if (err->code != AEROSPIKE_OK) {
+						goto CLEANUP;
+					}
+					as_operations_add_write(&ops, bin, (as_bin_value *) put_val);
+					break;
+				default:
+					as_error_update(err, AEROSPIKE_ERR_PARAM, "Invalid operation given");
+			}
+		}
+	}
+
+	// Initialize record
+	as_record_init(rec, 0);
+
+	aerospike_key_operate(self->as, err, operate_policy_p, key, &ops, &rec);
+	if (err->code != AEROSPIKE_OK) {
+		goto CLEANUP;
+	}
+	if(rec) {
+		record_to_pyobject(err, rec, key, &py_rec);
+	}
+
+CLEANUP:
+	if (py_ustr) {
+		Py_DECREF(py_ustr);
+	}
+	if (py_ustr1) {
+		Py_DECREF(py_ustr1);
+	}
+	if (rec) {
+		as_record_destroy(rec);
+	}
+	if (key->valuep) {
+		as_key_destroy(key);
+	}
+	if (put_val) {
+		as_val_destroy(put_val);
+	}
+
+	if ( err->code != AEROSPIKE_OK ) {
+		PyObject * py_err = NULL;
+		error_to_pyobject(err, &py_err);
+		PyErr_SetObject(PyExc_Exception, py_err);
+		Py_DECREF(py_err);
+		return NULL;
+	}
+
+	if (py_rec) {
+		return py_rec;
+	} else {
+		return PyLong_FromLong(0);
+	}
+}
 
 /**
  *******************************************************************************************************
@@ -333,13 +436,9 @@ PyObject * AerospikeClient_Append(AerospikeClient * self, PyObject * args, PyObj
 	PyObject * py_meta = NULL;
 	PyObject * py_append_str = NULL;
 
-	as_operations ops;
 	as_policy_operate operate_policy;
 	as_policy_operate *operate_policy_p = NULL;
 	as_key key;
-
-	// Initialisation flags
-	bool key_initialised = false;
 
 	// Python Function Keyword Arguments
 	static char * kwlist[] = {"key", "bin", "val", "meta", "policy", NULL};
@@ -355,11 +454,6 @@ PyObject * AerospikeClient_Append(AerospikeClient * self, PyObject * args, PyObj
 		goto CLEANUP;
 	}
 
-	as_operations_inita(&ops, 1);
-
-	if(py_meta)
-		AerospikeClient_CheckForMeta(py_meta, &ops, &err);
-
 	py_result = AerospikeClient_convert_pythonObj_to_asType(&err,
 			py_key, py_policy, &key, &operate_policy, &operate_policy_p);
 	if (!py_result) {
@@ -367,33 +461,24 @@ PyObject * AerospikeClient_Append(AerospikeClient * self, PyObject * args, PyObj
 	} else {
 		Py_DECREF(py_result);
 	}
-	// Key is initialised successfully.
-	key_initialised = true;
 
-	py_result = AerospikeClient_Operate_Invoke(self, &key, py_bin, py_append_str,
-			&err, 0, AS_OPERATOR_APPEND, &ops);
-	
+	PyObject * py_list = NULL;
+	py_list = create_pylist(py_list, AS_OPERATOR_APPEND, py_bin, py_append_str, NULL);
+	py_result = AerospikeClient_Operate_Invoke(self, &err, &key, py_list,
+			py_meta, operate_policy_p);
+
+	if (py_list) {
+		Py_DECREF(py_list);
+	}
 	if (err.code != AEROSPIKE_OK) {
 		goto CLEANUP;
 	} else if (py_result == NULL) {
-		if (key_initialised == true) {
-			as_key_destroy(&key);
-		}
 		return NULL;
 	} else {
 		Py_DECREF(py_result);
-		aerospike_key_operate(self->as, &err, operate_policy_p, &key, &ops, NULL);
-		if (err.code != AEROSPIKE_OK) {
-			goto CLEANUP;
-		}
 	}
 
 CLEANUP:
-
-	if (key_initialised == true) {
-		as_key_destroy(&key);
-	}
-
 	if ( err.code != AEROSPIKE_OK ) {
 		PyObject * py_err = NULL;
 		error_to_pyobject(&err, &py_err);
@@ -431,15 +516,9 @@ PyObject * AerospikeClient_Prepend(AerospikeClient * self, PyObject * args, PyOb
 	PyObject * py_meta = NULL;
 	PyObject * py_prepend_str = NULL;
 
-	as_operations ops;
 	as_policy_operate operate_policy;
 	as_policy_operate *operate_policy_p = NULL;
 	as_key key;
-
-	// Initialisation flags
-	bool key_initialised = false;
-
-	as_operations_inita(&ops, 1);
 
 	// Python Function Keyword Arguments
 	static char * kwlist[] = {"key", "bin", "val", "meta", "policy", NULL};
@@ -455,9 +534,6 @@ PyObject * AerospikeClient_Prepend(AerospikeClient * self, PyObject * args, PyOb
 		goto CLEANUP;
 	}
 
-	if(py_meta)
-		AerospikeClient_CheckForMeta(py_meta, &ops, &err);
-
 	py_result = AerospikeClient_convert_pythonObj_to_asType(&err,
 			py_key, py_policy, &key, &operate_policy, &operate_policy_p);
 	if (!py_result) {
@@ -465,33 +541,24 @@ PyObject * AerospikeClient_Prepend(AerospikeClient * self, PyObject * args, PyOb
 	} else {
 		Py_DECREF(py_result);
 	}
-	// key is initialised successfully
-	key_initialised = true;
 
-	py_result = AerospikeClient_Operate_Invoke(self, &key, py_bin, py_prepend_str,
-			&err, 0, AS_OPERATOR_PREPEND, &ops);
+	PyObject * py_list = NULL;
+	py_list = create_pylist(py_list, AS_OPERATOR_PREPEND, py_bin, py_prepend_str, NULL);
+	py_result = AerospikeClient_Operate_Invoke(self, &err, &key, py_list,
+			py_meta, operate_policy_p);
 
+	if (py_list) {
+		Py_DECREF(py_list);
+	}
 	if (err.code != AEROSPIKE_OK) {
 		goto CLEANUP;
 	} else if (py_result == NULL) {
-		if (key_initialised == true) {
-			as_key_destroy(&key);
-		}
 		return NULL;
 	} else {
 		Py_DECREF(py_result);
-		aerospike_key_operate(self->as, &err, operate_policy_p, &key, &ops, NULL);
-		if (err.code != AEROSPIKE_OK) {
-			goto CLEANUP;
-		}
 	}
 
 CLEANUP:
-
-	if (key_initialised == true){
-		as_key_destroy(&key);
-	}
-
 	if ( err.code != AEROSPIKE_OK ) {
 		PyObject * py_err = NULL;
 		error_to_pyobject(&err, &py_err);
@@ -529,26 +596,19 @@ PyObject * AerospikeClient_Increment(AerospikeClient * self, PyObject * args, Py
 	PyObject * py_bin = NULL;
 	PyObject * py_meta = NULL;
 	PyObject * py_offset_value = 0;
-	long initial_val = 0;
+	PyObject * py_initial_val = NULL;
 
-	as_operations ops;
 	as_key key;
 	as_policy_operate operate_policy;
 	as_policy_operate *operate_policy_p = NULL;
-
-
-	// Initialisation flags
-	bool key_initialised = false;
-
-	as_operations_inita(&ops, 1);
 
 	// Python Function Keyword Arguments
 	static char * kwlist[] = {"key", "bin", "offset", "initial_value", "meta",
 		"policy", NULL};
 
 	// Python Function Argument Parsing
-	if ( PyArg_ParseTupleAndKeywords(args, kwds, "OOO|lOO:increment", kwlist, 
-				&py_key, &py_bin, &py_offset_value, &initial_val, &py_meta,
+	if ( PyArg_ParseTupleAndKeywords(args, kwds, "OOO|OOO:increment", kwlist,
+				&py_key, &py_bin, &py_offset_value, &py_initial_val, &py_meta,
 				&py_policy) == false ) {
 		return NULL;
 	}
@@ -558,9 +618,6 @@ PyObject * AerospikeClient_Increment(AerospikeClient * self, PyObject * args, Py
 		goto CLEANUP;
 	}
 
-	if(py_meta)
-		AerospikeClient_CheckForMeta(py_meta, &ops, &err);
-
 	py_result = AerospikeClient_convert_pythonObj_to_asType(&err,
 			py_key, py_policy, &key, &operate_policy, &operate_policy_p);
 
@@ -569,33 +626,25 @@ PyObject * AerospikeClient_Increment(AerospikeClient * self, PyObject * args, Py
 	} else {
 		Py_DECREF(py_result);
 	}
-	// Key initialisation is successful
-	key_initialised = true;
 
-	py_result = AerospikeClient_Operate_Invoke(self, &key, py_bin, py_offset_value,
-			&err, initial_val, AS_OPERATOR_INCR, &ops);
+	PyObject * py_list = NULL;
+	py_list = create_pylist(py_list, AS_OPERATOR_INCR, py_bin, py_offset_value,
+			py_initial_val);
+	py_result = AerospikeClient_Operate_Invoke(self, &err, &key, py_list,
+			py_meta, operate_policy_p);
 	
+	if (py_list) {
+		Py_DECREF(py_list);
+	}
 	if (err.code != AEROSPIKE_OK) {
 		goto CLEANUP;
 	} else if (py_result == NULL) {
-		if (key_initialised == true) {
-			as_key_destroy(&key);
-		}
 		return NULL;
 	} else {
 		Py_DECREF(py_result);
-		aerospike_key_operate(self->as, &err, operate_policy_p, &key, &ops, NULL);
-		if (err.code != AEROSPIKE_OK) {
-			goto CLEANUP;
-		}
 	}
 
 CLEANUP:
-
-	if (key_initialised == true) {
-		as_key_destroy(&key);
-	}
-
 	if ( err.code != AEROSPIKE_OK ) {
 		PyObject * py_err = NULL;
 		error_to_pyobject(&err, &py_err);
@@ -632,15 +681,9 @@ PyObject * AerospikeClient_Touch(AerospikeClient * self, PyObject * args, PyObje
 	PyObject * py_meta = NULL;
 	PyObject * py_touchvalue = 0;
 
-	as_operations ops;
 	as_key key;
 	as_policy_operate operate_policy;
 	as_policy_operate *operate_policy_p = NULL;
-
-	// Initialisation flags
-	bool key_initialised = false;
-
-	as_operations_inita(&ops, 1);
 
 	// Python Function Keyword Arguments
 	static char * kwlist[] = {"key", "val", "meta", "policy", NULL};
@@ -656,9 +699,6 @@ PyObject * AerospikeClient_Touch(AerospikeClient * self, PyObject * args, PyObje
 		goto CLEANUP;
 	}
 
-	if(py_meta)
-		AerospikeClient_CheckForMeta(py_meta, &ops, &err);
-
 	py_result = AerospikeClient_convert_pythonObj_to_asType(&err,
 			py_key, py_policy, &key, &operate_policy, &operate_policy_p);
 	if (!py_result) {
@@ -666,32 +706,25 @@ PyObject * AerospikeClient_Touch(AerospikeClient * self, PyObject * args, PyObje
 	} else {
 		Py_DECREF(py_result);
 	}
-	// key is initialised successfully
-	key_initialised = true;
 
-	py_result = AerospikeClient_Operate_Invoke(self, &key, NULL, py_touchvalue,
-			&err, 0, AS_OPERATOR_TOUCH, &ops);
+	PyObject * py_list = NULL;
+	py_list = create_pylist(py_list, AS_OPERATOR_TOUCH, NULL, py_touchvalue,
+			NULL);
+	py_result = AerospikeClient_Operate_Invoke(self, &err, &key, py_list,
+			py_meta, operate_policy_p);
+
+	if (py_list) {
+		Py_DECREF(py_list);
+	}
 	if (err.code != AEROSPIKE_OK) {
 		goto CLEANUP;
 	} else if (py_result == NULL) {
-		if (key_initialised == true) {
-			as_key_destroy(&key);
-		}
 		return NULL;
 	} else {
 		Py_DECREF(py_result);
-		aerospike_key_operate(self->as, &err, operate_policy_p, &key, &ops, NULL);
-		if (err.code != AEROSPIKE_OK) {
-			goto CLEANUP;
-		}
 	}
 
 CLEANUP:
-
-	if (key_initialised == true){
-		as_key_destroy(&key);
-	}
-
 	if ( err.code != AEROSPIKE_OK ) {
 		PyObject * py_err = NULL;
 		error_to_pyobject(&err, &py_err);
@@ -701,9 +734,6 @@ CLEANUP:
 	}
 	return PyLong_FromLong(0);
 }
-
-/* OPERATE
- */
 
 /**
  *******************************************************************************************************
@@ -729,25 +759,11 @@ PyObject * AerospikeClient_Operate(AerospikeClient * self, PyObject * args, PyOb
 	PyObject * py_list = NULL;
 	PyObject * py_policy = NULL;
 	PyObject * py_result = NULL;
-	PyObject * py_rec = NULL;
-	PyObject * bin_name = NULL;
 	PyObject * py_meta = NULL;
 
-	as_operations ops;
+	as_key key;
 	as_policy_operate operate_policy;
 	as_policy_operate *operate_policy_p = NULL;
-	as_key key;
-	as_record * rec = NULL;
-
-	long op;
-	//char * str = NULL;
-	long offset;
-
-	// Initialisation flags
-	bool key_initialised = false;
-
-	// Initialize record
-	as_record_init(rec, 0);
 
 	// Python Function Keyword Arguments
 	static char * kwlist[] = {"key", "list", "meta", "policy", NULL};
@@ -770,92 +786,21 @@ PyObject * AerospikeClient_Operate(AerospikeClient * self, PyObject * args, PyOb
 	} else {
 		Py_DECREF(py_result);
 	}
-	// Key is initialised successfully
-	key_initialised = true;
 
 	if ( py_list != NULL && PyList_Check(py_list) ) {
-		Py_ssize_t size = PyList_Size(py_list);
-		as_operations_inita(&ops, size);
-		if(py_meta)
-			AerospikeClient_CheckForMeta(py_meta, &ops, &err);
-		for ( int i = 0; i < size; i++ ) {
-			PyObject * py_val = PyList_GetItem(py_list, i);
-			op = -1;
-			//str = NULL;
-			bin_name = NULL;
-			offset = 0;
-			if ( PyDict_Check(py_val) ) {
-				PyObject *key_op = NULL, *value = NULL;
-				PyObject * val_used = NULL;
-				Py_ssize_t pos = 0;
-				while (PyDict_Next(py_val, &pos, &key_op, &value)) {
-					if ( ! PyString_Check(key_op) ) {
-						as_error_update(&err, AEROSPIKE_ERR_CLIENT, "A operation key must be a string.");
-						goto CLEANUP;
-					} else {
-						char * name = PyString_AsString(key_op);
-						if(!strcmp(name,"op") && (PyInt_Check(value) || PyLong_Check(value))) {
-							op = PyInt_AsLong(value);
-						} else if (!strcmp(name, "bin")) {
-							bin_name = value;
-						} else if(!strcmp(name, "val")) {
-							val_used = value;
-						} else {
-							as_error_update(&err, AEROSPIKE_ERR_PARAM, "operation can contain only op, bin and val keys");
-							goto CLEANUP;
-						}
-					}
-				}
-
-				py_result = AerospikeClient_Operate_Invoke(self, &key, bin_name,
-						val_used, &err, offset, op, &ops);
-				
-				if (err.code != AEROSPIKE_OK) {
-					goto CLEANUP;
-				} else if (py_result == NULL) {
-					if (key_initialised == true){
-						as_key_destroy(&key);
-					}
-					return NULL;
-				} else {
-					 Py_DECREF(py_result);
-				}
-			}
-		}
+		return (AerospikeClient_Operate_Invoke(self, &err,
+				&key, py_list, py_meta, operate_policy_p));
 	} else {
 		as_error_update(&err, AEROSPIKE_ERR_PARAM, "Operations should be of type list");
 		goto CLEANUP;
 	}
-	if (py_result)
-	{
-		aerospike_key_operate(self->as, &err, operate_policy_p, &key, &ops, &rec);
-		if (err.code != AEROSPIKE_OK) {
-			goto CLEANUP;
-		}
-		if(rec) {
-			record_to_pyobject(&err, rec, &key, &py_rec);
-		}
-	}
+
 CLEANUP:
-
-	if (key_initialised == true){
-		as_key_destroy(&key);
-	}
-
-	if (rec) {
-		as_record_destroy(rec);
-	}
-
 	if ( err.code != AEROSPIKE_OK ) {
 		PyObject * py_err = NULL;
 		error_to_pyobject(&err, &py_err);
 		PyErr_SetObject(PyExc_Exception, py_err);
 		Py_DECREF(py_err);
 		return NULL;
-	}
-	if (py_rec) {
-		return py_rec;
-	} else {
-		return PyLong_FromLong(0);
 	}
 }
