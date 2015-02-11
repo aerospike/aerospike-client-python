@@ -33,7 +33,7 @@ class TestUdfRemove(object):
         """
         Setup method
         """
-        TestUdfRemove.client.udf_put( {}, 'example.lua', 0 )
+        TestUdfRemove.client.udf_put( {}, u'example.lua', 0 )
         time.sleep(2)
 
     def teardown_method(self,method):
@@ -116,3 +116,21 @@ class TestUdfRemove(object):
 
         assert exception.value[0] == 100
         assert exception.value[1] == "AEROSPIKE_ERR_UDF"
+
+    def test_udf_remove_with_unicode_filename(self):
+
+        policy = { 'timeout' : 0 }
+        module = u"example.lua"
+        status = TestUdfRemove.client.udf_remove( policy, module )
+
+        assert status == 0
+
+        time.sleep(4)
+        udf_list = TestUdfRemove.client.udf_list( {'timeout' : 0} )
+
+        present = False
+        for udf in udf_list:
+            if 'example.lua' == udf['name']:
+                present = True
+
+        assert False if present else True
