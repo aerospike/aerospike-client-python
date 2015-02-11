@@ -30,19 +30,28 @@ AerospikeQuery * AerospikeQuery_Select(AerospikeQuery * self, PyObject * args, P
 	TRACE();
 
 	int nbins = (int) PyTuple_Size(args);
+	char * bin = NULL;
+	PyObject * py_ustr = NULL;
 
 	as_query_select_init(&self->query, nbins);
 
 	for ( int i = 0; i < nbins; i++ ) {
 		PyObject * py_bin = PyTuple_GetItem(args, i);
-		if ( PyString_Check(py_bin) ) {
+		if (py_bin) {
+			if (PyUnicode_Check(py_bin)) {
+				py_ustr = PyUnicode_AsUTF8String(py_bin);
+				bin = PyString_AsString(py_ustr);
+			} else if (PyString_Check(py_bin)) {
+				bin = PyString_AsString(py_bin);
+			}
+		} else {
 			// TRACE();
-			char * bin = PyString_AsString(py_bin);
-			as_query_select(&self->query, bin);
 		}
-		else {
-			// TRACE();
-		}
+		as_query_select(&self->query, bin);
+	}
+
+	if (py_ustr) {
+		Py_DECREF(py_ustr);
 	}
 
 	Py_INCREF(self);

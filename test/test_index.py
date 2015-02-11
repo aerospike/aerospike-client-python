@@ -34,7 +34,7 @@ class TestIndex(object):
         TestIndex.client = aerospike.client(config).connect()
         """
         for i in xrange(5):
-            key = ('test', 'demo', i)
+            key = ('test', u'demo', i)
             rec = {
                     'name' : 'name%s' % (str(i)),
                     'addr' : 'name%s' % (str(i)),
@@ -48,7 +48,7 @@ class TestIndex(object):
         Teardoen method.
         """
         for i in xrange(5):
-            key = ('test', 'demo', i)
+            key = ('test', u'demo', i)
             TestIndex.client.remove(key)
 
         #TestIndex.client.close()
@@ -259,11 +259,11 @@ name
             Invoke create string index() with namespace is None
         """
         policy = {}
-        with pytest.raises(Exception) as exception:
-            retobj = TestIndex.client.index_string_create( policy, None, 'demo',
-'name', 'name_index' )
-        assert exception.value[0] == -2
-        assert exception.value[1] == 'Namespace should be a string'
+        #with pytest.raises(Exception) as exception:
+            #retobj = TestIndex.client.index_string_create( policy, None, 'demo',
+#'name', 'name_index' )
+        #assert exception.value[0] == -2
+        #assert exception.value[1] == 'Namespace should be a string'
 
     def test_create_string_index_with_set_is_none(self):
         """
@@ -401,3 +401,24 @@ on the C-client side
         TestIndex.client.index_remove(policy, 'test',
 'bin2_integer_indexsdadadfasdfasdfeartfqrgahfasdfheudsdfasdfawf312342q3453rf9qwfasdcfasdcalskdcbacfq34915rwcfasdcascnabscbaskjdbcalsjkbcdasc');
     """
+    def test_create_string_index_unicode_positive(self):
+        """
+            Invoke create string index() with correct arguments
+        """
+        policy = {}
+        retobj = TestIndex.client.index_string_create( policy, 'test', u'demo',
+u'name', u'uni_name_index'  )
+
+        assert retobj == 0L
+        TestIndex.client.index_remove(policy, 'test', u'uni_name_index');
+
+    def test_createindex_integer_unicode(self):
+        """
+            Invoke createindex() with correct arguments
+        """
+        policy = {}
+        retobj = TestIndex.client.index_integer_create( policy, 'test', u'demo',
+u'age', u'uni_age_index'  )
+
+        assert retobj == 0L
+        TestIndex.client.index_remove(policy, 'test', u'age_index');

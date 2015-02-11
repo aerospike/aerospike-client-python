@@ -40,21 +40,14 @@ static int64_t pyobject_to_int64(PyObject * py_obj)
 	}
 }
 
-static char * pyobject_to_str(PyObject * py_obj)
-{
-	if ( PyString_Check(py_obj) ) {
-		return PyString_AsString(py_obj);
-	}
-	else {
-		return NULL;
-	}
-}
-
 static int AerospikeQuery_Where_Add(as_query * query, as_predicate_type predicate, PyObject * py_bin, PyObject * py_val1, PyObject * py_val2)
 {
 	as_error err;
+	char * val = NULL, * bin = NULL;
+	PyObject * py_ustr1 = NULL;
+	PyObject * py_ustr2 = NULL;
 
-	if ( ! PyString_Check(py_bin) ) {
+	if ( ! PyString_Check(py_bin)  && !(PyUnicode_Check(py_bin))) {
 		// If it ain't expected, raise and error
 		as_error_update(&err, AEROSPIKE_ERR_PARAM, "predicate expects a bin name.");
 		PyObject * py_err = NULL;
@@ -65,7 +58,7 @@ static int AerospikeQuery_Where_Add(as_query * query, as_predicate_type predicat
 
 	switch (predicate) {
 		case AS_PREDICATE_STRING_EQUAL: {
-			if ( ! PyString_Check(py_val1) ) {
+			if ( ! PyString_Check(py_val1) && !(PyUnicode_Check(py_bin))) {
 				// If it ain't expected, raise and error
 				as_error_update(&err, AEROSPIKE_ERR_PARAM, "predicate 'equals' expects a string value.");
 				PyObject * py_err = NULL;
@@ -74,8 +67,19 @@ static int AerospikeQuery_Where_Add(as_query * query, as_predicate_type predicat
 				return 1;
 			}
 
-			char * bin = pyobject_to_str(py_bin);
-			char * val = pyobject_to_str(py_val1);
+			if ( PyUnicode_Check(py_bin)) {
+				py_ustr1 = PyUnicode_AsUTF8String(py_bin);
+				bin = PyString_AsString(py_ustr1);
+			} else if ( PyString_Check(py_bin) ) {
+				bin = PyString_AsString(py_bin);
+			}
+
+			if ( PyUnicode_Check(py_val1)) {
+				py_ustr2 = PyUnicode_AsUTF8String(py_val1);
+				val = PyString_AsString(py_ustr2);
+			} else if ( PyString_Check(py_val1) ) {
+				val = PyString_AsString(py_val1);
+			}
 
 			as_query_where_init(query, 1);
 			as_query_where(query, bin, string_equals(val));
@@ -91,7 +95,12 @@ static int AerospikeQuery_Where_Add(as_query * query, as_predicate_type predicat
 				return 1;
 			}
 
-			char * bin = pyobject_to_str(py_bin);
+			if ( PyUnicode_Check(py_bin)) {
+				py_ustr1 = PyUnicode_AsUTF8String(py_bin);
+				bin = PyString_AsString(py_ustr1);
+			} else if ( PyString_Check(py_bin) ) {
+				bin = PyString_AsString(py_bin);
+			}
 			int64_t val = pyobject_to_int64(py_val1);
 
 			as_query_where_init(query, 1);
@@ -108,7 +117,12 @@ static int AerospikeQuery_Where_Add(as_query * query, as_predicate_type predicat
 				return 1;
 			}
 
-			char * bin = pyobject_to_str(py_bin);
+			if ( PyUnicode_Check(py_bin)) {
+				py_ustr1 = PyUnicode_AsUTF8String(py_bin);
+				bin = PyString_AsString(py_ustr1);
+			} else if ( PyString_Check(py_bin) ) {
+				bin = PyString_AsString(py_bin);
+			}
 			int64_t min = pyobject_to_int64(py_val1);
 			int64_t max = pyobject_to_int64(py_val2);
 
@@ -124,6 +138,13 @@ static int AerospikeQuery_Where_Add(as_query * query, as_predicate_type predicat
 			PyErr_SetObject(PyExc_Exception, py_err);
 			return 1;
 		}
+	}
+
+	if (py_ustr1) {
+		Py_DECREF(py_ustr1);
+	}
+	if (py_ustr2) {
+		Py_DECREF(py_ustr2);
 	}
 	return 0;
 }
