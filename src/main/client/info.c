@@ -97,6 +97,9 @@ static bool AerospikeClient_Info_each(as_error * err, const as_node * node, cons
 							host_addr = PyString_AsString(py_addr);
 						} else {
 							as_error_update(&udata_ptr->error, AEROSPIKE_ERR_PARAM, "Host address is of type incorrect");
+							if (py_res) {
+								Py_DECREF(py_res);
+							}
 							return false;
 							//goto CLEANUP;
 						}
@@ -163,23 +166,18 @@ PyObject * AerospikeClient_Info(AerospikeClient * self, PyObject * args, PyObjec
 	as_error err;
 	as_error_init(&err);
 
+	py_nodes = PyDict_New();
+	info_callback_udata.udata_p = py_nodes;
+	info_callback_udata.host_lookup_p = py_config;
+	as_error_init(&info_callback_udata.error);//
+
 	char * req = NULL;
 	if ( PyUnicode_Check(py_req)) {
 		py_ustr = PyUnicode_AsUTF8String(py_req);
 		req = PyString_AsString(py_ustr);
-		py_nodes = PyDict_New();
 
-		info_callback_udata.udata_p = py_nodes;
-		info_callback_udata.host_lookup_p = py_config;
-		as_error_init(&info_callback_udata.error);//
 	} else if( PyString_Check(py_req) ) {
 		req = PyString_AsString(py_req);
-
-		py_nodes = PyDict_New();
-
-		info_callback_udata.udata_p = py_nodes;
-		info_callback_udata.host_lookup_p = py_config;
-		as_error_init(&info_callback_udata.error);//
 
 	} else {
 		as_error_update(&err, AEROSPIKE_ERR_PARAM, "Request must be a string");
@@ -191,18 +189,19 @@ PyObject * AerospikeClient_Info(AerospikeClient * self, PyObject * args, PyObjec
 	if (&info_callback_udata.error.code != AEROSPIKE_OK) {
 		goto CLEANUP;
 	}
+
+CLEANUP:
 	if (py_ustr) {
 		Py_DECREF(py_ustr);
 	}
-
-CLEANUP:
 	if ( info_callback_udata.error.code != AEROSPIKE_OK ) {
 		PyObject * py_err = NULL;
 		error_to_pyobject(&info_callback_udata.error, &py_err);
 		PyErr_SetObject(PyExc_Exception, py_err);
 		Py_DECREF(py_err);
-		if (py_nodes) 
+		if (py_nodes) {
 			Py_DECREF(py_nodes);
+		}
 		return NULL;
 	}
 	if ( err.code != AEROSPIKE_OK ) {
@@ -210,10 +209,12 @@ CLEANUP:
 		error_to_pyobject(&err, &py_err);
 		PyErr_SetObject(PyExc_Exception, py_err);
 		Py_DECREF(py_err);
-		if (py_nodes)
+		if (py_nodes) {
 			Py_DECREF(py_nodes);
+		}
 		return NULL;
 	}
 
+    //Py_INCREF(py_nodes);
 	return info_callback_udata.udata_p;
 }

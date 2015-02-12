@@ -47,11 +47,10 @@ AerospikeScan * AerospikeScan_Select(AerospikeScan * self, PyObject * args, PyOb
 		} else {
 			TRACE();
 		}
-		as_scan_select(&self->scan, bin);	
-	}
-
-	if (py_ustr) {
-		Py_DECREF(py_ustr);
+		as_scan_select(&self->scan, bin);
+		if (py_ustr) {
+			Py_DECREF(py_ustr);
+		}
 	}
 
 	Py_INCREF(self);

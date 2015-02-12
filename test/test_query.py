@@ -26,14 +26,12 @@ class TestQuery(object):
         policy = {}
         TestQuery.client.index_integer_create(policy, 'test', 'demo',
 'age1', 'age_index1')
-        TestQuery.client.index_string_create(policy, 'test', 'demo', 'name', 'name_index')
         time.sleep(2)
 
     def teardown_class(cls):
         policy = {}
         TestQuery.client.index_remove(policy, 'test', 'age_index');
         TestQuery.client.index_remove(policy, 'test', 'age_index1');
-        TestQuery.client.index_remove(policy, 'test', 'name_index');
         TestQuery.client.close()
 
     def setup_method(self, method):
@@ -42,7 +40,7 @@ class TestQuery(object):
         Setup method.
         """
         for i in xrange(5):
-            key = ('test', u'demo', i)
+            key = ('test', 'demo', i)
             rec = {
                     'name' : 'name%s' % (str(i)),
                     'addr' : 'name%s' % (str(i)),
@@ -56,7 +54,7 @@ class TestQuery(object):
         Teardown method.
         """
         for i in xrange(5):
-            key = ('test', u'demo', i)
+            key = ('test', 'demo', i)
             TestQuery.client.remove(key)
 
     def test_query_with_no_parameters(self):
@@ -315,21 +313,6 @@ class TestQuery(object):
         result = query.foreach(callback)
         assert len(records) == 2
 
-    def test_query_with_unicode(self):
-        """
-            Invoke query() with unicode arguments
-        """
-        query = TestQuery.client.query('test', u'demo')
-        query.select(u'name', 'test_age')
-        query.where(p.between(u'test_age', 1, 4))
-
-        records = []
-        def callback((key,metadata,record)):
-            records.append(record)
-
-        query.foreach(callback)
-        assert len(records) == 4
-
     def test_query_with_results_method(self):
         """
             Invoke query() with correct arguments
@@ -341,21 +324,3 @@ class TestQuery(object):
         records = []
         records = query.results()
         assert len(records) == 1
-    
-    def test_query_with_predicate_value_unicode(self):
-        """
-            Invoke query() with predicate value is unicode.
-        """
-        policy = {}
-        query = TestQuery.client.query('test', 'demo')
-        query.select('name', 'test_age')
-        query.where(p.equals('name', 'name2'))
-
-        records = []
-        def callback((key,metadata,record)):
-            records.append(key)
-
-        query.foreach(callback)
-        assert records
-        assert len(records) == 1
-        policy = {}

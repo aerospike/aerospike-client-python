@@ -33,6 +33,8 @@ AerospikeQuery * AerospikeQuery_Apply(AerospikeQuery * self, PyObject * args, Py
 	PyObject * py_args = NULL;
 	PyObject * py_policy = NULL;
 
+	PyObject * py_ustr1 = NULL;
+	PyObject * py_ustr2 = NULL;
 	// Python function keyword arguments
 	static char * kwlist[] = {"module", "function", "arguments", "policy", NULL};
 
@@ -93,6 +95,14 @@ AerospikeQuery * AerospikeQuery_Apply(AerospikeQuery * self, PyObject * args, Py
 	as_query_apply(&self->query, module, function, (as_list *) arglist);
 
 CLEANUP:
+
+	if (py_ustr1) {
+		Py_DECREF(py_ustr1);
+	}
+
+	if (py_ustr2) {
+		Py_DECREF(py_ustr2);
+	}
 
 	if ( err.code != AEROSPIKE_OK ) {
 		PyObject * py_err = NULL;

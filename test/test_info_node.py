@@ -18,7 +18,8 @@ class TestInfoNode(object):
         Setup class.
         """
         config = {
-            'hosts': [('127.0.0.1', 3000)]
+            #'hosts': [('127.0.0.1', 3000)]
+            'hosts': [('10.71.71.174', 3000)]
         }
         TestInfoNode.client = aerospike.client(config).connect()
 

@@ -111,8 +111,6 @@ PyObject * AerospikeClient_Index_Integer_Create(AerospikeClient * self, PyObject
 	char *name = NULL;
 	PyObject * py_ustr2 = NULL;
 	if (PyUnicode_Check(py_name)) {
-		//py_ustr2 = PyUnicode_AsUTF8String(py_name);
-		//name = PyString_AsString(py_ustr2);
 		py_ustr2 = PyUnicode_AsUTF8String(py_name);
 		name = (char *)alloca((sizeof(char) * strlen(PyString_AsString(py_ustr2)) + 1));
 		strcpy(name,  PyString_AsString(py_ustr2));
@@ -124,8 +122,6 @@ PyObject * AerospikeClient_Index_Integer_Create(AerospikeClient * self, PyObject
 		goto CLEANUP;
 	}
 
-	name = PyString_AsString(py_name);
-
 	// Invoke operation
 	aerospike_index_integer_create(self->as, &err, info_policy_p, ns, set, bin, name);
 	if ( err.code != AEROSPIKE_OK ) {
@@ -133,10 +129,6 @@ PyObject * AerospikeClient_Index_Integer_Create(AerospikeClient * self, PyObject
 	}
 
 CLEANUP:
-
-	/*if (py_ustr2) {
-		Py_DECREF(py_ustr2);
-	}*/
 	if ( err.code != AEROSPIKE_OK ) {
 		PyObject * py_err = NULL;
 		error_to_pyobject(&err, &py_err);

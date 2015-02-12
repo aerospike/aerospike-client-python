@@ -86,29 +86,16 @@ static int AerospikeQuery_Type_Init(AerospikeQuery * self, PyObject * args, PyOb
 
 	char * namespace = NULL;
 	char * set = NULL;
-	PyObject * py_ustr = NULL;
 
 	if ( PyString_Check(py_namespace) ) {
 		namespace = PyString_AsString(py_namespace);
 	}
 
-	if ( py_set) {
-		if (PyUnicode_Check(py_set)) {
-			py_ustr = PyUnicode_AsUTF8String(py_set);
-			set = PyString_AsString(py_ustr);
-		} else if (PyString_Check(py_set)) {
-			set = PyString_AsString(py_set);
-		} else {
-			as_error_update(&err, AEROSPIKE_ERR_PARAM, "Set should be of type string");
-			return -1;
-		}
+	if (PyString_Check(py_set)) {
+		set = PyString_AsString(py_set);
 	}
 
 	as_query_init(&self->query, namespace, set);
-
-	if (py_ustr) {
-		Py_DECREF(py_ustr);
-	}
 
     return 0;
 }

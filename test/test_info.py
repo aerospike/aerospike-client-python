@@ -146,7 +146,6 @@ class TestInfo(object):
         request = u"statistics"
 
         config = {
-                #'hosts': [("127.0.0.1", 3000)]
                 'hosts': [(127, 3000)]
                 }
         with pytest.raises(Exception) as exception:
@@ -188,7 +187,7 @@ class TestInfo(object):
         with pytest.raises(Exception) as exception:
             TestInfo.client.info(request)
 
-        assert exception.value[0] == 1
+        assert exception.value[0] == -2L
         assert exception.value[1] == "Request must be a string"
 
     def test_info_without_parameters(self):

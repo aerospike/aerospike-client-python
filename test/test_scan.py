@@ -196,7 +196,7 @@ class TestScan(object):
 
         scan_obj = self.client.scan(ns, st)
 
-        scan_obj.select('name')
+        scan_obj.select(u'name', u'age')
 
         records = scan_obj.results()
 
