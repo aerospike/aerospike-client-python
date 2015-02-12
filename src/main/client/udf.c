@@ -313,6 +313,7 @@ PyObject * AerospikeClient_UDF_Get_Registered_UDF(AerospikeClient * self, PyObje
 	long language = 0;
 	bool init_udf_file = false;
 	PyObject * udf_content = NULL;
+	PyObject * py_ustr = NULL;
 
 	// Python Function Keyword Arguments
 	static char * kwlist[] = {"module", "language", "policy", NULL};
@@ -334,13 +335,18 @@ PyObject * AerospikeClient_UDF_Get_Registered_UDF(AerospikeClient * self, PyObje
 		goto CLEANUP;
 	}
 	char* strModule = NULL;
-	if(!PyString_Check(py_module))
+	if ( PyUnicode_Check(py_module) ) {
+		py_ustr = PyUnicode_AsUTF8String(py_module);
+		strModule = PyString_AsString(py_ustr);
+	}
+	else if ( PyString_Check(py_module)){
+		strModule = PyString_AsString(py_module);
+	}
+	else
 	{
-		as_error_update(&err, AEROSPIKE_ERR_CLIENT, "Module name should be a string");
+		as_error_update(&err, AEROSPIKE_ERR_CLIENT, "Module name should be a string or unicode string.");
 		goto CLEANUP;
 	}
-
-	strModule = PyString_AsString(py_module);
 
 	// Convert python object to policy_info
 	as_policy_info *info_policy_p = NULL, info_policy;
@@ -363,6 +369,9 @@ PyObject * AerospikeClient_UDF_Get_Registered_UDF(AerospikeClient * self, PyObje
 
 CLEANUP:
 
+	if (py_ustr){
+		Py_DECREF(py_ustr);
+	}
 	if(init_udf_file)
 	{
 		as_udf_file_destroy(&file);
