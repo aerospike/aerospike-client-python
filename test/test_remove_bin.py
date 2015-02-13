@@ -339,3 +339,31 @@ class TestRemovebin(object):
         (key , meta, bins) = TestRemovebin.client.get(key)
 
         assert bins == None
+
+    def test_remove_bin_with_unicode_binname(self):
+        """
+        Invoke remove_bin() with unicode bin name
+        """
+        key = ('test', 'demo', 2)
+
+        TestRemovebin.client.remove_bin(key, [u"name"])
+
+        (key , meta, bins) = TestRemovebin.client.get(key)
+
+        assert bins == { 'age': 2 }
+
+        key = ('test', 'demo', 3)
+
+        TestRemovebin.client.remove_bin(key, [u"name", "age"])
+
+        (key , meta, bins) = TestRemovebin.client.get(key)
+
+        assert bins == None
+
+        key = ('test', 'demo', 4)
+
+        TestRemovebin.client.remove_bin(key, ["name", u"age"])
+
+        (key , meta, bins) = TestRemovebin.client.get(key)
+
+        assert bins == None

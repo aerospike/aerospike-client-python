@@ -54,6 +54,7 @@ PyObject * AerospikeClient_RemoveBin_Invoke(
 	as_record rec;
 	char* binName = NULL;
 	int count = 0;
+	PyObject * py_ustr = NULL;
 
 	// Get the bin list size;
 	Py_ssize_t size = PyList_Size(py_binList);
@@ -77,16 +78,24 @@ PyObject * AerospikeClient_RemoveBin_Invoke(
 
 	for ( count = 0; count < size; count++ ) {
 		PyObject * py_val = PyList_GetItem(py_binList, count);
-		if( PyString_Check(py_val) ) {
+		if( PyUnicode_Check(py_val) ){
+			py_ustr = PyUnicode_AsUTF8String(py_val);
+			binName = PyString_AsString(py_ustr);
+		}
+		else if( PyString_Check(py_val) ) {
 			binName = PyString_AsString(py_val);
-			if(!as_record_set_nil(&rec, binName))
-			{
-				goto CLEANUP;
-			}
 		}
 		else
 		{
+			as_error_update(err, AEROSPIKE_ERR_CLIENT, "Invalid bin name, bin name should be a string or unicode string")
 			goto CLEANUP;
+		}
+		if (!as_record_set_nil(&rec, binName)){
+			goto CLEANUP;
+		}
+		if (py_ustr) {
+			Py_DECREF(py_ustr);
+			py_ustr = NULL;
 		}
 	}
 

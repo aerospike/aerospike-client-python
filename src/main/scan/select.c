@@ -50,6 +50,7 @@ AerospikeScan * AerospikeScan_Select(AerospikeScan * self, PyObject * args, PyOb
 		as_scan_select(&self->scan, bin);
 		if (py_ustr) {
 			Py_DECREF(py_ustr);
+			py_ustr = NULL;
 		}
 	}
 
