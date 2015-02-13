@@ -27,7 +27,7 @@ class TestScanApply(object):
             }
             self.client.put(key, rec)
         policy = {}
-        self.client.udf_put(policy, "bin_lua.lua", 0)
+        self.client.udf_put(policy, u"bin_lua.lua", 0)
 
     def teardown_method(self, method):
         """
@@ -158,10 +158,12 @@ class TestScanApply(object):
         """
         Invoke scan_apply() with None module function
         """
-        with pytest.raises(TypeError) as typeError:
+
+        with pytest.raises(Exception) as exception:
             scan_id = self.client.scan_apply("test", "demo", None, None, ['age', 2])
 
-        assert "scan_apply() argument 3 must be string, not None" in typeError.value
+        assert exception.value[0] == -2L
+        assert exception.value[1] == "Module name should be string"
 
     def test_scan_apply_with_percent_string(self):
         """
@@ -332,6 +334,24 @@ class TestScanApply(object):
         }
         scan_id = self.client.scan_apply("test", "demo", "bin_lua",
 "mytransform", ['age', 2], policy, options)
+
+        while True:
+            response = self.client.scan_info(scan_id)
+            if response['status'] == aerospike.SCAN_STATUS_COMPLETED:
+                break
+        for i in xrange(5):
+            key = ('test', 'demo', i)
+            (key, meta, bins) = self.client.get(key)
+            if bins['age'] != i + 2:
+                assert True == False
+
+        assert True == True
+    
+    def test_scan_apply_unicode_input(self):
+        """
+        Invoke scan_apply() with unicode udf
+        """
+        scan_id = self.client.scan_apply("test", "demo", u"bin_lua", u"mytransform", ['age', 2])
 
         while True:
             response = self.client.scan_info(scan_id)

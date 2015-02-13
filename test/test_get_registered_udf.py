@@ -22,7 +22,7 @@ class TestGetRegistered(object):
                 'timeout' : 5000
                 }
         TestGetRegistered.client = aerospike.client(config).connect()
-        TestGetRegistered.client.udf_put(policy, "bin_lua.lua", 0)
+        TestGetRegistered.client.udf_put(policy, u"bin_lua.lua", 0)
 
     def teardown_class(cls):
         """
@@ -186,3 +186,21 @@ class TestGetRegistered(object):
 
         assert exception.value[0] == -1
         assert exception.value[1] == "Module name should be a string or unicode string."
+    
+    def test_getRegistered_with_unicode_module(self):
+        """
+        Invoke getRegistered() with module name is unicode string
+        """
+        module = u"bin_lua.lua"
+        language = aerospike.UDF_TYPE_LUA
+        policy = {
+                'timeout' : 5000
+                }
+
+        udf_contents = TestGetRegistered.client.udf_getRegistered(module, language, policy)
+
+        #Check for udf file contents
+        fo = open("bin_lua.lua","r")
+        contents = fo.read()
+        assert contents == udf_contents
+        fo.close()

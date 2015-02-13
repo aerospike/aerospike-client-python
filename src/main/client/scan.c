@@ -51,7 +51,7 @@ AerospikeScan * AerospikeClient_Scan(AerospikeClient * self, PyObject * args, Py
 static
 PyObject * AerospikeClient_ScanApply_Invoke(
 		AerospikeClient * self,
-		char* namespace_p, char* set_p, char* module_p, char* function_p,
+		char* namespace_p, PyObject * py_set, PyObject * py_module, PyObject * py_function,
 		PyObject * py_args, PyObject * py_policy, PyObject * py_options, bool block)
 {
 	as_list* arglist = NULL;
@@ -64,6 +64,10 @@ PyObject * AerospikeClient_ScanApply_Invoke(
 	uint64_t scan_id = 0;
 	bool is_scan_init = false;
 
+	PyObject *py_ustr1 = NULL;
+	PyObject *py_ustr2 = NULL;
+	PyObject *py_ustr3 = NULL;
+
 	// Initialize error
 	as_error_init(&err);
 
@@ -72,13 +76,24 @@ PyObject * AerospikeClient_ScanApply_Invoke(
 		goto CLEANUP;
 	}
 
-	if (!(namespace_p) || !(set_p) || !(module_p) || !(function_p)) {
+	if (!(namespace_p) || !(py_set) || !(py_module) || !(py_function)) {
 		as_error_update(&err, AEROSPIKE_ERR_PARAM, "Parameter should not be null");
 		goto CLEANUP;
 	}
 
 	if (!PyList_Check(py_args)) {
 		as_error_update(&err, AEROSPIKE_ERR_PARAM, "Arguments should be a list");
+		goto CLEANUP;
+	}
+
+	char *set_p = NULL;
+	if (PyUnicode_Check(py_set)) {
+		py_ustr1 = PyUnicode_AsUTF8String(py_set);
+		set_p = PyString_AsString(py_ustr1);
+	} else if (PyString_Check(py_set)) {
+		set_p = PyString_AsString(py_set);
+	} else {
+		as_error_update(&err, AEROSPIKE_ERR_PARAM, "Set name should be string");
 		goto CLEANUP;
 	}
 
@@ -99,6 +114,28 @@ PyObject * AerospikeClient_ScanApply_Invoke(
 	}
 
 	if (err.code != AEROSPIKE_OK) {
+		goto CLEANUP;
+	}
+
+	char *module_p = NULL;
+	if (PyUnicode_Check(py_module)) {
+		py_ustr2 = PyUnicode_AsUTF8String(py_module);
+		module_p = PyString_AsString(py_ustr2);
+	} else if (PyString_Check(py_module)) {
+		module_p = PyString_AsString(py_module);
+	} else {
+		as_error_update(&err, AEROSPIKE_ERR_PARAM, "Module name should be string");
+		goto CLEANUP;
+	}
+
+	char *function_p = NULL;
+	if (PyUnicode_Check(py_function)) {
+		py_ustr3 = PyUnicode_AsUTF8String(py_function);
+		function_p = PyString_AsString(py_ustr3);
+	} else if (PyString_Check(py_function)) {
+		function_p = PyString_AsString(py_function);
+	} else {
+		as_error_update(&err, AEROSPIKE_ERR_PARAM, "Function name should be string");
 		goto CLEANUP;
 	}
 
@@ -132,6 +169,17 @@ PyObject * AerospikeClient_ScanApply_Invoke(
 	}
 
 CLEANUP:
+	if (py_ustr1) {
+		Py_DECREF(py_ustr1);
+	}
+
+	if (py_ustr2) {
+		Py_DECREF(py_ustr2);
+	}
+
+	if (py_ustr3) {
+		Py_DECREF(py_ustr3);
+	}
 
 	if (arglist) {
 		as_list_destroy(arglist);
@@ -176,7 +224,7 @@ PyObject * AerospikeClient_ScanApply(AerospikeClient * self, PyObject * args, Py
 	char *namespace = NULL, *set = NULL, *module = NULL, *function = NULL;
 
 	// Python Function Argument Parsing
-	if ( PyArg_ParseTupleAndKeywords(args, kwds, "ssssO|OO:scan_apply", kwlist, &namespace, &set,
+	if ( PyArg_ParseTupleAndKeywords(args, kwds, "sOOO|OOO:scan_apply", kwlist, &namespace, &set,
 				&module, &function, &py_args, &py_policy, &py_options) == false ) {
 		return NULL;
 	}

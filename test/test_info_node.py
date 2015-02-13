@@ -190,7 +190,7 @@ class TestInfoNode(object):
             response = TestInfoNode.client.info_node('bins', host)
 
         assert exception.value[0] == 9L
-        assert exception.value[1] == "AEROSPIKE_ERR_CLIENT"
+        assert exception.value[1] == ""
 
     def test_info_node_positive_with_all_parameters(self):
         """
@@ -249,3 +249,36 @@ class TestInfoNode(object):
         response = TestInfoNode.client.info_node(u'logs', host, policy)
 
         assert response != None
+    
+    def test_info_node_positive_with_valid_host(self):
+        """
+        Test info with incorrect host
+        """
+        host = {"addr": "192.168.1.2", "port": 3000}
+        with pytest.raises(Exception) as exception:
+            response = TestInfoNode.client.info_node('bins', host)
+
+        assert exception.value[0] == 9L
+        assert exception.value[1] == ""
+    
+    def test_info_node_positive_invalid_host(self):
+        """
+        Test info with incorrect host
+        """
+        host = {"addr": "abcderp", "port": 3000}
+        with pytest.raises(Exception) as exception:
+            response = TestInfoNode.client.info_node('bins', host)
+
+        assert exception.value[0] == -4L
+        assert exception.value[1] == "Invalid hostname abcderp: Name or service not known"
+    
+    def test_info_node_positive_with_dns(self):
+        """
+        Test info with incorrect host
+        """
+        host = {"addr": "google.com", "port": 3000}
+        with pytest.raises(Exception) as exception:
+            response = TestInfoNode.client.info_node('bins', host)
+
+        assert exception.value[0] == 9L
+        assert exception.value[1] == ""
