@@ -76,6 +76,8 @@ PyObject * AerospikeScan_Results(AerospikeScan * self, PyObject * args, PyObject
 
 	PyEval_RestoreThread(_save);
 
+	as_scan_destroy(&self->scan);
+
 	if ( err.code != AEROSPIKE_OK ) {
 		PyObject * py_err = NULL;
 		error_to_pyobject(&err, &py_err);

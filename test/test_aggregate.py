@@ -361,34 +361,3 @@ class TestAggregate(object):
 
         query.foreach(callback)
         assert rec == [{u'name4': 1, u'name2': 1, u'name3': 1, u'name0': 1, u'name1': 1}]
-
-    def test_aggregate_with_unicode_arguments_to_lua_function(self):
-        """
-            Invoke apply() with parameter's list for lua function.
-        """
-        query = self.client.query('test', 'demo')
-        query.where(p.between('test_age', 0, 5))
-        query.apply('stream_example', 'group_count', [u"name", u"addr"])
-
-        rec = []
-        def callback(value):
-            rec.append(value)
-
-        query.foreach(callback)
-        assert rec == [{u'name4': 1, u'name2': 1, u'name3': 1, u'name0': 1, u'name1': 1}]
-
-    def test_aggregate_with_unicode_arguments_to_lua_function(self):
-        """
-            Invoke apply() with parameter's list for lua function.
-        """
-        query = self.client.query('test', 'demo')
-        query.where(p.between('test_age', 0, 5))
-        query.apply('stream_example', 'group_count', [u"name", u"addr"])
-
-        rec = []
-        def callback(value):
-            rec.append(value)
-
-        query.foreach(callback)
-        assert rec == [{u'name4': 1, u'name2': 1, u'name3': 1, u'name0': 1, u'name1': 1}]
-

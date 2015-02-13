@@ -18,7 +18,8 @@ class TestInfoNode(object):
         Setup class.
         """
         config = {
-            'hosts': [('127.0.0.1', 3000)]
+            #'hosts': [('127.0.0.1', 3000)]
+            'hosts': [('10.71.71.174', 3000)]
         }
         TestInfoNode.client = aerospike.client(config).connect()
 
@@ -214,14 +215,37 @@ class TestInfoNode(object):
         with pytest.raises(TypeError) as typeError:
             response = TestInfoNode.client.info_node('bins', host, policy, "")
 
-        assert "info() takes at most 3 arguments (4 given)" in typeError.value
+        assert "info_node() takes at most 3 arguments (4 given)" in typeError.value
 
     def test_info_node_for_none_command(self):
         """
         Test info for None command
         """
         response = None
-        with pytest.raises(TypeError) as typeError:
+        with pytest.raises(Exception) as exception:
             response = TestInfoNode.client.info_node(None)
 
-        assert "info() argument 1 must be string, not None" in typeError.value
+        assert exception.value[0] == -2
+        assert exception.value[1] == "Request should be of string type"
+
+    def test_info_node_with_unicode_request_string_and_host_name(self):
+        """
+        Test info with all parameters
+        """
+        host = {"addr": u"127.0.0.1", "port": 3000}
+        policy = {
+            'timeout': 1000
+        }
+        response = TestInfoNode.client.info_node(u'logs', host, policy)
+
+    def test_info_node_positive_with_unicode_request_string_and_host_name(self):
+        """
+        Test info with all parameters
+        """
+        host = {"addr": u"127.0.0.1", "port": 3000}
+        policy = {
+            'timeout': 1000
+        }
+        response = TestInfoNode.client.info_node(u'logs', host, policy)
+
+        assert response != None

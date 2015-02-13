@@ -51,8 +51,10 @@ static char * pyobject_to_str(PyObject * py_obj)
 }
 
 static int AerospikeQuery_Where_Add(as_query * query, as_predicate_type predicate, as_index_datatype in_datatype, PyObject * py_bin, PyObject * py_val1, PyObject * py_val2)
+
 {
 	as_error err;
+	char * val = NULL, * bin = NULL;
 
 	if ( ! PyString_Check(py_bin) ) {
 		// If it ain't expected, raise and error
@@ -87,6 +89,7 @@ static int AerospikeQuery_Where_Add(as_query * query, as_predicate_type predicat
 				PyErr_SetObject(PyExc_Exception, py_err);
 				return 1;
 			}
+
 			break;
 		}
 		case AS_PREDICATE_RANGE: {

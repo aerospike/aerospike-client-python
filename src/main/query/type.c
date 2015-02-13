@@ -73,6 +73,8 @@ static int AerospikeQuery_Type_Init(AerospikeQuery * self, PyObject * args, PyOb
 {
 	PyObject * py_namespace = NULL;
 	PyObject * py_set = NULL;
+	as_error err;
+	as_error_init(&err);
 
 	static char * kwlist[] = {"namespace", "set", NULL};
 
@@ -89,7 +91,7 @@ static int AerospikeQuery_Type_Init(AerospikeQuery * self, PyObject * args, PyOb
 		namespace = PyString_AsString(py_namespace);
 	}
 
-	if ( PyString_Check(py_set) ) {
+	if (PyString_Check(py_set)) {
 		set = PyString_AsString(py_set);
 	}
 

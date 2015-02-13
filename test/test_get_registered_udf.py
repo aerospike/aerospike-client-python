@@ -62,6 +62,25 @@ class TestGetRegistered(object):
         assert contents == udf_contents
         fo.close()
 
+    def test_getRegistered_with_unicode_string_module_name(self):
+        """
+        Invoke getRegistered() with correct parameters
+        """
+        module = u"bin_lua.lua"
+        language = aerospike.UDF_TYPE_LUA
+        policy = {
+                'timeout' : 5000
+                }
+
+        udf_contents = TestGetRegistered.client.udf_getRegistered(module, language, policy)
+
+
+        #Check for udf file contents
+        fo = open("bin_lua.lua","r")
+        contents = fo.read()
+        assert contents == udf_contents
+        fo.close()
+
     def test_getRegistered_with_correct_policy(self):
         """
         Invoke getRegistered() with correct policy
@@ -166,4 +185,4 @@ class TestGetRegistered(object):
             TestGetRegistered.client.udf_getRegistered(None, language)
 
         assert exception.value[0] == -1
-        assert exception.value[1] == "Module name should be a string"
+        assert exception.value[1] == "Module name should be a string or unicode string."

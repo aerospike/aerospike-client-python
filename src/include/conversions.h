@@ -24,6 +24,7 @@
 #include <aerospike/as_error.h>
 #include <aerospike/as_record.h>
 #include <aerospike/as_udf.h>
+#include <aerospike/as_operations.h>
 
 #include "key.h"
 
@@ -68,3 +69,5 @@ as_status bins_to_pyobject(as_error * err, const as_record * rec, PyObject ** ob
 bool error_to_pyobject(const as_error * err, PyObject ** obj);
 
 void initialize_ldt(as_error *error, as_ldt* ldt_p, char* bin_name, int type, char* module);
+
+as_status pyobject_to_astype_write(as_error * err, char *bin_name,  PyObject * py_value, as_val **val, as_operations * ops);

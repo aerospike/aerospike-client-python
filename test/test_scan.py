@@ -23,7 +23,7 @@ class TestScan(object):
         self.client = aerospike.client(config).connect()
 
         for i in xrange(20):
-            key = ('test', 'demo', i)
+            key = ('test', u'demo', i)
             rec = {
                     'name' : 'name%s' % (str(i)),
                     'age'  : i
@@ -37,7 +37,7 @@ class TestScan(object):
         """
 
         for i in xrange(20):
-            key = ('test', 'demo', i)
+            key = ('test', u'demo', i)
             self.client.remove(key)
 
         self.client.close()
@@ -66,8 +66,8 @@ class TestScan(object):
         with pytest.raises(Exception) as exception:
             scan_obj.foreach(callback)
 
-        assert exception.value[0] == 20L
-        assert exception.value[1] == 'AEROSPIKE_ERR_NAMESPACE_NOT_FOUND'
+        assert exception.value[0] == 1L
+        assert exception.value[1] == 'AEROSPIKE_ERR_SERVER'
 
     def test_scan_with_none_ns_and_set(self):
 
@@ -77,9 +77,8 @@ class TestScan(object):
         with pytest.raises(Exception) as exception:
             scan_obj = self.client.scan( ns, st )
 
-        assert exception.value[0] == -1
-        #assert 1 == 1
-
+        assert exception.value[0] == -1L
+        assert exception.value[1] == 'Parameters are incorrect'
 
     def test_scan_with_existent_ns_and_set(self):
 
@@ -94,8 +93,6 @@ class TestScan(object):
         scan_obj = self.client.scan(ns, st)
 
         scan_obj.foreach(callback)
-
-        assert len(records) != 0
 
         assert len(records) != 0
 
@@ -153,3 +150,53 @@ class TestScan(object):
 
         scan_obj.foreach(callback , {'timeout' : 1000})
         assert len(records) == 10
+
+    def test_scan_with_unicode_set(self):
+
+        ns = 'test'
+
+        st = u'demo'
+
+        records = []
+
+        def callback( (key, meta, bins) ):
+            records.append(bins)
+
+        scan_obj = self.client.scan(ns, st)
+
+        scan_obj.foreach(callback)
+
+        assert len(records) != 0
+
+    def test_scan_with_select_clause(self):
+
+        ns = 'test'
+        st = 'demo'
+
+        records = []
+
+        def callback( (key, meta, bins) ):
+            records.append(bins)
+
+        scan_obj = self.client.scan(ns, st)
+
+        scan_obj.select('name')
+
+        scan_obj.foreach(callback)
+
+        assert len(records) != 0
+
+    def test_scan_with_results_method(self):
+
+        ns = 'test'
+        st = 'demo'
+
+        records = []
+
+        scan_obj = self.client.scan(ns, st)
+
+        scan_obj.select(u'name', u'age')
+
+        records = scan_obj.results()
+
+        assert len(records) != 0

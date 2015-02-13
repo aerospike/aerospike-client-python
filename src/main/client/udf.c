@@ -71,13 +71,17 @@ PyObject * AerospikeClient_UDF_Put(AerospikeClient * self, PyObject *args, PyObj
 	}
 
 	// Convert PyObject into a filename string
-	char *filename;
-	if( !PyString_Check(py_filename) ) {
+	char *filename = NULL;
+	PyObject * py_ustr = NULL;
+	if (PyUnicode_Check(py_filename)) {
+		py_ustr = PyUnicode_AsUTF8String(py_filename);
+		filename = PyString_AsString(py_ustr);
+	} else if (PyString_Check(py_filename)) {
+		filename = PyString_AsString(py_filename);
+	} else {
 		as_error_update(&err, AEROSPIKE_ERR_PARAM, "Filename should be a string");
 		goto CLEANUP;
 	}
-
-	filename = PyString_AsString(py_filename);
 
 	// Convert python object to policy_info
 	pyobject_to_policy_info( &err, py_policy, &info_policy, &info_policy_p);
@@ -125,6 +129,10 @@ PyObject * AerospikeClient_UDF_Put(AerospikeClient * self, PyObject *args, PyObj
 CLEANUP:
 	if(bytes)
 		free(bytes);
+
+	if (py_ustr) {
+		Py_DECREF(py_ustr);
+	}
 
 	if ( err.code != AEROSPIKE_OK ) {
 		PyObject * py_err = NULL;
@@ -181,13 +189,17 @@ PyObject * AerospikeClient_UDF_Remove(AerospikeClient * self, PyObject *args, Py
 	}
 
 	// Convert PyObject into a filename string
-	char *filename;
-	if( !PyString_Check(py_filename) ) {
+	char *filename = NULL;
+	PyObject * py_ustr = NULL;
+	if (PyUnicode_Check(py_filename)) {
+		py_ustr = PyUnicode_AsUTF8String(py_filename);
+		filename = PyString_AsString(py_ustr);
+	} else if (PyString_Check(py_filename)) {
+		filename = PyString_AsString(py_filename);
+	} else {
 		as_error_update(&err, AEROSPIKE_ERR_PARAM, "Filename should be a string");
 		goto CLEANUP;
 	}
-
-	filename = PyString_AsString(py_filename);
 
 	// Convert python object to policy_info
 	pyobject_to_policy_info( &err, py_policy, &info_policy, &info_policy_p);
@@ -200,6 +212,9 @@ PyObject * AerospikeClient_UDF_Remove(AerospikeClient * self, PyObject *args, Py
 
 CLEANUP:
 
+	if (py_ustr) {
+		Py_DECREF(py_ustr);
+	}
 	if ( err.code != AEROSPIKE_OK ) {
 		PyObject * py_err = NULL;
 		error_to_pyobject(&err, &py_err);

@@ -29,6 +29,7 @@
 #include <aerospike/as_map.h>
 #include <aerospike/as_nil.h>
 #include <aerospike/as_policy.h>
+#include <aerospike/as_operations.h>
 
 #include "conversions.h"
 #include "key.h"
@@ -430,6 +431,61 @@ as_status pyobject_to_record(as_error * err, PyObject * py_rec, PyObject * py_me
 	return err->code;
 }
 
+/*
+ * Convert pyobject to as_* type.
+ * Returns AEROSPIKE_OK on success. On error, the err argument is populated.
+ */
+as_status pyobject_to_astype_write(as_error * err, char *bin_name,  PyObject * py_value, as_val **val, as_operations * ops)
+{
+	as_error_reset(err);
+
+	if ( py_value == Py_None ) {
+		*val = (as_val *) &as_nil;
+	}
+	else if ( PyInt_Check(py_value) ) {
+		int64_t i = (int64_t) PyInt_AsLong(py_value);
+		*val = (as_val *) as_integer_new(i);
+	}
+	else if ( PyLong_Check(py_value) ) {
+		int64_t l = (int64_t) PyLong_AsLongLong(py_value);
+		*val = (as_val *) as_integer_new(l);
+	}
+	else if ( PyString_Check(py_value) ) {
+		char * s = PyString_AsString(py_value);
+		*val = (as_val *) as_string_new(s, false);
+	}
+	else if ( PyUnicode_Check(py_value) ) {
+		PyObject * py_ustr = PyUnicode_AsUTF8String(py_value);
+		char * str = PyString_AsString(py_ustr);
+		*val = (as_val *) as_string_new(strdup(str), true);
+		Py_DECREF(py_ustr);
+	}
+	else if ( PyByteArray_Check(py_value) ) {
+		uint8_t * b = (uint8_t *) PyByteArray_AsString(py_value);
+		uint32_t z = (uint32_t) PyByteArray_Size(py_value);
+		*val = (as_val *) as_bytes_new_wrap(b, z, false);
+	}
+	else if ( PyList_Check(py_value) ) {
+		as_list * list = NULL;
+		pyobject_to_list(err, py_value, &list);
+		if ( err->code == AEROSPIKE_OK ) {
+			*val = (as_val *) list;
+		}
+	}
+	else if ( PyDict_Check(py_value) ) {
+		as_map * map = NULL;
+		pyobject_to_map(err, py_value, &map);
+		if ( err->code == AEROSPIKE_OK ) {
+			*val = (as_val *) map;
+		}
+	}
+	else {
+		return as_error_update(err, AEROSPIKE_ERR_CLIENT, "value is not a supported type.");
+	}
+
+	return err->code;
+}
+
 as_status pyobject_to_key(as_error * err, PyObject * py_keytuple, as_key * key) 
 {
 	as_error_reset(err);
@@ -483,14 +539,14 @@ as_status pyobject_to_key(as_error * err, PyObject * py_keytuple, as_key * key)
 		ns = PyString_AsString(py_ns);
 	}
 
+	PyObject * py_ustr = NULL;
 	if ( py_set && py_set != Py_None ) {
 		if ( PyString_Check(py_set) ) {
 			set = PyString_AsString(py_set);
 		}
 		else if ( PyUnicode_Check(py_set) ) {
-			PyObject * py_ustr = PyUnicode_AsUTF8String(py_set);
+			py_ustr = PyUnicode_AsUTF8String(py_set);
 			set = PyString_AsString(py_ustr);
-			Py_DECREF(py_ustr);
 		}
 		else {
 			return as_error_update(err, AEROSPIKE_ERR_PARAM, "set must be a string");
@@ -546,6 +602,9 @@ as_status pyobject_to_key(as_error * err, PyObject * py_keytuple, as_key * key)
 	}
 	else {
 		return as_error_update(err, AEROSPIKE_ERR_PARAM, "either key or digest is required");
+	}
+	if (py_ustr) {
+		Py_DECREF(py_ustr);
 	}
 
 	return err->code;

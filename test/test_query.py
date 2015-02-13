@@ -38,7 +38,6 @@ class TestQuery(object):
         """
         Setup method.
         """
-
         for i in xrange(5):
             key = ('test', 'demo', i)
             rec = {
@@ -314,3 +313,15 @@ class TestQuery(object):
 
         result = query.foreach(callback)
         assert len(records) == 2
+
+    def test_query_with_results_method(self):
+        """
+            Invoke query() with correct arguments
+        """
+        query = TestQuery.client.query('test', 'demo')
+        query.select('name', 'test_age')
+        query.where(p.equals('test_age', 1))
+
+        records = []
+        records = query.results()
+        assert len(records) == 1

@@ -1018,3 +1018,21 @@ class TestPut(object):
         assert {"name": "Smith"} == bins
 
         self.delete_keys.append( key )
+
+    def test_put_with_set_unicode_string(self):
+
+        """
+            Invoke put() with set is unicode string.
+        """
+        key = ('test', u'demo', 1)
+
+        rec = {
+                "name" : "John"
+                }
+
+        assert 0 == TestPut.client.put( key, rec )
+
+        (key , meta, bins) = TestPut.client.get(key)
+
+        assert {"name": "John"} == bins
+        self.delete_keys.append( key )
