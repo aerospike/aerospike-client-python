@@ -361,3 +361,20 @@ class TestAggregate(object):
 
         query.foreach(callback)
         assert rec == [{u'name4': 1, u'name2': 1, u'name3': 1, u'name0': 1, u'name1': 1}]
+
+    def test_aggregate_with_unicode_module_and_function_name(self):
+        """
+            Invoke apply() with unicode module and function names
+        """
+        query = self.client.query('test', 'demo')
+        query.select(u'name', 'test_age')
+        query.where(p.between('test_age', 1, 5))
+        query.apply(u'stream_example', u'count')
+
+        records = []
+        def user_callback(value):
+            records.append(value)
+
+        query.foreach(user_callback)
+        assert records[0] == 4
+

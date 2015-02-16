@@ -55,27 +55,49 @@ static int AerospikeQuery_Where_Add(as_query * query, as_predicate_type predicat
 {
 	as_error err;
 	char * val = NULL, * bin = NULL;
-
-	if ( ! PyString_Check(py_bin) ) {
-		// If it ain't expected, raise and error
-		as_error_update(&err, AEROSPIKE_ERR_PARAM, "predicate expects a bin name.");
-		PyObject * py_err = NULL;
-		error_to_pyobject(&err, &py_err);
-		PyErr_SetObject(PyExc_Exception, py_err);
-		return 1;
-	}
+	PyObject * py_ubin = NULL;
+	PyObject * py_uval1 = NULL;
 
 	switch (predicate) {
 		case AS_PREDICATE_EQUAL: {
 			if ( in_datatype == AS_INDEX_STRING ){
-				char * bin = pyobject_to_str(py_bin);
-				char * val = pyobject_to_str(py_val1);
+				if (PyUnicode_Check(py_bin)){
+					py_ubin = PyUnicode_AsUTF8String(py_bin);
+					bin = PyString_AsString(py_ubin);
+				} else if (PyString_Check(py_bin) ){
+					bin = PyString_AsString(py_bin);
+				}
+				else {
+					return 1;
+				}
+
+				if (PyUnicode_Check(py_val1)){
+					py_uval1 = PyUnicode_AsUTF8String(py_val1);
+					val = PyString_AsString(py_uval1);
+				} else if (PyString_Check(py_val1) ){
+					val = PyString_AsString(py_val1);
+				}
+				else {
+					return 1;
+				}
 
 				as_query_where_init(query, 1);
 				as_query_where(query, bin, as_equals( STRING, val ));
+				if (py_ubin){
+					Py_DECREF(py_ubin);
+					py_ubin = NULL;
+				}
 			}
 			else if ( in_datatype == AS_INDEX_NUMERIC ){
-				char * bin = pyobject_to_str(py_bin);
+				if (PyUnicode_Check(py_bin)){
+					py_ubin = PyUnicode_AsUTF8String(py_bin);
+					bin = PyString_AsString(py_ubin);
+				} else if (PyString_Check(py_bin) ){
+					bin = PyString_AsString(py_bin);
+				}
+				else {
+					return 1;
+				}
 				int64_t val = pyobject_to_int64(py_val1);
 
 				as_query_where_init(query, 1);
@@ -94,7 +116,15 @@ static int AerospikeQuery_Where_Add(as_query * query, as_predicate_type predicat
 		}
 		case AS_PREDICATE_RANGE: {
 			if ( in_datatype == AS_INDEX_NUMERIC) {
-				char * bin  = pyobject_to_str(py_bin);
+				if (PyUnicode_Check(py_bin)){
+					py_ubin = PyUnicode_AsUTF8String(py_bin);
+					bin = PyString_AsString(py_ubin);
+				} else if (PyString_Check(py_bin)){
+					bin = PyString_AsString(py_bin);
+				}
+				else {
+					return 1;
+				}
 				int64_t min = pyobject_to_int64(py_val1);
 				int64_t max = pyobject_to_int64(py_val2);
 

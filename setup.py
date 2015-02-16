@@ -32,7 +32,7 @@ from subprocess import call
 
 AEROSPIKE_C_VERSION = os.getenv('AEROSPIKE_C_VERSION')
 if not AEROSPIKE_C_VERSION:
-    AEROSPIKE_C_VERSION = '3.0.96'
+    AEROSPIKE_C_VERSION = '3.1.2'
 AEROSPIKE_C_HOME = os.getenv('AEROSPIKE_C_HOME')
 PREFIX = None
 PLATFORM =  platform.platform(1)
@@ -80,7 +80,6 @@ if DARWIN:
     extra_compile_args = extra_compile_args + [
         '-D_DARWIN_UNLIMITED_SELECT',
         '-undefined','dynamic_lookup',
-        '-DLUA_DEBUG_HOOK',
         '-DMARCH_x86_64'
         ]
 

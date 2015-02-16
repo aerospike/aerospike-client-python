@@ -330,18 +330,24 @@ as_status pyobject_to_record(as_error * err, PyObject * py_rec, PyObject * py_me
 		return as_error_update(err, AEROSPIKE_ERR_CLIENT, "record is null");
 	}
 	else if ( PyDict_Check(py_rec) ) {
-		PyObject *key = NULL, *value = NULL;
+		PyObject *key = NULL, *value = NULL, *py_ukey = NULL;
 		Py_ssize_t pos = 0;
 		Py_ssize_t size = PyDict_Size(py_rec);
+		char *name = NULL;
 
 		as_record_init(rec, size);
 
 		while (PyDict_Next(py_rec, &pos, &key, &value)) {
-			if ( ! PyString_Check(key) ) {
-				return as_error_update(err, AEROSPIKE_ERR_CLIENT, "A bin name must be a string.");
-			}
 
-			char * name = PyString_AsString(key);
+			if ( PyUnicode_Check(key) ) {
+				py_ukey = PyUnicode_AsUTF8String(key);
+				name = PyString_AsString(py_ukey);
+			} else if ( PyString_Check(key) ) {
+				name = PyString_AsString(key);
+			}
+			else {
+				return as_error_update(err, AEROSPIKE_ERR_CLIENT, "A bin name must be a string or unicode string.");
+			}
 
 			if ( !value ) {
 				// this should never happen, but if it did...
@@ -392,6 +398,11 @@ as_status pyobject_to_record(as_error * err, PyObject * py_rec, PyObject * py_me
 				as_record_set_map(rec, name, map);
 			}
 			else {
+			}
+
+			if (py_ukey){
+				Py_DECREF(py_ukey);
+				py_ukey = NULL;
 			}
 		}
 
