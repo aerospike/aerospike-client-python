@@ -103,6 +103,12 @@ PyObject * AerospikeQuery_Results(AerospikeQuery * self, PyObject * args, PyObje
 	}
 
 	TRACE();
+
+	if ( self->query.apply.arglist ){
+		as_arraylist_destroy( self->query.apply.arglist );
+	}
+	self->query.apply.arglist = NULL;
+
 	as_query_destroy(&self->query);
 	return py_results;
 }

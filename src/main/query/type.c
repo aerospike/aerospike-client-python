@@ -100,8 +100,12 @@ static int AerospikeQuery_Type_Init(AerospikeQuery * self, PyObject * args, PyOb
     return 0;
 }
 
-static void AerospikeQuery_Type_Dealloc(PyObject * self)
+static void AerospikeQuery_Type_Dealloc(AerospikeQuery * self)
 {
+	int i;
+	for (i=0; i < self->u_objs.size; i++){
+		Py_DECREF(self->u_objs.ob[i]);
+	}
     self->ob_type->tp_free((PyObject *) self);
 }
 
@@ -181,4 +185,11 @@ AerospikeQuery * AerospikeQuery_New(AerospikeClient * client, PyObject * args, P
 		Py_DECREF(py_err);
 		return NULL;
 	}
+}
+PyObject * StoreUnicodePyObject(AerospikeQuery * self, PyObject *obj){
+
+	if (self->u_objs.size < MAX_UNICODE_OBJECTS){
+		self->u_objs.ob[self->u_objs.size++] = obj;
+	}
+	return obj;
 }

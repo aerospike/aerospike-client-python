@@ -39,7 +39,7 @@ static int64_t pyobject_to_int64(PyObject * py_obj)
 		return 0;
 	}
 }
-
+/*
 static char * pyobject_to_str(PyObject * py_obj)
 {
 	if ( PyString_Check(py_obj) ) {
@@ -49,14 +49,13 @@ static char * pyobject_to_str(PyObject * py_obj)
 		return NULL;
 	}
 }
-
-static int AerospikeQuery_Where_Add(as_query * query, as_predicate_type predicate, as_index_datatype in_datatype, PyObject * py_bin, PyObject * py_val1, PyObject * py_val2)
+*/
+static int AerospikeQuery_Where_Add(AerospikeQuery * self, as_predicate_type predicate, as_index_datatype in_datatype, PyObject * py_bin, PyObject * py_val1, PyObject * py_val2)
 
 {
 	as_error err;
 	char * val = NULL, * bin = NULL;
 	PyObject * py_ubin = NULL;
-	PyObject * py_uval1 = NULL;
 
 	switch (predicate) {
 		case AS_PREDICATE_EQUAL: {
@@ -71,9 +70,11 @@ static int AerospikeQuery_Where_Add(as_query * query, as_predicate_type predicat
 					return 1;
 				}
 
-				if (PyUnicode_Check(py_val1)){
-					py_uval1 = PyUnicode_AsUTF8String(py_val1);
-					val = PyString_AsString(py_uval1);
+				if (PyUnicode_Check(py_val1)){ 
+					val = PyString_AsString( 
+							StoreUnicodePyObject( self,
+								PyUnicode_AsUTF8String(py_val1) ));
+
 				} else if (PyString_Check(py_val1) ){
 					val = PyString_AsString(py_val1);
 				}
@@ -81,8 +82,8 @@ static int AerospikeQuery_Where_Add(as_query * query, as_predicate_type predicat
 					return 1;
 				}
 
-				as_query_where_init(query, 1);
-				as_query_where(query, bin, as_equals( STRING, val ));
+				as_query_where_init(&self->query, 1);
+				as_query_where(&self->query, bin, as_equals( STRING, val ));
 				if (py_ubin){
 					Py_DECREF(py_ubin);
 					py_ubin = NULL;
@@ -100,8 +101,12 @@ static int AerospikeQuery_Where_Add(as_query * query, as_predicate_type predicat
 				}
 				int64_t val = pyobject_to_int64(py_val1);
 
-				as_query_where_init(query, 1);
-				as_query_where(query, bin, as_equals( NUMERIC, val ));
+				as_query_where_init(&self->query, 1);
+				as_query_where(&self->query, bin, as_equals( NUMERIC, val ));
+				if (py_ubin){
+					Py_DECREF(py_ubin);
+					py_ubin = NULL;
+				}
 			}
 			else {
 				// If it ain't expected, raise and error
@@ -128,8 +133,12 @@ static int AerospikeQuery_Where_Add(as_query * query, as_predicate_type predicat
 				int64_t min = pyobject_to_int64(py_val1);
 				int64_t max = pyobject_to_int64(py_val2);
 
-				as_query_where_init(query, 1);
-				as_query_where(query, bin, as_range( DEFAULT, NUMERIC, min, max ));
+				as_query_where_init(&self->query, 1);
+				as_query_where(&self->query, bin, as_range( DEFAULT, NUMERIC, min, max ));
+				if (py_ubin){
+					Py_DECREF(py_ubin);
+					py_ubin = NULL;
+				}
 			}
 			else if ( in_datatype == AS_INDEX_STRING) {
 				// NOT IMPLEMENTED
@@ -185,7 +194,7 @@ AerospikeQuery * AerospikeQuery_Where(AerospikeQuery * self, PyObject * args)
 			as_predicate_type op = (as_predicate_type) PyInt_AsLong(py_op);
 			as_index_datatype op_data = (as_index_datatype) PyInt_AsLong(py_op_data);
 			rc = AerospikeQuery_Where_Add(
-				&self->query,
+				self,
 				op,
 				op_data,
 				size > 2 ? PyTuple_GetItem(py_arg1, 2) : Py_None,
@@ -201,7 +210,7 @@ AerospikeQuery * AerospikeQuery_Where(AerospikeQuery * self, PyObject * args)
 		if ( strcmp(op, "equals") == 0 ) {
 			if ( PyInt_Check(py_arg3) || PyLong_Check(py_arg3) ) {
 				rc = AerospikeQuery_Where_Add(
-					&self->query,
+					self,
 					AS_PREDICATE_EQUAL,
 					AS_INDEX_NUMERIC,
 					py_arg1,
@@ -209,9 +218,9 @@ AerospikeQuery * AerospikeQuery_Where(AerospikeQuery * self, PyObject * args)
 					Py_None
 				);
 			}
-			else if ( PyString_Check(py_arg3) ) {
+			else if ( PyString_Check(py_arg3) || PyUnicode_Check(py_arg3) ) {
 				rc = AerospikeQuery_Where_Add(
-					&self->query,
+					self,
 					AS_PREDICATE_EQUAL,
 					AS_INDEX_STRING,
 					py_arg1,
@@ -229,7 +238,7 @@ AerospikeQuery * AerospikeQuery_Where(AerospikeQuery * self, PyObject * args)
 		}
 		else if ( strcmp(op, "between") == 0 ) {
 			rc = AerospikeQuery_Where_Add(
-				&self->query,
+				self,
 				AS_PREDICATE_RANGE,
 				AS_INDEX_NUMERIC,
 				py_arg1,
