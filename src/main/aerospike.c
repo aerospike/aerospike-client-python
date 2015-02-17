@@ -29,24 +29,43 @@
 #include "llist.h"
 #include "lmap.h"
 #include "policy.h"
+#include "log.h"
+#include <aerospike/as_operations.h>
 
 static PyMethodDef Aerospike_Methods[] = {
 
 	{"client",		(PyCFunction) AerospikeClient_New,	METH_VARARGS | METH_KEYWORDS,
-					"Create a new instance of Client class."},
+		"Create a new instance of Client class."},
+	{"set_log_level",	(PyCFunction)Aerospike_Set_Log_Level,       METH_VARARGS | METH_KEYWORDS,
+		"Sets the log level"},
+
+	{"set_log_handler", (PyCFunction)Aerospike_Set_Log_Handler,	    METH_VARARGS | METH_KEYWORDS,
+		"Sets the log handler"},
 
 	{NULL}
 };
+
+static
+AerospikeConstants operator_constants[] = {
+	{ AS_OPERATOR_READ                 ,   "OPERATOR_READ"    },
+	{ AS_OPERATOR_WRITE                ,   "OPERATOR_WRITE"   },
+	{ AS_OPERATOR_INCR                 ,   "OPERATOR_INCR"    },
+	{ AS_OPERATOR_APPEND               ,   "OPERATOR_APPEND"  },
+	{ AS_OPERATOR_PREPEND              ,   "OPERATOR_PREPEND" },
+	{ AS_OPERATOR_TOUCH                ,   "OPERATOR_TOUCH"   }
+};
+
+#define OPERATOR_CONSTANTS_ARR_SIZE (sizeof(operator_constants)/sizeof(AerospikeConstants))
 
 PyMODINIT_FUNC initaerospike(void)
 {
 	// Makes things "thread-safe"
 	PyEval_InitThreads();
-
+	int i = 0;
 
 	// aerospike Module
 	PyObject * aerospike = Py_InitModule3("aerospike", Aerospike_Methods,
-		"Aerospike Python Client");
+			"Aerospike Python Client");
 
 	declare_policy_constants(aerospike);
 
@@ -62,21 +81,23 @@ PyMODINIT_FUNC initaerospike(void)
 	Py_INCREF(query);
 	PyModule_AddObject(aerospike, "Query", (PyObject *) query);
 
+	declare_policy_constants(aerospike);
+	declare_log_constants(aerospike);
+
 	PyTypeObject * scan = AerospikeScan_Ready();
 	Py_INCREF(scan);
 	PyModule_AddObject(aerospike, "Scan", (PyObject *) scan);
 
-    PyModule_AddIntMacro(aerospike, OPERATOR_PREPEND);
-    PyModule_AddIntMacro(aerospike, OPERATOR_APPEND);
-    PyModule_AddIntMacro(aerospike, OPERATOR_READ);
-    PyModule_AddIntMacro(aerospike, OPERATOR_WRITE);
-    PyModule_AddIntMacro(aerospike, OPERATOR_TOUCH);
-    PyModule_AddIntMacro(aerospike, OPERATOR_INCR);
+	for (i = 0; i <= OPERATOR_CONSTANTS_ARR_SIZE; i++) {
+		PyModule_AddIntConstant(aerospike,
+				operator_constants[i].constant_str,
+				operator_constants[i].constantno);
+	}
 
-    /*
-     * Add constants to module.
-     */
-    declare_policy_constants(aerospike);
+	/*
+	 * Add constants to module.
+	 */
+	declare_policy_constants(aerospike);
 
 	PyObject * predicates = AerospikePredicates_New();
 	Py_INCREF(predicates);

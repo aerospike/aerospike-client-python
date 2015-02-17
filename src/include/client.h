@@ -47,6 +47,11 @@ PyObject * AerospikeClient_Connect(AerospikeClient * self, PyObject * args, PyOb
  */
 PyObject * AerospikeClient_Close(AerospikeClient * self, PyObject * args, PyObject * kwds);
 
+/**
+ * Checks the connection to the database.
+ */
+PyObject * AerospikeClient_isConnected(AerospikeClient * self, PyObject * args, PyObject * kwds);
+
 
 /*******************************************************************************
  * KVS OPERATIONS
@@ -100,6 +105,13 @@ PyObject * AerospikeClient_Put(AerospikeClient * self, PyObject * args, PyObject
  */
 PyObject * AerospikeClient_Remove(AerospikeClient * self, PyObject * args, PyObject * kwds);
 
+/**
+ * Remove bin from the database.
+ *
+ *		client.removebin((x,y,z))
+ *
+ */
+extern PyObject * AerospikeClient_RemoveBin(AerospikeClient * self, PyObject * args, PyObject * kwds);
 /**
  * Append a record to the database.
  *
@@ -206,6 +218,10 @@ AerospikeKey * AerospikeClient_Key(AerospikeClient * self, PyObject * args, PyOb
  */
 AerospikeScan * AerospikeClient_Scan(AerospikeClient * self, PyObject * args, PyObject * kwds);
 
+PyObject * AerospikeClient_ScanApply(AerospikeClient * self, PyObject * args, PyObject * kwds);
+
+PyObject * AerospikeClient_ScanInfo(AerospikeClient * self, PyObject * args, PyObject * kwds);
+
 /*******************************************************************************
  * QUERY OPERATIONS
  ******************************************************************************/
@@ -280,6 +296,14 @@ PyObject * AerospikeClient_UDF_Remove(AerospikeClient * self, PyObject *args, Py
  */
 PyObject * AerospikeClient_UDF_List(AerospikeClient * self, PyObject *args, PyObject * kwds);
 
+/**
+ * Gets the registered UDFs
+ *
+ *		client.udf_getRegistered(module,policy,language)
+ *
+ */
+PyObject * AerospikeClient_UDF_Get_Registered_UDF(AerospikeClient * self, PyObject *args, PyObject * kwds);
+
 
 /*******************************************************************************
  * SECONDARY INDEX OPERATIONS
@@ -307,6 +331,26 @@ PyObject * AerospikeClient_Index_String_Create(AerospikeClient * self, PyObject 
  *
  */
 PyObject * AerospikeClient_Index_Remove(AerospikeClient * self, PyObject *args, PyObject * kwds);
+
+
+/*******************************************************************************
+ * LOG OPERATIONS
+ ******************************************************************************/
+/**
+ * Sets the log level
+ *
+ *		client.setLogLevel()
+ *
+ */
+PyObject * AerospikeClient_Set_Log_Level(AerospikeClient * self, PyObject *args, PyObject * kwds);
+
+/**
+ * Sets the log handler
+ *
+ *		client.setLogHandler()
+ *
+ */
+PyObject * AerospikeClient_Set_Log_Handler(AerospikeClient * self, PyObject *args, PyObject * kwds);
 
 /**
  * LSTACK Operations
@@ -340,12 +384,6 @@ AerospikeLList * AerospikeClient_LList(AerospikeClient * self, PyObject * args, 
  */
 AerospikeLMap * AerospikeClient_LMap(AerospikeClient * self, PyObject * args, PyObject * kwds);
 
-#define OPERATOR_PREPEND 4
-#define OPERATOR_APPEND  5
-#define OPERATOR_TOUCH   8
-#define OPERATOR_INCR    2
-#define OPERATOR_READ    1
-#define OPERATOR_WRITE   0
 
 /**
  * Get records in a batch

@@ -5,7 +5,6 @@
 The Aerospike Python client depends on:
 
 - The Aerospike C client 
-- Lua 5.1.5
 - Python devel Package
 
 The Aerospike Python Client works on Python 2.6.*, 2.7.* 
@@ -20,7 +19,7 @@ The following are dependencies for:
 
 **Dependencies**
 
-	sudo yum install lua-devel python26-devel
+    sudo yum install python26-devel
     sudo yum install python-devel # on CentOS 7 and variants
 
 ### Debian 6+ and Ubuntu 12.04+
@@ -33,26 +32,24 @@ The following are dependencies for:
 
 **Dependencies**
 
-	sudo apt-get install build-essential python-dev liblua5.1-dev
+    sudo apt-get install build-essential python-dev
 
 
 ### Mac OS X
 
 The Python development and build tools are included with Mac OS X.
 
-We recommend building Lua from source. To download the source code and build the library, follow the instruction provided in the _Lua_ section of the [Aerospike C Client Installation Guide](http://aerospike.com/docs/client/c/install/macosx.html#lua)
-
 ## Build
 
 To build the library:
 
-	python setup.py build --force
+    python setup.py build --force
 
 ## Install
 
 To install the library:
 
-	sudo python setup.py install --force
+    sudo python setup.py install --force
 
 **Note** If you have already installed the Aerospike C Client and it is on your linker path you can build using:
 
@@ -74,14 +71,14 @@ Examples are in the `examples` directory. The following examples are available:
 
 Each example provides help/usage information when you specify the `--help` option. For example, for help on the `kvs.py` example, then run:
 
-	python examples/client/kvs.py --help
+    python examples/client/kvs.py --help
 
 
 ### Running Examples
 
 Simply call `python` with the path to the example
 
-	python examples/client/kvs.py
+    python examples/client/kvs.py
 
 
 ## License

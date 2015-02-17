@@ -109,7 +109,7 @@ class TestSetPassword(object):
             status = self.client.admin_set_password( policy, user, password )
 
         assert exception.value[0] == 60
-        assert exception.value[1] == "aerospike set password failed"
+        assert exception.value[1] == "AEROSPIKE_INVALID_USER"
 
     def test_set_password_with_too_long_password(self):
 

@@ -29,6 +29,7 @@
 #include <aerospike/as_map.h>
 #include <aerospike/as_nil.h>
 #include <aerospike/as_policy.h>
+#include <aerospike/as_operations.h>
 
 #include "conversions.h"
 #include "key.h"
@@ -118,7 +119,7 @@ as_status as_user_array_to_pyobject( as_error *err, as_user **users, PyObject **
 
 	for(i = 0; i < users_size; i++) {
 
-		PyObject * py_user = PyString_FromString(users[i]->user);
+		PyObject * py_user       = PyString_FromString(users[i]->name);
 		PyObject * py_roles_size = PyInt_FromLong(users[i]->roles_size);
 		PyObject * py_roles;
 		strArray_to_pyobject(err, users[i]->roles, &py_roles, users[i]->roles_size);
@@ -148,7 +149,7 @@ as_status as_user_to_pyobject( as_error * err, as_user * user, PyObject ** py_as
 {
 	as_error_reset(err);
 
-	PyObject * py_user = PyString_FromString(user->user);
+	PyObject * py_user = PyString_FromString(user->name);
 	PyObject * py_roles_size = PyInt_FromLong(user->roles_size);
 	PyObject * py_roles;
 
@@ -157,20 +158,20 @@ as_status as_user_to_pyobject( as_error * err, as_user * user, PyObject ** py_as
 		goto END;
 	}
 
-	PyObject * py_user = PyDict_New();
+	PyObject * py_users = PyDict_New();
 
-	PyDict_SetItemString(py_user, "user", py_user);
-	PyDict_SetItemString(py_user, "roles_size", py_roles_size);
-	PyDict_SetItemString(py_user, "roles", py_roles);
+	PyDict_SetItemString(py_users, "user", py_user);
+	PyDict_SetItemString(py_users, "roles_size", py_roles_size);
+	PyDict_SetItemString(py_users, "roles", py_roles);
 
 	Py_DECREF(py_user);
 	Py_DECREF(py_roles_size);
 	Py_DECREF(py_roles);
 
 	*py_as_user = PyList_New(0);
-	PyList_Append(*py_as_user, py_user);
+	PyList_Append(*py_as_user, py_users);
 
-	Py_DECREF(py_user);
+	Py_DECREF(py_users);
 
 END:
 	return err->code;
@@ -329,18 +330,24 @@ as_status pyobject_to_record(as_error * err, PyObject * py_rec, PyObject * py_me
 		return as_error_update(err, AEROSPIKE_ERR_CLIENT, "record is null");
 	}
 	else if ( PyDict_Check(py_rec) ) {
-		PyObject *key = NULL, *value = NULL;
+		PyObject *key = NULL, *value = NULL, *py_ukey = NULL;
 		Py_ssize_t pos = 0;
 		Py_ssize_t size = PyDict_Size(py_rec);
+		char *name = NULL;
 
 		as_record_init(rec, size);
 
 		while (PyDict_Next(py_rec, &pos, &key, &value)) {
-			if ( ! PyString_Check(key) ) {
-				return as_error_update(err, AEROSPIKE_ERR_CLIENT, "A bin name must be a string.");
-			}
 
-			char * name = PyString_AsString(key);
+			if ( PyUnicode_Check(key) ) {
+				py_ukey = PyUnicode_AsUTF8String(key);
+				name = PyString_AsString(py_ukey);
+			} else if ( PyString_Check(key) ) {
+				name = PyString_AsString(key);
+			}
+			else {
+				return as_error_update(err, AEROSPIKE_ERR_CLIENT, "A bin name must be a string or unicode string.");
+			}
 
 			if ( !value ) {
 				// this should never happen, but if it did...
@@ -392,6 +399,11 @@ as_status pyobject_to_record(as_error * err, PyObject * py_rec, PyObject * py_me
 			}
 			else {
 			}
+
+			if (py_ukey){
+				Py_DECREF(py_ukey);
+				py_ukey = NULL;
+			}
 		}
 
 		if ( py_meta && PyDict_Check(py_meta) ) {
@@ -425,6 +437,61 @@ as_status pyobject_to_record(as_error * err, PyObject * py_rec, PyObject * py_me
 		if ( err->code != AEROSPIKE_OK ) {
 			as_record_destroy(rec);
 		}
+	}
+
+	return err->code;
+}
+
+/*
+ * Convert pyobject to as_* type.
+ * Returns AEROSPIKE_OK on success. On error, the err argument is populated.
+ */
+as_status pyobject_to_astype_write(as_error * err, char *bin_name,  PyObject * py_value, as_val **val, as_operations * ops)
+{
+	as_error_reset(err);
+
+	if ( py_value == Py_None ) {
+		*val = (as_val *) &as_nil;
+	}
+	else if ( PyInt_Check(py_value) ) {
+		int64_t i = (int64_t) PyInt_AsLong(py_value);
+		*val = (as_val *) as_integer_new(i);
+	}
+	else if ( PyLong_Check(py_value) ) {
+		int64_t l = (int64_t) PyLong_AsLongLong(py_value);
+		*val = (as_val *) as_integer_new(l);
+	}
+	else if ( PyString_Check(py_value) ) {
+		char * s = PyString_AsString(py_value);
+		*val = (as_val *) as_string_new(s, false);
+	}
+	else if ( PyUnicode_Check(py_value) ) {
+		PyObject * py_ustr = PyUnicode_AsUTF8String(py_value);
+		char * str = PyString_AsString(py_ustr);
+		*val = (as_val *) as_string_new(strdup(str), true);
+		Py_DECREF(py_ustr);
+	}
+	else if ( PyByteArray_Check(py_value) ) {
+		uint8_t * b = (uint8_t *) PyByteArray_AsString(py_value);
+		uint32_t z = (uint32_t) PyByteArray_Size(py_value);
+		*val = (as_val *) as_bytes_new_wrap(b, z, false);
+	}
+	else if ( PyList_Check(py_value) ) {
+		as_list * list = NULL;
+		pyobject_to_list(err, py_value, &list);
+		if ( err->code == AEROSPIKE_OK ) {
+			*val = (as_val *) list;
+		}
+	}
+	else if ( PyDict_Check(py_value) ) {
+		as_map * map = NULL;
+		pyobject_to_map(err, py_value, &map);
+		if ( err->code == AEROSPIKE_OK ) {
+			*val = (as_val *) map;
+		}
+	}
+	else {
+		return as_error_update(err, AEROSPIKE_ERR_CLIENT, "value is not a supported type.");
 	}
 
 	return err->code;
@@ -483,14 +550,14 @@ as_status pyobject_to_key(as_error * err, PyObject * py_keytuple, as_key * key)
 		ns = PyString_AsString(py_ns);
 	}
 
+	PyObject * py_ustr = NULL;
 	if ( py_set && py_set != Py_None ) {
 		if ( PyString_Check(py_set) ) {
 			set = PyString_AsString(py_set);
 		}
 		else if ( PyUnicode_Check(py_set) ) {
-			PyObject * py_ustr = PyUnicode_AsUTF8String(py_set);
+			py_ustr = PyUnicode_AsUTF8String(py_set);
 			set = PyString_AsString(py_ustr);
-			Py_DECREF(py_ustr);
 		}
 		else {
 			return as_error_update(err, AEROSPIKE_ERR_PARAM, "set must be a string");
@@ -546,6 +613,9 @@ as_status pyobject_to_key(as_error * err, PyObject * py_keytuple, as_key * key)
 	}
 	else {
 		return as_error_update(err, AEROSPIKE_ERR_PARAM, "either key or digest is required");
+	}
+	if (py_ustr) {
+		Py_DECREF(py_ustr);
 	}
 
 	return err->code;

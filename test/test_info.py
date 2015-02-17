@@ -143,16 +143,16 @@ class TestInfo(object):
 
     def test_info_with_config_for_statistics(self):
 
-        request = "statistics"
+        request = u"statistics"
 
         config = {
-                'hosts': [('127.0.0.1', 3000)]
+                'hosts': [(127, 3000)]
                 }
-        nodes_info = TestInfo.client.info(request, config)
+        with pytest.raises(Exception) as exception:
+            TestInfo.client.info(request, config)
 
-        assert nodes_info != None
-
-        assert type(nodes_info) == dict
+        assert exception.value[0] == -2
+        assert exception.value[1] == "Host address is of type incorrect"
 
     def test_info_with_config_for_statistics_and_policy(self):
 
@@ -185,9 +185,9 @@ class TestInfo(object):
         request = None
 
         with pytest.raises(Exception) as exception:
-            nodes_info = TestInfo.client.info(request)
+            TestInfo.client.info(request)
 
-        assert exception.value[0] == -2
+        assert exception.value[0] == -2L
         assert exception.value[1] == "Request must be a string"
 
     def test_info_without_parameters(self):

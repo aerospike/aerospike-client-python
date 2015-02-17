@@ -42,6 +42,9 @@ static PyMethodDef AerospikeClient_Type_Methods[] = {
 	{"close",
 		(PyCFunction) AerospikeClient_Close, METH_VARARGS | METH_KEYWORDS,
 		"Close the connection(s) to the cluster."},
+	{"isConnected",
+		(PyCFunction) AerospikeClient_isConnected, METH_VARARGS | METH_KEYWORDS,
+		"Checks current connection state."},
 
 	// ADMIN OPERATIONS
 
@@ -88,9 +91,12 @@ static PyMethodDef AerospikeClient_Type_Methods[] = {
 	{"apply",
 		(PyCFunction) AerospikeClient_Apply, METH_VARARGS | METH_KEYWORDS,
 		"Apply a UDF on a record in the database."},
-    {"append",
-        (PyCFunction) AerospikeClient_Append, METH_VARARGS | METH_KEYWORDS,
-        "Appends a string to the string value in a bin"},
+	{"remove_bin",
+		(PyCFunction) AerospikeClient_RemoveBin, METH_VARARGS | METH_KEYWORDS,
+		"Remove a bin from the database."},
+	{"append",
+		(PyCFunction) AerospikeClient_Append, METH_VARARGS | METH_KEYWORDS,
+		"Appends a string to the string value in a bin"},
 	{"prepend",
 		(PyCFunction) AerospikeClient_Prepend, METH_VARARGS | METH_KEYWORDS,
 		"Prepend a record to the database"},
@@ -121,6 +127,13 @@ static PyMethodDef AerospikeClient_Type_Methods[] = {
 	{"scan",
 		(PyCFunction) AerospikeClient_Scan, METH_VARARGS | METH_KEYWORDS,
 		"Create a new Scan object for performing scans."},
+	{"scan_apply",
+		(PyCFunction) AerospikeClient_ScanApply, METH_VARARGS | METH_KEYWORDS,
+		"Applies Scan object for performing scans."},
+
+	{"scan_info",
+		(PyCFunction) AerospikeClient_ScanInfo, METH_VARARGS | METH_KEYWORDS,
+		"Gets Scan Info."},
 
 	// INFO OPERATIONS
 	{"info",
@@ -144,6 +157,9 @@ static PyMethodDef AerospikeClient_Type_Methods[] = {
 	{"udf_list",
 		(PyCFunction)AerospikeClient_UDF_List, METH_VARARGS | METH_KEYWORDS,
 		"Lists the UDFs"},
+	{"udf_getRegistered",
+		(PyCFunction)AerospikeClient_UDF_Get_Registered_UDF, METH_VARARGS | METH_KEYWORDS,
+		"Get Registered UDFs"},
 
 	// SECONDARY INDEX OPERATONS
 
@@ -384,6 +400,7 @@ AerospikeClient * AerospikeClient_New(PyObject * parent, PyObject * args, PyObje
 	AerospikeClient * self = (AerospikeClient *) AerospikeClient_Type.tp_new(&AerospikeClient_Type, args, kwds);
 	if ( AerospikeClient_Type.tp_init((PyObject *) self, args, kwds) == 0 ){
 		// Initialize connection flag
+		self->is_conn_16 = false;
 		return self;
 	}
 	else {

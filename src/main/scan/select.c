@@ -29,18 +29,40 @@ AerospikeScan * AerospikeScan_Select(AerospikeScan * self, PyObject * args, PyOb
 {
 	TRACE();
 
-	as_scan_select_init(&self->scan, 100);
+	char * bin = NULL; 
+	PyObject * py_ustr = NULL;
+	as_error err;
+	as_error_init(&err);
 
 	int nbins = (int) PyTuple_Size(args);
+	as_scan_select_init(&self->scan, nbins);
+
 	for ( int i = 0; i < nbins; i++ ) {
 		PyObject * py_bin = PyTuple_GetItem(args, i);
-		if ( PyString_Check(py_bin) ) {
+		if ( py_bin) {
 			TRACE();
-			char * bin = PyString_AsString(py_bin);
-			as_scan_select(&self->scan, bin);
+			if (PyUnicode_Check(py_bin)) {
+				py_ustr = PyUnicode_AsUTF8String(py_bin);
+				bin = PyString_AsString(py_ustr);
+			} else if (PyString_Check(py_bin)) {
+				bin = PyString_AsString(py_bin);
+			} else {
+				as_error_update(&err, AEROSPIKE_ERR_PARAM, "Bin name should be of type string");
+				PyObject * py_err = NULL;
+				error_to_pyobject(&err, &py_err);
+				PyErr_SetObject(PyExc_Exception, py_err);
+				Py_DECREF(py_err);
+				as_scan_destroy(&self->scan);
+				return NULL;
+
+			}
+		} else {
+			TRACE();
 		}
-		else {
-			TRACE();
+		as_scan_select(&self->scan, bin);
+		if (py_ustr) {
+			Py_DECREF(py_ustr);
+			py_ustr = NULL;
 		}
 	}
 

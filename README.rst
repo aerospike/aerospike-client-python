@@ -13,7 +13,6 @@ Dependencies
 The Aerospike Python client depends on:
 
 -  The Aerospike C client
--  Lua 5.1.5
 -  Python devel Package
 
 The Aerospike Python Client works on Python 2.6.\ *, 2.7.*
@@ -29,7 +28,8 @@ The following are dependencies for:
 
 ::
 
-    sudo yum install lua-devel
+    sudo yum install python-devel
+    sudo yum install openssl-devel
 
 Debian 6+ and Ubuntu 12.04+
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -42,7 +42,8 @@ The following are dependencies for:
 
 ::
 
-    sudo apt-get install liblua5.1-dev
+    sudo apt-get install python-dev
+    sudo apt-get install libssl-dev
 
 Mac OS X
 ~~~~~~~~

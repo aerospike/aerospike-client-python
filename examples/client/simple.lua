@@ -22,3 +22,7 @@ end
 function concat(rec, a, b)
     return (a or "") .. (b or "")
 end
+function add_val(rec, bin, offset)
+    rec[bin] = rec[bin] + offset
+	aerospike:update(rec)
+end

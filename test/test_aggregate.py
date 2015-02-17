@@ -13,9 +13,7 @@ from aerospike import predicates as p
 class TestAggregate(object):
 
     def setup_class(cls):
-        config = {
-                'hosts': [('127.0.0.1', 3000)]
-                }
+        config = { 'hosts' : [('127.0.0.1', 3000)] }
         client = aerospike.client(config).connect()
         policy = {}
         client.index_integer_create(policy, 'test', 'demo',
@@ -35,7 +33,7 @@ class TestAggregate(object):
     def teardown_class(cls):
         config = {
                 'hosts': [('127.0.0.1', 3000)]
-                }
+        }
         client = aerospike.client(config).connect()
         policy = {}
         client.index_remove(policy, 'test', 'age_index');
@@ -220,8 +218,8 @@ class TestAggregate(object):
 
             query.foreach(user_callback)
 
-        assert exception.value[0] == 1L
-        assert exception.value[1] == 'AEROSPIKE_ERR_SERVER : "UDF: Execution Error 1"'
+        assert exception.value[0] == -1L
+        assert exception.value[1] == 'UDF: Execution Error 1'
 
     def test_aggregate_with_incorrect_function(self):
         """
@@ -238,8 +236,8 @@ class TestAggregate(object):
                 records.append(value)
 
             query.foreach(user_callback)
-        assert exception.value[0] == 1L
-        assert exception.value[1] == 'AEROSPIKE_ERR_SERVER : "UDF: Execution Error 2 : function not found"'
+        assert exception.value[0] == -1L
+        assert exception.value[1] == 'UDF: Execution Error 2 : function not found'
 
     def test_aggregate_with_correct_parameters(self):
         """
@@ -347,7 +345,7 @@ class TestAggregate(object):
 
             query.foreach(user_callback)
 
-        assert exception.value[0] == 1L
+        assert exception.value[0] == -1L
 
     def test_aggregate_with_arguments_to_lua_function(self):
         """
@@ -364,33 +362,19 @@ class TestAggregate(object):
         query.foreach(callback)
         assert rec == [{u'name4': 1, u'name2': 1, u'name3': 1, u'name0': 1, u'name1': 1}]
 
-    def test_aggregate_with_unicode_arguments_to_lua_function(self):
+    def test_aggregate_with_unicode_module_and_function_name(self):
         """
-            Invoke apply() with parameter's list for lua function.
-        """
-        query = self.client.query('test', 'demo')
-        query.where(p.between('test_age', 0, 5))
-        query.apply('stream_example', 'group_count', [u"name", u"addr"])
-
-        rec = []
-        def callback(value):
-            rec.append(value)
-
-        query.foreach(callback)
-        assert rec == [{u'name4': 1, u'name2': 1, u'name3': 1, u'name0': 1, u'name1': 1}]
-
-    def test_aggregate_with_unicode_arguments_to_lua_function(self):
-        """
-            Invoke apply() with parameter's list for lua function.
+            Invoke apply() with unicode module and function names
         """
         query = self.client.query('test', 'demo')
-        query.where(p.between('test_age', 0, 5))
-        query.apply('stream_example', 'group_count', [u"name", u"addr"])
+        query.select(u'name', 'test_age')
+        query.where(p.between('test_age', 1, 5))
+        query.apply(u'stream_example', u'count')
 
-        rec = []
-        def callback(value):
-            rec.append(value)
+        records = []
+        def user_callback(value):
+            records.append(value)
 
-        query.foreach(callback)
-        assert rec == [{u'name4': 1, u'name2': 1, u'name3': 1, u'name0': 1, u'name1': 1}]
+        query.foreach(user_callback)
+        assert records[0] == 4
 

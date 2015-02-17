@@ -32,7 +32,7 @@ from subprocess import call
 
 AEROSPIKE_C_VERSION = os.getenv('AEROSPIKE_C_VERSION')
 if not AEROSPIKE_C_VERSION:
-    AEROSPIKE_C_VERSION = '3.0.94'
+    AEROSPIKE_C_VERSION = '3.1.2'
 AEROSPIKE_C_HOME = os.getenv('AEROSPIKE_C_HOME')
 PREFIX = None
 PLATFORM =  platform.platform(1)
@@ -80,11 +80,8 @@ if DARWIN:
     extra_compile_args = extra_compile_args + [
         '-D_DARWIN_UNLIMITED_SELECT',
         '-undefined','dynamic_lookup',
-        '-DLUA_DEBUG_HOOK',
         '-DMARCH_x86_64'
         ]
-    
-    libraries = libraries + ['lua']
 
     if AEROSPIKE_C_HOME:
         PREFIX = AEROSPIKE_C_HOME + '/target/Darwin-x86_64'
@@ -104,39 +101,6 @@ elif LINUX:
 
     if AEROSPIKE_C_HOME:
         PREFIX = AEROSPIKE_C_HOME + '/target/Linux-x86_64'
-
-    #---------------------------------------------------------------------------
-    # The following will attempt to resolve the Lua 5.1 library dependency
-    #---------------------------------------------------------------------------
-
-    lua_dirs = [
-      '/usr/local/lib',
-      '/usr/lib',
-      '/usr/local/lib64',
-      '/usr/lib64',
-      '/usr/local/lib/x86_64-linux-gnu',
-      '/usr/lib/x86_64-linux-gnu',
-      '/lib/x86_64-linux-gnu',
-      '/lib',
-      ]
-
-    lua_aliases = ['lua5.1','lua-5.1','lua']
-
-    liblua = None
-    for directory in lua_dirs:
-      for alias in lua_aliases:
-        library = directory + '/lib' + alias + '.so'
-        if os.path.isfile(library):
-            libraries = libraries + [alias]
-            liblua = alias
-            print("info: liblua found: ", library, file=sys.stdout)
-            break
-      if liblua:
-        break
-
-    if not liblua:
-        print("error: liblua was not found:\n   ", "\n    ".join(lua_dirs), file=sys.stderr)
-        sys.exit(1)
 
 else:
     print("error: OS not supported:", PLATFORM, file=sys.stderr)
@@ -310,6 +274,7 @@ setup(
             # Source Files
             [
                 'src/main/aerospike.c', 
+                'src/main/log.c',
                 'src/main/client/type.c',
                 'src/main/client/apply.c',
                 'src/main/client/close.c',
@@ -330,6 +295,7 @@ setup(
                 'src/main/client/admin.c',
                 'src/main/client/udf.c',
                 'src/main/client/sec_index.c',
+                'src/main/client/remove_bin.c',
                 'src/main/client/lstack.c',
                 'src/main/client/lset.c',
                 'src/main/client/lmap.c',

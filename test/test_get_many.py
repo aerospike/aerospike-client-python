@@ -120,7 +120,7 @@ class TestGetMany(object):
 
     def test_get_many_with_non_existent_keys_in_middle(self):
 
-        self.keys.append( ('test', 'demo', 10) )
+        self.keys.append( ('test', 'demo', 'some_key') )
 
         for i in xrange(15,20):
             key = ('test', 'demo', i)

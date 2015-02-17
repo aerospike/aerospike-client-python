@@ -2,7 +2,7 @@ import unittest
 import aerospike
 
 config = {
-    "hosts": [("localhost",3000)]
+    "hosts": [("127.0.0.1",3000)]
 }
 
 # count records
@@ -175,7 +175,6 @@ class KVTestCase(unittest.TestCase):
             self.client.put(key, rec)
 
         self.client.index_integer_create({}, 'test', 'unittest', 'age', 'age_index')
-        sleep(1)
 
         query = self.client.query('test', 'unittest')
 

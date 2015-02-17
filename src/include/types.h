@@ -26,10 +26,19 @@
 #include <aerospike/as_bin.h>
 #include <aerospike/as_ldt.h>
 
+// Bin names can be of type Unicode in Python
+// DB supports 32767 maximum number of bins
+#define MAX_UNICODE_OBJECTS 32767
+
+typedef struct {
+	PyObject *ob[MAX_UNICODE_OBJECTS];
+	int size;
+} UnicodePyObjects;
 
 typedef struct {
 	PyObject_HEAD
 	aerospike * as;
+	int is_conn_16;
 } AerospikeClient;
 
 typedef struct {
@@ -44,6 +53,7 @@ typedef struct {
 	PyObject_HEAD
 	AerospikeClient * client;
 	as_query query;
+	UnicodePyObjects u_objs;
 } AerospikeQuery;
 
 typedef struct {

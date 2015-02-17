@@ -23,15 +23,16 @@ class TestQuery(object):
         TestQuery.client = aerospike.client(config).connect()
         policy = {}
         TestQuery.client.index_integer_create(policy, 'test', 'demo', 'test_age', 'age_index')
+        TestQuery.client.index_string_create(policy, 'test', 'demo', 'addr', 'addr_index')
         policy = {}
         TestQuery.client.index_integer_create(policy, 'test', 'demo',
 'age1', 'age_index1')
-        time.sleep(2)
 
     def teardown_class(cls):
         policy = {}
         TestQuery.client.index_remove(policy, 'test', 'age_index');
         TestQuery.client.index_remove(policy, 'test', 'age_index1');
+        TestQuery.client.index_remove(policy, 'test', 'addr_index');
         TestQuery.client.close()
 
     def setup_method(self, method):
@@ -39,7 +40,6 @@ class TestQuery(object):
         """
         Setup method.
         """
-
         for i in xrange(5):
             key = ('test', 'demo', i)
             rec = {
@@ -49,12 +49,21 @@ class TestQuery(object):
                     'no'   : i
                     }
             TestQuery.client.put(key, rec)
+        for i in xrange(5, 10):
+            key = ('test', 'demo', i)
+            rec = {
+                    u'name' : 'name%s' % (str(i)),
+                    u'addr' : u'name%s' % (str(i)),
+                    u'test_age'  : i,
+                    u'no'   : i
+                    }
+            TestQuery.client.put(key, rec)
 
     def teardown_method(self, method):
         """
         Teardown method.
         """
-        for i in xrange(5):
+        for i in xrange(10):
             key = ('test', 'demo', i)
             TestQuery.client.remove(key)
 
@@ -294,8 +303,10 @@ class TestQuery(object):
             val += 1
             records.append(key)
 
-        result = query.foreach(callback)
-        assert len(records) == 0
+        with pytest.raises(Exception) as exception:
+            result = query.foreach(callback)
+        assert exception.value[0] == -2L
+        assert exception.value[1] == "Callback function contains an error"
 
     def test_query_with_callback_returning_false(self):
         """
@@ -313,3 +324,47 @@ class TestQuery(object):
 
         result = query.foreach(callback)
         assert len(records) == 2
+
+    def test_query_with_results_method(self):
+        """
+            Invoke query() with correct arguments
+        """
+        query = TestQuery.client.query('test', 'demo')
+        query.select('name', 'test_age')
+        query.where(p.equals('test_age', 1))
+
+        records = []
+        records = query.results()
+        assert len(records) == 1
+
+    def test_query_with_unicode_binnames_in_select_and_where(self):
+        """
+            Invoke query() with unicode bin names in select
+        """
+        query = TestQuery.client.query('test', 'demo')
+        query.select(u'name', u'test_age', 'addr')
+        query.where(p.equals(u'test_age', 7))
+
+        records = query.results()
+        assert len(records) == 1
+        assert records[0][2] == {'test_age': 7, 'name': u'name7', 'addr': u'name7'}
+
+        query = TestQuery.client.query('test', 'demo')
+        query.select(u'name', 'addr')
+        query.where(p.equals(u'addr', u'name9'))
+
+        records = query.results()
+        assert records[0][2] == {'name': 'name9', 'addr': u'name9'}
+
+    def test_query_with_select_bin_integer(self):
+
+        """
+            Invoke query() with select bin is of integer type.
+        """
+        query = TestQuery.client.query('test', 'demo')
+
+        with pytest.raises(Exception) as exception:
+            query.select(22, 'test_age')
+
+        assert exception.value[0] == -2L
+        assert exception.value[1] == 'Bin name should be of type string'

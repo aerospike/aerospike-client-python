@@ -1,7 +1,7 @@
 
 # aerospike.Client.exists_many
 
-aerospike.Client.exists_many - read the meta-data of records only from the database in a batch
+aerospike.Client.exists_many - read record's meta-data only from the database in a batch
 
 ## Description
 

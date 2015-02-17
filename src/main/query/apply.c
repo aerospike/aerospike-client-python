@@ -33,6 +33,8 @@ AerospikeQuery * AerospikeQuery_Apply(AerospikeQuery * self, PyObject * args, Py
 	PyObject * py_args = NULL;
 	PyObject * py_policy = NULL;
 
+	PyObject * py_umodule   = NULL;
+	PyObject * py_ufunction = NULL;
 	// Python function keyword arguments
 	static char * kwlist[] = {"module", "function", "arguments", "policy", NULL};
 
@@ -55,19 +57,27 @@ AerospikeQuery * AerospikeQuery_Apply(AerospikeQuery * self, PyObject * args, Py
 	char * function = NULL;
 	as_arraylist * arglist = NULL;
 
-	if ( PyString_Check(py_module) ) {
+	if ( PyUnicode_Check(py_module) ){
+		py_umodule = PyUnicode_AsUTF8String(py_module);
+		module = PyString_AsString(py_umodule);
+	}
+	else if ( PyString_Check(py_module) ) {
 		module = PyString_AsString(py_module);
 	}
 	else {
-		as_error_update(&err, AEROSPIKE_ERR_CLIENT, "udf module argument must be a string");
+		as_error_update(&err, AEROSPIKE_ERR_CLIENT, "udf module argument must be a string or unicode string");
 		goto CLEANUP;
 	}
 
-	if ( PyString_Check(py_function) ) {
+	if ( PyUnicode_Check(py_function) ){
+		py_ufunction = PyUnicode_AsUTF8String(py_function);
+		function = PyString_AsString(py_ufunction);
+	}
+	else if ( PyString_Check(py_function) ) {
 		function = PyString_AsString(py_function);
 	}
 	else {
-		as_error_update(&err, AEROSPIKE_ERR_CLIENT, "udf function argument must be a string");
+		as_error_update(&err, AEROSPIKE_ERR_CLIENT, "udf function argument must be a string or unicode string");
 		goto CLEANUP;
 	}
 
@@ -93,6 +103,14 @@ AerospikeQuery * AerospikeQuery_Apply(AerospikeQuery * self, PyObject * args, Py
 	as_query_apply(&self->query, module, function, (as_list *) arglist);
 
 CLEANUP:
+
+	if (py_ufunction) {
+		Py_DECREF(py_ufunction);
+	}
+
+	if (py_umodule) {
+		Py_DECREF(py_umodule);
+	}
 
 	if ( err.code != AEROSPIKE_OK ) {
 		PyObject * py_err = NULL;

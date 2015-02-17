@@ -33,6 +33,7 @@ PyObject * AerospikeClient_Select_Invoke(
 {
 	// Python Return Value
 	PyObject * py_rec = NULL;
+	PyObject * py_ustr = NULL;
 
 	// Aerospike Client Arguments
 	as_error err;
@@ -81,9 +82,16 @@ PyObject * AerospikeClient_Select_Invoke(
 		for ( int i = 0; i < size; i++ ) {
 			PyObject * py_val = PyTuple_GetItem(py_bins, i);
 			bins[i] = (char *) alloca(sizeof(char) * AS_BIN_NAME_MAX_SIZE);
-			if ( PyString_Check(py_val) ) {
+			if (PyUnicode_Check(py_val)) {
+				py_ustr = PyUnicode_AsUTF8String(py_val);
+				strncpy(bins[i], PyString_AsString(py_ustr), AS_BIN_NAME_MAX_LEN);
+				bins[i][AS_BIN_NAME_MAX_LEN] = '\0';
+			} else if ( PyString_Check(py_val) ) {
 				strncpy(bins[i], PyString_AsString(py_val), AS_BIN_NAME_MAX_LEN);
 				bins[i][AS_BIN_NAME_MAX_LEN] = '\0';
+			} else {
+				as_error_update(&err, AEROSPIKE_ERR_PARAM, "not string type");
+				goto CLEANUP;
 			}
 		}
 		bins[size] = NULL;
@@ -127,6 +135,10 @@ PyObject * AerospikeClient_Select_Invoke(
 	}
 
 CLEANUP:
+
+	if (py_ustr) {
+		Py_DECREF(py_ustr);
+	}
 
 	if (key_initialised == true){
 		// Destroy the key if it is initialised successfully.

@@ -9,7 +9,7 @@ aerospike.Client.connect - establishes a connection to the Aerospike database in
 client = aerospike.Client(config).connect(<username>, <password>)
 
 ```
-**config**, is configuration parameter used while creating aerospike.Client instance.
+**config**, is configuration parameter used while creating aerospike.Client's instance.
 ```
 Dict: 
     {
@@ -25,7 +25,7 @@ Dict:
 
 
 **aerospike.Client.connect()** will open a new connection to the Aerospike database and returns
-aerospike.Clients object.   
+aerospike.Client's object.   
 
 ##Parameters
 

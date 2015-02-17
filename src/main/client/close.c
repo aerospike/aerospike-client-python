@@ -34,7 +34,7 @@ PyObject * AerospikeClient_Close(AerospikeClient * self, PyObject * args, PyObje
 		PyErr_SetObject(PyExc_Exception, py_err);
 		return NULL;
 	}
-
+	self->is_conn_16 = false;
 	aerospike_destroy(self->as);
 	self->as = NULL;
 

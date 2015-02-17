@@ -27,7 +27,6 @@ class TestUdfPut(object):
         """
         Setup method
         """
-        time.sleep(2)
 
     def teardown_method(self, method):
 
@@ -35,7 +34,6 @@ class TestUdfPut(object):
         Teardown method
         """
         udf_list = TestUdfPut.client.udf_list( { 'timeout' : 0 } )
-        #time.sleep(2)
         for udf in udf_list:
             if udf['name'] == 'example.lua':
                 TestUdfPut.client.udf_remove({}, "example.lua")
@@ -56,7 +54,6 @@ class TestUdfPut(object):
         status = TestUdfPut.client.udf_put( policy, filename, udf_type )
 
         assert status == 0
-        time.sleep(2)
         udf_list = TestUdfPut.client.udf_list( {} )
 
         present = False
@@ -117,8 +114,8 @@ class TestUdfPut(object):
         with pytest.raises(Exception) as exception:
             status = TestUdfPut.client.udf_put( policy, filename, udf_type )
 
-        assert exception.value[0] == 4
-        assert exception.value[1] == "AEROSPIKE_ERR_REQUEST_INVALID"
+        assert exception.value[0] == -2L
+        assert exception.value[1] == "Invalid udf type: 1"
 
     def test_udf_put_with_all_none_parameters(self):
 
@@ -127,3 +124,22 @@ class TestUdfPut(object):
 
         assert exception.value[0] == -2
         assert exception.value[1] == "Filename should be a string"
+
+    def test_udf_put_with_filename_unicode(self):
+
+        policy = {}
+        filename = u"example.lua"
+        udf_type = 0
+
+        status = TestUdfPut.client.udf_put( policy, filename, udf_type )
+
+        assert status == 0
+        time.sleep(2)
+        udf_list = TestUdfPut.client.udf_list( {} )
+
+        present = False
+        for udf in udf_list:
+            if 'example.lua' == udf['name']:
+                present = True
+
+        assert True if present else False

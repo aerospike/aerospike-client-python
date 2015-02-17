@@ -19,7 +19,7 @@ class TestLStack(object):
 
         print "setup class invoked..."
         config = {
-                "hosts": [("172.20.25.24", 3000)]
+                "hosts": [("127.0.0.1", 3000)]
                 }
 
         TestLStack.client = aerospike.client(config).connect()
