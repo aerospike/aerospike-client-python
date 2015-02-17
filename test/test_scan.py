@@ -200,3 +200,16 @@ class TestScan(object):
         records = scan_obj.results()
 
         assert len(records) != 0
+
+    def test_scan_with_select_bin_integer(self):
+
+        """
+            Invoke scan() with select bin is of type integer.
+        """
+        scan_obj = self.client.scan('test', 'demo')
+
+        with pytest.raises(Exception) as exception:
+            scan_obj.select(22, 'test_age')
+
+        assert exception.value[0] == -2L
+        assert exception.value[1] == 'Bin name should be of type string'

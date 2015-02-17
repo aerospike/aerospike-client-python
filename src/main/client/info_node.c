@@ -287,6 +287,7 @@ static PyObject * AerospikeClient_GetNodes_Invoke(
 	PyObject * py_req_str = NULL;
 	py_req_str = PyString_FromString("services");
 	response_services_p = AerospikeClient_InfoNode_Invoke(self, py_req_str, NULL, NULL);
+	Py_DECREF(py_req_str);
 	if(!response_services_p) {
 		as_error_update(&err, AEROSPIKE_ERR_CLIENT, "Services call returned an error");
 		goto CLEANUP;
@@ -294,6 +295,7 @@ static PyObject * AerospikeClient_GetNodes_Invoke(
 
 	py_req_str = PyString_FromString("service");
 	response_service_p = AerospikeClient_InfoNode_Invoke(self, py_req_str, NULL, NULL);
+	Py_DECREF(py_req_str);
 	if(!response_service_p) {
 		as_error_update(&err, AEROSPIKE_ERR_CLIENT, "Service call returned an error");
 		goto CLEANUP;

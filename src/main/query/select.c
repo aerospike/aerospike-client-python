@@ -32,6 +32,8 @@ AerospikeQuery * AerospikeQuery_Select(AerospikeQuery * self, PyObject * args, P
 	int nbins = (int) PyTuple_Size(args);
 	char * bin = NULL;
 	PyObject * py_ubin = NULL;
+	as_error err;
+	as_error_init(&err);
 
 	as_query_select_init(&self->query, nbins);
 
@@ -46,6 +48,13 @@ AerospikeQuery * AerospikeQuery_Select(AerospikeQuery * self, PyObject * args, P
 			bin = PyString_AsString(py_bin);
 		} else {
 			// TRACE();
+			as_error_update(&err, AEROSPIKE_ERR_PARAM, "Bin name should be of type string");
+			PyObject * py_err = NULL;
+			error_to_pyobject(&err, &py_err);
+			PyErr_SetObject(PyExc_Exception, py_err);
+			Py_DECREF(py_err);
+			as_query_destroy(&self->query);
+			return NULL;
 		}
 
 		as_query_select(&self->query, bin);

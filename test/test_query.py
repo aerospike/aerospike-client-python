@@ -355,3 +355,16 @@ class TestQuery(object):
 
         records = query.results()
         assert records[0][2] == {'name': 'name9', 'addr': u'name9'}
+
+    def test_query_with_select_bin_integer(self):
+
+        """
+            Invoke query() with select bin is of integer type.
+        """
+        query = TestQuery.client.query('test', 'demo')
+
+        with pytest.raises(Exception) as exception:
+            query.select(22, 'test_age')
+
+        assert exception.value[0] == -2L
+        assert exception.value[1] == 'Bin name should be of type string'

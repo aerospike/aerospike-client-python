@@ -1036,3 +1036,28 @@ class TestPut(object):
 
         assert {"name": "John"} == bins
         self.delete_keys.append( key )
+
+    def test_put_with_unicode_bin(self):
+
+        """
+            Invoke put() with unicode bin.
+        """
+        key = ('test', 'demo', 1)
+
+        rec = {
+                u'i': [ "nanslkdl", 1, bytearray("asd;as[d'as;d", "utf-8") ],
+                's': { "key": "asd';q;'1';" },
+                'b': 1234,
+                'l': '!@#@#$QSDAsd;as'
+            }
+
+        assert 0 == TestPut.client.put( key, rec)
+        (key , meta, bins) = TestPut.client.get(key)
+
+        assert {
+                'i': [ "nanslkdl", 1, bytearray("asd;as[d'as;d", "utf-8") ],
+                's': { "key": "asd';q;'1';" },
+                'b': 1234,
+                'l': '!@#@#$QSDAsd;as'
+        } == bins
+        self.delete_keys.append( key )
