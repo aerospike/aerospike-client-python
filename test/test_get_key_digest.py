@@ -122,9 +122,7 @@ class TestGetKeyDigest(object):
 
 
     def test_get_key_digest_with_map_key(self):
-	"""
-            Invoke get_key_digest() with key as a map
-	"""
+        #Invoke get_key_digest() with key as a map
         with pytest.raises(Exception) as exception:
             digest = TestGetKeyDigest.client.get_key_digest("test", "set", {"a":
                 1, "b": 2})
