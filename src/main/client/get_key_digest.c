@@ -31,7 +31,7 @@ PyObject * AerospikeClient_Get_Key_Digest_Invoke(
 	PyObject * py_ns, PyObject *py_set, PyObject * py_key)
 {
 	// Python Return Value
-	PyObject * py_keytuple = NULL;
+	PyObject * py_keydict = NULL;
 	PyObject * py_value = NULL;
 
 	// Aerospike Client Arguments
@@ -52,13 +52,13 @@ PyObject * AerospikeClient_Get_Key_Digest_Invoke(
 		goto CLEANUP;
 	}
 
-	py_keytuple = PyTuple_New(3);
-	PyTuple_SetItem(py_keytuple, 0, py_ns);
-	PyTuple_SetItem(py_keytuple, 1, py_set);
-	PyTuple_SetItem(py_keytuple, 2, py_key);
+	py_keydict = PyDict_New();
+	PyDict_SetItemString(py_keydict, "ns", py_ns);
+	PyDict_SetItemString(py_keydict, "set", py_set);
+	PyDict_SetItemString(py_keydict, "key", py_key);
 
 	// Convert python key object to as_key
-	pyobject_to_key(&err, py_keytuple, &key);
+	pyobject_to_key(&err, py_keydict, &key);
 	if ( err.code != AEROSPIKE_OK ) {
 		goto CLEANUP;
 	}
@@ -80,10 +80,12 @@ PyObject * AerospikeClient_Get_Key_Digest_Invoke(
 	}
 
 CLEANUP:
-
 	if (key_initialised == true){
 		// Destroy key only if it is initialised.
 		as_key_destroy(&key);
+	}
+	if (py_keydict) {
+		Py_DECREF(py_keydict);
 	}
 
 	if ( err.code != AEROSPIKE_OK ) {
