@@ -204,7 +204,9 @@ static PyMethodDef AerospikeClient_Type_Methods[] = {
 	{"exists_many",
 		(PyCFunction)AerospikeClient_Exists_Many, METH_VARARGS | METH_KEYWORDS,
 		"Get many records at a time."},
-
+	{"get_key_digest",
+		(PyCFunction)AerospikeClient_Get_Key_Digest, METH_VARARGS | METH_KEYWORDS,
+		"Get key digest"},
 	{NULL}
 };
 
