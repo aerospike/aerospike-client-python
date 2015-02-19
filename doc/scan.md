@@ -6,7 +6,7 @@
 ```
 aerospike.client.scan(namespace[, set])
 res = aerospike.scan.results([policy])
-aerospike.scan.foreach(callback[, policy])
+aerospike.scan.foreach(callback[, policy, options])
 ```
 
 **aerospike.client.scan()** will return a Scan object to be used for executing
@@ -37,7 +37,7 @@ def collect_names((key, metadata, bins)):
     pp.pprint(bins)
     names.append(bins['name'])
 
-query.foreach(collect_names, {'timeout':2000})
+query.foreach(collect_names, {'timeout':2000}, {'percent': 100, 'concurrent': True})
 pp.pprint(names)
 ```
 

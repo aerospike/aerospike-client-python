@@ -100,14 +100,15 @@ PyObject * AerospikeScan_Foreach(AerospikeScan * self, PyObject * args, PyObject
 	// Python Function Arguments
 	PyObject * py_callback = NULL;
 	PyObject * py_policy = NULL;
+	PyObject * py_options = NULL;
 	as_policy_scan scan_policy;
 	as_policy_scan * scan_policy_p = NULL;
 
 	// Python Function Keyword Arguments
-	static char * kwlist[] = {"callback", "policy", NULL};
+	static char * kwlist[] = {"callback", "policy", "options", NULL};
 
 	// Python Function Argument Parsing
-	if ( PyArg_ParseTupleAndKeywords(args, kwds, "O|O:foreach", kwlist, &py_callback, &py_policy) == false ) {
+	if ( PyArg_ParseTupleAndKeywords(args, kwds, "O|OO:foreach", kwlist, &py_callback, &py_policy, &py_options) == false ) {
 		return NULL;
 	}
 
@@ -131,6 +132,12 @@ PyObject * AerospikeScan_Foreach(AerospikeScan * self, PyObject * args, PyObject
 	pyobject_to_policy_scan(&err, py_policy, &scan_policy, &scan_policy_p);
 	if ( err.code != AEROSPIKE_OK ) {
 		goto CLEANUP;
+	}
+	if (py_options && PyDict_Check(py_options)) {
+		set_scan_options(&err, &self->scan, py_options);
+		if(err.code != AEROSPIKE_OK) {
+        	goto CLEANUP;
+        }
 	}
 
 	// We are spawning multiple threads
