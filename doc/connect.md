@@ -1,57 +1,51 @@
 
-# aerospike.Client.connect
-
-aerospike.Client.connect - establishes a connection to the Aerospike database instance.
+# aerospike.client.connect
 
 ## Description
 
 ```
-client = aerospike.Client(config).connect(<username>, <password>)
+client = aerospike.client(config).connect([username[, password]])
 
 ```
-**config**, is configuration parameter used while creating aerospike.Client's instance.
+**config** is a dictionary holding configuration info for the client
 ```
-Dict: 
-    {
-        'hosts': [
-                ('127.0.0.1', 3000)
-                ],
-        'policies': {
-                'timeout' : 0
-                }
-    }
-
+Dict:
+    'hosts': a list of (address, port) tuples identifying the cluster
+    'policies': a dictionary of policies
+        'timeout'          : default timeout in milliseconds
+        'key'              : default key policy for this client
+        'exists'           : default exists policy for this client
+        'gen'              : default generation policy for this client
+        'retry'            : default retry policy for this client
+        'consistency_level': default consistency level policy for this client
+        'replica'          : default replica policy for this client
+        'commit_level'     : default commit level policy for this client
 ```
 
-
-**aerospike.Client.connect()** will open a new connection to the Aerospike database and returns
-aerospike.Client's object.   
+**aerospike.client.connect()** will connect the client to the cluster described
+by the *hosts* configuration.
 
 ##Parameters
 
-**username** and **password** are self explanatory. They are used for establishing connection with security enabled Aerospike database instance.
-Skip them while connecting to security disabled Aerospike database instance.
-
-## Return Values
-Returns an instance of aeropspike.Client, which can be used later to do usual database operations.
+**username** and **password** are self explanatory. They are used for
+establishing connection to a security enabled Aerospike cluster
+(enterprise edition feature). Skip these when connecting to a community
+edition cluster.
 
 ## Examples
 
 ```python
-
 # -*- coding: utf-8 -*-
 import aerospike
+
 config = {
-            'hosts': [('127.0.0.1', 3000)]
-         }
+  'hosts':    [ ('127.0.0.1', 3000) ],
+  'policies': { 'timeout': 1000}}
 client = aerospike.client(config).connect()
 
 ```
 
 ### See Also
 
+- [Client Policies](http://www.aerospike.com/apidocs/c/db/d65/group__client__policies.html)
 
-
-- [Glossary](http://www.aerospike.com/docs/guide/glossary.html)
-
-- [Aerospike Data Model](http://www.aerospike.com/docs/architecture/data-model.html)

@@ -113,14 +113,14 @@ PyObject * AerospikeClient_Remove(AerospikeClient * self, PyObject * args, PyObj
  */
 extern PyObject * AerospikeClient_RemoveBin(AerospikeClient * self, PyObject * args, PyObject * kwds);
 /**
- * Append a record to the database.
+ * Append a string to a string bin value of a record in the database.
  *
  *		client.append((x,y,z))
  *
  */
 PyObject * AerospikeClient_Append(AerospikeClient * self, PyObject * args, PyObject * kwds);
 /**
- * Prepend a record to the database.
+ * Prepend a string to a string bin value of a record in the database.
  *
  *		client.prepend((x,y,z))
  *

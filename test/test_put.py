@@ -47,11 +47,9 @@ class TestPut(object):
         """
         key = ('test', 'demo', 1)
 
-        rec = {
-                "name" : "John"
-                }
+        bins = { "name" : "John" }
 
-        assert 0 == TestPut.client.put( key, rec )
+        assert 0 == TestPut.client.put( key, bins )
 
         (key , meta, bins) = TestPut.client.get(key)
 
@@ -66,14 +64,14 @@ class TestPut(object):
         """
         key = ('test', 'demo', 1)
 
-        rec = {
+        bins = {
                 'i': [ "nanslkdl", 1, bytearray("asd;as[d'as;d", "utf-8") ],
                 's': { "key": "asd';q;'1';" },
                 'b': 1234,
                 'l': '!@#@#$QSDAsd;as'
             }
 
-        assert 0 == TestPut.client.put( key, rec)
+        assert 0 == TestPut.client.put( key, bins)
         (key , meta, bins) = TestPut.client.get(key)
 
         assert {
@@ -104,19 +102,17 @@ class TestPut(object):
         with pytest.raises(TypeError) as typeError:
             res = TestPut.client.put( key )
 
-        assert "Required argument 'record' (pos 2) not found" in typeError.value
+        assert "Required argument 'bins' (pos 2) not found" in typeError.value
 
     def test_put_with_none_key(self):
 
         """
             Invoke put() with None as key.
         """
-        rec = {
-                "name" : "John"
-                }
+        bins = { "name" : "John" }
 
         with pytest.raises(Exception) as exception:
-            res = TestPut.client.put(None, rec)
+            res = TestPut.client.put(None, bins)
 
         assert exception.value[0] == -2
         assert exception.value[1] == 'key is invalid'
@@ -128,10 +124,10 @@ class TestPut(object):
         """
         key = (None, "demo", 1)
 
-        rec = { "name" : "Steve" }
+        bins = { "name" : "Steve" }
 
         with pytest.raises(Exception) as exception:
-            TestPut.client.put(key, rec)
+            TestPut.client.put(key, bins)
 
         assert exception.value[0] == -2
         assert exception.value[1] == "namespace must be a string"
@@ -143,9 +139,9 @@ class TestPut(object):
         """
         key = ("test", None, 1)
 
-        rec = { "name" : "John" }
+        bins = { "name" : "John" }
 
-        assert 0 == TestPut.client.put(key, rec)
+        assert 0 == TestPut.client.put(key, bins)
 
         _, _, bins = TestPut.client.get(key)
 
@@ -160,10 +156,10 @@ class TestPut(object):
         """
         key = ("test", "demo", None)
 
-        rec = { "name": "John" }
+        bins = { "name": "John" }
 
         with pytest.raises(Exception) as exception:
-            TestPut.client.put(key, rec)
+            TestPut.client.put(key, bins)
 
         assert exception.value[0] == -2
         assert exception.value[1] == "either key or digest is required"
@@ -175,9 +171,9 @@ class TestPut(object):
         """
         key = ('test', 'demo', 15)
 
-        rec = "Name : John"
+        kvs = "Name : John"
 
-        res = TestPut.client.put( key, rec )
+        res = TestPut.client.put( key, kvs )
 
         assert res == 0
         key, meta, bins = TestPut.client.get( key )
@@ -191,12 +187,12 @@ class TestPut(object):
         """
         key = ('demo', 'test', 1)
 
-        rec = {
+        bins = {
                 'a' : ['!@#!#$%#', bytearray('ASD@#$AR#$@#ERQ#', 'utf-8')]
                 }
 
         with pytest.raises(Exception) as exception:
-            res = TestPut.client.put( key, rec )
+            res = TestPut.client.put( key, bins )
 
         assert exception.value[0] == 20
         assert exception.value[1] == 'AEROSPIKE_ERR_NAMESPACE_NOT_FOUND'
@@ -208,11 +204,9 @@ class TestPut(object):
         """
         key = ('test1', 'demo', 1)
 
-        rec = {
-                'i': 'asdadasd'
-                }
+        bins = { 'i': 'asdadasd' }
         with pytest.raises(Exception) as exception:
-            res = TestPut.client.put( key, rec )
+            res = TestPut.client.put( key, bins )
 
         assert exception.value[0] == 20
         assert exception.value[1] == 'AEROSPIKE_ERR_NAMESPACE_NOT_FOUND'
@@ -224,11 +218,11 @@ class TestPut(object):
         """
         key = ('test', 'unknown_set', 1)
 
-        rec = {
+        bins = {
                 'a': { 'k': [bytearray("askluy3oijs", "utf-8")] }
                 }
 
-        res = TestPut.client.put( key, rec )
+        res = TestPut.client.put( key, bins )
 
         assert res == 0
 
@@ -245,11 +239,9 @@ class TestPut(object):
         """
         key = ('test', 'demo', 1)
 
-        rec = {
-                "is_present": False
-                }
+        bins = { "is_present": False }
 
-        res = TestPut.client.put( key, rec )
+        res = TestPut.client.put( key, bins )
 
         assert res == 0
 
@@ -262,11 +254,9 @@ class TestPut(object):
             #Invoke put() for unicode record.
         key = ('test', 'demo', 1)
 
-        rec = {
-                "unicode_string": u"\ud83d\ude04"
-        }
+        bins = { "unicode_string": u"\ud83d\ude04" }
 
-        res = TestPut.client.put( key, rec )
+        res = TestPut.client.put( key, bins )
 
         assert res == 0
 

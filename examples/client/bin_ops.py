@@ -18,6 +18,7 @@
 from __future__ import print_function
 
 import aerospike
+import pprint
 import sys
 
 from optparse import OptionParser
@@ -56,75 +57,55 @@ if options.help:
 exitCode = 0
 
 try:
-
     # ----------------------------------------------------------------------------
     # Connect to Cluster
     # ----------------------------------------------------------------------------
 
-    config = { 'hosts': [ (options.host, options.port) ] }
+    config = {'hosts': [ (options.host, options.port) ]}
     client = aerospike.client(config).connect()
 
     # ----------------------------------------------------------------------------
-    # Perform Operation
+    # Perform Operations
     # ----------------------------------------------------------------------------
 
     try:
+        pp = pprint.PrettyPrinter(indent=2)
+        client.put(('test', 'cats', 'mr. peppy'), {'breed':'persian'},
+                   policy={'exists': aerospike.POLICY_EXISTS_CREATE_OR_REPLACE,
+                           'key': aerospike.POLICY_KEY_DIGEST},
+                   meta={'ttl':120})
+        (key, meta, bins) = client.get(('test', 'cats', 'mr. peppy'))
+        print("Before:", bins)
+        client.increment(key, 'lives', -1, 9, policy={'timeout': 1500})
+        (key, meta, bins) = client.get(key)
+        print("After:", bins)
+        # the key we got back when we fetched the record with get() is useable
+        # as-is because it contains the record's digest
+        client.increment(key, 'lives', -1, 9)
+        (key, meta, bins) = client.get(key)
+        # kitty lost a life, unfortunately
+        print("Poor Kitty:", bins)
+        client.put(key, {'owner':'Fry'})
+        client.prepend(key, 'owner', 'Philip J. ')
+        client.append(key, 'owner', ' Esq.')
+        # kitty loses another life, gains a color, all as part of a record
+        # multi-op
+        ops = [{'bin': 'color', 'op': aerospike.OPERATOR_WRITE, 'val': 'smoke'},
+               {'bin': 'lives', 'op': aerospike.OPERATOR_INCR, 'val': -1},
+               {'bin': 'ailments', 'op': aerospike.OPERATOR_READ},
+               {'bin': 'lives', 'op': aerospike.OPERATOR_READ}]
+        (key, meta, bins) = client.operate(key, ops)
+        print("After calling operate(), kitty is down to", bins['lives'], "lives")
+        pp.pprint(bins)
 
-        print('########################################################################')
-        print('PUT')
-        print('########################################################################')
-
-        for i in range(1000):
-            # print 'a'
-            # j = igloo
-            rec = {
-                'i': i,
-                's': 'xyz',
-                'l': [2,4,8,16,32,None,128,256],
-                'm': {'a': 2, 'b': 4, 'c': 8, 'd': 16}
-            }
-            print(rec)
-            client.put(('test','demo',str(i)), rec)
-
-        # print('########################################################################')
-        # print('EXISTS')
-        # print('########################################################################')
-
-        # for i in range(1,1000):
-        #     (key, metadata) = client.exists(('test','demo',i))
-        #     print(key, metadata)
-
-
-        # print('########################################################################')
-        # print('GET')
-        # print('########################################################################')
-
-        # for i in range(1,1000):
-        #     (key, metadata, record) = client.get(('test','demo',i))
-        #     print(key, metadata, record)
-
-        # print('########################################################################')
-        # print('APPLY')
-        # print('########################################################################')
-
-        # for i in range(1,1000):
-        #   val1 = client.key('test','demo','key{0}'.format(i)).apply('simple', 'add', ['a', 30000])
-        #   print val1
-
-        # print('########################################################################')
-        # print('REMOVE')
-        # print('########################################################################')
-
-        # for i in range(1,1000):
-        #     client.remove(('test','demo',i))
-
-        # print('########################################################################')
-        # print('GET')
-        # print('########################################################################')
-
-        # for i in range(1,1000):
-        #     rec1 = client.get(('test','demo',i))
-        #     print(rec1)
+        # display the record as it is after all the operations
+        (key, meta, bins) = client.get(key)
+        print("\nRecord\n======\nKey\n---")
+        pp.pprint(key)
+        print("Meta\n----")
+        pp.pprint(meta)
+        print("Bins\n----")
+        pp.pprint(bins)
 
     except Exception, eargs:
         print("error: {0}".format(eargs), file=sys.stderr)

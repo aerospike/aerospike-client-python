@@ -26,7 +26,7 @@ from optparse import OptionParser
 # Options Parsing
 ################################################################################
 
-usage = "usage: %prog [options] key bin_names"
+usage = "usage: %prog [options]"
 
 optparser = OptionParser(usage=usage, add_help_option=False)
 
@@ -51,6 +51,14 @@ optparser.add_option(
     help="Port of the Aerospike server.")
 
 optparser.add_option(
+    "--timeout", dest="timeout", type="int", default=1000, metavar="<MS>",
+    help="Client timeout")
+
+optparser.add_option(
+    "--read-timeout", dest="read_timeout", type="int", default=1000, metavar="<MS>",
+    help="Client read timeout")
+
+optparser.add_option(
     "-n", "--namespace", dest="namespace", type="string", default="test", metavar="<NS>",
     help="Port of the Aerospike server.")
 
@@ -65,25 +73,9 @@ if options.help:
     print()
     sys.exit(1)
 
-if len(args) < 2:
-    optparser.print_help()
-    print()
-    sys.exit(1)
-
-################################################################################
-# Client Configuration
-################################################################################
-
-config = {
-    'hosts': [ (options.host, options.port) ]
-}
-client = aerospike.client(config).connect()
-
 ################################################################################
 # Application
 ################################################################################
-
-exitCode = 0
 
 try:
 
@@ -91,6 +83,12 @@ try:
     # Connect to Cluster
     # ----------------------------------------------------------------------------
 
+    config = {
+        'hosts': [ (options.host, options.port) ],
+        'policies': {
+            'timeout': options.timeout
+        }
+    }
     client = aerospike.client(config).connect(options.username, options.password)
 
     # ----------------------------------------------------------------------------
@@ -98,22 +96,66 @@ try:
     # ----------------------------------------------------------------------------
 
     try:
-
         namespace = options.namespace if options.namespace and options.namespace != 'None' else None
         set = options.set if options.set and options.set != 'None' else None
+        smile = u"\ud83d\ude04"
+        key = (namespace, set, smile)
+        bins = {'smiley': smile, 'smile_count': 1, 'mood': 'happy'}
+        print("Storing ", bins, "at a record identified by the tuple", key)
+        # overwrite the record if it exists, otherwise create it
+        client.put(key, bins, 
+                   policy={'exists': aerospike.POLICY_EXISTS_CREATE_OR_REPLACE,
+                           'key': aerospike.POLICY_KEY_SEND})
+        print("Retrieving the record from the server for comparison")
+        (key, meta, record) = client.get(key, policy={'timeout': options.read_timeout})
+        print("The value of the 'smiley' bin is", record['smiley'], "\n")
+        print("By the way, this record has been written", meta['gen'], "times")
+        future_gen = str(int(meta['gen']) + 2)
+        print("Expect the record generation to be", future_gen, "with two more write operations\n")
 
-        pk = args.pop(0)
-        bin_names = args
+        # add a dictionary under a bin named 'data'
+        bins = {'data': {'smiley_key': smile, smile:'this is a smiley '}}
+        print("Storing ", bins, "at the record", key)
+        client.put(key,  bins)
+        (key, metadata, bins) = client.get(key)
+        print("The value of the 'smiley_key' of the 'data' bin is",
+              bins['data']['smiley_key'], "\n")
+        print("The value of the", smile, " key is:",
+              bins['data'][smile], "\n")
 
-        client.remove_bin((namespace, set, pk), bin_names)
-        print("OK, bins removed from the record at", (namespace, set, pk))
+        # append to the value of the smile key
+        print("Before appending, the value of the 'mood' key is:",
+              bins['mood'])
+        client.append(key, 'mood', smile)
+        (key, metadata, bins) = client.get(key)
+        print("After appending, the value of the 'mood' key is:",
+              bins['mood'], "\n")
 
-    except Exception, (code,msg,file,line):
-        if code == 602:
-            print("error: Record not found")
-        else:
-            print("error: {0}".format((code,msg,file,line)), file=sys.stderr)
-            rc = 1
+        # prepend to the value of the smile key
+        print("Before prepending, the value of the 'mood' key is:",
+              bins['mood'])
+        client.prepend(key, 'mood', smile)
+        (key, metadata, bins) = client.get(key)
+        print("After prepending, the value of the 'mood' key is:",
+              bins['mood'], "\n")
+
+        # multiple operations on the record using the operate() method
+        ops = [{'bin': 'smiley', 'op': aerospike.OPERATOR_APPEND, 'val': smile},
+               {'bin': 'smile_count', 'op': aerospike.OPERATOR_INCR, 'val': 5},
+               {'bin': 'smiley', 'op': aerospike.OPERATOR_READ}]
+        print("Setting the following multiops on the same record\n", ops)
+        (key, meta, bins) = client.operate(key, ops)
+        print("The value of the 'smiley' bin is", bins['smiley'], "\n")
+
+        print("Displaying the key, metadata, and bins of the record")
+        (key, metadata, bins) = client.get(key)
+        print(key)
+        print(metadata)
+        print(bins)
+        exitCode = 0
+    except Exception as e:
+        print("error: {0}".format(e), file=sys.stderr)
+        exitCode = 2
 
     # ----------------------------------------------------------------------------
     # Close Connection to Cluster
@@ -121,8 +163,8 @@ try:
 
     client.close()
 
-except Exception, eargs:
-    print("error: {0}".format(eargs), file=sys.stderr)
+except Exception as e:
+    print("error: {0}".format(e), file=sys.stderr)
     exitCode = 3
 
 ################################################################################

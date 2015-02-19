@@ -1,76 +1,49 @@
 
-# aerospike.Client.touch
+# aerospike.client.touch
 
-aerospike.Client.touch - Touch a record in the Aerospike DB
 
 ## Description
 
 ```
-status = aerospike.Client.touch ( key, ttl = 0 [, policies ] )
-
+aerospike.client.touch(key, val=0[, meta[, policy]])
 ```
 
-**aerospike.Client.touch()** will touch the given record, resetting its
+**aerospike.client.touch()** will touch the given record, resetting its
 time-to-live and incrementing its generation.
 
 ## Parameters
 
-**key**, the key for the record. A tuple with keys
-['ns','set','key'] or ['ns','set','digest'].   
+**key** the tuple (namespace, set, key) representing the key associated with the record
 
-```
-Tuple:
-    key = ( <namespace>, 
-            <set name>, 
-            <the primary index key>, 
-            <a RIPEMD-160 hash of the key, and always present> )
+**val**, the [time-to-live](http://www.aerospike.com/docs/client/c/usage/kvs/write.html#change-record-time-to-live-ttl) in seconds for the record.
 
-```
+**meta** optional record metadata to be set. A dictionary with fields
+- **ttl** the [time-to-live](http://www.aerospike.com/docs/client/c/usage/kvs/write.html#change-record-time-to-live-ttl) in seconds
 
-**ttl**, the [time-to-live] in seconds for the record.
-
-**policies**, the dictionary of policies to be given while touch.   
-
-## Return Values
-Returns an integer status. 0(Zero) is success value. In case of error, appropriate exceptions will be raised.
+**policy** optional write policies. A dictionary with optional fields
+- **timeout** write timeout in milliseconds
+- **key** one of the [aerospike.POLICY_KEY_*](http://www.aerospike.com/apidocs/c/db/d65/group__client__policies.html#gaa9c8a79b2ab9d3812876c3ec5d1d50ec) values
+- **gen** one of the [aerospike.POLICY_GEN_*](http://www.aerospike.com/apidocs/c/db/d65/group__client__policies.html#ga38c1a40903e463e5d0af0141e8c64061) values
+- **retry** one of the [aerospike.POLICY_RETRY_*](http://www.aerospike.com/apidocs/c/db/d65/group__client__policies.html#gaa9730980a8b0eda8ab936a48009a6718) values
+- **commit_level** one of the [aerospike.POLICY_COMMIT_LEVEL_*](http://www.aerospike.com/apidocs/c/db/d65/group__client__policies.html#ga17faf52aeb845998e14ba0f3745e8f23) values
+- **consistency_level** one of the [aerospike.POLICY_CONSISTENCY_LEVEL_*](http://www.aerospike.com/apidocs/c/db/d65/group__client__policies.html#ga34dbe8d01c941be845145af643f9b5ab) values
+- **replica** one of the [aerospike_POLICY_REPLICA_*](http://www.aerospike.com/apidocs/c/db/d65/group__client__policies.html#gabce1fb468ee9cbfe54b7ab834cec79ab) values
 
 ## Examples
 
 ```python
-
 # -*- coding: utf-8 -*-
 import aerospike
-config = {
-            'hosts': [('127.0.0.1', 3000)]
-         }
+
+config = { 'hosts': [('127.0.0.1', 3000)] }
 client = aerospike.client(config).connect()
 
 key = ('test', 'demo', 1)
-
-options = {
-    'timeout' : 5000,
-    'key' : aerospike.POLICY_KEY_SEND
-}
-
-status = client.touch( key, 120, options)
-
-print status
-
-
+client.touch(key, 120, policy={'timeout': 100})
 ```
-
-We expect to see:
-
-```python
-0
-```
-
-
 
 ### See Also
 
+- [FAQ](https://www.aerospike.com/docs/guide/FAQ.html)
+- [Record TTL and Evictions](https://discuss.aerospike.com/t/records-ttl-and-evictions/737)
 
-
-- [Glossary](http://www.aerospike.com/docs/guide/glossary.html)
-
-- [Aerospike Data Model](http://www.aerospike.com/docs/architecture/data-model.html)

@@ -1,7 +1,7 @@
 
 # aggregate
 
-aggregate - applies a stream UDF to a secondary index query.
+aggregate - applies a stream UDF to the results of a secondary index query.
 
 ## Description
 
@@ -70,12 +70,7 @@ We expect to see:
 5
 ```
 
-
-
 ### See Also
 
-
-
-- [Glossary](http://www.aerospike.com/docs/guide/glossary.html)
-
 - [Aerospike Data Model](http://www.aerospike.com/docs/architecture/data-model.html)
+- [Key-Value Store](http://www.aerospike.com/docs/guide/kvs.html)

@@ -1,81 +1,48 @@
 
-# aerospike.Client.remove_bin
-
-aerospike.Client.remove_bin - removes a bin for a particular record matching with the given key
+# aerospike.client.remove_bin
 
 ## Description
 
 ```
-status = aerospike.Client.remove_bin( key, list, meta, policies )
-
+aerospike.client.remove_bin(key, list[, meta[, policy]])
 ```
 
-**aerospike.Client.remove_bin()** will remove a bin for a particular *record* matching with the *key* from database.
-It will return an integer status value or throws an exception in case of an error.   
+**aerospike.client.remove_bin()** will remove a list of bins from a given *record*.
 
 ## Parameters
 
-**key**, the key to identify the reocrd. A tuple with 'ns','set','key' sequentially.   
+**key** the tuple (namespace, set, key) representing the key associated with the record
 
-```
-Tuple:
-    key = ( <namespace>, 
-            <set name>, 
-            <the primary index key>, 
-            <a RIPEMD-160 hash of the key, and always present> )
-```
+**list** a list of bin names to be removed from the record
 
-**list**, the list of bins to be removed.
-**meta**, the metadata of the record. Optional parameter.
-**policies**, the dictionary of policies to be given while removing a record. Optional parameter.
-```
-Dict:
-    policies = {
-            'timeout' : <Only integer timeout value>
-    }
-```
+**meta** optional record metadata to be set. A dictionary with fields
+- **ttl** the [time-to-live](http://www.aerospike.com/docs/client/c/usage/kvs/write.html#change-record-time-to-live-ttl) in seconds
 
-## Return Values
-Returns an integer status. 0(Zero) is success value. In case of error, appropriate exceptions will be raised.
+**policy** optional write policies. A dictionary with optional fields
+- **timeout** write timeout in milliseconds
+- **key** one of the [aerospike.POLICY_KEY_*](http://www.aerospike.com/apidocs/c/db/d65/group__client__policies.html#gaa9c8a79b2ab9d3812876c3ec5d1d50ec) values
+- **exists** one of the [aerospike.POLICY_EXISTS_*](http://www.aerospike.com/apidocs/c/db/d65/group__client__policies.html#ga50b94613bcf416c9c2691c9831b89238) values
+- **gen** one of the [aerospike.POLICY_GEN_*](http://www.aerospike.com/apidocs/c/db/d65/group__client__policies.html#ga38c1a40903e463e5d0af0141e8c64061) values
+- **retry** one of the [aerospike.POLICY_RETRY_*](http://www.aerospike.com/apidocs/c/db/d65/group__client__policies.html#gaa9730980a8b0eda8ab936a48009a6718) values
+- **commit_level** one of the [aerospike.POLICY_COMMIT_LEVEL_*](http://www.aerospike.com/apidocs/c/db/d65/group__client__policies.html#ga17faf52aeb845998e14ba0f3745e8f23) values
 
 ## Examples
 
 ```python
-
 # -*- coding: utf-8 -*-
 import aerospike
-config = {
-            'hosts': [('127.0.0.1', 3000)]
-         }
+
+config = { 'hosts': [('127.0.0.1', 3000)] }
 client = aerospike.client(config).connect()
 
-policies = { 'timeout' : 0 }
-
 key = ('test', 'demo', 1)
-meta = {
-	'gen': 5,
-    'ttl': 1000
-}
-
-status = client.remove_bin( key, ['name'], meta, policies)
-
-print status
-
+meta = { 'gen': 5 }
+client.remove_bin(key, ['name', 'age'], meta)
 
 ```
-
-We expect to see:
-
-```python
-0
-```
-
-
 
 ### See Also
 
-
-
-- [Glossary](http://www.aerospike.com/docs/guide/glossary.html)
-
 - [Aerospike Data Model](http://www.aerospike.com/docs/architecture/data-model.html)
+- [Key-Value Store](http://www.aerospike.com/docs/guide/kvs.html)
+

@@ -1,76 +1,58 @@
-# aerospike.Client.query
-
-aerospike.Client.query - queries a secondary index on a set in the Aerospike
-database
+# aerospike.client.query
 
 ## Description
 
 ```
-status = aerospike.Client.query ( namespace, set )
-
+aerospike.client.query(namespace[, set])
+aerospike.predicates.equals(bin, val)
+aerospike.predicates.between(bin, min, max)
+aerospike.query.where(_predicate_)
+res = aerospike.query.results([policy])
+aerospike.query.foreach(callback[, policy])
 ```
 
-**aerospike.Client.query()**
-will query a *set* with a specified *where* predicate
-then invoke a callback function specified in foreach on each record in the result stream.
-The bins returned can be filtered by passing bins in the select
+**aerospike.client.query()** will return a Query object to be used for executing
+queries over a secondary index of the specified set (which can be ommitted or
+`None`).
 
-## Parameters
+The Query can be assigned a Predicate object using **aerospike.query.where()**,
+then invoked using either **aersopike.query.foreach()** or **aerospike.query.results()**.
+**foreach()** invokes a callback function for each of the records streaming back
+from the query, while **results** buffers these records and returns them as a
+list.
 
-The function takes **namespace** (required) and **set** (optional) arguments. The **set** can
-be ommitted or *None*.
+The bins returned can be filtered by using **aerospike.query.select()**.
 
-
-## Return Values
-The return value will be a new *aerospike.Query* class instance.
+Predicates currently come in two flavors, **aerospike.predicates.between()** and
+**aerospike.predicates.equals()**.
 
 ## Examples
 
 ```python
-
 # -*- coding: utf-8 -*-
 import aerospike
-config = {
-            'hosts': [('127.0.0.1', 3000)]
-         }
+from aerospike import predicates as p
+import pprint
+
+config = { 'hosts': [('127.0.0.1', 3000)] }
 client = aerospike.client(config).connect()
 
-records = []
-
+pp = pprint.PrettyPrinter(indent=2)
 query = self.client.query('test', 'demo')
+query.select('name', 'age') # matched records return with the values of these bins
+# assuming there is a secondary index on the 'age' bin of test.demo
+query.where(p.between('age', 20, 30))
+names = []
+def matched_names((key, metadata, bins)):
+    pp.pprint(bins)
+    names.append(bins['name'])
 
-query.select('name', 'age')
-
-query.where(p.equals('age', 1))
-records = []
-
-def print_result((key,metadata,record)):
-    records.append(record)
-
-policy = {
-    'timeout' : 1000
-    }
-
-query.foreach(print_result, policy)
-
-print records
-
-
+query.foreach(matched_names, {'timeout':2000})
+pp.pprint(names)
 ```
-
-We expect to see:
-
-```python
-[{'name':'aa', 'age': 99}]
-```
-
-
 
 ### See Also
 
-
-
-- [Glossary](http://www.aerospike.com/docs/guide/glossary.html)
-
-- [Aerospike Data Model](http://www.aerospike.com/docs/architecture/data-model.html)
+- [Query](http://www.aerospike.com/docs/guide/query.html)
+- [Managing Queries](http://www.aerospike.com/docs/operations/manage/queries/index.html)
 

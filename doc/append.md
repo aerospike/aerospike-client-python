@@ -1,77 +1,53 @@
 
-# aerospike.Client.append
-
-aerospike.Client.append - Appends a string to the string value in a bin
+# aerospike.client.append
 
 ## Description
 
 ```
-status = aerospike.Client.append ( key, bin, value [, policies ] )
-
+aerospike.client.append(key, bin, val[, meta[, policy]])
 ```
 
-**aerospike.Client.append()** will append a string *value* to the string value
+**aerospike.client.append()** will append a string *value* to the string value
 in a *bin*.
 
 ## Parameters
 
-**key**, the key for the record. A tuple with keys
-['ns','set','key'] or ['ns','set','digest'].   
+**key** the tuple (namespace, set, key) representing the key associated with the record
 
-```
-Tuple:
-    key = ( <namespace>, 
-            <set name>, 
-            <the primary index key>, 
-            <a RIPEMD-160 hash of the key, and always present> )
+**bin** the name of the bin.
 
-```
+**val**, the string to append to the string value in the bin.
 
-**bin**, the name of the bin.
+**meta** optional record metadata to be set. A dictionary with fields
+- **ttl** the [time-to-live](http://www.aerospike.com/docs/client/c/usage/kvs/write.html#change-record-time-to-live-ttl) in seconds
 
-**value**, the string to append to the string value in the bin.
-
-**policies**, the dictionary of policies to be given while append.   
-
-## Return Values
-Returns an integer status. 0(Zero) is success value. In case of error, appropriate exceptions will be raised.
+**policy** optional write policies. A dictionary with optional fields
+- **timeout** write timeout in milliseconds
+- **key** one of the [aerospike.POLICY_KEY_*](http://www.aerospike.com/apidocs/c/db/d65/group__client__policies.html#gaa9c8a79b2ab9d3812876c3ec5d1d50ec) values
+- **gen** one of the [aerospike.POLICY_GEN_*](http://www.aerospike.com/apidocs/c/db/d65/group__client__policies.html#ga38c1a40903e463e5d0af0141e8c64061) values
+- **retry** one of the [aerospike.POLICY_RETRY_*](http://www.aerospike.com/apidocs/c/db/d65/group__client__policies.html#gaa9730980a8b0eda8ab936a48009a6718) values
+- **commit_level** one of the [aerospike.POLICY_COMMIT_LEVEL_*](http://www.aerospike.com/apidocs/c/db/d65/group__client__policies.html#ga17faf52aeb845998e14ba0f3745e8f23) values
+- **consistency_level** one of the [aerospike.POLICY_CONSISTENCY_LEVEL_*](http://www.aerospike.com/apidocs/c/db/d65/group__client__policies.html#ga34dbe8d01c941be845145af643f9b5ab) values
+- **replica** one of the [aerospike_POLICY_REPLICA_*](http://www.aerospike.com/apidocs/c/db/d65/group__client__policies.html#gabce1fb468ee9cbfe54b7ab834cec79ab) values
 
 ## Examples
 
 ```python
-
 # -*- coding: utf-8 -*-
 import aerospike
-config = {
-            'hosts': [('127.0.0.1', 3000)]
-         }
+config = { 'hosts': [('127.0.0.1', 3000)] }
 client = aerospike.client(config).connect()
 
-key = ('test', 'demo', 1)
-
-options = {
-    'timeout' : 5000
-}
-
-status = client.append( key, bin, value, options)
-
-print status
-
-
+try:
+  key = ('test', 'demo', 1)
+  client.append(key, 'name', ' jr.', policy={'timeout': 1200})
+except Exception as e:
+  print("error: {0}".format(e), file=sys.stderr)
+  sys.exit(1)
 ```
-
-We expect to see:
-
-```python
-0
-```
-
-
 
 ### See Also
 
-
-
-- [Glossary](http://www.aerospike.com/docs/guide/glossary.html)
-
 - [Aerospike Data Model](http://www.aerospike.com/docs/architecture/data-model.html)
+- [Key-Value Store](http://www.aerospike.com/docs/guide/kvs.html)
+

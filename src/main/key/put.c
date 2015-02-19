@@ -35,7 +35,7 @@ PyObject * AerospikeKey_Put(AerospikeKey * key, PyObject * args, PyObject * kwds
 	PyObject * py_policy = NULL;
 	
 	// Python Function Keyword Arguments
-	static char * kwlist[] = {"record", "metadata", "policy", NULL};
+	static char * kwlist[] = {"bins", "meta", "policy", NULL};
 
 	// Python Function Argument Parsing
 	if ( PyArg_ParseTupleAndKeywords(args, kwds, "O|OO:get", kwlist, &py_bins, &py_meta, &py_policy) == false ) {

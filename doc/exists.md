@@ -1,71 +1,55 @@
 
-# aerospike.Client.exists
-
-aerospike.Client.exists - checks if a record exists in the Aerospike database
+# aerospike.client.exists
 
 ## Description
 
 ```
-( key, meta ) = aerospike.Client.exists ( key, policies )
-
+(key, meta) = aerospike.client.exists(key[, policy])
 ```
 
-**aerospike.Client.exists()** will check if a *record* with a given *key* exists in the database, and returns the *record*
-
-as a tuple consisting of key and meta.   
+**aerospike.client.exists()** will check if a *record* with a given *key* exists
+in the cluster, and return the *record* as a (key, meta) tuple if so.
 
 ## Parameters
 
-**key**, the key under which the record is stored . A tuple with 'ns','set','key' sequentially.
+**key** the tuple (namespace, set, key) representing the key associated with the record
 
-```
-Tuple:
-    key = ( <namespace>, 
-            <set name>, 
-            <the primary index key>, 
-            <a RIPEMD-160 hash of the key, and always present> )
-
-```
-
-**policies**, the dictionary of policies to be given while checking if a record exists.   
+**policy** optional read policies. A dictionary with optional fields
+- **timeout** read timeout in milliseconds
+- **key** one of the [aerospike.POLICY_KEY_*](http://www.aerospike.com/apidocs/c/db/d65/group__client__policies.html#gaa9c8a79b2ab9d3812876c3ec5d1d50ec) values
+- **consistency_level** one of the [aerospike.POLICY_CONSISTENCY_LEVEL_*](http://www.aerospike.com/apidocs/c/db/d65/group__client__policies.html#ga34dbe8d01c941be845145af643f9b5ab) values
+- **replica** one of the [aerospike_POLICY_REPLICA_*](http://www.aerospike.com/apidocs/c/db/d65/group__client__policies.html#gabce1fb468ee9cbfe54b7ab834cec79ab) values
 
 ## Return Values
-Returns a tuple of record having key and meta sequentially.
+Returns a tuple of record components:
 
 ```
 Tuple:
-    ( key, meta )
-    key   : a tuple containing (ns, set, primary_index_key, key_digest)
-
-    meta  : a dict containing { 'gen' : <genration value>, 'ttl': <ttl value>}
-
-gen: reflects the number of times the record has been altered
-
-ttl: time in seconds until the record expires
-
+    (key, meta)
+    key : a tuple (namespace, set, primary key, the record's RIPEMD-160 digest)
+    meta: a dict containing { 'gen' : <genration value>, 'ttl': <ttl value>}
 ```
-
-
 
 ## Examples
 
 ```python
-
 # -*- coding: utf-8 -*-
 import aerospike
-config = {
-            'hosts': [('127.0.0.1', 3000)]
-         }
+
+config = { 'hosts': [('127.0.0.1', 3000)] }
 client = aerospike.client(config).connect()
 
-key = ('test', 'demo', 1)
+try:
+  # assuming a record with such a key exists in the cluster
+  key = ('test', 'demo', 1)
+  (key, meta) = client.exists(key)
 
-( key, meta ) = client.exists( key )
-
-print key
-print meta
-
-
+  print(key)
+  print('--------------------------')
+  print(meta)
+except Exception as e:
+  print("error: {0}".format(e), file=sys.stderr)
+  sys.exit(1)
 
 ```
 
@@ -73,15 +57,12 @@ We expect to see:
 
 ```python
 ('test', 'demo', None, bytearray(b'\xb7\xf4\xb88\x89\xe2\xdag\xdeh>\x1d\xf6\x91\x9a\x1e\xac\xc4F\xc8'))
+--------------------------
 {'gen': 1, 'ttl': 2592000}
 ```
 
-
-
 ### See Also
 
-
-
-- [Glossary](http://www.aerospike.com/docs/guide/glossary.html)
-
 - [Aerospike Data Model](http://www.aerospike.com/docs/architecture/data-model.html)
+- [Key-Value Store](http://www.aerospike.com/docs/guide/kvs.html)
+
