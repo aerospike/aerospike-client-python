@@ -91,11 +91,10 @@ class TestGetKeyDigest(object):
             Invoke get_key_digest() with integer ns
         """
 
-        with pytest.raises(Exception) as exception:
+        with pytest.raises(TypeError) as typeError:
             digest = TestGetKeyDigest.client.get_key_digest(1, "demo", "get_digest_key")
 
-        assert exception.value[0] == -2
-        assert exception.value[1] == 'namespace must be a string'
+        assert 'Namespace should be a string' in typeError.value
 
     def test_get_key_digest_with_integer_set(self):
 
@@ -103,32 +102,29 @@ class TestGetKeyDigest(object):
             Invoke get_key_digest() with integer set
         """
 
-        with pytest.raises(Exception) as exception:
+        with pytest.raises(TypeError) as typeError:
             digest = TestGetKeyDigest.client.get_key_digest("test", 1, "get_digest_key")
 
-        assert exception.value[0] == -2
-        assert exception.value[1] == 'set must be a string'
+        assert 'Set should be a string or unicode' in typeError.value
 
     def test_get_key_digest_with_list_key(self):
 
         #Invoke get_key_digest() with key as a list
         mylist = [1, 2, 3]
 
-        with pytest.raises(Exception) as exception:
+        with pytest.raises(TypeError) as typeError:
             TestGetKeyDigest.client.get_key_digest("test", "demo", mylist)
 
-        assert exception.value[0] == -2
-        assert exception.value[1] == 'key is invalid'
+        assert 'Key is invalid' in typeError.value
 
 
     def test_get_key_digest_with_map_key(self):
         #Invoke get_key_digest() with key as a map
-        with pytest.raises(Exception) as exception:
+        with pytest.raises(TypeError) as typeError:
             digest = TestGetKeyDigest.client.get_key_digest("test", "set", {"a":
                 1, "b": 2})
 
-        assert exception.value[0] == -2
-        assert exception.value[1] == 'key is invalid'
+        assert 'Key is invalid' in typeError.value
 
     def test_get_key_digest_with_none_key(self):
 
@@ -136,8 +132,7 @@ class TestGetKeyDigest(object):
             Invoke get_key_digest() with key as a None
         """
 
-        with pytest.raises(Exception) as exception:
+        with pytest.raises(TypeError) as typeError:
             digest = TestGetKeyDigest.client.get_key_digest("test", "demo", None)
 
-        assert exception.value[0] == -2
-        assert exception.value[1] == 'either key or digest is required'
+        assert 'Key is invalid' in typeError.value
