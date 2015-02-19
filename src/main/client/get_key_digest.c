@@ -44,6 +44,18 @@ PyObject * AerospikeClient_Get_Key_Digest_Invoke(
 	// Initialised flags
 	bool key_initialised = false;
 
+	if ( !PyString_Check(py_ns) ) {
+		PyErr_SetString(PyExc_TypeError, "Namespace should be a string");
+		return NULL;
+	}
+	if ( !PyString_Check(py_set)  && !PyUnicode_Check(py_set) ) {
+		PyErr_SetString(PyExc_TypeError, "Set should be a string or unicode");
+		return NULL;
+	}
+	if ( !PyString_Check(py_key)  && !PyUnicode_Check(py_key) && !PyInt_Check(py_key) && !PyLong_Check(py_key) && !PyByteArray_Check(py_key) ) {
+		PyErr_SetString(PyExc_TypeError, "Key is invalid");
+		return NULL;
+	}
 	// Initialize error
 	as_error_init(&err);
 
@@ -51,7 +63,6 @@ PyObject * AerospikeClient_Get_Key_Digest_Invoke(
 		as_error_update(&err, AEROSPIKE_ERR_PARAM, "Invalid aerospike object");
 		goto CLEANUP;
 	}
-
 	py_keydict = PyDict_New();
 	PyDict_SetItemString(py_keydict, "ns", py_ns);
 	PyDict_SetItemString(py_keydict, "set", py_set);
@@ -72,7 +83,6 @@ PyObject * AerospikeClient_Get_Key_Digest_Invoke(
 		PyObject *py_len = PyLong_FromSize_t(len);
 		PyObject *py_length = PyLong_AsSsize_t(py_len);
 		py_value = PyByteArray_FromStringAndSize(digest->value, py_length);
-		//Py_DECREF(py_length);
 		Py_DECREF(py_len);
 	} else {
 		as_error_update(&err, AEROSPIKE_ERR_CLIENT, "Digest could not be calculated");
