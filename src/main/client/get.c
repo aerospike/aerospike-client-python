@@ -74,9 +74,19 @@ PyObject * AerospikeClient_Get_Invoke(
 
 	// Invoke operation
 	aerospike_key_get(self->as, &err, read_policy_p, &key, &rec);
-
 	if ( err.code == AEROSPIKE_OK ) {
 		record_to_pyobject(&err, rec, &key, &py_rec);
+		if ( read_policy_p == NULL || 
+				( read_policy_p != NULL && read_policy_p->key == AS_POLICY_KEY_DIGEST)){
+			// This is a special case.
+			// C-client returns NULL key, so to the user
+			// response will be (<ns>, <set>, None, <digest>)
+			// Using the same input key, just making primary key part to be None
+			// Only in case of POLICY_KEY_DIGEST or no policy specified
+			PyObject * p_key = PyTuple_GetItem( py_rec, 0 );
+			Py_INCREF(Py_None);
+			PyTuple_SetItem(p_key, 2, Py_None);
+		}
 	}
 	else if ( err.code == AEROSPIKE_ERR_RECORD_NOT_FOUND ) {
 		as_error_reset(&err);
