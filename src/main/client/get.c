@@ -33,8 +33,8 @@
  *
  * @param self                  AerospikeClient object
  * @param py_key                The key under which to store the record.
- * @param py_policy				The dictionary of policies to be given while
- * 								reading a record.
+ * @param py_policy             The dictionary of policies to be given while
+ *                              reading a record.
  *
  * Returns the record on success.
  * In case of error,appropriate exceptions will be raised.

@@ -34,7 +34,7 @@
  * @param self                  AerospikeClient object
  * @param py_key                The key under which to store the record
  * @param generation            The generation value
- * @param py_policy				The optional policy parameters
+ * @param py_policy             The optional policy parameters
  *
  * Returns 0 on success.
  * In case of error,appropriate exceptions will be raised.

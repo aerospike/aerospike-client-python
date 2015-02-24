@@ -90,7 +90,7 @@ PyObject * AerospikeQuery_Results(AerospikeQuery * self, PyObject * args, PyObje
 		goto CLEANUP;
 	}
 
-	// Convert python policy object to as_policy_exists
+	// Convert python policy object to as_policy_query
 	pyobject_to_policy_query(&err, py_policy, &query_policy, &query_policy_p);
 	if ( err.code != AEROSPIKE_OK ) {
 		goto CLEANUP;

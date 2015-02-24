@@ -36,7 +36,7 @@
  * @param py_module             The module name.
  * @param py_function           The UDF function to be applied on a record.
  * @param py_arglist            The arguments to the UDF function
- * @param py_policy				The optional policy parameters
+ * @param py_policy             The optional policy parameters
  *
  * Returns the result of UDF function.
  *******************************************************************************************************
@@ -59,6 +59,9 @@ PyObject * AerospikeClient_Apply_Invoke(
 	as_list * arglist = NULL;
 	as_val * result = NULL;
 
+	PyObject * py_umodule   = NULL;
+	PyObject * py_ufunction = NULL;
+
 	// Initialisation flags
 	bool key_initialised = false;
 
@@ -69,14 +72,7 @@ PyObject * AerospikeClient_Apply_Invoke(
 		PyErr_SetString(PyExc_TypeError, "expected UDF method arguments in a 'list'");
 		return NULL;
 	}
-	if( !PyString_Check(py_module) ){
-		PyErr_SetString(PyExc_TypeError, "expected 'str' type module name");
-		return NULL;
-	}
-	if( !PyString_Check(py_function) ){
-		PyErr_SetString(PyExc_TypeError, "expected 'str' type UDF method name");
-		return NULL;
-	}
+
 	if (!self || !self->as) {
 		as_error_update(&err, AEROSPIKE_ERR_PARAM, "Invalid aerospike object");
 		goto CLEANUP;
@@ -102,8 +98,29 @@ PyObject * AerospikeClient_Apply_Invoke(
 		goto CLEANUP;
 	}
 
-	module = PyString_AsString(py_module);
-	function = PyString_AsString(py_function);
+	if ( PyUnicode_Check(py_module) ){
+		py_umodule = PyUnicode_AsUTF8String(py_module);
+		module = PyString_AsString(py_umodule);
+	}
+	else if ( PyString_Check(py_module) ) {
+		module = PyString_AsString(py_module);
+	}
+	else {
+		as_error_update(&err, AEROSPIKE_ERR_CLIENT, "udf module argument must be a string or unicode string");
+		goto CLEANUP;
+	}
+
+	if ( PyUnicode_Check(py_function) ){
+		py_ufunction = PyUnicode_AsUTF8String(py_function);
+		function = PyString_AsString(py_ufunction);
+	}
+	else if ( PyString_Check(py_function) ) {
+		function = PyString_AsString(py_function);
+	}
+	else {
+		as_error_update(&err, AEROSPIKE_ERR_CLIENT, "function name must be a string or unicode string");
+		goto CLEANUP;
+	}
 
 	// Invoke operation
 	aerospike_key_apply(self->as, &err, apply_policy_p, &key, module, function, arglist, &result);
@@ -113,6 +130,14 @@ PyObject * AerospikeClient_Apply_Invoke(
 	}
 
 CLEANUP:
+
+	if (py_umodule) {
+		Py_DECREF(py_umodule);
+	}
+
+	if (py_ufunction) {
+		Py_DECREF(py_ufunction);
+	}
 
 	if (key_initialised == true){
 		// Destroy the key if it is initialised successfully.

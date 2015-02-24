@@ -34,7 +34,7 @@
  * @param self                  AerospikeClient object
  * @param py_key                The key under which to store the record.
  * @param py_bins               The bins to project into the DB.
- * @param py_policy				The optional policy parameters
+ * @param py_policy             The optional policy parameters
  *
  * Returns a tuple containing key, meta and bins.
  *******************************************************************************************************

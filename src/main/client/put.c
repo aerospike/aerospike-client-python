@@ -35,8 +35,8 @@
  * @param py_key                The key under which to store the record.
  * @param py_bins               The data to write to the Aerospike DB.
  * @param py_meta               The meatadata for the record.
- * @param py_policy				The dictionary of policies to be given while
- * 								reading a record.
+ * @param py_policy             The dictionary of policies to be given while
+ *                              reading a record.
  *
  * Returns an integer status. 0(Zero) is success value.
  * In case of error,appropriate exceptions will be raised.

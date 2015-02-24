@@ -16,9 +16,9 @@ status = aerospike.Client.admin_create_user ( policies, username, password, role
 
 **policies**, the dictionary of policies to be given while creating a user in the database.   
 
-**username**, the username of the user to be added to the aerospike database.
+**username**, the username of the user to be added to the Aerospike database.
 
-**password**, the password of the user to be added to the aerospike database.
+**password**, the password of the user to be added to the Aerospike database.
 
 **roles**, a list specifying the roles to be assigned to the newly created user.
 

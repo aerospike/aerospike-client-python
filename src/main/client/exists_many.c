@@ -36,7 +36,7 @@
  * @param results               An array of n as_batch_read entries
  * @param n                     The number of results from the batch request
  * @param udata                 The return value to be filled with result of
- * 								exists_many()
+ *                              exists_many()
  *
  * Returns boolean value(true or false).
  *******************************************************************************************************
@@ -86,7 +86,7 @@ bool batch_exists_cb(const as_batch_read* results, uint32_t n, void* udata)
  *
  * @param self                  AerospikeClient object
  * @param py_keys               The list of keys
- * @param py_policy				The dictionary of policies
+ * @param py_policy             The dictionary of policies
  *
  * Returns the metadata of a record if key exists otherwise NULL.
  *******************************************************************************************************
@@ -218,7 +218,7 @@ PyObject * AerospikeClient_Exists_Many(AerospikeClient * self, PyObject * args, 
 	static char * kwlist[] = {"keys", "policy", NULL};
 
 	// Python Function Argument Parsing
-	if ( PyArg_ParseTupleAndKeywords(args, kwds, "O|O:get", kwlist,
+	if ( PyArg_ParseTupleAndKeywords(args, kwds, "O|O:exists_many", kwlist,
 			&py_keys, &py_policy) == false ) {
 		return NULL;
 	}

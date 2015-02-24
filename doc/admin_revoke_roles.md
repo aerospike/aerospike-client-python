@@ -16,7 +16,8 @@ status = aerospike.Client.admin_revoke_roles ( policies, username, roles, roles_
 
 **policies**, the dictionary of policies to be given while revoking roles of a user in the database.
 
-**username**, the username of the user for whom the roles have to be revoked in the aerospike database.
+**username**, the username of the user for whom the roles have to be revoked in
+the Aerospike database.
 
 **roles**, a list specifying the roles to be revoked for the user.
 

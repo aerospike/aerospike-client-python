@@ -219,7 +219,7 @@ PyObject * AerospikeClient_Info(AerospikeClient * self, PyObject * args, PyObjec
 		goto CLEANUP;
 	}
 
-	// Convert python policy object to as_policy_exists
+	// Convert python policy object to as_policy_info
 	pyobject_to_policy_info(&err, py_policy, &info_policy, &info_policy_p);
 	if ( err.code != AEROSPIKE_OK ) {
 		goto CLEANUP;
