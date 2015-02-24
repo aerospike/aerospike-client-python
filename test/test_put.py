@@ -173,12 +173,11 @@ class TestPut(object):
 
         kvs = "Name : John"
 
-        res = TestPut.client.put( key, kvs )
+        with pytest.raises(Exception) as exception:
+            res = TestPut.client.put( key, kvs )
 
-        assert res == 0
-        key, meta, bins = TestPut.client.get( key )
-
-        assert bins == None
+        assert exception.value[0] == -2
+        assert exception.value[1] == "Record should be passed as bin-value pair"
 
     def test_put_with_wrong_ns_and_set(self):
 

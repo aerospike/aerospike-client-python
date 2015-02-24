@@ -27,6 +27,20 @@
 #include "key.h"
 #include "policy.h"
 
+/**
+ *******************************************************************************************************
+ * This function applies a registered udf module on a particular record.
+ *
+ * @param self                  AerospikeClient object
+ * @param py_key                The key under which to store the record.
+ * @param py_module             The module name.
+ * @param py_function           The UDF function to be applied on a record.
+ * @param py_arglist            The arguments to the UDF function
+ * @param py_policy				The optional policy parameters
+ *
+ * Returns the result of UDF function.
+ *******************************************************************************************************
+ */
 PyObject * AerospikeClient_Apply_Invoke(
 	AerospikeClient * self,
 	PyObject * py_key, PyObject * py_module, PyObject * py_function,
@@ -118,7 +132,19 @@ CLEANUP:
 	return py_result;
 }
 
-
+/**
+ *******************************************************************************************************
+ * Applies a registered UDF module on a particular record.
+ *
+ * @param self                  AerospikeClient object
+ * @param args                  The args is a tuple object containing an argument
+ *                              list passed from Python to a C function
+ * @param kwds                  Dictionary of keywords
+ *
+ * Returns the result of the udf function applied on the record.
+ * In case of error,appropriate exceptions will be raised.
+ *******************************************************************************************************
+ */
 PyObject * AerospikeClient_Apply(AerospikeClient * self, PyObject * args, PyObject * kwds)
 {
 	// Python Function Arguments

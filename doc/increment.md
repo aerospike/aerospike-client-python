@@ -46,7 +46,10 @@ try:
   client.put(('test', 'cats', 'mr. peppy'), {'breed':'persian'}, policy={'exists': aerospike.POLICY_EXISTS_CREATE_OR_REPLACE})
   (key, meta, bins) = client.get(('test', 'cats', 'mr. peppy'))
   print("Before:", bins, "\n")
-  client.increment(key, 'lives', -1, 9, policy={'key': aerospike.POLICY_KEY_SEND})
+  meta = {
+	  'ttl':5000
+  }
+  client.increment(key, 'lives', -1, 9, meta, policy={'key': aerospike.POLICY_KEY_SEND})
   (key, meta, bins) = client.get(key)
   print("After:", bins, "\n")
   client.increment(key, 'lives', -1, 9)

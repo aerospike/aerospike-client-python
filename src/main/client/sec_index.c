@@ -28,7 +28,19 @@
 #include "conversions.h"
 #include "policy.h"
 
-
+/**
+ *******************************************************************************************************
+ * Creates an integer index for a bin in the Aerospike DB.
+ *
+ * @param self                  AerospikeClient object
+ * @param args                  The args is a tuple object containing an argument
+ *                              list passed from Python to a C function
+ * @param kwds                  Dictionary of keywords
+ *
+ * Returns an integer status. 0(Zero) is success value.
+ * In case of error,appropriate exceptions will be raised.
+ *******************************************************************************************************
+ */
 PyObject * AerospikeClient_Index_Integer_Create(AerospikeClient * self, PyObject *args, PyObject * kwds)
 {
 	// Initialize error
@@ -143,7 +155,19 @@ CLEANUP:
 	return PyLong_FromLong(0);
 }
 
-
+/**
+ *******************************************************************************************************
+ * Creates a string index for a bin in the Aerospike DB.
+ *
+ * @param self                  AerospikeClient object
+ * @param args                  The args is a tuple object containing an argument
+ *                              list passed from Python to a C function
+ * @param kwds                  Dictionary of keywords
+ *
+ * Returns an integer status. 0(Zero) is success value.
+ * In case of error,appropriate exceptions will be raised.
+ *******************************************************************************************************
+ */
 PyObject * AerospikeClient_Index_String_Create(AerospikeClient * self, PyObject *args, PyObject * kwds)
 {
 	// Initialize error
@@ -263,7 +287,19 @@ CLEANUP:
 	return PyLong_FromLong(0);
 }
 
-
+/**
+ *******************************************************************************************************
+ * Removes an index in the Aerospike database.
+ *
+ * @param self                  AerospikeClient object
+ * @param args                  The args is a tuple object containing an argument
+ *                              list passed from Python to a C function
+ * @param kwds                  Dictionary of keywords
+ *
+ * Returns an integer status. 0(Zero) is success value.
+ * In case of error,appropriate exceptions will be raised.
+ *******************************************************************************************************
+ */
 PyObject * AerospikeClient_Index_Remove(AerospikeClient * self, PyObject *args, PyObject * kwds)
 {
 	// Initialize error

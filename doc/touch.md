@@ -39,7 +39,11 @@ config = { 'hosts': [('127.0.0.1', 3000)] }
 client = aerospike.client(config).connect()
 
 key = ('test', 'demo', 1)
-client.touch(key, 120, policy={'timeout': 100})
+
+meta = {
+	'ttl':8956
+}
+client.touch(key, 120, meta, policy={'timeout': 100})
 ```
 
 ### See Also

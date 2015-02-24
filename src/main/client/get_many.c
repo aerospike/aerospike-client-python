@@ -29,7 +29,18 @@
 #include "key.h"
 #include "policy.h"
 
-// Callback method
+/**
+ *******************************************************************************************************
+ * This callback will be called with the results with aerospike_batch_get().
+ *
+ * @param results               An array of n as_batch_read entries
+ * @param n                     The number of results from the batch request
+ * @param udata                 The return value to be filled with result of
+ * 								get_many()
+ *
+ * Returns boolean value(true or false).
+ *******************************************************************************************************
+ */
 static bool batch_get_cb(const as_batch_read* results, uint32_t n, void* udata)
 {
 	// Typecast udata back to PyObject
@@ -37,7 +48,6 @@ static bool batch_get_cb(const as_batch_read* results, uint32_t n, void* udata)
 
 	// Initialize error object
 	as_error err;
-
 	as_error_init(&err);
 
 	// Loop over results array
@@ -74,6 +84,17 @@ static bool batch_get_cb(const as_batch_read* results, uint32_t n, void* udata)
 	return true;
 }
 
+/**
+ *******************************************************************************************************
+ * This function will get a batch of records from the Aeropike DB.
+ *
+ * @param self                  AerospikeClient object
+ * @param py_keys               The list of keys
+ * @param py_policy				The dictionary of policies
+ *
+ * Returns the record if key exists otherwise NULL.
+ *******************************************************************************************************
+ */
 static
 PyObject * AerospikeClient_Get_Many_Invoke(
 	AerospikeClient * self,
@@ -177,6 +198,20 @@ CLEANUP:
 	return py_recs;
 }
 
+/**
+ *******************************************************************************************************
+ * Gets a batch of records from the Aerospike DB.
+ *
+ * @param self                  AerospikeClient object
+ * @param args                  The args is a tuple object containing an argument
+ *                              list passed from Python to a C function
+ * @param kwds                  Dictionary of keywords
+ *
+ * Returns a dictionary of record with key to be primary key and value to be a
+ * record.
+ * In case of error,appropriate exceptions will be raised.
+ *******************************************************************************************************
+ */
 PyObject * AerospikeClient_Get_Many(AerospikeClient * self, PyObject * args, PyObject * kwds)
 {
 	// Python Function Arguments

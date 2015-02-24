@@ -4,7 +4,8 @@
 ## Description
 
 ```
-aerospike.client.append(key, bin, val[, meta[, policy]])
+aerospike.client.append ( key, bin, val [, meta [, policies ]] )
+
 ```
 
 **aerospike.client.append()** will append a string *value* to the string value
@@ -40,10 +41,14 @@ client = aerospike.client(config).connect()
 
 try:
   key = ('test', 'demo', 1)
-  client.append(key, 'name', ' jr.', policy={'timeout': 1200})
+  meta = {
+	  'ttl' : 56
+  }
+  client.append(key, 'name', ' jr.', meta, policy={'timeout': 1200})
 except Exception as e:
   print("error: {0}".format(e), file=sys.stderr)
   sys.exit(1)
+
 ```
 
 ### See Also

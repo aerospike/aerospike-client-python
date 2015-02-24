@@ -437,6 +437,8 @@ as_status pyobject_to_record(as_error * err, PyObject * py_rec, PyObject * py_me
 		if ( err->code != AEROSPIKE_OK ) {
 			as_record_destroy(rec);
 		}
+	} else {
+		as_error_update(err, AEROSPIKE_ERR_PARAM, "Record should be passed as bin-value pair");
 	}
 
 	return err->code;

@@ -4,7 +4,7 @@
 ## Description
 
 ```
-aerospike.client.prepend(key, bin, val[, meta[, policy]])
+aerospike.client.prepend ( key, bin, val [, meta [, policies ]] )
 
 ```
 
@@ -22,6 +22,8 @@ in a *bin*.
 **meta** optional record metadata to be set. A dictionary with fields
 - **ttl** the [time-to-live](http://www.aerospike.com/docs/client/c/usage/kvs/write.html#change-record-time-to-live-ttl) in seconds
 
+**policies**, the dictionary of policies to be given while prepend.   
+
 **policy** optional write policies. A dictionary with optional fields
 - **timeout** write timeout in milliseconds
 - **key** one of the [aerospike.POLICY_KEY_*](http://www.aerospike.com/apidocs/c/db/d65/group__client__policies.html#gaa9c8a79b2ab9d3812876c3ec5d1d50ec) values
@@ -37,12 +39,16 @@ in a *bin*.
 # -*- coding: utf-8 -*-
 import aerospike
 
+
 config = { 'hosts': [('127.0.0.1', 3000)] }
 client = aerospike.client(config).connect()
 
 try:
   key = ('test', 'demo', 1)
-  client.prepend(key, 'name', 'Dr. ', policy={'timeout': 1200})
+  meta = {
+	  'ttl' : 88
+  }
+  client.prepend(key, 'name', 'Dr. ', meta, policy={'timeout': 1200})
 except Exception as e:
   print("error: {0}".format(e), file=sys.stderr)
   sys.exit(1)

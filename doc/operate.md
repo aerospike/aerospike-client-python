@@ -86,7 +86,10 @@ try:
       "val": 360
     }
   ]
-  (key, meta, bins) = self.client.operate(key, list, policy={'timeout':500})
+  meta = {
+	  'ttl' : 5865
+  }
+  (key, meta, bins) = self.client.operate(key, list, meta, policy={'timeout':500})
 
   print(key)
   print('--------------------------')

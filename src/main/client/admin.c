@@ -27,6 +27,19 @@
 #include "conversions.h"
 #include "policy.h"
 
+/**
+ *******************************************************************************************************
+ * Create a user in the Aerospike DB.
+ *
+ * @param self                  AerospikeClient object
+ * @param args                  The args is a tuple object containing an argument
+ *                              list passed from Python to a C function
+ * @param kwds                  Dictionary of keywords
+ *
+ * Returns an integer status. 0(Zero) is success value.
+ * In case of error,appropriate exceptions will be raised.
+ *******************************************************************************************************
+ */
 PyObject * AerospikeClient_Admin_Create_User(AerospikeClient * self, PyObject *args, PyObject * kwds)
 {
 	// Initialize error
@@ -116,7 +129,19 @@ CLEANUP:
 	return PyLong_FromLong(0);
 }
 
-
+/**
+ *******************************************************************************************************
+ * Drops a user from the Aerospike DB.
+ *
+ * @param self                  AerospikeClient object
+ * @param args                  The args is a tuple object containing an argument
+ *                              list passed from Python to a C function
+ * @param kwds                  Dictionary of keywords
+ *
+ * Returns an integer status. 0(Zero) is success value.
+ * In case of error,appropriate exceptions will be raised.
+ *******************************************************************************************************
+ */
 PyObject * AerospikeClient_Admin_Drop_User( AerospikeClient *self, PyObject *args, PyObject *kwds )
 {
 	// Initialize error
@@ -177,7 +202,19 @@ CLEANUP:
 	return PyLong_FromLong(0);
 }
 
-
+/**
+ *******************************************************************************************************
+ * Sets the password of a particular user in the Aerospike DB.
+ *
+ * @param self                  AerospikeClient object
+ * @param args                  The args is a tuple object containing an argument
+ *                              list passed from Python to a C function
+ * @param kwds                  Dictionary of keywords
+ *
+ * Returns an integer status. 0(Zero) is success value.
+ * In case of error,appropriate exceptions will be raised.
+ *******************************************************************************************************
+ */
 PyObject * AerospikeClient_Admin_Set_Password( AerospikeClient *self, PyObject *args, PyObject *kwds )
 {
 	// Initialize error
@@ -246,7 +283,19 @@ CLEANUP:
 	return PyLong_FromLong(0);
 }
 
-
+/**
+ *******************************************************************************************************
+ * Changes the password of a particular user in the Aerospike DB.
+ *
+ * @param self                  AerospikeClient object
+ * @param args                  The args is a tuple object containing an argument
+ *                              list passed from Python to a C function
+ * @param kwds                  Dictionary of keywords
+ *
+ * Returns an integer status. 0(Zero) is success value.
+ * In case of error,appropriate exceptions will be raised.
+ *******************************************************************************************************
+ */
 PyObject * AerospikeClient_Admin_Change_Password( AerospikeClient *self, PyObject *args, PyObject *kwds )
 {
 	// Initialize error
@@ -315,7 +364,19 @@ CLEANUP:
 	return PyLong_FromLong(0);
 }
 
-
+/**
+ *******************************************************************************************************
+ * Grants a role to a user in the Aerospike DB.
+ *
+ * @param self                  AerospikeClient object
+ * @param args                  The args is a tuple object containing an argument
+ *                              list passed from Python to a C function
+ * @param kwds                  Dictionary of keywords
+ *
+ * Returns an integer status. 0(Zero) is success value.
+ * In case of error,appropriate exceptions will be raised.
+ *******************************************************************************************************
+ */
 PyObject * AerospikeClient_Admin_Grant_Roles( AerospikeClient *self, PyObject *args, PyObject *kwds )
 {
 	// Initialize error
@@ -397,7 +458,19 @@ CLEANUP:
 	return PyLong_FromLong(0);
 }
 
-
+/**
+ *******************************************************************************************************
+ * Revokes roles of a user in the Aerospike DB.
+ *
+ * @param self                  AerospikeClient object
+ * @param args                  The args is a tuple object containing an argument
+ *                              list passed from Python to a C function
+ * @param kwds                  Dictionary of keywords
+ *
+ * Returns an integer status. 0(Zero) is success value.
+ * In case of error,appropriate exceptions will be raised.
+ *******************************************************************************************************
+ */
 PyObject * AerospikeClient_Admin_Revoke_Roles( AerospikeClient *self, PyObject *args, PyObject *kwds )
 {
 	// Initialize error
@@ -483,7 +556,19 @@ CLEANUP:
 	return PyLong_FromLong(0);
 }
 
-
+/**
+ *******************************************************************************************************
+ * Queries a user in the Aerospike DB.
+ *
+ * @param self                  AerospikeClient object
+ * @param args                  The args is a tuple object containing an argument
+ *                              list passed from Python to a C function
+ * @param kwds                  Dictionary of keywords
+ *
+ * Returns an integer status. 0(Zero) is success value.
+ * In case of error,appropriate exceptions will be raised.
+ *******************************************************************************************************
+ */
 PyObject * AerospikeClient_Admin_Query_User( AerospikeClient * self, PyObject * args, PyObject *kwds )
 {
 	// Initialize error
@@ -558,6 +643,19 @@ CLEANUP:
 	return py_user;
 }
 
+/**
+ *******************************************************************************************************
+ * Queries all users in the Aerospike DB.
+ *
+ * @param self                  AerospikeClient object
+ * @param args                  The args is a tuple object containing an argument
+ *                              list passed from Python to a C function
+ * @param kwds                  Dictionary of keywords
+ *
+ * Returns an integer status. 0(Zero) is success value.
+ * In case of error,appropriate exceptions will be raised.
+ *******************************************************************************************************
+ */
 PyObject * AerospikeClient_Admin_Query_Users( AerospikeClient * self, PyObject * args, PyObject *kwds )
 {
 	// Initialize error

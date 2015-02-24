@@ -27,6 +27,11 @@
 #include "conversions.h"
 #include "policy.h"
 
+/**
+ ********************************************************************************************************
+ * Macros for Info API.
+ ********************************************************************************************************
+ */
 #define MAX_HOST_COUNT 128
 #define INFO_REQUEST_RESPONSE_DELIMITER "\t"
 #define INFO_RESPONSE_END "\n"
@@ -37,10 +42,10 @@
  ******************************************************************************************************
  * Returns data for a particular request string to AerospikeClient_InfoNode
  *
- * @param self AerospikeClient object
- * @param request_str_p Request string sent from the python client
- * @param py_host Optional host sent from the python client
- * @param py_policy The policy sent from the python client
+ * @param self                  AerospikeClient object
+ * @param request_str_p         Request string sent from the python client
+ * @param py_host               Optional host sent from the python client
+ * @param py_policy             The policy sent from the python client
  *
  * Returns information about a host.
  ********************************************************************************************************/
@@ -61,6 +66,11 @@ static PyObject * AerospikeClient_InfoNode_Invoke(
 
 	as_error err;
 	as_error_init(&err);
+
+	if (!self || !self->as) {
+		as_error_update(&err, AEROSPIKE_ERR_PARAM, "Invalid aerospike object");
+		goto CLEANUP;
+	}
 
 	if (py_policy) {
 		if( PyDict_Check(py_policy) ) {
@@ -159,10 +169,10 @@ CLEANUP:
  ******************************************************************************************************
  * Returns data about a particular node in the database depending upon the request string.
  *
- * @param self AerospikeClient object
- * @param args The args is a tuple object containing an argument
- * list passed from Python to a C function
- * @param kwds Dictionary of keywords
+ * @param self                  AerospikeClient object
+ * @param args                  The args is a tuple object containing an argument
+ *                              list passed from Python to a C function
+ * @param kwds                  Dictionary of keywords
  *
  * Returns information about a host.
  ********************************************************************************************************/
@@ -187,12 +197,12 @@ PyObject * AerospikeClient_InfoNode(AerospikeClient * self, PyObject * args, PyO
  ******************************************************************************************************
  * Iterates over the hosts in the cluster and creates the list to be returned to the python client.
  *
- * @param err as_error object
- * @param command Request string sent from the python client
- * @param nodes_dict Dictionary containing details of each host
- * @param return_value List t o be returned back to the python client
- * @param host_index Index of the dictionary nodes_dict
- * @param index Index of the list to be returned.
+ * @param err                   as_error object
+ * @param command               Request string sent from the python client
+ * @param nodes_dict            Dictionary containing details of each host
+ * @param return_value          List t o be returned back to the python client
+ * @param host_index            Index of the dictionary nodes_dict
+ * @param index                 Index of the list to be returned.
  *
  * Returns information about a host.
  ********************************************************************************************************/
@@ -269,7 +279,7 @@ CLEANUP:
  ******************************************************************************************************
  * Returns data about the nodes to AerospikeClient_GetNodes.
  *
- * @param self AerospikeClient object
+ * @param self                  AerospikeClient object
  *
  * Returns a list containing the details of the nodes.
  ********************************************************************************************************/
@@ -330,10 +340,10 @@ CLEANUP:
  ******************************************************************************************************
  * Returns data about the nodes in a cluster of the database.
  *
- * @param self AerospikeClient object
- * @param args The args is a tuple object containing an argument
- * list passed from Python to a C function
- * @param kwds Dictionary of keywords
+ * @param self                  AerospikeClient object
+ * @param args                  The args is a tuple object containing an argument
+ *                              list passed from Python to a C function
+ * @param kwds                  Dictionary of keywords
  *
  * Returns a list containing the details of the nodes.
  ********************************************************************************************************/

@@ -27,6 +27,21 @@
 #include "key.h"
 #include "policy.h"
 
+/**
+ *******************************************************************************************************
+ * This function will put record to the Aerospike DB.
+ *
+ * @param self                  AerospikeClient object
+ * @param py_key                The key under which to store the record.
+ * @param py_bins               The data to write to the Aerospike DB.
+ * @param py_meta               The meatadata for the record.
+ * @param py_policy				The dictionary of policies to be given while
+ * 								reading a record.
+ *
+ * Returns an integer status. 0(Zero) is success value.
+ * In case of error,appropriate exceptions will be raised.
+ *******************************************************************************************************
+ */
 PyObject * AerospikeClient_Put_Invoke(
 	AerospikeClient * self,
 	PyObject * py_key, PyObject * py_bins, PyObject * py_meta, PyObject * py_policy)
@@ -99,6 +114,19 @@ CLEANUP:
 	return PyLong_FromLong(0);
 }
 
+/**
+ *******************************************************************************************************
+ * Puts a record to the Aerospike DB.
+ *
+ * @param self                  AerospikeClient object
+ * @param args                  The args is a tuple object containing an argument
+ *                              list passed from Python to a C function
+ * @param kwds                  Dictionary of keywords
+ *
+ * Returns an integer status. 0(Zero) is success value.
+ * In case of error,appropriate exceptions will be raised.
+ *******************************************************************************************************
+ */
 PyObject * AerospikeClient_Put(AerospikeClient * self, PyObject * args, PyObject * kwds)
 {
 	// Python Function Arguments

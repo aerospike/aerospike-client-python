@@ -23,6 +23,16 @@
 #define TRACE() printf("%s:%d\n",__FILE__,__LINE__)
 
 /*******************************************************************************
+ * Constants for Operate API's
+ ******************************************************************************/
+#define OPERATOR_PREPEND 4
+#define OPERATOR_APPEND  5
+#define OPERATOR_TOUCH   8
+#define OPERATOR_INCR    2
+#define OPERATOR_READ    1
+#define OPERATOR_WRITE   0
+
+/*******************************************************************************
  * CLIENT TYPE
  ******************************************************************************/
 
@@ -147,31 +157,6 @@ PyObject * AerospikeClient_Touch(AerospikeClient * self, PyObject * args, PyObje
  *
  */
 PyObject * AerospikeClient_Operate(AerospikeClient * self, PyObject * args, PyObject * kwds);
-
-/*******************************************************************************
- * INTENRAL (SHARED) OPERATIONS, FOR COMPATIBILITY W/ OLD API
- ******************************************************************************/
-
-PyObject * AerospikeClient_Apply_Invoke(
-	AerospikeClient * self,
-	PyObject * py_key, PyObject * py_module, PyObject * py_function,
-	PyObject * py_arglist, PyObject * py_policy);
-
-PyObject * AerospikeClient_Exists_Invoke(
-	AerospikeClient * self,
-	PyObject * py_key, PyObject * py_policy);
-
-PyObject * AerospikeClient_Get_Invoke(
-	AerospikeClient * self,
-	PyObject * py_key, PyObject * py_policy);
-
-PyObject * AerospikeClient_Put_Invoke(
-	AerospikeClient * self,
-	PyObject * py_key, PyObject * py_bins, PyObject * py_meta, PyObject * py_policy);
-
-PyObject * AerospikeClient_Remove_Invoke(
-	AerospikeClient * self,
-	PyObject * py_key, long generation, PyObject * py_policy);
 
 /*******************************************************************************
  * KEY OPERATIONS (DEPRECATED)
@@ -332,7 +317,6 @@ PyObject * AerospikeClient_Index_String_Create(AerospikeClient * self, PyObject 
  */
 PyObject * AerospikeClient_Index_Remove(AerospikeClient * self, PyObject *args, PyObject * kwds);
 
-
 /*******************************************************************************
  * LOG OPERATIONS
  ******************************************************************************/
@@ -383,7 +367,6 @@ AerospikeLList * AerospikeClient_LList(AerospikeClient * self, PyObject * args, 
  *
  */
 AerospikeLMap * AerospikeClient_LMap(AerospikeClient * self, PyObject * args, PyObject * kwds);
-
 
 /**
  * Get records in a batch

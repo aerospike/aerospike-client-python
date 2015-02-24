@@ -107,32 +107,30 @@ int check_type(PyObject * py_value, int op)
 
 /**
  *******************************************************************************************************
- * This function will set the metadata fields inside operation.
- * Like genertion value, ttl.
+ * This function checks for metadata and if present set it into the
+ * as_operations.
  *
- * @param py_meta              The value to perform operations.
- * @param op                   The operation to perform.
- * @param err                  The as_error to be populated by the function
- *                             with the encountered error if any.
+ * @param py_meta               The dictionary of metadata.
+ * @param ops                   The as_operations object.
+ * @param err                   The as_error to be populated by the function
+ *                              with the encountered error if any.
  *
  * Returns nothing.
  *******************************************************************************************************
  */
 static
-void AerospikeClient_CheckForMeta(PyObject * py_meta, as_operations * ops, as_error *err) {
+void AerospikeClient_CheckForMeta(PyObject * py_meta, as_operations * ops, as_error *err)
+{
 	if ( py_meta && PyDict_Check(py_meta) ) {
 		PyObject * py_gen = PyDict_GetItemString(py_meta, "gen");
 		PyObject * py_ttl = PyDict_GetItemString(py_meta, "ttl");
 
-		if( py_ttl != NULL ){
+		if ( py_ttl != NULL ){
 			if ( PyInt_Check(py_ttl) ) {
 				ops->ttl = (uint32_t) PyInt_AsLong(py_ttl);
-			}
-			else if ( PyLong_Check(py_ttl) ) {
+			} else if ( PyLong_Check(py_ttl) ) {
 				ops->ttl = (uint32_t) PyLong_AsLongLong(py_ttl);
-			}
-			else
-			{
+			} else {
 				as_error_update(err, AEROSPIKE_ERR_PARAM, "Ttl should be an int or long");
 			}
 		}
@@ -140,15 +138,14 @@ void AerospikeClient_CheckForMeta(PyObject * py_meta, as_operations * ops, as_er
 		if( py_gen != NULL ){
 			if ( PyInt_Check(py_gen) ) {
 				ops->gen = (uint16_t) PyInt_AsLong(py_gen);
-			}
-			else if ( PyLong_Check(py_gen) ) {
+			} else if ( PyLong_Check(py_gen) ) {
 				ops->gen = (uint16_t) PyLong_AsLongLong(py_gen);
-			}
-			else
-			{
+			} else {
 				as_error_update(err, AEROSPIKE_ERR_PARAM, "Generation should be an int or long");
 			}
 		}
+	} else {
+		as_error_update(err, AEROSPIKE_ERR_PARAM, "Metadata should be of type dictionary");
 	}
 }
 

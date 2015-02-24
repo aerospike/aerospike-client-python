@@ -25,6 +25,7 @@
 #include "client.h"
 #include "conversions.h"
 #include "query.h"
+#include "policy.h"
 
 #undef TRACE
 #define TRACE()
@@ -74,12 +75,26 @@ PyObject * AerospikeQuery_Results(AerospikeQuery * self, PyObject * args, PyObje
 
 	static char * kwlist[] = {"policy", NULL};
 
-	if ( PyArg_ParseTupleAndKeywords(args, kwds, "|O:foreach", kwlist, &py_policy) == false ) {
+	if ( PyArg_ParseTupleAndKeywords(args, kwds, "|O:results", kwlist, &py_policy) == false ) {
 		return NULL;
 	}
 
 	as_error err;
 	as_error_init(&err);
+
+	as_policy_query query_policy;
+	as_policy_query * query_policy_p = NULL;
+
+	if (!self || !self->client->as) {
+		as_error_update(&err, AEROSPIKE_ERR_PARAM, "Invalid aerospike object");
+		goto CLEANUP;
+	}
+
+	// Convert python policy object to as_policy_exists
+	pyobject_to_policy_query(&err, py_policy, &query_policy, &query_policy_p);
+	if ( err.code != AEROSPIKE_OK ) {
+		goto CLEANUP;
+	}
 
 	TRACE();
 	PyObject * py_results = PyList_New(0);
@@ -88,11 +103,12 @@ PyObject * AerospikeQuery_Results(AerospikeQuery * self, PyObject * args, PyObje
 	PyThreadState * _save = PyEval_SaveThread();
 
 	TRACE();
-    aerospike_query_foreach(self->client->as, &err, NULL, &self->query, each_result, py_results);
+    aerospike_query_foreach(self->client->as, &err, query_policy_p, &self->query, each_result, py_results);
 
 	TRACE();
 	PyEval_RestoreThread(_save);
 
+CLEANUP:/*??trace()*/
 	TRACE();
 	if ( err.code != AEROSPIKE_OK ) {
 		PyObject * py_err = NULL;
