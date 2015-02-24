@@ -4,7 +4,7 @@
 ## Description
 
 ```
-aerospike.client.prepend ( key, bin, val [, meta [, policies ]] )
+aerospike.client.prepend ( key, bin, val [, meta [, policy ]] )
 
 ```
 
@@ -21,8 +21,6 @@ in a *bin*.
 
 **meta** optional record metadata to be set. A dictionary with fields
 - **ttl** the [time-to-live](http://www.aerospike.com/docs/client/c/usage/kvs/write.html#change-record-time-to-live-ttl) in seconds
-
-**policies**, the dictionary of policies to be given while prepend.   
 
 **policy** optional write policies. A dictionary with optional fields
 - **timeout** write timeout in milliseconds

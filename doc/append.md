@@ -4,7 +4,7 @@
 ## Description
 
 ```
-aerospike.client.append ( key, bin, val [, meta [, policies ]] )
+aerospike.client.append ( key, bin, val [, meta [, policy ]] )
 
 ```
 
