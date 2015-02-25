@@ -31,9 +31,18 @@
 #include "policy.h"
 #include "log.h"
 #include <aerospike/as_operations.h>
+#include "serializer.h"
 
 static PyMethodDef Aerospike_Methods[] = {
 
+	//Serializer Operations
+
+	{"set_serializer",
+		(PyCFunction)AerospikeClient_Set_Serializer, METH_VARARGS | METH_KEYWORDS,
+		"Sets the serializer"},
+	{"set_deserializer",
+		(PyCFunction)AerospikeClient_Set_Deserializer, METH_VARARGS | METH_KEYWORDS,
+		"Sets the deserializer"},
 	{"client",		(PyCFunction) AerospikeClient_New,	METH_VARARGS | METH_KEYWORDS,
 		"Create a new instance of Client class."},
 	{"set_log_level",	(PyCFunction)Aerospike_Set_Log_Level,       METH_VARARGS | METH_KEYWORDS,

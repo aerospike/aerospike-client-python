@@ -44,7 +44,7 @@
  */
 PyObject * AerospikeClient_Put_Invoke(
 	AerospikeClient * self,
-	PyObject * py_key, PyObject * py_bins, PyObject * py_meta, PyObject * py_policy)
+	PyObject * py_key, PyObject * py_bins, PyObject * py_meta, PyObject * py_policy, long serializer_option)
 {
 	// Aerospike Client Arguments
 	as_error err;
@@ -61,6 +61,8 @@ PyObject * AerospikeClient_Put_Invoke(
 	as_record_init(&rec, 0);
 	record_initialised = true;
 
+	as_static_pool              static_pool = {0};
+    int iter=0;
 	// Initialize error
 	as_error_init(&err);
 
@@ -77,7 +79,7 @@ PyObject * AerospikeClient_Put_Invoke(
 	key_initialised = true;
 
 	// Convert python bins and metadata objects to as_record
-	pyobject_to_record(&err, py_bins, py_meta, &rec);
+	pyobject_to_record(&err, py_bins, py_meta, &rec, serializer_option, &static_pool);
 	if ( err.code != AEROSPIKE_OK ) {
 		goto CLEANUP;
 	}
@@ -92,7 +94,9 @@ PyObject * AerospikeClient_Put_Invoke(
 	aerospike_key_put(self->as, &err, write_policy_p, &key, &rec);
 
 CLEANUP:
-
+    for (iter = 0; iter < static_pool.current_bytes_id; iter++) {
+        as_bytes_destroy(&static_pool.bytes_pool[iter]);
+    }
 	if (key_initialised == true){
 		// Destroy the key if it is initialised.
 		as_key_destroy(&key);
@@ -134,18 +138,18 @@ PyObject * AerospikeClient_Put(AerospikeClient * self, PyObject * args, PyObject
 	PyObject * py_bins = NULL;
 	PyObject * py_meta = NULL;
 	PyObject * py_policy = NULL;
+	long serializer_option = SERIALIZER_PYTHON;
 
 	// Python Function Keyword Arguments
-	static char * kwlist[] = {"key", "bins", "meta", "policy", NULL};
+	static char * kwlist[] = {"key", "bins", "meta", "policy", "serializer_option", NULL};
 
 	// Python Function Argument Parsing
-	if ( PyArg_ParseTupleAndKeywords(args, kwds, "OO|OO:put", kwlist,
-			&py_key, &py_bins, &py_meta, &py_policy) == false ) {
+	if ( PyArg_ParseTupleAndKeywords(args, kwds, "OO|OOl:put", kwlist,
+			&py_key, &py_bins, &py_meta, &py_policy, &serializer_option) == false ) {
 		return NULL;
 	}
 
 	// Invoke Operation
 	return AerospikeClient_Put_Invoke(self,
-		py_key, py_bins, py_meta, py_policy
-		);
+		py_key, py_bins, py_meta, py_policy, serializer_option);
 }

@@ -87,7 +87,7 @@ PyObject * AerospikeClient_Apply_Invoke(
 	key_initialised = true;
 
 	// Convert python list to as_list
-	pyobject_to_list(&err, py_arglist, &arglist);
+	pyobject_to_list(&err, py_arglist, &arglist, NULL, -1);
 	if ( err.code != AEROSPIKE_OK ) {
 		goto CLEANUP;
 	}

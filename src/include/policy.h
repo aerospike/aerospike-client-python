@@ -25,6 +25,14 @@
  *Structure to map constant number to constant name string for Aerospike constants.
  *******************************************************************************************************
  */
+
+enum Aerospike_serializer_values {
+	SERIALIZER_NONE,
+	SERIALIZER_PYTHON, /* default handler for serializer type */
+	SERIALIZER_JSON,
+	SERIALIZER_USER,
+};
+
 typedef struct Aerospike_Constants {
     long    constantno;
     char    constant_str[MAX_CONSTANT_STR_SIZE];

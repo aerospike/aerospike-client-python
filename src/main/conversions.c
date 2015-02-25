@@ -30,9 +30,11 @@
 #include <aerospike/as_nil.h>
 #include <aerospike/as_policy.h>
 #include <aerospike/as_operations.h>
+#include <aerospike/as_bytes.h>
 
 #include "conversions.h"
 #include "key.h"
+#include "policy.h"
 
 #define PY_KEYT_NAMESPACE 0
 #define PY_KEYT_SET 1
@@ -198,7 +200,7 @@ as_status pyobject_to_strArray( as_error * err, PyObject * py_list,  char ** arr
 	return err->code;
 }
 
-as_status pyobject_to_list(as_error * err, PyObject * py_list, as_list ** list)
+as_status pyobject_to_list(as_error * err, PyObject * py_list, as_list ** list, as_static_pool *static_pool, int serializer_type)
 {
 	as_error_reset(err);
 
@@ -211,7 +213,7 @@ as_status pyobject_to_list(as_error * err, PyObject * py_list, as_list ** list)
 	for ( int i = 0; i < size; i++ ) {
 		PyObject * py_val = PyList_GetItem(py_list, i);
 		as_val * val = NULL;
-		pyobject_to_val(err, py_val, &val);
+		pyobject_to_val(err, py_val, &val, static_pool, serializer_type);
 		if ( err->code != AEROSPIKE_OK ) {
 			break;
 		}
@@ -225,7 +227,7 @@ as_status pyobject_to_list(as_error * err, PyObject * py_list, as_list ** list)
 	return err->code;
 }
 
-as_status pyobject_to_map(as_error * err, PyObject * py_dict, as_map ** map)
+as_status pyobject_to_map(as_error * err, PyObject * py_dict, as_map ** map, as_static_pool *static_pool, int serializer_type)
 {
 	as_error_reset(err);
 
@@ -241,11 +243,11 @@ as_status pyobject_to_map(as_error * err, PyObject * py_dict, as_map ** map)
 	while (PyDict_Next(py_dict, &pos, &py_key, &py_val)) {
 		as_val * key = NULL;
 		as_val * val = NULL;
-		pyobject_to_val(err, py_key, &key);
+		pyobject_to_val(err, py_key, &key, static_pool, serializer_type);
 		if ( err->code != AEROSPIKE_OK ) {
 			break;
 		}
-		pyobject_to_val(err, py_val, &val);
+		pyobject_to_val(err, py_val, &val, static_pool, serializer_type);
 		if ( err->code != AEROSPIKE_OK ) {
 			if (key) {
 				as_val_destroy(key);
@@ -262,7 +264,7 @@ as_status pyobject_to_map(as_error * err, PyObject * py_dict, as_map ** map)
 	return err->code;
 }
 
-as_status pyobject_to_val(as_error * err, PyObject * py_obj, as_val ** val)
+as_status pyobject_to_val(as_error * err, PyObject * py_obj, as_val ** val, as_static_pool *static_pool, int serializer_type)
 {
 	as_error_reset(err);
 
@@ -292,25 +294,40 @@ as_status pyobject_to_val(as_error * err, PyObject * py_obj, as_val ** val)
 		Py_DECREF(py_ustr);
 	}
 	else if ( PyByteArray_Check(py_obj) ) {
-		uint8_t * b = (uint8_t *) PyByteArray_AsString(py_obj);
-		uint32_t z = (uint32_t) PyByteArray_Size(py_obj);
-		*val = (as_val *) as_bytes_new_wrap(b, z, false);
+		as_bytes *bytes;
+		GET_BYTES_POOL(bytes, static_pool, err);
+		serialize_based_on_serializer_policy(serializer_type, &bytes, py_obj, err);
+		*val = (as_val *) bytes;
 	}
 	else if ( PyList_Check(py_obj) ) {
 		as_list * list = NULL;
-		pyobject_to_list(err, py_obj, &list);
+		pyobject_to_list(err, py_obj, &list, static_pool, serializer_type);
 		if ( err->code == AEROSPIKE_OK ) {
 			*val = (as_val *) list;
 		}
 	}
 	else if ( PyDict_Check(py_obj) ) {
 		as_map * map = NULL;
-		pyobject_to_map(err, py_obj, &map);
+		pyobject_to_map(err, py_obj, &map, static_pool, serializer_type);
 		if ( err->code == AEROSPIKE_OK ) {
 			*val = (as_val *) map;
 		}
-	}
-	else {
+	} else if ( PyFloat_Check(py_obj) ) {
+		as_bytes *bytes;
+		GET_BYTES_POOL(bytes, static_pool, err);
+		serialize_based_on_serializer_policy(serializer_type, &bytes, py_obj, err);
+		*val = (as_val *) bytes;
+	} else if ( PyBool_Check(py_obj) ) {
+		as_bytes *bytes;
+		GET_BYTES_POOL(bytes, static_pool, err);
+		serialize_based_on_serializer_policy(serializer_type, &bytes, py_obj, err);
+		*val = (as_val *) bytes;
+	} else if ( PyObject_TypeCheck(py_obj, &PyBaseObject_Type) ) {
+		as_bytes *bytes;
+		GET_BYTES_POOL(bytes, static_pool, err);
+		serialize_based_on_serializer_policy(serializer_type, &bytes, py_obj, err);
+		*val = (as_val *) bytes;
+	} else {
 		return as_error_update(err, AEROSPIKE_ERR_CLIENT, "value is not a supported type.");
 	}
 
@@ -321,7 +338,8 @@ as_status pyobject_to_val(as_error * err, PyObject * py_obj, as_val ** val)
  * Converts a PyObject into an as_record.
  * Returns AEROSPIKE_OK on success. On error, the err argument is populated.
  */
-as_status pyobject_to_record(as_error * err, PyObject * py_rec, PyObject * py_meta, as_record * rec)
+as_status pyobject_to_record(as_error * err, PyObject * py_rec, PyObject *
+py_meta, as_record * rec, int serializer_type, as_static_pool *static_pool)
 {
 	as_error_reset(err);
 
@@ -375,14 +393,15 @@ as_status pyobject_to_record(as_error * err, PyObject * py_rec, PyObject * py_me
 				as_record_set_strp(rec, name, val, false);
 			}
 			else if ( PyByteArray_Check(value) ) {
-				uint8_t * val = (uint8_t *) PyByteArray_AsString(value);
-				uint32_t sz = (uint32_t) PyByteArray_Size(value);
-				as_record_set_rawp(rec, name, val, sz, false);
+				as_bytes *bytes;
+				GET_BYTES_POOL(bytes, static_pool, err);
+				serialize_based_on_serializer_policy(serializer_type, &bytes, value, err);
+				as_record_set_bytes(rec, name, bytes);
 			}
 			else if ( PyList_Check(value) ) {
 				// as_list
 				as_list * list = NULL;
-				pyobject_to_list(err, value, &list);
+				pyobject_to_list(err, value, &list, static_pool, serializer_type);
 				if ( err->code != AEROSPIKE_OK ) {
 					break;
 				}
@@ -391,13 +410,17 @@ as_status pyobject_to_record(as_error * err, PyObject * py_rec, PyObject * py_me
 			else if ( PyDict_Check(value) ) {
 				// as_map
 				as_map * map = NULL;
-				pyobject_to_map(err, value, &map);
+				pyobject_to_map(err, value, &map, static_pool, serializer_type);
 				if ( err->code != AEROSPIKE_OK ) {
 					break;
 				}
 				as_record_set_map(rec, name, map);
 			}
 			else {
+				as_bytes *bytes;
+				GET_BYTES_POOL(bytes, static_pool, err);
+				serialize_based_on_serializer_policy(serializer_type, &bytes, value, err);
+				as_record_set_bytes(rec, name, bytes);
 			}
 
 			if (py_ukey){
@@ -654,9 +677,10 @@ as_status val_to_pyobject(as_error * err, const as_val * val, PyObject ** py_val
 				break;
 			}
 		case AS_BYTES: {
+				//uint32_t bval_size = as_bytes_size(bval);
 				as_bytes * bval = as_bytes_fromval(val);
-				uint32_t bval_size = as_bytes_size(bval);
-				*py_val = PyByteArray_FromStringAndSize((char *) as_bytes_get(bval), bval_size);
+				unserialize_based_on_as_bytes_type(bval, py_val, err);
+				//*py_val = PyByteArray_FromStringAndSize((char *) as_bytes_get(bval), bval_size);
 				break;
 			}
 		case AS_LIST: {

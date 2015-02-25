@@ -295,6 +295,7 @@ setup(
                 'src/main/client/admin.c',
                 'src/main/client/udf.c',
                 'src/main/client/sec_index.c',
+                'src/main/serializer.c',
                 'src/main/client/remove_bin.c',
                 'src/main/client/get_key_digest.c',
                 'src/main/client/lstack.c',
