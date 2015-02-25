@@ -312,23 +312,11 @@ as_status pyobject_to_val(as_error * err, PyObject * py_obj, as_val ** val, as_s
 		if ( err->code == AEROSPIKE_OK ) {
 			*val = (as_val *) map;
 		}
-	} else if ( PyFloat_Check(py_obj) ) {
-		as_bytes *bytes;
-		GET_BYTES_POOL(bytes, static_pool, err);
-		serialize_based_on_serializer_policy(serializer_type, &bytes, py_obj, err);
-		*val = (as_val *) bytes;
-	} else if ( PyBool_Check(py_obj) ) {
-		as_bytes *bytes;
-		GET_BYTES_POOL(bytes, static_pool, err);
-		serialize_based_on_serializer_policy(serializer_type, &bytes, py_obj, err);
-		*val = (as_val *) bytes;
-	} else if ( PyObject_TypeCheck(py_obj, &PyBaseObject_Type) ) {
-		as_bytes *bytes;
-		GET_BYTES_POOL(bytes, static_pool, err);
-		serialize_based_on_serializer_policy(serializer_type, &bytes, py_obj, err);
-		*val = (as_val *) bytes;
 	} else {
-		return as_error_update(err, AEROSPIKE_ERR_CLIENT, "value is not a supported type.");
+		as_bytes *bytes;
+		GET_BYTES_POOL(bytes, static_pool, err);
+		serialize_based_on_serializer_policy(serializer_type, &bytes, py_obj, err);
+		*val = (as_val *) bytes;
 	}
 
 	return err->code;
@@ -471,7 +459,8 @@ py_meta, as_record * rec, int serializer_type, as_static_pool *static_pool)
  * Convert pyobject to as_* type.
  * Returns AEROSPIKE_OK on success. On error, the err argument is populated.
  */
-as_status pyobject_to_astype_write(as_error * err, char *bin_name,  PyObject * py_value, as_val **val, as_operations * ops)
+as_status pyobject_to_astype_write(as_error * err, char *bin_name,  PyObject * py_value, as_val **val,
+		as_operations * ops, as_static_pool *static_pool, int serializer_type)
 {
 	as_error_reset(err);
 
@@ -503,14 +492,14 @@ as_status pyobject_to_astype_write(as_error * err, char *bin_name,  PyObject * p
 	}
 	else if ( PyList_Check(py_value) ) {
 		as_list * list = NULL;
-		pyobject_to_list(err, py_value, &list);
+		pyobject_to_list(err, py_value, &list, static_pool, serializer_type);
 		if ( err->code == AEROSPIKE_OK ) {
 			*val = (as_val *) list;
 		}
 	}
 	else if ( PyDict_Check(py_value) ) {
 		as_map * map = NULL;
-		pyobject_to_map(err, py_value, &map);
+		pyobject_to_map(err, py_value, &map, static_pool, serializer_type);
 		if ( err->code == AEROSPIKE_OK ) {
 			*val = (as_val *) map;
 		}

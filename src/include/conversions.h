@@ -72,4 +72,5 @@ bool error_to_pyobject(const as_error * err, PyObject ** obj);
 
 void initialize_ldt(as_error *error, as_ldt* ldt_p, char* bin_name, int type, char* module);
 
-as_status pyobject_to_astype_write(as_error * err, char *bin_name,  PyObject * py_value, as_val **val, as_operations * ops);
+as_status pyobject_to_astype_write(as_error * err, char *bin_name,  PyObject * py_value, as_val **val,
+		as_operations * ops, as_static_pool *static_pool, int serializer_type);

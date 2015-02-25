@@ -81,6 +81,8 @@ PyObject * AerospikeClient_ScanApply_Invoke(
 	PyObject *py_ustr2 = NULL;
 	PyObject *py_ustr3 = NULL;
 
+	as_static_pool static_pool = {0};
+
 	// Initialize error
 	as_error_init(&err);
 
@@ -152,7 +154,8 @@ PyObject * AerospikeClient_ScanApply_Invoke(
 		goto CLEANUP;
 	}
 
-	pyobject_to_list(&err, py_args, &arglist);
+	pyobject_to_list(&err, py_args, &arglist, &static_pool,
+			-1);
 	if (err.code != AEROSPIKE_OK) {
 		goto CLEANUP;
 	}

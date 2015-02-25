@@ -183,6 +183,7 @@ PyObject *  AerospikeClient_Operate_Invoke(
 	PyObject * py_ustr1 = NULL;
 	PyObject * py_bin = NULL;
 	as_record * rec = NULL;
+	as_static_pool static_pool = {0};
 
 	as_operations ops;
 	Py_ssize_t size = PyList_Size(py_list);
@@ -310,7 +311,8 @@ PyObject *  AerospikeClient_Operate_Invoke(
 					as_operations_add_read(&ops, bin);
 					break;
 				case AS_OPERATOR_WRITE:
-					pyobject_to_astype_write(err, bin, py_value, &put_val, &ops);
+					pyobject_to_astype_write(err, bin, py_value, &put_val, &ops,
+							&static_pool, -1);
 					if (err->code != AEROSPIKE_OK) {
 						goto CLEANUP;
 					}
