@@ -1153,3 +1153,22 @@ class TestPut(object):
         assert bins == {'odict': {u'apple': 4, u'banana': 3, u'orange': 2, u'pear': 1}}
 
         self.delete_keys.append( key )
+
+    def test_put_map_containing_tuple(self):
+
+        """
+            Invoke put() maap containing tuple.
+        """
+        key = ('test', 'demo', 1)
+
+        rec = {'seq' : {'bb' : tuple('abc')}}
+
+        res = TestPut.client.put( key, rec )
+
+        assert res == 0
+
+        (key , meta, bins) = TestPut.client.get(key)
+
+        assert bins == {'seq': {u'bb' : ('a', 'b', 'c')}}
+
+        self.delete_keys.append( key )

@@ -660,4 +660,25 @@ class TestOperate(object):
 
         key, meta, bins = TestOperate.client.operate(key, list)
 
-        assert bins == {'write_bin': {u'no': 89}}
+        assert bins == {'write_bin' : {u'no': 89}}
+
+    def test_operate_with_write_tuple_positive(self):
+        """
+        Invoke operate() with write operation
+        """
+        key = ('test', 'demo', 1)
+        list = [
+                {
+                    "op" : aerospike.OPERATOR_WRITE,
+                    "bin" : "write_bin",
+                    "val" : tuple('abc')
+                    },
+                {
+                    "op" : aerospike.OPERATOR_READ,
+                    "bin" : "write_bin"
+                    }
+                ]
+
+        key, meta, bins = TestOperate.client.operate(key, list)
+
+        assert bins == {'write_bin' : ('a', 'b', 'c')}

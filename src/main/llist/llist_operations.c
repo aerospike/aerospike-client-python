@@ -70,7 +70,7 @@ PyObject * AerospikeLList_Add(AerospikeLList * self, PyObject * args, PyObject *
 	}
 
 	as_val * val = NULL;
-	pyobject_to_val(&err, py_value, &val, &static_pool, -1);
+	pyobject_to_val(&err, py_value, &val, &static_pool, SERIALIZER_PYTHON);
 	if (err.code != AEROSPIKE_OK) {
 		goto CLEANUP;
 	}
@@ -215,7 +215,7 @@ PyObject * AerospikeLList_Get(AerospikeLList * self, PyObject * args, PyObject *
 	}
 
 	as_val * val = NULL;
-	pyobject_to_val(&err, py_value, &val, &static_pool, -1);
+	pyobject_to_val(&err, py_value, &val, &static_pool, SERIALIZER_PYTHON);
 	if (err.code != AEROSPIKE_OK) {
 		goto CLEANUP;
 	}
@@ -442,7 +442,7 @@ PyObject * AerospikeLList_Remove(AerospikeLList * self, PyObject * args, PyObjec
 	}
 
 	as_val * val = NULL;
-	pyobject_to_val(&err, py_value, &val, &static_pool, -1);
+	pyobject_to_val(&err, py_value, &val, &static_pool, SERIALIZER_PYTHON);
 	if (err.code != AEROSPIKE_OK) {
 		goto CLEANUP;
 	}

@@ -272,9 +272,6 @@ as_status pyobject_to_val(as_error * err, PyObject * py_obj, as_val ** val, as_s
 		// this should never happen, but if it did...
 		return as_error_update(err, AEROSPIKE_ERR_CLIENT, "value is null");
 	}
-	else if ( py_obj == Py_None ) {
-		*val = (as_val *) &as_nil;
-	}
 	else if ( PyInt_Check(py_obj) ) {
 		int64_t i = (int64_t) PyInt_AsLong(py_obj);
 		*val = (as_val *) as_integer_new(i);
@@ -358,9 +355,6 @@ py_meta, as_record * rec, int serializer_type, as_static_pool *static_pool)
 			if ( !value ) {
 				// this should never happen, but if it did...
 				return as_error_update(err, AEROSPIKE_ERR_CLIENT, "record is null");
-			}
-			else if ( value == Py_None ) {
-				as_record_set_nil(rec, name);
 			}
 			else if ( PyInt_Check(value) ) {
 				int64_t val = (int64_t) PyInt_AsLong(value);
@@ -464,10 +458,7 @@ as_status pyobject_to_astype_write(as_error * err, char *bin_name,  PyObject * p
 {
 	as_error_reset(err);
 
-	if ( py_value == Py_None ) {
-		*val = (as_val *) &as_nil;
-	}
-	else if ( PyInt_Check(py_value) ) {
+	if ( PyInt_Check(py_value) ) {
 		int64_t i = (int64_t) PyInt_AsLong(py_value);
 		*val = (as_val *) as_integer_new(i);
 	}
@@ -505,7 +496,10 @@ as_status pyobject_to_astype_write(as_error * err, char *bin_name,  PyObject * p
 		}
 	}
 	else {
-		return as_error_update(err, AEROSPIKE_ERR_CLIENT, "value is not a supported type.");
+		as_bytes *bytes;
+		GET_BYTES_POOL(bytes, static_pool, err);
+		serialize_based_on_serializer_policy(serializer_type, &bytes, py_value, err);
+		*val = (as_val *) bytes;
 	}
 
 	return err->code;
