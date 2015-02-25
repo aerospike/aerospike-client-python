@@ -4,6 +4,7 @@ import pytest
 import sys
 import time
 import cPickle as pickle
+from collections import OrderedDict
 
 try:
     import aerospike
@@ -332,14 +333,13 @@ class TestPut(object):
 
         self.delete_keys.append( key )
 
-    """
     def test_put_with_float_data(self):
 
             #Invoke put() for float data record.
         key = ( 'test', 'demo', 1 )
 
         rec = {
-                "pi" : 3.14
+                "pi" : 3.145
                 }
 
         res = TestPut.client.put( key, rec )
@@ -347,10 +347,9 @@ class TestPut(object):
         assert res == 0
         _, _, bins = TestPut.client.get( key )
 
-        assert bins == None
+        assert bins == {'pi': 3.145}
 
         self.delete_keys.append( key )
-        """
 
     def test_put_with_string_meta_and_string_policies(self):
         """
@@ -1049,4 +1048,108 @@ class TestPut(object):
                 'b': 1234,
                 'l': '!@#@#$QSDAsd;as'
         } == bins
+        self.delete_keys.append( key )
+
+    def test_put_set(self):
+
+        """
+            Invoke put() set.
+        """
+        key = ('test', 'demo', 1)
+
+        rec = {
+                "is_present": {1, 2}
+                }
+
+        res = TestPut.client.put( key, rec )
+
+        assert res == 0
+
+        (key , meta, bins) = TestPut.client.get(key)
+
+        assert bins == {"is_present": set([1, 2])}
+
+        self.delete_keys.append( key )
+
+    def test_put_frozenset(self):
+
+        """
+            Invoke put() frozenSet.
+        """
+        key = ('test', 'demo', 1)
+
+        cities = frozenset(["Frankfurt", "Basel", "Freiburg"])
+
+        rec = {'fSet' : cities}
+
+        res = TestPut.client.put( key, rec )
+
+        assert res == 0
+
+        (key , meta, bins) = TestPut.client.get(key)
+
+        assert bins == {'fSet' : frozenset(["Frankfurt", "Basel", "Freiburg"])}
+
+        self.delete_keys.append( key )
+
+    def test_put_tuple(self):
+
+        """
+            Invoke put() tuple.
+        """
+        key = ('test', 'demo', 1)
+
+        rec = {'seq' : tuple('abc')}
+
+        res = TestPut.client.put( key, rec )
+
+        assert res == 0
+
+        (key , meta, bins) = TestPut.client.get(key)
+
+        assert bins == {'seq': ('a', 'b', 'c')}
+
+        self.delete_keys.append( key )
+
+    def test_put_none_data(self):
+
+        """
+            Invoke put() None.
+        """
+        key = ('test', 'demo', 1)
+
+        rec_none = {
+                "is_present": None
+                }
+
+        res = TestPut.client.put( key, rec_none )
+
+        assert res == 0
+
+        (key , meta, bins) = TestPut.client.get(key)
+
+        assert bins == {"is_present": None}
+        self.delete_keys.append( key )
+
+    def test_put_ordereddict(self):
+
+        """
+            Invoke put() ordereddict.
+        """
+        key = ('test', 'demo', 1)
+
+        dict = {'banana': 3, 'apple':4, 'pear': 1, 'orange': 2}
+
+        od = OrderedDict(sorted(dict.items(), key=lambda t: t[0]))
+
+        rec = {'odict' : od}
+
+        res = TestPut.client.put( key, rec )
+
+        assert res == 0
+
+        (key , meta, bins) = TestPut.client.get(key)
+
+        assert bins == {'odict': {u'apple': 4, u'banana': 3, u'orange': 2, u'pear': 1}}
+
         self.delete_keys.append( key )
