@@ -73,11 +73,8 @@ class TestLMap(object):
                 "pi" : 3.14
                 }
 
-        with pytest.raises(Exception) as exception: 
-            TestLMap.lmap.put('k11', rec)
-
-        assert exception.value[0] == -1
-        assert exception.value[1] == "value is not a supported type."
+        assert 0 == TestLMap.lmap.put('k11', rec)
+        assert {u'k11': {u'pi' : 3.14}} == TestLMap.lmap.get('k11')
 
     #put() and Get() - put list to lmap.  
     def test_lmap_put_get_list_positive(self):

@@ -65,11 +65,8 @@ class TestLSet(object):
                 "pi" : 3.14
                 }
 
-        with pytest.raises(Exception) as exception: 
-            TestLSet.lset.add(rec)
-
-        assert exception.value[0] == -1
-        assert exception.value[1] == "value is not a supported type."
+        assert 0 == TestLSet.lset.add(rec)
+        assert {u"pi" : 3.14} == TestLSet.lset.get(rec)
 
     #Add and Get list from lset.
     def test_lset_add_list_positive(self):

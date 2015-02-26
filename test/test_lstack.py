@@ -46,8 +46,8 @@ class TestLStack(object):
         with pytest.raises(Exception) as exception: 
             TestLStack.lstack.peek(10)
 
-        assert exception.value[0] == 100
-        assert exception.value[1] == "/opt/aerospike/sys/udf/lua/ldt/lib_lstack.lua:3039: 1415:LDT-Top Record Not Found"
+        assert exception.value[0] == 2L
+        assert exception.value[1] == "AEROSPIKE_ERR_RECORD_NOT_FOUND"
 
     #Push() - push an object(integer, string, byte, map) onto the stack.
     #Size() - Get the current item count of the stack.
@@ -85,11 +85,8 @@ class TestLStack(object):
                 "pi" : 3.14
                 }
 
-        with pytest.raises(Exception) as exception: 
-            TestLStack.lstack.push(rec)
-
-        assert exception.value[0] == -1
-        assert exception.value[1] == "value is not a supported type."
+        assert 0 == TestLStack.lstack.push(rec)
+        assert [{"pi" : 3.14}] == TestLStack.lstack.peek(1)
 
     #Push - Push without any mandatory parameters.
     def test_lstack_push_no_parameter_negative(self):

@@ -23,6 +23,7 @@
 #include "client.h"
 #include "conversions.h"
 #include "query.h"
+#include "policy.h"
 
 AerospikeQuery * AerospikeQuery_Apply(AerospikeQuery * self, PyObject * args, PyObject * kwds)
 {
@@ -57,6 +58,8 @@ AerospikeQuery * AerospikeQuery_Apply(AerospikeQuery * self, PyObject * args, Py
 	char * function = NULL;
 	as_arraylist * arglist = NULL;
 
+	as_static_pool static_pool = {0};
+
 	if ( PyUnicode_Check(py_module) ){
 		py_umodule = PyUnicode_AsUTF8String(py_module);
 		module = PyString_AsString(py_umodule);
@@ -89,7 +92,7 @@ AerospikeQuery * AerospikeQuery_Apply(AerospikeQuery * self, PyObject * args, Py
 		for ( int i = 0; i < size; i++ ) {
 			PyObject * py_val = PyList_GetItem(py_args, (Py_ssize_t)i);
 			as_val * val = NULL;
-			pyobject_to_val(&err, py_val, &val, NULL, -1);
+			pyobject_to_val(&err, py_val, &val, &static_pool, SERIALIZER_PYTHON);
 			if ( err.code != AEROSPIKE_OK ) {
 				goto CLEANUP;
 			}
