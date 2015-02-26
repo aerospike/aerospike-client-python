@@ -213,3 +213,99 @@ class TestScan(object):
 
         assert exception.value[0] == -2L
         assert exception.value[1] == 'Bin name should be of type string'
+
+    def test_scan_with_options_positive(self):
+
+        """
+            Invoke scan() with options positive
+        """
+        ns = 'test'
+        st = 'demo'
+
+        records = []
+
+        options = {
+                "percent": 100,
+                "concurrent" : True,
+                "priority" : aerospike.SCAN_PRIORITY_HIGH
+        }
+        def callback( (key, meta, bins) ):
+            records.append(bins)
+
+        scan_obj = self.client.scan(ns, st)
+
+        scan_obj.foreach(callback, { 'timeout' : 1000 }, options)
+
+        assert len(records) != 0
+
+    def test_scan_with_options_percent_negative(self):
+
+        """
+            Invoke scan() with options negative
+        """
+        ns = 'test'
+        st = 'demo'
+
+        records = []
+
+        options = {
+                "percent": 80,
+                "concurrent" : True,
+                "priority" : aerospike.SCAN_PRIORITY_HIGH
+        }
+        def callback( (key, meta, bins) ):
+            records.append(bins)
+
+        scan_obj = self.client.scan(ns, st)
+
+        scan_obj.foreach(callback, { 'timeout' : 1000 }, options)
+
+        assert records == []
+
+    def test_scan_with_options_nobins(self):
+
+        """
+            Invoke scan() with nobins
+        """
+        ns = 'test'
+        st = 'demo'
+
+        records = []
+
+        options = {
+                "priority" : aerospike.SCAN_PRIORITY_HIGH,
+                "nobins" : True
+        }
+        def callback( (key, meta, bins) ):
+            records.append(bins)
+
+        scan_obj = self.client.scan(ns, st)
+
+        scan_obj.foreach(callback, { 'timeout' : 1000 }, options)
+
+        assert len(records) != 0
+
+    def test_scan_with_options_nobins_false(self):
+
+        """
+            Invoke scan() with nobins
+        """
+        ns = 'test'
+        st = 'demo'
+
+        records = []
+
+        options = {
+                "priority" : aerospike.SCAN_PRIORITY_HIGH,
+                "nobins" : "true"
+        }
+        def callback( (key, meta, bins) ):
+            records.append(bins)
+
+        scan_obj = self.client.scan(ns, st)
+
+        with pytest.raises(Exception) as exception:
+            scan_obj.foreach(callback, { 'timeout' : 1000 }, options)
+
+        assert exception.value[0] == -2L
+        assert exception.value[1] == 'Invalid value(type) for nobins'
