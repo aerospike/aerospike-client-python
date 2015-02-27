@@ -150,3 +150,21 @@ class TestSelectMany(object):
         assert type(records) == dict
         assert len(records.keys()) == 10
         assert records.keys() == [0, 1, 2, 3, 4, 15, 16, 17, 18, 19]
+
+    def test_select_many_with_unicode_bins(self):
+
+        filter_bins = [ u'title', u'name', 'country', u'addr' ]
+        records = TestSelectMany.client.select_many( self.keys, filter_bins )
+
+        assert type(records) == dict
+        assert len(records.keys()) == 5
+        for k in records.keys():
+            bins =  records[k][2].keys()
+            assert set(bins).intersection(set(filter_bins)) == set(bins)
+
+    def test_select_many_with_empty_bins_list(self):
+
+        records = TestSelectMany.client.select_many( self.keys, [] )
+
+        assert type(records) == dict
+        assert len(records.keys()) == 5
