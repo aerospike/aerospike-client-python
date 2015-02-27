@@ -423,3 +423,10 @@ PyObject * AerospikeClient_Info(AerospikeClient * self, PyObject * args, PyObjec
 *
 */
 PyObject * AerospikeClient_GetNodes(AerospikeClient * self, PyObject * args, PyObject * kwds);
+/**
+* Perforrm get key digest operation on the database.
+*
+* client.get_key_digest((x,y,z))
+*
+*/
+PyObject * AerospikeClient_Get_Key_Digest(AerospikeClient * self, PyObject * args, PyObject * kwds);

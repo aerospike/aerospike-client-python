@@ -297,6 +297,7 @@ setup(
                 'src/main/client/udf.c',
                 'src/main/client/sec_index.c',
                 'src/main/client/remove_bin.c',
+                'src/main/client/get_key_digest.c',
                 'src/main/client/lstack.c',
                 'src/main/client/lset.c',
                 'src/main/client/lmap.c',
