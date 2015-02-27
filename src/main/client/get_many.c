@@ -171,6 +171,7 @@ CLEANUP:
 		error_to_pyobject(&err, &py_err);
 		PyErr_SetObject(PyExc_Exception, py_err);
 		Py_DECREF(py_err);
+		Py_DECREF(py_recs);
 		return NULL;
 	}
 
