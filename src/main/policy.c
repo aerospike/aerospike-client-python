@@ -77,7 +77,7 @@ AerospikeConstants aerospike_constants[] = {
 	{ AS_POLICY_GEN_EQ                     ,   "POLICY_GEN_EQ" },
 	{ AS_POLICY_GEN_GT                     ,   "POLICY_GEN_GT" },
 	{ AS_SCAN_PRIORITY_AUTO                ,   "SCAN_PRIORITY_AUTO" },
-	{ AS_SCAN_PRIORITY_LOW                 ,   "SCAN_PRIORITY_AUTO" },
+	{ AS_SCAN_PRIORITY_LOW                 ,   "SCAN_PRIORITY_LOW" },
 	{ AS_SCAN_PRIORITY_MEDIUM              ,   "SCAN_PRIORITY_MEDIUM" },
 	{ AS_SCAN_PRIORITY_HIGH                ,   "SCAN_PRIORITY_HIGH" },
 	{ AS_SCAN_STATUS_COMPLETED             ,   "SCAN_STATUS_COMPLETED" },
