@@ -237,17 +237,20 @@ PyObject * AerospikeClient_ScanApply(AerospikeClient * self, PyObject * args, Py
 
 	// Python Function Keyword Arguments
 	static char * kwlist[] = {"ns", "set", "module", "function", "args", "policy", "options", NULL};
-	char *namespace = NULL, *set = NULL, *module = NULL, *function = NULL;
+	char *namespace = NULL;
+	PyObject *py_set = NULL;
+	PyObject *py_module = NULL;
+	PyObject *py_function = NULL;
 
 	// Python Function Argument Parsing
-	if ( PyArg_ParseTupleAndKeywords(args, kwds, "sOOO|OOO:scan_apply", kwlist, &namespace, &set,
-				&module, &function, &py_args, &py_policy, &py_options) == false ) {
+	if ( PyArg_ParseTupleAndKeywords(args, kwds, "sOOO|OOO:scan_apply", kwlist, &namespace, &py_set,
+				&py_module, &py_function, &py_args, &py_policy, &py_options) == false ) {
 		return NULL;
 	}
 
 	// Invoke Operation
-	return AerospikeClient_ScanApply_Invoke(self, namespace, set, module,
-			function, py_args, py_policy, py_options, true);
+	return AerospikeClient_ScanApply_Invoke(self, namespace, py_set, py_module,
+			py_function, py_args, py_policy, py_options, true);
 }
 
 /**

@@ -27,7 +27,7 @@
 #include <aerospike/as_operations.h>
 
 #include "key.h"
-#include "pool.h"
+#include "types.h"
 
 as_status as_udf_file_to_pyobject(as_error *err, as_udf_file * entry, PyObject ** py_file);
 

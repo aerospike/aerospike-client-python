@@ -174,7 +174,7 @@ PyObject *  AerospikeClient_Operate_Invoke(
 	char* bin = NULL;
 	char* val = NULL;
 	long offset;
-	long initial_value;
+	long initial_value = 0; 
 	long ttl;
 	long operation;
 	int i;
