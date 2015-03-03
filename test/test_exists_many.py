@@ -90,8 +90,9 @@ class TestExistsMany(object):
         records = TestExistsMany.client.exists_many( self.keys )
 
         assert type(records) == dict
-        assert len(records.keys()) == 5
-        assert records.keys() == [0, 1, 2, 3, 4]
+        assert len(records.keys()) == 6
+        assert records.keys() == [0, 1, 2, 3, 4, 'some_key']
+        assert records['some_key'] == None
 
     def test_exists_many_with_all_non_existent_keys(self):
 
@@ -99,8 +100,8 @@ class TestExistsMany(object):
 
         records = TestExistsMany.client.exists_many( keys )
 
-        assert len(records.keys()) == 0
-        assert records == {}
+        assert len(records.keys()) == 1
+        assert records == {'key': None}
 
     def test_exists_many_with_invalid_key(self):
 
@@ -118,7 +119,7 @@ class TestExistsMany(object):
 
         assert exception.value[0] == -2
         assert exception.value[1] == "timeout is invalid"
-    
+
     def test_exists_many_with_non_existent_keys_in_middle(self):
 
         self.keys.append( ('test', 'demo', 'some_key') )
@@ -139,5 +140,6 @@ class TestExistsMany(object):
             TestExistsMany.client.remove(key)
 
         assert type(records) == dict
-        assert len(records.keys()) == 10
-        assert records.keys() == [0, 1, 2, 3, 4, 15, 16, 17, 18, 19]
+        assert len(records.keys()) == 11
+        assert records.keys() == [0, 1, 2, 3, 4, 'some_key', 15, 16, 17, 18, 19]
+        assert records['some_key'] == None

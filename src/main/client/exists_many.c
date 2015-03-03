@@ -38,22 +38,22 @@ bool batch_exists_cb(const as_batch_read* results, uint32_t n, void* udata)
 	// Loop over results array
 	for ( uint32_t i =0; i < n; i++ ){
 
+		PyObject * rec = PyDict_New();
+		PyObject * p_key = NULL;
+
+		switch(((as_val*)(results[i].key->valuep))->type){
+			case AS_INTEGER:
+				p_key = PyInt_FromLong((long)results[i].key->value.integer.value);
+
+				break;
+			case AS_STRING:
+				p_key = PyString_FromString((const char *)results[i].key->value.string.value);
+				break;
+			default:
+				break;
+		}
+
 		if ( results[i].result == AEROSPIKE_OK ){
-
-			PyObject * rec = PyDict_New();
-			PyObject * p_key = NULL;
-
-			switch(((as_val*)(results[i].key->valuep))->type){
-				case AS_INTEGER:
-					p_key = PyInt_FromLong((long)results[i].key->value.integer.value);
-
-					break;
-				case AS_STRING:
-					p_key = PyString_FromString((const char *)results[i].key->value.string.value);
-					break;
-				default:
-					break;
-			}
 
 			PyDict_SetItemString( rec, "gen", PyInt_FromLong((long)results[i].record.gen) );
 			PyDict_SetItemString( rec, "ttl", PyInt_FromLong((long)results[i].record.ttl) );
@@ -62,8 +62,15 @@ bool batch_exists_cb(const as_batch_read* results, uint32_t n, void* udata)
 				return false;
 			}
 			Py_DECREF(rec);
-			Py_DECREF(p_key);
+		} else if (results[i].result == AEROSPIKE_ERR_RECORD_NOT_FOUND){
+			
+			Py_INCREF(Py_None);
+
+			if( PyDict_SetItem( py_recs, p_key, Py_None)){
+				return false;
+			}
 		}
+		Py_DECREF(p_key);
 	}
 	return true;
 }

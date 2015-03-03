@@ -43,23 +43,23 @@ static bool batch_get_cb(const as_batch_read* results, uint32_t n, void* udata)
 	// Loop over results array
 	for ( uint32_t i =0; i < n; i++ ){
 
+		PyObject * rec = NULL;
+		PyObject * p_key = NULL;
+
+		switch(((as_val*)(results[i].key->valuep))->type){
+			case AS_INTEGER:
+				p_key = PyInt_FromLong((long)results[i].key->value.integer.value);
+
+				break;
+			case AS_STRING:
+				p_key = PyString_FromString((const char *)results[i].key->value.string.value);
+				break;
+			default:
+				break;
+		}
+
 		// Check record status
 		if ( results[i].result == AEROSPIKE_OK ){
-
-			PyObject * rec = NULL;
-			PyObject * p_key = NULL;
-
-			switch(((as_val*)(results[i].key->valuep))->type){
-				case AS_INTEGER:
-					p_key = PyInt_FromLong((long)results[i].key->value.integer.value);
-
-					break;
-				case AS_STRING:
-					p_key = PyString_FromString((const char *)results[i].key->value.string.value);
-					break;
-				default:
-					break;
-			}
 
 			record_to_pyobject(&err, &results[i].record, results[i].key, &rec);
 
@@ -68,8 +68,14 @@ static bool batch_get_cb(const as_batch_read* results, uint32_t n, void* udata)
 				return false;
 			}
 			Py_DECREF(rec);
-			Py_DECREF(p_key);
+		} else if( results[i].result == AEROSPIKE_ERR_RECORD_NOT_FOUND) {
+			
+			Py_INCREF(Py_None);
+			if ( PyDict_SetItem( py_recs, p_key, Py_None)){
+				return false;
+			}
 		}
+		Py_DECREF(p_key);
 	}
 	return true;
 }
