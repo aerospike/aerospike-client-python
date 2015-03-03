@@ -38,9 +38,9 @@
  * Returns a tuple of record having key and meta sequentially.
  *******************************************************************************************************
  */
-PyObject * AerospikeClient_Exists_Invoke(
-	AerospikeClient * self,
-	PyObject * py_key, PyObject * py_policy)
+extern PyObject * AerospikeClient_Exists_Invoke(
+		AerospikeClient * self,
+		PyObject * py_key, PyObject * py_policy)
 {
 	// Python Return Value
 	PyObject * py_result = NULL;

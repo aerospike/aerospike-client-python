@@ -21,6 +21,7 @@
 #include <aerospike/as_error.h>
 #include <aerospike/as_policy.h>
 #include <aerospike/as_query.h>
+#include <aerospike/as_arraylist.h>
 
 #include "client.h"
 #include "conversions.h"
@@ -148,7 +149,7 @@ PyObject * AerospikeQuery_Foreach(AerospikeQuery * self, PyObject * args, PyObje
 
 CLEANUP:
 	if ( self->query.apply.arglist ){
-		as_arraylist_destroy( self->query.apply.arglist );
+		as_arraylist_destroy( (as_arraylist *) self->query.apply.arglist );
 	}
 	self->query.apply.arglist = NULL;
 

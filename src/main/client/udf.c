@@ -127,8 +127,9 @@ PyObject * AerospikeClient_UDF_Put(AerospikeClient * self, PyObject *args, PyObj
 	}
 
 CLEANUP:
-	if(bytes)
+	if(bytes) {
 		free(bytes);
+	}
 
 	if (py_ustr) {
 		Py_DECREF(py_ustr);

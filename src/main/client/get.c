@@ -41,8 +41,8 @@
  *******************************************************************************************************
  */
 PyObject * AerospikeClient_Get_Invoke(
-	AerospikeClient * self,
-	PyObject * py_key, PyObject * py_policy)
+		AerospikeClient * self,
+		PyObject * py_key, PyObject * py_policy)
 {
 	// Python Return Value
 	PyObject * py_rec = NULL;

@@ -25,6 +25,7 @@
 #include <aerospike/as_config.h>
 
 #include "client.h"
+#include "policy.h"
 #include "conversions.h"
 #include <arpa/inet.h>
 
@@ -78,7 +79,7 @@ static bool AerospikeClient_Info_each(as_error * err, const as_node * node, cons
 	struct sockaddr_in* addr = NULL;
 
 	if ( err && err->code != AEROSPIKE_OK ) {
-		error_to_pyobject(err, &py_err);
+		goto CLEANUP;
 	}
 	else if ( res != NULL ) {
 		char * out = strchr(res,'\t');
@@ -237,7 +238,8 @@ PyObject * AerospikeClient_Info(AerospikeClient * self, PyObject * args, PyObjec
 	}
 
 	aerospike_info_foreach(self->as, &err, info_policy_p, req,
-			AerospikeClient_Info_each, &info_callback_udata);
+			(aerospike_info_foreach_callback)AerospikeClient_Info_each,
+			&info_callback_udata);
 	
 	if (&info_callback_udata.error.code != AEROSPIKE_OK) {
 		goto CLEANUP;

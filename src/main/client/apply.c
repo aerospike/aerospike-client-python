@@ -42,9 +42,9 @@
  *******************************************************************************************************
  */
 PyObject * AerospikeClient_Apply_Invoke(
-	AerospikeClient * self,
-	PyObject * py_key, PyObject * py_module, PyObject * py_function,
-	PyObject * py_arglist, PyObject * py_policy)
+		AerospikeClient * self,
+		PyObject * py_key, PyObject * py_module, PyObject * py_function,
+		PyObject * py_arglist, PyObject * py_policy)
 {
 	// Python Return Value
 	PyObject * py_result = NULL;

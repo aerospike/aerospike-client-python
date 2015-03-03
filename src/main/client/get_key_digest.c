@@ -81,8 +81,10 @@ PyObject * AerospikeClient_Get_Key_Digest_Invoke(
 	if(digest->init) {
 		len = sizeof(digest->value);
 		PyObject *py_len = PyLong_FromSize_t(len);
-		PyObject *py_length = PyLong_AsSsize_t(py_len);
-		py_value = PyByteArray_FromStringAndSize(digest->value, py_length);
+		//PyObject *py_length = (Py_ssize_t) PyLong_AsSsize_t(py_len);
+		Py_ssize_t py_length =  PyLong_AsSsize_t(py_len);
+		py_value = PyByteArray_FromStringAndSize((const char *)digest->value,
+				py_length);
 		Py_DECREF(py_len);
 	} else {
 		as_error_update(&err, AEROSPIKE_ERR_CLIENT, "Digest could not be calculated");

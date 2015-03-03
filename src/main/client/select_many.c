@@ -235,7 +235,8 @@ PyObject * AerospikeClient_Select_Many_Invoke(
 
 	// Invoke C-client API
 	aerospike_batch_get_bins(self->as, &err, batch_policy_p,
-		&batch, filter_bins, bins_size, (aerospike_batch_read_callback) batch_select_cb,
+		&batch, (const char **) filter_bins, bins_size,
+		(aerospike_batch_read_callback) batch_select_cb,
 		py_recs);
 
 CLEANUP:

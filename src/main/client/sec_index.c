@@ -256,7 +256,6 @@ PyObject * AerospikeClient_Index_String_Create(AerospikeClient * self, PyObject 
 		name = (char *)alloca((sizeof(char) * strlen(PyString_AsString(py_ustr2)) + 1));
 		strcpy(name,  PyString_AsString(py_ustr2));
 		Py_DECREF(py_ustr2);
-		//name = PyString_AsString(py_ustr2);
 	} else if ( PyString_Check(py_name) ) {
 		name = PyString_AsString(py_name);
 	} else {
@@ -273,9 +272,6 @@ PyObject * AerospikeClient_Index_String_Create(AerospikeClient * self, PyObject 
 	}
 
 CLEANUP:
-	/*if (py_ustr2) {
-		Py_DECREF(py_ustr2);
-	}*/
 	if ( err.code != AEROSPIKE_OK ) {
 		PyObject * py_err = NULL;
 		error_to_pyobject(&err, &py_err);

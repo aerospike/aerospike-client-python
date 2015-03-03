@@ -22,6 +22,7 @@
 
 #include "client.h"
 #include "query.h"
+#include "conversions.h"
 
 #undef TRACE
 #define TRACE()

@@ -70,7 +70,6 @@ PyObject * AerospikeClient_Set_Serializer(AerospikeClient * self, PyObject * arg
 	}
 	is_user_serializer_registered = 1;
 	user_serializer_call_info.callback = py_func;
-	return PyLong_FromLong(0);
 
 CLEANUP:
 	if ( err.code != AEROSPIKE_OK ) {
@@ -80,6 +79,8 @@ CLEANUP:
         Py_DECREF(py_err);
 		return NULL;
 	}
+
+	return PyLong_FromLong(0);
 }
 
 /**
@@ -119,7 +120,6 @@ PyObject * AerospikeClient_Set_Deserializer(AerospikeClient * self, PyObject * a
 	}
 	is_user_deserializer_registered = 1;
 	user_deserializer_call_info.callback = py_func;
-	return PyLong_FromLong(0);
 
 CLEANUP:
 	if ( err.code != AEROSPIKE_OK ) {
@@ -129,6 +129,8 @@ CLEANUP:
         Py_DECREF(py_err);
 		return NULL;
 	}
+
+	return PyLong_FromLong(0);
 }
 
 /**
@@ -220,7 +222,7 @@ void execute_user_callback(user_serializer_callback *user_callback_info,
         if (serialize_flag) {
 			char * py_val = PyString_AsString(py_return);
 			len = PyString_Size(py_return);
-            set_as_bytes(bytes, py_val,
+            set_as_bytes(bytes, (uint8_t *) py_val,
                          len, AS_BYTES_BLOB, error_p);
             Py_DECREF(py_return);
         } else {
@@ -261,10 +263,10 @@ CLEANUP:
  *                                  with encountered error if any.
  *******************************************************************************************************
  */
-int serialize_based_on_serializer_policy(int32_t serializer_policy,
-                                                 as_bytes **bytes,
-                                                 PyObject *value,
-                                                 as_error *error_p)
+extern int serialize_based_on_serializer_policy(int32_t serializer_policy,
+		as_bytes **bytes,
+		PyObject *value,
+		as_error *error_p)
 {
     switch(serializer_policy) {
         case SERIALIZER_NONE:
@@ -300,8 +302,8 @@ py_funcname, value, NULL);
     				} else {
 						char *return_value = PyString_AsString(initresult);
                         int len = strlen(return_value);
-            			set_as_bytes(bytes, return_value,
-                         len, AS_BYTES_PYTHON, error_p);
+						set_as_bytes(bytes, (uint8_t *) return_value,
+								len, AS_BYTES_PYTHON, error_p);
     					Py_DECREF(initresult);
 					}
 
@@ -363,12 +365,10 @@ CLEANUP:
  *                              with encountered error if any.
  *******************************************************************************************************
  */
-PyObject * unserialize_based_on_as_bytes_type(as_bytes  *bytes,
-                                               PyObject  **retval,
-                                               as_error  *error_p)
+extern PyObject * unserialize_based_on_as_bytes_type(as_bytes  *bytes,
+		PyObject  **retval,
+		as_error  *error_p)
 {
-    int8_t*     bytes_val_p = NULL;
-
     switch(as_bytes_get_type(bytes)) {
         case AS_BYTES_PYTHON: {
 			PyObject* sysmodules = PyImport_GetModuleDict();
@@ -433,5 +433,6 @@ CLEANUP:
         Py_DECREF(py_err);
 		return NULL;
     }
-    //return;
+
+  return PyLong_FromLong(0);
 }

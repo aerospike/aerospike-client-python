@@ -146,9 +146,6 @@ PyObject * Aerospike_Set_Log_Handler(PyObject *parent, PyObject *args, PyObject 
 	// Python variables
 	PyObject *py_callback = NULL;
 
-	// Aerospike client variables
-	as_error err;
-
 	// Python function keyword arguments
 	static char * kwlist[] = {"log_handler", NULL};
 

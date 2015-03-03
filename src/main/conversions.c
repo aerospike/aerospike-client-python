@@ -35,6 +35,7 @@
 #include "conversions.h"
 #include "key.h"
 #include "policy.h"
+#include "serializer.h"
 
 #define PY_KEYT_NAMESPACE 0
 #define PY_KEYT_SET 1

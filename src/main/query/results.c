@@ -21,6 +21,7 @@
 #include <aerospike/aerospike_query.h>
 #include <aerospike/as_error.h>
 #include <aerospike/as_query.h>
+#include <aerospike/as_arraylist.h>
 
 #include "client.h"
 #include "conversions.h"
@@ -36,7 +37,8 @@ static bool each_result(const as_val * val, void * udata)
 		return false;
 	}
 
-	PyObject * py_results = (PyObject *) udata;
+	PyObject * py_results = NULL;
+	py_results = (PyObject *) udata;
 	PyObject * py_result = NULL;
 
 	as_error err;
@@ -97,7 +99,8 @@ PyObject * AerospikeQuery_Results(AerospikeQuery * self, PyObject * args, PyObje
 	}
 
 	TRACE();
-	PyObject * py_results = PyList_New(0);
+	PyObject * py_results = NULL;
+	py_results = PyList_New(0);
 
 	TRACE();
 	PyThreadState * _save = PyEval_SaveThread();
@@ -121,7 +124,7 @@ CLEANUP:/*??trace()*/
 	TRACE();
 
 	if ( self->query.apply.arglist ){
-		as_arraylist_destroy( self->query.apply.arglist );
+		as_arraylist_destroy( (as_arraylist *) self->query.apply.arglist );
 	}
 	self->query.apply.arglist = NULL;
 

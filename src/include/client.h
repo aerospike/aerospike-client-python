@@ -75,6 +75,10 @@ PyObject * AerospikeClient_isConnected(AerospikeClient * self, PyObject * args, 
  */
 PyObject * AerospikeClient_Apply(AerospikeClient * self, PyObject * args, PyObject * kwds);
 
+PyObject * AerospikeClient_Apply_Invoke(
+		AerospikeClient * self,
+		PyObject * py_key, PyObject * py_module, PyObject * py_function,
+		PyObject * py_arglist, PyObject * py_policy);
 /**
  * Check existence of a record in the database.
  *
@@ -83,6 +87,10 @@ PyObject * AerospikeClient_Apply(AerospikeClient * self, PyObject * args, PyObje
  */
 PyObject * AerospikeClient_Exists(AerospikeClient * self, PyObject * args, PyObject * kwds);
 
+PyObject * AerospikeClient_Exists_Invoke(
+		AerospikeClient * self,
+		PyObject * py_key, PyObject * py_policy);
+
 /**
  * Read a record from the database.
  *
@@ -90,6 +98,10 @@ PyObject * AerospikeClient_Exists(AerospikeClient * self, PyObject * args, PyObj
  *
  */
 PyObject * AerospikeClient_Get(AerospikeClient * self, PyObject * args, PyObject * kwds);
+
+PyObject * AerospikeClient_Get_Invoke(
+		AerospikeClient * self,
+		PyObject * py_key, PyObject * py_policy);
 
 /**
  * Project specific bins of a record from the database.
@@ -107,6 +119,10 @@ PyObject * AerospikeClient_Select(AerospikeClient * self, PyObject * args, PyObj
  */
 PyObject * AerospikeClient_Put(AerospikeClient * self, PyObject * args, PyObject * kwds);
 
+PyObject * AerospikeClient_Put_Invoke(
+		AerospikeClient * self,
+		PyObject * py_key, PyObject * py_bins, PyObject * py_meta, PyObject * py_policy,
+		long serializer_option);
 /**
  * Remove a record from the database.
  *
@@ -114,6 +130,10 @@ PyObject * AerospikeClient_Put(AerospikeClient * self, PyObject * args, PyObject
  *
  */
 PyObject * AerospikeClient_Remove(AerospikeClient * self, PyObject * args, PyObject * kwds);
+
+PyObject * AerospikeClient_Remove_Invoke(
+		AerospikeClient * self,
+		PyObject * py_key, PyObject * py_meta, PyObject * py_policy);
 
 /**
  * Remove bin from the database.

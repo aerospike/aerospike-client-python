@@ -43,8 +43,9 @@
  *******************************************************************************************************
  */
 PyObject * AerospikeClient_Put_Invoke(
-	AerospikeClient * self,
-	PyObject * py_key, PyObject * py_bins, PyObject * py_meta, PyObject * py_policy, long serializer_option)
+		AerospikeClient * self,
+		PyObject * py_key, PyObject * py_bins, PyObject * py_meta, PyObject * py_policy,
+		long serializer_option)
 {
 	// Aerospike Client Arguments
 	as_error err;

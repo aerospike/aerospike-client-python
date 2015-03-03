@@ -41,8 +41,8 @@
  *******************************************************************************************************
  */
 PyObject * AerospikeClient_Remove_Invoke(
-	AerospikeClient * self,
-	PyObject * py_key, PyObject * py_meta, PyObject * py_policy)
+		AerospikeClient * self,
+		PyObject * py_key, PyObject * py_meta, PyObject * py_policy)
 {
 
 	// Aerospike Client Arguments

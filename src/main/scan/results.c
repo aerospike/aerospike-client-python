@@ -36,7 +36,8 @@ static bool each_result(const as_val * val, void * udata)
 		return false;
 	}
 
-	PyObject * py_results = (PyObject *) udata;
+	PyObject * py_results = NULL;
+	py_results = (PyObject *) udata;
 	PyObject * py_result = NULL;
 
 	as_error err;
@@ -82,7 +83,8 @@ PyObject * AerospikeScan_Results(AerospikeScan * self, PyObject * args, PyObject
 		goto CLEANUP;
 	}
 
-	PyObject * py_results = PyList_New(0);
+	PyObject * py_results = NULL;
+	py_results = PyList_New(0);
 
 	PyThreadState * _save = PyEval_SaveThread();
 
