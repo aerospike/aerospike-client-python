@@ -119,6 +119,39 @@ class TestGetMany(object):
         assert exception.value[0] == -2
         assert exception.value[1] == "timeout is invalid"
 
+    def test_get_many_with_initkey_as_digest(self):
+
+        keys = []
+        key = ("test", "demo", None, bytearray("asd;as[d'as;djk;uyfl"))
+        rec = {
+            'name' : 'name1',
+            'age'  : 1
+        }
+        TestGetMany.client.put(key, rec)
+
+        keys.append(key)
+
+        key = ("test", "demo", None, bytearray("ase;as[d'as;djk;uyfl"))
+        rec = {
+            'name' : 'name2',
+            'age'  : 2
+        }
+        TestGetMany.client.put(key, rec)
+
+        keys.append(key)
+
+        records = TestGetMany.client.get_many( keys )
+
+        for key in keys:
+            TestGetMany.client.remove( key )
+
+        assert type(records) == dict
+        assert len(records.keys()) == 1
+        assert records.keys() == [None]
+        assert records == {None: (('test', 'demo', None,
+            bytearray(b"ase;as[d\'as;djk;uyfl")), {'gen': 1, 'ttl': 2592000},
+            {'age': 2, 'name': 'name2'})}
+
     def test_get_many_with_non_existent_keys_in_middle(self):
 
         self.keys.append( ('test', 'demo', 'some_key') )

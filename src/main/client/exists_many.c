@@ -40,17 +40,21 @@ bool batch_exists_cb(const as_batch_read* results, uint32_t n, void* udata)
 
 		PyObject * rec = PyDict_New();
 		PyObject * p_key = NULL;
+		if(results[i].key->valuep) {
+			switch(((as_val*)(results[i].key->valuep))->type){
+				case AS_INTEGER:
+					p_key = PyInt_FromLong((long)results[i].key->value.integer.value);
+					break;
 
-		switch(((as_val*)(results[i].key->valuep))->type){
-			case AS_INTEGER:
-				p_key = PyInt_FromLong((long)results[i].key->value.integer.value);
-
-				break;
-			case AS_STRING:
-				p_key = PyString_FromString((const char *)results[i].key->value.string.value);
-				break;
-			default:
-				break;
+				case AS_STRING:
+					p_key = PyString_FromString((const char *)results[i].key->value.string.value);
+					break;
+				default:
+					break;
+			}
+		} else {
+			Py_INCREF(Py_None);
+			p_key = Py_None;
 		}
 
 		if ( results[i].result == AEROSPIKE_OK ){

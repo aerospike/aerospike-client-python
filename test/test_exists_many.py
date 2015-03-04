@@ -120,6 +120,34 @@ class TestExistsMany(object):
         assert exception.value[0] == -2
         assert exception.value[1] == "timeout is invalid"
 
+    def test_exists_many_with_initkey_as_digest(self):
+
+        keys = []
+        key = ("test", "demo", None, bytearray("asd;as[d'as;djk;uyfl"))
+        rec = {
+            'name' : 'name1',
+            'age'  : 1
+        }
+        TestExistsMany.client.put(key, rec)
+        keys.append(key)
+
+        key = ("test", "demo", None, bytearray("ase;as[d'as;djk;uyfl"))
+        rec = {
+            'name' : 'name2',
+            'age'  : 2
+        }
+        TestExistsMany.client.put(key, rec)
+        keys.append(key)
+
+        records = TestExistsMany.client.exists_many( keys )
+
+        for key in keys:
+            TestExistsMany.client.remove( key )
+
+        assert type(records) == dict
+        assert len(records.keys()) == 1
+        assert records == {None: {'gen': 1, 'ttl': 2592000}}
+
     def test_exists_many_with_non_existent_keys_in_middle(self):
 
         self.keys.append( ('test', 'demo', 'some_key') )

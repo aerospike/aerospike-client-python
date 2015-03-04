@@ -144,6 +144,36 @@ class TestSelectMany(object):
         assert exception.value[0] == -2
         assert exception.value[1] == "timeout is invalid"
 
+    def test_select_many_with_initkey_as_digest(self):
+
+        keys = []
+        key = ("test", "demo", None, bytearray("asd;as[d'as;djk;uyfl"))
+        rec = {
+            'name' : 'name1',
+            'age'  : 1
+        }
+        TestSelectMany.client.put(key, rec)
+        keys.append(key)
+
+        key = ("test", "demo", None, bytearray("ase;as[d'as;djk;uyfl"))
+        rec = {
+            'name' : 'name2',
+            'age'  : 2
+        }
+        TestSelectMany.client.put(key, rec)
+        keys.append(key)
+
+        records = TestSelectMany.client.select_many( keys, [ u'name' ] )
+
+        for key in keys:
+            TestSelectMany.client.remove( key )
+
+        assert type(records) == dict
+        assert len(records.keys()) == 1
+        assert records == {None: (('test', 'demo', None,
+            bytearray(b"ase;as[d\'as;djk;uyfl")), {'gen': 1, 'ttl': 2592000},
+            {'name': 'name2'})}
+
     def test_select_many_with_non_existent_keys_in_middle(self):
 
         self.keys.append( ('test', 'demo', 'some_key') )
