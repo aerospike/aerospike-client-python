@@ -146,11 +146,7 @@ class TestGetMany(object):
             TestGetMany.client.remove( key )
 
         assert type(records) == dict
-        assert len(records.keys()) == 1
-        assert records.keys() == [None]
-        assert records == {None: (('test', 'demo', None,
-            bytearray(b"ase;as[d\'as;djk;uyfl")), {'gen': 1, 'ttl': 2592000},
-            {'age': 2, 'name': 'name2'})}
+        assert len(records.keys()) == 2
 
     def test_get_many_with_non_existent_keys_in_middle(self):
 

@@ -19,7 +19,7 @@ class TestExistsMany(object):
                 }
         TestExistsMany.client = aerospike.client(config).connect()
 
-    def teardwon_class(cls):
+    def teardown_class(cls):
         TestExistsMany.client.close()
 
     def setup_method(self, method):
@@ -145,8 +145,7 @@ class TestExistsMany(object):
             TestExistsMany.client.remove( key )
 
         assert type(records) == dict
-        assert len(records.keys()) == 1
-        assert records == {None: {'gen': 1, 'ttl': 2592000}}
+        assert len(records.keys()) == 2
 
     def test_exists_many_with_non_existent_keys_in_middle(self):
 

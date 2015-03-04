@@ -40,7 +40,8 @@ bool batch_exists_cb(const as_batch_read* results, uint32_t n, void* udata)
 
 		PyObject * rec = PyDict_New();
 		PyObject * p_key = NULL;
-		if(results[i].key->valuep) {
+
+		if ( results[i].key->valuep ) {
 			switch(((as_val*)(results[i].key->valuep))->type){
 				case AS_INTEGER:
 					p_key = PyInt_FromLong((long)results[i].key->value.integer.value);
@@ -74,6 +75,7 @@ bool batch_exists_cb(const as_batch_read* results, uint32_t n, void* udata)
 				return false;
 			}
 		}
+		Py_DECREF(rec);
 		Py_DECREF(p_key);
 	}
 	return true;
