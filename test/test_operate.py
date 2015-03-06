@@ -641,6 +641,46 @@ class TestOperate(object):
             TestOperate.client.operate(key, list)
         assert "Unsupported operand type(s) for +: 'int' and 'str'" in typeError.value
 
+    def test_operate_increment_nonexistent_key(self):
+        """
+        Invoke operate() with increment with nonexistent_key
+        """
+        key = ('test', 'demo', "non_existentkey")
+        list = [
+                {
+                    "op" : aerospike.OPERATOR_INCR,
+                    "bin" : "age",
+                    "val" : 5
+                    }
+                ]
+
+        TestOperate.client.operate(key, list)
+
+        (key, meta, bins) = TestOperate.client.get( key )
+
+        assert bins == {"age" : 5}
+
+        TestOperate.client.remove( key )
+
+    def test_operate_increment_nonexistent_bin(self):
+        """
+        Invoke operate() with increment with nonexistent_bin
+        """
+        key = ('test', 'demo', 1)
+        list = [
+                {
+                    "op" : aerospike.OPERATOR_INCR,
+                    "bin" : "my_age",
+                    "val" : 5
+                    }
+                ]
+
+        TestOperate.client.operate(key, list)
+
+        (key, meta, bins) = TestOperate.client.get( key )
+
+        assert bins == {"my_age" : 5, "age": 1,"name": "name1"}
+
     def test_operate_with_write_positive(self):
         """
         Invoke operate() with write operation

@@ -41,7 +41,7 @@
  *******************************************************************************************************
  */
 PyObject * create_pylist(PyObject * py_list, long operation, PyObject * py_bin,
-		PyObject * py_value, PyObject * py_initial_val)
+		PyObject * py_value)
 {
 	PyObject * dict = PyDict_New();
 	py_list = PyList_New(0);
@@ -50,9 +50,6 @@ PyObject * create_pylist(PyObject * py_list, long operation, PyObject * py_bin,
 		PyDict_SetItemString(dict, "bin", py_bin);
 	}
 	PyDict_SetItemString(dict, "val", py_value);
-	if (operation == AS_OPERATOR_INCR && py_initial_val && PyInt_Check(py_initial_val)) {
-		PyDict_SetItemString(dict, "initial_value", py_initial_val);
-	}
 
 	PyList_Append(py_list, dict);
 	Py_DECREF(dict);
@@ -211,7 +208,6 @@ PyObject *  AerospikeClient_Operate_Invoke(
 		if ( PyDict_Check(py_val) ) {
 			PyObject *key_op = NULL, *value = NULL;
 			PyObject * py_value = NULL;
-			PyObject * py_initial_value = NULL;
 			Py_ssize_t pos = 0;
 			while (PyDict_Next(py_val, &pos, &key_op, &value)) {
 				if ( ! PyString_Check(key_op) ) {
@@ -225,8 +221,6 @@ PyObject *  AerospikeClient_Operate_Invoke(
 						py_bin = value;
 					} else if(!strcmp(name, "val")) {
 						py_value = value;
-					} else if (!strcmp(name, "initial_value")) {
-						py_initial_value = value;
 					} else {
 						as_error_update(err, AEROSPIKE_ERR_PARAM, "operation can contain only op, bin and val keys");
 						goto CLEANUP;
@@ -278,31 +272,7 @@ PyObject *  AerospikeClient_Operate_Invoke(
 					break;
 				case AS_OPERATOR_INCR:
 					offset = PyInt_AsLong(py_value);
-					if (py_initial_value) {
-						initial_value = PyInt_AsLong(py_initial_value);
-					}
-					const char* select[] = {bin, NULL};
-					as_record* get_rec = NULL;
-
-					as_val* value_p = NULL;
-					aerospike_key_select(self->as,
-							err, NULL, key, select, &get_rec);
-					if (err->code != AEROSPIKE_OK) {
-						goto CLEANUP;
-					} else {
-						if (NULL != (value_p = (as_val *) as_record_get (get_rec, bin))) {
-							if (AS_NIL == value_p->type) {
-								if (!as_operations_add_write_int64(&ops, bin,
-											initial_value)) {
-									goto CLEANUP;
-								}
-							} else {
-								as_operations_add_incr(&ops, bin, offset);
-							}
-						} else {
-						}
-						as_record_destroy(get_rec);
-					}
+					as_operations_add_incr(&ops, bin, offset);
 					break;
 				case AS_OPERATOR_TOUCH:
 					ttl = PyInt_AsLong(py_value);
@@ -463,7 +433,7 @@ PyObject * AerospikeClient_Append(AerospikeClient * self, PyObject * args, PyObj
 	}
 
 	PyObject * py_list = NULL;
-	py_list = create_pylist(py_list, AS_OPERATOR_APPEND, py_bin, py_append_str, NULL);
+	py_list = create_pylist(py_list, AS_OPERATOR_APPEND, py_bin, py_append_str);
 	py_result = AerospikeClient_Operate_Invoke(self, &err, &key, py_list,
 			py_meta, operate_policy_p);
 
@@ -543,7 +513,7 @@ PyObject * AerospikeClient_Prepend(AerospikeClient * self, PyObject * args, PyOb
 	}
 
 	PyObject * py_list = NULL;
-	py_list = create_pylist(py_list, AS_OPERATOR_PREPEND, py_bin, py_prepend_str, NULL);
+	py_list = create_pylist(py_list, AS_OPERATOR_PREPEND, py_bin, py_prepend_str);
 	py_result = AerospikeClient_Operate_Invoke(self, &err, &key, py_list,
 			py_meta, operate_policy_p);
 
@@ -596,19 +566,18 @@ PyObject * AerospikeClient_Increment(AerospikeClient * self, PyObject * args, Py
 	PyObject * py_bin = NULL;
 	PyObject * py_meta = NULL;
 	PyObject * py_offset_value = 0;
-	PyObject * py_initial_val = NULL;
 
 	as_key key;
 	as_policy_operate operate_policy;
 	as_policy_operate *operate_policy_p = NULL;
 
 	// Python Function Keyword Arguments
-	static char * kwlist[] = {"key", "bin", "offset", "initial_value", "meta",
+	static char * kwlist[] = {"key", "bin", "offset", "meta",
 		"policy", NULL};
 
 	// Python Function Argument Parsing
-	if ( PyArg_ParseTupleAndKeywords(args, kwds, "OOO|OOO:increment", kwlist,
-				&py_key, &py_bin, &py_offset_value, &py_initial_val, &py_meta,
+	if ( PyArg_ParseTupleAndKeywords(args, kwds, "OOO|OO:increment", kwlist,
+				&py_key, &py_bin, &py_offset_value, &py_meta,
 				&py_policy) == false ) {
 		return NULL;
 	}
@@ -628,8 +597,7 @@ PyObject * AerospikeClient_Increment(AerospikeClient * self, PyObject * args, Py
 	}
 
 	PyObject * py_list = NULL;
-	py_list = create_pylist(py_list, AS_OPERATOR_INCR, py_bin, py_offset_value,
-			py_initial_val);
+	py_list = create_pylist(py_list, AS_OPERATOR_INCR, py_bin, py_offset_value);
 	py_result = AerospikeClient_Operate_Invoke(self, &err, &key, py_list,
 			py_meta, operate_policy_p);
 	
@@ -708,8 +676,7 @@ PyObject * AerospikeClient_Touch(AerospikeClient * self, PyObject * args, PyObje
 	}
 
 	PyObject * py_list = NULL;
-	py_list = create_pylist(py_list, AS_OPERATOR_TOUCH, NULL, py_touchvalue,
-			NULL);
+	py_list = create_pylist(py_list, AS_OPERATOR_TOUCH, NULL, py_touchvalue);
 	py_result = AerospikeClient_Operate_Invoke(self, &err, &key, py_list,
 			py_meta, operate_policy_p);
 
