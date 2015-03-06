@@ -1,95 +1,67 @@
 
-# aerospike.Client.exists_many
-
-aerospike.Client.exists_many - read record's meta-data only from the database in a batch
+# aerospike.client.exists_many
 
 ## Description
 
 ```
-{ primary_key : { "gen" : <generation>, "ttl" : <ttl> } } = aerospike.Client.exists_many ( keys, policies )
-
+{primary_key: {"gen": <generation>, "ttl": <ttl>}} = aerospike.client.exists_many(keys, policy)
 ```
 
-**aerospike.Client.exists_many()** will read *records* meta data only matching with given *keys*, and return 
-as a dict with key as a primary_key and value as dict with meta-data containing *gen* and *ttl*.   
+**aerospike.client.exists_many()** will batch-read the record metadata
+for the given *keys*, and return it as a dict.
 
 ## Parameters
 
-**keys**, the list / tuple of keys. An individual key is a tuple with 'ns','set','key' sequentially.   
+**keys**, a list of key tuples.
 
-```
-List:
-    keys = [
-            ( <namespace>, 
-            <set name>, 
-            <the primary index key>, 
-            <a RIPEMD-160 hash of the key, and always present> ),....
-            ]
-
-```
-
-**policies**, the dictionary of policies to be given while reading a record.   
+**policy** optional batch policies. A dictionary with optional fields
+- **timeout** read timeout in milliseconds
 
 ## Return Values
-Returns a dict of record with key to be a primary key and value to be a record.
+Returns a dict of records
 
 ```
 Dict:
     {
-        primary_key : {
-        "gen" : <generation value>,
-        "ttl" : <ttl value>
-        }
+        primary_key: {'gen': <generation value>, 'tt': <ttl value>}
     }
-
-gen: reflects the number of times the record has been altered
-
-ttl: time in seconds until the record expires
-
+    primary_key: the identifier of the record
 ```
 
 ## Examples
 
 ```python
-
 # -*- coding: utf-8 -*-
 import aerospike
-config = {
-            'hosts': [('127.0.0.1', 3000)]
-         }
+
+config = { 'hosts': [('127.0.0.1', 3000)] }
 client = aerospike.client(config).connect()
 
-keys = [ 
-        ('test', 'demo', 1),
-        ('test', 'demo', 2),
-        ('test', 'demo', 3),
-        ('test', 'demo', 4)
-    ]
-
-records = client.exists_many( keys )
-
+keys = [
+  ('test', 'demo', 1),
+  ('test', 'demo', 2),
+  ('test', 'demo', 3),
+  ('test', 'demo', 4)
+]
+records = client.exists_many(keys)
 print records
-
 ```
 
 We expect to see:
 
 ```python
 {
-    1: {'gen': 2, 'ttl': 2592000}, 
-    2: {'gen': 2, 'ttl': 2592000}, 
-    3: {'gen': 2, 'ttl': 2592000}, 
-    4: {'gen': 2, 'ttl': 2592000}
+  1: {'gen': 2, 'ttl': 2592000},
+  2: {'gen': 2, 'ttl': 2592000},
+  3: {'gen': 2, 'ttl': 2592000},
+  4: {'gen': 2, 'ttl': 2592000}
 }
 
 ```
 
-
-
 ### See Also
 
-
-
-- [Glossary](http://www.aerospike.com/docs/guide/glossary.html)
-
 - [Aerospike Data Model](http://www.aerospike.com/docs/architecture/data-model.html)
+- [Key-Value Store](http://www.aerospike.com/docs/guide/kvs.html)
+- [exists()](https://github.com/aerospike/aerospike-client-python/blob/master/doc/exists.md)
+

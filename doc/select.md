@@ -7,7 +7,7 @@
 (key, meta, bins) = aerospike.client.select(key, bins[, policy])
 ```
 
-**aerospike.client.select()** will project specified bins present from the record
+**aerospike.client.select()** will project specified bins from the record
 
 ## Parameters
 
