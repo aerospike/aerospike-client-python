@@ -61,6 +61,9 @@ class TestSelectMany(object):
 
         assert type(records) == dict
         assert len(records.keys()) == 5
+        for k in records.keys():
+            bins =  records[k][2].keys()
+            assert set(bins).intersection(set(filter_bins)) == set(bins)
 
     def test_select_many_with_proper_parameters(self):
 
@@ -70,6 +73,9 @@ class TestSelectMany(object):
         assert type(records) == dict
         assert len(records.keys()) == 5
         assert records.keys() == [0, 1, 2, 3, 4]
+        for k in records.keys():
+            bins =  records[k][2].keys()
+            assert set(bins).intersection(set(filter_bins)) == set(bins)
 
     def test_select_many_with_none_policy(self):
 
@@ -79,6 +85,9 @@ class TestSelectMany(object):
         assert type(records) == dict
         assert len(records.keys()) == 5
         assert records.keys() == [0, 1, 2, 3, 4]
+        for k in records.keys():
+            bins =  records[k][2].keys()
+            assert set(bins).intersection(set(filter_bins)) == set(bins)
 
     def test_select_many_with_none_keys(self):
 
@@ -96,8 +105,13 @@ class TestSelectMany(object):
         records = TestSelectMany.client.select_many( self.keys, filter_bins, {'timeout': 1000} )
 
         assert type(records) == dict
-        assert len(records.keys()) == 5
-        assert records.keys() == [0, 1, 2, 3, 4]
+        assert len(records.keys()) == 6
+        assert records.keys() == [0, 1, 2, 3, 4, 'non-existent']
+        assert records['non-existent'] == None
+        for k in records.keys():
+            if records[k] == None: continue
+            bins =  records[k][2].keys()
+            assert set(bins).intersection(set(filter_bins)) == set(bins)
 
     def test_select_many_with_all_non_existent_keys(self):
 
@@ -106,8 +120,12 @@ class TestSelectMany(object):
         filter_bins = [ 'title', 'name', 'country' ]
         records = TestSelectMany.client.select_many( keys, filter_bins )
 
-        assert len(records.keys()) == 0
-        assert records == {}
+        assert len(records.keys()) == 1
+        assert records == {'key': None}
+        for k in records.keys():
+            if records[k] == None: continue
+            bins =  records[k][2].keys()
+            assert set(bins).intersection(set(filter_bins)) == set(bins)
 
     def test_select_many_with_invalid_key(self):
 
@@ -125,6 +143,33 @@ class TestSelectMany(object):
 
         assert exception.value[0] == -2
         assert exception.value[1] == "timeout is invalid"
+
+    def test_select_many_with_initkey_as_digest(self):
+
+        keys = []
+        key = ("test", "demo", None, bytearray("asd;as[d'as;djk;uyfl"))
+        rec = {
+            'name' : 'name1',
+            'age'  : 1
+        }
+        TestSelectMany.client.put(key, rec)
+        keys.append(key)
+
+        key = ("test", "demo", None, bytearray("ase;as[d'as;djk;uyfl"))
+        rec = {
+            'name' : 'name2',
+            'age'  : 2
+        }
+        TestSelectMany.client.put(key, rec)
+        keys.append(key)
+
+        records = TestSelectMany.client.select_many( keys, [ u'name' ] )
+
+        for key in keys:
+            TestSelectMany.client.remove( key )
+
+        assert type(records) == dict
+        assert len(records.keys()) == 2
 
     def test_select_many_with_non_existent_keys_in_middle(self):
 
@@ -148,8 +193,13 @@ class TestSelectMany(object):
             TestSelectMany.client.remove(key)
 
         assert type(records) == dict
-        assert len(records.keys()) == 10
-        assert records.keys() == [0, 1, 2, 3, 4, 15, 16, 17, 18, 19]
+        assert len(records.keys()) == 11
+        assert records.keys() == [0, 1, 2, 3, 4, 'some_key', 15, 16, 17, 18, 19]
+        assert records['some_key'] == None
+        for k in records.keys():
+            if records[k] == None: continue
+            bins =  records[k][2].keys()
+            assert set(bins).intersection(set(filter_bins)) == set(bins)
 
     def test_select_many_with_unicode_bins(self):
 
