@@ -31,6 +31,7 @@ aerospike.client.put(key, bins[, meta[, policy]])
 ```python
 
 # -*- coding: utf-8 -*-
+from __future__ import print_function
 import aerospike
 
 config = {
