@@ -66,7 +66,6 @@ bool batch_exists_cb(const as_batch_read* results, uint32_t n, void* udata)
 			if ( PyDict_SetItem( py_recs, p_key, rec ) ){
 				return false;
 			}
-			Py_DECREF(rec);
 		} else if (results[i].result == AEROSPIKE_ERR_RECORD_NOT_FOUND){
 			
 			Py_INCREF(Py_None);
