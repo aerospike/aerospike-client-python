@@ -35,6 +35,7 @@ in a *bin*.
 
 ```python
 # -*- coding: utf-8 -*-
+from __future__ import print_function
 import aerospike
 config = { 'hosts': [('127.0.0.1', 3000)] }
 client = aerospike.client(config).connect()

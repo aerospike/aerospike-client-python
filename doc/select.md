@@ -7,7 +7,7 @@
 (key, meta, bins) = aerospike.client.select(key, bins[, policy])
 ```
 
-**aerospike.client.select()** will project specified bins present from the record
+**aerospike.client.select()** will project specified bins from the record
 
 ## Parameters
 
@@ -37,6 +37,7 @@ Tuple:
 
 ```python
 # -*- coding: utf-8 -*-
+from __future__ import print_function
 import aerospike
 
 config = { 'hosts': [('127.0.0.1', 3000)] }

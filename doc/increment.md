@@ -4,12 +4,16 @@
 ## Description
 
 ```
-aerospike.client.increment(key, bin, offset[, initial_value=0[, meta[, policy]]])
+aerospike.client.increment(key, bin, offset[, meta[, policy]])
 
 ```
 
 **aerospike.client.increment()** will increment a *bin* containing a numeric
-value by the *offset* or set it to the *initial_value* if it does not exist.
+value by the *offset* or set it as the *initial_value* if the record/bin does
+not exist.
+
+If a record with the given key does not exist it will be initialized with one
+bin named *bin* set to the integer value *offset* (the so-called 'upsert').
 
 ## Parameters
 
@@ -18,8 +22,6 @@ value by the *offset* or set it to the *initial_value* if it does not exist.
 **bin**, the name of the bin.
 
 **offset**, the integer by which to increment the value in the bin.
-
-**initial_value** the integer to which the bin is initialized if it does not exist
 
 **meta** optional record metadata to be set. A dictionary with fields
 - **ttl** the [time-to-live](http://www.aerospike.com/docs/client/c/usage/kvs/write.html#change-record-time-to-live-ttl) in seconds
@@ -37,6 +39,7 @@ value by the *offset* or set it to the *initial_value* if it does not exist.
 
 ```python
 # -*- coding: utf-8 -*-
+from __future__ import print_function
 import aerospike
 
 config = { 'hosts': [('127.0.0.1', 3000)] }
@@ -46,11 +49,10 @@ try:
   client.put(('test', 'cats', 'mr. peppy'), {'breed':'persian'}, policy={'exists': aerospike.POLICY_EXISTS_CREATE_OR_REPLACE})
   (key, meta, bins) = client.get(('test', 'cats', 'mr. peppy'))
   print("Before:", bins, "\n")
-  meta = { 'ttl':5000 }
-  client.increment(key, 'lives', -1, 9, meta, policy={'key': aerospike.POLICY_KEY_SEND})
+  client.increment(key, 'lives', -1)
   (key, meta, bins) = client.get(key)
   print("After:", bins, "\n")
-  client.increment(key, 'lives', -1, 9)
+  client.increment(key, 'lives', -1)
   (key, meta, bins) = client.get(key)
   print("Poor Kitty:", bins, "\n")
   print(bins)

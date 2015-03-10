@@ -9,8 +9,9 @@
 ```
 
 **aerospike.client.get()** will read a *record* with a given *key*, and return
-the *record* as a tuple consisting of key, meta and bins. Non-existent bins will
-appear in the *record* with a `None` value.
+the *record* as a tuple consisting of key, meta and bins.
+If the record does not exist the *meta* data will be `None`.
+Non-existent bins will appear in the *record* with a `None` value.
 
 ## Parameters
 
@@ -38,6 +39,7 @@ Tuple:
 ```python
 
 # -*- coding: utf-8 -*-
+from __future__ import print_function
 import aerospike
 
 config = { 'hosts': [('127.0.0.1', 3000)] }

@@ -30,14 +30,14 @@ config = { 'hosts': [('127.0.0.1', 3000)] }
 client = aerospike.client(config).connect()
 
 pp = pprint.PrettyPrinter(indent=2)
-scan = self.client.scan('test', 'demo')
+scan = aerospike.client.scan('test', 'demo')
 scan.select('name', 'age') # matched records return with the values of these bins
 names = []
 def collect_names((key, metadata, bins)):
     pp.pprint(bins)
     names.append(bins['name'])
 
-query.foreach(collect_names, {'timeout':2000}, {'percent': 100, 'concurrent': True})
+select.foreach(collect_names, {'timeout':2000}, {'percent': 100, 'concurrent': True})
 pp.pprint(names)
 ```
 

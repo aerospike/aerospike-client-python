@@ -66,23 +66,29 @@ static bool batch_select_cb(const as_batch_read* results, uint32_t n, void* udat
 	// Loop over results array
 	for ( uint32_t i =0; i < n; i++ ){
 
-		// Check record status
-		if ( results[i].result == AEROSPIKE_OK ){
+		PyObject * rec = NULL;
+		PyObject * p_key = NULL;
 
-			PyObject * rec = NULL;
-			PyObject * p_key = NULL;
-
+		if(results[i].key->valuep) {
 			switch(((as_val*)(results[i].key->valuep))->type){
 				case AS_INTEGER:
 					p_key = PyInt_FromLong((long)results[i].key->value.integer.value);
-
 					break;
+
 				case AS_STRING:
 					p_key = PyString_FromString((const char *)results[i].key->value.string.value);
 					break;
+
 				default:
 					break;
 			}
+		} else {
+			Py_INCREF(Py_None);
+			p_key = Py_None;
+		}
+
+		// Check record status
+		if ( results[i].result == AEROSPIKE_OK ){
 
 			record_to_pyobject(&err, &results[i].record, results[i].key, &rec);
 
@@ -91,8 +97,14 @@ static bool batch_select_cb(const as_batch_read* results, uint32_t n, void* udat
 				return false;
 			}
 			Py_DECREF(rec);
-			Py_DECREF(p_key);
+		} else if( results[i].result == AEROSPIKE_ERR_RECORD_NOT_FOUND ){
+
+			Py_INCREF(Py_None);
+			if ( PyDict_SetItem( py_recs, p_key, Py_None)){
+				return false;
+			}
 		}
+		Py_DECREF(p_key);
 	}
 	return true;
 }
@@ -109,10 +121,10 @@ static bool batch_select_cb(const as_batch_read* results, uint32_t n, void* udat
  *
  *********************************************************************
  **/
-static
+	static
 PyObject * AerospikeClient_Select_Many_Invoke(
-	AerospikeClient * self,
-	PyObject * py_keys, PyObject * py_bins, PyObject * py_policy)
+		AerospikeClient * self,
+		PyObject * py_keys, PyObject * py_bins, PyObject * py_policy)
 {
 	// Python Return Value
 	PyObject * py_recs = PyDict_New();
@@ -280,7 +292,7 @@ PyObject * AerospikeClient_Select_Many(AerospikeClient * self, PyObject * args, 
 
 	// Python Function Argument Parsing
 	if ( PyArg_ParseTupleAndKeywords(args, kwds, "OO|O:select_many", kwlist, 
-					 &py_keys, &py_bins, &py_policy) == false ) {
+				&py_keys, &py_bins, &py_policy) == false ) {
 		return NULL;
 	}
 
