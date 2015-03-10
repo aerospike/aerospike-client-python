@@ -183,7 +183,9 @@ PyObject *  AerospikeClient_Operate_Invoke(
 	PyObject * py_ustr1 = NULL;
 	PyObject * py_bin = NULL;
 	as_record * rec = NULL;
-	as_static_pool static_pool = {0};
+
+	as_static_pool static_pool;
+	memset(&static_pool, 0, sizeof(static_pool));
 
 	as_operations ops;
 	Py_ssize_t size = PyList_Size(py_list);
@@ -802,4 +804,5 @@ CLEANUP:
 		Py_DECREF(py_err);
 		return NULL;
 	}
+	return PyLong_FromLong(-1);
 }

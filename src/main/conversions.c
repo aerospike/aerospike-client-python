@@ -268,6 +268,7 @@ as_status pyobject_to_map(as_error * err, PyObject * py_dict, as_map ** map, as_
 as_status pyobject_to_val(as_error * err, PyObject * py_obj, as_val ** val, as_static_pool *static_pool, int serializer_type)
 {
 	as_error_reset(err);
+	PyObject * py_result = NULL;
 
 	if ( !py_obj ) {
 		// this should never happen, but if it did...
@@ -294,7 +295,8 @@ as_status pyobject_to_val(as_error * err, PyObject * py_obj, as_val ** val, as_s
 	else if ( PyByteArray_Check(py_obj) ) {
 		as_bytes *bytes;
 		GET_BYTES_POOL(bytes, static_pool, err);
-		serialize_based_on_serializer_policy(serializer_type, &bytes, py_obj, err);
+		py_result = serialize_based_on_serializer_policy(serializer_type,
+				&bytes, py_obj, err);
 		*val = (as_val *) bytes;
 	}
 	else if ( PyList_Check(py_obj) ) {
@@ -313,8 +315,13 @@ as_status pyobject_to_val(as_error * err, PyObject * py_obj, as_val ** val, as_s
 	} else {
 		as_bytes *bytes;
 		GET_BYTES_POOL(bytes, static_pool, err);
-		serialize_based_on_serializer_policy(serializer_type, &bytes, py_obj, err);
+		py_result = serialize_based_on_serializer_policy(serializer_type,
+                &bytes, py_obj, err);
 		*val = (as_val *) bytes;
+	}
+	
+	if (py_result) {
+		Py_DECREF(py_result);
 	}
 
 	return err->code;
@@ -324,10 +331,12 @@ as_status pyobject_to_val(as_error * err, PyObject * py_obj, as_val ** val, as_s
  * Converts a PyObject into an as_record.
  * Returns AEROSPIKE_OK on success. On error, the err argument is populated.
  */
-as_status pyobject_to_record(as_error * err, PyObject * py_rec, PyObject *
-py_meta, as_record * rec, int serializer_type, as_static_pool *static_pool)
+as_status pyobject_to_record(as_error * err, PyObject * py_rec,
+		PyObject * py_meta, as_record * rec, int serializer_type,
+		as_static_pool *static_pool)
 {
 	as_error_reset(err);
+	PyObject * py_result = NULL;
 
 	if ( !py_rec ) {
 		// this should never happen, but if it did...
@@ -378,7 +387,8 @@ py_meta, as_record * rec, int serializer_type, as_static_pool *static_pool)
 			else if ( PyByteArray_Check(value) ) {
 				as_bytes *bytes;
 				GET_BYTES_POOL(bytes, static_pool, err);
-				serialize_based_on_serializer_policy(serializer_type, &bytes, value, err);
+				py_result = serialize_based_on_serializer_policy(serializer_type,
+						&bytes, value, err);
 				as_record_set_bytes(rec, name, bytes);
 			}
 			else if ( PyList_Check(value) ) {
@@ -402,7 +412,8 @@ py_meta, as_record * rec, int serializer_type, as_static_pool *static_pool)
 			else {
 				as_bytes *bytes;
 				GET_BYTES_POOL(bytes, static_pool, err);
-				serialize_based_on_serializer_policy(serializer_type, &bytes, value, err);
+				py_result = serialize_based_on_serializer_policy(serializer_type,
+						&bytes, value, err);
 				as_record_set_bytes(rec, name, bytes);
 			}
 
@@ -438,7 +449,10 @@ py_meta, as_record * rec, int serializer_type, as_static_pool *static_pool)
 				}
 			}
 		}
-
+		
+		if (py_result) {
+			Py_DECREF(py_result);
+		}
 
 		if ( err->code != AEROSPIKE_OK ) {
 			as_record_destroy(rec);
@@ -458,6 +472,7 @@ as_status pyobject_to_astype_write(as_error * err, char *bin_name,  PyObject * p
 		as_operations * ops, as_static_pool *static_pool, int serializer_type)
 {
 	as_error_reset(err);
+	PyObject * py_result = NULL;
 
 	if ( PyInt_Check(py_value) ) {
 		int64_t i = (int64_t) PyInt_AsLong(py_value);
@@ -499,8 +514,13 @@ as_status pyobject_to_astype_write(as_error * err, char *bin_name,  PyObject * p
 	else {
 		as_bytes *bytes;
 		GET_BYTES_POOL(bytes, static_pool, err);
-		serialize_based_on_serializer_policy(serializer_type, &bytes, py_value, err);
+		py_result = serialize_based_on_serializer_policy(serializer_type,
+				&bytes, py_value, err);
 		*val = (as_val *) bytes;
+	}
+	
+	if (py_result) {
+		Py_DECREF(py_result);
 	}
 
 	return err->code;

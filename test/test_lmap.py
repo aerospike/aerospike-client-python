@@ -19,7 +19,7 @@ class TestLMap(object):
 
         print "setup class invoked..."
         config = {
-                "hosts": [("127.0.0.1", 3000)]
+                "hosts": [("192.168.5.108", 3000)]
                 }
 
         TestLMap.client = aerospike.client(config).connect()
@@ -61,20 +61,14 @@ class TestLMap(object):
                 'key' : aerospike.POLICY_KEY_SEND 
                 }
 
-        assert 4 == TestLMap.lmap.size(policy)
-
-    #put() - put unsupported datatype to lmap.
-    def test_lmap_put_float_positive(self):
-
-        """
-            Invoke put() float type data.
-        """
         rec = {
                 "pi" : 3.14
                 }
 
         assert 0 == TestLMap.lmap.put('k11', rec)
         assert {u'k11': {u'pi' : 3.14}} == TestLMap.lmap.get('k11')
+
+		assert 5 == TestLMap.lmap.size(policy)
 
     #put() and Get() - put list to lmap.  
     def test_lmap_put_get_list_positive(self):

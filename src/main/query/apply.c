@@ -58,8 +58,6 @@ AerospikeQuery * AerospikeQuery_Apply(AerospikeQuery * self, PyObject * args, Py
 	char * function = NULL;
 	as_arraylist * arglist = NULL;
 
-	as_static_pool static_pool = {0};
-
 	if ( PyUnicode_Check(py_module) ){
 		py_umodule = PyUnicode_AsUTF8String(py_module);
 		module = PyString_AsString(py_umodule);

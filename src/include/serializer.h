@@ -14,7 +14,7 @@
  * limitations under the License.
  ******************************************************************************/
 #ifndef __COMMON_H__
-#define __COMMON_H_
+#define __COMMON_H__
 
 #include <Python.h>
 #include <stdbool.h>
@@ -24,7 +24,7 @@ typedef struct {
     as_error error;
     PyObject * callback;
 }user_serializer_callback;
-extern user_serializer_callback user_serializer_call_info, user_deserializer_call_info;
+
 /**
  * Sets the serializer
  *
@@ -45,7 +45,7 @@ PyObject * AerospikeClient_Set_Deserializer(AerospikeClient * self, PyObject * a
  * Serializes Py_Object (value) into as_bytes using serialization logic
  * based on serializer_policy.
  */
-extern int serialize_based_on_serializer_policy(int32_t serializer_policy,
+extern PyObject * serialize_based_on_serializer_policy(int32_t serializer_policy,
 		as_bytes **bytes,
 		PyObject *value,
 		as_error *error_p);

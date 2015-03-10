@@ -306,6 +306,7 @@ PyObject * AerospikeClient_Index_Remove(AerospikeClient * self, PyObject *args, 
 	PyObject * py_policy = NULL;
 	PyObject * py_ns = NULL;
 	PyObject * py_name = NULL;
+	PyObject *py_ustr2 = NULL;
 
 	as_policy_info info_policy;
 	as_policy_info *info_policy_p = NULL;
@@ -341,7 +342,6 @@ PyObject * AerospikeClient_Index_Remove(AerospikeClient * self, PyObject *args, 
 
 	// Convert PyObject into the name of the index
 	char *name = NULL;
-	PyObject *py_ustr2 = NULL;
 	if (PyUnicode_Check(py_name)) {
 		py_ustr2 = PyUnicode_AsUTF8String(py_name);
 		name = PyString_AsString(py_ustr2);

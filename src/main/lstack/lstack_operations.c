@@ -47,7 +47,10 @@ PyObject * AerospikeLStack_Push(AerospikeLStack * self, PyObject * args, PyObjec
 
 	as_policy_apply apply_policy;
 	as_policy_apply* apply_policy_p = NULL;
-	as_static_pool static_pool = {0};
+	as_val * val = NULL;
+
+	as_static_pool static_pool;
+	memset(&static_pool, 0, sizeof(static_pool));
 
 	//Error Initialization
 	as_error err;
@@ -72,7 +75,6 @@ PyObject * AerospikeLStack_Push(AerospikeLStack * self, PyObject * args, PyObjec
 		goto CLEANUP;
 	}
 
-	as_val * val = NULL;
 	pyobject_to_val(&err, py_value, &val, &static_pool, SERIALIZER_PYTHON);
 	if (err.code != AEROSPIKE_OK) {
 		goto CLEANUP;
@@ -120,6 +122,10 @@ PyObject * AerospikeLStack_Push_Many(AerospikeLStack * self, PyObject * args, Py
 
 	as_policy_apply apply_policy;
 	as_policy_apply* apply_policy_p = NULL;
+	as_list* arglist = NULL;
+
+	as_static_pool static_pool;
+	memset(&static_pool, 0, sizeof(static_pool));
 
 	static char * kwlist[] = {"values", "policy", NULL};
 
@@ -148,8 +154,6 @@ PyObject * AerospikeLStack_Push_Many(AerospikeLStack * self, PyObject * args, Py
 		goto CLEANUP;
 	}
 
-	as_list* arglist = NULL;
-	as_static_pool static_pool = {0};
 	pyobject_to_list(&err, py_arglist, &arglist, &static_pool, SERIALIZER_PYTHON);
 	if (err.code != AEROSPIKE_OK) {
 		goto CLEANUP;
@@ -194,6 +198,7 @@ PyObject * AerospikeLStack_Peek(AerospikeLStack * self, PyObject * args, PyObjec
 
 	as_policy_apply apply_policy;
 	as_policy_apply* apply_policy_p = NULL;
+	as_list* list = NULL;
 
 	as_error err;
 	as_error_init(&err);
@@ -220,7 +225,6 @@ PyObject * AerospikeLStack_Peek(AerospikeLStack * self, PyObject * args, PyObjec
 	/*
 	 * Peek values from stack
 	 */
-	as_list* list = NULL; 
 	aerospike_lstack_peek(self->client->as, &err, apply_policy_p, &self->key,
 			&self->lstack, peek_count, &list);
 	if (err.code != AEROSPIKE_OK) {
@@ -268,10 +272,14 @@ PyObject * AerospikeLStack_Filter(AerospikeLStack * self, PyObject * args, PyObj
 
 	as_policy_apply apply_policy;
 	as_policy_apply* apply_policy_p = NULL;
+	as_list* arg_list = NULL;
+	as_list* elements_list = NULL;
+
+	as_static_pool static_pool;
+	memset(&static_pool, 0, sizeof(static_pool));
 
 	as_error err;
 	as_error_init(&err);
-	as_static_pool static_pool = {0};
 
 	static char * kwlist[] = {"peek_count", "udf_function_name", "args", "policy", NULL};
 
@@ -302,12 +310,10 @@ PyObject * AerospikeLStack_Filter(AerospikeLStack * self, PyObject * args, PyObj
 		goto CLEANUP;
 	}
 
-	as_list* arg_list = NULL;
 	if (py_args) {
 		pyobject_to_list(&err, py_args, &arg_list, &static_pool, SERIALIZER_PYTHON);
 	}
 
-	as_list* elements_list = NULL;
 	aerospike_lstack_filter(self->client->as, &err, apply_policy_p, &self->key,
 			&self->lstack, peek_count, filter_name, arg_list, &elements_list);
 

@@ -81,7 +81,8 @@ PyObject * AerospikeClient_ScanApply_Invoke(
 	PyObject *py_ustr2 = NULL;
 	PyObject *py_ustr3 = NULL;
 
-	as_static_pool static_pool = {0};
+	as_static_pool static_pool;
+	memset(&static_pool, 0, sizeof(static_pool));
 
 	// Initialize error
 	as_error_init(&err);

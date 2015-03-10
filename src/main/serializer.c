@@ -30,7 +30,7 @@
 uint32_t is_user_serializer_registered = 0;
 uint32_t is_user_deserializer_registered = 0;
 
-user_serializer_callback user_serializer_call_info = {0}, user_deserializer_call_info = {0};
+user_serializer_callback user_serializer_call_info, user_deserializer_call_info;
 
 /**
  ******************************************************************************************************
@@ -60,6 +60,10 @@ PyObject * AerospikeClient_Set_Serializer(AerospikeClient * self, PyObject * arg
 			&py_func) == false ) {
 		return NULL;
 	}
+
+    if (!is_user_serializer_registered) {
+        memset(&user_serializer_call_info, 0, sizeof(user_serializer_call_info));
+    }
 
     if(user_serializer_call_info.callback == py_func) {
         return PyLong_FromLong(0);
@@ -110,6 +114,11 @@ PyObject * AerospikeClient_Set_Deserializer(AerospikeClient * self, PyObject * a
 			&py_func) == false ) {
 		return NULL;
 	}
+
+    if (!is_user_deserializer_registered) {
+        memset(&user_deserializer_call_info, 0, sizeof(user_deserializer_call_info));
+    }
+
     if(user_deserializer_call_info.callback == py_func) {
         return PyLong_FromLong(0);
     }
@@ -263,7 +272,7 @@ CLEANUP:
  *                                  with encountered error if any.
  *******************************************************************************************************
  */
-extern int serialize_based_on_serializer_policy(int32_t serializer_policy,
+extern PyObject * serialize_based_on_serializer_policy(int32_t serializer_policy,
 		as_bytes **bytes,
 		PyObject *value,
 		as_error *error_p)
@@ -348,8 +357,8 @@ CLEANUP:
         Py_DECREF(py_err);
 		return NULL;
     }
-
-    return 0;
+  
+  return PyLong_FromLong(0);
 }
 
 /*

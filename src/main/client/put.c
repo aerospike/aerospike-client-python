@@ -57,13 +57,15 @@ PyObject * AerospikeClient_Put_Invoke(
 	// Initialisation flags
 	bool key_initialised = false;
 	bool record_initialised = false;
+	int iter=0;
 
 	// Initialize record
 	as_record_init(&rec, 0);
 	record_initialised = true;
 
-	as_static_pool              static_pool = {0};
-    int iter=0;
+	as_static_pool static_pool;
+	memset(&static_pool, 0, sizeof(static_pool));
+
 	// Initialize error
 	as_error_init(&err);
 
