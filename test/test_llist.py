@@ -135,7 +135,14 @@ class TestLList(object):
         with pytest.raises(Exception) as exception: 
             TestLList.llist_string.get('remove')
 
-        assert exception.value[0] == 125L
+        status = [100L, 125L]
+        for val in status:
+            if exception.value[0] != val:
+                continue
+            else:
+                break
+
+        assert exception.value[0] == val
 
     #Remove() - Remove non-existent object from the llist.
     def test_llist_remove_element_negative(self):
@@ -147,7 +154,14 @@ class TestLList(object):
         with pytest.raises(Exception) as exception:
             TestLList.llist_string.remove('kk')
 
-        assert exception.value[0] == 125L
+        status = [100L, 125L]
+        for val in status:
+            if exception.value[0] != val:
+                continue
+            else:
+                break
+
+        assert exception.value[0] == val
 
     #Destroy() - Delete the entire LList(LDT Remove).
     def test_llist_destroy_positive(self):

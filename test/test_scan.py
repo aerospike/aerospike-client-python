@@ -66,8 +66,14 @@ class TestScan(object):
         with pytest.raises(Exception) as exception:
             scan_obj.foreach(callback)
 
-        assert exception.value[0] == 1L
-        assert exception.value[1] == 'AEROSPIKE_ERR_SERVER'
+        status = [1L, 20L]
+        for val in status:
+            if exception.value[0] != val:
+                continue
+            else:
+                break
+        
+        assert exception.value[0] == val
 
     def test_scan_with_none_ns_and_set(self):
 

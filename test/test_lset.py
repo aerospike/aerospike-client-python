@@ -160,7 +160,14 @@ class TestLSet(object):
         with pytest.raises(Exception) as exception: 
             TestLSet.lset.get(1000)
 
-        assert exception.value[0] == 125L
+        status = [100L, 125L]
+        for val in status:
+            if exception.value[0] != val:
+                continue
+            else:
+                break
+
+        assert exception.value[0] == val
 
     #Exists() and Remove() - Test existence of an object and remove from the set.
     def test_lset_exists_element_positive(self):

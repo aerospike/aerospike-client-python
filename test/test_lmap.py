@@ -63,12 +63,11 @@ class TestLMap(object):
 
         rec = {
                 "pi" : 3.14
-                }
+				}
 
         assert 0 == TestLMap.lmap.put('k11', rec)
         assert {u'k11': {u'pi' : 3.14}} == TestLMap.lmap.get('k11')
-
-		assert 5 == TestLMap.lmap.size(policy)
+        assert 5 == TestLMap.lmap.size(policy)
 
     #put() and Get() - put list to lmap.  
     def test_lmap_put_get_list_positive(self):

@@ -12,7 +12,13 @@ except:
     sys.exit(1)
 class SomeClass(object):
 
-    pass
+	pass
+
+def serialize_function(val):
+    return pickle.dumps(val)
+
+def deserialize_function(val):
+    return pickle.loads(val)
 
 class TestSerializer(object):
 
@@ -24,6 +30,8 @@ class TestSerializer(object):
                 "hosts": [("127.0.0.1", 3000)]
                 }
         TestSerializer.client = aerospike.client(config).connect()
+        response = aerospike.set_serializer(serialize_function)
+        response = aerospike.set_deserializer(deserialize_function)
 
     def teardown_class(cls):
         TestSerializer.client.close()
@@ -47,9 +55,6 @@ class TestSerializer(object):
 
         #    Invoke put() for float data record with user serializer.
 
-        def serialize_function(val):
-            return pickle.dumps(val)
-        response = aerospike.set_serializer(serialize_function)
 
         key = ( 'test', 'demo', 1 )
 
@@ -61,10 +66,6 @@ class TestSerializer(object):
 
         assert res == 0
         
-        def deserialize_function(val):
-            return pickle.loads(val)
-
-        response = aerospike.set_deserializer(deserialize_function)
 
         _, _, bins = TestSerializer.client.get( key )
 
@@ -96,10 +97,6 @@ class TestSerializer(object):
         """
             Invoke put() for bool data record with user serializer.
         """
-        def serialize_function(val):
-            return pickle.dumps(val)
-
-        response = aerospike.set_serializer(serialize_function)
 
         key = ( 'test', 'demo', 1 )
 
@@ -110,11 +107,6 @@ class TestSerializer(object):
         res = TestSerializer.client.put( key, rec , {}, {}, aerospike.SERIALIZER_USER)
 
         assert res == 0
-
-        def deserialize_function(val):
-            return pickle.loads(val)
-
-        response = aerospike.set_deserializer(deserialize_function)
 
         _, _, bins = TestSerializer.client.get( key )
 
@@ -141,14 +133,11 @@ class TestSerializer(object):
         assert bins == { 'status': True }
 
         self.delete_keys.append( key )
+
     """
     def test_put_with_object_data_user_serializer(self):
 
-            Invoke put() for object data record with user serializer.
-        def serialize_function(val):
-            return pickle.dumps(val)
-
-        response = aerospike.set_serializer(serialize_function)
+            #Invoke put() for object data record with user serializer.
 
         key = ( 'test', 'demo', 1 )
 
@@ -161,14 +150,10 @@ class TestSerializer(object):
 
         assert res == 0
 
-        def deserialize_function(val):
-            return pickle.loads(val)
-
-        response = aerospike.set_deserializer(deserialize_function)
-
         _, _, bins = TestSerializer.client.get( key )
 
-        assert bins == { 'object': True }
+        #assert bins == { 'object': True }
+        assert bins == { 'object': obj1 }
 
         self.delete_keys.append( key )
 
@@ -198,8 +183,6 @@ class TestSerializer(object):
         """
             Invoke put() for float data record with user serializer.
         """
-        def serialize_function(val):
-            return pickle.dumps(val)
 
         with pytest.raises(Exception) as exception:
             response = aerospike.set_serializer(None)
@@ -207,34 +190,11 @@ class TestSerializer(object):
         assert exception.value[0] == -2
         assert exception.value[1] == "Parameter must be a callable"
 
-    def test_put_with_float_data_user_serializer_extra_parameter(self):
-
-        """
-            Invoke put() for float data record with user serializer.
-        """
-        def serialize_function(val, extraval):
-            return pickle.dumps(val)
-
-        response = aerospike.set_serializer(serialize_function)
-
-        key = ( 'test', 'demo', 1 )
-
-        rec = {
-                "pi" : 3.14
-                }
-
-        with pytest.raises(Exception) as exception:
-            res = TestSerializer.client.put( key, rec , {}, {}, aerospike.SERIALIZER_USER)
-        assert exception.value[0] == -1
-        assert exception.value[1] == "Unable to call user's registered serializer callback"
-
     def test_put_with_float_data_user_deserializer_none(self):
 
         """
             Invoke put() for float data record with user deserializer None.
         """
-        def serialize_function(val):
-            return pickle.dumps(val)
 
         response = aerospike.set_serializer(serialize_function)
 
@@ -248,84 +208,19 @@ class TestSerializer(object):
 
         assert res == 0
 
-        def deserialize_function(val):
-            return pickle.loads(val)
+        self.delete_keys.append( key )
 
         with pytest.raises(Exception) as exception:
             response = aerospike.set_deserializer(None)
 
         assert exception.value[0] == -2
         assert exception.value[1] == "Parameter must be a callable"
-    
-    def test_put_with_float_data_user_deserializer_extra_argument(self):
-
-            #Invoke put() for float data record with user deserializer extra argument
-        def serialize_function(val):
-            return pickle.dumps(val)
-
-        response = aerospike.set_serializer(serialize_function)
-
-        key = ( 'test', 'demo', 1 )
-
-        rec = {
-                "pi" : 3.14
-                }
-
-        res = TestSerializer.client.put( key, rec , {}, {}, aerospike.SERIALIZER_USER)
-
-        assert res == 0
-
-        def deserialize_function(val, extraval):
-            return pickle.loads(val)
-
-        response = aerospike.set_deserializer(deserialize_function)
-
-        with pytest.raises(Exception) as exception:
-            (key , meta, bins) = TestSerializer.client.get( key )
-
-        assert exception.value[0] == -1
-        assert exception.value[1] == "Unable to call user's registered deserializer callback"
-    
-    def test_put_with_float_data_user_multiple_serializer(self):
-
-        #    Invoke put() for float data record with user serializer.
-
-        def serialize_function(val):
-            return pickle.dumps(val)
-        response = aerospike.set_serializer(serialize_function)
-
-        def serialize_function_extra(val):
-            return pickle.dumps(val)
-        response = aerospike.set_serializer(serialize_function_extra)
-
-        key = ( 'test', 'demo', 1 )
-
-        rec = {
-                "pi" : 3.14
-                }
-
-        res = TestSerializer.client.put( key, rec , {}, {}, aerospike.SERIALIZER_USER)
-
-        assert res == 0
-        
-        def deserialize_function(val):
-            return pickle.loads(val)
-
-        response = aerospike.set_deserializer(deserialize_function)
-
-        _, _, bins = TestSerializer.client.get( key )
-
-        assert bins == { 'pi': 3.14 }
-        
-        #self.delete_keys.append( key )
 
     def test_put_with_mixed_data_user_serializer(self):
 
-        #    Invoke put() for mixed data record with user serializer.
-
-        def serialize_function(val):
-            return pickle.dumps(val)
-        response = aerospike.set_serializer(serialize_function)
+        """
+            Invoke put() for mixed data record with user serializer.
+        """
 
         key = ( 'test', 'demo', 1 )
 
@@ -342,11 +237,6 @@ class TestSerializer(object):
 
         assert res == 0
         
-        def deserialize_function(val):
-            return pickle.loads(val)
-
-        response = aerospike.set_deserializer(deserialize_function)
-
         _, _, bins = TestSerializer.client.get( key )
         
         assert bins == {
@@ -363,7 +253,9 @@ class TestSerializer(object):
 
     def test_put_with_mixed_data_python_serializer(self):
 
-          #  Invoke put() for mixed data record with python serializer.
+        """
+            Invoke put() for mixed data record with python serializer.
+        """
         key = ( 'test', 'demo', 1 )
 
         rec = {
@@ -394,4 +286,4 @@ class TestSerializer(object):
                 3.12, "t": 1}, "inlist": [1, 2]},
         }  
     
-        #self.delete_keys.append( key )
+        self.delete_keys.append( key )
