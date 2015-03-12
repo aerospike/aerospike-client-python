@@ -65,12 +65,16 @@ PyObject * AerospikeClient_Set_Serializer(AerospikeClient * self, PyObject * arg
         memset(&user_serializer_call_info, 0, sizeof(user_serializer_call_info));
     }
 
-    if(user_serializer_call_info.callback == py_func) {
+    if (user_serializer_call_info.callback == py_func) {
         return PyLong_FromLong(0);
     }
 	if (!PyCallable_Check(py_func)) {
 		as_error_update(&err, AEROSPIKE_ERR_PARAM, "Parameter must be a callable");
 		goto CLEANUP;
+	}
+
+	if (user_serializer_call_info.callback != NULL) {
+		Py_DECREF(user_serializer_call_info.callback);
 	}
 	is_user_serializer_registered = 1;
 	user_serializer_call_info.callback = py_func;
@@ -119,7 +123,7 @@ PyObject * AerospikeClient_Set_Deserializer(AerospikeClient * self, PyObject * a
         memset(&user_deserializer_call_info, 0, sizeof(user_deserializer_call_info));
     }
 
-    if(user_deserializer_call_info.callback == py_func) {
+    if (user_deserializer_call_info.callback == py_func) {
         return PyLong_FromLong(0);
     }
 
@@ -128,6 +132,9 @@ PyObject * AerospikeClient_Set_Deserializer(AerospikeClient * self, PyObject * a
 		goto CLEANUP;
 	}
 	is_user_deserializer_registered = 1;
+	if (user_deserializer_call_info.callback != NULL) {
+		Py_DECREF(user_deserializer_call_info.callback);
+	}
 	user_deserializer_call_info.callback = py_func;
 
 CLEANUP:

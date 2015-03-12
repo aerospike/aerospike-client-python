@@ -12,7 +12,7 @@ except:
     sys.exit(1)
 class SomeClass(object):
 
-	pass
+    pass
 
 def serialize_function(val):
     return pickle.dumps(val)
@@ -286,4 +286,46 @@ class TestSerializer(object):
                 3.12, "t": 1}, "inlist": [1, 2]},
         }  
     
+        self.delete_keys.append( key )
+
+    def test_register_multiple_serializer(self):
+
+        """
+            Invoke put() for mixed data record with python serializer.
+        """
+        key = ( 'test', 'demo', 1 )
+
+        rec = {
+            'map': { "key": "asd';q;'1';", "pi":3.14},
+            'normal': 1234,
+            'special': '!@#@#$QSDAsd;as',
+            'list': [ "nanslkdl", 1, bytearray("asd;as[d'as;d", "utf-8") ],
+            'bytes': bytearray("asd;as[d'as;d", "utf-8"),
+            'nestedlist': [ "nanslkdl", 1, bytearray("asd;as[d'as;d", "utf-8"), [ 1, bytearray("asd;as[d'as;d", "utf-8")] ],
+            'nestedmap': { "key": "asd';q;'1';", "pi":3.14, "nest" : {"pi1":
+                3.12, "t": 1}, "inlist": [1, 2]},
+        }
+
+        def serialize_function(val):
+            return pickle.dumps(val)
+
+        response = aerospike.set_serializer(serialize_function)
+
+        res = TestSerializer.client.put( key, rec , {}, {}, aerospike.SERIALIZER_PYTHON)
+
+        assert res == 0
+
+        _, _, bins = TestSerializer.client.get( key )
+
+        assert bins == {
+            'map': { "key": "asd';q;'1';", "pi":3.14},
+            'normal': 1234,
+            'special': '!@#@#$QSDAsd;as',
+            'list': [ "nanslkdl", 1, bytearray("asd;as[d'as;d", "utf-8") ],
+            'bytes': bytearray("asd;as[d'as;d", "utf-8"),
+            'nestedlist': [ "nanslkdl", 1, bytearray("asd;as[d'as;d", "utf-8"), [ 1, bytearray("asd;as[d'as;d", "utf-8")] ],
+            'nestedmap': { "key": "asd';q;'1';", "pi":3.14, "nest" : {"pi1":
+                3.12, "t": 1}, "inlist": [1, 2]},
+        }
+
         self.delete_keys.append( key )
