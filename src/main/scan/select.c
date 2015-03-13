@@ -21,6 +21,7 @@
 
 #include "client.h"
 #include "scan.h"
+#include "conversions.h"
 
 #undef TRACE
 #define TRACE()

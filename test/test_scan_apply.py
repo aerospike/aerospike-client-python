@@ -106,8 +106,14 @@ class TestScanApply(object):
         with pytest.raises(Exception) as exception:
             scan_id = self.client.scan_apply("test1", "demo1", "bin_lua", "mytransform", ['age', 2])
 
-        assert exception.value[0] == 1
-        assert exception.value[1] == "AEROSPIKE_ERR_SERVER"
+        status = [1L, 20L]
+        for val in status:
+            if exception.value[0] != val:
+                continue
+            else:
+                break
+
+		assert exception.value[0] == val
 
     def test_scan_apply_with_incorrect_module_name(self):
         """

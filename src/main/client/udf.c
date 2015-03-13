@@ -52,6 +52,8 @@ PyObject * AerospikeClient_UDF_Put(AerospikeClient * self, PyObject *args, PyObj
 	PyObject * py_policy = NULL;
 	PyObject * py_filename = NULL;
 	PyObject * py_udf_type = NULL;
+	PyObject * py_ustr = NULL;
+
 	uint8_t * bytes = NULL;
 	as_policy_info info_policy;
 	as_policy_info *info_policy_p = NULL;
@@ -72,7 +74,6 @@ PyObject * AerospikeClient_UDF_Put(AerospikeClient * self, PyObject *args, PyObj
 
 	// Convert PyObject into a filename string
 	char *filename = NULL;
-	PyObject * py_ustr = NULL;
 	if (PyUnicode_Check(py_filename)) {
 		py_ustr = PyUnicode_AsUTF8String(py_filename);
 		filename = PyString_AsString(py_ustr);
@@ -127,8 +128,9 @@ PyObject * AerospikeClient_UDF_Put(AerospikeClient * self, PyObject *args, PyObj
 	}
 
 CLEANUP:
-	if(bytes)
+	if(bytes) {
 		free(bytes);
+	}
 
 	if (py_ustr) {
 		Py_DECREF(py_ustr);
@@ -167,6 +169,8 @@ PyObject * AerospikeClient_UDF_Remove(AerospikeClient * self, PyObject *args, Py
 	// Python Function Arguments
 	PyObject * py_policy = NULL;
 	PyObject * py_filename = NULL;
+	PyObject * py_ustr = NULL;
+
 	as_policy_info info_policy;
 	as_policy_info *info_policy_p = NULL;
 
@@ -190,7 +194,6 @@ PyObject * AerospikeClient_UDF_Remove(AerospikeClient * self, PyObject *args, Py
 
 	// Convert PyObject into a filename string
 	char *filename = NULL;
-	PyObject * py_ustr = NULL;
 	if (PyUnicode_Check(py_filename)) {
 		py_ustr = PyUnicode_AsUTF8String(py_filename);
 		filename = PyString_AsString(py_ustr);

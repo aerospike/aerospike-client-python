@@ -24,14 +24,16 @@
 
 /**
  *******************************************************************************************************
- * Connects to the Aerospike DB.
+ * Establishes a connection to the Aerospike DB instance.
  *
  * @param self                  AerospikeClient object
  * @param args                  The args is a tuple object containing an argument
  *                              list passed from Python to a C function
  * @param kwds                  Dictionary of keywords
  *
- * Returns object.
+ * Returns an instance of aerospike.Client, Which can be used later to do usual
+ * database operations.
+ * In case of error,appropriate exceptions will be raised.
  *******************************************************************************************************
  */
 PyObject * AerospikeClient_Connect(AerospikeClient * self, PyObject * args, PyObject * kwds)

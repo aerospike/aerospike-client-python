@@ -28,7 +28,19 @@
 #include "conversions.h"
 #include "policy.h"
 
-
+/**
+ *******************************************************************************************************
+ * Creates an integer index for a bin in the Aerospike DB.
+ *
+ * @param self                  AerospikeClient object
+ * @param args                  The args is a tuple object containing an argument
+ *                              list passed from Python to a C function
+ * @param kwds                  Dictionary of keywords
+ *
+ * Returns an integer status. 0(Zero) is success value.
+ * In case of error,appropriate exceptions will be raised.
+ *******************************************************************************************************
+ */
 PyObject * AerospikeClient_Index_Integer_Create(AerospikeClient * self, PyObject *args, PyObject * kwds)
 {
 	// Initialize error
@@ -143,7 +155,19 @@ CLEANUP:
 	return PyLong_FromLong(0);
 }
 
-
+/**
+ *******************************************************************************************************
+ * Creates a string index for a bin in the Aerospike DB.
+ *
+ * @param self                  AerospikeClient object
+ * @param args                  The args is a tuple object containing an argument
+ *                              list passed from Python to a C function
+ * @param kwds                  Dictionary of keywords
+ *
+ * Returns an integer status. 0(Zero) is success value.
+ * In case of error,appropriate exceptions will be raised.
+ *******************************************************************************************************
+ */
 PyObject * AerospikeClient_Index_String_Create(AerospikeClient * self, PyObject *args, PyObject * kwds)
 {
 	// Initialize error
@@ -232,7 +256,6 @@ PyObject * AerospikeClient_Index_String_Create(AerospikeClient * self, PyObject 
 		name = (char *)alloca((sizeof(char) * strlen(PyString_AsString(py_ustr2)) + 1));
 		strcpy(name,  PyString_AsString(py_ustr2));
 		Py_DECREF(py_ustr2);
-		//name = PyString_AsString(py_ustr2);
 	} else if ( PyString_Check(py_name) ) {
 		name = PyString_AsString(py_name);
 	} else {
@@ -249,9 +272,6 @@ PyObject * AerospikeClient_Index_String_Create(AerospikeClient * self, PyObject 
 	}
 
 CLEANUP:
-	/*if (py_ustr2) {
-		Py_DECREF(py_ustr2);
-	}*/
 	if ( err.code != AEROSPIKE_OK ) {
 		PyObject * py_err = NULL;
 		error_to_pyobject(&err, &py_err);
@@ -263,7 +283,19 @@ CLEANUP:
 	return PyLong_FromLong(0);
 }
 
-
+/**
+ *******************************************************************************************************
+ * Removes an index in the Aerospike database.
+ *
+ * @param self                  AerospikeClient object
+ * @param args                  The args is a tuple object containing an argument
+ *                              list passed from Python to a C function
+ * @param kwds                  Dictionary of keywords
+ *
+ * Returns an integer status. 0(Zero) is success value.
+ * In case of error,appropriate exceptions will be raised.
+ *******************************************************************************************************
+ */
 PyObject * AerospikeClient_Index_Remove(AerospikeClient * self, PyObject *args, PyObject * kwds)
 {
 	// Initialize error
@@ -274,6 +306,7 @@ PyObject * AerospikeClient_Index_Remove(AerospikeClient * self, PyObject *args, 
 	PyObject * py_policy = NULL;
 	PyObject * py_ns = NULL;
 	PyObject * py_name = NULL;
+	PyObject *py_ustr2 = NULL;
 
 	as_policy_info info_policy;
 	as_policy_info *info_policy_p = NULL;
@@ -309,7 +342,6 @@ PyObject * AerospikeClient_Index_Remove(AerospikeClient * self, PyObject *args, 
 
 	// Convert PyObject into the name of the index
 	char *name = NULL;
-	PyObject *py_ustr2 = NULL;
 	if (PyUnicode_Check(py_name)) {
 		py_ustr2 = PyUnicode_AsUTF8String(py_name);
 		name = PyString_AsString(py_ustr2);

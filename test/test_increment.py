@@ -75,7 +75,7 @@ class TestIncrement(object):
         (key , meta, bins) = TestIncrement.client.get(key)
 
         assert bins == { 'age': 6, 'name': 'name1'}
-        assert key == ('test', 'demo', 1,
+        assert key == ('test', 'demo', None,
                 bytearray(b'\xb7\xf4\xb88\x89\xe2\xdag\xdeh>\x1d\xf6\x91\x9a\x1e\xac\xc4F\xc8'))
 
     def test_increment_with_policy_key_digest(self):
@@ -144,7 +144,7 @@ class TestIncrement(object):
         (key , meta, bins) = TestIncrement.client.get(key)
 
         assert bins == { 'age': 6, 'name': 'name1'}
-        assert key == ('test', 'demo', 1,
+        assert key == ('test', 'demo', None,
                 bytearray(b'\xb7\xf4\xb88\x89\xe2\xdag\xdeh>\x1d\xf6\x91\x9a\x1e\xac\xc4F\xc8'))
 
     def test_increment_with_policy_key_gen_EQ_positive(self):
@@ -171,7 +171,7 @@ class TestIncrement(object):
         (key , meta, bins) = TestIncrement.client.get(key)
 
         assert bins == { 'age': 6, 'name': 'name1'}
-        assert key == ('test', 'demo', 1,
+        assert key == ('test', 'demo', None,
                 bytearray(b'\xb7\xf4\xb88\x89\xe2\xdag\xdeh>\x1d\xf6\x91\x9a\x1e\xac\xc4F\xc8'))
 
     def test_increment_with_policy_key_gen_EQ_not_equal(self):
@@ -202,7 +202,7 @@ class TestIncrement(object):
         (key , meta, bins) = TestIncrement.client.get(key)
 
         assert bins == { 'age': 1, 'name': 'name1'}
-        assert key == ('test', 'demo', 1,
+        assert key == ('test', 'demo', None,
                 bytearray(b'\xb7\xf4\xb88\x89\xe2\xdag\xdeh>\x1d\xf6\x91\x9a\x1e\xac\xc4F\xc8'))
 
     def test_increment_with_policy_key_gen_GT_lesser(self):
@@ -232,7 +232,7 @@ class TestIncrement(object):
         (key , meta, bins) = TestIncrement.client.get(key)
 
         assert bins == { 'age': 1, 'name': 'name1'}
-        assert key == ('test', 'demo', 1,
+        assert key == ('test', 'demo', None,
                 bytearray(b'\xb7\xf4\xb88\x89\xe2\xdag\xdeh>\x1d\xf6\x91\x9a\x1e\xac\xc4F\xc8'))
 
     def test_increment_with_policy_key_gen_GT_positive(self):
@@ -259,7 +259,7 @@ class TestIncrement(object):
         (key , meta, bins) = TestIncrement.client.get(key)
 
         assert bins == { 'age': 6, 'name': 'name1'}
-        assert key == ('test', 'demo', 1,
+        assert key == ('test', 'demo', None,
                 bytearray(b'\xb7\xf4\xb88\x89\xe2\xdag\xdeh>\x1d\xf6\x91\x9a\x1e\xac\xc4F\xc8'))
 
     def test_increment_with_incorrect_policy(self):

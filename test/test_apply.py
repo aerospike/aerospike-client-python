@@ -317,3 +317,14 @@ class TestApply(object):
         assert retval == 0
         (key, meta, bins) = TestApply.client.get(key)
         assert bins['name'] == ['name1', [1, 2]]
+
+    def test_apply_with_unicode_module_and_function(self):
+        """
+            Invoke apply() with unicode module and function
+        """
+        key = ('test', 'demo', 1)
+        retval = TestApply.client.apply(key, u'sample', u'list_append', ['name', 'car'])
+        (key, meta, bins) = TestApply.client.get(key)
+
+        assert bins['name'] == ['name1', 'car']
+        assert retval == 0

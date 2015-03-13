@@ -270,7 +270,7 @@ class TestOperate(object):
        
         (key , meta, bins) = TestOperate.client.get(key)
         assert bins == { "age": 1, 'name': 'name1'}
-        assert key == ('test', 'demo', 1,
+        assert key == ('test', 'demo', None,
                 bytearray(b'\xb7\xf4\xb88\x89\xe2\xdag\xdeh>\x1d\xf6\x91\x9a\x1e\xac\xc4F\xc8'))
         
     def test_operate_with_policy_gen_GT_lesser(self):
@@ -315,7 +315,7 @@ class TestOperate(object):
         
         (key , meta, bins) = TestOperate.client.get(key)
         assert bins == { 'age' : 1, 'name': 'name1'}
-        assert key == ('test', 'demo', 1,
+        assert key == ('test', 'demo', None,
                 bytearray(b'\xb7\xf4\xb88\x89\xe2\xdag\xdeh>\x1d\xf6\x91\x9a\x1e\xac\xc4F\xc8'))
 
     def test_operate_with_policy_gen_GT_positive(self):
@@ -700,4 +700,25 @@ class TestOperate(object):
 
         key, meta, bins = TestOperate.client.operate(key, list)
 
-        assert bins == {'write_bin': {u'no': 89}}
+        assert bins == {'write_bin' : {u'no': 89}}
+
+    def test_operate_with_write_tuple_positive(self):
+        """
+        Invoke operate() with write operation
+        """
+        key = ('test', 'demo', 1)
+        list = [
+                {
+                    "op" : aerospike.OPERATOR_WRITE,
+                    "bin" : "write_bin",
+                    "val" : tuple('abc')
+                    },
+                {
+                    "op" : aerospike.OPERATOR_READ,
+                    "bin" : "write_bin"
+                    }
+                ]
+
+        key, meta, bins = TestOperate.client.operate(key, list)
+
+        assert bins == {'write_bin' : ('a', 'b', 'c')}

@@ -29,6 +29,19 @@
 #define RECORDS_SCANNED "records_scanned"
 #define STATUS "status"
 
+/**
+ *******************************************************************************************************
+ * This function allocates memory to self.
+ *
+ * @param self                  AerospikeClient object
+ * @param args                  The args is a tuple object containing an argument
+ *                              list passed from Python to a C function
+ * @param kwds                  Dictionary of keywords
+ *
+ * Returns self on success.
+ * In case of error,appropriate exceptions will be raised.
+ *******************************************************************************************************
+ */
 AerospikeScan * AerospikeClient_Scan(AerospikeClient * self, PyObject * args, PyObject * kwds)
 {
 	return AerospikeScan_New(self, args, kwds);
@@ -67,6 +80,9 @@ PyObject * AerospikeClient_ScanApply_Invoke(
 	PyObject *py_ustr1 = NULL;
 	PyObject *py_ustr2 = NULL;
 	PyObject *py_ustr3 = NULL;
+
+	as_static_pool static_pool;
+	memset(&static_pool, 0, sizeof(static_pool));
 
 	// Initialize error
 	as_error_init(&err);
@@ -139,7 +155,8 @@ PyObject * AerospikeClient_ScanApply_Invoke(
 		goto CLEANUP;
 	}
 
-	pyobject_to_list(&err, py_args, &arglist);
+	pyobject_to_list(&err, py_args, &arglist, &static_pool,
+			SERIALIZER_PYTHON);
 	if (err.code != AEROSPIKE_OK) {
 		goto CLEANUP;
 	}
@@ -221,17 +238,20 @@ PyObject * AerospikeClient_ScanApply(AerospikeClient * self, PyObject * args, Py
 
 	// Python Function Keyword Arguments
 	static char * kwlist[] = {"ns", "set", "module", "function", "args", "policy", "options", NULL};
-	char *namespace = NULL, *set = NULL, *module = NULL, *function = NULL;
+	char *namespace = NULL;
+	PyObject *py_set = NULL;
+	PyObject *py_module = NULL;
+	PyObject *py_function = NULL;
 
 	// Python Function Argument Parsing
-	if ( PyArg_ParseTupleAndKeywords(args, kwds, "sOOO|OOO:scan_apply", kwlist, &namespace, &set,
-				&module, &function, &py_args, &py_policy, &py_options) == false ) {
+	if ( PyArg_ParseTupleAndKeywords(args, kwds, "sOOO|OOO:scan_apply", kwlist, &namespace, &py_set,
+				&py_module, &py_function, &py_args, &py_policy, &py_options) == false ) {
 		return NULL;
 	}
 
 	// Invoke Operation
-	return AerospikeClient_ScanApply_Invoke(self, namespace, set, module,
-			function, py_args, py_policy, py_options, true);
+	return AerospikeClient_ScanApply_Invoke(self, namespace, py_set, py_module,
+			py_function, py_args, py_policy, py_options, true);
 }
 
 /**

@@ -45,6 +45,10 @@ PyObject * AerospikeLSet_Add(AerospikeLSet * self, PyObject * args, PyObject * k
 	PyObject* py_policy = NULL;
 	as_policy_apply apply_policy;
 	as_policy_apply* apply_policy_p = NULL;
+	as_val * val = NULL;
+
+	as_static_pool static_pool;
+	memset(&static_pool, 0, sizeof(static_pool));
 
 	as_error err;
 	as_error_init(&err);
@@ -68,8 +72,7 @@ PyObject * AerospikeLSet_Add(AerospikeLSet * self, PyObject * args, PyObject * k
 		goto CLEANUP;
 	}
 
-	as_val * val = NULL;
-	pyobject_to_val(&err, py_value, &val);
+	pyobject_to_val(&err, py_value, &val, &static_pool, SERIALIZER_PYTHON);
 	if (err.code != AEROSPIKE_OK) {
 		goto CLEANUP;
 	}
@@ -112,6 +115,10 @@ PyObject * AerospikeLSet_Add_Many(AerospikeLSet * self, PyObject * args, PyObjec
 	PyObject* py_policy = NULL;
 	as_policy_apply apply_policy;
 	as_policy_apply* apply_policy_p = NULL;
+	as_list* arglist = NULL;
+
+	as_static_pool static_pool;
+	memset(&static_pool, 0, sizeof(static_pool));
 
 	as_error err;
 	as_error_init(&err);
@@ -143,8 +150,7 @@ PyObject * AerospikeLSet_Add_Many(AerospikeLSet * self, PyObject * args, PyObjec
 		goto CLEANUP;
 	}
 
-	as_list* arglist = NULL;
-	pyobject_to_list(&err, py_arglist, &arglist);
+	pyobject_to_list(&err, py_arglist, &arglist, &static_pool, SERIALIZER_PYTHON);
 	if (err.code != AEROSPIKE_OK) {
 		goto CLEANUP;
 	}
@@ -188,6 +194,11 @@ PyObject * AerospikeLSet_Get(AerospikeLSet * self, PyObject * args, PyObject * k
 	PyObject* py_policy = NULL;
 	as_policy_apply apply_policy;
 	as_policy_apply* apply_policy_p = NULL;
+	as_val * val = NULL;
+	as_val* return_val_p = NULL;
+
+	as_static_pool static_pool;
+	memset(&static_pool, 0, sizeof(static_pool));
 
 	as_error err;
 	as_error_init(&err);
@@ -211,13 +222,11 @@ PyObject * AerospikeLSet_Get(AerospikeLSet * self, PyObject * args, PyObject * k
 		goto CLEANUP;
 	}
 
-	as_val * val = NULL;
-	pyobject_to_val(&err, py_value, &val);
+	pyobject_to_val(&err, py_value, &val, &static_pool, SERIALIZER_PYTHON);
 	if (err.code != AEROSPIKE_OK) {
 		goto CLEANUP;
 	}
 
-	as_val* return_val_p = NULL;
 	aerospike_lset_get(self->client->as, &err, apply_policy_p, &self->key,
 			&self->lset, val, &return_val_p);
 
@@ -268,6 +277,11 @@ PyObject * AerospikeLSet_Filter(AerospikeLSet * self, PyObject * args, PyObject 
 	PyObject* py_policy = NULL;
 	as_policy_apply apply_policy;
 	as_policy_apply* apply_policy_p = NULL;
+	as_list* arg_list = NULL;
+	as_list* elements_list = NULL;
+
+	as_static_pool static_pool;
+	memset(&static_pool, 0, sizeof(static_pool));
 
 	as_error err;
 	as_error_init(&err);
@@ -301,12 +315,10 @@ PyObject * AerospikeLSet_Filter(AerospikeLSet * self, PyObject * args, PyObject 
 		goto CLEANUP;
 	}
 
-	as_list* arg_list = NULL;
 	if (py_args) {
-		pyobject_to_list(&err, py_args, &arg_list);
+		pyobject_to_list(&err, py_args, &arg_list, &static_pool, SERIALIZER_PYTHON);
 	}
 
-	as_list* elements_list = NULL;
 	aerospike_lset_filter(self->client->as, &err, apply_policy_p, &self->key,
 			&self->lset, filter_name, arg_list, &elements_list);
 
@@ -413,6 +425,10 @@ PyObject * AerospikeLSet_Exists(AerospikeLSet * self, PyObject * args, PyObject 
 	PyObject* py_policy = NULL;
 	as_policy_apply apply_policy;
 	as_policy_apply* apply_policy_p = NULL;
+	as_val * val = NULL;
+
+	as_static_pool static_pool;
+	memset(&static_pool, 0, sizeof(static_pool));
 
 	as_error err;
 	as_error_init(&err);
@@ -436,8 +452,7 @@ PyObject * AerospikeLSet_Exists(AerospikeLSet * self, PyObject * args, PyObject 
 		goto CLEANUP;
 	}
 
-	as_val * val = NULL;
-	pyobject_to_val(&err, py_value, &val);
+	pyobject_to_val(&err, py_value, &val, &static_pool, SERIALIZER_PYTHON);
 	if (err.code != AEROSPIKE_OK) {
 		goto CLEANUP;
 	}
@@ -486,6 +501,10 @@ PyObject * AerospikeLSet_Remove(AerospikeLSet * self, PyObject * args, PyObject 
 	PyObject* py_policy = NULL;
 	as_policy_apply apply_policy;
 	as_policy_apply* apply_policy_p = NULL;
+	as_val * val = NULL;
+
+	as_static_pool static_pool;
+	memset(&static_pool, 0, sizeof(static_pool));
 
 	as_error err;
 	as_error_init(&err);
@@ -509,8 +528,7 @@ PyObject * AerospikeLSet_Remove(AerospikeLSet * self, PyObject * args, PyObject 
 		goto CLEANUP;
 	}
 
-	as_val * val = NULL;
-	pyobject_to_val(&err, py_value, &val);
+	pyobject_to_val(&err, py_value, &val, &static_pool, SERIALIZER_PYTHON);
 	if (err.code != AEROSPIKE_OK) {
 		goto CLEANUP;
 	}

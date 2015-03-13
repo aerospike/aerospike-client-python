@@ -4,7 +4,8 @@
 ## Description
 
 ```
-aerospike.client.remove(key, policy)
+status = aerospike.Client.remove ( key [, meta [, policy ]] )
+
 ```
 
 **aerospike.client.remove()** will remove a particular *record* matching the *key* from the cluster.
@@ -13,12 +14,18 @@ aerospike.client.remove(key, policy)
 
 **key** the tuple (namespace, set, key) representing the key associated with the record
 
+**meta**, the dictionary which will be combined with bins to write a record.
+The dictionary contains the generation value.
+
 **policy** optional remove policies. A dictionary with optional fields
 - **timeout** in milliseconds
 - **key** one of the [aerospike.POLICY_KEY_*](http://www.aerospike.com/apidocs/c/db/d65/group__client__policies.html#gaa9c8a79b2ab9d3812876c3ec5d1d50ec) values
 - **gen** one of the [aerospike.POLICY_GEN_*](http://www.aerospike.com/apidocs/c/db/d65/group__client__policies.html#ga38c1a40903e463e5d0af0141e8c64061) values
 - **retry** one of the [aerospike.POLICY_RETRY_*](http://www.aerospike.com/apidocs/c/db/d65/group__client__policies.html#gaa9730980a8b0eda8ab936a48009a6718) values
 - **commit_level** one of the [aerospike.POLICY_COMMIT_LEVEL_*](http://www.aerospike.com/apidocs/c/db/d65/group__client__policies.html#ga17faf52aeb845998e14ba0f3745e8f23) values
+
+## Return Values
+Returns an integer status. 0(Zero) is success value. In case of error, appropriate exceptions will be raised.
 
 ## Examples
 
@@ -30,7 +37,12 @@ config = { 'hosts': [('127.0.0.1', 3000)] }
 client = aerospike.client(config).connect()
 
 key = ('test', 'demo', 1)
-client.remove(key, {'retry': aerospike.POLICY_RETRY_ONCE})
+meta = {'ttl' : 45}
+
+status = client.remove( key, meta, policy={'retry': aerospike.POLICY_RETRY_ONCE} )
+
+print status
+
 
 ```
 

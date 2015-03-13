@@ -269,7 +269,7 @@ class TestInfoNode(object):
             response = TestInfoNode.client.info_node('bins', host)
 
         assert exception.value[0] == -4L
-        assert exception.value[1] == "Invalid hostname abcderp: No address associated with hostname"
+        assert exception.value[1] == "Invalid hostname abcderp: nodename nor servname provided, or not known"
     
     def test_info_node_positive_with_dns(self):
         """

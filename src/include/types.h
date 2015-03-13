@@ -25,6 +25,7 @@
 #include <aerospike/as_scan.h>
 #include <aerospike/as_bin.h>
 #include <aerospike/as_ldt.h>
+#include "pool.h"
 
 // Bin names can be of type Unicode in Python
 // DB supports 32767 maximum number of bins
@@ -53,6 +54,7 @@ typedef struct {
 	PyObject_HEAD
 	AerospikeClient * client;
 	as_query query;
+	as_static_pool static_pool;
 	UnicodePyObjects u_objs;
 } AerospikeQuery;
 

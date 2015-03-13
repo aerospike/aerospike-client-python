@@ -27,6 +27,18 @@
 #include "key.h"
 #include "policy.h"
 
+/**
+ *******************************************************************************************************
+ * This function projects bins on given namespace nd set.
+ *
+ * @param self                  AerospikeClient object
+ * @param py_key                The key under which to store the record.
+ * @param py_bins               The bins to project into the DB.
+ * @param py_policy             The optional policy parameters
+ *
+ * Returns a tuple containing key, meta and bins.
+ *******************************************************************************************************
+ */
 PyObject * AerospikeClient_Select_Invoke(
 	AerospikeClient * self,
 	PyObject * py_key, PyObject * py_bins, PyObject * py_policy)
@@ -158,6 +170,19 @@ CLEANUP:
 	return py_rec;
 }
 
+/**
+ *******************************************************************************************************
+ * Projects bins on given namespace and set.
+ *
+ * @param self                  AerospikeClient object
+ * @param args                  The args is a tuple object containing an argument
+ *                              list passed from Python to a C function
+ * @param kwds                  Dictionary of keywords
+ *
+ * Returns a tuple containing key, meta and bins.
+ * In case of error,appropriate exceptions will be raised.
+ *******************************************************************************************************
+ */
 PyObject * AerospikeClient_Select(AerospikeClient * self, PyObject * args, PyObject * kwds)
 {
 	// Python Function Arguments

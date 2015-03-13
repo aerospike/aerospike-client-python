@@ -4,7 +4,7 @@
 ## Description
 
 ```
-aerospike.client.prepend(key, bin, val[, meta[, policy]])
+aerospike.client.prepend ( key, bin, val [, meta [, policy ]] )
 
 ```
 
@@ -37,12 +37,16 @@ in a *bin*.
 # -*- coding: utf-8 -*-
 import aerospike
 
+
 config = { 'hosts': [('127.0.0.1', 3000)] }
 client = aerospike.client(config).connect()
 
 try:
   key = ('test', 'demo', 1)
-  client.prepend(key, 'name', 'Dr. ', policy={'timeout': 1200})
+  meta = {
+	  'ttl' : 88
+  }
+  client.prepend(key, 'name', 'Dr. ', meta, policy={'timeout': 1200})
 except Exception as e:
   print("error: {0}".format(e), file=sys.stderr)
   sys.exit(1)

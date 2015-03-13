@@ -27,9 +27,20 @@
 #include "key.h"
 #include "policy.h"
 
-PyObject * AerospikeClient_Exists_Invoke(
-	AerospikeClient * self,
-	PyObject * py_key, PyObject * py_policy)
+/**
+ *******************************************************************************************************
+ * This function applies a registered udf module on a particular record.
+ *
+ * @param self                  AerospikeClient object
+ * @param py_key                The key under which the record is stored.
+ * @param py_policy             The dictionary of policies
+ *
+ * Returns a tuple of record having key and meta sequentially.
+ *******************************************************************************************************
+ */
+extern PyObject * AerospikeClient_Exists_Invoke(
+		AerospikeClient * self,
+		PyObject * py_key, PyObject * py_policy)
 {
 	// Python Return Value
 	PyObject * py_result = NULL;
@@ -115,6 +126,19 @@ CLEANUP:
 	return py_result;
 }
 
+/**
+ *******************************************************************************************************
+ * Checks if a record exists in the Aerospike DB.
+ *
+ * @param self                  AerospikeClient object
+ * @param args                  The args is a tuple object containing an argument
+ *                              list passed from Python to a C function
+ * @param kwds                  Dictionary of keywords
+ *
+ * Returns a tuple of record having key and meta sequentially.
+ * In case of error,appropriate exceptions will be raised.
+ *******************************************************************************************************
+ */
 PyObject * AerospikeClient_Exists(AerospikeClient * self, PyObject * args, PyObject * kwds)
 {
 	// Python Function Arguments
