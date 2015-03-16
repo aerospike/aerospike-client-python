@@ -27,9 +27,22 @@
 #include "key.h"
 #include "policy.h"
 
+/**
+ *******************************************************************************************************
+ * This function read a record with a given key, and return the record.
+ *
+ * @param self                  AerospikeClient object
+ * @param py_key                The key under which to store the record.
+ * @param py_policy             The dictionary of policies to be given while
+ *                              reading a record.
+ *
+ * Returns the record on success.
+ * In case of error,appropriate exceptions will be raised.
+ *******************************************************************************************************
+ */
 PyObject * AerospikeClient_Get_Invoke(
-	AerospikeClient * self,
-	PyObject * py_key, PyObject * py_policy)
+		AerospikeClient * self,
+		PyObject * py_key, PyObject * py_policy)
 {
 	// Python Return Value
 	PyObject * py_rec = NULL;
@@ -128,6 +141,19 @@ CLEANUP:
 	return py_rec;
 }
 
+/**
+ *******************************************************************************************************
+ * Gets a record from the Aerospike DB.
+ *
+ * @param self                  AerospikeClient object
+ * @param args                  The args is a tuple object containing an argument
+ *                              list passed from Python to a C function
+ * @param kwds                  Dictionary of keywords
+ *
+ * Returns a tuple of record having key, meata and bins sequentially.
+ * In case of error,appropriate exceptions will be raised.
+ *******************************************************************************************************
+ */
 PyObject * AerospikeClient_Get(AerospikeClient * self, PyObject * args, PyObject * kwds)
 {
 	// Python Function Arguments

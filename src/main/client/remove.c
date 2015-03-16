@@ -27,9 +27,22 @@
 #include "key.h"
 #include "policy.h"
 
+/**
+ *******************************************************************************************************
+ * This function invokes csdk's API to remove particular record.
+ *
+ * @param self                  AerospikeClient object
+ * @param py_key                The key under which to store the record
+ * @param generation            The generation value
+ * @param py_policy             The optional policy parameters
+ *
+ * Returns 0 on success.
+ * In case of error,appropriate exceptions will be raised.
+ *******************************************************************************************************
+ */
 PyObject * AerospikeClient_Remove_Invoke(
-	AerospikeClient * self,
-	PyObject * py_key, long generation, PyObject * py_policy)
+		AerospikeClient * self,
+		PyObject * py_key, PyObject * py_meta, PyObject * py_policy)
 {
 
 	// Aerospike Client Arguments
@@ -58,12 +71,24 @@ PyObject * AerospikeClient_Remove_Invoke(
 	key_initialised = true;
 
 	// Convert python policy object to as_policy_exists
-	if(py_policy) {
+	if (py_policy) {
 		pyobject_to_policy_remove(&err, py_policy, &remove_policy, &remove_policy_p);
 		if ( err.code != AEROSPIKE_OK ) {
 			goto CLEANUP;
 		} else {
-			remove_policy_p->generation = generation;
+			if ( py_meta && PyDict_Check(py_meta) ) {
+				PyObject * py_gen = PyDict_GetItemString(py_meta, "gen");
+
+				if( py_gen != NULL ){
+					if ( PyInt_Check(py_gen) ) {
+						remove_policy_p->generation = (uint32_t) PyInt_AsLong(py_gen);
+					} else if ( PyLong_Check(py_gen) ) {
+						remove_policy_p->generation = (uint32_t) PyLong_AsLongLong(py_gen);
+					} else {
+						as_error_update(&err, AEROSPIKE_ERR_PARAM, "Generation should be an int or long");
+					}
+				}
+			}
 		}
 	}
 
@@ -88,22 +113,35 @@ CLEANUP:
 	return PyLong_FromLong(0);
 }
 
+/**
+ *******************************************************************************************************
+ * Removes a particular record matching with the given key.
+ *
+ * @param self                  AerospikeClient object
+ * @param args                  The args is a tuple object containing an argument
+ *                              list passed from Python to a C function
+ * @param kwds                  Dictionary of keywords
+ *
+ * Returns an integer status. 0(Zero) is success value.
+ * In case of error,appropriate exceptions will be raised.
+ *******************************************************************************************************
+ */
 PyObject * AerospikeClient_Remove(AerospikeClient * self, PyObject * args, PyObject * kwds)
 {
 	// Python Function Arguments
 	PyObject * py_key = NULL;
 	PyObject * py_policy = NULL;
-	long generation = 0;
+	PyObject * py_meta = NULL;
 
 	// Python Function Keyword Arguments
-	static char * kwlist[] = {"key", "policy", "generation", NULL};
+	static char * kwlist[] = {"key", "meta", "policy", NULL};
 
 	// Python Function Argument Parsing
-	if ( PyArg_ParseTupleAndKeywords(args, kwds, "O|lO:remove", kwlist,
-			&py_key, &generation, &py_policy) == false ) {
+	if ( PyArg_ParseTupleAndKeywords(args, kwds, "O|OO:remove", kwlist,
+			&py_key, &py_meta, &py_policy) == false ) {
 		return NULL;
 	}
 
 	// Invoke Operation
-	return AerospikeClient_Remove_Invoke(self, py_key, generation, py_policy);
+	return AerospikeClient_Remove_Invoke(self, py_key, py_meta, py_policy);
 }

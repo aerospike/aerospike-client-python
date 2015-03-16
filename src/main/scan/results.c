@@ -24,6 +24,7 @@
 
 #include "client.h"
 #include "conversions.h"
+#include "policy.h"
 #include "scan.h"
 
 #undef TRACE
@@ -35,7 +36,8 @@ static bool each_result(const as_val * val, void * udata)
 		return false;
 	}
 
-	PyObject * py_results = (PyObject *) udata;
+	PyObject * py_results = NULL;
+	py_results = (PyObject *) udata;
 	PyObject * py_result = NULL;
 
 	as_error err;
@@ -58,24 +60,40 @@ static bool each_result(const as_val * val, void * udata)
 PyObject * AerospikeScan_Results(AerospikeScan * self, PyObject * args, PyObject * kwds)
 {
 	PyObject * py_policy = NULL;
+	as_policy_scan scan_policy;
+	as_policy_scan * scan_policy_p = NULL;
 
 	static char * kwlist[] = {"policy", NULL};
 
-	if ( PyArg_ParseTupleAndKeywords(args, kwds, "|O:foreach", kwlist, &py_policy) == false ) {
+	if ( PyArg_ParseTupleAndKeywords(args, kwds, "|O:results", kwlist, &py_policy) == false ) {
 		return NULL;
 	}
 
 	as_error err;
 	as_error_init(&err);
 
-	PyObject * py_results = PyList_New(0);
+	if (!self || !self->client->as) {
+		as_error_update(&err, AEROSPIKE_ERR_PARAM, "Invalid aerospike object");
+		goto CLEANUP;
+	}
+
+	// Convert python policy object to as_policy_scan
+	pyobject_to_policy_scan(&err, py_policy, &scan_policy, &scan_policy_p);
+	if ( err.code != AEROSPIKE_OK ) {
+		goto CLEANUP;
+	}
+
+	PyObject * py_results = NULL;
+	py_results = PyList_New(0);
 
 	PyThreadState * _save = PyEval_SaveThread();
 
-	aerospike_scan_foreach(self->client->as, &err, NULL, &self->scan, each_result, py_results);
+	aerospike_scan_foreach(self->client->as, &err, scan_policy_p, &self->scan, each_result, py_results);
 
 	PyEval_RestoreThread(_save);
 
+
+CLEANUP:
 	as_scan_destroy(&self->scan);
 
 	if ( err.code != AEROSPIKE_OK ) {

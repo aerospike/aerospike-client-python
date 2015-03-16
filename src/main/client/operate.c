@@ -104,32 +104,30 @@ int check_type(PyObject * py_value, int op)
 
 /**
  *******************************************************************************************************
- * This function will set the metadata fields inside operation.
- * Like genertion value, ttl.
+ * This function checks for metadata and if present set it into the
+ * as_operations.
  *
- * @param py_meta              The value to perform operations.
- * @param op                   The operation to perform.
- * @param err                  The as_error to be populated by the function
- *                             with the encountered error if any.
+ * @param py_meta               The dictionary of metadata.
+ * @param ops                   The as_operations object.
+ * @param err                   The as_error to be populated by the function
+ *                              with the encountered error if any.
  *
  * Returns nothing.
  *******************************************************************************************************
  */
 static
-void AerospikeClient_CheckForMeta(PyObject * py_meta, as_operations * ops, as_error *err) {
+void AerospikeClient_CheckForMeta(PyObject * py_meta, as_operations * ops, as_error *err)
+{
 	if ( py_meta && PyDict_Check(py_meta) ) {
 		PyObject * py_gen = PyDict_GetItemString(py_meta, "gen");
 		PyObject * py_ttl = PyDict_GetItemString(py_meta, "ttl");
 
-		if( py_ttl != NULL ){
+		if ( py_ttl != NULL ){
 			if ( PyInt_Check(py_ttl) ) {
 				ops->ttl = (uint32_t) PyInt_AsLong(py_ttl);
-			}
-			else if ( PyLong_Check(py_ttl) ) {
+			} else if ( PyLong_Check(py_ttl) ) {
 				ops->ttl = (uint32_t) PyLong_AsLongLong(py_ttl);
-			}
-			else
-			{
+			} else {
 				as_error_update(err, AEROSPIKE_ERR_PARAM, "Ttl should be an int or long");
 			}
 		}
@@ -137,15 +135,14 @@ void AerospikeClient_CheckForMeta(PyObject * py_meta, as_operations * ops, as_er
 		if( py_gen != NULL ){
 			if ( PyInt_Check(py_gen) ) {
 				ops->gen = (uint16_t) PyInt_AsLong(py_gen);
-			}
-			else if ( PyLong_Check(py_gen) ) {
+			} else if ( PyLong_Check(py_gen) ) {
 				ops->gen = (uint16_t) PyLong_AsLongLong(py_gen);
-			}
-			else
-			{
+			} else {
 				as_error_update(err, AEROSPIKE_ERR_PARAM, "Generation should be an int or long");
 			}
 		}
+	} else {
+		as_error_update(err, AEROSPIKE_ERR_PARAM, "Metadata should be of type dictionary");
 	}
 }
 
@@ -174,7 +171,6 @@ PyObject *  AerospikeClient_Operate_Invoke(
 	char* bin = NULL;
 	char* val = NULL;
 	long offset;
-	long initial_value;
 	long ttl;
 	long operation;
 	int i;
@@ -183,6 +179,9 @@ PyObject *  AerospikeClient_Operate_Invoke(
 	PyObject * py_ustr1 = NULL;
 	PyObject * py_bin = NULL;
 	as_record * rec = NULL;
+
+	as_static_pool static_pool;
+	memset(&static_pool, 0, sizeof(static_pool));
 
 	as_operations ops;
 	Py_ssize_t size = PyList_Size(py_list);
@@ -283,7 +282,8 @@ PyObject *  AerospikeClient_Operate_Invoke(
 					as_operations_add_read(&ops, bin);
 					break;
 				case AS_OPERATOR_WRITE:
-					pyobject_to_astype_write(err, bin, py_value, &put_val, &ops);
+					pyobject_to_astype_write(err, bin, py_value, &put_val, &ops,
+							&static_pool, SERIALIZER_PYTHON);
 					if (err->code != AEROSPIKE_OK) {
 						goto CLEANUP;
 					}
@@ -770,4 +770,5 @@ CLEANUP:
 		Py_DECREF(py_err);
 		return NULL;
 	}
+	return PyLong_FromLong(-1);
 }

@@ -64,8 +64,14 @@ class TestChangePassword(object):
         with pytest.raises(Exception) as exception:
             self.clientreaduserwrong = aerospike.client(config).connect( user, "aerospike" )
 
-        assert exception.value[0] == 62
-        assert exception.value[1] == "Failed to connect to cluster: AEROSPIKE_INVALID_PASSWORD"
+        status = [-1L, 62]
+        for val in status:
+            if exception.value[0] != val:
+                continue
+            else:
+                break
+
+        assert exception.value[0] == val
 
         self.clientreaduserright = aerospike.client(config).connect( user, "newpassword" )
 
@@ -107,8 +113,14 @@ class TestChangePassword(object):
         with pytest.raises(Exception) as exception:
             self.clientreaduserwrong = aerospike.client(config).connect( user, "aerospike" )
 
-        assert exception.value[0] == 62
-        assert exception.value[1] == "Failed to connect to cluster: AEROSPIKE_INVALID_PASSWORD"
+        status = [-1L, 62]
+        for val in status:
+            if exception.value[0] != val:
+                continue
+            else:
+                break
+
+        assert exception.value[0] == val
 
         self.clientreaduserright = aerospike.client(config).connect( user, "newpassword" )
 
@@ -174,8 +186,14 @@ class TestChangePassword(object):
         with pytest.raises(Exception) as exception:
             self.clientreaduserwrong = aerospike.client(config).connect( user, "aerospike" )
 
-        assert exception.value[0] == 62
-        assert exception.value[1] == "Failed to connect to cluster: AEROSPIKE_INVALID_PASSWORD"
+        status = [-1L, 62]
+        for val in status:
+            if exception.value[0] != val:
+                continue
+            else:
+                break
+
+        assert exception.value[0] == val
 
         self.clientreaduserright = aerospike.client(config).connect( user, password )
 

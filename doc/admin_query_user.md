@@ -16,7 +16,7 @@ user_details = aerospike.Client.admin_query_user ( policies, username )
 
 **policies**, the dictionary of policies to be given while querying a user in the database.   
 
-**username**, the username of the user to be queried in the aerospike database.
+**username**, the username of the user to be queried in the Aerospike database.
 
 ## Return Values
 Returns a list containing the details of the particular user.

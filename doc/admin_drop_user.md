@@ -18,7 +18,7 @@ of dropping the user from the database.
 
 **policies**, the dictionary of policies to be given while dropping a user from the database.   
 
-**username**, the username of the user to be dropped from the aerospike database.
+**username**, the username of the user to be dropped from the Aerospike database.
 
 ## Return Values
 Returns an integer status code

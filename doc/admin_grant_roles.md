@@ -16,7 +16,8 @@ status = aerospike.Client.admin_grant_roles ( policies, username, roles, roles_s
 
 **policies**, the dictionary of policies to be given while granting roles to a user in the database.   
 
-**username**, the username of the user to whom the roles have to be granted in the aerospike database.
+**username**, the username of the user to whom the roles have to be granted in
+the Aerospike database.
 
 **roles**, a list specifying the roles to be assigned to the user.
 

@@ -10,7 +10,8 @@ user_details = aerospike.Client.admin_query_users ( policies )
 
 ```
 
-**aerospike.Client.admin_query_users()** will query all users in the aerospike database and return the *user_details* of all the users.   
+**aerospike.Client.admin_query_users()** will query all users in the Aerospike
+database and return the *user_details* of all the users.
 
 ## Parameters
 

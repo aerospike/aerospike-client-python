@@ -21,10 +21,12 @@
 #include <aerospike/aerospike_query.h>
 #include <aerospike/as_error.h>
 #include <aerospike/as_query.h>
+#include <aerospike/as_arraylist.h>
 
 #include "client.h"
 #include "conversions.h"
 #include "query.h"
+#include "policy.h"
 
 #undef TRACE
 #define TRACE()
@@ -35,7 +37,8 @@ static bool each_result(const as_val * val, void * udata)
 		return false;
 	}
 
-	PyObject * py_results = (PyObject *) udata;
+	PyObject * py_results = NULL;
+	py_results = (PyObject *) udata;
 	PyObject * py_result = NULL;
 
 	as_error err;
@@ -74,25 +77,41 @@ PyObject * AerospikeQuery_Results(AerospikeQuery * self, PyObject * args, PyObje
 
 	static char * kwlist[] = {"policy", NULL};
 
-	if ( PyArg_ParseTupleAndKeywords(args, kwds, "|O:foreach", kwlist, &py_policy) == false ) {
+	if ( PyArg_ParseTupleAndKeywords(args, kwds, "|O:results", kwlist, &py_policy) == false ) {
 		return NULL;
 	}
 
 	as_error err;
 	as_error_init(&err);
 
+	as_policy_query query_policy;
+	as_policy_query * query_policy_p = NULL;
+
+	if (!self || !self->client->as) {
+		as_error_update(&err, AEROSPIKE_ERR_PARAM, "Invalid aerospike object");
+		goto CLEANUP;
+	}
+
+	// Convert python policy object to as_policy_query
+	pyobject_to_policy_query(&err, py_policy, &query_policy, &query_policy_p);
+	if ( err.code != AEROSPIKE_OK ) {
+		goto CLEANUP;
+	}
+
 	TRACE();
-	PyObject * py_results = PyList_New(0);
+	PyObject * py_results = NULL;
+	py_results = PyList_New(0);
 
 	TRACE();
 	PyThreadState * _save = PyEval_SaveThread();
 
 	TRACE();
-    aerospike_query_foreach(self->client->as, &err, NULL, &self->query, each_result, py_results);
+    aerospike_query_foreach(self->client->as, &err, query_policy_p, &self->query, each_result, py_results);
 
 	TRACE();
 	PyEval_RestoreThread(_save);
 
+CLEANUP:/*??trace()*/
 	TRACE();
 	if ( err.code != AEROSPIKE_OK ) {
 		PyObject * py_err = NULL;
@@ -105,7 +124,7 @@ PyObject * AerospikeQuery_Results(AerospikeQuery * self, PyObject * args, PyObje
 	TRACE();
 
 	if ( self->query.apply.arglist ){
-		as_arraylist_destroy( self->query.apply.arglist );
+		as_arraylist_destroy( (as_arraylist *) self->query.apply.arglist );
 	}
 	self->query.apply.arglist = NULL;
 

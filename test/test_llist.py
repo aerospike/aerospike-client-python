@@ -36,6 +36,11 @@ class TestLList(object):
         TestLList.llist_string = TestLList.client.llist(TestLList.key2,
                 'string_bin')
 
+        TestLList.key3 = ('test', 'demo', 'float_llist_ky')
+
+        TestLList.llist_float = TestLList.client.llist(TestLList.key3,
+                'float_bin')
+
 
     def teardown_class(cls):
         print "teardown class invoked..."
@@ -74,10 +79,10 @@ class TestLList(object):
                 }
 
         with pytest.raises(Exception) as exception: 
-            TestLList.llist_integer.add(rec)
+            TestLList.llist_float.add(rec)
 
-        assert exception.value[0] == -1
-        assert exception.value[1] == "value is not a supported type."
+        assert exception.value[0] == 100
+        assert exception.value[1] == "/opt/aerospike/sys/udf/lua/ldt/lib_llist.lua:1347: 1433:LDT-Key (Unique) Function Not Found"
 
     #Add() - Add() without any mandatory parameters. 
     def test_llist_no_parameter_negative(self):
@@ -130,7 +135,14 @@ class TestLList(object):
         with pytest.raises(Exception) as exception: 
             TestLList.llist_string.get('remove')
 
-        assert exception.value[0] == 125L
+        status = [100L, 125L]
+        for val in status:
+            if exception.value[0] != val:
+                continue
+            else:
+                break
+
+        assert exception.value[0] == val
 
     #Remove() - Remove non-existent object from the llist.
     def test_llist_remove_element_negative(self):
@@ -142,7 +154,14 @@ class TestLList(object):
         with pytest.raises(Exception) as exception:
             TestLList.llist_string.remove('kk')
 
-        assert exception.value[0] == 125L
+        status = [100L, 125L]
+        for val in status:
+            if exception.value[0] != val:
+                continue
+            else:
+                break
+
+        assert exception.value[0] == val
 
     #Destroy() - Delete the entire LList(LDT Remove).
     def test_llist_destroy_positive(self):

@@ -33,15 +33,17 @@ PyObject * AerospikeKey_Put(AerospikeKey * key, PyObject * args, PyObject * kwds
 	PyObject * py_bins = NULL;
 	PyObject * py_meta = NULL;
 	PyObject * py_policy = NULL;
-	
+	int serializer_option;
 	// Python Function Keyword Arguments
-	static char * kwlist[] = {"bins", "meta", "policy", NULL};
+	static char * kwlist[] = {"bins", "meta", "policy", "serializer_option", NULL};
 
 	// Python Function Argument Parsing
-	if ( PyArg_ParseTupleAndKeywords(args, kwds, "O|OO:get", kwlist, &py_bins, &py_meta, &py_policy) == false ) {
+	if ( PyArg_ParseTupleAndKeywords(args, kwds, "O|OOl:put", kwlist, &py_bins,
+&py_meta, &py_policy, &serializer_option) == false ) {
 		return NULL;
 	}
 	
 	// Invoke Operation
-	return AerospikeClient_Put_Invoke(key->client, py_key, py_bins, py_meta, py_policy);
+	return AerospikeClient_Put_Invoke(key->client, py_key, py_bins, py_meta,
+py_policy, serializer_option);
 }

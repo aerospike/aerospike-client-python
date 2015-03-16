@@ -20,6 +20,19 @@
 #include "client.h"
 #include "query.h"
 
+/**
+ *******************************************************************************************************
+ * This function allocates memory to self.
+ *
+ * @param self                  AerospikeClient object
+ * @param args                  The args is a tuple object containing an argument
+ *                              list passed from Python to a C function
+ * @param kwds                  Dictionary of keywords
+ *
+ * Returns self on success.
+ * In case of error,appropriate exceptions will be raised.
+ *******************************************************************************************************
+ */
 AerospikeQuery * AerospikeClient_Query(AerospikeClient * self, PyObject * args, PyObject * kwds)
 {
 	return AerospikeQuery_New(self, args, kwds);

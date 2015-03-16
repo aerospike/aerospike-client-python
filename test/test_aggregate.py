@@ -349,11 +349,11 @@ class TestAggregate(object):
 
     def test_aggregate_with_arguments_to_lua_function(self):
         """
-            Invoke apply() with parameter's list for lua function.
+            Invoke aggregate() with unicode arguments to lua function.
         """
         query = self.client.query('test', 'demo')
         query.where(p.between('test_age', 0, 5))
-        query.apply('stream_example', 'group_count', ["name", "addr"])
+        query.apply('stream_example', 'group_count', [u"name", u"addr"])
 
         rec = []
         def callback(value):
@@ -364,7 +364,7 @@ class TestAggregate(object):
 
     def test_aggregate_with_unicode_module_and_function_name(self):
         """
-            Invoke apply() with unicode module and function names
+            Invoke aggregate() with unicode module and function names
         """
         query = self.client.query('test', 'demo')
         query.select(u'name', 'test_age')

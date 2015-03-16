@@ -29,6 +29,18 @@
 #include "key.h"
 #include "policy.h"
 
+/**
+ *******************************************************************************************************
+ * This callback will be called with the results with aerospike_batch_exists().
+ *
+ * @param results               An array of n as_batch_read entries
+ * @param n                     The number of results from the batch request
+ * @param udata                 The return value to be filled with result of
+ *                              exists_many()
+ *
+ * Returns boolean value(true or false).
+ *******************************************************************************************************
+ */
 static
 bool batch_exists_cb(const as_batch_read* results, uint32_t n, void* udata)
 {
@@ -80,6 +92,17 @@ bool batch_exists_cb(const as_batch_read* results, uint32_t n, void* udata)
 	return true;
 }
 
+/**
+ *******************************************************************************************************
+ * This function checks if a batch of records are present in DB or not.
+ *
+ * @param self                  AerospikeClient object
+ * @param py_keys               The list of keys
+ * @param py_policy             The dictionary of policies
+ *
+ * Returns the metadata of a record if key exists otherwise NULL.
+ *******************************************************************************************************
+ */
 static
 PyObject * AerospikeClient_Exists_Many_Invoke(
 	AerospikeClient * self,
@@ -183,6 +206,20 @@ CLEANUP:
 	return py_recs;
 }
 
+/**
+ *******************************************************************************************************
+ * Read the meta-data of records from the database in batch.
+ *
+ * @param self                  AerospikeClient object
+ * @param args                  The args is a tuple object containing an argument
+ *                              list passed from Python to a C function
+ * @param kwds                  Dictionary of keywords
+ *
+ * Returns a dictionary of record with key to be primary key and value
+ * to be meatadata of a record.
+ * In case of error,appropriate exceptions will be raised.
+ *******************************************************************************************************
+ */
 PyObject * AerospikeClient_Exists_Many(AerospikeClient * self, PyObject * args, PyObject * kwds)
 {
 	// Python Function Arguments
@@ -193,7 +230,7 @@ PyObject * AerospikeClient_Exists_Many(AerospikeClient * self, PyObject * args, 
 	static char * kwlist[] = {"keys", "policy", NULL};
 
 	// Python Function Argument Parsing
-	if ( PyArg_ParseTupleAndKeywords(args, kwds, "O|O:get", kwlist,
+	if ( PyArg_ParseTupleAndKeywords(args, kwds, "O|O:exists_many", kwlist,
 			&py_keys, &py_policy) == false ) {
 		return NULL;
 	}

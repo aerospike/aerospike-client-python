@@ -22,6 +22,19 @@
 #include "client.h"
 #include "conversions.h"
 
+/**
+ *******************************************************************************************************
+ * Closes already opened connection to the database.
+ *
+ * @param self                  AerospikeClient object
+ * @param args                  The args is a tuple object containing an argument
+ *                              list passed from Python to a C function
+ * @param kwds                  Dictionary of keywords
+ *
+ * Returns None.
+ * In case of error,appropriate exceptions will be raised.
+ *******************************************************************************************************
+ */
 PyObject * AerospikeClient_Close(AerospikeClient * self, PyObject * args, PyObject * kwds)
 {
 	as_error err;

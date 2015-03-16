@@ -18,9 +18,11 @@
 #include <stdbool.h>
 
 #include <aerospike/as_query.h>
+#include <aerospike/as_error.h>
 
 #include "client.h"
 #include "query.h"
+#include "conversions.h"
 
 #undef TRACE
 #define TRACE()

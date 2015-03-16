@@ -10,15 +10,17 @@ status = aerospike.Client.admin_set_password ( policies, username, password )
 
 ```
 
-**aerospike.Client.admin_set_password()** will set the *password* of a particular *user* in the aerospike database and return the *status* of the result.
+**aerospike.Client.admin_set_password()** will set the *password* of a
+particular *user* in the Aerospike database and return the *status* of the result.
 
 ## Parameters
 
 **policies**, the dictionary of policies to be given while setting the password of a user in the database.   
 
-**username**, the username of the user for whom the password is to be set in the aerospike database.
+**username**, the username of the user for whom the password is to be set in the
+Aerospike database.
 
-**password**, the password of the user to be set in the aerospike database.
+**password**, the password of the user to be set in the Aerospike database.
 
 ## Return Values
 Returns an integer status code
