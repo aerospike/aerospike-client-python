@@ -93,7 +93,8 @@ PyObject * AerospikeClient_Apply_Invoke(
 	}
 
 	// Convert python policy object to as_policy_apply
-	pyobject_to_policy_apply(&err, py_policy, &apply_policy, &apply_policy_p);
+	pyobject_to_policy_apply(&err, py_policy, &apply_policy, &apply_policy_p,
+			&self->as->config.policies.apply);
 	if ( err.code != AEROSPIKE_OK ) {
 		goto CLEANUP;
 	}

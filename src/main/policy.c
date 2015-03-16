@@ -206,11 +206,15 @@ exit:
  */
 as_status pyobject_to_policy_admin(as_error * err, PyObject * py_policy,
 		as_policy_admin * policy,
-		as_policy_admin ** policy_p)
+		as_policy_admin ** policy_p,
+		as_policy_admin * config_admin_policy)
 {
 
 	// Initialize Policy
 	POLICY_INIT(as_policy_admin);
+	
+	//Initialize policy with global defaults
+	as_policy_admin_copy(config_admin_policy, policy);
 
 	// Set policy fields
 	POLICY_SET_FIELD(timeout, uint32_t);
@@ -229,10 +233,14 @@ as_status pyobject_to_policy_admin(as_error * err, PyObject * py_policy,
  */
 as_status pyobject_to_policy_apply(as_error * err, PyObject * py_policy,
 		as_policy_apply * policy,
-		as_policy_apply ** policy_p)
+		as_policy_apply ** policy_p,
+		as_policy_apply * config_apply_policy)
 {
 	// Initialize Policy
 	POLICY_INIT(as_policy_apply);
+	
+	//Initialize policy with global defaults
+	as_policy_apply_copy(config_apply_policy, policy);
 
 	// Set policy fields
 	POLICY_SET_FIELD(timeout, uint32_t);
@@ -252,10 +260,14 @@ as_status pyobject_to_policy_apply(as_error * err, PyObject * py_policy,
  */
 as_status pyobject_to_policy_info(as_error * err, PyObject * py_policy,
 		as_policy_info * policy,
-		as_policy_info ** policy_p)
+		as_policy_info ** policy_p,
+		as_policy_info * config_info_policy)
 {
 	// Initialize Policy
 	POLICY_INIT(as_policy_info);
+
+	//Initialize policy with global defaults
+	as_policy_info_copy(config_info_policy, policy);
 
 	// Set policy fields
 	POLICY_SET_FIELD(timeout, uint32_t);
@@ -276,10 +288,14 @@ as_status pyobject_to_policy_info(as_error * err, PyObject * py_policy,
  */
 as_status pyobject_to_policy_query(as_error * err, PyObject * py_policy,
 		as_policy_query * policy,
-		as_policy_query ** policy_p)
+		as_policy_query ** policy_p,
+		as_policy_query * config_query_policy)
 {
 	// Initialize Policy
 	POLICY_INIT(as_policy_query);
+
+	//Initialize policy with global defaults
+	as_policy_query_copy(config_query_policy, policy);
 
 	// Set policy fields
 	POLICY_SET_FIELD(timeout, uint32_t);
@@ -298,10 +314,14 @@ as_status pyobject_to_policy_query(as_error * err, PyObject * py_policy,
  */
 as_status pyobject_to_policy_read(as_error * err, PyObject * py_policy,
 		as_policy_read * policy,
-		as_policy_read ** policy_p)
+		as_policy_read ** policy_p,
+		as_policy_read * config_read_policy)
 {
 	// Initialize Policy
 	POLICY_INIT(as_policy_read);
+	
+	//Initialize policy with global defaults
+	as_policy_read_copy(config_read_policy, policy);
 
 	// Set policy fields
 	POLICY_SET_FIELD(timeout, uint32_t);
@@ -323,10 +343,14 @@ as_status pyobject_to_policy_read(as_error * err, PyObject * py_policy,
  */
 as_status pyobject_to_policy_remove(as_error * err, PyObject * py_policy,
 		as_policy_remove * policy,
-		as_policy_remove ** policy_p)
+		as_policy_remove ** policy_p,
+		as_policy_remove * config_remove_policy)
 {
 	// Initialize Policy
 	POLICY_INIT(as_policy_remove);
+	
+	//Initialize policy with global defaults
+	as_policy_remove_copy(config_remove_policy, policy);
 
 	// Set policy fields
 	POLICY_SET_FIELD(timeout, uint32_t);
@@ -350,10 +374,14 @@ as_status pyobject_to_policy_remove(as_error * err, PyObject * py_policy,
  */
 as_status pyobject_to_policy_scan(as_error * err, PyObject * py_policy,
 		as_policy_scan * policy,
-		as_policy_scan ** policy_p)
+		as_policy_scan ** policy_p,
+		as_policy_scan * config_scan_policy)
 {
 	// Initialize Policy
 	POLICY_INIT(as_policy_scan);
+
+	//Initialize policy with global defaults
+	as_policy_scan_copy(config_scan_policy, policy);
 
 	// Set policy fields
 	POLICY_SET_FIELD(timeout, uint32_t);
@@ -373,10 +401,14 @@ as_status pyobject_to_policy_scan(as_error * err, PyObject * py_policy,
  */
 as_status pyobject_to_policy_write(as_error * err, PyObject * py_policy,
 		as_policy_write * policy,
-		as_policy_write ** policy_p)
+		as_policy_write ** policy_p,
+		as_policy_write * config_write_policy)
 {
 	// Initialize Policy
 	POLICY_INIT(as_policy_write);
+
+	//Initialize policy with global defaults
+	as_policy_write_copy(config_write_policy, policy);
 
 	// Set policy fields
 	POLICY_SET_FIELD(timeout, uint32_t);
@@ -400,10 +432,14 @@ as_status pyobject_to_policy_write(as_error * err, PyObject * py_policy,
  */
 as_status pyobject_to_policy_operate(as_error * err, PyObject * py_policy,
 		as_policy_operate * policy,
-		as_policy_operate ** policy_p)
+		as_policy_operate ** policy_p,
+		as_policy_operate * config_operate_policy)
 {
 	// Initialize Policy
 	POLICY_INIT(as_policy_operate);
+	
+	//Initialize policy with global defaults
+	as_policy_operate_copy(config_operate_policy, policy);
 
 	// Set policy fields
 	POLICY_SET_FIELD(timeout, uint32_t);
@@ -428,10 +464,14 @@ as_status pyobject_to_policy_operate(as_error * err, PyObject * py_policy,
  */
 as_status pyobject_to_policy_batch(as_error * err, PyObject * py_policy,
 		as_policy_batch * policy,
-		as_policy_batch ** policy_p)
+		as_policy_batch ** policy_p,
+		as_policy_batch * config_batch_policy)
 {
 	// Initialize Policy
 	POLICY_INIT(as_policy_batch);
+
+	//Initialize policy with global defaults
+	as_policy_batch_copy(config_batch_policy, policy);
 
 	// Set policy fields
 	POLICY_SET_FIELD(timeout, uint32_t);
