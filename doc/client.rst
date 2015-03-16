@@ -44,7 +44,7 @@ Client Class --- :class:`Client`
             print("error: {0}".format(e), file=sys.stderr)
 
         # Read a record
-        (key, metadata, record) = client.get(key)
+        (key, meta, record) = client.get(key)
 
         # Close the connection to the Aerospike cluster
         client.close()
@@ -62,7 +62,6 @@ Client Class --- :class:`Client`
     .. method:: close()
 
         Close all connections to the cluster.
-
 
     .. method:: get(key[, policy]) -> (key, meta, bins)
 
@@ -92,6 +91,76 @@ Client Class --- :class:`Client`
                 print(meta)
                 print('--------------------------')
                 print(bins)
+                client.close()
+            except Exception as e:
+                print("error: {0}".format(e), file=sys.stderr)
+                sys.exit(1)
+
+
+    .. method:: select(key[, policy]) -> (key, meta, bins)
+
+        Read a record with a given *key*, and return the record as a \
+        :class:`tuple` consisting of *key*, *meta* and *bins*, with the \
+        specified bins preojected. If the record does not exist the *meta* \
+        data will be ``None``. If a selected bin does not exist its value will \
+        be ``None``.
+
+        :param tuple key: a :ref:`aerospike_key_tuple` associated with the record.
+        :param list bins: a list of bin names to select from the record.
+        :param dict policy: optional read policies :ref:`aerospike_read_policies`.
+        :return: a :ref:`aerospike_record_tuple`.
+
+        .. code-block:: python
+
+            from __future__ import print_function
+            import aerospike
+
+            config = { 'hosts': [('127.0.0.1', 3000)] }
+            client = aerospike.client(config).connect()
+
+            try:
+                # assuming a record with such a key exists in the cluster
+                key = ('test', 'demo', 1)
+                (key, meta, bins) = client.select(key, ['name'])
+
+                print(key)
+                print('--------------------------')
+                print(meta)
+                print('--------------------------')
+                print(bins)
+                client.close()
+            except Exception as e:
+                print("error: {0}".format(e), file=sys.stderr)
+                sys.exit(1)
+
+
+    .. method:: exists(key[, policy]) -> (key, meta)
+
+        Check if a record with a given *key* exists in the cluster and return \
+        the record as a :class:`tuple` consisting of *key* and *meta*.  If \
+        the record  does not exist the *meta* data will be ``None``.
+
+        :param tuple key: a :ref:`aerospike_key_tuple` associated with the record.
+        :param dict policy: optional read policies :ref:`aerospike_read_policies`.
+        :rtype: :class:`tuple` (key, meta)
+
+        .. code-block:: python
+
+            from __future__ import print_function
+            import aerospike
+
+            config = { 'hosts': [('127.0.0.1', 3000)] }
+            client = aerospike.client(config).connect()
+
+            try:
+                # assuming a record with such a key exists in the cluster
+                key = ('test', 'demo', 1)
+                (key, meta) = client.exists(key)
+
+                print(key)
+                print('--------------------------')
+                print(meta)
+                client.close()
             except Exception as e:
                 print("error: {0}".format(e), file=sys.stderr)
                 sys.exit(1)
@@ -130,18 +199,25 @@ Client Class --- :class:`Client`
                          meta={'ttl':180})
                 # adding a bin
                 client.put(key, {'smiley': u"\ud83d\ude04"})
-
+                client.close()
             except Exception as e:
                 print("error: {0}".format(e), file=sys.stderr)
                 sys.exit(1)
 
 
-    .. method:: remove(key[, policy])
+    .. method:: touch(key[, val=0[, meta[, policy]]])
 
-        Remove a record matching the *key* from the cluster.
+        Touch the given record, resetting its \
+        `time-to-live <http://www.aerospike.com/docs/client/c/usage/kvs/write.html#change-record-time-to-live-ttl>`_ \
+        and incrementing its generation.
 
-        :param tuple key: a :ref:`aerospike_key_tuple` associated with the record.
-        :param dict policy: optional read policies :ref:`aerospike_remove_policies`.
+        :param tuple key: a :ref:`aerospike_key_tuple` tuple associated with the record.
+        :param int val: the optional ttl in seconds, with ``0`` resolving to the default value in the server config.
+        :param dict meta: optional record metadata to be set.
+        :param dict policy: optional operate policies :ref:`aerospike_operate_policies`.
+
+        .. seealso:: `Record TTL and Evictions <https://discuss.aerospike.com/t/records-ttl-and-evictions/737>`_ \
+                     and `FAQ <https://www.aerospike.com/docs/guide/FAQ.html>`_.
 
         .. code-block:: python
 
@@ -151,7 +227,81 @@ Client Class --- :class:`Client`
             client = aerospike.client(config).connect()
 
             key = ('test', 'demo', 1)
-            client.remove(key, {'retry': aerospike.POLICY_RETRY_ONCE})
+            client.touch(key, 120, policy={'timeout': 100})
+            client.close()
+
+
+    .. method:: remove(key[, policy])
+
+        Remove a record matching the *key* from the cluster.
+
+        :param tuple key: a :ref:`aerospike_key_tuple` associated with the record.
+        :param dict policy: optional remove policies :ref:`aerospike_remove_policies`.
+
+        .. code-block:: python
+
+            import aerospike
+
+            config = { 'hosts': [('127.0.0.1', 3000)] }
+            client = aerospike.client(config).connect()
+
+            key = ('test', 'demo', 1)
+            client.remove(key, {'retry': aerospike.POLICY_RETRY_ONCE
+            client.close()
+
+
+    .. method:: get_key_digest(ns, set, key) -> bytearray
+
+        Calculate the digest of a particular key. See: :ref:`aerospike_key_tuple`.
+
+        :param str ns: the namespace in the aerospike database.
+        :param str set: the set name.
+        :param key: the primary key identifier of the record within the set.
+        :type key: str or int
+        :return: a RIPEMD-160 digest of the input tuple.
+        :rtype: bytearray
+
+        .. code-block:: python
+
+            import aerospike
+            import pprint
+
+            pp = pprint.PrettyPrinter(indent=2)
+            config = { 'hosts': [('127.0.0.1', 3000)] }
+            client = aerospike.client(config).connect()
+
+            digest = client.get_key_digest("test", "demo", 1 )
+            pp.pprint(digest)
+            key = ('test', 'demo', None, digest)
+            (key, meta, bins) = client.get(key)
+            pp.pprint(bins)
+            client.close()
+
+
+    .. rubric:: Bin Operations
+
+
+    .. method:: remove_bin(key, list[, meta[, policy]])
+
+        Remove a list of bins from a record with a given *key*.
+
+        :param tuple key: a :ref:`aerospike_key_tuple` associated with the record.
+        :param list list: the bins names to be removed from the record.
+        :param dict meta: optional record metadata to be set, with field
+            ``'ttl'`` set to :class:`int` number of seconds.
+        :param dict policy: optional write policies :ref:`aerospike_write_policies`.
+
+        .. code-block:: python
+
+            import aerospike
+
+            config = { 'hosts': [('127.0.0.1', 3000)] }
+            client = aerospike.client(config).connect()
+
+            key = ('test', 'demo', 1)
+            meta = { 'ttl': 3600 }
+            client.remove_bin(key, ['name', 'age'], meta, {'retry': aerospike.POLICY_RETRY_ONCE})
+            client.close()
 
 
     .. method:: append(key, bin, val[, meta[, policy]])
@@ -242,6 +392,236 @@ Client Class --- :class:`Client`
                 sys.exit(1)
 
 
+    .. method:: operate(key, list[, meta[, policy]]) -> (key, meta, bins)
+
+        Perform multiple bin operations on a record with a given *key*, \
+        with write operations happening before read ops. Non-existent bins \
+        being read will have a ``None`` value.
+
+        :param tuple key: a :ref:`aerospike_key_tuple` associated with the record.
+        :param list list: a :class:`list` of one or more bin operations, each \
+            structured as the :class:`dict` \
+            ``{'bin': bin name, 'op': aerospike.OPERATOR_* [, 'val': value]}``. \
+            See :ref:`aerospike_operators`.
+        :param dict meta: optional record metadata to be set, with field
+            ``'ttl'`` set to :class:`int` number of seconds.
+        :param dict policy: optional operate policies :ref:`aerospike_operate_policies`.
+        :return: a :ref:`aerospike_record_tuple`.
+
+        .. code-block:: python
+
+            from __future__ import print_function
+            import aerospike
+
+            config = { 'hosts': [('127.0.0.1', 3000)] }
+            client = aerospike.client(config).connect()
+
+            try:
+                key = ('test', 'demo', 1)
+                client.put(key, {'count': 1})
+                list = [
+                    {
+                      "op" : aerospike.OPERATOR_INCR,
+                      "bin": "count",
+                      "val": 2
+                    },
+                    {
+                      "op" : aerospike.OPERATOR_PREPEND,
+                      "bin": "name",
+                      "val": ":start:"
+                    },
+                    {
+                      "op" : aerospike.OPERATOR_APPEND,
+                      "bin": "name",
+                      "val": ":end:"
+                    },
+                    {
+                      "op" : aerospike.OPERATOR_READ,
+                      "bin": "name"
+                    },
+                    {
+                      "op" : aerospike.OPERATOR_WRITE,
+                      "bin": "age",
+                      "val": 39
+                    },
+                    {
+                      "op" : aerospike.OPERATOR_TOUCH,
+                      "val": 360
+                    }
+                ]
+                (key, meta, bins) = self.client.operate(key, list, policy={'timeout':500})
+
+                print(key)
+                print('--------------------------')
+                print(meta)
+                print('--------------------------')
+                print(bins)
+            except Exception as e:
+                print("error: {0}".format(e), file=sys.stderr)
+                sys.exit(1)
+
+
+    .. rubric:: Batch Operations
+
+    .. method:: get_many(keys[, policy]) -> {primary_key: (key. meta, bins)}
+
+        Batch-read multiple keys, and return a :class:`dict` of records. \
+        For records that do not exist the value will be ``None``.
+
+        :param list keys: a list of :ref:`aerospike_key_tuple`.
+        :param dict policy: an optional :class:`dict` with fields:
+
+        .. hlist::
+            :columns: 1
+
+            * **timeout** read timeout in milliseconds
+
+        :return: a :class:`dict` of :ref:`aerospike_record_tuple` keyed on the \
+                 matching *primary key*.
+
+        .. code-block:: python
+
+            from __future__ import print_function
+            import aerospike
+
+            config = { 'hosts': [('127.0.0.1', 3000)] }
+            client = aerospike.client(config).connect()
+
+            try:
+                keys = [
+                  ('test', 'demo', 1),
+                  ('test', 'demo', 2),
+                  ('test', 'demo', 3),
+                  ('test', 'demo', 4)
+                ]
+                records = client.get_many(keys)
+                print records
+                client.close()
+            except Exception as e:
+                print("error: {0}".format(e), file=sys.stderr)
+                sys.exit(1)
+
+        .. note::
+
+            We expect to see something like:
+
+            .. code-block:: python
+
+                {
+                  1: (('test', 'demo', 1, bytearray(b'\xb7\xf4\xb88\x89\xe2\xdag\xdeh>\x1d\xf6\x91\x9a\x1e\xac\xc4F\xc8')), {'gen': 1, 'ttl': 2592000}, {'age': 1, 'name': u'Name1'}), 
+                  2: (('test', 'demo', 2, bytearray(b'\xaejQ_7\xdeJ\xda\xccD\x96\xe2\xda\x1f\xea\x84\x8c:\x92p')), {'gen': 1, 'ttl': 2592000}, {'age': 2, 'name': u'Name2'}), 
+                  3: (('test', 'demo', 3, bytearray(b'\xb1\xa5`g\xf6\xd4\xa8\xa4D9\xd3\xafb\xbf\xf8ha\x01\x94\xcd')), {'gen': 1, 'ttl': 2592000}, {'age': 3, 'name': u'Name3'}), 
+                  4: None
+                }
+
+
+    .. method:: exists_many(keys[, policy]) -> {primary_key: meta}
+
+        Batch-read metadata for multiple keys, and return it as a :class:`dict`. \
+        For records that do not exist the value will be ``None``.
+
+        :param list keys: a list of :ref:`aerospike_key_tuple`.
+        :param dict policy: an optional :class:`dict` with fields:
+
+        .. hlist::
+            :columns: 1
+
+            * **timeout** read timeout in milliseconds
+
+        :return: a :class:`dict` of :ref:`aerospike_record_tuple` keyed on the \
+                 matching *primary key*.
+
+        .. code-block:: python
+
+            from __future__ import print_function
+            import aerospike
+
+            config = { 'hosts': [('127.0.0.1', 3000)] }
+            client = aerospike.client(config).connect()
+
+            try:
+                keys = [
+                  ('test', 'demo', 1),
+                  ('test', 'demo', 2),
+                  ('test', 'demo', 3),
+                  ('test', 'demo', 4)
+                ]
+                records = client.exists_many(keys)
+                print records
+                client.close()
+            except Exception as e:
+                print("error: {0}".format(e), file=sys.stderr)
+                sys.exit(1)
+
+        .. note::
+
+            We expect to see something like:
+
+            .. code-block:: python
+
+                {
+                  1: {'gen': 2, 'ttl': 2592000},
+                  2: {'gen': 7, 'ttl': 1337},
+                  3: {'gen': 9, 'ttl': 543},
+                  4: None
+                }
+
+
+    .. method:: select_many(keys, bins[, policy]) -> {primary_key: (key. meta, bins)}
+
+        Batch-read multiple keys, and return a :class:`dict` of records. \
+        For records that do not exist the value will be ``None``. For records \
+        which do exist, but for which the selected bins do not exist the *bins* \
+        value will be ``{}``. Each of the *bins* will be filtered as specified.
+
+        :param list keys: a list of :ref:`aerospike_key_tuple`.
+        :param list bins: the bin names to select from the matching records.
+        :param dict policy: an optional :class:`dict` with fields:
+
+        .. hlist::
+            :columns: 1
+
+            * **timeout** read timeout in milliseconds
+
+        :return: a :class:`dict` of :ref:`aerospike_record_tuple` keyed on the \
+                 matching *primary key*.
+
+        .. code-block:: python
+
+            from __future__ import print_function
+            import aerospike
+
+            config = { 'hosts': [('127.0.0.1', 3000)] }
+            client = aerospike.client(config).connect()
+
+            try:
+                keys = [
+                  ('test', 'demo', 1),
+                  ('test', 'demo', 2),
+                  ('test', 'demo', 3),
+                  ('test', 'demo', 4)
+                ]
+                records = client.select_many(keys, [u'name'])
+                print records
+                client.close()
+            except Exception as e:
+                print("error: {0}".format(e), file=sys.stderr)
+                sys.exit(1)
+
+        .. note::
+
+            We expect to see something like:
+
+            .. code-block:: python
+
+                {
+                  1: (('test', 'demo', 1, bytearray(b'\xb7\xf4\xb88\x89\xe2\xdag\xdeh>\x1d\xf6\x91\x9a\x1e\xac\xc4F\xc8')), {'gen': 1, 'ttl': 2592000}, {'name': u'Name1'}),
+                  2: (('test', 'demo', 2, bytearray(b'\xaejQ_7\xdeJ\xda\xccD\x96\xe2\xda\x1f\xea\x84\x8c:\x92p')), {'gen': 1, 'ttl': 2592000}, {'name': u'Name2'}),
+                  3: (('test', 'demo', 3, bytearray(b'\xb1\xa5`g\xf6\xd4\xa8\xa4D9\xd3\xafb\xbf\xf8ha\x01\x94\xcd')), {'gen': 1, 'ttl': 2592000}, {'name': u'Name3'}),
+                  4: None
+                }
+
+
 .. _aerospike_key_tuple:
 
 Key Tuple
@@ -251,7 +631,7 @@ Key Tuple
 
     The key tuple which is sent and returned by various operations contains
 
-    ``(namespace, set, primary key, the record's RIPEMD-160 digest)``
+    ``(namespace, set, primary key[, the record's RIPEMD-160 digest])``
 
 
 .. _aerospike_record_tuple:
