@@ -94,7 +94,7 @@ try:
         filename = args.pop()
         udf_type = 0 # 0 for LUA 
     
-      	client.udf_put(policy, filename, udf_type)
+      	client.udf_put(filename, udf_type, policy)
         print("OK, 1 new UDF registered")
 
     except Exception as e:

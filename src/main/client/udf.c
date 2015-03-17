@@ -49,9 +49,10 @@ PyObject * AerospikeClient_UDF_Put(AerospikeClient * self, PyObject *args, PyObj
 	as_error_init(&err);
 
 	// Python Function Arguments
-	PyObject * py_policy = NULL;
 	PyObject * py_filename = NULL;
+	long language = 0;
 	PyObject * py_udf_type = NULL;
+	PyObject * py_policy = NULL;
 	PyObject * py_ustr = NULL;
 
 	uint8_t * bytes = NULL;
@@ -59,13 +60,20 @@ PyObject * AerospikeClient_UDF_Put(AerospikeClient * self, PyObject *args, PyObj
 	as_policy_info *info_policy_p = NULL;
 
 	// Python Function Keyword Arguments
-	static char * kwlist[] = {"policy", "filename", "udf_type", NULL};
+	static char * kwlist[] = {"filename", "udf_type", "policy", NULL};
 
 	// Python Function Argument Parsing
-	if ( PyArg_ParseTupleAndKeywords(args, kwds, "OOO:udf_put", kwlist,
-				&py_policy, &py_filename, &py_udf_type) == false ) {
+	if ( PyArg_ParseTupleAndKeywords(args, kwds, "O|lO:udf_put", kwlist,
+				&py_filename, &language, &py_policy) == false ) {
 		return NULL;
 	}
+
+	if(language != AS_UDF_TYPE_LUA)
+	{
+		as_error_update(&err, AEROSPIKE_ERR_CLIENT, "Invalid UDF language");
+		goto CLEANUP;
+	}
+	py_udf_type = PyLong_FromLong(language);
 
 	if (!self || !self->as) {
 		as_error_update(&err, AEROSPIKE_ERR_PARAM, "Invalid aerospike object");
@@ -175,11 +183,11 @@ PyObject * AerospikeClient_UDF_Remove(AerospikeClient * self, PyObject *args, Py
 	as_policy_info *info_policy_p = NULL;
 
 	// Python Function Keyword Arguments
-	static char * kwlist[] = {"policy", "filename", NULL};
+	static char * kwlist[] = {"filename", "policy", NULL};
 
 	// Python Function Argument Parsing
-	if ( PyArg_ParseTupleAndKeywords(args, kwds, "OO:udf_remove", kwlist,
-				&py_policy, &py_filename) == false ) {
+	if ( PyArg_ParseTupleAndKeywords(args, kwds, "O|O:udf_remove", kwlist,
+				&py_filename, &py_policy) == false ) {
 		return NULL;
 	}
 

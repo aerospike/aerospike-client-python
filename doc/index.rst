@@ -6,9 +6,9 @@ Introduction
 Aerospike database clusters. The Python client is a CPython module, built on
 the Aerospike C client.
 
-* ``aerospike`` - the module containing the Client, Query, Scan, and large ordered list (LList) classes.
+* :mod:`aerospike` - the module containing the Client, Query, Scan, and large ordered list (LList) classes.
 
-* ``aerospike.predicates`` is a submodule containing predicate helpers for use with the Query class.
+* :mod:`aerospike.predicates` is a submodule containing predicate helpers for use with the Query class.
 
 .. seealso::
     The `Python Client Manual <http://www.aerospike.com/docs/client/python/>`_
@@ -21,15 +21,11 @@ Content
     :maxdepth: 2
 
     aerospike
-    aerospike.predicates
+    client
+    scan
+    query
+    predicates
 
-Changes
-#######
-
-.. toctree::
-    :maxdepth: 1
-
-    changes
 
 Indices and tables
 ##################

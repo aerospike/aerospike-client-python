@@ -29,9 +29,9 @@ class TestApply(object):
         filename = "sample.lua"
         udf_type = 0
 
-        status = TestApply.client.udf_put( policy, filename, udf_type )
+        status = TestApply.client.udf_put( filename, udf_type, policy )
         filename = "test_record_udf.lua"
-        status = TestApply.client.udf_put( policy, filename, udf_type )
+        status = TestApply.client.udf_put( filename, udf_type, policy )
 
     def teardown_class(cls):
         policy = {}
@@ -40,7 +40,7 @@ class TestApply(object):
         policy = { 'timeout' : 0 }
         module = "sample.lua"
 
-        status = TestApply.client.udf_remove( policy, module )
+        status = TestApply.client.udf_remove( module, policy )
         TestApply.client.close()
 
     def setup_method(self, method):

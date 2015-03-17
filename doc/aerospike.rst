@@ -233,11 +233,3 @@ Scan Constants
 .. versionadded:: 1.0.39
 
 
-.. toctree::
-    :maxdepth: 1
-
-    client
-    query
-    scan
-    llist
-

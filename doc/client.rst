@@ -633,6 +633,78 @@ Client Class --- :class:`Client`
         :return: an :py:class:`aerospike.Scan` class.
 
 
+    .. rubric:: Queries
+
+    .. method:: query(namespace[, set]) -> Query
+
+        Return a :class:`aerospike.Query` object to be used for executing queries \
+        over a specified *set* (which can be ommitted or `None`) in a *namespace*.
+
+        :param str namespace: a list of :ref:`aerospike_key_tuple`.
+        :param str set: optional specified set name, otherwise the records \
+          which are not part of any *set* will be queried (**Note**: this is \
+          different from not providing the *set* in :meth:`scan`).
+        :return: an :py:class:`aerospike.Query` class.
+
+
+    .. rubric:: UDFs
+
+    .. method:: udf_put(filename[, udf_type=aerospike.UDF_TYPE_LUA[, policy]])
+
+        Register a UDF module with the cluster.
+
+        :param str filename: the UDF module to be registered with the cluster.
+        :param int udf_type: one of ``aerospike.UDF_TYPE_\*``
+        :param dict policy: currently **timeout** in milliseconds is the available policy.
+
+
+    .. method:: udf_remove(module[, policy])
+
+        Register a UDF module with the cluster.
+
+        :param str module: the UDF module to be deregistered from the cluster.
+        :param dict policy: currently **timeout** in milliseconds is the available policy.
+
+
+    .. method:: udf_list([policy]) -> []
+
+        Return the list of UDF modules registered with the cluster.
+
+        :param dict policy: currently **timeout** in milliseconds is the available policy.
+        :rtype: :class:`list`
+
+        .. code-block:: python
+
+            import aerospike
+
+            config = {'hosts': [('127.0.0.1', 3000)] }
+            client = aerospike.client(config).connect()
+            udfs = client.udf_list()
+            print(udfs)
+
+        .. note::
+
+            We expect to see something like:
+
+            .. code-block:: python
+
+                [{'content': bytearray(b''),
+                  'hash': bytearray(b'195e39ceb51c110950bd'),
+                  'name': 'my_udf1.lua',
+                  'type': 0},
+                 {'content': bytearray(b''),
+                  'hash': bytearray(b'8a2528e8475271877b3b'),
+                  'name': 'stream_udf.lua',
+                  'type': 0},
+                 {'content': bytearray(b''),
+                  'hash': bytearray(b'362ea79c8b64857701c2'),
+                  'name': 'aggregate_udf.lua',
+                  'type': 0},
+                 {'content': bytearray(b''),
+                  'hash': bytearray(b'635f47081431379baa4b'),
+                  'name': 'module.lua',
+                  'type': 0}]
+
 .. _aerospike_key_tuple:
 
 Key Tuple
