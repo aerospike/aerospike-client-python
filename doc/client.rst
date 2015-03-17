@@ -1,8 +1,6 @@
 .. _client:
 
-
 .. currentmodule:: aerospike
-
 
 =================================
 Client Class --- :class:`Client`
@@ -97,7 +95,7 @@ Client Class --- :class:`Client`
                 sys.exit(1)
 
 
-    .. method:: select(key[, policy]) -> (key, meta, bins)
+    .. method:: select(key, bins[, policy]) -> (key, meta, bins)
 
         Read a record with a given *key*, and return the record as a \
         :class:`tuple` consisting of *key*, *meta* and *bins*, with the \
@@ -622,6 +620,17 @@ Client Class --- :class:`Client`
                 }
 
 
+    .. method:: scan(namespace[, set]) -> Scan
+
+        Return a :class:`aerospike.Scan` object to be used for executing scans \
+        over a specified *set* (which can be ommitted or `None`) in a *namespace*.
+
+        :param str namespace: a list of :ref:`aerospike_key_tuple`.
+        :param str set: optional specified set name, otherwise the entire \
+          *namespace* will be scanned.
+        :return: an :py:class:`aerospike.Scan` class.
+
+
 .. _aerospike_key_tuple:
 
 Key Tuple
@@ -647,7 +656,7 @@ Record Tuple
         :columns: 1
 
         * *key* the tuple ``(namespace, set, primary key, the record's RIPEMD-160 digest)``
-        * *meta* a dict containing  {'gen' : genration value, 'ttl': ttl value}
+        * *meta* a dict containing  ``{'gen' : genration value, 'ttl': ttl value}``
         * *bins* a dict containing bin-name/bin-value pairs
 
 
@@ -658,7 +667,7 @@ Write Policies
 
 .. object:: policy
 
-    Optional write policies applicable to :meth:`put`. See :ref:`aerospike_policies`.
+    A :class:`dict` of optional write policies which are applicable to :meth:`Client.put`. See :ref:`aerospike_policies`.
 
     .. hlist::
         :columns: 1
@@ -678,7 +687,7 @@ Read Policies
 
 .. object:: policy
 
-    Optional read policies applicable to :meth:`get`. See :ref:`aerospike_policies`.
+     A :class:`dict` of optional read policies which are applicable to :meth:`Client.get`. See :ref:`aerospike_policies`.
 
     .. hlist::
         :columns: 1
@@ -697,8 +706,7 @@ Operate Policies
 
 .. object:: policy
 
-    Optional operate policies applicable to :meth:`append`, :meth:`prepend`, \
-    :meth:`increment`, :meth:`operate`. See :ref:`aerospike_policies`.
+     A :class:`dict` of optional operate policies which are applicable to :meth:`Client.append`, :meth:`Client.prepend`, :meth:`Client.increment`, :meth:`Client.operate`. See :ref:`aerospike_policies`.
 
     .. hlist::
         :columns: 1
@@ -719,7 +727,7 @@ Remove Policies
 
 .. object:: policy
 
-    Optional remove policies applicable to :meth:`remove`. See :ref:`aerospike_policies`.
+     A :class:`dict` of optional remove policies which are applicable to :meth:`Client.remove`. See :ref:`aerospike_policies`.
 
     .. hlist::
         :columns: 1

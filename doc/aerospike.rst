@@ -151,6 +151,29 @@ Policies
 
 .. data:: POLICY_RETRY_ONCE
 
+.. _aerospike_scan_constants:
+
+Scan Constants
+--------------
+
+.. data:: SCAN_PRIORITY_AUTO
+
+.. data:: SCAN_PRIORITY_HIGH
+
+.. data:: SCAN_PRIORITY_LOW
+
+.. data:: SCAN_PRIORITY_MEDIUM
+
+.. data:: SCAN_STATUS_ABORTED
+
+.. data:: SCAN_STATUS_COMPLETED
+
+.. data:: SCAN_STATUS_INPROGRESS
+
+.. data:: SCAN_STATUS_UNDEF
+
+.. versionadded:: 1.0.39
+
 
 .. toctree::
     :maxdepth: 1
