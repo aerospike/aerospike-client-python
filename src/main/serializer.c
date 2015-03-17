@@ -371,7 +371,7 @@ CLEANUP:
 /*
  *******************************************************************************************************
  * Checks as_bytes->type.
- * Unserializes as_bytes into Py_Object (retval) using unserialization logic
+ * Deserializes as_bytes into Py_Object (retval) using deserialization logic
  * based on as_bytes->type.
  *
  * @param bytes                 The as_bytes to be deserialized.
@@ -381,7 +381,7 @@ CLEANUP:
  *                              with encountered error if any.
  *******************************************************************************************************
  */
-extern PyObject * unserialize_based_on_as_bytes_type(as_bytes  *bytes,
+extern PyObject * deserialize_based_on_as_bytes_type(as_bytes  *bytes,
 		PyObject  **retval,
 		as_error  *error_p)
 {
@@ -428,7 +428,7 @@ py_funcname, py_value, NULL);
                     }
                 } else {
 					as_error_update(error_p, AEROSPIKE_ERR,
-                            "No unserializer callback registered");
+                            "No deserializer callback registered");
                     goto CLEANUP;
                 }
             }
@@ -436,7 +436,7 @@ py_funcname, py_value, NULL);
         default:
 
             as_error_update(error_p, AEROSPIKE_ERR,
-                    "Unable to unserialize bytes");
+                    "Unable to deserialize bytes");
             goto CLEANUP;
     }
 

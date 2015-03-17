@@ -67,6 +67,64 @@ containing the keys of all records in the set.
             'policies': {'timeout': 1000}}
         client = aerospike.client(config)
 
+
+.. rubric:: Serialization
+
+.. note::
+
+    By default, the :py:class:`aerospike.Client` maps supported types such \
+    as :class:`int`, :class:`str`, :class:`list`, :class:`dict` to matching
+    aerospike server `types <http://www.aerospike.com/docs/guide/data-types.html>`_ \
+    (int, string, list, map). When an unsupported type is encountered the module \
+    uses `cPickle <https://docs.python.org/2/library/pickle.html?highlight=cpickle#module-cPickle>`_ \
+    to serialize and deserialize the data, storing it into a *bytes* of type \
+    `'Python' <https://www.aerospike.com/docs/udf/api/bytes.html#encoding-type>`_ \
+    (`AS_BYTES_PYTHON <http://www.aerospike.com/apidocs/c/d0/dd4/as__bytes_8h.html#a0cf2a6a1f39668f606b19711b3a98bf3>`_).
+
+    Two functions :py:func:`set_serializer` and :py:func:`set_deserializer` \
+    allow for user-defined functions to handle serialization, instead. \
+    The serialized data is stored as \
+    'Generic' type *bytes* of type (\
+    `AS_BYTES_BLOB <http://www.aerospike.com/apidocs/c/d0/dd4/as__bytes_8h.html#a0cf2a6a1f39668f606b19711b3a98bf3>`_).
+
+.. py:function:: set_serializer(callback)
+
+    Overrides the default serializer with a user-defined fucntion *callback*.
+
+    :param callback callback: the function to invoke for serialization.
+
+    .. code-block:: python
+
+        import aerospike
+        import cPickle as pickle
+
+        def my_serializer(val):
+            return pickle.dumps(val)
+
+        aerospike.set_serializer(my_serializer)
+
+    .. versionadded:: 1.0.39
+
+
+.. py:function:: set_deserializer(callback)
+
+    Overrides the default serializer with a user-defined fucntion *callback*.
+
+    :param callback callback: the function to invoke for deserialization.
+
+    .. code-block:: python
+
+        import aerospike
+        import cPickle as pickle
+
+        def my_deserializer(val):
+            return pickle.loads(val)
+
+        aerospike.set_deserializer(my_serializer)
+
+    .. versionadded:: 1.0.39
+
+
 .. _aerospike_operators:
 
 Operators

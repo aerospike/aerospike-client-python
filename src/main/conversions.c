@@ -683,7 +683,7 @@ as_status val_to_pyobject(as_error * err, const as_val * val, PyObject ** py_val
 		case AS_BYTES: {
 				//uint32_t bval_size = as_bytes_size(bval);
 				as_bytes * bval = as_bytes_fromval(val);
-				PyObject * py_result = unserialize_based_on_as_bytes_type(bval, py_val, err);
+				PyObject * py_result = deserialize_based_on_as_bytes_type(bval, py_val, err);
 				if (py_result) {
 					Py_DECREF(py_result);
 				}

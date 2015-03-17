@@ -620,6 +620,8 @@ Client Class --- :class:`Client`
                 }
 
 
+    .. rubric:: Scans
+
     .. method:: scan(namespace[, set]) -> Scan
 
         Return a :class:`aerospike.Scan` object to be used for executing scans \
