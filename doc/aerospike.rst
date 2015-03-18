@@ -232,4 +232,10 @@ Scan Constants
 
 .. versionadded:: 1.0.39
 
+.. _aerospike_misc_constants:
+
+Miscellaneous
+-------------
+
+.. data:: UDF_TYPE_LUA
 

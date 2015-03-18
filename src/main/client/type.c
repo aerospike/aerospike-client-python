@@ -157,8 +157,8 @@ static PyMethodDef AerospikeClient_Type_Methods[] = {
 	{"udf_list",
 		(PyCFunction)AerospikeClient_UDF_List, METH_VARARGS | METH_KEYWORDS,
 		"Lists the UDFs"},
-	{"udf_getRegistered",
-		(PyCFunction)AerospikeClient_UDF_Get_Registered_UDF, METH_VARARGS | METH_KEYWORDS,
+	{"udf_get",
+		(PyCFunction)AerospikeClient_UDF_Get_UDF, METH_VARARGS | METH_KEYWORDS,
 		"Get Registered UDFs"},
 
 	// SECONDARY INDEX OPERATONS

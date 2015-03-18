@@ -327,7 +327,7 @@ CLEANUP:
  * Returns the content of the UDF module.
  *******************************************************************************************************
  */
-PyObject * AerospikeClient_UDF_Get_Registered_UDF(AerospikeClient * self, PyObject *args, PyObject * kwds)
+PyObject * AerospikeClient_UDF_Get_UDF(AerospikeClient * self, PyObject *args, PyObject * kwds)
 {
 	// Initialize error
 	as_error err;
@@ -345,7 +345,7 @@ PyObject * AerospikeClient_UDF_Get_Registered_UDF(AerospikeClient * self, PyObje
 	static char * kwlist[] = {"module", "language", "policy", NULL};
 
 	// Python Function Argument Parsing
-	if ( PyArg_ParseTupleAndKeywords(args, kwds, "O|lO:udf_getRegistered", kwlist,
+	if ( PyArg_ParseTupleAndKeywords(args, kwds, "O|lO:udf_get", kwlist,
 				&py_module ,&language, &py_policy) == false ) {
 		return NULL;
 	}

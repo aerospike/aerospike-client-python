@@ -16,6 +16,7 @@ Client Class --- :class:`Client`
         # import the module
         from __future__ import print_function
         import aerospike
+        import sys
 
         # Configure the client
         config = {
@@ -75,6 +76,7 @@ Client Class --- :class:`Client`
 
             from __future__ import print_function
             import aerospike
+            import sys
 
             config = { 'hosts': [('127.0.0.1', 3000)] }
             client = aerospike.client(config).connect()
@@ -112,6 +114,7 @@ Client Class --- :class:`Client`
 
             from __future__ import print_function
             import aerospike
+            import sys
 
             config = { 'hosts': [('127.0.0.1', 3000)] }
             client = aerospike.client(config).connect()
@@ -146,6 +149,7 @@ Client Class --- :class:`Client`
 
             from __future__ import print_function
             import aerospike
+            import sys
 
             config = { 'hosts': [('127.0.0.1', 3000)] }
             client = aerospike.client(config).connect()
@@ -202,6 +206,32 @@ Client Class --- :class:`Client`
                 print("error: {0}".format(e), file=sys.stderr)
                 sys.exit(1)
 
+        .. note:: Using Generation Policy
+
+            The generation policy allows a record to be written only when the \
+            generation is a specific value. In the following example, we only \
+            want to write the record if no change has occured since \
+            :meth:`exists` was called.
+
+            .. code-block:: python
+
+                from __future__ import print_function
+                import aerospike
+                import sys
+
+                config = { 'hosts': [ ('127.0.0.1',3000)]}
+                client = aerospike.client(config).connect()
+
+                try:
+                    (key, meta) = client.exists(('test','test','key1'))
+                    print(meta)
+                    print('============')
+                    client.put(('test','test','key1'), {'id':1,'a':2},
+                        policy={'gen':aerospike.POLICY_GEN_EQ},
+                        meta={'gen': 33})
+                    print('Record written.')
+                except Exception as e:
+                    print("error: {0}".format(e), file=sys.stderr)
 
     .. method:: touch(key[, val=0[, meta[, policy]]])
 
@@ -317,6 +347,8 @@ Client Class --- :class:`Client`
 
             from __future__ import print_function
             import aerospike
+            import sys
+
             config = { 'hosts': [('127.0.0.1', 3000)] }
             client = aerospike.client(config).connect()
 
@@ -343,6 +375,7 @@ Client Class --- :class:`Client`
 
             from __future__ import print_function
             import aerospike
+            import sys
 
             config = { 'hosts': [('127.0.0.1', 3000)] }
             client = aerospike.client(config).connect()
@@ -370,6 +403,7 @@ Client Class --- :class:`Client`
 
             from __future__ import print_function
             import aerospike
+            import sys
 
             config = { 'hosts': [('127.0.0.1', 3000)] }
             client = aerospike.client(config).connect()
@@ -410,6 +444,7 @@ Client Class --- :class:`Client`
 
             from __future__ import print_function
             import aerospike
+            import sys
 
             config = { 'hosts': [('127.0.0.1', 3000)] }
             client = aerospike.client(config).connect()
@@ -481,6 +516,7 @@ Client Class --- :class:`Client`
 
             from __future__ import print_function
             import aerospike
+            import sys
 
             config = { 'hosts': [('127.0.0.1', 3000)] }
             client = aerospike.client(config).connect()
@@ -533,6 +569,7 @@ Client Class --- :class:`Client`
 
             from __future__ import print_function
             import aerospike
+            import sys
 
             config = { 'hosts': [('127.0.0.1', 3000)] }
             client = aerospike.client(config).connect()
@@ -588,6 +625,7 @@ Client Class --- :class:`Client`
 
             from __future__ import print_function
             import aerospike
+            import sys
 
             config = { 'hosts': [('127.0.0.1', 3000)] }
             client = aerospike.client(config).connect()
@@ -704,6 +742,17 @@ Client Class --- :class:`Client`
                   'hash': bytearray(b'635f47081431379baa4b'),
                   'name': 'module.lua',
                   'type': 0}]
+
+
+    .. method:: udf_get(module[, language=aerospike.UDF_TYPE_LUA[, policy]]) -> str
+
+        Return the content of a UDF module which is registered with the cluster.
+
+        :param str module: the UDF module to read from the cluster.
+        :param int udf_type: one of ``aerospike.UDF_TYPE_\*``
+        :param dict policy: currently **timeout** in milliseconds is the available policy.
+        :rtype: :class:`str`
+
 
 .. _aerospike_key_tuple:
 

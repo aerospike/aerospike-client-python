@@ -94,7 +94,7 @@ try:
        	policy = {}
 
         client.udf_put(module, language, policy)
-    	udf_contents = client.udf_getRegistered(module, language, policy)
+    	udf_contents = client.udf_get(module, language, policy)
         print("Module contents : ")
     	print(udf_contents)
 
