@@ -21,12 +21,9 @@ class TestQuery(object):
                 'hosts': [('127.0.0.1', 3000)]
                 }
         TestQuery.client = aerospike.client(config).connect()
-        policy = {}
-        TestQuery.client.index_integer_create(policy, 'test', 'demo', 'test_age', 'age_index')
-        TestQuery.client.index_string_create(policy, 'test', 'demo', 'addr', 'addr_index')
-        policy = {}
-        TestQuery.client.index_integer_create(policy, 'test', 'demo',
-'age1', 'age_index1')
+        TestQuery.client.index_integer_create('test', 'demo', 'test_age', 'age_index')
+        TestQuery.client.index_string_create('test', 'demo', 'addr', 'addr_index')
+        TestQuery.client.index_integer_create('test', 'demo', 'age1', 'age_index1')
 
     def teardown_class(cls):
         policy = {}

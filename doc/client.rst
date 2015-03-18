@@ -61,7 +61,6 @@ Client Class --- :class:`Client`
     .. method:: close()
 
         Close all connections to the cluster.
-
     .. method:: get(key[, policy]) -> (key, meta, bins)
 
         Read a record with a given *key*, and return the record as a \
@@ -502,13 +501,7 @@ Client Class --- :class:`Client`
         For records that do not exist the value will be ``None``.
 
         :param list keys: a list of :ref:`aerospike_key_tuple`.
-        :param dict policy: an optional :class:`dict` with fields:
-
-        .. hlist::
-            :columns: 1
-
-            * **timeout** read timeout in milliseconds
-
+        :param dict policy: optional batch policies :ref:`aerospike_batch_policies`.
         :return: a :class:`dict` of :ref:`aerospike_record_tuple` keyed on the \
                  matching *primary key*.
 
@@ -555,13 +548,7 @@ Client Class --- :class:`Client`
         For records that do not exist the value will be ``None``.
 
         :param list keys: a list of :ref:`aerospike_key_tuple`.
-        :param dict policy: an optional :class:`dict` with fields:
-
-        .. hlist::
-            :columns: 1
-
-            * **timeout** read timeout in milliseconds
-
+        :param dict policy: optional batch policies :ref:`aerospike_batch_policies`.
         :return: a :class:`dict` of :ref:`aerospike_record_tuple` keyed on the \
                  matching *primary key*.
 
@@ -612,12 +599,7 @@ Client Class --- :class:`Client`
         :param list keys: a list of :ref:`aerospike_key_tuple`.
         :param list bins: the bin names to select from the matching records.
         :param dict policy: an optional :class:`dict` with fields:
-
-        .. hlist::
-            :columns: 1
-
-            * **timeout** read timeout in milliseconds
-
+        :param dict policy: optional batch policies :ref:`aerospike_batch_policies`.
         :return: a :class:`dict` of :ref:`aerospike_record_tuple` keyed on the \
                  matching *primary key*.
 
@@ -754,6 +736,100 @@ Client Class --- :class:`Client`
         :rtype: :class:`str`
 
 
+    .. method:: apply(key, module, function, args[, policy])
+
+        Apply a registered (see :meth:`udf_put`) record UDF to a particular record.
+
+        :param tuple key: a :ref:`aerospike_key_tuple` associated with the record.
+        :param str module: the name of the UDF module.
+        :param str function: the name of the UDF to apply to the record identified by *key*.
+        :param list args: the arguments to the UDF.
+        :param dict policy: optional write policies :ref:`aerospike_write_policies`.
+
+        .. seealso:: `Record UDF <http://www.aerospike.com/docs/guide/record_udf.html>`_.
+
+
+    .. method:: scan_apply(ns, set, module, function[, args[, policy[, options]]])
+
+        Initiate a background scan and apply a record UDF to each record matched by the scan.
+
+        :param str ns: the namespace in the aerospike database.
+        :param str set: the set name. Should be ``None`` if the entire namespace is to be scanned.
+        :param str module: the name of the UDF module.
+        :param str function: the name of the UDF to apply to the records matched by the scan.
+        :param list args: the arguments to the UDF.
+        :param dict policy: optional scan policies :ref:`aerospike_scan_policies`.
+        :param dict options: the :ref:`aerospike_scan_options` that will apply to the scan.
+        :rtype: int
+        :return: a scan ID that can be used with :meth:`scan_info` to track the status of the scan, as it runs in the background.
+
+        .. seealso:: `Record UDF <http://www.aerospike.com/docs/guide/record_udf.html>`_.
+
+
+    .. method:: scan_info(scan_id)
+
+        Return the status of a scan running in the background.
+
+        :param int scan_id: the scan ID returned by :meth:`scan_apply`.
+        :returns: a :class:`dict` with keys *status*, *records_scanned*, and \
+          *progress_pct*. The value of *status* is one of ``aerospike.SCAN_STATUS_*``. See: :ref:`aerospike_scan_constants`.
+
+        .. code-block:: python
+
+            import aerospike
+            import sys
+
+            config = {'hosts': [ ('127.0.0.1', 3000)]}
+            client = aerospike.client(config).connect()
+            try:
+                scan_id = client.scan_apply('test', 'demo', 'simple', 'add_val', ['age', 1])
+                while True:
+                    response = client.scan_info(scan_id)
+                    if response['status'] == aerospike.SCAN_STATUS_COMPLETED or
+                       response['status'] == aerospike.SCAN_STATUS_ABORTED:
+                        break
+                if response['status'] == aerospike.SCAN_STATUS_COMPLETED:
+                    print("Background scan successful")
+                    print("Progess percentage : ", response['progress_pct'])
+                    print("Number of scanned records : ", response['records_scanned'])
+                    print("Background scan status : ", "SCAN_STATUS_COMPLETED")
+                else:
+                    print("Scan_apply failed")
+            except Exception as e:
+                print("error: {0}".format(e), file=sys.stderr)
+            client.close()
+
+
+    .. rubric:: Admin
+
+    .. method:: index_string_create(ns, set, bin, index_name[, policy])
+
+        Create a string index with *index_name* on the *bin* in the specified *ns*, *set*.
+
+        :param str ns: the namespace in the aerospike database.
+        :param str set: the set name.
+        :param str bin: the name of bin the secondary index is built on.
+        :param str index_name: the name of the index.
+
+
+    .. method:: index_integer_create(ns, set, bin, index_name[, policy])
+
+        Create an integer index with *index_name* on the *bin* in the specified *ns*, *set*.
+
+        :param str ns: the namespace in the aerospike database.
+        :param str set: the set name.
+        :param str bin: the name of bin the secondary index is built on.
+        :param str index_name: the name of the index.
+
+
+    .. method:: index_remove(ns, index_name[, policy])
+
+        Remove the index with *index_name* from the namespace.
+
+        :param str ns: the namespace in the aerospike database.
+        :param str index_name: the name of the index.
+
+
 .. _aerospike_key_tuple:
 
 Key Tuple
@@ -860,5 +936,35 @@ Remove Policies
         * **key** one of the `aerospike.POLICY_KEY_* <http://www.aerospike.com/apidocs/c/db/d65/group__client__policies.html#gaa9c8a79b2ab9d3812876c3ec5d1d50ec>`_ values
         * **retry** one of the `aerospike.POLICY_RETRY_* <http://www.aerospike.com/apidocs/c/db/d65/group__client__policies.html#gaa9730980a8b0eda8ab936a48009a6718>`_ values
         * **gen** one of the `aerospike.POLICY_GEN_* <http://www.aerospike.com/apidocs/c/db/d65/group__client__policies.html#ga38c1a40903e463e5d0af0141e8c64061>`_ values
+
+
+.. _aerospike_batch_policies:
+
+Batch Policies
+--------------
+
+.. object:: policy
+
+     A :class:`dict` of optional batch policies which are applicable to :meth:`get_many`, :meth:`exists_many` and :meth:`select_many`. See :ref:`aerospike_policies`.
+
+    .. hlist::
+        :columns: 1
+
+        * **timeout** read timeout in milliseconds
+
+
+.. _aerospike_info_policies:
+
+Info Policies
+-------------
+
+.. object:: policy
+
+     A :class:`dict` of optional info policies which are applicable to :meth:`info`, :meth:`info_nodes`. See :ref:`aerospike_policies`.
+
+    .. hlist::
+        :columns: 1
+
+        * **timeout** read timeout in milliseconds
 
 
