@@ -677,6 +677,8 @@ Client Class --- :class:`Client`
         :param int udf_type: one of ``aerospike.UDF_TYPE_\*``
         :param dict policy: currently **timeout** in milliseconds is the available policy.
 
+        .. versionchanged:: 1.0.39
+
 
     .. method:: udf_remove(module[, policy])
 
@@ -684,6 +686,8 @@ Client Class --- :class:`Client`
 
         :param str module: the UDF module to be deregistered from the cluster.
         :param dict policy: currently **timeout** in milliseconds is the available policy.
+
+        .. versionchanged:: 1.0.39
 
 
     .. method:: udf_list([policy]) -> []
@@ -725,6 +729,8 @@ Client Class --- :class:`Client`
                   'name': 'module.lua',
                   'type': 0}]
 
+        .. versionchanged:: 1.0.39
+
 
     .. method:: udf_get(module[, language=aerospike.UDF_TYPE_LUA[, policy]]) -> str
 
@@ -734,6 +740,8 @@ Client Class --- :class:`Client`
         :param int udf_type: one of ``aerospike.UDF_TYPE_\*``
         :param dict policy: currently **timeout** in milliseconds is the available policy.
         :rtype: :class:`str`
+
+        .. versionchanged:: 1.0.39
 
 
     .. method:: apply(key, module, function, args[, policy])
@@ -811,6 +819,8 @@ Client Class --- :class:`Client`
         :param str bin: the name of bin the secondary index is built on.
         :param str index_name: the name of the index.
 
+        .. versionchanged:: 1.0.39
+
 
     .. method:: index_integer_create(ns, set, bin, index_name[, policy])
 
@@ -821,6 +831,8 @@ Client Class --- :class:`Client`
         :param str bin: the name of bin the secondary index is built on.
         :param str index_name: the name of the index.
 
+        .. versionchanged:: 1.0.39
+
 
     .. method:: index_remove(ns, index_name[, policy])
 
@@ -828,6 +840,8 @@ Client Class --- :class:`Client`
 
         :param str ns: the namespace in the aerospike database.
         :param str index_name: the name of the index.
+
+        .. versionchanged:: 1.0.39
 
 
 .. _aerospike_key_tuple:
