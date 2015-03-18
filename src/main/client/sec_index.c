@@ -58,11 +58,11 @@ PyObject * AerospikeClient_Index_Integer_Create(AerospikeClient * self, PyObject
 	as_index_task task;
 
 	// Python Function Keyword Arguments
-	static char * kwlist[] = {"policy", "ns", "set", "bin", "name", NULL};
+	static char * kwlist[] = {"ns", "set", "bin", "name", "policy", NULL};
 
 	// Python Function Argument Parsing
 	if ( PyArg_ParseTupleAndKeywords(args, kwds, "OOOOO:index_integer_create", kwlist,
-				&py_policy, &py_ns, &py_set, &py_bin, &py_name) == false ) {
+				&py_ns, &py_set, &py_bin, &py_name, &py_policy) == false ) {
 		return NULL;
 	}
 
@@ -186,11 +186,11 @@ PyObject * AerospikeClient_Index_String_Create(AerospikeClient * self, PyObject 
 	as_index_task task;
 
 	// Python Function Keyword Arguments
-	static char * kwlist[] = {"policy", "ns", "set", "bin", "name", NULL};
+	static char * kwlist[] = {"ns", "set", "bin", "name", "policy", NULL};
 
 	// Python Function Argument Parsing
 	if ( PyArg_ParseTupleAndKeywords(args, kwds, "OOOOO:index_string_create", kwlist,
-				&py_policy, &py_ns, &py_set, &py_bin, &py_name) == false ) {
+				&py_ns, &py_set, &py_bin, &py_name, &py_policy) == false ) {
 		return NULL;
 	}
 
@@ -312,11 +312,11 @@ PyObject * AerospikeClient_Index_Remove(AerospikeClient * self, PyObject *args, 
 	as_policy_info *info_policy_p = NULL;
 
 	// Python Function Keyword Arguments
-	static char * kwlist[] = {"policy", "ns", "name", NULL};
+	static char * kwlist[] = {"ns", "name", "policy", NULL};
 
 	// Python Function Argument Parsing
 	if ( PyArg_ParseTupleAndKeywords(args, kwds, "OOO:index_remove", kwlist,
-				&py_policy, &py_ns, &py_name) == false ) {
+				&py_ns, &py_name, &py_policy) == false ) {
 		return NULL;
 	}
 
