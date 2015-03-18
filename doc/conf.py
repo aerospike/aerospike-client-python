@@ -37,7 +37,7 @@ source_suffix = '.rst'
 master_doc = 'index'
 
 # General information about the project.
-project = u'aerospike-client-python'
+project = u'aerospike'
 copyright = u'2014-2015, Aerospike'
 
 # The version info for the project you're documenting, acts as replacement for
@@ -158,7 +158,7 @@ html_static_path = []
 #html_file_suffix = ''
 
 # Output file base name for HTML help builder.
-htmlhelp_basename = 'aerospike-client-pythondoc'
+htmlhelp_basename = 'aerospikehelp'
 
 
 # -- Options for LaTeX output --------------------------------------------------
@@ -172,7 +172,7 @@ htmlhelp_basename = 'aerospike-client-pythondoc'
 # Grouping the document tree into LaTeX files. List of tuples
 # (source start file, target name, title, author, documentclass [howto/manual]).
 latex_documents = [
-  ('index', 'aerospike-client-python.tex', u'aerospike-client-python Documentation',
+  ('index', 'aerospike.tex', u'aerospike Documentation',
    u'Ronen Botzer', 'manual'),
 ]
 

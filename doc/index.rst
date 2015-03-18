@@ -2,7 +2,7 @@
 Introduction
 ############
 
-``aerospike-client-python`` is a package which provides a Python client for
+``aerospike`` is a package which provides a Python client for
 Aerospike database clusters. The Python client is a CPython module, built on
 the Aerospike C client.
 
