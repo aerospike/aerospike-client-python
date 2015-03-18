@@ -76,6 +76,11 @@ Build
 Instructions for building Aerospike Python Client, please refer to the 
 ``BUILD.md`` file for details.
 
+Documentation
+-------------
+
+Documentation is hosted at `pythonhosted.org/aerospike <https://pythonhosted.org/aerospike/>`__ 
+
 Examples
 --------
 
