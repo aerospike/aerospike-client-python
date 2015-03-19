@@ -16,7 +16,7 @@ response = aerospike.Client.info_node( request , host , policies )
 
 **request**, a string representing a command and control operation.
 
-**host**, the dictionary specifying the host.
+**host**, the tuple specifying the host.
 
 **policies**, the dictionary of policies to be given while retreiving information about a particular host. 
 
@@ -38,7 +38,7 @@ config = {
 client = aerospike.client(config).connect()
 
 request = "statistics"
-host = {"addr": "127.0.0.1", "port": 3000}   
+host = ( "127.0.0.1", 3000 )   
 response = client.info_node( request, host )
 
 print response
