@@ -136,7 +136,7 @@ class TestInfoNode(object):
             }
         TestInfoNode.client.put(key, rec)
 
-        host = {}
+        host = ()
         policy = {
             'timeout': 1000
         }
@@ -151,7 +151,7 @@ class TestInfoNode(object):
         """
         Test info with incorrect policy
         """
-        host = {}
+        host = ()
         policy = {
             'timeout': 0.5
         }
@@ -171,7 +171,7 @@ class TestInfoNode(object):
                 'names': ['John', 'Marlen', 'Steve']
             }
         TestInfoNode.client.put(key, rec)
-        host = {"addr": "127.0.0.1", "port": 3000}
+        host = ("127.0.0.1", 3000)
         response = TestInfoNode.client.info_node('bins', host)
 
         TestInfoNode.client.remove(key)
@@ -184,7 +184,7 @@ class TestInfoNode(object):
         """
         Test info with incorrect host
         """
-        host = {"addr": "122.0.0.1", "port": 3000}
+        host = ("122.0.0.1", 3000)
         with pytest.raises(Exception) as exception:
             response = TestInfoNode.client.info_node('bins', host)
 
@@ -195,7 +195,7 @@ class TestInfoNode(object):
         """
         Test info with all parameters
         """
-        host = {"addr": "127.0.0.1", "port": 3000}
+        host = ("127.0.0.1", 3000)
         policy = {
             'timeout': 1000
         }
@@ -207,7 +207,7 @@ class TestInfoNode(object):
         """
         Test info with extra parameters
         """
-        host = {"addr": "127.0.0.1", "port": 3000}
+        host = ("127.0.0.1", 3000)
         policy = {
             'timeout': 1000
         }
@@ -231,7 +231,7 @@ class TestInfoNode(object):
         """
         Test info with all parameters
         """
-        host = {"addr": u"127.0.0.1", "port": 3000}
+        host = ( u"127.0.0.1", 3000 )
         policy = {
             'timeout': 1000
         }
@@ -241,7 +241,7 @@ class TestInfoNode(object):
         """
         Test info with all parameters
         """
-        host = {"addr": u"127.0.0.1", "port": 3000}
+        host = ( u"127.0.0.1", 3000 )
         policy = {
             'timeout': 1000
         }
@@ -253,7 +253,7 @@ class TestInfoNode(object):
         """
         Test info with incorrect host
         """
-        host = {"addr": "192.168.1.2", "port": 3000}
+        host = ( "192.168.1.2", 3000 )
         with pytest.raises(Exception) as exception:
             response = TestInfoNode.client.info_node('bins', host)
 
@@ -264,18 +264,17 @@ class TestInfoNode(object):
         """
         Test info with incorrect host
         """
-        host = {"addr": "abcderp", "port": 3000}
+        host = ( "abcderp", 3000 )
         with pytest.raises(Exception) as exception:
             response = TestInfoNode.client.info_node('bins', host)
 
         assert exception.value[0] == -4L
-        assert exception.value[1] == "Invalid hostname abcderp: nodename nor servname provided, or not known"
     
     def test_info_node_positive_with_dns(self):
         """
         Test info with incorrect host
         """
-        host = {"addr": "google.com", "port": 3000}
+        host = ( "google.com", 3000 )
         with pytest.raises(Exception) as exception:
             response = TestInfoNode.client.info_node('bins', host)
 

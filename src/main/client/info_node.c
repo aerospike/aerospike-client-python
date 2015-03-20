@@ -85,34 +85,24 @@ static PyObject * AerospikeClient_InfoNode_Invoke(
 	}
 
 	if ( py_host ) {
-		if ( PyDict_Check(py_host) ) {
-			Py_ssize_t pos = 0;
-			while (PyDict_Next(py_host, &pos, &key_op, &value)) {
-				if ( ! PyString_Check(key_op) ) {
-					as_error_update(&err, AEROSPIKE_ERR_PARAM, "Hosts key must be a string.");
-					goto CLEANUP;
-				} else {
-					char * name = PyString_AsString(key_op);
-					if (!strcmp(name,"addr")) {
-						if (PyUnicode_Check(value)) {
-							py_ustr = PyUnicode_AsUTF8String(value);
-							address = PyString_AsString(py_ustr);
-						} else if (PyString_Check(value)) {
-							address =  PyString_AsString(value);
-						} else {
-							as_error_update(&err, AEROSPIKE_ERR_PARAM, "Host name is of incorrect type");
-							goto CLEANUP;
-						}
-					} else if (!strcmp(name,"port") && (PyLong_Check(value) || PyInt_Check(value))) {
-						port_no = PyLong_AsLong(value);
-					} else {
-						as_error_update(&err, AEROSPIKE_ERR_PARAM, "Hosts dictionary incorrect");
-						goto CLEANUP;
-					}
-				}
+		if ( PyTuple_Check(py_host) && PyTuple_Size(py_host) == 2) {
+			PyObject * py_addr = PyTuple_GetItem(py_host,0);
+			PyObject * py_port = PyTuple_GetItem(py_host,1);
+
+			if ( PyString_Check(py_addr) ) {
+				address = PyString_AsString(py_addr);
+			} else if (PyUnicode_Check(py_addr)) {
+				py_ustr = PyUnicode_AsUTF8String(py_addr);
+				address = PyString_AsString(py_ustr);
 			}
-		} else {
-			as_error_update(&err, AEROSPIKE_ERR_PARAM, "Hosts should be a dictionary");
+			if ( PyInt_Check(py_port) ) {
+				port_no = (uint16_t) PyInt_AsLong(py_port);
+			}
+			else if ( PyLong_Check(py_port) ) {
+				port_no = (uint16_t) PyLong_AsLong(py_port);
+			}
+		} else if ( !PyTuple_Check(py_host)){
+			as_error_update(&err, AEROSPIKE_ERR_PARAM, "Host should be a specified in form of Tuple.");
 			goto CLEANUP;
 		}
 	}
