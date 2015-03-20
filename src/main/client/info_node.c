@@ -173,9 +173,9 @@ PyObject * AerospikeClient_InfoNode(AerospikeClient * self, PyObject * args, PyO
 
 	PyObject * py_request = NULL;
 
-	static char * kwlist[] = {"req", "host", "policy", NULL};
+	static char * kwlist[] = {"command", "host", "policy", NULL};
 
-	if ( PyArg_ParseTupleAndKeywords(args, kwds, "O|OO:info_node", kwlist,
+	if ( PyArg_ParseTupleAndKeywords(args, kwds, "OO|O:info_node", kwlist,
 				&py_request, &py_host, &py_policy) == false ) {
 		return NULL;
 	}
