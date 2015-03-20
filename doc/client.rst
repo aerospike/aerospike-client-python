@@ -754,7 +754,8 @@ Client Class --- :class:`Client`
         :param list args: the arguments to the UDF.
         :param dict policy: optional write policies :ref:`aerospike_write_policies`.
 
-        .. seealso:: `Record UDF <http://www.aerospike.com/docs/guide/record_udf.html>`_.
+        .. seealso:: `Record UDF <http://www.aerospike.com/docs/guide/record_udf.html>`_ \
+          and `Developing Record UDFs <http://www.aerospike.com/docs/udf/developing_record_udfs.html>`_.
 
 
     .. method:: scan_apply(ns, set, module, function[, args[, policy[, options]]])
@@ -771,7 +772,8 @@ Client Class --- :class:`Client`
         :rtype: int
         :return: a scan ID that can be used with :meth:`scan_info` to track the status of the scan, as it runs in the background.
 
-        .. seealso:: `Record UDF <http://www.aerospike.com/docs/guide/record_udf.html>`_.
+        .. seealso:: `Record UDF <http://www.aerospike.com/docs/guide/record_udf.html>`_ \
+          and `Developing Record UDFs <http://www.aerospike.com/docs/udf/developing_record_udfs.html>`_.
 
 
     .. method:: scan_info(scan_id)
