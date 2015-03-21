@@ -860,6 +860,35 @@ Client Class --- :class:`Client`
         .. versionchanged:: 1.0.41
 
 
+
+    .. method:: get_nodes()  ->  []
+
+        Return the list of hosts present in a connected cluster.
+
+        :rtype: :class:`list`
+
+        .. code-block:: python
+
+            import aerospike
+
+            config = {'hosts': [('127.0.0.1', 3000)] }
+            client = aerospike.client(config).connect()
+
+            nodes = client.get_nodes()
+            print(nodes)
+
+            client.close()
+
+        .. note::
+
+            We expect to see something like:
+
+            .. code-block:: python
+
+                [ ( '10.73.76.21', 3000), ('192.168.10.2', 3000) ]
+
+        .. versionchanged:: 1.0.41
+
 .. _aerospike_key_tuple:
 
 Key Tuple
