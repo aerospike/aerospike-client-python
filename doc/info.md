@@ -6,7 +6,7 @@ aerospike.Client.info - sends an info request to all the nodes in a cluster.
 ## Description
 
 ```
-response = aerospike.Client.info( request, config, policies )
+response = aerospike.Client.info( command, hosts, policies )
 
 ```
 
@@ -14,9 +14,9 @@ response = aerospike.Client.info( request, config, policies )
 
 ## Parameters
 
-**request**, a string representing a command and control operation.
+**command**, a string representing a command and control operation.
 
-**config**. a dictionary containing the list of hosts for which the response should be returned.
+**hosts**. the list of hosts for which the response should be returned.
 
 **policies**, the dictionary of policies to be given while returning the info.   
 
@@ -39,7 +39,7 @@ client = aerospike.client(config).connect()
 
 request = "statistics"
 
-response = client.info( request, config )
+response = client.info( request, config['hosts'] )
 
 print response
 
