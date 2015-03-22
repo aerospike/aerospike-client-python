@@ -846,7 +846,21 @@ Client Class --- :class:`Client`
         .. versionchanged:: 1.0.39
 
 
-    .. method:: info_node(command, host[, policy]) -> str
+     .. method:: info(command, hosts[, policy]) -> {}
+
+        Send an info *command* to multiple nodes specified in a *hosts* list.
+
+        :param str command: the info command.
+        :param list hosts: a :class:`list` containing an *address*, *port* :class:`tuple`. Example: ``[('127.0.0.1', 3000)]``
+        :param dict policy: optional info policies :ref:`aerospike_info_policies`.
+        :rtype: :class:`dict`
+
+        .. seealso:: `Info Command Reference <http://www.aerospike.com/docs/reference/info/>`_.
+
+        .. versionchanged:: 1.0.41
+
+
+     .. method:: info_node(command, host[, policy]) -> str
 
         Send an info *command* to a single node specified by *host*.
 
