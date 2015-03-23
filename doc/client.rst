@@ -754,7 +754,8 @@ Client Class --- :class:`Client`
         :param list args: the arguments to the UDF.
         :param dict policy: optional write policies :ref:`aerospike_write_policies`.
 
-        .. seealso:: `Record UDF <http://www.aerospike.com/docs/guide/record_udf.html>`_.
+        .. seealso:: `Record UDF <http://www.aerospike.com/docs/guide/record_udf.html>`_ \
+          and `Developing Record UDFs <http://www.aerospike.com/docs/udf/developing_record_udfs.html>`_.
 
 
     .. method:: scan_apply(ns, set, module, function[, args[, policy[, options]]])
@@ -771,7 +772,8 @@ Client Class --- :class:`Client`
         :rtype: int
         :return: a scan ID that can be used with :meth:`scan_info` to track the status of the scan, as it runs in the background.
 
-        .. seealso:: `Record UDF <http://www.aerospike.com/docs/guide/record_udf.html>`_.
+        .. seealso:: `Record UDF <http://www.aerospike.com/docs/guide/record_udf.html>`_ \
+          and `Developing Record UDFs <http://www.aerospike.com/docs/udf/developing_record_udfs.html>`_.
 
 
     .. method:: scan_info(scan_id)
@@ -842,6 +844,20 @@ Client Class --- :class:`Client`
         :param str index_name: the name of the index.
 
         .. versionchanged:: 1.0.39
+
+
+    .. method:: info_node(command, host[, policy]) -> str
+
+        Send an info *command* to a single node specified by *host*.
+
+        :param str command: the info command.
+        :param tuple host: a :class:`tuple` containing an *address*, *port* pair. Example: ``('127.0.0.1', 3000)``
+        :param dict policy: optional info policies :ref:`aerospike_info_policies`.
+        :rtype: :class:`str`
+
+        .. seealso:: `Info Command Reference <http://www.aerospike.com/docs/reference/info/>`_.
+
+        .. versionchanged:: 1.0.41
 
 
 .. _aerospike_key_tuple:
