@@ -427,9 +427,13 @@ py_funcname, py_value, NULL);
                         goto CLEANUP;
                     }
                 } else {
-					as_error_update(error_p, AEROSPIKE_ERR,
-                            "No deserializer callback registered");
-                    goto CLEANUP;
+					uint32_t bval_size = as_bytes_size(bytes);
+					PyObject *py_val = PyByteArray_FromStringAndSize((char *) as_bytes_get(bytes), bval_size);
+					if (!py_val) {
+						as_error_update(error_p, AEROSPIKE_ERR_CLIENT, "Unable to deserialize bytes");
+						goto CLEANUP;
+					}
+					*retval = py_val;
                 }
             }
             break;
