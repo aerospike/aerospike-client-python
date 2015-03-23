@@ -67,8 +67,8 @@ class TestIndex(object):
             Invoke createindex() with correct arguments
         """
         policy = {}
-        retobj = TestIndex.client.index_integer_create( policy, 'test', 'demo',
-'age', 'age_index'  )
+        retobj = TestIndex.client.index_integer_create('test', 'demo',
+'age', 'age_index', policy)
 
         assert retobj == 0L
         TestIndex.client.index_remove(policy, 'test', 'age_index');
@@ -79,8 +79,8 @@ class TestIndex(object):
         """
         policy = {}
         with pytest.raises(Exception) as exception:
-            retobj = TestIndex.client.index_integer_create( policy, 'test1', 'demo',
-'age', 'age_index'  )
+            retobj = TestIndex.client.index_integer_create( 'test1', 'demo',
+'age', 'age_index', policy )
         assert exception.value[0] == 4
         assert exception.value[1] == 'Namespace Not Found'
 
@@ -89,8 +89,8 @@ class TestIndex(object):
             Invoke createindex() with incorrect set
         """
         policy = {}
-        retobj = TestIndex.client.index_integer_create( policy, 'test', 'demo1',
-'age', 'age_index'  )
+        retobj = TestIndex.client.index_integer_create( 'test', 'demo1',
+'age', 'age_index', policy )
 
         assert retobj == 0L
         TestIndex.client.index_remove(policy, 'test', 'age_index');
@@ -100,8 +100,8 @@ class TestIndex(object):
             Invoke createindex() with incorrect bin
         """
         policy = {}
-        retobj = TestIndex.client.index_integer_create( policy, 'test', 'demo',
-'age1', 'age_index'  )
+        retobj = TestIndex.client.index_integer_create( 'test', 'demo',
+'age1', 'age_index', policy )
 
         assert retobj == 0L
         TestIndex.client.index_remove(policy, 'test', 'age_index');
@@ -112,8 +112,8 @@ class TestIndex(object):
         """
         policy = {}
         with pytest.raises(Exception) as exception:
-            retobj = TestIndex.client.index_integer_create( policy, None, 'demo',
-'age', 'age_index'  )
+            retobj = TestIndex.client.index_integer_create( None, 'demo',
+'age', 'age_index', policy )
         assert exception.value[0] == -2
         assert exception.value[1] == 'Namespace should be a string'
 
@@ -123,8 +123,8 @@ class TestIndex(object):
         """
         policy = {}
         with pytest.raises(Exception) as exception:
-            retobj = TestIndex.client.index_integer_create( policy, 'test', None,
-'age', 'age_index'  )
+            retobj = TestIndex.client.index_integer_create( 'test', None,
+'age', 'age_index' , policy)
         assert exception.value[0] == -2
         assert exception.value[1] == 'Set should be a string'
 
@@ -134,8 +134,8 @@ class TestIndex(object):
         """
         policy = {}
         with pytest.raises(Exception) as exception:
-            retobj = TestIndex.client.index_integer_create( policy, 'test', 'demo',
-None, 'age_index'  )
+            retobj = TestIndex.client.index_integer_create( 'test', 'demo',
+None, 'age_index' , policy)
         assert exception.value[0] == -2
         assert exception.value[1] == 'Bin should be a string'
 
@@ -145,8 +145,8 @@ None, 'age_index'  )
         """
         policy = {}
         with pytest.raises(Exception) as exception:
-            retobj = TestIndex.client.index_integer_create( policy, 'test', 'demo',
-'age', None )
+            retobj = TestIndex.client.index_integer_create( 'test', 'demo',
+'age', None, policy )
         assert exception.value[0] == -2
         assert exception.value[1] == 'Index name should be a string'
 
@@ -155,11 +155,11 @@ None, 'age_index'  )
             Invoke createindex() with multiple times on same bin
         """
         policy = {}
-        retobj = TestIndex.client.index_integer_create( policy, 'test', 'demo',
-'age', 'age_index' )
+        retobj = TestIndex.client.index_integer_create( 'test', 'demo',
+'age', 'age_index', policy)
         if retobj == 0L:
-            retobj = TestIndex.client.index_integer_create( policy, 'test', 'demo',
-'age', 'age_index' )
+            retobj = TestIndex.client.index_integer_create( 'test', 'demo',
+'age', 'age_index', policy)
             TestIndex.client.index_remove(policy, 'test', 'age_index');
             assert retobj == 0L
         else:
@@ -170,11 +170,11 @@ None, 'age_index'  )
             Invoke createindex() with multiple times on different bin
         """
         policy = {}
-        retobj = TestIndex.client.index_integer_create( policy, 'test', 'demo',
-'age', 'age_index' )
+        retobj = TestIndex.client.index_integer_create( 'test', 'demo',
+'age', 'age_index', policy )
         if retobj == 0L:
-            retobj = TestIndex.client.index_integer_create( policy, 'test', 'demo',
-'no', 'age_index' )
+            retobj = TestIndex.client.index_integer_create( 'test', 'demo',
+'no', 'age_index', policy )
             assert retobj == 0L
             TestIndex.client.index_remove(policy, 'test', 'age_index');
         else:
@@ -186,11 +186,11 @@ None, 'age_index'  )
 name
         """
         policy = {}
-        retobj = TestIndex.client.index_integer_create( policy, 'test', 'demo',
-'age', 'age_index' )
+        retobj = TestIndex.client.index_integer_create( 'test', 'demo',
+'age', 'age_index', policy )
         if retobj == 0L:
-            retobj = TestIndex.client.index_integer_create( policy, 'test', 'demo',
-'age', 'age_index1' )
+            retobj = TestIndex.client.index_integer_create( 'test', 'demo',
+'age', 'age_index1', policy )
             assert retobj == 0L
             TestIndex.client.index_remove(policy, 'test', 'age_index');
             TestIndex.client.index_remove(policy, 'test', 'age_index1');
@@ -204,8 +204,8 @@ name
         policy = {
             'timeout': 1000
             }
-        retobj = TestIndex.client.index_integer_create( policy, 'test', 'demo',
-'age', 'age_index'  )
+        retobj = TestIndex.client.index_integer_create( 'test', 'demo',
+'age', 'age_index', policy )
 
         assert retobj == 0L
         TestIndex.client.index_remove(policy, 'test', 'age_index');
@@ -215,8 +215,8 @@ name
             Invoke create string index() with correct arguments
         """
         policy = {}
-        retobj = TestIndex.client.index_string_create( policy, 'test', 'demo',
-'name', 'name_index'  )
+        retobj = TestIndex.client.index_string_create('test', 'demo', 'name',
+                'name_index', policy )
 
         assert retobj == 0L
         TestIndex.client.index_remove(policy, 'test', 'name_index');
@@ -227,8 +227,8 @@ name
         """
         policy = {}
         with pytest.raises(Exception) as exception:
-            retobj = TestIndex.client.index_string_create( policy, 'test1', 'demo',
-'name', 'name_index'  )
+            retobj = TestIndex.client.index_string_create('test1', 'demo',
+'name', 'name_index', policy)
         assert exception.value[0] == 4
         assert exception.value[1] == 'Namespace Not Found'
 
@@ -237,8 +237,8 @@ name
             Invoke create string index() with incorrect set
         """
         policy = {}
-        retobj = TestIndex.client.index_string_create( policy, 'test', 'demo1',
-'name', 'name_index'  )
+        retobj = TestIndex.client.index_string_create('test', 'demo1',
+'name', 'name_index', policy)
 
         assert retobj == 0L
         TestIndex.client.index_remove(policy, 'test', 'name_index');
@@ -248,8 +248,8 @@ name
             Invoke create string index() with incorrect bin
         """
         policy = {}
-        retobj = TestIndex.client.index_string_create( policy, 'test', 'demo',
-'name1', 'name_index'  )
+        retobj = TestIndex.client.index_string_create('test', 'demo',
+'name1', 'name_index', policy)
 
         assert retobj == 0L
         TestIndex.client.index_remove(policy, 'test', 'name_index');
@@ -271,8 +271,8 @@ name
         """
         policy = {}
         with pytest.raises(Exception) as exception:
-            retobj = TestIndex.client.index_string_create( policy, 'test', None,
-'name', 'name_index' )
+            retobj = TestIndex.client.index_string_create('test', None,
+'name', 'name_index', policy)
         assert exception.value[0] == -2
         assert exception.value[1] == 'Set should be a string'
 
@@ -282,8 +282,8 @@ name
         """
         policy = {}
         with pytest.raises(Exception) as exception:
-            retobj = TestIndex.client.index_string_create( policy, 'test', 'demo',
-None, 'name_index'  )
+            retobj = TestIndex.client.index_string_create('test', 'demo',
+None, 'name_index', policy)
         assert exception.value[0] == -2
         assert exception.value[1] == 'Bin should be a string'
 
@@ -293,8 +293,8 @@ None, 'name_index'  )
         """
         policy = {}
         with pytest.raises(Exception) as exception:
-            retobj = TestIndex.client.index_string_create( policy, 'test', 'demo',
-'name', None )
+            retobj = TestIndex.client.index_string_create('test', 'demo',
+'name', None, policy)
         assert exception.value[0] == -2
         assert exception.value[1] == 'Index name should be a string'
 
@@ -303,11 +303,11 @@ None, 'name_index'  )
             Invoke create string index() with multiple times on same bin
         """
         policy = {}
-        retobj = TestIndex.client.index_string_create( policy, 'test', 'demo',
-'name', 'name_index' )
+        retobj = TestIndex.client.index_string_create('test', 'demo',
+'name', 'name_index', policy)
         if retobj == 0L:
-            retobj = TestIndex.client.index_string_create( policy, 'test', 'demo',
-'name', 'name_index' )
+            retobj = TestIndex.client.index_string_create('test', 'demo',
+'name', 'name_index', policy)
             assert retobj == 0L
             TestIndex.client.index_remove(policy, 'test', 'name_index');
         else:
@@ -318,11 +318,11 @@ None, 'name_index'  )
             Invoke create string index() with multiple times on different bin
         """
         policy = {}
-        retobj = TestIndex.client.index_string_create( policy, 'test', 'demo',
-'name', 'name_index' )
+        retobj = TestIndex.client.index_string_create('test', 'demo',
+'name', 'name_index', policy)
         if retobj == 0L:
-            retobj = TestIndex.client.index_string_create( policy, 'test', 'demo',
-'addr', 'name_index' )
+            retobj = TestIndex.client.index_string_create('test', 'demo',
+'addr', 'name_index', policy)
             assert retobj == 0L
             TestIndex.client.index_remove(policy, 'test', 'name_index');
         else:
@@ -334,11 +334,11 @@ None, 'name_index'  )
 name
         """
         policy = {}
-        retobj = TestIndex.client.index_string_create( policy, 'test', 'demo',
-'name', 'name_index' )
+        retobj = TestIndex.client.index_string_create('test', 'demo',
+'name', 'name_index', policy)
         if retobj == 0L:
-            retobj = TestIndex.client.index_string_create( policy, 'test', 'demo',
-'name', 'name_index1' )
+            retobj = TestIndex.client.index_string_create('test', 'demo',
+'name', 'name_index1', policy)
             assert retobj == 0L
             TestIndex.client.index_remove(policy, 'test', 'name_index');
             TestIndex.client.index_remove(policy, 'test', 'name_index1');
@@ -352,8 +352,8 @@ name
         policy = {
             'timeout': 1000
             }
-        retobj = TestIndex.client.index_string_create( policy, 'test', 'demo',
-'name', 'name_index'  )
+        retobj = TestIndex.client.index_string_create('test', 'demo',
+'name', 'name_index', policy)
 
         assert retobj == 0L
         TestIndex.client.index_remove(policy, 'test', 'name_index');
@@ -371,8 +371,8 @@ name
             Invoke drop valid index()
         """
         policy = {}
-        retobj = TestIndex.client.index_integer_create(policy, 'test', 'demo',
-'age', 'age_index')
+        retobj = TestIndex.client.index_integer_create('test', 'demo',
+'age', 'age_index', policy)
         retobj = TestIndex.client.index_remove(policy, 'test', 'age_index')
         assert retobj == 0L
 
@@ -383,8 +383,8 @@ name
         policy = {
             'timeout': 1000
         }
-        retobj = TestIndex.client.index_integer_create(policy, 'test', 'demo',
-'age', 'age_index')
+        retobj = TestIndex.client.index_integer_create('test', 'demo',
+'age', 'age_index', policy)
         retobj = TestIndex.client.index_remove(policy, 'test', 'age_index')
         assert retobj == 0L
     """
@@ -393,9 +393,9 @@ on the C-client side
     def test_createindex_with_long_index_name(self):
             Invoke createindex() with long index name
         policy = {}
-        retobj = TestIndex.client.index_integer_create( policy, 'test', 'demo',
+        retobj = TestIndex.client.index_integer_create( 'test', 'demo',
 'age',
-'bin2_integer_indexsdadadfasdfasdfeartfqrgahfasdfheudsdfasdfawf312342q3453rf9qwfasdcfasdcalskdcbacfq34915rwcfasdcascnabscbaskjdbcalsjkbcdasc')
+'bin2_integer_indexsdadadfasdfasdfeartfqrgahfasdfheudsdfasdfawf312342q3453rf9qwfasdcfasdcalskdcbacfq34915rwcfasdcascnabscbaskjdbcalsjkbcdasc', policy)
 
         assert retobj == 0L
         TestIndex.client.index_remove(policy, 'test',
@@ -406,8 +406,8 @@ on the C-client side
             Invoke create string index() with correct arguments
         """
         policy = {}
-        retobj = TestIndex.client.index_string_create( policy, 'test', u'demo',
-u'name', u'uni_name_index'  )
+        retobj = TestIndex.client.index_string_create('test', u'demo',
+u'name', u'uni_name_index', policy)
 
         assert retobj == 0L
         TestIndex.client.index_remove(policy, 'test', u'uni_name_index');
@@ -417,8 +417,8 @@ u'name', u'uni_name_index'  )
             Invoke createindex() with correct arguments
         """
         policy = {}
-        retobj = TestIndex.client.index_integer_create( policy, 'test', u'demo',
-u'age', u'uni_age_index'  )
+        retobj = TestIndex.client.index_integer_create( 'test', u'demo',
+u'age', u'uni_age_index', policy )
 
         assert retobj == 0L
         TestIndex.client.index_remove(policy, 'test', u'age_index');

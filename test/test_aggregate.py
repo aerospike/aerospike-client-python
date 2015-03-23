@@ -26,7 +26,7 @@ class TestAggregate(object):
         filename = "stream_example.lua"
         udf_type = 0
 
-        status = client.udf_put( policy, filename, udf_type )
+        status = client.udf_put( filename, udf_type, policy )
 
         client.close()
 
@@ -41,7 +41,7 @@ class TestAggregate(object):
         policy = { }
         module = "stream_example.lua"
 
-        status = client.udf_remove( policy, module )
+        status = client.udf_remove( module, policy )
         client.close()
 
     def setup_method(self, method):

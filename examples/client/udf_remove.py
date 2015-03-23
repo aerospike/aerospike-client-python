@@ -90,10 +90,9 @@ try:
      
     try:
 
-        policy = {}
         module = args.pop()
         
-        client.udf_remove(policy, module)
+        client.udf_remove(module)
         print("OK, 1 UDF de-registered")
 
     except Exception as e:

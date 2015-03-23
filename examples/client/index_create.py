@@ -111,10 +111,10 @@ try:
         index_name = args.pop()
 
         if type == 'string':
-            client.index_string_create(policy, namespace, set, bin, index_name)
+            client.index_string_create(namespace, set, bin, index_name, policy)
             print("OK, 1 Secondary Index Created ")
         elif type == 'integer':
-            client.index_integer_create(policy, namespace, set, bin, index_name)
+            client.index_integer_create(namespace, set, bin, index_name, policy)
             print("OK, 1 Secondary Index Created ")
 
     except Exception as e:

@@ -36,7 +36,7 @@ class TestUdfPut(object):
         udf_list = TestUdfPut.client.udf_list( { 'timeout' : 0 } )
         for udf in udf_list:
             if udf['name'] == 'example.lua':
-                TestUdfPut.client.udf_remove({}, "example.lua")
+                TestUdfPut.client.udf_remove("example.lua")
 
     def test_udf_put_without_parameters(self):
 
@@ -51,7 +51,7 @@ class TestUdfPut(object):
         filename = "example.lua"
         udf_type = 0
 
-        status = TestUdfPut.client.udf_put( policy, filename, udf_type )
+        status = TestUdfPut.client.udf_put( filename, udf_type, policy )
 
         assert status == 0
         udf_list = TestUdfPut.client.udf_list( {} )
@@ -70,7 +70,7 @@ class TestUdfPut(object):
         udf_type = 0
 
         with pytest.raises(Exception) as exception:
-            status = TestUdfPut.client.udf_put( policy, filename, udf_type )
+            status = TestUdfPut.client.udf_put( filename, udf_type, policy )
 
         assert exception.value[0] == -2
         assert exception.value[1] == "timeout is invalid"
@@ -81,7 +81,7 @@ class TestUdfPut(object):
         filename = "example.lua"
         udf_type = 0
 
-        status = TestUdfPut.client.udf_put( policy, filename, udf_type )
+        status = TestUdfPut.client.udf_put( filename, udf_type, policy )
 
         assert status == 0
 
@@ -100,7 +100,7 @@ class TestUdfPut(object):
         udf_type = 0
 
         with pytest.raises(Exception) as exception:
-            status = TestUdfPut.client.udf_put( policy, filename, udf_type )
+            status = TestUdfPut.client.udf_put( filename, udf_type, policy )
 
         assert exception.value[0] == 2
         assert exception.value[1] == "cannot open script file"
@@ -112,7 +112,7 @@ class TestUdfPut(object):
         udf_type = 1
 
         with pytest.raises(Exception) as exception:
-            status = TestUdfPut.client.udf_put( policy, filename, udf_type )
+            status = TestUdfPut.client.udf_put( filename, udf_type, policy )
 
         assert exception.value[0] == -2L
         assert exception.value[1] == "Invalid udf type: 1"
@@ -131,7 +131,7 @@ class TestUdfPut(object):
         filename = u"example.lua"
         udf_type = 0
 
-        status = TestUdfPut.client.udf_put( policy, filename, udf_type )
+        status = TestUdfPut.client.udf_put( filename, udf_type, policy )
 
         assert status == 0
         time.sleep(2)

@@ -27,7 +27,7 @@ class TestScanApply(object):
             }
             self.client.put(key, rec)
         policy = {}
-        self.client.udf_put(policy, u"bin_lua.lua", 0)
+        self.client.udf_put(u"bin_lua.lua", 0, policy)
 
     def teardown_method(self, method):
         """

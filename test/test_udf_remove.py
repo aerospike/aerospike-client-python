@@ -33,7 +33,7 @@ class TestUdfRemove(object):
         """
         Setup method
         """
-        TestUdfRemove.client.udf_put( {}, u'example.lua', 0 )
+        TestUdfRemove.client.udf_put( u'example.lua', 0, {} )
         time.sleep(2)
 
     def teardown_method(self,method):
@@ -44,7 +44,7 @@ class TestUdfRemove(object):
         time.sleep(2)
         for udf in udf_list:
             if udf['name'] == 'example.lua':
-                TestUdfRemove.client.udf_remove({}, "example.lua")
+                TestUdfRemove.client.udf_remove("example.lua", {})
 
     def test_udf_remove_without_parameters(self):
 
@@ -64,7 +64,7 @@ class TestUdfRemove(object):
 
         policy = { 'timeout' : 0 }
         module = "example.lua"
-        status = TestUdfRemove.client.udf_remove( policy, module )
+        status = TestUdfRemove.client.udf_remove( module, policy )
 
         assert status == 0
 
@@ -83,7 +83,7 @@ class TestUdfRemove(object):
         policy = { 'timeout' : 0.1 }
         module = "example.lua"
 
-        status = TestUdfRemove.client.udf_remove( policy, module )
+        status = TestUdfRemove.client.udf_remove( module, policy )
 
         assert status == 0
 
@@ -92,7 +92,7 @@ class TestUdfRemove(object):
         policy = { 'timeout' : 1000 }
         module = "example.lua"
 
-        status = TestUdfRemove.client.udf_remove( policy, module )
+        status = TestUdfRemove.client.udf_remove( module, policy )
 
         assert status == 0
         time.sleep(3)
@@ -112,7 +112,7 @@ class TestUdfRemove(object):
         module = "some_module"
 
         with pytest.raises(Exception) as exception:
-            status = TestUdfRemove.client.udf_remove( policy, module )
+            status = TestUdfRemove.client.udf_remove( module, policy )
 
         assert exception.value[0] == 100
         assert exception.value[1] == "error=file_not_found\n"
@@ -121,7 +121,7 @@ class TestUdfRemove(object):
 
         policy = { 'timeout' : 0 }
         module = u"example.lua"
-        status = TestUdfRemove.client.udf_remove( policy, module )
+        status = TestUdfRemove.client.udf_remove( module, policy )
 
         assert status == 0
 

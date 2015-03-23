@@ -304,10 +304,10 @@ PyObject * AerospikeClient_UDF_List(AerospikeClient * self, PyObject *args, PyOb
 /**
  * Gets the registered UDFs
  *
- *		client.udf_getRegistered(module,policy,language)
+ *		client.udf_get(module,policy,language)
  *
  */
-PyObject * AerospikeClient_UDF_Get_Registered_UDF(AerospikeClient * self, PyObject *args, PyObject * kwds);
+PyObject * AerospikeClient_UDF_Get_UDF(AerospikeClient * self, PyObject *args, PyObject * kwds);
 
 
 /*******************************************************************************

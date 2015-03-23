@@ -93,8 +93,8 @@ try:
         language = aerospike.UDF_TYPE_LUA
        	policy = {}
 
-        client.udf_put(policy, module, 0)
-    	udf_contents = client.udf_getRegistered(module, language, policy)
+        client.udf_put(module, language, policy)
+    	udf_contents = client.udf_get(module, language, policy)
         print("Module contents : ")
     	print(udf_contents)
 

@@ -86,34 +86,24 @@ static PyObject * AerospikeClient_InfoNode_Invoke(
 	}
 
 	if ( py_host ) {
-		if ( PyDict_Check(py_host) ) {
-			Py_ssize_t pos = 0;
-			while (PyDict_Next(py_host, &pos, &key_op, &value)) {
-				if ( ! PyString_Check(key_op) ) {
-					as_error_update(&err, AEROSPIKE_ERR_PARAM, "Hosts key must be a string.");
-					goto CLEANUP;
-				} else {
-					char * name = PyString_AsString(key_op);
-					if (!strcmp(name,"addr")) {
-						if (PyUnicode_Check(value)) {
-							py_ustr = PyUnicode_AsUTF8String(value);
-							address = PyString_AsString(py_ustr);
-						} else if (PyString_Check(value)) {
-							address =  PyString_AsString(value);
-						} else {
-							as_error_update(&err, AEROSPIKE_ERR_PARAM, "Host name is of incorrect type");
-							goto CLEANUP;
-						}
-					} else if (!strcmp(name,"port") && (PyLong_Check(value) || PyInt_Check(value))) {
-						port_no = PyLong_AsLong(value);
-					} else {
-						as_error_update(&err, AEROSPIKE_ERR_PARAM, "Hosts dictionary incorrect");
-						goto CLEANUP;
-					}
-				}
+		if ( PyTuple_Check(py_host) && PyTuple_Size(py_host) == 2) {
+			PyObject * py_addr = PyTuple_GetItem(py_host,0);
+			PyObject * py_port = PyTuple_GetItem(py_host,1);
+
+			if ( PyString_Check(py_addr) ) {
+				address = PyString_AsString(py_addr);
+			} else if (PyUnicode_Check(py_addr)) {
+				py_ustr = PyUnicode_AsUTF8String(py_addr);
+				address = PyString_AsString(py_ustr);
 			}
-		} else {
-			as_error_update(&err, AEROSPIKE_ERR_PARAM, "Hosts should be a dictionary");
+			if ( PyInt_Check(py_port) ) {
+				port_no = (uint16_t) PyInt_AsLong(py_port);
+			}
+			else if ( PyLong_Check(py_port) ) {
+				port_no = (uint16_t) PyLong_AsLong(py_port);
+			}
+		} else if ( !PyTuple_Check(py_host)){
+			as_error_update(&err, AEROSPIKE_ERR_PARAM, "Host should be a specified in form of Tuple.");
 			goto CLEANUP;
 		}
 	}
@@ -184,9 +174,9 @@ PyObject * AerospikeClient_InfoNode(AerospikeClient * self, PyObject * args, PyO
 
 	PyObject * py_request = NULL;
 
-	static char * kwlist[] = {"req", "host", "policy", NULL};
+	static char * kwlist[] = {"command", "host", "policy", NULL};
 
-	if ( PyArg_ParseTupleAndKeywords(args, kwds, "O|OO:info_node", kwlist,
+	if ( PyArg_ParseTupleAndKeywords(args, kwds, "OO|O:info_node", kwlist,
 				&py_request, &py_host, &py_policy) == false ) {
 		return NULL;
 	}
@@ -200,15 +190,15 @@ PyObject * AerospikeClient_InfoNode(AerospikeClient * self, PyObject * args, PyO
  *
  * @param err                   as_error object
  * @param command               Request string sent from the python client
- * @param nodes_dict            Dictionary containing details of each host
+ * @param nodes_tuple           List containing details of each host
  * @param return_value          List t o be returned back to the python client
- * @param host_index            Index of the dictionary nodes_dict
+ * @param host_index            Index of the list nodes_tuple
  * @param index                 Index of the list to be returned.
  *
  * Returns information about a host.
  ********************************************************************************************************/
 static PyObject * AerospikeClient_GetNodes_Returnlist(as_error* err,
-	PyObject * command, PyObject * nodes_dict[], PyObject * return_value,
+	PyObject * command, PyObject * nodes_tuple[], PyObject * return_value,
 	uint32_t host_index, Py_ssize_t index) {
 
 	char* tok = NULL;
@@ -227,11 +217,11 @@ static PyObject * AerospikeClient_GetNodes_Returnlist(as_error* err,
 			goto CLEANUP;
 		}
 
-		nodes_dict[host_index] = PyDict_New();
+		nodes_tuple[host_index] = PyTuple_New(2);
 
 		value_tok = PyString_FromString(tok);
-		PyDict_SetItemString(nodes_dict[host_index], "addr" , value_tok);
-		Py_DECREF(value_tok);
+		PyTuple_SetItem(nodes_tuple[host_index], 0 , value_tok);
+		//Py_DECREF(value_tok);
 
 		if(strcmp(PyString_AsString(command),"response_services_p")) {
 			tok = strtok_r(NULL, HOST_DELIMITER, &saved);
@@ -252,11 +242,11 @@ static PyObject * AerospikeClient_GetNodes_Returnlist(as_error* err,
 			}
 		}
 
-		value_tok = PyString_FromString(tok);
-		PyDict_SetItemString(nodes_dict[host_index], "port" , value_tok);
-		Py_DECREF(value_tok);
-		PyList_Insert(return_value, index , nodes_dict[host_index]);
-		Py_DECREF(nodes_dict[host_index]);
+		value_tok = PyInt_FromString(tok, NULL, 10);
+		PyTuple_SetItem(nodes_tuple[host_index], 1 , value_tok);
+		//Py_DECREF(value_tok);
+		PyList_Insert(return_value, index , nodes_tuple[host_index]);
+		Py_DECREF(nodes_tuple[host_index]);
 		index++;
 		host_index++;
 
@@ -289,7 +279,7 @@ static PyObject * AerospikeClient_GetNodes_Invoke(
 
 	PyObject * response_services_p = NULL;
 	PyObject * response_service_p = NULL;
-	PyObject * nodes_dict[MAX_HOST_COUNT] = {0};
+	PyObject * nodes_tuple[MAX_HOST_COUNT] = {0};
 	PyObject * return_value = PyList_New(0);
 
 	as_error err;
@@ -312,9 +302,9 @@ static PyObject * AerospikeClient_GetNodes_Invoke(
 		goto CLEANUP;
 	}
 
-	return_value = AerospikeClient_GetNodes_Returnlist(&err, response_service_p, nodes_dict, return_value, 0, 0);
+	return_value = AerospikeClient_GetNodes_Returnlist(&err, response_service_p, nodes_tuple, return_value, 0, 0);
 	if( return_value )
-		return_value = AerospikeClient_GetNodes_Returnlist(&err, response_services_p, nodes_dict, return_value, 1, 1);
+		return_value = AerospikeClient_GetNodes_Returnlist(&err, response_services_p, nodes_tuple, return_value, 1, 1);
 
 CLEANUP:
 
