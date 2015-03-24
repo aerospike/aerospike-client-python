@@ -332,7 +332,7 @@ static int AerospikeClient_Type_Init(AerospikeClient * self, PyObject * args, Py
 	as_policies_init(&config.policies);
 
 	PyObject * py_policies = PyDict_GetItemString(py_config, "policies");
-	if ( PyDict_Check(py_policies)) {
+	if ( py_policies && PyDict_Check(py_policies)) {
 		//global defaults setting
 		PyObject * py_key_policy = PyDict_GetItemString(py_policies, "key");
 		if ( py_key_policy && PyInt_Check(py_key_policy) ) {
