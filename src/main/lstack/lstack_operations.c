@@ -70,7 +70,8 @@ PyObject * AerospikeLStack_Push(AerospikeLStack * self, PyObject * args, PyObjec
 	}
 
 	// Convert python policy object to as_policy_apply
-	pyobject_to_policy_apply(&err, py_policy, &apply_policy, &apply_policy_p);
+	pyobject_to_policy_apply(&err, py_policy, &apply_policy, &apply_policy_p,
+			&self->client->as->config.policies.apply);
 	if ( err.code != AEROSPIKE_OK ) {
 		goto CLEANUP;
 	}
@@ -141,7 +142,8 @@ PyObject * AerospikeLStack_Push_Many(AerospikeLStack * self, PyObject * args, Py
 	}
 
 	// Convert python policy object to as_policy_apply
-	pyobject_to_policy_apply(&err, py_policy, &apply_policy, &apply_policy_p);
+	pyobject_to_policy_apply(&err, py_policy, &apply_policy, &apply_policy_p,
+			&self->client->as->config.policies.apply);
 	if ( err.code != AEROSPIKE_OK ) {
 		goto CLEANUP;
 	}
@@ -217,7 +219,8 @@ PyObject * AerospikeLStack_Peek(AerospikeLStack * self, PyObject * args, PyObjec
 	}
 
 	// Convert python policy object to as_policy_apply
-	pyobject_to_policy_apply(&err, py_policy, &apply_policy, &apply_policy_p);
+	pyobject_to_policy_apply(&err, py_policy, &apply_policy, &apply_policy_p,
+			&self->client->as->config.policies.apply);
 	if ( err.code != AEROSPIKE_OK ) {
 		goto CLEANUP;
 	}
@@ -295,7 +298,8 @@ PyObject * AerospikeLStack_Filter(AerospikeLStack * self, PyObject * args, PyObj
 	}
 
 	// Convert python policy object to as_policy_apply
-	pyobject_to_policy_apply(&err, py_policy, &apply_policy, &apply_policy_p);
+	pyobject_to_policy_apply(&err, py_policy, &apply_policy, &apply_policy_p,
+			&self->client->as->config.policies.apply);
 	if ( err.code != AEROSPIKE_OK ) {
 		goto CLEANUP;
 	}
@@ -380,7 +384,8 @@ PyObject * AerospikeLStack_Destroy(AerospikeLStack * self, PyObject * args, PyOb
 	}
 
 	// Convert python policy object to as_policy_apply
-	pyobject_to_policy_apply(&err, py_policy, &apply_policy, &apply_policy_p);
+	pyobject_to_policy_apply(&err, py_policy, &apply_policy, &apply_policy_p,
+			&self->client->as->config.policies.apply);
 	if ( err.code != AEROSPIKE_OK ) {
 		goto CLEANUP;
 	}
@@ -437,7 +442,8 @@ PyObject * AerospikeLStack_Get_Capacity(AerospikeLStack * self, PyObject * args,
 	}
 
 	// Convert python policy object to as_policy_apply
-	pyobject_to_policy_apply(&err, py_policy, &apply_policy, &apply_policy_p);
+	pyobject_to_policy_apply(&err, py_policy, &apply_policy, &apply_policy_p,
+			&self->client->as->config.policies.apply);
 	if ( err.code != AEROSPIKE_OK ) {
 		goto CLEANUP;
 	}
@@ -495,7 +501,8 @@ PyObject * AerospikeLStack_Set_Capacity(AerospikeLStack * self, PyObject * args,
 	}
 
 	// Convert python policy object to as_policy_apply
-	pyobject_to_policy_apply(&err, py_policy, &apply_policy, &apply_policy_p);
+	pyobject_to_policy_apply(&err, py_policy, &apply_policy, &apply_policy_p,
+			&self->client->as->config.policies.apply);
 	if ( err.code != AEROSPIKE_OK ) {
 		goto CLEANUP;
 	}
@@ -553,7 +560,8 @@ PyObject * AerospikeLStack_Size(AerospikeLStack * self, PyObject * args, PyObjec
 	}
 
 	// Convert python policy object to as_policy_apply
-	pyobject_to_policy_apply(&err, py_policy, &apply_policy, &apply_policy_p);
+	pyobject_to_policy_apply(&err, py_policy, &apply_policy, &apply_policy_p,
+			&self->client->as->config.policies.apply);
 	if ( err.code != AEROSPIKE_OK ) {
 		goto CLEANUP;
 	}

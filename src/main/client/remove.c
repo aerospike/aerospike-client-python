@@ -72,7 +72,8 @@ PyObject * AerospikeClient_Remove_Invoke(
 
 	// Convert python policy object to as_policy_exists
 	if (py_policy) {
-		pyobject_to_policy_remove(&err, py_policy, &remove_policy, &remove_policy_p);
+		pyobject_to_policy_remove(&err, py_policy, &remove_policy, &remove_policy_p,
+				&self->as->config.policies.remove);
 		if ( err.code != AEROSPIKE_OK ) {
 			goto CLEANUP;
 		} else {

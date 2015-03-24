@@ -129,7 +129,8 @@ PyObject * AerospikeScan_Foreach(AerospikeScan * self, PyObject * args, PyObject
 	}
 
 	// Convert python policy object to as_policy_exists
-	pyobject_to_policy_scan(&err, py_policy, &scan_policy, &scan_policy_p);
+	pyobject_to_policy_scan(&err, py_policy, &scan_policy, &scan_policy_p,
+			&self->client->as->config.policies.scan);
 	if ( err.code != AEROSPIKE_OK ) {
 		goto CLEANUP;
 	}

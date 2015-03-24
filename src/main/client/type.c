@@ -329,8 +329,56 @@ static int AerospikeClient_Type_Init(AerospikeClient * self, PyObject * args, Py
 		}
 	}
 
-
 	as_policies_init(&config.policies);
+
+	PyObject * py_policies = PyDict_GetItemString(py_config, "policies");
+	if ( PyDict_Check(py_policies)) {
+		//global defaults setting
+		PyObject * py_key_policy = PyDict_GetItemString(py_policies, "key");
+		if ( py_key_policy && PyInt_Check(py_key_policy) ) {
+			config.policies.key = PyInt_AsLong(py_key_policy);
+		}
+
+		PyObject * py_timeout = PyDict_GetItemString(py_policies, "timeout");
+		if ( py_timeout && PyInt_Check(py_timeout) ) {
+			config.policies.timeout = PyInt_AsLong(py_timeout);
+		}
+
+		PyObject * py_retry = PyDict_GetItemString(py_policies, "retry");
+		if ( py_retry && PyInt_Check(py_retry) ) {
+			config.policies.retry = PyInt_AsLong(py_retry);
+		}
+
+		PyObject * py_exists = PyDict_GetItemString(py_policies, "exists");
+		if ( py_exists && PyInt_Check(py_exists) ) {
+			config.policies.exists = PyInt_AsLong(py_exists);
+		}
+
+		PyObject * py_replica = PyDict_GetItemString(py_policies, "replica");
+		if ( py_replica && PyInt_Check(py_replica) ) {
+			config.policies.replica = PyInt_AsLong(py_replica);
+		}
+
+		PyObject * py_consistency_level = PyDict_GetItemString(py_policies, "consistency_level");
+		if ( py_consistency_level && PyInt_Check(py_consistency_level) ) {
+			config.policies.consistency_level = PyInt_AsLong(py_consistency_level);
+		}
+
+		PyObject * py_commit_level = PyDict_GetItemString(py_policies, "commit_level");
+		if ( py_commit_level && PyInt_Check(py_commit_level) ) {
+			config.policies.commit_level = PyInt_AsLong(py_commit_level);
+		}
+
+		/*
+		 * Generation policy is removed from constructor.
+		 */
+	}
+
+	//conn_timeout_ms
+	PyObject * py_connect_timeout = PyDict_GetItemString(py_config, "connect_timeout");
+	if ( py_connect_timeout && PyInt_Check(py_connect_timeout) ) {
+		config.conn_timeout_ms = PyInt_AsLong(py_connect_timeout);
+	}
 
 	self->as = aerospike_new(&config);
 

@@ -88,7 +88,8 @@ PyObject * AerospikeClient_Put_Invoke(
 	}
 
 	// Convert python policy object to as_policy_write
-	pyobject_to_policy_write(&err, py_policy, &write_policy, &write_policy_p);
+	pyobject_to_policy_write(&err, py_policy, &write_policy, &write_policy_p,
+			&self->as->config.policies.write);
 	if ( err.code != AEROSPIKE_OK ) {
 		goto CLEANUP;
 	}

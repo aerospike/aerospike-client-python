@@ -354,8 +354,9 @@ CLEANUP:
  */
 static
 PyObject * AerospikeClient_convert_pythonObj_to_asType(
-	as_error *err, PyObject* py_key, PyObject* py_policy,
-	as_key* key_p, as_policy_operate* operate_policy_p,
+	AerospikeClient * self, as_error *err, PyObject* py_key,
+	PyObject* py_policy, as_key* key_p,
+	as_policy_operate* operate_policy_p,
 	as_policy_operate** operate_policy_pp)
 {
 	pyobject_to_key(err, py_key, key_p);
@@ -364,7 +365,8 @@ PyObject * AerospikeClient_convert_pythonObj_to_asType(
 	}
 
 	if (py_policy) {
-		pyobject_to_policy_operate(err, py_policy, operate_policy_p, operate_policy_pp);
+		pyobject_to_policy_operate(err, py_policy, operate_policy_p, operate_policy_pp,
+				&self->as->config.policies.operate);
 	}
 
 CLEANUP:
@@ -424,7 +426,7 @@ PyObject * AerospikeClient_Append(AerospikeClient * self, PyObject * args, PyObj
 		goto CLEANUP;
 	}
 
-	py_result = AerospikeClient_convert_pythonObj_to_asType(&err,
+	py_result = AerospikeClient_convert_pythonObj_to_asType(self, &err,
 			py_key, py_policy, &key, &operate_policy, &operate_policy_p);
 	if (!py_result) {
 		goto CLEANUP;
@@ -504,7 +506,7 @@ PyObject * AerospikeClient_Prepend(AerospikeClient * self, PyObject * args, PyOb
 		goto CLEANUP;
 	}
 
-	py_result = AerospikeClient_convert_pythonObj_to_asType(&err,
+	py_result = AerospikeClient_convert_pythonObj_to_asType(self, &err,
 			py_key, py_policy, &key, &operate_policy, &operate_policy_p);
 	if (!py_result) {
 		goto CLEANUP;
@@ -587,7 +589,7 @@ PyObject * AerospikeClient_Increment(AerospikeClient * self, PyObject * args, Py
 		goto CLEANUP;
 	}
 
-	py_result = AerospikeClient_convert_pythonObj_to_asType(&err,
+	py_result = AerospikeClient_convert_pythonObj_to_asType(self, &err,
 			py_key, py_policy, &key, &operate_policy, &operate_policy_p);
 
 	if (!py_result) {
@@ -667,7 +669,7 @@ PyObject * AerospikeClient_Touch(AerospikeClient * self, PyObject * args, PyObje
 		goto CLEANUP;
 	}
 
-	py_result = AerospikeClient_convert_pythonObj_to_asType(&err,
+	py_result = AerospikeClient_convert_pythonObj_to_asType(self, &err,
 			py_key, py_policy, &key, &operate_policy, &operate_policy_p);
 	if (!py_result) {
 		goto CLEANUP;
@@ -746,7 +748,7 @@ PyObject * AerospikeClient_Operate(AerospikeClient * self, PyObject * args, PyOb
 		goto CLEANUP;
 	}
 
-	py_result = AerospikeClient_convert_pythonObj_to_asType(&err,
+	py_result = AerospikeClient_convert_pythonObj_to_asType(self, &err,
 			py_key, py_policy, &key, &operate_policy, &operate_policy_p);
 	if (!py_result) {
 		goto CLEANUP;
