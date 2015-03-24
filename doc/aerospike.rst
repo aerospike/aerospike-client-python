@@ -89,7 +89,7 @@ containing the keys of all records in the set.
 
 .. py:function:: set_serializer(callback)
 
-    Overrides the default serializer with a user-defined fucntion *callback*.
+    Overrides the default serializer with a user-defined function *callback*.
 
     :param callback callback: the function to invoke for serialization.
 
@@ -123,6 +123,33 @@ containing the keys of all records in the set.
         aerospike.set_deserializer(my_serializer)
 
     .. versionadded:: 1.0.39
+
+
+.. py:function:: set_log_handler(callback)
+
+    Set a user-defined function as the log handler for all aerospike objects.
+    The *callback* is invoked whenever a log event passing the logging level
+    threshold is encountered.
+
+    :param callback callback: the function used as the logging handler.
+
+    .. code-block:: python
+
+        import aerospike
+        import syslog
+
+        def as_logger(level, func, myfile, line):
+            syslog.syslog(line)
+
+        aerospike.set_log_level(aerospike.LOG_LEVEL_DEBUG)
+        aerospike.set_deserializer(as_logger)
+
+
+.. py:function:: set_log_level(log_level)
+
+    Declare the logging level threshold for the log handler.
+
+    :param int log_level: one of the :ref:`aerospike_log_levels` constant values.
 
 
 .. _aerospike_operators:
@@ -238,4 +265,21 @@ Miscellaneous
 -------------
 
 .. data:: UDF_TYPE_LUA
+
+.. _aerospike_log_levels:
+
+Log Level
+---------
+
+.. data:: LOG_LEVEL_TRACE
+
+.. data:: LOG_LEVEL_DEBUG
+
+.. data:: LOG_LEVEL_INFO
+
+.. data:: LOG_LEVEL_WARN
+
+.. data:: LOG_LEVEL_ERROR
+
+.. data:: LOG_LEVEL_OFF
 
