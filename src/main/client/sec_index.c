@@ -61,7 +61,7 @@ PyObject * AerospikeClient_Index_Integer_Create(AerospikeClient * self, PyObject
 	static char * kwlist[] = {"ns", "set", "bin", "name", "policy", NULL};
 
 	// Python Function Argument Parsing
-	if ( PyArg_ParseTupleAndKeywords(args, kwds, "OOOOO:index_integer_create", kwlist,
+	if ( PyArg_ParseTupleAndKeywords(args, kwds, "OOOO|O:index_integer_create", kwlist,
 				&py_ns, &py_set, &py_bin, &py_name, &py_policy) == false ) {
 		return NULL;
 	}
@@ -72,7 +72,8 @@ PyObject * AerospikeClient_Index_Integer_Create(AerospikeClient * self, PyObject
 	}
 
 	// Convert python object to policy_info
-	pyobject_to_policy_info( &err, py_policy, &info_policy, &info_policy_p);
+	pyobject_to_policy_info( &err, py_policy, &info_policy, &info_policy_p,
+			&self->as->config.policies.info);
 	if ( err.code != AEROSPIKE_OK ) {
 		goto CLEANUP;
 	}
@@ -189,7 +190,7 @@ PyObject * AerospikeClient_Index_String_Create(AerospikeClient * self, PyObject 
 	static char * kwlist[] = {"ns", "set", "bin", "name", "policy", NULL};
 
 	// Python Function Argument Parsing
-	if ( PyArg_ParseTupleAndKeywords(args, kwds, "OOOOO:index_string_create", kwlist,
+	if ( PyArg_ParseTupleAndKeywords(args, kwds, "OOOO|O:index_string_create", kwlist,
 				&py_ns, &py_set, &py_bin, &py_name, &py_policy) == false ) {
 		return NULL;
 	}
@@ -200,7 +201,8 @@ PyObject * AerospikeClient_Index_String_Create(AerospikeClient * self, PyObject 
 	}
 
 	// Convert python object to policy_info
-	pyobject_to_policy_info( &err, py_policy, &info_policy, &info_policy_p);
+	pyobject_to_policy_info( &err, py_policy, &info_policy, &info_policy_p,
+			&self->as->config.policies.info);
 	if ( err.code != AEROSPIKE_OK ) {
 		goto CLEANUP;
 	}
@@ -315,7 +317,7 @@ PyObject * AerospikeClient_Index_Remove(AerospikeClient * self, PyObject *args, 
 	static char * kwlist[] = {"ns", "name", "policy", NULL};
 
 	// Python Function Argument Parsing
-	if ( PyArg_ParseTupleAndKeywords(args, kwds, "OOO:index_remove", kwlist,
+	if ( PyArg_ParseTupleAndKeywords(args, kwds, "OO|O:index_remove", kwlist,
 				&py_ns, &py_name, &py_policy) == false ) {
 		return NULL;
 	}
@@ -326,7 +328,8 @@ PyObject * AerospikeClient_Index_Remove(AerospikeClient * self, PyObject *args, 
 	}
 
 	// Convert python object to policy_info
-	pyobject_to_policy_info( &err, py_policy, &info_policy, &info_policy_p);
+	pyobject_to_policy_info( &err, py_policy, &info_policy, &info_policy_p,
+			&self->as->config.policies.info);
 	if ( err.code != AEROSPIKE_OK ) {
 		goto CLEANUP;
 	}

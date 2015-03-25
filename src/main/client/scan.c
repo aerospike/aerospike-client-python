@@ -117,8 +117,8 @@ PyObject * AerospikeClient_ScanApply_Invoke(
 	is_scan_init = true;
 
 	if (py_policy) {
-
-		pyobject_to_policy_scan(&err, py_policy, &scan_policy, &scan_policy_p);
+		pyobject_to_policy_scan(&err, py_policy, &scan_policy, &scan_policy_p,
+				&self->as->config.policies.scan);
 
 		if (err.code != AEROSPIKE_OK) {
 			goto CLEANUP;
@@ -171,7 +171,8 @@ PyObject * AerospikeClient_ScanApply_Invoke(
 	if(err.code == AEROSPIKE_OK) {
 		if(block) {
 			if (py_policy) {
-				pyobject_to_policy_info(&err, py_policy, &info_policy, &info_policy_p);
+				pyobject_to_policy_info(&err, py_policy, &info_policy, &info_policy_p,
+						&self->as->config.policies.info);
 				if (err.code != AEROSPIKE_OK) {
 					goto CLEANUP;
 				}
@@ -297,7 +298,8 @@ PyObject * AerospikeClient_ScanInfo(AerospikeClient * self, PyObject * args, PyO
 	}
 
 	// Convert python object to policy_info
-	pyobject_to_policy_info( &err, py_policy, &info_policy, &info_policy_p );
+	pyobject_to_policy_info( &err, py_policy, &info_policy, &info_policy_p,
+			&self->as->config.policies.info);
 	if ( err.code != AEROSPIKE_OK ) {
 		goto CLEANUP;
 	}

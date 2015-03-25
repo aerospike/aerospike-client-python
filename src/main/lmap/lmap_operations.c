@@ -69,7 +69,8 @@ PyObject * AerospikeLMap_Put(AerospikeLMap * self, PyObject * args, PyObject * k
 	}
 
 	// Convert python policy object to as_policy_apply
-	pyobject_to_policy_apply(&err, py_policy, &apply_policy, &apply_policy_p);
+	pyobject_to_policy_apply(&err, py_policy, &apply_policy, &apply_policy_p,
+			&self->client->as->config.policies.apply);
 	if ( err.code != AEROSPIKE_OK ) {
 		goto CLEANUP;
 	}
@@ -148,7 +149,8 @@ PyObject * AerospikeLMap_Put_Many(AerospikeLMap * self, PyObject * args, PyObjec
 	}
 
 	// Convert python policy object to as_policy_apply
-	pyobject_to_policy_apply(&err, py_policy, &apply_policy, &apply_policy_p);
+	pyobject_to_policy_apply(&err, py_policy, &apply_policy, &apply_policy_p,
+			&self->client->as->config.policies.apply);
 	if ( err.code != AEROSPIKE_OK ) {
 		goto CLEANUP;
 	}
@@ -228,7 +230,8 @@ PyObject * AerospikeLMap_Get(AerospikeLMap * self, PyObject * args, PyObject * k
 	}
 
 	// Convert python policy object to as_policy_apply
-	pyobject_to_policy_apply(&err, py_policy, &apply_policy, &apply_policy_p);
+	pyobject_to_policy_apply(&err, py_policy, &apply_policy, &apply_policy_p,
+			&self->client->as->config.policies.apply);
 	if ( err.code != AEROSPIKE_OK ) {
 		goto CLEANUP;
 	}
@@ -311,7 +314,8 @@ PyObject * AerospikeLMap_Filter(AerospikeLMap * self, PyObject * args, PyObject 
 	}
 
 	// Convert python policy object to as_policy_apply
-	pyobject_to_policy_apply(&err, py_policy, &apply_policy, &apply_policy_p);
+	pyobject_to_policy_apply(&err, py_policy, &apply_policy, &apply_policy_p,
+			&self->client->as->config.policies.apply);
 	if ( err.code != AEROSPIKE_OK ) {
 		goto CLEANUP;
 	}
@@ -396,7 +400,8 @@ PyObject * AerospikeLMap_Destroy(AerospikeLMap * self, PyObject * args, PyObject
 	}
 
 	// Convert python policy object to as_policy_apply
-	pyobject_to_policy_apply(&err, py_policy, &apply_policy, &apply_policy_p);
+	pyobject_to_policy_apply(&err, py_policy, &apply_policy, &apply_policy_p,
+			&self->client->as->config.policies.apply);
 	if ( err.code != AEROSPIKE_OK ) {
 		goto CLEANUP;
 	}
@@ -458,7 +463,8 @@ PyObject * AerospikeLMap_Remove(AerospikeLMap * self, PyObject * args, PyObject 
 	}
 
 	// Convert python policy object to as_policy_apply
-	pyobject_to_policy_apply(&err, py_policy, &apply_policy, &apply_policy_p);
+	pyobject_to_policy_apply(&err, py_policy, &apply_policy, &apply_policy_p,
+			&self->client->as->config.policies.apply);
 	if ( err.code != AEROSPIKE_OK ) {
 		goto CLEANUP;
 	}
@@ -524,7 +530,8 @@ PyObject * AerospikeLMap_Size(AerospikeLMap * self, PyObject * args, PyObject * 
 	}
 
 	// Convert python policy object to as_policy_apply
-	pyobject_to_policy_apply(&err, py_policy, &apply_policy, &apply_policy_p);
+	pyobject_to_policy_apply(&err, py_policy, &apply_policy, &apply_policy_p,
+			&self->client->as->config.policies.apply);
 	if ( err.code != AEROSPIKE_OK ) {
 		goto CLEANUP;
 	}

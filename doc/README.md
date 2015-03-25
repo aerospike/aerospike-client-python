@@ -1,5 +1,12 @@
 # Sphinx Documentation
 
+## API Docs Online
+
+The API docs are online at http://www.aerospike.com/apidocs/python/
+and https://pythonhosted.org/aerospike/
+
+## Generating Local Documentation
+
 You can use [Sphinx](http://sphinx-doc.org/index.html) to generate
 documentation from the _rst_ pages in this directory.
 

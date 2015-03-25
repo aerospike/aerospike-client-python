@@ -72,7 +72,8 @@ extern PyObject * AerospikeClient_Exists_Invoke(
 	key_initialised = true;
 
 	// Convert python policy object to as_policy_exists
-	pyobject_to_policy_read(&err, py_policy, &read_policy, &read_policy_p);
+	pyobject_to_policy_read(&err, py_policy, &read_policy, &read_policy_p,
+			&self->as->config.policies.read);
 	if ( err.code != AEROSPIKE_OK ) {
 		goto CLEANUP;
 	}

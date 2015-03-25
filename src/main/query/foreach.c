@@ -130,7 +130,8 @@ PyObject * AerospikeQuery_Foreach(AerospikeQuery * self, PyObject * args, PyObje
 	}
 
 	// Convert python policy object to as_policy_exists
-	pyobject_to_policy_query(&err, py_policy, &query_policy, &query_policy_p);
+	pyobject_to_policy_query(&err, py_policy, &query_policy, &query_policy_p,
+			&self->client->as->config.policies.query);
 	if ( err.code != AEROSPIKE_OK ) {
 		goto CLEANUP;
 	}

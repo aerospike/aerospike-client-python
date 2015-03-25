@@ -1172,3 +1172,31 @@ class TestPut(object):
         assert bins == {'seq': {u'bb' : ('a', 'b', 'c')}}
 
         self.delete_keys.append( key )
+
+    def test_put_user_serializer_no_deserializer(self):
+
+        """
+            Invoke put() for float data record with user serializer is
+            registered, but deserializer is not registered.
+        """
+
+        key = ( 'test', 'demo', 1 )
+
+        rec = {
+                "pi" : 3.14
+                }
+
+        def serialize_function(val):
+            return pickle.dumps(val)
+
+        response = aerospike.set_serializer(serialize_function)
+
+        res = TestPut.client.put( key, rec , {}, {}, aerospike.SERIALIZER_USER)
+
+        assert res == 0
+
+        _, _, bins = TestPut.client.get( key )
+
+        assert bins == {'pi': bytearray(b'F3.1400000000000001\n.')}
+
+        self.delete_keys.append( key )
