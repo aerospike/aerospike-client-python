@@ -19,11 +19,11 @@ class TestApply(object):
                 }
         TestApply.client = aerospike.client(config).connect()
         policy = {}
-        TestApply.client.index_integer_create(policy, 'test', 'demo',
-'age', 'age_index')
+        TestApply.client.index_integer_create('test', 'demo',
+'age', 'age_index', policy)
         policy = {}
-        TestApply.client.index_integer_create(policy, 'test', 'demo',
-'age1', 'age_index1')
+        TestApply.client.index_integer_create('test', 'demo',
+'age1', 'age_index1', policy)
 
         policy = {}
         filename = "sample.lua"
@@ -35,8 +35,8 @@ class TestApply(object):
 
     def teardown_class(cls):
         policy = {}
-        TestApply.client.index_remove(policy, 'test', 'age_index');
-        TestApply.client.index_remove(policy, 'test', 'age_index1');
+        TestApply.client.index_remove('test', 'age_index', policy);
+        TestApply.client.index_remove('test', 'age_index1', policy);
         policy = { 'timeout' : 0 }
         module = "sample.lua"
 

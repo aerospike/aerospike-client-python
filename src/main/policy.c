@@ -20,6 +20,7 @@
 #include <aerospike/as_error.h>
 #include <aerospike/as_policy.h>
 #include <aerospike/as_status.h>
+#include <aerospike/aerospike_index.h>
 #include "aerospike/as_scan.h"
 
 #include "policy.h"
@@ -93,7 +94,9 @@ AerospikeConstants aerospike_constants[] = {
 	{ SERIALIZER_PYTHON						,	"SERIALIZER_PYTHON" },
 	{ SERIALIZER_USER						,	"SERIALIZER_USER" },
 	{ SERIALIZER_JSON						,	"SERIALIZER_JSON" },
-	{ SERIALIZER_NONE						,	"SERIALIZER_NONE" }
+	{ SERIALIZER_NONE						,	"SERIALIZER_NONE" },
+	{ AS_INDEX_STRING						,	"INDEX_STRING" },
+	{ AS_INDEX_NUMERIC						,	"INDEX_NUMERIC" }
 };
 
 /**

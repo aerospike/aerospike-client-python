@@ -50,7 +50,7 @@ class TestUdfRemove(object):
 
         with pytest.raises(TypeError) as typeError:
             status = TestUdfRemove.client.udf_remove()
-        assert "Required argument 'policy' (pos 1) not found" in typeError.value
+        assert "Required argument 'filename' (pos 1) not found" in typeError.value
 
     def test_udf_remove_with_none_as_parameters(self):
 

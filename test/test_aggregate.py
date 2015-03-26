@@ -16,11 +16,11 @@ class TestAggregate(object):
         config = { 'hosts' : [('127.0.0.1', 3000)] }
         client = aerospike.client(config).connect()
         policy = {}
-        client.index_integer_create(policy, 'test', 'demo',
-'test_age', 'age_index')
+        client.index_integer_create('test', 'demo',
+'test_age', 'age_index', policy)
         policy = {}
-        client.index_integer_create(policy, 'test', 'demo',
-'age1', 'age_index1')
+        client.index_integer_create('test', 'demo',
+'age1', 'age_index1', policy)
 
         policy = {}
         filename = "stream_example.lua"
@@ -36,8 +36,8 @@ class TestAggregate(object):
         }
         client = aerospike.client(config).connect()
         policy = {}
-        client.index_remove(policy, 'test', 'age_index');
-        client.index_remove(policy, 'test', 'age_index1');
+        client.index_remove('test', 'age_index', policy);
+        client.index_remove('test', 'age_index1', policy);
         policy = { }
         module = "stream_example.lua"
 

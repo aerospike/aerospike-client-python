@@ -43,7 +43,7 @@ class TestUdfPut(object):
         with pytest.raises(TypeError) as typeError:
             TestUdfPut.client.udf_put()
 
-        assert "Required argument 'policy' (pos 1) not found" in typeError.value
+        assert "Required argument 'filename' (pos 1) not found" in typeError.value
 
     def test_udf_put_with_proper_parameters(self):
 
