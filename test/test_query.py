@@ -18,7 +18,7 @@ class TestQuery(object):
 
     def setup_class(cls):
         config = {
-                'hosts': [('172.20.25.195', 3000)]
+                'hosts': [('127.0.0.1', 3000)]
                 }
         TestQuery.client = aerospike.client(config).connect()
         TestQuery.client.index_integer_create('test', 'demo', 'test_age', 'age_index')
@@ -485,4 +485,4 @@ class TestQuery(object):
             records.append(record)
 
         query.foreach(callback)
-        assert len(records) == 2
+        assert len(records) == 8

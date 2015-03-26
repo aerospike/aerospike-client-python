@@ -16,7 +16,7 @@ class TestMapValuesIndex(object):
         Setup method.
         """
         config = {
-                'hosts': [('172.20.25.195', 3000)]
+                'hosts': [('127.0.0.1', 3000)]
                 }
         TestMapValuesIndex.client = aerospike.client(config).connect()
     
