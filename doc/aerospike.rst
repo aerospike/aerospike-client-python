@@ -266,6 +266,28 @@ Miscellaneous
 
 .. data:: UDF_TYPE_LUA
 
+.. data:: INDEX_STRING
+
+    An index whose values are of the aerospike string data type
+
+.. data:: INDEX_NUMERIC
+
+    An index whose values are of the aerospike integer data type
+
+.. seealso:: `Data Types <http://www.aerospike.com/docs/guide/data-types.html>`_.
+
+.. data:: INDEX_TYPE_LIST
+
+    Index a bin whose contents is an aerospike list
+
+.. data:: INDEX_TYPE_MAPKEYS
+
+    Index the keys of a bin whose contents is an aerospike map
+
+.. data:: INDEX_TYPE_MAPVALUES
+
+    Index the values of a bin whose contents is an aerospike map
+
 .. _aerospike_log_levels:
 
 Log Level
