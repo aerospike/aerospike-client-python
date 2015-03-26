@@ -107,9 +107,7 @@ static bool AerospikeClient_Info_each(as_error * err, const as_node * node, cons
 	PyTuple_SetItem(py_res, 1, py_out);
 
 	if(udata_ptr->host_lookup_p) {
-		PyObject *py_config = (PyObject *)udata_ptr->host_lookup_p;
-		if(PyDict_Check(py_config)) {
-			PyObject * py_hosts = PyDict_GetItemString(py_config, "hosts");
+		PyObject *py_hosts = (PyObject *)udata_ptr->host_lookup_p;
 			if ( py_hosts && PyList_Check(py_hosts) ) {
 				addr = as_node_get_address((as_node *)node);
 				int size = (int) PyList_Size(py_hosts);
@@ -150,8 +148,10 @@ static bool AerospikeClient_Info_each(as_error * err, const as_node * node, cons
 							}
 					}
 				}
+			} else if ( !PyList_Check( py_hosts )){
+				as_error_update(&udata_ptr->error, AEROSPIKE_ERR_PARAM, "Hosts should be specified in a list.");
+				goto CLEANUP;
 			}
-		}
 	} else {
 		PyObject * py_nodes = (PyObject *) udata_ptr->udata_p;
 		PyDict_SetItemString(py_nodes, node->name, py_res);
@@ -193,14 +193,14 @@ PyObject * AerospikeClient_Info(AerospikeClient * self, PyObject * args, PyObjec
 {
 	PyObject * py_req = NULL;
 	PyObject * py_policy = NULL;
-	PyObject * py_config = NULL;
+	PyObject * py_hosts = NULL;
 	PyObject * py_nodes = NULL;
 	PyObject * py_ustr = NULL;
 	foreach_callback_info_udata info_callback_udata;
 
-	static char * kwlist[] = {"req", "config", "policy", NULL};
+	static char * kwlist[] = {"command", "hosts", "policy", NULL};
 
-	if ( PyArg_ParseTupleAndKeywords(args, kwds, "O|OO:info", kwlist, &py_req, &py_config, &py_policy) == false ) {
+	if ( PyArg_ParseTupleAndKeywords(args, kwds, "O|OO:info", kwlist, &py_req, &py_hosts, &py_policy) == false ) {
 		return NULL;
 	}
 
@@ -212,7 +212,7 @@ PyObject * AerospikeClient_Info(AerospikeClient * self, PyObject * args, PyObjec
 
 	py_nodes = PyDict_New();
 	info_callback_udata.udata_p = py_nodes;
-	info_callback_udata.host_lookup_p = py_config;
+	info_callback_udata.host_lookup_p = py_hosts;
 	as_error_init(&info_callback_udata.error);
 
 	if (!self || !self->as) {
@@ -221,7 +221,8 @@ PyObject * AerospikeClient_Info(AerospikeClient * self, PyObject * args, PyObjec
 	}
 
 	// Convert python policy object to as_policy_info
-	pyobject_to_policy_info(&err, py_policy, &info_policy, &info_policy_p);
+	pyobject_to_policy_info(&err, py_policy, &info_policy, &info_policy_p,
+			&self->as->config.policies.info);
 	if ( err.code != AEROSPIKE_OK ) {
 		goto CLEANUP;
 	}

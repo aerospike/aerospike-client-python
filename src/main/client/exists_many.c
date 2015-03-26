@@ -176,7 +176,8 @@ PyObject * AerospikeClient_Exists_Many_Invoke(
 	}
 
 	// Convert python policy object to as_policy_batch
-	pyobject_to_policy_batch(&err, py_policy, &policy, &batch_policy_p);
+	pyobject_to_policy_batch(&err, py_policy, &policy, &batch_policy_p,
+			&self->as->config.policies.batch);
 	if ( err.code != AEROSPIKE_OK ) {
 		goto CLEANUP;
 	}
