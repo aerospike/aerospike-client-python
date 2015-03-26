@@ -347,6 +347,7 @@ as_status pyobject_to_record(as_error * err, PyObject * py_rec,
 		Py_ssize_t pos = 0;
 		Py_ssize_t size = PyDict_Size(py_rec);
 		char *name = NULL;
+		long ret_val = 0;
 
 		as_record_init(rec, size);
 
@@ -362,34 +363,42 @@ as_status pyobject_to_record(as_error * err, PyObject * py_rec,
 				return as_error_update(err, AEROSPIKE_ERR_CLIENT, "A bin name must be a string or unicode string.");
 			}
 
+			if (strlen(name) > AS_BIN_NAME_MAX_LEN) {
+				if (py_ukey) {
+					Py_DECREF(py_ukey);
+					py_ukey = NULL;
+				}
+				return as_error_update(err, AEROSPIKE_ERR_BIN_NAME, "A bin name should not exceed 14 characters limit");
+			}
+
 			if ( !value ) {
 				// this should never happen, but if it did...
 				return as_error_update(err, AEROSPIKE_ERR_CLIENT, "record is null");
 			}
 			else if ( PyInt_Check(value) ) {
 				int64_t val = (int64_t) PyInt_AsLong(value);
-				as_record_set_int64(rec, name, val);
+				ret_val = as_record_set_int64(rec, name, val);
 			}
 			else if ( PyLong_Check(value) ) {
 				int64_t val = (int64_t) PyLong_AsLongLong(value);
-				as_record_set_int64(rec, name, val);
+				ret_val = as_record_set_int64(rec, name, val);
 			}
 			else if ( PyUnicode_Check(value) ) {
 				PyObject * py_ustr = PyUnicode_AsUTF8String(value);
 				char * val = PyString_AsString(py_ustr);
-				as_record_set_strp(rec, name, strdup(val), true);
+				ret_val = as_record_set_strp(rec, name, strdup(val), true);
 				Py_DECREF(py_ustr);
 			}
 			else if ( PyString_Check(value) ) {
 				char * val = PyString_AsString(value);
-				as_record_set_strp(rec, name, val, false);
+				ret_val = as_record_set_strp(rec, name, val, false);
 			}
 			else if ( PyByteArray_Check(value) ) {
 				as_bytes *bytes;
 				GET_BYTES_POOL(bytes, static_pool, err);
 				py_result = serialize_based_on_serializer_policy(serializer_type,
 						&bytes, value, err);
-				as_record_set_bytes(rec, name, bytes);
+				ret_val = as_record_set_bytes(rec, name, bytes);
 			}
 			else if ( PyList_Check(value) ) {
 				// as_list
@@ -398,7 +407,7 @@ as_status pyobject_to_record(as_error * err, PyObject * py_rec,
 				if ( err->code != AEROSPIKE_OK ) {
 					break;
 				}
-				as_record_set_list(rec, name, list);
+				ret_val = as_record_set_list(rec, name, list);
 			}
 			else if ( PyDict_Check(value) ) {
 				// as_map
@@ -407,19 +416,23 @@ as_status pyobject_to_record(as_error * err, PyObject * py_rec,
 				if ( err->code != AEROSPIKE_OK ) {
 					break;
 				}
-				as_record_set_map(rec, name, map);
+				ret_val = as_record_set_map(rec, name, map);
 			}
 			else {
 				as_bytes *bytes;
 				GET_BYTES_POOL(bytes, static_pool, err);
 				py_result = serialize_based_on_serializer_policy(serializer_type,
 						&bytes, value, err);
-				as_record_set_bytes(rec, name, bytes);
+				ret_val = as_record_set_bytes(rec, name, bytes);
 			}
 
 			if (py_ukey){
 				Py_DECREF(py_ukey);
 				py_ukey = NULL;
+			}
+
+			if (!ret_val) {
+				return as_error_update(err, AEROSPIKE_ERR_BIN_NAME, "Unable to set key-value pair");
 			}
 		}
 

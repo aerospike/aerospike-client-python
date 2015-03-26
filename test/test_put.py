@@ -1200,3 +1200,20 @@ class TestPut(object):
         assert bins == {'pi': bytearray(b'F3.1400000000000001\n.')}
 
         self.delete_keys.append( key )
+
+    def test_put_record_with_bin_name_exceeding_max_limit(self):
+        """
+            Invoke put() with bin name exceeding the max limit of bin name.
+        """
+        key = ('test', 'demo', 'put_rec')
+        put_record = {'containers_free': [], 'containers_used': [{'cluster_id': 'bob', 'container_id': 1,
+            'port': 4000}], 'list_of_map': [{'test': 'bar'}], 'map_of_list': {'fizz': ['b', 'u', 'z', 'z']},
+            'ports_free': [],'ports_unused': [4100, 4200, 4300], 'provider_id' :
+            u'i-f01fc206'}
+
+        with pytest.raises(Exception) as exception:
+            TestPut.client.put( key, put_record)
+
+        assert exception.value[0] == 21L
+        assert exception.value[1] == "A bin name should not exceed 14 characters limit"
+
