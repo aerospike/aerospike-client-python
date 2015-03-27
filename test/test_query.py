@@ -486,3 +486,81 @@ class TestQuery(object):
 
         query.foreach(callback)
         assert len(records) == 8
+
+    def test_query_with_correct_parameters_rangecontains_notuple(self):
+        """
+            Invoke query() with correct arguments and using predicate contains
+        """
+        query = TestQuery.client.query('test', 'demo')
+        query.select('name', 'test_age')
+        query.where('numeric_map' , "range_contains", aerospike.INDEX_TYPE_MAPVALUES, aerospike.INDEX_NUMERIC, 1, 3)
+
+        records = []
+        def callback((key,metadata,record)):
+            records.append(record)
+
+        query.foreach(callback)
+        assert len(records) == 8
+
+    def test_query_with_correct_parameters_containsstring_mapvalues_notuple(self):
+        """
+            Invoke query() with correct arguments and using predicate contains
+        """
+        query = TestQuery.client.query('test', 'demo')
+        query.select('name', 'test_age')
+        query.where('string_map' , 'contains', aerospike.INDEX_TYPE_MAPVALUES, aerospike.INDEX_STRING, "a1")
+
+        records = []
+        def callback((key,metadata,record)):
+            records.append(record)
+
+        query.foreach(callback)
+        assert len(records) == 1
+
+    def test_query_with_correct_parameters_containsstring_notuple(self):
+
+        """
+            Invoke query() with correct arguments and using predicate contains
+        """
+        query = TestQuery.client.query('test', 'demo')
+        query.select('name', 'test_age')
+        query.where('string_list', "contains", aerospike.INDEX_TYPE_LIST, aerospike.INDEX_STRING, "str3")
+
+        records = []
+        def callback((key,metadata,record)):
+            records.append(record)
+
+        query.foreach(callback)
+        assert len(records) == 3
+
+    def test_query_with_correct_parameters_between_notuple(self):
+        """
+            Invoke query() with correct arguments and using predicate between
+        """
+        query = TestQuery.client.query('test', 'demo')
+        query.select('name', 'test_age')
+        query.where('test_age', 'between', 1, 4)
+
+        records = []
+        def callback((key,metadata,record)):
+            records.append(record)
+
+        query.foreach(callback)
+        assert len(records) == 4
+
+    def test_query_with_policy_notuple(self):
+        """
+            Invoke query() with policy
+        """
+        policy = {
+            'timeout': 1000
+        }
+        query = TestQuery.client.query('test', 'demo')
+        query.select('name', 'test_age')
+        query.where('test_age', 'equals', 1)
+        records = []
+        def callback((key,metadata,record)):
+            records.append(record)
+
+        query.foreach(callback, policy)
+        assert len(records) == 1
