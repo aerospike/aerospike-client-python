@@ -155,7 +155,6 @@ PyObject * AerospikeScan_Foreach(AerospikeScan * self, PyObject * args, PyObject
 
 CLEANUP:
 
-	as_scan_destroy(&self->scan);
 	if ( err.code != AEROSPIKE_OK || data.error.code != AEROSPIKE_OK) {
 		PyObject * py_err = NULL;
 		if ( err.code != AEROSPIKE_OK ){

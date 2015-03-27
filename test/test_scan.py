@@ -315,3 +315,44 @@ class TestScan(object):
 
         assert exception.value[0] == -2L
         assert exception.value[1] == 'Invalid value(type) for nobins'
+
+    def test_scan_with_multiple_foreach_on_same_scan_object(self):
+
+        """
+            Invoke multiple foreach on same scan object.
+        """
+        ns = 'test'
+        st = 'demo'
+
+        records = []
+
+        def callback( (key, meta, bins) ):
+            records.append(bins)
+
+        scan_obj = self.client.scan(ns, st)
+
+        scan_obj.foreach(callback)
+
+        assert len(records) != 0
+
+        records = []
+        scan_obj.foreach(callback)
+
+        assert len(records) != 0
+
+    def test_scan_with_multiple_results_call_on_same_scan_object(self):
+
+        ns = 'test'
+        st = 'demo'
+
+        scan_obj = self.client.scan(ns, st)
+
+        scan_obj.select(u'name', u'age')
+
+        records = []
+        records = scan_obj.results()
+        assert len(records) != 0
+
+        records = []
+        records = scan_obj.results()
+        assert len(records) != 0
