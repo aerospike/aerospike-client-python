@@ -129,6 +129,5 @@ CLEANUP:/*??trace()*/
 	}
 	self->query.apply.arglist = NULL;
 
-	as_query_destroy(&self->query);
 	return py_results;
 }

@@ -154,8 +154,6 @@ CLEANUP:
 	}
 	self->query.apply.arglist = NULL;
 
-	as_query_destroy(&self->query);
-
 	if ( err.code != AEROSPIKE_OK || data.error.code != AEROSPIKE_OK ) {
 		PyObject * py_err = NULL;
 		if ( err.code != AEROSPIKE_OK ){
