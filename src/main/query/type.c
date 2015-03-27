@@ -106,6 +106,8 @@ static void AerospikeQuery_Type_Dealloc(AerospikeQuery * self)
 	for (i=0; i < self->u_objs.size; i++){
 		Py_DECREF(self->u_objs.ob[i]);
 	}
+
+	as_query_destroy(&self->query);
     self->ob_type->tp_free((PyObject *) self);
 }
 

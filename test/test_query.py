@@ -27,9 +27,9 @@ class TestQuery(object):
 
     def teardown_class(cls):
         policy = {}
-        TestQuery.client.index_remove(policy, 'test', 'age_index');
-        TestQuery.client.index_remove(policy, 'test', 'age_index1');
-        TestQuery.client.index_remove(policy, 'test', 'addr_index');
+        TestQuery.client.index_remove('test', 'age_index', policy);
+        TestQuery.client.index_remove('test', 'age_index1', policy);
+        TestQuery.client.index_remove('test', 'addr_index', policy);
         TestQuery.client.close()
 
     def setup_method(self, method):
@@ -365,3 +365,39 @@ class TestQuery(object):
 
         assert exception.value[0] == -2L
         assert exception.value[1] == 'Bin name should be of type string'
+
+    def test_query_with_multiple_foreach_on_same_query_object(self):
+        """
+            Invoke query() with multple foreach() call on same query object
+        """
+        query = TestQuery.client.query('test', 'demo')
+        query.select('name', 'test_age')
+        query.where(p.equals('test_age', 1))
+
+        records = []
+        def callback((key,metadata,record)):
+            records.append(key)
+
+        query.foreach(callback)
+        assert len(records) == 1
+
+        records = []
+        query.foreach(callback)
+        assert len(records) == 1
+
+    def test_query_with_multiple_results_call_on_same_query_object(self):
+        """
+            Invoke query() with multple results() call on same query object
+        """
+        query = TestQuery.client.query('test', 'demo')
+        query.select(u'name', u'test_age', 'addr')
+        query.where(p.equals(u'test_age', 7))
+
+        records = query.results()
+        assert len(records) == 1
+        assert records[0][2] == {'test_age': 7, 'name': u'name7', 'addr': u'name7'}
+
+        records = []
+        records = query.results()
+        assert len(records) == 1
+        assert records[0][2] == {'test_age': 7, 'name': u'name7', 'addr': u'name7'}
