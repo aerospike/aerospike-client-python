@@ -21,7 +21,6 @@
  */
 
 #include <Python.h>
-#include <ctype.h>
 #include <aerospike/as_query.h>
 #include <aerospike/as_error.h>
 
@@ -56,7 +55,7 @@ static PyObject * AerospikePredicates_Contains(PyObject * self, PyObject * args)
 	PyObject * py_datatype = NULL;
 	PyObject * py_indextype = NULL;
 	int type;
-	char *index_type= NULL;
+	int index_type;
 
 	if ( PyArg_ParseTuple(args, "OOOO:equals", 
 			&py_bin, &py_indextype, &py_datatype, &py_val) == false ) {
@@ -67,21 +66,23 @@ static PyObject * AerospikePredicates_Contains(PyObject * self, PyObject * args)
 		type = PyInt_AsLong(py_datatype);
 	} else if ( PyLong_Check(py_datatype) ) {
 		type = PyLong_AsLongLong(py_datatype);
+	} else {
+		goto exit;
 	}
 
-	if(PyString_Check(py_indextype)) {
-		index_type = PyString_AsString(py_indextype);
-		for(int i=0;i<=strlen(index_type);i++){
-			if(index_type[i]>=97&&index_type[i]<=122)
-				index_type[i]=toupper(index_type[i]);
-		}
+	if(PyInt_Check(py_indextype)) {
+		index_type = PyInt_AsLong(py_indextype);
+	} else if (PyLong_Check(py_indextype)) {
+		index_type = PyLong_AsLongLong(py_indextype);
+	} else {
+		goto exit;
 	}
 
 	if ( (PyInt_Check(py_val) || PyLong_Check(py_val)) && type==1 ) {
-		return Py_BuildValue("iiOOOs", AS_PREDICATE_EQUAL, AS_INDEX_NUMERIC, py_bin, py_val, Py_None,index_type);
+		return Py_BuildValue("iiOOOi", AS_PREDICATE_EQUAL, AS_INDEX_NUMERIC, py_bin, py_val, Py_None, index_type);
 	}
 	else if ( (PyString_Check(py_val) || PyUnicode_Check(py_val)) && type == 0) {
-		return Py_BuildValue("iiOOOs", AS_PREDICATE_EQUAL, AS_INDEX_STRING, py_bin, py_val, Py_None, index_type);
+		return Py_BuildValue("iiOOOi", AS_PREDICATE_EQUAL, AS_INDEX_STRING, py_bin, py_val, Py_None, index_type);
 	}
 
 exit:
@@ -96,29 +97,32 @@ static PyObject * AerospikePredicates_RangeContains(PyObject * self, PyObject * 
 	PyObject * py_max= NULL;
 	PyObject * py_datatype = NULL;
 	PyObject * py_indextype = NULL;
+	int index_type;
+	int type;
 
 	if ( PyArg_ParseTuple(args, "OOOOO:equals", 
 			&py_bin, &py_indextype, &py_datatype, &py_min, &py_max) == false ) {
 		goto exit;
 	}
 
-	int type;
 	if(PyInt_Check(py_datatype)) {
 		type = PyInt_AsLong(py_datatype);
 	} else if ( PyLong_Check(py_datatype) ) {
 		type = PyLong_AsLongLong(py_datatype);
+	} else {
+		goto exit;
 	}
-	char *index_type= NULL;
 
-	if(PyString_Check(py_indextype)) {
-		index_type = PyString_AsString(py_indextype);
-		for(int i=0;i<=strlen(index_type);i++){
-			if(index_type[i]>=97 && index_type[i]<=122)
-				index_type[i]=toupper(index_type[i]);
-		}
+	if(PyInt_Check(py_indextype)) {
+		index_type = PyInt_AsLong(py_indextype);
+	} else if (PyLong_Check(py_indextype)) {
+		index_type = PyLong_AsLongLong(py_indextype);
+	} else {
+		goto exit;
 	}
+
 	if ((PyInt_Check(py_min) || PyLong_Check(py_min)) && (PyInt_Check(py_max) || PyLong_Check(py_max)) && type==1 ) {
-		return Py_BuildValue("iiOOOs", AS_PREDICATE_RANGE, AS_INDEX_NUMERIC, py_bin, py_min, py_max, index_type);
+		return Py_BuildValue("iiOOOi", AS_PREDICATE_RANGE, AS_INDEX_NUMERIC, py_bin, py_min, py_max, index_type);
 	}
 
 exit:
