@@ -14,10 +14,8 @@
     Represent a *bin* **BETWEEN** *min* **AND** *max* predicate.
 
     :param str bin: the bin name.
-    :param min: the minimum value to be matched with the between operator.
-    :type min: str or int
-    :param max: the maximum value to be matched with the between operator.
-    :type max: str or int
+    :param int min: the minimum value to be matched with the between operator.
+    :param int max: the maximum value to be matched with the between operator.
     :return: :class:`tuple` to be used in :meth:`aerospike.Query.where`.
 
     .. code-block:: python
@@ -50,14 +48,13 @@
         query = self.client.query('test', 'demo')
         query.where(p.equal('name', 'that guy'))
 
-.. py:function:: contains(bin, index_type, index_datatype, val)
+.. py:function:: contains(bin, index_type, val)
 
     Represent the predicate *bin* **CONTAINS** *val* for a bin with a complex \
     (list or map) type.
 
     :param str bin: the bin name.
     :param index_type: Possible ``aerospike.INDEX_TYPE_*`` values are detailed in :ref:`aerospike_misc_constants`.
-    :param index_datatype: Possible values are ``aerospike.INDEX_STRING`` and ``aerospike.INDEX_NUMERIC``.
     :param val: match records whose *bin* is an *index_type* (ex: list) containing *val*.
     :type val: str or int
     :return: :class:`tuple` to be used in :meth:`aerospike.Query.where`.
@@ -78,20 +75,17 @@
         client.index_map_values_create('test', 'demo', 'fav_movies', aerospike.INDEX_NUMERIC, 'demo_fav_movies_views_idx')
 
         query = self.client.query('test', 'demo')
-        query.where(p.contains('fav_movies', aerospike.INDEX_TYPE_MAPKEYS, aerospike.INDEX_STRING, '12 Monkeys'))
+        query.where(p.contains('fav_movies', aerospike.INDEX_TYPE_MAPKEYS, '12 Monkeys'))
 
-.. py:function:: range_contains(bin, index_type, index_datatype, min, max))
+.. py:function:: range_contains(bin, index_type, min, max))
 
     Represent the predicate *bin* **CONTAINS** values **BETWEEN** *min* **AND** \
     *max* for a bin with a complex (list or map) type.
 
     :param str bin: the bin name.
     :param index_type: Possible ``aerospike.INDEX_TYPE_*`` values are detailed in :ref:`aerospike_misc_constants`.
-    :param index_datatype: Possible values are ``aerospike.INDEX_STRING`` and ``aerospike.INDEX_NUMERIC``.
-    :param min: the minimum value to be used for matching with the range_contains operator.
-    :type min: str or int
-    :param max: the maximum value to be used for matching with the range_contains operator.
-    :type max: str or int
+    :param int min: the minimum value to be used for matching with the range_contains operator.
+    :param int max: the maximum value to be used for matching with the range_contains operator.
     :return: :class:`tuple` to be used in :meth:`aerospike.Query.where`.
 
     .. code-block:: python
@@ -107,4 +101,4 @@
 
         # query for records whose 'age' bin has a list with numeric values between 20 and 30
         query = self.client.query('test', 'demo')
-        query.where(p.range_contains('age', aerospike.INDEX_TYPE_LIST, aerospike.INDEX_NUMERIC, 20, 30))
+        query.where(p.range_contains('age', aerospike.INDEX_TYPE_LIST, 20, 30))

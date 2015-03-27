@@ -473,7 +473,7 @@ PyObject * AerospikeClient_Index_List_Create(AerospikeClient * self, PyObject *a
 		goto CLEANUP;
 	}
 
-	int type;
+	int type = 0;
 	if(PyInt_Check(py_datatype)) {
 		type = PyInt_AsLong(py_datatype);
 	} else if ( PyLong_Check(py_datatype) ) {
@@ -596,7 +596,7 @@ PyObject * AerospikeClient_Index_Map_Keys_Create(AerospikeClient * self, PyObjec
 		goto CLEANUP;
 	}
 
-	int type;
+	int type = 0;
 	if(PyInt_Check(py_datatype)) {
 		type = PyInt_AsLong(py_datatype);
 	} else if ( PyLong_Check(py_datatype) ) {
@@ -719,7 +719,7 @@ PyObject * AerospikeClient_Index_Map_Values_Create(AerospikeClient * self, PyObj
 		goto CLEANUP;
 	}
 
-	int type;
+	int type = 0;
 	if(PyInt_Check(py_datatype)) {
 		type = PyInt_AsLong(py_datatype);
 	} else if ( PyLong_Check(py_datatype) ) {

@@ -388,7 +388,7 @@ class TestQuery(object):
         """
         query = TestQuery.client.query('test', 'demo')
         query.select('name', 'test_age')
-        query.where(p.contains('numeric_list' , "LIST", aerospike.INDEX_NUMERIC, 1))
+        query.where(p.contains('numeric_list' , aerospike.INDEX_TYPE_LIST, 1))
 
         records = []
         def callback((key,metadata,record)):
@@ -403,7 +403,7 @@ class TestQuery(object):
         """
         query = TestQuery.client.query('test', 'demo')
         query.select('name', 'test_age')
-        query.where(p.contains('string_list' , "list", aerospike.INDEX_STRING, "str3"))
+        query.where(p.contains('string_list' , aerospike.INDEX_TYPE_LIST, "str3"))
 
         records = []
         def callback((key,metadata,record)):
@@ -418,7 +418,7 @@ class TestQuery(object):
         """
         query = TestQuery.client.query('test', 'demo')
         query.select('name', 'test_age')
-        query.where(p.range_contains('numeric_list' , "LIST", aerospike.INDEX_NUMERIC, 1, 3))
+        query.where(p.range_contains('numeric_list' , aerospike.INDEX_TYPE_LIST, 1, 3))
 
         records = []
         def callback((key,metadata,record)):
@@ -433,7 +433,7 @@ class TestQuery(object):
         """
         query = TestQuery.client.query('test', 'demo')
         query.select('name', 'test_age')
-        query.where(p.contains('string_map' , "mapkeys", aerospike.INDEX_STRING, "a"))
+        query.where(p.contains('string_map' , aerospike.INDEX_TYPE_MAPKEYS, "a"))
 
         records = []
         def callback((key,metadata,record)):
@@ -448,7 +448,7 @@ class TestQuery(object):
         """
         query = TestQuery.client.query('test', 'demo')
         query.select('name', 'test_age')
-        query.where(p.contains('string_map' , "mapvalues", aerospike.INDEX_STRING, "a1"))
+        query.where(p.contains('string_map' , aerospike.INDEX_TYPE_MAPVALUES, "a1"))
 
         records = []
         def callback((key,metadata,record)):
@@ -463,7 +463,7 @@ class TestQuery(object):
         """
         query = TestQuery.client.query('test', 'demo')
         query.select('name', 'test_age')
-        query.where(p.contains('numeric_map', "MAPVALUES", aerospike.INDEX_NUMERIC, 1))
+        query.where(p.contains('numeric_map', aerospike.INDEX_TYPE_MAPVALUES, 1))
 
         records = []
         def callback((key,metadata,record)):
@@ -478,7 +478,7 @@ class TestQuery(object):
         """
         query = TestQuery.client.query('test', 'demo')
         query.select('name', 'test_age')
-        query.where(p.range_contains('numeric_map' , "Mapvalues", aerospike.INDEX_NUMERIC, 1, 3))
+        query.where(p.range_contains('numeric_map' , aerospike.INDEX_TYPE_MAPVALUES, 1, 3))
 
         records = []
         def callback((key,metadata,record)):

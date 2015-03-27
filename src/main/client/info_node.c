@@ -61,7 +61,6 @@ static PyObject * AerospikeClient_InfoNode_Invoke(
 	char* address = (char *) self->as->config.hosts[0].addr;
 	long port_no = self->as->config.hosts[0].port;
 	char* response_p = NULL;
-	PyObject *key_op = NULL, *value = NULL;
 	as_status status = AEROSPIKE_OK;
 
 	as_error err;
