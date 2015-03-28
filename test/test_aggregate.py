@@ -378,3 +378,39 @@ class TestAggregate(object):
         query.foreach(user_callback)
         assert records[0] == 4
 
+    def test_aggregate_with_multiple_foreach_on_same_query_object(self):
+        """
+            Invoke aggregate() with multiple foreach on same query object.
+        """
+        query = self.client.query('test', 'demo')
+        query.select('name', 'test_age')
+        query.where(p.between('test_age', 1, 5))
+        query.apply('stream_example', 'count')
+
+        records = []
+        def user_callback(value):
+            records.append(value)
+
+        query.foreach(user_callback)
+        assert records[0] == 4
+
+        records = []
+        query.foreach(user_callback)
+        assert records[0] == 4
+
+    def test_aggregate_with_multiple_results_call_on_same_query_object(self):
+        """
+            Invoke aggregate() with multiple foreach on same query object.
+        """
+        query = self.client.query('test', 'demo')
+        query.select('name', 'test_age')
+        query.where(p.between('test_age', 1, 5))
+        query.apply('stream_example', 'count')
+
+        records = []
+        records = query.results()
+        assert records[0] == 4
+
+        records = []
+        records = query.results()
+        assert records[0] == 4

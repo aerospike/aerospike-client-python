@@ -105,6 +105,7 @@ static int AerospikeScan_Type_Init(AerospikeScan * self, PyObject * args, PyObje
 
 static void AerospikeScan_Type_Dealloc(PyObject * self)
 {
+    as_scan_destroy(&((AerospikeScan *)self)->scan);
     self->ob_type->tp_free((PyObject *) self);
 }
 

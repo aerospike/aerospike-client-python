@@ -454,6 +454,18 @@ class TestQuery(object):
         def callback((key,metadata,record)):
             records.append(record)
 
+    def test_query_with_multiple_foreach_on_same_query_object(self):
+        """
+            Invoke query() with multple foreach() call on same query object
+        """
+        query = TestQuery.client.query('test', 'demo')
+        query.select('name', 'test_age')
+        query.where(p.equals('test_age', 1))
+
+        records = []
+        def callback((key,metadata,record)):
+            records.append(key)
+
         query.foreach(callback)
         assert len(records) == 1
 
@@ -564,3 +576,23 @@ class TestQuery(object):
 
         query.foreach(callback, policy)
         assert len(records) == 1
+        records = []
+        query.foreach(callback)
+        assert len(records) == 1
+
+    def test_query_with_multiple_results_call_on_same_query_object(self):
+        """
+            Invoke query() with multple results() call on same query object
+        """
+        query = TestQuery.client.query('test', 'demo')
+        query.select(u'name', u'test_age', 'addr')
+        query.where(p.equals(u'test_age', 7))
+
+        records = query.results()
+        assert len(records) == 1
+        assert records[0][2] == {'test_age': 7, 'name': u'name7', 'addr': u'name7'}
+
+        records = []
+        records = query.results()
+        assert len(records) == 1
+        assert records[0][2] == {'test_age': 7, 'name': u'name7', 'addr': u'name7'}
