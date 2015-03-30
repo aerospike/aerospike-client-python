@@ -53,7 +53,6 @@ AerospikeScan * AerospikeScan_Select(AerospikeScan * self, PyObject * args, PyOb
 				error_to_pyobject(&err, &py_err);
 				PyErr_SetObject(PyExc_Exception, py_err);
 				Py_DECREF(py_err);
-				as_scan_destroy(&self->scan);
 				return NULL;
 
 			}
