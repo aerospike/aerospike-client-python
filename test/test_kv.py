@@ -174,7 +174,7 @@ class KVTestCase(unittest.TestCase):
             }
             self.client.put(key, rec)
 
-        self.client.index_integer_create({}, 'test', 'unittest', 'age', 'age_index')
+        self.client.index_integer_create('test', 'unittest', 'age', 'age_index', {})
 
         query = self.client.query('test', 'unittest')
 
@@ -190,6 +190,6 @@ class KVTestCase(unittest.TestCase):
             key = ('test', 'unittest', i)
             self.client.remove(key)
 
-        self.client.index_remove({}, 'test', 'age_index');
+        self.client.index_remove('test', 'age_index', {});
 
 suite = unittest.TestLoader().loadTestsFromTestCase(KVTestCase)

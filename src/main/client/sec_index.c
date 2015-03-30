@@ -409,6 +409,11 @@ PyObject * AerospikeClient_Index_List_Create(AerospikeClient * self, PyObject *a
 		goto CLEANUP;
 	}
 
+	if (!self->is_conn_16) {
+        as_error_update(&err, AEROSPIKE_ERR_CLUSTER, "No connection to aerospike cluster");
+        goto CLEANUP;
+    }
+
 	// Convert python object to policy_info
 	pyobject_to_policy_info( &err, py_policy, &info_policy, &info_policy_p, &self->as->config.policies.info);
 	if ( err.code != AEROSPIKE_OK ) {
@@ -532,6 +537,11 @@ PyObject * AerospikeClient_Index_Map_Keys_Create(AerospikeClient * self, PyObjec
 		goto CLEANUP;
 	}
 
+	if (!self->is_conn_16) {
+        as_error_update(&err, AEROSPIKE_ERR_CLUSTER, "No connection to aerospike cluster");
+        goto CLEANUP;
+    }
+
 	// Convert python object to policy_info
 	pyobject_to_policy_info( &err, py_policy, &info_policy, &info_policy_p, &self->as->config.policies.info);
 	if ( err.code != AEROSPIKE_OK ) {
@@ -654,6 +664,11 @@ PyObject * AerospikeClient_Index_Map_Values_Create(AerospikeClient * self, PyObj
 		as_error_update(&err, AEROSPIKE_ERR_PARAM, "Invalid aerospike object");
 		goto CLEANUP;
 	}
+
+	if (!self->is_conn_16) {
+        as_error_update(&err, AEROSPIKE_ERR_CLUSTER, "No connection to aerospike cluster");
+        goto CLEANUP;
+    }
 
 	// Convert python object to policy_info
 	pyobject_to_policy_info( &err, py_policy, &info_policy, &info_policy_p, &self->as->config.policies.info);

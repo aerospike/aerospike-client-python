@@ -269,3 +269,19 @@ u'numeric_map', aerospike.INDEX_NUMERIC, u'uni_age_index', policy )
 
         assert retobj == 0L
         TestMapKeysIndex.client.index_remove('test', u'uni_age_index', policy);
+
+    def test_mapkeysindex_with_correct_parameters_no_connection(self):
+        """
+            Invoke index_map_keys_create() with correct arguments no connection
+        """
+        policy = {}
+        config = {
+                'hosts': [('127.0.0.1', 3000)]
+                }
+        client1 = aerospike.client(config)
+
+        with pytest.raises(Exception) as exception:
+            retobj = client1.index_map_keys_create('test', 'demo', 'string_map', aerospike.INDEX_STRING, 'test_string_map_index', policy)
+
+        assert exception.value[0] == 11
+        assert exception.value[1] == 'No connection to aerospike cluster'
