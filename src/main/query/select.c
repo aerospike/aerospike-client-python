@@ -55,7 +55,6 @@ AerospikeQuery * AerospikeQuery_Select(AerospikeQuery * self, PyObject * args, P
 			error_to_pyobject(&err, &py_err);
 			PyErr_SetObject(PyExc_Exception, py_err);
 			Py_DECREF(py_err);
-			as_query_destroy(&self->query);
 			return NULL;
 		}
 
