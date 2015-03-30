@@ -179,6 +179,18 @@ AerospikeQuery * AerospikeQuery_Where(AerospikeQuery * self, PyObject * args)
 		return NULL;
 	}
 
+	as_error_init(&err);
+
+	if (!self || !self->client->as) {
+		as_error_update(&err, AEROSPIKE_ERR_PARAM, "Invalid aerospike object");
+		goto CLEANUP;
+	}
+
+	if (!self->client->is_conn_16) {
+		as_error_update(&err, AEROSPIKE_ERR_CLUSTER, "No connection to aerospike cluster");
+		goto CLEANUP;
+	}
+
 	if ( PyTuple_Check(py_arg1) ) {
 
 		Py_ssize_t size = PyTuple_Size(py_arg1);
@@ -273,8 +285,16 @@ AerospikeQuery * AerospikeQuery_Where(AerospikeQuery * self, PyObject * args)
 		as_query_destroy(&self->query);
 		rc = 1;
 	}
-
+CLEANUP:
 	if ( rc == 1 ) {
+		return NULL;
+	}
+
+	if ( err.code != AEROSPIKE_OK ) {
+		PyObject * py_err = NULL;
+		error_to_pyobject(&err, &py_err);
+		PyErr_SetObject(PyExc_Exception, py_err);
+		TRACE();
 		return NULL;
 	}
 

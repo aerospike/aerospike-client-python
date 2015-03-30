@@ -401,3 +401,26 @@ class TestQuery(object):
         records = query.results()
         assert len(records) == 1
         assert records[0][2] == {'test_age': 7, 'name': u'name7', 'addr': u'name7'}
+
+    def test_query_with_correct_parameters_without_connection(self):
+        """
+            Invoke query() with correct arguments without connection
+        """
+        config = {
+                'hosts': [('127.0.0.1', 3000)]
+                }
+        client1 = aerospike.client(config)
+
+        with pytest.raises(Exception) as exception:
+            query = client1.query('test', 'demo')
+            query.select('name', 'test_age')
+            query.where(p.equals('test_age', 1))
+
+            records = []
+            def callback((key,metadata,record)):
+                records.append(key)
+
+            query.foreach(callback)
+
+        assert exception.value[0] == 11L
+        assert exception.value[1] == 'No connection to aerospike cluster'

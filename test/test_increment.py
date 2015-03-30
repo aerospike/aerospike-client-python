@@ -365,3 +365,19 @@ class TestIncrement(object):
         (key , meta, bins) = TestIncrement.client.get(key)
 
         assert bins == { 'age': 11, 'name': 'name1'}
+
+    def test_increment_with_correct_parameters_without_connection(self):
+        """
+        Invoke increment() with correct parameters without connection
+        """
+        key = ('test', 'demo', 1)
+        config = {
+            'hosts': [('127.0.0.1', 3000)]
+        }
+        client1 = aerospike.client(config)
+
+        with pytest.raises(Exception) as exception:
+            client1.increment(key, "age", 5)
+
+        assert exception.value[0] == 11L
+        assert exception.value[1] == 'No connection to aerospike cluster'

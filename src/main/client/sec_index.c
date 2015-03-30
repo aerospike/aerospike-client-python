@@ -71,6 +71,11 @@ PyObject * AerospikeClient_Index_Integer_Create(AerospikeClient * self, PyObject
 		goto CLEANUP;
 	}
 
+	if (!self->is_conn_16) {
+		as_error_update(&err, AEROSPIKE_ERR_CLUSTER, "No connection to aerospike cluster");
+		goto CLEANUP;
+	}
+
 	// Convert python object to policy_info
 	pyobject_to_policy_info( &err, py_policy, &info_policy, &info_policy_p,
 			&self->as->config.policies.info);
@@ -200,6 +205,11 @@ PyObject * AerospikeClient_Index_String_Create(AerospikeClient * self, PyObject 
 		goto CLEANUP;
 	}
 
+	if (!self->is_conn_16) {
+		as_error_update(&err, AEROSPIKE_ERR_CLUSTER, "No connection to aerospike cluster");
+		goto CLEANUP;
+	}
+
 	// Convert python object to policy_info
 	pyobject_to_policy_info( &err, py_policy, &info_policy, &info_policy_p,
 			&self->as->config.policies.info);
@@ -324,6 +334,11 @@ PyObject * AerospikeClient_Index_Remove(AerospikeClient * self, PyObject *args, 
 
 	if (!self || !self->as) {
 		as_error_update(&err, AEROSPIKE_ERR_PARAM, "Invalid aerospike object");
+		goto CLEANUP;
+	}
+
+	if (!self->is_conn_16) {
+		as_error_update(&err, AEROSPIKE_ERR_CLUSTER, "No connection to aerospike cluster");
 		goto CLEANUP;
 	}
 

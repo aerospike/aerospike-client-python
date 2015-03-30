@@ -280,3 +280,20 @@ class TestInfoNode(object):
 
         assert exception.value[0] == 9L
         assert exception.value[1] == ""
+
+    def test_info_node_positive_without_connection(self):
+        """
+        Test info with correct arguments without connection
+        """
+        key = ('test', 'demo', 'list_key')
+
+        config = {
+            'hosts': [('127.0.0.1', 3000)]
+        }
+        client1 = aerospike.client(config)
+
+        with pytest.raises(Exception) as exception:
+            response = client1.info_node('bins', ('127.0.0.1', 3000))
+
+        assert exception.value[0] == 11L
+        assert exception.value[1] == 'No connection to aerospike cluster'

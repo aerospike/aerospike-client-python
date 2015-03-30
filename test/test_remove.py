@@ -413,3 +413,19 @@ class TestRemove(object):
 
         assert exception.value[0] == 2
         assert exception.value[1] == 'AEROSPIKE_ERR_RECORD_NOT_FOUND'
+
+    def test_remove_with_correct_parameters_without_connection(self):
+        """
+            Invoke remove() with correct arguments without connection
+        """
+        config = {
+                'hosts': [('127.0.0.1', 3000)]
+                }
+        client1 = aerospike.client(config)
+        key = ('test', 'demo', 1)
+
+        with pytest.raises(Exception) as exception:
+            retobj = client1.remove(key)
+
+        assert exception.value[0] == 11L
+        assert exception.value[1] == 'No connection to aerospike cluster'
