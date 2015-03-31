@@ -377,3 +377,19 @@ class TestAppend(object):
 
         key, meta, bins = TestAppend.client.get(key)
         assert bins['add'] == 'address'
+
+    def test_append_with_correct_paramters_without_connection(self):
+        """
+        Invoke append() with correct parameters without connection
+        """
+        config = {
+            'hosts': [('127.0.0.1', 3000)]
+        }
+        client1 = aerospike.client(config)
+        key = ('test', 'demo', 1)
+
+        with pytest.raises(Exception) as exception:
+            client1.append(key, "name", "str")
+
+        assert exception.value[0] == 11L
+        assert exception.value[1] == 'No connection to aerospike cluster'

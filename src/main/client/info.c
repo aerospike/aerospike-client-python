@@ -220,6 +220,11 @@ PyObject * AerospikeClient_Info(AerospikeClient * self, PyObject * args, PyObjec
 		goto CLEANUP;
 	}
 
+	if (!self->is_conn_16) {
+		as_error_update(&err, AEROSPIKE_ERR_CLUSTER, "No connection to aerospike cluster");
+		goto CLEANUP;
+	}
+
 	// Convert python policy object to as_policy_info
 	pyobject_to_policy_info(&err, py_policy, &info_policy, &info_policy_p,
 			&self->as->config.policies.info);

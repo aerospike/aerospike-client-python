@@ -170,3 +170,16 @@ class TestExistsMany(object):
         assert len(records.keys()) == 11
         assert records.keys() == [0, 1, 2, 3, 4, 'some_key', 15, 16, 17, 18, 19]
         assert records['some_key'] == None
+
+    def test_exists_many_with_proper_parameters_without_connection(self):
+
+        config = {
+                'hosts': [('127.0.0.1', 3000)]
+                }
+        client1 = aerospike.client(config)
+
+        with pytest.raises(Exception) as exception:
+            records = client1.exists_many( self.keys, { 'timeout': 3 } )
+
+        assert exception.value[0] == 11L
+        assert exception.value[1] == 'No connection to aerospike cluster'

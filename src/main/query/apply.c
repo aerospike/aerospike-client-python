@@ -53,6 +53,11 @@ AerospikeQuery * AerospikeQuery_Apply(AerospikeQuery * self, PyObject * args, Py
 		goto CLEANUP;
 	}
 
+	if (!self->client->is_conn_16) {
+		as_error_update(&err, AEROSPIKE_ERR_CLUSTER, "No connection to aerospike cluster");
+		goto CLEANUP;
+	}
+
 	// Aerospike API Arguments
 	char * module = NULL;
 	char * function = NULL;

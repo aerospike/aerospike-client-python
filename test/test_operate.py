@@ -722,3 +722,35 @@ class TestOperate(object):
         key, meta, bins = TestOperate.client.operate(key, list)
 
         assert bins == {'write_bin' : ('a', 'b', 'c')}
+
+    def test_operate_with_correct_paramters_positive_without_connection(self):
+        """
+        Invoke operate() with correct parameters without connection
+        """
+        key = ('test', 'demo', 1)
+        config = {
+            'hosts': [('127.0.0.1', 3000)]
+        }
+        client1 = aerospike.client(config)
+        list = [
+                {
+                    "op" : aerospike.OPERATOR_PREPEND,
+                    "bin" : "name",
+                    "val" : u"ram"
+                    },
+                {
+                    "op" : aerospike.OPERATOR_INCR,
+                    "bin" : "age",
+                    "val" : 3
+                    },
+                {
+                    "op" : aerospike.OPERATOR_READ,
+                    "bin" : "name"
+                    }
+                ]
+
+        with pytest.raises(Exception) as exception:
+            key, meta, bins = client1.operate(key, list)
+
+        assert exception.value[0] == 11L
+        assert exception.value[1] == 'No connection to aerospike cluster'

@@ -19,7 +19,7 @@ class TestLMap(object):
 
         print "setup class invoked..."
         config = {
-                "hosts": [("192.168.5.108", 3000)]
+                "hosts": [("127.0.0.1", 3000)]
                 }
 
         TestLMap.client = aerospike.client(config).connect()
