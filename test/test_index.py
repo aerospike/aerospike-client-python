@@ -416,3 +416,19 @@ u'age', u'uni_age_index', policy )
 
         assert retobj == 0L
         TestIndex.client.index_remove('test', u'age_index', policy);
+
+    def test_createindex_with_correct_parameters_without_connection(self):
+        """
+            Invoke createindex() with correct arguments without connection
+        """
+        policy = {}
+        config = {
+                'hosts': [('127.0.0.1', 3000)]
+                }
+        client1 = aerospike.client(config)
+
+        with pytest.raises(Exception) as exception:
+            etobj = client1.index_integer_create('test', 'demo', 'age', 'age_index', policy)
+
+        assert exception.value[0] == 11L
+        assert exception.value[1] == 'No connection to aerospike cluster'

@@ -1217,3 +1217,22 @@ class TestPut(object):
         assert exception.value[0] == 21L
         assert exception.value[1] == "A bin name should not exceed 14 characters limit"
 
+    def test_put_with_string_record_without_connection(self):
+
+        """
+            Invoke put() for a record with string data without connection
+        """
+        config = {
+                "hosts": [("127.0.0.1", 3000)]
+                }
+        client1 = aerospike.client(config)
+
+        key = ('test', 'demo', 1)
+
+        bins = { "name" : "John" }
+
+        with pytest.raises(Exception) as exception:
+            client1.put( key, bins )
+
+        assert exception.value[0] == 11L
+        assert exception.value[1] == 'No connection to aerospike cluster'

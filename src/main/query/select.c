@@ -37,6 +37,16 @@ AerospikeQuery * AerospikeQuery_Select(AerospikeQuery * self, PyObject * args, P
 	as_error err;
 	as_error_init(&err);
 
+	if (!self || !self->client->as) {
+		as_error_update(&err, AEROSPIKE_ERR_PARAM, "Invalid aerospike object");
+		goto CLEANUP;
+	}
+
+	if (!self->client->is_conn_16) {
+		as_error_update(&err, AEROSPIKE_ERR_CLUSTER, "No connection to aerospike cluster");
+		goto CLEANUP;
+	}
+
 	as_query_select_init(&self->query, nbins);
 
 	for ( int i = 0; i < nbins; i++ ) {
@@ -64,6 +74,15 @@ AerospikeQuery * AerospikeQuery_Select(AerospikeQuery * self, PyObject * args, P
 			Py_DECREF(py_ubin);
 			py_ubin = NULL;
 		}
+	}
+
+CLEANUP:
+	if ( err.code != AEROSPIKE_OK ) {
+		PyObject * py_err = NULL;
+		error_to_pyobject(&err, &py_err);
+		PyErr_SetObject(PyExc_Exception, py_err);
+		Py_DECREF(py_err);
+		return NULL;
 	}
 
 	Py_INCREF(self);
