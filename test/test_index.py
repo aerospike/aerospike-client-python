@@ -26,13 +26,9 @@ class TestIndex(object):
     def setup_method(self, method):
 
         """
-        Setup method.
-        
-        config = {
-                'hosts': [('127.0.0.1', 3000)]
-                }
-        TestIndex.client = aerospike.client(config).connect()
+        Setup method. 
         """
+
         for i in xrange(5):
             key = ('test', u'demo', i)
             rec = {
@@ -51,8 +47,6 @@ class TestIndex(object):
             key = ('test', u'demo', i)
             TestIndex.client.remove(key)
 
-        #TestIndex.client.close()
-
     def test_creatindex_with_no_paramters(self):
         """
             Invoke indexcreate() without any mandatory parameters.
@@ -60,7 +54,7 @@ class TestIndex(object):
         with pytest.raises(TypeError) as typeError:
             TestIndex.client.index_string_create()
 
-        assert "Required argument 'policy' (pos 1) not found" in typeError.value
+        assert "Required argument 'ns' (pos 1) not found" in typeError.value
 
     def test_createindex_with_correct_parameters(self):
         """
@@ -71,7 +65,7 @@ class TestIndex(object):
 'age', 'age_index', policy)
 
         assert retobj == 0L
-        TestIndex.client.index_remove(policy, 'test', 'age_index');
+        TestIndex.client.index_remove('test', 'age_index', policy);
 
     def test_createindex_with_incorrect_namespace(self):
         """
@@ -93,7 +87,7 @@ class TestIndex(object):
 'age', 'age_index', policy )
 
         assert retobj == 0L
-        TestIndex.client.index_remove(policy, 'test', 'age_index');
+        TestIndex.client.index_remove('test', 'age_index', policy);
 
     def test_createindex_with_incorrect_bin(self):
         """
@@ -104,7 +98,7 @@ class TestIndex(object):
 'age1', 'age_index', policy )
 
         assert retobj == 0L
-        TestIndex.client.index_remove(policy, 'test', 'age_index');
+        TestIndex.client.index_remove('test', 'age_index', policy);
 
     def test_createindex_with_namespace_is_none(self):
         """
@@ -160,7 +154,7 @@ None, 'age_index' , policy)
         if retobj == 0L:
             retobj = TestIndex.client.index_integer_create( 'test', 'demo',
 'age', 'age_index', policy)
-            TestIndex.client.index_remove(policy, 'test', 'age_index');
+            TestIndex.client.index_remove('test', 'age_index', policy);
             assert retobj == 0L
         else:
             assert True == False
@@ -176,7 +170,7 @@ None, 'age_index' , policy)
             retobj = TestIndex.client.index_integer_create( 'test', 'demo',
 'no', 'age_index', policy )
             assert retobj == 0L
-            TestIndex.client.index_remove(policy, 'test', 'age_index');
+            TestIndex.client.index_remove('test', 'age_index', policy);
         else:
             assert True == False
 
@@ -192,8 +186,8 @@ name
             retobj = TestIndex.client.index_integer_create( 'test', 'demo',
 'age', 'age_index1', policy )
             assert retobj == 0L
-            TestIndex.client.index_remove(policy, 'test', 'age_index');
-            TestIndex.client.index_remove(policy, 'test', 'age_index1');
+            TestIndex.client.index_remove('test', 'age_index', policy);
+            TestIndex.client.index_remove('test', 'age_index1', policy);
         else:
             assert True == False
 
@@ -208,7 +202,7 @@ name
 'age', 'age_index', policy )
 
         assert retobj == 0L
-        TestIndex.client.index_remove(policy, 'test', 'age_index');
+        TestIndex.client.index_remove('test', 'age_index', policy);
 
     def test_create_string_index_positive(self):
         """
@@ -219,7 +213,7 @@ name
                 'name_index', policy )
 
         assert retobj == 0L
-        TestIndex.client.index_remove(policy, 'test', 'name_index');
+        TestIndex.client.index_remove('test', 'name_index', policy);
 
     def test_create_string_index_with_incorrect_namespace(self):
         """
@@ -241,7 +235,7 @@ name
 'name', 'name_index', policy)
 
         assert retobj == 0L
-        TestIndex.client.index_remove(policy, 'test', 'name_index');
+        TestIndex.client.index_remove('test', 'name_index', policy);
 
     def test_create_string_index_with_incorrect_bin(self):
         """
@@ -252,7 +246,7 @@ name
 'name1', 'name_index', policy)
 
         assert retobj == 0L
-        TestIndex.client.index_remove(policy, 'test', 'name_index');
+        TestIndex.client.index_remove('test', 'name_index', policy);
 
     def test_create_string_index_with_namespace_is_none(self):
         """
@@ -309,7 +303,7 @@ None, 'name_index', policy)
             retobj = TestIndex.client.index_string_create('test', 'demo',
 'name', 'name_index', policy)
             assert retobj == 0L
-            TestIndex.client.index_remove(policy, 'test', 'name_index');
+            TestIndex.client.index_remove('test', 'name_index', policy);
         else:
             assert True == False
 
@@ -324,7 +318,7 @@ None, 'name_index', policy)
             retobj = TestIndex.client.index_string_create('test', 'demo',
 'addr', 'name_index', policy)
             assert retobj == 0L
-            TestIndex.client.index_remove(policy, 'test', 'name_index');
+            TestIndex.client.index_remove('test', 'name_index', policy);
         else:
             assert True == False
 
@@ -340,8 +334,8 @@ name
             retobj = TestIndex.client.index_string_create('test', 'demo',
 'name', 'name_index1', policy)
             assert retobj == 0L
-            TestIndex.client.index_remove(policy, 'test', 'name_index');
-            TestIndex.client.index_remove(policy, 'test', 'name_index1');
+            TestIndex.client.index_remove('test', 'name_index', policy);
+            TestIndex.client.index_remove('test', 'name_index1', policy);
         else:
             assert True == False
 
@@ -356,14 +350,14 @@ name
 'name', 'name_index', policy)
 
         assert retobj == 0L
-        TestIndex.client.index_remove(policy, 'test', 'name_index');
+        TestIndex.client.index_remove('test', 'name_index', policy);
 
     def test_drop_invalid_index(self):
         """
             Invoke drop invalid index() 
         """
         policy = {}
-        retobj = TestIndex.client.index_remove(policy, 'test', 'age_index_new')
+        retobj = TestIndex.client.index_remove('test', 'age_index_new', policy)
         assert retobj == 0L
 
     def test_drop_valid_index(self):
@@ -373,7 +367,7 @@ name
         policy = {}
         retobj = TestIndex.client.index_integer_create('test', 'demo',
 'age', 'age_index', policy)
-        retobj = TestIndex.client.index_remove(policy, 'test', 'age_index')
+        retobj = TestIndex.client.index_remove('test', 'age_index', policy)
         assert retobj == 0L
 
     def test_drop_valid_index_policy(self):
@@ -385,7 +379,7 @@ name
         }
         retobj = TestIndex.client.index_integer_create('test', 'demo',
 'age', 'age_index', policy)
-        retobj = TestIndex.client.index_remove(policy, 'test', 'age_index')
+        retobj = TestIndex.client.index_remove('test', 'age_index', policy)
         assert retobj == 0L
     """
     This test case causes a db crash and hence has been commented. Work pending
@@ -410,7 +404,7 @@ on the C-client side
 u'name', u'uni_name_index', policy)
 
         assert retobj == 0L
-        TestIndex.client.index_remove(policy, 'test', u'uni_name_index');
+        TestIndex.client.index_remove('test', u'uni_name_index', policy);
 
     def test_createindex_integer_unicode(self):
         """
@@ -421,4 +415,20 @@ u'name', u'uni_name_index', policy)
 u'age', u'uni_age_index', policy )
 
         assert retobj == 0L
-        TestIndex.client.index_remove(policy, 'test', u'age_index');
+        TestIndex.client.index_remove('test', u'age_index', policy);
+
+    def test_createindex_with_correct_parameters_without_connection(self):
+        """
+            Invoke createindex() with correct arguments without connection
+        """
+        policy = {}
+        config = {
+                'hosts': [('127.0.0.1', 3000)]
+                }
+        client1 = aerospike.client(config)
+
+        with pytest.raises(Exception) as exception:
+            etobj = client1.index_integer_create('test', 'demo', 'age', 'age_index', policy)
+
+        assert exception.value[0] == 11L
+        assert exception.value[1] == 'No connection to aerospike cluster'

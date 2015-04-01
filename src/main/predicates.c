@@ -48,13 +48,75 @@ exit:
 	return Py_None;
 }
 
+static PyObject * AerospikePredicates_Contains(PyObject * self, PyObject * args)
+{
+	PyObject * py_bin = NULL;
+	PyObject * py_indextype = NULL;
+	PyObject * py_val = NULL;
+	int index_type;
+
+	if ( PyArg_ParseTuple(args, "OOO:equals", 
+			&py_bin, &py_indextype, &py_val) == false ) {
+		goto exit;
+	}
+
+	if(PyInt_Check(py_indextype)) {
+		index_type = PyInt_AsLong(py_indextype);
+	} else if (PyLong_Check(py_indextype)) {
+		index_type = PyLong_AsLongLong(py_indextype);
+	} else {
+		goto exit;
+	}
+
+	if (PyInt_Check(py_val) || PyLong_Check(py_val)) {
+		return Py_BuildValue("iiOOOi", AS_PREDICATE_EQUAL, AS_INDEX_NUMERIC, py_bin, py_val, Py_None, index_type);
+	}
+	else if (PyString_Check(py_val) || PyUnicode_Check(py_val)) {
+		return Py_BuildValue("iiOOOi", AS_PREDICATE_EQUAL, AS_INDEX_STRING, py_bin, py_val, Py_None, index_type);
+	}
+
+exit:
+	Py_INCREF(Py_None);
+	return Py_None;
+}
+
+static PyObject * AerospikePredicates_RangeContains(PyObject * self, PyObject * args)
+{
+	PyObject * py_bin = NULL;
+	PyObject * py_indextype = NULL;
+	PyObject * py_min = NULL;
+	PyObject * py_max= NULL;
+	int index_type;
+
+	if ( PyArg_ParseTuple(args, "OOOO:equals",
+			&py_bin, &py_indextype, &py_min, &py_max) == false ) {
+		goto exit;
+	}
+
+	if(PyInt_Check(py_indextype)) {
+		index_type = PyInt_AsLong(py_indextype);
+	} else if (PyLong_Check(py_indextype)) {
+		index_type = PyLong_AsLongLong(py_indextype);
+	} else {
+		goto exit;
+	}
+
+	if ((PyInt_Check(py_min) || PyLong_Check(py_min)) && (PyInt_Check(py_max) || PyLong_Check(py_max))) {
+		return Py_BuildValue("iiOOOi", AS_PREDICATE_RANGE, AS_INDEX_NUMERIC, py_bin, py_min, py_max, index_type);
+	}
+
+exit:
+	Py_INCREF(Py_None);
+	return Py_None;
+}
+
 static PyObject * AerospikePredicates_Between(PyObject * self, PyObject * args)
 {
 	PyObject * py_bin = NULL;
 	PyObject * py_min = NULL;
 	PyObject * py_max = NULL;
 
-	if ( PyArg_ParseTuple(args, "OOO:between", 
+	if ( PyArg_ParseTuple(args, "OOO:between",
 			&py_bin, &py_min, &py_max) == false ) {
 		goto exit;
 	}
@@ -71,6 +133,8 @@ exit:
 static PyMethodDef AerospikePredicates_Methods[] = {
 	{"equals",		(PyCFunction) AerospikePredicates_Equals,	METH_VARARGS, "Tests whether a bin's value equals the specified value."},
 	{"between",		(PyCFunction) AerospikePredicates_Between,	METH_VARARGS, "Tests whether a bin's value is within the specified range."},
+	{"contains",	(PyCFunction) AerospikePredicates_Contains,	METH_VARARGS, "Tests whether a bin's value equals the specified value in a complex data type"},
+	{"range",	(PyCFunction) AerospikePredicates_RangeContains,	METH_VARARGS, "Tests whether a bin's value is within the specified range in a complex data type"},
 	{NULL, NULL, 0, NULL}
 };
 

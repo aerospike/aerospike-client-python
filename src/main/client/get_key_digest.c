@@ -63,6 +63,12 @@ PyObject * AerospikeClient_Get_Key_Digest_Invoke(
 		as_error_update(&err, AEROSPIKE_ERR_PARAM, "Invalid aerospike object");
 		goto CLEANUP;
 	}
+
+	if (!self->is_conn_16) {
+		as_error_update(&err, AEROSPIKE_ERR_CLUSTER, "No connection to aerospike cluster");
+		goto CLEANUP;
+	}
+
 	py_keydict = PyDict_New();
 	PyDict_SetItemString(py_keydict, "ns", py_ns);
 	PyDict_SetItemString(py_keydict, "set", py_set);

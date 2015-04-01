@@ -66,6 +66,11 @@ PyObject * AerospikeClient_Select_Invoke(
 		goto CLEANUP;
 	}
 
+	if (!self->is_conn_16) {
+		as_error_update(&err, AEROSPIKE_ERR_CLUSTER, "No connection to aerospike cluster");
+		goto CLEANUP;
+	}
+
 	// Convert python key object to as_key
 	pyobject_to_key(&err, py_key, &key);
 	if ( err.code != AEROSPIKE_OK ) {

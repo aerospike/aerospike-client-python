@@ -24,12 +24,24 @@ class TestQuery(object):
         TestQuery.client.index_integer_create('test', 'demo', 'test_age', 'age_index')
         TestQuery.client.index_string_create('test', 'demo', 'addr', 'addr_index')
         TestQuery.client.index_integer_create('test', 'demo', 'age1', 'age_index1')
+        TestQuery.client.index_list_create('test', 'demo', 'numeric_list', aerospike.INDEX_NUMERIC, 'numeric_list_index')
+        TestQuery.client.index_list_create('test', 'demo', 'string_list', aerospike.INDEX_STRING, 'string_list_index')
+        TestQuery.client.index_map_keys_create('test', 'demo', 'numeric_map', aerospike.INDEX_NUMERIC, 'numeric_map_index')
+        TestQuery.client.index_map_keys_create('test', 'demo', 'string_map', aerospike.INDEX_STRING, 'string_map_index')
+        TestQuery.client.index_map_values_create('test', 'demo', 'numeric_map', aerospike.INDEX_NUMERIC, 'numeric_map_values_index')
+        TestQuery.client.index_map_values_create('test', 'demo', 'string_map', aerospike.INDEX_STRING, 'string_map_values_index')
 
     def teardown_class(cls):
         policy = {}
         TestQuery.client.index_remove('test', 'age_index', policy);
         TestQuery.client.index_remove('test', 'age_index1', policy);
         TestQuery.client.index_remove('test', 'addr_index', policy);
+        TestQuery.client.index_remove('test', 'numeric_list_index', policy);
+        TestQuery.client.index_remove('test', 'string_list_index', policy);
+        TestQuery.client.index_remove('test', 'numeric_map_index', policy);
+        TestQuery.client.index_remove('test', 'string_map_index', policy);
+        TestQuery.client.index_remove('test', 'numeric_map_values_index', policy);
+        TestQuery.client.index_remove('test', 'string_map_values_index', policy);
         TestQuery.client.close()
 
     def setup_method(self, method):
@@ -42,6 +54,10 @@ class TestQuery(object):
             rec = {
                     'name' : 'name%s' % (str(i)),
                     'addr' : 'name%s' % (str(i)),
+                    'numeric_list': [i, i+1, i+2],
+                    'string_list': ["str"+str(i), "str"+str(i+1), "str"+str(i+2)],
+                    'numeric_map': {"a": i, "b": i+1, "c":i+2},
+                    'string_map': {"a": "a"+str(i), "b": "b"+str(i+1), "c": "c"+str(i+2)},
                     'test_age'  : i,
                     'no'   : i
                     }
@@ -366,6 +382,78 @@ class TestQuery(object):
         assert exception.value[0] == -2L
         assert exception.value[1] == 'Bin name should be of type string'
 
+    def test_query_with_correct_parameters_contains(self):
+        """
+            Invoke query() with correct arguments and using predicate contains
+        """
+        query = TestQuery.client.query('test', 'demo')
+        query.select('name', 'test_age')
+        query.where(p.contains('numeric_list' , aerospike.INDEX_TYPE_LIST, 1))
+
+        records = []
+        def callback((key,metadata,record)):
+            records.append(record)
+
+        query.foreach(callback)
+        assert len(records) == 2
+
+    def test_query_with_correct_parameters_containsstring(self):
+        """
+            Invoke query() with correct arguments and using predicate contains
+        """
+        query = TestQuery.client.query('test', 'demo')
+        query.select('name', 'test_age')
+        query.where(p.contains('string_list' , aerospike.INDEX_TYPE_LIST, "str3"))
+
+        records = []
+        def callback((key,metadata,record)):
+            records.append(record)
+
+        query.foreach(callback)
+        assert len(records) == 3
+
+    def test_query_with_correct_parameters_rangecontains(self):
+        """
+            Invoke query() with correct arguments and using predicate contains
+        """
+        query = TestQuery.client.query('test', 'demo')
+        query.select('name', 'test_age')
+        query.where(p.range('numeric_list' , aerospike.INDEX_TYPE_LIST, 1, 3))
+
+        records = []
+        def callback((key,metadata,record)):
+            records.append(record)
+
+        query.foreach(callback)
+        assert len(records) == 2
+
+    def test_query_with_correct_parameters_containsstring_mapkeys(self):
+        """
+            Invoke query() with correct arguments and using predicate contains
+        """
+        query = TestQuery.client.query('test', 'demo')
+        query.select('name', 'test_age')
+        query.where(p.contains('string_map' , aerospike.INDEX_TYPE_MAPKEYS, "a"))
+
+        records = []
+        def callback((key,metadata,record)):
+            records.append(record)
+
+        query.foreach(callback)
+        assert len(records) == 5
+
+    def test_query_with_correct_parameters_containsstring_mapvalues(self):
+        """
+            Invoke query() with correct arguments and using predicate contains
+        """
+        query = TestQuery.client.query('test', 'demo')
+        query.select('name', 'test_age')
+        query.where(p.contains('string_map' , aerospike.INDEX_TYPE_MAPVALUES, "a1"))
+
+        records = []
+        def callback((key,metadata,record)):
+            records.append(record)
+
     def test_query_with_multiple_foreach_on_same_query_object(self):
         """
             Invoke query() with multple foreach() call on same query object
@@ -381,6 +469,113 @@ class TestQuery(object):
         query.foreach(callback)
         assert len(records) == 1
 
+    def test_query_with_correct_parameters_containsnumeric_mapvalues(self):
+        """
+            Invoke query() with correct arguments and using predicate contains
+        """
+        query = TestQuery.client.query('test', 'demo')
+        query.select('name', 'test_age')
+        query.where(p.contains('numeric_map', aerospike.INDEX_TYPE_MAPVALUES, 1))
+
+        records = []
+        def callback((key,metadata,record)):
+            records.append(record)
+
+        query.foreach(callback)
+        assert len(records) == 2
+
+    def test_query_with_correct_parameters_rangecontains(self):
+        """
+            Invoke query() with correct arguments and using predicate contains
+        """
+        query = TestQuery.client.query('test', 'demo')
+        query.select('name', 'test_age')
+        query.where(p.range('numeric_map' , aerospike.INDEX_TYPE_MAPVALUES, 1, 3))
+
+        records = []
+        def callback((key,metadata,record)):
+            records.append(record)
+
+        query.foreach(callback)
+        assert len(records) == 8
+
+    def test_query_with_correct_parameters_rangecontains_notuple(self):
+        """
+            Invoke query() with correct arguments and using predicate contains
+        """
+        query = TestQuery.client.query('test', 'demo')
+        query.select('name', 'test_age')
+        query.where('numeric_map' , "range", aerospike.INDEX_TYPE_MAPVALUES, aerospike.INDEX_NUMERIC, 1, 3)
+
+        records = []
+        def callback((key,metadata,record)):
+            records.append(record)
+
+        query.foreach(callback)
+        assert len(records) == 8
+
+    def test_query_with_correct_parameters_containsstring_mapvalues_notuple(self):
+        """
+            Invoke query() with correct arguments and using predicate contains
+        """
+        query = TestQuery.client.query('test', 'demo')
+        query.select('name', 'test_age')
+        query.where('string_map' , 'contains', aerospike.INDEX_TYPE_MAPVALUES, aerospike.INDEX_STRING, "a1")
+
+        records = []
+        def callback((key,metadata,record)):
+            records.append(record)
+
+        query.foreach(callback)
+        assert len(records) == 1
+
+    def test_query_with_correct_parameters_containsstring_notuple(self):
+
+        """
+            Invoke query() with correct arguments and using predicate contains
+        """
+        query = TestQuery.client.query('test', 'demo')
+        query.select('name', 'test_age')
+        query.where('string_list', "contains", aerospike.INDEX_TYPE_LIST, aerospike.INDEX_STRING, "str3")
+
+        records = []
+        def callback((key,metadata,record)):
+            records.append(record)
+
+        query.foreach(callback)
+        assert len(records) == 3
+
+    def test_query_with_correct_parameters_between_notuple(self):
+        """
+            Invoke query() with correct arguments and using predicate between
+        """
+        query = TestQuery.client.query('test', 'demo')
+        query.select('name', 'test_age')
+        query.where('test_age', 'between', 1, 4)
+
+        records = []
+        def callback((key,metadata,record)):
+            records.append(record)
+
+        query.foreach(callback)
+        assert len(records) == 4
+
+    def test_query_with_policy_notuple(self):
+        """
+            Invoke query() with policy
+        """
+        policy = {
+            'timeout': 1000
+        }
+        query = TestQuery.client.query('test', 'demo')
+        query.select('name', 'test_age')
+        query.where('test_age', 'equals', 1)
+        records = []
+        def callback((key,metadata,record)):
+            records.append(record)
+
+        query.foreach(callback, policy)
+        assert len(records) == 1
         records = []
         query.foreach(callback)
         assert len(records) == 1
@@ -401,3 +596,26 @@ class TestQuery(object):
         records = query.results()
         assert len(records) == 1
         assert records[0][2] == {'test_age': 7, 'name': u'name7', 'addr': u'name7'}
+
+    def test_query_with_correct_parameters_without_connection(self):
+        """
+            Invoke query() with correct arguments without connection
+        """
+        config = {
+                'hosts': [('127.0.0.1', 3000)]
+                }
+        client1 = aerospike.client(config)
+
+        with pytest.raises(Exception) as exception:
+            query = client1.query('test', 'demo')
+            query.select('name', 'test_age')
+            query.where(p.equals('test_age', 1))
+
+            records = []
+            def callback((key,metadata,record)):
+                records.append(key)
+
+            query.foreach(callback)
+
+        assert exception.value[0] == 11L
+        assert exception.value[1] == 'No connection to aerospike cluster'

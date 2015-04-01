@@ -817,7 +817,8 @@ Client Class --- :class:`Client`
 
     .. method:: index_string_create(ns, set, bin, index_name[, policy])
 
-        Create a string index with *index_name* on the *bin* in the specified *ns*, *set*.
+        Create a string index with *index_name* on the *bin* in the specified \
+        *ns*, *set*.
 
         :param str ns: the namespace in the aerospike database.
         :param str set: the set name.
@@ -829,7 +830,8 @@ Client Class --- :class:`Client`
 
     .. method:: index_integer_create(ns, set, bin, index_name[, policy])
 
-        Create an integer index with *index_name* on the *bin* in the specified *ns*, *set*.
+        Create an integer index with *index_name* on the *bin* in the specified \
+        *ns*, *set*.
 
         :param str ns: the namespace in the aerospike database.
         :param str set: the set name.
@@ -837,6 +839,74 @@ Client Class --- :class:`Client`
         :param str index_name: the name of the index.
 
         .. versionchanged:: 1.0.39
+
+    .. method:: index_list_create(ns, set, bin, index_datatype, index_name[, policy])
+
+        Create an index named *index_name* for either numeric or string values \
+        (as defined by *index_datatype*) on records of the specified *ns*, *set* \
+        whose *bin* is a list.
+
+        :param str ns: the namespace in the aerospike database.
+        :param str set: the set name.
+        :param str bin: the name of bin the secondary index is built on.
+        :param index_datatype: Possible values are ``aerospike.INDEX_STRING`` and ``aerospike.INDEX_NUMERIC``.
+        :param str index_name: the name of the index.
+
+        .. warning::
+
+            This functionality will become available with a future release of the Aerospike server.
+
+        .. versionadded:: 1.0.42
+
+    .. method:: index_map_keys_create(ns, set, bin, index_datatype, index_name[, policy])
+
+        Create an index named *index_name* for either numeric or string values \
+        (as defined by *index_datatype*) on records of the specified *ns*, *set* \
+        whose *bin* is a map. The index will include the keys of the map.
+
+        :param str ns: the namespace in the aerospike database.
+        :param str set: the set name.
+        :param str bin: the name of bin the secondary index is built on.
+        :param index_datatype: Possible values are ``aerospike.INDEX_STRING`` and ``aerospike.INDEX_NUMERIC``.
+        :param str index_name: the name of the index.
+
+        .. warning::
+
+            This functionality will become available with a future release of the Aerospike server.
+
+        .. versionadded:: 1.0.42
+
+    .. method:: index_map_values_create(ns, set, bin, index_datatype, index_name[, policy])
+
+        Create an index named *index_name* for either numeric or string values \
+        (as defined by *index_datatype*) on records of the specified *ns*, *set* \
+        whose *bin* is a map. The index will include the values of the map.
+
+        :param str ns: the namespace in the aerospike database.
+        :param str set: the set name.
+        :param str bin: the name of bin the secondary index is built on.
+        :param index_datatype: Possible values are ``aerospike.INDEX_STRING`` and ``aerospike.INDEX_NUMERIC``.
+        :param str index_name: the name of the index.
+
+        .. warning::
+
+            This functionality will become available with a future release of the Aerospike server.
+
+        .. code-block:: python
+
+            import aerospike
+            from aerospike import predicates as p
+
+            client = aerospike.client({ 'hosts': [ ('127.0.0.1', 3000)]})
+
+            # assume the bin fav_movies in the set test.demo bin should contain
+            # a dict { (str) _title_ : (int) _times_viewed_ }
+            # create a secondary index for string values of test.demo records whose 'fav_movies' bin is a map
+            client.index_map_keys_create('test', 'demo', 'fav_movies', aerospike.INDEX_STRING, 'demo_fav_movies_titles_idx')
+            # create a secondary index for integer values of test.demo records whose 'fav_movies' bin is a map
+            client.index_map_values_create('test', 'demo', 'fav_movies', aerospike.INDEX_NUMERIC, 'demo_fav_movies_views_idx')
+
+        .. versionadded:: 1.0.42
 
 
     .. method:: index_remove(ns, index_name[, policy])

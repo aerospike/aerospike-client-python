@@ -76,6 +76,10 @@ PyObject * AerospikeScan_Results(AerospikeScan * self, PyObject * args, PyObject
 		as_error_update(&err, AEROSPIKE_ERR_PARAM, "Invalid aerospike object");
 		goto CLEANUP;
 	}
+	if (!self->client->is_conn_16) {
+		as_error_update(&err, AEROSPIKE_ERR_CLUSTER, "No connection to aerospike cluster");
+		goto CLEANUP;
+	}
 
 	// Convert python policy object to as_policy_scan
 	pyobject_to_policy_scan(&err, py_policy, &scan_policy, &scan_policy_p,

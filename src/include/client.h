@@ -336,6 +336,27 @@ PyObject * AerospikeClient_Index_String_Create(AerospikeClient * self, PyObject 
  *
  */
 PyObject * AerospikeClient_Index_Remove(AerospikeClient * self, PyObject *args, PyObject * kwds);
+/**
+ * Create secondary list index
+ *
+ *		client.index_list_create(policy, namespace, set, bin, index_name)
+ *
+ */
+PyObject * AerospikeClient_Index_List_Create(AerospikeClient * self, PyObject *args, PyObject * kwds);
+/**
+ * Create secondary map keys index
+ *
+ *		client.index_map_keys_create(policy, namespace, set, bin, index_name)
+ *
+ */
+PyObject * AerospikeClient_Index_Map_Keys_Create(AerospikeClient * self, PyObject *args, PyObject * kwds);
+/**
+ * Create secondary map values index
+ *
+ *		client.index_map_values_create(policy, namespace, set, bin, index_name)
+ *
+ */
+PyObject * AerospikeClient_Index_Map_Values_Create(AerospikeClient * self, PyObject *args, PyObject * kwds);
 
 /*******************************************************************************
  * LOG OPERATIONS

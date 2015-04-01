@@ -87,6 +87,8 @@ Query Class --- :class:`Query`
         :param callback callback: the function to invoke for each record.
         :param dict policy: optional query policies :ref:`aerospike_query_policies`.
 
+        .. seealso:: The :ref:`aerospike_record_tuple`.
+
         .. code-block:: python
 
             import aerospike

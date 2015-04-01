@@ -185,6 +185,16 @@ PyObject * AerospikeClient_RemoveBin(AerospikeClient * self, PyObject * args, Py
 		return NULL;
 	}
 
+	if (!self || !self->as) {
+		as_error_update(&err, AEROSPIKE_ERR_PARAM, "Invalid aerospike object");
+		goto CLEANUP;
+	}
+
+	if (!self->is_conn_16) {
+		as_error_update(&err, AEROSPIKE_ERR_CLUSTER, "No connection to aerospike cluster");
+		goto CLEANUP;
+	}
+
 	if(!PyList_Check(py_binList)) {
 		as_error_update(&err, AEROSPIKE_ERR_PARAM, "Bins should be a list");
 		goto CLEANUP;
