@@ -339,7 +339,7 @@ AerospikeQuery * AerospikeQuery_Where(AerospikeQuery * self, PyObject * args)
 				rc = 1;
 			}
 		}
-		else if ( strcmp(op, "range_contains") == 0 ) {
+		else if ( strcmp(op, "range") == 0 ) {
 			int index_type;
 			if(PyInt_Check(py_arg3)) {
 				index_type = PyInt_AsLong(py_arg3);
@@ -359,7 +359,7 @@ AerospikeQuery * AerospikeQuery_Where(AerospikeQuery * self, PyObject * args)
 				);
 			}
 			else {
-				as_error_update(&err, AEROSPIKE_ERR_PARAM, "predicate 'range_contains' expects a bin and two numeric values.");
+				as_error_update(&err, AEROSPIKE_ERR_PARAM, "predicate 'range' expects a bin and two numeric values.");
 				PyObject * py_err = NULL;
 				error_to_pyobject(&err, &py_err);
 				PyErr_SetObject(PyExc_Exception, py_err);

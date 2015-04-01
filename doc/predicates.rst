@@ -59,6 +59,10 @@
     :type val: str or int
     :return: :class:`tuple` to be used in :meth:`aerospike.Query.where`.
 
+    .. warning::
+
+        This functionality will become available with a future release of the Aerospike server.
+
     .. code-block:: python
 
         import aerospike
@@ -77,16 +81,20 @@
         query = self.client.query('test', 'demo')
         query.where(p.contains('fav_movies', aerospike.INDEX_TYPE_MAPKEYS, '12 Monkeys'))
 
-.. py:function:: range_contains(bin, index_type, min, max))
+.. py:function:: range(bin, index_type, min, max))
 
     Represent the predicate *bin* **CONTAINS** values **BETWEEN** *min* **AND** \
     *max* for a bin with a complex (list or map) type.
 
     :param str bin: the bin name.
     :param index_type: Possible ``aerospike.INDEX_TYPE_*`` values are detailed in :ref:`aerospike_misc_constants`.
-    :param int min: the minimum value to be used for matching with the range_contains operator.
-    :param int max: the maximum value to be used for matching with the range_contains operator.
+    :param int min: the minimum value to be used for matching with the range operator.
+    :param int max: the maximum value to be used for matching with the range operator.
     :return: :class:`tuple` to be used in :meth:`aerospike.Query.where`.
+
+    .. warning::
+
+        This functionality will become available with a future release of the Aerospike server.
 
     .. code-block:: python
 
@@ -101,4 +109,4 @@
 
         # query for records whose 'age' bin has a list with numeric values between 20 and 30
         query = self.client.query('test', 'demo')
-        query.where(p.range_contains('age', aerospike.INDEX_TYPE_LIST, 20, 30))
+        query.where(p.range('age', aerospike.INDEX_TYPE_LIST, 20, 30))

@@ -852,6 +852,10 @@ Client Class --- :class:`Client`
         :param index_datatype: Possible values are ``aerospike.INDEX_STRING`` and ``aerospike.INDEX_NUMERIC``.
         :param str index_name: the name of the index.
 
+        .. warning::
+
+            This functionality will become available with a future release of the Aerospike server.
+
         .. versionadded:: 1.0.42
 
     .. method:: index_map_keys_create(ns, set, bin, index_datatype, index_name[, policy])
@@ -866,6 +870,10 @@ Client Class --- :class:`Client`
         :param index_datatype: Possible values are ``aerospike.INDEX_STRING`` and ``aerospike.INDEX_NUMERIC``.
         :param str index_name: the name of the index.
 
+        .. warning::
+
+            This functionality will become available with a future release of the Aerospike server.
+
         .. versionadded:: 1.0.42
 
     .. method:: index_map_values_create(ns, set, bin, index_datatype, index_name[, policy])
@@ -879,6 +887,10 @@ Client Class --- :class:`Client`
         :param str bin: the name of bin the secondary index is built on.
         :param index_datatype: Possible values are ``aerospike.INDEX_STRING`` and ``aerospike.INDEX_NUMERIC``.
         :param str index_name: the name of the index.
+
+        .. warning::
+
+            This functionality will become available with a future release of the Aerospike server.
 
         .. code-block:: python
 
