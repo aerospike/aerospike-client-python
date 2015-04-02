@@ -223,3 +223,18 @@ class TestSelectMany(object):
 
         assert type(records) == dict
         assert len(records.keys()) == 5
+
+    def test_select_many_with_proper_parameters_without_connection(self):
+
+        config = {
+                'hosts': [('127.0.0.1', 3000)]
+                }
+        client1 = aerospike.client(config)
+
+        filter_bins = [ 'title', 'name' ]
+
+        with pytest.raises(Exception) as exception:
+            records = client1.select_many( self.keys, filter_bins, { 'timeout': 3 } )
+
+        assert exception.value[0] == 11L
+        assert exception.value[1] == 'No connection to aerospike cluster'

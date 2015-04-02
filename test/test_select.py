@@ -20,7 +20,7 @@ class TestSelect(TestBaseClass):
         hostlist, user, password = TestBaseClass.get_hosts()
         config = {
                 'hosts': hostlist
-                }
+        }
         if user == None and password == None:
             TestSelect.client = aerospike.client(config).connect()
         else:
@@ -263,3 +263,19 @@ class TestSelect(TestBaseClass):
 
         key = ('test', 'demo', 'aa')
         TestSelect.client.remove( key )
+
+    def test_select_with_key_and_bins_without_connection(self):
+
+        config = {
+                'hosts': [('127.0.0.1', 3000)]
+                }
+        client1 = aerospike.client(config)
+        key = ( "test", "demo", 1 )
+
+        bins_to_select = ['a']
+
+        with pytest.raises(Exception) as exception:
+            key, meta, bins = client1.select( key, bins_to_select)
+
+        assert exception.value[0] == 11L
+        assert exception.value[1] == 'No connection to aerospike cluster'

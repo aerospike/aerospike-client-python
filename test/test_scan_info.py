@@ -114,3 +114,19 @@ class TestScanInfo(object):
             scan_info = self.client.scan_info("string")
 
         assert "an integer is required" in typeError.value
+
+    def test_scan_info_with_correct_parameters_without_connection(self):
+        """
+        Invoke scan_info() with correct parameters without connection
+        """
+
+        config = {
+            'hosts': [('127.0.0.1', 3000)]
+        }
+        client1 = aerospike.client(config)
+
+        with pytest.raises(Exception) as exception:
+            scan_info = client1.scan_info(self.scan_id)
+
+        assert exception.value[0] == 11L
+        assert exception.value[1] == 'No connection to aerospike cluster'

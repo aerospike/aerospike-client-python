@@ -432,3 +432,25 @@ class TestAggregate(TestBaseClass):
         records = []
         records = query.results()
         assert records[0] == 4
+
+    def test_aggregate_with_correct_parameters_without_connection(self):
+        """
+            Invoke aggregate() with correct arguments without connection
+        """
+        config = { 'hosts' : [('127.0.0.1', 3000)] }
+        client1 = aerospike.client(config)
+
+        with pytest.raises(Exception) as exception:
+            query = client1.query('test', 'demo')
+            query.select('name', 'test_age')
+            query.where(p.between('test_age', 1, 5))
+            query.apply('stream_example', 'count')
+
+            records = []
+            def user_callback(value):
+                records.append(value)
+
+            query.foreach(user_callback)
+
+        assert exception.value[0] == 11L
+        assert exception.value[1] == 'No connection to aerospike cluster'

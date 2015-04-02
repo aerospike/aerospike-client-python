@@ -45,12 +45,12 @@ class KVTestCase(unittest.TestCase, TestBaseClass):
 
         global count
 
-        key = ("test","demo","1")
+        key = ("test","unittest","1")
 
         # cleanup records
         def remove_record((key, meta, rec)):
             self.client.remove(key)
-        self.client.scan("test","demo").foreach(remove_record)
+        self.client.scan("test","unittest").foreach(remove_record)
 
         recIn = {
             "i": 1234,
@@ -70,7 +70,7 @@ class KVTestCase(unittest.TestCase, TestBaseClass):
 
         # count records
         count = 0
-        self.client.scan("test","demo").foreach(count_records)
+        self.client.scan("test","unittest").foreach(count_records)
         assert count == 1
         self.assertEqual(count, 1, 'set should have 1 record')
 
@@ -99,7 +99,7 @@ class KVTestCase(unittest.TestCase, TestBaseClass):
 
         # count records
         count = 0
-        self.client.scan("test","demo").foreach(count_records)
+        self.client.scan("test","unittest").foreach(count_records)
         self.assertEqual(count, 0, 'set should be empty')
 
     def test_2(self):
@@ -109,12 +109,12 @@ class KVTestCase(unittest.TestCase, TestBaseClass):
 
         global count
 
-        key = ("test","demo","1")
+        key = ("test","unittest","1")
 
         # cleanup records
         def each_record((key, meta, rec)):
             self.client.remove(key)
-        self.client.scan("test","demo").foreach(each_record)
+        self.client.scan("test","unittest").foreach(each_record)
 
         recIn = {
             "i": 1234,
@@ -138,7 +138,7 @@ class KVTestCase(unittest.TestCase, TestBaseClass):
 
         # count records
         count = 0
-        self.client.scan("test","demo").foreach(count_records)
+        self.client.scan("test","unittest").foreach(count_records)
         self.assertEqual(count, 1, 'set should have 1 record')
 
         # read it
@@ -166,7 +166,7 @@ class KVTestCase(unittest.TestCase, TestBaseClass):
 
         # count records
         count = 0
-        self.client.scan("test","demo").foreach(count_records)
+        self.client.scan("test","unittest").foreach(count_records)
         self.assertEqual(count, 0, 'set should be empty')
 
     def test_3(self):
@@ -178,7 +178,7 @@ class KVTestCase(unittest.TestCase, TestBaseClass):
         global count
 
         for i in xrange(2):
-            key = ('test', 'demo', i)
+            key = ('test', 'unittest', i)
             rec = {
                 'name' : 'name%s' % (str(i)),
                 'addr' : 'name%s' % (str(i)),
@@ -187,10 +187,9 @@ class KVTestCase(unittest.TestCase, TestBaseClass):
             }
             self.client.put(key, rec)
 
-        self.client.index_integer_create('test', 'unittest', 'age', 'age_index',
-                {})
+        self.client.index_integer_create('test', 'unittest', 'age', 'age_index', {})
 
-        query = self.client.query('test', 'demo')
+        query = self.client.query('test', 'unittest')
 
         query.select("name", "age")
         count = 0
@@ -201,7 +200,7 @@ class KVTestCase(unittest.TestCase, TestBaseClass):
         self.assertEqual(count, 1, "foreach failed")
 
         for i in xrange(2):
-            key = ('test', 'demo', i)
+            key = ('test', 'unittest', i)
             self.client.remove(key)
 
         self.client.index_remove('test', 'age_index', {});

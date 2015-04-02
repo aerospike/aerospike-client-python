@@ -68,6 +68,10 @@ PyObject * AerospikeLStack_Push(AerospikeLStack * self, PyObject * args, PyObjec
 		as_error_update(&err, AEROSPIKE_ERR_PARAM, "Invalid aerospike object");
 		goto CLEANUP;
 	}
+	if (!self->client->is_conn_16) {
+		as_error_update(&err, AEROSPIKE_ERR_CLUSTER, "No connection to aerospike cluster");
+		goto CLEANUP;
+	}
 
 	// Convert python policy object to as_policy_apply
 	pyobject_to_policy_apply(&err, py_policy, &apply_policy, &apply_policy_p,
@@ -138,6 +142,10 @@ PyObject * AerospikeLStack_Push_Many(AerospikeLStack * self, PyObject * args, Py
 
 	if (!self || !self->client || !self->client->as) {
 		as_error_update(&err, AEROSPIKE_ERR_PARAM, "Invalid aerospike object");
+		goto CLEANUP;
+	}
+	if (!self->client->is_conn_16) {
+		as_error_update(&err, AEROSPIKE_ERR_CLUSTER, "No connection to aerospike cluster");
 		goto CLEANUP;
 	}
 
@@ -217,6 +225,10 @@ PyObject * AerospikeLStack_Peek(AerospikeLStack * self, PyObject * args, PyObjec
 		as_error_update(&err, AEROSPIKE_ERR_PARAM, "Invalid aerospike object");
 		goto CLEANUP;
 	}
+	if (!self->client->is_conn_16) {
+		as_error_update(&err, AEROSPIKE_ERR_CLUSTER, "No connection to aerospike cluster");
+		goto CLEANUP;
+	}
 
 	// Convert python policy object to as_policy_apply
 	pyobject_to_policy_apply(&err, py_policy, &apply_policy, &apply_policy_p,
@@ -294,6 +306,10 @@ PyObject * AerospikeLStack_Filter(AerospikeLStack * self, PyObject * args, PyObj
 
 	if (!self || !self->client || !self->client->as) {
 		as_error_update(&err, AEROSPIKE_ERR_PARAM, "Invalid aerospike object");
+		goto CLEANUP;
+	}
+	if (!self->client->is_conn_16) {
+		as_error_update(&err, AEROSPIKE_ERR_CLUSTER, "No connection to aerospike cluster");
 		goto CLEANUP;
 	}
 
@@ -382,6 +398,10 @@ PyObject * AerospikeLStack_Destroy(AerospikeLStack * self, PyObject * args, PyOb
 		as_error_update(&err, AEROSPIKE_ERR_PARAM, "Invalid aerospike object");
 		goto CLEANUP;
 	}
+	if (!self->client->is_conn_16) {
+		as_error_update(&err, AEROSPIKE_ERR_CLUSTER, "No connection to aerospike cluster");
+		goto CLEANUP;
+	}
 
 	// Convert python policy object to as_policy_apply
 	pyobject_to_policy_apply(&err, py_policy, &apply_policy, &apply_policy_p,
@@ -438,6 +458,10 @@ PyObject * AerospikeLStack_Get_Capacity(AerospikeLStack * self, PyObject * args,
 
 	if (!self || !self->client || !self->client->as) {
 		as_error_update(&err, AEROSPIKE_ERR_PARAM, "Invalid aerospike object");
+		goto CLEANUP;
+	}
+	if (!self->client->is_conn_16) {
+		as_error_update(&err, AEROSPIKE_ERR_CLUSTER, "No connection to aerospike cluster");
 		goto CLEANUP;
 	}
 
@@ -499,6 +523,10 @@ PyObject * AerospikeLStack_Set_Capacity(AerospikeLStack * self, PyObject * args,
 		as_error_update(&err, AEROSPIKE_ERR_PARAM, "Invalid aerospike object");
 		goto CLEANUP;
 	}
+	if (!self->client->is_conn_16) {
+		as_error_update(&err, AEROSPIKE_ERR_CLUSTER, "No connection to aerospike cluster");
+		goto CLEANUP;
+	}
 
 	// Convert python policy object to as_policy_apply
 	pyobject_to_policy_apply(&err, py_policy, &apply_policy, &apply_policy_p,
@@ -556,6 +584,10 @@ PyObject * AerospikeLStack_Size(AerospikeLStack * self, PyObject * args, PyObjec
 
 	if (!self || !self->client || !self->client->as) {
 		as_error_update(&err, AEROSPIKE_ERR_PARAM, "Invalid aerospike object");
+		goto CLEANUP;
+	}
+	if (!self->client->is_conn_16) {
+		as_error_update(&err, AEROSPIKE_ERR_CLUSTER, "No connection to aerospike cluster");
 		goto CLEANUP;
 	}
 

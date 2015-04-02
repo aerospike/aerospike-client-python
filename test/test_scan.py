@@ -122,10 +122,9 @@ class TestScan(TestBaseClass):
         scan_obj.foreach(callback, { 'timeout' : 2000 })
 
         assert len(records) != 0
-    """
+
     def test_scan_with_callback_contains_error(self):
 
-            #Invoke scan() with callback function returns false
         ns = 'test'
         st = 'demo'
 
@@ -137,10 +136,10 @@ class TestScan(TestBaseClass):
 
         scan_obj = self.client.scan(ns, st)
 
-        scan_obj.foreach(callback, { 'timeout' : 1000 })
-
-        assert len(records) == 0
-    """
+        with pytest.raises(Exception) as exception:
+            scan_obj.foreach(callback, { 'timeout' : 1000 })
+        assert exception.value[0] == -2L
+        assert exception.value[1] == "Callback function contains an error"
 
     def test_scan_with_callback_returning_false(self):
 

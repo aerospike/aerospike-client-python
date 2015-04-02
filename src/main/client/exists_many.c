@@ -123,6 +123,16 @@ PyObject * AerospikeClient_Exists_Many_Invoke(
 	// Initialize error
 	as_error_init(&err);
 
+	if (!self || !self->as) {
+		as_error_update(&err, AEROSPIKE_ERR_PARAM, "Invalid aerospike object");
+		goto CLEANUP;
+	}
+
+	if (!self->is_conn_16) {
+		as_error_update(&err, AEROSPIKE_ERR_CLUSTER, "No connection to aerospike cluster");
+		goto CLEANUP;
+	}
+
 	// Convert python keys list to as_key ** and set it in batch.keys
 	// keys can be specified in PyList and PyTuple
 	if ( py_keys != NULL && PyList_Check(py_keys) ) {

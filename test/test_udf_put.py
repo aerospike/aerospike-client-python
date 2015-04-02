@@ -148,3 +148,19 @@ class TestUdfPut(TestBaseClass):
                 present = True
 
         assert True if present else False
+
+    def test_udf_put_with_proper_parameters_without_connection(self):
+
+        policy = {}
+        filename = "example.lua"
+        udf_type = 0
+
+        config = { 'hosts' : [ ('127.0.0.1', 3000) ] }
+
+        client1 = aerospike.client(config)
+
+        with pytest.raises(Exception) as exception:
+            status = client1.udf_put( filename, udf_type, policy )
+
+        assert exception.value[0] == 11L
+        assert exception.value[1] == 'No connection to aerospike cluster'

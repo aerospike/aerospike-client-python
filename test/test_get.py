@@ -401,3 +401,20 @@ class TestGet(TestBaseClass):
         assert bins == { 'name' : 'john', 'age': 1 }
         assert key == ('test', 'demo', 1,
                 bytearray(b'\xb7\xf4\xb88\x89\xe2\xdag\xdeh>\x1d\xf6\x91\x9a\x1e\xac\xc4F\xc8'))
+
+    def test_get_with_only_key_no_connection(self):
+
+        """
+            Invoke get() with a key and not policy's dict no connection
+        """
+        key = ('test', 'demo', 1)
+        config = {
+                'hosts': [('127.0.0.1', 3000)]
+                }
+        client1 = aerospike.client(config)
+
+        with pytest.raises(Exception) as exception:
+            key, meta, bins = client1.get( key )
+
+        assert exception.value[0] == 11L
+        assert exception.value[1] == 'No connection to aerospike cluster'

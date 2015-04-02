@@ -68,6 +68,11 @@ PyObject * AerospikeLMap_Put(AerospikeLMap * self, PyObject * args, PyObject * k
 		goto CLEANUP;
 	}
 
+	if (!self->client->is_conn_16) {
+		as_error_update(&err, AEROSPIKE_ERR_CLUSTER, "No connection to aerospike cluster");
+		goto CLEANUP;
+	}
+
 	// Convert python policy object to as_policy_apply
 	pyobject_to_policy_apply(&err, py_policy, &apply_policy, &apply_policy_p,
 			&self->client->as->config.policies.apply);
@@ -145,6 +150,11 @@ PyObject * AerospikeLMap_Put_Many(AerospikeLMap * self, PyObject * args, PyObjec
 
 	if (!self || !self->client->as) {
 		as_error_update(&err, AEROSPIKE_ERR_PARAM, "Invalid aerospike object");
+		goto CLEANUP;
+	}
+
+	if (!self->client->is_conn_16) {
+		as_error_update(&err, AEROSPIKE_ERR_CLUSTER, "No connection to aerospike cluster");
 		goto CLEANUP;
 	}
 
@@ -226,6 +236,10 @@ PyObject * AerospikeLMap_Get(AerospikeLMap * self, PyObject * args, PyObject * k
 
 	if (!self || !self->client->as) {
 		as_error_update(&err, AEROSPIKE_ERR_PARAM, "Invalid aerospike object");
+		goto CLEANUP;
+	}
+	if (!self->client->is_conn_16) {
+		as_error_update(&err, AEROSPIKE_ERR_CLUSTER, "No connection to aerospike cluster");
 		goto CLEANUP;
 	}
 
@@ -310,6 +324,10 @@ PyObject * AerospikeLMap_Filter(AerospikeLMap * self, PyObject * args, PyObject 
 
 	if (!self || !self->client->as) {
 		as_error_update(&err, AEROSPIKE_ERR_PARAM, "Invalid aerospike object");
+		goto CLEANUP;
+	}
+	if (!self->client->is_conn_16) {
+		as_error_update(&err, AEROSPIKE_ERR_CLUSTER, "No connection to aerospike cluster");
 		goto CLEANUP;
 	}
 
@@ -398,6 +416,10 @@ PyObject * AerospikeLMap_Destroy(AerospikeLMap * self, PyObject * args, PyObject
 		as_error_update(&err, AEROSPIKE_ERR_PARAM, "Invalid aerospike object");
 		goto CLEANUP;
 	}
+	if (!self->client->is_conn_16) {
+		as_error_update(&err, AEROSPIKE_ERR_CLUSTER, "No connection to aerospike cluster");
+		goto CLEANUP;
+	}
 
 	// Convert python policy object to as_policy_apply
 	pyobject_to_policy_apply(&err, py_policy, &apply_policy, &apply_policy_p,
@@ -459,6 +481,10 @@ PyObject * AerospikeLMap_Remove(AerospikeLMap * self, PyObject * args, PyObject 
 
 	if (!self || !self->client->as) {
 		as_error_update(&err, AEROSPIKE_ERR_PARAM, "Invalid aerospike object");
+		goto CLEANUP;
+	}
+	if (!self->client->is_conn_16) {
+		as_error_update(&err, AEROSPIKE_ERR_CLUSTER, "No connection to aerospike cluster");
 		goto CLEANUP;
 	}
 
@@ -526,6 +552,10 @@ PyObject * AerospikeLMap_Size(AerospikeLMap * self, PyObject * args, PyObject * 
 
 	if (!self || !self->client->as) {
 		as_error_update(&err, AEROSPIKE_ERR_PARAM, "Invalid aerospike object");
+		goto CLEANUP;
+	}
+	if (!self->client->is_conn_16) {
+		as_error_update(&err, AEROSPIKE_ERR_CLUSTER, "No connection to aerospike cluster");
 		goto CLEANUP;
 	}
 

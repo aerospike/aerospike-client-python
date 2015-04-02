@@ -375,3 +375,18 @@ class TestScanApply(object):
                 assert True == False
 
         assert True == True
+
+    def test_scan_apply_with_correct_parameters_without_connection(self):
+        """
+        Invoke scan_apply() with correct parameters without connection
+        """
+        config = {
+            'hosts': [('127.0.0.1', 3000)]
+        }
+        client1 = aerospike.client(config)
+
+        with pytest.raises(Exception) as exception:
+            scan_id = client1.scan_apply("test", "demo", "bin_lua", "mytransform", ['age', 2])
+
+        assert exception.value[0] == 11L
+        assert exception.value[1] == 'No connection to aerospike cluster'

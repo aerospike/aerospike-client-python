@@ -335,3 +335,18 @@ class TestApply(TestBaseClass):
 
         assert bins['name'] == ['name1', 'car']
         assert retval == 0
+
+    def test_apply_with_correct_parameters_without_connection(self):
+        """
+            Invoke apply() with correct arguments without connection
+        """
+        key = ('test', 'demo', 1)
+        config = {
+                'hosts': [('127.0.0.1', 3000)]
+                }
+        client1 = aerospike.client(config)
+        with pytest.raises(Exception) as exception:
+            retval = client1.apply(key, 'sample', 'list_append', ['name', 'car'])
+
+        assert exception.value[0] == 11L
+        assert exception.value[1] == 'No connection to aerospike cluster'

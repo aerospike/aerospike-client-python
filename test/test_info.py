@@ -199,3 +199,18 @@ class TestInfo(object):
             nodes_info = TestInfo.client.info()
 
         assert "Required argument 'command' (pos 1) not found" in typeError.value
+
+    def test_info_positive_for_sets_without_connection(self):
+        """
+        Test info positive for sets without connection
+        """
+        config = {
+                'hosts': [('127.0.0.1', 3000)]
+                }
+        
+        client1 = aerospike.client(config)
+        with pytest.raises(Exception) as exception:
+            response = client1.info('sets', [('127.0.0.1', 3000)])
+
+        assert exception.value[0] == 11L
+        assert exception.value[1] == 'No connection to aerospike cluster'

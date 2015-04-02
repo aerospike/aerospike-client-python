@@ -79,3 +79,17 @@ class TestUdfList(TestBaseClass):
         assert exception.value[0] == -2
 
         assert exception.value[1] == 'timeout is invalid'
+
+    def test_udf_list_with_proper_parameters_without_connection(self):
+
+        config = { 'hosts' : [ ('127.0.0.1', 3000) ] }
+
+        client1 = aerospike.client(config)
+
+        policy = { 'timeout' : 0 }
+
+        with pytest.raises(Exception) as exception:
+            udf_list = client1.udf_list( policy )
+
+        assert exception.value[0] == 11L
+        assert exception.value[1] == 'No connection to aerospike cluster'

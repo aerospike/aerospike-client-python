@@ -40,3 +40,15 @@ class TestGetNodes(object):
 
         response = TestGetNodes.client.get_nodes("parameter")
         assert response != None
+
+    def test_get_nodes_positive_without_connection(self):
+        config = {
+            'hosts': [('127.0.0.1', 3000)]
+        }
+        client1 = aerospike.client(config)
+
+        with pytest.raises(Exception) as exception:
+            response = client1.get_nodes()
+
+        assert exception.value[0] == 11L
+        assert exception.value[1] == 'No connection to aerospike cluster'

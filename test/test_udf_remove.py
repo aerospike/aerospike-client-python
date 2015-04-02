@@ -139,3 +139,17 @@ class TestUdfRemove(TestBaseClass):
                 present = True
 
         assert False if present else True
+
+    def test_udf_remove_with_proper_parameters_without_connection(self):
+
+        config = { 'hosts' : [ ('127.0.0.1', 3000) ] }
+
+        client1 = aerospike.client(config)
+        policy = { 'timeout' : 0 }
+        module = "example.lua"
+
+        with pytest.raises(Exception) as exception:
+            status = client1.udf_remove( module, policy )
+
+        assert exception.value[0] == 11L
+        assert exception.value[1] == 'No connection to aerospike cluster'
