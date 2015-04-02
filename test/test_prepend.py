@@ -100,7 +100,7 @@ class TestPrepend(object):
         (key , meta, bins) = TestPrepend.client.get(key)
 
         assert bins == { 'age': 1, 'name': 'strname1', 'nolist': [1, 2, 3]}
-        assert key == ('test', 'demo', 1,
+        assert key == ('test', 'demo', None,
                 bytearray(b'\xb7\xf4\xb88\x89\xe2\xdag\xdeh>\x1d\xf6\x91\x9a\x1e\xac\xc4F\xc8'))
 
     def test_prepend_with_policy_key_gen_EQ_ignore(self):
@@ -125,7 +125,7 @@ class TestPrepend(object):
         (key , meta, bins) = TestPrepend.client.get(key)
 
         assert bins == { 'age': 1, 'name': 'strname1', 'nolist': [1, 2, 3]}
-        assert key == ('test', 'demo', 1,
+        assert key == ('test', 'demo', None,
                 bytearray(b'\xb7\xf4\xb88\x89\xe2\xdag\xdeh>\x1d\xf6\x91\x9a\x1e\xac\xc4F\xc8'))
 
     def test_prepend_with_policy_key_gen_EQ_positive(self):
@@ -152,7 +152,7 @@ class TestPrepend(object):
         (key , meta, bins) = TestPrepend.client.get(key)
 
         assert bins == { 'age': 1, 'name': 'strname1', 'nolist': [1, 2, 3]}
-        assert key == ('test', 'demo', 1,
+        assert key == ('test', 'demo', None,
                 bytearray(b'\xb7\xf4\xb88\x89\xe2\xdag\xdeh>\x1d\xf6\x91\x9a\x1e\xac\xc4F\xc8'))
 
     def test_prepend_with_policy_key_gen_EQ_not_equal(self):
@@ -183,7 +183,7 @@ class TestPrepend(object):
         (key , meta, bins) = TestPrepend.client.get(key)
 
         assert bins == { 'age': 1, 'name': 'name1', 'nolist': [1, 2, 3]}
-        assert key == ('test', 'demo', 1,
+        assert key == ('test', 'demo', None,
                 bytearray(b'\xb7\xf4\xb88\x89\xe2\xdag\xdeh>\x1d\xf6\x91\x9a\x1e\xac\xc4F\xc8'))
 
     def test_prepend_with_policy_key_gen_GT_lesser(self):
@@ -214,7 +214,7 @@ class TestPrepend(object):
         (key , meta, bins) = TestPrepend.client.get(key)
 
         assert bins == { 'age': 1, 'name': 'name1', 'nolist': [1, 2, 3]}
-        assert key == ('test', 'demo', 1,
+        assert key == ('test', 'demo', None,
                 bytearray(b'\xb7\xf4\xb88\x89\xe2\xdag\xdeh>\x1d\xf6\x91\x9a\x1e\xac\xc4F\xc8'))
 
     def test_prepend_with_policy_key_gen_GT_positive(self):
@@ -241,7 +241,7 @@ class TestPrepend(object):
         (key , meta, bins) = TestPrepend.client.get(key)
 
         assert bins == { 'age': 1, 'name': 'strname1', 'nolist': [1, 2, 3]}
-        assert key == ('test', 'demo', 1,
+        assert key == ('test', 'demo', None,
                 bytearray(b'\xb7\xf4\xb88\x89\xe2\xdag\xdeh>\x1d\xf6\x91\x9a\x1e\xac\xc4F\xc8'))
 
     def test_prepend_with_policy_key_digest(self):
@@ -328,7 +328,7 @@ class TestPrepend(object):
         with pytest.raises(TypeError) as typeError:
             TestPrepend.client.prepend(key, "name", 2)
 
-        assert "prepend() argument 3 must be string, not int" in typeError.value
+        assert "Cannot concatenate 'str' and 'int' objects" in typeError.value
 
     def test_prepend_with_extra_parameter(self):
         """
@@ -373,4 +373,24 @@ class TestPrepend(object):
             TestPrepend.client.prepend(key, None, "str")
 
         assert exception.value[0] == -2
-        assert exception.value[1] == "Bin should be a string"
+        assert exception.value[1] == "Bin name should be of type string"
+    
+    def test_prepend_unicode_string(self):
+        """
+        Invoke prepend() with unicode string
+        """
+        key = ('test', 'demo', 1)
+        res = TestPrepend.client.prepend( key, "name", u"age")
+
+        key, meta, bins = TestPrepend.client.get(key)
+        assert bins['name'] == 'agename1'
+    
+    def test_prepend_unicode_bin_name(self):
+        """
+        Invoke prepend() with unicode string
+        """
+        key = ('test', 'demo', 1)
+        res = TestPrepend.client.prepend( key, u"add", u"address")
+
+        key, meta, bins = TestPrepend.client.get(key)
+        assert bins['add'] == 'address'

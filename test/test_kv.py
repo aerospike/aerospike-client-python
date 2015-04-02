@@ -2,6 +2,10 @@ import unittest
 import aerospike
 from test_base_class import TestBaseClass
 
+config = {
+    "hosts": [("127.0.0.1",3000)]
+}
+
 # count records
 count = 0
 def count_records((key, meta, rec)):
@@ -183,8 +187,8 @@ class KVTestCase(unittest.TestCase, TestBaseClass):
             }
             self.client.put(key, rec)
 
-        self.client.index_integer_create({}, 'test', 'demo', 'age', 'age_index')
-        sleep(1)
+        self.client.index_integer_create('test', 'unittest', 'age', 'age_index',
+                {})
 
         query = self.client.query('test', 'demo')
 
@@ -200,6 +204,6 @@ class KVTestCase(unittest.TestCase, TestBaseClass):
             key = ('test', 'demo', i)
             self.client.remove(key)
 
-        self.client.index_remove({}, 'test', 'age_index');
+        self.client.index_remove('test', 'age_index', {});
 
 suite = unittest.TestLoader().loadTestsFromTestCase(KVTestCase)

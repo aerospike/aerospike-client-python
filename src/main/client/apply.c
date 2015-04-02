@@ -27,10 +27,24 @@
 #include "key.h"
 #include "policy.h"
 
+/**
+ *******************************************************************************************************
+ * This function applies a registered udf module on a particular record.
+ *
+ * @param self                  AerospikeClient object
+ * @param py_key                The key under which to store the record.
+ * @param py_module             The module name.
+ * @param py_function           The UDF function to be applied on a record.
+ * @param py_arglist            The arguments to the UDF function
+ * @param py_policy             The optional policy parameters
+ *
+ * Returns the result of UDF function.
+ *******************************************************************************************************
+ */
 PyObject * AerospikeClient_Apply_Invoke(
-	AerospikeClient * self,
-	PyObject * py_key, PyObject * py_module, PyObject * py_function,
-	PyObject * py_arglist, PyObject * py_policy)
+		AerospikeClient * self,
+		PyObject * py_key, PyObject * py_module, PyObject * py_function,
+		PyObject * py_arglist, PyObject * py_policy)
 {
 	// Python Return Value
 	PyObject * py_result = NULL;
@@ -45,8 +59,19 @@ PyObject * AerospikeClient_Apply_Invoke(
 	as_list * arglist = NULL;
 	as_val * result = NULL;
 
+	PyObject * py_umodule   = NULL;
+	PyObject * py_ufunction = NULL;
+
+	// Initialisation flags
+	bool key_initialised = false;
+
 	// Initialize error
 	as_error_init(&err);
+
+	if( !PyList_Check(py_arglist) ){
+		PyErr_SetString(PyExc_TypeError, "expected UDF method arguments in a 'list'");
+		return NULL;
+	}
 
 	if (!self || !self->as) {
 		as_error_update(&err, AEROSPIKE_ERR_PARAM, "Invalid aerospike object");
@@ -58,21 +83,45 @@ PyObject * AerospikeClient_Apply_Invoke(
 	if ( err.code != AEROSPIKE_OK ) {
 		goto CLEANUP;
 	}
+	// Key is initialiased successfully
+	key_initialised = true;
 
 	// Convert python list to as_list
-	pyobject_to_list(&err, py_arglist, &arglist);
+	pyobject_to_list(&err, py_arglist, &arglist, NULL, -1);
 	if ( err.code != AEROSPIKE_OK ) {
 		goto CLEANUP;
 	}
 
 	// Convert python policy object to as_policy_apply
-	pyobject_to_policy_apply(&err, py_policy, &apply_policy, &apply_policy_p);
+	pyobject_to_policy_apply(&err, py_policy, &apply_policy, &apply_policy_p,
+			&self->as->config.policies.apply);
 	if ( err.code != AEROSPIKE_OK ) {
 		goto CLEANUP;
 	}
 
-	module = PyString_AsString(py_module);
-	function = PyString_AsString(py_function);
+	if ( PyUnicode_Check(py_module) ){
+		py_umodule = PyUnicode_AsUTF8String(py_module);
+		module = PyString_AsString(py_umodule);
+	}
+	else if ( PyString_Check(py_module) ) {
+		module = PyString_AsString(py_module);
+	}
+	else {
+		as_error_update(&err, AEROSPIKE_ERR_CLIENT, "udf module argument must be a string or unicode string");
+		goto CLEANUP;
+	}
+
+	if ( PyUnicode_Check(py_function) ){
+		py_ufunction = PyUnicode_AsUTF8String(py_function);
+		function = PyString_AsString(py_ufunction);
+	}
+	else if ( PyString_Check(py_function) ) {
+		function = PyString_AsString(py_function);
+	}
+	else {
+		as_error_update(&err, AEROSPIKE_ERR_CLIENT, "function name must be a string or unicode string");
+		goto CLEANUP;
+	}
 
 	// Invoke operation
 	aerospike_key_apply(self->as, &err, apply_policy_p, &key, module, function, arglist, &result);
@@ -83,6 +132,18 @@ PyObject * AerospikeClient_Apply_Invoke(
 
 CLEANUP:
 
+	if (py_umodule) {
+		Py_DECREF(py_umodule);
+	}
+
+	if (py_ufunction) {
+		Py_DECREF(py_ufunction);
+	}
+
+	if (key_initialised == true){
+		// Destroy the key if it is initialised successfully.
+		as_key_destroy(&key);
+	}
 	as_list_destroy(arglist);
 	as_val_destroy(result);
 
@@ -97,7 +158,19 @@ CLEANUP:
 	return py_result;
 }
 
-
+/**
+ *******************************************************************************************************
+ * Applies a registered UDF module on a particular record.
+ *
+ * @param self                  AerospikeClient object
+ * @param args                  The args is a tuple object containing an argument
+ *                              list passed from Python to a C function
+ * @param kwds                  Dictionary of keywords
+ *
+ * Returns the result of the udf function applied on the record.
+ * In case of error,appropriate exceptions will be raised.
+ *******************************************************************************************************
+ */
 PyObject * AerospikeClient_Apply(AerospikeClient * self, PyObject * args, PyObject * kwds)
 {
 	// Python Function Arguments

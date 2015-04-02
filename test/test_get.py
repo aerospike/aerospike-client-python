@@ -333,7 +333,7 @@ class TestGet(TestBaseClass):
         assert bins == { 'is_present' : True }
 
     def test_get_initkey_with_digest(self):
-    
+
         """
             Invoke get() for a record having string data.
         """
@@ -356,12 +356,31 @@ class TestGet(TestBaseClass):
                 bytearray(b"asd;as[d\'as;djk;uyfl"))
 
 
+    def test_get_with_policy_key_digest(self):
+
+        """
+            Invoke get() for a record with POLICY_KEY_DIGEST
+        """
+        key = ('test', 'demo', 3)
+
+        (key, _, _) = TestGet.client.get( key,
+                policy = {'key': aerospike.POLICY_KEY_DIGEST })
+
+        assert key[2] == None
+
+        key = ('test', 'demo', 3)
+
+        (key, _, _) = TestGet.client.get( key , 
+                policy = {'key' : aerospike.POLICY_KEY_SEND})
+
+        assert key[2] == 3
+
     def test_get_initkey_with_policy_send(self):
-    
+
         """
             Invoke get() for a record having string data.
         """
-        
+
         key = ( 'test', 'demo', 1)
 
         rec = {

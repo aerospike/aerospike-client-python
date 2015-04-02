@@ -238,3 +238,28 @@ class TestSelect(TestBaseClass):
         key, meta, bins = TestSelect.client.select( key, bins_to_select )
 
         assert bins == { 'e': None, 'f': None }
+    def test_select_with_unicode_value(self):
+
+        key = ('test', 'demo', 'aa')
+
+        rec = {
+                'a': [ "nanslkdl", 1, bytearray("asd;as[d'as;d", "utf-8") ],
+                'b': { "key": "asd';q;'1';" },
+                'c': 1234,
+                'd': '!@#@#$QSDAsd;as'
+            }
+
+        assert 0 == TestSelect.client.put( key, rec )
+
+        bins_to_select = ['a']
+
+        key, meta, bins = TestSelect.client.select( key, bins_to_select)
+
+        assert bins == { 'a' : [ "nanslkdl", 1, bytearray("asd;as[d'as;d", "utf-8") ] }
+
+        assert meta != None
+
+        assert key != None
+
+        key = ('test', 'demo', 'aa')
+        TestSelect.client.remove( key )

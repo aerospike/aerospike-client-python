@@ -26,14 +26,14 @@ class TestUdfList(TestBaseClass):
         else:
             TestUdfList.client = aerospike.client(config).connect(user, password)
 
-        TestUdfList.client.udf_put( {}, 'example.lua', 0 )
+        TestUdfList.client.udf_put('example.lua', 0, {})
 
     def teardown_class(cls):
 
         """
         Teardown class
         """
-        TestUdfList.client.udf_remove({}, "example.lua")
+        TestUdfList.client.udf_remove("example.lua")
 
         TestUdfList.client.close()
 

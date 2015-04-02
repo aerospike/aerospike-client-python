@@ -88,10 +88,14 @@ class TestRemove(TestBaseClass):
             Invoke remove() with policy
         """
         key = ('test', 'demo', 1)
+        meta = {
+                'gen' : 0
+                }
         policy = {
             'timeout': 1000
         }
-        retobj = TestRemove.client.remove(key, 0, policy)
+        
+        retobj = TestRemove.client.remove(key, meta, policy)
 
         assert retobj == 0L
 
@@ -114,12 +118,15 @@ class TestRemove(TestBaseClass):
             Invoke remove() with policy
         """
         key = ('test', 'demo', 1)
+        meta = {
+                'gen' : 0
+                }
         policy = {
             'timeout': 1000,
             'retry': aerospike.POLICY_RETRY_ONCE,
             'key': aerospike.POLICY_KEY_SEND
         }
-        retobj = TestRemove.client.remove(key, 0, policy)
+        retobj = TestRemove.client.remove(key, meta, policy)
 
         assert retobj == 0L
 
@@ -146,6 +153,9 @@ class TestRemove(TestBaseClass):
 
         key = ( 'test', 'demo', None, bytearray("asd;as[d'as;djk;uyfl",
                "utf-8"))
+        meta = {
+                'gen' : 0
+                }
         policy = {
             'timeout': 1000,
             'retry': aerospike.POLICY_RETRY_ONCE,
@@ -155,7 +165,7 @@ class TestRemove(TestBaseClass):
 
         assert retobj == 0L
 
-        retobj = TestRemove.client.remove(key, 0, policy)
+        retobj = TestRemove.client.remove(key, meta, policy)
 
         assert retobj == 0L
 
@@ -171,14 +181,17 @@ class TestRemove(TestBaseClass):
             Invoke remove() with policy gen ignore
         """
         key = ('test', 'demo', 1)
+        meta = {
+                'gen' : 0
+                }
         policy = {
             'timeout': 1000,
             'retry': aerospike.POLICY_RETRY_ONCE,
             'key': aerospike.POLICY_KEY_SEND,
             'gen': aerospike.POLICY_GEN_IGNORE
         }
-        gen = 5
-        retobj = TestRemove.client.remove(key, gen, policy)
+        
+        retobj = TestRemove.client.remove(key, meta, policy)
 
         assert retobj == 0L
 
@@ -204,6 +217,9 @@ class TestRemove(TestBaseClass):
             Invoke remove() with policy gen positive
         """
         key = ('test', 'demo', 1)
+        meta = {
+                'gen' : 0
+                }
         policy = {
             'timeout': 1000,
             'retry': aerospike.POLICY_RETRY_ONCE,
@@ -213,7 +229,7 @@ class TestRemove(TestBaseClass):
 
         (key, meta) = TestRemove.client.exists(key)
         gen = meta['gen']
-        retobj = TestRemove.client.remove(key, gen, policy)
+        retobj = TestRemove.client.remove(key, meta, policy)
 
         assert retobj == 0L
 
@@ -238,6 +254,12 @@ class TestRemove(TestBaseClass):
             Invoke remove() with policy gen not equal
         """
         key = ('test', 'demo', 1)
+        
+        (key, meta) = TestRemove.client.exists(key)
+        gen = meta['gen'] + 5
+        metadata = {
+                'gen' : gen
+                }
         policy = {
             'timeout': 1000,
             'retry': aerospike.POLICY_RETRY_ONCE,
@@ -247,23 +269,19 @@ class TestRemove(TestBaseClass):
 
         (key, meta) = TestRemove.client.exists(key)
         gen = meta['gen'] + 5
-        retobj = TestRemove.client.remove(key, gen, policy)
+
+        with pytest.raises(Exception) as exception:
+            retobj = TestRemove.client.remove(key, gen, policy)
+
+        assert exception.value[0] == 3
+        assert exception.value[1] == 'AEROSPIKE_ERR_RECORD_GENERATION'
 
         (key, meta, bins) = TestRemove.client.get(key)
 
-        assert key == ('test', 'demo', 1,
+        assert key == ('test', 'demo', None,
                 bytearray(b'\xb7\xf4\xb88\x89\xe2\xdag\xdeh>\x1d\xf6\x91\x9a\x1e\xac\xc4F\xc8'))
-        assert meta == None
-        assert bins == None
-
-        key = ('test', 'demo', 1)
-        rec = {
-                'name' : 'name%s' % (str(1)),
-                'addr' : 'name%s' % (str(1)),
-                'age'  : 1,
-                'no'   : 1
-              }
-        TestRemove.client.put(key, rec)
+        assert meta != None
+        assert bins == {'addr': 'name1', 'age': 1, 'name': 'name1', 'no': 1}
 
     def test_remove_with_policy_gen_GT_lesser(self):
         """
@@ -279,25 +297,18 @@ class TestRemove(TestBaseClass):
 
         (key, meta) = TestRemove.client.exists(key)
         gen = meta['gen']
-        retobj = TestRemove.client.remove(key, gen, policy)
+        with pytest.raises(Exception) as exception:
+            retobj = TestRemove.client.remove(key, gen, policy)
 
-        assert retobj == 0L
+        assert exception.value[0] == 3
+        assert exception.value[1] == 'AEROSPIKE_ERR_RECORD_GENERATION'
 
         (key, meta, bins) = TestRemove.client.get(key)
 
-        assert key == ('test', 'demo', 1,
+        assert key == ('test', 'demo', None,
                 bytearray(b'\xb7\xf4\xb88\x89\xe2\xdag\xdeh>\x1d\xf6\x91\x9a\x1e\xac\xc4F\xc8'))
-        assert meta == None
-        assert bins == None
-
-        key = ('test', 'demo', 1)
-        rec = {
-                'name' : 'name%s' % (str(1)),
-                'addr' : 'name%s' % (str(1)),
-                'age'  : 1,
-                'no'   : 1
-              }
-        TestRemove.client.put(key, rec)
+        assert meta != None
+        assert bins == {'addr': 'name1', 'age': 1, 'name': 'name1', 'no': 1}
 
     def test_remove_with_policy_gen_GT_positive(self):
         """
@@ -313,7 +324,10 @@ class TestRemove(TestBaseClass):
 
         (key, meta) = TestRemove.client.exists(key)
         gen = meta['gen'] + 5
-        retobj = TestRemove.client.remove(key, gen, policy)
+        metadata = {
+                'gen' : gen
+                }
+        retobj = TestRemove.client.remove(key, metadata, policy)
 
         assert retobj == 0L
 
@@ -338,8 +352,11 @@ class TestRemove(TestBaseClass):
             Invoke remove() with policy as string
         """
         key = ('test', 'demo', 1)
+        meta = {
+                'gen' : 0
+                }
         with pytest.raises(Exception) as exception:
-            retobj = TestRemove.client.remove(key, 0, "")
+            retobj = TestRemove.client.remove(key, meta, "")
 
         assert exception.value[0] == -2
         assert exception.value[1] == 'policy must be a dict'
@@ -349,11 +366,14 @@ class TestRemove(TestBaseClass):
             Invoke remove() with extra parameter
         """
         key = ('test', 'demo', 1)
+        meta = {
+                'gen' : 0
+                }
         policy = {
             'timeout': 1000
         }
         with pytest.raises(TypeError) as typeError:
-            retobj = TestRemove.client.remove(key, 0, policy, "")
+            retobj = TestRemove.client.remove(key, meta, policy, "")
 
         assert "remove() takes at most 3 arguments (4 given)" in typeError.value
 

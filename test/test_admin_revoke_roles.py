@@ -89,7 +89,7 @@ class TestRevokeRoles(TestBaseClass):
         roles = ['sys-admin']
 
         with pytest.raises(Exception) as exception:
-            status = self.client.admin_replace_roles( policy, user, roles, len(roles) )
+            status = self.client.admin_revoke_roles( policy, user, roles, len(roles) )
 
         assert exception.value[0] == -2
         assert exception.value[1] == "timeout is invalid"
@@ -132,7 +132,7 @@ class TestRevokeRoles(TestBaseClass):
             status = self.client.admin_revoke_roles( policy, user, roles, len(roles) )
 
         assert exception.value[0] == 60
-        assert exception.value[1] == "aerospike revoke roles failed"
+        assert exception.value[1] == "AEROSPIKE_INVALID_USER"
 
     def test_revoke_roles_with_empty_roles_list(self):
 
@@ -144,7 +144,7 @@ class TestRevokeRoles(TestBaseClass):
             status = self.client.admin_revoke_roles( policy, user, roles, len(roles) )
 
         assert exception.value[0] == 70
-        assert exception.value[1] == "aerospike revoke roles failed"
+        assert exception.value[1] == "AEROSPIKE_INVALID_ROLE"
 
     def test_revoke_roles_with_invalid_role(self):
 
@@ -156,7 +156,7 @@ class TestRevokeRoles(TestBaseClass):
             status = self.client.admin_revoke_roles( policy, user, roles, len(roles) )
 
         assert exception.value[0] == 70
-        assert exception.value[1] == "aerospike revoke roles failed"
+        assert exception.value[1] == "AEROSPIKE_INVALID_ROLE"
 
     def test_revoke_roles_with_different_roles_and_roles_size(self):
 
@@ -168,7 +168,7 @@ class TestRevokeRoles(TestBaseClass):
             status = self.client.admin_revoke_roles(policy, user, roles, 2)
 
         assert exception.value[0] == 70
-        assert exception.value[1] == "aerospike revoke roles failed"
+        assert exception.value[1] == "AEROSPIKE_INVALID_ROLE"
 
     def test_revoke_roles_with_nonexistent_username(self):
 
@@ -180,7 +180,7 @@ class TestRevokeRoles(TestBaseClass):
             status = self.client.admin_revoke_roles( policy, user, roles, len(roles) )
 
         assert exception.value[0] == 60
-        assert exception.value[1] == "aerospike revoke roles failed"
+        assert exception.value[1] == "AEROSPIKE_INVALID_USER"
 
     def test_revoke_roles_with_special_characters_in_username(self):
 

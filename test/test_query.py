@@ -28,16 +28,17 @@ class TestQuery(object):
             TestQuery.client = aerospike.client(config).connect(user, password)
 
         policy = {}
-        TestQuery.client.index_integer_create(policy, 'test', 'demo', 'test_age', 'age_index')
+        TestQuery.client.index_integer_create('test', 'demo', 'test_age', 'age_index', policy)
         policy = {}
-        TestQuery.client.index_integer_create(policy, 'test', 'demo',
-'age1', 'age_index1')
+        TestQuery.client.index_integer_create('test', 'demo', 'age1', 'age_index1', policy)
+        TestQuery.client.index_string_create('test', 'demo', 'addr', 'addr_index', policy)
         time.sleep(4)
 
     def teardown_class(cls):
         policy = {}
-        TestQuery.client.index_remove(policy, 'test', 'age_index');
-        TestQuery.client.index_remove(policy, 'test', 'age_index1');
+        TestQuery.client.index_remove('test', 'age_index', policy);
+        TestQuery.client.index_remove('test', 'age_index1', policy);
+        TestQuery.client.index_remove('test', 'addr_index', policy);
         TestQuery.client.close()
 
     def setup_method(self, method):
@@ -45,7 +46,6 @@ class TestQuery(object):
         """
         Setup method.
         """
-
         for i in xrange(5):
             key = ('test', 'demo', i)
             rec = {
@@ -55,12 +55,21 @@ class TestQuery(object):
                     'no'   : i
                     }
             TestQuery.client.put(key, rec)
+        for i in xrange(5, 10):
+            key = ('test', 'demo', i)
+            rec = {
+                    u'name' : 'name%s' % (str(i)),
+                    u'addr' : u'name%s' % (str(i)),
+                    u'test_age'  : i,
+                    u'no'   : i
+                    }
+            TestQuery.client.put(key, rec)
 
     def teardown_method(self, method):
         """
         Teardown method.
         """
-        for i in xrange(5):
+        for i in xrange(10):
             key = ('test', 'demo', i)
             TestQuery.client.remove(key)
 
@@ -85,10 +94,10 @@ class TestQuery(object):
         query.where(p.equals('test_age', 1))
 
         records = []
-        def print_result((key,metadata,record)):
+        def callback((key,metadata,record)):
             records.append(key)
 
-        query.foreach(print_result)
+        query.foreach(callback)
         assert records
         assert len(records) == 1
 
@@ -100,10 +109,10 @@ class TestQuery(object):
             query = TestQuery.client.query('test1', 'demo1')
             query.select('name', 'test_age')
             query.where(p.equals('test_age', 1))
-            def print_result((key,metadata,record)):
+            def callback((key,metadata,record)):
                 assert metadata['gen'] != None
 
-            query.foreach(print_result)
+            query.foreach(callback)
 
         assert exception.value[0] == 4L
         assert exception.value[1] == 'AEROSPIKE_ERR_REQUEST_INVALID'
@@ -116,10 +125,10 @@ class TestQuery(object):
         query.select('name1', 'age1')
         query.where(p.equals('age1', 1))
         records = []
-        def print_result((key,metadata,record)):
+        def callback((key,metadata,record)):
             records.append(record)
 
-        query.foreach(print_result)
+        query.foreach(callback)
         assert len(records) == 0
 
     def test_query_without_callback_parameter(self):
@@ -129,7 +138,7 @@ class TestQuery(object):
         query = TestQuery.client.query('test', 'demo')
         query.select('name', 'test_age')
         query.where(p.equals('test_age', 1))
-        def print_result((key,metadata,record)):
+        def callback((key,metadata,record)):
             assert metadata['gen'] != None
 
         with pytest.raises(TypeError) as typeError:
@@ -145,10 +154,10 @@ class TestQuery(object):
             query = TestQuery.client.query('test', 'demo')
             query.select('name', 'no')
             query.where(p.equals('no', 1))
-            def print_result((key,metadata,record)):
+            def callback((key,metadata,record)):
                 assert metadata['gen'] != None
 
-            query.foreach(print_result)
+            query.foreach(callback)
 
         assert exception.value[0] == 201L
         assert exception.value[1] == 'AEROSPIKE_ERR_INDEX_NOT_FOUND'
@@ -161,10 +170,10 @@ class TestQuery(object):
         query.select('name', 'test_age')
         query.where(p.equals('test_age', 165))
         records = []
-        def print_result((key,metadata,record)):
+        def callback((key,metadata,record)):
             records.append(record)
 
-        query.foreach(print_result)
+        query.foreach(callback)
         assert len(records) == 0
 
     def test_query_with_where_none_value(self):
@@ -190,10 +199,10 @@ class TestQuery(object):
         query.select('name', 'test_age')
         query.where(p.equals('test_age', 1))
         records = []
-        def print_result((key,metadata,record)):
+        def callback((key,metadata,record)):
             records.append(record)
 
-        query.foreach(print_result, policy)
+        query.foreach(callback, policy)
         assert len(records) == 1
 
     def test_query_with_extra_argument(self):
@@ -206,11 +215,11 @@ class TestQuery(object):
         query = TestQuery.client.query('test', 'demo')
         query.select('name', 'test_age')
         query.where(p.equals('test_age', 1))
-        def print_result((key,metadata,record)):
+        def callback((key,metadata,record)):
             assert metadata['gen'] != None
 
         with pytest.raises(TypeError) as typeError:
-            query.foreach(print_result, policy, "")
+            query.foreach(callback, policy, "")
 
         assert "foreach() takes at most 2 arguments (3 given)" in typeError.value
 
@@ -224,11 +233,11 @@ class TestQuery(object):
         query = TestQuery.client.query('test', 'demo')
         query.select('name', 'test_age')
         query.where(p.equals('test_age', 1))
-        def print_result((key,metadata,record)):
+        def callback((key,metadata,record)):
             assert metadata['gen'] != None
 
         with pytest.raises(Exception) as exception:
-            query.foreach(print_result, policy)
+            query.foreach(callback, policy)
 
         assert exception.value[0] == -2L
         assert exception.value[1] == 'timeout is invalid'
@@ -244,7 +253,7 @@ class TestQuery(object):
         query.select('name', 'test_age')
         query.where(p.equals('test_age', 1))
         records = []
-        def print_result((key,metadata,record)):
+        def callback((key,metadata,record)):
             records.append(record)
             key = ('test', 'demo', 'put_in_callback')
             rec = {
@@ -253,7 +262,7 @@ class TestQuery(object):
                     }
             TestQuery.client.put(key, rec)
 
-        query.foreach(print_result, policy)
+        query.foreach(callback, policy)
 
         key = ('test', 'demo', 'put_in_callback')
         key1, meta, bins = TestQuery.client.get( key )
@@ -271,10 +280,10 @@ class TestQuery(object):
         query.where(p.between('test_age', 1, 4))
 
         records = []
-        def print_result((key,metadata,record)):
+        def callback((key,metadata,record)):
             records.append(record)
 
-        query.foreach(print_result)
+        query.foreach(callback)
         assert len(records) == 4
     
     def test_query_with_where_is_null(self):
@@ -296,12 +305,14 @@ class TestQuery(object):
         query.where(p.equals('test_age', 1))
 
         records = []
-        def print_result((key,metadata,record)):
+        def callback((key,metadata,record)):
             val += 1
             records.append(key)
 
-        result = query.foreach(print_result)
-        assert len(records) == 0
+        with pytest.raises(Exception) as exception:
+            result = query.foreach(callback)
+        assert exception.value[0] == -2L
+        assert exception.value[1] == "Callback function contains an error"
 
     def test_query_with_callback_returning_false(self):
         """
@@ -309,12 +320,93 @@ class TestQuery(object):
         """
         query = TestQuery.client.query('test', 'demo')
         query.select('name', 'test_age')
+        query.where(p.between('test_age', 1, 5))
+
+        records = []
+        def callback((key,metadata,record)):
+            if len(records) == 2:
+                return False
+            records.append(key)
+
+        result = query.foreach(callback)
+        assert len(records) == 2
+
+    def test_query_with_results_method(self):
+        """
+            Invoke query() with correct arguments
+        """
+        query = TestQuery.client.query('test', 'demo')
+        query.select('name', 'test_age')
         query.where(p.equals('test_age', 1))
 
         records = []
-        def print_result((key,metadata,record)):
-            records.append(key)
-            return False
-
-        result = query.foreach(print_result)
+        records = query.results()
         assert len(records) == 1
+
+    def test_query_with_unicode_binnames_in_select_and_where(self):
+        """
+            Invoke query() with unicode bin names in select
+        """
+        query = TestQuery.client.query('test', 'demo')
+        query.select(u'name', u'test_age', 'addr')
+        query.where(p.equals(u'test_age', 7))
+
+        records = query.results()
+        assert len(records) == 1
+        assert records[0][2] == {'test_age': 7, 'name': u'name7', 'addr': u'name7'}
+
+        query = TestQuery.client.query('test', 'demo')
+        query.select(u'name', 'addr')
+        query.where(p.equals(u'addr', u'name9'))
+
+        records = query.results()
+        assert records[0][2] == {'name': 'name9', 'addr': u'name9'}
+
+    def test_query_with_select_bin_integer(self):
+
+        """
+            Invoke query() with select bin is of integer type.
+        """
+        query = TestQuery.client.query('test', 'demo')
+
+        with pytest.raises(Exception) as exception:
+            query.select(22, 'test_age')
+
+        assert exception.value[0] == -2L
+        assert exception.value[1] == 'Bin name should be of type string'
+
+    def test_query_with_multiple_foreach_on_same_query_object(self):
+        """
+            Invoke query() with multple foreach() call on same query object
+        """
+        query = TestQuery.client.query('test', 'demo')
+        query.select('name', 'test_age')
+        query.where(p.equals('test_age', 1))
+
+        records = []
+        def callback((key,metadata,record)):
+            records.append(key)
+
+        query.foreach(callback)
+        assert len(records) == 1
+
+        records = []
+        query.foreach(callback)
+        assert len(records) == 1
+
+    def test_query_with_multiple_results_call_on_same_query_object(self):
+        """
+            Invoke query() with multple results() call on same query object
+        """
+        query = TestQuery.client.query('test', 'demo')
+        query.select(u'name', u'test_age', 'addr')
+        query.where(p.equals(u'test_age', 7))
+
+        records = query.results()
+        assert len(records) == 1
+        assert records[0][2] == {'test_age': 7, 'name': u'name7', 'addr': u'name7'}
+
+        records = []
+        records = query.results()
+        assert len(records) == 1
+        assert records[0][2] == {'test_age': 7, 'name': u'name7', 'addr': u'name7'}

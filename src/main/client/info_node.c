@@ -27,6 +27,11 @@
 #include "conversions.h"
 #include "policy.h"
 
+/**
+ ********************************************************************************************************
+ * Macros for Info API.
+ ********************************************************************************************************
+ */
 #define MAX_HOST_COUNT 128
 #define INFO_REQUEST_RESPONSE_DELIMITER "\t"
 #define INFO_RESPONSE_END "\n"
@@ -37,31 +42,40 @@
  ******************************************************************************************************
  * Returns data for a particular request string to AerospikeClient_InfoNode
  *
- * @param self AerospikeClient object
- * @param request_str_p Request string sent from the python client
- * @param py_host Optional host sent from the python client
- * @param py_policy The policy sent from the python client
+ * @param self                  AerospikeClient object
+ * @param request_str_p         Request string sent from the python client
+ * @param py_host               Optional host sent from the python client
+ * @param py_policy             The policy sent from the python client
  *
  * Returns information about a host.
  ********************************************************************************************************/
 static PyObject * AerospikeClient_InfoNode_Invoke(
 	AerospikeClient * self,
-	char* request_str_p, PyObject * py_host, PyObject * py_policy) {
+	PyObject * py_request_str, PyObject * py_host, PyObject * py_policy) {
 
 	PyObject * py_response = NULL;
-	as_policy_info              info_policy;
-	as_policy_info*             info_policy_p = NULL;
-	char*                       address = (char *) self->as->config.hosts[0].addr;
-	long                        port_no = self->as->config.hosts[0].port;
-	char*                       response_p = NULL;
+	PyObject * py_ustr = NULL;
+	PyObject * py_ustr1 = NULL;
+	as_policy_info info_policy;
+	as_policy_info* info_policy_p = NULL;
+	char* address = (char *) self->as->config.hosts[0].addr;
+	long port_no = self->as->config.hosts[0].port;
+	char* response_p = NULL;
 	PyObject *key_op = NULL, *value = NULL;
+	as_status status = AEROSPIKE_OK;
 
 	as_error err;
 	as_error_init(&err);
 
+	if (!self || !self->as) {
+		as_error_update(&err, AEROSPIKE_ERR_PARAM, "Invalid aerospike object");
+		goto CLEANUP;
+	}
+
 	if (py_policy) {
 		if( PyDict_Check(py_policy) ) {
-			pyobject_to_policy_info(&err, py_policy, &info_policy, &info_policy_p);
+			pyobject_to_policy_info(&err, py_policy, &info_policy, &info_policy_p,
+					&self->as->config.policies.info);
 			if (err.code != AEROSPIKE_OK) {
 				goto CLEANUP;
 			}
@@ -72,37 +86,51 @@ static PyObject * AerospikeClient_InfoNode_Invoke(
 	}
 
 	if ( py_host ) {
-		if ( PyDict_Check(py_host) ) {
-			Py_ssize_t pos = 0;
-			while (PyDict_Next(py_host, &pos, &key_op, &value)) {
-				if ( ! PyString_Check(key_op) ) {
-					as_error_update(&err, AEROSPIKE_ERR_PARAM, "Hosts key must be a string.");
-					goto CLEANUP;
-				} else {
-					char * name = PyString_AsString(key_op);
-					if(!strcmp(name,"addr") && (PyString_Check(value))) {
-						address =  PyString_AsString(value);
-					} else if (!strcmp(name,"port") && (PyLong_Check(value) || PyInt_Check(value))) {
-						port_no = PyLong_AsLong(value);
-					} else {
-						as_error_update(&err, AEROSPIKE_ERR_PARAM, "Hosts dictionary incorrect");
-						goto CLEANUP;
-					}
-				}
+		if ( PyTuple_Check(py_host) && PyTuple_Size(py_host) == 2) {
+			PyObject * py_addr = PyTuple_GetItem(py_host,0);
+			PyObject * py_port = PyTuple_GetItem(py_host,1);
+
+			if ( PyString_Check(py_addr) ) {
+				address = PyString_AsString(py_addr);
+			} else if (PyUnicode_Check(py_addr)) {
+				py_ustr = PyUnicode_AsUTF8String(py_addr);
+				address = PyString_AsString(py_ustr);
 			}
-		} else {
-			as_error_update(&err, AEROSPIKE_ERR_PARAM, "Hosts should be a dictionary");
+			if ( PyInt_Check(py_port) ) {
+				port_no = (uint16_t) PyInt_AsLong(py_port);
+			}
+			else if ( PyLong_Check(py_port) ) {
+				port_no = (uint16_t) PyLong_AsLong(py_port);
+			}
+		} else if ( !PyTuple_Check(py_host)){
+			as_error_update(&err, AEROSPIKE_ERR_PARAM, "Host should be a specified in form of Tuple.");
 			goto CLEANUP;
 		}
 	}
-	aerospike_info_host(self->as, &err, info_policy_p,
+
+	char * request_str_p = NULL;
+	if (PyUnicode_Check(py_request_str)) {
+		py_ustr1 = PyUnicode_AsUTF8String(py_request_str);
+		request_str_p = PyString_AsString(py_ustr1);
+	} else if (PyString_Check(py_request_str)) {
+		request_str_p = PyString_AsString(py_request_str);
+	} else {
+		as_error_update(&err, AEROSPIKE_ERR_PARAM, "Request should be of string type");
+		goto CLEANUP;
+	}
+
+	status = aerospike_info_host(self->as, &err, info_policy_p,
 		(const char *) address, (uint16_t) port_no, request_str_p,
 		&response_p);
 	if( err.code == AEROSPIKE_OK ) {
-		if (response_p)
+		if (response_p && status == AEROSPIKE_OK){
 			py_response = PyString_FromString(response_p);
-		else {
-			as_error_update(&err, AEROSPIKE_ERR_CLIENT, "Info operation failed");
+			free(response_p);
+		} else if ( response_p == NULL){
+			as_error_update(&err, AEROSPIKE_ERR_CLIENT, "Invalid info operation");
+			goto CLEANUP;
+		} else if ( status != AEROSPIKE_OK ){
+			as_error_update(&err, status, "Info operation failed");
 			goto CLEANUP;
 		}
 	} else {
@@ -110,8 +138,12 @@ static PyObject * AerospikeClient_InfoNode_Invoke(
 	}
 
 CLEANUP:
-	if(response_p) {
-		free(response_p);
+
+	if (py_ustr) {
+		Py_DECREF(py_ustr);
+	}
+	if (py_ustr1) {
+		Py_DECREF(py_ustr1);
 	}
 
 	if ( err.code != AEROSPIKE_OK ) {
@@ -128,10 +160,10 @@ CLEANUP:
  ******************************************************************************************************
  * Returns data about a particular node in the database depending upon the request string.
  *
- * @param self AerospikeClient object
- * @param args The args is a tuple object containing an argument
- * list passed from Python to a C function
- * @param kwds Dictionary of keywords
+ * @param self                  AerospikeClient object
+ * @param args                  The args is a tuple object containing an argument
+ *                              list passed from Python to a C function
+ * @param kwds                  Dictionary of keywords
  *
  * Returns information about a host.
  ********************************************************************************************************/
@@ -140,32 +172,33 @@ PyObject * AerospikeClient_InfoNode(AerospikeClient * self, PyObject * args, PyO
 	PyObject * py_host = NULL;
 	PyObject * py_policy = NULL;
 
-	char* request = NULL;
+	PyObject * py_request = NULL;
 
-	static char * kwlist[] = {"req", "host", "policy", NULL};
+	static char * kwlist[] = {"command", "host", "policy", NULL};
 
-	if ( PyArg_ParseTupleAndKeywords(args, kwds, "s|OO:info", kwlist, &request, &py_host, &py_policy) == false ) {
+	if ( PyArg_ParseTupleAndKeywords(args, kwds, "OO|O:info_node", kwlist,
+				&py_request, &py_host, &py_policy) == false ) {
 		return NULL;
 	}
 
-	return AerospikeClient_InfoNode_Invoke(self, request, py_host, py_policy);
+	return AerospikeClient_InfoNode_Invoke(self, py_request, py_host, py_policy);
 
 }
 /**
  ******************************************************************************************************
  * Iterates over the hosts in the cluster and creates the list to be returned to the python client.
  *
- * @param err as_error object
- * @param command Request string sent from the python client
- * @param nodes_dict Dictionary containing details of each host
- * @param return_value List t o be returned back to the python client
- * @param host_index Index of the dictionary nodes_dict
- * @param index Index of the list to be returned.
+ * @param err                   as_error object
+ * @param command               Request string sent from the python client
+ * @param nodes_tuple           List containing details of each host
+ * @param return_value          List t o be returned back to the python client
+ * @param host_index            Index of the list nodes_tuple
+ * @param index                 Index of the list to be returned.
  *
  * Returns information about a host.
  ********************************************************************************************************/
 static PyObject * AerospikeClient_GetNodes_Returnlist(as_error* err,
-	PyObject * command, PyObject * nodes_dict[], PyObject * return_value,
+	PyObject * command, PyObject * nodes_tuple[], PyObject * return_value,
 	uint32_t host_index, Py_ssize_t index) {
 
 	char* tok = NULL;
@@ -184,11 +217,11 @@ static PyObject * AerospikeClient_GetNodes_Returnlist(as_error* err,
 			goto CLEANUP;
 		}
 
-		nodes_dict[host_index] = PyDict_New();
+		nodes_tuple[host_index] = PyTuple_New(2);
 
 		value_tok = PyString_FromString(tok);
-		PyDict_SetItemString(nodes_dict[host_index], "addr" , value_tok);
-		Py_DECREF(value_tok);
+		PyTuple_SetItem(nodes_tuple[host_index], 0 , value_tok);
+		//Py_DECREF(value_tok);
 
 		if(strcmp(PyString_AsString(command),"response_services_p")) {
 			tok = strtok_r(NULL, HOST_DELIMITER, &saved);
@@ -209,11 +242,11 @@ static PyObject * AerospikeClient_GetNodes_Returnlist(as_error* err,
 			}
 		}
 
-		value_tok = PyString_FromString(tok);
-		PyDict_SetItemString(nodes_dict[host_index], "port" , value_tok);
-		Py_DECREF(value_tok);
-		PyList_Insert(return_value, index , nodes_dict[host_index]);
-		Py_DECREF(nodes_dict[host_index]);
+		value_tok = PyInt_FromString(tok, NULL, 10);
+		PyTuple_SetItem(nodes_tuple[host_index], 1 , value_tok);
+		//Py_DECREF(value_tok);
+		PyList_Insert(return_value, index , nodes_tuple[host_index]);
+		Py_DECREF(nodes_tuple[host_index]);
 		index++;
 		host_index++;
 
@@ -237,7 +270,7 @@ CLEANUP:
  ******************************************************************************************************
  * Returns data about the nodes to AerospikeClient_GetNodes.
  *
- * @param self AerospikeClient object
+ * @param self                  AerospikeClient object
  *
  * Returns a list containing the details of the nodes.
  ********************************************************************************************************/
@@ -246,27 +279,32 @@ static PyObject * AerospikeClient_GetNodes_Invoke(
 
 	PyObject * response_services_p = NULL;
 	PyObject * response_service_p = NULL;
-	PyObject * nodes_dict[MAX_HOST_COUNT] = {0};
+	PyObject * nodes_tuple[MAX_HOST_COUNT] = {0};
 	PyObject * return_value = PyList_New(0);
 
 	as_error err;
 	as_error_init(&err);
 
-	response_services_p = AerospikeClient_InfoNode_Invoke(self, "services", NULL, NULL);
+	PyObject * py_req_str = NULL;
+	py_req_str = PyString_FromString("services");
+	response_services_p = AerospikeClient_InfoNode_Invoke(self, py_req_str, NULL, NULL);
+	Py_DECREF(py_req_str);
 	if(!response_services_p) {
 		as_error_update(&err, AEROSPIKE_ERR_CLIENT, "Services call returned an error");
 		goto CLEANUP;
 	}
 
-	response_service_p = AerospikeClient_InfoNode_Invoke(self, "service", NULL, NULL);
+	py_req_str = PyString_FromString("service");
+	response_service_p = AerospikeClient_InfoNode_Invoke(self, py_req_str, NULL, NULL);
+	Py_DECREF(py_req_str);
 	if(!response_service_p) {
 		as_error_update(&err, AEROSPIKE_ERR_CLIENT, "Service call returned an error");
 		goto CLEANUP;
 	}
 
-	return_value = AerospikeClient_GetNodes_Returnlist(&err, response_service_p, nodes_dict, return_value, 0, 0);
+	return_value = AerospikeClient_GetNodes_Returnlist(&err, response_service_p, nodes_tuple, return_value, 0, 0);
 	if( return_value )
-		return_value = AerospikeClient_GetNodes_Returnlist(&err, response_services_p, nodes_dict, return_value, 1, 1);
+		return_value = AerospikeClient_GetNodes_Returnlist(&err, response_services_p, nodes_tuple, return_value, 1, 1);
 
 CLEANUP:
 
@@ -293,10 +331,10 @@ CLEANUP:
  ******************************************************************************************************
  * Returns data about the nodes in a cluster of the database.
  *
- * @param self AerospikeClient object
- * @param args The args is a tuple object containing an argument
- * list passed from Python to a C function
- * @param kwds Dictionary of keywords
+ * @param self                  AerospikeClient object
+ * @param args                  The args is a tuple object containing an argument
+ *                              list passed from Python to a C function
+ * @param kwds                  Dictionary of keywords
  *
  * Returns a list containing the details of the nodes.
  ********************************************************************************************************/

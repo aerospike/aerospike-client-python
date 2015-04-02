@@ -73,7 +73,7 @@ static bool each_result(const as_val * val, void * udata)
 		// an exception was raised, handle it (someday)
 		// for now, we bail from the loop
 		as_error_update(err, AEROSPIKE_ERR_PARAM, "Callback function contains an error");
-		rval = false;
+		rval = true;
 	}
 	else if (  PyBool_Check(py_return) ) {
 		if ( Py_False == py_return ) {
@@ -100,16 +100,22 @@ PyObject * AerospikeScan_Foreach(AerospikeScan * self, PyObject * args, PyObject
 	// Python Function Arguments
 	PyObject * py_callback = NULL;
 	PyObject * py_policy = NULL;
+	PyObject * py_options = NULL;
 	as_policy_scan scan_policy;
 	as_policy_scan * scan_policy_p = NULL;
 
 	// Python Function Keyword Arguments
-	static char * kwlist[] = {"callback", "policy", NULL};
+	static char * kwlist[] = {"callback", "policy", "options", NULL};
 
 	// Python Function Argument Parsing
-	if ( PyArg_ParseTupleAndKeywords(args, kwds, "O|O:foreach", kwlist, &py_callback, &py_policy) == false ) {
+	if ( PyArg_ParseTupleAndKeywords(args, kwds, "O|OO:foreach", kwlist, &py_callback, &py_policy, &py_options) == false ) {
 		return NULL;
 	}
+
+	// Create and initialize callback user-data
+	LocalData data;
+	data.callback = py_callback;
+	as_error_init(&data.error);
 
 	// Aerospike Client Arguments
 	as_error err;
@@ -123,15 +129,17 @@ PyObject * AerospikeScan_Foreach(AerospikeScan * self, PyObject * args, PyObject
 	}
 
 	// Convert python policy object to as_policy_exists
-	pyobject_to_policy_scan(&err, py_policy, &scan_policy, &scan_policy_p);
+	pyobject_to_policy_scan(&err, py_policy, &scan_policy, &scan_policy_p,
+			&self->client->as->config.policies.scan);
 	if ( err.code != AEROSPIKE_OK ) {
 		goto CLEANUP;
 	}
-
-	// Create and initialize callback user-data
-	LocalData data;
-	data.callback = py_callback;
-	as_error_init(&data.error);
+	if (py_options && PyDict_Check(py_options)) {
+		set_scan_options(&err, &self->scan, py_options);
+		if(err.code != AEROSPIKE_OK) {
+        	goto CLEANUP;
+        }
+	}
 
 	// We are spawning multiple threads
 	PyThreadState * _save = PyEval_SaveThread();
@@ -147,9 +155,14 @@ PyObject * AerospikeScan_Foreach(AerospikeScan * self, PyObject * args, PyObject
 
 CLEANUP:
 
-	if ( err.code != AEROSPIKE_OK ) {
+	if ( err.code != AEROSPIKE_OK || data.error.code != AEROSPIKE_OK) {
 		PyObject * py_err = NULL;
-		error_to_pyobject(&err, &py_err);
+		if ( err.code != AEROSPIKE_OK ){
+			error_to_pyobject(&err, &py_err);
+		}
+		if ( data.error.code != AEROSPIKE_OK){
+			error_to_pyobject(&data.error, &py_err);
+		}
 		PyErr_SetObject(PyExc_Exception, py_err);
 		Py_DECREF(py_err);
 		return NULL;

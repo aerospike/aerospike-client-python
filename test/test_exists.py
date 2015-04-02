@@ -23,7 +23,7 @@ class TestExists(TestBaseClass):
         """
         hostlist, user, password = TestBaseClass.get_hosts()
         config = {
-                'hosts': TestBaseClass.hostlist
+                'hosts': hostlist
                 }
         if user == None and password == None:
             TestExists.client = aerospike.client(config).connect()

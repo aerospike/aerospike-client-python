@@ -38,7 +38,7 @@ class TestUdfRemove(TestBaseClass):
         """
         Setup method
         """
-        TestUdfRemove.client.udf_put( {}, 'example.lua', 0 )
+        TestUdfRemove.client.udf_put( u'example.lua', 0, {} )
         time.sleep(2)
 
     def teardown_method(self,method):
@@ -49,13 +49,13 @@ class TestUdfRemove(TestBaseClass):
         time.sleep(2)
         for udf in udf_list:
             if udf['name'] == 'example.lua':
-                TestUdfRemove.client.udf_remove({}, "example.lua")
+                TestUdfRemove.client.udf_remove("example.lua", {})
 
     def test_udf_remove_without_parameters(self):
 
         with pytest.raises(TypeError) as typeError:
             status = TestUdfRemove.client.udf_remove()
-        assert "Required argument 'policy' (pos 1) not found" in typeError.value
+        assert "Required argument 'filename' (pos 1) not found" in typeError.value
 
     def test_udf_remove_with_none_as_parameters(self):
 
@@ -69,7 +69,7 @@ class TestUdfRemove(TestBaseClass):
 
         policy = { 'timeout' : 0 }
         module = "example.lua"
-        status = TestUdfRemove.client.udf_remove( policy, module )
+        status = TestUdfRemove.client.udf_remove( module, policy )
 
         assert status == 0
 
@@ -88,7 +88,7 @@ class TestUdfRemove(TestBaseClass):
         policy = { 'timeout' : 0.1 }
         module = "example.lua"
 
-        status = TestUdfRemove.client.udf_remove( policy, module )
+        status = TestUdfRemove.client.udf_remove( module, policy )
 
         assert status == 0
 
@@ -97,7 +97,7 @@ class TestUdfRemove(TestBaseClass):
         policy = { 'timeout' : 1000 }
         module = "example.lua"
 
-        status = TestUdfRemove.client.udf_remove( policy, module )
+        status = TestUdfRemove.client.udf_remove( module, policy )
 
         assert status == 0
         time.sleep(3)
@@ -117,7 +117,25 @@ class TestUdfRemove(TestBaseClass):
         module = "some_module"
 
         with pytest.raises(Exception) as exception:
-            status = TestUdfRemove.client.udf_remove( policy, module )
+            status = TestUdfRemove.client.udf_remove( module, policy )
 
         assert exception.value[0] == 100
-        assert exception.value[1] == "AEROSPIKE_ERR_UDF"
+        assert exception.value[1] == "error=file_not_found\n"
+
+    def test_udf_remove_with_unicode_filename(self):
+
+        policy = { 'timeout' : 0 }
+        module = u"example.lua"
+        status = TestUdfRemove.client.udf_remove( module, policy )
+
+        assert status == 0
+
+        time.sleep(4)
+        udf_list = TestUdfRemove.client.udf_list( {'timeout' : 0} )
+
+        present = False
+        for udf in udf_list:
+            if 'example.lua' == udf['name']:
+                present = True
+
+        assert False if present else True

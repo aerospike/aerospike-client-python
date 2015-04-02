@@ -13,3 +13,9 @@ script:
 notifications:
   slack:
     secure: QaCE4lTfpv57X921q5oCrHrB1qqkLsnGM2+L/zCTEQKc20tNnfNjrDsFJGrLibZbEvZCcVOfr1xH0WhaPurngG6uTRLUqWBf3evwnMgTWDxFU0wcZlKR/Vww3zNXBuD4tDafC1bEa/fm+9xDDmtlV8AaySpiwQazLtwqOatoTD8=
+  hipchat:
+    rooms:
+      secure: LmFIM1e/9Vr4Fx7abosnnc5gsgnSTCiOBSJlA62CeHa7xnOcz7k6LCw7VVtwZIaxnszDxMRx5Jn0d8P7JhX6XRu1BveWB9Ybpuan9i3+F+lHBusKMw5vFShquran//K1O3Or81rBxXc27Rd9K05rnH0747mlr2fNSfDJv2wygdI=
+  email:
+  - qe-notices@aerospike.com
+  - qe-notices-clients@aerospike.com

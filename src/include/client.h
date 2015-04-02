@@ -23,6 +23,16 @@
 #define TRACE() printf("%s:%d\n",__FILE__,__LINE__)
 
 /*******************************************************************************
+ * Constants for Operate API's
+ ******************************************************************************/
+#define OPERATOR_PREPEND 4
+#define OPERATOR_APPEND  5
+#define OPERATOR_TOUCH   8
+#define OPERATOR_INCR    2
+#define OPERATOR_READ    1
+#define OPERATOR_WRITE   0
+
+/*******************************************************************************
  * CLIENT TYPE
  ******************************************************************************/
 
@@ -47,6 +57,11 @@ PyObject * AerospikeClient_Connect(AerospikeClient * self, PyObject * args, PyOb
  */
 PyObject * AerospikeClient_Close(AerospikeClient * self, PyObject * args, PyObject * kwds);
 
+/**
+ * Checks the connection to the database.
+ */
+PyObject * AerospikeClient_isConnected(AerospikeClient * self, PyObject * args, PyObject * kwds);
+
 
 /*******************************************************************************
  * KVS OPERATIONS
@@ -60,6 +75,10 @@ PyObject * AerospikeClient_Close(AerospikeClient * self, PyObject * args, PyObje
  */
 PyObject * AerospikeClient_Apply(AerospikeClient * self, PyObject * args, PyObject * kwds);
 
+PyObject * AerospikeClient_Apply_Invoke(
+		AerospikeClient * self,
+		PyObject * py_key, PyObject * py_module, PyObject * py_function,
+		PyObject * py_arglist, PyObject * py_policy);
 /**
  * Check existence of a record in the database.
  *
@@ -68,6 +87,10 @@ PyObject * AerospikeClient_Apply(AerospikeClient * self, PyObject * args, PyObje
  */
 PyObject * AerospikeClient_Exists(AerospikeClient * self, PyObject * args, PyObject * kwds);
 
+PyObject * AerospikeClient_Exists_Invoke(
+		AerospikeClient * self,
+		PyObject * py_key, PyObject * py_policy);
+
 /**
  * Read a record from the database.
  *
@@ -75,6 +98,10 @@ PyObject * AerospikeClient_Exists(AerospikeClient * self, PyObject * args, PyObj
  *
  */
 PyObject * AerospikeClient_Get(AerospikeClient * self, PyObject * args, PyObject * kwds);
+
+PyObject * AerospikeClient_Get_Invoke(
+		AerospikeClient * self,
+		PyObject * py_key, PyObject * py_policy);
 
 /**
  * Project specific bins of a record from the database.
@@ -92,6 +119,10 @@ PyObject * AerospikeClient_Select(AerospikeClient * self, PyObject * args, PyObj
  */
 PyObject * AerospikeClient_Put(AerospikeClient * self, PyObject * args, PyObject * kwds);
 
+PyObject * AerospikeClient_Put_Invoke(
+		AerospikeClient * self,
+		PyObject * py_key, PyObject * py_bins, PyObject * py_meta, PyObject * py_policy,
+		long serializer_option);
 /**
  * Remove a record from the database.
  *
@@ -100,15 +131,26 @@ PyObject * AerospikeClient_Put(AerospikeClient * self, PyObject * args, PyObject
  */
 PyObject * AerospikeClient_Remove(AerospikeClient * self, PyObject * args, PyObject * kwds);
 
+PyObject * AerospikeClient_Remove_Invoke(
+		AerospikeClient * self,
+		PyObject * py_key, PyObject * py_meta, PyObject * py_policy);
+
 /**
- * Append a record to the database.
+ * Remove bin from the database.
+ *
+ *		client.removebin((x,y,z))
+ *
+ */
+extern PyObject * AerospikeClient_RemoveBin(AerospikeClient * self, PyObject * args, PyObject * kwds);
+/**
+ * Append a string to a string bin value of a record in the database.
  *
  *		client.append((x,y,z))
  *
  */
 PyObject * AerospikeClient_Append(AerospikeClient * self, PyObject * args, PyObject * kwds);
 /**
- * Prepend a record to the database.
+ * Prepend a string to a string bin value of a record in the database.
  *
  *		client.prepend((x,y,z))
  *
@@ -135,31 +177,6 @@ PyObject * AerospikeClient_Touch(AerospikeClient * self, PyObject * args, PyObje
  *
  */
 PyObject * AerospikeClient_Operate(AerospikeClient * self, PyObject * args, PyObject * kwds);
-
-/*******************************************************************************
- * INTENRAL (SHARED) OPERATIONS, FOR COMPATIBILITY W/ OLD API
- ******************************************************************************/
-
-PyObject * AerospikeClient_Apply_Invoke(
-	AerospikeClient * self,
-	PyObject * py_key, PyObject * py_module, PyObject * py_function,
-	PyObject * py_arglist, PyObject * py_policy);
-
-PyObject * AerospikeClient_Exists_Invoke(
-	AerospikeClient * self,
-	PyObject * py_key, PyObject * py_policy);
-
-PyObject * AerospikeClient_Get_Invoke(
-	AerospikeClient * self,
-	PyObject * py_key, PyObject * py_policy);
-
-PyObject * AerospikeClient_Put_Invoke(
-	AerospikeClient * self,
-	PyObject * py_key, PyObject * py_bins, PyObject * py_meta, PyObject * py_policy);
-
-PyObject * AerospikeClient_Remove_Invoke(
-	AerospikeClient * self,
-	PyObject * py_key, long generation, PyObject * py_policy);
 
 /*******************************************************************************
  * KEY OPERATIONS (DEPRECATED)
@@ -205,6 +222,10 @@ AerospikeKey * AerospikeClient_Key(AerospikeClient * self, PyObject * args, PyOb
  *
  */
 AerospikeScan * AerospikeClient_Scan(AerospikeClient * self, PyObject * args, PyObject * kwds);
+
+PyObject * AerospikeClient_ScanApply(AerospikeClient * self, PyObject * args, PyObject * kwds);
+
+PyObject * AerospikeClient_ScanInfo(AerospikeClient * self, PyObject * args, PyObject * kwds);
 
 /*******************************************************************************
  * QUERY OPERATIONS
@@ -280,6 +301,14 @@ PyObject * AerospikeClient_UDF_Remove(AerospikeClient * self, PyObject *args, Py
  */
 PyObject * AerospikeClient_UDF_List(AerospikeClient * self, PyObject *args, PyObject * kwds);
 
+/**
+ * Gets the registered UDFs
+ *
+ *		client.udf_get(module,policy,language)
+ *
+ */
+PyObject * AerospikeClient_UDF_Get_UDF(AerospikeClient * self, PyObject *args, PyObject * kwds);
+
 
 /*******************************************************************************
  * SECONDARY INDEX OPERATIONS
@@ -308,12 +337,56 @@ PyObject * AerospikeClient_Index_String_Create(AerospikeClient * self, PyObject 
  */
 PyObject * AerospikeClient_Index_Remove(AerospikeClient * self, PyObject *args, PyObject * kwds);
 
-#define OPERATOR_PREPEND 4
-#define OPERATOR_APPEND  5
-#define OPERATOR_TOUCH   8
-#define OPERATOR_INCR    2
-#define OPERATOR_READ    1
-#define OPERATOR_WRITE   0
+/*******************************************************************************
+ * LOG OPERATIONS
+ ******************************************************************************/
+/**
+ * Sets the log level
+ *
+ *		client.setLogLevel()
+ *
+ */
+PyObject * AerospikeClient_Set_Log_Level(AerospikeClient * self, PyObject *args, PyObject * kwds);
+
+/**
+ * Sets the log handler
+ *
+ *		client.setLogHandler()
+ *
+ */
+PyObject * AerospikeClient_Set_Log_Handler(AerospikeClient * self, PyObject *args, PyObject * kwds);
+
+/**
+ * LSTACK Operations
+ *
+ *		client.lstack(key, bin)
+ *
+ */
+AerospikeLStack * AerospikeClient_LStack(AerospikeClient * self, PyObject * args, PyObject * kwds);
+
+/**
+ * LSET Operations
+ *
+ *		client.lset(key, bin)
+ *
+ */
+AerospikeLSet * AerospikeClient_LSet(AerospikeClient * self, PyObject * args, PyObject * kwds);
+
+/**
+ * LLIST Operations
+ *
+ *		client.llist(key, bin)
+ *
+ */
+AerospikeLList * AerospikeClient_LList(AerospikeClient * self, PyObject * args, PyObject * kwds);
+
+/**
+ * LMAP Operations
+ *
+ *		client.lmap(key, bin)
+ *
+ */
+AerospikeLMap * AerospikeClient_LMap(AerospikeClient * self, PyObject * args, PyObject * kwds);
 
 /**
  * Get records in a batch
@@ -322,6 +395,14 @@ PyObject * AerospikeClient_Index_Remove(AerospikeClient * self, PyObject *args, 
  *
  */
 PyObject * AerospikeClient_Get_Many(AerospikeClient * self, PyObject *args, PyObject * kwds);
+
+/**
+ * Filter bins from records in a batch
+ *
+ *		client.select_many([keys], [bins], policies)
+ *
+ */
+PyObject * AerospikeClient_Select_Many(AerospikeClient * self, PyObject *args, PyObject * kwds);
 
 /**
  * Check existence of given keys
@@ -345,3 +426,10 @@ PyObject * AerospikeClient_Info(AerospikeClient * self, PyObject * args, PyObjec
 *
 */
 PyObject * AerospikeClient_GetNodes(AerospikeClient * self, PyObject * args, PyObject * kwds);
+/**
+* Perforrm get key digest operation on the database.
+*
+* client.get_key_digest((x,y,z))
+*
+*/
+PyObject * AerospikeClient_Get_Key_Digest(AerospikeClient * self, PyObject * args, PyObject * kwds);

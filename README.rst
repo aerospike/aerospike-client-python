@@ -13,7 +13,6 @@ Dependencies
 The Aerospike Python client depends on:
 
 -  The Aerospike C client
--  Lua 5.1.5
 -  Python devel Package
 
 The Aerospike Python Client works on Python 2.6.\ *, 2.7.*
@@ -29,7 +28,8 @@ The following are dependencies for:
 
 ::
 
-    sudo yum install lua-devel
+    sudo yum install python-devel
+    sudo yum install openssl-devel
 
 Debian 6+ and Ubuntu 12.04+
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -42,15 +42,24 @@ The following are dependencies for:
 
 ::
 
-    sudo apt-get install liblua5.1-dev
+    sudo apt-get install python-dev
+    sudo apt-get install libssl-dev
 
-Mac OS X
+OS X
 ~~~~~~~~
 
-We recommend building Lua from source. To download the source code and
-build the library, follow the instruction provided in the *Lua* section
-of the `Aerospike C Client Installation
-Guide <http://aerospike.com/docs/client/c/install/macosx.html#lua>`__
+By default OS X will be missing command line tools. On Mavericks (OS X 10.9)
+and higher those `can be installed without Xcode <http://osxdaily.com/2014/02/12/install-command-line-tools-mac-os-x/>`__.
+
+::
+
+    xcode-select --install # install the command line tools, if missing
+
+The dependencies can be installed through the OS X package manager `Homebrew <http://brew.sh/>`__.
+
+::
+
+    brew install openssl
 
 Install
 -------
@@ -66,6 +75,11 @@ Build
 
 Instructions for building Aerospike Python Client, please refer to the 
 ``BUILD.md`` file for details.
+
+Documentation
+-------------
+
+Documentation is hosted at `pythonhosted.org/aerospike <https://pythonhosted.org/aerospike/>`__ 
 
 Examples
 --------

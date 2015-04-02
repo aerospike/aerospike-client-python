@@ -3,6 +3,7 @@ import pytest
 import time
 import sys
 import cPickle as pickle
+from test_base_class import TestBaseClass
 try:
     import aerospike
 except:
@@ -15,10 +16,14 @@ class TestGetNodes(object):
         """
         Setup class.
         """
+        hostlist, user, password = TestBaseClass.get_hosts()
         config = {
-            'hosts': [('127.0.0.1', 3000)]
-        }
-        TestGetNodes.client = aerospike.client(config).connect()
+                'hosts': hostlist
+                }
+        if user == None and password == None:
+            TestGetNodes.client = aerospike.client(config).connect()
+        else:
+            TestGetNodes.client = aerospike.client(config).connect(user, password)
 
     def teardown_class(cls):
         """

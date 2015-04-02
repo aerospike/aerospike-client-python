@@ -27,12 +27,25 @@
 #include "key.h"
 #include "policy.h"
 
+/**
+ *******************************************************************************************************
+ * This function projects bins on given namespace nd set.
+ *
+ * @param self                  AerospikeClient object
+ * @param py_key                The key under which to store the record.
+ * @param py_bins               The bins to project into the DB.
+ * @param py_policy             The optional policy parameters
+ *
+ * Returns a tuple containing key, meta and bins.
+ *******************************************************************************************************
+ */
 PyObject * AerospikeClient_Select_Invoke(
 	AerospikeClient * self,
 	PyObject * py_key, PyObject * py_bins, PyObject * py_policy)
 {
 	// Python Return Value
 	PyObject * py_rec = NULL;
+	PyObject * py_ustr = NULL;
 
 	// Aerospike Client Arguments
 	as_error err;
@@ -41,6 +54,9 @@ PyObject * AerospikeClient_Select_Invoke(
 	as_key key;
 	as_record * rec = NULL;
 	char ** bins = NULL;
+
+	// Initialisation flags
+	bool key_initialised = false;
 
 	// Initialize error
 	as_error_init(&err);
@@ -55,7 +71,8 @@ PyObject * AerospikeClient_Select_Invoke(
 	if ( err.code != AEROSPIKE_OK ) {
 		goto CLEANUP;
 	}
-
+	// key is initialised successfully
+	key_initialised = true;
 
 	// Convert python bins list to char ** bins
 	if ( py_bins != NULL && PyList_Check(py_bins) ) {
@@ -77,9 +94,16 @@ PyObject * AerospikeClient_Select_Invoke(
 		for ( int i = 0; i < size; i++ ) {
 			PyObject * py_val = PyTuple_GetItem(py_bins, i);
 			bins[i] = (char *) alloca(sizeof(char) * AS_BIN_NAME_MAX_SIZE);
-			if ( PyString_Check(py_val) ) {
+			if (PyUnicode_Check(py_val)) {
+				py_ustr = PyUnicode_AsUTF8String(py_val);
+				strncpy(bins[i], PyString_AsString(py_ustr), AS_BIN_NAME_MAX_LEN);
+				bins[i][AS_BIN_NAME_MAX_LEN] = '\0';
+			} else if ( PyString_Check(py_val) ) {
 				strncpy(bins[i], PyString_AsString(py_val), AS_BIN_NAME_MAX_LEN);
 				bins[i][AS_BIN_NAME_MAX_LEN] = '\0';
+			} else {
+				as_error_update(&err, AEROSPIKE_ERR_PARAM, "not string type");
+				goto CLEANUP;
 			}
 		}
 		bins[size] = NULL;
@@ -90,7 +114,8 @@ PyObject * AerospikeClient_Select_Invoke(
 	}
 
 	// Convert python policy object to as_policy_exists
-	pyobject_to_policy_read(&err, py_policy, &read_policy, &read_policy_p);
+	pyobject_to_policy_read(&err, py_policy, &read_policy, &read_policy_p,
+			&self->as->config.policies.read);
 	if ( err.code != AEROSPIKE_OK ) {
 		goto CLEANUP;
 	}
@@ -124,7 +149,15 @@ PyObject * AerospikeClient_Select_Invoke(
 
 CLEANUP:
 
-	// as_key_destroy(&key);
+	if (py_ustr) {
+		Py_DECREF(py_ustr);
+	}
+
+	if (key_initialised == true){
+		// Destroy the key if it is initialised successfully.
+		as_key_destroy(&key);
+	}
+
 	as_record_destroy(rec);
 
 	if ( err.code != AEROSPIKE_OK ) {
@@ -138,6 +171,19 @@ CLEANUP:
 	return py_rec;
 }
 
+/**
+ *******************************************************************************************************
+ * Projects bins on given namespace and set.
+ *
+ * @param self                  AerospikeClient object
+ * @param args                  The args is a tuple object containing an argument
+ *                              list passed from Python to a C function
+ * @param kwds                  Dictionary of keywords
+ *
+ * Returns a tuple containing key, meta and bins.
+ * In case of error,appropriate exceptions will be raised.
+ *******************************************************************************************************
+ */
 PyObject * AerospikeClient_Select(AerospikeClient * self, PyObject * args, PyObject * kwds)
 {
 	// Python Function Arguments

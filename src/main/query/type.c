@@ -73,6 +73,8 @@ static int AerospikeQuery_Type_Init(AerospikeQuery * self, PyObject * args, PyOb
 {
 	PyObject * py_namespace = NULL;
 	PyObject * py_set = NULL;
+	as_error err;
+	as_error_init(&err);
 
 	static char * kwlist[] = {"namespace", "set", NULL};
 
@@ -89,7 +91,7 @@ static int AerospikeQuery_Type_Init(AerospikeQuery * self, PyObject * args, PyOb
 		namespace = PyString_AsString(py_namespace);
 	}
 
-	if ( PyString_Check(py_set) ) {
+	if (PyString_Check(py_set)) {
 		set = PyString_AsString(py_set);
 	}
 
@@ -98,8 +100,14 @@ static int AerospikeQuery_Type_Init(AerospikeQuery * self, PyObject * args, PyOb
     return 0;
 }
 
-static void AerospikeQuery_Type_Dealloc(PyObject * self)
+static void AerospikeQuery_Type_Dealloc(AerospikeQuery * self)
 {
+	int i;
+	for (i=0; i < self->u_objs.size; i++){
+		Py_DECREF(self->u_objs.ob[i]);
+	}
+
+	as_query_destroy(&self->query);
     self->ob_type->tp_free((PyObject *) self);
 }
 
@@ -179,4 +187,11 @@ AerospikeQuery * AerospikeQuery_New(AerospikeClient * client, PyObject * args, P
 		Py_DECREF(py_err);
 		return NULL;
 	}
+}
+PyObject * StoreUnicodePyObject(AerospikeQuery * self, PyObject *obj){
+
+	if (self->u_objs.size < MAX_UNICODE_OBJECTS){
+		self->u_objs.ob[self->u_objs.size++] = obj;
+	}
+	return obj;
 }

@@ -29,7 +29,18 @@
 #include "key.h"
 #include "policy.h"
 
-// Callback method
+/**
+ *******************************************************************************************************
+ * This callback will be called with the results with aerospike_batch_get().
+ *
+ * @param results               An array of n as_batch_read entries
+ * @param n                     The number of results from the batch request
+ * @param udata                 The return value to be filled with result of
+ *                              get_many()
+ *
+ * Returns boolean value(true or false).
+ *******************************************************************************************************
+ */
 static bool batch_get_cb(const as_batch_read* results, uint32_t n, void* udata)
 {
 	// Typecast udata back to PyObject
@@ -37,29 +48,33 @@ static bool batch_get_cb(const as_batch_read* results, uint32_t n, void* udata)
 
 	// Initialize error object
 	as_error err;
-
 	as_error_init(&err);
 
 	// Loop over results array
 	for ( uint32_t i =0; i < n; i++ ){
 
-		// Check record status
-		if ( results[i].result == AEROSPIKE_OK ){
+		PyObject * rec = NULL;
+		PyObject * p_key = NULL;
 
-			PyObject * rec = NULL;
-			PyObject * p_key = NULL;
-
+		if(results[i].key->valuep) {
 			switch(((as_val*)(results[i].key->valuep))->type){
 				case AS_INTEGER:
 					p_key = PyInt_FromLong((long)results[i].key->value.integer.value);
-
 					break;
+
 				case AS_STRING:
 					p_key = PyString_FromString((const char *)results[i].key->value.string.value);
 					break;
 				default:
 					break;
 			}
+		} else {
+			Py_INCREF(Py_None);
+			p_key = Py_None;
+		}
+
+		// Check record status
+		if ( results[i].result == AEROSPIKE_OK ){
 
 			record_to_pyobject(&err, &results[i].record, results[i].key, &rec);
 
@@ -68,12 +83,29 @@ static bool batch_get_cb(const as_batch_read* results, uint32_t n, void* udata)
 				return false;
 			}
 			Py_DECREF(rec);
-			Py_DECREF(p_key);
+		} else if( results[i].result == AEROSPIKE_ERR_RECORD_NOT_FOUND) {
+			
+			Py_INCREF(Py_None);
+			if ( PyDict_SetItem( py_recs, p_key, Py_None)){
+				return false;
+			}
 		}
+		Py_DECREF(p_key);
 	}
 	return true;
 }
 
+/**
+ *******************************************************************************************************
+ * This function will get a batch of records from the Aeropike DB.
+ *
+ * @param self                  AerospikeClient object
+ * @param py_keys               The list of keys
+ * @param py_policy             The dictionary of policies
+ *
+ * Returns the record if key exists otherwise NULL.
+ *******************************************************************************************************
+ */
 static
 PyObject * AerospikeClient_Get_Many_Invoke(
 	AerospikeClient * self,
@@ -88,6 +120,9 @@ PyObject * AerospikeClient_Get_Many_Invoke(
 	as_policy_batch policy;
 	as_policy_batch * batch_policy_p = NULL;
 
+	// Initialisation flags
+	bool batch_initialised = false;
+
 	// Initialize error
 	as_error_init(&err);
 
@@ -96,7 +131,9 @@ PyObject * AerospikeClient_Get_Many_Invoke(
 	if ( py_keys != NULL && PyList_Check(py_keys) ) {
 		Py_ssize_t size = PyList_Size(py_keys);
 
-		as_batch_inita(&batch, size);
+		as_batch_init(&batch, size);
+		// Batch object initialised
+		batch_initialised = true;
 
 		for ( int i = 0; i < size; i++ ) {
 
@@ -117,7 +154,9 @@ PyObject * AerospikeClient_Get_Many_Invoke(
 	else if ( py_keys != NULL && PyTuple_Check(py_keys) ) {
 		Py_ssize_t size = PyTuple_Size(py_keys);
 
-		as_batch_inita(&batch, size);
+		as_batch_init(&batch, size);
+		// Batch object initialised.
+		batch_initialised = true;
 
 		for ( int i = 0; i < size; i++ ) {
 			PyObject * py_key = PyTuple_GetItem(py_keys, i);
@@ -140,7 +179,8 @@ PyObject * AerospikeClient_Get_Many_Invoke(
 	}
 
 	// Convert python policy object to as_policy_batch
-	pyobject_to_policy_batch(&err, py_policy, &policy, &batch_policy_p);
+	pyobject_to_policy_batch(&err, py_policy, &policy, &batch_policy_p,
+			&self->as->config.policies.batch);
 	if ( err.code != AEROSPIKE_OK ) {
 		goto CLEANUP;
 	}
@@ -152,17 +192,39 @@ PyObject * AerospikeClient_Get_Many_Invoke(
 
 CLEANUP:
 
+	if (batch_initialised == true){
+		// We should destroy batch object as we are using 'as_batch_init' for initialisation
+		// Also, pyobject_to_key is soing strdup() in case of Unicode. So, object destruction
+		// is necessary.
+		as_batch_destroy(&batch);
+	}
+
 	if ( err.code != AEROSPIKE_OK ) {
 		PyObject * py_err = NULL;
 		error_to_pyobject(&err, &py_err);
 		PyErr_SetObject(PyExc_Exception, py_err);
 		Py_DECREF(py_err);
+		Py_DECREF(py_recs);
 		return NULL;
 	}
 
 	return py_recs;
 }
 
+/**
+ *******************************************************************************************************
+ * Gets a batch of records from the Aerospike DB.
+ *
+ * @param self                  AerospikeClient object
+ * @param args                  The args is a tuple object containing an argument
+ *                              list passed from Python to a C function
+ * @param kwds                  Dictionary of keywords
+ *
+ * Returns a dictionary of record with key to be primary key and value to be a
+ * record.
+ * In case of error,appropriate exceptions will be raised.
+ *******************************************************************************************************
+ */
 PyObject * AerospikeClient_Get_Many(AerospikeClient * self, PyObject * args, PyObject * kwds)
 {
 	// Python Function Arguments
@@ -173,7 +235,7 @@ PyObject * AerospikeClient_Get_Many(AerospikeClient * self, PyObject * args, PyO
 	static char * kwlist[] = {"keys", "policy", NULL};
 
 	// Python Function Argument Parsing
-	if ( PyArg_ParseTupleAndKeywords(args, kwds, "O|O:get", kwlist, 
+	if ( PyArg_ParseTupleAndKeywords(args, kwds, "O|O:get_many", kwlist,
 			&py_keys, &py_policy) == false ) {
 		return NULL;
 	}

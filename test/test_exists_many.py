@@ -17,14 +17,14 @@ class TestExistsMany(TestBaseClass):
         """
         hostlist, user, password = TestBaseClass.get_hosts()
         config = {
-                'hosts': TestBaseClass.hostlist
+                'hosts': hostlist
                 }
         if user == None and password == None:
             TestExistsMany.client = aerospike.client(config).connect()
         else:
             TestExistsMany.client = aerospike.client(config).connect(user, password)
 
-    def teardwon_class(cls):
+    def teardown_class(cls):
         TestExistsMany.client.close()
 
     def setup_method(self, method):
@@ -90,13 +90,14 @@ class TestExistsMany(TestBaseClass):
 
     def test_exists_many_with_non_existent_keys(self):
 
-        self.keys.append( ('test', 'demo', 'non-existent') )
+        self.keys.append( ('test', 'demo', 'some_key') )
 
         records = TestExistsMany.client.exists_many( self.keys )
 
         assert type(records) == dict
-        assert len(records.keys()) == 5
-        assert records.keys() == [0, 1, 2, 3, 4]
+        assert len(records.keys()) == 6
+        assert records.keys() == [0, 1, 2, 3, 4, 'some_key']
+        assert records['some_key'] == None
 
     def test_exists_many_with_all_non_existent_keys(self):
 
@@ -104,8 +105,8 @@ class TestExistsMany(TestBaseClass):
 
         records = TestExistsMany.client.exists_many( keys )
 
-        assert len(records.keys()) == 0
-        assert records == {}
+        assert len(records.keys()) == 1
+        assert records == {'key': None}
 
     def test_exists_many_with_invalid_key(self):
 
@@ -123,10 +124,37 @@ class TestExistsMany(TestBaseClass):
 
         assert exception.value[0] == -2
         assert exception.value[1] == "timeout is invalid"
-    
+
+    def test_exists_many_with_initkey_as_digest(self):
+
+        keys = []
+        key = ("test", "demo", None, bytearray("asd;as[d'as;djk;uyfl"))
+        rec = {
+            'name' : 'name1',
+            'age'  : 1
+        }
+        TestExistsMany.client.put(key, rec)
+        keys.append(key)
+
+        key = ("test", "demo", None, bytearray("ase;as[d'as;djk;uyfl"))
+        rec = {
+            'name' : 'name2',
+            'age'  : 2
+        }
+        TestExistsMany.client.put(key, rec)
+        keys.append(key)
+
+        records = TestExistsMany.client.exists_many( keys )
+
+        for key in keys:
+            TestExistsMany.client.remove( key )
+
+        assert type(records) == dict
+        assert len(records.keys()) == 2
+
     def test_exists_many_with_non_existent_keys_in_middle(self):
 
-        self.keys.append( ('test', 'demo', 'non-existent') )
+        self.keys.append( ('test', 'demo', 'some_key') )
 
         for i in xrange(15,20):
             key = ('test', 'demo', i)
@@ -144,5 +172,6 @@ class TestExistsMany(TestBaseClass):
             TestExistsMany.client.remove(key)
 
         assert type(records) == dict
-        assert len(records.keys()) == 10
-        assert records.keys() == [0, 1, 2, 3, 4, 15, 16, 17, 18, 19]
+        assert len(records.keys()) == 11
+        assert records.keys() == [0, 1, 2, 3, 4, 'some_key', 15, 16, 17, 18, 19]
+        assert records['some_key'] == None

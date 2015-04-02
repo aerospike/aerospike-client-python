@@ -39,7 +39,7 @@ class TestInfoNode(object):
         """
         with pytest.raises(TypeError) as typeError:
             response = TestInfoNode.client.info_node()
-        assert "Required argument 'req' (pos 1) not found" in typeError.value
+        assert "Required argument 'command' (pos 1) not found" in typeError.value
 
     def test_info_node_positive(self):
         """
@@ -52,7 +52,7 @@ class TestInfoNode(object):
             }
 
         TestInfoNode.client.put(key, rec)
-        response = TestInfoNode.client.info_node('bins')
+        response = TestInfoNode.client.info_node('bins', ('127.0.0.1', 3000))
         TestInfoNode.client.remove(key)
         if 'names' in  response:
             assert True == True
@@ -70,7 +70,7 @@ class TestInfoNode(object):
             }
 
         TestInfoNode.client.put(key, rec)
-        response = TestInfoNode.client.info_node('namespaces')
+        response = TestInfoNode.client.info_node('namespaces', ('127.0.0.1', 3000))
         TestInfoNode.client.remove(key)
         if 'test' in  response:
             assert True == True
@@ -88,7 +88,7 @@ class TestInfoNode(object):
             }
 
         TestInfoNode.client.put(key, rec)
-        response = TestInfoNode.client.info_node('sets')
+        response = TestInfoNode.client.info_node('sets', ('127.0.0.1', 3000))
         TestInfoNode.client.remove(key)
         if 'demo' in  response:
             assert True == True
@@ -106,11 +106,11 @@ class TestInfoNode(object):
             }
         policy = {}
         TestInfoNode.client.put(key, rec)
-        response = TestInfoNode.client.info_node('sindex-create:ns=test;set=demo;indexname=names_test_index;indexdata=names,string')
+        response = TestInfoNode.client.info_node('sindex-create:ns=test;set=demo;indexname=names_test_index;indexdata=names,string', ('127.0.0.1', 3000))
         time.sleep(2)
         TestInfoNode.client.remove(key)
-        response = TestInfoNode.client.info_node('sindex')
-        TestInfoNode.client.info_node('sindex-delete:ns=test;indexname=names_test_index')
+        response = TestInfoNode.client.info_node('sindex', ('127.0.0.1', 3000))
+        TestInfoNode.client.info_node('sindex-delete:ns=test;indexname=names_test_index', ('127.0.0.1', 3000))
 
         if 'names_test_index' in  response:
             assert True == True
@@ -125,10 +125,10 @@ class TestInfoNode(object):
         """
         response = None
         with pytest.raises(Exception) as exception:
-            response = TestInfoNode.client.info_node('abcd')
+            response = TestInfoNode.client.info_node('abcd', ('127.0.0.1', 3000))
 
         assert exception.value[0] == -1
-        assert exception.value[1] == "Info operation failed"
+        assert exception.value[1] == "Invalid info operation"
 
     def test_info_node_positive_with_correct_policy(self):
         """
@@ -141,7 +141,7 @@ class TestInfoNode(object):
             }
         TestInfoNode.client.put(key, rec)
 
-        host = {}
+        host = ()
         policy = {
             'timeout': 1000
         }
@@ -156,7 +156,7 @@ class TestInfoNode(object):
         """
         Test info with incorrect policy
         """
-        host = {}
+        host = ()
         policy = {
             'timeout': 0.5
         }
@@ -176,7 +176,7 @@ class TestInfoNode(object):
                 'names': ['John', 'Marlen', 'Steve']
             }
         TestInfoNode.client.put(key, rec)
-        host = {"addr": "127.0.0.1", "port": 3000}
+        host = ("127.0.0.1", 3000)
         response = TestInfoNode.client.info_node('bins', host)
 
         TestInfoNode.client.remove(key)
@@ -189,18 +189,18 @@ class TestInfoNode(object):
         """
         Test info with incorrect host
         """
-        host = {"addr": "122.0.0.1", "port": 3000}
+        host = ("122.0.0.1", 3000)
         with pytest.raises(Exception) as exception:
             response = TestInfoNode.client.info_node('bins', host)
 
-        assert exception.value[0] == -1
-        assert exception.value[1] == "AEROSPIKE_ERR_CLIENT"
+        assert exception.value[0] == 9L
+        assert exception.value[1] == ""
 
     def test_info_node_positive_with_all_parameters(self):
         """
         Test info with all parameters
         """
-        host = {"addr": "127.0.0.1", "port": 3000}
+        host = ("127.0.0.1", 3000)
         policy = {
             'timeout': 1000
         }
@@ -212,21 +212,76 @@ class TestInfoNode(object):
         """
         Test info with extra parameters
         """
-        host = {"addr": "127.0.0.1", "port": 3000}
+        host = ("127.0.0.1", 3000)
         policy = {
             'timeout': 1000
         }
         with pytest.raises(TypeError) as typeError:
             response = TestInfoNode.client.info_node('bins', host, policy, "")
 
-        assert "info() takes at most 3 arguments (4 given)" in typeError.value
+        assert "info_node() takes at most 3 arguments (4 given)" in typeError.value
 
     def test_info_node_for_none_command(self):
         """
         Test info for None command
         """
         response = None
-        with pytest.raises(TypeError) as typeError:
-            response = TestInfoNode.client.info_node(None)
+        with pytest.raises(Exception) as exception:
+            response = TestInfoNode.client.info_node(None, ('127.0.0.1', 3000))
 
-        assert "info() argument 1 must be string, not None" in typeError.value
+        assert exception.value[0] == -2
+        assert exception.value[1] == "Request should be of string type"
+
+    def test_info_node_with_unicode_request_string_and_host_name(self):
+        """
+        Test info with all parameters
+        """
+        host = ( u"127.0.0.1", 3000 )
+        policy = {
+            'timeout': 1000
+        }
+        response = TestInfoNode.client.info_node(u'logs', host, policy)
+
+    def test_info_node_positive_with_unicode_request_string_and_host_name(self):
+        """
+        Test info with all parameters
+        """
+        host = ( u"127.0.0.1", 3000 )
+        policy = {
+            'timeout': 1000
+        }
+        response = TestInfoNode.client.info_node(u'logs', host, policy)
+
+        assert response != None
+    
+    def test_info_node_positive_with_valid_host(self):
+        """
+        Test info with incorrect host
+        """
+        host = ( "192.168.1.2", 3000 )
+        with pytest.raises(Exception) as exception:
+            response = TestInfoNode.client.info_node('bins', host)
+
+        assert exception.value[0] == 9L
+        assert exception.value[1] == ""
+    
+    def test_info_node_positive_invalid_host(self):
+        """
+        Test info with incorrect host
+        """
+        host = ( "abcderp", 3000 )
+        with pytest.raises(Exception) as exception:
+            response = TestInfoNode.client.info_node('bins', host)
+
+        assert exception.value[0] == -4L
+    
+    def test_info_node_positive_with_dns(self):
+        """
+        Test info with incorrect host
+        """
+        host = ( "google.com", 3000 )
+        with pytest.raises(Exception) as exception:
+            response = TestInfoNode.client.info_node('bins', host)
+
+        assert exception.value[0] == 9L
+        assert exception.value[1] == ""

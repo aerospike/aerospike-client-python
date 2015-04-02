@@ -26,28 +26,28 @@ class TestApply(TestBaseClass):
             TestApply.client = aerospike.client(config).connect(user, password)
 
         policy = {}
-        TestApply.client.index_integer_create(policy, 'test', 'demo',
-'age', 'age_index')
+        TestApply.client.index_integer_create('test', 'demo',
+'age', 'age_index', policy)
         policy = {}
-        TestApply.client.index_integer_create(policy, 'test', 'demo',
-'age1', 'age_index1')
+        TestApply.client.index_integer_create('test', 'demo',
+'age1', 'age_index1', policy)
 
         policy = {}
         filename = "sample.lua"
         udf_type = 0
 
-        status = TestApply.client.udf_put( policy, filename, udf_type )
+        status = TestApply.client.udf_put( filename, udf_type, policy )
         filename = "test_record_udf.lua"
-        status = TestApply.client.udf_put( policy, filename, udf_type )
+        status = TestApply.client.udf_put( filename, udf_type, policy )
 
     def teardown_class(cls):
         policy = {}
-        TestApply.client.index_remove(policy, 'test', 'age_index');
-        TestApply.client.index_remove(policy, 'test', 'age_index1');
+        TestApply.client.index_remove('test', 'age_index', policy);
+        TestApply.client.index_remove('test', 'age_index1', policy);
         policy = { 'timeout' : 0 }
         module = "sample.lua"
 
-        status = TestApply.client.udf_remove( policy, module )
+        status = TestApply.client.udf_remove( module, policy )
         TestApply.client.close()
 
     def setup_method(self, method):
@@ -281,7 +281,7 @@ class TestApply(TestBaseClass):
         key = ('test', 'demo', 1)
         retval = TestApply.client.apply(key, 'test_record_udf',
                 'udf_returns_record',
-                None)
+                [])
         assert retval != None
 
     def test_apply_with_extra_argument_to_lua(self):
@@ -324,3 +324,14 @@ class TestApply(TestBaseClass):
         assert retval == 0
         (key, meta, bins) = TestApply.client.get(key)
         assert bins['name'] == ['name1', [1, 2]]
+
+    def test_apply_with_unicode_module_and_function(self):
+        """
+            Invoke apply() with unicode module and function
+        """
+        key = ('test', 'demo', 1)
+        retval = TestApply.client.apply(key, u'sample', u'list_append', ['name', 'car'])
+        (key, meta, bins) = TestApply.client.get(key)
+
+        assert bins['name'] == ['name1', 'car']
+        assert retval == 0

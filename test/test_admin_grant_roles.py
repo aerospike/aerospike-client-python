@@ -120,7 +120,7 @@ class TestGrantRoles(TestBaseClass):
             status = self.client.admin_grant_roles( policy, user, roles, len(roles) )
 
         assert exception.value[0] == 60
-        assert exception.value[1] == "aerospike grant roles failed"
+        assert exception.value[1] == "AEROSPIKE_INVALID_USER"
 
     def test_grant_roles_with_special_characters_in_username(self):
 
@@ -158,7 +158,7 @@ class TestGrantRoles(TestBaseClass):
             status = self.client.admin_grant_roles( policy, user, roles, len(roles) )
 
         assert exception.value[0] == 70
-        assert exception.value[1] == "aerospike grant roles failed"
+        assert exception.value[1] == "AEROSPIKE_INVALID_ROLE"
 
     def test_grant_roles_with_invalid_role(self):
 
@@ -170,7 +170,7 @@ class TestGrantRoles(TestBaseClass):
             status = self.client.admin_grant_roles( policy, user, roles, len(roles) )
 
         assert exception.value[0] == 70
-        assert exception.value[1] == "aerospike grant roles failed"
+        assert exception.value[1] == "AEROSPIKE_INVALID_ROLE"
 
     def test_grant_roles_with_different_roles_and_roles_size(self):
 
@@ -182,4 +182,4 @@ class TestGrantRoles(TestBaseClass):
             status = self.client.admin_grant_roles(policy, user, roles, 2)
 
         assert exception.value[0] == 70
-        assert exception.value[1] == "aerospike grant roles failed"
+        assert exception.value[1] == "AEROSPIKE_INVALID_ROLE"

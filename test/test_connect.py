@@ -21,14 +21,15 @@ class TestConnect(TestBaseClass):
             Invoke connect() with positive parameters.
         """
         config = {
-                'hosts': TestBaseClass.hostlist
+                'hosts': TestConnect.hostlist
                 }
-        if TestBaseClass.user == None and TestBaseClass.password == None:
+        if TestConnect.user == None and TestConnect.password == None:
             self.client = aerospike.client(config).connect()
         else:
-            self.client = aerospike.client(config).connect(TestBaseClass.user, TestBaseClass.password)
+            self.client = aerospike.client(config).connect(TestConnect.user, TestConnect.password)
 
         assert self.client != None
+        assert self.client.isConnected() == True
         self.client.close()
 
     def test_connect_positive_with_policy(self):
@@ -36,17 +37,18 @@ class TestConnect(TestBaseClass):
             Invoke connect() with positive parameters and policy.
         """
         config = {
-                'hosts': TestBaseClass.hostlist,
+                'hosts': TestConnect.hostlist,
                 'policies': {
                    'timeout': 10000
                 }
                 }
-        if TestBaseClass.user == None and TestBaseClass.password == None:
+        if TestConnect.user == None and TestConnect.password == None:
             self.client = aerospike.client(config).connect()
         else:
-            self.client = aerospike.client(config).connect(TestBaseClass.user, TestBaseClass.password)
+            self.client = aerospike.client(config).connect(TestConnect.user, TestConnect.password)
        
-        assert self.client != None
+        assert self.client.isConnected() == True
+        assert self.client.isConnected() == True
         self.client.close()
 
     def test_connect_positive_with_multiple_hosts(self):
@@ -54,12 +56,12 @@ class TestConnect(TestBaseClass):
             Invoke connect() with multiple hosts.
         """
         config = {
-                'hosts': TestBaseClass.hostlist
+                'hosts': TestConnect.hostlist
                 }
-        if TestBaseClass.user == None and TestBaseClass.password == None:
+        if TestConnect.user == None and TestConnect.password == None:
             self.client = aerospike.client(config).connect()
         else:
-            self.client = aerospike.client(config).connect(TestBaseClass.user, TestBaseClass.password)
+            self.client = aerospike.client(config).connect(TestConnect.user, TestConnect.password)
 
         assert self.client != None
         self.client.close()
@@ -71,7 +73,6 @@ class TestConnect(TestBaseClass):
         config = 1
         with pytest.raises(Exception) as exception:
             self.client = aerospike.client(config).connect()
-
         assert exception.value[0] == -1
         assert exception.value[1] == "Parameters are incorrect"
     
@@ -84,8 +85,8 @@ class TestConnect(TestBaseClass):
         with pytest.raises(Exception) as exception:
             self.client = aerospike.client(config).connect()
 
-        assert exception.value[0] == 11
-        assert exception.value[1] == 'no hosts provided'
+        assert exception.value[0] == -2L
+        assert exception.value[1] == 'No hosts provided'
 
     def test_connect_missing_hosts_key(self):
         """
@@ -97,8 +98,8 @@ class TestConnect(TestBaseClass):
         with pytest.raises(Exception) as exception:
             self.client = aerospike.client(config).connect()
 
-        assert exception.value[0] == 11
-        assert exception.value[1] == 'no hosts provided'
+        assert exception.value[0] == -2L
+        assert exception.value[1] == 'No hosts provided'
 
     def test_connect_missing_address(self):
         """
@@ -110,8 +111,8 @@ class TestConnect(TestBaseClass):
         with pytest.raises(Exception) as exception:
             self.client = aerospike.client(config).connect()
 
-        assert exception.value[0] == 11
-        assert exception.value[1] == 'no hosts provided'
+        assert exception.value[0] == -2L
+        assert exception.value[1] == 'No hosts provided'
 
     def test_connect_missing_port(self):
         """
@@ -122,7 +123,7 @@ class TestConnect(TestBaseClass):
                 }
         self.client = aerospike.client(config).connect()
 
-        assert self.client != None
+        assert self.client.isConnected() == True
         self.client.close()
 
     def test_connect_incorrect_port(self):
@@ -136,7 +137,7 @@ class TestConnect(TestBaseClass):
             self.client = aerospike.client(config).connect()
 
         assert exception.value[0] == -1
-        assert exception.value[1] == 'AEROSPIKE_ERR_CLIENT'
+        assert exception.value[1] == 'Failed to seed cluster'
 
     def test_connect_port_is_string(self):
         """
@@ -149,4 +150,4 @@ class TestConnect(TestBaseClass):
             self.client = aerospike.client(config).connect()
 
         assert exception.value[0] == -1
-        assert exception.value[1] == 'AEROSPIKE_ERR_CLIENT'
+        assert exception.value[1] == 'Failed to seed cluster'

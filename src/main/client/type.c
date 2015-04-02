@@ -26,6 +26,7 @@
 #include "admin.h"
 #include "client.h"
 #include "policy.h"
+#include "conversions.h"
 
 /*******************************************************************************
  * PYTHON TYPE METHODS
@@ -41,6 +42,9 @@ static PyMethodDef AerospikeClient_Type_Methods[] = {
 	{"close",
 		(PyCFunction) AerospikeClient_Close, METH_VARARGS | METH_KEYWORDS,
 		"Close the connection(s) to the cluster."},
+	{"isConnected",
+		(PyCFunction) AerospikeClient_isConnected, METH_VARARGS | METH_KEYWORDS,
+		"Checks current connection state."},
 
 	// ADMIN OPERATIONS
 
@@ -61,9 +65,6 @@ static PyMethodDef AerospikeClient_Type_Methods[] = {
 	{"admin_revoke_roles",
 		(PyCFunction) AerospikeClient_Admin_Revoke_Roles,	METH_VARARGS | METH_KEYWORDS,
 		"Revoke roles"},
-	{"admin_replace_roles",
-		(PyCFunction) AerospikeClient_Admin_Replace_Roles, METH_VARARGS | METH_KEYWORDS,
-		"Replace roles."},
 	{"admin_query_user",
 		(PyCFunction) AerospikeClient_Admin_Query_User, METH_VARARGS | METH_KEYWORDS,
 		"Query a user for roles."},
@@ -90,9 +91,12 @@ static PyMethodDef AerospikeClient_Type_Methods[] = {
 	{"apply",
 		(PyCFunction) AerospikeClient_Apply, METH_VARARGS | METH_KEYWORDS,
 		"Apply a UDF on a record in the database."},
-    {"append",
-        (PyCFunction) AerospikeClient_Append, METH_VARARGS | METH_KEYWORDS,
-        "Appends a string to the string value in a bin"},
+	{"remove_bin",
+		(PyCFunction) AerospikeClient_RemoveBin, METH_VARARGS | METH_KEYWORDS,
+		"Remove a bin from the database."},
+	{"append",
+		(PyCFunction) AerospikeClient_Append, METH_VARARGS | METH_KEYWORDS,
+		"Appends a string to the string value in a bin"},
 	{"prepend",
 		(PyCFunction) AerospikeClient_Prepend, METH_VARARGS | METH_KEYWORDS,
 		"Prepend a record to the database"},
@@ -123,6 +127,13 @@ static PyMethodDef AerospikeClient_Type_Methods[] = {
 	{"scan",
 		(PyCFunction) AerospikeClient_Scan, METH_VARARGS | METH_KEYWORDS,
 		"Create a new Scan object for performing scans."},
+	{"scan_apply",
+		(PyCFunction) AerospikeClient_ScanApply, METH_VARARGS | METH_KEYWORDS,
+		"Applies Scan object for performing scans."},
+
+	{"scan_info",
+		(PyCFunction) AerospikeClient_ScanInfo, METH_VARARGS | METH_KEYWORDS,
+		"Gets Scan Info."},
 
 	// INFO OPERATIONS
 	{"info",
@@ -146,6 +157,9 @@ static PyMethodDef AerospikeClient_Type_Methods[] = {
 	{"udf_list",
 		(PyCFunction)AerospikeClient_UDF_List, METH_VARARGS | METH_KEYWORDS,
 		"Lists the UDFs"},
+	{"udf_get",
+		(PyCFunction)AerospikeClient_UDF_Get_UDF, METH_VARARGS | METH_KEYWORDS,
+		"Get Registered UDFs"},
 
 	// SECONDARY INDEX OPERATONS
 
@@ -158,15 +172,44 @@ static PyMethodDef AerospikeClient_Type_Methods[] = {
 	{"index_remove",
 		(PyCFunction)AerospikeClient_Index_Remove, METH_VARARGS | METH_KEYWORDS,
 		"Remove a secondary index"},
+	
+    // LSTACK OPERATIONS
+
+	{"lstack",
+		(PyCFunction) AerospikeClient_LStack, METH_VARARGS | METH_KEYWORDS,
+		"LSTACK operations"},
+
+    // LSET OPERATIONS
+
+	{"lset",
+		(PyCFunction) AerospikeClient_LSet, METH_VARARGS | METH_KEYWORDS,
+		"LSET operations"},
+
+    // LLIST OPERATIONS
+
+	{"llist",
+		(PyCFunction) AerospikeClient_LList, METH_VARARGS | METH_KEYWORDS,
+		"LLIST operations"},
+
+    // LMAP OPERATIONS
+
+	{"lmap",
+		(PyCFunction) AerospikeClient_LMap, METH_VARARGS | METH_KEYWORDS,
+		"LMAP operations"},
 
 	// BATCH OPERATIONS
 	{"get_many",
 		(PyCFunction)AerospikeClient_Get_Many, METH_VARARGS | METH_KEYWORDS,
 		"Get many records at a time."},
+	{"select_many",
+		(PyCFunction)AerospikeClient_Select_Many, METH_VARARGS | METH_KEYWORDS,
+		"Filter bins from many records at a time."},
 	{"exists_many",
 		(PyCFunction)AerospikeClient_Exists_Many, METH_VARARGS | METH_KEYWORDS,
-		"Get many records at a time."},
-
+		"Check existence of  many records at a time."},
+	{"get_key_digest",
+		(PyCFunction)AerospikeClient_Get_Key_Digest, METH_VARARGS | METH_KEYWORDS,
+		"Get key digest"},
 	{NULL}
 };
 
@@ -286,8 +329,56 @@ static int AerospikeClient_Type_Init(AerospikeClient * self, PyObject * args, Py
 		}
 	}
 
-
 	as_policies_init(&config.policies);
+
+	PyObject * py_policies = PyDict_GetItemString(py_config, "policies");
+	if ( py_policies && PyDict_Check(py_policies)) {
+		//global defaults setting
+		PyObject * py_key_policy = PyDict_GetItemString(py_policies, "key");
+		if ( py_key_policy && PyInt_Check(py_key_policy) ) {
+			config.policies.key = PyInt_AsLong(py_key_policy);
+		}
+
+		PyObject * py_timeout = PyDict_GetItemString(py_policies, "timeout");
+		if ( py_timeout && PyInt_Check(py_timeout) ) {
+			config.policies.timeout = PyInt_AsLong(py_timeout);
+		}
+
+		PyObject * py_retry = PyDict_GetItemString(py_policies, "retry");
+		if ( py_retry && PyInt_Check(py_retry) ) {
+			config.policies.retry = PyInt_AsLong(py_retry);
+		}
+
+		PyObject * py_exists = PyDict_GetItemString(py_policies, "exists");
+		if ( py_exists && PyInt_Check(py_exists) ) {
+			config.policies.exists = PyInt_AsLong(py_exists);
+		}
+
+		PyObject * py_replica = PyDict_GetItemString(py_policies, "replica");
+		if ( py_replica && PyInt_Check(py_replica) ) {
+			config.policies.replica = PyInt_AsLong(py_replica);
+		}
+
+		PyObject * py_consistency_level = PyDict_GetItemString(py_policies, "consistency_level");
+		if ( py_consistency_level && PyInt_Check(py_consistency_level) ) {
+			config.policies.consistency_level = PyInt_AsLong(py_consistency_level);
+		}
+
+		PyObject * py_commit_level = PyDict_GetItemString(py_policies, "commit_level");
+		if ( py_commit_level && PyInt_Check(py_commit_level) ) {
+			config.policies.commit_level = PyInt_AsLong(py_commit_level);
+		}
+
+		/*
+		 * Generation policy is removed from constructor.
+		 */
+	}
+
+	//conn_timeout_ms
+	PyObject * py_connect_timeout = PyDict_GetItemString(py_config, "connect_timeout");
+	if ( py_connect_timeout && PyInt_Check(py_connect_timeout) ) {
+		config.conn_timeout_ms = PyInt_AsLong(py_connect_timeout);
+	}
 
 	self->as = aerospike_new(&config);
 
@@ -362,6 +453,7 @@ AerospikeClient * AerospikeClient_New(PyObject * parent, PyObject * args, PyObje
 	AerospikeClient * self = (AerospikeClient *) AerospikeClient_Type.tp_new(&AerospikeClient_Type, args, kwds);
 	if ( AerospikeClient_Type.tp_init((PyObject *) self, args, kwds) == 0 ){
 		// Initialize connection flag
+		self->is_conn_16 = false;
 		return self;
 	}
 	else {

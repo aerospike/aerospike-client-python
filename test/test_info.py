@@ -40,7 +40,7 @@ class TestInfo(object):
 
         request = "statistics"
 
-        nodes_info = TestInfo.client.info(request)
+        nodes_info = TestInfo.client.info(request, [('127.0.0.1', 3000)])
 
         assert nodes_info != None
 
@@ -57,7 +57,7 @@ class TestInfo(object):
             }
 
         TestInfo.client.put(key, rec)
-        response = TestInfo.client.info('namespaces')
+        response = TestInfo.client.info('namespaces', [('127.0.0.1', 3000)])
         TestInfo.client.remove(key)
         flag = 0
         for keys in response.keys():
@@ -81,7 +81,7 @@ class TestInfo(object):
             }
 
         TestInfo.client.put(key, rec)
-        response = TestInfo.client.info('sets')
+        response = TestInfo.client.info('sets', [('127.0.0.1', 3000)])
         TestInfo.client.remove(key)
         flag = 0
         for keys in response.keys():
@@ -105,7 +105,7 @@ class TestInfo(object):
             }
 
         TestInfo.client.put(key, rec)
-        response = TestInfo.client.info('bins')
+        response = TestInfo.client.info('bins', [('127.0.0.1', 3000)])
         TestInfo.client.remove(key)
         flag = 0
         for keys in response.keys():
@@ -129,11 +129,11 @@ class TestInfo(object):
             }
         policy = {}
         TestInfo.client.put(key, rec)
-        response = TestInfo.client.info('sindex-create:ns=test;set=demo;indexname=names_test_index;indexdata=names,string')
+        response = TestInfo.client.info('sindex-create:ns=test;set=demo;indexname=names_test_index;indexdata=names,string', [('127.0.0.1', 3000)])
         time.sleep(2)
         TestInfo.client.remove(key)
-        response = TestInfo.client.info('sindex')
-        TestInfo.client.info('sindex-delete:ns=test;indexname=names_test_index')
+        response = TestInfo.client.info('sindex', [('127.0.0.1', 3000)])
+        TestInfo.client.info('sindex-delete:ns=test;indexname=names_test_index', [('127.0.0.1', 3000)])
 
         flag = 0
         for keys in response.keys():
@@ -148,24 +148,22 @@ class TestInfo(object):
 
     def test_info_with_config_for_statistics(self):
 
-        request = "statistics"
+        request = u"statistics"
 
-        config = {
-                'hosts': [('127.0.0.1', 3000)]
-                }
-        nodes_info = TestInfo.client.info(request, config)
+        config = [(127, 3000)]
 
-        assert nodes_info != None
+        with pytest.raises(Exception) as exception:
+            TestInfo.client.info(request, config)
 
-        assert type(nodes_info) == dict
+        assert exception.value[0] == -2
+        assert exception.value[1] == "Host address is of type incorrect"
 
     def test_info_with_config_for_statistics_and_policy(self):
 
         request = "statistics"
 
-        config = {
-                'hosts': [('127.0.0.1', 3000)]
-                }
+        config = [('127.0.0.1', 3000)]
+
         policy = {
                 'timeout': 1000
         }
@@ -179,7 +177,7 @@ class TestInfo(object):
 
         request = "no_info"
 
-        nodes_info = TestInfo.client.info(request)
+        nodes_info = TestInfo.client.info(request, [('127.0.0.1', 3000)])
 
         assert type(nodes_info) == dict
 
@@ -190,9 +188,9 @@ class TestInfo(object):
         request = None
 
         with pytest.raises(Exception) as exception:
-            nodes_info = TestInfo.client.info(request)
+            TestInfo.client.info(request, [('127.0.0.1', 3000)])
 
-        assert exception.value[0] == -2
+        assert exception.value[0] == -2L
         assert exception.value[1] == "Request must be a string"
 
     def test_info_without_parameters(self):
@@ -200,4 +198,4 @@ class TestInfo(object):
         with pytest.raises(TypeError) as typeError:
             nodes_info = TestInfo.client.info()
 
-        assert "Required argument 'req' (pos 1) not found" in typeError.value
+        assert "Required argument 'command' (pos 1) not found" in typeError.value

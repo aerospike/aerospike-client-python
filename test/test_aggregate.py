@@ -25,37 +25,36 @@ class TestAggregate(TestBaseClass):
             client = aerospike.client(config).connect(user, password)
 
         policy = {}
-        client.index_integer_create(policy, 'test', 'demo',
-'test_age', 'age_index')
+        client.index_integer_create('test', 'demo',
+'test_age', 'age_index', policy)
         policy = {}
-        client.index_integer_create(policy, 'test', 'demo',
-'age1', 'age_index1')
+        client.index_integer_create('test', 'demo',
+'age1', 'age_index1', policy)
 
         policy = {}
         filename = "stream_example.lua"
         udf_type = 0
 
-        status = client.udf_put( policy, filename, udf_type )
+        status = client.udf_put( filename, udf_type, policy )
 
         client.close()
 
     def teardown_class(cls):
+        hostlist, user, password = TestBaseClass.get_hosts()
         config = {
-                'hosts': TestBaseClass.hostlist
+                'hosts': hostlist
                 }
-        if TestBaseClass.user == None and TestBaseClass.password == None:
+        if user == None and password == None:
             client = aerospike.client(config).connect()
-	else:
-            client = aerospike.client(config).connect(TestBaseClass.user,
-                    TestBaseClass.password)
-
+        else:
+            client = aerospike.client(config).connect(user, password)
         policy = {}
-        client.index_remove(policy, 'test', 'age_index');
-        client.index_remove(policy, 'test', 'age_index1');
+        client.index_remove('test', 'age_index', policy);
+        client.index_remove('test', 'age_index1', policy);
         policy = { }
         module = "stream_example.lua"
 
-        status = client.udf_remove( policy, module )
+        status = client.udf_remove( module, policy )
         client.close()
 
     def setup_method(self, method):
@@ -117,10 +116,10 @@ class TestAggregate(TestBaseClass):
             query.apply('stream_example', 'count');
 
             result = None
-            def print_result(value):
+            def user_callback(value):
                 result = value
 
-            query.foreach(print_result)
+            query.foreach(user_callback)
         assert exception.value[0] == 201L
         assert exception.value[1] == 'AEROSPIKE_ERR_INDEX_NOT_FOUND'
 
@@ -134,10 +133,10 @@ class TestAggregate(TestBaseClass):
             query.where(p.equals('test_age', 1))
             query.apply('stream_example', 'count')
             result = 1
-            def print_result(value):
+            def user_callback(value):
                 result = value
 
-            query.foreach(print_result)
+            query.foreach(user_callback)
 
         assert exception.value[0] == 4L
         assert exception.value[1] == 'AEROSPIKE_ERR_REQUEST_INVALID'
@@ -151,10 +150,10 @@ class TestAggregate(TestBaseClass):
         query.where(p.equals('test_age', 165))
         query.apply('stream_example', 'count')
         records = []
-        def print_result(value):
+        def user_callback(value):
             records.append(value)
 
-        query.foreach(print_result)
+        query.foreach(user_callback)
         assert records == []
 
     def test_aggregate_with_where_none_value(self):
@@ -167,10 +166,10 @@ class TestAggregate(TestBaseClass):
             query.where(p.equals('test_age', None))
             query.apply('stream_example', 'count')
             result = 1
-            def print_result(value):
+            def user_callback(value):
                 result = value
 
-            query.foreach(print_result)
+            query.foreach(user_callback)
 
         assert exception.value[0] == -2L
         assert exception.value[1] == 'predicate is invalid.'
@@ -184,10 +183,10 @@ class TestAggregate(TestBaseClass):
         query.where(p.between('test_age', True, True))
         query.apply('stream_example', 'count')
         records = []
-        def print_result(value):
+        def user_callback(value):
             records.append(value)
 
-        query.foreach(print_result)
+        query.foreach(user_callback)
         assert records[0] == 1
 
     def test_aggregate_with_where_equals_value(self):
@@ -199,10 +198,10 @@ class TestAggregate(TestBaseClass):
         query.where(p.equals('test_age', 2))
         query.apply('stream_example', 'count')
         records = []
-        def print_result(value):
+        def user_callback(value):
             records.append(value)
 
-        query.foreach(print_result)
+        query.foreach(user_callback)
         assert records[0] == 1
 
     def test_aggregate_with_empty_module_function(self):
@@ -215,10 +214,10 @@ class TestAggregate(TestBaseClass):
         query.apply('', '')
 
         result = None
-        def print_result(value):
+        def user_callback(value):
             result = value
 
-        query.foreach(print_result)
+        query.foreach(user_callback)
         assert result == None
 
     def test_aggregate_with_incorrect_module(self):
@@ -232,13 +231,13 @@ class TestAggregate(TestBaseClass):
             query.apply('streamwrong', 'count')
 
             result = None
-            def print_result(value):
+            def user_callback(value):
                 result = value
 
-            query.foreach(print_result)
+            query.foreach(user_callback)
 
-        assert exception.value[0] == 1L
-        assert exception.value[1] == 'AEROSPIKE_ERR_SERVER : "UDF: Execution Error 1"'
+        assert exception.value[0] == -1L
+        assert exception.value[1] == 'UDF: Execution Error 1'
 
     def test_aggregate_with_incorrect_function(self):
         """
@@ -251,12 +250,12 @@ class TestAggregate(TestBaseClass):
             query.apply('stream_example', 'countno')
 
             records = []
-            def print_result(value):
+            def user_callback(value):
                 records.append(value)
 
-            query.foreach(print_result)
-        assert exception.value[0] == 1L
-        assert exception.value[1] == 'AEROSPIKE_ERR_SERVER : "UDF: Execution Error 2 : function not found"'
+            query.foreach(user_callback)
+        assert exception.value[0] == -1L
+        assert exception.value[1] == 'UDF: Execution Error 2 : function not found'
 
     def test_aggregate_with_correct_parameters(self):
         """
@@ -268,10 +267,10 @@ class TestAggregate(TestBaseClass):
         query.apply('stream_example', 'count')
 
         records = []
-        def print_result(value):
+        def user_callback(value):
             records.append(value)
 
-        query.foreach(print_result)
+        query.foreach(user_callback)
         assert records[0] == 4
 
     def test_aggregate_with_policy(self):
@@ -287,10 +286,10 @@ class TestAggregate(TestBaseClass):
         query.apply('stream_example', 'count')
 
         records = []
-        def print_result(value):
+        def user_callback(value):
             records.append(value)
 
-        query.foreach(print_result, policy)
+        query.foreach(user_callback, policy)
         assert records[0] == 4
 
     def test_aggregate_with_extra_parameter(self):
@@ -308,10 +307,10 @@ class TestAggregate(TestBaseClass):
             query.apply('stream_example', 'count')
 
             result = None
-            def print_result(value):
+            def user_callback(value):
                 result = value
 
-            query.foreach(print_result, policy, "")
+            query.foreach(user_callback, policy, "")
 
         assert "foreach() takes at most 2 arguments (3 given)" in typeError.value
 
@@ -326,10 +325,10 @@ class TestAggregate(TestBaseClass):
         query.apply('stream_example', 'count', [stream])
 
         records = []
-        def print_result(value):
+        def user_callback(value):
             records.append(value)
 
-        query.foreach(print_result)
+        query.foreach(user_callback)
         assert records[0] == 4
 
     def test_aggregate_with_extra_parameter_in_lua(self):
@@ -342,10 +341,10 @@ class TestAggregate(TestBaseClass):
         query.apply('stream_example', 'count_extra')
 
         records = []
-        def print_result(value):
+        def user_callback(value):
             records.append(value)
 
-        query.foreach(print_result)
+        query.foreach(user_callback)
         assert records[0] == 4
 
     def test_aggregate_with_less_parameter_in_lua(self):
@@ -359,9 +358,77 @@ class TestAggregate(TestBaseClass):
             query.apply('stream_example', 'count_less')
 
             records = []
-            def print_result(value):
+            def user_callback(value):
                 records.append(value)
 
-            query.foreach(print_result)
+            query.foreach(user_callback)
 
-        assert exception.value[0] == 1L
+        assert exception.value[0] == -1L
+
+    def test_aggregate_with_arguments_to_lua_function(self):
+        """
+            Invoke aggregate() with unicode arguments to lua function.
+        """
+        query = self.client.query('test', 'demo')
+        query.where(p.between('test_age', 0, 5))
+        query.apply('stream_example', 'group_count', [u"name", u"addr"])
+
+        rec = []
+        def callback(value):
+            rec.append(value)
+
+        query.foreach(callback)
+        assert rec == [{u'name4': 1, u'name2': 1, u'name3': 1, u'name0': 1, u'name1': 1}]
+
+    def test_aggregate_with_unicode_module_and_function_name(self):
+        """
+            Invoke aggregate() with unicode module and function names
+        """
+        query = self.client.query('test', 'demo')
+        query.select(u'name', 'test_age')
+        query.where(p.between('test_age', 1, 5))
+        query.apply(u'stream_example', u'count')
+
+        records = []
+        def user_callback(value):
+            records.append(value)
+
+        query.foreach(user_callback)
+        assert records[0] == 4
+
+    def test_aggregate_with_multiple_foreach_on_same_query_object(self):
+        """
+            Invoke aggregate() with multiple foreach on same query object.
+        """
+        query = self.client.query('test', 'demo')
+        query.select('name', 'test_age')
+        query.where(p.between('test_age', 1, 5))
+        query.apply('stream_example', 'count')
+
+        records = []
+        def user_callback(value):
+            records.append(value)
+
+        query.foreach(user_callback)
+        assert records[0] == 4
+
+        records = []
+        query.foreach(user_callback)
+        assert records[0] == 4
+
+    def test_aggregate_with_multiple_results_call_on_same_query_object(self):
+        """
+            Invoke aggregate() with multiple foreach on same query object.
+        """
+        query = self.client.query('test', 'demo')
+        query.select('name', 'test_age')
+        query.where(p.between('test_age', 1, 5))
+        query.apply('stream_example', 'count')
+
+        records = []
+        records = query.results()
+        assert records[0] == 4
+
+        records = []
+        records = query.results()
+        assert records[0] == 4
