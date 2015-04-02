@@ -249,7 +249,7 @@ try:
         # run the operatons
         for op in operation(r, w):
 
-            key = (options.namespace, options.set, keys[random.randint(0,k)])
+            key = (options.namespace, options.set, keys[random.randint(0,k-1)])
 
             if op == READ_OP:
                 print('[READ] ', key) if options.verbose else 0
