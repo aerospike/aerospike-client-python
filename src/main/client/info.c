@@ -35,35 +35,35 @@ typedef struct foreach_callback_info_udata_t {
 	as_error       error;
 } foreach_callback_info_udata;
 
--/**
-- ********************************************************************************************************
-- * Macros for Info API.
-- ********************************************************************************************************
-- */
+/**
+ ********************************************************************************************************
+ * Macros for Info API.
+ ********************************************************************************************************
+ */
 #define INET_ADDRSTRLEN 16
 #define INET6_ADDRSTRLEN 46
 #define INET_PORT 5
 #define IP_PORT_SEPARATOR_LEN 1
 #define IP_PORT_MAX_LEN INET6_ADDRSTRLEN + INET_PORT + IP_PORT_SEPARATOR_LEN
 
--/**
-- *******************************************************************************************************
-- * Callback for as_info_foreach().
-- *
-- * @param err                   The as_error to be populated by the function
-- *                              with the encountered error if any.
-- * @param node                  The current as_node object for which the
-- *                              callback is fired by c client.
-- * @param req                   The info request string.
-- * @param res                   The info response string for current node.
-- * @pram udata                  The callback udata containing the host_lookup
-- *                              array and the return zval to be populated with
-- *                              an entry for current node's info response with
-- *                              the node's ID as the key.
-- *
-- * Returns true if callback is successful, Otherwise false.
-- *******************************************************************************************************
-- */
+/**
+ *******************************************************************************************************
+ * Callback for as_info_foreach().
+ *
+ * @param err                   The as_error to be populated by the function
+ *                              with the encountered error if any.
+ * @param node                  The current as_node object for which the
+ *                              callback is fired by c client.
+ * @param req                   The info request string.
+ * @param res                   The info response string for current node.
+ * @pram udata                  The callback udata containing the host_lookup
+ *                              array and the return zval to be populated with
+ *                              an entry for current node's info response with
+ *                              the node's ID as the key.
+ *
+ * Returns true if callback is successful, Otherwise false.
+ *******************************************************************************************************
+ */
 static bool AerospikeClient_Info_each(as_error * err, const as_node * node, const char * req, char * res, void * udata)
 {
 	PyObject * py_err = NULL;
@@ -169,19 +169,19 @@ CLEANUP:
 	return true;
 }
 
--/**
-- *******************************************************************************************************
-- * Sends an info request to all the nodes in a cluster.
-- *
-- * @param self                  AerospikeClient object
-- * @param args                  The args is a tuple object containing an argument
-- *                              list passed from Python to a C function
-- * @param kwds                  Dictionary of keywords
-- *
-- * Returns a server response for the particular request string.
-- * In case of error,appropriate exceptions will be raised.
-- *******************************************************************************************************
-- */
+/**
+ *******************************************************************************************************
+ * Sends an info request to all the nodes in a cluster.
+ *
+ * @param self                  AerospikeClient object
+ * @param args                  The args is a tuple object containing an argument
+ *                              list passed from Python to a C function
+ * @param kwds                  Dictionary of keywords
+ *
+ * Returns a server response for the particular request string.
+ * In case of error,appropriate exceptions will be raised.
+ *******************************************************************************************************
+ */
 PyObject * AerospikeClient_Info(AerospikeClient * self, PyObject * args, PyObject * kwds)
 {
 	PyObject * py_req = NULL;
