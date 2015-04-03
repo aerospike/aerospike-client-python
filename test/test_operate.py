@@ -3,6 +3,7 @@ import pytest
 import time
 import sys
 import cPickle as pickle
+from test_base_class import TestBaseClass
 try:
     import aerospike
 except:
@@ -14,10 +15,14 @@ class TestOperate(object):
         """
         Setup method.
         """
+        hostlist, user, password = TestBaseClass.get_hosts()
         config = {
-            'hosts': [('127.0.0.1', 3000)]
-        }
-        TestOperate.client = aerospike.client(config).connect()
+                'hosts': hostlist
+                }
+        if user == None and password == None:
+            TestOperate.client = aerospike.client(config).connect()
+        else:
+            TestOperate.client = aerospike.client(config).connect(user, password)
 
     def teardown_class(cls):
         TestOperate.client.close()
@@ -722,3 +727,35 @@ class TestOperate(object):
         key, meta, bins = TestOperate.client.operate(key, list)
 
         assert bins == {'write_bin' : ('a', 'b', 'c')}
+
+    def test_operate_with_correct_paramters_positive_without_connection(self):
+        """
+        Invoke operate() with correct parameters without connection
+        """
+        key = ('test', 'demo', 1)
+        config = {
+            'hosts': [('127.0.0.1', 3000)]
+        }
+        client1 = aerospike.client(config)
+        list = [
+                {
+                    "op" : aerospike.OPERATOR_PREPEND,
+                    "bin" : "name",
+                    "val" : u"ram"
+                    },
+                {
+                    "op" : aerospike.OPERATOR_INCR,
+                    "bin" : "age",
+                    "val" : 3
+                    },
+                {
+                    "op" : aerospike.OPERATOR_READ,
+                    "bin" : "name"
+                    }
+                ]
+
+        with pytest.raises(Exception) as exception:
+            key, meta, bins = client1.operate(key, list)
+
+        assert exception.value[0] == 11L
+        assert exception.value[1] == 'No connection to aerospike cluster'

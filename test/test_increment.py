@@ -3,6 +3,8 @@ import pytest
 import time
 import sys
 import cPickle as pickle
+from test_base_class import TestBaseClass
+
 try:
     import aerospike
 except:
@@ -14,10 +16,14 @@ class TestIncrement(object):
         """
         Setup method.
         """
+        hostlist, user, password = TestBaseClass.get_hosts()
         config = {
-            'hosts': [('127.0.0.1', 3000)]
-        }
-        TestIncrement.client = aerospike.client(config).connect()
+                'hosts': hostlist
+                }
+        if user == None and password == None:
+            TestIncrement.client = aerospike.client(config).connect()
+        else:
+            TestIncrement.client = aerospike.client(config).connect(user, password)
 
     def teardown_class(cls):
         TestIncrement.client.close()
@@ -116,7 +122,6 @@ class TestIncrement(object):
             'key' : aerospike.POLICY_KEY_SEND
         }
         TestIncrement.client.increment(key, "age", 5, {}, policy)
-
 
         (key , meta, bins) = TestIncrement.client.get(key)
 
@@ -365,3 +370,19 @@ class TestIncrement(object):
         (key , meta, bins) = TestIncrement.client.get(key)
 
         assert bins == { 'age': 11, 'name': 'name1'}
+
+    def test_increment_with_correct_parameters_without_connection(self):
+        """
+        Invoke increment() with correct parameters without connection
+        """
+        key = ('test', 'demo', 1)
+        config = {
+            'hosts': [('127.0.0.1', 3000)]
+        }
+        client1 = aerospike.client(config)
+
+        with pytest.raises(Exception) as exception:
+            client1.increment(key, "age", 5)
+
+        assert exception.value[0] == 11L
+        assert exception.value[1] == 'No connection to aerospike cluster'

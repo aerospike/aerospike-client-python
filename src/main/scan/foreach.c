@@ -128,6 +128,11 @@ PyObject * AerospikeScan_Foreach(AerospikeScan * self, PyObject * args, PyObject
 		goto CLEANUP;
 	}
 
+	if (!self->client->is_conn_16) {
+		as_error_update(&err, AEROSPIKE_ERR_CLUSTER, "No connection to aerospike cluster");
+		goto CLEANUP;
+	}
+
 	// Convert python policy object to as_policy_exists
 	pyobject_to_policy_scan(&err, py_policy, &scan_policy, &scan_policy_p,
 			&self->client->as->config.policies.scan);
@@ -155,7 +160,6 @@ PyObject * AerospikeScan_Foreach(AerospikeScan * self, PyObject * args, PyObject
 
 CLEANUP:
 
-	as_scan_destroy(&self->scan);
 	if ( err.code != AEROSPIKE_OK || data.error.code != AEROSPIKE_OK) {
 		PyObject * py_err = NULL;
 		if ( err.code != AEROSPIKE_OK ){

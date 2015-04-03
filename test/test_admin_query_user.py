@@ -4,6 +4,7 @@
 import pytest
 import sys
 import time
+from test_base_class import TestBaseClass
 
 try:
     import aerospike
@@ -11,17 +12,18 @@ except:
     print "Please install aerospike python client."
     sys.exit(1)
 
-class TestQueryUser(object):
+class TestQueryUser(TestBaseClass):
 
     def setup_method(self, method):
 
         """
         Setup method
         """
+        hostlist, user, password = TestBaseClass().get_hosts()
         config = {
-                "hosts": [("127.0.0.1", 3000)]
+                "hosts": hostlist
                 }
-        self.client = aerospike.client(config).connect( "admin", "admin" )
+        self.client = aerospike.client(config).connect( user, password )
 
         policy = {}
         user = "example"

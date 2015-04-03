@@ -18,6 +18,7 @@
 from __future__ import print_function
 
 import aerospike
+import traceback
 import random
 import signal
 import sys
@@ -259,13 +260,14 @@ try:
             elif op == WRITE_OP:
                 print('[WRITE]', key) if options.verbose else 0
                 rec = {
-                    'key': key[2]
+                        'key': key[2]
                 }
                 client.put(key, rec)
                 count += 1
 
             if options.heap_interval > 0 and (count % options.heap_interval) == 0:
                 print("HEAP@{0}: {1}".format(count, heapy.heap()))
+
 
     except KeyboardInterrupt:
         total_summary()

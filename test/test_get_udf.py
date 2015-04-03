@@ -3,6 +3,7 @@ import pytest
 import time
 import sys
 import cPickle as pickle
+from test_base_class import TestBaseClass
 try:
     import aerospike
 except:
@@ -15,13 +16,17 @@ class TestGetRegistered(object):
         """
         Setup class.
         """
+        hostlist, user, password = TestBaseClass.get_hosts()
         config = {
-            'hosts': [('127.0.0.1', 3000)]
-        }
+                'hosts': hostlist
+                }
+        if user == None and password == None:
+            TestGetRegistered.client = aerospike.client(config).connect()
+        else:
+            TestGetRegistered.client = aerospike.client(config).connect(user, password)
         policy = {
                 'timeout' : 5000
                 }
-        TestGetRegistered.client = aerospike.client(config).connect()
         TestGetRegistered.client.udf_put(u"bin_lua.lua", 0, policy)
 
     def teardown_class(cls):
@@ -204,3 +209,24 @@ class TestGetRegistered(object):
         contents = fo.read()
         assert contents == udf_contents
         fo.close()
+
+    def test_udf_get_with_correct_paramters_without_connection(self):
+        """
+        Invoke udf_get() with correct parameters without connection
+        """
+        module = "bin_lua.lua"
+        language = aerospike.UDF_TYPE_LUA
+        policy = {
+                'timeout' : 5000
+                }
+
+        config = {
+            'hosts': [('127.0.0.1', 3000)]
+        }
+        client1 = aerospike.client(config)
+
+        with pytest.raises(Exception) as exception:
+            udf_contents = client1.udf_get(module, language, policy)
+
+        assert exception.value[0] == 11L
+        assert exception.value[1] == 'No connection to aerospike cluster'

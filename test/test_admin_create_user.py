@@ -3,6 +3,7 @@
 import pytest
 import sys
 import time
+from test_base_class import TestBaseClass
 
 try:
     import aerospike
@@ -10,17 +11,18 @@ except:
     print "Please install aerospike python client."
     sys.exit(1)
 
-class TestCreateUser(object):
+class TestCreateUser(TestBaseClass):
 
     def setup_method(self, method):
 
         """
         Setup method
         """
+        hostlist, user, password = TestBaseClass().get_hosts()
         config = {
-                "hosts": [("127.0.0.1", 3000)]
+                "hosts": hostlist
                 }
-        self.client = aerospike.client(config).connect( "admin", "admin" )
+        self.client = aerospike.client(config).connect( user, password )
 
         self.delete_users = []
 
@@ -319,7 +321,7 @@ class TestCreateUser(object):
         assert status == 0
 
         config = {
-                "hosts": [("127.0.0.1", 3000)]
+                "hosts": TestCreateUser.hostlist
                 }
 
         non_admin_client = None

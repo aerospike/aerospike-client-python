@@ -3,6 +3,7 @@
 import pytest
 import sys
 import time
+from test_base_class import TestBaseClass
 try:
     import aerospike
 except:
@@ -20,11 +21,14 @@ class TestLList(object):
     def setup_class(cls):
 
         print "setup class invoked..."
+        hostlist, user, password = TestBaseClass.get_hosts()
         config = {
-                "hosts": [("127.0.0.1", 3000)]
+                'hosts': hostlist
                 }
-
-        TestLList.client = aerospike.client(config).connect()
+        if user == None and password == None:
+            TestLList.client = aerospike.client(config).connect()
+        else:
+            TestLList.client = aerospike.client(config).connect(user, password)
 
         TestLList.key1 = ('test', 'demo', 'integer_llist_ky')
 

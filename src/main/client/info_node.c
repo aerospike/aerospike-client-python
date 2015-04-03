@@ -61,7 +61,6 @@ static PyObject * AerospikeClient_InfoNode_Invoke(
 	char* address = (char *) self->as->config.hosts[0].addr;
 	long port_no = self->as->config.hosts[0].port;
 	char* response_p = NULL;
-	PyObject *key_op = NULL, *value = NULL;
 	as_status status = AEROSPIKE_OK;
 
 	as_error err;
@@ -69,6 +68,11 @@ static PyObject * AerospikeClient_InfoNode_Invoke(
 
 	if (!self || !self->as) {
 		as_error_update(&err, AEROSPIKE_ERR_PARAM, "Invalid aerospike object");
+		goto CLEANUP;
+	}
+
+	if (!self->is_conn_16) {
+		as_error_update(&err, AEROSPIKE_ERR_CLUSTER, "No connection to aerospike cluster");
 		goto CLEANUP;
 	}
 
@@ -284,6 +288,16 @@ static PyObject * AerospikeClient_GetNodes_Invoke(
 
 	as_error err;
 	as_error_init(&err);
+
+	if (!self || !self->as) {
+		as_error_update(&err, AEROSPIKE_ERR_PARAM, "Invalid aerospike object");
+		goto CLEANUP;
+	}
+
+	if (!self->is_conn_16) {
+		as_error_update(&err, AEROSPIKE_ERR_CLUSTER, "No connection to aerospike cluster");
+		goto CLEANUP;
+	}
 
 	PyObject * py_req_str = NULL;
 	py_req_str = PyString_FromString("services");

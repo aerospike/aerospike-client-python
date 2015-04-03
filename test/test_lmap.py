@@ -3,6 +3,7 @@
 import pytest
 import sys
 import time
+from test_base_class import TestBaseClass
 try:
     import aerospike
 except:
@@ -18,11 +19,14 @@ class TestLMap(object):
     def setup_class(cls):
 
         print "setup class invoked..."
+        hostlist, user, password = TestBaseClass.get_hosts()
         config = {
-                "hosts": [("192.168.5.108", 3000)]
+                'hosts': hostlist
                 }
-
-        TestLMap.client = aerospike.client(config).connect()
+        if user == None and password == None:
+            TestLMap.client = aerospike.client(config).connect()
+        else:
+            TestLMap.client = aerospike.client(config).connect(user, password)
 
         TestLMap.key = ('test', 'demo', 'lmap_add_key')
 

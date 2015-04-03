@@ -3,6 +3,7 @@
 import pytest
 import sys
 import time
+from test_base_class import TestBaseClass
 import cPickle as pickle
 
 try:
@@ -26,10 +27,14 @@ class TestSerializer(object):
         """
             Setup class
         """
+        hostlist, user, password = TestBaseClass.get_hosts()
         config = {
-                "hosts": [("127.0.0.1", 3000)]
+                'hosts': hostlist
                 }
-        TestSerializer.client = aerospike.client(config).connect()
+        if user == None and password == None:
+            TestSerializer.client = aerospike.client(config).connect()
+        else:
+            TestSerializer.client = aerospike.client(config).connect(user, password)
         response = aerospike.set_serializer(serialize_function)
         response = aerospike.set_deserializer(deserialize_function)
 

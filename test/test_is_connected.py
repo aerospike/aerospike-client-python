@@ -3,6 +3,7 @@ import pytest
 import time
 import sys
 import cPickle as pickle
+from test_base_class import TestBaseClass
 try:
     import aerospike
 except:
@@ -25,10 +26,14 @@ class TestIsconnected(object):
         """
         Invoke isconnected() positive.
         """
+        hostlist, user, password = TestBaseClass.get_hosts()
         config = {
-            'hosts': [('127.0.0.1', 3000)]
-        }
-        self.client = aerospike.client(config).connect()
+                'hosts': hostlist
+                }
+        if user == None and password == None:
+            self.client = aerospike.client(config).connect()
+        else:
+            self.client = aerospike.client(config).connect(user, password)
         if self.client.isConnected():
             assert True == True
         else:
@@ -40,9 +45,10 @@ class TestIsconnected(object):
         """
         Invoke isconnected() before connect
         """
+        hostlist, user, password = TestBaseClass.get_hosts()
         config = {
-            'hosts': [('127.0.0.1', 3000)]
-        }
+                'hosts': hostlist
+                }
         self.client = aerospike.client(config)
         if self.client.isConnected():
             assert True == False
@@ -61,10 +67,14 @@ class TestIsconnected(object):
         """
         Invoke isconnected() positive.
         """
+        hostlist, user, password = TestBaseClass.get_hosts()
         config = {
-            'hosts': [('127.0.0.1', 3000)]
-        }
-        self.client = aerospike.client(config).connect()
+                'hosts': hostlist
+                }
+        if user == None and password == None:
+            self.client = aerospike.client(config).connect()
+        else:
+            self.client = aerospike.client(config).connect(user, password)
 
         self.client.close()
         if self.client.isConnected():

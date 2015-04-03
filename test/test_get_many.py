@@ -2,6 +2,7 @@
 
 import pytest
 import sys
+from test_base_class import TestBaseClass
 
 try:
     import aerospike
@@ -9,15 +10,19 @@ except:
     print "Please install aerospike python client."
     sys.exit(1)
 
-class TestGetMany(object):
+class TestGetMany(TestBaseClass):
     def setup_class(cls):
         """
         Setup method.
         """
+        hostlist, user, password = TestBaseClass.get_hosts()
         config = {
-                'hosts': [('127.0.0.1', 3000)]
+                'hosts': hostlist
                 }
-        TestGetMany.client = aerospike.client(config).connect()
+        if user == None and password == None:
+            TestGetMany.client = aerospike.client(config).connect()
+        else:
+            TestGetMany.client = aerospike.client(config).connect(user, password)
 
     def teardown_class(cls):
         TestGetMany.client.close()
@@ -171,3 +176,15 @@ class TestGetMany(object):
         assert len(records.keys()) == 11
         assert records.keys() == [0, 1, 2, 3, 4, 'some_key', 15, 16, 17, 18, 19]
         assert records['some_key'] == None
+
+    def test_get_many_with_proper_parameters_without_connection(self):
+        config = {
+                'hosts': [('127.0.0.1', 3000)]
+                }
+        client1 = aerospike.client(config)
+
+        with pytest.raises(Exception) as exception:
+            records = client1.get_many( self.keys, { 'timeout': 3 } )
+
+        assert exception.value[0] == 11L
+        assert exception.value[1] == 'No connection to aerospike cluster'

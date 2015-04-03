@@ -2,6 +2,7 @@
 
 import pytest
 import sys
+from test_base_class import TestBaseClass
 
 try:
     import aerospike
@@ -10,18 +11,22 @@ except:
     sys.exit(1)
 
 
-class TestScan(object):
+class TestScan(TestBaseClass):
 
     def setup_method(self, method):
 
         """
         Setup method.
         """
+        hostlist, user, password = TestBaseClass.get_hosts()
         config = {
-                'hosts': [('127.0.0.1', 3000)]
+                'hosts': hostlist
                 }
-        self.client = aerospike.client(config).connect()
-
+        if user == None and password == None:
+            self.client = aerospike.client(config).connect()
+        else:
+            self.client = aerospike.client(config).connect(user, password)
+    
         for i in xrange(20):
             key = ('test', u'demo', i)
             rec = {
@@ -117,10 +122,9 @@ class TestScan(object):
         scan_obj.foreach(callback, { 'timeout' : 2000 })
 
         assert len(records) != 0
-    """
+
     def test_scan_with_callback_contains_error(self):
 
-            #Invoke scan() with callback function returns false
         ns = 'test'
         st = 'demo'
 
@@ -132,10 +136,10 @@ class TestScan(object):
 
         scan_obj = self.client.scan(ns, st)
 
-        scan_obj.foreach(callback, { 'timeout' : 1000 })
-
-        assert len(records) == 0
-    """
+        with pytest.raises(Exception) as exception:
+            scan_obj.foreach(callback, { 'timeout' : 1000 })
+        assert exception.value[0] == -2L
+        assert exception.value[1] == "Callback function contains an error"
 
     def test_scan_with_callback_returning_false(self):
 
@@ -315,3 +319,44 @@ class TestScan(object):
 
         assert exception.value[0] == -2L
         assert exception.value[1] == 'Invalid value(type) for nobins'
+
+    def test_scan_with_multiple_foreach_on_same_scan_object(self):
+
+        """
+            Invoke multiple foreach on same scan object.
+        """
+        ns = 'test'
+        st = 'demo'
+
+        records = []
+
+        def callback( (key, meta, bins) ):
+            records.append(bins)
+
+        scan_obj = self.client.scan(ns, st)
+
+        scan_obj.foreach(callback)
+
+        assert len(records) != 0
+
+        records = []
+        scan_obj.foreach(callback)
+
+        assert len(records) != 0
+
+    def test_scan_with_multiple_results_call_on_same_scan_object(self):
+
+        ns = 'test'
+        st = 'demo'
+
+        scan_obj = self.client.scan(ns, st)
+
+        scan_obj.select(u'name', u'age')
+
+        records = []
+        records = scan_obj.results()
+        assert len(records) != 0
+
+        records = []
+        records = scan_obj.results()
+        assert len(records) != 0

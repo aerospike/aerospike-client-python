@@ -129,6 +129,11 @@ PyObject * AerospikeQuery_Foreach(AerospikeQuery * self, PyObject * args, PyObje
 		goto CLEANUP;
 	}
 
+	if (!self->client->is_conn_16) {
+		as_error_update(&err, AEROSPIKE_ERR_CLUSTER, "No connection to aerospike cluster");
+		goto CLEANUP;
+	}
+
 	// Convert python policy object to as_policy_exists
 	pyobject_to_policy_query(&err, py_policy, &query_policy, &query_policy_p,
 			&self->client->as->config.policies.query);
@@ -153,8 +158,6 @@ CLEANUP:
 		as_arraylist_destroy( (as_arraylist *) self->query.apply.arglist );
 	}
 	self->query.apply.arglist = NULL;
-
-	as_query_destroy(&self->query);
 
 	if ( err.code != AEROSPIKE_OK || data.error.code != AEROSPIKE_OK ) {
 		PyObject * py_err = NULL;

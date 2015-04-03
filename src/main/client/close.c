@@ -39,6 +39,19 @@ PyObject * AerospikeClient_Close(AerospikeClient * self, PyObject * args, PyObje
 {
 	as_error err;
 
+	// Initialize error
+	as_error_init(&err);
+
+	if (!self || !self->as) {
+		as_error_update(&err, AEROSPIKE_ERR_PARAM, "Invalid aerospike object");
+		goto CLEANUP;
+	}
+
+	if (!self->is_conn_16) {
+		as_error_update(&err, AEROSPIKE_ERR_CLUSTER, "No connection to aerospike cluster");
+		goto CLEANUP;
+	}
+
 	aerospike_close(self->as, &err);
 
 	if ( err.code != AEROSPIKE_OK ) {
@@ -52,5 +65,13 @@ PyObject * AerospikeClient_Close(AerospikeClient * self, PyObject * args, PyObje
 	self->as = NULL;
 
 	Py_INCREF(Py_None);
+CLEANUP:
+	if ( err.code != AEROSPIKE_OK ) {
+		PyObject * py_err = NULL;
+		error_to_pyobject(&err, &py_err);
+		PyErr_SetObject(PyExc_Exception, py_err);
+		Py_DECREF(py_err);
+		return NULL;
+	}
 	return Py_None;
 }

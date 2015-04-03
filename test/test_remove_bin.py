@@ -3,6 +3,7 @@ import pytest
 import sys
 import time
 import cPickle as pickle
+from test_base_class import TestBaseClass
 
 try:
     import aerospike
@@ -15,10 +16,14 @@ class TestRemovebin(object):
         """
         Setup class.
         """
+        hostlist, user, password = TestBaseClass.get_hosts()
         config = {
-            'hosts': [('127.0.0.1', 3000)]
-        }
-        TestRemovebin.client = aerospike.client(config).connect()
+                'hosts': hostlist
+                }
+        if user == None and password == None:
+            TestRemovebin.client = aerospike.client(config).connect()
+        else:
+            TestRemovebin.client = aerospike.client(config).connect(user, password)
 
     def teardown_class(cls):
         TestRemovebin.client.close()
@@ -367,3 +372,20 @@ class TestRemovebin(object):
         (key , meta, bins) = TestRemovebin.client.get(key)
 
         assert bins == None
+
+    def test_remove_bin_with_correct_parameters_without_connection(self):
+        """
+        Invoke remove_bin() with correct parameters without connection
+        """
+        config = {
+            'hosts': [('127.0.0.1', 3000)]
+        }
+        client1 = aerospike.client(config)
+
+        key = ('test', 'demo', 1)
+
+        with pytest.raises(Exception) as exception:
+            client1.remove_bin(key, ["age"])
+
+        assert exception.value[0] == 11L
+        assert exception.value[1] == 'No connection to aerospike cluster'

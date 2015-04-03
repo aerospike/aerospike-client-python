@@ -3,6 +3,7 @@
 import pytest
 import sys
 import time
+from test_base_class import TestBaseClass
 
 try:
     import aerospike
@@ -10,14 +11,18 @@ except:
     print "Please install aerospike python client."
     sys.exit(1)
 
-class TestUdfPut(object):
+class TestUdfPut(TestBaseClass):
     def setup_class(cls):
         """
         Setup class
         """
-        config = { 'hosts' : [ ('127.0.0.1', 3000) ] }
+        hostlist, user, password = TestBaseClass.get_hosts()
+        config = { 'hosts' : hostlist }
 
-        TestUdfPut.client = aerospike.client(config).connect()
+        if user == None and password == None:
+            TestUdfPut.client = aerospike.client(config).connect()
+        else:
+            TestUdfPut.client = aerospike.client(config).connect(user, password)
 
     def teardown_class(cls):
         TestUdfPut.client.close()
@@ -43,7 +48,7 @@ class TestUdfPut(object):
         with pytest.raises(TypeError) as typeError:
             TestUdfPut.client.udf_put()
 
-        assert "Required argument 'policy' (pos 1) not found" in typeError.value
+        assert "Required argument 'filename' (pos 1) not found" in typeError.value
 
     def test_udf_put_with_proper_parameters(self):
 
@@ -143,3 +148,19 @@ class TestUdfPut(object):
                 present = True
 
         assert True if present else False
+
+    def test_udf_put_with_proper_parameters_without_connection(self):
+
+        policy = {}
+        filename = "example.lua"
+        udf_type = 0
+
+        config = { 'hosts' : [ ('127.0.0.1', 3000) ] }
+
+        client1 = aerospike.client(config)
+
+        with pytest.raises(Exception) as exception:
+            status = client1.udf_put( filename, udf_type, policy )
+
+        assert exception.value[0] == 11L
+        assert exception.value[1] == 'No connection to aerospike cluster'

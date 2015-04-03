@@ -2,6 +2,7 @@
 
 import pytest
 import sys
+from test_base_class import TestBaseClass
 
 try:
     import aerospike
@@ -14,10 +15,14 @@ class TestSelectMany(object):
         """
         Setup method.
         """
+        hostlist, user, password = TestBaseClass.get_hosts()
         config = {
-                'hosts': [('127.0.0.1', 3000)]
+                'hosts': hostlist
                 }
-        TestSelectMany.client = aerospike.client(config).connect()
+        if user == None and password == None:
+            TestSelectMany.client = aerospike.client(config).connect()
+        else:
+            TestSelectMany.client = aerospike.client(config).connect(user, password)
 
     def teardown_class(cls):
         TestSelectMany.client.close()
@@ -218,3 +223,18 @@ class TestSelectMany(object):
 
         assert type(records) == dict
         assert len(records.keys()) == 5
+
+    def test_select_many_with_proper_parameters_without_connection(self):
+
+        config = {
+                'hosts': [('127.0.0.1', 3000)]
+                }
+        client1 = aerospike.client(config)
+
+        filter_bins = [ 'title', 'name' ]
+
+        with pytest.raises(Exception) as exception:
+            records = client1.select_many( self.keys, filter_bins, { 'timeout': 3 } )
+
+        assert exception.value[0] == 11L
+        assert exception.value[1] == 'No connection to aerospike cluster'

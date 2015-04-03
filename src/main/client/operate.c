@@ -157,8 +157,6 @@ void AerospikeClient_CheckForMeta(PyObject * py_meta, as_operations * ops, as_er
  * @param py_list               The list containing op, bin and value.
  * @param py_meta               The metadata for the operation.
  * @param operate_policy_p      The value for operate policy.
- *
- * Returns 0 on success.
  *******************************************************************************************************
  */
 static
@@ -395,7 +393,6 @@ CLEANUP:
  */
 PyObject * AerospikeClient_Append(AerospikeClient * self, PyObject * args, PyObject * kwds)
 {
-
 	// Initialize error
 	as_error err;
 	as_error_init(&err);
@@ -423,6 +420,11 @@ PyObject * AerospikeClient_Append(AerospikeClient * self, PyObject * args, PyObj
 
 	if (!self || !self->as) {
 		as_error_update(&err, AEROSPIKE_ERR_PARAM, "Invalid aerospike object");
+		goto CLEANUP;
+	}
+
+	if (!self->is_conn_16) {
+		as_error_update(&err, AEROSPIKE_ERR_CLUSTER, "No connection to aerospike cluster");
 		goto CLEANUP;
 	}
 
@@ -503,6 +505,11 @@ PyObject * AerospikeClient_Prepend(AerospikeClient * self, PyObject * args, PyOb
 
 	if (!self || !self->as) {
 		as_error_update(&err, AEROSPIKE_ERR_PARAM, "Invalid aerospike object");
+		goto CLEANUP;
+	}
+
+	if (!self->is_conn_16) {
+		as_error_update(&err, AEROSPIKE_ERR_CLUSTER, "No connection to aerospike cluster");
 		goto CLEANUP;
 	}
 
@@ -589,6 +596,11 @@ PyObject * AerospikeClient_Increment(AerospikeClient * self, PyObject * args, Py
 		goto CLEANUP;
 	}
 
+	if (!self->is_conn_16) {
+		as_error_update(&err, AEROSPIKE_ERR_CLUSTER, "No connection to aerospike cluster");
+		goto CLEANUP;
+	}
+
 	py_result = AerospikeClient_convert_pythonObj_to_asType(self, &err,
 			py_key, py_policy, &key, &operate_policy, &operate_policy_p);
 
@@ -669,6 +681,11 @@ PyObject * AerospikeClient_Touch(AerospikeClient * self, PyObject * args, PyObje
 		goto CLEANUP;
 	}
 
+	if (!self->is_conn_16) {
+		as_error_update(&err, AEROSPIKE_ERR_CLUSTER, "No connection to aerospike cluster");
+		goto CLEANUP;
+	}
+
 	py_result = AerospikeClient_convert_pythonObj_to_asType(self, &err,
 			py_key, py_policy, &key, &operate_policy, &operate_policy_p);
 	if (!py_result) {
@@ -745,6 +762,11 @@ PyObject * AerospikeClient_Operate(AerospikeClient * self, PyObject * args, PyOb
 
 	if (!self || !self->as) {
 		as_error_update(&err, AEROSPIKE_ERR_PARAM, "Invalid aerospike object");
+		goto CLEANUP;
+	}
+
+	if (!self->is_conn_16) {
+		as_error_update(&err, AEROSPIKE_ERR_CLUSTER, "No connection to aerospike cluster");
 		goto CLEANUP;
 	}
 

@@ -4,6 +4,7 @@ import time
 import sys
 import cPickle as pickle
 import socket
+from test_base_class import TestBaseClass
 
 try:
     import aerospike
@@ -17,10 +18,14 @@ class TestInfoNode(object):
         """
         Setup class.
         """
+        hostlist, user, password = TestBaseClass.get_hosts()
         config = {
-            'hosts': [('127.0.0.1', 3000)]
-        }
-        TestInfoNode.client = aerospike.client(config).connect()
+                'hosts': hostlist
+                }
+        if user == None and password == None:
+            TestInfoNode.client = aerospike.client(config).connect()
+        else:
+            TestInfoNode.client = aerospike.client(config).connect(user, password)
 
     def teardown_class(cls):
         """
@@ -280,3 +285,20 @@ class TestInfoNode(object):
 
         assert exception.value[0] == 9L
         assert exception.value[1] == ""
+
+    def test_info_node_positive_without_connection(self):
+        """
+        Test info with correct arguments without connection
+        """
+        key = ('test', 'demo', 'list_key')
+
+        config = {
+            'hosts': [('127.0.0.1', 3000)]
+        }
+        client1 = aerospike.client(config)
+
+        with pytest.raises(Exception) as exception:
+            response = client1.info_node('bins', ('127.0.0.1', 3000))
+
+        assert exception.value[0] == 11L
+        assert exception.value[1] == 'No connection to aerospike cluster'

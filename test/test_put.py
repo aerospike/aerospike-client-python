@@ -4,6 +4,7 @@ import pytest
 import sys
 import time
 import cPickle as pickle
+from test_base_class import TestBaseClass
 from collections import OrderedDict
 
 try:
@@ -12,16 +13,20 @@ except:
     print "Please install aerospike python client."
     sys.exit(1)
 
-class TestPut(object):
+class TestPut(TestBaseClass):
 
     def setup_class(cls):
         """
             Setup class
         """
+        hostlist, user, password = TestBaseClass.get_hosts()
         config = {
-                "hosts": [("127.0.0.1", 3000)]
+                "hosts": hostlist
                 }
-        TestPut.client = aerospike.client(config).connect()
+        if user == None and password == None:
+            TestPut.client = aerospike.client(config).connect()
+        else:
+            TestPut.client = aerospike.client(config).connect(user, password)
 
     def teardown_class(cls):
         TestPut.client.close()
@@ -1200,3 +1205,39 @@ class TestPut(object):
         assert bins == {'pi': bytearray(b'F3.1400000000000001\n.')}
 
         self.delete_keys.append( key )
+
+    def test_put_record_with_bin_name_exceeding_max_limit(self):
+        """
+            Invoke put() with bin name exceeding the max limit of bin name.
+        """
+        key = ('test', 'demo', 'put_rec')
+        put_record = {'containers_free': [], 'containers_used': [{'cluster_id': 'bob', 'container_id': 1,
+            'port': 4000}], 'list_of_map': [{'test': 'bar'}], 'map_of_list': {'fizz': ['b', 'u', 'z', 'z']},
+            'ports_free': [],'ports_unused': [4100, 4200, 4300], 'provider_id' :
+            u'i-f01fc206'}
+
+        with pytest.raises(Exception) as exception:
+            TestPut.client.put( key, put_record)
+
+        assert exception.value[0] == 21L
+        assert exception.value[1] == "A bin name should not exceed 14 characters limit"
+
+    def test_put_with_string_record_without_connection(self):
+
+        """
+            Invoke put() for a record with string data without connection
+        """
+        config = {
+                "hosts": [("127.0.0.1", 3000)]
+                }
+        client1 = aerospike.client(config)
+
+        key = ('test', 'demo', 1)
+
+        bins = { "name" : "John" }
+
+        with pytest.raises(Exception) as exception:
+            client1.put( key, bins )
+
+        assert exception.value[0] == 11L
+        assert exception.value[1] == 'No connection to aerospike cluster'

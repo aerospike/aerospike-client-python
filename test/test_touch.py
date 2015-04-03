@@ -3,6 +3,7 @@ import pytest
 import time
 import sys
 import cPickle as pickle
+from test_base_class import TestBaseClass
 try:
     import aerospike
 except:
@@ -14,10 +15,14 @@ class TestTouch(object):
         """
         Setup method.
         """
+        hostlist, user, password = TestBaseClass.get_hosts()
         config = {
-            'hosts': [('127.0.0.1', 3000)]
-        }
-        TestTouch.client = aerospike.client(config).connect()
+                'hosts': hostlist
+                }
+        if user == None and password == None:
+            TestTouch.client = aerospike.client(config).connect()
+        else:
+            TestTouch.client = aerospike.client(config).connect(user, password)
 
     def teardown_class(cls):
         TestTouch.client.close()
@@ -313,3 +318,19 @@ class TestTouch(object):
 
         assert exception.value[0] == -2
         assert exception.value[1] == "policy must be a dict"
+
+    def test_touch_with_correct_paramters_without_connection(self):
+        """
+        Invoke touch() with correct parameters without connection
+        """
+        config = {
+            'hosts': [('127.0.0.1', 3000)]
+        }
+        client1 = aerospike.client(config)
+        key = ('test', 'demo', 1)
+
+        with pytest.raises(Exception) as exception:
+            response = client1.touch(key, 120)
+
+        assert exception.value[0] == 11L
+        assert exception.value[1] == 'No connection to aerospike cluster'

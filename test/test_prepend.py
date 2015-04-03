@@ -3,6 +3,7 @@ import pytest
 import time
 import sys
 import cPickle as pickle
+from test_base_class import TestBaseClass
 try:
     import aerospike
 except:
@@ -14,10 +15,14 @@ class TestPrepend(object):
         """
         Setup method.
         """
+        hostlist, user, password = TestBaseClass.get_hosts()
         config = {
-            'hosts': [('127.0.0.1', 3000)]
-        }
-        TestPrepend.client = aerospike.client(config).connect()
+                'hosts': hostlist
+                }
+        if user == None and password == None:
+            TestPrepend.client = aerospike.client(config).connect()
+        else:
+            TestPrepend.client = aerospike.client(config).connect(user, password)
 
     def teardown_class(cls):
         TestPrepend.client.close()
@@ -389,3 +394,19 @@ class TestPrepend(object):
 
         key, meta, bins = TestPrepend.client.get(key)
         assert bins['add'] == 'address'
+
+    def test_prepend_with_correct_parameters_without_connection(self):
+        """
+        Invoke prepend() with correct parameters without connection
+        """
+        config = {
+            'hosts': [('127.0.0.1', 3000)]
+        }
+        client1 = aerospike.client(config)
+        key = ('test', 'demo', 1)
+
+        with pytest.raises(Exception) as exception:
+            client1.prepend(key, "name", "str")
+
+        assert exception.value[0] == 11L
+        assert exception.value[1] == 'No connection to aerospike cluster'

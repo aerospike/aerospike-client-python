@@ -3,6 +3,7 @@
 import pytest
 import sys
 import time
+from test_base_class import TestBaseClass
 try:
     import aerospike
 except:
@@ -18,11 +19,14 @@ class TestLSet(object):
     def setup_class(cls):
 
         print "setup class invoked..."
+        hostlist, user, password = TestBaseClass.get_hosts()
         config = {
-                "hosts": [("127.0.0.1", 3000)]
+                'hosts': hostlist
                 }
-
-        TestLSet.client = aerospike.client(config).connect()
+        if user == None and password == None:
+            TestLSet.client = aerospike.client(config).connect()
+        else:
+            TestLSet.client = aerospike.client(config).connect(user, password)
 
         TestLSet.key = ('test', 'demo', 'lset_add_key')
 

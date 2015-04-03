@@ -3,6 +3,7 @@
 import pytest
 import sys
 import cPickle as pickle
+from test_base_class import TestBaseClass
 
 try:
     import aerospike
@@ -15,15 +16,19 @@ class SomeClass(object):
     pass
 
 
-class TestGet(object):
+class TestGet(TestBaseClass):
     def setup_class(cls):
         """
         Setup method.
         """
+        hostlist, user, password = TestBaseClass.get_hosts()
         config = {
-                'hosts': [('127.0.0.1', 3000)]
+                'hosts': hostlist
                 }
-        TestGet.client = aerospike.client(config).connect()
+        if user == None and password == None:
+            TestGet.client = aerospike.client(config).connect()
+        else:
+            TestGet.client = aerospike.client(config).connect(user, password)
 
     def teardown_class(cls):
         TestGet.client.close()
@@ -396,3 +401,20 @@ class TestGet(object):
         assert bins == { 'name' : 'john', 'age': 1 }
         assert key == ('test', 'demo', 1,
                 bytearray(b'\xb7\xf4\xb88\x89\xe2\xdag\xdeh>\x1d\xf6\x91\x9a\x1e\xac\xc4F\xc8'))
+
+    def test_get_with_only_key_no_connection(self):
+
+        """
+            Invoke get() with a key and not policy's dict no connection
+        """
+        key = ('test', 'demo', 1)
+        config = {
+                'hosts': [('127.0.0.1', 3000)]
+                }
+        client1 = aerospike.client(config)
+
+        with pytest.raises(Exception) as exception:
+            key, meta, bins = client1.get( key )
+
+        assert exception.value[0] == 11L
+        assert exception.value[1] == 'No connection to aerospike cluster'

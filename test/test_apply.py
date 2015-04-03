@@ -4,6 +4,8 @@
 import pytest
 import sys
 import cPickle as pickle
+from test_base_class import TestBaseClass
+
 try:
     import aerospike
 except:
@@ -11,19 +13,24 @@ except:
     sys.exit(1)
 
 from aerospike import predicates as p
-class TestApply(object):
+class TestApply(TestBaseClass):
 
     def setup_class(cls):
+        hostlist, user, password = TestBaseClass.get_hosts()
         config = {
-                'hosts': [('127.0.0.1', 3000)]
+                'hosts': hostlist
                 }
-        TestApply.client = aerospike.client(config).connect()
+        if user == None and password == None:
+            TestApply.client = aerospike.client(config).connect()
+        else:
+            TestApply.client = aerospike.client(config).connect(user, password)
+
         policy = {}
-        TestApply.client.index_integer_create(policy, 'test', 'demo',
-'age', 'age_index')
+        TestApply.client.index_integer_create('test', 'demo',
+'age', 'age_index', policy)
         policy = {}
-        TestApply.client.index_integer_create(policy, 'test', 'demo',
-'age1', 'age_index1')
+        TestApply.client.index_integer_create('test', 'demo',
+'age1', 'age_index1', policy)
 
         policy = {}
         filename = "sample.lua"
@@ -35,8 +42,8 @@ class TestApply(object):
 
     def teardown_class(cls):
         policy = {}
-        TestApply.client.index_remove(policy, 'test', 'age_index');
-        TestApply.client.index_remove(policy, 'test', 'age_index1');
+        TestApply.client.index_remove('test', 'age_index', policy);
+        TestApply.client.index_remove('test', 'age_index1', policy);
         policy = { 'timeout' : 0 }
         module = "sample.lua"
 
@@ -328,3 +335,18 @@ class TestApply(object):
 
         assert bins['name'] == ['name1', 'car']
         assert retval == 0
+
+    def test_apply_with_correct_parameters_without_connection(self):
+        """
+            Invoke apply() with correct arguments without connection
+        """
+        key = ('test', 'demo', 1)
+        config = {
+                'hosts': [('127.0.0.1', 3000)]
+                }
+        client1 = aerospike.client(config)
+        with pytest.raises(Exception) as exception:
+            retval = client1.apply(key, 'sample', 'list_append', ['name', 'car'])
+
+        assert exception.value[0] == 11L
+        assert exception.value[1] == 'No connection to aerospike cluster'
