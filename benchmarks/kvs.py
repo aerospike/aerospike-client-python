@@ -25,8 +25,10 @@ import string
 import time
 
 from guppy import hpy
-from threading import Timer
 from optparse import OptionParser
+import time
+import copy
+from tabulate import tabulate
 
 ################################################################################
 # Options Parsing
@@ -112,6 +114,18 @@ optparser.add_option(
     "--keys", dest="keys", type="int", default=1000000,
     help="Number of unique keys")
 
+optparser.add_option(
+    "-l", "--latency", dest="latency", type="string", default="4,1",
+    help= "<number of latency columns>,<range shift increment> Show transaction latency percentages using elapsed time ranges.\
+    <number of latency columns>: Number of elapsed time ranges. <range shift increment>: Power of 2 multiple between each range starting at column 3.\
+    A latency definition of '-latency 7,1' results in this layout:\
+        <=1ms >1ms >2ms >4ms >8ms >16ms >32ms\
+           x%   x%   x%   x%   x%    x%    x%\
+    A latency definition of '-latency 4,3' results in this layout:\
+        <=1ms >1ms >8ms >64ms\
+           x%   x%   x%    x%\
+    Latency columns are cumulative. If a transaction takes 9ms, it will be included in both the >1ms and >8ms columns.")
+
 (options, args) = optparser.parse_args()
 
 if options.help:
@@ -184,10 +198,45 @@ k = options.keys
 r = options.reads
 w = options.writes
 
-count = 0
+total_count = 0
+read_count = 0
+write_count = 0
 start = 0
 intervals = []
 heapy = hpy()
+
+no_of_buckets, range_increment = [int(elem.strip()) for elem in options.latency.split(',')]
+
+__buckets = [0, 1] + [ elem << i for i in [0] for elem in [1]*(no_of_buckets - 2) for i in [ i + range_increment ]]
+
+# Separate buckets for read / write latency data
+read_bucket = dict.fromkeys( __buckets, 0 )
+write_bucket = copy.deepcopy(read_bucket)
+
+# return current time in ms
+current_milliseconds_time = lambda: int(round(time.time() * 1000))
+
+# returns latency table headers
+def get_latency_table_headers():
+    headers = ["", "<=1ms", ">1ms"] + [ ">{0}ms".format(i) for i in __buckets[2:] ]
+    return headers
+
+# manages the read / write operations counter in latency dictionaries
+def increment_counters(bucket, time_in_millisecond):
+    if time_in_millisecond <= 0:
+        bucket[0] += 1
+    for key in bucket.keys():
+        if time_in_millisecond >= key > 0:
+            bucket[key] += 1
+
+# format the output as per tabulate standard and calculate percentages as well
+def interprete_summary():
+    global total_count, read_count, write_count, read_bucket, write_bucket
+
+    read_summary = [ 'read' ] + [ '{0}%'.format(int(round(read_bucket[key] * 100/read_count))) for key in read_bucket.keys()]
+    write_summary = [ 'write' ] + [ '{0}%'.format(int(round(write_bucket[key] * 100/write_count))) for key in write_bucket.keys()]
+
+    return read_summary, write_summary
 
 def total_summary():
 
@@ -200,8 +249,12 @@ def total_summary():
     print()
     print("Summary:")
     print("     {0} keys generated".format(k))
-    print("     {0} seconds for {1} operations".format(elapse, count))
-    print("     {0} operations per second".format(count / elapse))
+    print("     {0} seconds for {1} operations".format(elapse, total_count))
+    print("     {0} operations per second".format(total_count / elapse))
+    print()
+    print("Latency stats:")
+    table = [ info for info in interprete_summary() ]
+    print(tabulate(table, headers=get_latency_table_headers()))
     print()
     print("Heap: ")
     print(heapy.heap())
@@ -253,19 +306,29 @@ try:
 
             if op == READ_OP:
                 print('[READ] ', key) if options.verbose else 0
+                now = current_milliseconds_time()
                 result = client.exists(key)
-                count += 1
+                elapsed = current_milliseconds_time() - now
+                print('[READ ELAPSED] {0}ms'.format(elapsed)) if options.verbose else 0
+                increment_counters(read_bucket, elapsed)
+                total_count += 1
+                read_count += 1
 
             elif op == WRITE_OP:
                 print('[WRITE]', key) if options.verbose else 0
                 rec = {
                     'key': key[2]
                 }
+                now = current_milliseconds_time()
                 client.put(key, rec)
-                count += 1
+                elapsed = current_milliseconds_time() - now
+                print('[WRITE ELAPSED] {0}ms'.format(elapsed)) if options.verbose else 0
+                increment_counters(write_bucket, elapsed)
+                total_count += 1
+                write_count += 1
 
-            if options.heap_interval > 0 and (count % options.heap_interval) == 0:
-                print("HEAP@{0}: {1}".format(count, heapy.heap()))
+            if options.heap_interval > 0 and (total_count % options.heap_interval) == 0:
+                print("HEAP@{0}: {1}".format(total_count, heapy.heap()))
 
     except KeyboardInterrupt:
         total_summary()
