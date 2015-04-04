@@ -34,6 +34,10 @@ from tabulate import tabulate
 # Options Parsing
 ################################################################################
 
+"""
+TODO: change optparse to argparse
+optparse is deprecated from Python V2.7
+"""
 usage = "usage: %prog [options]"
 
 optparser = OptionParser(usage=usage, add_help_option=False)
