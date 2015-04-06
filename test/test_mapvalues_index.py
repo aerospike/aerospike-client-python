@@ -130,17 +130,29 @@ class TestMapValuesIndex(object):
         assert exception.value[0] == -2
         assert exception.value[1] == 'Namespace should be a string'
 
+    def test_mapvaluesindex_with_set_is_int(self):
+        """
+            Invoke createindex() with set is int
+        """
+        policy = {}
+        with pytest.raises(Exception) as exception:
+            retobj = TestMapValuesIndex.client.index_map_values_create( 'test', 1,
+'string_map', aerospike.INDEX_STRING, 'test_string_map_index' , policy)
+
+        assert exception.value[0] == -2
+        assert exception.value[1] == 'Set should be a string'
+
     def test_mapvaluesindex_with_set_is_none(self):
         """
             Invoke createindex() with set is None
         """
         policy = {}
-        with pytest.raises(Exception) as exception:
-            retobj = TestMapValuesIndex.client.index_map_values_create( 'test', None,
+        retobj = TestMapValuesIndex.client.index_map_values_create( 'test', None,
 'string_map', aerospike.INDEX_STRING, 'test_string_map_index' , policy)
 
-        assert exception.value[0] == -2
-        assert exception.value[1] == 'Set should be a string'
+        assert retobj == 0L
+        TestMapValuesIndex.client.index_remove('test', 'test_string_map_index', policy);
+
 
     def test_mapvaluesindex_with_bin_is_none(self):
         """

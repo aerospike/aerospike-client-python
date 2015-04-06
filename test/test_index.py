@@ -122,11 +122,24 @@ class TestIndex(TestBaseClass):
             Invoke createindex() with set is None
         """
         policy = {}
-        with pytest.raises(Exception) as exception:
-            retobj = TestIndex.client.index_integer_create( 'test', None,
+        retobj = TestIndex.client.index_integer_create( 'test', None,
 'age', 'age_index' , policy)
+
+        assert retobj == 0L
+        TestIndex.client.index_remove('test', 'age_index', policy);
+
+    def test_createindex_with_set_is_int(self):
+        """
+            Invoke createindex() with set is int
+        """
+        policy = {}
+        with pytest.raises(Exception) as exception:
+            retobj = TestIndex.client.index_integer_create( 'test', 1,
+'age', 'age_index' , policy)
+
         assert exception.value[0] == -2
         assert exception.value[1] == 'Set should be a string'
+
 
     def test_createindex_with_bin_is_none(self):
         """
@@ -270,11 +283,24 @@ name
             Invoke create string index() with set is None
         """
         policy = {}
-        with pytest.raises(Exception) as exception:
-            retobj = TestIndex.client.index_string_create('test', None,
+        retobj = TestIndex.client.index_string_create('test', None,
 'name', 'name_index', policy)
+
+        assert retobj == 0L
+        TestIndex.client.index_remove('test', 'name_index', policy);
+
+    def test_create_string_index_with_set_is_int(self):
+        """
+            Invoke create string index() with set is int
+        """
+        policy = {}
+
+        with pytest.raises(Exception) as exception:
+            retobj = TestIndex.client.index_string_create('test', 1, 'name', 'name_index', policy)
+
         assert exception.value[0] == -2
         assert exception.value[1] == 'Set should be a string'
+
 
     def test_create_string_index_with_bin_is_none(self):
         """

@@ -130,17 +130,29 @@ class TestListIndex(object):
         assert exception.value[0] == -2
         assert exception.value[1] == 'Namespace should be a string'
 
+    def test_listindex_with_set_is_int(self):
+        """
+            Invoke createindex() with set is int
+        """
+        policy = {}
+        with pytest.raises(Exception) as exception:
+            retobj = TestListIndex.client.index_list_create( 'test', 1,
+'string_list', aerospike.INDEX_STRING, 'test_string_list_index' , policy)
+
+        assert exception.value[0] == -2
+        assert exception.value[1] == 'Set should be a string'
+
     def test_listindex_with_set_is_none(self):
         """
             Invoke createindex() with set is None
         """
         policy = {}
-        with pytest.raises(Exception) as exception:
-            retobj = TestListIndex.client.index_list_create( 'test', None,
+        retobj = TestListIndex.client.index_list_create( 'test', None,
 'string_list', aerospike.INDEX_STRING, 'test_string_list_index' , policy)
 
-        assert exception.value[0] == -2
-        assert exception.value[1] == 'Set should be a string'
+        assert retobj == 0L
+        TestListIndex.client.index_remove('test', 'test_string_list_index', policy);
+
 
     def test_listindex_with_bin_is_none(self):
         """

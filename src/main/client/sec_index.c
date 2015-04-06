@@ -105,6 +105,8 @@ PyObject * AerospikeClient_Index_Integer_Create(AerospikeClient * self, PyObject
 	} else if ( PyString_Check(py_set) ) {
 		set_ptr = PyString_AsString(py_set);
 		strncpy(set, set_ptr, AS_SET_MAX_SIZE);
+	} else if (py_set == Py_None) {
+		set[0] = NULL;
 	} else {
 		as_error_update(&err, AEROSPIKE_ERR_PARAM, "Set should be a string");
 		goto CLEANUP;
@@ -240,6 +242,8 @@ PyObject * AerospikeClient_Index_String_Create(AerospikeClient * self, PyObject 
 	} else if ( PyString_Check(py_set) ) {
 		set_ptr = PyString_AsString(py_set);
 		strncpy(set, set_ptr, AS_SET_MAX_SIZE);
+	} else if ( py_set == Py_None ) {
+		set[0] = NULL;
 	} else {
 		as_error_update(&err, AEROSPIKE_ERR_PARAM, "Set should be a string");
 		goto CLEANUP;
@@ -458,6 +462,8 @@ PyObject * AerospikeClient_Index_List_Create(AerospikeClient * self, PyObject *a
 	} else if ( PyString_Check(py_set) ) {
 		set_ptr = PyString_AsString(py_set);
 		strncpy(set, set_ptr, AS_SET_MAX_SIZE);
+	} else if ( py_set == Py_None ) {
+		set[0] = NULL;
 	} else {
 		as_error_update(&err, AEROSPIKE_ERR_PARAM, "Set should be a string");
 		goto CLEANUP;
@@ -586,6 +592,8 @@ PyObject * AerospikeClient_Index_Map_Keys_Create(AerospikeClient * self, PyObjec
 	} else if ( PyString_Check(py_set) ) {
 		set_ptr = PyString_AsString(py_set);
 		strncpy(set, set_ptr, AS_SET_MAX_SIZE);
+	} else if ( py_set == Py_None ) {
+		set[0] = NULL;
 	} else {
 		as_error_update(&err, AEROSPIKE_ERR_PARAM, "Set should be a string");
 		goto CLEANUP;
@@ -714,6 +722,8 @@ PyObject * AerospikeClient_Index_Map_Values_Create(AerospikeClient * self, PyObj
 	} else if ( PyString_Check(py_set) ) {
 		set_ptr = PyString_AsString(py_set);
 		strncpy(set, set_ptr, AS_SET_MAX_SIZE);
+	} else if ( py_set == Py_None ) {
+		set[0] = NULL;
 	} else {
 		as_error_update(&err, AEROSPIKE_ERR_PARAM, "Set should be a string");
 		goto CLEANUP;
