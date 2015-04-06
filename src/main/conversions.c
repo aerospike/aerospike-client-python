@@ -684,8 +684,15 @@ as_status val_to_pyobject(as_error * err, const as_val * val, PyObject ** py_val
 				as_string * s = as_string_fromval(val);
 				char * str = as_string_get(s);
 				if ( str != NULL ) {
-					size_t sz = strlen(str);
-					*py_val = PyUnicode_DecodeUTF8(str, sz, NULL);
+					*py_val = PyString_FromString( str );
+					if (py_val == NULL){
+						size_t sz = strlen(str);
+						*py_val = PyUnicode_DecodeUTF8(str, sz, NULL);
+					}
+					if (*py_val == NULL) {
+						as_error_update(err, AEROSPIKE_ERR_CLIENT, "Unknown type for value");
+						return err->code;
+					}
 				}
 				else {
 					Py_INCREF(Py_None);
@@ -922,7 +929,14 @@ as_status key_to_pyobject(as_error * err, const as_key * key, PyObject ** obj)
 			}
 			case AS_STRING: {
 				as_string * sval = as_string_fromval(val);
-				py_key = PyUnicode_DecodeUTF8(as_string_get(sval), as_string_len(sval), NULL);
+				py_key = PyString_FromString( as_string_get(sval) );
+				if (py_key == NULL){
+					py_key = PyUnicode_DecodeUTF8(as_string_get(sval), as_string_len(sval), NULL);
+				}
+				if (py_key == NULL) {
+					as_error_update(err, AEROSPIKE_ERR_CLIENT, "Unknown type for value");
+					return err->code;
+				}
 				break;
 			}
 			case AS_BYTES: {
