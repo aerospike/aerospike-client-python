@@ -35,6 +35,7 @@ class TestGet(TestBaseClass):
 
     def setup_method(self, method):
 
+        self.keys = []
         for i in xrange(5):
             key = ('test', 'demo', i)
             rec = {
@@ -42,8 +43,9 @@ class TestGet(TestBaseClass):
                     'age'  : i
                     }
             TestGet.client.put(key, rec)
+            self.keys.append( key )
 
-        key = ('test', 'demo', 'list_key')
+        key = ('test', 'demo', 'list_key'); self.keys.append( key )
 
         rec = {
                 'names': ['John', 'Marlen', 'Steve']
@@ -51,7 +53,7 @@ class TestGet(TestBaseClass):
 
         TestGet.client.put(key, rec)
 
-        key = ('test', 'demo', 'map_key')
+        key = ('test', 'demo', 'map_key'); self.keys.append( key )
 
         rec = {
                 'names' :{
@@ -62,7 +64,7 @@ class TestGet(TestBaseClass):
 
         TestGet.client.put(key, rec)
 
-        key = ('test', 'demo', 'list_map_key')
+        key = ('test', 'demo', 'list_map_key'); self.keys.append( key )
 
         rec = {
                 'names' : ['John', 'Marlen', 'Steve'],
@@ -82,21 +84,21 @@ class TestGet(TestBaseClass):
 
         obj1, obj2 = SomeClass(), SomeClass()
 
-        key = ('test', 'demo', 'objects')
+        key = ('test', 'demo', 'objects'); self.keys.append( key )
 
         rec = {
                 'objects' : [ pickle.dumps( obj1 ), pickle.dumps( obj2 ) ]
                 }
         TestGet.client.put(key, rec)
 
-        key = ('test', 'demo', 'bytes_key')
+        key = ('test', 'demo', 'bytes_key'); self.keys.append( key )
 
         rec = {
                 'bytes': bytearray('John', 'utf-8')
                 }
         TestGet.client.put(key, rec)
 
-        key = ( 'test', 'demo', 'boolean_key' )
+        key = ( 'test', 'demo', 'boolean_key' ); self.keys.append( key )
 
         rec = {
                 'is_present': True
@@ -108,18 +110,8 @@ class TestGet(TestBaseClass):
         """
         Teardoen method.
         """
-        for i in xrange(5):
-            key = ('test', 'demo', i)
-            TestGet.client.remove(key)
-
-        key = ('test', 'demo', 'list_key')
-        TestGet.client.remove(key)
-
-        key = ('test', 'demo', 'map_key')
-        TestGet.client.remove(key)
-
-        key = ('test', 'demo', 'objects')
-        TestGet.client.remove(key)
+        for key in self.keys:
+            TestGet.client.remove( key )
 
     def test_get_with_no_parameter(self):
 
@@ -354,6 +346,7 @@ class TestGet(TestBaseClass):
         assert bins == { 'name' : 'john' }
         assert key == ('test', 'demo', None,
                 bytearray(b"asd;as[d\'as;djk;uyfl"))
+        TestGet.client.remove( key )
 
 
     def test_get_with_policy_key_digest(self):

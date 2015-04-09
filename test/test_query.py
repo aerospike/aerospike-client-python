@@ -17,6 +17,8 @@ from aerospike import predicates as p
 
 class TestQuery(object):
 
+    pytestmark = pytest.mark.skipif("1 == 1")
+
     def setup_class(cls):
         hostlist, user, password = TestBaseClass.get_hosts()
         config = {

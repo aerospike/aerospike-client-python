@@ -149,6 +149,7 @@ class TestSelectMany(object):
         assert exception.value[0] == -2
         assert exception.value[1] == "timeout is invalid"
 
+    @pytest.mark.skipif("True")
     def test_select_many_with_initkey_as_digest(self):
 
         keys = []

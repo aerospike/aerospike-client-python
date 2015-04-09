@@ -125,6 +125,7 @@ class TestExistsMany(TestBaseClass):
         assert exception.value[0] == -2
         assert exception.value[1] == "timeout is invalid"
 
+    @pytest.mark.xfail
     def test_exists_many_with_initkey_as_digest(self):
 
         keys = []

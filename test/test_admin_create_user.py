@@ -5,13 +5,11 @@ import sys
 import time
 from test_base_class import TestBaseClass
 
-try:
-    import aerospike
-except:
-    print "Please install aerospike python client."
-    sys.exit(1)
+aerospike = pytest.importorskip("aerospike")
 
 class TestCreateUser(TestBaseClass):
+
+    pytestmark = pytest.mark.skipif(TestBaseClass().get_hosts()[1] == None, reason="No user specified, may be not secured cluster.")
 
     def setup_method(self, method):
 
@@ -22,6 +20,8 @@ class TestCreateUser(TestBaseClass):
         config = {
                 "hosts": hostlist
                 }
+
+
         self.client = aerospike.client(config).connect( user, password )
 
         self.delete_users = []

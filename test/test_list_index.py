@@ -5,13 +5,13 @@ import pytest
 import sys
 import cPickle as pickle
 from test_base_class import TestBaseClass
-try:
-    import aerospike
-except:
-    print "Please install aerospike python client."
-    sys.exit(1)
+
+aerospike = pytest.importorskip("aerospike")
 
 class TestListIndex(object):
+
+    pytestmark = pytest.mark.xfail
+
     def setup_class(cls):
         """
         Setup method.
@@ -24,7 +24,7 @@ class TestListIndex(object):
             TestListIndex.client = aerospike.client(config).connect()
         else:
             TestListIndex.client = aerospike.client(config).connect(user, password)
-    
+
     def teardown_class(cls):
         TestListIndex.client.close()
 

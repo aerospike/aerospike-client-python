@@ -35,6 +35,7 @@ class TestExists(TestBaseClass):
 
     def setup_method(self, method):
 
+        self.keys = []
 
         for i in xrange(5):
             key = ('test', 'demo', i)
@@ -43,8 +44,9 @@ class TestExists(TestBaseClass):
                     'age'  : i
                     }
             TestExists.client.put(key, rec)
+            self.keys.append( key )
 
-        key = ('test', 'demo', 'list_key')
+        key = ('test', 'demo', 'list_key'); self.keys.append(key)
 
         rec = {
                 'names': ['John', 'Marlen', 'Steve']
@@ -52,7 +54,7 @@ class TestExists(TestBaseClass):
 
         TestExists.client.put(key, rec)
 
-        key = ('test', 'demo', 'map_key')
+        key = ('test', 'demo', 'map_key'); self.keys.append(key)
 
         rec = {
                 'names' :{
@@ -63,7 +65,7 @@ class TestExists(TestBaseClass):
 
         TestExists.client.put(key, rec)
 
-        key = ('test', 'demo', 'list_map_key')
+        key = ('test', 'demo', 'list_map_key'); self.keys.append(key)
 
         rec = {
                 'names' : ['John', 'Marlen', 'Steve'],
@@ -83,14 +85,14 @@ class TestExists(TestBaseClass):
 
         obj1, obj2 = SomeClass(), SomeClass()
 
-        key = ('test', 'demo', 'objects')
+        key = ('test', 'demo', 'objects'); self.keys.append(key)
 
         rec = {
                 'objects' : [ pickle.dumps( obj1 ), pickle.dumps( obj2 ) ]
                 }
         TestExists.client.put(key, rec)
 
-        key = ('test', 'demo', 'bytes_key')
+        key = ('test', 'demo', 'bytes_key'); self.keys.append(key)
 
         rec = {
                 'bytes': bytearray('John', 'utf-8')
@@ -101,19 +103,9 @@ class TestExists(TestBaseClass):
         """
         Teardoen method.
         """
-        for i in xrange(5):
-            key = ('test', 'demo', i)
-            TestExists.client.remove(key)
 
-        key = ('test', 'demo', 'list_key')
-        TestExists.client.remove(key)
-
-        key = ('test', 'demo', 'map_key')
-        TestExists.client.remove(key)
-
-        key = ('test', 'demo', 'objects')
-        TestExists.client.remove(key)
-
+        for key in self.keys:
+            TestExists.client.remove( key )
 
     def test_exists_with_no_paramters(self):
         """

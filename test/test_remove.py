@@ -249,6 +249,7 @@ class TestRemove(TestBaseClass):
               }
         TestRemove.client.put(key, rec)
 
+    #@pytest.mark.xfail
     def test_remove_with_policy_gen_eq_not_equal(self):
         """
             Invoke remove() with policy gen not equal
@@ -283,6 +284,7 @@ class TestRemove(TestBaseClass):
         assert meta != None
         assert bins == {'addr': 'name1', 'age': 1, 'name': 'name1', 'no': 1}
 
+    #@pytest.mark.xfail
     def test_remove_with_policy_gen_GT_lesser(self):
         """
             Invoke remove() with policy gen GT lesser

@@ -6,11 +6,7 @@ import time
 import cPickle as pickle
 from test_base_class import TestBaseClass
 
-try:
-    import aerospike
-except:
-    print "Please install aerospike python client."
-    sys.exit(1)
+aerospike = pytest.importorskip("aerospike")
 
 class SomeClass(object):
 
@@ -18,6 +14,8 @@ class SomeClass(object):
 
 
 class TestDropUser(TestBaseClass):
+
+    pytestmark = pytest.mark.skipif(TestBaseClass().get_hosts()[1] == None, reason="No user specified, may be not secured cluster.")
 
     def setup_method(self, method):
 
@@ -28,6 +26,7 @@ class TestDropUser(TestBaseClass):
         config = {
                 'hosts': hostlist
                 }
+        TestDropUser.Me = self
         self.client = aerospike.client(config).connect( user, password )
 
     def teardown_method(self, method):
