@@ -92,10 +92,13 @@ try:
 
    	policy = {}
    	user = "foo"
-    	password = "bar"
+    	password = "foobar"
     	
-    	client.admin_change_password(policy, user, password)
+        client_new = aerospike.client(config).connect(user, "bar")
+    	status = client_new.admin_change_password(policy, user, password)
+        client_new.close()
         
+        print("Status of changing password is: %d" % status)
     	print("OK, password changed for 1 user")
 
     except Exception as e:

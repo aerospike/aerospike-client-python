@@ -69,7 +69,7 @@ if options.help:
     print()
     sys.exit(1)
 
-if len(args) != 0:
+if len(args) != 1:
     optparser.print_help()
     print()
     sys.exit(1)
@@ -106,7 +106,7 @@ try:
     try:
         namespace = options.namespace if options.namespace and options.namespace != 'None' else None
         set = options.set if options.set and options.set != 'None' else None
-        key = "example_get_digest"
+        key = args.pop(0)
 
         digest = client.get_key_digest(namespace, set, key)
         print("---")
