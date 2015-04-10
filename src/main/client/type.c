@@ -70,6 +70,9 @@ static PyMethodDef AerospikeClient_Type_Methods[] = {
 		"Query a user for roles."},
 	{"admin_query_users",	(PyCFunction) AerospikeClient_Admin_Query_Users, METH_VARARGS | METH_KEYWORDS,
 		"Query all users for roles."},
+	{"admin_create_role",
+		(PyCFunction) AerospikeClient_Admin_Create_Role, METH_VARARGS | METH_KEYWORDS,
+		"Create a new role."},
 
 	// KVS OPERATIONS
 

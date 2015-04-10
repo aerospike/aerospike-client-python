@@ -90,3 +90,10 @@ PyObject * AerospikeClient_Admin_Query_User(AerospikeClient *self, PyObject *arg
  */
 PyObject * AerospikeClient_Admin_Query_Users(AerospikeClient *self, PyObject *args, PyObject *kwds);
 
+/**
+ * Create a new role in the database.
+ *
+ *		client.admin_create_role(policy, role, privileges, privileges_size, ns, set)
+ *
+ */
+PyObject * AerospikeClient_Admin_Create_Role(AerospikeClient * self, PyObject *args, PyObject *kwds);
