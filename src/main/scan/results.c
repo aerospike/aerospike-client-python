@@ -88,8 +88,7 @@ PyObject * AerospikeScan_Results(AerospikeScan * self, PyObject * args, PyObject
 		goto CLEANUP;
 	}
 
-	PyObject * py_results = NULL;
-	py_results = PyList_New(0);
+	PyObject * py_results = PyList_New(0);
 
 	PyThreadState * _save = PyEval_SaveThread();
 
