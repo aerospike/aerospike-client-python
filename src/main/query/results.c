@@ -105,7 +105,8 @@ PyObject * AerospikeQuery_Results(AerospikeQuery * self, PyObject * args, PyObje
 	}
 
 	TRACE();
-	PyObject * py_results = PyList_New(0);
+	PyObject * py_results = NULL;
+	py_results = PyList_New(0);
 
 	TRACE();
 	PyThreadState * _save = PyEval_SaveThread();
