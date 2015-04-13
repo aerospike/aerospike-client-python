@@ -10,32 +10,27 @@ except:
     print "Please install aerospike python client."
     sys.exit(1)
 
-class TestGetRegistered(object):
 
+class TestGetRegistered(object):
     def setup_class(cls):
         """
         Setup class.
         """
         hostlist, user, password = TestBaseClass.get_hosts()
-        config = {
-                'hosts': hostlist
-                }
+        config = {'hosts': hostlist}
         if user == None and password == None:
             TestGetRegistered.client = aerospike.client(config).connect()
         else:
-            TestGetRegistered.client = aerospike.client(config).connect(user, password)
-        policy = {
-                'timeout' : 5000
-                }
+            TestGetRegistered.client = aerospike.client(config).connect(
+                user, password)
+        policy = {'timeout': 5000}
         TestGetRegistered.client.udf_put(u"bin_lua.lua", 0, policy)
 
     def teardown_class(cls):
         """
         Teardoen class.
         """
-        policy = {
-                'timeout' : 5000
-                }
+        policy = {'timeout': 5000}
         TestGetRegistered.client.udf_remove("bin_lua.lua", policy)
         TestGetRegistered.client.close()
 
@@ -54,15 +49,13 @@ class TestGetRegistered(object):
         """
         module = "bin_lua.lua"
         language = aerospike.UDF_TYPE_LUA
-        policy = {
-                'timeout' : 5000
-                }
+        policy = {'timeout': 5000}
 
-        udf_contents = TestGetRegistered.client.udf_get(module, language, policy)
-
+        udf_contents = TestGetRegistered.client.udf_get(module, language,
+                                                        policy)
 
         #Check for udf file contents
-        fo = open("bin_lua.lua","r")
+        fo = open("bin_lua.lua", "r")
         contents = fo.read()
         assert contents == udf_contents
         fo.close()
@@ -73,15 +66,13 @@ class TestGetRegistered(object):
         """
         module = u"bin_lua.lua"
         language = aerospike.UDF_TYPE_LUA
-        policy = {
-                'timeout' : 5000
-                }
+        policy = {'timeout': 5000}
 
-        udf_contents = TestGetRegistered.client.udf_get(module, language, policy)
-
+        udf_contents = TestGetRegistered.client.udf_get(module, language,
+                                                        policy)
 
         #Check for udf file contents
-        fo = open("bin_lua.lua","r")
+        fo = open("bin_lua.lua", "r")
         contents = fo.read()
         assert contents == udf_contents
         fo.close()
@@ -92,13 +83,12 @@ class TestGetRegistered(object):
         """
         module = "bin_lua.lua"
         language = aerospike.UDF_TYPE_LUA
-        policy = {
-                'timeout' : 5000
-                }
-        udf_contents = TestGetRegistered.client.udf_get(module, language, policy)
+        policy = {'timeout': 5000}
+        udf_contents = TestGetRegistered.client.udf_get(module, language,
+                                                        policy)
 
         #Check for udf file contents
-        fo = open("bin_lua.lua","r")
+        fo = open("bin_lua.lua", "r")
         contents = fo.read()
         assert contents == udf_contents
         fo.close()
@@ -109,9 +99,7 @@ class TestGetRegistered(object):
         """
         module = "bin_lua.lua"
         language = aerospike.UDF_TYPE_LUA
-        policy = {
-                'timeout' : 0.5
-                }
+        policy = {'timeout': 0.5}
 
         with pytest.raises(Exception) as exception:
             TestGetRegistered.client.udf_get(module, language, policy)
@@ -125,9 +113,7 @@ class TestGetRegistered(object):
         """
         module = "bin_transform_random"
         language = aerospike.UDF_TYPE_LUA
-        policy = {
-                'timeout' : 1000
-                }
+        policy = {'timeout': 1000}
 
         with pytest.raises(Exception) as exception:
             TestGetRegistered.client.udf_get(module, language, policy)
@@ -141,9 +127,7 @@ class TestGetRegistered(object):
         """
         module = "bin_lua.lua"
         language = 85
-        policy = {
-                'timeout' : 1000
-                }
+        policy = {'timeout': 1000}
 
         with pytest.raises(Exception) as exception:
             TestGetRegistered.client.udf_get(module, language, policy)
@@ -157,9 +141,7 @@ class TestGetRegistered(object):
         """
         module = "bin_lua.lua"
         language = aerospike.UDF_TYPE_LUA
-        policy = {
-                'timeout' : 1000
-                }
+        policy = {'timeout': 1000}
 
         #Check for status or empty udf contents
         with pytest.raises(TypeError) as typeError:
@@ -191,21 +173,20 @@ class TestGetRegistered(object):
 
         assert exception.value[0] == -1
         assert exception.value[1] == "Module name should be a string or unicode string."
-    
+
     def test_udf_get_with_unicode_module(self):
         """
         Invoke udf_get() with module name is unicode string
         """
         module = u"bin_lua.lua"
         language = aerospike.UDF_TYPE_LUA
-        policy = {
-                'timeout' : 5000
-                }
+        policy = {'timeout': 5000}
 
-        udf_contents = TestGetRegistered.client.udf_get(module, language, policy)
+        udf_contents = TestGetRegistered.client.udf_get(module, language,
+                                                        policy)
 
         #Check for udf file contents
-        fo = open("bin_lua.lua","r")
+        fo = open("bin_lua.lua", "r")
         contents = fo.read()
         assert contents == udf_contents
         fo.close()
@@ -216,13 +197,9 @@ class TestGetRegistered(object):
         """
         module = "bin_lua.lua"
         language = aerospike.UDF_TYPE_LUA
-        policy = {
-                'timeout' : 5000
-                }
+        policy = {'timeout': 5000}
 
-        config = {
-            'hosts': [('127.0.0.1', 3000)]
-        }
+        config = {'hosts': [('127.0.0.1', 3000)]}
         client1 = aerospike.client(config)
 
         with pytest.raises(Exception) as exception:

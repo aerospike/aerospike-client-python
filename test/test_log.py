@@ -9,12 +9,13 @@ try:
 except:
     print "Please install aerospike python client."
     sys.exit(1)
-        
+
+
 def handler(level, func, myfile, line):
     assert 1 == 1
 
-class TestLog(object):
 
+class TestLog(object):
     def test_set_log_level_correct(self):
         """
         Test log level with correct parameters
@@ -33,9 +34,7 @@ class TestLog(object):
 
         aerospike.set_log_handler(handler)
 
-        config = {
-                "hosts": [("127.0.0.1", 3000)]
-                }
+        config = {"hosts": [("127.0.0.1", 3000)]}
         client = aerospike.client(config).connect()
 
         assert response == 0

@@ -1,4 +1,3 @@
-
 # -*- coding: utf-8 -*-
 
 import pytest
@@ -11,8 +10,8 @@ except:
     print "Please install aerospike python client."
     sys.exit(1)
 
-class TestConnect(TestBaseClass):
 
+class TestConnect(TestBaseClass):
     def setup_class(cls):
         hostlist, user, password = TestBaseClass.get_hosts()
 
@@ -20,13 +19,12 @@ class TestConnect(TestBaseClass):
         """
             Invoke connect() with positive parameters.
         """
-        config = {
-                'hosts': TestConnect.hostlist
-                }
+        config = {'hosts': TestConnect.hostlist}
         if TestConnect.user == None and TestConnect.password == None:
             self.client = aerospike.client(config).connect()
         else:
-            self.client = aerospike.client(config).connect(TestConnect.user, TestConnect.password)
+            self.client = aerospike.client(config).connect(
+                TestConnect.user, TestConnect.password)
 
         assert self.client != None
         assert self.client.isConnected() == True
@@ -37,16 +35,15 @@ class TestConnect(TestBaseClass):
             Invoke connect() with positive parameters and policy.
         """
         config = {
-                'hosts': TestConnect.hostlist,
-                'policies': {
-                   'timeout': 10000
-                }
-                }
+            'hosts': TestConnect.hostlist,
+            'policies': {'timeout': 10000}
+        }
         if TestConnect.user == None and TestConnect.password == None:
             self.client = aerospike.client(config).connect()
         else:
-            self.client = aerospike.client(config).connect(TestConnect.user, TestConnect.password)
-       
+            self.client = aerospike.client(config).connect(
+                TestConnect.user, TestConnect.password)
+
         assert self.client.isConnected() == True
         assert self.client.isConnected() == True
         self.client.close()
@@ -55,13 +52,12 @@ class TestConnect(TestBaseClass):
         """
             Invoke connect() with multiple hosts.
         """
-        config = {
-                'hosts': TestConnect.hostlist
-                }
+        config = {'hosts': TestConnect.hostlist}
         if TestConnect.user == None and TestConnect.password == None:
             self.client = aerospike.client(config).connect()
         else:
-            self.client = aerospike.client(config).connect(TestConnect.user, TestConnect.password)
+            self.client = aerospike.client(config).connect(
+                TestConnect.user, TestConnect.password)
 
         assert self.client != None
         self.client.close()
@@ -75,13 +71,12 @@ class TestConnect(TestBaseClass):
             self.client = aerospike.client(config).connect()
         assert exception.value[0] == -1
         assert exception.value[1] == "Parameters are incorrect"
-    
+
     def test_connect_config_empty_dict(self):
         """
             Invoke connect() with config as empty dict.
         """
-        config = {
-                }
+        config = {}
         with pytest.raises(Exception) as exception:
             self.client = aerospike.client(config).connect()
 
@@ -92,9 +87,7 @@ class TestConnect(TestBaseClass):
         """
             Invoke connect() with host key missing in config dict.
         """
-        config = {
-                '': [('127.0.0.1', 3000)]
-                }
+        config = {'': [('127.0.0.1', 3000)]}
         with pytest.raises(Exception) as exception:
             self.client = aerospike.client(config).connect()
 
@@ -105,9 +98,7 @@ class TestConnect(TestBaseClass):
         """
             Invoke connect() with missing address in config dict.
         """
-        config = {
-                'hosts': [3000]
-                }
+        config = {'hosts': [3000]}
         with pytest.raises(Exception) as exception:
             self.client = aerospike.client(config).connect()
 
@@ -118,9 +109,7 @@ class TestConnect(TestBaseClass):
         """
             Invoke connect() with missing port in config dict.
         """
-        config = {
-                'hosts': ['127.0.0.1']
-                }
+        config = {'hosts': ['127.0.0.1']}
         self.client = aerospike.client(config).connect()
 
         assert self.client.isConnected() == True
@@ -130,9 +119,7 @@ class TestConnect(TestBaseClass):
         """
             Invoke connect() with incorrect port in config dict.
         """
-        config = {
-                'hosts': [('127.0.0.1', 2000)]
-                }
+        config = {'hosts': [('127.0.0.1', 2000)]}
         with pytest.raises(Exception) as exception:
             self.client = aerospike.client(config).connect()
 
@@ -143,9 +130,7 @@ class TestConnect(TestBaseClass):
         """
             Invoke connect() with port as string in config dict.
         """
-        config = {
-                'hosts': [('127.0.0.1', '3000')]
-                }
+        config = {'hosts': [('127.0.0.1', '3000')]}
         with pytest.raises(Exception) as exception:
             self.client = aerospike.client(config).connect()
 

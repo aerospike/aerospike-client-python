@@ -1,6 +1,7 @@
 import pytest
 import ConfigParser
 
+
 class TestBaseClass(object):
     hostlist = []
     user = None
@@ -24,13 +25,13 @@ class TestBaseClass(object):
                         TestBaseClass.password = optionvalue.strip('\"')
                         continue
                 semicount = optionvalue.count(';')
-                for i in xrange(semicount): 
+                for i in xrange(semicount):
                     tup = ()
                     semicolonindex = optionvalue.find(';')
                     index = optionvalue.find(':')
-                    tup += (optionvalue[:index],) 
-                    substr = optionvalue[index+1:semicolonindex]
-                    tup += (int(substr),)
-                    optionvalue = optionvalue[semicolonindex+1:]
+                    tup += (optionvalue[:index], )
+                    substr = optionvalue[index + 1:semicolonindex]
+                    tup += (int(substr), )
+                    optionvalue = optionvalue[semicolonindex + 1:]
                     TestBaseClass.hostlist.append(tup)
         return TestBaseClass.hostlist, TestBaseClass.user, TestBaseClass.password

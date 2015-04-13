@@ -10,8 +10,8 @@ except:
     print "Please install aerospike python client."
     sys.exit(1)
 
-class TestIsconnected(object):
 
+class TestIsconnected(object):
     def setup_method(self, method):
         """
         Setup method.
@@ -27,9 +27,7 @@ class TestIsconnected(object):
         Invoke isconnected() positive.
         """
         hostlist, user, password = TestBaseClass.get_hosts()
-        config = {
-                'hosts': hostlist
-                }
+        config = {'hosts': hostlist}
         if user == None and password == None:
             self.client = aerospike.client(config).connect()
         else:
@@ -46,9 +44,7 @@ class TestIsconnected(object):
         Invoke isconnected() before connect
         """
         hostlist, user, password = TestBaseClass.get_hosts()
-        config = {
-                'hosts': hostlist
-                }
+        config = {'hosts': hostlist}
         self.client = aerospike.client(config)
         if self.client.isConnected():
             assert True == False
@@ -68,9 +64,7 @@ class TestIsconnected(object):
         Invoke isconnected() positive.
         """
         hostlist, user, password = TestBaseClass.get_hosts()
-        config = {
-                'hosts': hostlist
-                }
+        config = {'hosts': hostlist}
         if user == None and password == None:
             self.client = aerospike.client(config).connect()
         else:
@@ -81,4 +75,3 @@ class TestIsconnected(object):
             assert True == False
         else:
             assert True == True
-
