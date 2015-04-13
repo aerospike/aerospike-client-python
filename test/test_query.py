@@ -9,6 +9,7 @@ from test_base_class import TestBaseClass
 
 try:
     import aerospike
+    from aerospike.exception import *
 except:
     print "Please install aerospike python client."
     sys.exit(1)
@@ -164,7 +165,8 @@ class TestQuery(object):
         """
             Invoke query() with non-indexed bin
         """
-        with pytest.raises(Exception) as exception:
+        #with pytest.raises(Exception) as exception:
+        try:
             query = TestQuery.client.query('test', 'demo')
             query.select('name', 'no')
             query.where(p.equals('no', 1))
@@ -173,8 +175,8 @@ class TestQuery(object):
 
             query.foreach(callback)
 
-        assert exception.value[0] == 201L
-        assert exception.value[1] == 'AEROSPIKE_ERR_INDEX_NOT_FOUND'
+        except IndexNotFound:
+            assert True == True
 
     def test_query_with_where_incorrect(self):
         """

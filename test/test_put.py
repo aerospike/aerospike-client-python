@@ -9,6 +9,7 @@ from collections import OrderedDict
 
 try:
     import aerospike
+    from aerospike.exception import *
 except:
     print "Please install aerospike python client."
     sys.exit(1)
@@ -594,11 +595,13 @@ class TestPut(TestBaseClass):
             'gen': 10
         }
 
-        with pytest.raises(Exception) as exception:
+        #with pytest.raises(Exception) as exception:
+        try:
             TestPut.client.put( key, rec, meta, policy )
 
-        assert exception.value[0] == 3
-        assert exception.value[1] == 'AEROSPIKE_ERR_RECORD_GENERATION'
+        except RecordGenerationError as exception:
+            assert exception.code == 3
+            assert exception.msg == 'AEROSPIKE_ERR_RECORD_GENERATION'
         
         ( key, meta, bins) = TestPut.client.get(key)
         assert {"name": "John"} == bins
@@ -642,11 +645,14 @@ class TestPut(TestBaseClass):
             'gen': 2
         }
 
-        with pytest.raises(Exception) as exception:
+        #with pytest.raises(Exception) as exception:
+        try:
             TestPut.client.put( key, rec, meta, policy )
 
-        assert exception.value[0] == 5
-        assert exception.value[1] == 'AEROSPIKE_ERR_RECORD_EXISTS'
+        except RecordExistsError as exception:
+            assert exception.code == 5
+            assert exception.msg == 'AEROSPIKE_ERR_RECORD_EXISTS'
+            assert exception.bins == None
 
         ( key, meta, bins) = TestPut.client.get(key)
         assert {"name": "John"} == bins

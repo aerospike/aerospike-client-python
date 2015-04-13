@@ -25,6 +25,7 @@
 #include "client.h"
 #include "conversions.h"
 #include "key.h"
+#include "exceptions.h"
 #include "policy.h"
 
 /**
@@ -108,9 +109,9 @@ PyObject * AerospikeClient_Get_Invoke(
 		}
 	}
 	else if ( err.code == AEROSPIKE_ERR_RECORD_NOT_FOUND ) {
-		as_error_reset(&err);
+		//as_error_reset(&err);
 
-		PyObject * py_rec_key = NULL;
+		/*PyObject * py_rec_key = NULL;
 		PyObject * py_rec_meta = Py_None;
 		PyObject * py_rec_bins = Py_None;
 
@@ -122,7 +123,7 @@ PyObject * AerospikeClient_Get_Invoke(
 		PyTuple_SetItem(py_rec, 2, py_rec_bins);
 
 		Py_INCREF(py_rec_meta);
-		Py_INCREF(py_rec_bins);
+		Py_INCREF(py_rec_bins);*/
 	}
 
 CLEANUP:
@@ -139,7 +140,13 @@ CLEANUP:
 	if ( err.code != AEROSPIKE_OK ) {
 		PyObject * py_err = NULL;
 		error_to_pyobject(&err, &py_err);
-		PyErr_SetObject(PyExc_Exception, py_err);
+		PyObject *exception_type = raise_exception(&err);
+		if(PyObject_HasAttrString(exception_type, "key")) {
+			PyObject_SetAttrString(exception_type, "key", py_key);
+		} else if(PyObject_HasAttrString(exception_type, "bin")) {
+			PyObject_SetAttrString(exception_type, "bin", Py_None);
+		}
+		PyErr_SetObject(exception_type, py_err);
 		Py_DECREF(py_err);
 		return NULL;
 	}

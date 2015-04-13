@@ -6,6 +6,7 @@ import cPickle as pickle
 from test_base_class import TestBaseClass
 try:
     import aerospike
+    from aerospike.exception import *
 except:
     print "Please install aerospike python client."
     sys.exit(1)
@@ -174,11 +175,13 @@ class TestGetRegistered(object):
         module = "bin_lua.lua"
         language = aerospike.UDF_TYPE_LUA
 
-        with pytest.raises(Exception) as exception:
+        #with pytest.raises(Exception) as exception:
+        try:
             TestGetRegistered.client.udf_get(module, language, "")
 
-        assert exception.value[0] == -2
-        assert exception.value[1] == "policy must be a dict"
+        except ParamError as exception:
+            assert exception.code == -2
+            assert exception.msg == "policy must be a dict"
 
     def test_udf_get_module_is_none(self):
         """

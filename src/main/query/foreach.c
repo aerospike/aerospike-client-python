@@ -167,7 +167,13 @@ CLEANUP:
 		if ( data.error.code != AEROSPIKE_OK ){
 			error_to_pyobject(&data.error, &py_err);
 		}
-		PyErr_SetObject(PyExc_Exception, py_err);
+		/*PyErr_SetObject(PyExc_Exception, py_err);
+		Py_DECREF(py_err);*/
+		PyObject *exception_type = raise_exception(&err);
+		if(PyObject_HasAttrString(exception_type, "name")) {
+			PyObject_SetAttrString(exception_type, "name", Py_None);
+		}
+		PyErr_SetObject(exception_type, py_err);
 		Py_DECREF(py_err);
 		return NULL;
 	}

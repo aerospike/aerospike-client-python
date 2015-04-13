@@ -26,6 +26,7 @@
 
 #include "client.h"
 #include "conversions.h"
+#include "exceptions.h"
 #include "policy.h"
 
 /**
@@ -153,7 +154,11 @@ CLEANUP:
 	if ( err.code != AEROSPIKE_OK ) {
 		PyObject * py_err = NULL;
 		error_to_pyobject(&err, &py_err);
-		PyErr_SetObject(PyExc_Exception, py_err);
+		PyObject *exception_type = raise_exception(&err);
+		if(PyObject_HasAttrString(exception_type, "name")) {
+			PyObject_SetAttrString(exception_type, "name", py_name);
+		}
+		PyErr_SetObject(exception_type, py_err);
 		Py_DECREF(py_err);
 		return NULL;
 	}
@@ -677,6 +682,7 @@ PyObject * AerospikeClient_Index_Map_Values_Create(AerospikeClient * self, PyObj
 
 	if (!self || !self->as) {
 		as_error_update(&err, AEROSPIKE_ERR_PARAM, "Invalid aerospike object");
+		//raise_exception(&err, -2, "Invalid aerospike object");
 		goto CLEANUP;
 	}
 
@@ -766,10 +772,7 @@ PyObject * AerospikeClient_Index_Map_Values_Create(AerospikeClient * self, PyObj
 
 CLEANUP:
 	if ( err.code != AEROSPIKE_OK ) {
-		PyObject * py_err = NULL;
-		error_to_pyobject(&err, &py_err);
-		PyErr_SetObject(PyExc_Exception, py_err);
-		Py_DECREF(py_err);
+		raise_exception(&err);
 		return NULL;
 	}
 

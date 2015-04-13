@@ -7,6 +7,7 @@ from test_base_class import TestBaseClass
 
 try:
     import aerospike
+    from aerospike.exception import *
 except:
     print "Please install aerospike python client."
     sys.exit(1)
@@ -173,11 +174,12 @@ class TestGet(TestBaseClass):
         """
         key = (None, 'demo', 2)
 
-        with pytest.raises(Exception) as exception:
+        try:
             key, meta, bins = TestGet.client.get( key )
 
-        assert exception.value[0] == -2
-        assert exception.value[1] == 'namespace must be a string'
+        except ParamError as exception:
+            assert exception.code == -2
+            assert exception.msg == 'namespace must be a string'
 
     def test_get_with_none_pk(self):
 

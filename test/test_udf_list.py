@@ -7,6 +7,7 @@ from test_base_class import TestBaseClass
 
 try:
     import aerospike
+    from aerospike.exception import *
 except:
     print "Please install aerospike python client."
     sys.exit(1)
@@ -73,12 +74,14 @@ class TestUdfList(TestBaseClass):
 
         policy = { 'timeout' : 0.1 }
 
-        with pytest.raises(Exception) as exception:
+        #with pytest.raises(Exception) as exception:
+        try:
             udf_list = TestUdfList.client.udf_list( policy )
 
-        assert exception.value[0] == -2
+        except ParamError as exception:
+            assert exception.code == -2
 
-        assert exception.value[1] == 'timeout is invalid'
+            assert exception.msg == 'timeout is invalid'
 
     def test_udf_list_with_proper_parameters_without_connection(self):
 

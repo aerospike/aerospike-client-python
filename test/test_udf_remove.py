@@ -7,6 +7,7 @@ from test_base_class import TestBaseClass
 
 try:
     import aerospike
+    from aerospike.exception import *
 except:
     print "Please install aerospike python client."
     sys.exit(1)
@@ -116,11 +117,14 @@ class TestUdfRemove(TestBaseClass):
         policy = {}
         module = "some_module"
 
-        with pytest.raises(Exception) as exception:
+        #with pytest.raises(Exception) as exception:
+        try:
             status = TestUdfRemove.client.udf_remove( module, policy )
 
-        assert exception.value[0] == 100
-        assert exception.value[1] == "error=file_not_found\n"
+        except UDFError as exception:
+            assert exception.code == 100
+            assert exception.msg == "error=file_not_found\n"
+            assert exception.module == "some_module"
 
     def test_udf_remove_with_unicode_filename(self):
 

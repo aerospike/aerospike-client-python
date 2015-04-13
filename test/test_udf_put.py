@@ -7,6 +7,7 @@ from test_base_class import TestBaseClass
 
 try:
     import aerospike
+    from aerospike.exception import *
 except:
     print "Please install aerospike python client."
     sys.exit(1)
@@ -107,7 +108,7 @@ class TestUdfPut(TestBaseClass):
         with pytest.raises(Exception) as exception:
             status = TestUdfPut.client.udf_put( filename, udf_type, policy )
 
-        assert exception.value[0] == 2
+        assert exception.value[0] == 1302
         assert exception.value[1] == "cannot open script file"
 
     def test_udf_put_with_non_lua_udf_type_and_lua_script_file(self):
@@ -116,11 +117,12 @@ class TestUdfPut(TestBaseClass):
         filename = "example.lua"
         udf_type = 1
 
-        with pytest.raises(Exception) as exception:
+        try:
             status = TestUdfPut.client.udf_put( filename, udf_type, policy )
 
-        assert exception.value[0] == -2L
-        assert exception.value[1] == "Invalid udf type: 1"
+        except ClientError as exception:
+            assert exception.code == -1
+            assert exception.msg == "Invalid UDF language"
 
     def test_udf_put_with_all_none_parameters(self):
 
