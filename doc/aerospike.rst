@@ -125,6 +125,8 @@ containing the keys of all records in the set.
     .. versionadded:: 1.0.39
 
 
+.. rubric:: Logging
+
 .. py:function:: set_log_handler(callback)
 
     Set a user-defined function as the log handler for all aerospike objects.
