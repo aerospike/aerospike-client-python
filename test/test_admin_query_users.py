@@ -7,6 +7,7 @@ from test_base_class import TestBaseClass
 
 try:
     import aerospike
+    from aerospike.exception import *
 except:
     print "Please install aerospike python client."
     sys.exit(1)
@@ -61,7 +62,7 @@ class TestQueryUsers(TestBaseClass):
 
         for user in user_details:
             if user['user'] == "example":
-                assert user == {'roles': ['sys-admin', 'read', 'read-write'], 'roles_size':
+                assert user == {'roles': ['read', 'read-write', 'sys-admin'], 'roles_size':
 3, 'user': "example"}
 
     def test_query_users_with_invalid_timeout_policy_value(self):
@@ -69,11 +70,12 @@ class TestQueryUsers(TestBaseClass):
         policy = { "timeout" : 0.1 }
         user = "example"
 
-        with pytest.raises(Exception) as exception:
+        try:
             status = self.client.admin_query_users( policy )
 
-        assert exception.value[0] == -2
-        assert exception.value[1] == "timeout is invalid"
+        except ParamError as exception:
+            assert exception.code == -2
+            assert exception.msg == "timeout is invalid"
 
     def test_query_users_with_proper_timeout_policy_value(self):
 
@@ -85,7 +87,7 @@ class TestQueryUsers(TestBaseClass):
         time.sleep(2)
         for user in user_details:
             if user['user'] == "example":
-                assert user == {'roles': ['sys-admin','read','read-write'],
+                assert user == {'roles': ['read','read-write', 'sys-admin'],
 'roles_size': 3, 'user': "example"}
 
     def test_query_users_with_no_roles(self):
@@ -125,8 +127,9 @@ class TestQueryUsers(TestBaseClass):
             Invoke query_users() with policy as string
         """
         policy = ""
-        with pytest.raises(Exception) as exception:
+        try:
             self.client.admin_query_users( policy )
 
-        assert exception.value[0] == -2L
-        assert exception.value[1] == "policy must be a dict"
+        except ParamError as exception:
+            assert exception.code == -2L
+            assert exception.msg == "policy must be a dict"

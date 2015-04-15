@@ -7,6 +7,7 @@ from test_base_class import TestBaseClass
 
 try:
     import aerospike
+    from aerospike.exception import *
 except:
     print "Please install aerospike python client."
     sys.exit(1)
@@ -61,11 +62,12 @@ class TestSetPassword(TestBaseClass):
         user = "testsetpassworduser"
         password = "newpassword"
 
-        with pytest.raises(Exception) as exception:
+        try:
             status = self.client.admin_set_password( policy, user, password )
 
-        assert exception.value[0] == -2
-        assert exception.value[1] == "timeout is invalid"
+        except ParamError as exception:
+            assert exception.code == -2
+            assert exception.msg == "timeout is invalid"
 
     def test_set_password_with_proper_timeout_policy_value(self):
 
@@ -83,11 +85,12 @@ class TestSetPassword(TestBaseClass):
         user = None
         password = "newpassword"
 
-        with pytest.raises(Exception) as exception :
+        try:
             status = self.client.admin_set_password( policy, user, password )
 
-        assert exception.value[0] == -2
-        assert exception.value[1] == "Username should be a string"
+        except ParamError as exception:
+            assert exception.code == -2
+            assert exception.msg == "Username should be a string"
 
     def test_set_password_with_none_password(self):
 
@@ -95,11 +98,12 @@ class TestSetPassword(TestBaseClass):
         user = "testsetpassworduser"
         password = None
 
-        with pytest.raises(Exception) as exception:
+        try:
             status = self.client.admin_set_password( policy, user, password )
 
-        assert exception.value[0] == -2
-        assert exception.value[1] == "Password should be a string"
+        except ParamError as exception:
+            assert exception.code == -2
+            assert exception.msg == "Password should be a string"
 
     def test_set_password_with_non_existent_user(self):
 
@@ -107,11 +111,12 @@ class TestSetPassword(TestBaseClass):
         user = "new_user"
         password = "newpassword"
 
-        with pytest.raises(Exception) as exception:
+        try:
             status = self.client.admin_set_password( policy, user, password )
 
-        assert exception.value[0] == 60
-        assert exception.value[1] == "AEROSPIKE_INVALID_USER"
+        except InvalidUser as exception:
+            assert exception.code == 60
+            assert exception.msg == "AEROSPIKE_INVALID_USER"
 
     def test_set_password_with_too_long_password(self):
 

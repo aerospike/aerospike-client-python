@@ -19,31 +19,93 @@
  *
  * q = client.query(ns,set).where(p.equals("bin",1))
  */
-
 #include <Python.h>
 #include <aerospike/as_query.h>
 #include <aerospike/as_error.h>
+#include <aerospike/as_status.h>
 
 #include "conversions.h"
+#include <string.h>
 #include "exceptions.h"
 PyObject *ParamError;
-PyObject *ClientError;
-PyObject *ServerError;
+PyObject *ClientError, *ServerError, *TimeoutError;
+PyObject *InvalidRequest, *ServerFull, *NoXDR, *UnsupportedFeature, *DeviceOverload, *ForbiddenError, *QueryError;
+PyObject *AdminError, *SecurityNotSupported, *SecurityNotEnabled, *SecuritySchemeNotSupported, *InvalidCommand, *InvalidField, *IllegalState, *InvalidUser, *UserExistsError, *InvalidPassword, *ExpiredPassword, *ForbiddenPassword, *InvalidCredential, *InvalidRole, *RoleExistsError, *RoleViolation, *InvalidPrivilege, *NotAuthenticated;
 static PyObject *AerospikeError, *InvalidHostError, *NamespaceNotFound;
-static PyObject *RecordError, *RecordKeyMismatch, *RecordNotFound, *BinNameError, *RecordGenerationError, *RecordExistsError, *RecordTooBig, *RecordBusy, *BinNameError, *BinExistsError, *BinNotFound, *BinIncompatibleType;
+static PyObject *RecordError, *RecordKeyMismatch=NULL, *RecordNotFound=NULL, *BinNameError=NULL, *RecordGenerationError=NULL, *RecordExistsError, *RecordTooBig, *RecordBusy, *BinNameError, *BinExistsError, *BinNotFound, *BinIncompatibleType;
 static PyObject *IndexError, *IndexNotFound, *IndexFoundError, *IndexOOM, *IndexNotReadable, *IndexNameMaxLen, *IndexNameMaxCount;
 static PyObject *UDFError, *UDFNotFound, *LuaFileNotFound;
 static PyObject *ClusterError, *ClusterChangeError;
+static PyObject *module;
+
+struct server_exceptions_struct {
+	PyObject * *server_exceptions[9];
+	char * server_exceptions_name[9];
+	int server_exceptions_codes[9];
+};
+struct record_exceptions_struct {
+	PyObject * *record_exceptions[10];
+	char * record_exceptions_name[10];
+	int record_exceptions_codes[10];
+};
+
+struct index_exceptions_struct {
+	PyObject * *index_exceptions[5];
+	char * index_exceptions_name[5];
+	int index_exceptions_codes[5];
+};
+
+struct admin_exceptions_struct {
+	PyObject * *admin_exceptions[17];
+	char * admin_exceptions_name[17];
+	int admin_exceptions_codes[17];
+};
 
 PyObject * AerospikeException_New(void)
 {
-	PyObject * module = Py_InitModule3("aerospike.exception", NULL, "Exception objects");
+	module = Py_InitModule3("aerospike.exception", NULL, "Exception objects");
+
+	struct server_exceptions_struct server_array = { 
+		{&InvalidRequest, &ServerFull, &NoXDR, &UnsupportedFeature, &DeviceOverload, &NamespaceNotFound, &ForbiddenError, &QueryError, &ClusterError},
+		{"InvalidRequest", "ServerFull", "NoXDR", "UnsupportedFeature", "DeviceOverload", "NamespaceNotFound", "ForbiddenError", "QueryError", "ClusterError"},
+		{AEROSPIKE_ERR_REQUEST_INVALID, AEROSPIKE_ERR_SERVER_FULL, AEROSPIKE_ERR_NO_XDR, AEROSPIKE_ERR_UNSUPPORTED_FEATURE, AEROSPIKE_ERR_DEVICE_OVERLOAD, 
+			AEROSPIKE_ERR_NAMESPACE_NOT_FOUND,  AEROSPIKE_ERR_FAIL_FORBIDDEN, AEROSPIKE_ERR_QUERY, AEROSPIKE_ERR_CLUSTER}
+	};
+
+	struct record_exceptions_struct record_array = { 
+		{&RecordKeyMismatch, &RecordNotFound, &RecordGenerationError, &RecordExistsError, &RecordTooBig, &RecordBusy, &BinNameError, &BinExistsError, &BinNotFound, 
+			&BinIncompatibleType},
+		{"RecordKeyMismatch", "RecordNotFound", "RecordGenerationError", "RecordExistsError", "RecordTooBig", "RecordBusy", "BinNameError", "BinExistsError", 
+			"BinNotFound", "BinIncompatibleType"},
+		{AEROSPIKE_ERR_RECORD_KEY_MISMATCH, AEROSPIKE_ERR_RECORD_NOT_FOUND, AEROSPIKE_ERR_RECORD_GENERATION, AEROSPIKE_ERR_RECORD_EXISTS, AEROSPIKE_ERR_RECORD_TOO_BIG, AEROSPIKE_ERR_RECORD_BUSY, AEROSPIKE_ERR_BIN_NAME, AEROSPIKE_ERR_BIN_EXISTS, AEROSPIKE_ERR_BIN_NOT_FOUND, AEROSPIKE_ERR_BIN_INCOMPATIBLE_TYPE}
+	};
+
+	struct index_exceptions_struct index_array = { 
+		{&IndexNotFound, &IndexOOM, &IndexNotReadable, &IndexNameMaxLen, &IndexNameMaxCount},
+		{"IndexNotFound", "IndexOOM", "IndexNotReadable", "IndexNameMaxLen", "IndexNameMaxCount"},
+		{AEROSPIKE_ERR_INDEX_NOT_FOUND, AEROSPIKE_ERR_INDEX_FOUND, AEROSPIKE_ERR_INDEX_OOM, AEROSPIKE_ERR_INDEX_NOT_READABLE, AEROSPIKE_ERR_INDEX_NAME_MAXLEN, 
+			AEROSPIKE_ERR_INDEX_MAXCOUNT}
+	};
+
+	struct admin_exceptions_struct admin_array = { 
+		{&SecurityNotSupported, &SecurityNotEnabled, &SecuritySchemeNotSupported, &InvalidCommand, &InvalidField, &IllegalState, &InvalidUser, &UserExistsError, 
+			&InvalidPassword, &ExpiredPassword, &ForbiddenPassword, &InvalidCredential, &InvalidRole, &RoleExistsError, &RoleViolation, &InvalidPrivilege, 
+			&NotAuthenticated},
+		{"SecurityNotSupported", "SecurityNotEnabled", "SecuritySchemeNotSupported", "InvalidCommand", "InvalidField", "IllegalState", "InvalidUser", "UserExistsError", 
+			"InvalidPassword", "ExpiredPassword", "ForbiddenPassword", "InvalidCredential", "InvalidRole", "RoleExistsError", "RoleViolation", "InvalidPrivilege", 
+			"NotAuthenticated"},
+		{AEROSPIKE_SECURITY_NOT_SUPPORTED, AEROSPIKE_SECURITY_NOT_ENABLED, AEROSPIKE_SECURITY_SCHEME_NOT_SUPPORTED, AEROSPIKE_INVALID_COMMAND, AEROSPIKE_INVALID_FIELD, 
+			AEROSPIKE_ILLEGAL_STATE, AEROSPIKE_INVALID_USER, AEROSPIKE_USER_ALREADY_EXISTS, AEROSPIKE_INVALID_PASSWORD, AEROSPIKE_EXPIRED_PASSWORD, 
+			AEROSPIKE_FORBIDDEN_PASSWORD, AEROSPIKE_INVALID_CREDENTIAL, AEROSPIKE_INVALID_ROLE, AEROSPIKE_ROLE_ALREADY_EXISTS, AEROSPIKE_ROLE_VIOLATION,  
+			AEROSPIKE_INVALID_PRIVILEGE, AEROSPIKE_NOT_AUTHENTICATED}
+	};
 
 	PyObject *py_dict = PyDict_New();
 	PyDict_SetItemString(py_dict, "code", Py_None);
 	PyDict_SetItemString(py_dict, "file", Py_None);
 	PyDict_SetItemString(py_dict, "msg", Py_None);
 	PyDict_SetItemString(py_dict, "line", Py_None);
+
 	AerospikeError = PyErr_NewException("exception.AerospikeError", NULL, py_dict);
 	Py_INCREF(AerospikeError);
 	Py_DECREF(py_dict);
@@ -52,23 +114,42 @@ PyObject * AerospikeException_New(void)
 	ClientError = PyErr_NewException("exception.ClientError", AerospikeError, NULL);
 	Py_INCREF(ClientError);
 	PyModule_AddObject(module, "ClientError", ClientError);
+	PyObject_SetAttrString(ClientError, "code", PyInt_FromLong(AEROSPIKE_ERR_CLIENT));
 
 	ServerError = PyErr_NewException("exception.ServerError", AerospikeError, NULL);
 	Py_INCREF(ServerError);
 	PyModule_AddObject(module, "ServerError", ServerError);
+	PyObject_SetAttrString(ServerError, "code", PyInt_FromLong(AEROSPIKE_ERR_SERVER));
 
+	TimeoutError = PyErr_NewException("exception.TimeoutError", AerospikeError, NULL);
+	Py_INCREF(TimeoutError);
+	PyModule_AddObject(module, "TimeoutError", TimeoutError);
+	PyObject_SetAttrString(TimeoutError, "code", PyInt_FromLong(AEROSPIKE_ERR_TIMEOUT));
+
+	//Client Exceptions
 	ParamError = PyErr_NewException("exception.ParamError", ClientError, NULL);
 	Py_INCREF(ParamError);
 	PyModule_AddObject(module, "ParamError", ParamError);
+	PyObject_SetAttrString(ParamError, "code", PyInt_FromLong(AEROSPIKE_ERR_PARAM));
 
 	InvalidHostError = PyErr_NewException("exception.InvalidHostError", ClientError, NULL);
 	Py_INCREF(InvalidHostError);
 	PyModule_AddObject(module, "InvalidHostError", InvalidHostError);
+	PyObject_SetAttrString(InvalidHostError, "code", PyInt_FromLong(AEROSPIKE_ERR_INVALID_HOST));
 
-	//Cluster exceptions
-	ClusterError = PyErr_NewException("exception.ClusterError", ServerError, NULL);
-	Py_INCREF(ClusterError);
-	PyModule_AddObject(module, "ClusterError", ClusterError);
+	//Server Exceptions
+	int count = sizeof(server_array.server_exceptions)/sizeof(server_array.server_exceptions[0]);
+	int i;
+	PyObject **current_exception;
+	for(i=0; i < count; i++) {
+		current_exception = server_array.server_exceptions[i];
+		char * name = server_array.server_exceptions_name[i];
+		char prefix[40] = "exception.";
+		*current_exception = PyErr_NewException(strcat(prefix, name), ServerError, NULL);
+		Py_INCREF(*current_exception);
+		PyModule_AddObject(module, name, *current_exception);
+		PyObject_SetAttrString(*current_exception, "code", PyInt_FromLong(server_array.server_exceptions_codes[i]));
+	}
 
 	ClusterChangeError = PyErr_NewException("exception.ClusterChangeError", ClusterError, NULL);
 	Py_INCREF(ClusterChangeError);
@@ -77,87 +158,44 @@ PyObject * AerospikeException_New(void)
 	//Record exceptions
 	PyObject *py_record_dict = PyDict_New();
 	PyDict_SetItemString(py_record_dict, "key", Py_None);
-	PyDict_SetItemString(py_record_dict, "bins", Py_None);
+	PyDict_SetItemString(py_record_dict, "bin", Py_None);
 
 	RecordError = PyErr_NewException("exception.RecordError", ServerError, py_record_dict);
 	Py_INCREF(RecordError);
 	Py_DECREF(py_record_dict);
 	PyModule_AddObject(module, "RecordError", RecordError);
-
-	RecordKeyMismatch = PyErr_NewException("exception.RecordKeyMismatch", RecordError, NULL);
-	Py_INCREF(RecordKeyMismatch);
-	PyModule_AddObject(module, "RecordKeyMismatch", RecordKeyMismatch);
-
-	RecordNotFound = PyErr_NewException("exception.RecordNotFound", RecordError, NULL);
-	Py_INCREF(RecordNotFound);
-	PyModule_AddObject(module, "RecordNotFound", RecordNotFound);
-
-	RecordGenerationError = PyErr_NewException("exception.RecordGenerationError", RecordError, NULL);
-	Py_INCREF(RecordGenerationError);
-	PyModule_AddObject(module, "RecordGenerationError", RecordGenerationError);
-
-	RecordExistsError = PyErr_NewException("exception.RecordExistsError", RecordError, NULL);
-	Py_INCREF(RecordExistsError);
-	PyModule_AddObject(module, "RecordExistsError", RecordExistsError);
-
-	RecordTooBig = PyErr_NewException("exception.RecordTooBig", RecordError, NULL);
-	Py_INCREF(RecordTooBig);
-	PyModule_AddObject(module, "RecordTooBig", RecordTooBig);
-
-	RecordBusy = PyErr_NewException("exception.RecordBusy", RecordError, NULL);
-	Py_INCREF(RecordBusy);
-	PyModule_AddObject(module, "RecordBusy", RecordBusy);
-
-	BinNameError = PyErr_NewException("exception.BinNameError", RecordError, NULL);
-	Py_INCREF(BinNameError);
-	PyModule_AddObject(module, "BinNameError", BinNameError);
-
-	BinExistsError = PyErr_NewException("exception.BinExistsError", RecordError, NULL);
-	Py_INCREF(BinExistsError);
-	PyModule_AddObject(module, "BinExistsError", BinExistsError);
-
-	BinNotFound = PyErr_NewException("exception.BinNotFound", RecordError, NULL);
-	Py_INCREF(BinNotFound);
-	PyModule_AddObject(module, "BinNotFound", BinNotFound);
-
-	BinIncompatibleType = PyErr_NewException("exception.BinIncompatibleType", RecordError, NULL);
-	Py_INCREF(BinIncompatibleType);
-	PyModule_AddObject(module, "BinIncompatibleType", BinIncompatibleType);
-
-	NamespaceNotFound = PyErr_NewException("exception.NamespaceNotFound", ServerError, NULL);
-	Py_INCREF(NamespaceNotFound);
-	PyModule_AddObject(module, "NamespaceNotFound", NamespaceNotFound);
+	
+	//int count = sizeof(record_exceptions)/sizeof(record_exceptions[0]);
+	count = sizeof(record_array.record_exceptions)/sizeof(record_array.record_exceptions[0]);
+	for(i=0; i < count; i++) {
+		current_exception = record_array.record_exceptions[i];
+		char * name = record_array.record_exceptions_name[i];
+		char prefix[40] = "exception.";
+		*current_exception = PyErr_NewException(strcat(prefix, name), RecordError, NULL);
+		Py_INCREF(*current_exception);
+		PyModule_AddObject(module, name, *current_exception);
+		PyObject_SetAttrString(*current_exception, "code", PyInt_FromLong(record_array.record_exceptions_codes[i]));
+	}
 
 	//Index exceptions
 	PyObject *py_index_dict = PyDict_New();
 	PyDict_SetItemString(py_index_dict, "name", Py_None);
-	IndexError = PyErr_NewException("exception.IndexError", ServerError, NULL);
+
+	IndexError = PyErr_NewException("exception.IndexError", ServerError, py_index_dict);
 	Py_INCREF(IndexError);
+	Py_DECREF(py_index_dict);
 	PyModule_AddObject(module, "IndexError", IndexError);
 
-	IndexNotFound = PyErr_NewException("exception.IndexNotFound", IndexError, NULL);
-	Py_INCREF(IndexNotFound);
-	PyModule_AddObject(module, "IndexNotFound", IndexNotFound);
-
-	IndexFoundError = PyErr_NewException("exception.IndexFoundError", IndexError, NULL);
-	Py_INCREF(IndexFoundError);
-	PyModule_AddObject(module, "IndexFoundError", IndexFoundError);
-
-	IndexOOM = PyErr_NewException("exception.IndexOOM", IndexError, NULL);
-	Py_INCREF(IndexOOM);
-	PyModule_AddObject(module, "IndexOOM", IndexOOM);
-
-	IndexNotReadable = PyErr_NewException("exception.IndexNotReadable", IndexError, NULL);
-	Py_INCREF(IndexNotReadable);
-	PyModule_AddObject(module, "IndexNotReadable", IndexNotReadable);
-
-	IndexNameMaxLen = PyErr_NewException("exception.IndexNameMaxLen", IndexError, NULL);
-	Py_INCREF(IndexNameMaxLen);
-	PyModule_AddObject(module, "IndexNameMaxLen", IndexNameMaxLen);
-
-	IndexNameMaxCount = PyErr_NewException("exception.IndexNameMaxCount", IndexError, NULL);
-	Py_INCREF(IndexNameMaxCount);
-	PyModule_AddObject(module, "IndexNameMaxCount", IndexNameMaxCount);
+	count = sizeof(index_array.index_exceptions)/sizeof(index_array.index_exceptions[0]);
+	for(i=0; i < count; i++) {
+		current_exception = index_array.index_exceptions[i];
+		char * name = index_array.index_exceptions_name[i];
+		char prefix[40] = "exception.";
+		*current_exception = PyErr_NewException(strcat(prefix, name), IndexError, NULL);
+		Py_INCREF(*current_exception);
+		PyModule_AddObject(module, name, *current_exception);
+		PyObject_SetAttrString(*current_exception, "code", PyInt_FromLong(index_array.index_exceptions_codes[i]));
+	}
 
 	//UDF exceptions
 	PyObject *py_udf_dict = PyDict_New();
@@ -176,12 +214,42 @@ PyObject * AerospikeException_New(void)
 	LuaFileNotFound = PyErr_NewException("exception.LuaFileNotFound", UDFError, NULL);
 	Py_INCREF(LuaFileNotFound);
 	PyModule_AddObject(module, "LuaFileNotFound", LuaFileNotFound);
+
+	//Admin exceptions
+	AdminError = PyErr_NewException("exception.AdminError", ServerError, NULL);
+	Py_INCREF(AdminError);
+	PyModule_AddObject(module, "AdminError", AdminError);
+
+	count = sizeof(admin_array.admin_exceptions)/sizeof(admin_array.admin_exceptions[0]);
+	for(i=0; i < count; i++) {
+		current_exception = admin_array.admin_exceptions[i];
+		char * name = admin_array.admin_exceptions_name[i];
+		char prefix[40] = "exception.";
+		*current_exception = PyErr_NewException(strcat(prefix, name), AdminError, NULL);
+		Py_INCREF(*current_exception);
+		PyModule_AddObject(module, name, *current_exception);
+		PyObject_SetAttrString(*current_exception, "code", PyInt_FromLong(admin_array.admin_exceptions_codes[i]));
+	}
 	return module;
 }
 
 PyObject* raise_exception(as_error *err) {
+		PyObject * py_key = NULL, *py_value = NULL;
+		Py_ssize_t pos = 0;
+		PyObject * py_module_dict = PyModule_GetDict(module);
+		while(PyDict_Next(py_module_dict, &pos, &py_key, &py_value)) {
+			if(PyObject_HasAttrString(py_value, "file")) {
+				PyObject * py_code = PyObject_GetAttrString(py_value, "code");
+				if(err->code == PyInt_AsLong(py_code)) {
+					PyObject_SetAttrString(py_value, "msg", PyString_FromString(err->message));
+					PyObject_SetAttrString(py_value, "file", PyString_FromString(err->file));
+					PyObject_SetAttrString(py_value, "line", PyInt_FromLong(err->line));
+					break;
+				}
+			}
+		}
 		PyObject * type_of_exception = NULL;
-		switch(err->code) {
+		/*switch(err->code) {
 			case -1:
 				type_of_exception = ClientError;
 			break;
@@ -281,12 +349,9 @@ PyObject* raise_exception(as_error *err) {
 			case 1302:
 				type_of_exception = LuaFileNotFound;
 			break;
-		}
+		}*/
 
-		PyObject_SetAttrString(type_of_exception, "code", PyInt_FromLong(err->code));
-		PyObject_SetAttrString(type_of_exception, "msg", PyString_FromString(err->message));
-		PyObject_SetAttrString(type_of_exception, "file", PyString_FromString(err->file));
-		PyObject_SetAttrString(type_of_exception, "line", PyInt_FromLong(err->line));
+		//PyObject_SetAttrString(type_of_exception, "code", PyInt_FromLong(err->code));
 
-		return type_of_exception;
+		return py_value;
 }

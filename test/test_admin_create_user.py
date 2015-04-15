@@ -7,6 +7,7 @@ from test_base_class import TestBaseClass
 
 try:
     import aerospike
+    from aerospike.exception import *
 except:
     print "Please install aerospike python client."
     sys.exit(1)
@@ -66,7 +67,7 @@ class TestCreateUser(TestBaseClass):
 
         user_details = self.client.admin_query_user( policy, user )
 
-        assert user_details == [{'roles': ['sys-admin', 'read', 'read-write', ], 'roles_size': 3, 'user': 'user1'}]
+        assert user_details == [{'roles': ['read', 'read-write', 'sys-admin'], 'roles_size': 3, 'user': 'user1'}]
 
         self.delete_users.append('user1')
 
@@ -82,11 +83,12 @@ class TestCreateUser(TestBaseClass):
         except:
             pass
 
-        with pytest.raises(Exception) as exception:
+        try:
             status = self.client.admin_create_user( policy, user, password, roles, len(roles) )
 
-        assert exception.value[0] == -2
-        assert exception.value[1] == "timeout is invalid"
+        except ParamError as exception:
+            assert exception.code == -2
+            assert exception.msg == "timeout is invalid"
 
     def test_create_user_with_proper_timeout_policy_value(self):
 
@@ -121,11 +123,12 @@ class TestCreateUser(TestBaseClass):
         password = "user3"
         roles = ["sys-admin"]
 
-        with pytest.raises(Exception) as exception:
+        try:
             status = self.client.admin_create_user( policy, user, password, roles, len(roles) )
 
-        assert exception.value[0] == -2
-        assert exception.value[1] == "Username should be a string"
+        except ParamError as exception:
+            assert exception.code == -2
+            assert exception.msg == "Username should be a string"
 
     def test_create_user_with_empty_username(self):
 
@@ -134,11 +137,12 @@ class TestCreateUser(TestBaseClass):
         password = "user3"
         roles = ["read-write"]
 
-        with pytest.raises(Exception) as exception:
+        try:
             status = self.client.admin_create_user( policy, user, password, roles, len(roles) )
 
-        assert exception.value[0] == 60
-        assert exception.value[1] == "AEROSPIKE_INVALID_USER"
+        except InvalidUser as exception:
+            assert exception.code == 60
+            assert exception.msg == "AEROSPIKE_INVALID_USER"
 
     def test_create_user_with_special_characters_in_username(self):
 
@@ -165,11 +169,12 @@ class TestCreateUser(TestBaseClass):
         password = None
         roles = ["sys-admin"]
 
-        with pytest.raises(Exception) as exception:
+        try:
             status = self.client.admin_create_user( policy, user, password, roles, len(roles) )
 
-        assert exception.value[0] == -2
-        assert exception.value[1] == "Password should be a string"
+        except ParamError as exception:
+            assert exception.code == -2
+            assert exception.msg == "Password should be a string"
 
     def test_create_user_with_empty_string_as_password(self):
 
@@ -219,11 +224,12 @@ class TestCreateUser(TestBaseClass):
         except:
             pass
 
-        with pytest.raises(Exception) as exception:
+        try:
             status = self.client.admin_create_user( policy, user, password, roles, len(roles) )
 
-        assert exception.value[0] == 60
-        assert exception.value[1] == "AEROSPIKE_INVALID_USER"
+        except InvalidUser as exception:
+            assert exception.code == 60
+            assert exception.msg == "AEROSPIKE_INVALID_USER"
 
 
     def test_create_user_with_too_long_password(self):
@@ -262,11 +268,12 @@ class TestCreateUser(TestBaseClass):
         except:
             pass
 
-        with pytest.raises(Exception) as exception:
+        try:
             status = self.client.admin_create_user( policy, user, password, roles, len(roles) )
 
-        assert exception.value[0] == 70
-        assert exception.value[1] == "AEROSPIKE_INVALID_ROLE"
+        except InvalidRole as exception:
+            assert exception.code == 70
+            assert exception.msg == "AEROSPIKE_INVALID_ROLE"
 
     def test_create_user_with_invalid_role(self):
 
@@ -280,11 +287,12 @@ class TestCreateUser(TestBaseClass):
         except:
             pass
 
-        with pytest.raises(Exception) as exception:
+        try:
             status = self.client.admin_create_user( policy, user, password, roles, len(roles) )
 
-        assert exception.value[0] == 70
-        assert exception.value[1] == "AEROSPIKE_INVALID_ROLE"
+        except InvalidRole as exception:
+            assert exception.code == 70
+            assert exception.msg == "AEROSPIKE_INVALID_ROLE"
 
     def test_create_user_with_different_roles_and_roles_size(self):
 
@@ -298,11 +306,12 @@ class TestCreateUser(TestBaseClass):
         except:
             pass
 
-        with pytest.raises(Exception) as exception:
+        try:
             status = self.client.admin_create_user(policy, user, password, roles, 2)
 
-        assert exception.value[0] == 70
-        assert exception.value[1] == "AEROSPIKE_INVALID_ROLE"
+        except InvalidRole as exception:
+            assert exception.code == 70
+            assert exception.msg == "AEROSPIKE_INVALID_ROLE"
 
     def test_create_user_with_non_user_admin_user(self):
 
@@ -326,13 +335,14 @@ class TestCreateUser(TestBaseClass):
 
         non_admin_client = None
 
-        with pytest.raises(Exception) as exception:
+        try:
             non_admin_client = aerospike.client(config).connect( "non_admin", "non_admin" )
             status = non_admin_client.admin_create_user( policy, "user78", password, roles, len(roles) )
 
-        if non_admin_client:
-            non_admin_client.close()
+            if non_admin_client:
+                non_admin_client.close()
 
-        assert exception.value[0] == 81
+        except RoleViolation as exception:
+            assert exception.code == 81
 
         self.delete_users.append("non_admin")

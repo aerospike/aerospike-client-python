@@ -109,6 +109,8 @@ PyObject * AerospikeClient_Get_Invoke(
 		}
 	}
 	else if ( err.code == AEROSPIKE_ERR_RECORD_NOT_FOUND ) {
+		err.file = __FILE__;
+		err.line = __LINE__;
 		//as_error_reset(&err);
 
 		/*PyObject * py_rec_key = NULL;
@@ -143,7 +145,8 @@ CLEANUP:
 		PyObject *exception_type = raise_exception(&err);
 		if(PyObject_HasAttrString(exception_type, "key")) {
 			PyObject_SetAttrString(exception_type, "key", py_key);
-		} else if(PyObject_HasAttrString(exception_type, "bin")) {
+		} 
+		if(PyObject_HasAttrString(exception_type, "bin")) {
 			PyObject_SetAttrString(exception_type, "bin", Py_None);
 		}
 		PyErr_SetObject(exception_type, py_err);

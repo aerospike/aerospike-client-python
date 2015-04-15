@@ -7,6 +7,7 @@ from test_base_class import TestBaseClass
 
 try:
     import aerospike
+    from aerospike.exception import *
 except:
     print "Please install aerospike python client."
     sys.exit(1)
@@ -88,11 +89,12 @@ class TestRevokeRoles(TestBaseClass):
         user = "example"
         roles = ['sys-admin']
 
-        with pytest.raises(Exception) as exception:
+        try:
             status = self.client.admin_revoke_roles( policy, user, roles, len(roles) )
 
-        assert exception.value[0] == -2
-        assert exception.value[1] == "timeout is invalid"
+        except ParamError as exception:
+            assert exception.code == -2
+            assert exception.msg == "timeout is invalid"
 
     def test_revoke_roles_with_proper_timeout_policy_value(self):
 
@@ -116,11 +118,12 @@ class TestRevokeRoles(TestBaseClass):
         user = None
         roles = ["sys-admin"]
 
-        with pytest.raises(Exception) as exception:
+        try:
             status = self.client.admin_revoke_roles( policy, user, roles, len(roles) )
 
-        assert exception.value[0] == -2
-        assert exception.value[1] == "Username should be a string"
+        except ParamError as exception:
+            assert exception.code == -2
+            assert exception.msg == "Username should be a string"
 
     def test_revoke_roles_with_empty_username(self):
 
@@ -128,11 +131,12 @@ class TestRevokeRoles(TestBaseClass):
         user = ""
         roles = ["read-write"]
 
-        with pytest.raises(Exception) as exception:
+        try:
             status = self.client.admin_revoke_roles( policy, user, roles, len(roles) )
 
-        assert exception.value[0] == 60
-        assert exception.value[1] == "AEROSPIKE_INVALID_USER"
+        except InvalidUser as exception:
+            assert exception.code == 60
+            assert exception.msg == "AEROSPIKE_INVALID_USER"
 
     def test_revoke_roles_with_empty_roles_list(self):
 
@@ -140,11 +144,12 @@ class TestRevokeRoles(TestBaseClass):
         user = "example"
         roles = []
 
-        with pytest.raises(Exception) as exception:
+        try:
             status = self.client.admin_revoke_roles( policy, user, roles, len(roles) )
 
-        assert exception.value[0] == 70
-        assert exception.value[1] == "AEROSPIKE_INVALID_ROLE"
+        except InvalidRole as exception:
+            assert exception.code == 70
+            assert exception.msg == "AEROSPIKE_INVALID_ROLE"
 
     def test_revoke_roles_with_invalid_role(self):
 
@@ -176,11 +181,12 @@ class TestRevokeRoles(TestBaseClass):
         user = "non-existent"
         roles = ["read-write"]
 
-        with pytest.raises(Exception) as exception:
+        try:
             status = self.client.admin_revoke_roles( policy, user, roles, len(roles) )
 
-        assert exception.value[0] == 60
-        assert exception.value[1] == "AEROSPIKE_INVALID_USER"
+        except InvalidUser as exception:
+            assert exception.code == 60
+            assert exception.msg == "AEROSPIKE_INVALID_USER"
 
     def test_revoke_roles_with_special_characters_in_username(self):
 
