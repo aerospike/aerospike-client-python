@@ -73,6 +73,19 @@ class TestIndex(TestBaseClass):
         assert retobj == 0L
         TestIndex.client.index_remove('test', 'age_index', policy);
 
+    def test_createindex_with_correct_parameters_set_length_extra(self):
+            #Invoke createindex() with correct arguments
+        set_name = 'a'
+        for i in xrange(100):
+            set_name = set_name + 'a'
+        policy = {}
+        with pytest.raises(Exception) as exception:
+            retobj = TestIndex.client.index_integer_create('test', set_name,
+'age', 'age_index', policy)
+
+        assert exception.value[0] == 4
+        assert exception.value[1] == 'Invalid Set Name'
+
     def test_createindex_with_incorrect_namespace(self):
         """
             Invoke createindex() with incorrect namespace
@@ -118,15 +131,23 @@ class TestIndex(TestBaseClass):
         assert exception.value[1] == 'Namespace should be a string'
 
     def test_createindex_with_set_is_none(self):
-        """
-            Invoke createindex() with set is None
-        """
+            #Invoke createindex() with set is None
+        policy = {}
+        retobj = TestIndex.client.index_integer_create( 'test', None,
+'age', 'age_index' , policy)
+
+        assert retobj == 0L
+        TestIndex.client.index_remove('test', 'age_index', policy);
+
+    def test_createindex_with_set_is_int(self):
+            #Invoke createindex() with set is int
         policy = {}
         with pytest.raises(Exception) as exception:
-            retobj = TestIndex.client.index_integer_create( 'test', None,
+            retobj = TestIndex.client.index_integer_create( 'test', 1,
 'age', 'age_index' , policy)
+
         assert exception.value[0] == -2
-        assert exception.value[1] == 'Set should be a string'
+        assert exception.value[1] == 'Set should be string, unicode or None'
 
     def test_createindex_with_bin_is_none(self):
         """
@@ -148,7 +169,7 @@ None, 'age_index' , policy)
             retobj = TestIndex.client.index_integer_create( 'test', 'demo',
 'age', None, policy )
         assert exception.value[0] == -2
-        assert exception.value[1] == 'Index name should be a string'
+        assert exception.value[1] == 'Index name should be string or unicode'
 
     def test_create_same_index_multiple_times(self):
         """
@@ -221,6 +242,32 @@ name
         assert retobj == 0L
         TestIndex.client.index_remove('test', 'name_index', policy)
 
+    def test_create_string_index_with_correct_parameters_set_length_extra(self):
+            #Invoke createindex() with correct arguments set length extra
+        set_name = 'a'
+        for i in xrange(100):
+            set_name = set_name + 'a'
+        policy = {}
+        with pytest.raises(Exception) as exception:
+            retobj = TestIndex.client.index_string_create('test', set_name,
+'name', 'name_index', policy)
+
+        assert exception.value[0] == 4
+        assert exception.value[1] == 'Invalid Set Name'
+
+    def test_create_string_index_with_correct_parameters_ns_length_extra(self):
+            #Invoke createindex() with correct arguments ns length extra
+        ns_name = 'a'
+        for i in xrange(50):
+            ns_name = ns_name + 'a'
+        policy = {}
+        with pytest.raises(Exception) as exception:
+            retobj = TestIndex.client.index_string_create(ns_name, 'demo',
+'name', 'name_index', policy)
+
+        assert exception.value[0] == 4
+        assert exception.value[1] == 'Namespace Not Found'
+
     def test_create_string_index_with_incorrect_namespace(self):
         """
             Invoke create string index() with incorrect namespace
@@ -266,15 +313,23 @@ name
         #assert exception.value[1] == 'Namespace should be a string'
 
     def test_create_string_index_with_set_is_none(self):
-        """
-            Invoke create string index() with set is None
-        """
+            #Invoke create string index() with set is None
         policy = {}
-        with pytest.raises(Exception) as exception:
-            retobj = TestIndex.client.index_string_create('test', None,
+        retobj = TestIndex.client.index_string_create('test', None,
 'name', 'name_index', policy)
+
+        assert retobj == 0L
+        TestIndex.client.index_remove('test', 'name_index', policy);
+
+    def test_create_string_index_with_set_is_int(self):
+            #Invoke create string index() with set is int
+        policy = {}
+
+        with pytest.raises(Exception) as exception:
+            retobj = TestIndex.client.index_string_create('test', 1, 'name', 'name_index', policy)
+
         assert exception.value[0] == -2
-        assert exception.value[1] == 'Set should be a string'
+        assert exception.value[1] == 'Set should be string, unicode or None'
 
     def test_create_string_index_with_bin_is_none(self):
         """
@@ -296,7 +351,7 @@ None, 'name_index', policy)
             retobj = TestIndex.client.index_string_create('test', 'demo',
 'name', None, policy)
         assert exception.value[0] == -2
-        assert exception.value[1] == 'Index name should be a string'
+        assert exception.value[1] == 'Index name should be string or unicode'
 
     def test_create_same_string_index_multiple_times(self):
         """
@@ -424,9 +479,7 @@ u'age', u'uni_age_index', policy )
         TestIndex.client.index_remove('test', u'age_index', policy);
 
     def test_createindex_with_correct_parameters_without_connection(self):
-        """
-            Invoke createindex() with correct arguments without connection
-        """
+            #Invoke createindex() with correct arguments without connection
         policy = {}
         config = {
                 'hosts': [('127.0.0.1', 3000)]
