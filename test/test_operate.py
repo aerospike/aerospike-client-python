@@ -6,6 +6,7 @@ import cPickle as pickle
 from test_base_class import TestBaseClass
 try:
     import aerospike
+    from aerospike.exception import *
 except:
     print "Please install aerospike python client."
     sys.exit(1)
@@ -266,12 +267,12 @@ class TestOperate(object):
                     "bin" : "name"
                     }
                 ]
-
-        with pytest.raises(Exception) as exception:
+        try:
             key, meta, bins = TestOperate.client.operate(key, list, meta, policy)
 
-        assert exception.value[0] == 3L
-        assert exception.value[1] == "AEROSPIKE_ERR_RECORD_GENERATION"
+        except RecordGenerationError as exception:
+            assert exception.code == 3L
+            assert exception.msg == "AEROSPIKE_ERR_RECORD_GENERATION"
        
         (key , meta, bins) = TestOperate.client.get(key)
         assert bins == { "age": 1, 'name': 'name1'}
@@ -312,11 +313,12 @@ class TestOperate(object):
                     }
                 ]
 
-        with pytest.raises(Exception) as exception:
+        try:
             (key, meta, bins) = TestOperate.client.operate(key, list, meta, policy)
 
-        assert exception.value[0] == 3L
-        assert exception.value[1] == "AEROSPIKE_ERR_RECORD_GENERATION"
+        except RecordGenerationError as exception:
+            assert exception.code == 3L
+            assert exception.msg == "AEROSPIKE_ERR_RECORD_GENERATION"
         
         (key , meta, bins) = TestOperate.client.get(key)
         assert bins == { 'age' : 1, 'name': 'name1'}
@@ -388,11 +390,12 @@ class TestOperate(object):
                     }
                 ]
 
-        with pytest.raises(Exception) as exception:
+        try:
             (bins) = TestOperate.client.operate(key, list, {}, policy)
 
-        assert exception.value[0] == -2
-        assert exception.value[1] == "timeout is invalid"
+        except ParamError as exception:
+            assert exception.code == -2
+            assert exception.msg == "timeout is invalid"
 
     def test_opearte_on_same_bin_negative(self):
         """
@@ -424,11 +427,12 @@ class TestOperate(object):
                     }
                 ]
 
-        with pytest.raises(Exception) as exception:
+        try:
             (bins) = TestOperate.client.operate(key, list, {}, policy)
 
-        assert exception.value[0] == 4L
-        assert exception.value[1] == "AEROSPIKE_ERR_REQUEST_INVALID"
+        except InvalidRequest as exception:
+            assert exception.code == 4L
+            assert exception.msg == "AEROSPIKE_ERR_REQUEST_INVALID"
 
     def test_operate_with_nonexistent_key_positive(self):
         """
@@ -487,11 +491,12 @@ class TestOperate(object):
                     "val" : "ram"
                     }
                 ]
-        with pytest.raises(Exception) as exception:
+        try:
             TestOperate.client.operate("", list)
 
-        assert exception.value[0] == -2
-        assert exception.value[1] == "key is invalid"
+        except ParamError as exception:
+            assert exception.code == -2
+            assert exception.msg == "key is invalid"
 
     def test_operate_with_extra_parameter_negative(self):
         """
@@ -525,11 +530,12 @@ class TestOperate(object):
                     "val" : "ram"
                     }
                 ]
-        with pytest.raises(Exception) as exception:
+        try:
             TestOperate.client.operate(key, list, {}, "")
 
-        assert exception.value[0] == -2
-        assert exception.value[1] == "policy must be a dict"
+        except ParamError as exception:
+            assert exception.code == -2
+            assert exception.msg == "policy must be a dict"
 
     def test_operate_key_is_none_negative(self):
         """
@@ -542,11 +548,12 @@ class TestOperate(object):
                     "val" : "ram"
                     }
                 ]
-        with pytest.raises(Exception) as exception:
+        try:
             TestOperate.client.operate(None, list)
 
-        assert exception.value[0] == -2
-        assert exception.value[1] == "key is invalid"
+        except ParamError as exception:
+            assert exception.code == -2
+            assert exception.msg == "key is invalid"
 
     def test_operate_append_withot_value_parameter_negative(self):
         """
@@ -569,11 +576,12 @@ class TestOperate(object):
                     }
                 ]
 
-        with pytest.raises(Exception) as exception:
+        try:
             TestOperate.client.operate(key, list, {}, policy)
 
-        assert exception.value[0] == -2
-        assert exception.value[1] == "Value should be given"
+        except ParamError as exception:
+            assert exception.code == -2
+            assert exception.msg == "Value should be given"
 
     def test_operate_with_extra_parameter_negative(self):
         """
@@ -593,11 +601,12 @@ class TestOperate(object):
                     },
                 ]
 
-        with pytest.raises(Exception) as exception:
+        try:
             TestOperate.client.operate(key, list, {}, policy)
 
-        assert exception.value[0] == -2
-        assert exception.value[1] == "operation can contain only op, bin and val keys"
+        except ParamError as exception:
+            assert exception.code == -2
+            assert exception.msg == "operation can contain only op, bin and val keys"
 
     def test_operate_append_value_integer_negative(self):
         """
@@ -754,8 +763,9 @@ class TestOperate(object):
                     }
                 ]
 
-        with pytest.raises(Exception) as exception:
+        try:
             key, meta, bins = client1.operate(key, list)
 
-        assert exception.value[0] == 11L
-        assert exception.value[1] == 'No connection to aerospike cluster'
+        except ClusterError as exception:
+            assert exception.code == 11L
+            assert exception.msg == 'No connection to aerospike cluster'

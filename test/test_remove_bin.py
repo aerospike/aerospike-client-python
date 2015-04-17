@@ -7,6 +7,7 @@ from test_base_class import TestBaseClass
 
 try:
     import aerospike
+    from aerospike.exception import *
 except:
     print "Please install aerospike python client."
     sys.exit(1)
@@ -155,12 +156,12 @@ class TestRemovebin(object):
             'ttl': 1000
         }
 
-        with pytest.raises(Exception) as exception:
+        try:
             TestRemovebin.client.remove_bin(key, ["age"], meta, policy)
 
-        assert exception.value[0] == 3
-        assert exception.value[1] == "AEROSPIKE_ERR_RECORD_GENERATION"
-
+        except RecordGenerationError as exception:
+            assert exception.code == 3
+            assert exception.msg == "AEROSPIKE_ERR_RECORD_GENERATION"
 
         (key , meta, bins) = TestRemovebin.client.get(key)
 
@@ -187,12 +188,12 @@ class TestRemovebin(object):
             'ttl': 1000
         }
 
-        with pytest.raises(Exception) as exception:
+        try:
             TestRemovebin.client.remove_bin(key, ["age"], meta, policy)
 
-        assert exception.value[0] == 3
-        assert exception.value[1] == "AEROSPIKE_ERR_RECORD_GENERATION"
-
+        except RecordGenerationError as exception:
+            assert exception.code == 3
+            assert exception.msg == "AEROSPIKE_ERR_RECORD_GENERATION"
 
         (key , meta, bins) = TestRemovebin.client.get(key)
 
@@ -262,12 +263,12 @@ class TestRemovebin(object):
         policy = {
             'timeout': 0.5
         }
-        with pytest.raises(Exception) as exception:
+        try:
             TestRemovebin.client.remove_bin(key, ["age"], {}, policy)
 
-        assert exception.value[0] == -1
-        #assert exception.value[1] == "Invalid value(type) for policy key"
-        assert exception.value[1] == "Incorrect policy"
+        except ClientError as exception:
+            assert exception.code == -1
+            assert exception.msg == "Incorrect policy"
 
     def test_remove_bin_with_nonexistent_key(self):
         """
@@ -304,22 +305,24 @@ class TestRemovebin(object):
         """
         Invoke remove_bin() with key is none
         """
-        with pytest.raises(Exception) as exception:
+        try:
             TestRemovebin.client.remove_bin(None, ["age"])
 
-        assert exception.value[0] == -2
-        assert exception.value[1] == "key is invalid"
+        except ParamError as exception:
+            assert exception.code == -2
+            assert exception.msg == "key is invalid"
 
     def test_remove_bin_bin_is_none(self):
         """
         Invoke remove_bin() with bin is none
         """
         key = ('test', 'demo', 1)
-        with pytest.raises(Exception) as exception:
+        try:
             TestRemovebin.client.remove_bin(key, None)
 
-        assert exception.value[0] == -2
-        assert exception.value[1] == "Bins should be a list"
+        except ParamError as exception:
+            assert exception.code == -2
+            assert exception.msg == "Bins should be a list"
 
     def test_remove_bin_no_bin(self):
         """
@@ -327,7 +330,6 @@ class TestRemovebin(object):
         """
         key = ('test', 'demo', 1)
         TestRemovebin.client.remove_bin(key, [])
-
 
         (key , meta, bins) = TestRemovebin.client.get(key)
 
@@ -384,8 +386,9 @@ class TestRemovebin(object):
 
         key = ('test', 'demo', 1)
 
-        with pytest.raises(Exception) as exception:
+        try:
             client1.remove_bin(key, ["age"])
 
-        assert exception.value[0] == 11L
-        assert exception.value[1] == 'No connection to aerospike cluster'
+        except ClusterError as exception:
+            assert exception.code == 11L
+            assert exception.msg == 'No connection to aerospike cluster'

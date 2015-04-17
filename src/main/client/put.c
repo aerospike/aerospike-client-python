@@ -103,8 +103,7 @@ PyObject * AerospikeClient_Put_Invoke(
 	// Invoke operation
 	aerospike_key_put(self->as, &err, write_policy_p, &key, &rec);
 	if ( err.code != AEROSPIKE_OK ) {
-		as_error_update(&err, err.code, err.message);
-		goto CLEANUP;
+		as_error_update(&err, err.code, NULL);
 	}
 
 CLEANUP:

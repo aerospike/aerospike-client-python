@@ -7,6 +7,7 @@ import cPickle as pickle
 from test_base_class import TestBaseClass
 try:
     import aerospike
+    from aerospike.exception import *
 except:
     print "Please install aerospike python client."
     sys.exit(1)
@@ -53,7 +54,6 @@ class TestMapKeysIndex(object):
             key = ('test', u'demo', i)
             TestMapKeysIndex.client.remove(key)
 
-        #TestMapKeysIndex.client.close()
 
     def test_mapkeysindex_with_no_paramters(self):
         """
@@ -91,11 +91,13 @@ class TestMapKeysIndex(object):
             Invoke createindex() with incorrect namespace
         """
         policy = {}
-        with pytest.raises(Exception) as exception:
+        try:
             retobj = TestMapKeysIndex.client.index_map_keys_create( 'test1', 'demo',
 'numeric_map', aerospike.INDEX_NUMERIC, 'test_numeric_map_index', policy )
-        assert exception.value[0] == 4
-        assert exception.value[1] == 'Namespace Not Found'
+
+        except InvalidRequest as exception:
+            assert exception.code == 4
+            assert exception.msg == 'Namespace Not Found'
 
     def test_mapkeysindex_with_incorrect_set(self):
         """
@@ -124,47 +126,52 @@ class TestMapKeysIndex(object):
             Invoke createindex() with namespace is None
         """
         policy = {}
-        with pytest.raises(Exception) as exception:
+        try:
             retobj = TestMapKeysIndex.client.index_map_keys_create( None, 'demo',
 'string_map', aerospike.INDEX_STRING, 'test_string_map_index', policy )
-        assert exception.value[0] == -2
-        assert exception.value[1] == 'Namespace should be a string'
+
+        except ParamError as exception:
+            assert exception.code == -2
+            assert exception.msg == 'Namespace should be a string'
 
     def test_mapkeysindex_with_set_is_none(self):
         """
             Invoke createindex() with set is None
         """
         policy = {}
-        with pytest.raises(Exception) as exception:
+        try:
             retobj = TestMapKeysIndex.client.index_map_keys_create( 'test', None,
 'string_map', aerospike.INDEX_STRING, 'test_string_map_index' , policy)
 
-        assert exception.value[0] == -2
-        assert exception.value[1] == 'Set should be a string'
+        except ParamError as exception:
+            assert exception.code == -2
+            assert exception.msg == 'Set should be a string'
 
     def test_mapkeysindex_with_bin_is_none(self):
         """
             Invoke createindex() with bin is None
         """
         policy = {}
-        with pytest.raises(Exception) as exception:
+        try:
             retobj = TestMapKeysIndex.client.index_map_keys_create( 'test', 'demo',
 None, aerospike.INDEX_NUMERIC, 'test_numeric_map_index' , policy)
 
-        assert exception.value[0] == -2
-        assert exception.value[1] == 'Bin should be a string'
+        except ParamError as exception:
+            assert exception.code == -2
+            assert exception.msg == 'Bin should be a string'
 
     def test_mapkeysindex_with_index_is_none(self):
         """
             Invoke createindex() with index is None
         """
         policy = {}
-        with pytest.raises(Exception) as exception:
+        try:
             retobj = TestMapKeysIndex.client.index_map_keys_create( 'test', 'demo',
 'string_map', aerospike.INDEX_STRING,  None, policy )
 
-        assert exception.value[0] == -2
-        assert exception.value[1] == 'Index name should be a string'
+        except ParamError as exception:
+            assert exception.code == -2
+            assert exception.msg == 'Index name should be a string'
 
     def test_create_same_mapindex_multiple_times(self):
         """
@@ -285,8 +292,9 @@ u'numeric_map', aerospike.INDEX_NUMERIC, u'uni_age_index', policy )
                 }
         client1 = aerospike.client(config)
 
-        with pytest.raises(Exception) as exception:
+        try:
             retobj = client1.index_map_keys_create('test', 'demo', 'string_map', aerospike.INDEX_STRING, 'test_string_map_index', policy)
 
-        assert exception.value[0] == 11
-        assert exception.value[1] == 'No connection to aerospike cluster'
+        except ClusterError as exception:
+            assert exception.code == 11
+            assert exception.msg == 'No connection to aerospike cluster'

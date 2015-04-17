@@ -8,6 +8,7 @@ from test_base_class import TestBaseClass
 
 try:
     import aerospike
+    from aerospike.exception import *
 except:
     print "Please install aerospike python client."
     sys.exit(1)
@@ -19,9 +20,9 @@ class TestInfo(object):
         """
         Setup class.
         """
-        hostlist, user, password = TestBaseClass.get_hosts()
+        TestInfo.hostlist, user, password = TestBaseClass.get_hosts()
         config = {
-                'hosts': hostlist
+                'hosts': TestInfo.hostlist
                 }
         if user == None and password == None:
             TestInfo.client = aerospike.client(config).connect()
@@ -40,7 +41,7 @@ class TestInfo(object):
 
         request = "statistics"
 
-        nodes_info = TestInfo.client.info(request, [('127.0.0.1', 3000)])
+        nodes_info = TestInfo.client.info(request, TestInfo.hostlist)
 
         assert nodes_info != None
 
@@ -57,7 +58,7 @@ class TestInfo(object):
             }
 
         TestInfo.client.put(key, rec)
-        response = TestInfo.client.info('namespaces', [('127.0.0.1', 3000)])
+        response = TestInfo.client.info('namespaces', TestInfo.hostlist)
         TestInfo.client.remove(key)
         flag = 0
         for keys in response.keys():
@@ -81,7 +82,7 @@ class TestInfo(object):
             }
 
         TestInfo.client.put(key, rec)
-        response = TestInfo.client.info('sets', [('127.0.0.1', 3000)])
+        response = TestInfo.client.info('sets', TestInfo.hostlist)
         TestInfo.client.remove(key)
         flag = 0
         for keys in response.keys():
@@ -105,7 +106,7 @@ class TestInfo(object):
             }
 
         TestInfo.client.put(key, rec)
-        response = TestInfo.client.info('bins', [('127.0.0.1', 3000)])
+        response = TestInfo.client.info('bins', TestInfo.hostlist)
         TestInfo.client.remove(key)
         flag = 0
         for keys in response.keys():
@@ -129,11 +130,11 @@ class TestInfo(object):
             }
         policy = {}
         TestInfo.client.put(key, rec)
-        response = TestInfo.client.info('sindex-create:ns=test;set=demo;indexname=names_test_index;indexdata=names,string', [('127.0.0.1', 3000)])
+        response = TestInfo.client.info('sindex-create:ns=test;set=demo;indexname=names_test_index;indexdata=names,string', TestInfo.hostlist)
         time.sleep(2)
         TestInfo.client.remove(key)
-        response = TestInfo.client.info('sindex', [('127.0.0.1', 3000)])
-        TestInfo.client.info('sindex-delete:ns=test;indexname=names_test_index', [('127.0.0.1', 3000)])
+        response = TestInfo.client.info('sindex', TestInfo.hostlist)
+        TestInfo.client.info('sindex-delete:ns=test;indexname=names_test_index', TestInfo.hostlist)
 
         flag = 0
         for keys in response.keys():
@@ -152,17 +153,18 @@ class TestInfo(object):
 
         config = [(127, 3000)]
 
-        with pytest.raises(Exception) as exception:
+        try:
             TestInfo.client.info(request, config)
 
-        assert exception.value[0] == -2
-        assert exception.value[1] == "Host address is of type incorrect"
+        except ParamError as exception:
+            assert exception.code == -2
+            assert exception.msg == "Host address is of type incorrect"
 
     def test_info_with_config_for_statistics_and_policy(self):
 
         request = "statistics"
 
-        config = [('127.0.0.1', 3000)]
+        config = [('172.20.25.193', 3000)]
 
         policy = {
                 'timeout': 1000
@@ -177,7 +179,7 @@ class TestInfo(object):
 
         request = "no_info"
 
-        nodes_info = TestInfo.client.info(request, [('127.0.0.1', 3000)])
+        nodes_info = TestInfo.client.info(request, TestInfo.hostlist)
 
         assert type(nodes_info) == dict
 
@@ -187,11 +189,12 @@ class TestInfo(object):
 
         request = None
 
-        with pytest.raises(Exception) as exception:
-            TestInfo.client.info(request, [('127.0.0.1', 3000)])
+        try:
+            TestInfo.client.info(request, TestInfo.hostlist)
 
-        assert exception.value[0] == -2L
-        assert exception.value[1] == "Request must be a string"
+        except ParamError as exception:
+            assert exception.code == -2L
+            assert exception.msg == "Request must be a string"
 
     def test_info_without_parameters(self):
 
@@ -205,12 +208,13 @@ class TestInfo(object):
         Test info positive for sets without connection
         """
         config = {
-                'hosts': [('127.0.0.1', 3000)]
+                'hosts': [('172.20.25.193', 3000)]
                 }
         
         client1 = aerospike.client(config)
-        with pytest.raises(Exception) as exception:
-            response = client1.info('sets', [('127.0.0.1', 3000)])
+        try:
+            response = client1.info('sets', TestInfo.hostlist)
 
-        assert exception.value[0] == 11L
-        assert exception.value[1] == 'No connection to aerospike cluster'
+        except ClusterError as exception:
+            assert exception.code == 11L
+            assert exception.msg == 'No connection to aerospike cluster'

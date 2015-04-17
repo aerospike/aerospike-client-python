@@ -24,6 +24,7 @@
 
 #include "client.h"
 #include "conversions.h"
+#include "exceptions.h"
 #include "key.h"
 #include "policy.h"
 
@@ -124,9 +125,15 @@ CLEANUP:
 	if ( err.code != AEROSPIKE_OK ) {
 		PyObject * py_err = NULL;
 		error_to_pyobject(&err, &py_err);
-		PyErr_SetObject(PyExc_Exception, py_err);
+		PyObject *exception_type = raise_exception(&err);
+		if(PyObject_HasAttrString(exception_type, "key")) {
+			PyObject_SetAttrString(exception_type, "key", py_key);
+		} 
+		if(PyObject_HasAttrString(exception_type, "bin")) {
+			PyObject_SetAttrString(exception_type, "bin", Py_None);
+		}
+		PyErr_SetObject(exception_type, py_err);
 		Py_DECREF(py_err);
-		return NULL;
 	}
 
 	return py_result;

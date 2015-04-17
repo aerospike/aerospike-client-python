@@ -8,6 +8,7 @@ from test_base_class import TestBaseClass
 
 try:
     import aerospike
+    from aerospike.exception import *
 except:
     print "Please install aerospike python client."
     sys.exit(1)
@@ -78,11 +79,13 @@ class TestIndex(TestBaseClass):
             Invoke createindex() with incorrect namespace
         """
         policy = {}
-        with pytest.raises(Exception) as exception:
+        try:
             retobj = TestIndex.client.index_integer_create( 'test1', 'demo',
 'age', 'age_index', policy )
-        assert exception.value[0] == 4
-        assert exception.value[1] == 'Namespace Not Found'
+
+        except InvalidRequest as exception:
+            assert exception.code == 4
+            assert exception.msg == 'Namespace Not Found'
 
     def test_createindex_with_incorrect_set(self):
         """
@@ -111,44 +114,52 @@ class TestIndex(TestBaseClass):
             Invoke createindex() with namespace is None
         """
         policy = {}
-        with pytest.raises(Exception) as exception:
+        try:
             retobj = TestIndex.client.index_integer_create( None, 'demo',
 'age', 'age_index', policy )
-        assert exception.value[0] == -2
-        assert exception.value[1] == 'Namespace should be a string'
+
+        except ParamError as exception:
+            assert exception.code == -2
+            assert exception.msg == 'Namespace should be a string'
 
     def test_createindex_with_set_is_none(self):
         """
             Invoke createindex() with set is None
         """
         policy = {}
-        with pytest.raises(Exception) as exception:
+        try:
             retobj = TestIndex.client.index_integer_create( 'test', None,
 'age', 'age_index' , policy)
-        assert exception.value[0] == -2
-        assert exception.value[1] == 'Set should be a string'
+
+        except ParamError as exception:
+            assert exception.code == -2
+            assert exception.msg == 'Set should be a string'
 
     def test_createindex_with_bin_is_none(self):
         """
             Invoke createindex() with bin is None
         """
         policy = {}
-        with pytest.raises(Exception) as exception:
+        try:
             retobj = TestIndex.client.index_integer_create( 'test', 'demo',
 None, 'age_index' , policy)
-        assert exception.value[0] == -2
-        assert exception.value[1] == 'Bin should be a string'
+
+        except ParamError as exception:
+            assert exception.code == -2
+            assert exception.msg == 'Bin should be a string'
 
     def test_createindex_with_index_is_none(self):
         """
             Invoke createindex() with index is None
         """
         policy = {}
-        with pytest.raises(Exception) as exception:
+        try:
             retobj = TestIndex.client.index_integer_create( 'test', 'demo',
 'age', None, policy )
-        assert exception.value[0] == -2
-        assert exception.value[1] == 'Index name should be a string'
+
+        except ParamError as exception:
+            assert exception.code == -2
+            assert exception.msg == 'Index name should be a string'
 
     def test_create_same_index_multiple_times(self):
         """
@@ -226,11 +237,13 @@ name
             Invoke create string index() with incorrect namespace
         """
         policy = {}
-        with pytest.raises(Exception) as exception:
+        try:
             retobj = TestIndex.client.index_string_create('test1', 'demo',
 'name', 'name_index', policy)
-        assert exception.value[0] == 4
-        assert exception.value[1] == 'Namespace Not Found'
+
+        except InvalidRequest as exception:
+            assert exception.code == 4
+            assert exception.msg == 'Namespace Not Found'
 
     def test_create_string_index_with_incorrect_set(self):
         """
@@ -259,44 +272,51 @@ name
             Invoke create string index() with namespace is None
         """
         policy = {}
-        #with pytest.raises(Exception) as exception:
-            #retobj = TestIndex.client.index_string_create( policy, None, 'demo',
-#'name', 'name_index' )
-        #assert exception.value[0] == -2
-        #assert exception.value[1] == 'Namespace should be a string'
+        try:
+            retobj = TestIndex.client.index_string_create( None, 'demo', 'name', 'name_index', policy )
+
+        except ParamError as exception:
+            assert exception.code == -2
+            assert exception.msg == 'Namespace should be a string'
 
     def test_create_string_index_with_set_is_none(self):
         """
             Invoke create string index() with set is None
         """
         policy = {}
-        with pytest.raises(Exception) as exception:
+        try:
             retobj = TestIndex.client.index_string_create('test', None,
 'name', 'name_index', policy)
-        assert exception.value[0] == -2
-        assert exception.value[1] == 'Set should be a string'
+
+        except ParamError as exception:
+            assert exception.code == -2
+            assert exception.msg == 'Set should be a string'
 
     def test_create_string_index_with_bin_is_none(self):
         """
             Invoke create string index() with bin is None
         """
         policy = {}
-        with pytest.raises(Exception) as exception:
+        try:
             retobj = TestIndex.client.index_string_create('test', 'demo',
 None, 'name_index', policy)
-        assert exception.value[0] == -2
-        assert exception.value[1] == 'Bin should be a string'
+
+        except ParamError as exception:
+            assert exception.code == -2
+            assert exception.msg == 'Bin should be a string'
 
     def test_create_string_index_with_index_is_none(self):
         """
             Invoke create_string_index() with index is None
         """
         policy = {}
-        with pytest.raises(Exception) as exception:
+        try:
             retobj = TestIndex.client.index_string_create('test', 'demo',
 'name', None, policy)
-        assert exception.value[0] == -2
-        assert exception.value[1] == 'Index name should be a string'
+
+        except ParamError as exception:
+            assert exception.code == -2
+            assert exception.msg == 'Index name should be a string'
 
     def test_create_same_string_index_multiple_times(self):
         """
@@ -433,8 +453,9 @@ u'age', u'uni_age_index', policy )
                 }
         client1 = aerospike.client(config)
 
-        with pytest.raises(Exception) as exception:
+        try:
             etobj = client1.index_integer_create('test', 'demo', 'age', 'age_index', policy)
 
-        assert exception.value[0] == 11L
-        assert exception.value[1] == 'No connection to aerospike cluster'
+        except ClusterError as exception:
+            assert exception.code == 11L
+            assert exception.msg == 'No connection to aerospike cluster'

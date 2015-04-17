@@ -119,7 +119,7 @@ PyObject * AerospikeClient_Admin_Create_User(AerospikeClient * self, PyObject *a
 	// Invoke operation
 	aerospike_create_user(self->as, &err, admin_policy_p, user, password, (const char**)roles, roles_size);
 	if(err.code != AEROSPIKE_OK) {
-		as_error_update(&err, err.code, err.message);
+		as_error_update(&err, err.code, NULL);
 		goto CLEANUP;
 	}
 
@@ -207,7 +207,7 @@ PyObject * AerospikeClient_Admin_Drop_User( AerospikeClient *self, PyObject *arg
 	//Invoke operation
 	aerospike_drop_user(self->as, &err, admin_policy_p, user);
 	if(err.code != AEROSPIKE_OK) {
-		as_error_update(&err, err.code, err.message);
+		as_error_update(&err, err.code, NULL);
 		goto CLEANUP;
 	}
 
@@ -299,7 +299,7 @@ PyObject * AerospikeClient_Admin_Set_Password( AerospikeClient *self, PyObject *
 	// Invoke operation
 	aerospike_set_password( self->as, &err, admin_policy_p, user, password );
 	if(err.code != AEROSPIKE_OK) {
-		as_error_update(&err, err.code, err.message);
+		as_error_update(&err, err.code, NULL);
 		goto CLEANUP;
 	}
 
@@ -391,7 +391,7 @@ PyObject * AerospikeClient_Admin_Change_Password( AerospikeClient *self, PyObjec
 	// Invoke operation
 	aerospike_change_password( self->as, &err, admin_policy_p, user, password );
 	if(err.code != AEROSPIKE_OK) {
-		as_error_update(&err, err.code, err.message);
+		as_error_update(&err, err.code, NULL);
 		goto CLEANUP;
 	}
 
@@ -492,7 +492,7 @@ PyObject * AerospikeClient_Admin_Grant_Roles( AerospikeClient *self, PyObject *a
 	// Invoke operation
 	aerospike_grant_roles(self->as, &err, admin_policy_p, user, (const char**)roles, roles_size);
 	if(err.code != AEROSPIKE_OK) {
-		as_error_update(&err, err.code, err.message);
+		as_error_update(&err, err.code, NULL);
 		goto CLEANUP;
 	}
 
@@ -601,7 +601,7 @@ PyObject * AerospikeClient_Admin_Revoke_Roles( AerospikeClient *self, PyObject *
 	// Invoke operation
 	aerospike_revoke_roles(self->as, &err, admin_policy_p, user, (const char**)roles, roles_size);
 	if(err.code != AEROSPIKE_OK) {
-		as_error_update(&err, err.code, err.message);
+		as_error_update(&err, err.code, NULL);
 		goto CLEANUP;
 	}
 
@@ -699,7 +699,7 @@ PyObject * AerospikeClient_Admin_Query_User( AerospikeClient * self, PyObject * 
 	// Convert returned as_user struct to python object
 	as_user_to_pyobject(&err, user, &py_user);
 	if(err.code != AEROSPIKE_OK) {
-		as_error_update(&err, err.code, err.message);
+		as_error_update(&err, err.code, NULL);
 		goto CLEANUP;
 	}
 
@@ -786,7 +786,7 @@ PyObject * AerospikeClient_Admin_Query_Users( AerospikeClient * self, PyObject *
 	// Convert returned array of as_user structs into python object;
 	as_user_array_to_pyobject(&err, users, &py_users, users_size);
 	if(err.code != AEROSPIKE_OK) {
-		as_error_update(&err, err.code, err.message);
+		as_error_update(&err, err.code, NULL);
 		goto CLEANUP;
 	}
 

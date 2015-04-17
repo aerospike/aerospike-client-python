@@ -206,14 +206,17 @@ PyObject * AerospikeException_New(void)
 	Py_INCREF(UDFError);
 	Py_DECREF(py_udf_dict);
 	PyModule_AddObject(module, "UDFError", UDFError);
+	PyObject_SetAttrString(UDFError, "code", PyInt_FromLong(AEROSPIKE_ERR_UDF));
 
 	UDFNotFound = PyErr_NewException("exception.UDFNotFound", UDFError, NULL);
 	Py_INCREF(UDFNotFound);
 	PyModule_AddObject(module, "UDFNotFound", UDFNotFound);
+	PyObject_SetAttrString(UDFNotFound, "code", PyInt_FromLong(AEROSPIKE_ERR_UDF_NOT_FOUND));
 
 	LuaFileNotFound = PyErr_NewException("exception.LuaFileNotFound", UDFError, NULL);
 	Py_INCREF(LuaFileNotFound);
 	PyModule_AddObject(module, "LuaFileNotFound", LuaFileNotFound);
+	PyObject_SetAttrString(LuaFileNotFound, "code", PyInt_FromLong(AEROSPIKE_ERR_LUA_FILE_NOT_FOUND));
 
 	//Admin exceptions
 	AdminError = PyErr_NewException("exception.AdminError", ServerError, NULL);

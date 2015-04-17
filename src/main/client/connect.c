@@ -64,11 +64,6 @@ PyObject * AerospikeClient_Connect(AerospikeClient * self, PyObject * args, PyOb
 		PyErr_SetObject(exception_type, py_err);
 		Py_DECREF(py_err);
 		return NULL;
-		/*PyObject * py_err = NULL;
-		error_to_pyobject(&err, &py_err);
-		PyErr_SetObject(PyExc_Exception, py_err);
-		Py_DECREF(py_err);
-		return NULL;*/
 	}
 	self->is_conn_16 = true;
 	Py_INCREF(self);

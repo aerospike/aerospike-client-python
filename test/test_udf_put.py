@@ -75,11 +75,12 @@ class TestUdfPut(TestBaseClass):
         filename = "example.lua"
         udf_type = 0
 
-        with pytest.raises(Exception) as exception:
+        try:
             status = TestUdfPut.client.udf_put( filename, udf_type, policy )
 
-        assert exception.value[0] == -2
-        assert exception.value[1] == "timeout is invalid"
+        except ParamError as exception:
+            assert exception.code == -2
+            assert exception.msg == "timeout is invalid"
 
     def test_udf_put_with_proper_timeout_policy_value(self):
 
@@ -105,11 +106,12 @@ class TestUdfPut(TestBaseClass):
         filename = "somefile"
         udf_type = 0
 
-        with pytest.raises(Exception) as exception:
+        try:
             status = TestUdfPut.client.udf_put( filename, udf_type, policy )
 
-        assert exception.value[0] == 1302
-        assert exception.value[1] == "cannot open script file"
+        except LuaFileNotFound as exception:
+            assert exception.code == 1302
+            assert exception.msg == "cannot open script file"
 
     def test_udf_put_with_non_lua_udf_type_and_lua_script_file(self):
 
@@ -161,8 +163,9 @@ class TestUdfPut(TestBaseClass):
 
         client1 = aerospike.client(config)
 
-        with pytest.raises(Exception) as exception:
+        try:
             status = client1.udf_put( filename, udf_type, policy )
 
-        assert exception.value[0] == 11L
-        assert exception.value[1] == 'No connection to aerospike cluster'
+        except ClusterError as exception:
+            assert exception.code == 11L
+            assert exception.msg == 'No connection to aerospike cluster'

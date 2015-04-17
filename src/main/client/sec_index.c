@@ -145,6 +145,7 @@ PyObject * AerospikeClient_Index_Integer_Create(AerospikeClient * self, PyObject
 	// Invoke operation
 	aerospike_index_create_complex(self->as, &err, &task, info_policy_p, ns, set, bin, name, AS_INDEX_TYPE_DEFAULT, AS_INDEX_NUMERIC);
 	if ( err.code != AEROSPIKE_OK ) {
+		as_error_update(&err, err.code, NULL);
 		goto CLEANUP;
 	} else {
 		aerospike_index_create_wait(&err, &task, 2000);
@@ -283,6 +284,7 @@ PyObject * AerospikeClient_Index_String_Create(AerospikeClient * self, PyObject 
 	// Invoke operation
 	aerospike_index_create_complex(self->as, &err, &task, info_policy_p, ns, set, bin, name, AS_INDEX_TYPE_DEFAULT, AS_INDEX_STRING);
 	if ( err.code != AEROSPIKE_OK ) {
+		as_error_update(&err, err.code, NULL);
 		goto CLEANUP;
 	} else {
 		aerospike_index_create_wait(&err, &task, 2000);
@@ -292,7 +294,11 @@ CLEANUP:
 	if ( err.code != AEROSPIKE_OK ) {
 		PyObject * py_err = NULL;
 		error_to_pyobject(&err, &py_err);
-		PyErr_SetObject(PyExc_Exception, py_err);
+		PyObject *exception_type = raise_exception(&err);
+		if(PyObject_HasAttrString(exception_type, "name")) {
+			PyObject_SetAttrString(exception_type, "name", py_name);
+		}
+		PyErr_SetObject(exception_type, py_err);
 		Py_DECREF(py_err);
 		return NULL;
 	}
@@ -378,6 +384,7 @@ PyObject * AerospikeClient_Index_Remove(AerospikeClient * self, PyObject *args, 
 	// Invoke operation
 	aerospike_index_remove(self->as, &err, info_policy_p, ns, name);
 	if ( err.code != AEROSPIKE_OK ) {
+		as_error_update(&err, err.code, NULL);
 		goto CLEANUP;
 	}
 
@@ -389,7 +396,11 @@ CLEANUP:
 	if ( err.code != AEROSPIKE_OK ) {
 		PyObject * py_err = NULL;
 		error_to_pyobject(&err, &py_err);
-		PyErr_SetObject(PyExc_Exception, py_err);
+		PyObject *exception_type = raise_exception(&err);
+		if(PyObject_HasAttrString(exception_type, "name")) {
+			PyObject_SetAttrString(exception_type, "name", py_name);
+		}
+		PyErr_SetObject(exception_type, py_err);
 		Py_DECREF(py_err);
 		return NULL;
 	}
@@ -508,6 +519,7 @@ PyObject * AerospikeClient_Index_List_Create(AerospikeClient * self, PyObject *a
 	// Invoke operation
 	aerospike_index_create_complex(self->as, &err, &task, info_policy_p, ns, set, bin, name, AS_INDEX_TYPE_LIST, type);
 	if ( err.code != AEROSPIKE_OK ) {
+		as_error_update(&err, err.code, NULL);
 		goto CLEANUP;
 	} else {
 		aerospike_index_create_wait(&err, &task, 2000);
@@ -517,7 +529,11 @@ CLEANUP:
 	if ( err.code != AEROSPIKE_OK ) {
 		PyObject * py_err = NULL;
 		error_to_pyobject(&err, &py_err);
-		PyErr_SetObject(PyExc_Exception, py_err);
+		PyObject *exception_type = raise_exception(&err);
+		if(PyObject_HasAttrString(exception_type, "name")) {
+			PyObject_SetAttrString(exception_type, "name", py_name);
+		}
+		PyErr_SetObject(exception_type, py_err);
 		Py_DECREF(py_err);
 		return NULL;
 	}
@@ -636,6 +652,7 @@ PyObject * AerospikeClient_Index_Map_Keys_Create(AerospikeClient * self, PyObjec
 	// Invoke operation
 	aerospike_index_create_complex(self->as, &err, &task, info_policy_p, ns, set, bin, name, AS_INDEX_TYPE_MAPKEYS, type);
 	if ( err.code != AEROSPIKE_OK ) {
+		as_error_update(&err, err.code, NULL);
 		goto CLEANUP;
 	} else {
 		aerospike_index_create_wait(&err, &task, 2000);
@@ -645,7 +662,11 @@ CLEANUP:
 	if ( err.code != AEROSPIKE_OK ) {
 		PyObject * py_err = NULL;
 		error_to_pyobject(&err, &py_err);
-		PyErr_SetObject(PyExc_Exception, py_err);
+		PyObject *exception_type = raise_exception(&err);
+		if(PyObject_HasAttrString(exception_type, "name")) {
+			PyObject_SetAttrString(exception_type, "name", py_name);
+		}
+		PyErr_SetObject(exception_type, py_err);
 		Py_DECREF(py_err);
 		return NULL;
 	}
@@ -765,6 +786,7 @@ PyObject * AerospikeClient_Index_Map_Values_Create(AerospikeClient * self, PyObj
 	// Invoke operation
 	aerospike_index_create_complex(self->as, &err, &task, info_policy_p, ns, set, bin, name, AS_INDEX_TYPE_MAPVALUES, type);
 	if ( err.code != AEROSPIKE_OK ) {
+		as_error_update(&err, err.code, NULL);
 		goto CLEANUP;
 	} else {
 		aerospike_index_create_wait(&err, &task, 2000);
@@ -772,7 +794,14 @@ PyObject * AerospikeClient_Index_Map_Values_Create(AerospikeClient * self, PyObj
 
 CLEANUP:
 	if ( err.code != AEROSPIKE_OK ) {
-		raise_exception(&err);
+		PyObject * py_err = NULL;
+		error_to_pyobject(&err, &py_err);
+		PyObject *exception_type = raise_exception(&err);
+		if(PyObject_HasAttrString(exception_type, "name")) {
+			PyObject_SetAttrString(exception_type, "name", py_name);
+		}
+		PyErr_SetObject(exception_type, py_err);
+		Py_DECREF(py_err);
 		return NULL;
 	}
 

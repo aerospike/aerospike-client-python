@@ -7,6 +7,7 @@ from test_base_class import TestBaseClass
 
 try:
     import aerospike
+    from aerospike.exception import *
 except:
     print "Please install aerospike python client."
     sys.exit(1)
@@ -197,12 +198,13 @@ class TestIncrement(object):
             'gen': gen + 5,
             'ttl': 1200
         }
-        with pytest.raises(Exception) as exception:
+        try:
             TestIncrement.client.increment(key, "age", 5, meta, policy)
 
-        assert exception.value[0] == 3
-        assert exception.value[1] == "AEROSPIKE_ERR_RECORD_GENERATION"
-
+        except RecordGenerationError as exception:
+            assert exception.code == 3
+            assert exception.msg == "AEROSPIKE_ERR_RECORD_GENERATION"
+            assert exception.bin == "age"
 
         (key , meta, bins) = TestIncrement.client.get(key)
 
@@ -228,11 +230,12 @@ class TestIncrement(object):
             'gen': gen,
             'ttl': 1200
         }
-        with pytest.raises(Exception) as exception:
+        try:
             TestIncrement.client.increment(key, "age", 5, meta, policy)
 
-        assert exception.value[0] == 3
-        assert exception.value[1] == "AEROSPIKE_ERR_RECORD_GENERATION"
+        except RecordGenerationError as exception:
+            assert exception.code == 3
+            assert exception.msg == "AEROSPIKE_ERR_RECORD_GENERATION"
 
         (key , meta, bins) = TestIncrement.client.get(key)
 
@@ -275,11 +278,12 @@ class TestIncrement(object):
         policy = {
             'timeout': 0.5
         }
-        with pytest.raises(Exception) as exception:
+        try:
             TestIncrement.client.increment(key, "age", 5, {}, policy)
 
-        assert exception.value[0] == -2
-        assert exception.value[1] == "timeout is invalid"
+        except ParamError as exception:
+            assert exception.code == -2
+            assert exception.msg == "timeout is invalid"
 
     def test_increment_with_nonexistent_key(self):
         """
@@ -333,32 +337,35 @@ class TestIncrement(object):
         Invoke increment() with policy is string
         """
         key = ('test', 'demo', 1)
-        with pytest.raises(Exception) as exception:
+        try:
             TestIncrement.client.increment(key, "age", 2, {}, "")
 
-        assert exception.value[0] == -2
-        assert exception.value[1] == "policy must be a dict"
+        except ParamError as exception:
+            assert exception.code == -2
+            assert exception.msg == "policy must be a dict"
 
     def test_increment_key_is_none(self):
         """
         Invoke increment() with key is none
         """
-        with pytest.raises(Exception) as exception:
+        try:
             TestIncrement.client.increment(None, "age", 2)
 
-        assert exception.value[0] == -2
-        assert exception.value[1] == "key is invalid"
+        except ParamError as exception:
+            assert exception.code == -2
+            assert exception.msg == "key is invalid"
 
     def test_increment_bin_is_none(self):
         """
         Invoke increment() with bin is none
         """
         key = ('test', 'demo', 1)
-        with pytest.raises(Exception) as exception:
+        try:
             TestIncrement.client.increment(key, None, 2)
 
-        assert exception.value[0] == -2
-        assert exception.value[1] == "Bin name should be of type string"
+        except ParamError as exception:
+            assert exception.code == -2
+            assert exception.msg == "Bin name should be of type string"
 
     def test_increment_with_unicode_bin(self):
         """
@@ -381,8 +388,9 @@ class TestIncrement(object):
         }
         client1 = aerospike.client(config)
 
-        with pytest.raises(Exception) as exception:
+        try:
             client1.increment(key, "age", 5)
 
-        assert exception.value[0] == 11L
-        assert exception.value[1] == 'No connection to aerospike cluster'
+        except ClusterError as exception:
+            assert exception.code == 11L
+            assert exception.msg == 'No connection to aerospike cluster'

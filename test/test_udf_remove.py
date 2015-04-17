@@ -60,11 +60,12 @@ class TestUdfRemove(TestBaseClass):
 
     def test_udf_remove_with_none_as_parameters(self):
 
-        with pytest.raises(Exception) as exception:
+        try:
             status = TestUdfRemove.client.udf_remove(None, None)
 
-        assert exception.value[0] == -2
-        assert exception.value[1] == "Filename should be a string"
+        except ParamError as exception:
+            assert exception.code == -2
+            assert exception.msg == "Filename should be a string"
 
     def test_udf_remove_with_proper_parameters(self):
 
@@ -117,7 +118,6 @@ class TestUdfRemove(TestBaseClass):
         policy = {}
         module = "some_module"
 
-        #with pytest.raises(Exception) as exception:
         try:
             status = TestUdfRemove.client.udf_remove( module, policy )
 
@@ -152,8 +152,9 @@ class TestUdfRemove(TestBaseClass):
         policy = { 'timeout' : 0 }
         module = "example.lua"
 
-        with pytest.raises(Exception) as exception:
+        try:
             status = client1.udf_remove( module, policy )
 
-        assert exception.value[0] == 11L
-        assert exception.value[1] == 'No connection to aerospike cluster'
+        except ClusterError as exception:
+            assert exception.code == 11L
+            assert exception.msg == 'No connection to aerospike cluster'
