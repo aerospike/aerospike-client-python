@@ -6,18 +6,12 @@ import cPickle as pickle
 import time
 from test_base_class import TestBaseClass
 
-try:
-    import aerospike
-except:
-    print "Please install aerospike python client."
-    sys.exit(1)
+aerospike = pytest.importorskip("aerospike")
 
 from aerospike import predicates as p
 
 
 class TestQuery(object):
-
-    pytestmark = pytest.mark.skipif("1 == 1")
 
     def setup_class(cls):
         hostlist, user, password = TestBaseClass.get_hosts()

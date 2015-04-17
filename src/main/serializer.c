@@ -73,11 +73,12 @@ PyObject * AerospikeClient_Set_Serializer(AerospikeClient * self, PyObject * arg
 		goto CLEANUP;
 	}
 
-	if (user_serializer_call_info.callback != NULL) {
+    if (user_serializer_call_info.callback != NULL) {
 		Py_DECREF(user_serializer_call_info.callback);
 	}
 	is_user_serializer_registered = 1;
 	user_serializer_call_info.callback = py_func;
+	Py_INCREF(py_func);
 
 CLEANUP:
 	if ( err.code != AEROSPIKE_OK ) {
@@ -136,6 +137,7 @@ PyObject * AerospikeClient_Set_Deserializer(AerospikeClient * self, PyObject * a
 		Py_DECREF(user_deserializer_call_info.callback);
 	}
 	user_deserializer_call_info.callback = py_func;
+	Py_INCREF(py_func);
 
 CLEANUP:
 	if ( err.code != AEROSPIKE_OK ) {
@@ -222,17 +224,26 @@ void execute_user_callback(user_serializer_callback *user_callback_info,
 	int len;
 
 	if (serialize_flag) {
-		PyTuple_SetItem(py_arglist, 0 , *value);
+		Py_XINCREF(*value);
+		if( PyTuple_SetItem(py_arglist, 0 , *value) != 0){
+			Py_DECREF(py_arglist);
+			goto CLEANUP;
+		}
 	} else {
 		as_bytes * bytes_pointer = *bytes;
 		char*       bytes_val_p = (char*)bytes_pointer->value;
 		py_value = PyString_FromStringAndSize(bytes_val_p, as_bytes_size(*bytes));
-		PyTuple_SetItem(py_arglist, 0 , py_value);
+		if (PyTuple_SetItem(py_arglist, 0 , py_value) != 0){
+			Py_DECREF(py_arglist);
+			goto CLEANUP;
+		}
 	}
 
+	Py_INCREF(user_callback_info -> callback);
 	py_return = PyEval_CallObject(user_callback_info->callback, py_arglist);
-	if(!serialize_flag)
-		Py_DECREF(py_arglist);
+	Py_DECREF(user_callback_info -> callback);
+	Py_DECREF(py_arglist);
+
 	if (py_return) {
 
 		if (serialize_flag) {
@@ -284,6 +295,7 @@ extern PyObject * serialize_based_on_serializer_policy(int32_t serializer_policy
 		PyObject *value,
 		as_error *error_p)
 {
+	PyObject* initresult = NULL;
 	switch(serializer_policy) {
 		case SERIALIZER_NONE:
 			as_error_update(error_p, AEROSPIKE_ERR_PARAM,
@@ -300,31 +312,33 @@ extern PyObject * serialize_based_on_serializer_policy(int32_t serializer_policy
 					cpickle_module = PyImport_ImportModule("cPickle");
 				}
 
-				PyObject* initresult;
-
 				if(!cpickle_module) {
 					/* insert error handling here! and exit this function */
 					as_error_update(error_p, AEROSPIKE_ERR_CLIENT, "Unable to load cpickle module");
 					goto CLEANUP;
 				} else {
 					PyObject * py_funcname = PyString_FromString("dumps");
+
+					Py_INCREF(cpickle_module);
 					initresult = PyObject_CallMethodObjArgs(cpickle_module,
 							py_funcname, value, NULL);
+					Py_DECREF(cpickle_module);
 					Py_DECREF(py_funcname);
+
 					if(!initresult) {
 						/* more error handling &c */
 						as_error_update(error_p, AEROSPIKE_ERR_CLIENT, "Unable to call dumps function");
 						goto CLEANUP;
 					} else {
+						Py_INCREF(initresult);
 						char *return_value = PyString_AsString(initresult);
 						int len = strlen(return_value);
 						set_as_bytes(bytes, (uint8_t *) return_value,
 								len, AS_BYTES_PYTHON, error_p);
 						Py_DECREF(initresult);
 					}
-
-					Py_DECREF(cpickle_module);
 				}
+				Py_XDECREF(cpickle_module);
 			}
 			break;
 		case SERIALIZER_JSON:
@@ -356,7 +370,7 @@ extern PyObject * serialize_based_on_serializer_policy(int32_t serializer_policy
 	}
 
 CLEANUP:
-
+	Py_XDECREF(initresult);
 	if ( error_p->code != AEROSPIKE_OK ) {
 		PyObject * py_err = NULL;
 		error_to_pyobject(error_p, &py_err);
@@ -395,7 +409,7 @@ extern PyObject * deserialize_based_on_as_bytes_type(as_bytes  *bytes,
 									  cpickle_module = PyImport_ImportModule("cPickle");
 								  }
 
-								  PyObject* initresult;
+								  PyObject* initresult = NULL;
 								  if(!cpickle_module) {
 									  /* insert error handling here! and exit this function */
 									  as_error_update(error_p, AEROSPIKE_ERR_CLIENT, "Unable to load cpickle module");
@@ -404,7 +418,10 @@ extern PyObject * deserialize_based_on_as_bytes_type(as_bytes  *bytes,
 									  char*       bytes_val_p = (char*)bytes->value;
 									  PyObject *py_value = PyString_FromStringAndSize(bytes_val_p, as_bytes_size(bytes));
 									  PyObject *py_funcname = PyString_FromString("loads");
+
+									  Py_INCREF(cpickle_module);
 									  initresult = PyObject_CallMethodObjArgs(cpickle_module, py_funcname, py_value, NULL);
+									  Py_DECREF(cpickle_module);
 									  Py_DECREF(py_funcname);
 									  Py_DECREF(py_value);
 									  if(!initresult) {
@@ -414,9 +431,8 @@ extern PyObject * deserialize_based_on_as_bytes_type(as_bytes  *bytes,
 									  } else {
 										  *retval = initresult;
 									  }
-
-									  Py_DECREF(cpickle_module);
 								  }
+								  Py_XDECREF(cpickle_module);
 							  }
 							  break;
 		case AS_BYTES_BLOB: {
