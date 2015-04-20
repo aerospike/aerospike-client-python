@@ -89,6 +89,19 @@ class TestMapKeysIndex(object):
         TestMapKeysIndex.client.index_remove('test', 'test_numeric_map_index',
                                              policy)
 
+    def test_mapkeys_with_correct_parameters_set_length_extra(self):
+            #Invoke index_map_keys_create() with correct arguments and set length extra
+        set_name = 'a'
+        for i in xrange(100):
+            set_name = set_name + 'a'
+        policy = {}
+        with pytest.raises(Exception) as exception:
+            retobj = TestMapKeysIndex.client.index_map_keys_create('test', set_name,
+'string_map', aerospike.INDEX_STRING, "test_string_map_index", policy)
+
+        assert exception.value[0] == 4
+        assert exception.value[1] == 'Invalid Set Name'
+
     def test_mapkeysindex_with_incorrect_namespace(self):
         """
             Invoke createindex() with incorrect namespace
@@ -139,18 +152,30 @@ class TestMapKeysIndex(object):
         assert exception.value[0] == -2
         assert exception.value[1] == 'Namespace should be a string'
 
+    def test_mapkeysindex_with_set_is_int(self):
+        """
+            Invoke createindex() with set is int
+        """
+        policy = {}
+        with pytest.raises(Exception) as exception:
+            retobj = TestMapKeysIndex.client.index_map_keys_create(
+                'test', 1, 'string_map', aerospike.INDEX_STRING,
+                'test_string_map_index', policy)
+
+        assert exception.value[0] == -2
+        assert exception.value[1] == 'Set should be string, unicode or None'
+
     def test_mapkeysindex_with_set_is_none(self):
         """
             Invoke createindex() with set is None
         """
         policy = {}
-        with pytest.raises(Exception) as exception:
-            retobj = TestMapKeysIndex.client.index_map_keys_create(
-                'test', None, 'string_map', aerospike.INDEX_STRING,
-                'test_string_map_index', policy)
+        retobj = TestMapKeysIndex.client.index_map_keys_create( 'test', None,
+'string_map', aerospike.INDEX_STRING, 'test_string_map_index' , policy)
 
-        assert exception.value[0] == -2
-        assert exception.value[1] == 'Set should be a string'
+        assert retobj == 0L
+        TestMapKeysIndex.client.index_remove('test', 'test_string_map_index', policy);
+
 
     def test_mapkeysindex_with_bin_is_none(self):
         """
@@ -176,7 +201,7 @@ class TestMapKeysIndex(object):
                 policy)
 
         assert exception.value[0] == -2
-        assert exception.value[1] == 'Index name should be a string'
+        assert exception.value[1] == 'Index name should be string or unicode'
 
     def test_create_same_mapindex_multiple_times(self):
         """

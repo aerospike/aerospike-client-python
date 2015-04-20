@@ -686,6 +686,10 @@ Client Class --- :class:`Client`
         :param int udf_type: one of ``aerospike.UDF_TYPE_\*``
         :param dict policy: currently **timeout** in milliseconds is the available policy.
 
+        .. code-block:: python
+
+            client.udf_put('/path/to/my_module.lua')
+
         .. versionchanged:: 1.0.39
 
 
@@ -695,6 +699,10 @@ Client Class --- :class:`Client`
 
         :param str module: the UDF module to be deregistered from the cluster.
         :param dict policy: currently **timeout** in milliseconds is the available policy.
+
+        .. code-block:: python
+
+            client.udf_remove('my_module.lua')
 
         .. versionchanged:: 1.0.39
 

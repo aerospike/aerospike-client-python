@@ -22,6 +22,7 @@ class TestQuery(object):
             TestQuery.client = aerospike.client(config).connect(user, password)
 
         TestQuery.client = aerospike.client(config).connect()
+
         TestQuery.client.index_integer_create('test', 'demo', 'test_age',
                                               'age_index')
         TestQuery.client.index_string_create('test', 'demo', 'addr',
@@ -46,6 +47,8 @@ class TestQuery(object):
         TestQuery.client.index_map_values_create('test', 'demo', 'string_map',
                                                  aerospike.INDEX_STRING,
                                                  'string_map_values_index')
+        TestQuery.client.index_integer_create('test', None, 'test_age_none', 
+                                                'age_index_none')
 
     def teardown_class(cls):
         policy = {}
@@ -59,6 +62,7 @@ class TestQuery(object):
         TestQuery.client.index_remove('test', 'numeric_map_values_index',
                                       policy)
         TestQuery.client.index_remove('test', 'string_map_values_index', policy)
+        TestQuery.client.index_remove('test', 'age_index_none', policy);
         TestQuery.client.close()
 
     def setup_method(self, method):
@@ -101,7 +105,7 @@ class TestQuery(object):
         """
         for i in xrange(10):
             key = ('test', 'demo', i)
-            TestQuery.client.remove(key)
+            #TestQuery.client.remove(key)
 
     def test_query_with_no_parameters(self):
         """
@@ -148,6 +152,38 @@ class TestQuery(object):
 
         assert exception.value[0] == 4L
         assert exception.value[1] == 'AEROSPIKE_ERR_REQUEST_INVALID'
+
+    def test_query_with_ns_not_string(self):
+        """
+            Invoke query() with incorrect ns and set
+        """
+        with pytest.raises(Exception) as exception:
+            query = TestQuery.client.query(1, 'demo')
+            query.select('name', 'test_age')
+            query.where(p.equals('test_age', 1))
+            def callback((key,metadata,record)):
+                assert metadata['gen'] != None
+
+            query.foreach(callback)
+
+        assert exception.value[0] == -2L
+        assert exception.value[1] == 'Namespace should be a string'
+
+    def test_query_with_set_int(self):
+        """
+            Invoke query() with incorrect ns and set
+        """
+        with pytest.raises(Exception) as exception:
+            query = TestQuery.client.query('test', 1)
+            query.select('name', 'test_age')
+            query.where(p.equals('test_age', 1))
+            def callback((key,metadata,record)):
+                assert metadata['gen'] != None
+
+            query.foreach(callback)
+
+        assert exception.value[0] == -2L
+        assert exception.value[1] == 'Set should be string, unicode or None'
 
     def test_query_with_incorrect_bin_name(self):
         """
@@ -673,3 +709,37 @@ class TestQuery(object):
 
         assert exception.value[0] == 11L
         assert exception.value[1] == 'No connection to aerospike cluster'
+
+    def test_query_with_policy_on_none_set_index(self):
+        """
+            Invoke query() with policy on none set index
+        """
+        policy = {
+            'timeout': 1000
+        }
+        query = TestQuery.client.query('test', None)
+        query.select('name', 'test_age_none')
+        query.where(p.equals('test_age_none', 1))
+        records = []
+        def callback((key,metadata,record)):
+            records.append(record)
+
+        query.foreach(callback, policy)
+        assert len(records) == 0
+
+    def test_query_with_only_ns(self):
+        """
+            Invoke query() with policy on none set index
+        """
+        policy = {
+            'timeout': 1000
+        }
+        query = TestQuery.client.query('test')
+        query.select('name', 'test_age_none')
+        query.where(p.equals('test_age_none', 1))
+        records = []
+        def callback((key,metadata,record)):
+            records.append(record)
+
+        query.foreach(callback, policy)
+        assert len(records) == 0

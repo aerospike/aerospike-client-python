@@ -138,7 +138,7 @@ PyObject * AerospikeClient_UDF_Put(AerospikeClient * self, PyObject *args, PyObj
 	if( err.code != AEROSPIKE_OK ) {
 		goto CLEANUP;
 	} else {
-		aerospike_udf_put_wait(self->as, &err, info_policy_p, filename, 2000);
+		aerospike_udf_put_wait(self->as, &err, info_policy_p, as_basename(NULL, filename), 2000);
 	}
 
 CLEANUP:
