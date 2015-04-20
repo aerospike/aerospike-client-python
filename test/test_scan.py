@@ -9,8 +9,6 @@ aerospike = pytest.importorskip("aerospike")
 
 class TestScan(TestBaseClass):
 
-    #pytestmark = pytest.mark.skipif("1 == 1")
-
     def setup_method(self, method):
         """
         Setup method.
@@ -116,7 +114,6 @@ class TestScan(TestBaseClass):
 
         assert len(records) != 0
 
-    """
     @pytest.mark.xfail(reason="segfault!")
     def test_scan_with_callback_contains_error(self):
 
@@ -136,7 +133,6 @@ class TestScan(TestBaseClass):
             scan_obj.foreach(callback, { 'timeout' : 1000 })
         assert exception.value[0] == -2L
         assert exception.value[1] == "Callback function contains an error"
-    """
 
     def test_scan_with_callback_returning_false(self):
         """

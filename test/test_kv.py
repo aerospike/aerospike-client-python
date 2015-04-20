@@ -1,6 +1,6 @@
 import unittest
-import aerospike
 from test_base_class import TestBaseClass
+import aerospike
 
 config = {"hosts": [("127.0.0.1", 3000)]}
 

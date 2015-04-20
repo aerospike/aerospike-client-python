@@ -4,11 +4,7 @@ import pytest
 import sys
 from test_base_class import TestBaseClass
 
-try:
-    import aerospike
-except:
-    print "Please install aerospike python client."
-    sys.exit(1)
+aerospike = pytest.importorskip("aerospike")
 
 
 class TestExistsMany(TestBaseClass):

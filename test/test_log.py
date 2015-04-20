@@ -4,12 +4,7 @@ import pytest
 import sys
 import cPickle as pickle
 
-try:
-    import aerospike
-except:
-    print "Please install aerospike python client."
-    sys.exit(1)
-
+aerospike = pytest.importorskip("aerospike")
 
 def handler(level, func, myfile, line):
     assert 1 == 1

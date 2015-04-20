@@ -10,8 +10,6 @@ aerospike = pytest.importorskip("aerospike")
 
 class TestListIndex(object):
 
-    pytestmark = pytest.mark.xfail
-
     def setup_class(cls):
         """
         Setup method.

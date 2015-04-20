@@ -4,11 +4,8 @@ import pytest
 import sys
 import cPickle as pickle
 from test_base_class import TestBaseClass
-try:
-    import aerospike
-except:
-    print "Please install aerospike python client."
-    sys.exit(1)
+
+aerospike = pytest.importorskip("aerospike")
 
 
 class TestMapKeysIndex(object):

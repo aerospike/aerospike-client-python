@@ -4,12 +4,8 @@ import pytest
 import sys
 import time
 from test_base_class import TestBaseClass
-try:
-    import aerospike
-except:
-    print "Please install aerospike python client."
-    sys.exit(1)
 
+aerospike = pytest.importorskip("aerospike")
 
 class TestLList(object):
 
@@ -70,7 +66,7 @@ class TestLList(object):
         assert 1 == TestLList.llist_integer.size()
 
     #Add() - Add() unsupported type data to llist.
-    @pytest.mark.skipif('1 == 1')
+    @pytest.mark.xfail
     def test_llist_add_float_positive(self):
         """
             Invoke add() float type data.
@@ -78,10 +74,9 @@ class TestLList(object):
         rec = {"pi": 3.14}
 
         with pytest.raises(Exception) as exception:
-            TestLList.llist_float.add(rec)
+            TestLList.llist_float.add(3.14)
 
         assert exception.value[0] == 100
-        assert exception.value[1] == "/opt/aerospike/sys/udf/lua/ldt/lib_llist.lua:1347: 1433:LDT-Key (Unique) Function Not Found"
         assert 1 == TestLList.llist_float.size()
         TestLList.llist_float.add(123)
         assert 1 == TestLList.llist_float.size()
@@ -142,6 +137,7 @@ class TestLList(object):
         assert exception.value[0] == val
 
     #Remove() - Remove non-existent object from the llist.
+    @pytest.mark.xfail
     def test_llist_remove_element_negative(self):
         """
             Invoke remove() to remove non-existent element.
@@ -151,13 +147,8 @@ class TestLList(object):
             TestLList.llist_string.remove('kk')
 
         status = [100L, 125L]
-        for val in status:
-            if exception.value[0] != val:
-                continue
-            else:
-                break
 
-        assert exception.value[0] == val
+        assert exception.value[0] in status
 
     #Destroy() - Delete the entire LList(LDT Remove).
     def test_llist_destroy_positive(self):
