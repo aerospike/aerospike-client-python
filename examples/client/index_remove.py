@@ -98,7 +98,7 @@ try:
         namespace = options.namespace
         index_name = args.pop()
 
-        client.index_remove(policy, namespace, index_name)
+        client.index_remove(namespace, index_name, policy)
         print("OK, 1 Integer Secondary Index Removed ")
 
     except Exception as e:
