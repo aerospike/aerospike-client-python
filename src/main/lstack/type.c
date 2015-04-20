@@ -26,6 +26,7 @@
 
 #include "client.h"
 #include "conversions.h"
+#include "exceptions.h"
 #include "lstack.h"
 
 /*******************************************************************************
@@ -199,10 +200,18 @@ AerospikeLStack * AerospikeLStack_New(AerospikeClient * client, PyObject * args,
 	} else {
 		as_error err;
 		as_error_init(&err);
-		as_error_update(&err, AEROSPIKE_ERR, "Parameters are incorrect");
-		PyObject * py_err = NULL;
+		as_error_update(&err, AEROSPIKE_ERR_PARAM, "Parameters are incorrect");
+		PyObject * py_err = NULL, *py_key = NULL;
 		error_to_pyobject(&err, &py_err);
-		PyErr_SetObject(PyExc_Exception, py_err);
+		PyObject *exception_type = raise_exception(&err);
+		if(PyObject_HasAttrString(exception_type, "key")) {
+			key_to_pyobject(&err, &self->key, &py_key);
+			PyObject_SetAttrString(exception_type, "key", py_key);
+		} 
+		if(PyObject_HasAttrString(exception_type, "bin")) {
+			PyObject_SetAttrString(exception_type, "bin", PyString_FromString((char *)&self->bin_name));
+		}
+		PyErr_SetObject(exception_type, py_err);
 		Py_DECREF(py_err);
 		return NULL;
 	}

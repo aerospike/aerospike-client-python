@@ -34,7 +34,9 @@ PyObject *AdminError, *SecurityNotSupported, *SecurityNotEnabled, *SecuritySchem
 static PyObject *AerospikeError, *InvalidHostError, *NamespaceNotFound;
 static PyObject *RecordError, *RecordKeyMismatch=NULL, *RecordNotFound=NULL, *BinNameError=NULL, *RecordGenerationError=NULL, *RecordExistsError, *RecordTooBig, *RecordBusy, *BinNameError, *BinExistsError, *BinNotFound, *BinIncompatibleType;
 static PyObject *IndexError, *IndexNotFound, *IndexFoundError, *IndexOOM, *IndexNotReadable, *IndexNameMaxLen, *IndexNameMaxCount;
+static PyObject *LDTError, *LargeItemNotFound, *LDTInternalError, *LDTNotFound, *LDTUniqueKeyError, *LDTInsertError, *LDTSearchError, *LDTDeleteError, *LDTInputParamError, *LDTTypeMismatch, *LDTBinNameNull, *LDTBinNameNotString, *LDTBinNameTooLong, *LDTTooManyOpenSubrecs, *LDTTopRecNotFound, *LDTSubRecNotFound, *LDTBinNotFound, *LDTBinExistsError, *LDTBinDamaged, *LDTSubrecPoolDamaged, *LDTSubrecDamaged, *LDTSubrecOpenError, *LDTSubrecUpdateError, *LDTSubrecCreateError, *LDTSubrecDeleteError, *LDTSubrecCloseError, *LDTToprecUpdateError, *LDTToprecCreateError, *LDTFilterFunctionBad, *LDTFilterFunctionNotFound, *LDTKeyFunctionBad, *LDTKeyFunctionNotFound, *LDTTransFunctionBad, *LDTTransFunctionNotFound, *LDTUntransFunctionBad, *LDTUntransFunctionNotFound, *LDTUserModuleBad, *LDTUserModuleNotFound;
 static PyObject *UDFError, *UDFNotFound, *LuaFileNotFound;
+static PyObject *QueryQueueFull, *QueryTimeout;
 static PyObject *ClusterError, *ClusterChangeError;
 static PyObject *module;
 
@@ -50,15 +52,21 @@ struct record_exceptions_struct {
 };
 
 struct index_exceptions_struct {
-	PyObject * *index_exceptions[5];
-	char * index_exceptions_name[5];
-	int index_exceptions_codes[5];
+	PyObject * *index_exceptions[6];
+	char * index_exceptions_name[6];
+	int index_exceptions_codes[6];
 };
 
 struct admin_exceptions_struct {
 	PyObject * *admin_exceptions[17];
 	char * admin_exceptions_name[17];
 	int admin_exceptions_codes[17];
+};
+
+struct ldt_exceptions_struct {
+	PyObject * *ldt_exceptions[37];
+	char * ldt_exceptions_name[37];
+	int ldt_exceptions_codes[37];
 };
 
 PyObject * AerospikeException_New(void)
@@ -81,8 +89,8 @@ PyObject * AerospikeException_New(void)
 	};
 
 	struct index_exceptions_struct index_array = { 
-		{&IndexNotFound, &IndexOOM, &IndexNotReadable, &IndexNameMaxLen, &IndexNameMaxCount},
-		{"IndexNotFound", "IndexOOM", "IndexNotReadable", "IndexNameMaxLen", "IndexNameMaxCount"},
+		{&IndexNotFound, &IndexFoundError, &IndexOOM, &IndexNotReadable, &IndexNameMaxLen, &IndexNameMaxCount},
+		{"IndexNotFound", "IndexFoundError", "IndexOOM", "IndexNotReadable", "IndexNameMaxLen", "IndexNameMaxCount"},
 		{AEROSPIKE_ERR_INDEX_NOT_FOUND, AEROSPIKE_ERR_INDEX_FOUND, AEROSPIKE_ERR_INDEX_OOM, AEROSPIKE_ERR_INDEX_NOT_READABLE, AEROSPIKE_ERR_INDEX_NAME_MAXLEN, 
 			AEROSPIKE_ERR_INDEX_MAXCOUNT}
 	};
@@ -98,6 +106,31 @@ PyObject * AerospikeException_New(void)
 			AEROSPIKE_ILLEGAL_STATE, AEROSPIKE_INVALID_USER, AEROSPIKE_USER_ALREADY_EXISTS, AEROSPIKE_INVALID_PASSWORD, AEROSPIKE_EXPIRED_PASSWORD, 
 			AEROSPIKE_FORBIDDEN_PASSWORD, AEROSPIKE_INVALID_CREDENTIAL, AEROSPIKE_INVALID_ROLE, AEROSPIKE_ROLE_ALREADY_EXISTS, AEROSPIKE_ROLE_VIOLATION,  
 			AEROSPIKE_INVALID_PRIVILEGE, AEROSPIKE_NOT_AUTHENTICATED}
+	};
+
+	struct ldt_exceptions_struct ldt_array = { 
+		{&LargeItemNotFound, &LDTInternalError, &LDTNotFound, &LDTUniqueKeyError, &LDTInsertError, &LDTSearchError, &LDTDeleteError, &LDTInputParamError,
+			&LDTTypeMismatch, &LDTBinNameNull, &LDTBinNameNotString, &LDTBinNameTooLong, &LDTTooManyOpenSubrecs, &LDTTopRecNotFound, &LDTSubRecNotFound, 
+			&LDTBinNotFound,&LDTBinExistsError, &LDTBinDamaged, &LDTSubrecPoolDamaged, &LDTSubrecDamaged, &LDTSubrecOpenError, &LDTSubrecUpdateError, 
+			&LDTSubrecCreateError, &LDTSubrecDeleteError, &LDTSubrecCloseError, &LDTToprecUpdateError, &LDTToprecCreateError, &LDTFilterFunctionBad, 
+			&LDTFilterFunctionNotFound, &LDTKeyFunctionBad, &LDTKeyFunctionNotFound, &LDTTransFunctionBad, &LDTTransFunctionNotFound, &LDTUntransFunctionBad, 
+			&LDTUntransFunctionNotFound, &LDTUserModuleBad, &LDTUserModuleNotFound},
+		{"LargeItemNotFound", "LDTInternalError", "LDTNotFound", "LDTUniqueKeyError", "LDTInsertError", "LDTSearchError", "LDTDeleteError", "LDTInputParamError", 
+			"LDTTypeMismatch", "LDTBinNameNull", "LDTBinNameNotString", "LDTBinNameTooLong", "LDTTooManyOpenSubrecs", "LDTTopRecNotFound", "LDTSubRecNotFound", 
+			"LDTBinNotFound", "LDTBinExistsError", "LDTBinDamaged", "LDTSubrecPoolDamaged", "LDTSubrecDamaged", "LDTSubrecOpenError", "LDTSubrecUpdateError",
+			"LDTSubrecCreateError", "LDTSubrecDeleteError", "LDTSubrecCloseError", "LDTToprecUpdateError", "LDTToprecCreateError", "LDTFilterFunctionBad",
+			"LDTFilterFunctionNotFound", "LDTKeyFunctionBad", "LDTKeyFunctionNotFound", "LDTTransFunctionBad", "LDTTransFunctionNotFound", "LDTUntransFunctionBad",
+			"LDTUntransFunctionNotFound", "LDTUserModuleBad", "LDTUserModuleNotFound"},
+		{AEROSPIKE_ERR_LARGE_ITEM_NOT_FOUND, AEROSPIKE_ERR_LDT_INTERNAL, AEROSPIKE_ERR_LDT_NOT_FOUND, AEROSPIKE_ERR_LDT_UNIQUE_KEY, AEROSPIKE_ERR_LDT_INSERT, 
+			AEROSPIKE_ERR_LDT_SEARCH, AEROSPIKE_ERR_LDT_DELETE, AEROSPIKE_ERR_LDT_INPUT_PARM, AEROSPIKE_ERR_LDT_TYPE_MISMATCH, AEROSPIKE_ERR_LDT_NULL_BIN_NAME,
+			AEROSPIKE_ERR_LDT_BIN_NAME_NOT_STRING, AEROSPIKE_ERR_LDT_BIN_NAME_TOO_LONG, AEROSPIKE_ERR_LDT_TOO_MANY_OPEN_SUBRECS, AEROSPIKE_ERR_LDT_TOP_REC_NOT_FOUND,
+			AEROSPIKE_ERR_LDT_SUB_REC_NOT_FOUND, AEROSPIKE_ERR_LDT_BIN_DOES_NOT_EXIST, AEROSPIKE_ERR_LDT_BIN_ALREADY_EXISTS, AEROSPIKE_ERR_LDT_BIN_DAMAGED,
+			AEROSPIKE_ERR_LDT_SUBREC_POOL_DAMAGED, AEROSPIKE_ERR_LDT_SUBREC_DAMAGED, AEROSPIKE_ERR_LDT_SUBREC_OPEN, AEROSPIKE_ERR_LDT_SUBREC_UPDATE,
+			AEROSPIKE_ERR_LDT_SUBREC_CREATE, AEROSPIKE_ERR_LDT_SUBREC_DELETE, AEROSPIKE_ERR_LDT_SUBREC_CLOSE, AEROSPIKE_ERR_LDT_TOPREC_UPDATE, 
+			AEROSPIKE_ERR_LDT_TOPREC_CREATE, AEROSPIKE_ERR_LDT_FILTER_FUNCTION_BAD, AEROSPIKE_ERR_LDT_FILTER_FUNCTION_NOT_FOUND, AEROSPIKE_ERR_LDT_KEY_FUNCTION_BAD,
+			AEROSPIKE_ERR_LDT_KEY_FUNCTION_NOT_FOUND, AEROSPIKE_ERR_LDT_TRANS_FUNCTION_BAD, AEROSPIKE_ERR_LDT_TRANS_FUNCTION_NOT_FOUND, 
+			AEROSPIKE_ERR_LDT_UNTRANS_FUNCTION_BAD, AEROSPIKE_ERR_LDT_UNTRANS_FUNCTION_NOT_FOUND, AEROSPIKE_ERR_LDT_USER_MODULE_BAD, 
+			AEROSPIKE_ERR_LDT_USER_MODULE_NOT_FOUND}
 	};
 
 	PyObject *py_dict = PyDict_New();
@@ -233,6 +266,37 @@ PyObject * AerospikeException_New(void)
 		PyModule_AddObject(module, name, *current_exception);
 		PyObject_SetAttrString(*current_exception, "code", PyInt_FromLong(admin_array.admin_exceptions_codes[i]));
 	}
+
+	//Query exceptions
+	QueryQueueFull = PyErr_NewException("exception.QueryQueueFull", QueryError, NULL);
+	Py_INCREF(QueryQueueFull);
+	PyModule_AddObject(module, "QueryQueueFull", QueryQueueFull);
+	PyObject_SetAttrString(QueryQueueFull, "code", PyInt_FromLong(AEROSPIKE_ERR_QUERY_QUEUE_FULL));
+
+	QueryTimeout = PyErr_NewException("exception.QueryTimeout", QueryError, NULL);
+	Py_INCREF(QueryTimeout);
+	PyModule_AddObject(module, "QueryTimeout", QueryTimeout);
+	PyObject_SetAttrString(QueryQueueFull, "code", PyInt_FromLong(AEROSPIKE_ERR_QUERY_TIMEOUT));
+
+	//LDT exceptions
+	PyObject *py_ldt_dict = PyDict_New();
+	PyDict_SetItemString(py_ldt_dict, "key", Py_None);
+	PyDict_SetItemString(py_ldt_dict, "bin", Py_None);
+	LDTError = PyErr_NewException("exception.LDTError", ServerError, py_ldt_dict);
+	Py_INCREF(LDTError);
+	Py_DECREF(py_ldt_dict);
+	PyModule_AddObject(module, "LDTError", LDTError);
+
+	count = sizeof(ldt_array.ldt_exceptions)/sizeof(ldt_array.ldt_exceptions[0]);
+	for(i=0; i < count; i++) {
+		current_exception = ldt_array.ldt_exceptions[i];
+		char * name = ldt_array.ldt_exceptions_name[i];
+		char prefix[40] = "exception.";
+		*current_exception = PyErr_NewException(strcat(prefix, name), LDTError, NULL);
+		Py_INCREF(*current_exception);
+		PyModule_AddObject(module, name, *current_exception);
+		PyObject_SetAttrString(*current_exception, "code", PyInt_FromLong(ldt_array.ldt_exceptions_codes[i]));
+	}
 	return module;
 }
 
@@ -251,7 +315,6 @@ PyObject* raise_exception(as_error *err) {
 				}
 			}
 		}
-		PyObject * type_of_exception = NULL;
 		/*switch(err->code) {
 			case -1:
 				type_of_exception = ClientError;

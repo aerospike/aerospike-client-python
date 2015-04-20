@@ -23,6 +23,7 @@
 
 #include "client.h"
 #include "conversions.h"
+#include "exceptions.h"
 #include "lset.h"
 #include "policy.h"
 
@@ -84,6 +85,9 @@ PyObject * AerospikeLSet_Add(AerospikeLSet * self, PyObject * args, PyObject * k
 
 	aerospike_lset_add(self->client->as, &err, apply_policy_p, &self->key,
 			&self->lset, val);
+	if(err.code != AEROSPIKE_OK) {
+		as_error_update(&err, err.code, NULL);
+	}
 
 CLEANUP:
 
@@ -92,9 +96,17 @@ CLEANUP:
 	}
 
 	if ( err.code != AEROSPIKE_OK ) {
-		PyObject * py_err = NULL;
+		PyObject * py_err = NULL, *py_key = NULL;
 		error_to_pyobject(&err, &py_err);
-		PyErr_SetObject(PyExc_Exception, py_err);
+		PyObject *exception_type = raise_exception(&err);
+		if(PyObject_HasAttrString(exception_type, "key")) {
+			key_to_pyobject(&err, &self->key, &py_key);
+			PyObject_SetAttrString(exception_type, "key", py_key);
+		} 
+		if(PyObject_HasAttrString(exception_type, "bin")) {
+			PyObject_SetAttrString(exception_type, "bin", PyString_FromString((char *)&self->bin_name));
+		}
+		PyErr_SetObject(exception_type, py_err);
 		Py_DECREF(py_err);
 		return NULL;
 	}
@@ -167,6 +179,9 @@ PyObject * AerospikeLSet_Add_Many(AerospikeLSet * self, PyObject * args, PyObjec
 
 	aerospike_lset_add_all(self->client->as, &err, apply_policy_p,
 			&self->key, &self->lset, arglist);
+	if( err.code != AEROSPIKE_OK ) {
+		as_error_update(&err, err.code, NULL);
+	}
 
 CLEANUP:
 
@@ -175,9 +190,17 @@ CLEANUP:
 	}
 
 	if ( err.code != AEROSPIKE_OK ) {
-		PyObject * py_err = NULL;
+		PyObject * py_err = NULL, *py_key = NULL;
 		error_to_pyobject(&err, &py_err);
-		PyErr_SetObject(PyExc_Exception, py_err);
+		PyObject *exception_type = raise_exception(&err);
+		if(PyObject_HasAttrString(exception_type, "key")) {
+			key_to_pyobject(&err, &self->key, &py_key);
+			PyObject_SetAttrString(exception_type, "key", py_key);
+		} 
+		if(PyObject_HasAttrString(exception_type, "bin")) {
+			PyObject_SetAttrString(exception_type, "bin", PyString_FromString((char *)&self->bin_name));
+		}
+		PyErr_SetObject(exception_type, py_err);
 		Py_DECREF(py_err);
 		return NULL;
 	}
@@ -246,6 +269,7 @@ PyObject * AerospikeLSet_Get(AerospikeLSet * self, PyObject * args, PyObject * k
 			&self->lset, val, &return_val_p);
 
 	if (err.code != AEROSPIKE_OK) {
+		as_error_update(&err, err.code, NULL);
 		goto CLEANUP;
 	}
 
@@ -263,9 +287,17 @@ CLEANUP:
 	}
 
 	if ( err.code != AEROSPIKE_OK ) {
-		PyObject * py_err = NULL;
+		PyObject * py_err = NULL, *py_key = NULL;
 		error_to_pyobject(&err, &py_err);
-		PyErr_SetObject(PyExc_Exception, py_err);
+		PyObject *exception_type = raise_exception(&err);
+		if(PyObject_HasAttrString(exception_type, "key")) {
+			key_to_pyobject(&err, &self->key, &py_key);
+			PyObject_SetAttrString(exception_type, "key", py_key);
+		} 
+		if(PyObject_HasAttrString(exception_type, "bin")) {
+			PyObject_SetAttrString(exception_type, "bin", PyString_FromString((char *)&self->bin_name));
+		}
+		PyErr_SetObject(exception_type, py_err);
 		Py_DECREF(py_err);
 		return NULL;
 	}
@@ -343,6 +375,7 @@ PyObject * AerospikeLSet_Filter(AerospikeLSet * self, PyObject * args, PyObject 
 			&self->lset, filter_name, arg_list, &elements_list);
 
 	if (err.code != AEROSPIKE_OK) {
+		as_error_update(&err, err.code, NULL);
 		goto CLEANUP;
 	}
 
@@ -360,9 +393,17 @@ CLEANUP:
 	}
 
 	if ( err.code != AEROSPIKE_OK ) {
-		PyObject * py_err = NULL;
+		PyObject * py_err = NULL, *py_key = NULL;
 		error_to_pyobject(&err, &py_err);
-		PyErr_SetObject(PyExc_Exception, py_err);
+		PyObject *exception_type = raise_exception(&err);
+		if(PyObject_HasAttrString(exception_type, "key")) {
+			key_to_pyobject(&err, &self->key, &py_key);
+			PyObject_SetAttrString(exception_type, "key", py_key);
+		} 
+		if(PyObject_HasAttrString(exception_type, "bin")) {
+			PyObject_SetAttrString(exception_type, "bin", PyString_FromString((char *)&self->bin_name));
+		}
+		PyErr_SetObject(exception_type, py_err);
 		Py_DECREF(py_err);
 		return NULL;
 	}
@@ -417,13 +458,24 @@ PyObject * AerospikeLSet_Destroy(AerospikeLSet * self, PyObject * args, PyObject
 
 	aerospike_lset_destroy(self->client->as, &err, apply_policy_p, &self->key,
 			&self->lset);
+	if( err.code != AEROSPIKE_OK) {
+		as_error_update(&err, err.code, NULL);
+	}
 
 CLEANUP:
 
 	if ( err.code != AEROSPIKE_OK ) {
-		PyObject * py_err = NULL;
+		PyObject * py_err = NULL, *py_key = NULL;
 		error_to_pyobject(&err, &py_err);
-		PyErr_SetObject(PyExc_Exception, py_err);
+		PyObject *exception_type = raise_exception(&err);
+		if(PyObject_HasAttrString(exception_type, "key")) {
+			key_to_pyobject(&err, &self->key, &py_key);
+			PyObject_SetAttrString(exception_type, "key", py_key);
+		} 
+		if(PyObject_HasAttrString(exception_type, "bin")) {
+			PyObject_SetAttrString(exception_type, "bin", PyString_FromString((char *)&self->bin_name));
+		}
+		PyErr_SetObject(exception_type, py_err);
 		Py_DECREF(py_err);
 		return NULL;
 	}
@@ -491,6 +543,9 @@ PyObject * AerospikeLSet_Exists(AerospikeLSet * self, PyObject * args, PyObject 
 	as_boolean_init(&exists, false);
 	aerospike_lset_exists(self->client->as, &err, apply_policy_p, &self->key,
 			&self->lset, val, &exists);
+	if( err.code != AEROSPIKE_OK) {
+		as_error_update(&err, err.code, NULL);
+	}
 
 CLEANUP:
 
@@ -499,9 +554,17 @@ CLEANUP:
 	}
 
 	if ( err.code != AEROSPIKE_OK ) {
-		PyObject * py_err = NULL;
+		PyObject * py_err = NULL, *py_key = NULL;
 		error_to_pyobject(&err, &py_err);
-		PyErr_SetObject(PyExc_Exception, py_err);
+		PyObject *exception_type = raise_exception(&err);
+		if(PyObject_HasAttrString(exception_type, "key")) {
+			key_to_pyobject(&err, &self->key, &py_key);
+			PyObject_SetAttrString(exception_type, "key", py_key);
+		} 
+		if(PyObject_HasAttrString(exception_type, "bin")) {
+			PyObject_SetAttrString(exception_type, "bin", PyString_FromString((char *)&self->bin_name));
+		}
+		PyErr_SetObject(exception_type, py_err);
 		Py_DECREF(py_err);
 		return NULL;
 	}
@@ -570,6 +633,9 @@ PyObject * AerospikeLSet_Remove(AerospikeLSet * self, PyObject * args, PyObject 
 
 	aerospike_lset_remove(self->client->as, &err, apply_policy_p, &self->key,
 			&self->lset, val);
+	if( err.code != AEROSPIKE_OK ) {
+		as_error_update(&err, err.code, NULL);
+	}
 
 CLEANUP:
 
@@ -578,9 +644,17 @@ CLEANUP:
 	}
 
 	if ( err.code != AEROSPIKE_OK ) {
-		PyObject * py_err = NULL;
+		PyObject * py_err = NULL, *py_key = NULL;
 		error_to_pyobject(&err, &py_err);
-		PyErr_SetObject(PyExc_Exception, py_err);
+		PyObject *exception_type = raise_exception(&err);
+		if(PyObject_HasAttrString(exception_type, "key")) {
+			key_to_pyobject(&err, &self->key, &py_key);
+			PyObject_SetAttrString(exception_type, "key", py_key);
+		} 
+		if(PyObject_HasAttrString(exception_type, "bin")) {
+			PyObject_SetAttrString(exception_type, "bin", PyString_FromString((char *)&self->bin_name));
+		}
+		PyErr_SetObject(exception_type, py_err);
 		Py_DECREF(py_err);
 		return NULL;
 	}
@@ -636,13 +710,24 @@ PyObject * AerospikeLSet_Size(AerospikeLSet * self, PyObject * args, PyObject * 
 
 	aerospike_lset_size(self->client->as, &err, apply_policy_p, &self->key,
 			&self->lset, (uint32_t *)&size);
+	if(err.code != AEROSPIKE_OK) {
+		as_error_update(&err, err.code, NULL);
+	}
 
 CLEANUP:
 
 	if ( err.code != AEROSPIKE_OK ) {
-		PyObject * py_err = NULL;
+		PyObject * py_err = NULL, *py_key = NULL;
 		error_to_pyobject(&err, &py_err);
-		PyErr_SetObject(PyExc_Exception, py_err);
+		PyObject *exception_type = raise_exception(&err);
+		if(PyObject_HasAttrString(exception_type, "key")) {
+			key_to_pyobject(&err, &self->key, &py_key);
+			PyObject_SetAttrString(exception_type, "key", py_key);
+		} 
+		if(PyObject_HasAttrString(exception_type, "bin")) {
+			PyObject_SetAttrString(exception_type, "bin", PyString_FromString((char *)&self->bin_name));
+		}
+		PyErr_SetObject(exception_type, py_err);
 		Py_DECREF(py_err);
 		return NULL;
 	}

@@ -6,6 +6,7 @@ import time
 from test_base_class import TestBaseClass
 try:
     import aerospike
+    from aerospike.exception import *
 except:
     print "Please install aerospike python client."
     sys.exit(1)
@@ -82,11 +83,12 @@ class TestLList(object):
                 "pi" : 3.14
                 }
 
-        with pytest.raises(Exception) as exception: 
+        try:
             TestLList.llist_float.add(rec)
 
-        assert exception.value[0] == 100
-        assert exception.value[1] == "/opt/aerospike/sys/udf/lua/ldt/lib_llist.lua:1347: 1433:LDT-Key (Unique) Function Not Found"
+        except UDFError as exception:
+            assert exception.code == 100
+            assert exception.msg == "/opt/aerospike/sys/udf/lua/ldt/lib_llist.lua:1347: 1433:LDT-Key (Unique) Function Not Found"
 
     #Add() - Add() without any mandatory parameters. 
     def test_llist_no_parameter_negative(self):
@@ -136,17 +138,13 @@ class TestLList(object):
         assert 0 == TestLList.llist_string.add('remove')
         assert 0 == TestLList.llist_string.remove('remove')
 
-        with pytest.raises(Exception) as exception: 
+        try:
             TestLList.llist_string.get('remove')
 
-        status = [100L, 125L]
-        for val in status:
-            if exception.value[0] != val:
-                continue
-            else:
-                break
-
-        assert exception.value[0] == val
+        except UDFError as exception:
+            assert exception.code == 100L
+        except LargeItemNotFound as exception:
+            assert exception.code == 125L
 
     #Remove() - Remove non-existent object from the llist.
     def test_llist_remove_element_negative(self):
@@ -155,17 +153,13 @@ class TestLList(object):
             Invoke remove() to remove non-existent element.
         """
 
-        with pytest.raises(Exception) as exception:
+        try:
             TestLList.llist_string.remove('kk')
 
-        status = [100L, 125L]
-        for val in status:
-            if exception.value[0] != val:
-                continue
-            else:
-                break
-
-        assert exception.value[0] == val
+        except UDFError as exception:
+            assert exception.code == 100L
+        except LargeItemNotFound as exception:
+            assert exception.code == 125L
 
     #Destroy() - Delete the entire LList(LDT Remove).
     def test_llist_destroy_positive(self):
@@ -188,8 +182,9 @@ class TestLList(object):
         """
         key = ('test', 'demo', 12.3)
 
-        with pytest.raises(Exception) as exception: 
+        try:
             llist = self.client.llist(key, 'ldt_stk')
 
-        assert exception.value[0] == -1
-        assert exception.value[1] == "Parameters are incorrect"
+        except ParamError as exception:
+            assert exception.code == -2
+            assert exception.msg == "Parameters are incorrect"
