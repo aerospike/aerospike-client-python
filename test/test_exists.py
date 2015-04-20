@@ -7,6 +7,7 @@ from test_base_class import TestBaseClass
 
 try:
     import aerospike
+    from aerospike.exception import *
 except:
     print "Please install aerospike python client."
     sys.exit(1)
@@ -249,9 +250,12 @@ class TestExists(TestBaseClass):
         """
         key = ('test', 'demo', '1')
 
-        key, meta = TestExists.client.exists( key )
+        try:
+            key, meta = TestExists.client.exists( key )
 
-        assert meta == None
+        except RecordNotFound as exception:
+            assert exception.code == 2
+            assert exception.msg == 'AEROSPIKE_ERR_RECORD_NOT_FOUND'
 
     def test_exists_with_none_set(self):
 
@@ -260,9 +264,12 @@ class TestExists(TestBaseClass):
         """
         key = ('test', None, 2)
 
-        key, meta = TestExists.client.exists( key )
+        try:
+            key, meta = TestExists.client.exists( key )
 
-        assert meta == None
+        except RecordNotFound as exception:
+            assert exception.code == 2
+            assert exception.msg == 'AEROSPIKE_ERR_RECORD_NOT_FOUND'
 
     def test_exists_with_none_namespace(self):
 
@@ -334,9 +341,12 @@ class TestExists(TestBaseClass):
         """
         key = ('test', 'set', 1)
 
-        key, meta = TestExists.client.exists(key)
+        try:
+            key, meta = TestExists.client.exists(key)
 
-        assert meta == None
+        except RecordNotFound as exception:
+            assert exception.code == 2
+            assert exception.msg == 'AEROSPIKE_ERR_RECORD_NOT_FOUND'
 
     def test_exists_with_non_existent_key(self):
 
@@ -344,10 +354,12 @@ class TestExists(TestBaseClass):
             Invoke exists() for non-existent key.
         """
         key = ('test', 'demo', 'non-existent')
+        try:
+            key, meta = TestExists.client.exists( key )
 
-        key, meta = TestExists.client.exists( key )
-
-        assert meta == None
+        except RecordNotFound as exception:
+            assert exception.code == 2
+            assert exception.msg == 'AEROSPIKE_ERR_RECORD_NOT_FOUND'
 
     def test_exists_with_only_key_without_connection(self):
 

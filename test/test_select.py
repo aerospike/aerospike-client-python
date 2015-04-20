@@ -7,6 +7,7 @@ from test_base_class import TestBaseClass
 
 try:
     import aerospike
+    from aerospike.exception import *
 except:
     print "Please install aerospike python client."
     sys.exit(1)
@@ -129,11 +130,12 @@ class TestSelect(TestBaseClass):
 
         bins_to_select = [ 'a', 'b' ]
 
-        key, meta, bins = TestSelect.client.select( key, bins_to_select )
+        try:
+            key, meta, bins = TestSelect.client.select( key, bins_to_select )
 
-        assert key != None
-        assert meta == None
-        assert bins == None
+        except RecordNotFound as exception:
+            assert exception.code == 2
+            assert exception.msg == 'AEROSPIKE_ERR_RECORD_NOT_FOUND'
 
     def test_select_with_key_and_single_bin_to_select_not_a_list(self):
 

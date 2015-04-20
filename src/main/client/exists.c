@@ -99,19 +99,8 @@ extern PyObject * AerospikeClient_Exists_Invoke(
 		PyTuple_SetItem(py_result, 0, py_result_key);
 		PyTuple_SetItem(py_result, 1, py_result_meta);
 	}
-	else if ( err.code == AEROSPIKE_ERR_RECORD_NOT_FOUND ) {
-		as_error_reset(&err);
-
-		PyObject * py_result_key = NULL;
-		PyObject * py_result_meta = Py_None;
-
-		key_to_pyobject(&err, &key, &py_result_key);
-
-		py_result = PyTuple_New(2);
-		PyTuple_SetItem(py_result, 0, py_result_key);
-		PyTuple_SetItem(py_result, 1, py_result_meta);
-
-		Py_INCREF(py_result_meta);
+	else if ( err.code != AEROSPIKE_OK ) {
+		as_error_update(&err, err.code, NULL);
 	}
 
 CLEANUP:

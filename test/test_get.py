@@ -150,10 +150,12 @@ class TestGet(TestBaseClass):
         """
         key = ('test', 'demo', '1')
 
-        key, meta, bins = TestGet.client.get( key )
+        try:
+            key, meta, bins = TestGet.client.get( key )
 
-        assert bins == None
-        assert meta == None
+        except RecordNotFound as exception:
+            assert exception.code == 2
+            assert exception.msg == 'AEROSPIKE_ERR_RECORD_NOT_FOUND'
 
     def test_get_with_none_set(self):
 
@@ -162,10 +164,12 @@ class TestGet(TestBaseClass):
         """
         key = ('test', None, 2)
 
-        key, meta, bins = TestGet.client.get( key )
+        try:
+            key, meta, bins = TestGet.client.get( key )
 
-        assert bins == None
-        assert meta == None
+        except RecordNotFound as exception:
+            assert exception.code == 2
+            assert exception.msg == 'AEROSPIKE_ERR_RECORD_NOT_FOUND'
 
     def test_get_with_none_namespace(self):
 
@@ -238,10 +242,12 @@ class TestGet(TestBaseClass):
         """
         key = ('test', 'some_random_set', 1)
 
-        key, meta, bins = TestGet.client.get(key)
+        try:
+            key, meta, bins = TestGet.client.get(key)
 
-        assert meta == None
-        assert bins == None
+        except RecordNotFound as exception:
+            assert exception.code == 2
+            assert exception.msg == 'AEROSPIKE_ERR_RECORD_NOT_FOUND'
 
     def test_get_with_non_existent_key(self):
 
@@ -250,10 +256,12 @@ class TestGet(TestBaseClass):
         """
         key = ('test', 'demo', 'non-existent')
 
-        key, meta, bins = TestGet.client.get( key )
+        try:
+            key, meta, bins = TestGet.client.get( key )
 
-        assert bins == None
-        assert meta == None
+        except RecordNotFound as exception:
+            assert exception.code == 2
+            assert exception.msg == 'AEROSPIKE_ERR_RECORD_NOT_FOUND'
 
     def test_get_for_list_type_record(self):
 
