@@ -5,11 +5,8 @@ import sys
 import cPickle as pickle
 from test_base_class import TestBaseClass
 
-try:
-    import aerospike
-except:
-    print "Please install aerospike python client."
-    sys.exit(1)
+aerospike = pytest.importorskip("aerospike")
+
 
 class TestIncrement(object):
     def setup_class(cls):
@@ -17,13 +14,12 @@ class TestIncrement(object):
         Setup method.
         """
         hostlist, user, password = TestBaseClass.get_hosts()
-        config = {
-                'hosts': hostlist
-                }
+        config = {'hosts': hostlist}
         if user == None and password == None:
             TestIncrement.client = aerospike.client(config).connect()
         else:
-            TestIncrement.client = aerospike.client(config).connect(user, password)
+            TestIncrement.client = aerospike.client(config).connect(user,
+                                                                    password)
 
     def teardown_class(cls):
         TestIncrement.client.close()
@@ -31,10 +27,7 @@ class TestIncrement(object):
     def setup_method(self, method):
         for i in xrange(5):
             key = ('test', 'demo', i)
-            rec = {
-                'name' : 'name%s' % (str(i)),
-                'age' : i
-            }
+            rec = {'name': 'name%s' % (str(i)), 'age': i}
             TestIncrement.client.put(key, rec)
 
     def teardown_method(self, method):
@@ -60,9 +53,9 @@ class TestIncrement(object):
         key = ('test', 'demo', 1)
         TestIncrement.client.increment(key, "age", 5)
 
-        (key , meta, bins) = TestIncrement.client.get(key)
+        (key, meta, bins) = TestIncrement.client.get(key)
 
-        assert bins == { 'age': 6, 'name': 'name1'}
+        assert bins == {'age': 6, 'name': 'name1'}
 
     def test_increment_with_policy_key_send(self):
         """
@@ -71,45 +64,40 @@ class TestIncrement(object):
         key = ('test', 'demo', 1)
         policy = {
             'timeout': 1000,
-            'key' : aerospike.POLICY_KEY_SEND,
+            'key': aerospike.POLICY_KEY_SEND,
             'retry': aerospike.POLICY_RETRY_ONCE,
             'commit_level': aerospike.POLICY_COMMIT_LEVEL_MASTER
         }
         TestIncrement.client.increment(key, "age", 5, {}, policy)
 
+        (key, meta, bins) = TestIncrement.client.get(key)
 
-        (key , meta, bins) = TestIncrement.client.get(key)
-
-        assert bins == { 'age': 6, 'name': 'name1'}
-        assert key == ('test', 'demo', None,
-                bytearray(b'\xb7\xf4\xb88\x89\xe2\xdag\xdeh>\x1d\xf6\x91\x9a\x1e\xac\xc4F\xc8'))
+        assert bins == {'age': 6, 'name': 'name1'}
+        assert key == ('test', 'demo', None, bytearray(
+            b'\xb7\xf4\xb88\x89\xe2\xdag\xdeh>\x1d\xf6\x91\x9a\x1e\xac\xc4F\xc8')
+                      )
 
     def test_increment_with_policy_key_digest(self):
         """
         Invoke increment() with policy key digest
         """
-        key = ( 'test', 'demo', None, bytearray("asd;as[d'as;djk;uyfl",
-               "utf-8"))
-        rec = {
-            'name' : 'name%s' % (str(1)),
-            'age' : 1,
-            'nolist': [1, 2, 3]
-        }
+        key = ('test', 'demo', None, bytearray("asd;as[d'as;djk;uyfl",
+                                               "utf-8"))
+        rec = {'name': 'name%s' % (str(1)), 'age': 1, 'nolist': [1, 2, 3]}
         TestIncrement.client.put(key, rec)
 
         policy = {
             'timeout': 1000,
-            'key' : aerospike.POLICY_KEY_DIGEST,
-            'retry' : aerospike.POLICY_RETRY_NONE
+            'key': aerospike.POLICY_KEY_DIGEST,
+            'retry': aerospike.POLICY_RETRY_NONE
         }
         TestIncrement.client.increment(key, "age", 5, {}, policy)
 
+        (key, meta, bins) = TestIncrement.client.get(key)
 
-        (key , meta, bins) = TestIncrement.client.get(key)
-
-        assert bins == { 'age': 6, 'name': 'name1', 'nolist': [1, 2, 3]}
+        assert bins == {'age': 6, 'name': 'name1', 'nolist': [1, 2, 3]}
         assert key == ('test', 'demo', None,
-                bytearray(b"asd;as[d\'as;djk;uyfl"))
+                       bytearray(b"asd;as[d\'as;djk;uyfl"))
         TestIncrement.client.remove(key)
 
     def test_increment_with_correct_policy(self):
@@ -117,15 +105,12 @@ class TestIncrement(object):
         Invoke increment() with correct policy
         """
         key = ('test', 'demo', 1)
-        policy = {
-            'timeout': 1000,
-            'key' : aerospike.POLICY_KEY_SEND
-        }
+        policy = {'timeout': 1000, 'key': aerospike.POLICY_KEY_SEND}
         TestIncrement.client.increment(key, "age", 5, {}, policy)
 
-        (key , meta, bins) = TestIncrement.client.get(key)
+        (key, meta, bins) = TestIncrement.client.get(key)
 
-        assert bins == { 'age': 6, 'name': 'name1'}
+        assert bins == {'age': 6, 'name': 'name1'}
 
     def test_increment_with_policy_key_gen_EQ_ignore(self):
         """
@@ -134,23 +119,20 @@ class TestIncrement(object):
         key = ('test', 'demo', 1)
         policy = {
             'timeout': 1000,
-            'key' : aerospike.POLICY_KEY_SEND,
+            'key': aerospike.POLICY_KEY_SEND,
             'retry': aerospike.POLICY_RETRY_ONCE,
             'gen': aerospike.POLICY_GEN_IGNORE
         }
 
-        meta = {
-            'gen': 10,
-            'ttl': 1200
-        }
+        meta = {'gen': 10, 'ttl': 1200}
         TestIncrement.client.increment(key, "age", 5, meta, policy)
 
+        (key, meta, bins) = TestIncrement.client.get(key)
 
-        (key , meta, bins) = TestIncrement.client.get(key)
-
-        assert bins == { 'age': 6, 'name': 'name1'}
-        assert key == ('test', 'demo', None,
-                bytearray(b'\xb7\xf4\xb88\x89\xe2\xdag\xdeh>\x1d\xf6\x91\x9a\x1e\xac\xc4F\xc8'))
+        assert bins == {'age': 6, 'name': 'name1'}
+        assert key == ('test', 'demo', None, bytearray(
+            b'\xb7\xf4\xb88\x89\xe2\xdag\xdeh>\x1d\xf6\x91\x9a\x1e\xac\xc4F\xc8')
+                      )
 
     def test_increment_with_policy_key_gen_EQ_positive(self):
         """
@@ -159,25 +141,22 @@ class TestIncrement(object):
         key = ('test', 'demo', 1)
         policy = {
             'timeout': 1000,
-            'key' : aerospike.POLICY_KEY_SEND,
+            'key': aerospike.POLICY_KEY_SEND,
             'retry': aerospike.POLICY_RETRY_ONCE,
             'gen': aerospike.POLICY_GEN_EQ
         }
-        (key, meta) = TestIncrement.client.exists(key) 
+        (key, meta) = TestIncrement.client.exists(key)
 
         gen = meta['gen']
-        meta = {
-            'gen': gen,
-            'ttl': 1200
-        }
+        meta = {'gen': gen, 'ttl': 1200}
         TestIncrement.client.increment(key, "age", 5, meta, policy)
 
+        (key, meta, bins) = TestIncrement.client.get(key)
 
-        (key , meta, bins) = TestIncrement.client.get(key)
-
-        assert bins == { 'age': 6, 'name': 'name1'}
-        assert key == ('test', 'demo', None,
-                bytearray(b'\xb7\xf4\xb88\x89\xe2\xdag\xdeh>\x1d\xf6\x91\x9a\x1e\xac\xc4F\xc8'))
+        assert bins == {'age': 6, 'name': 'name1'}
+        assert key == ('test', 'demo', None, bytearray(
+            b'\xb7\xf4\xb88\x89\xe2\xdag\xdeh>\x1d\xf6\x91\x9a\x1e\xac\xc4F\xc8')
+                      )
 
     def test_increment_with_policy_key_gen_EQ_not_equal(self):
         """
@@ -186,29 +165,26 @@ class TestIncrement(object):
         key = ('test', 'demo', 1)
         policy = {
             'timeout': 1000,
-            'key' : aerospike.POLICY_KEY_SEND,
+            'key': aerospike.POLICY_KEY_SEND,
             'retry': aerospike.POLICY_RETRY_ONCE,
             'gen': aerospike.POLICY_GEN_EQ
         }
-        (key, meta) = TestIncrement.client.exists(key) 
+        (key, meta) = TestIncrement.client.exists(key)
         gen = meta['gen']
 
-        meta = {
-            'gen': gen + 5,
-            'ttl': 1200
-        }
+        meta = {'gen': gen + 5, 'ttl': 1200}
         with pytest.raises(Exception) as exception:
             TestIncrement.client.increment(key, "age", 5, meta, policy)
 
         assert exception.value[0] == 3
         assert exception.value[1] == "AEROSPIKE_ERR_RECORD_GENERATION"
 
+        (key, meta, bins) = TestIncrement.client.get(key)
 
-        (key , meta, bins) = TestIncrement.client.get(key)
-
-        assert bins == { 'age': 1, 'name': 'name1'}
-        assert key == ('test', 'demo', None,
-                bytearray(b'\xb7\xf4\xb88\x89\xe2\xdag\xdeh>\x1d\xf6\x91\x9a\x1e\xac\xc4F\xc8'))
+        assert bins == {'age': 1, 'name': 'name1'}
+        assert key == ('test', 'demo', None, bytearray(
+            b'\xb7\xf4\xb88\x89\xe2\xdag\xdeh>\x1d\xf6\x91\x9a\x1e\xac\xc4F\xc8')
+                      )
 
     def test_increment_with_policy_key_gen_GT_lesser(self):
         """
@@ -217,28 +193,26 @@ class TestIncrement(object):
         key = ('test', 'demo', 1)
         policy = {
             'timeout': 1000,
-            'key' : aerospike.POLICY_KEY_SEND,
+            'key': aerospike.POLICY_KEY_SEND,
             'retry': aerospike.POLICY_RETRY_ONCE,
             'gen': aerospike.POLICY_GEN_GT
         }
-        (key, meta) = TestIncrement.client.exists(key) 
+        (key, meta) = TestIncrement.client.exists(key)
 
         gen = meta['gen']
-        meta = {
-            'gen': gen,
-            'ttl': 1200
-        }
+        meta = {'gen': gen, 'ttl': 1200}
         with pytest.raises(Exception) as exception:
             TestIncrement.client.increment(key, "age", 5, meta, policy)
 
         assert exception.value[0] == 3
         assert exception.value[1] == "AEROSPIKE_ERR_RECORD_GENERATION"
 
-        (key , meta, bins) = TestIncrement.client.get(key)
+        (key, meta, bins) = TestIncrement.client.get(key)
 
-        assert bins == { 'age': 1, 'name': 'name1'}
-        assert key == ('test', 'demo', None,
-                bytearray(b'\xb7\xf4\xb88\x89\xe2\xdag\xdeh>\x1d\xf6\x91\x9a\x1e\xac\xc4F\xc8'))
+        assert bins == {'age': 1, 'name': 'name1'}
+        assert key == ('test', 'demo', None, bytearray(
+            b'\xb7\xf4\xb88\x89\xe2\xdag\xdeh>\x1d\xf6\x91\x9a\x1e\xac\xc4F\xc8')
+                      )
 
     def test_increment_with_policy_key_gen_GT_positive(self):
         """
@@ -247,34 +221,29 @@ class TestIncrement(object):
         key = ('test', 'demo', 1)
         policy = {
             'timeout': 1000,
-            'key' : aerospike.POLICY_KEY_SEND,
+            'key': aerospike.POLICY_KEY_SEND,
             'retry': aerospike.POLICY_RETRY_ONCE,
             'gen': aerospike.POLICY_GEN_GT
         }
-        (key, meta) = TestIncrement.client.exists(key) 
+        (key, meta) = TestIncrement.client.exists(key)
 
         gen = meta['gen']
-        meta = {
-            'gen': gen+5,
-            'ttl': 1200
-        }
+        meta = {'gen': gen + 5, 'ttl': 1200}
         TestIncrement.client.increment(key, "age", 5, meta, policy)
 
+        (key, meta, bins) = TestIncrement.client.get(key)
 
-        (key , meta, bins) = TestIncrement.client.get(key)
-
-        assert bins == { 'age': 6, 'name': 'name1'}
-        assert key == ('test', 'demo', None,
-                bytearray(b'\xb7\xf4\xb88\x89\xe2\xdag\xdeh>\x1d\xf6\x91\x9a\x1e\xac\xc4F\xc8'))
+        assert bins == {'age': 6, 'name': 'name1'}
+        assert key == ('test', 'demo', None, bytearray(
+            b'\xb7\xf4\xb88\x89\xe2\xdag\xdeh>\x1d\xf6\x91\x9a\x1e\xac\xc4F\xc8')
+                      )
 
     def test_increment_with_incorrect_policy(self):
         """
         Invoke increment() with incorrect policy
         """
         key = ('test', 'demo', 1)
-        policy = {
-            'timeout': 0.5
-        }
+        policy = {'timeout': 0.5}
         with pytest.raises(Exception) as exception:
             TestIncrement.client.increment(key, "age", 5, {}, policy)
 
@@ -288,9 +257,9 @@ class TestIncrement(object):
         key = ('test', 'demo', 'non-existentkey')
         status = TestIncrement.client.increment(key, "age", 5)
 
-        (key , meta, bins) = TestIncrement.client.get(key)
+        (key, meta, bins) = TestIncrement.client.get(key)
 
-        assert bins == { 'age': 5}
+        assert bins == {'age': 5}
 
         TestIncrement.client.remove(key)
 
@@ -301,9 +270,9 @@ class TestIncrement(object):
         key = ('test', 'demo', 1)
         status = TestIncrement.client.increment(key, "age1", 5)
 
-        (key , meta, bins) = TestIncrement.client.get(key)
+        (key, meta, bins) = TestIncrement.client.get(key)
 
-        assert bins == { 'age1': 5, 'name': u'name1', 'age': 1}
+        assert bins == {'age1': 5, 'name': u'name1', 'age': 1}
 
     def test_increment_value_is_string(self):
         """
@@ -320,9 +289,7 @@ class TestIncrement(object):
         Invoke increment() with extra parameter.
         """
         key = ('test', 'demo', 1)
-        policy = {
-            'timeout': 1000
-        }
+        policy = {'timeout': 1000}
         with pytest.raises(TypeError) as typeError:
             TestIncrement.client.increment(key, "age", 2, {}, policy, "")
 
@@ -367,18 +334,16 @@ class TestIncrement(object):
         key = ('test', 'demo', 1)
         TestIncrement.client.increment(key, u"age", 10)
 
-        (key , meta, bins) = TestIncrement.client.get(key)
+        (key, meta, bins) = TestIncrement.client.get(key)
 
-        assert bins == { 'age': 11, 'name': 'name1'}
+        assert bins == {'age': 11, 'name': 'name1'}
 
     def test_increment_with_correct_parameters_without_connection(self):
         """
         Invoke increment() with correct parameters without connection
         """
         key = ('test', 'demo', 1)
-        config = {
-            'hosts': [('127.0.0.1', 3000)]
-        }
+        config = {'hosts': [('127.0.0.1', 3000)]}
         client1 = aerospike.client(config)
 
         with pytest.raises(Exception) as exception:

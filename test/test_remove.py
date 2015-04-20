@@ -5,22 +5,16 @@ import sys
 import cPickle as pickle
 from test_base_class import TestBaseClass
 
-try:
-    import aerospike
-except:
-    print "Please install aerospike python client."
-    sys.exit(1)
+aerospike = pytest.importorskip("aerospike")
+
 
 class TestRemove(TestBaseClass):
-
     def setup_class(cls):
         """
         Setup class
         """
         hostlist, user, password = TestBaseClass.get_hosts()
-        config = {
-                'hosts': hostlist
-                }
+        config = {'hosts': hostlist}
         if user == None and password == None:
             TestRemove.client = aerospike.client(config).connect()
         else:
@@ -36,11 +30,11 @@ class TestRemove(TestBaseClass):
         for i in xrange(5):
             key = ('test', 'demo', i)
             rec = {
-                    'name' : 'name%s' % (str(i)),
-                    'addr' : 'name%s' % (str(i)),
-                    'age'  : i,
-                    'no'   : i
-                    }
+                'name': 'name%s' % (str(i)),
+                'addr': 'name%s' % (str(i)),
+                'age': i,
+                'no': i
+            }
             TestRemove.client.put(key, rec)
 
     def teardown_method(self, method):
@@ -70,31 +64,27 @@ class TestRemove(TestBaseClass):
         assert retobj == 0L
 
         (key, meta, bins) = TestRemove.client.get(key)
-        
+
         assert meta == None
         assert bins == None
-        
+
         key = ('test', 'demo', 1)
         rec = {
-                'name' : 'name%s' % (str(1)),
-                'addr' : 'name%s' % (str(1)),
-                'age'  : 1,
-                'no'   : 1
-              }
+            'name': 'name%s' % (str(1)),
+            'addr': 'name%s' % (str(1)),
+            'age': 1,
+            'no': 1
+        }
         TestRemove.client.put(key, rec)
-        
+
     def test_remove_with_policy(self):
         """
             Invoke remove() with policy
         """
         key = ('test', 'demo', 1)
-        meta = {
-                'gen' : 0
-                }
-        policy = {
-            'timeout': 1000
-        }
-        
+        meta = {'gen': 0}
+        policy = {'timeout': 1000}
+
         retobj = TestRemove.client.remove(key, meta, policy)
 
         assert retobj == 0L
@@ -103,24 +93,22 @@ class TestRemove(TestBaseClass):
 
         assert meta == None
         assert bins == None
-    
+
         key = ('test', 'demo', 1)
         rec = {
-                'name' : 'name%s' % (str(1)),
-                'addr' : 'name%s' % (str(1)),
-                'age'  : 1,
-                'no'   : 1
-              }
+            'name': 'name%s' % (str(1)),
+            'addr': 'name%s' % (str(1)),
+            'age': 1,
+            'no': 1
+        }
         TestRemove.client.put(key, rec)
-        
+
     def test_remove_with_policy_all(self):
         """
             Invoke remove() with policy
         """
         key = ('test', 'demo', 1)
-        meta = {
-                'gen' : 0
-                }
+        meta = {'gen': 0}
         policy = {
             'timeout': 1000,
             'retry': aerospike.POLICY_RETRY_ONCE,
@@ -132,30 +120,29 @@ class TestRemove(TestBaseClass):
 
         (key, meta, bins) = TestRemove.client.get(key)
 
-        assert key == ('test', 'demo', 1,
-                bytearray(b'\xb7\xf4\xb88\x89\xe2\xdag\xdeh>\x1d\xf6\x91\x9a\x1e\xac\xc4F\xc8'))
+        assert key == ('test', 'demo', 1, bytearray(
+            b'\xb7\xf4\xb88\x89\xe2\xdag\xdeh>\x1d\xf6\x91\x9a\x1e\xac\xc4F\xc8')
+                      )
         assert meta == None
         assert bins == None
-        
+
         key = ('test', 'demo', 1)
         rec = {
-                'name' : 'name%s' % (str(1)),
-                'addr' : 'name%s' % (str(1)),
-                'age'  : 1,
-                'no'   : 1
-              }
+            'name': 'name%s' % (str(1)),
+            'addr': 'name%s' % (str(1)),
+            'age': 1,
+            'no': 1
+        }
         TestRemove.client.put(key, rec)
-        
+
     def test_remove_with_policy_key_digest(self):
         """
             Invoke remove() with policy_key_digest
         """
 
-        key = ( 'test', 'demo', None, bytearray("asd;as[d'as;djk;uyfl",
-               "utf-8"))
-        meta = {
-                'gen' : 0
-                }
+        key = ('test', 'demo', None, bytearray("asd;as[d'as;djk;uyfl",
+                                               "utf-8"))
+        meta = {'gen': 0}
         policy = {
             'timeout': 1000,
             'retry': aerospike.POLICY_RETRY_ONCE,
@@ -170,56 +157,52 @@ class TestRemove(TestBaseClass):
         assert retobj == 0L
 
         (key, meta, bins) = TestRemove.client.get(key)
-        
+
         assert key == ('test', 'demo', None,
-                bytearray(b"asd;as[d\'as;djk;uyfl"))
+                       bytearray(b"asd;as[d\'as;djk;uyfl"))
         assert meta == None
         assert bins == None
-        
+
     def test_remove_with_policy_gen_ignore(self):
         """
             Invoke remove() with policy gen ignore
         """
         key = ('test', 'demo', 1)
-        meta = {
-                'gen' : 0
-                }
+        meta = {'gen': 0}
         policy = {
             'timeout': 1000,
             'retry': aerospike.POLICY_RETRY_ONCE,
             'key': aerospike.POLICY_KEY_SEND,
             'gen': aerospike.POLICY_GEN_IGNORE
         }
-        
+
         retobj = TestRemove.client.remove(key, meta, policy)
 
         assert retobj == 0L
 
         (key, meta, bins) = TestRemove.client.get(key)
 
-        assert key == ('test', 'demo', 1,
-                bytearray(b'\xb7\xf4\xb88\x89\xe2\xdag\xdeh>\x1d\xf6\x91\x9a\x1e\xac\xc4F\xc8'))
+        assert key == ('test', 'demo', 1, bytearray(
+            b'\xb7\xf4\xb88\x89\xe2\xdag\xdeh>\x1d\xf6\x91\x9a\x1e\xac\xc4F\xc8')
+                      )
         assert meta == None
         assert bins == None
 
         key = ('test', 'demo', 1)
         rec = {
-                'name' : 'name%s' % (str(1)),
-                'addr' : 'name%s' % (str(1)),
-                'age'  : 1,
-                'no'   : 1
-              }
+            'name': 'name%s' % (str(1)),
+            'addr': 'name%s' % (str(1)),
+            'age': 1,
+            'no': 1
+        }
         TestRemove.client.put(key, rec)
-
 
     def test_remove_with_policy_gen_eq_positive(self):
         """
             Invoke remove() with policy gen positive
         """
         key = ('test', 'demo', 1)
-        meta = {
-                'gen' : 0
-                }
+        meta = {'gen': 0}
         policy = {
             'timeout': 1000,
             'retry': aerospike.POLICY_RETRY_ONCE,
@@ -235,18 +218,19 @@ class TestRemove(TestBaseClass):
 
         (key, meta, bins) = TestRemove.client.get(key)
 
-        assert key == ('test', 'demo', 1,
-                bytearray(b'\xb7\xf4\xb88\x89\xe2\xdag\xdeh>\x1d\xf6\x91\x9a\x1e\xac\xc4F\xc8'))
+        assert key == ('test', 'demo', 1, bytearray(
+            b'\xb7\xf4\xb88\x89\xe2\xdag\xdeh>\x1d\xf6\x91\x9a\x1e\xac\xc4F\xc8')
+                      )
         assert meta == None
         assert bins == None
 
         key = ('test', 'demo', 1)
         rec = {
-                'name' : 'name%s' % (str(1)),
-                'addr' : 'name%s' % (str(1)),
-                'age'  : 1,
-                'no'   : 1
-              }
+            'name': 'name%s' % (str(1)),
+            'addr': 'name%s' % (str(1)),
+            'age': 1,
+            'no': 1
+        }
         TestRemove.client.put(key, rec)
 
     def test_remove_with_policy_gen_eq_not_equal(self):
@@ -254,12 +238,10 @@ class TestRemove(TestBaseClass):
             Invoke remove() with policy gen not equal
         """
         key = ('test', 'demo', 1)
-        
+
         (key, meta) = TestRemove.client.exists(key)
         gen = meta['gen'] + 5
-        metadata = {
-                'gen' : gen
-                }
+        metadata = {'gen': gen}
         policy = {
             'timeout': 1000,
             'retry': aerospike.POLICY_RETRY_ONCE,
@@ -278,8 +260,9 @@ class TestRemove(TestBaseClass):
 
         (key, meta, bins) = TestRemove.client.get(key)
 
-        assert key == ('test', 'demo', None,
-                bytearray(b'\xb7\xf4\xb88\x89\xe2\xdag\xdeh>\x1d\xf6\x91\x9a\x1e\xac\xc4F\xc8'))
+        assert key == ('test', 'demo', None, bytearray(
+            b'\xb7\xf4\xb88\x89\xe2\xdag\xdeh>\x1d\xf6\x91\x9a\x1e\xac\xc4F\xc8')
+                      )
         assert meta != None
         assert bins == {'addr': 'name1', 'age': 1, 'name': 'name1', 'no': 1}
 
@@ -305,8 +288,9 @@ class TestRemove(TestBaseClass):
 
         (key, meta, bins) = TestRemove.client.get(key)
 
-        assert key == ('test', 'demo', None,
-                bytearray(b'\xb7\xf4\xb88\x89\xe2\xdag\xdeh>\x1d\xf6\x91\x9a\x1e\xac\xc4F\xc8'))
+        assert key == ('test', 'demo', None, bytearray(
+            b'\xb7\xf4\xb88\x89\xe2\xdag\xdeh>\x1d\xf6\x91\x9a\x1e\xac\xc4F\xc8')
+                      )
         assert meta != None
         assert bins == {'addr': 'name1', 'age': 1, 'name': 'name1', 'no': 1}
 
@@ -324,27 +308,26 @@ class TestRemove(TestBaseClass):
 
         (key, meta) = TestRemove.client.exists(key)
         gen = meta['gen'] + 5
-        metadata = {
-                'gen' : gen
-                }
+        metadata = {'gen': gen}
         retobj = TestRemove.client.remove(key, metadata, policy)
 
         assert retobj == 0L
 
         (key, meta, bins) = TestRemove.client.get(key)
 
-        assert key == ('test', 'demo', 1,
-                bytearray(b'\xb7\xf4\xb88\x89\xe2\xdag\xdeh>\x1d\xf6\x91\x9a\x1e\xac\xc4F\xc8'))
+        assert key == ('test', 'demo', 1, bytearray(
+            b'\xb7\xf4\xb88\x89\xe2\xdag\xdeh>\x1d\xf6\x91\x9a\x1e\xac\xc4F\xc8')
+                      )
         assert meta == None
         assert bins == None
 
         key = ('test', 'demo', 1)
         rec = {
-                'name' : 'name%s' % (str(1)),
-                'addr' : 'name%s' % (str(1)),
-                'age'  : 1,
-                'no'   : 1
-              }
+            'name': 'name%s' % (str(1)),
+            'addr': 'name%s' % (str(1)),
+            'age': 1,
+            'no': 1
+        }
         TestRemove.client.put(key, rec)
 
     def test_remove_with_policy_as_string(self):
@@ -352,9 +335,7 @@ class TestRemove(TestBaseClass):
             Invoke remove() with policy as string
         """
         key = ('test', 'demo', 1)
-        meta = {
-                'gen' : 0
-                }
+        meta = {'gen': 0}
         with pytest.raises(Exception) as exception:
             retobj = TestRemove.client.remove(key, meta, "")
 
@@ -366,12 +347,8 @@ class TestRemove(TestBaseClass):
             Invoke remove() with extra parameter
         """
         key = ('test', 'demo', 1)
-        meta = {
-                'gen' : 0
-                }
-        policy = {
-            'timeout': 1000
-        }
+        meta = {'gen': 0}
+        policy = {'timeout': 1000}
         with pytest.raises(TypeError) as typeError:
             retobj = TestRemove.client.remove(key, meta, policy, "")
 
@@ -424,9 +401,7 @@ class TestRemove(TestBaseClass):
         """
             Invoke remove() with correct arguments without connection
         """
-        config = {
-                'hosts': [('127.0.0.1', 3000)]
-                }
+        config = {'hosts': [('127.0.0.1', 3000)]}
         client1 = aerospike.client(config)
         key = ('test', 'demo', 1)
 

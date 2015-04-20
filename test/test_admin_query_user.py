@@ -1,4 +1,3 @@
-
 # -*- coding: utf-8 -*-
 
 import pytest
@@ -6,43 +5,42 @@ import sys
 import time
 from test_base_class import TestBaseClass
 
-try:
-    import aerospike
-except:
-    print "Please install aerospike python client."
-    sys.exit(1)
+aerospike = pytest.importorskip("aerospike")
+
 
 class TestQueryUser(TestBaseClass):
 
-    def setup_method(self, method):
+    pytestmark = pytest.mark.skipif(
+        TestBaseClass().get_hosts()[1] == None,
+        reason="No user specified, may be not secured cluster.")
 
+    def setup_method(self, method):
         """
         Setup method
         """
         hostlist, user, password = TestBaseClass().get_hosts()
-        config = {
-                "hosts": hostlist
-                }
-        self.client = aerospike.client(config).connect( user, password )
+        config = {"hosts": hostlist}
+        TestQueryUser.Me = self
+        self.client = aerospike.client(config).connect(user, password)
 
         policy = {}
         user = "example"
         password = "foo2"
         roles = ["read-write", "sys-admin", "read"]
 
-        status = self.client.admin_create_user( policy, user, password, roles, len(roles) )
+        status = self.client.admin_create_user(policy, user, password, roles,
+                                               len(roles))
 
         self.delete_users = []
 
     def teardown_method(self, method):
-
         """
         Teardown method
         """
 
         policy = {}
 
-        self.client.admin_drop_user( policy, "example" )
+        self.client.admin_drop_user(policy, "example")
 
         self.client.close()
 
@@ -59,40 +57,46 @@ class TestQueryUser(TestBaseClass):
         user = "example"
 
         time.sleep(2)
-        user_details = self.client.admin_query_user( policy, user )
+        user_details = self.client.admin_query_user(policy, user)
 
-        assert user_details == [{'roles': ['sys-admin', 'read', 'read-write'], 'roles_size':
-3, 'user': user}]
+        assert user_details == [{
+            'roles': ['sys-admin', 'read', 'read-write'],
+            'roles_size': 3,
+            'user': user
+        }]
 
     def test_query_user_with_invalid_timeout_policy_value(self):
 
-        policy = { "timeout" : 0.1 }
+        policy = {"timeout": 0.1}
         user = "example"
 
         with pytest.raises(Exception) as exception:
-            status = self.client.admin_query_user( policy, user )
+            status = self.client.admin_query_user(policy, user)
 
         assert exception.value[0] == -2
         assert exception.value[1] == "timeout is invalid"
 
     def test_query_user_with_proper_timeout_policy_value(self):
 
-        policy = { 'timeout' : 5 }
+        policy = {'timeout': 5}
         user = "example"
 
         time.sleep(2)
-        user_details = self.client.admin_query_user( policy, user )
+        user_details = self.client.admin_query_user(policy, user)
 
-        assert user_details == [{'roles': ['sys-admin','read','read-write'],
-'roles_size': 3, 'user': user}]
+        assert user_details == [{
+            'roles': ['sys-admin', 'read', 'read-write'],
+            'roles_size': 3,
+            'user': user
+        }]
 
     def test_query_user_with_none_username(self):
 
-        policy = { 'timeout' : 0 }
+        policy = {'timeout': 0}
         user = None
 
         with pytest.raises(Exception) as exception:
-            user_details = self.client.admin_query_user( policy, user )
+            user_details = self.client.admin_query_user(policy, user)
 
         assert exception.value[0] == -2
         assert exception.value[1] == "Username should be a string"
@@ -103,7 +107,7 @@ class TestQueryUser(TestBaseClass):
         user = ""
 
         with pytest.raises(Exception) as exception:
-            status = self.client.admin_query_user( policy, user )
+            status = self.client.admin_query_user(policy, user)
 
         assert exception.value[0] == 60
         assert exception.value[1] == "AEROSPIKE_INVALID_USER"
@@ -114,7 +118,7 @@ class TestQueryUser(TestBaseClass):
         user = "non-existent"
 
         with pytest.raises(Exception) as exception:
-            status = self.client.admin_query_user( policy, user )
+            status = self.client.admin_query_user(policy, user)
 
         assert exception.value[0] == 60
         assert exception.value[1] == "AEROSPIKE_INVALID_USER"
@@ -129,32 +133,31 @@ class TestQueryUser(TestBaseClass):
         assert status == 0
         time.sleep(2)
 
-        user_details = self.client.admin_query_user( policy, user )
+        user_details = self.client.admin_query_user(policy, user)
 
-        assert user_details == [{'roles': [], 'roles_size':
-0, 'user': 'example'}]
+        assert user_details == [
+            {'roles': [],
+             'roles_size': 0,
+             'user': 'example'}
+        ]
 
     def test_query_user_with_extra_argument(self):
-
         """
             Invoke query_user() with extra argument.
         """
-        policy = {
-            'timeout': 1000
-        }
+        policy = {'timeout': 1000}
         with pytest.raises(TypeError) as typeError:
-            self.client.admin_query_user( policy, "foo", "" )
+            self.client.admin_query_user(policy, "foo", "")
 
         assert "admin_query_user() takes at most 2 arguments (3 given)" in typeError.value
 
     def test_query_user_with_policy_as_string(self):
-
         """
             Invoke query_user() with policy as string
         """
         policy = ""
         with pytest.raises(Exception) as exception:
-            self.client.admin_query_user( policy, "foo")
+            self.client.admin_query_user(policy, "foo")
 
         assert exception.value[0] == -2L
         assert exception.value[1] == "policy must be a dict"
