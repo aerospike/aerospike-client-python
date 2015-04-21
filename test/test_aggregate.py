@@ -148,6 +148,7 @@ class TestAggregate(TestBaseClass):
             records.append(value)
 
         query.foreach(user_callback)
+        assert exception.value[0] == 100L
         assert records == []
 
     def test_aggregate_with_where_none_value(self):

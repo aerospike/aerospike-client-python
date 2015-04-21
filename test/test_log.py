@@ -3,6 +3,7 @@
 import pytest
 import sys
 import cPickle as pickle
+from test_base_class import TestBaseClass
 
 aerospike = pytest.importorskip("aerospike")
 
@@ -26,11 +27,13 @@ class TestLog(object):
         """
 
         response = aerospike.set_log_level(aerospike.LOG_LEVEL_DEBUG)
-
         aerospike.set_log_handler(handler)
-
-        config = {"hosts": [("127.0.0.1", 3000)]}
-        client = aerospike.client(config).connect()
+        hostlist, user, password = TestBaseClass.get_hosts()
+        config = {'hosts': hostlist}
+        if user == None and password == None:
+           client = aerospike.client(config).connect()
+        else:
+           client = aerospike.client(config).connect(user, password)
 
         assert response == 0
         client.close()

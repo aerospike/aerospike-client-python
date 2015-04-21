@@ -11,6 +11,8 @@ aerospike = pytest.importorskip("aerospike")
 class TestConnect(TestBaseClass):
     def setup_class(cls):
         hostlist, user, password = TestBaseClass.get_hosts()
+        config = {'hosts': hostlist}
+        TestConnect.config = config
 
     def test_connect_positive(self):
         """
@@ -84,7 +86,7 @@ class TestConnect(TestBaseClass):
         """
             Invoke connect() with host key missing in config dict.
         """
-        config = {'': [('127.0.0.1', 3000)]}
+        config = {'': TestConnect.config['hosts']}
         with pytest.raises(Exception) as exception:
             self.client = aerospike.client(config).connect()
 
@@ -106,7 +108,7 @@ class TestConnect(TestBaseClass):
         """
             Invoke connect() with missing port in config dict.
         """
-        config = {'hosts': ['127.0.0.1']}
+        config = {'hosts': [TestConnect.config['hosts'][0]]}
         self.client = aerospike.client(config).connect()
 
         assert self.client.isConnected() == True
@@ -116,7 +118,7 @@ class TestConnect(TestBaseClass):
         """
             Invoke connect() with incorrect port in config dict.
         """
-        config = {'hosts': [('127.0.0.1', 2000)]}
+        config = {'hosts': [(TestConnect.config['hosts'][0][0], 12)]}
         with pytest.raises(Exception) as exception:
             self.client = aerospike.client(config).connect()
 
@@ -127,7 +129,7 @@ class TestConnect(TestBaseClass):
         """
             Invoke connect() with port as string in config dict.
         """
-        config = {'hosts': [('127.0.0.1', '3000')]}
+        config = {'hosts': TestConnect.config['hosts']}
         with pytest.raises(Exception) as exception:
             self.client = aerospike.client(config).connect()
 

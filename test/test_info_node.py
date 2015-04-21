@@ -15,6 +15,7 @@ class TestInfoNode(object):
         """
         hostlist, user, password = TestBaseClass.get_hosts()
         config = {'hosts': hostlist}
+        TestInfoNode.config = config
         if user == None and password == None:
             TestInfoNode.client = aerospike.client(config).connect()
         else:
@@ -44,7 +45,7 @@ class TestInfoNode(object):
         rec = {'names': ['John', 'Marlen', 'Steve']}
 
         TestInfoNode.client.put(key, rec)
-        response = TestInfoNode.client.info_node('bins', ('127.0.0.1', 3000))
+        response = TestInfoNode.client.info_node('bins', TestInfoNode.config['hosts'][0])
         TestInfoNode.client.remove(key)
         if 'names' in response:
             assert True == True
@@ -61,7 +62,7 @@ class TestInfoNode(object):
 
         TestInfoNode.client.put(key, rec)
         response = TestInfoNode.client.info_node('namespaces',
-                                                 ('127.0.0.1', 3000))
+                                                 TestInfoNode.config['hosts'][0])
         TestInfoNode.client.remove(key)
         if 'test' in response:
             assert True == True
@@ -77,7 +78,7 @@ class TestInfoNode(object):
         rec = {'names': ['John', 'Marlen', 'Steve']}
 
         TestInfoNode.client.put(key, rec)
-        response = TestInfoNode.client.info_node('sets', ('127.0.0.1', 3000))
+        response = TestInfoNode.client.info_node('sets', TestInfoNode.config['hosts'][0])
         TestInfoNode.client.remove(key)
         if 'demo' in response:
             assert True == True
@@ -95,13 +96,13 @@ class TestInfoNode(object):
         TestInfoNode.client.put(key, rec)
         response = TestInfoNode.client.info_node(
             'sindex-create:ns=test;set=demo;indexname=names_test_index;indexdata=names,string',
-            ('127.0.0.1', 3000))
+            TestInfoNode.config['hosts'][0])
         time.sleep(2)
         TestInfoNode.client.remove(key)
-        response = TestInfoNode.client.info_node('sindex', ('127.0.0.1', 3000))
+        response = TestInfoNode.client.info_node('sindex', TestInfoNode.config['hosts'][0])
         TestInfoNode.client.info_node(
             'sindex-delete:ns=test;indexname=names_test_index',
-            ('127.0.0.1', 3000))
+            TestInfoNode.config['hosts'][0])
 
         if 'names_test_index' in response:
             assert True == True
@@ -115,7 +116,7 @@ class TestInfoNode(object):
         response = None
         with pytest.raises(Exception) as exception:
             response = TestInfoNode.client.info_node('abcd',
-                                                     ('127.0.0.1', 3000))
+                                                     TestInfoNode.config['hosts'][0])
 
         assert exception.value[0] == -1
         assert exception.value[1] == "Invalid info operation"
@@ -158,7 +159,7 @@ class TestInfoNode(object):
 
         rec = {'names': ['John', 'Marlen', 'Steve']}
         TestInfoNode.client.put(key, rec)
-        host = ("127.0.0.1", 3000)
+        host = TestInfoNode.config['hosts'][0]
         response = TestInfoNode.client.info_node('bins', host)
 
         TestInfoNode.client.remove(key)
@@ -182,7 +183,7 @@ class TestInfoNode(object):
         """
         Test info with all parameters
         """
-        host = ("127.0.0.1", 3000)
+        host = TestInfoNode.config['hosts'][0]
         policy = {'timeout': 1000}
         response = TestInfoNode.client.info_node('logs', host, policy)
 
@@ -192,7 +193,7 @@ class TestInfoNode(object):
         """
         Test info with extra parameters
         """
-        host = ("127.0.0.1", 3000)
+        host = TestInfoNode.config['hosts'][0]
         policy = {'timeout': 1000}
         with pytest.raises(TypeError) as typeError:
             response = TestInfoNode.client.info_node('bins', host, policy, "")
@@ -205,7 +206,7 @@ class TestInfoNode(object):
         """
         response = None
         with pytest.raises(Exception) as exception:
-            response = TestInfoNode.client.info_node(None, ('127.0.0.1', 3000))
+            response = TestInfoNode.client.info_node(None, TestInfoNode.config['hosts'][0])
 
         assert exception.value[0] == -2
         assert exception.value[1] == "Request should be of string type"
@@ -214,7 +215,8 @@ class TestInfoNode(object):
         """
         Test info with all parameters
         """
-        host = (u"127.0.0.1", 3000)
+        host = (unicode(TestInfoNode.config['hosts'][0][0]),
+                TestInfoNode.config['hosts'][0][1])
         policy = {'timeout': 1000}
         response = TestInfoNode.client.info_node(u'logs', host, policy)
 
@@ -223,7 +225,8 @@ class TestInfoNode(object):
         """
         Test info with all parameters
         """
-        host = (u"127.0.0.1", 3000)
+        host = (unicode(TestInfoNode.config['hosts'][0][0]),
+                TestInfoNode.config['hosts'][0][1])
         policy = {'timeout': 1000}
         response = TestInfoNode.client.info_node(u'logs', host, policy)
 
@@ -267,11 +270,10 @@ class TestInfoNode(object):
         """
         key = ('test', 'demo', 'list_key')
 
-        config = {'hosts': [('127.0.0.1', 3000)]}
-        client1 = aerospike.client(config)
+        client1 = aerospike.client(TestInfoNode.config)
 
         with pytest.raises(Exception) as exception:
-            response = client1.info_node('bins', ('127.0.0.1', 3000))
+            response = client1.info_node('bins', TestInfoNode.config['hosts'][0])
 
         assert exception.value[0] == 11L
         assert exception.value[1] == 'No connection to aerospike cluster'
