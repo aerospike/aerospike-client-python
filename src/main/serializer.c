@@ -23,6 +23,7 @@
 
 #include "client.h"
 #include "conversions.h"
+#include "exceptions.h"
 #include "key.h"
 #include "policy.h"
 #include "serializer.h"
@@ -83,8 +84,9 @@ CLEANUP:
 	if ( err.code != AEROSPIKE_OK ) {
 		PyObject * py_err = NULL;
 		error_to_pyobject(&err, &py_err);
-		PyErr_SetObject(PyExc_Exception, py_err);
-        Py_DECREF(py_err);
+		PyObject *exception_type = raise_exception(&err);
+		PyErr_SetObject(exception_type, py_err);
+		Py_DECREF(py_err);
 		return NULL;
 	}
 
@@ -141,8 +143,9 @@ CLEANUP:
 	if ( err.code != AEROSPIKE_OK ) {
 		PyObject * py_err = NULL;
 		error_to_pyobject(&err, &py_err);
-		PyErr_SetObject(PyExc_Exception, py_err);
-        Py_DECREF(py_err);
+		PyObject *exception_type = raise_exception(&err);
+		PyErr_SetObject(exception_type, py_err);
+		Py_DECREF(py_err);
 		return NULL;
 	}
 
@@ -184,10 +187,12 @@ void set_as_bytes(as_bytes **bytes,
 CLEANUP:
 
   if ( error_p->code != AEROSPIKE_OK ) {
-        PyObject * py_err = NULL;
-        error_to_pyobject(error_p, &py_err);
-        PyErr_SetObject(PyExc_Exception, py_err);
-        Py_DECREF(py_err);
+		PyObject * py_err = NULL;
+		error_to_pyobject(error_p, &py_err);
+		PyObject *exception_type = raise_exception(error_p);
+		PyErr_SetObject(exception_type, py_err);
+		Py_DECREF(py_err);
+		return NULL;
 	}
     return;
 }
@@ -258,10 +263,11 @@ void execute_user_callback(user_serializer_callback *user_callback_info,
 
 CLEANUP:
   if ( error_p->code != AEROSPIKE_OK ) {
-        PyObject * py_err = NULL;
-        error_to_pyobject(error_p, &py_err);
-        PyErr_SetObject(PyExc_Exception, py_err);
-        Py_DECREF(py_err);
+		PyObject * py_err = NULL;
+		error_to_pyobject(error_p, &py_err);
+		PyObject *exception_type = raise_exception(error_p);
+		PyErr_SetObject(exception_type, py_err);
+		Py_DECREF(py_err);
     }
 }
 
@@ -358,10 +364,11 @@ py_funcname, value, NULL);
 CLEANUP:
 
   if ( error_p->code != AEROSPIKE_OK ) {
-        PyObject * py_err = NULL;
-        error_to_pyobject(error_p, &py_err);
-        PyErr_SetObject(PyExc_Exception, py_err);
-        Py_DECREF(py_err);
+		PyObject * py_err = NULL;
+		error_to_pyobject(error_p, &py_err);
+		PyObject *exception_type = raise_exception(error_p);
+		PyErr_SetObject(exception_type, py_err);
+		Py_DECREF(py_err);
 		return NULL;
     }
   
@@ -447,10 +454,11 @@ py_funcname, py_value, NULL);
 CLEANUP:
 
   if ( error_p->code != AEROSPIKE_OK ) {
-        PyObject * py_err = NULL;
-        error_to_pyobject(error_p, &py_err);
-        PyErr_SetObject(PyExc_Exception, py_err);
-        Py_DECREF(py_err);
+		PyObject * py_err = NULL;
+		error_to_pyobject(error_p, &py_err);
+		PyObject *exception_type = raise_exception(error_p);
+		PyErr_SetObject(exception_type, py_err);
+		Py_DECREF(py_err);
 		return NULL;
     }
 

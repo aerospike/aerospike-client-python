@@ -57,7 +57,9 @@ PyObject * AerospikeClient_Close(AerospikeClient * self, PyObject * args, PyObje
 	if ( err.code != AEROSPIKE_OK ) {
 		PyObject * py_err = NULL;
 		error_to_pyobject(&err, &py_err);
-		PyErr_SetObject(PyExc_Exception, py_err);
+		PyObject *exception_type = raise_exception(&err);
+		PyErr_SetObject(exception_type, py_err);
+		Py_DECREF(py_err);
 		return NULL;
 	}
 	self->is_conn_16 = false;
@@ -69,7 +71,8 @@ CLEANUP:
 	if ( err.code != AEROSPIKE_OK ) {
 		PyObject * py_err = NULL;
 		error_to_pyobject(&err, &py_err);
-		PyErr_SetObject(PyExc_Exception, py_err);
+		PyObject *exception_type = raise_exception(&err);
+		PyErr_SetObject(exception_type, py_err);
 		Py_DECREF(py_err);
 		return NULL;
 	}

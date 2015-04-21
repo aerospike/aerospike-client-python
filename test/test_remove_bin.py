@@ -47,8 +47,9 @@ class TestRemovebin(object):
         """
         for i in xrange(5):
             key = ('test', 'demo', i)
-            (key , meta, bins) = TestRemovebin.client.get(key)
-            if bins != None:
+            try:
+                (key , meta, bins) = TestRemovebin.client.get(key)
+            except RecordNotFound:
                 TestRemovebin.client.remove(key)
 
     def test_remove_bin_with_no_parameters(self):
@@ -343,9 +344,18 @@ class TestRemovebin(object):
         TestRemovebin.client.remove_bin(key, ["name", "age"])
 
 
-        (key , meta, bins) = TestRemovebin.client.get(key)
+        try:
+            (key , meta, bins) = TestRemovebin.client.get(key)
 
-        assert bins == None
+        except RecordNotFound as exception:
+            assert exception.code == 2
+        for i in xrange(5):
+            key = ('test', 'demo', i)
+            rec = {
+                'name' : 'name%s' % (str(i)),
+                'age' : i
+            }
+            TestRemovebin.client.put(key, rec)
 
     def test_remove_bin_with_unicode_binname(self):
         """
@@ -363,17 +373,27 @@ class TestRemovebin(object):
 
         TestRemovebin.client.remove_bin(key, [u"name", "age"])
 
-        (key , meta, bins) = TestRemovebin.client.get(key)
+        try:
+            (key , meta, bins) = TestRemovebin.client.get(key)
 
-        assert bins == None
-
+        except RecordNotFound as exception:
+            assert exception.code == 2
         key = ('test', 'demo', 4)
 
         TestRemovebin.client.remove_bin(key, ["name", u"age"])
 
-        (key , meta, bins) = TestRemovebin.client.get(key)
+        try:
+            (key , meta, bins) = TestRemovebin.client.get(key)
 
-        assert bins == None
+        except RecordNotFound as exception:
+            assert exception.code == 2
+        for i in xrange(5):
+            key = ('test', 'demo', i)
+            rec = {
+                'name' : 'name%s' % (str(i)),
+                'age' : i
+            }
+            TestRemovebin.client.put(key, rec)
 
     def test_remove_bin_with_correct_parameters_without_connection(self):
         """

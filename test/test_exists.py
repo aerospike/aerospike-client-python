@@ -162,11 +162,12 @@ class TestExists(TestBaseClass):
         key = ('test', 'demo', 1)
         policy = ""
 
-        with pytest.raises(Exception) as exception:
+        try:
             key, meta = TestExists.client.exists( key, policy )
 
-        assert exception.value[0] == -2
-        assert exception.value[1] == 'policy must be a dict'
+        except ParamError as exception:
+            assert exception.code == -2
+            assert exception.msg == 'policy must be a dict'
 
     def test_exists_with_timeout_is_string(self):
 
@@ -178,11 +179,12 @@ class TestExists(TestBaseClass):
             'timeout' : "1000"
         }
 
-        with pytest.raises(Exception) as exception:
+        try:
             key, meta = TestExists.client.exists( key, policy )
 
-        assert exception.value[0] == -2
-        assert exception.value[1] == 'timeout is invalid'
+        except ParamError as exception:
+            assert exception.code == -2
+            assert exception.msg == 'timeout is invalid'
 
     def test_exists_for_list_type_record(self):
 
@@ -278,11 +280,12 @@ class TestExists(TestBaseClass):
         """
         key = (None, 'demo', 2)
 
-        with pytest.raises(Exception) as exception:
+        try:
             key, meta = TestExists.client.exists( key )
 
-        assert exception.value[0] == -2
-        assert exception.value[1] == 'namespace must be a string'
+        except ParamError as exception:
+            assert exception.code == -2
+            assert exception.msg == 'namespace must be a string'
 
     def test_exists_with_none_pk(self):
 
@@ -291,22 +294,24 @@ class TestExists(TestBaseClass):
         """
         key = ('test', 'demo', None)
 
-        with pytest.raises(Exception) as exception:
+        try:
             key, meta  = TestExists.client.exists( key )
 
-        assert exception.value[0] == -2
-        assert exception.value[1] == 'either key or digest is required'
+        except ParamError as exception:
+            assert exception.code == -2
+            assert exception.msg == 'either key or digest is required'
 
     def test_exists_with_none_key(self):
 
         """
             Invoke exists() with None as a key.
         """
-        with pytest.raises(Exception) as exception:
+        try:
             key, meta  = TestExists.client.exists(None)
 
-        assert exception.value[0] == -2
-        assert exception.value[1] == "key is invalid"
+        except ParamError as exception:
+            assert exception.code == -2
+            assert exception.msg == "key is invalid"
 
     def test_exists_key_type_list(self):
 
@@ -315,11 +320,12 @@ class TestExists(TestBaseClass):
         """
         key = ['test', 'demo', '1']
 
-        with pytest.raises(Exception) as exception:
+        try:
             key, meta = TestExists.client.exists(key)
 
-        assert exception.value[0] == -2
-        assert exception.value[1] == "key is invalid"
+        except ParamError as exception:
+            assert exception.code == -2
+            assert exception.msg == "key is invalid"
 
     def test_exists_with_non_existent_namespace(self):
 
@@ -328,11 +334,12 @@ class TestExists(TestBaseClass):
         """
         key = ('namespace', 'demo', 1)
 
-        with pytest.raises(Exception) as exception:
+        try:
             key, meta = TestExists.client.exists(key)
 
-        assert exception.value[0] == 20
-        assert exception.value[1] == 'AEROSPIKE_ERR_NAMESPACE_NOT_FOUND'
+        except NamespaceNotFound as exception:
+            assert exception.code == 20
+            assert exception.msg == 'AEROSPIKE_ERR_NAMESPACE_NOT_FOUND'
 
     def test_exists_with_non_existent_set(self):
 
@@ -372,8 +379,9 @@ class TestExists(TestBaseClass):
                 }
         client1 = aerospike.client(config)
 
-        with pytest.raises(Exception) as exception:
+        try:
             key, meta = client1.exists( key )
 
-        assert exception.value[0] == 11L
-        assert exception.value[1] == 'No connection to aerospike cluster'
+        except ClusterError as exception:
+            assert exception.code == 11L
+            assert exception.msg == 'No connection to aerospike cluster'

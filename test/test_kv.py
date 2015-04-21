@@ -1,6 +1,7 @@
 import unittest
 import aerospike
 from test_base_class import TestBaseClass
+from aerospike.exception import *
 
 config = {
     "hosts": [("127.0.0.1",3000)]
@@ -94,8 +95,10 @@ class KVTestCase(unittest.TestCase, TestBaseClass):
         self.assertEqual(rc, 0, 'wrong return code')
 
         # ensure not existent
-        (key, meta) = self.client.exists(key)
-        self.assertTrue(meta is None)
+        try:
+            (key, meta) = self.client.exists(key)
+        except RecordNotFound as exception:
+            assert exception.code == 2
 
         # count records
         count = 0
@@ -161,8 +164,10 @@ class KVTestCase(unittest.TestCase, TestBaseClass):
         self.assertEqual(rc, 0, 'wrong return code')
 
         # ensure not existent
-        (key, meta) = self.client.exists(digest_only(key))
-        self.assertTrue(meta is None)
+        try:
+            (key, meta) = self.client.exists(digest_only(key))
+        except RecordNotFound as exception:
+            assert exception.code == 2
 
         # count records
         count = 0

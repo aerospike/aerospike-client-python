@@ -192,22 +192,24 @@ class TestGet(TestBaseClass):
         """
         key = ('test', 'demo', None)
 
-        with pytest.raises(Exception) as exception:
+        try:
             key, meta, bins = TestGet.client.get( key )
 
-        assert exception.value[0] == -2
-        assert exception.value[1] == 'either key or digest is required'
+        except ParamError as exception:
+            assert exception.code == -2
+            assert exception.msg == 'either key or digest is required'
 
     def test_get_with_none_key(self):
 
         """
             Invoke get() with None as a key.
         """
-        with pytest.raises(Exception) as exception:
+        try:
             key, meta, bins = TestGet.client.get(None)
 
-        assert exception.value[0] == -2
-        assert exception.value[1] == "key is invalid"
+        except ParamError as exception:
+            assert exception.code == -2
+            assert exception.msg == "key is invalid"
 
     def test_get_key_type_list(self):
 
@@ -216,11 +218,12 @@ class TestGet(TestBaseClass):
         """
         key = ['test', 'demo', '1']
 
-        with pytest.raises(Exception) as exception:
+        try:
             key, meta, bins = TestGet.client.get(key)
 
-        assert exception.value[0] == -2
-        assert exception.value[1] == "key is invalid"
+        except ParamError as exception:
+            assert exception.code == -2
+            assert exception.msg == "key is invalid"
 
     def test_get_with_non_existent_namespace(self):
 
@@ -229,11 +232,12 @@ class TestGet(TestBaseClass):
         """
         key = ('namespace', 'demo', 1)
 
-        with pytest.raises(Exception) as exception:
+        try:
             key, meta, bins = TestGet.client.get(key)
 
-        assert exception.value[0] == 20
-        assert exception.value[1] == 'AEROSPIKE_ERR_NAMESPACE_NOT_FOUND'
+        except NamespaceNotFound as exception:
+            assert exception.code == 20
+            assert exception.msg == 'AEROSPIKE_ERR_NAMESPACE_NOT_FOUND'
 
     def test_get_with_non_existent_set(self):
 
@@ -423,8 +427,9 @@ class TestGet(TestBaseClass):
                 }
         client1 = aerospike.client(config)
 
-        with pytest.raises(Exception) as exception:
+        try:
             key, meta, bins = client1.get( key )
 
-        assert exception.value[0] == 11L
-        assert exception.value[1] == 'No connection to aerospike cluster'
+        except ClusterError as exception:
+            assert exception.code == 11L
+            assert exception.msg == 'No connection to aerospike cluster'

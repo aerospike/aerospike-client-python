@@ -24,6 +24,7 @@
 
 #include "client.h"
 #include "conversions.h"
+#include "exceptions.h"
 #include "policy.h"
 #include "scan.h"
 
@@ -85,6 +86,7 @@ PyObject * AerospikeScan_Results(AerospikeScan * self, PyObject * args, PyObject
 	pyobject_to_policy_scan(&err, py_policy, &scan_policy, &scan_policy_p,
 			&self->client->as->config.policies.scan);
 	if ( err.code != AEROSPIKE_OK ) {
+		as_error_update(&err, err.code, NULL);
 		goto CLEANUP;
 	}
 
@@ -103,7 +105,9 @@ CLEANUP:
 	if ( err.code != AEROSPIKE_OK ) {
 		PyObject * py_err = NULL;
 		error_to_pyobject(&err, &py_err);
-		PyErr_SetObject(PyExc_Exception, py_err);
+		PyObject *exception_type = raise_exception(&err);
+		PyErr_SetObject(exception_type, py_err);
+		Py_DECREF(py_err);
 		return NULL;
 	}
 

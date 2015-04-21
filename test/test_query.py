@@ -92,13 +92,14 @@ class TestQuery(object):
         """
             Invoke query() without any mandatory parameters.
         """
-        with pytest.raises(Exception) as exception:
+        try:
             query = TestQuery.client.query()
             query.select()
             query.where()
 
-        assert exception.value[0] == -2
-        assert exception.value[1] == 'query() expects atleast 1 parameter'
+        except ParamError as exception:
+            assert exception.code == -2
+            assert exception.msg == 'query() expects atleast 1 parameter'
 
     def test_query_with_correct_parameters(self):
         """
@@ -120,7 +121,7 @@ class TestQuery(object):
         """
             Invoke query() with incorrect ns and set
         """
-        with pytest.raises(Exception) as exception:
+        try:
             query = TestQuery.client.query('test1', 'demo1')
             query.select('name', 'test_age')
             query.where(p.equals('test_age', 1))
@@ -129,8 +130,9 @@ class TestQuery(object):
 
             query.foreach(callback)
 
-        assert exception.value[0] == 4L
-        assert exception.value[1] == 'AEROSPIKE_ERR_REQUEST_INVALID'
+        except InvalidRequest as exception:
+            assert exception.code == 4L
+            assert exception.msg == 'AEROSPIKE_ERR_REQUEST_INVALID'
 
     def test_query_with_incorrect_bin_name(self):
         """
@@ -175,8 +177,10 @@ class TestQuery(object):
 
             query.foreach(callback)
 
-        except IndexNotFound:
-            assert True == True
+        except IndexNotFound as exception:
+            assert exception.code == 201
+            assert exception.msg == 'AEROSPIKE_ERR_INDEX_NOT_FOUND'
+            assert exception.name == None
 
     def test_query_with_where_incorrect(self):
         """
@@ -198,11 +202,12 @@ class TestQuery(object):
         """
         query = TestQuery.client.query('test', 'demo')
         query.select('name', 'test_age')
-        with pytest.raises(Exception) as exception:
+        try:
             query.where(p.equals('test_age', None))
 
-        assert exception.value[0] == -2L
-        assert exception.value[1] == 'predicate is invalid.'
+        except ParamError as exception:
+            assert exception.code == -2L
+            assert exception.msg == 'predicate is invalid.'
 
     def test_query_with_policy(self):
         """
@@ -252,11 +257,12 @@ class TestQuery(object):
         def callback((key,metadata,record)):
             assert metadata['gen'] != None
 
-        with pytest.raises(Exception) as exception:
+        try:
             query.foreach(callback, policy)
 
-        assert exception.value[0] == -2L
-        assert exception.value[1] == 'timeout is invalid'
+        except ParamError as exception:
+            assert exception.code == -2L
+            assert exception.msg == 'timeout is invalid'
 
     def test_query_with_put_in_callback(self):
         """
@@ -306,11 +312,12 @@ class TestQuery(object):
 
         query = TestQuery.client.query('test', 'demo')
         query.select('name', 'test_age')
-        with pytest.raises(Exception) as exception:
+        try:
             query.where("")
 
-        assert exception.value[0] == -2
-        assert exception.value[1] == "predicate is invalid."
+        except ParamError as exception:
+            assert exception.code == -2
+            assert exception.msg == "predicate is invalid."
 
     def test_query_with_callback_contains_error(self):
         """
@@ -325,10 +332,12 @@ class TestQuery(object):
             val += 1
             records.append(key)
 
-        with pytest.raises(Exception) as exception:
+        try:
             result = query.foreach(callback)
-        assert exception.value[0] == -2L
-        assert exception.value[1] == "Callback function contains an error"
+
+        except ParamError as exception:
+            assert exception.code == -2L
+            assert exception.msg == "Callback function contains an error"
 
     def test_query_with_callback_returning_false(self):
         """
@@ -385,11 +394,12 @@ class TestQuery(object):
         """
         query = TestQuery.client.query('test', 'demo')
 
-        with pytest.raises(Exception) as exception:
+        try:
             query.select(22, 'test_age')
 
-        assert exception.value[0] == -2L
-        assert exception.value[1] == 'Bin name should be of type string'
+        except ParamError as exception:
+            assert exception.code == -2L
+            assert exception.msg == 'Bin name should be of type string'
 
     def test_query_with_correct_parameters_contains(self):
         """
@@ -615,7 +625,7 @@ class TestQuery(object):
                 }
         client1 = aerospike.client(config)
 
-        with pytest.raises(Exception) as exception:
+        try:
             query = client1.query('test', 'demo')
             query.select('name', 'test_age')
             query.where(p.equals('test_age', 1))
@@ -626,5 +636,6 @@ class TestQuery(object):
 
             query.foreach(callback)
 
-        assert exception.value[0] == 11L
-        assert exception.value[1] == 'No connection to aerospike cluster'
+        except ClusterError as exception:
+            assert exception.code == 11L
+            assert exception.msg == 'No connection to aerospike cluster'

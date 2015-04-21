@@ -3,9 +3,11 @@
 import pytest
 import sys
 import cPickle as pickle
+from test_base_class import TestBaseClass
 
 try:
     import aerospike
+    from aerospike.exception import *
 except:
     print "Please install aerospike python client."
     sys.exit(1)
@@ -33,10 +35,14 @@ class TestLog(object):
 
         aerospike.set_log_handler(handler)
 
+        hostlist, user, password = TestBaseClass.get_hosts()
         config = {
-                "hosts": [("127.0.0.1", 3000)]
+                "hosts": hostlist
                 }
-        client = aerospike.client(config).connect()
+        if user == None and password == None:
+            client = aerospike.client(config).connect()
+        else:
+            client = aerospike.client(config).connect(user, password)
 
         assert response == 0
         client.close()
@@ -45,11 +51,12 @@ class TestLog(object):
         """
         Test log level with log level as None
         """
-        with pytest.raises(Exception) as exception:
+        try:
             response = aerospike.set_log_level(None)
 
-        assert exception.value[0] == -2
-        assert exception.value[1] == 'Invalid log level'
+        except ParamError as exception:
+            assert exception.code == -2
+            assert exception.msg == 'Invalid log level'
 
     def test_set_log_level_incorrect(self):
         """

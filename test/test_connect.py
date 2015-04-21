@@ -7,6 +7,7 @@ import cPickle as pickle
 from test_base_class import TestBaseClass
 try:
     import aerospike
+    from aerospike.exception import *
 except:
     print "Please install aerospike python client."
     sys.exit(1)
@@ -71,10 +72,11 @@ class TestConnect(TestBaseClass):
             Invoke connect with config as Integer (non-dict)
         """
         config = 1
-        with pytest.raises(Exception) as exception:
+        try:
             self.client = aerospike.client(config).connect()
-        assert exception.value[0] == -1
-        assert exception.value[1] == "Parameters are incorrect"
+        except ParamError as exception:
+            assert exception.code == -2
+            assert exception.msg == "Parameters are incorrect"
     
     def test_connect_config_empty_dict(self):
         """
@@ -82,11 +84,12 @@ class TestConnect(TestBaseClass):
         """
         config = {
                 }
-        with pytest.raises(Exception) as exception:
+        try:
             self.client = aerospike.client(config).connect()
 
-        assert exception.value[0] == -2L
-        assert exception.value[1] == 'No hosts provided'
+        except ParamError as exception:
+            assert exception.code == -2L
+            assert exception.msg == 'No hosts provided'
 
     def test_connect_missing_hosts_key(self):
         """
@@ -95,11 +98,12 @@ class TestConnect(TestBaseClass):
         config = {
                 '': [('127.0.0.1', 3000)]
                 }
-        with pytest.raises(Exception) as exception:
+        try:
             self.client = aerospike.client(config).connect()
 
-        assert exception.value[0] == -2L
-        assert exception.value[1] == 'No hosts provided'
+        except ParamError as exception:
+            assert exception.code == -2L
+            assert exception.msg == 'No hosts provided'
 
     def test_connect_missing_address(self):
         """
@@ -108,11 +112,12 @@ class TestConnect(TestBaseClass):
         config = {
                 'hosts': [3000]
                 }
-        with pytest.raises(Exception) as exception:
+        try:
             self.client = aerospike.client(config).connect()
 
-        assert exception.value[0] == -2L
-        assert exception.value[1] == 'No hosts provided'
+        except ParamError as exception:
+            assert exception.code == -2L
+            assert exception.msg == 'No hosts provided'
 
     def test_connect_missing_port(self):
         """
@@ -133,11 +138,12 @@ class TestConnect(TestBaseClass):
         config = {
                 'hosts': [('127.0.0.1', 2000)]
                 }
-        with pytest.raises(Exception) as exception:
+        try:
             self.client = aerospike.client(config).connect()
 
-        assert exception.value[0] == -1
-        assert exception.value[1] == 'Failed to seed cluster'
+        except ClientError as exception:
+            assert exception.code == -1
+            assert exception.msg == 'Failed to seed cluster'
 
     def test_connect_port_is_string(self):
         """
@@ -146,8 +152,9 @@ class TestConnect(TestBaseClass):
         config = {
                 'hosts': [('127.0.0.1', '3000')]
                 }
-        with pytest.raises(Exception) as exception:
+        try:
             self.client = aerospike.client(config).connect()
 
-        assert exception.value[0] == -1
-        assert exception.value[1] == 'Failed to seed cluster'
+        except ClientError as exception:
+            assert exception.code == -1
+            assert exception.msg == 'Failed to seed cluster'

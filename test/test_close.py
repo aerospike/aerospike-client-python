@@ -8,6 +8,7 @@ from test_base_class import TestBaseClass
 
 try:
     import aerospike
+    from aerospike.exception import *
 except:
     print "Please install aerospike python client."
     sys.exit(1)
@@ -55,8 +56,9 @@ class TestClose(TestBaseClass):
                 }
         self.client = aerospike.client(config)
 
-        with pytest.raises(Exception) as exception:
+        try:
             self.closeobject = self.client.close()
 
-        assert exception.value[0] == 11L
-        assert exception.value[1] == 'No connection to aerospike cluster'
+        except ClusterError as exception:
+            assert exception.code == 11L
+            assert exception.msg == 'No connection to aerospike cluster'

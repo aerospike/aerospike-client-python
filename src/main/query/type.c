@@ -27,6 +27,7 @@
 #include "client.h"
 #include "query.h"
 #include "conversions.h"
+#include "exceptions.h"
 
 /*******************************************************************************
  * PYTHON TYPE METHODS
@@ -183,7 +184,8 @@ AerospikeQuery * AerospikeQuery_New(AerospikeClient * client, PyObject * args, P
 		as_error_update(&err, AEROSPIKE_ERR_PARAM, "query() expects atleast 1 parameter");
 		PyObject * py_err = NULL;
 		error_to_pyobject(&err, &py_err);
-		PyErr_SetObject(PyExc_Exception, py_err);
+		PyObject *exception_type = raise_exception(&err);
+		PyErr_SetObject(exception_type, py_err);
 		Py_DECREF(py_err);
 		return NULL;
 	}

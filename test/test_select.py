@@ -93,10 +93,11 @@ class TestSelect(TestBaseClass):
 
         bins_to_select = ['a']
 
-        with pytest.raises(Exception) as exception:
+        try:
             key, meta, bins = TestSelect.client.select(None, bins_to_select)
 
-        assert exception.value[0] == -2
+        except ParamError as exception:
+            assert exception.code == -2
 
     def test_select_with_none_policy(self):
 
@@ -118,11 +119,12 @@ class TestSelect(TestBaseClass):
 
         bins_to_select = None
 
-        with pytest.raises(Exception) as exception:
+        try:
             key, meta, bins = TestSelect.client.select( key, bins_to_select )
 
-        assert exception.value[0] == -2
-        assert exception.value[1] == 'not a list or tuple'
+        except ParamError as exception:
+            assert exception.code == -2
+            assert exception.msg == 'not a list or tuple'
 
     def test_select_with_non_existent_key(self):
 
@@ -143,12 +145,12 @@ class TestSelect(TestBaseClass):
 
         bin_to_select = 'a' # Not a list
 
-        with pytest.raises(Exception) as exception:
+        try:
             key, meta, bins = TestSelect.client.select( key, bin_to_select )
 
-        assert exception.value[0] == -2
-
-        assert exception.value[1] == 'not a list or tuple'
+        except ParamError as exception:
+            assert exception.code == -2
+            assert exception.msg == 'not a list or tuple'
 
     def test_select_with_key_and_multiple_bins_to_select(self):
 
@@ -276,8 +278,9 @@ class TestSelect(TestBaseClass):
 
         bins_to_select = ['a']
 
-        with pytest.raises(Exception) as exception:
+        try:
             key, meta, bins = client1.select( key, bins_to_select)
 
-        assert exception.value[0] == 11L
-        assert exception.value[1] == 'No connection to aerospike cluster'
+        except ClusterError as exception:
+            assert exception.code == 11L
+            assert exception.msg == 'No connection to aerospike cluster'
