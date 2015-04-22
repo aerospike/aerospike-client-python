@@ -86,9 +86,9 @@ class TestLList(object):
         try:
             TestLList.llist_float.add(rec)
 
-        except UDFError as exception:
-            assert exception.code == 100
-            assert exception.msg == "/opt/aerospike/sys/udf/lua/ldt/lib_llist.lua:1347: 1433:LDT-Key (Unique) Function Not Found"
+        except LDTKeyFunctionNotFound as exception:
+            assert exception.code == 1433
+            assert exception.msg == "LDT-Key (Unique) Function Not Found"
 
     #Add() - Add() without any mandatory parameters. 
     def test_llist_no_parameter_negative(self):

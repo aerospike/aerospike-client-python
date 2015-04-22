@@ -692,7 +692,7 @@ PyObject * AerospikeClient_Admin_Query_User( AerospikeClient * self, PyObject * 
 	// Invoke operation
 	aerospike_query_user(self->as, &err, admin_policy_p, user_name, &user);
 	if(err.code != AEROSPIKE_OK) {
-		as_error_update(&err, err.code, err.message);
+		as_error_update(&err, err.code, NULL);
 		goto CLEANUP;
 	}
 

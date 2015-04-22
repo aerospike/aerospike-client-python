@@ -22,6 +22,7 @@
 
 #include "client.h"
 #include "conversions.h"
+#include "exceptions.h"
 #include "log.h"
 
 static AerospikeLogCallback user_callback;

@@ -127,8 +127,9 @@ class TestLSet(object):
         try:
             TestLSet.lset.add(566)
 
-        except UDFError as exception:
-            assert exception.code == 100
+        except LDTUniqueKeyError as exception:
+            assert exception.code == 1402
+            assert exception.msg == "LDT-Unique Key or Value Violation"
 
     #Add_many() - Add a list of objects to the set.
     def test_lset_add_many_positive(self):

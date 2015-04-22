@@ -192,7 +192,6 @@ CLEANUP:
 		PyObject *exception_type = raise_exception(error_p);
 		PyErr_SetObject(exception_type, py_err);
 		Py_DECREF(py_err);
-		return NULL;
 	}
     return;
 }

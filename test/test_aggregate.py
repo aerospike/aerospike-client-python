@@ -227,7 +227,7 @@ class TestAggregate(TestBaseClass):
     """
     def test_aggregate_with_incorrect_module(self):
             #Invoke aggregate() with incorrect module
-        with pytest.raises(Exception) as exception:
+        try:
             query = self.client.query('test', 'demo')
             query.select('name', 'test_age')
             query.where(p.between('test_age', 1, 5))
@@ -239,12 +239,13 @@ class TestAggregate(TestBaseClass):
 
             query.foreach(user_callback)
 
-        assert exception.value[0] == -1L
-        assert exception.value[1] == 'UDF: Execution Error 1'
+        except ClientError as exception:
+            assert exception.code == -1L
+            assert exception.msg == 'UDF: Execution Error 1'
 
     def test_aggregate_with_incorrect_function(self):
         #Invoke aggregate() with incorrect function
-        with pytest.raises(Exception) as exception:
+        try:
             query = self.client.query('test', 'demo')
             query.select('name', 'test_age')
             query.where(p.between('test_age', 1, 5))
@@ -255,9 +256,10 @@ class TestAggregate(TestBaseClass):
                 records.append(value)
 
             query.foreach(user_callback)
-        assert exception.value[0] == -1L
-        assert exception.value[1] == 'UDF: Execution Error 2 : function not found'
-        """
+        except ClientError as exception:
+            assert exception.code == -1L
+            assert exception.msg == 'UDF: Execution Error 2 : function not found'
+            """
     def test_aggregate_with_correct_parameters(self):
         """
             Invoke aggregate() with correct arguments
@@ -347,10 +349,11 @@ class TestAggregate(TestBaseClass):
 
         query.foreach(user_callback)
         assert records[0] == 4
+
     """
     def test_aggregate_with_less_parameter_in_lua(self):
         #Invoke aggregate() with less parameter in lua
-        with pytest.raises(Exception) as exception:
+        try:
             query = self.client.query('test', 'demo')
             query.select('name', 'test_age')
             query.where(p.between('test_age', 1, 5))
@@ -362,9 +365,9 @@ class TestAggregate(TestBaseClass):
 
             query.foreach(user_callback)
 
-        assert exception.value[0] == -1L
-        """
-
+        except ClientError as exception:
+            assert exception.code == -1L
+            """
     def test_aggregate_with_arguments_to_lua_function(self):
         """
             Invoke aggregate() with unicode arguments to lua function.

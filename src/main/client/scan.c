@@ -21,6 +21,7 @@
 #include "scan.h"
 #include "policy.h"
 #include "conversions.h"
+#include "exceptions.h"
 #include <aerospike/aerospike_scan.h>
 #include <aerospike/as_arraylist.h>
 #include <aerospike/as_scan.h>

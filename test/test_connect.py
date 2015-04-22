@@ -126,10 +126,12 @@ class TestConnect(TestBaseClass):
         config = {
                 'hosts': ['127.0.0.1']
                 }
-        self.client = aerospike.client(config).connect()
+        try:
+            self.client = aerospike.client(config).connect()
 
-        assert self.client.isConnected() == True
-        self.client.close()
+        except ClientError as exception:
+            assert exception.code == -1
+            assert exception.msg == 'Failed to seed cluster'
 
     def test_connect_incorrect_port(self):
         """

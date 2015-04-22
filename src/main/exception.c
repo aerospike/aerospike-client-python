@@ -26,6 +26,7 @@
 
 #include "conversions.h"
 #include <string.h>
+#include <stdlib.h>
 #include "exceptions.h"
 PyObject *ParamError;
 PyObject *ClientError, *ServerError, *TimeoutError;
@@ -143,6 +144,7 @@ PyObject * AerospikeException_New(void)
 	Py_INCREF(AerospikeError);
 	Py_DECREF(py_dict);
 	PyModule_AddObject(module, "AerospikeError", AerospikeError);
+	PyObject_SetAttrString(AerospikeError, "code", Py_None);
 
 	ClientError = PyErr_NewException("exception.ClientError", AerospikeError, NULL);
 	Py_INCREF(ClientError);
@@ -304,9 +306,29 @@ PyObject* raise_exception(as_error *err) {
 		PyObject * py_key = NULL, *py_value = NULL;
 		Py_ssize_t pos = 0;
 		PyObject * py_module_dict = PyModule_GetDict(module);
+		char * err_msg= err->message, *err_code = err->message;
+		char *final_code = NULL;
+		if(err->code == AEROSPIKE_ERR_UDF) {
+			while(strstr(err_code, ": ") != NULL) {
+				err_code++;
+			}
+			while(strstr(err_msg, ":LDT") != NULL) {
+				err_msg++;
+			}
+			final_code = (char *)malloc(err_msg - err_code + 2);
+			if(err_code != err->message && err_msg != err->message) {
+				strncpy(final_code, err_code + 1, err_msg - err_code + 2);
+				err->code = atoi(final_code);
+				strcpy(err->message, err_msg);
+			}
+			free(final_code);
+		}
 		while(PyDict_Next(py_module_dict, &pos, &py_key, &py_value)) {
 			if(PyObject_HasAttrString(py_value, "file")) {
 				PyObject * py_code = PyObject_GetAttrString(py_value, "code");
+				if(py_code == Py_None) {
+					continue;
+				}
 				if(err->code == PyInt_AsLong(py_code)) {
 					PyObject_SetAttrString(py_value, "msg", PyString_FromString(err->message));
 					PyObject_SetAttrString(py_value, "file", PyString_FromString(err->file));
@@ -315,109 +337,6 @@ PyObject* raise_exception(as_error *err) {
 				}
 			}
 		}
-		/*switch(err->code) {
-			case -1:
-				type_of_exception = ClientError;
-			break;
-
-			case -2:
-				type_of_exception = ParamError;
-			break;
-
-			case 20:
-				type_of_exception = NamespaceNotFound;
-			break;
-
-			//Catch Record Errors
-			case 19:
-				type_of_exception = RecordKeyMismatch;
-			break;
-
-			case 2:
-				type_of_exception = RecordNotFound;
-			break;
-
-			case 3:
-				type_of_exception = RecordGenerationError;
-			break;
-
-			case 5:
-				type_of_exception = RecordExistsError;
-			break;
-
-			case 13:
-				type_of_exception = RecordTooBig;
-			break;
-
-			case 14:
-				type_of_exception = RecordBusy;
-			break;
-
-			case 21:
-				type_of_exception = BinNameError;
-			break;
-
-			case 6:
-				type_of_exception = BinExistsError;
-			break;
-
-			case 17:
-				type_of_exception = BinNotFound;
-			break;
-
-			case 12:
-				type_of_exception = BinIncompatibleType;
-			break;
-
-			//Catch cluster errors
-			case 11:
-				type_of_exception = ClusterError;
-			break;
-
-			case 7:
-				type_of_exception = ClusterChangeError;
-			break;
-
-			//Catch index exceptions
-			case 201:
-				type_of_exception = IndexNotFound;
-			break;
-
-			case 200:
-				type_of_exception = IndexFoundError;
-			break;
-
-			case 202:
-				type_of_exception = IndexOOM;
-			break;
-
-			case 203:
-				type_of_exception = IndexNotReadable;
-			break;
-
-			case 205:
-				type_of_exception = IndexNameMaxLen;
-			break;
-
-			case 206:
-				type_of_exception = IndexNameMaxCount;
-			break;
-
-			//Catch udf exceptions
-			case 100:
-				type_of_exception = UDFError;
-			break;
-
-			case 1301:
-				type_of_exception = UDFNotFound;
-			break;
-
-			case 1302:
-				type_of_exception = LuaFileNotFound;
-			break;
-		}*/
-
-		//PyObject_SetAttrString(type_of_exception, "code", PyInt_FromLong(err->code));
 
 		return py_value;
 }

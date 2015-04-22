@@ -202,8 +202,8 @@ AerospikeLStack * AerospikeLStack_New(AerospikeClient * client, PyObject * args,
 		as_error_init(&err);
 		as_error_update(&err, AEROSPIKE_ERR_PARAM, "Parameters are incorrect");
 		PyObject * py_err = NULL, *py_key = NULL;
-		error_to_pyobject(&err, &py_err);
 		PyObject *exception_type = raise_exception(&err);
+		error_to_pyobject(&err, &py_err);
 		if(PyObject_HasAttrString(exception_type, "key")) {
 			key_to_pyobject(&err, &self->key, &py_key);
 			PyObject_SetAttrString(exception_type, "key", py_key);
