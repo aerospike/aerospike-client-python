@@ -120,8 +120,8 @@ try:
         (key, metadata, bins) = client.get(key)
         print("The value of the 'smiley_key' of the 'data' bin is",
               bins['data']['smiley_key'], "\n")
-        print("The value of the", smile, " key is:",
-              bins['data'][smile], "\n")
+        #print("The value of the", smile, " key is:",
+        #      bins['data'][smile], "\n")
 
         # append to the value of the smile key
         print("Before appending, the value of the 'mood' key is:",
@@ -152,6 +152,7 @@ try:
         print(key)
         print(metadata)
         print(bins)
+        client.remove(key)
         exitCode = 0
     except Exception as e:
         print("error: {0}".format(e), file=sys.stderr)

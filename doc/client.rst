@@ -69,7 +69,7 @@ Client Class --- :class:`Client`
 
         :param tuple key: a :ref:`aerospike_key_tuple` associated with the record.
         :param dict policy: optional read policies :ref:`aerospike_read_policies`.
-        :return: a :ref:`aerospike_record_tuple`.
+        :return: a :ref:`aerospike_record_tuple`. See :ref:`unicode_handling`.
 
         .. code-block:: python
 
@@ -107,7 +107,7 @@ Client Class --- :class:`Client`
         :param tuple key: a :ref:`aerospike_key_tuple` associated with the record.
         :param list bins: a list of bin names to select from the record.
         :param dict policy: optional read policies :ref:`aerospike_read_policies`.
-        :return: a :ref:`aerospike_record_tuple`.
+        :return: a :ref:`aerospike_record_tuple`. See :ref:`unicode_handling`.
 
         .. code-block:: python
 
@@ -244,7 +244,7 @@ Client Class --- :class:`Client`
         :param tuple key: a :ref:`aerospike_key_tuple` tuple associated with the record.
         :param int val: the optional ttl in seconds, with ``0`` resolving to the default value in the server config.
         :param dict meta: optional record metadata to be set.
-        :param dict policy: optional operate policies :ref:`aerospike_operate_policies`.
+        :param dict policy: optional :ref:`aerospike_operate_policies`.
 
         .. seealso:: `Record TTL and Evictions <https://discuss.aerospike.com/t/records-ttl-and-evictions/737>`_ \
                      and `FAQ <https://www.aerospike.com/docs/guide/FAQ.html>`_.
@@ -343,7 +343,7 @@ Client Class --- :class:`Client`
         :param str val: the string to append to the value of *bin*.
         :param dict meta: optional record metadata to be set, with field
             ``'ttl'`` set to :class:`int` number of seconds.
-        :param dict policy: optional operate policies :ref:`aerospike_operate_policies`.
+        :param dict policy: optional :ref:`aerospike_operate_policies`.
 
         .. code-block:: python
 
@@ -371,7 +371,7 @@ Client Class --- :class:`Client`
         :param str val: the string to prepend to the value of *bin*.
         :param dict meta: optional record metadata to be set, with field
             ``'ttl'`` set to :class:`int` number of seconds.
-        :param dict policy: optional operate policies :ref:`aerospike_operate_policies`.
+        :param dict policy: optional :ref:`aerospike_operate_policies`.
 
         .. code-block:: python
 
@@ -399,7 +399,7 @@ Client Class --- :class:`Client`
         :param int offset: the integer by which to increment the value in the *bin*.
         :param dict meta: optional record metadata to be set, with field
             ``'ttl'`` set to :class:`int` number of seconds.
-        :param dict policy: optional operate policies :ref:`aerospike_operate_policies`.
+        :param dict policy: optional :ref:`aerospike_operate_policies`.
 
         .. code-block:: python
 
@@ -439,8 +439,14 @@ Client Class --- :class:`Client`
             See :ref:`aerospike_operators`.
         :param dict meta: optional record metadata to be set, with field
             ``'ttl'`` set to :class:`int` number of seconds.
-        :param dict policy: optional operate policies :ref:`aerospike_operate_policies`.
-        :return: a :ref:`aerospike_record_tuple`.
+        :param dict policy: optional :ref:`aerospike_operate_policies`.
+        :return: a :ref:`aerospike_record_tuple`. See :ref:`unicode_handling`.
+
+        .. note::
+
+            Currently each :meth:`operate` call can only have one
+            write operation per-bin. For example a single bin cannot be both
+            appended and prepended in a single call.
 
         .. code-block:: python
 
@@ -462,13 +468,13 @@ Client Class --- :class:`Client`
                     },
                     {
                       "op" : aerospike.OPERATOR_PREPEND,
-                      "bin": "name",
-                      "val": ":start:"
+                      "bin": "title",
+                      "val": "Mr."
                     },
                     {
                       "op" : aerospike.OPERATOR_APPEND,
                       "bin": "name",
-                      "val": ":end:"
+                      "val": " jr."
                     },
                     {
                       "op" : aerospike.OPERATOR_READ,
@@ -506,7 +512,7 @@ Client Class --- :class:`Client`
         :param list keys: a list of :ref:`aerospike_key_tuple`.
         :param dict policy: optional batch policies :ref:`aerospike_batch_policies`.
         :return: a :class:`dict` of :ref:`aerospike_record_tuple` keyed on the \
-                 matching *primary key*.
+                 matching *primary key*. See :ref:`unicode_handling`.
 
         .. code-block:: python
 
@@ -680,6 +686,10 @@ Client Class --- :class:`Client`
         :param int udf_type: one of ``aerospike.UDF_TYPE_\*``
         :param dict policy: currently **timeout** in milliseconds is the available policy.
 
+        .. code-block:: python
+
+            client.udf_put('/path/to/my_module.lua')
+
         .. versionchanged:: 1.0.39
 
 
@@ -689,6 +699,10 @@ Client Class --- :class:`Client`
 
         :param str module: the UDF module to be deregistered from the cluster.
         :param dict policy: currently **timeout** in milliseconds is the available policy.
+
+        .. code-block:: python
+
+            client.udf_remove('my_module.lua')
 
         .. versionchanged:: 1.0.39
 
@@ -1021,6 +1035,48 @@ Record Tuple
         * *meta* a dict containing  ``{'gen' : genration value, 'ttl': ttl value}``
         * *bins* a dict containing bin-name/bin-value pairs
 
+
+.. _unicode_handling:
+
+Unicode Handling
+----------------
+
+Both :class:`str` and :class:`unicode` values are converted by the
+client into UTF-8 encoded strings for storage on the aerospike server.
+Read methods such as :meth:`get`, :meth:`query`, :meth:`scan` and
+:meth:`operate` will return that data as UTF-8 encoded :class:`str`
+values. To get a :class:`unicode` you will need to manually decode.
+
+.. warning::
+
+    Prior to release 1.0.43 read operations always returned strings as :class:`unicode`.
+
+.. code-block:: python
+
+    >>> client.put(key, { 'name': 'Dr. Zeta Alphabeta', 'age': 47})
+    >>> (key, meta, record) = client.get(key)
+    >>> type(record['name'])
+    <type 'str'>
+    >>> record['name']
+    'Dr. Zeta Alphabeta'
+    >>> client.put(key, { 'name': unichr(0x2603), 'age': 21})
+    >>> (key, meta, record) = client.get(key)
+    >>> type(record['name'])
+    <type 'str'>
+    >>> record['name']
+    '\xe2\x98\x83'
+    >>> print(record['name'])
+    ☃
+    >>> name = record['name'].decode('utf-8')
+    >>> type(name)
+    <type 'unicode'>
+    >>> name
+    u'\u2603'
+    >>> print(name)
+    ☃
+
+
+.. versionchanged:: 1.0.43
 
 .. _aerospike_write_policies:
 

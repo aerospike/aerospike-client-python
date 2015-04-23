@@ -6,30 +6,23 @@ import cPickle as pickle
 import time
 from test_base_class import TestBaseClass
 
-try:
-    import aerospike
-except:
-    print "Please install aerospike python client."
-    sys.exit(1)
+aerospike = pytest.importorskip("aerospike")
+
 
 class TestInfo(object):
-
     def setup_class(cls):
-
         """
         Setup class.
         """
         hostlist, user, password = TestBaseClass.get_hosts()
-        config = {
-                'hosts': hostlist
-                }
+        config = {'hosts': hostlist}
+        TestInfo.config = config
         if user == None and password == None:
             TestInfo.client = aerospike.client(config).connect()
         else:
             TestInfo.client = aerospike.client(config).connect(user, password)
 
     def teardown_class(cls):
-
         """
         Teardoen class.
         """
@@ -40,7 +33,7 @@ class TestInfo(object):
 
         request = "statistics"
 
-        nodes_info = TestInfo.client.info(request, [('127.0.0.1', 3000)])
+        nodes_info = TestInfo.client.info(request, TestInfo.config['hosts'])
 
         assert nodes_info != None
 
@@ -52,12 +45,10 @@ class TestInfo(object):
         """
         key = ('test', 'demo', 'list_key')
 
-        rec = {
-                'names': ['John', 'Marlen', 'Steve']
-            }
+        rec = {'names': ['John', 'Marlen', 'Steve']}
 
         TestInfo.client.put(key, rec)
-        response = TestInfo.client.info('namespaces', [('127.0.0.1', 3000)])
+        response = TestInfo.client.info('namespaces', TestInfo.config['hosts'])
         TestInfo.client.remove(key)
         flag = 0
         for keys in response.keys():
@@ -76,12 +67,10 @@ class TestInfo(object):
         """
         key = ('test', 'demo', 'list_key')
 
-        rec = {
-                'names': ['John', 'Marlen', 'Steve']
-            }
+        rec = {'names': ['John', 'Marlen', 'Steve']}
 
         TestInfo.client.put(key, rec)
-        response = TestInfo.client.info('sets', [('127.0.0.1', 3000)])
+        response = TestInfo.client.info('sets', TestInfo.config['hosts'])
         TestInfo.client.remove(key)
         flag = 0
         for keys in response.keys():
@@ -100,12 +89,10 @@ class TestInfo(object):
         """
         key = ('test', 'demo', 'list_key')
 
-        rec = {
-                'names': ['John', 'Marlen', 'Steve']
-            }
+        rec = {'names': ['John', 'Marlen', 'Steve']}
 
         TestInfo.client.put(key, rec)
-        response = TestInfo.client.info('bins', [('127.0.0.1', 3000)])
+        response = TestInfo.client.info('bins', TestInfo.config['hosts'])
         TestInfo.client.remove(key)
         flag = 0
         for keys in response.keys():
@@ -124,16 +111,17 @@ class TestInfo(object):
         """
         key = ('test', 'demo', 'list_key')
 
-        rec = {
-                'names': ['John', 'Marlen', 'Steve']
-            }
+        rec = {'names': ['John', 'Marlen', 'Steve']}
         policy = {}
         TestInfo.client.put(key, rec)
-        response = TestInfo.client.info('sindex-create:ns=test;set=demo;indexname=names_test_index;indexdata=names,string', [('127.0.0.1', 3000)])
+        response = TestInfo.client.info(
+            'sindex-create:ns=test;set=demo;indexname=names_test_index;indexdata=names,string',
+            TestInfo.config['hosts'])
         time.sleep(2)
         TestInfo.client.remove(key)
-        response = TestInfo.client.info('sindex', [('127.0.0.1', 3000)])
-        TestInfo.client.info('sindex-delete:ns=test;indexname=names_test_index', [('127.0.0.1', 3000)])
+        response = TestInfo.client.info('sindex', TestInfo.config['hosts'])
+        TestInfo.client.info('sindex-delete:ns=test;indexname=names_test_index',
+                             TestInfo.config['hosts'])
 
         flag = 0
         for keys in response.keys():
@@ -161,13 +149,8 @@ class TestInfo(object):
     def test_info_with_config_for_statistics_and_policy(self):
 
         request = "statistics"
-
-        config = [('127.0.0.1', 3000)]
-
-        policy = {
-                'timeout': 1000
-        }
-        nodes_info = TestInfo.client.info(request, config, policy)
+        policy = {'timeout': 1000}
+        nodes_info = TestInfo.client.info(request, TestInfo.config['hosts'], policy)
 
         assert nodes_info != None
 
@@ -177,7 +160,7 @@ class TestInfo(object):
 
         request = "no_info"
 
-        nodes_info = TestInfo.client.info(request, [('127.0.0.1', 3000)])
+        nodes_info = TestInfo.client.info(request, TestInfo.config['hosts'])
 
         assert type(nodes_info) == dict
 
@@ -188,7 +171,7 @@ class TestInfo(object):
         request = None
 
         with pytest.raises(Exception) as exception:
-            TestInfo.client.info(request, [('127.0.0.1', 3000)])
+            TestInfo.client.info(request, TestInfo.config['hosts'])
 
         assert exception.value[0] == -2L
         assert exception.value[1] == "Request must be a string"
@@ -204,13 +187,10 @@ class TestInfo(object):
         """
         Test info positive for sets without connection
         """
-        config = {
-                'hosts': [('127.0.0.1', 3000)]
-                }
-        
-        client1 = aerospike.client(config)
+
+        client1 = aerospike.client(TestInfo.config)
         with pytest.raises(Exception) as exception:
-            response = client1.info('sets', [('127.0.0.1', 3000)])
+            response = client1.info('sets', TestInfo.config['hosts'])
 
         assert exception.value[0] == 11L
         assert exception.value[1] == 'No connection to aerospike cluster'

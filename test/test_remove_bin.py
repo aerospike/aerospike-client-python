@@ -5,11 +5,8 @@ import time
 import cPickle as pickle
 from test_base_class import TestBaseClass
 
-try:
-    import aerospike
-except:
-    print "Please install aerospike python client."
-    sys.exit(1)
+aerospike = pytest.importorskip("aerospike")
+
 
 class TestRemovebin(object):
     def setup_class(cls):
@@ -17,13 +14,12 @@ class TestRemovebin(object):
         Setup class.
         """
         hostlist, user, password = TestBaseClass.get_hosts()
-        config = {
-                'hosts': hostlist
-                }
+        config = {'hosts': hostlist}
         if user == None and password == None:
             TestRemovebin.client = aerospike.client(config).connect()
         else:
-            TestRemovebin.client = aerospike.client(config).connect(user, password)
+            TestRemovebin.client = aerospike.client(config).connect(user,
+                                                                    password)
 
     def teardown_class(cls):
         TestRemovebin.client.close()
@@ -34,10 +30,7 @@ class TestRemovebin(object):
         """
         for i in xrange(5):
             key = ('test', 'demo', i)
-            rec = {
-                'name' : 'name%s' % (str(i)),
-                'age' : i
-            }
+            rec = {'name': 'name%s' % (str(i)), 'age': i}
             TestRemovebin.client.put(key, rec)
 
     def teardown_method(self, method):
@@ -46,7 +39,7 @@ class TestRemovebin(object):
         """
         for i in xrange(5):
             key = ('test', 'demo', i)
-            (key , meta, bins) = TestRemovebin.client.get(key)
+            (key, meta, bins) = TestRemovebin.client.get(key)
             if bins != None:
                 TestRemovebin.client.remove(key)
 
@@ -65,25 +58,21 @@ class TestRemovebin(object):
         key = ('test', 'demo', 1)
         TestRemovebin.client.remove_bin(key, ["age"])
 
+        (key, meta, bins) = TestRemovebin.client.get(key)
 
-        (key , meta, bins) = TestRemovebin.client.get(key)
-
-        assert bins == { 'name': 'name1'}
+        assert bins == {'name': 'name1'}
 
     def test_remove_bin_with_correct_policy(self):
         """
         Invoke remove_bin() with correct policy
         """
         key = ('test', 'demo', 1)
-        policy = {
-            'timeout': 1000
-        }
+        policy = {'timeout': 1000}
         TestRemovebin.client.remove_bin(key, ["age"], {}, policy)
 
+        (key, meta, bins) = TestRemovebin.client.get(key)
 
-        (key , meta, bins) = TestRemovebin.client.get(key)
-
-        assert bins == { 'name': 'name1'}
+        assert bins == {'name': 'name1'}
 
     def test_remove_bin_with_policy_send_gen_ignore(self):
         """
@@ -96,18 +85,15 @@ class TestRemovebin(object):
             'key': aerospike.POLICY_KEY_SEND,
             'gen': aerospike.POLICY_GEN_IGNORE
         }
-        meta = {
-            'gen': 2,
-            'ttl': 1000
-        }
+        meta = {'gen': 2, 'ttl': 1000}
         TestRemovebin.client.remove_bin(key, ["age"], meta, policy)
 
+        (key, meta, bins) = TestRemovebin.client.get(key)
 
-        (key , meta, bins) = TestRemovebin.client.get(key)
-
-        assert bins == { 'name': 'name1'}
-        assert key == ('test', 'demo', None,
-                bytearray(b'\xb7\xf4\xb88\x89\xe2\xdag\xdeh>\x1d\xf6\x91\x9a\x1e\xac\xc4F\xc8'))
+        assert bins == {'name': 'name1'}
+        assert key == ('test', 'demo', None, bytearray(
+            b'\xb7\xf4\xb88\x89\xe2\xdag\xdeh>\x1d\xf6\x91\x9a\x1e\xac\xc4F\xc8')
+                      )
 
     def test_remove_bin_with_policy_send_gen_eq_positive(self):
         """
@@ -123,19 +109,16 @@ class TestRemovebin(object):
 
         (key, meta) = TestRemovebin.client.exists(key)
         gen = meta['gen']
-        meta = {
-            'gen': gen,
-            'ttl': 1000
-        }
+        meta = {'gen': gen, 'ttl': 1000}
 
         TestRemovebin.client.remove_bin(key, ["age"], meta, policy)
 
+        (key, meta, bins) = TestRemovebin.client.get(key)
 
-        (key , meta, bins) = TestRemovebin.client.get(key)
-
-        assert bins == { 'name': 'name1'}
-        assert key == ('test', 'demo', None,
-                bytearray(b'\xb7\xf4\xb88\x89\xe2\xdag\xdeh>\x1d\xf6\x91\x9a\x1e\xac\xc4F\xc8'))
+        assert bins == {'name': 'name1'}
+        assert key == ('test', 'demo', None, bytearray(
+            b'\xb7\xf4\xb88\x89\xe2\xdag\xdeh>\x1d\xf6\x91\x9a\x1e\xac\xc4F\xc8')
+                      )
 
     def test_remove_bin_with_policy_send_gen_eq_not_equal(self):
         """
@@ -150,10 +133,7 @@ class TestRemovebin(object):
         }
         (key, meta) = TestRemovebin.client.exists(key)
         gen = meta['gen']
-        meta = {
-            'gen': gen + 5,
-            'ttl': 1000
-        }
+        meta = {'gen': gen + 5, 'ttl': 1000}
 
         with pytest.raises(Exception) as exception:
             TestRemovebin.client.remove_bin(key, ["age"], meta, policy)
@@ -161,12 +141,12 @@ class TestRemovebin(object):
         assert exception.value[0] == 3
         assert exception.value[1] == "AEROSPIKE_ERR_RECORD_GENERATION"
 
+        (key, meta, bins) = TestRemovebin.client.get(key)
 
-        (key , meta, bins) = TestRemovebin.client.get(key)
-
-        assert bins == { 'age': 1, 'name': 'name1'}
-        assert key == ('test', 'demo', None,
-                bytearray(b'\xb7\xf4\xb88\x89\xe2\xdag\xdeh>\x1d\xf6\x91\x9a\x1e\xac\xc4F\xc8'))
+        assert bins == {'age': 1, 'name': 'name1'}
+        assert key == ('test', 'demo', None, bytearray(
+            b'\xb7\xf4\xb88\x89\xe2\xdag\xdeh>\x1d\xf6\x91\x9a\x1e\xac\xc4F\xc8')
+                      )
 
     def test_remove_bin_with_policy_send_gen_GT_lesser(self):
         """
@@ -182,10 +162,7 @@ class TestRemovebin(object):
 
         (key, meta) = TestRemovebin.client.exists(key)
         gen = meta['gen']
-        meta = {
-            'gen': gen,
-            'ttl': 1000
-        }
+        meta = {'gen': gen, 'ttl': 1000}
 
         with pytest.raises(Exception) as exception:
             TestRemovebin.client.remove_bin(key, ["age"], meta, policy)
@@ -193,12 +170,12 @@ class TestRemovebin(object):
         assert exception.value[0] == 3
         assert exception.value[1] == "AEROSPIKE_ERR_RECORD_GENERATION"
 
+        (key, meta, bins) = TestRemovebin.client.get(key)
 
-        (key , meta, bins) = TestRemovebin.client.get(key)
-
-        assert bins == { 'age': 1, 'name': 'name1'}
-        assert key == ('test', 'demo', None,
-                bytearray(b'\xb7\xf4\xb88\x89\xe2\xdag\xdeh>\x1d\xf6\x91\x9a\x1e\xac\xc4F\xc8'))
+        assert bins == {'age': 1, 'name': 'name1'}
+        assert key == ('test', 'demo', None, bytearray(
+            b'\xb7\xf4\xb88\x89\xe2\xdag\xdeh>\x1d\xf6\x91\x9a\x1e\xac\xc4F\xc8')
+                      )
 
     def test_remove_bin_with_policy_send_gen_GT_positive(self):
         """
@@ -214,43 +191,33 @@ class TestRemovebin(object):
 
         (key, meta) = TestRemovebin.client.exists(key)
         gen = meta['gen']
-        meta = {
-            'gen': gen + 5,
-            'ttl': 1000
-        }
+        meta = {'gen': gen + 5, 'ttl': 1000}
 
         TestRemovebin.client.remove_bin(key, ["age"], meta, policy)
 
+        (key, meta, bins) = TestRemovebin.client.get(key)
 
-        (key , meta, bins) = TestRemovebin.client.get(key)
-
-        assert bins == { 'name': 'name1'}
-        assert key == ('test', 'demo', None,
-                bytearray(b'\xb7\xf4\xb88\x89\xe2\xdag\xdeh>\x1d\xf6\x91\x9a\x1e\xac\xc4F\xc8'))
+        assert bins == {'name': 'name1'}
+        assert key == ('test', 'demo', None, bytearray(
+            b'\xb7\xf4\xb88\x89\xe2\xdag\xdeh>\x1d\xf6\x91\x9a\x1e\xac\xc4F\xc8')
+                      )
 
     def test_remove_bin_with_policy_key_digest(self):
         """
         Invoke remove_bin() with policy key digest
         """
-        key = ( 'test', 'demo', None, bytearray("asd;as[d'as;djk;uyfl",
-               "utf-8"))
-        rec = {
-            'age': 1,
-            'name': 'name1'
-        }
+        key = ('test', 'demo', None, bytearray("asd;as[d'as;djk;uyfl",
+                                               "utf-8"))
+        rec = {'age': 1, 'name': 'name1'}
         TestRemovebin.client.put(key, rec)
-        policy = {
-            'timeout': 1000,
-            'key': aerospike.POLICY_KEY_DIGEST
-        }
+        policy = {'timeout': 1000, 'key': aerospike.POLICY_KEY_DIGEST}
         TestRemovebin.client.remove_bin(key, ["age"], {}, policy)
 
+        (key, meta, bins) = TestRemovebin.client.get(key)
 
-        (key , meta, bins) = TestRemovebin.client.get(key)
-
-        assert bins == { 'name': 'name1'}
+        assert bins == {'name': 'name1'}
         assert key == ('test', 'demo', None,
-                bytearray(b"asd;as[d\'as;djk;uyfl"))
+                       bytearray(b"asd;as[d\'as;djk;uyfl"))
 
         TestRemovebin.client.remove(key)
 
@@ -259,9 +226,7 @@ class TestRemovebin(object):
         Invoke remove_bin() with incorrect policy
         """
         key = ('test', 'demo', 1)
-        policy = {
-            'timeout': 0.5
-        }
+        policy = {'timeout': 0.5}
         with pytest.raises(Exception) as exception:
             TestRemovebin.client.remove_bin(key, ["age"], {}, policy)
 
@@ -292,9 +257,7 @@ class TestRemovebin(object):
         Invoke remove_bin() with extra parameter.
         """
         key = ('test', 'demo', 1)
-        policy = {
-            'timeout': 1000
-        }
+        policy = {'timeout': 1000}
         with pytest.raises(TypeError) as typeError:
             TestRemovebin.client.remove_bin(key, ["age"], {}, policy, "")
 
@@ -328,10 +291,9 @@ class TestRemovebin(object):
         key = ('test', 'demo', 1)
         TestRemovebin.client.remove_bin(key, [])
 
+        (key, meta, bins) = TestRemovebin.client.get(key)
 
-        (key , meta, bins) = TestRemovebin.client.get(key)
-
-        assert bins == { 'name': 'name1', 'age': 1}
+        assert bins == {'name': 'name1', 'age': 1}
 
     def test_remove_bin_all_bins(self):
         """
@@ -340,8 +302,7 @@ class TestRemovebin(object):
         key = ('test', 'demo', 1)
         TestRemovebin.client.remove_bin(key, ["name", "age"])
 
-
-        (key , meta, bins) = TestRemovebin.client.get(key)
+        (key, meta, bins) = TestRemovebin.client.get(key)
 
         assert bins == None
 
@@ -353,15 +314,15 @@ class TestRemovebin(object):
 
         TestRemovebin.client.remove_bin(key, [u"name"])
 
-        (key , meta, bins) = TestRemovebin.client.get(key)
+        (key, meta, bins) = TestRemovebin.client.get(key)
 
-        assert bins == { 'age': 2 }
+        assert bins == {'age': 2}
 
         key = ('test', 'demo', 3)
 
         TestRemovebin.client.remove_bin(key, [u"name", "age"])
 
-        (key , meta, bins) = TestRemovebin.client.get(key)
+        (key, meta, bins) = TestRemovebin.client.get(key)
 
         assert bins == None
 
@@ -369,7 +330,7 @@ class TestRemovebin(object):
 
         TestRemovebin.client.remove_bin(key, ["name", u"age"])
 
-        (key , meta, bins) = TestRemovebin.client.get(key)
+        (key, meta, bins) = TestRemovebin.client.get(key)
 
         assert bins == None
 
@@ -377,9 +338,7 @@ class TestRemovebin(object):
         """
         Invoke remove_bin() with correct parameters without connection
         """
-        config = {
-            'hosts': [('127.0.0.1', 3000)]
-        }
+        config = {'hosts': [('127.0.0.1', 3000)]}
         client1 = aerospike.client(config)
 
         key = ('test', 'demo', 1)

@@ -1,4 +1,3 @@
-
 # -*- coding: utf-8 -*-
 
 import pytest
@@ -7,76 +6,97 @@ import cPickle as pickle
 import time
 from test_base_class import TestBaseClass
 
-try:
-    import aerospike
-except:
-    print "Please install aerospike python client."
-    sys.exit(1)
+aerospike = pytest.importorskip("aerospike")
 
 from aerospike import predicates as p
+
 
 class TestQuery(object):
 
     def setup_class(cls):
         hostlist, user, password = TestBaseClass.get_hosts()
-        config = {
-                'hosts': hostlist
-                }
+        config = {'hosts': hostlist}
         if user == None and password == None:
             TestQuery.client = aerospike.client(config).connect()
         else:
             TestQuery.client = aerospike.client(config).connect(user, password)
 
         TestQuery.client = aerospike.client(config).connect()
-        TestQuery.client.index_integer_create('test', 'demo', 'test_age', 'age_index')
-        TestQuery.client.index_string_create('test', 'demo', 'addr', 'addr_index')
-        TestQuery.client.index_integer_create('test', 'demo', 'age1', 'age_index1')
-        TestQuery.client.index_list_create('test', 'demo', 'numeric_list', aerospike.INDEX_NUMERIC, 'numeric_list_index')
-        TestQuery.client.index_list_create('test', 'demo', 'string_list', aerospike.INDEX_STRING, 'string_list_index')
-        TestQuery.client.index_map_keys_create('test', 'demo', 'numeric_map', aerospike.INDEX_NUMERIC, 'numeric_map_index')
-        TestQuery.client.index_map_keys_create('test', 'demo', 'string_map', aerospike.INDEX_STRING, 'string_map_index')
-        TestQuery.client.index_map_values_create('test', 'demo', 'numeric_map', aerospike.INDEX_NUMERIC, 'numeric_map_values_index')
-        TestQuery.client.index_map_values_create('test', 'demo', 'string_map', aerospike.INDEX_STRING, 'string_map_values_index')
+
+        TestQuery.client.index_integer_create('test', 'demo', 'test_age',
+                                              'age_index')
+        TestQuery.client.index_string_create('test', 'demo', 'addr',
+                                             'addr_index')
+        TestQuery.client.index_integer_create('test', 'demo', 'age1',
+                                              'age_index1')
+        TestQuery.client.index_list_create('test', 'demo', 'numeric_list',
+                                           aerospike.INDEX_NUMERIC,
+                                           'numeric_list_index')
+        TestQuery.client.index_list_create('test', 'demo', 'string_list',
+                                           aerospike.INDEX_STRING,
+                                           'string_list_index')
+        TestQuery.client.index_map_keys_create('test', 'demo', 'numeric_map',
+                                               aerospike.INDEX_NUMERIC,
+                                               'numeric_map_index')
+        TestQuery.client.index_map_keys_create('test', 'demo', 'string_map',
+                                               aerospike.INDEX_STRING,
+                                               'string_map_index')
+        TestQuery.client.index_map_values_create('test', 'demo', 'numeric_map',
+                                                 aerospike.INDEX_NUMERIC,
+                                                 'numeric_map_values_index')
+        TestQuery.client.index_map_values_create('test', 'demo', 'string_map',
+                                                 aerospike.INDEX_STRING,
+                                                 'string_map_values_index')
+        TestQuery.client.index_integer_create('test', None, 'test_age_none', 
+                                                'age_index_none')
 
     def teardown_class(cls):
         policy = {}
-        TestQuery.client.index_remove('test', 'age_index', policy);
-        TestQuery.client.index_remove('test', 'age_index1', policy);
-        TestQuery.client.index_remove('test', 'addr_index', policy);
-        TestQuery.client.index_remove('test', 'numeric_list_index', policy);
-        TestQuery.client.index_remove('test', 'string_list_index', policy);
-        TestQuery.client.index_remove('test', 'numeric_map_index', policy);
-        TestQuery.client.index_remove('test', 'string_map_index', policy);
-        TestQuery.client.index_remove('test', 'numeric_map_values_index', policy);
-        TestQuery.client.index_remove('test', 'string_map_values_index', policy);
+        TestQuery.client.index_remove('test', 'age_index', policy)
+        TestQuery.client.index_remove('test', 'age_index1', policy)
+        TestQuery.client.index_remove('test', 'addr_index', policy)
+        TestQuery.client.index_remove('test', 'numeric_list_index', policy)
+        TestQuery.client.index_remove('test', 'string_list_index', policy)
+        TestQuery.client.index_remove('test', 'numeric_map_index', policy)
+        TestQuery.client.index_remove('test', 'string_map_index', policy)
+        TestQuery.client.index_remove('test', 'numeric_map_values_index',
+                                      policy)
+        TestQuery.client.index_remove('test', 'string_map_values_index', policy)
+        TestQuery.client.index_remove('test', 'age_index_none', policy);
         TestQuery.client.close()
 
     def setup_method(self, method):
-
         """
         Setup method.
         """
         for i in xrange(5):
             key = ('test', 'demo', i)
             rec = {
-                    'name' : 'name%s' % (str(i)),
-                    'addr' : 'name%s' % (str(i)),
-                    'numeric_list': [i, i+1, i+2],
-                    'string_list': ["str"+str(i), "str"+str(i+1), "str"+str(i+2)],
-                    'numeric_map': {"a": i, "b": i+1, "c":i+2},
-                    'string_map': {"a": "a"+str(i), "b": "b"+str(i+1), "c": "c"+str(i+2)},
-                    'test_age'  : i,
-                    'no'   : i
-                    }
+                'name': 'name%s' % (str(i)),
+                'addr': 'name%s' % (str(i)),
+                'numeric_list': [i, i + 1, i + 2],
+                'string_list': ["str" + str(i), "str" + str(i + 1),
+                                "str" + str(i + 2)],
+                'numeric_map': {"a": i,
+                                "b": i + 1,
+                                "c": i + 2},
+                'string_map': {
+                    "a": "a" + str(i),
+                    "b": "b" + str(i + 1),
+                    "c": "c" + str(i + 2)
+                },
+                'test_age': i,
+                'no': i
+            }
             TestQuery.client.put(key, rec)
         for i in xrange(5, 10):
             key = ('test', 'demo', i)
             rec = {
-                    u'name' : 'name%s' % (str(i)),
-                    u'addr' : u'name%s' % (str(i)),
-                    u'test_age'  : i,
-                    u'no'   : i
-                    }
+                u'name': 'name%s' % (str(i)),
+                u'addr': u'name%s' % (str(i)),
+                u'test_age': i,
+                u'no': i
+            }
             TestQuery.client.put(key, rec)
 
     def teardown_method(self, method):
@@ -85,7 +105,7 @@ class TestQuery(object):
         """
         for i in xrange(10):
             key = ('test', 'demo', i)
-            TestQuery.client.remove(key)
+            #TestQuery.client.remove(key)
 
     def test_query_with_no_parameters(self):
         """
@@ -108,7 +128,8 @@ class TestQuery(object):
         query.where(p.equals('test_age', 1))
 
         records = []
-        def callback((key,metadata,record)):
+
+        def callback((key, metadata, record)):
             records.append(key)
 
         query.foreach(callback)
@@ -123,13 +144,46 @@ class TestQuery(object):
             query = TestQuery.client.query('test1', 'demo1')
             query.select('name', 'test_age')
             query.where(p.equals('test_age', 1))
-            def callback((key,metadata,record)):
+
+            def callback((key, metadata, record)):
                 assert metadata['gen'] != None
 
             query.foreach(callback)
 
         assert exception.value[0] == 4L
         assert exception.value[1] == 'AEROSPIKE_ERR_REQUEST_INVALID'
+
+    def test_query_with_ns_not_string(self):
+        """
+            Invoke query() with incorrect ns and set
+        """
+        with pytest.raises(Exception) as exception:
+            query = TestQuery.client.query(1, 'demo')
+            query.select('name', 'test_age')
+            query.where(p.equals('test_age', 1))
+            def callback((key,metadata,record)):
+                assert metadata['gen'] != None
+
+            query.foreach(callback)
+
+        assert exception.value[0] == -2L
+        assert exception.value[1] == 'Namespace should be a string'
+
+    def test_query_with_set_int(self):
+        """
+            Invoke query() with incorrect ns and set
+        """
+        with pytest.raises(Exception) as exception:
+            query = TestQuery.client.query('test', 1)
+            query.select('name', 'test_age')
+            query.where(p.equals('test_age', 1))
+            def callback((key,metadata,record)):
+                assert metadata['gen'] != None
+
+            query.foreach(callback)
+
+        assert exception.value[0] == -2L
+        assert exception.value[1] == 'Set should be string, unicode or None'
 
     def test_query_with_incorrect_bin_name(self):
         """
@@ -139,7 +193,8 @@ class TestQuery(object):
         query.select('name1', 'age1')
         query.where(p.equals('age1', 1))
         records = []
-        def callback((key,metadata,record)):
+
+        def callback((key, metadata, record)):
             records.append(record)
 
         query.foreach(callback)
@@ -152,7 +207,8 @@ class TestQuery(object):
         query = TestQuery.client.query('test', 'demo')
         query.select('name', 'test_age')
         query.where(p.equals('test_age', 1))
-        def callback((key,metadata,record)):
+
+        def callback((key, metadata, record)):
             assert metadata['gen'] != None
 
         with pytest.raises(TypeError) as typeError:
@@ -168,7 +224,8 @@ class TestQuery(object):
             query = TestQuery.client.query('test', 'demo')
             query.select('name', 'no')
             query.where(p.equals('no', 1))
-            def callback((key,metadata,record)):
+
+            def callback((key, metadata, record)):
                 assert metadata['gen'] != None
 
             query.foreach(callback)
@@ -184,7 +241,8 @@ class TestQuery(object):
         query.select('name', 'test_age')
         query.where(p.equals('test_age', 165))
         records = []
-        def callback((key,metadata,record)):
+
+        def callback((key, metadata, record)):
             records.append(record)
 
         query.foreach(callback)
@@ -206,14 +264,13 @@ class TestQuery(object):
         """
             Invoke query() with policy
         """
-        policy = {
-            'timeout': 1000
-        }
+        policy = {'timeout': 1000}
         query = TestQuery.client.query('test', 'demo')
         query.select('name', 'test_age')
         query.where(p.equals('test_age', 1))
         records = []
-        def callback((key,metadata,record)):
+
+        def callback((key, metadata, record)):
             records.append(record)
 
         query.foreach(callback, policy)
@@ -223,13 +280,12 @@ class TestQuery(object):
         """
             Invoke query() with extra argument
         """
-        policy = {
-            'timeout': 1000
-        }
+        policy = {'timeout': 1000}
         query = TestQuery.client.query('test', 'demo')
         query.select('name', 'test_age')
         query.where(p.equals('test_age', 1))
-        def callback((key,metadata,record)):
+
+        def callback((key, metadata, record)):
             assert metadata['gen'] != None
 
         with pytest.raises(TypeError) as typeError:
@@ -241,13 +297,12 @@ class TestQuery(object):
         """
             Invoke query() with incorrect policy
         """
-        policy = {
-            'timeout': ""
-        }
+        policy = {'timeout': ""}
         query = TestQuery.client.query('test', 'demo')
         query.select('name', 'test_age')
         query.where(p.equals('test_age', 1))
-        def callback((key,metadata,record)):
+
+        def callback((key, metadata, record)):
             assert metadata['gen'] != None
 
         with pytest.raises(Exception) as exception:
@@ -260,30 +315,26 @@ class TestQuery(object):
         """
             Invoke query() with put in callback
         """
-        policy = {
-            'timeout': 1000
-        }
+        policy = {'timeout': 1000}
         query = TestQuery.client.query('test', 'demo')
         query.select('name', 'test_age')
         query.where(p.equals('test_age', 1))
         records = []
-        def callback((key,metadata,record)):
+
+        def callback((key, metadata, record)):
             records.append(record)
             key = ('test', 'demo', 'put_in_callback')
-            rec = {
-                    'name' : 'name%s' % (str(8)),
-                    'test_age'  : 8,
-                    }
+            rec = {'name': 'name%s' % (str(8)), 'test_age': 8, }
             TestQuery.client.put(key, rec)
 
         query.foreach(callback, policy)
 
         key = ('test', 'demo', 'put_in_callback')
-        key1, meta, bins = TestQuery.client.get( key )
+        key1, meta, bins = TestQuery.client.get(key)
 
         key = ('test', 'demo', 'put_in_callback')
         TestQuery.client.remove(key)
-        assert bins == { 'test_age': 8, 'name': 'name8'}
+        assert bins == {'test_age': 8, 'name': 'name8'}
 
     def test_query_with_correct_parameters_between(self):
         """
@@ -294,12 +345,13 @@ class TestQuery(object):
         query.where(p.between('test_age', 1, 4))
 
         records = []
-        def callback((key,metadata,record)):
+
+        def callback((key, metadata, record)):
             records.append(record)
 
         query.foreach(callback)
         assert len(records) == 4
-    
+
     def test_query_with_where_is_null(self):
 
         query = TestQuery.client.query('test', 'demo')
@@ -319,7 +371,8 @@ class TestQuery(object):
         query.where(p.equals('test_age', 1))
 
         records = []
-        def callback((key,metadata,record)):
+
+        def callback((key, metadata, record)):
             val += 1
             records.append(key)
 
@@ -337,7 +390,8 @@ class TestQuery(object):
         query.where(p.between('test_age', 1, 5))
 
         records = []
-        def callback((key,metadata,record)):
+
+        def callback((key, metadata, record)):
             if len(records) == 2:
                 return False
             records.append(key)
@@ -367,7 +421,11 @@ class TestQuery(object):
 
         records = query.results()
         assert len(records) == 1
-        assert records[0][2] == {'test_age': 7, 'name': u'name7', 'addr': u'name7'}
+        assert records[0][2] == {
+            'test_age': 7,
+            'name': u'name7',
+            'addr': u'name7'
+        }
 
         query = TestQuery.client.query('test', 'demo')
         query.select(u'name', 'addr')
@@ -377,7 +435,6 @@ class TestQuery(object):
         assert records[0][2] == {'name': 'name9', 'addr': u'name9'}
 
     def test_query_with_select_bin_integer(self):
-
         """
             Invoke query() with select bin is of integer type.
         """
@@ -395,10 +452,11 @@ class TestQuery(object):
         """
         query = TestQuery.client.query('test', 'demo')
         query.select('name', 'test_age')
-        query.where(p.contains('numeric_list' , aerospike.INDEX_TYPE_LIST, 1))
+        query.where(p.contains('numeric_list', aerospike.INDEX_TYPE_LIST, 1))
 
         records = []
-        def callback((key,metadata,record)):
+
+        def callback((key, metadata, record)):
             records.append(record)
 
         query.foreach(callback)
@@ -410,10 +468,12 @@ class TestQuery(object):
         """
         query = TestQuery.client.query('test', 'demo')
         query.select('name', 'test_age')
-        query.where(p.contains('string_list' , aerospike.INDEX_TYPE_LIST, "str3"))
+        query.where(p.contains('string_list', aerospike.INDEX_TYPE_LIST,
+                               "str3"))
 
         records = []
-        def callback((key,metadata,record)):
+
+        def callback((key, metadata, record)):
             records.append(record)
 
         query.foreach(callback)
@@ -425,10 +485,11 @@ class TestQuery(object):
         """
         query = TestQuery.client.query('test', 'demo')
         query.select('name', 'test_age')
-        query.where(p.range('numeric_list' , aerospike.INDEX_TYPE_LIST, 1, 3))
+        query.where(p.range('numeric_list', aerospike.INDEX_TYPE_LIST, 1, 3))
 
         records = []
-        def callback((key,metadata,record)):
+
+        def callback((key, metadata, record)):
             records.append(record)
 
         query.foreach(callback)
@@ -440,10 +501,11 @@ class TestQuery(object):
         """
         query = TestQuery.client.query('test', 'demo')
         query.select('name', 'test_age')
-        query.where(p.contains('string_map' , aerospike.INDEX_TYPE_MAPKEYS, "a"))
+        query.where(p.contains('string_map', aerospike.INDEX_TYPE_MAPKEYS, "a"))
 
         records = []
-        def callback((key,metadata,record)):
+
+        def callback((key, metadata, record)):
             records.append(record)
 
         query.foreach(callback)
@@ -455,10 +517,12 @@ class TestQuery(object):
         """
         query = TestQuery.client.query('test', 'demo')
         query.select('name', 'test_age')
-        query.where(p.contains('string_map' , aerospike.INDEX_TYPE_MAPVALUES, "a1"))
+        query.where(p.contains('string_map', aerospike.INDEX_TYPE_MAPVALUES,
+                               "a1"))
 
         records = []
-        def callback((key,metadata,record)):
+
+        def callback((key, metadata, record)):
             records.append(record)
 
     def test_query_with_multiple_foreach_on_same_query_object(self):
@@ -470,7 +534,8 @@ class TestQuery(object):
         query.where(p.equals('test_age', 1))
 
         records = []
-        def callback((key,metadata,record)):
+
+        def callback((key, metadata, record)):
             records.append(key)
 
         query.foreach(callback)
@@ -482,10 +547,12 @@ class TestQuery(object):
         """
         query = TestQuery.client.query('test', 'demo')
         query.select('name', 'test_age')
-        query.where(p.contains('numeric_map', aerospike.INDEX_TYPE_MAPVALUES, 1))
+        query.where(p.contains('numeric_map', aerospike.INDEX_TYPE_MAPVALUES,
+                               1))
 
         records = []
-        def callback((key,metadata,record)):
+
+        def callback((key, metadata, record)):
             records.append(record)
 
         query.foreach(callback)
@@ -497,10 +564,12 @@ class TestQuery(object):
         """
         query = TestQuery.client.query('test', 'demo')
         query.select('name', 'test_age')
-        query.where(p.range('numeric_map' , aerospike.INDEX_TYPE_MAPVALUES, 1, 3))
+        query.where(p.range('numeric_map', aerospike.INDEX_TYPE_MAPVALUES, 1,
+                            3))
 
         records = []
-        def callback((key,metadata,record)):
+
+        def callback((key, metadata, record)):
             records.append(record)
 
         query.foreach(callback)
@@ -512,41 +581,48 @@ class TestQuery(object):
         """
         query = TestQuery.client.query('test', 'demo')
         query.select('name', 'test_age')
-        query.where('numeric_map' , "range", aerospike.INDEX_TYPE_MAPVALUES, aerospike.INDEX_NUMERIC, 1, 3)
+        query.where('numeric_map', "range", aerospike.INDEX_TYPE_MAPVALUES,
+                    aerospike.INDEX_NUMERIC, 1, 3)
 
         records = []
-        def callback((key,metadata,record)):
+
+        def callback((key, metadata, record)):
             records.append(record)
 
         query.foreach(callback)
         assert len(records) == 8
 
-    def test_query_with_correct_parameters_containsstring_mapvalues_notuple(self):
+    def test_query_with_correct_parameters_containsstring_mapvalues_notuple(
+        self
+    ):
         """
             Invoke query() with correct arguments and using predicate contains
         """
         query = TestQuery.client.query('test', 'demo')
         query.select('name', 'test_age')
-        query.where('string_map' , 'contains', aerospike.INDEX_TYPE_MAPVALUES, aerospike.INDEX_STRING, "a1")
+        query.where('string_map', 'contains', aerospike.INDEX_TYPE_MAPVALUES,
+                    aerospike.INDEX_STRING, "a1")
 
         records = []
-        def callback((key,metadata,record)):
+
+        def callback((key, metadata, record)):
             records.append(record)
 
         query.foreach(callback)
         assert len(records) == 1
 
     def test_query_with_correct_parameters_containsstring_notuple(self):
-
         """
             Invoke query() with correct arguments and using predicate contains
         """
         query = TestQuery.client.query('test', 'demo')
         query.select('name', 'test_age')
-        query.where('string_list', "contains", aerospike.INDEX_TYPE_LIST, aerospike.INDEX_STRING, "str3")
+        query.where('string_list', "contains", aerospike.INDEX_TYPE_LIST,
+                    aerospike.INDEX_STRING, "str3")
 
         records = []
-        def callback((key,metadata,record)):
+
+        def callback((key, metadata, record)):
             records.append(record)
 
         query.foreach(callback)
@@ -561,7 +637,8 @@ class TestQuery(object):
         query.where('test_age', 'between', 1, 4)
 
         records = []
-        def callback((key,metadata,record)):
+
+        def callback((key, metadata, record)):
             records.append(record)
 
         query.foreach(callback)
@@ -571,14 +648,13 @@ class TestQuery(object):
         """
             Invoke query() with policy
         """
-        policy = {
-            'timeout': 1000
-        }
+        policy = {'timeout': 1000}
         query = TestQuery.client.query('test', 'demo')
         query.select('name', 'test_age')
         query.where('test_age', 'equals', 1)
         records = []
-        def callback((key,metadata,record)):
+
+        def callback((key, metadata, record)):
             records.append(record)
 
         query.foreach(callback, policy)
@@ -597,20 +673,26 @@ class TestQuery(object):
 
         records = query.results()
         assert len(records) == 1
-        assert records[0][2] == {'test_age': 7, 'name': u'name7', 'addr': u'name7'}
+        assert records[0][2] == {
+            'test_age': 7,
+            'name': u'name7',
+            'addr': u'name7'
+        }
 
         records = []
         records = query.results()
         assert len(records) == 1
-        assert records[0][2] == {'test_age': 7, 'name': u'name7', 'addr': u'name7'}
+        assert records[0][2] == {
+            'test_age': 7,
+            'name': u'name7',
+            'addr': u'name7'
+        }
 
     def test_query_with_correct_parameters_without_connection(self):
         """
             Invoke query() with correct arguments without connection
         """
-        config = {
-                'hosts': [('127.0.0.1', 3000)]
-                }
+        config = {'hosts': [('127.0.0.1', 3000)]}
         client1 = aerospike.client(config)
 
         with pytest.raises(Exception) as exception:
@@ -619,10 +701,45 @@ class TestQuery(object):
             query.where(p.equals('test_age', 1))
 
             records = []
-            def callback((key,metadata,record)):
+
+            def callback((key, metadata, record)):
                 records.append(key)
 
             query.foreach(callback)
 
         assert exception.value[0] == 11L
         assert exception.value[1] == 'No connection to aerospike cluster'
+
+    def test_query_with_policy_on_none_set_index(self):
+        """
+            Invoke query() with policy on none set index
+        """
+        policy = {
+            'timeout': 1000
+        }
+        query = TestQuery.client.query('test', None)
+        query.select('name', 'test_age_none')
+        query.where(p.equals('test_age_none', 1))
+        records = []
+        def callback((key,metadata,record)):
+            records.append(record)
+
+        query.foreach(callback, policy)
+        assert len(records) == 0
+
+    def test_query_with_only_ns(self):
+        """
+            Invoke query() with policy on none set index
+        """
+        policy = {
+            'timeout': 1000
+        }
+        query = TestQuery.client.query('test')
+        query.select('name', 'test_age_none')
+        query.where(p.equals('test_age_none', 1))
+        records = []
+        def callback((key,metadata,record)):
+            records.append(record)
+
+        query.foreach(callback, policy)
+        assert len(records) == 0

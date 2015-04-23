@@ -104,8 +104,8 @@ try:
 
         pk = args.pop(0)
         bin_names = args
-
-        client.remove_bin((namespace, set, pk), bin_names)
+        status = client.remove_bin((namespace, set, pk), bin_names)
+        print("Status of bin removal is: %d" %(status))
         print("OK, bins removed from the record at", (namespace, set, pk))
 
     except Exception, (code,msg,file,line):

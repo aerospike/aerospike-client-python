@@ -5,81 +5,72 @@ import sys
 import cPickle as pickle
 from test_base_class import TestBaseClass
 
-try:
-    import aerospike
-except:
-    print "Please install aerospike python client."
-    sys.exit(1)
+
+aerospike = pytest.importorskip("aerospike")
 
 from aerospike import predicates as p
-class TestAggregate(TestBaseClass):
 
+
+class TestAggregate(TestBaseClass):
     def setup_class(cls):
         hostlist, user, password = TestBaseClass.get_hosts()
-        config = {
-                'hosts': hostlist
-                }
+        config = {'hosts': hostlist}
         if user == None and password == None:
             client = aerospike.client(config).connect()
         else:
             client = aerospike.client(config).connect(user, password)
 
         policy = {}
-        client.index_integer_create('test', 'demo',
-'test_age', 'age_index', policy)
+        client.index_integer_create('test', 'demo', 'test_age', 'age_index',
+                                    policy)
         policy = {}
-        client.index_integer_create('test', 'demo',
-'age1', 'age_index1', policy)
+        client.index_integer_create('test', 'demo', 'age1', 'age_index1',
+                                    policy)
 
         policy = {}
         filename = "stream_example.lua"
         udf_type = 0
 
-        status = client.udf_put( filename, udf_type, policy )
+        status = client.udf_put(filename, udf_type, policy)
 
         client.close()
 
     def teardown_class(cls):
         hostlist, user, password = TestBaseClass.get_hosts()
-        config = {
-                'hosts': hostlist
-                }
+        config = {'hosts': hostlist}
         if user == None and password == None:
             client = aerospike.client(config).connect()
         else:
             client = aerospike.client(config).connect(user, password)
         policy = {}
-        client.index_remove('test', 'age_index', policy);
-        client.index_remove('test', 'age_index1', policy);
-        policy = { }
+        client.index_remove('test', 'age_index', policy)
+        client.index_remove('test', 'age_index1', policy)
+        policy = {}
         module = "stream_example.lua"
 
-        status = client.udf_remove( module, policy )
+        status = client.udf_remove(module, policy)
         client.close()
 
     def setup_method(self, method):
-
         """
         Setup method.
         """
 
-        config = {
-                'hosts': TestBaseClass.hostlist
-                }
+        config = {'hosts': TestBaseClass.hostlist}
         if TestBaseClass.user == None and TestBaseClass.password == None:
             self.client = aerospike.client(config).connect()
         else:
-            self.client = aerospike.client(config).connect(TestBaseClass.user,
-                    TestBaseClass.password)
+            self.client = aerospike.client(config).connect(
+                TestBaseClass.user, TestBaseClass.password)
 
         for i in xrange(5):
             key = ('test', 'demo', i)
             rec = {
-                    'name' : 'name%s' % (str(i)),
-                    'addr' : 'name%s' % (str(i)),
-                    'test_age'  : i,
-                    'no'   : i
-                    }
+                'name': 'name%s' % (str(i)),
+                'addr': 'name%s' % (str(i)),
+                'test_age': i,
+                'no': i
+            }
             self.client.put(key, rec)
 
     def teardown_method(self, method):
@@ -113,9 +104,10 @@ class TestAggregate(TestBaseClass):
             query = self.client.query('test', 'demo')
             query.select('name', 'no')
             query.where(p.between('no', 1, 5))
-            query.apply('stream_example', 'count');
+            query.apply('stream_example', 'count')
 
             result = None
+
             def user_callback(value):
                 result = value
 
@@ -133,6 +125,7 @@ class TestAggregate(TestBaseClass):
             query.where(p.equals('test_age', 1))
             query.apply('stream_example', 'count')
             result = 1
+
             def user_callback(value):
                 result = value
 
@@ -150,10 +143,12 @@ class TestAggregate(TestBaseClass):
         query.where(p.equals('test_age', 165))
         query.apply('stream_example', 'count')
         records = []
+
         def user_callback(value):
             records.append(value)
 
         query.foreach(user_callback)
+        assert exception.value[0] == 100L
         assert records == []
 
     def test_aggregate_with_where_none_value(self):
@@ -166,6 +161,7 @@ class TestAggregate(TestBaseClass):
             query.where(p.equals('test_age', None))
             query.apply('stream_example', 'count')
             result = 1
+
             def user_callback(value):
                 result = value
 
@@ -183,6 +179,7 @@ class TestAggregate(TestBaseClass):
         query.where(p.between('test_age', True, True))
         query.apply('stream_example', 'count')
         records = []
+
         def user_callback(value):
             records.append(value)
 
@@ -198,6 +195,7 @@ class TestAggregate(TestBaseClass):
         query.where(p.equals('test_age', 2))
         query.apply('stream_example', 'count')
         records = []
+
         def user_callback(value):
             records.append(value)
 
@@ -214,6 +212,7 @@ class TestAggregate(TestBaseClass):
         query.apply('', '')
 
         result = None
+
         def user_callback(value):
             result = value
 
@@ -231,6 +230,7 @@ class TestAggregate(TestBaseClass):
             query.apply('streamwrong', 'count')
 
             result = None
+
             def user_callback(value):
                 result = value
 
@@ -250,6 +250,7 @@ class TestAggregate(TestBaseClass):
             query.apply('stream_example', 'countno')
 
             records = []
+
             def user_callback(value):
                 records.append(value)
 
@@ -267,6 +268,7 @@ class TestAggregate(TestBaseClass):
         query.apply('stream_example', 'count')
 
         records = []
+
         def user_callback(value):
             records.append(value)
 
@@ -277,15 +279,14 @@ class TestAggregate(TestBaseClass):
         """
             Invoke aggregate() with policy
         """
-        policy = {
-            'timeout': 1000
-        }
+        policy = {'timeout': 1000}
         query = self.client.query('test', 'demo')
         query.select('name', 'test_age')
         query.where(p.between('test_age', 1, 5))
         query.apply('stream_example', 'count')
 
         records = []
+
         def user_callback(value):
             records.append(value)
 
@@ -296,9 +297,7 @@ class TestAggregate(TestBaseClass):
         """
             Invoke aggregate() with extra parameter
         """
-        policy = {
-            'timeout': 1000
-        }
+        policy = {'timeout': 1000}
 
         with pytest.raises(TypeError) as typeError:
             query = self.client.query('test', 'demo')
@@ -307,6 +306,7 @@ class TestAggregate(TestBaseClass):
             query.apply('stream_example', 'count')
 
             result = None
+
             def user_callback(value):
                 result = value
 
@@ -325,6 +325,7 @@ class TestAggregate(TestBaseClass):
         query.apply('stream_example', 'count', [stream])
 
         records = []
+
         def user_callback(value):
             records.append(value)
 
@@ -341,6 +342,7 @@ class TestAggregate(TestBaseClass):
         query.apply('stream_example', 'count_extra')
 
         records = []
+
         def user_callback(value):
             records.append(value)
 
@@ -358,6 +360,7 @@ class TestAggregate(TestBaseClass):
             query.apply('stream_example', 'count_less')
 
             records = []
+
             def user_callback(value):
                 records.append(value)
 
@@ -374,11 +377,18 @@ class TestAggregate(TestBaseClass):
         query.apply('stream_example', 'group_count', [u"name", u"addr"])
 
         rec = []
+
         def callback(value):
             rec.append(value)
 
         query.foreach(callback)
-        assert rec == [{u'name4': 1, u'name2': 1, u'name3': 1, u'name0': 1, u'name1': 1}]
+        assert rec == [
+            {u'name4': 1,
+             u'name2': 1,
+             u'name3': 1,
+             u'name0': 1,
+             u'name1': 1}
+        ]
 
     def test_aggregate_with_unicode_module_and_function_name(self):
         """
@@ -390,6 +400,7 @@ class TestAggregate(TestBaseClass):
         query.apply(u'stream_example', u'count')
 
         records = []
+
         def user_callback(value):
             records.append(value)
 
@@ -406,6 +417,7 @@ class TestAggregate(TestBaseClass):
         query.apply('stream_example', 'count')
 
         records = []
+
         def user_callback(value):
             records.append(value)
 
@@ -437,7 +449,7 @@ class TestAggregate(TestBaseClass):
         """
             Invoke aggregate() with correct arguments without connection
         """
-        config = { 'hosts' : [('127.0.0.1', 3000)] }
+        config = {'hosts': [('127.0.0.1', 3000)]}
         client1 = aerospike.client(config)
 
         with pytest.raises(Exception) as exception:
@@ -447,6 +459,7 @@ class TestAggregate(TestBaseClass):
             query.apply('stream_example', 'count')
 
             records = []
+
             def user_callback(value):
                 records.append(value)
 
