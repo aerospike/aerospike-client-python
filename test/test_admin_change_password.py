@@ -5,8 +5,8 @@ import sys
 import time
 from test_base_class import TestBaseClass
 
+aerospike = pytest.importorskip("aerospike")
 try:
-    import aerospike
     from aerospike.exception import *
 except:
     print "Please install aerospike python client."
@@ -14,28 +14,29 @@ except:
 
 class TestChangePassword(TestBaseClass):
 
+    pytestmark = pytest.mark.skipif(
+        TestBaseClass().get_hosts()[1] == None,
+        reason="No user specified, may be not secured cluster.")
+
     def setup_method(self, method):
-        
         """
         Setup method
         """
         hostlist, user, password = TestBaseClass().get_hosts()
-        config = {
-                "hosts": hostlist
-                }
-        self.client = aerospike.client(config).connect( user, password )
+        config = {"hosts": hostlist}
+        self.client = aerospike.client(config).connect(user, password)
 
-        self.client.admin_create_user( {}, "testchangepassworduser", "aerospike", ["read"], 1)
+        self.client.admin_create_user({}, "testchangepassworduser",
+                                      "aerospike", ["read"], 1)
         time.sleep(2)
         self.delete_users = []
 
     def teardown_method(self, method):
-
         """
         Teardown method
         """
 
-        self.client.admin_drop_user( {}, "testchangepassworduser" )
+        self.client.admin_drop_user({}, "testchangepassworduser")
 
         self.client.close()
 
@@ -49,15 +50,15 @@ class TestChangePassword(TestBaseClass):
     def test_change_password_with_proper_parameters(self):
 
         user = "testchangepassworduser"
-        config = {
-                "hosts": TestChangePassword.hostlist
-                }
-        self.clientreaduser = aerospike.client(config).connect( user, "aerospike" )
+        config = {"hosts": TestChangePassword.hostlist}
+        self.clientreaduser = aerospike.client(config).connect(user,
+                                                               "aerospike")
 
         policy = {}
         password = "newpassword"
 
-        status = self.clientreaduser.admin_change_password( policy, user, password )
+        status = self.clientreaduser.admin_change_password(policy, user,
+                                                           password)
 
         assert status == 0
 
@@ -74,7 +75,8 @@ class TestChangePassword(TestBaseClass):
             assert exception.code == -1
             assert exception.msg == "Failed to seed cluster"
 
-        self.clientreaduserright = aerospike.client(config).connect( user, "newpassword" )
+        self.clientreaduserright = aerospike.client(config).connect(
+            user, "newpassword")
 
         assert self.clientreaduserright != None
 
@@ -83,7 +85,7 @@ class TestChangePassword(TestBaseClass):
 
     def test_change_password_with_invalid_timeout_policy_value(self):
 
-        policy = { 'timeout' : 0.1 }
+        policy = {'timeout': 0.1}
         user = "testchangepassworduser"
         password = "newpassword"
 
@@ -97,15 +99,15 @@ class TestChangePassword(TestBaseClass):
     def test_change_password_with_proper_timeout_policy_value(self):
 
         user = "testchangepassworduser"
-        config = {
-                "hosts": TestChangePassword.hostlist
-                }
-        self.clientreaduser = aerospike.client(config).connect( user, "aerospike" )
+        config = {"hosts": TestChangePassword.hostlist}
+        self.clientreaduser = aerospike.client(config).connect(user,
+                                                               "aerospike")
 
         policy = {'timeout': 10}
         password = "newpassword"
 
-        status = self.clientreaduser.admin_change_password( policy, user, password )
+        status = self.clientreaduser.admin_change_password(policy, user,
+                                                           password)
 
         assert status == 0
 
@@ -123,7 +125,8 @@ class TestChangePassword(TestBaseClass):
             assert exception.code == -1
             assert exception.msg == "Failed to seed cluster"
 
-        self.clientreaduserright = aerospike.client(config).connect( user, "newpassword" )
+        self.clientreaduserright = aerospike.client(config).connect(
+            user, "newpassword")
 
         assert self.clientreaduserright != None
 
@@ -172,15 +175,15 @@ class TestChangePassword(TestBaseClass):
     def test_change_password_with_too_long_password(self):
 
         user = "testchangepassworduser"
-        config = {
-                "hosts": TestChangePassword.hostlist
-                }
-        self.clientreaduser = aerospike.client(config).connect( user, "aerospike" )
+        config = {"hosts": TestChangePassword.hostlist}
+        self.clientreaduser = aerospike.client(config).connect(user,
+                                                               "aerospike")
 
         policy = {'timeout': 10}
-        password = "password"*1000
+        password = "password" * 1000
 
-        status = self.clientreaduser.admin_change_password( policy, user, password )
+        status = self.clientreaduser.admin_change_password(policy, user,
+                                                           password)
 
         assert status == 0
 
@@ -198,7 +201,8 @@ class TestChangePassword(TestBaseClass):
             assert exception.code == -1
             assert exception.msg == "Failed to seed cluster"
 
-        self.clientreaduserright = aerospike.client(config).connect( user, password )
+        self.clientreaduserright = aerospike.client(config).connect(user,
+                                                                    password)
 
         assert self.clientreaduserright != None
 

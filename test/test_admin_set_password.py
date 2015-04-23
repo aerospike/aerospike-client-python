@@ -5,8 +5,8 @@ import sys
 import time
 from test_base_class import TestBaseClass
 
+aerospike = pytest.importorskip("aerospike")
 try:
-    import aerospike
     from aerospike.exception import *
 except:
     print "Please install aerospike python client."
@@ -14,28 +14,30 @@ except:
 
 class TestSetPassword(TestBaseClass):
 
-    def setup_method(self, method):
+    pytestmark = pytest.mark.skipif(
+        TestBaseClass().get_hosts()[1] == None,
+        reason="No user specified, may be not secured cluster.")
 
+    def setup_method(self, method):
         """
         Setup method
         """
         hostlist, user, password = TestBaseClass().get_hosts()
-        config = {
-                "hosts": hostlist
-                }
-        self.client = aerospike.client(config).connect( user, password )
+        config = {"hosts": hostlist}
+        TestSetPassword.Me = self
+        self.client = aerospike.client(config).connect(user, password)
 
-        self.client.admin_create_user( {}, "testsetpassworduser", "aerospike", ["read"], 1)
+        self.client.admin_create_user({}, "testsetpassworduser", "aerospike",
+                                      ["read"], 1)
 
         self.delete_users = []
 
     def teardown_method(self, method):
-
         """
         Teardown method
         """
 
-        self.client.admin_drop_user( {}, "testsetpassworduser" )
+        self.client.admin_drop_user({}, "testsetpassworduser")
 
         self.client.close()
 
@@ -48,17 +50,17 @@ class TestSetPassword(TestBaseClass):
 
     def test_set_password_with_proper_parameters(self):
 
-        policy = { 'timeout' : 0 }
+        policy = {'timeout': 0}
         user = "testsetpassworduser"
         password = "newpassword"
 
-        status = self.client.admin_set_password( policy, user, password )
+        status = self.client.admin_set_password(policy, user, password)
 
         assert status == 0
 
     def test_set_password_with_invalid_timeout_policy_value(self):
 
-        policy = { 'timeout' : 0.1 }
+        policy = {'timeout': 0.1}
         user = "testsetpassworduser"
         password = "newpassword"
 
@@ -71,11 +73,11 @@ class TestSetPassword(TestBaseClass):
 
     def test_set_password_with_proper_timeout_policy_value(self):
 
-        policy = {'timeout' : 4}
+        policy = {'timeout': 4}
         user = "testsetpassworduser"
         password = "newpassword"
 
-        status = self.client.admin_set_password( policy, user, password )
+        status = self.client.admin_set_password(policy, user, password)
 
         assert status == 0
 
@@ -122,8 +124,8 @@ class TestSetPassword(TestBaseClass):
 
         policy = {}
         user = "testsetpassworduser"
-        password = "newpassword$"*1000
+        password = "newpassword$" * 1000
 
-        status = self.client.admin_set_password( policy, user, password )
+        status = self.client.admin_set_password(policy, user, password)
 
         assert status == 0

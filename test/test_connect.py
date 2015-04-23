@@ -1,33 +1,33 @@
-
 # -*- coding: utf-8 -*-
 
 import pytest
 import sys
 import cPickle as pickle
 from test_base_class import TestBaseClass
+
+aerospike = pytest.importorskip("aerospike")
 try:
-    import aerospike
     from aerospike.exception import *
 except:
     print "Please install aerospike python client."
     sys.exit(1)
 
 class TestConnect(TestBaseClass):
-
     def setup_class(cls):
         hostlist, user, password = TestBaseClass.get_hosts()
+        config = {'hosts': hostlist}
+        TestConnect.config = config
 
     def test_connect_positive(self):
         """
             Invoke connect() with positive parameters.
         """
-        config = {
-                'hosts': TestConnect.hostlist
-                }
+        config = {'hosts': TestConnect.hostlist}
         if TestConnect.user == None and TestConnect.password == None:
             self.client = aerospike.client(config).connect()
         else:
-            self.client = aerospike.client(config).connect(TestConnect.user, TestConnect.password)
+            self.client = aerospike.client(config).connect(
+                TestConnect.user, TestConnect.password)
 
         assert self.client != None
         assert self.client.isConnected() == True
@@ -38,16 +38,15 @@ class TestConnect(TestBaseClass):
             Invoke connect() with positive parameters and policy.
         """
         config = {
-                'hosts': TestConnect.hostlist,
-                'policies': {
-                   'timeout': 10000
-                }
-                }
+            'hosts': TestConnect.hostlist,
+            'policies': {'timeout': 10000}
+        }
         if TestConnect.user == None and TestConnect.password == None:
             self.client = aerospike.client(config).connect()
         else:
-            self.client = aerospike.client(config).connect(TestConnect.user, TestConnect.password)
-       
+            self.client = aerospike.client(config).connect(
+                TestConnect.user, TestConnect.password)
+
         assert self.client.isConnected() == True
         assert self.client.isConnected() == True
         self.client.close()
@@ -56,13 +55,12 @@ class TestConnect(TestBaseClass):
         """
             Invoke connect() with multiple hosts.
         """
-        config = {
-                'hosts': TestConnect.hostlist
-                }
+        config = {'hosts': TestConnect.hostlist}
         if TestConnect.user == None and TestConnect.password == None:
             self.client = aerospike.client(config).connect()
         else:
-            self.client = aerospike.client(config).connect(TestConnect.user, TestConnect.password)
+            self.client = aerospike.client(config).connect(
+                TestConnect.user, TestConnect.password)
 
         assert self.client != None
         self.client.close()

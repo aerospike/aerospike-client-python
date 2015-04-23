@@ -30,6 +30,7 @@ from __future__ import print_function
 import aerospike
 import sys
 import textwrap
+import re
 import time
 
 from optparse import OptionParser
@@ -190,7 +191,7 @@ def print_header(header,message=None):
 def print_record((key, meta, record), prefix=''):
 	print("%s%-4d %-4s %-8s %s" % (
 		prefix,
-		key['key'], 
+		int(key[2] or 0), 
 		meta.get('gen') if meta and 'gen' in meta else '-', 
 		meta.get('ttl') if meta and 'ttl' in meta else '-', 
 		record if record else '-'
@@ -245,7 +246,7 @@ def delete_records():
 			# first remove the existing record
 			client.remove((options.namespace, options.set, key))
 	except Exception, err:
-		if err[0]['code'] != 602:
+		if err[0] != 2:
 			print("delete_records() error: {0}".format(err[0]), file=sys.stderr)
 			sys.exit(1)
 
@@ -267,9 +268,9 @@ def write_records():
 
 			except Exception as e:
 				if ttl > TTL_MAX:
-					print('error: (correct) failed to write record with TTL(%d) > TTL_MAX(%d)' % (ttl, TTL_MAX))
+					print('error: (correct) failed to write record with TTL(%d) > TTL_MAX(%d)' % (int(ttl or 0), TTL_MAX))
 				else:
-					print('error: failed to write record with TTL = %d' % ttl)
+					print('error: failed to write record with TTL = %d ' % int(ttl or 0))
 
 	except Exception as e:
 		print("error: {0}".format(e), file=sys.stderr)
@@ -288,6 +289,20 @@ for p in PARAMS_SERVICE:
 		time.sleep(1)
 print("service parameters passed")
 
+print("getting initial ttl values")
+info = client.info("namespace/" +options.namespace)
+default_ttl =0
+max_ttl = 0
+for key, value in info.items():
+    array_of_items = re.split(';|=', value[1])
+    iter = 0;
+    for item in array_of_items:
+        iter = iter + 1
+        if item == "default-ttl":
+            default_ttl = array_of_items[iter]
+        if item == "max-ttl":
+            max_ttl = array_of_items[iter]
+
 print('Set Parameters for Namespace')
 for p in PARAMS_NAMESPACE:        
 		test_params_for_stanza(p,options.namespace,True)
@@ -302,9 +317,18 @@ start = time.time()
 
 delete_records()
 check_records(start, 0, 'Clean state')
+
 write_records()
+
 check_records(start, 0, 'Initial state')
 check_records(start, 2, 'Expect all records with TTL-2')
 check_records(start, 6, 'Expect all records with TTL<=5 to be gone')
 check_records(start, 3, 'Expect all records with TTL<=10 to be gone')
 check_records(start, 6, 'Expect all records to be gone, except NO_EXPIRE')
+client.remove((options.namespace, options.set, 60))
+
+PARAMS_NAMESPACE = [[ ('default-ttl', default_ttl), ('max-ttl', max_ttl) ]]
+print('Reset Parameters for Namespace')
+for p in PARAMS_NAMESPACE:        
+		test_params_for_stanza(p,options.namespace,True)
+		time.sleep(1)

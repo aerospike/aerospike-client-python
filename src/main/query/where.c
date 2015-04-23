@@ -297,8 +297,8 @@ AerospikeQuery * AerospikeQuery_Where(AerospikeQuery * self, PyObject * args)
 			);
 		}
 		else if ( strcmp(op, "contains") == 0 ) {
-			int index_type = -1;
-			int type = -1;
+			int index_type = 0;
+			int type = 0;
 			if(PyInt_Check(py_arg3)) {
 				index_type = PyInt_AsLong(py_arg3);
 			} else if (PyLong_Check(py_arg3)) {
@@ -341,7 +341,7 @@ AerospikeQuery * AerospikeQuery_Where(AerospikeQuery * self, PyObject * args)
 			}
 		}
 		else if ( strcmp(op, "range") == 0 ) {
-			int index_type = -1;
+			int index_type = 0;
 			if(PyInt_Check(py_arg3)) {
 				index_type = PyInt_AsLong(py_arg3);
 			} else if (PyLong_Check(py_arg3)) {

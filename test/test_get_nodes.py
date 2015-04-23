@@ -4,27 +4,26 @@ import time
 import sys
 import cPickle as pickle
 from test_base_class import TestBaseClass
+
+aerospike = pytest.importorskip("aerospike")
 try:
-    import aerospike
     from aerospike.exception import *
 except:
     print "Please install aerospike python client."
     sys.exit(1)
 
 class TestGetNodes(object):
-
     def setup_class(cls):
         """
         Setup class.
         """
         hostlist, user, password = TestBaseClass.get_hosts()
-        config = {
-                'hosts': hostlist
-                }
+        config = {'hosts': hostlist}
         if user == None and password == None:
             TestGetNodes.client = aerospike.client(config).connect()
         else:
-            TestGetNodes.client = aerospike.client(config).connect(user, password)
+            TestGetNodes.client = aerospike.client(config).connect(user,
+                                                                   password)
 
     def teardown_class(cls):
         """
@@ -43,9 +42,7 @@ class TestGetNodes(object):
         assert response != None
 
     def test_get_nodes_positive_without_connection(self):
-        config = {
-            'hosts': [('127.0.0.1', 3000)]
-        }
+        config = {'hosts': [('127.0.0.1', 3000)]}
         client1 = aerospike.client(config)
 
         try:

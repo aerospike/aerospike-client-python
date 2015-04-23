@@ -4,8 +4,9 @@ import time
 import sys
 import cPickle as pickle
 from test_base_class import TestBaseClass
+
+aerospike = pytest.importorskip("aerospike")
 try:
-    import aerospike
     from aerospike.exception import *
 except:
     print "Please install aerospike python client."
@@ -17,13 +18,12 @@ class TestPrepend(object):
         Setup method.
         """
         hostlist, user, password = TestBaseClass.get_hosts()
-        config = {
-                'hosts': hostlist
-                }
+        config = {'hosts': hostlist}
         if user == None and password == None:
             TestPrepend.client = aerospike.client(config).connect()
         else:
-            TestPrepend.client = aerospike.client(config).connect(user, password)
+            TestPrepend.client = aerospike.client(config).connect(user,
+                                                                  password)
 
     def teardown_class(cls):
         TestPrepend.client.close()
@@ -31,11 +31,7 @@ class TestPrepend(object):
     def setup_method(self, method):
         for i in xrange(5):
             key = ('test', 'demo', i)
-            rec = {
-                'name' : 'name%s' % (str(i)),
-                'age' : i,
-                'nolist': [1, 2, 3]
-            }
+            rec = {'name': 'name%s' % (str(i)), 'age': i, 'nolist': [1, 2, 3]}
             TestPrepend.client.put(key, rec)
 
     def teardown_method(self, method):
@@ -61,10 +57,9 @@ class TestPrepend(object):
         key = ('test', 'demo', 1)
         TestPrepend.client.prepend(key, "name", "str")
 
+        (key, meta, bins) = TestPrepend.client.get(key)
 
-        (key , meta, bins) = TestPrepend.client.get(key)
-
-        assert bins == { 'age': 1, 'name': 'strname1', 'nolist': [1, 2, 3]}
+        assert bins == {'age': 1, 'name': 'strname1', 'nolist': [1, 2, 3]}
 
     def test_prepend_with_correct_policy(self):
         """
@@ -73,16 +68,15 @@ class TestPrepend(object):
         key = ('test', 'demo', 1)
         policy = {
             'timeout': 1000,
-            'key' : aerospike.POLICY_KEY_SEND,
+            'key': aerospike.POLICY_KEY_SEND,
             'commit_level': aerospike.POLICY_COMMIT_LEVEL_ALL
         }
-        
+
         TestPrepend.client.prepend(key, "name", "str", {}, policy)
 
+        (key, meta, bins) = TestPrepend.client.get(key)
 
-        (key , meta, bins) = TestPrepend.client.get(key)
-
-        assert bins == { 'age': 1, 'name': 'strname1', 'nolist': [1, 2, 3]}
+        assert bins == {'age': 1, 'name': 'strname1', 'nolist': [1, 2, 3]}
 
     def test_prepend_with_policy_key_send(self):
         """
@@ -91,18 +85,18 @@ class TestPrepend(object):
         key = ('test', 'demo', 1)
         policy = {
             'timeout': 1000,
-            'key' : aerospike.POLICY_KEY_SEND,
+            'key': aerospike.POLICY_KEY_SEND,
             'retry': aerospike.POLICY_RETRY_ONCE,
             'commit_level': aerospike.POLICY_COMMIT_LEVEL_MASTER
         }
         TestPrepend.client.prepend(key, "name", "str", {}, policy)
 
+        (key, meta, bins) = TestPrepend.client.get(key)
 
-        (key , meta, bins) = TestPrepend.client.get(key)
-
-        assert bins == { 'age': 1, 'name': 'strname1', 'nolist': [1, 2, 3]}
-        assert key == ('test', 'demo', None,
-                bytearray(b'\xb7\xf4\xb88\x89\xe2\xdag\xdeh>\x1d\xf6\x91\x9a\x1e\xac\xc4F\xc8'))
+        assert bins == {'age': 1, 'name': 'strname1', 'nolist': [1, 2, 3]}
+        assert key == ('test', 'demo', None, bytearray(
+            b'\xb7\xf4\xb88\x89\xe2\xdag\xdeh>\x1d\xf6\x91\x9a\x1e\xac\xc4F\xc8')
+                      )
 
     def test_prepend_with_policy_key_gen_EQ_ignore(self):
         """
@@ -111,23 +105,20 @@ class TestPrepend(object):
         key = ('test', 'demo', 1)
         policy = {
             'timeout': 1000,
-            'key' : aerospike.POLICY_KEY_SEND,
+            'key': aerospike.POLICY_KEY_SEND,
             'retry': aerospike.POLICY_RETRY_ONCE,
             'gen': aerospike.POLICY_GEN_IGNORE
         }
 
-        meta = {
-            'gen': 10,
-            'ttl': 1200
-        }
+        meta = {'gen': 10, 'ttl': 1200}
         TestPrepend.client.prepend(key, "name", "str", meta, policy)
 
+        (key, meta, bins) = TestPrepend.client.get(key)
 
-        (key , meta, bins) = TestPrepend.client.get(key)
-
-        assert bins == { 'age': 1, 'name': 'strname1', 'nolist': [1, 2, 3]}
-        assert key == ('test', 'demo', None,
-                bytearray(b'\xb7\xf4\xb88\x89\xe2\xdag\xdeh>\x1d\xf6\x91\x9a\x1e\xac\xc4F\xc8'))
+        assert bins == {'age': 1, 'name': 'strname1', 'nolist': [1, 2, 3]}
+        assert key == ('test', 'demo', None, bytearray(
+            b'\xb7\xf4\xb88\x89\xe2\xdag\xdeh>\x1d\xf6\x91\x9a\x1e\xac\xc4F\xc8')
+                      )
 
     def test_prepend_with_policy_key_gen_EQ_positive(self):
         """
@@ -136,25 +127,22 @@ class TestPrepend(object):
         key = ('test', 'demo', 1)
         policy = {
             'timeout': 1000,
-            'key' : aerospike.POLICY_KEY_SEND,
+            'key': aerospike.POLICY_KEY_SEND,
             'retry': aerospike.POLICY_RETRY_ONCE,
             'gen': aerospike.POLICY_GEN_EQ
         }
-        (key, meta) = TestPrepend.client.exists(key) 
+        (key, meta) = TestPrepend.client.exists(key)
 
         gen = meta['gen']
-        meta = {
-            'gen': gen,
-            'ttl': 1200
-        }
+        meta = {'gen': gen, 'ttl': 1200}
         TestPrepend.client.prepend(key, "name", "str", meta, policy)
 
+        (key, meta, bins) = TestPrepend.client.get(key)
 
-        (key , meta, bins) = TestPrepend.client.get(key)
-
-        assert bins == { 'age': 1, 'name': 'strname1', 'nolist': [1, 2, 3]}
-        assert key == ('test', 'demo', None,
-                bytearray(b'\xb7\xf4\xb88\x89\xe2\xdag\xdeh>\x1d\xf6\x91\x9a\x1e\xac\xc4F\xc8'))
+        assert bins == {'age': 1, 'name': 'strname1', 'nolist': [1, 2, 3]}
+        assert key == ('test', 'demo', None, bytearray(
+            b'\xb7\xf4\xb88\x89\xe2\xdag\xdeh>\x1d\xf6\x91\x9a\x1e\xac\xc4F\xc8')
+                      )
 
     def test_prepend_with_policy_key_gen_EQ_not_equal(self):
         """
@@ -163,11 +151,11 @@ class TestPrepend(object):
         key = ('test', 'demo', 1)
         policy = {
             'timeout': 1000,
-            'key' : aerospike.POLICY_KEY_SEND,
+            'key': aerospike.POLICY_KEY_SEND,
             'retry': aerospike.POLICY_RETRY_ONCE,
             'gen': aerospike.POLICY_GEN_EQ
         }
-        (key, meta) = TestPrepend.client.exists(key) 
+        (key, meta) = TestPrepend.client.exists(key)
         gen = meta['gen']
         
         meta = {
@@ -182,12 +170,12 @@ class TestPrepend(object):
             assert exception.msg == "AEROSPIKE_ERR_RECORD_GENERATION"
             assert exception.bin == 'name'
 
+        (key, meta, bins) = TestPrepend.client.get(key)
 
-        (key , meta, bins) = TestPrepend.client.get(key)
-
-        assert bins == { 'age': 1, 'name': 'name1', 'nolist': [1, 2, 3]}
-        assert key == ('test', 'demo', None,
-                bytearray(b'\xb7\xf4\xb88\x89\xe2\xdag\xdeh>\x1d\xf6\x91\x9a\x1e\xac\xc4F\xc8'))
+        assert bins == {'age': 1, 'name': 'name1', 'nolist': [1, 2, 3]}
+        assert key == ('test', 'demo', None, bytearray(
+            b'\xb7\xf4\xb88\x89\xe2\xdag\xdeh>\x1d\xf6\x91\x9a\x1e\xac\xc4F\xc8')
+                      )
 
     def test_prepend_with_policy_key_gen_GT_lesser(self):
         """
@@ -196,11 +184,11 @@ class TestPrepend(object):
         key = ('test', 'demo', 1)
         policy = {
             'timeout': 1000,
-            'key' : aerospike.POLICY_KEY_SEND,
+            'key': aerospike.POLICY_KEY_SEND,
             'retry': aerospike.POLICY_RETRY_ONCE,
             'gen': aerospike.POLICY_GEN_GT
         }
-        (key, meta) = TestPrepend.client.exists(key) 
+        (key, meta) = TestPrepend.client.exists(key)
 
         gen = meta['gen']
         meta = {
@@ -215,12 +203,12 @@ class TestPrepend(object):
             assert exception.msg == "AEROSPIKE_ERR_RECORD_GENERATION"
             assert exception.bin == "name"
 
+        (key, meta, bins) = TestPrepend.client.get(key)
 
-        (key , meta, bins) = TestPrepend.client.get(key)
-
-        assert bins == { 'age': 1, 'name': 'name1', 'nolist': [1, 2, 3]}
-        assert key == ('test', 'demo', None,
-                bytearray(b'\xb7\xf4\xb88\x89\xe2\xdag\xdeh>\x1d\xf6\x91\x9a\x1e\xac\xc4F\xc8'))
+        assert bins == {'age': 1, 'name': 'name1', 'nolist': [1, 2, 3]}
+        assert key == ('test', 'demo', None, bytearray(
+            b'\xb7\xf4\xb88\x89\xe2\xdag\xdeh>\x1d\xf6\x91\x9a\x1e\xac\xc4F\xc8')
+                      )
 
     def test_prepend_with_policy_key_gen_GT_positive(self):
         """
@@ -229,54 +217,47 @@ class TestPrepend(object):
         key = ('test', 'demo', 1)
         policy = {
             'timeout': 1000,
-            'key' : aerospike.POLICY_KEY_SEND,
+            'key': aerospike.POLICY_KEY_SEND,
             'retry': aerospike.POLICY_RETRY_ONCE,
             'gen': aerospike.POLICY_GEN_GT
         }
-        (key, meta) = TestPrepend.client.exists(key) 
+        (key, meta) = TestPrepend.client.exists(key)
 
         gen = meta['gen']
-        meta = {
-            'gen': gen+2,
-            'ttl': 1200
-        }
+        meta = {'gen': gen + 2, 'ttl': 1200}
         TestPrepend.client.prepend(key, "name", "str", meta, policy)
 
+        (key, meta, bins) = TestPrepend.client.get(key)
 
-        (key , meta, bins) = TestPrepend.client.get(key)
-
-        assert bins == { 'age': 1, 'name': 'strname1', 'nolist': [1, 2, 3]}
-        assert key == ('test', 'demo', None,
-                bytearray(b'\xb7\xf4\xb88\x89\xe2\xdag\xdeh>\x1d\xf6\x91\x9a\x1e\xac\xc4F\xc8'))
+        assert bins == {'age': 1, 'name': 'strname1', 'nolist': [1, 2, 3]}
+        assert key == ('test', 'demo', None, bytearray(
+            b'\xb7\xf4\xb88\x89\xe2\xdag\xdeh>\x1d\xf6\x91\x9a\x1e\xac\xc4F\xc8')
+                      )
 
     def test_prepend_with_policy_key_digest(self):
         """
         Invoke prepend() with policy key digest
         """
-        key = ( 'test', 'demo', None, bytearray("asd;as[d'as;djk;uyfl",
-               "utf-8"))
-        rec = {
-            'name' : 'name%s' % (str(1)),
-            'age' : 1,
-            'nolist': [1, 2, 3]
-        }
+        key = ('test', 'demo', None, bytearray("asd;as[d'as;djk;uyfl",
+                                               "utf-8"))
+        rec = {'name': 'name%s' % (str(1)), 'age': 1, 'nolist': [1, 2, 3]}
         TestPrepend.client.put(key, rec)
 
         policy = {
             'timeout': 1000,
-            'key' : aerospike.POLICY_KEY_DIGEST,
-            'retry' : aerospike.POLICY_RETRY_NONE
+            'key': aerospike.POLICY_KEY_DIGEST,
+            'retry': aerospike.POLICY_RETRY_NONE
         }
         TestPrepend.client.prepend(key, "name", "str", {}, policy)
 
+        (key, meta, bins) = TestPrepend.client.get(key)
 
-        (key , meta, bins) = TestPrepend.client.get(key)
-
-        assert bins == { 'age': 1, 'name': 'strname1', 'nolist': [1, 2, 3]}
+        assert bins == {'age': 1, 'name': 'strname1', 'nolist': [1, 2, 3]}
         assert key == ('test', 'demo', None,
-                bytearray(b"asd;as[d\'as;djk;uyfl"))
+                       bytearray(b"asd;as[d\'as;djk;uyfl"))
 
         TestPrepend.client.remove(key)
+
     """
     def test_prepend_with_correct_policyandlist(self):
         #Invoke prepend() with correct policy
@@ -292,6 +273,7 @@ class TestPrepend(object):
 
         assert bins == { 'age': 1, 'name': 'strname1', 'nolist': [1, 2, 3]}
     """
+
     def test_prepend_with_incorrect_policy(self):
         """
         Invoke prepend() with incorrect policy
@@ -341,12 +323,10 @@ class TestPrepend(object):
         Invoke prepend() with extra parameter.
         """
         key = ('test', 'demo', 1)
-        policy = {
-            'timeout': 1000
-        }
+        policy = {'timeout': 1000}
         with pytest.raises(TypeError) as typeError:
             TestPrepend.client.prepend(key, "name", "str", {}, policy, "")
-        
+
         assert "prepend() takes at most 5 arguments (6 given)" in typeError.value
 
     def test_prepend_policy_is_string(self):
@@ -389,17 +369,17 @@ class TestPrepend(object):
         Invoke prepend() with unicode string
         """
         key = ('test', 'demo', 1)
-        res = TestPrepend.client.prepend( key, "name", u"age")
+        res = TestPrepend.client.prepend(key, "name", u"age")
 
         key, meta, bins = TestPrepend.client.get(key)
         assert bins['name'] == 'agename1'
-    
+
     def test_prepend_unicode_bin_name(self):
         """
         Invoke prepend() with unicode string
         """
         key = ('test', 'demo', 1)
-        res = TestPrepend.client.prepend( key, u"add", u"address")
+        res = TestPrepend.client.prepend(key, u"add", u"address")
 
         key, meta, bins = TestPrepend.client.get(key)
         assert bins['add'] == 'address'
@@ -408,9 +388,7 @@ class TestPrepend(object):
         """
         Invoke prepend() with correct parameters without connection
         """
-        config = {
-            'hosts': [('127.0.0.1', 3000)]
-        }
+        config = {'hosts': [('127.0.0.1', 3000)]}
         client1 = aerospike.client(config)
         key = ('test', 'demo', 1)
 

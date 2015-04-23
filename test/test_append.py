@@ -5,8 +5,8 @@ import sys
 import cPickle as pickle
 from test_base_class import TestBaseClass
 
+aerospike = pytest.importorskip("aerospike")
 try:
-    import aerospike
     from aerospike.exception import *
 except:
     print "Please install aerospike python client."
@@ -18,9 +18,7 @@ class TestAppend(object):
         Setup method.
         """
         hostlist, user, password = TestBaseClass.get_hosts()
-        config = {
-                'hosts': hostlist
-                }
+        config = {'hosts': hostlist}
         if user == None and password == None:
             TestAppend.client = aerospike.client(config).connect()
         else:
@@ -32,10 +30,7 @@ class TestAppend(object):
     def setup_method(self, method):
         for i in xrange(5):
             key = ('test', 'demo', i)
-            rec = {
-                'name' : 'name%s' % (str(i)),
-                'age' : i
-            }
+            rec = {'name': 'name%s' % (str(i)), 'age': i}
             TestAppend.client.put(key, rec)
 
     def teardown_method(self, method):
@@ -62,10 +57,9 @@ class TestAppend(object):
         key = ('test', 'demo', 1)
         TestAppend.client.append(key, "name", "str")
 
+        (key, meta, bins) = TestAppend.client.get(key)
 
-        (key , meta, bins) = TestAppend.client.get(key)
-
-        assert bins == { 'age': 1, 'name': 'name1str'}
+        assert bins == {'age': 1, 'name': 'name1str'}
 
     def test_append_with_correct_policy(self):
         """
@@ -74,16 +68,14 @@ class TestAppend(object):
         key = ('test', 'demo', 1)
         policy = {
             'timeout': 1000,
-            'retry' : aerospike.POLICY_RETRY_ONCE,
+            'retry': aerospike.POLICY_RETRY_ONCE,
             'commit_level': aerospike.POLICY_COMMIT_LEVEL_MASTER
         }
         TestAppend.client.append(key, "name", "str", {}, policy)
 
+        (key, meta, bins) = TestAppend.client.get(key)
 
-        (key , meta, bins) = TestAppend.client.get(key)
-
-        assert bins == { 'age': 1, 'name': 'name1str'}
-
+        assert bins == {'age': 1, 'name': 'name1str'}
 
     def test_append_with_policy_key_send(self):
         """
@@ -92,45 +84,40 @@ class TestAppend(object):
         key = ('test', 'demo', 1)
         policy = {
             'timeout': 1000,
-            'key' : aerospike.POLICY_KEY_SEND,
+            'key': aerospike.POLICY_KEY_SEND,
             'retry': aerospike.POLICY_RETRY_ONCE,
             'commit_level': aerospike.POLICY_COMMIT_LEVEL_ALL
         }
         TestAppend.client.append(key, "name", "str", {}, policy)
 
+        (key, meta, bins) = TestAppend.client.get(key)
 
-        (key , meta, bins) = TestAppend.client.get(key)
-
-        assert bins == { 'age': 1, 'name': 'name1str'}
-        assert key == ('test', 'demo', None,
-                bytearray(b'\xb7\xf4\xb88\x89\xe2\xdag\xdeh>\x1d\xf6\x91\x9a\x1e\xac\xc4F\xc8'))
+        assert bins == {'age': 1, 'name': 'name1str'}
+        assert key == ('test', 'demo', None, bytearray(
+            b'\xb7\xf4\xb88\x89\xe2\xdag\xdeh>\x1d\xf6\x91\x9a\x1e\xac\xc4F\xc8')
+                      )
 
     def test_append_with_policy_key_digest(self):
         """
         Invoke append() with policy key digest
         """
-        key = ( 'test', 'demo', None, bytearray("asd;as[d'as;djk;uyfl",
-               "utf-8"))
-        rec = {
-            'name' : 'name%s' % (str(1)),
-            'age' : 1,
-            'nolist': [1, 2, 3]
-        }
+        key = ('test', 'demo', None, bytearray("asd;as[d'as;djk;uyfl",
+                                               "utf-8"))
+        rec = {'name': 'name%s' % (str(1)), 'age': 1, 'nolist': [1, 2, 3]}
         TestAppend.client.put(key, rec)
 
         policy = {
             'timeout': 1000,
-            'key' : aerospike.POLICY_KEY_DIGEST,
-            'retry' : aerospike.POLICY_RETRY_NONE
+            'key': aerospike.POLICY_KEY_DIGEST,
+            'retry': aerospike.POLICY_RETRY_NONE
         }
         TestAppend.client.append(key, "name", "str", {}, policy)
 
+        (key, meta, bins) = TestAppend.client.get(key)
 
-        (key , meta, bins) = TestAppend.client.get(key)
-
-        assert bins == { 'age': 1, 'name': 'name1str', 'nolist': [1, 2, 3]}
+        assert bins == {'age': 1, 'name': 'name1str', 'nolist': [1, 2, 3]}
         assert key == ('test', 'demo', None,
-                bytearray(b"asd;as[d\'as;djk;uyfl"))
+                       bytearray(b"asd;as[d\'as;djk;uyfl"))
 
         TestAppend.client.remove(key)
 
@@ -141,23 +128,20 @@ class TestAppend(object):
         key = ('test', 'demo', 1)
         policy = {
             'timeout': 1000,
-            'key' : aerospike.POLICY_KEY_SEND,
+            'key': aerospike.POLICY_KEY_SEND,
             'retry': aerospike.POLICY_RETRY_ONCE,
             'gen': aerospike.POLICY_GEN_IGNORE
         }
 
-        meta = {
-            'gen': 10,
-            'ttl': 1200
-        }
+        meta = {'gen': 10, 'ttl': 1200}
         TestAppend.client.append(key, "name", "str", meta, policy)
 
+        (key, meta, bins) = TestAppend.client.get(key)
 
-        (key , meta, bins) = TestAppend.client.get(key)
-
-        assert bins == { 'age': 1, 'name': 'name1str'}
-        assert key == ('test', 'demo', None,
-                bytearray(b'\xb7\xf4\xb88\x89\xe2\xdag\xdeh>\x1d\xf6\x91\x9a\x1e\xac\xc4F\xc8'))
+        assert bins == {'age': 1, 'name': 'name1str'}
+        assert key == ('test', 'demo', None, bytearray(
+            b'\xb7\xf4\xb88\x89\xe2\xdag\xdeh>\x1d\xf6\x91\x9a\x1e\xac\xc4F\xc8')
+                      )
 
     def test_append_with_policy_key_gen_EQ_positive(self):
         """
@@ -166,26 +150,23 @@ class TestAppend(object):
         key = ('test', 'demo', 1)
         policy = {
             'timeout': 1000,
-            'key' : aerospike.POLICY_KEY_SEND,
+            'key': aerospike.POLICY_KEY_SEND,
             'retry': aerospike.POLICY_RETRY_ONCE,
             'gen': aerospike.POLICY_GEN_EQ
         }
-        (key, meta) = TestAppend.client.exists(key) 
+        (key, meta) = TestAppend.client.exists(key)
 
         gen = meta['gen']
 
-        meta = {
-            'gen': gen,
-            'ttl': 1200
-        }
+        meta = {'gen': gen, 'ttl': 1200}
         TestAppend.client.append(key, "name", "str", meta, policy)
 
+        (key, meta, bins) = TestAppend.client.get(key)
 
-        (key , meta, bins) = TestAppend.client.get(key)
-
-        assert bins == { 'age': 1, 'name': 'name1str'}
-        assert key == ('test', 'demo', None,
-                bytearray(b'\xb7\xf4\xb88\x89\xe2\xdag\xdeh>\x1d\xf6\x91\x9a\x1e\xac\xc4F\xc8'))
+        assert bins == {'age': 1, 'name': 'name1str'}
+        assert key == ('test', 'demo', None, bytearray(
+            b'\xb7\xf4\xb88\x89\xe2\xdag\xdeh>\x1d\xf6\x91\x9a\x1e\xac\xc4F\xc8')
+                      )
 
     def test_append_with_policy_key_gen_GT_lesser(self):
         """
@@ -194,11 +175,11 @@ class TestAppend(object):
         key = ('test', 'demo', 1)
         policy = {
             'timeout': 1000,
-            'key' : aerospike.POLICY_KEY_SEND,
+            'key': aerospike.POLICY_KEY_SEND,
             'retry': aerospike.POLICY_RETRY_ONCE,
             'gen': aerospike.POLICY_GEN_GT
         }
-        (key, meta) = TestAppend.client.exists(key) 
+        (key, meta) = TestAppend.client.exists(key)
 
         gen = meta['gen']
 
@@ -216,9 +197,10 @@ class TestAppend(object):
 
         (key , meta, bins) = TestAppend.client.get(key)
 
-        assert bins == { 'age': 1, 'name': 'name1'}
-        assert key == ('test', 'demo', None,
-                bytearray(b'\xb7\xf4\xb88\x89\xe2\xdag\xdeh>\x1d\xf6\x91\x9a\x1e\xac\xc4F\xc8'))
+        assert bins == {'age': 1, 'name': 'name1'}
+        assert key == ('test', 'demo', None, bytearray(
+            b'\xb7\xf4\xb88\x89\xe2\xdag\xdeh>\x1d\xf6\x91\x9a\x1e\xac\xc4F\xc8')
+                      )
 
     def test_append_with_policy_key_gen_GT_positive(self):
         """
@@ -227,26 +209,23 @@ class TestAppend(object):
         key = ('test', 'demo', 1)
         policy = {
             'timeout': 1000,
-            'key' : aerospike.POLICY_KEY_SEND,
+            'key': aerospike.POLICY_KEY_SEND,
             'retry': aerospike.POLICY_RETRY_ONCE,
             'gen': aerospike.POLICY_GEN_GT
         }
-        (key, meta) = TestAppend.client.exists(key) 
+        (key, meta) = TestAppend.client.exists(key)
 
         gen = meta['gen']
 
-        meta = {
-            'gen': gen+2,
-            'ttl': 1200
-        }
+        meta = {'gen': gen + 2, 'ttl': 1200}
         TestAppend.client.append(key, "name", "str", meta, policy)
 
+        (key, meta, bins) = TestAppend.client.get(key)
 
-        (key , meta, bins) = TestAppend.client.get(key)
-
-        assert bins == { 'age': 1, 'name': 'name1str'}
-        assert key == ('test', 'demo', None,
-                bytearray(b'\xb7\xf4\xb88\x89\xe2\xdag\xdeh>\x1d\xf6\x91\x9a\x1e\xac\xc4F\xc8'))
+        assert bins == {'age': 1, 'name': 'name1str'}
+        assert key == ('test', 'demo', None, bytearray(
+            b'\xb7\xf4\xb88\x89\xe2\xdag\xdeh>\x1d\xf6\x91\x9a\x1e\xac\xc4F\xc8')
+                      )
 
     def test_append_with_policy_key_gen_EQ_not_equal(self):
         """
@@ -255,11 +234,11 @@ class TestAppend(object):
         key = ('test', 'demo', 1)
         policy = {
             'timeout': 1000,
-            'key' : aerospike.POLICY_KEY_SEND,
+            'key': aerospike.POLICY_KEY_SEND,
             'retry': aerospike.POLICY_RETRY_ONCE,
             'gen': aerospike.POLICY_GEN_EQ
         }
-        (key, meta) = TestAppend.client.exists(key) 
+        (key, meta) = TestAppend.client.exists(key)
         gen = meta['gen']
 
         meta = {
@@ -276,9 +255,10 @@ class TestAppend(object):
 
         (key , meta, bins) = TestAppend.client.get(key)
 
-        assert bins == { 'age': 1, 'name': 'name1'}
-        assert key == ('test', 'demo', None,
-                bytearray(b'\xb7\xf4\xb88\x89\xe2\xdag\xdeh>\x1d\xf6\x91\x9a\x1e\xac\xc4F\xc8'))
+        assert bins == {'age': 1, 'name': 'name1'}
+        assert key == ('test', 'demo', None, bytearray(
+            b'\xb7\xf4\xb88\x89\xe2\xdag\xdeh>\x1d\xf6\x91\x9a\x1e\xac\xc4F\xc8')
+                      )
 
     def test_append_with_incorrect_policy(self):
         """
@@ -329,9 +309,7 @@ class TestAppend(object):
         Invoke append() with extra parameter.
         """
         key = ('test', 'demo', 1)
-        policy = {
-            'timeout': 1000
-        }
+        policy = {'timeout': 1000}
         with pytest.raises(TypeError) as typeError:
             TestAppend.client.append(key, "name", "str", {}, policy, "")
 
@@ -377,17 +355,17 @@ class TestAppend(object):
         Invoke append() with unicode string
         """
         key = ('test', 'demo', 1)
-        res = TestAppend.client.append( key, "name", u"address")
+        res = TestAppend.client.append(key, "name", u"address")
 
         key, meta, bins = TestAppend.client.get(key)
         assert bins['name'] == 'name1address'
-    
+
     def test_append_unicode_bin_name(self):
         """
         Invoke append() with unicode string
         """
         key = ('test', 'demo', 1)
-        res = TestAppend.client.append( key, u"add", u"address")
+        res = TestAppend.client.append(key, u"add", u"address")
 
         key, meta, bins = TestAppend.client.get(key)
         assert bins['add'] == 'address'
@@ -396,9 +374,7 @@ class TestAppend(object):
         """
         Invoke append() with correct parameters without connection
         """
-        config = {
-            'hosts': [('127.0.0.1', 3000)]
-        }
+        config = {'hosts': [('127.0.0.1', 3000)]}
         client1 = aerospike.client(config)
         key = ('test', 'demo', 1)
 

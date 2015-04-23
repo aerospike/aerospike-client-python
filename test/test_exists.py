@@ -5,8 +5,8 @@ import sys
 import cPickle as pickle
 from test_base_class import TestBaseClass
 
+aerospike = pytest.importorskip("aerospike")
 try:
-    import aerospike
     from aerospike.exception import *
 except:
     print "Please install aerospike python client."
@@ -23,9 +23,7 @@ class TestExists(TestBaseClass):
         Setup method.
         """
         hostlist, user, password = TestBaseClass.get_hosts()
-        config = {
-                'hosts': hostlist
-                }
+        config = {'hosts': hostlist}
         if user == None and password == None:
             TestExists.client = aerospike.client(config).connect()
         else:
@@ -36,85 +34,61 @@ class TestExists(TestBaseClass):
 
     def setup_method(self, method):
 
+        self.keys = []
 
         for i in xrange(5):
             key = ('test', 'demo', i)
-            rec = {
-                    'name' : 'name%s' % (str(i)),
-                    'age'  : i
-                    }
+            rec = {'name': 'name%s' % (str(i)), 'age': i}
             TestExists.client.put(key, rec)
+            self.keys.append(key)
 
         key = ('test', 'demo', 'list_key')
+        self.keys.append(key)
 
-        rec = {
-                'names': ['John', 'Marlen', 'Steve']
-            }
+        rec = {'names': ['John', 'Marlen', 'Steve']}
 
         TestExists.client.put(key, rec)
 
         key = ('test', 'demo', 'map_key')
+        self.keys.append(key)
 
-        rec = {
-                'names' :{
-                    'name' : 'John',
-                    'age'  : 24
-                    }
-                }
+        rec = {'names': {'name': 'John', 'age': 24}}
 
         TestExists.client.put(key, rec)
 
         key = ('test', 'demo', 'list_map_key')
+        self.keys.append(key)
 
         rec = {
-                'names' : ['John', 'Marlen', 'Steve'],
-                'names_and_age': [
-                    {
-                      'name': 'John',
-                      'age': 24
-                    },
-                    {
-                        'name': 'Marlen',
-                        'age' : 25
-                        }
-                    ]
-                }
+            'names': ['John', 'Marlen', 'Steve'],
+            'names_and_age': [{'name': 'John',
+                               'age': 24}, {'name': 'Marlen',
+                                            'age': 25}]
+        }
 
         TestExists.client.put(key, rec)
 
         obj1, obj2 = SomeClass(), SomeClass()
 
         key = ('test', 'demo', 'objects')
+        self.keys.append(key)
 
-        rec = {
-                'objects' : [ pickle.dumps( obj1 ), pickle.dumps( obj2 ) ]
-                }
+        rec = {'objects': [pickle.dumps(obj1), pickle.dumps(obj2)]}
         TestExists.client.put(key, rec)
 
         key = ('test', 'demo', 'bytes_key')
+        self.keys.append(key)
 
-        rec = {
-                'bytes': bytearray('John', 'utf-8')
-                }
+        rec = {'bytes': bytearray('John', 'utf-8')}
         TestExists.client.put(key, rec)
 
     def teardown_method(self, method):
         """
         Teardoen method.
         """
-        for i in xrange(5):
-            key = ('test', 'demo', i)
+
+        for key in self.keys:
             TestExists.client.remove(key)
-
-        key = ('test', 'demo', 'list_key')
-        TestExists.client.remove(key)
-
-        key = ('test', 'demo', 'map_key')
-        TestExists.client.remove(key)
-
-        key = ('test', 'demo', 'objects')
-        TestExists.client.remove(key)
-
 
     def test_exists_with_no_paramters(self):
         """
@@ -126,36 +100,33 @@ class TestExists(TestBaseClass):
         assert "Required argument 'key' (pos 1) not found" in typeError.value
 
     def test_exists_with_only_key(self):
-
         """
             Invoke exists() with a key and not policy's dict.
         """
         key = ('test', 'demo', 1)
 
-        key, meta = TestExists.client.exists( key )
+        key, meta = TestExists.client.exists(key)
 
         assert meta['gen'] != None
         assert meta['ttl'] != None
 
     def test_exists_with_key_and_policy(self):
-
         """
             Invoke exists() with a key and policy.
         """
         key = ('test', 'demo', 1)
         policy = {
-            'timeout' : 1000,
+            'timeout': 1000,
             'replica': aerospike.POLICY_REPLICA_MASTER,
             'consistency': aerospike.POLICY_CONSISTENCY_ONE
         }
 
-        key, meta = TestExists.client.exists( key, policy )
+        key, meta = TestExists.client.exists(key, policy)
 
         assert meta['gen'] != None
         assert meta['ttl'] != None
 
     def test_exists_with_policy_is_string(self):
-
         """
             Invoke exists() with a key and policy as string.
         """
@@ -170,14 +141,11 @@ class TestExists(TestBaseClass):
             assert exception.msg == 'policy must be a dict'
 
     def test_exists_with_timeout_is_string(self):
-
         """
             Invoke exists() with a key and timeout as string.
         """
         key = ('test', 'demo', 1)
-        policy = {
-            'timeout' : "1000"
-        }
+        policy = {'timeout': "1000"}
 
         try:
             key, meta = TestExists.client.exists( key, policy )
@@ -187,7 +155,6 @@ class TestExists(TestBaseClass):
             assert exception.msg == 'timeout is invalid'
 
     def test_exists_for_list_type_record(self):
-
         """
             Invoke exists() for list typed record.
         """
@@ -199,7 +166,6 @@ class TestExists(TestBaseClass):
         assert meta['ttl'] != None
 
     def test_exists_for_map_type_record(self):
-
         """
             Invoke exists() for map type record.
         """
@@ -211,7 +177,6 @@ class TestExists(TestBaseClass):
         assert meta['ttl'] != None
 
     def test_exists_for_list_and_map_type_combined(self):
-
         """
             Invoke exists() for list and map combined record.
         """
@@ -223,11 +188,10 @@ class TestExists(TestBaseClass):
         assert meta['ttl'] != None
 
     def test_exists_with_list_of_objects(self):
-
         """
             Invoke exists() for list of objects.
         """
-        key = ( 'test', 'demo', 'objects')
+        key = ('test', 'demo', 'objects')
 
         key, meta = TestExists.client.exists(key)
 
@@ -235,7 +199,6 @@ class TestExists(TestBaseClass):
         assert meta['ttl'] != None
 
     def test_exists_with_bytearray(self):
-
         """
             Invoke exists() for bytarray record.
         """
@@ -245,8 +208,8 @@ class TestExists(TestBaseClass):
 
         assert meta['gen'] != None
         assert meta['ttl'] != None
-    def test_exists_with_typed_key(self):
 
+    def test_exists_with_typed_key(self):
         """
             Invoke exists() with a string key and not policy's dict.
         """
@@ -260,7 +223,6 @@ class TestExists(TestBaseClass):
             assert exception.msg == 'AEROSPIKE_ERR_RECORD_NOT_FOUND'
 
     def test_exists_with_none_set(self):
-
         """
             Invoke exists() with None set in key tuple.
         """
@@ -274,7 +236,6 @@ class TestExists(TestBaseClass):
             assert exception.msg == 'AEROSPIKE_ERR_RECORD_NOT_FOUND'
 
     def test_exists_with_none_namespace(self):
-
         """
             Invoke exists() with None namespace in key tuple.
         """
@@ -288,7 +249,6 @@ class TestExists(TestBaseClass):
             assert exception.msg == 'namespace must be a string'
 
     def test_exists_with_none_pk(self):
-
         """
             Invoke exists() with None as primary_key part of key tuple.
         """
@@ -302,7 +262,6 @@ class TestExists(TestBaseClass):
             assert exception.msg == 'either key or digest is required'
 
     def test_exists_with_none_key(self):
-
         """
             Invoke exists() with None as a key.
         """
@@ -314,7 +273,6 @@ class TestExists(TestBaseClass):
             assert exception.msg == "key is invalid"
 
     def test_exists_key_type_list(self):
-
         """
             Invoke exists() with key specified as a list of ns, set and key/digest.
         """
@@ -328,7 +286,6 @@ class TestExists(TestBaseClass):
             assert exception.msg == "key is invalid"
 
     def test_exists_with_non_existent_namespace(self):
-
         """
             Invoke exists() for non-existent namespace.
         """
@@ -342,7 +299,6 @@ class TestExists(TestBaseClass):
             assert exception.msg == 'AEROSPIKE_ERR_NAMESPACE_NOT_FOUND'
 
     def test_exists_with_non_existent_set(self):
-
         """
             Invoke exists() for non-existent set.
         """
@@ -356,7 +312,6 @@ class TestExists(TestBaseClass):
             assert exception.msg == 'AEROSPIKE_ERR_RECORD_NOT_FOUND'
 
     def test_exists_with_non_existent_key(self):
-
         """
             Invoke exists() for non-existent key.
         """
@@ -369,14 +324,11 @@ class TestExists(TestBaseClass):
             assert exception.msg == 'AEROSPIKE_ERR_RECORD_NOT_FOUND'
 
     def test_exists_with_only_key_without_connection(self):
-
         """
             Invoke exists() with a key and not policy's dict and no connection
         """
         key = ('test', 'demo', 1)
-        config = {
-                'hosts': [('127.0.0.1', 3000)]
-                }
+        config = {'hosts': [('127.0.0.1', 3000)]}
         client1 = aerospike.client(config)
 
         try:

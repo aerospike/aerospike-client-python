@@ -4,37 +4,33 @@ import time
 import sys
 import cPickle as pickle
 from test_base_class import TestBaseClass
+
+aerospike = pytest.importorskip("aerospike")
 try:
-    import aerospike
     from aerospike.exception import *
 except:
     print "Please install aerospike python client."
     sys.exit(1)
 
 class TestScanInfo(object):
-
     def setup_method(self, method):
         """
         Setup method.
         """
         hostlist, user, password = TestBaseClass.get_hosts()
-        config = {
-                'hosts': hostlist
-                }
+        config = {'hosts': hostlist}
         if user == None and password == None:
             self.client = aerospike.client(config).connect()
         else:
             self.client = aerospike.client(config).connect(user, password)
         for i in xrange(5):
             key = ('test', 'demo', i)
-            rec = {
-                'name' : 'name%s' % (str(i)),
-                'age' : i
-            }
+            rec = {'name': 'name%s' % (str(i)), 'age': i}
             self.client.put(key, rec)
         policy = {}
         self.client.udf_put("bin_lua.lua", 0, policy)
-        self.scan_id = self.client.scan_apply("test", "demo", "bin_lua", "mytransform", ['age', 2])
+        self.scan_id = self.client.scan_apply("test", "demo", "bin_lua",
+                                              "mytransform", ['age', 2])
 
     def teardown_method(self, method):
         """
@@ -68,9 +64,7 @@ class TestScanInfo(object):
         """
         Invoke scan_info() with correct policy
         """
-        policy = {
-            'timeout': 1000
-        }
+        policy = {'timeout': 1000}
         scan_info = self.client.scan_info(self.scan_id, policy)
 
         if scan_info['status'] == aerospike.SCAN_STATUS_COMPLETED or scan_info['status'] == aerospike.SCAN_STATUS_UNDEF or scan_info['status'] or aerospike.SCAN_STATUS_INPROGRESS or scan_info['status'] == aerospike.SCAN_STATUS_ABORTED:
@@ -122,9 +116,7 @@ class TestScanInfo(object):
         Invoke scan_info() with correct parameters without connection
         """
 
-        config = {
-            'hosts': [('127.0.0.1', 3000)]
-        }
+        config = {'hosts': [('127.0.0.1', 3000)]}
         client1 = aerospike.client(config)
 
         try:

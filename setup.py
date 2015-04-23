@@ -48,7 +48,7 @@ include_dirs = ['src/include'] + [x for x in os.getenv('CPATH', '').split(':') i
 
 extra_compile_args = [
     '-std=gnu99', '-g', '-Wall', '-fPIC', '-O1',
-    '-fno-common', '-fno-strict-aliasing', '-finline-functions', 
+    '-fno-common', '-fno-strict-aliasing', 
     '-march=nocona', 
     '-D_FILE_OFFSET_BITS=64', '-D_REENTRANT', '-D_GNU_SOURCE'
     ]
@@ -79,7 +79,6 @@ if DARWIN:
 
     extra_compile_args = extra_compile_args + [
         '-D_DARWIN_UNLIMITED_SELECT',
-        '-undefined','dynamic_lookup',
         '-DMARCH_x86_64'
         ]
 
@@ -93,7 +92,7 @@ elif LINUX:
     #---------------------------------------------------------------------------
 
     extra_compile_args = extra_compile_args + [
-        '-rdynamic',
+        '-rdynamic', '-finline-functions',
         '-DMARCH_x86_64'
         ]
 
@@ -345,3 +344,4 @@ setup(
         )
     ]
   )
+

@@ -5,8 +5,8 @@ import sys
 import time
 from test_base_class import TestBaseClass
 
+aerospike = pytest.importorskip("aerospike")
 try:
-    import aerospike
     from aerospike.exception import *
 except:
     print "Please install aerospike python client."
@@ -14,35 +14,37 @@ except:
 
 class TestQueryUsers(TestBaseClass):
 
-    def setup_method(self, method):
+    pytestmark = pytest.mark.skipif(
+        TestBaseClass().get_hosts()[1] == None,
+        reason="No user specified, may be not secured cluster.")
 
+    def setup_method(self, method):
         """
         Setup method
         """
         hostlist, user, password = TestBaseClass().get_hosts()
-        config = {
-                "hosts": hostlist
-                }
-        self.client = aerospike.client(config).connect( user, password )
+        config = {"hosts": hostlist}
+        TestQueryUsers.Me = self
+        self.client = aerospike.client(config).connect(user, password)
 
         policy = {}
         user = "example"
         password = "foo2"
         roles = ["read-write", "sys-admin", "read"]
 
-        status = self.client.admin_create_user( policy, user, password, roles, len(roles) )
+        status = self.client.admin_create_user(policy, user, password, roles,
+                                               len(roles))
 
         self.delete_users = []
 
     def teardown_method(self, method):
-
         """
         Teardown method
         """
 
         policy = {}
 
-        self.client.admin_drop_user( policy, "example" )
+        self.client.admin_drop_user(policy, "example")
 
         self.client.close()
 
@@ -58,7 +60,7 @@ class TestQueryUsers(TestBaseClass):
         policy = {}
 
         time.sleep(2)
-        user_details = self.client.admin_query_users( policy)
+        user_details = self.client.admin_query_users(policy)
 
         for user in user_details:
             if user['user'] == "example":
@@ -67,7 +69,7 @@ class TestQueryUsers(TestBaseClass):
 
     def test_query_users_with_invalid_timeout_policy_value(self):
 
-        policy = { "timeout" : 0.1 }
+        policy = {"timeout": 0.1}
         user = "example"
 
         try:
@@ -79,10 +81,10 @@ class TestQueryUsers(TestBaseClass):
 
     def test_query_users_with_proper_timeout_policy_value(self):
 
-        policy = { 'timeout' : 5 }
+        policy = {'timeout': 5}
 
         time.sleep(2)
-        user_details = self.client.admin_query_users( policy )
+        user_details = self.client.admin_query_users(policy)
 
         time.sleep(2)
         for user in user_details:
@@ -100,29 +102,28 @@ class TestQueryUsers(TestBaseClass):
         assert status == 0
         time.sleep(2)
 
-        user_details = self.client.admin_query_users( policy )
+        user_details = self.client.admin_query_users(policy)
 
         time.sleep(2)
         for user in user_details:
             if user['user'] == "example":
-                assert user == {'roles': [],
-'roles_size': 0, 'user': "example"}
+                assert user == {
+                    'roles': [],
+                    'roles_size': 0,
+                    'user': "example"
+                }
 
     def test_query_users_with_extra_argument(self):
-
         """
             Invoke query_users() with extra argument.
         """
-        policy = {
-            'timeout': 1000
-        }
+        policy = {'timeout': 1000}
         with pytest.raises(TypeError) as typeError:
-            self.client.admin_query_users( policy, "" )
+            self.client.admin_query_users(policy, "")
 
         assert "admin_query_users() takes at most 1 argument (2 given)" in typeError.value
 
     def test_query_users_with_policy_as_string(self):
-
         """
             Invoke query_users() with policy as string
         """

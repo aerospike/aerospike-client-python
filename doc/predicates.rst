@@ -24,9 +24,12 @@
         from aerospike import predicates as p
 
         config = { 'hosts': [ ('127.0.0.1', 3000)]}
-        client = aerospike.client(config)
-        query = self.client.query('test', 'demo')
+        client = aerospike.client(config).connect()
+        query = client.query('test', 'demo')
         query.where(p.between('age', 20, 30))
+        res = query.results()
+        print(res)
+        client.close
 
 
 .. py:function:: equals(bin, val)
@@ -44,9 +47,12 @@
         from aerospike import predicates as p
 
         config = { 'hosts': [ ('127.0.0.1', 3000)]}
-        client = aerospike.client(config)
-        query = self.client.query('test', 'demo')
+        client = aerospike.client(config).connect()
+        query = client.query('test', 'demo')
         query.where(p.equal('name', 'that guy'))
+        res = query.results()
+        print(res)
+        client.close
 
 .. py:function:: contains(bin, index_type, val)
 
@@ -69,7 +75,7 @@
         from aerospike import predicates as p
 
         config = { 'hosts': [ ('127.0.0.1', 3000)]}
-        client = aerospike.client(config)
+        client = aerospike.client(config).connect()
 
         # assume the bin fav_movies in the set test.demo bin should contain
         # a dict { (str) _title_ : (int) _times_viewed_ }
@@ -78,8 +84,14 @@
         # create a secondary index for integer values of test.demo records whose 'fav_movies' bin is a map
         client.index_map_values_create('test', 'demo', 'fav_movies', aerospike.INDEX_NUMERIC, 'demo_fav_movies_views_idx')
 
-        query = self.client.query('test', 'demo')
+        client.put(('test','demo','Dr. Doom'), {'age':43, 'fav_movies': {'12 Monkeys': 1, 'Brasil': 2}})
+        client.put(('test','demo','The Hulk'), {'age':38, 'fav_movies': {'Blindness': 1, 'Eternal Sunshine': 2}})
+
+        query = client.query('test', 'demo')
         query.where(p.contains('fav_movies', aerospike.INDEX_TYPE_MAPKEYS, '12 Monkeys'))
+        res = query.results()
+        print(res)
+        client.close
 
 .. py:function:: range(bin, index_type, min, max))
 
@@ -102,11 +114,14 @@
         from aerospike import predicates as p
 
         config = { 'hosts': [ ('127.0.0.1', 3000)]}
-        client = aerospike.client(config)
+        client = aerospike.client(config).connect()
 
         # create a secondary index for numeric values of test.demo records whose 'age' bin is a list
         client.index_list_create('test', 'demo', 'age', aerospike.INDEX_NUMERIC, 'demo_age_nidx')
 
         # query for records whose 'age' bin has a list with numeric values between 20 and 30
-        query = self.client.query('test', 'demo')
+        query = client.query('test', 'demo')
         query.where(p.range('age', aerospike.INDEX_TYPE_LIST, 20, 30))
+        res = query.results()
+        print(res)
+        client.close

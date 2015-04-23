@@ -5,23 +5,21 @@ import sys
 import cPickle as pickle
 from test_base_class import TestBaseClass
 
+aerospike = pytest.importorskip("aerospike")
 try:
-    import aerospike
     from aerospike.exception import *
 except:
     print "Please install aerospike python client."
     sys.exit(1)
 
-class TestSelect(TestBaseClass):
 
+class TestSelect(TestBaseClass):
     def setup_class(cls):
         """
         Setup class.
         """
         hostlist, user, password = TestBaseClass.get_hosts()
-        config = {
-                'hosts': hostlist
-        }
+        config = {'hosts': hostlist}
         if user == None and password == None:
             TestSelect.client = aerospike.client(config).connect()
         else:
@@ -31,36 +29,34 @@ class TestSelect(TestBaseClass):
         TestSelect.client.close()
 
     def setup_method(self, method):
-
         """
         Setup method.
         """
         key = ('test', 'demo', 1)
 
         rec = {
-                'a': [ "nanslkdl", 1, bytearray("asd;as[d'as;d", "utf-8") ],
-                'b': { "key": "asd';q;'1';" },
-                'c': 1234,
-                'd': '!@#@#$QSDAsd;as'
-            }
+            'a': ["nanslkdl", 1, bytearray("asd;as[d'as;d", "utf-8")],
+            'b': {"key": "asd';q;'1';"},
+            'c': 1234,
+            'd': '!@#@#$QSDAsd;as'
+        }
 
-        TestSelect.client.put( key, rec )
+        TestSelect.client.put(key, rec)
 
     def teardown_method(self, method):
-
         """
         Teardoen method.
         """
 
-        key = ( "test", "demo", 1 )
+        key = ("test", "demo", 1)
 
-        TestSelect.client.remove( key )
+        TestSelect.client.remove(key)
 
     def test_select_with_key_and_empty_list_of_bins_to_select(self):
 
-        key = ( "test", "demo", 1 )
+        key = ("test", "demo", 1)
 
-        key, meta, bins = TestSelect.client.select( key, [] )
+        key, meta, bins = TestSelect.client.select(key, [])
 
         assert bins == {}
 
@@ -70,13 +66,15 @@ class TestSelect(TestBaseClass):
 
     def test_select_with_key_and_bins(self):
 
-        key = ( "test", "demo", 1 )
+        key = ("test", "demo", 1)
 
         bins_to_select = ['a']
 
-        key, meta, bins = TestSelect.client.select( key, bins_to_select)
+        key, meta, bins = TestSelect.client.select(key, bins_to_select)
 
-        assert bins == { 'a' : [ "nanslkdl", 1, bytearray("asd;as[d'as;d", "utf-8") ] }
+        assert bins == {
+            'a': ["nanslkdl", 1, bytearray("asd;as[d'as;d", "utf-8")]
+        }
 
         assert meta != None
 
@@ -101,13 +99,13 @@ class TestSelect(TestBaseClass):
 
     def test_select_with_none_policy(self):
 
-        key = ( "test", "demo", 1 )
+        key = ("test", "demo", 1)
 
-        bins_to_select = [ 'b' ]
+        bins_to_select = ['b']
 
-        key, meta, bins = TestSelect.client.select( key, bins_to_select, None )
+        key, meta, bins = TestSelect.client.select(key, bins_to_select, None)
 
-        assert bins == { 'b': { "key": "asd';q;'1';" }, }
+        assert bins == {'b': {"key": "asd';q;'1';"}, }
 
         assert meta != None
 
@@ -115,7 +113,7 @@ class TestSelect(TestBaseClass):
 
     def test_select_with_none_bins_to_select(self):
 
-        key = ( "test", "demo", 1 )
+        key = ("test", "demo", 1)
 
         bins_to_select = None
 
@@ -128,9 +126,9 @@ class TestSelect(TestBaseClass):
 
     def test_select_with_non_existent_key(self):
 
-        key = ( "test", "demo", 'non-existent' )
+        key = ("test", "demo", 'non-existent')
 
-        bins_to_select = [ 'a', 'b' ]
+        bins_to_select = ['a', 'b']
 
         try:
             key, meta, bins = TestSelect.client.select( key, bins_to_select )
@@ -141,9 +139,9 @@ class TestSelect(TestBaseClass):
 
     def test_select_with_key_and_single_bin_to_select_not_a_list(self):
 
-        key = ( "test", "demo", 1 )
+        key = ("test", "demo", 1)
 
-        bin_to_select = 'a' # Not a list
+        bin_to_select = 'a'  # Not a list
 
         try:
             key, meta, bins = TestSelect.client.select( key, bin_to_select )
@@ -154,127 +152,126 @@ class TestSelect(TestBaseClass):
 
     def test_select_with_key_and_multiple_bins_to_select(self):
 
-        key = ( "test", "demo", 1 )
+        key = ("test", "demo", 1)
 
-        bins_to_select = [ 'c', 'd' ]
+        bins_to_select = ['c', 'd']
 
-        key, meta, bins = TestSelect.client.select( key, bins_to_select )
+        key, meta, bins = TestSelect.client.select(key, bins_to_select)
 
-        assert bins ==  { 'c': 1234, 'd': '!@#@#$QSDAsd;as' }
+        assert bins == {'c': 1234, 'd': '!@#@#$QSDAsd;as'}
 
         assert meta != None
 
     def test_select_with_key_and_multiple_bins_to_select_policy_key_send(self):
 
-        key = ( "test", "demo", 1 )
+        key = ("test", "demo", 1)
 
-        bins_to_select = [ 'c', 'd' ]
-        policy = {
-            'timeout': 1000,
-            'key': aerospike.POLICY_KEY_SEND
-        }
-        key, meta, bins = TestSelect.client.select( key, bins_to_select, policy )
+        bins_to_select = ['c', 'd']
+        policy = {'timeout': 1000, 'key': aerospike.POLICY_KEY_SEND}
+        key, meta, bins = TestSelect.client.select(key, bins_to_select, policy)
 
-        assert bins ==  { 'c': 1234, 'd': '!@#@#$QSDAsd;as' }
-        assert key == ('test', 'demo', 1,
-                bytearray(b'\xb7\xf4\xb88\x89\xe2\xdag\xdeh>\x1d\xf6\x91\x9a\x1e\xac\xc4F\xc8'))
+        assert bins == {'c': 1234, 'd': '!@#@#$QSDAsd;as'}
+        assert key == ('test', 'demo', 1, bytearray(
+            b'\xb7\xf4\xb88\x89\xe2\xdag\xdeh>\x1d\xf6\x91\x9a\x1e\xac\xc4F\xc8')
+                      )
         assert meta != None
-    
-    def test_select_with_key_and_multiple_bins_to_select_policy_key_digest(self):
 
+    def test_select_with_key_and_multiple_bins_to_select_policy_key_digest(self
+                                                                          ):
 
-        key = ( 'test', 'demo', None, bytearray("asd;as[d'as;djk;uyfl",
-               "utf-8"))
+        key = ('test', 'demo', None, bytearray("asd;as[d'as;djk;uyfl",
+                                               "utf-8"))
         rec = {
-                'a': [ "nanslkdl", 1, bytearray("asd;as[d'as;d", "utf-8") ],
-                'b': { "key": "asd';q;'1';" },
-                'c': 1234,
-                'd': '!@#@#$QSDAsd;as'
-            }
-
-        TestSelect.client.put( key, rec )
-
-        bins_to_select = [ 'c', 'd' ]
-        policy = {
-            'timeout': 1000,
-            'key': aerospike.POLICY_KEY_DIGEST
+            'a': ["nanslkdl", 1, bytearray("asd;as[d'as;d", "utf-8")],
+            'b': {"key": "asd';q;'1';"},
+            'c': 1234,
+            'd': '!@#@#$QSDAsd;as'
         }
-        key, meta, bins = TestSelect.client.select( key, bins_to_select, policy )
 
-        assert bins ==  { 'c': 1234, 'd': '!@#@#$QSDAsd;as' }
+        TestSelect.client.put(key, rec)
+
+        bins_to_select = ['c', 'd']
+        policy = {'timeout': 1000, 'key': aerospike.POLICY_KEY_DIGEST}
+        key, meta, bins = TestSelect.client.select(key, bins_to_select, policy)
+
+        assert bins == {'c': 1234, 'd': '!@#@#$QSDAsd;as'}
         assert key == ('test', 'demo', None,
-                bytearray(b"asd;as[d\'as;djk;uyfl"))
+                       bytearray(b"asd;as[d\'as;djk;uyfl"))
         assert meta != None
 
-        key = ( 'test', 'demo', None, bytearray("asd;as[d'as;djk;uyfl",
-               "utf-8"))
+        key = ('test', 'demo', None, bytearray("asd;as[d'as;djk;uyfl",
+                                               "utf-8"))
         TestSelect.client.remove(key)
-    
-    def test_select_with_key_and_combination_of_existent_and_non_existent_bins_to_select(self):
 
-        key = ( "test", "demo", 1 )
+    def test_select_with_key_and_combination_of_existent_and_non_existent_bins_to_select(
+        self
+    ):
 
-        bins_to_select = [ 'c', 'd', 'e' ]
+        key = ("test", "demo", 1)
 
-        key, meta, bins = TestSelect.client.select( key, bins_to_select )
+        bins_to_select = ['c', 'd', 'e']
 
-        assert bins == { 'c': 1234, 'd': '!@#@#$QSDAsd;as', 'e': None }
+        key, meta, bins = TestSelect.client.select(key, bins_to_select)
+
+        assert bins == {'c': 1234, 'd': '!@#@#$QSDAsd;as', 'e': None}
 
         assert meta != None
 
     def test_select_with_key_and_non_existent_bin_in_middle(self):
 
-        key = ( "test", "demo", 1 )
+        key = ("test", "demo", 1)
 
-        bins_to_select = [ 'c', 'e', 'd' ]
+        bins_to_select = ['c', 'e', 'd']
 
-        key, meta, bins = TestSelect.client.select( key, bins_to_select )
+        key, meta, bins = TestSelect.client.select(key, bins_to_select)
 
-        assert bins == { 'c': 1234, 'e': None, 'd': '!@#@#$QSDAsd;as' }
+        assert bins == {'c': 1234, 'e': None, 'd': '!@#@#$QSDAsd;as'}
 
         assert meta != None
+
     def test_select_with_key_and_non_existent_bins_to_select(self):
 
-        key = ( "test", "demo", 1 )
+        key = ("test", "demo", 1)
 
-        bins_to_select = [ 'e', 'f' ]
+        bins_to_select = ['e', 'f']
 
-        key, meta, bins = TestSelect.client.select( key, bins_to_select )
+        key, meta, bins = TestSelect.client.select(key, bins_to_select)
 
-        assert bins == { 'e': None, 'f': None }
+        assert bins == {'e': None, 'f': None}
+
     def test_select_with_unicode_value(self):
 
         key = ('test', 'demo', 'aa')
 
         rec = {
-                'a': [ "nanslkdl", 1, bytearray("asd;as[d'as;d", "utf-8") ],
-                'b': { "key": "asd';q;'1';" },
-                'c': 1234,
-                'd': '!@#@#$QSDAsd;as'
-            }
+            'a': ["nanslkdl", 1, bytearray("asd;as[d'as;d", "utf-8")],
+            'b': {"key": "asd';q;'1';"},
+            'c': 1234,
+            'd': '!@#@#$QSDAsd;as'
+        }
 
-        assert 0 == TestSelect.client.put( key, rec )
+        assert 0 == TestSelect.client.put(key, rec)
 
         bins_to_select = ['a']
 
-        key, meta, bins = TestSelect.client.select( key, bins_to_select)
+        key, meta, bins = TestSelect.client.select(key, bins_to_select)
 
-        assert bins == { 'a' : [ "nanslkdl", 1, bytearray("asd;as[d'as;d", "utf-8") ] }
+        assert bins == {
+            'a': ["nanslkdl", 1, bytearray("asd;as[d'as;d", "utf-8")]
+        }
 
         assert meta != None
 
         assert key != None
 
         key = ('test', 'demo', 'aa')
-        TestSelect.client.remove( key )
+        TestSelect.client.remove(key)
 
     def test_select_with_key_and_bins_without_connection(self):
 
-        config = {
-                'hosts': [('127.0.0.1', 3000)]
-                }
+        config = {'hosts': [('127.0.0.1', 3000)]}
         client1 = aerospike.client(config)
-        key = ( "test", "demo", 1 )
+        key = ("test", "demo", 1)
 
         bins_to_select = ['a']
 

@@ -185,7 +185,7 @@ PyObject * AerospikeException_New(void)
 	//int count = sizeof(record_exceptions)/sizeof(record_exceptions[0]);
 	count = sizeof(record_array.record_exceptions)/sizeof(record_array.record_exceptions[0]);
 	for(i=0; i < count; i++) {
-		*current_exception = record_array.record_exceptions[i];
+		current_exception = record_array.record_exceptions[i];
 		char * name = record_array.record_exceptions_name[i];
 		char prefix[40] = "exception.";
 		*current_exception = PyErr_NewException(strcat(prefix, name), exceptions_array.RecordError, NULL);

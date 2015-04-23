@@ -5,8 +5,8 @@ import sys
 import cPickle as pickle
 from test_base_class import TestBaseClass
 
+aerospike = pytest.importorskip("aerospike")
 try:
-    import aerospike
     from aerospike.exception import *
 except:
     print "Please install aerospike python client."
@@ -15,8 +15,8 @@ except:
 def handler(level, func, myfile, line):
     assert 1 == 1
 
-class TestLog(object):
 
+class TestLog(object):
     def test_set_log_level_correct(self):
         """
         Test log level with correct parameters
@@ -32,7 +32,6 @@ class TestLog(object):
         """
 
         response = aerospike.set_log_level(aerospike.LOG_LEVEL_DEBUG)
-
         aerospike.set_log_handler(handler)
 
         hostlist, user, password = TestBaseClass.get_hosts()

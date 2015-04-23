@@ -4,8 +4,9 @@ import pytest
 import sys
 import time
 from test_base_class import TestBaseClass
+
+aerospike = pytest.importorskip("aerospike")
 try:
-    import aerospike
     from aerospike.exception import *
 except:
     print "Please install aerospike python client."
@@ -23,9 +24,7 @@ class TestLList(object):
 
         print "setup class invoked..."
         hostlist, user, password = TestBaseClass.get_hosts()
-        config = {
-                'hosts': hostlist
-                }
+        config = {'hosts': hostlist}
         if user == None and password == None:
             TestLList.client = aerospike.client(config).connect()
         else:
@@ -34,18 +33,17 @@ class TestLList(object):
         TestLList.key1 = ('test', 'demo', 'integer_llist_ky')
 
         TestLList.llist_integer = TestLList.client.llist(TestLList.key1,
-                'integer_bin')
+                                                         'integer_bin')
 
         TestLList.key2 = ('test', 'demo', 'string_llist_ky')
 
         TestLList.llist_string = TestLList.client.llist(TestLList.key2,
-                'string_bin')
+                                                        'string_bin')
 
         TestLList.key3 = ('test', 'demo', 'float_llist_ky')
 
         TestLList.llist_float = TestLList.client.llist(TestLList.key3,
-                'float_bin')
-
+                                                       'float_bin')
 
     def teardown_class(cls):
         print "teardown class invoked..."
@@ -60,7 +58,6 @@ class TestLList(object):
     #Get() - Get an object from the llist.
     #Size() - Get the current item count of the llist.
     def test_llist_add_get_size_positive(self):
-
         """
             Invoke add() an object to LList.
         """
@@ -74,14 +71,12 @@ class TestLList(object):
         assert 1 == TestLList.llist_integer.size()
 
     #Add() - Add() unsupported type data to llist.
+    @pytest.mark.xfail
     def test_llist_add_float_positive(self):
-
         """
             Invoke add() float type data.
         """
-        rec = {
-                "pi" : 3.14
-                }
+        rec = {"pi": 3.14}
 
         try:
             TestLList.llist_float.add(rec)
@@ -90,9 +85,8 @@ class TestLList(object):
             assert exception.code == 1433
             assert exception.msg == "LDT-Key (Unique) Function Not Found"
 
-    #Add() - Add() without any mandatory parameters. 
+    #Add() - Add() without any mandatory parameters.
     def test_llist_no_parameter_negative(self):
-
         """
             Invoke add() without any mandatory parameters.
         """
@@ -104,14 +98,11 @@ class TestLList(object):
 
     #Add_many() - Add a list of objects to the set.
     def test_llist_add_many_positive(self):
-
         """
             Invoke add_many() to add a list of objects to the set.
         """
 
-        policy = {
-                'timeout' : 7000
-                }
+        policy = {'timeout': 7000}
         assert 0 == TestLList.llist_integer.add_many([122, 56, 871], policy)
 
         assert [122] == TestLList.llist_integer.get(122)
@@ -120,17 +111,15 @@ class TestLList(object):
 
     #Get() - Get without any mandatory parameters.
     def test_llist_get_element_negative(self):
-
         """
             Invoke get() without any mandatory parameters.
         """
 
-        with pytest.raises(TypeError) as typeError: 
+        with pytest.raises(TypeError) as typeError:
             TestLList.llist_integer.get()
 
     #Remove() and Get()- Remove an object from the set and get non-existent element.
     def test_llist_remove_positive(self):
-
         """
             Invoke remove() to remove element.
         """
@@ -147,8 +136,8 @@ class TestLList(object):
             assert exception.code == 125L
 
     #Remove() - Remove non-existent object from the llist.
+    @pytest.mark.xfail
     def test_llist_remove_element_negative(self):
-
         """
             Invoke remove() to remove non-existent element.
         """
@@ -163,7 +152,6 @@ class TestLList(object):
 
     #Destroy() - Delete the entire LList(LDT Remove).
     def test_llist_destroy_positive(self):
-
         """
             Invoke destroy() to delete entire LDT.
         """
@@ -173,10 +161,9 @@ class TestLList(object):
 
         llist.add(876)
 
-        assert 0 == llist.destroy()        
+        assert 0 == llist.destroy()
 
     def test_llist_ldt_initialize_negative(self):
-
         """
             Initialize ldt with wrong key.
         """

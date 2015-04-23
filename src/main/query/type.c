@@ -74,6 +74,8 @@ static int AerospikeQuery_Type_Init(AerospikeQuery * self, PyObject * args, PyOb
 {
 	PyObject * py_namespace = NULL;
 	PyObject * py_set = NULL;
+	PyObject * py_ustr_set = NULL;
+
 	as_error err;
 	as_error_init(&err);
 
@@ -82,7 +84,8 @@ static int AerospikeQuery_Type_Init(AerospikeQuery * self, PyObject * args, PyOb
 	if ( PyArg_ParseTupleAndKeywords(args, kwds, "O|O:key", kwlist,
 		&py_namespace, &py_set) == false ) {
 		as_query_destroy(&self->query);
-		return -1;
+		as_error_update(&err, AEROSPIKE_ERR_PARAM, "query() expects atleast 1 parameter");
+		goto CLEANUP;
 	}
 
 	char * namespace = NULL;
@@ -90,13 +93,38 @@ static int AerospikeQuery_Type_Init(AerospikeQuery * self, PyObject * args, PyOb
 
 	if ( PyString_Check(py_namespace) ) {
 		namespace = PyString_AsString(py_namespace);
+	} else {
+		as_error_update(&err, AEROSPIKE_ERR_PARAM, "Namespace should be a string");
+		goto CLEANUP;
 	}
 
-	if (PyString_Check(py_set)) {
-		set = PyString_AsString(py_set);
+	if(py_set) {
+		if (PyString_Check(py_set)) {
+			set = PyString_AsString(py_set);
+		} else if (PyUnicode_Check(py_set)) {
+			py_ustr_set = PyUnicode_AsUTF8String(py_set);
+			set = PyString_AsString(py_ustr_set);
+		} else if ( py_set != Py_None ) {
+			as_error_update(&err, AEROSPIKE_ERR_PARAM, "Set should be string, unicode or None");
+			goto CLEANUP;
+		}
 	}
 
 	as_query_init(&self->query, namespace, set);
+
+CLEANUP:
+	if(py_ustr_set) {
+		Py_DECREF(py_ustr_set);
+	}
+
+	if ( err.code != AEROSPIKE_OK ) {
+		PyObject * py_err = NULL;
+		error_to_pyobject(&err, &py_err);
+		PyObject *exception_type = raise_exception(&err);
+		PyErr_SetObject(exception_type, py_err);
+		Py_DECREF(py_err);
+		return -1;
+	}
 
     return 0;
 }
@@ -179,14 +207,6 @@ AerospikeQuery * AerospikeQuery_New(AerospikeClient * client, PyObject * args, P
 	if (AerospikeQuery_Type.tp_init((PyObject *) self, args, kwds) == 0) {
 		return self;
 	} else {
-		as_error err;
-		as_error_init(&err);
-		as_error_update(&err, AEROSPIKE_ERR_PARAM, "query() expects atleast 1 parameter");
-		PyObject * py_err = NULL;
-		error_to_pyobject(&err, &py_err);
-		PyObject *exception_type = raise_exception(&err);
-		PyErr_SetObject(exception_type, py_err);
-		Py_DECREF(py_err);
 		return NULL;
 	}
 }

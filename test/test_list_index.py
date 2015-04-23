@@ -1,49 +1,48 @@
-
 # -*- coding: utf-8 -*-
 
 import pytest
 import sys
 import cPickle as pickle
 from test_base_class import TestBaseClass
+
+aerospike = pytest.importorskip("aerospike")
 try:
-    import aerospike
     from aerospike.exception import *
 except:
     print "Please install aerospike python client."
     sys.exit(1)
 
 class TestListIndex(object):
+
     def setup_class(cls):
         """
         Setup method.
         """
         hostlist, user, password = TestBaseClass.get_hosts()
-        config = {
-                'hosts': hostlist
-                }
+        config = {'hosts': hostlist}
         if user == None and password == None:
             TestListIndex.client = aerospike.client(config).connect()
         else:
-            TestListIndex.client = aerospike.client(config).connect(user, password)
-    
+            TestListIndex.client = aerospike.client(config).connect(user,
+                                                                    password)
+
     def teardown_class(cls):
         TestListIndex.client.close()
 
     def setup_method(self, method):
-
         """
         Setup method.
-        """ 
+        """
         for i in xrange(5):
             key = ('test', u'demo', i)
             rec = {
-                    'name' : 'name%s' % (str(i)),
-                    'addr' : 'name%s' % (str(i)),
-                    'numeric_list': [1, 2, 3, 4],
-                    'string_list': ["a", "b", "c", "d"],
-                    'age'  : i,
-                    'no'   : i
-                    }
+                'name': 'name%s' % (str(i)),
+                'addr': 'name%s' % (str(i)),
+                'numeric_list': [1, 2, 3, 4],
+                'string_list': ["a", "b", "c", "d"],
+                'age': i,
+                'no': i
+            }
             TestListIndex.client.put(key, rec)
 
     def teardown_method(self, method):
@@ -70,28 +69,46 @@ class TestListIndex(object):
             Invoke index_list_create() with correct arguments
         """
         policy = {}
-        retobj = TestListIndex.client.index_list_create('test', 'demo',
-'string_list', aerospike.INDEX_STRING, 'test_string_list_index', policy)
+        retobj = TestListIndex.client.index_list_create(
+            'test', 'demo', 'string_list', aerospike.INDEX_STRING,
+            'test_string_list_index', policy)
 
         assert retobj == 0L
-        TestListIndex.client.index_remove('test', 'test_string_list_index', policy);
+        TestListIndex.client.index_remove('test', 'test_string_list_index',
+                                          policy)
 
     def test_listindex_with_correct_parameters_numeric(self):
         """
             Invoke index_list_create() with correct arguments
         """
         policy = {}
-        retobj = TestListIndex.client.index_list_create('test', 'demo',
-'numeric_list', aerospike.INDEX_NUMERIC, 'test_numeric_list_index', policy)
+        retobj = TestListIndex.client.index_list_create(
+            'test', 'demo', 'numeric_list', aerospike.INDEX_NUMERIC,
+            'test_numeric_list_index', policy)
 
         assert retobj == 0L
-        TestListIndex.client.index_remove('test', 'test_numeric_list_index', policy);
+        TestListIndex.client.index_remove('test', 'test_numeric_list_index',
+                                          policy)
+
+    def test_listindex_with_correct_parameters_set_length_extra(self):
+            #Invoke index_list_create() with correct arguments and set length extra
+        set_name = 'a'
+        for i in xrange(100):
+            set_name = set_name + 'a'
+        policy = {}
+        with pytest.raises(Exception) as exception:
+            retobj = TestListIndex.client.index_list_create('test', set_name,
+'string_list', aerospike.INDEX_STRING, "test_string_list_index", policy)
+
+        assert exception.value[0] == 4
+        assert exception.value[1] == 'Invalid Set Name'
 
     def test_listindex_with_incorrect_namespace(self):
         """
             Invoke createindex() with incorrect namespace
         """
         policy = {}
+
         try:
             retobj = TestListIndex.client.index_list_create( 'test1', 'demo',
 'numeric_list', aerospike.INDEX_NUMERIC, 'test_numeric_list_index', policy )
@@ -105,22 +122,26 @@ class TestListIndex(object):
             Invoke createindex() with incorrect set
         """
         policy = {}
-        retobj = TestListIndex.client.index_list_create( 'test', 'demo1',
-'numeric_list', aerospike.INDEX_NUMERIC, 'test_numeric_list_index', policy )
+        retobj = TestListIndex.client.index_list_create(
+            'test', 'demo1', 'numeric_list', aerospike.INDEX_NUMERIC,
+            'test_numeric_list_index', policy)
 
         assert retobj == 0L
-        TestListIndex.client.index_remove('test', 'test_numeric_list_index', policy);
+        TestListIndex.client.index_remove('test', 'test_numeric_list_index',
+                                          policy)
 
     def test_listindex_with_incorrect_bin(self):
         """
             Invoke createindex() with incorrect bin
         """
         policy = {}
-        retobj = TestListIndex.client.index_list_create( 'test', 'demo',
-'string_list1', aerospike.INDEX_STRING, 'test_string_list_index', policy )
+        retobj = TestListIndex.client.index_list_create(
+            'test', 'demo', 'string_list1', aerospike.INDEX_STRING,
+            'test_string_list_index', policy)
 
         assert retobj == 0L
-        TestListIndex.client.index_remove('test', 'test_string_list_index', policy);
+        TestListIndex.client.index_remove('test', 'test_string_list_index',
+                                          policy)
 
     def test_listindex_with_namespace_is_none(self):
         """
@@ -134,6 +155,19 @@ class TestListIndex(object):
         except ParamError as exception:
             assert exception.code == -2
             assert exception.msg == 'Namespace should be a string'
+
+    def test_listindex_with_set_is_int(self):
+        """
+            Invoke createindex() with set is int
+        """
+        policy = {}
+        with pytest.raises(Exception) as exception:
+            retobj = TestListIndex.client.index_list_create(
+                'test', 1, 'string_list', aerospike.INDEX_STRING,
+                'test_string_list_index', policy)
+
+        assert exception.value[0] == -2
+        assert exception.value[1] == 'Set should be string, unicode or None'
 
     def test_listindex_with_set_is_none(self):
         """
@@ -172,19 +206,22 @@ None, aerospike.INDEX_NUMERIC, 'test_numeric_list_index' , policy)
 
         except ParamError as exception:
             assert exception.code == -2
-            assert exception.msg == 'Index name should be a string'
+            assert exception.msg == 'Index name should be string or unicode'
 
     def test_create_same_listindex_multiple_times(self):
         """
             Invoke createindex() with multiple times on same bin
         """
         policy = {}
-        retobj = TestListIndex.client.index_list_create( 'test', 'demo',
-'numeric_list', aerospike.INDEX_NUMERIC, 'test_numeric_list_index', policy)
+        retobj = TestListIndex.client.index_list_create(
+            'test', 'demo', 'numeric_list', aerospike.INDEX_NUMERIC,
+            'test_numeric_list_index', policy)
         if retobj == 0L:
-            retobj = TestListIndex.client.index_list_create( 'test', 'demo',
-'numeric_list', aerospike.INDEX_NUMERIC, 'test_numeric_list_index', policy)
-            TestListIndex.client.index_remove('test', 'test_numeric_list_index', policy);
+            retobj = TestListIndex.client.index_list_create(
+                'test', 'demo', 'numeric_list', aerospike.INDEX_NUMERIC,
+                'test_numeric_list_index', policy)
+            TestListIndex.client.index_remove(
+                'test', 'test_numeric_list_index', policy)
             assert retobj == 0L
         else:
             assert True == False
@@ -194,13 +231,16 @@ None, aerospike.INDEX_NUMERIC, 'test_numeric_list_index' , policy)
             Invoke createindex() with multiple times on different bin
         """
         policy = {}
-        retobj = TestListIndex.client.index_list_create( 'test', 'demo',
-'string_list', aerospike.INDEX_STRING, 'test_string_list_index', policy )
+        retobj = TestListIndex.client.index_list_create(
+            'test', 'demo', 'string_list', aerospike.INDEX_STRING,
+            'test_string_list_index', policy)
         if retobj == 0L:
-            retobj = TestListIndex.client.index_list_create( 'test', 'demo',
-'numeric_list', aerospike.INDEX_NUMERIC, 'test_string_list_index', policy )
+            retobj = TestListIndex.client.index_list_create(
+                'test', 'demo', 'numeric_list', aerospike.INDEX_NUMERIC,
+                'test_string_list_index', policy)
             assert retobj == 0L
-            TestListIndex.client.index_remove('test', 'test_string_list_index', policy);
+            TestListIndex.client.index_remove('test', 'test_string_list_index',
+                                              policy)
         else:
             assert True == False
 
@@ -210,14 +250,18 @@ None, aerospike.INDEX_NUMERIC, 'test_numeric_list_index' , policy)
 name
         """
         policy = {}
-        retobj = TestListIndex.client.index_list_create( 'test', 'demo',
-'string_list', aerospike.INDEX_STRING, 'test_string_list_index', policy )
+        retobj = TestListIndex.client.index_list_create(
+            'test', 'demo', 'string_list', aerospike.INDEX_STRING,
+            'test_string_list_index', policy)
         if retobj == 0L:
-            retobj = TestListIndex.client.index_list_create( 'test', 'demo',
-'string_list', aerospike.INDEX_STRING, 'test_string_list_index1', policy )
+            retobj = TestListIndex.client.index_list_create(
+                'test', 'demo', 'string_list', aerospike.INDEX_STRING,
+                'test_string_list_index1', policy)
             assert retobj == 0L
-            TestListIndex.client.index_remove('test', 'test_string_list_index', policy);
-            TestListIndex.client.index_remove('test', 'test_string_list_index1', policy);
+            TestListIndex.client.index_remove('test', 'test_string_list_index',
+                                              policy)
+            TestListIndex.client.index_remove(
+                'test', 'test_string_list_index1', policy)
         else:
             assert True == False
 
@@ -225,27 +269,27 @@ name
         """
             Invoke createindex() with policy
         """
-        policy = {
-            'timeout': 1000
-            }
-        retobj = TestListIndex.client.index_list_create( 'test', 'demo',
-'numeric_list', aerospike.INDEX_NUMERIC, 'test_numeric_list_index', policy )
+        policy = {'timeout': 1000}
+        retobj = TestListIndex.client.index_list_create(
+            'test', 'demo', 'numeric_list', aerospike.INDEX_NUMERIC,
+            'test_numeric_list_index', policy)
 
         assert retobj == 0L
-        TestListIndex.client.index_remove('test', 'test_numeric_list_index', policy);
+        TestListIndex.client.index_remove('test', 'test_numeric_list_index',
+                                          policy)
 
     def test_createlistindex_with_policystring(self):
         """
             Invoke createindex() with policy
         """
-        policy = {
-            'timeout': 1000
-            }
-        retobj = TestListIndex.client.index_list_create( 'test', 'demo',
-'string_list', aerospike.INDEX_STRING, 'test_string_list_index', policy )
+        policy = {'timeout': 1000}
+        retobj = TestListIndex.client.index_list_create(
+            'test', 'demo', 'string_list', aerospike.INDEX_STRING,
+            'test_string_list_index', policy)
 
         assert retobj == 0L
-        TestListIndex.client.index_remove('test', 'test_string_list_index', policy);
+        TestListIndex.client.index_remove('test', 'test_string_list_index',
+                                          policy)
 
     """
     This test case causes a db crash and hence has been commented. Work pending
@@ -261,36 +305,37 @@ on the C-client side
         TestListIndex.client.index_remove(policy, 'test',
 'bin2_integer_indexsdadadfasdfasdfeartfqrgahfasdfheudsdfasdfawf312342q3453rf9qwfasdcfasdcalskdcbacfq34915rwcfasdcascnabscbaskjdbcalsjkbcdasc');
     """
+
     def test_create_liststringindex_unicode_positive(self):
         """
             Invoke create string index() with correct arguments
         """
         policy = {}
-        retobj = TestListIndex.client.index_list_create('test', u'demo',
-u'string_list', aerospike.INDEX_STRING, u'uni_name_index', policy)
+        retobj = TestListIndex.client.index_list_create(
+            'test', u'demo', u'string_list', aerospike.INDEX_STRING,
+            u'uni_name_index', policy)
 
         assert retobj == 0L
-        TestListIndex.client.index_remove('test', u'uni_name_index', policy);
+        TestListIndex.client.index_remove('test', u'uni_name_index', policy)
 
     def test_create_list_integer_index_unicode(self):
         """
             Invoke createindex() with correct arguments
         """
         policy = {}
-        retobj = TestListIndex.client.index_list_create( 'test', u'demo',
-u'numeric_list', aerospike.INDEX_NUMERIC, u'uni_age_index', policy )
+        retobj = TestListIndex.client.index_list_create(
+            'test', u'demo', u'numeric_list', aerospike.INDEX_NUMERIC,
+            u'uni_age_index', policy)
 
         assert retobj == 0L
-        TestListIndex.client.index_remove('test', u'uni_age_index', policy);
+        TestListIndex.client.index_remove('test', u'uni_age_index', policy)
 
     def test_listindex_with_correct_parameters_no_connection(self):
         """
             Invoke index_list_create() with correct arguments no connection
         """
         policy = {}
-        config = {
-                'hosts': [('127.0.0.1', 3000)]
-                }
+        config = {'hosts': [('127.0.0.1', 3000)]}
         client1 = aerospike.client(config)
 
         try:

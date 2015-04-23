@@ -1,12 +1,12 @@
-
 # -*- coding: utf-8 -*-
 
 import pytest
 import sys
 import cPickle as pickle
 from test_base_class import TestBaseClass
+
+aerospike = pytest.importorskip("aerospike")
 try:
-    import aerospike
     from aerospike.exception import *
 except:
     print "Please install aerospike python client."
@@ -18,32 +18,34 @@ class TestMapKeysIndex(object):
         Setup method.
         """
         hostlist, user, password = TestBaseClass.get_hosts()
-        config = {
-                'hosts': hostlist
-                }
+        config = {'hosts': hostlist}
         if user == None and password == None:
             TestMapKeysIndex.client = aerospike.client(config).connect()
         else:
-            TestMapKeysIndex.client = aerospike.client(config).connect(user, password)
-    
+            TestMapKeysIndex.client = aerospike.client(config).connect(
+                user, password)
+
     def teardown_class(cls):
         TestMapKeysIndex.client.close()
 
     def setup_method(self, method):
-
         """
         Setup method.
-        """ 
+        """
         for i in xrange(5):
             key = ('test', u'demo', i)
             rec = {
-                    'name' : 'name%s' % (str(i)),
-                    'addr' : 'name%s' % (str(i)),
-                    'numeric_map': {"a": 1, "b": 2, "c": 3},
-                    'string_map': {"sa": "a", "sb": "b", "sc": "c"},
-                    'age'  : i,
-                    'no'   : i
-                    }
+                'name': 'name%s' % (str(i)),
+                'addr': 'name%s' % (str(i)),
+                'numeric_map': {"a": 1,
+                                "b": 2,
+                                "c": 3},
+                'string_map': {"sa": "a",
+                               "sb": "b",
+                               "sc": "c"},
+                'age': i,
+                'no': i
+            }
             TestMapKeysIndex.client.put(key, rec)
 
     def teardown_method(self, method):
@@ -69,22 +71,39 @@ class TestMapKeysIndex(object):
             Invoke index_mapkeys_create() with correct arguments
         """
         policy = {}
-        retobj = TestMapKeysIndex.client.index_map_keys_create('test', 'demo',
-'string_map', aerospike.INDEX_STRING, 'test_string_map_index', policy)
+        retobj = TestMapKeysIndex.client.index_map_keys_create(
+            'test', 'demo', 'string_map', aerospike.INDEX_STRING,
+            'test_string_map_index', policy)
 
         assert retobj == 0L
-        TestMapKeysIndex.client.index_remove('test', 'test_string_map_index', policy);
+        TestMapKeysIndex.client.index_remove('test', 'test_string_map_index',
+                                             policy)
 
     def test_mapkeysindex_with_correct_parameters_numeric(self):
         """
             Invoke index_mapkeys_create() with correct arguments
         """
         policy = {}
-        retobj = TestMapKeysIndex.client.index_map_keys_create('test', 'demo',
-'numeric_map', aerospike.INDEX_NUMERIC, 'test_numeric_map_index', policy)
+        retobj = TestMapKeysIndex.client.index_map_keys_create(
+            'test', 'demo', 'numeric_map', aerospike.INDEX_NUMERIC,
+            'test_numeric_map_index', policy)
 
         assert retobj == 0L
-        TestMapKeysIndex.client.index_remove('test', 'test_numeric_map_index', policy);
+        TestMapKeysIndex.client.index_remove('test', 'test_numeric_map_index',
+                                             policy)
+
+    def test_mapkeys_with_correct_parameters_set_length_extra(self):
+            #Invoke index_map_keys_create() with correct arguments and set length extra
+        set_name = 'a'
+        for i in xrange(100):
+            set_name = set_name + 'a'
+        policy = {}
+        with pytest.raises(Exception) as exception:
+            retobj = TestMapKeysIndex.client.index_map_keys_create('test', set_name,
+'string_map', aerospike.INDEX_STRING, "test_string_map_index", policy)
+
+        assert exception.value[0] == 4
+        assert exception.value[1] == 'Invalid Set Name'
 
     def test_mapkeysindex_with_incorrect_namespace(self):
         """
@@ -104,22 +123,26 @@ class TestMapKeysIndex(object):
             Invoke createindex() with incorrect set
         """
         policy = {}
-        retobj = TestMapKeysIndex.client.index_map_keys_create( 'test', 'demo1',
-'numeric_map', aerospike.INDEX_NUMERIC, 'test_numeric_map_index', policy )
+        retobj = TestMapKeysIndex.client.index_map_keys_create(
+            'test', 'demo1', 'numeric_map', aerospike.INDEX_NUMERIC,
+            'test_numeric_map_index', policy)
 
         assert retobj == 0L
-        TestMapKeysIndex.client.index_remove('test', 'test_numeric_map_index', policy);
+        TestMapKeysIndex.client.index_remove('test', 'test_numeric_map_index',
+                                             policy)
 
     def test_mapkeysindex_with_incorrect_bin(self):
         """
             Invoke createindex() with incorrect bin
         """
         policy = {}
-        retobj = TestMapKeysIndex.client.index_map_keys_create( 'test', 'demo',
-'string_map1', aerospike.INDEX_STRING, 'test_string_map_index', policy )
+        retobj = TestMapKeysIndex.client.index_map_keys_create(
+            'test', 'demo', 'string_map1', aerospike.INDEX_STRING,
+            'test_string_map_index', policy)
 
         assert retobj == 0L
-        TestMapKeysIndex.client.index_remove('test', 'test_string_map_index', policy);
+        TestMapKeysIndex.client.index_remove('test', 'test_string_map_index',
+                                             policy)
 
     def test_mapkeysindex_with_namespace_is_none(self):
         """
@@ -133,6 +156,19 @@ class TestMapKeysIndex(object):
         except ParamError as exception:
             assert exception.code == -2
             assert exception.msg == 'Namespace should be a string'
+
+    def test_mapkeysindex_with_set_is_int(self):
+        """
+            Invoke createindex() with set is int
+        """
+        policy = {}
+        with pytest.raises(Exception) as exception:
+            retobj = TestMapKeysIndex.client.index_map_keys_create(
+                'test', 1, 'string_map', aerospike.INDEX_STRING,
+                'test_string_map_index', policy)
+
+        assert exception.value[0] == -2
+        assert exception.value[1] == 'Set should be string, unicode or None'
 
     def test_mapkeysindex_with_set_is_none(self):
         """
@@ -171,19 +207,22 @@ None, aerospike.INDEX_NUMERIC, 'test_numeric_map_index' , policy)
 
         except ParamError as exception:
             assert exception.code == -2
-            assert exception.msg == 'Index name should be a string'
+            assert exception.msg == 'Index name should be string or unicode'
 
     def test_create_same_mapindex_multiple_times(self):
         """
             Invoke createindex() with multiple times on same bin
         """
         policy = {}
-        retobj = TestMapKeysIndex.client.index_map_keys_create( 'test', 'demo',
-'numeric_map', aerospike.INDEX_NUMERIC, 'test_numeric_map_index', policy)
+        retobj = TestMapKeysIndex.client.index_map_keys_create(
+            'test', 'demo', 'numeric_map', aerospike.INDEX_NUMERIC,
+            'test_numeric_map_index', policy)
         if retobj == 0L:
-            retobj = TestMapKeysIndex.client.index_map_keys_create( 'test', 'demo',
-'numeric_map', aerospike.INDEX_NUMERIC, 'test_numeric_map_index', policy)
-            TestMapKeysIndex.client.index_remove('test', 'test_numeric_map_index', policy);
+            retobj = TestMapKeysIndex.client.index_map_keys_create(
+                'test', 'demo', 'numeric_map', aerospike.INDEX_NUMERIC,
+                'test_numeric_map_index', policy)
+            TestMapKeysIndex.client.index_remove(
+                'test', 'test_numeric_map_index', policy)
             assert retobj == 0L
         else:
             assert True == False
@@ -193,13 +232,16 @@ None, aerospike.INDEX_NUMERIC, 'test_numeric_map_index' , policy)
             Invoke createindex() with multiple times on different bin
         """
         policy = {}
-        retobj = TestMapKeysIndex.client.index_map_keys_create( 'test', 'demo',
-'string_map', aerospike.INDEX_STRING, 'test_string_map_index', policy )
+        retobj = TestMapKeysIndex.client.index_map_keys_create(
+            'test', 'demo', 'string_map', aerospike.INDEX_STRING,
+            'test_string_map_index', policy)
         if retobj == 0L:
-            retobj = TestMapKeysIndex.client.index_map_keys_create( 'test', 'demo',
-'numeric_map', aerospike.INDEX_NUMERIC, 'test_string_map_index', policy )
+            retobj = TestMapKeysIndex.client.index_map_keys_create(
+                'test', 'demo', 'numeric_map', aerospike.INDEX_NUMERIC,
+                'test_string_map_index', policy)
             assert retobj == 0L
-            TestMapKeysIndex.client.index_remove('test', 'test_string_map_index', policy);
+            TestMapKeysIndex.client.index_remove(
+                'test', 'test_string_map_index', policy)
         else:
             assert True == False
 
@@ -209,14 +251,18 @@ None, aerospike.INDEX_NUMERIC, 'test_numeric_map_index' , policy)
 name
         """
         policy = {}
-        retobj = TestMapKeysIndex.client.index_map_keys_create( 'test', 'demo',
-'string_map', aerospike.INDEX_STRING, 'test_string_map_index', policy )
+        retobj = TestMapKeysIndex.client.index_map_keys_create(
+            'test', 'demo', 'string_map', aerospike.INDEX_STRING,
+            'test_string_map_index', policy)
         if retobj == 0L:
-            retobj = TestMapKeysIndex.client.index_map_keys_create( 'test', 'demo',
-'string_map', aerospike.INDEX_STRING, 'test_string_map_index1', policy )
+            retobj = TestMapKeysIndex.client.index_map_keys_create(
+                'test', 'demo', 'string_map', aerospike.INDEX_STRING,
+                'test_string_map_index1', policy)
             assert retobj == 0L
-            TestMapKeysIndex.client.index_remove('test', 'test_string_map_index', policy);
-            TestMapKeysIndex.client.index_remove('test', 'test_string_map_index1', policy);
+            TestMapKeysIndex.client.index_remove(
+                'test', 'test_string_map_index', policy)
+            TestMapKeysIndex.client.index_remove(
+                'test', 'test_string_map_index1', policy)
         else:
             assert True == False
 
@@ -224,27 +270,27 @@ name
         """
             Invoke createindex() with policy
         """
-        policy = {
-            'timeout': 1000
-            }
-        retobj = TestMapKeysIndex.client.index_map_keys_create( 'test', 'demo',
-'numeric_map', aerospike.INDEX_NUMERIC, 'test_numeric_map_index', policy )
+        policy = {'timeout': 1000}
+        retobj = TestMapKeysIndex.client.index_map_keys_create(
+            'test', 'demo', 'numeric_map', aerospike.INDEX_NUMERIC,
+            'test_numeric_map_index', policy)
 
         assert retobj == 0L
-        TestMapKeysIndex.client.index_remove('test', 'test_numeric_map_index', policy);
+        TestMapKeysIndex.client.index_remove('test', 'test_numeric_map_index',
+                                             policy)
 
     def test_createmapindex_with_policystring(self):
         """
             Invoke createindex() with policy
         """
-        policy = {
-            'timeout': 1000
-            }
-        retobj = TestMapKeysIndex.client.index_map_keys_create( 'test', 'demo',
-'string_map', aerospike.INDEX_STRING, 'test_string_map_index', policy )
+        policy = {'timeout': 1000}
+        retobj = TestMapKeysIndex.client.index_map_keys_create(
+            'test', 'demo', 'string_map', aerospike.INDEX_STRING,
+            'test_string_map_index', policy)
 
         assert retobj == 0L
-        TestMapKeysIndex.client.index_remove('test', 'test_string_map_index', policy);
+        TestMapKeysIndex.client.index_remove('test', 'test_string_map_index',
+                                             policy)
 
     """
     This test case causes a db crash and hence has been commented. Work pending
@@ -260,36 +306,37 @@ on the C-client side
         TestMapKeysIndex.client.index_remove(policy, 'test',
 'bin2_integer_indexsdadadfasdfasdfeartfqrgahfasdfheudsdfasdfawf312342q3453rf9qwfasdcfasdcalskdcbacfq34915rwcfasdcascnabscbaskjdbcalsjkbcdasc');
     """
+
     def test_create_mapstringindex_unicode_positive(self):
         """
             Invoke create string index() with correct arguments
         """
         policy = {}
-        retobj = TestMapKeysIndex.client.index_map_keys_create('test', u'demo',
-u'string_map', aerospike.INDEX_STRING, u'uni_name_index', policy)
+        retobj = TestMapKeysIndex.client.index_map_keys_create(
+            'test', u'demo', u'string_map', aerospike.INDEX_STRING,
+            u'uni_name_index', policy)
 
         assert retobj == 0L
-        TestMapKeysIndex.client.index_remove('test', u'uni_name_index', policy);
+        TestMapKeysIndex.client.index_remove('test', u'uni_name_index', policy)
 
     def test_create_map_integer_index_unicode(self):
         """
             Invoke createindex() with correct arguments
         """
         policy = {}
-        retobj = TestMapKeysIndex.client.index_map_keys_create( 'test', u'demo',
-u'numeric_map', aerospike.INDEX_NUMERIC, u'uni_age_index', policy )
+        retobj = TestMapKeysIndex.client.index_map_keys_create(
+            'test', u'demo', u'numeric_map', aerospike.INDEX_NUMERIC,
+            u'uni_age_index', policy)
 
         assert retobj == 0L
-        TestMapKeysIndex.client.index_remove('test', u'uni_age_index', policy);
+        TestMapKeysIndex.client.index_remove('test', u'uni_age_index', policy)
 
     def test_mapkeysindex_with_correct_parameters_no_connection(self):
         """
             Invoke index_map_keys_create() with correct arguments no connection
         """
         policy = {}
-        config = {
-                'hosts': [('127.0.0.1', 3000)]
-                }
+        config = {'hosts': [('127.0.0.1', 3000)]}
         client1 = aerospike.client(config)
 
         try:

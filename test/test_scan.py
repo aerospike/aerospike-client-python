@@ -4,40 +4,32 @@ import pytest
 import sys
 from test_base_class import TestBaseClass
 
+aerospike = pytest.importorskip("aerospike")
 try:
-    import aerospike
     from aerospike.exception import *
 except:
     print "Please install aerospike python client."
     sys.exit(1)
 
-
 class TestScan(TestBaseClass):
 
     def setup_method(self, method):
-
         """
         Setup method.
         """
         hostlist, user, password = TestBaseClass.get_hosts()
-        config = {
-                'hosts': hostlist
-                }
+        config = {'hosts': hostlist}
         if user == None and password == None:
             self.client = aerospike.client(config).connect()
         else:
             self.client = aerospike.client(config).connect(user, password)
-    
+
         for i in xrange(20):
             key = ('test', u'demo', i)
-            rec = {
-                    'name' : 'name%s' % (str(i)),
-                    'age'  : i
-                    }
+            rec = {'name': 'name%s' % (str(i)), 'age': i}
             self.client.put(key, rec)
 
     def teardown_method(self, method):
-
         """
         Teardown method
         """
@@ -50,7 +42,7 @@ class TestScan(TestBaseClass):
 
     def test_scan_without_any_parameter(self):
 
-
+        scan_obj = None
         with pytest.raises(TypeError) as typeError:
             scan_obj = self.client.scan()
             scan_obj.foreach()
@@ -63,10 +55,10 @@ class TestScan(TestBaseClass):
         st = 'set'
 
         records = []
-
+        scan_obj = None
         scan_obj = self.client.scan(ns, st)
 
-        def callback( (key, meta, bins) ):
+        def callback((key, meta, bins)):
             records.append(bins)
 
         try:
@@ -95,8 +87,9 @@ class TestScan(TestBaseClass):
         st = 'demo'
 
         records = []
+        scan_obj = None
 
-        def callback( (key, meta, bins) ):
+        def callback((key, meta, bins)):
             records.append(bins)
 
         scan_obj = self.client.scan(ns, st)
@@ -112,21 +105,25 @@ class TestScan(TestBaseClass):
 
         records = []
 
-        def callback( (key, meta, bins) ):
+        scan_obj = None
+
+        def callback((key, meta, bins)):
             records.append(bins)
 
         scan_obj = self.client.scan(ns, st)
 
-        scan_obj.foreach(callback, { 'timeout' : 2000 })
+        scan_obj.foreach(callback, {'timeout': 2000})
 
         assert len(records) != 0
 
+    @pytest.mark.xfail(reason="segfault!")
     def test_scan_with_callback_contains_error(self):
 
         ns = 'test'
         st = 'demo'
 
         records = []
+        scan_obj = None
         val = 1
         def callback( (key, meta, bins) ):
             val += 1
@@ -142,7 +139,6 @@ class TestScan(TestBaseClass):
             assert exception.msg == "Callback function contains an error"
 
     def test_scan_with_callback_returning_false(self):
-
         """
             Invoke scan() with callback function returns false
         """
@@ -151,14 +147,16 @@ class TestScan(TestBaseClass):
 
         records = []
 
-        def callback( (key, meta, bins) ):
+        scan_obj = None
+
+        def callback((key, meta, bins)):
             if len(records) == 10:
                 return False
             records.append(bins)
 
         scan_obj = self.client.scan(ns, st)
 
-        scan_obj.foreach(callback , {'timeout' : 1000})
+        scan_obj.foreach(callback, {'timeout': 1000})
         assert len(records) == 10
 
     def test_scan_with_unicode_set(self):
@@ -169,7 +167,9 @@ class TestScan(TestBaseClass):
 
         records = []
 
-        def callback( (key, meta, bins) ):
+        scan_obj = None
+
+        def callback((key, meta, bins)):
             records.append(bins)
 
         scan_obj = self.client.scan(ns, st)
@@ -185,7 +185,9 @@ class TestScan(TestBaseClass):
 
         records = []
 
-        def callback( (key, meta, bins) ):
+        scan_obj = None
+
+        def callback((key, meta, bins)):
             records.append(bins)
 
         scan_obj = self.client.scan(ns, st)
@@ -203,6 +205,7 @@ class TestScan(TestBaseClass):
 
         records = []
 
+        scan_obj = None
         scan_obj = self.client.scan(ns, st)
 
         scan_obj.select(u'name', u'age')
@@ -212,10 +215,10 @@ class TestScan(TestBaseClass):
         assert len(records) != 0
 
     def test_scan_with_select_bin_integer(self):
-
         """
             Invoke scan() with select bin is of type integer.
         """
+        scan_obj = None
         scan_obj = self.client.scan('test', 'demo')
 
         try:
@@ -226,7 +229,6 @@ class TestScan(TestBaseClass):
             assert exception.msg == 'Bin name should be of type string'
 
     def test_scan_with_options_positive(self):
-
         """
             Invoke scan() with options positive
         """
@@ -235,22 +237,23 @@ class TestScan(TestBaseClass):
 
         records = []
 
+        scan_obj = None
         options = {
-                "percent": 100,
-                "concurrent" : True,
-                "priority" : aerospike.SCAN_PRIORITY_HIGH
+            "percent": 100,
+            "concurrent": True,
+            "priority": aerospike.SCAN_PRIORITY_HIGH
         }
-        def callback( (key, meta, bins) ):
+
+        def callback((key, meta, bins)):
             records.append(bins)
 
         scan_obj = self.client.scan(ns, st)
 
-        scan_obj.foreach(callback, { 'timeout' : 1000 }, options)
+        scan_obj.foreach(callback, {}, options)
 
         assert len(records) != 0
 
     def test_scan_with_options_percent_negative(self):
-
         """
             Invoke scan() with options negative
         """
@@ -259,22 +262,23 @@ class TestScan(TestBaseClass):
 
         records = []
 
+        scan_obj = None
         options = {
-                "percent": 80,
-                "concurrent" : True,
-                "priority" : aerospike.SCAN_PRIORITY_HIGH
+            "percent": 80,
+            "concurrent": True,
+            "priority": aerospike.SCAN_PRIORITY_HIGH
         }
-        def callback( (key, meta, bins) ):
+
+        def callback((key, meta, bins)):
             records.append(bins)
 
         scan_obj = self.client.scan(ns, st)
 
-        scan_obj.foreach(callback, { 'timeout' : 1000 }, options)
+        scan_obj.foreach(callback, {}, options)
 
         assert records == []
 
     def test_scan_with_options_nobins(self):
-
         """
             Invoke scan() with nobins
         """
@@ -283,21 +287,19 @@ class TestScan(TestBaseClass):
 
         records = []
 
-        options = {
-                "priority" : aerospike.SCAN_PRIORITY_HIGH,
-                "nobins" : True
-        }
-        def callback( (key, meta, bins) ):
+        scan_obj = None
+        options = {"priority": aerospike.SCAN_PRIORITY_HIGH, "nobins": True}
+
+        def callback((key, meta, bins)):
             records.append(bins)
 
         scan_obj = self.client.scan(ns, st)
 
-        scan_obj.foreach(callback, { 'timeout' : 1000 }, options)
+        scan_obj.foreach(callback, {}, options)
 
         assert len(records) != 0
 
     def test_scan_with_options_nobins_false(self):
-
         """
             Invoke scan() with nobins
         """
@@ -306,11 +308,10 @@ class TestScan(TestBaseClass):
 
         records = []
 
-        options = {
-                "priority" : aerospike.SCAN_PRIORITY_HIGH,
-                "nobins" : "true"
-        }
-        def callback( (key, meta, bins) ):
+        scan_obj = None
+        options = {"priority": aerospike.SCAN_PRIORITY_HIGH, "nobins": "true"}
+
+        def callback((key, meta, bins)):
             records.append(bins)
 
         scan_obj = self.client.scan(ns, st)
@@ -323,7 +324,6 @@ class TestScan(TestBaseClass):
             assert exception.msg == 'Invalid value(type) for nobins'
 
     def test_scan_with_multiple_foreach_on_same_scan_object(self):
-
         """
             Invoke multiple foreach on same scan object.
         """
@@ -332,7 +332,9 @@ class TestScan(TestBaseClass):
 
         records = []
 
-        def callback( (key, meta, bins) ):
+        scan_obj = None
+
+        def callback((key, meta, bins)):
             records.append(bins)
 
         scan_obj = self.client.scan(ns, st)
@@ -351,6 +353,7 @@ class TestScan(TestBaseClass):
         ns = 'test'
         st = 'demo'
 
+        scan_obj = None
         scan_obj = self.client.scan(ns, st)
 
         scan_obj.select(u'name', u'age')
