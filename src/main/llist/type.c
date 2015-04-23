@@ -203,11 +203,22 @@ AerospikeLList * AerospikeLList_New(AerospikeClient * client, PyObject * args, P
 		PyObject *exception_type = raise_exception(&err);
 		error_to_pyobject(&err, &py_err);
 		if(PyObject_HasAttrString(exception_type, "key")) {
-			key_to_pyobject(&err, &self->key, &py_key);
-			PyObject_SetAttrString(exception_type, "key", py_key);
+			if(&self->key) {
+				key_to_pyobject(&err, &self->key, &py_key);
+				PyObject_SetAttrString(exception_type, "key", py_key);
+				Py_DECREF(py_key);
+			} else {
+				PyObject_SetAttrString(exception_type, "key", Py_None);
+			}
 		} 
 		if(PyObject_HasAttrString(exception_type, "bin")) {
-			PyObject_SetAttrString(exception_type, "bin", Py_None);
+			if(&self->bin_name) {
+				PyObject *py_bins = PyString_FromString((char *)&self->bin_name);
+				PyObject_SetAttrString(exception_type, "bin", py_bins);
+				Py_DECREF(py_bins);
+			} else {
+				PyObject_SetAttrString(exception_type, "bin", Py_None);
+			}
 		}
 		PyErr_SetObject(exception_type, py_err);
 		Py_DECREF(py_err);

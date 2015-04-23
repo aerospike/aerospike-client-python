@@ -114,9 +114,12 @@ CLEANUP:
 		if(PyObject_HasAttrString(exception_type, "key")) {
 			key_to_pyobject(&err, &self->key, &py_key);
 			PyObject_SetAttrString(exception_type, "key", py_key);
+			Py_DECREF(py_key);
 		} 
 		if(PyObject_HasAttrString(exception_type, "bin")) {
-			PyObject_SetAttrString(exception_type, "bin", PyString_FromString((char *)&self->bin_name));
+			PyObject *py_bins = PyString_FromString((char *)&self->bin_name);
+			PyObject_SetAttrString(exception_type, "bin", py_bins);
+			Py_DECREF(py_bins);
 		}
 		PyErr_SetObject(exception_type, py_err);
 		Py_DECREF(py_err);
@@ -209,9 +212,12 @@ CLEANUP:
 		if(PyObject_HasAttrString(exception_type, "key")) {
 			key_to_pyobject(&err, &self->key, &py_key);
 			PyObject_SetAttrString(exception_type, "key", py_key);
+			Py_DECREF(py_key);
 		} 
 		if(PyObject_HasAttrString(exception_type, "bin")) {
-			PyObject_SetAttrString(exception_type, "bin", PyString_FromString((char *)&self->bin_name));
+			PyObject *py_bins = PyString_FromString((char *)&self->bin_name);
+			PyObject_SetAttrString(exception_type, "bin", py_bins);
+			Py_DECREF(py_bins);
 		}
 		PyErr_SetObject(exception_type, py_err);
 		Py_DECREF(py_err);
@@ -306,9 +312,12 @@ CLEANUP:
 		if(PyObject_HasAttrString(exception_type, "key")) {
 			key_to_pyobject(&err, &self->key, &py_key);
 			PyObject_SetAttrString(exception_type, "key", py_key);
+			Py_DECREF(py_key);
 		} 
 		if(PyObject_HasAttrString(exception_type, "bin")) {
-			PyObject_SetAttrString(exception_type, "bin", PyString_FromString((char *)&self->bin_name));
+			PyObject *py_bins = PyString_FromString((char *)&self->bin_name);
+			PyObject_SetAttrString(exception_type, "bin", py_bins);
+			Py_DECREF(py_bins);
 		}
 		PyErr_SetObject(exception_type, py_err);
 		Py_DECREF(py_err);
@@ -412,9 +421,12 @@ CLEANUP:
 		if(PyObject_HasAttrString(exception_type, "key")) {
 			key_to_pyobject(&err, &self->key, &py_key);
 			PyObject_SetAttrString(exception_type, "key", py_key);
+			Py_DECREF(py_key);
 		} 
 		if(PyObject_HasAttrString(exception_type, "bin")) {
-			PyObject_SetAttrString(exception_type, "bin", PyString_FromString((char *)&self->bin_name));
+			PyObject *py_bins = PyString_FromString((char *)&self->bin_name);
+			PyObject_SetAttrString(exception_type, "bin", py_bins);
+			Py_DECREF(py_bins);
 		}
 		PyErr_SetObject(exception_type, py_err);
 		Py_DECREF(py_err);
@@ -482,9 +494,12 @@ CLEANUP:
 		if(PyObject_HasAttrString(exception_type, "key")) {
 			key_to_pyobject(&err, &self->key, &py_key);
 			PyObject_SetAttrString(exception_type, "key", py_key);
+			Py_DECREF(py_key);
 		} 
 		if(PyObject_HasAttrString(exception_type, "bin")) {
-			PyObject_SetAttrString(exception_type, "bin", PyString_FromString((char *)&self->bin_name));
+			PyObject *py_bins = PyString_FromString((char *)&self->bin_name);
+			PyObject_SetAttrString(exception_type, "bin", py_bins);
+			Py_DECREF(py_bins);
 		}
 		PyErr_SetObject(exception_type, py_err);
 		Py_DECREF(py_err);
@@ -569,9 +584,12 @@ CLEANUP:
 		if(PyObject_HasAttrString(exception_type, "key")) {
 			key_to_pyobject(&err, &self->key, &py_key);
 			PyObject_SetAttrString(exception_type, "key", py_key);
+			Py_DECREF(py_key);
 		} 
 		if(PyObject_HasAttrString(exception_type, "bin")) {
-			PyObject_SetAttrString(exception_type, "bin", PyString_FromString((char *)&self->bin_name));
+			PyObject *py_bins = PyString_FromString((char *)&self->bin_name);
+			PyObject_SetAttrString(exception_type, "bin", py_bins);
+			Py_DECREF(py_bins);
 		}
 		PyErr_SetObject(exception_type, py_err);
 		Py_DECREF(py_err);
@@ -642,9 +660,12 @@ CLEANUP:
 		if(PyObject_HasAttrString(exception_type, "key")) {
 			key_to_pyobject(&err, &self->key, &py_key);
 			PyObject_SetAttrString(exception_type, "key", py_key);
+			Py_DECREF(py_key);
 		} 
 		if(PyObject_HasAttrString(exception_type, "bin")) {
-			PyObject_SetAttrString(exception_type, "bin", PyString_FromString((char *)&self->bin_name));
+			PyObject *py_bins = PyString_FromString((char *)&self->bin_name);
+			PyObject_SetAttrString(exception_type, "bin", py_bins);
+			Py_DECREF(py_bins);
 		}
 		PyErr_SetObject(exception_type, py_err);
 		Py_DECREF(py_err);

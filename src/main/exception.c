@@ -35,10 +35,14 @@ PyObject * AerospikeException_New(void)
 	memset(&exceptions_array, 0, sizeof(exceptions_array));
 
 	struct server_exceptions_struct server_array = { 
-		{&exceptions_array.InvalidRequest, &exceptions_array.ServerFull, &exceptions_array.NoXDR, &exceptions_array.UnsupportedFeature, &exceptions_array.DeviceOverload, 			&exceptions_array.NamespaceNotFound, &exceptions_array.ForbiddenError, &exceptions_array.QueryError, &exceptions_array.ClusterError},
-		{"InvalidRequest", "ServerFull", "NoXDR", "UnsupportedFeature", "DeviceOverload", "NamespaceNotFound", "ForbiddenError", "QueryError", "ClusterError"},
-		{AEROSPIKE_ERR_REQUEST_INVALID, AEROSPIKE_ERR_SERVER_FULL, AEROSPIKE_ERR_NO_XDR, AEROSPIKE_ERR_UNSUPPORTED_FEATURE, AEROSPIKE_ERR_DEVICE_OVERLOAD, 
-			AEROSPIKE_ERR_NAMESPACE_NOT_FOUND,  AEROSPIKE_ERR_FAIL_FORBIDDEN, AEROSPIKE_ERR_QUERY, AEROSPIKE_ERR_CLUSTER}
+		{&exceptions_array.InvalidRequest, &exceptions_array.ServerFull, &exceptions_array.NoXDR, 
+			&exceptions_array.UnsupportedFeature, &exceptions_array.DeviceOverload, &exceptions_array.NamespaceNotFound, 
+			&exceptions_array.ForbiddenError, &exceptions_array.QueryError, &exceptions_array.ClusterError},
+		{"InvalidRequest", "ServerFull", "NoXDR", "UnsupportedFeature", "DeviceOverload", "NamespaceNotFound", 
+			"ForbiddenError", "QueryError", "ClusterError"},
+		{AEROSPIKE_ERR_REQUEST_INVALID, AEROSPIKE_ERR_SERVER_FULL, AEROSPIKE_ERR_NO_XDR, 
+			AEROSPIKE_ERR_UNSUPPORTED_FEATURE, AEROSPIKE_ERR_DEVICE_OVERLOAD, AEROSPIKE_ERR_NAMESPACE_NOT_FOUND,  
+			AEROSPIKE_ERR_FAIL_FORBIDDEN, AEROSPIKE_ERR_QUERY, AEROSPIKE_ERR_CLUSTER}
 	};
 
 	struct record_exceptions_struct record_array = { 
@@ -46,8 +50,8 @@ PyObject * AerospikeException_New(void)
 			&exceptions_array.RecordExistsError, &exceptions_array.RecordTooBig, &exceptions_array.RecordBusy, 
 			&exceptions_array.BinNameError, &exceptions_array.BinExistsError, &exceptions_array.BinNotFound, 
 			&exceptions_array.BinIncompatibleType},
-		{"RecordKeyMismatch", "RecordNotFound", "RecordGenerationError", "RecordExistsError", "RecordTooBig", "RecordBusy", "BinNameError", "BinExistsError", 
-			"BinNotFound", "BinIncompatibleType"},
+		{"RecordKeyMismatch", "RecordNotFound", "RecordGenerationError", "RecordExistsError", "RecordTooBig", "RecordBusy", 
+			"BinNameError", "BinExistsError", "BinNotFound", "BinIncompatibleType"},
 		{AEROSPIKE_ERR_RECORD_KEY_MISMATCH, AEROSPIKE_ERR_RECORD_NOT_FOUND, AEROSPIKE_ERR_RECORD_GENERATION, 
 			AEROSPIKE_ERR_RECORD_EXISTS, AEROSPIKE_ERR_RECORD_TOO_BIG, AEROSPIKE_ERR_RECORD_BUSY, 
 			AEROSPIKE_ERR_BIN_NAME, AEROSPIKE_ERR_BIN_EXISTS, AEROSPIKE_ERR_BIN_NOT_FOUND, 
@@ -69,9 +73,9 @@ PyObject * AerospikeException_New(void)
 			&exceptions_array.ExpiredPassword, &exceptions_array.ForbiddenPassword, &exceptions_array.InvalidCredential, 
 			&exceptions_array.InvalidRole, &exceptions_array.RoleExistsError, &exceptions_array.RoleViolation, 
 			&exceptions_array.InvalidPrivilege, &exceptions_array.NotAuthenticated},
-		{"SecurityNotSupported", "SecurityNotEnabled", "SecuritySchemeNotSupported", "InvalidCommand", "InvalidField", "IllegalState", "InvalidUser", "UserExistsError", 
-			"InvalidPassword", "ExpiredPassword", "ForbiddenPassword", "InvalidCredential", "InvalidRole", "RoleExistsError", "RoleViolation", "InvalidPrivilege", 
-			"NotAuthenticated"},
+		{"SecurityNotSupported", "SecurityNotEnabled", "SecuritySchemeNotSupported", "InvalidCommand", "InvalidField", 
+			"IllegalState", "InvalidUser", "UserExistsError", "InvalidPassword", "ExpiredPassword", "ForbiddenPassword", 
+			"InvalidCredential", "InvalidRole", "RoleExistsError", "RoleViolation", "InvalidPrivilege", "NotAuthenticated"},
 		{AEROSPIKE_SECURITY_NOT_SUPPORTED, AEROSPIKE_SECURITY_NOT_ENABLED, AEROSPIKE_SECURITY_SCHEME_NOT_SUPPORTED, 
 			AEROSPIKE_INVALID_COMMAND, AEROSPIKE_INVALID_FIELD, AEROSPIKE_ILLEGAL_STATE, 
 			AEROSPIKE_INVALID_USER, AEROSPIKE_USER_ALREADY_EXISTS, AEROSPIKE_INVALID_PASSWORD, 

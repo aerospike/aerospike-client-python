@@ -20,7 +20,3 @@
 
 PyObject * AerospikeException_New(void);
 PyObject* raise_exception(as_error * err);
-/*PyObject * AerospikeError;
-PyObject * ParamError;
-PyObject * ClientError;
-PyObject * ServerError;*/
