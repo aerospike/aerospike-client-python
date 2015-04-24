@@ -40,7 +40,10 @@ class TestOperate(object):
         """
         for i in xrange(5):
             key = ('test', 'demo', i)
-            TestOperate.client.remove(key)
+            try:
+                TestOperate.client.remove(key)
+            except RecordNotFound as exception:
+                pass
 
     def test_operate_with_no_parameters_negative(self):
         """
@@ -94,6 +97,8 @@ class TestOperate(object):
         assert key == ('test', 'demo', 1, bytearray(
             b'\xb7\xf4\xb88\x89\xe2\xdag\xdeh>\x1d\xf6\x91\x9a\x1e\xac\xc4F\xc8')
                       )
+
+        TestOperate.client.remove(key)
 
     def test_operate_with_policy_key_digest(self):
         """

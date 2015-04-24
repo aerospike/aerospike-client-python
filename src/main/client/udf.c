@@ -158,7 +158,8 @@ CLEANUP:
 		PyObject *exception_type = raise_exception(&err);
 		if(PyObject_HasAttrString(exception_type, "module")) {
 			PyObject_SetAttrString(exception_type, "module", Py_None);
-		} else if(PyObject_HasAttrString(exception_type, "func")) {
+		} 
+		if(PyObject_HasAttrString(exception_type, "func")) {
 			PyObject_SetAttrString(exception_type, "func", Py_None);
 		}
 		PyErr_SetObject(exception_type, py_err);
@@ -253,7 +254,8 @@ CLEANUP:
 		PyObject *exception_type = raise_exception(&err);
 		if(PyObject_HasAttrString(exception_type, "module")) {
 			PyObject_SetAttrString(exception_type, "module", py_filename);
-		} else if(PyObject_HasAttrString(exception_type, "func")) {
+		} 
+		if(PyObject_HasAttrString(exception_type, "func")) {
 			PyObject_SetAttrString(exception_type, "func", Py_None);
 		}
 		PyErr_SetObject(exception_type, py_err);
@@ -345,7 +347,8 @@ CLEANUP:
 		PyObject *exception_type = raise_exception(&err);
 		if(PyObject_HasAttrString(exception_type, "module")) {
 			PyObject_SetAttrString(exception_type, "module", Py_None);
-		} else if(PyObject_HasAttrString(exception_type, "func")) {
+		} 
+		if(PyObject_HasAttrString(exception_type, "func")) {
 			PyObject_SetAttrString(exception_type, "func", Py_None);
 		}
 		PyErr_SetObject(exception_type, py_err);
@@ -456,7 +459,8 @@ CLEANUP:
 		PyObject *exception_type = raise_exception(&err);
 		if(PyObject_HasAttrString(exception_type, "module")) {
 			PyObject_SetAttrString(exception_type, "module", py_module);
-		} else if(PyObject_HasAttrString(exception_type, "func")) {
+		} 
+		if(PyObject_HasAttrString(exception_type, "func")) {
 			PyObject_SetAttrString(exception_type, "func", Py_None);
 		}
 		PyErr_SetObject(exception_type, py_err);

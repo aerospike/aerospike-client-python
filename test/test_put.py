@@ -871,7 +871,7 @@ class TestPut(TestBaseClass):
         """
         key = ('test', 'demo', 1)
 
-        rec = {"is_present": {1, 2}}
+        rec = {"is_present": set([1, 2])}
 
         res = TestPut.client.put(key, rec)
 

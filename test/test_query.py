@@ -110,7 +110,7 @@ class TestQuery(object):
         """
         for i in xrange(10):
             key = ('test', 'demo', i)
-            #TestQuery.client.remove(key)
+            TestQuery.client.remove(key)
 
     def test_query_with_no_parameters(self):
         """
