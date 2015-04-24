@@ -120,6 +120,7 @@ PyObject * AerospikeException_New(void)
 			AEROSPIKE_ERR_LDT_USER_MODULE_NOT_FOUND}
 	};
 
+	PyObject *py_code = NULL;
 	PyObject *py_dict = PyDict_New();
 	PyDict_SetItemString(py_dict, "code", Py_None);
 	PyDict_SetItemString(py_dict, "file", Py_None);
@@ -135,28 +136,38 @@ PyObject * AerospikeException_New(void)
 	exceptions_array.ClientError = PyErr_NewException("exception.ClientError", exceptions_array.AerospikeError, NULL);
 	Py_INCREF(exceptions_array.ClientError);
 	PyModule_AddObject(module, "ClientError", exceptions_array.ClientError);
-	PyObject_SetAttrString(exceptions_array.ClientError, "code", PyInt_FromLong(AEROSPIKE_ERR_CLIENT));
+	py_code = PyInt_FromLong(AEROSPIKE_ERR_CLIENT);
+	PyObject_SetAttrString(exceptions_array.ClientError, "code", py_code);
+	Py_DECREF(py_code);
 
 	exceptions_array.ServerError = PyErr_NewException("exception.ServerError", exceptions_array.AerospikeError, NULL);
 	Py_INCREF(exceptions_array.ServerError);
 	PyModule_AddObject(module, "ServerError", exceptions_array.ServerError);
-	PyObject_SetAttrString(exceptions_array.ServerError, "code", PyInt_FromLong(AEROSPIKE_ERR_SERVER));
+	py_code = PyInt_FromLong(AEROSPIKE_ERR_SERVER);
+	PyObject_SetAttrString(exceptions_array.ServerError, "code", py_code);
+	Py_DECREF(py_code);
 
 	exceptions_array.TimeoutError = PyErr_NewException("exception.TimeoutError", exceptions_array.AerospikeError, NULL);
 	Py_INCREF(exceptions_array.TimeoutError);
 	PyModule_AddObject(module, "TimeoutError", exceptions_array.TimeoutError);
-	PyObject_SetAttrString(exceptions_array.TimeoutError, "code", PyInt_FromLong(AEROSPIKE_ERR_TIMEOUT));
+	py_code = PyInt_FromLong(AEROSPIKE_ERR_TIMEOUT);
+	PyObject_SetAttrString(exceptions_array.TimeoutError, "code", py_code);
+	Py_DECREF(py_code);
 
 	//Client Exceptions
 	exceptions_array.ParamError = PyErr_NewException("exception.ParamError", exceptions_array.ClientError, NULL);
 	Py_INCREF(exceptions_array.ParamError);
 	PyModule_AddObject(module, "ParamError", exceptions_array.ParamError);
-	PyObject_SetAttrString(exceptions_array.ParamError, "code", PyInt_FromLong(AEROSPIKE_ERR_PARAM));
+	py_code = PyInt_FromLong(AEROSPIKE_ERR_PARAM);
+	PyObject_SetAttrString(exceptions_array.ParamError, "code", py_code);
+	Py_DECREF(py_code);
 
 	exceptions_array.InvalidHostError = PyErr_NewException("exception.InvalidHostError", exceptions_array.ClientError, NULL);
 	Py_INCREF(exceptions_array.InvalidHostError);
 	PyModule_AddObject(module, "InvalidHostError", exceptions_array.InvalidHostError);
-	PyObject_SetAttrString(exceptions_array.InvalidHostError, "code", PyInt_FromLong(AEROSPIKE_ERR_INVALID_HOST));
+	py_code = PyInt_FromLong(AEROSPIKE_ERR_INVALID_HOST);
+	PyObject_SetAttrString(exceptions_array.InvalidHostError, "code", py_code);
+	Py_DECREF(py_code);
 
 	//Server Exceptions
 	int count = sizeof(server_array.server_exceptions)/sizeof(server_array.server_exceptions[0]);
@@ -169,12 +180,17 @@ PyObject * AerospikeException_New(void)
 		*current_exception = PyErr_NewException(strcat(prefix, name), exceptions_array.ServerError, NULL);
 		Py_INCREF(*current_exception);
 		PyModule_AddObject(module, name, *current_exception);
-		PyObject_SetAttrString(*current_exception, "code", PyInt_FromLong(server_array.server_exceptions_codes[i]));
+		PyObject *py_code = PyInt_FromLong(server_array.server_exceptions_codes[i]);
+		PyObject_SetAttrString(*current_exception, "code", py_code);
+		Py_DECREF(py_code);
 	}
 
 	exceptions_array.ClusterChangeError = PyErr_NewException("exception.ClusterChangeError", exceptions_array.ClusterError, NULL);
 	Py_INCREF(exceptions_array.ClusterChangeError);
 	PyModule_AddObject(module, "ClusterChangeError", exceptions_array.ClusterChangeError);
+	py_code = PyInt_FromLong(AEROSPIKE_ERR_CLUSTER_CHANGE);
+	PyObject_SetAttrString(exceptions_array.ClusterChangeError, "code", py_code);
+	Py_DECREF(py_code);
 
 	//Record exceptions
 	PyObject *py_record_dict = PyDict_New();
@@ -195,7 +211,9 @@ PyObject * AerospikeException_New(void)
 		*current_exception = PyErr_NewException(strcat(prefix, name), exceptions_array.RecordError, NULL);
 		Py_INCREF(*current_exception);
 		PyModule_AddObject(module, name, *current_exception);
-		PyObject_SetAttrString(*current_exception, "code", PyInt_FromLong(record_array.record_exceptions_codes[i]));
+		PyObject *py_code = PyInt_FromLong(record_array.record_exceptions_codes[i]);
+		PyObject_SetAttrString(*current_exception, "code", py_code);
+		Py_DECREF(py_code);
 	}
 
 	//Index exceptions
@@ -215,7 +233,9 @@ PyObject * AerospikeException_New(void)
 		*current_exception = PyErr_NewException(strcat(prefix, name), exceptions_array.IndexError, NULL);
 		Py_INCREF(*current_exception);
 		PyModule_AddObject(module, name, *current_exception);
-		PyObject_SetAttrString(*current_exception, "code", PyInt_FromLong(index_array.index_exceptions_codes[i]));
+		PyObject *py_code = PyInt_FromLong(index_array.index_exceptions_codes[i]);
+		PyObject_SetAttrString(*current_exception, "code", py_code);
+		Py_DECREF(py_code);
 	}
 
 	//UDF exceptions
@@ -227,17 +247,23 @@ PyObject * AerospikeException_New(void)
 	Py_INCREF(exceptions_array.UDFError);
 	Py_DECREF(py_udf_dict);
 	PyModule_AddObject(module, "UDFError", exceptions_array.UDFError);
-	PyObject_SetAttrString(exceptions_array.UDFError, "code", PyInt_FromLong(AEROSPIKE_ERR_UDF));
+	py_code = PyInt_FromLong(AEROSPIKE_ERR_UDF);
+	PyObject_SetAttrString(exceptions_array.UDFError, "code", py_code);
+	Py_DECREF(py_code);
 
 	exceptions_array.UDFNotFound = PyErr_NewException("exception.UDFNotFound", exceptions_array.UDFError, NULL);
 	Py_INCREF(exceptions_array.UDFNotFound);
 	PyModule_AddObject(module, "UDFNotFound", exceptions_array.UDFNotFound);
-	PyObject_SetAttrString(exceptions_array.UDFNotFound, "code", PyInt_FromLong(AEROSPIKE_ERR_UDF_NOT_FOUND));
+	py_code = PyInt_FromLong(AEROSPIKE_ERR_UDF_NOT_FOUND);
+	PyObject_SetAttrString(exceptions_array.UDFNotFound, "code", py_code);
+	Py_DECREF(py_code);
 
 	exceptions_array.LuaFileNotFound = PyErr_NewException("exception.LuaFileNotFound", exceptions_array.UDFError, NULL);
 	Py_INCREF(exceptions_array.LuaFileNotFound);
 	PyModule_AddObject(module, "LuaFileNotFound", exceptions_array.LuaFileNotFound);
-	PyObject_SetAttrString(exceptions_array.LuaFileNotFound, "code", PyInt_FromLong(AEROSPIKE_ERR_LUA_FILE_NOT_FOUND));
+	py_code = PyInt_FromLong(AEROSPIKE_ERR_LUA_FILE_NOT_FOUND);
+	PyObject_SetAttrString(exceptions_array.LuaFileNotFound, "code", py_code);
+	Py_DECREF(py_code);
 
 	//Admin exceptions
 	exceptions_array.AdminError = PyErr_NewException("exception.AdminError", exceptions_array.ServerError, NULL);
@@ -252,19 +278,25 @@ PyObject * AerospikeException_New(void)
 		*current_exception = PyErr_NewException(strcat(prefix, name), exceptions_array.AdminError, NULL);
 		Py_INCREF(*current_exception);
 		PyModule_AddObject(module, name, *current_exception);
-		PyObject_SetAttrString(*current_exception, "code", PyInt_FromLong(admin_array.admin_exceptions_codes[i]));
+		PyObject *py_code = PyInt_FromLong(admin_array.admin_exceptions_codes[i]);
+		PyObject_SetAttrString(*current_exception, "code", py_code);
+		Py_DECREF(py_code);
 	}
 
 	//Query exceptions
 	exceptions_array.QueryQueueFull = PyErr_NewException("exception.QueryQueueFull", exceptions_array.QueryError, NULL);
 	Py_INCREF(exceptions_array.QueryQueueFull);
 	PyModule_AddObject(module, "QueryQueueFull", exceptions_array.QueryQueueFull);
-	PyObject_SetAttrString(exceptions_array.QueryQueueFull, "code", PyInt_FromLong(AEROSPIKE_ERR_QUERY_QUEUE_FULL));
+	py_code = PyInt_FromLong(AEROSPIKE_ERR_QUERY_QUEUE_FULL);
+	PyObject_SetAttrString(exceptions_array.QueryQueueFull, "code", py_code);
+	Py_DECREF(py_code);
 
 	exceptions_array.QueryTimeout = PyErr_NewException("exception.QueryTimeout", exceptions_array.QueryError, NULL);
 	Py_INCREF(exceptions_array.QueryTimeout);
 	PyModule_AddObject(module, "QueryTimeout", exceptions_array.QueryTimeout);
-	PyObject_SetAttrString(exceptions_array.QueryQueueFull, "code", PyInt_FromLong(AEROSPIKE_ERR_QUERY_TIMEOUT));
+	py_code = PyInt_FromLong(AEROSPIKE_ERR_QUERY_TIMEOUT);
+	PyObject_SetAttrString(exceptions_array.QueryQueueFull, "code", py_code);
+	Py_DECREF(py_code);
 
 	//LDT exceptions
 	PyObject *py_ldt_dict = PyDict_New();
@@ -283,7 +315,9 @@ PyObject * AerospikeException_New(void)
 		*current_exception = PyErr_NewException(strcat(prefix, name), exceptions_array.LDTError, NULL);
 		Py_INCREF(*current_exception);
 		PyModule_AddObject(module, name, *current_exception);
-		PyObject_SetAttrString(*current_exception, "code", PyInt_FromLong(ldt_array.ldt_exceptions_codes[i]));
+		PyObject *py_code = PyInt_FromLong(ldt_array.ldt_exceptions_codes[i]);
+		PyObject_SetAttrString(*current_exception, "code", py_code);
+		Py_DECREF(py_code);
 	}
 	return module;
 }
@@ -310,7 +344,7 @@ PyObject* raise_exception(as_error *err) {
 		free(final_code);
 	}
 	while(PyDict_Next(py_module_dict, &pos, &py_key, &py_value)) {
-		if(PyObject_HasAttrString(py_value, "file")) {
+		if(PyObject_HasAttrString(py_value, "code")) {
 			PyObject * py_code = PyObject_GetAttrString(py_value, "code");
 			if(py_code == Py_None) {
 				continue;
