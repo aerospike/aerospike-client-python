@@ -174,3 +174,172 @@ class TestLList(object):
 
         assert exception.value[0] == -1
         assert exception.value[1] == "Parameters are incorrect"
+
+    def test_llist_find_first_positive_without_policy(self):
+        """
+            Invoke find_first() to access elements
+        """
+        elements_list = TestLList.llist_integer.find_first(2)
+
+        assert elements_list == [11, 56]
+
+    def test_llist_find_first_positive(self):
+        """
+            Invoke find_first() to access elements
+        """
+        elements_list = TestLList.llist_integer.find_first(2, {'timeout': 1000})
+
+        assert elements_list == [11, 56]
+
+    def test_llist_find_first_count_large_positive(self):
+        """
+            Invoke find_first() to access elements with a larger count
+        """
+        elements_list = TestLList.llist_integer.find_first(10, {'timeout': 1000})
+
+        assert elements_list == [11, 56, 122, 871]
+
+    def test_llist_find_first_count_negative(self):
+        """
+            Invoke find_first() to access elements with a negative count
+        """
+        elements_list = TestLList.llist_integer.find_first(-8, {'timeout': 1000})
+
+        assert elements_list == [11, 56, 122, 871]
+
+    def test_llist_find_last_positive_without_policy(self):
+        """
+            Invoke find_last() to access elements
+        """
+        elements_list = TestLList.llist_integer.find_last(2)
+
+        assert elements_list == [871, 122]
+
+    def test_llist_find_last_positive(self):
+        """
+            Invoke find_last() to access elements
+        """
+        elements_list = TestLList.llist_integer.find_last(2, {'timeout': 1000})
+
+        assert elements_list == [871, 122]
+
+    def test_llist_find_last_count_large(self):
+        """
+            Invoke find_last() to access elements
+        """
+        elements_list = TestLList.llist_integer.find_last(15, {'timeout': 1000})
+
+        assert elements_list == [871, 122, 56, 11]
+
+    def test_llist_find_last_count_negative(self):
+        """
+            Invoke find_last() to access elements
+        """
+        elements_list = TestLList.llist_integer.find_last(-2, {'timeout': 1000})
+
+        assert elements_list == [871, 122, 56, 11]
+
+    def test_llist_find_last_no_params(self):
+        """
+            Invoke find_last() to access elements
+        """
+        with pytest.raises(TypeError) as typeError:
+            TestLList.llist_integer.find_last()
+
+        assert "Required argument 'count' (pos 1) not found" in typeError.value
+
+    def test_llist_find_last_no_parameters_negative(self):
+        """
+            Invoke find_last() to access elements
+        """
+        with pytest.raises(TypeError) as typeError:
+            TestLList.llist_integer.find_last()
+
+        assert "Required argument 'count' (pos 1) not found" in typeError.value
+
+    def test_llist_find_from_positive_without_policy(self):
+        """
+            Invoke find_from() to access elements from a given key
+        """
+        elements_list = TestLList.llist_integer.find_from(56, 2)
+
+        assert elements_list == [56, 122]
+
+    def test_llist_find_from_positive(self):
+        """
+            Invoke find_from() to access elements from a given key
+        """
+        elements_list = TestLList.llist_integer.find_from(56, 2, {'timeout': 1000})
+
+        assert elements_list == [56, 122]
+
+    def test_llist_find_from_positive_non_existent_key(self):
+        """
+            Invoke find_from() to access elements from a non-existent key
+        """
+        elements_list = TestLList.llist_integer.find_from(21, 2, {'timeout': 1000})
+
+        assert elements_list == [56, 122]
+
+    def test_llist_range_limit_positive_without_policy(self):
+        """
+            Invoke range_limit() to access elements
+        """
+        elements_list = TestLList.llist_integer.range_limit(56, 871, 2, None, None)
+
+        assert elements_list == [56, 122, 871]
+
+    def test_llist_range_limit_positive(self):
+        """
+            Invoke range_limit() to access elements
+        """
+        elements_list = TestLList.llist_integer.range_limit(56, 871, 2, None, None, {'timeout': 1000})
+
+        assert elements_list == [56, 122, 871]
+
+    def test_llist_range_limit_negative_keys(self):
+        """
+            Invoke range_limit() to access elements with negative keys
+        """
+        elements_list = TestLList.llist_integer.range_limit(-56, -871, 2, None, None, {'timeout': 1000})
+
+        assert elements_list == []
+
+    def test_llist_range_limit_larger_count_positive(self):
+        """
+            Invoke range_limit() to access elements with larger count than list
+            size
+        """
+        elements_list = TestLList.llist_integer.range_limit(56, 871, 8, None, None, {'timeout': 1000})
+
+        assert elements_list == [56, 122, 871]
+
+    def test_llist_range_limit_count_negative(self):
+        """
+            Invoke range_limit() to access elements
+        """
+        elements_list = TestLList.llist_integer.range_limit(56, 871, -2, None, None, {'timeout': 1000})
+
+        assert elements_list == [56, 122, 871]
+
+    def test_llist_set_page_size_without_policy(self):
+        #Invoke set_page_size() to set page size of ldt bin.
+        assert 0 == TestLList.llist_integer.set_page_size(8192)
+
+    def test_llist_set_page_size(self):
+        #Invoke set_page_size() to set page size of ldt bin.
+        assert 0 == TestLList.llist_integer.set_page_size(8192, {'timeout': 0})
+
+    def test_llist_set_page_size_string_negative(self):
+        with pytest.raises(TypeError) as typeError:
+            TestLList.llist_integer.set_page_size("8192", {'timeout': 0})
+
+        assert "an integer is required" in typeError.value
+
+    """ Causes db to shutdown
+    def test_llist_find_from_positive_negative_count(self):
+        #Invoke find_from() to access elements with a negative count
+        elements_list = TestLList.llist_integer.find_from(56, -2, {'timeout': 1000})
+
+        assert elements_list == [56, 122]
+        """
