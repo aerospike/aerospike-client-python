@@ -6,7 +6,7 @@ aerospike.Client.admin_query_user - queries a user in the Aerospike database
 ## Description
 
 ```
-user_details = aerospike.Client.admin_query_user ( policies, username )
+user_details = aerospike.Client.admin_query_user ( username[, policies ] )
 
 ```
 
@@ -14,13 +14,12 @@ user_details = aerospike.Client.admin_query_user ( policies, username )
 
 ## Parameters
 
-**policies**, the dictionary of policies to be given while querying a user in the database.   
-
 **username**, the username of the user to be queried in the Aerospike database.
+
+**policies**, the dictionary of policies to be given while querying a user in the database.
 
 ## Return Values
 Returns a list containing the details of the particular user.
-
 
 ## Examples
 
@@ -37,7 +36,7 @@ policy = {
 	 }
 username = "example"
 
-user_details = client.admin_query_user( policy, username )
+user_details = client.admin_query_user( username, policy )
 
 print user_details
 

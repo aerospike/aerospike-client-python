@@ -6,7 +6,7 @@ aerospike.Client.admin_revoke_roles - revokes roles of a user in the Aerospike d
 ## Description
 
 ```
-status = aerospike.Client.admin_revoke_roles ( policies, username, roles, roles_size )
+status = aerospike.Client.admin_revoke_roles ( username, roles[, policies ] )
 
 ```
 
@@ -14,14 +14,12 @@ status = aerospike.Client.admin_revoke_roles ( policies, username, roles, roles_
 
 ## Parameters
 
-**policies**, the dictionary of policies to be given while revoking roles of a user in the database.
-
 **username**, the username of the user for whom the roles have to be revoked in
 the Aerospike database.
 
 **roles**, a list specifying the roles to be revoked for the user.
 
-**roles_size**, the length of the *roles* list.
+**policies**, the dictionary of policies to be given while revoking roles of a user in the database.
 
 ## Return Values
 Returns an integer status code
@@ -42,7 +40,7 @@ policy = {
 username = "example"
 roles = ["read-write", "sys-admin"]
 
-status = client.admin_revoke_roles( policy, username, roles, len(roles) )
+status = client.admin_revoke_roles( username, roles, policy )
 
 print status
 

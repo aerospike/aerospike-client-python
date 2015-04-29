@@ -29,7 +29,7 @@ class TestRevokeRoles(TestBaseClass):
         password = "foo2"
         roles = ["read-write", "sys-admin", "read"]
 
-        status = self.client.admin_create_user( policy, user, password, roles, len(roles) )
+        status = self.client.admin_create_user( user, password, roles, policy )
 
         self.delete_users = []
 
@@ -41,7 +41,7 @@ class TestRevokeRoles(TestBaseClass):
 
         policy = {}
 
-        self.client.admin_drop_user( policy, "example" )
+        self.client.admin_drop_user( "example", policy )
 
         self.client.close()
 
@@ -50,7 +50,7 @@ class TestRevokeRoles(TestBaseClass):
         with pytest.raises(TypeError) as typeError:
             self.client.admin_revoke_roles()
 
-        assert "Required argument 'policy' (pos 1) not found" in typeError.value
+        assert "Required argument 'user' (pos 1) not found" in typeError.value
 
     def test_revoke_roles_with_proper_parameters(self):
 
@@ -58,11 +58,11 @@ class TestRevokeRoles(TestBaseClass):
         user = "example"
         roles = ["read", "sys-admin"]
 
-        status = self.client.admin_revoke_roles(policy, user, roles, len(roles))
+        status = self.client.admin_revoke_roles(user, roles, policy)
         assert status == 0
         time.sleep(2)
 
-        user_details = self.client.admin_query_user( policy, user )
+        user_details = self.client.admin_query_user( user, policy )
 
         assert user_details == [{'roles': ['read-write'], 'roles_size':
 1, 'user': 'example'}]
@@ -73,11 +73,11 @@ class TestRevokeRoles(TestBaseClass):
         user = "example"
         roles = ["read", "sys-admin", "read-write"]
 
-        status = self.client.admin_revoke_roles(policy, user, roles, len(roles))
+        status = self.client.admin_revoke_roles(user, roles)
         assert status == 0
         time.sleep(2)
 
-        user_details = self.client.admin_query_user( policy, user )
+        user_details = self.client.admin_query_user( user, policy )
 
         assert user_details == [{'roles': [], 'roles_size':
 0, 'user': 'example'}]
@@ -89,7 +89,7 @@ class TestRevokeRoles(TestBaseClass):
         roles = ['sys-admin']
 
         with pytest.raises(Exception) as exception:
-            status = self.client.admin_revoke_roles( policy, user, roles, len(roles) )
+            status = self.client.admin_revoke_roles( user, roles, policy )
 
         assert exception.value[0] == -2
         assert exception.value[1] == "timeout is invalid"
@@ -100,13 +100,13 @@ class TestRevokeRoles(TestBaseClass):
         user = "example"
         roles = ["read-write", "sys-admin"]
 
-        status = self.client.admin_revoke_roles( policy, user, roles , len(roles) )
+        status = self.client.admin_revoke_roles( user, roles , policy )
 
         time.sleep(2)
 
         assert status == 0
 
-        user_details = self.client.admin_query_user( {}, user )
+        user_details = self.client.admin_query_user( user )
 
         assert user_details == [{'roles': ['read'], 'roles_size': 1, 'user': 'example'}]
 
@@ -117,7 +117,7 @@ class TestRevokeRoles(TestBaseClass):
         roles = ["sys-admin"]
 
         with pytest.raises(Exception) as exception:
-            status = self.client.admin_revoke_roles( policy, user, roles, len(roles) )
+            status = self.client.admin_revoke_roles( user, roles, policy )
 
         assert exception.value[0] == -2
         assert exception.value[1] == "Username should be a string"
@@ -129,7 +129,7 @@ class TestRevokeRoles(TestBaseClass):
         roles = ["read-write"]
 
         with pytest.raises(Exception) as exception:
-            status = self.client.admin_revoke_roles( policy, user, roles, len(roles) )
+            status = self.client.admin_revoke_roles( user, roles, policy )
 
         assert exception.value[0] == 60
         assert exception.value[1] == "AEROSPIKE_INVALID_USER"
@@ -141,7 +141,7 @@ class TestRevokeRoles(TestBaseClass):
         roles = []
 
         with pytest.raises(Exception) as exception:
-            status = self.client.admin_revoke_roles( policy, user, roles, len(roles) )
+            status = self.client.admin_revoke_roles( user, roles, policy )
 
         assert exception.value[0] == 70
         assert exception.value[1] == "AEROSPIKE_INVALID_ROLE"
@@ -153,19 +153,7 @@ class TestRevokeRoles(TestBaseClass):
         roles = ["viewer"]
 
         with pytest.raises(Exception) as exception:
-            status = self.client.admin_revoke_roles( policy, user, roles, len(roles) )
-
-        assert exception.value[0] == 70
-        assert exception.value[1] == "AEROSPIKE_INVALID_ROLE"
-
-    def test_revoke_roles_with_different_roles_and_roles_size(self):
-
-        policy = {}
-        user = "example"
-        roles = ["read-write"]
-
-        with pytest.raises(Exception) as exception:
-            status = self.client.admin_revoke_roles(policy, user, roles, 2)
+            status = self.client.admin_revoke_roles( user, roles, policy )
 
         assert exception.value[0] == 70
         assert exception.value[1] == "AEROSPIKE_INVALID_ROLE"
@@ -177,7 +165,7 @@ class TestRevokeRoles(TestBaseClass):
         roles = ["read-write"]
 
         with pytest.raises(Exception) as exception:
-            status = self.client.admin_revoke_roles( policy, user, roles, len(roles) )
+            status = self.client.admin_revoke_roles( user, roles, policy )
 
         assert exception.value[0] == 60
         assert exception.value[1] == "AEROSPIKE_INVALID_USER"
@@ -189,23 +177,22 @@ class TestRevokeRoles(TestBaseClass):
         password = "abcd"
         roles = ["read-write"]
 
-        status = self.client.admin_create_user( policy, user, password, roles, len(roles) )
+        status = self.client.admin_create_user( user, password, roles, policy )
         time.sleep(2)
 
         assert status == 0
-        status = self.client.admin_revoke_roles( policy, user, roles, len(roles) )
+        status = self.client.admin_revoke_roles( user, roles, policy )
 
         time.sleep(2)
 
         assert status == 0
 
-        user_details = self.client.admin_query_user( {}, user )
+        user_details = self.client.admin_query_user( user )
 
         assert user_details == [{'roles': [], 'roles_size':
 0, 'user':'!#Q#AEQ@#$%&^*((^&*~~~````[['}]
 
-        status = self.client.admin_drop_user( policy,
-"!#Q#AEQ@#$%&^*((^&*~~~````[[" )
+        status = self.client.admin_drop_user( "!#Q#AEQ@#$%&^*((^&*~~~````[[" )
         assert status == 0
 
     def test_revoke_roles_nonpossessed(self):
@@ -215,20 +202,20 @@ class TestRevokeRoles(TestBaseClass):
         password = "abcd"
         roles = ["read-write"]
 
-        status = self.client.admin_create_user( policy, user, password, roles, len(roles) )
+        status = self.client.admin_create_user( user, password, roles, policy )
         time.sleep(2)
 
         assert status == 0
         roles = ["read"]
-        status = self.client.admin_revoke_roles( policy, user, roles, len(roles) )
+        status = self.client.admin_revoke_roles( user, roles )
 
         time.sleep(2)
 
-        user_details = self.client.admin_query_user( {}, user )
+        user_details = self.client.admin_query_user( user, {} )
 
         assert user_details == [{'roles': ["read-write"], 'roles_size':
 1, 'user': user}]
 
         assert status == 0
-        status = self.client.admin_drop_user( policy, user)
+        status = self.client.admin_drop_user( user)
         assert status == 0

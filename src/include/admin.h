@@ -93,7 +93,42 @@ PyObject * AerospikeClient_Admin_Query_Users(AerospikeClient *self, PyObject *ar
 /**
  * Create a new role in the database.
  *
- *		client.admin_create_role(policy, role, privileges, privileges_size, ns, set)
+ *		client.admin_create_role(role, privileges, ns, set, policy)
  *
  */
 PyObject * AerospikeClient_Admin_Create_Role(AerospikeClient * self, PyObject *args, PyObject *kwds);
+/**
+ * Drop a user defined role in the database.
+ *
+ *		client.admin_drop_role(role, policy)
+ *
+ */
+PyObject * AerospikeClient_Admin_Drop_Role(AerospikeClient * self, PyObject *args, PyObject *kwds);
+/**
+ * Grant privileges to a user defined role in the database.
+ *
+ *		client.admin_grant_privileges(role, privileges, ns, set, policy)
+ *
+ */
+PyObject * AerospikeClient_Admin_Grant_Privileges(AerospikeClient * self, PyObject *args, PyObject *kwds);
+/**
+ * Revoke privileges from a user defined role in the database.
+ *
+ *		client.admin_revoke_privileges(role, privileges, ns, set, policy)
+ *
+ */
+PyObject * AerospikeClient_Admin_Revoke_Privileges(AerospikeClient * self, PyObject *args, PyObject *kwds);
+/**
+ * Query a user defined role in the database.
+ *
+ *		client.admin_query_role(role, policy)
+ *
+ */
+PyObject * AerospikeClient_Admin_Query_Role(AerospikeClient * self, PyObject *args, PyObject *kwds);
+/**
+ * Query all user defined roles in the database.
+ *
+ *		client.admin_query_roles(policy)
+ *
+ */
+PyObject * AerospikeClient_Admin_Query_Roles(AerospikeClient * self, PyObject *args, PyObject *kwds);

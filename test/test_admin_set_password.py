@@ -24,7 +24,7 @@ class TestSetPassword(TestBaseClass):
                 }
         self.client = aerospike.client(config).connect( user, password )
 
-        self.client.admin_create_user( {}, "testsetpassworduser", "aerospike", ["read"], 1)
+        self.client.admin_create_user( "testsetpassworduser", "aerospike", ["read"], {})
 
         self.delete_users = []
 
@@ -34,7 +34,7 @@ class TestSetPassword(TestBaseClass):
         Teardown method
         """
 
-        self.client.admin_drop_user( {}, "testsetpassworduser" )
+        self.client.admin_drop_user( "testsetpassworduser" )
 
         self.client.close()
 
@@ -43,7 +43,7 @@ class TestSetPassword(TestBaseClass):
         with pytest.raises(TypeError) as typeError:
             status = self.client.admin_set_password()
 
-        assert "Required argument 'policy' (pos 1) not found" in typeError.value
+        assert "Required argument 'user' (pos 1) not found" in typeError.value
 
     def test_set_password_with_proper_parameters(self):
 
@@ -51,7 +51,7 @@ class TestSetPassword(TestBaseClass):
         user = "testsetpassworduser"
         password = "newpassword"
 
-        status = self.client.admin_set_password( policy, user, password )
+        status = self.client.admin_set_password( user, password )
 
         assert status == 0
 
@@ -62,7 +62,7 @@ class TestSetPassword(TestBaseClass):
         password = "newpassword"
 
         with pytest.raises(Exception) as exception:
-            status = self.client.admin_set_password( policy, user, password )
+            status = self.client.admin_set_password( user, password, policy )
 
         assert exception.value[0] == -2
         assert exception.value[1] == "timeout is invalid"
@@ -73,7 +73,7 @@ class TestSetPassword(TestBaseClass):
         user = "testsetpassworduser"
         password = "newpassword"
 
-        status = self.client.admin_set_password( policy, user, password )
+        status = self.client.admin_set_password( user, password, policy )
 
         assert status == 0
 
@@ -84,7 +84,7 @@ class TestSetPassword(TestBaseClass):
         password = "newpassword"
 
         with pytest.raises(Exception) as exception :
-            status = self.client.admin_set_password( policy, user, password )
+            status = self.client.admin_set_password( user, password )
 
         assert exception.value[0] == -2
         assert exception.value[1] == "Username should be a string"
@@ -96,7 +96,7 @@ class TestSetPassword(TestBaseClass):
         password = None
 
         with pytest.raises(Exception) as exception:
-            status = self.client.admin_set_password( policy, user, password )
+            status = self.client.admin_set_password( user, password )
 
         assert exception.value[0] == -2
         assert exception.value[1] == "Password should be a string"
@@ -108,7 +108,7 @@ class TestSetPassword(TestBaseClass):
         password = "newpassword"
 
         with pytest.raises(Exception) as exception:
-            status = self.client.admin_set_password( policy, user, password )
+            status = self.client.admin_set_password( user, password, policy )
 
         assert exception.value[0] == 60
         assert exception.value[1] == "AEROSPIKE_INVALID_USER"
@@ -119,6 +119,6 @@ class TestSetPassword(TestBaseClass):
         user = "testsetpassworduser"
         password = "newpassword$"*1000
 
-        status = self.client.admin_set_password( policy, user, password )
+        status = self.client.admin_set_password( user, password, policy )
 
         assert status == 0

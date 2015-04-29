@@ -24,7 +24,7 @@ class TestChangePassword(TestBaseClass):
                 }
         self.client = aerospike.client(config).connect( user, password )
 
-        self.client.admin_create_user( {}, "testchangepassworduser", "aerospike", ["read"], 1)
+        self.client.admin_create_user( "testchangepassworduser", "aerospike", ["read"], {})
         time.sleep(2)
         self.delete_users = []
 
@@ -34,7 +34,7 @@ class TestChangePassword(TestBaseClass):
         Teardown method
         """
 
-        self.client.admin_drop_user( {}, "testchangepassworduser" )
+        self.client.admin_drop_user( "testchangepassworduser" )
 
         self.client.close()
 
@@ -43,7 +43,7 @@ class TestChangePassword(TestBaseClass):
         with pytest.raises(TypeError) as typeError:
             status = self.client.admin_change_password()
 
-        assert "Required argument 'policy' (pos 1) not found" in typeError.value
+        assert "Required argument 'user' (pos 1) not found" in typeError.value
 
     def test_change_password_with_proper_parameters(self):
 
@@ -56,7 +56,7 @@ class TestChangePassword(TestBaseClass):
         policy = {}
         password = "newpassword"
 
-        status = self.clientreaduser.admin_change_password( policy, user, password )
+        status = self.clientreaduser.admin_change_password( user, password )
 
         assert status == 0
 
@@ -89,7 +89,7 @@ class TestChangePassword(TestBaseClass):
         password = "newpassword"
 
         with pytest.raises(Exception) as exception :
-            status = self.client.admin_change_password( policy, user, password )
+            status = self.client.admin_change_password( user, password, policy )
 
         assert exception.value[0] == -2
         assert exception.value[1] == "timeout is invalid"
@@ -105,7 +105,7 @@ class TestChangePassword(TestBaseClass):
         policy = {'timeout': 10}
         password = "newpassword"
 
-        status = self.clientreaduser.admin_change_password( policy, user, password )
+        status = self.clientreaduser.admin_change_password( user, password, policy )
 
         assert status == 0
 
@@ -138,7 +138,7 @@ class TestChangePassword(TestBaseClass):
         password = "newpassword"
 
         with pytest.raises(Exception) as exception:
-            status = self.client.admin_change_password( policy, user, password )
+            status = self.client.admin_change_password( user, password, policy )
 
         assert exception.value[0] == -2
         assert exception.value[1] == "Username should be a string"
@@ -150,7 +150,7 @@ class TestChangePassword(TestBaseClass):
         password = None
 
         with pytest.raises(Exception) as exception:
-            status = self.client.admin_change_password( policy, user, password )
+            status = self.client.admin_change_password( user, password, policy )
 
         assert exception.value[0] == -2
         assert exception.value[1] == "Password should be a string"
@@ -162,7 +162,7 @@ class TestChangePassword(TestBaseClass):
         password = "newpassword"
 
         with pytest.raises(Exception) as exception:
-            status = self.client.admin_change_password( policy, user, password )
+            status = self.client.admin_change_password( user, password, policy )
 
         assert exception.value[0] == 60
         assert exception.value[1] == "AEROSPIKE_INVALID_USER"
@@ -178,7 +178,7 @@ class TestChangePassword(TestBaseClass):
         policy = {'timeout': 10}
         password = "password"*1000
 
-        status = self.clientreaduser.admin_change_password( policy, user, password )
+        status = self.clientreaduser.admin_change_password( user, password, policy )
 
         assert status == 0
 
