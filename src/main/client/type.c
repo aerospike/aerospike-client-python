@@ -199,7 +199,7 @@ static PyMethodDef AerospikeClient_Type_Methods[] = {
 	{"index_map_values_create",
 		(PyCFunction)AerospikeClient_Index_Map_Values_Create, METH_VARARGS | METH_KEYWORDS,
 		"Remove a secondary list index"},
-	
+
     // LSTACK OPERATIONS
 
 	{"lstack",

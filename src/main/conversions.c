@@ -157,7 +157,6 @@ void pyobject_to_as_privileges(as_error *err, PyObject *py_privileges, as_privil
 				PyObject *py_code = NULL;
 				py_code  = PyDict_GetItemString(py_val, "code");
 				privileges[i]->code = PyInt_AsLong(py_code);
-				Py_DECREF(py_code);
 			} else {
 				as_error_update(err, AEROSPIKE_ERR_PARAM, "Code is a compulsory parameter in privileges dictionary");
 				break;
@@ -167,7 +166,6 @@ void pyobject_to_as_privileges(as_error *err, PyObject *py_privileges, as_privil
 			if(PyDict_Contains(py_val, py_dict_key)) {
 				PyObject *py_ns  = PyDict_GetItemString(py_val, "ns");
 				strcpy(privileges[i]->ns, PyString_AsString(py_ns));
-				Py_DECREF(py_ns);
 			} else {
 				strcpy(privileges[i]->ns, "");
 			}
@@ -176,7 +174,6 @@ void pyobject_to_as_privileges(as_error *err, PyObject *py_privileges, as_privil
 			if(PyDict_Contains(py_val, py_dict_key)) {
 				PyObject *py_set  = PyDict_GetItemString(py_val, "set");
 				strcpy(privileges[i]->set, PyString_AsString(py_set));
-				Py_DECREF(py_set);
 			} else {
 				strcpy(privileges[i]->set, "");
 			}
@@ -203,9 +200,9 @@ as_status as_role_array_to_pyobject( as_error *err, as_role **roles, PyObject **
 		}
 
 		PyObject * py_roles = PyDict_New();
-		PyDict_SetItemString(py_roles, "user", py_role);
+		PyDict_SetItemString(py_roles, "role", py_role);
 		PyDict_SetItemString(py_roles, "privileges_size", py_privileges_size);
-		PyDict_SetItemString(py_roles, "privielges", py_privileges);
+		PyDict_SetItemString(py_roles, "privileges", py_privileges);
 
 		Py_DECREF(py_role);
 		Py_DECREF(py_privileges_size);
@@ -451,7 +448,7 @@ as_status pyobject_to_val(as_error * err, PyObject * py_obj, as_val ** val, as_s
                 &bytes, py_obj, err);
 		*val = (as_val *) bytes;
 	}
-	
+
 	if (py_result) {
 		Py_DECREF(py_result);
 	}
@@ -594,7 +591,7 @@ as_status pyobject_to_record(as_error * err, PyObject * py_rec,
 				}
 			}
 		}
-		
+
 		if (py_result) {
 			Py_DECREF(py_result);
 		}
@@ -663,7 +660,7 @@ as_status pyobject_to_astype_write(as_error * err, char *bin_name,  PyObject * p
 				&bytes, py_value, err);
 		*val = (as_val *) bytes;
 	}
-	
+
 	if (py_result) {
 		Py_DECREF(py_result);
 	}

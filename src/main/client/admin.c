@@ -830,40 +830,6 @@ PyObject * AerospikeClient_Admin_Create_Role(AerospikeClient * self, PyObject *a
 	privileges = (as_privilege **)alloca(sizeof(as_privilege *) * privileges_size);
 
 	pyobject_to_as_privileges(&err, py_privileges, privileges, privileges_size);
-	/*for (int i = 0; i < privileges_size; i++) {
-		PyObject * py_val = PyList_GetItem(py_privileges, i);
-		if(PyDict_Check(py_val)) {
-			privileges[i] = (as_privilege *)cf_malloc(sizeof(as_privilege));
-			PyObject *py_dict_key = PyString_FromString("code");
-			if(PyDict_GetItemString(py_val, "code")) {
-				PyObject *py_code  = PyDict_GetItemString(py_val, "code");
-				privileges[i]->code = PyInt_AsLong(py_code);
-				Py_DECREF(py_code);
-			} else {
-				as_error_update(&err, AEROSPIKE_ERR_PARAM, "Code is a compulsory parameter in privileges dictionary");
-				goto CLEANUP;
-			}
-			Py_DECREF(py_dict_key);
-			py_dict_key = PyString_FromString("ns");
-			if(PyDict_Contains(py_val, py_dict_key)) {
-				PyObject *py_ns  = PyDict_GetItemString(py_val, "ns");
-				strcpy(privileges[i]->ns, PyString_AsString(py_ns));
-				Py_DECREF(py_ns);
-			} else {
-				strcpy(privileges[i]->ns, "");
-			}
-			Py_DECREF(py_dict_key);
-			py_dict_key = PyString_FromString("set");
-			if(PyDict_Contains(py_val, py_dict_key)) {
-				PyObject *py_set  = PyDict_GetItemString(py_val, "set");
-				strcpy(privileges[i]->set, PyString_AsString(py_set));
-				Py_DECREF(py_set);
-			} else {
-				strcpy(privileges[i]->set, "");
-			}
-			Py_DECREF(py_dict_key);
-		}
-	}*/
 
 	pyobject_to_policy_admin( &err, py_policy, &admin_policy, &admin_policy_p,
 			&self->as->config.policies.admin);
@@ -876,7 +842,7 @@ PyObject * AerospikeClient_Admin_Create_Role(AerospikeClient * self, PyObject *a
 		role = PyString_AsString(py_role);
 	} else {
 		as_error_update(&err, AEROSPIKE_ERR_PARAM, "Role name should be a string");
-		goto CLEANUP;	
+		goto CLEANUP;
 	}
 
 	// Invoke operation
@@ -885,7 +851,7 @@ PyObject * AerospikeClient_Admin_Create_Role(AerospikeClient * self, PyObject *a
 CLEANUP:
 	if(privileges) {
 		for(int i = 0; i < privileges_size; i++) {
-			if( privileges[i] != NULL) 
+			if( privileges[i] != NULL)
 				cf_free(privileges[i]);
 		}
 	}
@@ -956,7 +922,7 @@ PyObject * AerospikeClient_Admin_Drop_Role(AerospikeClient * self, PyObject *arg
 		role = PyString_AsString(py_role);
 	} else {
 		as_error_update(&err, AEROSPIKE_ERR_PARAM, "Role name should be a string");
-		goto CLEANUP;	
+		goto CLEANUP;
 	}
 
 	// Invoke operation
@@ -1048,7 +1014,7 @@ PyObject * AerospikeClient_Admin_Grant_Privileges(AerospikeClient * self, PyObje
 		role = PyString_AsString(py_role);
 	} else {
 		as_error_update(&err, AEROSPIKE_ERR_PARAM, "Role name should be a string");
-		goto CLEANUP;	
+		goto CLEANUP;
 	}
 
 	// Invoke operation
@@ -1057,7 +1023,7 @@ PyObject * AerospikeClient_Admin_Grant_Privileges(AerospikeClient * self, PyObje
 CLEANUP:
 	if(privileges) {
 		for(int i = 0; i < privileges_size; i++) {
-			if( privileges[i] != NULL) 
+			if( privileges[i] != NULL)
 				cf_free(privileges[i]);
 		}
 	}
@@ -1145,7 +1111,7 @@ PyObject * AerospikeClient_Admin_Revoke_Privileges(AerospikeClient * self, PyObj
 		role = PyString_AsString(py_role);
 	} else {
 		as_error_update(&err, AEROSPIKE_ERR_PARAM, "Role name should be a string");
-		goto CLEANUP;	
+		goto CLEANUP;
 	}
 
 	// Invoke operation
@@ -1154,7 +1120,7 @@ PyObject * AerospikeClient_Admin_Revoke_Privileges(AerospikeClient * self, PyObj
 CLEANUP:
 	if(privileges) {
 		for(int i = 0; i < privileges_size; i++) {
-			if( privileges[i] != NULL) 
+			if( privileges[i] != NULL)
 				cf_free(privileges[i]);
 		}
 	}
@@ -1229,7 +1195,7 @@ PyObject * AerospikeClient_Admin_Query_Role(AerospikeClient * self, PyObject *ar
 		role = PyString_AsString(py_role);
 	} else {
 		as_error_update(&err, AEROSPIKE_ERR_PARAM, "Role name should be a string");
-		goto CLEANUP;	
+		goto CLEANUP;
 	}
 
 	// Invoke operation

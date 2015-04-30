@@ -104,7 +104,8 @@ AerospikeConstants aerospike_constants[] = {
 	{ AS_PRIVILEGE_USER_ADMIN				, 	"USER_ADMIN" },
 	{ AS_PRIVILEGE_SYS_ADMIN				,	"SYS_ADMIN"	},
 	{ AS_PRIVILEGE_READ						,	"READ"},
-	{ AS_PRIVILEGE_READ_WRITE				,	"READ_WRITE"}
+	{ AS_PRIVILEGE_READ_WRITE				,	"READ_WRITE"},
+	{ AS_PRIVILEGE_READ_WRITE_UDF			,	"READ_WRITE_UDF"}
 };
 
 /**
