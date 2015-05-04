@@ -146,18 +146,6 @@ class TestRevokeRoles(TestBaseClass):
         assert exception.value[0] == 70
         assert exception.value[1] == "AEROSPIKE_INVALID_ROLE"
 
-    def test_revoke_roles_with_invalid_role(self):
-
-        policy = {}
-        user = "example"
-        roles = ["viewer"]
-
-        with pytest.raises(Exception) as exception:
-            status = self.client.admin_revoke_roles( user, roles, policy )
-
-        assert exception.value[0] == 70
-        assert exception.value[1] == "AEROSPIKE_INVALID_ROLE"
-
     def test_revoke_roles_with_nonexistent_username(self):
 
         policy = {}

@@ -292,24 +292,6 @@ class TestCreateUser(TestBaseClass):
         assert exception.value[0] == 70
         assert exception.value[1] == "AEROSPIKE_INVALID_ROLE"
 
-    def test_create_user_with_invalid_role(self):
-
-        policy = {}
-        user = "user12"
-        password = "user12"
-        roles = ["viewer"]
-
-        try:
-            self.client.admin_drop_user ( user, policy )
-        except:
-            pass
-
-        with pytest.raises(Exception) as exception:
-            status = self.client.admin_create_user( user, password, roles, policy )
-
-        assert exception.value[0] == 70
-        assert exception.value[1] == "AEROSPIKE_INVALID_ROLE"
-
     def test_create_user_with_non_user_admin_user(self):
 
         policy = {}

@@ -119,6 +119,36 @@ class TestDropUser(TestBaseClass):
         assert exception.value[0] == 60L
         assert exception.value[1] == 'AEROSPIKE_INVALID_USER'
 
+    def test_drop_user_positive_without_policy(self):
+
+        """
+            Invoke drop_user() with correct arguments.
+        """
+        policy = {
+            'timeout': 1000
+        }
+        user = "foo"
+        password = "foo1"
+        roles = ["read", "read-write", "sys-admin"]
+
+        status = self.client.admin_create_user( user, password, roles, policy )
+
+        time.sleep(2)
+
+        assert status == 0
+        user_details = self.client.admin_query_user( user, policy )
+
+        assert user_details == [{'roles': ['read', 'read-write', 'sys-admin'], 'roles_size': 3, 'user': 'foo'}]
+        status = self.client.admin_drop_user( user )
+        assert status == 0
+
+        time.sleep(1)
+
+        with pytest.raises(Exception) as exception:
+            user_details = self.client.admin_query_user( user, policy )
+
+        assert exception.value[0] == 60L
+        assert exception.value[1] == 'AEROSPIKE_INVALID_USER'
     def test_drop_user_negative(self):
 
         """

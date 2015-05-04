@@ -67,6 +67,21 @@ class TestGrantRoles(TestBaseClass):
         assert user_details == [{'roles': ['read', 'read-write', 'sys-admin'
 ], 'roles_size': 3, 'user': 'example'}]
 
+    def test_grant_roles_with_proper_parameters_without_policy(self):
+
+        policy = {'timeout': 1000}
+        user = "example"
+        roles = ["read", "read-write", "sys-admin"]
+
+        status = self.client.admin_grant_roles(user, roles)
+        assert status == 0
+        time.sleep(2)
+
+        user_details = self.client.admin_query_user( user, policy )
+
+        assert user_details == [{'roles': ['read', 'read-write', 'sys-admin'
+], 'roles_size': 3, 'user': 'example'}]
+
     def test_grant_roles_with_invalid_timeout_policy_value(self):
 
         policy = { "timeout" : 0.1 }
@@ -152,18 +167,6 @@ class TestGrantRoles(TestBaseClass):
         policy = {'timeout': 1000}
         user = "example"
         roles = []
-
-        with pytest.raises(Exception) as exception:
-            status = self.client.admin_grant_roles( user, roles, policy )
-
-        assert exception.value[0] == 70
-        assert exception.value[1] == "AEROSPIKE_INVALID_ROLE"
-
-    def test_grant_roles_with_invalid_role(self):
-
-        policy = {'timeout': 1000}
-        user = "example"
-        roles = ["viewer"]
 
         with pytest.raises(Exception) as exception:
             status = self.client.admin_grant_roles( user, roles, policy )
