@@ -76,12 +76,12 @@ try:
                    meta={'ttl':120})
         (key, meta, bins) = client.get(('test', 'cats', 'mr. peppy'))
         print("Before:", bins)
-        client.increment(key, 'lives', -1, 9, policy={'timeout': 1500})
+        client.increment(key, 'lives', -1, {'gen': 2, 'ttl': 1000}, policy={'timeout': 1500})
         (key, meta, bins) = client.get(key)
         print("After:", bins)
         # the key we got back when we fetched the record with get() is useable
         # as-is because it contains the record's digest
-        client.increment(key, 'lives', -1, 9)
+        client.increment(key, 'lives', -1)
         (key, meta, bins) = client.get(key)
         # kitty lost a life, unfortunately
         print("Poor Kitty:", bins)

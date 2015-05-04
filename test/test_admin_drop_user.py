@@ -6,11 +6,8 @@ import time
 import cPickle as pickle
 from test_base_class import TestBaseClass
 
-try:
-    import aerospike
-except:
-    print "Please install aerospike python client."
-    sys.exit(1)
+aerospike = pytest.importorskip("aerospike")
+
 
 class SomeClass(object):
 
@@ -19,16 +16,18 @@ class SomeClass(object):
 
 class TestDropUser(TestBaseClass):
 
-    def setup_method(self, method):
+    pytestmark = pytest.mark.skipif(
+        TestBaseClass().get_hosts()[1] == None,
+        reason="No user specified, may be not secured cluster.")
 
+    def setup_method(self, method):
         """
         Setup method.
         """
         hostlist, user, password = TestBaseClass().get_hosts()
-        config = {
-                'hosts': hostlist
-                }
-        self.client = aerospike.client(config).connect( user, password )
+        config = {'hosts': hostlist}
+        TestDropUser.Me = self
+        self.client = aerospike.client(config).connect(user, password)
 
     def teardown_method(self, method):
         """
@@ -46,7 +45,6 @@ class TestDropUser(TestBaseClass):
         assert "Required argument 'user' (pos 1) not found" in typeError.value
 
     def test_drop_user_with_policy_none(self):
-
         """
             Invoke drop_user() with policy none
         """
@@ -75,13 +73,10 @@ class TestDropUser(TestBaseClass):
         assert exception.value[1] == 'AEROSPIKE_INVALID_USER'
 
     def test_drop_user_with_user_none(self):
-
         """
             Invoke drop_user() with policy none
         """
-        policy = {
-            'timeout': 1000
-        }
+        policy = {'timeout': 1000}
         with pytest.raises(Exception) as exception:
             self.client.admin_drop_user( None, policy )
 
@@ -89,13 +84,10 @@ class TestDropUser(TestBaseClass):
         assert exception.value[1] == 'Username should be a string'
 
     def test_drop_user_positive(self):
-
         """
             Invoke drop_user() with correct arguments.
         """
-        policy = {
-            'timeout': 1000
-        }
+        policy = {'timeout': 1000}
         user = "foo"
         password = "foo1"
         roles = ["read", "read-write", "sys-admin"]
@@ -150,7 +142,6 @@ class TestDropUser(TestBaseClass):
         assert exception.value[0] == 60L
         assert exception.value[1] == 'AEROSPIKE_INVALID_USER'
     def test_drop_user_negative(self):
-
         """
             Invoke drop_user() with non-existent user.
         """
@@ -171,13 +162,10 @@ class TestDropUser(TestBaseClass):
         assert exception.value[1] == 'AEROSPIKE_INVALID_USER'
 
     def test_drop_user_policy_incorrect(self):
-
         """
             Invoke drop_user() with policy incorrect
         """
-        policy = {
-            'timeout': 1000
-        }
+        policy = {'timeout': 1000}
         user = "incorrect-policy"
         password = "foo1"
         roles = ["read", "read-write", "sys-admin"]
@@ -203,13 +191,10 @@ class TestDropUser(TestBaseClass):
         status = self.client.admin_drop_user( user )
 
     def test_drop_user_with_extra_argument(self):
-
         """
             Invoke drop_user() with extra argument.
         """
-        policy = {
-            'timeout': 1000
-        }
+        policy = {'timeout': 1000}
         with pytest.raises(TypeError) as typeError:
             self.client.admin_drop_user( "foo", policy, "" )
 
@@ -218,9 +203,9 @@ class TestDropUser(TestBaseClass):
     def test_drop_user_with_too_long_username(self):
 
         policy = {}
-        user = "user$"*1000
+        user = "user$" * 1000
         password = "user10"
-        roles = [ "sys-admin" ]
+        roles = ["sys-admin"]
 
         with pytest.raises(Exception) as exception:
             status = self.client.admin_create_user( user, password, roles, policy )
@@ -250,4 +235,3 @@ class TestDropUser(TestBaseClass):
         status = self.client.admin_drop_user( user )
 
         assert status == 0
-

@@ -152,6 +152,7 @@ try:
         print(key)
         print(metadata)
         print(bins)
+        client.remove(key)
         exitCode = 0
     except Exception as e:
         print("error: {0}".format(e), file=sys.stderr)

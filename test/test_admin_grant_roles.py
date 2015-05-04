@@ -5,24 +5,23 @@ import sys
 import time
 from test_base_class import TestBaseClass
 
-try:
-    import aerospike
-except:
-    print "Please install aerospike python client."
-    sys.exit(1)
+aerospike = pytest.importorskip("aerospike")
+
 
 class TestGrantRoles(TestBaseClass):
 
-    def setup_method(self, method):
+    pytestmark = pytest.mark.skipif(
+        TestBaseClass().get_hosts()[1] == None,
+        reason="No user specified, may be not secured cluster.")
 
+    def setup_method(self, method):
         """
         Setup method
         """
         hostlist, user, password = TestBaseClass().get_hosts()
-        config = {
-                "hosts": hostlist
-                }
-        self.client = aerospike.client(config).connect( user, password )
+        config = {"hosts": hostlist}
+        TestGrantRoles.Me = self
+        self.client = aerospike.client(config).connect(user, password)
 
         policy = {}
         user = "example"
@@ -34,7 +33,6 @@ class TestGrantRoles(TestBaseClass):
         self.delete_users = []
 
     def teardown_method(self, method):
-
         """
         Teardown method
         """
@@ -84,7 +82,7 @@ class TestGrantRoles(TestBaseClass):
 
     def test_grant_roles_with_invalid_timeout_policy_value(self):
 
-        policy = { "timeout" : 0.1 }
+        policy = {"timeout": 0.1}
         user = "example"
         roles = ['sys-admin']
 
@@ -96,7 +94,7 @@ class TestGrantRoles(TestBaseClass):
 
     def test_grant_roles_with_proper_timeout_policy_value(self):
 
-        policy = { 'timeout' : 5 }
+        policy = {'timeout': 5}
         user = "example"
         roles = ["read-write", "sys-admin"]
 
@@ -108,14 +106,12 @@ class TestGrantRoles(TestBaseClass):
 
         user_details = self.client.admin_query_user( user )
 
-        assert user_details == [{'roles': ['read-write', 'sys-admin'
+        assert user_details == [{'roles': ['read-write', 'sys-admin',
 ], 'roles_size': 2, 'user': 'example'}]
-
-
 
     def test_grant_roles_with_none_username(self):
 
-        policy = { 'timeout' : 0 }
+        policy = {'timeout': 0}
         user = None
         roles = ["sys-admin"]
 
@@ -156,8 +152,11 @@ class TestGrantRoles(TestBaseClass):
 
         user_details = self.client.admin_query_user( user )
 
-        assert user_details == [{'roles': ['read','read-write'], 'roles_size':
-2, 'user':'!#Q#AEQ@#$%&^*((^&*~~~````['}]
+        assert user_details == [{
+            'roles': ['read', 'read-write'],
+            'roles_size': 2,
+            'user': '!#Q#AEQ@#$%&^*((^&*~~~````['
+        }]
 
         status = self.client.admin_drop_user( "!#Q#AEQ@#$%&^*((^&*~~~````[" )
         assert status == 0
