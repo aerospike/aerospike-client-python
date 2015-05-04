@@ -1207,6 +1207,11 @@ PyObject * AerospikeClient_Admin_Query_Role(AerospikeClient * self, PyObject *ar
 	as_role_to_pyobject(&err, ret_role, &py_ret_role);
 
 CLEANUP:
+
+	if( ret_role != NULL) {
+		as_role_destroy(ret_role);
+	}
+
 	if ( err.code != AEROSPIKE_OK ) {
 		PyObject * py_err = NULL;
 		error_to_pyobject(&err, &py_err);
@@ -1280,6 +1285,8 @@ PyObject * AerospikeClient_Admin_Query_Roles(AerospikeClient * self, PyObject *a
 	as_role_array_to_pyobject(&err, ret_role, &py_ret_role, ret_role_size);
 
 CLEANUP:
+	as_roles_destroy(ret_role, ret_role_size);
+
 	if ( err.code != AEROSPIKE_OK ) {
 		PyObject * py_err = NULL;
 		error_to_pyobject(&err, &py_err);
