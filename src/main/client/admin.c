@@ -1000,8 +1000,6 @@ PyObject * AerospikeClient_Admin_Grant_Privileges(AerospikeClient * self, PyObje
 	PyObject * py_policy = NULL;
 	PyObject * py_role = NULL;
 	PyObject * py_privileges = NULL;
-	PyObject * py_ns = NULL;
-	PyObject * py_set = NULL;
 
 	as_policy_admin admin_policy;
 	as_policy_admin *admin_policy_p = NULL;

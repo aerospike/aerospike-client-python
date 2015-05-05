@@ -13,6 +13,10 @@ except:
 
 class TestQueryRole(TestBaseClass):
 
+    pytestmark = pytest.mark.skipif(
+        TestBaseClass().get_hosts()[1] == None,
+        reason="No user specified, may be not secured cluster.")
+
     def setup_method(self, method):
 
         """
