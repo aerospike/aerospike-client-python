@@ -6,7 +6,11 @@ import time
 from test_base_class import TestBaseClass
 
 aerospike = pytest.importorskip("aerospike")
-
+try:
+    from aerospike.exception import *
+except:
+    print "Please install aerospike python client."
+    sys.exit(1)
 
 class TestLSet(object):
 
@@ -107,10 +111,12 @@ class TestLSet(object):
 
         print TestLSet.key
 
-        with pytest.raises(Exception) as exception:
+        try:
             TestLSet.lset.add(566)
 
-        assert exception.value[0] == 100
+        except LDTUniqueKeyError as exception:
+            assert exception.code == 1402
+            assert exception.msg == "LDT-Unique Key or Value Violation"
 
     #Add_many() - Add a list of objects to the set.
     def test_lset_add_many_positive(self):
@@ -140,17 +146,13 @@ class TestLSet(object):
             Invoke get() non-existent element from set.
         """
 
-        with pytest.raises(Exception) as exception:
+        try:
             TestLSet.lset.get(1000)
 
-        status = [100L, 125L]
-        for val in status:
-            if exception.value[0] != val:
-                continue
-            else:
-                break
-
-        assert exception.value[0] == val
+        except UDFError as exception:
+            assert exception.code == 100L
+        except LargeItemNotFound as exception:
+            assert exception.code == 125L
 
     #Exists() and Remove() - Test existence of an object and remove from the set.
     def test_lset_exists_element_positive(self):
@@ -188,8 +190,9 @@ class TestLSet(object):
         """
         key = ('test', 'demo', 12.3)
 
-        with pytest.raises(Exception) as exception:
+        try:
             lset = self.client.lset(key, 'ldt_stk')
 
-        assert exception.value[0] == -1
-        assert exception.value[1] == "Parameters are incorrect"
+        except ParamError as exception:
+            assert exception.code == -2
+            assert exception.msg == "Parameters are incorrect"

@@ -26,6 +26,7 @@
 
 #include "client.h"
 #include "conversions.h"
+#include "exceptions.h"
 #include "key.h"
 #include "policy.h"
 
@@ -147,7 +148,7 @@ PyObject * AerospikeClient_Exists_Many_Invoke(
 			PyObject * py_key = PyList_GetItem(py_keys, i);
 
 			if ( !PyTuple_Check(py_key) ){
-				as_error_update(&err, AEROSPIKE_ERR_CLIENT, "Key should be a tuple.");
+				as_error_update(&err, AEROSPIKE_ERR_PARAM, "Key should be a tuple.");
 				goto CLEANUP;
 			}
 
@@ -169,7 +170,7 @@ PyObject * AerospikeClient_Exists_Many_Invoke(
 			PyObject * py_key = PyTuple_GetItem(py_keys, i);
 
 			if ( !PyTuple_Check(py_key) ){
-				as_error_update(&err, AEROSPIKE_ERR_CLIENT, "Key should be a tuple.");
+				as_error_update(&err, AEROSPIKE_ERR_PARAM, "Key should be a tuple.");
 				goto CLEANUP;
 			}
 
@@ -181,7 +182,7 @@ PyObject * AerospikeClient_Exists_Many_Invoke(
 		}
 	}
 	else {
-		as_error_update(&err, AEROSPIKE_ERR_CLIENT, "Keys should be specified as a list or tuple.");
+		as_error_update(&err, AEROSPIKE_ERR_PARAM, "Keys should be specified as a list or tuple.");
 		goto CLEANUP;
 	}
 
@@ -196,6 +197,9 @@ PyObject * AerospikeClient_Exists_Many_Invoke(
 	aerospike_batch_exists(self->as, &err, batch_policy_p,
 		&batch, (aerospike_batch_read_callback) batch_exists_cb,
 		py_recs);
+	if ( err.code != AEROSPIKE_OK ) {
+		as_error_update(&err, err.code, NULL);
+	}
 
 CLEANUP:
 
@@ -209,7 +213,14 @@ CLEANUP:
 	if ( err.code != AEROSPIKE_OK ) {
 		PyObject * py_err = NULL;
 		error_to_pyobject(&err, &py_err);
-		PyErr_SetObject(PyExc_Exception, py_err);
+		PyObject *exception_type = raise_exception(&err);
+		if(PyObject_HasAttrString(exception_type, "key")) {
+			PyObject_SetAttrString(exception_type, "key", py_keys);
+		} 
+		if(PyObject_HasAttrString(exception_type, "bin")) {
+			PyObject_SetAttrString(exception_type, "bin", Py_None);
+		}
+		PyErr_SetObject(exception_type, py_err);
 		Py_DECREF(py_err);
 		return NULL;
 	}

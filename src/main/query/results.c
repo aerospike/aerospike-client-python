@@ -25,6 +25,7 @@
 
 #include "client.h"
 #include "conversions.h"
+#include "exceptions.h"
 #include "query.h"
 #include "policy.h"
 
@@ -122,7 +123,9 @@ CLEANUP:/*??trace()*/
 	if ( err.code != AEROSPIKE_OK ) {
 		PyObject * py_err = NULL;
 		error_to_pyobject(&err, &py_err);
-		PyErr_SetObject(PyExc_Exception, py_err);
+		PyObject *exception_type = raise_exception(&err);
+		PyErr_SetObject(exception_type, py_err);
+		Py_DECREF(py_err);
 		TRACE();
 		return NULL;
 	}

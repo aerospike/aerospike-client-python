@@ -5,7 +5,11 @@ import sys
 from test_base_class import TestBaseClass
 
 aerospike = pytest.importorskip("aerospike")
-
+try:
+    from aerospike.exception import *
+except:
+    print "Please install aerospike python client."
+    sys.exit(1)
 
 class TestScan(TestBaseClass):
 
@@ -57,27 +61,25 @@ class TestScan(TestBaseClass):
         def callback((key, meta, bins)):
             records.append(bins)
 
-        with pytest.raises(Exception) as exception:
+        try:
             scan_obj.foreach(callback)
 
-        status = [1L, 20L]
-        for val in status:
-            if exception.value[0] != val:
-                continue
-            else:
-                break
-        assert exception.value[0] == val
+        except NamespaceNotFound as exception:
+            assert exception.code == 20L
+        except ServerError as exception:
+            assert exception.code == 1L
 
     def test_scan_with_none_ns_and_set(self):
 
         ns = None
         st = None
-        scan_obj = None
-        with pytest.raises(Exception) as exception:
-            scan_obj = self.client.scan(ns, st)
 
-        assert exception.value[0] == -1L
-        assert exception.value[1] == 'Parameters are incorrect'
+        try:
+            scan_obj = self.client.scan( ns, st )
+
+        except ParamError as exception:
+            assert exception.code == -2L
+            assert exception.msg == 'Parameters are incorrect'
 
     def test_scan_with_existent_ns_and_set(self):
 
@@ -129,10 +131,12 @@ class TestScan(TestBaseClass):
 
         scan_obj = self.client.scan(ns, st)
 
-        with pytest.raises(Exception) as exception:
+        try:
             scan_obj.foreach(callback, { 'timeout' : 1000 })
-        assert exception.value[0] == -2L
-        assert exception.value[1] == "Callback function contains an error"
+
+        except ParamError as exception:
+            assert exception.code == -2L
+            assert exception.msg == "Callback function contains an error"
 
     def test_scan_with_callback_returning_false(self):
         """
@@ -217,11 +221,12 @@ class TestScan(TestBaseClass):
         scan_obj = None
         scan_obj = self.client.scan('test', 'demo')
 
-        with pytest.raises(Exception) as exception:
+        try:
             scan_obj.select(22, 'test_age')
 
-        assert exception.value[0] == -2L
-        assert exception.value[1] == 'Bin name should be of type string'
+        except ParamError as exception:
+            assert exception.code == -2L
+            assert exception.msg == 'Bin name should be of type string'
 
     def test_scan_with_options_positive(self):
         """
@@ -311,11 +316,12 @@ class TestScan(TestBaseClass):
 
         scan_obj = self.client.scan(ns, st)
 
-        with pytest.raises(Exception) as exception:
-            scan_obj.foreach(callback, {'timeout': 1000}, options)
+        try:
+            scan_obj.foreach(callback, { 'timeout' : 1000 }, options)
 
-        assert exception.value[0] == -2L
-        assert exception.value[1] == 'Invalid value(type) for nobins'
+        except ParamError as exception:
+            assert exception.code == -2L
+            assert exception.msg == 'Invalid value(type) for nobins'
 
     def test_scan_with_multiple_foreach_on_same_scan_object(self):
         """

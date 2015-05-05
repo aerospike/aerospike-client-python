@@ -6,7 +6,11 @@ import time
 from test_base_class import TestBaseClass
 
 aerospike = pytest.importorskip("aerospike")
-
+try:
+    from aerospike.exception import *
+except:
+    print "Please install aerospike python client."
+    sys.exit(1)
 
 class TestChangePassword(TestBaseClass):
 
@@ -58,19 +62,18 @@ class TestChangePassword(TestBaseClass):
 
         assert status == 0
 
-        config = {"hosts": TestChangePassword.hostlist}
-        with pytest.raises(Exception) as exception:
-            self.clientreaduserwrong = aerospike.client(config).connect(
-                user, "aerospike")
+        config = {
+                "hosts": TestChangePassword.hostlist
+                }
+        try:
+            self.clientreaduserwrong = aerospike.client(config).connect( user, "aerospike" )
 
-        status = [-1L, 62]
-        for val in status:
-            if exception.value[0] != val:
-                continue
-            else:
-                break
-
-        assert exception.value[0] == val
+        except InvalidPassword as exception:
+            assert exception.code == 62 
+            assert exception.msg == None
+        except ClientError as exception:
+            assert exception.code == -1
+            assert exception.msg == "Failed to seed cluster"
 
         self.clientreaduserright = aerospike.client(config).connect(
             user, "newpassword")
@@ -86,11 +89,12 @@ class TestChangePassword(TestBaseClass):
         user = "testchangepassworduser"
         password = "newpassword"
 
-        with pytest.raises(Exception) as exception:
-            status = self.client.admin_change_password(policy, user, password)
+        try:
+            status = self.client.admin_change_password( policy, user, password )
 
-        assert exception.value[0] == -2
-        assert exception.value[1] == "timeout is invalid"
+        except ParamError as exception:
+            assert exception.code == -2
+            assert exception.msg == "timeout is invalid"
 
     def test_change_password_with_proper_timeout_policy_value(self):
 
@@ -107,19 +111,19 @@ class TestChangePassword(TestBaseClass):
 
         assert status == 0
 
-        config = {"hosts": TestChangePassword.hostlist}
-        with pytest.raises(Exception) as exception:
-            self.clientreaduserwrong = aerospike.client(config).connect(
-                user, "aerospike")
+        config = {
+                "hosts": TestChangePassword.hostlist
+                }
 
-        status = [-1L, 62]
-        for val in status:
-            if exception.value[0] != val:
-                continue
-            else:
-                break
+        try:
+            self.clientreaduserwrong = aerospike.client(config).connect( user, "aerospike" )
 
-        assert exception.value[0] == val
+        except InvalidPassword as exception:
+            assert exception.code == 62 
+            assert exception.msg == None
+        except ClientError as exception:
+            assert exception.code == -1
+            assert exception.msg == "Failed to seed cluster"
 
         self.clientreaduserright = aerospike.client(config).connect(
             user, "newpassword")
@@ -135,11 +139,12 @@ class TestChangePassword(TestBaseClass):
         user = None
         password = "newpassword"
 
-        with pytest.raises(Exception) as exception:
-            status = self.client.admin_change_password(policy, user, password)
+        try:
+            status = self.client.admin_change_password( policy, user, password )
 
-        assert exception.value[0] == -2
-        assert exception.value[1] == "Username should be a string"
+        except ParamError as exception:
+            assert exception.code == -2
+            assert exception.msg == "Username should be a string"
 
     def test_change_password_with_none_password(self):
 
@@ -147,11 +152,12 @@ class TestChangePassword(TestBaseClass):
         user = "testchangepassworduser"
         password = None
 
-        with pytest.raises(Exception) as exception:
-            status = self.client.admin_change_password(policy, user, password)
+        try:
+            status = self.client.admin_change_password( policy, user, password )
 
-        assert exception.value[0] == -2
-        assert exception.value[1] == "Password should be a string"
+        except ParamError as exception:
+            assert exception.code == -2
+            assert exception.msg == "Password should be a string"
 
     def test_change_password_with_non_existent_user(self):
 
@@ -159,11 +165,12 @@ class TestChangePassword(TestBaseClass):
         user = "readwriteuser"
         password = "newpassword"
 
-        with pytest.raises(Exception) as exception:
-            status = self.client.admin_change_password(policy, user, password)
+        try:
+            status = self.client.admin_change_password( policy, user, password )
 
-        assert exception.value[0] == 60
-        assert exception.value[1] == "AEROSPIKE_INVALID_USER"
+        except InvalidUser as exception:
+            assert exception.code == 60
+            assert exception.msg == "AEROSPIKE_INVALID_USER"
 
     def test_change_password_with_too_long_password(self):
 
@@ -180,19 +187,19 @@ class TestChangePassword(TestBaseClass):
 
         assert status == 0
 
-        config = {"hosts": TestChangePassword.hostlist}
-        with pytest.raises(Exception) as exception:
-            self.clientreaduserwrong = aerospike.client(config).connect(
-                user, "aerospike")
+        config = {
+                "hosts": TestChangePassword.hostlist
+                }
 
-        status = [-1L, 62]
-        for val in status:
-            if exception.value[0] != val:
-                continue
-            else:
-                break
+        try:
+            self.clientreaduserwrong = aerospike.client(config).connect( user, "aerospike" )
 
-        assert exception.value[0] == val
+        except InvalidPassword as exception:
+            assert exception.code == 62 
+            assert exception.msg == None
+        except ClientError as exception:
+            assert exception.code == -1
+            assert exception.msg == "Failed to seed cluster"
 
         self.clientreaduserright = aerospike.client(config).connect(user,
                                                                     password)

@@ -5,11 +5,14 @@ import sys
 import cPickle as pickle
 from test_base_class import TestBaseClass
 
-
 aerospike = pytest.importorskip("aerospike")
+try:
+    from aerospike.exception import *
+except:
+    print "Please install aerospike python client."
+    sys.exit(1)
 
 from aerospike import predicates as p
-
 
 class TestAggregate(TestBaseClass):
     def setup_class(cls):
@@ -86,13 +89,14 @@ class TestAggregate(TestBaseClass):
         """
             Invoke aggregate() without any mandatory parameters.
         """
-        with pytest.raises(Exception) as exception:
+        try:
             query = self.client.query()
             query.select()
             query.where()
 
-        assert exception.value[0] == -2
-        assert exception.value[1] == 'query() expects atleast 1 parameter'
+        except ParamError as exception:
+            assert exception.code == -2
+            assert exception.msg == 'query() expects atleast 1 parameter'
 
         #assert "where() takes at least 1 argument (0 given)" in typeError.value
 
@@ -100,7 +104,7 @@ class TestAggregate(TestBaseClass):
         """
             Invoke aggregate() with no secondary index
         """
-        with pytest.raises(Exception) as exception:
+        try:
             query = self.client.query('test', 'demo')
             query.select('name', 'no')
             query.where(p.between('no', 1, 5))
@@ -112,14 +116,15 @@ class TestAggregate(TestBaseClass):
                 result = value
 
             query.foreach(user_callback)
-        assert exception.value[0] == 201L
-        assert exception.value[1] == 'AEROSPIKE_ERR_INDEX_NOT_FOUND'
+        except IndexNotFound as exception:
+            assert exception.code == 201L
+            assert exception.msg == 'AEROSPIKE_ERR_INDEX_NOT_FOUND'
 
     def test_aggregate_with_incorrect_ns_set(self):
         """
             Invoke aggregate() with incorrect ns and set
         """
-        with pytest.raises(Exception) as exception:
+        try:
             query = self.client.query('test1', 'demo1')
             query.select('name', 'test_age')
             query.where(p.equals('test_age', 1))
@@ -131,8 +136,9 @@ class TestAggregate(TestBaseClass):
 
             query.foreach(user_callback)
 
-        assert exception.value[0] == 4L
-        assert exception.value[1] == 'AEROSPIKE_ERR_REQUEST_INVALID'
+        except InvalidRequest as exception:
+            assert exception.code == 4L
+            assert exception.msg == 'AEROSPIKE_ERR_REQUEST_INVALID'
 
     def test_aggregate_with_where_incorrect(self):
         """
@@ -148,7 +154,6 @@ class TestAggregate(TestBaseClass):
             records.append(value)
 
         query.foreach(user_callback)
-        assert exception.value[0] == 100L
         assert records == []
 
     def test_aggregate_with_where_none_value(self):
@@ -157,7 +162,7 @@ class TestAggregate(TestBaseClass):
         """
         query = self.client.query('test', 'demo')
         query.select('name', 'test_age')
-        with pytest.raises(Exception) as exception:
+        try:
             query.where(p.equals('test_age', None))
             query.apply('stream_example', 'count')
             result = 1
@@ -167,8 +172,9 @@ class TestAggregate(TestBaseClass):
 
             query.foreach(user_callback)
 
-        assert exception.value[0] == -2L
-        assert exception.value[1] == 'predicate is invalid.'
+        except ParamError as exception:
+            assert exception.code == -2L
+            assert exception.msg == 'predicate is invalid.'
 
     def test_aggregate_with_where_bool_value(self):
         """
@@ -218,12 +224,10 @@ class TestAggregate(TestBaseClass):
 
         query.foreach(user_callback)
         assert result == None
-
+    """
     def test_aggregate_with_incorrect_module(self):
-        """
-            Invoke aggregate() with incorrect module
-        """
-        with pytest.raises(Exception) as exception:
+            #Invoke aggregate() with incorrect module
+        try:
             query = self.client.query('test', 'demo')
             query.select('name', 'test_age')
             query.where(p.between('test_age', 1, 5))
@@ -236,14 +240,13 @@ class TestAggregate(TestBaseClass):
 
             query.foreach(user_callback)
 
-        assert exception.value[0] == -1L
-        assert exception.value[1] == 'UDF: Execution Error 1'
+        except ClientError as exception:
+            assert exception.code == -1L
+            assert exception.msg == 'UDF: Execution Error 1'
 
     def test_aggregate_with_incorrect_function(self):
-        """
-            Invoke aggregate() with incorrect function
-        """
-        with pytest.raises(Exception) as exception:
+        #Invoke aggregate() with incorrect function
+        try:
             query = self.client.query('test', 'demo')
             query.select('name', 'test_age')
             query.where(p.between('test_age', 1, 5))
@@ -255,9 +258,10 @@ class TestAggregate(TestBaseClass):
                 records.append(value)
 
             query.foreach(user_callback)
-        assert exception.value[0] == -1L
-        assert exception.value[1] == 'UDF: Execution Error 2 : function not found'
-
+        except ClientError as exception:
+            assert exception.code == -1L
+            assert exception.msg == 'UDF: Execution Error 2 : function not found'
+            """
     def test_aggregate_with_correct_parameters(self):
         """
             Invoke aggregate() with correct arguments
@@ -349,11 +353,10 @@ class TestAggregate(TestBaseClass):
         query.foreach(user_callback)
         assert records[0] == 4
 
+    """
     def test_aggregate_with_less_parameter_in_lua(self):
-        """
-            Invoke aggregate() with less parameter in lua
-        """
-        with pytest.raises(Exception) as exception:
+        #Invoke aggregate() with less parameter in lua
+        try:
             query = self.client.query('test', 'demo')
             query.select('name', 'test_age')
             query.where(p.between('test_age', 1, 5))
@@ -366,8 +369,9 @@ class TestAggregate(TestBaseClass):
 
             query.foreach(user_callback)
 
-        assert exception.value[0] == -1L
-
+        except ClientError as exception:
+            assert exception.code == -1L
+            """
     def test_aggregate_with_arguments_to_lua_function(self):
         """
             Invoke aggregate() with unicode arguments to lua function.
@@ -452,7 +456,7 @@ class TestAggregate(TestBaseClass):
         config = {'hosts': [('127.0.0.1', 3000)]}
         client1 = aerospike.client(config)
 
-        with pytest.raises(Exception) as exception:
+        try:
             query = client1.query('test', 'demo')
             query.select('name', 'test_age')
             query.where(p.between('test_age', 1, 5))
@@ -465,5 +469,6 @@ class TestAggregate(TestBaseClass):
 
             query.foreach(user_callback)
 
-        assert exception.value[0] == 11L
-        assert exception.value[1] == 'No connection to aerospike cluster'
+        except ClusterError as exception:
+            assert exception.code == 11L
+            assert exception.msg == 'No connection to aerospike cluster'

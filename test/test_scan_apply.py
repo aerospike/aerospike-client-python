@@ -6,6 +6,11 @@ import cPickle as pickle
 from test_base_class import TestBaseClass
 
 aerospike = pytest.importorskip("aerospike")
+try:
+    from aerospike.exception import *
+except:
+    print "Please install aerospike python client."
+    sys.exit(1)
 
 class TestScanApply(object):
     def setup_method(self, method):
@@ -85,30 +90,27 @@ class TestScanApply(object):
         """
         Invoke scan_apply() with incorrect policy
         """
-        policy = {'timeout': 0.5}
-        with pytest.raises(Exception) as exception:
-            scan_id = self.client.scan_apply("test", "demo", "bin_lua",
-                                             "mytransform", ['age', 2], policy)
+        policy = {
+            'timeout': 0.5
+        }
+        try:
+            scan_id = self.client.scan_apply("test", "demo", "bin_lua", "mytransform", ['age', 2], policy)
 
-        assert exception.value[0] == -2
-        assert exception.value[1] == "timeout is invalid"
+        except ParamError as exception:
+            assert exception.code == -2
+            assert exception.msg == "timeout is invalid"
 
     def test_scan_apply_with_incorrect_ns_set(self):
         """
         Invoke scan_apply() with incorrect ns and set
         """
-        with pytest.raises(Exception) as exception:
-            scan_id = self.client.scan_apply("test1", "demo1", "bin_lua",
-                                             "mytransform", ['age', 2])
+        try:
+            scan_id = self.client.scan_apply("test1", "demo1", "bin_lua", "mytransform", ['age', 2])
 
-        status = [1L, 20L]
-        for val in status:
-            if exception.value[0] != val:
-                continue
-            else:
-                break
-
-                assert exception.value[0] == val
+        except NamespaceNotFound as exception:
+            assert exception.code == 20L
+        except ServerError as exception:
+            assert exception.code == 1L
 
     def test_scan_apply_with_incorrect_module_name(self):
         """
@@ -163,12 +165,12 @@ class TestScanApply(object):
         Invoke scan_apply() with None module function
         """
 
-        with pytest.raises(Exception) as exception:
-            scan_id = self.client.scan_apply("test", "demo", None, None,
-                                             ['age', 2])
+        try:
+            scan_id = self.client.scan_apply("test", "demo", None, None, ['age', 2])
 
-        assert exception.value[0] == -2L
-        assert exception.value[1] == "Module name should be string"
+        except ParamError as exception:
+            assert exception.code == -2L
+            assert exception.msg == "Module name should be string"
 
     def test_scan_apply_with_percent_string(self):
         """
@@ -180,13 +182,14 @@ class TestScanApply(object):
             "concurrent": False,
             "priority": aerospike.SCAN_PRIORITY_HIGH
         }
-        with pytest.raises(Exception) as exception:
+        try:
             scan_id = self.client.scan_apply("test", "demo", "bin_lua",
                                              "mytransform_incorrect",
                                              ['age', 2], policy, options)
 
-        assert exception.value[0] == -2
-        assert exception.value[1] == "Invalid value(type) for percent"
+        except ParamError as exception:
+            assert exception.code == -2
+            assert exception.msg == "Invalid value(type) for percent"
 
     def test_scan_apply_with_priority_string(self):
         """
@@ -198,13 +201,14 @@ class TestScanApply(object):
             "concurrent": False,
             "priority": "aerospike.SCAN_PRIORITY_HIGH"
         }
-        with pytest.raises(Exception) as exception:
+        try:
             scan_id = self.client.scan_apply("test", "demo", "bin_lua",
                                              "mytransform_incorrect",
                                              ['age', 2], policy, options)
 
-        assert exception.value[0] == -2
-        assert exception.value[1] == "Invalid value(type) for priority"
+        except ParamError as exception:
+            assert exception.code == -2
+            assert exception.msg == "Invalid value(type) for priority"
 
     def test_scan_apply_with_concurrent_int(self):
         """
@@ -216,13 +220,14 @@ class TestScanApply(object):
             "concurrent": 5,
             "priority": aerospike.SCAN_PRIORITY_HIGH
         }
-        with pytest.raises(Exception) as exception:
+        try:
             scan_id = self.client.scan_apply("test", "demo", "bin_lua",
                                              "mytransform_incorrect",
                                              ['age', 2], policy, options)
 
-        assert exception.value[0] == -2
-        assert exception.value[1] == "Invalid value(type) for concurrent"
+        except ParamError as exception:
+            assert exception.code == -2
+            assert exception.msg == "Invalid value(type) for concurrent"
 
     def test_scan_apply_with_extra_argument(self):
         """
@@ -245,23 +250,23 @@ class TestScanApply(object):
         """
         Invoke scan_apply() with arguments as string
         """
-        with pytest.raises(Exception) as exception:
-            scan_id = self.client.scan_apply("test", "demo", "bin_lua",
-                                             "mytransform", "")
+        try:
+            scan_id = self.client.scan_apply("test", "demo", "bin_lua", "mytransform", "")
 
-        assert exception.value[0] == -2
-        assert exception.value[1] == "Arguments should be a list"
+        except ParamError as exception:
+            assert exception.code == -2
+            assert exception.msg == "Arguments should be a list"
 
     def test_scan_apply_with_argument_is_none(self):
         """
         Invoke scan_apply() with arguments as None
         """
-        with pytest.raises(Exception) as exception:
-            scan_id = self.client.scan_apply("test", "demo", "bin_lua",
-                                             "mytransform", None)
+        try:
+            scan_id = self.client.scan_apply("test", "demo", "bin_lua", "mytransform", None)
 
-        assert exception.value[0] == -2
-        assert exception.value[1] == "Arguments should be a list"
+        except ParamError as exception:
+            assert exception.code == -2
+            assert exception.msg == "Arguments should be a list"
 
     def test_scan_apply_with_extra_call_to_lua(self):
         """
@@ -378,9 +383,9 @@ class TestScanApply(object):
         config = {'hosts': [('127.0.0.1', 3000)]}
         client1 = aerospike.client(config)
 
-        with pytest.raises(Exception) as exception:
-            scan_id = client1.scan_apply("test", "demo", "bin_lua",
-                                         "mytransform", ['age', 2])
+        try:
+            scan_id = client1.scan_apply("test", "demo", "bin_lua", "mytransform", ['age', 2])
 
-        assert exception.value[0] == 11L
-        assert exception.value[1] == 'No connection to aerospike cluster'
+        except ClusterError as exception:
+            assert exception.code == 11L
+            assert exception.msg == 'No connection to aerospike cluster'

@@ -8,7 +8,12 @@ from test_base_class import TestBaseClass
 from collections import OrderedDict
 
 aerospike = pytest.importorskip("aerospike")
-
+try:
+    import aerospike
+    from aerospike.exception import *
+except:
+    print "Please install aerospike python client."
+    sys.exit(1)
 
 class TestPut(TestBaseClass):
     def setup_class(cls):
@@ -104,11 +109,12 @@ class TestPut(TestBaseClass):
         """
         bins = {"name": "John"}
 
-        with pytest.raises(Exception) as exception:
+        try:
             res = TestPut.client.put(None, bins)
 
-        assert exception.value[0] == -2
-        assert exception.value[1] == 'key is invalid'
+        except ParamError as exception:
+            assert exception.code == -2
+            assert exception.msg == 'key is invalid'
 
     def test_put_with_none_namespace_in_key(self):
         """
@@ -118,11 +124,12 @@ class TestPut(TestBaseClass):
 
         bins = {"name": "Steve"}
 
-        with pytest.raises(Exception) as exception:
+        try:
             TestPut.client.put(key, bins)
 
-        assert exception.value[0] == -2
-        assert exception.value[1] == "namespace must be a string"
+        except ParamError as exception:
+            assert exception.code == -2
+            assert exception.msg == "namespace must be a string"
 
     def test_put_and_get_with_none_set_in_key(self):
         """
@@ -148,11 +155,12 @@ class TestPut(TestBaseClass):
 
         bins = {"name": "John"}
 
-        with pytest.raises(Exception) as exception:
+        try:
             TestPut.client.put(key, bins)
 
-        assert exception.value[0] == -2
-        assert exception.value[1] == "either key or digest is required"
+        except ParamError as exception:
+            assert exception.code == -2
+            assert exception.msg == "either key or digest is required"
 
     def test_put_with_string_type_record(self):
         """
@@ -162,11 +170,12 @@ class TestPut(TestBaseClass):
 
         kvs = "Name : John"
 
-        with pytest.raises(Exception) as exception:
-            res = TestPut.client.put(key, kvs)
+        try:
+            res = TestPut.client.put( key, kvs )
 
-        assert exception.value[0] == -2
-        assert exception.value[1] == "Record should be passed as bin-value pair"
+        except ParamError as exception:
+            assert exception.code == -2
+            assert exception.msg == "Record should be passed as bin-value pair"
 
     def test_put_with_wrong_ns_and_set(self):
         """
@@ -176,11 +185,12 @@ class TestPut(TestBaseClass):
 
         bins = {'a': ['!@#!#$%#', bytearray('ASD@#$AR#$@#ERQ#', 'utf-8')]}
 
-        with pytest.raises(Exception) as exception:
-            res = TestPut.client.put(key, bins)
+        try:
+            res = TestPut.client.put( key, bins )
 
-        assert exception.value[0] == 20
-        assert exception.value[1] == 'AEROSPIKE_ERR_NAMESPACE_NOT_FOUND'
+        except NamespaceNotFound as exception:
+            assert exception.code == 20
+            assert exception.msg == 'AEROSPIKE_ERR_NAMESPACE_NOT_FOUND'
 
     def test_put_with_nonexistent_namespace(self):
         """
@@ -188,12 +198,13 @@ class TestPut(TestBaseClass):
         """
         key = ('test1', 'demo', 1)
 
-        bins = {'i': 'asdadasd'}
-        with pytest.raises(Exception) as exception:
-            res = TestPut.client.put(key, bins)
+        bins = { 'i': 'asdadasd' }
+        try:
+            res = TestPut.client.put( key, bins )
 
-        assert exception.value[0] == 20
-        assert exception.value[1] == 'AEROSPIKE_ERR_NAMESPACE_NOT_FOUND'
+        except NamespaceNotFound as exception:
+            assert exception.code == 20
+            assert exception.msg == 'AEROSPIKE_ERR_NAMESPACE_NOT_FOUND'
 
     def test_put_with_nonexistent_set(self):
         """
@@ -336,11 +347,12 @@ class TestPut(TestBaseClass):
 
         rec = {'i': 12}
 
-        with pytest.raises(Exception) as exception:
-            res = TestPut.client.put(key, rec, "meta", "policies")
+        try:
+            res = TestPut.client.put( key, rec, "meta", "policies")
 
-        assert exception.value[0] == -2
-        assert exception.value[1] == "policy must be a dict"
+        except ParamError as exception:
+            assert exception.code == -2
+            assert exception.msg == "policy must be a dict"
 
     def test_put_with_string_record_generation(self):
         """
@@ -368,11 +380,12 @@ class TestPut(TestBaseClass):
         meta = {'gen': "wrong", 'ttl': 25000}
         policy = {'timeout': 1000}
 
-        with pytest.raises(Exception) as exception:
-            TestPut.client.put(key, rec, meta, policy)
+        try:
+            TestPut.client.put( key, rec, meta, policy )
 
-        assert exception.value[0] == -2
-        assert exception.value[1] == "Generation should be an int or long"
+        except ParamError as exception:
+            assert exception.code == -2
+            assert exception.msg == "Generation should be an int or long"
 
         #self.delete_keys.append( key )
 
@@ -382,14 +395,22 @@ class TestPut(TestBaseClass):
         """
         key = ('test', 'demo', 1)
 
-        rec = {"name": "John"}
-        meta = {'gen': 3, 'ttl': "25000"}
-        policy = {'timeout': 1000}
-        with pytest.raises(Exception) as exception:
-            TestPut.client.put(key, rec, meta, policy)
+        rec = {
+                "name" : "John"
+                }
+        meta = {
+            'gen': 3,
+            'ttl': "25000"
+        }
+        policy = {
+            'timeout': 1000
+        }
+        try:
+            TestPut.client.put( key, rec, meta, policy )
 
-        assert exception.value[0] == -2
-        assert exception.value[1] == "Ttl should be an int or long"
+        except ParamError as exception:
+            assert exception.code == -2
+            assert exception.msg == "Ttl should be an int or long"
 
         #self.delete_keys.append( key )
 
@@ -431,14 +452,22 @@ class TestPut(TestBaseClass):
         """
         key = ('test', 'demo', 1)
 
-        rec = {"name": "John"}
-        meta = {'gen': 3, 'ttl': 25000}
-        policy = {'timeout': "1000"}
-        with pytest.raises(Exception) as exception:
-            TestPut.client.put(key, rec, meta, policy)
+        rec = {
+                "name" : "John"
+                }
+        meta = {
+            'gen': 3,
+            'ttl' :25000
+        }
+        policy = {
+            'timeout': "1000"
+        }
+        try:
+            TestPut.client.put( key, rec, meta, policy )
 
-        assert exception.value[0] == -2
-        assert exception.value[1] == 'timeout is invalid'
+        except ParamError as exception:
+            assert exception.code == -2
+            assert exception.msg == 'timeout is invalid'
 
     def test_put_with_policy_gen_EQ_positive(self):
         """
@@ -489,13 +518,14 @@ class TestPut(TestBaseClass):
         policy = {'timeout': 1000, 'gen': aerospike.POLICY_GEN_EQ}
         meta = {'gen': 10}
 
-        with pytest.raises(Exception) as exception:
-            TestPut.client.put(key, rec, meta, policy)
+        try:
+            TestPut.client.put( key, rec, meta, policy )
 
-        assert exception.value[0] == 3
-        assert exception.value[1] == 'AEROSPIKE_ERR_RECORD_GENERATION'
-
-        (key, meta, bins) = TestPut.client.get(key)
+        except RecordGenerationError as exception:
+            assert exception.code == 3
+            assert exception.msg == 'AEROSPIKE_ERR_RECORD_GENERATION'
+        
+        ( key, meta, bins) = TestPut.client.get(key)
         assert {"name": "John"} == bins
 
         self.delete_keys.append(key)
@@ -524,11 +554,13 @@ class TestPut(TestBaseClass):
         policy = {'timeout': 1000, 'exists': aerospike.POLICY_EXISTS_CREATE}
         meta = {'gen': 2}
 
-        with pytest.raises(Exception) as exception:
-            TestPut.client.put(key, rec, meta, policy)
+        try:
+            TestPut.client.put( key, rec, meta, policy )
 
-        assert exception.value[0] == 5
-        assert exception.value[1] == 'AEROSPIKE_ERR_RECORD_EXISTS'
+        except RecordExistsError as exception:
+            assert exception.code == 5
+            assert exception.msg == 'AEROSPIKE_ERR_RECORD_EXISTS'
+            assert exception.bin == {'name': 'Smith'}
 
         (key, meta, bins) = TestPut.client.get(key)
         assert {"name": "John"} == bins
@@ -573,11 +605,12 @@ class TestPut(TestBaseClass):
             'retry': aerospike.POLICY_RETRY_ONCE,
             'key': aerospike.POLICY_KEY_SEND
         }
-        with pytest.raises(Exception) as exception:
-            assert 0 == TestPut.client.put(key, rec, meta, policy)
+        try:
+            assert 0 == TestPut.client.put( key, rec, meta, policy )
 
-        assert exception.value[0] == 2
-        assert exception.value[1] == 'AEROSPIKE_ERR_RECORD_NOT_FOUND'
+        except RecordNotFound as exception:
+            assert exception.code == 2
+            assert exception.msg == 'AEROSPIKE_ERR_RECORD_NOT_FOUND'
 
         #self.delete_keys.append( key )
 
@@ -700,11 +733,12 @@ class TestPut(TestBaseClass):
             'retry': aerospike.POLICY_RETRY_ONCE,
             'key': aerospike.POLICY_KEY_SEND
         }
-        with pytest.raises(Exception) as exception:
-            assert 0 == TestPut.client.put(key, rec, meta, policy)
+        try:
+            assert 0 == TestPut.client.put( key, rec, meta, policy )
 
-        assert exception.value[0] == 2
-        assert exception.value[1] == 'AEROSPIKE_ERR_RECORD_NOT_FOUND'
+        except RecordNotFound as exception:
+            assert exception.code == 2
+            assert exception.msg == 'AEROSPIKE_ERR_RECORD_NOT_FOUND'
 
         #self.delete_keys.append( key )
     def test_put_with_policy_gen_GT_lesser(self):
@@ -726,11 +760,12 @@ class TestPut(TestBaseClass):
         policy = {'timeout': 1000, 'gen': aerospike.POLICY_GEN_GT}
         meta = {'gen': gen}
 
-        with pytest.raises(Exception) as exception:
-            TestPut.client.put(key, rec, meta, policy)
+        try:
+            TestPut.client.put( key, rec, meta, policy )
 
-        assert exception.value[0] == 3
-        assert exception.value[1] == 'AEROSPIKE_ERR_RECORD_GENERATION'
+        except RecordGenerationError as exception:
+            assert exception.code == 3
+            assert exception.msg == 'AEROSPIKE_ERR_RECORD_GENERATION'
 
         (key, meta, bins) = TestPut.client.get(key)
         assert {"name": "John"} == bins
@@ -836,7 +871,7 @@ class TestPut(TestBaseClass):
         """
         key = ('test', 'demo', 1)
 
-        rec = {"is_present": {1, 2}}
+        rec = {"is_present": set([1, 2])}
 
         res = TestPut.client.put(key, rec)
 
@@ -992,11 +1027,12 @@ class TestPut(TestBaseClass):
             'provider_id': u'i-f01fc206'
         }
 
-        with pytest.raises(Exception) as exception:
-            TestPut.client.put(key, put_record)
+        try:
+            TestPut.client.put( key, put_record)
 
-        assert exception.value[0] == 21L
-        assert exception.value[1] == "A bin name should not exceed 14 characters limit"
+        except BinNameError as exception:
+            assert exception.code == 21L
+            assert exception.msg == "A bin name should not exceed 14 characters limit"
 
     def test_put_with_string_record_without_connection(self):
         """
@@ -1009,8 +1045,9 @@ class TestPut(TestBaseClass):
 
         bins = {"name": "John"}
 
-        with pytest.raises(Exception) as exception:
-            client1.put(key, bins)
+        try:
+            client1.put( key, bins )
 
-        assert exception.value[0] == 11L
-        assert exception.value[1] == 'No connection to aerospike cluster'
+        except ClusterError as exception:
+            assert exception.code == 11L
+            assert exception.msg == 'No connection to aerospike cluster'

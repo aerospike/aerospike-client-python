@@ -6,9 +6,13 @@ import cPickle as pickle
 from test_base_class import TestBaseClass
 
 aerospike = pytest.importorskip("aerospike")
+try:
+    from aerospike.exception import *
+except:
+    print "Please install aerospike python client."
+    sys.exit(1)
 
 from aerospike import predicates as p
-
 
 class TestApply(TestBaseClass):
     def setup_class(cls):
@@ -109,12 +113,13 @@ class TestApply(TestBaseClass):
         """
         policy = {'timeout': 0.1}
         key = ('test', 'demo', 1)
-        with pytest.raises(Exception) as exception:
-            retval = TestApply.client.apply(key, 'sample', 'list_append',
-                                            ['name', 'car'], policy)
+        try:
+            retval = TestApply.client.apply(key, 'sample', 'list_append', ['name',
+'car'], policy)
 
-        assert exception.value[0] == -2L
-        assert exception.value[1] == 'timeout is invalid'
+        except ParamError as exception:
+            assert exception.code == -2L
+            assert exception.msg == 'timeout is invalid'
 
     def test_apply_with_extra_argument(self):
         """
@@ -134,79 +139,85 @@ class TestApply(TestBaseClass):
         """
         policy = {'timeout': 1000}
         key = ('test', 'demo', 1)
-        with pytest.raises(Exception) as exception:
-            retval = TestApply.client.apply(key, 'sample', 'list_append',
-                                            ['addr', 'car'], policy)
+        try:
+            retval = TestApply.client.apply(key, 'sample', 'list_append', ['addr',
+'car'], policy)
 
-        assert exception.value[0] == 100L
+        except UDFError as exception:
+            assert exception.code == 100L
 
     def test_apply_with_empty_module_function(self):
         """
             Invoke apply() with empty module and function
         """
-        with pytest.raises(Exception) as exception:
+        try:
             key = ('test', 'demo', 1)
             retval = TestApply.client.apply(key, '', '', ['name', 'car'])
 
-        assert exception.value[0] == 100L
-        assert exception.value[1] == 'UDF: Execution Error 1'
+        except UDFError as exception:
+            assert exception.code == 100L
+            assert exception.msg == 'UDF: Execution Error 1'
 
     def test_apply_with_incorrect_module(self):
         """
             Invoke apply() with incorrect module
         """
-        with pytest.raises(Exception) as exception:
+        try:
             key = ('test', 'demo', 1)
             TestApply.client.apply(key, 'samplewrong', 'list_append', ['name',
                                                                        'car'])
 
-        assert exception.value[0] == 100L
-        assert exception.value[1] == 'UDF: Execution Error 1'
+        except UDFError as exception:
+            assert exception.code == 100L
+            assert exception.msg == 'UDF: Execution Error 1'
 
     def test_apply_with_incorrect_function(self):
         """
             Invoke apply() with incorrect function
         """
-        with pytest.raises(Exception) as exception:
+        try:
             key = ('test', 'demo', 1)
             TestApply.client.apply(key, 'sample', 'list_prepend', ['name',
                                                                    'car'])
 
-        assert exception.value[0] == 100L
-        assert exception.value[1] == 'function not found'
+        except UDFError as exception:
+            assert exception.code == 100L
+            assert exception.msg == 'function not found'
 
     def test_apply_with_key_as_string(self):
         """
             Invoke apply() with key as string
         """
-        with pytest.raises(Exception) as exception:
+        try:
             TestApply.client.apply("", 'sample', 'list_append', ['name', 'car'])
 
-        assert exception.value[0] == -2L
-        assert exception.value[1] == 'key is invalid'
+        except ParamError as exception:
+            assert exception.code == -2L
+            assert exception.msg == 'key is invalid'
 
     def test_apply_with_incorrect_ns_set(self):
         """
             Invoke apply() with incorrect ns and set
         """
-        with pytest.raises(Exception) as exception:
+        try:
             key = ('test1', 'demo1', 1)
             TestApply.client.apply(key, 'sample', 'list_prepend', ['name',
                                                                    'car'])
 
-        assert exception.value[0] == 20L
-        assert exception.value[1] == 'AEROSPIKE_ERR_NAMESPACE_NOT_FOUND'
+        except NamespaceNotFound as exception:
+            assert exception.code == 20L
+            assert exception.msg == 'AEROSPIKE_ERR_NAMESPACE_NOT_FOUND'
 
     def test_apply_with_key_as_none(self):
         """
             Invoke apply() with key as none
         """
-        with pytest.raises(Exception) as exception:
-            TestApply.client.apply(None, 'sample', 'list_append', ['name',
-                                                                   'car'])
+        try:
+            TestApply.client.apply(None, 'sample', 'list_append', ['name', 'car'])
 
-        assert exception.value[0] == -2L
-        assert exception.value[1] == 'key is invalid'
+        except ParamError as exception:
+            assert exception.code == -2L
+            assert exception.msg == 'key is invalid'
 
     def test_apply_with_append_integer(self):
         """
@@ -335,9 +346,9 @@ class TestApply(TestBaseClass):
         key = ('test', 'demo', 1)
         config = {'hosts': [('127.0.0.1', 3000)]}
         client1 = aerospike.client(config)
-        with pytest.raises(Exception) as exception:
-            retval = client1.apply(key, 'sample', 'list_append', ['name',
-                                                                  'car'])
+        try:
+            retval = client1.apply(key, 'sample', 'list_append', ['name', 'car'])
 
-        assert exception.value[0] == 11L
-        assert exception.value[1] == 'No connection to aerospike cluster'
+        except ClusterError as exception:
+            assert exception.code == 11L
+            assert exception.msg == 'No connection to aerospike cluster'
