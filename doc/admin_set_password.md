@@ -6,7 +6,7 @@ aerospike.Client.admin_set_password - sets the password of a particular user in 
 ## Description
 
 ```
-status = aerospike.Client.admin_set_password ( username, password[, policies ] )
+status = aerospike.Client.admin_set_password ( username, password[, policy ] )
 
 ```
 **aerospike.Client.admin_set_password()** will set the *password* of a
@@ -19,7 +19,7 @@ Aerospike database.
 
 **password**, the password of the user to be set in the Aerospike database.
 
-**policies**, the dictionary of policies to be given while setting the password of a user in the database.
+**policy**, the dictionary of policy options to be given while setting the password of a user in the database.
 
 ## Return Values
 Returns an integer status code

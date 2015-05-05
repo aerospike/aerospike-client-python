@@ -6,7 +6,7 @@ aerospike.Client.admin_create_user - creates a user in the Aerospike database
 ## Description
 
 ```
-status = aerospike.Client.admin_create_user ( username, password, roles[, policies] )
+status = aerospike.Client.admin_create_user ( username, password, roles[, policy] )
 
 ```
 
@@ -20,7 +20,7 @@ status = aerospike.Client.admin_create_user ( username, password, roles[, polici
 
 **roles**, a list specifying the roles to be assigned to the newly created user.
 
-**policies**, the dictionary of policies to be given while creating a user in the database.   
+**policy**, the dictionary of policy options to be given while creating a user in the database.   
 
 ## Return Values
 Returns an integer status code

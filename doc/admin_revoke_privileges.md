@@ -6,7 +6,7 @@ aerospike.Client.admin_revoke_privileges - revokes privileges from  a user defin
 ## Description
 
 ```
-status = aerospike.Client.admin_revoke_privileges ( role, privileges[, policies ] )
+status = aerospike.Client.admin_revoke_privileges ( role, privileges[, policy ] )
 
 ```
 
@@ -18,7 +18,7 @@ status = aerospike.Client.admin_revoke_privileges ( role, privileges[, policies 
 
 **privileges**, a list of dictionaries specifying th privileges to be revoked.
 
-**policies**, the dictionary of policies to be given while revoking privileges from the database.   
+**policy**, the dictionary of policy options to be given while revoking privileges from the database.   
 
 ## Return Values
 Returns an integer status code

@@ -6,7 +6,7 @@ aerospike.Client.admin_create_role - creates a user defined role in the Aerospik
 ## Description
 
 ```
-status = aerospike.Client.admin_create_role ( role, privileges[, policies] )
+status = aerospike.Client.admin_create_role ( role, privileges[, policy] )
 
 ```
 
@@ -18,7 +18,7 @@ status = aerospike.Client.admin_create_role ( role, privileges[, policies] )
 
 **privileges**, a list of dictionaries specifying the privileges to be contained in the newly created role.
 
-**policies**, the dictionary of policies to be given while creating a role in the database.   
+**policy**, the dictionary of policy options to be given while creating a role in the database.   
 
 ## Return Values
 Returns an integer status code

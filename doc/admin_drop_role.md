@@ -6,7 +6,7 @@ aerospike.Client.admin_drop_role - drops a user defined role from the Aerospike 
 ## Description
 
 ```
-status = aerospike.Client.admin_drop_role ( role[, policies ] )
+status = aerospike.Client.admin_drop_role ( role[, policy ] )
 
 ```
 
@@ -16,7 +16,7 @@ status = aerospike.Client.admin_drop_role ( role[, policies ] )
 
 **role**, the role to be dropped from the Aerospike database.
 
-**policies**, the dictionary of policies to be given while dropping a user from the database.   
+**policy**, the dictionary of policy options to be given while dropping a user from the database.   
 
 ## Return Values
 Returns an integer status code

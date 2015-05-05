@@ -6,7 +6,7 @@ aerospike.Client.admin_query_role - queries a role in the Aerospike database
 ## Description
 
 ```
-role_details = aerospike.Client.admin_query_role ( role[, policies ] )
+role_details = aerospike.Client.admin_query_role ( role[, policy ] )
 
 ```
 
@@ -16,7 +16,7 @@ role_details = aerospike.Client.admin_query_role ( role[, policies ] )
 
 **role**, the user defined role to be queried in the Aerospike database.
 
-**policies**, the dictionary of policies to be given while querying a role in the database.
+**policy**, the dictionary of policy options to be given while querying a role in the database.
 
 ## Return Values
 Returns a list containing the details of the particular role.

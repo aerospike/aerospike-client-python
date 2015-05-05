@@ -6,7 +6,7 @@ aerospike.Client.admin_change_password - changes the password of a particular us
 ## Description
 
 ```
-status = aerospike.Client.admin_change_password ( username, password[, policies ] )
+status = aerospike.Client.admin_change_password ( username, password[, policy ] )
 
 ```
 
@@ -20,7 +20,7 @@ in the Aerospike database.
 
 **password**, the changed password of the user in the Aerospike database.
 
-**policies**, the dictionary of policies to be given while changing the password of a user in the database.   
+**policy**, the dictionary of policy options to be given while changing the password of a user in the database.   
 
 ## Return Values
 Returns an integer status code

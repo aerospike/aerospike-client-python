@@ -6,7 +6,7 @@ aerospike.Client.admin_drop_user - drops a user from the Aerospike database
 ## Description
 
 ```
-status = aerospike.Client.admin_drop_user ( username[, policies ] )
+status = aerospike.Client.admin_drop_user ( username[, policy ] )
 
 ```
 
@@ -18,7 +18,7 @@ of dropping the user from the database.
 
 **username**, the username of the user to be dropped from the Aerospike database.
 
-**policies**, the dictionary of policies to be given while dropping a user from the database.   
+**policy**, the dictionary of policy options to be given while dropping a user from the database.   
 
 ## Return Values
 Returns an integer status code

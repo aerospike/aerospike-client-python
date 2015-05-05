@@ -6,7 +6,7 @@ aerospike.Client.admin_query_roles - queries all user defined roles in the Aeros
 ## Description
 
 ```
-role_details = aerospike.Client.admin_query_roles ( policies )
+role_details = aerospike.Client.admin_query_roles ( policy )
 
 ```
 
@@ -15,7 +15,7 @@ database and return the *role_details* of all the roles.
 
 ## Parameters
 
-**policies**, the dictionary of policies to be given while querying all roles in the database.
+**policy**, the dictionary of policy options to be given while querying all roles in the database.
 
 ## Return Values
 Returns a list containing the details of all roles.

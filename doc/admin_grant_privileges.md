@@ -6,7 +6,7 @@ aerospike.Client.admin_grant_privileges - grants privileges to a role in the Aer
 ## Description
 
 ```
-status = aerospike.Client.admin_grant_privileges ( role, privileges[, policies ] )
+status = aerospike.Client.admin_grant_privileges ( role, privileges[, policy ] )
 
 ```
 
@@ -18,7 +18,7 @@ status = aerospike.Client.admin_grant_privileges ( role, privileges[, policies ]
 
 **privileges**, a list of dictionaries specifying the privileges to be assigned to the role.
 
-**policies**, the dictionary of policies to be given while granting privileges to a role in the database.   
+**policy**, the dictionary of policy options to be given while granting privileges to a role in the database.   
 
 ## Return Values
 Returns an integer status code
