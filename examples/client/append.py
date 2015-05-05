@@ -116,7 +116,11 @@ try:
             'example_age': 1
         }
 
-        meta = {'ttl': options.ttl, 'gen': options.gen}
+        meta = {}
+        if (options.gen):
+            meta['gen'] = options.gen
+        if (options.ttl):
+            meta['ttl'] = options.ttl
         policy = None
 
         # invoke operation
