@@ -23,10 +23,10 @@ import sys
 from optparse import OptionParser
 
 ################################################################################
-# Options Parsing
+# Option Parsing
 ################################################################################
 
-usage = "usage: %prog [options] index_name"
+usage = "usage: %prog [options] key"
 
 optparser = OptionParser(usage=usage, add_help_option=False)
 
@@ -53,6 +53,19 @@ optparser.add_option(
 optparser.add_option(
     "-n", "--namespace", dest="namespace", type="string", default="test", metavar="<NS>",
     help="Port of the Aerospike server.")
+
+optparser.add_option(
+    "-s", "--set", dest="set", type="string", default="demo", metavar="<SET>",
+    help="Port of the Aerospike server.")
+
+optparser.add_option(
+    "--gen", dest="gen", type="int", default=None, metavar="<GEN>",
+    help="Generation of the record being written.")
+
+optparser.add_option(
+    "--ttl", dest="ttl", type="int", default=None, metavar="<TTL>",
+    help="TTL of the record being written.")
+
 
 (options, args) = optparser.parse_args()
 
@@ -91,20 +104,48 @@ try:
     # ----------------------------------------------------------------------------
     # Perform Operation
     # ----------------------------------------------------------------------------
-     
+
     try:
 
-        policy = {}
-        namespace = options.namespace
-        index_name = args.pop()
+        namespace = options.namespace if options.namespace and options.namespace != 'None' else None
+        set = options.set if options.set and options.set != 'None' else None
+        key = args.pop()
 
-        client.index_remove(namespace, index_name, policy)
-        print("OK, 1 Integer Secondary Index Removed ")
+        record = {
+            'example_name': 'John',
+            'example_age': 1
+        }
+
+        meta = {'ttl': options.ttl, 'gen': options.gen}
+        policy = None
+
+        # invoke operation
+
+        client.put((namespace, set, key), record, meta, policy)
+            
+        print("---")
+        print("OK, 1 record written.")
+
+        (returnedkey, meta, bins) = client.get((namespace, set, key))
+
+        print("---")
+        print("Before increment operation")
+        print(bins)
+
+        client.increment((namespace, set, key), "example_age", 5, 0, meta, policy)
+        print("---")
+        print("OK, 1 record touched.")
+
+        (returnedkey, meta, bins) = client.get((namespace, set, key))
+
+        print("---")
+        print("After increment operation")
+        print(bins)
 
     except Exception as e:
         print("error: {0}".format(e), file=sys.stderr)
         exitCode = 2
-    
+
     # ----------------------------------------------------------------------------
     # Close Connection to Cluster
     # ----------------------------------------------------------------------------

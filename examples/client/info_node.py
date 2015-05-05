@@ -26,7 +26,7 @@ from optparse import OptionParser
 # Options Parsing
 ################################################################################
 
-usage = "usage: %prog [options] index_name"
+usage = "usage: %prog [options] [REQUEST]"
 
 optparser = OptionParser(usage=usage, add_help_option=False)
 
@@ -50,18 +50,9 @@ optparser.add_option(
     "-p", "--port", dest="port", type="int", default=3000, metavar="<PORT>",
     help="Port of the Aerospike server.")
 
-optparser.add_option(
-    "-n", "--namespace", dest="namespace", type="string", default="test", metavar="<NS>",
-    help="Port of the Aerospike server.")
-
 (options, args) = optparser.parse_args()
 
 if options.help:
-    optparser.print_help()
-    print()
-    sys.exit(1)
-
-if len(args) != 1:
     optparser.print_help()
     print()
     sys.exit(1)
@@ -79,7 +70,6 @@ config = {
 ################################################################################
 
 exitCode = 0
-
 try:
 
     # ----------------------------------------------------------------------------
@@ -91,20 +81,24 @@ try:
     # ----------------------------------------------------------------------------
     # Perform Operation
     # ----------------------------------------------------------------------------
-     
+
     try:
 
-        policy = {}
-        namespace = options.namespace
-        index_name = args.pop()
+        request = "statistics"
+        if len(args) > 0:
+            request = ' '.join(args)
 
-        client.index_remove(namespace, index_name, policy)
-        print("OK, 1 Integer Secondary Index Removed ")
+        response = client.info_node(request)
+
+        print("---")
+        print("Response of info_node request is: ")
+
+        print(response)
 
     except Exception as e:
         print("error: {0}".format(e), file=sys.stderr)
         exitCode = 2
-    
+
     # ----------------------------------------------------------------------------
     # Close Connection to Cluster
     # ----------------------------------------------------------------------------

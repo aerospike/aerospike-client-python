@@ -22,11 +22,12 @@ import sys
 
 from optparse import OptionParser
 
+
 ################################################################################
 # Options Parsing
 ################################################################################
 
-usage = "usage: %prog [options] index_name"
+usage = "usage: %prog"
 
 optparser = OptionParser(usage=usage, add_help_option=False)
 
@@ -50,18 +51,9 @@ optparser.add_option(
     "-p", "--port", dest="port", type="int", default=3000, metavar="<PORT>",
     help="Port of the Aerospike server.")
 
-optparser.add_option(
-    "-n", "--namespace", dest="namespace", type="string", default="test", metavar="<NS>",
-    help="Port of the Aerospike server.")
-
 (options, args) = optparser.parse_args()
 
 if options.help:
-    optparser.print_help()
-    print()
-    sys.exit(1)
-
-if len(args) != 1:
     optparser.print_help()
     print()
     sys.exit(1)
@@ -91,20 +83,21 @@ try:
     # ----------------------------------------------------------------------------
     # Perform Operation
     # ----------------------------------------------------------------------------
-     
+
     try:
+        response = client.get_nodes()
 
-        policy = {}
-        namespace = options.namespace
-        index_name = args.pop()
+        if response != None:
+            print(response)
+            print("---")
+        else:
+            print('error: Not Found.', file=sys.stderr)
+            exitCode = 1
 
-        client.index_remove(namespace, index_name, policy)
-        print("OK, 1 Integer Secondary Index Removed ")
-
-    except Exception as e:
-        print("error: {0}".format(e), file=sys.stderr)
+    except Exception, eargs:
+        print("error: {0}".format(eargs), file=sys.stderr)
         exitCode = 2
-    
+
     # ----------------------------------------------------------------------------
     # Close Connection to Cluster
     # ----------------------------------------------------------------------------
