@@ -6,7 +6,11 @@ import cPickle as pickle
 from test_base_class import TestBaseClass
 
 aerospike = pytest.importorskip("aerospike")
-
+try:
+    from aerospike.exception import *
+except:
+    print "Please install aerospike python client."
+    sys.exit(1)
 
 class TestConnect(TestBaseClass):
     def setup_class(cls):
@@ -66,72 +70,91 @@ class TestConnect(TestBaseClass):
             Invoke connect with config as Integer (non-dict)
         """
         config = 1
-        with pytest.raises(Exception) as exception:
+        try:
             self.client = aerospike.client(config).connect()
-        assert exception.value[0] == -1
-        assert exception.value[1] == "Parameters are incorrect"
-
+        except ParamError as exception:
+            assert exception.code == -2
+            assert exception.msg == "Parameters are incorrect"
+    
     def test_connect_config_empty_dict(self):
         """
             Invoke connect() with config as empty dict.
         """
-        config = {}
-        with pytest.raises(Exception) as exception:
+        config = {
+                }
+        try:
             self.client = aerospike.client(config).connect()
 
-        assert exception.value[0] == -2L
-        assert exception.value[1] == 'No hosts provided'
+        except ParamError as exception:
+            assert exception.code == -2L
+            assert exception.msg == 'No hosts provided'
 
     def test_connect_missing_hosts_key(self):
         """
             Invoke connect() with host key missing in config dict.
         """
-        config = {'': TestConnect.config['hosts']}
-        with pytest.raises(Exception) as exception:
+        config = {
+                '': [('127.0.0.1', 3000)]
+                }
+        try:
             self.client = aerospike.client(config).connect()
 
-        assert exception.value[0] == -2L
-        assert exception.value[1] == 'No hosts provided'
+        except ParamError as exception:
+            assert exception.code == -2L
+            assert exception.msg == 'No hosts provided'
 
     def test_connect_missing_address(self):
         """
             Invoke connect() with missing address in config dict.
         """
-        config = {'hosts': [3000]}
-        with pytest.raises(Exception) as exception:
+        config = {
+                'hosts': [3000]
+                }
+        try:
             self.client = aerospike.client(config).connect()
 
-        assert exception.value[0] == -2L
-        assert exception.value[1] == 'No hosts provided'
+        except ParamError as exception:
+            assert exception.code == -2L
+            assert exception.msg == 'No hosts provided'
 
     def test_connect_missing_port(self):
         """
             Invoke connect() with missing port in config dict.
         """
-        config = {'hosts': [TestConnect.config['hosts'][0]]}
-        self.client = aerospike.client(config).connect()
+        config = {
+                'hosts': ['127.0.0.1']
+                }
+        try:
+            self.client = aerospike.client(config).connect()
 
-        assert self.client.isConnected() == True
-        self.client.close()
+        except ClientError as exception:
+            assert exception.code == -1
+            assert exception.msg == 'Failed to seed cluster'
 
     def test_connect_incorrect_port(self):
         """
             Invoke connect() with incorrect port in config dict.
         """
-        config = {'hosts': [(TestConnect.config['hosts'][0][0], 12)]}
-        with pytest.raises(Exception) as exception:
+        config = {
+                'hosts': [('127.0.0.1', 2000)]
+                }
+        try:
             self.client = aerospike.client(config).connect()
 
-        assert exception.value[0] == -1
-        assert exception.value[1] == 'Failed to seed cluster'
+        except ClientError as exception:
+            assert exception.code == -1
+            assert exception.msg == 'Failed to seed cluster'
 
     def test_connect_port_is_string(self):
         """
             Invoke connect() with port as string in config dict.
         """
-        config = {'hosts': TestConnect.config['hosts']}
-        with pytest.raises(Exception) as exception:
+        config = {
+                'hosts': [('127.0.0.1', '3000')]
+                }
+        try:
             self.client = aerospike.client(config).connect()
 
-        assert exception.value[0] == -1
-        assert exception.value[1] == 'Failed to seed cluster'
+        except ClientError as exception:
+            assert exception.code == -1
+            assert exception.msg == 'Failed to seed cluster'

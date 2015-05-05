@@ -7,7 +7,11 @@ from test_base_class import TestBaseClass
 import cPickle as pickle
 
 aerospike = pytest.importorskip("aerospike")
-
+try:
+    from aerospike.exception import *
+except:
+    print "Please install aerospike python client."
+    sys.exit(1)
 
 class SomeClass(object):
 
@@ -178,11 +182,12 @@ class TestSerializer(object):
             Invoke put() for float data record with user serializer.
         """
 
-        with pytest.raises(Exception) as exception:
+        try:
             response = aerospike.set_serializer(None)
 
-        assert exception.value[0] == -2
-        assert exception.value[1] == "Parameter must be a callable"
+        except ParamError as exception:
+            assert exception.code == -2
+            assert exception.msg == "Parameter must be a callable"
 
     def test_put_with_float_data_user_deserializer_none(self):
         """
@@ -202,11 +207,12 @@ class TestSerializer(object):
 
         self.delete_keys.append(key)
 
-        with pytest.raises(Exception) as exception:
+        try:
             response = aerospike.set_deserializer(None)
 
-        assert exception.value[0] == -2
-        assert exception.value[1] == "Parameter must be a callable"
+        except ParamError as exception:
+            assert exception.code == -2
+            assert exception.msg == "Parameter must be a callable"
 
     def test_put_with_mixed_data_user_serializer(self):
         """

@@ -22,6 +22,7 @@
 
 #include "client.h"
 #include "conversions.h"
+#include "exceptions.h"
 #include "query.h"
 #include "policy.h"
 
@@ -97,6 +98,7 @@ AerospikeQuery * AerospikeQuery_Apply(AerospikeQuery * self, PyObject * args, Py
 			as_val * val = NULL;
 			pyobject_to_val(&err, py_val, &val, &self->static_pool, SERIALIZER_PYTHON);
 			if ( err.code != AEROSPIKE_OK ) {
+				as_error_update(&err, err.code, NULL);
 				goto CLEANUP;
 			}
 			else {
@@ -121,7 +123,14 @@ CLEANUP:
 	if ( err.code != AEROSPIKE_OK ) {
 		PyObject * py_err = NULL;
 		error_to_pyobject(&err, &py_err);
-		PyErr_SetObject(PyExc_Exception, py_err);
+		PyObject *exception_type = raise_exception(&err);
+		if(PyObject_HasAttrString(exception_type, "module")) {
+			PyObject_SetAttrString(exception_type, "module", py_module);
+		} 
+		if(PyObject_HasAttrString(exception_type, "func")) {
+			PyObject_SetAttrString(exception_type, "func", py_function);
+		}
+		PyErr_SetObject(exception_type, py_err);
 		Py_DECREF(py_err);
 		return NULL;
 	}

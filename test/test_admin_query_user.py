@@ -6,7 +6,11 @@ import time
 from test_base_class import TestBaseClass
 
 aerospike = pytest.importorskip("aerospike")
-
+try:
+    from aerospike.exception import *
+except:
+    print "Please install aerospike python client."
+    sys.exit(1)
 
 class TestQueryUser(TestBaseClass):
 
@@ -69,8 +73,9 @@ class TestQueryUser(TestBaseClass):
         with pytest.raises(Exception) as exception:
             status = self.client.admin_query_user( user, policy )
 
-        assert exception.value[0] == -2
-        assert exception.value[1] == "timeout is invalid"
+        except ParamError as exception:
+            assert exception.code == -2
+            assert exception.msg == "timeout is invalid"
 
     def test_query_user_with_proper_timeout_policy_value(self):
 
@@ -91,8 +96,9 @@ class TestQueryUser(TestBaseClass):
         with pytest.raises(Exception) as exception:
             user_details = self.client.admin_query_user( user, policy )
 
-        assert exception.value[0] == -2
-        assert exception.value[1] == "Username should be a string"
+        except ParamError as exception:
+            assert exception.code == -2
+            assert exception.msg == "Username should be a string"
 
     def test_query_user_with_empty_username(self):
 
@@ -102,8 +108,9 @@ class TestQueryUser(TestBaseClass):
         with pytest.raises(Exception) as exception:
             status = self.client.admin_query_user( user, policy )
 
-        assert exception.value[0] == 60
-        assert exception.value[1] == "AEROSPIKE_INVALID_USER"
+        except InvalidUser as exception:
+            assert exception.code == 60
+            assert exception.msg == "AEROSPIKE_INVALID_USER"
 
     def test_query_user_with_nonexistent_username(self):
 
@@ -113,8 +120,9 @@ class TestQueryUser(TestBaseClass):
         with pytest.raises(Exception) as exception:
             status = self.client.admin_query_user( user, policy )
 
-        assert exception.value[0] == 60
-        assert exception.value[1] == "AEROSPIKE_INVALID_USER"
+        except InvalidUser as exception:
+            assert exception.code == 60
+            assert exception.msg == "AEROSPIKE_INVALID_USER"
 
     def test_query_user_with_no_roles(self):
 
@@ -152,5 +160,6 @@ class TestQueryUser(TestBaseClass):
         with pytest.raises(Exception) as exception:
             self.client.admin_query_user( "foo", policy)
 
-        assert exception.value[0] == -2L
-        assert exception.value[1] == "policy must be a dict"
+        except AerospikeError as exception:
+            assert exception.code == -2L
+            assert exception.msg == "policy must be a dict"

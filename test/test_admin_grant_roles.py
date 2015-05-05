@@ -6,7 +6,11 @@ import time
 from test_base_class import TestBaseClass
 
 aerospike = pytest.importorskip("aerospike")
-
+try:
+    from aerospike.exception import *
+except:
+    print "Please install aerospike python client."
+    sys.exit(1)
 
 class TestGrantRoles(TestBaseClass):
 
@@ -77,8 +81,8 @@ class TestGrantRoles(TestBaseClass):
 
         user_details = self.client.admin_query_user( user, policy )
 
-        assert user_details == [{'roles': ['read', 'read-write', 'sys-admin'
-], 'roles_size': 3, 'user': 'example'}]
+        assert user_details == [{'roles': ['read', 'read-write', 'sys-admin'],
+                                           'roles_size': 3, 'user': 'example'}]
 
     def test_grant_roles_with_invalid_timeout_policy_value(self):
 
@@ -89,8 +93,9 @@ class TestGrantRoles(TestBaseClass):
         with pytest.raises(Exception) as exception:
             status = self.client.admin_grant_roles( user, roles, policy )
 
-        assert exception.value[0] == -2
-        assert exception.value[1] == "timeout is invalid"
+        except ParamError as exception:
+            assert exception.code == -2
+            assert exception.msg == "timeout is invalid"
 
     def test_grant_roles_with_proper_timeout_policy_value(self):
 
@@ -106,8 +111,8 @@ class TestGrantRoles(TestBaseClass):
 
         user_details = self.client.admin_query_user( user )
 
-        assert user_details == [{'roles': ['read-write', 'sys-admin',
-], 'roles_size': 2, 'user': 'example'}]
+        assert user_details == [{'roles': ['read-write', 'sys-admin'],
+                                           'roles_size': 2, 'user': 'example'}]
 
     def test_grant_roles_with_none_username(self):
 
@@ -118,8 +123,9 @@ class TestGrantRoles(TestBaseClass):
         with pytest.raises(Exception) as exception:
             status = self.client.admin_grant_roles( user, roles, policy )
 
-        assert exception.value[0] == -2
-        assert exception.value[1] == "Username should be a string"
+        except ParamError as exception:
+            assert exception.code == -2
+            assert exception.msg == "Username should be a string"
 
     def test_grant_roles_with_empty_username(self):
 
@@ -130,8 +136,9 @@ class TestGrantRoles(TestBaseClass):
         with pytest.raises(Exception) as exception:
             status = self.client.admin_grant_roles( user, roles, policy )
 
-        assert exception.value[0] == 60
-        assert exception.value[1] == "AEROSPIKE_INVALID_USER"
+        except InvalidUser as exception:
+            assert exception.code == 60
+            assert exception.msg == "AEROSPIKE_INVALID_USER"
 
     def test_grant_roles_with_special_characters_in_username(self):
 

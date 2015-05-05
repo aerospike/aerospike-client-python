@@ -7,14 +7,21 @@ import socket
 from test_base_class import TestBaseClass
 
 aerospike = pytest.importorskip("aerospike")
+try:
+    from aerospike.exception import *
+except:
+    print "Please install aerospike python client."
+    sys.exit(1)
 
 class TestInfoNode(object):
     def setup_class(cls):
         """
         Setup class.
         """
-        hostlist, user, password = TestBaseClass.get_hosts()
-        config = {'hosts': hostlist}
+        TestInfoNode.hostlist, user, password = TestBaseClass.get_hosts()
+        config = {
+                'hosts': TestInfoNode.hostlist
+                }
         TestInfoNode.config = config
         if user == None and password == None:
             TestInfoNode.client = aerospike.client(config).connect()
@@ -61,8 +68,7 @@ class TestInfoNode(object):
         rec = {'names': ['John', 'Marlen', 'Steve']}
 
         TestInfoNode.client.put(key, rec)
-        response = TestInfoNode.client.info_node('namespaces',
-                                                 TestInfoNode.config['hosts'][0])
+        response = TestInfoNode.client.info_node('namespaces', TestInfoNode.config['hosts'][0])
         TestInfoNode.client.remove(key)
         if 'test' in response:
             assert True == True
@@ -94,15 +100,11 @@ class TestInfoNode(object):
         rec = {'names': ['John', 'Marlen', 'Steve']}
         policy = {}
         TestInfoNode.client.put(key, rec)
-        response = TestInfoNode.client.info_node(
-            'sindex-create:ns=test;set=demo;indexname=names_test_index;indexdata=names,string',
-            TestInfoNode.config['hosts'][0])
+        response = TestInfoNode.client.info_node('sindex-create:ns=test;set=demo;indexname=names_test_index;indexdata=names,string', TestInfoNode.config['hosts'][0])
         time.sleep(2)
         TestInfoNode.client.remove(key)
         response = TestInfoNode.client.info_node('sindex', TestInfoNode.config['hosts'][0])
-        TestInfoNode.client.info_node(
-            'sindex-delete:ns=test;indexname=names_test_index',
-            TestInfoNode.config['hosts'][0])
+        TestInfoNode.client.info_node('sindex-delete:ns=test;indexname=names_test_index', TestInfoNode.config['hosts'][0])
 
         if 'names_test_index' in response:
             assert True == True
@@ -114,12 +116,12 @@ class TestInfoNode(object):
         Test info for incorrect command
         """
         response = None
-        with pytest.raises(Exception) as exception:
-            response = TestInfoNode.client.info_node('abcd',
-                                                     TestInfoNode.config['hosts'][0])
+        try:
+            response = TestInfoNode.client.info_node('abcd', TestInfoNode.config['hosts'][0])
 
-        assert exception.value[0] == -1
-        assert exception.value[1] == "Invalid info operation"
+        except ClientError as exception:
+            assert exception.code == -1
+            assert exception.msg == "Invalid info operation"
 
     def test_info_node_positive_with_correct_policy(self):
         """
@@ -144,12 +146,15 @@ class TestInfoNode(object):
         Test info with incorrect policy
         """
         host = ()
-        policy = {'timeout': 0.5}
-        with pytest.raises(Exception) as exception:
+        policy = {
+            'timeout': 0.5
+        }
+        try:
             response = TestInfoNode.client.info_node('bins', host, policy)
 
-        assert exception.value[0] == -2
-        assert exception.value[1] == "timeout is invalid"
+        except ParamError as exception:
+            assert exception.code == -2
+            assert exception.msg == "timeout is invalid"
 
     def test_info_node_positive_with_host(self):
         """
@@ -173,18 +178,21 @@ class TestInfoNode(object):
         Test info with incorrect host
         """
         host = ("122.0.0.1", 3000)
-        with pytest.raises(Exception) as exception:
+        try:
             response = TestInfoNode.client.info_node('bins', host)
 
-        assert exception.value[0] == 9L
-        assert exception.value[1] == ""
+        except TimeoutError as exception:
+            assert exception.code == 9L
+            assert exception.msg == ""
 
     def test_info_node_positive_with_all_parameters(self):
         """
         Test info with all parameters
         """
+        policy = {
+            'timeout': 1000
+        }
         host = TestInfoNode.config['hosts'][0]
-        policy = {'timeout': 1000}
         response = TestInfoNode.client.info_node('logs', host, policy)
 
         assert response != None
@@ -205,11 +213,12 @@ class TestInfoNode(object):
         Test info for None command
         """
         response = None
-        with pytest.raises(Exception) as exception:
+        try:
             response = TestInfoNode.client.info_node(None, TestInfoNode.config['hosts'][0])
 
-        assert exception.value[0] == -2
-        assert exception.value[1] == "Request should be of string type"
+        except ParamError as exception:
+            assert exception.code == -2
+            assert exception.msg == "Request should be of string type"
 
     def test_info_node_with_unicode_request_string_and_host_name(self):
         """
@@ -217,7 +226,9 @@ class TestInfoNode(object):
         """
         host = (unicode(TestInfoNode.config['hosts'][0][0]),
                 TestInfoNode.config['hosts'][0][1])
-        policy = {'timeout': 1000}
+        policy = {
+            'timeout': 1000
+        }
         response = TestInfoNode.client.info_node(u'logs', host, policy)
 
     def test_info_node_positive_with_unicode_request_string_and_host_name(self
@@ -236,13 +247,14 @@ class TestInfoNode(object):
         """
         Test info with incorrect host
         """
-        host = ("192.168.1.2", 3000)
-        with pytest.raises(Exception) as exception:
+        host = ( "192.168.1.2", 3000 )
+        try:
             response = TestInfoNode.client.info_node('bins', host)
 
-        assert exception.value[0] == 9L
-        assert exception.value[1] == ""
-
+        except TimeoutError as exception:
+            assert exception.code == 9L
+            assert exception.msg == ""
+    
     def test_info_node_positive_invalid_host(self):
         """
         Test info with incorrect host
@@ -257,12 +269,13 @@ class TestInfoNode(object):
         """
         Test info with incorrect host
         """
-        host = ("google.com", 3000)
-        with pytest.raises(Exception) as exception:
+        host = ( "google.com", 3000 )
+        try:
             response = TestInfoNode.client.info_node('bins', host)
 
-        assert exception.value[0] == 9L
-        assert exception.value[1] == ""
+        except TimeoutError as exception:
+            assert exception.code == 9L
+            assert exception.msg == ""
 
     def test_info_node_positive_without_connection(self):
         """
@@ -271,9 +284,9 @@ class TestInfoNode(object):
         key = ('test', 'demo', 'list_key')
 
         client1 = aerospike.client(TestInfoNode.config)
-
-        with pytest.raises(Exception) as exception:
+        try:
             response = client1.info_node('bins', TestInfoNode.config['hosts'][0])
 
-        assert exception.value[0] == 11L
-        assert exception.value[1] == 'No connection to aerospike cluster'
+        except ClusterError as exception:
+            assert exception.code == 11L
+            assert exception.msg == 'No connection to aerospike cluster'

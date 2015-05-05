@@ -23,6 +23,7 @@
 
 #include "client.h"
 #include "conversions.h"
+#include "exceptions.h"
 #include "scan.h"
 #include "policy.h"
 
@@ -155,20 +156,23 @@ PyObject * AerospikeScan_Foreach(AerospikeScan * self, PyObject * args, PyObject
 	// We are done using multiple threads
 	PyEval_RestoreThread(_save);
 	if (data.error.code != AEROSPIKE_OK) {
+		as_error_update(&data.error, data.error.code, NULL);
 		goto CLEANUP;
 	}
 
 CLEANUP:
 
 	if ( err.code != AEROSPIKE_OK || data.error.code != AEROSPIKE_OK) {
-		PyObject * py_err = NULL;
+		PyObject * py_err = NULL, *exception_type = NULL;
 		if ( err.code != AEROSPIKE_OK ){
 			error_to_pyobject(&err, &py_err);
+			exception_type = raise_exception(&err);
 		}
 		if ( data.error.code != AEROSPIKE_OK){
 			error_to_pyobject(&data.error, &py_err);
+			exception_type = raise_exception(&data.error);
 		}
-		PyErr_SetObject(PyExc_Exception, py_err);
+		PyErr_SetObject(exception_type, py_err);
 		Py_DECREF(py_err);
 		return NULL;
 	}

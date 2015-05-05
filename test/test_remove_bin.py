@@ -6,7 +6,11 @@ import cPickle as pickle
 from test_base_class import TestBaseClass
 
 aerospike = pytest.importorskip("aerospike")
-
+try:
+    from aerospike.exception import *
+except:
+    print "Please install aerospike python client."
+    sys.exit(1)
 
 class TestRemovebin(object):
     def setup_class(cls):
@@ -39,8 +43,9 @@ class TestRemovebin(object):
         """
         for i in xrange(5):
             key = ('test', 'demo', i)
-            (key, meta, bins) = TestRemovebin.client.get(key)
-            if bins != None:
+            try:
+                (key , meta, bins) = TestRemovebin.client.get(key)
+            except RecordNotFound:
                 TestRemovebin.client.remove(key)
 
     def test_remove_bin_with_no_parameters(self):
@@ -135,11 +140,12 @@ class TestRemovebin(object):
         gen = meta['gen']
         meta = {'gen': gen + 5, 'ttl': 1000}
 
-        with pytest.raises(Exception) as exception:
+        try:
             TestRemovebin.client.remove_bin(key, ["age"], meta, policy)
 
-        assert exception.value[0] == 3
-        assert exception.value[1] == "AEROSPIKE_ERR_RECORD_GENERATION"
+        except RecordGenerationError as exception:
+            assert exception.code == 3
+            assert exception.msg == "AEROSPIKE_ERR_RECORD_GENERATION"
 
         (key, meta, bins) = TestRemovebin.client.get(key)
 
@@ -164,11 +170,12 @@ class TestRemovebin(object):
         gen = meta['gen']
         meta = {'gen': gen, 'ttl': 1000}
 
-        with pytest.raises(Exception) as exception:
+        try:
             TestRemovebin.client.remove_bin(key, ["age"], meta, policy)
 
-        assert exception.value[0] == 3
-        assert exception.value[1] == "AEROSPIKE_ERR_RECORD_GENERATION"
+        except RecordGenerationError as exception:
+            assert exception.code == 3
+            assert exception.msg == "AEROSPIKE_ERR_RECORD_GENERATION"
 
         (key, meta, bins) = TestRemovebin.client.get(key)
 
@@ -226,13 +233,16 @@ class TestRemovebin(object):
         Invoke remove_bin() with incorrect policy
         """
         key = ('test', 'demo', 1)
-        policy = {'timeout': 0.5}
-        with pytest.raises(Exception) as exception:
+
+        policy = {
+            'timeout': 0.5
+        }
+        try:
             TestRemovebin.client.remove_bin(key, ["age"], {}, policy)
 
-        assert exception.value[0] == -1
-        #assert exception.value[1] == "Invalid value(type) for policy key"
-        assert exception.value[1] == "Incorrect policy"
+        except ClientError as exception:
+            assert exception.code == -1
+            assert exception.msg == "Incorrect policy"
 
     def test_remove_bin_with_nonexistent_key(self):
         """
@@ -267,22 +277,24 @@ class TestRemovebin(object):
         """
         Invoke remove_bin() with key is none
         """
-        with pytest.raises(Exception) as exception:
+        try:
             TestRemovebin.client.remove_bin(None, ["age"])
 
-        assert exception.value[0] == -2
-        assert exception.value[1] == "key is invalid"
+        except ParamError as exception:
+            assert exception.code == -2
+            assert exception.msg == "key is invalid"
 
     def test_remove_bin_bin_is_none(self):
         """
         Invoke remove_bin() with bin is none
         """
         key = ('test', 'demo', 1)
-        with pytest.raises(Exception) as exception:
+        try:
             TestRemovebin.client.remove_bin(key, None)
 
-        assert exception.value[0] == -2
-        assert exception.value[1] == "Bins should be a list"
+        except ParamError as exception:
+            assert exception.code == -2
+            assert exception.msg == "Bins should be a list"
 
     def test_remove_bin_no_bin(self):
         """
@@ -291,9 +303,9 @@ class TestRemovebin(object):
         key = ('test', 'demo', 1)
         TestRemovebin.client.remove_bin(key, [])
 
-        (key, meta, bins) = TestRemovebin.client.get(key)
+        (key , meta, bins) = TestRemovebin.client.get(key)
 
-        assert bins == {'name': 'name1', 'age': 1}
+        assert bins == { 'name': 'name1', 'age': 1}
 
     def test_remove_bin_all_bins(self):
         """
@@ -302,9 +314,19 @@ class TestRemovebin(object):
         key = ('test', 'demo', 1)
         TestRemovebin.client.remove_bin(key, ["name", "age"])
 
-        (key, meta, bins) = TestRemovebin.client.get(key)
 
-        assert bins == None
+        try:
+            (key , meta, bins) = TestRemovebin.client.get(key)
+
+        except RecordNotFound as exception:
+            assert exception.code == 2
+        for i in xrange(5):
+            key = ('test', 'demo', i)
+            rec = {
+                'name' : 'name%s' % (str(i)),
+                'age' : i
+            }
+            TestRemovebin.client.put(key, rec)
 
     def test_remove_bin_with_unicode_binname(self):
         """
@@ -322,17 +344,27 @@ class TestRemovebin(object):
 
         TestRemovebin.client.remove_bin(key, [u"name", "age"])
 
-        (key, meta, bins) = TestRemovebin.client.get(key)
+        try:
+            (key , meta, bins) = TestRemovebin.client.get(key)
 
-        assert bins == None
-
+        except RecordNotFound as exception:
+            assert exception.code == 2
         key = ('test', 'demo', 4)
 
         TestRemovebin.client.remove_bin(key, ["name", u"age"])
 
-        (key, meta, bins) = TestRemovebin.client.get(key)
+        try:
+            (key , meta, bins) = TestRemovebin.client.get(key)
 
-        assert bins == None
+        except RecordNotFound as exception:
+            assert exception.code == 2
+        for i in xrange(5):
+            key = ('test', 'demo', i)
+            rec = {
+                'name' : 'name%s' % (str(i)),
+                'age' : i
+            }
+            TestRemovebin.client.put(key, rec)
 
     def test_remove_bin_with_correct_parameters_without_connection(self):
         """
@@ -343,8 +375,9 @@ class TestRemovebin(object):
 
         key = ('test', 'demo', 1)
 
-        with pytest.raises(Exception) as exception:
+        try:
             client1.remove_bin(key, ["age"])
 
-        assert exception.value[0] == 11L
-        assert exception.value[1] == 'No connection to aerospike cluster'
+        except ClusterError as exception:
+            assert exception.code == 11L
+            assert exception.msg == 'No connection to aerospike cluster'

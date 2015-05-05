@@ -5,9 +5,12 @@ import sys
 import cPickle as pickle
 from test_base_class import TestBaseClass
 
-
 aerospike = pytest.importorskip("aerospike")
-
+try:
+    from aerospike.exception import *
+except:
+    print "Please install aerospike python client."
+    sys.exit(1)
 
 class TestGetRegistered(object):
     def setup_class(cls):
@@ -99,11 +102,12 @@ class TestGetRegistered(object):
         language = aerospike.UDF_TYPE_LUA
         policy = {'timeout': 0.5}
 
-        with pytest.raises(Exception) as exception:
+        try:
             TestGetRegistered.client.udf_get(module, language, policy)
 
-        assert exception.value[0] == -2
-        assert exception.value[1] == "timeout is invalid"
+        except ParamError as exception:
+            assert exception.code == -2
+            assert exception.msg == "timeout is invalid"
 
     def test_udf_get_with_nonexistent_module(self):
         """
@@ -113,11 +117,12 @@ class TestGetRegistered(object):
         language = aerospike.UDF_TYPE_LUA
         policy = {'timeout': 1000}
 
-        with pytest.raises(Exception) as exception:
+        try:
             TestGetRegistered.client.udf_get(module, language, policy)
 
-        assert exception.value[0] == 100
-        assert exception.value[1] == "error=not_found\n"
+        except UDFError as exception:
+            assert exception.code == 100
+            assert exception.msg == "error=not_found\n"
 
     def test_udf_get_with_random_language(self):
         """
@@ -127,11 +132,12 @@ class TestGetRegistered(object):
         language = 85
         policy = {'timeout': 1000}
 
-        with pytest.raises(Exception) as exception:
+        try:
             TestGetRegistered.client.udf_get(module, language, policy)
 
-        assert exception.value[0] == -1
-        assert exception.value[1] == "Invalid language"
+        except ClientError as exception:
+            assert exception.code == -1
+            assert exception.msg == "Invalid language"
 
     def test_udf_get_with_extra_parameter(self):
         """
@@ -154,11 +160,13 @@ class TestGetRegistered(object):
         module = "bin_lua.lua"
         language = aerospike.UDF_TYPE_LUA
 
-        with pytest.raises(Exception) as exception:
+        #with pytest.raises(Exception) as exception:
+        try:
             TestGetRegistered.client.udf_get(module, language, "")
 
-        assert exception.value[0] == -2
-        assert exception.value[1] == "policy must be a dict"
+        except ParamError as exception:
+            assert exception.code == -2
+            assert exception.msg == "policy must be a dict"
 
     def test_udf_get_module_is_none(self):
         """
@@ -166,12 +174,13 @@ class TestGetRegistered(object):
         """
         language = aerospike.UDF_TYPE_LUA
 
-        with pytest.raises(Exception) as exception:
+        try:
             TestGetRegistered.client.udf_get(None, language)
 
-        assert exception.value[0] == -1
-        assert exception.value[1] == "Module name should be a string or unicode string."
-
+        except ClientError as exception:
+            assert exception.code == -1
+            assert exception.msg == "Module name should be a string or unicode string."
+    
     def test_udf_get_with_unicode_module(self):
         """
         Invoke udf_get() with module name is unicode string
@@ -200,8 +209,9 @@ class TestGetRegistered(object):
         config = {'hosts': [('127.0.0.1', 3000)]}
         client1 = aerospike.client(config)
 
-        with pytest.raises(Exception) as exception:
+        try:
             udf_contents = client1.udf_get(module, language, policy)
 
-        assert exception.value[0] == 11L
-        assert exception.value[1] == 'No connection to aerospike cluster'
+        except ClusterError as exception:
+            assert exception.code == 11L
+            assert exception.msg == 'No connection to aerospike cluster'

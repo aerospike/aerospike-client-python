@@ -6,7 +6,11 @@ import cPickle as pickle
 from test_base_class import TestBaseClass
 
 aerospike = pytest.importorskip("aerospike")
-
+try:
+    from aerospike.exception import *
+except:
+    print "Please install aerospike python client."
+    sys.exit(1)
 
 class TestScanInfo(object):
     def setup_method(self, method):
@@ -72,12 +76,15 @@ class TestScanInfo(object):
         """
         Invoke scan_info() with incorrect policy
         """
-        policy = {'timeout': 0.5}
-        with pytest.raises(Exception) as exception:
+        policy = {
+            'timeout': 0.5
+        }
+        try:
             scan_id = self.client.scan_info(self.scan_id, policy)
 
-        assert exception.value[0] == -2
-        assert exception.value[1] == "timeout is invalid"
+        except ParamError as exception:
+            assert exception.code == -2
+            assert exception.msg == "timeout is invalid"
 
     def test_scan_info_with_scanid_negative(self):
         """
@@ -112,8 +119,9 @@ class TestScanInfo(object):
         config = {'hosts': [('127.0.0.1', 3000)]}
         client1 = aerospike.client(config)
 
-        with pytest.raises(Exception) as exception:
+        try:
             scan_info = client1.scan_info(self.scan_id)
 
-        assert exception.value[0] == 11L
-        assert exception.value[1] == 'No connection to aerospike cluster'
+        except ClusterError as exception:
+            assert exception.code == 11L
+            assert exception.msg == 'No connection to aerospike cluster'

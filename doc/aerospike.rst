@@ -144,7 +144,7 @@ containing the keys of all records in the set.
             syslog.syslog(line)
 
         aerospike.set_log_level(aerospike.LOG_LEVEL_DEBUG)
-        aerospike.set_deserializer(as_logger)
+        aerospike.set_log_handler(as_logger)
 
 
 .. py:function:: set_log_level(log_level)

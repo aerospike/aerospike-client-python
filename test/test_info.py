@@ -7,15 +7,21 @@ import time
 from test_base_class import TestBaseClass
 
 aerospike = pytest.importorskip("aerospike")
-
+try:
+    from aerospike.exception import *
+except:
+    print "Please install aerospike python client."
+    sys.exit(1)
 
 class TestInfo(object):
     def setup_class(cls):
         """
         Setup class.
         """
-        hostlist, user, password = TestBaseClass.get_hosts()
-        config = {'hosts': hostlist}
+        TestInfo.hostlist, user, password = TestBaseClass.get_hosts()
+        config = {
+                'hosts': TestInfo.hostlist
+                }
         TestInfo.config = config
         if user == None and password == None:
             TestInfo.client = aerospike.client(config).connect()
@@ -140,11 +146,12 @@ class TestInfo(object):
 
         config = [(127, 3000)]
 
-        with pytest.raises(Exception) as exception:
+        try:
             TestInfo.client.info(request, config)
 
-        assert exception.value[0] == -2
-        assert exception.value[1] == "Host address is of type incorrect"
+        except ParamError as exception:
+            assert exception.code == -2
+            assert exception.msg == "Host address is of type incorrect"
 
     def test_info_with_config_for_statistics_and_policy(self):
 
@@ -170,11 +177,12 @@ class TestInfo(object):
 
         request = None
 
-        with pytest.raises(Exception) as exception:
+        try:
             TestInfo.client.info(request, TestInfo.config['hosts'])
 
-        assert exception.value[0] == -2L
-        assert exception.value[1] == "Request must be a string"
+        except ParamError as exception:
+            assert exception.code == -2L
+            assert exception.msg == "Request must be a string"
 
     def test_info_without_parameters(self):
 
@@ -187,10 +195,10 @@ class TestInfo(object):
         """
         Test info positive for sets without connection
         """
-
         client1 = aerospike.client(TestInfo.config)
-        with pytest.raises(Exception) as exception:
+        try:
             response = client1.info('sets', TestInfo.config['hosts'])
 
-        assert exception.value[0] == 11L
-        assert exception.value[1] == 'No connection to aerospike cluster'
+        except ClusterError as exception:
+            assert exception.code == 11L
+            assert exception.msg == 'No connection to aerospike cluster'

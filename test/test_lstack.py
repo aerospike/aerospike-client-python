@@ -6,7 +6,11 @@ import time
 from test_base_class import TestBaseClass
 
 aerospike = pytest.importorskip("aerospike")
-
+try:
+    from aerospike.exception import *
+except:
+    print "Please install aerospike python client."
+    sys.exit(1)
 
 class TestLStack(object):
 
@@ -42,10 +46,12 @@ class TestLStack(object):
             Invoke peek() from empty stack.
         """
 
-        with pytest.raises(Exception) as exception:
+        try:
             TestLStack.lstack.peek(10)
 
-        assert exception.value[0] == 100L
+        except RecordNotFound as exception:
+            assert exception.code == 2L
+            assert exception.msg == "AEROSPIKE_ERR_RECORD_NOT_FOUND"
 
     #Push() - push an object(integer, string, byte, map) onto the stack.
     #Size() - Get the current item count of the stack.
@@ -118,12 +124,13 @@ class TestLStack(object):
         """
             Invoke set_capacity() of lstack with zero value.
         """
-        with pytest.raises(Exception) as exception:
+        try:
             TestLStack.lstack.set_capacity(0)
 
-        assert exception.value[0] == -2
-        assert exception.value[1] == "invalid parameter. as/key/ldt/capacity cannot be null"
-
+        except ParamError as exception:
+            assert exception.code == -2
+            assert exception.msg == "invalid parameter. as/key/ldt/capacity cannot be null"
+    
     #Destroy() - Delete the entire set(LDT Remove).
     def test_lstack_destroy_positive(self):
         """
@@ -143,8 +150,9 @@ class TestLStack(object):
         """
         key = ('test', 'demo', 12.3)
 
-        with pytest.raises(Exception) as exception:
+        try:
             lstack = self.client.lstack(key, 'ldt_stk')
 
-        assert exception.value[0] == -1
-        assert exception.value[1] == "Parameters are incorrect"
+        except ParamError as exception:
+            assert exception.code == -2
+            assert exception.msg == "Parameters are incorrect"

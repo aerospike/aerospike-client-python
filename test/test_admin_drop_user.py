@@ -7,7 +7,11 @@ import cPickle as pickle
 from test_base_class import TestBaseClass
 
 aerospike = pytest.importorskip("aerospike")
-
+try:
+    from aerospike.exception import *
+except:
+    print "Please install aerospike python client."
+    sys.exit(1)
 
 class SomeClass(object):
 
@@ -69,8 +73,9 @@ class TestDropUser(TestBaseClass):
         with pytest.raises(Exception) as exception:
             user_details = self.client.admin_query_user( user )
 
-        assert exception.value[0] == 60L
-        assert exception.value[1] == 'AEROSPIKE_INVALID_USER'
+        except InvalidUser as exception:
+            assert exception.code == 60L
+            assert exception.msg == 'AEROSPIKE_INVALID_USER'
 
     def test_drop_user_with_user_none(self):
         """
@@ -80,8 +85,9 @@ class TestDropUser(TestBaseClass):
         with pytest.raises(Exception) as exception:
             self.client.admin_drop_user( None, policy )
 
-        assert exception.value[0] == -2L
-        assert exception.value[1] == 'Username should be a string'
+        except ParamError as exception:
+            assert exception.code == -2L
+            assert exception.msg == 'Username should be a string'
 
     def test_drop_user_positive(self):
         """
@@ -108,8 +114,9 @@ class TestDropUser(TestBaseClass):
         with pytest.raises(Exception) as exception:
             user_details = self.client.admin_query_user( user, policy )
 
-        assert exception.value[0] == 60L
-        assert exception.value[1] == 'AEROSPIKE_INVALID_USER'
+        except InvalidUser as exception:
+            assert exception.code == 60L
+            assert exception.msg == 'AEROSPIKE_INVALID_USER'
 
     def test_drop_user_positive_without_policy(self):
 
@@ -152,14 +159,16 @@ class TestDropUser(TestBaseClass):
         with pytest.raises(Exception) as exception:
             user_details = self.client.admin_query_user( user, policy )
 
-        assert exception.value[0] == 60L
-        assert exception.value[1] == 'AEROSPIKE_INVALID_USER'
+        except InvalidUser as exception:
+            assert exception.code == 60L
+            assert exception.msg == 'AEROSPIKE_INVALID_USER'
 
         with pytest.raises(Exception) as exception:
             status = self.client.admin_drop_user( user )
 
-        assert exception.value[0] == 60L
-        assert exception.value[1] == 'AEROSPIKE_INVALID_USER'
+        except InvalidUser as exception:
+            assert exception.code == 60L
+            assert exception.msg == 'AEROSPIKE_INVALID_USER'
 
     def test_drop_user_policy_incorrect(self):
         """
@@ -177,16 +186,17 @@ class TestDropUser(TestBaseClass):
         assert status == 0
         user_details = self.client.admin_query_user( user, policy )
 
-        assert user_details == [{'roles': ['read', 'read-write', 'sys-admin'
-], 'roles_size': 3, 'user': 'incorrect-policy'}]
+        assert user_details == [{'roles': ['read', 'read-write', 'sys-admin'],
+                                           'roles_size': 3, 'user': 'incorrect-policy'}]
         policy = {
             'timeout': 0.2
         }
         with pytest.raises(Exception) as exception:
             status = self.client.admin_drop_user( user, policy )
 
-        assert exception.value[0] == -2L
-        assert exception.value[1] == 'timeout is invalid'
+        except ParamError as exception:
+            assert exception.code == -2L
+            assert exception.msg == 'timeout is invalid'
 
         status = self.client.admin_drop_user( user )
 
@@ -210,14 +220,16 @@ class TestDropUser(TestBaseClass):
         with pytest.raises(Exception) as exception:
             status = self.client.admin_create_user( user, password, roles, policy )
 
-        assert exception.value[0] == 60
-        assert exception.value[1] == "AEROSPIKE_INVALID_USER"
+        except InvalidUser as exception:
+            assert exception.code == 60
+            assert exception.msg == "AEROSPIKE_INVALID_USER"
 
         with pytest.raises(Exception) as exception:
             status = self.client.admin_drop_user( user, policy )
 
-        assert exception.value[0] == 60
-        assert exception.value[1] == "AEROSPIKE_INVALID_USER"
+        except InvalidUser as exception:
+            assert exception.code == 60
+            assert exception.msg == "AEROSPIKE_INVALID_USER"
 
     def test_drop_user_with_special_characters_in_username(self):
 
