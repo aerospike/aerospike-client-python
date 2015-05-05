@@ -74,3 +74,11 @@ void initialize_ldt(as_error *error, as_ldt* ldt_p, char* bin_name, int type, ch
 
 as_status pyobject_to_astype_write(as_error * err, char *bin_name,  PyObject * py_value, as_val **val,
 		as_operations * ops, as_static_pool *static_pool, int serializer_type);
+
+as_status as_privilege_to_pyobject( as_error * err, as_privilege privileges[], PyObject ** py_as_privilege, int privilege_size);
+
+as_status as_role_to_pyobject( as_error * err, as_role * role, PyObject ** py_as_role );
+
+as_status as_role_array_to_pyobject( as_error *err, as_role **roles, PyObject **py_as_roles, int roles_size );
+
+void pyobject_to_as_privileges(as_error *err, PyObject *py_privileges, as_privilege** privileges, int privileges_size);

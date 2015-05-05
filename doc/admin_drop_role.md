@@ -1,22 +1,20 @@
 
-# aerospike.Client.admin_drop_user
+# aerospike.Client.admin_drop_role
 
-aerospike.Client.admin_drop_user - drops a user from the Aerospike database
+aerospike.Client.admin_drop_role - drops a user defined role from the Aerospike database
 
 ## Description
 
 ```
-status = aerospike.Client.admin_drop_user ( username[, policy ] )
+status = aerospike.Client.admin_drop_role ( role[, policy ] )
 
 ```
 
-**aerospike.Client.admin_drop_user()** will drop a *user* with a given *username*, and return the *status*
-
-of dropping the user from the database.   
+**aerospike.Client.admin_drop_role()** will drop a *role* and return the *status* of dropping the role from the database.   
 
 ## Parameters
 
-**username**, the username of the user to be dropped from the Aerospike database.
+**role**, the role to be dropped from the Aerospike database.
 
 **policy**, the dictionary of policy options to be given while dropping a user from the database.   
 
@@ -38,9 +36,9 @@ client = aerospike.client(config).connect('admin', 'admin')
 policy = {
 	    'timeout': 1000
 	}
-username = "example"
+role_name = "example_role"
 
-status = client.admin_drop_user( username, policy )
+status = client.admin_drop_role( role_name, policy )
 
 print status
 

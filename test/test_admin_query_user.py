@@ -32,8 +32,7 @@ class TestQueryUser(TestBaseClass):
         password = "foo2"
         roles = ["read-write", "sys-admin", "read"]
 
-        status = self.client.admin_create_user(policy, user, password, roles,
-                                               len(roles))
+        status = self.client.admin_create_user( user, password, roles, policy )
 
         self.delete_users = []
 
@@ -44,7 +43,7 @@ class TestQueryUser(TestBaseClass):
 
         policy = {}
 
-        self.client.admin_drop_user(policy, "example")
+        self.client.admin_drop_user( "example", policy )
 
         self.client.close()
 
@@ -53,7 +52,7 @@ class TestQueryUser(TestBaseClass):
         with pytest.raises(TypeError) as typeError:
             self.client.admin_query_user()
 
-        assert "Required argument 'policy' (pos 1) not found" in typeError.value
+        assert "Required argument 'user' (pos 1) not found" in typeError.value
 
     def test_query_user_with_proper_parameters(self):
 
@@ -61,7 +60,7 @@ class TestQueryUser(TestBaseClass):
         user = "example"
 
         time.sleep(2)
-        user_details = self.client.admin_query_user(policy, user)
+        user_details = self.client.admin_query_user( user )
 
         assert user_details == [{'roles': ['read', 'read-write', 'sys-admin'], 'roles_size':
 3, 'user': user}]
@@ -71,8 +70,8 @@ class TestQueryUser(TestBaseClass):
         policy = {"timeout": 0.1}
         user = "example"
 
-        try:
-            status = self.client.admin_query_user( policy, user )
+        with pytest.raises(Exception) as exception:
+            status = self.client.admin_query_user( user, policy )
 
         except ParamError as exception:
             assert exception.code == -2
@@ -84,7 +83,7 @@ class TestQueryUser(TestBaseClass):
         user = "example"
 
         time.sleep(2)
-        user_details = self.client.admin_query_user(policy, user)
+        user_details = self.client.admin_query_user( user, policy )
 
         assert user_details == [{'roles': ['read','read-write','sys-admin'],
 'roles_size': 3, 'user': user}]
@@ -94,8 +93,8 @@ class TestQueryUser(TestBaseClass):
         policy = {'timeout': 0}
         user = None
 
-        try:
-            user_details = self.client.admin_query_user( policy, user )
+        with pytest.raises(Exception) as exception:
+            user_details = self.client.admin_query_user( user, policy )
 
         except ParamError as exception:
             assert exception.code == -2
@@ -106,8 +105,8 @@ class TestQueryUser(TestBaseClass):
         policy = {}
         user = ""
 
-        try:
-            status = self.client.admin_query_user( policy, user )
+        with pytest.raises(Exception) as exception:
+            status = self.client.admin_query_user( user, policy )
 
         except InvalidUser as exception:
             assert exception.code == 60
@@ -118,8 +117,8 @@ class TestQueryUser(TestBaseClass):
         policy = {}
         user = "non-existent"
 
-        try:
-            status = self.client.admin_query_user( policy, user )
+        with pytest.raises(Exception) as exception:
+            status = self.client.admin_query_user( user, policy )
 
         except InvalidUser as exception:
             assert exception.code == 60
@@ -131,11 +130,11 @@ class TestQueryUser(TestBaseClass):
         user = "example"
         roles = ["sys-admin", "read", "read-write"]
 
-        status = self.client.admin_revoke_roles(policy, user, roles, len(roles))
+        status = self.client.admin_revoke_roles(user, roles, policy)
         assert status == 0
         time.sleep(2)
 
-        user_details = self.client.admin_query_user(policy, user)
+        user_details = self.client.admin_query_user( user )
 
         assert user_details == [
             {'roles': [],
@@ -149,7 +148,7 @@ class TestQueryUser(TestBaseClass):
         """
         policy = {'timeout': 1000}
         with pytest.raises(TypeError) as typeError:
-            self.client.admin_query_user(policy, "foo", "")
+            self.client.admin_query_user( "foo", policy, "" )
 
         assert "admin_query_user() takes at most 2 arguments (3 given)" in typeError.value
 
@@ -158,8 +157,8 @@ class TestQueryUser(TestBaseClass):
             Invoke query_user() with policy as string
         """
         policy = ""
-        try:
-            self.client.admin_query_user( policy, "foo")
+        with pytest.raises(Exception) as exception:
+            self.client.admin_query_user( "foo", policy)
 
         except AerospikeError as exception:
             assert exception.code == -2L

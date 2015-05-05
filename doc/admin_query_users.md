@@ -6,7 +6,7 @@ aerospike.Client.admin_query_users - queries all users in the Aerospike database
 ## Description
 
 ```
-user_details = aerospike.Client.admin_query_users ( policies )
+user_details = aerospike.Client.admin_query_users ( policy )
 
 ```
 
@@ -15,7 +15,7 @@ database and return the *user_details* of all the users.
 
 ## Parameters
 
-**policies**, the dictionary of policies to be given while querying all users in the database.   
+**policy**, the dictionary of policy options to be given while querying all users in the database.   
 
 ## Return Values
 Returns a list containing the details of all users.

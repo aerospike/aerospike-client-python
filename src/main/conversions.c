@@ -147,6 +147,74 @@ as_status as_user_array_to_pyobject( as_error *err, as_user **users, PyObject **
 	return err->code;
 }
 
+void pyobject_to_as_privileges(as_error *err, PyObject *py_privileges, as_privilege** privileges, int privileges_size) {
+	for (int i = 0; i < privileges_size; i++) {
+		PyObject * py_val = PyList_GetItem(py_privileges, i);
+		if(PyDict_Check(py_val)) {
+			privileges[i] = (as_privilege *)cf_malloc(sizeof(as_privilege));
+			PyObject *py_dict_key = PyString_FromString("code");
+			if(PyDict_Contains(py_val, py_dict_key)) {
+				PyObject *py_code = NULL;
+				py_code  = PyDict_GetItemString(py_val, "code");
+				privileges[i]->code = PyInt_AsLong(py_code);
+			} else {
+				as_error_update(err, AEROSPIKE_ERR_PARAM, "Code is a compulsory parameter in privileges dictionary");
+				break;
+			}
+			Py_DECREF(py_dict_key);
+			py_dict_key = PyString_FromString("ns");
+			if(PyDict_Contains(py_val, py_dict_key)) {
+				PyObject *py_ns  = PyDict_GetItemString(py_val, "ns");
+				strcpy(privileges[i]->ns, PyString_AsString(py_ns));
+			} else {
+				strcpy(privileges[i]->ns, "");
+			}
+			Py_DECREF(py_dict_key);
+			py_dict_key = PyString_FromString("set");
+			if(PyDict_Contains(py_val, py_dict_key)) {
+				PyObject *py_set  = PyDict_GetItemString(py_val, "set");
+				strcpy(privileges[i]->set, PyString_AsString(py_set));
+			} else {
+				strcpy(privileges[i]->set, "");
+			}
+			Py_DECREF(py_dict_key);
+		}
+	}
+}
+
+as_status as_role_array_to_pyobject( as_error *err, as_role **roles, PyObject **py_as_roles, int roles_size )
+{
+	as_error_reset(err);
+	int i;
+	*py_as_roles = PyList_New(0);
+
+	for(i = 0; i < roles_size; i++) {
+
+		PyObject * py_role = PyString_FromString(roles[i]->name);
+		PyObject * py_privileges_size = PyInt_FromLong(roles[i]->privileges_size);
+		PyObject * py_privileges = PyList_New(0);
+
+		as_privilege_to_pyobject(err, roles[i]->privileges, &py_privileges, roles[i]->privileges_size);
+		if( err->code != AEROSPIKE_OK) {
+			break;
+		}
+
+		PyObject * py_roles = PyDict_New();
+		PyDict_SetItemString(py_roles, "role", py_role);
+		PyDict_SetItemString(py_roles, "privileges_size", py_privileges_size);
+		PyDict_SetItemString(py_roles, "privileges", py_privileges);
+
+		Py_DECREF(py_role);
+		Py_DECREF(py_privileges_size);
+		Py_DECREF(py_privileges);
+
+		PyList_Append(*py_as_roles, py_roles);
+
+		Py_DECREF(py_roles);
+	}
+
+	return err->code;
+}
 
 as_status as_user_to_pyobject( as_error * err, as_user * user, PyObject ** py_as_user )
 {
@@ -177,6 +245,67 @@ as_status as_user_to_pyobject( as_error * err, as_user * user, PyObject ** py_as
 	Py_DECREF(py_users);
 
 END:
+	return err->code;
+}
+
+as_status as_role_to_pyobject( as_error * err, as_role * role, PyObject ** py_as_role )
+{
+	as_error_reset(err);
+
+	PyObject * py_role = PyString_FromString(role->name);
+	PyObject * py_privileges_size = PyInt_FromLong(role->privileges_size);
+	PyObject * py_privileges = PyList_New(0);
+
+	as_privilege_to_pyobject(err, role->privileges, &py_privileges, role->privileges_size);
+	if( err->code != AEROSPIKE_OK) {
+		goto END;
+	}
+
+	PyObject * py_roles = PyDict_New();
+
+	PyDict_SetItemString(py_roles, "role", py_role);
+	PyDict_SetItemString(py_roles, "privileges_size", py_privileges_size);
+	PyDict_SetItemString(py_roles, "privileges", py_privileges);
+
+	Py_DECREF(py_role);
+	Py_DECREF(py_privileges_size);
+	Py_DECREF(py_privileges);
+
+	*py_as_role = PyList_New(0);
+	PyList_Append(*py_as_role, py_roles);
+
+	Py_DECREF(py_roles);
+
+END:
+	return err->code;
+}
+
+as_status as_privilege_to_pyobject( as_error * err, as_privilege privileges[], PyObject ** py_as_privilege, int privilege_size)
+{
+	as_error_reset(err);
+
+	PyObject * py_ns = NULL;
+	PyObject * py_set = NULL;
+	PyObject * py_code = NULL;
+	for(int i=0; i<privilege_size; i++) {
+		py_ns = PyString_FromString(privileges[i].ns);
+		py_set = PyString_FromString(privileges[i].set);
+		py_code = PyInt_FromLong(privileges[i].code);
+
+		PyObject *py_privilege = PyDict_New();
+		PyDict_SetItemString(py_privilege, "ns", py_ns);
+		PyDict_SetItemString(py_privilege, "set", py_set);
+		PyDict_SetItemString(py_privilege, "code", py_code);
+
+		Py_DECREF(py_ns);
+		Py_DECREF(py_set);
+		Py_DECREF(py_code);
+
+		PyList_Append(*py_as_privilege, py_privilege);
+
+		Py_DECREF(py_privilege);
+	}
+
 	return err->code;
 }
 
@@ -319,7 +448,7 @@ as_status pyobject_to_val(as_error * err, PyObject * py_obj, as_val ** val, as_s
                 &bytes, py_obj, err);
 		*val = (as_val *) bytes;
 	}
-	
+
 	if (py_result) {
 		Py_DECREF(py_result);
 	}
@@ -462,7 +591,7 @@ as_status pyobject_to_record(as_error * err, PyObject * py_rec,
 				}
 			}
 		}
-		
+
 		if (py_result) {
 			Py_DECREF(py_result);
 		}
@@ -531,7 +660,7 @@ as_status pyobject_to_astype_write(as_error * err, char *bin_name,  PyObject * p
 				&bytes, py_value, err);
 		*val = (as_val *) bytes;
 	}
-	
+
 	if (py_result) {
 		Py_DECREF(py_result);
 	}

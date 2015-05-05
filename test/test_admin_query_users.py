@@ -32,8 +32,7 @@ class TestQueryUsers(TestBaseClass):
         password = "foo2"
         roles = ["read-write", "sys-admin", "read"]
 
-        status = self.client.admin_create_user(policy, user, password, roles,
-                                               len(roles))
+        status = self.client.admin_create_user( user, password, roles, policy )
 
         self.delete_users = []
 
@@ -44,23 +43,16 @@ class TestQueryUsers(TestBaseClass):
 
         policy = {}
 
-        self.client.admin_drop_user(policy, "example")
+        self.client.admin_drop_user( "example", policy )
 
         self.client.close()
-
-    def test_query_users_without_any_parameters(self):
-
-        with pytest.raises(TypeError) as typeError:
-            self.client.admin_query_users()
-
-        assert "Required argument 'policy' (pos 1) not found" in typeError.value
 
     def test_query_users_with_proper_parameters(self):
 
         policy = {}
 
         time.sleep(2)
-        user_details = self.client.admin_query_users(policy)
+        user_details = self.client.admin_query_users()
 
         for user in user_details:
             if user['user'] == "example":
@@ -89,8 +81,8 @@ class TestQueryUsers(TestBaseClass):
         time.sleep(2)
         for user in user_details:
             if user['user'] == "example":
-                assert user == {'roles': ['read','read-write', 'sys-admin'],
-'roles_size': 3, 'user': "example"}
+                assert user == {'roles': ['read', 'read-write', 'sys-admin'],
+                                'roles_size': 3, 'user': "example"}
 
     def test_query_users_with_no_roles(self):
 
@@ -98,7 +90,7 @@ class TestQueryUsers(TestBaseClass):
         user = "example"
         roles = ["sys-admin", "read", "read-write"]
 
-        status = self.client.admin_revoke_roles(policy, user, roles, len(roles))
+        status = self.client.admin_revoke_roles(user, roles, policy)
         assert status == 0
         time.sleep(2)
 

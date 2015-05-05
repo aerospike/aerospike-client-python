@@ -20,6 +20,7 @@
 #include <aerospike/as_error.h>
 #include <aerospike/as_policy.h>
 #include <aerospike/as_status.h>
+#include <aerospike/as_admin.h>
 #include <aerospike/aerospike_index.h>
 #include "aerospike/as_scan.h"
 
@@ -99,7 +100,12 @@ AerospikeConstants aerospike_constants[] = {
 	{ AS_INDEX_NUMERIC						,	"INDEX_NUMERIC" },
 	{ AS_INDEX_TYPE_LIST					,	"INDEX_TYPE_LIST" },
 	{ AS_INDEX_TYPE_MAPKEYS					,	"INDEX_TYPE_MAPKEYS" },
-	{ AS_INDEX_TYPE_MAPVALUES				,	"INDEX_TYPE_MAPVALUES" }
+	{ AS_INDEX_TYPE_MAPVALUES				,	"INDEX_TYPE_MAPVALUES" },
+	{ AS_PRIVILEGE_USER_ADMIN				, 	"USER_ADMIN" },
+	{ AS_PRIVILEGE_SYS_ADMIN				,	"SYS_ADMIN"	},
+	{ AS_PRIVILEGE_READ						,	"READ"},
+	{ AS_PRIVILEGE_READ_WRITE				,	"READ_WRITE"},
+	{ AS_PRIVILEGE_READ_WRITE_UDF			,	"READ_WRITE_UDF"}
 };
 
 /**

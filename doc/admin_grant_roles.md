@@ -6,7 +6,7 @@ aerospike.Client.admin_grant_roles - grants roles to a user in the Aerospike dat
 ## Description
 
 ```
-status = aerospike.Client.admin_grant_roles ( policies, username, roles, roles_size )
+status = aerospike.Client.admin_grant_roles ( username, roles[, policy ] )
 
 ```
 
@@ -14,14 +14,12 @@ status = aerospike.Client.admin_grant_roles ( policies, username, roles, roles_s
 
 ## Parameters
 
-**policies**, the dictionary of policies to be given while granting roles to a user in the database.   
-
 **username**, the username of the user to whom the roles have to be granted in
 the Aerospike database.
 
 **roles**, a list specifying the roles to be assigned to the user.
 
-**roles_size**, the length of the *roles* list.
+**policy**, the dictionary of policy options to be given while granting roles to a user in the database.   
 
 ## Return Values
 Returns an integer status code
@@ -42,7 +40,7 @@ policy = {
 username = "example"
 roles = ["read", "read-write", "sys-admin"]
 
-status = client.admin_grant_roles( policy, username, roles, len(roles) )
+status = client.admin_grant_roles( username, roles, policy )
 
 print status
 
