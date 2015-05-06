@@ -94,7 +94,7 @@ try:
    	user = "foo"
     	password = "bar"
     	
-    	client.admin_set_password(policy, user, password)
+    	client.admin_set_password(user, password, policy)
         
     	print("OK, password set for 1 user")
 

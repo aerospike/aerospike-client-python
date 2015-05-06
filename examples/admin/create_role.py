@@ -91,13 +91,12 @@ try:
     try:
 
    	policy = {}
-   	user = "foo"
-    	roles = ["read-write", "read"]
-    	roles_size = len(roles)
+   	role = "example_foo"
+        privileges = [{"code": aerospike.READ}, {"code": aerospike.USER_ADMIN}]
     	
-    	client.admin_grant_roles(user, roles)
+  	client.admin_create_role(role, privileges, policy)
         
-    	print("OK, new roles granted to 1 user")
+    	print("OK, 1 new role created")
 
     except Exception as e:
         print("error: {0}".format(e), file=sys.stderr)

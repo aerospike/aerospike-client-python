@@ -93,7 +93,7 @@ try:
    	policy = {}
    	user = "foo"
     	
-  	roles = client.admin_query_user(policy, user)
+  	roles = client.admin_query_user(user, policy)
         
 	print(roles)
 	print("---")

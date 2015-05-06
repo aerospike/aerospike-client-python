@@ -91,13 +91,13 @@ try:
     try:
 
    	policy = {}
-   	user = "foo"
-    	roles = ["read-write", "read"]
-    	roles_size = len(roles)
     	
-    	client.admin_grant_roles(user, roles)
-        
-    	print("OK, new roles granted to 1 user")
+  	roles = client.admin_query_roles(policy)
+       
+	for role in roles:
+	   print(role)
+	print("---") 
+    	print("OK, All roles retrieved")
 
     except Exception as e:
         print("error: {0}".format(e), file=sys.stderr)

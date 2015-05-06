@@ -91,13 +91,11 @@ try:
     try:
 
    	policy = {}
-   	user = "foo"
-    	roles = ["read-write", "read"]
-    	roles_size = len(roles)
+   	role = "example_foo"
     	
-    	client.admin_grant_roles(user, roles)
+  	client.admin_drop_role(role, policy)
         
-    	print("OK, new roles granted to 1 user")
+    	print("OK, 1 role dropped")
 
     except Exception as e:
         print("error: {0}".format(e), file=sys.stderr)

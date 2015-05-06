@@ -93,7 +93,7 @@ try:
    	policy = {}
    	user = "foo"
     	
-  	client.admin_drop_user(policy, user)
+  	client.admin_drop_user(user, policy)
         
     	print("OK, 1 user dropped")
 

@@ -95,7 +95,7 @@ try:
     	password = "foobar"
     	
         client_new = aerospike.client(config).connect(user, "bar")
-    	status = client_new.admin_change_password(policy, user, password)
+    	status = client_new.admin_change_password(user, password)
         client_new.close()
         
         print("Status of changing password is: %d" % status)
