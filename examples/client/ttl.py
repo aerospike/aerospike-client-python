@@ -236,7 +236,6 @@ def check_records(start, wait=0, message=None):
 		print_records([client.get((options.namespace, options.set, k)) for k in KEYS],'  ')
 	except Exception as e:
 		print("error: {0}".format(e), file=sys.stderr)
-		sys.exit(1)
 
 	print_histogram('  ')
 
