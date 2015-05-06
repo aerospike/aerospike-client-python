@@ -5,8 +5,9 @@ import sys
 import time
 from test_base_class import TestBaseClass
 
+aerospike = pytest.importorskip("aerospike")
 try:
-    import aerospike
+    from aerospike.exception import *
 except:
     print "Please install aerospike python client."
     sys.exit(1)
@@ -118,34 +119,37 @@ aerospike.READ, "ns": "test", "set":"demo"}], {'timeout': 1000})
         """
             Drop non-existent role
         """
-        with pytest.raises(Exception) as exception:
+        try:
             self.client.admin_drop_role("usr-sys-admin")
 
-        assert exception.value[0] == 70
-        assert exception.value[1] == "AEROSPIKE_INVALID_ROLE"
+        except InvalidRole as exception:
+            assert exception.code == 70
+            assert exception.msg == "AEROSPIKE_INVALID_ROLE"
 
     def test_drop_role_rolename_None(self):
         """
             Drop role with role name None
         """
-        with pytest.raises(Exception) as exception:
+        try:
             self.client.admin_drop_role(None)
 
-        assert exception.value[0] == -2
-        assert exception.value[1] == "Role name should be a string"
+        except ParamError as exception:
+            assert exception.code == -2
+            assert exception.msg == "Role name should be a string"
 
     def test_drop_role_with_incorrect_policy(self):
         """
             Drop role with incorrect policy
         """
-        status = self.client.admin_create_role("usr-sys-admin", [{"code": aerospike.USER_ADMIN}, {"code": aerospike.SYS_ADMIN}])
+        status = self.client.admin_create_role("usr-sys-admin", [{"code": aerospike.USER_ADMIN}])
 
         assert status == 0
 
-        with pytest.raises(Exception) as exception:
+        try:
             self.client.admin_drop_role("usr-sys-admin", {"timeout": 0.2})
 
-        assert exception.value[0] == -2
-        assert exception.value[1] == 'timeout is invalid'
+        except ParamError as exception:
+            assert exception.code == -2
+            assert exception.msg == 'timeout is invalid'
 
         self.client.admin_drop_role("usr-sys-admin")

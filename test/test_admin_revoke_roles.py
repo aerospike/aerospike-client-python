@@ -96,7 +96,7 @@ class TestRevokeRoles(TestBaseClass):
         user = "example"
         roles = ['sys-admin']
 
-        with pytest.raises(Exception) as exception:
+        try:
             status = self.client.admin_revoke_roles( user, roles, policy )
 
         except ParamError as exception:
@@ -129,7 +129,7 @@ class TestRevokeRoles(TestBaseClass):
         user = None
         roles = ["sys-admin"]
 
-        with pytest.raises(Exception) as exception:
+        try:
             status = self.client.admin_revoke_roles( user, roles, policy )
 
         except ParamError as exception:
@@ -142,7 +142,7 @@ class TestRevokeRoles(TestBaseClass):
         user = ""
         roles = ["read-write"]
 
-        with pytest.raises(Exception) as exception:
+        try:
             status = self.client.admin_revoke_roles( user, roles, policy )
 
         except InvalidUser as exception:
@@ -155,11 +155,12 @@ class TestRevokeRoles(TestBaseClass):
         user = "example"
         roles = []
 
-        with pytest.raises(Exception) as exception:
+        try:
             status = self.client.admin_revoke_roles( user, roles, policy )
 
-        assert exception.value[0] == 70
-        assert exception.value[1] == "AEROSPIKE_INVALID_ROLE"
+        except InvalidRole as exception:
+            assert exception.code == 70
+            assert exception.msg == "AEROSPIKE_INVALID_ROLE"
 
     def test_revoke_roles_with_nonexistent_username(self):
 
@@ -167,7 +168,7 @@ class TestRevokeRoles(TestBaseClass):
         user = "non-existent"
         roles = ["read-write"]
 
-        with pytest.raises(Exception) as exception:
+        try:
             status = self.client.admin_revoke_roles( user, roles, policy )
 
         except InvalidUser as exception:

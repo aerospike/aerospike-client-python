@@ -5,8 +5,9 @@ import sys
 import time
 from test_base_class import TestBaseClass
 
+aerospike = pytest.importorskip("aerospike")
 try:
-    import aerospike
+    from aerospike.exception import *
 except:
     print "Please install aerospike python client."
     sys.exit(1)
@@ -118,11 +119,12 @@ aerospike.READ, "ns": "test", "set":"demo"}], {'timeout': 1000})
         """
             role name not string
         """
-        with pytest.raises(Exception) as exception:
+        try:
             self.client.admin_create_role(1, [{"code": aerospike.USER_ADMIN}])
 
-        assert exception.value[0] == -2
-        assert exception.value[1] == "Role name should be a string"
+        except ParamError as exception:
+            assert exception.code == -2
+            assert exception.msg == "Role name should be a string"
 
     def test_create_role_unknown_privilege_type(self):
         """
@@ -137,11 +139,12 @@ aerospike.READ, "ns": "test", "set":"demo"}], {'timeout': 1000})
         """
             privilege type incorrect
         """
-        with pytest.raises(Exception) as exception:
+        try:
             self.client.admin_create_role("usr-sys-admin", None)
 
-        assert exception.value[0] == -2
-        assert exception.value[1] == "Privileges should be a list"
+        except ParamError as exception:
+            assert exception.code == -2
+            assert exception.msg == "Privileges should be a list"
 
     def test_create_role_existing_role(self):
         """
@@ -151,11 +154,12 @@ aerospike.READ, "ns": "test", "set":"demo"}], {'timeout': 1000})
 
         assert status == 0
 
-        with pytest.raises(Exception) as exception:
+        try:
             self.client.admin_create_role("usr-sys-admin", [{"code": aerospike.USER_ADMIN}, {"code": aerospike.SYS_ADMIN}])
 
-        assert exception.value[0] == 71
-        assert exception.value[1] == "AEROSPIKE_ROLE_ALREADY_EXISTS"
+        except RoleExistsError as exception:
+            assert exception.code == 71
+            assert exception.msg == "AEROSPIKE_ROLE_ALREADY_EXISTS"
 
         time.sleep(1)
         status = self.client.admin_drop_role("usr-sys-admin")
@@ -201,10 +205,11 @@ aerospike.READ, "ns": "test", "set":"demo"}], {'timeout': 1000})
         """
         role_name = "role$"*1000
 
-        with pytest.raises(Exception) as exception:
+        try:
             self.client.admin_create_role(role_name, [{"code":
 aerospike.READ, "ns": "test", "set":"demo"}], {'timeout': 1000})
 
-        assert exception.value[0] == 70
-        assert exception.value[1] == "AEROSPIKE_INVALID_ROLE"
+        except InvalidRole as exception:
+            assert exception.code == 70
+            assert exception.msg == "AEROSPIKE_INVALID_ROLE"
 

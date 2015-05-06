@@ -108,7 +108,7 @@ class TestCreateUser(TestBaseClass):
         except:
             pass
 
-        with pytest.raises(Exception) as exception:
+        try:
             status = self.client.admin_create_user( user, password, roles, policy )
 
         except ParamError as exception:
@@ -148,7 +148,7 @@ class TestCreateUser(TestBaseClass):
         password = "user3"
         roles = ["sys-admin"]
 
-        with pytest.raises(Exception) as exception:
+        try:
             status = self.client.admin_create_user( user, password, roles, policy )
 
         except ParamError as exception:
@@ -162,7 +162,7 @@ class TestCreateUser(TestBaseClass):
         password = "user3"
         roles = ["read-write"]
 
-        with pytest.raises(Exception) as exception:
+        try:
             status = self.client.admin_create_user( user, password, roles, policy )
 
         except InvalidUser as exception:
@@ -194,7 +194,7 @@ class TestCreateUser(TestBaseClass):
         password = None
         roles = ["sys-admin"]
 
-        with pytest.raises(Exception) as exception:
+        try:
             status = self.client.admin_create_user( user, password, roles, policy )
 
         except ParamError as exception:
@@ -249,7 +249,7 @@ class TestCreateUser(TestBaseClass):
         except:
             pass
 
-        with pytest.raises(Exception) as exception:
+        try:
             status = self.client.admin_create_user( user, password, roles, policy )
 
         except InvalidUser as exception:
@@ -295,7 +295,7 @@ class TestCreateUser(TestBaseClass):
         except:
             pass
 
-        with pytest.raises(Exception) as exception:
+        try:
             status = self.client.admin_create_user( user, password, roles, policy )
 
         except InvalidRole as exception:
@@ -322,7 +322,7 @@ class TestCreateUser(TestBaseClass):
 
         non_admin_client = None
 
-        with pytest.raises(Exception) as exception:
+        try:
             non_admin_client = aerospike.client(config).connect( "non_admin", "non_admin" )
             status = non_admin_client.admin_create_user( "user78", password, roles, policy )
 

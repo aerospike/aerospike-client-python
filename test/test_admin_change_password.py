@@ -87,7 +87,7 @@ class TestChangePassword(TestBaseClass):
         user = "testchangepassworduser"
         password = "newpassword"
 
-        with pytest.raises(Exception) as exception :
+        try:
             status = self.client.admin_change_password( user, password, policy )
 
         except ParamError as exception:
@@ -136,7 +136,7 @@ class TestChangePassword(TestBaseClass):
         user = None
         password = "newpassword"
 
-        with pytest.raises(Exception) as exception:
+        try:
             status = self.client.admin_change_password( user, password, policy )
 
         except ParamError as exception:
@@ -149,7 +149,7 @@ class TestChangePassword(TestBaseClass):
         user = "testchangepassworduser"
         password = None
 
-        with pytest.raises(Exception) as exception:
+        try:
             status = self.client.admin_change_password( user, password, policy )
 
         except ParamError as exception:
@@ -162,7 +162,7 @@ class TestChangePassword(TestBaseClass):
         user = "readwriteuser"
         password = "newpassword"
 
-        with pytest.raises(Exception) as exception:
+        try:
             status = self.client.admin_change_password( user, password, policy )
 
         except InvalidUser as exception:

@@ -70,7 +70,7 @@ class TestQueryUser(TestBaseClass):
         policy = {"timeout": 0.1}
         user = "example"
 
-        with pytest.raises(Exception) as exception:
+        try:
             status = self.client.admin_query_user( user, policy )
 
         except ParamError as exception:
@@ -93,7 +93,7 @@ class TestQueryUser(TestBaseClass):
         policy = {'timeout': 0}
         user = None
 
-        with pytest.raises(Exception) as exception:
+        try:
             user_details = self.client.admin_query_user( user, policy )
 
         except ParamError as exception:
@@ -105,7 +105,7 @@ class TestQueryUser(TestBaseClass):
         policy = {}
         user = ""
 
-        with pytest.raises(Exception) as exception:
+        try:
             status = self.client.admin_query_user( user, policy )
 
         except InvalidUser as exception:
@@ -117,7 +117,7 @@ class TestQueryUser(TestBaseClass):
         policy = {}
         user = "non-existent"
 
-        with pytest.raises(Exception) as exception:
+        try:
             status = self.client.admin_query_user( user, policy )
 
         except InvalidUser as exception:
@@ -157,7 +157,7 @@ class TestQueryUser(TestBaseClass):
             Invoke query_user() with policy as string
         """
         policy = ""
-        with pytest.raises(Exception) as exception:
+        try:
             self.client.admin_query_user( "foo", policy)
 
         except AerospikeError as exception:
