@@ -90,7 +90,7 @@ class TestGrantRoles(TestBaseClass):
         user = "example"
         roles = ['sys-admin']
 
-        with pytest.raises(Exception) as exception:
+        try:
             status = self.client.admin_grant_roles( user, roles, policy )
 
         except ParamError as exception:
@@ -120,7 +120,7 @@ class TestGrantRoles(TestBaseClass):
         user = None
         roles = ["sys-admin"]
 
-        with pytest.raises(Exception) as exception:
+        try:
             status = self.client.admin_grant_roles( user, roles, policy )
 
         except ParamError as exception:
@@ -133,7 +133,7 @@ class TestGrantRoles(TestBaseClass):
         user = ""
         roles = ["read-write"]
 
-        with pytest.raises(Exception) as exception:
+        try:
             status = self.client.admin_grant_roles( user, roles, policy )
 
         except InvalidUser as exception:
@@ -174,8 +174,9 @@ class TestGrantRoles(TestBaseClass):
         user = "example"
         roles = []
 
-        with pytest.raises(Exception) as exception:
+        try:
             status = self.client.admin_grant_roles( user, roles, policy )
 
-        assert exception.value[0] == 70
-        assert exception.value[1] == "AEROSPIKE_INVALID_ROLE"
+        except InvalidRole as exception:
+            assert exception.code == 70
+            assert exception.msg == "AEROSPIKE_INVALID_ROLE"

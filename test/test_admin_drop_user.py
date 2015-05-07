@@ -70,7 +70,7 @@ class TestDropUser(TestBaseClass):
 
         assert status == 0
 
-        with pytest.raises(Exception) as exception:
+        try:
             user_details = self.client.admin_query_user( user )
 
         except InvalidUser as exception:
@@ -82,7 +82,7 @@ class TestDropUser(TestBaseClass):
             Invoke drop_user() with policy none
         """
         policy = {'timeout': 1000}
-        with pytest.raises(Exception) as exception:
+        try:
             self.client.admin_drop_user( None, policy )
 
         except ParamError as exception:
@@ -111,7 +111,7 @@ class TestDropUser(TestBaseClass):
 
         time.sleep(1)
 
-        with pytest.raises(Exception) as exception:
+        try:
             user_details = self.client.admin_query_user( user, policy )
 
         except InvalidUser as exception:
@@ -143,11 +143,13 @@ class TestDropUser(TestBaseClass):
 
         time.sleep(1)
 
-        with pytest.raises(Exception) as exception:
+        try:
             user_details = self.client.admin_query_user( user, policy )
 
-        assert exception.value[0] == 60L
-        assert exception.value[1] == 'AEROSPIKE_INVALID_USER'
+        except InvalidUser as exception:
+            assert exception.code == 60L
+            assert exception.msg == 'AEROSPIKE_INVALID_USER'
+
     def test_drop_user_negative(self):
         """
             Invoke drop_user() with non-existent user.
@@ -156,14 +158,14 @@ class TestDropUser(TestBaseClass):
         user = "foo"
         password = "foo1"
         roles = ["read", "read-write", "sys-admin"]
-        with pytest.raises(Exception) as exception:
+        try:
             user_details = self.client.admin_query_user( user, policy )
 
         except InvalidUser as exception:
             assert exception.code == 60L
             assert exception.msg == 'AEROSPIKE_INVALID_USER'
 
-        with pytest.raises(Exception) as exception:
+        try:
             status = self.client.admin_drop_user( user )
 
         except InvalidUser as exception:
@@ -191,7 +193,7 @@ class TestDropUser(TestBaseClass):
         policy = {
             'timeout': 0.2
         }
-        with pytest.raises(Exception) as exception:
+        try:
             status = self.client.admin_drop_user( user, policy )
 
         except ParamError as exception:
@@ -217,14 +219,14 @@ class TestDropUser(TestBaseClass):
         password = "user10"
         roles = ["sys-admin"]
 
-        with pytest.raises(Exception) as exception:
+        try:
             status = self.client.admin_create_user( user, password, roles, policy )
 
         except InvalidUser as exception:
             assert exception.code == 60
             assert exception.msg == "AEROSPIKE_INVALID_USER"
 
-        with pytest.raises(Exception) as exception:
+        try:
             status = self.client.admin_drop_user( user, policy )
 
         except InvalidUser as exception:

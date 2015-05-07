@@ -5,8 +5,9 @@ import sys
 import time
 from test_base_class import TestBaseClass
 
+aerospike = pytest.importorskip("aerospike")
 try:
-    import aerospike
+    from aerospike.exception import *
 except:
     print "Please install aerospike python client."
     sys.exit(1)
@@ -77,8 +78,9 @@ class TestQueryRoles(TestBaseClass):
         """
             Query roles incorrect policy
         """
-        with pytest.raises(Exception) as exception:
+        try:
             roles = self.client.admin_query_roles({'timeout': 0.2})
 
-        assert exception.value[0] == -2
-        assert exception.value[1] == 'timeout is invalid'
+        except ParamError as exception:
+            assert exception.code == -2
+            assert exception.msg == 'timeout is invalid'

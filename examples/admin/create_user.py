@@ -26,7 +26,7 @@ from optparse import OptionParser
 # Options Parsing
 ################################################################################
 
-usage = "usage: %prog [options] key"
+usage = "usage: %prog [options]"
 
 optparser = OptionParser(usage=usage, add_help_option=False)
 
@@ -96,7 +96,7 @@ try:
     	roles = ["read-write", "read"]
     	roles_size = len(roles)
     	
-  	client.admin_create_user(policy, user, password, roles, roles_size)
+  	client.admin_create_user(user, password, roles, policy)
         
     	print("OK, 1 new user created")
 

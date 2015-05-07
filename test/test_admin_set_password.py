@@ -63,7 +63,7 @@ class TestSetPassword(TestBaseClass):
         user = "testsetpassworduser"
         password = "newpassword"
 
-        with pytest.raises(Exception) as exception:
+        try:
             status = self.client.admin_set_password( user, password, policy )
 
         except ParamError as exception:
@@ -86,7 +86,7 @@ class TestSetPassword(TestBaseClass):
         user = None
         password = "newpassword"
 
-        with pytest.raises(Exception) as exception :
+        try:
             status = self.client.admin_set_password( user, password )
 
         except ParamError as exception:
@@ -99,7 +99,7 @@ class TestSetPassword(TestBaseClass):
         user = "testsetpassworduser"
         password = None
 
-        with pytest.raises(Exception) as exception:
+        try:
             status = self.client.admin_set_password( user, password )
 
         except ParamError as exception:
@@ -112,7 +112,7 @@ class TestSetPassword(TestBaseClass):
         user = "new_user"
         password = "newpassword"
 
-        with pytest.raises(Exception) as exception:
+        try:
             status = self.client.admin_set_password( user, password, policy )
 
         except InvalidUser as exception:

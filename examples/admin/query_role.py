@@ -91,13 +91,13 @@ try:
     try:
 
    	policy = {}
-   	user = "foo"
-    	roles = ["read-write", "read"]
-    	roles_size = len(roles)
+   	role = "example_foo"
     	
-    	client.admin_replace_roles(policy, user, roles, roles_size)
+  	privileges = client.admin_query_role(role, policy)
         
-    	print("OK, roles replaced for 1 user")
+	print(privileges)
+	print("---")
+    	print("OK, Roles retrieved for 1 user")
 
     except Exception as e:
         print("error: {0}".format(e), file=sys.stderr)

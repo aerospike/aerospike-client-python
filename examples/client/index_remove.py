@@ -26,7 +26,7 @@ from optparse import OptionParser
 # Options Parsing
 ################################################################################
 
-usage = "usage: %prog [options] index_name"
+usage = "usage: %prog [options] bin index_name"
 
 optparser = OptionParser(usage=usage, add_help_option=False)
 

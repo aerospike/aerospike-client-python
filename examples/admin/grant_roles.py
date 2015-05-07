@@ -95,7 +95,7 @@ try:
     	roles = ["read-write", "read"]
     	roles_size = len(roles)
     	
-    	client.admin_grant_roles(policy, user, roles, roles_size)
+    	client.admin_grant_roles(user, roles)
         
     	print("OK, new roles granted to 1 user")
 

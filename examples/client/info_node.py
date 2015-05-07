@@ -88,7 +88,7 @@ try:
         if len(args) > 0:
             request = ' '.join(args)
 
-        response = client.info_node(request)
+        response = client.info_node(request, config['hosts'][0])
 
         print("---")
         print("Response of info_node request is: ")

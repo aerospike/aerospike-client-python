@@ -5,8 +5,9 @@ import sys
 import time
 from test_base_class import TestBaseClass
 
+aerospike = pytest.importorskip("aerospike")
 try:
-    import aerospike
+    from aerospike.exception import *
 except:
     print "Please install aerospike python client."
     sys.exit(1)
@@ -116,11 +117,12 @@ aerospike.READ, "ns":"test", "set":"demo"}])
         """
             role name not string
         """
-        with pytest.raises(Exception) as exception:
+        try:
             self.client.admin_revoke_privileges(1, [{"code": aerospike.USER_ADMIN}])
 
-        assert exception.value[0] == -2
-        assert exception.value[1] == "Role name should be a string"
+        except ParamError as exception:
+            assert exception.code == -2
+            assert exception.msg == "Role name should be a string"
 
     def test_revoke_privileges_unknown_privilege_type(self):
         """
@@ -135,18 +137,20 @@ aerospike.READ, "ns":"test", "set":"demo"}])
         """
             privilege type incorrect
         """
-        with pytest.raises(Exception) as exception:
+        try:
             self.client.admin_revoke_privileges("usr-sys-admin", None)
 
-        assert exception.value[0] == -2
-        assert exception.value[1] == "Privileges should be a list"
+        except ParamError as exception:
+            assert exception.code == -2
+            assert exception.msg == "Privileges should be a list"
 
     def test_revoke_privileges_empty_list_privileges(self):
         """
             privilege type is an empty list
         """
-        with pytest.raises(Exception) as exception:
+        try:
             self.client.admin_revoke_privileges("usr-sys-admin", [])
 
-        assert exception.value[0] == 72
-        assert exception.value[1] == 'AEROSPIKE_INVALID_PRIVILEGE'
+        except InvalidPrivilege as exception:
+            assert exception.code == 72
+            assert exception.msg == 'AEROSPIKE_INVALID_PRIVILEGE'

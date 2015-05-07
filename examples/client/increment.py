@@ -59,11 +59,11 @@ optparser.add_option(
     help="Port of the Aerospike server.")
 
 optparser.add_option(
-    "--gen", dest="gen", type="int", default=None, metavar="<GEN>",
+    "--gen", dest="gen", type="int", default=10, metavar="<GEN>",
     help="Generation of the record being written.")
 
 optparser.add_option(
-    "--ttl", dest="ttl", type="int", default=None, metavar="<TTL>",
+    "--ttl", dest="ttl", type="int", default=1000, metavar="<TTL>",
     help="TTL of the record being written.")
 
 
@@ -132,7 +132,7 @@ try:
         print("Before increment operation")
         print(bins)
 
-        client.increment((namespace, set, key), "example_age", 5, 0, meta, policy)
+        client.increment((namespace, set, key), "example_age", 5, meta, policy)
         print("---")
         print("OK, 1 record touched.")
 
