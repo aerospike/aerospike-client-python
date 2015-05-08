@@ -121,10 +121,18 @@ class TestGet(TestBaseClass):
 
         try:
             key, meta, bins = TestGet.client.get( key )
-
+            """
+            We are making the api backward compatible. In case of RecordNotFound an
+            exception will not be raised. Instead Ok response is returned withe the
+            meta as None. This might change with further releases.
+            """
         except RecordNotFound as exception:
+            assert True == False
             assert exception.code == 2
             assert exception.msg == 'AEROSPIKE_ERR_RECORD_NOT_FOUND'
+
+        assert bins == None
+        assert meta == None
 
     def test_get_with_none_set(self):
         """
@@ -135,9 +143,18 @@ class TestGet(TestBaseClass):
         try:
             key, meta, bins = TestGet.client.get( key )
 
+            """
+            We are making the api backward compatible. In case of RecordNotFound an
+            exception will not be raised. Instead Ok response is returned withe the
+            meta as None. This might change with further releases.
+            """
         except RecordNotFound as exception:
+            assert True == False
             assert exception.code == 2
             assert exception.msg == 'AEROSPIKE_ERR_RECORD_NOT_FOUND'
+
+        assert bins == None
+        assert meta == None
 
     def test_get_with_none_namespace(self):
         """
@@ -211,9 +228,18 @@ class TestGet(TestBaseClass):
         try:
             key, meta, bins = TestGet.client.get(key)
 
+            """
+            We are making the api backward compatible. In case of RecordNotFound an
+            exception will not be raised. Instead Ok response is returned withe the
+            meta as None. This might change with further releases.
+            """
         except RecordNotFound as exception:
+            assert True == False
             assert exception.code == 2
             assert exception.msg == 'AEROSPIKE_ERR_RECORD_NOT_FOUND'
+
+        assert bins == None
+        assert meta == None
 
     def test_get_with_non_existent_key(self):
         """
@@ -224,9 +250,18 @@ class TestGet(TestBaseClass):
         try:
             key, meta, bins = TestGet.client.get( key )
 
+            """
+            We are making the api backward compatible. In case of RecordNotFound an
+            exception will not be raised. Instead Ok response is returned withe the
+            meta as None. This might change with further releases.
+            """
         except RecordNotFound as exception:
+            assert True == False
             assert exception.code == 2
             assert exception.msg == 'AEROSPIKE_ERR_RECORD_NOT_FOUND'
+
+        assert bins == None
+        assert meta == None
 
     def test_get_for_list_type_record(self):
         """
