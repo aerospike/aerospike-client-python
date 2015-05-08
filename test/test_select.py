@@ -133,9 +133,19 @@ class TestSelect(TestBaseClass):
         try:
             key, meta, bins = TestSelect.client.select( key, bins_to_select )
 
+            """
+            We are making the api backward compatible. In case of RecordNotFound an
+            exception will not be raised. Instead Ok response is returned withe the
+            meta as None. This might change with further releases.
+            """
         except RecordNotFound as exception:
+            assert True == False
             assert exception.code == 2
             assert exception.msg == 'AEROSPIKE_ERR_RECORD_NOT_FOUND'
+
+        assert key != None
+        assert meta == None
+        assert bins == None
 
     def test_select_with_key_and_single_bin_to_select_not_a_list(self):
 
