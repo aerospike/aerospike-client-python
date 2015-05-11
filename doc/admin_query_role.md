@@ -45,7 +45,7 @@ print role_details
 We expect to see:
 
 ```python
-[{'privileges': [{'code': 11, 'ns': 'test', 'set': 'demo'}], 'privileges_size': 1, 'role': 'example_role'}]
+[{'code': 11, 'ns': 'test', 'set': 'demo'}]
 ```
 
 

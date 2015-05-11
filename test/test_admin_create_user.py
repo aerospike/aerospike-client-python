@@ -68,7 +68,7 @@ class TestCreateUser(TestBaseClass):
 
         user_details = self.client.admin_query_user( user, policy )
 
-        assert user_details == [{'roles': ['read', 'read-write', 'sys-admin'], 'roles_size': 3, 'user': 'user1'}]
+        assert user_details == ['read', 'read-write', 'sys-admin']
 
         self.delete_users.append('user1')
 
@@ -92,7 +92,7 @@ class TestCreateUser(TestBaseClass):
 
         user_details = self.client.admin_query_user( user, policy )
 
-        assert user_details == [{'roles': ['read', 'read-write', 'sys-admin'], 'roles_size': 3, 'user': 'user1'}]
+        assert user_details == ['read', 'read-write', 'sys-admin']
 
         self.delete_users.append('user1')
 
@@ -135,9 +135,7 @@ class TestCreateUser(TestBaseClass):
 
         user_details = self.client.admin_query_user( user )
 
-        assert user_details[0]['user'] == "user2"
-
-        assert user_details[0]['roles'].sort() == roles.sort()
+        assert user_details == ['read-write', 'sys-admin']
 
         self.delete_users.append('user2')
 
@@ -275,11 +273,7 @@ class TestCreateUser(TestBaseClass):
 
         user_details = self.client.admin_query_user( user, policy )
 
-        assert user_details == [
-            {'roles': ['read-write'],
-             'roles_size': 1,
-             'user': 'user10'}
-        ]
+        assert user_details == ['read-write']
 
         self.delete_users.append(user)
 

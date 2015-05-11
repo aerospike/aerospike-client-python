@@ -43,7 +43,7 @@ print role_details
 We expect to see:
 
 ```python
-[{'privileges': [{'code': 11, 'ns': 'test', 'set': 'demo'}], 'privileges_size': 1, 'role': 'example'}, {'privileges': [{'code': 11, 'ns': 'test', 'set': 'demo'}], 'privileges_size': 1, 'role': 'example_role'}, {'privileges': [{'code': 10, 'ns': '', 'set': ''}], 'privileges_size': 1, 'role': 'read'}, {'privileges': [{'code': 11, 'ns': '', 'set': ''}], 'privileges_size': 1, 'role': 'read-write'}, {'privileges': [{'code': 12, 'ns': '', 'set': ''}], 'privileges_size': 1, 'role': 'read-write-udf'}, {'privileges': [{'code': 1, 'ns': '', 'set': ''}], 'privileges_size': 1, 'role': 'sys-admin'}, {'privileges': [{'code': 0, 'ns': '', 'set': ''}], 'privileges_size': 1, 'role': 'user-admin'}]
+{'example': [{'code': 11, 'ns': 'test', 'set': 'demo'}], 'example_role': [{'code': 11, 'ns': 'test', 'set': 'demo'}], 'read': [{'code': 10, 'ns': '', 'set': ''}], 'read-write': [{'code': 11, 'ns': '', 'set': ''}], 'read-write-udf': [{'code': 12, 'ns': '', 'set': ''}], 'sys-admin': [{'code': 1, 'ns': '', 'set': ''}], 'user-admin': [{'code': 0, 'ns':'', 'set': ''}]}
 ```
 
 

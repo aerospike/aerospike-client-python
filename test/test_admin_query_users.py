@@ -54,10 +54,7 @@ class TestQueryUsers(TestBaseClass):
         time.sleep(2)
         user_details = self.client.admin_query_users()
 
-        for user in user_details:
-            if user['user'] == "example":
-                assert user == {'roles': ['read', 'read-write', 'sys-admin'], 'roles_size':
-3, 'user': "example"}
+        assert user_details['example'] == ['read', 'read-write', 'sys-admin']
 
     def test_query_users_with_invalid_timeout_policy_value(self):
 
@@ -79,10 +76,7 @@ class TestQueryUsers(TestBaseClass):
         user_details = self.client.admin_query_users(policy)
 
         time.sleep(2)
-        for user in user_details:
-            if user['user'] == "example":
-                assert user == {'roles': ['read', 'read-write', 'sys-admin'],
-                                'roles_size': 3, 'user': "example"}
+        assert user_details['example'] == ['read', 'read-write', 'sys-admin']
 
     def test_query_users_with_no_roles(self):
 
@@ -97,13 +91,7 @@ class TestQueryUsers(TestBaseClass):
         user_details = self.client.admin_query_users(policy)
 
         time.sleep(2)
-        for user in user_details:
-            if user['user'] == "example":
-                assert user == {
-                    'roles': [],
-                    'roles_size': 0,
-                    'user': "example"
-                }
+        assert user_details['example'] == []
 
     def test_query_users_with_extra_argument(self):
         """

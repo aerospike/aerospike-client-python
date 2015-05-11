@@ -62,7 +62,7 @@ aerospike.READ}])
         assert status == 0
 
         roles = self.client.admin_query_role("usr-sys-admin")
-        assert roles[0]['privileges'] == [{'code': 0, 'ns': '', 'set': ''},
+        assert roles== [{'code': 0, 'ns': '', 'set': ''},
 {'code': 1, 'ns': '', 'set': ''}, {'code': 10, 'ns': '', 'set': ''}]
 
         status = self.client.admin_revoke_privileges("usr-sys-admin", [{"code": aerospike.READ}])
@@ -79,7 +79,7 @@ aerospike.READ}], {'timeout': 1000})
         assert status == 0
 
         roles = self.client.admin_query_role("usr-sys-admin")
-        assert roles[0]['privileges'] == [{'code': 0, 'ns': '', 'set': ''},
+        assert roles == [{'code': 0, 'ns': '', 'set': ''},
 {'code': 1, 'ns': '', 'set': ''}, {'code': 10, 'ns': '', 'set': ''}]
 
         status = self.client.admin_revoke_privileges("usr-sys-admin", [{"code": aerospike.READ}])
@@ -96,7 +96,7 @@ aerospike.READ, "ns":"test", "set":"demo"}])
         assert status == 0
         time.sleep(1)
         roles = self.client.admin_query_role("usr-sys-admin")
-        assert roles[0]['privileges'] == [{'code': 0, 'ns': '', 'set': ''},
+        assert roles == [{'code': 0, 'ns': '', 'set': ''},
 {'code': 1, 'ns': '', 'set': ''}, {'code': 10, 'ns': 'test', 'set': 'demo'}]
 
         status = self.client.admin_revoke_privileges("usr-sys-admin", [{"code":

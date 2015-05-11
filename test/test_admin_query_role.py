@@ -57,16 +57,14 @@ class TestQueryRole(TestBaseClass):
             Query role positive
         """
         roles = self.client.admin_query_role("usr-sys-admin")
-        assert roles[0]['privileges'] == [{'code': 0, 'ns': '', 'set': ''},
-{'code': 1, 'ns': '', 'set': ''}]
+        assert roles == [{'code': 0, 'ns': '', 'set': ''}, {'code': 1, 'ns': '', 'set': ''}]
 
     def test_admin_query_role_positive_with_policy(self):
         """
             Query role positive policy
         """
         roles = self.client.admin_query_role("usr-sys-admin", {'timeout': 1000})
-        assert roles[0]['privileges'] == [{'code': 0, 'ns': '', 'set': ''},
-{'code': 1, 'ns': '', 'set': ''}]
+        assert roles == [{'code': 0, 'ns': '', 'set': ''}, {'code': 1, 'ns': '', 'set': ''}]
 
     def test_admin_query_role_incorrect_role_name(self):
         """

@@ -45,7 +45,7 @@ print user_details
 We expect to see:
 
 ```python
-[{'roles_size': 3, 'user': 'example', 'roles': ['sys-admin', 'read', 'read-write']}]
+['sys-admin', 'read', 'read-write']
 ```
 
 

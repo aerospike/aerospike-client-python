@@ -62,7 +62,7 @@ aerospike.READ, "ns": "test", "set":"demo"}], {'timeout': 1000})
         time.sleep(1)
         roles = self.client.admin_query_role("usr-sys-admin")
 
-        assert roles[0].get('role') == "usr-sys-admin"
+        assert roles == [{'code': 10, 'ns': 'test', 'set': 'demo'}]
 
         status = self.client.admin_create_user("testcreaterole", "createrole",
 ["usr-sys-admin"])
@@ -71,7 +71,7 @@ aerospike.READ, "ns": "test", "set":"demo"}], {'timeout': 1000})
         time.sleep(1)
         users = self.client.admin_query_user("testcreaterole")
 
-        assert users[0]['roles'] == ["usr-sys-admin"]
+        assert users == ["usr-sys-admin"]
 
         status = self.client.admin_drop_role("usr-sys-admin")
 
@@ -79,7 +79,7 @@ aerospike.READ, "ns": "test", "set":"demo"}], {'timeout': 1000})
 
         users = self.client.admin_query_user("testcreaterole")
 
-        assert users[0]['roles'] == []
+        assert users == []
 
         self.client.admin_drop_user("testcreaterole")
 
@@ -94,7 +94,7 @@ aerospike.READ, "ns": "test", "set":"demo"}], {'timeout': 1000})
         time.sleep(1)
         roles = self.client.admin_query_role("usr-sys-admin")
 
-        assert roles[0].get('role') == "usr-sys-admin"
+        assert roles == [{"code": 0, 'ns': '', 'set': ''}, {"code": 1, 'ns': '', 'set': ''}]
 
         status = self.client.admin_create_user("testcreaterole", "createrole",
 ["usr-sys-admin"])
@@ -103,7 +103,7 @@ aerospike.READ, "ns": "test", "set":"demo"}], {'timeout': 1000})
         time.sleep(1)
         users = self.client.admin_query_user("testcreaterole")
 
-        assert users[0]['roles'] == ["usr-sys-admin"]
+        assert users == ["usr-sys-admin"]
 
         status = self.client.admin_drop_role("usr-sys-admin")
 
@@ -111,7 +111,7 @@ aerospike.READ, "ns": "test", "set":"demo"}], {'timeout': 1000})
 
         users = self.client.admin_query_user("testcreaterole")
 
-        assert users[0]['roles'] == []
+        assert users == []
 
         self.client.admin_drop_user("testcreaterole")
 
@@ -178,7 +178,7 @@ aerospike.READ, "ns": "test", "set":"demo"}], {'timeout': 1000})
         time.sleep(1)
         roles = self.client.admin_query_role(role_name)
 
-        assert roles[0].get('role') == role_name
+        assert roles == [{"code": 10, "ns": "test", "set": "demo"}]
 
         status = self.client.admin_create_user("testcreaterole", "createrole",
 [role_name])
@@ -187,7 +187,7 @@ aerospike.READ, "ns": "test", "set":"demo"}], {'timeout': 1000})
         time.sleep(1)
         users = self.client.admin_query_user("testcreaterole")
 
-        assert users[0]['roles'] == [role_name]
+        assert users == [role_name]
 
         status = self.client.admin_drop_role(role_name)
 
@@ -195,7 +195,7 @@ aerospike.READ, "ns": "test", "set":"demo"}], {'timeout': 1000})
 
         users = self.client.admin_query_user("testcreaterole")
 
-        assert users[0]['roles'] == []
+        assert users == []
 
         self.client.admin_drop_user("testcreaterole")
 

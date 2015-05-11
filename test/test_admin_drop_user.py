@@ -64,7 +64,7 @@ class TestDropUser(TestBaseClass):
         assert status == 0
         user_details = self.client.admin_query_user( user, policy )
 
-        assert user_details == [{'roles': ['read', 'read-write', 'sys-admin'], 'roles_size': 3, 'user': 'foo'}]
+        assert user_details == ['read', 'read-write', 'sys-admin']
 
         status = self.client.admin_drop_user( user, policy )
 
@@ -105,7 +105,7 @@ class TestDropUser(TestBaseClass):
         assert status == 0
         user_details = self.client.admin_query_user( user, policy )
 
-        assert user_details == [{'roles': ['read', 'read-write', 'sys-admin'], 'roles_size': 3, 'user': 'foo'}]
+        assert user_details == ['read', 'read-write', 'sys-admin']
         status = self.client.admin_drop_user( user, policy )
         assert status == 0
 
@@ -137,7 +137,7 @@ class TestDropUser(TestBaseClass):
         assert status == 0
         user_details = self.client.admin_query_user( user, policy )
 
-        assert user_details == [{'roles': ['read', 'read-write', 'sys-admin'], 'roles_size': 3, 'user': 'foo'}]
+        assert user_details == ['read', 'read-write', 'sys-admin']
         status = self.client.admin_drop_user( user )
         assert status == 0
 
@@ -188,8 +188,7 @@ class TestDropUser(TestBaseClass):
         assert status == 0
         user_details = self.client.admin_query_user( user, policy )
 
-        assert user_details == [{'roles': ['read', 'read-write', 'sys-admin'],
-                                           'roles_size': 3, 'user': 'incorrect-policy'}]
+        assert user_details == ['read', 'read-write', 'sys-admin']
         policy = {
             'timeout': 0.2
         }
