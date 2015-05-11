@@ -26,7 +26,7 @@ def deserialize_function(val):
     return pickle.loads(val)
 
 
-class TestSerializer(object):
+class TestUserSerializer(object):
     def setup_class(cls):
         """
             Setup class
@@ -34,15 +34,15 @@ class TestSerializer(object):
         hostlist, user, password = TestBaseClass.get_hosts()
         config = {'hosts': hostlist}
         if user == None and password == None:
-            TestSerializer.client = aerospike.client(config).connect()
+            TestUserSerializer.client = aerospike.client(config).connect()
         else:
-            TestSerializer.client = aerospike.client(config).connect(user,
+            TestUserSerializer.client = aerospike.client(config).connect(user,
                                                                      password)
         response = aerospike.set_serializer(serialize_function)
         response = aerospike.set_deserializer(deserialize_function)
 
     def teardown_class(cls):
-        TestSerializer.client.close()
+        TestUserSerializer.client.close()
 
     def setup_method(self, method):
         """
@@ -56,7 +56,7 @@ class TestSerializer(object):
             Teardown method
         """
         for key in self.delete_keys:
-            TestSerializer.client.remove(key)
+            TestUserSerializer.client.remove(key)
 
     def test_put_with_float_data_user_serializer(self):
 
@@ -66,34 +66,17 @@ class TestSerializer(object):
 
         rec = {"pi": 3.14}
 
-        res = TestSerializer.client.put(key, rec, {}, {},
+        res = TestUserSerializer.client.put(key, rec, {}, {},
                                         aerospike.SERIALIZER_USER)
 
         assert res == 0
 
-        _, _, bins = TestSerializer.client.get(key)
+        _, _, bins = TestUserSerializer.client.get(key)
 
         assert bins == {'pi': 3.14}
 
         self.delete_keys.append(key)
 
-    def test_put_with_float_data_python_serializer(self):
-
-        #  Invoke put() for float data record with python serializer.
-        key = ('test', 'demo', 1)
-
-        rec = {"pi": 3.14}
-
-        res = TestSerializer.client.put(key, rec, {}, {},
-                                        aerospike.SERIALIZER_PYTHON)
-
-        assert res == 0
-
-        _, _, bins = TestSerializer.client.get(key)
-
-        assert bins == {'pi': 3.14}
-
-        self.delete_keys.append(key)
 
     def test_put_with_bool_data_user_serializer(self):
         """
@@ -104,34 +87,17 @@ class TestSerializer(object):
 
         rec = {'status': True}
 
-        res = TestSerializer.client.put(key, rec, {}, {},
+        res = TestUserSerializer.client.put(key, rec, {}, {},
                                         aerospike.SERIALIZER_USER)
 
         assert res == 0
 
-        _, _, bins = TestSerializer.client.get(key)
+        _, _, bins = TestUserSerializer.client.get(key)
 
         assert bins == {'status': True}
 
         self.delete_keys.append(key)
 
-    def test_put_with_bool_data_python_serializer(self):
-        """
-            Invoke put() for bool data record with python serializer.
-        """
-        key = ('test', 'demo', 1)
-
-        rec = {"status": True}
-
-        res = TestSerializer.client.put(key, rec, {}, {},
-                                        aerospike.SERIALIZER_PYTHON)
-
-        assert res == 0
-        _, _, bins = TestSerializer.client.get(key)
-
-        assert bins == {'status': True}
-
-        self.delete_keys.append(key)
 
     """
     def test_put_with_object_data_user_serializer(self):
@@ -145,11 +111,11 @@ class TestSerializer(object):
             'object': obj1
         }
 
-        res = TestSerializer.client.put( key, rec , {}, {}, aerospike.SERIALIZER_USER)
+        res = TestUserSerializer.client.put( key, rec , {}, {}, aerospike.SERIALIZER_USER)
 
         assert res == 0
 
-        _, _, bins = TestSerializer.client.get( key )
+        _, _, bins = TestUserSerializer.client.get( key )
 
         #assert bins == { 'object': True }
         assert bins == { 'object': obj1 }
@@ -167,10 +133,10 @@ class TestSerializer(object):
                 "object" : obj1
         }
 
-        res = TestSerializer.client.put( key, rec , {}, {}, aerospike.SERIALIZER_PYTHON)
+        res = TestUserSerializer.client.put( key, rec , {}, {}, aerospike.SERIALIZER_PYTHON)
 
         assert res == 0
-        _, _, bins = TestSerializer.client.get( key )
+        _, _, bins = TestUserSerializer.client.get( key )
 
         assert bins == { 'object': True }
 
@@ -200,7 +166,7 @@ class TestSerializer(object):
 
         rec = {"pi": 3.14}
 
-        res = TestSerializer.client.put(key, rec, {}, {},
+        res = TestUserSerializer.client.put(key, rec, {}, {},
                                         aerospike.SERIALIZER_USER)
 
         assert res == 0
@@ -237,12 +203,12 @@ class TestSerializer(object):
                          "t": 1}
             },
         }
-        res = TestSerializer.client.put(key, rec, {}, {},
+        res = TestUserSerializer.client.put(key, rec, {}, {},
                                         aerospike.SERIALIZER_USER)
 
         assert res == 0
 
-        _, _, bins = TestSerializer.client.get(key)
+        _, _, bins = TestUserSerializer.client.get(key)
 
         assert bins == {
             'map': {"key": "asd';q;'1';",
@@ -262,54 +228,4 @@ class TestSerializer(object):
 
         self.delete_keys.append(key)
 
-    def test_put_with_mixed_data_python_serializer(self):
-        """
-            Invoke put() for mixed data record with python serializer.
-        """
-        key = ('test', 'demo', 1)
-
-        rec = {
-            'map': {"key": "asd';q;'1';",
-                    "pi": 3.14},
-            'normal': 1234,
-            'special': '!@#@#$QSDAsd;as',
-            'list': ["nanslkdl", 1, bytearray("asd;as[d'as;d", "utf-8")],
-            'bytes': bytearray("asd;as[d'as;d", "utf-8"),
-            'nestedlist': ["nanslkdl", 1, bytearray("asd;as[d'as;d", "utf-8"),
-                           [1, bytearray("asd;as[d'as;d", "utf-8")]],
-            'nestedmap': {
-                "key": "asd';q;'1';",
-                "pi": 3.14,
-                "nest": {"pi1": 3.12,
-                         "t": 1},
-                "inlist": [1, 2]
-            },
-        }
-
-        res = TestSerializer.client.put(key, rec, {}, {},
-                                        aerospike.SERIALIZER_PYTHON)
-
-        assert res == 0
-
-        _, _, bins = TestSerializer.client.get(key)
-
-        assert bins == {
-            'map': {"key": "asd';q;'1';",
-                    "pi": 3.14},
-            'normal': 1234,
-            'special': '!@#@#$QSDAsd;as',
-            'list': ["nanslkdl", 1, bytearray("asd;as[d'as;d", "utf-8")],
-            'bytes': bytearray("asd;as[d'as;d", "utf-8"),
-            'nestedlist': ["nanslkdl", 1, bytearray("asd;as[d'as;d", "utf-8"),
-                           [1, bytearray("asd;as[d'as;d", "utf-8")]],
-            'nestedmap': {
-                "key": "asd';q;'1';",
-                "pi": 3.14,
-                "nest": {"pi1": 3.12,
-                         "t": 1},
-                "inlist": [1, 2]
-            },
-        }
-
-        self.delete_keys.append(key)
 
