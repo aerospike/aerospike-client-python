@@ -71,7 +71,7 @@ class TestLList(object):
         assert 1 == TestLList.llist_integer.size()
 
     #Add() - Add() unsupported type data to llist.
-    @pytest.mark.xfail
+    #@pytest.mark.skipif("True")
     def test_llist_add_float_positive(self):
         """
             Invoke add() float type data.
@@ -83,7 +83,7 @@ class TestLList(object):
 
         except LDTKeyFunctionNotFound as exception:
             assert exception.code == 1433
-            assert exception.msg == "LDT-Key (Unique) Function Not Found"
+            assert exception.msg == "LDT-Key Field Not Found"
 
     #Add() - Add() without any mandatory parameters.
     def test_llist_no_parameter_negative(self):
@@ -136,7 +136,6 @@ class TestLList(object):
             assert exception.code == 125L
 
     #Remove() - Remove non-existent object from the llist.
-    @pytest.mark.xfail
     def test_llist_remove_element_negative(self):
         """
             Invoke remove() to remove non-existent element.
