@@ -13,9 +13,10 @@ Client Class --- :class:`Client`
 
     Example::
 
-        # import the module
         from __future__ import print_function
+        # import the module
         import aerospike
+        from aerospike.exception import *
         import sys
 
         # Configure the client
@@ -26,8 +27,8 @@ Client Class --- :class:`Client`
         # Create a client and connect it to the cluster
         try:
             client = aerospike.client(config).connect()
-        except:
-            print("failed to connect to the cluster with". config['hosts'])
+        except ClientError as e:
+            print("Error: {0} [{1}]".format(e.msg, e.code))
             sys.exit(1)
 
         # Records are addressable via a tuple of (namespace, set, key)
@@ -39,8 +40,8 @@ Client Class --- :class:`Client`
                 'name': 'John Doe',
                 'age': 32
             })
-        except Exception as e:
-            print("error: {0}".format(e), file=sys.stderr)
+        except RecordError as e:
+            print("Error: {0} [{1}]".format(e.msg, e.code))
 
         # Read a record
         (key, meta, record) = client.get(key)
@@ -75,6 +76,7 @@ Client Class --- :class:`Client`
 
             from __future__ import print_function
             import aerospike
+            from aerospike.exception import AerospikeError
             import sys
 
             config = { 'hosts': [('127.0.0.1', 3000)] }
@@ -91,8 +93,8 @@ Client Class --- :class:`Client`
                 print('--------------------------')
                 print(bins)
                 client.close()
-            except Exception as e:
-                print("error: {0}".format(e), file=sys.stderr)
+            except AerospikeError as e:
+                print("Error: {0} [{1}]".format(e.msg, e.code))
                 sys.exit(1)
 
 
@@ -113,6 +115,7 @@ Client Class --- :class:`Client`
 
             from __future__ import print_function
             import aerospike
+            from aerospike.exception import AerospikeError
             import sys
 
             config = { 'hosts': [('127.0.0.1', 3000)] }
@@ -129,8 +132,8 @@ Client Class --- :class:`Client`
                 print('--------------------------')
                 print(bins)
                 client.close()
-            except Exception as e:
-                print("error: {0}".format(e), file=sys.stderr)
+            except AerospikeError as e:
+                print("Error: {0} [{1}]".format(e.msg, e.code))
                 sys.exit(1)
 
 
@@ -148,6 +151,7 @@ Client Class --- :class:`Client`
 
             from __future__ import print_function
             import aerospike
+            from aerospike.exception import AerospikeError
             import sys
 
             config = { 'hosts': [('127.0.0.1', 3000)] }
@@ -162,8 +166,8 @@ Client Class --- :class:`Client`
                 print('--------------------------')
                 print(meta)
                 client.close()
-            except Exception as e:
-                print("error: {0}".format(e), file=sys.stderr)
+            except AerospikeError as e:
+                print("Error: {0} [{1}]".format(e.msg, e.code))
                 sys.exit(1)
 
 
@@ -181,6 +185,7 @@ Client Class --- :class:`Client`
 
             from __future__ import print_function
             import aerospike
+            from aerospike.exception import AerospikeError
 
             config = {
                 'hosts': [ ('127.0.0.1', 3000) ],
@@ -201,8 +206,8 @@ Client Class --- :class:`Client`
                 # adding a bin
                 client.put(key, {'smiley': u"\ud83d\ude04"})
                 client.close()
-            except Exception as e:
-                print("error: {0}".format(e), file=sys.stderr)
+            except AerospikeError as e:
+                print("Error: {0} [{1}]".format(e.msg, e.code))
                 sys.exit(1)
 
         .. note:: Using Generation Policy
@@ -216,6 +221,7 @@ Client Class --- :class:`Client`
 
                 from __future__ import print_function
                 import aerospike
+                from aerospike.exception import *
                 import sys
 
                 config = { 'hosts': [ ('127.0.0.1',3000)]}
@@ -229,11 +235,10 @@ Client Class --- :class:`Client`
                         policy={'gen':aerospike.POLICY_GEN_EQ},
                         meta={'gen': 33})
                     print('Record written.')
-                except Exception as e:
-                    if e[0] == 3:
-                        print("put() failed due to generation policy mismatch")
-                    else:
-                        print("error: {0}".format(e), file=sys.stderr)
+                except RecordGenerationError:
+                    print("put() failed due to generation policy mismatch")
+                except AerospikeError as e:
+                    print("Error: {0} [{1}]".format(e.msg, e.code))
 
     .. method:: touch(key[, val=0[, meta[, policy]]])
 
@@ -349,6 +354,7 @@ Client Class --- :class:`Client`
 
             from __future__ import print_function
             import aerospike
+            from aerospike.exception import AerospikeError
             import sys
 
             config = { 'hosts': [('127.0.0.1', 3000)] }
@@ -357,8 +363,8 @@ Client Class --- :class:`Client`
             try:
                 key = ('test', 'demo', 1)
                 client.append(key, 'name', ' jr.', policy={'timeout': 1200})
-            except Exception as e:
-                print("error: {0}".format(e), file=sys.stderr)
+            except AerospikeError as e:
+                print("Error: {0} [{1}]".format(e.msg, e.code))
                 sys.exit(1)
 
 
@@ -377,6 +383,7 @@ Client Class --- :class:`Client`
 
             from __future__ import print_function
             import aerospike
+            from aerospike.exception import AerospikeError
             import sys
 
             config = { 'hosts': [('127.0.0.1', 3000)] }
@@ -385,8 +392,8 @@ Client Class --- :class:`Client`
             try:
                 key = ('test', 'demo', 1)
                 client.prepend(key, 'name', 'Dr. ', policy={'timeout': 1200})
-            except Exception as e:
-                print("error: {0}".format(e), file=sys.stderr)
+            except AerospikeError as e:
+                print("Error: {0} [{1}]".format(e.msg, e.code))
                 sys.exit(1)
 
 
@@ -405,6 +412,7 @@ Client Class --- :class:`Client`
 
             from __future__ import print_function
             import aerospike
+            from aerospike.exception import AerospikeError
             import sys
 
             config = { 'hosts': [('127.0.0.1', 3000)] }
@@ -421,8 +429,8 @@ Client Class --- :class:`Client`
                 (key, meta, bins) = client.get(key)
                 print("Poor Kitty:", bins, "\n")
                 print(bins)
-            except Exception as e:
-                print("error: {0}".format(e), file=sys.stderr)
+            except AerospikeError as e:
+                print("Error: {0} [{1}]".format(e.msg, e.code))
                 sys.exit(1)
 
 
@@ -452,6 +460,7 @@ Client Class --- :class:`Client`
 
             from __future__ import print_function
             import aerospike
+            from aerospike.exception import AerospikeError
             import sys
 
             config = { 'hosts': [('127.0.0.1', 3000)] }
@@ -497,8 +506,8 @@ Client Class --- :class:`Client`
                 print(meta)
                 print('--------------------------')
                 print(bins)
-            except Exception as e:
-                print("error: {0}".format(e), file=sys.stderr)
+            except AerospikeError as e:
+                print("Error: {0} [{1}]".format(e.msg, e.code))
                 sys.exit(1)
 
 
@@ -518,6 +527,7 @@ Client Class --- :class:`Client`
 
             from __future__ import print_function
             import aerospike
+            from aerospike.exception import AerospikeError
             import sys
 
             config = { 'hosts': [('127.0.0.1', 3000)] }
@@ -533,8 +543,8 @@ Client Class --- :class:`Client`
                 records = client.get_many(keys)
                 print records
                 client.close()
-            except Exception as e:
-                print("error: {0}".format(e), file=sys.stderr)
+            except AerospikeError as e:
+                print("Error: {0} [{1}]".format(e.msg, e.code))
                 sys.exit(1)
 
         .. note::
@@ -565,6 +575,7 @@ Client Class --- :class:`Client`
 
             from __future__ import print_function
             import aerospike
+            from aerospike.exception import AerospikeError
             import sys
 
             config = { 'hosts': [('127.0.0.1', 3000)] }
@@ -580,8 +591,8 @@ Client Class --- :class:`Client`
                 records = client.exists_many(keys)
                 print records
                 client.close()
-            except Exception as e:
-                print("error: {0}".format(e), file=sys.stderr)
+            except AerospikeError as e:
+                print("Error: {0} [{1}]".format(e.msg, e.code))
                 sys.exit(1)
 
         .. note::
@@ -616,6 +627,7 @@ Client Class --- :class:`Client`
 
             from __future__ import print_function
             import aerospike
+            from aerospike.exception import AerospikeError
             import sys
 
             config = { 'hosts': [('127.0.0.1', 3000)] }
@@ -631,8 +643,8 @@ Client Class --- :class:`Client`
                 records = client.select_many(keys, [u'name'])
                 print records
                 client.close()
-            except Exception as e:
-                print("error: {0}".format(e), file=sys.stderr)
+            except AerospikeError as e:
+                print("Error: {0} [{1}]".format(e.msg, e.code))
                 sys.exit(1)
 
         .. note::
@@ -804,6 +816,7 @@ Client Class --- :class:`Client`
         .. code-block:: python
 
             import aerospike
+            from aerospike.exception import AerospikeError
             import sys
 
             config = {'hosts': [ ('127.0.0.1', 3000)]}
@@ -822,8 +835,8 @@ Client Class --- :class:`Client`
                     print("Background scan status : ", "SCAN_STATUS_COMPLETED")
                 else:
                     print("Scan_apply failed")
-            except Exception as e:
-                print("error: {0}".format(e), file=sys.stderr)
+            except AerospikeError as e:
+                print("Error: {0} [{1}]".format(e.msg, e.code))
             client.close()
 
 

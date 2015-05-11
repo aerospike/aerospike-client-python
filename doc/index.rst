@@ -25,6 +25,7 @@ Content
     scan
     query
     predicates
+    exception
 
 
 Indices and tables
