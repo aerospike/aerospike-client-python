@@ -131,11 +131,10 @@ aerospike.PRIV_READ, "ns":"test", "set":"demo"}])
         """
             privilege type unknown
         """
-        with pytest.raises(AttributeError) as attributeError:
-            self.client.admin_revoke_privileges("usr-sys-admin", [{"code":
-                aerospike.PRIV_USER_ADMIN_WRONG}])
-
-        assert "'module' object has no attribute 'USER_ADMIN_WRONG'" in attributeError.value
+        try:
+            self.client.admin_revoke_privileges("usr-sys-admin", [{"code": 64}])
+        except InvalidPrivilege as exception:
+            assert exception.code == 72
 
     def test_revoke_privileges_incorrect_privilege_type(self):
         """
