@@ -29,7 +29,8 @@ class TestQueryRoles(TestBaseClass):
                 }
         self.client = aerospike.client(config).connect( user, password )
 
-        self.client.admin_create_role("usr-sys-admin", [{"code": aerospike.USER_ADMIN}, {"code": aerospike.SYS_ADMIN}])
+        self.client.admin_create_role("usr-sys-admin", [{"code":
+            aerospike.USER_ADMIN}, {"code": aerospike.PRIV_SYS_ADMIN}])
         self.delete_users = []
 
     def teardown_method(self, method):

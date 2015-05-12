@@ -92,7 +92,7 @@ try:
 
    	policy = {}
    	role = "example_foo"
-        privileges = [{"code": aerospike.SYS_ADMIN}]
+        privileges = [{"code": aerospike.PRIV_SYS_ADMIN}]
     	
     	client.admin_revoke_privileges(role, privileges, policy)
         

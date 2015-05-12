@@ -55,9 +55,15 @@ Client Class --- :class:`Client`
         <https://www.aerospike.com/docs/architecture/clients.html>`_.
 
 
-    .. method:: connect()
+    .. method:: connect([username, password])
 
-        Connect to the cluster.
+        Connect to the cluster. The optional *username* and *password* only
+        apply when connecting to the Enterprise Edition of Aerospike.
+
+        :param str username: a defined user with roles in the cluster. See :meth:`admin_create_user`.
+        :param str password: the password will be hashed by the client using bcrypt.
+
+        .. seealso:: `Security features article <https://www.aerospike.com/docs/guide/security.html>`_.
 
     .. method:: close()
 
@@ -289,7 +295,7 @@ Client Class --- :class:`Client`
 
         Calculate the digest of a particular key. See: :ref:`aerospike_key_tuple`.
 
-        :param str ns: the namespace in the aerospike database.
+        :param str ns: the namespace in the aerospike cluster.
         :param str set: the set name.
         :param key: the primary key identifier of the record within the set.
         :type key: str or int
@@ -791,7 +797,7 @@ Client Class --- :class:`Client`
 
         Initiate a background scan and apply a record UDF to each record matched by the scan.
 
-        :param str ns: the namespace in the aerospike database.
+        :param str ns: the namespace in the aerospike cluster.
         :param str set: the set name. Should be ``None`` if the entire namespace is to be scanned.
         :param str module: the name of the UDF module.
         :param str function: the name of the UDF to apply to the records matched by the scan.
@@ -840,17 +846,18 @@ Client Class --- :class:`Client`
             client.close()
 
 
-    .. rubric:: Admin
+    .. rubric:: Info
 
     .. method:: index_string_create(ns, set, bin, index_name[, policy])
 
         Create a string index with *index_name* on the *bin* in the specified \
         *ns*, *set*.
 
-        :param str ns: the namespace in the aerospike database.
+        :param str ns: the namespace in the aerospike cluster.
         :param str set: the set name.
         :param str bin: the name of bin the secondary index is built on.
         :param str index_name: the name of the index.
+        :param dict policy: optional info policies :ref:`aerospike_info_policies`.
 
         .. versionchanged:: 1.0.39
 
@@ -860,10 +867,11 @@ Client Class --- :class:`Client`
         Create an integer index with *index_name* on the *bin* in the specified \
         *ns*, *set*.
 
-        :param str ns: the namespace in the aerospike database.
+        :param str ns: the namespace in the aerospike cluster.
         :param str set: the set name.
         :param str bin: the name of bin the secondary index is built on.
         :param str index_name: the name of the index.
+        :param dict policy: optional info policies :ref:`aerospike_info_policies`.
 
         .. versionchanged:: 1.0.39
 
@@ -873,11 +881,12 @@ Client Class --- :class:`Client`
         (as defined by *index_datatype*) on records of the specified *ns*, *set* \
         whose *bin* is a list.
 
-        :param str ns: the namespace in the aerospike database.
+        :param str ns: the namespace in the aerospike cluster.
         :param str set: the set name.
         :param str bin: the name of bin the secondary index is built on.
         :param index_datatype: Possible values are ``aerospike.INDEX_STRING`` and ``aerospike.INDEX_NUMERIC``.
         :param str index_name: the name of the index.
+        :param dict policy: optional info policies :ref:`aerospike_info_policies`.
 
         .. warning::
 
@@ -891,11 +900,12 @@ Client Class --- :class:`Client`
         (as defined by *index_datatype*) on records of the specified *ns*, *set* \
         whose *bin* is a map. The index will include the keys of the map.
 
-        :param str ns: the namespace in the aerospike database.
+        :param str ns: the namespace in the aerospike cluster.
         :param str set: the set name.
         :param str bin: the name of bin the secondary index is built on.
         :param index_datatype: Possible values are ``aerospike.INDEX_STRING`` and ``aerospike.INDEX_NUMERIC``.
         :param str index_name: the name of the index.
+        :param dict policy: optional info policies :ref:`aerospike_info_policies`.
 
         .. warning::
 
@@ -909,11 +919,12 @@ Client Class --- :class:`Client`
         (as defined by *index_datatype*) on records of the specified *ns*, *set* \
         whose *bin* is a map. The index will include the values of the map.
 
-        :param str ns: the namespace in the aerospike database.
+        :param str ns: the namespace in the aerospike cluster.
         :param str set: the set name.
         :param str bin: the name of bin the secondary index is built on.
         :param index_datatype: Possible values are ``aerospike.INDEX_STRING`` and ``aerospike.INDEX_NUMERIC``.
         :param str index_name: the name of the index.
+        :param dict policy: optional info policies :ref:`aerospike_info_policies`.
 
         .. warning::
 
@@ -940,8 +951,9 @@ Client Class --- :class:`Client`
 
         Remove the index with *index_name* from the namespace.
 
-        :param str ns: the namespace in the aerospike database.
+        :param str ns: the namespace in the aerospike cluster.
         :param str index_name: the name of the index.
+        :param dict policy: optional info policies :ref:`aerospike_info_policies`.
 
         .. versionchanged:: 1.0.39
 
@@ -1019,6 +1031,215 @@ Client Class --- :class:`Client`
         .. seealso:: `Info Command Reference <http://www.aerospike.com/docs/reference/info/>`_.
 
         .. versionchanged:: 1.0.41
+
+
+    .. rubric:: Admin
+
+    .. note::
+
+        The admin methods implement the security features of the Enterprise \
+        Edition of Aerospike. These methods will raise a \
+        :exc:`~aerospike.exception.SecurityNotSupported` when the client is \
+        connected to a Community Edition cluster (see
+        :mod:`aerospike.exception`). \
+
+        A user is validated by the client against the server whenever a \
+        connection is established through the use of a username and password \
+        (passwords hashed using bcrypt). \
+        When security is enabled, each operation is validated against the \
+        user\'s roles. Users are assigned roles, which are collections of \
+        :ref:`aerospike_privilege_dict`.
+
+        .. code-block:: python
+
+            import aerospike
+            from aerospike.exception import *
+            import time
+
+            config = {'hosts': [('127.0.0.1', 3000)] }
+            client = aerospike.client(config).connect('ipji', 'life is good')
+
+            try:
+                dev_privileges = [{'code': aerospike.PRIV_READ}, {'code': aerospike.PRIV_READ_WRITE}]
+                client.admin_create_role('dev_role', dev_privileges)
+                client.admin_grant_privileges('dev_role', [{'code': aerospike.PRIV_READ_WRITE_UDF}])
+                client.admin_create_user('dev', 'you young whatchacallit... idiot', ['dev_role'])
+                time.sleep(1)
+                print(client.admin_query_user('dev'))
+                print(admin_query_users())
+            except AdminError as e:
+                print("Error [{0}]: {1}".format(e.code, e.msg))
+            client.close()
+
+        .. seealso:: `Security features article <https://www.aerospike.com/docs/guide/security.html>`_.
+
+
+    .. method:: admin_create_role(role, privileges[, policy])
+
+        Create a custom, named *role* containing a :class:`list` of
+        *privileges*.
+
+        :param str role: the name of the role.
+        :param list privileges: a list of :ref:`aerospike_privilege_dict`.
+        :param dict policy: optional admin policies :ref:`aerospike_admin_policies`.
+        :raises: one of the :exc:`~aerospike.exception.AdminError` subclasses.
+
+        .. versionchanged:: 1.0.44
+
+
+    .. method:: admin_drop_role(role[, policy])
+
+        Drop a custom *role*.
+
+        :param str role: the name of the role.
+        :param dict policy: optional admin policies :ref:`aerospike_admin_policies`.
+        :raises: one of the :exc:`~aerospike.exception.AdminError` subclasses.
+
+        .. versionchanged:: 1.0.44
+
+
+    .. method:: admin_grant_privileges(role, privileges[, policy])
+
+        Add *privileges* to a *role*.
+
+        :param str role: the name of the role.
+        :param list privileges: a list of :ref:`aerospike_privilege_dict`.
+        :param dict policy: optional admin policies :ref:`aerospike_admin_policies`.
+        :raises: one of the :exc:`~aerospike.exception.AdminError` subclasses.
+
+        .. versionchanged:: 1.0.44
+
+
+    .. method:: admin_revoke_privileges(role, privileges[, policy])
+
+        Remove *privileges* from a *role*.
+
+        :param str role: the name of the role.
+        :param list privileges: a list of :ref:`aerospike_privilege_dict`.
+        :param dict policy: optional admin policies :ref:`aerospike_admin_policies`.
+        :raises: one of the :exc:`~aerospike.exception.AdminError` subclasses.
+
+        .. versionchanged:: 1.0.44
+
+
+    .. method:: admin_query_role(role[, policy]) -> []
+
+        Get the :class:`list` of privileges associated with a *role*.
+
+        :param str role: the name of the role.
+        :param dict policy: optional admin policies :ref:`aerospike_admin_policies`.
+        :return: a :class:`list` of :ref:`aerospike_privilege_dict`.
+        :raises: one of the :exc:`~aerospike.exception.AdminError` subclasses.
+
+        .. versionchanged:: 1.0.44
+
+
+    .. method:: admin_query_roles([policy]) -> {}
+
+        Get all named roles and their privileges.
+
+        :param dict policy: optional admin policies :ref:`aerospike_admin_policies`.
+        :return: a :class:`dict` of :ref:`aerospike_privilege_dict` keyed by role name.
+        :raises: one of the :exc:`~aerospike.exception.AdminError` subclasses.
+
+        .. versionchanged:: 1.0.44
+
+
+    .. method:: admin_create_user(username, password, roles[, policy])
+
+        Create a user with a specified *username* and grant it *roles*.
+
+        :param str username: the username to be added to the aerospike cluster.
+        :param str password: the password associated with the given username.
+        :param list roles: the list of role names assigned to the user.
+        :param dict policy: optional admin policies :ref:`aerospike_admin_policies`.
+        :raises: one of the :exc:`~aerospike.exception.AdminError` subclasses.
+
+        .. versionchanged:: 1.0.44
+
+
+    .. method:: admin_drop_user(username[, policy])
+
+        Drop the user with a specified *username* from the cluster.
+
+        :param str username: the username to be dropped from the aerospike cluster.
+        :param dict policy: optional admin policies :ref:`aerospike_admin_policies`.
+        :raises: one of the :exc:`~aerospike.exception.AdminError` subclasses.
+
+        .. versionchanged:: 1.0.44
+
+
+    .. method:: admin_change_password(username, password[, policy])
+
+        Change the *password* of the user *username*. This operation can only \
+        be performed by that same user.
+
+        :param str username: the username.
+        :param str password: the password associated with the given username.
+        :param dict policy: optional admin policies :ref:`aerospike_admin_policies`.
+        :raises: one of the :exc:`~aerospike.exception.AdminError` subclasses.
+
+        .. versionchanged:: 1.0.44
+
+
+    .. method:: admin_set_password(username, password[, policy])
+
+        Set the *password* of the user *username* by a user administrator.
+
+        :param str username: the username to be added to the aerospike cluster.
+        :param str password: the password associated with the given username.
+        :param dict policy: optional admin policies :ref:`aerospike_admin_policies`.
+        :raises: one of the :exc:`~aerospike.exception.AdminError` subclasses.
+
+        .. versionchanged:: 1.0.44
+
+
+    .. method:: admin_grant_roles(username, roles[, policy])
+
+        Add *roles* to the user *username*.
+
+        :param str username: the username to be granted the roles.
+        :param list roles: a list of role names.
+        :param dict policy: optional admin policies :ref:`aerospike_admin_policies`.
+        :raises: one of the :exc:`~aerospike.exception.AdminError` subclasses.
+
+        .. versionchanged:: 1.0.44
+
+
+    .. method:: admin_revoke_roles(username, roles[, policy])
+
+        Remove *roles* from the user *username*.
+
+        :param str username: the username to have the roles revoked.
+        :param list roles: a list of role names.
+        :param dict policy: optional admin policies :ref:`aerospike_admin_policies`.
+        :raises: one of the :exc:`~aerospike.exception.AdminError` subclasses.
+
+        .. versionchanged:: 1.0.44
+
+
+    .. method:: admin_query_user (username[, policy]) -> []
+
+        Return the list of roles granted to the specified user *username*.
+
+        :param str username: the username to query for.
+        :param dict policy: optional admin policies :ref:`aerospike_admin_policies`.
+        :return: a :class:`list` of role names.
+        :raises: one of the :exc:`~aerospike.exception.AdminError` subclasses.
+
+        .. versionchanged:: 1.0.44
+
+
+    .. method:: admin_query_users ([policy]) -> {}
+
+        Return the :class:`dict` of users, with their roles keyed by username.
+
+        :param dict policy: optional admin policies :ref:`aerospike_admin_policies`.
+        :return: a :class:`dict` of roles keyed by username.
+        :raises: one of the :exc:`~aerospike.exception.AdminError` subclasses.
+
+        .. versionchanged:: 1.0.44
+
 
 .. _aerospike_key_tuple:
 
@@ -1192,11 +1413,46 @@ Info Policies
 
 .. object:: policy
 
-     A :class:`dict` of optional info policies which are applicable to :meth:`info`, :meth:`info_nodes`. See :ref:`aerospike_policies`.
+     A :class:`dict` of optional info policies which are applicable to :meth:`info`, :meth:`info_nodes` and index operations. See :ref:`aerospike_policies`.
 
     .. hlist::
         :columns: 1
 
         * **timeout** read timeout in milliseconds
 
+
+.. _aerospike_admin_policies:
+
+Admin Policies
+--------------
+
+.. object:: policy
+
+     A :class:`dict` of optional admin policies which are applicable to admin (security) operations. See :ref:`aerospike_policies`.
+
+    .. hlist::
+        :columns: 1
+
+        * **timeout** read timeout in milliseconds
+
+
+.. _aerospike_privilege_dict:
+
+Privilege Objects
+-----------------
+
+.. object:: privilege
+
+    A :class:`dict` describing a privilege associated with a specific role.
+
+    .. hlist::
+        :columns: 1
+
+        * **code** one of the `aerospike.PRIV_* <http://www.aerospike.com/apidocs/c/dd/d3f/as__admin_8h.html#a3abfbabd6287af263860154d044b44b3>`_ values
+        * **ns** optional namespace to which the privilege applies, otherwise the privilege applies globally.
+        * **set** optional set within the *ns* to which the privilege applies, otherwise to the entire namespace.
+
+    Example:
+
+    ``{'code': aerospike.PRIV_READ, 'ns': 'test', 'set': 'demo'}``
 
