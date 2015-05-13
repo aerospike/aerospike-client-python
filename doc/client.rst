@@ -1277,9 +1277,10 @@ Unicode Handling
 
 Both :class:`str` and :class:`unicode` values are converted by the
 client into UTF-8 encoded strings for storage on the aerospike server.
-Read methods such as :meth:`get`, :meth:`query`, :meth:`scan` and
-:meth:`operate` will return that data as UTF-8 encoded :class:`str`
-values. To get a :class:`unicode` you will need to manually decode.
+Read methods such as :meth:`~aerospike.Client.get`,
+:meth:`~aerospike.Client.query`, :meth:`~aerospike.Client.scan` and
+:meth:`~aerospike.Client.operate` will return that data as UTF-8 encoded
+:class:`str` values. To get a :class:`unicode` you will need to manually decode.
 
 .. warning::
 
