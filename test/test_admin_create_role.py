@@ -28,6 +28,10 @@ class TestCreateRole(TestBaseClass):
                 "hosts": hostlist
                 }
         self.client = aerospike.client(config).connect( user, password )
+        try:
+            self.client.admin_drop_user("testcreaterole")
+        except:
+            pass # do nothing, EAFP
 
         self.delete_users = []
 
@@ -55,23 +59,23 @@ class TestCreateRole(TestBaseClass):
         """
             Create role positive
         """
-        status = self.client.admin_create_role("usr-sys-admin", [{"code":
-aerospike.READ, "ns": "test", "set":"demo"}], {'timeout': 1000})
+        status = self.client.admin_create_role("usr-sys-admin", 
+                [{"code": aerospike.PRIV_READ, "ns": "test", "set":"demo"}],
+                {'timeout': 1000})
 
         assert status == 0
         time.sleep(1)
         roles = self.client.admin_query_role("usr-sys-admin")
 
-        assert roles[0].get('role') == "usr-sys-admin"
+        assert roles == [{'code': 10, 'ns': 'test', 'set': 'demo'}]
 
-        status = self.client.admin_create_user("testcreaterole", "createrole",
-["usr-sys-admin"])
+        status = self.client.admin_create_user("testcreaterole", "createrole", ["usr-sys-admin"])
 
         assert status == 0
         time.sleep(1)
         users = self.client.admin_query_user("testcreaterole")
 
-        assert users[0]['roles'] == ["usr-sys-admin"]
+        assert users == ["usr-sys-admin"]
 
         status = self.client.admin_drop_role("usr-sys-admin")
 
@@ -79,7 +83,7 @@ aerospike.READ, "ns": "test", "set":"demo"}], {'timeout': 1000})
 
         users = self.client.admin_query_user("testcreaterole")
 
-        assert users[0]['roles'] == []
+        assert users == []
 
         self.client.admin_drop_user("testcreaterole")
 
@@ -87,14 +91,15 @@ aerospike.READ, "ns": "test", "set":"demo"}], {'timeout': 1000})
         """
             Create role positive
         """
-        status = self.client.admin_create_role("usr-sys-admin", [{"code": aerospike.USER_ADMIN}, {"code": aerospike.SYS_ADMIN}])
+        status = self.client.admin_create_role("usr-sys-admin", [{"code":
+            aerospike.PRIV_USER_ADMIN}, {"code": aerospike.PRIV_SYS_ADMIN}])
 
         assert status == 0
 
         time.sleep(1)
         roles = self.client.admin_query_role("usr-sys-admin")
 
-        assert roles[0].get('role') == "usr-sys-admin"
+        assert roles == [{"code": 0, 'ns': '', 'set': ''}, {"code": 1, 'ns': '', 'set': ''}]
 
         status = self.client.admin_create_user("testcreaterole", "createrole",
 ["usr-sys-admin"])
@@ -103,7 +108,7 @@ aerospike.READ, "ns": "test", "set":"demo"}], {'timeout': 1000})
         time.sleep(1)
         users = self.client.admin_query_user("testcreaterole")
 
-        assert users[0]['roles'] == ["usr-sys-admin"]
+        assert users == ["usr-sys-admin"]
 
         status = self.client.admin_drop_role("usr-sys-admin")
 
@@ -111,7 +116,7 @@ aerospike.READ, "ns": "test", "set":"demo"}], {'timeout': 1000})
 
         users = self.client.admin_query_user("testcreaterole")
 
-        assert users[0]['roles'] == []
+        assert users == []
 
         self.client.admin_drop_user("testcreaterole")
 
@@ -120,8 +125,7 @@ aerospike.READ, "ns": "test", "set":"demo"}], {'timeout': 1000})
             role name not string
         """
         try:
-            self.client.admin_create_role(1, [{"code": aerospike.USER_ADMIN}])
-
+            self.client.admin_create_role(1, [{"code": aerospike.PRIV_USER_ADMIN}])
         except ParamError as exception:
             assert exception.code == -2
             assert exception.msg == "Role name should be a string"
@@ -130,10 +134,10 @@ aerospike.READ, "ns": "test", "set":"demo"}], {'timeout': 1000})
         """
             privilege type unknown
         """
-        with pytest.raises(AttributeError) as attributeError:
-            self.client.admin_create_role("usr-sys-admin", [{"code": aerospike.USER_ADMIN_WRONG}])
-
-        assert "'module' object has no attribute 'USER_ADMIN_WRONG'" in attributeError.value
+        try:
+            self.client.admin_create_role("usr-sys-admin", [{"code": 64}])
+        except InvalidPrivilege as exception:
+            assert exception.code == 72
 
     def test_create_role_incorrect_privilege_type(self):
         """
@@ -150,12 +154,14 @@ aerospike.READ, "ns": "test", "set":"demo"}], {'timeout': 1000})
         """
             create an already existing role
         """
-        status = self.client.admin_create_role("usr-sys-admin", [{"code": aerospike.USER_ADMIN}, {"code": aerospike.SYS_ADMIN}])
+        status = self.client.admin_create_role("usr-sys-admin", [{"code":
+            aerospike.PRIV_USER_ADMIN}, {"code": aerospike.PRIV_SYS_ADMIN}])
 
         assert status == 0
 
         try:
-            self.client.admin_create_role("usr-sys-admin", [{"code": aerospike.USER_ADMIN}, {"code": aerospike.SYS_ADMIN}])
+            self.client.admin_create_role("usr-sys-admin", [{"code":
+                aerospike.PRIV_USER_ADMIN}, {"code": aerospike.PRIV_SYS_ADMIN}])
 
         except RoleExistsError as exception:
             assert exception.code == 71
@@ -171,23 +177,25 @@ aerospike.READ, "ns": "test", "set":"demo"}], {'timeout': 1000})
             Create role positive with special characters in role name
         """
         role_name = "!#Q#AEQ@#$%&^*((^&*~~~````"
-        status = self.client.admin_create_role(role_name, [{"code":
-aerospike.READ, "ns": "test", "set":"demo"}], {'timeout': 1000})
+        try:
+            self.client.admin_drop_role(role_name) # clear out if it exists
+        except:
+            pass # EAFP
+        status = self.client.admin_create_role(role_name, [{"code": aerospike.PRIV_READ, "ns": "test", "set":"demo"}], {'timeout': 1000})
 
         assert status == 0
         time.sleep(1)
         roles = self.client.admin_query_role(role_name)
 
-        assert roles[0].get('role') == role_name
+        assert roles == [{"code": aerospike.PRIV_READ, "ns": "test", "set": "demo"}]
 
-        status = self.client.admin_create_user("testcreaterole", "createrole",
-[role_name])
+        status = self.client.admin_create_user("testcreaterole", "createrole", [role_name])
 
         assert status == 0
         time.sleep(1)
         users = self.client.admin_query_user("testcreaterole")
 
-        assert users[0]['roles'] == [role_name]
+        assert users == [role_name]
 
         status = self.client.admin_drop_role(role_name)
 
@@ -195,7 +203,7 @@ aerospike.READ, "ns": "test", "set":"demo"}], {'timeout': 1000})
 
         users = self.client.admin_query_user("testcreaterole")
 
-        assert users[0]['roles'] == []
+        assert users == []
 
         self.client.admin_drop_user("testcreaterole")
 
@@ -207,7 +215,7 @@ aerospike.READ, "ns": "test", "set":"demo"}], {'timeout': 1000})
 
         try:
             self.client.admin_create_role(role_name, [{"code":
-aerospike.READ, "ns": "test", "set":"demo"}], {'timeout': 1000})
+aerospike.PRIV_READ, "ns": "test", "set":"demo"}], {'timeout': 1000})
 
         except InvalidRole as exception:
             assert exception.code == 70

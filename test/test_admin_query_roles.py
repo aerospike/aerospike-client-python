@@ -29,7 +29,10 @@ class TestQueryRoles(TestBaseClass):
                 }
         self.client = aerospike.client(config).connect( user, password )
 
-        self.client.admin_create_role("usr-sys-admin", [{"code": aerospike.USER_ADMIN}, {"code": aerospike.SYS_ADMIN}])
+        usr_sys_admin_privs =  [
+            {"code": aerospike.PRIV_USER_ADMIN},
+            {"code": aerospike.PRIV_SYS_ADMIN}]
+        self.client.admin_create_role("usr-sys-admin", usr_sys_admin_privs)
         self.delete_users = []
 
     def teardown_method(self, method):
@@ -49,14 +52,7 @@ class TestQueryRoles(TestBaseClass):
         roles = self.client.admin_query_roles()
 
         flag = 0
-        for role in roles:
-            if role['role'] == "usr-sys-admin":
-                flag = 1
-                assert role['privileges'] == [{'code': 0, 'ns': '', 'set': ''},
-{'code': 1, 'ns': '', 'set': ''}]
-
-        if not flag:
-            assert True == False
+        assert roles['usr-sys-admin'] == [{'code': 0, 'ns': '', 'set': ''}, {'code': 1, 'ns': '', 'set': ''}]
 
     def test_admin_query_roles_positive_with_policy(self):
         """
@@ -65,14 +61,7 @@ class TestQueryRoles(TestBaseClass):
         roles = self.client.admin_query_roles({'timeout': 1000})
 
         flag = 0
-        for role in roles:
-            if role['role'] == "usr-sys-admin":
-                flag = 1
-                assert role['privileges'] == [{'code': 0, 'ns': '', 'set': ''},
-{'code': 1, 'ns': '', 'set': ''}]
-
-        if not flag:
-            assert True == False
+        assert roles['usr-sys-admin'] == [{'code': 0, 'ns': '', 'set': ''}, {'code': 1, 'ns': '', 'set': ''}]
 
     def test_admin_query_roles_incorrect_policy(self):
         """

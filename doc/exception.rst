@@ -23,7 +23,10 @@
       print("Error: {0} [{1}]".format(e.msg, e.code))
 
 
-.. py:exception:: aerospike.exception.AerospikeError
+.. versionadded:: 1.0.44
+
+
+.. py:exception:: AerospikeError
 
     The parent class of all exceptions raised by the Aerospike client, inherets
     from :py:exc:`exceptions.Exception`
@@ -39,59 +42,59 @@
     .. py:attribute:: file
     .. py:attribute:: line
 
-.. py:exception:: aerospike.exception.ClientError
+.. py:exception:: ClientError
 
     Exception class for client-side errors, often due to mis-configuration or
     misuse of the API methods. Subclass of :py:exc:`~aerospike.exception.AerospikeError`.
 
-.. py:exception:: aerospike.exception.InvalidHostError
+.. py:exception:: InvalidHostError
 
     Subclass of :py:exc:`~aerospike.exception.ClientError`.
 
-.. py:exception:: aerospike.exception.ParamError
+.. py:exception:: ParamError
 
     Subclass of :py:exc:`~aerospike.exception.ClientError`.
 
-.. py:exception:: aerospike.exception.ServerError
+.. py:exception:: ServerError
 
     The parent class for all errors returned from the cluster.
 
-.. py:exception:: aerospike.exception.InvalidRequest
+.. py:exception:: InvalidRequest
 
     Protocol-level error. Subclass of :py:exc:`~aerospike.exception.ServerError`.
 
-.. py:exception:: aerospike.exception.ServerFull
+.. py:exception:: ServerFull
 
     The server node is running out of memory and/or storage device space
     reserved for the specified namespace.
     Subclass of :py:exc:`~aerospike.exception.ServerError`.
 
-.. py:exception:: aerospike.exception.NoXDR
+.. py:exception:: NoXDR
 
     XDR is not available for the cluster.
     Subclass of :py:exc:`~aerospike.exception.ServerError`.
 
-.. py:exception:: aerospike.exception.UnsupportedFeature
+.. py:exception:: UnsupportedFeature
 
     Encountered an unimplemented server feature.
     Subclass of :py:exc:`~aerospike.exception.ServerError`.
 
-.. py:exception:: aerospike.exception.DeviceOverload
+.. py:exception:: DeviceOverload
 
     The server node's storage device(s) can't keep up with the write load.
     Subclass of :py:exc:`~aerospike.exception.ServerError`.
 
-.. py:exception:: aerospike.exception.NamespaceNotFound
+.. py:exception:: NamespaceNotFound
 
     Namespace in request not found on server.
     Subclass of :py:exc:`~aerospike.exception.ServerError`.
 
-.. py:exception:: aerospike.exception.ForbiddenError
+.. py:exception:: ForbiddenError
 
     Operation not allowed at this time.
     Subclass of :py:exc:`~aerospike.exception.ServerError`.
 
-.. py:exception:: aerospike.exception.RecordError
+.. py:exception:: RecordError
 
     The parent class for record and bin exceptions exceptions associated with
     read and write operations. Subclass of :py:exc:`~aerospike.exception.ServerError`.
@@ -104,59 +107,59 @@
 
         Optionally the bin associated with the error.
 
-.. py:exception:: aerospike.exception.RecordKeyMismatch
+.. py:exception:: RecordKeyMismatch
 
     Record key sent with transaction did not match key stored on server.
     Subclass of :py:exc:`~aerospike.exception.RecordError`.
 
-.. py:exception:: aerospike.exception.RecordNotFound
+.. py:exception:: RecordNotFound
 
     Record does not exist in database. May be returned by read, or write with
     policy :py:data:`aerospike.POLICY_EXISTS_UPDATE`.
     Subclass of :py:exc:`~aerospike.exception.RecordError`.
 
-.. py:exception:: aerospike.exception.RecordGenerationError
+.. py:exception:: RecordGenerationError
 
     Generation of record in database does not satisfy write policy.
     Subclass of :py:exc:`~aerospike.exception.RecordError`.
 
-.. py:exception:: aerospike.exception.RecordGenerationError
+.. py:exception:: RecordGenerationError
 
     Record already exists. May be returned by write with policy
     :py:data:`aerospike.POLICY_EXISTS_CREATE`. Subclass of :py:exc:`~aerospike.exception.RecordError`.
 
-.. py:exception:: aerospike.exception.RecordBusy
+.. py:exception:: RecordBusy
 
     Record being (re-)written can't fit in a storage write block.
     Subclass of :py:exc:`~aerospike.exception.RecordError`.
 
-.. py:exception:: aerospike.exception.RecordTooBig
+.. py:exception:: RecordTooBig
 
     Too may concurrent requests for one record - a "hot-key" situation.
     Subclass of :py:exc:`~aerospike.exception.RecordError`.
 
-.. py:exception:: aerospike.exception.BinNameError
+.. py:exception:: BinNameError
 
     Length of bin name exceeds the limit of 14 characters.
     Subclass of :py:exc:`~aerospike.exception.RecordError`.
 
-.. py:exception:: aerospike.exception.BinExistsError
+.. py:exception:: BinExistsError
 
     Bin already exists. Occurs only if the client has that check enabled.
     Subclass of :py:exc:`~aerospike.exception.RecordError`.
 
-.. py:exception:: aerospike.exception.BinNotFound
+.. py:exception:: BinNotFound
 
     Bin-level replace-only supported on server but not on client.
     Subclass of :py:exc:`~aerospike.exception.RecordError`.
 
-.. py:exception:: aerospike.exception.BinIncompatibleType
+.. py:exception:: BinIncompatibleType
 
     Bin modification operation can't be done on an existing bin due to its
     value type (for example appending to an integer).
     Subclass of :py:exc:`~aerospike.exception.RecordError`.
 
-.. py:exception:: aerospike.exception.IndexError
+.. py:exception:: IndexError
 
     The parent class for indexing exceptions.
     Subclass of :py:exc:`~aerospike.exception.ServerError`.
@@ -165,129 +168,129 @@
 
         The name of the index associated with the error.
 
-.. py:exception:: aerospike.exception.IndexNotFound
+.. py:exception:: IndexNotFound
 
     Subclass of :py:exc:`~aerospike.exception.IndexError`.
 
-.. py:exception:: aerospike.exception.IndexFoundError
+.. py:exception:: IndexFoundError
 
     Subclass of :py:exc:`~aerospike.exception.IndexError`.
 
-.. py:exception:: aerospike.exception.IndexOOM
+.. py:exception:: IndexOOM
 
     The index is out of memory.
     Subclass of :py:exc:`~aerospike.exception.IndexError`.
 
-.. py:exception:: aerospike.exception.IndexNotReadable
+.. py:exception:: IndexNotReadable
 
     Subclass of :py:exc:`~aerospike.exception.IndexError`.
 
-.. py:exception:: aerospike.exception.IndexNameMaxLen
+.. py:exception:: IndexNameMaxLen
 
     Subclass of :py:exc:`~aerospike.exception.IndexError`.
 
-.. py:exception:: aerospike.exception.IndexNameMaxCount
+.. py:exception:: IndexNameMaxCount
 
     Reached the maximum allowed number of indexes.
     Subclass of :py:exc:`~aerospike.exception.IndexError`.
 
-.. py:exception:: aerospike.exception.QueryError
+.. py:exception:: QueryError
 
     Exception class for query errors.
     Subclass of :py:exc:`~aerospike.exception.AerospikeError`.
 
-.. py:exception:: aerospike.exception.QueryQueueFull
+.. py:exception:: QueryQueueFull
 
     Subclass of :py:exc:`~aerospike.exception.QueryError`.
 
-.. py:exception:: aerospike.exception.QueryTimeout
+.. py:exception:: QueryTimeout
 
     Subclass of :py:exc:`~aerospike.exception.QueryError`.
 
-.. py:exception:: aerospike.exception.ClusterError
+.. py:exception:: ClusterError
 
     Cluster discovery and connection errors.
     Subclass of :py:exc:`~aerospike.exception.AerospikeError`.
 
-.. py:exception:: aerospike.exception.ClusterChangeError
+.. py:exception:: ClusterChangeError
 
     A cluster state change occurred during the request. This may also be
     returned by scan operations with the fail-on-cluster-change flag set.
     Subclass of :py:exc:`~aerospike.exception.ClusterError`.
 
-.. py:exception:: aerospike.exception.AdminError
+.. py:exception:: AdminError
 
     The parent class for exceptions of the security API.
 
-.. py:exception:: aerospike.exception.ExpiredPassword
+.. py:exception:: ExpiredPassword
 
     Subclass of :py:exc:`~aerospike.exception.AdminError`.
 
-.. py:exception:: aerospike.exception.ForbiddenPassword
+.. py:exception:: ForbiddenPassword
 
     Subclass of :py:exc:`~aerospike.exception.AdminError`.
 
-.. py:exception:: aerospike.exception.IllegalState
+.. py:exception:: IllegalState
 
     Subclass of :py:exc:`~aerospike.exception.AdminError`.
 
-.. py:exception:: aerospike.exception.InvalidCommand
+.. py:exception:: InvalidCommand
 
     Subclass of :py:exc:`~aerospike.exception.AdminError`.
 
-.. py:exception:: aerospike.exception.InvalidCredential
+.. py:exception:: InvalidCredential
 
     Subclass of :py:exc:`~aerospike.exception.AdminError`.
 
-.. py:exception:: aerospike.exception.InvalidField
+.. py:exception:: InvalidField
 
     Subclass of :py:exc:`~aerospike.exception.AdminError`.
 
-.. py:exception:: aerospike.exception.InvalidPassword
+.. py:exception:: InvalidPassword
 
     Subclass of :py:exc:`~aerospike.exception.AdminError`.
 
-.. py:exception:: aerospike.exception.InvalidPrivilege
+.. py:exception:: InvalidPrivilege
 
     Subclass of :py:exc:`~aerospike.exception.AdminError`.
 
-.. py:exception:: aerospike.exception.InvalidRole
+.. py:exception:: InvalidRole
 
     Subclass of :py:exc:`~aerospike.exception.AdminError`.
 
-.. py:exception:: aerospike.exception.InvalidUser
+.. py:exception:: InvalidUser
 
     Subclass of :py:exc:`~aerospike.exception.AdminError`.
 
-.. py:exception:: aerospike.exception.NotAuthenticated
+.. py:exception:: NotAuthenticated
 
     Subclass of :py:exc:`~aerospike.exception.AdminError`.
 
-.. py:exception:: aerospike.exception.RoleExistsError
+.. py:exception:: RoleExistsError
 
     Subclass of :py:exc:`~aerospike.exception.AdminError`.
 
-.. py:exception:: aerospike.exception.RoleViolation
+.. py:exception:: RoleViolation
 
     Subclass of :py:exc:`~aerospike.exception.AdminError`.
 
-.. py:exception:: aerospike.exception.SecurityNotEnabled
+.. py:exception:: SecurityNotEnabled
 
     Subclass of :py:exc:`~aerospike.exception.AdminError`.
 
-.. py:exception:: aerospike.exception.SecurityNotSupported
+.. py:exception:: SecurityNotSupported
 
     Subclass of :py:exc:`~aerospike.exception.AdminError`.
 
-.. py:exception:: aerospike.exception.SecuritySchemeNotSupported
+.. py:exception:: SecuritySchemeNotSupported
 
     Subclass of :py:exc:`~aerospike.exception.AdminError`.
 
-.. py:exception:: aerospike.exception.UserExistsError
+.. py:exception:: UserExistsError
 
     Subclass of :py:exc:`~aerospike.exception.AdminError`.
 
-.. py:exception:: aerospike.exception.UDFError
+.. py:exception:: UDFError
 
     The parent class for UDF exceptions exceptions.
     Subclass of :py:exc:`~aerospike.exception.ServerError`.
@@ -300,15 +303,15 @@
 
         Optionally the name of the UDF function.
 
-.. py:exception:: aerospike.exception.UDFNotFound
+.. py:exception:: UDFNotFound
 
     Subclass of :py:exc:`~aerospike.exception.UDFError`.
 
-.. py:exception:: aerospike.exception.LuaFileNotFound
+.. py:exception:: LuaFileNotFound
 
     Subclass of :py:exc:`~aerospike.exception.UDFError`.
 
-.. py:exception:: aerospike.exception.LDTError
+.. py:exception:: LDTError
 
     The parent class for Large Data Type exceptions.
     Subclass of :py:exc:`~aerospike.exception.ServerError`.
@@ -321,151 +324,151 @@
 
         The bin containing the LDT.
 
-.. py:exception:: aerospike.exception.LargeItemNotFound
+.. py:exception:: LargeItemNotFound
 
     Subclass of :py:exc:`~aerospike.exception.LDTError`.
 
-.. py:exception:: aerospike.exception.LDTInternalError
+.. py:exception:: LDTInternalError
 
     Subclass of :py:exc:`~aerospike.exception.LDTError`.
 
-.. py:exception:: aerospike.exception.LDTNotFound
+.. py:exception:: LDTNotFound
 
     Subclass of :py:exc:`~aerospike.exception.LDTError`.
 
-.. py:exception:: aerospike.exception.LDTUniqueKeyError
+.. py:exception:: LDTUniqueKeyError
 
     Subclass of :py:exc:`~aerospike.exception.LDTError`.
 
-.. py:exception:: aerospike.exception.LDTInsertError
+.. py:exception:: LDTInsertError
 
     Subclass of :py:exc:`~aerospike.exception.LDTError`.
 
-.. py:exception:: aerospike.exception.LDTSearchError
+.. py:exception:: LDTSearchError
 
     Subclass of :py:exc:`~aerospike.exception.LDTError`.
 
-.. py:exception:: aerospike.exception.LDTDeleteError
+.. py:exception:: LDTDeleteError
 
     Subclass of :py:exc:`~aerospike.exception.LDTError`.
 
-.. py:exception:: aerospike.exception.LDTInputParamError
+.. py:exception:: LDTInputParamError
 
     Subclass of :py:exc:`~aerospike.exception.LDTError`.
 
-.. py:exception:: aerospike.exception.LDTTypeMismatch
+.. py:exception:: LDTTypeMismatch
 
     Subclass of :py:exc:`~aerospike.exception.LDTError`.
 
-.. py:exception:: aerospike.exception.LDTBinNameNull
+.. py:exception:: LDTBinNameNull
 
     Subclass of :py:exc:`~aerospike.exception.LDTError`.
 
-.. py:exception:: aerospike.exception.LDTBinNameNotString
+.. py:exception:: LDTBinNameNotString
 
     Subclass of :py:exc:`~aerospike.exception.LDTError`.
 
-.. py:exception:: aerospike.exception.LDTBinNameTooLong
+.. py:exception:: LDTBinNameTooLong
 
     Subclass of :py:exc:`~aerospike.exception.LDTError`.
 
-.. py:exception:: aerospike.exception.LDTTooManyOpenSubrecs
+.. py:exception:: LDTTooManyOpenSubrecs
 
     Subclass of :py:exc:`~aerospike.exception.LDTError`.
 
-.. py:exception:: aerospike.exception.LDTTopRecNotFound
+.. py:exception:: LDTTopRecNotFound
 
     Subclass of :py:exc:`~aerospike.exception.LDTError`.
 
-.. py:exception:: aerospike.exception.LDTSubRecNotFound
+.. py:exception:: LDTSubRecNotFound
 
     Subclass of :py:exc:`~aerospike.exception.LDTError`.
 
-.. py:exception:: aerospike.exception.LDTBinNotFound
+.. py:exception:: LDTBinNotFound
 
     Subclass of :py:exc:`~aerospike.exception.LDTError`.
 
-.. py:exception:: aerospike.exception.LDTBinExistsError
+.. py:exception:: LDTBinExistsError
 
     Subclass of :py:exc:`~aerospike.exception.LDTError`.
 
-.. py:exception:: aerospike.exception.LDTBinDamaged
+.. py:exception:: LDTBinDamaged
 
     Subclass of :py:exc:`~aerospike.exception.LDTError`.
 
-.. py:exception:: aerospike.exception.LDTSubrecPoolDamaged
+.. py:exception:: LDTSubrecPoolDamaged
 
     Subclass of :py:exc:`~aerospike.exception.LDTError`.
 
-.. py:exception:: aerospike.exception.LDTSubrecDamaged
+.. py:exception:: LDTSubrecDamaged
 
     Subclass of :py:exc:`~aerospike.exception.LDTError`.
 
-.. py:exception:: aerospike.exception.LDTSubrecOpenError
+.. py:exception:: LDTSubrecOpenError
 
     Subclass of :py:exc:`~aerospike.exception.LDTError`.
 
-.. py:exception:: aerospike.exception.LDTSubrecUpdateError
+.. py:exception:: LDTSubrecUpdateError
 
     Subclass of :py:exc:`~aerospike.exception.LDTError`.
 
-.. py:exception:: aerospike.exception.LDTSubrecCreateError
+.. py:exception:: LDTSubrecCreateError
 
     Subclass of :py:exc:`~aerospike.exception.LDTError`.
 
-.. py:exception:: aerospike.exception.LDTSubrecDeleteError
+.. py:exception:: LDTSubrecDeleteError
 
     Subclass of :py:exc:`~aerospike.exception.LDTError`.
 
-.. py:exception:: aerospike.exception.LDTSubrecCloseError
+.. py:exception:: LDTSubrecCloseError
 
     Subclass of :py:exc:`~aerospike.exception.LDTError`.
 
-.. py:exception:: aerospike.exception.LDTToprecUpdateError
+.. py:exception:: LDTToprecUpdateError
 
     Subclass of :py:exc:`~aerospike.exception.LDTError`.
 
-.. py:exception:: aerospike.exception.LDTToprecCreateError
+.. py:exception:: LDTToprecCreateError
 
     Subclass of :py:exc:`~aerospike.exception.LDTError`.
 
-.. py:exception:: aerospike.exception.LDTFilterFunctionBad
+.. py:exception:: LDTFilterFunctionBad
 
     Subclass of :py:exc:`~aerospike.exception.LDTError`.
 
-.. py:exception:: aerospike.exception.LDTFilterFunctionNotFound
+.. py:exception:: LDTFilterFunctionNotFound
 
     Subclass of :py:exc:`~aerospike.exception.LDTError`.
 
-.. py:exception:: aerospike.exception.LDTKeyFunctionBad
+.. py:exception:: LDTKeyFunctionBad
 
     Subclass of :py:exc:`~aerospike.exception.LDTError`.
 
-.. py:exception:: aerospike.exception.LDTKeyFunctionNotFound
+.. py:exception:: LDTKeyFunctionNotFound
 
     Subclass of :py:exc:`~aerospike.exception.LDTError`.
 
-.. py:exception:: aerospike.exception.LDTTransFunctionBad
+.. py:exception:: LDTTransFunctionBad
 
     Subclass of :py:exc:`~aerospike.exception.LDTError`.
 
-.. py:exception:: aerospike.exception.LDTTransFunctionNotFound
+.. py:exception:: LDTTransFunctionNotFound
 
     Subclass of :py:exc:`~aerospike.exception.LDTError`.
 
-.. py:exception:: aerospike.exception.LDTUntransFunctionBad
+.. py:exception:: LDTUntransFunctionBad
 
     Subclass of :py:exc:`~aerospike.exception.LDTError`.
 
-.. py:exception:: aerospike.exception.LDTUntransFunctionNotFound
+.. py:exception:: LDTUntransFunctionNotFound
 
     Subclass of :py:exc:`~aerospike.exception.LDTError`.
 
-.. py:exception:: aerospike.exception.LDTUserModuleBad
+.. py:exception:: LDTUserModuleBad
 
     Subclass of :py:exc:`~aerospike.exception.LDTError`.
 
-.. py:exception:: aerospike.exception.LDTUserModuleNotFound
+.. py:exception:: LDTUserModuleNotFound
 
     Subclass of :py:exc:`~aerospike.exception.LDTError`.
 

@@ -92,7 +92,7 @@ try:
 
    	policy = {}
    	role = "example_foo"
-        privileges = [{"code": aerospike.READ}, {"code": aerospike.USER_ADMIN}]
+        privileges = [{"code": aerospike.READ}, {"code": aerospike.PRIV_USER_ADMIN}]
     	
   	client.admin_create_role(role, privileges, policy)
         
