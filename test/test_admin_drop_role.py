@@ -56,13 +56,13 @@ class TestDropRole(TestBaseClass):
             Drop role positive with policy
         """
         status = self.client.admin_create_role("usr-sys-admin", [{"code":
-aerospike.READ, "ns": "test", "set":"demo"}], {'timeout': 1000})
+aerospike.PRIV_READ, "ns": "test", "set":"demo"}], {'timeout': 1000})
 
         assert status == 0
         time.sleep(1)
         roles = self.client.admin_query_role("usr-sys-admin")
 
-        assert roles[0].get('role') == "usr-sys-admin"
+        assert roles == [{"code": 10, "ns": "test", "set": "demo"}]
 
         status = self.client.admin_create_user("testcreaterole", "createrole",
 ["usr-sys-admin"])
@@ -71,7 +71,7 @@ aerospike.READ, "ns": "test", "set":"demo"}], {'timeout': 1000})
         time.sleep(1)
         users = self.client.admin_query_user("testcreaterole")
 
-        assert users[0]['roles'] == ["usr-sys-admin"]
+        assert users == ["usr-sys-admin"]
 
         status = self.client.admin_drop_role("usr-sys-admin", {'timeout': 1000})
 
@@ -79,7 +79,7 @@ aerospike.READ, "ns": "test", "set":"demo"}], {'timeout': 1000})
 
         users = self.client.admin_query_user("testcreaterole")
 
-        assert users[0]['roles'] == []
+        assert users == []
 
         self.client.admin_drop_user("testcreaterole")
 
@@ -87,14 +87,15 @@ aerospike.READ, "ns": "test", "set":"demo"}], {'timeout': 1000})
         """
             Drop role positive
         """
-        status = self.client.admin_create_role("usr-sys-admin", [{"code": aerospike.USER_ADMIN}, {"code": aerospike.SYS_ADMIN}])
+        status = self.client.admin_create_role("usr-sys-admin", [{"code":
+            aerospike.PRIV_USER_ADMIN}, {"code": aerospike.PRIV_SYS_ADMIN}])
 
         assert status == 0
 
         time.sleep(1)
         roles = self.client.admin_query_role("usr-sys-admin")
 
-        assert roles[0].get('role') == "usr-sys-admin"
+        assert roles == [{"code": 0, "ns": "", "set": ""}, {"code": 1, "ns": "", "set": ""}]
 
         status = self.client.admin_create_user("testcreaterole", "createrole",
 ["usr-sys-admin"])
@@ -103,7 +104,7 @@ aerospike.READ, "ns": "test", "set":"demo"}], {'timeout': 1000})
         time.sleep(1)
         users = self.client.admin_query_user("testcreaterole")
 
-        assert users[0]['roles'] == ["usr-sys-admin"]
+        assert users == ["usr-sys-admin"]
 
         status = self.client.admin_drop_role("usr-sys-admin")
 
@@ -111,7 +112,7 @@ aerospike.READ, "ns": "test", "set":"demo"}], {'timeout': 1000})
 
         users = self.client.admin_query_user("testcreaterole")
 
-        assert users[0]['roles'] == []
+        assert users == []
 
         self.client.admin_drop_user("testcreaterole")
 
@@ -141,7 +142,8 @@ aerospike.READ, "ns": "test", "set":"demo"}], {'timeout': 1000})
         """
             Drop role with incorrect policy
         """
-        status = self.client.admin_create_role("usr-sys-admin", [{"code": aerospike.USER_ADMIN}])
+        status = self.client.admin_create_role("usr-sys-admin", [{"code":
+            aerospike.PRIV_USER_ADMIN}])
 
         assert status == 0
 

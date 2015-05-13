@@ -66,11 +66,7 @@ class TestRevokeRoles(TestBaseClass):
 
         user_details = self.client.admin_query_user( user, policy )
 
-        assert user_details == [
-            {'roles': ['read-write'],
-             'roles_size': 1,
-             'user': 'example'}
-        ]
+        assert user_details == ['read-write']
 
     def test_revoke_all_roles_with_proper_parameters(self):
 
@@ -84,11 +80,7 @@ class TestRevokeRoles(TestBaseClass):
 
         user_details = self.client.admin_query_user( user, policy )
 
-        assert user_details == [
-            {'roles': [],
-             'roles_size': 0,
-             'user': 'example'}
-        ]
+        assert user_details == []
 
     def test_revoke_roles_with_invalid_timeout_policy_value(self):
 
@@ -117,11 +109,7 @@ class TestRevokeRoles(TestBaseClass):
 
         user_details = self.client.admin_query_user( user )
 
-        assert user_details == [
-            {'roles': ['read'],
-             'roles_size': 1,
-             'user': 'example'}
-        ]
+        assert user_details == ['read']
 
     def test_revoke_roles_with_none_username(self):
 
@@ -194,11 +182,7 @@ class TestRevokeRoles(TestBaseClass):
 
         user_details = self.client.admin_query_user( user )
 
-        assert user_details == [{
-            'roles': [],
-            'roles_size': 0,
-            'user': '!#Q#AEQ@#$%&^*((^&*~~~````[['
-        }]
+        assert user_details == []
 
         status = self.client.admin_drop_user( "!#Q#AEQ@#$%&^*((^&*~~~````[[" )
         assert status == 0
@@ -221,11 +205,7 @@ class TestRevokeRoles(TestBaseClass):
 
         user_details = self.client.admin_query_user( user, {} )
 
-        assert user_details == [
-            {'roles': ["read-write"],
-             'roles_size': 1,
-             'user': user}
-        ]
+        assert user_details == ["read-write"]
 
         assert status == 0
         status = self.client.admin_drop_user( user)

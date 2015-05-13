@@ -29,7 +29,8 @@ class TestGrantPrivileges(TestBaseClass):
                 }
         self.client = aerospike.client(config).connect( user, password )
 
-        self.client.admin_create_role("usr-sys-admin", [{"code": aerospike.USER_ADMIN}, {"code": aerospike.SYS_ADMIN}])
+        self.client.admin_create_role("usr-sys-admin", [{"code":
+            aerospike.PRIV_USER_ADMIN}, {"code": aerospike.PRIV_SYS_ADMIN}])
         self.delete_users = []
 
     def teardown_method(self, method):
@@ -57,15 +58,16 @@ class TestGrantPrivileges(TestBaseClass):
             Grant privileges positive
         """
         status = self.client.admin_grant_privileges("usr-sys-admin", [{"code":
-aerospike.READ}])
+aerospike.PRIV_READ}])
 
         assert status == 0
 
         roles = self.client.admin_query_role("usr-sys-admin")
-        assert roles[0]['privileges'] == [{'code': 0, 'ns': '', 'set': ''},
+        assert roles== [{'code': 0, 'ns': '', 'set': ''},
 {'code': 1, 'ns': '', 'set': ''}, {'code': 10, 'ns': '', 'set': ''}]
 
-        status = self.client.admin_revoke_privileges("usr-sys-admin", [{"code": aerospike.READ}])
+        status = self.client.admin_revoke_privileges("usr-sys-admin", [{"code":
+            aerospike.PRIV_READ}])
 
         assert status == 0
 
@@ -74,15 +76,16 @@ aerospike.READ}])
             Grant privileges positive with policy
         """
         status = self.client.admin_grant_privileges("usr-sys-admin", [{"code":
-aerospike.READ}], {'timeout': 1000})
+aerospike.PRIV_READ}], {'timeout': 1000})
 
         assert status == 0
 
         roles = self.client.admin_query_role("usr-sys-admin")
-        assert roles[0]['privileges'] == [{'code': 0, 'ns': '', 'set': ''},
+        assert roles == [{'code': 0, 'ns': '', 'set': ''},
 {'code': 1, 'ns': '', 'set': ''}, {'code': 10, 'ns': '', 'set': ''}]
 
-        status = self.client.admin_revoke_privileges("usr-sys-admin", [{"code": aerospike.READ}])
+        status = self.client.admin_revoke_privileges("usr-sys-admin", [{"code":
+            aerospike.PRIV_READ}])
 
         assert status == 0
 
@@ -91,16 +94,16 @@ aerospike.READ}], {'timeout': 1000})
             Grant privileges positive with ns and set
         """
         status = self.client.admin_grant_privileges("usr-sys-admin", [{"code":
-aerospike.READ, "ns":"test", "set":"demo"}])
+aerospike.PRIV_READ, "ns":"test", "set":"demo"}])
 
         assert status == 0
         time.sleep(1)
         roles = self.client.admin_query_role("usr-sys-admin")
-        assert roles[0]['privileges'] == [{'code': 0, 'ns': '', 'set': ''},
+        assert roles == [{'code': 0, 'ns': '', 'set': ''},
 {'code': 1, 'ns': '', 'set': ''}, {'code': 10, 'ns': 'test', 'set': 'demo'}]
 
         status = self.client.admin_revoke_privileges("usr-sys-admin", [{"code":
-aerospike.READ, "ns":"test", "set":"demo"}])
+aerospike.PRIV_READ, "ns":"test", "set":"demo"}])
 
         assert status == 0
 
@@ -109,7 +112,7 @@ aerospike.READ, "ns":"test", "set":"demo"}])
             role name not string
         """
         try:
-            self.client.admin_grant_privileges(1, [{"code": aerospike.USER_ADMIN}])
+            self.client.admin_grant_privileges(1, [{"code": aerospike.PRIV_USER_ADMIN}])
 
         except ParamError as exception:
             assert exception.code == -2
@@ -119,10 +122,10 @@ aerospike.READ, "ns":"test", "set":"demo"}])
         """
             privilege type unknown
         """
-        with pytest.raises(AttributeError) as attributeError:
-            self.client.admin_grant_privileges("usr-sys-admin", [{"code": aerospike.USER_ADMIN_WRONG}])
-
-        assert "'module' object has no attribute 'USER_ADMIN_WRONG'" in attributeError.value
+        try:
+            self.client.admin_grant_privileges("usr-sys-admin", [{"code": 64}])
+        except InvalidPrivilege as exception:
+            assert exception.code == 72
 
     def test_grant_privileges_incorrect_privilege_type(self):
         """

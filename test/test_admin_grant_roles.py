@@ -66,8 +66,7 @@ class TestGrantRoles(TestBaseClass):
 
         user_details = self.client.admin_query_user( user, policy )
 
-        assert user_details == [{'roles': ['read', 'read-write', 'sys-admin'
-], 'roles_size': 3, 'user': 'example'}]
+        assert user_details == ['read', 'read-write', 'sys-admin']
 
     def test_grant_roles_with_proper_parameters_without_policy(self):
 
@@ -81,8 +80,7 @@ class TestGrantRoles(TestBaseClass):
 
         user_details = self.client.admin_query_user( user, policy )
 
-        assert user_details == [{'roles': ['read', 'read-write', 'sys-admin'],
-                                           'roles_size': 3, 'user': 'example'}]
+        assert user_details == ['read', 'read-write', 'sys-admin']
 
     def test_grant_roles_with_invalid_timeout_policy_value(self):
 
@@ -111,8 +109,7 @@ class TestGrantRoles(TestBaseClass):
 
         user_details = self.client.admin_query_user( user )
 
-        assert user_details == [{'roles': ['read-write', 'sys-admin'],
-                                           'roles_size': 2, 'user': 'example'}]
+        assert user_details == ['read-write', 'sys-admin']
 
     def test_grant_roles_with_none_username(self):
 
@@ -159,11 +156,7 @@ class TestGrantRoles(TestBaseClass):
 
         user_details = self.client.admin_query_user( user )
 
-        assert user_details == [{
-            'roles': ['read', 'read-write'],
-            'roles_size': 2,
-            'user': '!#Q#AEQ@#$%&^*((^&*~~~````['
-        }]
+        assert user_details == ['read', 'read-write']
 
         status = self.client.admin_drop_user( "!#Q#AEQ@#$%&^*((^&*~~~````[" )
         assert status == 0

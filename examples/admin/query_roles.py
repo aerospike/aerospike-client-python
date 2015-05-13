@@ -26,7 +26,7 @@ from optparse import OptionParser
 # Options Parsing
 ################################################################################
 
-usage = "usage: %prog [options] key"
+usage = "usage: %prog [options]"
 
 optparser = OptionParser(usage=usage, add_help_option=False)
 
@@ -93,9 +93,8 @@ try:
    	policy = {}
     	
   	roles = client.admin_query_roles(policy)
-       
-	for role in roles:
-	   print(role)
+
+	print(roles)
 	print("---") 
     	print("OK, All roles retrieved")
 

@@ -307,3 +307,30 @@ Log Level
 
 .. data:: LOG_LEVEL_OFF
 
+
+.. _aerospike_privileges:
+
+Privileges
+----------
+
+.. data:: PRIV_READ
+
+    The user is granted read access.
+
+.. data:: PRIV_READ_WRITE
+
+    The user is granted read and write access.
+
+.. data:: PRIV_READ_WRITE_UDF
+
+    The user is granted read and write access, and the ability to invoke UDFs.
+
+.. data:: PRIV_SYS_ADMIN
+
+    The user is granted the ability to perform system administration operations.
+
+.. data:: PRIV_USER_ADMIN
+
+    The user is granted the ability to perform user administration operations.
+
+
