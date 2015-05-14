@@ -44,7 +44,7 @@ Query Class --- :class:`Query`
         one of the :mod:`aerospike.predicates` methods :meth:`~aerospike.predicates.equals` \
         and :meth:`~aerospike.predicates.between`.
 
-        :param tuple predicate: the :class:`tuple` produced by one of the :mod:`aerospike.predicates` methods.
+        :param tuple predicate: the :py:func:`tuple` produced by one of the :mod:`aerospike.predicates` methods.
 
         .. note:: Currently, you can assign at most one predicate to the query.
 
@@ -84,7 +84,7 @@ Query Class --- :class:`Query`
         Invoke the *callback* function for each of the records streaming back \
         from the query.
 
-        :param callback callback: the function to invoke for each record.
+        :param callable callback: the function to invoke for each record.
         :param dict policy: optional query policies :ref:`aerospike_query_policies`.
 
         .. seealso:: The :ref:`aerospike_record_tuple`.

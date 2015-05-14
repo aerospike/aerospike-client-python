@@ -71,7 +71,7 @@ Client Class --- :class:`Client`
     .. method:: get(key[, policy]) -> (key, meta, bins)
 
         Read a record with a given *key*, and return the record as a \
-        :class:`tuple` consisting of *key*, *meta* and *bins*.  If the record \
+        :py:func:`tuple` consisting of *key*, *meta* and *bins*.  If the record \
         does not exist the *meta* data will be ``None``.
 
         :param tuple key: a :ref:`aerospike_key_tuple` associated with the record.
@@ -107,7 +107,7 @@ Client Class --- :class:`Client`
     .. method:: select(key, bins[, policy]) -> (key, meta, bins)
 
         Read a record with a given *key*, and return the record as a \
-        :class:`tuple` consisting of *key*, *meta* and *bins*, with the \
+        :py:func:`tuple` consisting of *key*, *meta* and *bins*, with the \
         specified bins preojected. If the record does not exist the *meta* \
         data will be ``None``. If a selected bin does not exist its value will \
         be ``None``.
@@ -146,12 +146,12 @@ Client Class --- :class:`Client`
     .. method:: exists(key[, policy]) -> (key, meta)
 
         Check if a record with a given *key* exists in the cluster and return \
-        the record as a :class:`tuple` consisting of *key* and *meta*.  If \
+        the record as a :py:func:`tuple` consisting of *key* and *meta*.  If \
         the record  does not exist the *meta* data will be ``None``.
 
         :param tuple key: a :ref:`aerospike_key_tuple` associated with the record.
         :param dict policy: optional read policies :ref:`aerospike_read_policies`.
-        :rtype: :class:`tuple` (key, meta)
+        :rtype: :py:func:`tuple` (key, meta)
 
         .. code-block:: python
 
@@ -298,7 +298,7 @@ Client Class --- :class:`Client`
         :param str ns: the namespace in the aerospike cluster.
         :param str set: the set name.
         :param key: the primary key identifier of the record within the set.
-        :type key: str or int
+        :type key: :py:class:`str` or :py:class:`int`
         :return: a RIPEMD-160 digest of the input tuple.
         :rtype: bytearray
 
@@ -992,7 +992,7 @@ Client Class --- :class:`Client`
         Send an info *command* to multiple nodes specified in a *hosts* list.
 
         :param str command: the info command.
-        :param list hosts: a :class:`list` containing an *address*, *port* :class:`tuple`. Example: ``[('127.0.0.1', 3000)]``
+        :param list hosts: a :class:`list` containing an *address*, *port* :py:func:`tuple`. Example: ``[('127.0.0.1', 3000)]``
         :param dict policy: optional info policies :ref:`aerospike_info_policies`.
         :rtype: :class:`dict`
 
@@ -1024,7 +1024,7 @@ Client Class --- :class:`Client`
         Send an info *command* to a single node specified by *host*.
 
         :param str command: the info command.
-        :param tuple host: a :class:`tuple` containing an *address*, *port* pair. Example: ``('127.0.0.1', 3000)``
+        :param tuple host: a :py:func:`tuple` containing an *address*, *port* pair. Example: ``('127.0.0.1', 3000)``
         :param dict policy: optional info policies :ref:`aerospike_info_policies`.
         :rtype: :class:`str`
 
@@ -1275,16 +1275,16 @@ Record Tuple
 Unicode Handling
 ----------------
 
-Both :class:`str` and :class:`unicode` values are converted by the
+Both :class:`str` and :func:`unicode` values are converted by the
 client into UTF-8 encoded strings for storage on the aerospike server.
 Read methods such as :meth:`~aerospike.Client.get`,
 :meth:`~aerospike.Client.query`, :meth:`~aerospike.Client.scan` and
 :meth:`~aerospike.Client.operate` will return that data as UTF-8 encoded
-:class:`str` values. To get a :class:`unicode` you will need to manually decode.
+:class:`str` values. To get a :func:`unicode` you will need to manually decode.
 
 .. warning::
 
-    Prior to release 1.0.43 read operations always returned strings as :class:`unicode`.
+    Prior to release 1.0.43 read operations always returned strings as :func:`unicode`.
 
 .. code-block:: python
 
@@ -1399,7 +1399,9 @@ Batch Policies
 
 .. object:: policy
 
-     A :class:`dict` of optional batch policies which are applicable to :meth:`get_many`, :meth:`exists_many` and :meth:`select_many`. See :ref:`aerospike_policies`.
+     A :class:`dict` of optional batch policies which are applicable to \
+     :meth:`~aerospike.Client.get_many`, :meth:`~aerospike.Client.exists_many` \
+     and :meth:`~aerospike.Client.select_many`. See :ref:`aerospike_policies`.
 
     .. hlist::
         :columns: 1
@@ -1414,7 +1416,9 @@ Info Policies
 
 .. object:: policy
 
-     A :class:`dict` of optional info policies which are applicable to :meth:`info`, :meth:`info_nodes` and index operations. See :ref:`aerospike_policies`.
+     A :class:`dict` of optional info policies which are applicable to \
+     :meth:`~aerospike.Client.info`, :meth:`~aerospike.Client.info_node` \
+     and index operations. See :ref:`aerospike_policies`.
 
     .. hlist::
         :columns: 1

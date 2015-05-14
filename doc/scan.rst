@@ -76,7 +76,7 @@ Scan Class --- :class:`Scan`
         Invoke the *callback* function for each of the records streaming back \
         from the scan.
 
-        :param callback callback: the function to invoke for each record.
+        :param callable callback: the function to invoke for each record.
         :param dict policy: optional scan policies :ref:`aerospike_scan_policies`.
         :param dict options: the :ref:`aerospike_scan_options` that will apply \
            to the scan.

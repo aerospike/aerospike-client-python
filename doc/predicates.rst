@@ -16,7 +16,7 @@
     :param str bin: the bin name.
     :param int min: the minimum value to be matched with the between operator.
     :param int max: the maximum value to be matched with the between operator.
-    :return: :class:`tuple` to be used in :meth:`aerospike.Query.where`.
+    :return: :py:func:`tuple` to be used in :meth:`aerospike.Query.where`.
 
     .. code-block:: python
 
@@ -38,8 +38,8 @@
 
     :param str bin: the bin name.
     :param val: the value to be matched with an equals operator.
-    :type val: str or int
-    :return: :class:`tuple` to be used in :meth:`aerospike.Query.where`.
+    :type val: :py:class:`str` or :py:class:`int`
+    :return: :py:func:`tuple` to be used in :meth:`aerospike.Query.where`.
 
     .. code-block:: python
 
@@ -62,8 +62,8 @@
     :param str bin: the bin name.
     :param index_type: Possible ``aerospike.INDEX_TYPE_*`` values are detailed in :ref:`aerospike_misc_constants`.
     :param val: match records whose *bin* is an *index_type* (ex: list) containing *val*.
-    :type val: str or int
-    :return: :class:`tuple` to be used in :meth:`aerospike.Query.where`.
+    :type val: :py:class:`str` or :py:class:`int`
+    :return: :py:func:`tuple` to be used in :meth:`aerospike.Query.where`.
 
     .. warning::
 
@@ -102,7 +102,7 @@
     :param index_type: Possible ``aerospike.INDEX_TYPE_*`` values are detailed in :ref:`aerospike_misc_constants`.
     :param int min: the minimum value to be used for matching with the range operator.
     :param int max: the maximum value to be used for matching with the range operator.
-    :return: :class:`tuple` to be used in :meth:`aerospike.Query.where`.
+    :return: :py:func:`tuple` to be used in :meth:`aerospike.Query.where`.
 
     .. warning::
 
