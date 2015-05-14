@@ -33,8 +33,8 @@ class TestAggregate(TestBaseClass):
         filename = "stream_example.lua"
         udf_type = aerospike.UDF_TYPE_LUA
         status = client.udf_put(filename, udf_type)
-        shutil.copyfile(filename, config['lua']['user_path'] +
-            'stream_example.lua')
+        #shutil.copyfile(filename, config['lua']['user_path'] +
+        #    'stream_example.lua')
         client.close()
 
     def teardown_class(cls):
@@ -46,11 +46,11 @@ class TestAggregate(TestBaseClass):
             client = aerospike.client(config).connect()
         else:
             client = aerospike.client(config).connect(user, password)
-        #client.index_remove('test', 'test_demo_test_age_idx')
-        #client.index_remove('test', 'test_demo_age1_idx')
+        client.index_remove('test', 'test_demo_test_age_idx')
+        client.index_remove('test', 'test_demo_age1_idx')
         module = "stream_example.lua"
 
-        #status = client.udf_remove(module)
+        status = client.udf_remove(module)
         client.close()
 
     def setup_method(self, method):
@@ -142,7 +142,7 @@ class TestAggregate(TestBaseClass):
             assert exception.code == 4L
             assert exception.msg == 'AEROSPIKE_ERR_REQUEST_INVALID'
 
-    @pytest.mark.xfail(reason="C client incorrectly sent status AEROSPIKE_ERR_UDF")
+    #@pytest.mark.xfail(reason="C client incorrectly sent status AEROSPIKE_ERR_UDF")
     def test_aggregate_with_where_incorrect(self):
         """
             Invoke aggregate() with where is incorrect
