@@ -73,15 +73,17 @@ containing the keys of all records in the set.
 .. note::
 
     By default, the :py:class:`aerospike.Client` maps supported types such \
-    as :class:`int`, :class:`str`, :class:`list`, :class:`dict` to matching
-    aerospike server `types <http://www.aerospike.com/docs/guide/data-types.html>`_ \
-    (int, string, list, map). When an unsupported type is encountered the module \
-    uses `cPickle <https://docs.python.org/2/library/pickle.html?highlight=cpickle#module-cPickle>`_ \
+    as :py:class:`int`, :py:class:`str`, :py:class:`bytearray`, :py:class:`list`, \
+    :py:class:`dict` to matching aerospike server \
+    `types <http://www.aerospike.com/docs/guide/data-types.html>`_ \
+    (int, string, bytes, list, map). When an unsupported type is encountered
+    the module uses \
+    `cPickle <https://docs.python.org/2/library/pickle.html?highlight=cpickle#module-cPickle>`_ \
     to serialize and deserialize the data, storing it into a *bytes* of type \
     `'Python' <https://www.aerospike.com/docs/udf/api/bytes.html#encoding-type>`_ \
     (`AS_BYTES_PYTHON <http://www.aerospike.com/apidocs/c/d0/dd4/as__bytes_8h.html#a0cf2a6a1f39668f606b19711b3a98bf3>`_).
 
-    Two functions :py:func:`set_serializer` and :py:func:`set_deserializer` \
+    Two functions :func:`~aerospike.set_serializer` and :func:`~aerospike.set_deserializer` \
     allow for user-defined functions to handle serialization, instead. \
     The serialized data is stored as \
     'Generic' type *bytes* of type (\
@@ -91,7 +93,7 @@ containing the keys of all records in the set.
 
     Overrides the default serializer with a user-defined function *callback*.
 
-    :param callback callback: the function to invoke for serialization.
+    :param callable callback: the function to invoke for serialization.
 
     .. code-block:: python
 
@@ -110,7 +112,7 @@ containing the keys of all records in the set.
 
     Overrides the default serializer with a user-defined fucntion *callback*.
 
-    :param callback callback: the function to invoke for deserialization.
+    :param callable callback: the function to invoke for deserialization.
 
     .. code-block:: python
 
@@ -133,7 +135,7 @@ containing the keys of all records in the set.
     The *callback* is invoked whenever a log event passing the logging level
     threshold is encountered.
 
-    :param callback callback: the function used as the logging handler.
+    :param callable callback: the function used as the logging handler.
 
     .. code-block:: python
 

@@ -308,42 +308,52 @@ extern PyObject * serialize_based_on_serializer_policy(int32_t serializer_policy
 			goto CLEANUP;
 		case SERIALIZER_PYTHON:
 			{
-				/* get the sys.modules dictionary */
-				PyObject* sysmodules = PyImport_GetModuleDict();
-				PyObject* cpickle_module = NULL;
-				if(PyMapping_HasKeyString(sysmodules, "cPickle")) {
-					cpickle_module = PyMapping_GetItemString(sysmodules, "cPickle");
+
+				if (PyByteArray_Check(value)) {
+					uint8_t *bytes_array = (uint8_t *) PyByteArray_AsString(value);
+					uint32_t bytes_array_len  = (uint32_t)  PyByteArray_Size(value);
+
+					set_as_bytes(bytes, bytes_array, bytes_array_len, AS_BYTES_BLOB, error_p);
+
 				} else {
-					cpickle_module = PyImport_ImportModule("cPickle");
-				}
 
-				if(!cpickle_module) {
-					/* insert error handling here! and exit this function */
-					as_error_update(error_p, AEROSPIKE_ERR_CLIENT, "Unable to load cpickle module");
-					goto CLEANUP;
-				} else {
-					PyObject * py_funcname = PyString_FromString("dumps");
+					/* get the sys.modules dictionary */
+					PyObject* sysmodules = PyImport_GetModuleDict();
+					PyObject* cpickle_module = NULL;
+					if(PyMapping_HasKeyString(sysmodules, "cPickle")) {
+						cpickle_module = PyMapping_GetItemString(sysmodules, "cPickle");
+					} else {
+						cpickle_module = PyImport_ImportModule("cPickle");
+					}
 
-					Py_INCREF(cpickle_module);
-					initresult = PyObject_CallMethodObjArgs(cpickle_module,
-							py_funcname, value, NULL);
-					Py_DECREF(cpickle_module);
-					Py_DECREF(py_funcname);
-
-					if(!initresult) {
-						/* more error handling &c */
-						as_error_update(error_p, AEROSPIKE_ERR_CLIENT, "Unable to call dumps function");
+					if(!cpickle_module) {
+						/* insert error handling here! and exit this function */
+						as_error_update(error_p, AEROSPIKE_ERR_CLIENT, "Unable to load cpickle module");
 						goto CLEANUP;
 					} else {
-						Py_INCREF(initresult);
-						char *return_value = PyString_AsString(initresult);
-						int len = strlen(return_value);
-						set_as_bytes(bytes, (uint8_t *) return_value,
-								len, AS_BYTES_PYTHON, error_p);
-						Py_DECREF(initresult);
+						PyObject * py_funcname = PyString_FromString("dumps");
+
+						Py_INCREF(cpickle_module);
+						initresult = PyObject_CallMethodObjArgs(cpickle_module,
+								py_funcname, value, NULL);
+						Py_DECREF(cpickle_module);
+						Py_DECREF(py_funcname);
+
+						if(!initresult) {
+							/* more error handling &c */
+							as_error_update(error_p, AEROSPIKE_ERR_CLIENT, "Unable to call dumps function");
+							goto CLEANUP;
+						} else {
+							Py_INCREF(initresult);
+							char *return_value = PyString_AsString(initresult);
+							int len = strlen(return_value);
+							set_as_bytes(bytes, (uint8_t *) return_value,
+									len, AS_BYTES_PYTHON, error_p);
+							Py_DECREF(initresult);
+						}
 					}
+					Py_XDECREF(cpickle_module);
 				}
-				Py_XDECREF(cpickle_module);
 			}
 			break;
 		case SERIALIZER_JSON:

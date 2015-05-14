@@ -7,73 +7,82 @@ import time
 from test_base_class import TestBaseClass
 
 aerospike = pytest.importorskip("aerospike")
+from aerospike import predicates as p
 try:
     from aerospike.exception import *
 except:
     print "Please install aerospike python client."
     sys.exit(1)
 
-from aerospike import predicates as p
 
 
-class TestQuery(object):
-
+class TestQuery(TestBaseClass):
     def setup_class(cls):
         hostlist, user, password = TestBaseClass.get_hosts()
         config = {'hosts': hostlist}
         if user == None and password == None:
-            TestQuery.client = aerospike.client(config).connect()
+            client = aerospike.client(config).connect()
         else:
-            TestQuery.client = aerospike.client(config).connect(user, password)
+            client = aerospike.client(config).connect(user, password)
 
-        TestQuery.client = aerospike.client(config).connect()
-
-        TestQuery.client.index_integer_create('test', 'demo', 'test_age',
+        client.index_integer_create('test', 'demo', 'test_age',
                                               'age_index')
-        TestQuery.client.index_string_create('test', 'demo', 'addr',
+        client.index_string_create('test', 'demo', 'addr',
                                              'addr_index')
-        TestQuery.client.index_integer_create('test', 'demo', 'age1',
+        client.index_integer_create('test', 'demo', 'age1',
                                               'age_index1')
-        TestQuery.client.index_list_create('test', 'demo', 'numeric_list',
+        client.index_list_create('test', 'demo', 'numeric_list',
                                            aerospike.INDEX_NUMERIC,
                                            'numeric_list_index')
-        TestQuery.client.index_list_create('test', 'demo', 'string_list',
+        client.index_list_create('test', 'demo', 'string_list',
                                            aerospike.INDEX_STRING,
                                            'string_list_index')
-        TestQuery.client.index_map_keys_create('test', 'demo', 'numeric_map',
+        client.index_map_keys_create('test', 'demo', 'numeric_map',
                                                aerospike.INDEX_NUMERIC,
                                                'numeric_map_index')
-        TestQuery.client.index_map_keys_create('test', 'demo', 'string_map',
+        client.index_map_keys_create('test', 'demo', 'string_map',
                                                aerospike.INDEX_STRING,
                                                'string_map_index')
-        TestQuery.client.index_map_values_create('test', 'demo', 'numeric_map',
+        client.index_map_values_create('test', 'demo', 'numeric_map',
                                                  aerospike.INDEX_NUMERIC,
                                                  'numeric_map_values_index')
-        TestQuery.client.index_map_values_create('test', 'demo', 'string_map',
+        client.index_map_values_create('test', 'demo', 'string_map',
                                                  aerospike.INDEX_STRING,
                                                  'string_map_values_index')
-        TestQuery.client.index_integer_create('test', None, 'test_age_none', 
+        client.index_integer_create('test', None, 'test_age_none', 
                                                 'age_index_none')
 
     def teardown_class(cls):
+        hostlist, user, password = TestBaseClass.get_hosts()
+        config = {'hosts': hostlist}
+        if user == None and password == None:
+            client = aerospike.client(config).connect()
+        else:
+            client = aerospike.client(config).connect(user, password)
         policy = {}
-        TestQuery.client.index_remove('test', 'age_index', policy)
-        TestQuery.client.index_remove('test', 'age_index1', policy)
-        TestQuery.client.index_remove('test', 'addr_index', policy)
-        TestQuery.client.index_remove('test', 'numeric_list_index', policy)
-        TestQuery.client.index_remove('test', 'string_list_index', policy)
-        TestQuery.client.index_remove('test', 'numeric_map_index', policy)
-        TestQuery.client.index_remove('test', 'string_map_index', policy)
-        TestQuery.client.index_remove('test', 'numeric_map_values_index',
-                                      policy)
-        TestQuery.client.index_remove('test', 'string_map_values_index', policy)
-        TestQuery.client.index_remove('test', 'age_index_none', policy);
-        TestQuery.client.close()
+        client.index_remove('test', 'age_index', policy)
+        client.index_remove('test', 'age_index1', policy)
+        client.index_remove('test', 'addr_index', policy)
+        client.index_remove('test', 'numeric_list_index', policy)
+        client.index_remove('test', 'string_list_index', policy)
+        client.index_remove('test', 'numeric_map_index', policy)
+        client.index_remove('test', 'string_map_index', policy)
+        client.index_remove('test', 'numeric_map_values_index', policy)
+        client.index_remove('test', 'string_map_values_index', policy)
+        client.index_remove('test', 'age_index_none', policy);
+        client.close()
 
     def setup_method(self, method):
         """
         Setup method.
         """
+        config = {'hosts': TestBaseClass.hostlist}
+        if TestBaseClass.user == None and TestBaseClass.password == None:
+            self.client = aerospike.client(config).connect()
+        else:
+            self.client = aerospike.client(config).connect(
+                TestBaseClass.user, TestBaseClass.password)
+
         for i in xrange(5):
             key = ('test', 'demo', i)
             rec = {
@@ -93,7 +102,7 @@ class TestQuery(object):
                 'test_age': i,
                 'no': i
             }
-            TestQuery.client.put(key, rec)
+            self.client.put(key, rec)
         for i in xrange(5, 10):
             key = ('test', 'demo', i)
             rec = {
@@ -102,7 +111,7 @@ class TestQuery(object):
                 u'test_age': i,
                 u'no': i
             }
-            TestQuery.client.put(key, rec)
+            self.client.put(key, rec)
 
     def teardown_method(self, method):
         """
@@ -110,14 +119,15 @@ class TestQuery(object):
         """
         for i in xrange(10):
             key = ('test', 'demo', i)
-            TestQuery.client.remove(key)
+            self.client.remove(key)
+        self.client.close()
 
     def test_query_with_no_parameters(self):
         """
             Invoke query() without any mandatory parameters.
         """
         try:
-            query = TestQuery.client.query()
+            query = self.client.query()
             query.select()
             query.where()
 
@@ -129,7 +139,7 @@ class TestQuery(object):
         """
             Invoke query() with correct arguments
         """
-        query = TestQuery.client.query('test', 'demo')
+        query = self.client.query('test', 'demo')
         query.select('name', 'test_age')
         query.where(p.equals('test_age', 1))
 
@@ -147,7 +157,7 @@ class TestQuery(object):
             Invoke query() with incorrect ns and set
         """
         try:
-            query = TestQuery.client.query('test1', 'demo1')
+            query = self.client.query('test1', 'demo1')
             query.select('name', 'test_age')
             query.where(p.equals('test_age', 1))
 
@@ -165,7 +175,7 @@ class TestQuery(object):
             Invoke query() with incorrect ns and set
         """
         try:
-            query = TestQuery.client.query(1, 'demo')
+            query = self.client.query(1, 'demo')
             query.select('name', 'test_age')
             query.where(p.equals('test_age', 1))
             def callback((key,metadata,record)):
@@ -182,7 +192,7 @@ class TestQuery(object):
             Invoke query() with incorrect ns and set
         """
         try:
-            query = TestQuery.client.query('test', 1)
+            query = self.client.query('test', 1)
             query.select('name', 'test_age')
             query.where(p.equals('test_age', 1))
             def callback((key,metadata,record)):
@@ -198,7 +208,7 @@ class TestQuery(object):
         """
             Invoke query() with incorrect bin name
         """
-        query = TestQuery.client.query('test', 'demo')
+        query = self.client.query('test', 'demo')
         query.select('name1', 'age1')
         query.where(p.equals('age1', 1))
         records = []
@@ -213,7 +223,7 @@ class TestQuery(object):
         """
             Invoke query() with without callback
         """
-        query = TestQuery.client.query('test', 'demo')
+        query = self.client.query('test', 'demo')
         query.select('name', 'test_age')
         query.where(p.equals('test_age', 1))
 
@@ -231,7 +241,7 @@ class TestQuery(object):
         """
         #with pytest.raises(Exception) as exception:
         try:
-            query = TestQuery.client.query('test', 'demo')
+            query = self.client.query('test', 'demo')
             query.select('name', 'no')
             query.where(p.equals('no', 1))
 
@@ -249,7 +259,7 @@ class TestQuery(object):
         """
             Invoke query() with where is incorrect
         """
-        query = TestQuery.client.query('test', 'demo')
+        query = self.client.query('test', 'demo')
         query.select('name', 'test_age')
         query.where(p.equals('test_age', 165))
         records = []
@@ -264,7 +274,7 @@ class TestQuery(object):
         """
             Invoke query() with where is null value
         """
-        query = TestQuery.client.query('test', 'demo')
+        query = self.client.query('test', 'demo')
         query.select('name', 'test_age')
         try:
             query.where(p.equals('test_age', None))
@@ -278,7 +288,7 @@ class TestQuery(object):
             Invoke query() with policy
         """
         policy = {'timeout': 1000}
-        query = TestQuery.client.query('test', 'demo')
+        query = self.client.query('test', 'demo')
         query.select('name', 'test_age')
         query.where(p.equals('test_age', 1))
         records = []
@@ -294,7 +304,7 @@ class TestQuery(object):
             Invoke query() with extra argument
         """
         policy = {'timeout': 1000}
-        query = TestQuery.client.query('test', 'demo')
+        query = self.client.query('test', 'demo')
         query.select('name', 'test_age')
         query.where(p.equals('test_age', 1))
 
@@ -311,7 +321,7 @@ class TestQuery(object):
             Invoke query() with incorrect policy
         """
         policy = {'timeout': ""}
-        query = TestQuery.client.query('test', 'demo')
+        query = self.client.query('test', 'demo')
         query.select('name', 'test_age')
         query.where(p.equals('test_age', 1))
 
@@ -330,7 +340,7 @@ class TestQuery(object):
             Invoke query() with put in callback
         """
         policy = {'timeout': 1000}
-        query = TestQuery.client.query('test', 'demo')
+        query = self.client.query('test', 'demo')
         query.select('name', 'test_age')
         query.where(p.equals('test_age', 1))
         records = []
@@ -339,22 +349,22 @@ class TestQuery(object):
             records.append(record)
             key = ('test', 'demo', 'put_in_callback')
             rec = {'name': 'name%s' % (str(8)), 'test_age': 8, }
-            TestQuery.client.put(key, rec)
+            self.client.put(key, rec)
 
         query.foreach(callback, policy)
 
         key = ('test', 'demo', 'put_in_callback')
-        key1, meta, bins = TestQuery.client.get(key)
+        key1, meta, bins = self.client.get(key)
 
         key = ('test', 'demo', 'put_in_callback')
-        TestQuery.client.remove(key)
+        self.client.remove(key)
         assert bins == {'test_age': 8, 'name': 'name8'}
 
     def test_query_with_correct_parameters_between(self):
         """
             Invoke query() with correct arguments and using predicate between
         """
-        query = TestQuery.client.query('test', 'demo')
+        query = self.client.query('test', 'demo')
         query.select('name', 'test_age')
         query.where(p.between('test_age', 1, 4))
 
@@ -368,7 +378,7 @@ class TestQuery(object):
 
     def test_query_with_where_is_null(self):
 
-        query = TestQuery.client.query('test', 'demo')
+        query = self.client.query('test', 'demo')
         query.select('name', 'test_age')
         try:
             query.where("")
@@ -381,7 +391,7 @@ class TestQuery(object):
         """
             Invoke query() with callback function contains an error
         """
-        query = TestQuery.client.query('test', 'demo')
+        query = self.client.query('test', 'demo')
         query.select('name', 'test_age')
         query.where(p.equals('test_age', 1))
 
@@ -402,7 +412,7 @@ class TestQuery(object):
         """
             Invoke query() with callback function returns false
         """
-        query = TestQuery.client.query('test', 'demo')
+        query = self.client.query('test', 'demo')
         query.select('name', 'test_age')
         query.where(p.between('test_age', 1, 5))
 
@@ -420,7 +430,7 @@ class TestQuery(object):
         """
             Invoke query() with correct arguments
         """
-        query = TestQuery.client.query('test', 'demo')
+        query = self.client.query('test', 'demo')
         query.select('name', 'test_age')
         query.where(p.equals('test_age', 1))
 
@@ -432,7 +442,7 @@ class TestQuery(object):
         """
             Invoke query() with unicode bin names in select
         """
-        query = TestQuery.client.query('test', 'demo')
+        query = self.client.query('test', 'demo')
         query.select(u'name', u'test_age', 'addr')
         query.where(p.equals(u'test_age', 7))
 
@@ -444,7 +454,7 @@ class TestQuery(object):
             'addr': u'name7'
         }
 
-        query = TestQuery.client.query('test', 'demo')
+        query = self.client.query('test', 'demo')
         query.select(u'name', 'addr')
         query.where(p.equals(u'addr', u'name9'))
 
@@ -455,7 +465,7 @@ class TestQuery(object):
         """
             Invoke query() with select bin is of integer type.
         """
-        query = TestQuery.client.query('test', 'demo')
+        query = self.client.query('test', 'demo')
 
         try:
             query.select(22, 'test_age')
@@ -468,7 +478,7 @@ class TestQuery(object):
         """
             Invoke query() with correct arguments and using predicate contains
         """
-        query = TestQuery.client.query('test', 'demo')
+        query = self.client.query('test', 'demo')
         query.select('name', 'test_age')
         query.where(p.contains('numeric_list', aerospike.INDEX_TYPE_LIST, 1))
 
@@ -484,7 +494,7 @@ class TestQuery(object):
         """
             Invoke query() with correct arguments and using predicate contains
         """
-        query = TestQuery.client.query('test', 'demo')
+        query = self.client.query('test', 'demo')
         query.select('name', 'test_age')
         query.where(p.contains('string_list', aerospike.INDEX_TYPE_LIST,
                                "str3"))
@@ -501,7 +511,7 @@ class TestQuery(object):
         """
             Invoke query() with correct arguments and using predicate contains
         """
-        query = TestQuery.client.query('test', 'demo')
+        query = self.client.query('test', 'demo')
         query.select('name', 'test_age')
         query.where(p.range('numeric_list', aerospike.INDEX_TYPE_LIST, 1, 3))
 
@@ -517,7 +527,7 @@ class TestQuery(object):
         """
             Invoke query() with correct arguments and using predicate contains
         """
-        query = TestQuery.client.query('test', 'demo')
+        query = self.client.query('test', 'demo')
         query.select('name', 'test_age')
         query.where(p.contains('string_map', aerospike.INDEX_TYPE_MAPKEYS, "a"))
 
@@ -533,7 +543,7 @@ class TestQuery(object):
         """
             Invoke query() with correct arguments and using predicate contains
         """
-        query = TestQuery.client.query('test', 'demo')
+        query = self.client.query('test', 'demo')
         query.select('name', 'test_age')
         query.where(p.contains('string_map', aerospike.INDEX_TYPE_MAPVALUES,
                                "a1"))
@@ -547,7 +557,7 @@ class TestQuery(object):
         """
             Invoke query() with multple foreach() call on same query object
         """
-        query = TestQuery.client.query('test', 'demo')
+        query = self.client.query('test', 'demo')
         query.select('name', 'test_age')
         query.where(p.equals('test_age', 1))
 
@@ -563,7 +573,7 @@ class TestQuery(object):
         """
             Invoke query() with correct arguments and using predicate contains
         """
-        query = TestQuery.client.query('test', 'demo')
+        query = self.client.query('test', 'demo')
         query.select('name', 'test_age')
         query.where(p.contains('numeric_map', aerospike.INDEX_TYPE_MAPVALUES,
                                1))
@@ -580,7 +590,7 @@ class TestQuery(object):
         """
             Invoke query() with correct arguments and using predicate contains
         """
-        query = TestQuery.client.query('test', 'demo')
+        query = self.client.query('test', 'demo')
         query.select('name', 'test_age')
         query.where(p.range('numeric_map', aerospike.INDEX_TYPE_MAPVALUES, 1,
                             3))
@@ -597,7 +607,7 @@ class TestQuery(object):
         """
             Invoke query() with correct arguments and using predicate contains
         """
-        query = TestQuery.client.query('test', 'demo')
+        query = self.client.query('test', 'demo')
         query.select('name', 'test_age')
         query.where('numeric_map', "range", aerospike.INDEX_TYPE_MAPVALUES,
                     aerospike.INDEX_NUMERIC, 1, 3)
@@ -616,7 +626,7 @@ class TestQuery(object):
         """
             Invoke query() with correct arguments and using predicate contains
         """
-        query = TestQuery.client.query('test', 'demo')
+        query = self.client.query('test', 'demo')
         query.select('name', 'test_age')
         query.where('string_map', 'contains', aerospike.INDEX_TYPE_MAPVALUES,
                     aerospike.INDEX_STRING, "a1")
@@ -633,7 +643,7 @@ class TestQuery(object):
         """
             Invoke query() with correct arguments and using predicate contains
         """
-        query = TestQuery.client.query('test', 'demo')
+        query = self.client.query('test', 'demo')
         query.select('name', 'test_age')
         query.where('string_list', "contains", aerospike.INDEX_TYPE_LIST,
                     aerospike.INDEX_STRING, "str3")
@@ -650,7 +660,7 @@ class TestQuery(object):
         """
             Invoke query() with correct arguments and using predicate between
         """
-        query = TestQuery.client.query('test', 'demo')
+        query = self.client.query('test', 'demo')
         query.select('name', 'test_age')
         query.where('test_age', 'between', 1, 4)
 
@@ -667,7 +677,7 @@ class TestQuery(object):
             Invoke query() with policy
         """
         policy = {'timeout': 1000}
-        query = TestQuery.client.query('test', 'demo')
+        query = self.client.query('test', 'demo')
         query.select('name', 'test_age')
         query.where('test_age', 'equals', 1)
         records = []
@@ -685,7 +695,7 @@ class TestQuery(object):
         """
             Invoke query() with multple results() call on same query object
         """
-        query = TestQuery.client.query('test', 'demo')
+        query = self.client.query('test', 'demo')
         query.select(u'name', u'test_age', 'addr')
         query.where(p.equals(u'test_age', 7))
 
@@ -736,7 +746,7 @@ class TestQuery(object):
         policy = {
             'timeout': 1000
         }
-        query = TestQuery.client.query('test', None)
+        query = self.client.query('test', None)
         query.select('name', 'test_age_none')
         query.where(p.equals('test_age_none', 1))
         records = []
@@ -753,7 +763,7 @@ class TestQuery(object):
         policy = {
             'timeout': 1000
         }
-        query = TestQuery.client.query('test')
+        query = self.client.query('test')
         query.select('name', 'test_age_none')
         query.where(p.equals('test_age_none', 1))
         records = []
