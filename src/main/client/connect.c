@@ -82,7 +82,7 @@ PyObject * AerospikeClient_Connect(AerospikeClient * self, PyObject * args, PyOb
  * Returns true or false.
  *******************************************************************************************************
  */
-PyObject * AerospikeClient_isConnected(AerospikeClient * self, PyObject * args, PyObject * kwds)
+PyObject * AerospikeClient_is_connected(AerospikeClient * self, PyObject * args, PyObject * kwds)
 {
 
 	if (1 == self->is_conn_16) //Need to define a macro AEROSPIKE_CONN_STATE

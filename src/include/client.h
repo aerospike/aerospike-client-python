@@ -60,7 +60,7 @@ PyObject * AerospikeClient_Close(AerospikeClient * self, PyObject * args, PyObje
 /**
  * Checks the connection to the database.
  */
-PyObject * AerospikeClient_isConnected(AerospikeClient * self, PyObject * args, PyObject * kwds);
+PyObject * AerospikeClient_is_connected(AerospikeClient * self, PyObject * args, PyObject * kwds);
 
 
 /*******************************************************************************

@@ -36,7 +36,10 @@ class TestScanApply(object):
         """
         for i in xrange(5):
             key = ('test', 'demo', i)
-            self.client.remove(key)
+            try:
+                self.client.remove(key)
+            except TimeoutError:
+                pass
         self.client.close()
 
     def test_scan_apply_with_no_parameters(self):

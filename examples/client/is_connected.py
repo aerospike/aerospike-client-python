@@ -102,7 +102,7 @@ try:
 
         namespace = options.namespace if options.namespace and options.namespace != 'None' else None
         set = options.set if options.set and options.set != 'None' else None
-        if client.isConnected() == True:
+        if client.is_connected() == True:
             print("Connected to Aerospike DB.")
 
     except Exception, (code,msg,file,line):

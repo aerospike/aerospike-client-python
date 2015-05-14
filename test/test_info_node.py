@@ -247,13 +247,13 @@ class TestInfoNode(object):
         """
         Test info with incorrect host
         """
-        host = ( "192.168.1.2", 3000 )
+        host = ( "192.168.244.244", 3000 )
         try:
             response = TestInfoNode.client.info_node('bins', host)
-
+        except ClientError as exception:
+            assert exception.code == -1L
         except TimeoutError as exception:
             assert exception.code == 9L
-            assert exception.msg == ""
     
     def test_info_node_positive_invalid_host(self):
         """

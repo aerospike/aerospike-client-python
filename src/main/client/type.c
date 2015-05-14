@@ -43,8 +43,8 @@ static PyMethodDef AerospikeClient_Type_Methods[] = {
 	{"close",
 		(PyCFunction) AerospikeClient_Close, METH_VARARGS | METH_KEYWORDS,
 		"Close the connection(s) to the cluster."},
-	{"isConnected",
-		(PyCFunction) AerospikeClient_isConnected, METH_VARARGS | METH_KEYWORDS,
+	{"is_connected",
+		(PyCFunction) AerospikeClient_is_connected, METH_VARARGS | METH_KEYWORDS,
 		"Checks current connection state."},
 
 	// ADMIN OPERATIONS
