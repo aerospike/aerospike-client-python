@@ -4,6 +4,7 @@ import pytest
 import sys
 import cPickle as pickle
 from test_base_class import TestBaseClass
+import shutil
 
 aerospike = pytest.importorskip("aerospike")
 try:
@@ -17,41 +18,39 @@ from aerospike import predicates as p
 class TestAggregate(TestBaseClass):
     def setup_class(cls):
         hostlist, user, password = TestBaseClass.get_hosts()
-        config = {'hosts': hostlist}
+        config = {
+            'hosts': hostlist,
+            'lua':{'user_path': '/tmp/'}}
         if user == None and password == None:
             client = aerospike.client(config).connect()
         else:
             client = aerospike.client(config).connect(user, password)
 
-        policy = {}
-        client.index_integer_create('test', 'demo', 'test_age', 'age_index',
-                                    policy)
-        policy = {}
-        client.index_integer_create('test', 'demo', 'age1', 'age_index1',
-                                    policy)
+        client.index_integer_create('test', 'demo', 'test_age',
+                'test_demo_test_age_idx')
+        client.index_integer_create('test', 'demo', 'age1', 'test_demo_age1_idx')
 
-        policy = {}
         filename = "stream_example.lua"
-        udf_type = 0
-
-        status = client.udf_put(filename, udf_type, policy)
-
+        udf_type = aerospike.UDF_TYPE_LUA
+        status = client.udf_put(filename, udf_type)
+        shutil.copyfile(filename, config['lua']['user_path'] +
+            'stream_example.lua')
         client.close()
 
     def teardown_class(cls):
         hostlist, user, password = TestBaseClass.get_hosts()
-        config = {'hosts': hostlist}
+        config = {
+            'hosts': hostlist,
+            'lua':{'user_path': '/tmp/'}}
         if user == None and password == None:
             client = aerospike.client(config).connect()
         else:
             client = aerospike.client(config).connect(user, password)
-        policy = {}
-        client.index_remove('test', 'age_index', policy)
-        client.index_remove('test', 'age_index1', policy)
-        policy = {}
+        #client.index_remove('test', 'test_demo_test_age_idx')
+        #client.index_remove('test', 'test_demo_age1_idx')
         module = "stream_example.lua"
 
-        status = client.udf_remove(module, policy)
+        #status = client.udf_remove(module)
         client.close()
 
     def setup_method(self, method):
@@ -59,7 +58,10 @@ class TestAggregate(TestBaseClass):
         Setup method.
         """
 
-        config = {'hosts': TestBaseClass.hostlist}
+        hostlist, user, password = TestBaseClass.get_hosts()
+        config = {
+            'hosts': hostlist,
+            'lua':{'user_path': '/tmp/'}}
         if TestBaseClass.user == None and TestBaseClass.password == None:
             self.client = aerospike.client(config).connect()
         else:
@@ -82,7 +84,7 @@ class TestAggregate(TestBaseClass):
         """
         for i in xrange(5):
             key = ('test', 'demo', i)
-            self.client.remove(key)
+            #self.client.remove(key)
         self.client.close()
 
     def test_aggregate_with_no_parameters(self):
@@ -140,6 +142,7 @@ class TestAggregate(TestBaseClass):
             assert exception.code == 4L
             assert exception.msg == 'AEROSPIKE_ERR_REQUEST_INVALID'
 
+    @pytest.mark.xfail(reason="C client incorrectly sent status AEROSPIKE_ERR_UDF")
     def test_aggregate_with_where_incorrect(self):
         """
             Invoke aggregate() with where is incorrect
@@ -176,6 +179,7 @@ class TestAggregate(TestBaseClass):
             assert exception.code == -2L
             assert exception.msg == 'predicate is invalid.'
 
+    #@pytest.mark.xfail(reason="C client incorrectly sent status AEROSPIKE_ERR_UDF")
     def test_aggregate_with_where_bool_value(self):
         """
             Invoke aggregate() with where is bool value
