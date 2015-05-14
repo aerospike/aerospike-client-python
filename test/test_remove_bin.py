@@ -262,6 +262,24 @@ class TestRemovebin(object):
 
         assert status == 0L
 
+    def test_remove_bin_with_single_bin_in_a_record(self):
+        """
+        Invoke remove_bin() with policy key digest
+        """
+        key = ('test', 'demo', "single-bin")
+
+        rec = {'name': 'single'}
+
+        TestRemovebin.client.put(key, rec)
+
+        policy = {'timeout': 1000, 'key': aerospike.POLICY_KEY_DIGEST}
+        TestRemovebin.client.remove_bin(key, ["name"], {}, policy)
+
+        _, _, bins = TestRemovebin.client.select(key, ["name"])
+        import pdb; pdb.set_trace()
+        assert bins == None
+
+
     def test_remove_bin_with_extra_parameter(self):
         """
         Invoke remove_bin() with extra parameter.

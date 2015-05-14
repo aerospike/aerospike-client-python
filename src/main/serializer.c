@@ -308,7 +308,13 @@ extern PyObject * serialize_based_on_serializer_policy(int32_t serializer_policy
 			goto CLEANUP;
 		case SERIALIZER_PYTHON:
 			{
-
+				/*
+				 * Serialize bytearray as is and store them into database with
+				 * type AS_BYTES_BLOB, unlike other values in case of 
+				 * SERIALIZER_PYTHON.
+				 * This is a special case.
+				 * Refer: AER-3589 for more details.
+				 */
 				if (PyByteArray_Check(value)) {
 					uint8_t *bytes_array = (uint8_t *) PyByteArray_AsString(value);
 					uint32_t bytes_array_len  = (uint32_t)  PyByteArray_Size(value);
