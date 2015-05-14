@@ -20,8 +20,7 @@ class TestAggregate(TestBaseClass):
         hostlist, user, password = TestBaseClass.get_hosts()
         config = {
             'hosts': hostlist,
-            'lua':{'user_path': '/tmp/',
-                   'system_path' : '/home/aashish/Aerospike/aerospike-client-python/aerospike-client-c/lua/' }}
+            'lua':{'user_path': '/tmp/'}}
         if user == None and password == None:
             client = aerospike.client(config).connect()
         else:
@@ -62,8 +61,7 @@ class TestAggregate(TestBaseClass):
         hostlist, user, password = TestBaseClass.get_hosts()
         config = {
             'hosts': hostlist,
-            'lua':{'user_path': '/tmp/',
-                    'system_path' : '/home/aashish/Aerospike/aerospike-client-python/aerospike-client-c/lua/' }}
+            'lua':{'user_path': '/tmp/'}}
         if TestBaseClass.user == None and TestBaseClass.password == None:
             self.client = aerospike.client(config).connect()
         else:
