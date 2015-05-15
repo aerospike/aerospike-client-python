@@ -24,9 +24,7 @@ class TestCreateRole(TestBaseClass):
         Setup method
         """
         hostlist, user, password = TestBaseClass().get_hosts()
-        config = {
-                "hosts": hostlist
-                }
+        config = { "hosts": hostlist}
         self.client = aerospike.client(config).connect( user, password )
         try:
             self.client.admin_drop_user("testcreaterole")
@@ -59,14 +57,18 @@ class TestCreateRole(TestBaseClass):
         """
             Create role positive
         """
-        status = self.client.admin_create_role("usr-sys-admin", 
+        try:
+            self.client.admin_query_role("usr-sys-admin")
+            # role exists, clear it out.
+            self.client.admin_drop_role("usr-sys-admin")
+        except InvalidRole:
+            pass # we are good, no such role exists
+
+        self.client.admin_create_role("usr-sys-admin",
                 [{"code": aerospike.PRIV_READ, "ns": "test", "set":"demo"}],
                 {'timeout': 1000})
-
-        assert status == 0
         time.sleep(1)
         roles = self.client.admin_query_role("usr-sys-admin")
-
         assert roles == [{'code': 10, 'ns': 'test', 'set': 'demo'}]
 
         status = self.client.admin_create_user("testcreaterole", "createrole", ["usr-sys-admin"])
@@ -91,11 +93,15 @@ class TestCreateRole(TestBaseClass):
         """
             Create role positive
         """
-        status = self.client.admin_create_role("usr-sys-admin", [{"code":
+        try:
+            self.client.admin_query_role("usr-sys-admin")
+            # role exists, clear it out.
+            self.client.admin_drop_role("usr-sys-admin")
+        except InvalidRole:
+            pass # we are good, no such role exists
+
+        self.client.admin_create_role("usr-sys-admin", [{"code":
             aerospike.PRIV_USER_ADMIN}, {"code": aerospike.PRIV_SYS_ADMIN}])
-
-        assert status == 0
-
         time.sleep(1)
         roles = self.client.admin_query_role("usr-sys-admin")
 
@@ -135,6 +141,13 @@ class TestCreateRole(TestBaseClass):
             privilege type unknown
         """
         try:
+            self.client.admin_query_role("usr-sys-admin")
+            # role exists, clear it out.
+            self.client.admin_drop_role("usr-sys-admin")
+        except InvalidRole:
+            pass # we are good, no such role exists
+
+        try:
             self.client.admin_create_role("usr-sys-admin", [{"code": 64}])
         except InvalidPrivilege as exception:
             assert exception.code == 72
@@ -154,11 +167,15 @@ class TestCreateRole(TestBaseClass):
         """
             create an already existing role
         """
-        status = self.client.admin_create_role("usr-sys-admin", [{"code":
+        try:
+            self.client.admin_query_role("usr-sys-admin")
+            # role exists, clear it out.
+            self.client.admin_drop_role("usr-sys-admin")
+        except InvalidRole:
+            pass # we are good, no such role exists
+
+        self.client.admin_create_role("usr-sys-admin", [{"code":
             aerospike.PRIV_USER_ADMIN}, {"code": aerospike.PRIV_SYS_ADMIN}])
-
-        assert status == 0
-
         try:
             self.client.admin_create_role("usr-sys-admin", [{"code":
                 aerospike.PRIV_USER_ADMIN}, {"code": aerospike.PRIV_SYS_ADMIN}])

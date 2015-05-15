@@ -55,17 +55,28 @@ class TestDropRole(TestBaseClass):
         """
             Drop role positive with policy
         """
-        status = self.client.admin_create_role("usr-sys-admin", [{"code":
-aerospike.PRIV_READ, "ns": "test", "set":"demo"}], {'timeout': 1000})
+        try:
+            self.client.admin_query_role("usr-sys-admin")
+            # role exists, clear it out.
+            self.client.admin_drop_role("usr-sys-admin")
+        except InvalidRole:
+            pass # we are good, no such role exists
 
-        assert status == 0
+        self.client.admin_create_role("usr-sys-admin", [{"code":
+            aerospike.PRIV_READ, "ns": "test", "set":"demo"}], {'timeout': 1000})
         time.sleep(1)
         roles = self.client.admin_query_role("usr-sys-admin")
-
         assert roles == [{"code": 10, "ns": "test", "set": "demo"}]
 
+        try:
+            self.client.admin_query_user("testcreaterole")
+            # user exists, clear it out.
+            self.client.admin_drop_user("testcreaterole")
+        except AdminError:
+            pass # we are good, no such user exists
+
         status = self.client.admin_create_user("testcreaterole", "createrole",
-["usr-sys-admin"])
+            ["usr-sys-admin"])
 
         assert status == 0
         time.sleep(1)
@@ -87,15 +98,25 @@ aerospike.PRIV_READ, "ns": "test", "set":"demo"}], {'timeout': 1000})
         """
             Drop role positive
         """
+        try:
+            self.client.admin_query_role("usr-sys-admin")
+            # role exists, clear it out.
+            self.client.admin_drop_role("usr-sys-admin")
+        except InvalidRole:
+            pass # we are good, no such role exists
+
         status = self.client.admin_create_role("usr-sys-admin", [{"code":
             aerospike.PRIV_USER_ADMIN}, {"code": aerospike.PRIV_SYS_ADMIN}])
-
-        assert status == 0
-
         time.sleep(1)
         roles = self.client.admin_query_role("usr-sys-admin")
-
         assert roles == [{"code": 0, "ns": "", "set": ""}, {"code": 1, "ns": "", "set": ""}]
+
+        try:
+            self.client.admin_query_user("testcreaterole")
+            # user exists, clear it out.
+            self.client.admin_drop_user("testcreaterole")
+        except AdminError:
+            pass # we are good, no such user exists
 
         status = self.client.admin_create_user("testcreaterole", "createrole",
 ["usr-sys-admin"])

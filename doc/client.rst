@@ -845,7 +845,6 @@ Client Class --- :class:`Client`
 
             import aerospike
             from aerospike.exception import AerospikeError
-            import sys
 
             config = {'hosts': [ ('127.0.0.1', 3000)]}
             client = aerospike.client(config).connect()
@@ -853,7 +852,7 @@ Client Class --- :class:`Client`
                 scan_id = client.scan_apply('test', 'demo', 'simple', 'add_val', ['age', 1])
                 while True:
                     response = client.scan_info(scan_id)
-                    if response['status'] == aerospike.SCAN_STATUS_COMPLETED or
+                    if response['status'] == aerospike.SCAN_STATUS_COMPLETED or \
                        response['status'] == aerospike.SCAN_STATUS_ABORTED:
                         break
                 if response['status'] == aerospike.SCAN_STATUS_COMPLETED:
