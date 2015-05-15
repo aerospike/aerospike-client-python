@@ -118,10 +118,10 @@ PyObject * AerospikeClient_UDF_Put(AerospikeClient * self, PyObject *args, PyObj
 
 	// Convert lua file to content
 	as_bytes content;
-	FILE * file = fopen(filename,"r");
-	FILE * copy_file = fopen(copy_filepath, "w+");
+	FILE * file_p = fopen(filename,"r");
+	FILE * copy_file_p = fopen(copy_filepath, "w+");
 
-	if ( !file ) {
+	if ( !file_p ) {
 		as_error_update(&err, AEROSPIKE_ERR_LUA_FILE_NOT_FOUND, "cannot open script file");
 		goto CLEANUP;
 	}
@@ -135,15 +135,20 @@ PyObject * AerospikeClient_UDF_Put(AerospikeClient * self, PyObject *args, PyObj
 	int size = 0;
 
 	uint8_t * buff = bytes;
-	int read  = (int)fread(buff, 1, LUA_FILE_BUFFER_FRAME, file);
-	int write = (int)fwrite(buff, 1, LUA_FILE_BUFFER_FRAME, copy_file);
+	int read  = (int)fread(buff, 1, LUA_FILE_BUFFER_FRAME, file_p);
+	int write = (int)fwrite(buff, 1, LUA_FILE_BUFFER_FRAME, copy_file_p);
 	while ( read ) {
 		size += read;
 		buff += read;
-		read = (int)fread(buff, 1, LUA_FILE_BUFFER_FRAME, file);
-		write = (int)fwrite(buff, 1, LUA_FILE_BUFFER_FRAME, copy_file);
+		read = (int)fread(buff, 1, LUA_FILE_BUFFER_FRAME, file_p);
+		write = (int)fwrite(buff, 1, LUA_FILE_BUFFER_FRAME, copy_file_p);
 	}
-	fclose(file);
+	if (file_p) {
+		fclose(file_p);
+	}
+	if (copy_file_p) {
+		fclose(copy_file_p);
+	}
 
 	as_bytes_init_wrap(&content, bytes, size, true);
 
