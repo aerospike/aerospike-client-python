@@ -98,16 +98,6 @@ PyObject * AerospikeClient_UDF_Put(AerospikeClient * self, PyObject *args, PyObj
 		goto CLEANUP;
 	}
 
-	char copy_filepath[AS_CONFIG_PATH_MAX_LEN] = {0};
-	uint32_t user_path_len = strlen(self->as->config.lua.user_path);
-	memcpy( copy_filepath,
-			self->as->config.lua.user_path,
-			user_path_len);
-	memcpy( copy_filepath + user_path_len, "/", 1);
-	memcpy( copy_filepath + user_path_len + 1, filename, strlen(filename));
-	copy_filepath[user_path_len + 1 + strlen(filename)] = '\0';
-
-
 	// Convert python object to policy_info
 	pyobject_to_policy_info( &err, py_policy, &info_policy, &info_policy_p,
 			&self->as->config.policies.info);
@@ -119,7 +109,6 @@ PyObject * AerospikeClient_UDF_Put(AerospikeClient * self, PyObject *args, PyObj
 	// Convert lua file to content
 	as_bytes content;
 	FILE * file = fopen(filename,"r");
-	FILE * copy_file = fopen(copy_filepath, "w+");
 
 	if ( !file ) {
 		as_error_update(&err, AEROSPIKE_ERR_LUA_FILE_NOT_FOUND, "cannot open script file");
@@ -135,13 +124,11 @@ PyObject * AerospikeClient_UDF_Put(AerospikeClient * self, PyObject *args, PyObj
 	int size = 0;
 
 	uint8_t * buff = bytes;
-	int read  = (int)fread(buff, 1, LUA_FILE_BUFFER_FRAME, file);
-	int write = (int)fwrite(buff, 1, LUA_FILE_BUFFER_FRAME, copy_file);
+	int read = (int)fread(buff, 1, 512, file);
 	while ( read ) {
 		size += read;
 		buff += read;
-		read = (int)fread(buff, 1, LUA_FILE_BUFFER_FRAME, file);
-		write = (int)fwrite(buff, 1, LUA_FILE_BUFFER_FRAME, copy_file);
+		read = (int)fread(buff, 1, 512, file);
 	}
 	fclose(file);
 

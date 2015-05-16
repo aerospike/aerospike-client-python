@@ -33,8 +33,8 @@ class TestAggregate(TestBaseClass):
         filename = "stream_example.lua"
         udf_type = aerospike.UDF_TYPE_LUA
         status = client.udf_put(filename, udf_type)
-        #shutil.copyfile(filename, config['lua']['user_path'] +
-        #    'stream_example.lua')
+        shutil.copyfile(filename, config['lua']['user_path'] +
+            'stream_example.lua')
         client.close()
 
     def teardown_class(cls):
