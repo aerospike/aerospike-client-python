@@ -120,6 +120,8 @@ Query Class --- :class:`Query`
         :param str function: the name of the Lua function within the *module*.
         :param list arguments: optional arguments to pass to the *function*.
 
+        .. seealso:: `Developing Stream UDFs <http://www.aerospike.com/docs/udf/developing_stream_udfs.html>`_
+
         .. note::
 
             Assume we registered the following Lua module with the cluster as \
@@ -174,7 +176,9 @@ Query Class --- :class:`Query`
                 from aerospike import predicates as p
                 import pprint
 
-                config = { 'hosts': [('127.0.0.1', 3000)] }
+                config = {'hosts': [('127.0.0.1', 3000)],
+                          'lua': {'system_path':'/usr/local/aerospike/lua/',
+                                  'user_path':'/usr/local/aerospike/user-lua/'}}
                 client = aerospike.client(config).connect()
 
                 pp = pprint.PrettyPrinter(indent=2)
@@ -183,6 +187,14 @@ Query Class --- :class:`Query`
                 query.apply('stream_udf', 'group_count', [ 'first_name' ])
                 names = query.results()
                 pp.pprint(names)
+
+            With stream UDFs, the final reduce steps (which ties
+            the results from the reducers of the cluster nodes) executes on the
+            client-side. Explicitly setting the Lua ``user_path`` in the
+            config helps the client find the local copy of the module
+            containing the stream UDF. The ``system_path`` is constructed when
+            the Python package is installed, and contains system modules such
+            as ``aerospike.lua``, ``as.lua``, and ``stream_ops.lua``.
 
 
 .. _aerospike_query_policies:

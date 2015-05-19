@@ -37,10 +37,10 @@ $: py.test -v [options]
 [Pytest usage]:http://pytest.org/latest/usage.html
 
 To set the server details, modify the file config.conf
-If a community-edition server is to be used specify the list of hosts in the [community-edition] section. You can remove the [enterprise-edition] section
+If a community-edition server is to be used specify the list of hosts in the `[community-edition]` section. You can remove the `[enterprise-edition]` section
 or leave its options empty.
 
-If an enterprise-edition server is to be used, specify the list of hosts in the [enterprise-edition] section along with the username and password.
+If an enterprise-edition server is to be used, specify the list of hosts in the `[enterprise-edition]` section along with the username and password.
 
 Hosts values are `address:port`, with multiple hosts separated by a semi-colon.
 

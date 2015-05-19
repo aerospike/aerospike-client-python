@@ -75,6 +75,7 @@ Client Class --- :class:`Client`
     .. method:: close()
 
         Close all connections to the cluster.
+
     .. method:: get(key[, policy]) -> (key, meta, bins)
 
         Read a record with a given *key*, and return the record as a \
@@ -99,12 +100,12 @@ Client Class --- :class:`Client`
                 # assuming a record with such a key exists in the cluster
                 key = ('test', 'demo', 1)
                 (key, meta, bins) = client.get(key)
-
-                print(key)
-                print('--------------------------')
-                print(meta)
-                print('--------------------------')
-                print(bins)
+                if meta != None:
+                    print(key)
+                    print('--------------------------')
+                    print(meta)
+                    print('--------------------------')
+                    print(bins)
                 client.close()
             except AerospikeError as e:
                 print("Error: {0} [{1}]".format(e.msg, e.code))
@@ -807,6 +808,8 @@ Client Class --- :class:`Client`
         :param str function: the name of the UDF to apply to the record identified by *key*.
         :param list args: the arguments to the UDF.
         :param dict policy: optional write policies :ref:`aerospike_write_policies`.
+        :return: the value optionally returned by the UDF, one of :class:`str`,\ 
+                 :class:`int`, :class:`bytearray`, :class:`list`, :class:`dict`.
         :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
 
         .. seealso:: `Record UDF <http://www.aerospike.com/docs/guide/record_udf.html>`_ \
