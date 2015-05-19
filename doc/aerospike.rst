@@ -44,8 +44,8 @@ containing the keys of all records in the set.
 
             * **hosts** a required :class:`list` of (address, port) tuples identifying the cluster
             * **lua** an optional class:`dict` containing the paths to two types of Lua modules
-              * **system_path** the location of the system modules such as ``aerospike.lua``, ``stream_ops.lua``
-              * **user_path** the location of the user's record and stream UDFs
+                * **system_path** the location of the system modules such as ``aerospike.lua``, ``stream_ops.lua``
+                * **user_path** the location of the user's record and stream UDFs
             * **policies** a :class:`dict` of policies
                 * **timeout** default timeout in milliseconds
                 * **key** default key policy for this client
