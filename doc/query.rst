@@ -13,13 +13,17 @@ Query Class --- :class:`Query`
 
     The Query object created by calling :meth:`aerospike.Client.query` is used \
     for executing queries over a secondary index of a specified set (which \
-    can be ommitted or ``None``).
+    can be ommitted or ``None``). For queries, the ``None`` set contains those \
+    records which are not part of any named set.
 
     The Query can (optionally) be assigned one of the \
     :mod:`~aerospike.predicates` (:meth:`~aerospike.predicates.between` \
-    or :meth:`~aerospike.predicates.equals`) using :meth:`where`, then \
-    invoked using either :meth:`foreach` or :meth:`results`. The bins returned \
-    can be filtered by using :meth:`select`.
+    or :meth:`~aerospike.predicates.equals`) using :meth:`where`. A query \
+    without a predicate will match all the records in the given set, similar \
+    to a :class:`~aerospike.Scan`.
+
+    The query is invoked using either :meth:`foreach` or :meth:`results`. \
+    The bins returned can be filtered by using :meth:`select`.
 
     Finally, a `stream UDF <http://www.aerospike.com/docs/udf/developing_stream_udfs.html>`_ \
     may be applied with :meth:`apply`. It will aggregate results out of the \
@@ -114,7 +118,10 @@ Query Class --- :class:`Query`
 
     .. method:: apply(module, function[, arguments])
 
-        Aggregate the :meth:`results` using a stream `UDF <http://www.aerospike.com/docs/guide/udf.html>`_.
+        Aggregate the :meth:`results` using a stream \
+        `UDF <http://www.aerospike.com/docs/guide/udf.html>`_. If no \
+        predicate is attached to the  :class:`~aerospike.Query` the stream UDF \
+        will aggregate over all the records in the specified set.
 
         :param str module: the name of the Lua module.
         :param str function: the name of the Lua function within the *module*.

@@ -688,7 +688,9 @@ Client Class --- :class:`Client`
     .. method:: scan(namespace[, set]) -> Scan
 
         Return a :class:`aerospike.Scan` object to be used for executing scans \
-        over a specified *set* (which can be ommitted or `None`) in a *namespace*.
+        over a specified *set* (which can be ommitted or ``None``) in a \
+        *namespace*. A scan with a ``None`` set returns all the records in the \
+        namespace.
 
         :param str namespace: a list of :ref:`aerospike_key_tuple`.
         :param str set: optional specified set name, otherwise the entire \

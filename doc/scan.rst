@@ -11,6 +11,13 @@ Scan Class --- :class:`Scan`
 
 .. class:: Scan
 
+    The Scan object is used to return all the records in a specified set (which \
+    can be ommitted or ``None``). A Scan with a ``None`` set returns all the \
+    records in the namespace.
+
+    The scan is invoked using either :meth:`foreach` or :meth:`results`. The \
+    bins returned can be filtered using :meth:`select`.
+
     .. seealso::
         `Scans <http://www.aerospike.com/docs/guide/scan.html>`_ and \
         `Managing Scans <http://www.aerospike.com/docs/operations/manage/scans/>`_.
