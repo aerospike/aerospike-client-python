@@ -64,6 +64,15 @@ PyObject * AerospikeClient_Close(AerospikeClient * self, PyObject * args, PyObje
 		return NULL;
 	}
 	self->is_conn_16 = false;
+
+	/*
+	 * Need to free memory allocated to host address string
+	 * in AerospikeClient_Type_Init.
+	 */ 
+	for( int i = 0; i < self->as->config.hosts_size; i++) {
+		free(self->as->config.hosts[i].addr);
+	}
+
 	aerospike_destroy(self->as);
 	self->as = NULL;
 
