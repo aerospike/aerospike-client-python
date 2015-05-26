@@ -91,6 +91,8 @@ static int AerospikeScan_Type_Init(AerospikeScan * self, PyObject * args, PyObje
 			set = PyString_AsString(py_ustr);
 		} else if (PyString_Check(py_set)) {
 			set = PyString_AsString(py_set);
+		} else if ( Py_None == py_set ) {
+			set = NULL;
 		}
 	} else {
 		return -1;
