@@ -98,6 +98,23 @@ class TestScan(TestBaseClass):
 
         assert len(records) != 0
 
+    def test_scan_with_existent_ns_and_none_set(self):
+
+        ns = 'test'
+        st = 'demo'
+
+        records = []
+        scan_obj = None
+
+        def callback((key, meta, bins)):
+            records.append(bins)
+
+        scan_obj = self.client.scan(ns, None)
+
+        scan_obj.foreach(callback)
+
+        assert len(records) != 0
+
     def test_scan_with_timeout_policy(self):
 
         ns = 'test'
