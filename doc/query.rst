@@ -115,6 +115,33 @@ Query Class --- :class:`Query`
             query.foreach(matched_names, {'timeout':2000})
             pp.pprint(names)
 
+        .. note:: To stop the stream return ``False`` from the callback function.
+
+        .. code-block:: python
+
+            from __future__ import print_function
+            import aerospike
+            from aerospike import predicates as p
+
+            config = { 'hosts': [ ('127.0.0.1',3000)]}
+            client = aerospike.client(config).connect()
+
+            def limit(lim, result):
+                c = [0]
+                def key_add((key, metadata, bins)):
+                    if c[0] < lim:
+                        result.append(key)
+                        c[0] = c[0] + 1
+                    else:
+                        return False
+                return key_add
+
+            query = client.query('test','user')
+            query.where(p.between('age', 20, 30))
+            keys = []
+            query.foreach(limit(100, keys))
+            print(len(keys)) # this will be 100 if there number of matching records > 100
+            client.close()
 
     .. method:: apply(module, function[, arguments])
 

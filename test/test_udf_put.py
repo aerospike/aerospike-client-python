@@ -105,8 +105,6 @@ class TestUdfPut(TestBaseClass):
 
         try:
             TestUdfPut.client.udf_put( filename, udf_type, policy )
-        except UDFError as e:
-            assert e.code == 100
         except LuaFileNotFound as e:
             assert e.code == 1302
 

@@ -6,6 +6,7 @@ class TestBaseClass(object):
     hostlist = []
     user = None
     password = None
+    has_ldt = None
 
     @staticmethod
     def get_hosts():
@@ -36,4 +37,26 @@ class TestBaseClass(object):
                 host[1] = int(host[1])
                 hosts.append(tuple(host))
         return hosts
+
+    @staticmethod
+    def has_ldt_support():
+        if TestBaseClass.has_ldt is not None:
+            return TestBaseClass.has_ldt
+        import aerospike
+        hostlist, user, password = TestBaseClass.get_hosts()
+        config = {'hosts': hostlist}
+        if user == None and password == None:
+            client = aerospike.client(config).connect()
+        else:
+            client = aerospike.client(config).connect(user, password)
+        response = client.info('get-config:context=namespace;id=test', config['hosts'])
+        namespace_config = response.values()[0][1]
+        if namespace_config.find('ldt-enabled=true') == -1:
+            TestBaseClass.has_ldt = False
+        else:
+            TestBaseClass.has_ldt = True
+        client.close()
+        return TestBaseClass.has_ldt
+
+
 

@@ -12,7 +12,12 @@ except:
     print "Please install aerospike python client."
     sys.exit(1)
 
-class TestLList(object):
+
+class TestLList(TestBaseClass):
+
+    pytestmark = pytest.mark.skipif(
+        TestBaseClass.has_ldt_support() == False,
+        reason="LDTs are not enabled for namespace 'test'")
 
     llist_integer = None
     llist_string = None
@@ -20,39 +25,35 @@ class TestLList(object):
     key1 = None
     key2 = None
 
-    def setup_class(cls):
+    def setup_class(self):
 
         print "setup class invoked..."
         hostlist, user, password = TestBaseClass.get_hosts()
         config = {'hosts': hostlist}
         if user == None and password == None:
-            TestLList.client = aerospike.client(config).connect()
+            self.client = aerospike.client(config).connect()
         else:
-            TestLList.client = aerospike.client(config).connect(user, password)
+            self.client = aerospike.client(config).connect(user, password)
 
         TestLList.key1 = ('test', 'demo', 'integer_llist_ky')
-
         TestLList.llist_integer = TestLList.client.llist(TestLList.key1,
                                                          'integer_bin')
-
         TestLList.key2 = ('test', 'demo', 'string_llist_ky')
-
         TestLList.llist_string = TestLList.client.llist(TestLList.key2,
                                                         'string_bin')
-
         TestLList.key3 = ('test', 'demo', 'float_llist_ky')
-
         TestLList.llist_float = TestLList.client.llist(TestLList.key3,
                                                        'float_bin')
 
-    def teardown_class(cls):
+
+    def teardown_class(self):
         print "teardown class invoked..."
 
         TestLList.llist_integer.destroy()
 
         TestLList.llist_string.destroy()
 
-        cls.client.close()
+        self.client.close()
 
     #Add() - Add an object to the llist.
     #Get() - Get an object from the llist.
@@ -71,7 +72,6 @@ class TestLList(object):
         assert 1 == TestLList.llist_integer.size()
 
     #Add() - Add() unsupported type data to llist.
-    #@pytest.mark.skipif("True")
     def test_llist_add_float_positive(self):
         """
             Invoke add() float type data.

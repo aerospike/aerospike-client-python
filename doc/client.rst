@@ -818,7 +818,7 @@ Client Class --- :class:`Client`
           and `Developing Record UDFs <http://www.aerospike.com/docs/udf/developing_record_udfs.html>`_.
 
 
-    .. method:: scan_apply(ns, set, module, function[, args[, policy[, options]]])
+    .. method:: scan_apply(ns, set, module, function[, args[, policy[, options]]]) -> int
 
         Initiate a background scan and apply a record UDF to each record matched by the scan.
 
@@ -829,7 +829,7 @@ Client Class --- :class:`Client`
         :param list args: the arguments to the UDF.
         :param dict policy: optional scan policies :ref:`aerospike_scan_policies`.
         :param dict options: the :ref:`aerospike_scan_options` that will apply to the scan.
-        :rtype: class:`int`
+        :rtype: :class:`int`
         :return: a scan ID that can be used with :meth:`scan_info` to track the status of the scan, as it runs in the background.
         :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
 
@@ -837,7 +837,7 @@ Client Class --- :class:`Client`
           and `Developing Record UDFs <http://www.aerospike.com/docs/udf/developing_record_udfs.html>`_.
 
 
-    .. method:: scan_info(scan_id)
+    .. method:: scan_info(scan_id) -> dict
 
         Return the status of a scan running in the background.
 

@@ -115,6 +115,11 @@ class TestInfo(object):
         """
         Test info for secondary index creation
         """
+        try:
+            TestInfo.client.index_remove('test','names_test_index')
+            time.sleep(3)
+        except:
+            pass
         key = ('test', 'demo', 'list_key')
 
         rec = {'names': ['John', 'Marlen', 'Steve']}
@@ -123,12 +128,10 @@ class TestInfo(object):
         response = TestInfo.client.info(
             'sindex-create:ns=test;set=demo;indexname=names_test_index;indexdata=names,string',
             TestInfo.config['hosts'])
-        time.sleep(2)
+        print(response)
+        time.sleep(3)
         TestInfo.client.remove(key)
         response = TestInfo.client.info('sindex', TestInfo.config['hosts'])
-        TestInfo.client.info('sindex-delete:ns=test;indexname=names_test_index',
-                             TestInfo.config['hosts'])
-
         flag = 0
         for keys in response.keys():
             for value in response[keys]:
