@@ -64,9 +64,9 @@ static int AerospikeQuery_Where_Add(AerospikeQuery * self, as_predicate_type pre
 			if ( in_datatype == AS_INDEX_STRING ){
 				if (PyUnicode_Check(py_bin)){
 					py_ubin = PyUnicode_AsUTF8String(py_bin);
-					bin = PyString_AsString(py_ubin);
+					bin = strdup(PyString_AsString(py_ubin));
 				} else if (PyString_Check(py_bin) ){
-					bin = PyString_AsString(py_bin);
+					bin = strdup(PyString_AsString(py_bin));
 				}
 				else {
 					return 1;
@@ -104,9 +104,9 @@ static int AerospikeQuery_Where_Add(AerospikeQuery * self, as_predicate_type pre
 			else if ( in_datatype == AS_INDEX_NUMERIC ){
 				if (PyUnicode_Check(py_bin)){
 					py_ubin = PyUnicode_AsUTF8String(py_bin);
-					bin = PyString_AsString(py_ubin);
+					bin = strdup(PyString_AsString(py_ubin));
 				} else if (PyString_Check(py_bin) ){
-					bin = PyString_AsString(py_bin);
+					bin = strdup(PyString_AsString(py_bin));
 				}
 				else {
 					return 1;
@@ -145,9 +145,9 @@ static int AerospikeQuery_Where_Add(AerospikeQuery * self, as_predicate_type pre
 			if ( in_datatype == AS_INDEX_NUMERIC) {
 				if (PyUnicode_Check(py_bin)){
 					py_ubin = PyUnicode_AsUTF8String(py_bin);
-					bin = PyString_AsString(py_ubin);
+					bin = strdup(PyString_AsString(py_ubin));
 				} else if (PyString_Check(py_bin)){
-					bin = PyString_AsString(py_bin);
+					bin = strdup(PyString_AsString(py_bin));
 				}
 				else {
 					return 1;
