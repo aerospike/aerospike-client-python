@@ -98,20 +98,6 @@ PyObject * AerospikeClient_UDF_Put(AerospikeClient * self, PyObject *args, PyObj
 		goto CLEANUP;
 	}
 
-	char copy_filepath[AS_CONFIG_PATH_MAX_LEN] = {0};
-	uint32_t user_path_len = strlen(self->as->config.lua.user_path);
-	memcpy( copy_filepath,
-			self->as->config.lua.user_path,
-			user_path_len);
-	memcpy( copy_filepath + user_path_len, "/", 1);
-	if (filename[0] == '/') {
-		char * extracted_filename  = strrchr(filename, '/');
-		memcpy( copy_filepath + user_path_len + 1, extracted_filename + 1, strlen(extracted_filename) - 1);
-		copy_filepath[user_path_len + strlen(extracted_filename)] = '\0';
-	} else {
-		memcpy( copy_filepath + user_path_len + 1, filename, strlen(filename));
-		copy_filepath[user_path_len + 1 + strlen(filename)] = '\0';
-	}
 
 	// Convert python object to policy_info
 	pyobject_to_policy_info( &err, py_policy, &info_policy, &info_policy_p,
@@ -124,7 +110,26 @@ PyObject * AerospikeClient_UDF_Put(AerospikeClient * self, PyObject *args, PyObj
 	// Convert lua file to content
 	as_bytes content;
 	FILE * file_p = fopen(filename,"r");
-	FILE * copy_file_p = fopen(copy_filepath, "w+");
+	FILE * copy_file_p = NULL;
+
+	if(strcmp(self->as->config.lua.user_path, ".")) {
+		char copy_filepath[AS_CONFIG_PATH_MAX_LEN] = {0};
+		uint32_t user_path_len = strlen(self->as->config.lua.user_path);
+		memcpy( copy_filepath,
+			self->as->config.lua.user_path,
+			user_path_len);
+		memcpy( copy_filepath + user_path_len, "/", 1);
+		if (filename[0] == '/') {
+			char * extracted_filename  = strrchr(filename, '/');
+			memcpy( copy_filepath + user_path_len + 1, extracted_filename + 1, strlen(extracted_filename) - 1);
+			copy_filepath[user_path_len + strlen(extracted_filename)] = '\0';
+		} else {
+			memcpy( copy_filepath + user_path_len + 1, filename, strlen(filename));
+			copy_filepath[user_path_len + 1 + strlen(filename)] = '\0';
+		}
+
+		copy_file_p = fopen(copy_filepath, "w+");
+	}
 
 	if ( !file_p ) {
 		as_error_update(&err, AEROSPIKE_ERR_LUA_FILE_NOT_FOUND, "cannot open script file");
@@ -140,13 +145,22 @@ PyObject * AerospikeClient_UDF_Put(AerospikeClient * self, PyObject *args, PyObj
 	int size = 0;
 
 	uint8_t * buff = bytes;
-	int read  = (int)fread(buff, 1, LUA_FILE_BUFFER_FRAME, file_p);
-	int write = (int)fwrite(buff, 1, read, copy_file_p);
-	while ( read ) {
-		size += read;
-		buff += read;
-		read = (int)fread(buff, 1, LUA_FILE_BUFFER_FRAME, file_p);
-		write = (int)fwrite(buff, 1, read, copy_file_p);
+	if (copy_file_p) {
+		int read  = (int)fread(buff, 1, LUA_FILE_BUFFER_FRAME, file_p);
+		int write = (int)fwrite(buff, 1, read, copy_file_p);
+		while ( read ) {
+			size += read;
+			buff += read;
+			read = (int)fread(buff, 1, LUA_FILE_BUFFER_FRAME, file_p);
+			write = (int)fwrite(buff, 1, read, copy_file_p);
+		}
+	} else {
+		int read  = (int)fread(buff, 1, LUA_FILE_BUFFER_FRAME, file_p);
+		while ( read ) {
+			size += read;
+			buff += read;
+			read = (int)fread(buff, 1, LUA_FILE_BUFFER_FRAME, file_p);
+		}
 	}
 	if (file_p) {
 		fclose(file_p);
