@@ -104,9 +104,14 @@ PyObject * AerospikeClient_UDF_Put(AerospikeClient * self, PyObject *args, PyObj
 			self->as->config.lua.user_path,
 			user_path_len);
 	memcpy( copy_filepath + user_path_len, "/", 1);
-	memcpy( copy_filepath + user_path_len + 1, filename, strlen(filename));
-	copy_filepath[user_path_len + 1 + strlen(filename)] = '\0';
-
+	if (filename[0] == '/') {
+		char * extracted_filename  = strrchr(filename, '/');
+		memcpy( copy_filepath + user_path_len + 1, extracted_filename + 1, strlen(extracted_filename) - 1);
+		copy_filepath[user_path_len + strlen(extracted_filename)] = '\0';
+	} else {
+		memcpy( copy_filepath + user_path_len + 1, filename, strlen(filename));
+		copy_filepath[user_path_len + 1 + strlen(filename)] = '\0';
+	}
 
 	// Convert python object to policy_info
 	pyobject_to_policy_info( &err, py_policy, &info_policy, &info_policy_p,
@@ -136,12 +141,12 @@ PyObject * AerospikeClient_UDF_Put(AerospikeClient * self, PyObject *args, PyObj
 
 	uint8_t * buff = bytes;
 	int read  = (int)fread(buff, 1, LUA_FILE_BUFFER_FRAME, file_p);
-	int write = (int)fwrite(buff, 1, LUA_FILE_BUFFER_FRAME, copy_file_p);
+	int write = (int)fwrite(buff, 1, read, copy_file_p);
 	while ( read ) {
 		size += read;
 		buff += read;
 		read = (int)fread(buff, 1, LUA_FILE_BUFFER_FRAME, file_p);
-		write = (int)fwrite(buff, 1, LUA_FILE_BUFFER_FRAME, copy_file_p);
+		write = (int)fwrite(buff, 1, read, copy_file_p);
 	}
 	if (file_p) {
 		fclose(file_p);
