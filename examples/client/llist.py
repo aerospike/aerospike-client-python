@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 ################################################################################
-# Copyright 2013-2014 Aerospike, Inc.
+# Copyright 2013-2015 Aerospike, Inc.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -18,6 +18,7 @@
 from __future__ import print_function
 
 import aerospike
+from aerospike.exception import *
 import sys
 
 from optparse import OptionParser
@@ -26,7 +27,7 @@ from optparse import OptionParser
 # Options Parsing
 ################################################################################
 
-usage = "usage: %prog [options] key"
+usage = "usage: %prog [options]"
 
 optparser = OptionParser(usage=usage, add_help_option=False)
 
@@ -50,22 +51,9 @@ optparser.add_option(
     "-p", "--port", dest="port", type="int", default=3000, metavar="<PORT>",
     help="Port of the Aerospike server.")
 
-optparser.add_option(
-    "-n", "--namespace", dest="namespace", type="string", default="test", metavar="<NS>",
-    help="Port of the Aerospike server.")
-
-optparser.add_option(
-    "-s", "--set", dest="set", type="string", default="demo", metavar="<SET>",
-    help="Port of the Aerospike server.")
-
 (options, args) = optparser.parse_args()
 
 if options.help:
-    optparser.print_help()
-    print()
-    sys.exit(1)
-
-if len(args) != 1:
     optparser.print_help()
     print()
     sys.exit(1)
@@ -75,60 +63,68 @@ if len(args) != 1:
 ################################################################################
 
 config = {
-    'hosts': [ (options.host, options.port) ]
+    'hosts': [(options.host, options.port)],
+    'lua': {'user_path': '.'}
 }
 
 ################################################################################
 # Application
 ################################################################################
 
-exitCode = 0
+try:
+    client = aerospike.client(config).connect(options.username, options.password)
+except ClientError as e:
+    print("Error: {0} [{1}]".format(e.msg, e.code))
+    sys.exit(1)
+
+key = ('test', 'articles', 'The Number One Soft Drink')
+tags = client.llist(key, 'tags')
+try:
+    print("Demonstrating an LList with string type elements")
+    print("================================================")
+    tags.add("soda")
+    tags.add_many(["slurm","addictive","prizes","diet","royal slurm","glurmo"])
+except LDTError as e:
+    print("Error while adding tags: {0} [{1}]".format(e.msg, e.code))
+
+print("The entire list of elements:")
+print(tags.filter())
+print("The first two elements:")
+print(tags.find_first(2))
+print("Removing the element 'prizes'")
+try:
+    tags.remove("prizes")
+except:
+    pass
+print("The three elements from the end:")
+print(tags.find_last(3))
+print("A couple of elements from 'glurmo':")
+print(tags.find_from("glurmo", 2))
+
+comments = client.llist(key, 'comments')
+try:
+    print("\n")
+    print("Demonstrating an LList with map (dict) type elements")
+    print("====================================================")
+    comments.add({'key':'comment-1', 'user':'blorgulax', 'body': 'First!'})
+    comments.add({'key':'comment-2', 'user':'fry',
+        'body':'You deserve a Slurmie','parent': 'comment-1'})
+    n = comments.size() + 1
+    comments.add({'key':'comment-' + str(n), 'user':'curlyjoe',
+        'body': 'make it an implosion'})
+    comments.add({'key':'comment-4', 'user':'queen slurm',
+        'body':"Honey comes out of a bee's behind...",'parent': 'comment-1'})
+except LDTError as e:
+    print("Error while adding comments: {0} [{1}]".format(e.msg, e.code))
+
+print("Getting the first comment:")
+print(comments.get("comment-1"))
 
 try:
+    # Clean-up
+    tags.destroy()
+    comments.destroy()
+except:
+    pass
+client.close()
 
-    # ----------------------------------------------------------------------------
-    # Connect to Cluster
-    # ----------------------------------------------------------------------------
-
-    client = aerospike.client(config).connect(options.username, options.password)
-
-    # ----------------------------------------------------------------------------
-    # Perform Operation
-    # ----------------------------------------------------------------------------
-
-    try:
-        
-        namespace = options.namespace if options.namespace and options.namespace != 'None' else None
-        set = options.set if options.set and options.set != 'None' else None
-
-        keys = list(args)
-        print keys
-        records = client.exists_many(keys)
-
-        if records != None:
-            print(records)
-            print("---")
-            print("OK, %d records found." % len(records))
-        else:
-            print('error: Not Found.', file=sys.stderr)
-            exitCode = 1
-
-    except Exception, eargs:
-        print("error: {0}".format(eargs), file=sys.stderr)
-        exitCode = 2
-
-    # ----------------------------------------------------------------------------
-    # Close Connection to Cluster
-    # ----------------------------------------------------------------------------
-
-    client.close()
-
-except Exception, eargs:
-    print("error: {0}".format(eargs), file=sys.stderr)
-    exitCode = 3
-
-################################################################################
-# Exit
-################################################################################
-
-sys.exit(exitCode)

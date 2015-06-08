@@ -58,7 +58,7 @@ Query Class --- :class:`Query`
         Buffer the records resulting from the query, and return them as a \
         :class:`list` of records.
 
-        :param dict policy: optional query policies :ref:`aerospike_query_policies`.
+        :param dict policy: optional :ref:`aerospike_query_policies`.
         :return: a :class:`list` of :ref:`aerospike_record_tuple`.
 
         .. code-block:: python
@@ -89,7 +89,7 @@ Query Class --- :class:`Query`
         from the query.
 
         :param callable callback: the function to invoke for each record.
-        :param dict policy: optional query policies :ref:`aerospike_query_policies`.
+        :param dict policy: optional :ref:`aerospike_query_policies`.
 
         .. seealso:: The :ref:`aerospike_record_tuple`.
 

@@ -35,7 +35,7 @@ Scan Class --- :class:`Scan`
         Buffer the records resulting from the scan, and return them as a \
         :class:`list` of records.
 
-        :param dict policy: optional scan policies :ref:`aerospike_scan_policies`.
+        :param dict policy: optional :ref:`aerospike_scan_policies`.
         :return: a :class:`list` of :ref:`aerospike_record_tuple`.
 
         .. code-block:: python
@@ -84,7 +84,7 @@ Scan Class --- :class:`Scan`
         from the scan.
 
         :param callable callback: the function to invoke for each record.
-        :param dict policy: optional scan policies :ref:`aerospike_scan_policies`.
+        :param dict policy: optional :ref:`aerospike_scan_policies`.
         :param dict options: the :ref:`aerospike_scan_options` that will apply \
            to the scan.
 
