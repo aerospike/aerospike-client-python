@@ -11,6 +11,13 @@ Scan Class --- :class:`Scan`
 
 .. class:: Scan
 
+    The Scan object is used to return all the records in a specified set (which \
+    can be ommitted or ``None``). A Scan with a ``None`` set returns all the \
+    records in the namespace.
+
+    The scan is invoked using either :meth:`foreach` or :meth:`results`. The \
+    bins returned can be filtered using :meth:`select`.
+
     .. seealso::
         `Scans <http://www.aerospike.com/docs/guide/scan.html>`_ and \
         `Managing Scans <http://www.aerospike.com/docs/operations/manage/scans/>`_.
@@ -28,7 +35,7 @@ Scan Class --- :class:`Scan`
         Buffer the records resulting from the scan, and return them as a \
         :class:`list` of records.
 
-        :param dict policy: optional scan policies :ref:`aerospike_scan_policies`.
+        :param dict policy: optional :ref:`aerospike_scan_policies`.
         :return: a :class:`list` of :ref:`aerospike_record_tuple`.
 
         .. code-block:: python
@@ -76,8 +83,8 @@ Scan Class --- :class:`Scan`
         Invoke the *callback* function for each of the records streaming back \
         from the scan.
 
-        :param callback callback: the function to invoke for each record.
-        :param dict policy: optional scan policies :ref:`aerospike_scan_policies`.
+        :param callable callback: the function to invoke for each record.
+        :param dict policy: optional :ref:`aerospike_scan_policies`.
         :param dict options: the :ref:`aerospike_scan_options` that will apply \
            to the scan.
 

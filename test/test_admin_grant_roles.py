@@ -6,7 +6,11 @@ import time
 from test_base_class import TestBaseClass
 
 aerospike = pytest.importorskip("aerospike")
-
+try:
+    from aerospike.exception import *
+except:
+    print "Please install aerospike python client."
+    sys.exit(1)
 
 class TestGrantRoles(TestBaseClass):
 
@@ -28,8 +32,7 @@ class TestGrantRoles(TestBaseClass):
         password = "foo2"
         roles = ["read-write"]
 
-        status = self.client.admin_create_user(policy, user, password, roles,
-                                               len(roles))
+        status = self.client.admin_create_user( user, password, roles, policy )
 
         self.delete_users = []
 
@@ -40,7 +43,7 @@ class TestGrantRoles(TestBaseClass):
 
         policy = {}
 
-        self.client.admin_drop_user(policy, "example")
+        self.client.admin_drop_user( "example", policy )
 
         self.client.close()
 
@@ -49,7 +52,7 @@ class TestGrantRoles(TestBaseClass):
         with pytest.raises(TypeError) as typeError:
             self.client.admin_grant_roles()
 
-        assert "Required argument 'policy' (pos 1) not found" in typeError.value
+        assert "Required argument 'user' (pos 1) not found" in typeError.value
 
     def test_grant_roles_with_proper_parameters(self):
 
@@ -57,19 +60,27 @@ class TestGrantRoles(TestBaseClass):
         user = "example"
         roles = ["read", "read-write", "sys-admin"]
 
-        status = self.client.admin_grant_roles(policy, user, roles, len(roles))
+        status = self.client.admin_grant_roles(user, roles, policy)
         assert status == 0
         time.sleep(2)
 
-        user_details = self.client.admin_query_user(policy, user)
+        user_details = self.client.admin_query_user( user, policy )
 
-        assert user_details == [{
-            'roles': ['sys-admin',
-                      'read',
-                      'read-write', ],
-            'roles_size': 3,
-            'user': 'example'
-        }]
+        assert user_details == ['read', 'read-write', 'sys-admin']
+
+    def test_grant_roles_with_proper_parameters_without_policy(self):
+
+        policy = {'timeout': 1000}
+        user = "example"
+        roles = ["read", "read-write", "sys-admin"]
+
+        status = self.client.admin_grant_roles(user, roles)
+        assert status == 0
+        time.sleep(2)
+
+        user_details = self.client.admin_query_user( user, policy )
+
+        assert user_details == ['read', 'read-write', 'sys-admin']
 
     def test_grant_roles_with_invalid_timeout_policy_value(self):
 
@@ -77,12 +88,12 @@ class TestGrantRoles(TestBaseClass):
         user = "example"
         roles = ['sys-admin']
 
-        with pytest.raises(Exception) as exception:
-            status = self.client.admin_grant_roles(policy, user, roles,
-                                                   len(roles))
+        try:
+            status = self.client.admin_grant_roles( user, roles, policy )
 
-        assert exception.value[0] == -2
-        assert exception.value[1] == "timeout is invalid"
+        except ParamError as exception:
+            assert exception.code == -2
+            assert exception.msg == "timeout is invalid"
 
     def test_grant_roles_with_proper_timeout_policy_value(self):
 
@@ -90,20 +101,15 @@ class TestGrantRoles(TestBaseClass):
         user = "example"
         roles = ["read-write", "sys-admin"]
 
-        status = self.client.admin_grant_roles(policy, user, roles, len(roles))
+        status = self.client.admin_grant_roles( user, roles )
 
         time.sleep(2)
 
         assert status == 0
 
-        user_details = self.client.admin_query_user({}, user)
+        user_details = self.client.admin_query_user( user )
 
-        assert user_details == [{
-            'roles': ['sys-admin',
-                      'read-write', ],
-            'roles_size': 2,
-            'user': 'example'
-        }]
+        assert user_details == ['read-write', 'sys-admin']
 
     def test_grant_roles_with_none_username(self):
 
@@ -111,12 +117,12 @@ class TestGrantRoles(TestBaseClass):
         user = None
         roles = ["sys-admin"]
 
-        with pytest.raises(Exception) as exception:
-            status = self.client.admin_grant_roles(policy, user, roles,
-                                                   len(roles))
+        try:
+            status = self.client.admin_grant_roles( user, roles, policy )
 
-        assert exception.value[0] == -2
-        assert exception.value[1] == "Username should be a string"
+        except ParamError as exception:
+            assert exception.code == -2
+            assert exception.msg == "Username should be a string"
 
     def test_grant_roles_with_empty_username(self):
 
@@ -124,12 +130,12 @@ class TestGrantRoles(TestBaseClass):
         user = ""
         roles = ["read-write"]
 
-        with pytest.raises(Exception) as exception:
-            status = self.client.admin_grant_roles(policy, user, roles,
-                                                   len(roles))
+        try:
+            status = self.client.admin_grant_roles( user, roles, policy )
 
-        assert exception.value[0] == 60
-        assert exception.value[1] == "AEROSPIKE_INVALID_USER"
+        except InvalidUser as exception:
+            assert exception.code == 60
+            assert exception.msg == "AEROSPIKE_INVALID_USER"
 
     def test_grant_roles_with_special_characters_in_username(self):
 
@@ -138,27 +144,21 @@ class TestGrantRoles(TestBaseClass):
         password = "abcd"
         roles = ["read-write"]
 
-        status = self.client.admin_create_user(policy, user, password, roles,
-                                               len(roles))
+        status = self.client.admin_create_user( user, password, roles, policy )
 
         assert status == 0
         roles = ["read"]
-        status = self.client.admin_grant_roles(policy, user, roles, len(roles))
+        status = self.client.admin_grant_roles( user, roles , policy )
 
         time.sleep(2)
 
         assert status == 0
 
-        user_details = self.client.admin_query_user({}, user)
+        user_details = self.client.admin_query_user( user )
 
-        assert user_details == [{
-            'roles': ['read', 'read-write'],
-            'roles_size': 2,
-            'user': '!#Q#AEQ@#$%&^*((^&*~~~````['
-        }]
+        assert user_details == ['read', 'read-write']
 
-        status = self.client.admin_drop_user(policy,
-                                             "!#Q#AEQ@#$%&^*((^&*~~~````[")
+        status = self.client.admin_drop_user( "!#Q#AEQ@#$%&^*((^&*~~~````[" )
         assert status == 0
 
     def test_grant_roles_with_empty_roles_list(self):
@@ -167,34 +167,9 @@ class TestGrantRoles(TestBaseClass):
         user = "example"
         roles = []
 
-        with pytest.raises(Exception) as exception:
-            status = self.client.admin_grant_roles(policy, user, roles,
-                                                   len(roles))
+        try:
+            status = self.client.admin_grant_roles( user, roles, policy )
 
-        assert exception.value[0] == 70
-        assert exception.value[1] == "AEROSPIKE_INVALID_ROLE"
-
-    def test_grant_roles_with_invalid_role(self):
-
-        policy = {'timeout': 1000}
-        user = "example"
-        roles = ["viewer"]
-
-        with pytest.raises(Exception) as exception:
-            status = self.client.admin_grant_roles(policy, user, roles,
-                                                   len(roles))
-
-        assert exception.value[0] == 70
-        assert exception.value[1] == "AEROSPIKE_INVALID_ROLE"
-
-    def test_grant_roles_with_different_roles_and_roles_size(self):
-
-        policy = {'timeout': 1000}
-        user = "example"
-        roles = ["read-write"]
-
-        with pytest.raises(Exception) as exception:
-            status = self.client.admin_grant_roles(policy, user, roles, 2)
-
-        assert exception.value[0] == 70
-        assert exception.value[1] == "AEROSPIKE_INVALID_ROLE"
+        except InvalidRole as exception:
+            assert exception.code == 70
+            assert exception.msg == "AEROSPIKE_INVALID_ROLE"

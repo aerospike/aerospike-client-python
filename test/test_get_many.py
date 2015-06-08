@@ -5,6 +5,11 @@ import sys
 from test_base_class import TestBaseClass
 
 aerospike = pytest.importorskip("aerospike")
+try:
+    from aerospike.exception import *
+except:
+    print "Please install aerospike python client."
+    sys.exit(1)
 
 class TestGetMany(TestBaseClass):
     def setup_class(cls):
@@ -71,11 +76,12 @@ class TestGetMany(TestBaseClass):
 
     def test_get_many_with_none_keys(self):
 
-        with pytest.raises(Exception) as exception:
-            TestGetMany.client.get_many(None, {})
+        try:
+            TestGetMany.client.get_many( None, {} )
 
-        assert exception.value[0] == -1
-        assert exception.value[1] == "Keys should be specified as a list or tuple."
+        except ParamError as exception:
+            assert exception.code == -2
+            assert exception.msg == "Keys should be specified as a list or tuple."
 
     def test_get_many_with_non_existent_keys(self):
 
@@ -99,20 +105,22 @@ class TestGetMany(TestBaseClass):
 
     def test_get_many_with_invalid_key(self):
 
-        with pytest.raises(Exception) as exception:
-            records = TestGetMany.client.get_many("key")
+        try:
+            records = TestGetMany.client.get_many( "key" )
 
-        assert exception.value[0] == -1
-        assert exception.value[1] == "Keys should be specified as a list or tuple."
+        except ParamError as exception:
+            assert exception.code == -2
+            assert exception.msg == "Keys should be specified as a list or tuple."
 
     def test_get_many_with_invalid_timeout(self):
 
-        policies = {'timeout': 0.2}
-        with pytest.raises(Exception) as exception:
+        policies = { 'timeout' : 0.2 }
+        try:
             records = TestGetMany.client.get_many(self.keys, policies)
 
-        assert exception.value[0] == -2
-        assert exception.value[1] == "timeout is invalid"
+        except ParamError as exception:
+            assert exception.code == -2
+            assert exception.msg == "timeout is invalid"
 
     @pytest.mark.xfail
     def test_get_many_with_initkey_as_digest(self):
@@ -162,9 +170,9 @@ class TestGetMany(TestBaseClass):
     def test_get_many_with_proper_parameters_without_connection(self):
         config = {'hosts': [('127.0.0.1', 3000)]}
         client1 = aerospike.client(config)
+        try:
+            records = client1.get_many( self.keys, { 'timeout': 3 } )
 
-        with pytest.raises(Exception) as exception:
-            records = client1.get_many(self.keys, {'timeout': 3})
-
-        assert exception.value[0] == 11L
-        assert exception.value[1] == 'No connection to aerospike cluster'
+        except ClusterError as exception:
+            assert exception.code == 11L
+            assert exception.msg == 'No connection to aerospike cluster'

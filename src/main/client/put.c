@@ -24,6 +24,7 @@
 
 #include "client.h"
 #include "conversions.h"
+#include "exceptions.h"
 #include "key.h"
 #include "policy.h"
 
@@ -101,6 +102,9 @@ PyObject * AerospikeClient_Put_Invoke(
 
 	// Invoke operation
 	aerospike_key_put(self->as, &err, write_policy_p, &key, &rec);
+	if ( err.code != AEROSPIKE_OK ) {
+		as_error_update(&err, err.code, NULL);
+	}
 
 CLEANUP:
     for (iter = 0; iter < static_pool.current_bytes_id; iter++) {
@@ -119,7 +123,14 @@ CLEANUP:
 	if ( err.code != AEROSPIKE_OK ) {
 		PyObject * py_err = NULL;
 		error_to_pyobject(&err, &py_err);
-		PyErr_SetObject(PyExc_Exception, py_err);
+		PyObject *exception_type = raise_exception(&err);
+		if(PyObject_HasAttrString(exception_type, "key")) {
+			PyObject_SetAttrString(exception_type, "key", py_key);
+		} 
+		if(PyObject_HasAttrString(exception_type, "bin")) {
+			PyObject_SetAttrString(exception_type, "bin", py_bins);
+		}
+		PyErr_SetObject(exception_type, py_err);
 		Py_DECREF(py_err);
 		return NULL;
 	}

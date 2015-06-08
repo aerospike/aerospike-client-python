@@ -1,6 +1,8 @@
 import unittest
 from test_base_class import TestBaseClass
+
 import aerospike
+from aerospike.exception import *
 
 config = {"hosts": [("127.0.0.1", 3000)]}
 
@@ -108,8 +110,18 @@ class KVTestCase(unittest.TestCase, TestBaseClass):
         self.assertEqual(rc, 0, 'wrong return code')
 
         # ensure not existent
-        (key, meta) = self.client.exists(key)
-        self.assertTrue(meta is None)
+        try:
+            (key, meta) = self.client.exists(key)
+            """
+            We are making the api backward compatible. In case of RecordNotFound an
+            exception will not be raised. Instead Ok response is returned withe the
+            meta as None. This might change with further releases.
+            """
+        except RecordNotFound as exception:
+            assert True == False
+            assert exception.code == 2
+
+        assert meta == None
 
         # count records
         count = 0
@@ -186,8 +198,18 @@ class KVTestCase(unittest.TestCase, TestBaseClass):
         self.assertEqual(rc, 0, 'wrong return code')
 
         # ensure not existent
-        (key, meta) = self.client.exists(digest_only(key))
-        self.assertTrue(meta is None)
+        try:
+            (key, meta) = self.client.exists(digest_only(key))
+            """
+            We are making the api backward compatible. In case of RecordNotFound an
+            exception will not be raised. Instead Ok response is returned withe the
+            meta as None. This might change with further releases.
+            """
+        except RecordNotFound as exception:
+            assert True == False
+            assert exception.code == 2
+
+        assert meta == None
 
         # count records
         count = 0

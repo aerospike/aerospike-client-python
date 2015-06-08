@@ -6,6 +6,11 @@ import time
 from test_base_class import TestBaseClass
 
 aerospike = pytest.importorskip("aerospike")
+try:
+    from aerospike.exception import *
+except:
+    print "Please install aerospike python client."
+    sys.exit(1)
 
 class TestUdfPut(TestBaseClass):
     def setup_class(cls):
@@ -68,11 +73,12 @@ class TestUdfPut(TestBaseClass):
         filename = "example.lua"
         udf_type = 0
 
-        with pytest.raises(Exception) as exception:
-            status = TestUdfPut.client.udf_put(filename, udf_type, policy)
+        try:
+            status = TestUdfPut.client.udf_put( filename, udf_type, policy )
 
-        assert exception.value[0] == -2
-        assert exception.value[1] == "timeout is invalid"
+        except ParamError as exception:
+            assert exception.code == -2
+            assert exception.msg == "timeout is invalid"
 
     def test_udf_put_with_proper_timeout_policy_value(self):
 
@@ -97,11 +103,10 @@ class TestUdfPut(TestBaseClass):
         filename = "somefile"
         udf_type = 0
 
-        with pytest.raises(Exception) as exception:
-            status = TestUdfPut.client.udf_put(filename, udf_type, policy)
-
-        assert exception.value[0] == 2
-        assert exception.value[1] == "cannot open script file"
+        try:
+            TestUdfPut.client.udf_put( filename, udf_type, policy )
+        except LuaFileNotFound as e:
+            assert e.code == 1302
 
     def test_udf_put_with_non_lua_udf_type_and_lua_script_file(self):
 
@@ -109,11 +114,12 @@ class TestUdfPut(TestBaseClass):
         filename = "example.lua"
         udf_type = 1
 
-        with pytest.raises(Exception) as exception:
-            status = TestUdfPut.client.udf_put(filename, udf_type, policy)
+        try:
+            status = TestUdfPut.client.udf_put( filename, udf_type, policy )
 
-        assert exception.value[0] == -1L
-        assert exception.value[1] == "Invalid UDF language"
+        except ClientError as exception:
+            assert exception.code == -1
+            assert exception.msg == "Invalid UDF language"
 
     def test_udf_put_with_all_none_parameters(self):
 
@@ -151,8 +157,9 @@ class TestUdfPut(TestBaseClass):
 
         client1 = aerospike.client(config)
 
-        with pytest.raises(Exception) as exception:
-            status = client1.udf_put(filename, udf_type, policy)
+        try:
+            status = client1.udf_put( filename, udf_type, policy )
 
-        assert exception.value[0] == 11L
-        assert exception.value[1] == 'No connection to aerospike cluster'
+        except ClusterError as exception:
+            assert exception.code == 11L
+            assert exception.msg == 'No connection to aerospike cluster'

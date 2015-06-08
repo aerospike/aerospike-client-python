@@ -26,6 +26,7 @@
 
 #include "client.h"
 #include "conversions.h"
+#include "exceptions.h"
 #include "lmap.h"
 
 /*******************************************************************************
@@ -196,10 +197,29 @@ AerospikeLMap * AerospikeLMap_New(AerospikeClient * client, PyObject * args, PyO
 	} else {
 		as_error err;
 		as_error_init(&err);
-		as_error_update(&err, AEROSPIKE_ERR, "Parameters are incorrect");
-		PyObject * py_err = NULL;
+		as_error_update(&err, AEROSPIKE_ERR_PARAM, "Parameters are incorrect");
+		PyObject * py_err = NULL, *py_key = NULL;
+		PyObject *exception_type = raise_exception(&err);
 		error_to_pyobject(&err, &py_err);
-		PyErr_SetObject(PyExc_Exception, py_err);
+		if(PyObject_HasAttrString(exception_type, "key")) {
+			if(&self->key) {
+				key_to_pyobject(&err, &self->key, &py_key);
+				PyObject_SetAttrString(exception_type, "key", py_key);
+				Py_DECREF(py_key);
+			} else {
+				PyObject_SetAttrString(exception_type, "key", Py_None);
+			}
+		} 
+		if(PyObject_HasAttrString(exception_type, "bin")) {
+			if(&self->bin_name) {
+				PyObject *py_bins = PyString_FromString((char *)&self->bin_name);
+				PyObject_SetAttrString(exception_type, "bin", py_bins);
+				Py_DECREF(py_bins);
+			} else {
+				PyObject_SetAttrString(exception_type, "bin", Py_None);
+			}
+		}
+		PyErr_SetObject(exception_type, py_err);
 		Py_DECREF(py_err);
 		return NULL;
 	}

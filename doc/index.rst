@@ -10,6 +10,8 @@ the Aerospike C client.
 
 * :mod:`aerospike.predicates` is a submodule containing predicate helpers for use with the Query class.
 
+* :mod:`aerospike.exception` is a submodule containing the exception hierarchy for AerospikeError and its subclasses.
+
 .. seealso::
     The `Python Client Manual <http://www.aerospike.com/docs/client/python/>`_
     for a quick guide.
@@ -25,6 +27,8 @@ Content
     scan
     query
     predicates
+    llist
+    exception
 
 
 Indices and tables

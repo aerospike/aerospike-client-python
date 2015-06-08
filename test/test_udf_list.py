@@ -4,9 +4,15 @@ import pytest
 import sys
 import time
 from test_base_class import TestBaseClass
+from types import *
 
 aerospike = pytest.importorskip("aerospike")
-
+try:
+    import aerospike
+    from aerospike.exception import *
+except:
+    print "Please install aerospike python client."
+    sys.exit(1)
 
 class TestUdfList(TestBaseClass):
     def setup_class(cls):
@@ -34,10 +40,8 @@ class TestUdfList(TestBaseClass):
 
     def test_udf_list_without_any_paramter(self):
 
-        with pytest.raises(TypeError) as typeError:
-            TestUdfList.client.udf_list()
-
-        assert "Required argument 'policy' (pos 1) not found" in typeError.value
+        ulist = TestUdfList.client.udf_list()
+        assert type(ulist) is ListType
 
     def test_udf_list_with_proper_parameters(self):
 
@@ -68,12 +72,13 @@ class TestUdfList(TestBaseClass):
 
         policy = {'timeout': 0.1}
 
-        with pytest.raises(Exception) as exception:
-            udf_list = TestUdfList.client.udf_list(policy)
+        try:
+            udf_list = TestUdfList.client.udf_list( policy )
 
-        assert exception.value[0] == -2
+        except ParamError as exception:
+            assert exception.code == -2
 
-        assert exception.value[1] == 'timeout is invalid'
+            assert exception.msg == 'timeout is invalid'
 
     def test_udf_list_with_proper_parameters_without_connection(self):
 
@@ -83,8 +88,9 @@ class TestUdfList(TestBaseClass):
 
         policy = {'timeout': 0}
 
-        with pytest.raises(Exception) as exception:
-            udf_list = client1.udf_list(policy)
+        try:
+            udf_list = client1.udf_list( policy )
 
-        assert exception.value[0] == 11L
-        assert exception.value[1] == 'No connection to aerospike cluster'
+        except ClusterError as exception:
+            assert exception.code == 11L
+            assert exception.msg == 'No connection to aerospike cluster'

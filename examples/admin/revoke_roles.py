@@ -95,7 +95,7 @@ try:
     	roles = ["read-write", "read"]
     	roles_size = len(roles)
     	
-    	client.admin_revoke_roles(policy, user, roles, roles_size)
+    	client.admin_revoke_roles(user, roles, policy)
         
     	print("OK, roles revoked from 1 user")
 

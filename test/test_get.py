@@ -6,7 +6,11 @@ import cPickle as pickle
 from test_base_class import TestBaseClass
 
 aerospike = pytest.importorskip("aerospike")
-
+try:
+    from aerospike.exception import *
+except:
+    print "Please install aerospike python client."
+    sys.exit(1)
 
 class SomeClass(object):
 
@@ -115,7 +119,17 @@ class TestGet(TestBaseClass):
         """
         key = ('test', 'demo', '1')
 
-        key, meta, bins = TestGet.client.get(key)
+        try:
+            key, meta, bins = TestGet.client.get( key )
+            """
+            We are making the api backward compatible. In case of RecordNotFound an
+            exception will not be raised. Instead Ok response is returned withe the
+            meta as None. This might change with further releases.
+            """
+        except RecordNotFound as exception:
+            assert True == False
+            assert exception.code == 2
+            assert exception.msg == 'AEROSPIKE_ERR_RECORD_NOT_FOUND'
 
         assert bins == None
         assert meta == None
@@ -126,7 +140,18 @@ class TestGet(TestBaseClass):
         """
         key = ('test', None, 2)
 
-        key, meta, bins = TestGet.client.get(key)
+        try:
+            key, meta, bins = TestGet.client.get( key )
+
+            """
+            We are making the api backward compatible. In case of RecordNotFound an
+            exception will not be raised. Instead Ok response is returned withe the
+            meta as None. This might change with further releases.
+            """
+        except RecordNotFound as exception:
+            assert True == False
+            assert exception.code == 2
+            assert exception.msg == 'AEROSPIKE_ERR_RECORD_NOT_FOUND'
 
         assert bins == None
         assert meta == None
@@ -137,11 +162,12 @@ class TestGet(TestBaseClass):
         """
         key = (None, 'demo', 2)
 
-        with pytest.raises(Exception) as exception:
-            key, meta, bins = TestGet.client.get(key)
+        try:
+            key, meta, bins = TestGet.client.get( key )
 
-        assert exception.value[0] == -2
-        assert exception.value[1] == 'namespace must be a string'
+        except ParamError as exception:
+            assert exception.code == -2
+            assert exception.msg == 'namespace must be a string'
 
     def test_get_with_none_pk(self):
         """
@@ -149,21 +175,23 @@ class TestGet(TestBaseClass):
         """
         key = ('test', 'demo', None)
 
-        with pytest.raises(Exception) as exception:
-            key, meta, bins = TestGet.client.get(key)
+        try:
+            key, meta, bins = TestGet.client.get( key )
 
-        assert exception.value[0] == -2
-        assert exception.value[1] == 'either key or digest is required'
+        except ParamError as exception:
+            assert exception.code == -2
+            assert exception.msg == 'either key or digest is required'
 
     def test_get_with_none_key(self):
         """
             Invoke get() with None as a key.
         """
-        with pytest.raises(Exception) as exception:
+        try:
             key, meta, bins = TestGet.client.get(None)
 
-        assert exception.value[0] == -2
-        assert exception.value[1] == "key is invalid"
+        except ParamError as exception:
+            assert exception.code == -2
+            assert exception.msg == "key is invalid"
 
     def test_get_key_type_list(self):
         """
@@ -171,11 +199,12 @@ class TestGet(TestBaseClass):
         """
         key = ['test', 'demo', '1']
 
-        with pytest.raises(Exception) as exception:
+        try:
             key, meta, bins = TestGet.client.get(key)
 
-        assert exception.value[0] == -2
-        assert exception.value[1] == "key is invalid"
+        except ParamError as exception:
+            assert exception.code == -2
+            assert exception.msg == "key is invalid"
 
     def test_get_with_non_existent_namespace(self):
         """
@@ -183,11 +212,12 @@ class TestGet(TestBaseClass):
         """
         key = ('namespace', 'demo', 1)
 
-        with pytest.raises(Exception) as exception:
+        try:
             key, meta, bins = TestGet.client.get(key)
 
-        assert exception.value[0] == 20
-        assert exception.value[1] == 'AEROSPIKE_ERR_NAMESPACE_NOT_FOUND'
+        except NamespaceNotFound as exception:
+            assert exception.code == 20
+            assert exception.msg == 'AEROSPIKE_ERR_NAMESPACE_NOT_FOUND'
 
     def test_get_with_non_existent_set(self):
         """
@@ -195,10 +225,21 @@ class TestGet(TestBaseClass):
         """
         key = ('test', 'some_random_set', 1)
 
-        key, meta, bins = TestGet.client.get(key)
+        try:
+            key, meta, bins = TestGet.client.get(key)
 
-        assert meta == None
+            """
+            We are making the api backward compatible. In case of RecordNotFound an
+            exception will not be raised. Instead Ok response is returned withe the
+            meta as None. This might change with further releases.
+            """
+        except RecordNotFound as exception:
+            assert True == False
+            assert exception.code == 2
+            assert exception.msg == 'AEROSPIKE_ERR_RECORD_NOT_FOUND'
+
         assert bins == None
+        assert meta == None
 
     def test_get_with_non_existent_key(self):
         """
@@ -206,7 +247,18 @@ class TestGet(TestBaseClass):
         """
         key = ('test', 'demo', 'non-existent')
 
-        key, meta, bins = TestGet.client.get(key)
+        try:
+            key, meta, bins = TestGet.client.get( key )
+
+            """
+            We are making the api backward compatible. In case of RecordNotFound an
+            exception will not be raised. Instead Ok response is returned withe the
+            meta as None. This might change with further releases.
+            """
+        except RecordNotFound as exception:
+            assert True == False
+            assert exception.code == 2
+            assert exception.msg == 'AEROSPIKE_ERR_RECORD_NOT_FOUND'
 
         assert bins == None
         assert meta == None
@@ -359,8 +411,9 @@ class TestGet(TestBaseClass):
         config = {'hosts': [('127.0.0.1', 3000)]}
         client1 = aerospike.client(config)
 
-        with pytest.raises(Exception) as exception:
-            key, meta, bins = client1.get(key)
+        try:
+            key, meta, bins = client1.get( key )
 
-        assert exception.value[0] == 11L
-        assert exception.value[1] == 'No connection to aerospike cluster'
+        except ClusterError as exception:
+            assert exception.code == 11L
+            assert exception.msg == 'No connection to aerospike cluster'

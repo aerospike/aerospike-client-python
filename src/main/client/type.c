@@ -27,6 +27,7 @@
 #include "client.h"
 #include "policy.h"
 #include "conversions.h"
+#include "exceptions.h"
 
 /*******************************************************************************
  * PYTHON TYPE METHODS
@@ -42,8 +43,8 @@ static PyMethodDef AerospikeClient_Type_Methods[] = {
 	{"close",
 		(PyCFunction) AerospikeClient_Close, METH_VARARGS | METH_KEYWORDS,
 		"Close the connection(s) to the cluster."},
-	{"isConnected",
-		(PyCFunction) AerospikeClient_isConnected, METH_VARARGS | METH_KEYWORDS,
+	{"is_connected",
+		(PyCFunction) AerospikeClient_is_connected, METH_VARARGS | METH_KEYWORDS,
 		"Checks current connection state."},
 
 	// ADMIN OPERATIONS
@@ -70,6 +71,24 @@ static PyMethodDef AerospikeClient_Type_Methods[] = {
 		"Query a user for roles."},
 	{"admin_query_users",	(PyCFunction) AerospikeClient_Admin_Query_Users, METH_VARARGS | METH_KEYWORDS,
 		"Query all users for roles."},
+	{"admin_create_role",
+		(PyCFunction) AerospikeClient_Admin_Create_Role, METH_VARARGS | METH_KEYWORDS,
+		"Create a new role."},
+	{"admin_drop_role",
+		(PyCFunction) AerospikeClient_Admin_Drop_Role, METH_VARARGS | METH_KEYWORDS,
+		"Drop a new role."},
+	{"admin_grant_privileges",
+		(PyCFunction) AerospikeClient_Admin_Grant_Privileges, METH_VARARGS | METH_KEYWORDS,
+		"Grant privileges to a user defined role"},
+	{"admin_revoke_privileges",
+		(PyCFunction) AerospikeClient_Admin_Revoke_Privileges, METH_VARARGS | METH_KEYWORDS,
+		"Revoke privileges from a user defined role"},
+	{"admin_query_role",
+		(PyCFunction) AerospikeClient_Admin_Query_Role, METH_VARARGS | METH_KEYWORDS,
+		"Query a user defined role"},
+	{"admin_query_roles",
+		(PyCFunction) AerospikeClient_Admin_Query_Roles, METH_VARARGS | METH_KEYWORDS,
+		"Querys all user defined roles"},
 
 	// KVS OPERATIONS
 
@@ -181,7 +200,7 @@ static PyMethodDef AerospikeClient_Type_Methods[] = {
 	{"index_map_values_create",
 		(PyCFunction)AerospikeClient_Index_Map_Values_Create, METH_VARARGS | METH_KEYWORDS,
 		"Remove a secondary list index"},
-	
+
     // LSTACK OPERATIONS
 
 	{"lstack",
@@ -315,26 +334,34 @@ static int AerospikeClient_Type_Init(AerospikeClient * self, PyObject * args, Py
 	if ( py_hosts && PyList_Check(py_hosts) ) {
 		int size = (int) PyList_Size(py_hosts);
 		for ( int i = 0; i < size && i < AS_CONFIG_HOSTS_SIZE; i++ ) {
+			char *addr = NULL;
+			uint16_t port = 3000;
 			PyObject * py_host = PyList_GetItem(py_hosts, i);
-			if ( PyTuple_Check(py_host) && PyTuple_Size(py_host) == 2 ) {
-				PyObject * py_addr = PyTuple_GetItem(py_host,0);
-				PyObject * py_port = PyTuple_GetItem(py_host,1);
-				if ( PyString_Check(py_addr) ) {
-					char * addr = PyString_AsString(py_addr);
-					config.hosts[i].addr = addr;
+			PyObject * py_addr, * py_port;
+
+			if( PyTuple_Check(py_host) && PyTuple_Size(py_host) == 2) {
+
+				py_addr = PyTuple_GetItem(py_host, 0);
+				if(PyString_Check(py_addr)) {
+					addr = strdup(PyString_AsString(py_addr));
 				}
-				if ( PyInt_Check(py_port) ) {
-					config.hosts[i].port = (uint16_t) PyInt_AsLong(py_port);
+				py_port = PyTuple_GetItem(py_host,1);
+				if( PyInt_Check(py_port) || PyLong_Check(py_port) ) {
+					port = (uint16_t) PyLong_AsLong(py_port);
 				}
-				else if ( PyLong_Check(py_port) ) {
-					config.hosts[i].port = (uint16_t) PyLong_AsLong(py_port);
+				else {
+					port = 0;
 				}
 			}
 			else if ( PyString_Check(py_host) ) {
-				char * addr = PyString_AsString(py_host);
-				config.hosts[i].addr = addr;
-				config.hosts[i].port = 3000;
+				addr = strdup( strtok( PyString_AsString(py_host), ":" ) );
+				addr = strtok(addr, ":");
+				char *temp = strtok(NULL, ":");
+				if(NULL != temp) {
+					port = (uint16_t)atoi(temp);
+				}
 			}
+			as_config_add_host(&config, addr, port);
 		}
 	}
 
@@ -468,10 +495,11 @@ AerospikeClient * AerospikeClient_New(PyObject * parent, PyObject * args, PyObje
 	else {
 		as_error err;
 		as_error_init(&err);
-		as_error_update(&err, AEROSPIKE_ERR, "Parameters are incorrect");
+		as_error_update(&err, AEROSPIKE_ERR_PARAM, "Parameters are incorrect");
 		PyObject * py_err = NULL;
-		error_to_pyobject( &err, &py_err);
-		PyErr_SetObject( PyExc_Exception, py_err);
+		error_to_pyobject(&err, &py_err);
+		PyObject *exception_type = raise_exception(&err);
+		PyErr_SetObject(exception_type, py_err);
 		Py_DECREF(py_err);
 		return NULL;
 	}

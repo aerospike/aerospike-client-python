@@ -94,8 +94,7 @@ try:
     	
   	user_roles = client.admin_query_users(policy)
        
-	for user in user_roles:
-	   print(user)
+	print(user_roles)
 	print("---") 
     	print("OK, All user roles retrieved")
 

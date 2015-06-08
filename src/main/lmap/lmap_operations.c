@@ -23,6 +23,7 @@
 
 #include "client.h"
 #include "conversions.h"
+#include "exceptions.h"
 #include "lmap.h"
 #include "policy.h"
 
@@ -92,6 +93,9 @@ PyObject * AerospikeLMap_Put(AerospikeLMap * self, PyObject * args, PyObject * k
 
 	aerospike_lmap_put(self->client->as, &err, apply_policy_p, &self->key,
 			&self->lmap, map_key, map_value);
+	if(err.code != AEROSPIKE_OK) {
+		as_error_update(&err, err.code, NULL);
+	}
 
 CLEANUP:
 
@@ -104,9 +108,20 @@ CLEANUP:
 	}
 
 	if ( err.code != AEROSPIKE_OK ) {
-		PyObject * py_err = NULL;
+		PyObject * py_err = NULL, *py_key = NULL;
+		PyObject *exception_type = raise_exception(&err);
 		error_to_pyobject(&err, &py_err);
-		PyErr_SetObject(PyExc_Exception, py_err);
+		if(PyObject_HasAttrString(exception_type, "key")) {
+			key_to_pyobject(&err, &self->key, &py_key);
+			PyObject_SetAttrString(exception_type, "key", py_key);
+			Py_DECREF(py_key);
+		} 
+		if(PyObject_HasAttrString(exception_type, "bin")) {
+			PyObject *py_bins = PyString_FromString((char *)&self->bin_name);
+			PyObject_SetAttrString(exception_type, "bin", py_bins);
+			Py_DECREF(py_bins);
+		}
+		PyErr_SetObject(exception_type, py_err);
 		Py_DECREF(py_err);
 		return NULL;
 	}
@@ -180,6 +195,9 @@ PyObject * AerospikeLMap_Put_Many(AerospikeLMap * self, PyObject * args, PyObjec
 
 	aerospike_lmap_put_all(self->client->as, &err, apply_policy_p,
 			&self->key, &self->lmap, map_values);
+	if(err.code != AEROSPIKE_OK) {
+		as_error_update(&err, err.code, NULL);
+	}
 
 CLEANUP:
 
@@ -188,9 +206,20 @@ CLEANUP:
 	}
 
 	if ( err.code != AEROSPIKE_OK ) {
-		PyObject * py_err = NULL;
+		PyObject * py_err = NULL, *py_key = NULL;
+		PyObject *exception_type = raise_exception(&err);
 		error_to_pyobject(&err, &py_err);
-		PyErr_SetObject(PyExc_Exception, py_err);
+		if(PyObject_HasAttrString(exception_type, "key")) {
+			key_to_pyobject(&err, &self->key, &py_key);
+			PyObject_SetAttrString(exception_type, "key", py_key);
+			Py_DECREF(py_key);
+		} 
+		if(PyObject_HasAttrString(exception_type, "bin")) {
+			PyObject *py_bins = PyString_FromString((char *)&self->bin_name);
+			PyObject_SetAttrString(exception_type, "bin", py_bins);
+			Py_DECREF(py_bins);
+		}
+		PyErr_SetObject(exception_type, py_err);
 		Py_DECREF(py_err);
 		return NULL;
 	}
@@ -259,6 +288,7 @@ PyObject * AerospikeLMap_Get(AerospikeLMap * self, PyObject * args, PyObject * k
 			&self->lmap, map_key, &map_key_value);
 
 	if (err.code != AEROSPIKE_OK) {
+		as_error_update(&err, err.code, NULL);
 		goto CLEANUP;
 	}
 
@@ -276,9 +306,20 @@ CLEANUP:
 	}
 
 	if ( err.code != AEROSPIKE_OK ) {
-		PyObject * py_err = NULL;
+		PyObject * py_err = NULL, *py_key = NULL;
+		PyObject *exception_type = raise_exception(&err);
 		error_to_pyobject(&err, &py_err);
-		PyErr_SetObject(PyExc_Exception, py_err);
+		if(PyObject_HasAttrString(exception_type, "key")) {
+			key_to_pyobject(&err, &self->key, &py_key);
+			PyObject_SetAttrString(exception_type, "key", py_key);
+			Py_DECREF(py_key);
+		} 
+		if(PyObject_HasAttrString(exception_type, "bin")) {
+			PyObject *py_bins = PyString_FromString((char *)&self->bin_name);
+			PyObject_SetAttrString(exception_type, "bin", py_bins);
+			Py_DECREF(py_bins);
+		}
+		PyErr_SetObject(exception_type, py_err);
 		Py_DECREF(py_err);
 		return NULL;
 	}
@@ -356,6 +397,7 @@ PyObject * AerospikeLMap_Filter(AerospikeLMap * self, PyObject * args, PyObject 
 			&self->lmap, filter_name, arg_list, &elements);
 
 	if (err.code != AEROSPIKE_OK) {
+		as_error_update(&err, err.code, NULL);
 		goto CLEANUP;
 	}
 
@@ -373,9 +415,20 @@ CLEANUP:
 	}
 
 	if ( err.code != AEROSPIKE_OK ) {
-		PyObject * py_err = NULL;
+		PyObject * py_err = NULL, *py_key = NULL;
+		PyObject *exception_type = raise_exception(&err);
 		error_to_pyobject(&err, &py_err);
-		PyErr_SetObject(PyExc_Exception, py_err);
+		if(PyObject_HasAttrString(exception_type, "key")) {
+			key_to_pyobject(&err, &self->key, &py_key);
+			PyObject_SetAttrString(exception_type, "key", py_key);
+			Py_DECREF(py_key);
+		} 
+		if(PyObject_HasAttrString(exception_type, "bin")) {
+			PyObject *py_bins = PyString_FromString((char *)&self->bin_name);
+			PyObject_SetAttrString(exception_type, "bin", py_bins);
+			Py_DECREF(py_bins);
+		}
+		PyErr_SetObject(exception_type, py_err);
 		Py_DECREF(py_err);
 		return NULL;
 	}
@@ -425,6 +478,7 @@ PyObject * AerospikeLMap_Destroy(AerospikeLMap * self, PyObject * args, PyObject
 	pyobject_to_policy_apply(&err, py_policy, &apply_policy, &apply_policy_p,
 			&self->client->as->config.policies.apply);
 	if ( err.code != AEROSPIKE_OK ) {
+		as_error_update(&err, err.code, NULL);
 		goto CLEANUP;
 	}
 
@@ -434,9 +488,20 @@ PyObject * AerospikeLMap_Destroy(AerospikeLMap * self, PyObject * args, PyObject
 CLEANUP:
 
 	if ( err.code != AEROSPIKE_OK ) {
-		PyObject * py_err = NULL;
+		PyObject * py_err = NULL, *py_key = NULL;
+		PyObject *exception_type = raise_exception(&err);
 		error_to_pyobject(&err, &py_err);
-		PyErr_SetObject(PyExc_Exception, py_err);
+		if(PyObject_HasAttrString(exception_type, "key")) {
+			key_to_pyobject(&err, &self->key, &py_key);
+			PyObject_SetAttrString(exception_type, "key", py_key);
+			Py_DECREF(py_key);
+		} 
+		if(PyObject_HasAttrString(exception_type, "bin")) {
+			PyObject *py_bins = PyString_FromString((char *)&self->bin_name);
+			PyObject_SetAttrString(exception_type, "bin", py_bins);
+			Py_DECREF(py_bins);
+		}
+		PyErr_SetObject(exception_type, py_err);
 		Py_DECREF(py_err);
 		return NULL;
 	}
@@ -502,6 +567,9 @@ PyObject * AerospikeLMap_Remove(AerospikeLMap * self, PyObject * args, PyObject 
 
 	aerospike_lmap_remove(self->client->as, &err, apply_policy_p, &self->key,
 			&self->lmap, map_key);
+	if(err.code != AEROSPIKE_OK) {
+		as_error_update(&err, err.code, NULL);
+	}
 
 CLEANUP:
 
@@ -510,9 +578,20 @@ CLEANUP:
 	}
 
 	if ( err.code != AEROSPIKE_OK ) {
-		PyObject * py_err = NULL;
+		PyObject * py_err = NULL, *py_key = NULL;
+		PyObject *exception_type = raise_exception(&err);
 		error_to_pyobject(&err, &py_err);
-		PyErr_SetObject(PyExc_Exception, py_err);
+		if(PyObject_HasAttrString(exception_type, "key")) {
+			key_to_pyobject(&err, &self->key, &py_key);
+			PyObject_SetAttrString(exception_type, "key", py_key);
+			Py_DECREF(py_key);
+		} 
+		if(PyObject_HasAttrString(exception_type, "bin")) {
+			PyObject *py_bins = PyString_FromString((char *)&self->bin_name);
+			PyObject_SetAttrString(exception_type, "bin", py_bins);
+			Py_DECREF(py_bins);
+		}
+		PyErr_SetObject(exception_type, py_err);
 		Py_DECREF(py_err);
 		return NULL;
 	}
@@ -568,13 +647,27 @@ PyObject * AerospikeLMap_Size(AerospikeLMap * self, PyObject * args, PyObject * 
 
 	aerospike_lmap_size(self->client->as, &err, apply_policy_p, &self->key,
 			&self->lmap, (uint32_t *)&size);
+	if(err.code != AEROSPIKE_OK) {
+		as_error_update(&err, err.code, NULL);
+	}
 
 CLEANUP:
 
 	if ( err.code != AEROSPIKE_OK ) {
-		PyObject * py_err = NULL;
+		PyObject * py_err = NULL, *py_key = NULL;
+		PyObject *exception_type = raise_exception(&err);
 		error_to_pyobject(&err, &py_err);
-		PyErr_SetObject(PyExc_Exception, py_err);
+		if(PyObject_HasAttrString(exception_type, "key")) {
+			key_to_pyobject(&err, &self->key, &py_key);
+			PyObject_SetAttrString(exception_type, "key", py_key);
+			Py_DECREF(py_key);
+		} 
+		if(PyObject_HasAttrString(exception_type, "bin")) {
+			PyObject *py_bins = PyString_FromString((char *)&self->bin_name);
+			PyObject_SetAttrString(exception_type, "bin", py_bins);
+			Py_DECREF(py_bins);
+		}
+		PyErr_SetObject(exception_type, py_err);
 		Py_DECREF(py_err);
 		return NULL;
 	}

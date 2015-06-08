@@ -27,6 +27,7 @@
 #include "client.h"
 #include "policy.h"
 #include "conversions.h"
+#include "exceptions.h"
 #include <arpa/inet.h>
 
 typedef struct foreach_callback_info_udata_t {
@@ -74,6 +75,7 @@ static bool AerospikeClient_Info_each(as_error * err, const as_node * node, cons
 
 
 	if ( err && err->code != AEROSPIKE_OK ) {
+		as_error_update(err, err->code, NULL);
         goto CLEANUP;
 	}
 	else if ( res != NULL ) {
@@ -155,14 +157,16 @@ CLEANUP:
 	if ( udata_ptr->error.code != AEROSPIKE_OK ) {
 		PyObject * py_err = NULL;
 		error_to_pyobject( &udata_ptr->error, &py_err);
-		PyErr_SetObject(PyExc_Exception, py_err);
+		PyObject *exception_type = raise_exception(&udata_ptr->error);
+		PyErr_SetObject(exception_type, py_err);
 		Py_DECREF(py_err);
 		return NULL;
 	}
 	if ( err->code != AEROSPIKE_OK ) {
 		PyObject * py_err = NULL;
 		error_to_pyobject(err, &py_err);
-		PyErr_SetObject(PyExc_Exception, py_err);
+		PyObject *exception_type = raise_exception(err);
+		PyErr_SetObject(exception_type, py_err);
 		Py_DECREF(py_err);
 		return NULL;
 	}
@@ -237,6 +241,7 @@ PyObject * AerospikeClient_Info(AerospikeClient * self, PyObject * args, PyObjec
 					&info_callback_udata);
 
 	if (&info_callback_udata.error.code != AEROSPIKE_OK) {
+		as_error_update(&err, err.code, NULL);
 		goto CLEANUP;
 	}
 CLEANUP:
@@ -246,7 +251,8 @@ CLEANUP:
 	if ( info_callback_udata.error.code != AEROSPIKE_OK ) {
 		PyObject * py_err = NULL;
 		error_to_pyobject(&info_callback_udata.error, &py_err);
-		PyErr_SetObject(PyExc_Exception, py_err);
+		PyObject *exception_type = raise_exception(&info_callback_udata.error);
+		PyErr_SetObject(exception_type, py_err);
 		Py_DECREF(py_err);
 		if (py_nodes) {
 			Py_DECREF(py_nodes);
@@ -256,7 +262,8 @@ CLEANUP:
 	if ( err.code != AEROSPIKE_OK ) {
 		PyObject * py_err = NULL;
 		error_to_pyobject(&err, &py_err);
-		PyErr_SetObject(PyExc_Exception, py_err);
+		PyObject *exception_type = raise_exception(&err);
+		PyErr_SetObject(exception_type, py_err);
 		Py_DECREF(py_err);
 		if (py_nodes) {
 			Py_DECREF(py_nodes);

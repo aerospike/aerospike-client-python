@@ -1,7 +1,6 @@
-#!/usr/bin/python
 # -*- coding: utf-8 -*-
 ################################################################################
-# Copyright 2013-2014 Aerospike, Inc.
+# Copyright 2013-2015 Aerospike, Inc.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -236,7 +235,6 @@ def check_records(start, wait=0, message=None):
 		print_records([client.get((options.namespace, options.set, k)) for k in KEYS],'  ')
 	except Exception as e:
 		print("error: {0}".format(e), file=sys.stderr)
-		sys.exit(1)
 
 	print_histogram('  ')
 

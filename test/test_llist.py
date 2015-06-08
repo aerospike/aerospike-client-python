@@ -6,8 +6,18 @@ import time
 from test_base_class import TestBaseClass
 
 aerospike = pytest.importorskip("aerospike")
+try:
+    from aerospike.exception import *
+except:
+    print "Please install aerospike python client."
+    sys.exit(1)
 
-class TestLList(object):
+
+class TestLList(TestBaseClass):
+
+    pytestmark = pytest.mark.skipif(
+        TestBaseClass.has_ldt_support() == False,
+        reason="LDTs are not enabled for namespace 'test'")
 
     llist_integer = None
     llist_string = None
@@ -15,39 +25,36 @@ class TestLList(object):
     key1 = None
     key2 = None
 
-    def setup_class(cls):
+    def setup_class(self):
 
         print "setup class invoked..."
         hostlist, user, password = TestBaseClass.get_hosts()
         config = {'hosts': hostlist}
         if user == None and password == None:
-            TestLList.client = aerospike.client(config).connect()
+            self.client = aerospike.client(config).connect()
         else:
-            TestLList.client = aerospike.client(config).connect(user, password)
+            self.client = aerospike.client(config).connect(user, password)
 
         TestLList.key1 = ('test', 'demo', 'integer_llist_ky')
-
         TestLList.llist_integer = TestLList.client.llist(TestLList.key1,
                                                          'integer_bin')
-
         TestLList.key2 = ('test', 'demo', 'string_llist_ky')
-
         TestLList.llist_string = TestLList.client.llist(TestLList.key2,
                                                         'string_bin')
-
         TestLList.key3 = ('test', 'demo', 'float_llist_ky')
-
         TestLList.llist_float = TestLList.client.llist(TestLList.key3,
                                                        'float_bin')
 
-    def teardown_class(cls):
+
+    def teardown_class(self):
         print "teardown class invoked..."
-
-        TestLList.llist_integer.destroy()
-
-        TestLList.llist_string.destroy()
-
-        cls.client.close()
+        try:
+            TestLList.llist_integer.destroy()
+            TestLList.llist_string.destroy()
+            TestLList.list_float.destroy()
+        except:
+            pass
+        self.client.close()
 
     #Add() - Add an object to the llist.
     #Get() - Get an object from the llist.
@@ -66,21 +73,18 @@ class TestLList(object):
         assert 1 == TestLList.llist_integer.size()
 
     #Add() - Add() unsupported type data to llist.
-    @pytest.mark.xfail
     def test_llist_add_float_positive(self):
         """
             Invoke add() float type data.
         """
         rec = {"pi": 3.14}
 
-        with pytest.raises(Exception) as exception:
-            TestLList.llist_float.add(3.14)
+        try:
+            TestLList.llist_float.add(rec)
 
-        assert exception.value[0] == 100
-        assert 1 == TestLList.llist_float.size()
-        TestLList.llist_float.add(123)
-        assert 1 == TestLList.llist_float.size()
-        TestLList.llist_float.destroy()
+        except LDTKeyFunctionNotFound as exception:
+            assert exception.code == 1433
+            assert exception.msg == "LDT-Key Field Not Found"
 
     #Add() - Add() without any mandatory parameters.
     def test_llist_no_parameter_negative(self):
@@ -90,8 +94,6 @@ class TestLList(object):
 
         with pytest.raises(TypeError) as typeError:
             TestLList.llist_integer.add()
-
-        assert "Required argument 'value' (pos 1) not found" in typeError.value
 
     #Add_many() - Add a list of objects to the set.
     def test_llist_add_many_positive(self):
@@ -124,31 +126,27 @@ class TestLList(object):
         assert 0 == TestLList.llist_string.add('remove')
         assert 0 == TestLList.llist_string.remove('remove')
 
-        with pytest.raises(Exception) as exception:
+        try:
             TestLList.llist_string.get('remove')
 
-        status = [100L, 125L]
-        for val in status:
-            if exception.value[0] != val:
-                continue
-            else:
-                break
-
-        assert exception.value[0] == val
+        except UDFError as exception:
+            assert exception.code == 100L
+        except LargeItemNotFound as exception:
+            assert exception.code == 125L
 
     #Remove() - Remove non-existent object from the llist.
-    @pytest.mark.xfail
     def test_llist_remove_element_negative(self):
         """
             Invoke remove() to remove non-existent element.
         """
 
-        with pytest.raises(Exception) as exception:
+        try:
             TestLList.llist_string.remove('kk')
 
-        status = [100L, 125L]
-
-        assert exception.value[0] in status
+        except UDFError as exception:
+            assert exception.code == 100L
+        except LargeItemNotFound as exception:
+            assert exception.code == 125L
 
     #Destroy() - Delete the entire LList(LDT Remove).
     def test_llist_destroy_positive(self):
@@ -156,11 +154,11 @@ class TestLList(object):
             Invoke destroy() to delete entire LDT.
         """
         key = ('test', 'demo', 'remove')
-
         llist = self.client.llist(key, 'llist_add')
-
-        llist.add(876)
-
+        try:
+            llist.add(876)
+        except:
+            pass
         assert 0 == llist.destroy()
 
     def test_llist_ldt_initialize_negative(self):
@@ -168,12 +166,11 @@ class TestLList(object):
             Initialize ldt with wrong key.
         """
         key = ('test', 'demo', 12.3)
-
-        with pytest.raises(Exception) as exception:
+        try:
             llist = self.client.llist(key, 'ldt_stk')
-
-        assert exception.value[0] == -1
-        assert exception.value[1] == "Parameters are incorrect"
+        except ParamError as exception:
+            assert exception.code == -2
+            assert exception.msg == "Parameters are incorrect"
 
     def test_llist_find_first_positive_without_policy(self):
         """
@@ -188,7 +185,6 @@ class TestLList(object):
             Invoke find_first() to access elements
         """
         elements_list = TestLList.llist_integer.find_first(2, {'timeout': 1000})
-
         assert elements_list == [11, 56]
 
     def test_llist_find_first_count_large_positive(self):
@@ -196,7 +192,6 @@ class TestLList(object):
             Invoke find_first() to access elements with a larger count
         """
         elements_list = TestLList.llist_integer.find_first(10, {'timeout': 1000})
-
         assert elements_list == [11, 56, 122, 871]
 
     def test_llist_find_first_count_negative(self):
@@ -204,7 +199,6 @@ class TestLList(object):
             Invoke find_first() to access elements with a negative count
         """
         elements_list = TestLList.llist_integer.find_first(-8, {'timeout': 1000})
-
         assert elements_list == [11, 56, 122, 871]
 
     def test_llist_find_last_positive_without_policy(self):
@@ -212,7 +206,6 @@ class TestLList(object):
             Invoke find_last() to access elements
         """
         elements_list = TestLList.llist_integer.find_last(2)
-
         assert elements_list == [871, 122]
 
     def test_llist_find_last_positive(self):
@@ -220,7 +213,6 @@ class TestLList(object):
             Invoke find_last() to access elements
         """
         elements_list = TestLList.llist_integer.find_last(2, {'timeout': 1000})
-
         assert elements_list == [871, 122]
 
     def test_llist_find_last_count_large(self):
@@ -228,7 +220,6 @@ class TestLList(object):
             Invoke find_last() to access elements
         """
         elements_list = TestLList.llist_integer.find_last(15, {'timeout': 1000})
-
         assert elements_list == [871, 122, 56, 11]
 
     def test_llist_find_last_count_negative(self):
@@ -236,7 +227,6 @@ class TestLList(object):
             Invoke find_last() to access elements
         """
         elements_list = TestLList.llist_integer.find_last(-2, {'timeout': 1000})
-
         assert elements_list == [871, 122, 56, 11]
 
     def test_llist_find_last_no_params(self):
@@ -245,7 +235,6 @@ class TestLList(object):
         """
         with pytest.raises(TypeError) as typeError:
             TestLList.llist_integer.find_last()
-
         assert "Required argument 'count' (pos 1) not found" in typeError.value
 
     def test_llist_find_last_no_parameters_negative(self):
@@ -254,7 +243,6 @@ class TestLList(object):
         """
         with pytest.raises(TypeError) as typeError:
             TestLList.llist_integer.find_last()
-
         assert "Required argument 'count' (pos 1) not found" in typeError.value
 
     def test_llist_find_from_positive_without_policy(self):
@@ -262,7 +250,6 @@ class TestLList(object):
             Invoke find_from() to access elements from a given key
         """
         elements_list = TestLList.llist_integer.find_from(56, 2)
-
         assert elements_list == [56, 122]
 
     def test_llist_find_from_positive(self):
@@ -270,7 +257,6 @@ class TestLList(object):
             Invoke find_from() to access elements from a given key
         """
         elements_list = TestLList.llist_integer.find_from(56, 2, {'timeout': 1000})
-
         assert elements_list == [56, 122]
 
     def test_llist_find_from_positive_non_existent_key(self):
@@ -278,7 +264,6 @@ class TestLList(object):
             Invoke find_from() to access elements from a non-existent key
         """
         elements_list = TestLList.llist_integer.find_from(21, 2, {'timeout': 1000})
-
         assert elements_list == [56, 122]
 
     def test_llist_range_limit_positive_without_policy(self):
@@ -286,7 +271,6 @@ class TestLList(object):
             Invoke range_limit() to access elements
         """
         elements_list = TestLList.llist_integer.range_limit(56, 871, 2, None, None)
-
         assert elements_list == [56, 122, 871]
 
     def test_llist_range_limit_positive(self):
@@ -294,7 +278,6 @@ class TestLList(object):
             Invoke range_limit() to access elements
         """
         elements_list = TestLList.llist_integer.range_limit(56, 871, 2, None, None, {'timeout': 1000})
-
         assert elements_list == [56, 122, 871]
 
     def test_llist_range_limit_negative_keys(self):
@@ -302,7 +285,6 @@ class TestLList(object):
             Invoke range_limit() to access elements with negative keys
         """
         elements_list = TestLList.llist_integer.range_limit(-56, -871, 2, None, None, {'timeout': 1000})
-
         assert elements_list == []
 
     def test_llist_range_limit_larger_count_positive(self):
@@ -311,7 +293,6 @@ class TestLList(object):
             size
         """
         elements_list = TestLList.llist_integer.range_limit(56, 871, 8, None, None, {'timeout': 1000})
-
         assert elements_list == [56, 122, 871]
 
     def test_llist_range_limit_count_negative(self):
@@ -319,7 +300,6 @@ class TestLList(object):
             Invoke range_limit() to access elements
         """
         elements_list = TestLList.llist_integer.range_limit(56, 871, -2, None, None, {'timeout': 1000})
-
         assert elements_list == [56, 122, 871]
 
     def test_llist_set_page_size_without_policy(self):
@@ -333,7 +313,6 @@ class TestLList(object):
     def test_llist_set_page_size_string_negative(self):
         with pytest.raises(TypeError) as typeError:
             TestLList.llist_integer.set_page_size("8192", {'timeout': 0})
-
         assert "an integer is required" in typeError.value
 
     """ Causes db to shutdown

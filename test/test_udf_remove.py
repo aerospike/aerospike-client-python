@@ -6,6 +6,11 @@ import time
 from test_base_class import TestBaseClass
 
 aerospike = pytest.importorskip("aerospike")
+try:
+    from aerospike.exception import *
+except:
+    print "Please install aerospike python client."
+    sys.exit(1)
 
 
 class TestUdfRemove(TestBaseClass):
@@ -19,8 +24,7 @@ class TestUdfRemove(TestBaseClass):
         if user == None and password == None:
             TestUdfRemove.client = aerospike.client(config).connect()
         else:
-            TestUdfRemove.client = aerospike.client(config).connect(user,
-                                                                    password)
+            TestUdfRemove.client = aerospike.client(config).connect(user, password)
 
     def teardown_class(cls):
         """
@@ -54,11 +58,12 @@ class TestUdfRemove(TestBaseClass):
 
     def test_udf_remove_with_none_as_parameters(self):
 
-        with pytest.raises(Exception) as exception:
+        try:
             status = TestUdfRemove.client.udf_remove(None, None)
 
-        assert exception.value[0] == -2
-        assert exception.value[1] == "Filename should be a string"
+        except ParamError as exception:
+            assert exception.code == -2
+            assert exception.msg == "Filename should be a string"
 
     def test_udf_remove_with_proper_parameters(self):
 
@@ -111,11 +116,13 @@ class TestUdfRemove(TestBaseClass):
         policy = {}
         module = "some_module"
 
-        with pytest.raises(Exception) as exception:
-            status = TestUdfRemove.client.udf_remove(module, policy)
+        try:
+            status = TestUdfRemove.client.udf_remove( module, policy )
 
-        assert exception.value[0] == 100
-        assert exception.value[1] == "error=file_not_found\n"
+        except UDFError as exception:
+            assert exception.code == 100
+            assert exception.msg == "error=file_not_found\n"
+            assert exception.module == "some_module"
 
     def test_udf_remove_with_unicode_filename(self):
 
@@ -143,8 +150,9 @@ class TestUdfRemove(TestBaseClass):
         policy = {'timeout': 0}
         module = "example.lua"
 
-        with pytest.raises(Exception) as exception:
-            status = client1.udf_remove(module, policy)
+        try:
+            status = client1.udf_remove( module, policy )
 
-        assert exception.value[0] == 11L
-        assert exception.value[1] == 'No connection to aerospike cluster'
+        except ClusterError as exception:
+            assert exception.code == 11L
+            assert exception.msg == 'No connection to aerospike cluster'

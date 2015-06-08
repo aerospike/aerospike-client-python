@@ -7,11 +7,11 @@ local function add(a, b)
 end
 
 function count(stream)
-    return stream : map(one) : reduce(add);
+    return stream : map(one) : reduce(add)
 end
 
 function count_extra(stream, extra_parameter)
-    return stream : map(one) : reduce(add);
+    return stream : map(one) : reduce(add)
 end
 
 function count_less()

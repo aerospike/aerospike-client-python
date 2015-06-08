@@ -21,7 +21,7 @@ class TestIsconnected(object):
 
     def test_isconnected_positive(self):
         """
-        Invoke isconnected() positive.
+        Invoke is_connected() positive.
         """
         hostlist, user, password = TestBaseClass.get_hosts()
         config = {'hosts': hostlist}
@@ -29,36 +29,27 @@ class TestIsconnected(object):
             self.client = aerospike.client(config).connect()
         else:
             self.client = aerospike.client(config).connect(user, password)
-        if self.client.isConnected():
-            assert True == True
-        else:
-            assert True == False
-
+        assert self.client.is_connected() == True
         self.client.close()
 
     def test_isconnected_beforeconnect(self):
         """
-        Invoke isconnected() before connect
+        Invoke is_connected() before connect
         """
         hostlist, user, password = TestBaseClass.get_hosts()
         config = {'hosts': hostlist}
         self.client = aerospike.client(config)
-        if self.client.isConnected():
-            assert True == False
+        assert self.client.is_connected() == False
+        if user == None and password == None:
+            self.client.connect()
         else:
-            assert True == True
-
-        self.client.connect()
-
-        if self.client.isConnected():
-            assert True == True
-        else:
-            assert True == False
+            self.client.connect(user, password)
+        assert self.client.is_connected() == True
         self.client.close()
 
     def test_isconnected_afterclose(self):
         """
-        Invoke isconnected() positive.
+        Invoke is_connected() after close.
         """
         hostlist, user, password = TestBaseClass.get_hosts()
         config = {'hosts': hostlist}
@@ -68,7 +59,4 @@ class TestIsconnected(object):
             self.client = aerospike.client(config).connect(user, password)
 
         self.client.close()
-        if self.client.isConnected():
-            assert True == False
-        else:
-            assert True == True
+        assert self.client.is_connected() == False

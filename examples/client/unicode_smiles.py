@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 ################################################################################
-# Copyright 2013-2014 Aerospike, Inc.
+# Copyright 2013-2015 Aerospike, Inc.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -18,6 +18,7 @@
 from __future__ import print_function
 
 import aerospike
+from aerospike.exception import *
 import sys
 
 from optparse import OptionParser
@@ -164,8 +165,8 @@ try:
 
     client.close()
 
-except Exception as e:
-    print("error: {0}".format(e), file=sys.stderr)
+except ClientError as e:
+    print("Error: {0} [{1}]".format(e.msg, e.code))
     exitCode = 3
 
 ################################################################################

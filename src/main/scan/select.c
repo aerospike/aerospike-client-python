@@ -22,6 +22,7 @@
 #include "client.h"
 #include "scan.h"
 #include "conversions.h"
+#include "exceptions.h"
 
 #undef TRACE
 #define TRACE()
@@ -61,7 +62,8 @@ AerospikeScan * AerospikeScan_Select(AerospikeScan * self, PyObject * args, PyOb
 				as_error_update(&err, AEROSPIKE_ERR_PARAM, "Bin name should be of type string");
 				PyObject * py_err = NULL;
 				error_to_pyobject(&err, &py_err);
-				PyErr_SetObject(PyExc_Exception, py_err);
+				PyObject *exception_type = raise_exception(&err);
+				PyErr_SetObject(exception_type, py_err);
 				Py_DECREF(py_err);
 				return NULL;
 
@@ -81,7 +83,9 @@ CLEANUP:
 	if ( err.code != AEROSPIKE_OK ) {
 		PyObject * py_err = NULL;
 		error_to_pyobject(&err, &py_err);
-		PyErr_SetObject(PyExc_Exception, py_err);
+		PyObject *exception_type = raise_exception(&err);
+		PyErr_SetObject(exception_type, py_err);
+		Py_DECREF(py_err);
 		return NULL;
 	}
 
