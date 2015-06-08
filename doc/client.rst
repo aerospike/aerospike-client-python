@@ -718,20 +718,26 @@ Client Class --- :class:`Client`
 
         Register a UDF module with the cluster.
 
-        :param str filename: the UDF module to be registered with the cluster.
+        :param str filename: the path to the UDF module to be registered with the cluster.
         :param int udf_type: one of ``aerospike.UDF_TYPE_\*``
         :param dict policy: currently **timeout** in milliseconds is the available policy.
         :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
 
-        .. code-block:: python
+        .. note::
+            Register the UDF module and copy it to the Lua 'user_path', \
+            a directory that should contain a copy of the modules registered \
+            with the cluster.
 
-            config = {
-                'hosts': [ ('127.0.0.1', 3000)],
-                'lua': { 'user_path': '.'}}
-            client = aerospike.client(config).connect()
-            client.udf_put('my_module.lua')
+            .. code-block:: python
+                :emphasize-lines: 3,5
 
-        .. versionchanged:: 1.0.39
+                config = {
+                    'hosts': [ ('127.0.0.1', 3000)],
+                    'lua': { 'user_path': '/path/to/lua/user_path'}}
+                client = aerospike.client(config).connect()
+                client.udf_put('/path/to/my_module.lua')
+
+        .. versionchanged:: 1.0.45
 
 
     .. method:: udf_remove(module[, policy])
