@@ -83,7 +83,7 @@ Client Class --- :class:`Client`
         does not exist the *meta* data will be ``None``.
 
         :param tuple key: a :ref:`aerospike_key_tuple` associated with the record.
-        :param dict policy: optional read policies :ref:`aerospike_read_policies`.
+        :param dict policy: optional :ref:`aerospike_read_policies`.
         :return: a :ref:`aerospike_record_tuple`. See :ref:`unicode_handling`.
 
         .. code-block:: python
@@ -122,7 +122,7 @@ Client Class --- :class:`Client`
 
         :param tuple key: a :ref:`aerospike_key_tuple` associated with the record.
         :param list bins: a list of bin names to select from the record.
-        :param dict policy: optional read policies :ref:`aerospike_read_policies`.
+        :param dict policy: optional :ref:`aerospike_read_policies`.
         :return: a :ref:`aerospike_record_tuple`. See :ref:`unicode_handling`.
 
         .. code-block:: python
@@ -158,7 +158,7 @@ Client Class --- :class:`Client`
         the record  does not exist the *meta* data will be ``None``.
 
         :param tuple key: a :ref:`aerospike_key_tuple` associated with the record.
-        :param dict policy: optional read policies :ref:`aerospike_read_policies`.
+        :param dict policy: optional :ref:`aerospike_read_policies`.
         :rtype: :py:func:`tuple` (key, meta)
 
         .. code-block:: python
@@ -193,7 +193,7 @@ Client Class --- :class:`Client`
         :param dict bins: a :class:`dict` of bin-name / bin-value pairs.
         :param dict meta: optional record metadata to be set, with field
             ``'ttl'`` set to :class:`int` number of seconds.
-        :param dict policy: optional read policies :ref:`aerospike_write_policies`.
+        :param dict policy: optional :ref:`aerospike_write_policies`.
         :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
 
         .. code-block:: python
@@ -287,7 +287,7 @@ Client Class --- :class:`Client`
         Remove a record matching the *key* from the cluster.
 
         :param tuple key: a :ref:`aerospike_key_tuple` associated with the record.
-        :param dict policy: optional remove policies :ref:`aerospike_remove_policies`.
+        :param dict policy: optional :ref:`aerospike_remove_policies`.
         :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
 
         .. code-block:: python
@@ -341,7 +341,7 @@ Client Class --- :class:`Client`
         :param list list: the bins names to be removed from the record.
         :param dict meta: optional record metadata to be set, with field
             ``'ttl'`` set to :class:`int` number of seconds.
-        :param dict policy: optional write policies :ref:`aerospike_write_policies`.
+        :param dict policy: optional :ref:`aerospike_write_policies`.
         :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
 
         .. code-block:: python
@@ -541,7 +541,7 @@ Client Class --- :class:`Client`
         For records that do not exist the value will be ``None``.
 
         :param list keys: a list of :ref:`aerospike_key_tuple`.
-        :param dict policy: optional batch policies :ref:`aerospike_batch_policies`.
+        :param dict policy: optional :ref:`aerospike_batch_policies`.
         :return: a :class:`dict` of :ref:`aerospike_record_tuple` keyed on the \
                  matching *primary key*. See :ref:`unicode_handling`.
 
@@ -589,7 +589,7 @@ Client Class --- :class:`Client`
         For records that do not exist the value will be ``None``.
 
         :param list keys: a list of :ref:`aerospike_key_tuple`.
-        :param dict policy: optional batch policies :ref:`aerospike_batch_policies`.
+        :param dict policy: optional :ref:`aerospike_batch_policies`.
         :return: a :class:`dict` of :ref:`aerospike_record_tuple` keyed on the \
                  matching *primary key*.
 
@@ -641,7 +641,7 @@ Client Class --- :class:`Client`
         :param list keys: a list of :ref:`aerospike_key_tuple`.
         :param list bins: the bin names to select from the matching records.
         :param dict policy: an optional :class:`dict` with fields:
-        :param dict policy: optional batch policies :ref:`aerospike_batch_policies`.
+        :param dict policy: optional :ref:`aerospike_batch_policies`.
         :return: a :class:`dict` of :ref:`aerospike_record_tuple` keyed on the \
                  matching *primary key*.
 
@@ -725,7 +725,11 @@ Client Class --- :class:`Client`
 
         .. code-block:: python
 
-            client.udf_put('/path/to/my_module.lua')
+            config = {
+                'hosts': [ ('127.0.0.1', 3000)],
+                'lua': { 'user_path': '.'}}
+            client = aerospike.client(config).connect()
+            client.udf_put('my_module.lua')
 
         .. versionchanged:: 1.0.39
 
@@ -755,12 +759,12 @@ Client Class --- :class:`Client`
 
         .. code-block:: python
 
+            from __future__ import print_function
             import aerospike
 
             config = {'hosts': [('127.0.0.1', 3000)] }
             client = aerospike.client(config).connect()
-            udfs = client.udf_list()
-            print(udfs)
+            print(client.udf_list())
 
         .. note::
 
@@ -809,7 +813,7 @@ Client Class --- :class:`Client`
         :param str module: the name of the UDF module.
         :param str function: the name of the UDF to apply to the record identified by *key*.
         :param list args: the arguments to the UDF.
-        :param dict policy: optional write policies :ref:`aerospike_write_policies`.
+        :param dict policy: optional :ref:`aerospike_apply_policies`.
         :return: the value optionally returned by the UDF, one of :class:`str`,\ 
                  :class:`int`, :class:`bytearray`, :class:`list`, :class:`dict`.
         :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
@@ -827,7 +831,7 @@ Client Class --- :class:`Client`
         :param str module: the name of the UDF module.
         :param str function: the name of the UDF to apply to the records matched by the scan.
         :param list args: the arguments to the UDF.
-        :param dict policy: optional scan policies :ref:`aerospike_scan_policies`.
+        :param dict policy: optional :ref:`aerospike_scan_policies`.
         :param dict options: the :ref:`aerospike_scan_options` that will apply to the scan.
         :rtype: :class:`int`
         :return: a scan ID that can be used with :meth:`scan_info` to track the status of the scan, as it runs in the background.
@@ -883,7 +887,7 @@ Client Class --- :class:`Client`
         :param str set: the set name.
         :param str bin: the name of bin the secondary index is built on.
         :param str index_name: the name of the index.
-        :param dict policy: optional info policies :ref:`aerospike_info_policies`.
+        :param dict policy: optional :ref:`aerospike_info_policies`.
         :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
 
         .. versionchanged:: 1.0.39
@@ -898,7 +902,7 @@ Client Class --- :class:`Client`
         :param str set: the set name.
         :param str bin: the name of bin the secondary index is built on.
         :param str index_name: the name of the index.
-        :param dict policy: optional info policies :ref:`aerospike_info_policies`.
+        :param dict policy: optional :ref:`aerospike_info_policies`.
         :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
 
         .. versionchanged:: 1.0.39
@@ -914,7 +918,7 @@ Client Class --- :class:`Client`
         :param str bin: the name of bin the secondary index is built on.
         :param index_datatype: Possible values are ``aerospike.INDEX_STRING`` and ``aerospike.INDEX_NUMERIC``.
         :param str index_name: the name of the index.
-        :param dict policy: optional info policies :ref:`aerospike_info_policies`.
+        :param dict policy: optional :ref:`aerospike_info_policies`.
         :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
 
         .. warning::
@@ -934,7 +938,7 @@ Client Class --- :class:`Client`
         :param str bin: the name of bin the secondary index is built on.
         :param index_datatype: Possible values are ``aerospike.INDEX_STRING`` and ``aerospike.INDEX_NUMERIC``.
         :param str index_name: the name of the index.
-        :param dict policy: optional info policies :ref:`aerospike_info_policies`.
+        :param dict policy: optional :ref:`aerospike_info_policies`.
         :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
 
         .. warning::
@@ -954,7 +958,7 @@ Client Class --- :class:`Client`
         :param str bin: the name of bin the secondary index is built on.
         :param index_datatype: Possible values are ``aerospike.INDEX_STRING`` and ``aerospike.INDEX_NUMERIC``.
         :param str index_name: the name of the index.
-        :param dict policy: optional info policies :ref:`aerospike_info_policies`.
+        :param dict policy: optional :ref:`aerospike_info_policies`.
         :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
 
         .. warning::
@@ -984,7 +988,7 @@ Client Class --- :class:`Client`
 
         :param str ns: the namespace in the aerospike cluster.
         :param str index_name: the name of the index.
-        :param dict policy: optional info policies :ref:`aerospike_info_policies`.
+        :param dict policy: optional :ref:`aerospike_info_policies`.
         :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
 
         .. versionchanged:: 1.0.39
@@ -1026,7 +1030,7 @@ Client Class --- :class:`Client`
 
         :param str command: the info command.
         :param list hosts: a :class:`list` containing an *address*, *port* :py:func:`tuple`. Example: ``[('127.0.0.1', 3000)]``
-        :param dict policy: optional info policies :ref:`aerospike_info_policies`.
+        :param dict policy: optional :ref:`aerospike_info_policies`.
         :rtype: :class:`dict`
         :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
 
@@ -1059,13 +1063,27 @@ Client Class --- :class:`Client`
 
         :param str command: the info command.
         :param tuple host: a :py:func:`tuple` containing an *address*, *port* pair. Example: ``('127.0.0.1', 3000)``
-        :param dict policy: optional info policies :ref:`aerospike_info_policies`.
+        :param dict policy: optional :ref:`aerospike_info_policies`.
         :rtype: :class:`str`
         :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
 
         .. seealso:: `Info Command Reference <http://www.aerospike.com/docs/reference/info/>`_.
 
         .. versionchanged:: 1.0.41
+
+
+    .. rubric:: LList
+
+    .. method:: llist(key, bin[, module]) -> LList
+
+        Return a :class:`aerospike.LList` object on a specified *key* and *bin*.
+
+        :param tuple key: a :ref:`aerospike_key_tuple` associated with the record.
+        :param str bin: the name of the bin cotaining the :class:`~aerospike.LList`.
+        :param str module: an optional UDF module that contains filtering \
+                           functions to be used in conjunction with LList methods.
+        :return: an :py:class:`aerospike.LList` class.
+        :raises: a subclass of :exc:`~aerospike.exception.LDTError`.
 
 
     .. rubric:: Admin
@@ -1116,7 +1134,7 @@ Client Class --- :class:`Client`
 
         :param str role: the name of the role.
         :param list privileges: a list of :ref:`aerospike_privilege_dict`.
-        :param dict policy: optional admin policies :ref:`aerospike_admin_policies`.
+        :param dict policy: optional :ref:`aerospike_admin_policies`.
         :raises: one of the :exc:`~aerospike.exception.AdminError` subclasses.
 
         .. versionchanged:: 1.0.44
@@ -1127,7 +1145,7 @@ Client Class --- :class:`Client`
         Drop a custom *role*.
 
         :param str role: the name of the role.
-        :param dict policy: optional admin policies :ref:`aerospike_admin_policies`.
+        :param dict policy: optional :ref:`aerospike_admin_policies`.
         :raises: one of the :exc:`~aerospike.exception.AdminError` subclasses.
 
         .. versionchanged:: 1.0.44
@@ -1139,7 +1157,7 @@ Client Class --- :class:`Client`
 
         :param str role: the name of the role.
         :param list privileges: a list of :ref:`aerospike_privilege_dict`.
-        :param dict policy: optional admin policies :ref:`aerospike_admin_policies`.
+        :param dict policy: optional :ref:`aerospike_admin_policies`.
         :raises: one of the :exc:`~aerospike.exception.AdminError` subclasses.
 
         .. versionchanged:: 1.0.44
@@ -1151,7 +1169,7 @@ Client Class --- :class:`Client`
 
         :param str role: the name of the role.
         :param list privileges: a list of :ref:`aerospike_privilege_dict`.
-        :param dict policy: optional admin policies :ref:`aerospike_admin_policies`.
+        :param dict policy: optional :ref:`aerospike_admin_policies`.
         :raises: one of the :exc:`~aerospike.exception.AdminError` subclasses.
 
         .. versionchanged:: 1.0.44
@@ -1162,7 +1180,7 @@ Client Class --- :class:`Client`
         Get the :class:`list` of privileges associated with a *role*.
 
         :param str role: the name of the role.
-        :param dict policy: optional admin policies :ref:`aerospike_admin_policies`.
+        :param dict policy: optional :ref:`aerospike_admin_policies`.
         :return: a :class:`list` of :ref:`aerospike_privilege_dict`.
         :raises: one of the :exc:`~aerospike.exception.AdminError` subclasses.
 
@@ -1173,7 +1191,7 @@ Client Class --- :class:`Client`
 
         Get all named roles and their privileges.
 
-        :param dict policy: optional admin policies :ref:`aerospike_admin_policies`.
+        :param dict policy: optional :ref:`aerospike_admin_policies`.
         :return: a :class:`dict` of :ref:`aerospike_privilege_dict` keyed by role name.
         :raises: one of the :exc:`~aerospike.exception.AdminError` subclasses.
 
@@ -1187,7 +1205,7 @@ Client Class --- :class:`Client`
         :param str username: the username to be added to the aerospike cluster.
         :param str password: the password associated with the given username.
         :param list roles: the list of role names assigned to the user.
-        :param dict policy: optional admin policies :ref:`aerospike_admin_policies`.
+        :param dict policy: optional :ref:`aerospike_admin_policies`.
         :raises: one of the :exc:`~aerospike.exception.AdminError` subclasses.
 
         .. versionchanged:: 1.0.44
@@ -1198,7 +1216,7 @@ Client Class --- :class:`Client`
         Drop the user with a specified *username* from the cluster.
 
         :param str username: the username to be dropped from the aerospike cluster.
-        :param dict policy: optional admin policies :ref:`aerospike_admin_policies`.
+        :param dict policy: optional :ref:`aerospike_admin_policies`.
         :raises: one of the :exc:`~aerospike.exception.AdminError` subclasses.
 
         .. versionchanged:: 1.0.44
@@ -1211,7 +1229,7 @@ Client Class --- :class:`Client`
 
         :param str username: the username.
         :param str password: the password associated with the given username.
-        :param dict policy: optional admin policies :ref:`aerospike_admin_policies`.
+        :param dict policy: optional :ref:`aerospike_admin_policies`.
         :raises: one of the :exc:`~aerospike.exception.AdminError` subclasses.
 
         .. versionchanged:: 1.0.44
@@ -1223,7 +1241,7 @@ Client Class --- :class:`Client`
 
         :param str username: the username to be added to the aerospike cluster.
         :param str password: the password associated with the given username.
-        :param dict policy: optional admin policies :ref:`aerospike_admin_policies`.
+        :param dict policy: optional :ref:`aerospike_admin_policies`.
         :raises: one of the :exc:`~aerospike.exception.AdminError` subclasses.
 
         .. versionchanged:: 1.0.44
@@ -1235,7 +1253,7 @@ Client Class --- :class:`Client`
 
         :param str username: the username to be granted the roles.
         :param list roles: a list of role names.
-        :param dict policy: optional admin policies :ref:`aerospike_admin_policies`.
+        :param dict policy: optional :ref:`aerospike_admin_policies`.
         :raises: one of the :exc:`~aerospike.exception.AdminError` subclasses.
 
         .. versionchanged:: 1.0.44
@@ -1247,7 +1265,7 @@ Client Class --- :class:`Client`
 
         :param str username: the username to have the roles revoked.
         :param list roles: a list of role names.
-        :param dict policy: optional admin policies :ref:`aerospike_admin_policies`.
+        :param dict policy: optional :ref:`aerospike_admin_policies`.
         :raises: one of the :exc:`~aerospike.exception.AdminError` subclasses.
 
         .. versionchanged:: 1.0.44
@@ -1258,7 +1276,7 @@ Client Class --- :class:`Client`
         Return the list of roles granted to the specified user *username*.
 
         :param str username: the username to query for.
-        :param dict policy: optional admin policies :ref:`aerospike_admin_policies`.
+        :param dict policy: optional :ref:`aerospike_admin_policies`.
         :return: a :class:`list` of role names.
         :raises: one of the :exc:`~aerospike.exception.AdminError` subclasses.
 
@@ -1269,7 +1287,7 @@ Client Class --- :class:`Client`
 
         Return the :class:`dict` of users, with their roles keyed by username.
 
-        :param dict policy: optional admin policies :ref:`aerospike_admin_policies`.
+        :param dict policy: optional :ref:`aerospike_admin_policies`.
         :return: a :class:`dict` of roles keyed by username.
         :raises: one of the :exc:`~aerospike.exception.AdminError` subclasses.
 
@@ -1355,7 +1373,7 @@ Write Policies
 
 .. object:: policy
 
-    A :class:`dict` of optional write policies which are applicable to :meth:`Client.put`. See :ref:`aerospike_policies`.
+    A :class:`dict` of optional write policies which are applicable to :meth:`~Client.put`. See :ref:`aerospike_policies`.
 
     .. hlist::
         :columns: 1
@@ -1375,7 +1393,7 @@ Read Policies
 
 .. object:: policy
 
-     A :class:`dict` of optional read policies which are applicable to :meth:`Client.get`. See :ref:`aerospike_policies`.
+     A :class:`dict` of optional read policies which are applicable to :meth:`~Client.get`. See :ref:`aerospike_policies`.
 
     .. hlist::
         :columns: 1
@@ -1394,7 +1412,7 @@ Operate Policies
 
 .. object:: policy
 
-     A :class:`dict` of optional operate policies which are applicable to :meth:`Client.append`, :meth:`Client.prepend`, :meth:`Client.increment`, :meth:`Client.operate`. See :ref:`aerospike_policies`.
+     A :class:`dict` of optional operate policies which are applicable to :meth:`~Client.append`, :meth:`~Client.prepend`, :meth:`~Client.increment`, :meth:`~Client.operate`. See :ref:`aerospike_policies`.
 
     .. hlist::
         :columns: 1
@@ -1407,6 +1425,22 @@ Operate Policies
         * **commit_level** one of the `aerospike.POLICY_COMMIT_LEVEL_* <http://www.aerospike.com/apidocs/c/db/d65/group__client__policies.html#ga17faf52aeb845998e14ba0f3745e8f23>`_ values
         * **consistency_level** one of the `aerospike.POLICY_CONSISTENCY_LEVEL_* <http://www.aerospike.com/apidocs/c/db/d65/group__client__policies.html#ga34dbe8d01c941be845145af643f9b5ab>`_ values
 
+.. _aerospike_apply_policies:
+
+Apply Policies
+--------------
+
+.. object:: policy
+
+    A :class:`dict` of optional apply policies which are applicable to :meth:`~Client.apply`, and :class:`~aerospike.LList` methods. See :ref:`aerospike_policies`.
+
+    .. hlist::
+        :columns: 1
+
+        * **timeout** write timeout in milliseconds
+        * **key** one of the `aerospike.POLICY_KEY_* <http://www.aerospike.com/apidocs/c/db/d65/group__client__policies.html#gaa9c8a79b2ab9d3812876c3ec5d1d50ec>`_ values
+        * **commit_level** one of the `aerospike.POLICY_COMMIT_LEVEL_* <http://www.aerospike.com/apidocs/c/db/d65/group__client__policies.html#ga17faf52aeb845998e14ba0f3745e8f23>`_ values
+
 
 .. _aerospike_remove_policies:
 
@@ -1415,7 +1449,7 @@ Remove Policies
 
 .. object:: policy
 
-     A :class:`dict` of optional remove policies which are applicable to :meth:`Client.remove`. See :ref:`aerospike_policies`.
+     A :class:`dict` of optional remove policies which are applicable to :meth:`~Client.remove`. See :ref:`aerospike_policies`.
 
     .. hlist::
         :columns: 1

@@ -294,7 +294,7 @@ PyObject * AerospikeClient_UDF_List(AerospikeClient * self, PyObject *args, PyOb
 	static char * kwlist[] = {"policy", NULL};
 
 	// Python Function Argument Parsing
-	if ( PyArg_ParseTupleAndKeywords(args, kwds, "O:udf_list", kwlist, &py_policy) == false ) {
+	if ( PyArg_ParseTupleAndKeywords(args, kwds, "|O:udf_list", kwlist, &py_policy) == false ) {
 		return NULL;
 	}
 
