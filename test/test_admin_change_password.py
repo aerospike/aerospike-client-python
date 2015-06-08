@@ -26,8 +26,11 @@ class TestChangePassword(TestBaseClass):
         config = {"hosts": hostlist}
         self.client = aerospike.client(config).connect(user, password)
 
-        self.client.admin_create_user( "testchangepassworduser", "aerospike", ["read"], {})
-        time.sleep(2)
+        try:
+            self.client.admin_create_user( "testchangepassworduser", "aerospike", ["read"], {})
+            time.sleep(1)
+        except UserExistsError:
+            pass # we are good, no such role exists
         self.delete_users = []
 
     def teardown_method(self, method):

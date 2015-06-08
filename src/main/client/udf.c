@@ -98,7 +98,6 @@ PyObject * AerospikeClient_UDF_Put(AerospikeClient * self, PyObject *args, PyObj
 		goto CLEANUP;
 	}
 
-
 	// Convert python object to policy_info
 	pyobject_to_policy_info( &err, py_policy, &info_policy, &info_policy_p,
 			&self->as->config.policies.info);
@@ -335,7 +334,7 @@ PyObject * AerospikeClient_UDF_List(AerospikeClient * self, PyObject *args, PyOb
 	static char * kwlist[] = {"policy", NULL};
 
 	// Python Function Argument Parsing
-	if ( PyArg_ParseTupleAndKeywords(args, kwds, "O:udf_list", kwlist, &py_policy) == false ) {
+	if ( PyArg_ParseTupleAndKeywords(args, kwds, "|O:udf_list", kwlist, &py_policy) == false ) {
 		return NULL;
 	}
 

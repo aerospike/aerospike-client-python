@@ -334,26 +334,34 @@ static int AerospikeClient_Type_Init(AerospikeClient * self, PyObject * args, Py
 	if ( py_hosts && PyList_Check(py_hosts) ) {
 		int size = (int) PyList_Size(py_hosts);
 		for ( int i = 0; i < size && i < AS_CONFIG_HOSTS_SIZE; i++ ) {
+			char *addr = NULL;
+			uint16_t port = 3000;
 			PyObject * py_host = PyList_GetItem(py_hosts, i);
-			if ( PyTuple_Check(py_host) && PyTuple_Size(py_host) == 2 ) {
-				PyObject * py_addr = PyTuple_GetItem(py_host,0);
-				PyObject * py_port = PyTuple_GetItem(py_host,1);
-				if ( PyString_Check(py_addr) ) {
-					char * addr = PyString_AsString(py_addr);
-					config.hosts[i].addr = addr;
+			PyObject * py_addr, * py_port;
+
+			if( PyTuple_Check(py_host) && PyTuple_Size(py_host) == 2) {
+
+				py_addr = PyTuple_GetItem(py_host, 0);
+				if(PyString_Check(py_addr)) {
+					addr = strdup(PyString_AsString(py_addr));
 				}
-				if ( PyInt_Check(py_port) ) {
-					config.hosts[i].port = (uint16_t) PyInt_AsLong(py_port);
+				py_port = PyTuple_GetItem(py_host,1);
+				if( PyInt_Check(py_port) || PyLong_Check(py_port) ) {
+					port = (uint16_t) PyLong_AsLong(py_port);
 				}
-				else if ( PyLong_Check(py_port) ) {
-					config.hosts[i].port = (uint16_t) PyLong_AsLong(py_port);
+				else {
+					port = 0;
 				}
 			}
 			else if ( PyString_Check(py_host) ) {
-				char * addr = PyString_AsString(py_host);
-				config.hosts[i].addr = addr;
-				config.hosts[i].port = 3000;
+				addr = strdup( strtok( PyString_AsString(py_host), ":" ) );
+				addr = strtok(addr, ":");
+				char *temp = strtok(NULL, ":");
+				if(NULL != temp) {
+					port = (uint16_t)atoi(temp);
+				}
 			}
+			as_config_add_host(&config, addr, port);
 		}
 	}
 

@@ -4,7 +4,9 @@ import pytest
 import sys
 import cPickle as pickle
 from test_base_class import TestBaseClass
+import os
 import shutil
+import time
 
 aerospike = pytest.importorskip("aerospike")
 try:
@@ -20,7 +22,8 @@ class TestAggregate(TestBaseClass):
         hostlist, user, password = TestBaseClass.get_hosts()
         config = {
             'hosts': hostlist,
-            'lua':{'user_path': '/tmp/'}}
+            'lua':{'user_path': '/tmp/',
+            'system_path':'../aerospike-client-c/lua/'}}
         if user == None and password == None:
             client = aerospike.client(config).connect()
         else:
@@ -29,19 +32,22 @@ class TestAggregate(TestBaseClass):
         client.index_integer_create('test', 'demo', 'test_age',
                 'test_demo_test_age_idx')
         client.index_integer_create('test', 'demo', 'age1', 'test_demo_age1_idx')
+        time.sleep(2)
 
         filename = "stream_example.lua"
         udf_type = aerospike.UDF_TYPE_LUA
         status = client.udf_put(filename, udf_type)
-        #shutil.copyfile(filename, config['lua']['user_path'] +
-        #    'stream_example.lua')
+        shutil.copyfile(filename, config['lua']['user_path'] +
+            'stream_example.lua')
         client.close()
 
     def teardown_class(cls):
+        return
         hostlist, user, password = TestBaseClass.get_hosts()
         config = {
             'hosts': hostlist,
-            'lua':{'user_path': '/tmp/'}}
+            'lua':{'user_path': '/tmp/',
+            'system_path':'../aerospike-client-c/lua/'}}
         if user == None and password == None:
             client = aerospike.client(config).connect()
         else:
@@ -51,6 +57,7 @@ class TestAggregate(TestBaseClass):
         module = "stream_example.lua"
 
         status = client.udf_remove(module)
+        os.remove(config['lua']['user_path'] + 'stream_example.lua')
         client.close()
 
     def setup_method(self, method):
@@ -61,7 +68,8 @@ class TestAggregate(TestBaseClass):
         hostlist, user, password = TestBaseClass.get_hosts()
         config = {
             'hosts': hostlist,
-            'lua':{'user_path': '/tmp/'}}
+            'lua':{'user_path': '/tmp/',
+            'system_path':'../aerospike-client-c/lua/'}}
         if TestBaseClass.user == None and TestBaseClass.password == None:
             self.client = aerospike.client(config).connect()
         else:

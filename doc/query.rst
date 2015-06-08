@@ -13,13 +13,17 @@ Query Class --- :class:`Query`
 
     The Query object created by calling :meth:`aerospike.Client.query` is used \
     for executing queries over a secondary index of a specified set (which \
-    can be ommitted or ``None``).
+    can be ommitted or ``None``). For queries, the ``None`` set contains those \
+    records which are not part of any named set.
 
     The Query can (optionally) be assigned one of the \
     :mod:`~aerospike.predicates` (:meth:`~aerospike.predicates.between` \
-    or :meth:`~aerospike.predicates.equals`) using :meth:`where`, then \
-    invoked using either :meth:`foreach` or :meth:`results`. The bins returned \
-    can be filtered by using :meth:`select`.
+    or :meth:`~aerospike.predicates.equals`) using :meth:`where`. A query \
+    without a predicate will match all the records in the given set, similar \
+    to a :class:`~aerospike.Scan`.
+
+    The query is invoked using either :meth:`foreach` or :meth:`results`. \
+    The bins returned can be filtered by using :meth:`select`.
 
     Finally, a `stream UDF <http://www.aerospike.com/docs/udf/developing_stream_udfs.html>`_ \
     may be applied with :meth:`apply`. It will aggregate results out of the \
@@ -54,7 +58,7 @@ Query Class --- :class:`Query`
         Buffer the records resulting from the query, and return them as a \
         :class:`list` of records.
 
-        :param dict policy: optional query policies :ref:`aerospike_query_policies`.
+        :param dict policy: optional :ref:`aerospike_query_policies`.
         :return: a :class:`list` of :ref:`aerospike_record_tuple`.
 
         .. code-block:: python
@@ -85,7 +89,7 @@ Query Class --- :class:`Query`
         from the query.
 
         :param callable callback: the function to invoke for each record.
-        :param dict policy: optional query policies :ref:`aerospike_query_policies`.
+        :param dict policy: optional :ref:`aerospike_query_policies`.
 
         .. seealso:: The :ref:`aerospike_record_tuple`.
 
@@ -111,14 +115,46 @@ Query Class --- :class:`Query`
             query.foreach(matched_names, {'timeout':2000})
             pp.pprint(names)
 
+        .. note:: To stop the stream return ``False`` from the callback function.
+
+        .. code-block:: python
+
+            from __future__ import print_function
+            import aerospike
+            from aerospike import predicates as p
+
+            config = { 'hosts': [ ('127.0.0.1',3000)]}
+            client = aerospike.client(config).connect()
+
+            def limit(lim, result):
+                c = [0]
+                def key_add((key, metadata, bins)):
+                    if c[0] < lim:
+                        result.append(key)
+                        c[0] = c[0] + 1
+                    else:
+                        return False
+                return key_add
+
+            query = client.query('test','user')
+            query.where(p.between('age', 20, 30))
+            keys = []
+            query.foreach(limit(100, keys))
+            print(len(keys)) # this will be 100 if there number of matching records > 100
+            client.close()
 
     .. method:: apply(module, function[, arguments])
 
-        Aggregate the :meth:`results` using a stream `UDF <http://www.aerospike.com/docs/guide/udf.html>`_.
+        Aggregate the :meth:`results` using a stream \
+        `UDF <http://www.aerospike.com/docs/guide/udf.html>`_. If no \
+        predicate is attached to the  :class:`~aerospike.Query` the stream UDF \
+        will aggregate over all the records in the specified set.
 
         :param str module: the name of the Lua module.
         :param str function: the name of the Lua function within the *module*.
         :param list arguments: optional arguments to pass to the *function*.
+
+        .. seealso:: `Developing Stream UDFs <http://www.aerospike.com/docs/udf/developing_stream_udfs.html>`_
 
         .. note::
 
@@ -174,7 +210,9 @@ Query Class --- :class:`Query`
                 from aerospike import predicates as p
                 import pprint
 
-                config = { 'hosts': [('127.0.0.1', 3000)] }
+                config = {'hosts': [('127.0.0.1', 3000)],
+                          'lua': {'system_path':'/usr/local/aerospike/lua/',
+                                  'user_path':'/usr/local/aerospike/user-lua/'}}
                 client = aerospike.client(config).connect()
 
                 pp = pprint.PrettyPrinter(indent=2)
@@ -183,6 +221,14 @@ Query Class --- :class:`Query`
                 query.apply('stream_udf', 'group_count', [ 'first_name' ])
                 names = query.results()
                 pp.pprint(names)
+
+            With stream UDFs, the final reduce steps (which ties
+            the results from the reducers of the cluster nodes) executes on the
+            client-side. Explicitly setting the Lua ``user_path`` in the
+            config helps the client find the local copy of the module
+            containing the stream UDF. The ``system_path`` is constructed when
+            the Python package is installed, and contains system modules such
+            as ``aerospike.lua``, ``as.lua``, and ``stream_ops.lua``.
 
 
 .. _aerospike_query_policies:

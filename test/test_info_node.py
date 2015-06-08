@@ -95,6 +95,11 @@ class TestInfoNode(object):
         """
         Test info with correct arguments
         """
+        try:
+            TestInfoNode.client.index_remove('test','names_test_index')
+            time.sleep(2)
+        except:
+            pass
         key = ('test', 'demo', 'list_key')
 
         rec = {'names': ['John', 'Marlen', 'Steve']}
@@ -104,7 +109,6 @@ class TestInfoNode(object):
         time.sleep(2)
         TestInfoNode.client.remove(key)
         response = TestInfoNode.client.info_node('sindex', TestInfoNode.config['hosts'][0])
-        TestInfoNode.client.info_node('sindex-delete:ns=test;indexname=names_test_index', TestInfoNode.config['hosts'][0])
 
         if 'names_test_index' in response:
             assert True == True

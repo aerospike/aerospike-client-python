@@ -104,11 +104,9 @@ class TestUdfPut(TestBaseClass):
         udf_type = 0
 
         try:
-            status = TestUdfPut.client.udf_put( filename, udf_type, policy )
-
-        except LuaFileNotFound as exception:
-            assert exception.code == 1302
-            assert exception.msg == "cannot open script file"
+            TestUdfPut.client.udf_put( filename, udf_type, policy )
+        except LuaFileNotFound as e:
+            assert e.code == 1302
 
     def test_udf_put_with_non_lua_udf_type_and_lua_script_file(self):
 

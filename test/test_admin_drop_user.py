@@ -100,7 +100,7 @@ class TestDropUser(TestBaseClass):
 
         status = self.client.admin_create_user( user, password, roles, policy )
 
-        time.sleep(2)
+        time.sleep(1)
 
         assert status == 0
         user_details = self.client.admin_query_user( user, policy )
@@ -132,7 +132,7 @@ class TestDropUser(TestBaseClass):
 
         status = self.client.admin_create_user( user, password, roles, policy )
 
-        time.sleep(2)
+        time.sleep(1)
 
         assert status == 0
         user_details = self.client.admin_query_user( user, policy )
@@ -183,7 +183,7 @@ class TestDropUser(TestBaseClass):
 
         status = self.client.admin_create_user( user, password, roles, policy )
 
-        time.sleep(2)
+        time.sleep(1)
 
         assert status == 0
         user_details = self.client.admin_query_user( user, policy )
