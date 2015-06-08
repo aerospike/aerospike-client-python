@@ -73,12 +73,12 @@ static int AerospikeQuery_Where_Add(AerospikeQuery * self, as_predicate_type pre
 				}
 
 				if (PyUnicode_Check(py_val1)){ 
-					val = PyString_AsString( 
+					val = strdup(PyString_AsString(
 							StoreUnicodePyObject( self,
-								PyUnicode_AsUTF8String(py_val1) ));
+								PyUnicode_AsUTF8String(py_val1) )));
 
 				} else if (PyString_Check(py_val1) ){
-					val = PyString_AsString(py_val1);
+					val = strdup(PyString_AsString(py_val1));
 				}
 				else {
 					return 1;
