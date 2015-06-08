@@ -117,7 +117,7 @@ PyObject * AerospikeClient_UDF_Put(AerospikeClient * self, PyObject *args, PyObj
     memcpy( copy_filepath,
         self->as->config.lua.user_path,
         user_path_len);
-    if ( self->as->config.lua.user_path[user_path_len-1] != "/" ) {
+    if ( self->as->config.lua.user_path[user_path_len-1] != '/' ) {
         memcpy( copy_filepath + user_path_len, "/", 1);
         user_path_len = user_path_len + 1;
     }
@@ -150,12 +150,12 @@ PyObject * AerospikeClient_UDF_Put(AerospikeClient * self, PyObject *args, PyObj
     if (!copy_file_p) {
         copy_file_p = fopen(copy_filepath, "w+");
         int read  = (int)fread(buff, 1, LUA_FILE_BUFFER_FRAME, file_p);
-        int write = (int)fwrite(buff, 1, read, copy_file_p);
+        fwrite(buff, 1, read, copy_file_p);
         while ( read ) {
             size += read;
             buff += read;
             read = (int)fread(buff, 1, LUA_FILE_BUFFER_FRAME, file_p);
-            write = (int)fwrite(buff, 1, read, copy_file_p);
+            fwrite(buff, 1, read, copy_file_p);
         }
     } else {
         int read  = (int)fread(buff, 1, LUA_FILE_BUFFER_FRAME, file_p);
