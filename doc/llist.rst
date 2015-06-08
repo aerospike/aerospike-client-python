@@ -133,6 +133,14 @@ Large Ordered List Class --- :class:`LList`
             parent_comment = comments.get({'key':'comment-101'})
 
 
+    .. method:: filter() -> [elements]
+
+        Scan for all elements in the :class:`LList`.
+
+        :return: a :class:`list` of elements.
+        :raises: subclass of :exc:`~aerospike.exception.LDTError`.
+
+
     .. method:: find_first(count[, policy]) -> [elements]
 
         Get the first *count* elements in the :class:`LList`.
