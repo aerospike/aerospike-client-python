@@ -20,6 +20,13 @@ test_get.py :
 
 test_kv.py :
     It is a general test suite which includes all API's single test cases.
+
+Dependencies
+------------
+The test suite uses pytest.
+
+`pip install pytest`
+
 Execution
 ---------
 
