@@ -70,7 +70,7 @@ PyObject * AerospikeClient_Close(AerospikeClient * self, PyObject * args, PyObje
 	 * in AerospikeClient_Type_Init.
 	 */ 
 	for( int i = 0; i < self->as->config.hosts_size; i++) {
-		free(self->as->config.hosts[i].addr);
+		free((void *) self->as->config.hosts[i].addr);
 	}
 
 	aerospike_destroy(self->as);
