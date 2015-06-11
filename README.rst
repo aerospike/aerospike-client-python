@@ -3,9 +3,9 @@ Aerospike Python Client
 |Build| |Release| |Downloads| |License|
 
 .. |Build| image:: https://travis-ci.org/aerospike/aerospike-client-python.svg?branch=master
-.. |Release| image:: https://pypip.in/version/aerospike/badge.svg
-.. |Downloads| image:: https://pypip.in/download/aerospike/badge.svg
-.. |License| image:: https://pypip.in/license/aerospike/badge.svg
+.. |Release| image:: https://img.shields.io/pypi/v/aerospike.svg
+.. |Downloads| image:: https://img.shields.io/pypi/dm/aerospike.svg
+.. |License| image:: https://img.shields.io/pypi/l/aerospike.svg
 
 Dependencies
 ------------

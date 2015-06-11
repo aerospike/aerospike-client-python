@@ -116,7 +116,7 @@ Client Class --- :class:`Client`
 
         Read a record with a given *key*, and return the record as a \
         :py:func:`tuple` consisting of *key*, *meta* and *bins*, with the \
-        specified bins preojected. If the record does not exist the *meta* \
+        specified bins projected. If the record does not exist the *meta* \
         data will be ``None``. If a selected bin does not exist its value will \
         be ``None``.
 
@@ -229,7 +229,7 @@ Client Class --- :class:`Client`
 
             The generation policy allows a record to be written only when the \
             generation is a specific value. In the following example, we only \
-            want to write the record if no change has occured since \
+            want to write the record if no change has occurred since \
             :meth:`exists` was called.
 
             .. code-block:: python
@@ -389,7 +389,7 @@ Client Class --- :class:`Client`
 
     .. method:: prepend(key, bin, val[, meta[, policy]])
 
-        Append the string *val* to the string value in *bin*.
+        Prepend the string value in *bin* with the string *val*.
 
         :param tuple key: a :ref:`aerospike_key_tuple` tuple associated with the record.
         :param str bin: the name of the bin.
@@ -419,7 +419,7 @@ Client Class --- :class:`Client`
 
     .. method:: increment(key, bin, offset[, meta[, policy]])
 
-        Append the string *val* to the string value in *bin*.
+        Increment the integer value in *bin* by the integer *val*.
 
         :param tuple key: a :ref:`aerospike_key_tuple` tuple associated with the record.
         :param str bin: the name of the bin.
@@ -688,7 +688,7 @@ Client Class --- :class:`Client`
     .. method:: scan(namespace[, set]) -> Scan
 
         Return a :class:`aerospike.Scan` object to be used for executing scans \
-        over a specified *set* (which can be ommitted or ``None``) in a \
+        over a specified *set* (which can be omitted or ``None``) in a \
         *namespace*. A scan with a ``None`` set returns all the records in the \
         namespace.
 
@@ -703,7 +703,7 @@ Client Class --- :class:`Client`
     .. method:: query(namespace[, set]) -> Query
 
         Return a :class:`aerospike.Query` object to be used for executing queries \
-        over a specified *set* (which can be ommitted or `None`) in a *namespace*.
+        over a specified *set* (which can be omitted or `None`) in a *namespace*.
 
         :param str namespace: a list of :ref:`aerospike_key_tuple`.
         :param str set: optional specified set name, otherwise the records \
@@ -872,7 +872,7 @@ Client Class --- :class:`Client`
                         break
                 if response['status'] == aerospike.SCAN_STATUS_COMPLETED:
                     print("Background scan successful")
-                    print("Progess percentage : ", response['progress_pct'])
+                    print("Progress percentage : ", response['progress_pct'])
                     print("Number of scanned records : ", response['records_scanned'])
                     print("Background scan status : ", "SCAN_STATUS_COMPLETED")
                 else:
@@ -1085,7 +1085,7 @@ Client Class --- :class:`Client`
         Return a :class:`aerospike.LList` object on a specified *key* and *bin*.
 
         :param tuple key: a :ref:`aerospike_key_tuple` associated with the record.
-        :param str bin: the name of the bin cotaining the :class:`~aerospike.LList`.
+        :param str bin: the name of the bin containing the :class:`~aerospike.LList`.
         :param str module: an optional UDF module that contains filtering \
                            functions to be used in conjunction with LList methods.
         :return: an :py:class:`aerospike.LList` class.
