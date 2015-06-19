@@ -75,6 +75,7 @@ static bool each_result(const as_val * val, void * udata)
 PyObject * AerospikeQuery_Results(AerospikeQuery * self, PyObject * args, PyObject * kwds)
 {
 	PyObject * py_policy = NULL;
+	PyObject * py_results = NULL;
 
 	static char * kwlist[] = {"policy", NULL};
 
@@ -106,7 +107,6 @@ PyObject * AerospikeQuery_Results(AerospikeQuery * self, PyObject * args, PyObje
 	}
 
 	TRACE();
-	PyObject * py_results = NULL;
 	py_results = PyList_New(0);
 
 	TRACE();

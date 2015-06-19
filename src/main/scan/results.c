@@ -61,6 +61,7 @@ static bool each_result(const as_val * val, void * udata)
 PyObject * AerospikeScan_Results(AerospikeScan * self, PyObject * args, PyObject * kwds)
 {
 	PyObject * py_policy = NULL;
+	PyObject * py_results = NULL;
 	as_policy_scan scan_policy;
 	as_policy_scan * scan_policy_p = NULL;
 
@@ -90,7 +91,6 @@ PyObject * AerospikeScan_Results(AerospikeScan * self, PyObject * args, PyObject
 		goto CLEANUP;
 	}
 
-	PyObject * py_results = NULL;
 	py_results = PyList_New(0);
 
 	PyThreadState * _save = PyEval_SaveThread();
