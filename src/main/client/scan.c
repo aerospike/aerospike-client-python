@@ -114,7 +114,8 @@ PyObject * AerospikeClient_ScanApply_Invoke(
 		set_p = PyString_AsString(py_ustr1);
 	} else if (PyString_Check(py_set)) {
 		set_p = PyString_AsString(py_set);
-	} else {
+	} else if( Py_None != py_set ) {
+		// Scan whole namespace if set is 'None' else error
 		as_error_update(&err, AEROSPIKE_ERR_PARAM, "Set name should be string");
 		goto CLEANUP;
 	}
