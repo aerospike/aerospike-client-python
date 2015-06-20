@@ -365,6 +365,27 @@ static int AerospikeClient_Type_Init(AerospikeClient * self, PyObject * args, Py
 		}
 	}
 
+    PyObject * py_shm = PyDict_GetItemString(py_config, "shm");
+    if(py_shm && PyDict_Check(py_shm) ) {
+
+        config.use_shm = true;
+
+        PyObject * py_shm_max_nodes = PyDict_GetItemString( py_shm, "shm_max_nodes" );
+        if(py_shm_max_nodes && PyInt_Check(py_shm_max_nodes) ) {
+            config.shm_max_nodes = PyInt_AsLong(py_shm_max_nodes);
+        }
+
+        PyObject * py_shm_max_namespaces = PyDict_GetItemString(py_shm, "shm_max_namespaces");
+        if(py_shm_max_namespaces && PyInt_Check(py_shm_max_namespaces) ) {
+            config.shm_max_namespaces = PyInt_AsLong(py_shm_max_namespaces);
+        }
+
+        PyObject* py_shm_takeover_threshold_sec = PyDict_GetItemString(py_shm, "shm_takeover_threshold_sec");
+        if(py_shm_takeover_threshold_sec && PyInt_Check(py_shm_takeover_threshold_sec) ) {
+            config.shm_takeover_threshold_sec = PyInt_AsLong( py_shm_takeover_threshold_sec);
+        }
+    }
+
 	as_policies_init(&config.policies);
 
 	PyObject * py_policies = PyDict_GetItemString(py_config, "policies");
