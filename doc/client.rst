@@ -703,7 +703,10 @@ Client Class --- :class:`Client`
     .. method:: query(namespace[, set]) -> Query
 
         Return a :class:`aerospike.Query` object to be used for executing queries \
-        over a specified *set* (which can be omitted or `None`) in a *namespace*.
+        over a specified *set* (which can be omitted or ``None``) in a *namespace*. \
+        A query with a ``None`` set returns records which are **not in any \
+        named set**. This is different than the meaning of a ``None`` set in \
+        a scan.
 
         :param str namespace: a list of :ref:`aerospike_key_tuple`.
         :param str set: optional specified set name, otherwise the records \

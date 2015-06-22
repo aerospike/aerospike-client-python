@@ -1,6 +1,6 @@
 #! /bin/bash
 ################################################################################
-# Copyright 2013-2014 Aerospike, Inc.
+# Copyright 2013-2015 Aerospike, Inc.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -16,6 +16,8 @@
 ################################################################################
 
 AEROSPIKE_C_VERSION=${AEROSPIKE_C_VERSION:-'latest'}
+# always download unless environment var is set to 0, then check locally first
+DOWNLOAD=${DOWNLOAD_C_CLIENT:-1}
 
 ################################################################################
 #
@@ -176,7 +178,7 @@ download()
   wget_path=`which wget`
   has_wget=$?
 
-  # Check 
+  # Check
   if [ $has_curl != 0 ] && [ $has_wget != 0 ]; then
     echo "error: Not able to find 'curl' or `wget`. Either is required to download the package."
     exit 1
