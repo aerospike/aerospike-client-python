@@ -717,7 +717,13 @@ as_status pyobject_to_key(as_error * err, PyObject * py_keytuple, as_key * key)
 			as_key_init_int64(key, ns, set, k);
 		}
 		else if ( PyByteArray_Check(py_key) ) {
-			return as_error_update(err, AEROSPIKE_ERR_PARAM, "key as a byte array is not supported");
+			uint32_t sz = (uint32_t) PyByteArray_Size(py_key);
+
+			if ( sz <= 0 ) {
+				return as_error_update(err, AEROSPIKE_ERR_PARAM, "Byte array size cannot be 0");
+			}
+			uint8_t * byte_array = (uint8_t *) PyByteArray_AsString(py_key);
+			as_key_init_raw(key, ns, set, byte_array, sz);
 		}
 		else {
 			return as_error_update(err, AEROSPIKE_ERR_PARAM, "key is invalid");
