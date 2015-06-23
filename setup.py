@@ -49,8 +49,8 @@ include_dirs = ['src/include'] + [x for x in os.getenv('CPATH', '').split(':') i
 
 extra_compile_args = [
     '-std=gnu99', '-g', '-Wall', '-fPIC', '-O1',
-    '-fno-common', '-fno-strict-aliasing', 
-    '-march=nocona', 
+    '-fno-common', '-fno-strict-aliasing', '-Wno-strict-prototypes',
+    '-march=nocona',
     '-D_FILE_OFFSET_BITS=64', '-D_REENTRANT', '-D_GNU_SOURCE'
     ]
 
