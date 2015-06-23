@@ -51,7 +51,7 @@ detect_linux()
 
     case ${DIST_NAME} in
 
-      "centos6" | "centos7" | "redhatenterpriceserver6" | "fedora20" | "fedora21" | "oracleserver6" )
+      "centos6" | "centos7" | "redhatenterpriceserver6" | "fedora20" | "fedora21" | "oracleserver6" | "scientific6" )
         echo "el6" "rpm"
         return 0
         ;;
@@ -106,7 +106,7 @@ detect_linux()
     dist=$(cat /etc/issue | tr '[:upper:]' '[:lower:]')
     case ${dist} in
 
-      "centos"* | "red hat enterprise linux"* | "fedora"* | "oracleserver"* )
+      "centos"* | "red hat enterprise linux"* | "fedora"* | "oracleserver"* | "scientific linux"* )
         echo "el6" "rpm"
         return 0
         ;;
