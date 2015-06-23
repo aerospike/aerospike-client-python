@@ -824,6 +824,10 @@ PyObject * AerospikeLList_Find_First_Filter(AerospikeLList * self, PyObject * ar
 		count = PyInt_AsLong(py_count);
 	} else if( PyLong_Check(py_count) ) {
 		count = PyLong_AsLong(py_count);
+        if((uint32_t)-1 == count) {
+            as_error_update(&err, AEROSPIKE_ERR_PARAM, "integer value exceeds sys.maxsize");
+            goto CLEANUP;
+        }
 	} else {
 		as_error_update(&err, AEROSPIKE_ERR_PARAM, "Count should be an integer or long");
 		goto CLEANUP;
@@ -916,6 +920,10 @@ PyObject * AerospikeLList_Find_Last(AerospikeLList * self, PyObject * args, PyOb
 		count = PyInt_AsLong(py_count);
 	} else if( PyLong_Check(py_count) ) {
 		count = PyLong_AsLong(py_count);
+        if((uint32_t)-1 == count) {
+            as_error_update(&err, AEROSPIKE_ERR_PARAM, "integer value exceeds sys.maxsize");
+            goto CLEANUP;
+        }
 	} else {
 		as_error_update(&err, AEROSPIKE_ERR_PARAM, "Count should be an integer or long");
 		goto CLEANUP;
@@ -1018,6 +1026,10 @@ PyObject * AerospikeLList_Find_Last_Filter(AerospikeLList * self, PyObject * arg
 		count = PyInt_AsLong(py_count);
 	} else if( PyLong_Check(py_count) ) {
 		count = PyLong_AsLong(py_count);
+        if((uint32_t)-1 == count) {
+            as_error_update(&err, AEROSPIKE_ERR_PARAM, "integer value exceeds sys.maxsize");
+            goto CLEANUP;
+        }
 	} else {
 		as_error_update(&err, AEROSPIKE_ERR_PARAM, "Count should be an integer or long");
 		goto CLEANUP;
@@ -1112,6 +1124,10 @@ PyObject * AerospikeLList_Find_From(AerospikeLList * self, PyObject * args, PyOb
 		count = PyInt_AsLong(py_count);
 	} else if( PyLong_Check(py_count) ) {
 		count = PyLong_AsLong(py_count);
+        if((uint32_t)-1 == count) {
+            as_error_update(&err, AEROSPIKE_ERR_PARAM, "integer value exceeds sys.maxsize");
+            goto CLEANUP;
+        }
 	} else {
 		as_error_update(&err, AEROSPIKE_ERR_PARAM, "Count should be an integer or long");
 		goto CLEANUP;
@@ -1208,6 +1224,10 @@ PyObject * AerospikeLList_Find_From_Filter(AerospikeLList * self, PyObject * arg
 		count = PyInt_AsLong(py_count);
 	} else if( PyLong_Check(py_count) ) {
 		count = PyLong_AsLong(py_count);
+        if((uint32_t)-1 == count) {
+            as_error_update(&err, AEROSPIKE_ERR_PARAM, "integer value exceeds sys.maxsize");
+            goto CLEANUP;
+        }
 	} else {
 		as_error_update(&err, AEROSPIKE_ERR_PARAM, "Count should be an integer or long");
 		goto CLEANUP;
@@ -1326,6 +1346,10 @@ PyObject * AerospikeLList_Range_Limit(AerospikeLList * self, PyObject * args, Py
 		count = PyInt_AsLong(py_count);
 	} else if( PyLong_Check(py_count) ) {
 		count = PyLong_AsLong(py_count);
+        if((uint32_t)-1 == count) {
+            as_error_update(&err, AEROSPIKE_ERR_PARAM, "integer value exceeds sys.maxsize");
+            goto CLEANUP;
+        }
 	} else {
 		as_error_update(&err, AEROSPIKE_ERR_PARAM, "Count should be an integer or long");
 		goto CLEANUP;

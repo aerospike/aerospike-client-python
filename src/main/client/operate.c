@@ -122,25 +122,38 @@ void AerospikeClient_CheckForMeta(PyObject * py_meta, as_operations * ops, as_er
 	if ( py_meta && PyDict_Check(py_meta) ) {
 		PyObject * py_gen = PyDict_GetItemString(py_meta, "gen");
 		PyObject * py_ttl = PyDict_GetItemString(py_meta, "ttl");
-
+        uint32_t ttl = 0;
+        uint16_t gen = 0; 
 		if ( py_ttl != NULL ){
 			if ( PyInt_Check(py_ttl) ) {
-				ops->ttl = (uint32_t) PyInt_AsLong(py_ttl);
+				ttl = (uint32_t) PyInt_AsLong(py_ttl);
 			} else if ( PyLong_Check(py_ttl) ) {
-				ops->ttl = (uint32_t) PyLong_AsLongLong(py_ttl);
+				ttl = (uint32_t) PyLong_AsLongLong(py_ttl);
 			} else {
 				as_error_update(err, AEROSPIKE_ERR_PARAM, "Ttl should be an int or long");
 			}
+
+            if((uint32_t)-1 == ttl) {
+                as_error_update(err, AEROSPIKE_ERR_PARAM, "integer value for ttl exceeds sys.maxsize");
+                return;
+            }
+            ops->ttl = ttl;
 		}
 
 		if( py_gen != NULL ){
 			if ( PyInt_Check(py_gen) ) {
-				ops->gen = (uint16_t) PyInt_AsLong(py_gen);
+				gen = (uint16_t) PyInt_AsLong(py_gen);
 			} else if ( PyLong_Check(py_gen) ) {
-				ops->gen = (uint16_t) PyLong_AsLongLong(py_gen);
+				gen = (uint16_t) PyLong_AsLongLong(py_gen);
 			} else {
 				as_error_update(err, AEROSPIKE_ERR_PARAM, "Generation should be an int or long");
 			}
+
+            if((uint16_t)-1 == gen) {
+                as_error_update(err, AEROSPIKE_ERR_PARAM, "integer value for gen exceeds sys.maxsize");
+                return;
+            }
+            ops->gen = gen;
 		}
 	} else {
 		as_error_update(err, AEROSPIKE_ERR_PARAM, "Metadata should be of type dictionary");
@@ -169,10 +182,10 @@ PyObject *  AerospikeClient_Operate_Invoke(
 	as_val* put_val = NULL;
 	char* bin = NULL;
 	char* val = NULL;
-	long offset;
-	long ttl;
-	long operation;
-	int i;
+	long offset = 0;
+	uint32_t ttl = 0;
+	long operation = 0;
+	int i = 0;
 	PyObject * py_rec = NULL;
 	PyObject * py_ustr = NULL;
 	PyObject * py_ustr1 = NULL;
@@ -269,12 +282,28 @@ PyObject *  AerospikeClient_Operate_Invoke(
 					as_operations_add_prepend_str(&ops, bin, val);
 					break;
 				case AS_OPERATOR_INCR:
-					offset = PyInt_AsLong(py_value);
-					as_operations_add_incr(&ops, bin, offset);
-					break;
+					if (PyInt_Check(py_value)) {
+                        offset = PyInt_AsLong(py_value);
+                    } else if ( PyLong_Check(py_value) ) {
+                        offset = PyLong_AsLong(py_value);
+                        if(-1 == offset) {
+                            as_error_update(err, AEROSPIKE_ERR_PARAM, "integer value exceeds sys.maxsize");
+                            goto CLEANUP;
+                        }
+                    }
+                    as_operations_add_incr(&ops, bin, offset);
+                    break;
 				case AS_OPERATOR_TOUCH:
-					ttl = PyInt_AsLong(py_value);
-					ops.ttl = ttl;
+					if (PyInt_Check(py_value)) {
+                        ops.ttl = _PyInt_AsInt(py_value);
+                    } else if ( PyLong_Check(py_value) ) {
+                        ttl = _PyLong_AsInt(py_value);
+                        if((uint32_t)-1 == ttl) {
+                            as_error_update(err, AEROSPIKE_ERR_PARAM, "integer value for ttl exceeds sys.maxsize");
+                            goto CLEANUP;
+                        }
+                        ops.ttl = ttl;
+                    }
 					as_operations_add_touch(&ops);
 					break;
 				case AS_OPERATOR_READ:
