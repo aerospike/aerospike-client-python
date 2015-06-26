@@ -397,6 +397,9 @@ as_status pyobject_to_val(as_error * err, PyObject * py_obj, as_val ** val, as_s
 		if ( err->code == AEROSPIKE_OK ) {
 			*val = (as_val *) map;
 		}
+	}
+	else if ( Py_None == py_obj ) {
+		*val = as_val_reserve(&as_nil);
 	} else {
 		as_bytes *bytes;
 		GET_BYTES_POOL(bytes, static_pool, err);
