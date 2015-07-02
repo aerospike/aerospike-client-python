@@ -161,7 +161,7 @@ PyObject * AerospikeClient_Put(AerospikeClient * self, PyObject * args, PyObject
 	long serializer_option = SERIALIZER_PYTHON;
 
 	// Python Function Keyword Arguments
-	static char * kwlist[] = {"key", "bins", "meta", "policy", "serializer_option", NULL};
+	static char * kwlist[] = {"key", "bins", "meta", "policy", "serializer", NULL};
 
 	// Python Function Argument Parsing
 	if ( PyArg_ParseTupleAndKeywords(args, kwds, "OO|OOl:put", kwlist,

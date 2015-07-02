@@ -274,6 +274,19 @@ Scan Constants
 
 .. versionadded:: 1.0.39
 
+.. _aerospike_serialization_constants:
+
+Serialization Constants
+-----------------------
+
+.. data:: SERIALIZER_PYTHON
+
+.. data:: SERIALIZER_USER
+
+.. data:: SERIALIZER_NONE
+
+.. versionadded:: 1.0.47
+
 .. _aerospike_misc_constants:
 
 Miscellaneous

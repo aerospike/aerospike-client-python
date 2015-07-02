@@ -185,7 +185,7 @@ Client Class --- :class:`Client`
                 sys.exit(1)
 
 
-    .. method:: put(key, bins[, meta[, policy]])
+    .. method:: put(key, bins[, meta[, policy[, serializer]]])
 
         Write a record with a given *key* to the cluster.
 
@@ -194,6 +194,8 @@ Client Class --- :class:`Client`
         :param dict meta: optional record metadata to be set, with field
             ``'ttl'`` set to :class:`int` number of seconds.
         :param dict policy: optional :ref:`aerospike_write_policies`.
+        :param serializer: optionally override the serialization mode of the
+            client with one of the :ref:`aerospike_serialization_constants`.
         :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
 
         .. code-block:: python
