@@ -346,8 +346,8 @@ extern PyObject * serialize_based_on_serializer_policy(int32_t serializer_policy
 						} else {
 							Py_INCREF(initresult);
 							char *return_value = PyString_AsString(initresult);
-							int len = strlen(return_value);
-							set_as_bytes(bytes, (uint8_t *) return_value,
+							Py_ssize_t len = PyString_GET_SIZE(initresult);
+                            set_as_bytes(bytes, (uint8_t *) return_value,
 									len, AS_BYTES_PYTHON, error_p);
 							Py_DECREF(initresult);
 						}
