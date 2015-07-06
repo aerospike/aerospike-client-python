@@ -469,6 +469,11 @@ extern PyObject * deserialize_based_on_as_bytes_type(as_bytes  *bytes,
 								}
 							}
 							break;
+        case AS_BYTES_LDT:  {
+                                Py_INCREF(Py_None);
+                                *retval = Py_None;
+                            }
+                            break;
 		default:
 
 							as_error_update(error_p, AEROSPIKE_ERR,
