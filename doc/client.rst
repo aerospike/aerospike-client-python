@@ -523,7 +523,7 @@ Client Class --- :class:`Client`
                       "val": 360
                     }
                 ]
-                (key, meta, bins) = self.client.operate(key, list, policy={'timeout':500})
+                (key, meta, bins) = client.operate(key, list, policy={'timeout':500})
 
                 print(key)
                 print('--------------------------')
