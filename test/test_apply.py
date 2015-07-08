@@ -95,6 +95,18 @@ class TestApply(TestBaseClass):
         assert bins['name'] == ['name1', 'car']
         assert retval == 0
 
+    def test_apply_with_none_parameter(self):
+        """
+            Invoke apply() with a None argument
+        """
+        key = ('test', 'demo', 1)
+        retval = TestApply.client.apply(key, 'sample', 'list_append', ['name',
+                                                                       None])
+        (key, meta, bins) = TestApply.client.get(key)
+
+        assert bins['name'] == ['name1', None]
+        assert retval == 0
+
     def test_apply_with_policy(self):
         """
             Invoke apply() with policy
