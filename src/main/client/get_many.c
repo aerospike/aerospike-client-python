@@ -29,7 +29,6 @@
 #include "exceptions.h"
 #include "key.h"
 #include "policy.h"
-
 /**
  *******************************************************************************************************
  * This callback will be called with the results with aerospike_batch_get().
@@ -44,27 +43,102 @@
  */
 static bool batch_get_cb(const as_batch_read* results, uint32_t n, void* udata)
 {
-	// Typecast udata back to PyObject
-	PyObject * py_recs = (PyObject *) udata;
+    // Typecast udata back to PyObject
+    PyObject * py_recs = (PyObject *) udata;
 
-	// Initialize error object
-	as_error err;
-	as_error_init(&err);
+    // Initialize error object
+    as_error err;
+    as_error_init(&err);
 
-	// Loop over results array
-	for ( uint32_t i =0; i < n; i++ ){
+    // Loop over results array
+    for ( uint32_t i =0; i < n; i++ ){
+
+        PyObject * rec = NULL;
+        PyObject * p_key = NULL;
+        p_key = PyTuple_New(3);
+
+	    if ( results[i].key->ns && strlen(results[i].key->ns) > 0 ) {
+		    PyTuple_SetItem(p_key, 0, PyString_FromString(results[i].key->ns));
+	    }
+
+	    if ( results[i].key->set && strlen(results[i].key->set) > 0 ) {
+		    PyTuple_SetItem(p_key, 1, PyString_FromString(results[i].key->set));
+	    }
+
+        if(results[i].key->valuep) {
+            switch(((as_val*)(results[i].key->valuep))->type){
+                case AS_INTEGER:
+                    PyTuple_SetItem(p_key, 2, PyInt_FromLong((long)results[i].key->value.integer.value));
+                    break;
+
+                case AS_STRING:
+                    PyTuple_SetItem(p_key, 2, PyString_FromString((const char *)results[i].key->value.string.value));
+                    break;
+                default:
+                    break;
+            }
+        } else {
+            Py_INCREF(Py_None);
+            p_key = Py_None;
+        }
+
+        // Check record status
+        if ( results[i].result == AEROSPIKE_OK ){
+
+            record_to_pyobject(&err, &results[i].record, results[i].key, &rec);
+
+            // Set return value in return Dict
+            if ( PyDict_SetItem( py_recs, p_key, rec ) ){
+                return false;
+            }
+            Py_DECREF(rec);
+        } else if( results[i].result == AEROSPIKE_ERR_RECORD_NOT_FOUND) {
+            
+            Py_INCREF(Py_None);
+            if ( PyDict_SetItem( py_recs, p_key, Py_None)){
+                return false;
+            }
+        }
+        Py_DECREF(p_key);
+    }
+    return true;
+}
+
+/**
+ *******************************************************************************************************
+ * This function will be called with the results with aerospike_batch_read().
+ *
+ * @param records               A vector list of as_batch_read_record entries
+ * @param py_recs               The pyobject to be filled with.
+ *
+ *******************************************************************************************************
+ */
+static void batch_get_recs(as_error *err, as_batch_read_records* records, PyObject **py_recs)
+{
+    as_vector* list = &records->list;
+    for (uint32_t i = 0; i < list->size; i++) {
+        as_batch_read_record* batch = as_vector_get(list, i);
 
 		PyObject * rec = NULL;
 		PyObject * p_key = NULL;
+        p_key = PyTuple_New(3);
 
-		if(results[i].key->valuep) {
-			switch(((as_val*)(results[i].key->valuep))->type){
+	    if ( batch->key.ns && strlen(batch->key.ns) > 0 ) {
+		    PyTuple_SetItem(p_key, 0, PyString_FromString(batch->key.ns));
+	    }
+
+	    if ( batch->key.set && strlen(batch->key.set) > 0 ) {
+		    PyTuple_SetItem(p_key, 1, PyString_FromString(batch->key.set));
+	    }
+
+		if(batch->key.valuep) {
+			switch(((as_val*)(batch->key.valuep))->type){
 				case AS_INTEGER:
-					p_key = PyInt_FromLong((long)results[i].key->value.integer.value);
+					PyTuple_SetItem(p_key, 2, PyInt_FromLong((long)batch->key.value.integer.value));
 					break;
 
 				case AS_STRING:
-					p_key = PyString_FromString((const char *)results[i].key->value.string.value);
+					PyTuple_SetItem(p_key, 2, PyString_FromString((const char *)batch->key.value.string.value));
 					break;
 				default:
 					break;
@@ -74,26 +148,20 @@ static bool batch_get_cb(const as_batch_read* results, uint32_t n, void* udata)
 			p_key = Py_None;
 		}
 
-		// Check record status
-		if ( results[i].result == AEROSPIKE_OK ){
-
-			record_to_pyobject(&err, &results[i].record, results[i].key, &rec);
-
-			// Set return value in return Dict
-			if ( PyDict_SetItem( py_recs, p_key, rec ) ){
-				return false;
-			}
-			Py_DECREF(rec);
-		} else if( results[i].result == AEROSPIKE_ERR_RECORD_NOT_FOUND) {
-			
-			Py_INCREF(Py_None);
-			if ( PyDict_SetItem( py_recs, p_key, Py_None)){
-				return false;
-			}
-		}
-		Py_DECREF(p_key);
-	}
-	return true;
+		if ( batch->result == AEROSPIKE_OK ){
+            record_to_pyobject(err, &batch->record, &batch->key, &rec);
+	        if ( PyDict_SetItem( *py_recs, p_key, rec ) ){
+                return false;
+		    }
+            Py_DECREF(rec);
+        } else if (batch->result == AEROSPIKE_ERR_RECORD_NOT_FOUND) {
+            Py_INCREF(Py_None);
+            if ( PyDict_SetItem( *py_recs, p_key, Py_None)){
+                return false;
+            }
+        }
+        Py_DECREF(p_key);
+    }
 }
 
 /**
@@ -117,12 +185,13 @@ PyObject * AerospikeClient_Get_Many_Invoke(
 
 	// Aerospike Client Arguments
 	as_error err;
-	as_batch batch;
+    as_batch_read_records records;
+    //as_batch batch;
 	as_policy_batch policy;
 	as_policy_batch * batch_policy_p = NULL;
-
-	// Initialisation flags
-	bool batch_initialised = false;
+    //int has_batch_index = 1;
+    // Initialisation flags
+    bool batch_initialised = false;
 
 	// Initialize error
 	as_error_init(&err);
@@ -137,14 +206,16 @@ PyObject * AerospikeClient_Get_Many_Invoke(
 		goto CLEANUP;
 	}
 
+    as_batch_read_record* record = NULL;
 	// Convert python keys list to as_key ** and add it to as_batch.keys
 	// keys can be specified in PyList or PyTuple
 	if ( py_keys != NULL && PyList_Check(py_keys) ) {
 		Py_ssize_t size = PyList_Size(py_keys);
 
-		as_batch_init(&batch, size);
-		// Batch object initialised
-		batch_initialised = true;
+        as_batch_read_inita(&records, size);
+        //as_batch_init(&batch, size);
+        // Batch object initialised
+        batch_initialised = true;
 
 		for ( int i = 0; i < size; i++ ) {
 
@@ -155,7 +226,11 @@ PyObject * AerospikeClient_Get_Many_Invoke(
 				goto CLEANUP;
 			}
 
-			pyobject_to_key(&err, py_key, as_batch_keyat(&batch, i));
+            record = as_batch_read_reserve(&records);
+
+			pyobject_to_key(&err, py_key, &record->key);
+            record->read_all_bins = true;
+            //pyobject_to_key(&err, py_key, as_batch_keyat(&batch, i));
 
 			if ( err.code != AEROSPIKE_OK ) {
 				goto CLEANUP;
@@ -165,9 +240,10 @@ PyObject * AerospikeClient_Get_Many_Invoke(
 	else if ( py_keys != NULL && PyTuple_Check(py_keys) ) {
 		Py_ssize_t size = PyTuple_Size(py_keys);
 
-		as_batch_init(&batch, size);
-		// Batch object initialised.
-		batch_initialised = true;
+        //as_batch_init(&batch, size);
+        // Batch object initialised
+        batch_initialised = true;
+        as_batch_read_inita(&records, size);
 
 		for ( int i = 0; i < size; i++ ) {
 			PyObject * py_key = PyTuple_GetItem(py_keys, i);
@@ -177,7 +253,11 @@ PyObject * AerospikeClient_Get_Many_Invoke(
 				goto CLEANUP;
 			}
 
-			pyobject_to_key(&err, py_key, as_batch_keyat(&batch, i));
+            record = as_batch_read_reserve(&records);
+
+			pyobject_to_key(&err, py_key, &record->key);
+            record->read_all_bins = true;
+            //pyobject_to_key(&err, py_key, as_batch_keyat(&batch, i));
 
 			if ( err.code != AEROSPIKE_OK ) {
 				goto CLEANUP;
@@ -197,19 +277,23 @@ PyObject * AerospikeClient_Get_Many_Invoke(
 	}
 
 	// Invoke C-client API
-	aerospike_batch_get(self->as, &err, batch_policy_p,
-		&batch, (aerospike_batch_read_callback) batch_get_cb,
-		py_recs);
+    if (aerospike_batch_read(self->as, &err, batch_policy_p, &records) != AEROSPIKE_OK) 
+    {
+		goto CLEANUP;
+    }
+    /*aerospike_batch_get(self->as, &err, batch_policy_p,
+        &batch, (aerospike_batch_read_callback) batch_get_cb,
+        py_recs);*/
 
+    batch_get_recs(&err, &records, &py_recs);
+    
 CLEANUP:
-
-	if (batch_initialised == true){
-		// We should destroy batch object as we are using 'as_batch_init' for initialisation
-		// Also, pyobject_to_key is soing strdup() in case of Unicode. So, object destruction
-		// is necessary.
-		as_batch_destroy(&batch);
-	}
-
+    if (batch_initialised == true){
+        // We should destroy batch object as we are using 'as_batch_init' for initialisation
+        // Also, pyobject_to_key is soing strdup() in case of Unicode. So, object destruction
+        // is necessary.
+        //as_batch_destroy(&batch);
+    }
 	if ( err.code != AEROSPIKE_OK ) {
 		PyObject * py_err = NULL;
 		error_to_pyobject(&err, &py_err);

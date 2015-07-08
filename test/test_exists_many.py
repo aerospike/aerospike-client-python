@@ -3,6 +3,7 @@
 import pytest
 import sys
 from test_base_class import TestBaseClass
+from collections import Counter
 
 aerospike = pytest.importorskip("aerospike")
 try:
@@ -65,7 +66,9 @@ class TestExistsMany(TestBaseClass):
 
         assert type(records) == dict
         assert len(records.keys()) == 5
-        assert records.keys() == [0, 1, 2, 3, 4]
+        #assert records.keys() == [0, 1, 2, 3, 4]
+        assert Counter([x[2] for x in records.keys()]) == Counter([0, 1, 2, 3,
+            4])
 
     def test_exists_many_with_none_policy(self):
 
@@ -73,7 +76,9 @@ class TestExistsMany(TestBaseClass):
 
         assert type(records) == dict
         assert len(records.keys()) == 5
-        assert records.keys() == [0, 1, 2, 3, 4]
+        #assert records.keys() == [0, 1, 2, 3, 4]
+        assert Counter([x[2] for x in records.keys()]) == Counter([0, 1, 2, 3,
+            4])
 
     def test_exists_many_with_none_keys(self):
 
@@ -92,8 +97,9 @@ class TestExistsMany(TestBaseClass):
 
         assert type(records) == dict
         assert len(records.keys()) == 6
-        assert records.keys() == [0, 1, 2, 3, 4, 'some_key']
-        assert records['some_key'] == None
+        assert Counter([x[2] for x in records.keys()]) == Counter([0, 1, 2, 3,
+            4, 'some_key'])
+        assert records[("test", "demo", "some_key")] == None
 
     def test_exists_many_with_all_non_existent_keys(self):
 
@@ -102,7 +108,7 @@ class TestExistsMany(TestBaseClass):
         records = TestExistsMany.client.exists_many(keys)
 
         assert len(records.keys()) == 1
-        assert records == {'key': None}
+        assert records == {('test','demo','key'): None}
 
     def test_exists_many_with_invalid_key(self):
 
@@ -163,8 +169,9 @@ class TestExistsMany(TestBaseClass):
 
         assert type(records) == dict
         assert len(records.keys()) == 11
-        assert records.keys() == [0, 1, 2, 3, 4, 'some_key', 15, 16, 17, 18, 19]
-        assert records['some_key'] == None
+        assert Counter([x[2] for x in records.keys()]) == Counter([0, 1, 2, 3,
+            4, 'some_key', 15, 16, 17, 18, 19])
+        assert records[('test', 'demo', 'some_key')] == None
 
     def test_exists_many_with_proper_parameters_without_connection(self):
 
