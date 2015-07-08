@@ -71,7 +71,7 @@ Query Class --- :class:`Query`
             client = aerospike.client(config).connect()
 
             pp = pprint.PrettyPrinter(indent=2)
-            query = self.client.query('test', 'demo')
+            query = client.query('test', 'demo')
             query.select('name', 'age') # matched records return with the values of these bins
             # assuming there is a secondary index on the 'age' bin of test.demo
             query.where(p.equals('age', 40))
@@ -103,7 +103,7 @@ Query Class --- :class:`Query`
             client = aerospike.client(config).connect()
 
             pp = pprint.PrettyPrinter(indent=2)
-            query = self.client.query('test', 'demo')
+            query = client.query('test', 'demo')
             query.select('name', 'age') # matched records return with the values of these bins
             # assuming there is a secondary index on the 'age' bin of test.demo
             query.where(p.between('age', 20, 30))
@@ -153,6 +153,7 @@ Query Class --- :class:`Query`
         :param str module: the name of the Lua module.
         :param str function: the name of the Lua function within the *module*.
         :param list arguments: optional arguments to pass to the *function*.
+        :return: one of the supported types, :class:`int`, :class:`str`, :class:`list`, :class:`dict` (map), :class:`bytearray` (bytes).
 
         .. seealso:: `Developing Stream UDFs <http://www.aerospike.com/docs/udf/developing_stream_udfs.html>`_
 
@@ -216,10 +217,11 @@ Query Class --- :class:`Query`
                 client = aerospike.client(config).connect()
 
                 pp = pprint.PrettyPrinter(indent=2)
-                query = self.client.query('test', 'users')
+                query = client.query('test', 'users')
                 query.where(p.between('age', 20, 29))
                 query.apply('stream_udf', 'group_count', [ 'first_name' ])
                 names = query.results()
+                # we expect a dict (map) whose keys are names, each with a count value
                 pp.pprint(names)
 
             With stream UDFs, the final reduce steps (which ties
