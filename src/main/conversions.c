@@ -365,6 +365,9 @@ as_status pyobject_to_val(as_error * err, PyObject * py_obj, as_val ** val, as_s
 	}
 	else if ( PyLong_Check(py_obj) ) {
 		int64_t l = (int64_t) PyLong_AsLongLong(py_obj);
+        if(-1 == l) {
+		    return as_error_update(err, AEROSPIKE_ERR_PARAM, "integer value exceeds sys.maxsize");
+        }
 		*val = (as_val *) as_integer_new(l);
 	}
 	else if ( PyString_Check(py_obj) ) {
@@ -469,6 +472,9 @@ as_status pyobject_to_record(as_error * err, PyObject * py_rec,
 			}
 			else if ( PyLong_Check(value) ) {
 				int64_t val = (int64_t) PyLong_AsLongLong(value);
+                if(-1 == val) {
+                    return as_error_update(err, AEROSPIKE_ERR_PARAM, "integer value exceeds sys.maxsize");
+                }
 				ret_val = as_record_set_int64(rec, name, val);
 			}
 			else if ( PyUnicode_Check(value) ) {
@@ -534,6 +540,9 @@ as_status pyobject_to_record(as_error * err, PyObject * py_rec,
 				}
 				else if ( PyLong_Check(py_ttl) ) {
 					rec->ttl = (uint32_t) PyLong_AsLongLong(py_ttl);
+                    if((uint32_t)-1 == rec->ttl) {
+            		    as_error_update(err, AEROSPIKE_ERR_PARAM, "integer value exceeds sys.maxsize");
+                    }
 				} else {
 					as_error_update(err, AEROSPIKE_ERR_PARAM, "Ttl should be an int or long");
 				}
@@ -545,6 +554,9 @@ as_status pyobject_to_record(as_error * err, PyObject * py_rec,
 				}
 				else if ( PyLong_Check(py_gen) ) {
 					rec->gen = (uint16_t) PyLong_AsLongLong(py_gen);
+                    if((uint32_t)-1 == rec->ttl) {
+            		    as_error_update(err, AEROSPIKE_ERR_PARAM, "integer value exceeds sys.maxsize");
+                    }
 				} else {
 					as_error_update(err, AEROSPIKE_ERR_PARAM, "Generation should be an int or long");
 				}
@@ -717,6 +729,9 @@ as_status pyobject_to_key(as_error * err, PyObject * py_keytuple, as_key * key)
 		}
 		else if ( PyLong_Check(py_key) ) {
 			int64_t k = (int64_t) PyLong_AsLongLong(py_key);
+            if(-1 == k) {
+			    return as_error_update(err, AEROSPIKE_ERR_PARAM, "integer value for KEY exceeds sys.maxsize");
+            }
 			as_key_init_int64(key, ns, set, k);
 		}
 		else if ( PyByteArray_Check(py_key) ) {

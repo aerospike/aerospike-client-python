@@ -317,3 +317,15 @@ class TestTouch(object):
         except ClusterError as exception:
             assert exception.code == 11L
             assert exception.msg == 'No connection to aerospike cluster'
+
+    def test_touch_withttlvalue_greaterthan_maxsize(self):
+        """
+        Invoke touch() with ttl value greater than (2^63-1)
+        """
+        key = ('test', 'demo', 1)
+        meta = {'gen': 10, 'ttl': 12005678901234567890}
+        try:
+            TestTouch.client.touch(key, 120, meta, None)
+        except ParamError as exception:
+            assert exception.code == -2
+            assert exception.msg == 'integer value for ttl exceeds sys.maxsize'
