@@ -24,8 +24,7 @@ class TestUdfRemove(TestBaseClass):
         if user == None and password == None:
             TestUdfRemove.client = aerospike.client(config).connect()
         else:
-            TestUdfRemove.client = aerospike.client(config).connect(user,
-                                                                    password)
+            TestUdfRemove.client = aerospike.client(config).connect(user, password)
 
     def teardown_class(cls):
         """

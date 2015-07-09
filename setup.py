@@ -33,6 +33,7 @@ from subprocess import call
 AEROSPIKE_C_VERSION = os.getenv('AEROSPIKE_C_VERSION')
 if not AEROSPIKE_C_VERSION:
     AEROSPIKE_C_VERSION = '3.1.16'
+DOWNLOAD_C_CLIENT = os.getenv('DOWNLOAD_C_CLIENT')
 AEROSPIKE_C_HOME = os.getenv('AEROSPIKE_C_HOME')
 PREFIX = None
 PLATFORM =  platform.platform(1)
@@ -48,8 +49,8 @@ include_dirs = ['src/include'] + [x for x in os.getenv('CPATH', '').split(':') i
 
 extra_compile_args = [
     '-std=gnu99', '-g', '-Wall', '-fPIC', '-O1',
-    '-fno-common', '-fno-strict-aliasing', 
-    '-march=nocona', 
+    '-fno-common', '-fno-strict-aliasing', '-Wno-strict-prototypes',
+    '-march=nocona',
     '-D_FILE_OFFSET_BITS=64', '-D_REENTRANT', '-D_GNU_SOURCE'
     ]
 
@@ -153,10 +154,13 @@ else:
 
         if PREFIX:
             os.putenv('PREFIX', PREFIX)
-        
+
         if AEROSPIKE_C_VERSION:
             os.putenv('AEROSPIKE_C_VERSION', AEROSPIKE_C_VERSION)
-        
+
+        if DOWNLOAD_C_CLIENT:
+            os.putenv('DOWNLOAD_C_CLIENT', DOWNLOAD_C_CLIENT)
+
         rc = call(['./scripts/aerospike-client-c.sh'])
         if rc != 0 :
             print("error: scripts/aerospike-client-c.sh", rc, file=sys.stderr)

@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright 2013-2014 Aerospike, Inc.
+ * Copyright 2013-2015 Aerospike, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -91,7 +91,70 @@ PyObject * AerospikeLList_Remove(AerospikeLList * self, PyObject * args, PyObjec
  * llist.size()
  */
 PyObject * AerospikeLList_Size(AerospikeLList * self, PyObject * args, PyObject * kwds);
-
+/**
+ * Performs `find_first` operation. Select values from the beginning of list up
+ * to a maximum count.
+ *
+ *
+ * llist.find_first()
+ */
+PyObject * AerospikeLList_Find_First(AerospikeLList * self, PyObject * args, PyObject * kwds);
+/**
+ * Performs `find_first_filter` operation. Select values from the beginning of list up
+ * to a maximum count applying a filter predicate.
+ *
+ *
+ * llist.find_first_filter()
+ */
+PyObject * AerospikeLList_Find_First_Filter(AerospikeLList * self, PyObject * args, PyObject * kwds);
+/**
+ * Performs `find_last` operation. Select values from the beginning of list up
+ * to a maximum count.
+ *
+ *
+ * llist.find_last()
+ */
+PyObject * AerospikeLList_Find_Last(AerospikeLList * self, PyObject * args, PyObject * kwds);
+/**
+ * Performs `find_last_filter` operation. Select values from the end of list up
+ * to a maximum count applying a filter predicate.
+ *
+ *
+ * llist.find_last_filter()
+ */
+PyObject * AerospikeLList_Find_Last_Filter(AerospikeLList * self, PyObject * args, PyObject * kwds);
+/**
+ * Performs `find_from` operation. Select values from a begin key up
+ * to a maximum count.
+ *
+ *
+ * llist.find_from()
+ */
+PyObject * AerospikeLList_Find_From(AerospikeLList * self, PyObject * args, PyObject * kwds);
+/**
+ * Performs `find_from_filter` operation. Select values from a begin key up
+ * to a maximum count applying a lua filter.
+ *
+ *
+ * llist.find_from_filter()
+ */
+PyObject * AerospikeLList_Find_From_Filter(AerospikeLList * self, PyObject * args, PyObject * kwds);
+/**
+ * Performs `range_limit` operation. Select values from a begin key up
+ * to a end key with a maximum count applying a lua filter.
+ *
+ *
+ * llist.range_limit()
+ */
+PyObject * AerospikeLList_Range_Limit(AerospikeLList * self, PyObject * args, PyObject * kwds);
+/**
+ * Performs `set_page_size` operation. Sets the page size of lua bin
+ *
+ *
+ *
+ * llist.set_page_size()
+ */
+PyObject * AerospikeLList_Set_Page_Size(AerospikeLList * self, PyObject * args, PyObject * kwds);
 /**
  * Performs `config` operation. This will get the configuration
  * parameters of the list.

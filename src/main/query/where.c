@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright 2013-2014 Aerospike, Inc.
+ * Copyright 2013-2015 Aerospike, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -73,12 +73,12 @@ static int AerospikeQuery_Where_Add(AerospikeQuery * self, as_predicate_type pre
 				}
 
 				if (PyUnicode_Check(py_val1)){ 
-					val = PyString_AsString( 
+					val = strdup(PyString_AsString(
 							StoreUnicodePyObject( self,
-								PyUnicode_AsUTF8String(py_val1) ));
+								PyUnicode_AsUTF8String(py_val1) )));
 
 				} else if (PyString_Check(py_val1) ){
-					val = PyString_AsString(py_val1);
+					val = strdup(PyString_AsString(py_val1));
 				}
 				else {
 					return 1;
@@ -303,12 +303,20 @@ AerospikeQuery * AerospikeQuery_Where(AerospikeQuery * self, PyObject * args)
 				index_type = PyInt_AsLong(py_arg3);
 			} else if (PyLong_Check(py_arg3)) {
 				index_type = PyLong_AsLongLong(py_arg3);
+                if(-1 == index_type) {
+                    as_error_update(&err, AEROSPIKE_ERR_PARAM, "integer value exceeds sys.maxsize");
+                    goto CLEANUP;
+                }
 			}
 
 			if(PyInt_Check(py_arg4)) {
 				type = PyInt_AsLong(py_arg4);
 			} else if ( PyLong_Check(py_arg4) ) {
 				type = PyLong_AsLongLong(py_arg4);
+                if(-1 == type) {
+                    as_error_update(&err, AEROSPIKE_ERR_PARAM, "integer value exceeds sys.maxsize");
+                    goto CLEANUP;
+                }
 			}
 			if ( (PyInt_Check(py_arg5) || PyLong_Check(py_arg5)) && type == 1) {
 				rc = AerospikeQuery_Where_Add(
@@ -346,6 +354,10 @@ AerospikeQuery * AerospikeQuery_Where(AerospikeQuery * self, PyObject * args)
 				index_type = PyInt_AsLong(py_arg3);
 			} else if (PyLong_Check(py_arg3)) {
 				index_type = PyLong_AsLongLong(py_arg3);
+                if(-1 == index_type) {
+                    as_error_update(&err, AEROSPIKE_ERR_PARAM, "integer value exceeds sys.maxsize");
+                    goto CLEANUP;
+                }
 			}
 
 			if ( PyInt_Check(py_arg4) || PyLong_Check(py_arg4)) {

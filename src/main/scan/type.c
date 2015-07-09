@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright 2013-2014 Aerospike, Inc.
+ * Copyright 2013-2015 Aerospike, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -91,6 +91,8 @@ static int AerospikeScan_Type_Init(AerospikeScan * self, PyObject * args, PyObje
 			set = PyString_AsString(py_ustr);
 		} else if (PyString_Check(py_set)) {
 			set = PyString_AsString(py_set);
+		} else if ( Py_None == py_set ) {
+			set = NULL;
 		}
 	} else {
 		return -1;

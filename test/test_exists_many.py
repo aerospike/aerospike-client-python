@@ -61,7 +61,7 @@ class TestExistsMany(TestBaseClass):
 
     def test_exists_many_with_proper_parameters(self):
 
-        records = TestExistsMany.client.exists_many(self.keys, {'timeout': 3})
+        records = TestExistsMany.client.exists_many(self.keys, {'timeout': 1200})
 
         assert type(records) == dict
         assert len(records.keys()) == 5

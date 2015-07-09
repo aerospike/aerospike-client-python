@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright 2013-2014 Aerospike, Inc.
+ * Copyright 2013-2015 Aerospike, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -58,6 +58,30 @@ static PyMethodDef AerospikeLList_Type_Methods[] = {
 	{"size",
 		(PyCFunction) AerospikeLList_Size, METH_VARARGS | METH_KEYWORDS,
 		"Get the current item count of the list."},
+	{"find_first",
+		(PyCFunction) AerospikeLList_Find_First, METH_VARARGS | METH_KEYWORDS,
+		"Select values from the beginning of list up to a maximum count"},
+	{"find_first_filter",
+		(PyCFunction) AerospikeLList_Find_First_Filter, METH_VARARGS | METH_KEYWORDS,
+		"Select values from the beginning of list up to a maximum count applying a predicate filter"},
+	{"find_last",
+		(PyCFunction) AerospikeLList_Find_Last, METH_VARARGS | METH_KEYWORDS,
+		"Select values from the end of list up to a maximum count"},
+	{"find_last_filter",
+		(PyCFunction) AerospikeLList_Find_Last_Filter, METH_VARARGS | METH_KEYWORDS,
+		"Select values from the end of list up to a maximum count applying a predicate filter"},
+	{"find_from",
+		(PyCFunction) AerospikeLList_Find_From, METH_VARARGS | METH_KEYWORDS,
+		"Select values from a begin key up to a maximum count"},
+	{"find_from_filter",
+		(PyCFunction) AerospikeLList_Find_From_Filter, METH_VARARGS | METH_KEYWORDS,
+		"Select values from a begin key up to a maximum count applying the lua filter"},
+	{"range_limit",
+		(PyCFunction) AerospikeLList_Range_Limit, METH_VARARGS | METH_KEYWORDS,
+		"Select values from a begin key up to a end key with a maximum count applying the lua filter"},
+	{"set_page_size",
+		(PyCFunction) AerospikeLList_Set_Page_Size, METH_VARARGS | METH_KEYWORDS,
+		"Set page size of lua bin"},
 	{"config",
 		(PyCFunction) AerospikeLList_Config, METH_VARARGS | METH_KEYWORDS,
 		"Get the configuration parameters of the list."},

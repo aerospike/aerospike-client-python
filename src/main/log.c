@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright 2013-2014 Aerospike, Inc.
+ * Copyright 2013-2015 Aerospike, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -86,6 +86,10 @@ PyObject * Aerospike_Set_Log_Level(PyObject *parent, PyObject *args, PyObject * 
 	}
 
 	long lLogLevel = PyInt_AsLong(py_log_level);
+    if((uint32_t)-1 == lLogLevel) {
+        as_error_update(&err, AEROSPIKE_ERR_PARAM, "integer value exceeds sys.maxsize");
+        goto CLEANUP;
+    }
 
 	// Invoke C API to set log level
 	as_log_set_level((as_log_level)lLogLevel);

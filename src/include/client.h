@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright 2013-2014 Aerospike, Inc.
+ * Copyright 2013-2015 Aerospike, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -33,6 +33,12 @@
 #define OPERATOR_WRITE   0
 
 /*******************************************************************************
+ * Macros for UDF operations.
+ ******************************************************************************/
+
+#define LUA_FILE_BUFFER_FRAME 512
+
+/*******************************************************************************
  * CLIENT TYPE
  ******************************************************************************/
 
@@ -60,7 +66,7 @@ PyObject * AerospikeClient_Close(AerospikeClient * self, PyObject * args, PyObje
 /**
  * Checks the connection to the database.
  */
-PyObject * AerospikeClient_isConnected(AerospikeClient * self, PyObject * args, PyObject * kwds);
+PyObject * AerospikeClient_is_connected(AerospikeClient * self, PyObject * args, PyObject * kwds);
 
 
 /*******************************************************************************

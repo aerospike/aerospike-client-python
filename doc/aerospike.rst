@@ -42,7 +42,10 @@ containing the keys of all records in the set.
         .. hlist::
             :columns: 1
 
-            * **hosts** a :class:`list` of (address, port) tuples identifying the cluster
+            * **hosts** a required :class:`list` of (address, port) tuples identifying the cluster
+            * **lua** an optional class:`dict` containing the paths to two types of Lua modules
+                * **system_path** the location of the system modules such as ``aerospike.lua``, ``stream_ops.lua``
+                * **user_path** the location of the user's record and stream UDFs
             * **policies** a :class:`dict` of policies
                 * **timeout** default timeout in milliseconds
                 * **key** default key policy for this client
@@ -52,11 +55,16 @@ containing the keys of all records in the set.
                 * **consistency_level** default consistency level policy for this client
                 * **replica** default replica policy for this client
                 * **commit_level** default commit level policy for this client
+            * **shm** a :class:`dict` with optional shared-memory cluster tending parameters. Shared-memory tending is on if the :class:`dict` is provided.
+                * **max_nodes** maximum number of nodes allowed. Pad so new nodes can be added without configuration changes (default: 16)
+                * **max_namespaces** similarly pad (default: 8)
+                * **takeover_threshold_sec** take over tending if the cluster hasn't been checked for this many seconds (default: 30)
 
     :return: an :py:class:`aerospike.Client` class.
 
     .. seealso::
-        `Client Policies <http://www.aerospike.com/apidocs/c/db/d65/group__client__policies.html>`_.
+        `Client Policies <http://www.aerospike.com/apidocs/c/db/d65/group__client__policies.html>`_ and \
+        `Shared Memory <https://www.aerospike.com/docs/client/c/usage/shm.html>`_.
 
     .. code-block:: python
 
@@ -64,8 +72,11 @@ containing the keys of all records in the set.
 
         config = {
             'hosts':    [ ('127.0.0.1', 3000) ],
-            'policies': {'timeout': 1000}}
+            'policies': {'timeout': 1000},
+            'shm':      { }}
         client = aerospike.client(config)
+
+    .. versionchanged:: 1.0.46
 
 
 .. rubric:: Serialization
@@ -262,6 +273,19 @@ Scan Constants
 .. data:: SCAN_STATUS_UNDEF
 
 .. versionadded:: 1.0.39
+
+.. _aerospike_serialization_constants:
+
+Serialization Constants
+-----------------------
+
+.. data:: SERIALIZER_PYTHON
+
+.. data:: SERIALIZER_USER
+
+.. data:: SERIALIZER_NONE
+
+.. versionadded:: 1.0.47
 
 .. _aerospike_misc_constants:
 

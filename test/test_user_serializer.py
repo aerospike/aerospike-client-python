@@ -36,8 +36,7 @@ class TestUserSerializer(object):
         if user == None and password == None:
             TestUserSerializer.client = aerospike.client(config).connect()
         else:
-            TestUserSerializer.client = aerospike.client(config).connect(user,
-                                                                     password)
+            TestUserSerializer.client = aerospike.client(config).connect(user, password)
         response = aerospike.set_serializer(serialize_function)
         response = aerospike.set_deserializer(deserialize_function)
 

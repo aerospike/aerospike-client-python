@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright 2013-2014 Aerospike, Inc.
+ * Copyright 2013-2015 Aerospike, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -82,7 +82,7 @@ PyObject * AerospikeClient_Connect(AerospikeClient * self, PyObject * args, PyOb
  * Returns true or false.
  *******************************************************************************************************
  */
-PyObject * AerospikeClient_isConnected(AerospikeClient * self, PyObject * args, PyObject * kwds)
+PyObject * AerospikeClient_is_connected(AerospikeClient * self, PyObject * args, PyObject * kwds)
 {
 
 	if (1 == self->is_conn_16) //Need to define a macro AEROSPIKE_CONN_STATE

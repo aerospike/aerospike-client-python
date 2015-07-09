@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright 2013-2014 Aerospike, Inc.
+ * Copyright 2013-2015 Aerospike, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -111,10 +111,15 @@ PyObject * AerospikeClient_RemoveBin_Invoke(
 			}
 			else if ( PyLong_Check(py_ttl) ) {
 				rec.ttl = (uint32_t) PyLong_AsLongLong(py_ttl);
+                if((uint32_t)-1 == rec.ttl) {
+				    as_error_update(err, AEROSPIKE_ERR_PARAM, "integer value for ttl exceeds sys.maxsize");
+			        goto CLEANUP;
+                }
 			}
 			else
 			{
 				as_error_update(err, AEROSPIKE_ERR_PARAM, "Ttl should be an int or long");
+			    goto CLEANUP;
 			}
 		}
 
@@ -124,10 +129,15 @@ PyObject * AerospikeClient_RemoveBin_Invoke(
 			}
 			else if ( PyLong_Check(py_gen) ) {
 				rec.gen = (uint16_t) PyLong_AsLongLong(py_gen);
+                if((uint16_t)-1 == rec.gen) {
+                    as_error_update(err, AEROSPIKE_ERR_PARAM, "integer value for gen exceeds sys.maxsize");
+			        goto CLEANUP;
+                }
 			}
 			else
 			{
 				as_error_update(err, AEROSPIKE_ERR_PARAM, "Generation should be an int or long");
+			    goto CLEANUP;
 			}
 		}
 	}

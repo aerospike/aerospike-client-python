@@ -28,7 +28,7 @@
 
 .. py:exception:: AerospikeError
 
-    The parent class of all exceptions raised by the Aerospike client, inherets
+    The parent class of all exceptions raised by the Aerospike client, inherits
     from :py:exc:`exceptions.Exception`
 
     .. py:attribute:: code

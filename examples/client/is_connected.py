@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 ################################################################################
-# Copyright 2013-2014 Aerospike, Inc.
+# Copyright 2013-2015 Aerospike, Inc.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -26,7 +26,7 @@ from optparse import OptionParser
 # Options Parsing
 ################################################################################
 
-usage = "usage: %prog [options] key"
+usage = "usage: %prog [options]"
 
 optparser = OptionParser(usage=usage, add_help_option=False)
 
@@ -65,7 +65,7 @@ if options.help:
     print()
     sys.exit(1)
 
-if len(args) != 1:
+if len(args) != 0:
     optparser.print_help()
     print()
     sys.exit(1)
@@ -77,6 +77,8 @@ if len(args) != 1:
 config = {
     'hosts': [ (options.host, options.port) ]
 }
+
+client = aerospike.client(config).connect()
 
 ################################################################################
 # Application
@@ -97,25 +99,18 @@ try:
     # ----------------------------------------------------------------------------
 
     try:
-        
+
         namespace = options.namespace if options.namespace and options.namespace != 'None' else None
         set = options.set if options.set and options.set != 'None' else None
+        if client.is_connected() == True:
+            print("Connected to Aerospike DB.")
 
-        keys = list(args)
-        print keys
-        records = client.exists_many(keys)
-
-        if records != None:
-            print(records)
-            print("---")
-            print("OK, %d records found." % len(records))
+    except Exception, (code,msg,file,line):
+        if code == 1:
+            print("error: Connect failed")
         else:
-            print('error: Not Found.', file=sys.stderr)
-            exitCode = 1
-
-    except Exception, eargs:
-        print("error: {0}".format(eargs), file=sys.stderr)
-        exitCode = 2
+            print("error: {0}".format((code,msg,file,line)), file=sys.stderr)
+            rc = 1
 
     # ----------------------------------------------------------------------------
     # Close Connection to Cluster

@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright 2013-2014 Aerospike, Inc.
+ * Copyright 2013-2015 Aerospike, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -108,9 +108,29 @@ PyObject * AerospikeClient_UDF_Put(AerospikeClient * self, PyObject *args, PyObj
 
 	// Convert lua file to content
 	as_bytes content;
-	FILE * file = fopen(filename,"r");
+	FILE * file_p = fopen(filename,"r");
+	FILE * copy_file_p = NULL;
 
-	if ( !file ) {
+	char copy_filepath[AS_CONFIG_PATH_MAX_LEN] = {0};
+	uint32_t user_path_len = strlen(self->as->config.lua.user_path);
+    memcpy( copy_filepath,
+        self->as->config.lua.user_path,
+        user_path_len);
+    if ( self->as->config.lua.user_path[user_path_len-1] != '/' ) {
+        memcpy( copy_filepath + user_path_len, "/", 1);
+        user_path_len = user_path_len + 1;
+    }
+    char* extracted_filename = strrchr(filename, '/');
+    if (extracted_filename) {
+        memcpy( copy_filepath + user_path_len, extracted_filename + 1, strlen(extracted_filename) - 1);
+        copy_filepath[user_path_len + strlen(extracted_filename) - 1] = '\0';
+    } else {
+        memcpy( copy_filepath + user_path_len, filename, strlen(filename));
+        copy_filepath[user_path_len + strlen(filename)] = '\0';
+    }
+
+
+	if ( !file_p ) {
 		as_error_update(&err, AEROSPIKE_ERR_LUA_FILE_NOT_FOUND, "cannot open script file");
 		goto CLEANUP;
 	}
@@ -121,16 +141,36 @@ PyObject * AerospikeClient_UDF_Put(AerospikeClient * self, PyObject *args, PyObj
 		goto CLEANUP;
 	}
 
-	int size = 0;
+    int size = 0;
 
-	uint8_t * buff = bytes;
-	int read = (int)fread(buff, 1, 512, file);
-	while ( read ) {
-		size += read;
-		buff += read;
-		read = (int)fread(buff, 1, 512, file);
+    uint8_t * buff = bytes;
+
+    copy_file_p = fopen(copy_filepath, "r");
+    if (!copy_file_p) {
+        copy_file_p = fopen(copy_filepath, "w+");
+        int read  = (int)fread(buff, 1, LUA_FILE_BUFFER_FRAME, file_p);
+        fwrite(buff, 1, read, copy_file_p);
+        while ( read ) {
+            size += read;
+            buff += read;
+            read = (int)fread(buff, 1, LUA_FILE_BUFFER_FRAME, file_p);
+            fwrite(buff, 1, read, copy_file_p);
+        }
+    } else {
+        int read  = (int)fread(buff, 1, LUA_FILE_BUFFER_FRAME, file_p);
+        while ( read ) {
+            size += read;
+            buff += read;
+            read = (int)fread(buff, 1, LUA_FILE_BUFFER_FRAME, file_p);
+        }
+    }
+
+	if (file_p) {
+		fclose(file_p);
 	}
-	fclose(file);
+	if (copy_file_p) {
+		fclose(copy_file_p);
+	}
 
 	as_bytes_init_wrap(&content, bytes, size, true);
 
@@ -294,7 +334,7 @@ PyObject * AerospikeClient_UDF_List(AerospikeClient * self, PyObject *args, PyOb
 	static char * kwlist[] = {"policy", NULL};
 
 	// Python Function Argument Parsing
-	if ( PyArg_ParseTupleAndKeywords(args, kwds, "O:udf_list", kwlist, &py_policy) == false ) {
+	if ( PyArg_ParseTupleAndKeywords(args, kwds, "|O:udf_list", kwlist, &py_policy) == false ) {
 		return NULL;
 	}
 

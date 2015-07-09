@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 ################################################################################
-# Copyright 2013-2014 Aerospike, Inc.
+# Copyright 2013-2015 Aerospike, Inc.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -149,10 +149,21 @@ try:
         print("The value of the 'smiley' bin is", bins['smiley'], "\n")
 
         print("Displaying the key, metadata, and bins of the record")
-        (key, metadata, bins) = client.get(key)
+        (key, meta, bins) = client.get(key)
         print(key)
-        print(metadata)
+        print(meta)
+        print(bins, "\n")
+        client.remove(key)
+
+        # example of a bytearray primary key
+        print("Save a new record with a bytearray primary key")
+        smiley_pk = bytearray(smile, encoding="utf-8")
+        client.put((namespace, set, smiley_pk), {'smiley':smile, 'smiley_pk':
+                      smiley_pk})
+        print("Display the bins of a record with a bytearray key")
+        (key, meta, bins) = client.get((namespace, set, smiley_pk))
         print(bins)
+        print("The value of the 'smiley_pk' bin is", bins['smiley_pk'], "\n")
         client.remove(key)
         exitCode = 0
     except Exception as e:

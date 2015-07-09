@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright 2013-2014 Aerospike, Inc.
+ * Copyright 2013-2015 Aerospike, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -494,6 +494,10 @@ PyObject * AerospikeClient_Index_List_Create(AerospikeClient * self, PyObject *a
 		type = PyInt_AsLong(py_datatype);
 	} else if ( PyLong_Check(py_datatype) ) {
 		type = PyLong_AsLongLong(py_datatype);
+        if(-1 == type) {
+		    as_error_update(&err, AEROSPIKE_ERR_PARAM, "integer value exceeds sys.maxsize");
+    		goto CLEANUP;
+        }
 	}
 
 	// Invoke operation
@@ -624,6 +628,10 @@ PyObject * AerospikeClient_Index_Map_Keys_Create(AerospikeClient * self, PyObjec
 		type = PyInt_AsLong(py_datatype);
 	} else if ( PyLong_Check(py_datatype) ) {
 		type = PyLong_AsLongLong(py_datatype);
+        if(-1 == type) {
+		    as_error_update(&err, AEROSPIKE_ERR_PARAM, "integer value exceeds sys.maxsize");
+    		goto CLEANUP;
+        }
 	}
 
 	// Invoke operation
@@ -755,6 +763,10 @@ PyObject * AerospikeClient_Index_Map_Values_Create(AerospikeClient * self, PyObj
 		type = PyInt_AsLong(py_datatype);
 	} else if ( PyLong_Check(py_datatype) ) {
 		type = PyLong_AsLongLong(py_datatype);
+        if(-1 == type) {
+		    as_error_update(&err, AEROSPIKE_ERR_PARAM, "integer value exceeds sys.maxsize");
+    		goto CLEANUP;
+        }
 	}
 
 	// Invoke operation

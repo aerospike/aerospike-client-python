@@ -36,7 +36,10 @@ class TestScanApply(object):
         """
         for i in xrange(5):
             key = ('test', 'demo', i)
-            self.client.remove(key)
+            try:
+                self.client.remove(key)
+            except TimeoutError:
+                pass
         self.client.close()
 
     def test_scan_apply_with_no_parameters(self):
@@ -72,6 +75,26 @@ class TestScanApply(object):
         """
         policy = {'timeout': 1000}
         scan_id = self.client.scan_apply("test", "demo", "bin_lua",
+                                         "mytransform", ['age', 2], policy)
+
+        while True:
+            response = self.client.scan_info(scan_id)
+            if response['status'] == aerospike.SCAN_STATUS_COMPLETED:
+                break
+        for i in xrange(5):
+            key = ('test', 'demo', i)
+            (key, meta, bins) = self.client.get(key)
+            if bins['age'] != i + 2:
+                assert True == False
+
+        assert True == True
+
+    def test_scan_apply_with_none_set(self):
+        """
+        Invoke scan_apply() with correct policy
+        """
+        policy = {'timeout': 1000}
+        scan_id = self.client.scan_apply("test", None, "bin_lua",
                                          "mytransform", ['age', 2], policy)
 
         while True:

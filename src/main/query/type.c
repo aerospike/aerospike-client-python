@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright 2013-2014 Aerospike, Inc.
+ * Copyright 2013-2015 Aerospike, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -135,6 +135,15 @@ static void AerospikeQuery_Type_Dealloc(AerospikeQuery * self)
 	for (i=0; i < self->u_objs.size; i++){
 		Py_DECREF(self->u_objs.ob[i]);
 	}
+
+    for(i=0; i<self->query.where.size; i++) {
+        as_predicate * p = &self->query.where.entries[i];
+        if( p ) {
+            if( p->dtype == AS_INDEX_STRING ) {
+                free(p->value.string);
+            }
+        }
+    }
 
 	as_query_destroy(&self->query);
     self->ob_type->tp_free((PyObject *) self);

@@ -30,7 +30,7 @@ class TestConnect(TestBaseClass):
                 TestConnect.user, TestConnect.password)
 
         assert self.client != None
-        assert self.client.isConnected() == True
+        assert self.client.is_connected() == True
         self.client.close()
 
     def test_connect_positive_with_policy(self):
@@ -47,8 +47,8 @@ class TestConnect(TestBaseClass):
             self.client = aerospike.client(config).connect(
                 TestConnect.user, TestConnect.password)
 
-        assert self.client.isConnected() == True
-        assert self.client.isConnected() == True
+        assert self.client.is_connected() == True
+        assert self.client.is_connected() == True
         self.client.close()
 
     def test_connect_positive_with_multiple_hosts(self):

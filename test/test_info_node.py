@@ -95,6 +95,11 @@ class TestInfoNode(object):
         """
         Test info with correct arguments
         """
+        try:
+            TestInfoNode.client.index_remove('test','names_test_index')
+            time.sleep(2)
+        except:
+            pass
         key = ('test', 'demo', 'list_key')
 
         rec = {'names': ['John', 'Marlen', 'Steve']}
@@ -104,7 +109,6 @@ class TestInfoNode(object):
         time.sleep(2)
         TestInfoNode.client.remove(key)
         response = TestInfoNode.client.info_node('sindex', TestInfoNode.config['hosts'][0])
-        TestInfoNode.client.info_node('sindex-delete:ns=test;indexname=names_test_index', TestInfoNode.config['hosts'][0])
 
         if 'names_test_index' in response:
             assert True == True
@@ -247,13 +251,13 @@ class TestInfoNode(object):
         """
         Test info with incorrect host
         """
-        host = ( "192.168.1.2", 3000 )
+        host = ( "192.168.244.244", 3000 )
         try:
             response = TestInfoNode.client.info_node('bins', host)
-
+        except ClientError as exception:
+            assert exception.code == -1L
         except TimeoutError as exception:
             assert exception.code == 9L
-            assert exception.msg == ""
     
     def test_info_node_positive_invalid_host(self):
         """
