@@ -141,14 +141,14 @@ void batch_exists_recs(as_error *err, as_batch_read_records* records, PyObject *
 					break;
 
 				case AS_STRING:
-					PyTuple_SetItem(p_key, 3, PyString_FromString((const char *)batch->key.value.string.value));
+					PyTuple_SetItem(p_key, 2, PyString_FromString((const char *)batch->key.value.string.value));
 					break;
 				default:
 					break;
 			}
 		} else {
 			Py_INCREF(Py_None);
-			p_key = Py_None;
+			PyTuple_SetItem(p_key, 2, Py_None);
 		}
 
 		if ( batch->result == AEROSPIKE_OK ){
@@ -156,18 +156,13 @@ void batch_exists_recs(as_error *err, as_batch_read_records* records, PyObject *
 			PyDict_SetItemString( rec, "gen", PyInt_FromLong((long)batch->record.gen) );
 			PyDict_SetItemString( rec, "ttl", PyInt_FromLong((long)batch->record.ttl) );
 
-			if ( PyDict_SetItem( *py_recs, p_key, rec ) ){
-                return false;
-			}
+			PyDict_SetItem( *py_recs, p_key, rec );
+		    Py_DECREF(rec);
 		} else if (batch->result == AEROSPIKE_ERR_RECORD_NOT_FOUND){
 			
 			Py_INCREF(Py_None);
-
-			if( PyDict_SetItem( *py_recs, p_key, PyString_FromString("1"))){
-                return false;
-			}
+			PyDict_SetItem( *py_recs, p_key, Py_None);
 		}
-		Py_DECREF(rec);
 		Py_DECREF(p_key);
 	}
 }
@@ -306,6 +301,7 @@ CLEANUP:
 		// Also, pyobject_to_key is soing strdup() in case of Unicode. So, object destruction
 		// is necessary.
     	//as_batch_destroy(&batch);
+        as_batch_read_destroy(&records);
 	}
 
 	if ( err.code != AEROSPIKE_OK ) {

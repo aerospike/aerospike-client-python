@@ -145,20 +145,16 @@ static void batch_get_recs(as_error *err, as_batch_read_records* records, PyObje
 			}
 		} else {
 			Py_INCREF(Py_None);
-			p_key = Py_None;
+			PyTuple_SetItem(p_key, 2, Py_None);
 		}
 
 		if ( batch->result == AEROSPIKE_OK ){
             record_to_pyobject(err, &batch->record, &batch->key, &rec);
-	        if ( PyDict_SetItem( *py_recs, p_key, rec ) ){
-                return false;
-		    }
+	        PyDict_SetItem( *py_recs, p_key, rec );
             Py_DECREF(rec);
         } else if (batch->result == AEROSPIKE_ERR_RECORD_NOT_FOUND) {
             Py_INCREF(Py_None);
-            if ( PyDict_SetItem( *py_recs, p_key, Py_None)){
-                return false;
-            }
+            PyDict_SetItem( *py_recs, p_key, Py_None);
         }
         Py_DECREF(p_key);
     }
@@ -185,14 +181,24 @@ PyObject * AerospikeClient_Get_Many_Invoke(
 
 	// Aerospike Client Arguments
 	as_error err;
+    int i=0;
     as_batch_read_records records;
     //as_batch batch;
 	as_policy_batch policy;
 	as_policy_batch * batch_policy_p = NULL;
-    //int has_batch_index = 1;
+    int has_batch_index = 1;
+    /*as_cluster_s* cluster = NULL;
+    as_nodes* nodes = NULL;*/
     // Initialisation flags
     bool batch_initialised = false;
 
+    /*for (i=0 ; i<self->as->cluster->nodes->size ; i++)
+    {
+        if (self->as->cluster->nodes->array[i]->has_batch_index == 0)
+        {
+            has_batch_index = 0;
+        }
+    }*/
 	// Initialize error
 	as_error_init(&err);
 
@@ -293,6 +299,7 @@ CLEANUP:
         // Also, pyobject_to_key is soing strdup() in case of Unicode. So, object destruction
         // is necessary.
         //as_batch_destroy(&batch);
+        as_batch_read_destroy(&records);
     }
 	if ( err.code != AEROSPIKE_OK ) {
 		PyObject * py_err = NULL;

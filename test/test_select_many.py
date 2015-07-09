@@ -3,6 +3,7 @@
 import pytest
 import sys
 from test_base_class import TestBaseClass
+from collections import Counter
 
 aerospike = pytest.importorskip("aerospike")
 try:
@@ -72,11 +73,12 @@ class TestSelectMany(object):
 
         filter_bins = ['title', 'name']
         records = TestSelectMany.client.select_many(self.keys, filter_bins,
-                                                    {'timeout': 3})
+                                                    {'timeout': 20})
 
         assert type(records) == dict
         assert len(records.keys()) == 5
-        assert records.keys() == [0, 1, 2, 3, 4]
+        assert Counter([x[2] for x in records.keys()]) == Counter([0, 1, 2, 3,
+            4])
         for k in records.keys():
             bins = records[k][2].keys()
             assert set(bins).intersection(set(filter_bins)) == set(bins)
@@ -89,7 +91,8 @@ class TestSelectMany(object):
 
         assert type(records) == dict
         assert len(records.keys()) == 5
-        assert records.keys() == [0, 1, 2, 3, 4]
+        assert Counter([x[2] for x in records.keys()]) == Counter([0, 1, 2, 3,
+            4])
         for k in records.keys():
             bins = records[k][2].keys()
             assert set(bins).intersection(set(filter_bins)) == set(bins)
@@ -113,8 +116,9 @@ class TestSelectMany(object):
 
         assert type(records) == dict
         assert len(records.keys()) == 6
-        assert records.keys() == [0, 1, 2, 3, 4, 'non-existent']
-        assert records['non-existent'] == None
+        assert Counter([x[2] for x in records.keys()]) == Counter([0, 1, 2, 3,
+            4, 'non-existent'])
+        assert records[('test', 'demo', 'non-existent')] == None
         for k in records.keys():
             if records[k] == None: continue
             bins = records[k][2].keys()
@@ -128,7 +132,7 @@ class TestSelectMany(object):
         records = TestSelectMany.client.select_many(keys, filter_bins)
 
         assert len(records.keys()) == 1
-        assert records == {'key': None}
+        assert records == {('test', 'demo', 'key'): None}
         for k in records.keys():
             if records[k] == None: continue
             bins = records[k][2].keys()
@@ -198,8 +202,9 @@ class TestSelectMany(object):
 
         assert type(records) == dict
         assert len(records.keys()) == 11
-        assert records.keys() == [0, 1, 2, 3, 4, 'some_key', 15, 16, 17, 18, 19]
-        assert records['some_key'] == None
+        assert Counter([x[2] for x in records.keys()]) == Counter([0, 1, 2, 3, 4,
+            'some_key', 15, 16, 17, 18, 19])
+        assert records[('test', 'demo', 'some_key')] == None
         for k in records.keys():
             if records[k] == None: continue
             bins = records[k][2].keys()
