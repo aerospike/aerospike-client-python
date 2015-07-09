@@ -162,6 +162,22 @@ class TestPut(TestBaseClass):
             assert exception.code == -2
             assert exception.msg == "either key or digest is required"
 
+    def test_put_with_bytearray_primary_key(self):
+        """
+            Invoke put() with bytearray primary key in key.
+        """
+        key = ("test", "demo", bytearray("asd;as[d'as;d", "utf-8"))
+
+        bins = {"name": "John"}
+
+        TestPut.client.put(key, bins)
+
+        (key, meta, bins) = TestPut.client.get(key)
+
+        assert bins == {"name": "John"}
+
+        self.delete_keys.append(key)
+
     def test_put_with_string_type_record(self):
         """
             Invoke put() with string typed record.
