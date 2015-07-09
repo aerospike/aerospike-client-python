@@ -1316,6 +1316,36 @@ Key Tuple
 
     ``(namespace, set, primary key[, the record's RIPEMD-160 digest])``
 
+    .. hlist::
+        :columns: 1
+
+        * *namespace* the :class:`str` name of the namespace, which must be \
+          preconfigured on the cluster.
+        * *set* the :class:`str` name of the set. Will be created automatically \
+          if it does not exist.
+        * *primary key* the value by which the client-side application \
+          identifies the record, which can be of type :class:`str`, :class:`int` \
+          or :class:`bytearray`.
+        * *digest* the first three parts of the tuple get hashed through \
+          RIPEMD-160, and the digest used by the clients and cluster nodes \
+          to locate the record. A key tuple is also valid if it has the \
+          digest part filled and the primary key part set to ``None``.
+
+    .. code-block:: python
+
+        >>> client = aerospike.client(config).connect()
+        >>> client.put(('test','demo','oof'), {'id':0, 'a':1})
+        >>> (key, meta, bins) = client.get(('test','demo','oof'))
+        >>> key
+        ('test', 'demo', None, bytearray(b'\ti\xcb\xb9\xb6V#V\xecI#\xealu\x05\x00H\x98\xe4='))
+        >>> (key2, meta2, bins2) = client.get(key)
+        >>> bins2
+        {'a': 1, 'id': 0}
+
+    .. seealso:: `Data Model: Key / Digest <https://www.aerospike.com/docs/architecture/data-model.html#key-digest>`_.
+
+    .. versionchanged:: 1.0.47
+
 
 .. _aerospike_record_tuple:
 
@@ -1329,9 +1359,11 @@ Record Tuple
     .. hlist::
         :columns: 1
 
-        * *key* the tuple ``(namespace, set, primary key, the record's RIPEMD-160 digest)``
-        * *meta* a dict containing  ``{'gen' : genration value, 'ttl': ttl value}``
-        * *bins* a dict containing bin-name/bin-value pairs
+        * *key* the :ref:`aerospike_key_tuple`.
+        * *meta* a :class:`dict` containing  ``{'gen' : genration value, 'ttl': ttl value}``.
+        * *bins* a :class:`dict` containing bin-name/bin-value pairs.
+
+    .. seealso:: `Data Model: Record <https://www.aerospike.com/docs/architecture/data-model.html#records>`_.
 
 
 .. _unicode_handling:
