@@ -365,6 +365,9 @@ as_status pyobject_to_val(as_error * err, PyObject * py_obj, as_val ** val, as_s
 	}
 	else if ( PyLong_Check(py_obj) ) {
 		int64_t l = (int64_t) PyLong_AsLongLong(py_obj);
+        if(-1 == l) {
+		    return as_error_update(err, AEROSPIKE_ERR_PARAM, "integer value exceeds sys.maxsize");
+        }
 		*val = (as_val *) as_integer_new(l);
 	}
 	else if ( PyString_Check(py_obj) ) {
@@ -397,6 +400,9 @@ as_status pyobject_to_val(as_error * err, PyObject * py_obj, as_val ** val, as_s
 		if ( err->code == AEROSPIKE_OK ) {
 			*val = (as_val *) map;
 		}
+	}
+	else if ( Py_None == py_obj ) {
+		*val = as_val_reserve(&as_nil);
 	} else {
 		as_bytes *bytes;
 		GET_BYTES_POOL(bytes, static_pool, err);
@@ -466,6 +472,9 @@ as_status pyobject_to_record(as_error * err, PyObject * py_rec,
 			}
 			else if ( PyLong_Check(value) ) {
 				int64_t val = (int64_t) PyLong_AsLongLong(value);
+                if(-1 == val) {
+                    return as_error_update(err, AEROSPIKE_ERR_PARAM, "integer value exceeds sys.maxsize");
+                }
 				ret_val = as_record_set_int64(rec, name, val);
 			}
 			else if ( PyUnicode_Check(value) ) {
@@ -531,6 +540,9 @@ as_status pyobject_to_record(as_error * err, PyObject * py_rec,
 				}
 				else if ( PyLong_Check(py_ttl) ) {
 					rec->ttl = (uint32_t) PyLong_AsLongLong(py_ttl);
+                    if((uint32_t)-1 == rec->ttl) {
+            		    as_error_update(err, AEROSPIKE_ERR_PARAM, "integer value exceeds sys.maxsize");
+                    }
 				} else {
 					as_error_update(err, AEROSPIKE_ERR_PARAM, "Ttl should be an int or long");
 				}
@@ -542,6 +554,9 @@ as_status pyobject_to_record(as_error * err, PyObject * py_rec,
 				}
 				else if ( PyLong_Check(py_gen) ) {
 					rec->gen = (uint16_t) PyLong_AsLongLong(py_gen);
+                    if((uint32_t)-1 == rec->ttl) {
+            		    as_error_update(err, AEROSPIKE_ERR_PARAM, "integer value exceeds sys.maxsize");
+                    }
 				} else {
 					as_error_update(err, AEROSPIKE_ERR_PARAM, "Generation should be an int or long");
 				}
@@ -714,10 +729,19 @@ as_status pyobject_to_key(as_error * err, PyObject * py_keytuple, as_key * key)
 		}
 		else if ( PyLong_Check(py_key) ) {
 			int64_t k = (int64_t) PyLong_AsLongLong(py_key);
+            if(-1 == k) {
+			    return as_error_update(err, AEROSPIKE_ERR_PARAM, "integer value for KEY exceeds sys.maxsize");
+            }
 			as_key_init_int64(key, ns, set, k);
 		}
 		else if ( PyByteArray_Check(py_key) ) {
-			return as_error_update(err, AEROSPIKE_ERR_PARAM, "key as a byte array is not supported");
+			uint32_t sz = (uint32_t) PyByteArray_Size(py_key);
+
+			if ( sz <= 0 ) {
+				return as_error_update(err, AEROSPIKE_ERR_PARAM, "Byte array size cannot be 0");
+			}
+			uint8_t * byte_array = (uint8_t *) PyByteArray_AsString(py_key);
+			as_key_init_raw(key, ns, set, byte_array, sz);
 		}
 		else {
 			return as_error_update(err, AEROSPIKE_ERR_PARAM, "key is invalid");

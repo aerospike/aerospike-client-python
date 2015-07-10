@@ -162,6 +162,22 @@ class TestPut(TestBaseClass):
             assert exception.code == -2
             assert exception.msg == "either key or digest is required"
 
+    def test_put_with_bytearray_primary_key(self):
+        """
+            Invoke put() with bytearray primary key in key.
+        """
+        key = ("test", "demo", bytearray("asd;as[d'as;d", "utf-8"))
+
+        bins = {"name": "John"}
+
+        TestPut.client.put(key, bins)
+
+        (key, meta, bins) = TestPut.client.get(key)
+
+        assert bins == {"name": "John"}
+
+        self.delete_keys.append(key)
+
     def test_put_with_string_type_record(self):
         """
             Invoke put() with string typed record.
@@ -1051,3 +1067,34 @@ class TestPut(TestBaseClass):
         except ClusterError as exception:
             assert exception.code == 11L
             assert exception.msg == 'No connection to aerospike cluster'
+
+    def test_put_with_integer_greater_than_maxisze(self):
+        """
+            Invoke put() for a record with integer greater than max size
+        """
+        key = ('test', 'demo', 1)
+
+        bins = {"no": 111111111111111111111111111111111111111111111}
+
+        try:
+            assert 0 == TestPut.client.put(key, bins)
+
+        except ParamError as exception:
+            assert exception.code == -2
+            assert exception.msg == 'integer value exceeds sys.maxsize'
+
+    def test_put_with_key_as_an_integer_greater_than_maxisze(self):
+        """
+            Invoke put() for a record with integer greater than max size
+        """
+        key = ('test', 'demo', 1111111111111111111111111111111111)
+
+        bins = {"no": 11}
+
+        try:
+            assert 0 == TestPut.client.put(key, bins)
+
+        except ParamError as exception:
+            assert exception.code == -2
+            assert exception.msg == 'integer value for KEY exceeds sys.maxsize'
+

@@ -107,6 +107,8 @@ try:
         print('APPLY')
         print('########################################################################')
 
+        client.udf_put('simple.lua')
+
         for i in range(1,1000):
             val1 = client.key('test','demo','key{0}'.format(i)).apply('simple', 'concat', ['a', 30000])
             print(val1)

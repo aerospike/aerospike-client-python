@@ -371,3 +371,17 @@ class TestIncrement(object):
         except ClusterError as exception:
             assert exception.code == 11L
             assert exception.msg == 'No connection to aerospike cluster'
+
+    def test_increment_with_integer_greaterthan_maxsize(self):
+        """
+        Invoke increment() with integer greater then(2^63 - 1)
+        """
+        key = ('test', 'demo', 1)
+        bins = {"age": 10}
+        TestIncrement.client.put(key, bins)
+        try:
+            TestIncrement.client.increment(key, 'age', 68786586756785785745)
+        except Exception as exception:
+            assert exception.code == -2
+            assert exception.msg == 'integer value exceeds sys.maxsize'
+
