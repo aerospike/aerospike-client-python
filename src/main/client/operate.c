@@ -295,9 +295,9 @@ PyObject *  AerospikeClient_Operate_Invoke(
                     break;
 				case AS_OPERATOR_TOUCH:
 					if (PyInt_Check(py_value)) {
-                        ops.ttl = _PyInt_AsInt(py_value);
+                        ops.ttl = PyInt_AsLong(py_value);
                     } else if ( PyLong_Check(py_value) ) {
-                        ttl = _PyLong_AsInt(py_value);
+                        ttl = PyLong_AsLong(py_value);
                         if((uint32_t)-1 == ttl) {
                             as_error_update(err, AEROSPIKE_ERR_PARAM, "integer value for ttl exceeds sys.maxsize");
                             goto CLEANUP;
