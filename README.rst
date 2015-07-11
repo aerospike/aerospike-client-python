@@ -4,6 +4,7 @@ Aerospike Python Client
 
 .. |Build| image:: https://travis-ci.org/aerospike/aerospike-client-python.svg?branch=master
 .. |Release| image:: https://img.shields.io/pypi/v/aerospike.svg
+.. |Wheel| image:: https://img.shields.io/pypi/wheel/aerospike.svg
 .. |Downloads| image:: https://img.shields.io/pypi/dm/aerospike.svg
 .. |License| image:: https://img.shields.io/pypi/l/aerospike.svg
 
