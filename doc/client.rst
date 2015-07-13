@@ -74,7 +74,8 @@ Client Class --- :class:`Client`
 
     .. method:: close()
 
-        Close all connections to the cluster.
+        Close all connections to the cluster. It is recommended to explicitly \
+        call this method when the program is done communicating with the cluster.
 
     .. method:: get(key[, policy]) -> (key, meta, bins)
 
@@ -106,10 +107,11 @@ Client Class --- :class:`Client`
                     print(meta)
                     print('--------------------------')
                     print(bins)
-                client.close()
             except AerospikeError as e:
                 print("Error: {0} [{1}]".format(e.msg, e.code))
                 sys.exit(1)
+            finally:
+                client.close()
 
 
     .. method:: select(key, bins[, policy]) -> (key, meta, bins)
@@ -145,10 +147,11 @@ Client Class --- :class:`Client`
                 print(meta)
                 print('--------------------------')
                 print(bins)
-                client.close()
             except AerospikeError as e:
                 print("Error: {0} [{1}]".format(e.msg, e.code))
                 sys.exit(1)
+            finally:
+                client.close()
 
 
     .. method:: exists(key[, policy]) -> (key, meta)
@@ -179,10 +182,11 @@ Client Class --- :class:`Client`
                 print(key)
                 print('--------------------------')
                 print(meta)
-                client.close()
             except AerospikeError as e:
                 print("Error: {0} [{1}]".format(e.msg, e.code))
                 sys.exit(1)
+            finally:
+                client.close()
 
 
     .. method:: put(key, bins[, meta[, policy[, serializer]]])
@@ -222,10 +226,11 @@ Client Class --- :class:`Client`
                          meta={'ttl':180})
                 # adding a bin
                 client.put(key, {'smiley': u"\ud83d\ude04"})
-                client.close()
             except AerospikeError as e:
                 print("Error: {0} [{1}]".format(e.msg, e.code))
                 sys.exit(1)
+            finally:
+                client.close()
 
         .. note:: Using Generation Policy
 
@@ -256,6 +261,7 @@ Client Class --- :class:`Client`
                     print("put() failed due to generation policy mismatch")
                 except AerospikeError as e:
                     print("Error: {0} [{1}]".format(e.msg, e.code))
+                client.close()
 
     .. method:: touch(key[, val=0[, meta[, policy]]])
 
@@ -387,6 +393,8 @@ Client Class --- :class:`Client`
             except AerospikeError as e:
                 print("Error: {0} [{1}]".format(e.msg, e.code))
                 sys.exit(1)
+            finally:
+                client.close()
 
 
     .. method:: prepend(key, bin, val[, meta[, policy]])
@@ -417,6 +425,8 @@ Client Class --- :class:`Client`
             except AerospikeError as e:
                 print("Error: {0} [{1}]".format(e.msg, e.code))
                 sys.exit(1)
+            finally:
+                client.close()
 
 
     .. method:: increment(key, bin, offset[, meta[, policy]])
@@ -455,6 +465,8 @@ Client Class --- :class:`Client`
             except AerospikeError as e:
                 print("Error: {0} [{1}]".format(e.msg, e.code))
                 sys.exit(1)
+            finally:
+                client.close()
 
 
     .. method:: operate(key, list[, meta[, policy]]) -> (key, meta, bins)
@@ -533,6 +545,8 @@ Client Class --- :class:`Client`
             except AerospikeError as e:
                 print("Error: {0} [{1}]".format(e.msg, e.code))
                 sys.exit(1)
+            finally:
+                client.close()
 
 
     .. rubric:: Batch Operations
@@ -566,10 +580,11 @@ Client Class --- :class:`Client`
                 ]
                 records = client.get_many(keys)
                 print records
-                client.close()
             except AerospikeError as e:
                 print("Error: {0} [{1}]".format(e.msg, e.code))
                 sys.exit(1)
+            finally:
+                client.close()
 
         .. note::
 
@@ -614,10 +629,11 @@ Client Class --- :class:`Client`
                 ]
                 records = client.exists_many(keys)
                 print records
-                client.close()
             except AerospikeError as e:
                 print("Error: {0} [{1}]".format(e.msg, e.code))
                 sys.exit(1)
+            finally:
+                client.close()
 
         .. note::
 
@@ -666,10 +682,11 @@ Client Class --- :class:`Client`
                 ]
                 records = client.select_many(keys, [u'name'])
                 print records
-                client.close()
             except AerospikeError as e:
                 print("Error: {0} [{1}]".format(e.msg, e.code))
                 sys.exit(1)
+            finally:
+                client.close()
 
         .. note::
 
@@ -741,6 +758,7 @@ Client Class --- :class:`Client`
                     'lua': { 'user_path': '/path/to/lua/user_path'}}
                 client = aerospike.client(config).connect()
                 client.udf_put('/path/to/my_module.lua')
+                client.close()
 
         .. versionchanged:: 1.0.45
 
@@ -776,6 +794,7 @@ Client Class --- :class:`Client`
             config = {'hosts': [('127.0.0.1', 3000)] }
             client = aerospike.client(config).connect()
             print(client.udf_list())
+            client.close()
 
         .. note::
 
@@ -981,7 +1000,7 @@ Client Class --- :class:`Client`
             import aerospike
             from aerospike import predicates as p
 
-            client = aerospike.client({ 'hosts': [ ('127.0.0.1', 3000)]})
+            client = aerospike.client({ 'hosts': [ ('127.0.0.1', 3000)]}).connect()
 
             # assume the bin fav_movies in the set test.demo bin should contain
             # a dict { (str) _title_ : (int) _times_viewed_ }
@@ -989,6 +1008,7 @@ Client Class --- :class:`Client`
             client.index_map_keys_create('test', 'demo', 'fav_movies', aerospike.INDEX_STRING, 'demo_fav_movies_titles_idx')
             # create a secondary index for integer values of test.demo records whose 'fav_movies' bin is a map
             client.index_map_values_create('test', 'demo', 'fav_movies', aerospike.INDEX_NUMERIC, 'demo_fav_movies_views_idx')
+            client.close()
 
         .. versionadded:: 1.0.42
 
@@ -1341,6 +1361,7 @@ Key Tuple
         >>> (key2, meta2, bins2) = client.get(key)
         >>> bins2
         {'a': 1, 'id': 0}
+        >>> client.close()
 
     .. seealso:: `Data Model: Key / Digest <https://www.aerospike.com/docs/architecture/data-model.html#key-digest>`_.
 

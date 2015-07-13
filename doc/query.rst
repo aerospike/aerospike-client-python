@@ -77,6 +77,7 @@ Query Class --- :class:`Query`
             query.where(p.equals('age', 40))
             records = query.results( {'timeout':2000})
             pp.pprint(records)
+            client.close()
 
         .. note::
 
@@ -114,6 +115,7 @@ Query Class --- :class:`Query`
 
             query.foreach(matched_names, {'timeout':2000})
             pp.pprint(names)
+            client.close()
 
         .. note:: To stop the stream return ``False`` from the callback function.
 
@@ -223,6 +225,7 @@ Query Class --- :class:`Query`
                 names = query.results()
                 # we expect a dict (map) whose keys are names, each with a count value
                 pp.pprint(names)
+                client.close()
 
             With stream UDFs, the final reduce steps (which ties
             the results from the reducers of the cluster nodes) executes on the
