@@ -267,16 +267,18 @@ class TestRemovebin(object):
         Invoke remove_bin() with policy key digest
         """
         key = ('test', 'demo', "single-bin")
+        try:
+            TestRemovebin.client.remove(key)
+        except:
+            pass
 
         rec = {'name': 'single'}
-
         TestRemovebin.client.put(key, rec)
 
-        policy = {'timeout': 1000, 'key': aerospike.POLICY_KEY_DIGEST}
+        policy = {'timeout': 1000}
         TestRemovebin.client.remove_bin(key, ["name"], {}, policy)
 
-        _, _, bins = TestRemovebin.client.select(key, ["name"])
-        import pdb; pdb.set_trace()
+        _, _, bins = TestRemovebin.client.get(key)
         assert bins == None
 
 
