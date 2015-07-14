@@ -77,6 +77,8 @@ static bool batch_get_cb(const as_batch_read* results, uint32_t n, void* udata)
                 default:
                     break;
             }
+		} else if (results[i].key->digest.init) {
+            PyTuple_SetItem(p_key, 2, PyString_FromStringAndSize((char *) results[i].key->digest.value, AS_DIGEST_VALUE_SIZE));
         } else {
             Py_INCREF(Py_None);
             PyTuple_SetItem(p_key, 2, Py_None);
@@ -143,6 +145,8 @@ static void batch_get_recs(as_error *err, as_batch_read_records* records, PyObje
 				default:
 					break;
 			}
+		} else if (batch->key.digest.init) {
+            PyTuple_SetItem(p_key, 2, PyString_FromStringAndSize((char *) batch->key.digest.value, AS_DIGEST_VALUE_SIZE));
 		} else {
 			Py_INCREF(Py_None);
 			PyTuple_SetItem(p_key, 2, Py_None);

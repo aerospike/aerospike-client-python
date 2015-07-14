@@ -92,7 +92,9 @@ static bool batch_select_cb(const as_batch_read* results, uint32_t n, void* udat
 				default:
 					break;
 			}
-		} else {
+		} else if (results[i].key->digest.init) {
+            PyTuple_SetItem(p_key, 2, PyString_FromStringAndSize((char *) results[i].key->digest.value, AS_DIGEST_VALUE_SIZE));
+        } else {
 			Py_INCREF(Py_None);
 			PyTuple_SetItem(p_key, 2, Py_None);
 		}
@@ -158,6 +160,8 @@ static void batch_select_recs(as_error *err, as_batch_read_records* records, PyO
                 default:
                     break;
             }
+		} else if (batch->key.digest.init) {
+            PyTuple_SetItem(p_key, 2, PyString_FromStringAndSize((char *) batch->key.digest.value, AS_DIGEST_VALUE_SIZE));
         } else {
             Py_INCREF(Py_None);
             PyTuple_SetItem(p_key, 2, Py_None);

@@ -126,7 +126,6 @@ class TestGetMany(TestBaseClass):
             assert exception.code == -2
             assert exception.msg == "timeout is invalid"
 
-    @pytest.mark.xfail
     def test_get_many_with_initkey_as_digest(self):
 
         keys = []
@@ -149,6 +148,7 @@ class TestGetMany(TestBaseClass):
 
         assert type(records) == dict
         assert len(records.keys()) == 2
+        assert Counter([x[2] for x in records.keys()]) == Counter(["asd;as[d'as;djk;uyfl", "ase;as[d'as;djk;uyfl"])
 
     def test_get_many_with_non_existent_keys_in_middle(self):
 
