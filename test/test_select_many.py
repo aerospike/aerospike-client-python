@@ -6,7 +6,7 @@ from test_base_class import TestBaseClass
 try:
     from collections import Counter
 except ImportError:
-    import Counter
+    from counter26 import Counter
 
 aerospike = pytest.importorskip("aerospike")
 try:
