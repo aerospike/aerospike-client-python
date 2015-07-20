@@ -112,6 +112,7 @@ Scan Class --- :class:`Scan`
               'priority': aerospike.SCAN_PRIORITY_MEDIUM
             }
             scan.foreach(get_keys, options=scan_opts)
+            client.close()
 
         .. note::
 

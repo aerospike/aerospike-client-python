@@ -139,7 +139,7 @@ else:
         )
     ]
     
-    if 'build' in sys.argv or 'install' in sys.argv :
+    if 'build' in sys.argv or 'build_ext' in sys.argv or 'install' in sys.argv:
 
         # Prefix for Aerospike C client libraries and headers
         aerospike_c_prefix = './aerospike-client-c'

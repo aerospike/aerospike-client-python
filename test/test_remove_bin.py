@@ -262,6 +262,26 @@ class TestRemovebin(object):
 
         assert status == 0L
 
+    def test_remove_bin_with_single_bin_in_a_record(self):
+        """
+        Invoke remove_bin() with policy key digest
+        """
+        key = ('test', 'demo', "single-bin")
+        try:
+            TestRemovebin.client.remove(key)
+        except:
+            pass
+
+        rec = {'name': 'single'}
+        TestRemovebin.client.put(key, rec)
+
+        policy = {'timeout': 1000}
+        TestRemovebin.client.remove_bin(key, ["name"], {}, policy)
+
+        _, _, bins = TestRemovebin.client.get(key)
+        assert bins == None
+
+
     def test_remove_bin_with_extra_parameter(self):
         """
         Invoke remove_bin() with extra parameter.
