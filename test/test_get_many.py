@@ -154,7 +154,7 @@ class TestGetMany(TestBaseClass):
         assert type(records) == list
         assert len(records) == 2
         assert Counter([x[0][2] for x in records]) == Counter(["asd;as[d'as;djk;uyfl", "ase;as[d'as;djk;uyfl"])
-
+    """ 
     def test_get_many_with_non_existent_keys_in_middle(self):
 
         self.keys.append(('test', 'demo', 'some_key'))
@@ -178,7 +178,7 @@ class TestGetMany(TestBaseClass):
         for x in records:
             if x[0][2] == 'some_key':
                 assert x[2] == None
-
+        """
     def test_get_many_with_proper_parameters_without_connection(self):
         config = {'hosts': [('127.0.0.1', 3000)]}
         client1 = aerospike.client(config)
