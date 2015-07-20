@@ -3,7 +3,10 @@
 import pytest
 import sys
 from test_base_class import TestBaseClass
-from collections import Counter
+try:
+    from collections import Counter
+except ImportError:
+    import Counter
 
 aerospike = pytest.importorskip("aerospike")
 try:
@@ -57,27 +60,25 @@ class TestExistsMany(TestBaseClass):
 
         records = TestExistsMany.client.exists_many(self.keys)
 
-        assert type(records) == dict
-        assert len(records.keys()) == 5
+        assert type(records) == list
+        assert len(records) == 5
 
     def test_exists_many_with_proper_parameters(self):
 
         records = TestExistsMany.client.exists_many(self.keys, {'timeout': 1200})
 
-        assert type(records) == dict
-        assert len(records.keys()) == 5
-        #assert records.keys() == [0, 1, 2, 3, 4]
-        assert Counter([x[2] for x in records.keys()]) == Counter([0, 1, 2, 3,
+        assert type(records) == list
+        assert len(records) == 5
+        assert Counter([x[0][2] for x in records]) == Counter([0, 1, 2, 3,
             4])
 
     def test_exists_many_with_none_policy(self):
 
         records = TestExistsMany.client.exists_many(self.keys, None)
 
-        assert type(records) == dict
-        assert len(records.keys()) == 5
-        #assert records.keys() == [0, 1, 2, 3, 4]
-        assert Counter([x[2] for x in records.keys()]) == Counter([0, 1, 2, 3,
+        assert type(records) == list
+        assert len(records) == 5
+        assert Counter([x[0][2] for x in records]) == Counter([0, 1, 2, 3,
             4])
 
     def test_exists_many_with_none_keys(self):
@@ -95,11 +96,13 @@ class TestExistsMany(TestBaseClass):
 
         records = TestExistsMany.client.exists_many(self.keys)
 
-        assert type(records) == dict
-        assert len(records.keys()) == 6
-        assert Counter([x[2] for x in records.keys()]) == Counter([0, 1, 2, 3,
+        assert type(records) == list
+        assert len(records) == 6
+        assert Counter([x[0][2] for x in records]) == Counter([0, 1, 2, 3,
             4, 'some_key'])
-        assert records[("test", "demo", "some_key")] == None
+        for x in records:
+            if x[0][2] == 'some_key':
+                assert x[1] == None
 
     def test_exists_many_with_all_non_existent_keys(self):
 
@@ -107,8 +110,10 @@ class TestExistsMany(TestBaseClass):
 
         records = TestExistsMany.client.exists_many(keys)
 
-        assert len(records.keys()) == 1
-        assert records == {('test','demo','key'): None}
+        assert len(records) == 1
+        for x in records:
+            if x[0][2] == 'key':
+                assert x[1] == None
 
     def test_exists_many_with_invalid_key(self):
 
@@ -147,9 +152,9 @@ class TestExistsMany(TestBaseClass):
         for key in keys:
             TestExistsMany.client.remove(key)
 
-        assert type(records) == dict
-        assert len(records.keys()) == 2
-        assert Counter([x[2] for x in records.keys()]) == Counter(["asd;as[d'as;djk;uyfl", "ase;as[d'as;djk;uyfl"])
+        assert type(records) == list
+        assert len(records) == 2
+        assert Counter([x[0][2] for x in records]) == Counter(["asd;as[d'as;djk;uyfl", "ase;as[d'as;djk;uyfl"])
 
     def test_exists_many_with_non_existent_keys_in_middle(self):
 
@@ -167,11 +172,13 @@ class TestExistsMany(TestBaseClass):
             key = ('test', 'demo', i)
             TestExistsMany.client.remove(key)
 
-        assert type(records) == dict
-        assert len(records.keys()) == 11
-        assert Counter([x[2] for x in records.keys()]) == Counter([0, 1, 2, 3,
+        assert type(records) == list
+        assert len(records) == 11
+        assert Counter([x[0][2] for x in records]) == Counter([0, 1, 2, 3,
             4, 'some_key', 15, 16, 17, 18, 19])
-        assert records[('test', 'demo', 'some_key')] == None
+        for x in records:
+            if x[0][2] == 'some_key':
+                assert x[1] == None
 
     def test_exists_many_with_proper_parameters_without_connection(self):
 
