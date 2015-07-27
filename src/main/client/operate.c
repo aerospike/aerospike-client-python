@@ -16,6 +16,7 @@
 
 #include <Python.h>
 #include <stdbool.h>
+#include <stdlib.h>
 #include <string.h>
 #include <aerospike/aerospike_key.h>
 #include <aerospike/as_key.h>
@@ -71,33 +72,14 @@ PyObject * create_pylist(PyObject * py_list, long operation, PyObject * py_bin,
  */
 int check_type(PyObject * py_value, int op)
 {
-	if ( PyList_Check(py_value) && (op == AS_OPERATOR_APPEND || op == AS_OPERATOR_PREPEND)) {
-		PyErr_SetString(PyExc_TypeError, "Cannot concatenate 'str' and 'list' objects");
+	if ((!PyInt_Check(py_value) && !PyLong_Check(py_value)) && (op == AS_OPERATOR_TOUCH)) {
+		PyErr_SetString(PyExc_TypeError, "Unsupported operand type(s) for touch : only int or long allowed");
 		return 1;
-	} else if ( PyDict_Check(py_value) && (op == AS_OPERATOR_APPEND || op == AS_OPERATOR_PREPEND)) {
-		PyErr_SetString(PyExc_TypeError, "Cannot concatenate 'str' and 'dict' objects");
+	} else if ( (!PyInt_Check(py_value) && !PyLong_Check(py_value) && !PyString_Check(py_value)) && op == AS_OPERATOR_INCR){
+		PyErr_SetString(PyExc_TypeError, "Unsupported operand type(s) for +: only 'int' and 'str' allowed");
 		return 1;
-	} else if ( PyList_Check(py_value) && (op == AS_OPERATOR_INCR)) {
-		PyErr_SetString(PyExc_TypeError, "Unsupported operand type(s) for +: 'int' and 'list'");
-		return 1;
-	} else if ( PyDict_Check(py_value) && (op == AS_OPERATOR_INCR)) {
-		PyErr_SetString(PyExc_TypeError, "Unsupported operand type(s) for +: 'int' and 'dict'");
-		return 1;
-	} else if ( PyList_Check(py_value) && (op == AS_OPERATOR_TOUCH)) {
-		PyErr_SetString(PyExc_TypeError, "Unsupported operand type(s) for touch : 'list'");
-		return 1;
-	} else if ( PyDict_Check(py_value) && (op == AS_OPERATOR_TOUCH)) {
-		PyErr_SetString(PyExc_TypeError, "Unsupported operand type(s) for touch : 'dict'");
-		return 1;
-	} else if ( PyString_Check(py_value) && op == AS_OPERATOR_INCR){
-		PyErr_SetString(PyExc_TypeError, "Unsupported operand type(s) for +: 'int' and 'str'");
-		return 1;
-	} else if ( PyString_Check(py_value) && op == AS_OPERATOR_TOUCH){
-		PyErr_SetString(PyExc_TypeError, "Unsupported operand type(s) for touch operation");
-		return 1;
-	} else if ( (PyInt_Check(py_value) || PyLong_Check(py_value)) &&
-			(op == AS_OPERATOR_APPEND || op == AS_OPERATOR_PREPEND)) {
-		PyErr_SetString(PyExc_TypeError, "Cannot concatenate 'str' and 'int' objects");
+	} else if ((!PyString_Check(py_value) && !PyUnicode_Check(py_value)) && (op == AS_OPERATOR_APPEND || op == AS_OPERATOR_PREPEND)) {
+		PyErr_SetString(PyExc_TypeError, "Cannot concatenate 'str' and 'non-str' objects");
 		return 1;
 	}
 	return 0;
@@ -256,7 +238,33 @@ PyObject *  AerospikeClient_Operate_Invoke(
 			if (py_value) {
 				if (check_type(py_value, operation)) {
 					return NULL;
-				}
+				} else if (PyString_Check(py_value) && (operation == AS_OPERATOR_INCR)) {
+                    char * incr_string = PyString_AsString(py_value);
+                    int incr_value = 0, sign = 1;
+
+                    if (strlen(incr_string) > 15) {
+                        PyErr_SetString(PyExc_TypeError, "Unsupported string length for increment operation");
+                        return NULL;
+                    }
+                    if (*incr_string == '-') {
+                        incr_string = incr_string + 1;
+                        sign = -1;
+                    } else if (*incr_string == '+') {
+                        incr_string = incr_string + 1;
+                        sign = 1;
+                    }
+                    while (*incr_string != '\0') {
+                        if (*incr_string >= 48 && *incr_string <= 57) {
+                            incr_value = (incr_value * 10) + (*incr_string ^ 0x30);
+                        } else {
+                            PyErr_SetString(PyExc_TypeError, "Unsupported operand type(s) for +: 'int' and 'str'");
+                            return NULL;
+                        }
+                        incr_string = incr_string + 1;
+                    }
+                    incr_value = incr_value * sign;
+                    py_value = PyInt_FromLong(incr_value);
+                }
 			} else if ((!py_value) && (operation != AS_OPERATOR_READ)) {
 				as_error_update(err, AEROSPIKE_ERR_PARAM, "Value should be given");
 				goto CLEANUP;

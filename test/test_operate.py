@@ -499,7 +499,7 @@ class TestOperate(object):
 
         with pytest.raises(TypeError) as typeError:
             TestOperate.client.operate(key, list)
-        assert "Cannot concatenate 'str' and 'int' objects" in typeError.value
+        assert "Cannot concatenate 'str' and 'non-str' objects" in typeError.value
 
     def test_operate_increment_value_string_negative(self):
         """
@@ -600,3 +600,31 @@ class TestOperate(object):
         except ClusterError as exception:
             assert exception.code == 11L
             assert exception.msg == 'No connection to aerospike cluster'
+
+    def test_operate_with_incr_value_string(self):
+        """
+        Invoke operate() with incr value negative
+        """
+        key = ('test', 'demo', 1)
+        policy = {
+            'timeout': 1000,
+            'key': aerospike.POLICY_KEY_SEND,
+            'commit_level': aerospike.POLICY_COMMIT_LEVEL_MASTER
+        }
+
+        list = [{"op": aerospike.OPERATOR_APPEND,
+                 "bin": "name",
+                 "val": "aa"},
+                {"op": aerospike.OPERATOR_INCR,
+                 "bin": "age",
+                 "val": "3"}, {"op": aerospike.OPERATOR_READ,
+                             "bin": "name"}]
+
+        key, meta, bins = TestOperate.client.operate(key, list, {}, policy)
+
+        assert bins == {'name': 'name1aa'}
+        assert key == ('test', 'demo', 1, bytearray(
+            b'\xb7\xf4\xb88\x89\xe2\xdag\xdeh>\x1d\xf6\x91\x9a\x1e\xac\xc4F\xc8')
+                      )
+
+        TestOperate.client.remove(key)

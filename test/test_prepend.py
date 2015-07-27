@@ -316,7 +316,7 @@ class TestPrepend(object):
         with pytest.raises(TypeError) as typeError:
             TestPrepend.client.prepend(key, "name", 2)
 
-        assert "Cannot concatenate 'str' and 'int' objects" in typeError.value
+        assert "Cannot concatenate 'str' and 'non-str' objects" in typeError.value
 
     def test_prepend_with_extra_parameter(self):
         """

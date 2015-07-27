@@ -278,7 +278,7 @@ class TestTouch(object):
         with pytest.raises(TypeError) as typeError:
             TestTouch.client.touch(key, "name")
 
-        assert "Unsupported operand type(s) for touch operation" in typeError.value
+        assert "Unsupported operand type(s) for touch : only int or long allowed" in typeError.value
 
     def test_touch_with_extra_parameter(self):
         """

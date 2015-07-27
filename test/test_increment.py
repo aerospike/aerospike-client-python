@@ -384,4 +384,14 @@ class TestIncrement(object):
         except Exception as exception:
             assert exception.code == -2
             assert exception.msg == 'integer value exceeds sys.maxsize'
+    def test_increment_with_string_value(self):
+        """
+        Invoke increment() with string value
+        """
+        key = ('test', 'demo', 1)
+        TestIncrement.client.increment(key, "age", "5")
+
+        (key, meta, bins) = TestIncrement.client.get(key)
+
+        assert bins == {'age': 6, 'name': 'name1'}
 

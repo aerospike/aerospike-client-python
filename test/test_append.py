@@ -302,7 +302,7 @@ class TestAppend(object):
         with pytest.raises(TypeError) as typeError:
             TestAppend.client.append(key, "name", 2)
 
-        assert "Cannot concatenate 'str' and 'int' objects" in typeError.value
+        assert "Cannot concatenate 'str' and 'non-str' objects" in typeError.value
 
     def test_append_with_extra_parameter(self):
         """
