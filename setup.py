@@ -30,6 +30,8 @@ from subprocess import call
 # ENVIRONMENT VARIABLES
 ################################################################################
 
+os.putenv('ARCHFLAGS','-arch x86_64')
+os.environ['ARCHFLAGS'] = '-arch x86_64'
 AEROSPIKE_C_VERSION = os.getenv('AEROSPIKE_C_VERSION')
 if not AEROSPIKE_C_VERSION:
     AEROSPIKE_C_VERSION = '3.1.16'
@@ -244,6 +246,8 @@ setup(
         'License :: OSI Approved :: Apache Software License',
         'Operating System :: POSIX :: Linux',
         'Operating System :: MacOS :: MacOS X',
+        'Programming Language :: Python :: 2.6',
+        'Programming Language :: Python :: 2.7',
         'Programming Language :: Python :: Implementation :: CPython',
         'Topic :: Database'
     ],
