@@ -313,10 +313,12 @@ class TestPrepend(object):
         Invoke prepend() not a string
         """
         key = ('test', 'demo', 1)
-        with pytest.raises(TypeError) as typeError:
+        try:
             TestPrepend.client.prepend(key, "name", 2)
 
-        assert "Cannot concatenate 'str' and 'int' objects" in typeError.value
+        except ParamError as exception:
+            assert exception.code == -2
+            assert exception.msg == "Cannot concatenate 'str' and 'non-str' objects"
 
     def test_prepend_with_extra_parameter(self):
         """
