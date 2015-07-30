@@ -497,9 +497,11 @@ class TestOperate(object):
                  "val": 3}, {"op": aerospike.OPERATOR_READ,
                              "bin": "name"}]
 
-        with pytest.raises(TypeError) as typeError:
+        try:
             TestOperate.client.operate(key, list)
-        assert "Cannot concatenate 'str' and 'non-str' objects" in typeError.value
+        except ParamError as exception:
+            assert exception.code == -2
+            assert exception.msg == "Cannot concatenate 'str' and 'non-str' objects"
 
     def test_operate_increment_value_string_negative(self):
         """
@@ -513,9 +515,11 @@ class TestOperate(object):
                                  "bin": "name"}
         ]
 
-        with pytest.raises(TypeError) as typeError:
+        try:
             TestOperate.client.operate(key, list)
-        assert "Unsupported operand type(s) for +: 'int' and 'str'" in typeError.value
+        except ParamError as exception:
+            assert exception.code == -2
+            assert exception.msg == "Unsupported operand type(s) for +: 'int' and 'str'"
 
     def test_operate_increment_nonexistent_key(self):
         """

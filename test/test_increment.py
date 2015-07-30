@@ -295,10 +295,12 @@ class TestIncrement(object):
         Invoke increment() value is string
         """
         key = ('test', 'demo', 1)
-        with pytest.raises(TypeError) as typeError:
+        try:
             TestIncrement.client.increment(key, "age", "str")
 
-        assert "Unsupported operand type(s) for +: 'int' and 'str'" in typeError.value
+        except ParamError as exception:
+            assert exception.code == -2
+            assert exception.msg == "Unsupported operand type(s) for +: 'int' and 'str'"
 
     def test_increment_with_extra_parameter(self):
         """

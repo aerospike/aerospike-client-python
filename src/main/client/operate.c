@@ -243,8 +243,8 @@ PyObject *  AerospikeClient_Operate_Invoke(
                     int incr_value = 0, sign = 1;
 
                     if (strlen(incr_string) > 15) {
-                        PyErr_SetString(PyExc_TypeError, "Unsupported string length for increment operation");
-                        return NULL;
+				        as_error_update(err, AEROSPIKE_ERR_PARAM, "Unsupported string length for increment operation");
+                        goto CLEANUP;
                     }
                     if (*incr_string == '-') {
                         incr_string = incr_string + 1;
@@ -257,8 +257,8 @@ PyObject *  AerospikeClient_Operate_Invoke(
                         if (*incr_string >= 48 && *incr_string <= 57) {
                             incr_value = (incr_value * 10) + (*incr_string ^ 0x30);
                         } else {
-                            PyErr_SetString(PyExc_TypeError, "Unsupported operand type(s) for +: 'int' and 'str'");
-                            return NULL;
+				            as_error_update(err, AEROSPIKE_ERR_PARAM, "Unsupported operand type(s) for +: 'int' and 'str'");
+                            goto CLEANUP;
                         }
                         incr_string = incr_string + 1;
                     }

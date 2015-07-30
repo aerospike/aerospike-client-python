@@ -275,10 +275,12 @@ class TestTouch(object):
         Invoke touch() not a string
         """
         key = ('test', 'demo', 1)
-        with pytest.raises(TypeError) as typeError:
+        try:
             TestTouch.client.touch(key, "name")
 
-        assert "Unsupported operand type(s) for touch : only int or long allowed" in typeError.value
+        except ParamError as exception:
+            assert exception.code == -2
+            assert exception.msg == "Unsupported operand type(s) for touch : only int or long allowed"
 
     def test_touch_with_extra_parameter(self):
         """
