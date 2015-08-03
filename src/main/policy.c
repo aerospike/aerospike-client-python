@@ -23,6 +23,7 @@
 #include <aerospike/as_admin.h>
 #include <aerospike/aerospike_index.h>
 #include "aerospike/as_scan.h"
+#include "aerospike/as_job.h"
 
 #include "policy.h"
 
@@ -86,6 +87,9 @@ AerospikeConstants aerospike_constants[] = {
 	{ AS_SCAN_STATUS_ABORTED               ,   "SCAN_STATUS_ABORTED" },
 	{ AS_SCAN_STATUS_UNDEF                 ,   "SCAN_STATUS_UNDEF" },
 	{ AS_SCAN_STATUS_INPROGRESS            ,   "SCAN_STATUS_INPROGRESS" },
+	{ AS_JOB_STATUS_COMPLETED              ,   "JOB_STATUS_COMPLETED" },
+	{ AS_JOB_STATUS_UNDEF                  ,   "JOB_STATUS_UNDEF" },
+	{ AS_JOB_STATUS_INPROGRESS             ,   "JOB_STATUS_INPROGRESS" },
 	{ AS_POLICY_REPLICA_MASTER             ,   "POLICY_REPLICA_MASTER" },
 	{ AS_POLICY_REPLICA_ANY                 ,   "POLICY_REPLICA_ANY" },
 	{ AS_POLICY_CONSISTENCY_LEVEL_ONE       ,   "POLICY_CONSISTENCY_ONE" },

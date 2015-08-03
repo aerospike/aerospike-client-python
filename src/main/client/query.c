@@ -206,7 +206,7 @@ static
 PyObject * AerospikeClient_QueryApply_Invoke(
 		AerospikeClient * self,
 		char* namespace_p, PyObject * py_set, PyObject * py_predicate, PyObject * py_module, PyObject * py_function,
-		PyObject * py_args, PyObject * py_policy, PyObject * py_options, bool block)
+		PyObject * py_args, PyObject * py_policy, bool block)
 {
 	as_list* arglist = NULL;
 	as_policy_write write_policy;
@@ -271,14 +271,6 @@ PyObject * AerospikeClient_QueryApply_Invoke(
 		if (err.code != AEROSPIKE_OK) {
 			goto CLEANUP;
 		}
-	}
-
-	if (py_options && PyDict_Check(py_options)) {
-		//set_scan_options(&err, &scan, py_options);
-	}
-
-	if (err.code != AEROSPIKE_OK) {
-		goto CLEANUP;
 	}
 
 	char *module_p = NULL;
@@ -410,10 +402,9 @@ PyObject * AerospikeClient_QueryApply(AerospikeClient * self, PyObject * args, P
 	// Python Function Arguments
 	PyObject * py_args = NULL;
 	PyObject * py_policy = NULL;
-	PyObject * py_options = NULL;
 
 	// Python Function Keyword Arguments
-	static char * kwlist[] = {"ns", "set", "preidcate", "module", "function", "args", "policy", "options", NULL};
+	static char * kwlist[] = {"ns", "set", "preidcate", "module", "function", "args", "policy", NULL};
 	char *namespace = NULL;
 	PyObject *py_set = NULL;
 	PyObject *py_module = NULL;
@@ -421,14 +412,14 @@ PyObject * AerospikeClient_QueryApply(AerospikeClient * self, PyObject * args, P
     PyObject *py_predicate = NULL;
 
 	// Python Function Argument Parsing
-	if ( PyArg_ParseTupleAndKeywords(args, kwds, "sOOOO|OOO:query_apply", kwlist, &namespace, &py_set,
-				&py_predicate, &py_module, &py_function, &py_args, &py_policy, &py_options) == false ) {
+	if ( PyArg_ParseTupleAndKeywords(args, kwds, "sOOOO|OO:query_apply", kwlist, &namespace, &py_set,
+				&py_predicate, &py_module, &py_function, &py_args, &py_policy) == false ) {
 		return NULL;
 	}
 
 	// Invoke Operation
 	return AerospikeClient_QueryApply_Invoke(self, namespace, py_set, py_predicate, py_module,
-			py_function, py_args, py_policy, py_options, true);
+			py_function, py_args, py_policy, true);
 }
 /**
  *******************************************************************************************************
@@ -445,7 +436,7 @@ PyObject * AerospikeClient_QueryApply(AerospikeClient * self, PyObject * args, P
  */
 PyObject * AerospikeClient_JobInfo(AerospikeClient * self, PyObject * args, PyObject * kwds)
 {
-	/*// Initialize error
+	// Initialize error
 	as_error err;
 	as_error_init(&err);
 
@@ -485,7 +476,7 @@ PyObject * AerospikeClient_JobInfo(AerospikeClient * self, PyObject * args, PyOb
 	}
 
 	if (AEROSPIKE_OK != (aerospike_job_info(self->as, &err,
-					info_policy_p, lqueryId, &job_info))) {
+					info_policy_p, "query", lqueryId, false, &job_info))) {
 		goto CLEANUP;
 	}
 
@@ -514,6 +505,6 @@ CLEANUP:
 		return NULL;
 	}
 
-	return retObj;*/
+	return retObj;
 
 }
