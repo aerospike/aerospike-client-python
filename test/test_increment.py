@@ -295,10 +295,12 @@ class TestIncrement(object):
         Invoke increment() value is string
         """
         key = ('test', 'demo', 1)
-        with pytest.raises(TypeError) as typeError:
+        try:
             TestIncrement.client.increment(key, "age", "str")
 
-        assert "Unsupported operand type(s) for +: 'int' and 'str'" in typeError.value
+        except ParamError as exception:
+            assert exception.code == -2
+            assert exception.msg == "Unsupported operand type(s) for +: 'int' and 'str'"
 
     def test_increment_with_extra_parameter(self):
         """
@@ -384,4 +386,14 @@ class TestIncrement(object):
         except Exception as exception:
             assert exception.code == -2
             assert exception.msg == 'integer value exceeds sys.maxsize'
+    def test_increment_with_string_value(self):
+        """
+        Invoke increment() with string value
+        """
+        key = ('test', 'demo', 1)
+        TestIncrement.client.increment(key, "age", "5")
+
+        (key, meta, bins) = TestIncrement.client.get(key)
+
+        assert bins == {'age': 6, 'name': 'name1'}
 
