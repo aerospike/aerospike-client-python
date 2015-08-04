@@ -110,9 +110,14 @@ AerospikeConstants aerospike_constants[] = {
 	{ AS_PRIVILEGE_DATA_ADMIN				,	"PRIV_DATA_ADMIN"	},
 	{ AS_PRIVILEGE_READ						,	"PRIV_READ"},
 	{ AS_PRIVILEGE_READ_WRITE				,	"PRIV_READ_WRITE"},
-	{ AS_PRIVILEGE_READ_WRITE_UDF			,	"PRIV_READ_WRITE_UDF"}
+	{ AS_PRIVILEGE_READ_WRITE_UDF			,	"PRIV_READ_WRITE_UDF"},
 };
 
+static
+AerospikeJobConstants aerospike_job_constants[] = {
+    { "scan"        ,     "JOB_SCAN"},
+    { "query"       ,     "JOB_QUERY"}
+};
 /**
  * Function for setting scan parameters in scan.
  * Like Scan Priority, Percentage, Concurrent, Nobins
@@ -210,6 +215,12 @@ as_status declare_policy_constants(PyObject *aerospike)
 		PyModule_AddIntConstant(aerospike,
 				aerospike_constants[i].constant_str,
 				aerospike_constants[i].constantno);
+	}
+
+	for (i = 0; i <= AEROSPIKE_JOB_CONSTANTS_ARR_SIZE; i++) {
+		PyModule_AddStringConstant(aerospike,
+				aerospike_job_constants[i].exposed_job_str,
+				aerospike_job_constants[i].job_str);
 	}
 exit:
 	return status;

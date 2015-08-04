@@ -335,7 +335,7 @@ PyObject * AerospikeClient_QueryApply_Invoke(
 	aerospike_query_background(self->as, &err, write_policy_p, &query, &query_id);
 	arglist = NULL;
 	if(err.code == AEROSPIKE_OK) {
-		/*if(block) {
+		if(block) {
 			if (py_policy) {
 				pyobject_to_policy_info(&err, py_policy, &info_policy, &info_policy_p,
 						&self->as->config.policies.info);
@@ -343,11 +343,11 @@ PyObject * AerospikeClient_QueryApply_Invoke(
 					goto CLEANUP;
 				}
 			}
-			aerospike_scan_wait(self->as, &err, info_policy_p, scan_id, 0);
+			aerospike_query_wait(self->as, &err, info_policy_p, &query, query_id, 0);
 			if(err.code != AEROSPIKE_OK) {
-				as_error_update(&err, AEROSPIKE_ERR_PARAM, "Unable to perform scan_wait on the scan");
+				as_error_update(&err, AEROSPIKE_ERR_PARAM, "Unable to perform query_wait on the query");
 			}
-		}*/
+		}
 	} else {
 		goto CLEANUP;
 	}
@@ -445,16 +445,17 @@ PyObject * AerospikeClient_JobInfo(AerospikeClient * self, PyObject * args, PyOb
 	PyObject * retObj = PyDict_New();
 
 	long lqueryId = 0;
+    char *module = NULL;
 
 	as_policy_info info_policy;
 	as_policy_info *info_policy_p = NULL;
 	as_job_info job_info;
 
 	// Python Function Keyword Arguments
-	static char * kwlist[] = {"queryid", "policy", NULL};
+	static char * kwlist[] = {"queryid", "module", "policy", NULL};
 
 	// Python Function Argument Parsing
-	if ( PyArg_ParseTupleAndKeywords(args, kwds, "l|O:query_info", kwlist, &lqueryId, &py_policy) == false ) {
+	if ( PyArg_ParseTupleAndKeywords(args, kwds, "ls|O:query_info", kwlist, &lqueryId, &module, &py_policy) == false ) {
 		return NULL;
 	}
 
@@ -475,8 +476,13 @@ PyObject * AerospikeClient_JobInfo(AerospikeClient * self, PyObject * args, PyOb
 		goto CLEANUP;
 	}
 
+    if (strcmp(module, "scan") && strcmp(module, "query")) {
+		as_error_update(&err, AEROSPIKE_ERR_PARAM, "Module can have only two values: aerospike.JOB_SCAN or aerospike.JOB_QUERY");
+		goto CLEANUP;
+    }
+
 	if (AEROSPIKE_OK != (aerospike_job_info(self->as, &err,
-					info_policy_p, "query", lqueryId, false, &job_info))) {
+					info_policy_p, module, lqueryId, false, &job_info))) {
 		goto CLEANUP;
 	}
 

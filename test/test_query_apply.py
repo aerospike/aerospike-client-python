@@ -59,7 +59,7 @@ class TestQueryApply(object):
             5), "bin_lua", "mytransform", ['age', 2])
 
         while True:
-            response = self.client.job_info(query_id)
+            response = self.client.job_info(query_id, aerospike.JOB_QUERY)
             if response['status'] == aerospike.JOB_STATUS_COMPLETED:
                 break
         for i in xrange(1, 5):
@@ -79,7 +79,7 @@ class TestQueryApply(object):
             5), "bin_lua", "mytransform", ['age', 2], policy)
 
         while True:
-            response = self.client.job_info(query_id)
+            response = self.client.job_info(query_id, aerospike.JOB_QUERY)
             if response['status'] == aerospike.JOB_STATUS_COMPLETED:
                 break
         for i in xrange(1, 5):
@@ -99,13 +99,13 @@ class TestQueryApply(object):
                                          "mytransform", ['age', 2], policy)
 
         while True:
-            response = self.client.job_info(query_id)
+            response = self.client.job_info(query_id, aerospike.JOB_QUERY)
             if response['status'] == aerospike.JOB_STATUS_COMPLETED:
                 break
         for i in xrange(1, 5):
             key = ('test', 'demo', i)
             (key, meta, bins) = self.client.get(key)
-            if bins['age'] != i + 2:
+            if bins['age'] != i:
                 assert True == False
 
         assert True == True
@@ -144,7 +144,7 @@ class TestQueryApply(object):
             5), "bin_lua_incorrect", "mytransform", ['age', 2])
 
         while True:
-            response = self.client.job_info(query_id)
+            response = self.client.job_info(query_id, aerospike.JOB_QUERY)
             if response['status'] == aerospike.JOB_STATUS_COMPLETED:
                 break
         for i in xrange(1, 5):
@@ -163,7 +163,7 @@ class TestQueryApply(object):
             5), "bin_lua", "mytransform_incorrect", ['age', 2])
 
         while True:
-            response = self.client.job_info(query_id)
+            response = self.client.job_info(query_id, aerospike.JOB_QUERY)
             if response['status'] == aerospike.JOB_STATUS_COMPLETED:
                 break
         for i in xrange(1, 5):
@@ -242,7 +242,7 @@ class TestQueryApply(object):
         #time.sleep(2)
 
         while True:
-            response = self.client.job_info(query_id)
+            response = self.client.job_info(query_id, aerospike.JOB_QUERY)
             if response['status'] == aerospike.JOB_STATUS_COMPLETED:
                 break
         for i in xrange(1, 5):
@@ -263,7 +263,7 @@ class TestQueryApply(object):
         #time.sleep(2)
 
         while True:
-            response = self.client.job_info(query_id)
+            response = self.client.job_info(query_id, aerospike.JOB_QUERY)
             if response['status'] == aerospike.JOB_STATUS_COMPLETED:
                 break
         for i in xrange(1, 5):
@@ -284,7 +284,7 @@ class TestQueryApply(object):
         #time.sleep(2)
 
         while True:
-            response = self.client.job_info(query_id)
+            response = self.client.job_info(query_id, aerospike.JOB_QUERY)
             if response['status'] == aerospike.JOB_STATUS_COMPLETED:
                 break
         for i in xrange(1, 5):
@@ -303,7 +303,7 @@ class TestQueryApply(object):
             5), u"bin_lua", u"mytransform", ['age', 2])
 
         while True:
-            response = self.client.job_info(query_id)
+            response = self.client.job_info(query_id, aerospike.JOB_QUERY)
             if response['status'] == aerospike.JOB_STATUS_COMPLETED:
                 break
         for i in xrange(1, 5):
@@ -328,3 +328,16 @@ class TestQueryApply(object):
         except ClusterError as exception:
             assert exception.code == 11L
             assert exception.msg == 'No connection to aerospike cluster'
+
+    def test_query_apply_with_incorrect_module_type(self):
+        """
+        Invoke query_apply() with incorrect module type
+        """
+        query_id = self.client.query_apply("test", "demo", p.between("age", 1,
+            5), "bin_lua", "mytransform", ['age', 2])
+
+        try:
+            response = self.client.job_info(query_id, "aggregate")
+        except ParamError as exception:
+            assert exception.code == -2
+            assert exception.msg == "Module can have only two values: aerospike.JOB_SCAN or aerospike.JOB_QUERY"
