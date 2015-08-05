@@ -108,7 +108,6 @@ class TestSelectMany(object):
         except ParamError as exception:
             assert exception.code == -2
             assert exception.msg == "Keys should be specified as a list or tuple."
-
     def test_select_many_with_non_existent_keys(self):
 
         self.keys.append(('test', 'demo', 'non-existent'))
@@ -127,7 +126,6 @@ class TestSelectMany(object):
                 continue
             bins = k[2].keys()
             assert set(bins).intersection(set(filter_bins)) == set(bins)
-    """
     def test_select_many_with_all_non_existent_keys(self):
 
         keys = [('test', 'demo', 'key')]
@@ -136,8 +134,8 @@ class TestSelectMany(object):
         records = TestSelectMany.client.select_many(keys, filter_bins)
 
         assert len(records) == 1
-        #assert records == [(('test', 'demo', 'key'), None, None)]
-        """
+        assert records == [(('test', 'demo', 'key'), None, None)]
+
     def test_select_many_with_invalid_key(self):
 
         try:

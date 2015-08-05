@@ -94,6 +94,7 @@ bool batch_exists_cb(const as_batch_read* results, uint32_t n, void* udata)
             if ( PyList_SetItem( py_recs, i, py_rec ) ){
                 return false;
             }
+            Py_INCREF(py_rec);
         } else if (results[i].result == AEROSPIKE_ERR_RECORD_NOT_FOUND){
             
             Py_INCREF(Py_None);
@@ -102,6 +103,7 @@ bool batch_exists_cb(const as_batch_read* results, uint32_t n, void* udata)
             if( PyList_SetItem( py_recs, i, py_rec)){
                 return false;
             }
+            Py_INCREF(py_rec);
         }
     }
     return true;
@@ -168,11 +170,13 @@ void batch_exists_recs(as_error *err, as_batch_read_records* records, PyObject *
 
             PyTuple_SetItem(py_rec, 1, rec);
 			PyList_SetItem( *py_recs, i, py_rec );
+            Py_INCREF(py_rec);
 		} else if (batch->result == AEROSPIKE_ERR_RECORD_NOT_FOUND){
 			
 			Py_INCREF(Py_None);
             PyTuple_SetItem(py_rec, 1, Py_None);
 			PyList_SetItem( *py_recs, i, py_rec);
+            Py_INCREF(py_rec);
 		}
 	}
 }

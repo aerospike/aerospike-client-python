@@ -98,6 +98,7 @@ static bool batch_get_cb(const as_batch_read* results, uint32_t n, void* udata)
             if ( PyList_SetItem( py_recs, i, py_rec ) ){
                 return false;
             }
+            Py_INCREF(py_rec);
         } else if( results[i].result == AEROSPIKE_ERR_RECORD_NOT_FOUND) {
             
             Py_INCREF(Py_None);
@@ -107,6 +108,7 @@ static bool batch_get_cb(const as_batch_read* results, uint32_t n, void* udata)
             if ( PyList_SetItem( py_recs, i, py_rec)){
                 return false;
             }
+            Py_INCREF(py_rec);
         }
     }
     return true;
@@ -164,15 +166,17 @@ static void batch_get_recs(as_error *err, as_batch_read_records* records, PyObje
 
 		if ( batch->result == AEROSPIKE_OK ){
             record_to_pyobject(err, &batch->record, &batch->key, &rec);
-            PyTuple_SetItem(py_rec, 1, PyTuple_GetItem(rec , 1));
-            PyTuple_SetItem(py_rec, 2, PyTuple_GetItem(rec , 2));
+            PyTuple_SetItem(py_rec, 1, PyTuple_GetItem(rec, 1));
+            PyTuple_SetItem(py_rec, 2, PyTuple_GetItem(rec, 2));
 	        PyList_SetItem( *py_recs, i, py_rec);
+            Py_INCREF(py_rec);
         } else if (batch->result == AEROSPIKE_ERR_RECORD_NOT_FOUND) {
             Py_INCREF(Py_None);
             PyTuple_SetItem(py_rec, 1, Py_None);
             Py_INCREF(Py_None);
             PyTuple_SetItem(py_rec, 2, Py_None);
             PyList_SetItem( *py_recs, i, py_rec);
+            Py_INCREF(py_rec);
         }
     }
 }
