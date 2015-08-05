@@ -353,6 +353,9 @@ PyObject * AerospikeClient_QueryApply_Invoke(
 	}
 
 CLEANUP:
+    if (rc) {
+        return NULL;
+    }
 	if (py_ustr1) {
 		Py_DECREF(py_ustr1);
 	}
