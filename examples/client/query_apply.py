@@ -19,17 +19,19 @@ from __future__ import print_function
 
 import aerospike
 import json
+import re
 import sys
+import os.path
 
 from optparse import OptionParser
+from aerospike import predicates as p
 
 ################################################################################
-# Options Parsing
+# Option Parsing
 ################################################################################
 
-usage = "usage: %prog [options] module function [args...]"
-
-def scan_callback(option, opt, value, parser):
+usage = "usage: %prog [options] [where]"
+def query_callback(option, opt, value, parser):
   setattr(parser.values, option.dest, value.split(','))
 
 optparser = OptionParser(usage=usage, add_help_option=False)
@@ -37,14 +39,6 @@ optparser = OptionParser(usage=usage, add_help_option=False)
 optparser.add_option(
     "-h", "--host", dest="host", type="string", default="127.0.0.1", metavar="<ADDRESS>",
     help="Address of Aerospike server.")
-
-optparser.add_option(
-    "-U", "--username", dest="username", type="string", metavar="<USERNAME>",
-    help="Username to connect to database.")
-
-optparser.add_option(
-    "-P", "--password", dest="password", type="string", metavar="<PASSWORD>",
-    help="Password to connect to database.")
 
 optparser.add_option(
     "-p", "--port", dest="port", type="int", default=3000, metavar="<PORT>",
@@ -72,11 +66,20 @@ optparser.add_option(
 
 optparser.add_option(
     "-a", "--arg", dest="arguments", type="string", action="callback",
-    callback=scan_callback,  help="UDF Arguments.")
+    callback=query_callback,  help="UDF Arguments.")
 
 optparser.add_option(
     "-b", "--bins", dest="bins", type="string", action="append", 
     help="Bins to select from each record.")
+
+optparser.add_option(
+    "--show-key", dest="show_key", action="store_true",
+    help="If set, displays the key/digest.")
+
+optparser.add_option(
+    "--show-meta", dest="show_meta", action="store_true",
+    help="If set, displays the metadata.")
+
 
 (options, args) = optparser.parse_args()
 
@@ -85,16 +88,20 @@ if options.help:
     print()
     sys.exit(1)
 
-if len(args) > 0:
+if len(args) > 1:
     optparser.print_help()
     print()
     sys.exit(1)
+
 ################################################################################
 # Client Configuration
 ################################################################################
 
 config = {
-    'hosts': [ (options.host, options.port) ]
+    'hosts': [ (options.host, options.port) ],
+    'lua': {
+        'user_path': os.path.dirname(__file__)
+    }
 }
 
 ################################################################################
@@ -103,54 +110,81 @@ config = {
 
 exitCode = 0
 
-def parse_arg(s):
-    try:
-        return json.loads(s)
-    except ValueError:
-        return s
-
 try:
 
     # ----------------------------------------------------------------------------
     # Connect to Cluster
     # ----------------------------------------------------------------------------
 
-    client = aerospike.client(config).connect(options.username, options.password)
+    client = aerospike.client(config).connect()
 
     # ----------------------------------------------------------------------------
     # Perform Operation
     # ----------------------------------------------------------------------------
 
     try:
-        
+
+        query_id = 0
+        re_bin = "(.{1,14})"
+        re_str_eq = "\s+=\s*(?:(?:\"(.*)\")|(?:\'(.*)\'))"
+        re_int_eq = "\s+=\s*(\d+)"
+        re_int_rg = "\s+between\s+\(\s*(\d+)\s*,\s*(\d+)\s*\)"
+        re_w = re.compile("%s(?:%s|%s|%s)" % (re_bin, re_str_eq, re_int_eq, re_int_rg))
+
         namespace = options.namespace if options.namespace and options.namespace != 'None' else None
         set = options.set if options.set and options.set != 'None' else None
 
-        args.reverse()
-
-        module = options.module
-        function = options.function
+        q = None
 
         for i, param in enumerate(options.arguments):
             if param.isdigit():
                 options.arguments[i] = int(param)
 
-        policy = {}
-        scan_id = client.scan_apply(namespace, set, module, function, options.arguments, policy)
+        if len(args) == 1:
+            w = re_w.match(args[0])
+            if w != None:
+
+                # If predicate is provided, then perform a query
+                
+                if w.group(2):
+                    b = w.group(1)
+                    v = w.group(2)
+                    query_id = client.query_apply(options.namespace,
+                            options.set, p.equals(b, v), options.module,
+                            options.function, options.arguments)
+                elif w.group(3):
+                    b = w.group(1)
+                    v = w.group(3)
+                    query_id = client.query_apply(options.namespace,
+                            options.set, p.equals(b, v), options.module,
+                            options.function, options.arguments)
+                elif w.group(4):
+                    b = w.group(1)
+                    v = int(w.group(4))
+                    query_id = client.query_apply(options.namespace,
+                            options.set, p.equals(b, v), options.module,
+                            options.function, options.arguments)
+                elif w.group(5) and w.group(6):
+                    b = w.group(1)
+                    l = int(w.group(5))
+                    u = int(w.group(6))
+                    query_id = client.query_apply(options.namespace,
+                            options.set, p.between(b, l, u), options.module,
+                            options.function, options.arguments)
 
         while True:
-            response = client.job_info(scan_id, aerospike.JOB_SCAN)
+            response = client.job_info(query_id, aerospike.JOB_QUERY)
             if response['status'] == aerospike.JOB_STATUS_COMPLETED:
                 break
 
         if response['status'] == aerospike.JOB_STATUS_COMPLETED:
-            print("Background scan is successful")
+            print("Background query is successful")
         else:
-            print("Scan_apply failed")
-
-    except Exception as e:
-        print("error: {0}".format(e), file=sys.stderr)
-        rc = 1
+            print("Query_apply failed")
+        
+    except Exception, eargs:
+        print("error: {0}".format(eargs), file=sys.stderr)
+        exitCode = 2
 
     # ----------------------------------------------------------------------------
     # Close Connection to Cluster
@@ -161,6 +195,7 @@ try:
 except Exception, eargs:
     print("error: {0}".format(eargs), file=sys.stderr)
     exitCode = 3
+
 
 ################################################################################
 # Exit
