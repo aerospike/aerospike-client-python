@@ -20,10 +20,10 @@
 #include <stdbool.h>
 #include "aerospike/as_error.h"
 #include "types.h"
-typedef struct {
+/*typedef struct {
     as_error error;
     PyObject * callback;
-}user_serializer_callback;
+}user_serializer_callback;*/
 
 /**
  * Sets the serializer

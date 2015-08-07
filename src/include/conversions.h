@@ -43,16 +43,15 @@ as_status pyobject_to_strArray(as_error * err, PyObject * py_list,  char **arr);
 
 as_status pykey_to_key(as_error * err, AerospikeKey * py_key, as_key * key);
 
-as_status pyobject_to_val(as_error * err, PyObject * py_obj, as_val ** val, as_static_pool *static_pool, int serializer_type);
+as_status pyobject_to_val(as_error * err, PyObject * py_obj, as_val ** val, as_static_pool *static_pool, int serializer_type, user_serializer_callback user_serializer_call_info);
 
-as_status pyobject_to_map(as_error * err, PyObject * py_dict, as_map ** map, as_static_pool *static_pool, int serializer_type);
+as_status pyobject_to_map(as_error * err, PyObject * py_dict, as_map ** map, as_static_pool *static_pool, int serializer_type, user_serializer_callback user_serializer_call_info);
 
-as_status pyobject_to_list(as_error * err, PyObject * py_list, as_list ** list, as_static_pool *static_pool, int serializer_type);
+as_status pyobject_to_list(as_error * err, PyObject * py_list, as_list ** list, as_static_pool *static_pool, int serializer_type, user_serializer_callback user_serializer_call_info);
 
 as_status pyobject_to_key(as_error * err, PyObject * py_key, as_key * key);
 
-as_status pyobject_to_record(as_error * err, PyObject * py_rec, PyObject *
-py_meta, as_record * rec, int serializer_option, as_static_pool *static_pool);
+as_status pyobject_to_record(as_error * err, PyObject * py_rec, PyObject * py_meta, as_record * rec, int serializer_option, as_static_pool *static_pool, user_serializer_callback user_serializer_call_info);
 
 as_status val_to_pyobject(as_error * err, const as_val * val, PyObject ** py_map);
 
@@ -72,8 +71,8 @@ bool error_to_pyobject(const as_error * err, PyObject ** obj);
 
 void initialize_ldt(as_error *error, as_ldt* ldt_p, char* bin_name, int type, char* module);
 
-as_status pyobject_to_astype_write(as_error * err, char *bin_name,  PyObject * py_value, as_val **val,
-		as_operations * ops, as_static_pool *static_pool, int serializer_type);
+as_status pyobject_to_astype_write(as_error * err, char *bin_name,  PyObject * py_value, as_val **val, as_operations * ops, 
+        as_static_pool *static_pool, int serializer_type, user_serializer_callback user_serializer_call_info);
 
 as_status as_privilege_to_pyobject( as_error * err, as_privilege privileges[], PyObject ** py_as_privilege, int privilege_size);
 

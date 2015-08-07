@@ -81,7 +81,7 @@ PyObject * AerospikeLStack_Push(AerospikeLStack * self, PyObject * args, PyObjec
 		goto CLEANUP;
 	}
 
-	pyobject_to_val(&err, py_value, &val, &static_pool, SERIALIZER_PYTHON);
+	pyobject_to_val(&err, py_value, &val, &static_pool, SERIALIZER_PYTHON, self->client->user_serializer_call_info);
 	if (err.code != AEROSPIKE_OK) {
 		goto CLEANUP;
 	}
@@ -179,7 +179,7 @@ PyObject * AerospikeLStack_Push_Many(AerospikeLStack * self, PyObject * args, Py
 		goto CLEANUP;
 	}
 
-	pyobject_to_list(&err, py_arglist, &arglist, &static_pool, SERIALIZER_PYTHON);
+	pyobject_to_list(&err, py_arglist, &arglist, &static_pool, SERIALIZER_PYTHON, self->client->user_serializer_call_info);
 	if (err.code != AEROSPIKE_OK) {
 		goto CLEANUP;
 	}
@@ -372,7 +372,7 @@ PyObject * AerospikeLStack_Filter(AerospikeLStack * self, PyObject * args, PyObj
 	}
 
 	if (py_args) {
-		pyobject_to_list(&err, py_args, &arg_list, &static_pool, SERIALIZER_PYTHON);
+		pyobject_to_list(&err, py_args, &arg_list, &static_pool, SERIALIZER_PYTHON, self->client->user_serializer_call_info);
 	}
 
 	aerospike_lstack_filter(self->client->as, &err, apply_policy_p, &self->key,

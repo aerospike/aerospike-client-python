@@ -79,7 +79,7 @@ PyObject * AerospikeLList_Add(AerospikeLList * self, PyObject * args, PyObject *
 		goto CLEANUP;
 	}
 
-	pyobject_to_val(&err, py_value, &val, &static_pool, SERIALIZER_PYTHON);
+	pyobject_to_val(&err, py_value, &val, &static_pool, SERIALIZER_PYTHON, self->client->user_serializer_call_info);
 	if (err.code != AEROSPIKE_OK) {
 		goto CLEANUP;
 	}
@@ -177,7 +177,7 @@ PyObject * AerospikeLList_Add_Many(AerospikeLList * self, PyObject * args, PyObj
 		goto CLEANUP;
 	}
 
-	pyobject_to_list(&err, py_arglist, &arglist, &static_pool, SERIALIZER_PYTHON);
+	pyobject_to_list(&err, py_arglist, &arglist, &static_pool, SERIALIZER_PYTHON, self->client->user_serializer_call_info);
 	if (err.code != AEROSPIKE_OK) {
 		goto CLEANUP;
 	}
@@ -269,7 +269,7 @@ PyObject * AerospikeLList_Get(AerospikeLList * self, PyObject * args, PyObject *
 		goto CLEANUP;
 	}
 
-	pyobject_to_val(&err, py_value, &val, &static_pool, SERIALIZER_PYTHON);
+	pyobject_to_val(&err, py_value, &val, &static_pool, SERIALIZER_PYTHON, self->client->user_serializer_call_info);
 	if (err.code != AEROSPIKE_OK) {
 		goto CLEANUP;
 	}
@@ -381,7 +381,7 @@ PyObject * AerospikeLList_Filter(AerospikeLList * self, PyObject * args, PyObjec
 	}
 
 	if (py_args) {
-		pyobject_to_list(&err, py_args, &arg_list, &static_pool, SERIALIZER_PYTHON);
+		pyobject_to_list(&err, py_args, &arg_list, &static_pool, SERIALIZER_PYTHON, self->client->user_serializer_call_info);
 	}
 
 	aerospike_llist_filter(self->client->as, &err, apply_policy_p, &self->key,
@@ -553,7 +553,7 @@ PyObject * AerospikeLList_Remove(AerospikeLList * self, PyObject * args, PyObjec
 		goto CLEANUP;
 	}
 
-	pyobject_to_val(&err, py_value, &val, &static_pool, SERIALIZER_PYTHON);
+	pyobject_to_val(&err, py_value, &val, &static_pool, SERIALIZER_PYTHON, self->client->user_serializer_call_info);
 	if (err.code != AEROSPIKE_OK) {
 		as_error_update(&err, err.code, NULL);
 		goto CLEANUP;
@@ -816,7 +816,7 @@ PyObject * AerospikeLList_Find_First_Filter(AerospikeLList * self, PyObject * ar
 	}
 
 	if (PyList_Check(py_args)) {
-		pyobject_to_list(&err, py_args, &arg_list, &static_pool, SERIALIZER_PYTHON);
+		pyobject_to_list(&err, py_args, &arg_list, &static_pool, SERIALIZER_PYTHON, self->client->user_serializer_call_info);
 	}
 
 	uint32_t count = 0;
@@ -1018,7 +1018,7 @@ PyObject * AerospikeLList_Find_Last_Filter(AerospikeLList * self, PyObject * arg
 	}
 
 	if (PyList_Check(py_args)) {
-		pyobject_to_list(&err, py_args, &arg_list, &static_pool, SERIALIZER_PYTHON);
+		pyobject_to_list(&err, py_args, &arg_list, &static_pool, SERIALIZER_PYTHON, self->client->user_serializer_call_info);
 	}
 
 	uint32_t count = 0;
@@ -1133,7 +1133,7 @@ PyObject * AerospikeLList_Find_From(AerospikeLList * self, PyObject * args, PyOb
 		goto CLEANUP;
 	}
 
-	pyobject_to_val(&err, py_value, &from_val, &static_pool, SERIALIZER_PYTHON);
+	pyobject_to_val(&err, py_value, &from_val, &static_pool, SERIALIZER_PYTHON, self->client->user_serializer_call_info);
 
 	aerospike_llist_find_from(self->client->as, &err, apply_policy_p, &self->key, &self->llist, from_val, count, &elements_list);
 	if(err.code != AEROSPIKE_OK) {
@@ -1244,11 +1244,11 @@ PyObject * AerospikeLList_Find_From_Filter(AerospikeLList * self, PyObject * arg
 	}
 
 	if (PyList_Check(py_args)) {
-		pyobject_to_list(&err, py_args, &arg_list, &static_pool, SERIALIZER_PYTHON);
+		pyobject_to_list(&err, py_args, &arg_list, &static_pool, SERIALIZER_PYTHON, self->client->user_serializer_call_info);
 	}
 
 	if(py_value != Py_None) {
-		pyobject_to_val(&err, py_value, &from_val, &static_pool, SERIALIZER_PYTHON);
+		pyobject_to_val(&err, py_value, &from_val, &static_pool, SERIALIZER_PYTHON, self->client->user_serializer_call_info);
 	} else {
 		as_error_update(&err, AEROSPIKE_ERR_PARAM, "Value should not be None");
 		goto CLEANUP;
@@ -1374,12 +1374,12 @@ PyObject * AerospikeLList_Range_Limit(AerospikeLList * self, PyObject * args, Py
 	}
 
 	if (py_args != Py_None) {
-		pyobject_to_list(&err, py_args, &arg_list, &static_pool, SERIALIZER_PYTHON);
+		pyobject_to_list(&err, py_args, &arg_list, &static_pool, SERIALIZER_PYTHON, self->client->user_serializer_call_info);
 	}
 
 	if( py_from_value != Py_None && py_end_value != Py_None ) {
-		pyobject_to_val(&err, py_from_value, &from_val, &static_pool, SERIALIZER_PYTHON);
-		pyobject_to_val(&err, py_end_value, &end_val, &static_pool, SERIALIZER_PYTHON);
+		pyobject_to_val(&err, py_from_value, &from_val, &static_pool, SERIALIZER_PYTHON, self->client->user_serializer_call_info);
+		pyobject_to_val(&err, py_end_value, &end_val, &static_pool, SERIALIZER_PYTHON, self->client->user_serializer_call_info);
 	} else {
 		as_error_update(&err, AEROSPIKE_ERR_PARAM, "Begin or end key cannot be None");
 		goto CLEANUP;

@@ -163,7 +163,7 @@ PyObject * AerospikeClient_ScanApply_Invoke(
 	}
 
 	pyobject_to_list(&err, py_args, &arglist, &static_pool,
-			SERIALIZER_PYTHON);
+			SERIALIZER_PYTHON, self->user_serializer_call_info);
 	if (err.code != AEROSPIKE_OK) {
 		goto CLEANUP;
 	}
