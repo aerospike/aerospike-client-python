@@ -30,6 +30,10 @@
 #include "key.h"
 #include "policy.h"
 
+typedef struct {
+	PyObject * py_recs;
+    AerospikeClient * client;
+} LocalData;
 /**
  *******************************************************************************************************
  * This callback will be called with the results with aerospike_batch_get().
@@ -45,7 +49,8 @@
 static bool batch_get_cb(const as_batch_read* results, uint32_t n, void* udata)
 {
 	// Typecast udata back to PyObject
-	PyObject * py_recs = (PyObject *) udata;
+    LocalData *data = (LocalData *) udata;
+	PyObject * py_recs = data->py_recs;
 
 	// Initialize error object
 	as_error err;
@@ -77,7 +82,7 @@ static bool batch_get_cb(const as_batch_read* results, uint32_t n, void* udata)
 		// Check record status
 		if ( results[i].result == AEROSPIKE_OK ){
 
-			record_to_pyobject(&err, &results[i].record, results[i].key, &rec);
+			record_to_pyobject(data->client, &err, &results[i].record, results[i].key, &rec);
 
 			// Set return value in return Dict
 			if ( PyDict_SetItem( py_recs, p_key, rec ) ){
@@ -121,6 +126,9 @@ PyObject * AerospikeClient_Get_Many_Invoke(
 	as_policy_batch policy;
 	as_policy_batch * batch_policy_p = NULL;
 
+    LocalData data;
+    data.py_recs = py_recs;
+    data.client = self;
 	// Initialisation flags
 	bool batch_initialised = false;
 
@@ -199,7 +207,7 @@ PyObject * AerospikeClient_Get_Many_Invoke(
 	// Invoke C-client API
 	aerospike_batch_get(self->as, &err, batch_policy_p,
 		&batch, (aerospike_batch_read_callback) batch_get_cb,
-		py_recs);
+		&data);
 
 CLEANUP:
 

@@ -45,7 +45,8 @@ PyObject * AerospikeClient_Set_Deserializer(AerospikeClient * self, PyObject * a
  * Serializes Py_Object (value) into as_bytes using serialization logic
  * based on serializer_policy.
  */
-extern PyObject * serialize_based_on_serializer_policy(int32_t serializer_policy,
+extern PyObject * serialize_based_on_serializer_policy(AerospikeClient * self,
+        int32_t serializer_policy,
 		as_bytes **bytes,
 		PyObject *value,
 		as_error *error_p);
@@ -54,7 +55,8 @@ extern PyObject * serialize_based_on_serializer_policy(int32_t serializer_policy
  * Deserializes Py_Object (value) into as_bytes using Deserialization logic
  * based on serializer_policy.
  */
-extern PyObject * deserialize_based_on_as_bytes_type(as_bytes  *bytes,
+extern PyObject * deserialize_based_on_as_bytes_type(AerospikeClient * self,
+        as_bytes  *bytes,
 		PyObject  **retval,
 		as_error  *error_p);
 #endif

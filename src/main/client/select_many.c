@@ -30,6 +30,10 @@
 #include "key.h"
 #include "policy.h"
 
+typedef struct {
+	PyObject * py_recs;
+    AerospikeClient * client;
+} LocalData;
 /**
  *************************************************************************
  * This function will store all the Unicode objects in a pool, created in
@@ -57,7 +61,8 @@ PyObject * store_unicode_bins(UnicodePyObjects *u_obj, PyObject * py_uobj){
 static bool batch_select_cb(const as_batch_read* results, uint32_t n, void* udata)
 {
 	// Typecast udata back to PyObject
-	PyObject * py_recs = (PyObject *) udata;
+    LocalData *data = (LocalData *) udata; 
+	PyObject * py_recs = data->py_recs;
 
 	// Initialize error object
 	as_error err;
@@ -91,7 +96,7 @@ static bool batch_select_cb(const as_batch_read* results, uint32_t n, void* udat
 		// Check record status
 		if ( results[i].result == AEROSPIKE_OK ){
 
-			record_to_pyobject(&err, &results[i].record, results[i].key, &rec);
+			record_to_pyobject(data->client, &err, &results[i].record, results[i].key, &rec);
 
 			// Set return value in return Dict
 			if ( PyDict_SetItem( py_recs, p_key, rec ) ){
@@ -138,6 +143,9 @@ PyObject * AerospikeClient_Select_Many_Invoke(
 	Py_ssize_t bins_size = 0;
 	char **filter_bins = NULL;
 
+    LocalData data;
+    data.py_recs = py_recs;
+    data.client = self;
 	// Unicode object's pool
 	UnicodePyObjects u_objs;
 	u_objs.size = 0;
@@ -261,7 +269,7 @@ PyObject * AerospikeClient_Select_Many_Invoke(
 	aerospike_batch_get_bins(self->as, &err, batch_policy_p,
 		&batch, (const char **) filter_bins, bins_size,
 		(aerospike_batch_read_callback) batch_select_cb,
-		py_recs);
+		&data);
 
 CLEANUP:
 

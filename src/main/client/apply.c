@@ -93,7 +93,7 @@ PyObject * AerospikeClient_Apply_Invoke(
 	key_initialised = true;
 
 	// Convert python list to as_list
-	pyobject_to_list(&err, py_arglist, &arglist, NULL, -1, self->user_serializer_call_info);
+	pyobject_to_list(self, &err, py_arglist, &arglist, NULL, -1);
 	if ( err.code != AEROSPIKE_OK ) {
 		goto CLEANUP;
 	}
@@ -133,7 +133,7 @@ PyObject * AerospikeClient_Apply_Invoke(
 	aerospike_key_apply(self->as, &err, apply_policy_p, &key, module, function, arglist, &result);
 
 	if ( err.code == AEROSPIKE_OK ) {
-		val_to_pyobject(&err, result, &py_result);
+		val_to_pyobject(self, &err, result, &py_result);
 	} else {
 		as_error_update(&err, err.code, NULL);
 	}

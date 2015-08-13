@@ -318,8 +318,8 @@ PyObject *  AerospikeClient_Operate_Invoke(
 					as_operations_add_read(&ops, bin);
 					break;
 				case AS_OPERATOR_WRITE:
-					pyobject_to_astype_write(err, bin, py_value, &put_val, &ops,
-							&static_pool, SERIALIZER_PYTHON, self->user_serializer_call_info);
+					pyobject_to_astype_write(self, err, bin, py_value, &put_val, &ops,
+							&static_pool, SERIALIZER_PYTHON);
 					if (err->code != AEROSPIKE_OK) {
 						goto CLEANUP;
 					}
@@ -340,7 +340,7 @@ PyObject *  AerospikeClient_Operate_Invoke(
 		goto CLEANUP;
 	}
 	if(rec) {
-		record_to_pyobject(err, rec, key, &py_rec);
+		record_to_pyobject(self, err, rec, key, &py_rec);
 	}
 
 CLEANUP:

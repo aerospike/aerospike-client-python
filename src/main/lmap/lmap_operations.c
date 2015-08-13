@@ -81,12 +81,12 @@ PyObject * AerospikeLMap_Put(AerospikeLMap * self, PyObject * args, PyObject * k
 		goto CLEANUP;
 	}
 
-	pyobject_to_val(&err, py_map_key, &map_key, &static_pool, SERIALIZER_PYTHON, self->client->user_serializer_call_info);
+	pyobject_to_val(self->client, &err, py_map_key, &map_key, &static_pool, SERIALIZER_PYTHON);
 	if (err.code != AEROSPIKE_OK) {
 		goto CLEANUP;
 	}
 
-	pyobject_to_val(&err, py_map_value, &map_value, &static_pool, SERIALIZER_PYTHON, self->client->user_serializer_call_info);
+	pyobject_to_val(self->client, &err, py_map_value, &map_value, &static_pool, SERIALIZER_PYTHON);
 	if (err.code != AEROSPIKE_OK) {
 		goto CLEANUP;
 	}
@@ -187,7 +187,7 @@ PyObject * AerospikeLMap_Put_Many(AerospikeLMap * self, PyObject * args, PyObjec
 	/*
 	 * Convert python map to as map
 	 */
-	pyobject_to_map(&err, py_values, &map_values, &static_pool, SERIALIZER_PYTHON, self->client->user_serializer_call_info);
+	pyobject_to_map(self->client, &err, py_values, &map_values, &static_pool, SERIALIZER_PYTHON);
 	if (err.code != AEROSPIKE_OK) {
 		map_values = NULL;
 		goto CLEANUP;
@@ -279,7 +279,7 @@ PyObject * AerospikeLMap_Get(AerospikeLMap * self, PyObject * args, PyObject * k
 		goto CLEANUP;
 	}
 
-	pyobject_to_val(&err, py_map_key, &map_key, &static_pool, SERIALIZER_PYTHON, self->client->user_serializer_call_info);
+	pyobject_to_val(self->client, &err, py_map_key, &map_key, &static_pool, SERIALIZER_PYTHON);
 	if (err.code != AEROSPIKE_OK) {
 		goto CLEANUP;
 	}
@@ -293,7 +293,7 @@ PyObject * AerospikeLMap_Get(AerospikeLMap * self, PyObject * args, PyObject * k
 	}
 
 	PyObject * py_map_val = NULL;
-	val_to_pyobject(&err, map_key_value, &py_map_val);
+	val_to_pyobject(self->client, &err, map_key_value, &py_map_val);
 
 CLEANUP:
 
@@ -390,7 +390,7 @@ PyObject * AerospikeLMap_Filter(AerospikeLMap * self, PyObject * args, PyObject 
 	}
 
 	if (py_args) {
-		pyobject_to_list(&err, py_args, &arg_list, &static_pool, SERIALIZER_PYTHON, self->client->user_serializer_call_info);
+		pyobject_to_list(self->client, &err, py_args, &arg_list, &static_pool, SERIALIZER_PYTHON);
 	}
 
 	aerospike_lmap_filter(self->client->as, &err, apply_policy_p, &self->key,
@@ -402,7 +402,7 @@ PyObject * AerospikeLMap_Filter(AerospikeLMap * self, PyObject * args, PyObject 
 	}
 
 	PyObject* py_map = NULL;
-	map_to_pyobject(&err, elements, &py_map);
+	map_to_pyobject(self->client, &err, elements, &py_map);
 
 CLEANUP:
 
@@ -560,7 +560,7 @@ PyObject * AerospikeLMap_Remove(AerospikeLMap * self, PyObject * args, PyObject 
 		goto CLEANUP;
 	}
 
-	pyobject_to_val(&err, py_map_key, &map_key, &static_pool, SERIALIZER_PYTHON, self->client->user_serializer_call_info);
+	pyobject_to_val(self->client, &err, py_map_key, &map_key, &static_pool, SERIALIZER_PYTHON);
 	if (err.code != AEROSPIKE_OK) {
 		goto CLEANUP;
 	}
