@@ -392,7 +392,12 @@ extern PyObject * serialize_based_on_serializer_policy(AerospikeClient * self,
 				    if (AEROSPIKE_OK != (error_p->code)) {
 					    goto CLEANUP;
 				    }
-			    } else {
+			    } else if (self->user_serializer_call_info.callback) {
+                    execute_user_callback(&self->user_serializer_call_info, bytes, &value, true, error_p);
+				    if (AEROSPIKE_OK != (error_p->code)) {
+					    goto CLEANUP;
+				    }
+                } else {
 				    as_error_update(error_p, AEROSPIKE_ERR,
 						"No serializer callback registered");
 				    goto CLEANUP;

@@ -17,6 +17,10 @@ class SomeClass(object):
 
     pass
 
+test_list = []
+def client_serialize_function(val):
+    test_list.append(val)
+    return pickle.dumps(val)
 
 class TestPythonSerializer(object):
 
@@ -25,7 +29,9 @@ class TestPythonSerializer(object):
             Setup class
         """
         hostlist, user, password = TestBaseClass.get_hosts()
-        config = {'hosts': hostlist}
+        config = {'hosts': hostlist,
+                  'serialization': (client_serialize_function,
+                      None)}
         if user == None and password == None:
             TestPythonSerializer.client = aerospike.client(config).connect()
         else:
@@ -134,5 +140,37 @@ class TestPythonSerializer(object):
         }
 
         self.delete_keys.append(key)
+    """
+    def test_put_with_float_data_python_default_serializer(self):
 
+        #  Invoke put() for float data record with user client serializer.
+        key = ('test', 'demo', 1)
+
+        rec = {"pi": 3.14}
+
+        res = TestPythonSerializer.client.put(key, rec, {}, {})
+
+        assert res == 0
+
+        _, _, bins = TestPythonSerializer.client.get(key)
+
+        assert bins == {'pi': 3.14}
+
+        self.delete_keys.append(key)
+        """
+    def test_put_with_float_data_user_client_serializer(self):
+
+        #  Invoke put() for float data record with user client serializer.
+        key = ('test', 'demo', 1)
+
+        rec = {"pi": 3.14}
+
+        res = TestPythonSerializer.client.put(key, rec, {}, {},
+                                        aerospike.SERIALIZER_USER)
+
+        assert res == 0
+
+        assert test_list == [3.14]
+
+        self.delete_keys.append(key)
 

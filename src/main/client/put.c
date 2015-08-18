@@ -175,6 +175,8 @@ PyObject * AerospikeClient_Put(AerospikeClient * self, PyObject * args, PyObject
             self->is_client_put_serializer = true;
             serializer_option = PyLong_AsLong(py_serializer_option);
         }
+    } else {
+            self->is_client_put_serializer = false;
     }
 	// Invoke Operation
 	return AerospikeClient_Put_Invoke(self,
