@@ -35,6 +35,9 @@ class TestGetMany(TestBaseClass):
             rec = {'name': 'name%s' % (str(i)), 'age': i}
             TestGetMany.client.put(key, rec)
             self.keys.append(key)
+        key = ('test', 'demo', 'float_value')
+        TestGetMany.client.put(key, {"float_value": 4.3})
+        self.keys.append(key)
 
     def teardown_method(self, method):
         """
@@ -56,23 +59,25 @@ class TestGetMany(TestBaseClass):
         records = TestGetMany.client.get_many(self.keys)
 
         assert type(records) == dict
-        assert len(records.keys()) == 5
+        assert len(records.keys()) == 6
 
     def test_get_many_with_proper_parameters(self):
 
         records = TestGetMany.client.get_many(self.keys, {'timeout': 3})
 
         assert type(records) == dict
-        assert len(records.keys()) == 5
-        assert records.keys() == [0, 1, 2, 3, 4]
+        assert len(records.keys()) == 6
+        assert records.keys() == [0, 1, 2, 3, 4, 'float_value']
+        assert records['float_value'][2] == {'float_value': 4.3}
 
     def test_get_many_with_none_policy(self):
 
         records = TestGetMany.client.get_many(self.keys, None)
 
         assert type(records) == dict
-        assert len(records.keys()) == 5
-        assert records.keys() == [0, 1, 2, 3, 4]
+        assert len(records.keys()) == 6
+        assert records.keys() == [0, 1, 2, 3, 4, 'float_value']
+        assert records['float_value'][2] == {'float_value': 4.3}
 
     def test_get_many_with_none_keys(self):
 
@@ -90,8 +95,8 @@ class TestGetMany(TestBaseClass):
         records = TestGetMany.client.get_many(self.keys)
 
         assert type(records) == dict
-        assert len(records.keys()) == 6
-        assert records.keys() == [0, 1, 2, 3, 4, 'non-existent']
+        assert len(records.keys()) == 7
+        assert records.keys() == [0, 1, 2, 3, 4, 'non-existent', 'float_value']
         assert records['non-existent'] == None
 
     def test_get_many_with_all_non_existent_keys(self):
@@ -163,8 +168,9 @@ class TestGetMany(TestBaseClass):
             TestGetMany.client.remove(key)
 
         assert type(records) == dict
-        assert len(records.keys()) == 11
-        assert records.keys() == [0, 1, 2, 3, 4, 'some_key', 15, 16, 17, 18, 19]
+        assert len(records.keys()) == 12
+        assert records.keys() == [0, 1, 2, 3, 4, 'some_key', 15, 16, 17, 18, 19,
+                'float_value']
         assert records['some_key'] == None
 
     def test_get_many_with_proper_parameters_without_connection(self):

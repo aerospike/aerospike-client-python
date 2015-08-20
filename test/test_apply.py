@@ -95,6 +95,20 @@ class TestApply(TestBaseClass):
         assert bins['name'] == ['name1', 'car']
         assert retval == 0
 
+    @pytest.mark.xfail
+    def test_apply_with_correct_parameters_float_argument(self):
+        """
+            Invoke apply() with correct arguments with a floating value in the
+            list of arguments
+        """
+        key = ('test', 'demo', 1)
+        retval = TestApply.client.apply(key, 'sample', 'list_append', ['name',
+                                                                       5.434])
+        (key, meta, bins) = TestApply.client.get(key)
+
+        assert bins['name'] == ['name1', 5.434]
+        assert retval == 0
+
     def test_apply_with_none_parameter(self):
         """
             Invoke apply() with a None argument

@@ -41,6 +41,9 @@ class TestSelectMany(object):
             }
             TestSelectMany.client.put(key, rec)
             self.keys.append(key)
+        key = ('test', 'demo', 'float_value')
+        TestSelectMany.client.put(key, {"float_value": 4.3})
+        self.keys.append(key)
 
     def teardown_method(self, method):
         """
@@ -63,20 +66,20 @@ class TestSelectMany(object):
         records = TestSelectMany.client.select_many(self.keys, filter_bins)
 
         assert type(records) == dict
-        assert len(records.keys()) == 5
+        assert len(records.keys()) == 6
         for k in records.keys():
             bins = records[k][2].keys()
             assert set(bins).intersection(set(filter_bins)) == set(bins)
 
     def test_select_many_with_proper_parameters(self):
 
-        filter_bins = ['title', 'name']
+        filter_bins = ['title', 'name', 'float_value']
         records = TestSelectMany.client.select_many(self.keys, filter_bins,
                                                     {'timeout': 3})
 
         assert type(records) == dict
-        assert len(records.keys()) == 5
-        assert records.keys() == [0, 1, 2, 3, 4]
+        assert len(records.keys()) == 6
+        assert records.keys() == [0, 1, 2, 3, 4, 'float_value']
         for k in records.keys():
             bins = records[k][2].keys()
             assert set(bins).intersection(set(filter_bins)) == set(bins)
@@ -88,8 +91,8 @@ class TestSelectMany(object):
                                                     None)
 
         assert type(records) == dict
-        assert len(records.keys()) == 5
-        assert records.keys() == [0, 1, 2, 3, 4]
+        assert len(records.keys()) == 6
+        assert records.keys() == [0, 1, 2, 3, 4, 'float_value']
         for k in records.keys():
             bins = records[k][2].keys()
             assert set(bins).intersection(set(filter_bins)) == set(bins)
@@ -112,8 +115,8 @@ class TestSelectMany(object):
                                                     {'timeout': 1000})
 
         assert type(records) == dict
-        assert len(records.keys()) == 6
-        assert records.keys() == [0, 1, 2, 3, 4, 'non-existent']
+        assert len(records.keys()) == 7
+        assert records.keys() == [0, 1, 2, 3, 4, 'non-existent', 'float_value']
         assert records['non-existent'] == None
         for k in records.keys():
             if records[k] == None: continue
@@ -197,8 +200,9 @@ class TestSelectMany(object):
             TestSelectMany.client.remove(key)
 
         assert type(records) == dict
-        assert len(records.keys()) == 11
-        assert records.keys() == [0, 1, 2, 3, 4, 'some_key', 15, 16, 17, 18, 19]
+        assert len(records.keys()) == 12
+        assert records.keys() == [0, 1, 2, 3, 4, 'some_key', 15, 16, 17, 18, 19,
+                'float_value']
         assert records['some_key'] == None
         for k in records.keys():
             if records[k] == None: continue
@@ -211,7 +215,7 @@ class TestSelectMany(object):
         records = TestSelectMany.client.select_many(self.keys, filter_bins)
 
         assert type(records) == dict
-        assert len(records.keys()) == 5
+        assert len(records.keys()) == 6
         for k in records.keys():
             bins = records[k][2].keys()
             assert set(bins).intersection(set(filter_bins)) == set(bins)
@@ -221,7 +225,7 @@ class TestSelectMany(object):
         records = TestSelectMany.client.select_many(self.keys, [])
 
         assert type(records) == dict
-        assert len(records.keys()) == 5
+        assert len(records.keys()) == 6
 
     def test_select_many_with_proper_parameters_without_connection(self):
 

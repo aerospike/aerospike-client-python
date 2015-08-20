@@ -31,6 +31,7 @@
 #include <aerospike/as_policy.h>
 #include <aerospike/as_operations.h>
 #include <aerospike/as_bytes.h>
+#include <aerospike/as_double.h>
 
 #include "conversions.h"
 #include "key.h"
@@ -400,8 +401,10 @@ as_status pyobject_to_val(as_error * err, PyObject * py_obj, as_val ** val, as_s
 		if ( err->code == AEROSPIKE_OK ) {
 			*val = (as_val *) map;
 		}
-	}
-	else if ( Py_None == py_obj ) {
+	} else if (PyFloat_Check(py_obj)) {
+        double d = PyFloat_AsDouble(py_obj);
+		*val = (as_val *) as_double_new(d);
+    } else if ( Py_None == py_obj ) {
 		*val = as_val_reserve(&as_nil);
 	} else {
 		as_bytes *bytes;
@@ -486,8 +489,10 @@ as_status pyobject_to_record(as_error * err, PyObject * py_rec,
 			else if ( PyString_Check(value) ) {
 				char * val = PyString_AsString(value);
 				ret_val = as_record_set_strp(rec, name, val, false);
-			}
-			else if ( PyByteArray_Check(value) ) {
+			} else if ( PyFloat_Check(value) ) {
+                double val = PyFloat_AsDouble(value);
+                ret_val = as_record_set_double(rec, name, val);
+            } else if ( PyByteArray_Check(value) ) {
 				as_bytes *bytes;
 				GET_BYTES_POOL(bytes, static_pool, err);
 				py_result = serialize_based_on_serializer_policy(serializer_type,
@@ -594,37 +599,34 @@ as_status pyobject_to_astype_write(as_error * err, char *bin_name,  PyObject * p
 	else if ( PyLong_Check(py_value) ) {
 		int64_t l = (int64_t) PyLong_AsLongLong(py_value);
 		*val = (as_val *) as_integer_new(l);
-	}
-	else if ( PyString_Check(py_value) ) {
+	} else if ( PyFloat_Check(py_value) ) {
+        double d = PyFloat_AsDouble(py_value);
+        *val = (as_val *) as_double_new(d);
+    } else if ( PyString_Check(py_value) ) {
 		char * s = PyString_AsString(py_value);
 		*val = (as_val *) as_string_new(s, false);
-	}
-	else if ( PyUnicode_Check(py_value) ) {
+	} else if ( PyUnicode_Check(py_value) ) {
 		PyObject * py_ustr = PyUnicode_AsUTF8String(py_value);
 		char * str = PyString_AsString(py_ustr);
 		*val = (as_val *) as_string_new(strdup(str), true);
 		Py_DECREF(py_ustr);
-	}
-	else if ( PyByteArray_Check(py_value) ) {
+	} else if ( PyByteArray_Check(py_value) ) {
 		uint8_t * b = (uint8_t *) PyByteArray_AsString(py_value);
 		uint32_t z = (uint32_t) PyByteArray_Size(py_value);
 		*val = (as_val *) as_bytes_new_wrap(b, z, false);
-	}
-	else if ( PyList_Check(py_value) ) {
+	} else if ( PyList_Check(py_value) ) {
 		as_list * list = NULL;
 		pyobject_to_list(err, py_value, &list, static_pool, serializer_type);
 		if ( err->code == AEROSPIKE_OK ) {
 			*val = (as_val *) list;
 		}
-	}
-	else if ( PyDict_Check(py_value) ) {
+	} else if ( PyDict_Check(py_value) ) {
 		as_map * map = NULL;
 		pyobject_to_map(err, py_value, &map, static_pool, serializer_type);
 		if ( err->code == AEROSPIKE_OK ) {
 			*val = (as_val *) map;
 		}
-	}
-	else {
+	} else {
 		as_bytes *bytes;
 		GET_BYTES_POOL(bytes, static_pool, err);
 		py_result = serialize_based_on_serializer_policy(serializer_type,
@@ -789,6 +791,11 @@ as_status val_to_pyobject(as_error * err, const as_val * val, PyObject ** py_val
 				*py_val = PyInt_FromLong((long) as_integer_get(i));
 				break;
 			}
+        case AS_DOUBLE: {
+                as_double * d = as_double_fromval(val);
+                *py_val = PyFloat_FromDouble(as_double_get(d));
+                break;
+            }
 		case AS_STRING: {
 				as_string * s = as_string_fromval(val);
 				char * str = as_string_get(s);

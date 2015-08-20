@@ -344,14 +344,46 @@ class TestPut(TestBaseClass):
         #Invoke put() for float data record.
         key = ('test', 'demo', 1)
 
-        rec = {"pi": 3.145}
+        rec = {"pi": 3.141}
 
         res = TestPut.client.put(key, rec)
 
         assert res == 0
         _, _, bins = TestPut.client.get(key)
 
-        assert bins == {'pi': 3.145}
+        assert bins == {'pi': 3.141}
+
+        self.delete_keys.append(key)
+
+    def test_put_with_float_data_within_list(self):
+
+        #Invoke put() for float data record within list.
+        key = ('test', 'demo', 1)
+
+        rec = {"double-list": [3.141, 4.123, 6.285]}
+
+        res = TestPut.client.put(key, rec)
+
+        assert res == 0
+        _, _, bins = TestPut.client.get(key)
+
+        assert bins == {'double_list': [3.141, 4.123, 6.285]}
+
+        self.delete_keys.append(key)
+
+    def test_put_with_float_data_within_map(self):
+
+        #Invoke put() for float data record within map.
+        key = ('test', 'demo', 1)
+
+        rec = {"double-map": {"1": 3.141,"2": 4.123,"3": 6.285}}
+
+        res = TestPut.client.put(key, rec)
+
+        assert res == 0
+        _, _, bins = TestPut.client.get(key)
+
+        assert bins == {'double_map': {"1": 3.141, "2": 4.123, "3": 6.285}}
 
         self.delete_keys.append(key)
 
@@ -1020,7 +1052,7 @@ class TestPut(TestBaseClass):
 
         _, _, bins = TestPut.client.get(key)
 
-        assert bins == {'pi': bytearray(b'F3.1400000000000001\n.')}
+        assert bins == {'pi': 3.14}
 
         self.delete_keys.append(key)
 

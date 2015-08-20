@@ -406,6 +406,30 @@ class TestAggregate(TestBaseClass):
              u'name1': 1}
         ]
 
+    @pytest.mark.xfail
+    def test_aggregate_with_arguments_to_lua_function_having_float_value(self):
+        """
+            Invoke aggregate() with unicode arguments to lua function having a
+            float value
+        """
+        query = self.client.query('test', 'demo')
+        query.where(p.between('test_age', 0, 5))
+        query.apply('stream_example', 'double_group_count', [u"name", u"addr", 2.5])
+
+        rec = []
+
+        def callback(value):
+            rec.append(value)
+
+        query.foreach(callback)
+        assert rec == [
+            {u'name4': 3.5,
+             u'name2': 3.5,
+             u'name3': 3.5,
+             u'name0': 3.5,
+             u'name1': 3.5}
+        ]
+
     def test_aggregate_with_unicode_module_and_function_name(self):
         """
             Invoke aggregate() with unicode module and function names
