@@ -360,7 +360,7 @@ class TestPut(TestBaseClass):
         #Invoke put() for float data record within list.
         key = ('test', 'demo', 1)
 
-        rec = {"double-list": [3.141, 4.123, 6.285]}
+        rec = {"double_list": [3.141, 4.123, 6.285]}
 
         res = TestPut.client.put(key, rec)
 
@@ -376,7 +376,7 @@ class TestPut(TestBaseClass):
         #Invoke put() for float data record within map.
         key = ('test', 'demo', 1)
 
-        rec = {"double-map": {"1": 3.141,"2": 4.123,"3": 6.285}}
+        rec = {"double_map": {"1": 3.141,"2": 4.123,"3": 6.285}}
 
         res = TestPut.client.put(key, rec)
 

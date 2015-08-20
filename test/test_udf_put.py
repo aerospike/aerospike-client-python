@@ -126,7 +126,7 @@ class TestUdfPut(TestBaseClass):
         with pytest.raises(TypeError) as exception:
             status = TestUdfPut.client.udf_put(None, None, None)
 
-        assert exception.value[0] == "an integer is required"
+        assert "an integer is required" in exception.value
 
     def test_udf_put_with_filename_unicode(self):
 
