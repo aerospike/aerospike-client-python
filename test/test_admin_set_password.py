@@ -26,7 +26,10 @@ class TestSetPassword(TestBaseClass):
         config = {"hosts": hostlist}
         TestSetPassword.Me = self
         self.client = aerospike.client(config).connect(user, password)
-
+        try:
+            self.client.admin_drop_user("testsetpassworduser")
+        except:
+            pass
         self.client.admin_create_user( "testsetpassworduser", "aerospike", ["read"], {})
 
         self.delete_users = []

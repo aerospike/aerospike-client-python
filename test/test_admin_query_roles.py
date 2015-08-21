@@ -28,7 +28,10 @@ class TestQueryRoles(TestBaseClass):
                 "hosts": hostlist
                 }
         self.client = aerospike.client(config).connect( user, password )
-
+        try:
+            self.client.admin_drop_role("usr-sys-admin")
+        except:
+            pass
         usr_sys_admin_privs =  [
             {"code": aerospike.PRIV_USER_ADMIN},
             {"code": aerospike.PRIV_SYS_ADMIN}]

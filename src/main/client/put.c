@@ -88,7 +88,7 @@ PyObject * AerospikeClient_Put_Invoke(
 	key_initialised = true;
 
 	// Convert python bins and metadata objects to as_record
-	pyobject_to_record(&err, py_bins, py_meta, &rec, serializer_option, &static_pool);
+	pyobject_to_record(self, &err, py_bins, py_meta, &rec, serializer_option, &static_pool);
 	if ( err.code != AEROSPIKE_OK ) {
 		goto CLEANUP;
 	}

@@ -95,7 +95,6 @@ class TestApply(TestBaseClass):
         assert bins['name'] == ['name1', 'car']
         assert retval == 0
 
-    @pytest.mark.xfail
     def test_apply_with_correct_parameters_float_argument(self):
         """
             Invoke apply() with correct arguments with a floating value in the

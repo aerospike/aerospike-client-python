@@ -27,6 +27,10 @@ class TestQueryUsers(TestBaseClass):
         TestQueryUsers.Me = self
         self.client = aerospike.client(config).connect(user, password)
 
+        try:
+            self.client.admin_drop_user("example")
+        except:
+            pass
         policy = {}
         user = "example"
         password = "foo2"

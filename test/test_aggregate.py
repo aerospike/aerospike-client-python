@@ -406,7 +406,6 @@ class TestAggregate(TestBaseClass):
              u'name1': 1}
         ]
 
-    @pytest.mark.xfail
     def test_aggregate_with_arguments_to_lua_function_having_float_value(self):
         """
             Invoke aggregate() with unicode arguments to lua function having a
