@@ -26,6 +26,14 @@ class TestPut(TestBaseClass):
             TestPut.client = aerospike.client(config).connect()
         else:
             TestPut.client = aerospike.client(config).connect(user, password)
+        TestPut.skip_old_server = True
+        versioninfo = TestPut.client.info('version')
+        for keys in versioninfo:
+            for value in versioninfo[keys]:
+                if value != None:
+                    versionlist = value[value.find("build") + 6:value.find("\n")].split(".")
+                    if int(versionlist[0]) >= 3 and int(versionlist[1]) >= 6:
+                        TestPut.skip_old_server = False
 
     def teardown_class(cls):
         TestPut.client.close()
@@ -1052,7 +1060,10 @@ class TestPut(TestBaseClass):
 
         _, _, bins = TestPut.client.get(key)
 
-        assert bins == {'pi': 3.14}
+        if TestPut.skip_old_server == False:
+            assert bins == {'pi': 3.14}
+        else:
+            assert bins == {'pi': bytearray(b'F3.1400000000000001\n.')}
 
         self.delete_keys.append(key)
 

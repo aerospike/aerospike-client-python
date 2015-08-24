@@ -24,6 +24,14 @@ class TestIncrement(object):
         else:
             TestIncrement.client = aerospike.client(config).connect(user,
                                                                     password)
+        TestIncrement.skip_old_server = True
+        versioninfo = TestIncrement.client.info('version')
+        for keys in versioninfo:
+            for value in versioninfo[keys]:
+                if value != None:
+                    versionlist = value[value.find("build") + 6:value.find("\n")].split(".")
+                    if int(versionlist[0]) >= 3 and int(versionlist[1]) >= 6:
+                        TestIncrement.skip_old_server = False
 
     def teardown_class(cls):
         TestIncrement.client.close()
@@ -68,6 +76,8 @@ class TestIncrement(object):
         """
         Invoke increment() with correct parameters and a float value
         """
+        if TestIncrement.skip_old_server == True:
+            pytest.skip("Server does not support increment on float type")
         key = ('test', 'demo', 6)
         TestIncrement.client.increment(key, "age", 6.4)
 

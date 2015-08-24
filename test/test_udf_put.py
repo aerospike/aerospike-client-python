@@ -37,6 +37,7 @@ class TestUdfPut(TestBaseClass):
         """
         Teardown method
         """
+        time.sleep(1)
         udf_list = TestUdfPut.client.udf_list({'timeout': 0})
         for udf in udf_list:
             if udf['name'] == 'example.lua':

@@ -24,6 +24,14 @@ class TestOperate(object):
         else:
             TestOperate.client = aerospike.client(config).connect(user,
                                                                   password)
+        TestOperate.skip_old_server = True
+        versioninfo = TestOperate.client.info('version')
+        for keys in versioninfo:
+            for value in versioninfo[keys]:
+                if value != None:
+                    versionlist = value[value.find("build") + 6:value.find("\n")].split(".")
+                    if int(versionlist[0]) >= 3 and int(versionlist[1]) >= 6:
+                        TestOperate.skip_old_server = False
 
     def teardown_class(cls):
         TestOperate.client.close()
@@ -79,6 +87,8 @@ class TestOperate(object):
         """
         Invoke operate() with correct parameters
         """
+        if TestOperate.skip_old_server == True:
+            pytest.skip("Server does not support increment on float type")
         key = ('test', 'demo', 6)
         list = [
             {"op": aerospike.OPERATOR_INCR,
@@ -573,6 +583,8 @@ class TestOperate(object):
         """
         Invoke operate() with write operation float value
         """
+        if TestOperate.skip_old_server == True:
+            pytest.skip("Server does not support operation")
         key = ('test', 'demo', 1)
         list = [{
             "op": aerospike.OPERATOR_WRITE,
