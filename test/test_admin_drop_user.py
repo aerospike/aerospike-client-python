@@ -32,6 +32,10 @@ class TestDropUser(TestBaseClass):
         config = {'hosts': hostlist}
         TestDropUser.Me = self
         self.client = aerospike.client(config).connect(user, password)
+        try:
+            self.client.admin_drop_user("foo-test")
+        except:
+            pass
 
     def teardown_method(self, method):
         """
@@ -53,7 +57,7 @@ class TestDropUser(TestBaseClass):
             Invoke drop_user() with policy none
         """
         policy = None
-        user = "foo"
+        user = "foo-test"
         password = "foo1"
         roles = ["read", "read-write", "sys-admin"]
 
@@ -94,7 +98,7 @@ class TestDropUser(TestBaseClass):
             Invoke drop_user() with correct arguments.
         """
         policy = {'timeout': 1000}
-        user = "foo"
+        user = "foo-test"
         password = "foo1"
         roles = ["read", "read-write", "sys-admin"]
 
@@ -126,7 +130,7 @@ class TestDropUser(TestBaseClass):
         policy = {
             'timeout': 1000
         }
-        user = "foo"
+        user = "foo-test"
         password = "foo1"
         roles = ["read", "read-write", "sys-admin"]
 
@@ -155,7 +159,7 @@ class TestDropUser(TestBaseClass):
             Invoke drop_user() with non-existent user.
         """
         policy = {}
-        user = "foo"
+        user = "foo-test"
         password = "foo1"
         roles = ["read", "read-write", "sys-admin"]
         try:
@@ -207,7 +211,7 @@ class TestDropUser(TestBaseClass):
         """
         policy = {'timeout': 1000}
         with pytest.raises(TypeError) as typeError:
-            self.client.admin_drop_user( "foo", policy, "" )
+            self.client.admin_drop_user( "foo-test", policy, "" )
 
         assert "admin_drop_user() takes at most 2 arguments (3 given)" in typeError.value
 

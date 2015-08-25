@@ -99,6 +99,12 @@ example, run:
     python examples/client/kvs.py
 
 
+Becnhmarks
+----------
+
+To run the benchmarks the python modules 'guppy' and 'tabulate' need to be installed.
+Benchmark applications are provided in the `benchmarks directory of the GitHub repository <https://github.com/aerospike/aerospike-client-python/tree/master/benchmarks>`__
+
 License
 -------
 

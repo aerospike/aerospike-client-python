@@ -26,7 +26,7 @@ from optparse import OptionParser
 # Options Parsing
 ################################################################################
 
-usage = "usage: %prog [options] key"
+usage = "usage: %prog [options]"
 
 optparser = OptionParser(usage=usage, add_help_option=False)
 
@@ -90,13 +90,13 @@ try:
      
     try:
 
-   	policy = {}
+        policy = {}
     	
-  	user_roles = client.admin_query_users(policy)
+        user_roles = client.admin_query_users(policy)
        
-	print(user_roles)
-	print("---") 
-    	print("OK, All user roles retrieved")
+        print(user_roles)
+        print("---") 
+    	print("OK, All users retrieved")
 
     except Exception as e:
         print("error: {0}".format(e), file=sys.stderr)

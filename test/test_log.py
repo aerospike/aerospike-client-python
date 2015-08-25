@@ -15,6 +15,8 @@ except:
 def handler(level, func, myfile, line):
     assert 1 == 1
 
+def extrahandler(level, func, myfile, line):
+    print "Level is: %d" % level
 
 class TestLog(object):
     def test_set_log_level_correct(self):
@@ -71,12 +73,6 @@ class TestLog(object):
         """
 
         aerospike.set_log_level(aerospike.LOG_LEVEL_DEBUG)
-
-        def handler(level, func, myfile, line):
-            print "Level is: %d" % level
-
-        def extrahandler(level, func, myfile, line):
-            print "Level is: %d" % level
 
         with pytest.raises(TypeError) as typeError:
             aerospike.set_log_handler(handler, extrahandler)
