@@ -26,7 +26,10 @@ class TestSetPassword(TestBaseClass):
         config = {"hosts": hostlist}
         TestSetPassword.Me = self
         self.client = aerospike.client(config).connect(user, password)
-
+        try:
+            self.client.admin_drop_user("testsetpassworduser")
+        except:
+            pass
         self.client.admin_create_user( "testsetpassworduser", "aerospike", ["read"], {})
 
         self.delete_users = []
@@ -49,7 +52,7 @@ class TestSetPassword(TestBaseClass):
 
     def test_set_password_with_proper_parameters(self):
 
-        policy = {'timeout': 0}
+        policy = {'timeout': 20}
         user = "testsetpassworduser"
         password = "newpassword"
 
@@ -72,7 +75,7 @@ class TestSetPassword(TestBaseClass):
 
     def test_set_password_with_proper_timeout_policy_value(self):
 
-        policy = {'timeout': 4}
+        policy = {'timeout': 20}
         user = "testsetpassworduser"
         password = "newpassword"
 

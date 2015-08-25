@@ -26,7 +26,10 @@ class TestQueryUsers(TestBaseClass):
         config = {"hosts": hostlist}
         TestQueryUsers.Me = self
         self.client = aerospike.client(config).connect(user, password)
-
+        try:
+            self.client.admin_drop_user("example")
+        except:
+            pass
         policy = {}
         user = "example"
         password = "foo2"
@@ -70,7 +73,7 @@ class TestQueryUsers(TestBaseClass):
 
     def test_query_users_with_proper_timeout_policy_value(self):
 
-        policy = {'timeout': 5}
+        policy = {'timeout': 20}
 
         time.sleep(2)
         user_details = self.client.admin_query_users(policy)

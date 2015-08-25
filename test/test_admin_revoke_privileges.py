@@ -28,7 +28,10 @@ class TestRevokePrivilege(TestBaseClass):
                 "hosts": hostlist
                 }
         self.client = aerospike.client(config).connect( user, password )
-
+        try:
+            self.client_admin_drop_role("usr-sys-admin")
+        except:
+            pass
         self.client.admin_create_role("usr-sys-admin", [{"code":
             aerospike.PRIV_USER_ADMIN}, {"code": aerospike.PRIV_SYS_ADMIN}])
         self.delete_users = []
@@ -60,7 +63,7 @@ class TestRevokePrivilege(TestBaseClass):
 aerospike.PRIV_READ}])
 
         assert status == 0
-
+        time.sleep(1)
         roles = self.client.admin_query_role("usr-sys-admin")
         assert roles == [{'code': 0, 'ns': '', 'set': ''},
 {'code': 1, 'ns': '', 'set': ''}, {'code': 10, 'ns': '', 'set': ''}]
@@ -82,7 +85,7 @@ aerospike.PRIV_READ}])
 aerospike.PRIV_READ}], {'timeout': 1000})
 
         assert status == 0
-
+        time.sleep(1)
         roles = self.client.admin_query_role("usr-sys-admin")
         assert roles == [{'code': 0, 'ns': '', 'set': ''},
 {'code': 1, 'ns': '', 'set': ''}, {'code': 10, 'ns': '', 'set': ''}]

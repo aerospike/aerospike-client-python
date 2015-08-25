@@ -28,7 +28,7 @@ class TestChangePassword(TestBaseClass):
 
         try:
             self.client.admin_create_user( "testchangepassworduser", "aerospike", ["read"], {})
-            time.sleep(1)
+            time.sleep(2)
         except UserExistsError:
             pass # we are good, no such role exists
         self.delete_users = []

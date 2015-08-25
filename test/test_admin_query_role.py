@@ -31,6 +31,10 @@ class TestQueryRole(TestBaseClass):
         usr_sys_admin_privs =  [
             {"code": aerospike.PRIV_USER_ADMIN},
             {"code": aerospike.PRIV_SYS_ADMIN}]
+        try:
+            self.client.admin_drop_role("usr-sys-admin")
+        except:
+            pass
         self.client.admin_create_role("usr-sys-admin", usr_sys_admin_privs)
         self.delete_users = []
 

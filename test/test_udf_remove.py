@@ -44,8 +44,8 @@ class TestUdfRemove(TestBaseClass):
         """
         Teardown method
         """
-        udf_list = TestUdfRemove.client.udf_list({'timeout': 0})
         time.sleep(2)
+        udf_list = TestUdfRemove.client.udf_list({'timeout': 10})
         for udf in udf_list:
             if udf['name'] == 'example.lua':
                 TestUdfRemove.client.udf_remove("example.lua", {})
@@ -67,14 +67,14 @@ class TestUdfRemove(TestBaseClass):
 
     def test_udf_remove_with_proper_parameters(self):
 
-        policy = {'timeout': 0}
+        policy = {'timeout': 10}
         module = "example.lua"
         status = TestUdfRemove.client.udf_remove(module, policy)
 
         assert status == 0
 
         time.sleep(4)
-        udf_list = TestUdfRemove.client.udf_list({'timeout': 0})
+        udf_list = TestUdfRemove.client.udf_list({'timeout': 10})
 
         present = False
         for udf in udf_list:

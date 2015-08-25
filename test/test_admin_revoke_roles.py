@@ -26,7 +26,10 @@ class TestRevokeRoles(TestBaseClass):
         config = {"hosts": hostlist}
         TestRevokeRoles.Me = self
         self.client = aerospike.client(config).connect(user, password)
-
+        try:
+            self.client.admin_drop_user("example")
+        except:
+            pass
         policy = {}
         user = "example"
         password = "foo2"
@@ -97,7 +100,7 @@ class TestRevokeRoles(TestBaseClass):
 
     def test_revoke_roles_with_proper_timeout_policy_value(self):
 
-        policy = {'timeout': 5}
+        policy = {'timeout': 50}
         user = "example"
         roles = ["read-write", "sys-admin"]
 
@@ -113,7 +116,7 @@ class TestRevokeRoles(TestBaseClass):
 
     def test_revoke_roles_with_none_username(self):
 
-        policy = {'timeout': 0}
+        policy = {'timeout': 50}
         user = None
         roles = ["sys-admin"]
 

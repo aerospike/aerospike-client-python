@@ -72,7 +72,7 @@ class TestSelectMany(object):
 
         filter_bins = ['title', 'name']
         records = TestSelectMany.client.select_many(self.keys, filter_bins,
-                                                    {'timeout': 3})
+                                                    {'timeout': 20})
 
         assert type(records) == dict
         assert len(records.keys()) == 5
@@ -231,7 +231,8 @@ class TestSelectMany(object):
         filter_bins = ['title', 'name']
 
         try:
-            records = client1.select_many( self.keys, filter_bins, { 'timeout': 3 } )
+            records = client1.select_many( self.keys, filter_bins, { 'timeout':
+                20} )
 
         except ClusterError as exception:
             assert exception.code == 11L

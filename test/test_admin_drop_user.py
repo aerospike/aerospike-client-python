@@ -32,6 +32,10 @@ class TestDropUser(TestBaseClass):
         config = {'hosts': hostlist}
         TestDropUser.Me = self
         self.client = aerospike.client(config).connect(user, password)
+        try:
+            self.client.admin_drop_user("foo")
+        except:
+            pass
 
     def teardown_method(self, method):
         """

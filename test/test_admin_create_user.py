@@ -117,7 +117,7 @@ class TestCreateUser(TestBaseClass):
 
     def test_create_user_with_proper_timeout_policy_value(self):
 
-        policy = {'timeout': 5}
+        policy = {'timeout': 20}
         user = "user2"
         password = "user2"
         roles = ["read-write", "sys-admin"]
@@ -141,7 +141,7 @@ class TestCreateUser(TestBaseClass):
 
     def test_create_user_with_none_username(self):
 
-        policy = {'timeout': 0}
+        policy = {'timeout': 20}
         user = None
         password = "user3"
         roles = ["sys-admin"]

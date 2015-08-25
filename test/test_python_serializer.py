@@ -167,20 +167,20 @@ class TestPythonSerializer(object):
         assert bins == {'pi': 3.14}
 
         self.delete_keys.append(key)
+        client.close()
 
     def test_put_with_float_data_user_client_serializer(self):
 
         #  Invoke put() for float data record with user client serializer.
-        key = ('test', 'demo', 1)
+        key = ('test', 'demo', 5)
 
-        rec = {"pi": 3.14}
+        rec = {"pi": 3.18}
 
-        res = TestPythonSerializer.client.put(key, rec, {}, {},
-                                        aerospike.SERIALIZER_USER)
+        res = TestPythonSerializer.client.put(key, rec, {}, {})
 
         assert res == 0
 
-        assert test_list == [3.14]
+        assert test_list == [3.18]
 
         self.delete_keys.append(key)
 

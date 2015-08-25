@@ -60,7 +60,7 @@ class TestGetMany(TestBaseClass):
 
     def test_get_many_with_proper_parameters(self):
 
-        records = TestGetMany.client.get_many(self.keys, {'timeout': 3})
+        records = TestGetMany.client.get_many(self.keys, {'timeout': 20})
 
         assert type(records) == dict
         assert len(records.keys()) == 5
@@ -171,7 +171,7 @@ class TestGetMany(TestBaseClass):
         config = {'hosts': [('127.0.0.1', 3000)]}
         client1 = aerospike.client(config)
         try:
-            records = client1.get_many( self.keys, { 'timeout': 3 } )
+            records = client1.get_many( self.keys, { 'timeout': 20 } )
 
         except ClusterError as exception:
             assert exception.code == 11L
