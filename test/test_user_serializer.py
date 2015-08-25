@@ -29,7 +29,8 @@ def deserialize_function(val):
     return pickle.loads(val)
 
 def client_deserialize_function(val):
-    return pickle.dumps(val)
+    test_list.append(pickle.loads(val))
+    return pickle.loads(val)
 
 
 class TestUserSerializer(object):
@@ -236,21 +237,60 @@ class TestUserSerializer(object):
 
         self.delete_keys.append(key)
 
-    def test_put_with_float_data_user_client_serializer(self):
+    def test_put_with_float_data_user_client_serializer_deserializer(self):
 
         #    Invoke put() for float data record with user client serializer.
+        hostlist, user, password = TestBaseClass.get_hosts()
+        method_config = {'hosts': hostlist,
+                'serialization': (client_serialize_function,
+                    client_deserialize_function)}
+        if user == None and password == None:
+            client = aerospike.client(method_config).connect()
+        else:
+            client = aerospike.client(method_config).connect(user, password)
+        response = aerospike.set_serializer(serialize_function)
+        response = aerospike.set_deserializer(deserialize_function)
         key = ('test', 'demo', 1)
 
         rec = {"pi": 3.14}
 
-        res = TestUserSerializer.client.put(key, rec, {}, {})
+        res = client.put(key, rec, {}, {})
 
         assert res == 0
 
         assert test_list == [3.14]
-        _, _, bins = TestUserSerializer.client.get(key)
+        _, _, bins = client.get(key)
 
         assert bins == {'pi': 3.14}
-
+        assert test_list == [3.14, 3.14]
+        del test_list[:]
         self.delete_keys.append(key)
 
+    def test_put_with_float_data_user_client_serializer_deserializer_with_spec_in_put(self):
+
+        #    Invoke put() for float data record with user client serializer.
+        hostlist, user, password = TestBaseClass.get_hosts()
+        method_config = {'hosts': hostlist,
+                'serialization': (client_serialize_function,
+                    client_deserialize_function)}
+        if user == None and password == None:
+            client = aerospike.client(method_config).connect()
+        else:
+            client = aerospike.client(method_config).connect(user, password)
+        response = aerospike.set_serializer(serialize_function)
+        response = aerospike.set_deserializer(deserialize_function)
+        key = ('test', 'demo', 1)
+
+        rec = {"pi": 3.14}
+
+        res = client.put(key, rec, {}, {}, aerospike.SERIALIZER_USER)
+
+        assert res == 0
+
+        assert test_list == []
+        _, _, bins = client.get(key)
+
+        assert bins == {'pi': 3.14}
+        assert test_list == [3.14]
+        del test_list[:]
+        self.delete_keys.append(key)

@@ -140,24 +140,34 @@ class TestPythonSerializer(object):
         }
 
         self.delete_keys.append(key)
-    """
+
     def test_put_with_float_data_python_default_serializer(self):
 
         #  Invoke put() for float data record with user client serializer.
+        hostlist, user, password = TestBaseClass.get_hosts()
+        method_config = {'hosts': hostlist,
+                  'serialization': (None,
+                      None)}
+        if user == None and password == None:
+            client = aerospike.client(method_config).connect()
+        else:
+            client = aerospike.client(method_config).connect(user, password)
+
         key = ('test', 'demo', 1)
 
+        assert test_list == []
         rec = {"pi": 3.14}
 
-        res = TestPythonSerializer.client.put(key, rec, {}, {})
+        res = client.put(key, rec, {}, {})
 
         assert res == 0
 
-        _, _, bins = TestPythonSerializer.client.get(key)
+        _, _, bins = client.get(key)
 
         assert bins == {'pi': 3.14}
 
         self.delete_keys.append(key)
-        """
+
     def test_put_with_float_data_user_client_serializer(self):
 
         #  Invoke put() for float data record with user client serializer.

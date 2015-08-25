@@ -387,7 +387,6 @@ static int AerospikeClient_Type_Init(AerospikeClient * self, PyObject * args, Py
     }
 
     self->is_client_put_serializer = false;
-    self->is_client_put_deserializer = false;
     self->user_serializer_call_info.callback = NULL;
     self->user_deserializer_call_info.callback = NULL;
     PyObject *py_serializer_option = PyDict_GetItemString(py_config, "serialization");
@@ -395,8 +394,7 @@ static int AerospikeClient_Type_Init(AerospikeClient * self, PyObject * args, Py
         PyObject *py_serializer = PyTuple_GetItem(py_serializer_option, 0);
         if (py_serializer && py_serializer != Py_None) {
             if (!PyCallable_Check(py_serializer)) {
-                //as_error_update(&err, AEROSPIKE_ERR_PARAM, "Parameter must be a callable");
-                //goto CLEANUP;
+                return -1;
             }
             memset(&self->user_serializer_call_info, 0, sizeof(self->user_serializer_call_info));
             self->user_serializer_call_info.callback = py_serializer;
@@ -404,8 +402,7 @@ static int AerospikeClient_Type_Init(AerospikeClient * self, PyObject * args, Py
         PyObject *py_deserializer = PyTuple_GetItem(py_serializer_option, 1);
         if (py_deserializer && py_deserializer != Py_None) {
             if (!PyCallable_Check(py_deserializer)) {
-                //as_error_update(&err, AEROSPIKE_ERR_PARAM, "Parameter must be a callable");
-                //goto CLEANUP;
+                return -1;
             }
             memset(&self->user_deserializer_call_info, 0, sizeof(self->user_deserializer_call_info));
             self->user_deserializer_call_info.callback = py_deserializer;
