@@ -711,7 +711,7 @@ Client Class --- :class:`Client`
         *namespace*. A scan with a ``None`` set returns all the records in the \
         namespace.
 
-        :param str namespace: a list of :ref:`aerospike_key_tuple`.
+        :param str namespace: the namespace in the aerospike cluster.
         :param str set: optional specified set name, otherwise the entire \
           *namespace* will be scanned.
         :return: an :py:class:`aerospike.Scan` class.
@@ -727,7 +727,7 @@ Client Class --- :class:`Client`
         named set**. This is different than the meaning of a ``None`` set in \
         a scan.
 
-        :param str namespace: a list of :ref:`aerospike_key_tuple`.
+        :param str namespace: the namespace in the aerospike cluster.
         :param str set: optional specified set name, otherwise the records \
           which are not part of any *set* will be queried (**Note**: this is \
           different from not providing the *set* in :meth:`scan`).
