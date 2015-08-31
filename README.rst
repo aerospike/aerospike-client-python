@@ -16,7 +16,8 @@ The Aerospike Python client depends on:
 -  The Aerospike C client
 -  Python devel Package
 
-The Aerospike Python Client works on Python 2.6.\ *, 2.7.*
+The Aerospike Python Client works on Python 2.6.\ *, 2.7.* running on **64-bit**
+OS X 10.9+ and Linux.
 
 RedHat 6+ and CentOS 6+
 ~~~~~~~~~~~~~~~~~~~~~~~
