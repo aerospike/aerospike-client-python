@@ -24,6 +24,10 @@ class TestQueryApply(object):
             self.client = aerospike.client(config).connect()
         else:
             self.client = aerospike.client(config).connect(user, password)
+        self.client.index_integer_create('test', 'demo', 'age',
+                'test_demo_age_idx')
+        self.client.index_integer_create('test', None, 'age',
+                'test_null_age_idx')
         for i in xrange(1, 5):
             key = ('test', 'demo', i)
             rec = {'name': 'name%s' % (str(i)), 'age': i}
