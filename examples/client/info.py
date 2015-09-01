@@ -100,12 +100,13 @@ try:
                             if len(entry) > 0:
                                 count = 0
                                 for field in entry.split(','):
-                                    (name,value) = field.split('=')
-                                    if count > 0:
-                                        print("      {0}: {1}".format(name, value))
-                                    else:
-                                        print("    - {0}: {1}".format(name, value))
-                                    count += 1
+                                    if "=" in field:
+                                        (name,value) = field.split('=')
+                                        if count > 0:
+                                            print("      {0}: {1}".format(name, value))
+                                        else:
+                                            print("    - {0}: {1}".format(name, value))
+                                        count += 1
                     else:
                         print("{0}: {1}".format(node, res))
 

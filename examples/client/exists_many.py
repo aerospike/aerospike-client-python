@@ -61,7 +61,7 @@ optparser.add_option(
 
 optparser.add_option(
     "-k", "--keys", dest="keys", type="string", default="", metavar="<KEYS>",
-    help="Keys to be accessed in the database server")
+    help="Keys to be accessed in the database server. Should be specified as 'name','name1','name2' etc")
 
 (options, args) = optparser.parse_args()
 
@@ -69,12 +69,6 @@ if options.help:
     optparser.print_help()
     print()
     sys.exit(1)
-"""
-if len(args) != 1:
-    optparser.print_help()
-    print()
-    sys.exit(1)
-    """
 
 ################################################################################
 # Client Configuration

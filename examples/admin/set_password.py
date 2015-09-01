@@ -26,7 +26,7 @@ from optparse import OptionParser
 # Options Parsing
 ################################################################################
 
-usage = "usage: %prog [options] key"
+usage = "usage: %prog [options]"
 
 optparser = OptionParser(usage=usage, add_help_option=False)
 
@@ -90,8 +90,8 @@ try:
      
     try:
 
-   	policy = {}
-   	user = "foo"
+        policy = {}
+        user = "foo-example"
     	password = "bar"
     	
     	client.admin_set_password(user, password, policy)
@@ -100,6 +100,7 @@ try:
 
     except Exception as e:
         print("error: {0}".format(e), file=sys.stderr)
+        print("In case of invalid user first create user using create_user.py")
         exitCode = 2
     
     # ----------------------------------------------------------------------------

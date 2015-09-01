@@ -204,7 +204,8 @@ class TestSelectMany(object):
         filter_bins = ['title', 'name']
 
         try:
-            records = client1.select_many( self.keys, filter_bins, { 'timeout': 3 } )
+            records = client1.select_many( self.keys, filter_bins, { 'timeout':
+                20} )
 
         except ClusterError as exception:
             assert exception.code == 11L

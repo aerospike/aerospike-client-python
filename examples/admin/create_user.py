@@ -90,15 +90,15 @@ try:
      
     try:
 
-   	policy = {}
-   	user = "foo"
-    	password = "bar"
-    	roles = ["read-write", "read"]
-    	roles_size = len(roles)
+        policy = {}
+        user = "foo-example"
+        password = "bar"
+        roles = ["read-write", "read"]
+        roles_size = len(roles)
     	
-  	client.admin_create_user(user, password, roles, policy)
+        client.admin_create_user(user, password, roles, policy)
         
-    	print("OK, 1 new user created")
+        print("OK, 1 new user created")
 
     except Exception as e:
         print("error: {0}".format(e), file=sys.stderr)

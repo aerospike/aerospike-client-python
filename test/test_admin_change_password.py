@@ -28,7 +28,7 @@ class TestChangePassword(TestBaseClass):
 
         try:
             self.client.admin_create_user( "testchangepassworduser", "aerospike", ["read"], {})
-            time.sleep(1)
+            time.sleep(2)
         except UserExistsError:
             pass # we are good, no such role exists
         self.delete_users = []
@@ -104,7 +104,7 @@ class TestChangePassword(TestBaseClass):
         self.clientreaduser = aerospike.client(config).connect(user,
                                                                "aerospike")
 
-        policy = {'timeout': 10}
+        policy = {'timeout': 100}
         password = "newpassword"
 
         status = self.clientreaduser.admin_change_password( user, password, policy )
@@ -179,7 +179,7 @@ class TestChangePassword(TestBaseClass):
         self.clientreaduser = aerospike.client(config).connect(user,
                                                                "aerospike")
 
-        policy = {'timeout': 10}
+        policy = {'timeout': 100}
         password = "password" * 1000
 
         status = self.clientreaduser.admin_change_password( user, password, policy )

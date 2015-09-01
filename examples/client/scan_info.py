@@ -111,7 +111,10 @@ try:
         namespace = options.namespace if options.namespace and options.namespace != 'None' else None
         set = options.set if options.set and options.set != 'None' else None
 
+      	client.udf_put(filename, 0, policy)
+
         module = "simple" 
+        filename = "simple.lua" 
         function = "add_val"
         args = ['age', 1]
         policy = {}

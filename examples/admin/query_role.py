@@ -26,7 +26,7 @@ from optparse import OptionParser
 # Options Parsing
 ################################################################################
 
-usage = "usage: %prog [options] key"
+usage = "usage: %prog [options]"
 
 optparser = OptionParser(usage=usage, add_help_option=False)
 
@@ -90,17 +90,18 @@ try:
      
     try:
 
-   	policy = {}
-   	role = "example_foo"
+        policy = {}
+        role = "example_foo"
     	
-  	privileges = client.admin_query_role(role, policy)
+        privileges = client.admin_query_role(role, policy)
         
-	print(privileges)
-	print("---")
-    	print("OK, Roles retrieved for 1 user")
+        print(privileges)
+        print("---")
+        print("OK, Privileges retrieved for one role")
 
     except Exception as e:
         print("error: {0}".format(e), file=sys.stderr)
+        print("In case of invalid role, first create role using create_role.py")
         exitCode = 2
     
     # ----------------------------------------------------------------------------

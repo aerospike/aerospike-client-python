@@ -90,12 +90,11 @@ try:
      
     try:
 
-   	policy = {}
+        policy = {}
     	
-  	roles = client.admin_query_roles(policy)
-
-	print(roles)
-	print("---") 
+        roles = client.admin_query_roles(policy)
+        print(roles)
+        print("---") 
     	print("OK, All roles retrieved")
 
     except Exception as e:
