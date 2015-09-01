@@ -58,8 +58,8 @@ class TestScanApply(object):
                                          "mytransform", ['age', 2])
 
         while True:
-            response = self.client.scan_info(scan_id)
-            if response['status'] == aerospike.SCAN_STATUS_COMPLETED:
+            response = self.client.job_info(scan_id, aerospike.JOB_SCAN)
+            if response['status'] == aerospike.JOB_STATUS_COMPLETED:
                 break
         for i in xrange(5):
             key = ('test', 'demo', i)
@@ -78,8 +78,8 @@ class TestScanApply(object):
                                          "mytransform", ['age', 2], policy)
 
         while True:
-            response = self.client.scan_info(scan_id)
-            if response['status'] == aerospike.SCAN_STATUS_COMPLETED:
+            response = self.client.job_info(scan_id, aerospike.JOB_SCAN)
+            if response['status'] == aerospike.JOB_STATUS_COMPLETED:
                 break
         for i in xrange(5):
             key = ('test', 'demo', i)
@@ -98,8 +98,8 @@ class TestScanApply(object):
                                          "mytransform", ['age', 2], policy)
 
         while True:
-            response = self.client.scan_info(scan_id)
-            if response['status'] == aerospike.SCAN_STATUS_COMPLETED:
+            response = self.client.job_info(scan_id, aerospike.JOB_SCAN)
+            if response['status'] == aerospike.JOB_STATUS_COMPLETED:
                 break
         for i in xrange(5):
             key = ('test', 'demo', i)
@@ -143,8 +143,8 @@ class TestScanApply(object):
                                          "mytransform", ['age', 2])
 
         while True:
-            response = self.client.scan_info(scan_id)
-            if response['status'] == aerospike.SCAN_STATUS_COMPLETED:
+            response = self.client.job_info(scan_id, aerospike.JOB_SCAN)
+            if response['status'] == aerospike.JOB_STATUS_COMPLETED:
                 break
         for i in xrange(5):
             key = ('test', 'demo', i)
@@ -162,8 +162,8 @@ class TestScanApply(object):
                                          "mytransform_incorrect", ['age', 2])
 
         while True:
-            response = self.client.scan_info(scan_id)
-            if response['status'] == aerospike.SCAN_STATUS_COMPLETED:
+            response = self.client.job_info(scan_id, aerospike.JOB_SCAN)
+            if response['status'] == aerospike.JOB_STATUS_COMPLETED:
                 break
         for i in xrange(5):
             key = ('test', 'demo', i)
@@ -301,8 +301,8 @@ class TestScanApply(object):
         #time.sleep(2)
 
         while True:
-            response = self.client.scan_info(scan_id)
-            if response['status'] == aerospike.SCAN_STATUS_COMPLETED:
+            response = self.client.job_info(scan_id, aerospike.JOB_SCAN)
+            if response['status'] == aerospike.JOB_STATUS_COMPLETED:
                 break
         for i in xrange(5):
             key = ('test', 'demo', i)
@@ -322,8 +322,8 @@ class TestScanApply(object):
         #time.sleep(2)
 
         while True:
-            response = self.client.scan_info(scan_id)
-            if response['status'] == aerospike.SCAN_STATUS_COMPLETED:
+            response = self.client.job_info(scan_id, aerospike.JOB_SCAN)
+            if response['status'] == aerospike.JOB_STATUS_COMPLETED:
                 break
         for i in xrange(5):
             key = ('test', 'demo', i)
@@ -343,8 +343,8 @@ class TestScanApply(object):
         #time.sleep(2)
 
         while True:
-            response = self.client.scan_info(scan_id)
-            if response['status'] == aerospike.SCAN_STATUS_COMPLETED:
+            response = self.client.job_info(scan_id, aerospike.JOB_SCAN)
+            if response['status'] == aerospike.JOB_STATUS_COMPLETED:
                 break
         for i in xrange(5):
             key = ('test', 'demo', i)
@@ -369,8 +369,8 @@ class TestScanApply(object):
                                                          2], policy, options)
 
         while True:
-            response = self.client.scan_info(scan_id)
-            if response['status'] == aerospike.SCAN_STATUS_COMPLETED:
+            response = self.client.job_info(scan_id, aerospike.JOB_SCAN)
+            if response['status'] == aerospike.JOB_STATUS_COMPLETED:
                 break
         for i in xrange(5):
             key = ('test', 'demo', i)
@@ -388,8 +388,8 @@ class TestScanApply(object):
                                          u"mytransform", ['age', 2])
 
         while True:
-            response = self.client.scan_info(scan_id)
-            if response['status'] == aerospike.SCAN_STATUS_COMPLETED:
+            response = self.client.job_info(scan_id, aerospike.JOB_SCAN)
+            if response['status'] == aerospike.JOB_STATUS_COMPLETED:
                 break
         for i in xrange(5):
             key = ('test', 'demo', i)

@@ -94,3 +94,5 @@ PyObject * AerospikeQuery_Results(AerospikeQuery * self, PyObject * args, PyObje
  *
  */
 PyObject * StoreUnicodePyObject(AerospikeQuery * self, PyObject * obj);
+
+int64_t pyobject_to_int64(PyObject * py_obj);
