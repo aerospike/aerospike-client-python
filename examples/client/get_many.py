@@ -22,6 +22,7 @@ import sys
 
 from optparse import OptionParser
 
+
 ################################################################################
 # Options Parsing
 ################################################################################
@@ -35,6 +36,14 @@ optparser.add_option(
     help="Displays this message.")
 
 optparser.add_option(
+    "-U", "--username", dest="username", type="string", metavar="<USERNAME>",
+    help="Username to connect to database.")
+
+optparser.add_option(
+    "-P", "--password", dest="password", type="string", metavar="<PASSWORD>",
+    help="Password to connect to database.")
+
+optparser.add_option(
     "-h", "--host", dest="host", type="string", default="127.0.0.1", metavar="<ADDRESS>",
     help="Address of Aerospike server.")
 
@@ -43,21 +52,20 @@ optparser.add_option(
     help="Port of the Aerospike server.")
 
 optparser.add_option(
-    "-U", "--username", dest="username", type="string", metavar="<USERNAME>",
-    help="Username to connect to database.")
+    "-n", "--namespace", dest="namespace", type="string", default="test", metavar="<NS>",
+    help="Port of the Aerospike server.")
 
 optparser.add_option(
-    "-P", "--password", dest="password", type="string", metavar="<PASSWORD>",
-    help="Password to connect to database.")
+    "-s", "--set", dest="set", type="string", default="demo", metavar="<SET>",
+    help="Port of the Aerospike server.")
+
+optparser.add_option(
+    "-k", "--keys", dest="keys", type="string", default="", metavar="<KEYS>",
+    help="Keys to be accessed in the database server. Should be specified as 'name','name1','name2' etc")
 
 (options, args) = optparser.parse_args()
 
 if options.help:
-    optparser.print_help()
-    print()
-    sys.exit(1)
-
-if options.username == None or options.password == None:
     optparser.print_help()
     print()
     sys.exit(1)
@@ -87,21 +95,33 @@ try:
     # ----------------------------------------------------------------------------
     # Perform Operation
     # ----------------------------------------------------------------------------
-     
+
     try:
+        
+        namespace = options.namespace if options.namespace and options.namespace != 'None' else None
+        set = options.set if options.set and options.set != 'None' else None
+        #args.pop()
 
-        policy = {}
-    	
-        user_roles = client.admin_query_users(policy)
-       
-        print(user_roles)
-        print("---") 
-    	print("OK, All users retrieved")
+        keys = options.keys.split(',')
+        keylist = []
+        for key in keys:
+            individualkey = (namespace, set, key)
+            keylist.append(individualkey)
 
-    except Exception as e:
-        print("error: {0}".format(e), file=sys.stderr)
+        records = client.get_many(keylist)
+
+        if records != None:
+            print(records)
+            print("---")
+            print("OK, %d records found." % len(records))
+        else:
+            print('error: Not Found.', file=sys.stderr)
+            exitCode = 1
+
+    except Exception, eargs:
+        print("error: {0}".format(eargs), file=sys.stderr)
         exitCode = 2
-    
+
     # ----------------------------------------------------------------------------
     # Close Connection to Cluster
     # ----------------------------------------------------------------------------

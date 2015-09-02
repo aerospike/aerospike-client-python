@@ -26,13 +26,13 @@ class TestQueryUsers(TestBaseClass):
         config = {"hosts": hostlist}
         TestQueryUsers.Me = self
         self.client = aerospike.client(config).connect(user, password)
-
+        
         try:
-            self.client.admin_drop_user("example")
+            self.client.admin_drop_user("example-test")
         except:
             pass
         policy = {}
-        user = "example"
+        user = "example-test"
         password = "foo2"
         roles = ["read-write", "sys-admin", "read"]
 
@@ -47,7 +47,7 @@ class TestQueryUsers(TestBaseClass):
 
         policy = {}
 
-        self.client.admin_drop_user( "example", policy )
+        self.client.admin_drop_user( "example-test", policy )
 
         self.client.close()
 
@@ -58,12 +58,12 @@ class TestQueryUsers(TestBaseClass):
         time.sleep(2)
         user_details = self.client.admin_query_users()
 
-        assert user_details['example'] == ['read', 'read-write', 'sys-admin']
+        assert user_details['example-test'] == ['read', 'read-write', 'sys-admin']
 
     def test_query_users_with_invalid_timeout_policy_value(self):
 
         policy = {"timeout": 0.1}
-        user = "example"
+        user = "example-test"
 
         try:
             status = self.client.admin_query_users( policy )
@@ -74,18 +74,18 @@ class TestQueryUsers(TestBaseClass):
 
     def test_query_users_with_proper_timeout_policy_value(self):
 
-        policy = {'timeout': 5}
+        policy = {'timeout': 50}
 
         time.sleep(2)
         user_details = self.client.admin_query_users(policy)
 
         time.sleep(2)
-        assert user_details['example'] == ['read', 'read-write', 'sys-admin']
+        assert user_details['example-test'] == ['read', 'read-write', 'sys-admin']
 
     def test_query_users_with_no_roles(self):
 
         policy = {}
-        user = "example"
+        user = "example-test"
         roles = ["sys-admin", "read", "read-write"]
 
         status = self.client.admin_revoke_roles(user, roles, policy)
@@ -95,7 +95,7 @@ class TestQueryUsers(TestBaseClass):
         user_details = self.client.admin_query_users(policy)
 
         time.sleep(2)
-        assert user_details['example'] == []
+        assert user_details['example-test'] == []
 
     def test_query_users_with_extra_argument(self):
         """

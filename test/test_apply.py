@@ -28,7 +28,7 @@ class TestApply(TestBaseClass):
             for value in versioninfo[keys]:
                 if value != None:
                     versionlist = value[value.find("build") + 6:value.find("\n")].split(".")
-                    if int(versionlist[0]) >= 3 and int(versionlist[1]) >= 6:
+                    if int(versionlist[0]) >= 3:# and int(versionlist[1]) >= 6:
                         TestApply.skip_old_server = False
 
         policy = {}

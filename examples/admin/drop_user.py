@@ -26,7 +26,7 @@ from optparse import OptionParser
 # Options Parsing
 ################################################################################
 
-usage = "usage: %prog [options] key"
+usage = "usage: %prog [options]"
 
 optparser = OptionParser(usage=usage, add_help_option=False)
 
@@ -90,10 +90,10 @@ try:
      
     try:
 
-   	policy = {}
-   	user = "foo"
+        policy = {}
+        user = "foo-example"
     	
-  	client.admin_drop_user(user, policy)
+        client.admin_drop_user(user, policy)
         
     	print("OK, 1 user dropped")
 

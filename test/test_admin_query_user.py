@@ -26,13 +26,12 @@ class TestQueryUser(TestBaseClass):
         config = {"hosts": hostlist}
         TestQueryUser.Me = self
         self.client = aerospike.client(config).connect(user, password)
-
         try:
-            self.client.admin_drop_user("example")
+            self.client.admin_drop_user("example-test")
         except:
             pass
         policy = {}
-        user = "example"
+        user = "example-test"
         password = "foo2"
         roles = ["read-write", "sys-admin", "read"]
 
@@ -47,7 +46,7 @@ class TestQueryUser(TestBaseClass):
 
         policy = {}
 
-        self.client.admin_drop_user( "example", policy )
+        self.client.admin_drop_user( "example-test", policy )
 
         self.client.close()
 
@@ -61,7 +60,7 @@ class TestQueryUser(TestBaseClass):
     def test_query_user_with_proper_parameters(self):
 
         policy = {}
-        user = "example"
+        user = "example-test"
 
         time.sleep(2)
         user_details = self.client.admin_query_user( user )
@@ -70,7 +69,7 @@ class TestQueryUser(TestBaseClass):
     def test_query_user_with_invalid_timeout_policy_value(self):
 
         policy = {"timeout": 0.1}
-        user = "example"
+        user = "example-test"
 
         try:
             status = self.client.admin_query_user( user, policy )
@@ -81,8 +80,8 @@ class TestQueryUser(TestBaseClass):
 
     def test_query_user_with_proper_timeout_policy_value(self):
 
-        policy = {'timeout': 5}
-        user = "example"
+        policy = {'timeout': 30}
+        user = "example-test"
 
         time.sleep(2)
         user_details = self.client.admin_query_user( user, policy )
@@ -91,7 +90,7 @@ class TestQueryUser(TestBaseClass):
 
     def test_query_user_with_none_username(self):
 
-        policy = {'timeout': 0}
+        policy = {'timeout': 30}
         user = None
 
         try:
@@ -128,7 +127,7 @@ class TestQueryUser(TestBaseClass):
     def test_query_user_with_no_roles(self):
 
         policy = {}
-        user = "example"
+        user = "example-test"
         roles = ["sys-admin", "read", "read-write"]
 
         status = self.client.admin_revoke_roles(user, roles, policy)

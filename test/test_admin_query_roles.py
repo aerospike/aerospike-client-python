@@ -35,8 +35,13 @@ class TestQueryRoles(TestBaseClass):
         usr_sys_admin_privs =  [
             {"code": aerospike.PRIV_USER_ADMIN},
             {"code": aerospike.PRIV_SYS_ADMIN}]
-        self.client.admin_create_role("usr-sys-admin", usr_sys_admin_privs)
+        try:
+            self.client.admin_drop_role("usr-sys-admin-test")
+        except:
+            pass
+        self.client.admin_create_role("usr-sys-admin-test", usr_sys_admin_privs)
         self.delete_users = []
+        time.sleep(1)
 
     def teardown_method(self, method):
 
@@ -45,7 +50,7 @@ class TestQueryRoles(TestBaseClass):
         """
         policy = {}
 
-        self.client.admin_drop_role("usr-sys-admin")
+        self.client.admin_drop_role("usr-sys-admin-test")
         self.client.close()
 
     def test_admin_query_roles_positive(self):
@@ -55,7 +60,7 @@ class TestQueryRoles(TestBaseClass):
         roles = self.client.admin_query_roles()
 
         flag = 0
-        assert roles['usr-sys-admin'] == [{'code': 0, 'ns': '', 'set': ''}, {'code': 1, 'ns': '', 'set': ''}]
+        assert roles['usr-sys-admin-test'] == [{'code': 0, 'ns': '', 'set': ''}, {'code': 1, 'ns': '', 'set': ''}]
 
     def test_admin_query_roles_positive_with_policy(self):
         """
@@ -64,7 +69,7 @@ class TestQueryRoles(TestBaseClass):
         roles = self.client.admin_query_roles({'timeout': 1000})
 
         flag = 0
-        assert roles['usr-sys-admin'] == [{'code': 0, 'ns': '', 'set': ''}, {'code': 1, 'ns': '', 'set': ''}]
+        assert roles['usr-sys-admin-test'] == [{'code': 0, 'ns': '', 'set': ''}, {'code': 1, 'ns': '', 'set': ''}]
 
     def test_admin_query_roles_incorrect_policy(self):
         """

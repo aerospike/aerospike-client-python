@@ -51,8 +51,8 @@ class TestCreateUser(TestBaseClass):
     def test_create_user_with_proper_parameters(self):
 
         policy = {"timeout": 1000}
-        user = "user1"
-        password = "user1"
+        user = "user1-test"
+        password = "user1-test"
         roles = ["read", "read-write", "sys-admin"]
 
         try:
@@ -70,13 +70,13 @@ class TestCreateUser(TestBaseClass):
 
         assert user_details == ['read', 'read-write', 'sys-admin']
 
-        self.delete_users.append('user1')
+        self.delete_users.append('user1-test')
 
     def test_create_user_with_proper_parameters_without_policy(self):
 
         policy = { "timeout": 1000 }
-        user = "user1"
-        password = "user1"
+        user = "user1-test"
+        password = "user1-test"
         roles = ["read", "read-write", "sys-admin"]
 
         try:
@@ -94,13 +94,13 @@ class TestCreateUser(TestBaseClass):
 
         assert user_details == ['read', 'read-write', 'sys-admin']
 
-        self.delete_users.append('user1')
+        self.delete_users.append('user1-test')
 
     def test_create_user_with_invalid_timeout_policy_value(self):
 
         policy = {"timeout": 0.1}
-        user = "user3"
-        password = "user3"
+        user = "user3-test"
+        password = "user3-test"
         roles = ['sys-admin']
 
         try:
@@ -117,9 +117,9 @@ class TestCreateUser(TestBaseClass):
 
     def test_create_user_with_proper_timeout_policy_value(self):
 
-        policy = {'timeout': 5}
-        user = "user2"
-        password = "user2"
+        policy = {'timeout': 20}
+        user = "user2-test"
+        password = "user2-test"
         roles = ["read-write", "sys-admin"]
 
         try:
@@ -137,13 +137,13 @@ class TestCreateUser(TestBaseClass):
 
         assert user_details == ['read-write', 'sys-admin']
 
-        self.delete_users.append('user2')
+        self.delete_users.append('user2-test')
 
     def test_create_user_with_none_username(self):
 
-        policy = {'timeout': 0}
+        policy = {'timeout': 20}
         user = None
-        password = "user3"
+        password = "user3-test"
         roles = ["sys-admin"]
 
         try:
@@ -157,7 +157,7 @@ class TestCreateUser(TestBaseClass):
 
         policy = {}
         user = ""
-        password = "user3"
+        password = "user3-test"
         roles = ["read-write"]
 
         try:
@@ -171,7 +171,7 @@ class TestCreateUser(TestBaseClass):
 
         policy = {}
         user = "!#Q#AEQ@#$%&^*((^&*~~~````"
-        password = "user4"
+        password = "uesr4-test"
         roles = ["read-write"]
 
         try:
@@ -188,7 +188,7 @@ class TestCreateUser(TestBaseClass):
     def test_create_user_with_none_password(self):
 
         policy = {}
-        user = "user4"
+        user = "uesr4-test"
         password = None
         roles = ["sys-admin"]
 
@@ -202,7 +202,7 @@ class TestCreateUser(TestBaseClass):
     def test_create_user_with_empty_string_as_password(self):
 
         policy = {}
-        user = "user5"
+        user = "user5-test"
         password = ""
         roles = ["read-write"]
 
@@ -220,7 +220,7 @@ class TestCreateUser(TestBaseClass):
     def test_create_user_with_special_characters_in_password(self):
 
         policy = {}
-        user = "user6"
+        user = "user6-test"
         password = "@#!$#$WERWE%&%$"
         roles = ["sys-admin"]
 
@@ -239,7 +239,7 @@ class TestCreateUser(TestBaseClass):
 
         policy = {}
         user = "user$" * 1000
-        password = "user10"
+        password = "user10-test"
         roles = ["sys-admin"]
 
         try:
@@ -257,7 +257,7 @@ class TestCreateUser(TestBaseClass):
     def test_create_user_with_too_long_password(self):
 
         policy = {'timeout': 1000}
-        user = "user10"
+        user = "user10-test"
         password = "user#" * 1000
         roles = ["read-write"]
 
@@ -299,8 +299,8 @@ class TestCreateUser(TestBaseClass):
     def test_create_user_with_non_user_admin_user(self):
 
         policy = {}
-        user = "non_admin"
-        password = "non_admin"
+        user = "non_admin_test"
+        password = "non_admin_test"
         roles = ["read-write"]
 
         try:
@@ -317,7 +317,7 @@ class TestCreateUser(TestBaseClass):
         non_admin_client = None
 
         try:
-            non_admin_client = aerospike.client(config).connect( "non_admin", "non_admin" )
+            non_admin_client = aerospike.client(config).connect( "non_admin_test", "non_admin_test" )
             status = non_admin_client.admin_create_user( "user78", password, roles, policy )
 
             if non_admin_client:
@@ -326,4 +326,4 @@ class TestCreateUser(TestBaseClass):
         except RoleViolation as exception:
             assert exception.code == 81
 
-        self.delete_users.append("non_admin")
+        self.delete_users.append("non_admin_test")

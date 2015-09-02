@@ -23,6 +23,7 @@
 #include <aerospike/as_admin.h>
 #include <aerospike/aerospike_index.h>
 #include "aerospike/as_scan.h"
+#include "aerospike/as_job.h"
 
 #include "policy.h"
 
@@ -86,6 +87,9 @@ AerospikeConstants aerospike_constants[] = {
 	{ AS_SCAN_STATUS_ABORTED               ,   "SCAN_STATUS_ABORTED" },
 	{ AS_SCAN_STATUS_UNDEF                 ,   "SCAN_STATUS_UNDEF" },
 	{ AS_SCAN_STATUS_INPROGRESS            ,   "SCAN_STATUS_INPROGRESS" },
+	{ AS_JOB_STATUS_COMPLETED              ,   "JOB_STATUS_COMPLETED" },
+	{ AS_JOB_STATUS_UNDEF                  ,   "JOB_STATUS_UNDEF" },
+	{ AS_JOB_STATUS_INPROGRESS             ,   "JOB_STATUS_INPROGRESS" },
 	{ AS_POLICY_REPLICA_MASTER             ,   "POLICY_REPLICA_MASTER" },
 	{ AS_POLICY_REPLICA_ANY                 ,   "POLICY_REPLICA_ANY" },
 	{ AS_POLICY_CONSISTENCY_LEVEL_ONE       ,   "POLICY_CONSISTENCY_ONE" },
@@ -106,9 +110,14 @@ AerospikeConstants aerospike_constants[] = {
 	{ AS_PRIVILEGE_DATA_ADMIN				,	"PRIV_DATA_ADMIN"	},
 	{ AS_PRIVILEGE_READ						,	"PRIV_READ"},
 	{ AS_PRIVILEGE_READ_WRITE				,	"PRIV_READ_WRITE"},
-	{ AS_PRIVILEGE_READ_WRITE_UDF			,	"PRIV_READ_WRITE_UDF"}
+	{ AS_PRIVILEGE_READ_WRITE_UDF			,	"PRIV_READ_WRITE_UDF"},
 };
 
+static
+AerospikeJobConstants aerospike_job_constants[] = {
+    { "scan"        ,     "JOB_SCAN"},
+    { "query"       ,     "JOB_QUERY"}
+};
 /**
  * Function for setting scan parameters in scan.
  * Like Scan Priority, Percentage, Concurrent, Nobins
@@ -206,6 +215,12 @@ as_status declare_policy_constants(PyObject *aerospike)
 		PyModule_AddIntConstant(aerospike,
 				aerospike_constants[i].constant_str,
 				aerospike_constants[i].constantno);
+	}
+
+	for (i = 0; i <= AEROSPIKE_JOB_CONSTANTS_ARR_SIZE; i++) {
+		PyModule_AddStringConstant(aerospike,
+				aerospike_job_constants[i].exposed_job_str,
+				aerospike_job_constants[i].job_str);
 	}
 exit:
 	return status;

@@ -134,5 +134,3 @@ class TestPythonSerializer(object):
         }
 
         self.delete_keys.append(key)
-
-

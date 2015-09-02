@@ -29,7 +29,7 @@
 #undef TRACE
 #define TRACE()
 
-static int64_t pyobject_to_int64(PyObject * py_obj)
+int64_t pyobject_to_int64(PyObject * py_obj)
 {
 	if ( PyInt_Check(py_obj) ) {
 		return PyInt_AsLong(py_obj);

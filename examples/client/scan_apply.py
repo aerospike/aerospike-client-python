@@ -29,6 +29,9 @@ from optparse import OptionParser
 
 usage = "usage: %prog [options] module function [args...]"
 
+def scan_callback(option, opt, value, parser):
+  setattr(parser.values, option.dest, value.split(','))
+
 optparser = OptionParser(usage=usage, add_help_option=False)
 
 optparser.add_option(
@@ -60,6 +63,18 @@ optparser.add_option(
     help="Port of the Aerospike server.")
 
 optparser.add_option(
+    "-m", "--module", dest="module", type="string",
+    help="UDF Module.")
+
+optparser.add_option(
+    "-f", "--function", dest="function", type="string",
+    help="UDF Function.")
+
+optparser.add_option(
+    "-a", "--arg", dest="arguments", type="string", action="callback",
+    callback=scan_callback,  help="UDF Arguments.")
+
+optparser.add_option(
     "-b", "--bins", dest="bins", type="string", action="append", 
     help="Bins to select from each record.")
 
@@ -70,7 +85,7 @@ if options.help:
     print()
     sys.exit(1)
 
-if len(args) < 3:
+if len(args) > 0:
     optparser.print_help()
     print()
     sys.exit(1)
@@ -113,21 +128,22 @@ try:
 
         args.reverse()
 
-        module = args.pop() 
-        function = args.pop()
+        module = options.module
+        function = options.function
 
-        args.reverse()
-        argl = map(parse_arg, args)
+        for i, param in enumerate(options.arguments):
+            if param.isdigit():
+                options.arguments[i] = int(param)
+
         policy = {}
-
-        scan_id = client.scan_apply(namespace, set, module, function, argl, policy)
+        scan_id = client.scan_apply(namespace, set, module, function, options.arguments, policy)
 
         while True:
-            response = client.scan_info(scan_id)
-            if response['status'] == aerospike.SCAN_STATUS_COMPLETED:
+            response = client.job_info(scan_id, aerospike.JOB_SCAN)
+            if response['status'] == aerospike.JOB_STATUS_COMPLETED:
                 break
 
-        if response['status'] == aerospike.SCAN_STATUS_COMPLETED:
+        if response['status'] == aerospike.JOB_STATUS_COMPLETED:
             print("Background scan is successful")
         else:
             print("Scan_apply failed")

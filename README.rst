@@ -11,12 +11,13 @@ Aerospike Python Client
 Dependencies
 ------------
 
-The Aerospike Python client depends on:
+The Python Client for Aerospike works on Python 2.6.\ *, 2.7.* running on
+**64-bit** OS X 10.9+ and Linux.
 
--  The Aerospike C client
+The client depends on:
+
 -  Python devel Package
-
-The Aerospike Python Client works on Python 2.6.\ *, 2.7.*
+-  The Aerospike C client
 
 RedHat 6+ and CentOS 6+
 ~~~~~~~~~~~~~~~~~~~~~~~
@@ -98,6 +99,12 @@ example, run:
 
     python examples/client/kvs.py
 
+
+Becnhmarks
+----------
+
+To run the benchmarks the python modules 'guppy' and 'tabulate' need to be installed.
+Benchmark applications are provided in the `benchmarks directory of the GitHub repository <https://github.com/aerospike/aerospike-client-python/tree/master/benchmarks>`__
 
 License
 -------

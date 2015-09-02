@@ -26,7 +26,7 @@ from optparse import OptionParser
 # Options Parsing
 ################################################################################
 
-usage = "usage: %prog [options] key"
+usage = "usage: %prog [options]"
 
 optparser = OptionParser(usage=usage, add_help_option=False)
 
@@ -90,13 +90,13 @@ try:
      
     try:
 
-   	policy = {}
-   	role = "example_foo"
-        privileges = [{"code": aerospike.READ}, {"code": aerospike.PRIV_USER_ADMIN}]
+        policy = {}
+        role = "example_foo"
+        privileges = [{"code": aerospike.PRIV_READ}, {"code": aerospike.PRIV_USER_ADMIN}]
     	
-  	client.admin_create_role(role, privileges, policy)
+        client.admin_create_role(role, privileges, policy)
         
-    	print("OK, 1 new role created")
+        print("OK, 1 new role created")
 
     except Exception as e:
         print("error: {0}".format(e), file=sys.stderr)

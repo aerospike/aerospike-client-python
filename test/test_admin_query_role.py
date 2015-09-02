@@ -35,9 +35,14 @@ class TestQueryRole(TestBaseClass):
         usr_sys_admin_privs =  [
             {"code": aerospike.PRIV_USER_ADMIN},
             {"code": aerospike.PRIV_SYS_ADMIN}]
-        self.client.admin_create_role("usr-sys-admin", usr_sys_admin_privs)
-        time.sleep(1)
+        try:
+            self.client.admin_drop_role("usr-sys-admin-test")
+        except:
+            pass
+        self.client.admin_create_role("usr-sys-admin-test", usr_sys_admin_privs)
+
         self.delete_users = []
+        time.sleep(1)
 
     def teardown_method(self, method):
 
@@ -47,7 +52,7 @@ class TestQueryRole(TestBaseClass):
 
         policy = {}
 
-        self.client.admin_drop_role("usr-sys-admin")
+        self.client.admin_drop_role("usr-sys-admin-test")
         self.client.close()
 
     def test_admin_query_role_no_parameters(self):
@@ -63,14 +68,14 @@ class TestQueryRole(TestBaseClass):
         """
             Query role positive
         """
-        roles = self.client.admin_query_role("usr-sys-admin")
+        roles = self.client.admin_query_role("usr-sys-admin-test")
         assert roles == [{'code': 0, 'ns': '', 'set': ''}, {'code': 1, 'ns': '', 'set': ''}]
 
     def test_admin_query_role_positive_with_policy(self):
         """
             Query role positive policy
         """
-        roles = self.client.admin_query_role("usr-sys-admin", {'timeout': 1000})
+        roles = self.client.admin_query_role("usr-sys-admin-test", {'timeout': 1000})
         assert roles == [{'code': 0, 'ns': '', 'set': ''}, {'code': 1, 'ns': '', 'set': ''}]
 
     def test_admin_query_role_incorrect_role_name(self):
@@ -78,7 +83,7 @@ class TestQueryRole(TestBaseClass):
             Incorrect role name
         """
         try:
-            self.client.admin_query_role("usr-sys-admin-non-existent", {'timeout': 1000})
+            self.client.admin_query_role("usr-sys-admin-test-non-existent", {'timeout': 1000})
 
         except InvalidRole as exception:
             assert exception.code == 70

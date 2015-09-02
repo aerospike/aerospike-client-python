@@ -27,11 +27,11 @@ class TestRevokeRoles(TestBaseClass):
         TestRevokeRoles.Me = self
         self.client = aerospike.client(config).connect(user, password)
         try:
-            self.client.admin_drop_user("example")
+            self.client.admin_drop_user("example-test")
         except:
             pass
         policy = {}
-        user = "example"
+        user = "example-test"
         password = "foo2"
         roles = ["read-write", "sys-admin", "read"]
 
@@ -46,7 +46,7 @@ class TestRevokeRoles(TestBaseClass):
 
         policy = {}
 
-        self.client.admin_drop_user( "example", policy )
+        self.client.admin_drop_user( "example-test", policy )
 
         self.client.close()
 
@@ -60,7 +60,7 @@ class TestRevokeRoles(TestBaseClass):
     def test_revoke_roles_with_proper_parameters(self):
 
         policy = {}
-        user = "example"
+        user = "example-test"
         roles = ["read", "sys-admin"]
 
         status = self.client.admin_revoke_roles(user, roles, policy)
@@ -74,9 +74,10 @@ class TestRevokeRoles(TestBaseClass):
     def test_revoke_all_roles_with_proper_parameters(self):
 
         policy = {}
-        user = "example"
+        user = "example-test"
         roles = ["read", "sys-admin", "read-write"]
 
+        time.sleep(2)
         status = self.client.admin_revoke_roles(user, roles)
         assert status == 0
         time.sleep(2)
@@ -88,7 +89,7 @@ class TestRevokeRoles(TestBaseClass):
     def test_revoke_roles_with_invalid_timeout_policy_value(self):
 
         policy = {"timeout": 0.1}
-        user = "example"
+        user = "example-test"
         roles = ['sys-admin']
 
         try:
@@ -100,8 +101,8 @@ class TestRevokeRoles(TestBaseClass):
 
     def test_revoke_roles_with_proper_timeout_policy_value(self):
 
-        policy = {'timeout': 5}
-        user = "example"
+        policy = {'timeout': 50}
+        user = "example-test"
         roles = ["read-write", "sys-admin"]
 
         status = self.client.admin_revoke_roles( user, roles , policy )
@@ -116,7 +117,7 @@ class TestRevokeRoles(TestBaseClass):
 
     def test_revoke_roles_with_none_username(self):
 
-        policy = {'timeout': 0}
+        policy = {'timeout': 50}
         user = None
         roles = ["sys-admin"]
 
@@ -143,7 +144,7 @@ class TestRevokeRoles(TestBaseClass):
     def test_revoke_roles_with_empty_roles_list(self):
 
         policy = {}
-        user = "example"
+        user = "example-test"
         roles = []
 
         try:

@@ -140,6 +140,12 @@ static PyMethodDef AerospikeClient_Type_Methods[] = {
 	{"query",
 		(PyCFunction) AerospikeClient_Query, METH_VARARGS | METH_KEYWORDS,
 		"Create a new Query object for peforming queries."},
+	{"query_apply",
+		(PyCFunction) AerospikeClient_QueryApply, METH_VARARGS | METH_KEYWORDS,
+		"Applies query object for performing queries."},
+	{"job_info",
+		(PyCFunction) AerospikeClient_JobInfo, METH_VARARGS | METH_KEYWORDS,
+		"Gets Job Info"},
 
 	// SCAN OPERATIONS
 

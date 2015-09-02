@@ -3,6 +3,10 @@
 import pytest
 import sys
 from test_base_class import TestBaseClass
+try:
+    from collections import Counter
+except ImportError:
+    from counter26 import Counter
 
 aerospike = pytest.importorskip("aerospike")
 try:
@@ -58,26 +62,28 @@ class TestGetMany(TestBaseClass):
 
         records = TestGetMany.client.get_many(self.keys)
 
-        assert type(records) == dict
-        assert len(records.keys()) == 6
+        assert type(records) == list
+        assert len(records) == 6
 
     def test_get_many_with_proper_parameters(self):
 
-        records = TestGetMany.client.get_many(self.keys, {'timeout': 3})
+        records = TestGetMany.client.get_many(self.keys, {'timeout': 30})
 
-        assert type(records) == dict
-        assert len(records.keys()) == 6
-        assert records.keys() == [0, 1, 2, 3, 4, 'float_value']
-        assert records['float_value'][2] == {'float_value': 4.3}
+        assert type(records) == list
+        assert len(records) == 6
+        assert Counter([x[0][2] for x in records]) == Counter([0, 1, 2, 3,
+            4, 'float_value'])
+        assert records[5][2] == {'float_value': 4.3}
 
     def test_get_many_with_none_policy(self):
 
         records = TestGetMany.client.get_many(self.keys, None)
 
-        assert type(records) == dict
-        assert len(records.keys()) == 6
-        assert records.keys() == [0, 1, 2, 3, 4, 'float_value']
-        assert records['float_value'][2] == {'float_value': 4.3}
+        assert type(records) == list
+        assert len(records) == 6
+        assert Counter([x[0][2] for x in records]) == Counter([0, 1, 2, 3,
+            4, 'float_value'])
+        assert records[5][2] == {'float_value': 4.3}
 
     def test_get_many_with_none_keys(self):
 
@@ -94,10 +100,13 @@ class TestGetMany(TestBaseClass):
 
         records = TestGetMany.client.get_many(self.keys)
 
-        assert type(records) == dict
-        assert len(records.keys()) == 7
-        assert records.keys() == [0, 1, 2, 3, 4, 'non-existent', 'float_value']
-        assert records['non-existent'] == None
+        assert type(records) == list
+        assert len(records) == 7
+        assert Counter([x[0][2] for x in records]) == Counter([0, 1, 2, 3,
+            4, 'non-existent', 'float_value'])
+        for x in records:
+            if x[0][2] == 'non-existent':
+                assert x[2] == None
 
     def test_get_many_with_all_non_existent_keys(self):
 
@@ -105,8 +114,8 @@ class TestGetMany(TestBaseClass):
 
         records = TestGetMany.client.get_many(keys)
 
-        assert len(records.keys()) == 1
-        assert records == {'key': None}
+        assert len(records) == 1
+        assert records == [(('test', 'demo', 'key'), None, None)]
 
     def test_get_many_with_invalid_key(self):
 
@@ -127,7 +136,6 @@ class TestGetMany(TestBaseClass):
             assert exception.code == -2
             assert exception.msg == "timeout is invalid"
 
-    @pytest.mark.xfail
     def test_get_many_with_initkey_as_digest(self):
 
         keys = []
@@ -148,8 +156,9 @@ class TestGetMany(TestBaseClass):
         for key in keys:
             TestGetMany.client.remove(key)
 
-        assert type(records) == dict
-        assert len(records.keys()) == 2
+        assert type(records) == list
+        assert len(records) == 2
+        assert Counter([x[0][2] for x in records]) == Counter(["asd;as[d'as;djk;uyfl", "ase;as[d'as;djk;uyfl"])
 
     def test_get_many_with_non_existent_keys_in_middle(self):
 
@@ -167,17 +176,19 @@ class TestGetMany(TestBaseClass):
             key = ('test', 'demo', i)
             TestGetMany.client.remove(key)
 
-        assert type(records) == dict
-        assert len(records.keys()) == 12
-        assert records.keys() == [0, 1, 2, 3, 4, 'some_key', 15, 16, 17, 18, 19,
-                'float_value']
-        assert records['some_key'] == None
+        assert type(records) == list
+        assert len(records) == 12
+        assert Counter([x[0][2] for x in records]) == Counter([0, 1, 2, 3,
+            4, 'some_key', 15, 16, 17, 18, 19, 'float_value'])
+        for x in records:
+            if x[0][2] == 'some_key':
+                assert x[2] == None
 
     def test_get_many_with_proper_parameters_without_connection(self):
         config = {'hosts': [('127.0.0.1', 3000)]}
         client1 = aerospike.client(config)
         try:
-            records = client1.get_many( self.keys, { 'timeout': 3 } )
+            records = client1.get_many( self.keys, { 'timeout': 20 } )
 
         except ClusterError as exception:
             assert exception.code == 11L
