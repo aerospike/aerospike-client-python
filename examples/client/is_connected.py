@@ -78,7 +78,6 @@ config = {
     'hosts': [ (options.host, options.port) ]
 }
 
-client = aerospike.client(config).connect()
 
 ################################################################################
 # Application

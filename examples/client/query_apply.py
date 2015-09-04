@@ -18,6 +18,7 @@
 from __future__ import print_function
 
 import aerospike
+import json
 import re
 import sys
 import os.path
@@ -30,16 +31,10 @@ from aerospike import predicates as p
 ################################################################################
 
 usage = "usage: %prog [options] [where]"
+def query_callback(option, opt, value, parser):
+  setattr(parser.values, option.dest, value.split(','))
 
 optparser = OptionParser(usage=usage, add_help_option=False)
-
-optparser.add_option(
-    "-U", "--username", dest="username", type="string", metavar="<USERNAME>",
-    help="Username to connect to database.")
-
-optparser.add_option(
-    "-P", "--password", dest="password", type="string", metavar="<PASSWORD>",
-    help="Password to connect to database.")
 
 optparser.add_option(
     "-h", "--host", dest="host", type="string", default="127.0.0.1", metavar="<ADDRESS>",
@@ -70,8 +65,8 @@ optparser.add_option(
     help="UDF Function.")
 
 optparser.add_option(
-    "-a", "--arg", dest="arguments", action="append", type="string",
-    help="UDF Arguments.")
+    "-a", "--arg", dest="arguments", type="string", action="callback",
+    callback=query_callback,  help="UDF Arguments.")
 
 optparser.add_option(
     "-b", "--bins", dest="bins", type="string", action="append", 
@@ -121,7 +116,7 @@ try:
     # Connect to Cluster
     # ----------------------------------------------------------------------------
 
-    client = aerospike.client(config).connect(options.username, options.password)
+    client = aerospike.client(config).connect()
 
     # ----------------------------------------------------------------------------
     # Perform Operation
@@ -129,6 +124,7 @@ try:
 
     try:
 
+        query_id = 0
         re_bin = "(.{1,14})"
         re_str_eq = "\s+=\s*(?:(?:\"(.*)\")|(?:\'(.*)\'))"
         re_int_eq = "\s+=\s*(\d+)"
@@ -140,69 +136,52 @@ try:
 
         q = None
 
-        if len(args) == 1:
+        for i, param in enumerate(options.arguments):
+            if param.isdigit():
+                options.arguments[i] = int(param)
 
+        if len(args) == 1:
             w = re_w.match(args[0])
             if w != None:
 
                 # If predicate is provided, then perform a query
-                q = client.query(namespace, set)
-
+                
                 if w.group(2):
                     b = w.group(1)
                     v = w.group(2)
-                    q.where(p.equals(b, v))
+                    query_id = client.query_apply(options.namespace,
+                            options.set, p.equals(b, v), options.module,
+                            options.function, options.arguments)
                 elif w.group(3):
                     b = w.group(1)
                     v = w.group(3)
-                    q.where(p.equals(b, v))
+                    query_id = client.query_apply(options.namespace,
+                            options.set, p.equals(b, v), options.module,
+                            options.function, options.arguments)
                 elif w.group(4):
                     b = w.group(1)
                     v = int(w.group(4))
-                    q.where(p.equals(b, v))
+                    query_id = client.query_apply(options.namespace,
+                            options.set, p.equals(b, v), options.module,
+                            options.function, options.arguments)
                 elif w.group(5) and w.group(6):
                     b = w.group(1)
                     l = int(w.group(5))
                     u = int(w.group(6))
-                    q.where(p.between(b, l, u))
+                    query_id = client.query_apply(options.namespace,
+                            options.set, p.between(b, l, u), options.module,
+                            options.function, options.arguments)
 
-        if q == None:
-            # If predicate not provided, then perform a scan
-            q = client.scan(namespace, set)
+        while True:
+            response = client.job_info(query_id, aerospike.JOB_QUERY)
+            if response['status'] == aerospike.JOB_STATUS_COMPLETED:
+                break
 
-        if options.bins and len(options.bins) > 0:
-            # project specified bins
-            q.select(*options.bins)
-
-        if options.module and options.function:
-            if options.arguments:
-                q.apply(options.module, options.function, *options.arguments)
-            else:
-                q.apply(options.module, options.function)
-
-        results = []
-
-        # callback to be called for each record read
-        def callback((key, meta, rec)):
-            results.append((key, meta, rec))
-            if options.show_key and options.show_meta:
-                print(key, meta, rec)
-            elif options.show_key:
-                print(key, rec)
-            elif options.show_meta:
-                print(meta, rec)
-            else:
-                print(rec)
-        
-        # invoke the operations, and for each record invoke the callback
-        q.foreach(callback)
-        
-        print("---")
-        if len(results) == 1:
-            print("OK, 1 result found.")
+        if response['status'] == aerospike.JOB_STATUS_COMPLETED:
+            print("Background query is successful")
         else:
-            print("OK, %d results found." % len(results))
-
+            print("Query_apply failed")
+        
     except Exception, eargs:
         print("error: {0}".format(eargs), file=sys.stderr)
         exitCode = 2

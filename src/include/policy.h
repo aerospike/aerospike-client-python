@@ -38,7 +38,12 @@ typedef struct Aerospike_Constants {
     char    constant_str[MAX_CONSTANT_STR_SIZE];
 }AerospikeConstants;
 
+typedef struct Aerospike_JobConstants {
+    char job_str[MAX_CONSTANT_STR_SIZE];
+    char exposed_job_str[MAX_CONSTANT_STR_SIZE];
+}AerospikeJobConstants;
 #define AEROSPIKE_CONSTANTS_ARR_SIZE (sizeof(aerospike_constants)/sizeof(AerospikeConstants))
+#define AEROSPIKE_JOB_CONSTANTS_ARR_SIZE (sizeof(aerospike_job_constants)/sizeof(AerospikeJobConstants))
 
 as_status pyobject_to_policy_admin(as_error * err, PyObject * py_policy,
 									as_policy_admin * policy,

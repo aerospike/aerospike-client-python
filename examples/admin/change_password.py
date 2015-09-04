@@ -19,6 +19,7 @@ from __future__ import print_function
 
 import aerospike
 import sys
+from aerospike.exception import *
 
 from optparse import OptionParser
 
@@ -26,7 +27,7 @@ from optparse import OptionParser
 # Options Parsing
 ################################################################################
 
-usage = "usage: %prog [options] key"
+usage = "usage: %prog [options]"
 
 optparser = OptionParser(usage=usage, add_help_option=False)
 
@@ -90,11 +91,15 @@ try:
      
     try:
 
-   	policy = {}
-   	user = "foo"
-    	password = "foobar"
-    	
-        client_new = aerospike.client(config).connect(user, "bar")
+        policy = {}
+        user = "foo-example"
+        password = "foobar"
+        try:	
+            client_new = aerospike.client(config).connect(user, "bar")
+        except ClientError:
+            print("User might not be created or node may be down. In case of non-existent user run create_user.py first")
+            client.close()
+            sys.exit()
     	status = client_new.admin_change_password(user, password)
         client_new.close()
         

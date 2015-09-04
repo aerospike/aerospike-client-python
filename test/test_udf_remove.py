@@ -45,7 +45,7 @@ class TestUdfRemove(TestBaseClass):
         Teardown method
         """
         time.sleep(2)
-        udf_list = TestUdfRemove.client.udf_list({'timeout': 10})
+        udf_list = TestUdfRemove.client.udf_list({'timeout': 100})
         for udf in udf_list:
             if udf['name'] == 'example.lua':
                 TestUdfRemove.client.udf_remove("example.lua", {})
@@ -74,7 +74,7 @@ class TestUdfRemove(TestBaseClass):
         assert status == 0
 
         time.sleep(4)
-        udf_list = TestUdfRemove.client.udf_list({'timeout': 10})
+        udf_list = TestUdfRemove.client.udf_list({'timeout': 100})
 
         present = False
         for udf in udf_list:
@@ -126,14 +126,14 @@ class TestUdfRemove(TestBaseClass):
 
     def test_udf_remove_with_unicode_filename(self):
 
-        policy = {'timeout': 0}
+        policy = {'timeout': 100}
         module = u"example.lua"
         status = TestUdfRemove.client.udf_remove(module, policy)
 
         assert status == 0
 
         time.sleep(4)
-        udf_list = TestUdfRemove.client.udf_list({'timeout': 0})
+        udf_list = TestUdfRemove.client.udf_list({'timeout': 100})
 
         present = False
         for udf in udf_list:
@@ -147,7 +147,7 @@ class TestUdfRemove(TestBaseClass):
         config = {'hosts': [('127.0.0.1', 3000)]}
 
         client1 = aerospike.client(config)
-        policy = {'timeout': 0}
+        policy = {'timeout': 100}
         module = "example.lua"
 
         try:

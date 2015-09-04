@@ -257,6 +257,8 @@ PyObject * AerospikeClient_ScanInfo(AerospikeClient * self, PyObject * args, PyO
  *
  */
 AerospikeQuery * AerospikeClient_Query(AerospikeClient * self, PyObject * args, PyObject * kwds);
+PyObject * AerospikeClient_QueryApply(AerospikeClient * self, PyObject * args, PyObject * kwds);
+PyObject * AerospikeClient_JobInfo(AerospikeClient * self, PyObject * args, PyObject * kwds);
 
 /*******************************************************************************
  * INFO OPERATIONS

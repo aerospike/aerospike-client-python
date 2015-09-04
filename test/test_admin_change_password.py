@@ -104,7 +104,7 @@ class TestChangePassword(TestBaseClass):
         self.clientreaduser = aerospike.client(config).connect(user,
                                                                "aerospike")
 
-        policy = {'timeout': 10}
+        policy = {'timeout': 100}
         password = "newpassword"
 
         status = self.clientreaduser.admin_change_password( user, password, policy )
@@ -179,7 +179,7 @@ class TestChangePassword(TestBaseClass):
         self.clientreaduser = aerospike.client(config).connect(user,
                                                                "aerospike")
 
-        policy = {'timeout': 10}
+        policy = {'timeout': 100}
         password = "password" * 1000
 
         status = self.clientreaduser.admin_change_password( user, password, policy )

@@ -47,6 +47,14 @@ optparser.add_option(
 	help="Displays this message.")
 
 optparser.add_option(
+    "-U", "--username", dest="username", type="string", metavar="<USERNAME>",
+    help="Username to connect to database.")
+
+optparser.add_option(
+    "-P", "--password", dest="password", type="string", metavar="<PASSWORD>",
+    help="Password to connect to database.")
+
+optparser.add_option(
 	"-h", "--host", dest="host", type="string", default="127.0.0.1", metavar="<ADDRESS>",
 	help="Address of Aerospike server.")
 
@@ -156,7 +164,7 @@ config = {
 }
 
 print('Connect to Server: ', config)
-client = aerospike.client(config).connect()
+client = aerospike.client(config).connect(options.username, options.password)
 
 ################################################################################
 # Perform Operation

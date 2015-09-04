@@ -52,7 +52,7 @@ class TestSetPassword(TestBaseClass):
 
     def test_set_password_with_proper_parameters(self):
 
-        policy = {'timeout': 20}
+        policy = {'timeout': 50}
         user = "testsetpassworduser"
         password = "newpassword"
 
@@ -75,7 +75,7 @@ class TestSetPassword(TestBaseClass):
 
     def test_set_password_with_proper_timeout_policy_value(self):
 
-        policy = {'timeout': 20}
+        policy = {'timeout': 50}
         user = "testsetpassworduser"
         password = "newpassword"
 

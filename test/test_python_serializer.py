@@ -174,13 +174,12 @@ class TestPythonSerializer(object):
         #  Invoke put() for float data record with user client serializer.
         key = ('test', 'demo', 5)
 
-        rec = {"pi": 3.18}
+        rec = {"pi": 3.14}
 
         res = TestPythonSerializer.client.put(key, rec, {}, {})
 
         assert res == 0
 
-        assert test_list == [3.18]
+        assert test_list == [3.14]
 
         self.delete_keys.append(key)
-
