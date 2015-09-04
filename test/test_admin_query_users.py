@@ -26,6 +26,7 @@ class TestQueryUsers(TestBaseClass):
         config = {"hosts": hostlist}
         TestQueryUsers.Me = self
         self.client = aerospike.client(config).connect(user, password)
+        
         try:
             self.client.admin_drop_user("example-test")
         except:

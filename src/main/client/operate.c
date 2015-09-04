@@ -22,6 +22,7 @@
 #include <aerospike/as_key.h>
 #include <aerospike/as_error.h>
 #include <aerospike/as_record.h>
+#include <aerospike/as_operations.h>
 #include "client.h"
 #include "conversions.h"
 #include "exceptions.h"
@@ -70,12 +71,12 @@ PyObject * create_pylist(PyObject * py_list, long operation, PyObject * py_bin,
  * Returns 0 if operation can be performed.
  *******************************************************************************************************
  */
-int check_type(PyObject * py_value, int op, as_error *err)
+int check_type(AerospikeClient * self, PyObject * py_value, int op, as_error *err)
 {
 	if ((!PyInt_Check(py_value) && !PyLong_Check(py_value)) && (op == AS_OPERATOR_TOUCH)) {
 	    as_error_update(err, AEROSPIKE_ERR_PARAM, "Unsupported operand type(s) for touch : only int or long allowed");
 		return 1;
-	} else if ( (!PyInt_Check(py_value) && !PyLong_Check(py_value) && !PyString_Check(py_value)) && op == AS_OPERATOR_INCR){
+	} else if ( (!PyInt_Check(py_value) && !PyLong_Check(py_value) && (!PyFloat_Check(py_value) || !aerospike_has_double(self->as)) && !PyString_Check(py_value)) && op == AS_OPERATOR_INCR){
 	    as_error_update(err, AEROSPIKE_ERR_PARAM, "Unsupported operand type(s) for +: only 'int' and 'str' allowed");
 		return 1;
 	} else if ((!PyString_Check(py_value) && !PyUnicode_Check(py_value)) && (op == AS_OPERATOR_APPEND || op == AS_OPERATOR_PREPEND)) {
@@ -165,6 +166,7 @@ PyObject *  AerospikeClient_Operate_Invoke(
 	char* bin = NULL;
 	char* val = NULL;
 	long offset = 0;
+    double double_offset = 0.0;
 	uint32_t ttl = 0;
 	long operation = 0;
 	int i = 0;
@@ -198,6 +200,7 @@ PyObject *  AerospikeClient_Operate_Invoke(
 		PyObject * py_val = PyList_GetItem(py_list, i);
 		operation = -1;
 		offset = 0;
+        double_offset = 0.0;
 		if ( PyDict_Check(py_val) ) {
 			PyObject *key_op = NULL, *value = NULL;
 			PyObject * py_value = NULL;
@@ -236,7 +239,7 @@ PyObject *  AerospikeClient_Operate_Invoke(
 				goto CLEANUP;
 			}
 			if (py_value) {
-				if (check_type(py_value, operation, err)) {
+				if (check_type(self, py_value, operation, err)) {
                     goto CLEANUP;
 				} else if (PyString_Check(py_value) && (operation == AS_OPERATOR_INCR)) {
                     char * incr_string = PyString_AsString(py_value);
@@ -292,14 +295,18 @@ PyObject *  AerospikeClient_Operate_Invoke(
 				case AS_OPERATOR_INCR:
 					if (PyInt_Check(py_value)) {
                         offset = PyInt_AsLong(py_value);
+                        as_operations_add_incr(&ops, bin, offset);
                     } else if ( PyLong_Check(py_value) ) {
                         offset = PyLong_AsLong(py_value);
                         if(-1 == offset) {
                             as_error_update(err, AEROSPIKE_ERR_PARAM, "integer value exceeds sys.maxsize");
                             goto CLEANUP;
                         }
+                        as_operations_add_incr(&ops, bin, offset);
+                    } else if (PyFloat_Check(py_value)) {
+                        double_offset = PyFloat_AsDouble(py_value);
+                        as_operations_add_incr_double(&ops, bin, double_offset);
                     }
-                    as_operations_add_incr(&ops, bin, offset);
                     break;
 				case AS_OPERATOR_TOUCH:
 					if (PyInt_Check(py_value)) {
@@ -318,7 +325,7 @@ PyObject *  AerospikeClient_Operate_Invoke(
 					as_operations_add_read(&ops, bin);
 					break;
 				case AS_OPERATOR_WRITE:
-					pyobject_to_astype_write(err, bin, py_value, &put_val, &ops,
+					pyobject_to_astype_write(self, err, bin, py_value, &put_val, &ops,
 							&static_pool, SERIALIZER_PYTHON);
 					if (err->code != AEROSPIKE_OK) {
 						goto CLEANUP;

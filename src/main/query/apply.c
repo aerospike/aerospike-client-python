@@ -96,7 +96,7 @@ AerospikeQuery * AerospikeQuery_Apply(AerospikeQuery * self, PyObject * args, Py
 		for ( int i = 0; i < size; i++ ) {
 			PyObject * py_val = PyList_GetItem(py_args, (Py_ssize_t)i);
 			as_val * val = NULL;
-			pyobject_to_val(&err, py_val, &val, &self->static_pool, SERIALIZER_PYTHON);
+			pyobject_to_val(self->client, &err, py_val, &val, &self->static_pool, SERIALIZER_PYTHON);
 			if ( err.code != AEROSPIKE_OK ) {
 				as_error_update(&err, err.code, NULL);
 				goto CLEANUP;

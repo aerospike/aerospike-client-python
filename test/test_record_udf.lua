@@ -90,8 +90,12 @@ function map_iterate_returns_map(record, bin, set_value)
 end
 
 --[[UDF which returns a whole record--]]
-function udf_returns_record(record)
-    return record
+function udf_returns_record(rec)
+    local mapped = map()
+    for i, bin_name in ipairs(record.bin_names(rec)) do
+        mapped[bin_name] = rec[bin_name];
+    end
+    return mapped
 end
 
 --[[UDF which accepts nothing and returns nothing--]]

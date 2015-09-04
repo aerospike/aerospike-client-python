@@ -37,6 +37,7 @@ class TestUdfPut(TestBaseClass):
         """
         Teardown method
         """
+        time.sleep(1)
         udf_list = TestUdfPut.client.udf_list({'timeout': 0})
         for udf in udf_list:
             if udf['name'] == 'example.lua':
@@ -123,10 +124,10 @@ class TestUdfPut(TestBaseClass):
 
     def test_udf_put_with_all_none_parameters(self):
 
-        with pytest.raises(TypeError) as typeError:
+        with pytest.raises(TypeError) as exception:
             status = TestUdfPut.client.udf_put(None, None, None)
 
-        assert "an integer is required" in typeError.value
+        assert "an integer is required" in exception.value
 
     def test_udf_put_with_filename_unicode(self):
 

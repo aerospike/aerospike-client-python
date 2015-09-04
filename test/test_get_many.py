@@ -39,6 +39,9 @@ class TestGetMany(TestBaseClass):
             rec = {'name': 'name%s' % (str(i)), 'age': i}
             TestGetMany.client.put(key, rec)
             self.keys.append(key)
+        key = ('test', 'demo', 'float_value')
+        TestGetMany.client.put(key, {"float_value": 4.3})
+        self.keys.append(key)
 
     def teardown_method(self, method):
         """
@@ -60,25 +63,27 @@ class TestGetMany(TestBaseClass):
         records = TestGetMany.client.get_many(self.keys)
 
         assert type(records) == list
-        assert len(records) == 5
+        assert len(records) == 6
 
     def test_get_many_with_proper_parameters(self):
 
         records = TestGetMany.client.get_many(self.keys, {'timeout': 30})
 
         assert type(records) == list
-        assert len(records) == 5
+        assert len(records) == 6
         assert Counter([x[0][2] for x in records]) == Counter([0, 1, 2, 3,
-            4])
+            4, 'float_value'])
+        assert records[5][2] == {'float_value': 4.3}
 
     def test_get_many_with_none_policy(self):
 
         records = TestGetMany.client.get_many(self.keys, None)
 
         assert type(records) == list
-        assert len(records) == 5
+        assert len(records) == 6
         assert Counter([x[0][2] for x in records]) == Counter([0, 1, 2, 3,
-            4])
+            4, 'float_value'])
+        assert records[5][2] == {'float_value': 4.3}
 
     def test_get_many_with_none_keys(self):
 
@@ -96,9 +101,9 @@ class TestGetMany(TestBaseClass):
         records = TestGetMany.client.get_many(self.keys)
 
         assert type(records) == list
-        assert len(records) == 6
+        assert len(records) == 7
         assert Counter([x[0][2] for x in records]) == Counter([0, 1, 2, 3,
-            4, 'non-existent'])
+            4, 'non-existent', 'float_value'])
         for x in records:
             if x[0][2] == 'non-existent':
                 assert x[2] == None
@@ -172,9 +177,9 @@ class TestGetMany(TestBaseClass):
             TestGetMany.client.remove(key)
 
         assert type(records) == list
-        assert len(records) == 11
+        assert len(records) == 12
         assert Counter([x[0][2] for x in records]) == Counter([0, 1, 2, 3,
-            4, 'some_key', 15, 16, 17, 18, 19])
+            4, 'some_key', 15, 16, 17, 18, 19, 'float_value'])
         for x in records:
             if x[0][2] == 'some_key':
                 assert x[2] == None

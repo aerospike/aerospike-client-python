@@ -22,6 +22,14 @@ class TestApply(TestBaseClass):
             TestApply.client = aerospike.client(config).connect()
         else:
             TestApply.client = aerospike.client(config).connect(user, password)
+        TestApply.skip_old_server = True
+        versioninfo = TestApply.client.info('version')
+        for keys in versioninfo:
+            for value in versioninfo[keys]:
+                if value != None:
+                    versionlist = value[value.find("build") + 6:value.find("\n")].split(".")
+                    if int(versionlist[0]) >= 3 and int(versionlist[1]) >= 6:
+                        TestApply.skip_old_server = False
 
         policy = {}
         TestApply.client.index_integer_create('test', 'demo', 'age',
@@ -93,6 +101,21 @@ class TestApply(TestBaseClass):
         (key, meta, bins) = TestApply.client.get(key)
 
         assert bins['name'] == ['name1', 'car']
+        assert retval == 0
+
+    def test_apply_with_correct_parameters_float_argument(self):
+        """
+            Invoke apply() with correct arguments with a floating value in the
+            list of arguments
+        """
+        if TestApply.skip_old_server == True:
+            pytest.skip("Server does not support apply on float type as lua argument")
+        key = ('test', 'demo', 1)
+        retval = TestApply.client.apply(key, 'sample', 'list_append', ['name',
+                                                                       5.434])
+        (key, meta, bins) = TestApply.client.get(key)
+
+        assert bins['name'] == ['name1', 5.434]
         assert retval == 0
 
     def test_apply_with_none_parameter(self):
