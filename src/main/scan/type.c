@@ -94,7 +94,9 @@ static int AerospikeScan_Type_Init(AerospikeScan * self, PyObject * args, PyObje
 		} else if ( Py_None == py_set ) {
 			set = NULL;
 		}
-	} else
+	} else {
+                set = NULL;
+        }
 
 	as_scan_init(&self->scan, namespace, set);
 
