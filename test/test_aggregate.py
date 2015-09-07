@@ -29,6 +29,14 @@ class TestAggregate(TestBaseClass):
         else:
             client = aerospike.client(config).connect(user, password)
 
+        TestAggregate.skip_old_server = True
+        versioninfo = client.info('version')
+        for keys in versioninfo:
+            for value in versioninfo[keys]:
+                if value != None:
+                    versionlist = value[value.find("build") + 6:value.find("\n")].split(".")
+                    if int(versionlist[0]) >= 3 and int(versionlist[1]) >= 6:
+                        TestAggregate.skip_old_server = False
         client.index_integer_create('test', 'demo', 'test_age',
                 'test_demo_test_age_idx')
         client.index_integer_create('test', 'demo', 'age1', 'test_demo_age1_idx')
@@ -404,6 +412,31 @@ class TestAggregate(TestBaseClass):
              u'name3': 1,
              u'name0': 1,
              u'name1': 1}
+        ]
+
+    def test_aggregate_with_arguments_to_lua_function_having_float_value(self):
+        """
+            Invoke aggregate() with unicode arguments to lua function having a
+            float value
+        """
+        if TestAggregate.skip_old_server == True:
+            pytest.skip("Server does not support aggregate on float type as lua argument")
+        query = self.client.query('test', 'demo')
+        query.where(p.between('test_age', 0, 5))
+        query.apply('stream_example', 'double_group_count', [u"name", u"addr", 2.5])
+
+        rec = []
+
+        def callback(value):
+            rec.append(value)
+
+        query.foreach(callback)
+        assert rec == [
+            {u'name4': 3.5,
+             u'name2': 3.5,
+             u'name3': 3.5,
+             u'name0': 3.5,
+             u'name1': 3.5}
         ]
 
     def test_aggregate_with_unicode_module_and_function_name(self):

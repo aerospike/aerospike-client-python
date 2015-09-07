@@ -67,7 +67,7 @@ class TestUdfRemove(TestBaseClass):
 
     def test_udf_remove_with_proper_parameters(self):
 
-        policy = {'timeout': 10}
+        policy = {'timeout': 50}
         module = "example.lua"
         status = TestUdfRemove.client.udf_remove(module, policy)
 

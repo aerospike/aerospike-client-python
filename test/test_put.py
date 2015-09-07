@@ -26,6 +26,14 @@ class TestPut(TestBaseClass):
             TestPut.client = aerospike.client(config).connect()
         else:
             TestPut.client = aerospike.client(config).connect(user, password)
+        TestPut.skip_old_server = True
+        versioninfo = TestPut.client.info('version')
+        for keys in versioninfo:
+            for value in versioninfo[keys]:
+                if value != None:
+                    versionlist = value[value.find("build") + 6:value.find("\n")].split(".")
+                    if int(versionlist[0]) >= 3 and int(versionlist[1]) >= 6:
+                        TestPut.skip_old_server = False
 
     def teardown_class(cls):
         TestPut.client.close()
@@ -344,14 +352,46 @@ class TestPut(TestBaseClass):
         #Invoke put() for float data record.
         key = ('test', 'demo', 1)
 
-        rec = {"pi": 3.145}
+        rec = {"pi": 3.141}
 
         res = TestPut.client.put(key, rec)
 
         assert res == 0
         _, _, bins = TestPut.client.get(key)
 
-        assert bins == {'pi': 3.145}
+        assert bins == {'pi': 3.141}
+
+        self.delete_keys.append(key)
+
+    def test_put_with_float_data_within_list(self):
+
+        #Invoke put() for float data record within list.
+        key = ('test', 'demo', 1)
+
+        rec = {"double_list": [3.141, 4.123, 6.285]}
+
+        res = TestPut.client.put(key, rec)
+
+        assert res == 0
+        _, _, bins = TestPut.client.get(key)
+
+        assert bins == {'double_list': [3.141, 4.123, 6.285]}
+
+        self.delete_keys.append(key)
+
+    def test_put_with_float_data_within_map(self):
+
+        #Invoke put() for float data record within map.
+        key = ('test', 'demo', 1)
+
+        rec = {"double_map": {"1": 3.141,"2": 4.123,"3": 6.285}}
+
+        res = TestPut.client.put(key, rec)
+
+        assert res == 0
+        _, _, bins = TestPut.client.get(key)
+
+        assert bins == {'double_map': {"1": 3.141, "2": 4.123, "3": 6.285}}
 
         self.delete_keys.append(key)
 
@@ -1020,7 +1060,10 @@ class TestPut(TestBaseClass):
 
         _, _, bins = TestPut.client.get(key)
 
-        assert bins == {'pi': bytearray(b'F3.1400000000000001\n.')}
+        if TestPut.skip_old_server == False:
+            assert bins == {'pi': 3.14}
+        else:
+            assert bins == {'pi': bytearray(b'F3.1400000000000001\n.')}
 
         self.delete_keys.append(key)
 

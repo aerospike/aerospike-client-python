@@ -252,17 +252,17 @@ class TestUserSerializer(object):
         response = aerospike.set_deserializer(deserialize_function)
         key = ('test', 'demo', 1)
 
-        rec = {"pi": 3.14}
+        rec = {"bytes": bytearray("asd;as[d'as;d", "utf-8")}
 
         res = client.put(key, rec, {}, {})
 
         assert res == 0
 
-        assert test_list == [3.14]
+        assert test_list == [bytearray("asd;as[d'as;d", "utf-8")]
         _, _, bins = client.get(key)
 
-        assert bins == {'pi': 3.14}
-        assert test_list == [3.14, 3.14]
+        assert bins == {'bytes': bytearray("asd;as[d'as;d", "utf-8")}
+        assert test_list == [bytearray("asd;as[d'as;d", "utf-8"), bytearray("asd;as[d'as;d", "utf-8")]
         del test_list[:]
         self.delete_keys.append(key)
 
@@ -281,7 +281,9 @@ class TestUserSerializer(object):
         response = aerospike.set_deserializer(deserialize_function)
         key = ('test', 'demo', 1)
 
-        rec = {"pi": 3.14}
+        del test_list[:]
+
+        rec = {"bytes": bytearray("asd;as[d'as;d", "utf-8")}
 
         res = client.put(key, rec, {}, {}, aerospike.SERIALIZER_USER)
 
@@ -290,7 +292,7 @@ class TestUserSerializer(object):
         assert test_list == []
         _, _, bins = client.get(key)
 
-        assert bins == {'pi': 3.14}
-        assert test_list == [3.14]
+        assert bins == {'bytes': bytearray("asd;as[d'as;d", "utf-8")}
+        assert test_list == [bytearray("asd;as[d'as;d", "utf-8")]
         del test_list[:]
         self.delete_keys.append(key)

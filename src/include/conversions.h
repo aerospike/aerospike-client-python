@@ -51,7 +51,8 @@ as_status pyobject_to_list(AerospikeClient * self, as_error * err, PyObject * py
 
 as_status pyobject_to_key(as_error * err, PyObject * py_key, as_key * key);
 
-as_status pyobject_to_record(AerospikeClient * self, as_error * err, PyObject * py_rec, PyObject * py_meta, as_record * rec, int serializer_option, as_static_pool *static_pool);
+as_status pyobject_to_record(AerospikeClient * self, as_error * err, PyObject * py_rec, PyObject *
+py_meta, as_record * rec, int serializer_option, as_static_pool *static_pool);
 
 as_status val_to_pyobject(AerospikeClient * self, as_error * err, const as_val * val, PyObject ** py_map);
 
@@ -71,8 +72,8 @@ bool error_to_pyobject(const as_error * err, PyObject ** obj);
 
 void initialize_ldt(as_error *error, as_ldt* ldt_p, char* bin_name, int type, char* module);
 
-as_status pyobject_to_astype_write(AerospikeClient * self, as_error * err, char *bin_name,  PyObject * py_value, as_val **val, as_operations * ops, 
-        as_static_pool *static_pool, int serializer_type);
+as_status pyobject_to_astype_write(AerospikeClient * self, as_error * err, char *bin_name,  PyObject * py_value, as_val **val,
+		as_operations * ops, as_static_pool *static_pool, int serializer_type);
 
 as_status as_privilege_to_pyobject( as_error * err, as_privilege privileges[], PyObject ** py_as_privilege, int privilege_size);
 

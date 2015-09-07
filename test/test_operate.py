@@ -24,6 +24,14 @@ class TestOperate(object):
         else:
             TestOperate.client = aerospike.client(config).connect(user,
                                                                   password)
+        TestOperate.skip_old_server = True
+        versioninfo = TestOperate.client.info('version')
+        for keys in versioninfo:
+            for value in versioninfo[keys]:
+                if value != None:
+                    versionlist = value[value.find("build") + 6:value.find("\n")].split(".")
+                    if int(versionlist[0]) >= 3 and int(versionlist[1]) >= 6:
+                        TestOperate.skip_old_server = False
 
     def teardown_class(cls):
         TestOperate.client.close()
@@ -33,6 +41,9 @@ class TestOperate(object):
             key = ('test', 'demo', i)
             rec = {'name': 'name%s' % (str(i)), 'age': i}
             TestOperate.client.put(key, rec)
+        key = ('test', 'demo', 6)
+        rec = {"age": 6.3}
+        TestOperate.client.put(key, rec)
 
     def teardown_method(self, method):
         """
@@ -71,6 +82,25 @@ class TestOperate(object):
         key, meta, bins = TestOperate.client.operate(key, list)
 
         assert bins == {'name': 'ramname1'}
+
+    def test_operate_with_increment_positive_float_value(self):
+        """
+        Invoke operate() with correct parameters
+        """
+        if TestOperate.skip_old_server == True:
+            pytest.skip("Server does not support increment on float type")
+        key = ('test', 'demo', 6)
+        list = [
+            {"op": aerospike.OPERATOR_INCR,
+             "bin": "age",
+             "val": 3.5}, 
+            {"op": aerospike.OPERATOR_READ,
+             "bin": "age"}
+        ]
+
+        key, meta, bins = TestOperate.client.operate(key, list)
+
+        assert bins == {'age': 9.8}
 
     def test_operate_with_correct_policy_positive(self):
         """
@@ -548,6 +578,24 @@ class TestOperate(object):
         (key, meta, bins) = TestOperate.client.get(key)
 
         assert bins == {"my_age": 5, "age": 1, "name": "name1"}
+
+    def test_operate_with_write_positive_float_value(self):
+        """
+        Invoke operate() with write operation float value
+        """
+        if TestOperate.skip_old_server == True:
+            pytest.skip("Server does not support operation")
+        key = ('test', 'demo', 1)
+        list = [{
+            "op": aerospike.OPERATOR_WRITE,
+            "bin": "write_bin",
+            "val": {"no": 89.8}
+        }, {"op": aerospike.OPERATOR_READ,
+            "bin": "write_bin"}]
+
+        key, meta, bins = TestOperate.client.operate(key, list)
+
+        assert bins == {'write_bin': {u'no': 89.8}}
 
     def test_operate_with_write_positive(self):
         """

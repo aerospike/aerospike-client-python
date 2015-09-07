@@ -156,7 +156,7 @@ class TestPythonSerializer(object):
         key = ('test', 'demo', 1)
 
         assert test_list == []
-        rec = {"pi": 3.14}
+        rec = {"bytes": bytearray("asd;as[d'as;d", "utf-8")}
 
         res = client.put(key, rec, {}, {})
 
@@ -164,7 +164,7 @@ class TestPythonSerializer(object):
 
         _, _, bins = client.get(key)
 
-        assert bins == {'pi': 3.14}
+        assert bins == {'bytes': bytearray("asd;as[d'as;d", "utf-8")}
 
         self.delete_keys.append(key)
         client.close()
@@ -174,12 +174,12 @@ class TestPythonSerializer(object):
         #  Invoke put() for float data record with user client serializer.
         key = ('test', 'demo', 5)
 
-        rec = {"pi": 3.14}
+        rec = {"bytes": bytearray("asd;as[d'as;d", "utf-8")}
 
         res = TestPythonSerializer.client.put(key, rec, {}, {})
 
         assert res == 0
 
-        assert test_list == [3.14]
+        assert test_list == [bytearray("asd;as[d'as;d", "utf-8")]
 
         self.delete_keys.append(key)
