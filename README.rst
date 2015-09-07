@@ -72,6 +72,10 @@ Aerospike Python Client can be installed using `pip`:
 
     pip install aerospike
 
+    # with pip versions >= 6.0 you can
+
+    pip install --no-cache-dir aerospike
+
 Build
 -----
 
@@ -81,19 +85,15 @@ Instructions for building Aerospike Python Client, please refer to the
 Documentation
 -------------
 
-Documentation is hosted at `pythonhosted.org/aerospike <https://pythonhosted.org/aerospike/>`__ 
+Documentation is hosted at `pythonhosted.org/aerospike <https://pythonhosted.org/aerospike/>`__
+and at `aerospike.com/apidocs/python <http://www.aerospike.com/apidocs/python/>`.
 
 Examples
 --------
 
 Example applications are provided in the `examples directory of the GitHub repository <https://github.com/aerospike/aerospike-client-python/tree/master/examples/client>`__
 
-Prior to running examples, be sure to install ``Aerospike Python Client``. 
-
-For assistance with an example, provide the ``--help`` option.
-
-To run the example, simply execute it. For examples, to run the ``kvs.py``
-example, run:
+For examples, to run the ``kvs.py``:
 
 ::
 

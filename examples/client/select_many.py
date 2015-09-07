@@ -19,7 +19,6 @@ from __future__ import print_function
 
 import aerospike
 import sys
-import json
 
 from optparse import OptionParser
 
@@ -28,7 +27,7 @@ from optparse import OptionParser
 # Options Parsing
 ################################################################################
 
-usage = "usage: %prog [options] [bins]"
+usage = "usage: %prog [options]"
 
 optparser = OptionParser(usage=usage, add_help_option=False)
 
@@ -85,12 +84,6 @@ config = {
 
 exitCode = 0
 
-def parse_arg(s):
-    try:
-        return json.loads(s)
-    except ValueError:
-        return s
-
 try:
 
     # ----------------------------------------------------------------------------
@@ -115,9 +108,7 @@ try:
             individualkey = (namespace, set, key)
             keylist.append(individualkey)
 
-        args.reverse()
-        bins = map(parse_arg, args)
-        records = client.select_many(keylist, bins)
+        records = client.select_many(keylist,['i','d'])
 
         if records != None:
             print(records)

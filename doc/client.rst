@@ -119,8 +119,10 @@ Client Class --- :class:`Client`
         Read a record with a given *key*, and return the record as a \
         :py:func:`tuple` consisting of *key*, *meta* and *bins*, with the \
         specified bins projected. If the record does not exist the *meta* \
-        data will be ``None``. If a selected bin does not exist its value will \
-        be ``None``.
+        data will be ``None``. Prior to Aerospike server 3.6.0, if a selected \
+        bin does not exist its value will be ``None``. Starting with 3.6.0, if
+        a bin does not exist it will not be present in the returned \
+        :ref:`aerospike_record_tuple`.
 
         :param tuple key: a :ref:`aerospike_key_tuple` associated with the record.
         :param list bins: a list of bin names to select from the record.
@@ -142,11 +144,8 @@ Client Class --- :class:`Client`
                 key = ('test', 'demo', 1)
                 (key, meta, bins) = client.select(key, ['name'])
 
-                print(key)
-                print('--------------------------')
-                print(meta)
-                print('--------------------------')
-                print(bins)
+                if meta != None:
+                    print("name: ", bins.get('name'))
             except AerospikeError as e:
                 print("Error: {0} [{1}]".format(e.msg, e.code))
                 sys.exit(1)
@@ -472,8 +471,10 @@ Client Class --- :class:`Client`
     .. method:: operate(key, list[, meta[, policy]]) -> (key, meta, bins)
 
         Perform multiple bin operations on a record with a given *key*, \
-        with write operations happening before read ops. Non-existent bins \
-        being read will have a ``None`` value.
+        with write operations happening before read ops. In Aerospike server \
+        versions prior to 3.6.0, non-existent bins being read will have a \
+        ``None`` value. Starting with 3.6.0 non-existent bins will not be \
+        present in the returned :ref:`aerospike_record_tuple`.
 
         :param tuple key: a :ref:`aerospike_key_tuple` associated with the record.
         :param list list: a :class:`list` of one or more bin operations, each \
@@ -551,15 +552,19 @@ Client Class --- :class:`Client`
 
     .. rubric:: Batch Operations
 
-    .. method:: get_many(keys[, policy]) -> {primary_key: (key. meta, bins)}
+    .. method:: get_many(keys[, policy]) -> [ (key, meta, bins)]
 
-        Batch-read multiple keys, and return a :class:`dict` of records. \
-        For records that do not exist the value will be ``None``.
+        Batch-read multiple records, and return them as a :class:`list`. Any \
+        record that does not exist will have a ``None`` value for metadata \
+        and bins in the record tuple.
 
         :param list keys: a list of :ref:`aerospike_key_tuple`.
         :param dict policy: optional :ref:`aerospike_batch_policies`.
-        :return: a :class:`dict` of :ref:`aerospike_record_tuple` keyed on the \
-                 matching *primary key*. See :ref:`unicode_handling`.
+        :return: a :class:`list` of :ref:`aerospike_record_tuple`.
+
+        .. seealso:: `Batch <https://www.aerospike.com/docs/guide/batch.html>`_ \
+            for information about the Batch Index interface new to Aerospike \
+            server >= 3.6.0.
 
         .. code-block:: python
 
@@ -572,6 +577,7 @@ Client Class --- :class:`Client`
             client = aerospike.client(config).connect()
 
             try:
+                # assume the fourth key has no matching record
                 keys = [
                   ('test', 'demo', 1),
                   ('test', 'demo', 2),
@@ -592,23 +598,33 @@ Client Class --- :class:`Client`
 
             .. code-block:: python
 
-                {
-                  1: (('test', 'demo', 1, bytearray(b'\xb7\xf4\xb88\x89\xe2\xdag\xdeh>\x1d\xf6\x91\x9a\x1e\xac\xc4F\xc8')), {'gen': 1, 'ttl': 2592000}, {'age': 1, 'name': u'Name1'}), 
-                  2: (('test', 'demo', 2, bytearray(b'\xaejQ_7\xdeJ\xda\xccD\x96\xe2\xda\x1f\xea\x84\x8c:\x92p')), {'gen': 1, 'ttl': 2592000}, {'age': 2, 'name': u'Name2'}), 
-                  3: (('test', 'demo', 3, bytearray(b'\xb1\xa5`g\xf6\xd4\xa8\xa4D9\xd3\xafb\xbf\xf8ha\x01\x94\xcd')), {'gen': 1, 'ttl': 2592000}, {'age': 3, 'name': u'Name3'}), 
-                  4: None
-                }
+                [
+                  (('test', 'demo', 1), {'gen': 1, 'ttl': 2592000}, {'age': 1, 'name': u'Name1'}),
+                  (('test', 'demo', 2), {'gen': 1, 'ttl': 2592000}, {'age': 2, 'name': u'Name2'}),
+                  (('test', 'demo', 3), {'gen': 1, 'ttl': 2592000}, {'age': 3, 'name': u'Name3'}),
+                  (('test', 'demo', 4), None, None)
+                ]
+
+        .. warning::
+
+            The return type changed to :class:`list` starting with version 1.0.50.
+
+        .. versionchanged:: 1.0.50
 
 
-    .. method:: exists_many(keys[, policy]) -> {primary_key: meta}
+    .. method:: exists_many(keys[, policy]) -> [ (key, meta)]
 
-        Batch-read metadata for multiple keys, and return it as a :class:`dict`. \
-        For records that do not exist the value will be ``None``.
+        Batch-read metadata for multiple keys, and return it as a :class:`list`. \
+        Any record that does not exist will have a ``None`` value for metadata in \
+        the result tuple.
 
         :param list keys: a list of :ref:`aerospike_key_tuple`.
         :param dict policy: optional :ref:`aerospike_batch_policies`.
-        :return: a :class:`dict` of :ref:`aerospike_record_tuple` keyed on the \
-                 matching *primary key*.
+        :return: a :class:`list` of (key, metadata) :py:func:`tuple`.
+
+        .. seealso:: `Batch <https://www.aerospike.com/docs/guide/batch.html>`_ \
+            for information about the Batch Index interface new to Aerospike \
+            server >= 3.6.0.
 
         .. code-block:: python
 
@@ -621,6 +637,7 @@ Client Class --- :class:`Client`
             client = aerospike.client(config).connect()
 
             try:
+                # assume the fourth key has no matching record
                 keys = [
                   ('test', 'demo', 1),
                   ('test', 'demo', 2),
@@ -641,27 +658,34 @@ Client Class --- :class:`Client`
 
             .. code-block:: python
 
-                {
-                  1: {'gen': 2, 'ttl': 2592000},
-                  2: {'gen': 7, 'ttl': 1337},
-                  3: {'gen': 9, 'ttl': 543},
-                  4: None
-                }
+               [
+                  (('test', 'demo', 1), {'gen': 2, 'ttl': 2592000}),
+                  (('test', 'demo', 2), {'gen': 7, 'ttl': 1337}),
+                  (('test', 'demo', 3), {'gen': 9, 'ttl': 543}),
+                  (('test', 'demo', 4), None)
+               ]
+
+        .. warning::
+
+            The return type changed to :class:`list` starting with version 1.0.50.
+
+        .. versionchanged:: 1.0.50
 
 
-    .. method:: select_many(keys, bins[, policy]) -> {primary_key: (key. meta, bins)}
+    .. method:: select_many(keys, bins[, policy]) -> {primary_key: (key, meta, bins)}
 
-        Batch-read multiple keys, and return a :class:`dict` of records. \
-        For records that do not exist the value will be ``None``. For records \
-        which do exist, but for which the selected bins do not exist the *bins* \
-        value will be ``{}``. Each of the *bins* will be filtered as specified.
+        Batch-read multiple records, and return them as a :class:`list`. Any \
+        record that does not exist will have a ``None`` value for metadata \
+        and bins in the record tuple. The *bins* will be filtered as specified.
 
         :param list keys: a list of :ref:`aerospike_key_tuple`.
         :param list bins: the bin names to select from the matching records.
-        :param dict policy: an optional :class:`dict` with fields:
         :param dict policy: optional :ref:`aerospike_batch_policies`.
-        :return: a :class:`dict` of :ref:`aerospike_record_tuple` keyed on the \
-                 matching *primary key*.
+        :return: a :class:`list` of :ref:`aerospike_record_tuple`.
+
+        .. seealso:: `Batch <https://www.aerospike.com/docs/guide/batch.html>`_ \
+            for information about the Batch Index interface new to Aerospike \
+            server >= 3.6.0.
 
         .. code-block:: python
 
@@ -674,6 +698,7 @@ Client Class --- :class:`Client`
             client = aerospike.client(config).connect()
 
             try:
+                # assume the fourth key has no matching record
                 keys = [
                   ('test', 'demo', 1),
                   ('test', 'demo', 2),
@@ -694,12 +719,18 @@ Client Class --- :class:`Client`
 
             .. code-block:: python
 
-                {
-                  1: (('test', 'demo', 1, bytearray(b'\xb7\xf4\xb88\x89\xe2\xdag\xdeh>\x1d\xf6\x91\x9a\x1e\xac\xc4F\xc8')), {'gen': 1, 'ttl': 2592000}, {'name': u'Name1'}),
-                  2: (('test', 'demo', 2, bytearray(b'\xaejQ_7\xdeJ\xda\xccD\x96\xe2\xda\x1f\xea\x84\x8c:\x92p')), {'gen': 1, 'ttl': 2592000}, {'name': u'Name2'}),
-                  3: (('test', 'demo', 3, bytearray(b'\xb1\xa5`g\xf6\xd4\xa8\xa4D9\xd3\xafb\xbf\xf8ha\x01\x94\xcd')), {'gen': 1, 'ttl': 2592000}, {'name': u'Name3'}),
-                  4: None
-                }
+                [
+                  (('test', 'demo', 1), {'gen': 1, 'ttl': 2592000}, {'name': u'Name1'}),
+                  (('test', 'demo', 2), {'gen': 1, 'ttl': 2592000}, {'name': u'Name2'}),
+                  (('test', 'demo', 3), {'gen': 1, 'ttl': 2592000}, {'name': u'Name3'}),
+                  (('test', 'demo', 4), None, None)
+                ]
+
+        .. warning::
+
+            The return type changed to :class:`list` starting with version 1.0.50.
+
+        .. versionchanged:: 1.0.50
 
 
     .. rubric:: Scans
@@ -864,11 +895,73 @@ Client Class --- :class:`Client`
         :param dict policy: optional :ref:`aerospike_scan_policies`.
         :param dict options: the :ref:`aerospike_scan_options` that will apply to the scan.
         :rtype: :class:`int`
-        :return: a scan ID that can be used with :meth:`scan_info` to track the status of the scan, as it runs in the background.
+        :return: a job ID that can be used with :meth:`job_info` to track the status of the ``aerospike.JOB_SCAN``, as it runs in the background.
         :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
 
         .. seealso:: `Record UDF <http://www.aerospike.com/docs/guide/record_udf.html>`_ \
           and `Developing Record UDFs <http://www.aerospike.com/docs/udf/developing_record_udfs.html>`_.
+
+
+    .. method:: query_apply(ns, set, predicate, module, function[, args[, policy]]) -> int
+
+        Initiate a background query and apply a record UDF to each record matched by the query.
+
+        :param str ns: the namespace in the aerospike cluster.
+        :param str set: the set name. Should be ``None`` if you want to query records in the *ns* which are in no set.
+        :param tuple predicate: the :py:func:`tuple` produced by one of the :mod:`aerospike.predicates` methods.
+        :param str module: the name of the UDF module.
+        :param str function: the name of the UDF to apply to the records matched by the query.
+        :param list args: the arguments to the UDF.
+        :param dict policy: optional :ref:`aerospike_query_policies`.
+        :rtype: :class:`int`
+        :return: a job ID that can be used with :meth:`job_info` to track the status of the ``aerospike.JOB_QUERY`` , as it runs in the background.
+        :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
+
+        .. seealso:: `Record UDF <http://www.aerospike.com/docs/guide/record_udf.html>`_ \
+          and `Developing Record UDFs <http://www.aerospike.com/docs/udf/developing_record_udfs.html>`_.
+
+        .. warning::
+
+            This functionality will become available with a future release of the Aerospike server.
+
+        .. versionadded:: 1.0.50
+
+
+    .. method:: job_info(job_id, module[, policy]) -> dict
+
+        Return the status of a job running in the background.
+
+        :param int job_id: the job ID returned by :meth:`scan_apply` and :meth:`query_apply`.
+        :param module: one of ``aerospike.JOB_SCAN`` or ``aerospike.JOB_QUERY``.
+        :returns: a :class:`dict` with keys *status*, *records_read*, and \
+          *progress_pct*. The value of *status* is one of ``aerospike.JOB_STATUS_*``. See: :ref:`aerospike_job_constants`.
+        :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
+
+        .. code-block:: python
+
+            from __future__ import print_function
+            import aerospike
+            from aerospike.exception import AerospikeError
+            import time
+
+            config = {'hosts': [ ('127.0.0.1', 3000)]}
+            client = aerospike.client(config).connect()
+            try:
+                # run the UDF 'add_val' in Lua module 'simple' on the records of test.demo
+                job_id = client.scan_apply('test', 'demo', 'simple', 'add_val', ['age', 1])
+                while True:
+                    time.sleep(0.25)
+                    response = client.job_info(job_id, aerospike.JOB_SCAN)
+                    if response['status'] == aerospike.JOB_STATUS_COMPLETED:
+                        break
+                print("Job ", str(job_id), " completed")
+                print("Progress percentage : ", response['progress_pct'])
+                print("Number of scanned records : ", response['records_read'])
+            except AerospikeError as e:
+                print("Error: {0} [{1}]".format(e.msg, e.code))
+            client.close()
+
+        .. versionadded:: 1.0.50
 
 
     .. method:: scan_info(scan_id) -> dict
@@ -880,8 +973,12 @@ Client Class --- :class:`Client`
           *progress_pct*. The value of *status* is one of ``aerospike.SCAN_STATUS_*``. See: :ref:`aerospike_scan_constants`.
         :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
 
+        .. deprecated:: 1.0.50
+            Use :meth:`job_info` instead.
+
         .. code-block:: python
 
+            from __future__ import print_function
             import aerospike
             from aerospike.exception import AerospikeError
 
@@ -973,7 +1070,7 @@ Client Class --- :class:`Client`
 
         .. warning::
 
-            This functionality will become available with a future release of the Aerospike server.
+            This functionality will become available with a future release of the Aerospike Interfaces with the batch index interface on server.
 
         .. versionadded:: 1.0.42
 

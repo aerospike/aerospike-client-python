@@ -38,7 +38,8 @@ class TestSelect(TestBaseClass):
             'a': ["nanslkdl", 1, bytearray("asd;as[d'as;d", "utf-8")],
             'b': {"key": "asd';q;'1';"},
             'c': 1234,
-            'd': '!@#@#$QSDAsd;as'
+            'd': '!@#@#$QSDAsd;as',
+            'n': None
         }
 
         TestSelect.client.put(key, rec)
@@ -219,11 +220,11 @@ class TestSelect(TestBaseClass):
 
         key = ("test", "demo", 1)
 
-        bins_to_select = ['c', 'd', 'e']
+        bins_to_select = ['c', 'd', 'n']
 
         key, meta, bins = TestSelect.client.select(key, bins_to_select)
 
-        assert bins == {'c': 1234, 'd': '!@#@#$QSDAsd;as', 'e': None}
+        assert bins == {'c': 1234, 'd': '!@#@#$QSDAsd;as', 'n': None}
 
         assert meta != None
 
@@ -235,7 +236,7 @@ class TestSelect(TestBaseClass):
 
         key, meta, bins = TestSelect.client.select(key, bins_to_select)
 
-        assert bins == {'c': 1234, 'e': None, 'd': '!@#@#$QSDAsd;as'}
+        assert bins == {'c': 1234, 'd': '!@#@#$QSDAsd;as'}
 
         assert meta != None
 
@@ -247,7 +248,7 @@ class TestSelect(TestBaseClass):
 
         key, meta, bins = TestSelect.client.select(key, bins_to_select)
 
-        assert bins == {'e': None, 'f': None}
+        assert bins == {}
 
     def test_select_with_unicode_value(self):
 
