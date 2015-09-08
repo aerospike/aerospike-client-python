@@ -20,6 +20,7 @@
 #include <aerospike/as_admin.h>
 #include <aerospike/as_error.h>
 #include <aerospike/as_key.h>
+#include <aerospike/aerospike_key.h>
 #include <aerospike/as_record.h>
 
 #include <aerospike/as_ldt.h>
