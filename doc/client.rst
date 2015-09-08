@@ -9,6 +9,20 @@ Client Class --- :class:`Client`
 :class:`Client`
 ===============
 
+The client connects through a seed node (the address of a single node) to an
+Aerospike database cluster. From the seed node, the client learns of the other
+nodes and establishes connections to them. It also gets the partition map of
+the cluster, which is how it knows where every record actually lives.
+
+The client handles the connections, including re-establishing them ahead of
+executing an operation. It keeps track of changes to the cluster through
+a cluster-tending thread.
+
+.. seealso::
+    `Client Architecture
+    <https://www.aerospike.com/docs/architecture/clients.html>`_ and
+    `Data Distribution <https://www.aerospike.com/docs/architecture/data-distribution.html>`_.
+
 .. class:: Client
 
     Example::
@@ -31,7 +45,7 @@ Client Class --- :class:`Client`
             print("Error: {0} [{1}]".format(e.msg, e.code))
             sys.exit(1)
 
-        # Records are addressable via a tuple of (namespace, set, key)
+        # Records are addressable via a tuple of (namespace, set, primary key)
         key = ('test', 'demo', 'foo')
 
         try:
@@ -50,11 +64,6 @@ Client Class --- :class:`Client`
         client.close()
 
 
-    .. seealso::
-        `Client Architecture
-        <https://www.aerospike.com/docs/architecture/clients.html>`_.
-
-
     .. method:: connect([username, password])
 
         Connect to the cluster. The optional *username* and *password* only
@@ -68,7 +77,7 @@ Client Class --- :class:`Client`
 
     .. method:: is_connected()
 
-        The status of the connection to the cluster.
+        States whether the most recent connection attempt to the cluster succeeded.
 
         :rtype: :class:`bool`
 
@@ -562,9 +571,9 @@ Client Class --- :class:`Client`
         :param dict policy: optional :ref:`aerospike_batch_policies`.
         :return: a :class:`list` of :ref:`aerospike_record_tuple`.
 
-        .. seealso:: `Batch <https://www.aerospike.com/docs/guide/batch.html>`_ \
-            for information about the Batch Index interface new to Aerospike \
-            server >= 3.6.0.
+        .. seealso:: More information about the \
+            `Batch Index <https://www.aerospike.com/docs/guide/batch.html>`_ \
+            interface new to Aerospike server >= 3.6.0.
 
         .. code-block:: python
 
@@ -622,9 +631,9 @@ Client Class --- :class:`Client`
         :param dict policy: optional :ref:`aerospike_batch_policies`.
         :return: a :class:`list` of (key, metadata) :py:func:`tuple`.
 
-        .. seealso:: `Batch <https://www.aerospike.com/docs/guide/batch.html>`_ \
-            for information about the Batch Index interface new to Aerospike \
-            server >= 3.6.0.
+        .. seealso:: More information about the \
+            `Batch Index <https://www.aerospike.com/docs/guide/batch.html>`_ \
+            interface new to Aerospike server >= 3.6.0.
 
         .. code-block:: python
 
@@ -683,9 +692,9 @@ Client Class --- :class:`Client`
         :param dict policy: optional :ref:`aerospike_batch_policies`.
         :return: a :class:`list` of :ref:`aerospike_record_tuple`.
 
-        .. seealso:: `Batch <https://www.aerospike.com/docs/guide/batch.html>`_ \
-            for information about the Batch Index interface new to Aerospike \
-            server >= 3.6.0.
+        .. seealso:: More information about the \
+            `Batch Index <https://www.aerospike.com/docs/guide/batch.html>`_ \
+            interface new to Aerospike server >= 3.6.0.
 
         .. code-block:: python
 

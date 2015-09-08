@@ -49,7 +49,7 @@ To build the library:
 
 To install the library:
 
-    sudo python setup.py install --force
+    python setup.py install --force
 
 **Note** If you have already installed the Aerospike C Client and it is on your linker path you can build using:
 

@@ -45,8 +45,10 @@ in an in-memory primary index.
         .. hlist::
             :columns: 1
 
-            * **hosts** a required :class:`list` of (address, port) tuples identifying the cluster
-            * **lua** an optional class:`dict` containing the paths to two types of Lua modules
+            * **hosts** a required :class:`list` of (address, port) tuples identifying the cluster. \
+              The client will connect to the first available node in the list, the *seed node*, \
+              and will learn about the cluster and partition map from it.
+            * **lua** an optional :class:`dict` containing the paths to two types of Lua modules
                 * **system_path** the location of the system modules such as ``aerospike.lua``, ``stream_ops.lua``
                 * **user_path** the location of the user's record and stream UDFs
             * **policies** a :class:`dict` of policies
@@ -58,7 +60,7 @@ in an in-memory primary index.
                 * **consistency_level** default consistency level policy for this client
                 * **replica** default replica policy for this client
                 * **commit_level** default commit level policy for this client
-            * **shm** a :class:`dict` with optional shared-memory cluster tending parameters. Shared-memory cluster tending is on if the :class:`dict` is provided.
+            * **shm** a :class:`dict` with optional shared-memory cluster tending parameters. Shared-memory cluster tending is on if the :class:`dict` is provided. If multiple clients are instantiated talking to the same cluster the *shm* cluster-tending should be used.
                 * **max_nodes** maximum number of nodes allowed. Pad so new nodes can be added without configuration changes (default: 16)
                 * **max_namespaces** similarly pad (default: 8)
                 * **takeover_threshold_sec** take over tending if the cluster hasn't been checked for this many seconds (default: 30)
