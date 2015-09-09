@@ -71,7 +71,7 @@ static bool batch_select_cb(const as_batch_read* results, uint32_t n, void* udat
         PyObject * py_rec = NULL;
 		PyObject * p_key = NULL;
         py_rec = PyTuple_New(3);
-        p_key = PyTuple_New(3);
+        p_key = PyTuple_New(4);
 
 	    if ( results[i].key->ns && strlen(results[i].key->ns) > 0 ) {
 		    PyTuple_SetItem(p_key, 0, PyString_FromString(results[i].key->ns));
@@ -94,12 +94,14 @@ static bool batch_select_cb(const as_batch_read* results, uint32_t n, void* udat
 				default:
 					break;
 			}
-		} else if (results[i].key->digest.init) {
-            PyTuple_SetItem(p_key, 2, PyString_FromStringAndSize((char *) results[i].key->digest.value, AS_DIGEST_VALUE_SIZE));
         } else {
 			Py_INCREF(Py_None);
 			PyTuple_SetItem(p_key, 2, Py_None);
 		}
+
+		if (results[i].key->digest.init) {
+            PyTuple_SetItem(p_key, 3, PyByteArray_FromStringAndSize((char *) results[i].key->digest.value, AS_DIGEST_VALUE_SIZE));
+        }
 
         PyTuple_SetItem(py_rec, 0, p_key);
 		// Check record status
@@ -148,7 +150,7 @@ static void batch_select_recs(as_error *err, as_batch_read_records* records, PyO
         PyObject * py_rec = NULL;
         PyObject * p_key = NULL;
         py_rec = PyTuple_New(3);
-        p_key = PyTuple_New(3);
+        p_key = PyTuple_New(4);
 
         if ( batch->key.ns && strlen(batch->key.ns) > 0 ) {
             PyTuple_SetItem(p_key, 0, PyString_FromString(batch->key.ns));
@@ -170,13 +172,14 @@ static void batch_select_recs(as_error *err, as_batch_read_records* records, PyO
                 default:
                     break;
             }
-		} else if (batch->key.digest.init) {
-            PyTuple_SetItem(p_key, 2, PyString_FromStringAndSize((char *) batch->key.digest.value, AS_DIGEST_VALUE_SIZE));
         } else {
             Py_INCREF(Py_None);
             PyTuple_SetItem(p_key, 2, Py_None);
         }
 
+		if (batch->key.digest.init) {
+            PyTuple_SetItem(p_key, 3, PyByteArray_FromStringAndSize((char *) batch->key.digest.value, AS_DIGEST_VALUE_SIZE));
+        }
         PyTuple_SetItem(py_rec, 0, p_key);
 
         if ( batch->result == AEROSPIKE_OK ){

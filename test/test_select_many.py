@@ -137,7 +137,8 @@ class TestSelectMany(object):
         records = TestSelectMany.client.select_many(keys, filter_bins)
 
         assert len(records) == 1
-        assert records == [(('test', 'demo', 'key'), None, None)]
+        assert records == [(('test', 'demo', 'key',
+            bytearray(b';\xd4u\xbd\x0cs\xf2\x10\xb6~\xa87\x930\x0e\xea\xe5v(]')), None, None)]
 
     def test_select_many_with_invalid_key(self):
 
@@ -178,7 +179,13 @@ class TestSelectMany(object):
 
         assert type(records) == list
         assert len(records) == 2
-        assert Counter([x[0][2] for x in records]) == Counter(["asd;as[d'as;djk;uyfl", "ase;as[d'as;djk;uyfl"])
+        i = 0
+        for x in records:
+            if i:
+                assert x[0][3] == bytearray(b"ase;as[d'as;djk;uyfl")
+            else:
+                assert x[0][3] == bytearray(b"asd;as[d'as;djk;uyfl")
+            i += 1
 
     def test_select_many_with_non_existent_keys_in_middle(self):   
         self.keys.append(('test', 'demo', 'some_key'))
