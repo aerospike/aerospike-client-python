@@ -56,7 +56,7 @@ static bool batch_get_cb(const as_batch_read* results, uint32_t n, void* udata)
         PyObject * rec = NULL;
         PyObject * py_rec = NULL;
         PyObject * p_key = NULL;
-        p_key = PyTuple_New(3);
+        p_key = PyTuple_New(4);
         py_rec = PyTuple_New(3);
 
 	    if ( results[i].key->ns && strlen(results[i].key->ns) > 0 ) {
@@ -79,11 +79,13 @@ static bool batch_get_cb(const as_batch_read* results, uint32_t n, void* udata)
                 default:
                     break;
             }
-		} else if (results[i].key->digest.init) {
-            PyTuple_SetItem(p_key, 2, PyString_FromStringAndSize((char *) results[i].key->digest.value, AS_DIGEST_VALUE_SIZE));
         } else {
             Py_INCREF(Py_None);
             PyTuple_SetItem(p_key, 2, Py_None);
+        }
+
+		if (results[i].key->digest.init) {
+            PyTuple_SetItem(p_key, 3, PyByteArray_FromStringAndSize((char *) results[i].key->digest.value, AS_DIGEST_VALUE_SIZE));
         }
 
         PyTuple_SetItem(py_rec, 0, p_key);
@@ -133,7 +135,7 @@ static void batch_get_recs(as_error *err, as_batch_read_records* records, PyObje
         PyObject * py_rec = NULL;
 		PyObject * p_key = NULL;
         py_rec = PyTuple_New(3);
-        p_key = PyTuple_New(3);
+        p_key = PyTuple_New(4);
 
 	    if ( batch->key.ns && strlen(batch->key.ns) > 0 ) {
 		    PyTuple_SetItem(p_key, 0, PyString_FromString(batch->key.ns));
@@ -155,12 +157,14 @@ static void batch_get_recs(as_error *err, as_batch_read_records* records, PyObje
 				default:
 					break;
 			}
-		} else if (batch->key.digest.init) {
-            PyTuple_SetItem(p_key, 2, PyString_FromStringAndSize((char *) batch->key.digest.value, AS_DIGEST_VALUE_SIZE));
 		} else {
 			Py_INCREF(Py_None);
 			PyTuple_SetItem(p_key, 2, Py_None);
 		}
+
+		if (batch->key.digest.init) {
+            PyTuple_SetItem(p_key, 3, PyByteArray_FromStringAndSize((char *) batch->key.digest.value, AS_DIGEST_VALUE_SIZE));
+        }
 
         PyTuple_SetItem(py_rec, 0, p_key);
 
