@@ -108,14 +108,17 @@ static bool batch_select_cb(const as_batch_read* results, uint32_t n, void* udat
 		if ( results[i].result == AEROSPIKE_OK ){
 
 			record_to_pyobject(&err, &results[i].record, results[i].key, &rec);
-
-            PyTuple_SetItem(py_rec, 1, PyTuple_GetItem(rec, 1));
-            PyTuple_SetItem(py_rec, 2, PyTuple_GetItem(rec, 2));
+            PyObject *py_obj = PyTuple_GetItem(rec, 1);
+            Py_INCREF(py_obj);
+            PyTuple_SetItem(py_rec, 1, py_obj);
+            py_obj = PyTuple_GetItem(rec, 2);
+            Py_INCREF(py_obj);
+            PyTuple_SetItem(py_rec, 2, py_obj);
 			// Set return value in return Dict
 			if ( PyList_SetItem( py_recs, i, py_rec ) ){
 				return false;
 			}
-            Py_INCREF(py_rec);
+            Py_DECREF(rec);
 		} else if( results[i].result == AEROSPIKE_ERR_RECORD_NOT_FOUND ){
 
 			Py_INCREF(Py_None);
@@ -125,7 +128,6 @@ static bool batch_select_cb(const as_batch_read* results, uint32_t n, void* udat
 			if ( PyList_SetItem( py_recs, i, py_rec)){
 				return false;
 			}
-            Py_INCREF(py_rec);
 		}
 	}
 	return true;
@@ -184,17 +186,20 @@ static void batch_select_recs(as_error *err, as_batch_read_records* records, PyO
 
         if ( batch->result == AEROSPIKE_OK ){
             record_to_pyobject(err, &batch->record, &batch->key, &rec);
-            PyTuple_SetItem(py_rec, 1, PyTuple_GetItem(rec, 1));
-            PyTuple_SetItem(py_rec, 2, PyTuple_GetItem(rec, 2));
+            PyObject *py_obj = PyTuple_GetItem(rec, 1);
+            Py_INCREF(py_obj);
+            PyTuple_SetItem(py_rec, 1, py_obj);
+            py_obj = PyTuple_GetItem(rec, 2);
+            Py_INCREF(py_obj);
+            PyTuple_SetItem(py_rec, 2, py_obj);
             PyList_SetItem( *py_recs, i, py_rec );
-            Py_INCREF(py_rec);
+            Py_DECREF(rec);
         } else if (batch->result == AEROSPIKE_ERR_RECORD_NOT_FOUND) {
             Py_INCREF(Py_None);
             PyTuple_SetItem(py_rec, 1, Py_None);
             Py_INCREF(Py_None);
             PyTuple_SetItem(py_rec, 2, Py_None);
             PyList_SetItem( *py_recs, i, py_rec);
-            Py_INCREF(py_rec);
         }
     }
 }
