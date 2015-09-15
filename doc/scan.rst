@@ -55,7 +55,7 @@ Scan Class --- :class:`Scan`
             scan = client.scan('test', 'test')
             scan.select('id','a','zzz')
             res = scan.results()
-            pp.pprint(red)
+            pp.pprint(res)
             client.close()
 
         .. note::

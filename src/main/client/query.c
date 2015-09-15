@@ -407,7 +407,7 @@ PyObject * AerospikeClient_QueryApply(AerospikeClient * self, PyObject * args, P
 	PyObject * py_policy = NULL;
 
 	// Python Function Keyword Arguments
-	static char * kwlist[] = {"ns", "set", "preidcate", "module", "function", "args", "policy", NULL};
+	static char * kwlist[] = {"ns", "set", "predicate", "module", "function", "args", "policy", NULL};
 	char *namespace = NULL;
 	PyObject *py_set = NULL;
 	PyObject *py_module = NULL;
@@ -447,7 +447,7 @@ PyObject * AerospikeClient_JobInfo(AerospikeClient * self, PyObject * args, PyOb
 	PyObject * py_policy = NULL;
 	PyObject * retObj = PyDict_New();
 
-	long lqueryId = 0;
+	long ljobId = 0;
     char *module = NULL;
 
 	as_policy_info info_policy;
@@ -455,10 +455,10 @@ PyObject * AerospikeClient_JobInfo(AerospikeClient * self, PyObject * args, PyOb
 	as_job_info job_info;
 
 	// Python Function Keyword Arguments
-	static char * kwlist[] = {"queryid", "module", "policy", NULL};
+	static char * kwlist[] = {"job_id", "module", "policy", NULL};
 
 	// Python Function Argument Parsing
-	if ( PyArg_ParseTupleAndKeywords(args, kwds, "ls|O:query_info", kwlist, &lqueryId, &module, &py_policy) == false ) {
+	if ( PyArg_ParseTupleAndKeywords(args, kwds, "ls|O:job_info", kwlist, &ljobId, &module, &py_policy) == false ) {
 		return NULL;
 	}
 
@@ -485,7 +485,7 @@ PyObject * AerospikeClient_JobInfo(AerospikeClient * self, PyObject * args, PyOb
     }
 
 	if (AEROSPIKE_OK != (aerospike_job_info(self->as, &err,
-					info_policy_p, module, lqueryId, false, &job_info))) {
+					info_policy_p, module, ljobId, false, &job_info))) {
 		goto CLEANUP;
 	}
 

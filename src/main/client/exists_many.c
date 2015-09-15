@@ -55,7 +55,7 @@ bool batch_exists_cb(const as_batch_read* results, uint32_t n, void* udata)
         PyObject * py_rec = NULL;
         PyObject * p_key = NULL;
         py_rec = PyTuple_New(2);
-        p_key = PyTuple_New(3);
+        p_key = PyTuple_New(4);
 
 	    if ( results[i].key->ns && strlen(results[i].key->ns) > 0 ) {
 		    PyTuple_SetItem(p_key, 0, PyString_FromString(results[i].key->ns));
@@ -77,33 +77,35 @@ bool batch_exists_cb(const as_batch_read* results, uint32_t n, void* udata)
                 default:
                     break;
             }
-		} else if (results[i].key->digest.init) {
-            PyTuple_SetItem(p_key, 2, PyString_FromStringAndSize((char *) results[i].key->digest.value, AS_DIGEST_VALUE_SIZE));
         } else {
             Py_INCREF(Py_None);
             PyTuple_SetItem(p_key, 2, Py_None);
         }
+		if (results[i].key->digest.init) {
+            PyTuple_SetItem(p_key, 3, PyByteArray_FromStringAndSize((char *) results[i].key->digest.value, AS_DIGEST_VALUE_SIZE));
+        }
 
         PyTuple_SetItem(py_rec, 0, p_key);
         if ( results[i].result == AEROSPIKE_OK ){
-
-            PyDict_SetItemString( rec, "gen", PyInt_FromLong((long)results[i].record.gen) );
-            PyDict_SetItemString( rec, "ttl", PyInt_FromLong((long)results[i].record.ttl) );
+            PyObject *py_gen = PyInt_FromLong((long)results[i].record.gen);
+            PyDict_SetItemString( rec, "gen", py_gen );
+            Py_DECREF(py_gen);
+            PyObject *py_ttl = PyInt_FromLong((long)results[i].record.ttl);
+            PyDict_SetItemString( rec, "ttl", py_ttl );
+            Py_DECREF(py_ttl);
 
             PyTuple_SetItem(py_rec, 1, rec);
             if ( PyList_SetItem( py_recs, i, py_rec ) ){
                 return false;
             }
-            Py_INCREF(py_rec);
         } else if (results[i].result == AEROSPIKE_ERR_RECORD_NOT_FOUND){
-            
+            Py_DECREF(rec);
             Py_INCREF(Py_None);
             PyTuple_SetItem(py_rec, 1, Py_None);
 
             if( PyList_SetItem( py_recs, i, py_rec)){
                 return false;
             }
-            Py_INCREF(py_rec);
         }
     }
     return true;
@@ -133,7 +135,7 @@ void batch_exists_recs(as_error *err, as_batch_read_records* records, PyObject *
 		PyObject * p_key = NULL;
 		PyObject * py_rec = NULL;
         py_rec = PyTuple_New(2);
-        p_key = PyTuple_New(3);
+        p_key = PyTuple_New(4);
 
 	    if ( batch->key.ns && strlen(batch->key.ns) > 0 ) {
 		    PyTuple_SetItem(p_key, 0, PyString_FromString(batch->key.ns));
@@ -155,28 +157,32 @@ void batch_exists_recs(as_error *err, as_batch_read_records* records, PyObject *
 				default:
 					break;
 			}
-		} else if (batch->key.digest.init) {
-            PyTuple_SetItem(p_key, 2, PyString_FromStringAndSize((char *) batch->key.digest.value, AS_DIGEST_VALUE_SIZE));
 		} else {
 			Py_INCREF(Py_None);
 			PyTuple_SetItem(p_key, 2, Py_None);
 		}
 
+		if (batch->key.digest.init) {
+            PyTuple_SetItem(p_key, 3, PyByteArray_FromStringAndSize((char *) batch->key.digest.value, AS_DIGEST_VALUE_SIZE));
+        }
+
         PyTuple_SetItem(py_rec, 0, p_key);
 		if ( batch->result == AEROSPIKE_OK ){
 
-			PyDict_SetItemString( rec, "gen", PyInt_FromLong((long)batch->record.gen) );
-			PyDict_SetItemString( rec, "ttl", PyInt_FromLong((long)batch->record.ttl) );
+            PyObject *py_gen = PyInt_FromLong((long)batch->record.gen);
+			PyDict_SetItemString( rec, "gen", py_gen );
+            Py_DECREF(py_gen);
+            PyObject *py_ttl = PyInt_FromLong((long)batch->record.ttl);
+			PyDict_SetItemString( rec, "ttl", py_ttl );
+            Py_DECREF(py_ttl);
 
             PyTuple_SetItem(py_rec, 1, rec);
 			PyList_SetItem( *py_recs, i, py_rec );
-            Py_INCREF(py_rec);
 		} else if (batch->result == AEROSPIKE_ERR_RECORD_NOT_FOUND){
-			
+		    Py_DECREF(rec);
 			Py_INCREF(Py_None);
             PyTuple_SetItem(py_rec, 1, Py_None);
 			PyList_SetItem( *py_recs, i, py_rec);
-            Py_INCREF(py_rec);
 		}
 	}
 }

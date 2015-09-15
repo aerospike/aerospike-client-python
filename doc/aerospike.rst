@@ -9,8 +9,8 @@
     :synopsis: Aerospike client for Python.
 
 The Aerospike client enables you to build an application in Python with an
-Aerospike cluster as its database. The client manages connections and handles
-the transactions performed against the cluster.
+Aerospike cluster as its database. The client manages the connections to the
+cluster and handles the transactions performed against it.
 
 .. rubric:: Data Model
 
@@ -23,8 +23,8 @@ Pairs of key-value data called ``bins`` make up ``records``, similar to
 *columns* of a *row* in a standard RDBMS. Aerospike is schema-less, meaning
 that you do not need to define your bins in advance.
 
-Records are uniquely identified by their key, and sets have a primary index
-containing the keys of all records in the set.
+Records are uniquely identified by their key, and record metadata is contained
+in an in-memory primary index.
 
 .. seealso::
     `System Overview <http://www.aerospike.com/docs/architecture/index.html>`_
@@ -35,15 +35,20 @@ containing the keys of all records in the set.
 
 .. py:function:: client(config)
 
-    Creates a new instance of the Client class.
+    Creates a new instance of the Client class. This client can
+    :meth:`~aerospike.Client.connect` to the cluster and perform operations
+    against it, such as :meth:`~aerospike.Client.put` and
+    :meth:`~aerospike.Client.get` records.
 
     :param dict config: the client's configuration.
 
         .. hlist::
             :columns: 1
 
-            * **hosts** a required :class:`list` of (address, port) tuples identifying the cluster
-            * **lua** an optional class:`dict` containing the paths to two types of Lua modules
+            * **hosts** a required :class:`list` of (address, port) tuples identifying the cluster. \
+              The client will connect to the first available node in the list, the *seed node*, \
+              and will learn about the cluster and partition map from it.
+            * **lua** an optional :class:`dict` containing the paths to two types of Lua modules
                 * **system_path** the location of the system modules such as ``aerospike.lua``, ``stream_ops.lua``
                 * **user_path** the location of the user's record and stream UDFs
             * **policies** a :class:`dict` of policies
@@ -55,7 +60,7 @@ containing the keys of all records in the set.
                 * **consistency_level** default consistency level policy for this client
                 * **replica** default replica policy for this client
                 * **commit_level** default commit level policy for this client
-            * **shm** a :class:`dict` with optional shared-memory cluster tending parameters. Shared-memory tending is on if the :class:`dict` is provided.
+            * **shm** a :class:`dict` with optional shared-memory cluster tending parameters. Shared-memory cluster tending is on if the :class:`dict` is provided. If multiple clients are instantiated talking to the same cluster the *shm* cluster-tending should be used.
                 * **max_nodes** maximum number of nodes allowed. Pad so new nodes can be added without configuration changes (default: 16)
                 * **max_namespaces** similarly pad (default: 8)
                 * **takeover_threshold_sec** take over tending if the cluster hasn't been checked for this many seconds (default: 30)
@@ -70,6 +75,11 @@ containing the keys of all records in the set.
 
         import aerospike
 
+        # configure the client to first connect to a cluster node at 127.0.0.1
+        # the client will learn about the other nodes in the cluster from the
+        # seed node.
+        # in this configuration shared-memory cluster tending is turned on,
+        # which is appropriate for a multi-process context, such as a webserver
         config = {
             'hosts':    [ ('127.0.0.1', 3000) ],
             'policies': {'timeout': 1000},
@@ -266,13 +276,46 @@ Scan Constants
 
 .. data:: SCAN_STATUS_ABORTED
 
+    .. deprecated:: 1.0.50
+        used by :meth:`~aerospike.Client.scan_info`
+
 .. data:: SCAN_STATUS_COMPLETED
+
+    .. deprecated:: 1.0.50
+        used by :meth:`~aerospike.Client.scan_info`
 
 .. data:: SCAN_STATUS_INPROGRESS
 
+    .. deprecated:: 1.0.50
+        used by :meth:`~aerospike.Client.scan_info`
+
 .. data:: SCAN_STATUS_UNDEF
 
+    .. deprecated:: 1.0.50
+        used by :meth:`~aerospike.Client.scan_info`
+
 .. versionadded:: 1.0.39
+
+.. _aerospike_job_constants:
+
+Job Constants
+--------------
+
+.. data:: JOB_SCAN
+
+    Scan job type argument for the module parameter of :meth:`~aerospike.Client.job_info`
+
+.. data:: JOB_QUERY
+
+    Query job type argument for the module parameter of :meth:`~aerospike.Client.job_info`
+
+.. data:: JOB_STATUS_UNDEF
+
+.. data:: JOB_STATUS_INPROGRESS
+
+.. data:: JOB_STATUS_COMPLETED
+
+.. versionadded:: 1.0.50
 
 .. _aerospike_serialization_constants:
 

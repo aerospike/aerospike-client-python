@@ -154,7 +154,13 @@ class TestExistsMany(TestBaseClass):
 
         assert type(records) == list
         assert len(records) == 2
-        assert Counter([x[0][2] for x in records]) == Counter(["asd;as[d'as;djk;uyfl", "ase;as[d'as;djk;uyfl"])
+        i = 0
+        for x in records:
+            if i:
+                assert x[0][3] == bytearray(b"ase;as[d'as;djk;uyfl")
+            else:
+                assert x[0][3] == bytearray(b"asd;as[d'as;djk;uyfl")
+            i += 1
 
     def test_exists_many_with_non_existent_keys_in_middle(self):
 

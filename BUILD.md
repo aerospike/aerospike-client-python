@@ -2,12 +2,13 @@
 
 ## Dependencies
 
-The Aerospike Python client depends on:
+The Python Client for Aerospike works on Python 2.6, 2.7 running on
+**64-bit** OS X 10.9+ and Linux.
 
-- The Aerospike C client 
-- Python devel Package
+The client depends on:
 
-The Aerospike Python Client works on Python 2.6.*, 2.7.* 
+-  Python devel Package
+-  The Aerospike C client
 
 ### RedHat 6+ and CentOS 6+
 
@@ -19,8 +20,9 @@ The following are dependencies for:
 
 **Dependencies**
 
-    sudo yum install python26-devel
-    sudo yum install python-devel # on CentOS 7 and variants
+    sudo yum install python26-devel on CentOS 6 and similar
+    sudo yum install python-devel # on CentOS 7
+    sudo yum install openssl-devel
 
 ### Debian 6+ and Ubuntu 12.04+
 
@@ -33,11 +35,20 @@ The following are dependencies for:
 **Dependencies**
 
     sudo apt-get install build-essential python-dev
+    sudo apt-get install libssl-dev
 
 
 ### Mac OS X
 
-The Python development and build tools are included with Mac OS X.
+By default OS X will be missing command line tools. On Mavericks (OS X 10.9)
+and higher those [can be installed without Xcode](http://osxdaily.com/2014/02/12/install-command-line-tools-mac-os-x/).
+
+    xcode-select --install # install the command line tools, if missing
+
+The dependencies can be installed through the OS X package manager [Homebrew](http://brew.sh/).
+
+    brew install openssl
+
 
 ## Build
 
@@ -49,7 +60,7 @@ To build the library:
 
 To install the library:
 
-    sudo python setup.py install --force
+    python setup.py install --force
 
 **Note** If you have already installed the Aerospike C Client and it is on your linker path you can build using:
 
