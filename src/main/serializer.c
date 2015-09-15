@@ -483,13 +483,27 @@ extern PyObject * deserialize_based_on_as_bytes_type(AerospikeClient * self,
                                 if (self->user_deserializer_call_info.callback) {
 						            execute_user_callback(&self->user_deserializer_call_info, &bytes, retval, false, error_p);
 									if(AEROSPIKE_OK != (error_p->code)) {
-									    goto CLEANUP;
-									}
+									    uint32_t bval_size = as_bytes_size(bytes);
+									    PyObject *py_val = PyByteArray_FromStringAndSize((char *) as_bytes_get(bytes), bval_size);
+									    if (!py_val) {
+										    as_error_update(error_p, AEROSPIKE_ERR_CLIENT, "Unable to deserialize bytes");
+										    goto CLEANUP;
+									    }
+									    *retval = py_val;
+										as_error_update(error_p, AEROSPIKE_OK, NULL);
+                                    }
                                 } else {
 								    if (is_user_deserializer_registered) {
 									    execute_user_callback(&user_deserializer_call_info, &bytes, retval, false, error_p);
 									    if(AEROSPIKE_OK != (error_p->code)) {
-										    goto CLEANUP;
+									        uint32_t bval_size = as_bytes_size(bytes);
+									        PyObject *py_val = PyByteArray_FromStringAndSize((char *) as_bytes_get(bytes), bval_size);
+									        if (!py_val) {
+										        as_error_update(error_p, AEROSPIKE_ERR_CLIENT, "Unable to deserialize bytes");
+										        goto CLEANUP;
+									        }
+										    as_error_update(error_p, AEROSPIKE_OK, NULL);
+									        *retval = py_val;
 									    }
 								    } else {
 									    uint32_t bval_size = as_bytes_size(bytes);
