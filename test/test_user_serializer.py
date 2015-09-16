@@ -18,6 +18,9 @@ class SomeClass(object):
 
     pass
 
+def serialize_function_old_server(val):
+    return marshal.dumps(val)
+
 def serialize_function(val):
     return json.dumps(marshal.dumps(val))
 
@@ -26,6 +29,9 @@ def client_serialize_function(val):
 
 def deserialize_function(val):
     return marshal.loads(json.loads(val))
+
+def deserialize_function_old_server(val):
+    return marshal.loads(val)
 
 def client_deserialize_function(val):
     return marshal.loads(val)
@@ -45,6 +51,14 @@ class TestUserSerializer(object):
             TestUserSerializer.client = aerospike.client(config).connect()
         else:
             TestUserSerializer.client = aerospike.client(config).connect(user, password)
+        TestUserSerializer.skip_old_server = True
+        versioninfo = TestUserSerializer.client.info('version')
+        for keys in versioninfo:
+            for value in versioninfo[keys]:
+                if value != None:
+                    versionlist = value[value.find("build") + 6:value.find("\n")].split(".")
+                    if int(versionlist[0]) >= 3 and int(versionlist[1]) >= 6:
+                        TestUserSerializer.skip_old_server = False
 
     def teardown_class(cls):
         TestUserSerializer.client.close()
@@ -68,8 +82,12 @@ class TestUserSerializer(object):
 
         #    Invoke put() for float data record with user serializer.
 
-        response = aerospike.set_serializer(serialize_function)
-        response = aerospike.set_deserializer(deserialize_function)
+        if TestUserSerializer.skip_old_server == False:
+            response = aerospike.set_serializer(serialize_function)
+            response = aerospike.set_deserializer(deserialize_function)
+        else:
+            response = aerospike.set_serializer(serialize_function_old_server)
+            response = aerospike.set_deserializer(deserialize_function_old_server)
         key = ('test', 'demo', 1)
 
         rec = {"pi": 3.14}
@@ -170,7 +188,10 @@ class TestUserSerializer(object):
             Invoke put() for float data record with user deserializer None.
         """
 
-        response = aerospike.set_serializer(serialize_function)
+        if TestUserSerializer.skip_old_server == False:
+            response = aerospike.set_serializer(serialize_function)
+        else:
+            response = aerospike.set_serializer(serialize_function_old_server)
 
         key = ('test', 'demo', 1)
 
@@ -197,8 +218,12 @@ class TestUserSerializer(object):
 
         key = ('test', 'demo', 1)
 
-        response = aerospike.set_serializer(serialize_function)
-        response = aerospike.set_deserializer(deserialize_function)
+        if TestUserSerializer.skip_old_server == False:
+            response = aerospike.set_serializer(serialize_function)
+            response = aerospike.set_deserializer(deserialize_function)
+        else:
+            response = aerospike.set_serializer(serialize_function_old_server)
+            response = aerospike.set_deserializer(deserialize_function_old_server)
         rec = {
             'map': {"key": "asd';q;'1';",
                     "pi": 3.14},

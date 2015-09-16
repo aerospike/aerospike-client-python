@@ -228,15 +228,15 @@ class TestPythonSerializer(object):
                     "pi": 3.14},
             'normal': 1234,
             'special': '!@#@#$QSDAsd;as',
-            'list': ["nanslkdl", 1, bytearray("asd;as[d'as;d", "utf-8")],
-            'bytes': bytearray("asd;as[d'as;d", "utf-8"),
-            'nestedlist': ["nanslkdl", 1, bytearray("asd;as[d'as;d", "utf-8"),
-                           [1, bytearray("asd;as[d'as;d", "utf-8")]],
+            'list': ["nanslkdl", 1,],
+            'nestedlist': ["nanslkdl", 1, True,
+                           [1, 2, 3]],
             'nestedmap': {
                 "key": "asd';q;'1';",
                 "pi": 3.14,
                 "nest": {"pi1": 3.12,
-                         "t": 1}
+                         "t": 1},
+                "inlist": [1, 2]
             },
         }
 
@@ -251,15 +251,16 @@ class TestPythonSerializer(object):
                     "pi": 3.14},
             'normal': 1234,
             'special': '!@#@#$QSDAsd;as',
-            'list': ["nanslkdl", 1, bytearray("asd;as[d'as;d", "utf-8")],
-            'bytes': bytearray("asd;as[d'as;d", "utf-8"),
-            'nestedlist': ["nanslkdl", 1, bytearray("asd;as[d'as;d", "utf-8"),
-                           [1, bytearray("asd;as[d'as;d", "utf-8")]],
-            'nestedmap':
-            {"key": "asd';q;'1';",
-             "pi": 3.14,
-             "nest": {"pi1": 3.12,
-                      "t": 1}},
+            'list': ["nanslkdl", 1,],
+            'nestedlist': ["nanslkdl", 1, True,
+                           [1, 2, 3]],
+            'nestedmap': {
+                "key": "asd';q;'1';",
+                "pi": 3.14,
+                "nest": {"pi1": 3.12,
+                         "t": 1},
+                "inlist": [1, 2]
+            },
         }
 
         self.delete_keys.append(key)

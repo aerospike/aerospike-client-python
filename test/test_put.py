@@ -1113,7 +1113,7 @@ class TestPut(TestBaseClass):
         if TestPut.skip_old_server == False:
             assert bins == {'pi': 3.14}
         else:
-            assert bins == {'pi': bytearray(b'F3.1400000000000001\n.')}
+            assert bins == {'pi': bytearray(b'g\x1f\x85\xebQ\xb8\x1e\t@')}
 
         self.delete_keys.append(key)
 
