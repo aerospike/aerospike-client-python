@@ -35,6 +35,7 @@
 #include <aerospike/as_double.h>
 
 #include "conversions.h"
+#include "geo.h"
 #include "key.h"
 #include "policy.h"
 #include "serializer.h"
@@ -483,6 +484,16 @@ as_status pyobject_to_record(AerospikeClient * self, as_error * err, PyObject * 
                 }
 				ret_val = as_record_set_int64(rec, name, val);
 			}
+            else if (!strcmp(value->ob_type->tp_name, "aerospike.Geospatial")) {
+                //ret_val = as_record_set_geojson_strp(rec, name, geo_value, true);*/
+                /*PyObject* sysmodules = PyImport_GetModuleDict();
+				PyObject* aerospike_module = NULL;
+				aerospike_module = PyMapping_GetItemString(sysmodules, "aerospike");
+                PyObject * py_dict = PyModule_GetDict(aerospike_module);
+                printf("In here");*/
+                PyObject* py_data = PyObject_GenericGetAttr(value, PyString_FromString("geo_data"));
+                char *geo_value = PyString_AsString(AerospikeGeospatial_DoDumps(py_data, err));
+            }
 			else if ( PyUnicode_Check(value) ) {
 				PyObject * py_ustr = PyUnicode_AsUTF8String(value);
 				char * val = PyString_AsString(py_ustr);

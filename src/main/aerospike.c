@@ -22,6 +22,7 @@
 #include "client.h"
 #include "key.h"
 #include "query.h"
+#include "geo.h"
 #include "scan.h"
 #include "predicates.h"
 #include "exceptions.h"
@@ -133,4 +134,8 @@ PyMODINIT_FUNC initaerospike(void)
 	PyTypeObject * lmap = AerospikeLMap_Ready();
 	Py_INCREF(lmap);
 	PyModule_AddObject(aerospike, "lmap", (PyObject *) lmap);
+
+	PyTypeObject * geospatial = AerospikeGeospatial_Ready();
+	Py_INCREF(geospatial);
+	PyModule_AddObject(aerospike, "geo", (PyObject *) geospatial);
 }
