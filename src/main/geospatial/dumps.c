@@ -44,7 +44,6 @@ PyObject * AerospikeGeospatial_DoDumps(PyObject *geo_data, as_error *err)
 	} else {
         PyObject *py_funcname = PyString_FromString("dumps");
         Py_INCREF(json_module);
-        Py_INCREF(geo_data);
         initresult = PyObject_CallMethodObjArgs(json_module, py_funcname, geo_data, NULL);
         Py_DECREF(json_module);
         Py_DECREF(py_funcname);

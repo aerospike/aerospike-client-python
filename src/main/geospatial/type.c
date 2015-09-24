@@ -69,7 +69,7 @@ void store_geodata(AerospikeGeospatial *self, as_error *err, PyObject *py_geodat
                 Py_ssize_t size = PyList_Size(py_coordinates);
                 for (int i = 0; i < size; i++)
                 {
-                    PyObject *py_listitem = PyList_GetItem(py_coordinates, i);
+                    /*PyObject *py_listitem = PyList_GetItem(py_coordinates, i);
                     if (PyList_Check(py_listitem))
                     {
                         for (int j=0; j < PyList_Size(py_listitem); j++) 
@@ -82,8 +82,8 @@ void store_geodata(AerospikeGeospatial *self, as_error *err, PyObject *py_geodat
                         }
 
                     } else {
-		                as_error_update(err, AEROSPIKE_ERR_PARAM, "Each coordinate must be a list of latitude and longitude");
-                    }
+		                //as_error_update(err, AEROSPIKE_ERR_PARAM, "Each coordinate must be a list of latitude and longitude");
+                    }*/
                 }
             } else {
 		        as_error_update(err, AEROSPIKE_ERR_PARAM, "Geospatial 'type' must be string and 'coordinates' must be a list");
@@ -141,9 +141,41 @@ CLEANUP:
     return 0;
 }
 
-PyObject *AerospikeGeospatial_Type_Repr(self) PyObject* self;
+PyObject *AerospikeGeospatial_Type_Repr(self) AerospikeGeospatial* self;
 {
-    return PyLong_FromLong(0);
+	// Aerospike error object
+	as_error err;
+	// Initialize error object
+	as_error_init(&err);
+
+	if ( !self ){
+		as_error_update(&err, AEROSPIKE_ERR_PARAM, "Invalid geospatial object");
+		goto CLEANUP;
+	}
+
+	PyObject* initresult = AerospikeGeospatial_DoDumps(self->geo_data, &err);
+    if(!initresult) {
+	    as_error_update(&err, AEROSPIKE_ERR_CLIENT, "Unable to call get data in str format");
+		goto CLEANUP;
+    }
+    char *initresult_str= PyString_AsString(initresult);
+    char *new_str = NULL;
+    new_str = (char *) malloc(strlen(initresult_str) + 3);
+    memset(new_str, '\0', strlen(initresult_str) + 3);
+    snprintf(new_str, strlen(initresult_str) + 3, "\'%s\'", initresult_str);
+
+CLEANUP:
+
+	// If an error occurred, tell Python.
+	if ( err.code != AEROSPIKE_OK ) {
+		PyObject * py_err = NULL;
+		error_to_pyobject(&err, &py_err);
+		PyObject *exception_type = raise_exception(&err);
+		PyErr_SetObject(exception_type, py_err);
+		Py_DECREF(py_err);
+		return NULL;
+	}
+    return PyString_FromString(new_str);;
 }
 
 PyObject* AerospikeGeospatial_Type_Str(self) AerospikeGeospatial* self;
@@ -158,6 +190,12 @@ PyObject* AerospikeGeospatial_Type_Str(self) AerospikeGeospatial* self;
 		goto CLEANUP;
 	}
 
+	PyObject* initresult = AerospikeGeospatial_DoDumps(self->geo_data, &err);
+    if(!initresult) {
+	    as_error_update(&err, AEROSPIKE_ERR_CLIENT, "Unable to call get data in str format");
+		goto CLEANUP;
+    }
+
 CLEANUP:
 
 	// If an error occurred, tell Python.
@@ -169,7 +207,7 @@ CLEANUP:
 		Py_DECREF(py_err);
 		return NULL;
 	}
-    return self->geo_data;
+    return initresult;
 }
 static void AerospikeGeospatial_Type_Dealloc(AerospikeGeospatial * self)
 {

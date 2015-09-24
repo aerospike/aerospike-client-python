@@ -19,6 +19,7 @@
 
 #include <aerospike/aerospike.h>
 #include <aerospike/aerospike_index.h>
+#include <aerospike/aerospike_key.h>
 #include <aerospike/as_bin.h>
 #include <aerospike/as_config.h>
 #include <aerospike/as_error.h>
@@ -838,6 +839,11 @@ PyObject * AerospikeClient_Index_2dsphere_Create(AerospikeClient * self, PyObjec
 
 	if (!self->is_conn_16) {
         as_error_update(&err, AEROSPIKE_ERR_CLUSTER, "No connection to aerospike cluster");
+        goto CLEANUP;
+    }
+
+    if (!aerospike_has_geo(self->as)) {
+        as_error_update(&err, AEROSPIKE_ERR_CLUSTER, "Server does not support geospatial indexes");
         goto CLEANUP;
     }
 
