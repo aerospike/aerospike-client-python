@@ -58,5 +58,6 @@ CLEANUP:
 		Py_DECREF(py_err);
 		return NULL;
 	}
+    Py_INCREF(self->geo_data);
     return self->geo_data;
 }

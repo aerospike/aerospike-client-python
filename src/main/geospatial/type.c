@@ -65,31 +65,14 @@ void store_geodata(AerospikeGeospatial *self, as_error *err, PyObject *py_geodat
         if (PyDict_GetItemString(py_geodata, "type") && PyDict_GetItemString(py_geodata, "coordinates")) {
             PyObject * py_type = PyDict_GetItemString(py_geodata, "type");
             PyObject * py_coordinates = PyDict_GetItemString(py_geodata, "coordinates");
-            if (PyString_Check(py_type) && PyList_Check(py_coordinates)) {
-                Py_ssize_t size = PyList_Size(py_coordinates);
-                for (int i = 0; i < size; i++)
-                {
-                    /*PyObject *py_listitem = PyList_GetItem(py_coordinates, i);
-                    if (PyList_Check(py_listitem))
-                    {
-                        for (int j=0; j < PyList_Size(py_listitem); j++) 
-                        {
-                            PyObject *py_each_coordinate = PyList_GetItem(py_listitem, j);
-                            if (!PyInt_Check(py_each_coordinate) && !PyLong_Check(py_each_coordinate) && !PyFloat_Check(py_each_coordinate))
-                            {
-		                        as_error_update(err, AEROSPIKE_ERR_PARAM, "Geospatial coordinates must be int, long or float");
-                            }
-                        }
-
-                    } else {
-		                //as_error_update(err, AEROSPIKE_ERR_PARAM, "Each coordinate must be a list of latitude and longitude");
-                    }*/
-                }
-            } else {
+            if (!(PyString_Check(py_type) || PyUnicode_Check(py_type)) || !PyList_Check(py_coordinates)) {
 		        as_error_update(err, AEROSPIKE_ERR_PARAM, "Geospatial 'type' must be string and 'coordinates' must be a list");
             }
+            if (self->geo_data) {
+                Py_DECREF(self->geo_data);
+            }
             self->geo_data = py_geodata;
-            Py_INCREF(py_geodata);
+            Py_INCREF(self->geo_data);
         } else {
 		    as_error_update(err, AEROSPIKE_ERR_PARAM, "Geospatial dictionary should have keys 'type' and 'coordinates'");
         }
@@ -211,6 +194,9 @@ CLEANUP:
 }
 static void AerospikeGeospatial_Type_Dealloc(AerospikeGeospatial * self)
 {
+    if (self->geo_data) {
+        Py_DECREF(self->geo_data);
+    }
     self->ob_type->tp_free((PyObject *) self);
 }
 

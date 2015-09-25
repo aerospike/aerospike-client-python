@@ -502,7 +502,7 @@ as_status pyobject_to_record(AerospikeClient * self, as_error * err, PyObject * 
                     char *geo_value = PyString_AsString(AerospikeGeospatial_DoDumps(py_data, err));
                     ret_val = as_record_set_geojson_str(rec, name, geo_value);
                 } else {
-		            as_error_update(err, AEROSPIKE_ERR_CLIENT, "Server does not support geoJSON data");
+		            return as_error_update(err, AEROSPIKE_ERR_CLIENT, "Server does not support geoJSON data");
                 }
             }
 			else if ( PyUnicode_Check(value) ) {
