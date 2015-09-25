@@ -72,7 +72,6 @@ void store_geodata(AerospikeGeospatial *self, as_error *err, PyObject *py_geodat
                 Py_DECREF(self->geo_data);
             }
             self->geo_data = py_geodata;
-            Py_INCREF(self->geo_data);
         } else {
 		    as_error_update(err, AEROSPIKE_ERR_PARAM, "Geospatial dictionary should have keys 'type' and 'coordinates'");
         }
@@ -121,12 +120,13 @@ CLEANUP:
 		return -1;
 	}
 
+    Py_INCREF(self->geo_data);
     return 0;
 }
 
 PyObject *AerospikeGeospatial_Type_Repr(self) AerospikeGeospatial* self;
 {
-    PyObject *initresult = NULL;
+    PyObject *initresult = NULL, *py_return = NULL;
     char *new_repr_str = NULL;
 	// Aerospike error object
 	as_error err;
@@ -143,7 +143,7 @@ PyObject *AerospikeGeospatial_Type_Repr(self) AerospikeGeospatial* self;
 	    as_error_update(&err, AEROSPIKE_ERR_CLIENT, "Unable to call get data in str format");
 		goto CLEANUP;
     }
-    char *initresult_str= PyString_AsString(initresult);
+    char *initresult_str = PyString_AsString(initresult);
     new_repr_str = (char *) malloc(strlen(initresult_str) + 3);
     memset(new_repr_str, '\0', strlen(initresult_str) + 3);
     snprintf(new_repr_str, strlen(initresult_str) + 3, "\'%s\'", initresult_str);
@@ -159,7 +159,11 @@ CLEANUP:
 		Py_DECREF(py_err);
 		return NULL;
 	}
-    return PyString_FromString(new_repr_str);
+
+    py_return = PyString_FromString(new_repr_str);
+    Py_DECREF(initresult);
+    free(new_repr_str);
+    return py_return;
 }
 
 PyObject* AerospikeGeospatial_Type_Str(self) AerospikeGeospatial* self;

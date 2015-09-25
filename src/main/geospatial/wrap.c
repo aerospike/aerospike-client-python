@@ -62,6 +62,7 @@ CLEANUP:
 		return NULL;
 	}
 
+    Py_INCREF(self->geo_data);
 	return PyLong_FromLong(0);
 }
 
