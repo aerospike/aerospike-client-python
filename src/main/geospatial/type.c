@@ -33,7 +33,7 @@
  * PYTHON TYPE METHODS
  ******************************************************************************/
 static PyMemberDef AerospikeGeospatial_Type_Members[] = {
-    {"geo_data", T_OBJECT, offsetof(AerospikeGeospatial, geo_data), NULL, "The geo object"},
+    {"geo_data", T_OBJECT, offsetof(AerospikeGeospatial, geo_data), 0, "The geo object"},
     {NULL}
 };
 static PyMethodDef AerospikeGeospatial_Type_Methods[] = {
@@ -126,6 +126,8 @@ CLEANUP:
 
 PyObject *AerospikeGeospatial_Type_Repr(self) AerospikeGeospatial* self;
 {
+    PyObject *initresult = NULL;
+    char *new_repr_str = NULL;
 	// Aerospike error object
 	as_error err;
 	// Initialize error object
@@ -136,16 +138,15 @@ PyObject *AerospikeGeospatial_Type_Repr(self) AerospikeGeospatial* self;
 		goto CLEANUP;
 	}
 
-	PyObject* initresult = AerospikeGeospatial_DoDumps(self->geo_data, &err);
+	initresult = AerospikeGeospatial_DoDumps(self->geo_data, &err);
     if(!initresult) {
 	    as_error_update(&err, AEROSPIKE_ERR_CLIENT, "Unable to call get data in str format");
 		goto CLEANUP;
     }
     char *initresult_str= PyString_AsString(initresult);
-    char *new_str = NULL;
-    new_str = (char *) malloc(strlen(initresult_str) + 3);
-    memset(new_str, '\0', strlen(initresult_str) + 3);
-    snprintf(new_str, strlen(initresult_str) + 3, "\'%s\'", initresult_str);
+    new_repr_str = (char *) malloc(strlen(initresult_str) + 3);
+    memset(new_repr_str, '\0', strlen(initresult_str) + 3);
+    snprintf(new_repr_str, strlen(initresult_str) + 3, "\'%s\'", initresult_str);
 
 CLEANUP:
 
@@ -158,11 +159,12 @@ CLEANUP:
 		Py_DECREF(py_err);
 		return NULL;
 	}
-    return PyString_FromString(new_str);;
+    return PyString_FromString(new_repr_str);
 }
 
 PyObject* AerospikeGeospatial_Type_Str(self) AerospikeGeospatial* self;
 {
+    PyObject *initresult = NULL;
 	// Aerospike error object
 	as_error err;
 	// Initialize error object
@@ -173,7 +175,7 @@ PyObject* AerospikeGeospatial_Type_Str(self) AerospikeGeospatial* self;
 		goto CLEANUP;
 	}
 
-	PyObject* initresult = AerospikeGeospatial_DoDumps(self->geo_data, &err);
+	initresult = AerospikeGeospatial_DoDumps(self->geo_data, &err);
     if(!initresult) {
 	    as_error_update(&err, AEROSPIKE_ERR_CLIENT, "Unable to call get data in str format");
 		goto CLEANUP;

@@ -25,8 +25,6 @@ class TestGeospatial(TestBaseClass):
         else:
             TestGeospatial.client = aerospike.client(config).connect(user, password)
         
-        TestGeospatial.client.index_2dsphere_create("test", "demo", "loc", "loc_index")
-
         versioninfo = TestGeospatial.client.info('version')
         for keys in versioninfo:
             for value in versioninfo[keys]:
@@ -34,6 +32,8 @@ class TestGeospatial(TestBaseClass):
                     versionlist = value[value.find("build") + 6:value.find("\n")].split(".")
                     if not (int(versionlist[0]) >= 3 and int(versionlist[1]) >= 6):
                         pytest.skip("Server does not support geospatial indexes")
+
+        TestGeospatial.client.index_2dsphere_create("test", "demo", "loc", "loc_index")
 
     def teardown_class(cls):
         TestGeospatial.client.index_remove('test', 'loc_index')
