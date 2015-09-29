@@ -111,38 +111,6 @@ class TestInfo(object):
         else:
             assert True == False
 
-    def test_info_positive_for_sindex_creation(self):
-        """
-        Test info for secondary index creation
-        """
-        try:
-            TestInfo.client.index_remove('test','names_test_index')
-            time.sleep(3)
-        except:
-            pass
-        key = ('test', 'demo', 'list_key')
-
-        rec = {'names': ['John', 'Marlen', 'Steve']}
-        policy = {}
-        TestInfo.client.put(key, rec)
-        response = TestInfo.client.info(
-            'sindex-create:ns=test;set=demo;indexname=names_test_index;indexdata=names,string',
-            TestInfo.config['hosts'])
-        print(response)
-        time.sleep(3)
-        TestInfo.client.remove(key)
-        response = TestInfo.client.info('sindex', TestInfo.config['hosts'])
-        flag = 0
-        for keys in response.keys():
-            for value in response[keys]:
-                if value != None:
-                    if 'demo' in value:
-                        flag = 1
-        if flag:
-            assert True == True
-        else:
-            assert True == False
-
     def test_info_with_config_for_statistics(self):
 
         request = u"statistics"
