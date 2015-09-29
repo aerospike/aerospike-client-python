@@ -123,6 +123,42 @@ class TestGeospatial(TestBaseClass):
 
         assert len(records) == 0
 
+    def test_geospatial_positive_query_without_set(self):
+        """
+            Perform a positive geospatial query for a polygon without a set
+        """
+	keys = []
+        for i in xrange(1, 10):
+            key = ('test', None, i)
+            lng = -122 + (0.2 * i)
+            lat = 37.5 + (0.2 * i)
+            geo_object = aerospike.Geo({"type": "Point", "coordinates": [lng, lat] })
+    
+            TestGeospatial.client.put(key, {"loc": geo_object})
+            keys.append(key)
+
+        TestGeospatial.client.index_2dsphere_create("test", None, "loc", "loc_index_no_set")
+        records = []
+        query = TestGeospatial.client.query("test", None)
+
+        geo_object2 = aerospike.Geo({"type": "Polygon", "coordinates": [[[-122.500000,
+    37.000000],[-121.000000, 37.000000], [-121.000000, 38.080000],[-122.500000,
+        38.080000], [-122.500000, 37.000000]]]})
+
+        query.where(p.within("loc", geo_object2.dumps()))
+
+        def callback((key, metadata, record)):
+            records.append(record)
+
+        query.foreach(callback)
+
+        TestGeospatial.client.index_remove('test', 'loc_index_no_set')
+        for key in keys:
+            TestGeospatial.client.remove(key)
+
+        assert len(records) == 2
+        assert records == [{'loc': {'coordinates': [-121.8, 37.7], 'type': 'Point'}}, {'loc': {'coordinates': [-121.6, 37.9], 'type': 'Point'}}]
+
     def test_geospatial_positive_query_for_circle(self):
         """
             Perform a positive geospatial query for a circle
@@ -184,6 +220,33 @@ class TestGeospatial(TestBaseClass):
         assert self.geo_object.unwrap() == {'coordinates': [[[-122.5, 37.0], [-121.0, 37.0], [-121.0, 38.08],
             [-122.5, 38.08], [-122.5, 37.0]]], 'type': 'Polygon'}
 
+    def test_geospatial_wrap_positive_with_query(self):
+        """
+            Perform a positive wrap on geospatial data followed by a query
+        """
+        geo_object_wrap = aerospike.Geo({"type": "Polygon", "coordinates": [[[-124.500000,
+    37.000000],[-125.000000, 37.000000], [-121.000000, 38.080000],[-122.500000,
+        38.080000], [-124.500000, 37.000000]]]})
+
+        geo_object_wrap.wrap({"type": "Polygon", "coordinates": [[[-122.500000, 
+            37.000000],[-121.000000, 37.000000], [-121.000000, 38.080000],[-122.500000,
+            38.080000], [-122.500000, 37.000000]]]})
+        assert geo_object_wrap.unwrap() == {'coordinates': [[[-122.5, 37.0], [-121.0, 37.0], [-121.0, 38.08],
+            [-122.5, 38.08], [-122.5, 37.0]]], 'type': 'Polygon'}
+        
+	records = []
+        query = TestGeospatial.client.query("test", "demo")
+        query.where(p.within("loc", geo_object_wrap.dumps()))
+
+        def callback((key, metadata, record)):
+            records.append(record)
+
+        query.foreach(callback)
+
+        assert len(records) == 3
+        assert records == [{'loc': {'coordinates': [-122.0, 37.5], 'type': 'Point'}}, {'loc': {'coordinates': [-121.8, 37.7], 'type':
+                'Point'}}, {'loc': {'coordinates': [-121.6, 37.9], 'type': 'Point'}}]
+
     def test_geospatial_loads_positive(self):
         """
             Perform a positive loads on geoJSON raw string
@@ -192,6 +255,32 @@ class TestGeospatial(TestBaseClass):
 
         assert self.geo_object.unwrap() == {'coordinates': [[[-122.5, 37.0], [-121.0, 37.0], [-121.0, 38.08],
             [-122.5, 38.08], [-122.5, 37.0]]], 'type': 'Polygon'}
+
+    def test_geospatial_loads_positive_with_query(self):
+        """
+            Perform a positive loads on geoJSON raw string followed by a query
+        """
+        geo_object_loads = aerospike.Geo({"type": "Polygon", "coordinates": [[[-124.500000,
+    37.000000],[-125.000000, 37.000000], [-121.000000, 38.080000],[-122.500000,
+        38.080000], [-124.500000, 37.000000]]]})
+
+        geo_object_loads.loads('{"type": "Polygon", "coordinates": [[[-122.500000, 37.000000], [-121.000000, 37.000000], [-121.000000, 38.080000],[-122.500000, 38.080000], [-122.500000, 37.000000]]]}')
+
+        assert geo_object_loads.unwrap() == {'coordinates': [[[-122.5, 37.0], [-121.0, 37.0], [-121.0, 38.08],
+            [-122.5, 38.08], [-122.5, 37.0]]], 'type': 'Polygon'}
+
+	records = []
+        query = TestGeospatial.client.query("test", "demo")
+        query.where(p.within("loc", geo_object_loads.dumps()))
+
+        def callback((key, metadata, record)):
+            records.append(record)
+
+        query.foreach(callback)
+
+        assert len(records) == 3
+        assert records == [{'loc': {'coordinates': [-122.0, 37.5], 'type': 'Point'}}, {'loc': {'coordinates': [-121.8, 37.7], 'type':
+                'Point'}}, {'loc': {'coordinates': [-121.6, 37.9], 'type': 'Point'}}]
 
     def test_geospatial_dumps_positive(self):
         """
@@ -205,6 +294,7 @@ class TestGeospatial(TestBaseClass):
         """
             Perform a positive repr. Verify using eval()
         """
+	assert repr(self.geo_object) == '\'{"type": "Point", "coordinates": [-120.2, 39.3]}\''
         assert eval(repr(self.geo_object)) == '{"type": "Point", "coordinates": [-120.2, 39.3]}'
 
     def test_geospatial_2dindex_positive(self):
@@ -218,3 +308,32 @@ class TestGeospatial(TestBaseClass):
         status = TestGeospatial.client.index_2dsphere_create("test", "demo", "loc", "loc_index")
 
         assert status == 0
+
+    def test_geospatial_2dindex_positive_with_policy(self):
+        """
+            Perform a positive 2d index creation with policy
+        """
+        status = TestGeospatial.client.index_remove('test', 'loc_index')
+
+        assert status == 0
+
+        status = TestGeospatial.client.index_2dsphere_create("test", "demo", "loc", "loc_index", {"timeout": 2000})
+
+        assert status == 0
+
+    def test_geospatial_2dindex_set_length_extra(self):
+        """
+            Perform a 2d creation with set length exceeding limit
+        """
+        set_name = 'a'
+        for i in xrange(100):
+            set_name = set_name + 'a'
+        status = TestGeospatial.client.index_remove('test', 'loc_index')
+
+        assert status == 0
+	try:
+        	status = TestGeospatial.client.index_2dsphere_create("test", set_name, "loc", "loc_index")
+
+	except InvalidRequest as exception:
+        	assert exception.code == 4
+		assert exception.msg == "Invalid Set Name"
