@@ -5,7 +5,6 @@ import sys
 import time
 import cPickle as pickle
 from test_base_class import TestBaseClass
-from collections import OrderedDict
 
 aerospike = pytest.importorskip("aerospike")
 try:
@@ -992,33 +991,6 @@ class TestPut(TestBaseClass):
         (key, meta, bins) = TestPut.client.get(key)
 
         assert bins == {"is_present": None}
-        self.delete_keys.append(key)
-
-    def test_put_ordereddict(self):
-        """
-            Invoke put() ordereddict.
-        """
-        key = ('test', 'demo', 1)
-
-        dict = {'banana': 3, 'apple': 4, 'pear': 1, 'orange': 2}
-
-        od = OrderedDict(sorted(dict.items(), key=lambda t: t[0]))
-
-        rec = {'odict': od}
-
-        res = TestPut.client.put(key, rec)
-
-        assert res == 0
-
-        (key, meta, bins) = TestPut.client.get(key)
-
-        assert bins == {
-            'odict': {u'apple': 4,
-                      u'banana': 3,
-                      u'orange': 2,
-                      u'pear': 1}
-        }
-
         self.delete_keys.append(key)
 
     def test_put_map_containing_tuple(self):
