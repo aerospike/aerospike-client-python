@@ -220,6 +220,15 @@ class TestGeospatial(TestBaseClass):
         assert self.geo_object.unwrap() == {'coordinates': [[[-122.5, 37.0], [-121.0, 37.0], [-121.0, 38.08],
             [-122.5, 38.08], [-122.5, 37.0]]], 'type': 'Polygon'}
 
+    def test_geospatial_object_wrap_non_dict(self):
+        """
+            The geospatial object provided to wrap() is not a dictionary
+        """
+        try:
+            self.geo_object.wrap("abc")
+        except ParamError as exception:
+            assert exception.code == -2
+            assert exception.msg == 'Geospatial data should be a dictionary'
     def test_geospatial_wrap_positive_with_query(self):
         """
             Perform a positive wrap on geospatial data followed by a query
@@ -255,6 +264,16 @@ class TestGeospatial(TestBaseClass):
 
         assert self.geo_object.unwrap() == {'coordinates': [[[-122.5, 37.0], [-121.0, 37.0], [-121.0, 38.08],
             [-122.5, 38.08], [-122.5, 37.0]]], 'type': 'Polygon'}
+
+    def test_geospatial_object_loads_non_dict(self):
+        """
+            The geospatial object provided to loads() is not a dictionary
+        """
+        try:
+            self.geo_object.loads('{"abc"}')
+        except ClientError as exception:
+            assert exception.code == -1
+            assert exception.msg == 'String is not geoJSON serializable'
 
     def test_geospatial_loads_positive_with_query(self):
         """
