@@ -229,6 +229,7 @@ class TestGeospatial(TestBaseClass):
         except ParamError as exception:
             assert exception.code == -2
             assert exception.msg == 'Geospatial data should be a dictionary'
+
     def test_geospatial_wrap_positive_with_query(self):
         """
             Perform a positive wrap on geospatial data followed by a query
