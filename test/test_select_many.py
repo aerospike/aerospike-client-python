@@ -56,6 +56,8 @@ class TestSelectMany(object):
         for i in xrange(5):
             key = ('test', 'demo', i)
             TestSelectMany.client.remove(key)
+        key = ('test', 'demo', 'float_value')
+        TestSelectMany.client.remove(key)
 
     def test_select_many_without_any_parameter(self):
 

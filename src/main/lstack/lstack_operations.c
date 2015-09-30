@@ -277,7 +277,7 @@ PyObject * AerospikeLStack_Peek(AerospikeLStack * self, PyObject * args, PyObjec
 	}
 
 	PyObject* py_list = NULL;
-	list_to_pyobject(&err, list, &py_list);
+	list_to_pyobject(self->client, &err, list, &py_list);
 
 CLEANUP:
 
@@ -384,7 +384,7 @@ PyObject * AerospikeLStack_Filter(AerospikeLStack * self, PyObject * args, PyObj
 	}
 
 	PyObject* py_list = NULL;
-	list_to_pyobject(&err, elements_list, &py_list);
+	list_to_pyobject(self->client, &err, elements_list, &py_list);
 
 CLEANUP:
 
