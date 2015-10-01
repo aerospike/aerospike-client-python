@@ -221,7 +221,7 @@ class TestPythonSerializer(object):
             pass
 
         rec = {'normal': 1234, 'tuple': (1,2,3)}
-        res = client.put(key, rec)
+        res = client.put(key, rec, serializer=aerospike.SERIALIZER_USER)
 
         assert res == 0
 
