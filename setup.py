@@ -335,6 +335,11 @@ setup(
                 'src/main/llist/llist_operations.c',
                 'src/main/lmap/type.c',
                 'src/main/lmap/lmap_operations.c',
+                'src/main/geospatial/type.c',
+                'src/main/geospatial/wrap.c',
+                'src/main/geospatial/unwrap.c',
+                'src/main/geospatial/loads.c',
+                'src/main/geospatial/dumps.c',
                 'src/main/conversions.c',
                 'src/main/policy.c',
                 'src/main/predicates.c'

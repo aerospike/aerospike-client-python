@@ -19,6 +19,7 @@
 
 #include <aerospike/aerospike.h>
 #include <aerospike/aerospike_index.h>
+#include <aerospike/aerospike_key.h>
 #include <aerospike/as_bin.h>
 #include <aerospike/as_config.h>
 #include <aerospike/as_error.h>
@@ -771,6 +772,132 @@ PyObject * AerospikeClient_Index_Map_Values_Create(AerospikeClient * self, PyObj
 
 	// Invoke operation
 	aerospike_index_create_complex(self->as, &err, &task, info_policy_p, namespace, set_ptr, bin_ptr, name, AS_INDEX_TYPE_MAPVALUES, type);
+	if ( err.code != AEROSPIKE_OK ) {
+		as_error_update(&err, err.code, NULL);
+		goto CLEANUP;
+	} else {
+		aerospike_index_create_wait(&err, &task, 2000);
+	}
+
+CLEANUP:
+	if(py_ustr_set) {
+		Py_DECREF(py_ustr_set);
+	}
+	if(py_ustr_bin) {
+		Py_DECREF(py_ustr_bin);
+	}
+	if(py_ustr_name) {
+		Py_DECREF(py_ustr_name);
+	}
+	if ( err.code != AEROSPIKE_OK ) {
+		PyObject * py_err = NULL;
+		error_to_pyobject(&err, &py_err);
+		PyObject *exception_type = raise_exception(&err);
+		if(PyObject_HasAttrString(exception_type, "name")) {
+			PyObject_SetAttrString(exception_type, "name", py_name);
+		}
+		PyErr_SetObject(exception_type, py_err);
+		Py_DECREF(py_err);
+		return NULL;
+	}
+
+	return PyLong_FromLong(0);
+}
+PyObject * AerospikeClient_Index_2dsphere_Create(AerospikeClient * self, PyObject *args, PyObject * kwds)
+{
+	// Initialize error
+	as_error err;
+	as_error_init(&err);
+
+	// Python Function Arguments
+	PyObject * py_policy = NULL;
+	PyObject * py_ns = NULL;
+	PyObject * py_set = NULL;
+	PyObject * py_bin = NULL;
+	PyObject * py_name = NULL;
+	PyObject *py_ustr_set = NULL;
+	PyObject *py_ustr_bin = NULL;
+	PyObject *py_ustr_name = NULL;
+
+	as_policy_info info_policy;
+	as_policy_info *info_policy_p = NULL;
+	as_index_task task;
+
+	// Python Function Keyword Arguments
+	static char * kwlist[] = {"ns", "set", "bin", "name", "policy", NULL};
+
+	// Python Function Argument Parsing
+	if ( PyArg_ParseTupleAndKeywords(args, kwds, "OOOO|O:index_2dsphere_create", kwlist,
+				&py_ns, &py_set, &py_bin, &py_name, &py_policy) == false ) {
+		return NULL;
+	}
+
+	if (!self || !self->as) {
+		as_error_update(&err, AEROSPIKE_ERR_PARAM, "Invalid aerospike object");
+		goto CLEANUP;
+	}
+
+	if (!self->is_conn_16) {
+        as_error_update(&err, AEROSPIKE_ERR_CLUSTER, "No connection to aerospike cluster");
+        goto CLEANUP;
+    }
+
+    if (!aerospike_has_geo(self->as)) {
+        as_error_update(&err, AEROSPIKE_ERR_CLUSTER, "Server does not support geospatial indexes");
+        goto CLEANUP;
+    }
+
+	// Convert python object to policy_info
+	pyobject_to_policy_info( &err, py_policy, &info_policy, &info_policy_p, &self->as->config.policies.info);
+	if ( err.code != AEROSPIKE_OK ) {
+		goto CLEANUP;
+	}
+
+	// Convert python object into namespace string
+	if( !PyString_Check(py_ns) ) {
+		as_error_update(&err, AEROSPIKE_ERR_PARAM, "Namespace should be a string");
+		goto CLEANUP;
+	}
+	char *namespace = PyString_AsString(py_ns);
+
+	// Convert python object into set string
+	char *set_ptr = NULL;
+	if (PyUnicode_Check(py_set)) {
+		py_ustr_set = PyUnicode_AsUTF8String(py_set);
+		set_ptr = PyString_AsString(py_ustr_set);
+	} else if ( PyString_Check(py_set) ) {
+		set_ptr = PyString_AsString(py_set);
+	} else if(py_set != Py_None) {
+		as_error_update(&err, AEROSPIKE_ERR_PARAM, "Set should be string, unicode or None");
+		goto CLEANUP;
+	}
+
+	// Convert python object into bin string
+	char *bin_ptr = NULL;
+	if (PyUnicode_Check(py_bin)) {
+		py_ustr_bin = PyUnicode_AsUTF8String(py_bin);
+		bin_ptr = PyString_AsString(py_ustr_bin);
+	} else if ( PyString_Check(py_bin) ) {
+		bin_ptr = PyString_AsString(py_bin);
+	} else {
+		as_error_update(&err, AEROSPIKE_ERR_PARAM, "Bin should be a string");
+		goto CLEANUP;
+	}
+
+	// Convert PyObject into the name of the index
+	char *name = NULL;
+	if (PyUnicode_Check(py_name)) {
+		py_ustr_name = PyUnicode_AsUTF8String(py_name);
+		name = PyString_AsString(py_ustr_name);
+	} else if ( PyString_Check(py_name) ) {
+		name = PyString_AsString(py_name);
+	} else {
+		as_error_update(&err, AEROSPIKE_ERR_PARAM, "Index name should be string or unicode");
+		goto CLEANUP;
+	}
+
+	// Invoke operation
+	aerospike_index_create_complex(self->as, &err, &task, info_policy_p, namespace, set_ptr, bin_ptr, name, AS_INDEX_TYPE_DEFAULT, AS_INDEX_GEO2DSPHERE);
 	if ( err.code != AEROSPIKE_OK ) {
 		as_error_update(&err, err.code, NULL);
 		goto CLEANUP;

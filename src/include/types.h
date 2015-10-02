@@ -73,6 +73,11 @@ typedef struct {
 } AerospikeScan;
 
 typedef struct {
+  PyObject_HEAD
+  PyObject *geo_data;
+} AerospikeGeospatial;
+
+typedef struct {
     PyObject_HEAD
     AerospikeClient * client;
     as_ldt lstack;

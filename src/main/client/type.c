@@ -206,6 +206,9 @@ static PyMethodDef AerospikeClient_Type_Methods[] = {
 	{"index_map_values_create",
 		(PyCFunction)AerospikeClient_Index_Map_Values_Create, METH_VARARGS | METH_KEYWORDS,
 		"Remove a secondary list index"},
+	{"index_2dsphere_create",
+		(PyCFunction)AerospikeClient_Index_2dsphere_Create,	METH_VARARGS | METH_KEYWORDS,
+		"Creates a secondary 2dsphere index"},
 
     // LSTACK OPERATIONS
 
@@ -244,6 +247,7 @@ static PyMethodDef AerospikeClient_Type_Methods[] = {
 	{"get_key_digest",
 		(PyCFunction)AerospikeClient_Get_Key_Digest, METH_VARARGS | METH_KEYWORDS,
 		"Get key digest"},
+
 	{NULL}
 };
 
