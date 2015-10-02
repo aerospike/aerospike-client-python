@@ -155,7 +155,7 @@ Query Class --- :class:`Query`
         :param str module: the name of the Lua module.
         :param str function: the name of the Lua function within the *module*.
         :param list arguments: optional arguments to pass to the *function*.
-        :return: one of the supported types, :class:`int`, :class:`str`, :class:`list`, :class:`dict` (map), :class:`bytearray` (bytes).
+        :return: one of the supported types, :class:`int`, :class:`str`, :class:`float` (double), :class:`list`, :class:`dict` (map), :class:`bytearray` (bytes).
 
         .. seealso:: `Developing Stream UDFs <http://www.aerospike.com/docs/udf/developing_stream_udfs.html>`_
 

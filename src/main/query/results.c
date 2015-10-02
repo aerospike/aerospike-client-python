@@ -32,6 +32,11 @@
 #undef TRACE
 #define TRACE()
 
+typedef struct {
+	PyObject * py_results;
+    AerospikeClient * client;
+} LocalData;
+
 static bool each_result(const as_val * val, void * udata)
 {
 	if ( !val ) {
@@ -39,7 +44,8 @@ static bool each_result(const as_val * val, void * udata)
 	}
 
 	PyObject * py_results = NULL;
-	py_results = (PyObject *) udata;
+    LocalData *data = (LocalData *) udata;
+	py_results = data->py_results;
 	PyObject * py_result = NULL;
 
 	as_error err;
@@ -51,7 +57,7 @@ static bool each_result(const as_val * val, void * udata)
 
 	TRACE();
 
-	val_to_pyobject(&err, val, &py_result);
+	val_to_pyobject(data->client, &err, val, &py_result);
 
 	TRACE();
 
@@ -78,6 +84,9 @@ PyObject * AerospikeQuery_Results(AerospikeQuery * self, PyObject * args, PyObje
 	PyObject * py_results = NULL;
 
 	static char * kwlist[] = {"policy", NULL};
+
+	LocalData data;
+    data.client = self->client;
 
 	if ( PyArg_ParseTupleAndKeywords(args, kwds, "|O:results", kwlist, &py_policy) == false ) {
 		return NULL;
@@ -108,12 +117,13 @@ PyObject * AerospikeQuery_Results(AerospikeQuery * self, PyObject * args, PyObje
 
 	TRACE();
 	py_results = PyList_New(0);
+	data.py_results = py_results;
 
 	TRACE();
 	PyThreadState * _save = PyEval_SaveThread();
 
 	TRACE();
-    aerospike_query_foreach(self->client->as, &err, query_policy_p, &self->query, each_result, py_results);
+    aerospike_query_foreach(self->client->as, &err, query_policy_p, &self->query, each_result, &data);
 
 	TRACE();
 	PyEval_RestoreThread(_save);

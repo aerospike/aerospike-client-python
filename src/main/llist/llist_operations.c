@@ -283,7 +283,7 @@ PyObject * AerospikeLList_Get(AerospikeLList * self, PyObject * args, PyObject *
 	}
 
 	PyObject * py_list = NULL;
-	list_to_pyobject(&err, list_p, &py_list);
+	list_to_pyobject(self->client, &err, list_p, &py_list);
 
 CLEANUP:
 
@@ -393,7 +393,7 @@ PyObject * AerospikeLList_Filter(AerospikeLList * self, PyObject * args, PyObjec
 	}
 
 	PyObject* py_list = NULL;
-	list_to_pyobject(&err, elements_list, &py_list);
+	list_to_pyobject(self->client, &err, elements_list, &py_list);
 
 CLEANUP:
 
@@ -731,7 +731,7 @@ PyObject * AerospikeLList_Find_First(AerospikeLList * self, PyObject * args, PyO
 		goto CLEANUP;
 	}
 
-	list_to_pyobject(&err, elements_list, &py_elements_list);
+	list_to_pyobject(self->client, &err, elements_list, &py_elements_list);
 
 CLEANUP:
 	if (elements_list) {
@@ -841,7 +841,7 @@ PyObject * AerospikeLList_Find_First_Filter(AerospikeLList * self, PyObject * ar
 	}
 
 	PyObject* py_list = NULL;
-	list_to_pyobject(&err, elements_list, &py_list);
+	list_to_pyobject(self->client, &err, elements_list, &py_list);
 
 CLEANUP:
 
@@ -934,7 +934,7 @@ PyObject * AerospikeLList_Find_Last(AerospikeLList * self, PyObject * args, PyOb
 		goto CLEANUP;
 	}
 
-	list_to_pyobject(&err, elements_list, &py_elements_list);
+	list_to_pyobject(self->client, &err, elements_list, &py_elements_list);
 
 CLEANUP:
 	if (elements_list) {
@@ -1043,7 +1043,7 @@ PyObject * AerospikeLList_Find_Last_Filter(AerospikeLList * self, PyObject * arg
 	}
 
 	PyObject* py_list = NULL;
-	list_to_pyobject(&err, elements_list, &py_list);
+	list_to_pyobject(self->client, &err, elements_list, &py_list);
 
 CLEANUP:
 
@@ -1140,7 +1140,7 @@ PyObject * AerospikeLList_Find_From(AerospikeLList * self, PyObject * args, PyOb
 		goto CLEANUP;
 	}
 
-	list_to_pyobject(&err, elements_list, &py_elements_list);
+	list_to_pyobject(self->client, &err, elements_list, &py_elements_list);
 
 CLEANUP:
 	if (elements_list) {
@@ -1259,7 +1259,7 @@ PyObject * AerospikeLList_Find_From_Filter(AerospikeLList * self, PyObject * arg
 		goto CLEANUP;
 	}
 
-	list_to_pyobject(&err, elements_list, &py_elements_list);
+	list_to_pyobject(self->client, &err, elements_list, &py_elements_list);
 
 CLEANUP:
 	if (elements_list) {
@@ -1390,7 +1390,7 @@ PyObject * AerospikeLList_Range_Limit(AerospikeLList * self, PyObject * args, Py
 		goto CLEANUP;
 	}
 
-	list_to_pyobject(&err, elements_list, &py_elements_list);
+	list_to_pyobject(self->client, &err, elements_list, &py_elements_list);
 
 CLEANUP:
 	if (elements_list) {

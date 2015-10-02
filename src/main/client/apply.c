@@ -133,7 +133,7 @@ PyObject * AerospikeClient_Apply_Invoke(
 	aerospike_key_apply(self->as, &err, apply_policy_p, &key, module, function, arglist, &result);
 
 	if ( err.code == AEROSPIKE_OK ) {
-		val_to_pyobject(&err, result, &py_result);
+		val_to_pyobject(self, &err, result, &py_result);
 	} else {
 		as_error_update(&err, err.code, NULL);
 	}

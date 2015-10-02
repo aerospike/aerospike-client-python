@@ -280,14 +280,12 @@ class TestSelect(TestBaseClass):
 
     def test_select_with_key_and_bins_without_connection(self):
 
-        config = {'hosts': [('127.0.0.1', 3000)]}
-        client1 = aerospike.client(config)
         key = ("test", "demo", 1)
 
         bins_to_select = ['a']
 
         try:
-            key, meta, bins = client1.select( key, bins_to_select)
+            key, meta, bins = TestSelect.client.select( key, bins_to_select)
 
         except ClusterError as exception:
             assert exception.code == 11L
