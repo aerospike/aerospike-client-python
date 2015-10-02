@@ -51,6 +51,7 @@ in an in-memory primary index.
             * **lua** an optional :class:`dict` containing the paths to two types of Lua modules
                 * **system_path** the location of the system modules such as ``aerospike.lua``, ``stream_ops.lua``
                 * **user_path** the location of the user's record and stream UDFs
+            * **serialization** an optional instance-level :py:func:`tuple` of (serializer, deserializer). Takes precedence over a class serializer registered with :func:`~aerospike.set_serializer`.
             * **policies** a :class:`dict` of policies
                 * **timeout** default timeout in milliseconds
                 * **key** default key policy for this client
@@ -86,66 +87,162 @@ in an in-memory primary index.
             'shm':      { }}
         client = aerospike.client(config)
 
-    .. versionchanged:: 1.0.46
+    .. versionchanged:: 1.0.53
 
 
 .. rubric:: Serialization
 
 .. note::
 
-    By default, the :py:class:`aerospike.Client` maps supported types such \
-    as :py:class:`int`, :py:class:`str`, :py:class:`bytearray`, :py:class:`list`, \
-    :py:class:`dict` to matching aerospike server \
+    By default, the :py:class:`aerospike.Client` maps the supported types \
+    :py:class:`int`, :py:class:`str`, :py:class:`float`, :py:class:`bytearray`, \
+    :py:class:`list`, :py:class:`dict` to matching aerospike server \
     `types <http://www.aerospike.com/docs/guide/data-types.html>`_ \
-    (int, string, bytes, list, map). When an unsupported type is encountered
-    the module uses \
+    (int, string, double, bytes, list, map). When an unsupported type is \
+    encountered, the module uses \
     `cPickle <https://docs.python.org/2/library/pickle.html?highlight=cpickle#module-cPickle>`_ \
-    to serialize and deserialize the data, storing it into a *bytes* of type \
+    to serialize and deserialize the data, storing it into *as_bytes* of type \
     `'Python' <https://www.aerospike.com/docs/udf/api/bytes.html#encoding-type>`_ \
     (`AS_BYTES_PYTHON <http://www.aerospike.com/apidocs/c/d0/dd4/as__bytes_8h.html#a0cf2a6a1f39668f606b19711b3a98bf3>`_).
 
-    Two functions :func:`~aerospike.set_serializer` and :func:`~aerospike.set_deserializer` \
+    The functions :func:`~aerospike.set_serializer` and :func:`~aerospike.set_deserializer` \
     allow for user-defined functions to handle serialization, instead. \
     The serialized data is stored as \
-    'Generic' type *bytes* of type (\
-    `AS_BYTES_BLOB <http://www.aerospike.com/apidocs/c/d0/dd4/as__bytes_8h.html#a0cf2a6a1f39668f606b19711b3a98bf3>`_).
+    'Generic' *as_bytes* of type (\
+    `AS_BYTES_BLOB <http://www.aerospike.com/apidocs/c/d0/dd4/as__bytes_8h.html#a0cf2a6a1f39668f606b19711b3a98bf3>`_). \
+    The *serialization* config param of :func:`aerospike.client` registers an \
+    instance-level pair of functions that handle serialization.
 
 .. py:function:: set_serializer(callback)
 
-    Overrides the default serializer with a user-defined function *callback*.
+    Register a user-defined serializer available to all :class:`aerospike.Client`
+    instances.
 
     :param callable callback: the function to invoke for serialization.
+
+    .. seealso:: To use this function with :meth:`~aerospike.Client.put` the \
+        argument to *serializer* should be :const:`aerospike.SERIALIZER_USER`.
 
     .. code-block:: python
 
         import aerospike
-        import cPickle as pickle
+        import json
 
         def my_serializer(val):
-            return pickle.dumps(val)
+            return json.dumps(val)
 
         aerospike.set_serializer(my_serializer)
 
     .. versionadded:: 1.0.39
 
-
 .. py:function:: set_deserializer(callback)
 
-    Overrides the default serializer with a user-defined fucntion *callback*.
+    Register a user-defined deserializer available to all :class:`aerospike.Client`
+    instances. Once registered, all read methods (such as \
+    :meth:`~aerospike.Client.get`) will run bins containing 'Generic' *as_bytes* \
+    of type (`AS_BYTES_BLOB <http://www.aerospike.com/apidocs/c/d0/dd4/as__bytes_8h.html#a0cf2a6a1f39668f606b19711b3a98bf3>`_)
+    through this deserializer.
 
     :param callable callback: the function to invoke for deserialization.
 
+.. py:function:: unset_serializers()
+
+    Deregister the user-defined de/serializer available from :class:`aerospike.Client`
+    instances.
+
+.. note:: Serialization Examples
+
+    The following example shows the three modes of serialization - built-in, \
+    class-level user functions, instance-level user functions:
+
     .. code-block:: python
 
+        from __future__ import print_function
         import aerospike
-        import cPickle as pickle
+        import marshal
+        import json
 
-        def my_deserializer(val):
-            return pickle.loads(val)
+        def go_marshal(val):
+            return marshal.dumps(val)
 
-        aerospike.set_deserializer(my_serializer)
+        def demarshal(val):
+            return marshal.loads(val)
 
-    .. versionadded:: 1.0.39
+        def jsonize(val):
+            return json.dumps(val)
+
+        def dejsonize(val):
+            return json.loads(val)
+
+        aerospike.set_serializer(go_marshal)
+        aerospike.set_deserializer(demarshal)
+        config = {'hosts':[('127.0.0.1', 3000)]}
+        client = aerospike.client(config).connect()
+        config['serialization'] = (jsonize,dejsonize)
+        client2 = aerospike.client(config).connect()
+
+        for i in xrange(1, 4):
+            try:
+                client.remove(('test', 'demo', 'foo' + i))
+            except:
+                pass
+
+        bin_ = {'t': (1, 2, 3)} # tuple is an unsupported type
+        print("Use the built-in serialization (cPickle)")
+        client.put(('test','demo','foo1'), bin_)
+        (key, meta, bins) = client.get(('test','demo','foo1'))
+        print(bins)
+
+        print("Use the class-level user-defined serialization (marshal)")
+        client.put(('test','demo','foo2'), bin_, serializer=aerospike.SERIALIZER_USER)
+        (key, meta, bins) = client.get(('test','demo','foo2'))
+        print(bins)
+
+        print("Use the instance-level user-defined serialization (json)")
+        client2.put(('test','demo','foo3'), bin_, serializer=aerospike.SERIALIZER_USER)
+        # notice that json-encoding a tuple produces a list
+        (key, meta, bins) = client2.get(('test','demo','foo3'))
+        print(bins)
+        client.close()
+
+    The expected output is:
+
+    .. code-block:: python
+
+        Use the built-in serialization (cPickle)
+        {'i': 321, 't': (1, 2, 3)}
+        Use the class-level user-defined serialization (marshal)
+        {'i': 321, 't': (1, 2, 3)}
+        Use the instance-level user-defined serialization (json)
+        {'i': 321, 't': [1, 2, 3]}
+
+    While AQL shows the records as having the following structure:
+
+    .. code-block:: sql
+
+        aql> select i,t from test.demo where PK='foo1'
+        +-----+----------------------------------------------+
+        | i   | t                                            |
+        +-----+----------------------------------------------+
+        | 321 | 28 49 31 0A 49 32 0A 49 33 0A 74 70 31 0A 2E |
+        +-----+----------------------------------------------+
+        1 row in set (0.000 secs)
+
+        aql> select i,t from test.demo where PK='foo2'
+        +-----+-------------------------------------------------------------+
+        | i   | t                                                           |
+        +-----+-------------------------------------------------------------+
+        | 321 | 28 03 00 00 00 69 01 00 00 00 69 02 00 00 00 69 03 00 00 00 |
+        +-----+-------------------------------------------------------------+
+        1 row in set (0.000 secs)
+
+        aql> select i,t from test.demo where PK='foo3'
+        +-----+----------------------------+
+        | i   | t                          |
+        +-----+----------------------------+
+        | 321 | 5B 31 2C 20 32 2C 20 33 5D |
+        +-----+----------------------------+
+        1 row in set (0.000 secs)
 
 
 .. rubric:: Logging
@@ -324,9 +421,16 @@ Serialization Constants
 
 .. data:: SERIALIZER_PYTHON
 
+    Use the cPickle serializer to handle unsupported types (default)
+
 .. data:: SERIALIZER_USER
 
+    Use a user-defined serializer to handle unsupported types. Must have \
+    been registered for the aerospike class or configured for the Client object
+
 .. data:: SERIALIZER_NONE
+
+    Do not serialize bins whose data type is unsupported
 
 .. versionadded:: 1.0.47
 

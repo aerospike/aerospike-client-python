@@ -95,7 +95,7 @@ PyObject * AerospikeClient_Get_Invoke(
 	// Invoke operation
 	aerospike_key_get(self->as, &err, read_policy_p, &key, &rec);
 	if ( err.code == AEROSPIKE_OK ) {
-		record_to_pyobject(&err, rec, &key, &py_rec);
+		record_to_pyobject(self, &err, rec, &key, &py_rec);
 		if ( read_policy_p == NULL || 
 				( read_policy_p != NULL && read_policy_p->key == AS_POLICY_KEY_DIGEST)){
 			// This is a special case.

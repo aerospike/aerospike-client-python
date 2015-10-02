@@ -207,7 +207,9 @@ a cluster-tending thread.
             ``'ttl'`` set to :class:`int` number of seconds.
         :param dict policy: optional :ref:`aerospike_write_policies`.
         :param serializer: optionally override the serialization mode of the
-            client with one of the :ref:`aerospike_serialization_constants`.
+            client with one of the :ref:`aerospike_serialization_constants`. To
+            use a class-level user-defined serialization function registered with
+            :func:`aerospike.set_serializer` use :const:`aerospike.SERIALIZER_USER`.
         :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
 
         .. code-block:: python
@@ -227,6 +229,7 @@ a cluster-tending thread.
                     'l': [ "qwertyuiop", 1, bytearray("asd;as[d'as;d", "utf-8") ],
                     'm': { "key": "asd';q;'1';" },
                     'i': 1234,
+                    'f': 3.14159265359,
                     's': '!@#@#$QSDAsd;as'
                 }
                 client.put(key, bins,
@@ -884,8 +887,8 @@ a cluster-tending thread.
         :param str function: the name of the UDF to apply to the record identified by *key*.
         :param list args: the arguments to the UDF.
         :param dict policy: optional :ref:`aerospike_apply_policies`.
-        :return: the value optionally returned by the UDF, one of :class:`str`,\ 
-                 :class:`int`, :class:`bytearray`, :class:`list`, :class:`dict`.
+        :return: the value optionally returned by the UDF, one of :class:`str`,\
+                 :class:`int`, :class:`float`, :class:`bytearray`, :class:`list`, :class:`dict`.
         :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
 
         .. seealso:: `Record UDF <http://www.aerospike.com/docs/guide/record_udf.html>`_ \

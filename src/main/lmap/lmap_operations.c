@@ -293,7 +293,7 @@ PyObject * AerospikeLMap_Get(AerospikeLMap * self, PyObject * args, PyObject * k
 	}
 
 	PyObject * py_map_val = NULL;
-	val_to_pyobject(&err, map_key_value, &py_map_val);
+	val_to_pyobject(self->client, &err, map_key_value, &py_map_val);
 
 CLEANUP:
 
@@ -402,7 +402,7 @@ PyObject * AerospikeLMap_Filter(AerospikeLMap * self, PyObject * args, PyObject 
 	}
 
 	PyObject* py_map = NULL;
-	map_to_pyobject(&err, elements, &py_map);
+	map_to_pyobject(self->client, &err, elements, &py_map);
 
 CLEANUP:
 

@@ -30,6 +30,10 @@
 #include "key.h"
 #include "policy.h"
 
+typedef struct {
+	PyObject * py_recs;
+    AerospikeClient * client;
+} LocalData;
 /**
  *************************************************************************
  * This function will store all the Unicode objects in a pool, created in
@@ -57,7 +61,8 @@ PyObject * store_unicode_bins(UnicodePyObjects *u_obj, PyObject * py_uobj){
 static bool batch_select_cb(const as_batch_read* results, uint32_t n, void* udata)
 {
 	// Typecast udata back to PyObject
-	PyObject * py_recs = (PyObject *) udata;
+    LocalData *data = (LocalData *) udata; 
+	PyObject * py_recs = data->py_recs;
 
 	// Initialize error object
 	as_error err;
@@ -107,7 +112,7 @@ static bool batch_select_cb(const as_batch_read* results, uint32_t n, void* udat
 		// Check record status
 		if ( results[i].result == AEROSPIKE_OK ){
 
-			record_to_pyobject(&err, &results[i].record, results[i].key, &rec);
+			record_to_pyobject(data->client, &err, &results[i].record, results[i].key, &rec);
             PyObject *py_obj = PyTuple_GetItem(rec, 1);
             Py_INCREF(py_obj);
             PyTuple_SetItem(py_rec, 1, py_obj);
@@ -142,7 +147,7 @@ static bool batch_select_cb(const as_batch_read* results, uint32_t n, void* udat
  *
  *******************************************************************************************************
  */
-static void batch_select_recs(as_error *err, as_batch_read_records* records, PyObject **py_recs)
+static void batch_select_recs(AerospikeClient *self, as_error *err, as_batch_read_records* records, PyObject **py_recs)
 {
     as_vector* list = &records->list;
     for (uint32_t i = 0; i < list->size; i++) {
@@ -185,7 +190,7 @@ static void batch_select_recs(as_error *err, as_batch_read_records* records, PyO
         PyTuple_SetItem(py_rec, 0, p_key);
 
         if ( batch->result == AEROSPIKE_OK ){
-            record_to_pyobject(err, &batch->record, &batch->key, &rec);
+            record_to_pyobject(self, err, &batch->record, &batch->key, &rec);
             PyObject *py_obj = PyTuple_GetItem(rec, 1);
             Py_INCREF(py_obj);
             PyTuple_SetItem(py_rec, 1, py_obj);
@@ -300,7 +305,7 @@ static PyObject * batch_select_aerospike_batch_read(as_error *err, AerospikeClie
     {
 		goto CLEANUP;
     }
-    batch_select_recs(err, &records, &py_recs);
+    batch_select_recs(self, err, &records, &py_recs);
     
 CLEANUP:
     if (batch_initialised == true){
@@ -331,12 +336,15 @@ static PyObject * batch_select_aerospike_batch_get(as_error *err, AerospikeClien
     as_batch batch;
     bool batch_initialised = false;
 
+    LocalData data;
+    data.client = self;
 	// Convert python keys list to as_key ** and add it to as_batch.keys
 	// keys can be specified in PyList or PyTuple
 	if ( py_keys != NULL && PyList_Check(py_keys) ) {
 		Py_ssize_t size = PyList_Size(py_keys);
 
         py_recs = PyList_New(size);
+        data.py_recs = py_recs;
         as_batch_init(&batch, size);
 
         // Batch object initialised
@@ -362,6 +370,7 @@ static PyObject * batch_select_aerospike_batch_get(as_error *err, AerospikeClien
 		Py_ssize_t size = PyTuple_Size(py_keys);
 
         py_recs = PyList_New(size);
+        data.py_recs = py_recs;
         as_batch_init(&batch, size);
         // Batch object initialised
         batch_initialised = true;
@@ -390,7 +399,7 @@ static PyObject * batch_select_aerospike_batch_get(as_error *err, AerospikeClien
 	aerospike_batch_get_bins(self->as, err, batch_policy_p,
 		&batch, (const char **) filter_bins, bins_size,
 		(aerospike_batch_read_callback) batch_select_cb,
-		py_recs);
+		&data);
     
 CLEANUP:
     if (batch_initialised == true){

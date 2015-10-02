@@ -3,7 +3,7 @@
 import pytest
 import sys
 import time
-import cPickle as pickle
+import marshal
 from test_base_class import TestBaseClass
 
 aerospike = pytest.importorskip("aerospike")
@@ -13,6 +13,7 @@ try:
 except:
     print "Please install aerospike python client."
     sys.exit(1)
+
 
 class TestPut(TestBaseClass):
     def setup_class(cls):
@@ -49,6 +50,7 @@ class TestPut(TestBaseClass):
         """
         for key in self.delete_keys:
             TestPut.client.remove(key)
+
 
     def test_put_with_string_record(self):
         """
@@ -1011,6 +1013,54 @@ class TestPut(TestBaseClass):
 
         self.delete_keys.append(key)
 
+    def test_put_serializer_default(self):
+        """
+            Invoke put() with mixed data record with no class or instance
+            serializer or deserializer. Python option should get called by default
+        """
+
+        key = ('test', 'demo', 1)
+
+        rec = {
+            'map': {"key": "asd';q;'1';",
+                    "pi": 3.14},
+            'normal': 1234,
+            'special': '!@#@#$QSDAsd;as',
+            'list': ["nanslkdl", 1, bytearray("asd;as[d'as;d", "utf-8")],
+            'bytes': bytearray("asd;as[d'as;d", "utf-8"),
+            'nestedlist': ["nanslkdl", 1, bytearray("asd;as[d'as;d", "utf-8"),
+                           [1, bytearray("asd;as[d'as;d", "utf-8")]],
+            'nestedmap': {
+                "key": "asd';q;'1';",
+                "pi": 3.14,
+                "nest": {"pi1": 3.12,
+                         "t": 1}
+            },
+        }
+
+        res = TestPut.client.put(key, rec, {}, {})
+
+        assert res == 0
+
+        _, _, bins = TestPut.client.get(key)
+
+        assert bins == {
+            'map': {"key": "asd';q;'1';",
+                    "pi": 3.14},
+            'normal': 1234,
+            'special': '!@#@#$QSDAsd;as',
+            'list': ["nanslkdl", 1, bytearray("asd;as[d'as;d", "utf-8")],
+            'bytes': bytearray("asd;as[d'as;d", "utf-8"),
+            'nestedlist': ["nanslkdl", 1, bytearray("asd;as[d'as;d", "utf-8"),
+                           [1, bytearray("asd;as[d'as;d", "utf-8")]],
+            'nestedmap':
+            {"key": "asd';q;'1';",
+             "pi": 3.14,
+             "nest": {"pi1": 3.12,
+                      "t": 1}},
+        }
+        self.delete_keys.append(key)
+
     def test_put_user_serializer_no_deserializer(self):
         """
             Invoke put() for float data record with user serializer is
@@ -1022,7 +1072,7 @@ class TestPut(TestBaseClass):
         rec = {"pi": 3.14}
 
         def serialize_function(val):
-            return pickle.dumps(val)
+            return marshal.dumps(val)
 
         response = aerospike.set_serializer(serialize_function)
 
@@ -1035,7 +1085,7 @@ class TestPut(TestBaseClass):
         if TestPut.skip_old_server == False:
             assert bins == {'pi': 3.14}
         else:
-            assert bins == {'pi': bytearray(b'F3.1400000000000001\n.')}
+            assert bins == {'pi': bytearray(b'g\x1f\x85\xebQ\xb8\x1e\t@')}
 
         self.delete_keys.append(key)
 
