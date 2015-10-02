@@ -385,14 +385,18 @@ as_status pyobject_to_val(AerospikeClient * self, as_error * err, PyObject * py_
 		Py_DECREF(py_ustr);
 	}
     else if (!strcmp(py_obj->ob_type->tp_name, "aerospike.Geospatial")) {
+        PyObject *py_parameter = PyString_FromString("geo_data");
+        PyObject* py_data = PyObject_GenericGetAttr(py_obj, py_parameter);
+        Py_DECREF(py_parameter);
+        char *geo_value = PyString_AsString(AerospikeGeospatial_DoDumps(py_data, err));
         if (aerospike_has_geo(self->as)) {
-            PyObject *py_parameter = PyString_FromString("geo_data");
-            PyObject* py_data = PyObject_GenericGetAttr(py_obj, py_parameter);
-            Py_DECREF(py_parameter);
-            char *geo_value = PyString_AsString(AerospikeGeospatial_DoDumps(py_data, err));
             *val = (as_val *) as_geojson_new(geo_value, false);
         } else {
-		    as_error_update(err, AEROSPIKE_ERR_CLUSTER, "Server does not support geoJSON data");
+		    as_bytes *bytes;
+		    GET_BYTES_POOL(bytes, static_pool, err);
+		    py_result = serialize_based_on_serializer_policy(self, serializer_type,
+                &bytes, py_data, err);
+		    *val = (as_val *) bytes;
         }
     }
 	else if ( PyByteArray_Check(py_obj) ) {
@@ -496,12 +500,16 @@ as_status pyobject_to_record(AerospikeClient * self, as_error * err, PyObject * 
 				ret_val = as_record_set_int64(rec, name, val);
 			}
             else if (!strcmp(value->ob_type->tp_name, "aerospike.Geospatial")) {
+                PyObject* py_data = PyObject_GenericGetAttr(value, PyString_FromString("geo_data"));
+                char *geo_value = PyString_AsString(AerospikeGeospatial_DoDumps(py_data, err));
                 if (aerospike_has_geo(self->as)) {
-                    PyObject* py_data = PyObject_GenericGetAttr(value, PyString_FromString("geo_data"));
-                    char *geo_value = PyString_AsString(AerospikeGeospatial_DoDumps(py_data, err));
                     ret_val = as_record_set_geojson_str(rec, name, geo_value);
                 } else {
-		            return as_error_update(err, AEROSPIKE_ERR_CLIENT, "Server does not support geoJSON data");
+			    	as_bytes *bytes;
+				    GET_BYTES_POOL(bytes, static_pool, err);
+				    py_result = serialize_based_on_serializer_policy(self, serializer_type,
+						&bytes, py_data, err);
+				    ret_val = as_record_set_bytes(rec, name, bytes);
                 }
             }
 			else if ( PyUnicode_Check(value) ) {
@@ -629,14 +637,18 @@ as_status pyobject_to_astype_write(AerospikeClient * self, as_error * err, char 
 		char * s = PyString_AsString(py_value);
 		*val = (as_val *) as_string_new(s, false);
     } else if (!strcmp(py_value->ob_type->tp_name, "aerospike.Geospatial")) {
+        PyObject *py_parameter = PyString_FromString("geo_data");
+        PyObject* py_data = PyObject_GenericGetAttr(py_value, py_parameter);
+        Py_DECREF(py_parameter);
+        char *geo_value = PyString_AsString(AerospikeGeospatial_DoDumps(py_data, err));
         if (aerospike_has_geo(self->as)) {
-            PyObject *py_parameter = PyString_FromString("geo_data");
-            PyObject* py_data = PyObject_GenericGetAttr(py_value, py_parameter);
-            Py_DECREF(py_parameter);
-            char *geo_value = PyString_AsString(AerospikeGeospatial_DoDumps(py_data, err));
             *val = (as_val *) as_geojson_new(geo_value, false);
         } else {
-		    as_error_update(err, AEROSPIKE_ERR_CLUSTER, "Server does not support geoJSON data");
+		    as_bytes *bytes;
+		    GET_BYTES_POOL(bytes, static_pool, err);
+		    py_result = serialize_based_on_serializer_policy(self, serializer_type,
+				&bytes, py_data, err);
+		    *val = (as_val *) bytes;
         }
 	} else if ( PyUnicode_Check(py_value) ) {
 		PyObject * py_ustr = PyUnicode_AsUTF8String(py_value);

@@ -20,6 +20,7 @@ class TestGeospatial(TestBaseClass):
         """
         hostlist, user, password = TestBaseClass.get_hosts()
         config = {'hosts': hostlist}
+        TestGeospatial.skip_old_server = False
         if user == None and password == None:
             TestGeospatial.client = aerospike.client(config).connect()
         else:
@@ -31,9 +32,9 @@ class TestGeospatial(TestBaseClass):
                 if value != None:
                     versionlist = value[value.find("build") + 6:value.find("\n")].split(".")
                     if not (int(versionlist[0]) >= 3 and int(versionlist[1]) >= 6):
-                        pytest.skip("Server does not support geospatial indexes")
-
-        TestGeospatial.client.index_2dsphere_create("test", "demo", "loc", "loc_index")
+                        TestGeospatial.skip_old_server = True
+        if not TestGeospatial.skip_old_server:
+            TestGeospatial.client.index_2dsphere_create("test", "demo", "loc", "loc_index")
 
     def teardown_class(cls):
         TestGeospatial.client.index_remove('test', 'loc_index')
@@ -84,6 +85,8 @@ class TestGeospatial(TestBaseClass):
         """
             Perform a positive geospatial query for a polygon
         """
+        if TestGeospatial.skip_old_server:
+            pytest.skip("Server does not support geospatial indexes")
         records = []
         query = TestGeospatial.client.query("test", "demo")
 
@@ -107,6 +110,8 @@ class TestGeospatial(TestBaseClass):
             Perform a positive geospatial query for polygon where all points are
             outside polygon
         """
+        if TestGeospatial.skip_old_server:
+            pytest.skip("Server does not support geospatial indexes")
         records = []
         query = TestGeospatial.client.query("test", "demo")
 
@@ -127,7 +132,9 @@ class TestGeospatial(TestBaseClass):
         """
             Perform a positive geospatial query for a polygon without a set
         """
-	keys = []
+        if TestGeospatial.skip_old_server:
+            pytest.skip("Server does not support geospatial indexes")
+	    keys = []
         for i in xrange(1, 10):
             key = ('test', None, i)
             lng = -122 + (0.2 * i)
@@ -163,6 +170,8 @@ class TestGeospatial(TestBaseClass):
         """
             Perform a positive geospatial query for a circle
         """
+        if TestGeospatial.skip_old_server:
+            pytest.skip("Server does not support geospatial indexes")
         records = []
         query = TestGeospatial.client.query("test", "demo")
 
@@ -203,6 +212,8 @@ class TestGeospatial(TestBaseClass):
         """
             The geospatial object is not a dictionary
         """
+        if TestGeospatial.skip_old_server:
+            pytest.skip("Server does not support geospatial indexes")
         try:
             geo_object_wrong = aerospike.Geo("abc")
 
@@ -234,6 +245,8 @@ class TestGeospatial(TestBaseClass):
         """
             Perform a positive wrap on geospatial data followed by a query
         """
+        if TestGeospatial.skip_old_server:
+            pytest.skip("Server does not support geospatial indexes")
         geo_object_wrap = aerospike.Geo({"type": "Polygon", "coordinates": [[[-124.500000,
     37.000000],[-125.000000, 37.000000], [-121.000000, 38.080000],[-122.500000,
         38.080000], [-124.500000, 37.000000]]]})
@@ -280,6 +293,8 @@ class TestGeospatial(TestBaseClass):
         """
             Perform a positive loads on geoJSON raw string followed by a query
         """
+        if TestGeospatial.skip_old_server:
+            pytest.skip("Server does not support geospatial indexes")
         geo_object_loads = aerospike.Geo({"type": "Polygon", "coordinates": [[[-124.500000,
     37.000000],[-125.000000, 37.000000], [-121.000000, 38.080000],[-122.500000,
         38.080000], [-124.500000, 37.000000]]]})
@@ -321,6 +336,8 @@ class TestGeospatial(TestBaseClass):
         """
             Perform a positive 2d index creation
         """
+        if TestGeospatial.skip_old_server:
+            pytest.skip("Server does not support geospatial indexes")
         status = TestGeospatial.client.index_remove('test', 'loc_index')
 
         assert status == 0
@@ -333,6 +350,8 @@ class TestGeospatial(TestBaseClass):
         """
             Perform a positive 2d index creation with policy
         """
+        if TestGeospatial.skip_old_server:
+            pytest.skip("Server does not support geospatial indexes")
         status = TestGeospatial.client.index_remove('test', 'loc_index')
 
         assert status == 0
@@ -345,6 +364,8 @@ class TestGeospatial(TestBaseClass):
         """
             Perform a 2d creation with set length exceeding limit
         """
+        if TestGeospatial.skip_old_server:
+            pytest.skip("Server does not support geospatial indexes")
         set_name = 'a'
         for i in xrange(100):
             set_name = set_name + 'a'
