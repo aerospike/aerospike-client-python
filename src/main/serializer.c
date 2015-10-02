@@ -301,14 +301,19 @@ extern PyObject * serialize_based_on_serializer_policy(AerospikeClient * self,
 		PyObject *value,
 		as_error *error_p)
 {
-    uint8_t use_client_serializer = false;
+    uint8_t use_client_serializer = true;
 	PyObject* initresult = NULL;
-    if(!self->is_client_put_serializer) {
-        if  (self->user_serializer_call_info.callback) {
-            serializer_policy = SERIALIZER_USER;
-            use_client_serializer = true;
+
+    if (self->is_client_put_serializer) {
+        if (serializer_policy == SERIALIZER_USER) {
+            if (!self->user_serializer_call_info.callback) {
+                use_client_serializer = false;
+            }
         }
+    } else if (self->user_serializer_call_info.callback) {
+        serializer_policy = SERIALIZER_USER;
     }
+
 	switch(serializer_policy) {
 		case SERIALIZER_NONE:
 			as_error_update(error_p, AEROSPIKE_ERR_PARAM,
@@ -541,4 +546,26 @@ CLEANUP:
 	}
 
 	return PyLong_FromLong(0);
+}
+PyObject * AerospikeClient_Unset_Serializers(AerospikeClient * self, PyObject * args, PyObject * kwds)
+{
+	// Python Function Arguments
+	PyObject * py_func = NULL;
+
+	// Python Function Keyword Arguments
+	static char * kwlist[] = {NULL};
+	as_error err;
+	// Initialize error
+	as_error_init(&err);
+
+	// Python Function Argument Parsing
+	if ( PyArg_ParseTupleAndKeywords(args, kwds, ":unset_serializers", kwlist) == false ) {
+		return NULL;
+	}
+	is_user_serializer_registered = 0;
+	is_user_deserializer_registered = 0;
+    memset(&user_deserializer_call_info, 0, sizeof(user_deserializer_call_info));
+    memset(&user_serializer_call_info, 0, sizeof(user_serializer_call_info));
+
+    return PyLong_FromLong(0);
 }

@@ -145,6 +145,11 @@ in an in-memory primary index.
 
     :param callable callback: the function to invoke for deserialization.
 
+.. py:function:: unset_serializers()
+
+    Deregister the user-defined de/serializer available from :class:`aerospike.Client`
+    instances.
+
 .. note:: Serialization Examples
 
     The following example shows the three modes of serialization - built-in, \
@@ -194,7 +199,7 @@ in an in-memory primary index.
         print(bins)
 
         print("Use the instance-level user-defined serialization (json)")
-        client2.put(('test','demo','foo3'), bin_)
+        client2.put(('test','demo','foo3'), bin_, serializer=aerospike.SERIALIZER_USER)
         # notice that json-encoding a tuple produces a list
         (key, meta, bins) = client2.get(('test','demo','foo3'))
         print(bins)
@@ -425,7 +430,7 @@ Serialization Constants
 
 .. data:: SERIALIZER_NONE
 
-    Drop bins whose values are of an unsupported type
+    Do not serialize bins whose data type is unsupported
 
 .. versionadded:: 1.0.47
 

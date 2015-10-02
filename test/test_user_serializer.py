@@ -36,9 +36,6 @@ def deserialize_function_old_server(val):
 def client_deserialize_function(val):
     return marshal.loads(val)
 
-def client_deserialize_function_override(val):
-    return json.loads(val)
-
 
 class TestUserSerializer(object):
     def setup_class(cls):
@@ -268,12 +265,12 @@ class TestUserSerializer(object):
     def test_put_with_mixeddata_client_serializer_deserializer_with_spec_in_put(self):
 
         #    Invoke put() for mixed data with class and instance serialziers
-        #    with no specification in put
+        #    with a specification in put. Client one is called
 
         hostlist, user, password = TestBaseClass.get_hosts()
         method_config = {'hosts': hostlist,
                 'serialization': (client_serialize_function,
-                    client_deserialize_function_override)}
+                    client_deserialize_function)}
         if user == None and password == None:
             client = aerospike.client(method_config).connect()
         else:
@@ -311,10 +308,10 @@ class TestUserSerializer(object):
                     "pi": 3},
             'normal': 1234,
             'special': '!@#@#$QSDAsd;as',
-            'list': ["nanslkdl", 1, marshal.dumps(bytearray("asd;as[d'as;d", "utf-8"))],
-            'bytes': marshal.dumps(bytearray("asd;as[d'as;d", "utf-8")),
-            'nestedlist': ["nanslkdl", 1, marshal.dumps(bytearray("asd;as[d'as;d", "utf-8")),
-                           [1, marshal.dumps(bytearray("asd;as[d'as;d", "utf-8"))]],
+            'list': ["nanslkdl", 1, bytearray("asd;as[d'as;d", "utf-8")],
+            'bytes': bytearray("asd;as[d'as;d", "utf-8"),
+            'nestedlist': ["nanslkdl", 1, bytearray("asd;as[d'as;d", "utf-8"),
+                           [1, bytearray("asd;as[d'as;d", "utf-8")]],
             'nestedmap': {
                 "key": "asd';q;'1';",
                 "pi": 314,
