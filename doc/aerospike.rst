@@ -278,13 +278,13 @@ in an in-memory primary index.
 
 .. rubric:: Geospatial
 
-.. py:function:: geo([geo_data])
+.. py:function:: geojson([geo_data])
 
-    Creates an instance of the :class:`~aerospike.Geo` class, and used to wrap a
+    Creates an instance of the :class:`~aerospike.GeoJSON` class, and used to wrap a
     geospatial object, such as a point, polygon or circle.
 
     :param dict geo_data: a :class:`dict` representing the geospatial data.
-    :return: an instance of the :py:class:`aerospike.Geo` class.
+    :return: an instance of the :py:class:`aerospike.GeoJSON` class.
 
     .. code-block:: python
 
@@ -293,8 +293,8 @@ in an in-memory primary index.
         # Create GeoJSON point using WGS84 coordinates.
         latitude = 45.920278
         longitude = 63.342222
-        loc = aerospike.geo({'type': 'Point',
-                             'coordinates': [longitude, latitude]})
+        loc = aerospike.geojson({'type': 'Point',
+                                 'coordinates': [longitude, latitude]})
 
     .. versionadded:: 1.0.53
 

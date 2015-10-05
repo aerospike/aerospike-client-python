@@ -140,5 +140,5 @@ PyMODINIT_FUNC initaerospike(void)
 
 	PyTypeObject * geospatial = AerospikeGeospatial_Ready();
 	Py_INCREF(geospatial);
-	PyModule_AddObject(aerospike, "Geo", (PyObject *) geospatial);
+	PyModule_AddObject(aerospike, "GeoJSON", (PyObject *) geospatial);
 }

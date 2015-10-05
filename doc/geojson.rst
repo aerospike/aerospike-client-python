@@ -1,26 +1,26 @@
-.. _geo:
+.. _geojson:
 
 .. currentmodule:: aerospike
 
-=================================
-Geo Class --- :class:`Geo`
-=================================
+==================================
+GeoJSON Class --- :class:`GeoJSON`
+==================================
 
-:class:`Geo`
-===============
+:class:`GeoJSON`
+================
 
-.. class:: Geo
+.. class:: GeoJSON
 
-    Starting with version 3.6.2, the Aerospike server supports storing
-    geospatial data. A 2dsphere index can be built on a bin which contains
-    geospatial data, enabling queries for the points contained within given
-    shapes using :meth:`aerospike.predicates.within`.
+    A near future version of the Aerospike server will support storing
+    GeoJSON data. A geo2dsphere index can be built on a bin which contains
+    GeoJSON data, enabling queries for the points contained within given
+    shapes using :meth:`aerospike.predicates.geo_within`.
 
     On the client side, wrapping geospatial data in an instance of the
-    :class:`aerospike.Geo` class enables serialization of the data into the
+    :class:`aerospike.GeoJSON` class enables serialization of the data into the
     correct type during write operation, such as :meth:`~aerospike.Client.put`.
     On reading a record from the server, bins with geospatial data it will be
-    deserialized into a :class:`~aerospike.Geo` instance.
+    deserialized into a :class:`~aerospike.GeoJSON` instance.
 
     .. code-block:: python
 
@@ -33,8 +33,8 @@ Geo Class --- :class:`Geo`
         # Create GeoJSON point using WGS84 coordinates.
         latitude = 28.608389
         longitude = -80.604333
-        loc = aerospike.geo({'type': "Point",
-                             'coordinates': [longitude, latitude] })
+        loc = aerospike.geojson({'type': "Point",
+                                 'coordinates': [longitude, latitude] })
         print(loc)
 
         # Create a user record.
@@ -53,25 +53,25 @@ Geo Class --- :class:`Geo`
 
     .. method:: wrap(geo_data)
 
-        Sets the geospatial data of the :class:`~aerospike.Geo` wrapper class.
+        Sets the geospatial data of the :class:`~aerospike.GeoJSON` wrapper class.
 
         :param dict geo_data: a :class:`dict` representing the geospatial data.
 
     .. method:: unwrap() -> dict of geospatial data
 
-        Gets the geospatial data contained in the :class:`~aerospike.Geo` class.
+        Gets the geospatial data contained in the :class:`~aerospike.GeoJSON` class.
 
         :return: a :class:`dict` representing the geospatial data.
 
     .. method:: loads(raw_geo)
 
-        Sets the geospatial data of the :class:`~aerospike.Geo` wrapper class from a raw GeoJSON string.
+        Sets the geospatial data of the :class:`~aerospike.GeoJSON` wrapper class from a GeoJSON string.
 
         :param str raw_geo: a GeoJSON string representation.
 
     .. method:: dumps() -> a GeoJSON string
 
-        Gets the geospatial data contained in the :class:`~aerospike.Geo` class as a GeoJSON string.
+        Gets the geospatial data contained in the :class:`~aerospike.GeoJSON` class as a GeoJSON string.
 
         :return: a GeoJSON :class:`str` representing the geospatial data.
 

@@ -27,7 +27,7 @@ Content
     scan
     query
     predicates
-    geo
+    geojson
     llist
     exception
 

@@ -61,7 +61,7 @@ PyObject * AerospikeGeospatial_Dumps(AerospikeGeospatial * self, PyObject * args
 	as_error_init(&err);
 
 	if (!self) {
-		as_error_update(&err, AEROSPIKE_ERR_PARAM, "Invalid geospatial object");
+		as_error_update(&err, AEROSPIKE_ERR_PARAM, "Invalid geospatial data");
 		goto CLEANUP;
 	}
 

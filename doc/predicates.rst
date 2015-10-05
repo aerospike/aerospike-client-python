@@ -130,15 +130,15 @@
         print(res)
         client.close
 
-.. py:function:: within(bin, shape)
+.. py:function:: geo_within(bin, shape)
 
     Predicate for finding any point in bin which is within the given shape.
-    Requires a geospatial 2dsphere index
-    (:meth:`~aerospike.Client.index_2dsphere_create`) over a *bin* containing
-    :class:`~aerospike.Geo` point data.
+    Requires a geo2dsphere index
+    (:meth:`~aerospike.Client.index_geo2dsphere_create`) over a *bin*
+    containing :class:`~aerospike.GeoJSON` point data.
 
     :param str bin: the bin name.
-    :param str shape: find points that are within this geoJSON shape.
+    :param str shape: find points that are within the shape described by a GeoJSON string.
     :return: :py:func:`tuple` to be used in :meth:`aerospike.Query.where`.
 
     .. code-block:: python
@@ -150,7 +150,7 @@
         config = { 'hosts': [ ('127.0.0.1', 3000)]}
         client = aerospike.client(config).connect()
         # Create a search rectangle which matches screen boundaries:
-        rect = aerospike.geo({ 'type': "Polygon",
+        rect = aerospike.geojson({ 'type': "Polygon",
                  'coordinates': [
                       [[-122.115246, 37.339645],
                        [-122.032506, 37.339645],
@@ -162,7 +162,7 @@
         # Find all points contained in the rectangle.
         query = client.query('test', 'demo')
         query.select('userid', 'tstamp', 'loc')
-        query.where(p.within('loc', rect.dumps()))
+        query.where(p.geo_within('loc', rect.dumps()))
         points = query.results()
         print(points)
         client.close
