@@ -549,9 +549,6 @@ CLEANUP:
 }
 PyObject * AerospikeClient_Unset_Serializers(AerospikeClient * self, PyObject * args, PyObject * kwds)
 {
-	// Python Function Arguments
-	PyObject * py_func = NULL;
-
 	// Python Function Keyword Arguments
 	static char * kwlist[] = {NULL};
 	as_error err;
