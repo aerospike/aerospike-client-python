@@ -134,7 +134,7 @@ class TestGeospatial(TestBaseClass):
         """
         if TestGeospatial.skip_old_server:
             pytest.skip("Server does not support geospatial indexes")
-	    keys = []
+        keys = []
         for i in xrange(1, 10):
             key = ('test', None, i)
             lng = -122 + (0.2 * i)
