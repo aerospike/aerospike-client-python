@@ -34,7 +34,7 @@ class TestGeospatial(TestBaseClass):
                     if not (int(versionlist[0]) >= 3 and int(versionlist[1]) >= 6):
                         TestGeospatial.skip_old_server = True
         if not TestGeospatial.skip_old_server:
-            TestGeospatial.client.index_2dsphere_create("test", "demo", "loc", "loc_index")
+            TestGeospatial.client.index_geo2dsphere_create("test", "demo", "loc", "loc_index")
 
     def teardown_class(cls):
         TestGeospatial.client.index_remove('test', 'loc_index')
@@ -47,7 +47,7 @@ class TestGeospatial(TestBaseClass):
             key = ('test', 'demo', i)
             lng = -122 + (0.2 * i)
             lat = 37.5 + (0.2 * i)
-            self.geo_object = aerospike.Geo({"type": "Point", "coordinates": [lng, lat] })
+            self.geo_object = aerospike.geojson({"type": "Point", "coordinates": [lng, lat] })
     
             TestGeospatial.client.put(key, {"loc": self.geo_object})
             self.keys.append(key)
@@ -65,8 +65,8 @@ class TestGeospatial(TestBaseClass):
         """
 
         key = ('test', 'demo', 'single_geo_put')
-        geo_object_single = aerospike.Geo({"type": "Point", "coordinates": [42.34, 58.62] })
-        geo_object_dict = aerospike.Geo({"type": "Point", "coordinates": [56.34, 69.62] })
+        geo_object_single = aerospike.GeoJSON({"type": "Point", "coordinates": [42.34, 58.62] })
+        geo_object_dict = aerospike.GeoJSON({"type": "Point", "coordinates": [56.34, 69.62] })
         
         TestGeospatial.client.put(key, {"loc": geo_object_single, "int_bin": 2,
             "string_bin": "str", "dict_bin": {"a": 1, "b":2, "geo":
@@ -90,7 +90,7 @@ class TestGeospatial(TestBaseClass):
         records = []
         query = TestGeospatial.client.query("test", "demo")
 
-        geo_object2 = aerospike.Geo({"type": "Polygon", "coordinates": [[[-122.500000,
+        geo_object2 = aerospike.GeoJSON({"type": "Polygon", "coordinates": [[[-122.500000,
     37.000000],[-121.000000, 37.000000], [-121.000000, 38.080000],[-122.500000,
         38.080000], [-122.500000, 37.000000]]]})
 
@@ -115,7 +115,7 @@ class TestGeospatial(TestBaseClass):
         records = []
         query = TestGeospatial.client.query("test", "demo")
 
-        geo_object2 = aerospike.Geo({"type": "Polygon", "coordinates": [[[-126.500000,
+        geo_object2 = aerospike.GeoJSON({"type": "Polygon", "coordinates": [[[-126.500000,
     37.000000],[-124.000000, 37.000000], [-124.000000, 38.080000],[-126.500000,
         38.080000], [-126.500000, 37.000000]]]})
 
@@ -139,16 +139,16 @@ class TestGeospatial(TestBaseClass):
             key = ('test', None, i)
             lng = -122 + (0.2 * i)
             lat = 37.5 + (0.2 * i)
-            geo_object = aerospike.Geo({"type": "Point", "coordinates": [lng, lat] })
+            geo_object = aerospike.GeoJSON({"type": "Point", "coordinates": [lng, lat] })
     
             TestGeospatial.client.put(key, {"loc": geo_object})
             keys.append(key)
 
-        TestGeospatial.client.index_2dsphere_create("test", None, "loc", "loc_index_no_set")
+        TestGeospatial.client.index_geo2dsphere_create("test", None, "loc", "loc_index_no_set")
         records = []
         query = TestGeospatial.client.query("test", None)
 
-        geo_object2 = aerospike.Geo({"type": "Polygon", "coordinates": [[[-122.500000,
+        geo_object2 = aerospike.GeoJSON({"type": "Polygon", "coordinates": [[[-122.500000,
     37.000000],[-121.000000, 37.000000], [-121.000000, 38.080000],[-122.500000,
         38.080000], [-122.500000, 37.000000]]]})
 
@@ -175,7 +175,7 @@ class TestGeospatial(TestBaseClass):
         records = []
         query = TestGeospatial.client.query("test", "demo")
 
-        geo_object2 = aerospike.Geo({"type": "Circle", "coordinates": [[-122.0, 37.5], 250.2]})
+        geo_object2 = aerospike.GeoJSON({"type": "Circle", "coordinates": [[-122.0, 37.5], 250.2]})
 
         query.where(p.within("loc", geo_object2.dumps()))
 
@@ -192,7 +192,7 @@ class TestGeospatial(TestBaseClass):
             Perform an operate operation with geospatial bin
         """
 
-        geo_object_operate = aerospike.Geo({"type": "Point", "coordinates": [43.45, 56.75] })
+        geo_object_operate = aerospike.GeoJSON({"type": "Point", "coordinates": [43.45, 56.75] })
         key = ('test', 'demo', 'single_geo_operate')
         list = [{
             "op": aerospike.OPERATOR_WRITE,
@@ -215,7 +215,7 @@ class TestGeospatial(TestBaseClass):
         if TestGeospatial.skip_old_server:
             pytest.skip("Server does not support geospatial indexes")
         try:
-            geo_object_wrong = aerospike.Geo("abc")
+            geo_object_wrong = aerospike.GeoJSON("abc")
 
         except ParamError as exception:
             assert exception.code == -2
@@ -247,7 +247,7 @@ class TestGeospatial(TestBaseClass):
         """
         if TestGeospatial.skip_old_server:
             pytest.skip("Server does not support geospatial indexes")
-        geo_object_wrap = aerospike.Geo({"type": "Polygon", "coordinates": [[[-124.500000,
+        geo_object_wrap = aerospike.GeoJSON({"type": "Polygon", "coordinates": [[[-124.500000,
     37.000000],[-125.000000, 37.000000], [-121.000000, 38.080000],[-122.500000,
         38.080000], [-124.500000, 37.000000]]]})
 
@@ -295,7 +295,7 @@ class TestGeospatial(TestBaseClass):
         """
         if TestGeospatial.skip_old_server:
             pytest.skip("Server does not support geospatial indexes")
-        geo_object_loads = aerospike.Geo({"type": "Polygon", "coordinates": [[[-124.500000,
+        geo_object_loads = aerospike.GeoJSON({"type": "Polygon", "coordinates": [[[-124.500000,
     37.000000],[-125.000000, 37.000000], [-121.000000, 38.080000],[-122.500000,
         38.080000], [-124.500000, 37.000000]]]})
 
@@ -342,7 +342,7 @@ class TestGeospatial(TestBaseClass):
 
         assert status == 0
 
-        status = TestGeospatial.client.index_2dsphere_create("test", "demo", "loc", "loc_index")
+        status = TestGeospatial.client.index_geo2dsphere_create("test", "demo", "loc", "loc_index")
 
         assert status == 0
 
@@ -356,7 +356,7 @@ class TestGeospatial(TestBaseClass):
 
         assert status == 0
 
-        status = TestGeospatial.client.index_2dsphere_create("test", "demo", "loc", "loc_index", {"timeout": 2000})
+        status = TestGeospatial.client.index_geo2dsphere_create("test", "demo", "loc", "loc_index", {"timeout": 2000})
 
         assert status == 0
 
@@ -373,7 +373,7 @@ class TestGeospatial(TestBaseClass):
 
         assert status == 0
 	try:
-        	status = TestGeospatial.client.index_2dsphere_create("test", set_name, "loc", "loc_index")
+        	status = TestGeospatial.client.index_geo2dsphere_create("test", set_name, "loc", "loc_index")
 
 	except InvalidRequest as exception:
         	assert exception.code == 4
