@@ -27,6 +27,7 @@ Content
     scan
     query
     predicates
+    geo
     llist
     exception
 

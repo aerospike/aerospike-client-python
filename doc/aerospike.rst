@@ -66,7 +66,7 @@ in an in-memory primary index.
                 * **max_namespaces** similarly pad (default: 8)
                 * **takeover_threshold_sec** take over tending if the cluster hasn't been checked for this many seconds (default: 30)
 
-    :return: an :py:class:`aerospike.Client` class.
+    :return: an instance of the :py:class:`aerospike.Client` class.
 
     .. seealso::
         `Client Policies <http://www.aerospike.com/apidocs/c/db/d65/group__client__policies.html>`_ and \
@@ -149,6 +149,8 @@ in an in-memory primary index.
 
     Deregister the user-defined de/serializer available from :class:`aerospike.Client`
     instances.
+
+    .. versionadded:: 1.0.53
 
 .. note:: Serialization Examples
 
@@ -272,6 +274,29 @@ in an in-memory primary index.
     Declare the logging level threshold for the log handler.
 
     :param int log_level: one of the :ref:`aerospike_log_levels` constant values.
+
+
+.. rubric:: Geospatial
+
+.. py:function:: geo([geo_data])
+
+    Creates an instance of the :class:`~aerospike.Geo` class, and used to wrap a
+    geospatial object, such as a point, polygon or circle.
+
+    :param dict geo_data: a :class:`dict` representing the geospatial data.
+    :return: an instance of the :py:class:`aerospike.Geo` class.
+
+    .. code-block:: python
+
+        import aerospike
+
+        # Create GeoJSON point using WGS84 coordinates.
+        latitude = 45.920278
+        longitude = 63.342222
+        loc = aerospike.geo({'type': 'Point',
+                             'coordinates': [longitude, latitude]})
+
+    .. versionadded:: 1.0.53
 
 
 .. _aerospike_operators:
