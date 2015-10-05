@@ -130,7 +130,7 @@ exit:
 	return Py_None;
 }
 
-static PyObject * AerospikePredicates_Within(PyObject * self, PyObject * args)
+static PyObject * AerospikePredicates_GeoWithin(PyObject * self, PyObject * args)
 {
 	PyObject * py_bin = NULL;
 	PyObject * py_shape = NULL;
@@ -153,7 +153,7 @@ static PyMethodDef AerospikePredicates_Methods[] = {
 	{"between",		(PyCFunction) AerospikePredicates_Between,	METH_VARARGS, "Tests whether a bin's value is within the specified range."},
 	{"contains",	(PyCFunction) AerospikePredicates_Contains,	METH_VARARGS, "Tests whether a bin's value equals the specified value in a complex data type"},
 	{"range",	(PyCFunction) AerospikePredicates_RangeContains,	METH_VARARGS, "Tests whether a bin's value is within the specified range in a complex data type"},
-	{"within",		(PyCFunction) AerospikePredicates_Within,	METH_VARARGS, "Tests whether a bin's value is within the specified shape."},
+	{"geo_within",		(PyCFunction) AerospikePredicates_GeoWithin,	METH_VARARGS, "Tests whether a bin's value is within the specified shape."},
 	{NULL, NULL, 0, NULL}
 };
 

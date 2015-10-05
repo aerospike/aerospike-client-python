@@ -827,7 +827,7 @@ PyObject * AerospikeClient_Index_2dsphere_Create(AerospikeClient * self, PyObjec
 	static char * kwlist[] = {"ns", "set", "bin", "name", "policy", NULL};
 
 	// Python Function Argument Parsing
-	if ( PyArg_ParseTupleAndKeywords(args, kwds, "OOOO|O:index_2dsphere_create", kwlist,
+	if ( PyArg_ParseTupleAndKeywords(args, kwds, "OOOO|O:index_geo2dsphere_create", kwlist,
 				&py_ns, &py_set, &py_bin, &py_name, &py_policy) == false ) {
 		return NULL;
 	}

@@ -1121,10 +1121,10 @@ a cluster-tending thread.
 
         .. versionadded:: 1.0.42
 
-    .. method:: index_2dsphere_create(ns, set, bin, index_name[, policy])
+    .. method:: index_geo2dsphere_create(ns, set, bin, index_name[, policy])
 
-        Create a geospatial 2dsphere index with *index_name* on the *bin* in \
-        the specified *ns*, *set*.
+        Create a geospatial 2D spherical index with *index_name* on the *bin* \
+        in the specified *ns*, *set*.
 
         :param str ns: the namespace in the aerospike cluster.
         :param str set: the set name.
@@ -1133,8 +1133,8 @@ a cluster-tending thread.
         :param dict policy: optional :ref:`aerospike_info_policies`.
         :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
 
-        .. seealso:: The :class:`aerospike.Geo` class, and queries using \
-            :meth:`aerospike.predicates.within`.
+        .. seealso:: The :class:`aerospike.GeoJSON` class, and queries using \
+            :meth:`aerospike.predicates.geo_within`.
 
         .. versionadded:: 1.0.53
 

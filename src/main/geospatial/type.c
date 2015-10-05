@@ -33,22 +33,22 @@
  * PYTHON TYPE METHODS
  ******************************************************************************/
 static PyMemberDef AerospikeGeospatial_Type_Members[] = {
-    {"geo_data", T_OBJECT, offsetof(AerospikeGeospatial, geo_data), 0, "The geo object"},
+    {"geo_data", T_OBJECT, offsetof(AerospikeGeospatial, geo_data), 0, "The aerospike.GeoJSON object"},
     {NULL}
 };
 static PyMethodDef AerospikeGeospatial_Type_Methods[] = {
 
     {"wrap",	(PyCFunction) AerospikeGeospatial_Wrap,		METH_VARARGS | METH_KEYWORDS,
-    			"Sets the geospatial data to the arguements"},
+    			"Sets the geospatial data in the aerospike.GeoJSON object"},
 
     {"unwrap",	(PyCFunction) AerospikeGeospatial_Unwrap,	METH_VARARGS | METH_KEYWORDS,
-    			"Load the geospatial data from the arguments"},
+    			"Returns the geospatial data contained in the aerospike.GeoJSON object"},
 
     {"loads",	(PyCFunction) AerospikeGeospatial_Loads,	METH_VARARGS | METH_KEYWORDS,
-    			"Set the geospatial data from a  raw geoJSON string"},
+    			"Set the geospatial data from a raw GeoJSON string"},
 
     {"dumps",	(PyCFunction) AerospikeGeospatial_Dumps,	METH_VARARGS | METH_KEYWORDS,
-    			"Get the geospatial data in form of raw geoJSON string."},
+    			"Get the geospatial data in form of a GeoJSON string."},
 
     /*{"where",	(PyCFunction) AerospikeQuery_Where,		METH_VARARGS,
     			"Predicate to be applied to the query."},*/
@@ -101,9 +101,9 @@ static int AerospikeGeospatial_Type_Init(AerospikeGeospatial * self, PyObject * 
 
 	static char * kwlist[] = {"geo_data", NULL};
 
-	if ( PyArg_ParseTupleAndKeywords(args, kwds, "O:geo", kwlist,
+	if ( PyArg_ParseTupleAndKeywords(args, kwds, "O:geojson", kwlist,
 		&py_geodata) == false ) {
-		as_error_update(&err, AEROSPIKE_ERR_PARAM, "geo() expects exactly 1 parameter");
+		as_error_update(&err, AEROSPIKE_ERR_PARAM, "geojson() expects exactly 1 parameter");
 		goto CLEANUP;
 	}
 
@@ -234,9 +234,9 @@ static PyTypeObject AerospikeGeospatial_Type = {
     .tp_as_buffer		= 0,
     .tp_flags			= Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE,
     .tp_doc				=
-    		"The Geospatial class assists in populating the parameters of a geospatial object\n"
-    		"operation. To create a new instance of the Geospatial class, call the\n"
-    		"goe() method on an instance of a Client class.\n",
+    		"The GeoJSON class casts geospatial data to and from the server's\n"
+    		"as_geojson type. To create a new instance of the class, use the\n"
+    		"aerospike.geojson() function.\n",
     .tp_traverse		= 0,
     .tp_clear			= 0,
     .tp_richcompare		= 0,
