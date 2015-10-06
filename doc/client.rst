@@ -1228,6 +1228,15 @@ a cluster-tending thread.
 
         .. versionchanged:: 1.0.41
 
+    .. method:: has_geo()  ->  bool
+
+        Check whether the connected cluster supports geospatial data and indexes.
+
+        :rtype: :class:`bool`
+        :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
+
+        .. versionadded:: 1.0.53
+
 
     .. rubric:: LList
 

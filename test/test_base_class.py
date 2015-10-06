@@ -7,6 +7,7 @@ class TestBaseClass(object):
     user = None
     password = None
     has_ldt = None
+    has_geo = None
 
     @staticmethod
     def get_hosts():
@@ -57,6 +58,21 @@ class TestBaseClass(object):
             TestBaseClass.has_ldt = True
         client.close()
         return TestBaseClass.has_ldt
+
+    @staticmethod
+    def has_geo_support():
+        if TestBaseClass.has_geo is not None:
+            return TestBaseClass.has_geo
+        import aerospike
+        hostlist, user, password = TestBaseClass.get_hosts()
+        config = {'hosts': hostlist}
+        if user == None and password == None:
+            client = aerospike.client(config).connect()
+        else:
+            client = aerospike.client(config).connect(user, password)
+        TestBaseClass.has_geo = client.has_geo()
+        client.close()
+        return TestBaseClass.has_geo
 
 
 

@@ -170,6 +170,9 @@ static PyMethodDef AerospikeClient_Type_Methods[] = {
 	{"get_nodes",
 		(PyCFunction) AerospikeClient_GetNodes, METH_VARARGS | METH_KEYWORDS,
 		"Gets information about the nodes of the cluster."},
+	{"has_geo",
+		(PyCFunction)AerospikeClient_HasGeo, METH_VARARGS | METH_KEYWORDS,
+		"Reflect if the server supports geospatial"},
 
 	// UDF OPERATIONS
 

@@ -457,12 +457,19 @@ PyObject * AerospikeClient_Exists_Many(AerospikeClient * self, PyObject *args, P
 PyObject * AerospikeClient_Info(AerospikeClient * self, PyObject * args, PyObject * kwds);
 
 /**
-* Perforrm get nodes operation on the database.
+* Perform get nodes operation on the database.
 *
 * client.get_nodes((x,y,z))
 *
 */
 PyObject * AerospikeClient_GetNodes(AerospikeClient * self, PyObject * args, PyObject * kwds);
+/**
+* Reflect if the server supports the geospatial feature.
+*
+* client.has_geo()
+*
+*/
+PyObject * AerospikeClient_HasGeo(AerospikeClient * self, PyObject * args, PyObject * kwds);
 /**
 * Perforrm get key digest operation on the database.
 *
