@@ -1107,7 +1107,6 @@ a cluster-tending thread.
         .. code-block:: python
 
             import aerospike
-            from aerospike import predicates as p
 
             client = aerospike.client({ 'hosts': [ ('127.0.0.1', 3000)]}).connect()
 
@@ -1136,6 +1135,14 @@ a cluster-tending thread.
         .. seealso:: The :class:`aerospike.GeoJSON` class, and queries using \
             :meth:`aerospike.predicates.geo_within`.
 
+        .. code-block:: python
+
+            import aerospike
+
+            client = aerospike.client({ 'hosts': [ ('127.0.0.1', 3000)]}).connect()
+            client.index_geo2dsphere_create('test', 'demo', 'loc', 'loc_geo_idx')
+            client.close()
+
         .. versionadded:: 1.0.53
 
 
@@ -1151,11 +1158,11 @@ a cluster-tending thread.
         .. versionchanged:: 1.0.39
 
 
-    .. method:: get_nodes()  ->  []
+    .. method:: get_nodes() -> []
 
         Return the list of hosts present in a connected cluster.
 
-        :rtype: :class:`list`
+        :return: a :class:`list` of node address tuples.
         :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
 
         .. code-block:: python
@@ -1175,10 +1182,9 @@ a cluster-tending thread.
 
             .. code-block:: python
 
-                [ ( '127.0.0.1', 3000), ('127.0.0.1', 3010) ]
+                [('127.0.0.1', 3000), ('127.0.0.1', 3010)]
 
         .. versionchanged:: 1.0.41
-
 
 
      .. method:: info(command[, hosts[, policy]]) -> {}

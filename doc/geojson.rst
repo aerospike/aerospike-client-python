@@ -26,15 +26,17 @@ GeoJSON Class --- :class:`GeoJSON`
 
         from __future__ import print_function
         import aerospike
+        from aerospike import GeoJSON
         import time
 
         config = { 'hosts': [ ('127.0.0.1', 3000)]}
         client = aerospike.client(config).connect()
+        client.index_geo2dsphere_create('test', 'demo', 'loc', 'loc_geo_idx')
         # Create GeoJSON point using WGS84 coordinates.
         latitude = 28.608389
         longitude = -80.604333
-        loc = aerospike.geojson({'type': "Point",
-                                 'coordinates': [longitude, latitude] })
+        loc = GeoJSON({'type': "Point",
+                       'coordinates': [longitude, latitude]})
         print(loc)
 
         # Create a user record.

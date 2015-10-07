@@ -145,19 +145,18 @@
 
         from __future__ import print_function
         import aerospike
+        from aerospike import GeoJSON
         from aerospike import predicates as p
 
         config = { 'hosts': [ ('127.0.0.1', 3000)]}
         client = aerospike.client(config).connect()
         # Create a search rectangle which matches screen boundaries:
-        rect = aerospike.geojson({ 'type': "Polygon",
-                 'coordinates': [
-                      [[-122.115246, 37.339645],
-                       [-122.032506, 37.339645],
-                       [-122.032506, 37.446842],
-                       [-122.115246, 37.446842],
-                       [-122.115246, 37.339645]]
-                 ]})
+        rect = GeoJSON({ 'type': "Polygon",
+                         'coordinates': [
+                          [[28.60000, -80.590000],
+                           [28.61800, -80.590000],
+                           [28.61800, -80.620000],
+                           [28.600000,-80.620000]]]})
 
         # Find all points contained in the rectangle.
         query = client.query('test', 'demo')
