@@ -42,7 +42,7 @@ class TestGeospatial(TestBaseClass):
             key = ('test', 'demo', i)
             lng = -122 + (0.2 * i)
             lat = 37.5 + (0.2 * i)
-            self.geo_object = aerospike.geojson({"type": "Point", "coordinates": [lng, lat] })
+            self.geo_object = aerospike.GeoJSON({"type": "Point", "coordinates": [lng, lat] })
     
             TestGeospatial.client.put(key, {"loc": self.geo_object})
             self.keys.append(key)
@@ -312,6 +312,95 @@ class TestGeospatial(TestBaseClass):
         """
 	assert repr(self.geo_object) == '\'{"type": "Point", "coordinates": [-120.2, 39.3]}\''
         assert eval(repr(self.geo_object)) == '{"type": "Point", "coordinates": [-120.2, 39.3]}'
+
+
+    def test_geospatial_put_get_positive_with_geodata(self):
+        """
+            Perform a get and put with multiple bins including geospatial bin
+            using geodata method
+        """
+
+        key = ('test', 'demo', 'single_geo_put')
+        geo_object_single = aerospike.geodata({"type": "Point", "coordinates": [42.34, 58.62] })
+        geo_object_dict = aerospike.geodata({"type": "Point", "coordinates": [56.34, 69.62] })
+        
+        TestGeospatial.client.put(key, {"loc": geo_object_single, "int_bin": 2,
+            "string_bin": "str", "dict_bin": {"a": 1, "b":2, "geo":
+                geo_object_dict}})
+        
+        key, meta, bins = TestGeospatial.client.get(key)
+
+        assert bins == {'loc': {'coordinates': [42.34, 58.62], 'type': 'Point'},
+                "int_bin": 2, "string_bin": "str", "dict_bin": {"a": 1, "b": 2,
+                  "geo": {'coordinates': [56.34, 69.62], 'type':
+                        'Point'}}}
+
+        TestGeospatial.client.remove(key)
+
+    def test_geospatial_put_get_positive_with_geojson(self):
+        """
+            Perform a get and put with multiple bins including geospatial bin
+            using geodata method
+        """
+
+        key = ('test', 'demo', 'single_geo_put')
+        geo_object_single = aerospike.geojson('{"type": "Point", "coordinates": [42.34, 58.62] }')
+        geo_object_dict = aerospike.geojson('{"type": "Point", "coordinates": [56.34, 69.62] }')
+        
+        TestGeospatial.client.put(key, {"loc": geo_object_single, "int_bin": 2,
+            "string_bin": "str", "dict_bin": {"a": 1, "b":2, "geo":
+                geo_object_dict}})
+        
+        key, meta, bins = TestGeospatial.client.get(key)
+
+        assert bins == {'loc': {'coordinates': [42.34, 58.62], 'type': 'Point'},
+                "int_bin": 2, "string_bin": "str", "dict_bin": {"a": 1, "b": 2,
+                  "geo": {'coordinates': [56.34, 69.62], 'type':
+                        'Point'}}}
+
+        TestGeospatial.client.remove(key)
+
+    def test_geospatial_positive_query_with_geodata(self):
+        """
+            Perform a positive geospatial query for a polygon with geodata
+        """
+        records = []
+        query = TestGeospatial.client.query("test", "demo")
+
+        geo_object2 = aerospike.geodata({"type": "Polygon", "coordinates": [[[-122.500000,
+    37.000000],[-121.000000, 37.000000], [-121.000000, 38.080000],[-122.500000,
+        38.080000], [-122.500000, 37.000000]]]})
+
+        query.where(p.geo_within("loc", geo_object2.dumps()))
+
+        def callback((key, metadata, record)):
+            records.append(record)
+
+        query.foreach(callback)
+
+        assert len(records) == 3
+        assert records == [{'loc': {'coordinates': [-122.0, 37.5], 'type': 'Point'}}, {'loc': {'coordinates': [-121.8, 37.7], 'type':
+                'Point'}}, {'loc': {'coordinates': [-121.6, 37.9], 'type': 'Point'}}]
+
+    def test_geospatial_positive_query_with_geojson(self):
+        """
+            Perform a positive geospatial query for a polygon with geojson
+        """
+        records = []
+        query = TestGeospatial.client.query("test", "demo")
+
+        geo_object2 = aerospike.geojson('{"type": "Polygon", "coordinates": [[[-122.500000, 37.000000], [-121.000000, 37.000000], [-121.000000, 38.080000],[-122.500000, 38.080000], [-122.500000, 37.000000]]]}')
+
+        query.where(p.geo_within("loc", geo_object2.dumps()))
+
+        def callback((key, metadata, record)):
+            records.append(record)
+
+        query.foreach(callback)
+
+        assert len(records) == 3
+        assert records == [{'loc': {'coordinates': [-122.0, 37.5], 'type': 'Point'}}, {'loc': {'coordinates': [-121.8, 37.7], 'type':
+                'Point'}}, {'loc': {'coordinates': [-121.6, 37.9], 'type': 'Point'}}]
 
     def test_geospatial_2dindex_positive(self):
         """

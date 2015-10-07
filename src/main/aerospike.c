@@ -55,6 +55,10 @@ static PyMethodDef Aerospike_Methods[] = {
 
 	{"set_log_handler", (PyCFunction)Aerospike_Set_Log_Handler,	    METH_VARARGS | METH_KEYWORDS,
 		"Sets the log handler"},
+	{"geodata", (PyCFunction)Aerospike_Set_Geo_Data,	    METH_VARARGS | METH_KEYWORDS,
+		"Sets the geo data"},
+	{"geojson", (PyCFunction)Aerospike_Set_Geo_Json,	    METH_VARARGS | METH_KEYWORDS,
+		"Sets the geo data from a raw geoJSON string"},
 
 	{NULL}
 };
