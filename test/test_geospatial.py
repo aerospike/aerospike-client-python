@@ -195,16 +195,16 @@ class TestGeospatial(TestBaseClass):
 
         TestGeospatial.client.remove(key)
 
-    def test_geospatial_object_non_dict(self):
+    def test_geospatial_object_non_json_serialziable_string(self):
         """
             The geospatial object is not a dictionary
         """
         try:
             geo_object_wrong = aerospike.GeoJSON("abc")
 
-        except ParamError as exception:
-            assert exception.code == -2
-            assert exception.msg == 'Geospatial data should be a dictionary'
+        except ClientError as exception:
+            assert exception.code == -1
+            assert exception.msg == 'String is not GeoJSON serializable'
 
     def test_geospatial_wrap_positive(self):
         """
