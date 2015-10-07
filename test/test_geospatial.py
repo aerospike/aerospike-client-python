@@ -87,7 +87,7 @@ class TestGeospatial(TestBaseClass):
     37.000000],[-121.000000, 37.000000], [-121.000000, 38.080000],[-122.500000,
         38.080000], [-122.500000, 37.000000]]]})
 
-        query.where(p.within("loc", geo_object2.dumps()))
+        query.where(p.geo_within("loc", geo_object2.dumps()))
 
         def callback((key, metadata, record)):
             records.append(record)
@@ -110,7 +110,7 @@ class TestGeospatial(TestBaseClass):
     37.000000],[-124.000000, 37.000000], [-124.000000, 38.080000],[-126.500000,
         38.080000], [-126.500000, 37.000000]]]})
 
-        query.where(p.within("loc", geo_object2.dumps()))
+        query.where(p.geo_within("loc", geo_object2.dumps()))
 
         def callback((key, metadata, record)):
             records.append(record)
@@ -141,7 +141,7 @@ class TestGeospatial(TestBaseClass):
     37.000000],[-121.000000, 37.000000], [-121.000000, 38.080000],[-122.500000,
         38.080000], [-122.500000, 37.000000]]]})
 
-        query.where(p.within("loc", geo_object2.dumps()))
+        query.where(p.geo_within("loc", geo_object2.dumps()))
 
         def callback((key, metadata, record)):
             records.append(record)
@@ -164,7 +164,7 @@ class TestGeospatial(TestBaseClass):
 
         geo_object2 = aerospike.GeoJSON({"type": "Circle", "coordinates": [[-122.0, 37.5], 250.2]})
 
-        query.where(p.within("loc", geo_object2.dumps()))
+        query.where(p.geo_within("loc", geo_object2.dumps()))
 
         def callback((key, metadata, record)):
             records.append(record)
@@ -242,7 +242,7 @@ class TestGeospatial(TestBaseClass):
         
 	records = []
         query = TestGeospatial.client.query("test", "demo")
-        query.where(p.within("loc", geo_object_wrap.dumps()))
+        query.where(p.geo_within("loc", geo_object_wrap.dumps()))
 
         def callback((key, metadata, record)):
             records.append(record)
@@ -270,7 +270,7 @@ class TestGeospatial(TestBaseClass):
             self.geo_object.loads('{"abc"}')
         except ClientError as exception:
             assert exception.code == -1
-            assert exception.msg == 'String is not geoJSON serializable'
+            assert exception.msg == 'String is not GeoJSON serializable'
 
     def test_geospatial_loads_positive_with_query(self):
         """
@@ -287,7 +287,7 @@ class TestGeospatial(TestBaseClass):
 
 	records = []
         query = TestGeospatial.client.query("test", "demo")
-        query.where(p.within("loc", geo_object_loads.dumps()))
+        query.where(p.geo_within("loc", geo_object_loads.dumps()))
 
         def callback((key, metadata, record)):
             records.append(record)
