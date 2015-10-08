@@ -310,6 +310,7 @@ extern PyObject * serialize_based_on_serializer_policy(AerospikeClient * self,
                 use_client_serializer = false;
             }
         }
+        self->is_client_put_serializer = false;
     } else if (self->user_serializer_call_info.callback) {
         serializer_policy = SERIALIZER_USER;
     }

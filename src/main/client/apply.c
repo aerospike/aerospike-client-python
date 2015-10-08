@@ -63,6 +63,8 @@ PyObject * AerospikeClient_Apply_Invoke(
 	PyObject * py_umodule   = NULL;
 	PyObject * py_ufunction = NULL;
 
+	as_static_pool static_pool;
+	memset(&static_pool, 0, sizeof(static_pool));
 	// Initialisation flags
 	bool key_initialised = false;
 
@@ -93,7 +95,7 @@ PyObject * AerospikeClient_Apply_Invoke(
 	key_initialised = true;
 
 	// Convert python list to as_list
-	pyobject_to_list(self, &err, py_arglist, &arglist, NULL, -1);
+	pyobject_to_list(self, &err, py_arglist, &arglist, &static_pool, SERIALIZER_PYTHON);
 	if ( err.code != AEROSPIKE_OK ) {
 		goto CLEANUP;
 	}
