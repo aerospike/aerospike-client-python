@@ -45,6 +45,8 @@ class TestApply(TestBaseClass):
         status = TestApply.client.udf_put(filename, udf_type, policy)
         filename = "test_record_udf.lua"
         status = TestApply.client.udf_put(filename, udf_type, policy)
+        filename = "udf_basic_ops.lua"
+        status = TestApply.client.udf_put(filename, udf_type, policy)
 
     def teardown_class(cls):
         policy = {}
@@ -53,6 +55,8 @@ class TestApply(TestBaseClass):
         policy = {'timeout': 0}
         module = "sample.lua"
 
+        status = TestApply.client.udf_remove(module, policy)
+        module = "udf_basic_ops.lua"
         status = TestApply.client.udf_remove(module, policy)
         TestApply.client.close()
 
@@ -319,6 +323,23 @@ class TestApply(TestBaseClass):
         retval = TestApply.client.apply(key, 'test_record_udf',
                                         'udf_returns_record', [])
         assert retval != None
+
+    def test_apply_with_bytearray(self):
+        """
+            Invoke apply() with a bytearray as a argument
+        """
+        key = ('test', 'demo', 'apply_insert')
+        retval = TestApply.client.apply(key, 'udf_basic_ops',
+                                        'create_record',
+                                        [bytearray("asd;as[d'as;d",
+                                            "utf-8")])
+        assert retval != None
+
+        (key, meta, bins) = TestApply.client.get(key)
+
+        assert bins == {'bin': bytearray(b"asd;as[d\'as;d")}
+
+        TestApply.client.remove(key)
 
     def test_apply_with_extra_argument_to_lua(self):
         """
