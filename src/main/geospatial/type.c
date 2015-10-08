@@ -76,7 +76,7 @@ void store_geodata(AerospikeGeospatial *self, as_error *err, PyObject *py_geodat
 		    as_error_update(err, AEROSPIKE_ERR_PARAM, "Geospatial dictionary should have keys 'type' and 'coordinates'");
         }
 	} else {
-		as_error_update(err, AEROSPIKE_ERR_PARAM, "Geospatial data should be a dictionary");
+		as_error_update(err, AEROSPIKE_ERR_PARAM, "Geospatial data should be a dictionary or raw geoJSON string");
 	}
 }
 
