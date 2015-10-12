@@ -86,6 +86,7 @@ PyObject * AerospikeClient_Apply_Invoke(
 		goto CLEANUP;
 	}
 
+    self->is_client_put_serializer = false;
 	// Convert python key object to as_key
 	pyobject_to_key(&err, py_key, &key);
 	if ( err.code != AEROSPIKE_OK ) {

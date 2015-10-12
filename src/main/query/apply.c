@@ -59,6 +59,8 @@ AerospikeQuery * AerospikeQuery_Apply(AerospikeQuery * self, PyObject * args, Py
 		goto CLEANUP;
 	}
 
+    self->client->is_client_put_serializer = false;
+
 	// Aerospike API Arguments
 	char * module = NULL;
 	char * function = NULL;
