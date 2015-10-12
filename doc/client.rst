@@ -122,6 +122,33 @@ a cluster-tending thread.
             finally:
                 client.close()
 
+        .. warning::
+
+            The client will be changed to raise a :py:exc:`~aerospike.exception.RecordNotFound` \
+            exception when :meth:`~aerospike.Client.get` does not find the \
+            record. Code that currently checks for ``meta != None`` should be \
+            modified to anticipate and handle this change.
+
+            .. code-block:: python
+
+                try:
+                    # assuming a record with such a key exists in the cluster
+                    key = ('test', 'demo', 1)
+                    (key, meta, bins) = client.get(key)
+                    if meta == None:
+                        raise aerospike.exception.RecordNotFound
+                    print(key)
+                    print('--------------------------')
+                    print(meta)
+                    print('--------------------------')
+                    print(bins)
+                except RecordNotFound:
+                    print("The record does not exist")
+                except AerospikeError as e:
+                    print("Error: {0} [{1}]".format(e.msg, e.code))
+                    sys.exit(1)
+
+
 
     .. method:: select(key, bins[, policy]) -> (key, meta, bins)
 
@@ -161,6 +188,32 @@ a cluster-tending thread.
             finally:
                 client.close()
 
+        .. warning::
+
+            The client will be changed to raise a :py:exc:`~aerospike.exception.RecordNotFound` \
+            exception when :meth:`~aerospike.Client.select` does not find the \
+            record. Code that currently checks for ``meta != None`` should be \
+            modified to anticipate and handle this change.
+
+            .. code-block:: python
+
+                try:
+                    # assuming a record with such a key exists in the cluster
+                    key = ('test', 'demo', 1)
+                    (key, meta, bins) = client.select(key, ['name'])
+                    if meta == None:
+                        raise aerospike.exception.RecordNotFound
+                    print(key)
+                    print('--------------------------')
+                    print(meta)
+                    print('--------------------------')
+                    print(bins)
+                except RecordNotFound:
+                    print("The record does not exist")
+                except AerospikeError as e:
+                    print("Error: {0} [{1}]".format(e.msg, e.code))
+                    sys.exit(1)
+
 
     .. method:: exists(key[, policy]) -> (key, meta)
 
@@ -195,6 +248,30 @@ a cluster-tending thread.
                 sys.exit(1)
             finally:
                 client.close()
+
+        .. warning::
+
+            The client will be changed to raise a :py:exc:`~aerospike.exception.RecordNotFound` \
+            exception when :meth:`~aerospike.Client.exists` does not find the \
+            record. Code that currently checks for ``meta != None`` should be \
+            modified to anticipate and handle this change.
+
+            .. code-block:: python
+
+                try:
+                    # assuming a record with such a key exists in the cluster
+                    key = ('test', 'demo', 1)
+                    (key, meta, bins) = client.exists(key)
+                    if meta == None:
+                        raise aerospike.exception.RecordNotFound
+                    print(key)
+                    print('--------------------------')
+                    print(meta)
+                except RecordNotFound:
+                    print("The record does not exist")
+                except AerospikeError as e:
+                    print("Error: {0} [{1}]".format(e.msg, e.code))
+                    sys.exit(1)
 
 
     .. method:: put(key, bins[, meta[, policy[, serializer]]])
