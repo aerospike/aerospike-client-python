@@ -204,7 +204,7 @@ class TestGeospatial(TestBaseClass):
 
         except ParamError as exception:
             assert exception.code == -2
-            assert exception.msg == 'Geospatial data should be a dictionary or raw geoJSON string'
+            assert exception.msg == 'Geospatial data should be a dictionary or raw GeoJSON string'
 
     def test_geospatial_object_non_json_serialziable_string(self):
         """
@@ -235,7 +235,7 @@ class TestGeospatial(TestBaseClass):
             self.geo_object.wrap("abc")
         except ParamError as exception:
             assert exception.code == -2
-            assert exception.msg == 'Geospatial data should be a dictionary or raw geoJSON string'
+            assert exception.msg == 'Geospatial data should be a dictionary or raw GeoJSON string'
 
     def test_geospatial_wrap_positive_with_query(self):
         """

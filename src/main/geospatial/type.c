@@ -76,7 +76,7 @@ void store_geodata(AerospikeGeospatial *self, as_error *err, PyObject *py_geodat
 		    as_error_update(err, AEROSPIKE_ERR_PARAM, "Geospatial dictionary should have keys 'type' and 'coordinates'");
         }
 	} else {
-		as_error_update(err, AEROSPIKE_ERR_PARAM, "Geospatial data should be a dictionary or raw geoJSON string");
+		as_error_update(err, AEROSPIKE_ERR_PARAM, "Geospatial data should be a dictionary or raw GeoJSON string");
 	}
 }
 
@@ -103,9 +103,9 @@ static int AerospikeGeospatial_Type_Init(AerospikeGeospatial * self, PyObject * 
 
 	static char * kwlist[] = {"geo_data", NULL};
 
-	if ( PyArg_ParseTupleAndKeywords(args, kwds, "O:geojson", kwlist,
+	if ( PyArg_ParseTupleAndKeywords(args, kwds, "O:GeoJSON", kwlist,
 		&py_geodata) == false ) {
-		as_error_update(&err, AEROSPIKE_ERR_PARAM, "geojson() expects exactly 1 parameter");
+		as_error_update(&err, AEROSPIKE_ERR_PARAM, "GeoJSON() expects exactly 1 parameter");
 		goto CLEANUP;
 	}
 
@@ -249,8 +249,7 @@ static PyTypeObject AerospikeGeospatial_Type = {
     .tp_flags			= Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE,
     .tp_doc				=
     		"The GeoJSON class casts geospatial data to and from the server's\n"
-    		"as_geojson type. To create a new instance of the class, use the\n"
-    		"aerospike.geojson() function.\n",
+    		"as_geojson type.\n",
     .tp_traverse		= 0,
     .tp_clear			= 0,
     .tp_richcompare		= 0,
@@ -284,11 +283,11 @@ AerospikeGeospatial  * Aerospike_Set_Geo_Data(PyObject * parent, PyObject * args
 	// Python function arguments
 	PyObject * py_geodata = NULL;
 	// Python function keyword arguments
-	static char * kwlist[] = {"geodata", NULL};
+	static char * kwlist[] = {"geo_data", NULL};
 	as_error err;
 	as_error_init(&err);
 
-	if ( PyArg_ParseTupleAndKeywords(args, kwds, "O:geojson", kwlist, &py_geodata) == false ){
+	if ( PyArg_ParseTupleAndKeywords(args, kwds, "O:geodata", kwlist, &py_geodata) == false ){
 		return NULL;
 	}
 
@@ -300,7 +299,7 @@ AerospikeGeospatial  * Aerospike_Set_Geo_Data(PyObject * parent, PyObject * args
 		    return NULL;
 	    }
     } else {
-        as_error_update(&err, AEROSPIKE_ERR_PARAM, "Geospatial data should be a dictionary");
+        as_error_update(&err, AEROSPIKE_ERR_PARAM, "The geospatial data should be a dictionary");
     }
 
 	if ( err.code != AEROSPIKE_OK ) {
@@ -318,7 +317,7 @@ AerospikeGeospatial  * Aerospike_Set_Geo_Json(PyObject * parent, PyObject * args
 	// Python function arguments
 	PyObject * py_geodata = NULL;
 	// Python function keyword arguments
-	static char * kwlist[] = {"geodata", NULL};
+	static char * kwlist[] = {"geojson_str", NULL};
 	as_error err;
 	as_error_init(&err);
 
@@ -334,7 +333,7 @@ AerospikeGeospatial  * Aerospike_Set_Geo_Json(PyObject * parent, PyObject * args
 		    return NULL;
 	    }
     } else {
-        as_error_update(&err, AEROSPIKE_ERR_PARAM, "Geospatial data should be a geoJSON string");
+        as_error_update(&err, AEROSPIKE_ERR_PARAM, "The geospatial data should be a GeoJSON string");
     }
 
 	if ( err.code != AEROSPIKE_OK ) {

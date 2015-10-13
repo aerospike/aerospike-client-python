@@ -276,6 +276,45 @@ in an in-memory primary index.
     :param int log_level: one of the :ref:`aerospike_log_levels` constant values.
 
 
+.. rubric:: Geospatial
+
+.. py:function:: geodata([geo_data])
+
+    Helper for creating an instance of the :class:`~aerospike.GeoJSON` class. \
+    Used to wrap a geospatial object, such as a point, polygon or circle.
+
+    :param dict geo_data: a :class:`dict` representing the geospatial data.
+    :return: an instance of the :py:class:`aerospike.GeoJSON` class.
+
+    .. code-block:: python
+
+        import aerospike
+
+        # Create GeoJSON point using WGS84 coordinates.
+        latitude = 45.920278
+        longitude = 63.342222
+        loc = aerospike.geodata({'type': 'Point',
+                                 'coordinates': [longitude, latitude]})
+
+    .. versionadded:: 1.0.54
+
+.. py:function:: geojson([geojson_str])
+
+    Helper for creating an instance of the :class:`~aerospike.GeoJSON` class \
+    from a raw GeoJSON :class:`str`.
+
+    :param dict geojson_str: a :class:`str` of raw GeoJSON.
+    :return: an instance of the :py:class:`aerospike.GeoJSON` class.
+
+    .. code-block:: python
+
+        import aerospike
+
+        # Create GeoJSON point using WGS84 coordinates.
+        loc = aerospike.geojson('{"type": "Point", "coordinates": [28.608389, -80.604333]}')
+
+    .. versionadded:: 1.0.54
+
 .. _aerospike_operators:
 
 Operators
