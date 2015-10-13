@@ -324,7 +324,7 @@ PyObject * AerospikeClient_UDF_Get_UDF(AerospikeClient * self, PyObject *args, P
 /**
  * Create secondary integer index
  *
- *		client.index_integer_create(policy, namespace, set, bin, index_name)
+ *		client.index_integer_create(namespace, set, bin, index_name, policy)
  *
  */
 PyObject * AerospikeClient_Index_Integer_Create(AerospikeClient * self, PyObject *args, PyObject * kwds);
@@ -332,10 +332,18 @@ PyObject * AerospikeClient_Index_Integer_Create(AerospikeClient * self, PyObject
 /**
  * Create secondary string index
  *
- *		client.index_string_create(policy, namespace, set, bin, index_name)
+ *		client.index_string_create(namespace, set, bin, index_name, policy)
  *
  */
 PyObject * AerospikeClient_Index_String_Create(AerospikeClient * self, PyObject *args, PyObject * kwds);
+
+/**
+ * Create secondary geospatial index
+ *
+ *		client.index_2dsphere_create(namespace, set, bin, index_name, policy)
+ *
+ */
+PyObject * AerospikeClient_Index_2dsphere_Create(AerospikeClient * self, PyObject *args, PyObject * kwds);
 
 /**
  * Remove secondary index
@@ -449,12 +457,19 @@ PyObject * AerospikeClient_Exists_Many(AerospikeClient * self, PyObject *args, P
 PyObject * AerospikeClient_Info(AerospikeClient * self, PyObject * args, PyObject * kwds);
 
 /**
-* Perforrm get nodes operation on the database.
+* Perform get nodes operation on the database.
 *
 * client.get_nodes((x,y,z))
 *
 */
 PyObject * AerospikeClient_GetNodes(AerospikeClient * self, PyObject * args, PyObject * kwds);
+/**
+* Reflect if the server supports the geospatial feature.
+*
+* client.has_geo()
+*
+*/
+PyObject * AerospikeClient_HasGeo(AerospikeClient * self, PyObject * args, PyObject * kwds);
 /**
 * Perforrm get key digest operation on the database.
 *

@@ -347,7 +347,7 @@ PyObject *  AerospikeClient_Operate_Invoke(
 		goto CLEANUP;
 	}
 	if(rec) {
-		record_to_pyobject(err, rec, key, &py_rec);
+		record_to_pyobject(self, err, rec, key, &py_rec);
 	}
 
 CLEANUP:

@@ -19,6 +19,7 @@
 
 #include <aerospike/as_query.h>
 #include <aerospike/aerospike_index.h>
+#include <aerospike/aerospike_key.h>
 #include <aerospike/as_error.h>
 
 #include "client.h"
@@ -174,7 +175,42 @@ static int AerospikeQuery_Where_Add(AerospikeQuery * self, as_predicate_type pre
 			}
 			else if ( in_datatype == AS_INDEX_STRING) {
 				// NOT IMPLEMENTED
-			}
+			} 
+            else if (in_datatype == AS_INDEX_GEO2DSPHERE) {
+
+                if (!aerospike_has_geo(self->client->as)) {
+				    as_error_update(&err, AEROSPIKE_ERR_CLUSTER, "Server does not support geospatial queries");
+				    PyObject * py_err = NULL;
+				    error_to_pyobject(&err, &py_err);
+				    PyErr_SetObject(PyExc_Exception, py_err);
+				    return 1;
+                }
+				if (PyUnicode_Check(py_bin)){
+					py_ubin = PyUnicode_AsUTF8String(py_bin);
+					bin = PyString_AsString(py_ubin);
+				} else if (PyString_Check(py_bin)){
+					bin = PyString_AsString(py_bin);
+				}
+				else {
+					return 1;
+				}
+
+				if (PyUnicode_Check(py_val1)){ 
+					val = strdup(PyString_AsString(
+							StoreUnicodePyObject( self,
+								PyUnicode_AsUTF8String(py_val1) )));
+
+				} else if (PyString_Check(py_val1) ){
+					val = strdup(PyString_AsString(py_val1));
+				}
+				else {
+					return 1;
+				}
+				as_query_where_init(&self->query, 1);
+				if(index_type == 0) {
+					as_query_where(&self->query, bin, as_geo_within(val));
+                }
+            }
 			else {
 				// If it ain't right, raise and error
 				as_error_update(&err, AEROSPIKE_ERR_PARAM, "predicate 'between' expects two integer values.");

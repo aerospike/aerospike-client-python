@@ -20,6 +20,7 @@
 
     .. code-block:: python
 
+        from __future__ import print_function
         import aerospike
         from aerospike import predicates as p
 
@@ -43,6 +44,7 @@
 
     .. code-block:: python
 
+        from __future__ import print_function
         import aerospike
         from aerospike import predicates as p
 
@@ -71,6 +73,7 @@
 
     .. code-block:: python
 
+        from __future__ import print_function
         import aerospike
         from aerospike import predicates as p
 
@@ -110,6 +113,7 @@
 
     .. code-block:: python
 
+        from __future__ import print_function
         import aerospike
         from aerospike import predicates as p
 
@@ -125,3 +129,40 @@
         res = query.results()
         print(res)
         client.close
+
+.. py:function:: geo_within(bin, shape)
+
+    Predicate for finding any point in bin which is within the given shape.
+    Requires a geo2dsphere index
+    (:meth:`~aerospike.Client.index_geo2dsphere_create`) over a *bin*
+    containing :class:`~aerospike.GeoJSON` point data.
+
+    :param str bin: the bin name.
+    :param str shape: find points that are within the shape described by a GeoJSON string.
+    :return: :py:func:`tuple` to be used in :meth:`aerospike.Query.where`.
+
+    .. code-block:: python
+
+        from __future__ import print_function
+        import aerospike
+        from aerospike import GeoJSON
+        from aerospike import predicates as p
+
+        config = { 'hosts': [ ('127.0.0.1', 3000)]}
+        client = aerospike.client(config).connect()
+        # Create a search rectangle which matches screen boundaries:
+        rect = GeoJSON({ 'type': "Polygon",
+                         'coordinates': [
+                          [[28.60000, -80.590000],
+                           [28.61800, -80.590000],
+                           [28.61800, -80.620000],
+                           [28.600000,-80.620000]]]})
+
+        # Find all points contained in the rectangle.
+        query = client.query('test', 'demo')
+        query.select('userid', 'tstamp', 'loc')
+        query.where(p.geo_within('loc', rect.dumps()))
+        points = query.results()
+        print(points)
+        client.close
+

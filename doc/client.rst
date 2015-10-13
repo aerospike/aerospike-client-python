@@ -122,6 +122,33 @@ a cluster-tending thread.
             finally:
                 client.close()
 
+        .. warning::
+
+            The client will be changed to raise a :py:exc:`~aerospike.exception.RecordNotFound` \
+            exception when :meth:`~aerospike.Client.get` does not find the \
+            record. Code that currently checks for ``meta != None`` should be \
+            modified to anticipate and handle this change.
+
+            .. code-block:: python
+
+                try:
+                    # assuming a record with such a key exists in the cluster
+                    key = ('test', 'demo', 1)
+                    (key, meta, bins) = client.get(key)
+                    if meta == None:
+                        raise aerospike.exception.RecordNotFound
+                    print(key)
+                    print('--------------------------')
+                    print(meta)
+                    print('--------------------------')
+                    print(bins)
+                except RecordNotFound:
+                    print("The record does not exist")
+                except AerospikeError as e:
+                    print("Error: {0} [{1}]".format(e.msg, e.code))
+                    sys.exit(1)
+
+
 
     .. method:: select(key, bins[, policy]) -> (key, meta, bins)
 
@@ -161,6 +188,32 @@ a cluster-tending thread.
             finally:
                 client.close()
 
+        .. warning::
+
+            The client will be changed to raise a :py:exc:`~aerospike.exception.RecordNotFound` \
+            exception when :meth:`~aerospike.Client.select` does not find the \
+            record. Code that currently checks for ``meta != None`` should be \
+            modified to anticipate and handle this change.
+
+            .. code-block:: python
+
+                try:
+                    # assuming a record with such a key exists in the cluster
+                    key = ('test', 'demo', 1)
+                    (key, meta, bins) = client.select(key, ['name'])
+                    if meta == None:
+                        raise aerospike.exception.RecordNotFound
+                    print(key)
+                    print('--------------------------')
+                    print(meta)
+                    print('--------------------------')
+                    print(bins)
+                except RecordNotFound:
+                    print("The record does not exist")
+                except AerospikeError as e:
+                    print("Error: {0} [{1}]".format(e.msg, e.code))
+                    sys.exit(1)
+
 
     .. method:: exists(key[, policy]) -> (key, meta)
 
@@ -196,6 +249,30 @@ a cluster-tending thread.
             finally:
                 client.close()
 
+        .. warning::
+
+            The client will be changed to raise a :py:exc:`~aerospike.exception.RecordNotFound` \
+            exception when :meth:`~aerospike.Client.exists` does not find the \
+            record. Code that currently checks for ``meta != None`` should be \
+            modified to anticipate and handle this change.
+
+            .. code-block:: python
+
+                try:
+                    # assuming a record with such a key exists in the cluster
+                    key = ('test', 'demo', 1)
+                    (key, meta, bins) = client.exists(key)
+                    if meta == None:
+                        raise aerospike.exception.RecordNotFound
+                    print(key)
+                    print('--------------------------')
+                    print(meta)
+                except RecordNotFound:
+                    print("The record does not exist")
+                except AerospikeError as e:
+                    print("Error: {0} [{1}]".format(e.msg, e.code))
+                    sys.exit(1)
+
 
     .. method:: put(key, bins[, meta[, policy[, serializer]]])
 
@@ -207,7 +284,9 @@ a cluster-tending thread.
             ``'ttl'`` set to :class:`int` number of seconds.
         :param dict policy: optional :ref:`aerospike_write_policies`.
         :param serializer: optionally override the serialization mode of the
-            client with one of the :ref:`aerospike_serialization_constants`.
+            client with one of the :ref:`aerospike_serialization_constants`. To
+            use a class-level user-defined serialization function registered with
+            :func:`aerospike.set_serializer` use :const:`aerospike.SERIALIZER_USER`.
         :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
 
         .. code-block:: python
@@ -227,6 +306,7 @@ a cluster-tending thread.
                     'l': [ "qwertyuiop", 1, bytearray("asd;as[d'as;d", "utf-8") ],
                     'm': { "key": "asd';q;'1';" },
                     'i': 1234,
+                    'f': 3.14159265359,
                     's': '!@#@#$QSDAsd;as'
                 }
                 client.put(key, bins,
@@ -884,8 +964,8 @@ a cluster-tending thread.
         :param str function: the name of the UDF to apply to the record identified by *key*.
         :param list args: the arguments to the UDF.
         :param dict policy: optional :ref:`aerospike_apply_policies`.
-        :return: the value optionally returned by the UDF, one of :class:`str`,\ 
-                 :class:`int`, :class:`bytearray`, :class:`list`, :class:`dict`.
+        :return: the value optionally returned by the UDF, one of :class:`str`,\
+                 :class:`int`, :class:`float`, :class:`bytearray`, :class:`list`, :class:`dict`.
         :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
 
         .. seealso:: `Record UDF <http://www.aerospike.com/docs/guide/record_udf.html>`_ \
@@ -1104,7 +1184,6 @@ a cluster-tending thread.
         .. code-block:: python
 
             import aerospike
-            from aerospike import predicates as p
 
             client = aerospike.client({ 'hosts': [ ('127.0.0.1', 3000)]}).connect()
 
@@ -1117,6 +1196,31 @@ a cluster-tending thread.
             client.close()
 
         .. versionadded:: 1.0.42
+
+    .. method:: index_geo2dsphere_create(ns, set, bin, index_name[, policy])
+
+        Create a geospatial 2D spherical index with *index_name* on the *bin* \
+        in the specified *ns*, *set*.
+
+        :param str ns: the namespace in the aerospike cluster.
+        :param str set: the set name.
+        :param str bin: the name of bin the secondary index is built on.
+        :param str index_name: the name of the index.
+        :param dict policy: optional :ref:`aerospike_info_policies`.
+        :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
+
+        .. seealso:: The :class:`aerospike.GeoJSON` class, and queries using \
+            :meth:`aerospike.predicates.geo_within`.
+
+        .. code-block:: python
+
+            import aerospike
+
+            client = aerospike.client({ 'hosts': [ ('127.0.0.1', 3000)]}).connect()
+            client.index_geo2dsphere_create('test', 'demo', 'loc', 'loc_geo_idx')
+            client.close()
+
+        .. versionadded:: 1.0.53
 
 
     .. method:: index_remove(ns, index_name[, policy])
@@ -1131,11 +1235,11 @@ a cluster-tending thread.
         .. versionchanged:: 1.0.39
 
 
-    .. method:: get_nodes()  ->  []
+    .. method:: get_nodes() -> []
 
         Return the list of hosts present in a connected cluster.
 
-        :rtype: :class:`list`
+        :return: a :class:`list` of node address tuples.
         :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
 
         .. code-block:: python
@@ -1155,10 +1259,9 @@ a cluster-tending thread.
 
             .. code-block:: python
 
-                [ ( '127.0.0.1', 3000), ('127.0.0.1', 3010) ]
+                [('127.0.0.1', 3000), ('127.0.0.1', 3010)]
 
         .. versionchanged:: 1.0.41
-
 
 
      .. method:: info(command[, hosts[, policy]]) -> {}
@@ -1207,6 +1310,15 @@ a cluster-tending thread.
         .. seealso:: `Info Command Reference <http://www.aerospike.com/docs/reference/info/>`_.
 
         .. versionchanged:: 1.0.41
+
+    .. method:: has_geo()  ->  bool
+
+        Check whether the connected cluster supports geospatial data and indexes.
+
+        :rtype: :class:`bool`
+        :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
+
+        .. versionadded:: 1.0.53
 
 
     .. rubric:: LList

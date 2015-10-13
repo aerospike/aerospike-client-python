@@ -32,6 +32,11 @@
 #define MAX_UNICODE_OBJECTS 32767
 
 typedef struct {
+    as_error error;
+    PyObject * callback;
+}user_serializer_callback;
+
+typedef struct {
 	PyObject *ob[MAX_UNICODE_OBJECTS];
 	int size;
 } UnicodePyObjects;
@@ -40,6 +45,9 @@ typedef struct {
 	PyObject_HEAD
 	aerospike * as;
 	int is_conn_16;
+    user_serializer_callback user_serializer_call_info;
+    user_serializer_callback user_deserializer_call_info;
+    uint8_t is_client_put_serializer;
 } AerospikeClient;
 
 typedef struct {
@@ -63,6 +71,11 @@ typedef struct {
   AerospikeClient * client;
   as_scan scan;
 } AerospikeScan;
+
+typedef struct {
+  PyObject_HEAD
+  PyObject *geo_data;
+} AerospikeGeospatial;
 
 typedef struct {
     PyObject_HEAD

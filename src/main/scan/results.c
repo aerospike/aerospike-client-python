@@ -31,6 +31,11 @@
 #undef TRACE
 #define TRACE()
 
+typedef struct {
+	PyObject * py_results;
+    AerospikeClient * client;
+} LocalData;
+
 static bool each_result(const as_val * val, void * udata)
 {
 	if ( !val ) {
@@ -38,7 +43,8 @@ static bool each_result(const as_val * val, void * udata)
 	}
 
 	PyObject * py_results = NULL;
-	py_results = (PyObject *) udata;
+    LocalData *data = (LocalData *) udata;
+	py_results = data->py_results;
 	PyObject * py_result = NULL;
 
 	as_error err;
@@ -46,7 +52,7 @@ static bool each_result(const as_val * val, void * udata)
 	PyGILState_STATE gstate;
 	gstate = PyGILState_Ensure();
 
-	val_to_pyobject(&err, val, &py_result);
+	val_to_pyobject(data->client, &err, val, &py_result);
 
 	if ( py_result ) {
 		PyList_Append(py_results, py_result);
@@ -65,6 +71,8 @@ PyObject * AerospikeScan_Results(AerospikeScan * self, PyObject * args, PyObject
 	as_policy_scan scan_policy;
 	as_policy_scan * scan_policy_p = NULL;
 
+	LocalData data;
+    data.client = self->client;
 	static char * kwlist[] = {"policy", NULL};
 
 	if ( PyArg_ParseTupleAndKeywords(args, kwds, "|O:results", kwlist, &py_policy) == false ) {
@@ -92,10 +100,11 @@ PyObject * AerospikeScan_Results(AerospikeScan * self, PyObject * args, PyObject
 	}
 
 	py_results = PyList_New(0);
+    data.py_results = py_results;
 
 	PyThreadState * _save = PyEval_SaveThread();
 
-	aerospike_scan_foreach(self->client->as, &err, scan_policy_p, &self->scan, each_result, py_results);
+	aerospike_scan_foreach(self->client->as, &err, scan_policy_p, &self->scan, each_result, &data);
 
 	PyEval_RestoreThread(_save);
 

@@ -22,6 +22,7 @@
 #include "client.h"
 #include "key.h"
 #include "query.h"
+#include "geo.h"
 #include "scan.h"
 #include "predicates.h"
 #include "exceptions.h"
@@ -44,6 +45,9 @@ static PyMethodDef Aerospike_Methods[] = {
 	{"set_deserializer",
 		(PyCFunction)AerospikeClient_Set_Deserializer, METH_VARARGS | METH_KEYWORDS,
 		"Sets the deserializer"},
+	{"unset_serializers",
+		(PyCFunction)AerospikeClient_Unset_Serializers, METH_VARARGS | METH_KEYWORDS,
+		"Unsets the serializer and deserializer"},
 	{"client",		(PyCFunction) AerospikeClient_New,	METH_VARARGS | METH_KEYWORDS,
 		"Create a new instance of Client class."},
 	{"set_log_level",	(PyCFunction)Aerospike_Set_Log_Level,       METH_VARARGS | METH_KEYWORDS,
@@ -133,4 +137,8 @@ PyMODINIT_FUNC initaerospike(void)
 	PyTypeObject * lmap = AerospikeLMap_Ready();
 	Py_INCREF(lmap);
 	PyModule_AddObject(aerospike, "lmap", (PyObject *) lmap);
+
+	PyTypeObject * geospatial = AerospikeGeospatial_Ready();
+	Py_INCREF(geospatial);
+	PyModule_AddObject(aerospike, "GeoJSON", (PyObject *) geospatial);
 }
