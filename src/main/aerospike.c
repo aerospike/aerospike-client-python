@@ -83,6 +83,8 @@ PyMODINIT_FUNC initaerospike(void)
 
 	declare_policy_constants(aerospike);
 
+    PyModule_AddStringConstant(aerospike, "__version__", "2.3.4");
+
 	PyObject * exception = AerospikeException_New();
 	Py_INCREF(exception);
 	PyModule_AddObject(aerospike, "exception", exception);
