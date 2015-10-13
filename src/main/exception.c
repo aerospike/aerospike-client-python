@@ -200,6 +200,7 @@ PyObject * AerospikeException_New(void)
 	exceptions_array.RecordError = PyErr_NewException("exception.RecordError", exceptions_array.ServerError, py_record_dict);
 	Py_INCREF(exceptions_array.RecordError);
 	Py_DECREF(py_record_dict);
+	PyObject_SetAttrString(exceptions_array.RecordError, "code", Py_None);
 	PyModule_AddObject(module, "RecordError", exceptions_array.RecordError);
 
 	//int count = sizeof(record_exceptions)/sizeof(record_exceptions[0]);
@@ -223,6 +224,9 @@ PyObject * AerospikeException_New(void)
 	exceptions_array.IndexError = PyErr_NewException("exception.IndexError", exceptions_array.ServerError, py_index_dict);
 	Py_INCREF(exceptions_array.IndexError);
 	Py_DECREF(py_index_dict);
+	py_code = PyInt_FromLong(AEROSPIKE_ERR_INDEX);
+	PyObject_SetAttrString(exceptions_array.IndexError, "code", py_code);
+    Py_DECREF(py_code);
 	PyModule_AddObject(module, "IndexError", exceptions_array.IndexError);
 
 	count = sizeof(index_array.index_exceptions)/sizeof(index_array.index_exceptions[0]);
@@ -268,6 +272,7 @@ PyObject * AerospikeException_New(void)
 	//Admin exceptions
 	exceptions_array.AdminError = PyErr_NewException("exception.AdminError", exceptions_array.ServerError, NULL);
 	Py_INCREF(exceptions_array.AdminError);
+	PyObject_SetAttrString(exceptions_array.AdminError, "code", Py_None);
 	PyModule_AddObject(module, "AdminError", exceptions_array.AdminError);
 
 	count = sizeof(admin_array.admin_exceptions)/sizeof(admin_array.admin_exceptions[0]);
@@ -303,6 +308,7 @@ PyObject * AerospikeException_New(void)
 	PyDict_SetItemString(py_ldt_dict, "key", Py_None);
 	PyDict_SetItemString(py_ldt_dict, "bin", Py_None);
 	exceptions_array.LDTError = PyErr_NewException("exception.LDTError", exceptions_array.ServerError, py_ldt_dict);
+	PyObject_SetAttrString(exceptions_array.LDTError, "code", Py_None);
 	Py_INCREF(exceptions_array.LDTError);
 	Py_DECREF(py_ldt_dict);
 	PyModule_AddObject(module, "LDTError", exceptions_array.LDTError);
