@@ -333,8 +333,6 @@ class TestApply(TestBaseClass):
                                         'create_record',
                                         [bytearray("asd;as[d'as;d",
                                             "utf-8")])
-        assert retval != None
-
         (key, meta, bins) = TestApply.client.get(key)
 
         assert bins == {'bin': bytearray(b"asd;as[d\'as;d")}
