@@ -38,6 +38,8 @@ GeoJSON Class --- :class:`GeoJSON`
         loc = GeoJSON({'type': "Point",
                        'coordinates': [longitude, latitude]})
         print(loc)
+        # Alternatively create the GeoJSON point from a string
+        loc = GeoJSON('{"type": "Point", "coordinates": [28.608389, -80.604333]}')
 
         # Create a user record.
         bins = {'tstamp': time.time(),
@@ -52,6 +54,10 @@ GeoJSON Class --- :class:`GeoJSON`
         print(b)
         client.close()
 
+
+    .. class:: GeoJSON([geo_data])
+
+        Optionally initializes an object with a GeoJSON :class:`str` or a :class:`dict` of geospatial data.
 
     .. method:: wrap(geo_data)
 

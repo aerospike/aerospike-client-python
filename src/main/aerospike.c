@@ -52,10 +52,12 @@ static PyMethodDef Aerospike_Methods[] = {
 		"Create a new instance of Client class."},
 	{"set_log_level",	(PyCFunction)Aerospike_Set_Log_Level,       METH_VARARGS | METH_KEYWORDS,
 		"Sets the log level"},
-
 	{"set_log_handler", (PyCFunction)Aerospike_Set_Log_Handler,	    METH_VARARGS | METH_KEYWORDS,
 		"Sets the log handler"},
-
+	{"geodata", (PyCFunction)Aerospike_Set_Geo_Data,	    METH_VARARGS | METH_KEYWORDS,
+		"Creates a GeoJSON object from geospatial data."},
+	{"geojson", (PyCFunction)Aerospike_Set_Geo_Json,	    METH_VARARGS | METH_KEYWORDS,
+		"Creates a GeoJSON object from a raw GeoJSON string."},
 	{NULL}
 };
 
