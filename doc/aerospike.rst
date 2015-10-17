@@ -480,6 +480,12 @@ Serialization Constants
 Miscellaneous
 -------------
 
+.. data:: __version__
+
+    A :class:`str` containing the module's version.
+
+    .. versionadded:: 1.0.54
+
 .. data:: UDF_TYPE_LUA
 
 .. data:: INDEX_STRING
