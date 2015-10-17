@@ -304,7 +304,6 @@ if [ $DOWNLOAD ] && [ $DOWNLOAD == 1 ]; then
     printf "warning: new package. If you would like to download a new package\n"
     printf "warning: then please remove the 'aerospike-client' directory and any \n"
     printf "warning: 'aerospike-client.tgz' file in this directory.\n"
-    printf "warning: \n"
   else
 
     ##############################################################################
@@ -317,7 +316,6 @@ if [ $DOWNLOAD ] && [ $DOWNLOAD == 1 ]; then
       printf "warning: We will be using this package, rather than downloading a new package.\n"
       printf "warning: If you would like to download a new package, then please remove.\n"
       printf "warning: 'aerospike-client.tgz' from this directory.\n"
-      printf "warning: \n"
     else
       download
       
