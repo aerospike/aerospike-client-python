@@ -16,15 +16,32 @@
 ################################################################################
 
 from __future__ import print_function
-
 import os
 import platform
 import sys
-
-# from distutils.core import setup, Extension
-from setuptools import setup, Extension
 from os import path
+from setuptools.command.install import install
+from setuptools import setup, Extension
 from subprocess import call
+
+
+class InstallCommand(install):
+    user_options = install.user_options + [
+        ('lua-system-path=', None, 'Path to the lua system files')
+    ]
+
+    def initialize_options(self):
+        install.initialize_options(self)
+        self.lua_system_path = None
+
+    def finalize_options(self):
+        install.finalize_options(self)
+
+    def run(self):
+        global lua_system_path
+        lua_system_path = self.lua_system_path
+        install.run(self)
+
 
 ################################################################################
 # ENVIRONMENT VARIABLES
@@ -44,24 +61,79 @@ DARWIN = 'Darwin' in PLATFORM
 CWD = path.abspath(path.dirname(__file__))
 
 ################################################################################
+# HELPER FUNCTION FOR RESOLVING THE C CLIENT DEPENDENCY
+################################################################################
+
+def resolve_c_client():
+    global PREFIX, AEROSPIKE_C_VERSION, DOWNLOAD_C_CLIENT
+    global extra_objects, include_dirs
+
+    if PREFIX:
+        os.putenv('PREFIX', PREFIX)
+    if AEROSPIKE_C_VERSION:
+        os.putenv('AEROSPIKE_C_VERSION', AEROSPIKE_C_VERSION)
+    if DOWNLOAD_C_CLIENT:
+        os.putenv('DOWNLOAD_C_CLIENT', DOWNLOAD_C_CLIENT)
+
+    print('info: Executing','./scripts/aerospike-client-c.sh', file=sys.stdout)
+    os.chmod('./scripts/aerospike-client-c.sh',0755)
+    rc = call(['./scripts/aerospike-client-c.sh'])
+    if rc != 0 :
+        print("error: scripts/aerospike-client-c.sh", rc, file=sys.stderr)
+        sys.exit(1)
+
+    # Prefix for Aerospike C client libraries and headers
+    aerospike_c_prefix = './aerospike-client-c'
+    if not os.path.isdir(aerospike_c_prefix):
+        print("error: Directory not found:", aerospike_c_prefix, file=sys.stderr)
+        sys.exit(1)
+
+    #-------------------------------------------------------------------------------
+    # Check for aerospike.h
+    #-------------------------------------------------------------------------------
+    aerospike_h = aerospike_c_prefix + '/include/aerospike/aerospike.h'
+    if not os.path.isfile(aerospike_h):
+        print("error: aerospike.h not found:", aerospike_h, file=sys.stderr)
+        sys.exit(1)
+    print("info: aerospike.h found:", aerospike_h, file=sys.stdout)
+    include_dirs = include_dirs + [
+        aerospike_c_prefix + '/include', 
+        aerospike_c_prefix + '/include/ck'
+        ]
+
+    #-------------------------------------------------------------------------------
+    # Check for libaerospike.a
+    #-------------------------------------------------------------------------------
+    aerospike_a = aerospike_c_prefix + '/lib/libaerospike.a'
+    if not os.path.isfile(aerospike_a):
+        print("error: libaerospike.a not found:", aerospike_a, file=sys.stderr)
+        sys.exit(1)
+    print("info: libaerospike.a found:", aerospike_a, file=sys.stdout)
+    extra_objects = extra_objects + [
+        aerospike_a
+        ]
+
+    #---------------------------------------------------------------------------
+    # Environment Variables
+    #---------------------------------------------------------------------------
+    os.putenv('CPATH', ':'.join(include_dirs))
+    os.putenv('LD_LIBRARY_PATH', ':'.join(library_dirs))
+    os.putenv('DYLD_LIBRARY_PATH', ':'.join(library_dirs))
+
+################################################################################
 # GENERIC BUILD SETTINGS
 ################################################################################
 
 include_dirs = ['src/include'] + [x for x in os.getenv('CPATH', '').split(':') if len(x) > 0]
-
 extra_compile_args = [
     '-std=gnu99', '-g', '-Wall', '-fPIC', '-O1',
     '-fno-common', '-fno-strict-aliasing', '-Wno-strict-prototypes',
     '-march=nocona',
     '-D_FILE_OFFSET_BITS=64', '-D_REENTRANT', '-D_GNU_SOURCE'
     ]
-
 extra_objects = []
-
 extra_link_args = []
-
 library_dirs = []
-
 libraries = [
   'ssl',
   'crypto',
@@ -75,144 +147,71 @@ libraries = [
 ################################################################################
 
 if DARWIN:
-
     #---------------------------------------------------------------------------
     # Mac Specific Compiler and Linker Settings
     #---------------------------------------------------------------------------
-
     extra_compile_args = extra_compile_args + [
         '-D_DARWIN_UNLIMITED_SELECT',
         '-DMARCH_x86_64'
         ]
-
     if AEROSPIKE_C_HOME:
         PREFIX = AEROSPIKE_C_HOME + '/target/Darwin-x86_64'
 
 elif LINUX:
-
     #---------------------------------------------------------------------------
     # Linux Specific Compiler and Linker Settings
     #---------------------------------------------------------------------------
-
     extra_compile_args = extra_compile_args + [
         '-rdynamic', '-finline-functions',
         '-DMARCH_x86_64'
         ]
-
     libraries = libraries + ['rt']
-
     if AEROSPIKE_C_HOME:
         PREFIX = AEROSPIKE_C_HOME + '/target/Linux-x86_64'
-
 else:
     print("error: OS not supported:", PLATFORM, file=sys.stderr)
     sys.exit(1)
 
+################################################################################
+# RESOLVE C CLIENT DEPENDENCY AND LUA SYSTEM PATH
+################################################################################
 
-################################################################################
-# RESOLVE C CLIENT DEPENDENCY
-################################################################################
+lua_system_path = ''
+for arg in sys.argv:
+    if arg[0:17] == '--lua-system-path':
+        option, val = arg.split('=')
+        lua_system_path = val.strip()
 
 # If the C client is packaged elsewhere, assume the libraries are available
 if os.environ.get('NO_RESOLVE_C_CLIENT_DEP', None):
     libraries = libraries + ['aerospike']
     # Can override the lua path
-    lua_path = os.environ.get('AEROSPIKE_LUA_PATH', "/usr/local/share/aerospike/lua")
-    data_files = [
-        ('aerospike', []),
-        ('aerospike/lua', [
-            lua_path + '/aerospike.lua',
-            lua_path + '/as.lua',
-            lua_path + '/stream_ops.lua',
-            ]
-        )
-    ]
-
+    lua_src_path = os.environ.get('AEROSPIKE_LUA_PATH', lua_system_path)
 else:
-    lua_path = "aerospike-client-c/lua"
+    lua_src_path = "aerospike-client-c/lua"
+    if ('build' in sys.argv or 'build_ext' in sys.argv or
+        'install' in sys.argv):
+        resolve_c_client()
 
+# Determine where the system lua files should be copied to
+if not lua_system_path:
+    lua_system_path = '/usr/local/aerospike/lua'
     data_files = [
-        ('aerospike', []),
-        ('aerospike/lua', [
-            lua_path + '/aerospike.lua',
-            lua_path + '/as.lua',
-            lua_path + '/stream_ops.lua',
-            ]
-        )
+        ('/usr/local/aerospike', []),
+        ('/usr/local/aerospike/usr-lua', [])
     ]
-    
-    if 'build' in sys.argv or 'build_ext' in sys.argv or 'install' in sys.argv:
-
-        # Prefix for Aerospike C client libraries and headers
-        aerospike_c_prefix = './aerospike-client-c'
-
-        #-------------------------------------------------------------------------------
-        # Execute Aerospike C Client Resolver
-        #-------------------------------------------------------------------------------
-
-        print('info: Executing','./scripts/aerospike-client-c.sh', file=sys.stdout)
-
-        os.chmod('./scripts/aerospike-client-c.sh',0755)
-
-        if PREFIX:
-            os.putenv('PREFIX', PREFIX)
-
-        if AEROSPIKE_C_VERSION:
-            os.putenv('AEROSPIKE_C_VERSION', AEROSPIKE_C_VERSION)
-
-        if DOWNLOAD_C_CLIENT:
-            os.putenv('DOWNLOAD_C_CLIENT', DOWNLOAD_C_CLIENT)
-
-        rc = call(['./scripts/aerospike-client-c.sh'])
-        if rc != 0 :
-            print("error: scripts/aerospike-client-c.sh", rc, file=sys.stderr)
-            sys.exit(1)
-
-
-        if not os.path.isdir(aerospike_c_prefix):
-            print("error: Directory not found:", aerospike_c_prefix, file=sys.stderr)
-            sys.exit(1)
-
-        #-------------------------------------------------------------------------------
-        # Check for aerospike.h
-        #-------------------------------------------------------------------------------
-
-        aerospike_h = aerospike_c_prefix + '/include/aerospike/aerospike.h'
-
-        if not os.path.isfile(aerospike_h):
-            print("error: aerospike.h not found:", aerospike_h, file=sys.stderr)
-            sys.exit(1)
-
-        print("info: aerospike.h found:", aerospike_h, file=sys.stdout)
-
-        include_dirs = [
-            aerospike_c_prefix + '/include', 
-            aerospike_c_prefix + '/include/ck'
-            ] + include_dirs
-
-        #-------------------------------------------------------------------------------
-        # Check for libaerospike.a
-        #-------------------------------------------------------------------------------
-
-        aerospike_a = aerospike_c_prefix + '/lib/libaerospike.a'
-
-        if not os.path.isfile(aerospike_a):
-            print("error: libaerospike.a not found:", aerospike_a, file=sys.stderr)
-            sys.exit(1)
-
-        print("info: libaerospike.a found:", aerospike_a, file=sys.stdout)
-        extra_objects = [
-            aerospike_a
-            ] + extra_objects
-
-        #---------------------------------------------------------------------------
-        # Environment Variables
-        #---------------------------------------------------------------------------
-
-        os.putenv('CPATH', ':'.join(include_dirs))
-        os.putenv('LD_LIBRARY_PATH', ':'.join(library_dirs))
-        os.putenv('DYLD_LIBRARY_PATH', ':'.join(library_dirs))
-
+else:
+    data_files = []
+data_files = data_files + [
+    (lua_system_path, [
+        lua_src_path + '/aerospike.lua',
+        lua_src_path + '/as.lua',
+        lua_src_path + '/stream_ops.lua'
+        ]
+    )
+]
+print('info: The Lua system files will be copied to', lua_system_path, "\n",
+      file=sys.stdout)
 
 ################################################################################
 # SETUP
@@ -227,21 +226,18 @@ with open(path.join(CWD, 'VERSION')) as f:
     version = f.read()
 
 setup(
-    name = 'aerospike', 
-    
-    version = version.strip(), 
-
+    cmdclass={
+        'install': InstallCommand,
+    },
+    name = 'aerospike',
+    version = version.strip(),
     description = 'Aerospike Client Library for Python',
     long_description = long_description,
-    
     author = 'Aerospike, Inc.',
     author_email = 'info@aerospike.com',
     url = 'http://aerospike.com',
-
     license = 'Apache Software License',
-
     keywords = ['aerospike', 'nosql', 'database'],
-
     classifiers = [
         'License :: OSI Approved :: Apache Software License',
         'Operating System :: POSIX :: Linux',
@@ -252,36 +248,31 @@ setup(
         'Topic :: Database'
     ],
 
-
-    zip_safe = False,
-
-    include_package_data = True,
-
     # Package Data Files
+    zip_safe = False,
+    include_package_data = True,
     package_data = {
         'aerospike': [
-            lua_path + '/*.lua',
+            lua_src_path + '/*.lua',
         ]
     },
 
     # Data files
     data_files = data_files,
-
     eager_resources = [
-        lua_path + '/aerospike.lua',
-        lua_path + '/as.lua',
-        lua_path + '/stream_ops.lua',
+        lua_src_path + '/aerospike.lua',
+        lua_src_path + '/as.lua',
+        lua_src_path + '/stream_ops.lua',
     ],
-
     ext_modules = [
-        Extension( 
+        Extension(
             # Extension Name
             'aerospike',
 
             # Source Files
             [
-                'src/main/aerospike.c', 
-                'src/main/exception.c', 
+                'src/main/aerospike.c',
+                'src/main/exception.c',
                 'src/main/log.c',
                 'src/main/client/type.c',
                 'src/main/client/apply.c',
@@ -356,5 +347,5 @@ setup(
             extra_link_args = extra_link_args,
         )
     ]
-  )
+)
 

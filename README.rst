@@ -72,14 +72,18 @@ Aerospike Python Client can be installed using `pip`:
 
     pip install aerospike
 
-    # with pip versions >= 6.0 you can
+    # to troubleshoot pip versions >= 6.0 you can
 
     pip install --no-cache-dir aerospike
+
+    # to have pip copy the Lua system files to a dir other than /usr/local/aerospike/lua
+
+    pip install aerospike --install-option="--lua-system-path=/opt/aerospike/lua"
 
 Build
 -----
 
-Instructions for building Aerospike Python Client, please refer to the 
+Instructions for building Aerospike Python Client, please refer to the
 ``BUILD.md`` file for details.
 
 Documentation
