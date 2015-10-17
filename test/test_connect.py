@@ -18,6 +18,12 @@ class TestConnect(TestBaseClass):
         config = {'hosts': hostlist}
         TestConnect.config = config
 
+    def test_version(self):
+        """
+            Check for aerospike vrsion
+        """
+        assert aerospike.__version__ == "1.0.54"
+
     def test_connect_positive(self):
         """
             Invoke connect() with positive parameters.

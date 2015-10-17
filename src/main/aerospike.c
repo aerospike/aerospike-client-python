@@ -75,6 +75,8 @@ AerospikeConstants operator_constants[] = {
 
 PyMODINIT_FUNC initaerospike(void)
 {
+
+    static char version[6] = "1.0.54";
 	// Makes things "thread-safe"
 	PyEval_InitThreads();
 	int i = 0;
@@ -84,6 +86,8 @@ PyMODINIT_FUNC initaerospike(void)
 			"Aerospike Python Client");
 
 	declare_policy_constants(aerospike);
+
+    PyModule_AddStringConstant(aerospike, "__version__", version);
 
 	PyObject * exception = AerospikeException_New();
 	Py_INCREF(exception);
