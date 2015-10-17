@@ -49,7 +49,7 @@ in an in-memory primary index.
               The client will connect to the first available node in the list, the *seed node*, \
               and will learn about the cluster and partition map from it.
             * **lua** an optional :class:`dict` containing the paths to two types of Lua modules
-                * **system_path** the location of the system modules such as ``aerospike.lua``, ``stream_ops.lua``
+                * **system_path** the location of the system modules such as ``aerospike.lua`` (default: ``/usr/local/aerospike/lua``)
                 * **user_path** the location of the user's record and stream UDFs
             * **serialization** an optional instance-level :py:func:`tuple` of (serializer, deserializer). Takes precedence over a class serializer registered with :func:`~aerospike.set_serializer`.
             * **policies** a :class:`dict` of policies

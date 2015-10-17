@@ -14,8 +14,8 @@ The client depends on:
 
 The following are dependencies for:
 
-- RedHat Enterprise (RHEL) 6 or newer 
-- CentOS 6 or newer 
+- RedHat Enterprise (RHEL) 6 or newer
+- CentOS 6 or newer
 - and related distributions using `yum` package manager.
 
 **Dependencies**
@@ -28,8 +28,8 @@ The following are dependencies for:
 
 The following are dependencies for:
 
-- Debian 6 or newer 
-- Ubuntu 12.04 or newer 
+- Debian 6 or newer
+- Ubuntu 12.04 or newer
 - and related distributions using `apt-get` package manager.
 
 **Dependencies**
@@ -65,6 +65,14 @@ To install the library:
 **Note** If you have already installed the Aerospike C Client and it is on your linker path you can build using:
 
     AEROSPIKE_LUA_PATH="path/to/lua-core/src" NO_RESOLVE_C_CLIENT_DEP=True python setup.py {build,install} --force
+
+### Lua System Modules
+
+Stream UDF functionality requires a local copy of the system Lua modules.
+By default, those Lua files are copied to `/usr/local/aerospike/lua`.
+A different directory can be created, then set:
+
+    python setup.py install --lua-system-path=/path/to/lua
 
 
 ## Examples
