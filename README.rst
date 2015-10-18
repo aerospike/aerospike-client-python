@@ -16,8 +16,9 @@ The Python Client for Aerospike works on Python 2.6, 2.7 running on
 
 The client depends on:
 
--  Python devel Package
--  The Aerospike C client
+- Python devel Package
+- OpenSSL
+- The Aerospike C client
 
 RedHat 6+ and CentOS 6+
 ~~~~~~~~~~~~~~~~~~~~~~~
@@ -26,7 +27,7 @@ The following are dependencies for:
 
 -  RedHat Enterprise (RHEL) 6 or newer
 -  CentOS 6 or newer
--  and related distributions using ``yum`` package manager.
+-  Related distributions which use the ``yum`` package manager.
 
 ::
 
@@ -38,9 +39,9 @@ Debian 6+ and Ubuntu 12.04+
 
 The following are dependencies for:
 
--  Debian 6 or newer
--  Ubuntu 12.04 or newer
--  and related distributions using ``apt-get`` package manager.
+- Debian 6 or newer
+- Ubuntu 12.04 or newer
+- Related distributions which use the ``apt`` package manager.
 
 ::
 
@@ -57,7 +58,8 @@ and higher those `can be installed without Xcode <http://osxdaily.com/2014/02/12
 
     xcode-select --install # install the command line tools, if missing
 
-The dependencies can be installed through the OS X package manager `Homebrew <http://brew.sh/>`__.
+OpenSSL can be installed through the `Homebrew <http://brew.sh/>`__ OS X package
+manager.
 
 ::
 
@@ -83,8 +85,8 @@ Aerospike Python Client can be installed using `pip`:
 Build
 -----
 
-Instructions for building Aerospike Python Client, please refer to the
-``BUILD.md`` file for details.
+For instructions on manually building the Python client, please refer to the
+``BUILD.md`` file.
 
 Documentation
 -------------

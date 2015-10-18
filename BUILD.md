@@ -7,8 +7,9 @@ The Python Client for Aerospike works on Python 2.6, 2.7 running on
 
 The client depends on:
 
--  Python devel Package
--  The Aerospike C client
+- Python devel Package
+- OpenSSL
+- The Aerospike C client
 
 ### RedHat 6+ and CentOS 6+
 
@@ -16,13 +17,12 @@ The following are dependencies for:
 
 - RedHat Enterprise (RHEL) 6 or newer
 - CentOS 6 or newer
-- and related distributions using `yum` package manager.
+- Related distributions which use the `yum` package manager.
 
-**Dependencies**
-
+    sudo yum install openssl-devel
     sudo yum install python26-devel on CentOS 6 and similar
     sudo yum install python-devel # on CentOS 7
-    sudo yum install openssl-devel
+    # for older distros, such as CentOS 5, see http://stackoverflow.com/a/11684053/582436
 
 ### Debian 6+ and Ubuntu 12.04+
 
@@ -30,15 +30,12 @@ The following are dependencies for:
 
 - Debian 6 or newer
 - Ubuntu 12.04 or newer
-- and related distributions using `apt-get` package manager.
-
-**Dependencies**
+- Related distributions which use the `apt` package manager.
 
     sudo apt-get install build-essential python-dev
     sudo apt-get install libssl-dev
 
-
-### Mac OS X
+### OS X
 
 By default OS X will be missing command line tools. On Mavericks (OS X 10.9)
 and higher those [can be installed without Xcode](http://osxdaily.com/2014/02/12/install-command-line-tools-mac-os-x/).
@@ -49,11 +46,29 @@ The dependencies can be installed through the OS X package manager [Homebrew](ht
 
     brew install openssl
 
-
 ## Build
 
 To build the library:
 
+    python setup.py build --force
+
+### Building on an Unsupported Linux Distro
+If you are installing the Python client on an unsupported OS, such as CentOS 5,
+you will need to first build the C client manually.
+
+1. Clone the [aerospike/aerospike-client-c](https://github.com/aerospike/aerospike-client-c) repo from GitHub.
+2. Install the dependencies. See the [README](https://github.com/aerospike/aerospike-client-c/blob/master/README.md).
+3. Change directory to the C client, and build it.
+
+    git submodule update --init
+    make
+
+3. Clone the [aerospike/aerospike-lua-core](https://github.com/aerospike/aerospike-lua-core) repo from GitHub.
+4. Change directory to the Python client and build it.
+
+    export DOWNLOAD_C_CLIENT=0
+    export AEROSPIKE_C_HOME=/path/to/aerospike-c-client
+    export AEROSPIKE_LUA_PATH=/path/to/aerospike-lua-core/src
     python setup.py build --force
 
 ## Install
@@ -61,10 +76,6 @@ To build the library:
 To install the library:
 
     python setup.py install --force
-
-**Note** If you have already installed the Aerospike C Client and it is on your linker path you can build using:
-
-    AEROSPIKE_LUA_PATH="path/to/lua-core/src" NO_RESOLVE_C_CLIENT_DEP=True python setup.py {build,install} --force
 
 ### Lua System Modules
 
