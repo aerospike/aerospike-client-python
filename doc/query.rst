@@ -215,7 +215,7 @@ Query Class --- :class:`Query`
 
                 config = {'hosts': [('127.0.0.1', 3000)],
                           'lua': {'system_path':'/usr/local/aerospike/lua/',
-                                  'user_path':'/usr/local/aerospike/user-lua/'}}
+                                  'user_path':'/usr/local/aerospike/usr-lua/'}}
                 client = aerospike.client(config).connect()
 
                 pp = pprint.PrettyPrinter(indent=2)
@@ -234,6 +234,8 @@ Query Class --- :class:`Query`
             containing the stream UDF. The ``system_path`` is constructed when
             the Python package is installed, and contains system modules such
             as ``aerospike.lua``, ``as.lua``, and ``stream_ops.lua``.
+            The default value for the Lua ``system_path`` is
+            ``/usr/local/aerospike/lua``.
 
 
 .. _aerospike_query_policies:

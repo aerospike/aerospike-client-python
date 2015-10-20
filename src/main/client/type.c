@@ -17,6 +17,7 @@
 #include <Python.h>
 #include <structmember.h>
 #include <stdbool.h>
+#include <unistd.h>
 
 #include <aerospike/aerospike.h>
 #include <aerospike/as_config.h>
@@ -309,39 +310,27 @@ static int AerospikeClient_Type_Init(AerospikeClient * self, PyObject * args, Py
 	}
 
 	if ( ! lua_system_path ) {
+		char system_path[AS_CONFIG_PATH_MAX_LEN] = {0};
+		memcpy(system_path, "/usr/local/aerospike/lua", 24);
+		system_path[24] = '\0';
 
-		PyObject * py_prefix = PySys_GetObject("prefix");
-		if ( py_prefix && PyString_Check(py_prefix) ) {
-			char * prefix = PyString_AsString(py_prefix);
-			size_t prefix_len = strlen(prefix);
-
-			char system_path[AS_CONFIG_PATH_MAX_LEN] = {0};
-			memcpy(system_path, prefix, strlen(prefix));
-			memcpy(system_path + prefix_len, "/aerospike/lua", AS_CONFIG_PATH_MAX_LEN - prefix_len);
-			system_path[prefix_len + strlen("/aerospike/lua")] = '\0';
-
-			struct stat info;
-
-			if( stat( system_path, &info ) == 0 && (info.st_mode & S_IFDIR) ) {
-				memcpy(config.lua.system_path, system_path, AS_CONFIG_PATH_MAX_LEN);
-			}
-			else {
-				memcpy(system_path + prefix_len, "/local/aerospike/lua", AS_CONFIG_PATH_MAX_LEN - prefix_len);
-				system_path[prefix_len + strlen("/local/aerospike/lua")] = '\0';
-
-				if( stat( system_path, &info ) == 0 && (info.st_mode & S_IFDIR) ) {
-					memcpy(config.lua.system_path, system_path, AS_CONFIG_PATH_MAX_LEN);
-				}
-				else {
-					config.lua.system_path[0] = '\0';
-				}
-			}
+		struct stat info;
+		if (stat(system_path, &info) == 0 && (info.st_mode & S_IFDIR) && (access(system_path, R_OK)) == 0) {
+			memcpy(config.lua.system_path, system_path, AS_CONFIG_PATH_MAX_LEN);
 		}
-	}
+		else {
+			config.lua.system_path[0] = '\0';
+		}
+    }
 
 	if ( ! lua_user_path ) {
 		memcpy(config.lua.user_path, ".", AS_CONFIG_PATH_MAX_LEN);
-	}
+	} else {
+		struct stat info;
+		if (stat(config.lua.user_path, &info ) != 0 || !(info.st_mode & S_IFDIR) || (access(config.lua.user_path, W_OK) != 0)) {
+		    memcpy(config.lua.user_path, ".", AS_CONFIG_PATH_MAX_LEN);
+		}
+    }
 
 	PyObject * py_hosts = PyDict_GetItemString(py_config, "hosts");
 	if ( py_hosts && PyList_Check(py_hosts) ) {

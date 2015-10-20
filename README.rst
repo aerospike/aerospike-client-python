@@ -11,13 +11,14 @@ Aerospike Python Client
 Dependencies
 ------------
 
-The Python Client for Aerospike works on Python 2.6, 2.7 running on
+The Python client for Aerospike works with Python 2.6 and 2.7, running on
 **64-bit** OS X 10.9+ and Linux.
 
 The client depends on:
 
--  Python devel Package
--  The Aerospike C client
+- Python devel package
+- OpenSSL
+- The Aerospike C client
 
 RedHat 6+ and CentOS 6+
 ~~~~~~~~~~~~~~~~~~~~~~~
@@ -26,7 +27,7 @@ The following are dependencies for:
 
 -  RedHat Enterprise (RHEL) 6 or newer
 -  CentOS 6 or newer
--  and related distributions using ``yum`` package manager.
+-  Related distributions which use the ``yum`` package manager
 
 ::
 
@@ -38,9 +39,9 @@ Debian 6+ and Ubuntu 12.04+
 
 The following are dependencies for:
 
--  Debian 6 or newer
--  Ubuntu 12.04 or newer
--  and related distributions using ``apt-get`` package manager.
+- Debian 6 or newer
+- Ubuntu 12.04 or newer
+- Related distributions which use the ``apt`` package manager
 
 ::
 
@@ -57,7 +58,8 @@ and higher those `can be installed without Xcode <http://osxdaily.com/2014/02/12
 
     xcode-select --install # install the command line tools, if missing
 
-The dependencies can be installed through the OS X package manager `Homebrew <http://brew.sh/>`__.
+OpenSSL can be installed through the `Homebrew <http://brew.sh/>`__ OS X package
+manager.
 
 ::
 
@@ -72,15 +74,19 @@ Aerospike Python Client can be installed using `pip`:
 
     pip install aerospike
 
-    # with pip versions >= 6.0 you can
+    # to troubleshoot pip versions >= 6.0 you can
 
     pip install --no-cache-dir aerospike
+
+    # to have pip copy the Lua system files to a dir other than /usr/local/aerospike/lua
+
+    pip install aerospike --install-option="--lua-system-path=/opt/aerospike/lua"
 
 Build
 -----
 
-Instructions for building Aerospike Python Client, please refer to the 
-``BUILD.md`` file for details.
+For instructions on manually building the Python client, please refer to the
+``BUILD.md`` file in this repo.
 
 Documentation
 -------------

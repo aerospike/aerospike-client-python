@@ -213,7 +213,7 @@ class TestExists(TestBaseClass):
         """
             Invoke exists() with a string key and not policy's dict.
         """
-        key = ('test', 'demo', '1')
+        key = ('test', 'demo', '1asfew923987fas3g')
 
         try:
             key, meta = TestExists.client.exists( key )

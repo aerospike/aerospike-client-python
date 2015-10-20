@@ -117,7 +117,7 @@ class TestGet(TestBaseClass):
         """
             Invoke get() with a string key and not policy's dict.
         """
-        key = ('test', 'demo', '1')
+        key = ('test', 'demo', '1iaushdf89v')
 
         try:
             key, meta, bins = TestGet.client.get( key )

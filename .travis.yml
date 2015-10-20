@@ -27,7 +27,7 @@ install:
 - sleep 3
 script:
 - python setup.py build
-- python setup.py install
+- python setup.py install --lua-system-path=./
 - cd test
 - ./run -v
 notifications:
