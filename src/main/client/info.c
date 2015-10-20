@@ -237,9 +237,11 @@ PyObject * AerospikeClient_Info(AerospikeClient * self, PyObject * args, PyObjec
 		as_error_update(&err, AEROSPIKE_ERR_PARAM, "Request must be a string");
 		goto CLEANUP;
 	}
+    Py_BEGIN_ALLOW_THREADS
 	aerospike_info_foreach(self->as, &err, info_policy_p, req,
 					(aerospike_info_foreach_callback)AerospikeClient_Info_each,
 					&info_callback_udata);
+    Py_END_ALLOW_THREADS
 
 	if (&info_callback_udata.error.code != AEROSPIKE_OK) {
 		as_error_update(&err, err.code, NULL);

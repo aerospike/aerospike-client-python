@@ -55,7 +55,9 @@ PyObject * AerospikeClient_Connect(AerospikeClient * self, PyObject * args, PyOb
 		as_config_set_user(&self->as->config, username, password);
 	}
 
+    Py_BEGIN_ALLOW_THREADS
 	aerospike_connect(self->as, &err);
+    Py_END_ALLOW_THREADS
 
 	if ( err.code != AEROSPIKE_OK ) {
 		PyObject * py_err = NULL;

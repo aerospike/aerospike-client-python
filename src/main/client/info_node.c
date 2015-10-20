@@ -124,9 +124,11 @@ static PyObject * AerospikeClient_InfoNode_Invoke(
 		goto CLEANUP;
 	}
 
+    Py_BEGIN_ALLOW_THREADS
 	status = aerospike_info_host(self->as, &err, info_policy_p,
 		(const char *) address, (uint16_t) port_no, request_str_p,
 		&response_p);
+    Py_END_ALLOW_THREADS
 	if( err.code == AEROSPIKE_OK ) {
 		if (response_p && status == AEROSPIKE_OK){
 			py_response = PyString_FromString(response_p);

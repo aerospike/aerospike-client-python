@@ -132,12 +132,16 @@ PyObject * AerospikeClient_Index_Integer_Create(AerospikeClient * self, PyObject
 	}
 
 	// Invoke operation
+    Py_BEGIN_ALLOW_THREADS
 	aerospike_index_create_complex(self->as, &err, &task, info_policy_p, namespace, set_ptr, bin_ptr, name, AS_INDEX_TYPE_DEFAULT, AS_INDEX_NUMERIC);
+    Py_END_ALLOW_THREADS
 	if ( err.code != AEROSPIKE_OK ) {
 		as_error_update(&err, err.code, NULL);
 		goto CLEANUP;
 	} else {
+        Py_BEGIN_ALLOW_THREADS
 		aerospike_index_create_wait(&err, &task, 2000);
+        Py_END_ALLOW_THREADS
 	}
 
 CLEANUP:
@@ -268,12 +272,17 @@ PyObject * AerospikeClient_Index_String_Create(AerospikeClient * self, PyObject 
 	}
 
 	// Invoke operation
+    Py_BEGIN_ALLOW_THREADS
 	aerospike_index_create_complex(self->as, &err, &task, info_policy_p, namespace, set_ptr, bin_ptr, name, AS_INDEX_TYPE_DEFAULT, AS_INDEX_STRING);
+    Py_END_ALLOW_THREADS
+
 	if ( err.code != AEROSPIKE_OK ) {
 		as_error_update(&err, err.code, NULL);
 		goto CLEANUP;
 	} else {
+        Py_BEGIN_ALLOW_THREADS
 		aerospike_index_create_wait(&err, &task, 2000);
+        Py_END_ALLOW_THREADS
 	}
 
 CLEANUP:
@@ -375,7 +384,9 @@ PyObject * AerospikeClient_Index_Remove(AerospikeClient * self, PyObject *args, 
 	}
 
 	// Invoke operation
+    Py_BEGIN_ALLOW_THREADS
 	aerospike_index_remove(self->as, &err, info_policy_p, namespace, name);
+    Py_END_ALLOW_THREADS
 	if ( err.code != AEROSPIKE_OK ) {
 		as_error_update(&err, err.code, NULL);
 		goto CLEANUP;
@@ -502,12 +513,16 @@ PyObject * AerospikeClient_Index_List_Create(AerospikeClient * self, PyObject *a
 	}
 
 	// Invoke operation
+    Py_BEGIN_ALLOW_THREADS
 	aerospike_index_create_complex(self->as, &err, &task, info_policy_p, namespace, set_ptr, bin_ptr, name, AS_INDEX_TYPE_LIST, type);
+    Py_END_ALLOW_THREADS
 	if ( err.code != AEROSPIKE_OK ) {
 		as_error_update(&err, err.code, NULL);
 		goto CLEANUP;
 	} else {
+        Py_BEGIN_ALLOW_THREADS
 		aerospike_index_create_wait(&err, &task, 2000);
+        Py_END_ALLOW_THREADS
 	}
 
 CLEANUP:
@@ -636,12 +651,16 @@ PyObject * AerospikeClient_Index_Map_Keys_Create(AerospikeClient * self, PyObjec
 	}
 
 	// Invoke operation
+    Py_BEGIN_ALLOW_THREADS
 	aerospike_index_create_complex(self->as, &err, &task, info_policy_p, namespace, set_ptr, bin_ptr, name, AS_INDEX_TYPE_MAPKEYS, type);
+    Py_END_ALLOW_THREADS
 	if ( err.code != AEROSPIKE_OK ) {
 		as_error_update(&err, err.code, NULL);
 		goto CLEANUP;
 	} else {
+        Py_BEGIN_ALLOW_THREADS
 		aerospike_index_create_wait(&err, &task, 2000);
+        Py_END_ALLOW_THREADS
 	}
 
 CLEANUP:
@@ -771,12 +790,16 @@ PyObject * AerospikeClient_Index_Map_Values_Create(AerospikeClient * self, PyObj
 	}
 
 	// Invoke operation
+    Py_BEGIN_ALLOW_THREADS
 	aerospike_index_create_complex(self->as, &err, &task, info_policy_p, namespace, set_ptr, bin_ptr, name, AS_INDEX_TYPE_MAPVALUES, type);
+    Py_END_ALLOW_THREADS
 	if ( err.code != AEROSPIKE_OK ) {
 		as_error_update(&err, err.code, NULL);
 		goto CLEANUP;
 	} else {
+        Py_BEGIN_ALLOW_THREADS
 		aerospike_index_create_wait(&err, &task, 2000);
+        Py_END_ALLOW_THREADS
 	}
 
 CLEANUP:
@@ -897,12 +920,16 @@ PyObject * AerospikeClient_Index_2dsphere_Create(AerospikeClient * self, PyObjec
 	}
 
 	// Invoke operation
+    Py_BEGIN_ALLOW_THREADS
 	aerospike_index_create_complex(self->as, &err, &task, info_policy_p, namespace, set_ptr, bin_ptr, name, AS_INDEX_TYPE_DEFAULT, AS_INDEX_GEO2DSPHERE);
+    Py_END_ALLOW_THREADS
 	if ( err.code != AEROSPIKE_OK ) {
 		as_error_update(&err, err.code, NULL);
 		goto CLEANUP;
 	} else {
+        Py_BEGIN_ALLOW_THREADS
 		aerospike_index_create_wait(&err, &task, 2000);
+        Py_END_ALLOW_THREADS
 	}
 
 CLEANUP:

@@ -133,7 +133,9 @@ PyObject * AerospikeClient_Apply_Invoke(
 	}
 
 	// Invoke operation
+    Py_BEGIN_ALLOW_THREADS
 	aerospike_key_apply(self->as, &err, apply_policy_p, &key, module, function, arglist, &result);
+    Py_END_ALLOW_THREADS
 
 	if ( err.code == AEROSPIKE_OK ) {
 		val_to_pyobject(self, &err, result, &py_result);

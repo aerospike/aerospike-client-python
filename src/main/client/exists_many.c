@@ -269,10 +269,12 @@ static PyObject * batch_exists_aerospike_batch_read(as_error *err, AerospikeClie
 	}
 
 	// Invoke C-client API
+    Py_BEGIN_ALLOW_THREADS
     if (aerospike_batch_read(self->as, err, batch_policy_p, &records) != AEROSPIKE_OK) 
     {
 		goto CLEANUP;
     }
+    Py_END_ALLOW_THREADS
     batch_exists_recs(err, &records, &py_recs);
     
 CLEANUP:
@@ -361,9 +363,11 @@ static PyObject * batch_exists_aerospike_batch_exists(as_error *err, AerospikeCl
 	}
 
 	// Invoke C-client API
+    Py_BEGIN_ALLOW_THREADS
     aerospike_batch_exists(self->as, err, batch_policy_p,
         &batch, (aerospike_batch_read_callback) batch_exists_cb,
         py_recs);
+    Py_END_ALLOW_THREADS
     if ( err->code != AEROSPIKE_OK ) {
         as_error_update(err, err->code, NULL);
     }

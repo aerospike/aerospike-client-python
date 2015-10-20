@@ -142,11 +142,13 @@ PyObject * AerospikeClient_RemoveBin_Invoke(
 		}
 	}
 
+    Py_BEGIN_ALLOW_THREADS
 	if (AEROSPIKE_OK != aerospike_key_put(self->as, err, write_policy_p, &key, &rec))
 	{
 		as_error_update(err, err->code, NULL);
 		goto CLEANUP;
 	}
+    Py_END_ALLOW_THREADS
 
 CLEANUP:
 

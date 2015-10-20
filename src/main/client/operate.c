@@ -341,7 +341,10 @@ PyObject *  AerospikeClient_Operate_Invoke(
 	// Initialize record
 	as_record_init(rec, 0);
 
+    Py_BEGIN_ALLOW_THREADS
 	aerospike_key_operate(self->as, err, operate_policy_p, key, &ops, &rec);
+    Py_END_ALLOW_THREADS
+
 	if (err->code != AEROSPIKE_OK) {
 		as_error_update(err, err->code, NULL);
 		goto CLEANUP;
