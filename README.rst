@@ -92,7 +92,7 @@ Documentation
 -------------
 
 Documentation is hosted at `pythonhosted.org/aerospike <https://pythonhosted.org/aerospike/>`__
-and at `aerospike.com/apidocs/python <http://www.aerospike.com/apidocs/python/>`.
+and at `aerospike.com/apidocs/python <http://www.aerospike.com/apidocs/python/>`__.
 
 Examples
 --------

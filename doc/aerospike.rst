@@ -65,6 +65,8 @@ in an in-memory primary index.
                 * **max_nodes** maximum number of nodes allowed. Pad so new nodes can be added without configuration changes (default: 16)
                 * **max_namespaces** similarly pad (default: 8)
                 * **takeover_threshold_sec** take over tending if the cluster hasn't been checked for this many seconds (default: 30)
+            * **thread_pool_size** number of threads in the pool that is used in batch/scan/query commands (default: 16)
+            * **max_threads** size of the synchronous connection pool for each server node (default: 300)
 
     :return: an instance of the :py:class:`aerospike.Client` class.
 

@@ -451,6 +451,16 @@ static int AerospikeClient_Type_Init(AerospikeClient * self, PyObject * args, Py
 			config.policies.commit_level = PyInt_AsLong(py_commit_level);
 		}
 
+		PyObject * py_max_threads = PyDict_GetItemString(py_policies, "max_threads");
+        if ( py_max_threads && (PyInt_Check(py_max_threads) || PyLong_Check(py_max_threads))) {
+            config.max_threads = PyInt_AsLong(py_max_threads);
+        }
+
+		PyObject * py_thread_pool_size = PyDict_GetItemString(py_policies, "thread_pool_size");
+        if ( py_thread_pool_size && (PyInt_Check(py_thread_pool_size) || PyLong_Check(py_thread_pool_size))) {
+            config.thread_pool_size = PyInt_AsLong(py_thread_pool_size);
+        }
+
 		/*
 		 * Generation policy is removed from constructor.
 		 */

@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 ################################################################################
-# Copyright 2013-2014 Aerospike, Inc.
+# Copyright 2013-2015 Aerospike, Inc.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -19,9 +19,9 @@ from __future__ import print_function
 import os
 import platform
 import sys
-from os import path
 from setuptools.command.install import install
 from setuptools import setup, Extension
+from shutil import copytree, copy2
 from subprocess import call
 
 
@@ -58,13 +58,13 @@ PREFIX = None
 PLATFORM =  platform.platform(1)
 LINUX = 'Linux' in PLATFORM
 DARWIN = 'Darwin' in PLATFORM
-CWD = path.abspath(path.dirname(__file__))
+CWD = os.path.abspath(os.path.dirname(__file__))
 
 ################################################################################
 # HELPER FUNCTION FOR RESOLVING THE C CLIENT DEPENDENCY
 ################################################################################
 
-def resolve_c_client():
+def resolve_c_client(lua_src_path, lua_system_path):
     global PREFIX, AEROSPIKE_C_VERSION, DOWNLOAD_C_CLIENT
     global extra_objects, include_dirs
 
@@ -119,6 +119,16 @@ def resolve_c_client():
     os.putenv('CPATH', ':'.join(include_dirs))
     os.putenv('LD_LIBRARY_PATH', ':'.join(library_dirs))
     os.putenv('DYLD_LIBRARY_PATH', ':'.join(library_dirs))
+
+    #---------------------------------------------------------------------------
+    # Deploying the system lua files
+    #---------------------------------------------------------------------------
+    print("copying from", lua_src_path, "to", lua_system_path)
+    if not os.path.isdir(lua_system_path):
+        copytree(lua_src_path, lua_system_path)
+    else:
+        for fname in os.listdir(lua_src_path):
+            copy2(os.path.join(lua_src_path, fname), lua_system_path)
 
 ################################################################################
 # GENERIC BUILD SETTINGS
@@ -176,53 +186,50 @@ else:
 # RESOLVE C CLIENT DEPENDENCY AND LUA SYSTEM PATH
 ################################################################################
 
+# Determine where the system lua files should be copied to
 lua_system_path = ''
 for arg in sys.argv:
     if arg[0:17] == '--lua-system-path':
         option, val = arg.split('=')
         lua_system_path = val.strip()
+if not lua_system_path:
+    lua_system_path = '/usr/local/aerospike/lua'
 
 # If the C client is packaged elsewhere, assume the libraries are available
 if os.environ.get('NO_RESOLVE_C_CLIENT_DEP', None):
+    has_c_client = True
     libraries = libraries + ['aerospike']
-    # Can override the lua path
     lua_src_path = os.environ.get('AEROSPIKE_LUA_PATH', lua_system_path)
 else:
+    has_c_client = False
     lua_src_path = "aerospike-client-c/lua"
-    if ('build' in sys.argv or 'build_ext' in sys.argv or
-        'install' in sys.argv):
-        resolve_c_client()
 
-# Determine where the system lua files should be copied to
-if not lua_system_path:
-    lua_system_path = '/usr/local/aerospike/lua'
-    data_files = [
-        ('/usr/local/aerospike', []),
-        ('/usr/local/aerospike/usr-lua', [])
-    ]
-else:
-    data_files = []
-data_files = data_files + [
-    (lua_system_path, [
+data_files = [
+    ('aerospike', []),
+    ('aerospike/usr-lua', []),
+    ('aerospike/lua', [
         lua_src_path + '/aerospike.lua',
         lua_src_path + '/as.lua',
         lua_src_path + '/stream_ops.lua'
         ]
     )
 ]
-print('info: The Lua system files will be copied to', lua_system_path, "\n",
-      file=sys.stdout)
+
+if not has_c_client:
+    if ('build' in sys.argv or 'build_ext' in sys.argv or
+        'install' in sys.argv):
+        resolve_c_client(lua_src_path, lua_system_path)
 
 ################################################################################
 # SETUP
 ################################################################################
 
 # Get the long description from the relevant file
-with open(path.join(CWD, 'README.rst')) as f:
+with open(os.path.join(CWD, 'README.rst')) as f:
     long_description = f.read()
 
 # Get the version from the relevant file
-with open(path.join(CWD, 'VERSION')) as f:
+with open(os.path.join(CWD, 'VERSION')) as f:
     version = f.read()
 
 setup(
