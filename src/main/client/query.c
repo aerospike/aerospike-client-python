@@ -334,7 +334,9 @@ PyObject * AerospikeClient_QueryApply_Invoke(
 		goto CLEANUP;
 	}
 
+    Py_BEGIN_ALLOW_THREADS
 	aerospike_query_background(self->as, &err, write_policy_p, &query, &query_id);
+    Py_END_ALLOW_THREADS
 	arglist = NULL;
 	if(err.code == AEROSPIKE_OK) {
 		if(block) {
@@ -345,7 +347,9 @@ PyObject * AerospikeClient_QueryApply_Invoke(
 					goto CLEANUP;
 				}
 			}
+            Py_BEGIN_ALLOW_THREADS
 			aerospike_query_wait(self->as, &err, info_policy_p, &query, query_id, 0);
+            Py_END_ALLOW_THREADS
 			if(err.code != AEROSPIKE_OK) {
 				as_error_update(&err, AEROSPIKE_ERR_PARAM, "Unable to perform query_wait on the query");
 			}
@@ -486,10 +490,12 @@ PyObject * AerospikeClient_JobInfo(AerospikeClient * self, PyObject * args, PyOb
 		goto CLEANUP;
     }
 
+    Py_BEGIN_ALLOW_THREADS
 	if (AEROSPIKE_OK != (aerospike_job_info(self->as, &err,
 					info_policy_p, module, ljobId, false, &job_info))) {
 		goto CLEANUP;
 	}
+    Py_END_ALLOW_THREADS
 
 	if(retObj)
 	{

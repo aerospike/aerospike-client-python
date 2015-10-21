@@ -175,7 +175,9 @@ PyObject * AerospikeClient_ScanApply_Invoke(
 		goto CLEANUP;
 	}
 
+    Py_BEGIN_ALLOW_THREADS
 	aerospike_scan_background(self->as, &err, scan_policy_p, &scan, &scan_id);
+    Py_END_ALLOW_THREADS
 	arglist = NULL;
 	if(err.code == AEROSPIKE_OK) {
 		if(block) {
@@ -186,7 +188,9 @@ PyObject * AerospikeClient_ScanApply_Invoke(
 					goto CLEANUP;
 				}
 			}
+            Py_BEGIN_ALLOW_THREADS
 			aerospike_scan_wait(self->as, &err, info_policy_p, scan_id, 0);
+            Py_END_ALLOW_THREADS
 			if(err.code != AEROSPIKE_OK) {
 				as_error_update(&err, AEROSPIKE_ERR_PARAM, "Unable to perform scan_wait on the scan");
 			}
@@ -319,10 +323,12 @@ PyObject * AerospikeClient_ScanInfo(AerospikeClient * self, PyObject * args, PyO
 		goto CLEANUP;
 	}
 
+    Py_BEGIN_ALLOW_THREADS
 	if (AEROSPIKE_OK != (aerospike_scan_info(self->as, &err,
 					info_policy_p, lscanId, &scan_info))) {
 		goto CLEANUP;
 	}
+    Py_END_ALLOW_THREADS
 
 	if(retObj)
 	{
