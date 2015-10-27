@@ -19,6 +19,7 @@ from __future__ import print_function
 import os
 import platform
 import sys
+from distutils.command.build import build
 from setuptools.command.install import install
 from setuptools import setup, Extension
 from shutil import copytree, copy2
@@ -41,6 +42,23 @@ class InstallCommand(install):
         global lua_system_path
         lua_system_path = self.lua_system_path
         install.run(self)
+
+class BuildCommand(build):
+    user_options = build.user_options + [
+        ('lua-system-path=', None, 'Path to the lua system files')
+    ]
+
+    def initialize_options(self):
+        build.initialize_options(self)
+        self.lua_system_path = None
+
+    def finalize_options(self):
+        build.finalize_options(self)
+
+    def run(self):
+        global lua_system_path
+        lua_system_path = self.lua_system_path
+        build.run(self)
 
 
 ################################################################################
@@ -234,6 +252,7 @@ with open(os.path.join(CWD, 'VERSION')) as f:
 
 setup(
     cmdclass={
+        'build': BuildCommand,
         'install': InstallCommand,
     },
     name = 'aerospike',
