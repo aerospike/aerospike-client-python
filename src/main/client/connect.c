@@ -21,8 +21,10 @@
 
 #include "client.h"
 #include "conversions.h"
+#include "global_hosts.h"
 #include "exceptions.h"
 
+#define MAX_PORT_SIZE 6
 /**
  *******************************************************************************************************
  * Establishes a connection to the Aerospike DB instance.
@@ -41,6 +43,10 @@ PyObject * AerospikeClient_Connect(AerospikeClient * self, PyObject * args, PyOb
 {
 	as_error err;
 	as_error_init(&err);
+    int8_t i = 0;
+    char *alias_to_search = NULL;
+    char *alias_to_hash = NULL;
+    char port_str[MAX_PORT_SIZE];
 
 	PyObject * py_username = NULL;
 	PyObject * py_password = NULL;
@@ -55,7 +61,40 @@ PyObject * AerospikeClient_Connect(AerospikeClient * self, PyObject * args, PyOb
 		as_config_set_user(&self->as->config, username, password);
 	}
 
+    for (i=0; i<self->as->config.hosts_size; i++)
+    {
+        char *addr = self->as->config.hosts[i].addr;
+        int port = self->as->config.hosts[i].port;
+        alias_to_search = (char*) PyMem_Malloc(strlen(addr) + strlen(self->as->config.user) + MAX_PORT_SIZE + 2);
+        sprintf(port_str, "%d", port);
+        strcpy(alias_to_search, addr);
+        strcat(alias_to_search, ":");
+        strcat(alias_to_search, port_str);
+        strcat(alias_to_search, ":");
+        strcat(alias_to_search, self->as->config.user);
+        if (PyDict_GetItemString(py_global_hosts, alias_to_search)) {
+            printf("\n In this if");
+        }
+        else {
+            printf("\nCorrect");
+        }
+        PyMem_Free(alias_to_search);
+        alias_to_search = NULL;
+        //printf("\nAddress is: %s", addr);
+    }
 	aerospike_connect(self->as, &err);
+
+    alias_to_search = (char*) PyMem_Malloc(strlen(self->as->config.hosts[0].addr) + strlen(self->as->config.user) + MAX_PORT_SIZE + 2);
+    sprintf(port_str, "%d", self->as->config.hosts[0].port);
+    strcpy(alias_to_search, self->as->config.hosts[0].addr);
+    strcat(alias_to_search, ":");
+    strcat(alias_to_search, port_str);
+    strcat(alias_to_search, ":");
+    strcat(alias_to_search, self->as->config.user);
+    PyObject * py_newobject = AerospikeGobalHosts_New(self->as);
+    PyDict_SetItemString(py_global_hosts, alias_to_search, py_newobject);
+    PyMem_Free(alias_to_search);
+    alias_to_search = NULL;
 
 	if ( err.code != AEROSPIKE_OK ) {
 		PyObject * py_err = NULL;

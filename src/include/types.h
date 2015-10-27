@@ -31,6 +31,13 @@
 // DB supports 32767 maximum number of bins
 #define MAX_UNICODE_OBJECTS 32767
 
+extern PyObject *py_global_hosts;
+
+typedef struct {
+	PyObject_HEAD
+	aerospike * as;
+} AerospikeGlobalHosts;
+
 typedef struct {
     as_error error;
     PyObject * callback;
