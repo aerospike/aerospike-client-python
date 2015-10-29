@@ -22,7 +22,9 @@
 #include "client.h"
 #include "conversions.h"
 #include "exceptions.h"
+#include "global_hosts.h"
 
+#define MAX_PORT_SIZE 6
 /**
  *******************************************************************************************************
  * Closes already opened connection to the database.
@@ -39,6 +41,8 @@
 PyObject * AerospikeClient_Close(AerospikeClient * self, PyObject * args, PyObject * kwds)
 {
 	as_error err;
+    char *alias_to_search = NULL;
+    char port_str[MAX_PORT_SIZE];
 
 	// Initialize error
 	as_error_init(&err);
@@ -53,7 +57,37 @@ PyObject * AerospikeClient_Close(AerospikeClient * self, PyObject * args, PyObje
 		goto CLEANUP;
 	}
 
-	aerospike_close(self->as, &err);
+    PyObject *py_persistent_item = NULL;
+    int i=0;
+    for (i=0; i<self->as->config.hosts_size; i++)
+    {
+        int port = self->as->config.hosts[i].port;
+        alias_to_search = (char*) PyMem_Malloc(strlen(self->as->config.hosts[i].addr) + strlen(self->as->config.user) + MAX_PORT_SIZE + 2);
+        sprintf(port_str, "%d", port);
+        strcpy(alias_to_search, self->as->config.hosts[i].addr);
+        strcat(alias_to_search, ":");
+        strcat(alias_to_search, port_str);
+        strcat(alias_to_search, ":");
+        strcat(alias_to_search, self->as->config.user);
+        py_persistent_item = PyDict_GetItemString(py_global_hosts, alias_to_search); 
+        if (py_persistent_item) {
+            if (((AerospikeGlobalHosts*)py_persistent_item)->ref_cnt == 1) {
+                printf("\nRef count delete");
+     //           PyDict_DelItemString(py_global_hosts, alias_to_search);
+            }
+        }
+        PyMem_Free(alias_to_search);
+        alias_to_search = NULL;
+    }
+    ((AerospikeGlobalHosts*)py_persistent_item)->ref_cnt--;
+
+    if (!((AerospikeGlobalHosts*)py_persistent_item)->ref_cnt)
+    {
+        printf("\nIn close");
+	    aerospike_close(self->as, &err);
+        AerospikeGlobalHosts_Del(py_persistent_item);
+    }
+    
 
 	if ( err.code != AEROSPIKE_OK ) {
 		PyObject * py_err = NULL;

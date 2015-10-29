@@ -35,7 +35,7 @@ static PyObject * AerospikeGlobalHosts_Type_New(PyTypeObject * type, PyObject * 
 {
 	AerospikeGlobalHosts * self = NULL;
 
-	self = (AerospikeGlobalHosts *) type->tp_alloc(type, 0);
+	self = (AerospikeGlobalHosts *) PyObject_New(AerospikeGlobalHosts, type);
 
 	if ( self == NULL ) {
 		return NULL;
@@ -44,7 +44,7 @@ static PyObject * AerospikeGlobalHosts_Type_New(PyTypeObject * type, PyObject * 
 	return (PyObject *) self;
 }
 
-static int AerospikeGlobalHosts_Type_Init(AerospikeGeospatial * self, PyObject * args, PyObject * kwds)
+/*static int AerospikeGlobalHosts_Type_Init(AerospikeGeospatial * self, PyObject * args, PyObject * kwds)
 {
 	as_error err;
 	as_error_init(&err);
@@ -61,11 +61,13 @@ CLEANUP:
 	}
 
     return 0;
-}
+}*/
 
 static void AerospikeGlobalHosts_Type_Dealloc(PyObject * self)
 {
-	self->ob_type->tp_free((PyObject *) self);
+    printf("\nFinal address is: %p\n", (void*) (((AerospikeGlobalHosts* )self)->as)); 
+	//self->ob_type->tp_free((PyObject *) self);
+	PyMem_DEL((PyObject *) self);
 }
 
 /*******************************************************************************
@@ -111,7 +113,7 @@ static PyTypeObject AerospikeGlobalHosts_Type = {
 	.tp_descr_get		= 0,
 	.tp_descr_set		= 0,
 	.tp_dictoffset		= 0,
-	.tp_init			= AerospikeGlobalHosts_Type_Init,
+	.tp_init			= 0,
 	.tp_alloc			= 0,
 	.tp_new				= AerospikeGlobalHosts_Type_New
 };
@@ -120,5 +122,12 @@ AerospikeGlobalHosts * AerospikeGobalHosts_New(aerospike* as)
 {
 	AerospikeGlobalHosts * self = (AerospikeGlobalHosts *) AerospikeGlobalHosts_Type.tp_new(&AerospikeGlobalHosts_Type, Py_None, Py_None);
     self->as = as;
+    self->shm_key = as->config.shm_key;
+    self->ref_cnt = 1;
 	return self;
+}
+
+void AerospikeGlobalHosts_Del(PyObject *self)
+{
+    AerospikeGlobalHosts_Type_Dealloc(self);
 }

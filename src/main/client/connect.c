@@ -72,16 +72,60 @@ PyObject * AerospikeClient_Connect(AerospikeClient * self, PyObject * args, PyOb
         strcat(alias_to_search, port_str);
         strcat(alias_to_search, ":");
         strcat(alias_to_search, self->as->config.user);
-        if (PyDict_GetItemString(py_global_hosts, alias_to_search)) {
+        PyObject * py_persistent_item = PyDict_GetItemString(py_global_hosts, alias_to_search); 
+        if (py_persistent_item) {
             printf("\n In this if");
-        }
-        else {
-            printf("\nCorrect");
+            aerospike *as = ((AerospikeGlobalHosts*)py_persistent_item)->as;
+            self->as = as;
+            self->as->config.shm_key = ((AerospikeGlobalHosts*)py_persistent_item)->shm_key;
+
+            //Increase ref count of all objects containing same *as object
+            PyObject *py_key, *py_value;
+            Py_ssize_t pos = 0;
+            ((AerospikeGlobalHosts*)py_persistent_item)->ref_cnt++;
+            /*while (PyDict_Next(py_global_hosts, &pos, &py_key, &py_value)) {
+                if (((AerospikeGlobalHosts*)py_value)->shm_key == self->as->config.shm_key) {
+                    ((AerospikeGlobalHosts*)py_value)->ref_cnt++;
+                }
+            }*/
+
+            PyMem_Free(alias_to_search);
+            alias_to_search = NULL;
+            goto CLEANUP;
         }
         PyMem_Free(alias_to_search);
         alias_to_search = NULL;
-        //printf("\nAddress is: %s", addr);
     }
+
+    //Generate unique shm_key
+    PyObject *py_key, *py_value;
+    Py_ssize_t pos = 0;
+    int flag = 0;
+    int shm_key;
+    if (user_shm_key) {
+        shm_key = self->as->config.shm_key;
+        user_shm_key = false;
+    } else {
+        shm_key = counter;
+    }
+    while(1) {
+        flag = 0;
+        while (PyDict_Next(py_global_hosts, &pos, &py_key, &py_value))
+        {
+            printf("\n In dictionary");
+            if ((((AerospikeGlobalHosts*)py_value)->shm_key == shm_key)) {
+                flag = 1;
+                break;
+            }
+        }
+        if (!flag) {
+            self->as->config.shm_key = shm_key;
+            printf("\n Counter is: %ld", shm_key);
+            break;
+        }
+        shm_key = shm_key + 1;
+    }
+    self->as->config.shm_key = shm_key;
 	aerospike_connect(self->as, &err);
 
     alias_to_search = (char*) PyMem_Malloc(strlen(self->as->config.hosts[0].addr) + strlen(self->as->config.user) + MAX_PORT_SIZE + 2);
@@ -92,10 +136,26 @@ PyObject * AerospikeClient_Connect(AerospikeClient * self, PyObject * args, PyOb
     strcat(alias_to_search, ":");
     strcat(alias_to_search, self->as->config.user);
     PyObject * py_newobject = AerospikeGobalHosts_New(self->as);
+    printf("\nInitial address is: %p\n", (void*) self->as); 
     PyDict_SetItemString(py_global_hosts, alias_to_search, py_newobject);
     PyMem_Free(alias_to_search);
     alias_to_search = NULL;
 
+    for (i=1; i<self->as->config.hosts_size; i++)
+    {
+        alias_to_search = (char*) PyMem_Malloc(strlen(self->as->config.hosts[i].addr) + strlen(self->as->config.user) + MAX_PORT_SIZE + 2);
+        sprintf(port_str, "%d", self->as->config.hosts[i].port);
+        strcpy(alias_to_search, self->as->config.hosts[i].addr);
+        strcat(alias_to_search, ":");
+        strcat(alias_to_search, port_str);
+        strcat(alias_to_search, ":");
+        strcat(alias_to_search, self->as->config.user);
+        //PyObject * py_newobject = AerospikeGobalHosts_New(self->as);
+        PyDict_SetItemString(py_global_hosts, alias_to_search, py_newobject);
+        PyMem_Free(alias_to_search);
+        alias_to_search = NULL;
+    }
+CLEANUP:
 	if ( err.code != AEROSPIKE_OK ) {
 		PyObject * py_err = NULL;
 		error_to_pyobject(&err, &py_err);

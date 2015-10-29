@@ -30,12 +30,15 @@
 // Bin names can be of type Unicode in Python
 // DB supports 32767 maximum number of bins
 #define MAX_UNICODE_OBJECTS 32767
-
+extern int counter;
 extern PyObject *py_global_hosts;
+extern bool user_shm_key;
 
 typedef struct {
 	PyObject_HEAD
 	aerospike * as;
+    int shm_key;
+    int ref_cnt;
 } AerospikeGlobalHosts;
 
 typedef struct {

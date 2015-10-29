@@ -386,6 +386,12 @@ static int AerospikeClient_Type_Init(AerospikeClient * self, PyObject * args, Py
         if(py_shm_takeover_threshold_sec && PyInt_Check(py_shm_takeover_threshold_sec) ) {
             config.shm_takeover_threshold_sec = PyInt_AsLong( py_shm_takeover_threshold_sec);
         }
+
+        PyObject* py_shm_cluster_key = PyDict_GetItemString(py_shm, "shm_key");
+        if(py_shm_cluster_key && PyInt_Check(py_shm_cluster_key) ) {
+            user_shm_key = true;
+            config.shm_key = PyInt_AsLong(py_shm_cluster_key);
+        }
     }
 
     self->is_client_put_serializer = false;
