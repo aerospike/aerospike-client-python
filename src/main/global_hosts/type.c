@@ -67,7 +67,7 @@ static void AerospikeGlobalHosts_Type_Dealloc(PyObject * self)
 {
     printf("\nFinal address is: %p\n", (void*) (((AerospikeGlobalHosts* )self)->as)); 
 	//self->ob_type->tp_free((PyObject *) self);
-	PyMem_DEL((PyObject *) self);
+	PyObject_Del((PyObject *) self);
 }
 
 /*******************************************************************************

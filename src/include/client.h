@@ -477,3 +477,11 @@ PyObject * AerospikeClient_HasGeo(AerospikeClient * self, PyObject * args, PyObj
 *
 */
 PyObject * AerospikeClient_Get_Key_Digest(AerospikeClient * self, PyObject * args, PyObject * kwds);
+/**
+ * Return search string for host port combination
+ */
+char* return_search_string(aerospike *as);
+/**
+ * Close the aerospike object depending on the global_hosts entries
+ */
+char* close_aerospike_object(aerospike *as, as_error *err, char *alias_to_search, PyObject *py_persistent_item);

@@ -121,7 +121,6 @@ class TestConnect(TestBaseClass):
 
         except ParamError as exception:
             assert exception.code == -2L
-            assert exception.msg == 'No hosts provided'
 
     def test_connect_missing_port(self):
         """
@@ -130,12 +129,9 @@ class TestConnect(TestBaseClass):
         config = {
                 'hosts': ['127.0.0.1']
                 }
-        try:
-            self.client = aerospike.client(config).connect()
-
-        except ClientError as exception:
-            assert exception.code == -1
-            assert exception.msg == 'Failed to seed cluster'
+        self.client = aerospike.client(config).connect()
+        assert self.client.is_connected() == True
+        self.client.close()
 
     def test_connect_incorrect_port(self):
         """
