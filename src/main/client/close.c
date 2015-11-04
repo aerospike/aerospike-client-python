@@ -133,15 +133,12 @@ char* return_search_string(aerospike *as)
     return alias_to_search;
 }
 
-char* close_aerospike_object(aerospike *as, as_error *err, char *alias_to_search, PyObject *py_persistent_item)
+void close_aerospike_object(aerospike *as, as_error *err, char *alias_to_search, PyObject *py_persistent_item)
 {
-        printf("\nIdhar");
         if (((AerospikeGlobalHosts*)py_persistent_item)->ref_cnt == 1) {
-            printf("\nRef count delete");
             PyDict_DelItemString(py_global_hosts, alias_to_search);
             AerospikeGlobalHosts_Del(py_persistent_item);
-	        aerospike_close(as, &err);
-            printf("\nAfter removing item");
+	        aerospike_close(as, err);
 	        
             /*
 	        * Need to free memory allocated to host address string
@@ -153,8 +150,6 @@ char* close_aerospike_object(aerospike *as, as_error *err, char *alias_to_search
 
 	        aerospike_destroy(as);
         } else {
-            printf("\nIn this else");
             ((AerospikeGlobalHosts*)py_persistent_item)->ref_cnt--;
         }
-        printf("\nUdhar");
 }

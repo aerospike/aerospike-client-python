@@ -44,29 +44,8 @@ static PyObject * AerospikeGlobalHosts_Type_New(PyTypeObject * type, PyObject * 
 	return (PyObject *) self;
 }
 
-/*static int AerospikeGlobalHosts_Type_Init(AerospikeGeospatial * self, PyObject * args, PyObject * kwds)
-{
-	as_error err;
-	as_error_init(&err);
-
-CLEANUP:
-
-	if ( err.code != AEROSPIKE_OK ) {
-		PyObject * py_err = NULL;
-		error_to_pyobject(&err, &py_err);
-		PyObject *exception_type = raise_exception(&err);
-		PyErr_SetObject(exception_type, py_err);
-		Py_DECREF(py_err);
-		return -1;
-	}
-
-    return 0;
-}*/
-
 static void AerospikeGlobalHosts_Type_Dealloc(PyObject * self)
 {
-    printf("\nFinal address is: %p\n", (void*) (((AerospikeGlobalHosts* )self)->as)); 
-	//self->ob_type->tp_free((PyObject *) self);
 	PyObject_Del((PyObject *) self);
 }
 

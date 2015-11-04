@@ -484,4 +484,4 @@ char* return_search_string(aerospike *as);
 /**
  * Close the aerospike object depending on the global_hosts entries
  */
-char* close_aerospike_object(aerospike *as, as_error *err, char *alias_to_search, PyObject *py_persistent_item);
+void close_aerospike_object(aerospike *as, as_error *err, char *alias_to_search, PyObject *py_persistent_item);
