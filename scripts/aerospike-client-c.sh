@@ -68,12 +68,7 @@ detect_linux()
         return 0
         ;;
 
-      "ubuntu12" | "ubuntu13" | "ubuntu14" )
-        echo "ubuntu12"  "deb"
-        return 0
-        ;;
-
-      "linuxmint17" )
+      "ubuntu12" | "ubuntu13" | "ubuntu14" | "ubuntu15" | "linuxmint17" )
         echo "ubuntu12"  "deb"
         return 0
         ;;
@@ -146,7 +141,7 @@ detect_linux()
       "ubuntu"* )
         vers=$(lsb_release -r -s)
         case ${vers} in
-          "12."* | "13."* | "14.*" )
+          "12."* | "13."* | "14."* | "15."* )
             echo "ubuntu12"  "deb"
             return 0
             ;;
