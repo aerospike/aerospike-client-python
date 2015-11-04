@@ -22,7 +22,7 @@ class TestConnect(TestBaseClass):
         """
             Check for aerospike vrsion
         """
-        assert aerospike.__version__ == "1.0.55"
+        assert aerospike.__version__ == "1.0.56"
 
     def test_connect_positive(self):
         """
