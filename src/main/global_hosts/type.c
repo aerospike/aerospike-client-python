@@ -46,7 +46,7 @@ static PyObject * AerospikeGlobalHosts_Type_New(PyTypeObject * type, PyObject * 
 
 static void AerospikeGlobalHosts_Type_Dealloc(PyObject * self)
 {
-	PyObject_Del((PyObject *) self);
+    Py_DECREF((PyObject*) self);
 }
 
 /*******************************************************************************
@@ -103,6 +103,7 @@ AerospikeGlobalHosts * AerospikeGobalHosts_New(aerospike* as)
     self->as = as;
     self->shm_key = as->config.shm_key;
     self->ref_cnt = 1;
+    Py_INCREF((PyObject*) self);
 	return self;
 }
 

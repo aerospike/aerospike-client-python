@@ -64,7 +64,6 @@ PyObject * AerospikeClient_Connect(AerospikeClient * self, PyObject * args, PyOb
 
         PyObject * py_persistent_item = PyDict_GetItemString(py_global_hosts, alias_to_search); 
         if (py_persistent_item) {
-
             aerospike *as = ((AerospikeGlobalHosts*)py_persistent_item)->as;
             //Destroy the initial aeorpsike object as it has to point to the one in
             //the persistent list now
@@ -79,7 +78,6 @@ PyObject * AerospikeClient_Connect(AerospikeClient * self, PyObject * args, PyOb
             PyMem_Free(alias_to_search);
             alias_to_search = NULL;
         }
-
         //Generate unique shm_key
         PyObject *py_key, *py_value;
         Py_ssize_t pos = 0;
