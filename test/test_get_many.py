@@ -205,7 +205,8 @@ class TestGetMany(TestBaseClass):
 
     def test_get_many_with_use_batch_direct(self):
 
-        config = {'hosts': TestGetMany.hostlist}
+        config = {'hosts': TestGetMany.hostlist, 'policies': {'use_batch_direct':
+            True}}
         if TestGetMany.user == None and TestGetMany.password == None:
             client_batch_direct = aerospike.client(config).connect()
         else:
@@ -217,7 +218,8 @@ class TestGetMany(TestBaseClass):
         assert type(records) == list
         assert len(records) == 6
         assert Counter([x[0][2] for x in records]) == Counter([0, 1, 2, 3,
-            4, 'float_value'])
+        4, 'float_value'])
         assert records[5][2] == {'float_value': 4.3}
+
 
         client_batch_direct.close()
