@@ -583,7 +583,7 @@ as_status pyobject_to_record(AerospikeClient * self, as_error * err, PyObject * 
             		    as_error_update(err, AEROSPIKE_ERR_PARAM, "integer value exceeds sys.maxsize");
                     }
 				} else {
-					as_error_update(err, AEROSPIKE_ERR_PARAM, "Ttl should be an int or long");
+					as_error_update(err, AEROSPIKE_ERR_PARAM, "TTL should be an int or long");
 				}
 			}
 
