@@ -412,6 +412,8 @@ static int AerospikeClient_Type_Init(AerospikeClient * self, PyObject * args, Py
     }
 
 	as_policies_init(&config.policies);
+    //Set default value of use_batch_direct
+    config.policies.batch.use_batch_direct = false;
 
 	PyObject * py_policies = PyDict_GetItemString(py_config, "policies");
 	if ( py_policies && PyDict_Check(py_policies)) {
@@ -459,6 +461,12 @@ static int AerospikeClient_Type_Init(AerospikeClient * self, PyObject * args, Py
 		PyObject * py_thread_pool_size = PyDict_GetItemString(py_policies, "thread_pool_size");
         if ( py_thread_pool_size && (PyInt_Check(py_thread_pool_size) || PyLong_Check(py_thread_pool_size))) {
             config.thread_pool_size = PyInt_AsLong(py_thread_pool_size);
+        }
+
+        //Setting for use_batch_direct
+		PyObject * py_use_batch_direct = PyDict_GetItemString(py_policies, "use_batch_direct");
+        if ( py_use_batch_direct && PyBool_Check(py_use_batch_direct)) {
+            config.policies.batch.use_batch_direct = PyInt_AsLong(py_use_batch_direct);
         }
 
 		/*
