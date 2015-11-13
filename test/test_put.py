@@ -467,7 +467,7 @@ class TestPut(TestBaseClass):
 
         except ParamError as exception:
             assert exception.code == -2
-            assert exception.msg == "Ttl should be an int or long"
+            assert exception.msg == "TTL should be an int or long"
 
         #self.delete_keys.append( key )
 
