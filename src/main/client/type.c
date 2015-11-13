@@ -344,9 +344,12 @@ static int AerospikeClient_Type_Init(AerospikeClient * self, PyObject * args, Py
 			if( PyTuple_Check(py_host) && PyTuple_Size(py_host) == 2) {
 
 				py_addr = PyTuple_GetItem(py_host, 0);
-				if(PyString_Check(py_addr)) {
+				if (PyString_Check(py_addr)) {
 					addr = strdup(PyString_AsString(py_addr));
-				}
+				} else if (PyUnicode_Check(py_addr)) {
+		            PyObject * py_ustr = PyUnicode_AsUTF8String(py_addr);
+		            addr = strdup(PyString_AsString(py_ustr));
+                }
 				py_port = PyTuple_GetItem(py_host,1);
 				if( PyInt_Check(py_port) || PyLong_Check(py_port) ) {
 					port = (uint16_t) PyLong_AsLong(py_port);
