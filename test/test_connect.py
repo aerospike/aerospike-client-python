@@ -180,3 +180,56 @@ class TestConnect(TestBaseClass):
         except ClientError as exception:
             assert exception.code == -1
             assert exception.msg == 'Failed to seed cluster'
+
+    def test_connect_positive_shm_key(self):
+        """
+            Invoke connect() with shm_key specified
+        """
+        config = {'hosts': TestConnect.hostlist,
+                'shm': {'shm_key': 3}
+                }
+        if TestConnect.user == None and TestConnect.password == None:
+            self.client = aerospike.client(config).connect()
+        else:
+            self.client = aerospike.client(config).connect(
+                TestConnect.user, TestConnect.password)
+
+        assert self.client != None
+        assert self.client.is_connected() == True
+        assert self.client.shm_key() == 3
+        self.client.close()
+
+    def test_connect_positive_shm_key_default(self):
+        """
+            Invoke connect() with shm enabled but shm_key not specified
+        """
+        config = {'hosts': TestConnect.hostlist,
+                'shm': {'shm_max_nodes': 5}
+                }
+        if TestConnect.user == None and TestConnect.password == None:
+            self.client = aerospike.client(config).connect()
+        else:
+            self.client = aerospike.client(config).connect(
+                TestConnect.user, TestConnect.password)
+
+        assert self.client != None
+        assert self.client.is_connected() == True
+        assert self.client.shm_key() == 2768240640
+        self.client.close()
+
+    def test_connect_positive_shm_not_enabled(self):
+        """
+            Invoke connect() with shm not anabled
+        """
+        config = {'hosts': TestConnect.hostlist,
+                }
+        if TestConnect.user == None and TestConnect.password == None:
+            self.client = aerospike.client(config).connect()
+        else:
+            self.client = aerospike.client(config).connect(
+                TestConnect.user, TestConnect.password)
+
+        assert self.client != None
+        assert self.client.is_connected() == True
+        assert self.client.shm_key() == None
+        self.client.close()

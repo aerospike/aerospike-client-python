@@ -68,6 +68,11 @@ PyObject * AerospikeClient_Close(AerospikeClient * self, PyObject * args, PyObje
  */
 PyObject * AerospikeClient_is_connected(AerospikeClient * self, PyObject * args, PyObject * kwds);
 
+/**
+ * Get the shm_key to the cluster.
+ */
+PyObject * AerospikeClient_shm_key(AerospikeClient * self, PyObject * args, PyObject * kwds);
+
 
 /*******************************************************************************
  * KVS OPERATIONS

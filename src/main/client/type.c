@@ -47,6 +47,9 @@ static PyMethodDef AerospikeClient_Type_Methods[] = {
 	{"is_connected",
 		(PyCFunction) AerospikeClient_is_connected, METH_VARARGS | METH_KEYWORDS,
 		"Checks current connection state."},
+	{"shm_key",
+		(PyCFunction) AerospikeClient_shm_key, METH_VARARGS | METH_KEYWORDS,
+		"Get the shm key of the cluster"},
 
 	// ADMIN OPERATIONS
 

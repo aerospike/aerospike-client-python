@@ -83,28 +83,32 @@ PyObject * AerospikeClient_Connect(AerospikeClient * self, PyObject * args, PyOb
         Py_ssize_t pos = 0;
         int flag = 0;
         int shm_key;
-        if (user_shm_key) {
-            shm_key = self->as->config.shm_key;
-            user_shm_key = false;
-        } else {
-            shm_key = counter;
-        }
-        while(1) {
-            flag = 0;
-            while (PyDict_Next(py_global_hosts, &pos, &py_key, &py_value))
-            {
-                if ((((AerospikeGlobalHosts*)py_value)->shm_key == shm_key)) {
-                    flag = 1;
+        if (self->as->config.use_shm) {
+            if (user_shm_key) {
+                shm_key = self->as->config.shm_key;
+                user_shm_key = false;
+            } else {
+                shm_key = counter;
+            }
+            while(1) {
+                flag = 0;
+                while (PyDict_Next(py_global_hosts, &pos, &py_key, &py_value))
+                {
+                    if (((AerospikeGlobalHosts*)py_value)->as->config.use_shm) {
+                        if ((((AerospikeGlobalHosts*)py_value)->shm_key == shm_key)) {
+                            flag = 1;
+                            break;
+                        }
+                    }
+                }
+                if (!flag) {
+                    self->as->config.shm_key = shm_key;
                     break;
                 }
+                shm_key = shm_key + 1;
             }
-            if (!flag) {
-                self->as->config.shm_key = shm_key;
-                break;
-            }
-            shm_key = shm_key + 1;
+            self->as->config.shm_key = shm_key;
         }
-        self->as->config.shm_key = shm_key;
 	    aerospike_connect(self->as, &err);
         if (err.code != AEROSPIKE_OK) {
             goto CLEANUP;
@@ -153,4 +157,50 @@ PyObject * AerospikeClient_is_connected(AerospikeClient * self, PyObject * args,
     Py_INCREF(Py_False);
 	return Py_False;
 
+}
+
+/**
+ *******************************************************************************************************
+ * Get shm_key configured with the Aerospike DB
+ *
+ * @param self                  AerospikeClient object
+ * @param args                  The args is a tuple object containing an argument
+ *                              list passed from Python to a C function
+ * @param kwds                  Dictionary of keywords
+ *
+ * Returns true or false.
+ *******************************************************************************************************
+ */
+PyObject * AerospikeClient_shm_key(AerospikeClient * self, PyObject * args, PyObject * kwds)
+{
+	as_error err;
+	as_error_init(&err);
+
+	if (!self || !self->as) {
+		as_error_update(&err, AEROSPIKE_ERR_PARAM, "Invalid aerospike object");
+		goto CLEANUP;
+	}
+
+	if (!self->is_conn_16) {
+		as_error_update(&err, AEROSPIKE_ERR_CLUSTER, "No connection to aerospike cluster");
+		goto CLEANUP;
+	}
+
+    if (self->as->config.use_shm && self->as->config.shm_key) {
+        return PyLong_FromUnsignedLong((unsigned int) self->as->config.shm_key);
+    }
+
+
+CLEANUP:
+	if ( err.code != AEROSPIKE_OK ) {
+		PyObject * py_err = NULL;
+		error_to_pyobject(&err, &py_err);
+		PyObject *exception_type = raise_exception(&err);
+		PyErr_SetObject(exception_type, py_err);
+		Py_DECREF(py_err);
+		return NULL;
+	}
+
+	Py_INCREF(Py_None);
+	return Py_None;
 }
