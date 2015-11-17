@@ -647,13 +647,10 @@ class TestOperate(object):
                 'commit_level': aerospike.POLICY_COMMIT_LEVEL_MASTER
             }
 
-            list = [{"op": aerospike.OPERATOR_APPEND,
-                     "bin": "name",
-                     "val": "aa"},
-                    {"op": aerospike.OPERATOR_INCR,
+            list = [ {"op": aerospike.OPERATOR_INCR,
                      "bin": "age",
                      "val": "3"}, {"op": aerospike.OPERATOR_READ,
-                                 "bin": "name"}]
+                                 "bin": "age"}]
 
             key, meta, bins = TestOperate.client.operate(key, list, {}, policy)
 
