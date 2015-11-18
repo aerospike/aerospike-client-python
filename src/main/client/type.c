@@ -17,6 +17,7 @@
 #include <Python.h>
 #include <structmember.h>
 #include <stdbool.h>
+#include <unistd.h>
 
 #include <aerospike/aerospike.h>
 #include <aerospike/as_config.h>
@@ -170,6 +171,9 @@ static PyMethodDef AerospikeClient_Type_Methods[] = {
 	{"get_nodes",
 		(PyCFunction) AerospikeClient_GetNodes, METH_VARARGS | METH_KEYWORDS,
 		"Gets information about the nodes of the cluster."},
+	{"has_geo",
+		(PyCFunction)AerospikeClient_HasGeo, METH_VARARGS | METH_KEYWORDS,
+		"Reflect if the server supports geospatial"},
 
 	// UDF OPERATIONS
 
@@ -206,6 +210,9 @@ static PyMethodDef AerospikeClient_Type_Methods[] = {
 	{"index_map_values_create",
 		(PyCFunction)AerospikeClient_Index_Map_Values_Create, METH_VARARGS | METH_KEYWORDS,
 		"Remove a secondary list index"},
+	{"index_geo2dsphere_create",
+		(PyCFunction)AerospikeClient_Index_2dsphere_Create,	METH_VARARGS | METH_KEYWORDS,
+		"Creates a secondary geo2dsphere index"},
 
     // LSTACK OPERATIONS
 
@@ -244,6 +251,7 @@ static PyMethodDef AerospikeClient_Type_Methods[] = {
 	{"get_key_digest",
 		(PyCFunction)AerospikeClient_Get_Key_Digest, METH_VARARGS | METH_KEYWORDS,
 		"Get key digest"},
+
 	{NULL}
 };
 
@@ -302,39 +310,27 @@ static int AerospikeClient_Type_Init(AerospikeClient * self, PyObject * args, Py
 	}
 
 	if ( ! lua_system_path ) {
+		char system_path[AS_CONFIG_PATH_MAX_LEN] = {0};
+		memcpy(system_path, "/usr/local/aerospike/lua", 24);
+		system_path[24] = '\0';
 
-		PyObject * py_prefix = PySys_GetObject("prefix");
-		if ( py_prefix && PyString_Check(py_prefix) ) {
-			char * prefix = PyString_AsString(py_prefix);
-			size_t prefix_len = strlen(prefix);
-
-			char system_path[AS_CONFIG_PATH_MAX_LEN] = {0};
-			memcpy(system_path, prefix, strlen(prefix));
-			memcpy(system_path + prefix_len, "/aerospike/lua", AS_CONFIG_PATH_MAX_LEN - prefix_len);
-			system_path[prefix_len + strlen("/aerospike/lua")] = '\0';
-
-			struct stat info;
-
-			if( stat( system_path, &info ) == 0 && (info.st_mode & S_IFDIR) ) {
-				memcpy(config.lua.system_path, system_path, AS_CONFIG_PATH_MAX_LEN);
-			}
-			else {
-				memcpy(system_path + prefix_len, "/local/aerospike/lua", AS_CONFIG_PATH_MAX_LEN - prefix_len);
-				system_path[prefix_len + strlen("/local/aerospike/lua")] = '\0';
-
-				if( stat( system_path, &info ) == 0 && (info.st_mode & S_IFDIR) ) {
-					memcpy(config.lua.system_path, system_path, AS_CONFIG_PATH_MAX_LEN);
-				}
-				else {
-					config.lua.system_path[0] = '\0';
-				}
-			}
+		struct stat info;
+		if (stat(system_path, &info) == 0 && (info.st_mode & S_IFDIR) && (access(system_path, R_OK)) == 0) {
+			memcpy(config.lua.system_path, system_path, AS_CONFIG_PATH_MAX_LEN);
 		}
-	}
+		else {
+			config.lua.system_path[0] = '\0';
+		}
+    }
 
 	if ( ! lua_user_path ) {
 		memcpy(config.lua.user_path, ".", AS_CONFIG_PATH_MAX_LEN);
-	}
+	} else {
+		struct stat info;
+		if (stat(config.lua.user_path, &info ) != 0 || !(info.st_mode & S_IFDIR) || (access(config.lua.user_path, W_OK) != 0)) {
+		    memcpy(config.lua.user_path, ".", AS_CONFIG_PATH_MAX_LEN);
+		}
+    }
 
 	PyObject * py_hosts = PyDict_GetItemString(py_config, "hosts");
 	if ( py_hosts && PyList_Check(py_hosts) ) {
@@ -372,7 +368,7 @@ static int AerospikeClient_Type_Init(AerospikeClient * self, PyObject * args, Py
 	}
 
     PyObject * py_shm = PyDict_GetItemString(py_config, "shm");
-    if(py_shm && PyDict_Check(py_shm) ) {
+    if (py_shm && PyDict_Check(py_shm) ) {
 
         config.use_shm = true;
 
@@ -389,6 +385,29 @@ static int AerospikeClient_Type_Init(AerospikeClient * self, PyObject * args, Py
         PyObject* py_shm_takeover_threshold_sec = PyDict_GetItemString(py_shm, "shm_takeover_threshold_sec");
         if(py_shm_takeover_threshold_sec && PyInt_Check(py_shm_takeover_threshold_sec) ) {
             config.shm_takeover_threshold_sec = PyInt_AsLong( py_shm_takeover_threshold_sec);
+        }
+    }
+
+    self->is_client_put_serializer = false;
+    self->user_serializer_call_info.callback = NULL;
+    self->user_deserializer_call_info.callback = NULL;
+    PyObject *py_serializer_option = PyDict_GetItemString(py_config, "serialization");
+    if (py_serializer_option && PyTuple_Check(py_serializer_option)) {
+        PyObject *py_serializer = PyTuple_GetItem(py_serializer_option, 0);
+        if (py_serializer && py_serializer != Py_None) {
+            if (!PyCallable_Check(py_serializer)) {
+                return -1;
+            }
+            memset(&self->user_serializer_call_info, 0, sizeof(self->user_serializer_call_info));
+            self->user_serializer_call_info.callback = py_serializer;
+        }
+        PyObject *py_deserializer = PyTuple_GetItem(py_serializer_option, 1);
+        if (py_deserializer && py_deserializer != Py_None) {
+            if (!PyCallable_Check(py_deserializer)) {
+                return -1;
+            }
+            memset(&self->user_deserializer_call_info, 0, sizeof(self->user_deserializer_call_info));
+            self->user_deserializer_call_info.callback = py_deserializer;
         }
     }
 
@@ -431,6 +450,16 @@ static int AerospikeClient_Type_Init(AerospikeClient * self, PyObject * args, Py
 		if ( py_commit_level && PyInt_Check(py_commit_level) ) {
 			config.policies.commit_level = PyInt_AsLong(py_commit_level);
 		}
+
+		PyObject * py_max_threads = PyDict_GetItemString(py_policies, "max_threads");
+        if ( py_max_threads && (PyInt_Check(py_max_threads) || PyLong_Check(py_max_threads))) {
+            config.max_threads = PyInt_AsLong(py_max_threads);
+        }
+
+		PyObject * py_thread_pool_size = PyDict_GetItemString(py_policies, "thread_pool_size");
+        if ( py_thread_pool_size && (PyInt_Check(py_thread_pool_size) || PyLong_Check(py_thread_pool_size))) {
+            config.thread_pool_size = PyInt_AsLong(py_thread_pool_size);
+        }
 
 		/*
 		 * Generation policy is removed from constructor.

@@ -280,7 +280,7 @@ PyObject * AerospikeLSet_Get(AerospikeLSet * self, PyObject * args, PyObject * k
 	}
 
 	PyObject * py_return_val = NULL;
-	val_to_pyobject(&err, return_val_p, &py_return_val);
+	val_to_pyobject(self->client, &err, return_val_p, &py_return_val);
 
 CLEANUP:
 
@@ -389,7 +389,7 @@ PyObject * AerospikeLSet_Filter(AerospikeLSet * self, PyObject * args, PyObject 
 	}
 
 	PyObject* py_list = NULL;
-	list_to_pyobject(&err, elements_list, &py_list);
+	list_to_pyobject(self->client, &err, elements_list, &py_list);
 
 CLEANUP:
 

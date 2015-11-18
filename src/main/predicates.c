@@ -130,11 +130,30 @@ exit:
 	return Py_None;
 }
 
+static PyObject * AerospikePredicates_GeoWithin(PyObject * self, PyObject * args)
+{
+	PyObject * py_bin = NULL;
+	PyObject * py_shape = NULL;
+
+	if ( PyArg_ParseTuple(args, "OO:equals", 
+			&py_bin, &py_shape) == false ) {
+		goto exit;
+	}
+
+	if ( PyString_Check(py_shape) || PyUnicode_Check(py_shape) ) {
+		return Py_BuildValue("iiOO", AS_PREDICATE_RANGE, AS_INDEX_GEO2DSPHERE, py_bin, py_shape);
+	}
+
+exit:
+	Py_INCREF(Py_None);
+	return Py_None;
+}
 static PyMethodDef AerospikePredicates_Methods[] = {
 	{"equals",		(PyCFunction) AerospikePredicates_Equals,	METH_VARARGS, "Tests whether a bin's value equals the specified value."},
 	{"between",		(PyCFunction) AerospikePredicates_Between,	METH_VARARGS, "Tests whether a bin's value is within the specified range."},
 	{"contains",	(PyCFunction) AerospikePredicates_Contains,	METH_VARARGS, "Tests whether a bin's value equals the specified value in a complex data type"},
 	{"range",	(PyCFunction) AerospikePredicates_RangeContains,	METH_VARARGS, "Tests whether a bin's value is within the specified range in a complex data type"},
+	{"geo_within",		(PyCFunction) AerospikePredicates_GeoWithin,	METH_VARARGS, "Tests whether a bin's value is within the specified shape."},
 	{NULL, NULL, 0, NULL}
 };
 

@@ -239,6 +239,8 @@ PyObject * AerospikeClient_QueryApply_Invoke(
 		goto CLEANUP;
 	}
 
+    self->is_client_put_serializer = false;
+
 	if (!(namespace_p) || !(py_set) || !(py_predicate) || !(py_module) || !(py_function)) {
 		as_error_update(&err, AEROSPIKE_ERR_PARAM, "Parameter should not be null");
 		goto CLEANUP;

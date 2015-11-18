@@ -22,6 +22,7 @@
 #include "client.h"
 #include "key.h"
 #include "query.h"
+#include "geo.h"
 #include "scan.h"
 #include "predicates.h"
 #include "exceptions.h"
@@ -44,14 +45,19 @@ static PyMethodDef Aerospike_Methods[] = {
 	{"set_deserializer",
 		(PyCFunction)AerospikeClient_Set_Deserializer, METH_VARARGS | METH_KEYWORDS,
 		"Sets the deserializer"},
+	{"unset_serializers",
+		(PyCFunction)AerospikeClient_Unset_Serializers, METH_VARARGS | METH_KEYWORDS,
+		"Unsets the serializer and deserializer"},
 	{"client",		(PyCFunction) AerospikeClient_New,	METH_VARARGS | METH_KEYWORDS,
 		"Create a new instance of Client class."},
 	{"set_log_level",	(PyCFunction)Aerospike_Set_Log_Level,       METH_VARARGS | METH_KEYWORDS,
 		"Sets the log level"},
-
 	{"set_log_handler", (PyCFunction)Aerospike_Set_Log_Handler,	    METH_VARARGS | METH_KEYWORDS,
 		"Sets the log handler"},
-
+	{"geodata", (PyCFunction)Aerospike_Set_Geo_Data,	    METH_VARARGS | METH_KEYWORDS,
+		"Creates a GeoJSON object from geospatial data."},
+	{"geojson", (PyCFunction)Aerospike_Set_Geo_Json,	    METH_VARARGS | METH_KEYWORDS,
+		"Creates a GeoJSON object from a raw GeoJSON string."},
 	{NULL}
 };
 
@@ -69,6 +75,8 @@ AerospikeConstants operator_constants[] = {
 
 PyMODINIT_FUNC initaerospike(void)
 {
+
+    static char version[6] = "1.0.55";
 	// Makes things "thread-safe"
 	PyEval_InitThreads();
 	int i = 0;
@@ -78,6 +86,8 @@ PyMODINIT_FUNC initaerospike(void)
 			"Aerospike Python Client");
 
 	declare_policy_constants(aerospike);
+
+    PyModule_AddStringConstant(aerospike, "__version__", version);
 
 	PyObject * exception = AerospikeException_New();
 	Py_INCREF(exception);
@@ -133,4 +143,8 @@ PyMODINIT_FUNC initaerospike(void)
 	PyTypeObject * lmap = AerospikeLMap_Ready();
 	Py_INCREF(lmap);
 	PyModule_AddObject(aerospike, "lmap", (PyObject *) lmap);
+
+	PyTypeObject * geospatial = AerospikeGeospatial_Ready();
+	Py_INCREF(geospatial);
+	PyModule_AddObject(aerospike, "GeoJSON", (PyObject *) geospatial);
 }

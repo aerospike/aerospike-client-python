@@ -295,12 +295,25 @@ CLEANUP:
  *                                  with encountered error if any.
  *******************************************************************************************************
  */
-extern PyObject * serialize_based_on_serializer_policy(int32_t serializer_policy,
+extern PyObject * serialize_based_on_serializer_policy(AerospikeClient * self,
+        int32_t serializer_policy,
 		as_bytes **bytes,
 		PyObject *value,
 		as_error *error_p)
 {
+    uint8_t use_client_serializer = true;
 	PyObject* initresult = NULL;
+
+    if (self->is_client_put_serializer) {
+        if (serializer_policy == SERIALIZER_USER) {
+            if (!self->user_serializer_call_info.callback) {
+                use_client_serializer = false;
+            }
+        }
+    } else if (self->user_serializer_call_info.callback) {
+        serializer_policy = SERIALIZER_USER;
+    }
+
 	switch(serializer_policy) {
 		case SERIALIZER_NONE:
 			as_error_update(error_p, AEROSPIKE_ERR_PARAM,
@@ -373,17 +386,29 @@ extern PyObject * serialize_based_on_serializer_policy(int32_t serializer_policy
 			goto CLEANUP;
 
 		case SERIALIZER_USER:
-			if (is_user_serializer_registered) {
-				execute_user_callback(&user_serializer_call_info, bytes, &value, true, error_p);
+            if (use_client_serializer) {
+                execute_user_callback(&self->user_serializer_call_info, bytes, &value, true, error_p);
 				if (AEROSPIKE_OK != (error_p->code)) {
 					goto CLEANUP;
 				}
-			} else {
-				as_error_update(error_p, AEROSPIKE_ERR,
+            } else {
+			    if (is_user_serializer_registered) {
+                    execute_user_callback(&user_serializer_call_info, bytes, &value, true, error_p);
+				    if (AEROSPIKE_OK != (error_p->code)) {
+					    goto CLEANUP;
+				    }
+			    } else if (self->user_serializer_call_info.callback) {
+                    execute_user_callback(&self->user_serializer_call_info, bytes, &value, true, error_p);
+				    if (AEROSPIKE_OK != (error_p->code)) {
+					    goto CLEANUP;
+				    }
+                } else {
+				    as_error_update(error_p, AEROSPIKE_ERR,
 						"No serializer callback registered");
-				goto CLEANUP;
-			}
-			break;
+				    goto CLEANUP;
+			    }
+            }
+		    break;
 		default:
 			as_error_update(error_p, AEROSPIKE_ERR,
 					"Unsupported serializer");
@@ -418,7 +443,8 @@ CLEANUP:
  *                              with encountered error if any.
  *******************************************************************************************************
  */
-extern PyObject * deserialize_based_on_as_bytes_type(as_bytes  *bytes,
+extern PyObject * deserialize_based_on_as_bytes_type(AerospikeClient * self,
+        as_bytes  *bytes,
 		PyObject  **retval,
 		as_error  *error_p)
 {
@@ -459,21 +485,42 @@ extern PyObject * deserialize_based_on_as_bytes_type(as_bytes  *bytes,
 							  }
 							  break;
 		case AS_BYTES_BLOB: {
-								if (is_user_deserializer_registered) {
-									execute_user_callback(&user_deserializer_call_info, &bytes, retval, false, error_p);
+                                if (self->user_deserializer_call_info.callback) {
+						            execute_user_callback(&self->user_deserializer_call_info, &bytes, retval, false, error_p);
 									if(AEROSPIKE_OK != (error_p->code)) {
-										goto CLEANUP;
-									}
-								} else {
-									uint32_t bval_size = as_bytes_size(bytes);
-									PyObject *py_val = PyByteArray_FromStringAndSize((char *) as_bytes_get(bytes), bval_size);
-									if (!py_val) {
+									    uint32_t bval_size = as_bytes_size(bytes);
+									    PyObject *py_val = PyByteArray_FromStringAndSize((char *) as_bytes_get(bytes), bval_size);
+									    if (!py_val) {
+										    as_error_update(error_p, AEROSPIKE_ERR_CLIENT, "Unable to deserialize bytes");
+										    goto CLEANUP;
+									    }
+									    *retval = py_val;
+										as_error_update(error_p, AEROSPIKE_OK, NULL);
+                                    }
+                                } else {
+								    if (is_user_deserializer_registered) {
+									    execute_user_callback(&user_deserializer_call_info, &bytes, retval, false, error_p);
+									    if(AEROSPIKE_OK != (error_p->code)) {
+									        uint32_t bval_size = as_bytes_size(bytes);
+									        PyObject *py_val = PyByteArray_FromStringAndSize((char *) as_bytes_get(bytes), bval_size);
+									        if (!py_val) {
+										        as_error_update(error_p, AEROSPIKE_ERR_CLIENT, "Unable to deserialize bytes");
+										        goto CLEANUP;
+									        }
+										    as_error_update(error_p, AEROSPIKE_OK, NULL);
+									        *retval = py_val;
+									    }
+								    } else {
+									    uint32_t bval_size = as_bytes_size(bytes);
+									    PyObject *py_val = PyByteArray_FromStringAndSize((char *) as_bytes_get(bytes), bval_size);
+									    if (!py_val) {
 										as_error_update(error_p, AEROSPIKE_ERR_CLIENT, "Unable to deserialize bytes");
 										goto CLEANUP;
-									}
-									*retval = py_val;
-								}
-							}
+									    }
+									    *retval = py_val;
+								    }
+							    }
+                            }
 							break;
         case AS_BYTES_LDT:  {
                                 Py_INCREF(Py_None);
@@ -499,4 +546,23 @@ CLEANUP:
 	}
 
 	return PyLong_FromLong(0);
+}
+PyObject * AerospikeClient_Unset_Serializers(AerospikeClient * self, PyObject * args, PyObject * kwds)
+{
+	// Python Function Keyword Arguments
+	static char * kwlist[] = {NULL};
+	as_error err;
+	// Initialize error
+	as_error_init(&err);
+
+	// Python Function Argument Parsing
+	if ( PyArg_ParseTupleAndKeywords(args, kwds, ":unset_serializers", kwlist) == false ) {
+		return NULL;
+	}
+	is_user_serializer_registered = 0;
+	is_user_deserializer_registered = 0;
+    memset(&user_deserializer_call_info, 0, sizeof(user_deserializer_call_info));
+    memset(&user_serializer_call_info, 0, sizeof(user_serializer_call_info));
+
+    return PyLong_FromLong(0);
 }

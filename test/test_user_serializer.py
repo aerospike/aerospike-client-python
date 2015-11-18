@@ -3,8 +3,9 @@
 import pytest
 import sys
 import time
+import json
+import marshal
 from test_base_class import TestBaseClass
-import cPickle as pickle
 
 aerospike = pytest.importorskip("aerospike")
 try:
@@ -17,13 +18,23 @@ class SomeClass(object):
 
     pass
 
+def serialize_function_old_server(val):
+    return marshal.dumps(val)
 
 def serialize_function(val):
-    return pickle.dumps(val)
+    return json.dumps(marshal.dumps(val))
 
+def client_serialize_function(val):
+    return marshal.dumps(val)
 
 def deserialize_function(val):
-    return pickle.loads(val)
+    return marshal.loads(json.loads(val))
+
+def deserialize_function_old_server(val):
+    return marshal.loads(val)
+
+def client_deserialize_function(val):
+    return marshal.loads(val)
 
 
 class TestUserSerializer(object):
@@ -37,8 +48,14 @@ class TestUserSerializer(object):
             TestUserSerializer.client = aerospike.client(config).connect()
         else:
             TestUserSerializer.client = aerospike.client(config).connect(user, password)
-        response = aerospike.set_serializer(serialize_function)
-        response = aerospike.set_deserializer(deserialize_function)
+        TestUserSerializer.skip_old_server = True
+        versioninfo = TestUserSerializer.client.info('version')
+        for keys in versioninfo:
+            for value in versioninfo[keys]:
+                if value != None:
+                    versionlist = value[value.find("build") + 6:value.find("\n")].split(".")
+                    if int(versionlist[0]) >= 3 and int(versionlist[1]) >= 6:
+                        TestUserSerializer.skip_old_server = False
 
     def teardown_class(cls):
         TestUserSerializer.client.close()
@@ -57,10 +74,17 @@ class TestUserSerializer(object):
         for key in self.delete_keys:
             TestUserSerializer.client.remove(key)
 
+
     def test_put_with_float_data_user_serializer(self):
 
         #    Invoke put() for float data record with user serializer.
 
+        if TestUserSerializer.skip_old_server == False:
+            response = aerospike.set_serializer(serialize_function)
+            response = aerospike.set_deserializer(deserialize_function)
+        else:
+            response = aerospike.set_serializer(serialize_function_old_server)
+            response = aerospike.set_deserializer(deserialize_function_old_server)
         key = ('test', 'demo', 1)
 
         rec = {"pi": 3.14}
@@ -82,6 +106,8 @@ class TestUserSerializer(object):
             Invoke put() for bool data record with user serializer.
         """
 
+        response = aerospike.set_serializer(serialize_function)
+        response = aerospike.set_deserializer(deserialize_function)
         key = ('test', 'demo', 1)
 
         rec = {'status': True}
@@ -159,7 +185,10 @@ class TestUserSerializer(object):
             Invoke put() for float data record with user deserializer None.
         """
 
-        response = aerospike.set_serializer(serialize_function)
+        if TestUserSerializer.skip_old_server == False:
+            response = aerospike.set_serializer(serialize_function)
+        else:
+            response = aerospike.set_serializer(serialize_function_old_server)
 
         key = ('test', 'demo', 1)
 
@@ -186,6 +215,12 @@ class TestUserSerializer(object):
 
         key = ('test', 'demo', 1)
 
+        if TestUserSerializer.skip_old_server == False:
+            response = aerospike.set_serializer(serialize_function)
+            response = aerospike.set_deserializer(deserialize_function)
+        else:
+            response = aerospike.set_serializer(serialize_function_old_server)
+            response = aerospike.set_deserializer(deserialize_function_old_server)
         rec = {
             'map': {"key": "asd';q;'1';",
                     "pi": 3.14},
@@ -227,4 +262,122 @@ class TestUserSerializer(object):
 
         self.delete_keys.append(key)
 
+    def test_put_with_mixeddata_client_serializer_deserializer_with_spec_in_put(self):
 
+        #    Invoke put() for mixed data with class and instance serialziers
+        #    with a specification in put. Client one is called
+
+        hostlist, user, password = TestBaseClass.get_hosts()
+        method_config = {'hosts': hostlist,
+                'serialization': (client_serialize_function,
+                    client_deserialize_function)}
+        if user == None and password == None:
+            client = aerospike.client(method_config).connect()
+        else:
+            client = aerospike.client(method_config).connect(user, password)
+        response = aerospike.set_serializer(serialize_function)
+        response = aerospike.set_deserializer(deserialize_function)
+        key = ('test', 'demo', 1)
+
+        rec = {
+            'map': {"key": "asd';q;'1';",
+                    "pi": 3},
+            'normal': 1234,
+            'special': '!@#@#$QSDAsd;as',
+            'list': ["nanslkdl", 1, bytearray("asd;as[d'as;d", "utf-8")],
+            'bytes': bytearray("asd;as[d'as;d", "utf-8"),
+            'nestedlist': ["nanslkdl", 1, bytearray("asd;as[d'as;d", "utf-8"),
+                           [1, bytearray("asd;as[d'as;d", "utf-8")]],
+            'nestedmap': {
+                "key": "asd';q;'1';",
+                "pi": 314,
+                "nest": {"pi1": 312,
+                         "t": 1}
+            },
+        }
+
+        res = client.put(key, rec, {}, {}, aerospike.SERIALIZER_USER)
+
+        assert res == 0
+
+        _, _, bins = client.get(key)
+
+
+        assert bins == {
+            'map': {"key": "asd';q;'1';",
+                    "pi": 3},
+            'normal': 1234,
+            'special': '!@#@#$QSDAsd;as',
+            'list': ["nanslkdl", 1, bytearray("asd;as[d'as;d", "utf-8")],
+            'bytes': bytearray("asd;as[d'as;d", "utf-8"),
+            'nestedlist': ["nanslkdl", 1, bytearray("asd;as[d'as;d", "utf-8"),
+                           [1, bytearray("asd;as[d'as;d", "utf-8")]],
+            'nestedmap': {
+                "key": "asd';q;'1';",
+                "pi": 314,
+                "nest": {"pi1": 312,
+                         "t": 1}
+            },
+        }
+        client.close()
+
+        self.delete_keys.append(key)
+
+    def test_put_with_mixeddata_client_serializer_deserializer_no_put_spec(self):
+
+        #    Invoke put() for mixed data with class and instance serialziers
+        #    with no specification in put
+        hostlist, user, password = TestBaseClass.get_hosts()
+        method_config = {'hosts': hostlist,
+                'serialization': (client_serialize_function,
+                    client_deserialize_function)}
+        if user == None and password == None:
+            client = aerospike.client(method_config).connect()
+        else:
+            client = aerospike.client(method_config).connect(user, password)
+
+        response = aerospike.set_serializer(serialize_function)
+        response = aerospike.set_deserializer(deserialize_function)
+        key = ('test', 'demo', 1)
+
+        rec = {
+            'map': {"key": "asd';q;'1';",
+                    "pi": 3},
+            'normal': 1234,
+            'special': '!@#@#$QSDAsd;as',
+            'list': ["nanslkdl", 1, bytearray("asd;as[d'as;d", "utf-8")],
+            'bytes': bytearray("asd;as[d'as;d", "utf-8"),
+            'nestedlist': ["nanslkdl", 1, bytearray("asd;as[d'as;d", "utf-8"),
+                           [1, bytearray("asd;as[d'as;d", "utf-8")]],
+            'nestedmap': {
+                "key": "asd';q;'1';",
+                "pi": 3.14,
+                "nest": {"pi1": 312,
+                         "t": 1}
+            },
+        }
+
+        res = client.put(key, rec, {}, {})
+
+        assert res == 0
+
+        _, _, bins = client.get(key)
+
+        assert bins == {
+            'map': {"key": "asd';q;'1';",
+                    "pi": 3},
+            'normal': 1234,
+            'special': '!@#@#$QSDAsd;as',
+            'list': ["nanslkdl", 1, "asd;as[d'as;d"],
+            'bytes': "asd;as[d'as;d",
+            'nestedlist': ["nanslkdl", 1, "asd;as[d'as;d",
+                           [1, "asd;as[d'as;d"]],
+            'nestedmap': {
+                "key": "asd';q;'1';",
+                "pi": 3.14,
+                "nest": {"pi1": 312,
+                         "t": 1}
+            },
+        }
+        client.close()
+        self.delete_keys.append(key)

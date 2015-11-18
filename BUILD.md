@@ -1,44 +1,49 @@
-# Build Aerospike Python Client
+# Manually Building the Python Client for Aerospike
 
 ## Dependencies
 
-The Python Client for Aerospike works on Python 2.6, 2.7 running on
+The Python client for Aerospike works with Python 2.6 and 2.7, running on
 **64-bit** OS X 10.9+ and Linux.
 
 The client depends on:
 
--  Python devel Package
--  The Aerospike C client
+- The Python devel package
+- OpenSSL
+- The Aerospike C client
+
 
 ### RedHat 6+ and CentOS 6+
 
 The following are dependencies for:
 
-- RedHat Enterprise (RHEL) 6 or newer 
-- CentOS 6 or newer 
-- and related distributions using `yum` package manager.
+ -  RedHat Enterprise (RHEL) 6 or newer
+ -  CentOS 6 or newer
+ -  Related distributions which use the `yum` package manager
 
-**Dependencies**
+```
+sudo yum install openssl-devel
+sudo yum install python26-devel # on CentOS 6 and similar
+sudo yum install python-devel # on CentOS 7
+```
 
-    sudo yum install python26-devel on CentOS 6 and similar
-    sudo yum install python-devel # on CentOS 7
-    sudo yum install openssl-devel
+To get `python26-devel` on older distros such as CentOS 5, see [Stack Overflow](http://stackoverflow.com/a/11684053/582436).
+
 
 ### Debian 6+ and Ubuntu 12.04+
 
 The following are dependencies for:
 
-- Debian 6 or newer 
-- Ubuntu 12.04 or newer 
-- and related distributions using `apt-get` package manager.
+ - Debian 6 or newer
+ - Ubuntu 12.04 or newer
+ - Related distributions which use the `apt` package manager
 
-**Dependencies**
+```
+sudo apt-get install libssl-dev
+sudo apt-get install build-essential python-dev
+```
 
-    sudo apt-get install build-essential python-dev
-    sudo apt-get install libssl-dev
 
-
-### Mac OS X
+### OS X
 
 By default OS X will be missing command line tools. On Mavericks (OS X 10.9)
 and higher those [can be installed without Xcode](http://osxdaily.com/2014/02/12/install-command-line-tools-mac-os-x/).
@@ -56,15 +61,45 @@ To build the library:
 
     python setup.py build --force
 
+
+### Building on an Unsupported Linux Distro
+
+If you are installing the Python client on an unsupported OS, such as CentOS 5,
+you will need to first build the C client manually.
+
+1. Clone the [aerospike/aerospike-client-c](https://github.com/aerospike/aerospike-client-c) repo from GitHub.
+2. Install the dependencies. See the [README](https://github.com/aerospike/aerospike-client-c/blob/master/README.md).
+3. Change directory to the C client, and build it.
+
+```
+git submodule update --init
+make
+```
+
+4. Clone the [aerospike/aerospike-lua-core](https://github.com/aerospike/aerospike-lua-core) repo from GitHub.
+5. Change directory to the Python client and build it.
+
+```
+export DOWNLOAD_C_CLIENT=0
+export AEROSPIKE_C_HOME=/path/to/aerospike-c-client
+export AEROSPIKE_LUA_PATH=/path/to/aerospike-lua-core/src
+python setup.py build --force
+```
+
+
 ## Install
 
 To install the library:
 
     python setup.py install --force
 
-**Note** If you have already installed the Aerospike C Client and it is on your linker path you can build using:
+### Lua System Modules
 
-    AEROSPIKE_LUA_PATH="path/to/lua-core/src" NO_RESOLVE_C_CLIENT_DEP=True python setup.py {build,install} --force
+Stream UDF functionality requires a local copy of the system Lua modules.
+By default, those Lua files are copied to `/usr/local/aerospike/lua`.
+A different directory can be created, then set:
+
+    python setup.py install --lua-system-path=/path/to/lua
 
 
 ## Examples

@@ -63,6 +63,8 @@ PyObject * AerospikeClient_Apply_Invoke(
 	PyObject * py_umodule   = NULL;
 	PyObject * py_ufunction = NULL;
 
+	as_static_pool static_pool;
+	memset(&static_pool, 0, sizeof(static_pool));
 	// Initialisation flags
 	bool key_initialised = false;
 
@@ -84,6 +86,7 @@ PyObject * AerospikeClient_Apply_Invoke(
 		goto CLEANUP;
 	}
 
+    self->is_client_put_serializer = false;
 	// Convert python key object to as_key
 	pyobject_to_key(&err, py_key, &key);
 	if ( err.code != AEROSPIKE_OK ) {
@@ -93,7 +96,7 @@ PyObject * AerospikeClient_Apply_Invoke(
 	key_initialised = true;
 
 	// Convert python list to as_list
-	pyobject_to_list(self, &err, py_arglist, &arglist, NULL, -1);
+	pyobject_to_list(self, &err, py_arglist, &arglist, &static_pool, SERIALIZER_PYTHON);
 	if ( err.code != AEROSPIKE_OK ) {
 		goto CLEANUP;
 	}
@@ -133,7 +136,7 @@ PyObject * AerospikeClient_Apply_Invoke(
 	aerospike_key_apply(self->as, &err, apply_policy_p, &key, module, function, arglist, &result);
 
 	if ( err.code == AEROSPIKE_OK ) {
-		val_to_pyobject(&err, result, &py_result);
+		val_to_pyobject(self, &err, result, &py_result);
 	} else {
 		as_error_update(&err, err.code, NULL);
 	}

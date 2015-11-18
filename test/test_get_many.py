@@ -50,6 +50,8 @@ class TestGetMany(TestBaseClass):
         for i in xrange(5):
             key = ('test', 'demo', i)
             TestGetMany.client.remove(key)
+        key = ('test', 'demo', 'float_value')
+        TestGetMany.client.remove(key)
 
     def test_get_many_without_any_parameter(self):
 

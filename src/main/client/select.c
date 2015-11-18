@@ -133,7 +133,7 @@ PyObject * AerospikeClient_Select_Invoke(
 	aerospike_key_select(self->as, &err, read_policy_p, &key, (const char **) bins, &rec);
 
 	if ( err.code == AEROSPIKE_OK ) {
-		record_to_pyobject(&err, rec, &key, &py_rec);
+		record_to_pyobject(self, &err, rec, &key, &py_rec);
 	}
 	else if( err.code == AEROSPIKE_ERR_RECORD_NOT_FOUND ) {
 		as_error_reset(&err);

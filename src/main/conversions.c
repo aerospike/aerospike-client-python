@@ -22,6 +22,7 @@
 #include <aerospike/as_key.h>
 #include <aerospike/aerospike_key.h>
 #include <aerospike/as_record.h>
+#include <aerospike/as_geojson.h>
 
 #include <aerospike/as_ldt.h>
 #include <aerospike/as_arraylist.h>
@@ -35,6 +36,7 @@
 #include <aerospike/as_double.h>
 
 #include "conversions.h"
+#include "geo.h"
 #include "key.h"
 #include "policy.h"
 #include "serializer.h"
@@ -382,10 +384,25 @@ as_status pyobject_to_val(AerospikeClient * self, as_error * err, PyObject * py_
 		*val = (as_val *) as_string_new(strdup(str), true);
 		Py_DECREF(py_ustr);
 	}
+    else if (!strcmp(py_obj->ob_type->tp_name, "aerospike.Geospatial")) {
+        PyObject *py_parameter = PyString_FromString("geo_data");
+        PyObject* py_data = PyObject_GenericGetAttr(py_obj, py_parameter);
+        Py_DECREF(py_parameter);
+        char *geo_value = PyString_AsString(AerospikeGeospatial_DoDumps(py_data, err));
+        if (aerospike_has_geo(self->as)) {
+            *val = (as_val *) as_geojson_new(geo_value, false);
+        } else {
+		    as_bytes *bytes;
+		    GET_BYTES_POOL(bytes, static_pool, err);
+		    py_result = serialize_based_on_serializer_policy(self, serializer_type,
+                &bytes, py_data, err);
+		    *val = (as_val *) bytes;
+        }
+    }
 	else if ( PyByteArray_Check(py_obj) ) {
 		as_bytes *bytes;
 		GET_BYTES_POOL(bytes, static_pool, err);
-		py_result = serialize_based_on_serializer_policy(serializer_type,
+		py_result = serialize_based_on_serializer_policy(self, serializer_type,
 				&bytes, py_obj, err);
 		*val = (as_val *) bytes;
 	}
@@ -411,7 +428,7 @@ as_status pyobject_to_val(AerospikeClient * self, as_error * err, PyObject * py_
         } else {
 		    as_bytes *bytes;
 		    GET_BYTES_POOL(bytes, static_pool, err);
-		    py_result = serialize_based_on_serializer_policy(serializer_type,
+		    py_result = serialize_based_on_serializer_policy(self, serializer_type,
                 &bytes, py_obj, err);
 		    *val = (as_val *) bytes;
         }
@@ -428,9 +445,8 @@ as_status pyobject_to_val(AerospikeClient * self, as_error * err, PyObject * py_
  * Converts a PyObject into an as_record.
  * Returns AEROSPIKE_OK on success. On error, the err argument is populated.
  */
-as_status pyobject_to_record(AerospikeClient * self, as_error * err, PyObject * py_rec,
-		PyObject * py_meta, as_record * rec, int serializer_type,
-		as_static_pool *static_pool)
+as_status pyobject_to_record(AerospikeClient * self, as_error * err, PyObject * py_rec, PyObject * py_meta, 
+        as_record * rec, int serializer_type, as_static_pool *static_pool)
 {
 	as_error_reset(err);
 	PyObject * py_result = NULL;
@@ -483,6 +499,19 @@ as_status pyobject_to_record(AerospikeClient * self, as_error * err, PyObject * 
                 }
 				ret_val = as_record_set_int64(rec, name, val);
 			}
+            else if (!strcmp(value->ob_type->tp_name, "aerospike.Geospatial")) {
+                PyObject* py_data = PyObject_GenericGetAttr(value, PyString_FromString("geo_data"));
+                char *geo_value = PyString_AsString(AerospikeGeospatial_DoDumps(py_data, err));
+                if (aerospike_has_geo(self->as)) {
+                    ret_val = as_record_set_geojson_str(rec, name, geo_value);
+                } else {
+			    	as_bytes *bytes;
+				    GET_BYTES_POOL(bytes, static_pool, err);
+				    py_result = serialize_based_on_serializer_policy(self, serializer_type,
+						&bytes, py_data, err);
+				    ret_val = as_record_set_bytes(rec, name, bytes);
+                }
+            }
 			else if ( PyUnicode_Check(value) ) {
 				PyObject * py_ustr = PyUnicode_AsUTF8String(value);
 				char * val = PyString_AsString(py_ustr);
@@ -495,7 +524,7 @@ as_status pyobject_to_record(AerospikeClient * self, as_error * err, PyObject * 
             } else if ( PyByteArray_Check(value) ) {
 				as_bytes *bytes;
 				GET_BYTES_POOL(bytes, static_pool, err);
-				py_result = serialize_based_on_serializer_policy(serializer_type,
+				py_result = serialize_based_on_serializer_policy(self, serializer_type,
 						&bytes, value, err);
 				ret_val = as_record_set_bytes(rec, name, bytes);
 			}
@@ -524,7 +553,7 @@ as_status pyobject_to_record(AerospikeClient * self, as_error * err, PyObject * 
                 } else {
 			    	as_bytes *bytes;
 				    GET_BYTES_POOL(bytes, static_pool, err);
-				    py_result = serialize_based_on_serializer_policy(serializer_type,
+				    py_result = serialize_based_on_serializer_policy(self, serializer_type,
 						&bytes, value, err);
 				    ret_val = as_record_set_bytes(rec, name, bytes);
                 }
@@ -607,6 +636,20 @@ as_status pyobject_to_astype_write(AerospikeClient * self, as_error * err, char 
     } else if ( PyString_Check(py_value) ) {
 		char * s = PyString_AsString(py_value);
 		*val = (as_val *) as_string_new(s, false);
+    } else if (!strcmp(py_value->ob_type->tp_name, "aerospike.Geospatial")) {
+        PyObject *py_parameter = PyString_FromString("geo_data");
+        PyObject* py_data = PyObject_GenericGetAttr(py_value, py_parameter);
+        Py_DECREF(py_parameter);
+        char *geo_value = PyString_AsString(AerospikeGeospatial_DoDumps(py_data, err));
+        if (aerospike_has_geo(self->as)) {
+            *val = (as_val *) as_geojson_new(geo_value, false);
+        } else {
+		    as_bytes *bytes;
+		    GET_BYTES_POOL(bytes, static_pool, err);
+		    py_result = serialize_based_on_serializer_policy(self, serializer_type,
+				&bytes, py_data, err);
+		    *val = (as_val *) bytes;
+        }
 	} else if ( PyUnicode_Check(py_value) ) {
 		PyObject * py_ustr = PyUnicode_AsUTF8String(py_value);
 		char * str = PyString_AsString(py_ustr);
@@ -635,7 +678,7 @@ as_status pyobject_to_astype_write(AerospikeClient * self, as_error * err, char 
         } else {
 		    as_bytes *bytes;
 		    GET_BYTES_POOL(bytes, static_pool, err);
-		    py_result = serialize_based_on_serializer_policy(serializer_type,
+		    py_result = serialize_based_on_serializer_policy(self, serializer_type,
 				&bytes, py_value, err);
 		    *val = (as_val *) bytes;
         }
@@ -784,11 +827,12 @@ as_status pyobject_to_key(as_error * err, PyObject * py_keytuple, as_key * key)
 typedef struct {
 	as_error * err;
 	uint32_t count;
+    AerospikeClient * client;
 	void * udata;
 } conversion_data;
 
 
-as_status val_to_pyobject(as_error * err, const as_val * val, PyObject ** py_val)
+as_status val_to_pyobject(AerospikeClient * self, as_error * err, const as_val * val, PyObject ** py_val)
 {
 	as_error_reset(err);
 
@@ -826,7 +870,7 @@ as_status val_to_pyobject(as_error * err, const as_val * val, PyObject ** py_val
 		case AS_BYTES: {
 				//uint32_t bval_size = as_bytes_size(bval);
 				as_bytes * bval = as_bytes_fromval(val);
-				PyObject * py_result = deserialize_based_on_as_bytes_type(bval, py_val, err);
+				PyObject * py_result = deserialize_based_on_as_bytes_type(self, bval, py_val, err);
 				if (py_result) {
 					Py_DECREF(py_result);
 				}
@@ -837,7 +881,7 @@ as_status val_to_pyobject(as_error * err, const as_val * val, PyObject ** py_val
 				as_list * l = as_list_fromval((as_val *) val);
 				if ( l != NULL ) {
 					PyObject * py_list = NULL;
-					list_to_pyobject(err, l, &py_list);
+					list_to_pyobject(self, err, l, &py_list);
 					if ( err->code == AEROSPIKE_OK ) {
 						*py_val = py_list;
 					}
@@ -848,7 +892,7 @@ as_status val_to_pyobject(as_error * err, const as_val * val, PyObject ** py_val
 				as_map * m = as_map_fromval(val);
 				if ( m != NULL ) {
 					PyObject * py_map = NULL;
-					map_to_pyobject(err, m, &py_map);
+					map_to_pyobject(self, err, m, &py_map);
 					if ( err->code == AEROSPIKE_OK ) {
 						*py_val = py_map;
 					}
@@ -859,7 +903,7 @@ as_status val_to_pyobject(as_error * err, const as_val * val, PyObject ** py_val
 				as_record * r = as_record_fromval(val);
 				if ( r != NULL ) {
 					PyObject * py_rec = NULL;
-					record_to_pyobject(err, r, NULL, &py_rec);
+					record_to_pyobject(self, err, r, NULL, &py_rec);
 					if ( err->code == AEROSPIKE_OK ) {
 						*py_val = py_rec;
 					}
@@ -871,6 +915,14 @@ as_status val_to_pyobject(as_error * err, const as_val * val, PyObject ** py_val
 				*py_val = Py_None;
 				break;
 			}
+        case AS_GEOJSON: {
+            as_geojson * gp = as_geojson_fromval(val);
+            char * locstr = as_geojson_get(gp);
+            PyObject *py_locstr = PyString_FromString(locstr);
+            *py_val = AerospikeGeospatial_DoLoads(py_locstr, err);
+            Py_DECREF(py_locstr);
+            break;
+        }
 		default: {
 				as_error_update(err, AEROSPIKE_ERR_CLIENT, "Unknown type for value");
 				return err->code;
@@ -891,7 +943,7 @@ static bool list_to_pyobject_each(as_val * val, void * udata)
 	PyObject * py_list = (PyObject *) convd->udata;
 
 	PyObject * py_val = NULL;
-	val_to_pyobject(convd->err, val, &py_val);
+	val_to_pyobject(convd->client, convd->err, val, &py_val);
 
 	if ( err->code != AEROSPIKE_OK ) {
 		return false;
@@ -903,13 +955,14 @@ static bool list_to_pyobject_each(as_val * val, void * udata)
 	return true;
 }
 
-as_status list_to_pyobject(as_error * err, const as_list * list, PyObject ** py_list)
+as_status list_to_pyobject(AerospikeClient * self, as_error * err, const as_list * list, PyObject ** py_list)
 {
 	*py_list = PyList_New(as_list_size((as_list *) list));
 
 	conversion_data convd = {
 		.err = err,
 		.count = 0,
+        .client = self,
 		.udata = *py_list
 	};
 
@@ -934,14 +987,14 @@ static bool map_to_pyobject_each(const as_val * key, const as_val * val, void * 
 	PyObject * py_dict = (PyObject *) convd->udata;
 
 	PyObject * py_key = NULL;
-	val_to_pyobject(convd->err, key, &py_key);
+	val_to_pyobject(convd->client, convd->err, key, &py_key);
 
 	if ( err->code != AEROSPIKE_OK ) {
 		return false;
 	}
 
 	PyObject * py_val = NULL;
-	val_to_pyobject(convd->err, val, &py_val);
+	val_to_pyobject(convd->client, convd->err, val, &py_val);
 
 	if ( err->code != AEROSPIKE_OK ) {
 		PyObject_Del(py_key);
@@ -957,13 +1010,14 @@ static bool map_to_pyobject_each(const as_val * key, const as_val * val, void * 
 	return true;
 }
 
-as_status map_to_pyobject(as_error * err, const as_map * map, PyObject ** py_map)
+as_status map_to_pyobject(AerospikeClient * self, as_error * err, const as_map * map, PyObject ** py_map)
 {
 	*py_map = PyDict_New();
 
 	conversion_data convd = {
 		.err = err,
 		.count = 0,
+        .client = self,
 		.udata = *py_map
 	};
 
@@ -977,7 +1031,7 @@ as_status map_to_pyobject(as_error * err, const as_map * map, PyObject ** py_map
 	return err->code;
 }
 
-as_status record_to_pyobject(as_error * err, const as_record * rec, const as_key * key, PyObject ** obj)
+as_status record_to_pyobject(AerospikeClient * self, as_error * err, const as_record * rec, const as_key * key, PyObject ** obj)
 {
 	as_error_reset(err);
 
@@ -992,7 +1046,7 @@ as_status record_to_pyobject(as_error * err, const as_record * rec, const as_key
 
 	key_to_pyobject(err, key ? key : &rec->key, &py_rec_key);
 	metadata_to_pyobject(err, rec, &py_rec_meta);
-	bins_to_pyobject(err, rec, &py_rec_bins);
+	bins_to_pyobject(self, err, rec, &py_rec_bins);
 
 	if ( py_rec_key == NULL ) {
 		Py_INCREF(Py_None);
@@ -1123,7 +1177,7 @@ static bool bins_to_pyobject_each(const char * name, const as_val * val, void * 
 	PyObject * py_bins = (PyObject *) convd->udata;
 	PyObject * py_val = NULL;
 
-	val_to_pyobject(err, val, &py_val);
+	val_to_pyobject(convd->client, err, val, &py_val);
 
 	if ( err->code != AEROSPIKE_OK ) {
 		return false;
@@ -1137,7 +1191,7 @@ static bool bins_to_pyobject_each(const char * name, const as_val * val, void * 
 	return true;
 }
 
-as_status bins_to_pyobject(as_error * err, const as_record * rec, PyObject ** py_bins)
+as_status bins_to_pyobject(AerospikeClient * self, as_error * err, const as_record * rec, PyObject ** py_bins)
 {
 	as_error_reset(err);
 
@@ -1151,6 +1205,7 @@ as_status bins_to_pyobject(as_error * err, const as_record * rec, PyObject ** py
 	conversion_data convd = {
 		.err = err,
 		.count = 0,
+        .client = self,
 		.udata = *py_bins
 	};
 
