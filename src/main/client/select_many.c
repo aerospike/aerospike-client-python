@@ -69,6 +69,9 @@ static bool batch_select_cb(const as_batch_read* results, uint32_t n, void* udat
 
 	as_error_init(&err);
 
+	// Lock Python State
+	PyGILState_STATE gstate;
+	gstate = PyGILState_Ensure();
 	// Loop over results array
 	for ( uint32_t i =0; i < n; i++ ){
 
@@ -135,6 +138,8 @@ static bool batch_select_cb(const as_batch_read* results, uint32_t n, void* udat
 			}
 		}
 	}
+	// Release Python State
+	PyGILState_Release(gstate);
 	return true;
 }
 
@@ -302,11 +307,12 @@ static PyObject * batch_select_aerospike_batch_read(as_error *err, AerospikeClie
 
 	// Invoke C-client API
     Py_BEGIN_ALLOW_THREADS
-    if (aerospike_batch_read(self->as, err, batch_policy_p, &records) != AEROSPIKE_OK) 
+    aerospike_batch_read(self->as, err, batch_policy_p, &records);
+    Py_END_ALLOW_THREADS
+    if (err->code != AEROSPIKE_OK)
     {
 		goto CLEANUP;
     }
-    Py_END_ALLOW_THREADS
     batch_select_recs(self, err, &records, &py_recs);
     
 CLEANUP:
