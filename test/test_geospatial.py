@@ -162,7 +162,7 @@ class TestGeospatial(TestBaseClass):
         records = []
         query = TestGeospatial.client.query("test", "demo")
 
-        geo_object2 = aerospike.GeoJSON({"type": "Circle", "coordinates": [[-122.0, 37.5], 250.2]})
+        geo_object2 = aerospike.GeoJSON({"type": "AeroCircle", "coordinates": [[-122.0, 37.5], 250.2]})
 
         query.where(p.geo_within("loc", geo_object2.dumps()))
 

@@ -2,6 +2,7 @@
 
 import pytest
 import sys
+import json
 import cPickle as pickle
 from test_base_class import TestBaseClass
 
@@ -22,7 +23,7 @@ class TestConnect(TestBaseClass):
         """
             Check for aerospike vrsion
         """
-        assert aerospike.__version__ == "1.0.55"
+        assert aerospike.__version__ != None
 
     def test_connect_positive(self):
         """
@@ -69,6 +70,25 @@ class TestConnect(TestBaseClass):
                 TestConnect.user, TestConnect.password)
 
         assert self.client != None
+        self.client.close()
+
+    def test_connect_positive_unicode_hosts(self):
+        """
+            Invoke connect() with unicode hosts.
+        """
+        uni = json.dumps(TestConnect.hostlist[0])
+        hostlist = json.loads(uni)
+        config = {'hosts': [(hostlist[0], hostlist[1])],
+                'policies': {'use_batch_direct': True}
+                }
+        if TestConnect.user == None and TestConnect.password == None:
+            self.client = aerospike.client(config).connect()
+        else:
+            self.client = aerospike.client(config).connect(
+                TestConnect.user, TestConnect.password)
+
+        assert self.client != None
+        assert self.client.is_connected() == True
         self.client.close()
 
     def test_connect_config_not_dict(self):

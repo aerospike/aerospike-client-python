@@ -67,6 +67,7 @@ in an in-memory primary index.
                 * **takeover_threshold_sec** take over tending if the cluster hasn't been checked for this many seconds (default: 30)
             * **thread_pool_size** number of threads in the pool that is used in batch/scan/query commands (default: 16)
             * **max_threads** size of the synchronous connection pool for each server node (default: 300)
+            * **batch_direct** whether to use the batch-direct protocol (default: ``False``, so will use batch-index if available)
 
     :return: an instance of the :py:class:`aerospike.Client` class.
 

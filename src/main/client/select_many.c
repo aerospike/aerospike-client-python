@@ -508,7 +508,7 @@ PyObject * AerospikeClient_Select_Many_Invoke(
 	}
 
     has_batch_index = aerospike_has_batch_index(self->as);
-    if (has_batch_index) {
+    if (has_batch_index && !(self->as->config.policies.batch.use_batch_direct)) {
         py_recs = batch_select_aerospike_batch_read(&err, self, py_keys, batch_policy_p, filter_bins, bins_size);
     } else {
         py_recs = batch_select_aerospike_batch_get(&err, self, py_keys, batch_policy_p, filter_bins, bins_size);

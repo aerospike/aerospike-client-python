@@ -76,7 +76,7 @@ AerospikeConstants operator_constants[] = {
 PyMODINIT_FUNC initaerospike(void)
 {
 
-    static char version[6] = "1.0.55";
+    static char version[6] = "1.0.56";
 	// Makes things "thread-safe"
 	PyEval_InitThreads();
 	int i = 0;

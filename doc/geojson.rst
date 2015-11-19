@@ -39,7 +39,7 @@ GeoJSON Class --- :class:`GeoJSON`
                        'coordinates': [longitude, latitude]})
         print(loc)
         # Alternatively create the GeoJSON point from a string
-        loc = GeoJSON('{"type": "Point", "coordinates": [28.608389, -80.604333]}')
+        loc = aerospike.geojson('{"type": "Point", "coordinates": [28.608389, -80.604333]}')
 
         # Create a user record.
         bins = {'tstamp': time.time(),

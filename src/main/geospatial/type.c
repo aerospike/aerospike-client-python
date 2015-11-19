@@ -62,19 +62,10 @@ static PyMethodDef AerospikeGeospatial_Type_Methods[] = {
 void store_geodata(AerospikeGeospatial *self, as_error *err, PyObject *py_geodata) 
 {
 	if ( PyDict_Check(py_geodata) ) {
-        if (PyDict_GetItemString(py_geodata, "type") && PyDict_GetItemString(py_geodata, "coordinates")) {
-            PyObject * py_type = PyDict_GetItemString(py_geodata, "type");
-            PyObject * py_coordinates = PyDict_GetItemString(py_geodata, "coordinates");
-            if (!(PyString_Check(py_type) || PyUnicode_Check(py_type)) || !PyList_Check(py_coordinates)) {
-		        as_error_update(err, AEROSPIKE_ERR_PARAM, "Geospatial 'type' must be string and 'coordinates' must be a list");
-            }
-            if (self->geo_data) {
-                Py_DECREF(self->geo_data);
-            }
-            self->geo_data = py_geodata;
-        } else {
-		    as_error_update(err, AEROSPIKE_ERR_PARAM, "Geospatial dictionary should have keys 'type' and 'coordinates'");
+        if (self->geo_data) {
+            Py_DECREF(self->geo_data);
         }
+        self->geo_data = py_geodata;
 	} else {
 		as_error_update(err, AEROSPIKE_ERR_PARAM, "Geospatial data should be a dictionary or raw GeoJSON string");
 	}
