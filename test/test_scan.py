@@ -150,8 +150,8 @@ class TestScan(TestBaseClass):
         try:
             scan_obj.foreach(callback, { 'timeout' : 1000 })
 
-        except ParamError as exception:
-            assert exception.code == -2L
+        except ClientError as exception:
+            assert exception.code == -1L
             assert exception.msg == "Callback function contains an error"
 
     def test_scan_with_callback_returning_false(self):
