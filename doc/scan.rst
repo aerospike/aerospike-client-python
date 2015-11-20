@@ -88,6 +88,8 @@ Scan Class --- :class:`Scan`
         :param dict options: the :ref:`aerospike_scan_options` that will apply \
            to the scan.
 
+        .. note:: A :ref:`aerospike_record_tuple` is passed as the argument to the callback function.
+
         .. code-block:: python
 
             import aerospike
@@ -102,7 +104,7 @@ Scan Class --- :class:`Scan`
             client.put(('test','test','key2'), {'id':2,'b':2},
                 policy={'key':aerospike.POLICY_KEY_SEND})
 
-            def show_keys((key, meta, bins)):
+            def show_key((key, meta, bins)):
                 print(key)
 
             scan = client.scan('test', 'test')
@@ -111,7 +113,7 @@ Scan Class --- :class:`Scan`
               'nobins': True,
               'priority': aerospike.SCAN_PRIORITY_MEDIUM
             }
-            scan.foreach(get_keys, options=scan_opts)
+            scan.foreach(show_key, options=scan_opts)
             client.close()
 
         .. note::
@@ -122,6 +124,32 @@ Scan Class --- :class:`Scan`
 
                 ('test', 'test', u'key2', bytearray(b'\xb2\x18\n\xd4\xce\xd8\xba:\x96s\xf5\x9ba\xf1j\xa7t\xeem\x01'))
                 ('test', 'test', u'key1', bytearray(b'\x1cJ\xce\xa7\xd4Vj\xef+\xdf@W\xa5\xd8o\x8d:\xc9\xf4\xde'))
+
+        .. note:: To stop the stream return ``False`` from the callback function.
+
+            .. code-block:: python
+
+                from __future__ import print_function
+                import aerospike
+
+                config = { 'hosts': [ ('127.0.0.1',3000)]}
+                client = aerospike.client(config).connect()
+
+                def limit(lim, result):
+                    c = [0] # integers are immutable so a list (mutable) is used for the counter
+                    def key_add((key, metadata, bins)):
+                        if c[0] < lim:
+                            result.append(key)
+                            c[0] = c[0] + 1
+                        else:
+                            return False
+                    return key_add
+
+                scan = client.scan('test','user')
+                keys = []
+                scan.foreach(limit(100, keys))
+                print(len(keys)) # this will be 100 if the number of matching records > 100
+                client.close()
 
 
 .. _aerospike_scan_policies:

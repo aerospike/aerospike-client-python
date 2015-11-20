@@ -314,18 +314,6 @@ class TestIncrement(object):
 
         assert bins == {'age1': 5, 'name': u'name1', 'age': 1}
 
-    def test_increment_value_is_string(self):
-        """
-        Invoke increment() value is string
-        """
-        key = ('test', 'demo', 1)
-        try:
-            TestIncrement.client.increment(key, "age", "str")
-
-        except ParamError as exception:
-            assert exception.code == -2
-            assert exception.msg == "Unsupported operand type(s) for +: 'int' and 'str'"
-
     def test_increment_with_extra_parameter(self):
         """
         Invoke increment() with extra parameter.
@@ -410,14 +398,16 @@ class TestIncrement(object):
         except Exception as exception:
             assert exception.code == -2
             assert exception.msg == 'integer value exceeds sys.maxsize'
+
     def test_increment_with_string_value(self):
         """
         Invoke increment() with string value
         """
-        key = ('test', 'demo', 1)
-        TestIncrement.client.increment(key, "age", "5")
+        try:
+            key = ('test', 'demo', 1)
+            TestIncrement.client.increment(key, "age", "5")
 
-        (key, meta, bins) = TestIncrement.client.get(key)
-
-        assert bins == {'age': 6, 'name': 'name1'}
+        except ParamError as exception:
+            assert exception.code == -2
+            assert exception.msg == "Unsupported operand type(s) for +: only 'int' allowed"
 
