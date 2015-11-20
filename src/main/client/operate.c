@@ -268,7 +268,7 @@ PyObject *  AerospikeClient_Operate_Invoke(
                     incr_value = incr_value * sign;
                     py_value = PyInt_FromLong(incr_value);
                 }
-			} else if ((!py_value) && (operation != AS_OPERATOR_READ)) {
+			} else if ((!py_value) && (operation != AS_OPERATOR_READ && operation != AS_OPERATOR_TOUCH)) {
 				as_error_update(err, AEROSPIKE_ERR_PARAM, "Value should be given");
 				goto CLEANUP;
 			}
@@ -309,9 +309,10 @@ PyObject *  AerospikeClient_Operate_Invoke(
                     }
                     break;
 				case AS_OPERATOR_TOUCH:
-					if (PyInt_Check(py_value)) {
+                    ops.ttl = 0;
+					if (py_value && PyInt_Check(py_value)) {
                         ops.ttl = PyInt_AsLong(py_value);
-                    } else if ( PyLong_Check(py_value) ) {
+                    } else if (py_value && PyLong_Check(py_value)) {
                         ttl = PyLong_AsLong(py_value);
                         if((uint32_t)-1 == ttl) {
                             as_error_update(err, AEROSPIKE_ERR_PARAM, "integer value for ttl exceeds sys.maxsize");
