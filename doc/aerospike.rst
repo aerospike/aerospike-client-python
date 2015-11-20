@@ -260,16 +260,19 @@ in an in-memory primary index.
 
     :param callable callback: the function used as the logging handler.
 
-    .. code-block:: python
+    .. note:: The callback function must have the five parameters (level, func, path, line, msg)
 
-        import aerospike
-        import syslog
+        .. code-block:: python
 
-        def as_logger(level, func, myfile, line):
-            syslog.syslog(line)
+            from __future__ import print_function
+            import aerospike
 
-        aerospike.set_log_level(aerospike.LOG_LEVEL_DEBUG)
-        aerospike.set_log_handler(as_logger)
+            def as_logger(level, func, path, line, msg):
+            def as_logger(level, func, myfile, line, msg):
+                print("**", myfile, line, func, ':: ', msg, "**")
+
+            aerospike.set_log_level(aerospike.LOG_LEVEL_DEBUG)
+            aerospike.set_log_handler(as_logger)
 
 
 .. py:function:: set_log_level(log_level)
