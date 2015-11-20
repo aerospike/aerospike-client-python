@@ -264,11 +264,12 @@ in an in-memory primary index.
 
         .. code-block:: python
 
+            from __future__ import print_function
             import aerospike
-            import syslog
 
             def as_logger(level, func, path, line, msg):
-                syslog.syslog(msg)
+            def as_logger(level, func, myfile, line, msg):
+                print("**", myfile, line, func, ':: ', msg, "**")
 
             aerospike.set_log_level(aerospike.LOG_LEVEL_DEBUG)
             aerospike.set_log_handler(as_logger)
