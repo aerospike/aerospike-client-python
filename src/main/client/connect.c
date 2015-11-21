@@ -95,7 +95,7 @@ PyObject * AerospikeClient_Connect(AerospikeClient * self, PyObject * args, PyOb
                 while (PyDict_Next(py_global_hosts, &pos, &py_key, &py_value))
                 {
                     if (((AerospikeGlobalHosts*)py_value)->as->config.use_shm) {
-                        if ((((AerospikeGlobalHosts*)py_value)->shm_key == shm_key)) {
+                        if (((AerospikeGlobalHosts*)py_value)->shm_key == shm_key) {
                             flag = 1;
                             break;
                         }

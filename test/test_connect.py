@@ -147,11 +147,15 @@ class TestConnect(TestBaseClass):
             Invoke connect() with missing port in config dict.
         """
         config = {
-                'hosts': ['127.0.0.1']
+                'hosts': [('127.0.0.1')]
                 }
-        self.client = aerospike.client(config).connect()
-        assert self.client.is_connected() == True
-        self.client.close()
+        self.client = aerospike.client(config)
+        try:
+            self.client.connect()
+            self.client.close()
+        except ClientError as exception:
+            assert exception.code == -1
+            assert self.client.is_connected() != True
 
     def test_connect_incorrect_port(self):
         """
