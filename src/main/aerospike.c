@@ -35,6 +35,10 @@
 #include <aerospike/as_operations.h>
 #include "serializer.h"
 
+PyObject *py_global_hosts;
+int counter = 0xA5000000;
+bool user_shm_key = false;
+
 static PyMethodDef Aerospike_Methods[] = {
 
 	//Serializer Operations
@@ -72,7 +76,6 @@ AerospikeConstants operator_constants[] = {
 };
 
 #define OPERATOR_CONSTANTS_ARR_SIZE (sizeof(operator_constants)/sizeof(AerospikeConstants))
-
 PyMODINIT_FUNC initaerospike(void)
 {
 
@@ -85,6 +88,7 @@ PyMODINIT_FUNC initaerospike(void)
 	PyObject * aerospike = Py_InitModule3("aerospike", Aerospike_Methods,
 			"Aerospike Python Client");
 
+    py_global_hosts = PyDict_New();
 	declare_policy_constants(aerospike);
 
     PyModule_AddStringConstant(aerospike, "__version__", version);
