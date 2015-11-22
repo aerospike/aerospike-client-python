@@ -61,6 +61,11 @@ To build the library:
 
     python setup.py build --force
 
+The helper `scripts/aerospike-client-c.sh` is triggered by `setup.py` to
+download the appropriate C client. However, if one is present this will not
+happen, and a build may fail against an old client. At that point you should
+remove the directory `aerospike-client-c` and run the build command again.
+
 
 ### Building on an Unsupported Linux Distro
 

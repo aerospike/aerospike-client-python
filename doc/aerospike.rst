@@ -65,6 +65,7 @@ in an in-memory primary index.
                 * **max_nodes** maximum number of nodes allowed. Pad so new nodes can be added without configuration changes (default: 16)
                 * **max_namespaces** similarly pad (default: 8)
                 * **takeover_threshold_sec** take over tending if the cluster hasn't been checked for this many seconds (default: 30)
+                * **shm_key** explicitly set the shm key for this client. It is otherwise implicitly evaluated per unique hostname, and can be inspected with :meth:`~aerospike.Client.shm_key` (default: 0xA5000000)
             * **thread_pool_size** number of threads in the pool that is used in batch/scan/query commands (default: 16)
             * **max_threads** size of the synchronous connection pool for each server node (default: 300)
             * **batch_direct** whether to use the batch-direct protocol (default: ``False``, so will use batch-index if available)
@@ -90,7 +91,7 @@ in an in-memory primary index.
             'shm':      { }}
         client = aerospike.client(config)
 
-    .. versionchanged:: 1.0.53
+    .. versionchanged:: 1.0.56
 
 
 .. rubric:: Serialization

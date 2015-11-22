@@ -16,6 +16,7 @@
 ################################################################################
 
 from __future__ import print_function
+import errno
 import os
 import platform
 import sys
@@ -81,6 +82,10 @@ CWD = os.path.abspath(os.path.dirname(__file__))
 ################################################################################
 # HELPER FUNCTION FOR RESOLVING THE C CLIENT DEPENDENCY
 ################################################################################
+def lua_syspath_error(lua_system_path, exit_code):
+    print("error: need permission to copy the Lua system files to ",
+          lua_system_path, "or change the --lua-system-path")
+    sys.exit(exit_code)
 
 def resolve_c_client(lua_src_path, lua_system_path):
     global PREFIX, AEROSPIKE_C_VERSION, DOWNLOAD_C_CLIENT
@@ -104,7 +109,7 @@ def resolve_c_client(lua_src_path, lua_system_path):
     aerospike_c_prefix = './aerospike-client-c'
     if not os.path.isdir(aerospike_c_prefix):
         print("error: Directory not found:", aerospike_c_prefix, file=sys.stderr)
-        sys.exit(1)
+        sys.exit(2)
 
     #-------------------------------------------------------------------------------
     # Check for aerospike.h
@@ -112,7 +117,7 @@ def resolve_c_client(lua_src_path, lua_system_path):
     aerospike_h = aerospike_c_prefix + '/include/aerospike/aerospike.h'
     if not os.path.isfile(aerospike_h):
         print("error: aerospike.h not found:", aerospike_h, file=sys.stderr)
-        sys.exit(1)
+        sys.exit(3)
     print("info: aerospike.h found:", aerospike_h, file=sys.stdout)
     include_dirs = include_dirs + [
         aerospike_c_prefix + '/include', 
@@ -125,7 +130,7 @@ def resolve_c_client(lua_src_path, lua_system_path):
     aerospike_a = aerospike_c_prefix + '/lib/libaerospike.a'
     if not os.path.isfile(aerospike_a):
         print("error: libaerospike.a not found:", aerospike_a, file=sys.stderr)
-        sys.exit(1)
+        sys.exit(4)
     print("info: libaerospike.a found:", aerospike_a, file=sys.stdout)
     extra_objects = extra_objects + [
         aerospike_a
@@ -143,10 +148,22 @@ def resolve_c_client(lua_src_path, lua_system_path):
     #---------------------------------------------------------------------------
     print("copying from", lua_src_path, "to", lua_system_path)
     if not os.path.isdir(lua_system_path):
-        copytree(lua_src_path, lua_system_path)
+        try:
+            copytree(lua_src_path, lua_system_path)
+        except OSError as e:
+            lua_syspath_error(lua_system_path, 5)
     else:
         for fname in os.listdir(lua_src_path):
-            copy2(os.path.join(lua_src_path, fname), lua_system_path)
+            try:
+                copytree(os.path.join(lua_src_path, fname), lua_system_path)
+            except OSError as e:
+                if e.errno == errno.ENOTDIR:
+                    try:
+                        copy2(os.path.join(lua_src_path, fname), lua_system_path)
+                    except:
+                        lua_syspath_error(lua_system_path, 6)
+                else:
+                    lua_syspath_error(lua_system_path, 7)
 
 ################################################################################
 # GENERIC BUILD SETTINGS
@@ -198,7 +215,7 @@ elif LINUX:
         PREFIX = AEROSPIKE_C_HOME + '/target/Linux-x86_64'
 else:
     print("error: OS not supported:", PLATFORM, file=sys.stderr)
-    sys.exit(1)
+    sys.exit(8)
 
 ################################################################################
 # RESOLVE C CLIENT DEPENDENCY AND LUA SYSTEM PATH
