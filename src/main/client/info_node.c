@@ -222,7 +222,7 @@ static PyObject * AerospikeClient_GetNodes_Returnlist(as_error* err,
 	}
 	while (tok != NULL && (host_index < MAX_HOST_COUNT)) {
 		tok = strtok_r(NULL, IP_PORT_DELIMITER, &saved);
-#ifdef __APPLE__
+#if defined(__APPLE__)
 		if (tok == NULL || saved == NULL) {
 #else
 		if (tok == NULL || *saved == '\0') {
