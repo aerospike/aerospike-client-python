@@ -74,7 +74,7 @@ static bool each_result(const as_val * val, void * udata)
 	if ( py_return == NULL ) {
 		// an exception was raised, handle it (someday)
 		// for now, we bail from the loop
-		as_error_update(err, AEROSPIKE_ERR_PARAM, "Callback function contains an error");
+		as_error_update(err, AEROSPIKE_ERR_CLIENT, "Callback function contains an error");
 		rval = true;
 	}
 	else if (  PyBool_Check(py_return) ) {

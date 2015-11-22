@@ -1212,6 +1212,10 @@ a cluster-tending thread.
         .. seealso:: The :class:`aerospike.GeoJSON` class, and queries using \
             :meth:`aerospike.predicates.geo_within`.
 
+        .. warning::
+
+            This functionality will become available with a future release of the Aerospike server.
+
         .. code-block:: python
 
             import aerospike
@@ -1319,6 +1323,14 @@ a cluster-tending thread.
         :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
 
         .. versionadded:: 1.0.53
+
+    .. method:: shm_key()  ->  int
+
+        Expose the value of the shm_key for this client if shared-memory cluster tending is enabled, 
+
+        :rtype: :class:`int` or ``None``
+
+        .. versionadded:: 1.0.56
 
 
     .. rubric:: LList
