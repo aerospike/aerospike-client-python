@@ -104,7 +104,9 @@ PyObject * AerospikeClient_Remove_Invoke(
 	}
 
 	// Invoke operation
+    Py_BEGIN_ALLOW_THREADS
 	aerospike_key_remove(self->as, &err, remove_policy_p, &key);
+    Py_END_ALLOW_THREADS
 	if(err.code != AEROSPIKE_OK) {
 		as_error_update(&err, err.code, NULL);
 	}

@@ -130,7 +130,9 @@ PyObject * AerospikeClient_Select_Invoke(
 	as_record_init(rec, 0);
 
 	// Invoke operation
+    Py_BEGIN_ALLOW_THREADS
 	aerospike_key_select(self->as, &err, read_policy_p, &key, (const char **) bins, &rec);
+    Py_END_ALLOW_THREADS
 
 	if ( err.code == AEROSPIKE_OK ) {
 		record_to_pyobject(self, &err, rec, &key, &py_rec);

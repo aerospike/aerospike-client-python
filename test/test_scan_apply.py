@@ -57,10 +57,13 @@ class TestScanApply(object):
         scan_id = self.client.scan_apply("test", "demo", "bin_lua",
                                          "mytransform", ['age', 2])
 
+        time.sleep(0.1)
         while True:
             response = self.client.job_info(scan_id, aerospike.JOB_SCAN)
-            if response['status'] == aerospike.JOB_STATUS_COMPLETED:
+            if response['status'] != aerospike.JOB_STATUS_INPROGRESS:
                 break
+            time.sleep(0.1)
+
         for i in xrange(5):
             key = ('test', 'demo', i)
             (key, meta, bins) = self.client.get(key)
@@ -77,10 +80,13 @@ class TestScanApply(object):
         scan_id = self.client.scan_apply("test", "demo", "bin_lua",
                                          "mytransform", ['age', 2], policy)
 
+        time.sleep(0.1)
         while True:
             response = self.client.job_info(scan_id, aerospike.JOB_SCAN)
-            if response['status'] == aerospike.JOB_STATUS_COMPLETED:
+            if response['status'] != aerospike.JOB_STATUS_INPROGRESS:
                 break
+            time.sleep(0.1)
+
         for i in xrange(5):
             key = ('test', 'demo', i)
             (key, meta, bins) = self.client.get(key)
@@ -97,10 +103,13 @@ class TestScanApply(object):
         scan_id = self.client.scan_apply("test", None, "bin_lua",
                                          "mytransform", ['age', 2], policy)
 
+        time.sleep(0.1)
         while True:
             response = self.client.job_info(scan_id, aerospike.JOB_SCAN)
-            if response['status'] == aerospike.JOB_STATUS_COMPLETED:
+            if response['status'] != aerospike.JOB_STATUS_INPROGRESS:
                 break
+            time.sleep(0.1)
+
         for i in xrange(5):
             key = ('test', 'demo', i)
             (key, meta, bins) = self.client.get(key)
@@ -142,10 +151,13 @@ class TestScanApply(object):
         scan_id = self.client.scan_apply("test", "demo", "bin_lua_incorrect",
                                          "mytransform", ['age', 2])
 
+        time.sleep(0.1)
         while True:
             response = self.client.job_info(scan_id, aerospike.JOB_SCAN)
-            if response['status'] == aerospike.JOB_STATUS_COMPLETED:
+            if response['status'] != aerospike.JOB_STATUS_INPROGRESS:
                 break
+            time.sleep(0.1)
+
         for i in xrange(5):
             key = ('test', 'demo', i)
             (key, meta, bins) = self.client.get(key)
@@ -161,10 +173,13 @@ class TestScanApply(object):
         scan_id = self.client.scan_apply("test", "demo", "bin_lua",
                                          "mytransform_incorrect", ['age', 2])
 
+        time.sleep(0.1)
         while True:
             response = self.client.job_info(scan_id, aerospike.JOB_SCAN)
-            if response['status'] == aerospike.JOB_STATUS_COMPLETED:
+            if response['status'] != aerospike.JOB_STATUS_INPROGRESS:
                 break
+            time.sleep(0.1)
+
         for i in xrange(5):
             key = ('test', 'demo', i)
             (key, meta, bins) = self.client.get(key)
@@ -300,10 +315,13 @@ class TestScanApply(object):
 
         #time.sleep(2)
 
+        time.sleep(0.1)
         while True:
             response = self.client.job_info(scan_id, aerospike.JOB_SCAN)
-            if response['status'] == aerospike.JOB_STATUS_COMPLETED:
+            if response['status'] != aerospike.JOB_STATUS_INPROGRESS:
                 break
+            time.sleep(0.1)
+
         for i in xrange(5):
             key = ('test', 'demo', i)
             (key, meta, bins) = self.client.get(key)
@@ -321,10 +339,13 @@ class TestScanApply(object):
 
         #time.sleep(2)
 
+        time.sleep(0.1)
         while True:
             response = self.client.job_info(scan_id, aerospike.JOB_SCAN)
-            if response['status'] == aerospike.JOB_STATUS_COMPLETED:
+            if response['status'] != aerospike.JOB_STATUS_INPROGRESS:
                 break
+            time.sleep(0.1)
+
         for i in xrange(5):
             key = ('test', 'demo', i)
             (key, meta, bins) = self.client.get(key)
@@ -342,10 +363,13 @@ class TestScanApply(object):
 
         #time.sleep(2)
 
+        time.sleep(0.1)
         while True:
             response = self.client.job_info(scan_id, aerospike.JOB_SCAN)
-            if response['status'] == aerospike.JOB_STATUS_COMPLETED:
+            if response['status'] != aerospike.JOB_STATUS_INPROGRESS:
                 break
+            time.sleep(0.1)
+
         for i in xrange(5):
             key = ('test', 'demo', i)
             (key, meta, bins) = self.client.get(key)
@@ -368,10 +392,13 @@ class TestScanApply(object):
                                          "mytransform", ['age',
                                                          2], policy, options)
 
+        time.sleep(0.1)
         while True:
             response = self.client.job_info(scan_id, aerospike.JOB_SCAN)
-            if response['status'] == aerospike.JOB_STATUS_COMPLETED:
+            if response['status'] != aerospike.JOB_STATUS_INPROGRESS:
                 break
+            time.sleep(0.1)
+
         for i in xrange(5):
             key = ('test', 'demo', i)
             (key, meta, bins) = self.client.get(key)
@@ -387,10 +414,13 @@ class TestScanApply(object):
         scan_id = self.client.scan_apply("test", "demo", u"bin_lua",
                                          u"mytransform", ['age', 2])
 
+        time.sleep(0.1)
         while True:
             response = self.client.job_info(scan_id, aerospike.JOB_SCAN)
-            if response['status'] == aerospike.JOB_STATUS_COMPLETED:
+            if response['status'] != aerospike.JOB_STATUS_INPROGRESS:
                 break
+            time.sleep(0.1)
+
         for i in xrange(5):
             key = ('test', 'demo', i)
             (key, meta, bins) = self.client.get(key)

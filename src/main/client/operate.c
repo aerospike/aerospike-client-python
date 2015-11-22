@@ -76,8 +76,8 @@ int check_type(AerospikeClient * self, PyObject * py_value, int op, as_error *er
 	if ((!PyInt_Check(py_value) && !PyLong_Check(py_value)) && (op == AS_OPERATOR_TOUCH)) {
 	    as_error_update(err, AEROSPIKE_ERR_PARAM, "Unsupported operand type(s) for touch : only int or long allowed");
 		return 1;
-	} else if ( (!PyInt_Check(py_value) && !PyLong_Check(py_value) && (!PyFloat_Check(py_value) || !aerospike_has_double(self->as)) && !PyString_Check(py_value)) && op == AS_OPERATOR_INCR){
-	    as_error_update(err, AEROSPIKE_ERR_PARAM, "Unsupported operand type(s) for +: only 'int' and 'str' allowed");
+	} else if ( (!PyInt_Check(py_value) && !PyLong_Check(py_value) && (!PyFloat_Check(py_value) || !aerospike_has_double(self->as))) && op == AS_OPERATOR_INCR){
+	    as_error_update(err, AEROSPIKE_ERR_PARAM, "Unsupported operand type(s) for +: only 'int' allowed");
 		return 1;
 	} else if ((!PyString_Check(py_value) && !PyUnicode_Check(py_value)) && (op == AS_OPERATOR_APPEND || op == AS_OPERATOR_PREPEND)) {
 	    as_error_update(err, AEROSPIKE_ERR_PARAM, "Cannot concatenate 'str' and 'non-str' objects");
@@ -241,32 +241,6 @@ PyObject *  AerospikeClient_Operate_Invoke(
 			if (py_value) {
 				if (check_type(self, py_value, operation, err)) {
                     goto CLEANUP;
-				} else if (PyString_Check(py_value) && (operation == AS_OPERATOR_INCR)) {
-                    char * incr_string = PyString_AsString(py_value);
-                    int incr_value = 0, sign = 1;
-
-                    if (strlen(incr_string) > 15) {
-				        as_error_update(err, AEROSPIKE_ERR_PARAM, "Unsupported string length for increment operation");
-                        goto CLEANUP;
-                    }
-                    if (*incr_string == '-') {
-                        incr_string = incr_string + 1;
-                        sign = -1;
-                    } else if (*incr_string == '+') {
-                        incr_string = incr_string + 1;
-                        sign = 1;
-                    }
-                    while (*incr_string != '\0') {
-                        if (*incr_string >= 48 && *incr_string <= 57) {
-                            incr_value = (incr_value * 10) + (*incr_string ^ 0x30);
-                        } else {
-				            as_error_update(err, AEROSPIKE_ERR_PARAM, "Unsupported operand type(s) for +: 'int' and 'str'");
-                            goto CLEANUP;
-                        }
-                        incr_string = incr_string + 1;
-                    }
-                    incr_value = incr_value * sign;
-                    py_value = PyInt_FromLong(incr_value);
                 }
 			} else if ((!py_value) && (operation != AS_OPERATOR_READ)) {
 				as_error_update(err, AEROSPIKE_ERR_PARAM, "Value should be given");
@@ -341,7 +315,10 @@ PyObject *  AerospikeClient_Operate_Invoke(
 	// Initialize record
 	as_record_init(rec, 0);
 
+    Py_BEGIN_ALLOW_THREADS
 	aerospike_key_operate(self->as, err, operate_policy_p, key, &ops, &rec);
+    Py_END_ALLOW_THREADS
+
 	if (err->code != AEROSPIKE_OK) {
 		as_error_update(err, err->code, NULL);
 		goto CLEANUP;
