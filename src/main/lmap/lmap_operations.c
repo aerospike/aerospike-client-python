@@ -91,8 +91,10 @@ PyObject * AerospikeLMap_Put(AerospikeLMap * self, PyObject * args, PyObject * k
 		goto CLEANUP;
 	}
 
+    Py_BEGIN_ALLOW_THREADS
 	aerospike_lmap_put(self->client->as, &err, apply_policy_p, &self->key,
 			&self->lmap, map_key, map_value);
+    Py_END_ALLOW_THREADS
 	if(err.code != AEROSPIKE_OK) {
 		as_error_update(&err, err.code, NULL);
 	}
@@ -193,8 +195,10 @@ PyObject * AerospikeLMap_Put_Many(AerospikeLMap * self, PyObject * args, PyObjec
 		goto CLEANUP;
 	}
 
+    Py_BEGIN_ALLOW_THREADS
 	aerospike_lmap_put_all(self->client->as, &err, apply_policy_p,
 			&self->key, &self->lmap, map_values);
+    Py_END_ALLOW_THREADS
 	if(err.code != AEROSPIKE_OK) {
 		as_error_update(&err, err.code, NULL);
 	}
@@ -284,8 +288,10 @@ PyObject * AerospikeLMap_Get(AerospikeLMap * self, PyObject * args, PyObject * k
 		goto CLEANUP;
 	}
 
+    Py_BEGIN_ALLOW_THREADS
 	aerospike_lmap_get(self->client->as, &err, apply_policy_p, &self->key,
 			&self->lmap, map_key, &map_key_value);
+    Py_END_ALLOW_THREADS
 
 	if (err.code != AEROSPIKE_OK) {
 		as_error_update(&err, err.code, NULL);
@@ -393,8 +399,10 @@ PyObject * AerospikeLMap_Filter(AerospikeLMap * self, PyObject * args, PyObject 
 		pyobject_to_list(self->client, &err, py_args, &arg_list, &static_pool, SERIALIZER_PYTHON);
 	}
 
+    Py_BEGIN_ALLOW_THREADS
 	aerospike_lmap_filter(self->client->as, &err, apply_policy_p, &self->key,
 			&self->lmap, filter_name, arg_list, &elements);
+    Py_END_ALLOW_THREADS
 
 	if (err.code != AEROSPIKE_OK) {
 		as_error_update(&err, err.code, NULL);
@@ -482,8 +490,10 @@ PyObject * AerospikeLMap_Destroy(AerospikeLMap * self, PyObject * args, PyObject
 		goto CLEANUP;
 	}
 
+    Py_BEGIN_ALLOW_THREADS
 	aerospike_lmap_destroy(self->client->as, &err, apply_policy_p, &self->key,
 			&self->lmap);
+    Py_END_ALLOW_THREADS
 
 CLEANUP:
 
@@ -565,8 +575,10 @@ PyObject * AerospikeLMap_Remove(AerospikeLMap * self, PyObject * args, PyObject 
 		goto CLEANUP;
 	}
 
+    Py_BEGIN_ALLOW_THREADS
 	aerospike_lmap_remove(self->client->as, &err, apply_policy_p, &self->key,
 			&self->lmap, map_key);
+    Py_END_ALLOW_THREADS
 	if(err.code != AEROSPIKE_OK) {
 		as_error_update(&err, err.code, NULL);
 	}
@@ -645,8 +657,10 @@ PyObject * AerospikeLMap_Size(AerospikeLMap * self, PyObject * args, PyObject * 
 		goto CLEANUP;
 	}
 
+    Py_BEGIN_ALLOW_THREADS
 	aerospike_lmap_size(self->client->as, &err, apply_policy_p, &self->key,
 			&self->lmap, (uint32_t *)&size);
+    Py_END_ALLOW_THREADS
 	if(err.code != AEROSPIKE_OK) {
 		as_error_update(&err, err.code, NULL);
 	}

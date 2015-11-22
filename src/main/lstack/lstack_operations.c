@@ -86,8 +86,10 @@ PyObject * AerospikeLStack_Push(AerospikeLStack * self, PyObject * args, PyObjec
 		goto CLEANUP;
 	}
 
+    Py_BEGIN_ALLOW_THREADS
 	aerospike_lstack_push(self->client->as, &err, apply_policy_p, &self->key,
 			&self->lstack, val);
+    Py_END_ALLOW_THREADS
 	if(err.code != AEROSPIKE_OK) {
 		as_error_update(&err, err.code, NULL);
 	}
@@ -184,8 +186,10 @@ PyObject * AerospikeLStack_Push_Many(AerospikeLStack * self, PyObject * args, Py
 		goto CLEANUP;
 	}
 
+    Py_BEGIN_ALLOW_THREADS
 	aerospike_lstack_push_all(self->client->as, &err, apply_policy_p,
 			&self->key, &self->lstack, arglist);
+    Py_END_ALLOW_THREADS
 	if(err.code != AEROSPIKE_OK) {
 		as_error_update(&err, err.code, NULL);
 	}
@@ -269,8 +273,10 @@ PyObject * AerospikeLStack_Peek(AerospikeLStack * self, PyObject * args, PyObjec
 	/*
 	 * Peek values from stack
 	 */
+    Py_BEGIN_ALLOW_THREADS
 	aerospike_lstack_peek(self->client->as, &err, apply_policy_p, &self->key,
 			&self->lstack, peek_count, &list);
+    Py_END_ALLOW_THREADS
 	if (err.code != AEROSPIKE_OK) {
 		as_error_update(&err, err.code, NULL);
 		goto CLEANUP;
@@ -375,8 +381,10 @@ PyObject * AerospikeLStack_Filter(AerospikeLStack * self, PyObject * args, PyObj
 		pyobject_to_list(self->client, &err, py_args, &arg_list, &static_pool, SERIALIZER_PYTHON);
 	}
 
+    Py_BEGIN_ALLOW_THREADS
 	aerospike_lstack_filter(self->client->as, &err, apply_policy_p, &self->key,
 			&self->lstack, peek_count, filter_name, arg_list, &elements_list);
+    Py_END_ALLOW_THREADS
 
 	if (err.code != AEROSPIKE_OK) {
 		as_error_update(&err, err.code, NULL);
@@ -464,8 +472,10 @@ PyObject * AerospikeLStack_Destroy(AerospikeLStack * self, PyObject * args, PyOb
 		goto CLEANUP;
 	}
 
+    Py_BEGIN_ALLOW_THREADS
 	aerospike_lstack_destroy(self->client->as, &err, apply_policy_p, &self->key,
 			&self->lstack);
+    Py_END_ALLOW_THREADS
 
 CLEANUP:
 
@@ -538,8 +548,10 @@ PyObject * AerospikeLStack_Get_Capacity(AerospikeLStack * self, PyObject * args,
 		goto CLEANUP;
 	}
 
+    Py_BEGIN_ALLOW_THREADS
 	aerospike_lstack_get_capacity(self->client->as, &err, apply_policy_p, &self->key,
 			&self->lstack, (uint32_t *)&capacity);
+    Py_END_ALLOW_THREADS
 
 CLEANUP:
 
@@ -612,8 +624,10 @@ PyObject * AerospikeLStack_Set_Capacity(AerospikeLStack * self, PyObject * args,
 		goto CLEANUP;
 	}
 
+    Py_BEGIN_ALLOW_THREADS
 	aerospike_lstack_set_capacity(self->client->as, &err, apply_policy_p, &self->key,
 			&self->lstack, capacity);
+    Py_END_ALLOW_THREADS
 	if( err.code != AEROSPIKE_OK ) {
 		as_error_update(&err, err.code, NULL);
 	}
@@ -689,8 +703,10 @@ PyObject * AerospikeLStack_Size(AerospikeLStack * self, PyObject * args, PyObjec
 		goto CLEANUP;
 	}
 
+    Py_BEGIN_ALLOW_THREADS
 	aerospike_lstack_size(self->client->as, &err, apply_policy_p, &self->key,
 			&self->lstack, &size);
+    Py_END_ALLOW_THREADS
 	if( err.code != AEROSPIKE_OK ) {
 		as_error_update(&err, err.code, NULL);
 	}

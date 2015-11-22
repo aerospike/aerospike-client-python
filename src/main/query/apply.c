@@ -110,7 +110,9 @@ AerospikeQuery * AerospikeQuery_Apply(AerospikeQuery * self, PyObject * args, Py
 	}
 
 
+    Py_BEGIN_ALLOW_THREADS
 	as_query_apply(&self->query, module, function, (as_list *) arglist);
+    Py_END_ALLOW_THREADS
 
 CLEANUP:
 

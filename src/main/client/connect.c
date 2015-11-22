@@ -41,22 +41,22 @@
  */
 PyObject * AerospikeClient_Connect(AerospikeClient * self, PyObject * args, PyObject * kwds)
 {
-	as_error err;
-	as_error_init(&err);
+    as_error err;
+    as_error_init(&err);
     char *alias_to_search = NULL;
 
-	PyObject * py_username = NULL;
-	PyObject * py_password = NULL;
+    PyObject * py_username = NULL;
+    PyObject * py_password = NULL;
 
-	if ( PyArg_ParseTuple(args, "|OO:connect", &py_username, &py_password) == false ) {
-		return NULL;
-	}
+    if ( PyArg_ParseTuple(args, "|OO:connect", &py_username, &py_password) == false ) {
+        return NULL;
+    }
 
-	if ( py_username && PyString_Check(py_username) && py_password && PyString_Check(py_password) ) {
-		char * username = PyString_AsString(py_username);
-		char * password = PyString_AsString(py_password);
-		as_config_set_user(&self->as->config, username, password);
-	}
+    if ( py_username && PyString_Check(py_username) && py_password && PyString_Check(py_password) ) {
+        char * username = PyString_AsString(py_username);
+        char * password = PyString_AsString(py_password);
+        as_config_set_user(&self->as->config, username, password);
+    }
 
     if (self->as->config.hosts_size) {
 
@@ -109,7 +109,9 @@ PyObject * AerospikeClient_Connect(AerospikeClient * self, PyObject * args, PyOb
             }
             self->as->config.shm_key = shm_key;
         }
-	    aerospike_connect(self->as, &err);
+        Py_BEGIN_ALLOW_THREADS
+        aerospike_connect(self->as, &err);
+        Py_END_ALLOW_THREADS
         if (err.code != AEROSPIKE_OK) {
             goto CLEANUP;
         }
@@ -120,17 +122,17 @@ PyObject * AerospikeClient_Connect(AerospikeClient * self, PyObject * args, PyOb
     }
 
 CLEANUP:
-	if ( err.code != AEROSPIKE_OK ) {
-		PyObject * py_err = NULL;
-		error_to_pyobject(&err, &py_err);
-		PyObject *exception_type = raise_exception(&err);
-		PyErr_SetObject(exception_type, py_err);
-		Py_DECREF(py_err);
-		return NULL;
-	}
-	self->is_conn_16 = true;
-	Py_INCREF(self);
-	return (PyObject *) self;
+    if ( err.code != AEROSPIKE_OK ) {
+        PyObject * py_err = NULL;
+        error_to_pyobject(&err, &py_err);
+        PyObject *exception_type = raise_exception(&err);
+        PyErr_SetObject(exception_type, py_err);
+        Py_DECREF(py_err);
+        return NULL;
+    }
+    self->is_conn_16 = true;
+    Py_INCREF(self);
+    return (PyObject *) self;
 }
 
 /**
@@ -148,14 +150,14 @@ CLEANUP:
 PyObject * AerospikeClient_is_connected(AerospikeClient * self, PyObject * args, PyObject * kwds)
 {
 
-	if (1 == self->is_conn_16) //Need to define a macro AEROSPIKE_CONN_STATE
-	{
+    if (1 == self->is_conn_16) //Need to define a macro AEROSPIKE_CONN_STATE
+    {
       Py_INCREF(Py_True);
-	  return Py_True;
-	}
+      return Py_True;
+    }
 
     Py_INCREF(Py_False);
-	return Py_False;
+    return Py_False;
 
 }
 
@@ -173,18 +175,18 @@ PyObject * AerospikeClient_is_connected(AerospikeClient * self, PyObject * args,
  */
 PyObject * AerospikeClient_shm_key(AerospikeClient * self, PyObject * args, PyObject * kwds)
 {
-	as_error err;
-	as_error_init(&err);
+    as_error err;
+    as_error_init(&err);
 
-	if (!self || !self->as) {
-		as_error_update(&err, AEROSPIKE_ERR_PARAM, "Invalid aerospike object");
-		goto CLEANUP;
-	}
+    if (!self || !self->as) {
+        as_error_update(&err, AEROSPIKE_ERR_PARAM, "Invalid aerospike object");
+        goto CLEANUP;
+    }
 
-	if (!self->is_conn_16) {
-		as_error_update(&err, AEROSPIKE_ERR_CLUSTER, "No connection to aerospike cluster");
-		goto CLEANUP;
-	}
+    if (!self->is_conn_16) {
+        as_error_update(&err, AEROSPIKE_ERR_CLUSTER, "No connection to aerospike cluster");
+        goto CLEANUP;
+    }
 
     if (self->as->config.use_shm && self->as->config.shm_key) {
         return PyLong_FromUnsignedLong((unsigned int) self->as->config.shm_key);
@@ -192,15 +194,15 @@ PyObject * AerospikeClient_shm_key(AerospikeClient * self, PyObject * args, PyOb
 
 
 CLEANUP:
-	if ( err.code != AEROSPIKE_OK ) {
-		PyObject * py_err = NULL;
-		error_to_pyobject(&err, &py_err);
-		PyObject *exception_type = raise_exception(&err);
-		PyErr_SetObject(exception_type, py_err);
-		Py_DECREF(py_err);
-		return NULL;
-	}
+    if ( err.code != AEROSPIKE_OK ) {
+        PyObject * py_err = NULL;
+        error_to_pyobject(&err, &py_err);
+        PyObject *exception_type = raise_exception(&err);
+        PyErr_SetObject(exception_type, py_err);
+        Py_DECREF(py_err);
+        return NULL;
+    }
 
-	Py_INCREF(Py_None);
-	return Py_None;
+    Py_INCREF(Py_None);
+    return Py_None;
 }

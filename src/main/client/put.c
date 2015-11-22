@@ -101,7 +101,9 @@ PyObject * AerospikeClient_Put_Invoke(
 	}
 
 	// Invoke operation
+    Py_BEGIN_ALLOW_THREADS
 	aerospike_key_put(self->as, &err, write_policy_p, &key, &rec);
+    Py_END_ALLOW_THREADS
 	if ( err.code != AEROSPIKE_OK ) {
 		as_error_update(&err, err.code, NULL);
 	}

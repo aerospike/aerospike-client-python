@@ -41,21 +41,21 @@
  */
 PyObject * AerospikeClient_Close(AerospikeClient * self, PyObject * args, PyObject * kwds)
 {
-	as_error err;
+    as_error err;
     char *alias_to_search = NULL;
 
-	// Initialize error
-	as_error_init(&err);
+    // Initialize error
+    as_error_init(&err);
 
-	if (!self || !self->as) {
-		as_error_update(&err, AEROSPIKE_ERR_PARAM, "Invalid aerospike object");
-		goto CLEANUP;
-	}
+    if (!self || !self->as) {
+        as_error_update(&err, AEROSPIKE_ERR_PARAM, "Invalid aerospike object");
+        goto CLEANUP;
+    }
 
-	if (!self->is_conn_16) {
-		as_error_update(&err, AEROSPIKE_ERR_CLUSTER, "No connection to aerospike cluster");
-		goto CLEANUP;
-	}
+    if (!self->is_conn_16) {
+        as_error_update(&err, AEROSPIKE_ERR_CLUSTER, "No connection to aerospike cluster");
+        goto CLEANUP;
+    }
 
     alias_to_search = return_search_string(self->as);
     PyObject *py_persistent_item = NULL;
@@ -63,32 +63,32 @@ PyObject * AerospikeClient_Close(AerospikeClient * self, PyObject * args, PyObje
     py_persistent_item = PyDict_GetItemString(py_global_hosts, alias_to_search); 
     if (py_persistent_item) {
         close_aerospike_object(self->as, &err, alias_to_search, py_persistent_item);
-	    self->is_conn_16 = false;
-	    self->as = NULL;
+        self->is_conn_16 = false;
+        self->as = NULL;
     }
     PyMem_Free(alias_to_search);
     alias_to_search = NULL;
 
-	if ( err.code != AEROSPIKE_OK ) {
-		PyObject * py_err = NULL;
-		error_to_pyobject(&err, &py_err);
-		PyObject *exception_type = raise_exception(&err);
-		PyErr_SetObject(exception_type, py_err);
-		Py_DECREF(py_err);
-		return NULL;
-	}
+    if ( err.code != AEROSPIKE_OK ) {
+        PyObject * py_err = NULL;
+        error_to_pyobject(&err, &py_err);
+        PyObject *exception_type = raise_exception(&err);
+        PyErr_SetObject(exception_type, py_err);
+        Py_DECREF(py_err);
+        return NULL;
+    }
 
-	Py_INCREF(Py_None);
+    Py_INCREF(Py_None);
 CLEANUP:
-	if ( err.code != AEROSPIKE_OK ) {
-		PyObject * py_err = NULL;
-		error_to_pyobject(&err, &py_err);
-		PyObject *exception_type = raise_exception(&err);
-		PyErr_SetObject(exception_type, py_err);
-		Py_DECREF(py_err);
-		return NULL;
-	}
-	return Py_None;
+    if ( err.code != AEROSPIKE_OK ) {
+        PyObject * py_err = NULL;
+        error_to_pyobject(&err, &py_err);
+        PyObject *exception_type = raise_exception(&err);
+        PyErr_SetObject(exception_type, py_err);
+        Py_DECREF(py_err);
+        return NULL;
+    }
+    return Py_None;
 }
 
 char* return_search_string(aerospike *as)
@@ -138,17 +138,19 @@ void close_aerospike_object(aerospike *as, as_error *err, char *alias_to_search,
         if (((AerospikeGlobalHosts*)py_persistent_item)->ref_cnt == 1) {
             PyDict_DelItemString(py_global_hosts, alias_to_search);
             AerospikeGlobalHosts_Del(py_persistent_item);
-	        aerospike_close(as, err);
-	        
+            aerospike_close(as, err);
+            
             /*
-	        * Need to free memory allocated to host address string
-	        * in AerospikeClient_Type_Init.
-	        */ 
-	        for( int i = 0; i < as->config.hosts_size; i++) {
-		        free((void *) as->config.hosts[i].addr);
-	        }
+            * Need to free memory allocated to host address string
+            * in AerospikeClient_Type_Init.
+            */ 
+            for( int i = 0; i < as->config.hosts_size; i++) {
+                free((void *) as->config.hosts[i].addr);
+            }
 
-	        aerospike_destroy(as);
+            Py_BEGIN_ALLOW_THREADS
+            aerospike_destroy(as);
+            Py_END_ALLOW_THREADS
         } else {
             ((AerospikeGlobalHosts*)py_persistent_item)->ref_cnt--;
         }
