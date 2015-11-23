@@ -230,8 +230,10 @@ PyObject *  AerospikeClient_Operate_Invoke(
 					bin = PyString_AsString(py_ustr);
 				} else if (PyString_Check(py_bin)) {
 					bin = PyString_AsString(py_bin);
-				} else {
-					as_error_update(err, AEROSPIKE_ERR_PARAM, "Bin name should be of type string");
+				} else if (PyByteArray_Check(py_bin)) {
+                    bin = PyByteArray_AsString(key);
+                } else {
+                    as_error_update(err, AEROSPIKE_ERR_PARAM, "Bin name should be of type string");
 					goto CLEANUP;
 				}
 			} else if (!py_bin && operation != AS_OPERATOR_TOUCH) {

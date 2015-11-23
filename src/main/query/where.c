@@ -62,14 +62,15 @@ static int AerospikeQuery_Where_Add(AerospikeQuery * self, as_predicate_type pre
 
 	switch (predicate) {
 		case AS_PREDICATE_EQUAL: {
-			if ( in_datatype == AS_INDEX_STRING ){
+			if ( in_datatype == AS_INDEX_STRING ) {
 				if (PyUnicode_Check(py_bin)){
 					py_ubin = PyUnicode_AsUTF8String(py_bin);
 					bin = PyString_AsString(py_ubin);
-				} else if (PyString_Check(py_bin) ){
+				} else if (PyString_Check(py_bin) ) {
 					bin = PyString_AsString(py_bin);
-				}
-				else {
+                } else if (PyByteArray_Check(py_bin)) {
+                    bin = PyByteArray_AsString(py_bin);
+				} else {
 					return 1;
 				}
 
@@ -102,14 +103,15 @@ static int AerospikeQuery_Where_Add(AerospikeQuery * self, as_predicate_type pre
 					py_ubin = NULL;
 				}
 			}
-			else if ( in_datatype == AS_INDEX_NUMERIC ){
-				if (PyUnicode_Check(py_bin)){
+			else if ( in_datatype == AS_INDEX_NUMERIC ) {
+				if (PyUnicode_Check(py_bin)) {
 					py_ubin = PyUnicode_AsUTF8String(py_bin);
 					bin = PyString_AsString(py_ubin);
-				} else if (PyString_Check(py_bin) ){
+				} else if (PyString_Check(py_bin) ) {
 					bin = PyString_AsString(py_bin);
-				}
-				else {
+                } else if (PyByteArray_Check(py_bin)) {
+                    bin = PyByteArray_AsString(py_bin);
+				} else {
 					return 1;
 				}
 				int64_t val = pyobject_to_int64(py_val1);
@@ -149,8 +151,9 @@ static int AerospikeQuery_Where_Add(AerospikeQuery * self, as_predicate_type pre
 					bin = PyString_AsString(py_ubin);
 				} else if (PyString_Check(py_bin)){
 					bin = PyString_AsString(py_bin);
-				}
-				else {
+                } else if (PyByteArray_Check(py_bin)) {
+                    bin = PyByteArray_AsString(py_bin);
+				} else {
 					return 1;
 				}
 				int64_t min = pyobject_to_int64(py_val1);
@@ -185,13 +188,14 @@ static int AerospikeQuery_Where_Add(AerospikeQuery * self, as_predicate_type pre
 				    PyErr_SetObject(PyExc_Exception, py_err);
 				    return 1;
                 }
-				if (PyUnicode_Check(py_bin)){
+				if (PyUnicode_Check(py_bin)) {
 					py_ubin = PyUnicode_AsUTF8String(py_bin);
 					bin = PyString_AsString(py_ubin);
-				} else if (PyString_Check(py_bin)){
+				} else if (PyString_Check(py_bin)) {
 					bin = PyString_AsString(py_bin);
-				}
-				else {
+                } else if (PyByteArray_Check(py_bin)) {
+                    bin = PyByteArray_AsString(py_bin);
+				} else {
 					return 1;
 				}
 

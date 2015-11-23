@@ -471,8 +471,9 @@ as_status pyobject_to_record(AerospikeClient * self, as_error * err, PyObject * 
 				name = PyString_AsString(py_ukey);
 			} else if ( PyString_Check(key) ) {
 				name = PyString_AsString(key);
-			}
-			else {
+			} else if (PyByteArray_Check(key)) {
+                name = PyByteArray_AsString(key);
+            } else {
 				return as_error_update(err, AEROSPIKE_ERR_CLIENT, "A bin name must be a string or unicode string.");
 			}
 
