@@ -231,7 +231,7 @@ PyObject *  AerospikeClient_Operate_Invoke(
 				} else if (PyString_Check(py_bin)) {
 					bin = PyString_AsString(py_bin);
 				} else if (PyByteArray_Check(py_bin)) {
-                    bin = PyByteArray_AsString(key);
+                    bin = PyByteArray_AsString(py_bin);
                 } else {
                     as_error_update(err, AEROSPIKE_ERR_PARAM, "Bin name should be of type string");
 					goto CLEANUP;
