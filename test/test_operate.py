@@ -659,3 +659,20 @@ class TestOperate(object):
             assert exception.msg == "Unsupported operand type(s) for +: only 'int' allowed"
 
         TestOperate.client.remove(key)
+
+    def test_operate_with_bin_bytearray_positive(self):
+        """
+        Invoke operate() with correct parameters
+        """
+        key = ('test', 'demo', 1)
+        list = [
+            {"op": aerospike.OPERATOR_PREPEND,
+             "bin": bytearray("asd[;asjk", "utf-8"),
+             "val": u"ram"},
+            {"op": aerospike.OPERATOR_READ,
+                "bin": bytearray("asd[;asjk", "utf-8")}
+        ]
+
+        key, meta, bins = TestOperate.client.operate(key, list)
+
+        assert bins == {'asd[;asjk': 'ram'}
