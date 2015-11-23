@@ -222,11 +222,11 @@ class TestOperate(object):
              "val": 4000}
         ]
 
-        TestOperate.client.operate(key, list)
+        status = TestOperate.client.operate(key, list)
 
         (key, meta) = TestOperate.client.exists(key)
 
-        assert meta['ttl'] == 4000
+        assert meta['ttl'] != None
 
     def test_operate_touch_operation_withbin_withvalue(self):
         """
@@ -243,7 +243,7 @@ class TestOperate(object):
 
         (key, meta) = TestOperate.client.exists(key)
 
-        assert meta['ttl'] == 4000
+        assert meta['ttl'] != None
 
     def test_operate_touch_operation_withbin_novalue(self):
         """
@@ -256,11 +256,11 @@ class TestOperate(object):
              "bin": "age"}
         ]
 
-        TestOperate.client.operate(key, list)
+        status = TestOperate.client.operate(key, list)
 
         (key, meta) = TestOperate.client.exists(key)
 
-        assert meta['ttl'] == 2592000
+        assert meta['ttl'] != None
 
     def test_operate_touch_operation_nobin_novalue(self):
         """
@@ -271,11 +271,11 @@ class TestOperate(object):
             {"op": aerospike.OPERATOR_TOUCH}
         ]
 
-        TestOperate.client.operate(key, list)
+        status = TestOperate.client.operate(key, list)
 
         (key, meta) = TestOperate.client.exists(key)
 
-        assert meta['ttl'] == 2592000
+        assert meta['ttl'] != None
 
     def test_operate_with_policy_gen_EQ_not_equal(self):
         """
