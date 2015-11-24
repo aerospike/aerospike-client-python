@@ -29,6 +29,12 @@ class TestScan(TestBaseClass):
             rec = {'name': 'name%s' % (str(i)), 'age': i}
             self.client.put(key, rec)
 
+        key = ('test', u'demo', 122)
+        list = [{"op": aerospike.OPERATOR_APPEND,
+                "bin": bytearray("asd;adk\0kj", "utf-8"),
+                "val": u"john"}];
+        self.client.operate(key, list)
+
     def teardown_method(self, method):
         """
         Teardown method
@@ -38,6 +44,8 @@ class TestScan(TestBaseClass):
             key = ('test', u'demo', i)
             self.client.remove(key)
 
+        key = ('test', 'demo', 122)
+        self.client.remove(key)
         self.client.close()
 
     def test_scan_without_any_parameter(self):
@@ -381,3 +389,21 @@ class TestScan(TestBaseClass):
         records = []
         records = scan_obj.results()
         assert len(records) != 0
+
+    def test_scan_with_select_binnames_bytearray(self):
+
+        ns = 'test'
+        st = 'demo'
+
+        records = []
+
+        def callback((key, meta, bins)):
+            records.append(bins)
+
+        scan_obj = self.client.scan(ns, st)
+
+        scan_obj.select(bytearray("asd;adk\0kj", "utf-8"))
+
+        scan_obj.foreach(callback)
+
+        assert len(records) == 1
