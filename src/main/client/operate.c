@@ -225,22 +225,31 @@ PyObject *  AerospikeClient_Operate_Invoke(
 			}
 
 			if (py_bin) {
-				if (PyUnicode_Check(py_bin)) {
-					py_ustr = PyUnicode_AsUTF8String(py_bin);
-					bin = PyString_AsString(py_ustr);
-				} else if (PyString_Check(py_bin)) {
-					bin = PyString_AsString(py_bin);
-				} else {
-					as_error_update(err, AEROSPIKE_ERR_PARAM, "Bin name should be of type string");
-					goto CLEANUP;
-				}
+                if (self->strict_types) {
+				    if (PyUnicode_Check(py_bin)) {
+					    py_ustr = PyUnicode_AsUTF8String(py_bin);
+					    bin = PyString_AsString(py_ustr);
+				    } else if (PyString_Check(py_bin)) {
+					    bin = PyString_AsString(py_bin);
+				    } else {
+					    as_error_update(err, AEROSPIKE_ERR_PARAM, "Bin name should be of type string");
+					    goto CLEANUP;
+				    }
+                } else {
+                    if (PyString_Check(py_bin)) {
+					    as_error_update(err, AEROSPIKE_ERR_PARAM, "Bin name should be of type string");
+					    goto CLEANUP;
+                    }
+                }
 			} else if (!py_bin && operation != AS_OPERATOR_TOUCH) {
 				as_error_update(err, AEROSPIKE_ERR_PARAM, "Bin is not given");
 				goto CLEANUP;
 			}
 			if (py_value) {
-				if (check_type(self, py_value, operation, err)) {
-                    goto CLEANUP;
+                if (self->strict_types) {
+				    if (check_type(self, py_value, operation, err)) {
+                        goto CLEANUP;
+                    }
                 }
 			} else if ((!py_value) && (operation != AS_OPERATOR_READ)) {
 				as_error_update(err, AEROSPIKE_ERR_PARAM, "Value should be given");

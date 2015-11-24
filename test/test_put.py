@@ -22,10 +22,13 @@ class TestPut(TestBaseClass):
         """
         hostlist, user, password = TestBaseClass.get_hosts()
         config = {"hosts": hostlist}
+        config_strict_types = {"hosts": hostlist, "strict_types": False}
         if user == None and password == None:
             TestPut.client = aerospike.client(config).connect()
+            TestPut.client_strict_types = aerospike.client(config_strict_types).connect()
         else:
             TestPut.client = aerospike.client(config).connect(user, password)
+            TestPut.client_strict_types = aerospike.client(config_strict_types).connect(user, password)
         TestPut.skip_old_server = True
         versioninfo = TestPut.client.info('version')
         for keys in versioninfo:
@@ -37,6 +40,7 @@ class TestPut(TestBaseClass):
 
     def teardown_class(cls):
         TestPut.client.close()
+        TestPut.client_strict_types.close()
 
     def setup_method(self, method):
         """
@@ -1162,4 +1166,76 @@ class TestPut(TestBaseClass):
         except ParamError as exception:
             assert exception.code == -2
             assert exception.msg == 'integer value for KEY exceeds sys.maxsize'
+    """
+    def test_put_record_set_to_aerospike_null(self):
+            #Invoke put() for a record with bin set to aerospike_null
+        key = ('test', 'demo', 1)
 
+        bins = {"name": "John", "no": 3}
+
+        assert 0 == TestPut.client.put(key, bins)
+
+        (key, meta, bins) = TestPut.client.get(key)
+
+        assert {"name": "John", "no": 3} == bins
+
+        bins = {"no": aerospike.null}
+
+        assert 0 == TestPut.client.put(key, bins)
+
+        (key, meta, bins) = TestPut.client.get(key)
+
+        assert {"name": "John"} == bins
+
+        self.delete_keys.append(key)
+        """
+
+    def test_put_strict_types_bin_length(self):
+        """
+            Invoke put() for a record with strict type set to false and bin
+            length more than 14 characters
+        """
+        key = ('test', 'demo', 1)
+
+        maxlength = ""
+        for i in xrange(20):
+            maxlength = maxlength + "a"
+
+        bins = {"name": "John", maxlength: 3}
+
+        assert 0 == TestPut.client_strict_types.put(key, bins)
+
+        (key, meta, bins) = TestPut.client_strict_types.get(key)
+
+        assert {"name": "John"} == bins
+        self.delete_keys.append(key)
+
+    def test_put_strict_types_empty_record(self):
+        """
+            Invoke put() for a record with strict type set to false and record
+            is empty
+        """
+        key = ('test', 'demo', 1)
+
+        bins = {}
+
+        assert 0 == TestPut.client_strict_types.put(key, bins)
+
+        (key, meta, bins) = TestPut.client_strict_types.get(key)
+
+        assert None == bins
+    """
+    def test_put_strict_types_unicode_bin(self):
+            #Invoke put() for a record with strict type set to false and bin is
+            #of type unicode. Expects string
+        key = ('test', 'demo', 1)
+
+        bins = {"name": "John",  u"\ud83d\ude04": 3}
+
+        assert 0 == TestPut.client_strict_types.put(key, bins)
+
+        (key, meta, bins) = TestPut.client_strict_types.get(key)
+
+        assert {"name": "John", "no": 3} == bins
+        self.delete_keys.append(key)
+        """

@@ -32,6 +32,7 @@
 #define MAX_UNICODE_OBJECTS 32767
 extern int counter;
 extern PyObject *py_global_hosts;
+extern PyObject *aerospike_module;
 extern bool user_shm_key;
 
 typedef struct {
@@ -58,6 +59,7 @@ typedef struct {
     user_serializer_callback user_serializer_call_info;
     user_serializer_callback user_deserializer_call_info;
     uint8_t is_client_put_serializer;
+    uint8_t strict_types;
 } AerospikeClient;
 
 typedef struct {

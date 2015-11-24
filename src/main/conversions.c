@@ -466,23 +466,27 @@ as_status pyobject_to_record(AerospikeClient * self, as_error * err, PyObject * 
 
 		while (PyDict_Next(py_rec, &pos, &key, &value)) {
 
-			if ( PyUnicode_Check(key) ) {
-				py_ukey = PyUnicode_AsUTF8String(key);
-				name = PyString_AsString(py_ukey);
-			} else if ( PyString_Check(key) ) {
-				name = PyString_AsString(key);
-			}
-			else {
-				return as_error_update(err, AEROSPIKE_ERR_CLIENT, "A bin name must be a string or unicode string.");
-			}
+            if (self->strict_types) {
+			    if ( PyUnicode_Check(key) ) {
+				    py_ukey = PyUnicode_AsUTF8String(key);
+				    name = PyString_AsString(py_ukey);
+			    } else if ( PyString_Check(key) ) {
+				    name = PyString_AsString(key);
+			    }
+			    else {
+				    return as_error_update(err, AEROSPIKE_ERR_CLIENT, "A bin name must be a string or unicode string.");
+			    }
 
-			if (strlen(name) > AS_BIN_NAME_MAX_LEN) {
-				if (py_ukey) {
-					Py_DECREF(py_ukey);
-					py_ukey = NULL;
-				}
-				return as_error_update(err, AEROSPIKE_ERR_BIN_NAME, "A bin name should not exceed 14 characters limit");
-			}
+			    if (strlen(name) > AS_BIN_NAME_MAX_LEN) {
+				    if (py_ukey) {
+					    Py_DECREF(py_ukey);
+					    py_ukey = NULL;
+				    }
+				    return as_error_update(err, AEROSPIKE_ERR_BIN_NAME, "A bin name should not exceed 14 characters limit");
+			    }
+            } else {
+                name = PyString_AsString(key);
+            }
 
 			if ( !value ) {
 				// this should never happen, but if it did...
@@ -545,8 +549,7 @@ as_status pyobject_to_record(AerospikeClient * self, as_error * err, PyObject * 
 					break;
 				}
 				ret_val = as_record_set_map(rec, name, map);
-			}
-			else {
+            } else {
                 if (aerospike_has_double(self->as) && PyFloat_Check(value)) {
                     double val = PyFloat_AsDouble(value);
                     ret_val = as_record_set_double(rec, name, val);
@@ -564,9 +567,11 @@ as_status pyobject_to_record(AerospikeClient * self, as_error * err, PyObject * 
 				py_ukey = NULL;
 			}
 
-			if (!ret_val) {
-				return as_error_update(err, AEROSPIKE_ERR_BIN_NAME, "Unable to set key-value pair");
-			}
+            if (self->strict_types) {
+			    if (!ret_val) {
+				    return as_error_update(err, AEROSPIKE_ERR_BIN_NAME, "Unable to set key-value pair");
+			    }
+            }
 		}
 
 		if ( py_meta && PyDict_Check(py_meta) ) {

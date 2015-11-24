@@ -497,6 +497,15 @@ static int AerospikeClient_Type_Init(AerospikeClient * self, PyObject * args, Py
 		config.conn_timeout_ms = PyInt_AsLong(py_connect_timeout);
 	}
 
+	//strict_types check
+    self->strict_types = true;
+	PyObject * py_strict_types = PyDict_GetItemString(py_config, "strict_types");
+	if ( py_strict_types && PyBool_Check(py_strict_types) ) {
+        if (Py_False == py_strict_types) {
+		    self->strict_types = false;
+        }
+	}
+
 	self->as = aerospike_new(&config);
 
 	return 0;

@@ -35,6 +35,7 @@
 #include <aerospike/as_operations.h>
 #include "serializer.h"
 
+PyObject *aerospike_module;
 PyObject *py_global_hosts;
 int counter = 0xA5000000;
 bool user_shm_key = false;
@@ -85,39 +86,39 @@ PyMODINIT_FUNC initaerospike(void)
 	int i = 0;
 
 	// aerospike Module
-	PyObject * aerospike = Py_InitModule3("aerospike", Aerospike_Methods,
+	aerospike_module = Py_InitModule3("aerospike", Aerospike_Methods,
 			"Aerospike Python Client");
 
     py_global_hosts = PyDict_New();
-	declare_policy_constants(aerospike);
+	declare_policy_constants(aerospike_module);
 
-    PyModule_AddStringConstant(aerospike, "__version__", version);
+    PyModule_AddStringConstant(aerospike_module, "__version__", version);
 
 	PyObject * exception = AerospikeException_New();
 	Py_INCREF(exception);
-	PyModule_AddObject(aerospike, "exception", exception);
+	PyModule_AddObject(aerospike_module, "exception", exception);
 
 	PyTypeObject * client = AerospikeClient_Ready();
 	Py_INCREF(client);
-	PyModule_AddObject(aerospike, "Client", (PyObject *) client);
+	PyModule_AddObject(aerospike_module, "Client", (PyObject *) client);
 
 	PyTypeObject * key = AerospikeKey_Ready();
 	Py_INCREF(key);
-	PyModule_AddObject(aerospike, "Key", (PyObject *) key);
+	PyModule_AddObject(aerospike_module, "Key", (PyObject *) key);
 
 	PyTypeObject * query = AerospikeQuery_Ready();
 	Py_INCREF(query);
-	PyModule_AddObject(aerospike, "Query", (PyObject *) query);
+	PyModule_AddObject(aerospike_module, "Query", (PyObject *) query);
 
-	declare_policy_constants(aerospike);
-	declare_log_constants(aerospike);
+	declare_policy_constants(aerospike_module);
+	declare_log_constants(aerospike_module);
 
 	PyTypeObject * scan = AerospikeScan_Ready();
 	Py_INCREF(scan);
-	PyModule_AddObject(aerospike, "Scan", (PyObject *) scan);
+	PyModule_AddObject(aerospike_module, "Scan", (PyObject *) scan);
 
 	for (i = 0; i <= OPERATOR_CONSTANTS_ARR_SIZE; i++) {
-		PyModule_AddIntConstant(aerospike,
+		PyModule_AddIntConstant(aerospike_module,
 				operator_constants[i].constant_str,
 				operator_constants[i].constantno);
 	}
@@ -125,30 +126,30 @@ PyMODINIT_FUNC initaerospike(void)
 	/*
 	 * Add constants to module.
 	 */
-	declare_policy_constants(aerospike);
+	declare_policy_constants(aerospike_module);
 
 	PyObject * predicates = AerospikePredicates_New();
 	Py_INCREF(predicates);
-	PyModule_AddObject(aerospike, "predicates", predicates);
+	PyModule_AddObject(aerospike_module, "predicates", predicates);
 
 
 	PyTypeObject * lstack = AerospikeLStack_Ready();
 	Py_INCREF(lstack);
-	PyModule_AddObject(aerospike, "lstack", (PyObject *) lstack);
+	PyModule_AddObject(aerospike_module, "lstack", (PyObject *) lstack);
 
 	PyTypeObject * lset = AerospikeLSet_Ready();
 	Py_INCREF(lset);
-	PyModule_AddObject(aerospike, "lset", (PyObject *) lset);
+	PyModule_AddObject(aerospike_module, "lset", (PyObject *) lset);
 
 	PyTypeObject * llist = AerospikeLList_Ready();
 	Py_INCREF(llist);
-	PyModule_AddObject(aerospike, "llist", (PyObject *) llist);
+	PyModule_AddObject(aerospike_module, "llist", (PyObject *) llist);
 
 	PyTypeObject * lmap = AerospikeLMap_Ready();
 	Py_INCREF(lmap);
-	PyModule_AddObject(aerospike, "lmap", (PyObject *) lmap);
+	PyModule_AddObject(aerospike_module, "lmap", (PyObject *) lmap);
 
 	PyTypeObject * geospatial = AerospikeGeospatial_Ready();
 	Py_INCREF(geospatial);
-	PyModule_AddObject(aerospike, "GeoJSON", (PyObject *) geospatial);
+	PyModule_AddObject(aerospike_module, "GeoJSON", (PyObject *) geospatial);
 }
