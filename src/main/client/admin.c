@@ -118,7 +118,9 @@ PyObject * AerospikeClient_Admin_Create_User(AerospikeClient * self, PyObject *a
 	}
 
 	// Invoke operation
+    Py_BEGIN_ALLOW_THREADS
 	aerospike_create_user(self->as, &err, admin_policy_p, user, password, (const char**)roles, roles_size);
+    Py_END_ALLOW_THREADS
 	if(err.code != AEROSPIKE_OK) {
 		as_error_update(&err, err.code, NULL);
 		goto CLEANUP;
@@ -206,7 +208,9 @@ PyObject * AerospikeClient_Admin_Drop_User( AerospikeClient *self, PyObject *arg
 	user = PyString_AsString(py_user);
 
 	//Invoke operation
+    Py_BEGIN_ALLOW_THREADS
 	aerospike_drop_user(self->as, &err, admin_policy_p, user);
+    Py_END_ALLOW_THREADS
 	if(err.code != AEROSPIKE_OK) {
 		as_error_update(&err, err.code, NULL);
 		goto CLEANUP;
@@ -298,7 +302,9 @@ PyObject * AerospikeClient_Admin_Set_Password( AerospikeClient *self, PyObject *
 	password = PyString_AsString(py_password);
 
 	// Invoke operation
+    Py_BEGIN_ALLOW_THREADS
 	aerospike_set_password( self->as, &err, admin_policy_p, user, password );
+    Py_END_ALLOW_THREADS
 	if(err.code != AEROSPIKE_OK) {
 		as_error_update(&err, err.code, NULL);
 		goto CLEANUP;
@@ -390,7 +396,9 @@ PyObject * AerospikeClient_Admin_Change_Password( AerospikeClient *self, PyObjec
 	password = PyString_AsString(py_password);
 
 	// Invoke operation
+    Py_BEGIN_ALLOW_THREADS
 	aerospike_change_password( self->as, &err, admin_policy_p, user, password );
+    Py_END_ALLOW_THREADS
 	if(err.code != AEROSPIKE_OK) {
 		as_error_update(&err, err.code, NULL);
 		goto CLEANUP;
@@ -492,7 +500,9 @@ PyObject * AerospikeClient_Admin_Grant_Roles( AerospikeClient *self, PyObject *a
 	}
 
 	// Invoke operation
+    Py_BEGIN_ALLOW_THREADS
 	aerospike_grant_roles(self->as, &err, admin_policy_p, user, (const char**)roles, roles_size);
+    Py_END_ALLOW_THREADS
 	if(err.code != AEROSPIKE_OK) {
 		as_error_update(&err, err.code, NULL);
 		goto CLEANUP;
@@ -602,7 +612,9 @@ PyObject * AerospikeClient_Admin_Revoke_Roles( AerospikeClient *self, PyObject *
 	}
 
 	// Invoke operation
+    Py_BEGIN_ALLOW_THREADS
 	aerospike_revoke_roles(self->as, &err, admin_policy_p, user, (const char**)roles, roles_size);
+    Py_END_ALLOW_THREADS
 	if(err.code != AEROSPIKE_OK) {
 		as_error_update(&err, err.code, NULL);
 		goto CLEANUP;
@@ -693,7 +705,9 @@ PyObject * AerospikeClient_Admin_Query_User( AerospikeClient * self, PyObject * 
 	user_name = PyString_AsString(py_user_name);
 
 	// Invoke operation
+    Py_BEGIN_ALLOW_THREADS
 	aerospike_query_user(self->as, &err, admin_policy_p, user_name, &user);
+    Py_END_ALLOW_THREADS
 	if(err.code != AEROSPIKE_OK) {
 		as_error_update(&err, err.code, NULL);
 		goto CLEANUP;
@@ -780,7 +794,9 @@ PyObject * AerospikeClient_Admin_Query_Users( AerospikeClient * self, PyObject *
 	}
 
 	// Invoke operation
+    Py_BEGIN_ALLOW_THREADS
 	aerospike_query_users(self->as, &err, admin_policy_p, &users, &users_size);
+    Py_END_ALLOW_THREADS
 	if(err.code != AEROSPIKE_OK) {
 		as_error_update(&err, err.code, err.message);
 		goto CLEANUP;
@@ -883,7 +899,9 @@ PyObject * AerospikeClient_Admin_Create_Role(AerospikeClient * self, PyObject *a
 	}
 
 	// Invoke operation
+    Py_BEGIN_ALLOW_THREADS
 	aerospike_create_role(self->as, &err, admin_policy_p, role, privileges, privileges_size);
+    Py_END_ALLOW_THREADS
 
 CLEANUP:
 	if(privileges) {
@@ -964,7 +982,9 @@ PyObject * AerospikeClient_Admin_Drop_Role(AerospikeClient * self, PyObject *arg
 	}
 
 	// Invoke operation
+    Py_BEGIN_ALLOW_THREADS
 	aerospike_drop_role(self->as, &err, admin_policy_p, role);
+    Py_END_ALLOW_THREADS
 
 CLEANUP:
 	if ( err.code != AEROSPIKE_OK ) {
@@ -1055,7 +1075,9 @@ PyObject * AerospikeClient_Admin_Grant_Privileges(AerospikeClient * self, PyObje
 	}
 
 	// Invoke operation
+    Py_BEGIN_ALLOW_THREADS
 	aerospike_grant_privileges(self->as, &err, admin_policy_p, role, privileges, privileges_size);
+    Py_END_ALLOW_THREADS
 
 CLEANUP:
 	if(privileges) {
@@ -1153,7 +1175,9 @@ PyObject * AerospikeClient_Admin_Revoke_Privileges(AerospikeClient * self, PyObj
 	}
 
 	// Invoke operation
+    Py_BEGIN_ALLOW_THREADS
 	aerospike_revoke_privileges(self->as, &err, admin_policy_p, role, privileges, privileges_size);
+    Py_END_ALLOW_THREADS
 
 CLEANUP:
 	if(privileges) {
@@ -1238,7 +1262,9 @@ PyObject * AerospikeClient_Admin_Query_Role(AerospikeClient * self, PyObject *ar
 	}
 
 	// Invoke operation
+    Py_BEGIN_ALLOW_THREADS
 	aerospike_query_role(self->as, &err, admin_policy_p, role, &ret_role);
+    Py_END_ALLOW_THREADS
 	if ( err.code != AEROSPIKE_OK ) {
 		goto CLEANUP;
 	}
@@ -1317,7 +1343,9 @@ PyObject * AerospikeClient_Admin_Query_Roles(AerospikeClient * self, PyObject *a
 	}
 
 	// Invoke operation
+    Py_BEGIN_ALLOW_THREADS
 	aerospike_query_roles(self->as, &err, admin_policy_p, &ret_role, &ret_role_size);
+    Py_END_ALLOW_THREADS
 	if ( err.code != AEROSPIKE_OK ) {
 		goto CLEANUP;
 	}

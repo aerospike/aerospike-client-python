@@ -62,11 +62,13 @@ class TestQueryApply(object):
         query_id = self.client.query_apply("test", "demo", p.between("age", 1,
             5), "bin_lua", "mytransform", ['age', 2])
 
+        time.sleep(0.1)
         while True:
-            time.sleep(0.1)
             response = self.client.job_info(query_id, aerospike.JOB_QUERY)
-            if response['status'] == aerospike.JOB_STATUS_COMPLETED:
+            if response['status'] != aerospike.JOB_STATUS_INPROGRESS:
                 break
+            time.sleep(0.1)
+
         for i in xrange(1, 5):
             key = ('test', 'demo', i)
             (key, meta, bins) = self.client.get(key)
@@ -83,11 +85,13 @@ class TestQueryApply(object):
         query_id = self.client.query_apply("test", "demo", p.between("age", 1,
             5), "bin_lua", "mytransform", ['age', 2], policy)
 
+        time.sleep(0.1)
         while True:
-            time.sleep(0.1)
             response = self.client.job_info(query_id, aerospike.JOB_QUERY)
-            if response['status'] == aerospike.JOB_STATUS_COMPLETED:
+            if response['status'] != aerospike.JOB_STATUS_INPROGRESS:
                 break
+            time.sleep(0.1)
+
         for i in xrange(1, 5):
             key = ('test', 'demo', i)
             (key, meta, bins) = self.client.get(key)
@@ -104,11 +108,13 @@ class TestQueryApply(object):
         query_id = self.client.query_apply("test", None, p.between("age", 1, 5), "bin_lua",
                                          "mytransform", ['age', 2], policy)
 
+        time.sleep(0.1)
         while True:
-            time.sleep(0.1)
             response = self.client.job_info(query_id, aerospike.JOB_QUERY)
-            if response['status'] == aerospike.JOB_STATUS_COMPLETED:
+            if response['status'] != aerospike.JOB_STATUS_INPROGRESS:
                 break
+            time.sleep(0.1)
+
         for i in xrange(1, 5):
             key = ('test', 'demo', i)
             (key, meta, bins) = self.client.get(key)
@@ -150,11 +156,13 @@ class TestQueryApply(object):
         query_id = self.client.query_apply("test", "demo", p.between("age", 1,
             5), "bin_lua_incorrect", "mytransform", ['age', 2])
 
+        time.sleep(0.1)
         while True:
-            time.sleep(0.1)
             response = self.client.job_info(query_id, aerospike.JOB_QUERY)
-            if response['status'] == aerospike.JOB_STATUS_COMPLETED:
+            if response['status'] != aerospike.JOB_STATUS_INPROGRESS:
                 break
+            time.sleep(0.1)
+
         for i in xrange(1, 5):
             key = ('test', 'demo', i)
             (key, meta, bins) = self.client.get(key)
@@ -170,11 +178,13 @@ class TestQueryApply(object):
         query_id = self.client.query_apply("test", "demo", p.between("age", 1,
             5), "bin_lua", "mytransform_incorrect", ['age', 2])
 
+        time.sleep(0.1)
         while True:
-            time.sleep(0.1)
             response = self.client.job_info(query_id, aerospike.JOB_QUERY)
-            if response['status'] == aerospike.JOB_STATUS_COMPLETED:
+            if response['status'] != aerospike.JOB_STATUS_INPROGRESS:
                 break
+            time.sleep(0.1)
+
         for i in xrange(1, 5):
             key = ('test', 'demo', i)
             (key, meta, bins) = self.client.get(key)
@@ -250,11 +260,13 @@ class TestQueryApply(object):
 
         #time.sleep(2)
 
+        time.sleep(0.1)
         while True:
-            time.sleep(0.1)
             response = self.client.job_info(query_id, aerospike.JOB_QUERY)
-            if response['status'] == aerospike.JOB_STATUS_COMPLETED:
+            if response['status'] != aerospike.JOB_STATUS_INPROGRESS:
                 break
+            time.sleep(0.1)
+
         for i in xrange(1, 5):
             key = ('test', 'demo', i)
             (key, meta, bins) = self.client.get(key)
@@ -272,11 +284,13 @@ class TestQueryApply(object):
 
         #time.sleep(2)
 
+        time.sleep(0.1)
         while True:
-            time.sleep(0.1)
             response = self.client.job_info(query_id, aerospike.JOB_QUERY)
-            if response['status'] == aerospike.JOB_STATUS_COMPLETED:
+            if response['status'] != aerospike.JOB_STATUS_INPROGRESS:
                 break
+            time.sleep(0.1)
+
         for i in xrange(1, 5):
             key = ('test', 'demo', i)
             (key, meta, bins) = self.client.get(key)
@@ -294,11 +308,13 @@ class TestQueryApply(object):
 
         #time.sleep(2)
 
+        time.sleep(0.1)
         while True:
-            time.sleep(0.1)
             response = self.client.job_info(query_id, aerospike.JOB_QUERY)
-            if response['status'] == aerospike.JOB_STATUS_COMPLETED:
+            if response['status'] != aerospike.JOB_STATUS_INPROGRESS:
                 break
+            time.sleep(0.1)
+
         for i in xrange(1, 5):
             key = ('test', 'demo', i)
             (key, meta, bins) = self.client.get(key)
@@ -314,11 +330,13 @@ class TestQueryApply(object):
         query_id = self.client.query_apply("test", "demo", p.between("age", 1,
             5), u"bin_lua", u"mytransform", ['age', 2])
 
+        time.sleep(0.1)
         while True:
-            time.sleep(0.1)
             response = self.client.job_info(query_id, aerospike.JOB_QUERY)
-            if response['status'] == aerospike.JOB_STATUS_COMPLETED:
+            if response['status'] != aerospike.JOB_STATUS_INPROGRESS:
                 break
+            time.sleep(0.1)
+
         for i in xrange(1, 5):
             key = ('test', 'demo', i)
             (key, meta, bins) = self.client.get(key)

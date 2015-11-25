@@ -598,24 +598,6 @@ class TestOperate(object):
             assert exception.code == -2
             assert exception.msg == "Cannot concatenate 'str' and 'non-str' objects"
 
-    def test_operate_increment_value_string_negative(self):
-        """
-        Invoke operate() with increment value is of type string
-        """
-        key = ('test', 'demo', 1)
-        list = [
-            {"op": aerospike.OPERATOR_INCR,
-             "bin": "age",
-             "val": "lllllll"}, {"op": aerospike.OPERATOR_READ,
-                                 "bin": "name"}
-        ]
-
-        try:
-            TestOperate.client.operate(key, list)
-        except ParamError as exception:
-            assert exception.code == -2
-            assert exception.msg == "Unsupported operand type(s) for +: 'int' and 'str'"
-
     def test_operate_increment_nonexistent_key(self):
         """
         Invoke operate() with increment with nonexistent_key
@@ -722,26 +704,23 @@ class TestOperate(object):
         """
         Invoke operate() with incr value negative
         """
-        key = ('test', 'demo', 1)
-        policy = {
-            'timeout': 1000,
-            'key': aerospike.POLICY_KEY_SEND,
-            'commit_level': aerospike.POLICY_COMMIT_LEVEL_MASTER
-        }
+        try:
+            key = ('test', 'demo', 1)
+            policy = {
+                'timeout': 1000,
+                'key': aerospike.POLICY_KEY_SEND,
+                'commit_level': aerospike.POLICY_COMMIT_LEVEL_MASTER
+            }
 
-        list = [{"op": aerospike.OPERATOR_APPEND,
-                 "bin": "name",
-                 "val": "aa"},
-                {"op": aerospike.OPERATOR_INCR,
-                 "bin": "age",
-                 "val": "3"}, {"op": aerospike.OPERATOR_READ,
-                             "bin": "name"}]
+            list = [ {"op": aerospike.OPERATOR_INCR,
+                     "bin": "age",
+                     "val": "3"}, {"op": aerospike.OPERATOR_READ,
+                                 "bin": "age"}]
 
-        key, meta, bins = TestOperate.client.operate(key, list, {}, policy)
+            key, meta, bins = TestOperate.client.operate(key, list, {}, policy)
 
-        assert bins == {'name': 'name1aa'}
-        assert key == ('test', 'demo', 1, bytearray(
-            b'\xb7\xf4\xb88\x89\xe2\xdag\xdeh>\x1d\xf6\x91\x9a\x1e\xac\xc4F\xc8')
-                      )
+        except ParamError as exception:
+            assert exception.code == -2
+            assert exception.msg == "Unsupported operand type(s) for +: only 'int' allowed"
 
         TestOperate.client.remove(key)
