@@ -28,6 +28,7 @@
 #include "exceptions.h"
 #include "key.h"
 #include "policy.h"
+#include "serializer.h"
 
 /**
  *******************************************************************************************************
@@ -79,7 +80,7 @@ int check_type(AerospikeClient * self, PyObject * py_value, int op, as_error *er
 	} else if ( (!PyInt_Check(py_value) && !PyLong_Check(py_value) && (!PyFloat_Check(py_value) || !aerospike_has_double(self->as))) && op == AS_OPERATOR_INCR){
 	    as_error_update(err, AEROSPIKE_ERR_PARAM, "Unsupported operand type(s) for +: only 'int' allowed");
 		return 1;
-	} else if ((!PyString_Check(py_value) && !PyUnicode_Check(py_value)) && (op == AS_OPERATOR_APPEND || op == AS_OPERATOR_PREPEND)) {
+	} else if ((!PyString_Check(py_value) && !PyUnicode_Check(py_value) && !PyByteArray_Check(py_value)) && (op == AS_OPERATOR_APPEND || op == AS_OPERATOR_PREPEND)) {
 	    as_error_update(err, AEROSPIKE_ERR_PARAM, "Cannot concatenate 'str' and 'non-str' objects");
 		return 1;
 	}
@@ -252,19 +253,31 @@ PyObject *  AerospikeClient_Operate_Invoke(
 					if (PyUnicode_Check(py_value)) {
 						py_ustr1 = PyUnicode_AsUTF8String(py_value);
 						val = PyString_AsString(py_ustr1);
-					} else {
+					    as_operations_add_append_str(&ops, bin, val);
+					} else if (PyString_Check(py_value)) {
 						val = PyString_AsString(py_value);
-					}
-					as_operations_add_append_str(&ops, bin, val);
+					    as_operations_add_append_str(&ops, bin, val);
+					} else {
+		                as_bytes *bytes;
+		                GET_BYTES_POOL(bytes, &static_pool, err);
+		                serialize_based_on_serializer_policy(self, SERIALIZER_PYTHON, &bytes, py_value, err);
+                        as_operations_add_append_raw(&ops, bin, bytes->value, bytes->size);
+                    }
 					break;
 				case AS_OPERATOR_PREPEND:
 					if (PyUnicode_Check(py_value)) {
 						py_ustr1 = PyUnicode_AsUTF8String(py_value);
 						val = PyString_AsString(py_ustr1);
-					} else {
+					    as_operations_add_prepend_str(&ops, bin, val);
+					} else if (PyString_Check(py_value)) {
 						val = PyString_AsString(py_value);
-					}
-					as_operations_add_prepend_str(&ops, bin, val);
+					    as_operations_add_prepend_str(&ops, bin, val);
+					} else {
+		                as_bytes *bytes;
+		                GET_BYTES_POOL(bytes, &static_pool, err);
+		                serialize_based_on_serializer_policy(self, SERIALIZER_PYTHON, &bytes, py_value, err);
+                        as_operations_add_prepend_raw(&ops, bin, bytes->value, bytes->size);
+                    }
 					break;
 				case AS_OPERATOR_INCR:
 					if (PyInt_Check(py_value)) {

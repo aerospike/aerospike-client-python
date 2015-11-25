@@ -45,6 +45,10 @@ class TestOperate(object):
         rec = {"age": 6.3}
         TestOperate.client.put(key, rec)
 
+        key = ('test', 'demo', 'bytearray_key')
+        rec = {"bytearray_bin": bytearray("asd;as[d'as;d", "utf-8")}
+        TestOperate.client.put(key, rec)
+
     def teardown_method(self, method):
         """
         Teardoen method.
@@ -55,6 +59,11 @@ class TestOperate(object):
                 TestOperate.client.remove(key)
             except RecordNotFound as exception:
                 pass
+        key = ('test', 'demo', 'bytearray_key')
+        try:
+            TestOperate.client.remove(key)
+        except RecordNotFound as exception:
+            pass
 
     def test_operate_with_no_parameters_negative(self):
         """
@@ -657,5 +666,79 @@ class TestOperate(object):
         except ParamError as exception:
             assert exception.code == -2
             assert exception.msg == "Unsupported operand type(s) for +: only 'int' allowed"
+
+        TestOperate.client.remove(key)
+
+    def test_operate_with_operatorappend_valbytearray(self):
+        """
+        Invoke operate() with operator as append and value is a bytearray
+        """
+        key = ('test', 'demo', 'bytearray_key')
+        list = [
+            {"op": aerospike.OPERATOR_APPEND,
+             "bin": "bytearray_bin",
+             "val": bytearray("abc")},
+            {"op": aerospike.OPERATOR_READ,
+             "bin": "bytearray_bin"}
+        ]
+
+        key, meta, bins = TestOperate.client.operate(key, list)
+
+        assert bins == {'bytearray_bin': "asd;as[d'as;dabc"}
+
+    def test_operate_with_operatorappend_valbytearray_newrecord(self):
+        """
+        Invoke operate() with operator as append and value is a bytearray and a
+        new record(does not exist)
+        """
+        key = ('test', 'demo', 'bytearray_new')
+        list = [
+            {"op": aerospike.OPERATOR_APPEND,
+             "bin": "bytearray_bin",
+             "val": bytearray("asd;as[d'as;d", "utf-8")},
+            {"op": aerospike.OPERATOR_READ,
+             "bin": "bytearray_bin"}
+        ]
+
+        key, meta, bins = TestOperate.client.operate(key, list)
+
+        assert bins == {'bytearray_bin': "asd;as[d'as;d"}
+
+        TestOperate.client.remove(key)
+
+    def test_operate_with_operatorprepend_valbytearray(self):
+        """
+        Invoke operate() with operator as prepend and value is a bytearray
+        """
+        key = ('test', 'demo', 'bytearray_key')
+        list = [
+            {"op": aerospike.OPERATOR_PREPEND,
+             "bin": "bytearray_bin",
+             "val": bytearray("abc")},
+            {"op": aerospike.OPERATOR_READ,
+             "bin": "bytearray_bin"}
+        ]
+
+        key, meta, bins = TestOperate.client.operate(key, list)
+
+        assert bins == {'bytearray_bin': "abcasd;as[d'as;d"}
+
+    def test_operate_with_operatorprepend_valbytearray_newrecord(self):
+        """
+        Invoke operate() with operator as prepend and value is a bytearray and a
+        new record(does not exist)
+        """
+        key = ('test', 'demo', 'bytearray_new')
+        list = [
+            {"op": aerospike.OPERATOR_PREPEND,
+             "bin": "bytearray_bin",
+             "val": bytearray("asd;as[d'as;d", "utf-8")},
+            {"op": aerospike.OPERATOR_READ,
+             "bin": "bytearray_bin"}
+        ]
+
+        key, meta, bins = TestOperate.client.operate(key, list)
+
+        assert bins == {'bytearray_bin': "asd;as[d'as;d"}
 
         TestOperate.client.remove(key)
