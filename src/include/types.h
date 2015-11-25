@@ -32,7 +32,6 @@
 #define MAX_UNICODE_OBJECTS 32767
 extern int counter;
 extern PyObject *py_global_hosts;
-extern PyObject *aerospike_module;
 extern bool user_shm_key;
 
 typedef struct {
