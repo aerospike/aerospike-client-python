@@ -36,14 +36,18 @@ extern bool user_shm_key;
 
 typedef struct {
 	PyObject_HEAD
+} AerospikeNullObject;
+
+typedef struct {
+	PyObject_HEAD
 	aerospike * as;
-    int shm_key;
-    int ref_cnt;
+	int shm_key;
+	int ref_cnt;
 } AerospikeGlobalHosts;
 
 typedef struct {
-    as_error error;
-    PyObject * callback;
+	as_error error;
+	PyObject * callback;
 }user_serializer_callback;
 
 typedef struct {

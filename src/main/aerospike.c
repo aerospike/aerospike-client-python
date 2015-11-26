@@ -34,6 +34,7 @@
 #include "log.h"
 #include <aerospike/as_operations.h>
 #include "serializer.h"
+#include "nullobject.h"
 
 PyObject *py_global_hosts;
 int counter = 0xA5000000;
@@ -151,4 +152,8 @@ PyMODINIT_FUNC initaerospike(void)
 	PyTypeObject * geospatial = AerospikeGeospatial_Ready();
 	Py_INCREF(geospatial);
 	PyModule_AddObject(aerospike, "GeoJSON", (PyObject *) geospatial);
+
+	PyTypeObject * null_object = AerospikeNullObject_New();
+	Py_INCREF(null_object);
+	PyModule_AddObject(aerospike, "null", (PyObject *) null_object);
 }

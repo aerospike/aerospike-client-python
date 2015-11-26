@@ -28,7 +28,13 @@
 #include "exceptions.h"
 #include "key.h"
 #include "policy.h"
+#include "serializer.h"
+#include "geo.h"
 
+#include <aerospike/as_double.h>
+#include <aerospike/as_integer.h>
+#include <aerospike/as_geojson.h>
+#include <aerospike/as_nil.h>
 /**
  *******************************************************************************************************
  * This function will check whether operation can be performed
@@ -143,6 +149,73 @@ void AerospikeClient_CheckForMeta(PyObject * py_meta, as_operations * ops, as_er
 	}
 }
 
+static void initialize_bin_for_strictypes(AerospikeClient *self, as_error *err, PyObject *py_value, as_binop *binop, char *bin, as_static_pool *static_pool) {
+	
+	as_bin *binop_bin = &binop->bin;
+	if (PyInt_Check(py_value)) {
+		int val = PyInt_AsLong(py_value);
+		as_integer_init((as_integer *) &binop_bin->value, val);
+		binop_bin->valuep = &binop_bin->value;
+	} else if (PyLong_Check(py_value)) {
+		long val = PyLong_AsLong(py_value);
+		as_integer_init((as_integer *) &binop_bin->value, val);
+		binop_bin->valuep = &binop_bin->value;
+	} else if (PyString_Check(py_value)) {
+		char * val = PyString_AsString(py_value);
+		as_string_init((as_string *) &binop_bin->value, val, free);
+		binop_bin->valuep = &binop_bin->value;	
+	} else if (PyUnicode_Check(py_value)) {
+		PyObject *py_ustr1 = PyUnicode_AsUTF8String(py_value);
+		char * val = PyString_AsString(py_ustr1);
+		as_string_init((as_string *) &binop_bin->value, val, free);
+		binop_bin->valuep = &binop_bin->value;	
+	} else if (PyFloat_Check(py_value)) {
+		int64_t val = PyFloat_AsDouble(py_value);
+		if (aerospike_has_double(self->as)) {
+			as_double_init((as_double *) &binop_bin->value, val);
+			binop_bin->valuep = &binop_bin->value;
+		} else {
+			as_bytes *bytes;
+			GET_BYTES_POOL(bytes, static_pool, err);
+			serialize_based_on_serializer_policy(self, SERIALIZER_PYTHON, &bytes, py_value, err);	
+			((as_val *) &binop_bin->value)->type = AS_UNKNOWN;
+			binop_bin->valuep = (as_bin_value *) bytes;
+		}
+	} else if (PyList_Check(py_value)) {
+		as_list * list = NULL;
+		pyobject_to_list(self, err, py_value, &list, static_pool, SERIALIZER_PYTHON);
+		((as_val *) &binop_bin->value)->type = AS_UNKNOWN;
+		binop_bin->valuep = (as_bin_value *) list;
+	} else if (PyDict_Check(py_value)) {
+		as_map * map = NULL;
+		pyobject_to_map(self, err, py_value, &map, static_pool, SERIALIZER_PYTHON);
+		((as_val *) &binop_bin->value)->type = AS_UNKNOWN;
+		binop_bin->valuep = (as_bin_value *) map;
+	} else if (!strcmp(py_value->ob_type->tp_name, "aerospike.Geospatial")) {
+		PyObject* py_data = PyObject_GenericGetAttr(py_value, PyString_FromString("geo_data"));
+		char *geo_value = PyString_AsString(AerospikeGeospatial_DoDumps(py_data, err));
+		if (aerospike_has_geo(self->as)) {
+			as_geojson_init((as_geojson *) &binop_bin->value, geo_value, free);
+			binop_bin->valuep = &binop_bin->value;
+		} else {
+			as_bytes *bytes;
+			GET_BYTES_POOL(bytes, static_pool, err);
+			serialize_based_on_serializer_policy(self, SERIALIZER_PYTHON, &bytes, py_data, err);	
+			((as_val *) &binop_bin->value)->type = AS_UNKNOWN;
+			binop_bin->valuep = (as_bin_value *) bytes;
+		}
+	} else if (!strcmp(py_value->ob_type->tp_name, "aerospike.null")) {
+		((as_val *) &binop_bin->value)->type = AS_UNKNOWN;
+		binop_bin->valuep = (as_bin_value *) &as_nil;
+	} else {
+		as_bytes *bytes;
+		GET_BYTES_POOL(bytes, static_pool, err);
+		serialize_based_on_serializer_policy(self, SERIALIZER_PYTHON, &bytes, py_value, err);	
+		((as_val *) &binop_bin->value)->type = AS_UNKNOWN;
+		binop_bin->valuep = (as_bin_value *) bytes;
+	}
+	strcpy(binop_bin->name, bin);
+}
 /**
  *******************************************************************************************************
  * This function invokes csdk's API's.
@@ -166,7 +239,7 @@ PyObject *  AerospikeClient_Operate_Invoke(
 	char* bin = NULL;
 	char* val = NULL;
 	long offset = 0;
-    double double_offset = 0.0;
+	double double_offset = 0.0;
 	uint32_t ttl = 0;
 	long operation = 0;
 	int i = 0;
@@ -225,7 +298,6 @@ PyObject *  AerospikeClient_Operate_Invoke(
 			}
 
 			if (py_bin) {
-                if (self->strict_types) {
 				    if (PyUnicode_Check(py_bin)) {
 					    py_ustr = PyUnicode_AsUTF8String(py_bin);
 					    bin = PyString_AsString(py_ustr);
@@ -235,22 +307,16 @@ PyObject *  AerospikeClient_Operate_Invoke(
 					    as_error_update(err, AEROSPIKE_ERR_PARAM, "Bin name should be of type string");
 					    goto CLEANUP;
 				    }
-                } else {
-                    if (PyString_Check(py_bin)) {
-					    as_error_update(err, AEROSPIKE_ERR_PARAM, "Bin name should be of type string");
-					    goto CLEANUP;
-                    }
-                }
 			} else if (!py_bin && operation != AS_OPERATOR_TOUCH) {
 				as_error_update(err, AEROSPIKE_ERR_PARAM, "Bin is not given");
 				goto CLEANUP;
 			}
 			if (py_value) {
-                if (self->strict_types) {
-				    if (check_type(self, py_value, operation, err)) {
-                        goto CLEANUP;
-                    }
-                }
+				if (self->strict_types) {
+					if (check_type(self, py_value, operation, err)) {
+						goto CLEANUP;
+					}
+				}
 			} else if ((!py_value) && (operation != AS_OPERATOR_READ)) {
 				as_error_update(err, AEROSPIKE_ERR_PARAM, "Value should be given");
 				goto CLEANUP;
@@ -261,19 +327,35 @@ PyObject *  AerospikeClient_Operate_Invoke(
 					if (PyUnicode_Check(py_value)) {
 						py_ustr1 = PyUnicode_AsUTF8String(py_value);
 						val = PyString_AsString(py_ustr1);
-					} else {
+						as_operations_add_append_str(&ops, bin, val);
+					} else if (PyString_Check(py_value)) {
 						val = PyString_AsString(py_value);
+						as_operations_add_append_str(&ops, bin, val);
+					} else {
+						if (!self->strict_types) {
+							as_operations *pointer_ops = &ops;
+							as_binop *binop = &pointer_ops->binops.entries[pointer_ops->binops.size++];
+							binop->op = AS_OPERATOR_APPEND;
+							initialize_bin_for_strictypes(self, err, py_value, binop, bin, &static_pool);
+						}
 					}
-					as_operations_add_append_str(&ops, bin, val);
 					break;
 				case AS_OPERATOR_PREPEND:
 					if (PyUnicode_Check(py_value)) {
 						py_ustr1 = PyUnicode_AsUTF8String(py_value);
 						val = PyString_AsString(py_ustr1);
-					} else {
+						as_operations_add_prepend_str(&ops, bin, val);
+					} else if (PyString_Check(py_value)) {
 						val = PyString_AsString(py_value);
+						as_operations_add_prepend_str(&ops, bin, val);
+					} else {
+						if (!self->strict_types) {
+							as_operations *pointer_ops = &ops;
+							as_binop *binop = &pointer_ops->binops.entries[pointer_ops->binops.size++];
+							binop->op = AS_OPERATOR_PREPEND;
+							initialize_bin_for_strictypes(self, err, py_value, binop, bin, &static_pool);
+						}
 					}
-					as_operations_add_prepend_str(&ops, bin, val);
 					break;
 				case AS_OPERATOR_INCR:
 					if (PyInt_Check(py_value)) {
@@ -289,7 +371,14 @@ PyObject *  AerospikeClient_Operate_Invoke(
                     } else if (PyFloat_Check(py_value)) {
                         double_offset = PyFloat_AsDouble(py_value);
                         as_operations_add_incr_double(&ops, bin, double_offset);
-                    }
+                    } else {
+						if (!self->strict_types) {
+							as_operations *pointer_ops = &ops;
+							as_binop *binop = &pointer_ops->binops.entries[pointer_ops->binops.size++];
+							binop->op = AS_OPERATOR_INCR;
+							initialize_bin_for_strictypes(self, err, py_value, binop, bin, &static_pool);
+						}
+					}
                     break;
 				case AS_OPERATOR_TOUCH:
 					if (PyInt_Check(py_value)) {
@@ -324,9 +413,9 @@ PyObject *  AerospikeClient_Operate_Invoke(
 	// Initialize record
 	as_record_init(rec, 0);
 
-    Py_BEGIN_ALLOW_THREADS
+	Py_BEGIN_ALLOW_THREADS
 	aerospike_key_operate(self->as, err, operate_policy_p, key, &ops, &rec);
-    Py_END_ALLOW_THREADS
+	Py_END_ALLOW_THREADS
 
 	if (err->code != AEROSPIKE_OK) {
 		as_error_update(err, err->code, NULL);
