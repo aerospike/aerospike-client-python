@@ -85,7 +85,7 @@ int check_type(AerospikeClient * self, PyObject * py_value, int op, as_error *er
 	} else if ( (!PyInt_Check(py_value) && !PyLong_Check(py_value) && (!PyFloat_Check(py_value) || !aerospike_has_double(self->as))) && op == AS_OPERATOR_INCR){
 	    as_error_update(err, AEROSPIKE_ERR_PARAM, "Unsupported operand type(s) for +: only 'int' allowed");
 		return 1;
-	} else if ((!PyString_Check(py_value) && !PyUnicode_Check(py_value)) && (op == AS_OPERATOR_APPEND || op == AS_OPERATOR_PREPEND)) {
+	} else if ((!PyString_Check(py_value) && !PyUnicode_Check(py_value) && !PyByteArray_Check(py_value)) && (op == AS_OPERATOR_APPEND || op == AS_OPERATOR_PREPEND)) {
 	    as_error_update(err, AEROSPIKE_ERR_PARAM, "Cannot concatenate 'str' and 'non-str' objects");
 		return 1;
 	}
@@ -298,15 +298,15 @@ PyObject *  AerospikeClient_Operate_Invoke(
 			}
 
 			if (py_bin) {
-				    if (PyUnicode_Check(py_bin)) {
-					    py_ustr = PyUnicode_AsUTF8String(py_bin);
-					    bin = PyString_AsString(py_ustr);
-				    } else if (PyString_Check(py_bin)) {
-					    bin = PyString_AsString(py_bin);
-				    } else {
-					    as_error_update(err, AEROSPIKE_ERR_PARAM, "Bin name should be of type string");
-					    goto CLEANUP;
-				    }
+				if (PyUnicode_Check(py_bin)) {
+					py_ustr = PyUnicode_AsUTF8String(py_bin);
+					bin = PyString_AsString(py_ustr);
+				} else if (PyString_Check(py_bin)) {
+					bin = PyString_AsString(py_bin);
+				} else {
+					as_error_update(err, AEROSPIKE_ERR_PARAM, "Bin name should be of type string");
+					goto CLEANUP;
+				}
 			} else if (!py_bin && operation != AS_OPERATOR_TOUCH) {
 				as_error_update(err, AEROSPIKE_ERR_PARAM, "Bin is not given");
 				goto CLEANUP;
@@ -330,7 +330,12 @@ PyObject *  AerospikeClient_Operate_Invoke(
 						as_operations_add_append_str(&ops, bin, val);
 					} else if (PyString_Check(py_value)) {
 						val = PyString_AsString(py_value);
-						as_operations_add_append_str(&ops, bin, val);
+					    as_operations_add_append_str(&ops, bin, val);
+					} else if (PyByteArray_Check(py_value)) {
+		                as_bytes *bytes;
+		                GET_BYTES_POOL(bytes, &static_pool, err);
+		                serialize_based_on_serializer_policy(self, SERIALIZER_PYTHON, &bytes, py_value, err);
+                        as_operations_add_append_raw(&ops, bin, bytes->value, bytes->size);
 					} else {
 						if (!self->strict_types) {
 							as_operations *pointer_ops = &ops;
@@ -347,7 +352,12 @@ PyObject *  AerospikeClient_Operate_Invoke(
 						as_operations_add_prepend_str(&ops, bin, val);
 					} else if (PyString_Check(py_value)) {
 						val = PyString_AsString(py_value);
-						as_operations_add_prepend_str(&ops, bin, val);
+					    as_operations_add_prepend_str(&ops, bin, val);
+					} else if (PyByteArray_Check(py_value)) {
+		                as_bytes *bytes;
+		                GET_BYTES_POOL(bytes, &static_pool, err);
+		                serialize_based_on_serializer_policy(self, SERIALIZER_PYTHON, &bytes, py_value, err);
+                        as_operations_add_prepend_raw(&ops, bin, bytes->value, bytes->size);
 					} else {
 						if (!self->strict_types) {
 							as_operations *pointer_ops = &ops;
@@ -405,7 +415,9 @@ PyObject *  AerospikeClient_Operate_Invoke(
 					as_operations_add_write(&ops, bin, (as_bin_value *) put_val);
 					break;
 				default:
-					as_error_update(err, AEROSPIKE_ERR_PARAM, "Invalid operation given");
+					if (self->strict_types) {
+						as_error_update(err, AEROSPIKE_ERR_PARAM, "Invalid operation given");
+					}
 			}
 		}
 	}
