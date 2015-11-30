@@ -25,7 +25,7 @@ static PyObject * AerospikeNullObject_Type_New(PyTypeObject * parent, PyObject *
 
 static void AerospikeNullObject_Type_Dealloc(AerospikeNullObject * self)
 {
-    PyObject_Del(self);
+	PyObject_Del(self);
 }
 
 /*******************************************************************************
@@ -78,10 +78,10 @@ static PyTypeObject AerospikeNullObject_Type = {
 
 static PyObject * AerospikeNullObject_Type_New(PyTypeObject * parent, PyObject * args, PyObject * kwds)
 {
-    return (PyObject *) PyObject_New(AerospikeNullObject, parent);
+	return (PyObject *) PyObject_New(AerospikeNullObject, parent);
 }
 
 PyObject * AerospikeNullObject_New()
 {
-    return AerospikeNullObject_Type_New(&AerospikeNullObject_Type, Py_None, Py_None);
+	return AerospikeNullObject_Type_New(&AerospikeNullObject_Type, Py_None, Py_None);
 }
