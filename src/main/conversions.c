@@ -466,16 +466,16 @@ as_status pyobject_to_record(AerospikeClient * self, as_error * err, PyObject * 
 
 		while (PyDict_Next(py_rec, &pos, &key, &value)) {
 
-			if (self->strict_types) {
-				if ( PyUnicode_Check(key) ) {
-					py_ukey = PyUnicode_AsUTF8String(key);
-					name = PyString_AsString(py_ukey);
-				} else if ( PyString_Check(key) ) {
-					name = PyString_AsString(key);
-				} else {
-					return as_error_update(err, AEROSPIKE_ERR_CLIENT, "A bin name must be a string or unicode string.");
-				}
+			if ( PyUnicode_Check(key) ) {
+				py_ukey = PyUnicode_AsUTF8String(key);
+				name = PyString_AsString(py_ukey);
+			} else if ( PyString_Check(key) ) {
+				name = PyString_AsString(key);
+			} else {
+				return as_error_update(err, AEROSPIKE_ERR_CLIENT, "A bin name must be a string or unicode string.");
+			}
 
+			if (self->strict_types) {
 				if (strlen(name) > AS_BIN_NAME_MAX_LEN) {
 					if (py_ukey) {
 						Py_DECREF(py_ukey);
@@ -483,8 +483,6 @@ as_status pyobject_to_record(AerospikeClient * self, as_error * err, PyObject * 
 					}
 					return as_error_update(err, AEROSPIKE_ERR_BIN_NAME, "A bin name should not exceed 14 characters limit");
 				}
-			} else {
-				name = PyString_AsString(key);
 			}
 
 			if ( !value ) {
@@ -670,6 +668,8 @@ as_status pyobject_to_astype_write(AerospikeClient * self, as_error * err, char 
 		if ( err->code == AEROSPIKE_OK ) {
 			*val = (as_val *) map;
 		}
+	} else if (!strcmp(py_value->ob_type->tp_name, "aerospike.null")) {
+		*val = (as_val *) &as_nil;
 	} else {
         if (aerospike_has_double(self->as) && PyFloat_Check(py_value)) {
             double d = PyFloat_AsDouble(py_value);

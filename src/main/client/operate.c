@@ -79,13 +79,14 @@ PyObject * create_pylist(PyObject * py_list, long operation, PyObject * py_bin,
  */
 int check_type(AerospikeClient * self, PyObject * py_value, int op, as_error *err)
 {
-	if ((!PyInt_Check(py_value) && !PyLong_Check(py_value)) && (op == AS_OPERATOR_TOUCH)) {
+	if ((!PyInt_Check(py_value) && !PyLong_Check(py_value) && strcmp(py_value->ob_type->tp_name, "aerospike.null")) && (op == AS_OPERATOR_TOUCH)) {
 	    as_error_update(err, AEROSPIKE_ERR_PARAM, "Unsupported operand type(s) for touch : only int or long allowed");
 		return 1;
-	} else if ( (!PyInt_Check(py_value) && !PyLong_Check(py_value) && (!PyFloat_Check(py_value) || !aerospike_has_double(self->as))) && op == AS_OPERATOR_INCR){
+	} else if ( (!PyInt_Check(py_value) && !PyLong_Check(py_value) && (!PyFloat_Check(py_value) || !aerospike_has_double(self->as)) && 
+				strcmp(py_value->ob_type->tp_name, "aerospike.null")) && op == AS_OPERATOR_INCR){
 	    as_error_update(err, AEROSPIKE_ERR_PARAM, "Unsupported operand type(s) for +: only 'int' allowed");
 		return 1;
-	} else if ((!PyString_Check(py_value) && !PyUnicode_Check(py_value) && !PyByteArray_Check(py_value)) && (op == AS_OPERATOR_APPEND || op == AS_OPERATOR_PREPEND)) {
+	} else if ((!PyString_Check(py_value) && !PyUnicode_Check(py_value) && !PyByteArray_Check(py_value) && strcmp(py_value->ob_type->tp_name, "aerospike.null")) && (op == AS_OPERATOR_APPEND || op == AS_OPERATOR_PREPEND)) {
 	    as_error_update(err, AEROSPIKE_ERR_PARAM, "Cannot concatenate 'str' and 'non-str' objects");
 		return 1;
 	}
@@ -207,6 +208,12 @@ static void initialize_bin_for_strictypes(AerospikeClient *self, as_error *err, 
 	} else if (!strcmp(py_value->ob_type->tp_name, "aerospike.null")) {
 		((as_val *) &binop_bin->value)->type = AS_UNKNOWN;
 		binop_bin->valuep = (as_bin_value *) &as_nil;
+	} else if (PyByteArray_Check(py_value)) {
+		as_bytes *bytes;
+		GET_BYTES_POOL(bytes, static_pool, err);
+		serialize_based_on_serializer_policy(self, SERIALIZER_PYTHON, &bytes, py_value, err);
+		as_bytes_init_wrap((as_bytes *) &binop_bin->value, bytes->value, bytes->size, false);	
+		binop_bin->valuep = &binop_bin->value;
 	} else {
 		as_bytes *bytes;
 		GET_BYTES_POOL(bytes, static_pool, err);
@@ -307,6 +314,17 @@ PyObject *  AerospikeClient_Operate_Invoke(
 					as_error_update(err, AEROSPIKE_ERR_PARAM, "Bin name should be of type string");
 					goto CLEANUP;
 				}
+
+				if (self->strict_types) {
+					if (strlen(bin) > AS_BIN_NAME_MAX_LEN) {
+						if (py_ustr) {
+							Py_DECREF(py_ustr);
+							py_ustr = NULL;
+						}
+						as_error_update(err, AEROSPIKE_ERR_BIN_NAME, "A bin name should not exceed 14 characters limit");
+						goto CLEANUP;
+					}
+				}
 			} else if (!py_bin && operation != AS_OPERATOR_TOUCH) {
 				as_error_update(err, AEROSPIKE_ERR_PARAM, "Bin is not given");
 				goto CLEANUP;
@@ -337,7 +355,7 @@ PyObject *  AerospikeClient_Operate_Invoke(
 		                serialize_based_on_serializer_policy(self, SERIALIZER_PYTHON, &bytes, py_value, err);
                         as_operations_add_append_raw(&ops, bin, bytes->value, bytes->size);
 					} else {
-						if (!self->strict_types) {
+						if (!self->strict_types || !strcmp(py_value->ob_type->tp_name, "aerospike.null")) {
 							as_operations *pointer_ops = &ops;
 							as_binop *binop = &pointer_ops->binops.entries[pointer_ops->binops.size++];
 							binop->op = AS_OPERATOR_APPEND;
@@ -359,7 +377,7 @@ PyObject *  AerospikeClient_Operate_Invoke(
 		                serialize_based_on_serializer_policy(self, SERIALIZER_PYTHON, &bytes, py_value, err);
                         as_operations_add_prepend_raw(&ops, bin, bytes->value, bytes->size);
 					} else {
-						if (!self->strict_types) {
+						if (!self->strict_types || !strcmp(py_value->ob_type->tp_name, "aerospike.null")) {
 							as_operations *pointer_ops = &ops;
 							as_binop *binop = &pointer_ops->binops.entries[pointer_ops->binops.size++];
 							binop->op = AS_OPERATOR_PREPEND;
@@ -382,7 +400,7 @@ PyObject *  AerospikeClient_Operate_Invoke(
                         double_offset = PyFloat_AsDouble(py_value);
                         as_operations_add_incr_double(&ops, bin, double_offset);
                     } else {
-						if (!self->strict_types) {
+						if (!self->strict_types || !strcmp(py_value->ob_type->tp_name, "aerospike.null")) {
 							as_operations *pointer_ops = &ops;
 							as_binop *binop = &pointer_ops->binops.entries[pointer_ops->binops.size++];
 							binop->op = AS_OPERATOR_INCR;
@@ -417,6 +435,7 @@ PyObject *  AerospikeClient_Operate_Invoke(
 				default:
 					if (self->strict_types) {
 						as_error_update(err, AEROSPIKE_ERR_PARAM, "Invalid operation given");
+						goto CLEANUP;
 					}
 			}
 		}

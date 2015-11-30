@@ -1166,9 +1166,11 @@ class TestPut(TestBaseClass):
         except ParamError as exception:
             assert exception.code == -2
             assert exception.msg == 'integer value for KEY exceeds sys.maxsize'
-    """
+
     def test_put_record_set_to_aerospike_null(self):
-            #Invoke put() for a record with bin set to aerospike_null
+        """
+            Invoke put() for a record with bin set to aerospike_null
+        """
         key = ('test', 'demo', 1)
 
         bins = {"name": "John", "no": 3}
@@ -1188,7 +1190,6 @@ class TestPut(TestBaseClass):
         assert {"name": "John"} == bins
 
         self.delete_keys.append(key)
-        """
 
     def test_put_strict_types_bin_length(self):
         """
@@ -1224,18 +1225,3 @@ class TestPut(TestBaseClass):
         (key, meta, bins) = TestPut.client_strict_types.get(key)
 
         assert None == bins
-    """
-    def test_put_strict_types_unicode_bin(self):
-            #Invoke put() for a record with strict type set to false and bin is
-            #of type unicode. Expects string
-        key = ('test', 'demo', 1)
-
-        bins = {"name": "John",  u"\ud83d\ude04": 3}
-
-        assert 0 == TestPut.client_strict_types.put(key, bins)
-
-        (key, meta, bins) = TestPut.client_strict_types.get(key)
-
-        assert {"name": "John", "no": 3} == bins
-        self.delete_keys.append(key)
-        """
