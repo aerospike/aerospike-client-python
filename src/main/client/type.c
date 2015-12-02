@@ -324,7 +324,7 @@ static int AerospikeClient_Type_Init(AerospikeClient * self, PyObject * args, Py
 		else {
 			config.lua.system_path[0] = '\0';
 		}
-    }
+	}
 
 	if ( ! lua_user_path ) {
 		memcpy(config.lua.user_path, ".", AS_CONFIG_PATH_MAX_LEN);
@@ -333,7 +333,7 @@ static int AerospikeClient_Type_Init(AerospikeClient * self, PyObject * args, Py
 		if (stat(config.lua.user_path, &info ) != 0 || !(info.st_mode & S_IFDIR) || (access(config.lua.user_path, W_OK) != 0)) {
 		    memcpy(config.lua.user_path, ".", AS_CONFIG_PATH_MAX_LEN);
 		}
-    }
+	}
 
 	PyObject * py_hosts = PyDict_GetItemString(py_config, "hosts");
 	if ( py_hosts && PyList_Check(py_hosts) ) {
@@ -350,9 +350,9 @@ static int AerospikeClient_Type_Init(AerospikeClient * self, PyObject * args, Py
 				if (PyString_Check(py_addr)) {
 					addr = strdup(PyString_AsString(py_addr));
 				} else if (PyUnicode_Check(py_addr)) {
-		            PyObject * py_ustr = PyUnicode_AsUTF8String(py_addr);
-		            addr = strdup(PyString_AsString(py_ustr));
-                }
+					PyObject * py_ustr = PyUnicode_AsUTF8String(py_addr);
+					addr = strdup(PyString_AsString(py_ustr));
+				}
 				py_port = PyTuple_GetItem(py_host,1);
 				if( PyInt_Check(py_port) || PyLong_Check(py_port) ) {
 					port = (uint16_t) PyLong_AsLong(py_port);
@@ -369,12 +369,12 @@ static int AerospikeClient_Type_Init(AerospikeClient * self, PyObject * args, Py
 					port = (uint16_t)atoi(temp);
 				}
 			}
-            if(addr) {
-			    as_config_add_host(&config, addr, port);
-            } else {
-                free(addr);
-                return -1;
-            }
+			if(addr) {
+				as_config_add_host(&config, addr, port);
+			} else {
+				free(addr);
+				return -1;
+			}
 		}
 	}
 
@@ -495,6 +495,15 @@ static int AerospikeClient_Type_Init(AerospikeClient * self, PyObject * args, Py
 	PyObject * py_connect_timeout = PyDict_GetItemString(py_config, "connect_timeout");
 	if ( py_connect_timeout && PyInt_Check(py_connect_timeout) ) {
 		config.conn_timeout_ms = PyInt_AsLong(py_connect_timeout);
+	}
+
+	//strict_types check
+	self->strict_types = true;
+	PyObject * py_strict_types = PyDict_GetItemString(py_config, "strict_types");
+	if ( py_strict_types && PyBool_Check(py_strict_types) ) {
+		if (Py_False == py_strict_types) {
+			self->strict_types = false;
+ 		}
 	}
 
 	self->as = aerospike_new(&config);

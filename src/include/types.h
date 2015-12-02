@@ -36,14 +36,18 @@ extern bool user_shm_key;
 
 typedef struct {
 	PyObject_HEAD
+} AerospikeNullObject;
+
+typedef struct {
+	PyObject_HEAD
 	aerospike * as;
-    int shm_key;
-    int ref_cnt;
+	int shm_key;
+	int ref_cnt;
 } AerospikeGlobalHosts;
 
 typedef struct {
-    as_error error;
-    PyObject * callback;
+	as_error error;
+	PyObject * callback;
 }user_serializer_callback;
 
 typedef struct {
@@ -55,9 +59,10 @@ typedef struct {
 	PyObject_HEAD
 	aerospike * as;
 	int is_conn_16;
-    user_serializer_callback user_serializer_call_info;
-    user_serializer_callback user_deserializer_call_info;
-    uint8_t is_client_put_serializer;
+	user_serializer_callback user_serializer_call_info;
+	user_serializer_callback user_deserializer_call_info;
+	uint8_t is_client_put_serializer;
+	uint8_t strict_types;
 } AerospikeClient;
 
 typedef struct {
@@ -77,14 +82,14 @@ typedef struct {
 } AerospikeQuery;
 
 typedef struct {
-  PyObject_HEAD
-  AerospikeClient * client;
-  as_scan scan;
+	PyObject_HEAD
+	AerospikeClient * client;
+	as_scan scan;
 } AerospikeScan;
 
 typedef struct {
-  PyObject_HEAD
-  PyObject *geo_data;
+	PyObject_HEAD
+	PyObject *geo_data;
 } AerospikeGeospatial;
 
 typedef struct {
