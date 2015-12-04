@@ -1152,6 +1152,22 @@ class TestPut(TestBaseClass):
             assert exception.code == -2
             assert exception.msg == 'integer value exceeds sys.maxsize'
 
+    def test_put_with_integer_no_exception_raised_CLIENT598(self):
+        """
+            Invoke put() for a record with integer equal to -1. No exception
+            raised. Test for CLIENT-598
+        """
+        key = ('test', 'demo', 1)
+
+        bins = {"no": -1}
+
+        TestPut.client.put(key, bins)
+
+        (key, meta, bins) = TestPut.client.get(key)
+
+        assert bins == {"no": -1}
+        self.delete_keys.append(key)
+
     def test_put_with_key_as_an_integer_greater_than_maxisze(self):
         """
             Invoke put() for a record with integer greater than max size
