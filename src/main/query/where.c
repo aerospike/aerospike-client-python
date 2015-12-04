@@ -332,27 +332,31 @@ AerospikeQuery * AerospikeQuery_Where(AerospikeQuery * self, PyObject * args)
 				0
 			);
 		}
-		else if ( strcmp(op, "contains") == 0 ) {
+		else if (strcmp(op, "contains") == 0) {
 			int index_type = 0;
 			int type = 0;
-			if(PyInt_Check(py_arg3)) {
+			if (PyInt_Check(py_arg3)) {
 				index_type = PyInt_AsLong(py_arg3);
 			} else if (PyLong_Check(py_arg3)) {
 				index_type = PyLong_AsLongLong(py_arg3);
-                if(-1 == index_type) {
-                    as_error_update(&err, AEROSPIKE_ERR_PARAM, "integer value exceeds sys.maxsize");
-                    goto CLEANUP;
-                }
+				if (index_type == -1 && PyErr_Occurred()) {
+					if (PyErr_ExceptionMatches(PyExc_OverflowError)) {
+						as_error_update(&err, AEROSPIKE_ERR_PARAM, "integer value exceeds sys.maxsize");
+						goto CLEANUP;
+					}
+				}
 			}
 
-			if(PyInt_Check(py_arg4)) {
+			if (PyInt_Check(py_arg4)) {
 				type = PyInt_AsLong(py_arg4);
-			} else if ( PyLong_Check(py_arg4) ) {
+			} else if (PyLong_Check(py_arg4)) {
 				type = PyLong_AsLongLong(py_arg4);
-                if(-1 == type) {
-                    as_error_update(&err, AEROSPIKE_ERR_PARAM, "integer value exceeds sys.maxsize");
-                    goto CLEANUP;
-                }
+				if (type == -1 && PyErr_Occurred()) {
+					if (PyErr_ExceptionMatches(PyExc_OverflowError)) {
+						as_error_update(&err, AEROSPIKE_ERR_PARAM, "integer value exceeds sys.maxsize");
+						goto CLEANUP;
+					}
+				}
 			}
 			if ( (PyInt_Check(py_arg5) || PyLong_Check(py_arg5)) && type == 1) {
 				rc = AerospikeQuery_Where_Add(
@@ -384,16 +388,18 @@ AerospikeQuery * AerospikeQuery_Where(AerospikeQuery * self, PyObject * args)
 				rc = 1;
 			}
 		}
-		else if ( strcmp(op, "range") == 0 ) {
+		else if (strcmp(op, "range") == 0) {
 			int index_type = 0;
-			if(PyInt_Check(py_arg3)) {
+			if (PyInt_Check(py_arg3)) {
 				index_type = PyInt_AsLong(py_arg3);
 			} else if (PyLong_Check(py_arg3)) {
 				index_type = PyLong_AsLongLong(py_arg3);
-                if(-1 == index_type) {
-                    as_error_update(&err, AEROSPIKE_ERR_PARAM, "integer value exceeds sys.maxsize");
-                    goto CLEANUP;
-                }
+				if (index_type == -1 && PyErr_Occurred()) {
+					if (PyErr_ExceptionMatches(PyExc_OverflowError)) {
+						as_error_update(&err, AEROSPIKE_ERR_PARAM, "integer value exceeds sys.maxsize");
+						goto CLEANUP;
+					}
+				}
 			}
 
 			if ( PyInt_Check(py_arg4) || PyLong_Check(py_arg4)) {

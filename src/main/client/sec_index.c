@@ -502,14 +502,15 @@ PyObject * AerospikeClient_Index_List_Create(AerospikeClient * self, PyObject *a
 	}
 
 	long type = 0;
-	if(PyInt_Check(py_datatype)) {
+	if (PyInt_Check(py_datatype)) {
 		type = PyInt_AsLong(py_datatype);
-	} else if ( PyLong_Check(py_datatype) ) {
+	} else if (PyLong_Check(py_datatype)) {
 		type = PyLong_AsLong(py_datatype);
-        if(-1 == type) {
-		    as_error_update(&err, AEROSPIKE_ERR_PARAM, "integer value exceeds sys.maxsize");
-    		goto CLEANUP;
-        }
+		if (type == -1 && PyErr_Occurred()) {
+			if (PyErr_ExceptionMatches(PyExc_OverflowError)) {
+				as_error_update(&err, AEROSPIKE_ERR_PARAM, "integer value exceeds sys.maxsize");
+			}
+		}
 	}
 
 	// Invoke operation
@@ -640,14 +641,16 @@ PyObject * AerospikeClient_Index_Map_Keys_Create(AerospikeClient * self, PyObjec
 	}
 
 	long type = 0;
-	if(PyInt_Check(py_datatype)) {
+	if (PyInt_Check(py_datatype)) {
 		type = PyInt_AsLong(py_datatype);
-	} else if ( PyLong_Check(py_datatype) ) {
+	} else if (PyLong_Check(py_datatype)) {
 		type = PyLong_AsLong(py_datatype);
-        if(-1 == type) {
-		    as_error_update(&err, AEROSPIKE_ERR_PARAM, "integer value exceeds sys.maxsize");
-    		goto CLEANUP;
-        }
+		if (type == -1 && PyErr_Occurred()) {
+			if (PyErr_ExceptionMatches(PyExc_OverflowError)) {
+				as_error_update(&err, AEROSPIKE_ERR_PARAM, "integer value exceeds sys.maxsize");
+				goto CLEANUP;
+			}
+		}
 	}
 
 	// Invoke operation
@@ -779,14 +782,16 @@ PyObject * AerospikeClient_Index_Map_Values_Create(AerospikeClient * self, PyObj
 	}
 
 	int type = 0;
-	if(PyInt_Check(py_datatype)) {
+	if (PyInt_Check(py_datatype)) {
 		type = PyInt_AsLong(py_datatype);
-	} else if ( PyLong_Check(py_datatype) ) {
+	} else if (PyLong_Check(py_datatype)) {
 		type = PyLong_AsLongLong(py_datatype);
-        if(-1 == type) {
-		    as_error_update(&err, AEROSPIKE_ERR_PARAM, "integer value exceeds sys.maxsize");
-    		goto CLEANUP;
-        }
+		if (type == -1 && PyErr_Occurred()) {
+			if (PyErr_ExceptionMatches(PyExc_OverflowError)) {
+				as_error_update(&err, AEROSPIKE_ERR_PARAM, "integer value exceeds sys.maxsize");
+				goto CLEANUP;
+			}
+		}
 	}
 
 	// Invoke operation

@@ -391,9 +391,11 @@ PyObject *  AerospikeClient_Operate_Invoke(
 						as_operations_add_incr(&ops, bin, offset);
 					} else if ( PyLong_Check(py_value) ) {
 						offset = PyLong_AsLong(py_value);
-						if(-1 == offset) {
-							as_error_update(err, AEROSPIKE_ERR_PARAM, "integer value exceeds sys.maxsize");
-							goto CLEANUP;
+						if (offset == -1 && PyErr_Occurred()) {
+							if (PyErr_ExceptionMatches(PyExc_OverflowError)) {
+								as_error_update(err, AEROSPIKE_ERR_PARAM, "integer value exceeds sys.maxsize");
+								goto CLEANUP;
+							}
 						}
 						as_operations_add_incr(&ops, bin, offset);
 					} else if (PyFloat_Check(py_value)) {
