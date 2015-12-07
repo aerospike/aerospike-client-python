@@ -1159,7 +1159,7 @@ class TestPut(TestBaseClass):
         """
         key = ('test', 'demo', 1)
 
-        bins = {"no": -1}
+        bins = {"no": -1L}
 
         TestPut.client.put(key, bins)
 
