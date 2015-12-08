@@ -163,12 +163,12 @@ static void initialize_bin_for_strictypes(AerospikeClient *self, as_error *err, 
 		binop_bin->valuep = &binop_bin->value;
 	} else if (PyString_Check(py_value)) {
 		char * val = PyString_AsString(py_value);
-		as_string_init((as_string *) &binop_bin->value, val, free);
+		as_string_init((as_string *) &binop_bin->value, val, false);
 		binop_bin->valuep = &binop_bin->value;	
 	} else if (PyUnicode_Check(py_value)) {
 		PyObject *py_ustr1 = PyUnicode_AsUTF8String(py_value);
 		char * val = PyString_AsString(py_ustr1);
-		as_string_init((as_string *) &binop_bin->value, val, free);
+		as_string_init((as_string *) &binop_bin->value, val, false);
 		binop_bin->valuep = &binop_bin->value;	
 	} else if (PyFloat_Check(py_value)) {
 		int64_t val = PyFloat_AsDouble(py_value);
@@ -196,7 +196,7 @@ static void initialize_bin_for_strictypes(AerospikeClient *self, as_error *err, 
 		PyObject* py_data = PyObject_GenericGetAttr(py_value, PyString_FromString("geo_data"));
 		char *geo_value = PyString_AsString(AerospikeGeospatial_DoDumps(py_data, err));
 		if (aerospike_has_geo(self->as)) {
-			as_geojson_init((as_geojson *) &binop_bin->value, geo_value, free);
+			as_geojson_init((as_geojson *) &binop_bin->value, geo_value, false);
 			binop_bin->valuep = &binop_bin->value;
 		} else {
 			as_bytes *bytes;
