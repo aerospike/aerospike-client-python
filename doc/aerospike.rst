@@ -45,7 +45,7 @@ in an in-memory primary index.
         .. hlist::
             :columns: 1
 
-            * **hosts** a required :class:`list` of (address, port) tuples identifying the cluster. \
+            * **hosts** a required :class:`list` of (address, port) tuples identifying a node (or multiple nodes) in the cluster. \
               The client will connect to the first available node in the list, the *seed node*, \
               and will learn about the cluster and partition map from it.
             * **lua** an optional :class:`dict` containing the paths to two types of Lua modules
@@ -492,6 +492,12 @@ Miscellaneous
     A :class:`str` containing the module's version.
 
     .. versionadded:: 1.0.54
+
+.. data:: null
+
+    A value for distinguishing a server-side null from a Python :py:obj:`None` .
+
+    .. versionadded:: 1.0.57
 
 .. data:: UDF_TYPE_LUA
 

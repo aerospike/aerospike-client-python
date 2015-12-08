@@ -12,7 +12,7 @@ Scan Class --- :class:`Scan`
 .. class:: Scan
 
     The Scan object is used to return all the records in a specified set (which \
-    can be ommitted or ``None``). A Scan with a ``None`` set returns all the \
+    can be ommitted or :py:obj:`None`). A Scan with a :py:obj:`None` set returns all the \
     records in the namespace.
 
     The scan is invoked using either :meth:`foreach` or :meth:`results`. The \
