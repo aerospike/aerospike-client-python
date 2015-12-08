@@ -13,7 +13,7 @@ Query Class --- :class:`Query`
 
     The Query object created by calling :meth:`aerospike.Client.query` is used \
     for executing queries over a secondary index of a specified set (which \
-    can be omitted or ``None``). For queries, the ``None`` set contains those \
+    can be omitted or :py:obj:`None`). For queries, the :py:obj:`None` set contains those \
     records which are not part of any named set.
 
     The Query can (optionally) be assigned one of the \

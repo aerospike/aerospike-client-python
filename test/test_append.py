@@ -32,6 +32,9 @@ class TestAppend(object):
             key = ('test', 'demo', i)
             rec = {'name': 'name%s' % (str(i)), 'age': i}
             TestAppend.client.put(key, rec)
+        key = ('test', 'demo', 'bytearray_key')
+        TestAppend.client.put(key, {"bytearray_bin": bytearray("asd;as[d'as;d",
+            "utf-8")})
 
     def teardown_method(self, method):
         """
@@ -41,6 +44,8 @@ class TestAppend(object):
         for i in xrange(5):
             key = ('test', 'demo', i)
             TestAppend.client.remove(key)
+        key = ('test', 'demo', 'bytearray_key')
+        TestAppend.client.remove(key)
 
     def test_append_with_no_parameters(self):
         """
@@ -386,3 +391,27 @@ class TestAppend(object):
         except ClusterError as exception:
             assert exception.code == 11L
             assert exception.msg == 'No connection to aerospike cluster'
+
+    def test_append_with_bytearray(self):
+        """
+        Invoke append() with bytearray value
+        """
+        key = ('test', 'demo', 'bytearray_key')
+        TestAppend.client.append(key, "bytearray_bin", bytearray("abc"))
+
+        (key, meta, bins) = TestAppend.client.get(key)
+
+        assert bins == {'bytearray_bin': "asd;as[d'as;dabc"}
+
+    def test_append_with_bytearray_new_key(self):
+        """
+        Invoke append() with bytearray value with a new record(non-existing)
+        """
+        key = ('test', 'demo', 'bytearray_new')
+        TestAppend.client.append(key, "bytearray_bin", bytearray("asd;as[d'as;d", "utf-8"))
+
+        (key, meta, bins) = TestAppend.client.get(key)
+
+        assert bins == {'bytearray_bin': "asd;as[d'as;d"}
+
+        TestAppend.client.remove(key)

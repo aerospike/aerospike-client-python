@@ -139,7 +139,7 @@ as_status as_user_array_to_pyobject( as_error *err, as_user **users, PyObject **
 		Py_DECREF(py_roles);
 
 	}
-    *py_as_users = py_users;
+	*py_as_users = py_users;
 
 	return err->code;
 }
@@ -201,7 +201,7 @@ as_status as_role_array_to_pyobject( as_error *err, as_role **roles, PyObject **
 		Py_DECREF(py_privileges);
 
 	}
-    *py_as_roles = py_roles;
+	*py_as_roles = py_roles;
 
 	return err->code;
 }
@@ -217,7 +217,7 @@ as_status as_user_to_pyobject( as_error * err, as_user * user, PyObject ** py_as
 		goto END;
 	}
 
-    *py_as_user = py_roles;
+	*py_as_user = py_roles;
 
 END:
 	return err->code;
@@ -369,9 +369,9 @@ as_status pyobject_to_val(AerospikeClient * self, as_error * err, PyObject * py_
 	}
 	else if ( PyLong_Check(py_obj) ) {
 		int64_t l = (int64_t) PyLong_AsLongLong(py_obj);
-        if(-1 == l) {
-		    return as_error_update(err, AEROSPIKE_ERR_PARAM, "integer value exceeds sys.maxsize");
-        }
+		if(-1 == l) {
+			return as_error_update(err, AEROSPIKE_ERR_PARAM, "integer value exceeds sys.maxsize");
+		}
 		*val = (as_val *) as_integer_new(l);
 	}
 	else if ( PyString_Check(py_obj) ) {
@@ -384,21 +384,21 @@ as_status pyobject_to_val(AerospikeClient * self, as_error * err, PyObject * py_
 		*val = (as_val *) as_string_new(strdup(str), true);
 		Py_DECREF(py_ustr);
 	}
-    else if (!strcmp(py_obj->ob_type->tp_name, "aerospike.Geospatial")) {
-        PyObject *py_parameter = PyString_FromString("geo_data");
-        PyObject* py_data = PyObject_GenericGetAttr(py_obj, py_parameter);
-        Py_DECREF(py_parameter);
-        char *geo_value = PyString_AsString(AerospikeGeospatial_DoDumps(py_data, err));
-        if (aerospike_has_geo(self->as)) {
-            *val = (as_val *) as_geojson_new(geo_value, false);
-        } else {
-		    as_bytes *bytes;
-		    GET_BYTES_POOL(bytes, static_pool, err);
-		    py_result = serialize_based_on_serializer_policy(self, serializer_type,
-                &bytes, py_data, err);
-		    *val = (as_val *) bytes;
-        }
-    }
+	else if (!strcmp(py_obj->ob_type->tp_name, "aerospike.Geospatial")) {
+		PyObject *py_parameter = PyString_FromString("geo_data");
+		PyObject* py_data = PyObject_GenericGetAttr(py_obj, py_parameter);
+		Py_DECREF(py_parameter);
+		char *geo_value = PyString_AsString(AerospikeGeospatial_DoDumps(py_data, err));
+		if (aerospike_has_geo(self->as)) {
+			*val = (as_val *) as_geojson_new(geo_value, false);
+		} else {
+			as_bytes *bytes;
+			GET_BYTES_POOL(bytes, static_pool, err);
+			py_result = serialize_based_on_serializer_policy(self, serializer_type,
+				&bytes, py_data, err);
+			*val = (as_val *) bytes;
+		}
+	}
 	else if ( PyByteArray_Check(py_obj) ) {
 		as_bytes *bytes;
 		GET_BYTES_POOL(bytes, static_pool, err);
@@ -419,19 +419,19 @@ as_status pyobject_to_val(AerospikeClient * self, as_error * err, PyObject * py_
 		if ( err->code == AEROSPIKE_OK ) {
 			*val = (as_val *) map;
 		}
-    } else if ( Py_None == py_obj ) {
+	} else if ( Py_None == py_obj ) {
 		*val = as_val_reserve(&as_nil);
 	} else {
-        if (aerospike_has_double(self->as) && PyFloat_Check(py_obj)) {
-            double d = PyFloat_AsDouble(py_obj);
-		    *val = (as_val *) as_double_new(d);
-        } else {
-		    as_bytes *bytes;
-		    GET_BYTES_POOL(bytes, static_pool, err);
-		    py_result = serialize_based_on_serializer_policy(self, serializer_type,
-                &bytes, py_obj, err);
-		    *val = (as_val *) bytes;
-        }
+		if (aerospike_has_double(self->as) && PyFloat_Check(py_obj)) {
+			double d = PyFloat_AsDouble(py_obj);
+			*val = (as_val *) as_double_new(d);
+		} else {
+			as_bytes *bytes;
+			GET_BYTES_POOL(bytes, static_pool, err);
+			py_result = serialize_based_on_serializer_policy(self, serializer_type,
+				&bytes, py_obj, err);
+			*val = (as_val *) bytes;
+		}
 	}
 
 	if (py_result) {
@@ -471,63 +471,59 @@ as_status pyobject_to_record(AerospikeClient * self, as_error * err, PyObject * 
 				name = PyString_AsString(py_ukey);
 			} else if ( PyString_Check(key) ) {
 				name = PyString_AsString(key);
-            } else {
+			} else {
 				return as_error_update(err, AEROSPIKE_ERR_CLIENT, "A bin name must be a string or unicode string.");
 			}
 
-			if (strlen(name) > AS_BIN_NAME_MAX_LEN) {
-				if (py_ukey) {
-					Py_DECREF(py_ukey);
-					py_ukey = NULL;
+			if (self->strict_types) {
+				if (strlen(name) > AS_BIN_NAME_MAX_LEN) {
+					if (py_ukey) {
+						Py_DECREF(py_ukey);
+						py_ukey = NULL;
+					}
+					return as_error_update(err, AEROSPIKE_ERR_BIN_NAME, "A bin name should not exceed 14 characters limit");
 				}
-				return as_error_update(err, AEROSPIKE_ERR_BIN_NAME, "A bin name should not exceed 14 characters limit");
 			}
 
 			if ( !value ) {
 				// this should never happen, but if it did...
 				return as_error_update(err, AEROSPIKE_ERR_CLIENT, "record is null");
-			}
-			else if ( PyInt_Check(value) ) {
+			} else if ( PyInt_Check(value) ) {
 				int64_t val = (int64_t) PyInt_AsLong(value);
 				ret_val = as_record_set_int64(rec, name, val);
-			}
-			else if ( PyLong_Check(value) ) {
+			} else if ( PyLong_Check(value) ) {
 				int64_t val = (int64_t) PyLong_AsLongLong(value);
-                if(-1 == val) {
-                    return as_error_update(err, AEROSPIKE_ERR_PARAM, "integer value exceeds sys.maxsize");
-                }
+				if(-1 == val) {
+					return as_error_update(err, AEROSPIKE_ERR_PARAM, "integer value exceeds sys.maxsize");
+				}
 				ret_val = as_record_set_int64(rec, name, val);
-			}
-            else if (!strcmp(value->ob_type->tp_name, "aerospike.Geospatial")) {
-                PyObject* py_data = PyObject_GenericGetAttr(value, PyString_FromString("geo_data"));
-                char *geo_value = PyString_AsString(AerospikeGeospatial_DoDumps(py_data, err));
-                if (aerospike_has_geo(self->as)) {
-                    ret_val = as_record_set_geojson_str(rec, name, geo_value);
-                } else {
-			    	as_bytes *bytes;
-				    GET_BYTES_POOL(bytes, static_pool, err);
-				    py_result = serialize_based_on_serializer_policy(self, serializer_type,
+			} else if (!strcmp(value->ob_type->tp_name, "aerospike.Geospatial")) {
+				PyObject* py_data = PyObject_GenericGetAttr(value, PyString_FromString("geo_data"));
+				char *geo_value = PyString_AsString(AerospikeGeospatial_DoDumps(py_data, err));
+				if (aerospike_has_geo(self->as)) {
+					ret_val = as_record_set_geojson_str(rec, name, geo_value);
+				} else {
+					as_bytes *bytes;
+					GET_BYTES_POOL(bytes, static_pool, err);
+					py_result = serialize_based_on_serializer_policy(self, serializer_type,
 						&bytes, py_data, err);
-				    ret_val = as_record_set_bytes(rec, name, bytes);
-                }
-            }
-			else if ( PyUnicode_Check(value) ) {
+					ret_val = as_record_set_bytes(rec, name, bytes);
+				}
+			} else if ( PyUnicode_Check(value) ) {
 				PyObject * py_ustr = PyUnicode_AsUTF8String(value);
 				char * val = PyString_AsString(py_ustr);
 				ret_val = as_record_set_strp(rec, name, strdup(val), true);
 				Py_DECREF(py_ustr);
-			}
-			else if ( PyString_Check(value) ) {
+			} else if ( PyString_Check(value) ) {
 				char * val = PyString_AsString(value);
 				ret_val = as_record_set_strp(rec, name, val, false);
-            } else if ( PyByteArray_Check(value) ) {
+			} else if ( PyByteArray_Check(value) ) {
 				as_bytes *bytes;
 				GET_BYTES_POOL(bytes, static_pool, err);
 				py_result = serialize_based_on_serializer_policy(self, serializer_type,
 						&bytes, value, err);
 				ret_val = as_record_set_bytes(rec, name, bytes);
-			}
-			else if ( PyList_Check(value) ) {
+			} else if ( PyList_Check(value) ) {
 				// as_list
 				as_list * list = NULL;
 				pyobject_to_list(self, err, value, &list, static_pool, serializer_type);
@@ -535,8 +531,7 @@ as_status pyobject_to_record(AerospikeClient * self, as_error * err, PyObject * 
 					break;
 				}
 				ret_val = as_record_set_list(rec, name, list);
-			}
-			else if ( PyDict_Check(value) ) {
+			} else if ( PyDict_Check(value) ) {
 				// as_map
 				as_map * map = NULL;
 				pyobject_to_map(self, err, value, &map, static_pool, serializer_type);
@@ -544,18 +539,19 @@ as_status pyobject_to_record(AerospikeClient * self, as_error * err, PyObject * 
 					break;
 				}
 				ret_val = as_record_set_map(rec, name, map);
-			}
-			else {
-                if (aerospike_has_double(self->as) && PyFloat_Check(value)) {
-                    double val = PyFloat_AsDouble(value);
-                    ret_val = as_record_set_double(rec, name, val);
-                } else {
-			    	as_bytes *bytes;
-				    GET_BYTES_POOL(bytes, static_pool, err);
-				    py_result = serialize_based_on_serializer_policy(self, serializer_type,
+			} else if (!strcmp(value->ob_type->tp_name, "aerospike.null")) {
+				ret_val = as_record_set_nil(rec, name);
+			} else {
+				if (aerospike_has_double(self->as) && PyFloat_Check(value)) {
+					double val = PyFloat_AsDouble(value);
+					ret_val = as_record_set_double(rec, name, val);
+				} else {
+					as_bytes *bytes;
+					GET_BYTES_POOL(bytes, static_pool, err);
+					py_result = serialize_based_on_serializer_policy(self, serializer_type,
 						&bytes, value, err);
-				    ret_val = as_record_set_bytes(rec, name, bytes);
-                }
+					ret_val = as_record_set_bytes(rec, name, bytes);
+				}
 			}
 
 			if (py_ukey){
@@ -563,8 +559,10 @@ as_status pyobject_to_record(AerospikeClient * self, as_error * err, PyObject * 
 				py_ukey = NULL;
 			}
 
-			if (!ret_val) {
-				return as_error_update(err, AEROSPIKE_ERR_BIN_NAME, "Unable to set key-value pair");
+			if (self->strict_types) {
+				if (!ret_val) {
+					return as_error_update(err, AEROSPIKE_ERR_BIN_NAME, "Unable to set key-value pair");
+				}
 			}
 		}
 
@@ -578,9 +576,9 @@ as_status pyobject_to_record(AerospikeClient * self, as_error * err, PyObject * 
 				}
 				else if ( PyLong_Check(py_ttl) ) {
 					rec->ttl = (uint32_t) PyLong_AsLongLong(py_ttl);
-                    if((uint32_t)-1 == rec->ttl) {
-            		    as_error_update(err, AEROSPIKE_ERR_PARAM, "integer value exceeds sys.maxsize");
-                    }
+					if((uint32_t)-1 == rec->ttl) {
+						as_error_update(err, AEROSPIKE_ERR_PARAM, "integer value exceeds sys.maxsize");
+					}
 				} else {
 					as_error_update(err, AEROSPIKE_ERR_PARAM, "TTL should be an int or long");
 				}
@@ -592,9 +590,9 @@ as_status pyobject_to_record(AerospikeClient * self, as_error * err, PyObject * 
 				}
 				else if ( PyLong_Check(py_gen) ) {
 					rec->gen = (uint16_t) PyLong_AsLongLong(py_gen);
-                    if((uint32_t)-1 == rec->ttl) {
-            		    as_error_update(err, AEROSPIKE_ERR_PARAM, "integer value exceeds sys.maxsize");
-                    }
+					if ((uint32_t)-1 == rec->ttl) {
+						as_error_update(err, AEROSPIKE_ERR_PARAM, "integer value exceeds sys.maxsize");
+					}
 				} else {
 					as_error_update(err, AEROSPIKE_ERR_PARAM, "Generation should be an int or long");
 				}
@@ -632,23 +630,23 @@ as_status pyobject_to_astype_write(AerospikeClient * self, as_error * err, char 
 	else if ( PyLong_Check(py_value) ) {
 		int64_t l = (int64_t) PyLong_AsLongLong(py_value);
 		*val = (as_val *) as_integer_new(l);
-    } else if ( PyString_Check(py_value) ) {
+	} else if ( PyString_Check(py_value) ) {
 		char * s = PyString_AsString(py_value);
 		*val = (as_val *) as_string_new(s, false);
-    } else if (!strcmp(py_value->ob_type->tp_name, "aerospike.Geospatial")) {
-        PyObject *py_parameter = PyString_FromString("geo_data");
-        PyObject* py_data = PyObject_GenericGetAttr(py_value, py_parameter);
-        Py_DECREF(py_parameter);
-        char *geo_value = PyString_AsString(AerospikeGeospatial_DoDumps(py_data, err));
-        if (aerospike_has_geo(self->as)) {
-            *val = (as_val *) as_geojson_new(geo_value, false);
-        } else {
-		    as_bytes *bytes;
-		    GET_BYTES_POOL(bytes, static_pool, err);
-		    py_result = serialize_based_on_serializer_policy(self, serializer_type,
+	} else if (!strcmp(py_value->ob_type->tp_name, "aerospike.Geospatial")) {
+		PyObject *py_parameter = PyString_FromString("geo_data");
+		PyObject* py_data = PyObject_GenericGetAttr(py_value, py_parameter);
+		Py_DECREF(py_parameter);
+		char *geo_value = PyString_AsString(AerospikeGeospatial_DoDumps(py_data, err));
+		if (aerospike_has_geo(self->as)) {
+			*val = (as_val *) as_geojson_new(geo_value, false);
+		} else {
+			as_bytes *bytes;
+			GET_BYTES_POOL(bytes, static_pool, err);
+			py_result = serialize_based_on_serializer_policy(self, serializer_type,
 				&bytes, py_data, err);
-		    *val = (as_val *) bytes;
-        }
+			*val = (as_val *) bytes;
+		}
 	} else if ( PyUnicode_Check(py_value) ) {
 		PyObject * py_ustr = PyUnicode_AsUTF8String(py_value);
 		char * str = PyString_AsString(py_ustr);
@@ -670,17 +668,19 @@ as_status pyobject_to_astype_write(AerospikeClient * self, as_error * err, char 
 		if ( err->code == AEROSPIKE_OK ) {
 			*val = (as_val *) map;
 		}
+	} else if (!strcmp(py_value->ob_type->tp_name, "aerospike.null")) {
+		*val = (as_val *) &as_nil;
 	} else {
-        if (aerospike_has_double(self->as) && PyFloat_Check(py_value)) {
-            double d = PyFloat_AsDouble(py_value);
-            *val = (as_val *) as_double_new(d);
-        } else {
-		    as_bytes *bytes;
-		    GET_BYTES_POOL(bytes, static_pool, err);
-		    py_result = serialize_based_on_serializer_policy(self, serializer_type,
+		if (aerospike_has_double(self->as) && PyFloat_Check(py_value)) {
+			double d = PyFloat_AsDouble(py_value);
+			*val = (as_val *) as_double_new(d);
+		} else {
+			as_bytes *bytes;
+			GET_BYTES_POOL(bytes, static_pool, err);
+			py_result = serialize_based_on_serializer_policy(self, serializer_type,
 				&bytes, py_value, err);
-		    *val = (as_val *) bytes;
-        }
+			*val = (as_val *) bytes;
+		}
 	}
 
 	if (py_result) {

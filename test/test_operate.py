@@ -24,6 +24,12 @@ class TestOperate(object):
         else:
             TestOperate.client = aerospike.client(config).connect(user,
                                                                   password)
+        config_strict_types = {'hosts': hostlist, 'strict_types': False}
+        if user == None and password == None:
+            TestOperate.client_strict_types = aerospike.client(config_strict_types).connect()
+        else:
+            TestOperate.client_strict_types = aerospike.client(config_strict_types).connect(user, password)
+
         TestOperate.skip_old_server = True
         versioninfo = TestOperate.client.info('version')
         for keys in versioninfo:
@@ -35,8 +41,11 @@ class TestOperate(object):
 
     def teardown_class(cls):
         TestOperate.client.close()
+        TestOperate.client_strict_types.close()
 
     def setup_method(self, method):
+        TestOperate.keys = []
+
         for i in xrange(5):
             key = ('test', 'demo', i)
             rec = {'name': 'name%s' % (str(i)), 'age': i}
@@ -45,12 +54,30 @@ class TestOperate(object):
         rec = {"age": 6.3}
         TestOperate.client.put(key, rec)
 
+        key = ('test', 'demo', 'bytearray_key')
+        rec = {"bytearray_bin": bytearray("asd;as[d'as;d", "utf-8")}
+        TestOperate.client.put(key, rec)
+
+        TestOperate.keys.append(key)
+
+        key = ('test', 'demo', 'existing_key')
+        rec = {"dict": {"a": 1}, "bytearray": bytearray("abc"), "float": 3.4,
+                "list": ['a']}
+        TestOperate.client.put(key, rec)
+
+        TestOperate.keys.append(key)
+
     def teardown_method(self, method):
         """
         Teardoen method.
         """
         for i in xrange(5):
             key = ('test', 'demo', i)
+            try:
+                TestOperate.client.remove(key)
+            except RecordNotFound as exception:
+                pass
+        for key in TestOperate.keys:
             try:
                 TestOperate.client.remove(key)
             except RecordNotFound as exception:
@@ -211,6 +238,71 @@ class TestOperate(object):
         assert key == ('test', 'demo', 1, bytearray(
             b'\xb7\xf4\xb88\x89\xe2\xdag\xdeh>\x1d\xf6\x91\x9a\x1e\xac\xc4F\xc8')
                       )
+
+    def test_operate_touch_operation_nobin_withvalue(self):
+        """
+        Invoke operate() with touch value. No bin specified. Value is specified
+        """
+        key = ('test', 'demo', 1)
+        list = [
+            {"op": aerospike.OPERATOR_TOUCH,
+             "val": 4000}
+        ]
+
+        status = TestOperate.client.operate(key, list)
+
+        (key, meta) = TestOperate.client.exists(key)
+
+        assert meta['ttl'] != None
+
+    def test_operate_touch_operation_withbin_withvalue(self):
+        """
+        Invoke operate() with touch operation. Bin and value both specified
+        """
+        key = ('test', 'demo', 1)
+        list = [
+            {"op": aerospike.OPERATOR_TOUCH,
+             "bin": "age",
+             "val": 4000}
+        ]
+
+        TestOperate.client.operate(key, list)
+
+        (key, meta) = TestOperate.client.exists(key)
+
+        assert meta['ttl'] != None
+
+    def test_operate_touch_operation_withbin_novalue(self):
+        """
+        Invoke operate() with touch operation. Bin is specified but no value
+        specified
+        """
+        key = ('test', 'demo', 1)
+        list = [
+            {"op": aerospike.OPERATOR_TOUCH,
+             "bin": "age"}
+        ]
+
+        status = TestOperate.client.operate(key, list)
+
+        (key, meta) = TestOperate.client.exists(key)
+
+        assert meta['ttl'] != None
+
+    def test_operate_touch_operation_nobin_novalue(self):
+        """
+        Invoke operate() with touch operation. Bin and value not specified
+        """
+        key = ('test', 'demo', 1)
+        list = [
+            {"op": aerospike.OPERATOR_TOUCH}
+        ]
+
+        status = TestOperate.client.operate(key, list)
+
+        (key, meta) = TestOperate.client.exists(key)
+
+        assert meta['ttl'] != None
 
     def test_operate_with_policy_gen_EQ_not_equal(self):
         """
@@ -676,3 +768,490 @@ class TestOperate(object):
         key, meta, bins = TestOperate.client.operate(key, list)
 
         assert bins == {'asd[;asjk': 'ram'}
+
+    def test_operate_with_operatorappend_valbytearray(self):
+        """
+        Invoke operate() with operator as append and value is a bytearray
+        """
+        key = ('test', 'demo', 'bytearray_key')
+        list = [
+            {"op": aerospike.OPERATOR_APPEND,
+             "bin": "bytearray_bin",
+             "val": bytearray("abc")},
+            {"op": aerospike.OPERATOR_READ,
+             "bin": "bytearray_bin"}
+        ]
+
+        key, meta, bins = TestOperate.client.operate(key, list)
+
+        assert bins == {'bytearray_bin': "asd;as[d'as;dabc"}
+
+    def test_operate_with_operatorappend_valbytearray_newrecord(self):
+        """
+        Invoke operate() with operator as append and value is a bytearray and a
+        new record(does not exist)
+        """
+        key = ('test', 'demo', 'bytearray_new')
+        list = [
+            {"op": aerospike.OPERATOR_APPEND,
+             "bin": "bytearray_bin",
+             "val": bytearray("asd;as[d'as;d", "utf-8")},
+            {"op": aerospike.OPERATOR_READ,
+             "bin": "bytearray_bin"}
+        ]
+
+        key, meta, bins = TestOperate.client.operate(key, list)
+
+        assert bins == {'bytearray_bin': "asd;as[d'as;d"}
+
+        TestOperate.client.remove(key)
+
+    def test_operate_with_operatorprepend_valbytearray(self):
+        """
+        Invoke operate() with operator as prepend and value is a bytearray
+        """
+        key = ('test', 'demo', 'bytearray_key')
+        list = [
+            {"op": aerospike.OPERATOR_PREPEND,
+             "bin": "bytearray_bin",
+             "val": bytearray("abc")},
+            {"op": aerospike.OPERATOR_READ,
+             "bin": "bytearray_bin"}
+        ]
+
+        key, meta, bins = TestOperate.client.operate(key, list)
+
+        assert bins == {'bytearray_bin': "abcasd;as[d'as;d"}
+
+    def test_operate_with_operatorprepend_valbytearray_newrecord(self):
+        """
+        Invoke operate() with operator as prepend and value is a bytearray and a
+        new record(does not exist)
+        """
+        key = ('test', 'demo', 'bytearray_new')
+        list = [
+            {"op": aerospike.OPERATOR_PREPEND,
+             "bin": "bytearray_bin",
+             "val": bytearray("asd;as[d'as;d", "utf-8")},
+            {"op": aerospike.OPERATOR_READ,
+             "bin": "bytearray_bin"}
+        ]
+
+        key, meta, bins = TestOperate.client.operate(key, list)
+
+        assert bins == {'bytearray_bin': "asd;as[d'as;d"}
+
+        TestOperate.client.remove(key)
+
+    def test_operate_write_set_to_aerospike_null(self):
+		"""
+        	Invoke operate() with write command with bin set to aerospike_null
+		"""
+		key = ('test', 'demo', 'null_record')
+
+		bins = {"name": "John", "no": 3}
+
+		assert 0 == TestOperate.client.put(key, bins)
+
+		(key, meta, bins) = TestOperate.client.get(key)
+
+		assert {"name": "John", "no": 3} == bins
+
+		list = [
+			{
+				"op" : aerospike.OPERATOR_WRITE,
+				"bin": "no",
+				"val": aerospike.null
+			},
+			{
+				"op": aerospike.OPERATOR_READ,
+				"bin": "no"
+			}
+        ]	
+
+		(key, meta, bins) = TestOperate.client.operate(key, list)
+
+		assert {} == bins
+
+		TestOperate.client.remove(key)
+
+    def test_operate_prepend_with_int_new_record(self):
+        """
+            Invoke operate() with prepend command on a new record
+	    """
+        key = ('test', 'demo', 'prepend_int')
+
+        list = [
+            {
+                "op" : aerospike.OPERATOR_PREPEND,
+                "bin": "age",
+                "val": 4
+            },
+            {
+                "op": aerospike.OPERATOR_READ,
+                "bin": "age"
+            }
+        ]	
+
+        (key, meta, bins) = TestOperate.client_strict_types.operate(key, list)
+
+        assert {'age': 4} == bins
+
+        TestOperate.client_strict_types.remove(key)
+
+    def test_operate_prepend_with_int_existing_record(self):
+        """
+            Invoke operate() with prepend command on a existing record
+        """
+        key = ('test', 'demo', 1)
+
+        list = [
+            {
+                "op" : aerospike.OPERATOR_PREPEND,
+                "bin": "age",
+                "val": 4
+            },
+            {
+                "op": aerospike.OPERATOR_READ,
+                "bin": "age"
+            }
+        ]	
+
+        try:
+            (key, meta, bins) = TestOperate.client_strict_types.operate(key, list)
+
+        except BinIncompatibleType as exception:
+            assert exception.code == 12L
+
+        TestOperate.client_strict_types.remove(key)
+
+    def test_operate_prepend_with_list_existing_record(self):
+        """
+            Invoke operate() with prepend command on a existing record
+        """
+        key = ('test', 'demo', 'existing_key')
+
+        (key, old_meta) = TestOperate.client_strict_types.exists(key)
+
+        list = [
+            {
+                "op" : aerospike.OPERATOR_PREPEND,
+                "bin": "list",
+                "val": ['c']
+            },
+            {
+                "op": aerospike.OPERATOR_READ,
+                "bin": "list"
+            }
+        ]	
+
+        (key, meta, bins) = TestOperate.client_strict_types.operate(key, list)
+
+        assert bins == {'list': ['c']}
+        assert meta['gen'] == old_meta['gen'] + 1
+
+        TestOperate.client_strict_types.remove(key)
+
+    def test_operate_append_with_dict_new_record(self):
+        """
+            Invoke operate() with append command on a new record
+	    """
+        key = ('test', 'demo', 'append_dict')
+
+        list = [
+            {
+                "op" : aerospike.OPERATOR_APPEND,
+                "bin": "dict",
+                "val": {"a": 1, "b": 2}
+            },
+            {
+                "op": aerospike.OPERATOR_READ,
+                "bin": "dict"
+            }
+        ]	
+
+        (key, meta, bins) = TestOperate.client_strict_types.operate(key, list)
+
+        assert {'dict': {"a": 1, "b": 2}} == bins
+
+        TestOperate.client_strict_types.remove(key)
+
+    def test_operate_append_with_dict_existing_record(self):
+        """
+            Invoke operate() with append command on a existing record
+        """
+        key = ('test', 'demo', 'existing_key')
+
+        (key, old_meta) = TestOperate.client_strict_types.exists(key)
+
+        list = [
+            {
+                "op" : aerospike.OPERATOR_APPEND,
+                "bin": "dict",
+                "val": {"c": 2}
+            },
+            {
+                "op": aerospike.OPERATOR_READ,
+                "bin": "dict"
+            }
+        ]	
+
+        (key, meta, bins) = TestOperate.client_strict_types.operate(key, list)
+
+        assert {'dict': {"a": 1}} == bins
+        assert meta['gen'] == old_meta['gen'] + 1
+
+        TestOperate.client_strict_types.remove(key)
+
+    def test_operate_append_with_float_existing_record(self):
+        """
+            Invoke operate() with append command on a existing record
+        """
+        key = ('test', 'demo', 'existing_key')
+
+        list = [
+            {
+                "op" : aerospike.OPERATOR_APPEND,
+                "bin": "float",
+                "val": 3.4
+            },
+            {
+                "op": aerospike.OPERATOR_READ,
+                "bin": "float"
+            }
+        ]	
+
+        try:
+            (key, meta, bins) = TestOperate.client_strict_types.operate(key, list)
+
+        except BinIncompatibleType as exception:
+            assert exception.code == 12L
+
+        TestOperate.client_strict_types.remove(key)
+
+    def test_operate_incr_with_string_new_record(self):
+        """
+            Invoke operate() with incr command on a new record
+	    """
+        key = ('test', 'demo', 'incr_string')
+
+        list = [
+            {
+                "op" : aerospike.OPERATOR_INCR,
+                "bin": "name",
+                "val": "aerospike"
+            },
+            {
+                "op": aerospike.OPERATOR_READ,
+                "bin": "name"
+            }
+        ]	
+
+        (key, meta, bins) = TestOperate.client_strict_types.operate(key, list)
+
+        assert {'name': 'aerospike'} == bins
+
+        TestOperate.client_strict_types.remove(key)
+
+    def test_operate_incr_with_string_existing_record(self):
+        """
+            Invoke operate() with incr command on a existing record
+        """
+        key = ('test', 'demo', 1)
+
+        list = [
+            {
+                "op" : aerospike.OPERATOR_INCR,
+                "bin": "name",
+                "val": "aerospike"
+            },
+            {
+                "op": aerospike.OPERATOR_READ,
+                "bin": "name"
+            }
+        ]	
+
+        try:
+            (key, meta, bins) = TestOperate.client_strict_types.operate(key, list)
+
+        except BinIncompatibleType as exception:
+            assert exception.code == 12L
+
+        TestOperate.client_strict_types.remove(key)
+
+    def test_operate_incr_with_bytearray_existing_record(self):
+        """
+            Invoke operate() with incr command on a new record
+	    """
+        key = ('test', 'demo', 'existing_key')
+
+        list = [
+            {
+                "op" : aerospike.OPERATOR_INCR,
+                "bin": "bytearray",
+                "val": bytearray("abc")
+            },
+            {
+                "op": aerospike.OPERATOR_READ,
+                "bin": "bytearray"
+            }
+        ]	
+
+        try:
+            (key, meta, bins) = TestOperate.client_strict_types.operate(key, list)
+
+        except BinIncompatibleType as exception:
+            assert exception.code == 12L
+
+        TestOperate.client_strict_types.remove(key)
+
+    def test_operate_incr_with_geospatial_new_record(self):
+        """
+            Invoke operate() with incr command on a new record
+	    """
+        key = ('test', 'demo', 'geospatial_key')
+
+        list = [
+            {
+                "op" : aerospike.OPERATOR_INCR,
+                "bin": "geospatial",
+                "val": aerospike.GeoJSON({"type": "Point", "coordinates":
+                    [42.34, 58.62] })
+            },
+            {
+                "op": aerospike.OPERATOR_READ,
+                "bin": "geospatial"
+            }
+        ]	
+
+        (key, meta, bins) = TestOperate.client_strict_types.operate(key, list)
+
+        assert bins == {'geospatial': {'coordinates': [42.34, 58.62], 'type':
+            'Point'}}
+        TestOperate.client_strict_types.remove(key)
+
+    def test_operate_with_bin_length_extra(self):
+        """
+        Invoke operate() with bin length extra. Strict types enabled
+        """
+        key = ('test', 'demo', 1)
+
+        max_length = 'a'
+        for i in xrange(20):
+            max_length = max_length + 'a'
+
+        list = [
+            {"op": aerospike.OPERATOR_PREPEND,
+             "bin": "name",
+             "val": u"ram"},
+            {"op": aerospike.OPERATOR_INCR,
+             "bin": max_length,
+             "val": 3}, {"op": aerospike.OPERATOR_READ,
+                         "bin": "name"}
+        ]
+
+        try:
+            key, meta, bins = TestOperate.client.operate(key, list)
+
+        except BinNameError as exception:
+            assert exception.code == 21L
+
+    def test_operate_with_bin_length_extra_nostricttypes(self):
+        """
+        Invoke operate() with bin length extra. Strict types disabled
+        """
+        key = ('test', 'demo', 1)
+
+        max_length = 'a'
+        for i in xrange(20):
+            max_length = max_length + 'a'
+
+        list = [
+            {"op": aerospike.OPERATOR_PREPEND,
+             "bin": "name",
+             "val": u"ram"},
+            {"op": aerospike.OPERATOR_INCR,
+             "bin": max_length,
+             "val": 3}
+        ]
+
+        TestOperate.client_strict_types.operate(key, list)
+
+        (key, meta, bins) = TestOperate.client_strict_types.get(key)
+
+        assert bins == {"name": "ramname1", "age": 1}
+
+    def test_operate_with_command_invalid(self):
+        """
+        Invoke operate() with an invalid command. Strict types enabled
+        """
+        key = ('test', 'demo', 1)
+
+        list = [
+            {"op": aerospike.OPERATOR_PREPEND,
+             "bin": "name",
+             "val": u"ram"},
+            {"op": 3,
+             "bin": "age",
+             "val": 3}, {"op": aerospike.OPERATOR_READ,
+                         "bin": "name"}
+        ]
+
+        try:
+            key, meta, bins = TestOperate.client.operate(key, list)
+
+        except ParamError as exception:
+            assert exception.code == -2L
+
+    def test_operate_with_command_invalid_nostricttypes(self):
+        """
+        Invoke operate() with an invalid command. Strict types disabled
+        """
+        key = ('test', 'demo', 1)
+
+        list = [
+            {"op": aerospike.OPERATOR_PREPEND,
+             "bin": "name",
+             "val": u"ram"},
+            {"op": 3,
+             "bin": "age",
+             "val": 3}, {"op": aerospike.OPERATOR_READ,
+                         "bin": "name"}
+        ]
+
+        key, meta, bins = TestOperate.client_strict_types.operate(key, list)
+
+        assert bins == {'name': 'ramname1'}
+
+    def test_operate_prepend_set_to_aerospike_null(self):
+        """
+            Invoke operate() with prepend command with bin set to aerospike_null
+        """
+        key = ('test', 'demo', 'null_record')
+
+        bins = {"name": "John", "no": 3}
+
+        assert 0 == TestOperate.client.put(key, bins)
+
+        (key, meta, bins) = TestOperate.client.get(key)
+
+        assert {"name": "John", "no": 3} == bins
+
+        list = [
+            {
+                "op" : aerospike.OPERATOR_PREPEND,
+                "bin": "no",
+                "val": aerospike.null
+            },
+            {
+                "op": aerospike.OPERATOR_READ,
+                "bin": "no"
+            }
+        ]	
+
+        try:
+            (key, meta, bins) = TestOperate.client.operate(key, list)
+
+        except InvalidRequest as exception:
+            assert exception.code == 4
+        TestOperate.client.remove(key)
