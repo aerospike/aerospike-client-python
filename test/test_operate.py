@@ -239,6 +239,71 @@ class TestOperate(object):
             b'\xb7\xf4\xb88\x89\xe2\xdag\xdeh>\x1d\xf6\x91\x9a\x1e\xac\xc4F\xc8')
                       )
 
+    def test_operate_touch_operation_nobin_withvalue(self):
+        """
+        Invoke operate() with touch value. No bin specified. Value is specified
+        """
+        key = ('test', 'demo', 1)
+        list = [
+            {"op": aerospike.OPERATOR_TOUCH,
+             "val": 4000}
+        ]
+
+        status = TestOperate.client.operate(key, list)
+
+        (key, meta) = TestOperate.client.exists(key)
+
+        assert meta['ttl'] != None
+
+    def test_operate_touch_operation_withbin_withvalue(self):
+        """
+        Invoke operate() with touch operation. Bin and value both specified
+        """
+        key = ('test', 'demo', 1)
+        list = [
+            {"op": aerospike.OPERATOR_TOUCH,
+             "bin": "age",
+             "val": 4000}
+        ]
+
+        TestOperate.client.operate(key, list)
+
+        (key, meta) = TestOperate.client.exists(key)
+
+        assert meta['ttl'] != None
+
+    def test_operate_touch_operation_withbin_novalue(self):
+        """
+        Invoke operate() with touch operation. Bin is specified but no value
+        specified
+        """
+        key = ('test', 'demo', 1)
+        list = [
+            {"op": aerospike.OPERATOR_TOUCH,
+             "bin": "age"}
+        ]
+
+        status = TestOperate.client.operate(key, list)
+
+        (key, meta) = TestOperate.client.exists(key)
+
+        assert meta['ttl'] != None
+
+    def test_operate_touch_operation_nobin_novalue(self):
+        """
+        Invoke operate() with touch operation. Bin and value not specified
+        """
+        key = ('test', 'demo', 1)
+        list = [
+            {"op": aerospike.OPERATOR_TOUCH}
+        ]
+
+        status = TestOperate.client.operate(key, list)
+
+        (key, meta) = TestOperate.client.exists(key)
+
+        assert meta['ttl'] != None
+
     def test_operate_with_policy_gen_EQ_not_equal(self):
         """
         Invoke operate() with gen not equal.
@@ -686,6 +751,23 @@ class TestOperate(object):
             assert exception.msg == "Unsupported operand type(s) for +: only 'int' allowed"
 
         TestOperate.client.remove(key)
+
+    def test_operate_with_bin_bytearray_positive(self):
+        """
+        Invoke operate() with correct parameters
+        """
+        key = ('test', 'demo', 1)
+        list = [
+            {"op": aerospike.OPERATOR_PREPEND,
+             "bin": bytearray("asd[;asjk", "utf-8"),
+             "val": u"ram"},
+            {"op": aerospike.OPERATOR_READ,
+                "bin": bytearray("asd[;asjk", "utf-8")}
+        ]
+
+        key, meta, bins = TestOperate.client.operate(key, list)
+
+        assert bins == {'asd[;asjk': 'ram'}
 
     def test_operate_with_operatorappend_valbytearray(self):
         """
