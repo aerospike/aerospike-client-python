@@ -61,8 +61,9 @@ static int query_where_add(as_query **query, as_predicate_type predicate, as_ind
 					bin = PyString_AsString(py_ubin);
 				} else if (PyString_Check(py_bin) ){
 					bin = PyString_AsString(py_bin);
-				}
-				else {
+				} else if (PyByteArray_Check(py_bin)) {
+                    bin = PyByteArray_AsString(py_bin);
+                } else {
 					return 1;
 				}
 
@@ -99,8 +100,9 @@ static int query_where_add(as_query **query, as_predicate_type predicate, as_ind
 					bin = PyString_AsString(py_ubin);
 				} else if (PyString_Check(py_bin) ){
 					bin = PyString_AsString(py_bin);
-				}
-				else {
+				} else if (PyByteArray_Check(py_bin)) {
+                    bin = PyByteArray_AsString(py_bin);
+                } else {
 					return 1;
 				}
 				int64_t val = pyobject_to_int64(py_val1);
@@ -140,8 +142,9 @@ static int query_where_add(as_query **query, as_predicate_type predicate, as_ind
 					bin = PyString_AsString(py_ubin);
 				} else if (PyString_Check(py_bin)){
 					bin = PyString_AsString(py_bin);
-				}
-				else {
+                } else if (PyByteArray_Check(py_bin)) {
+                    bin = PyByteArray_AsString(py_bin);
+                } else {
 					return 1;
 				}
 				int64_t min = pyobject_to_int64(py_val1);

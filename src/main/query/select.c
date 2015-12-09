@@ -59,6 +59,8 @@ AerospikeQuery * AerospikeQuery_Select(AerospikeQuery * self, PyObject * args, P
 		else if (PyString_Check(py_bin)) {
 			// TRACE();
 			bin = PyString_AsString(py_bin);
+        } else if (PyByteArray_Check(py_bin)) {
+            bin = PyByteArray_AsString(py_bin);
 		} else {
 			// TRACE();
 			as_error_update(&err, AEROSPIKE_ERR_PARAM, "Bin name should be of type string");
