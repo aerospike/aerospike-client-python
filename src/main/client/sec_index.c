@@ -114,7 +114,9 @@ PyObject * AerospikeClient_Index_Integer_Create(AerospikeClient * self, PyObject
 		bin_ptr = PyString_AsString(py_ustr_bin);
 	} else if ( PyString_Check(py_bin) ) {
 		bin_ptr = PyString_AsString(py_bin);
-	} else {
+	} else if (PyByteArray_Check(py_bin)) {
+        bin_ptr = PyByteArray_AsString(py_bin);
+    } else {
 		as_error_update(&err, AEROSPIKE_ERR_PARAM, "Bin should be a string");
 		goto CLEANUP;
 	}
@@ -254,6 +256,8 @@ PyObject * AerospikeClient_Index_String_Create(AerospikeClient * self, PyObject 
 		bin_ptr = PyString_AsString(py_ustr_bin);
 	} else if ( PyString_Check(py_bin) ) {
 		bin_ptr = PyString_AsString(py_bin);
+	} else if (PyByteArray_Check(py_bin)) {
+        bin_ptr = PyByteArray_AsString(py_bin);
 	} else {
 		as_error_update(&err, AEROSPIKE_ERR_PARAM, "Bin should be a string");
 		goto CLEANUP;
@@ -484,6 +488,8 @@ PyObject * AerospikeClient_Index_List_Create(AerospikeClient * self, PyObject *a
 		bin_ptr = PyString_AsString(py_ustr_bin);
 	} else if ( PyString_Check(py_bin) ) {
 		bin_ptr = PyString_AsString(py_bin);
+	} else if (PyByteArray_Check(py_bin)) {
+        bin_ptr = PyByteArray_AsString(py_bin);
 	} else {
 		as_error_update(&err, AEROSPIKE_ERR_PARAM, "Bin should be a string");
 		goto CLEANUP;
@@ -623,6 +629,8 @@ PyObject * AerospikeClient_Index_Map_Keys_Create(AerospikeClient * self, PyObjec
 		bin_ptr = PyString_AsString(py_ustr_bin);
 	} else if ( PyString_Check(py_bin) ) {
 		bin_ptr = PyString_AsString(py_bin);
+	} else if (PyByteArray_Check(py_bin)) {
+        bin_ptr = PyByteArray_AsString(py_bin);
 	} else {
 		as_error_update(&err, AEROSPIKE_ERR_PARAM, "Bin should be a string");
 		goto CLEANUP;
@@ -764,6 +772,8 @@ PyObject * AerospikeClient_Index_Map_Values_Create(AerospikeClient * self, PyObj
 		bin_ptr = PyString_AsString(py_ustr_bin);
 	} else if ( PyString_Check(py_bin) ) {
 		bin_ptr = PyString_AsString(py_bin);
+	} else if (PyByteArray_Check(py_bin)) {
+        bin_ptr = PyByteArray_AsString(py_bin);
 	} else {
 		as_error_update(&err, AEROSPIKE_ERR_PARAM, "Bin should be a string");
 		goto CLEANUP;
@@ -907,6 +917,8 @@ PyObject * AerospikeClient_Index_2dsphere_Create(AerospikeClient * self, PyObjec
 		bin_ptr = PyString_AsString(py_ustr_bin);
 	} else if ( PyString_Check(py_bin) ) {
 		bin_ptr = PyString_AsString(py_bin);
+	} else if (PyByteArray_Check(py_bin)) {
+        bin_ptr = PyByteArray_AsString(py_bin);
 	} else {
 		as_error_update(&err, AEROSPIKE_ERR_PARAM, "Bin should be a string");
 		goto CLEANUP;
