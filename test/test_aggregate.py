@@ -517,3 +517,26 @@ class TestAggregate(TestBaseClass):
         except ClusterError as exception:
             assert exception.code == 11L
             assert exception.msg == 'No connection to aerospike cluster'
+
+    def test_aggregate_with_correct_parameters_lua_file_not_in_same_dir(self):
+        """
+            Invoke aggregate() with correct arguments and lua file not in same
+            directory
+        """
+        os.remove('stream_example.lua')
+        query = self.client.query('test', 'demo')
+        query.select('name', 'test_age')
+        query.where(p.between('test_age', 1, 5))
+        query.apply('stream_example', 'count')
+
+        records = []
+
+        def user_callback(value):
+            records.append(value)
+
+        query.foreach(user_callback)
+        assert records[0] == 4
+
+        assert True if os.path.isfile('/tmp/stream_example.lua') else False
+
+        shutil.move('/tmp/stream_example.lua', '.')

@@ -330,7 +330,7 @@ static int AerospikeClient_Type_Init(AerospikeClient * self, PyObject * args, Py
 		memcpy(config.lua.user_path, ".", AS_CONFIG_PATH_MAX_LEN);
 	} else {
 		struct stat info;
-		if (stat(config.lua.user_path, &info ) != 0 || !(info.st_mode & S_IFDIR) || (access(config.lua.user_path, W_OK) != 0)) {
+		if (stat(config.lua.user_path, &info ) != 0 || !(info.st_mode & S_IFDIR)) {
 		    memcpy(config.lua.user_path, ".", AS_CONFIG_PATH_MAX_LEN);
 		}
 	}

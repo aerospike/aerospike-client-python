@@ -145,25 +145,36 @@ PyObject * AerospikeClient_UDF_Put(AerospikeClient * self, PyObject *args, PyObj
 
     uint8_t * buff = bytes;
 
-    copy_file_p = fopen(copy_filepath, "r");
-    if (!copy_file_p) {
-        copy_file_p = fopen(copy_filepath, "w+");
-        int read  = (int)fread(buff, 1, LUA_FILE_BUFFER_FRAME, file_p);
-        fwrite(buff, 1, read, copy_file_p);
-        while ( read ) {
-            size += read;
-            buff += read;
-            read = (int)fread(buff, 1, LUA_FILE_BUFFER_FRAME, file_p);
-            fwrite(buff, 1, read, copy_file_p);
-        }
-    } else {
-        int read  = (int)fread(buff, 1, LUA_FILE_BUFFER_FRAME, file_p);
-        while ( read ) {
-            size += read;
-            buff += read;
-            read = (int)fread(buff, 1, LUA_FILE_BUFFER_FRAME, file_p);
-        }
-    }
+	if (access(self->as->config.lua.user_path, W_OK) == 0) {
+		copy_file_p = fopen(copy_filepath, "r");
+		if (!copy_file_p) {
+			copy_file_p = fopen(copy_filepath, "w+");
+			int read  = (int)fread(buff, 1, LUA_FILE_BUFFER_FRAME, file_p);
+			if (read && fwrite(buff, 1, read, copy_file_p)) {
+				while (read) {
+					size += read;
+					buff += read;
+					read = (int)fread(buff, 1, LUA_FILE_BUFFER_FRAME, file_p);
+					if (!fwrite(buff, 1, read, copy_file_p)) {
+						break;
+					}
+				}
+			} else {
+				as_error_update(&err, AEROSPIKE_ERR_CLIENT, "Write of lua file to user path failed");
+				goto CLEANUP;
+			}
+		} else {
+			int read  = (int)fread(buff, 1, LUA_FILE_BUFFER_FRAME, file_p);
+			while (read) {
+				size += read;
+				buff += read;
+				read = (int)fread(buff, 1, LUA_FILE_BUFFER_FRAME, file_p);
+			}
+		}
+	} else {
+		as_error_update(&err, AEROSPIKE_ERR_CLIENT, "No permissions to write lua file to user path");
+		goto CLEANUP;
+	}
 
 	if (file_p) {
 		fclose(file_p);
