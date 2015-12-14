@@ -34,7 +34,7 @@ struct exceptions {
 	PyObject *DeviceOverload;
 	PyObject *ForbiddenError;
 	PyObject *QueryError;
-    PyObject *InvalidGeoJSON;
+	PyObject *InvalidGeoJSON;
 
 	//Client exceptions
 	PyObject *ParamError;
