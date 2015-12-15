@@ -53,8 +53,8 @@ static char * pyobject_to_str(PyObject * py_obj)
 	}
 }
 */
-static int AerospikeQuery_Where_Add(AerospikeQuery * self, as_predicate_type predicate, as_index_datatype in_datatype, PyObject * py_bin, PyObject * py_val1, PyObject * py_val2, int index_type)
-
+static int AerospikeQuery_Where_Add(AerospikeQuery * self, as_predicate_type predicate, as_index_datatype in_datatype, 
+		PyObject * py_bin, PyObject * py_val1, PyObject * py_val2, int index_type)
 {
 	as_error err;
 	char * val = NULL, * bin = NULL;
@@ -62,24 +62,24 @@ static int AerospikeQuery_Where_Add(AerospikeQuery * self, as_predicate_type pre
 
 	switch (predicate) {
 		case AS_PREDICATE_EQUAL: {
-			if ( in_datatype == AS_INDEX_STRING ) {
-				if (PyUnicode_Check(py_bin)){
+			if (in_datatype == AS_INDEX_STRING) {
+				if (PyUnicode_Check(py_bin)) {
 					py_ubin = PyUnicode_AsUTF8String(py_bin);
 					bin = PyString_AsString(py_ubin);
-				} else if (PyString_Check(py_bin) ) {
+				} else if (PyString_Check(py_bin)) {
 					bin = PyString_AsString(py_bin);
-                } else if (PyByteArray_Check(py_bin)) {
-                    bin = PyByteArray_AsString(py_bin);
+				} else if (PyByteArray_Check(py_bin)) {
+					bin = PyByteArray_AsString(py_bin);
 				} else {
 					return 1;
 				}
 
-				if (PyUnicode_Check(py_val1)){ 
+				if (PyUnicode_Check(py_val1)) { 
 					val = strdup(PyString_AsString(
 							StoreUnicodePyObject( self,
 								PyUnicode_AsUTF8String(py_val1) )));
 
-				} else if (PyString_Check(py_val1) ){
+				} else if (PyString_Check(py_val1)) {
 					val = strdup(PyString_AsString(py_val1));
 				}
 				else {
@@ -87,13 +87,13 @@ static int AerospikeQuery_Where_Add(AerospikeQuery * self, as_predicate_type pre
 				}
 
 				as_query_where_init(&self->query, 1);
-				if(index_type == 0) {
+				if (index_type == 0) {
 					as_query_where(&self->query, bin, as_equals( STRING, val ));
-				} else if(index_type == 1) {
+				} else if (index_type == 1) {
 					as_query_where(&self->query, bin, as_contains( LIST, STRING, val ));
-				} else if(index_type == 2) {
+				} else if (index_type == 2) {
 					as_query_where(&self->query, bin, as_contains( MAPKEYS, STRING, val ));
-				} else if(index_type == 3) {
+				} else if (index_type == 3) {
 					as_query_where(&self->query, bin, as_contains( MAPVALUES, STRING, val ));
 				} else {
 					return 1;
@@ -102,12 +102,11 @@ static int AerospikeQuery_Where_Add(AerospikeQuery * self, as_predicate_type pre
 					Py_DECREF(py_ubin);
 					py_ubin = NULL;
 				}
-			}
-			else if ( in_datatype == AS_INDEX_NUMERIC ) {
+			} else if (in_datatype == AS_INDEX_NUMERIC) {
 				if (PyUnicode_Check(py_bin)) {
 					py_ubin = PyUnicode_AsUTF8String(py_bin);
 					bin = PyString_AsString(py_ubin);
-				} else if (PyString_Check(py_bin) ) {
+				} else if (PyString_Check(py_bin)) {
 					bin = PyString_AsString(py_bin);
                 } else if (PyByteArray_Check(py_bin)) {
                     bin = PyByteArray_AsString(py_bin);
@@ -117,13 +116,13 @@ static int AerospikeQuery_Where_Add(AerospikeQuery * self, as_predicate_type pre
 				int64_t val = pyobject_to_int64(py_val1);
 
 				as_query_where_init(&self->query, 1);
-				if(index_type == 0) {
+				if (index_type == 0) {
 					as_query_where(&self->query, bin, as_equals( NUMERIC, val ));
-				} else if(index_type == 1) {
+				} else if (index_type == 1) {
 					as_query_where(&self->query, bin, as_contains( LIST, NUMERIC, val ));
-				} else if(index_type == 2) {
+				} else if (index_type == 2) {
 					as_query_where(&self->query, bin, as_contains( MAPKEYS, NUMERIC, val ));
-				} else if(index_type == 3) {
+				} else if (index_type == 3) {
 					as_query_where(&self->query, bin, as_contains( MAPVALUES, NUMERIC, val ));
 				} else {
 					return 1;
@@ -132,8 +131,7 @@ static int AerospikeQuery_Where_Add(AerospikeQuery * self, as_predicate_type pre
 					Py_DECREF(py_ubin);
 					py_ubin = NULL;
 				}
-			}
-			else {
+			} else {
 				// If it ain't expected, raise and error
 				as_error_update(&err, AEROSPIKE_ERR_PARAM, "predicate 'equals' expects a string or integer value.");
 				PyObject * py_err = NULL;
@@ -145,14 +143,14 @@ static int AerospikeQuery_Where_Add(AerospikeQuery * self, as_predicate_type pre
 			break;
 		}
 		case AS_PREDICATE_RANGE: {
-			if ( in_datatype == AS_INDEX_NUMERIC) {
-				if (PyUnicode_Check(py_bin)){
+			if (in_datatype == AS_INDEX_NUMERIC) {
+				if (PyUnicode_Check(py_bin)) {
 					py_ubin = PyUnicode_AsUTF8String(py_bin);
 					bin = PyString_AsString(py_ubin);
-				} else if (PyString_Check(py_bin)){
+				} else if (PyString_Check(py_bin)) {
 					bin = PyString_AsString(py_bin);
-                } else if (PyByteArray_Check(py_bin)) {
-                    bin = PyByteArray_AsString(py_bin);
+				} else if (PyByteArray_Check(py_bin)) {
+					bin = PyByteArray_AsString(py_bin);
 				} else {
 					return 1;
 				}
@@ -160,26 +158,24 @@ static int AerospikeQuery_Where_Add(AerospikeQuery * self, as_predicate_type pre
 				int64_t max = pyobject_to_int64(py_val2);
 
 				as_query_where_init(&self->query, 1);
-				if(index_type == 0) {
+				if (index_type == 0) {
 					as_query_where(&self->query, bin, as_range( DEFAULT, NUMERIC, min, max ));
-				} else if(index_type == 1) {
+				} else if (index_type == 1) {
 					as_query_where(&self->query, bin, as_range( LIST, NUMERIC, min, max ));
-				} else if(index_type == 2) {
+				} else if (index_type == 2) {
 					as_query_where(&self->query, bin, as_range( MAPKEYS, NUMERIC, min, max ));
-				} else if(index_type == 3) {
+				} else if (index_type == 3) {
 					as_query_where(&self->query, bin, as_range( MAPVALUES, NUMERIC, min, max ));
 				} else {
 					return 1;
 				}
-				if (py_ubin){
+				if (py_ubin) {
 					Py_DECREF(py_ubin);
 					py_ubin = NULL;
 				}
-			}
-			else if ( in_datatype == AS_INDEX_STRING) {
+			} else if ( in_datatype == AS_INDEX_STRING) {
 				// NOT IMPLEMENTED
-			} 
-            else if (in_datatype == AS_INDEX_GEO2DSPHERE) {
+			} else if (in_datatype == AS_INDEX_GEO2DSPHERE) {
 
                 if (!aerospike_has_geo(self->client->as)) {
 				    as_error_update(&err, AEROSPIKE_ERR_CLUSTER, "Server does not support geospatial queries");
@@ -199,23 +195,24 @@ static int AerospikeQuery_Where_Add(AerospikeQuery * self, as_predicate_type pre
 					return 1;
 				}
 
-				if (PyUnicode_Check(py_val1)){ 
+				if (PyUnicode_Check(py_val1)) { 
 					val = strdup(PyString_AsString(
 							StoreUnicodePyObject( self,
 								PyUnicode_AsUTF8String(py_val1) )));
 
-				} else if (PyString_Check(py_val1) ){
+				} else if (PyString_Check(py_val1)) {
 					val = strdup(PyString_AsString(py_val1));
 				}
 				else {
 					return 1;
 				}
 				as_query_where_init(&self->query, 1);
-				if(index_type == 0) {
+				if (index_type == 0) {
 					as_query_where(&self->query, bin, as_geo_within(val));
-                }
-            }
-			else {
+				} else if (index_type == 1) {
+					as_query_where(&self->query, bin, as_geo_contains(val));
+				}
+			} else {
 				// If it ain't right, raise and error
 				as_error_update(&err, AEROSPIKE_ERR_PARAM, "predicate 'between' expects two integer values.");
 				PyObject * py_err = NULL;
