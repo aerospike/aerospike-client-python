@@ -101,7 +101,6 @@ class TestListIndex(object):
 'string_list', aerospike.INDEX_STRING, "test_string_list_index", policy)
 
         assert exception.value[0] == 4
-        assert exception.value[1] == 'Invalid Set Name'
 
     def test_listindex_with_incorrect_namespace(self):
         """

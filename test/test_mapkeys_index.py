@@ -103,7 +103,6 @@ class TestMapKeysIndex(object):
 'string_map', aerospike.INDEX_STRING, "test_string_map_index", policy)
 
         assert exception.value[0] == 4
-        assert exception.value[1] == 'Invalid Set Name'
 
     def test_mapkeysindex_with_incorrect_namespace(self):
         """

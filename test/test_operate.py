@@ -31,6 +31,7 @@ class TestOperate(object):
             TestOperate.client_strict_types = aerospike.client(config_strict_types).connect(user, password)
 
         TestOperate.skip_old_server = True
+        TestOperate.skip_latest_server = True
         versioninfo = TestOperate.client.info('version')
         for keys in versioninfo:
             for value in versioninfo[keys]:
@@ -38,6 +39,8 @@ class TestOperate(object):
                     versionlist = value[value.find("build") + 6:value.find("\n")].split(".")
                     if int(versionlist[0]) >= 3 and int(versionlist[1]) >= 6:
                         TestOperate.skip_old_server = False
+                    if int(versionlist[0]) >= 3 and int(versionlist[1]) >= 7:
+                        TestOperate.skip_latest_server = False
 
     def teardown_class(cls):
         TestOperate.client.close()
@@ -945,10 +948,16 @@ class TestOperate(object):
             }
         ]	
 
-        (key, meta, bins) = TestOperate.client_strict_types.operate(key, list)
+        try:
+            (key, meta, bins) = TestOperate.client_strict_types.operate(key, list)
 
-        assert bins == {'list': ['c']}
-        assert meta['gen'] == old_meta['gen'] + 1
+            if not TestOperate.skip_latest_server:
+                assert bins == {'list': ['c']}
+                assert meta['gen'] == old_meta['gen'] + 1
+
+        except BinIncompatibleType as exception:
+            if not TestOperate.skip_latest_server:
+                assert exception.code == 12
 
         TestOperate.client_strict_types.remove(key)
 
@@ -996,10 +1005,16 @@ class TestOperate(object):
             }
         ]	
 
-        (key, meta, bins) = TestOperate.client_strict_types.operate(key, list)
+        try:
+            (key, meta, bins) = TestOperate.client_strict_types.operate(key, list)
 
-        assert {'dict': {"a": 1}} == bins
-        assert meta['gen'] == old_meta['gen'] + 1
+            if not TestOperate.skip_latest_server:
+                assert {'dict': {"a": 1}} == bins
+                assert meta['gen'] == old_meta['gen'] + 1
+
+        except BinIncompatibleType as exception:
+            if not TestOperate.skip_latest_server:
+                assert exception.code == 12
 
         TestOperate.client_strict_types.remove(key)
 

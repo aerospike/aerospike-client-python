@@ -33,15 +33,14 @@ static PyObject * AerospikePredicates_Equals(PyObject * self, PyObject * args)
 	PyObject * py_bin = NULL;
 	PyObject * py_val = NULL;
 
-	if ( PyArg_ParseTuple(args, "OO:equals", 
-			&py_bin, &py_val) == false ) {
+	if (PyArg_ParseTuple(args, "OO:equals", 
+			&py_bin, &py_val) == false) {
 		goto exit;
 	}
 
-	if ( PyInt_Check(py_val) || PyLong_Check(py_val) ) {
+	if (PyInt_Check(py_val) || PyLong_Check(py_val)) {
 		return Py_BuildValue("iiOO", AS_PREDICATE_EQUAL, AS_INDEX_NUMERIC, py_bin, py_val);
-	}
-	else if ( PyString_Check(py_val) || PyUnicode_Check(py_val) ) {
+	} else if (PyString_Check(py_val) || PyUnicode_Check(py_val)) {
 		return Py_BuildValue("iiOO", AS_PREDICATE_EQUAL, AS_INDEX_STRING, py_bin, py_val);
 	}
 
@@ -57,12 +56,12 @@ static PyObject * AerospikePredicates_Contains(PyObject * self, PyObject * args)
 	PyObject * py_val = NULL;
 	int index_type;
 
-	if ( PyArg_ParseTuple(args, "OOO:equals", 
-			&py_bin, &py_indextype, &py_val) == false ) {
+	if (PyArg_ParseTuple(args, "OOO:equals", 
+				&py_bin, &py_indextype, &py_val) == false) {
 		goto exit;
 	}
 
-	if(PyInt_Check(py_indextype)) {
+	if (PyInt_Check(py_indextype)) {
 		index_type = PyInt_AsLong(py_indextype);
 	} else if (PyLong_Check(py_indextype)) {
 		index_type = PyLong_AsLongLong(py_indextype);
@@ -72,8 +71,7 @@ static PyObject * AerospikePredicates_Contains(PyObject * self, PyObject * args)
 
 	if (PyInt_Check(py_val) || PyLong_Check(py_val)) {
 		return Py_BuildValue("iiOOOi", AS_PREDICATE_EQUAL, AS_INDEX_NUMERIC, py_bin, py_val, Py_None, index_type);
-	}
-	else if (PyString_Check(py_val) || PyUnicode_Check(py_val)) {
+	} else if (PyString_Check(py_val) || PyUnicode_Check(py_val)) {
 		return Py_BuildValue("iiOOOi", AS_PREDICATE_EQUAL, AS_INDEX_STRING, py_bin, py_val, Py_None, index_type);
 	}
 
@@ -90,12 +88,12 @@ static PyObject * AerospikePredicates_RangeContains(PyObject * self, PyObject * 
 	PyObject * py_max= NULL;
 	int index_type;
 
-	if ( PyArg_ParseTuple(args, "OOOO:equals",
-			&py_bin, &py_indextype, &py_min, &py_max) == false ) {
+	if (PyArg_ParseTuple(args, "OOOO:equals",
+			&py_bin, &py_indextype, &py_min, &py_max) == false) {
 		goto exit;
 	}
 
-	if(PyInt_Check(py_indextype)) {
+	if (PyInt_Check(py_indextype)) {
 		index_type = PyInt_AsLong(py_indextype);
 	} else if (PyLong_Check(py_indextype)) {
 		index_type = PyLong_AsLongLong(py_indextype);
@@ -119,11 +117,11 @@ static PyObject * AerospikePredicates_Between(PyObject * self, PyObject * args)
 	PyObject * py_max = NULL;
 
 	if (PyArg_ParseTuple(args, "OOO:between",
-			&py_bin, &py_min, &py_max) == false ) {
+			&py_bin, &py_min, &py_max) == false) {
 		goto exit;
 	}
 
-	if ( (PyInt_Check(py_min) || PyLong_Check(py_min)) && (PyInt_Check(py_max) || PyLong_Check(py_max)) ) {
+	if ((PyInt_Check(py_min) || PyLong_Check(py_min)) && (PyInt_Check(py_max) || PyLong_Check(py_max))) {
 		return Py_BuildValue("iiOOO", AS_PREDICATE_RANGE, AS_INDEX_NUMERIC, py_bin, py_min, py_max);
 	}
 
@@ -137,8 +135,8 @@ static PyObject * AerospikePredicates_GeoWithin_GeoJSONRegion(PyObject * self, P
 	PyObject * py_bin = NULL;
 	PyObject * py_shape = NULL;
 
-	if ( PyArg_ParseTuple(args, "OO:geo_within_geojson_region",
-			&py_bin, &py_shape) == false ) {
+	if (PyArg_ParseTuple(args, "OO:geo_within_geojson_region",
+			&py_bin, &py_shape) == false) {
 		goto exit;
 	}
 
@@ -166,7 +164,7 @@ static PyObject * AerospikePredicates_GeoWithin_Radius(PyObject * self, PyObject
 	py_geo_object = PyDict_New();
 
 	if (PyArg_ParseTuple(args, "OOOO:geo_within_radius", 
-			&py_bin, &py_lat, &py_long, &py_radius) == false ) {
+			&py_bin, &py_lat, &py_long, &py_radius) == false) {
 		goto CLEANUP;
 	}
 
@@ -200,7 +198,7 @@ static PyObject * AerospikePredicates_GeoWithin_Radius(PyObject * self, PyObject
 
 CLEANUP:
 	// If an error occurred, tell Python.
-	if ( err.code != AEROSPIKE_OK ) {
+	if (err.code != AEROSPIKE_OK) {
 		PyObject * py_err = NULL;
 		error_to_pyobject(&err, &py_err);
 		PyObject *exception_type = raise_exception(&err);
@@ -245,7 +243,7 @@ static PyObject * AerospikePredicates_GeoContains_Point(PyObject * self, PyObjec
 	py_geo_object = PyDict_New();
 
 	if (PyArg_ParseTuple(args, "OOO:geo_contains_point", 
-			&py_bin, &py_lat, &py_long) == false ) {
+			&py_bin, &py_lat, &py_long) == false) {
 		goto CLEANUP;
 	}
 
@@ -275,7 +273,7 @@ static PyObject * AerospikePredicates_GeoContains_Point(PyObject * self, PyObjec
 
 CLEANUP:
 	// If an error occurred, tell Python.
-	if ( err.code != AEROSPIKE_OK ) {
+	if (err.code != AEROSPIKE_OK) {
 		PyObject * py_err = NULL;
 		error_to_pyobject(&err, &py_err);
 		PyObject *exception_type = raise_exception(&err);
