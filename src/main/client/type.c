@@ -132,6 +132,15 @@ static PyMethodDef AerospikeClient_Type_Methods[] = {
 	{"operate",
 		(PyCFunction) AerospikeClient_Operate, METH_VARARGS | METH_KEYWORDS,
 		"Performs operate operation"},
+	{"list_append",
+		(PyCFunction) AerospikeClient_ListAppend, METH_VARARGS | METH_KEYWORDS,
+		"Appends a single val to the list value in bin"},
+	{"list_extend",
+		(PyCFunction) AerospikeClient_ListExtend, METH_VARARGS | METH_KEYWORDS,
+		"Extend the list value in bin with the given items"},
+	{"list_insert",
+		(PyCFunction) AerospikeClient_ListInsert, METH_VARARGS | METH_KEYWORDS,
+		"Inserts val at the specified index of the list value in bin"},
 
 	// Deprecated key-based API
 

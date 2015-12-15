@@ -190,6 +190,33 @@ PyObject * AerospikeClient_Touch(AerospikeClient * self, PyObject * args, PyObje
 PyObject * AerospikeClient_Operate(AerospikeClient * self, PyObject * args, PyObject * kwds);
 
 /*******************************************************************************
+ * LIST FUNCTIONS(CDT)
+ ******************************************************************************/
+/**
+ * Append a single val to the list value in bin.
+ *
+ *		client.list_append((x,y,z))
+ *
+ */
+PyObject * AerospikeClient_ListAppend(AerospikeClient * self, PyObject * args, PyObject * kwds);
+
+/**
+ * Extend the list value in bin with the given items.
+ *
+ *		client.list_extend((x,y,z))
+ *
+ */
+PyObject * AerospikeClient_ListExtend(AerospikeClient * self, PyObject * args, PyObject * kwds);
+
+/**
+ * Insert val at the specified index of the list value in bin.
+ *
+ *		client.list_insert((x,y,z))
+ *
+ */
+PyObject * AerospikeClient_ListInsert(AerospikeClient * self, PyObject * args, PyObject * kwds);
+
+/*******************************************************************************
  * KEY OPERATIONS (DEPRECATED)
  ******************************************************************************/
 

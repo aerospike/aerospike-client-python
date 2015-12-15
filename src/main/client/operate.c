@@ -967,7 +967,8 @@ PyObject * AerospikeClient_Operate(AerospikeClient * self, PyObject * args, PyOb
 	}
 
 	if ( py_list != NULL && PyList_Check(py_list) ) {
-		py_result = AerospikeClient_Operate_Invoke(self, &err, &key, py_list, py_meta, operate_policy_p);
+		py_result = AerospikeClient_Operate_Invoke(self, &err, &key, py_list, py_meta,
+                operate_policy_p);
 	} else {
 		as_error_update(&err, AEROSPIKE_ERR_PARAM, "Operations should be of type list");
 		goto CLEANUP;
@@ -986,4 +987,452 @@ CLEANUP:
 		return NULL;
 	}
 	return py_result;
+}
+
+
+/**
+ *******************************************************************************************************
+ * Check whether Aerospike server supports CDT feature or not.
+ *******************************************************************************************************
+ */
+#define INFO_CALL "features"
+static bool
+has_cdt_list(aerospike *as, as_error *err)
+{
+	char *res = NULL;
+
+	int rc = aerospike_info_any(as, err, NULL, INFO_CALL, &res);
+
+	if (rc == AEROSPIKE_OK) {
+		char *st = strstr(res, "cdt-list");
+		free(res);
+		if (st) {
+			return true;
+		}
+	}
+	return false;
+}
+
+/**
+ *******************************************************************************************************
+ * Append a single value to the list value in bin.
+ *
+ * @param self                  AerospikeClient object
+ * @param args                  The args is a tuple object containing an argument
+ *                              list passed from Python to a C function
+ * @param kwds                  Dictionary of keywords
+ *
+ * Returns an integer status. 0(Zero) is success value.
+ * In case of error,appropriate exceptions will be raised.
+ *******************************************************************************************************
+ */
+PyObject * AerospikeClient_ListAppend(AerospikeClient * self, PyObject * args, PyObject * kwds)
+{
+	// Initialize error
+	as_error err;
+	as_error_init(&err);
+
+	// Python Function Arguments
+	PyObject * py_key = NULL;
+	PyObject * py_bin = NULL;
+	PyObject * py_policy = NULL;
+	PyObject * py_result = NULL;
+	PyObject * py_meta = NULL;
+	PyObject * py_append_val = NULL;
+	PyObject * py_ustr = NULL;
+
+	as_policy_operate operate_policy;
+	as_policy_operate *operate_policy_p = NULL;
+	as_key key;
+	char* bin = NULL;
+
+	// Python Function Keyword Arguments
+	static char * kwlist[] = {"key", "bin", "val", "meta", "policy", NULL};
+
+	// Python Function Argument Parsing
+	if ( PyArg_ParseTupleAndKeywords(args, kwds, "OOO|OO:list_append", kwlist,
+				&py_key, &py_bin, &py_append_val, &py_meta, &py_policy) == false ) {
+		return NULL;
+	}
+
+	if (!self || !self->as) {
+		as_error_update(&err, AEROSPIKE_ERR_PARAM, "Invalid aerospike object");
+		goto CLEANUP;
+	}
+
+	if (!self->is_conn_16) {
+		as_error_update(&err, AEROSPIKE_ERR_CLUSTER, "No connection to aerospike cluster");
+		goto CLEANUP;
+	}
+
+	if (!has_cdt_list(self->as, &err)) {
+		as_error_update(&err, AEROSPIKE_ERR_UNSUPPORTED_FEATURE, "CDT list feature is not supported");
+		goto CLEANUP;
+	}
+
+	py_result = AerospikeClient_convert_pythonObj_to_asType(self, &err,
+			py_key, py_policy, &key, &operate_policy, &operate_policy_p);
+
+	if (!py_result) {
+		goto CLEANUP;
+	} else {
+		Py_DECREF(py_result);
+	}
+
+	as_static_pool static_pool;
+	memset(&static_pool, 0, sizeof(static_pool));
+
+	as_operations ops;
+	as_operations_inita(&ops, 1);
+
+	if(py_meta) {
+		AerospikeClient_CheckForMeta(py_meta, &ops, &err);
+	}
+
+	if (err.code != AEROSPIKE_OK) {
+		goto CLEANUP;
+	}
+
+	if (py_bin) {
+		if (PyUnicode_Check(py_bin)) {
+			py_ustr = PyUnicode_AsUTF8String(py_bin);
+			bin = PyString_AsString(py_ustr);
+		} else if (PyString_Check(py_bin)) {
+			bin = PyString_AsString(py_bin);
+		} else if (PyByteArray_Check(py_bin)) {
+			bin = PyByteArray_AsString(py_bin);
+		} else {
+			as_error_update(&err, AEROSPIKE_ERR_PARAM, "Bin name should be of type string");
+			goto CLEANUP;
+		}
+
+		if (self->strict_types) {
+			if (strlen(bin) > AS_BIN_NAME_MAX_LEN) {
+				if (py_ustr) {
+					Py_DECREF(py_ustr);
+					py_ustr = NULL;
+				}
+				as_error_update(&err, AEROSPIKE_ERR_BIN_NAME, "A bin name should not exceed 14 characters limit");
+				goto CLEANUP;
+			}
+		}
+	}
+	/*if (py_append_val) {
+		if (self->strict_types) {
+			if (check_type(self, py_append_val, operation, err)) {
+					goto CLEANUP;
+            }
+        }
+	}*/
+	as_val* put_val = NULL;
+	pyobject_to_astype_write(self, &err, bin, py_append_val, &put_val, &ops,
+			&static_pool, SERIALIZER_PYTHON);
+	if (err.code != AEROSPIKE_OK) {
+		goto CLEANUP;
+	}
+	as_operations_list_append(&ops, bin, put_val);
+
+	Py_BEGIN_ALLOW_THREADS
+	aerospike_key_operate(self->as, &err, operate_policy_p, &key, &ops, NULL);
+	Py_END_ALLOW_THREADS
+
+	if (err.code != AEROSPIKE_OK) {
+		goto CLEANUP;
+	}
+
+CLEANUP:
+	if ( err.code != AEROSPIKE_OK ) {
+		PyObject * py_err = NULL;
+		error_to_pyobject(&err, &py_err);
+		PyObject *exception_type = raise_exception(&err);
+		if(PyObject_HasAttrString(exception_type, "key")) {
+			PyObject_SetAttrString(exception_type, "key", py_key);
+		}
+		if(PyObject_HasAttrString(exception_type, "bin")) {
+			PyObject_SetAttrString(exception_type, "bin", py_bin);
+		}
+		PyErr_SetObject(exception_type, py_err);
+		Py_DECREF(py_err);
+		return NULL;
+	}
+	return PyLong_FromLong(0);
+}
+
+/**
+ *******************************************************************************************************
+ * Extend the list value in bin with the given items.
+ *
+ * @param self                  AerospikeClient object
+ * @param args                  The args is a tuple object containing an argument
+ *                              list passed from Python to a C function
+ * @param kwds                  Dictionary of keywords
+ *
+ * Returns an integer status. 0(Zero) is success value.
+ * In case of error,appropriate exceptions will be raised.
+ *******************************************************************************************************
+ */
+PyObject * AerospikeClient_ListExtend(AerospikeClient * self, PyObject * args, PyObject * kwds)
+{
+	// Initialize error
+	as_error err;
+	as_error_init(&err);
+
+	// Python Function Arguments
+	PyObject * py_key = NULL;
+	PyObject * py_bin = NULL;
+	PyObject * py_policy = NULL;
+	PyObject * py_result = NULL;
+	PyObject * py_meta = NULL;
+	PyObject * py_append_val = NULL;
+	PyObject * py_ustr = NULL;
+
+	as_policy_operate operate_policy;
+	as_policy_operate *operate_policy_p = NULL;
+	as_key key;
+	char* bin = NULL;
+
+	// Python Function Keyword Arguments
+	static char * kwlist[] = {"key", "bin", "items", "meta", "policy", NULL};
+
+	// Python Function Argument Parsing
+	if ( PyArg_ParseTupleAndKeywords(args, kwds, "OOO|OO:list_extend", kwlist,
+				&py_key, &py_bin, &py_append_val, &py_meta, &py_policy) == false ) {
+		return NULL;
+	}
+
+	if (!self || !self->as) {
+		as_error_update(&err, AEROSPIKE_ERR_PARAM, "Invalid aerospike object");
+		goto CLEANUP;
+	}
+
+	if (!self->is_conn_16) {
+		as_error_update(&err, AEROSPIKE_ERR_CLUSTER, "No connection to aerospike cluster");
+		goto CLEANUP;
+	}
+
+	if (!has_cdt_list(self->as, &err)) {
+		as_error_update(&err, AEROSPIKE_ERR_UNSUPPORTED_FEATURE, "CDT list feature is not supported");
+		goto CLEANUP;
+	}
+
+	py_result = AerospikeClient_convert_pythonObj_to_asType(self, &err,
+			py_key, py_policy, &key, &operate_policy, &operate_policy_p);
+
+	if (!py_result) {
+		goto CLEANUP;
+	} else {
+		Py_DECREF(py_result);
+	}
+
+	as_static_pool static_pool;
+	memset(&static_pool, 0, sizeof(static_pool));
+
+	as_operations ops;
+	as_operations_inita(&ops, 1);
+
+	if(py_meta) {
+		AerospikeClient_CheckForMeta(py_meta, &ops, &err);
+	}
+
+	if (err.code != AEROSPIKE_OK) {
+		goto CLEANUP;
+	}
+
+	if (py_bin) {
+		if (PyUnicode_Check(py_bin)) {
+			py_ustr = PyUnicode_AsUTF8String(py_bin);
+			bin = PyString_AsString(py_ustr);
+		} else if (PyString_Check(py_bin)) {
+			bin = PyString_AsString(py_bin);
+		} else if (PyByteArray_Check(py_bin)) {
+			bin = PyByteArray_AsString(py_bin);
+		} else {
+			as_error_update(&err, AEROSPIKE_ERR_PARAM, "Bin name should be of type string");
+			goto CLEANUP;
+		}
+
+		if (self->strict_types) {
+			if (strlen(bin) > AS_BIN_NAME_MAX_LEN) {
+				if (py_ustr) {
+					Py_DECREF(py_ustr);
+					py_ustr = NULL;
+				}
+				as_error_update(&err, AEROSPIKE_ERR_BIN_NAME, "A bin name should not exceed 14 characters limit");
+				goto CLEANUP;
+			}
+		}
+	}
+
+	as_val* put_val = NULL;
+	pyobject_to_astype_write(self, &err, bin, py_append_val, &put_val, &ops,
+			&static_pool, SERIALIZER_PYTHON);
+	if (err.code != AEROSPIKE_OK) {
+        goto CLEANUP;
+	}
+	as_operations_list_append_items(&ops, bin, (as_list*) put_val);
+
+	Py_BEGIN_ALLOW_THREADS
+	aerospike_key_operate(self->as, &err, operate_policy_p, &key, &ops, NULL);
+	Py_END_ALLOW_THREADS
+
+	if (err.code != AEROSPIKE_OK) {
+		goto CLEANUP;
+	}
+
+CLEANUP:
+	if ( err.code != AEROSPIKE_OK ) {
+		PyObject * py_err = NULL;
+		error_to_pyobject(&err, &py_err);
+		PyObject *exception_type = raise_exception(&err);
+		if(PyObject_HasAttrString(exception_type, "key")) {
+			PyObject_SetAttrString(exception_type, "key", py_key);
+		}
+		if(PyObject_HasAttrString(exception_type, "bin")) {
+			PyObject_SetAttrString(exception_type, "bin", py_bin);
+		}
+		PyErr_SetObject(exception_type, py_err);
+		Py_DECREF(py_err);
+		return NULL;
+	}
+	return PyLong_FromLong(0);
+}
+
+/**
+ *******************************************************************************************************
+ * Inserts val at the specified index of the list value in bin.
+ *
+ * @param self                  AerospikeClient object
+ * @param args                  The args is a tuple object containing an argument
+ *                              list passed from Python to a C function
+ * @param kwds                  Dictionary of keywords
+ *
+ * Returns an integer status. 0(Zero) is success value.
+ * In case of error,appropriate exceptions will be raised.
+ *******************************************************************************************************
+ */
+PyObject * AerospikeClient_ListInsert(AerospikeClient * self, PyObject * args, PyObject * kwds)
+{
+	// Initialize error
+	as_error err;
+	as_error_init(&err);
+
+	// Python Function Arguments
+	PyObject * py_key = NULL;
+	PyObject * py_bin = NULL;
+	PyObject * py_policy = NULL;
+	PyObject * py_result = NULL;
+	PyObject * py_meta = NULL;
+	PyObject * py_insert_val = NULL;
+	PyObject * py_ustr = NULL;
+
+	as_policy_operate operate_policy;
+	as_policy_operate *operate_policy_p = NULL;
+	as_key key;
+	char* bin = NULL;
+	uint64_t index;
+
+	// Python Function Keyword Arguments
+	static char * kwlist[] = {"key", "bin", "index", "val", "meta", "policy", NULL};
+
+	// Python Function Argument Parsing
+	if ( PyArg_ParseTupleAndKeywords(args, kwds, "OOlO|OO:list_insert", kwlist,
+				&py_key, &py_bin, &index, &py_insert_val, &py_meta, &py_policy) == false ) {
+		return NULL;
+	}
+
+    if (!self || !self->as) {
+		as_error_update(&err, AEROSPIKE_ERR_PARAM, "Invalid aerospike object");
+		goto CLEANUP;
+	}
+
+	if (!self->is_conn_16) {
+		as_error_update(&err, AEROSPIKE_ERR_CLUSTER, "No connection to aerospike cluster");
+		goto CLEANUP;
+	}
+
+	if (!has_cdt_list(self->as, &err)) {
+		as_error_update(&err, AEROSPIKE_ERR_UNSUPPORTED_FEATURE, "CDT list feature is not supported");
+		goto CLEANUP;
+	}
+
+	py_result = AerospikeClient_convert_pythonObj_to_asType(self, &err,
+			py_key, py_policy, &key, &operate_policy, &operate_policy_p);
+
+	if (!py_result) {
+		goto CLEANUP;
+	} else {
+		Py_DECREF(py_result);
+	}
+
+	as_static_pool static_pool;
+	memset(&static_pool, 0, sizeof(static_pool));
+
+	as_operations ops;
+	as_operations_inita(&ops, 1);
+
+	if(py_meta) {
+		AerospikeClient_CheckForMeta(py_meta, &ops, &err);
+	}
+
+	if (err.code != AEROSPIKE_OK) {
+		goto CLEANUP;
+	}
+	if (py_bin) {
+		if (PyUnicode_Check(py_bin)) {
+			py_ustr = PyUnicode_AsUTF8String(py_bin);
+			bin = PyString_AsString(py_ustr);
+		} else if (PyString_Check(py_bin)) {
+			bin = PyString_AsString(py_bin);
+		} else if (PyByteArray_Check(py_bin)) {
+			bin = PyByteArray_AsString(py_bin);
+		} else {
+			as_error_update(&err, AEROSPIKE_ERR_PARAM, "Bin name should be of type string");
+			goto CLEANUP;
+		}
+
+		if (self->strict_types) {
+			if (strlen(bin) > AS_BIN_NAME_MAX_LEN) {
+				if (py_ustr) {
+					Py_DECREF(py_ustr);
+					py_ustr = NULL;
+				}
+				as_error_update(&err, AEROSPIKE_ERR_BIN_NAME, "A bin name should not exceed 14 characters limit");
+				goto CLEANUP;
+			}
+		}
+	}
+
+	as_val* put_val = NULL;
+	pyobject_to_astype_write(self, &err, bin, py_insert_val, &put_val, &ops,
+			&static_pool, SERIALIZER_PYTHON);
+	if (err.code != AEROSPIKE_OK) {
+		goto CLEANUP;
+	}
+
+	as_operations_list_insert(&ops, bin, index, put_val);
+
+	Py_BEGIN_ALLOW_THREADS
+	aerospike_key_operate(self->as, &err, operate_policy_p, &key, &ops, NULL);
+	Py_END_ALLOW_THREADS
+
+	if (err.code != AEROSPIKE_OK) {
+		goto CLEANUP;
+	}
+
+CLEANUP:
+	if ( err.code != AEROSPIKE_OK ) {
+		PyObject * py_err = NULL;
+		error_to_pyobject(&err, &py_err);
+		PyObject *exception_type = raise_exception(&err);
+		if(PyObject_HasAttrString(exception_type, "key")) {
+			PyObject_SetAttrString(exception_type, "key", py_key);
+		}
+		if(PyObject_HasAttrString(exception_type, "bin")) {
+			PyObject_SetAttrString(exception_type, "bin", py_bin);
+		}
+		PyErr_SetObject(exception_type, py_err);
+		Py_DECREF(py_err);
+		return NULL;
+	}
+	return PyLong_FromLong(0);
 }
