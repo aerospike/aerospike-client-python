@@ -141,6 +141,15 @@ static PyMethodDef AerospikeClient_Type_Methods[] = {
 	{"list_insert",
 		(PyCFunction) AerospikeClient_ListInsert, METH_VARARGS | METH_KEYWORDS,
 		"Inserts val at the specified index of the list value in bin"},
+	{"list_insert_items",
+		(PyCFunction) AerospikeClient_ListInsertItems, METH_VARARGS | METH_KEYWORDS,
+		"Insert the items at the specified index of a list value in bin"},
+	{"list_pop",
+		(PyCFunction) AerospikeClient_ListPop, METH_VARARGS | METH_KEYWORDS,
+		"Remove and get back a list element at a given index of a list value in bin"},
+	{"list_count",
+		(PyCFunction) AerospikeClient_ListCount, METH_VARARGS | METH_KEYWORDS,
+		"Count the elements of the list value in bin"},
 
 	// Deprecated key-based API
 

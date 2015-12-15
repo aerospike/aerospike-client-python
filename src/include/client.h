@@ -216,6 +216,30 @@ PyObject * AerospikeClient_ListExtend(AerospikeClient * self, PyObject * args, P
  */
 PyObject * AerospikeClient_ListInsert(AerospikeClient * self, PyObject * args, PyObject * kwds);
 
+/**
+ * Insert the items at the specified index of a list value in bin.
+ *
+ *		client.list_insert_items((x,y,z))
+ *
+ */
+PyObject * AerospikeClient_ListInsertItems(AerospikeClient * self, PyObject * args, PyObject * kwds);
+
+/**
+ * Remove and get back a list element at a given index of a list value in bin.
+ *
+ *		client.list_pop((x,y,z))
+ *
+ */
+PyObject * AerospikeClient_ListPop(AerospikeClient * self, PyObject * args, PyObject * kwds);
+
+/**
+ * Count the elements of the list value in bin.
+ *
+ *		client.list_count((x,y,z))
+ *
+ */
+PyObject * AerospikeClient_ListCount(AerospikeClient * self, PyObject * args, PyObject * kwds);
+
 /*******************************************************************************
  * KEY OPERATIONS (DEPRECATED)
  ******************************************************************************/

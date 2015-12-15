@@ -203,7 +203,7 @@ class TestListAppend(object):
         Invoke list_append() with key is none
         """
         try:
-            TestListAppend.client.append(None, "age", 45)
+            TestListAppend.client.list_append(None, "age", 45)
 
         except ParamError as exception:
             assert exception.code == -2
@@ -215,7 +215,7 @@ class TestListAppend(object):
         """
         key = ('test', 'demo', 1)
         try:
-            TestListAppend.client.append(key, None, "str")
+            TestListAppend.client.list_append(key, None, "str")
 
         except ParamError as exception:
             assert exception.code == -2
