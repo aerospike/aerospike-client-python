@@ -93,7 +93,6 @@ class TestIndex(TestBaseClass):
 
         except InvalidRequest as exception:
             assert exception.code == 4
-            assert exception.msg == 'Namespace Not Found'
 
     def test_createindex_with_incorrect_set(self):
         """
@@ -282,7 +281,6 @@ name
 
         except InvalidRequest as exception:
             assert exception.code == 4
-            assert exception.msg == 'Namespace Not Found'
 
     def test_create_string_index_with_incorrect_set(self):
         """

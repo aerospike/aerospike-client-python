@@ -86,10 +86,12 @@ PyObject * Aerospike_Set_Log_Level(PyObject *parent, PyObject *args, PyObject * 
 	}
 
 	long lLogLevel = PyInt_AsLong(py_log_level);
-    if((uint32_t)-1 == lLogLevel) {
-        as_error_update(&err, AEROSPIKE_ERR_PARAM, "integer value exceeds sys.maxsize");
-        goto CLEANUP;
-    }
+	if (lLogLevel == (uint32_t)-1 && PyErr_Occurred()) {
+		if (PyErr_ExceptionMatches(PyExc_OverflowError)) {
+			as_error_update(&err, AEROSPIKE_ERR_PARAM, "integer value exceeds sys.maxsize");
+			goto CLEANUP;
+		}
+	}
 
 	// Invoke C API to set log level
 	as_log_set_level((as_log_level)lLogLevel);

@@ -363,14 +363,16 @@ as_status pyobject_to_val(AerospikeClient * self, as_error * err, PyObject * py_
 		// this should never happen, but if it did...
 		return as_error_update(err, AEROSPIKE_ERR_CLIENT, "value is null");
 	}
-	else if ( PyInt_Check(py_obj) ) {
+	else if (PyInt_Check(py_obj)) {
 		int64_t i = (int64_t) PyInt_AsLong(py_obj);
 		*val = (as_val *) as_integer_new(i);
 	}
-	else if ( PyLong_Check(py_obj) ) {
+	else if (PyLong_Check(py_obj)) {
 		int64_t l = (int64_t) PyLong_AsLongLong(py_obj);
-		if(-1 == l) {
-			return as_error_update(err, AEROSPIKE_ERR_PARAM, "integer value exceeds sys.maxsize");
+		if (l == -1 && PyErr_Occurred()) {
+			if (PyErr_ExceptionMatches(PyExc_OverflowError)) {
+				return as_error_update(err, AEROSPIKE_ERR_PARAM, "integer value exceeds sys.maxsize");
+			}
 		}
 		*val = (as_val *) as_integer_new(l);
 	}
@@ -493,8 +495,10 @@ as_status pyobject_to_record(AerospikeClient * self, as_error * err, PyObject * 
 				ret_val = as_record_set_int64(rec, name, val);
 			} else if ( PyLong_Check(value) ) {
 				int64_t val = (int64_t) PyLong_AsLongLong(value);
-				if(-1 == val) {
-					return as_error_update(err, AEROSPIKE_ERR_PARAM, "integer value exceeds sys.maxsize");
+				if (val == -1 && PyErr_Occurred()) {
+					if (PyErr_ExceptionMatches(PyExc_OverflowError)) {
+						return as_error_update(err, AEROSPIKE_ERR_PARAM, "integer value exceeds sys.maxsize");
+					}
 				}
 				ret_val = as_record_set_int64(rec, name, val);
 			} else if (!strcmp(value->ob_type->tp_name, "aerospike.Geospatial")) {
@@ -576,8 +580,10 @@ as_status pyobject_to_record(AerospikeClient * self, as_error * err, PyObject * 
 				}
 				else if ( PyLong_Check(py_ttl) ) {
 					rec->ttl = (uint32_t) PyLong_AsLongLong(py_ttl);
-					if((uint32_t)-1 == rec->ttl) {
-						as_error_update(err, AEROSPIKE_ERR_PARAM, "integer value exceeds sys.maxsize");
+					if (rec->ttl == (uint32_t)-1 && PyErr_Occurred()) {
+						if (PyErr_ExceptionMatches(PyExc_OverflowError)) {
+							as_error_update(err, AEROSPIKE_ERR_PARAM, "integer value exceeds sys.maxsize");
+						}
 					}
 				} else {
 					as_error_update(err, AEROSPIKE_ERR_PARAM, "TTL should be an int or long");
@@ -588,10 +594,12 @@ as_status pyobject_to_record(AerospikeClient * self, as_error * err, PyObject * 
 				if ( PyInt_Check(py_gen) ) {
 					rec->gen = (uint16_t) PyInt_AsLong(py_gen);
 				}
-				else if ( PyLong_Check(py_gen) ) {
+				else if (PyLong_Check(py_gen)) {
 					rec->gen = (uint16_t) PyLong_AsLongLong(py_gen);
-					if ((uint32_t)-1 == rec->ttl) {
-						as_error_update(err, AEROSPIKE_ERR_PARAM, "integer value exceeds sys.maxsize");
+					if (rec->gen == (uint16_t)-1 && PyErr_Occurred()) {
+						if (PyErr_ExceptionMatches(PyExc_OverflowError)) {
+							as_error_update(err, AEROSPIKE_ERR_PARAM, "integer value exceeds sys.maxsize");
+						}
 					}
 				} else {
 					as_error_update(err, AEROSPIKE_ERR_PARAM, "Generation should be an int or long");

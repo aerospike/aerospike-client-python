@@ -95,10 +95,12 @@ class TestGeospatial(TestBaseClass):
         
         key, meta, bins = TestGeospatial.client.get(key)
 
-        assert bins == {'loc': {'coordinates': [42.34, 58.62], 'type': 'Point'},
+        expected = {'loc': {'coordinates': [42.34, 58.62], 'type': 'Point'},
                 "int_bin": 2, "string_bin": "str", "dict_bin": {"a": 1, "b": 2,
                   "geo": {'coordinates': [56.34, 69.62], 'type':
                         'Point'}}}
+        for b in bins:
+            assert b in expected
 
         TestGeospatial.client.remove(key)
 
@@ -121,8 +123,10 @@ class TestGeospatial(TestBaseClass):
         query.foreach(callback)
 
         assert len(records) == 3
-        assert records == [{'loc': {'coordinates': [-122.0, 37.5], 'type': 'Point'}}, {'loc': {'coordinates': [-121.8, 37.7], 'type':
+        expected = [{'loc': {'coordinates': [-122.0, 37.5], 'type': 'Point'}}, {'loc': {'coordinates': [-121.8, 37.7], 'type':
                 'Point'}}, {'loc': {'coordinates': [-121.6, 37.9], 'type': 'Point'}}]
+        for r in records:
+            assert r in expected
 
     def test_geospatial_positive_query_outside_shape(self):
         """
@@ -179,7 +183,9 @@ class TestGeospatial(TestBaseClass):
             TestGeospatial.client.remove(key)
 
         assert len(records) == 2
-        assert records == [{'loc': {'coordinates': [-121.8, 37.7], 'type': 'Point'}}, {'loc': {'coordinates': [-121.6, 37.9], 'type': 'Point'}}]
+        expected = [{'loc': {'coordinates': [-121.8, 37.7], 'type': 'Point'}}, {'loc': {'coordinates': [-121.6, 37.9], 'type': 'Point'}}]
+        for r in records:
+            assert r in expected
 
     def test_geospatial_positive_query_for_circle(self):
         """
@@ -278,8 +284,10 @@ class TestGeospatial(TestBaseClass):
         query.foreach(callback)
 
         assert len(records) == 3
-        assert records == [{'loc': {'coordinates': [-122.0, 37.5], 'type': 'Point'}}, {'loc': {'coordinates': [-121.8, 37.7], 'type':
+        expected = [{'loc': {'coordinates': [-122.0, 37.5], 'type': 'Point'}}, {'loc': {'coordinates': [-121.8, 37.7], 'type':
                 'Point'}}, {'loc': {'coordinates': [-121.6, 37.9], 'type': 'Point'}}]
+        for r in records:
+            assert r in expected
 
     def test_geospatial_loads_positive(self):
         """
@@ -314,8 +322,10 @@ class TestGeospatial(TestBaseClass):
         query.foreach(callback)
 
         assert len(records) == 3
-        assert records == [{'loc': {'coordinates': [-122.0, 37.5], 'type': 'Point'}}, {'loc': {'coordinates': [-121.8, 37.7], 'type':
+        expected = [{'loc': {'coordinates': [-122.0, 37.5], 'type': 'Point'}}, {'loc': {'coordinates': [-121.8, 37.7], 'type':
                 'Point'}}, {'loc': {'coordinates': [-121.6, 37.9], 'type': 'Point'}}]
+        for r in records:
+            assert r in expected
 
     def test_geospatial_dumps_positive(self):
         """
@@ -349,10 +359,12 @@ class TestGeospatial(TestBaseClass):
         
         key, meta, bins = TestGeospatial.client.get(key)
 
-        assert bins == {'loc': {'coordinates': [42.34, 58.62], 'type': 'Point'},
+        expected = {'loc': {'coordinates': [42.34, 58.62], 'type': 'Point'},
                 "int_bin": 2, "string_bin": "str", "dict_bin": {"a": 1, "b": 2,
                   "geo": {'coordinates': [56.34, 69.62], 'type':
                         'Point'}}}
+        for b in bins:
+            assert b in expected
 
         TestGeospatial.client.remove(key)
 
@@ -372,10 +384,12 @@ class TestGeospatial(TestBaseClass):
         
         key, meta, bins = TestGeospatial.client.get(key)
 
-        assert bins == {'loc': {'coordinates': [42.34, 58.62], 'type': 'Point'},
+        expected = {'loc': {'coordinates': [42.34, 58.62], 'type': 'Point'},
                 "int_bin": 2, "string_bin": "str", "dict_bin": {"a": 1, "b": 2,
                   "geo": {'coordinates': [56.34, 69.62], 'type':
                         'Point'}}}
+        for b in bins:
+            assert b in expected
 
         TestGeospatial.client.remove(key)
 
@@ -398,8 +412,10 @@ class TestGeospatial(TestBaseClass):
         query.foreach(callback)
 
         assert len(records) == 3
-        assert records == [{'loc': {'coordinates': [-122.0, 37.5], 'type': 'Point'}}, {'loc': {'coordinates': [-121.8, 37.7], 'type':
+        expected = [{'loc': {'coordinates': [-122.0, 37.5], 'type': 'Point'}}, {'loc': {'coordinates': [-121.8, 37.7], 'type':
                 'Point'}}, {'loc': {'coordinates': [-121.6, 37.9], 'type': 'Point'}}]
+        for r in records:
+            assert r in expected
 
     def test_geospatial_positive_query_with_geojson(self):
         """
@@ -418,8 +434,10 @@ class TestGeospatial(TestBaseClass):
         query.foreach(callback)
 
         assert len(records) == 3
-        assert records == [{'loc': {'coordinates': [-122.0, 37.5], 'type': 'Point'}}, {'loc': {'coordinates': [-121.8, 37.7], 'type':
+        expected = [{'loc': {'coordinates': [-122.0, 37.5], 'type': 'Point'}}, {'loc': {'coordinates': [-121.8, 37.7], 'type':
                 'Point'}}, {'loc': {'coordinates': [-121.6, 37.9], 'type': 'Point'}}]
+        for r in records:
+            assert r in expected
 
     def test_geospatial_2dindex_positive(self):
         """

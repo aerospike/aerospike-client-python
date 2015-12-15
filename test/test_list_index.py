@@ -114,7 +114,6 @@ class TestListIndex(object):
 
         except InvalidRequest as exception:
             assert exception.code == 4
-            assert exception.msg == 'Namespace Not Found'
 
     def test_listindex_with_incorrect_set(self):
         """

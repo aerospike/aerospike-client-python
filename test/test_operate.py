@@ -24,14 +24,13 @@ class TestOperate(object):
         else:
             TestOperate.client = aerospike.client(config).connect(user,
                                                                   password)
-        config_strict_types = {'hosts': hostlist, 'strict_types': False}
+        config_no_typechecks = {'hosts': hostlist, 'strict_types': False}
         if user == None and password == None:
-            TestOperate.client_strict_types = aerospike.client(config_strict_types).connect()
+            TestOperate.client_no_typechecks = aerospike.client(config_no_typechecks).connect()
         else:
-            TestOperate.client_strict_types = aerospike.client(config_strict_types).connect(user, password)
+            TestOperate.client_no_typechecks = aerospike.client(config_no_typechecks).connect(user, password)
 
         TestOperate.skip_old_server = True
-        TestOperate.skip_latest_server = True
         versioninfo = TestOperate.client.info('version')
         for keys in versioninfo:
             for value in versioninfo[keys]:
@@ -39,12 +38,10 @@ class TestOperate(object):
                     versionlist = value[value.find("build") + 6:value.find("\n")].split(".")
                     if int(versionlist[0]) >= 3 and int(versionlist[1]) >= 6:
                         TestOperate.skip_old_server = False
-                    if int(versionlist[0]) >= 3 and int(versionlist[1]) >= 7:
-                        TestOperate.skip_latest_server = False
 
     def teardown_class(cls):
         TestOperate.client.close()
-        TestOperate.client_strict_types.close()
+        TestOperate.client_no_typechecks.close()
 
     def setup_method(self, method):
         TestOperate.keys = []
@@ -345,7 +342,6 @@ class TestOperate(object):
 
         except RecordGenerationError as exception:
             assert exception.code == 3L
-            assert exception.msg == "AEROSPIKE_ERR_RECORD_GENERATION"
        
         (key , meta, bins) = TestOperate.client.get(key)
         assert bins == { "age": 1, 'name': 'name1'}
@@ -379,7 +375,6 @@ class TestOperate(object):
 
         except RecordGenerationError as exception:
             assert exception.code == 3L
-            assert exception.msg == "AEROSPIKE_ERR_RECORD_GENERATION"
         
         (key , meta, bins) = TestOperate.client.get(key)
         assert bins == { 'age' : 1, 'name': 'name1'}
@@ -462,7 +457,6 @@ class TestOperate(object):
 
         except InvalidRequest as exception:
             assert exception.code == 4L
-            assert exception.msg == "AEROSPIKE_ERR_REQUEST_INVALID"
 
     def test_operate_with_nonexistent_key_positive(self):
         """
@@ -896,11 +890,11 @@ class TestOperate(object):
             }
         ]	
 
-        (key, meta, bins) = TestOperate.client_strict_types.operate(key, list)
+        (key, meta, bins) = TestOperate.client_no_typechecks.operate(key, list)
 
         assert {'age': 4} == bins
 
-        TestOperate.client_strict_types.remove(key)
+        TestOperate.client_no_typechecks.remove(key)
 
     def test_operate_prepend_with_int_existing_record(self):
         """
@@ -921,12 +915,12 @@ class TestOperate(object):
         ]	
 
         try:
-            (key, meta, bins) = TestOperate.client_strict_types.operate(key, list)
+            (key, meta, bins) = TestOperate.client_no_typechecks.operate(key, list)
 
         except BinIncompatibleType as exception:
             assert exception.code == 12L
 
-        TestOperate.client_strict_types.remove(key)
+        TestOperate.client_no_typechecks.remove(key)
 
     def test_operate_prepend_with_list_existing_record(self):
         """
@@ -934,7 +928,7 @@ class TestOperate(object):
         """
         key = ('test', 'demo', 'existing_key')
 
-        (key, old_meta) = TestOperate.client_strict_types.exists(key)
+        (key, old_meta) = TestOperate.client_no_typechecks.exists(key)
 
         list = [
             {
@@ -948,18 +942,16 @@ class TestOperate(object):
             }
         ]	
 
+        exception_raised = False
         try:
-            (key, meta, bins) = TestOperate.client_strict_types.operate(key, list)
-
-            if not TestOperate.skip_latest_server:
-                assert bins == {'list': ['c']}
-                assert meta['gen'] == old_meta['gen'] + 1
-
+            (key, meta, bins) = TestOperate.client_no_typechecks.operate(key, list)
         except BinIncompatibleType as exception:
-            if not TestOperate.skip_latest_server:
-                assert exception.code == 12
+            assert exception.code == 12L
+            exception_raised = True
+        assert exception_raised is True
 
-        TestOperate.client_strict_types.remove(key)
+
+        TestOperate.client_no_typechecks.remove(key)
 
     def test_operate_append_with_dict_new_record(self):
         """
@@ -979,11 +971,11 @@ class TestOperate(object):
             }
         ]	
 
-        (key, meta, bins) = TestOperate.client_strict_types.operate(key, list)
+        (key, meta, bins) = TestOperate.client_no_typechecks.operate(key, list)
 
         assert {'dict': {"a": 1, "b": 2}} == bins
 
-        TestOperate.client_strict_types.remove(key)
+        TestOperate.client_no_typechecks.remove(key)
 
     def test_operate_append_with_dict_existing_record(self):
         """
@@ -991,7 +983,7 @@ class TestOperate(object):
         """
         key = ('test', 'demo', 'existing_key')
 
-        (key, old_meta) = TestOperate.client_strict_types.exists(key)
+        (key, old_meta) = TestOperate.client_no_typechecks.exists(key)
 
         list = [
             {
@@ -1003,20 +995,17 @@ class TestOperate(object):
                 "op": aerospike.OPERATOR_READ,
                 "bin": "dict"
             }
-        ]	
+        ]
 
+        exception_raised = False
         try:
-            (key, meta, bins) = TestOperate.client_strict_types.operate(key, list)
-
-            if not TestOperate.skip_latest_server:
-                assert {'dict': {"a": 1}} == bins
-                assert meta['gen'] == old_meta['gen'] + 1
-
+            (key, meta, bins) = TestOperate.client_no_typechecks.operate(key, list)
         except BinIncompatibleType as exception:
-            if not TestOperate.skip_latest_server:
-                assert exception.code == 12
+            assert exception.code == 12L
+            exception_raised = True
+        assert exception_raised is True
 
-        TestOperate.client_strict_types.remove(key)
+        TestOperate.client_no_typechecks.remove(key)
 
     def test_operate_append_with_float_existing_record(self):
         """
@@ -1037,12 +1026,12 @@ class TestOperate(object):
         ]	
 
         try:
-            (key, meta, bins) = TestOperate.client_strict_types.operate(key, list)
+            (key, meta, bins) = TestOperate.client_no_typechecks.operate(key, list)
 
         except BinIncompatibleType as exception:
             assert exception.code == 12L
 
-        TestOperate.client_strict_types.remove(key)
+        TestOperate.client_no_typechecks.remove(key)
 
     def test_operate_incr_with_string_new_record(self):
         """
@@ -1062,11 +1051,11 @@ class TestOperate(object):
             }
         ]	
 
-        (key, meta, bins) = TestOperate.client_strict_types.operate(key, list)
+        (key, meta, bins) = TestOperate.client_no_typechecks.operate(key, list)
 
         assert {'name': 'aerospike'} == bins
 
-        TestOperate.client_strict_types.remove(key)
+        TestOperate.client_no_typechecks.remove(key)
 
     def test_operate_incr_with_string_existing_record(self):
         """
@@ -1087,12 +1076,12 @@ class TestOperate(object):
         ]	
 
         try:
-            (key, meta, bins) = TestOperate.client_strict_types.operate(key, list)
+            (key, meta, bins) = TestOperate.client_no_typechecks.operate(key, list)
 
         except BinIncompatibleType as exception:
             assert exception.code == 12L
 
-        TestOperate.client_strict_types.remove(key)
+        TestOperate.client_no_typechecks.remove(key)
 
     def test_operate_incr_with_bytearray_existing_record(self):
         """
@@ -1113,12 +1102,12 @@ class TestOperate(object):
         ]	
 
         try:
-            (key, meta, bins) = TestOperate.client_strict_types.operate(key, list)
+            (key, meta, bins) = TestOperate.client_no_typechecks.operate(key, list)
 
         except BinIncompatibleType as exception:
             assert exception.code == 12L
 
-        TestOperate.client_strict_types.remove(key)
+        TestOperate.client_no_typechecks.remove(key)
 
     def test_operate_incr_with_geospatial_new_record(self):
         """
@@ -1139,11 +1128,11 @@ class TestOperate(object):
             }
         ]	
 
-        (key, meta, bins) = TestOperate.client_strict_types.operate(key, list)
+        (key, meta, bins) = TestOperate.client_no_typechecks.operate(key, list)
 
         assert bins == {'geospatial': {'coordinates': [42.34, 58.62], 'type':
             'Point'}}
-        TestOperate.client_strict_types.remove(key)
+        TestOperate.client_no_typechecks.remove(key)
 
     def test_operate_with_bin_length_extra(self):
         """
@@ -1190,9 +1179,9 @@ class TestOperate(object):
              "val": 3}
         ]
 
-        TestOperate.client_strict_types.operate(key, list)
+        TestOperate.client_no_typechecks.operate(key, list)
 
-        (key, meta, bins) = TestOperate.client_strict_types.get(key)
+        (key, meta, bins) = TestOperate.client_no_typechecks.get(key)
 
         assert bins == {"name": "ramname1", "age": 1}
 
@@ -1234,7 +1223,7 @@ class TestOperate(object):
                          "bin": "name"}
         ]
 
-        key, meta, bins = TestOperate.client_strict_types.operate(key, list)
+        key, meta, bins = TestOperate.client_no_typechecks.operate(key, list)
 
         assert bins == {'name': 'ramname1'}
 
