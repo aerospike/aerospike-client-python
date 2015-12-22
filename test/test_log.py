@@ -12,7 +12,7 @@ except:
     print "Please install aerospike python client."
     sys.exit(1)
         
-def handler(level, func, myfile, line):
+def handler(level, func, path, line, msg):
     assert 1 == 1
 
 def extrahandler(level, func, myfile, line):

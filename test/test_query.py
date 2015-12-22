@@ -51,6 +51,8 @@ class TestQuery(TestBaseClass):
                                                  'string_map_values_index')
         client.index_integer_create('test', None, 'test_age_none', 
                                                 'age_index_none')
+        client.index_integer_create('test', 'demo', bytearray("sal\0kj", "utf-8"),
+                                             'sal_index')
 
     def teardown_class(cls):
         hostlist, user, password = TestBaseClass.get_hosts()
@@ -70,6 +72,7 @@ class TestQuery(TestBaseClass):
         client.index_remove('test', 'numeric_map_values_index', policy)
         client.index_remove('test', 'string_map_values_index', policy)
         client.index_remove('test', 'age_index_none', policy);
+        client.index_remove('test', 'sal_index')
         client.close()
 
     def setup_method(self, method):
@@ -113,6 +116,12 @@ class TestQuery(TestBaseClass):
             }
             self.client.put(key, rec)
 
+        key = ('test', 'demo', 122)
+        list = [{"op": aerospike.OPERATOR_WRITE,
+                "bin": bytearray("sal\0kj", "utf-8"),
+                "val": 80000}];
+        self.client.operate(key, list)
+
     def teardown_method(self, method):
         """
         Teardown method.
@@ -120,6 +129,9 @@ class TestQuery(TestBaseClass):
         for i in xrange(10):
             key = ('test', 'demo', i)
             self.client.remove(key)
+
+        key = ('test', 'demo', 122)
+        self.client.remove(key)
         self.client.close()
 
     def test_query_with_no_parameters(self):
@@ -404,8 +416,8 @@ class TestQuery(TestBaseClass):
         try:
             result = query.foreach(callback)
 
-        except ParamError as exception:
-            assert exception.code == -2L
+        except ClientError as exception:
+            assert exception.code == -1L
             assert exception.msg == "Callback function contains an error"
 
     def test_query_with_callback_returning_false(self):
@@ -772,3 +784,20 @@ class TestQuery(TestBaseClass):
 
         query.foreach(callback, policy)
         assert len(records) == 0
+
+    def test_query_with_select_bytearray(self):
+        """
+            Invoke query() with correct arguments
+        """
+        query = self.client.query('test', 'demo')
+        query.select(bytearray("sal\0kj", "utf-8"))
+        query.where(p.equals(bytearray("sal\0kj", "utf-8"), 80000))
+
+        records = []
+
+        def callback((key, metadata, record)):
+            records.append(key)
+
+        query.foreach(callback)
+        assert records
+        assert len(records) == 1

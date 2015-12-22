@@ -81,7 +81,6 @@ class TestIndex(TestBaseClass):
 'age', 'age_index', policy)
 
         assert exception.value[0] == 4
-        assert exception.value[1] == 'Invalid Set Name'
 
     def test_createindex_with_incorrect_namespace(self):
         """
@@ -94,7 +93,6 @@ class TestIndex(TestBaseClass):
 
         except InvalidRequest as exception:
             assert exception.code == 4
-            assert exception.msg == 'Namespace Not Found'
 
     def test_createindex_with_incorrect_set(self):
         """
@@ -259,7 +257,6 @@ name
 'name', 'name_index', policy)
 
         assert exception.value[0] == 4
-        assert exception.value[1] == 'Invalid Set Name'
 
     def test_create_string_index_with_correct_parameters_ns_length_extra(self):
             #Invoke createindex() with correct arguments ns length extra
@@ -272,7 +269,6 @@ name
 'name', 'name_index', policy)
 
         assert exception.value[0] == 4
-        assert exception.value[1] == 'Namespace Not Found'
 
     def test_create_string_index_with_incorrect_namespace(self):
         """
@@ -285,7 +281,6 @@ name
 
         except InvalidRequest as exception:
             assert exception.code == 4
-            assert exception.msg == 'Namespace Not Found'
 
     def test_create_string_index_with_incorrect_set(self):
         """

@@ -56,6 +56,9 @@ static bool batch_get_cb(const as_batch_read* results, uint32_t n, void* udata)
 	as_error err;
 	as_error_init(&err);
 
+	// Lock Python State
+	PyGILState_STATE gstate;
+	gstate = PyGILState_Ensure();
     /*// Typecast udata back to PyObject
     PyObject * py_recs = (PyObject *) udata;
 
@@ -129,6 +132,8 @@ static bool batch_get_cb(const as_batch_read* results, uint32_t n, void* udata)
             }
         }
     }
+	// Release Python State
+	PyGILState_Release(gstate);
     return true;
 }
 
@@ -287,7 +292,10 @@ static PyObject * batch_get_aerospike_batch_read(as_error *err, AerospikeClient 
 	}
 
 	// Invoke C-client API
-    if (aerospike_batch_read(self->as, err, batch_policy_p, &records) != AEROSPIKE_OK) 
+    Py_BEGIN_ALLOW_THREADS
+    aerospike_batch_read(self->as, err, batch_policy_p, &records);
+    Py_END_ALLOW_THREADS
+    if (err->code != AEROSPIKE_OK)
     {
 		goto CLEANUP;
     }
@@ -382,9 +390,11 @@ static PyObject * batch_get_aerospike_batch_get(as_error *err, AerospikeClient *
 	}
 
 	// Invoke C-client API
+    Py_BEGIN_ALLOW_THREADS
     aerospike_batch_get(self->as, err, batch_policy_p,
         &batch, (aerospike_batch_read_callback) batch_get_cb,
         &data);
+    Py_END_ALLOW_THREADS
     
 CLEANUP:
     if (batch_initialised == true){
@@ -443,7 +453,7 @@ PyObject * AerospikeClient_Get_Many_Invoke(
 	}
 
     has_batch_index = aerospike_has_batch_index(self->as);
-    if (has_batch_index) {
+    if (has_batch_index && !(self->as->config.policies.batch.use_batch_direct)) {
         py_recs = batch_get_aerospike_batch_read(&err, self, py_keys, batch_policy_p);
     } else {
         py_recs = batch_get_aerospike_batch_get(&err, self, py_keys, batch_policy_p);

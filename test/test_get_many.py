@@ -20,13 +20,13 @@ class TestGetMany(TestBaseClass):
         """
         Setup method.
         """
-        hostlist, user, password = TestBaseClass.get_hosts()
-        config = {'hosts': hostlist}
-        if user == None and password == None:
+        TestGetMany.hostlist, TestGetMany.user, TestGetMany.password = TestBaseClass.get_hosts()
+        config = {'hosts': TestGetMany.hostlist}
+        if TestGetMany.user == None and TestGetMany.password == None:
             TestGetMany.client = aerospike.client(config).connect()
         else:
-            TestGetMany.client = aerospike.client(config).connect(user,
-                                                                  password)
+            TestGetMany.client = aerospike.client(config).connect(TestGetMany.user,
+                                                                  TestGetMany.password)
 
     def teardown_class(cls):
         TestGetMany.client.close()
@@ -202,3 +202,24 @@ class TestGetMany(TestBaseClass):
         except ClusterError as exception:
             assert exception.code == 11L
             assert exception.msg == 'No connection to aerospike cluster'
+
+    def test_get_many_with_use_batch_direct(self):
+
+        config = {'hosts': TestGetMany.hostlist, 'policies': {'use_batch_direct':
+            True}}
+        if TestGetMany.user == None and TestGetMany.password == None:
+            client_batch_direct = aerospike.client(config).connect()
+        else:
+            client_batch_direct = aerospike.client(config).connect(TestGetMany.user,
+                                                                  TestGetMany.password)
+
+        records = client_batch_direct.get_many(self.keys, {'timeout': 30})
+
+        assert type(records) == list
+        assert len(records) == 6
+        assert Counter([x[0][2] for x in records]) == Counter([0, 1, 2, 3,
+        4, 'float_value'])
+        assert records[5][2] == {'float_value': 4.3}
+
+
+        client_batch_direct.close()

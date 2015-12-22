@@ -104,7 +104,6 @@ class TestMapValuesIndex(object):
 'string_map', aerospike.INDEX_STRING, "test_string_map_index", policy)
 
         assert exception.value[0] == 4
-        assert exception.value[1] == 'Invalid Set Name'
 
     def test_mapvaluesindex_with_incorrect_namespace(self):
         """
@@ -117,7 +116,6 @@ class TestMapValuesIndex(object):
 
         except InvalidRequest as exception:
             assert exception.code == 4
-            assert exception.msg == 'Namespace Not Found'
 
     def test_mapvaluesindex_with_incorrect_set(self):
         """

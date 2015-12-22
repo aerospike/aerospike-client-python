@@ -61,8 +61,9 @@ static int query_where_add(as_query **query, as_predicate_type predicate, as_ind
 					bin = PyString_AsString(py_ubin);
 				} else if (PyString_Check(py_bin) ){
 					bin = PyString_AsString(py_bin);
-				}
-				else {
+				} else if (PyByteArray_Check(py_bin)) {
+                    bin = PyByteArray_AsString(py_bin);
+                } else {
 					return 1;
 				}
 
@@ -99,8 +100,9 @@ static int query_where_add(as_query **query, as_predicate_type predicate, as_ind
 					bin = PyString_AsString(py_ubin);
 				} else if (PyString_Check(py_bin) ){
 					bin = PyString_AsString(py_bin);
-				}
-				else {
+				} else if (PyByteArray_Check(py_bin)) {
+                    bin = PyByteArray_AsString(py_bin);
+                } else {
 					return 1;
 				}
 				int64_t val = pyobject_to_int64(py_val1);
@@ -140,8 +142,9 @@ static int query_where_add(as_query **query, as_predicate_type predicate, as_ind
 					bin = PyString_AsString(py_ubin);
 				} else if (PyString_Check(py_bin)){
 					bin = PyString_AsString(py_bin);
-				}
-				else {
+                } else if (PyByteArray_Check(py_bin)) {
+                    bin = PyByteArray_AsString(py_bin);
+                } else {
 					return 1;
 				}
 				int64_t min = pyobject_to_int64(py_val1);
@@ -334,7 +337,9 @@ PyObject * AerospikeClient_QueryApply_Invoke(
 		goto CLEANUP;
 	}
 
+    Py_BEGIN_ALLOW_THREADS
 	aerospike_query_background(self->as, &err, write_policy_p, &query, &query_id);
+    Py_END_ALLOW_THREADS
 	arglist = NULL;
 	if(err.code == AEROSPIKE_OK) {
 		if(block) {
@@ -345,7 +350,9 @@ PyObject * AerospikeClient_QueryApply_Invoke(
 					goto CLEANUP;
 				}
 			}
+            Py_BEGIN_ALLOW_THREADS
 			aerospike_query_wait(self->as, &err, info_policy_p, &query, query_id, 0);
+            Py_END_ALLOW_THREADS
 			if(err.code != AEROSPIKE_OK) {
 				as_error_update(&err, AEROSPIKE_ERR_PARAM, "Unable to perform query_wait on the query");
 			}
@@ -486,10 +493,12 @@ PyObject * AerospikeClient_JobInfo(AerospikeClient * self, PyObject * args, PyOb
 		goto CLEANUP;
     }
 
+    Py_BEGIN_ALLOW_THREADS
 	if (AEROSPIKE_OK != (aerospike_job_info(self->as, &err,
 					info_policy_p, module, ljobId, false, &job_info))) {
 		goto CLEANUP;
 	}
+    Py_END_ALLOW_THREADS
 
 	if(retObj)
 	{

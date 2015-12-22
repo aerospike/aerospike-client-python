@@ -85,7 +85,9 @@ extern PyObject * AerospikeClient_Exists_Invoke(
 	}
 
 	// Invoke operation
+    Py_BEGIN_ALLOW_THREADS
 	aerospike_key_exists(self->as, &err, read_policy_p, &key, &rec);
+    Py_END_ALLOW_THREADS
 
 	if ( err.code == AEROSPIKE_OK ) {
 

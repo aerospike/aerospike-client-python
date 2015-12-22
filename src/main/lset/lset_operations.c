@@ -83,8 +83,10 @@ PyObject * AerospikeLSet_Add(AerospikeLSet * self, PyObject * args, PyObject * k
 		goto CLEANUP;
 	}
 
+    Py_BEGIN_ALLOW_THREADS
 	aerospike_lset_add(self->client->as, &err, apply_policy_p, &self->key,
 			&self->lset, val);
+    Py_END_ALLOW_THREADS
 	if(err.code != AEROSPIKE_OK) {
 		as_error_update(&err, err.code, NULL);
 	}
@@ -180,8 +182,10 @@ PyObject * AerospikeLSet_Add_Many(AerospikeLSet * self, PyObject * args, PyObjec
 		goto CLEANUP;
 	}
 
+    Py_BEGIN_ALLOW_THREADS
 	aerospike_lset_add_all(self->client->as, &err, apply_policy_p,
 			&self->key, &self->lset, arglist);
+    Py_END_ALLOW_THREADS
 	if( err.code != AEROSPIKE_OK ) {
 		as_error_update(&err, err.code, NULL);
 	}
@@ -271,8 +275,10 @@ PyObject * AerospikeLSet_Get(AerospikeLSet * self, PyObject * args, PyObject * k
 		goto CLEANUP;
 	}
 
+    Py_BEGIN_ALLOW_THREADS
 	aerospike_lset_get(self->client->as, &err, apply_policy_p, &self->key,
 			&self->lset, val, &return_val_p);
+    Py_END_ALLOW_THREADS
 
 	if (err.code != AEROSPIKE_OK) {
 		as_error_update(&err, err.code, NULL);
@@ -380,8 +386,10 @@ PyObject * AerospikeLSet_Filter(AerospikeLSet * self, PyObject * args, PyObject 
 		pyobject_to_list(self->client, &err, py_args, &arg_list, &static_pool, SERIALIZER_PYTHON);
 	}
 
+    Py_BEGIN_ALLOW_THREADS
 	aerospike_lset_filter(self->client->as, &err, apply_policy_p, &self->key,
 			&self->lset, filter_name, arg_list, &elements_list);
+    Py_END_ALLOW_THREADS
 
 	if (err.code != AEROSPIKE_OK) {
 		as_error_update(&err, err.code, NULL);
@@ -468,8 +476,10 @@ PyObject * AerospikeLSet_Destroy(AerospikeLSet * self, PyObject * args, PyObject
 		goto CLEANUP;
 	}
 
+    Py_BEGIN_ALLOW_THREADS
 	aerospike_lset_destroy(self->client->as, &err, apply_policy_p, &self->key,
 			&self->lset);
+    Py_END_ALLOW_THREADS
 	if( err.code != AEROSPIKE_OK) {
 		as_error_update(&err, err.code, NULL);
 	}
@@ -556,8 +566,10 @@ PyObject * AerospikeLSet_Exists(AerospikeLSet * self, PyObject * args, PyObject 
 
 	as_boolean exists;
 	as_boolean_init(&exists, false);
+    Py_BEGIN_ALLOW_THREADS
 	aerospike_lset_exists(self->client->as, &err, apply_policy_p, &self->key,
 			&self->lset, val, &exists);
+    Py_END_ALLOW_THREADS
 	if( err.code != AEROSPIKE_OK) {
 		as_error_update(&err, err.code, NULL);
 	}
@@ -649,8 +661,10 @@ PyObject * AerospikeLSet_Remove(AerospikeLSet * self, PyObject * args, PyObject 
 		goto CLEANUP;
 	}
 
+    Py_BEGIN_ALLOW_THREADS
 	aerospike_lset_remove(self->client->as, &err, apply_policy_p, &self->key,
 			&self->lset, val);
+    Py_END_ALLOW_THREADS
 	if( err.code != AEROSPIKE_OK ) {
 		as_error_update(&err, err.code, NULL);
 	}
@@ -729,8 +743,10 @@ PyObject * AerospikeLSet_Size(AerospikeLSet * self, PyObject * args, PyObject * 
 		goto CLEANUP;
 	}
 
+    Py_BEGIN_ALLOW_THREADS
 	aerospike_lset_size(self->client->as, &err, apply_policy_p, &self->key,
 			&self->lset, (uint32_t *)&size);
+    Py_END_ALLOW_THREADS
 	if(err.code != AEROSPIKE_OK) {
 		as_error_update(&err, err.code, NULL);
 	}

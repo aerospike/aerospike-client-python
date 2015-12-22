@@ -114,7 +114,9 @@ PyObject * AerospikeClient_Index_Integer_Create(AerospikeClient * self, PyObject
 		bin_ptr = PyString_AsString(py_ustr_bin);
 	} else if ( PyString_Check(py_bin) ) {
 		bin_ptr = PyString_AsString(py_bin);
-	} else {
+	} else if (PyByteArray_Check(py_bin)) {
+        bin_ptr = PyByteArray_AsString(py_bin);
+    } else {
 		as_error_update(&err, AEROSPIKE_ERR_PARAM, "Bin should be a string");
 		goto CLEANUP;
 	}
@@ -132,12 +134,16 @@ PyObject * AerospikeClient_Index_Integer_Create(AerospikeClient * self, PyObject
 	}
 
 	// Invoke operation
+    Py_BEGIN_ALLOW_THREADS
 	aerospike_index_create_complex(self->as, &err, &task, info_policy_p, namespace, set_ptr, bin_ptr, name, AS_INDEX_TYPE_DEFAULT, AS_INDEX_NUMERIC);
+    Py_END_ALLOW_THREADS
 	if ( err.code != AEROSPIKE_OK ) {
 		as_error_update(&err, err.code, NULL);
 		goto CLEANUP;
 	} else {
+        Py_BEGIN_ALLOW_THREADS
 		aerospike_index_create_wait(&err, &task, 2000);
+        Py_END_ALLOW_THREADS
 	}
 
 CLEANUP:
@@ -250,6 +256,8 @@ PyObject * AerospikeClient_Index_String_Create(AerospikeClient * self, PyObject 
 		bin_ptr = PyString_AsString(py_ustr_bin);
 	} else if ( PyString_Check(py_bin) ) {
 		bin_ptr = PyString_AsString(py_bin);
+	} else if (PyByteArray_Check(py_bin)) {
+        bin_ptr = PyByteArray_AsString(py_bin);
 	} else {
 		as_error_update(&err, AEROSPIKE_ERR_PARAM, "Bin should be a string");
 		goto CLEANUP;
@@ -268,12 +276,17 @@ PyObject * AerospikeClient_Index_String_Create(AerospikeClient * self, PyObject 
 	}
 
 	// Invoke operation
+    Py_BEGIN_ALLOW_THREADS
 	aerospike_index_create_complex(self->as, &err, &task, info_policy_p, namespace, set_ptr, bin_ptr, name, AS_INDEX_TYPE_DEFAULT, AS_INDEX_STRING);
+    Py_END_ALLOW_THREADS
+
 	if ( err.code != AEROSPIKE_OK ) {
 		as_error_update(&err, err.code, NULL);
 		goto CLEANUP;
 	} else {
+        Py_BEGIN_ALLOW_THREADS
 		aerospike_index_create_wait(&err, &task, 2000);
+        Py_END_ALLOW_THREADS
 	}
 
 CLEANUP:
@@ -375,7 +388,9 @@ PyObject * AerospikeClient_Index_Remove(AerospikeClient * self, PyObject *args, 
 	}
 
 	// Invoke operation
+    Py_BEGIN_ALLOW_THREADS
 	aerospike_index_remove(self->as, &err, info_policy_p, namespace, name);
+    Py_END_ALLOW_THREADS
 	if ( err.code != AEROSPIKE_OK ) {
 		as_error_update(&err, err.code, NULL);
 		goto CLEANUP;
@@ -473,6 +488,8 @@ PyObject * AerospikeClient_Index_List_Create(AerospikeClient * self, PyObject *a
 		bin_ptr = PyString_AsString(py_ustr_bin);
 	} else if ( PyString_Check(py_bin) ) {
 		bin_ptr = PyString_AsString(py_bin);
+	} else if (PyByteArray_Check(py_bin)) {
+        bin_ptr = PyByteArray_AsString(py_bin);
 	} else {
 		as_error_update(&err, AEROSPIKE_ERR_PARAM, "Bin should be a string");
 		goto CLEANUP;
@@ -491,23 +508,28 @@ PyObject * AerospikeClient_Index_List_Create(AerospikeClient * self, PyObject *a
 	}
 
 	long type = 0;
-	if(PyInt_Check(py_datatype)) {
+	if (PyInt_Check(py_datatype)) {
 		type = PyInt_AsLong(py_datatype);
-	} else if ( PyLong_Check(py_datatype) ) {
+	} else if (PyLong_Check(py_datatype)) {
 		type = PyLong_AsLong(py_datatype);
-        if(-1 == type) {
-		    as_error_update(&err, AEROSPIKE_ERR_PARAM, "integer value exceeds sys.maxsize");
-    		goto CLEANUP;
-        }
+		if (type == -1 && PyErr_Occurred()) {
+			if (PyErr_ExceptionMatches(PyExc_OverflowError)) {
+				as_error_update(&err, AEROSPIKE_ERR_PARAM, "integer value exceeds sys.maxsize");
+			}
+		}
 	}
 
 	// Invoke operation
+    Py_BEGIN_ALLOW_THREADS
 	aerospike_index_create_complex(self->as, &err, &task, info_policy_p, namespace, set_ptr, bin_ptr, name, AS_INDEX_TYPE_LIST, type);
+    Py_END_ALLOW_THREADS
 	if ( err.code != AEROSPIKE_OK ) {
 		as_error_update(&err, err.code, NULL);
 		goto CLEANUP;
 	} else {
+        Py_BEGIN_ALLOW_THREADS
 		aerospike_index_create_wait(&err, &task, 2000);
+        Py_END_ALLOW_THREADS
 	}
 
 CLEANUP:
@@ -607,6 +629,8 @@ PyObject * AerospikeClient_Index_Map_Keys_Create(AerospikeClient * self, PyObjec
 		bin_ptr = PyString_AsString(py_ustr_bin);
 	} else if ( PyString_Check(py_bin) ) {
 		bin_ptr = PyString_AsString(py_bin);
+	} else if (PyByteArray_Check(py_bin)) {
+        bin_ptr = PyByteArray_AsString(py_bin);
 	} else {
 		as_error_update(&err, AEROSPIKE_ERR_PARAM, "Bin should be a string");
 		goto CLEANUP;
@@ -625,23 +649,29 @@ PyObject * AerospikeClient_Index_Map_Keys_Create(AerospikeClient * self, PyObjec
 	}
 
 	long type = 0;
-	if(PyInt_Check(py_datatype)) {
+	if (PyInt_Check(py_datatype)) {
 		type = PyInt_AsLong(py_datatype);
-	} else if ( PyLong_Check(py_datatype) ) {
+	} else if (PyLong_Check(py_datatype)) {
 		type = PyLong_AsLong(py_datatype);
-        if(-1 == type) {
-		    as_error_update(&err, AEROSPIKE_ERR_PARAM, "integer value exceeds sys.maxsize");
-    		goto CLEANUP;
-        }
+		if (type == -1 && PyErr_Occurred()) {
+			if (PyErr_ExceptionMatches(PyExc_OverflowError)) {
+				as_error_update(&err, AEROSPIKE_ERR_PARAM, "integer value exceeds sys.maxsize");
+				goto CLEANUP;
+			}
+		}
 	}
 
 	// Invoke operation
+    Py_BEGIN_ALLOW_THREADS
 	aerospike_index_create_complex(self->as, &err, &task, info_policy_p, namespace, set_ptr, bin_ptr, name, AS_INDEX_TYPE_MAPKEYS, type);
+    Py_END_ALLOW_THREADS
 	if ( err.code != AEROSPIKE_OK ) {
 		as_error_update(&err, err.code, NULL);
 		goto CLEANUP;
 	} else {
+        Py_BEGIN_ALLOW_THREADS
 		aerospike_index_create_wait(&err, &task, 2000);
+        Py_END_ALLOW_THREADS
 	}
 
 CLEANUP:
@@ -742,6 +772,8 @@ PyObject * AerospikeClient_Index_Map_Values_Create(AerospikeClient * self, PyObj
 		bin_ptr = PyString_AsString(py_ustr_bin);
 	} else if ( PyString_Check(py_bin) ) {
 		bin_ptr = PyString_AsString(py_bin);
+	} else if (PyByteArray_Check(py_bin)) {
+        bin_ptr = PyByteArray_AsString(py_bin);
 	} else {
 		as_error_update(&err, AEROSPIKE_ERR_PARAM, "Bin should be a string");
 		goto CLEANUP;
@@ -760,23 +792,29 @@ PyObject * AerospikeClient_Index_Map_Values_Create(AerospikeClient * self, PyObj
 	}
 
 	int type = 0;
-	if(PyInt_Check(py_datatype)) {
+	if (PyInt_Check(py_datatype)) {
 		type = PyInt_AsLong(py_datatype);
-	} else if ( PyLong_Check(py_datatype) ) {
+	} else if (PyLong_Check(py_datatype)) {
 		type = PyLong_AsLongLong(py_datatype);
-        if(-1 == type) {
-		    as_error_update(&err, AEROSPIKE_ERR_PARAM, "integer value exceeds sys.maxsize");
-    		goto CLEANUP;
-        }
+		if (type == -1 && PyErr_Occurred()) {
+			if (PyErr_ExceptionMatches(PyExc_OverflowError)) {
+				as_error_update(&err, AEROSPIKE_ERR_PARAM, "integer value exceeds sys.maxsize");
+				goto CLEANUP;
+			}
+		}
 	}
 
 	// Invoke operation
+    Py_BEGIN_ALLOW_THREADS
 	aerospike_index_create_complex(self->as, &err, &task, info_policy_p, namespace, set_ptr, bin_ptr, name, AS_INDEX_TYPE_MAPVALUES, type);
+    Py_END_ALLOW_THREADS
 	if ( err.code != AEROSPIKE_OK ) {
 		as_error_update(&err, err.code, NULL);
 		goto CLEANUP;
 	} else {
+        Py_BEGIN_ALLOW_THREADS
 		aerospike_index_create_wait(&err, &task, 2000);
+        Py_END_ALLOW_THREADS
 	}
 
 CLEANUP:
@@ -879,6 +917,8 @@ PyObject * AerospikeClient_Index_2dsphere_Create(AerospikeClient * self, PyObjec
 		bin_ptr = PyString_AsString(py_ustr_bin);
 	} else if ( PyString_Check(py_bin) ) {
 		bin_ptr = PyString_AsString(py_bin);
+	} else if (PyByteArray_Check(py_bin)) {
+        bin_ptr = PyByteArray_AsString(py_bin);
 	} else {
 		as_error_update(&err, AEROSPIKE_ERR_PARAM, "Bin should be a string");
 		goto CLEANUP;
@@ -897,12 +937,16 @@ PyObject * AerospikeClient_Index_2dsphere_Create(AerospikeClient * self, PyObjec
 	}
 
 	// Invoke operation
+    Py_BEGIN_ALLOW_THREADS
 	aerospike_index_create_complex(self->as, &err, &task, info_policy_p, namespace, set_ptr, bin_ptr, name, AS_INDEX_TYPE_DEFAULT, AS_INDEX_GEO2DSPHERE);
+    Py_END_ALLOW_THREADS
 	if ( err.code != AEROSPIKE_OK ) {
 		as_error_update(&err, err.code, NULL);
 		goto CLEANUP;
 	} else {
+        Py_BEGIN_ALLOW_THREADS
 		aerospike_index_create_wait(&err, &task, 2000);
+        Py_END_ALLOW_THREADS
 	}
 
 CLEANUP:

@@ -47,6 +47,9 @@ static PyMethodDef AerospikeClient_Type_Methods[] = {
 	{"is_connected",
 		(PyCFunction) AerospikeClient_is_connected, METH_VARARGS | METH_KEYWORDS,
 		"Checks current connection state."},
+	{"shm_key",
+		(PyCFunction) AerospikeClient_shm_key, METH_VARARGS | METH_KEYWORDS,
+		"Get the shm key of the cluster"},
 
 	// ADMIN OPERATIONS
 
@@ -321,16 +324,16 @@ static int AerospikeClient_Type_Init(AerospikeClient * self, PyObject * args, Py
 		else {
 			config.lua.system_path[0] = '\0';
 		}
-    }
+	}
 
 	if ( ! lua_user_path ) {
 		memcpy(config.lua.user_path, ".", AS_CONFIG_PATH_MAX_LEN);
 	} else {
 		struct stat info;
-		if (stat(config.lua.user_path, &info ) != 0 || !(info.st_mode & S_IFDIR) || (access(config.lua.user_path, W_OK) != 0)) {
+		if (stat(config.lua.user_path, &info ) != 0 || !(info.st_mode & S_IFDIR)) {
 		    memcpy(config.lua.user_path, ".", AS_CONFIG_PATH_MAX_LEN);
 		}
-    }
+	}
 
 	PyObject * py_hosts = PyDict_GetItemString(py_config, "hosts");
 	if ( py_hosts && PyList_Check(py_hosts) ) {
@@ -344,8 +347,11 @@ static int AerospikeClient_Type_Init(AerospikeClient * self, PyObject * args, Py
 			if( PyTuple_Check(py_host) && PyTuple_Size(py_host) == 2) {
 
 				py_addr = PyTuple_GetItem(py_host, 0);
-				if(PyString_Check(py_addr)) {
+				if (PyString_Check(py_addr)) {
 					addr = strdup(PyString_AsString(py_addr));
+				} else if (PyUnicode_Check(py_addr)) {
+					PyObject * py_ustr = PyUnicode_AsUTF8String(py_addr);
+					addr = strdup(PyString_AsString(py_ustr));
 				}
 				py_port = PyTuple_GetItem(py_host,1);
 				if( PyInt_Check(py_port) || PyLong_Check(py_port) ) {
@@ -363,7 +369,12 @@ static int AerospikeClient_Type_Init(AerospikeClient * self, PyObject * args, Py
 					port = (uint16_t)atoi(temp);
 				}
 			}
-			as_config_add_host(&config, addr, port);
+			if(addr) {
+				as_config_add_host(&config, addr, port);
+			} else {
+				free(addr);
+				return -1;
+			}
 		}
 	}
 
@@ -385,6 +396,12 @@ static int AerospikeClient_Type_Init(AerospikeClient * self, PyObject * args, Py
         PyObject* py_shm_takeover_threshold_sec = PyDict_GetItemString(py_shm, "shm_takeover_threshold_sec");
         if(py_shm_takeover_threshold_sec && PyInt_Check(py_shm_takeover_threshold_sec) ) {
             config.shm_takeover_threshold_sec = PyInt_AsLong( py_shm_takeover_threshold_sec);
+        }
+
+        PyObject* py_shm_cluster_key = PyDict_GetItemString(py_shm, "shm_key");
+        if(py_shm_cluster_key && PyInt_Check(py_shm_cluster_key) ) {
+            user_shm_key = true;
+            config.shm_key = PyInt_AsLong(py_shm_cluster_key);
         }
     }
 
@@ -412,6 +429,8 @@ static int AerospikeClient_Type_Init(AerospikeClient * self, PyObject * args, Py
     }
 
 	as_policies_init(&config.policies);
+    //Set default value of use_batch_direct
+    config.policies.batch.use_batch_direct = false;
 
 	PyObject * py_policies = PyDict_GetItemString(py_config, "policies");
 	if ( py_policies && PyDict_Check(py_policies)) {
@@ -461,6 +480,12 @@ static int AerospikeClient_Type_Init(AerospikeClient * self, PyObject * args, Py
             config.thread_pool_size = PyInt_AsLong(py_thread_pool_size);
         }
 
+        //Setting for use_batch_direct
+		PyObject * py_use_batch_direct = PyDict_GetItemString(py_policies, "use_batch_direct");
+        if ( py_use_batch_direct && PyBool_Check(py_use_batch_direct)) {
+            config.policies.batch.use_batch_direct = PyInt_AsLong(py_use_batch_direct);
+        }
+
 		/*
 		 * Generation policy is removed from constructor.
 		 */
@@ -472,6 +497,15 @@ static int AerospikeClient_Type_Init(AerospikeClient * self, PyObject * args, Py
 		config.conn_timeout_ms = PyInt_AsLong(py_connect_timeout);
 	}
 
+	//strict_types check
+	self->strict_types = true;
+	PyObject * py_strict_types = PyDict_GetItemString(py_config, "strict_types");
+	if ( py_strict_types && PyBool_Check(py_strict_types) ) {
+		if (Py_False == py_strict_types) {
+			self->strict_types = false;
+ 		}
+	}
+
 	self->as = aerospike_new(&config);
 
 	return 0;
@@ -479,6 +513,23 @@ static int AerospikeClient_Type_Init(AerospikeClient * self, PyObject * args, Py
 
 static void AerospikeClient_Type_Dealloc(PyObject * self)
 {
+    as_error err;
+    as_error_init(&err);
+
+    if (((AerospikeClient*)self)->as) {
+        if (((AerospikeClient*)self)->as->config.hosts_size) {
+            char * alias_to_search = return_search_string(((AerospikeClient*)self)->as);
+            PyObject *py_persistent_item = NULL;
+
+            py_persistent_item = PyDict_GetItemString(py_global_hosts, alias_to_search); 
+            if (py_persistent_item) {
+                close_aerospike_object(((AerospikeClient*)self)->as, &err, alias_to_search, py_persistent_item);
+                ((AerospikeClient*)self)->as = NULL;
+            }
+            PyMem_Free(alias_to_search);
+            alias_to_search = NULL;
+        }
+    }
 	self->ob_type->tp_free((PyObject *) self);
 }
 

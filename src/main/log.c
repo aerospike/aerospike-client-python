@@ -86,10 +86,12 @@ PyObject * Aerospike_Set_Log_Level(PyObject *parent, PyObject *args, PyObject * 
 	}
 
 	long lLogLevel = PyInt_AsLong(py_log_level);
-    if((uint32_t)-1 == lLogLevel) {
-        as_error_update(&err, AEROSPIKE_ERR_PARAM, "integer value exceeds sys.maxsize");
-        goto CLEANUP;
-    }
+	if (lLogLevel == (uint32_t)-1 && PyErr_Occurred()) {
+		if (PyErr_ExceptionMatches(PyExc_OverflowError)) {
+			as_error_update(&err, AEROSPIKE_ERR_PARAM, "integer value exceeds sys.maxsize");
+			goto CLEANUP;
+		}
+	}
 
 	// Invoke C API to set log level
 	as_log_set_level((as_log_level)lLogLevel);
@@ -112,6 +114,12 @@ CLEANUP:
 static bool log_cb(as_log_level level, const char * func,
 		const char * file, uint32_t line, const char * fmt, ...){
 
+	char msg[1024];
+	va_list ap;
+	va_start(ap, fmt);
+	vsnprintf(msg, 1024, fmt, ap);
+	va_end(ap);
+
 	// Extract pyhton user callback
 	PyObject *py_callback = user_callback.callback;
 	// User callback's argument list
@@ -122,19 +130,21 @@ static bool log_cb(as_log_level level, const char * func,
 	gstate = PyGILState_Ensure();
 
 	// Create a tuple of argument list
-	py_arglist = PyTuple_New(4);
+	py_arglist = PyTuple_New(5);
 
 	// Initialise argument variables
 	PyObject *log_level = PyInt_FromLong((long)level);
 	PyObject *func_name = PyString_FromString(func);
 	PyObject *file_name = PyString_FromString(file);
 	PyObject *line_no   = PyInt_FromLong((long)line);
+	PyObject *message   = PyString_FromString(msg);
 
 	// Set argument list
 	PyTuple_SetItem(py_arglist, 0, log_level);
 	PyTuple_SetItem(py_arglist, 1, func_name);
 	PyTuple_SetItem(py_arglist, 2, file_name);
 	PyTuple_SetItem(py_arglist, 3, line_no);
+	PyTuple_SetItem(py_arglist, 4, message);
 
 	// Invoke user callback, passing in argument's list
 	PyEval_CallObject(py_callback, py_arglist);

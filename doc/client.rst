@@ -71,7 +71,9 @@ a cluster-tending thread.
 
         :param str username: a defined user with roles in the cluster. See :meth:`admin_create_user`.
         :param str password: the password will be hashed by the client using bcrypt.
-        :raises: :exc:`~aerospike.exception.ClientError`.
+        :raises: :exc:`~aerospike.exception.ClientError`, for example when a connection cannot be \
+                 established to a seed node (any single node in the cluster from which the client \
+                 learns of the other nodes).
 
         .. seealso:: `Security features article <https://www.aerospike.com/docs/guide/security.html>`_.
 
@@ -90,7 +92,7 @@ a cluster-tending thread.
 
         Read a record with a given *key*, and return the record as a \
         :py:func:`tuple` consisting of *key*, *meta* and *bins*.  If the record \
-        does not exist the *meta* data will be ``None``.
+        does not exist the *meta* data will be :py:obj:`None`.
 
         :param tuple key: a :ref:`aerospike_key_tuple` associated with the record.
         :param dict policy: optional :ref:`aerospike_read_policies`.
@@ -155,8 +157,8 @@ a cluster-tending thread.
         Read a record with a given *key*, and return the record as a \
         :py:func:`tuple` consisting of *key*, *meta* and *bins*, with the \
         specified bins projected. If the record does not exist the *meta* \
-        data will be ``None``. Prior to Aerospike server 3.6.0, if a selected \
-        bin does not exist its value will be ``None``. Starting with 3.6.0, if
+        data will be :py:obj:`None`. Prior to Aerospike server 3.6.0, if a selected \
+        bin does not exist its value will be :py:obj:`None`. Starting with 3.6.0, if
         a bin does not exist it will not be present in the returned \
         :ref:`aerospike_record_tuple`.
 
@@ -219,7 +221,7 @@ a cluster-tending thread.
 
         Check if a record with a given *key* exists in the cluster and return \
         the record as a :py:func:`tuple` consisting of *key* and *meta*.  If \
-        the record  does not exist the *meta* data will be ``None``.
+        the record  does not exist the *meta* data will be :py:obj:`None`.
 
         :param tuple key: a :ref:`aerospike_key_tuple` associated with the record.
         :param dict policy: optional :ref:`aerospike_read_policies`.
@@ -314,6 +316,8 @@ a cluster-tending thread.
                          meta={'ttl':180})
                 # adding a bin
                 client.put(key, {'smiley': u"\ud83d\ude04"})
+                # removing a bin
+                client.put(key, {'i': aerospike.null})
             except AerospikeError as e:
                 print("Error: {0} [{1}]".format(e.msg, e.code))
                 sys.exit(1)
@@ -431,7 +435,8 @@ a cluster-tending thread.
 
     .. method:: remove_bin(key, list[, meta[, policy]])
 
-        Remove a list of bins from a record with a given *key*.
+        Remove a list of bins from a record with a given *key*. Equivalent to \
+        setting those bins to :const:`aerospike.null` with a :meth:`~aerospike.Client.put`.
 
         :param tuple key: a :ref:`aerospike_key_tuple` associated with the record.
         :param list list: the bins names to be removed from the record.
@@ -562,7 +567,7 @@ a cluster-tending thread.
         Perform multiple bin operations on a record with a given *key*, \
         with write operations happening before read ops. In Aerospike server \
         versions prior to 3.6.0, non-existent bins being read will have a \
-        ``None`` value. Starting with 3.6.0 non-existent bins will not be \
+        :py:obj:`None` value. Starting with 3.6.0 non-existent bins will not be \
         present in the returned :ref:`aerospike_record_tuple`.
 
         :param tuple key: a :ref:`aerospike_key_tuple` associated with the record.
@@ -578,9 +583,8 @@ a cluster-tending thread.
 
         .. note::
 
-            Currently each :meth:`operate` call can only have one
-            write operation per-bin. For example a single bin cannot be both
-            appended and prepended in a single call.
+            :meth:`operate` can now have multiple write operations on a single
+            bin.
 
         .. code-block:: python
 
@@ -594,49 +598,91 @@ a cluster-tending thread.
 
             try:
                 key = ('test', 'demo', 1)
-                client.put(key, {'count': 1})
-                list = [
+                client.put(key, {'age': 25, 'career': 'delivery boy'})
+                ops = [
                     {
                       "op" : aerospike.OPERATOR_INCR,
-                      "bin": "count",
-                      "val": 2
+                      "bin": "age",
+                      "val": 1000
+                    },
+                    {
+                      "op" : aerospike.OPERATOR_WRITE,
+                      "bin": "name",
+                      "val": "J."
                     },
                     {
                       "op" : aerospike.OPERATOR_PREPEND,
-                      "bin": "title",
-                      "val": "Mr."
+                      "bin": "name",
+                      "val": "Phillip "
                     },
                     {
                       "op" : aerospike.OPERATOR_APPEND,
                       "bin": "name",
-                      "val": " jr."
+                      "val": " Fry"
                     },
                     {
                       "op" : aerospike.OPERATOR_READ,
                       "bin": "name"
                     },
                     {
-                      "op" : aerospike.OPERATOR_WRITE,
-                      "bin": "age",
-                      "val": 39
-                    },
-                    {
-                      "op" : aerospike.OPERATOR_TOUCH,
-                      "val": 360
+                      "op" : aerospike.OPERATOR_READ,
+                      "bin": "career"
                     }
                 ]
-                (key, meta, bins) = client.operate(key, list, policy={'timeout':500})
+                (key, meta, bins) = client.operate(key, ops, {'ttl':360}, {'timeout':500})
 
                 print(key)
                 print('--------------------------')
                 print(meta)
                 print('--------------------------')
-                print(bins)
+                print(bins) # will display all bins selected by OPERATOR_READ operations
             except AerospikeError as e:
                 print("Error: {0} [{1}]".format(e.msg, e.code))
                 sys.exit(1)
             finally:
                 client.close()
+
+        .. note::
+
+            :const:`~aerospike.OPERATOR_TOUCH` should only ever combine with
+            :const:`~aerospike.OPERATOR_READ`, for example to implement LRU
+            expiry on the records of a set.
+
+        .. warning::
+
+            Having *val* associated with :const:`~aerospike.OPERATOR_TOUCH` is deprecated.
+            Use the meta *ttl* field instead.
+
+        .. code-block:: python
+
+            from __future__ import print_function
+            import aerospike
+            from aerospike.exception import AerospikeError
+            import sys
+
+            config = { 'hosts': [('127.0.0.1', 3000)] }
+            client = aerospike.client(config).connect()
+
+            try:
+                key = ('test', 'demo', 1)
+                ops = [
+                    {
+                      "op" : aerospike.OPERATOR_TOUCH,
+                    },
+                    {
+                      "op" : aerospike.OPERATOR_READ,
+                      "bin": "name"
+                    }
+                ]
+                (key, meta, bins) = client.operate(key, ops, {'ttl':1800})
+                print("Touched the record for {0}, extending its ttl by 30m".format(bins))
+            except AerospikeError as e:
+                print("Error: {0} [{1}]".format(e.msg, e.code))
+                sys.exit(1)
+            finally:
+                client.close()
+
+        .. versionchanged:: 1.0.57
 
 
     .. rubric:: Batch Operations
@@ -644,7 +690,7 @@ a cluster-tending thread.
     .. method:: get_many(keys[, policy]) -> [ (key, meta, bins)]
 
         Batch-read multiple records, and return them as a :class:`list`. Any \
-        record that does not exist will have a ``None`` value for metadata \
+        record that does not exist will have a :py:obj:`None` value for metadata \
         and bins in the record tuple.
 
         :param list keys: a list of :ref:`aerospike_key_tuple`.
@@ -704,7 +750,7 @@ a cluster-tending thread.
     .. method:: exists_many(keys[, policy]) -> [ (key, meta)]
 
         Batch-read metadata for multiple keys, and return it as a :class:`list`. \
-        Any record that does not exist will have a ``None`` value for metadata in \
+        Any record that does not exist will have a :py:obj:`None` value for metadata in \
         the result tuple.
 
         :param list keys: a list of :ref:`aerospike_key_tuple`.
@@ -764,7 +810,7 @@ a cluster-tending thread.
     .. method:: select_many(keys, bins[, policy]) -> {primary_key: (key, meta, bins)}
 
         Batch-read multiple records, and return them as a :class:`list`. Any \
-        record that does not exist will have a ``None`` value for metadata \
+        record that does not exist will have a :py:obj:`None` value for metadata \
         and bins in the record tuple. The *bins* will be filtered as specified.
 
         :param list keys: a list of :ref:`aerospike_key_tuple`.
@@ -827,8 +873,8 @@ a cluster-tending thread.
     .. method:: scan(namespace[, set]) -> Scan
 
         Return a :class:`aerospike.Scan` object to be used for executing scans \
-        over a specified *set* (which can be omitted or ``None``) in a \
-        *namespace*. A scan with a ``None`` set returns all the records in the \
+        over a specified *set* (which can be omitted or :py:obj:`None`) in a \
+        *namespace*. A scan with a :py:obj:`None` set returns all the records in the \
         namespace.
 
         :param str namespace: the namespace in the aerospike cluster.
@@ -842,9 +888,9 @@ a cluster-tending thread.
     .. method:: query(namespace[, set]) -> Query
 
         Return a :class:`aerospike.Query` object to be used for executing queries \
-        over a specified *set* (which can be omitted or ``None``) in a *namespace*. \
-        A query with a ``None`` set returns records which are **not in any \
-        named set**. This is different than the meaning of a ``None`` set in \
+        over a specified *set* (which can be omitted or :py:obj:`None`) in a *namespace*. \
+        A query with a :py:obj:`None` set returns records which are **not in any \
+        named set**. This is different than the meaning of a :py:obj:`None` set in \
         a scan.
 
         :param str namespace: the namespace in the aerospike cluster.
@@ -977,7 +1023,7 @@ a cluster-tending thread.
         Initiate a background scan and apply a record UDF to each record matched by the scan.
 
         :param str ns: the namespace in the aerospike cluster.
-        :param str set: the set name. Should be ``None`` if the entire namespace is to be scanned.
+        :param str set: the set name. Should be :py:obj:`None` if the entire namespace is to be scanned.
         :param str module: the name of the UDF module.
         :param str function: the name of the UDF to apply to the records matched by the scan.
         :param list args: the arguments to the UDF.
@@ -996,7 +1042,7 @@ a cluster-tending thread.
         Initiate a background query and apply a record UDF to each record matched by the query.
 
         :param str ns: the namespace in the aerospike cluster.
-        :param str set: the set name. Should be ``None`` if you want to query records in the *ns* which are in no set.
+        :param str set: the set name. Should be :py:obj:`None` if you want to query records in the *ns* which are in no set.
         :param tuple predicate: the :py:func:`tuple` produced by one of the :mod:`aerospike.predicates` methods.
         :param str module: the name of the UDF module.
         :param str function: the name of the UDF to apply to the records matched by the query.
@@ -1212,6 +1258,10 @@ a cluster-tending thread.
         .. seealso:: The :class:`aerospike.GeoJSON` class, and queries using \
             :meth:`aerospike.predicates.geo_within`.
 
+        .. warning::
+
+            This functionality will become available with a future release of the Aerospike server.
+
         .. code-block:: python
 
             import aerospike
@@ -1319,6 +1369,14 @@ a cluster-tending thread.
         :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
 
         .. versionadded:: 1.0.53
+
+    .. method:: shm_key()  ->  int
+
+        Expose the value of the shm_key for this client if shared-memory cluster tending is enabled, 
+
+        :rtype: :class:`int` or :py:obj:`None`
+
+        .. versionadded:: 1.0.56
 
 
     .. rubric:: LList
@@ -1567,7 +1625,7 @@ Key Tuple
         * *digest* the first three parts of the tuple get hashed through \
           RIPEMD-160, and the digest used by the clients and cluster nodes \
           to locate the record. A key tuple is also valid if it has the \
-          digest part filled and the primary key part set to ``None``.
+          digest part filled and the primary key part set to :py:obj:`None`.
 
     .. code-block:: python
 

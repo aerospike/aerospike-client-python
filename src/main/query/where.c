@@ -62,14 +62,15 @@ static int AerospikeQuery_Where_Add(AerospikeQuery * self, as_predicate_type pre
 
 	switch (predicate) {
 		case AS_PREDICATE_EQUAL: {
-			if ( in_datatype == AS_INDEX_STRING ){
+			if ( in_datatype == AS_INDEX_STRING ) {
 				if (PyUnicode_Check(py_bin)){
 					py_ubin = PyUnicode_AsUTF8String(py_bin);
 					bin = PyString_AsString(py_ubin);
-				} else if (PyString_Check(py_bin) ){
+				} else if (PyString_Check(py_bin) ) {
 					bin = PyString_AsString(py_bin);
-				}
-				else {
+                } else if (PyByteArray_Check(py_bin)) {
+                    bin = PyByteArray_AsString(py_bin);
+				} else {
 					return 1;
 				}
 
@@ -102,14 +103,15 @@ static int AerospikeQuery_Where_Add(AerospikeQuery * self, as_predicate_type pre
 					py_ubin = NULL;
 				}
 			}
-			else if ( in_datatype == AS_INDEX_NUMERIC ){
-				if (PyUnicode_Check(py_bin)){
+			else if ( in_datatype == AS_INDEX_NUMERIC ) {
+				if (PyUnicode_Check(py_bin)) {
 					py_ubin = PyUnicode_AsUTF8String(py_bin);
 					bin = PyString_AsString(py_ubin);
-				} else if (PyString_Check(py_bin) ){
+				} else if (PyString_Check(py_bin) ) {
 					bin = PyString_AsString(py_bin);
-				}
-				else {
+                } else if (PyByteArray_Check(py_bin)) {
+                    bin = PyByteArray_AsString(py_bin);
+				} else {
 					return 1;
 				}
 				int64_t val = pyobject_to_int64(py_val1);
@@ -149,8 +151,9 @@ static int AerospikeQuery_Where_Add(AerospikeQuery * self, as_predicate_type pre
 					bin = PyString_AsString(py_ubin);
 				} else if (PyString_Check(py_bin)){
 					bin = PyString_AsString(py_bin);
-				}
-				else {
+                } else if (PyByteArray_Check(py_bin)) {
+                    bin = PyByteArray_AsString(py_bin);
+				} else {
 					return 1;
 				}
 				int64_t min = pyobject_to_int64(py_val1);
@@ -185,13 +188,14 @@ static int AerospikeQuery_Where_Add(AerospikeQuery * self, as_predicate_type pre
 				    PyErr_SetObject(PyExc_Exception, py_err);
 				    return 1;
                 }
-				if (PyUnicode_Check(py_bin)){
+				if (PyUnicode_Check(py_bin)) {
 					py_ubin = PyUnicode_AsUTF8String(py_bin);
 					bin = PyString_AsString(py_ubin);
-				} else if (PyString_Check(py_bin)){
+				} else if (PyString_Check(py_bin)) {
 					bin = PyString_AsString(py_bin);
-				}
-				else {
+                } else if (PyByteArray_Check(py_bin)) {
+                    bin = PyByteArray_AsString(py_bin);
+				} else {
 					return 1;
 				}
 
@@ -332,27 +336,31 @@ AerospikeQuery * AerospikeQuery_Where(AerospikeQuery * self, PyObject * args)
 				0
 			);
 		}
-		else if ( strcmp(op, "contains") == 0 ) {
+		else if (strcmp(op, "contains") == 0) {
 			int index_type = 0;
 			int type = 0;
-			if(PyInt_Check(py_arg3)) {
+			if (PyInt_Check(py_arg3)) {
 				index_type = PyInt_AsLong(py_arg3);
 			} else if (PyLong_Check(py_arg3)) {
 				index_type = PyLong_AsLongLong(py_arg3);
-                if(-1 == index_type) {
-                    as_error_update(&err, AEROSPIKE_ERR_PARAM, "integer value exceeds sys.maxsize");
-                    goto CLEANUP;
-                }
+				if (index_type == -1 && PyErr_Occurred()) {
+					if (PyErr_ExceptionMatches(PyExc_OverflowError)) {
+						as_error_update(&err, AEROSPIKE_ERR_PARAM, "integer value exceeds sys.maxsize");
+						goto CLEANUP;
+					}
+				}
 			}
 
-			if(PyInt_Check(py_arg4)) {
+			if (PyInt_Check(py_arg4)) {
 				type = PyInt_AsLong(py_arg4);
-			} else if ( PyLong_Check(py_arg4) ) {
+			} else if (PyLong_Check(py_arg4)) {
 				type = PyLong_AsLongLong(py_arg4);
-                if(-1 == type) {
-                    as_error_update(&err, AEROSPIKE_ERR_PARAM, "integer value exceeds sys.maxsize");
-                    goto CLEANUP;
-                }
+				if (type == -1 && PyErr_Occurred()) {
+					if (PyErr_ExceptionMatches(PyExc_OverflowError)) {
+						as_error_update(&err, AEROSPIKE_ERR_PARAM, "integer value exceeds sys.maxsize");
+						goto CLEANUP;
+					}
+				}
 			}
 			if ( (PyInt_Check(py_arg5) || PyLong_Check(py_arg5)) && type == 1) {
 				rc = AerospikeQuery_Where_Add(
@@ -384,16 +392,18 @@ AerospikeQuery * AerospikeQuery_Where(AerospikeQuery * self, PyObject * args)
 				rc = 1;
 			}
 		}
-		else if ( strcmp(op, "range") == 0 ) {
+		else if (strcmp(op, "range") == 0) {
 			int index_type = 0;
-			if(PyInt_Check(py_arg3)) {
+			if (PyInt_Check(py_arg3)) {
 				index_type = PyInt_AsLong(py_arg3);
 			} else if (PyLong_Check(py_arg3)) {
 				index_type = PyLong_AsLongLong(py_arg3);
-                if(-1 == index_type) {
-                    as_error_update(&err, AEROSPIKE_ERR_PARAM, "integer value exceeds sys.maxsize");
-                    goto CLEANUP;
-                }
+				if (index_type == -1 && PyErr_Occurred()) {
+					if (PyErr_ExceptionMatches(PyExc_OverflowError)) {
+						as_error_update(&err, AEROSPIKE_ERR_PARAM, "integer value exceeds sys.maxsize");
+						goto CLEANUP;
+					}
+				}
 			}
 
 			if ( PyInt_Check(py_arg4) || PyLong_Check(py_arg4)) {

@@ -33,6 +33,9 @@ class TestPrepend(object):
             key = ('test', 'demo', i)
             rec = {'name': 'name%s' % (str(i)), 'age': i, 'nolist': [1, 2, 3]}
             TestPrepend.client.put(key, rec)
+        key = ('test', 'demo', 'bytearray_key')
+        TestPrepend.client.put(key, {"bytearray_bin": bytearray("asd;as[d'as;d",
+            "utf-8")})
 
     def teardown_method(self, method):
         """
@@ -41,6 +44,8 @@ class TestPrepend(object):
         for i in xrange(5):
             key = ('test', 'demo', i)
             TestPrepend.client.remove(key)
+        key = ('test', 'demo', 'bytearray_key')
+        TestPrepend.client.remove(key)
 
     def test_prepend_with_no_parameters(self):
         """
@@ -400,3 +405,27 @@ class TestPrepend(object):
         except ClusterError as exception:
             assert exception.code == 11L
             assert exception.msg == 'No connection to aerospike cluster'
+
+    def test_prepend_with_bytearray(self):
+        """
+        Invoke prepend() with bytearray value
+        """
+        key = ('test', 'demo', 'bytearray_key')
+        TestPrepend.client.prepend(key, "bytearray_bin", bytearray("abc"))
+
+        (key, meta, bins) = TestPrepend.client.get(key)
+
+        assert bins == {'bytearray_bin': "abcasd;as[d'as;d"}
+
+    def test_prepend_with_bytearray_new_key(self):
+        """
+        Invoke prepend() with bytearray value with a new record(non-existing)
+        """
+        key = ('test', 'demo', 'bytearray_new')
+        TestPrepend.client.prepend(key, "bytearray_bin", bytearray("asd;as[d'as;d", "utf-8"))
+
+        (key, meta, bins) = TestPrepend.client.get(key)
+
+        assert bins == {'bytearray_bin': "asd;as[d'as;d"}
+
+        TestPrepend.client.remove(key)

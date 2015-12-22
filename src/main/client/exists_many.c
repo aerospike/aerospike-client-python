@@ -48,6 +48,10 @@ bool batch_exists_cb(const as_batch_read* results, uint32_t n, void* udata)
     // Typecast udata back to PyObject
     PyObject * py_recs = (PyObject *) udata;
 
+	// Lock Python State
+	PyGILState_STATE gstate;
+	gstate = PyGILState_Ensure();
+
     // Loop over results array
     for ( uint32_t i =0; i < n; i++ ){
 
@@ -108,6 +112,8 @@ bool batch_exists_cb(const as_batch_read* results, uint32_t n, void* udata)
             }
         }
     }
+	// Release Python State
+	PyGILState_Release(gstate);
     return true;
 }
 
@@ -269,7 +275,10 @@ static PyObject * batch_exists_aerospike_batch_read(as_error *err, AerospikeClie
 	}
 
 	// Invoke C-client API
-    if (aerospike_batch_read(self->as, err, batch_policy_p, &records) != AEROSPIKE_OK) 
+    Py_BEGIN_ALLOW_THREADS
+    aerospike_batch_read(self->as, err, batch_policy_p, &records);
+    Py_END_ALLOW_THREADS
+    if (err->code != AEROSPIKE_OK) 
     {
 		goto CLEANUP;
     }
@@ -361,9 +370,11 @@ static PyObject * batch_exists_aerospike_batch_exists(as_error *err, AerospikeCl
 	}
 
 	// Invoke C-client API
+    Py_BEGIN_ALLOW_THREADS
     aerospike_batch_exists(self->as, err, batch_policy_p,
         &batch, (aerospike_batch_read_callback) batch_exists_cb,
         py_recs);
+    Py_END_ALLOW_THREADS
     if ( err->code != AEROSPIKE_OK ) {
         as_error_update(err, err->code, NULL);
     }
@@ -425,7 +436,7 @@ PyObject * AerospikeClient_Exists_Many_Invoke(
 
     has_batch_index = aerospike_has_batch_index(self->as);
 
-    if (has_batch_index) {
+    if (has_batch_index && !(self->as->config.policies.batch.use_batch_direct)) {
         py_recs = batch_exists_aerospike_batch_read(&err, self, py_keys, batch_policy_p);
     } else {
         py_recs = batch_exists_aerospike_batch_exists(&err, self, py_keys, batch_policy_p);

@@ -34,6 +34,11 @@
 #include "log.h"
 #include <aerospike/as_operations.h>
 #include "serializer.h"
+#include "nullobject.h"
+
+PyObject *py_global_hosts;
+int counter = 0xA5000000;
+bool user_shm_key = false;
 
 static PyMethodDef Aerospike_Methods[] = {
 
@@ -72,11 +77,10 @@ AerospikeConstants operator_constants[] = {
 };
 
 #define OPERATOR_CONSTANTS_ARR_SIZE (sizeof(operator_constants)/sizeof(AerospikeConstants))
-
 PyMODINIT_FUNC initaerospike(void)
 {
 
-    static char version[6] = "1.0.55";
+	static char version[6] = "1.0.57";
 	// Makes things "thread-safe"
 	PyEval_InitThreads();
 	int i = 0;
@@ -85,9 +89,10 @@ PyMODINIT_FUNC initaerospike(void)
 	PyObject * aerospike = Py_InitModule3("aerospike", Aerospike_Methods,
 			"Aerospike Python Client");
 
+	py_global_hosts = PyDict_New();
 	declare_policy_constants(aerospike);
 
-    PyModule_AddStringConstant(aerospike, "__version__", version);
+	PyModule_AddStringConstant(aerospike, "__version__", version);
 
 	PyObject * exception = AerospikeException_New();
 	Py_INCREF(exception);
@@ -147,4 +152,8 @@ PyMODINIT_FUNC initaerospike(void)
 	PyTypeObject * geospatial = AerospikeGeospatial_Ready();
 	Py_INCREF(geospatial);
 	PyModule_AddObject(aerospike, "GeoJSON", (PyObject *) geospatial);
+
+	PyObject * null_object = AerospikeNullObject_New();
+	Py_INCREF(null_object);
+	PyModule_AddObject(aerospike, "null", (PyObject *) null_object);
 }

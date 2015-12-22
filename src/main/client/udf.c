@@ -145,25 +145,36 @@ PyObject * AerospikeClient_UDF_Put(AerospikeClient * self, PyObject *args, PyObj
 
     uint8_t * buff = bytes;
 
-    copy_file_p = fopen(copy_filepath, "r");
-    if (!copy_file_p) {
-        copy_file_p = fopen(copy_filepath, "w+");
-        int read  = (int)fread(buff, 1, LUA_FILE_BUFFER_FRAME, file_p);
-        fwrite(buff, 1, read, copy_file_p);
-        while ( read ) {
-            size += read;
-            buff += read;
-            read = (int)fread(buff, 1, LUA_FILE_BUFFER_FRAME, file_p);
-            fwrite(buff, 1, read, copy_file_p);
-        }
-    } else {
-        int read  = (int)fread(buff, 1, LUA_FILE_BUFFER_FRAME, file_p);
-        while ( read ) {
-            size += read;
-            buff += read;
-            read = (int)fread(buff, 1, LUA_FILE_BUFFER_FRAME, file_p);
-        }
-    }
+	if (access(self->as->config.lua.user_path, W_OK) == 0) {
+		copy_file_p = fopen(copy_filepath, "r");
+		if (!copy_file_p) {
+			copy_file_p = fopen(copy_filepath, "w+");
+			int read  = (int)fread(buff, 1, LUA_FILE_BUFFER_FRAME, file_p);
+			if (read && fwrite(buff, 1, read, copy_file_p)) {
+				while (read) {
+					size += read;
+					buff += read;
+					read = (int)fread(buff, 1, LUA_FILE_BUFFER_FRAME, file_p);
+					if (!fwrite(buff, 1, read, copy_file_p)) {
+						break;
+					}
+				}
+			} else {
+				as_error_update(&err, AEROSPIKE_ERR_CLIENT, "Write of lua file to user path failed");
+				goto CLEANUP;
+			}
+		} else {
+			int read  = (int)fread(buff, 1, LUA_FILE_BUFFER_FRAME, file_p);
+			while (read) {
+				size += read;
+				buff += read;
+				read = (int)fread(buff, 1, LUA_FILE_BUFFER_FRAME, file_p);
+			}
+		}
+	} else {
+		as_error_update(&err, AEROSPIKE_ERR_CLIENT, "No permissions to write lua file to user path");
+		goto CLEANUP;
+	}
 
 	if (file_p) {
 		fclose(file_p);
@@ -175,7 +186,9 @@ PyObject * AerospikeClient_UDF_Put(AerospikeClient * self, PyObject *args, PyObj
 	as_bytes_init_wrap(&content, bytes, size, true);
 
 	// Invoke operation
+    Py_BEGIN_ALLOW_THREADS
 	aerospike_udf_put(self->as, &err, info_policy_p, filename, udf_type, &content);
+    Py_END_ALLOW_THREADS
 	if( err.code != AEROSPIKE_OK ) {
 		as_error_update(&err, err.code, NULL);
 		goto CLEANUP;
@@ -277,7 +290,9 @@ PyObject * AerospikeClient_UDF_Remove(AerospikeClient * self, PyObject *args, Py
 			&self->as->config.policies.info);
 
 	// Invoke operation
+    Py_BEGIN_ALLOW_THREADS
 	aerospike_udf_remove(self->as, &err, info_policy_p, filename);
+    Py_END_ALLOW_THREADS
 	if ( err.code != AEROSPIKE_OK ) {
 		as_error_update(&err, err.code, NULL);
 		goto CLEANUP;
@@ -360,7 +375,9 @@ PyObject * AerospikeClient_UDF_List(AerospikeClient * self, PyObject *args, PyOb
 	init_udf_files = 1;
 
 	// Invoke operation
+    Py_BEGIN_ALLOW_THREADS
 	aerospike_udf_list(self->as, &err, info_policy_p, &files);
+    Py_END_ALLOW_THREADS
 	if ( err.code != AEROSPIKE_OK ) {
 		as_error_update(&err, err.code, NULL);
 		goto CLEANUP;
@@ -477,7 +494,9 @@ PyObject * AerospikeClient_UDF_Get_UDF(AerospikeClient * self, PyObject *args, P
 	init_udf_file=true;
 
 	// Invoke operation
+    Py_BEGIN_ALLOW_THREADS
 	aerospike_udf_get(self->as, &err, info_policy_p, strModule, (language - AS_UDF_TYPE_LUA) , &file);
+    Py_END_ALLOW_THREADS
 	if ( err.code != AEROSPIKE_OK ) {
 		as_error_update(&err, err.code, NULL);
 		goto CLEANUP;

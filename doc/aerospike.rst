@@ -45,7 +45,7 @@ in an in-memory primary index.
         .. hlist::
             :columns: 1
 
-            * **hosts** a required :class:`list` of (address, port) tuples identifying the cluster. \
+            * **hosts** a required :class:`list` of (address, port) tuples identifying a node (or multiple nodes) in the cluster. \
               The client will connect to the first available node in the list, the *seed node*, \
               and will learn about the cluster and partition map from it.
             * **lua** an optional :class:`dict` containing the paths to two types of Lua modules
@@ -65,8 +65,10 @@ in an in-memory primary index.
                 * **max_nodes** maximum number of nodes allowed. Pad so new nodes can be added without configuration changes (default: 16)
                 * **max_namespaces** similarly pad (default: 8)
                 * **takeover_threshold_sec** take over tending if the cluster hasn't been checked for this many seconds (default: 30)
+                * **shm_key** explicitly set the shm key for this client. It is otherwise implicitly evaluated per unique hostname, and can be inspected with :meth:`~aerospike.Client.shm_key` (default: 0xA5000000)
             * **thread_pool_size** number of threads in the pool that is used in batch/scan/query commands (default: 16)
             * **max_threads** size of the synchronous connection pool for each server node (default: 300)
+            * **batch_direct** whether to use the batch-direct protocol (default: ``False``, so will use batch-index if available)
 
     :return: an instance of the :py:class:`aerospike.Client` class.
 
@@ -89,7 +91,7 @@ in an in-memory primary index.
             'shm':      { }}
         client = aerospike.client(config)
 
-    .. versionchanged:: 1.0.53
+    .. versionchanged:: 1.0.56
 
 
 .. rubric:: Serialization
@@ -259,16 +261,19 @@ in an in-memory primary index.
 
     :param callable callback: the function used as the logging handler.
 
-    .. code-block:: python
+    .. note:: The callback function must have the five parameters (level, func, path, line, msg)
 
-        import aerospike
-        import syslog
+        .. code-block:: python
 
-        def as_logger(level, func, myfile, line):
-            syslog.syslog(line)
+            from __future__ import print_function
+            import aerospike
 
-        aerospike.set_log_level(aerospike.LOG_LEVEL_DEBUG)
-        aerospike.set_log_handler(as_logger)
+            def as_logger(level, func, path, line, msg):
+            def as_logger(level, func, myfile, line, msg):
+                print("**", myfile, line, func, ':: ', msg, "**")
+
+            aerospike.set_log_level(aerospike.LOG_LEVEL_DEBUG)
+            aerospike.set_log_handler(as_logger)
 
 
 .. py:function:: set_log_level(log_level)
@@ -487,6 +492,12 @@ Miscellaneous
     A :class:`str` containing the module's version.
 
     .. versionadded:: 1.0.54
+
+.. data:: null
+
+    A value for distinguishing a server-side null from a Python :py:obj:`None` .
+
+    .. versionadded:: 1.0.57
 
 .. data:: UDF_TYPE_LUA
 

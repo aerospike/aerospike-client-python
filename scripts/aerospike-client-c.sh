@@ -53,7 +53,7 @@ detect_linux()
 
     case ${DIST_NAME} in
 
-      "centos6" | "centos7" | "redhatenterpriceserver6" | "fedora20" | "fedora21" | "fedora22" | "oracleserver6" | "scientific6" )
+      "centos6" | "centos7" | "redhatenterpriseserver6" | "redhatenterpriseserver7" | "fedora20" | "fedora21" | "fedora22" | "oracleserver6" | "scientific6" )
         echo "el6" "rpm"
         return 0
         ;;
@@ -68,12 +68,7 @@ detect_linux()
         return 0
         ;;
 
-      "ubuntu12" | "ubuntu13" | "ubuntu14" | "ubuntu15" )
-        echo "ubuntu12"  "deb"
-        return 0
-        ;;
-
-      "linuxmint17" )
+      "ubuntu12" | "ubuntu13" | "ubuntu14" | "ubuntu15" | "linuxmint17" )
         echo "ubuntu12"  "deb"
         return 0
         ;;
@@ -151,7 +146,7 @@ detect_linux()
       "ubuntu"* )
         vers=$(lsb_release -r -s)
         case ${vers} in
-          "12."* | "13."* | "14.*" )
+          "12."* | "13."* | "14."* | "15."* )
             echo "ubuntu12"  "deb"
             return 0
             ;;
