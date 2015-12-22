@@ -158,11 +158,6 @@ detect_linux()
         esac
         ;;
 
-      "amazonami"* )
-        echo "el6" "rpm"
-        return 0
-        ;;
-
       * )
         echo "error: ${DIST_NAME} is not supported."
         return 1
