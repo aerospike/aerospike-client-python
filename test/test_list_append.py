@@ -31,11 +31,8 @@ class TestListAppend(object):
     def setup_method(self, method):
         for i in xrange(5):
             key = ('test', 'demo', i)
-            rec = {'name': 'name%s' % (str(i)), 'age': [i, i+1], 'city' : ['Pune', 'Dehli']}
+            rec = {'name': 'name%s' % (str(i)), 'contact_no': [i, i+1], 'city' : ['Pune', 'Dehli']}
             TestListAppend.client.put(key, rec)
-        key = ('test', 'demo', 'bytearray_key')
-        TestListAppend.client.put(key, {"bytearray_bin": bytearray("asd;as[d'as;d",
-            "utf-8")})
 
     def teardown_method(self, method):
         """
@@ -45,8 +42,6 @@ class TestListAppend(object):
         for i in xrange(5):
             key = ('test', 'demo', i)
             TestListAppend.client.remove(key)
-        key = ('test', 'demo', 'bytearray_key')
-        TestListAppend.client.remove(key)
 
     def test_list_append_string_with_correct_paramters(self):
         """
@@ -57,7 +52,7 @@ class TestListAppend(object):
 
         (key, meta, bins) = TestListAppend.client.get(key)
 
-        assert bins == {'age': [1, 2], 'name': 'name1', 'city':['Pune', 'Dehli', 'Chennai']}
+        assert bins == {'contact_no': [1, 2], 'name': 'name1', 'city':['Pune', 'Dehli', 'Chennai']}
 
     def test_list_append_unicode_string(self):
         """
@@ -67,7 +62,7 @@ class TestListAppend(object):
         res = TestListAppend.client.list_append(key, "city", u"Mumbai")
 
         key, meta, bins = TestListAppend.client.get(key)
-        assert bins == {'age': [1, 2], 'city' : ['Pune', 'Dehli', u'Mumbai'], 'name':'name1'}
+        assert bins == {'contact_no': [1, 2], 'city' : ['Pune', 'Dehli', u'Mumbai'], 'name':'name1'}
 
     def test_list_append_list_with_correct_policy(self):
         """
@@ -79,22 +74,22 @@ class TestListAppend(object):
             'retry': aerospike.POLICY_RETRY_ONCE,
             'commit_level': aerospike.POLICY_COMMIT_LEVEL_MASTER
         }
-        TestListAppend.client.list_append(key, "age", [45, 50, 80], {}, policy)
+        TestListAppend.client.list_append(key, "contact_no", [45, 50, 80], {}, policy)
 
         (key, meta, bins) = TestListAppend.client.get(key)
 
-        assert bins == {'age': [2, 3, [45, 50, 80]], 'city': ['Pune', 'Dehli'], 'name': 'name2'}
+        assert bins == {'contact_no': [2, 3, [45, 50, 80]], 'city': ['Pune', 'Dehli'], 'name': 'name2'}
 
     def test_list_append_float(self):
         """
         Invoke list_append() append float into the list
         """
         key = ('test', 'demo', 2)
-        TestListAppend.client.list_append(key, "age", 85.12)
+        TestListAppend.client.list_append(key, "contact_no", 85.12)
 
         (key, meta, bins) = TestListAppend.client.get(key)
 
-        assert bins == {'age': [2, 3, 85.12], 'city': ['Pune', 'Dehli'], 'name': 'name2'}
+        assert bins == {'contact_no': [2, 3, 85.12], 'city': ['Pune', 'Dehli'], 'name': 'name2'}
 
     def test_list_append_map(self):
         """
@@ -102,11 +97,11 @@ class TestListAppend(object):
         """
         key = ('test', 'demo', 3)
 
-        TestListAppend.client.list_append(key, "age", {'k1':29})
+        TestListAppend.client.list_append(key, "contact_no", {'k1':29})
 
         (key, meta, bins) = TestListAppend.client.get(key)
 
-        assert bins == {'age': [3, 4, {'k1':29}], 'city': ['Pune', 'Dehli'], 'name': 'name3'}
+        assert bins == {'contact_no': [3, 4, {'k1':29}], 'city': ['Pune', 'Dehli'], 'name': 'name3'}
 
     def test_list_append_bytearray(self):
         """
@@ -114,11 +109,11 @@ class TestListAppend(object):
         """
         key = ('test', 'demo', 1)
 
-        TestListAppend.client.list_append(key, "age", bytearray("asd;as[d'as;d", "utf-8"))
+        TestListAppend.client.list_append(key, "contact_no", bytearray("asd;as[d'as;d", "utf-8"))
 
         (key, meta, bins) = TestListAppend.client.get(key)
 
-        assert bins == {'age': [1, 2, bytearray(b"asd;as[d\'as;d")], 'city': ['Pune', 'Dehli'], 'name': 'name1'}
+        assert bins == {'contact_no': [1, 2, bytearray(b"asd;as[d\'as;d")], 'city': ['Pune', 'Dehli'], 'name': 'name1'}
     
     def test_list_append_boolean(self):
         """
@@ -126,11 +121,11 @@ class TestListAppend(object):
         """
         key = ('test', 'demo', 1)
 
-        TestListAppend.client.list_append(key, "age", False)
+        TestListAppend.client.list_append(key, "contact_no", False)
 
         (key, meta, bins) = TestListAppend.client.get(key)
 
-        assert bins == {'age': [1, 2, 0], 'city': ['Pune', 'Dehli'], 'name': 'name1'}
+        assert bins == {'contact_no': [1, 2, 0], 'city': ['Pune', 'Dehli'], 'name': 'name1'}
 
     def test_list_append_with_no_parameters(self):
         """
@@ -149,7 +144,7 @@ class TestListAppend(object):
             'timeout': 0.5
         }
         try:
-            TestListAppend.client.list_append(key, "age", "str", {}, policy)
+            TestListAppend.client.list_append(key, "contact_no", "str", {}, policy)
 
         except ParamError as exception:
             assert exception.code == -2
@@ -182,7 +177,7 @@ class TestListAppend(object):
         key = ('test', 'demo', 1)
         policy = {'timeout': 1000}
         with pytest.raises(TypeError) as typeError:
-            TestListAppend.client.list_append(key, "age", 999, {}, policy, "")
+            TestListAppend.client.list_append(key, "contact_no", 999, {}, policy, "")
 
         assert "list_append() takes at most 5 arguments (6 given)" in typeError.value
 
@@ -192,7 +187,7 @@ class TestListAppend(object):
         """
         key = ('test', 'demo', 1)
         try:
-            TestListAppend.client.list_append(key, "age", 85, {}, "")
+            TestListAppend.client.list_append(key, "contact_no", 85, {}, "")
 
         except ParamError as exception:
             assert exception.code == -2
@@ -203,7 +198,7 @@ class TestListAppend(object):
         Invoke list_append() with key is none
         """
         try:
-            TestListAppend.client.list_append(None, "age", 45)
+            TestListAppend.client.list_append(None, "contact_no", 45)
 
         except ParamError as exception:
             assert exception.code == -2

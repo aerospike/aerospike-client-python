@@ -233,6 +233,71 @@ PyObject * AerospikeClient_ListInsertItems(AerospikeClient * self, PyObject * ar
 PyObject * AerospikeClient_ListPop(AerospikeClient * self, PyObject * args, PyObject * kwds);
 
 /**
+ * Remove and get back a list element at a given index of a list value in bin.
+ *
+ *		client.list_pop_range((x,y,z))
+ *
+ */
+PyObject * AerospikeClient_ListPopRange(AerospikeClient * self, PyObject * args, PyObject * kwds);
+
+/**
+ * Remove a list element at a given index of a list value in bin.
+ *
+ *		client.list_remove((x,y,z))
+ *
+ */
+PyObject * AerospikeClient_ListRemove(AerospikeClient * self, PyObject * args, PyObject * kwds);
+
+/**
+ * Remove list elements at a given index of a list value in bin.
+ *
+ *		client.list_remove_range((x,y,z))
+ *
+ */
+PyObject * AerospikeClient_ListRemoveRange(AerospikeClient * self, PyObject * args, PyObject * kwds);
+
+/**
+ * Remove all the elements from a list value in bin.
+ *
+ *		client.list_clear((x,y,z))
+ *
+ */
+PyObject * AerospikeClient_ListClear(AerospikeClient * self, PyObject * args, PyObject * kwds);
+
+/**
+ * Set list element val at the specified index of a list value in bin.
+ *
+ *		client.list_set((x,y,z))
+ *
+ */
+PyObject * AerospikeClient_ListSet(AerospikeClient * self, PyObject * args, PyObject * kwds);
+
+/**
+ * Get the list element at the specified index of a list value in bin.
+ *
+ *		client.list_get((x,y,z))
+ *
+ */
+PyObject * AerospikeClient_ListGet(AerospikeClient * self, PyObject * args, PyObject * kwds);
+
+/**
+ * Get the list of count elements starting at a specified index of a list value in bin.
+ *
+ *		client.list_get_range((x,y,z))
+ *
+ */
+PyObject * AerospikeClient_ListGetRange(AerospikeClient * self, PyObject * args, PyObject * kwds);
+
+/**
+ * Remove elements from the list which are not within the range starting at the
+ * given index plus count.
+ *
+ *		client.list_trim((x,y,z))
+ *
+ */
+PyObject * AerospikeClient_ListTrim(AerospikeClient * self, PyObject * args, PyObject * kwds);
+
+/**
  * Count the elements of the list value in bin.
  *
  *		client.list_count((x,y,z))
