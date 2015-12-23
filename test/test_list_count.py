@@ -105,6 +105,22 @@ class TestListCount(object):
         except RecordNotFound as exception:
             assert exception.code == 2
 
+    def test_list_count_with_nonexistent_bin(self):
+        """
+        Invoke list_count() with non-existent bin
+        """
+        key = ('test', 'demo', 1)
+        charSet = 'abcdefghijklmnopqrstuvwxyz1234567890'
+        minLength = 5
+        maxLength = 10
+        length = random.randint(minLength, maxLength)
+        bin = ''.join(map(lambda unused :
+            random.choice(charSet), range(length)))+".com"
+        try:
+            TestListCount.client.list_count(key, bin)
+        except RecordNotFound as exception:
+            assert exception.code == 2
+
     def test_list_count_with_extra_parameter(self):
         """
         Invoke list_count() with extra parameter.
@@ -150,3 +166,15 @@ class TestListCount(object):
         except ParamError as exception:
             assert exception.code == -2
             assert exception.msg == "Bin name should be of type string"
+
+    def test_list_count_meta_type_integer(self):
+        """
+        Invoke list_count() with metadata input is of type integer
+        """
+        key = ('test', 'demo', 1)
+        try:
+            TestListCount.client.list_count(key, "contact_no", 888)
+
+        except ParamError as exception:
+            assert exception.code == -2
+            assert exception.msg == "Metadata should be of type dictionary"

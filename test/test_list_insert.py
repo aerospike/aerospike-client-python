@@ -48,7 +48,18 @@ class TestListInsert(object):
         key = ('test', 'demo', 'bytearray_key')
         TestListInsert.client.remove(key)
 
-    def test_list_insert_string_with_correct_paramters(self):
+    def test_list_insert_integer(self):
+        """
+        Invoke list_insert() insert integer value with correct parameters
+        """
+        key = ('test', 'demo', 1)
+        TestListInsert.client.list_insert(key, "age", 0, 999)
+
+        (key, meta, bins) = TestListInsert.client.get(key)
+
+        assert bins == {'age': [999, 1, 2], 'name': 'name1', 'city':['Pune', 'Dehli']}
+
+    def test_list_insert_string(self):
         """
         Invoke list_insert() inserts string with correct parameters
         """
@@ -132,6 +143,46 @@ class TestListInsert(object):
 
         assert bins == {'age': [1, 2, None, None, None, None, 0], 'city': ['Pune', 'Dehli'], 'name': 'name1'}
 
+    def test_list_insert_with_nonexistent_key(self):
+        """
+        Invoke list_insert() with non-existent key
+        """
+        charSet = 'abcdefghijklmnopqrstuvwxyz1234567890'
+        minLength = 5
+        maxLength = 30
+        length = random.randint(minLength, maxLength)
+        key = ('test', 'demo', ''.join(map(lambda unused :
+            random.choice(charSet), range(length)))+".com")
+        status = TestListInsert.client.list_insert(key, "abc", 2, 122)
+        assert status == 0L
+
+        (key, meta, bins) = TestListInsert.client.get(key)
+
+        assert status == 0L
+        assert bins == {'abc':[None, None, 122]}
+
+        TestListInsert.client.remove(key)
+
+    def test_list_insert_with_nonexistent_bin(self):
+        """
+        Invoke list_insert() with non-existent bin
+        """
+        key = ('test', 'demo', 1)
+        charSet = 'abcdefghijklmnopqrstuvwxyz1234567890'
+        minLength = 5
+        maxLength = 10
+        length = random.randint(minLength, maxLength)
+        bin = ''.join(map(lambda unused :
+            random.choice(charSet), range(length)))+".com"
+        status = TestListInsert.client.list_insert(key, bin, 3, 585)
+        assert status == 0L
+
+        (key, meta, bins) = TestListInsert.client.get(key)
+        assert status == 0L
+
+        assert bins == {'age': [1, 2], 'name': 'name1', 'city':['Pune',
+            'Dehli'], bin:[None, None, None, 585]}
+
     def test_list_insert_with_no_parameters(self):
         """
         Invoke list_insert() without any mandatory parameters.
@@ -154,26 +205,6 @@ class TestListInsert(object):
         except ParamError as exception:
             assert exception.code == -2
             assert exception.msg == "timeout is invalid"
-
-    def test_list_insert_with_nonexistent_key(self):
-        """
-        Invoke list_insert() with non-existent key
-        """
-        charSet = 'abcdefghijklmnopqrstuvwxyz1234567890'
-        minLength = 5
-        maxLength = 30
-        length = random.randint(minLength, maxLength)
-        key = ('test', 'demo', ''.join(map(lambda unused :
-            random.choice(charSet), range(length)))+".com")
-        status = TestListInsert.client.list_insert(key, "abc", 2, 122)
-        assert status == 0L
-
-        (key, meta, bins) = TestListInsert.client.get(key)
-        
-        assert status == 0L
-        assert bins == {'abc':[None, None, 122]}
-
-        TestListInsert.client.remove(key)
 
     def test_list_insert_with_extra_parameter(self):
         """
@@ -220,3 +251,37 @@ class TestListInsert(object):
         except ParamError as exception:
             assert exception.code == -2
             assert exception.msg == "Bin name should be of type string"
+
+    def test_list_insert_meta_type_integer(self):
+        """
+        Invoke list_insert() with metadata input is of type integer
+        """
+        key = ('test', 'demo', 1)
+        try:
+            TestListInsert.client.list_insert(key, "contact_no", 1, 85, 888)
+
+        except ParamError as exception:
+            assert exception.code == -2
+            assert exception.msg == "Metadata should be of type dictionary"
+
+    def test_list_insert_index_negative(self):
+        """
+        Invoke list_insert() insert with index is negative integer
+        """
+        key = ('test', 'demo', 1)
+
+        try:
+            TestListInsert.client.list_insert(key, "age", -6, False)
+        except InvalidRequest as exception:
+            assert exception.code == 4L
+            assert exception.msg == 'AEROSPIKE_ERR_REQUEST_INVALID'
+
+    def test_list_insert_index_type_string(self):
+        """
+        Invoke list_insert() insert with index is of type string
+        """
+        key = ('test', 'demo', 1)
+
+        with pytest.raises(TypeError) as typeError:
+            TestListInsert.client.list_insert(key, "age", "Fifth", False)
+        assert "an integer is required" in typeError.value

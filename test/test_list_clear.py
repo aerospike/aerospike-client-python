@@ -113,6 +113,22 @@ class TestListClear(object):
         except BinIncompatibleType as exception:
             assert exception.code == 12L
 
+    def test_list_clear_with_nonexistent_bin(self):
+        """
+        Invoke list_clear() with non-existent bin
+        """
+        key = ('test', 'demo', 1)
+        charSet = 'abcdefghijklmnopqrstuvwxyz1234567890'
+        minLength = 5
+        maxLength = 10
+        length = random.randint(minLength, maxLength)
+        bin = ''.join(map(lambda unused :
+            random.choice(charSet), range(length)))+".com"
+        try:
+            TestListClear.client.list_clear(key, bin)
+        except BinIncompatibleType as exception:
+            assert exception.code == 12L
+
     def test_list_clear_with_extra_parameter(self):
         """
         Invoke list_clear() with extra parameter.
@@ -158,3 +174,15 @@ class TestListClear(object):
         except ParamError as exception:
             assert exception.code == -2
             assert exception.msg == "Bin name should be of type string"
+
+    def test_list_clear_meta_type_integer(self):
+        """
+        Invoke list_clear() with metadata input is of type integer
+        """
+        key = ('test', 'demo', 1)
+        try:
+            TestListClear.client.list_clear(key, "contact_no", 888)
+
+        except ParamError as exception:
+            assert exception.code == -2
+            assert exception.msg == "Metadata should be of type dictionary"

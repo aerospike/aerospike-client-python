@@ -997,8 +997,7 @@ CLEANUP:
  *******************************************************************************************************
  */
 #define INFO_CALL "features"
-static bool
-has_cdt_list(aerospike *as, as_error *err)
+static bool has_cdt_list(aerospike *as, as_error *err)
 {
 	char *res = NULL;
 
@@ -1230,6 +1229,11 @@ PyObject * AerospikeClient_ListExtend(AerospikeClient * self, PyObject * args, P
 		goto CLEANUP;
 	}
 
+	if (!PyList_Check(py_append_val)) {
+		as_error_update(&err, AEROSPIKE_ERR_PARAM, "Items should be of type list");
+		goto CLEANUP;
+	}
+
 	as_operations ops;
 	as_operations_inita(&ops, 1);
 
@@ -1337,7 +1341,7 @@ PyObject * AerospikeClient_ListInsert(AerospikeClient * self, PyObject * args, P
 		return NULL;
 	}
 
-    if (!self || !self->as) {
+	if (!self || !self->as) {
 		as_error_update(&err, AEROSPIKE_ERR_PARAM, "Invalid aerospike object");
 		goto CLEANUP;
 	}
@@ -1472,6 +1476,11 @@ PyObject * AerospikeClient_ListInsertItems(AerospikeClient * self, PyObject * ar
 
 	if (!has_cdt_list(self->as, &err)) {
 		as_error_update(&err, AEROSPIKE_ERR_UNSUPPORTED_FEATURE, "CDT list feature is not supported");
+		goto CLEANUP;
+	}
+
+	if (!PyList_Check(py_insert_val)) {
+		as_error_update(&err, AEROSPIKE_ERR_PARAM, "Items should be of type list");
 		goto CLEANUP;
 	}
 
@@ -2388,7 +2397,6 @@ PyObject * AerospikeClient_ListGet(AerospikeClient * self, PyObject * args, PyOb
 	PyObject * py_meta = NULL;
 	PyObject * py_policy = NULL;
 	PyObject * py_result = NULL;
-	PyObject * py_list = NULL;
 
 	as_policy_operate operate_policy;
 	as_policy_operate *operate_policy_p = NULL;
@@ -2458,8 +2466,9 @@ PyObject * AerospikeClient_ListGet(AerospikeClient * self, PyObject * args, PyOb
 		goto CLEANUP;
 	}
 
+	PyObject *py_val = NULL;
 	if (rec) {
-		list_to_pyobject(self, &err, as_record_get_list(rec, bin), &py_list);
+		val_to_pyobject(self, &err, (as_val*) (rec->bins.entries[0].valuep), &py_val);
 	}
 
 CLEANUP:
@@ -2482,7 +2491,7 @@ CLEANUP:
 		Py_DECREF(py_err);
 		return NULL;
 	}
-	return py_list;
+	return py_val;
 }
 
 /**
@@ -2633,7 +2642,7 @@ PyObject * AerospikeClient_ListTrim(AerospikeClient * self, PyObject * args, PyO
 	PyObject * py_meta = NULL;
 	PyObject * py_policy = NULL;
 	PyObject * py_result = NULL;
-	PyObject * py_list = NULL;
+	//PyObject * py_list = NULL;
 
 	as_policy_operate operate_policy;
 	as_policy_operate *operate_policy_p = NULL;
@@ -2704,15 +2713,15 @@ PyObject * AerospikeClient_ListTrim(AerospikeClient * self, PyObject * args, PyO
 		goto CLEANUP;
 	}
 
-	if (rec) {
+	/*if (rec) {
 		list_to_pyobject(self, &err, as_record_get_list(rec, bin), &py_list);
-	}
+	}*/
 
 CLEANUP:
 	as_operations_destroy(&ops);
-	if (rec) {
+	/*if (rec) {
 		as_record_destroy(rec);
-	}
+	}*/
 
 	if ( err.code != AEROSPIKE_OK ) {
 		PyObject * py_err = NULL;
@@ -2728,5 +2737,6 @@ CLEANUP:
 		Py_DECREF(py_err);
 		return NULL;
 	}
-	return py_list;
+	//return py_list;
+	return PyLong_FromLong(0);
 }
