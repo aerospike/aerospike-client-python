@@ -1767,7 +1767,7 @@ PyObject * AerospikeClient_ListPop(AerospikeClient * self, PyObject * args, PyOb
 		goto CLEANUP;
 	}
 	PyObject *py_val = NULL;
-	if (rec) {
+	if (rec && rec->bins.size) {
 		val_to_pyobject(self, &err, (as_val*) (rec->bins.entries[0].valuep), &py_val);
 	}
 
@@ -1888,7 +1888,7 @@ PyObject * AerospikeClient_ListPopRange(AerospikeClient * self, PyObject * args,
 	if (err.code != AEROSPIKE_OK) {
 		goto CLEANUP;
 	}
-	if (rec) {
+	if (rec && rec->bins.size) {
 		list_to_pyobject(self, &err, as_record_get_list(rec, bin), &py_list);
 	}
 
@@ -2590,7 +2590,7 @@ PyObject * AerospikeClient_ListGetRange(AerospikeClient * self, PyObject * args,
 		goto CLEANUP;
 	}
 
-	if (rec) {
+	if (rec && rec->bins.size) {
 		list_to_pyobject(self, &err, as_record_get_list(rec, bin), &py_list);
 	}
 
