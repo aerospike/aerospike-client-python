@@ -113,6 +113,23 @@ class TestListRemoveRange(object):
         except BinIncompatibleType as exception:
             assert exception.code == 12L
 
+    def test_list_remove_range_with_nonexistent_bin(self):
+        """
+        Invoke list_remove_range() with non-existent bin
+        """
+        key = ('test', 'demo', 1)
+        charSet = 'abcdefghijklmnopqrstuvwxyz1234567890'
+        minLength = 5
+        maxLength = 10
+        length = random.randint(minLength, maxLength)
+        bin = ''.join(map(lambda unused :
+            random.choice(charSet), range(length)))+".com"
+        try:
+            TestListRemoveRange.client.list_remove_range(key, bin, 0, 1)
+
+        except BinIncompatibleType as exception:
+            assert exception.code == 12L
+
     def test_list_remove_range_with_extra_parameter(self):
         """
         Invoke list_remove_range() with extra parameter.
@@ -178,3 +195,25 @@ class TestListRemoveRange(object):
             bins = TestListRemoveRange.client.list_remove_range(key, "contact_no", 0, -59)
         except InvalidRequest as exception:
             assert exception.code == 4
+
+    def test_list_remove_range_meta_type_integer(self):
+        """
+        Invoke list_remove_range() with metadata input is of type integer
+        """
+        key = ('test', 'demo', 1)
+        try:
+            TestListRemoveRange.client.list_remove_range(key, "contact_no", 0, 2, 888)
+
+        except ParamError as exception:
+            assert exception.code == -2
+            assert exception.msg == "Metadata should be of type dictionary"
+
+    def test_list_remove_range_index_type_string(self):
+        """
+        Invoke list_remove_range() with index is of type string
+        """
+        key = ('test', 'demo', 1)
+
+        with pytest.raises(TypeError) as typeError:
+            TestListRemoveRange.client.list_remove_range(key, "contact_no", "Fifth", 2)
+        assert "an integer is required" in typeError.value

@@ -39,7 +39,7 @@ class TestListInsertItems(object):
 
     def teardown_method(self, method):
         """
-        Teardoen method.
+        Teardown method.
         """
         #time.sleep(1)
         for i in xrange(5):
@@ -280,3 +280,13 @@ class TestListInsertItems(object):
         except ParamError as exception:
             assert exception.code == -2
             assert exception.msg == "Metadata should be of type dictionary"
+
+    def test_list_insert_items_index_type_string(self):
+        """
+        Invoke list_insert_items() insert with index is of type string
+        """
+        key = ('test', 'demo', 1)
+
+        with pytest.raises(TypeError) as typeError:
+            TestListInsertItems.client.list_insert_items(key, "age", "Fifth", [False])
+        assert "an integer is required" in typeError.value

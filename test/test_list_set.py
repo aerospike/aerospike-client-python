@@ -45,9 +45,22 @@ class TestListSet(object):
             key = ('test', 'demo', i)
             TestListSet.client.remove(key)
 
-    def test_list_set_with_correct_paramters(self):
+    def test_list_set_with_element_integer(self):
         """
-        Invoke list_set() sets list element with correct parameters
+        Invoke list_set() sets list element with integer
+        """
+        key = ('test', 'demo', 1)
+
+        status = TestListSet.client.list_set(key, "contact_no", 5, 1000)
+        assert status == 0L
+
+        key, meta, bins = TestListSet.client.get(key)
+        assert bins == {'city': ['Pune', 'Dehli'], 'contact_no': [1, 2, None,
+            None, None, 1000], 'name': 'name1'}
+
+    def test_list_set_with_element_list_correct_paramters(self):
+        """
+        Invoke list_set() sets list element with list
         """
         key = ('test', 'demo', 1)
         
@@ -56,6 +69,69 @@ class TestListSet(object):
 
         key, meta, bins = TestListSet.client.get(key)
         assert bins == {'city': ['Pune', 'Dehli'], 'contact_no': [1, 2, None, None, None, [500, 1000]], 'name': 'name1'}
+
+    def test_list_set_with_element_string(self):
+        """
+        Invoke list_set() sets list element with string
+        """
+        key = ('test', 'demo', 1)
+
+        status = TestListSet.client.list_set(key, "contact_no", 5, 'string')
+        assert status == 0L
+
+        key, meta, bins = TestListSet.client.get(key)
+        assert bins == {'city': ['Pune', 'Dehli'], 'contact_no': [1, 2, None, None, None, 'string'], 'name': 'name1'}
+
+    def test_list_set_with_element_float(self):
+        """
+        Invoke list_set() sets list element with float
+        """
+        key = ('test', 'demo', 1)
+
+        status = TestListSet.client.list_set(key, "contact_no", 5, 45.896)
+        assert status == 0L
+
+        key, meta, bins = TestListSet.client.get(key)
+        assert bins == {'city': ['Pune', 'Dehli'], 'contact_no': [1, 2, None,
+            None, None, 45.896], 'name': 'name1'}
+
+    def test_list_set_with_element_boolean(self):
+        """
+        Invoke list_set() sets list element with boolean
+        """
+        key = ('test', 'demo', 1)
+
+        status = TestListSet.client.list_set(key, "contact_no", 5, False)
+        assert status == 0L
+
+        key, meta, bins = TestListSet.client.get(key)
+        assert bins == {'city': ['Pune', 'Dehli'], 'contact_no': [1, 2, None,
+            None, None, 0], 'name': 'name1'}
+
+    def test_list_set_with_element_bytearray(self):
+        """
+        Invoke list_append() sets list element bytearray into the list
+        """
+        key = ('test', 'demo', 1)
+
+        TestListSet.client.list_set(key, "contact_no", 0, bytearray("asd;as[d'as;d", "utf-8"))
+
+        (key, meta, bins) = TestListSet.client.get(key)
+
+        assert bins == {'contact_no': [bytearray(b"asd;as[d\'as;d"), 2], 'city': ['Pune', 'Dehli'], 'name': 'name1'}
+
+    def test_list_set_with_element_map(self):
+        """
+        Invoke list_set() sets list element with map
+        """
+        key = ('test', 'demo', 1)
+
+        status = TestListSet.client.list_set(key, "contact_no", 5, {'k1':56})
+        assert status == 0L
+
+        key, meta, bins = TestListSet.client.get(key)
+        assert bins == {'city': ['Pune', 'Dehli'], 'contact_no': [1, 2, None,
+            None, None, {'k1':56}], 'name': 'name1'}
 
     def test_list_set_with_correct_policy(self):
         """
@@ -110,6 +186,23 @@ class TestListSet(object):
             random.choice(charSet), range(length)))+".com")
         try:
             TestListSet.client.list_set(key, "contact_no", 0, 100)
+
+        except BinIncompatibleType as exception:
+            assert exception.code == 12L
+
+    def test_list_set_with_nonexistent_bin(self):
+        """
+        Invoke list_set() with non-existent bin
+        """
+        key = ('test', 'demo', 1)
+        charSet = 'abcdefghijklmnopqrstuvwxyz1234567890'
+        minLength = 5
+        maxLength = 10
+        length = random.randint(minLength, maxLength)
+        bin = ''.join(map(lambda unused :
+            random.choice(charSet), range(length)))+".com"
+        try:
+            TestListSet.client.list_set(key, bin, 0, 75)
 
         except BinIncompatibleType as exception:
             assert exception.code == 12L
@@ -169,3 +262,25 @@ class TestListSet(object):
             bins = TestListSet.client.list_set(key, "contact_no", -56, 12)
         except InvalidRequest as exception:
             assert exception.code == 4
+
+    def test_list_set_meta_type_integer(self):
+        """
+        Invoke list_set() with metadata input is of type integer
+        """
+        key = ('test', 'demo', 1)
+        try:
+            TestListSet.client.list_set(key, "contact_no", 0, 679, 888)
+
+        except ParamError as exception:
+            assert exception.code == -2
+            assert exception.msg == "Metadata should be of type dictionary"
+
+    def test_list_set_index_type_string(self):
+        """
+        Invoke list_set() with index is of type string
+        """
+        key = ('test', 'demo', 1)
+
+        with pytest.raises(TypeError) as typeError:
+            TestListSet.client.list_set(key, "contact_no", "Fifth", 448)
+        assert "an integer is required" in typeError.value

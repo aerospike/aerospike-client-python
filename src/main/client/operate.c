@@ -2467,7 +2467,7 @@ PyObject * AerospikeClient_ListGet(AerospikeClient * self, PyObject * args, PyOb
 	}
 
 	PyObject *py_val = NULL;
-	if (rec) {
+	if (rec && rec->bins.size) {
 		val_to_pyobject(self, &err, (as_val*) (rec->bins.entries[0].valuep), &py_val);
 	}
 
