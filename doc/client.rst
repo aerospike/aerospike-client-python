@@ -561,6 +561,190 @@ a cluster-tending thread.
             finally:
                 client.close()
 
+    .. method:: list_append(key, bin, val[, meta[, policy]])
+
+        Append a single element to a list value in *bin*.
+
+        :param tuple key: a :ref:`aerospike_key_tuple` tuple associated with the record.
+        :param str bin: the name of the bin.
+        :param val: :py:class:`int`, :py:class:`str`, \
+                   :py:class:`float`, :py:class:`bytearray`, :py:class:`list`, \
+                   :py:class:`dict`. An unsupported type will be serialized.
+        :param dict meta: optional record metadata to be set, with field
+            ``'ttl'`` set to :class:`int` number of seconds.
+        :param dict policy: optional :ref:`aerospike_operate_policies`.
+        :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
+
+    .. method:: list_extend(key, bin, items[, meta[, policy]])
+
+        Extend the list value in *bin* with the given *items*.
+
+        :param tuple key: a :ref:`aerospike_key_tuple` tuple associated with the record.
+        :param str bin: the name of the bin.
+        :param list items: the items to append the list in *bin*.
+        :param dict meta: optional record metadata to be set, with field
+            ``'ttl'`` set to :class:`int` number of seconds.
+        :param dict policy: optional :ref:`aerospike_operate_policies`.
+        :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
+
+    .. method:: list_insert(key, bin, index, val[, meta[, policy]])
+
+        Insert an element at the specified *index* of a list value in *bin*.
+
+        :param tuple key: a :ref:`aerospike_key_tuple` tuple associated with the record.
+        :param str bin: the name of the bin.
+        :param int index: the position in the index where the value should be inserted.
+        :param val: :py:class:`int`, :py:class:`str`, \
+                   :py:class:`float`, :py:class:`bytearray`, :py:class:`list`, \
+                   :py:class:`dict`. An unsupported type will be serialized.
+        :param dict meta: optional record metadata to be set, with field
+            ``'ttl'`` set to :class:`int` number of seconds.
+        :param dict policy: optional :ref:`aerospike_operate_policies`.
+        :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
+
+    .. method:: list_insert_items(key, bin, index, items[, meta[, policy]])
+
+        Insert the *items* at the specified *index* of a list value in *bin*.
+
+        :param tuple key: a :ref:`aerospike_key_tuple` tuple associated with the record.
+        :param str bin: the name of the bin.
+        :param int index: the position in the index where the items should be inserted.
+        :param list items: the items to insert into the list in *bin*.
+        :param dict meta: optional record metadata to be set, with field
+            ``'ttl'`` set to :class:`int` number of seconds.
+        :param dict policy: optional :ref:`aerospike_operate_policies`.
+        :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
+
+    .. method:: list_pop(key, bin, index[, meta[, policy]]) -> val
+
+        Remove and get back a list element at a given *index* of a list value in *bin*.
+
+        :param tuple key: a :ref:`aerospike_key_tuple` tuple associated with the record.
+        :param str bin: the name of the bin.
+        :param int index: the index position in the list element which should be removed and returned.
+        :param dict meta: optional record metadata to be set, with field
+            ``'ttl'`` set to :class:`int` number of seconds.
+        :param dict policy: optional :ref:`aerospike_operate_policies`.
+        :return: a single list element.
+        :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
+
+    .. method:: list_pop_range(key, bin, index, count[, meta[, policy]]) -> val
+
+        Remove and get back list elements at a given *index* of a list value in *bin*.
+
+        :param tuple key: a :ref:`aerospike_key_tuple` tuple associated with the record.
+        :param str bin: the name of the bin.
+        :param int index: the index of first element in a range which should be removed and returned.
+        :param int count: the number of elements in the range.
+        :param dict meta: optional record metadata to be set, with field
+            ``'ttl'`` set to :class:`int` number of seconds.
+        :param dict policy: optional :ref:`aerospike_operate_policies`.
+        :return: a :class:`list` of elements.
+        :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
+
+    .. method:: list_remove(key, bin, index[, meta[, policy]])
+
+        Remove a list element at a given *index* of a list value in *bin*.
+
+        :param tuple key: a :ref:`aerospike_key_tuple` tuple associated with the record.
+        :param str bin: the name of the bin.
+        :param int index: the index position in the list element which should be removed.
+        :param dict meta: optional record metadata to be set, with field
+            ``'ttl'`` set to :class:`int` number of seconds.
+        :param dict policy: optional :ref:`aerospike_operate_policies`.
+        :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
+
+    .. method:: list_remove_range(key, bin, index, count[, meta[, policy]])
+
+        Remove list elements at a given *index* of a list value in *bin*.
+
+        :param tuple key: a :ref:`aerospike_key_tuple` tuple associated with the record.
+        :param str bin: the name of the bin.
+        :param int index: the index of first element in a range which should be removed.
+        :param int count: the number of elements in the range.
+        :param dict meta: optional record metadata to be set, with field
+            ``'ttl'`` set to :class:`int` number of seconds.
+        :param dict policy: optional :ref:`aerospike_operate_policies`.
+        :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
+
+    .. method:: list_clear(key, bin[, meta[, policy]])
+
+        Remove all the elements from a list value in *bin*.
+
+        :param tuple key: a :ref:`aerospike_key_tuple` tuple associated with the record.
+        :param str bin: the name of the bin.
+        :param dict meta: optional record metadata to be set, with field
+            ``'ttl'`` set to :class:`int` number of seconds.
+        :param dict policy: optional :ref:`aerospike_operate_policies`.
+        :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
+
+    .. method:: list_set(key, bin, index, val[, meta[, policy]])
+
+        Set list element *val* at the specified *index* of a list value in *bin*.
+
+        :param tuple key: a :ref:`aerospike_key_tuple` tuple associated with the record.
+        :param str bin: the name of the bin.
+        :param int index: the position in the index where the value should be set.
+        :param val: :py:class:`int`, :py:class:`str`, \
+                   :py:class:`float`, :py:class:`bytearray`, :py:class:`list`, \
+                   :py:class:`dict`. An unsupported type will be serialized.
+        :param dict meta: optional record metadata to be set, with field
+            ``'ttl'`` set to :class:`int` number of seconds.
+        :param dict policy: optional :ref:`aerospike_operate_policies`.
+        :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
+
+    .. method:: list_get(key, bin, index[, meta[, policy]]) -> val
+
+        Get the list element at the specified *index* of a list value in *bin*.
+
+        :param tuple key: a :ref:`aerospike_key_tuple` tuple associated with the record.
+        :param str bin: the name of the bin.
+        :param int index: the position in the index where the value should be set.
+        :param dict meta: optional record metadata to be set, with field
+            ``'ttl'`` set to :class:`int` number of seconds.
+        :param dict policy: optional :ref:`aerospike_operate_policies`.
+        :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
+        :return: the list elements at the given index.
+
+    .. method:: list_get_range(key, bin, index, count[, meta[, policy]]) -> val
+
+        Get the list of *count* elements starting at a specified *index* of a list value in *bin*.
+
+        :param tuple key: a :ref:`aerospike_key_tuple` tuple associated with the record.
+        :param str bin: the name of the bin.
+        :param int index: the position in the index where the value should be set.
+        :param dict meta: optional record metadata to be set, with field
+            ``'ttl'`` set to :class:`int` number of seconds.
+        :param dict policy: optional :ref:`aerospike_operate_policies`.
+        :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
+        :return: a :class:`list` of elements.
+
+    .. method:: list_trim(key, bin, index, count[, meta[, policy]]) -> val
+
+        Remove elements from the list which are not within the range starting at the given *index* plus *count*.
+
+        :param tuple key: a :ref:`aerospike_key_tuple` tuple associated with the record.
+        :param str bin: the name of the bin.
+        :param int index: the position in the index marking the start of the range.
+        :param int index: the index position of the first element in a range which should not be removed.
+        :param int count: the number of elements in the range.
+        :param dict meta: optional record metadata to be set, with field
+            ``'ttl'`` set to :class:`int` number of seconds.
+        :param dict policy: optional :ref:`aerospike_operate_policies`.
+        :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
+        :return: a :class:`list` of elements.
+
+    .. method:: list_count(key, bin[, meta[, policy]]) -> count
+
+        Count the elements of the list value in *bin*.
+
+        :param tuple key: a :ref:`aerospike_key_tuple` tuple associated with the record.
+        :param str bin: the name of the bin.
+        :param dict meta: optional record metadata to be set, with field
+            ``'ttl'`` set to :class:`int` number of seconds.
+        :param dict policy: optional :ref:`aerospike_operate_policies`.
+        :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
+        :return: a :class:`int`.
 
     .. method:: operate(key, list[, meta[, policy]]) -> (key, meta, bins)
 
