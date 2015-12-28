@@ -318,7 +318,7 @@ in an in-memory primary index.
         import aerospike
 
         # Create GeoJSON point using WGS84 coordinates.
-        loc = aerospike.geojson('{"type": "Point", "coordinates": [28.608389, -80.604333]}')
+        loc = aerospike.geojson('{"type": "Point", "coordinates": [-80.604333, 28.608389]}')
 
     .. versionadded:: 1.0.54
 

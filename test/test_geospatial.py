@@ -52,12 +52,14 @@ class TestGeospatial(TestBaseClass):
     def setup_method(self, method):
 
         self.keys = []
+        pre = '{"type": "Point", "coordinates"'
+        suf = ']}'
         for i in xrange(10):
+            lng =  1220 - (2 * i)
+            lat = 375 + (2 * i)
             key = ('test', 'demo', i)
-            lng = -122 + (0.2 * i)
-            lat = 37.5 + (0.2 * i)
-            self.geo_object = aerospike.GeoJSON({"type": "Point", "coordinates": [lng, lat] })
-    
+            s = "{0}: [-{1}.{2}, {3}.{4}{5}".format(pre, (lng/10), (lng%10), (lat/10), (lat%10), suf)
+            self.geo_object = aerospike.geojson(s)
             TestGeospatial.client.put(key, {"loc": self.geo_object})
             self.keys.append(key)
 
@@ -154,12 +156,14 @@ class TestGeospatial(TestBaseClass):
             Perform a positive geospatial query for a polygon without a set
         """
         keys = []
+        pre = '{"type": "Point", "coordinates"'
+        suf = ']}'
         for i in xrange(1, 10):
+            lng =  1220 - (2 * i)
+            lat = 375 + (2 * i)
             key = ('test', None, i)
-            lng = -122 + (0.2 * i)
-            lat = 37.5 + (0.2 * i)
-            geo_object = aerospike.GeoJSON({"type": "Point", "coordinates": [lng, lat] })
-    
+            s = "{0}: [-{1}.{2}, {3}.{4}{5}".format(pre, (lng/10), (lng%10), (lat/10), (lat%10), suf)
+            geo_object = aerospike.geojson(s)
             TestGeospatial.client.put(key, {"loc": geo_object})
             keys.append(key)
 

@@ -1439,19 +1439,16 @@ a cluster-tending thread.
         :param dict policy: optional :ref:`aerospike_info_policies`.
         :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
 
-        .. seealso:: The :class:`aerospike.GeoJSON` class, and queries using \
-            :meth:`aerospike.predicates.geo_within`.
+        .. seealso:: :class:`aerospike.GeoJSON`, :mod:`aerospike.predicates`
 
-        .. warning::
-
-            This functionality will become available with a future release of the Aerospike server.
+        .. note:: Requires server version >= 3.7.0
 
         .. code-block:: python
 
             import aerospike
 
             client = aerospike.client({ 'hosts': [ ('127.0.0.1', 3000)]}).connect()
-            client.index_geo2dsphere_create('test', 'demo', 'loc', 'loc_geo_idx')
+            client.index_geo2dsphere_create('test', 'pads', 'loc', 'pads_loc_geo')
             client.close()
 
         .. versionadded:: 1.0.53
