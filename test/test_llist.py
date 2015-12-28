@@ -45,7 +45,6 @@ class TestLList(TestBaseClass):
         TestLList.llist_float = TestLList.client.llist(TestLList.key3,
                                                        'float_bin')
 
-
     def teardown_class(self):
         print "teardown class invoked..."
         try:
@@ -187,6 +186,13 @@ class TestLList(TestBaseClass):
         elements_list = TestLList.llist_integer.find_first(2, {'timeout': 1000})
         assert elements_list == [11, 56]
 
+    def test_llist_find_first_non_existent_bin(self):
+        llist_string = TestLList.client.llist(TestLList.key2,
+                                              'nonexistent')
+        with pytest.raises(LDTError) as ldtError:
+            llist_string.find_first(5)
+        assert "LDT-Bin Does Not Exist" in ldtError.value
+
     def test_llist_find_first_count_large_positive(self):
         """
             Invoke find_first() to access elements with a larger count
@@ -214,6 +220,13 @@ class TestLList(TestBaseClass):
         """
         elements_list = TestLList.llist_integer.find_last(2, {'timeout': 1000})
         assert elements_list == [871, 122]
+
+    def test_llist_find_last_non_existent_bin(self):
+        llist_string = TestLList.client.llist(TestLList.key2,
+                                              'nonexistent')
+        with pytest.raises(LDTError) as ldtError:
+            llist_string.find_last(5)
+        assert "LDT-Bin Does Not Exist" in ldtError.value
 
     def test_llist_find_last_count_large(self):
         """
