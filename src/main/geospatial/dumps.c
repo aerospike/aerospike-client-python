@@ -51,6 +51,7 @@ PyObject * AerospikeGeospatial_DoDumps(PyObject *geo_data, as_error *err)
 
     return initresult;
 }
+
 PyObject * AerospikeGeospatial_Dumps(AerospikeGeospatial * self, PyObject * args, PyObject * kwds)
 {
 

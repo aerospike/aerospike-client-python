@@ -30,9 +30,23 @@ class TestGeospatial(TestBaseClass):
         else:
             TestGeospatial.client = aerospike.client(config).connect(user, password)
         TestGeospatial.client.index_geo2dsphere_create("test", "demo", "loc", "loc_index")
+        TestGeospatial.client.index_geo2dsphere_create("test", "demo", "loc_polygon", "loc_polygon_index")
+        TestGeospatial.client.index_geo2dsphere_create("test", "demo",
+                "loc_circle", "loc_circle_index")
+
+        TestGeospatial.skip_old_server = True
+        versioninfo = TestGeospatial.client.info('version')
+        for keys in versioninfo:
+            for value in versioninfo[keys]:
+                if value != None:
+                    versionlist = value[value.find("build") + 6:value.find("\n")].split(".")
+                    if int(versionlist[0]) >= 3 and int(versionlist[1]) >= 7:
+                        TestGeospatial.skip_old_server = False
 
     def teardown_class(cls):
         TestGeospatial.client.index_remove('test', 'loc_index')
+        TestGeospatial.client.index_remove('test', 'loc_polygon_index')
+        TestGeospatial.client.index_remove('test', 'loc_circle_index')
         TestGeospatial.client.close()
 
     def setup_method(self, method):
@@ -47,6 +61,19 @@ class TestGeospatial(TestBaseClass):
             TestGeospatial.client.put(key, {"loc": self.geo_object})
             self.keys.append(key)
 
+        key = ('test', 'demo', 'polygon')
+        self.geo_object_polygon = aerospike.GeoJSON({"type": "Polygon",
+            "coordinates": [[[-122.500000, 37.000000],[-121.000000, 37.000000], [-121.000000, 
+                38.080000],[-122.500000, 38.080000], [-122.500000, 37.000000]]]})
+        TestGeospatial.client.put(key, {"loc_polygon": self.geo_object_polygon})
+        self.keys.append(key)
+
+        if not TestGeospatial.skip_old_server:
+            key = ('test', 'demo', 'circle')
+            geo_circle = aerospike.GeoJSON({"type": "AeroCircle", "coordinates": [[-122.0, 37.5], 250.2]})
+            TestGeospatial.client.put(key, {"loc_circle": geo_circle})
+            self.keys.append(key)
+
     def teardown_method(self, method):
         """
         Teardown method.
@@ -58,7 +85,6 @@ class TestGeospatial(TestBaseClass):
         """
             Perform a get and put with multiple bins including geospatial bin
         """
-
         key = ('test', 'demo', 'single_geo_put')
         geo_object_single = aerospike.GeoJSON({"type": "Point", "coordinates": [42.34, 58.62] })
         geo_object_dict = aerospike.GeoJSON({"type": "Point", "coordinates": [56.34, 69.62] })
@@ -89,7 +115,7 @@ class TestGeospatial(TestBaseClass):
     37.000000],[-121.000000, 37.000000], [-121.000000, 38.080000],[-122.500000,
         38.080000], [-122.500000, 37.000000]]]})
 
-        query.where(p.geo_within("loc", geo_object2.dumps()))
+        query.where(p.geo_within_geojson_region("loc", geo_object2.dumps()))
 
         def callback((key, metadata, record)):
             records.append(record)
@@ -114,7 +140,7 @@ class TestGeospatial(TestBaseClass):
     37.000000],[-124.000000, 37.000000], [-124.000000, 38.080000],[-126.500000,
         38.080000], [-126.500000, 37.000000]]]})
 
-        query.where(p.geo_within("loc", geo_object2.dumps()))
+        query.where(p.geo_within_geojson_region("loc", geo_object2.dumps()))
 
         def callback((key, metadata, record)):
             records.append(record)
@@ -145,7 +171,7 @@ class TestGeospatial(TestBaseClass):
     37.000000],[-121.000000, 37.000000], [-121.000000, 38.080000],[-122.500000,
         38.080000], [-122.500000, 37.000000]]]})
 
-        query.where(p.geo_within("loc", geo_object2.dumps()))
+        query.where(p.geo_within_geojson_region("loc", geo_object2.dumps()))
 
         def callback((key, metadata, record)):
             records.append(record)
@@ -165,12 +191,35 @@ class TestGeospatial(TestBaseClass):
         """
             Perform a positive geospatial query for a circle
         """
+        if TestGeospatial.skip_old_server == True:
+            pytest.skip("Server does not support apply on AeroCircle for GeoJSON")
+
         records = []
         query = TestGeospatial.client.query("test", "demo")
 
         geo_object2 = aerospike.GeoJSON({"type": "AeroCircle", "coordinates": [[-122.0, 37.5], 250.2]})
 
-        query.where(p.geo_within("loc", geo_object2.dumps()))
+        query.where(p.geo_within_geojson_region("loc", geo_object2.dumps()))
+
+        def callback((key, metadata, record)):
+            records.append(record)
+
+        query.foreach(callback)
+
+        assert len(records) == 1
+        assert records == [{'loc': {'coordinates': [-122.0, 37.5], 'type': 'Point'}}]
+
+    def test_geospatial_positive_query_for_circle_with_within_radius_helper(self):
+        """
+            Perform a positive geospatial query for a circle with helper
+        """
+        if TestGeospatial.skip_old_server == True:
+            pytest.skip("Server does not support apply on AeroCircle for GeoJSON")
+
+        records = []
+        query = TestGeospatial.client.query("test", "demo")
+
+        query.where(p.geo_within_radius("loc", -122.0, 37.5, 250.2))
 
         def callback((key, metadata, record)):
             records.append(record)
@@ -201,28 +250,6 @@ class TestGeospatial(TestBaseClass):
 
         TestGeospatial.client.remove(key)
 
-    def test_geospatial_object_not_dict_or_string(self):
-        """
-            The geospatial object is not a dictionary or string
-        """
-        try:
-            geo_object_wrong = aerospike.GeoJSON(1)
-
-        except ParamError as exception:
-            assert exception.code == -2
-            assert exception.msg == 'Geospatial data should be a dictionary or raw GeoJSON string'
-
-    def test_geospatial_object_non_json_serialziable_string(self):
-        """
-            The geospatial object is not a json serializable string
-        """
-        try:
-            geo_object_wrong = aerospike.GeoJSON("abc")
-
-        except ClientError as exception:
-            assert exception.code == -1
-            assert exception.msg == 'String is not GeoJSON serializable'
-
     def test_geospatial_wrap_positive(self):
         """
             Perform a positive wrap on geospatial data
@@ -233,23 +260,13 @@ class TestGeospatial(TestBaseClass):
         assert self.geo_object.unwrap() == {'coordinates': [[[-122.5, 37.0], [-121.0, 37.0], [-121.0, 38.08],
             [-122.5, 38.08], [-122.5, 37.0]]], 'type': 'Polygon'}
 
-    def test_geospatial_object_wrap_non_dict(self):
-        """
-            The geospatial object provided to wrap() is not a dictionary
-        """
-        try:
-            self.geo_object.wrap("abc")
-        except ParamError as exception:
-            assert exception.code == -2
-            assert exception.msg == 'Geospatial data should be a dictionary or raw GeoJSON string'
-
     def test_geospatial_wrap_positive_with_query(self):
         """
             Perform a positive wrap on geospatial data followed by a query
         """
-        geo_object_wrap = aerospike.GeoJSON({"type": "Polygon", "coordinates": [[[-124.500000,
-    37.000000],[-125.000000, 37.000000], [-121.000000, 38.080000],[-122.500000,
-        38.080000], [-124.500000, 37.000000]]]})
+        geo_object_wrap = aerospike.GeoJSON({"type": "Polygon", "coordinates": [[[-124.500000, 
+            37.000000],[-125.000000, 37.000000], [-121.000000, 38.080000],[-122.500000, 
+                38.080000], [-124.500000, 37.000000]]]})
 
         geo_object_wrap.wrap({"type": "Polygon", "coordinates": [[[-122.500000, 
             37.000000],[-121.000000, 37.000000], [-121.000000, 38.080000],[-122.500000,
@@ -257,9 +274,9 @@ class TestGeospatial(TestBaseClass):
         assert geo_object_wrap.unwrap() == {'coordinates': [[[-122.5, 37.0], [-121.0, 37.0], [-121.0, 38.08],
             [-122.5, 38.08], [-122.5, 37.0]]], 'type': 'Polygon'}
         
-	records = []
+        records = []
         query = TestGeospatial.client.query("test", "demo")
-        query.where(p.geo_within("loc", geo_object_wrap.dumps()))
+        query.where(p.geo_within_geojson_region("loc", geo_object_wrap.dumps()))
 
         def callback((key, metadata, record)):
             records.append(record)
@@ -281,32 +298,23 @@ class TestGeospatial(TestBaseClass):
         assert self.geo_object.unwrap() == {'coordinates': [[[-122.5, 37.0], [-121.0, 37.0], [-121.0, 38.08],
             [-122.5, 38.08], [-122.5, 37.0]]], 'type': 'Polygon'}
 
-    def test_geospatial_object_loads_non_dict(self):
-        """
-            The geospatial object provided to loads() is not a dictionary
-        """
-        try:
-            self.geo_object.loads('{"abc"}')
-        except ClientError as exception:
-            assert exception.code == -1
-            assert exception.msg == 'String is not GeoJSON serializable'
 
     def test_geospatial_loads_positive_with_query(self):
         """
             Perform a positive loads on geoJSON raw string followed by a query
         """
-        geo_object_loads = aerospike.GeoJSON({"type": "Polygon", "coordinates": [[[-124.500000,
-    37.000000],[-125.000000, 37.000000], [-121.000000, 38.080000],[-122.500000,
-        38.080000], [-124.500000, 37.000000]]]})
+        geo_object_loads = aerospike.GeoJSON({"type": "Polygon", "coordinates": [[[-124.500000, 
+            37.000000],[-125.000000, 37.000000], [-121.000000, 38.080000],[-122.500000, 
+                38.080000], [-124.500000, 37.000000]]]})
 
         geo_object_loads.loads('{"type": "Polygon", "coordinates": [[[-122.500000, 37.000000], [-121.000000, 37.000000], [-121.000000, 38.080000],[-122.500000, 38.080000], [-122.500000, 37.000000]]]}')
 
         assert geo_object_loads.unwrap() == {'coordinates': [[[-122.5, 37.0], [-121.0, 37.0], [-121.0, 38.08],
             [-122.5, 38.08], [-122.5, 37.0]]], 'type': 'Polygon'}
 
-	records = []
+        records = []
         query = TestGeospatial.client.query("test", "demo")
-        query.where(p.geo_within("loc", geo_object_loads.dumps()))
+        query.where(p.geo_within_geojson_region("loc", geo_object_loads.dumps()))
 
         def callback((key, metadata, record)):
             records.append(record)
@@ -331,7 +339,7 @@ class TestGeospatial(TestBaseClass):
         """
             Perform a positive repr. Verify using eval()
         """
-	assert repr(self.geo_object) == '\'{"type": "Point", "coordinates": [-120.2, 39.3]}\''
+        assert repr(self.geo_object) == '\'{"type": "Point", "coordinates": [-120.2, 39.3]}\''
         assert eval(repr(self.geo_object)) == '{"type": "Point", "coordinates": [-120.2, 39.3]}'
 
 
@@ -392,11 +400,11 @@ class TestGeospatial(TestBaseClass):
         records = []
         query = TestGeospatial.client.query("test", "demo")
 
-        geo_object2 = aerospike.geodata({"type": "Polygon", "coordinates": [[[-122.500000,
-    37.000000],[-121.000000, 37.000000], [-121.000000, 38.080000],[-122.500000,
-        38.080000], [-122.500000, 37.000000]]]})
+        geo_object2 = aerospike.geodata({"type": "Polygon", "coordinates": [[[-122.500000, 
+            37.000000],[-121.000000, 37.000000], [-121.000000, 38.080000],[-122.500000, 
+                38.080000], [-122.500000, 37.000000]]]})
 
-        query.where(p.geo_within("loc", geo_object2.dumps()))
+        query.where(p.geo_within_geojson_region("loc", geo_object2.dumps()))
 
         def callback((key, metadata, record)):
             records.append(record)
@@ -418,7 +426,7 @@ class TestGeospatial(TestBaseClass):
 
         geo_object2 = aerospike.geojson('{"type": "Polygon", "coordinates": [[[-122.500000, 37.000000], [-121.000000, 37.000000], [-121.000000, 38.080000],[-122.500000, 38.080000], [-122.500000, 37.000000]]]}')
 
-        query.where(p.geo_within("loc", geo_object2.dumps()))
+        query.where(p.geo_within_geojson_region("loc", geo_object2.dumps()))
 
         def callback((key, metadata, record)):
             records.append(record)
@@ -455,6 +463,153 @@ class TestGeospatial(TestBaseClass):
 
         assert status == 0
 
+    def test_geospatial_positive_query_with_point(self):
+        """
+            Perform a positive geospatial query for a point
+        """
+        records = []
+        query = TestGeospatial.client.query("test", "demo")
+
+        geo_object2 = aerospike.GeoJSON({"type": "Point", "coordinates":
+            [-121.700000, 37.200000]})
+
+        query.where(p.geo_contains_geojson_point("loc_polygon", geo_object2.dumps()))
+
+        def callback((key, metadata, record)):
+            records.append(record)
+
+        query.foreach(callback)
+
+        assert len(records) == 1
+        assert records == [{'loc_polygon': {'coordinates': [[[-122.500000,
+            37.000000],[-121.000000, 37.000000], [-121.000000, 38.080000],[-122.500000, 38.080000],
+            [-122.500000, 37.000000]]], 'type': 'Polygon'}}]
+
+    def test_geospatial_positive_query_with_point_outside_polygon(self):
+        """
+            Perform a positive geospatial query for a point outside polygon
+        """
+        records = []
+        query = TestGeospatial.client.query("test", "demo")
+
+        geo_object2 = aerospike.GeoJSON({"type": "Point", "coordinates":
+            [-123.700000, 37.200000]})
+
+        query.where(p.geo_contains_geojson_point("loc_polygon", geo_object2.dumps()))
+
+        def callback((key, metadata, record)):
+            records.append(record)
+
+        query.foreach(callback)
+
+        assert len(records) == 0
+
+    def test_geospatial_positive_query_with_point_in_aerocircle(self):
+        """
+            Perform a positive geospatial query for a point in aerocircle
+        """
+        if TestGeospatial.skip_old_server == True:
+            pytest.skip("Server does not support apply on AeroCircle for GeoJSON")
+
+        records = []
+        query = TestGeospatial.client.query("test", "demo")
+
+        geo_object2 = aerospike.GeoJSON({"type": "Point", "coordinates":
+            [-122.000000, 37.500000]})
+
+        query.where(p.geo_contains_geojson_point("loc_circle", geo_object2.dumps()))
+
+        def callback((key, metadata, record)):
+            records.append(record)
+
+        query.foreach(callback)
+
+        assert len(records) == 1
+        assert records == [{'loc_circle': {'coordinates': [[-122.0, 37.5], 250.2], 'type': 'AeroCircle'}}]
+
+    def test_geospatial_positive_query_with_point_outside_aerocircle(self):
+        """
+            Perform a positive geospatial query for a point in aerocircle
+        """
+        if TestGeospatial.skip_old_server == True:
+            pytest.skip("Server does not support apply on AeroCircle for GeoJSON")
+
+        records = []
+        query = TestGeospatial.client.query("test", "demo")
+
+        geo_object2 = aerospike.GeoJSON({"type": "Point", "coordinates":
+            [-122.000000, 450.200]})
+
+        query.where(p.geo_contains_geojson_point("loc_circle", geo_object2.dumps()))
+
+        def callback((key, metadata, record)):
+            records.append(record)
+
+        query.foreach(callback)
+
+        assert len(records) == 0
+
+    def test_geospatial_positive_query_with_point_helper_method(self):
+        """
+            Perform a positive geospatial query for a point with helper method
+        """
+        records = []
+        query = TestGeospatial.client.query("test", "demo")
+
+        query.where(p.geo_contains_point("loc_polygon", -121.7, 37.2))
+
+        def callback((key, metadata, record)):
+            records.append(record)
+
+        query.foreach(callback)
+
+        assert len(records) == 1
+        assert records == [{'loc_polygon': {'coordinates': [[[-122.500000,
+            37.000000],[-121.000000, 37.000000], [-121.000000, 38.080000],[-122.500000, 38.080000],
+            [-122.500000, 37.000000]]], 'type': 'Polygon'}}]
+
+    def test_geospatial_object_not_dict_or_string(self):
+        """
+            The geospatial object is not a dictionary or string
+        """
+        try:
+            geo_object_wrong = aerospike.GeoJSON(1)
+
+        except ParamError as exception:
+            assert exception.code == -2
+            assert exception.msg == 'Geospatial data should be a dictionary or raw GeoJSON string'
+
+    def test_geospatial_object_non_json_serializable_string(self):
+        """
+            The geospatial object is not a json serializable string
+        """
+        try:
+            geo_object_wrong = aerospike.GeoJSON("abc")
+
+        except ClientError as exception:
+            assert exception.code == -1
+            assert exception.msg == 'String is not GeoJSON serializable'
+
+    def test_geospatial_object_wrap_non_dict(self):
+        """
+            The geospatial object provided to wrap() is not a dictionary
+        """
+        try:
+            self.geo_object.wrap("abc")
+        except ParamError as exception:
+            assert exception.code == -2
+            assert exception.msg == 'Geospatial data should be a dictionary or raw GeoJSON string'
+
+    def test_geospatial_object_loads_non_dict(self):
+        """
+            The geospatial object provided to loads() is not a dictionary
+        """
+        try:
+            self.geo_object.loads('{"abc"}')
+        except ClientError as exception:
+            assert exception.code == -1
+            assert exception.msg == 'String is not GeoJSON serializable'
+
     def test_geospatial_2dindex_set_length_extra(self):
         """
             Perform a 2d creation with set length exceeding limit
@@ -466,6 +621,34 @@ class TestGeospatial(TestBaseClass):
 
         assert status == 0
         try:
-            status = TestGeospatial.client.index_geo2dsphere_create("test", set_name, "loc", "loc_index")
+        	status = TestGeospatial.client.index_geo2dsphere_create("test", set_name, "loc", "loc_index")
+
         except InvalidRequest as exception:
-            assert exception.code == 4
+        	assert exception.code == 4
+
+    def test_geospatial_query_circle_incorrect_param_within_radius_helper_method(self):
+        """
+            Perform a positive geospatial query for a circle with incorrect
+            params for helper method
+        """
+        records = []
+        query = TestGeospatial.client.query("test", "demo")
+
+        try:
+            query.where(p.geo_contains_point("loc_polygon", -122.0, 37.5, 250))
+        except ParamError as exception:
+            assert exception.code == -2L
+            assert exception.msg == "predicate is invalid."
+
+    def test_geospatial_query_point_incorrect_param_helper_method(self):
+        """
+            Perform a positive geospatial query for a point with incorrect
+            params for helper method
+        """
+        records = []
+        query = TestGeospatial.client.query("test", "demo")
+
+        try:
+            query.where(p.geo_contains_point("loc_polygon", -121.7, 37))
+        except ParamError as exception:
+            assert exception.code == -2L

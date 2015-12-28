@@ -61,11 +61,11 @@ static PyMethodDef AerospikeGeospatial_Type_Methods[] = {
  ******************************************************************************/
 void store_geodata(AerospikeGeospatial *self, as_error *err, PyObject *py_geodata) 
 {
-	if ( PyDict_Check(py_geodata) ) {
-        if (self->geo_data) {
-            Py_DECREF(self->geo_data);
-        }
-        self->geo_data = py_geodata;
+	if (PyDict_Check(py_geodata)) {
+		if (self->geo_data) {
+			Py_DECREF(self->geo_data);
+		}
+		self->geo_data = py_geodata;
 	} else {
 		as_error_update(err, AEROSPIKE_ERR_PARAM, "Geospatial data should be a dictionary or raw GeoJSON string");
 	}
@@ -75,11 +75,11 @@ static PyObject * AerospikeGeospatial_Type_New(PyTypeObject * type, PyObject * a
 {
 	AerospikeGeospatial * self = NULL;
 
-    self = (AerospikeGeospatial *) type->tp_alloc(type, 0);
+	self = (AerospikeGeospatial *) type->tp_alloc(type, 0);
 
-    if ( self == NULL ) {
-    	return NULL;
-    }
+	if (self == NULL) {
+		return NULL;
+	}
 
 	return (PyObject *) self;
 }
@@ -94,26 +94,26 @@ static int AerospikeGeospatial_Type_Init(AerospikeGeospatial * self, PyObject * 
 
 	static char * kwlist[] = {"geo_data", NULL};
 
-	if ( PyArg_ParseTupleAndKeywords(args, kwds, "O:GeoJSON", kwlist,
-		&py_geodata) == false ) {
+	if (PyArg_ParseTupleAndKeywords(args, kwds, "O:GeoJSON", kwlist,
+		&py_geodata) == false) {
 		as_error_update(&err, AEROSPIKE_ERR_PARAM, "GeoJSON() expects exactly 1 parameter");
 		goto CLEANUP;
 	}
 
-    if (PyString_Check(py_geodata)) {
-        initresult = AerospikeGeospatial_DoLoads(py_geodata, &err);
-        if(!initresult) {
+	if (PyString_Check(py_geodata)) {
+		initresult = AerospikeGeospatial_DoLoads(py_geodata, &err);
+		if (!initresult) {
 			as_error_update(&err, AEROSPIKE_ERR_CLIENT, "String is not GeoJSON serializable");
 			goto CLEANUP;
-        }
-        store_geodata(self, &err, initresult);
-    } else {
-    store_geodata(self, &err, py_geodata);
-    }
+		}
+		store_geodata(self, &err, initresult);
+	} else {
+		store_geodata(self, &err, py_geodata);
+	}
 
 CLEANUP:
 
-	if ( err.code != AEROSPIKE_OK ) {
+	if (err.code != AEROSPIKE_OK) {
 		PyObject * py_err = NULL;
 		error_to_pyobject(&err, &py_err);
 		PyObject *exception_type = raise_exception(&err);
@@ -122,11 +122,11 @@ CLEANUP:
 		return -1;
 	}
 
-    Py_INCREF(self->geo_data);
-    if (initresult) {
-        Py_DECREF(initresult);
-    }
-    return 0;
+	Py_INCREF(self->geo_data);
+	if (initresult) {
+		Py_DECREF(initresult);
+	}
+	return 0;
 }
 
 PyObject *AerospikeGeospatial_Type_Repr(self) AerospikeGeospatial* self;
