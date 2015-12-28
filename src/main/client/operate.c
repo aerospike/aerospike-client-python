@@ -2626,7 +2626,7 @@ CLEANUP:
  *                              list passed from Python to a C function
  * @param kwds                  Dictionary of keywords
  *
- * Returns a list of elements.
+ * Returns an integer status. 0(Zero) is success value.
  * In case of error,appropriate exceptions will be raised.
  *******************************************************************************************************
  */
@@ -2642,7 +2642,6 @@ PyObject * AerospikeClient_ListTrim(AerospikeClient * self, PyObject * args, PyO
 	PyObject * py_meta = NULL;
 	PyObject * py_policy = NULL;
 	PyObject * py_result = NULL;
-	//PyObject * py_list = NULL;
 
 	as_policy_operate operate_policy;
 	as_policy_operate *operate_policy_p = NULL;
@@ -2713,15 +2712,8 @@ PyObject * AerospikeClient_ListTrim(AerospikeClient * self, PyObject * args, PyO
 		goto CLEANUP;
 	}
 
-	/*if (rec) {
-		list_to_pyobject(self, &err, as_record_get_list(rec, bin), &py_list);
-	}*/
-
 CLEANUP:
 	as_operations_destroy(&ops);
-	/*if (rec) {
-		as_record_destroy(rec);
-	}*/
 
 	if ( err.code != AEROSPIKE_OK ) {
 		PyObject * py_err = NULL;
@@ -2737,6 +2729,5 @@ CLEANUP:
 		Py_DECREF(py_err);
 		return NULL;
 	}
-	//return py_list;
 	return PyLong_FromLong(0);
 }
