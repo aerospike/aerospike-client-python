@@ -335,17 +335,24 @@ class TestGeospatial(TestBaseClass):
         """
             Perform a positive dumps. Verify using str
         """
-        assert self.geo_object.dumps() == '{"type": "Point", "coordinates": [-120.2, 39.3]}'
+        geojson_str = self.geo_object.dumps()
+        assert type(geojson_str) == str
+        obj = aerospike.geojson(geojson_str)
+        assert obj.unwrap() == self.geo_object.unwrap()
 
-        assert str(self.geo_object) == '{"type": "Point", "coordinates": [-120.2, 39.3]}'
+        geojson_str = str(self.geo_object)
+        assert type(geojson_str) == str
+        obj = aerospike.geojson(geojson_str)
+        assert obj.unwrap() == self.geo_object.unwrap()
 
     def test_geospatial_repr_positive(self):
         """
             Perform a positive repr. Verify using eval()
         """
-        assert repr(self.geo_object) == '\'{"type": "Point", "coordinates": [-120.2, 39.3]}\''
-        assert eval(repr(self.geo_object)) == '{"type": "Point", "coordinates": [-120.2, 39.3]}'
-
+        geojson_str = eval(repr(self.geo_object))
+        assert type(geojson_str) == str
+        obj = aerospike.geojson(geojson_str)
+        assert obj.unwrap() == self.geo_object.unwrap()
 
     def test_geospatial_put_get_positive_with_geodata(self):
         """
