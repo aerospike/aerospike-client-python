@@ -29,8 +29,6 @@
 
 PyTypeObject * AerospikeGeospatial_Ready(void);
 
-AerospikeGeospatial * AerospikeGeospatial_New(AerospikeClient * client, PyObject * args, PyObject * kwds);
-
 PyObject * AerospikeGeospatial_Wrap(AerospikeGeospatial * self, PyObject * args, PyObject * kwds);
 
 PyObject * AerospikeGeospatial_Unwrap(AerospikeGeospatial * self, PyObject * args, PyObject * kwds);
@@ -48,3 +46,5 @@ PyObject * AerospikeGeospatial_DoLoads(PyObject *py_geodata, as_error *err);
 AerospikeGeospatial  * Aerospike_Set_Geo_Data(PyObject * parent, PyObject * args, PyObject * kwds);
 
 AerospikeGeospatial  * Aerospike_Set_Geo_Json(PyObject * parent, PyObject * args, PyObject * kwds);
+
+PyObject * AerospikeGeospatial_New(as_error *err, PyObject * value);

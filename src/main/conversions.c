@@ -502,8 +502,11 @@ as_status pyobject_to_record(AerospikeClient * self, as_error * err, PyObject * 
 				}
 				ret_val = as_record_set_int64(rec, name, val);
 			} else if (!strcmp(value->ob_type->tp_name, "aerospike.Geospatial")) {
-				PyObject* py_data = PyObject_GenericGetAttr(value, PyString_FromString("geo_data"));
-				char *geo_value = PyString_AsString(AerospikeGeospatial_DoDumps(py_data, err));
+				PyObject *py_geo_string = PyString_FromString("geo_data");
+				PyObject* py_data = PyObject_GenericGetAttr(value, py_geo_string);
+				Py_DECREF(py_geo_string);
+				PyObject *py_dumps = AerospikeGeospatial_DoDumps(py_data, err);
+				char *geo_value = PyString_AsString(py_dumps);
 				if (aerospike_has_geo(self->as)) {
 					ret_val = as_record_set_geojson_str(rec, name, geo_value);
 				} else {
@@ -513,6 +516,7 @@ as_status pyobject_to_record(AerospikeClient * self, as_error * err, PyObject * 
 						&bytes, py_data, err);
 					ret_val = as_record_set_bytes(rec, name, bytes);
 				}
+				Py_DECREF(py_dumps);
 			} else if ( PyUnicode_Check(value) ) {
 				PyObject * py_ustr = PyUnicode_AsUTF8String(value);
 				char * val = PyString_AsString(py_ustr);
@@ -922,14 +926,18 @@ as_status val_to_pyobject(AerospikeClient * self, as_error * err, const as_val *
 				*py_val = Py_None;
 				break;
 			}
-        case AS_GEOJSON: {
-            as_geojson * gp = as_geojson_fromval(val);
-            char * locstr = as_geojson_get(gp);
-            PyObject *py_locstr = PyString_FromString(locstr);
-            *py_val = AerospikeGeospatial_DoLoads(py_locstr, err);
-            Py_DECREF(py_locstr);
-            break;
-        }
+		case AS_GEOJSON: {
+			as_geojson * gp = as_geojson_fromval(val);
+			char * locstr = as_geojson_get(gp);
+			PyObject *py_locstr = PyString_FromString(locstr);
+			PyObject *py_loads = AerospikeGeospatial_DoLoads(py_locstr, err);
+			*py_val = AerospikeGeospatial_New(err, py_loads);
+			Py_DECREF(py_locstr);
+			if (py_loads) {
+				Py_DECREF(py_loads);
+			}
+			break;
+		}
 		default: {
 				as_error_update(err, AEROSPIKE_ERR_CLIENT, "Unknown type for value");
 				return err->code;
