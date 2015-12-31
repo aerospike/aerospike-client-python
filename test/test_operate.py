@@ -1130,8 +1130,8 @@ class TestOperate(object):
 
         (key, meta, bins) = TestOperate.client_no_typechecks.operate(key, list)
 
-        assert bins == {'geospatial': {'coordinates': [42.34, 58.62], 'type':
-            'Point'}}
+        assert bins['geospatial'].unwrap() == {'coordinates': [42.34, 58.62], 'type':
+            'Point'}
         TestOperate.client_no_typechecks.remove(key)
 
     def test_operate_with_bin_length_extra(self):

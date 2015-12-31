@@ -336,3 +336,11 @@ AerospikeGeospatial  * Aerospike_Set_Geo_Json(PyObject * parent, PyObject * args
 	}
     return NULL;
 }
+
+PyObject * AerospikeGeospatial_New(as_error *err, PyObject * value)
+{
+	AerospikeGeospatial * self = (AerospikeGeospatial *) AerospikeGeospatial_Type.tp_new(&AerospikeGeospatial_Type, Py_None, Py_None);
+	store_geodata(self, err, value);
+	Py_INCREF(self->geo_data);
+	return (PyObject *) self;
+}
