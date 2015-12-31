@@ -73,6 +73,11 @@ detect_linux()
         return 0
         ;;
 
+      "amazonami"* )
+        echo "el6" "rpm"
+	return 0
+	;;
+
       * )
         echo "error: ${DIST_NAME} is not supported."
         return 1
