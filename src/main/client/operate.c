@@ -2592,6 +2592,9 @@ PyObject * AerospikeClient_ListGetRange(AerospikeClient * self, PyObject * args,
 
 	if (rec && rec->bins.size) {
 		list_to_pyobject(self, &err, as_record_get_list(rec, bin), &py_list);
+	} else if (rec && rec->bins.size == 0) {
+		as_list *list = NULL;
+		list_to_pyobject(self, &err, list, &py_list);
 	}
 
 CLEANUP:

@@ -120,11 +120,8 @@ class TestListGetRange(object):
         length = random.randint(minLength, maxLength)
         bin = ''.join(map(lambda unused :
             random.choice(charSet), range(length)))+".com"
-        try:
-            TestListGetRange.client.list_get_range(key, bin, 0, 1)
-
-        except BinIncompatibleType as exception:
-            assert exception.code == 12L
+        bins = TestListGetRange.client.list_get_range(key, bin, 0, 1)
+        assert [] == bins
 
     def test_list_get_range_with_extra_parameter(self):
         """
