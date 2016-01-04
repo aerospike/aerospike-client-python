@@ -68,7 +68,7 @@ class TestListInsertItems(object):
 
         (key, meta, bins) = TestListInsertItems.client.get(key)
 
-        assert bins == {'age': [1, 2], 'name': 'name1', 'city':[['Chennai'], 'Pune', 'Dehli']}
+        assert bins == {'age': [1, 2], 'name': 'name1', 'city':['Chennai', 'Pune', 'Dehli']}
 
     def test_list_insert_items_unicode_string(self):
         """
@@ -79,7 +79,7 @@ class TestListInsertItems(object):
 
         key, meta, bins = TestListInsertItems.client.get(key)
         assert bins == {'age': [1, 2], 'city' : ['Pune', 'Dehli', None,
-            [u'Mumbai']], 'name':'name1'}
+            u'Mumbai'], 'name':'name1'}
 
     def test_list_insert_items_list_with_correct_policy(self):
         """
@@ -106,7 +106,7 @@ class TestListInsertItems(object):
 
         (key, meta, bins) = TestListInsertItems.client.get(key)
 
-        assert bins == {'age': [2, 3, None, None, None, None, None, [85.12]], 'city': ['Pune', 'Dehli'], 'name': 'name2'}
+        assert bins == {'age': [2, 3, None, None, None, None, None, 85.12], 'city': ['Pune', 'Dehli'], 'name': 'name2'}
 
     def test_list_insert_items_map(self):
         """
@@ -118,7 +118,7 @@ class TestListInsertItems(object):
 
         (key, meta, bins) = TestListInsertItems.client.get(key)
 
-        assert bins == {'age': [3, [{'k1':29}], 4], 'city': ['Pune', 'Dehli'], 'name': 'name3'}
+        assert bins == {'age': [3, {'k1':29}, 4], 'city': ['Pune', 'Dehli'], 'name': 'name3'}
 
     def test_list_insert_items_bytearray(self):
         """
@@ -142,7 +142,7 @@ class TestListInsertItems(object):
 
         (key, meta, bins) = TestListInsertItems.client.get(key)
 
-        assert bins == {'age': [1, 2, None, None, None, None, [0]], 'city': ['Pune', 'Dehli'], 'name': 'name1'}
+        assert bins == {'age': [1, 2, None, None, None, None, 0], 'city': ['Pune', 'Dehli'], 'name': 'name1'}
 
     def test_list_insert_items_with_nonexistent_key(self):
         """
