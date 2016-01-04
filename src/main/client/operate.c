@@ -1229,13 +1229,13 @@ PyObject * AerospikeClient_ListExtend(AerospikeClient * self, PyObject * args, P
 		goto CLEANUP;
 	}
 
+	as_operations ops;
+	as_operations_inita(&ops, 1);
+
 	if (!PyList_Check(py_append_val)) {
 		as_error_update(&err, AEROSPIKE_ERR_PARAM, "Items should be of type list");
 		goto CLEANUP;
 	}
-
-	as_operations ops;
-	as_operations_inita(&ops, 1);
 
 	py_result = AerospikeClient_convert_pythonObj_to_asType(self, &err,
 			py_key, py_policy, &key, &operate_policy, &operate_policy_p);
@@ -1479,13 +1479,13 @@ PyObject * AerospikeClient_ListInsertItems(AerospikeClient * self, PyObject * ar
 		goto CLEANUP;
 	}
 
+	as_operations ops;
+	as_operations_inita(&ops, 1);
+
 	if (!PyList_Check(py_insert_val)) {
 		as_error_update(&err, AEROSPIKE_ERR_PARAM, "Items should be of type list");
 		goto CLEANUP;
 	}
-
-	as_operations ops;
-	as_operations_inita(&ops, 1);
 
 	py_result = AerospikeClient_convert_pythonObj_to_asType(self, &err,
 			py_key, py_policy, &key, &operate_policy, &operate_policy_p);
