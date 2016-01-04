@@ -171,8 +171,8 @@ static PyMethodDef AerospikeClient_Type_Methods[] = {
 	{"list_trim",
 		(PyCFunction) AerospikeClient_ListTrim, METH_VARARGS | METH_KEYWORDS,
 		"Remove elements from the list which are not within the range starting at the given index plus count"},
-	{"list_count",
-		(PyCFunction) AerospikeClient_ListCount, METH_VARARGS | METH_KEYWORDS,
+	{"list_size",
+		(PyCFunction) AerospikeClient_ListSize, METH_VARARGS | METH_KEYWORDS,
 		"Count the elements of the list value in bin"},
 
 	// Deprecated key-based API

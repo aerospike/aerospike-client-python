@@ -1563,7 +1563,7 @@ CLEANUP:
  * In case of error,appropriate exceptions will be raised.
  *******************************************************************************************************
  */
-PyObject * AerospikeClient_ListCount(AerospikeClient * self, PyObject * args, PyObject * kwds)
+PyObject * AerospikeClient_ListSize(AerospikeClient * self, PyObject * args, PyObject * kwds)
 {
 	// Initialize error
 	as_error err;
@@ -1581,13 +1581,13 @@ PyObject * AerospikeClient_ListCount(AerospikeClient * self, PyObject * args, Py
 	as_record * rec = NULL;
 	as_key key;
 	char* bin = NULL;
-	int64_t list_count = 0;
+	int64_t list_size = 0;
 
 	// Python Function Keyword Arguments
 	static char * kwlist[] = {"key", "bin", "meta", "policy", NULL};
 
 	// Python Function Argument Parsing
-	if ( PyArg_ParseTupleAndKeywords(args, kwds, "OO|OO:list_count", kwlist,
+	if ( PyArg_ParseTupleAndKeywords(args, kwds, "OO|OO:list_size", kwlist,
 				&py_key, &py_bin, &py_meta, &py_policy) == false ) {
 		return NULL;
 	}
@@ -1648,7 +1648,7 @@ PyObject * AerospikeClient_ListCount(AerospikeClient * self, PyObject * args, Py
 	}
 
 	if(rec) {
-		list_count = as_record_get_int64(rec, bin, 0);
+		list_size = as_record_get_int64(rec, bin, 0);
 	}
 
 CLEANUP:
@@ -1670,7 +1670,7 @@ CLEANUP:
 		Py_DECREF(py_err);
 		return NULL;
 	}
-	return PyLong_FromLong(list_count);
+	return PyLong_FromLong(list_size);
 }
 
 /**

@@ -300,10 +300,10 @@ PyObject * AerospikeClient_ListTrim(AerospikeClient * self, PyObject * args, PyO
 /**
  * Count the elements of the list value in bin.
  *
- *		client.list_count((x,y,z))
+ *		client.list_size((x,y,z))
  *
  */
-PyObject * AerospikeClient_ListCount(AerospikeClient * self, PyObject * args, PyObject * kwds);
+PyObject * AerospikeClient_ListSize(AerospikeClient * self, PyObject * args, PyObject * kwds);
 
 /*******************************************************************************
  * KEY OPERATIONS (DEPRECATED)
