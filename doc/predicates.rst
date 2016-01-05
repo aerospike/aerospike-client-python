@@ -30,7 +30,7 @@
         query.where(p.between('age', 20, 30))
         res = query.results()
         print(res)
-        client.close
+        client.close()
 
 
 .. py:function:: equals(bin, val)
@@ -54,7 +54,185 @@
         query.where(p.equal('name', 'that guy'))
         res = query.results()
         print(res)
-        client.close
+        client.close()
+
+.. py:function:: geo_within_geojson_region(bin, shape)
+
+    Predicate for finding any point in bin which is within the given shape.
+    Requires a geo2dsphere index
+    (:meth:`~aerospike.Client.index_geo2dsphere_create`) over a *bin*
+    containing :class:`~aerospike.GeoJSON` point data.
+
+    :param str bin: the bin name.
+    :param str shape: the shape formatted as a GeoJSON string.
+    :return: :py:func:`tuple` to be used in :meth:`aerospike.Query.where`.
+
+    .. note:: Requires server version >= 3.7.0
+
+    .. code-block:: python
+
+        from __future__ import print_function
+        import aerospike
+        from aerospike import GeoJSON
+        from aerospike import predicates as p
+
+        config = { 'hosts': [ ('127.0.0.1', 3000)]}
+        client = aerospike.client(config).connect()
+
+        client.index_geo2dsphere_create('test', 'pads', 'loc', 'pads_loc_geo')
+        bins = {'pad_id': 1,
+                'loc': aerospike.geojson('{"type":"Point", "coordinates":[-80.604333, 28.608389]}')}
+        client.put(('test', 'pads', 'launchpad1'), bins)
+
+        # Create a search rectangle which matches screen boundaries:
+        # (from the bottom left corner counter-clockwise)
+        scrn = GeoJSON({ 'type': "Polygon",
+                         'coordinates': [
+                          [[-80.590000, 28.60000],
+                           [-80.590000, 28.61800],
+                           [-80.620000, 28.61800],
+                           [-80.620000, 28.60000],
+                           [-80.590000, 28.60000]]]})
+
+        # Find all points contained in the rectangle.
+        query = client.query('test', 'pads')
+        query.select('pad_id', 'loc')
+        query.where(p.geo_within_geojson_region('loc', scrn.dumps()))
+        records = query.results()
+        print(records)
+        client.close()
+
+    .. versionadded:: 1.0.58
+
+.. py:function:: geo_within_radius(bin, long, lat, radius_meters)
+
+    Predicate helper builds an AeroCircle GeoJSON shape, and returns a
+    'within GeoJSON region' predicate.
+    Requires a geo2dsphere index
+    (:meth:`~aerospike.Client.index_geo2dsphere_create`) over a *bin*
+    containing :class:`~aerospike.GeoJSON` point data.
+
+    :param str bin: the bin name.
+    :param float long: the longitude of the center point of the AeroCircle.
+    :param float lat: the latitude of the center point of the AeroCircle.
+    :param float radius_meters: the radius length in meters of the AeroCircle.
+    :return: :py:func:`tuple` to be used in :meth:`aerospike.Query.where`.
+
+    .. note:: Requires server version >= 3.7.0
+
+    .. code-block:: python
+
+        from __future__ import print_function
+        import aerospike
+        from aerospike import GeoJSON
+        from aerospike import predicates as p
+
+        config = { 'hosts': [ ('127.0.0.1', 3000)]}
+        client = aerospike.client(config).connect()
+
+        client.index_geo2dsphere_create('test', 'pads', 'loc', 'pads_loc_geo')
+        bins = {'pad_id': 1,
+                'loc': aerospike.geojson('{"type":"Point", "coordinates":[-80.604333, 28.608389]}')}
+        client.put(('test', 'pads', 'launchpad1'), bins)
+
+        query = client.query('test', 'pads')
+        query.select('pad_id', 'loc')
+        query.where(p.geo_within_radius('loc', -80.605000, 28.60900, 400.0))
+        records = query.results()
+        print(records)
+        client.close()
+
+    .. versionadded:: 1.0.58
+
+.. py:function:: geo_contains_geojson_point(bin, point)
+
+    Predicate for finding any regions in the bin which contain the given point.
+    Requires a geo2dsphere index
+    (:meth:`~aerospike.Client.index_geo2dsphere_create`) over a *bin*
+    containing :class:`~aerospike.GeoJSON` point data.
+
+    :param str bin: the bin name.
+    :param str point: the point formatted as a GeoJSON string.
+    :return: :py:func:`tuple` to be used in :meth:`aerospike.Query.where`.
+
+    .. note:: Requires server version >= 3.7.0
+
+    .. code-block:: python
+
+        from __future__ import print_function
+        import aerospike
+        from aerospike import GeoJSON
+        from aerospike import predicates as p
+
+        config = { 'hosts': [ ('127.0.0.1', 3000)]}
+        client = aerospike.client(config).connect()
+
+        client.index_geo2dsphere_create('test', 'launch_centers', 'area', 'launch_area_geo')
+        rect = GeoJSON({ 'type': "Polygon",
+                         'coordinates': [
+                          [[-80.590000, 28.60000],
+                           [-80.590000, 28.61800],
+                           [-80.620000, 28.61800],
+                           [-80.620000, 28.60000],
+                           [-80.590000, 28.60000]]]})
+        bins = {'area': rect}
+        client.put(('test', 'launch_centers', 'kennedy space center'), bins)
+
+        # Find all geo regions containing a point
+        point = GeoJSON({'type': "Point",
+                         'coordinates': [-80.604333, 28.608389]})
+        query = client.query('test', 'launch_centers')
+        query.where(p.geo_contains_geojson_point('area', point.dumps()))
+        records = query.results()
+        print(records)
+        client.close()
+
+    .. versionadded:: 1.0.58
+
+.. py:function:: geo_contains_point(bin, long, lat)
+
+    Predicate helper builds a GeoJSON point, and returns a
+    'contains GeoJSON point' predicate.
+    Requires a geo2dsphere index
+    (:meth:`~aerospike.Client.index_geo2dsphere_create`) over a *bin*
+    containing :class:`~aerospike.GeoJSON` point data.
+
+    :param str bin: the bin name.
+    :param float long: the longitude of the point.
+    :param float lat: the latitude of the point.
+    :return: :py:func:`tuple` to be used in :meth:`aerospike.Query.where`.
+
+    .. note:: Requires server version >= 3.7.0
+
+    .. code-block:: python
+
+        from __future__ import print_function
+        import aerospike
+        from aerospike import GeoJSON
+        from aerospike import predicates as p
+
+        config = { 'hosts': [ ('127.0.0.1', 3000)]}
+        client = aerospike.client(config).connect()
+
+        client.index_geo2dsphere_create('test', 'launch_centers', 'area', 'launch_area_geo')
+        rect = GeoJSON({ 'type': "Polygon",
+                         'coordinates': [
+                          [[-80.590000, 28.60000],
+                           [-80.590000, 28.61800],
+                           [-80.620000, 28.61800],
+                           [-80.620000, 28.60000],
+                           [-80.590000, 28.60000]]]})
+        bins = {'area': rect}
+        client.put(('test', 'launch_centers', 'kennedy space center'), bins)
+
+        # Find all geo regions containing a point
+        query = client.query('test', 'launch_centers')
+        query.where(p.geo_contains_point('area', -80.604333, 28.608389))
+        records = query.results()
+        print(records)
+        client.close()
+
+    .. versionadded:: 1.0.58
 
 .. py:function:: contains(bin, index_type, val)
 
@@ -69,7 +247,7 @@
 
     .. warning::
 
-        This functionality will become available with a future release of the Aerospike server.
+        This functionality will become production-ready in a future release of the Aerospike server.
 
     .. code-block:: python
 
@@ -94,7 +272,7 @@
         query.where(p.contains('fav_movies', aerospike.INDEX_TYPE_MAPKEYS, '12 Monkeys'))
         res = query.results()
         print(res)
-        client.close
+        client.close()
 
 .. py:function:: range(bin, index_type, min, max))
 
@@ -109,7 +287,7 @@
 
     .. warning::
 
-        This functionality will become available with a future release of the Aerospike server.
+        This functionality will become production-ready in a future release of the Aerospike server.
 
     .. code-block:: python
 
@@ -128,41 +306,5 @@
         query.where(p.range('age', aerospike.INDEX_TYPE_LIST, 20, 30))
         res = query.results()
         print(res)
-        client.close
-
-.. py:function:: geo_within(bin, shape)
-
-    Predicate for finding any point in bin which is within the given shape.
-    Requires a geo2dsphere index
-    (:meth:`~aerospike.Client.index_geo2dsphere_create`) over a *bin*
-    containing :class:`~aerospike.GeoJSON` point data.
-
-    :param str bin: the bin name.
-    :param str shape: find points that are within the shape described by a GeoJSON string.
-    :return: :py:func:`tuple` to be used in :meth:`aerospike.Query.where`.
-
-    .. code-block:: python
-
-        from __future__ import print_function
-        import aerospike
-        from aerospike import GeoJSON
-        from aerospike import predicates as p
-
-        config = { 'hosts': [ ('127.0.0.1', 3000)]}
-        client = aerospike.client(config).connect()
-        # Create a search rectangle which matches screen boundaries:
-        rect = GeoJSON({ 'type': "Polygon",
-                         'coordinates': [
-                          [[28.60000, -80.590000],
-                           [28.61800, -80.590000],
-                           [28.61800, -80.620000],
-                           [28.600000,-80.620000]]]})
-
-        # Find all points contained in the rectangle.
-        query = client.query('test', 'demo')
-        query.select('userid', 'tstamp', 'loc')
-        query.where(p.geo_within('loc', rect.dumps()))
-        points = query.results()
-        print(points)
-        client.close
+        client.close()
 

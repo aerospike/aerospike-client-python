@@ -11,10 +11,13 @@ GeoJSON Class --- :class:`GeoJSON`
 
 .. class:: GeoJSON
 
-    A near future version of the Aerospike server will support storing
-    GeoJSON data. A geo2dsphere index can be built on a bin which contains
+    Starting with version 3.7.0, the Aerospike server supports storing
+    GeoJSON data. A Geo2DSphere index can be built on a bin which contains
     GeoJSON data, enabling queries for the points contained within given
-    shapes using :meth:`aerospike.predicates.geo_within`.
+    shapes using :meth:`~aerospike.predicates.geo_within_geojson_region` and
+    :meth:`~aerospike.predicates.geo_within_radius`, and for the regions which
+    contain a point using :meth:`~aerospike.predicates.geo_contains_geojson_point`
+    and :meth:`~aerospike.predicates.geo_contains_point`.
 
     On the client side, wrapping geospatial data in an instance of the
     :class:`aerospike.GeoJSON` class enables serialization of the data into the
@@ -22,16 +25,19 @@ GeoJSON Class --- :class:`GeoJSON`
     On reading a record from the server, bins with geospatial data it will be
     deserialized into a :class:`~aerospike.GeoJSON` instance.
 
+    .. seealso::
+        `Geospatial Index and Query
+        <http://www.aerospike.com/docs/guide/geospatial.html>`_.
+
     .. code-block:: python
 
         from __future__ import print_function
         import aerospike
         from aerospike import GeoJSON
-        import time
 
         config = { 'hosts': [ ('127.0.0.1', 3000)]}
         client = aerospike.client(config).connect()
-        client.index_geo2dsphere_create('test', 'demo', 'loc', 'loc_geo_idx')
+        client.index_geo2dsphere_create('test', 'pads', 'loc', 'pads_loc_geo')
         # Create GeoJSON point using WGS84 coordinates.
         latitude = 28.608389
         longitude = -80.604333
@@ -39,18 +45,17 @@ GeoJSON Class --- :class:`GeoJSON`
                        'coordinates': [longitude, latitude]})
         print(loc)
         # Alternatively create the GeoJSON point from a string
-        loc = aerospike.geojson('{"type": "Point", "coordinates": [28.608389, -80.604333]}')
+        loc = aerospike.geojson('{"type": "Point", "coordinates": [-80.604333, 28.608389]}')
 
         # Create a user record.
-        bins = {'tstamp': time.time(),
-                'userid': 12345,
+        bins = {'pad_id': 1,
                 'loc': loc}
 
         # Store the record.
-        client.put(('test', 'demo', 'geo1'), bins)
+        client.put(('test', 'pads', 'launchpad1'), bins)
 
         # Read the record.
-        (k, m, b) = client.get(('test', 'demo', 'geo1'))
+        (k, m, b) = client.get(('test', 'demo', 'launchpad1'))
         print(b)
         client.close()
 
