@@ -76,11 +76,14 @@ class TestIndex(TestBaseClass):
         for i in xrange(100):
             set_name = set_name + 'a'
         policy = {}
-        with pytest.raises(Exception) as exception:
+        try:
             retobj = TestIndex.client.index_integer_create('test', set_name,
 'age', 'age_index', policy)
-
-        assert exception.value[0] == 4
+            assert False
+        except InvalidRequest as e:
+            assert e.code == 4
+        except Exception as e:
+            assert type(e) == InvalidRequest
 
     def test_createindex_with_incorrect_namespace(self):
         """
@@ -142,11 +145,15 @@ class TestIndex(TestBaseClass):
     def test_createindex_with_set_is_int(self):
             #Invoke createindex() with set is int
         policy = {}
-        with pytest.raises(Exception) as exception:
+        try:
             retobj = TestIndex.client.index_integer_create('test', 1, 'age',
                                                            'age_index', policy)
-        assert exception.value[0] == -2
-        assert exception.value[1] == 'Set should be string, unicode or None'
+            assert False
+        except ParamError as e:
+            assert e.code == -2
+            assert e.msg == 'Set should be string, unicode or None'
+        except Exception as e:
+            assert type(e) == ParamError
 
     def test_createindex_with_bin_is_none(self):
         """
@@ -252,11 +259,14 @@ name
         for i in xrange(100):
             set_name = set_name + 'a'
         policy = {}
-        with pytest.raises(Exception) as exception:
+        try:
             retobj = TestIndex.client.index_string_create('test', set_name,
 'name', 'name_index', policy)
-
-        assert exception.value[0] == 4
+            assert False
+        except InvalidRequest as e:
+            assert e.code == 4
+        except Exception as e:
+            assert type(e) == InvalidRequest
 
     def test_create_string_index_with_correct_parameters_ns_length_extra(self):
             #Invoke createindex() with correct arguments ns length extra
@@ -264,11 +274,14 @@ name
         for i in xrange(50):
             ns_name = ns_name + 'a'
         policy = {}
-        with pytest.raises(Exception) as exception:
+        try:
             retobj = TestIndex.client.index_string_create(ns_name, 'demo',
 'name', 'name_index', policy)
-
-        assert exception.value[0] == 4
+            assert False
+        except InvalidRequest as e:
+            assert e.code == 4
+        except Exception as e:
+            assert type(e) == InvalidRequest
 
     def test_create_string_index_with_incorrect_namespace(self):
         """

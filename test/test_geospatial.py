@@ -252,9 +252,9 @@ class TestGeospatial(TestBaseClass):
                 "bin": "write_bin"}]
 
         key, meta, bins = TestGeospatial.client.operate(key, list)
+        self.keys.append(key)
+        assert type(bins['write_bin']['no']) == aerospike.GeoJSON
         assert bins['write_bin']['no'].unwrap() == {'coordinates': [43.45, 56.75], 'type': 'Point'}
-
-        TestGeospatial.client.remove(key)
 
     def test_geospatial_wrap_positive(self):
         """

@@ -264,10 +264,13 @@ class TestInfoNode(object):
         Test info with incorrect host
         """
         host = ("abcderp", 3000)
-        with pytest.raises(Exception) as exception:
+        try:
             response = TestInfoNode.client.info_node('bins', host)
-
-        assert exception.value[0] == -4L
+            assert False
+        except InvalidHostError as e:
+            assert e.code == -4
+        except Exception as e:
+            assert type(e) == InvalidHostError
 
     def test_info_node_positive_with_dns(self):
         """
