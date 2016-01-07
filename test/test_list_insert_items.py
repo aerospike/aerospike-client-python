@@ -131,18 +131,23 @@ class TestListInsertItems(object):
         (key, meta, bins) = TestListInsertItems.client.get(key)
 
         assert bins == {'age': [1, 2, 555, bytearray(b"asd;as[d\'as;d")], 'city': ['Pune', 'Dehli'], 'name': 'name1'}
-    
+
+    @pytest.mark.xfail(reason="Boolean values cast to integer instead of being serialized")
     def test_list_insert_items_boolean(self):
         """
         Invoke list_insert_items() insert boolean into the list
         """
-        key = ('test', 'demo', 1)
 
-        TestListInsertItems.client.list_insert_items(key, "age", 6, [False])
+        key1 = ('test', 'demo', 1)
+        TestListInsertItems.client.list_insert_items(key1, "age", 1, [False])
+        (k1, m1, b1) = TestListInsertItems.client.get(key1)
+        key2 = ('test', 'demo', 2)
+        TestListInsertItems.client.list_insert_items(key2, "age", 1, [False, True])
+        (k2, m2, b2) = TestListInsertItems.client.get(key2)
 
-        (key, meta, bins) = TestListInsertItems.client.get(key)
-
-        assert bins == {'age': [1, 2, None, None, None, None, 0], 'city': ['Pune', 'Dehli'], 'name': 'name1'}
+        assert b1['age'] == [1, False, 2]
+        assert b2['age'] == [2, False, True, 3]
+        assert type(b1['age'][1]) == type(False)
 
     def test_list_insert_items_with_nonexistent_key(self):
         """
