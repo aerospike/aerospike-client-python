@@ -20,7 +20,7 @@ Content
 #######
 
 .. toctree::
-    :maxdepth: 2
+    :maxdepth: 3
 
     aerospike
     client
@@ -28,8 +28,8 @@ Content
     query
     predicates
     geojson
-    llist
     exception
+    llist
 
 
 Indices and tables
