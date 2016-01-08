@@ -34,6 +34,7 @@
 #include <aerospike/as_operations.h>
 #include <aerospike/as_bytes.h>
 #include <aerospike/as_double.h>
+#include <aerospike/as_boolean.h>
 
 #include "conversions.h"
 #include "geo.h"
@@ -359,15 +360,19 @@ as_status pyobject_to_val(AerospikeClient * self, as_error * err, PyObject * py_
 	as_error_reset(err);
 	PyObject * py_result = NULL;
 
-	if ( !py_obj ) {
+	if (!py_obj) {
 		// this should never happen, but if it did...
 		return as_error_update(err, AEROSPIKE_ERR_CLIENT, "value is null");
-	}
-	else if (PyInt_Check(py_obj)) {
+	} else if (PyBool_Check(py_obj)) {
+		as_bytes *bytes;
+		GET_BYTES_POOL(bytes, static_pool, err);
+		py_result = serialize_based_on_serializer_policy(self, serializer_type,
+			&bytes, py_obj, err);
+		*val = (as_val *) bytes;
+	} else if (PyInt_Check(py_obj)) {
 		int64_t i = (int64_t) PyInt_AsLong(py_obj);
 		*val = (as_val *) as_integer_new(i);
-	}
-	else if (PyLong_Check(py_obj)) {
+	} else if (PyLong_Check(py_obj)) {
 		int64_t l = (int64_t) PyLong_AsLongLong(py_obj);
 		if (l == -1 && PyErr_Occurred()) {
 			if (PyErr_ExceptionMatches(PyExc_OverflowError)) {
@@ -375,18 +380,15 @@ as_status pyobject_to_val(AerospikeClient * self, as_error * err, PyObject * py_
 			}
 		}
 		*val = (as_val *) as_integer_new(l);
-	}
-	else if ( PyString_Check(py_obj) ) {
+	} else if (PyString_Check(py_obj)) {
 		char * s = PyString_AsString(py_obj);
 		*val = (as_val *) as_string_new(s, false);
-	}
-	else if ( PyUnicode_Check(py_obj) ) {
+	} else if (PyUnicode_Check(py_obj)) {
 		PyObject * py_ustr = PyUnicode_AsUTF8String(py_obj);
 		char * str = PyString_AsString(py_ustr);
 		*val = (as_val *) as_string_new(strdup(str), true);
 		Py_DECREF(py_ustr);
-	}
-	else if (!strcmp(py_obj->ob_type->tp_name, "aerospike.Geospatial")) {
+	} else if (!strcmp(py_obj->ob_type->tp_name, "aerospike.Geospatial")) {
 		PyObject *py_parameter = PyString_FromString("geo_data");
 		PyObject* py_data = PyObject_GenericGetAttr(py_obj, py_parameter);
 		Py_DECREF(py_parameter);
@@ -400,28 +402,25 @@ as_status pyobject_to_val(AerospikeClient * self, as_error * err, PyObject * py_
 				&bytes, py_data, err);
 			*val = (as_val *) bytes;
 		}
-	}
-	else if ( PyByteArray_Check(py_obj) ) {
+	} else if (PyByteArray_Check(py_obj)) {
 		as_bytes *bytes;
 		GET_BYTES_POOL(bytes, static_pool, err);
 		py_result = serialize_based_on_serializer_policy(self, serializer_type,
 				&bytes, py_obj, err);
 		*val = (as_val *) bytes;
-	}
-	else if ( PyList_Check(py_obj) ) {
+	} else if (PyList_Check(py_obj)) {
 		as_list * list = NULL;
 		pyobject_to_list(self, err, py_obj, &list, static_pool, serializer_type);
-		if ( err->code == AEROSPIKE_OK ) {
+		if (err->code == AEROSPIKE_OK) {
 			*val = (as_val *) list;
 		}
-	}
-	else if ( PyDict_Check(py_obj) ) {
+	} else if (PyDict_Check(py_obj)) {
 		as_map * map = NULL;
 		pyobject_to_map(self, err, py_obj, &map, static_pool, serializer_type);
-		if ( err->code == AEROSPIKE_OK ) {
+		if (err->code == AEROSPIKE_OK) {
 			*val = (as_val *) map;
 		}
-	} else if ( Py_None == py_obj ) {
+	} else if (Py_None == py_obj) {
 		*val = as_val_reserve(&as_nil);
 	} else {
 		if (aerospike_has_double(self->as) && PyFloat_Check(py_obj)) {
@@ -453,11 +452,10 @@ as_status pyobject_to_record(AerospikeClient * self, as_error * err, PyObject * 
 	as_error_reset(err);
 	PyObject * py_result = NULL;
 
-	if ( !py_rec ) {
+	if (!py_rec) {
 		// this should never happen, but if it did...
 		return as_error_update(err, AEROSPIKE_ERR_CLIENT, "record is null");
-	}
-	else if ( PyDict_Check(py_rec) ) {
+	} else if (PyDict_Check(py_rec)) {
 		PyObject *key = NULL, *value = NULL, *py_ukey = NULL;
 		Py_ssize_t pos = 0;
 		Py_ssize_t size = PyDict_Size(py_rec);
@@ -468,10 +466,10 @@ as_status pyobject_to_record(AerospikeClient * self, as_error * err, PyObject * 
 
 		while (PyDict_Next(py_rec, &pos, &key, &value)) {
 
-			if ( PyUnicode_Check(key) ) {
+			if (PyUnicode_Check(key)) {
 				py_ukey = PyUnicode_AsUTF8String(key);
 				name = PyString_AsString(py_ukey);
-			} else if ( PyString_Check(key) ) {
+			} else if (PyString_Check(key)) {
 				name = PyString_AsString(key);
 			} else {
 				return as_error_update(err, AEROSPIKE_ERR_CLIENT, "A bin name must be a string or unicode string.");
@@ -487,13 +485,19 @@ as_status pyobject_to_record(AerospikeClient * self, as_error * err, PyObject * 
 				}
 			}
 
-			if ( !value ) {
+			if (!value) {
 				// this should never happen, but if it did...
 				return as_error_update(err, AEROSPIKE_ERR_CLIENT, "record is null");
-			} else if ( PyInt_Check(value) ) {
+			} else if (PyBool_Check(value)) {
+				as_bytes *bytes;
+				GET_BYTES_POOL(bytes, static_pool, err);
+				py_result = serialize_based_on_serializer_policy(self, serializer_type,
+						&bytes, value, err);
+				ret_val = as_record_set_bytes(rec, name, bytes);
+			} else if (PyInt_Check(value)) {
 				int64_t val = (int64_t) PyInt_AsLong(value);
 				ret_val = as_record_set_int64(rec, name, val);
-			} else if ( PyLong_Check(value) ) {
+			} else if (PyLong_Check(value)) {
 				int64_t val = (int64_t) PyLong_AsLongLong(value);
 				if (val == -1 && PyErr_Occurred()) {
 					if (PyErr_ExceptionMatches(PyExc_OverflowError)) {
@@ -517,21 +521,21 @@ as_status pyobject_to_record(AerospikeClient * self, as_error * err, PyObject * 
 					ret_val = as_record_set_bytes(rec, name, bytes);
 				}
 				Py_DECREF(py_dumps);
-			} else if ( PyUnicode_Check(value) ) {
+			} else if (PyUnicode_Check(value)) {
 				PyObject * py_ustr = PyUnicode_AsUTF8String(value);
 				char * val = PyString_AsString(py_ustr);
 				ret_val = as_record_set_strp(rec, name, strdup(val), true);
 				Py_DECREF(py_ustr);
-			} else if ( PyString_Check(value) ) {
+			} else if (PyString_Check(value)) {
 				char * val = PyString_AsString(value);
 				ret_val = as_record_set_strp(rec, name, val, false);
-			} else if ( PyByteArray_Check(value) ) {
+			} else if (PyByteArray_Check(value)) {
 				as_bytes *bytes;
 				GET_BYTES_POOL(bytes, static_pool, err);
 				py_result = serialize_based_on_serializer_policy(self, serializer_type,
 						&bytes, value, err);
 				ret_val = as_record_set_bytes(rec, name, bytes);
-			} else if ( PyList_Check(value) ) {
+			} else if (PyList_Check(value)) {
 				// as_list
 				as_list * list = NULL;
 				pyobject_to_list(self, err, value, &list, static_pool, serializer_type);
@@ -539,7 +543,7 @@ as_status pyobject_to_record(AerospikeClient * self, as_error * err, PyObject * 
 					break;
 				}
 				ret_val = as_record_set_list(rec, name, list);
-			} else if ( PyDict_Check(value) ) {
+			} else if (PyDict_Check(value)) {
 				// as_map
 				as_map * map = NULL;
 				pyobject_to_map(self, err, value, &map, static_pool, serializer_type);
@@ -562,7 +566,7 @@ as_status pyobject_to_record(AerospikeClient * self, as_error * err, PyObject * 
 				}
 			}
 
-			if (py_ukey){
+			if (py_ukey) {
 				Py_DECREF(py_ukey);
 				py_ukey = NULL;
 			}
@@ -574,15 +578,14 @@ as_status pyobject_to_record(AerospikeClient * self, as_error * err, PyObject * 
 			}
 		}
 
-		if ( py_meta && PyDict_Check(py_meta) ) {
+		if (py_meta && PyDict_Check(py_meta)) {
 			PyObject * py_gen = PyDict_GetItemString(py_meta, "gen");
 			PyObject * py_ttl = PyDict_GetItemString(py_meta, "ttl");
 
-			if( py_ttl != NULL ){
+			if (py_ttl != NULL) {
 				if ( PyInt_Check(py_ttl) ) {
 					rec->ttl = (uint32_t) PyInt_AsLong(py_ttl);
-				}
-				else if ( PyLong_Check(py_ttl) ) {
+				} else if (PyLong_Check(py_ttl)) {
 					rec->ttl = (uint32_t) PyLong_AsLongLong(py_ttl);
 					if (rec->ttl == (uint32_t)-1 && PyErr_Occurred()) {
 						if (PyErr_ExceptionMatches(PyExc_OverflowError)) {
@@ -594,11 +597,10 @@ as_status pyobject_to_record(AerospikeClient * self, as_error * err, PyObject * 
 				}
 			}
 
-			if( py_gen != NULL ){
-				if ( PyInt_Check(py_gen) ) {
+			if (py_gen != NULL) {
+				if (PyInt_Check(py_gen)) {
 					rec->gen = (uint16_t) PyInt_AsLong(py_gen);
-				}
-				else if (PyLong_Check(py_gen)) {
+				} else if (PyLong_Check(py_gen)) {
 					rec->gen = (uint16_t) PyLong_AsLongLong(py_gen);
 					if (rec->gen == (uint16_t)-1 && PyErr_Occurred()) {
 						if (PyErr_ExceptionMatches(PyExc_OverflowError)) {
@@ -615,7 +617,7 @@ as_status pyobject_to_record(AerospikeClient * self, as_error * err, PyObject * 
 			Py_DECREF(py_result);
 		}
 
-		if ( err->code != AEROSPIKE_OK ) {
+		if (err->code != AEROSPIKE_OK) {
 			as_record_destroy(rec);
 		}
 	} else {
@@ -635,14 +637,19 @@ as_status pyobject_to_astype_write(AerospikeClient * self, as_error * err, char 
 	as_error_reset(err);
 	PyObject * py_result = NULL;
 
-	if ( PyInt_Check(py_value) ) {
+	if (PyBool_Check(py_value)) {
+		as_bytes *bytes;
+		GET_BYTES_POOL(bytes, static_pool, err);
+		py_result = serialize_based_on_serializer_policy(self, serializer_type,
+				&bytes, py_value, err);
+		*val = (as_val *) bytes;
+	} else if (PyInt_Check(py_value)) {
 		int64_t i = (int64_t) PyInt_AsLong(py_value);
 		*val = (as_val *) as_integer_new(i);
-	}
-	else if ( PyLong_Check(py_value) ) {
+	} else if (PyLong_Check(py_value)) {
 		int64_t l = (int64_t) PyLong_AsLongLong(py_value);
 		*val = (as_val *) as_integer_new(l);
-	} else if ( PyString_Check(py_value) ) {
+	} else if (PyString_Check(py_value)) {
 		char * s = PyString_AsString(py_value);
 		*val = (as_val *) as_string_new(s, false);
 	} else if (!strcmp(py_value->ob_type->tp_name, "aerospike.Geospatial")) {
@@ -659,25 +666,25 @@ as_status pyobject_to_astype_write(AerospikeClient * self, as_error * err, char 
 				&bytes, py_data, err);
 			*val = (as_val *) bytes;
 		}
-	} else if ( PyUnicode_Check(py_value) ) {
+	} else if (PyUnicode_Check(py_value)) {
 		PyObject * py_ustr = PyUnicode_AsUTF8String(py_value);
 		char * str = PyString_AsString(py_ustr);
 		*val = (as_val *) as_string_new(strdup(str), true);
 		Py_DECREF(py_ustr);
-	} else if ( PyByteArray_Check(py_value) ) {
+	} else if (PyByteArray_Check(py_value)) {
 		uint8_t * b = (uint8_t *) PyByteArray_AsString(py_value);
 		uint32_t z = (uint32_t) PyByteArray_Size(py_value);
 		*val = (as_val *) as_bytes_new_wrap(b, z, false);
-	} else if ( PyList_Check(py_value) ) {
+	} else if (PyList_Check(py_value)) {
 		as_list * list = NULL;
 		pyobject_to_list(self, err, py_value, &list, static_pool, serializer_type);
-		if ( err->code == AEROSPIKE_OK ) {
+		if (err->code == AEROSPIKE_OK) {
 			*val = (as_val *) list;
 		}
-	} else if ( PyDict_Check(py_value) ) {
+	} else if (PyDict_Check(py_value)) {
 		as_map * map = NULL;
 		pyobject_to_map(self, err, py_value, &map, static_pool, serializer_type);
-		if ( err->code == AEROSPIKE_OK ) {
+		if (err->code == AEROSPIKE_OK) {
 			*val = (as_val *) map;
 		}
 	} else if (!strcmp(py_value->ob_type->tp_name, "aerospike.null")) {
@@ -846,7 +853,6 @@ typedef struct {
 as_status val_to_pyobject(AerospikeClient * self, as_error * err, const as_val * val, PyObject ** py_val)
 {
 	as_error_reset(err);
-
 	switch( as_val_type(val) ) {
 		case AS_INTEGER: {
 				as_integer * i = as_integer_fromval(val);
