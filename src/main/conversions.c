@@ -34,7 +34,6 @@
 #include <aerospike/as_operations.h>
 #include <aerospike/as_bytes.h>
 #include <aerospike/as_double.h>
-#include <aerospike/as_boolean.h>
 
 #include "conversions.h"
 #include "geo.h"
