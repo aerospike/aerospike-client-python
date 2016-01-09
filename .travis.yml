@@ -17,7 +17,7 @@ install:
 - cp -f .travis/aerospike.conf ./aerospike-server/share/etc
 - cd aerospike-server
 - sed -i -e 's/\${me}/"root"/' share/libexec/aerospike-start
-- sed -i -e 's/set_shmmax$/#set_shmmax/' share/libexec/aerospike-start
+- sed -i -e 's/set_shmall$/#set_shmall/' share/libexec/aerospike-start
 - sed -i -e 's/set_shmmax$/#set_shmmax/' share/libexec/aerospike-start
 - mkdir instance1
 - mkdir instance2
