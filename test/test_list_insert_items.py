@@ -132,7 +132,6 @@ class TestListInsertItems(object):
 
         assert bins == {'age': [1, 2, 555, bytearray(b"asd;as[d\'as;d")], 'city': ['Pune', 'Dehli'], 'name': 'name1'}
 
-    @pytest.mark.xfail(reason="Boolean values cast to integer instead of being serialized")
     def test_list_insert_items_boolean(self):
         """
         Invoke list_insert_items() insert boolean into the list
