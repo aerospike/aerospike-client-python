@@ -24,7 +24,7 @@ class TestScan(TestBaseClass):
         else:
             self.client = aerospike.client(config).connect(user, password)
 
-        for i in xrange(20):
+        for i in xrange(19):
             key = ('test', u'demo', i)
             rec = {'name': 'name%s' % (str(i)), 'age': i}
             self.client.put(key, rec)
@@ -44,7 +44,7 @@ class TestScan(TestBaseClass):
         Teardown method
         """
 
-        for i in xrange(20):
+        for i in xrange(19):
             key = ('test', u'demo', i)
             self.client.remove(key)
 
@@ -162,10 +162,8 @@ class TestScan(TestBaseClass):
             records.append(bins)
 
         scan_obj = self.client.scan(ns, st)
-
         try:
             scan_obj.foreach(callback, { 'timeout' : 1000 })
-
         except ClientError as exception:
             assert exception.code == -1L
             assert exception.msg == "Callback function contains an error"
@@ -285,30 +283,26 @@ class TestScan(TestBaseClass):
 
         assert len(records) != 0
 
-    def test_scan_with_options_percent_negative(self):
+    @pytest.mark.xfail(reason="Server does not respect percent < 100")
+    def test_scan_with_options_percent_partial(self):
         """
             Invoke scan() with options negative
         """
+        def callback((key, meta, bins)):
+            print key
+            records.append(key)
+
         ns = 'test'
         st = 'demo'
-
         records = []
-
-        scan_obj = None
         options = {
             "percent": 80,
             "concurrent": True,
             "priority": aerospike.SCAN_PRIORITY_HIGH
         }
-
-        def callback((key, meta, bins)):
-            records.append(bins)
-
         scan_obj = self.client.scan(ns, st)
-
         scan_obj.foreach(callback, {}, options)
-
-        assert records == []
+        assert len(records) >= 16 and len(records) < 18
 
     def test_scan_with_options_nobins(self):
         """
