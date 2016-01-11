@@ -24,7 +24,7 @@ class TestScan(TestBaseClass):
         else:
             self.client = aerospike.client(config).connect(user, password)
 
-        for i in xrange(20):
+        for i in xrange(19):
             key = ('test', u'demo', i)
             rec = {'name': 'name%s' % (str(i)), 'age': i}
             self.client.put(key, rec)
@@ -35,16 +35,24 @@ class TestScan(TestBaseClass):
                 "val": u"john"}];
         self.client.operate(key, list)
 
+        key = ('test', u'demo', 'ldt_key')
+        self.llist_bin = self.client.llist(key, 'llist_key')
+        self.llist_bin.add(10)
+        
     def teardown_method(self, method):
         """
         Teardown method
         """
 
-        for i in xrange(20):
+        for i in xrange(19):
             key = ('test', u'demo', i)
             self.client.remove(key)
 
         key = ('test', 'demo', 122)
+        self.client.remove(key)
+        self.llist_bin.remove(10)
+
+        key = ('test', 'demo', 'ldt_key')
         self.client.remove(key)
         self.client.close()
 
@@ -154,10 +162,8 @@ class TestScan(TestBaseClass):
             records.append(bins)
 
         scan_obj = self.client.scan(ns, st)
-
         try:
             scan_obj.foreach(callback, { 'timeout' : 1000 })
-
         except ClientError as exception:
             assert exception.code == -1L
             assert exception.msg == "Callback function contains an error"
@@ -277,30 +283,26 @@ class TestScan(TestBaseClass):
 
         assert len(records) != 0
 
-    def test_scan_with_options_percent_negative(self):
+    @pytest.mark.xfail(reason="Server does not respect percent < 100")
+    def test_scan_with_options_percent_partial(self):
         """
             Invoke scan() with options negative
         """
+        def callback((key, meta, bins)):
+            print key
+            records.append(key)
+
         ns = 'test'
         st = 'demo'
-
         records = []
-
-        scan_obj = None
         options = {
             "percent": 80,
             "concurrent": True,
             "priority": aerospike.SCAN_PRIORITY_HIGH
         }
-
-        def callback((key, meta, bins)):
-            records.append(bins)
-
         scan_obj = self.client.scan(ns, st)
-
         scan_obj.foreach(callback, {}, options)
-
-        assert records == []
+        assert len(records) >= 16 and len(records) < 18
 
     def test_scan_with_options_nobins(self):
         """
@@ -346,6 +348,68 @@ class TestScan(TestBaseClass):
         except ParamError as exception:
             assert exception.code == -2L
             assert exception.msg == 'Invalid value(type) for nobins'
+
+    def test_scan_with_options_includeldt_positive(self):
+        """
+            Invoke scan() with include ldt set to True
+        """
+        ns = 'test'
+        st = 'demo'
+
+        records = []
+
+        scan_obj = None
+        options = {
+            "percent": 100,
+            "concurrent": True,
+            "priority": aerospike.SCAN_PRIORITY_HIGH,
+            "include_ldt": True
+        }
+
+        def callback((key, meta, bins)):
+            records.append(bins)
+
+        scan_obj = self.client.scan(ns, st)
+
+        scan_obj.foreach(callback, {}, options)
+        value = 0
+        for x in records:
+            if 'llist_key' in x.keys():
+                value = x['llist_key']
+
+        assert value == [10]
+        assert len(records) != 0
+
+    def test_scan_with_options_includeldt_negative(self):
+        """
+            Invoke scan() with include ldt set to False
+        """
+        ns = 'test'
+        st = 'demo'
+
+        records = []
+
+        scan_obj = None
+        options = {
+            "percent": 100,
+            "concurrent": True,
+            "priority": aerospike.SCAN_PRIORITY_HIGH,
+            "include_ldt": False
+        }
+
+        def callback((key, meta, bins)):
+            records.append(bins)
+
+        scan_obj = self.client.scan(ns, st)
+
+        scan_obj.foreach(callback, {}, options)
+        value = 0
+        for x in records:
+            if 'llist_key' in x.keys():
+                value = x['llist_key'] 
+
+        assert value == None
+        assert len(records) != 0
 
     def test_scan_with_multiple_foreach_on_same_scan_object(self):
         """

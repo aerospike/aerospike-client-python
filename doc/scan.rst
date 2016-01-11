@@ -179,9 +179,10 @@ Scan Options
     .. hlist::
         :columns: 1
 
-        * **priority** See :ref:`aerospike_scan_constants` for values.
-        * **nobins** :class:`bool` value for whether to return the *bins* portion of the :ref:`aerospike_record_tuple`.
-        * **concurrent** :class:`bool` value for whether to run the scan concurrently on all nodes of the cluster.
+        * **priority** See :ref:`aerospike_scan_constants` for values. Default ``aerospike.SCAN_PRIORITY_AUTO``.
+        * **nobins** :class:`bool` whether to return the *bins* portion of the :ref:`aerospike_record_tuple`. Default ``False``.
+        * **concurrent** :class:`bool` whether to run the scan concurrently on all nodes of the cluster. Default ``False``.
+        * **include_ldt** :class:`bool` whether to include LDT bins with the scan. Default ``False``.
 
     .. versionadded:: 1.0.39
 

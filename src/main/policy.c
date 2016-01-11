@@ -189,6 +189,17 @@ void set_scan_options(as_error *err, as_scan* scan_p, PyObject * py_options)
 					as_error_update(err, AEROSPIKE_ERR_PARAM, "Unable to set scan nobins");
 					break;
 				}
+			} else if (strcmp("include_ldt", key_name) == 0) {
+				if (!PyBool_Check(value)) {
+					as_error_update(err, AEROSPIKE_ERR_PARAM, "Invalid value(type) for nobins");
+					break;
+				}
+				val = (int8_t)PyObject_IsTrue(value);
+				if (val == -1) {
+					as_error_update(err, AEROSPIKE_ERR_PARAM, "Unable to set scan nobins");
+					break;
+				}
+				scan_p->include_ldt = val;
 			} else {
 				as_error_update(err, AEROSPIKE_ERR_PARAM, "Invalid value for scan options");
 				break;
