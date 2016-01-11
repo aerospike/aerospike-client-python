@@ -429,6 +429,10 @@ a cluster-tending thread.
             pp.pprint(bins)
             client.close()
 
+    .. index::
+        single: Bin Operations
+
+    .. _aerospike_bin_operations:
 
     .. rubric:: Bin Operations
 
@@ -575,6 +579,10 @@ a cluster-tending thread.
         :param dict policy: optional :ref:`aerospike_operate_policies`.
         :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
 
+        .. note:: Requires server version >= 3.7.0
+
+        .. versionadded:: 1.0.59
+
     .. method:: list_extend(key, bin, items[, meta[, policy]])
 
         Extend the list value in *bin* with the given *items*.
@@ -586,6 +594,10 @@ a cluster-tending thread.
             ``'ttl'`` set to :class:`int` number of seconds.
         :param dict policy: optional :ref:`aerospike_operate_policies`.
         :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
+
+        .. note:: Requires server version >= 3.7.0
+
+        .. versionadded:: 1.0.59
 
     .. method:: list_insert(key, bin, index, val[, meta[, policy]])
 
@@ -602,6 +614,10 @@ a cluster-tending thread.
         :param dict policy: optional :ref:`aerospike_operate_policies`.
         :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
 
+        .. note:: Requires server version >= 3.7.0
+
+        .. versionadded:: 1.0.59
+
     .. method:: list_insert_items(key, bin, index, items[, meta[, policy]])
 
         Insert the *items* at the specified *index* of a list value in *bin*.
@@ -615,6 +631,10 @@ a cluster-tending thread.
         :param dict policy: optional :ref:`aerospike_operate_policies`.
         :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
 
+        .. note:: Requires server version >= 3.7.0
+
+        .. versionadded:: 1.0.59
+
     .. method:: list_pop(key, bin, index[, meta[, policy]]) -> val
 
         Remove and get back a list element at a given *index* of a list value in *bin*.
@@ -627,6 +647,10 @@ a cluster-tending thread.
         :param dict policy: optional :ref:`aerospike_operate_policies`.
         :return: a single list element.
         :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
+
+        .. note:: Requires server version >= 3.7.0
+
+        .. versionadded:: 1.0.59
 
     .. method:: list_pop_range(key, bin, index, count[, meta[, policy]]) -> val
 
@@ -642,6 +666,10 @@ a cluster-tending thread.
         :return: a :class:`list` of elements.
         :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
 
+        .. note:: Requires server version >= 3.7.0
+
+        .. versionadded:: 1.0.59
+
     .. method:: list_remove(key, bin, index[, meta[, policy]])
 
         Remove a list element at a given *index* of a list value in *bin*.
@@ -653,6 +681,10 @@ a cluster-tending thread.
             ``'ttl'`` set to :class:`int` number of seconds.
         :param dict policy: optional :ref:`aerospike_operate_policies`.
         :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
+
+        .. note:: Requires server version >= 3.7.0
+
+        .. versionadded:: 1.0.59
 
     .. method:: list_remove_range(key, bin, index, count[, meta[, policy]])
 
@@ -667,6 +699,10 @@ a cluster-tending thread.
         :param dict policy: optional :ref:`aerospike_operate_policies`.
         :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
 
+        .. note:: Requires server version >= 3.7.0
+
+        .. versionadded:: 1.0.59
+
     .. method:: list_clear(key, bin[, meta[, policy]])
 
         Remove all the elements from a list value in *bin*.
@@ -677,6 +713,10 @@ a cluster-tending thread.
             ``'ttl'`` set to :class:`int` number of seconds.
         :param dict policy: optional :ref:`aerospike_operate_policies`.
         :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
+
+        .. note:: Requires server version >= 3.7.0
+
+        .. versionadded:: 1.0.59
 
     .. method:: list_set(key, bin, index, val[, meta[, policy]])
 
@@ -693,6 +733,10 @@ a cluster-tending thread.
         :param dict policy: optional :ref:`aerospike_operate_policies`.
         :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
 
+        .. note:: Requires server version >= 3.7.0
+
+        .. versionadded:: 1.0.59
+
     .. method:: list_get(key, bin, index[, meta[, policy]]) -> val
 
         Get the list element at the specified *index* of a list value in *bin*.
@@ -706,6 +750,10 @@ a cluster-tending thread.
         :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
         :return: the list elements at the given index.
 
+        .. note:: Requires server version >= 3.7.0
+
+        .. versionadded:: 1.0.59
+
     .. method:: list_get_range(key, bin, index, count[, meta[, policy]]) -> val
 
         Get the list of *count* elements starting at a specified *index* of a list value in *bin*.
@@ -718,6 +766,10 @@ a cluster-tending thread.
         :param dict policy: optional :ref:`aerospike_operate_policies`.
         :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
         :return: a :class:`list` of elements.
+
+        .. note:: Requires server version >= 3.7.0
+
+        .. versionadded:: 1.0.59
 
     .. method:: list_trim(key, bin, index, count[, meta[, policy]]) -> val
 
@@ -734,9 +786,13 @@ a cluster-tending thread.
         :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
         :return: a :class:`list` of elements.
 
-    .. method:: list_count(key, bin[, meta[, policy]]) -> count
+        .. note:: Requires server version >= 3.7.0
 
-        Count the elements of the list value in *bin*.
+        .. versionadded:: 1.0.59
+
+    .. method:: list_size(key, bin[, meta[, policy]]) -> count
+
+        Count the number of elements in the list value in *bin*.
 
         :param tuple key: a :ref:`aerospike_key_tuple` tuple associated with the record.
         :param str bin: the name of the bin.
@@ -745,6 +801,10 @@ a cluster-tending thread.
         :param dict policy: optional :ref:`aerospike_operate_policies`.
         :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
         :return: a :class:`int`.
+
+        .. note:: Requires server version >= 3.7.0
+
+        .. versionadded:: 1.0.59
 
     .. method:: operate(key, list[, meta[, policy]]) -> (key, meta, bins)
 
@@ -868,6 +928,11 @@ a cluster-tending thread.
 
         .. versionchanged:: 1.0.57
 
+
+    .. index::
+        single: Batch Operations
+
+    .. _aerospike_batch_operations:
 
     .. rubric:: Batch Operations
 
@@ -1083,6 +1148,10 @@ a cluster-tending thread.
           different from not providing the *set* in :meth:`scan`).
         :return: an :py:class:`aerospike.Query` class.
 
+    .. index::
+        single: UDF Operations
+
+    .. _aerospike_udf_operations:
 
     .. rubric:: UDFs
 
@@ -1321,6 +1390,11 @@ a cluster-tending thread.
                 print("Error: {0} [{1}]".format(e.msg, e.code))
             client.close()
 
+
+    .. index::
+        single: Info Operations
+
+    .. _aerospike_info_operations:
 
     .. rubric:: Info
 
@@ -1573,6 +1647,11 @@ a cluster-tending thread.
         :return: an :py:class:`aerospike.LList` class.
         :raises: a subclass of :exc:`~aerospike.exception.LDTError`.
 
+
+    .. index::
+        single: Admin Operations
+
+    .. _aerospike_admin_operations:
 
     .. rubric:: Admin
 

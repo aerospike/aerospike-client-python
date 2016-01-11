@@ -2,8 +2,10 @@ language: python
 python:
 - 2.6
 - 2.7
+sudo: false
 os:
 - linux
+dist: trusty
 addons:
   apt:
     packages:
@@ -14,17 +16,21 @@ install:
 - tar xvzf aerospike-server.tgz
 - cp -f .travis/aerospike.conf ./aerospike-server/share/etc
 - cd aerospike-server
+- sed -i -e 's/\${me}/"root"/' share/libexec/aerospike-start
+- sed -i -e 's/set_shmall$/#set_shmall/' share/libexec/aerospike-start
+- sed -i -e 's/set_shmmax$/#set_shmmax/' share/libexec/aerospike-start
 - mkdir instance1
 - mkdir instance2
 - ./bin/aerospike init --home instance1 --instance 1 --service-port 3000
 - ./bin/aerospike init --home instance2 --instance 2 --service-port 3010
 - cd instance1
-- sudo ./bin/aerospike start
+- ./bin/aerospike start
+- ../../scripts/wait-for-node.sh var/log/aerospike.log
 - cd ..
 - cd instance2
-- sudo ./bin/aerospike start
+- ./bin/aerospike start
+- ../../scripts/wait-for-node.sh var/log/aerospike.log
 - cd ../..
-- sleep 3
 script:
 - python setup.py install --lua-system-path=./
 - cd test

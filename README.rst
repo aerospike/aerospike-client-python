@@ -68,19 +68,28 @@ manager.
 Install
 -------
 
-Aerospike Python Client can be installed using `pip`:
+Aerospike Python Client can be installed using ``pip``:
 
 ::
 
     pip install aerospike
 
     # to troubleshoot pip versions >= 6.0 you can
-
     pip install --no-cache-dir aerospike
 
-    # to have pip copy the Lua system files to a dir other than /usr/local/aerospike/lua
+    # to trouleshoot installation on OS X El-Capitan (10.11)
+    pip install --no-cache-dir --user aerospike
 
+    # to have pip copy the Lua system files to a dir other than /usr/local/aerospike/lua
     pip install aerospike --install-option="--lua-system-path=/opt/aerospike/lua"
+
+If you run into trouble installing the client on a supported OS, you may be
+using an outdated ``pip``.
+Versions of ``pip`` older than 7.0.0 should be upgraded, as well as versions of
+``setuptools`` older than 18.0.0. Upgrading ``pip`` on OS X El-Capitan (10.11)
+runs into `SIP issues <https://apple.stackexchange.com/questions/209572/how-to-use-pip-after-the-el-capitan-max-os-x-upgrade>`__
+with ``pip install --user <module>`` as the recommended workaround.
+
 
 Build
 -----

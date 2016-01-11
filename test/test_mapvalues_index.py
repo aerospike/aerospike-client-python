@@ -99,11 +99,11 @@ class TestMapValuesIndex(object):
         for i in xrange(100):
             set_name = set_name + 'a'
         policy = {}
-        with pytest.raises(Exception) as exception:
+        try:
             retobj = TestMapValuesIndex.client.index_map_values_create('test', set_name,
 'string_map', aerospike.INDEX_STRING, "test_string_map_index", policy)
-
-        assert exception.value[0] == 4
+        except InvalidRequest as exception:
+            assert exception.code == 4
 
     def test_mapvaluesindex_with_incorrect_namespace(self):
         """
@@ -113,7 +113,6 @@ class TestMapValuesIndex(object):
         try:
             retobj = TestMapValuesIndex.client.index_map_values_create( 'test1', 'demo',
 'numeric_map', aerospike.INDEX_NUMERIC, 'test_numeric_map_index', policy )
-
         except InvalidRequest as exception:
             assert exception.code == 4
 
@@ -161,13 +160,16 @@ class TestMapValuesIndex(object):
             Invoke createindex() with set is int
         """
         policy = {}
-        with pytest.raises(Exception) as exception:
+        try:
             retobj = TestMapValuesIndex.client.index_map_values_create(
                 'test', 1, 'string_map', aerospike.INDEX_STRING,
                 'test_string_map_index', policy)
-
-        assert exception.value[0] == -2
-        assert exception.value[1] == 'Set should be string, unicode or None'
+            assert False
+        except ParamError as e:
+            assert e.code == -2
+            assert e.msg == 'Set should be string, unicode or None'
+        except Exception as e:
+            assert type(e) == ParamError
 
     def test_mapvaluesindex_with_set_is_none(self):
         """
