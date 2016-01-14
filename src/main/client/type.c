@@ -535,8 +535,19 @@ static int AerospikeClient_Type_Init(AerospikeClient * self, PyObject * args, Py
 
 	//conn_timeout_ms
 	PyObject * py_connect_timeout = PyDict_GetItemString(py_config, "connect_timeout");
-	if ( py_connect_timeout && PyInt_Check(py_connect_timeout) ) {
+	if (py_connect_timeout && PyInt_Check(py_connect_timeout)) {
 		config.conn_timeout_ms = PyInt_AsLong(py_connect_timeout);
+	}
+
+	//compression_threshold
+	PyObject * py_compression_threshold = PyDict_GetItemString(py_config, "compression_threshold");
+	if (py_compression_threshold && PyInt_Check(py_compression_threshold)) {
+		int compression_value = PyInt_AsLong(py_compression_threshold);
+		if (compression_value >= 0) {
+			config.policies.write.compression_threshold = compression_value;
+		} else {
+			return -1;
+		}
 	}
 
 	//strict_types check
@@ -582,7 +593,7 @@ static void AerospikeClient_Type_Dealloc(PyObject * self)
 static PyTypeObject AerospikeClient_Type = {
 	PyObject_HEAD_INIT(NULL)
 
-		.ob_size			= 0,
+	.ob_size			= 0,
 	.tp_name			= "aerospike.Client",
 	.tp_basicsize		= sizeof(AerospikeClient),
 	.tp_itemsize		= 0,

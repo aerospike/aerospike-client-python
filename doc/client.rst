@@ -532,7 +532,8 @@ a cluster-tending thread.
 
         :param tuple key: a :ref:`aerospike_key_tuple` tuple associated with the record.
         :param str bin: the name of the bin.
-        :param int offset: the integer by which to increment the value in the *bin*.
+        :param int offset: the value by which to increment the value in *bin*.
+        :type offset: :py:class:`int` or :py:class:`float`
         :param dict meta: optional record metadata to be set, with field
             ``'ttl'`` set to :class:`int` number of seconds.
         :param dict policy: optional :ref:`aerospike_operate_policies`.
