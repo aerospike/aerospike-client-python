@@ -45,6 +45,9 @@ class TestLList(TestBaseClass):
         TestLList.llist_float = TestLList.client.llist(TestLList.key3,
                                                        'float_bin')
 
+        TestLList.non_ldt_key = ('test', 'demo', 'non_ldt_ky')
+        TestLList.client.put(TestLList.non_ldt_key, {"age": 1})
+
 
     def teardown_class(self):
         print "teardown class invoked..."
@@ -52,6 +55,7 @@ class TestLList(TestBaseClass):
             TestLList.llist_integer.destroy()
             TestLList.llist_string.destroy()
             TestLList.list_float.destroy()
+            TestLList.client.remove(('test', 'demo', 'non_ldt_key'))
         except:
             pass
         self.client.close()
@@ -201,6 +205,17 @@ class TestLList(TestBaseClass):
         elements_list = TestLList.llist_integer.find_first(-8, {'timeout': 1000})
         assert elements_list == [11, 56, 122, 871]
 
+    def test_llist_find_first_negative(self):
+        """
+            Invoke find_first() to access an unknown bin
+        """
+        non_ldt_key = ('test', 'demo', 'non_ldt_ky')
+        TestLList.llist_non_existent_bin = TestLList.client.llist(non_ldt_key, "non_existent")
+        try:
+            elements_list = TestLList.llist_non_existent_bin.find_first(2, {'timeout': 1000})
+        except LDTBinNotFound as exception:
+            assert exception.code == 1417
+
     def test_llist_find_last_positive_without_policy(self):
         """
             Invoke find_last() to access elements
@@ -228,6 +243,17 @@ class TestLList(TestBaseClass):
         """
         elements_list = TestLList.llist_integer.find_last(-2, {'timeout': 1000})
         assert elements_list == [871, 122, 56, 11]
+
+    def test_llist_find_last_negative(self):
+        """
+            Invoke find_last() to access an unknown bin
+        """
+        non_ldt_key = ('test', 'demo', 'non_ldt_ky')
+        TestLList.llist_non_existent_bin = TestLList.client.llist(non_ldt_key, "non_existent")
+        try:
+            elements_list = TestLList.llist_non_existent_bin.find_last(2, {'timeout': 1000})
+        except LDTBinNotFound as exception:
+            assert exception.code == 1417
 
     def test_llist_find_last_no_params(self):
         """
@@ -258,6 +284,17 @@ class TestLList(TestBaseClass):
         """
         elements_list = TestLList.llist_integer.find_from(56, 2, {'timeout': 1000})
         assert elements_list == [56, 122]
+
+    def test_llist_find_from_negative(self):
+        """
+            Invoke find_from() to access an unknown bin
+        """
+        non_ldt_key = ('test', 'demo', 'non_ldt_ky')
+        TestLList.llist_non_existent_bin = TestLList.client.llist(non_ldt_key, "non_existent")
+        try:
+            elements_list = TestLList.llist_non_existent_bin.find_from(21, 2, {'timeout': 1000})
+        except LDTBinNotFound as exception:
+            assert exception.code == 1417
 
     def test_llist_find_from_positive_non_existent_key(self):
         """
