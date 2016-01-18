@@ -65,6 +65,11 @@ PyObject * AerospikeClient_Close(AerospikeClient * self, PyObject * args, PyObje
 		close_aerospike_object(self->as, &err, alias_to_search, py_persistent_item);
 	} else {
 		aerospike_close(self->as, &err);
+
+		for (int i = 0; i < self->as->config.hosts_size; i++) {
+			free((void *) self->as->config.hosts[i].addr);
+		}
+
 		Py_BEGIN_ALLOW_THREADS
 		aerospike_destroy(self->as);
 		Py_END_ALLOW_THREADS
