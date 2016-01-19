@@ -99,7 +99,7 @@ def resolve_c_client(lua_src_path, lua_system_path):
         os.putenv('DOWNLOAD_C_CLIENT', DOWNLOAD_C_CLIENT)
 
     print('info: Executing','./scripts/aerospike-client-c.sh', file=sys.stdout)
-    os.chmod('./scripts/aerospike-client-c.sh',0755)
+    os.chmod('./scripts/aerospike-client-c.sh',0o0755)
     rc = call(['./scripts/aerospike-client-c.sh'])
     if rc != 0 :
         print("error: scripts/aerospike-client-c.sh", rc, file=sys.stderr)
