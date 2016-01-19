@@ -57,11 +57,12 @@ hosts: 192.168.0.2:3000;192.168.0.1:3000;
 
 Enterprise Edition Testing
 --------------------------
-Make sure that a test user has the correct permissions to execute the tests. For
-example:
+Make sure that a test user has the correct
+[permissions](http://www.aerospike.com/docs/guide/security.html#permissions) to
+execute the tests. For example:
 
 ```sql
-CREATE USER pytest PASSWORD just-test-me ROLES read-write-udf, sys-admin
+CREATE USER pytest PASSWORD just-test-me ROLES read-write-udf, sys-admin, user-admin, data-admin
 ```
 
 Edit the config.conf file:
