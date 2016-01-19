@@ -152,8 +152,11 @@ PyObject * AerospikeClient_is_connected(AerospikeClient * self, PyObject * args,
 
 	if (self->as && aerospike_cluster_is_connected(self->as)) //Need to define a macro AEROSPIKE_CONN_STATE
 	{
+		self->is_conn_16 = 1;
 		Py_INCREF(Py_True);
 		return Py_True;
+	} else {
+		self->is_conn_16 = 0;
 	}
 
 	Py_INCREF(Py_False);
