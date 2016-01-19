@@ -2,23 +2,27 @@
 
 import pytest
 import sys
-import cPickle as pickle
-from test_base_class import TestBaseClass
+from .test_base_class import TestBaseClass
+from aerospike import exception as e
 
 aerospike = pytest.importorskip("aerospike")
 try:
-    from aerospike.exception import *
+    import aerospike
 except:
-    print "Please install aerospike python client."
+    print("Please install aerospike python client.")
     sys.exit(1)
-        
+
+
 def handler(level, func, path, line, msg):
     assert 1 == 1
 
+
 def extrahandler(level, func, myfile, line):
-    print "Level is: %d" % level
+    print ("Level is: %d" % level)
+
 
 class TestLog(object):
+
     def test_set_log_level_correct(self):
         """
         Test log level with correct parameters
@@ -38,9 +42,9 @@ class TestLog(object):
 
         hostlist, user, password = TestBaseClass.get_hosts()
         config = {
-                "hosts": hostlist
-                }
-        if user == None and password == None:
+            "hosts": hostlist
+        }
+        if user is None and password is None:
             client = aerospike.client(config).connect()
         else:
             client = aerospike.client(config).connect(user, password)
@@ -53,9 +57,9 @@ class TestLog(object):
         Test log level with log level as None
         """
         try:
-            response = aerospike.set_log_level(None)
+            aerospike.set_log_level(None)
 
-        except ParamError as exception:
+        except e.ParamError as exception:
             assert exception.code == -2
             assert exception.msg == 'Invalid log level'
 
@@ -77,4 +81,5 @@ class TestLog(object):
         with pytest.raises(TypeError) as typeError:
             aerospike.set_log_handler(handler, extrahandler)
 
-        assert "setLogHandler() takes at most 1 argument (2 given)" in typeError.value
+        assert "setLogHandler() takes at most 1 argument (2 given)" in str(
+            typeError.value)

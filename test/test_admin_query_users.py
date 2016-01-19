@@ -3,14 +3,16 @@
 import pytest
 import sys
 import time
-from test_base_class import TestBaseClass
+from .test_base_class import TestBaseClass
+from aerospike import exception as e
 
 aerospike = pytest.importorskip("aerospike")
 try:
-    from aerospike.exception import *
+    import aerospike
 except:
-    print "Please install aerospike python client."
+    print("Please install aerospike python client.")
     sys.exit(1)
+
 
 class TestQueryUsers(TestBaseClass):
 
@@ -26,7 +28,7 @@ class TestQueryUsers(TestBaseClass):
         config = {"hosts": hostlist}
         TestQueryUsers.Me = self
         self.client = aerospike.client(config).connect(user, password)
-        
+
         try:
             self.client.admin_drop_user("example-test")
         except:
@@ -36,7 +38,7 @@ class TestQueryUsers(TestBaseClass):
         password = "foo2"
         roles = ["read-write", "sys-admin", "read"]
 
-        status = self.client.admin_create_user( user, password, roles, policy )
+        self.client.admin_create_user(user, password, roles, policy)
 
         self.delete_users = []
 
@@ -47,28 +49,26 @@ class TestQueryUsers(TestBaseClass):
 
         policy = {}
 
-        self.client.admin_drop_user( "example-test", policy )
+        self.client.admin_drop_user("example-test", policy)
 
         self.client.close()
 
     def test_query_users_with_proper_parameters(self):
 
-        policy = {}
-
         time.sleep(2)
         user_details = self.client.admin_query_users()
 
-        assert user_details['example-test'] == ['read', 'read-write', 'sys-admin']
+        assert user_details[
+            'example-test'] == ['read', 'read-write', 'sys-admin']
 
     def test_query_users_with_invalid_timeout_policy_value(self):
 
         policy = {"timeout": 0.1}
-        user = "example-test"
 
         try:
-            status = self.client.admin_query_users( policy )
+            self.client.admin_query_users(policy)
 
-        except ParamError as exception:
+        except e.ParamError as exception:
             assert exception.code == -2
             assert exception.msg == "timeout is invalid"
 
@@ -80,7 +80,8 @@ class TestQueryUsers(TestBaseClass):
         user_details = self.client.admin_query_users(policy)
 
         time.sleep(2)
-        assert user_details['example-test'] == ['read', 'read-write', 'sys-admin']
+        assert user_details[
+            'example-test'] == ['read', 'read-write', 'sys-admin']
 
     def test_query_users_with_no_roles(self):
 
@@ -105,7 +106,8 @@ class TestQueryUsers(TestBaseClass):
         with pytest.raises(TypeError) as typeError:
             self.client.admin_query_users(policy, "")
 
-        assert "admin_query_users() takes at most 1 argument (2 given)" in typeError.value
+        assert "admin_query_users() takes at most 1 argument (2 given)" in str(
+            typeError.value)
 
     def test_query_users_with_policy_as_string(self):
         """
@@ -113,8 +115,8 @@ class TestQueryUsers(TestBaseClass):
         """
         policy = ""
         try:
-            self.client.admin_query_users( policy )
+            self.client.admin_query_users(policy)
 
-        except ParamError as exception:
-            assert exception.code == -2L
+        except e.ParamError as exception:
+            assert exception.code == -2
             assert exception.msg == "policy must be a dict"

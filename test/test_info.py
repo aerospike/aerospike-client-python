@@ -2,28 +2,30 @@
 
 import pytest
 import sys
-import cPickle as pickle
-import time
-from test_base_class import TestBaseClass
+
+from .test_base_class import TestBaseClass
+from aerospike import exception as e
 
 aerospike = pytest.importorskip("aerospike")
 try:
-    from aerospike.exception import *
+    import aerospike
 except:
-    print "Please install aerospike python client."
+    print("Please install aerospike python client.")
     sys.exit(1)
 
+
 class TestInfo(object):
+
     def setup_class(cls):
         """
         Setup class.
         """
         TestInfo.hostlist, user, password = TestBaseClass.get_hosts()
         config = {
-                'hosts': TestInfo.hostlist
-                }
+            'hosts': TestInfo.hostlist
+        }
         TestInfo.config = config
-        if user == None and password == None:
+        if user is None and password is None:
             TestInfo.client = aerospike.client(config).connect()
         else:
             TestInfo.client = aerospike.client(config).connect(user, password)
@@ -41,7 +43,7 @@ class TestInfo(object):
 
         nodes_info = TestInfo.client.info(request, TestInfo.config['hosts'])
 
-        assert nodes_info != None
+        assert nodes_info is not None
 
         assert type(nodes_info) == dict
 
@@ -59,13 +61,13 @@ class TestInfo(object):
         flag = 0
         for keys in response.keys():
             for value in response[keys]:
-                if value != None:
+                if value is not None:
                     if 'test' in value:
                         flag = 1
         if flag:
-            assert True == True
+            assert True is True
         else:
-            assert True == False
+            assert True is False
 
     def test_info_positive_for_sets(self):
         """
@@ -81,13 +83,13 @@ class TestInfo(object):
         flag = 0
         for keys in response.keys():
             for value in response[keys]:
-                if value != None:
+                if value is not None:
                     if 'demo' in value:
                         flag = 1
         if flag:
-            assert True == True
+            assert True is True
         else:
-            assert True == False
+            assert True is False
 
     def test_info_positive_for_bins(self):
         """
@@ -103,13 +105,13 @@ class TestInfo(object):
         flag = 0
         for keys in response.keys():
             for value in response[keys]:
-                if value != None:
+                if value is not None:
                     if 'names' in value:
                         flag = 1
         if flag:
-            assert True == True
+            assert True is True
         else:
-            assert True == False
+            assert True is False
 
     def test_info_with_config_for_statistics(self):
 
@@ -120,7 +122,7 @@ class TestInfo(object):
         try:
             TestInfo.client.info(request, config)
 
-        except ParamError as exception:
+        except e.ParamError as exception:
             assert exception.code == -2
             assert exception.msg == "Host address is of type incorrect"
 
@@ -128,9 +130,10 @@ class TestInfo(object):
 
         request = "statistics"
         policy = {'timeout': 1000}
-        nodes_info = TestInfo.client.info(request, TestInfo.config['hosts'], policy)
+        nodes_info = TestInfo.client.info(
+            request, TestInfo.config['hosts'], policy)
 
-        assert nodes_info != None
+        assert nodes_info is not None
 
         assert type(nodes_info) == dict
 
@@ -151,16 +154,17 @@ class TestInfo(object):
         try:
             TestInfo.client.info(request, TestInfo.config['hosts'])
 
-        except ParamError as exception:
-            assert exception.code == -2L
+        except e.ParamError as exception:
+            assert exception.code == -2
             assert exception.msg == "Request must be a string"
 
     def test_info_without_parameters(self):
 
         with pytest.raises(TypeError) as typeError:
-            nodes_info = TestInfo.client.info()
+            TestInfo.client.info()
 
-        assert "Required argument 'command' (pos 1) not found" in typeError.value
+        assert "Required argument 'command' (pos 1) not found" in str(
+            typeError.value)
 
     def test_info_positive_for_sets_without_connection(self):
         """
@@ -168,8 +172,8 @@ class TestInfo(object):
         """
         client1 = aerospike.client(TestInfo.config)
         try:
-            response = client1.info('sets', TestInfo.config['hosts'])
+            client1.info('sets', TestInfo.config['hosts'])
 
-        except ClusterError as exception:
-            assert exception.code == 11L
+        except e.ClusterError as exception:
+            assert exception.code == 11
             assert exception.msg == 'No connection to aerospike cluster'

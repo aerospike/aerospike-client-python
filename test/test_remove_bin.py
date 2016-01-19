@@ -1,25 +1,26 @@
 # -*- coding: utf-8 -*-
 import pytest
 import sys
-import time
-import cPickle as pickle
-from test_base_class import TestBaseClass
+from .test_base_class import TestBaseClass
+from aerospike import exception as e
 
 aerospike = pytest.importorskip("aerospike")
 try:
-    from aerospike.exception import *
+    import aerospike
 except:
-    print "Please install aerospike python client."
+    print("Please install aerospike python client.")
     sys.exit(1)
 
+
 class TestRemovebin(object):
+
     def setup_class(cls):
         """
         Setup class.
         """
         hostlist, user, password = TestBaseClass.get_hosts()
         config = {'hosts': hostlist}
-        if user == None and password == None:
+        if user is None and password is None:
             TestRemovebin.client = aerospike.client(config).connect()
         else:
             TestRemovebin.client = aerospike.client(config).connect(user,
@@ -32,7 +33,7 @@ class TestRemovebin(object):
         """
         Setup method.
         """
-        for i in xrange(5):
+        for i in range(5):
             key = ('test', 'demo', i)
             rec = {'name': 'name%s' % (str(i)), 'age': i}
             TestRemovebin.client.put(key, rec)
@@ -41,11 +42,11 @@ class TestRemovebin(object):
         """
         Teardoen method.
         """
-        for i in xrange(5):
+        for i in range(5):
             key = ('test', 'demo', i)
             try:
-                (key , meta, bins) = TestRemovebin.client.get(key)
-            except RecordNotFound:
+                (key, _, _) = TestRemovebin.client.get(key)
+            except e.RecordNotFound:
                 TestRemovebin.client.remove(key)
 
     def test_remove_bin_with_no_parameters(self):
@@ -54,7 +55,8 @@ class TestRemovebin(object):
         """
         with pytest.raises(TypeError) as typeError:
             TestRemovebin.client.remove_bin()
-        assert "Required argument 'key' (pos 1) not found" in typeError.value
+        assert "Required argument 'key' (pos 1) not found" in str(
+            typeError.value)
 
     def test_remove_bin_with_correct_parameters(self):
         """
@@ -63,7 +65,7 @@ class TestRemovebin(object):
         key = ('test', 'demo', 1)
         TestRemovebin.client.remove_bin(key, ["age"])
 
-        (key, meta, bins) = TestRemovebin.client.get(key)
+        (key, _, bins) = TestRemovebin.client.get(key)
 
         assert bins == {'name': 'name1'}
 
@@ -75,7 +77,7 @@ class TestRemovebin(object):
         policy = {'timeout': 1000}
         TestRemovebin.client.remove_bin(key, ["age"], {}, policy)
 
-        (key, meta, bins) = TestRemovebin.client.get(key)
+        (key, _, bins) = TestRemovebin.client.get(key)
 
         assert bins == {'name': 'name1'}
 
@@ -98,7 +100,7 @@ class TestRemovebin(object):
         assert bins == {'name': 'name1'}
         assert key == ('test', 'demo', None, bytearray(
             b'\xb7\xf4\xb88\x89\xe2\xdag\xdeh>\x1d\xf6\x91\x9a\x1e\xac\xc4F\xc8')
-                      )
+        )
 
     def test_remove_bin_with_policy_send_gen_eq_positive(self):
         """
@@ -123,7 +125,7 @@ class TestRemovebin(object):
         assert bins == {'name': 'name1'}
         assert key == ('test', 'demo', None, bytearray(
             b'\xb7\xf4\xb88\x89\xe2\xdag\xdeh>\x1d\xf6\x91\x9a\x1e\xac\xc4F\xc8')
-                      )
+        )
 
     def test_remove_bin_with_policy_send_gen_eq_not_equal(self):
         """
@@ -143,7 +145,7 @@ class TestRemovebin(object):
         try:
             TestRemovebin.client.remove_bin(key, ["age"], meta, policy)
 
-        except RecordGenerationError as exception:
+        except e.RecordGenerationError as exception:
             assert exception.code == 3
             assert exception.msg == "AEROSPIKE_ERR_RECORD_GENERATION"
 
@@ -152,7 +154,7 @@ class TestRemovebin(object):
         assert bins == {'age': 1, 'name': 'name1'}
         assert key == ('test', 'demo', None, bytearray(
             b'\xb7\xf4\xb88\x89\xe2\xdag\xdeh>\x1d\xf6\x91\x9a\x1e\xac\xc4F\xc8')
-                      )
+        )
 
     def test_remove_bin_with_policy_send_gen_GT_lesser(self):
         """
@@ -173,7 +175,7 @@ class TestRemovebin(object):
         try:
             TestRemovebin.client.remove_bin(key, ["age"], meta, policy)
 
-        except RecordGenerationError as exception:
+        except e.RecordGenerationError as exception:
             assert exception.code == 3
             assert exception.msg == "AEROSPIKE_ERR_RECORD_GENERATION"
 
@@ -182,7 +184,7 @@ class TestRemovebin(object):
         assert bins == {'age': 1, 'name': 'name1'}
         assert key == ('test', 'demo', None, bytearray(
             b'\xb7\xf4\xb88\x89\xe2\xdag\xdeh>\x1d\xf6\x91\x9a\x1e\xac\xc4F\xc8')
-                      )
+        )
 
     def test_remove_bin_with_policy_send_gen_GT_positive(self):
         """
@@ -207,7 +209,7 @@ class TestRemovebin(object):
         assert bins == {'name': 'name1'}
         assert key == ('test', 'demo', None, bytearray(
             b'\xb7\xf4\xb88\x89\xe2\xdag\xdeh>\x1d\xf6\x91\x9a\x1e\xac\xc4F\xc8')
-                      )
+        )
 
     def test_remove_bin_with_policy_key_digest(self):
         """
@@ -220,7 +222,7 @@ class TestRemovebin(object):
         policy = {'timeout': 1000, 'key': aerospike.POLICY_KEY_DIGEST}
         TestRemovebin.client.remove_bin(key, ["age"], {}, policy)
 
-        (key, meta, bins) = TestRemovebin.client.get(key)
+        (key, _, bins) = TestRemovebin.client.get(key)
 
         assert bins == {'name': 'name1'}
         assert key == ('test', 'demo', None,
@@ -240,7 +242,7 @@ class TestRemovebin(object):
         try:
             TestRemovebin.client.remove_bin(key, ["age"], {}, policy)
 
-        except ClientError as exception:
+        except e.ClientError as exception:
             assert exception.code == -1
             assert exception.msg == "Incorrect policy"
 
@@ -251,7 +253,7 @@ class TestRemovebin(object):
         key = ('test', 'demo', "non-existent")
         status = TestRemovebin.client.remove_bin(key, ["age"])
 
-        assert status == 0L
+        assert status == 0
 
     def test_remove_bin_with_nonexistent_bin(self):
         """
@@ -260,7 +262,7 @@ class TestRemovebin(object):
         key = ('test', 'demo', 1)
         status = TestRemovebin.client.remove_bin(key, ["non-existent"])
 
-        assert status == 0L
+        assert status == 0
 
     def test_remove_bin_with_single_bin_in_a_record(self):
         """
@@ -279,8 +281,7 @@ class TestRemovebin(object):
         TestRemovebin.client.remove_bin(key, ["name"], {}, policy)
 
         _, _, bins = TestRemovebin.client.get(key)
-        assert bins == None
-
+        assert bins is None
 
     def test_remove_bin_with_extra_parameter(self):
         """
@@ -291,7 +292,8 @@ class TestRemovebin(object):
         with pytest.raises(TypeError) as typeError:
             TestRemovebin.client.remove_bin(key, ["age"], {}, policy, "")
 
-        assert "remove_bin() takes at most 4 arguments (5 given)" in typeError.value
+        assert "remove_bin() takes at most 4 arguments (5 given)" in str(
+            typeError.value)
 
     def test_remove_bin_key_is_none(self):
         """
@@ -300,7 +302,7 @@ class TestRemovebin(object):
         try:
             TestRemovebin.client.remove_bin(None, ["age"])
 
-        except ParamError as exception:
+        except e.ParamError as exception:
             assert exception.code == -2
             assert exception.msg == "key is invalid"
 
@@ -312,7 +314,7 @@ class TestRemovebin(object):
         try:
             TestRemovebin.client.remove_bin(key, None)
 
-        except ParamError as exception:
+        except e.ParamError as exception:
             assert exception.code == -2
             assert exception.msg == "Bins should be a list"
 
@@ -323,9 +325,9 @@ class TestRemovebin(object):
         key = ('test', 'demo', 1)
         TestRemovebin.client.remove_bin(key, [])
 
-        (key , meta, bins) = TestRemovebin.client.get(key)
+        (key, _, bins) = TestRemovebin.client.get(key)
 
-        assert bins == { 'name': 'name1', 'age': 1}
+        assert bins == {'name': 'name1', 'age': 1}
 
     def test_remove_bin_all_bins(self):
         """
@@ -334,17 +336,16 @@ class TestRemovebin(object):
         key = ('test', 'demo', 1)
         TestRemovebin.client.remove_bin(key, ["name", "age"])
 
-
         try:
-            (key , meta, bins) = TestRemovebin.client.get(key)
+            (key, _, _) = TestRemovebin.client.get(key)
 
-        except RecordNotFound as exception:
+        except e.RecordNotFound as exception:
             assert exception.code == 2
-        for i in xrange(5):
+        for i in range(5):
             key = ('test', 'demo', i)
             rec = {
-                'name' : 'name%s' % (str(i)),
-                'age' : i
+                'name': 'name%s' % (str(i)),
+                'age': i
             }
             TestRemovebin.client.put(key, rec)
 
@@ -356,7 +357,7 @@ class TestRemovebin(object):
 
         TestRemovebin.client.remove_bin(key, [u"name"])
 
-        (key, meta, bins) = TestRemovebin.client.get(key)
+        (key, _, bins) = TestRemovebin.client.get(key)
 
         assert bins == {'age': 2}
 
@@ -365,24 +366,24 @@ class TestRemovebin(object):
         TestRemovebin.client.remove_bin(key, [u"name", "age"])
 
         try:
-            (key , meta, bins) = TestRemovebin.client.get(key)
+            (key, _, bins) = TestRemovebin.client.get(key)
 
-        except RecordNotFound as exception:
+        except e.RecordNotFound as exception:
             assert exception.code == 2
         key = ('test', 'demo', 4)
 
         TestRemovebin.client.remove_bin(key, ["name", u"age"])
 
         try:
-            (key , meta, bins) = TestRemovebin.client.get(key)
+            (key, _, bins) = TestRemovebin.client.get(key)
 
-        except RecordNotFound as exception:
+        except e.RecordNotFound as exception:
             assert exception.code == 2
-        for i in xrange(5):
+        for i in range(5):
             key = ('test', 'demo', i)
             rec = {
-                'name' : 'name%s' % (str(i)),
-                'age' : i
+                'name': 'name%s' % (str(i)),
+                'age': i
             }
             TestRemovebin.client.put(key, rec)
 
@@ -398,6 +399,6 @@ class TestRemovebin(object):
         try:
             client1.remove_bin(key, ["age"])
 
-        except ClusterError as exception:
-            assert exception.code == 11L
+        except e.ClusterError as exception:
+            assert exception.code == 11
             assert exception.msg == 'No connection to aerospike cluster'

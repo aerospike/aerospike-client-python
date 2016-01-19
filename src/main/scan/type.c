@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright 2013-2015 Aerospike, Inc.
+ * Copyright 2013-2016 Aerospike, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -28,6 +28,8 @@
 #include "scan.h"
 #include "conversions.h"
 #include "exceptions.h"
+#include "macros.h"
+
 
 /*******************************************************************************
  * PYTHON TYPE METHODS
@@ -35,14 +37,14 @@
 
 static PyMethodDef AerospikeScan_Type_Methods[] = {
 
-    {"foreach",	(PyCFunction) AerospikeScan_Foreach,	METH_VARARGS | METH_KEYWORDS,
-    			"Iterate over each result and call the callback function."},
+	{"foreach",	(PyCFunction) AerospikeScan_Foreach,	METH_VARARGS | METH_KEYWORDS,
+				"Iterate over each result and call the callback function."},
 
-    {"select",	(PyCFunction) AerospikeScan_Select,		METH_VARARGS | METH_KEYWORDS,
-    			"Add bins to select in the query."},
+	{"select",	(PyCFunction) AerospikeScan_Select,		METH_VARARGS | METH_KEYWORDS,
+				"Add bins to select in the query."},
 
-    {"results",	(PyCFunction) AerospikeScan_Results,	METH_VARARGS | METH_KEYWORDS,
-    			"Get a record."},
+	{"results",	(PyCFunction) AerospikeScan_Results,	METH_VARARGS | METH_KEYWORDS,
+				"Get a record."},
 	{NULL}
 };
 
@@ -54,11 +56,11 @@ static PyObject * AerospikeScan_Type_New(PyTypeObject * type, PyObject * args, P
 {
 	AerospikeScan * self = NULL;
 
-    self = (AerospikeScan *) type->tp_alloc(type, 0);
+	self = (AerospikeScan *) type->tp_alloc(type, 0);
 
-    if ( self == NULL ) {
-    	return NULL;
-    }
+	if ( self == NULL ) {
+		return NULL;
+	}
 
 	return (PyObject *) self;
 }
@@ -88,7 +90,7 @@ static int AerospikeScan_Type_Init(AerospikeScan * self, PyObject * args, PyObje
 	if ( py_set) {
 		if (PyUnicode_Check(py_set)) {
 			py_ustr = PyUnicode_AsUTF8String(py_set);
-			set = PyString_AsString(py_ustr);
+			set = PyBytes_AsString(py_ustr);
 		} else if (PyString_Check(py_set)) {
 			set = PyString_AsString(py_set);
 		} else if ( Py_None == py_set ) {
@@ -101,13 +103,14 @@ static int AerospikeScan_Type_Init(AerospikeScan * self, PyObject * args, PyObje
 	if (py_ustr) {
 		Py_DECREF(py_ustr);
 	}
-    return 0;
+	return 0;
 }
 
 static void AerospikeScan_Type_Dealloc(PyObject * self)
 {
-    as_scan_destroy(&((AerospikeScan *)self)->scan);
-    self->ob_type->tp_free((PyObject *) self);
+	as_scan_destroy(&((AerospikeScan *)self)->scan);
+	Py_TYPE(self)->tp_free((PyObject *) self);
+//    self->ob_type->tp_free((PyObject *) self);
 }
 
 /*******************************************************************************
@@ -115,49 +118,53 @@ static void AerospikeScan_Type_Dealloc(PyObject * self)
  ******************************************************************************/
 
 static PyTypeObject AerospikeScan_Type = {
-	PyObject_HEAD_INIT(NULL)
-
-    .ob_size			= 0,
-    .tp_name			= "aerospike.Scan",
-    .tp_basicsize		= sizeof(AerospikeScan),
-    .tp_itemsize		= 0,
-    .tp_dealloc			= (destructor) AerospikeScan_Type_Dealloc,
-    .tp_print			= 0,
-    .tp_getattr			= 0,
-    .tp_setattr			= 0,
-    .tp_compare			= 0,
-    .tp_repr			= 0,
-    .tp_as_number		= 0,
-    .tp_as_sequence		= 0,
-    .tp_as_mapping		= 0,
-    .tp_hash			= 0,
-    .tp_call			= 0,
-    .tp_str				= 0,
-    .tp_getattro		= 0,
-    .tp_setattro		= 0,
-    .tp_as_buffer		= 0,
-    .tp_flags			= Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE,
-    .tp_doc				=
-    		"The Scan class assists in populating the parameters of a scan\n"
-    		"operation. To create a new instance of the Scan class, call the\n"
-    		"scan() method on an instance of a Client class.\n",
-    .tp_traverse		= 0,
-    .tp_clear			= 0,
-    .tp_richcompare		= 0,
-    .tp_weaklistoffset	= 0,
-    .tp_iter			= 0,
-    .tp_iternext		= 0,
-    .tp_methods			= AerospikeScan_Type_Methods,
-    .tp_members			= 0,
-    .tp_getset			= 0,
-    .tp_base			= 0,
-    .tp_dict			= 0,
-    .tp_descr_get		= 0,
-    .tp_descr_set		= 0,
-    .tp_dictoffset		= 0,
-    .tp_init			= (initproc) AerospikeScan_Type_Init,
-    .tp_alloc			= 0,
-    .tp_new				= AerospikeScan_Type_New
+	PyVarObject_HEAD_INIT(NULL, 0)
+	"aerospike.Scan",                   // tp_name
+	sizeof(AerospikeScan),              // tp_basicsize
+	0,                                  // tp_itemsize
+	(destructor) AerospikeScan_Type_Dealloc,
+	                                    // tp_dealloc
+	0,                                  // tp_print
+	0,                                  // tp_getattr
+	0,                                  // tp_setattr
+	0,                                  // tp_compare
+	0,                                  // tp_repr
+	0,                                  // tp_as_number
+	0,                                  // tp_as_sequence
+	0,                                  // tp_as_mapping
+	0,                                  // tp_hash
+	0,                                  // tp_call
+	0,                                  // tp_str
+	0,                                  // tp_getattro
+	0,                                  // tp_setattro
+	0,                                  // tp_as_buffer
+	Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE,
+	                                    // tp_flags
+	"The Scan class assists in populating the parameters of a scan\n"
+	"operation. To create a new instance of the Scan class, call the\n"
+	"scan() method on an instance of a Client class.\n",
+										// tp_doc
+	0,                                  // tp_traverse
+	0,                                  // tp_clear
+	0,                                  // tp_richcompare
+	0,                                  // tp_weaklistoffset
+	0,                                  // tp_iter
+	0,                                  // tp_iternext
+	AerospikeScan_Type_Methods,         // tp_methods
+	0,                                  // tp_members
+	0,                                  // tp_getset
+	0,                                  // tp_base
+	0,                                  // tp_dict
+	0,                                  // tp_descr_get
+	0,                                  // tp_descr_set
+	0,                                  // tp_dictoffset
+	(initproc) AerospikeScan_Type_Init,
+	                                    // tp_init
+	0,                                  // tp_alloc
+	AerospikeScan_Type_New,             // tp_new
+	0,                                  // tp_free
+	0,                                  // tp_is_gc
+	0                                   // tp_bases
 };
 
 /*******************************************************************************

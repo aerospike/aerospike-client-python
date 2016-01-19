@@ -1,42 +1,44 @@
 # -*- coding: utf-8 -*-
 import pytest
-import time
 import sys
-import cPickle as pickle
-from test_base_class import TestBaseClass
+
+from .test_base_class import TestBaseClass
+from aerospike import exception as e
 
 aerospike = pytest.importorskip("aerospike")
 try:
-    from aerospike.exception import *
+    import aerospike
 except:
-    print "Please install aerospike python client."
+    print("Please install aerospike python client.")
     sys.exit(1)
 
+
 class TestScanInfo(object):
+
     def setup_method(self, method):
         """
         Setup method.
         """
         hostlist, user, password = TestBaseClass.get_hosts()
         config = {'hosts': hostlist}
-        if user == None and password == None:
+        if user is None and password is None:
             self.client = aerospike.client(config).connect()
         else:
             self.client = aerospike.client(config).connect(user, password)
-        for i in xrange(5):
+        for i in range(5):
             key = ('test', 'demo', i)
             rec = {'name': 'name%s' % (str(i)), 'age': i}
             self.client.put(key, rec)
         policy = {}
         self.client.udf_put("bin_lua.lua", 0, policy)
         self.job_id = self.client.scan_apply("test", "demo", "bin_lua",
-                                              "mytransform", ['age', 2])
+                                             "mytransform", ['age', 2])
 
     def teardown_method(self, method):
         """
         Teardoen method.
         """
-        for i in xrange(5):
+        for i in range(5):
             key = ('test', 'demo', i)
             self.client.remove(key)
         self.client.close()
@@ -47,7 +49,8 @@ class TestScanInfo(object):
         """
         with pytest.raises(TypeError) as typeError:
             self.client.job_info()
-        assert "Required argument 'job_id' (pos 1) not found" in typeError.value
+        assert "Required argument 'job_id' (pos 1) not found" in str(
+            typeError.value)
 
     def test_job_info_with_correct_parameters(self):
         """
@@ -58,23 +61,24 @@ class TestScanInfo(object):
         if job_info['status'] == aerospike.JOB_STATUS_COMPLETED or \
            job_info['status'] == aerospike.JOB_STATUS_UNDEF or \
            job_info['status'] or aerospike.JOB_STATUS_INPROGRESS:
-            assert True == True
+            assert True is True
         else:
-            assert True == False
+            assert True is False
 
     def test_job_info_with_correct_policy(self):
         """
         Invoke job_info() with correct policy
         """
         policy = {'timeout': 1000}
-        job_info = self.client.job_info(self.job_id, aerospike.JOB_SCAN, policy)
+        job_info = self.client.job_info(
+            self.job_id, aerospike.JOB_SCAN, policy)
 
         if job_info['status'] == aerospike.JOB_STATUS_COMPLETED or \
            job_info['status'] == aerospike.JOB_STATUS_UNDEF or \
            job_info['status'] or aerospike.JOB_STATUS_INPROGRESS:
-            assert True == True
+            assert True is True
         else:
-            assert True == False
+            assert True is False
 
     def test_job_info_with_incorrect_policy(self):
         """
@@ -84,9 +88,9 @@ class TestScanInfo(object):
             'timeout': 0.5
         }
         try:
-            job_id = self.client.job_info(self.job_id, aerospike.JOB_SCAN, policy)
+            self.client.job_info(self.job_id, aerospike.JOB_SCAN, policy)
 
-        except ParamError as exception:
+        except e.ParamError as exception:
             assert exception.code == -2
             assert exception.msg == "timeout is invalid"
 
@@ -95,24 +99,26 @@ class TestScanInfo(object):
         Invoke job_info() with scan id negative
         """
         with pytest.raises(TypeError) as typeError:
-            job_info = self.client.job_info(-2)
-        assert "Required argument 'module' (pos 2) not found" in typeError.value
+            self.client.job_info(-2)
+        assert "Required argument 'module' (pos 2) not found" in str(
+            typeError.value)
 
     def test_job_info_with_scanid_incorrect(self):
         """
         Invoke job_info() with scan id incorrect
         """
         with pytest.raises(TypeError) as typeError:
-            job_info = self.client.job_info(1)
-        assert "Required argument 'module' (pos 2) not found" in typeError.value
+            self.client.job_info(1)
+        assert "Required argument 'module' (pos 2) not found" in str(
+            typeError.value)
 
     def test_job_info_with_scanid_string(self):
         """
         Invoke job_info() with scan id incorrect
         """
         with pytest.raises(TypeError) as typeError:
-            job_info = self.client.job_info("string")
-        assert "an integer is required" in typeError.value
+            self.client.job_info("string")
+        assert "an integer is required" in str(typeError.value)
 
     def test_job_info_with_correct_parameters_without_connection(self):
         """
@@ -123,8 +129,8 @@ class TestScanInfo(object):
         client1 = aerospike.client(config)
 
         try:
-            job_info = client1.job_info(self.job_id, aerospike.JOB_SCAN)
+            client1.job_info(self.job_id, aerospike.JOB_SCAN)
 
-        except ClusterError as exception:
-            assert exception.code == 11L
+        except e.ClusterError as exception:
+            assert exception.code == 11
             assert exception.msg == 'No connection to aerospike cluster'

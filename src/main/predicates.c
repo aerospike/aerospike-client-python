@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright 2013-2015 Aerospike, Inc.
+ * Copyright 2013-2016 Aerospike, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -301,6 +301,8 @@ static PyMethodDef AerospikePredicates_Methods[] = {
 
 PyObject * AerospikePredicates_New(void)
 {
-	PyObject * module = Py_InitModule3("aerospike.predicates", AerospikePredicates_Methods, "Query Predicates");
+	PyObject * module;
+	MOD_DEF(module, "aerospike.predicates", "Query Predicates", AerospikePredicates_Methods);
+
 	return module;
 }

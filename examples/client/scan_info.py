@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
-################################################################################
-# Copyright 2013-2015 Aerospike, Inc.
+##########################################################################
+# Copyright 2013-2016 Aerospike, Inc.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -13,7 +13,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-################################################################################
+##########################################################################
 
 from __future__ import print_function
 
@@ -23,9 +23,9 @@ import sys
 
 from optparse import OptionParser
 
-################################################################################
+##########################################################################
 # Options Parsing
-################################################################################
+##########################################################################
 
 usage = "usage: %prog [options]"
 
@@ -60,7 +60,7 @@ optparser.add_option(
     help="Port of the Aerospike server.")
 
 optparser.add_option(
-    "-b", "--bins", dest="bins", type="string", action="append", 
+    "-b", "--bins", dest="bins", type="string", action="append",
     help="Bins to select from each record.")
 
 (options, args) = optparser.parse_args()
@@ -74,19 +74,20 @@ if len(args) != 0:
     optparser.print_help()
     print()
     sys.exit(1)
-################################################################################
+##########################################################################
 # Client Configuration
-################################################################################
+##########################################################################
 
 config = {
-    'hosts': [ (options.host, options.port) ]
+    'hosts': [(options.host, options.port)]
 }
 
-################################################################################
+##########################################################################
 # Application
-################################################################################
+##########################################################################
 
 exitCode = 0
+
 
 def parse_arg(s):
     try:
@@ -100,32 +101,34 @@ try:
     # Connect to Cluster
     # ----------------------------------------------------------------------------
 
-    client = aerospike.client(config).connect(options.username, options.password)
+    client = aerospike.client(config).connect(
+        options.username, options.password)
 
     # ----------------------------------------------------------------------------
     # Perform Operation
     # ----------------------------------------------------------------------------
 
     try:
-        
+
         namespace = options.namespace if options.namespace and options.namespace != 'None' else None
         set = options.set if options.set and options.set != 'None' else None
 
-      	client.udf_put(filename, 0, policy)
-
-        module = "simple" 
-        filename = "simple.lua" 
+        module = "simple"
+        filename = "simple.lua"
         function = "add_val"
         args = ['age', 1]
         policy = {}
 
-        scan_id = client.scan_apply(namespace, set, module, function, args, policy)
+        client.udf_put(filename, 0, policy)
+
+        scan_id = client.scan_apply(
+            namespace, set, module, function, args, policy)
 
         while True:
             response = client.scan_info(scan_id)
             if response['status'] == aerospike.SCAN_STATUS_COMPLETED:
                 break
-                
+
         if response['status'] == aerospike.SCAN_STATUS_COMPLETED:
             print("Background scan successful")
             print("Progess percentage : ", response['progress_pct'])
@@ -144,12 +147,12 @@ try:
 
     client.close()
 
-except Exception, eargs:
+except Exception as eargs:
     print("error: {0}".format(eargs), file=sys.stderr)
     exitCode = 3
 
-################################################################################
+##########################################################################
 # Exit
-################################################################################
+##########################################################################
 
 sys.exit(exitCode)

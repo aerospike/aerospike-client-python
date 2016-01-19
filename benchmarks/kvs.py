@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
-################################################################################
-# Copyright 2013-2014 Aerospike, Inc.
+##########################################################################
+# Copyright 2013-2016 Aerospike, Inc.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -13,27 +13,25 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-################################################################################
+##########################################################################
 
 from __future__ import print_function
 
 import aerospike
-import traceback
 import random
 import signal
 import sys
 import string
 import time
 
-from guppy import hpy
+# from guppy import hpy
 from optparse import OptionParser
-import time
 import copy
 from tabulate import tabulate
 
-################################################################################
+##########################################################################
 # Options Parsing
-################################################################################
+##########################################################################
 
 """
 TODO: change optparse to argparse
@@ -121,7 +119,7 @@ optparser.add_option(
 
 optparser.add_option(
     "-l", "--latency", dest="latency", type="string", default="4,1",
-    help= "<number of latency columns>,<range shift increment> Show transaction latency percentages using elapsed time ranges.\
+    help="<number of latency columns>,<range shift increment> Show transaction latency percentages using elapsed time ranges.\
     <number of latency columns>: Number of elapsed time ranges. <range shift increment>: Power of 2 multiple between each range starting at column 3.\
     A latency definition of '-latency 7,1' results in this layout:\
         <=1ms >1ms >2ms >4ms >8ms >16ms >32ms\
@@ -138,29 +136,31 @@ if options.help:
     print()
     sys.exit(1)
 
-################################################################################
+##########################################################################
 # Client Configuration
-################################################################################
+##########################################################################
 
 config = {
-    'hosts': [ (options.host, options.port) ]
+    'hosts': [(options.host, options.port)]
 }
 
-################################################################################
+##########################################################################
 # Generators
-################################################################################
+##########################################################################
 
 READ_OP = 0
 WRITE_OP = 1
 CHOICE_OP = [READ_OP, WRITE_OP]
 
 # Generator for operations
+
+
 def operation(r, w):
     rn = r
     wn = w
     while rn + wn > 0:
         if rn > 0 and wn > 0:
-            op = random.randint(0,100)
+            op = random.randint(0, 100)
             if op <= r:
                 op = READ_OP
                 rn -= 1
@@ -186,16 +186,18 @@ def operation(r, w):
                 wn = w
             yield op
 
+
 def genstr():
     return ''.join(random.choice(options.str_chars) for _ in range(random.randrange(options.str_min, options.str_max, 1)))
+
 
 def genint():
     return random.randrange(options.int_min, options.int_max, 1)
 
 
-################################################################################
+##########################################################################
 # Application
-################################################################################
+##########################################################################
 
 exitCode = 0
 
@@ -210,23 +212,30 @@ start = 0
 intervals = []
 heapy = hpy()
 
-no_of_buckets, range_increment = [int(elem.strip()) for elem in options.latency.split(',')]
+no_of_buckets, range_increment = [
+    int(elem.strip()) for elem in options.latency.split(',')]
 
-__buckets = [0, 1] + [ elem << i for i in [0] for elem in [1]*(no_of_buckets - 2) for i in [ i + range_increment ]]
+__buckets = [0, 1] + [elem << i for i in [0]
+                      for elem in [1] * (no_of_buckets - 2) for i in [i + range_increment]]
 
 # Separate buckets for read / write latency data
-read_bucket = dict.fromkeys( __buckets, 0 )
+read_bucket = dict.fromkeys(__buckets, 0)
 write_bucket = copy.deepcopy(read_bucket)
 
 # return current time in ms
 current_milliseconds_time = lambda: int(round(time.time() * 1000))
 
 # returns latency table headers
+
+
 def get_latency_table_headers():
-    headers = ["", "<=1ms", ">1ms"] + [ ">{0}ms".format(i) for i in __buckets[2:] ]
+    headers = ["", "<=1ms", ">1ms"] + \
+        [">{0}ms".format(i) for i in __buckets[2:]]
     return headers
 
 # manages the read / write operations counter in latency dictionaries
+
+
 def increment_counters(bucket, time_in_millisecond):
     if time_in_millisecond <= 0:
         bucket[0] += 1
@@ -235,13 +244,18 @@ def increment_counters(bucket, time_in_millisecond):
             bucket[key] += 1
 
 # format the output as per tabulate standard and calculate percentages as well
+
+
 def interprete_summary():
     global total_count, read_count, write_count, read_bucket, write_bucket
 
-    read_summary = [ 'read' ] + [ '{0}%'.format(int(round(read_bucket[key] * 100/read_count))) for key in read_bucket.keys()]
-    write_summary = [ 'write' ] + [ '{0}%'.format(int(round(write_bucket[key] * 100/write_count))) for key in write_bucket.keys()]
+    read_summary = ['read'] + ['{0}%'.format(
+        int(round(read_bucket[key] * 100 / read_count))) for key in read_bucket.keys()]
+    write_summary = ['write'] + ['{0}%'.format(
+        int(round(write_bucket[key] * 100 / write_count))) for key in write_bucket.keys()]
 
     return read_summary, write_summary
+
 
 def total_summary():
 
@@ -258,7 +272,7 @@ def total_summary():
     print("     {0} operations per second".format(total_count / elapse))
     print()
     print("Latency stats:")
-    table = [ info for info in interprete_summary() ]
+    table = [info for info in interprete_summary()]
     print(tabulate(table, headers=get_latency_table_headers()))
     print()
     print("Heap: ")
@@ -286,7 +300,8 @@ try:
     # Connect to Cluster
     # ----------------------------------------------------------------------------
 
-    client = aerospike.client(config).connect(options.username, options.password)
+    client = aerospike.client(config).connect(
+        options.username, options.password)
 
     # ----------------------------------------------------------------------------
     # Perform Operation
@@ -307,14 +322,16 @@ try:
         # run the operatons
         for op in operation(r, w):
 
-            key = (options.namespace, options.set, keys[random.randint(0,k-1)])
+            key = (options.namespace, options.set,
+                   keys[random.randint(0, k - 1)])
 
             if op == READ_OP:
                 print('[READ] ', key) if options.verbose else 0
                 now = current_milliseconds_time()
                 result = client.exists(key)
                 elapsed = current_milliseconds_time() - now
-                print('[READ ELAPSED] {0}ms'.format(elapsed)) if options.verbose else 0
+                print('[READ ELAPSED] {0}ms'.format(
+                    elapsed)) if options.verbose else 0
                 increment_counters(read_bucket, elapsed)
                 total_count += 1
                 read_count += 1
@@ -322,12 +339,13 @@ try:
             elif op == WRITE_OP:
                 print('[WRITE]', key) if options.verbose else 0
                 rec = {
-                        'key': key[2]
+                    'key': key[2]
                 }
                 now = current_milliseconds_time()
                 client.put(key, rec)
                 elapsed = current_milliseconds_time() - now
-                print('[WRITE ELAPSED] {0}ms'.format(elapsed)) if options.verbose else 0
+                print('[WRITE ELAPSED] {0}ms'.format(
+                    elapsed)) if options.verbose else 0
                 increment_counters(write_bucket, elapsed)
                 total_count += 1
                 write_count += 1
@@ -335,19 +353,18 @@ try:
             if options.heap_interval > 0 and (total_count % options.heap_interval) == 0:
                 print("HEAP@{0}: {1}".format(total_count, heapy.heap()))
 
-
     except KeyboardInterrupt:
         total_summary()
-    except Exception, eargs:
+    except Exception as eargs:
         print("error: {0}".format(eargs), file=sys.stderr)
         sys.exit(2)
 
-except Exception, eargs:
+except Exception as eargs:
     print("error: {0}".format(eargs), file=sys.stderr)
     sys.exit(3)
 
-################################################################################
+##########################################################################
 # Exit
-################################################################################
+##########################################################################
 
 sys.exit(0)

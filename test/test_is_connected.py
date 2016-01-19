@@ -1,14 +1,18 @@
 # -*- coding: utf-8 -*-
 import pytest
-import time
 import sys
-import cPickle as pickle
-from test_base_class import TestBaseClass
+from .test_base_class import TestBaseClass
 
 aerospike = pytest.importorskip("aerospike")
+try:
+    import aerospike
+except:
+    print("Please install aerospike python client.")
+    sys.exit(1)
 
 
 class TestIsconnected(object):
+
     def setup_method(self, method):
         """
         Setup method.
@@ -25,7 +29,7 @@ class TestIsconnected(object):
         """
         hostlist, user, password = TestBaseClass.get_hosts()
         config = {'hosts': hostlist}
-        if user == None and password == None:
+        if user is None and password is None:
             self.client = aerospike.client(config).connect()
         else:
             self.client = aerospike.client(config).connect(user, password)
@@ -40,7 +44,7 @@ class TestIsconnected(object):
         config = {'hosts': hostlist}
         self.client = aerospike.client(config)
         assert self.client.is_connected() == False
-        if user == None and password == None:
+        if user is None and password is None:
             self.client.connect()
         else:
             self.client.connect(user, password)
@@ -53,7 +57,7 @@ class TestIsconnected(object):
         """
         hostlist, user, password = TestBaseClass.get_hosts()
         config = {'hosts': hostlist}
-        if user == None and password == None:
+        if user is None and password is None:
             self.client = aerospike.client(config).connect()
         else:
             self.client = aerospike.client(config).connect(user, password)

@@ -1,45 +1,49 @@
 # -*- coding: utf-8 -*-
 import pytest
-import time
 import sys
 import random
-import cPickle as pickle
-from test_base_class import TestBaseClass
+from .test_base_class import TestBaseClass
+from aerospike import exception as e
 
 aerospike = pytest.importorskip("aerospike")
 try:
-    from aerospike.exception import *
+    import aerospike
 except:
-    print "Please install aerospike python client."
+    print("Please install aerospike python client.")
     sys.exit(1)
 
+
 class TestListExtend(object):
+
     def setup_class(cls):
         """
         Setup method.
         """
         hostlist, user, password = TestBaseClass.get_hosts()
         config = {'hosts': hostlist}
-        if user == None and password == None:
+        if user is None and password is None:
             TestListExtend.client = aerospike.client(config).connect()
         else:
-            TestListExtend.client = aerospike.client(config).connect(user, password)
+            TestListExtend.client = aerospike.client(
+                config).connect(user, password)
 
     def teardown_class(cls):
         TestListExtend.client.close()
 
     def setup_method(self, method):
-        for i in xrange(5):
+        for i in range(5):
             key = ('test', 'demo', i)
-            rec = {'name': 'name%s' % (str(i)), 'contact_no': [i, i+1], 'city' : ['Pune', 'Dehli']}
+            rec = {'name': 'name%s' %
+                   (str(i)), 'contact_no': [i, i + 1],
+                   'city': ['Pune', 'Dehli']}
             TestListExtend.client.put(key, rec)
 
     def teardown_method(self, method):
         """
         Teardoen method.
         """
-        #time.sleep(1)
-        for i in xrange(5):
+        # time.sleep(1)
+        for i in range(5):
             key = ('test', 'demo', i)
             TestListExtend.client.remove(key)
 
@@ -50,27 +54,33 @@ class TestListExtend(object):
         key = ('test', 'demo', 1)
         TestListExtend.client.list_extend(key, "contact_no", [12, 56, 89])
 
-        (key, meta, bins) = TestListExtend.client.get(key)
+        (key, _, bins) = TestListExtend.client.get(key)
 
-        assert bins == {'contact_no': [1, 2, 12, 56, 89], 'name': 'name1', 'city':['Pune', 'Dehli']}
+        assert bins == {
+            'contact_no': [1, 2, 12, 56, 89], 'name': 'name1',
+            'city': ['Pune', 'Dehli']}
 
     def test_list_extend_with_policy(self):
         """
-        Invoke list_extend() extend the list with integer values and policy is passed
+        Invoke list_extend() extend the list with integer values and
+        policy is passed
         """
         key = ('test', 'demo', 1)
-        
+
         policy = {
             'timeout': 1000,
             'retry': aerospike.POLICY_RETRY_ONCE,
             'commit_level': aerospike.POLICY_COMMIT_LEVEL_MASTER
         }
 
-        TestListExtend.client.list_extend(key, "contact_no", [12, 56, 89], {}, policy)
+        TestListExtend.client.list_extend(
+            key, "contact_no", [12, 56, 89], {}, policy)
 
-        (key, meta, bins) = TestListExtend.client.get(key)
+        (key, _, bins) = TestListExtend.client.get(key)
 
-        assert bins == {'contact_no': [1, 2, 12, 56, 89], 'name': 'name1', 'city':['Pune', 'Dehli']}
+        assert bins == {
+            'contact_no': [1, 2, 12, 56, 89], 'name': 'name1',
+            'city': ['Pune', 'Dehli']}
 
     def test_list_extend_with_floats(self):
         """
@@ -80,9 +90,11 @@ class TestListExtend(object):
 
         TestListExtend.client.list_extend(key, "contact_no", [85.12, 85.46])
 
-        (key, meta, bins) = TestListExtend.client.get(key)
+        (key, _, bins) = TestListExtend.client.get(key)
 
-        assert bins == {'contact_no': [2, 3, 85.12, 85.46], 'city': ['Pune', 'Dehli'], 'name': 'name2'}
+        assert bins == {
+            'contact_no': [2, 3, 85.12, 85.46], 'city': ['Pune', 'Dehli'],
+            'name': 'name2'}
 
     def test_list_extend_with_all_entries(self):
         """
@@ -90,11 +102,13 @@ class TestListExtend(object):
         """
         key = ('test', 'demo', 1)
 
-        TestListExtend.client.list_extend(key, "contact_no", [False, [789, 45], 88, 15.2, 'aa'])
+        TestListExtend.client.list_extend(
+            key, "contact_no", [False, [789, 45], 88, 15.2, 'aa'])
 
-        (key, meta, bins) = TestListExtend.client.get(key)
+        (key, _, bins) = TestListExtend.client.get(key)
 
-        assert bins == {'contact_no': [1, 2, 0, [789, 45], 88, 15.2, 'aa'], 'city': ['Pune', 'Dehli'], 'name': 'name1'}
+        assert bins == {'contact_no': [1, 2, 0, [789, 45], 88, 15.2, 'aa'],
+                        'city': ['Pune', 'Dehli'], 'name': 'name1'}
 
     def test_list_extend_with_nonexistent_key(self):
         """
@@ -104,15 +118,16 @@ class TestListExtend(object):
         minLength = 5
         maxLength = 30
         length = random.randint(minLength, maxLength)
-        key = ('test', 'demo', ''.join(map(lambda unused :
-            random.choice(charSet), range(length)))+".com")
+        key = ('test', 'demo', ''.join(map(lambda unused:
+                                           random.choice(charSet),
+                                           range(length))) + ".com")
         status = TestListExtend.client.list_extend(key, "abc", [122, 789])
-        assert status == 0L
+        assert status == 0
 
-        (key, meta, bins) = TestListExtend.client.get(key)
+        (key, _, bins) = TestListExtend.client.get(key)
 
-        assert status == 0L
-        assert bins == {'abc':[122, 789]}
+        assert status == 0
+        assert bins == {'abc': [122, 789]}
 
         TestListExtend.client.remove(key)
 
@@ -125,16 +140,16 @@ class TestListExtend(object):
         minLength = 5
         maxLength = 10
         length = random.randint(minLength, maxLength)
-        bin = ''.join(map(lambda unused :
-            random.choice(charSet), range(length)))+".com"
+        bin = ''.join(map(lambda unused:
+                          random.choice(charSet), range(length))) + ".com"
         status = TestListExtend.client.list_extend(key, bin, [585, 789, 45])
-        assert status == 0L
+        assert status == 0
 
-        (key, meta, bins) = TestListExtend.client.get(key)
+        (key, _, bins) = TestListExtend.client.get(key)
 
-        assert status == 0L
-        assert bins == {'contact_no': [1, 2], 'name': 'name1', 'city':['Pune',
-            'Dehli'], bin:[585, 789, 45]}
+        assert status == 0
+        assert bins == {'contact_no': [1, 2], 'name': 'name1',
+                        'city': ['Pune', 'Dehli'], bin: [585, 789, 45]}
 
     def test_list_extend_with_no_parameters(self):
         """
@@ -142,7 +157,8 @@ class TestListExtend(object):
         """
         with pytest.raises(TypeError) as typeError:
             TestListExtend.client.list_extend()
-        assert "Required argument 'key' (pos 1) not found" in typeError.value
+        assert "Required argument 'key' (pos 1) not found" in str(
+            typeError.value)
 
     def test_list_extend_with_incorrect_policy(self):
         """
@@ -153,9 +169,10 @@ class TestListExtend(object):
             'timeout': 0.5
         }
         try:
-            TestListExtend.client.list_extend(key, "contact_no", ["str"], {}, policy)
+            TestListExtend.client.list_extend(
+                key, "contact_no", ["str"], {}, policy)
 
-        except ParamError as exception:
+        except e.ParamError as exception:
             assert exception.code == -2
             assert exception.msg == "timeout is invalid"
 
@@ -166,9 +183,11 @@ class TestListExtend(object):
         key = ('test', 'demo', 1)
         policy = {'timeout': 1000}
         with pytest.raises(TypeError) as typeError:
-            TestListExtend.client.list_extend(key, "contact_no", [999], {}, policy, "")
+            TestListExtend.client.list_extend(
+                key, "contact_no", [999], {}, policy, "")
 
-        assert "list_extend() takes at most 5 arguments (6 given)" in typeError.value
+        assert "list_extend() takes at most 5 arguments (6 given)" in str(
+            typeError.value)
 
     def test_list_extend_policy_is_string(self):
         """
@@ -178,7 +197,7 @@ class TestListExtend(object):
         try:
             TestListExtend.client.list_extend(key, "contact_no", [85], {}, "")
 
-        except ParamError as exception:
+        except e.ParamError as exception:
             assert exception.code == -2
             assert exception.msg == "policy must be a dict"
 
@@ -189,7 +208,7 @@ class TestListExtend(object):
         try:
             TestListExtend.client.list_extend(None, "contact_no", [45])
 
-        except ParamError as exception:
+        except e.ParamError as exception:
             assert exception.code == -2
             assert exception.msg == "key is invalid"
 
@@ -201,7 +220,7 @@ class TestListExtend(object):
         try:
             TestListExtend.client.list_extend(key, None, ["str"])
 
-        except ParamError as exception:
+        except e.ParamError as exception:
             assert exception.code == -2
             assert exception.msg == "Bin name should be of type string"
 
@@ -213,7 +232,7 @@ class TestListExtend(object):
         try:
             TestListExtend.client.list_extend(key, "contact_no", "str")
 
-        except ParamError as exception:
+        except e.ParamError as exception:
             assert exception.code == -2
             assert exception.msg == "Items should be of type list"
 
@@ -225,6 +244,6 @@ class TestListExtend(object):
         try:
             TestListExtend.client.list_extend(key, "contact_no", [85], 888)
 
-        except ParamError as exception:
+        except e.ParamError as exception:
             assert exception.code == -2
             assert exception.msg == "Metadata should be of type dictionary"

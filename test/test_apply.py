@@ -2,23 +2,23 @@
 
 import pytest
 import sys
-import cPickle as pickle
-from test_base_class import TestBaseClass
+
+from .test_base_class import TestBaseClass
 
 aerospike = pytest.importorskip("aerospike")
 try:
-    from aerospike.exception import *
+    import aerospike
 except:
-    print "Please install aerospike python client."
+    print("Please install aerospike python client.")
     sys.exit(1)
 
-from aerospike import predicates as p
 
 class TestApply(TestBaseClass):
+
     def setup_class(cls):
         hostlist, user, password = TestBaseClass.get_hosts()
         config = {'hosts': hostlist}
-        if user == None and password == None:
+        if user is None and password is None:
             TestApply.client = aerospike.client(config).connect()
         else:
             TestApply.client = aerospike.client(config).connect(user, password)
@@ -26,8 +26,9 @@ class TestApply(TestBaseClass):
         versioninfo = TestApply.client.info('version')
         for keys in versioninfo:
             for value in versioninfo[keys]:
-                if value != None:
-                    versionlist = value[value.find("build") + 6:value.find("\n")].split(".")
+                if value is not None:
+                    versionlist = value[
+                        value.find("build") + 6:value.find("\n")].split(".")
                     if int(versionlist[0]) >= 3 and int(versionlist[1]) >= 6:
                         TestApply.skip_old_server = False
 
@@ -42,11 +43,11 @@ class TestApply(TestBaseClass):
         filename = "sample.lua"
         udf_type = 0
 
-        status = TestApply.client.udf_put(filename, udf_type, policy)
+        TestApply.client.udf_put(filename, udf_type, policy)
         filename = "test_record_udf.lua"
-        status = TestApply.client.udf_put(filename, udf_type, policy)
+        TestApply.client.udf_put(filename, udf_type, policy)
         filename = "udf_basic_ops.lua"
-        status = TestApply.client.udf_put(filename, udf_type, policy)
+        TestApply.client.udf_put(filename, udf_type, policy)
 
     def teardown_class(cls):
         policy = {}
@@ -55,9 +56,9 @@ class TestApply(TestBaseClass):
         policy = {'timeout': 0}
         module = "sample.lua"
 
-        status = TestApply.client.udf_remove(module, policy)
+        TestApply.client.udf_remove(module, policy)
         module = "udf_basic_ops.lua"
-        status = TestApply.client.udf_remove(module, policy)
+        TestApply.client.udf_remove(module, policy)
         TestApply.client.close()
 
     def setup_method(self, method):
@@ -65,7 +66,7 @@ class TestApply(TestBaseClass):
         Setup method.
         """
 
-        for i in xrange(5):
+        for i in range(5):
             key = ('test', 'demo', i)
             rec = {
                 'name': ['name%s' % (str(i))],
@@ -82,7 +83,7 @@ class TestApply(TestBaseClass):
         """
         Teardown method.
         """
-        for i in xrange(5):
+        for i in range(5):
             key = ('test', 'demo', i)
             TestApply.client.remove(key)
 
@@ -93,7 +94,8 @@ class TestApply(TestBaseClass):
         with pytest.raises(TypeError) as typeError:
             TestApply.client.apply()
 
-        assert "Required argument 'key' (pos 1) not found" in typeError.value
+        assert "Required argument 'key' (pos 1) not found" in str(
+            typeError.value)
 
     def test_apply_with_correct_parameters(self):
         """
@@ -102,7 +104,7 @@ class TestApply(TestBaseClass):
         key = ('test', 'demo', 1)
         retval = TestApply.client.apply(key, 'sample', 'list_append', ['name',
                                                                        'car'])
-        (key, meta, bins) = TestApply.client.get(key)
+        (key, _, bins) = TestApply.client.get(key)
 
         assert bins['name'] == ['name1', 'car']
         assert retval == 0
@@ -112,12 +114,13 @@ class TestApply(TestBaseClass):
             Invoke apply() with correct arguments with a floating value in the
             list of arguments
         """
-        if TestApply.skip_old_server == True:
-            pytest.skip("Server does not support apply on float type as lua argument")
+        if TestApply.skip_old_server is True:
+            pytest.skip(
+                "Server does not support apply on float type as lua argument")
         key = ('test', 'demo', 1)
         retval = TestApply.client.apply(key, 'sample', 'list_append', ['name',
                                                                        5.434])
-        (key, meta, bins) = TestApply.client.get(key)
+        (key, _, bins) = TestApply.client.get(key)
 
         assert bins['name'] == ['name1', 5.434]
         assert retval == 0
@@ -129,7 +132,7 @@ class TestApply(TestBaseClass):
         key = ('test', 'demo', 1)
         retval = TestApply.client.apply(key, 'sample', 'list_append', ['name',
                                                                        None])
-        (key, meta, bins) = TestApply.client.get(key)
+        (key, _, bins) = TestApply.client.get(key)
 
         assert bins['name'] == ['name1', None]
         assert retval == 0
@@ -142,7 +145,7 @@ class TestApply(TestBaseClass):
         key = ('test', 'demo', 1)
         retval = TestApply.client.apply(key, 'sample', 'list_append',
                                         ['name', 'car'], policy)
-        (key, meta, bins) = TestApply.client.get(key)
+        (key, _, bins) = TestApply.client.get(key)
         assert retval == 0
         assert bins['name'] == ['name1', 'car']
 
@@ -153,11 +156,11 @@ class TestApply(TestBaseClass):
         policy = {'timeout': 0.1}
         key = ('test', 'demo', 1)
         try:
-            retval = TestApply.client.apply(key, 'sample', 'list_append', ['name',
-'car'], policy)
+            TestApply.client.apply(key, 'sample', 'list_append',
+                                   ['name', 'car'], policy)
 
-        except ParamError as exception:
-            assert exception.code == -2L
+        except aerospike.exception.ParamError as exception:
+            assert exception.code == -2
             assert exception.msg == 'timeout is invalid'
 
     def test_apply_with_extra_argument(self):
@@ -170,7 +173,8 @@ class TestApply(TestBaseClass):
             TestApply.client.apply(key, 'sample', 'list_append',
                                    ['name', 'car'], policy, "")
 
-        assert "apply() takes at most 5 arguments (6 given)" in typeError.value
+        assert "apply() takes at most 5 arguments (6 given)" in str(
+            typeError.value)
 
     def test_apply_with_incorrect_bin(self):
         """
@@ -179,11 +183,11 @@ class TestApply(TestBaseClass):
         policy = {'timeout': 1000}
         key = ('test', 'demo', 1)
         try:
-            retval = TestApply.client.apply(key, 'sample', 'list_append', ['addr',
-'car'], policy)
+            TestApply.client.apply(key, 'sample', 'list_append',
+                                   ['addr', 'car'], policy)
 
-        except UDFError as exception:
-            assert exception.code == 100L
+        except aerospike.exception.UDFError as exception:
+            assert exception.code == 100
 
     def test_apply_with_empty_module_function(self):
         """
@@ -191,10 +195,10 @@ class TestApply(TestBaseClass):
         """
         try:
             key = ('test', 'demo', 1)
-            retval = TestApply.client.apply(key, '', '', ['name', 'car'])
+            TestApply.client.apply(key, '', '', ['name', 'car'])
 
-        except UDFError as exception:
-            assert exception.code == 100L
+        except aerospike.exception.UDFError as exception:
+            assert exception.code == 100
             assert exception.msg == 'UDF: Execution Error 1'
 
     def test_apply_with_incorrect_module(self):
@@ -203,11 +207,11 @@ class TestApply(TestBaseClass):
         """
         try:
             key = ('test', 'demo', 1)
-            TestApply.client.apply(key, 'samplewrong', 'list_append', ['name',
-                                                                       'car'])
+            TestApply.client.apply(key, 'samplewrong', 'list_append',
+                                   ['name', 'car'])
 
-        except UDFError as exception:
-            assert exception.code == 100L
+        except aerospike.exception.UDFError as exception:
+            assert exception.code == 100
             assert exception.msg == 'UDF: Execution Error 1'
 
     def test_apply_with_incorrect_function(self):
@@ -216,11 +220,11 @@ class TestApply(TestBaseClass):
         """
         try:
             key = ('test', 'demo', 1)
-            TestApply.client.apply(key, 'sample', 'list_prepend', ['name',
-                                                                   'car'])
+            TestApply.client.apply(key, 'sample', 'list_prepend',
+                                   ['name', 'car'])
 
-        except UDFError as exception:
-            assert exception.code == 100L
+        except aerospike.exception.UDFError as exception:
+            assert exception.code == 100
             assert exception.msg == 'function not found'
 
     def test_apply_with_key_as_string(self):
@@ -228,10 +232,11 @@ class TestApply(TestBaseClass):
             Invoke apply() with key as string
         """
         try:
-            TestApply.client.apply("", 'sample', 'list_append', ['name', 'car'])
+            TestApply.client.apply(
+                "", 'sample', 'list_append', ['name', 'car'])
 
-        except ParamError as exception:
-            assert exception.code == -2L
+        except aerospike.exception.ParamError as exception:
+            assert exception.code == -2
             assert exception.msg == 'key is invalid'
 
     def test_apply_with_incorrect_ns_set(self):
@@ -240,11 +245,11 @@ class TestApply(TestBaseClass):
         """
         try:
             key = ('test1', 'demo1', 1)
-            TestApply.client.apply(key, 'sample', 'list_prepend', ['name',
-                                                                   'car'])
+            TestApply.client.apply(key, 'sample', 'list_prepend',
+                                   ['name', 'car'])
 
-        except NamespaceNotFound as exception:
-            assert exception.code == 20L
+        except aerospike.exception.NamespaceNotFound as exception:
+            assert exception.code == 20
             assert exception.msg == 'AEROSPIKE_ERR_NAMESPACE_NOT_FOUND'
 
     def test_apply_with_key_as_none(self):
@@ -252,10 +257,11 @@ class TestApply(TestBaseClass):
             Invoke apply() with key as none
         """
         try:
-            TestApply.client.apply(None, 'sample', 'list_append', ['name', 'car'])
+            TestApply.client.apply(
+                None, 'sample', 'list_append', ['name', 'car'])
 
-        except ParamError as exception:
-            assert exception.code == -2L
+        except aerospike.exception.ParamError as exception:
+            assert exception.code == -2
             assert exception.msg == 'key is invalid'
 
     def test_apply_with_append_integer(self):
@@ -263,10 +269,11 @@ class TestApply(TestBaseClass):
             Invoke apply() with append an integer
         """
         key = ('test', 'demo', 1)
-        retval = TestApply.client.apply(key, 'sample', 'list_append', ['name',
-                                                                       1])
+        retval = TestApply.client.apply(key, 'sample', 'list_append',
+                                        ['name', 1])
+
         assert retval == 0
-        (key, meta, bins) = TestApply.client.get(key)
+        (key, _, bins) = TestApply.client.get(key)
         assert bins['name'] == ['name1', 1]
 
     def test_apply_with_append_list(self):
@@ -274,10 +281,11 @@ class TestApply(TestBaseClass):
             Invoke apply() with append an list
         """
         key = ('test', 'demo', 1)
-        retval = TestApply.client.apply(key, 'sample', 'list_append', ['name',
-                                                                       [1, 2]])
+        retval = TestApply.client.apply(key, 'sample', 'list_append',
+                                        ['name', [1, 2]])
+
         assert retval == 0
-        (key, meta, bins) = TestApply.client.get(key)
+        (key, _, bins) = TestApply.client.get(key)
         assert bins['name'] == ['name1', [1, 2]]
 
     def test_apply_with_integer(self):
@@ -286,10 +294,11 @@ class TestApply(TestBaseClass):
         """
         key = ('test', 'demo', 1)
         retval = TestApply.client.apply(key, 'test_record_udf',
-                                        'bin_udf_operation_integer', ['age', 2,
-                                                                      20])
+                                        'bin_udf_operation_integer',
+                                        ['age', 2, 20])
+
         assert retval == 23
-        (key, meta, bins) = TestApply.client.get(key)
+        (key, _, bins) = TestApply.client.get(key)
         assert bins['age'] == 23
 
     def test_apply_with_string(self):
@@ -298,10 +307,11 @@ class TestApply(TestBaseClass):
         """
         key = ('test', 'demo', 1)
         retval = TestApply.client.apply(key, 'test_record_udf',
-                                        'bin_udf_operation_string', ['addr',
-                                                                     " world"])
+                                        'bin_udf_operation_string',
+                                        ['addr', " world"])
+
         assert retval == "name1 world"
-        (key, meta, bins) = TestApply.client.get(key)
+        (key, _, bins) = TestApply.client.get(key)
         assert bins['addr'] == "name1 world"
 
     def test_apply_with_map(self):
@@ -311,8 +321,8 @@ class TestApply(TestBaseClass):
         key = ('test', 'demo', 1)
         retval = TestApply.client.apply(key, 'test_record_udf', 'map_iterate',
                                         ['basic_map', 555])
-        assert retval == None
-        (key, meta, bins) = TestApply.client.get(key)
+        assert retval is None
+        (key, _, bins) = TestApply.client.get(key)
         assert bins['basic_map'] == {"k30": 555, "k20": 555, "k10": 555}
 
     def test_apply_with_record(self):
@@ -322,18 +332,18 @@ class TestApply(TestBaseClass):
         key = ('test', 'demo', 1)
         retval = TestApply.client.apply(key, 'test_record_udf',
                                         'udf_returns_record', [])
-        assert retval != None
+        assert retval is not None
 
     def test_apply_with_bytearray(self):
         """
             Invoke apply() with a bytearray as a argument
         """
         key = ('test', 'demo', 'apply_insert')
-        retval = TestApply.client.apply(key, 'udf_basic_ops',
-                                        'create_record',
-                                        [bytearray("asd;as[d'as;d",
-                                            "utf-8")])
-        (key, meta, bins) = TestApply.client.get(key)
+        TestApply.client.apply(key, 'udf_basic_ops',
+                               'create_record',
+                               [bytearray("asd;as[d'as;d",
+                                          "utf-8")])
+        (key, _, bins) = TestApply.client.get(key)
 
         assert bins == {'bin': bytearray(b"asd;as[d\'as;d")}
 
@@ -347,7 +357,7 @@ class TestApply(TestBaseClass):
         retval = TestApply.client.apply(key, 'sample', 'list_append',
                                         ['name', 'car', 1])
         assert retval == 0
-        (key, meta, bins) = TestApply.client.get(key)
+        (key, _, bins) = TestApply.client.get(key)
         assert bins['name'] == ['name1', 'car']
 
     def test_apply_with_extra_argument_in_lua(self):
@@ -358,7 +368,7 @@ class TestApply(TestBaseClass):
         retval = TestApply.client.apply(key, 'sample', 'list_append_extra',
                                         ['name', 'car'])
         assert retval == 0
-        (key, meta, bins) = TestApply.client.get(key)
+        (key, _, bins) = TestApply.client.get(key)
         assert bins['name'] == ['name1', 'car']
 
     def test_apply_with_no_argument_in_lua(self):
@@ -367,18 +377,20 @@ class TestApply(TestBaseClass):
         """
         key = ('test', 'demo', 1)
         with pytest.raises(TypeError) as typeError:
-            retval = TestApply.client.apply(key, 'sample', 'list_append_extra')
-        assert "Required argument 'args' (pos 4) not found" in typeError.value
+            TestApply.client.apply(key, 'sample', 'list_append_extra')
+        assert "Required argument 'args' (pos 4) not found" in str(
+            typeError.value)
 
-    def test_apply_with_append_list(self):
+    def test_apply_with_append_list2(self):
         """
             Invoke apply() with append an list
         """
         key = ('test', 'demo', 1)
-        retval = TestApply.client.apply(key, 'sample', 'list_append', ['name',
-                                                                       [1, 2]])
+        retval = TestApply.client.apply(key, 'sample', 'list_append',
+                                        ['name', [1, 2]])
+
         assert retval == 0
-        (key, meta, bins) = TestApply.client.get(key)
+        (key, _, bins) = TestApply.client.get(key)
         assert bins['name'] == ['name1', [1, 2]]
 
     def test_apply_with_unicode_module_and_function(self):
@@ -388,7 +400,7 @@ class TestApply(TestBaseClass):
         key = ('test', 'demo', 1)
         retval = TestApply.client.apply(key, u'sample', u'list_append',
                                         ['name', 'car'])
-        (key, meta, bins) = TestApply.client.get(key)
+        (key, _, bins) = TestApply.client.get(key)
 
         assert bins['name'] == ['name1', 'car']
         assert retval == 0
@@ -401,8 +413,8 @@ class TestApply(TestBaseClass):
         config = {'hosts': [('127.0.0.1', 3000)]}
         client1 = aerospike.client(config)
         try:
-            retval = client1.apply(key, 'sample', 'list_append', ['name', 'car'])
+            client1.apply(key, 'sample', 'list_append', ['name', 'car'])
 
-        except ClusterError as exception:
-            assert exception.code == 11L
+        except aerospike.exception.ClusterError as exception:
+            assert exception.code == 11
             assert exception.msg == 'No connection to aerospike cluster'

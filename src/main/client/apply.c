@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright 2013-2015 Aerospike, Inc.
+ * Copyright 2013-2016 Aerospike, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -86,7 +86,7 @@ PyObject * AerospikeClient_Apply_Invoke(
 		goto CLEANUP;
 	}
 
-    self->is_client_put_serializer = false;
+	self->is_client_put_serializer = false;
 	// Convert python key object to as_key
 	pyobject_to_key(&err, py_key, &key);
 	if ( err.code != AEROSPIKE_OK ) {
@@ -110,7 +110,7 @@ PyObject * AerospikeClient_Apply_Invoke(
 
 	if ( PyUnicode_Check(py_module) ){
 		py_umodule = PyUnicode_AsUTF8String(py_module);
-		module = PyString_AsString(py_umodule);
+		module = PyBytes_AsString(py_umodule);
 	}
 	else if ( PyString_Check(py_module) ) {
 		module = PyString_AsString(py_module);
@@ -122,7 +122,7 @@ PyObject * AerospikeClient_Apply_Invoke(
 
 	if ( PyUnicode_Check(py_function) ){
 		py_ufunction = PyUnicode_AsUTF8String(py_function);
-		function = PyString_AsString(py_ufunction);
+		function = PyBytes_AsString(py_ufunction);
 	}
 	else if ( PyString_Check(py_function) ) {
 		function = PyString_AsString(py_function);
@@ -133,9 +133,9 @@ PyObject * AerospikeClient_Apply_Invoke(
 	}
 
 	// Invoke operation
-    Py_BEGIN_ALLOW_THREADS
+	Py_BEGIN_ALLOW_THREADS
 	aerospike_key_apply(self->as, &err, apply_policy_p, &key, module, function, arglist, &result);
-    Py_END_ALLOW_THREADS
+	Py_END_ALLOW_THREADS
 
 	if ( err.code == AEROSPIKE_OK ) {
 		val_to_pyobject(self, &err, result, &py_result);

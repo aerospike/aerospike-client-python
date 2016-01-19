@@ -1,25 +1,27 @@
 # -*- coding: utf-8 -*-
 import pytest
-import time
 import sys
-import cPickle as pickle
-from test_base_class import TestBaseClass
+
+from .test_base_class import TestBaseClass
+from aerospike import exception as e
 
 aerospike = pytest.importorskip("aerospike")
 try:
-    from aerospike.exception import *
+    import aerospike
 except:
-    print "Please install aerospike python client."
+    print("Please install aerospike python client.")
     sys.exit(1)
 
+
 class TestGetRegistered(object):
+
     def setup_class(cls):
         """
         Setup class.
         """
         hostlist, user, password = TestBaseClass.get_hosts()
         config = {'hosts': hostlist}
-        if user == None and password == None:
+        if user is None and password is None:
             TestGetRegistered.client = aerospike.client(config).connect()
         else:
             TestGetRegistered.client = aerospike.client(config).connect(
@@ -42,7 +44,8 @@ class TestGetRegistered(object):
         with pytest.raises(TypeError) as typeError:
             TestGetRegistered.client.udf_get()
 
-        assert "Required argument 'module' (pos 1) not found" in typeError.value
+        assert "Required argument 'module' (pos 1) not found" in str(
+            typeError.value)
 
     def test_udf_get_with_correct_paramters(self):
         """
@@ -55,7 +58,7 @@ class TestGetRegistered(object):
         udf_contents = TestGetRegistered.client.udf_get(module, language,
                                                         policy)
 
-        #Check for udf file contents
+        # Check for udf file contents
         fo = open("bin_lua.lua", "r")
         contents = fo.read()
         assert contents == udf_contents
@@ -72,7 +75,7 @@ class TestGetRegistered(object):
         udf_contents = TestGetRegistered.client.udf_get(module, language,
                                                         policy)
 
-        #Check for udf file contents
+        # Check for udf file contents
         fo = open("bin_lua.lua", "r")
         contents = fo.read()
         assert contents == udf_contents
@@ -88,7 +91,7 @@ class TestGetRegistered(object):
         udf_contents = TestGetRegistered.client.udf_get(module, language,
                                                         policy)
 
-        #Check for udf file contents
+        # Check for udf file contents
         fo = open("bin_lua.lua", "r")
         contents = fo.read()
         assert contents == udf_contents
@@ -105,7 +108,7 @@ class TestGetRegistered(object):
         try:
             TestGetRegistered.client.udf_get(module, language, policy)
 
-        except ParamError as exception:
+        except e.ParamError as exception:
             assert exception.code == -2
             assert exception.msg == "timeout is invalid"
 
@@ -120,7 +123,7 @@ class TestGetRegistered(object):
         try:
             TestGetRegistered.client.udf_get(module, language, policy)
 
-        except UDFError as exception:
+        except e.UDFError as exception:
             assert exception.code == 100
             assert exception.msg == "error=not_found\n"
 
@@ -135,7 +138,7 @@ class TestGetRegistered(object):
         try:
             TestGetRegistered.client.udf_get(module, language, policy)
 
-        except ClientError as exception:
+        except e.ClientError as exception:
             assert exception.code == -1
             assert exception.msg == "Invalid language"
 
@@ -147,11 +150,12 @@ class TestGetRegistered(object):
         language = aerospike.UDF_TYPE_LUA
         policy = {'timeout': 1000}
 
-        #Check for status or empty udf contents
+        # Check for status or empty udf contents
         with pytest.raises(TypeError) as typeError:
             TestGetRegistered.client.udf_get(module, language, policy, "")
 
-        assert "udf_get() takes at most 3 arguments (4 given)" in typeError.value
+        assert "udf_get() takes at most 3 arguments (4 given)" in str(
+            typeError.value)
 
     def test_udf_get_policy_is_string(self):
         """
@@ -160,11 +164,11 @@ class TestGetRegistered(object):
         module = "bin_lua.lua"
         language = aerospike.UDF_TYPE_LUA
 
-        #with pytest.raises(Exception) as exception:
+        # with pytest.raises(Exception) as exception:
         try:
             TestGetRegistered.client.udf_get(module, language, "")
 
-        except ParamError as exception:
+        except e.ParamError as exception:
             assert exception.code == -2
             assert exception.msg == "policy must be a dict"
 
@@ -177,10 +181,10 @@ class TestGetRegistered(object):
         try:
             TestGetRegistered.client.udf_get(None, language)
 
-        except ClientError as exception:
+        except e.ClientError as exception:
             assert exception.code == -1
             assert exception.msg == "Module name should be a string or unicode string."
-    
+
     def test_udf_get_with_unicode_module(self):
         """
         Invoke udf_get() with module name is unicode string
@@ -192,7 +196,7 @@ class TestGetRegistered(object):
         udf_contents = TestGetRegistered.client.udf_get(module, language,
                                                         policy)
 
-        #Check for udf file contents
+        # Check for udf file contents
         fo = open("bin_lua.lua", "r")
         contents = fo.read()
         assert contents == udf_contents
@@ -210,8 +214,8 @@ class TestGetRegistered(object):
         client1 = aerospike.client(config)
 
         try:
-            udf_contents = client1.udf_get(module, language, policy)
+            client1.udf_get(module, language, policy)
 
-        except ClusterError as exception:
-            assert exception.code == 11L
+        except e.ClusterError as exception:
+            assert exception.code == 11
             assert exception.msg == 'No connection to aerospike cluster'

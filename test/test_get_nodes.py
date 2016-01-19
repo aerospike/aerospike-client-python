@@ -1,25 +1,27 @@
 # -*- coding: utf-8 -*-
 import pytest
-import time
 import sys
-import cPickle as pickle
-from test_base_class import TestBaseClass
+
+from .test_base_class import TestBaseClass
+from aerospike import exception as e
 
 aerospike = pytest.importorskip("aerospike")
 try:
-    from aerospike.exception import *
+    import aerospike
 except:
-    print "Please install aerospike python client."
+    print("Please install aerospike python client.")
     sys.exit(1)
 
+
 class TestGetNodes(object):
+
     def setup_class(cls):
         """
         Setup class.
         """
         hostlist, user, password = TestBaseClass.get_hosts()
         config = {'hosts': hostlist}
-        if user == None and password == None:
+        if user is None and password is None:
             TestGetNodes.client = aerospike.client(config).connect()
         else:
             TestGetNodes.client = aerospike.client(config).connect(user,
@@ -34,20 +36,20 @@ class TestGetNodes(object):
     def test_get_nodes_positive(self):
 
         response = TestGetNodes.client.get_nodes()
-        assert response != None
+        assert response is not None
 
     def test_get_nodes_with_parameter(self):
 
         response = TestGetNodes.client.get_nodes("parameter")
-        assert response != None
+        assert response is not None
 
     def test_get_nodes_positive_without_connection(self):
         config = {'hosts': [('127.0.0.1', 3000)]}
         client1 = aerospike.client(config)
 
         try:
-            response = client1.get_nodes()
+            client1.get_nodes()
 
-        except ClusterError as exception:
-            assert exception.code == 11L
+        except e.ClusterError as exception:
+            assert exception.code == 11
             assert exception.msg == 'No connection to aerospike cluster'

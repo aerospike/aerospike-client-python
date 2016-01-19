@@ -2,15 +2,21 @@
 
 import pytest
 import sys
-import cPickle as pickle
-from test_base_class import TestBaseClass
+try:
+    import cPickle as pickle
+except ImportError:
+    import pickle
+
+from .test_base_class import TestBaseClass
+from aerospike import exception as e
 
 aerospike = pytest.importorskip("aerospike")
 try:
-    from aerospike.exception import *
+    import aerospike
 except:
-    print "Please install aerospike python client."
+    print("Please install aerospike python client.")
     sys.exit(1)
+
 
 class SomeClass(object):
 
@@ -18,16 +24,18 @@ class SomeClass(object):
 
 
 class TestExists(TestBaseClass):
+
     def setup_class(cls):
         """
         Setup method.
         """
         hostlist, user, password = TestBaseClass.get_hosts()
         config = {'hosts': hostlist}
-        if user == None and password == None:
+        if user is None and password is None:
             TestExists.client = aerospike.client(config).connect()
         else:
-            TestExists.client = aerospike.client(config).connect(user, password)
+            TestExists.client = aerospike.client(
+                config).connect(user, password)
 
     def teardown_class(cls):
         TestExists.client.close()
@@ -36,7 +44,7 @@ class TestExists(TestBaseClass):
 
         self.keys = []
 
-        for i in xrange(5):
+        for i in range(5):
             key = ('test', 'demo', i)
             rec = {'name': 'name%s' % (str(i)), 'age': i}
             TestExists.client.put(key, rec)
@@ -61,9 +69,8 @@ class TestExists(TestBaseClass):
 
         rec = {
             'names': ['John', 'Marlen', 'Steve'],
-            'names_and_age': [{'name': 'John',
-                               'age': 24}, {'name': 'Marlen',
-                                            'age': 25}]
+            'names_and_age': [{'name': 'John', 'age': 24},
+                              {'name': 'Marlen', 'age': 25}]
         }
 
         TestExists.client.put(key, rec)
@@ -97,7 +104,8 @@ class TestExists(TestBaseClass):
         with pytest.raises(TypeError) as typeError:
             TestExists.client.exists()
 
-        assert "Required argument 'key' (pos 1) not found" in typeError.value
+        assert "Required argument 'key' (pos 1) not found" in str(
+            typeError.value)
 
     def test_exists_with_only_key(self):
         """
@@ -134,9 +142,9 @@ class TestExists(TestBaseClass):
         policy = ""
 
         try:
-            key, meta = TestExists.client.exists( key, policy )
+            key, _ = TestExists.client.exists(key, policy)
 
-        except ParamError as exception:
+        except e.ParamError as exception:
             assert exception.code == -2
             assert exception.msg == 'policy must be a dict'
 
@@ -148,9 +156,9 @@ class TestExists(TestBaseClass):
         policy = {'timeout': "1000"}
 
         try:
-            key, meta = TestExists.client.exists( key, policy )
+            key, _ = TestExists.client.exists(key, policy)
 
-        except ParamError as exception:
+        except e.ParamError as exception:
             assert exception.code == -2
             assert exception.msg == 'timeout is invalid'
 
@@ -216,19 +224,20 @@ class TestExists(TestBaseClass):
         key = ('test', 'demo', '1asfew923987fas3g')
 
         try:
-            key, meta = TestExists.client.exists( key )
+            key, meta = TestExists.client.exists(key)
 
             """
-            We are making the api backward compatible. In case of RecordNotFound an
-            exception will not be raised. Instead Ok response is returned withe the
+            We are making the api backward compatible. In case of
+            RecordNotFound an exception will not be raised
+            Instead Ok response is returned withe the
             meta as None. This might change with further releases.
             """
-        except RecordNotFound as exception:
-            assert True == False
+        except e.RecordNotFound as exception:
+            assert True is False
             assert exception.code == 2
             assert exception.msg == 'AEROSPIKE_ERR_RECORD_NOT_FOUND'
 
-        assert meta == None
+        assert meta is None
 
     def test_exists_with_none_set(self):
         """
@@ -237,19 +246,20 @@ class TestExists(TestBaseClass):
         key = ('test', None, 2)
 
         try:
-            key, meta = TestExists.client.exists( key )
+            key, meta = TestExists.client.exists(key)
 
             """
-            We are making the api backward compatible. In case of RecordNotFound an
-            exception will not be raised. Instead Ok response is returned withe the
+            We are making the api backward compatible. In case of
+            RecordNotFound an exception will not be raised.
+            Instead Ok response is returned withe the
             meta as None. This might change with further releases.
             """
-        except RecordNotFound as exception:
-            assert True == False
+        except e.RecordNotFound as exception:
+            assert True is False
             assert exception.code == 2
             assert exception.msg == 'AEROSPIKE_ERR_RECORD_NOT_FOUND'
 
-        assert meta == None
+        assert meta is None
 
     def test_exists_with_none_namespace(self):
         """
@@ -258,9 +268,9 @@ class TestExists(TestBaseClass):
         key = (None, 'demo', 2)
 
         try:
-            key, meta = TestExists.client.exists( key )
+            key, _ = TestExists.client.exists(key)
 
-        except ParamError as exception:
+        except e.ParamError as exception:
             assert exception.code == -2
             assert exception.msg == 'namespace must be a string'
 
@@ -271,9 +281,9 @@ class TestExists(TestBaseClass):
         key = ('test', 'demo', None)
 
         try:
-            key, meta  = TestExists.client.exists( key )
+            key, _ = TestExists.client.exists(key)
 
-        except ParamError as exception:
+        except e.ParamError as exception:
             assert exception.code == -2
             assert exception.msg == 'either key or digest is required'
 
@@ -282,22 +292,23 @@ class TestExists(TestBaseClass):
             Invoke exists() with None as a key.
         """
         try:
-            key, meta  = TestExists.client.exists(None)
+            TestExists.client.exists(None)
 
-        except ParamError as exception:
+        except e.ParamError as exception:
             assert exception.code == -2
             assert exception.msg == "key is invalid"
 
     def test_exists_key_type_list(self):
         """
-            Invoke exists() with key specified as a list of ns, set and key/digest.
+            Invoke exists() with key specified as a list of ns,
+            set and key/digest.
         """
         key = ['test', 'demo', '1']
 
         try:
-            key, meta = TestExists.client.exists(key)
+            key, _ = TestExists.client.exists(key)
 
-        except ParamError as exception:
+        except e.ParamError as exception:
             assert exception.code == -2
             assert exception.msg == "key is invalid"
 
@@ -308,9 +319,9 @@ class TestExists(TestBaseClass):
         key = ('namespace', 'demo', 1)
 
         try:
-            key, meta = TestExists.client.exists(key)
+            key, _ = TestExists.client.exists(key)
 
-        except NamespaceNotFound as exception:
+        except e.NamespaceNotFound as exception:
             assert exception.code == 20
             assert exception.msg == 'AEROSPIKE_ERR_NAMESPACE_NOT_FOUND'
 
@@ -324,16 +335,17 @@ class TestExists(TestBaseClass):
             key, meta = TestExists.client.exists(key)
 
             """
-            We are making the api backward compatible. In case of RecordNotFound an
-            exception will not be raised. Instead Ok response is returned withe the
+            We are making the api backward compatible. In case of
+            RecordNotFound an exception will not be raised.
+            Instead Ok response is returned withe the
             meta as None. This might change with further releases.
             """
-        except RecordNotFound as exception:
-            assert True == False
+        except e.RecordNotFound as exception:
+            assert True is False
             assert exception.code == 2
             assert exception.msg == 'AEROSPIKE_ERR_RECORD_NOT_FOUND'
 
-        assert meta == None
+        assert meta is None
 
     def test_exists_with_non_existent_key(self):
         """
@@ -341,19 +353,20 @@ class TestExists(TestBaseClass):
         """
         key = ('test', 'demo', 'non-existent')
         try:
-            key, meta = TestExists.client.exists( key )
+            key, meta = TestExists.client.exists(key)
 
             """
-            We are making the api backward compatible. In case of RecordNotFound an
-            exception will not be raised. Instead Ok response is returned withe the
+            We are making the api backward compatible. In case of
+            RecordNotFound an exception will not be raised. Instead
+            Ok response is returned withe the
             meta as None. This might change with further releases.
             """
-        except RecordNotFound as exception:
-            assert True == False
+        except e.RecordNotFound as exception:
+            assert True is False
             assert exception.code == 2
             assert exception.msg == 'AEROSPIKE_ERR_RECORD_NOT_FOUND'
 
-        assert meta == None
+        assert meta is None
 
     def test_exists_with_only_key_without_connection(self):
         """
@@ -364,8 +377,8 @@ class TestExists(TestBaseClass):
         client1 = aerospike.client(config)
 
         try:
-            key, meta = client1.exists( key )
+            key, _ = client1.exists(key)
 
-        except ClusterError as exception:
-            assert exception.code == 11L
+        except e.ClusterError as exception:
+            assert exception.code == 11
             assert exception.msg == 'No connection to aerospike cluster'

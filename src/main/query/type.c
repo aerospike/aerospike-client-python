@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright 2013-2015 Aerospike, Inc.
+ * Copyright 2013-2016 Aerospike, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -35,20 +35,20 @@
 
 static PyMethodDef AerospikeQuery_Type_Methods[] = {
 
-    {"apply",	(PyCFunction) AerospikeQuery_Apply,		METH_VARARGS | METH_KEYWORDS,
-    			"Apply a Stream UDF on the resultset of the query."},
+	{"apply",	(PyCFunction) AerospikeQuery_Apply,		METH_VARARGS | METH_KEYWORDS,
+				"Apply a Stream UDF on the resultset of the query."},
 
-    {"foreach",	(PyCFunction) AerospikeQuery_Foreach,	METH_VARARGS | METH_KEYWORDS,
-    			"Iterate over each record in the resultset and call the callback function."},
+	{"foreach",	(PyCFunction) AerospikeQuery_Foreach,	METH_VARARGS | METH_KEYWORDS,
+				"Iterate over each record in the resultset and call the callback function."},
 
-    {"results",	(PyCFunction) AerospikeQuery_Results,	METH_VARARGS | METH_KEYWORDS,
-    			"Return a list of all records in the resultset."},
+	{"results",	(PyCFunction) AerospikeQuery_Results,	METH_VARARGS | METH_KEYWORDS,
+				"Return a list of all records in the resultset."},
 
-    {"select",	(PyCFunction) AerospikeQuery_Select,	METH_VARARGS | METH_KEYWORDS,
-    			"Bins to project in the query."},
+	{"select",	(PyCFunction) AerospikeQuery_Select,	METH_VARARGS | METH_KEYWORDS,
+				"Bins to project in the query."},
 
-    {"where",	(PyCFunction) AerospikeQuery_Where,		METH_VARARGS,
-    			"Predicate to be applied to the query."},
+	{"where",	(PyCFunction) AerospikeQuery_Where,		METH_VARARGS,
+				"Predicate to be applied to the query."},
 
 	{NULL}
 };
@@ -61,11 +61,11 @@ static PyObject * AerospikeQuery_Type_New(PyTypeObject * type, PyObject * args, 
 {
 	AerospikeQuery * self = NULL;
 
-    self = (AerospikeQuery *) type->tp_alloc(type, 0);
+	self = (AerospikeQuery *) type->tp_alloc(type, 0);
 
-    if ( self == NULL ) {
-    	return NULL;
-    }
+	if (self == NULL) {
+		return NULL;
+	}
 
 	return (PyObject *) self;
 }
@@ -103,7 +103,7 @@ static int AerospikeQuery_Type_Init(AerospikeQuery * self, PyObject * args, PyOb
 			set = PyString_AsString(py_set);
 		} else if (PyUnicode_Check(py_set)) {
 			py_ustr_set = PyUnicode_AsUTF8String(py_set);
-			set = PyString_AsString(py_ustr_set);
+			set = PyBytes_AsString(py_ustr_set);
 		} else if ( py_set != Py_None ) {
 			as_error_update(&err, AEROSPIKE_ERR_PARAM, "Set should be string, unicode or None");
 			goto CLEANUP;
@@ -126,7 +126,7 @@ CLEANUP:
 		return -1;
 	}
 
-    return 0;
+	return 0;
 }
 
 static void AerospikeQuery_Type_Dealloc(AerospikeQuery * self)
@@ -136,68 +136,72 @@ static void AerospikeQuery_Type_Dealloc(AerospikeQuery * self)
 		Py_DECREF(self->u_objs.ob[i]);
 	}
 
-    for(i=0; i<self->query.where.size; i++) {
-        as_predicate * p = &self->query.where.entries[i];
-        if( p ) {
-            if( p->dtype == AS_INDEX_STRING ) {
-                free(p->value.string);
-            }
-        }
-    }
+	for (i = 0; i < self->query.where.size; i++) {
+		as_predicate * p = &self->query.where.entries[i];
+		if (p) {
+			if (p->dtype == AS_INDEX_STRING) {
+				free(p->value.string);
+			}
+		}
+	}
 
 	as_query_destroy(&self->query);
-    self->ob_type->tp_free((PyObject *) self);
+	Py_TYPE(self)->tp_free((PyObject *) self);
 }
 
 /*******************************************************************************
  * PYTHON TYPE DESCRIPTOR
  ******************************************************************************/
-
 static PyTypeObject AerospikeQuery_Type = {
-	PyObject_HEAD_INIT(NULL)
-
-    .ob_size			= 0,
-    .tp_name			= "aerospike.Query",
-    .tp_basicsize		= sizeof(AerospikeQuery),
-    .tp_itemsize		= 0,
-    .tp_dealloc			= (destructor) AerospikeQuery_Type_Dealloc,
-    .tp_print			= 0,
-    .tp_getattr			= 0,
-    .tp_setattr			= 0,
-    .tp_compare			= 0,
-    .tp_repr			= 0,
-    .tp_as_number		= 0,
-    .tp_as_sequence		= 0,
-    .tp_as_mapping		= 0,
-    .tp_hash			= 0,
-    .tp_call			= 0,
-    .tp_str				= 0,
-    .tp_getattro		= 0,
-    .tp_setattro		= 0,
-    .tp_as_buffer		= 0,
-    .tp_flags			= Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE,
-    .tp_doc				=
-    		"The Query class assists in populating the parameters of a query\n"
-    		"operation. To create a new instance of the Query class, call the\n"
-    		"query() method on an instance of a Client class.\n",
-    .tp_traverse		= 0,
-    .tp_clear			= 0,
-    .tp_richcompare		= 0,
-    .tp_weaklistoffset	= 0,
-    .tp_iter			= 0,
-    .tp_iternext		= 0,
-    .tp_methods			= AerospikeQuery_Type_Methods,
-    .tp_members			= 0,
-    .tp_getset			= 0,
-    .tp_base			= 0,
-    .tp_dict			= 0,
-    .tp_descr_get		= 0,
-    .tp_descr_set		= 0,
-    .tp_dictoffset		= 0,
-    .tp_init			= (initproc) AerospikeQuery_Type_Init,
-    .tp_alloc			= 0,
-    .tp_new				= AerospikeQuery_Type_New
+	PyVarObject_HEAD_INIT(NULL, 0)
+	"aerospike.Query",                  // tp_name
+	sizeof(AerospikeQuery),             // tp_basicsize
+	0,                                  // tp_itemsize
+	(destructor) AerospikeQuery_Type_Dealloc,
+	                                    // tp_dealloc
+	0,                                  // tp_print
+	0,                                  // tp_getattr
+	0,                                  // tp_setattr
+	0,                                  // tp_compare
+	0,                                  // tp_repr
+	0,                                  // tp_as_number
+	0,                                  // tp_as_sequence
+	0,                                  // tp_as_mapping
+	0,                                  // tp_hash
+	0,                                  // tp_call
+	0,                                  // tp_str
+	0,                                  // tp_getattro
+	0,                                  // tp_setattro
+	0,                                  // tp_as_buffer
+	Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE,
+	                                    // tp_flags
+	"The Query class assists in populating the parameters of a query\n"
+	"operation. To create a new instance of the Query class, call the\n"
+	"query() method on an instance of a Client class.\n",
+	                                    // tp_doc
+	0,                                  // tp_traverse
+	0,                                  // tp_clear
+	0,                                  // tp_richcompare
+	0,                                  // tp_weaklistoffset
+	0,                                  // tp_iter
+	0,                                  // tp_iternext
+	AerospikeQuery_Type_Methods,        // tp_methods
+	0,                                  // tp_members
+	0,                                  // tp_getset
+	0,                                  // tp_base
+	0,                                  // tp_dict
+	0,                                  // tp_descr_get
+	0,                                  // tp_descr_set
+	0,                                  // tp_dictoffset
+	(initproc) AerospikeQuery_Type_Init,
+	                                    // tp_init
+	0,                                  // tp_alloc
+	AerospikeQuery_Type_New,     // tp_new
+	0,                                  // tp_free
+	0,                                  // tp_is_gc
+	0                                   // tp_bases
 };
+
 
 /*******************************************************************************
  * PUBLIC FUNCTIONS
@@ -210,8 +214,8 @@ PyTypeObject * AerospikeQuery_Ready()
 
 AerospikeQuery * AerospikeQuery_New(AerospikeClient * client, PyObject * args, PyObject * kwds)
 {
-    AerospikeQuery * self = (AerospikeQuery *) AerospikeQuery_Type.tp_new(&AerospikeQuery_Type, args, kwds);
-    self->client = client;
+	AerospikeQuery * self = (AerospikeQuery *) AerospikeQuery_Type.tp_new(&AerospikeQuery_Type, args, kwds);
+	self->client = client;
 	Py_INCREF(client);
 	if (AerospikeQuery_Type.tp_init((PyObject *) self, args, kwds) == 0) {
 		return self;
@@ -221,7 +225,7 @@ AerospikeQuery * AerospikeQuery_New(AerospikeClient * client, PyObject * args, P
 }
 PyObject * StoreUnicodePyObject(AerospikeQuery * self, PyObject *obj){
 
-	if (self->u_objs.size < MAX_UNICODE_OBJECTS){
+	if (self->u_objs.size < MAX_UNICODE_OBJECTS) {
 		self->u_objs.ob[self->u_objs.size++] = obj;
 	}
 	return obj;
