@@ -569,7 +569,7 @@ static void AerospikeClient_Type_Dealloc(PyObject * self)
     as_error err;
     as_error_init(&err);
 
-    if (((AerospikeClient*)self)->as) {
+    if (((AerospikeClient*)self)->as && ((AerospikeClient*)self)->is_conn_16) {
         if (((AerospikeClient*)self)->as->config.hosts_size) {
             char * alias_to_search = return_search_string(((AerospikeClient*)self)->as);
             PyObject *py_persistent_item = NULL;
