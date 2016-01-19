@@ -52,11 +52,6 @@ PyObject * AerospikeClient_Close(AerospikeClient * self, PyObject * args, PyObje
 		goto CLEANUP;
 	}
 
-	if (!self->is_conn_16) {
-		as_error_update(&err, AEROSPIKE_ERR_CLUSTER, "No connection to aerospike cluster");
-		goto CLEANUP;
-	}
-
 	alias_to_search = return_search_string(self->as);
 	PyObject *py_persistent_item = NULL;
 

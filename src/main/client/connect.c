@@ -150,14 +150,17 @@ CLEANUP:
 PyObject * AerospikeClient_is_connected(AerospikeClient * self, PyObject * args, PyObject * kwds)
 {
 
-    if (1 == self->is_conn_16) //Need to define a macro AEROSPIKE_CONN_STATE
-    {
-      Py_INCREF(Py_True);
-      return Py_True;
-    }
+	if (self->as && aerospike_cluster_is_connected(self->as)) //Need to define a macro AEROSPIKE_CONN_STATE
+	{
+		self->is_conn_16 = 1;
+		Py_INCREF(Py_True);
+		return Py_True;
+	} else {
+		self->is_conn_16 = 0;
+	}
 
-    Py_INCREF(Py_False);
-    return Py_False;
+	Py_INCREF(Py_False);
+	return Py_False;
 
 }
 
