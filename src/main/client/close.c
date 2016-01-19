@@ -60,25 +60,27 @@ PyObject * AerospikeClient_Close(AerospikeClient * self, PyObject * args, PyObje
 	alias_to_search = return_search_string(self->as);
 	PyObject *py_persistent_item = NULL;
 
-	py_persistent_item = PyDict_GetItemString(py_global_hosts, alias_to_search);
+	py_persistent_item = PyDict_GetItemString(py_global_hosts, alias_to_search); 
 	if (py_persistent_item) {
 		close_aerospike_object(self->as, &err, alias_to_search, py_persistent_item);
-		self->is_conn_16 = false;
-	 	self->as = NULL;
+	} else {
+		aerospike_close(self->as, &err);
+
+		for (int i = 0; i < self->as->config.hosts_size; i++) {
+			free((void *) self->as->config.hosts[i].addr);
+		}
+
+		Py_BEGIN_ALLOW_THREADS
+		aerospike_destroy(self->as);
+		Py_END_ALLOW_THREADS
 	}
+	self->is_conn_16 = false;
+	self->as = NULL;
 	PyMem_Free(alias_to_search);
 	alias_to_search = NULL;
 
-	if ( err.code != AEROSPIKE_OK ) {
-		PyObject * py_err = NULL;
-		error_to_pyobject(&err, &py_err);
-		PyObject *exception_type = raise_exception(&err);
-		PyErr_SetObject(exception_type, py_err);
-		Py_DECREF(py_err);
-		return NULL;
-	}
-
 	Py_INCREF(Py_None);
+
 CLEANUP:
 	if ( err.code != AEROSPIKE_OK ) {
 		PyObject * py_err = NULL;
