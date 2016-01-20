@@ -24,7 +24,6 @@
 
 #include "client.h"
 #include "conversions.h"
-#include "key.h"
 #include "exceptions.h"
 #include "policy.h"
 

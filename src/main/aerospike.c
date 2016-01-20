@@ -20,16 +20,12 @@
 #include <string.h>
 
 #include "client.h"
-#include "key.h"
 #include "query.h"
 #include "geo.h"
 #include "scan.h"
 #include "predicates.h"
 #include "exceptions.h"
-#include "lstack.h"
-#include "lset.h"
 #include "llist.h"
-#include "lmap.h"
 #include "policy.h"
 #include "log.h"
 #include <aerospike/as_operations.h>
@@ -102,10 +98,6 @@ PyMODINIT_FUNC initaerospike(void)
 	Py_INCREF(client);
 	PyModule_AddObject(aerospike, "Client", (PyObject *) client);
 
-	PyTypeObject * key = AerospikeKey_Ready();
-	Py_INCREF(key);
-	PyModule_AddObject(aerospike, "Key", (PyObject *) key);
-
 	PyTypeObject * query = AerospikeQuery_Ready();
 	Py_INCREF(query);
 	PyModule_AddObject(aerospike, "Query", (PyObject *) query);
@@ -132,22 +124,9 @@ PyMODINIT_FUNC initaerospike(void)
 	Py_INCREF(predicates);
 	PyModule_AddObject(aerospike, "predicates", predicates);
 
-
-	PyTypeObject * lstack = AerospikeLStack_Ready();
-	Py_INCREF(lstack);
-	PyModule_AddObject(aerospike, "lstack", (PyObject *) lstack);
-
-	PyTypeObject * lset = AerospikeLSet_Ready();
-	Py_INCREF(lset);
-	PyModule_AddObject(aerospike, "lset", (PyObject *) lset);
-
 	PyTypeObject * llist = AerospikeLList_Ready();
 	Py_INCREF(llist);
 	PyModule_AddObject(aerospike, "llist", (PyObject *) llist);
-
-	PyTypeObject * lmap = AerospikeLMap_Ready();
-	Py_INCREF(lmap);
-	PyModule_AddObject(aerospike, "lmap", (PyObject *) lmap);
 
 	PyTypeObject * geospatial = AerospikeGeospatial_Ready();
 	Py_INCREF(geospatial);

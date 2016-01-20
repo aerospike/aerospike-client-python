@@ -24,7 +24,6 @@
 #include "client.h"
 #include "conversions.h"
 #include "exceptions.h"
-#include "key.h"
 #include "policy.h"
 
 PyObject * AerospikeClient_Get_Key_Digest_Invoke(
