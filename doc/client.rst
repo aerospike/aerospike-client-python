@@ -79,7 +79,7 @@ a cluster-tending thread.
 
     .. method:: is_connected()
 
-        States whether the most recent connection attempt to the cluster succeeded.
+        Tests the connections between the client and the nodes of the cluster.
 
         :rtype: :class:`bool`
 
