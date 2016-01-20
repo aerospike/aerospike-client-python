@@ -3,17 +3,19 @@
 import pytest
 import sys
 import time
-from test_base_class import TestBaseClass
+from .test_base_class import TestBaseClass
+from aerospike import exception as e
 
 aerospike = pytest.importorskip("aerospike")
 try:
-    from aerospike.exception import *
+    import aerospike
 except:
-    print "Please install aerospike python client."
+    print("Please install aerospike python client.")
     sys.exit(1)
 
 
 class TestUdfRemove(TestBaseClass):
+
     def setup_class(cls):
         """
         Setup class
@@ -21,10 +23,11 @@ class TestUdfRemove(TestBaseClass):
         hostlist, user, password = TestBaseClass.get_hosts()
         config = {'hosts': hostlist}
 
-        if user == None and password == None:
+        if user is None and password is None:
             TestUdfRemove.client = aerospike.client(config).connect()
         else:
-            TestUdfRemove.client = aerospike.client(config).connect(user, password)
+            TestUdfRemove.client = aerospike.client(
+                config).connect(user, password)
 
     def teardown_class(cls):
         """
@@ -53,15 +56,16 @@ class TestUdfRemove(TestBaseClass):
     def test_udf_remove_without_parameters(self):
 
         with pytest.raises(TypeError) as typeError:
-            status = TestUdfRemove.client.udf_remove()
-        assert "Required argument 'filename' (pos 1) not found" in typeError.value
+            TestUdfRemove.client.udf_remove()
+        assert "Required argument 'filename' (pos 1) not found" in str(
+            typeError.value)
 
     def test_udf_remove_with_none_as_parameters(self):
 
         try:
-            status = TestUdfRemove.client.udf_remove(None, None)
+            TestUdfRemove.client.udf_remove(None, None)
 
-        except ParamError as exception:
+        except e.ParamError as exception:
             assert exception.code == -2
             assert exception.msg == "Filename should be a string"
 
@@ -117,9 +121,9 @@ class TestUdfRemove(TestBaseClass):
         module = "some_module"
 
         try:
-            status = TestUdfRemove.client.udf_remove( module, policy )
+            TestUdfRemove.client.udf_remove(module, policy)
 
-        except UDFError as exception:
+        except e.UDFError as exception:
             assert exception.code == 100
             assert exception.msg == "error=file_not_found\n"
             assert exception.module == "some_module"
@@ -151,8 +155,8 @@ class TestUdfRemove(TestBaseClass):
         module = "example.lua"
 
         try:
-            status = client1.udf_remove( module, policy )
+            client1.udf_remove(module, policy)
 
-        except ClusterError as exception:
-            assert exception.code == 11L
+        except e.ClusterError as exception:
+            assert exception.code == 11
             assert exception.msg == 'No connection to aerospike cluster'

@@ -1,26 +1,26 @@
 # -*- coding: utf-8 -*-
 import pytest
-import time
 import sys
-import cPickle as pickle
-from test_base_class import TestBaseClass
+from .test_base_class import TestBaseClass
+from aerospike import exception as e
 
 aerospike = pytest.importorskip("aerospike")
 try:
     import aerospike
-    from aerospike.exception import *
 except:
-    print "Please install aerospike python client."
+    print("Please install aerospike python client.")
     sys.exit(1)
 
+
 class TestTouch(object):
+
     def setup_class(cls):
         """
         Setup method.
         """
         hostlist, user, password = TestBaseClass.get_hosts()
         config = {'hosts': hostlist}
-        if user == None and password == None:
+        if user is None and password is None:
             TestTouch.client = aerospike.client(config).connect()
         else:
             TestTouch.client = aerospike.client(config).connect(user, password)
@@ -29,7 +29,7 @@ class TestTouch(object):
         TestTouch.client.close()
 
     def setup_method(self, method):
-        for i in xrange(5):
+        for i in range(5):
             key = ('test', 'demo', i)
             rec = {'name': 'name%s' % (str(i)), 'age': i}
             TestTouch.client.put(key, rec)
@@ -38,7 +38,7 @@ class TestTouch(object):
         """
         Teardoen method.
         """
-        for i in xrange(5):
+        for i in range(5):
             key = ('test', 'demo', i)
             TestTouch.client.remove(key)
 
@@ -48,7 +48,8 @@ class TestTouch(object):
         """
         with pytest.raises(TypeError) as typeError:
             TestTouch.client.touch()
-        assert "Required argument 'key' (pos 1) not found" in typeError.value
+        assert "Required argument 'key' (pos 1) not found" in str(
+            typeError.value)
 
     def test_touch_with_correct_paramters(self):
         """
@@ -81,12 +82,12 @@ class TestTouch(object):
         }
         TestTouch.client.touch(key, 120, {}, policy)
 
-        (key, meta, bins) = TestTouch.client.get(key)
+        (key, _, bins) = TestTouch.client.get(key)
 
         assert bins == {'age': 1, 'name': 'name1'}
         assert key == ('test', 'demo', None, bytearray(
             b'\xb7\xf4\xb88\x89\xe2\xdag\xdeh>\x1d\xf6\x91\x9a\x1e\xac\xc4F\xc8')
-                      )
+        )
 
     def test_touch_with_policy_key_digest(self):
         """
@@ -104,7 +105,7 @@ class TestTouch(object):
         }
         TestTouch.client.touch(key, 120, {}, policy)
 
-        (key, meta, bins) = TestTouch.client.get(key)
+        (key, _, bins) = TestTouch.client.get(key)
 
         assert bins == {'age': 1, 'name': 'name1', 'nolist': [1, 2, 3]}
         assert key == ('test', 'demo', None,
@@ -131,7 +132,7 @@ class TestTouch(object):
         assert bins == {'age': 1, 'name': 'name1'}
         assert key == ('test', 'demo', None, bytearray(
             b'\xb7\xf4\xb88\x89\xe2\xdag\xdeh>\x1d\xf6\x91\x9a\x1e\xac\xc4F\xc8')
-                      )
+        )
 
     def test_touch_with_policy_key_gen_EQ_positive(self):
         """
@@ -155,7 +156,7 @@ class TestTouch(object):
         assert bins == {'age': 1, 'name': 'name1'}
         assert key == ('test', 'demo', None, bytearray(
             b'\xb7\xf4\xb88\x89\xe2\xdag\xdeh>\x1d\xf6\x91\x9a\x1e\xac\xc4F\xc8')
-                      )
+        )
 
     def test_touch_with_policy_key_gen_EQ_not_equal(self):
         """
@@ -175,7 +176,7 @@ class TestTouch(object):
         try:
             TestTouch.client.touch(key, 120, meta, policy)
 
-        except RecordGenerationError as exception:
+        except e.RecordGenerationError as exception:
             assert exception.code == 3
             assert exception.msg == "AEROSPIKE_ERR_RECORD_GENERATION"
 
@@ -184,7 +185,7 @@ class TestTouch(object):
         assert bins == {'age': 1, 'name': 'name1'}
         assert key == ('test', 'demo', None, bytearray(
             b'\xb7\xf4\xb88\x89\xe2\xdag\xdeh>\x1d\xf6\x91\x9a\x1e\xac\xc4F\xc8')
-                      )
+        )
 
     def test_touch_with_policy_key_gen_GT_lesser(self):
         """
@@ -207,7 +208,7 @@ class TestTouch(object):
         try:
             TestTouch.client.touch(key, 120, meta, policy)
 
-        except RecordGenerationError as exception:
+        except e.RecordGenerationError as exception:
             assert exception.code == 3
             assert exception.msg == "AEROSPIKE_ERR_RECORD_GENERATION"
 
@@ -216,7 +217,7 @@ class TestTouch(object):
         assert bins == {'age': 1, 'name': 'name1'}
         assert key == ('test', 'demo', None, bytearray(
             b'\xb7\xf4\xb88\x89\xe2\xdag\xdeh>\x1d\xf6\x91\x9a\x1e\xac\xc4F\xc8')
-                      )
+        )
 
     def test_touch_with_policy_key_gen_GT_positive(self):
         """
@@ -240,7 +241,7 @@ class TestTouch(object):
         assert bins == {'age': 1, 'name': 'name1'}
         assert key == ('test', 'demo', None, bytearray(
             b'\xb7\xf4\xb88\x89\xe2\xdag\xdeh>\x1d\xf6\x91\x9a\x1e\xac\xc4F\xc8')
-                      )
+        )
 
     def test_touch_with_incorrect_policy(self):
         """
@@ -253,7 +254,7 @@ class TestTouch(object):
         try:
             TestTouch.client.touch(key, 120, {}, policy)
 
-        except ParamError as exception:
+        except e.ParamError as exception:
             assert exception.code == -2
             assert exception.msg == "timeout is invalid"
 
@@ -264,9 +265,9 @@ class TestTouch(object):
         key = ('test', 'demo', 1000)
 
         try:
-            status = TestTouch.client.touch(key, 120)
+            TestTouch.client.touch(key, 120)
 
-        except RecordNotFound as exception:
+        except e.RecordNotFound as exception:
             assert exception.code == 2
             assert exception.msg == "AEROSPIKE_ERR_RECORD_NOT_FOUND"
 
@@ -278,7 +279,7 @@ class TestTouch(object):
         try:
             TestTouch.client.touch(key, "name")
 
-        except ParamError as exception:
+        except e.ParamError as exception:
             assert exception.code == -2
             assert exception.msg == "Unsupported operand type(s) for touch : only int or long allowed"
 
@@ -291,7 +292,8 @@ class TestTouch(object):
         with pytest.raises(TypeError) as typeError:
             TestTouch.client.touch(key, 120, {}, policy, "")
 
-        assert "touch() takes at most 4 arguments (5 given)" in typeError.value
+        assert "touch() takes at most 4 arguments (5 given)" in str(
+            typeError.value)
 
     def test_touch_policy_is_string(self):
         """
@@ -301,7 +303,7 @@ class TestTouch(object):
         try:
             TestTouch.client.touch(key, 120, {}, "")
 
-        except ParamError as exception:
+        except e.ParamError as exception:
             assert exception.code == -2
             assert exception.msg == "policy must be a dict"
 
@@ -314,10 +316,10 @@ class TestTouch(object):
         key = ('test', 'demo', 1)
 
         try:
-            response = client1.touch(key, 120)
+            client1.touch(key, 120)
 
-        except ClusterError as exception:
-            assert exception.code == 11L
+        except e.ClusterError as exception:
+            assert exception.code == 11
             assert exception.msg == 'No connection to aerospike cluster'
 
     def test_touch_withttlvalue_greaterthan_maxsize(self):
@@ -328,6 +330,6 @@ class TestTouch(object):
         meta = {'gen': 10, 'ttl': 12005678901234567890}
         try:
             TestTouch.client.touch(key, 120, meta, None)
-        except ParamError as exception:
+        except e.ParamError as exception:
             assert exception.code == -2
             assert exception.msg == 'integer value for ttl exceeds sys.maxsize'

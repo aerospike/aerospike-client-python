@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright 2013-2015 Aerospike, Inc.
+ * Copyright 2013-2016 Aerospike, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -53,7 +53,7 @@ static int AerospikeQuery_Where_Add(AerospikeQuery * self, as_predicate_type pre
 			if (in_datatype == AS_INDEX_STRING) {
 				if (PyUnicode_Check(py_bin)) {
 					py_ubin = PyUnicode_AsUTF8String(py_bin);
-					bin = PyString_AsString(py_ubin);
+					bin = PyBytes_AsString(py_ubin);
 				} else if (PyString_Check(py_bin)) {
 					bin = PyString_AsString(py_bin);
 				} else if (PyByteArray_Check(py_bin)) {
@@ -63,8 +63,9 @@ static int AerospikeQuery_Where_Add(AerospikeQuery * self, as_predicate_type pre
 				}
 
 				if (PyUnicode_Check(py_val1)) { 
-					val = strdup(PyString_AsString(StoreUnicodePyObject(self,
-								PyUnicode_AsUTF8String(py_val1))));
+					PyObject *py_uval = PyUnicode_AsUTF8String(py_val1);
+					val = strdup(PyBytes_AsString(py_uval));
+					Py_DECREF(py_uval);
 				} else if (PyString_Check(py_val1)) {
 					val = strdup(PyString_AsString(py_val1));
 				} else {
@@ -90,7 +91,7 @@ static int AerospikeQuery_Where_Add(AerospikeQuery * self, as_predicate_type pre
 			} else if (in_datatype == AS_INDEX_NUMERIC) {
 				if (PyUnicode_Check(py_bin)) {
 					py_ubin = PyUnicode_AsUTF8String(py_bin);
-					bin = PyString_AsString(py_ubin);
+					bin = PyBytes_AsString(py_ubin);
 				} else if (PyString_Check(py_bin)) {
 					bin = PyString_AsString(py_bin);
 				} else if (PyByteArray_Check(py_bin)) {
@@ -131,7 +132,7 @@ static int AerospikeQuery_Where_Add(AerospikeQuery * self, as_predicate_type pre
 			if (in_datatype == AS_INDEX_NUMERIC) {
 				if (PyUnicode_Check(py_bin)) {
 					py_ubin = PyUnicode_AsUTF8String(py_bin);
-					bin = PyString_AsString(py_ubin);
+					bin = PyBytes_AsString(py_ubin);
 				} else if (PyString_Check(py_bin)) {
 					bin = PyString_AsString(py_bin);
 				} else if (PyByteArray_Check(py_bin)) {
@@ -172,7 +173,7 @@ static int AerospikeQuery_Where_Add(AerospikeQuery * self, as_predicate_type pre
 
 				if (PyUnicode_Check(py_bin)) {
 					py_ubin = PyUnicode_AsUTF8String(py_bin);
-					bin = PyString_AsString(py_ubin);
+					bin = PyBytes_AsString(py_ubin);
 				} else if (PyString_Check(py_bin)) {
 					bin = PyString_AsString(py_bin);
 				} else if (PyByteArray_Check(py_bin)) {
@@ -182,9 +183,9 @@ static int AerospikeQuery_Where_Add(AerospikeQuery * self, as_predicate_type pre
 				}
 
 				if (PyUnicode_Check(py_val1)) { 
-					val = strdup(PyString_AsString(StoreUnicodePyObject(self,
-								PyUnicode_AsUTF8String(py_val1))));
-
+					PyObject *py_uval = PyUnicode_AsUTF8String(py_val1);
+					val = strdup(PyBytes_AsString(py_uval));
+					Py_DECREF(py_uval);
 				} else if (PyString_Check(py_val1)) {
 					val = strdup(PyString_AsString(py_val1));
 				} else {

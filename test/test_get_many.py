@@ -2,31 +2,36 @@
 
 import pytest
 import sys
-from test_base_class import TestBaseClass
 try:
     from collections import Counter
 except ImportError:
     from counter26 import Counter
 
+from .test_base_class import TestBaseClass
+from aerospike import exception as e
+
 aerospike = pytest.importorskip("aerospike")
 try:
-    from aerospike.exception import *
+    import aerospike
 except:
-    print "Please install aerospike python client."
+    print("Please install aerospike python client.")
     sys.exit(1)
 
+
 class TestGetMany(TestBaseClass):
+
     def setup_class(cls):
         """
         Setup method.
         """
         TestGetMany.hostlist, TestGetMany.user, TestGetMany.password = TestBaseClass.get_hosts()
         config = {'hosts': TestGetMany.hostlist}
-        if TestGetMany.user == None and TestGetMany.password == None:
+        if TestGetMany.user is None and TestGetMany.password is None:
             TestGetMany.client = aerospike.client(config).connect()
         else:
-            TestGetMany.client = aerospike.client(config).connect(TestGetMany.user,
-                                                                  TestGetMany.password)
+            TestGetMany.client = aerospike.client(config).connect(
+                TestGetMany.user,
+                TestGetMany.password)
 
     def teardown_class(cls):
         TestGetMany.client.close()
@@ -34,7 +39,7 @@ class TestGetMany(TestBaseClass):
     def setup_method(self, method):
         self.keys = []
 
-        for i in xrange(5):
+        for i in range(5):
             key = ('test', 'demo', i)
             rec = {'name': 'name%s' % (str(i)), 'age': i}
             TestGetMany.client.put(key, rec)
@@ -47,7 +52,7 @@ class TestGetMany(TestBaseClass):
         """
         Teardown method.
         """
-        for i in xrange(5):
+        for i in range(5):
             key = ('test', 'demo', i)
             TestGetMany.client.remove(key)
         key = ('test', 'demo', 'float_value')
@@ -58,7 +63,8 @@ class TestGetMany(TestBaseClass):
         with pytest.raises(TypeError) as typeError:
             TestGetMany.client.get_many()
 
-        assert "Required argument 'keys' (pos 1) not found" in typeError.value
+        assert "Required argument 'keys' (pos 1) not found" in str(
+            typeError.value)
 
     def test_get_many_without_policy(self):
 
@@ -74,7 +80,7 @@ class TestGetMany(TestBaseClass):
         assert type(records) == list
         assert len(records) == 6
         assert Counter([x[0][2] for x in records]) == Counter([0, 1, 2, 3,
-            4, 'float_value'])
+                                                               4, 'float_value'])
         assert records[5][2] == {'float_value': 4.3}
 
     def test_get_many_with_none_policy(self):
@@ -84,15 +90,15 @@ class TestGetMany(TestBaseClass):
         assert type(records) == list
         assert len(records) == 6
         assert Counter([x[0][2] for x in records]) == Counter([0, 1, 2, 3,
-            4, 'float_value'])
+                                                               4, 'float_value'])
         assert records[5][2] == {'float_value': 4.3}
 
     def test_get_many_with_none_keys(self):
 
         try:
-            TestGetMany.client.get_many( None, {} )
+            TestGetMany.client.get_many(None, {})
 
-        except ParamError as exception:
+        except e.ParamError as exception:
             assert exception.code == -2
             assert exception.msg == "Keys should be specified as a list or tuple."
 
@@ -105,7 +111,7 @@ class TestGetMany(TestBaseClass):
         assert type(records) == list
         assert len(records) == 7
         assert Counter([x[0][2] for x in records]) == Counter([0, 1, 2, 3,
-            4, 'non-existent', 'float_value'])
+                                                               4, 'non-existent', 'float_value'])
         for x in records:
             if x[0][2] == 'non-existent':
                 assert x[2] == None
@@ -118,37 +124,39 @@ class TestGetMany(TestBaseClass):
 
         assert len(records) == 1
         assert records == [(('test', 'demo', 'key',
-            bytearray(b';\xd4u\xbd\x0cs\xf2\x10\xb6~\xa87\x930\x0e\xea\xe5v(]')), None, None)]
+                             bytearray(b';\xd4u\xbd\x0cs\xf2\x10\xb6~\xa87\x930\x0e\xea\xe5v(]')), None, None)]
 
     def test_get_many_with_invalid_key(self):
 
         try:
-            records = TestGetMany.client.get_many( "key" )
+            TestGetMany.client.get_many("key")
 
-        except ParamError as exception:
+        except e.ParamError as exception:
             assert exception.code == -2
             assert exception.msg == "Keys should be specified as a list or tuple."
 
     def test_get_many_with_invalid_timeout(self):
 
-        policies = { 'timeout' : 0.2 }
+        policies = {'timeout': 0.2}
         try:
-            records = TestGetMany.client.get_many(self.keys, policies)
+            TestGetMany.client.get_many(self.keys, policies)
 
-        except ParamError as exception:
+        except e.ParamError as exception:
             assert exception.code == -2
             assert exception.msg == "timeout is invalid"
 
     def test_get_many_with_initkey_as_digest(self):
 
         keys = []
-        key = ("test", "demo", None, bytearray("asd;as[d'as;djk;uyfl"))
+        key = ("test", "demo", None, bytearray(
+            "asd;as[d'as;djk;uyfl", "utf-8"))
         rec = {'name': 'name1', 'age': 1}
         TestGetMany.client.put(key, rec)
 
         keys.append(key)
 
-        key = ("test", "demo", None, bytearray("ase;as[d'as;djk;uyfl"))
+        key = ("test", "demo", None, bytearray(
+            "ase;as[d'as;djk;uyfl", "utf-8"))
         rec = {'name': 'name2', 'age': 2}
         TestGetMany.client.put(key, rec)
 
@@ -167,13 +175,13 @@ class TestGetMany(TestBaseClass):
                 assert x[0][3] == bytearray(b"ase;as[d'as;djk;uyfl")
             else:
                 assert x[0][3] == bytearray(b"asd;as[d'as;djk;uyfl")
-            i = i+1
+            i = i + 1
 
     def test_get_many_with_non_existent_keys_in_middle(self):
 
         self.keys.append(('test', 'demo', 'some_key'))
 
-        for i in xrange(15, 20):
+        for i in range(15, 20):
             key = ('test', 'demo', i)
             rec = {'name': 'name%s' % (str(i)), 'age': i}
             TestGetMany.client.put(key, rec)
@@ -181,14 +189,14 @@ class TestGetMany(TestBaseClass):
 
         records = TestGetMany.client.get_many(self.keys)
 
-        for i in xrange(15, 20):
+        for i in range(15, 20):
             key = ('test', 'demo', i)
             TestGetMany.client.remove(key)
 
         assert type(records) == list
         assert len(records) == 12
         assert Counter([x[0][2] for x in records]) == Counter([0, 1, 2, 3,
-            4, 'some_key', 15, 16, 17, 18, 19, 'float_value'])
+                                                               4, 'some_key', 15, 16, 17, 18, 19, 'float_value'])
         for x in records:
             if x[0][2] == 'some_key':
                 assert x[2] == None
@@ -197,29 +205,29 @@ class TestGetMany(TestBaseClass):
         config = {'hosts': [('127.0.0.1', 3000)]}
         client1 = aerospike.client(config)
         try:
-            records = client1.get_many( self.keys, { 'timeout': 20 } )
+            client1.get_many(self.keys, {'timeout': 20})
 
-        except ClusterError as exception:
-            assert exception.code == 11L
+        except e.ClusterError as exception:
+            assert exception.code == 11
             assert exception.msg == 'No connection to aerospike cluster'
 
     def test_get_many_with_use_batch_direct(self):
 
-        config = {'hosts': TestGetMany.hostlist, 'policies': {'use_batch_direct':
-            True}}
-        if TestGetMany.user == None and TestGetMany.password == None:
+        config = {'hosts': TestGetMany.hostlist,
+                  'policies': {'use_batch_direct': True}}
+        if TestGetMany.user is None and TestGetMany.password is None:
             client_batch_direct = aerospike.client(config).connect()
         else:
-            client_batch_direct = aerospike.client(config).connect(TestGetMany.user,
-                                                                  TestGetMany.password)
+            client_batch_direct = aerospike.client(config).connect(
+                TestGetMany.user,
+                TestGetMany.password)
 
         records = client_batch_direct.get_many(self.keys, {'timeout': 30})
 
         assert type(records) == list
         assert len(records) == 6
         assert Counter([x[0][2] for x in records]) == Counter([0, 1, 2, 3,
-        4, 'float_value'])
+                                                               4, 'float_value'])
         assert records[5][2] == {'float_value': 4.3}
-
 
         client_batch_direct.close()

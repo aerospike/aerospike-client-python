@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
-################################################################################
-# Copyright 2013-2015 Aerospike, Inc.
+##########################################################################
+# Copyright 2013-2016 Aerospike, Inc.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -13,19 +13,19 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-################################################################################
+##########################################################################
 
 from __future__ import print_function
 
 import aerospike
-from aerospike.exception import *
 import sys
 
 from optparse import OptionParser
+from aerospike import exception as e
 
-################################################################################
+##########################################################################
 # Options Parsing
-################################################################################
+##########################################################################
 
 usage = "usage: %prog [options]"
 
@@ -58,23 +58,24 @@ if options.help:
     print()
     sys.exit(1)
 
-################################################################################
+##########################################################################
 # Client Configuration
-################################################################################
+##########################################################################
 
 config = {
     'hosts': [(options.host, options.port)],
     'lua': {'user_path': '.'}
 }
 
-################################################################################
+##########################################################################
 # Application
-################################################################################
+##########################################################################
 
 try:
-    client = aerospike.client(config).connect(options.username, options.password)
-except ClientError as e:
-    print("Error: {0} [{1}]".format(e.msg, e.code))
+    client = aerospike.client(config).connect(
+        options.username, options.password)
+except e.ClientError as exception:
+    print("Error: {0} [{1}]".format(exception.msg, exception.code))
     sys.exit(1)
 
 key = ('test', 'articles', 'The Number One Soft Drink')
@@ -83,9 +84,11 @@ try:
     print("Demonstrating an LList with string type elements")
     print("================================================")
     tags.add("soda")
-    tags.add_many(["slurm","addictive","prizes","diet","royal slurm","glurmo"])
-except LDTError as e:
-    print("Error while adding tags: {0} [{1}]".format(e.msg, e.code))
+    tags.add_many(
+        ["slurm", "addictive", "prizes", "diet", "royal slurm", "glurmo"])
+except e.LDTError as exception:
+    print("Error while adding tags: {0} [{1}]".format(
+        exception.msg, exception.code))
 
 print("The entire list of elements:")
 print(tags.filter())
@@ -106,16 +109,17 @@ try:
     print("\n")
     print("Demonstrating an LList with map (dict) type elements")
     print("====================================================")
-    comments.add({'key':'comment-1', 'user':'blorgulax', 'body': 'First!'})
-    comments.add({'key':'comment-2', 'user':'fry',
-        'body':'You deserve a Slurmie','parent': 'comment-1'})
+    comments.add({'key': 'comment-1', 'user': 'blorgulax', 'body': 'First!'})
+    comments.add({'key': 'comment-2', 'user': 'fry',
+                  'body': 'You deserve a Slurmie', 'parent': 'comment-1'})
     n = comments.size() + 1
-    comments.add({'key':'comment-' + str(n), 'user':'curlyjoe',
-        'body': 'make it an implosion'})
-    comments.add({'key':'comment-4', 'user':'queen slurm',
-        'body':"Honey comes out of a bee's behind...",'parent': 'comment-1'})
-except LDTError as e:
-    print("Error while adding comments: {0} [{1}]".format(e.msg, e.code))
+    comments.add({'key': 'comment-' + str(n), 'user': 'curlyjoe',
+                  'body': 'make it an implosion'})
+    comments.add({'key': 'comment-4', 'user': 'queen slurm',
+                  'body': "Honey comes out of a bee's behind...", 'parent': 'comment-1'})
+except e.LDTError as exception:
+    print("Error while adding comments: {0} [{1}]".format(
+        exception.msg, exception.code))
 
 print("Getting the first comment:")
 print(comments.get("comment-1"))
@@ -127,4 +131,3 @@ try:
 except:
     pass
 client.close()
-

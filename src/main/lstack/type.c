@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright 2013-2015 Aerospike, Inc.
+ * Copyright 2013-2016 Aerospike, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -129,55 +129,59 @@ static int AerospikeLStack_Type_Init(AerospikeLStack * self, PyObject * args, Py
 
 static void AerospikeLStack_Type_Dealloc(PyObject * self)
 {
-	self->ob_type->tp_free((PyObject *) self);
+	Py_TYPE(self)->tp_free((PyObject *) self);
+	//self->ob_type->tp_free((PyObject *) self);
 }
 
 /*******************************************************************************
  * PYTHON TYPE DESCRIPTOR
  ******************************************************************************/
-
 static PyTypeObject AerospikeLStack_Type = {
-	PyObject_HEAD_INIT(NULL)
-
-		.ob_size			= 0,
-	.tp_name			= "aerospike.LStack",
-	.tp_basicsize		= sizeof(AerospikeLStack),
-	.tp_itemsize		= 0,
-	.tp_dealloc			= (destructor) AerospikeLStack_Type_Dealloc,
-	.tp_print			= 0,
-	.tp_getattr			= 0,
-	.tp_setattr			= 0,
-	.tp_compare			= 0,
-	.tp_repr			= 0,
-	.tp_as_number		= 0,
-	.tp_as_sequence		= 0,
-	.tp_as_mapping		= 0,
-	.tp_hash			= 0,
-	.tp_call			= 0,
-	.tp_str				= 0,
-	.tp_getattro		= 0,
-	.tp_setattro		= 0,
-	.tp_as_buffer		= 0,
-	.tp_flags			= Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE,
-	.tp_doc				=
-		"The LStack class assists in populating the parameters of a LStack.\n",
-	.tp_traverse		= 0,
-	.tp_clear			= 0,
-	.tp_richcompare		= 0,
-	.tp_weaklistoffset	= 0,
-	.tp_iter			= 0,
-	.tp_iternext		= 0,
-	.tp_methods			= AerospikeLStack_Type_Methods,
-	.tp_members			= 0,
-	.tp_getset			= 0,
-	.tp_base			= 0,
-	.tp_dict			= 0,
-	.tp_descr_get		= 0,
-	.tp_descr_set		= 0,
-	.tp_dictoffset		= 0,
-	.tp_init			= (initproc) AerospikeLStack_Type_Init,
-	.tp_alloc			= 0,
-	.tp_new				= AerospikeLStack_Type_New
+	PyVarObject_HEAD_INIT(NULL, 0)
+	"aerospike.LStack",                 // tp_name
+	sizeof(AerospikeLStack),            // tp_basicsize
+	0,                                  // tp_itemsize
+	 (destructor) AerospikeLStack_Type_Dealloc,
+	                                    // tp_dealloc
+	0,                                  // tp_print
+	0,                                  // tp_getattr
+	0,                                  // tp_setattr
+	0,                                  // tp_compare
+	0,                                  // tp_repr
+	0,                                  // tp_as_number
+	0,                                  // tp_as_sequence
+	0,                                  // tp_as_mapping
+	0,                                  // tp_hash
+	0,                                  // tp_call
+	0,                                  // tp_str
+	0,                                  // tp_getattro
+	0,                                  // tp_setattro
+	0,                                  // tp_as_buffer
+	Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE,
+	                                    // tp_flags
+	"The LStack class assists in populating the parameters of a LStack.\n",
+	                                    // tp_doc
+	0,                                  // tp_traverse
+	0,                                  // tp_clear
+	0,                                  // tp_richcompare
+	0,                                  // tp_weaklistoffset
+	0,                                  // tp_iter
+	0,                                  // tp_iternext
+	AerospikeLStack_Type_Methods,       // tp_methods
+	0,                                  // tp_members
+	0,                                  // tp_getset
+	0,                                  // tp_base
+	0,                                  // tp_dict
+	0,                                  // tp_descr_get
+	0,                                  // tp_descr_set
+	0,                                  // tp_dictoffset
+	(initproc) AerospikeLStack_Type_Init,
+	                                    // tp_init
+	0,                                  // tp_alloc
+	AerospikeLStack_Type_New,           // tp_new
+	0,                                  // tp_free
+	0,                                  // tp_is_gc
+	0                                   // tp_bases
 };
 
 /*******************************************************************************

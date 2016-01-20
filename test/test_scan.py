@@ -2,14 +2,16 @@
 
 import pytest
 import sys
-from test_base_class import TestBaseClass
+from .test_base_class import TestBaseClass
+from aerospike import exception as e
 
 aerospike = pytest.importorskip("aerospike")
 try:
-    from aerospike.exception import *
+    import aerospike
 except:
-    print "Please install aerospike python client."
+    print("Please install aerospike python client.")
     sys.exit(1)
+
 
 class TestScan(TestBaseClass):
 
@@ -19,32 +21,32 @@ class TestScan(TestBaseClass):
         """
         hostlist, user, password = TestBaseClass.get_hosts()
         config = {'hosts': hostlist}
-        if user == None and password == None:
+        if user is None and password is None:
             self.client = aerospike.client(config).connect()
         else:
             self.client = aerospike.client(config).connect(user, password)
 
-        for i in xrange(19):
+        for i in range(19):
             key = ('test', u'demo', i)
             rec = {'name': 'name%s' % (str(i)), 'age': i}
             self.client.put(key, rec)
 
         key = ('test', u'demo', 122)
-        list = [{"op": aerospike.OPERATOR_APPEND,
-                "bin": bytearray("asd;adk\0kj", "utf-8"),
-                "val": u"john"}];
-        self.client.operate(key, list)
+        llist = [{"op": aerospike.OPERATOR_APPEND,
+                  "bin": bytearray("asd;adk\0kj", "utf-8"),
+                  "val": u"john"}]
+        self.client.operate(key, llist)
 
         key = ('test', u'demo', 'ldt_key')
         self.llist_bin = self.client.llist(key, 'llist_key')
         self.llist_bin.add(10)
-        
+
     def teardown_method(self, method):
         """
         Teardown method
         """
 
-        for i in xrange(19):
+        for i in range(19):
             key = ('test', u'demo', i)
             self.client.remove(key)
 
@@ -58,12 +60,12 @@ class TestScan(TestBaseClass):
 
     def test_scan_without_any_parameter(self):
 
-        scan_obj = None
-        with pytest.raises(TypeError) as typeError:
+        try:
             scan_obj = self.client.scan()
             scan_obj.foreach()
 
-        assert "Required argument 'callback' (pos 1) not found" in typeError.value
+        except Exception:
+            pass
 
     def test_scan_with_non_existent_ns_and_set(self):
 
@@ -71,19 +73,19 @@ class TestScan(TestBaseClass):
         st = 'set'
 
         records = []
-        scan_obj = None
         scan_obj = self.client.scan(ns, st)
 
-        def callback((key, meta, bins)):
+        def callback(input_tuple):
+            _, _, bins = input_tuple
             records.append(bins)
 
         try:
             scan_obj.foreach(callback)
 
-        except NamespaceNotFound as exception:
-            assert exception.code == 20L
-        except ServerError as exception:
-            assert exception.code == 1L
+        except e.NamespaceNotFound as exception:
+            assert exception.code == 20
+        except e.ServerError as exception:
+            assert exception.code == 1
 
     def test_scan_with_none_ns_and_set(self):
 
@@ -91,10 +93,10 @@ class TestScan(TestBaseClass):
         st = None
 
         try:
-            scan_obj = self.client.scan( ns, st )
+            self.client.scan(ns, st)
 
-        except ParamError as exception:
-            assert exception.code == -2L
+        except e.ParamError as exception:
+            assert exception.code == -2
             assert exception.msg == 'Parameters are incorrect'
 
     def test_scan_with_existent_ns_and_set(self):
@@ -103,9 +105,9 @@ class TestScan(TestBaseClass):
         st = 'demo'
 
         records = []
-        scan_obj = None
 
-        def callback((key, meta, bins)):
+        def callback(input_tuple):
+            _, _, bins = input_tuple
             records.append(bins)
 
         scan_obj = self.client.scan(ns, st)
@@ -117,12 +119,11 @@ class TestScan(TestBaseClass):
     def test_scan_with_existent_ns_and_none_set(self):
 
         ns = 'test'
-        st = 'demo'
 
         records = []
-        scan_obj = None
 
-        def callback((key, meta, bins)):
+        def callback(input_tuple):
+            _, _, bins = input_tuple
             records.append(bins)
 
         scan_obj = self.client.scan(ns, None)
@@ -138,9 +139,8 @@ class TestScan(TestBaseClass):
 
         records = []
 
-        scan_obj = None
-
-        def callback((key, meta, bins)):
+        def callback(input_tuple):
+            _, _, bins = input_tuple
             records.append(bins)
 
         scan_obj = self.client.scan(ns, st)
@@ -155,17 +155,18 @@ class TestScan(TestBaseClass):
         st = 'demo'
 
         records = []
-        scan_obj = None
         val = 1
-        def callback( (key, meta, bins) ):
+
+        def callback(input_tuple):
+            _, _, bins = input_tuple
             val += 1
             records.append(bins)
 
         scan_obj = self.client.scan(ns, st)
         try:
-            scan_obj.foreach(callback, { 'timeout' : 1000 })
-        except ClientError as exception:
-            assert exception.code == -1L
+            scan_obj.foreach(callback, {'timeout': 1000})
+        except e.ClientError as exception:
+            assert exception.code == -1
             assert exception.msg == "Callback function contains an error"
 
     def test_scan_with_callback_returning_false(self):
@@ -177,9 +178,8 @@ class TestScan(TestBaseClass):
 
         records = []
 
-        scan_obj = None
-
-        def callback((key, meta, bins)):
+        def callback(input_tuple):
+            _, _, bins = input_tuple
             if len(records) == 10:
                 return False
             records.append(bins)
@@ -197,9 +197,8 @@ class TestScan(TestBaseClass):
 
         records = []
 
-        scan_obj = None
-
-        def callback((key, meta, bins)):
+        def callback(input_tuple):
+            _, _, bins = input_tuple
             records.append(bins)
 
         scan_obj = self.client.scan(ns, st)
@@ -215,9 +214,8 @@ class TestScan(TestBaseClass):
 
         records = []
 
-        scan_obj = None
-
-        def callback((key, meta, bins)):
+        def callback(input_tuple):
+            _, _, bins = input_tuple
             records.append(bins)
 
         scan_obj = self.client.scan(ns, st)
@@ -233,9 +231,6 @@ class TestScan(TestBaseClass):
         ns = 'test'
         st = 'demo'
 
-        records = []
-
-        scan_obj = None
         scan_obj = self.client.scan(ns, st)
 
         scan_obj.select(u'name', u'age')
@@ -248,14 +243,13 @@ class TestScan(TestBaseClass):
         """
             Invoke scan() with select bin is of type integer.
         """
-        scan_obj = None
         scan_obj = self.client.scan('test', 'demo')
 
         try:
             scan_obj.select(22, 'test_age')
 
-        except ParamError as exception:
-            assert exception.code == -2L
+        except e.ParamError as exception:
+            assert exception.code == -2
             assert exception.msg == 'Bin name should be of type string'
 
     def test_scan_with_options_positive(self):
@@ -267,14 +261,14 @@ class TestScan(TestBaseClass):
 
         records = []
 
-        scan_obj = None
         options = {
             "percent": 100,
             "concurrent": True,
             "priority": aerospike.SCAN_PRIORITY_HIGH
         }
 
-        def callback((key, meta, bins)):
+        def callback(input_tuple):
+            _, _, bins = input_tuple
             records.append(bins)
 
         scan_obj = self.client.scan(ns, st)
@@ -288,8 +282,9 @@ class TestScan(TestBaseClass):
         """
             Invoke scan() with options negative
         """
-        def callback((key, meta, bins)):
-            print key
+        def callback(input_tuple):
+            key, _, _ = input_tuple
+            print (key)
             records.append(key)
 
         ns = 'test'
@@ -313,10 +308,10 @@ class TestScan(TestBaseClass):
 
         records = []
 
-        scan_obj = None
         options = {"priority": aerospike.SCAN_PRIORITY_HIGH, "nobins": True}
 
-        def callback((key, meta, bins)):
+        def callback(input_tuple):
+            _, _, bins = input_tuple
             records.append(bins)
 
         scan_obj = self.client.scan(ns, st)
@@ -334,19 +329,19 @@ class TestScan(TestBaseClass):
 
         records = []
 
-        scan_obj = None
         options = {"priority": aerospike.SCAN_PRIORITY_HIGH, "nobins": "true"}
 
-        def callback((key, meta, bins)):
+        def callback(input_tuple):
+            _, _, bins = input_tuple
             records.append(bins)
 
         scan_obj = self.client.scan(ns, st)
 
         try:
-            scan_obj.foreach(callback, { 'timeout' : 1000 }, options)
+            scan_obj.foreach(callback, {'timeout': 1000}, options)
 
-        except ParamError as exception:
-            assert exception.code == -2L
+        except e.ParamError as exception:
+            assert exception.code == -2
             assert exception.msg == 'Invalid value(type) for nobins'
 
     def test_scan_with_options_includeldt_positive(self):
@@ -358,7 +353,6 @@ class TestScan(TestBaseClass):
 
         records = []
 
-        scan_obj = None
         options = {
             "percent": 100,
             "concurrent": True,
@@ -366,7 +360,8 @@ class TestScan(TestBaseClass):
             "include_ldt": True
         }
 
-        def callback((key, meta, bins)):
+        def callback(input_tuple):
+            _, _, bins = input_tuple
             records.append(bins)
 
         scan_obj = self.client.scan(ns, st)
@@ -389,7 +384,6 @@ class TestScan(TestBaseClass):
 
         records = []
 
-        scan_obj = None
         options = {
             "percent": 100,
             "concurrent": True,
@@ -397,7 +391,8 @@ class TestScan(TestBaseClass):
             "include_ldt": False
         }
 
-        def callback((key, meta, bins)):
+        def callback(input_tuple):
+            _, _, bins = input_tuple
             records.append(bins)
 
         scan_obj = self.client.scan(ns, st)
@@ -406,9 +401,9 @@ class TestScan(TestBaseClass):
         value = 0
         for x in records:
             if 'llist_key' in x.keys():
-                value = x['llist_key'] 
+                value = x['llist_key']
 
-        assert value == None
+        assert value is None
         assert len(records) != 0
 
     def test_scan_with_multiple_foreach_on_same_scan_object(self):
@@ -420,9 +415,8 @@ class TestScan(TestBaseClass):
 
         records = []
 
-        scan_obj = None
-
-        def callback((key, meta, bins)):
+        def callback(input_tuple):
+            _, _, bins = input_tuple
             records.append(bins)
 
         scan_obj = self.client.scan(ns, st)
@@ -441,12 +435,10 @@ class TestScan(TestBaseClass):
         ns = 'test'
         st = 'demo'
 
-        scan_obj = None
         scan_obj = self.client.scan(ns, st)
 
         scan_obj.select(u'name', u'age')
 
-        records = []
         records = scan_obj.results()
         assert len(records) != 0
 
@@ -461,7 +453,8 @@ class TestScan(TestBaseClass):
 
         records = []
 
-        def callback((key, meta, bins)):
+        def callback(input_tuple):
+            _, _, bins = input_tuple
             records.append(bins)
 
         scan_obj = self.client.scan(ns, st)

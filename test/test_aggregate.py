@@ -2,29 +2,31 @@
 
 import pytest
 import sys
-import cPickle as pickle
-from test_base_class import TestBaseClass
 import os
 import shutil
 import time
+from aerospike import exception as e
+from aerospike import predicates as p
+
+from .test_base_class import TestBaseClass
 
 aerospike = pytest.importorskip("aerospike")
 try:
-    from aerospike.exception import *
+    import aerospike
 except:
-    print "Please install aerospike python client."
+    print("Please install aerospike python client.")
     sys.exit(1)
 
-from aerospike import predicates as p
 
 class TestAggregate(TestBaseClass):
+
     def setup_class(cls):
         hostlist, user, password = TestBaseClass.get_hosts()
         config = {
             'hosts': hostlist,
-            'lua':{'user_path': '/tmp/',
-            'system_path':'../aerospike-client-c/lua/'}}
-        if user == None and password == None:
+            'lua': {'user_path': '/tmp/',
+                    'system_path': '../aerospike-client-c/lua/'}}
+        if user is None and password is None:
             client = aerospike.client(config).connect()
         else:
             client = aerospike.client(config).connect(user, password)
@@ -33,20 +35,22 @@ class TestAggregate(TestBaseClass):
         versioninfo = client.info('version')
         for keys in versioninfo:
             for value in versioninfo[keys]:
-                if value != None:
-                    versionlist = value[value.find("build") + 6:value.find("\n")].split(".")
+                if value is not None:
+                    versionlist = value[
+                        value.find("build") + 6:value.find("\n")].split(".")
                     if int(versionlist[0]) >= 3 and int(versionlist[1]) >= 6:
                         TestAggregate.skip_old_server = False
         client.index_integer_create('test', 'demo', 'test_age',
-                'test_demo_test_age_idx')
-        client.index_integer_create('test', 'demo', 'age1', 'test_demo_age1_idx')
+                                    'test_demo_test_age_idx')
+        client.index_integer_create(
+            'test', 'demo', 'age1', 'test_demo_age1_idx')
         time.sleep(2)
 
         filename = "stream_example.lua"
         udf_type = aerospike.UDF_TYPE_LUA
-        status = client.udf_put(filename, udf_type)
+        client.udf_put(filename, udf_type)
         shutil.copyfile(filename, config['lua']['user_path'] +
-            'stream_example.lua')
+                        'stream_example.lua')
         client.close()
 
     def teardown_class(cls):
@@ -54,9 +58,9 @@ class TestAggregate(TestBaseClass):
         hostlist, user, password = TestBaseClass.get_hosts()
         config = {
             'hosts': hostlist,
-            'lua':{'user_path': '/tmp/',
-            'system_path':'../aerospike-client-c/lua/'}}
-        if user == None and password == None:
+            'lua': {'user_path': '/tmp/',
+                    'system_path': '../aerospike-client-c/lua/'}}
+        if user is None and password is None:
             client = aerospike.client(config).connect()
         else:
             client = aerospike.client(config).connect(user, password)
@@ -64,7 +68,7 @@ class TestAggregate(TestBaseClass):
         client.index_remove('test', 'test_demo_age1_idx')
         module = "stream_example.lua"
 
-        status = client.udf_remove(module)
+        client.udf_remove(module)
         os.remove(config['lua']['user_path'] + 'stream_example.lua')
         client.close()
 
@@ -73,18 +77,18 @@ class TestAggregate(TestBaseClass):
         Setup method.
         """
 
-        hostlist, user, password = TestBaseClass.get_hosts()
+        hostlist, _, _ = TestBaseClass.get_hosts()
         config = {
             'hosts': hostlist,
-            'lua':{'user_path': '/tmp/',
-            'system_path':'../aerospike-client-c/lua/'}}
-        if TestBaseClass.user == None and TestBaseClass.password == None:
+            'lua': {'user_path': '/tmp/',
+                    'system_path': '../aerospike-client-c/lua/'}}
+        if TestBaseClass.user is None and TestBaseClass.password is None:
             self.client = aerospike.client(config).connect()
         else:
             self.client = aerospike.client(config).connect(
                 TestBaseClass.user, TestBaseClass.password)
 
-        for i in xrange(5):
+        for i in range(5):
             key = ('test', 'demo', i)
             rec = {
                 'name': 'name%s' % (str(i)),
@@ -98,9 +102,7 @@ class TestAggregate(TestBaseClass):
         """
         Teardown method.
         """
-        for i in xrange(5):
-            key = ('test', 'demo', i)
-            #self.client.remove(key)
+
         self.client.close()
 
     def test_aggregate_with_no_parameters(self):
@@ -112,11 +114,11 @@ class TestAggregate(TestBaseClass):
             query.select()
             query.where()
 
-        except ParamError as exception:
+        except e.ParamError as exception:
             assert exception.code == -2
             assert exception.msg == 'query() expects atleast 1 parameter'
 
-        #assert "where() takes at least 1 argument (0 given)" in typeError.value
+# assert "where() takes at least 1 argument (0 given)" in typeError.value
 
     def test_aggregate_no_sec_index(self):
         """
@@ -128,14 +130,12 @@ class TestAggregate(TestBaseClass):
             query.where(p.between('no', 1, 5))
             query.apply('stream_example', 'count')
 
-            result = None
-
             def user_callback(value):
-                result = value
+                _ = value
 
             query.foreach(user_callback)
-        except IndexNotFound as exception:
-            assert exception.code == 201L
+        except e.IndexNotFound as exception:
+            assert exception.code == 201
             assert exception.msg == 'AEROSPIKE_ERR_INDEX_NOT_FOUND'
 
     def test_aggregate_with_incorrect_ns_set(self):
@@ -147,18 +147,16 @@ class TestAggregate(TestBaseClass):
             query.select('name', 'test_age')
             query.where(p.equals('test_age', 1))
             query.apply('stream_example', 'count')
-            result = 1
 
             def user_callback(value):
-                result = value
+                _ = value
 
             query.foreach(user_callback)
 
-        except InvalidRequest as exception:
-            assert exception.code == 4L
+        except e.InvalidRequest as exception:
+            assert exception.code == 4
             assert exception.msg == 'AEROSPIKE_ERR_REQUEST_INVALID'
 
-    #@pytest.mark.xfail(reason="C client incorrectly sent status AEROSPIKE_ERR_UDF")
     def test_aggregate_with_where_incorrect(self):
         """
             Invoke aggregate() with where is incorrect
@@ -184,18 +182,16 @@ class TestAggregate(TestBaseClass):
         try:
             query.where(p.equals('test_age', None))
             query.apply('stream_example', 'count')
-            result = 1
 
             def user_callback(value):
-                result = value
+                _ = value
 
             query.foreach(user_callback)
 
-        except ParamError as exception:
-            assert exception.code == -2L
+        except e.ParamError as exception:
+            assert exception.code == -2
             assert exception.msg == 'predicate is invalid.'
 
-    #@pytest.mark.xfail(reason="C client incorrectly sent status AEROSPIKE_ERR_UDF")
     def test_aggregate_with_where_bool_value(self):
         """
             Invoke aggregate() with where is bool value
@@ -240,10 +236,10 @@ class TestAggregate(TestBaseClass):
         result = None
 
         def user_callback(value):
-            result = value
+            _ = value
 
         query.foreach(user_callback)
-        assert result == None
+        assert result is None
     """
     def test_aggregate_with_incorrect_module(self):
             #Invoke aggregate() with incorrect module
@@ -280,8 +276,10 @@ class TestAggregate(TestBaseClass):
             query.foreach(user_callback)
         except ClientError as exception:
             assert exception.code == -1L
-            assert exception.msg == 'UDF: Execution Error 2 : function not found'
+            assert exception.msg == 'UDF: Execution Error 2 :
+                function not found'
             """
+
     def test_aggregate_with_correct_parameters(self):
         """
             Invoke aggregate() with correct arguments
@@ -329,14 +327,13 @@ class TestAggregate(TestBaseClass):
             query.where(p.between('test_age', 1, 5))
             query.apply('stream_example', 'count')
 
-            result = None
-
             def user_callback(value):
-                result = value
+                _ = value
 
             query.foreach(user_callback, policy, "")
 
-        assert "foreach() takes at most 2 arguments (3 given)" in typeError.value
+        assert "foreach() takes at most 2 arguments (3 given)" in str(
+            typeError.value)
 
     def test_aggregate_with_extra_parameters_to_lua(self):
         """
@@ -392,6 +389,7 @@ class TestAggregate(TestBaseClass):
         except ClientError as exception:
             assert exception.code == -1L
             """
+
     def test_aggregate_with_arguments_to_lua_function(self):
         """
             Invoke aggregate() with unicode arguments to lua function.
@@ -415,15 +413,19 @@ class TestAggregate(TestBaseClass):
         ]
 
     def test_aggregate_with_arguments_to_lua_function_having_float_value(self):
+        pytest.xfail("Missing function in lua")
         """
             Invoke aggregate() with unicode arguments to lua function having a
             float value
         """
-        if TestAggregate.skip_old_server == True:
-            pytest.skip("Server does not support aggregate on float type as lua argument")
+        if TestAggregate.skip_old_server is True:
+            pytest.skip(
+                "Server does not support aggregate on float \
+                 type as lua argument")
         query = self.client.query('test', 'demo')
         query.where(p.between('test_age', 0, 5))
-        query.apply('stream_example', 'double_group_count', [u"name", u"addr", 2.5])
+        query.apply(
+            'stream_example', 'double_group_count', [u"name", u"addr", 2.5])
 
         rec = []
 
@@ -486,7 +488,6 @@ class TestAggregate(TestBaseClass):
         query.where(p.between('test_age', 1, 5))
         query.apply('stream_example', 'count')
 
-        records = []
         records = query.results()
         assert records[0] == 4
 
@@ -514,8 +515,8 @@ class TestAggregate(TestBaseClass):
 
             query.foreach(user_callback)
 
-        except ClusterError as exception:
-            assert exception.code == 11L
+        except e.ClusterError as exception:
+            assert exception.code == 11
             assert exception.msg == 'No connection to aerospike cluster'
 
     def test_aggregate_with_correct_parameters_lua_file_not_in_same_dir(self):

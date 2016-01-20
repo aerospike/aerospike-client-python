@@ -1,8 +1,16 @@
 import unittest
-from test_base_class import TestBaseClass
+import sys
+import pytest
+from .test_base_class import TestBaseClass
+from aerospike import exception as e
 
-import aerospike
-from aerospike.exception import *
+aerospike = pytest.importorskip("aerospike")
+try:
+    import aerospike
+except:
+    print("Please install aerospike python client.")
+    sys.exit(1)
+
 
 config = {"hosts": [("127.0.0.1", 3000)]}
 
@@ -10,12 +18,12 @@ config = {"hosts": [("127.0.0.1", 3000)]}
 count = 0
 
 
-def count_records((key, meta, rec)):
+def count_records(input_tuple):
     global count
     count += 1
 
 
-def count_records_false((key, meta, rec)):
+def count_records_false(input_tuple):
     global count
     count += 1
     return False
@@ -26,13 +34,14 @@ def digest_only(key):
 
 
 class KVTestCase(unittest.TestCase, TestBaseClass):
+
     def setup_class(cls):
         KVTestCase.hostlist, KVTestCase.user, KVTestCase.password = TestBaseClass.get_hosts(
         )
 
     def setUp(self):
         config = {"hosts": KVTestCase.hostlist}
-        if KVTestCase.user == None and KVTestCase.password == None:
+        if KVTestCase.user is None and KVTestCase.password is None:
             self.client = aerospike.client(config).connect()
         else:
             self.client = aerospike.client(config).connect(KVTestCase.user,
@@ -43,7 +52,7 @@ class KVTestCase(unittest.TestCase, TestBaseClass):
 
     def test_1(self):
         '''
-        Using a single key, 
+        Using a single key,
         '''
 
         global count
@@ -51,7 +60,8 @@ class KVTestCase(unittest.TestCase, TestBaseClass):
         key = ("test", "unittest", "1")
 
         # cleanup records
-        def remove_record((key, meta, rec)):
+        def remove_record(input_tuple):
+            key, _, _ = input_tuple
             self.client.remove(key)
 
         self.client.scan("test", "unittest").foreach(remove_record)
@@ -113,15 +123,16 @@ class KVTestCase(unittest.TestCase, TestBaseClass):
         try:
             (key, meta) = self.client.exists(key)
             """
-            We are making the api backward compatible. In case of RecordNotFound an
-            exception will not be raised. Instead Ok response is returned withe the
+            We are making the api backward compatible. In case of
+            RecordNotFound an exception will not be raised.
+            Instead Ok response is returned withe the
             meta as None. This might change with further releases.
             """
-        except RecordNotFound as exception:
-            assert True == False
+        except e.RecordNotFound as exception:
+            assert True is False
             assert exception.code == 2
 
-        assert meta == None
+        assert meta is None
 
         # count records
         count = 0
@@ -138,7 +149,8 @@ class KVTestCase(unittest.TestCase, TestBaseClass):
         key = ("test", "unittest", "1")
 
         # cleanup records
-        def each_record((key, meta, rec)):
+        def each_record(input_tuple):
+            key, _, _ = input_tuple
             self.client.remove(key)
 
         self.client.scan("test", "unittest").foreach(each_record)
@@ -201,15 +213,16 @@ class KVTestCase(unittest.TestCase, TestBaseClass):
         try:
             (key, meta) = self.client.exists(digest_only(key))
             """
-            We are making the api backward compatible. In case of RecordNotFound an
-            exception will not be raised. Instead Ok response is returned withe the
+            We are making the api backward compatible. In case of
+            RecordNotFound an exception will not be raised.
+            Instead Ok response is returned withe the
             meta as None. This might change with further releases.
             """
-        except RecordNotFound as exception:
-            assert True == False
+        except e.RecordNotFound as exception:
+            assert True is False
             assert exception.code == 2
 
-        assert meta == None
+        assert meta is None
 
         # count records
         count = 0
@@ -221,10 +234,9 @@ class KVTestCase(unittest.TestCase, TestBaseClass):
         Using multiple keys
         """
         from aerospike import predicates as p
-        from time import sleep
         global count
 
-        for i in xrange(2):
+        for i in range(2):
             key = ('test', 'unittest', i)
             rec = {
                 'name': 'name%s' % (str(i)),
@@ -247,7 +259,7 @@ class KVTestCase(unittest.TestCase, TestBaseClass):
 
         self.assertEqual(count, 1, "foreach failed")
 
-        for i in xrange(2):
+        for i in range(2):
             key = ('test', 'unittest', i)
             self.client.remove(key)
 

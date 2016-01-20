@@ -2,62 +2,62 @@
 
 import pytest
 import sys
-import cPickle as pickle
-import time
-from test_base_class import TestBaseClass
+from .test_base_class import TestBaseClass
+from aerospike import exception as e
+from aerospike import predicates as p
 
 aerospike = pytest.importorskip("aerospike")
-from aerospike import predicates as p
 try:
-    from aerospike.exception import *
+    import aerospike
 except:
-    print "Please install aerospike python client."
+    print("Please install aerospike python client.")
     sys.exit(1)
 
 
-
 class TestQuery(TestBaseClass):
+
     def setup_class(cls):
         hostlist, user, password = TestBaseClass.get_hosts()
         config = {'hosts': hostlist}
-        if user == None and password == None:
+        if user is None and password is None:
             client = aerospike.client(config).connect()
         else:
             client = aerospike.client(config).connect(user, password)
 
         client.index_integer_create('test', 'demo', 'test_age',
-                                              'age_index')
+                                    'age_index')
         client.index_string_create('test', 'demo', 'addr',
-                                             'addr_index')
+                                   'addr_index')
         client.index_integer_create('test', 'demo', 'age1',
-                                              'age_index1')
+                                    'age_index1')
         client.index_list_create('test', 'demo', 'numeric_list',
-                                           aerospike.INDEX_NUMERIC,
-                                           'numeric_list_index')
+                                 aerospike.INDEX_NUMERIC,
+                                 'numeric_list_index')
         client.index_list_create('test', 'demo', 'string_list',
-                                           aerospike.INDEX_STRING,
-                                           'string_list_index')
+                                 aerospike.INDEX_STRING,
+                                 'string_list_index')
         client.index_map_keys_create('test', 'demo', 'numeric_map',
-                                               aerospike.INDEX_NUMERIC,
-                                               'numeric_map_index')
+                                     aerospike.INDEX_NUMERIC,
+                                     'numeric_map_index')
         client.index_map_keys_create('test', 'demo', 'string_map',
-                                               aerospike.INDEX_STRING,
-                                               'string_map_index')
+                                     aerospike.INDEX_STRING,
+                                     'string_map_index')
         client.index_map_values_create('test', 'demo', 'numeric_map',
-                                                 aerospike.INDEX_NUMERIC,
-                                                 'numeric_map_values_index')
+                                       aerospike.INDEX_NUMERIC,
+                                       'numeric_map_values_index')
         client.index_map_values_create('test', 'demo', 'string_map',
-                                                 aerospike.INDEX_STRING,
-                                                 'string_map_values_index')
-        client.index_integer_create('test', None, 'test_age_none', 
-                                                'age_index_none')
-        client.index_integer_create('test', 'demo', bytearray("sal\0kj", "utf-8"),
-                                             'sal_index')
+                                       aerospike.INDEX_STRING,
+                                       'string_map_values_index')
+        client.index_integer_create('test', None, 'test_age_none',
+                                    'age_index_none')
+        client.index_integer_create('test', 'demo',
+                                    bytearray("sal\0kj", "utf-8"),
+                                    'sal_index')
 
     def teardown_class(cls):
         hostlist, user, password = TestBaseClass.get_hosts()
         config = {'hosts': hostlist}
-        if user == None and password == None:
+        if user is None and password is None:
             client = aerospike.client(config).connect()
         else:
             client = aerospike.client(config).connect(user, password)
@@ -71,7 +71,7 @@ class TestQuery(TestBaseClass):
         client.index_remove('test', 'string_map_index', policy)
         client.index_remove('test', 'numeric_map_values_index', policy)
         client.index_remove('test', 'string_map_values_index', policy)
-        client.index_remove('test', 'age_index_none', policy);
+        client.index_remove('test', 'age_index_none', policy)
         client.index_remove('test', 'sal_index')
         client.close()
 
@@ -80,13 +80,13 @@ class TestQuery(TestBaseClass):
         Setup method.
         """
         config = {'hosts': TestBaseClass.hostlist}
-        if TestBaseClass.user == None and TestBaseClass.password == None:
+        if TestBaseClass.user is None and TestBaseClass.password is None:
             self.client = aerospike.client(config).connect()
         else:
             self.client = aerospike.client(config).connect(
                 TestBaseClass.user, TestBaseClass.password)
 
-        for i in xrange(5):
+        for i in range(5):
             key = ('test', 'demo', i)
             rec = {
                 'name': 'name%s' % (str(i)),
@@ -106,7 +106,7 @@ class TestQuery(TestBaseClass):
                 'no': i
             }
             self.client.put(key, rec)
-        for i in xrange(5, 10):
+        for i in range(5, 10):
             key = ('test', 'demo', i)
             rec = {
                 u'name': 'name%s' % (str(i)),
@@ -117,16 +117,16 @@ class TestQuery(TestBaseClass):
             self.client.put(key, rec)
 
         key = ('test', 'demo', 122)
-        list = [{"op": aerospike.OPERATOR_WRITE,
-                "bin": bytearray("sal\0kj", "utf-8"),
-                "val": 80000}];
-        self.client.operate(key, list)
+        llist = [{"op": aerospike.OPERATOR_WRITE,
+                  "bin": bytearray("sal\0kj", "utf-8"),
+                  "val": 80000}]
+        self.client.operate(key, llist)
 
     def teardown_method(self, method):
         """
         Teardown method.
         """
-        for i in xrange(10):
+        for i in range(10):
             key = ('test', 'demo', i)
             self.client.remove(key)
 
@@ -143,7 +143,7 @@ class TestQuery(TestBaseClass):
             query.select()
             query.where()
 
-        except ParamError as exception:
+        except e.ParamError as exception:
             assert exception.code == -2
             assert exception.msg == 'query() expects atleast 1 parameter'
 
@@ -157,7 +157,8 @@ class TestQuery(TestBaseClass):
 
         records = []
 
-        def callback((key, metadata, record)):
+        def callback(input_tuple):
+            key, _, _ = input_tuple
             records.append(key)
 
         query.foreach(callback)
@@ -173,13 +174,14 @@ class TestQuery(TestBaseClass):
             query.select('name', 'test_age')
             query.where(p.equals('test_age', 1))
 
-            def callback((key, metadata, record)):
+            def callback(input_tuple):
+                _, metadata, _ = input_tuple
                 assert metadata['gen'] != None
 
             query.foreach(callback)
 
-        except InvalidRequest as exception:
-            assert exception.code == 4L
+        except e.InvalidRequest as exception:
+            assert exception.code == 4
             assert exception.msg == 'AEROSPIKE_ERR_REQUEST_INVALID'
 
     def test_query_with_ns_not_string(self):
@@ -190,13 +192,15 @@ class TestQuery(TestBaseClass):
             query = self.client.query(1, 'demo')
             query.select('name', 'test_age')
             query.where(p.equals('test_age', 1))
-            def callback((key,metadata,record)):
+
+            def callback(input_tuple):
+                _, metadata, _ = input_tuple
                 assert metadata['gen'] != None
 
             query.foreach(callback)
 
-        except ParamError as exception:
-            assert exception.code == -2L
+        except e.ParamError as exception:
+            assert exception.code == -2
             assert exception.msg == 'Namespace should be a string'
 
     def test_query_with_set_int(self):
@@ -207,13 +211,15 @@ class TestQuery(TestBaseClass):
             query = self.client.query('test', 1)
             query.select('name', 'test_age')
             query.where(p.equals('test_age', 1))
-            def callback((key,metadata,record)):
+
+            def callback(input_tuple):
+                _, metadata, _ = input_tuple
                 assert metadata['gen'] != None
 
             query.foreach(callback)
 
-        except ParamError as exception:
-            assert exception.code == -2L
+        except e.ParamError as exception:
+            assert exception.code == -2
             assert exception.msg == 'Set should be string, unicode or None'
 
     def test_query_with_incorrect_bin_name(self):
@@ -225,7 +231,8 @@ class TestQuery(TestBaseClass):
         query.where(p.equals('age1', 1))
         records = []
 
-        def callback((key, metadata, record)):
+        def callback(input_tuple):
+            _, _, record = input_tuple
             records.append(record)
 
         query.foreach(callback)
@@ -239,33 +246,36 @@ class TestQuery(TestBaseClass):
         query.select('name', 'test_age')
         query.where(p.equals('test_age', 1))
 
-        def callback((key, metadata, record)):
+        def callback(input_tuple):
+            _, metadata, _ = input_tuple
             assert metadata['gen'] != None
 
         with pytest.raises(TypeError) as typeError:
             query.foreach()
 
-        assert "Required argument 'callback' (pos 1) not found" in typeError.value
+        assert "Required argument 'callback' (pos 1) not found" in str(
+            typeError.value)
 
     def test_query_with_nonindexed_bin(self):
         """
             Invoke query() with non-indexed bin
         """
-        #with pytest.raises(Exception) as exception:
+        # with pytest.raises(Exception) as exception:
         try:
             query = self.client.query('test', 'demo')
             query.select('name', 'no')
             query.where(p.equals('no', 1))
 
-            def callback((key, metadata, record)):
+            def callback(input_tuple):
+                _, metadata, _ = input_tuple
                 assert metadata['gen'] != None
 
             query.foreach(callback)
 
-        except IndexNotFound as exception:
+        except e.IndexNotFound as exception:
             assert exception.code == 201
             assert exception.msg == 'AEROSPIKE_ERR_INDEX_NOT_FOUND'
-            assert exception.name == None
+            assert exception.name is None
 
     def test_query_with_where_incorrect(self):
         """
@@ -276,7 +286,8 @@ class TestQuery(TestBaseClass):
         query.where(p.equals('test_age', 165))
         records = []
 
-        def callback((key, metadata, record)):
+        def callback(input_tuple):
+            _, _, record = input_tuple
             records.append(record)
 
         query.foreach(callback)
@@ -291,8 +302,8 @@ class TestQuery(TestBaseClass):
         try:
             query.where(p.equals('test_age', None))
 
-        except ParamError as exception:
-            assert exception.code == -2L
+        except e.ParamError as exception:
+            assert exception.code == -2
             assert exception.msg == 'predicate is invalid.'
 
     def test_query_with_policy(self):
@@ -305,7 +316,8 @@ class TestQuery(TestBaseClass):
         query.where(p.equals('test_age', 1))
         records = []
 
-        def callback((key, metadata, record)):
+        def callback(input_tuple):
+            _, _, record = input_tuple
             records.append(record)
 
         query.foreach(callback, policy)
@@ -320,13 +332,15 @@ class TestQuery(TestBaseClass):
         query.select('name', 'test_age')
         query.where(p.equals('test_age', 1))
 
-        def callback((key, metadata, record)):
+        def callback(input_tuple):
+            _, metadata, _ = input_tuple
             assert metadata['gen'] != None
 
         with pytest.raises(TypeError) as typeError:
             query.foreach(callback, policy, "")
 
-        assert "foreach() takes at most 2 arguments (3 given)" in typeError.value
+        assert "foreach() takes at most 2 arguments (3 given)" in str(
+            typeError.value)
 
     def test_query_with_incorrect_policy_value(self):
         """
@@ -337,14 +351,15 @@ class TestQuery(TestBaseClass):
         query.select('name', 'test_age')
         query.where(p.equals('test_age', 1))
 
-        def callback((key, metadata, record)):
+        def callback(input_tuple):
+            _, metadata, _ = input_tuple
             assert metadata['gen'] != None
 
         try:
             query.foreach(callback, policy)
 
-        except ParamError as exception:
-            assert exception.code == -2L
+        except e.ParamError as exception:
+            assert exception.code == -2
             assert exception.msg == 'timeout is invalid'
 
     def test_query_with_put_in_callback(self):
@@ -357,7 +372,8 @@ class TestQuery(TestBaseClass):
         query.where(p.equals('test_age', 1))
         records = []
 
-        def callback((key, metadata, record)):
+        def callback(input_tuple):
+            _, _, record = input_tuple
             records.append(record)
             key = ('test', 'demo', 'put_in_callback')
             rec = {'name': 'name%s' % (str(8)), 'test_age': 8, }
@@ -366,7 +382,7 @@ class TestQuery(TestBaseClass):
         query.foreach(callback, policy)
 
         key = ('test', 'demo', 'put_in_callback')
-        key1, meta, bins = self.client.get(key)
+        _, _, bins = self.client.get(key)
 
         key = ('test', 'demo', 'put_in_callback')
         self.client.remove(key)
@@ -382,7 +398,8 @@ class TestQuery(TestBaseClass):
 
         records = []
 
-        def callback((key, metadata, record)):
+        def callback(input_tuple):
+            _, _, record = input_tuple
             records.append(record)
 
         query.foreach(callback)
@@ -395,7 +412,7 @@ class TestQuery(TestBaseClass):
         try:
             query.where("")
 
-        except ParamError as exception:
+        except e.ParamError as exception:
             assert exception.code == -2
             assert exception.msg == "predicate is invalid."
 
@@ -409,15 +426,15 @@ class TestQuery(TestBaseClass):
 
         records = []
 
-        def callback((key, metadata, record)):
-            val += 1
+        def callback(input_tuple):
+            key, _, _ = input_tuple
             records.append(key)
 
         try:
-            result = query.foreach(callback)
+            query.foreach(callback)
 
-        except ClientError as exception:
-            assert exception.code == -1L
+        except e.ClientError as exception:
+            assert exception.code == -1
             assert exception.msg == "Callback function contains an error"
 
     def test_query_with_callback_returning_false(self):
@@ -430,12 +447,13 @@ class TestQuery(TestBaseClass):
 
         records = []
 
-        def callback((key, metadata, record)):
+        def callback(input_tuple):
+            key, _, _ = input_tuple
             if len(records) == 2:
                 return False
             records.append(key)
 
-        result = query.foreach(callback)
+        query.foreach(callback)
         assert len(records) == 2
 
     def test_query_with_results_method(self):
@@ -446,7 +464,6 @@ class TestQuery(TestBaseClass):
         query.select('name', 'test_age')
         query.where(p.equals('test_age', 1))
 
-        records = []
         records = query.results()
         assert len(records) == 1
 
@@ -466,13 +483,6 @@ class TestQuery(TestBaseClass):
             'addr': u'name7'
         }
 
-        query = self.client.query('test', 'demo')
-        query.select(u'name', 'addr')
-        query.where(p.equals(u'addr', u'name9'))
-
-        records = query.results()
-        assert records[0][2] == {'name': 'name9', 'addr': u'name9'}
-
     def test_query_with_select_bin_integer(self):
         """
             Invoke query() with select bin is of integer type.
@@ -482,8 +492,8 @@ class TestQuery(TestBaseClass):
         try:
             query.select(22, 'test_age')
 
-        except ParamError as exception:
-            assert exception.code == -2L
+        except e.ParamError as exception:
+            assert exception.code == -2
             assert exception.msg == 'Bin name should be of type string'
 
     def test_query_with_correct_parameters_contains(self):
@@ -496,13 +506,15 @@ class TestQuery(TestBaseClass):
 
         records = []
 
-        def callback((key, metadata, record)):
+        def callback(input_tuple):
+            _, _, record = input_tuple
             records.append(record)
 
         query.foreach(callback)
         assert len(records) == 2
 
     def test_query_with_correct_parameters_containsstring(self):
+        #        pytest.xfail("segfault!")
         """
             Invoke query() with correct arguments and using predicate contains
         """
@@ -513,45 +525,34 @@ class TestQuery(TestBaseClass):
 
         records = []
 
-        def callback((key, metadata, record)):
+        def callback(input_tuple):
+            _, _, record = input_tuple
             records.append(record)
 
         query.foreach(callback)
         assert len(records) == 3
 
-    def test_query_with_correct_parameters_rangecontains(self):
-        """
-            Invoke query() with correct arguments and using predicate contains
-        """
-        query = self.client.query('test', 'demo')
-        query.select('name', 'test_age')
-        query.where(p.range('numeric_list', aerospike.INDEX_TYPE_LIST, 1, 3))
-
-        records = []
-
-        def callback((key, metadata, record)):
-            records.append(record)
-
-        query.foreach(callback)
-        assert len(records) == 2
-
     def test_query_with_correct_parameters_containsstring_mapkeys(self):
+        #        pytest.xfail("segfault!")
         """
             Invoke query() with correct arguments and using predicate contains
         """
         query = self.client.query('test', 'demo')
         query.select('name', 'test_age')
-        query.where(p.contains('string_map', aerospike.INDEX_TYPE_MAPKEYS, "a"))
+        query.where(
+            p.contains('string_map', aerospike.INDEX_TYPE_MAPKEYS, "a"))
 
         records = []
 
-        def callback((key, metadata, record)):
+        def callback(input_tuple):
+            _, _, record = input_tuple
             records.append(record)
 
         query.foreach(callback)
         assert len(records) == 5
 
     def test_query_with_correct_parameters_containsstring_mapvalues(self):
+        #        pytest.xfail("segfault!")
         """
             Invoke query() with correct arguments and using predicate contains
         """
@@ -562,7 +563,8 @@ class TestQuery(TestBaseClass):
 
         records = []
 
-        def callback((key, metadata, record)):
+        def callback(input_tuple):
+            _, _, record = input_tuple
             records.append(record)
 
     def test_query_with_multiple_foreach_on_same_query_object(self):
@@ -575,7 +577,8 @@ class TestQuery(TestBaseClass):
 
         records = []
 
-        def callback((key, metadata, record)):
+        def callback(input_tuple):
+            key, _, _ = input_tuple
             records.append(key)
 
         query.foreach(callback)
@@ -592,7 +595,8 @@ class TestQuery(TestBaseClass):
 
         records = []
 
-        def callback((key, metadata, record)):
+        def callback(input_tuple):
+            _, _, record = input_tuple
             records.append(record)
 
         query.foreach(callback)
@@ -609,7 +613,8 @@ class TestQuery(TestBaseClass):
 
         records = []
 
-        def callback((key, metadata, record)):
+        def callback(input_tuple):
+            _, _, record = input_tuple
             records.append(record)
 
         query.foreach(callback)
@@ -626,7 +631,8 @@ class TestQuery(TestBaseClass):
 
         records = []
 
-        def callback((key, metadata, record)):
+        def callback(input_tuple):
+            _, _, record = input_tuple
             records.append(record)
 
         query.foreach(callback)
@@ -635,6 +641,7 @@ class TestQuery(TestBaseClass):
     def test_query_with_correct_parameters_containsstring_mapvalues_notuple(
         self
     ):
+        #        pytest.xfail("segfault!")
         """
             Invoke query() with correct arguments and using predicate contains
         """
@@ -645,7 +652,8 @@ class TestQuery(TestBaseClass):
 
         records = []
 
-        def callback((key, metadata, record)):
+        def callback(input_tuple):
+            _, _, record = input_tuple
             records.append(record)
 
         query.foreach(callback)
@@ -662,7 +670,8 @@ class TestQuery(TestBaseClass):
 
         records = []
 
-        def callback((key, metadata, record)):
+        def callback(input_tuple):
+            _, _, record = input_tuple
             records.append(record)
 
         query.foreach(callback)
@@ -678,7 +687,8 @@ class TestQuery(TestBaseClass):
 
         records = []
 
-        def callback((key, metadata, record)):
+        def callback(input_tuple):
+            _, _, record = input_tuple
             records.append(record)
 
         query.foreach(callback)
@@ -694,7 +704,8 @@ class TestQuery(TestBaseClass):
         query.where('test_age', 'equals', 1)
         records = []
 
-        def callback((key, metadata, record)):
+        def callback(input_tuple):
+            _, _, record = input_tuple
             records.append(record)
 
         query.foreach(callback, policy)
@@ -742,13 +753,14 @@ class TestQuery(TestBaseClass):
 
             records = []
 
-            def callback((key, metadata, record)):
+            def callback(input_tuple):
+                key, _, _ = input_tuple
                 records.append(key)
 
             query.foreach(callback)
 
-        except ClusterError as exception:
-            assert exception.code == 11L
+        except e.ClusterError as exception:
+            assert exception.code == 11
             assert exception.msg == 'No connection to aerospike cluster'
 
     def test_query_with_policy_on_none_set_index(self):
@@ -762,7 +774,9 @@ class TestQuery(TestBaseClass):
         query.select('name', 'test_age_none')
         query.where(p.equals('test_age_none', 1))
         records = []
-        def callback((key,metadata,record)):
+
+        def callback(input_tuple):
+            _, _, record = input_tuple
             records.append(record)
 
         query.foreach(callback, policy)
@@ -779,7 +793,9 @@ class TestQuery(TestBaseClass):
         query.select('name', 'test_age_none')
         query.where(p.equals('test_age_none', 1))
         records = []
-        def callback((key,metadata,record)):
+
+        def callback(input_tuple):
+            _, _, record = input_tuple
             records.append(record)
 
         query.foreach(callback, policy)
@@ -795,7 +811,8 @@ class TestQuery(TestBaseClass):
 
         records = []
 
-        def callback((key, metadata, record)):
+        def callback(input_tuple):
+            key, _, _ = input_tuple
             records.append(key)
 
         query.foreach(callback)

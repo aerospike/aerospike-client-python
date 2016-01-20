@@ -3,16 +3,19 @@
 import pytest
 import sys
 import time
-from test_base_class import TestBaseClass
+from .test_base_class import TestBaseClass
+from aerospike import exception as e
 
 aerospike = pytest.importorskip("aerospike")
 try:
-    from aerospike.exception import *
+    import aerospike
 except:
-    print "Please install aerospike python client."
+    print("Please install aerospike python client.")
     sys.exit(1)
 
+
 class TestUdfPut(TestBaseClass):
+
     def setup_class(cls):
         """
         Setup class
@@ -20,10 +23,11 @@ class TestUdfPut(TestBaseClass):
         hostlist, user, password = TestBaseClass.get_hosts()
         config = {'hosts': hostlist}
 
-        if user == None and password == None:
+        if user is None and password is None:
             TestUdfPut.client = aerospike.client(config).connect()
         else:
-            TestUdfPut.client = aerospike.client(config).connect(user, password)
+            TestUdfPut.client = aerospike.client(
+                config).connect(user, password)
 
     def teardown_class(cls):
         TestUdfPut.client.close()
@@ -48,7 +52,8 @@ class TestUdfPut(TestBaseClass):
         with pytest.raises(TypeError) as typeError:
             TestUdfPut.client.udf_put()
 
-        assert "Required argument 'filename' (pos 1) not found" in typeError.value
+        assert "Required argument 'filename' (pos 1) not found" in str(
+            typeError.value)
 
     def test_udf_put_with_proper_parameters(self):
 
@@ -75,9 +80,9 @@ class TestUdfPut(TestBaseClass):
         udf_type = 0
 
         try:
-            status = TestUdfPut.client.udf_put( filename, udf_type, policy )
+            TestUdfPut.client.udf_put(filename, udf_type, policy)
 
-        except ParamError as exception:
+        except e.ParamError as exception:
             assert exception.code == -2
             assert exception.msg == "timeout is invalid"
 
@@ -93,10 +98,9 @@ class TestUdfPut(TestBaseClass):
 
         udf_list = TestUdfPut.client.udf_list({})
 
-        present = False
         for udf in udf_list:
             if 'example.lua' == udf['name']:
-                present = True
+                _ = True
 
     def test_udf_put_with_non_existent_filename(self):
 
@@ -105,9 +109,9 @@ class TestUdfPut(TestBaseClass):
         udf_type = 0
 
         try:
-            TestUdfPut.client.udf_put( filename, udf_type, policy )
-        except LuaFileNotFound as e:
-            assert e.code == 1302
+            TestUdfPut.client.udf_put(filename, udf_type, policy)
+        except e.LuaFileNotFound as exception:
+            assert exception.code == 1302
 
     def test_udf_put_with_non_lua_udf_type_and_lua_script_file(self):
 
@@ -116,18 +120,18 @@ class TestUdfPut(TestBaseClass):
         udf_type = 1
 
         try:
-            status = TestUdfPut.client.udf_put( filename, udf_type, policy )
+            TestUdfPut.client.udf_put(filename, udf_type, policy)
 
-        except ClientError as exception:
+        except e.ClientError as exception:
             assert exception.code == -1
             assert exception.msg == "Invalid UDF language"
 
     def test_udf_put_with_all_none_parameters(self):
 
         with pytest.raises(TypeError) as exception:
-            status = TestUdfPut.client.udf_put(None, None, None)
+            TestUdfPut.client.udf_put(None, None, None)
 
-        assert "an integer is required" in exception.value
+        assert "an integer is required" in str(exception.value)
 
     def test_udf_put_with_filename_unicode(self):
 
@@ -159,8 +163,8 @@ class TestUdfPut(TestBaseClass):
         client1 = aerospike.client(config)
 
         try:
-            status = client1.udf_put( filename, udf_type, policy )
+            client1.udf_put(filename, udf_type, policy)
 
-        except ClusterError as exception:
-            assert exception.code == 11L
+        except e.ClusterError as exception:
+            assert exception.code == 11
             assert exception.msg == 'No connection to aerospike cluster'

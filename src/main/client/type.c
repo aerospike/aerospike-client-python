@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright 2013-2015 Aerospike, Inc.
+ * Copyright 2013-2016 Aerospike, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -259,25 +259,25 @@ static PyMethodDef AerospikeClient_Type_Methods[] = {
 		(PyCFunction)AerospikeClient_Index_2dsphere_Create,	METH_VARARGS | METH_KEYWORDS,
 		"Creates a secondary geo2dsphere index"},
 
-    // LSTACK OPERATIONS
+	// LSTACK OPERATIONS
 
 	{"lstack",
 		(PyCFunction) AerospikeClient_LStack, METH_VARARGS | METH_KEYWORDS,
 		"LSTACK operations"},
 
-    // LSET OPERATIONS
+	// LSET OPERATIONS
 
 	{"lset",
 		(PyCFunction) AerospikeClient_LSet, METH_VARARGS | METH_KEYWORDS,
 		"LSET operations"},
 
-    // LLIST OPERATIONS
+	// LLIST OPERATIONS
 
 	{"llist",
 		(PyCFunction) AerospikeClient_LList, METH_VARARGS | METH_KEYWORDS,
 		"LLIST operations"},
 
-    // LMAP OPERATIONS
+	// LMAP OPERATIONS
 
 	{"lmap",
 		(PyCFunction) AerospikeClient_LMap, METH_VARARGS | METH_KEYWORDS,
@@ -393,7 +393,8 @@ static int AerospikeClient_Type_Init(AerospikeClient * self, PyObject * args, Py
 					addr = strdup(PyString_AsString(py_addr));
 				} else if (PyUnicode_Check(py_addr)) {
 					PyObject * py_ustr = PyUnicode_AsUTF8String(py_addr);
-					addr = strdup(PyString_AsString(py_ustr));
+					addr = strdup(PyBytes_AsString(py_ustr));
+					Py_DECREF(py_ustr);
 				}
 				py_port = PyTuple_GetItem(py_host,1);
 				if( PyInt_Check(py_port) || PyLong_Check(py_port) ) {
@@ -420,59 +421,59 @@ static int AerospikeClient_Type_Init(AerospikeClient * self, PyObject * args, Py
 		}
 	}
 
-    PyObject * py_shm = PyDict_GetItemString(py_config, "shm");
-    if (py_shm && PyDict_Check(py_shm) ) {
+	PyObject * py_shm = PyDict_GetItemString(py_config, "shm");
+	if (py_shm && PyDict_Check(py_shm) ) {
 
-        config.use_shm = true;
+		config.use_shm = true;
 
-        PyObject * py_shm_max_nodes = PyDict_GetItemString( py_shm, "shm_max_nodes" );
-        if(py_shm_max_nodes && PyInt_Check(py_shm_max_nodes) ) {
-            config.shm_max_nodes = PyInt_AsLong(py_shm_max_nodes);
-        }
+		PyObject * py_shm_max_nodes = PyDict_GetItemString( py_shm, "shm_max_nodes" );
+		if(py_shm_max_nodes && PyInt_Check(py_shm_max_nodes) ) {
+			config.shm_max_nodes = PyInt_AsLong(py_shm_max_nodes);
+		}
 
-        PyObject * py_shm_max_namespaces = PyDict_GetItemString(py_shm, "shm_max_namespaces");
-        if(py_shm_max_namespaces && PyInt_Check(py_shm_max_namespaces) ) {
-            config.shm_max_namespaces = PyInt_AsLong(py_shm_max_namespaces);
-        }
+		PyObject * py_shm_max_namespaces = PyDict_GetItemString(py_shm, "shm_max_namespaces");
+		if(py_shm_max_namespaces && PyInt_Check(py_shm_max_namespaces) ) {
+			config.shm_max_namespaces = PyInt_AsLong(py_shm_max_namespaces);
+		}
 
-        PyObject* py_shm_takeover_threshold_sec = PyDict_GetItemString(py_shm, "shm_takeover_threshold_sec");
-        if(py_shm_takeover_threshold_sec && PyInt_Check(py_shm_takeover_threshold_sec) ) {
-            config.shm_takeover_threshold_sec = PyInt_AsLong( py_shm_takeover_threshold_sec);
-        }
+		PyObject* py_shm_takeover_threshold_sec = PyDict_GetItemString(py_shm, "shm_takeover_threshold_sec");
+		if(py_shm_takeover_threshold_sec && PyInt_Check(py_shm_takeover_threshold_sec) ) {
+			config.shm_takeover_threshold_sec = PyInt_AsLong( py_shm_takeover_threshold_sec);
+		}
 
-        PyObject* py_shm_cluster_key = PyDict_GetItemString(py_shm, "shm_key");
-        if(py_shm_cluster_key && PyInt_Check(py_shm_cluster_key) ) {
-            user_shm_key = true;
-            config.shm_key = PyInt_AsLong(py_shm_cluster_key);
-        }
-    }
+		PyObject* py_shm_cluster_key = PyDict_GetItemString(py_shm, "shm_key");
+		if(py_shm_cluster_key && PyInt_Check(py_shm_cluster_key) ) {
+			user_shm_key = true;
+			config.shm_key = PyInt_AsLong(py_shm_cluster_key);
+		}
+	}
 
-    self->is_client_put_serializer = false;
-    self->user_serializer_call_info.callback = NULL;
-    self->user_deserializer_call_info.callback = NULL;
-    PyObject *py_serializer_option = PyDict_GetItemString(py_config, "serialization");
-    if (py_serializer_option && PyTuple_Check(py_serializer_option)) {
-        PyObject *py_serializer = PyTuple_GetItem(py_serializer_option, 0);
-        if (py_serializer && py_serializer != Py_None) {
-            if (!PyCallable_Check(py_serializer)) {
-                return -1;
-            }
-            memset(&self->user_serializer_call_info, 0, sizeof(self->user_serializer_call_info));
-            self->user_serializer_call_info.callback = py_serializer;
-        }
-        PyObject *py_deserializer = PyTuple_GetItem(py_serializer_option, 1);
-        if (py_deserializer && py_deserializer != Py_None) {
-            if (!PyCallable_Check(py_deserializer)) {
-                return -1;
-            }
-            memset(&self->user_deserializer_call_info, 0, sizeof(self->user_deserializer_call_info));
-            self->user_deserializer_call_info.callback = py_deserializer;
-        }
-    }
+	self->is_client_put_serializer = false;
+	self->user_serializer_call_info.callback = NULL;
+	self->user_deserializer_call_info.callback = NULL;
+	PyObject *py_serializer_option = PyDict_GetItemString(py_config, "serialization");
+	if (py_serializer_option && PyTuple_Check(py_serializer_option)) {
+		PyObject *py_serializer = PyTuple_GetItem(py_serializer_option, 0);
+		if (py_serializer && py_serializer != Py_None) {
+			if (!PyCallable_Check(py_serializer)) {
+				return -1;
+			}
+			memset(&self->user_serializer_call_info, 0, sizeof(self->user_serializer_call_info));
+			self->user_serializer_call_info.callback = py_serializer;
+		}
+		PyObject *py_deserializer = PyTuple_GetItem(py_serializer_option, 1);
+		if (py_deserializer && py_deserializer != Py_None) {
+			if (!PyCallable_Check(py_deserializer)) {
+				return -1;
+			}
+			memset(&self->user_deserializer_call_info, 0, sizeof(self->user_deserializer_call_info));
+			self->user_deserializer_call_info.callback = py_deserializer;
+		}
+	}
 
 	as_policies_init(&config.policies);
-    //Set default value of use_batch_direct
-    config.policies.batch.use_batch_direct = false;
+	//Set default value of use_batch_direct
+	config.policies.batch.use_batch_direct = false;
 
 	PyObject * py_policies = PyDict_GetItemString(py_config, "policies");
 	if ( py_policies && PyDict_Check(py_policies)) {
@@ -513,20 +514,20 @@ static int AerospikeClient_Type_Init(AerospikeClient * self, PyObject * args, Py
 		}
 
 		PyObject * py_max_threads = PyDict_GetItemString(py_policies, "max_threads");
-        if ( py_max_threads && (PyInt_Check(py_max_threads) || PyLong_Check(py_max_threads))) {
-            config.max_threads = PyInt_AsLong(py_max_threads);
-        }
+		if ( py_max_threads && (PyInt_Check(py_max_threads) || PyLong_Check(py_max_threads))) {
+			config.max_threads = PyInt_AsLong(py_max_threads);
+		}
 
 		PyObject * py_thread_pool_size = PyDict_GetItemString(py_policies, "thread_pool_size");
-        if ( py_thread_pool_size && (PyInt_Check(py_thread_pool_size) || PyLong_Check(py_thread_pool_size))) {
-            config.thread_pool_size = PyInt_AsLong(py_thread_pool_size);
-        }
+		if ( py_thread_pool_size && (PyInt_Check(py_thread_pool_size) || PyLong_Check(py_thread_pool_size))) {
+			config.thread_pool_size = PyInt_AsLong(py_thread_pool_size);
+		}
 
-        //Setting for use_batch_direct
+		//Setting for use_batch_direct
 		PyObject * py_use_batch_direct = PyDict_GetItemString(py_policies, "use_batch_direct");
-        if ( py_use_batch_direct && PyBool_Check(py_use_batch_direct)) {
-            config.policies.batch.use_batch_direct = PyInt_AsLong(py_use_batch_direct);
-        }
+		if ( py_use_batch_direct && PyBool_Check(py_use_batch_direct)) {
+			config.policies.batch.use_batch_direct = PyInt_AsLong(py_use_batch_direct);
+		}
 
 		/*
 		 * Generation policy is removed from constructor.
@@ -566,23 +567,23 @@ static int AerospikeClient_Type_Init(AerospikeClient * self, PyObject * args, Py
 
 static void AerospikeClient_Type_Dealloc(PyObject * self)
 {
-    as_error err;
-    as_error_init(&err);
+	as_error err;
+	as_error_init(&err);
 
-    if (((AerospikeClient*)self)->as && ((AerospikeClient*)self)->is_conn_16) {
-        if (((AerospikeClient*)self)->as->config.hosts_size) {
-            char * alias_to_search = return_search_string(((AerospikeClient*)self)->as);
-            PyObject *py_persistent_item = NULL;
+	if (((AerospikeClient*)self)->as && ((AerospikeClient*)self)->is_conn_16) {
+		if (((AerospikeClient*)self)->as->config.hosts_size) {
+			char * alias_to_search = return_search_string(((AerospikeClient*)self)->as);
+			PyObject *py_persistent_item = NULL;
 
-            py_persistent_item = PyDict_GetItemString(py_global_hosts, alias_to_search); 
-            if (py_persistent_item) {
-                close_aerospike_object(((AerospikeClient*)self)->as, &err, alias_to_search, py_persistent_item);
-                ((AerospikeClient*)self)->as = NULL;
-            }
-            PyMem_Free(alias_to_search);
-            alias_to_search = NULL;
-        }
-    }
+			py_persistent_item = PyDict_GetItemString(py_global_hosts, alias_to_search);
+			if (py_persistent_item) {
+				close_aerospike_object(((AerospikeClient*)self)->as, &err, alias_to_search, py_persistent_item);
+				((AerospikeClient*)self)->as = NULL;
+			}
+			PyMem_Free(alias_to_search);
+			alias_to_search = NULL;
+		}
+	}
 	self->ob_type->tp_free((PyObject *) self);
 }
 
@@ -591,49 +592,54 @@ static void AerospikeClient_Type_Dealloc(PyObject * self)
  ******************************************************************************/
 
 static PyTypeObject AerospikeClient_Type = {
-	PyObject_HEAD_INIT(NULL)
-
-	.ob_size			= 0,
-	.tp_name			= "aerospike.Client",
-	.tp_basicsize		= sizeof(AerospikeClient),
-	.tp_itemsize		= 0,
-	.tp_dealloc			= (destructor) AerospikeClient_Type_Dealloc,
-	.tp_print			= 0,
-	.tp_getattr			= 0,
-	.tp_setattr			= 0,
-	.tp_compare			= 0,
-	.tp_repr			= 0,
-	.tp_as_number		= 0,
-	.tp_as_sequence		= 0,
-	.tp_as_mapping		= 0,
-	.tp_hash			= 0,
-	.tp_call			= 0,
-	.tp_str				= 0,
-	.tp_getattro		= 0,
-	.tp_setattro		= 0,
-	.tp_as_buffer		= 0,
-	.tp_flags			= Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE,
-	.tp_doc				=
-		"The Client class manages the connections and trasactions against\n"
-		"an Aerospike cluster.\n",
-	.tp_traverse		= 0,
-	.tp_clear			= 0,
-	.tp_richcompare		= 0,
-	.tp_weaklistoffset	= 0,
-	.tp_iter			= 0,
-	.tp_iternext		= 0,
-	.tp_methods			= AerospikeClient_Type_Methods,
-	.tp_members			= 0,
-	.tp_getset			= 0,
-	.tp_base			= 0,
-	.tp_dict			= 0,
-	.tp_descr_get		= 0,
-	.tp_descr_set		= 0,
-	.tp_dictoffset		= 0,
-	.tp_init			= (initproc) AerospikeClient_Type_Init,
-	.tp_alloc			= 0,
-	.tp_new				= AerospikeClient_Type_New
+	PyVarObject_HEAD_INIT(NULL, 0)
+	"aerospike.Client",                 // tp_name
+	sizeof(AerospikeClient),            // tp_basicsize
+	0,                                  // tp_itemsize
+	(destructor) AerospikeClient_Type_Dealloc,
+	                                    // tp_dealloc
+	0,                                  // tp_print
+	0,                                  // tp_getattr
+	0,                                  // tp_setattr
+	0,                                  // tp_compare
+	0,                                  // tp_repr
+	0,                                  // tp_as_number
+	0,                                  // tp_as_sequence
+	0,                                  // tp_as_mapping
+	0,                                  // tp_hash
+	0,                                  // tp_call
+	0,                                  // tp_str
+	0,                                  // tp_getattro
+	0,                                  // tp_setattro
+	0,                                  // tp_as_buffer
+	Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE,
+	                                    // tp_flags
+	"The Client class manages the connections and trasactions against\n"
+			"an Aerospike cluster.\n",
+	                                    // tp_doc
+	0,                                  // tp_traverse
+	0,                                  // tp_clear
+	0,                                  // tp_richcompare
+	0,                                  // tp_weaklistoffset
+	0,                                  // tp_iter
+	0,                                  // tp_iternext
+	AerospikeClient_Type_Methods,       // tp_methods
+	0,                                  // tp_members
+	0,                                  // tp_getset
+	0,                                  // tp_base
+	0,                                  // tp_dict
+	0,                                  // tp_descr_get
+	0,                                  // tp_descr_set
+	0,                                  // tp_dictoffset
+	(initproc) AerospikeClient_Type_Init,
+	                                    // tp_init
+	0,                                  // tp_alloc
+	AerospikeClient_Type_New,           // tp_new
+	0,                                  // tp_free
+	0,                                  // tp_is_gc
+	0                                   // tp_bases
 };
+
 
 /*******************************************************************************
  * PUBLIC FUNCTIONS

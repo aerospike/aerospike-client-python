@@ -1,37 +1,41 @@
 # -*- coding: utf-8 -*-
 import pytest
-import time
 import sys
 import random
-import cPickle as pickle
-from test_base_class import TestBaseClass
+from .test_base_class import TestBaseClass
+from aerospike import exception as e
 
 aerospike = pytest.importorskip("aerospike")
 try:
-    from aerospike.exception import *
+    import aerospike
 except:
-    print "Please install aerospike python client."
+    print("Please install aerospike python client.")
     sys.exit(1)
 
+
 class TestListGet(object):
+
     def setup_class(cls):
         """
         Setup method.
         """
         hostlist, user, password = TestBaseClass.get_hosts()
         config = {'hosts': hostlist}
-        if user == None and password == None:
+        if user is None and password is None:
             TestListGet.client = aerospike.client(config).connect()
         else:
-            TestListGet.client = aerospike.client(config).connect(user, password)
+            TestListGet.client = aerospike.client(
+                config).connect(user, password)
 
     def teardown_class(cls):
         TestListGet.client.close()
 
     def setup_method(self, method):
-        for i in xrange(5):
+        for i in range(5):
             key = ('test', 'demo', i)
-            rec = {'name': 'name%s' % (str(i)), 'contact_no': [i, i+1], 'city' : ['Pune', 'Dehli']}
+            rec = {'name': 'name%s' %
+                   (str(i)), 'contact_no': [i, i + 1],
+                   'city': ['Pune', 'Dehli']}
             TestListGet.client.put(key, rec)
         key = ('test', 'demo', 2)
         TestListGet.client.list_append(key, "contact_no", [45, 50, 80])
@@ -40,8 +44,8 @@ class TestListGet(object):
         """
         Teardown method.
         """
-        #time.sleep(1)
-        for i in xrange(5):
+        # time.sleep(1)
+        for i in range(5):
             key = ('test', 'demo', i)
             TestListGet.client.remove(key)
 
@@ -50,7 +54,7 @@ class TestListGet(object):
         Invoke list_get() get string with correct parameters
         """
         key = ('test', 'demo', 1)
-       
+
         val = TestListGet.client.list_get(key, "city", 0)
 
         assert val == 'Pune'
@@ -76,7 +80,8 @@ class TestListGet(object):
         """
         with pytest.raises(TypeError) as typeError:
             TestListGet.client.list_get()
-        assert "Required argument 'key' (pos 1) not found" in typeError.value
+        assert "Required argument 'key' (pos 1) not found" in str(
+            typeError.value)
 
     def test_list_get_with_incorrect_policy(self):
         """
@@ -89,7 +94,7 @@ class TestListGet(object):
         try:
             TestListGet.client.list_get(key, "contact_no", 0, {}, policy)
 
-        except ParamError as exception:
+        except e.ParamError as exception:
             assert exception.code == -2
             assert exception.msg == "timeout is invalid"
 
@@ -101,12 +106,13 @@ class TestListGet(object):
         minLength = 5
         maxLength = 30
         length = random.randint(minLength, maxLength)
-        key = ('test', 'demo', ''.join(map(lambda unused :
-            random.choice(charSet), range(length)))+".com")
+        key = ('test', 'demo', ''.join(map(lambda unused:
+                                           random.choice(charSet),
+                                           range(length))) + ".com")
         try:
             TestListGet.client.list_get(key, "contact_no", 0)
 
-        except RecordNotFound as exception:
+        except e.RecordNotFound as exception:
             assert exception.code == 2
 
     def test_list_get_with_extra_parameter(self):
@@ -118,7 +124,8 @@ class TestListGet(object):
         with pytest.raises(TypeError) as typeError:
             TestListGet.client.list_get(key, "contact_no", 1, {}, policy, "")
 
-        assert "list_get() takes at most 5 arguments (6 given)" in typeError.value
+        assert "list_get() takes at most 5 arguments (6 given)" in str(
+            typeError.value)
 
     def test_list_get_policy_is_string(self):
         """
@@ -128,7 +135,7 @@ class TestListGet(object):
         try:
             TestListGet.client.list_get(key, "contact_no", 1, {}, "")
 
-        except ParamError as exception:
+        except e.ParamError as exception:
             assert exception.code == -2
             assert exception.msg == "policy must be a dict"
 
@@ -139,7 +146,7 @@ class TestListGet(object):
         try:
             TestListGet.client.list_get(None, "contact_no", 0)
 
-        except ParamError as exception:
+        except e.ParamError as exception:
             assert exception.code == -2
             assert exception.msg == "key is invalid"
 
@@ -151,18 +158,18 @@ class TestListGet(object):
         try:
             TestListGet.client.list_get(key, None, 1)
 
-        except ParamError as exception:
+        except e.ParamError as exception:
             assert exception.code == -2
             assert exception.msg == "Bin name should be of type string"
-    
+
     def test_list_get_with_negative_index(self):
         """
         Invoke list_get() with negative index
         """
         key = ('test', 'demo', 1)
         try:
-            bins = TestListGet.client.list_get(key, "contact_no", -56)
-        except InvalidRequest as exception:
+            TestListGet.client.list_get(key, "contact_no", -56)
+        except e.InvalidRequest as exception:
             assert exception.code == 4
 
     def test_list_get_meta_type_integer(self):
@@ -173,7 +180,7 @@ class TestListGet(object):
         try:
             TestListGet.client.list_get(key, "contact_no", 0, 888)
 
-        except ParamError as exception:
+        except e.ParamError as exception:
             assert exception.code == -2
             assert exception.msg == "Metadata should be of type dictionary"
 
@@ -185,4 +192,4 @@ class TestListGet(object):
 
         with pytest.raises(TypeError) as typeError:
             TestListGet.client.list_get(key, "contact_no", "Fifth")
-        assert "an integer is required" in typeError.value
+        assert "an integer is required" in str(typeError.value)

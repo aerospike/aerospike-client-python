@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
-################################################################################
-# Copyright 2013-2015 Aerospike, Inc.
+##########################################################################
+# Copyright 2013-2016 Aerospike, Inc.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -13,7 +13,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-################################################################################
+##########################################################################
 
 from __future__ import print_function
 
@@ -25,9 +25,9 @@ import os.path
 from optparse import OptionParser
 from aerospike import predicates as p
 
-################################################################################
+##########################################################################
 # Option Parsing
-################################################################################
+##########################################################################
 
 usage = "usage: %prog [options] [where]"
 
@@ -74,7 +74,7 @@ optparser.add_option(
     help="UDF Arguments.")
 
 optparser.add_option(
-    "-b", "--bins", dest="bins", type="string", action="append", 
+    "-b", "--bins", dest="bins", type="string", action="append",
     help="Bins to select from each record.")
 
 optparser.add_option(
@@ -98,20 +98,20 @@ if len(args) > 1:
     print()
     sys.exit(1)
 
-################################################################################
+##########################################################################
 # Client Configuration
-################################################################################
+##########################################################################
 
 config = {
-    'hosts': [ (options.host, options.port) ],
+    'hosts': [(options.host, options.port)],
     'lua': {
         'user_path': os.path.dirname(__file__)
     }
 }
 
-################################################################################
+##########################################################################
 # Application
-################################################################################
+##########################################################################
 
 exitCode = 0
 
@@ -121,7 +121,8 @@ try:
     # Connect to Cluster
     # ----------------------------------------------------------------------------
 
-    client = aerospike.client(config).connect(options.username, options.password)
+    client = aerospike.client(config).connect(
+        options.username, options.password)
 
     # ----------------------------------------------------------------------------
     # Perform Operation
@@ -133,7 +134,8 @@ try:
         re_str_eq = "\s+=\s*(?:(?:\"(.*)\")|(?:\'(.*)\'))"
         re_int_eq = "\s+=\s*(\d+)"
         re_int_rg = "\s+between\s+\(\s*(\d+)\s*,\s*(\d+)\s*\)"
-        re_w = re.compile("%s(?:%s|%s|%s)" % (re_bin, re_str_eq, re_int_eq, re_int_rg))
+        re_w = re.compile("%s(?:%s|%s|%s)" %
+                          (re_bin, re_str_eq, re_int_eq, re_int_rg))
 
         namespace = options.namespace if options.namespace and options.namespace != 'None' else None
         set = options.set if options.set and options.set != 'None' else None
@@ -143,7 +145,7 @@ try:
         if len(args) == 1:
 
             w = re_w.match(args[0])
-            if w != None:
+            if w is not None:
 
                 # If predicate is provided, then perform a query
                 q = client.query(namespace, set)
@@ -166,7 +168,7 @@ try:
                     u = int(w.group(6))
                     q.where(p.between(b, l, u))
 
-        if q == None:
+        if q is None:
             # If predicate not provided, then perform a scan
             q = client.scan(namespace, set)
 
@@ -183,7 +185,8 @@ try:
         results = []
 
         # callback to be called for each record read
-        def callback((key, meta, rec)):
+        def callback(input_tuple):
+            (key, meta, rec) = input_tuple
             results.append((key, meta, rec))
             if options.show_key and options.show_meta:
                 print(key, meta, rec)
@@ -193,17 +196,17 @@ try:
                 print(meta, rec)
             else:
                 print(rec)
-        
+
         # invoke the operations, and for each record invoke the callback
         q.foreach(callback)
-        
+
         print("---")
         if len(results) == 1:
             print("OK, 1 result found.")
         else:
             print("OK, %d results found." % len(results))
 
-    except Exception, eargs:
+    except Exception as eargs:
         print("error: {0}".format(eargs), file=sys.stderr)
         exitCode = 2
 
@@ -213,13 +216,13 @@ try:
 
     client.close()
 
-except Exception, eargs:
+except Exception as eargs:
     print("error: {0}".format(eargs), file=sys.stderr)
     exitCode = 3
 
 
-################################################################################
+##########################################################################
 # Exit
-################################################################################
+##########################################################################
 
 sys.exit(exitCode)

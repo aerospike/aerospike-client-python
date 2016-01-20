@@ -1,47 +1,50 @@
 # -*- coding: utf-8 -*-
 import pytest
-import time
 import sys
-import cPickle as pickle
-from test_base_class import TestBaseClass
+
+from .test_base_class import TestBaseClass
+from aerospike import exception as e
 
 aerospike = pytest.importorskip("aerospike")
 try:
-    from aerospike.exception import *
+    import aerospike
 except:
-    print "Please install aerospike python client."
+    print("Please install aerospike python client.")
     sys.exit(1)
 
+
 class TestAppend(object):
+
     def setup_class(cls):
         """
         Setup method.
         """
         hostlist, user, password = TestBaseClass.get_hosts()
         config = {'hosts': hostlist}
-        if user == None and password == None:
+        if user is None and password is None:
             TestAppend.client = aerospike.client(config).connect()
         else:
-            TestAppend.client = aerospike.client(config).connect(user, password)
+            TestAppend.client = aerospike.client(
+                config).connect(user, password)
 
     def teardown_class(cls):
         TestAppend.client.close()
 
     def setup_method(self, method):
-        for i in xrange(5):
+        for i in range(5):
             key = ('test', 'demo', i)
             rec = {'name': 'name%s' % (str(i)), 'age': i}
             TestAppend.client.put(key, rec)
         key = ('test', 'demo', 'bytearray_key')
         TestAppend.client.put(key, {"bytearray_bin": bytearray("asd;as[d'as;d",
-            "utf-8")})
+                                                               "utf-8")})
 
     def teardown_method(self, method):
         """
         Teardoen method.
         """
-        #time.sleep(1)
-        for i in xrange(5):
+        # time.sleep(1)
+        for i in range(5):
             key = ('test', 'demo', i)
             TestAppend.client.remove(key)
         key = ('test', 'demo', 'bytearray_key')
@@ -53,7 +56,8 @@ class TestAppend(object):
         """
         with pytest.raises(TypeError) as typeError:
             TestAppend.client.append()
-        assert "Required argument 'key' (pos 1) not found" in typeError.value
+        assert "Required argument 'key' (pos 1) not found" in str(
+            typeError.value)
 
     def test_append_with_correct_paramters(self):
         """
@@ -62,7 +66,7 @@ class TestAppend(object):
         key = ('test', 'demo', 1)
         TestAppend.client.append(key, "name", "str")
 
-        (key, meta, bins) = TestAppend.client.get(key)
+        (key, _, bins) = TestAppend.client.get(key)
 
         assert bins == {'age': 1, 'name': 'name1str'}
 
@@ -78,7 +82,7 @@ class TestAppend(object):
         }
         TestAppend.client.append(key, "name", "str", {}, policy)
 
-        (key, meta, bins) = TestAppend.client.get(key)
+        (key, _, bins) = TestAppend.client.get(key)
 
         assert bins == {'age': 1, 'name': 'name1str'}
 
@@ -95,12 +99,12 @@ class TestAppend(object):
         }
         TestAppend.client.append(key, "name", "str", {}, policy)
 
-        (key, meta, bins) = TestAppend.client.get(key)
+        (key, _, bins) = TestAppend.client.get(key)
 
         assert bins == {'age': 1, 'name': 'name1str'}
         assert key == ('test', 'demo', None, bytearray(
             b'\xb7\xf4\xb88\x89\xe2\xdag\xdeh>\x1d\xf6\x91\x9a\x1e\xac\xc4F\xc8')
-                      )
+        )
 
     def test_append_with_policy_key_digest(self):
         """
@@ -118,7 +122,7 @@ class TestAppend(object):
         }
         TestAppend.client.append(key, "name", "str", {}, policy)
 
-        (key, meta, bins) = TestAppend.client.get(key)
+        (key, _, bins) = TestAppend.client.get(key)
 
         assert bins == {'age': 1, 'name': 'name1str', 'nolist': [1, 2, 3]}
         assert key == ('test', 'demo', None,
@@ -146,7 +150,7 @@ class TestAppend(object):
         assert bins == {'age': 1, 'name': 'name1str'}
         assert key == ('test', 'demo', None, bytearray(
             b'\xb7\xf4\xb88\x89\xe2\xdag\xdeh>\x1d\xf6\x91\x9a\x1e\xac\xc4F\xc8')
-                      )
+        )
 
     def test_append_with_policy_key_gen_EQ_positive(self):
         """
@@ -171,7 +175,7 @@ class TestAppend(object):
         assert bins == {'age': 1, 'name': 'name1str'}
         assert key == ('test', 'demo', None, bytearray(
             b'\xb7\xf4\xb88\x89\xe2\xdag\xdeh>\x1d\xf6\x91\x9a\x1e\xac\xc4F\xc8')
-                      )
+        )
 
     def test_append_with_policy_key_gen_GT_lesser(self):
         """
@@ -195,17 +199,17 @@ class TestAppend(object):
         try:
             TestAppend.client.append(key, "name", "str", meta, policy)
 
-        except RecordGenerationError as exception:
+        except e.RecordGenerationError as exception:
             assert exception.code == 3
             assert exception.msg == "AEROSPIKE_ERR_RECORD_GENERATION"
             assert exception.bin == "name"
 
-        (key , meta, bins) = TestAppend.client.get(key)
+        (key, meta, bins) = TestAppend.client.get(key)
 
         assert bins == {'age': 1, 'name': 'name1'}
         assert key == ('test', 'demo', None, bytearray(
             b'\xb7\xf4\xb88\x89\xe2\xdag\xdeh>\x1d\xf6\x91\x9a\x1e\xac\xc4F\xc8')
-                      )
+        )
 
     def test_append_with_policy_key_gen_GT_positive(self):
         """
@@ -230,7 +234,7 @@ class TestAppend(object):
         assert bins == {'age': 1, 'name': 'name1str'}
         assert key == ('test', 'demo', None, bytearray(
             b'\xb7\xf4\xb88\x89\xe2\xdag\xdeh>\x1d\xf6\x91\x9a\x1e\xac\xc4F\xc8')
-                      )
+        )
 
     def test_append_with_policy_key_gen_EQ_not_equal(self):
         """
@@ -253,17 +257,17 @@ class TestAppend(object):
         try:
             TestAppend.client.append(key, "name", "str", meta, policy)
 
-        except RecordGenerationError as exception:
+        except e.RecordGenerationError as exception:
             assert exception.code == 3
             assert exception.msg == "AEROSPIKE_ERR_RECORD_GENERATION"
             assert exception.bin == "name"
 
-        (key , meta, bins) = TestAppend.client.get(key)
+        (key, meta, bins) = TestAppend.client.get(key)
 
         assert bins == {'age': 1, 'name': 'name1'}
         assert key == ('test', 'demo', None, bytearray(
             b'\xb7\xf4\xb88\x89\xe2\xdag\xdeh>\x1d\xf6\x91\x9a\x1e\xac\xc4F\xc8')
-                      )
+        )
 
     def test_append_with_incorrect_policy(self):
         """
@@ -276,7 +280,7 @@ class TestAppend(object):
         try:
             TestAppend.client.append(key, "name", "str", {}, policy)
 
-        except ParamError as exception:
+        except e.ParamError as exception:
             assert exception.code == -2
             assert exception.msg == "timeout is invalid"
 
@@ -287,7 +291,7 @@ class TestAppend(object):
         key = ('test', 'demo', 1000)
         status = TestAppend.client.append(key, "name", "str")
 
-        assert status == 0L
+        assert status == 0
         TestAppend.client.remove(key)
 
     def test_append_with_nonexistent_bin(self):
@@ -297,7 +301,7 @@ class TestAppend(object):
         key = ('test', 'demo', 1)
         status = TestAppend.client.append(key, "name1", "str")
 
-        assert status == 0L
+        assert status == 0
 
     def test_append_value_not_string(self):
         """
@@ -307,7 +311,7 @@ class TestAppend(object):
         try:
             TestAppend.client.append(key, "name", 2)
 
-        except ParamError as exception:
+        except e.ParamError as exception:
             assert exception.code == -2
             assert exception.msg == "Cannot concatenate 'str' and 'non-str' objects"
 
@@ -320,7 +324,8 @@ class TestAppend(object):
         with pytest.raises(TypeError) as typeError:
             TestAppend.client.append(key, "name", "str", {}, policy, "")
 
-        assert "append() takes at most 5 arguments (6 given)" in typeError.value
+        assert "append() takes at most 5 arguments (6 given)" in str(
+            typeError.value)
 
     def test_append_policy_is_string(self):
         """
@@ -330,7 +335,7 @@ class TestAppend(object):
         try:
             TestAppend.client.append(key, "name", "pqr", {}, "")
 
-        except ParamError as exception:
+        except e.ParamError as exception:
             assert exception.code == -2
             assert exception.msg == "policy must be a dict"
 
@@ -341,7 +346,7 @@ class TestAppend(object):
         try:
             TestAppend.client.append(None, "name", "str")
 
-        except ParamError as exception:
+        except e.ParamError as exception:
             assert exception.code == -2
             assert exception.msg == "key is invalid"
 
@@ -353,18 +358,18 @@ class TestAppend(object):
         try:
             TestAppend.client.append(key, None, "str")
 
-        except ParamError as exception:
+        except e.ParamError as exception:
             assert exception.code == -2
             assert exception.msg == "Bin name should be of type string"
-    
+
     def test_append_unicode_value(self):
         """
         Invoke append() with unicode string
         """
         key = ('test', 'demo', 1)
-        res = TestAppend.client.append(key, "name", u"address")
+        TestAppend.client.append(key, "name", u"address")
 
-        key, meta, bins = TestAppend.client.get(key)
+        key, _, bins = TestAppend.client.get(key)
         assert bins['name'] == 'name1address'
 
     def test_append_unicode_bin_name(self):
@@ -372,9 +377,9 @@ class TestAppend(object):
         Invoke append() with unicode string
         """
         key = ('test', 'demo', 1)
-        res = TestAppend.client.append(key, u"add", u"address")
+        TestAppend.client.append(key, u"add", u"address")
 
-        key, meta, bins = TestAppend.client.get(key)
+        key, _, bins = TestAppend.client.get(key)
         assert bins['add'] == 'address'
 
     def test_append_with_correct_paramters_without_connection(self):
@@ -388,8 +393,8 @@ class TestAppend(object):
         try:
             client1.append(key, "name", "str")
 
-        except ClusterError as exception:
-            assert exception.code == 11L
+        except e.ClusterError as exception:
+            assert exception.code == 11
             assert exception.msg == 'No connection to aerospike cluster'
 
     def test_append_with_bytearray(self):
@@ -397,21 +402,24 @@ class TestAppend(object):
         Invoke append() with bytearray value
         """
         key = ('test', 'demo', 'bytearray_key')
-        TestAppend.client.append(key, "bytearray_bin", bytearray("abc"))
+        TestAppend.client.append(
+            key, "bytearray_bin", bytearray("abc", "utf-8"))
 
-        (key, meta, bins) = TestAppend.client.get(key)
+        (key, _, bins) = TestAppend.client.get(key)
 
-        assert bins == {'bytearray_bin': "asd;as[d'as;dabc"}
+        assert bins == {
+            'bytearray_bin': bytearray("asd;as[d'as;dabc", "utf-8")}
 
     def test_append_with_bytearray_new_key(self):
         """
         Invoke append() with bytearray value with a new record(non-existing)
         """
         key = ('test', 'demo', 'bytearray_new')
-        TestAppend.client.append(key, "bytearray_bin", bytearray("asd;as[d'as;d", "utf-8"))
+        TestAppend.client.append(
+            key, "bytearray_bin", bytearray("asd;as[d'as;d", "utf-8"))
 
-        (key, meta, bins) = TestAppend.client.get(key)
+        (key, _, bins) = TestAppend.client.get(key)
 
-        assert bins == {'bytearray_bin': "asd;as[d'as;d"}
+        assert bins == {'bytearray_bin': bytearray("asd;as[d'as;d", "utf-8")}
 
         TestAppend.client.remove(key)

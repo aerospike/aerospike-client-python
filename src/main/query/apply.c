@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright 2013-2015 Aerospike, Inc.
+ * Copyright 2013-2016 Aerospike, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -59,7 +59,7 @@ AerospikeQuery * AerospikeQuery_Apply(AerospikeQuery * self, PyObject * args, Py
 		goto CLEANUP;
 	}
 
-    self->client->is_client_put_serializer = false;
+	self->client->is_client_put_serializer = false;
 
 	// Aerospike API Arguments
 	char * module = NULL;
@@ -68,7 +68,7 @@ AerospikeQuery * AerospikeQuery_Apply(AerospikeQuery * self, PyObject * args, Py
 
 	if ( PyUnicode_Check(py_module) ){
 		py_umodule = PyUnicode_AsUTF8String(py_module);
-		module = PyString_AsString(py_umodule);
+		module = PyBytes_AsString(py_umodule);
 	}
 	else if ( PyString_Check(py_module) ) {
 		module = PyString_AsString(py_module);
@@ -80,7 +80,7 @@ AerospikeQuery * AerospikeQuery_Apply(AerospikeQuery * self, PyObject * args, Py
 
 	if ( PyUnicode_Check(py_function) ){
 		py_ufunction = PyUnicode_AsUTF8String(py_function);
-		function = PyString_AsString(py_ufunction);
+		function = PyBytes_AsString(py_ufunction);
 	}
 	else if ( PyString_Check(py_function) ) {
 		function = PyString_AsString(py_function);
@@ -110,9 +110,9 @@ AerospikeQuery * AerospikeQuery_Apply(AerospikeQuery * self, PyObject * args, Py
 	}
 
 
-    Py_BEGIN_ALLOW_THREADS
+	Py_BEGIN_ALLOW_THREADS
 	as_query_apply(&self->query, module, function, (as_list *) arglist);
-    Py_END_ALLOW_THREADS
+	Py_END_ALLOW_THREADS
 
 CLEANUP:
 

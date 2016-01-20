@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright 2013-2015 Aerospike, Inc.
+ * Copyright 2013-2016 Aerospike, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -98,7 +98,7 @@ PyObject * AerospikeClient_ScanApply_Invoke(
 		goto CLEANUP;
 	}
 
-    self->is_client_put_serializer = false;
+	self->is_client_put_serializer = false;
 
 	if (!(namespace_p) || !(py_set) || !(py_module) || !(py_function)) {
 		as_error_update(&err, AEROSPIKE_ERR_PARAM, "Parameter should not be null");
@@ -113,7 +113,7 @@ PyObject * AerospikeClient_ScanApply_Invoke(
 	char *set_p = NULL;
 	if (PyUnicode_Check(py_set)) {
 		py_ustr1 = PyUnicode_AsUTF8String(py_set);
-		set_p = PyString_AsString(py_ustr1);
+		set_p = PyBytes_AsString(py_ustr1);
 	} else if (PyString_Check(py_set)) {
 		set_p = PyString_AsString(py_set);
 	} else if( Py_None != py_set ) {
@@ -145,7 +145,7 @@ PyObject * AerospikeClient_ScanApply_Invoke(
 	char *module_p = NULL;
 	if (PyUnicode_Check(py_module)) {
 		py_ustr2 = PyUnicode_AsUTF8String(py_module);
-		module_p = PyString_AsString(py_ustr2);
+		module_p = PyBytes_AsString(py_ustr2);
 	} else if (PyString_Check(py_module)) {
 		module_p = PyString_AsString(py_module);
 	} else {
@@ -156,7 +156,7 @@ PyObject * AerospikeClient_ScanApply_Invoke(
 	char *function_p = NULL;
 	if (PyUnicode_Check(py_function)) {
 		py_ustr3 = PyUnicode_AsUTF8String(py_function);
-		function_p = PyString_AsString(py_ustr3);
+		function_p = PyBytes_AsString(py_ustr3);
 	} else if (PyString_Check(py_function)) {
 		function_p = PyString_AsString(py_function);
 	} else {
@@ -175,9 +175,9 @@ PyObject * AerospikeClient_ScanApply_Invoke(
 		goto CLEANUP;
 	}
 
-    Py_BEGIN_ALLOW_THREADS
+	Py_BEGIN_ALLOW_THREADS
 	aerospike_scan_background(self->as, &err, scan_policy_p, &scan, &scan_id);
-    Py_END_ALLOW_THREADS
+	Py_END_ALLOW_THREADS
 	arglist = NULL;
 	if(err.code == AEROSPIKE_OK) {
 		if(block) {
@@ -188,9 +188,9 @@ PyObject * AerospikeClient_ScanApply_Invoke(
 					goto CLEANUP;
 				}
 			}
-            Py_BEGIN_ALLOW_THREADS
+			Py_BEGIN_ALLOW_THREADS
 			aerospike_scan_wait(self->as, &err, info_policy_p, scan_id, 0);
-            Py_END_ALLOW_THREADS
+			Py_END_ALLOW_THREADS
 			if(err.code != AEROSPIKE_OK) {
 				as_error_update(&err, AEROSPIKE_ERR_PARAM, "Unable to perform scan_wait on the scan");
 			}
@@ -323,12 +323,12 @@ PyObject * AerospikeClient_ScanInfo(AerospikeClient * self, PyObject * args, PyO
 		goto CLEANUP;
 	}
 
-    Py_BEGIN_ALLOW_THREADS
+	Py_BEGIN_ALLOW_THREADS
 	if (AEROSPIKE_OK != (aerospike_scan_info(self->as, &err,
 					info_policy_p, lscanId, &scan_info))) {
 		goto CLEANUP;
 	}
-    Py_END_ALLOW_THREADS
+	Py_END_ALLOW_THREADS
 
 	if(retObj)
 	{

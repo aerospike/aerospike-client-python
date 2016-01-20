@@ -54,23 +54,3 @@ function group_count(stream, group_by_bin, bin_having, ge_threshold)
   end
 end
 
-local function double_count_bins(group_by_bin, value)
-  return function(group, rec)
-    if rec[group_by_bin] then
-      local bin_name = rec[group_by_bin]
-      group[bin_name] = (group[bin_name] or 0) + 1
-      group[bin_name] = group[bin_name] + value
-    end
-    return group
-  end
-end
-
-function double_group_count(stream, group_by_bin, bin_having, value, ge_threshold)
-  if bin_having and ge_threshold then
-    local myfilter = having_ge_threshold(bin_having, ge_threshold)
-    return stream : filter(myfilter) : aggregate(map{}, double_count_bins(group_by_bin, value)) : reduce(reduce_groups)
-  else
-    return stream : aggregate(map{}, double_count_bins(group_by_bin, value)) : reduce(reduce_groups)
-  end
-end
-
