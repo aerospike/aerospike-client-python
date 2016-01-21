@@ -77,7 +77,6 @@ class TestIncrement(object):
         assert bins == {'age': 6, 'name': 'name1'}
 
     def test_increment_with_correct_parameters_float_value(self):
-        pytest.xfail("Increment test not working for floats")
         """
         Invoke increment() with correct parameters and a float value
         """
@@ -88,7 +87,7 @@ class TestIncrement(object):
 
         (key, _, bins) = TestIncrement.client.get(key)
 
-        assert bins == {'age': 12.9, 'name': 'name6'}
+        assert bins == {'age': 12.9}
 
     def test_increment_with_policy_key_send(self):
         """

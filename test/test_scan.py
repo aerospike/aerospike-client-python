@@ -150,7 +150,6 @@ class TestScan(TestBaseClass):
         assert len(records) != 0
 
     def test_scan_with_callback_contains_error(self):
-        pytest.xfail("segfault!")
         ns = 'test'
         st = 'demo'
 
