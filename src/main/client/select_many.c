@@ -124,6 +124,8 @@ static bool batch_select_cb(const as_batch_read* results, uint32_t n, void* udat
 			PyTuple_SetItem(py_rec, 2, py_obj);
 			// Set return value in return Dict
 			if ( PyList_SetItem( py_recs, i, py_rec ) ){
+				// Release Python State
+				PyGILState_Release(gstate);
 				return false;
 			}
 			Py_DECREF(rec);
@@ -134,6 +136,8 @@ static bool batch_select_cb(const as_batch_read* results, uint32_t n, void* udat
 			Py_INCREF(Py_None);
 			PyTuple_SetItem(py_rec, 2, Py_None);
 			if ( PyList_SetItem( py_recs, i, py_rec)){
+				// Release Python State
+				PyGILState_Release(gstate);
 				return false;
 			}
 		}

@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright 2013-2015 Aerospike, Inc.
+ * Copyright 2013-2016 Aerospike, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -32,7 +32,7 @@
 
 typedef struct {
 	PyObject * py_recs;
-    AerospikeClient * client;
+	AerospikeClient * client;
 } LocalData;
 /**
  *******************************************************************************************************
@@ -49,7 +49,7 @@ typedef struct {
 static bool batch_get_cb(const as_batch_read* results, uint32_t n, void* udata)
 {
 	// Typecast udata back to PyObject
-    LocalData *data = (LocalData *) udata;
+	LocalData *data = (LocalData *) udata;
 	PyObject * py_recs = data->py_recs;
 
 	// Initialize error object
@@ -59,82 +59,91 @@ static bool batch_get_cb(const as_batch_read* results, uint32_t n, void* udata)
 	// Lock Python State
 	PyGILState_STATE gstate;
 	gstate = PyGILState_Ensure();
-    /*// Typecast udata back to PyObject
-    PyObject * py_recs = (PyObject *) udata;
+	/*// Typecast udata back to PyObject
+	PyObject * py_recs = (PyObject *) udata;
 
-    // Initialize error object
-    as_error err;
-    as_error_init(&err);*/
+	// Initialize error object
+	as_error err;
+	as_error_init(&err);*/
 
-    // Loop over results array
-    for ( uint32_t i =0; i < n; i++ ){
+	// Loop over results array
+	for (uint32_t i = 0; i < n; i++) {
 
-        PyObject * rec = NULL;
-        PyObject * py_rec = NULL;
-        PyObject * p_key = NULL;
-        p_key = PyTuple_New(4);
-        py_rec = PyTuple_New(3);
+		PyObject * rec = NULL;
+		PyObject * py_rec = NULL;
+		PyObject * p_key = NULL;
+		p_key = PyTuple_New(4);
+		py_rec = PyTuple_New(3);
 
-	    if ( results[i].key->ns && strlen(results[i].key->ns) > 0 ) {
-		    PyTuple_SetItem(p_key, 0, PyString_FromString(results[i].key->ns));
-	    }
+		if (results[i].key->ns && strlen(results[i].key->ns) > 0) {
+			PyTuple_SetItem(p_key, 0, PyString_FromString(results[i].key->ns));
+		}
 
-	    if ( results[i].key->set && strlen(results[i].key->set) > 0 ) {
-		    PyTuple_SetItem(p_key, 1, PyString_FromString(results[i].key->set));
-	    }
+		if (results[i].key->set && strlen(results[i].key->set) > 0) {
+			PyTuple_SetItem(p_key, 1, PyString_FromString(results[i].key->set));
+		}
 
-        if(results[i].key->valuep) {
-            switch(((as_val*)(results[i].key->valuep))->type){
-                case AS_INTEGER:
-                    PyTuple_SetItem(p_key, 2, PyInt_FromLong((long)results[i].key->value.integer.value));
-                    break;
+		if (results[i].key->valuep) {
+			switch (((as_val*) (results[i].key->valuep))->type) {
+			case AS_INTEGER:
+				PyTuple_SetItem(p_key, 2,
+						PyInt_FromLong(
+								(long) results[i].key->value.integer.value));
+				break;
 
-                case AS_STRING:
-                    PyTuple_SetItem(p_key, 2, PyString_FromString((const char *)results[i].key->value.string.value));
-                    break;
-                default:
-                    break;
-            }
-        } else {
-            Py_INCREF(Py_None);
-            PyTuple_SetItem(p_key, 2, Py_None);
-        }
+			case AS_STRING:
+				PyTuple_SetItem(p_key, 2,
+						PyString_FromString(
+								(const char *) results[i].key->value.string.value));
+				break;
+			default:
+				break;
+			}
+		} else {
+			Py_INCREF(Py_None);
+			PyTuple_SetItem(p_key, 2, Py_None);
+		}
 
 		if (results[i].key->digest.init) {
-            PyTuple_SetItem(p_key, 3, PyByteArray_FromStringAndSize((char *) results[i].key->digest.value, AS_DIGEST_VALUE_SIZE));
-        }
+			PyTuple_SetItem(p_key, 3, PyByteArray_FromStringAndSize((char *) results[i].key->digest.value, AS_DIGEST_VALUE_SIZE));
+		}
 
-        PyTuple_SetItem(py_rec, 0, p_key);
-        // Check record status
-        if ( results[i].result == AEROSPIKE_OK ){
+		PyTuple_SetItem(py_rec, 0, p_key);
+		// Check record status
+		if (results[i].result == AEROSPIKE_OK) {
 
-            record_to_pyobject(data->client, &err, &results[i].record, results[i].key, &rec);
-            PyObject *py_obj = PyTuple_GetItem(rec, 1);
-            Py_INCREF(py_obj);
-            PyTuple_SetItem(py_rec, 1, py_obj);
-            py_obj = PyTuple_GetItem(rec, 2);
-            Py_INCREF(py_obj);
-            PyTuple_SetItem(py_rec, 2, py_obj);
+			record_to_pyobject(data->client, &err, &results[i].record,
+					results[i].key, &rec);
+			PyObject *py_obj = PyTuple_GetItem(rec, 1);
+			Py_INCREF(py_obj);
+			PyTuple_SetItem(py_rec, 1, py_obj);
+			py_obj = PyTuple_GetItem(rec, 2);
+			Py_INCREF(py_obj);
+			PyTuple_SetItem(py_rec, 2, py_obj);
 
-            // Set return value in return Dict
-            if ( PyList_SetItem( py_recs, i, py_rec ) ){
-                return false;
-            }
-            Py_DECREF(rec);
-        } else if( results[i].result == AEROSPIKE_ERR_RECORD_NOT_FOUND) {
-            
-            Py_INCREF(Py_None);
-            PyTuple_SetItem(py_rec, 1, Py_None);
-            Py_INCREF(Py_None);
-            PyTuple_SetItem(py_rec, 2, Py_None);
-            if ( PyList_SetItem( py_recs, i, py_rec)){
-                return false;
-            }
-        }
-    }
+			// Set return value in return Dict
+			if (PyList_SetItem(py_recs, i, py_rec)) {
+				// Release Python State
+				PyGILState_Release(gstate);
+				return false;
+			}
+			Py_DECREF(rec);
+		} else if (results[i].result == AEROSPIKE_ERR_RECORD_NOT_FOUND) {
+
+			Py_INCREF(Py_None);
+			PyTuple_SetItem(py_rec, 1, Py_None);
+			Py_INCREF(Py_None);
+			PyTuple_SetItem(py_rec, 2, Py_None);
+			if (PyList_SetItem(py_recs, i, py_rec)) {
+				// Release Python State
+				PyGILState_Release(gstate);
+				return false;
+			}
+		}
+	}
 	// Release Python State
 	PyGILState_Release(gstate);
-    return true;
+	return true;
 }
 
 /**
