@@ -514,7 +514,6 @@ class TestQuery(TestBaseClass):
         assert len(records) == 2
 
     def test_query_with_correct_parameters_containsstring(self):
-        #        pytest.xfail("segfault!")
         """
             Invoke query() with correct arguments and using predicate contains
         """
@@ -533,7 +532,6 @@ class TestQuery(TestBaseClass):
         assert len(records) == 3
 
     def test_query_with_correct_parameters_containsstring_mapkeys(self):
-        #        pytest.xfail("segfault!")
         """
             Invoke query() with correct arguments and using predicate contains
         """
@@ -552,7 +550,6 @@ class TestQuery(TestBaseClass):
         assert len(records) == 5
 
     def test_query_with_correct_parameters_containsstring_mapvalues(self):
-        #        pytest.xfail("segfault!")
         """
             Invoke query() with correct arguments and using predicate contains
         """
@@ -641,7 +638,6 @@ class TestQuery(TestBaseClass):
     def test_query_with_correct_parameters_containsstring_mapvalues_notuple(
         self
     ):
-        #        pytest.xfail("segfault!")
         """
             Invoke query() with correct arguments and using predicate contains
         """
