@@ -1,37 +1,41 @@
 # -*- coding: utf-8 -*-
 import pytest
-import time
 import sys
 import random
-import cPickle as pickle
-from test_base_class import TestBaseClass
+from .test_base_class import TestBaseClass
+from aerospike import exception as e
 
 aerospike = pytest.importorskip("aerospike")
 try:
-    from aerospike.exception import *
+    import aerospike
 except:
-    print "Please install aerospike python client."
+    print("Please install aerospike python client.")
     sys.exit(1)
 
+
 class TestListRemove(object):
+
     def setup_class(cls):
         """
         Setup method.
         """
         hostlist, user, password = TestBaseClass.get_hosts()
         config = {'hosts': hostlist}
-        if user == None and password == None:
+        if user is None and password is None:
             TestListRemove.client = aerospike.client(config).connect()
         else:
-            TestListRemove.client = aerospike.client(config).connect(user, password)
+            TestListRemove.client = aerospike.client(
+                config).connect(user, password)
 
     def teardown_class(cls):
         TestListRemove.client.close()
 
     def setup_method(self, method):
-        for i in xrange(5):
+        for i in range(5):
             key = ('test', 'demo', i)
-            rec = {'name': 'name%s' % (str(i)), 'contact_no': [i, i+1], 'city' : ['Pune', 'Dehli']}
+            rec = {'name': 'name%s' %
+                   (str(i)), 'contact_no': [i, i + 1],
+                   'city': ['Pune', 'Dehli']}
             TestListRemove.client.put(key, rec)
         key = ('test', 'demo', 2)
         TestListRemove.client.list_append(key, "contact_no", [45, 50, 80])
@@ -40,8 +44,8 @@ class TestListRemove(object):
         """
         Teardown method.
         """
-        #time.sleep(1)
-        for i in xrange(5):
+        # time.sleep(1)
+        for i in range(5):
             key = ('test', 'demo', i)
             TestListRemove.client.remove(key)
 
@@ -50,12 +54,13 @@ class TestListRemove(object):
         Invoke list_remove() pop string with correct parameters
         """
         key = ('test', 'demo', 1)
-        
-        status = TestListRemove.client.list_remove(key, "contact_no", 0)
-        assert status == 0L
 
-        (key, meta, bins) = TestListRemove.client.get(key)
-        assert bins == {'city': ['Pune', 'Dehli'], 'contact_no': [2], 'name' : 'name1'}
+        status = TestListRemove.client.list_remove(key, "contact_no", 0)
+        assert status == 0
+
+        (key, _, bins) = TestListRemove.client.get(key)
+        assert bins == {
+            'city': ['Pune', 'Dehli'], 'contact_no': [2], 'name': 'name1'}
 
     def test_list_remove_with_correct_policy(self):
         """
@@ -68,11 +73,13 @@ class TestListRemove(object):
             'commit_level': aerospike.POLICY_COMMIT_LEVEL_MASTER
         }
 
-        status = TestListRemove.client.list_remove(key, 'contact_no', 2, {}, policy)
-        assert status == 0L
+        status = TestListRemove.client.list_remove(
+            key, 'contact_no', 2, {}, policy)
+        assert status == 0
 
-        (key, meta, bins) = TestListRemove.client.get(key)
-        assert bins == {'city': ['Pune', 'Dehli'], 'contact_no': [2, 3], 'name' : 'name2'}
+        (key, _, bins) = TestListRemove.client.get(key)
+        assert bins == {
+            'city': ['Pune', 'Dehli'], 'contact_no': [2, 3], 'name': 'name2'}
 
     def test_list_remove_with_no_parameters(self):
         """
@@ -80,7 +87,8 @@ class TestListRemove(object):
         """
         with pytest.raises(TypeError) as typeError:
             TestListRemove.client.list_remove()
-        assert "Required argument 'key' (pos 1) not found" in typeError.value
+        assert "Required argument 'key' (pos 1) not found" in str(
+            typeError.value)
 
     def test_list_remove_with_incorrect_policy(self):
         """
@@ -93,7 +101,7 @@ class TestListRemove(object):
         try:
             TestListRemove.client.list_remove(key, "contact_no", 0, {}, policy)
 
-        except ParamError as exception:
+        except e.ParamError as exception:
             assert exception.code == -2
             assert exception.msg == "timeout is invalid"
 
@@ -105,13 +113,14 @@ class TestListRemove(object):
         minLength = 5
         maxLength = 30
         length = random.randint(minLength, maxLength)
-        key = ('test', 'demo', ''.join(map(lambda unused :
-            random.choice(charSet), range(length)))+".com")
+        key = ('test', 'demo', ''.join(map(lambda unused:
+                                           random.choice(charSet),
+                                           range(length))) + ".com")
         try:
             TestListRemove.client.list_remove(key, "contact_no", 0)
 
-        except BinIncompatibleType as exception:
-            assert exception.code == 12L
+        except e.BinIncompatibleType as exception:
+            assert exception.code == 12
 
     def test_list_remove_with_nonexistent_bin(self):
         """
@@ -122,13 +131,13 @@ class TestListRemove(object):
         minLength = 5
         maxLength = 10
         length = random.randint(minLength, maxLength)
-        bin = ''.join(map(lambda unused :
-            random.choice(charSet), range(length)))+".com"
+        bin = ''.join(map(lambda unused:
+                          random.choice(charSet), range(length))) + ".com"
         try:
             TestListRemove.client.list_remove(key, bin, 585)
 
-        except BinIncompatibleType as exception:
-            assert exception.code == 12L
+        except e.BinIncompatibleType as exception:
+            assert exception.code == 12
 
     def test_list_remove_with_extra_parameter(self):
         """
@@ -137,9 +146,11 @@ class TestListRemove(object):
         key = ('test', 'demo', 1)
         policy = {'timeout': 1000}
         with pytest.raises(TypeError) as typeError:
-            TestListRemove.client.list_remove(key, "contact_no", 1, {}, policy, "")
+            TestListRemove.client.list_remove(
+                key, "contact_no", 1, {}, policy, "")
 
-        assert "list_remove() takes at most 5 arguments (6 given)" in typeError.value
+        assert "list_remove() takes at most 5 arguments (6 given)" in str(
+            typeError.value)
 
     def test_list_remove_policy_is_string(self):
         """
@@ -149,7 +160,7 @@ class TestListRemove(object):
         try:
             TestListRemove.client.list_remove(key, "contact_no", 1, {}, "")
 
-        except ParamError as exception:
+        except e.ParamError as exception:
             assert exception.code == -2
             assert exception.msg == "policy must be a dict"
 
@@ -160,7 +171,7 @@ class TestListRemove(object):
         try:
             TestListRemove.client.list_remove(None, "contact_no", 0)
 
-        except ParamError as exception:
+        except e.ParamError as exception:
             assert exception.code == -2
             assert exception.msg == "key is invalid"
 
@@ -172,18 +183,18 @@ class TestListRemove(object):
         try:
             TestListRemove.client.list_remove(key, None, 1)
 
-        except ParamError as exception:
+        except e.ParamError as exception:
             assert exception.code == -2
             assert exception.msg == "Bin name should be of type string"
-    
+
     def test_list_remove_with_negative_index(self):
         """
         Invoke list_remove() with negative index
         """
         key = ('test', 'demo', 1)
         try:
-            bins = TestListRemove.client.list_remove(key, "contact_no", -56)
-        except InvalidRequest as exception:
+            TestListRemove.client.list_remove(key, "contact_no", -56)
+        except e.InvalidRequest as exception:
             assert exception.code == 4
 
     def test_list_remove_meta_type_integer(self):
@@ -194,7 +205,7 @@ class TestListRemove(object):
         try:
             TestListRemove.client.list_remove(key, "contact_no", 1, 888)
 
-        except ParamError as exception:
+        except e.ParamError as exception:
             assert exception.code == -2
             assert exception.msg == "Metadata should be of type dictionary"
 
@@ -206,4 +217,4 @@ class TestListRemove(object):
 
         with pytest.raises(TypeError) as typeError:
             TestListRemove.client.list_remove(key, "contact_no", "Fifth")
-        assert "an integer is required" in typeError.value
+        assert "an integer is required" in str(typeError.value)

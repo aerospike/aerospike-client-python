@@ -1,48 +1,51 @@
 # -*- coding: utf-8 -*-
 import pytest
-import time
 import sys
 import random
-import cPickle as pickle
-from test_base_class import TestBaseClass
+from .test_base_class import TestBaseClass
+from aerospike import exception as e
 
 aerospike = pytest.importorskip("aerospike")
 try:
-    from aerospike.exception import *
+    import aerospike
 except:
-    print "Please install aerospike python client."
+    print("Please install aerospike python client.")
     sys.exit(1)
 
+
 class TestListInsert(object):
+
     def setup_class(cls):
         """
         Setup method.
         """
         hostlist, user, password = TestBaseClass.get_hosts()
         config = {'hosts': hostlist}
-        if user == None and password == None:
+        if user is None and password is None:
             TestListInsert.client = aerospike.client(config).connect()
         else:
-            TestListInsert.client = aerospike.client(config).connect(user, password)
+            TestListInsert.client = aerospike.client(
+                config).connect(user, password)
 
     def teardown_class(cls):
         TestListInsert.client.close()
 
     def setup_method(self, method):
-        for i in xrange(5):
+        for i in range(5):
             key = ('test', 'demo', i)
-            rec = {'name': 'name%s' % (str(i)), 'age': [i, i+1], 'city' : ['Pune', 'Dehli']}
+            rec = {'name': 'name%s' %
+                   (str(i)), 'age': [i, i + 1], 'city': ['Pune', 'Dehli']}
             TestListInsert.client.put(key, rec)
         key = ('test', 'demo', 'bytearray_key')
-        TestListInsert.client.put(key, {"bytearray_bin": bytearray("asd;as[d'as;d",
-            "utf-8")})
+        TestListInsert.client.put(
+            key, {"bytearray_bin": bytearray("asd;as[d'as;d", "utf-8")})
 
     def teardown_method(self, method):
         """
         Teardoen method.
         """
-        #time.sleep(1)
-        for i in xrange(5):
+        # time.sleep(1)
+        for i in range(5):
             key = ('test', 'demo', i)
             TestListInsert.client.remove(key)
         key = ('test', 'demo', 'bytearray_key')
@@ -55,9 +58,10 @@ class TestListInsert(object):
         key = ('test', 'demo', 1)
         TestListInsert.client.list_insert(key, "age", 0, 999)
 
-        (key, meta, bins) = TestListInsert.client.get(key)
+        (key, _, bins) = TestListInsert.client.get(key)
 
-        assert bins == {'age': [999, 1, 2], 'name': 'name1', 'city':['Pune', 'Dehli']}
+        assert bins == {
+            'age': [999, 1, 2], 'name': 'name1', 'city': ['Pune', 'Dehli']}
 
     def test_list_insert_string(self):
         """
@@ -66,19 +70,23 @@ class TestListInsert(object):
         key = ('test', 'demo', 1)
         TestListInsert.client.list_insert(key, "city", 0, "Chennai")
 
-        (key, meta, bins) = TestListInsert.client.get(key)
+        (key, _, bins) = TestListInsert.client.get(key)
 
-        assert bins == {'age': [1, 2], 'name': 'name1', 'city':['Chennai', 'Pune', 'Dehli']}
+        assert bins == {
+            'age': [1, 2], 'name': 'name1',
+            'city': ['Chennai', 'Pune', 'Dehli']}
 
     def test_list_insert_unicode_string(self):
         """
         Invoke list_insert() inserts unicode string
         """
         key = ('test', 'demo', 1)
-        res = TestListInsert.client.list_insert(key, "city", 3, u"Mumbai")
+        TestListInsert.client.list_insert(key, "city", 3, u"Mumbai")
 
-        key, meta, bins = TestListInsert.client.get(key)
-        assert bins == {'age': [1, 2], 'city' : ['Pune', 'Dehli', None, u'Mumbai'], 'name':'name1'}
+        key, _, bins = TestListInsert.client.get(key)
+        assert bins == {
+            'age': [1, 2], 'city': ['Pune', 'Dehli', None, u'Mumbai'],
+            'name': 'name1'}
 
     def test_list_insert_list_with_correct_policy(self):
         """
@@ -90,11 +98,13 @@ class TestListInsert(object):
             'retry': aerospike.POLICY_RETRY_ONCE,
             'commit_level': aerospike.POLICY_COMMIT_LEVEL_MASTER
         }
-        TestListInsert.client.list_insert(key, "age", 5, [45, 50, 80], {}, policy)
+        TestListInsert.client.list_insert(
+            key, "age", 5, [45, 50, 80], {}, policy)
 
-        (key, meta, bins) = TestListInsert.client.get(key)
+        (key, _, bins) = TestListInsert.client.get(key)
 
-        assert bins == {'age': [2, 3, None, None, None, [45, 50, 80]], 'city': ['Pune', 'Dehli'], 'name': 'name2'}
+        assert bins == {'age': [2, 3, None, None, None, [45, 50, 80]],
+                        'city': ['Pune', 'Dehli'], 'name': 'name2'}
 
     def test_list_insert_float(self):
         """
@@ -103,9 +113,10 @@ class TestListInsert(object):
         key = ('test', 'demo', 2)
         TestListInsert.client.list_insert(key, "age", 7, 85.12)
 
-        (key, meta, bins) = TestListInsert.client.get(key)
+        (key, _, bins) = TestListInsert.client.get(key)
 
-        assert bins == {'age': [2, 3, None, None, None, None, None, 85.12], 'city': ['Pune', 'Dehli'], 'name': 'name2'}
+        assert bins == {'age': [2, 3, None, None, None, None, None, 85.12],
+                        'city': ['Pune', 'Dehli'], 'name': 'name2'}
 
     def test_list_insert_map(self):
         """
@@ -113,11 +124,13 @@ class TestListInsert(object):
         """
         key = ('test', 'demo', 3)
 
-        TestListInsert.client.list_insert(key, "age", 1, {'k1':29})
+        TestListInsert.client.list_insert(key, "age", 1, {'k1': 29})
 
-        (key, meta, bins) = TestListInsert.client.get(key)
+        (key, _, bins) = TestListInsert.client.get(key)
 
-        assert bins == {'age': [3, {'k1':29}, 4], 'city': ['Pune', 'Dehli'], 'name': 'name3'}
+        assert bins == {
+            'age': [3, {'k1': 29}, 4], 'city': ['Pune', 'Dehli'],
+            'name': 'name3'}
 
     def test_list_insert_bytearray(self):
         """
@@ -125,12 +138,15 @@ class TestListInsert(object):
         """
         key = ('test', 'demo', 1)
 
-        TestListInsert.client.list_insert(key, "age", 2, bytearray("asd;as[d'as;d", "utf-8"))
+        TestListInsert.client.list_insert(
+            key, "age", 2, bytearray("asd;as[d'as;d", "utf-8"))
 
-        (key, meta, bins) = TestListInsert.client.get(key)
+        (key, _, bins) = TestListInsert.client.get(key)
 
-        assert bins == {'age': [1, 2, bytearray(b"asd;as[d\'as;d")], 'city': ['Pune', 'Dehli'], 'name': 'name1'}
-    
+        assert bins == {'age': [
+            1, 2, bytearray(b"asd;as[d\'as;d")], 'city': ['Pune', 'Dehli'],
+            'name': 'name1'}
+
     def test_list_insert_boolean(self):
         """
         Invoke list_insert() insert boolean into the list
@@ -139,9 +155,10 @@ class TestListInsert(object):
 
         TestListInsert.client.list_insert(key, "age", 6, False)
 
-        (key, meta, bins) = TestListInsert.client.get(key)
+        (key, _, bins) = TestListInsert.client.get(key)
 
-        assert bins == {'age': [1, 2, None, None, None, None, 0], 'city': ['Pune', 'Dehli'], 'name': 'name1'}
+        assert bins == {'age': [1, 2, None, None, None, None, 0], 'city': [
+            'Pune', 'Dehli'], 'name': 'name1'}
 
     def test_list_insert_with_nonexistent_key(self):
         """
@@ -151,15 +168,16 @@ class TestListInsert(object):
         minLength = 5
         maxLength = 30
         length = random.randint(minLength, maxLength)
-        key = ('test', 'demo', ''.join(map(lambda unused :
-            random.choice(charSet), range(length)))+".com")
+        key = ('test', 'demo', ''.join(map(lambda unused:
+                                           random.choice(charSet),
+                                           range(length))) + ".com")
         status = TestListInsert.client.list_insert(key, "abc", 2, 122)
-        assert status == 0L
+        assert status == 0
 
-        (key, meta, bins) = TestListInsert.client.get(key)
+        (key, _, bins) = TestListInsert.client.get(key)
 
-        assert status == 0L
-        assert bins == {'abc':[None, None, 122]}
+        assert status == 0
+        assert bins == {'abc': [None, None, 122]}
 
         TestListInsert.client.remove(key)
 
@@ -172,16 +190,17 @@ class TestListInsert(object):
         minLength = 5
         maxLength = 10
         length = random.randint(minLength, maxLength)
-        bin = ''.join(map(lambda unused :
-            random.choice(charSet), range(length)))+".com"
+        bin = ''.join(map(lambda unused:
+                          random.choice(charSet), range(length))) + ".com"
         status = TestListInsert.client.list_insert(key, bin, 3, 585)
-        assert status == 0L
+        assert status == 0
 
-        (key, meta, bins) = TestListInsert.client.get(key)
-        assert status == 0L
+        (key, _, bins) = TestListInsert.client.get(key)
+        assert status == 0
 
-        assert bins == {'age': [1, 2], 'name': 'name1', 'city':['Pune',
-            'Dehli'], bin:[None, None, None, 585]}
+        assert bins == {'age': [1, 2], 'name': 'name1',
+                        'city': ['Pune', 'Dehli'],
+                        bin: [None, None, None, 585]}
 
     def test_list_insert_with_no_parameters(self):
         """
@@ -189,7 +208,8 @@ class TestListInsert(object):
         """
         with pytest.raises(TypeError) as typeError:
             TestListInsert.client.list_insert()
-        assert "Required argument 'key' (pos 1) not found" in typeError.value
+        assert "Required argument 'key' (pos 1) not found" in str(
+            typeError.value)
 
     def test_list_insert_with_incorrect_policy(self):
         """
@@ -202,7 +222,7 @@ class TestListInsert(object):
         try:
             TestListInsert.client.list_insert(key, "age", 6, "str", {}, policy)
 
-        except ParamError as exception:
+        except e.ParamError as exception:
             assert exception.code == -2
             assert exception.msg == "timeout is invalid"
 
@@ -213,9 +233,11 @@ class TestListInsert(object):
         key = ('test', 'demo', 1)
         policy = {'timeout': 1000}
         with pytest.raises(TypeError) as typeError:
-            TestListInsert.client.list_insert(key, "age", 3, 999, {}, policy, "")
+            TestListInsert.client.list_insert(
+                key, "age", 3, 999, {}, policy, "")
 
-        assert "list_insert() takes at most 6 arguments (7 given)" in typeError.value
+        assert "list_insert() takes at most 6 arguments (7 given)" in str(
+            typeError.value)
 
     def test_list_insert_policy_is_string(self):
         """
@@ -225,7 +247,7 @@ class TestListInsert(object):
         try:
             TestListInsert.client.list_insert(key, "age", 1, 85, {}, "")
 
-        except ParamError as exception:
+        except e.ParamError as exception:
             assert exception.code == -2
             assert exception.msg == "policy must be a dict"
 
@@ -236,7 +258,7 @@ class TestListInsert(object):
         try:
             TestListInsert.client.list_insert(None, "age", 1, 45)
 
-        except ParamError as exception:
+        except e.ParamError as exception:
             assert exception.code == -2
             assert exception.msg == "key is invalid"
 
@@ -248,7 +270,7 @@ class TestListInsert(object):
         try:
             TestListInsert.client.list_insert(key, None, 2, "str")
 
-        except ParamError as exception:
+        except e.ParamError as exception:
             assert exception.code == -2
             assert exception.msg == "Bin name should be of type string"
 
@@ -260,7 +282,7 @@ class TestListInsert(object):
         try:
             TestListInsert.client.list_insert(key, "contact_no", 1, 85, 888)
 
-        except ParamError as exception:
+        except e.ParamError as exception:
             assert exception.code == -2
             assert exception.msg == "Metadata should be of type dictionary"
 
@@ -272,8 +294,8 @@ class TestListInsert(object):
 
         try:
             TestListInsert.client.list_insert(key, "age", -6, False)
-        except InvalidRequest as exception:
-            assert exception.code == 4L
+        except e.InvalidRequest as exception:
+            assert exception.code == 4
             assert exception.msg == 'AEROSPIKE_ERR_REQUEST_INVALID'
 
     def test_list_insert_index_type_string(self):
@@ -284,4 +306,4 @@ class TestListInsert(object):
 
         with pytest.raises(TypeError) as typeError:
             TestListInsert.client.list_insert(key, "age", "Fifth", False)
-        assert "an integer is required" in typeError.value
+        assert "an integer is required" in str(typeError.value)

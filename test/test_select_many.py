@@ -2,7 +2,9 @@
 
 import pytest
 import sys
-from test_base_class import TestBaseClass
+from .test_base_class import TestBaseClass
+from aerospike import exception as e
+
 try:
     from collections import Counter
 except ImportError:
@@ -10,19 +12,21 @@ except ImportError:
 
 aerospike = pytest.importorskip("aerospike")
 try:
-    from aerospike.exception import *
+    import aerospike
 except:
-    print "Please install aerospike python client."
+    print("Please install aerospike python client.")
     sys.exit(1)
 
+
 class TestSelectMany(object):
+
     def setup_class(cls):
         """
         Setup method.
         """
         hostlist, user, password = TestBaseClass.get_hosts()
         config = {'hosts': hostlist}
-        if user == None and password == None:
+        if user is None and password is None:
             TestSelectMany.client = aerospike.client(config).connect()
         else:
             TestSelectMany.client = aerospike.client(config).connect(user,
@@ -34,7 +38,7 @@ class TestSelectMany(object):
     def setup_method(self, method):
         self.keys = []
 
-        for i in xrange(5):
+        for i in range(5):
             key = ('test', 'demo', i)
             rec = {
                 'title': 'Mr.',
@@ -53,7 +57,7 @@ class TestSelectMany(object):
         """
         Teardown method.
         """
-        for i in xrange(5):
+        for i in range(5):
             key = ('test', 'demo', i)
             TestSelectMany.client.remove(key)
         key = ('test', 'demo', 'float_value')
@@ -64,7 +68,8 @@ class TestSelectMany(object):
         with pytest.raises(TypeError) as typeError:
             TestSelectMany.client.select_many()
 
-        assert "Required argument 'keys' (pos 1) not found" in typeError.value
+        assert "Required argument 'keys' (pos 1) not found" in str(
+            typeError.value)
 
     def test_select_many_without_policy(self):
 
@@ -85,8 +90,8 @@ class TestSelectMany(object):
 
         assert type(records) == list
         assert len(records) == 6
-        assert Counter([x[0][2] for x in records]) == Counter([0, 1, 2, 3,
-            4, 'float_value'])
+        assert Counter([x[0][2] for x in records]) == Counter(
+            [0, 1, 2, 3, 4, 'float_value'])
         for k in records:
             bins = k[2].keys()
             assert set(bins).intersection(set(filter_bins)) == set(bins)
@@ -99,8 +104,8 @@ class TestSelectMany(object):
 
         assert type(records) == list
         assert len(records) == 6
-        assert Counter([x[0][2] for x in records]) == Counter([0, 1, 2, 3,
-            4, 'float_value'])
+        assert Counter([x[0][2] for x in records]) == Counter(
+            [0, 1, 2, 3, 4, 'float_value'])
         for k in records:
             bins = k[2].keys()
             assert set(bins).intersection(set(filter_bins)) == set(bins)
@@ -108,11 +113,12 @@ class TestSelectMany(object):
     def test_select_many_with_none_keys(self):
 
         try:
-            TestSelectMany.client.select_many( None, [], {} )
+            TestSelectMany.client.select_many(None, [], {})
 
-        except ParamError as exception:
+        except e.ParamError as exception:
             assert exception.code == -2
             assert exception.msg == "Keys should be specified as a list or tuple."
+
     def test_select_many_with_non_existent_keys(self):
 
         self.keys.append(('test', 'demo', 'non-existent'))
@@ -123,14 +129,15 @@ class TestSelectMany(object):
 
         assert type(records) == list
         assert len(records) == 7
-        assert Counter([x[0][2] for x in records]) == Counter([0, 1, 2, 3,
-            4, 'non-existent', 'float_value'])
+        assert Counter([x[0][2] for x in records]) == Counter(
+            [0, 1, 2, 3, 4, 'non-existent', 'float_value'])
         for k in records:
             if k[0][2] == 'non-existent':
                 assert k[2] == None
                 continue
             bins = k[2].keys()
             assert set(bins).intersection(set(filter_bins)) == set(bins)
+
     def test_select_many_with_all_non_existent_keys(self):
 
         keys = [('test', 'demo', 'key')]
@@ -140,36 +147,38 @@ class TestSelectMany(object):
 
         assert len(records) == 1
         assert records == [(('test', 'demo', 'key',
-            bytearray(b';\xd4u\xbd\x0cs\xf2\x10\xb6~\xa87\x930\x0e\xea\xe5v(]')), None, None)]
+                             bytearray(b';\xd4u\xbd\x0cs\xf2\x10\xb6~\xa87\x930\x0e\xea\xe5v(]')), None, None)]
 
     def test_select_many_with_invalid_key(self):
 
         try:
-            records = TestSelectMany.client.select_many( "key", [] )
+            TestSelectMany.client.select_many("key", [])
 
-        except ParamError as exception:
+        except e.ParamError as exception:
             assert exception.code == -2
             assert exception.msg == "Keys should be specified as a list or tuple."
 
     def test_select_many_with_invalid_timeout(self):
 
-        policies = { 'timeout' : 0.2 }
+        policies = {'timeout': 0.2}
         try:
-            records = TestSelectMany.client.select_many(self.keys, [], policies)
+            TestSelectMany.client.select_many(self.keys, [], policies)
 
-        except ParamError as exception:
+        except e.ParamError as exception:
             assert exception.code == -2
             assert exception.msg == "timeout is invalid"
 
     def test_select_many_with_initkey_as_digest(self):
 
         keys = []
-        key = ("test", "demo", None, bytearray("asd;as[d'as;djk;uyfl"))
+        key = ("test", "demo", None, bytearray(
+            "asd;as[d'as;djk;uyfl", "utf-8"))
         rec = {'name': 'name1', 'age': 1}
         TestSelectMany.client.put(key, rec)
         keys.append(key)
 
-        key = ("test", "demo", None, bytearray("ase;as[d'as;djk;uyfl"))
+        key = ("test", "demo", None, bytearray(
+            "ase;as[d'as;djk;uyfl", "utf-8"))
         rec = {'name': 'name2', 'age': 2}
         TestSelectMany.client.put(key, rec)
         keys.append(key)
@@ -189,10 +198,10 @@ class TestSelectMany(object):
                 assert x[0][3] == bytearray(b"asd;as[d'as;djk;uyfl")
             i += 1
 
-    def test_select_many_with_non_existent_keys_in_middle(self):   
+    def test_select_many_with_non_existent_keys_in_middle(self):
         self.keys.append(('test', 'demo', 'some_key'))
 
-        for i in xrange(15, 20):
+        for i in range(15, 20):
             key = ('test', 'demo', i)
             rec = {
                 'name': 'name%s' % (str(i)),
@@ -205,14 +214,14 @@ class TestSelectMany(object):
         filter_bins = ['title', 'name', 'position']
         records = TestSelectMany.client.select_many(self.keys, filter_bins)
 
-        for i in xrange(15, 20):
+        for i in range(15, 20):
             key = ('test', 'demo', i)
             TestSelectMany.client.remove(key)
 
         assert type(records) == list
         assert len(records) == 12
-        assert Counter([x[0][2] for x in records]) == Counter([0, 1, 2, 3, 4, 'some_key', 15, 16, 17, 18, 19,
-                'float_value'])
+        assert Counter([x[0][2] for x in records]) == Counter(
+            [0, 1, 2, 3, 4, 'some_key', 15, 16, 17, 18, 19, 'float_value'])
         for k in records:
             if k[0][2] == 'some_key':
                 assert k[2] == None
@@ -246,9 +255,9 @@ class TestSelectMany(object):
         filter_bins = ['title', 'name']
 
         try:
-            records = client1.select_many( self.keys, filter_bins, { 'timeout':
-                20} )
+            client1.select_many(self.keys, filter_bins, {'timeout':
+                                                         20})
 
-        except ClusterError as exception:
-            assert exception.code == 11L
+        except e.ClusterError as exception:
+            assert exception.code == 11
             assert exception.msg == 'No connection to aerospike cluster'

@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright 2013-2015 Aerospike, Inc.
+ * Copyright 2013-2016 Aerospike, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -81,7 +81,7 @@ as_status as_udf_files_to_pyobject( as_error *err, as_udf_files *files, PyObject
 
 	*py_files = PyList_New(0);
 
-	for(int i = 0; i < files->size; i++) {
+	for(uint32_t i = 0; i < files->size; i++) {
 
 		PyObject * py_file;
 		as_udf_file_to_pyobject( err, &((files->entries)[i]), &py_file );
@@ -378,14 +378,14 @@ as_status pyobject_to_val(AerospikeClient * self, as_error * err, PyObject * py_
 			}
 		}
 		*val = (as_val *) as_integer_new(l);
+	} else if (PyUnicode_Check(py_obj)) {
+		PyObject * py_ustr = PyUnicode_AsUTF8String(py_obj);
+		char * str = PyBytes_AsString(py_ustr);
+		*val = (as_val *) as_string_new(strdup(str), true);
+		Py_DECREF(py_ustr);
 	} else if (PyString_Check(py_obj)) {
 		char * s = PyString_AsString(py_obj);
 		*val = (as_val *) as_string_new(s, false);
-	} else if (PyUnicode_Check(py_obj)) {
-		PyObject * py_ustr = PyUnicode_AsUTF8String(py_obj);
-		char * str = PyString_AsString(py_ustr);
-		*val = (as_val *) as_string_new(strdup(str), true);
-		Py_DECREF(py_ustr);
 	} else if (!strcmp(py_obj->ob_type->tp_name, "aerospike.Geospatial")) {
 		PyObject *py_parameter = PyString_FromString("geo_data");
 		PyObject* py_data = PyObject_GenericGetAttr(py_obj, py_parameter);
@@ -466,7 +466,10 @@ as_status pyobject_to_record(AerospikeClient * self, as_error * err, PyObject * 
 
 			if (PyUnicode_Check(key)) {
 				py_ukey = PyUnicode_AsUTF8String(key);
-				name = PyString_AsString(py_ukey);
+				if (!py_ukey) {
+					return as_error_update(err, AEROSPIKE_ERR_CLIENT, "Unicode bin name not encoded in utf-8.");
+				}
+				name = PyBytes_AsString(py_ukey);
 			} else if (PyString_Check(key)) {
 				name = PyString_AsString(key);
 			} else {
@@ -521,7 +524,10 @@ as_status pyobject_to_record(AerospikeClient * self, as_error * err, PyObject * 
 				Py_DECREF(py_dumps);
 			} else if (PyUnicode_Check(value)) {
 				PyObject * py_ustr = PyUnicode_AsUTF8String(value);
-				char * val = PyString_AsString(py_ustr);
+				if (!py_ustr) {
+					return as_error_update(err, AEROSPIKE_ERR_CLIENT, "Unicode value not encoded in utf-8.");
+				}
+				char * val = PyBytes_AsString(py_ustr);
 				ret_val = as_record_set_strp(rec, name, strdup(val), true);
 				Py_DECREF(py_ustr);
 			} else if (PyString_Check(value)) {
@@ -647,6 +653,11 @@ as_status pyobject_to_astype_write(AerospikeClient * self, as_error * err, char 
 	} else if (PyLong_Check(py_value)) {
 		int64_t l = (int64_t) PyLong_AsLongLong(py_value);
 		*val = (as_val *) as_integer_new(l);
+	} else if (PyUnicode_Check(py_value)) {
+		PyObject * py_ustr = PyUnicode_AsUTF8String(py_value);
+		char * str = PyBytes_AsString(py_ustr);
+		*val = (as_val *) as_string_new(strdup(str), true);
+		Py_DECREF(py_ustr);
 	} else if (PyString_Check(py_value)) {
 		char * s = PyString_AsString(py_value);
 		*val = (as_val *) as_string_new(s, false);
@@ -664,11 +675,6 @@ as_status pyobject_to_astype_write(AerospikeClient * self, as_error * err, char 
 				&bytes, py_data, err);
 			*val = (as_val *) bytes;
 		}
-	} else if (PyUnicode_Check(py_value)) {
-		PyObject * py_ustr = PyUnicode_AsUTF8String(py_value);
-		char * str = PyString_AsString(py_ustr);
-		*val = (as_val *) as_string_new(strdup(str), true);
-		Py_DECREF(py_ustr);
 	} else if (PyByteArray_Check(py_value)) {
 		uint8_t * b = (uint8_t *) PyByteArray_AsString(py_value);
 		uint32_t z = (uint32_t) PyByteArray_Size(py_value);
@@ -767,7 +773,7 @@ as_status pyobject_to_key(as_error * err, PyObject * py_keytuple, as_key * key)
 		}
 		else if ( PyUnicode_Check(py_set) ) {
 			py_ustr = PyUnicode_AsUTF8String(py_set);
-			set = PyString_AsString(py_ustr);
+			set = PyBytes_AsString(py_ustr);
 		}
 		else {
 			return as_error_update(err, AEROSPIKE_ERR_PARAM, "set must be a string");
@@ -777,7 +783,7 @@ as_status pyobject_to_key(as_error * err, PyObject * py_keytuple, as_key * key)
 	if ( py_key && py_key != Py_None ) {
 		if ( PyUnicode_Check(py_key) ) {
 			PyObject * py_ustr = PyUnicode_AsUTF8String(py_key);
-			char * k = PyString_AsString(py_ustr);
+			char * k = PyBytes_AsString(py_ustr);
 			// free flag has to be true. Because, we are creating a new memory
 			// for a primary key string using strdup()
 			// This memory is destroyed when we call as_key_destroy()
@@ -797,9 +803,9 @@ as_status pyobject_to_key(as_error * err, PyObject * py_keytuple, as_key * key)
 		}
 		else if ( PyLong_Check(py_key) ) {
 			int64_t k = (int64_t) PyLong_AsLongLong(py_key);
-            if(-1 == k) {
-			    return as_error_update(err, AEROSPIKE_ERR_PARAM, "integer value for KEY exceeds sys.maxsize");
-            }
+			if(-1 == k) {
+				return as_error_update(err, AEROSPIKE_ERR_PARAM, "integer value for KEY exceeds sys.maxsize");
+			}
 			as_key_init_int64(key, ns, set, k);
 		}
 		else if ( PyByteArray_Check(py_key) ) {
@@ -810,6 +816,10 @@ as_status pyobject_to_key(as_error * err, PyObject * py_keytuple, as_key * key)
 			}
 			uint8_t * byte_array = (uint8_t *) PyByteArray_AsString(py_key);
 			as_key_init_raw(key, ns, set, byte_array, sz);
+		}
+		else if ( PyBytes_Check(py_key) ) {
+			char * k = PyBytes_AsString(py_key);
+			as_key_init_strp(key, ns, set, strdup(k), true);
 		}
 		else {
 			return as_error_update(err, AEROSPIKE_ERR_PARAM, "key is invalid");
@@ -843,7 +853,7 @@ as_status pyobject_to_key(as_error * err, PyObject * py_keytuple, as_key * key)
 typedef struct {
 	as_error * err;
 	uint32_t count;
-    AerospikeClient * client;
+	AerospikeClient * client;
 	void * udata;
 } conversion_data;
 
@@ -857,11 +867,11 @@ as_status val_to_pyobject(AerospikeClient * self, as_error * err, const as_val *
 				*py_val = PyInt_FromLong((long) as_integer_get(i));
 				break;
 			}
-        case AS_DOUBLE: {
-                as_double * d = as_double_fromval(val);
-                *py_val = PyFloat_FromDouble(as_double_get(d));
-                break;
-            }
+		case AS_DOUBLE: {
+				as_double * d = as_double_fromval(val);
+				*py_val = PyFloat_FromDouble(as_double_get(d));
+				break;
+			}
 		case AS_STRING: {
 				as_string * s = as_string_fromval(val);
 				char * str = as_string_get(s);
@@ -981,7 +991,7 @@ as_status list_to_pyobject(AerospikeClient * self, as_error * err, const as_list
 	conversion_data convd = {
 		.err = err,
 		.count = 0,
-        .client = self,
+		.client = self,
 		.udata = *py_list
 	};
 
@@ -1036,7 +1046,7 @@ as_status map_to_pyobject(AerospikeClient * self, as_error * err, const as_map *
 	conversion_data convd = {
 		.err = err,
 		.count = 0,
-        .client = self,
+		.client = self,
 		.udata = *py_map
 	};
 
@@ -1224,7 +1234,7 @@ as_status bins_to_pyobject(AerospikeClient * self, as_error * err, const as_reco
 	conversion_data convd = {
 		.err = err,
 		.count = 0,
-        .client = self,
+		.client = self,
 		.udata = *py_bins
 	};
 
@@ -1304,13 +1314,13 @@ bool error_to_pyobject(const as_error * err, PyObject ** obj)
  * On failure it will set an error.
  */
 void initialize_ldt(as_error *error, as_ldt* ldt_p, char* bin_name,
-        int type, char* module)
+		int type, char* module)
 {
 	as_error_reset(error);
-    if (bin_name == NULL) {
+	if (bin_name == NULL) {
 		as_error_update(error, AEROSPIKE_ERR_PARAM, "Bin name is null");
-    }
-    if ( !as_ldt_init(ldt_p, bin_name, type, module) ){
+	}
+	if ( !as_ldt_init(ldt_p, bin_name, type, module) ){
 		as_error_update(error, AEROSPIKE_ERR_PARAM, "Unable to initialize LDT");
-    }
+	}
 }

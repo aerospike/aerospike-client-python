@@ -2,27 +2,32 @@
 
 import pytest
 import sys
-from test_base_class import TestBaseClass
+
+from .test_base_class import TestBaseClass
+from aerospike import exception as e
+
+aerospike = pytest.importorskip("aerospike")
+try:
+    import aerospike
+except:
+    print("Please install aerospike python client.")
+    sys.exit(1)
+
 try:
     from collections import Counter
 except ImportError:
     from counter26 import Counter
 
-aerospike = pytest.importorskip("aerospike")
-try:
-    from aerospike.exception import *
-except:
-    print "Please install aerospike python client."
-    sys.exit(1)
 
 class TestExistsMany(TestBaseClass):
+
     def setup_class(cls):
         """
         Setup method.
         """
         hostlist, user, password = TestBaseClass.get_hosts()
         config = {'hosts': hostlist}
-        if user == None and password == None:
+        if user is None and password is None:
             TestExistsMany.client = aerospike.client(config).connect()
         else:
             TestExistsMany.client = aerospike.client(config).connect(user,
@@ -35,7 +40,7 @@ class TestExistsMany(TestBaseClass):
 
         self.keys = []
 
-        for i in xrange(5):
+        for i in range(5):
             key = ('test', 'demo', i)
             rec = {'name': 'name%s' % (str(i)), 'age': i}
             TestExistsMany.client.put(key, rec)
@@ -45,7 +50,7 @@ class TestExistsMany(TestBaseClass):
         """
         Teardown method.
         """
-        for i in xrange(5):
+        for i in range(5):
             key = ('test', 'demo', i)
             TestExistsMany.client.remove(key)
 
@@ -54,7 +59,8 @@ class TestExistsMany(TestBaseClass):
         with pytest.raises(TypeError) as typeError:
             TestExistsMany.client.exists_many()
 
-        assert "Required argument 'keys' (pos 1) not found" in typeError.value
+        assert "Required argument 'keys' (pos 1) not found" in str(
+            typeError.value)
 
     def test_exists_many_without_policy(self):
 
@@ -65,12 +71,13 @@ class TestExistsMany(TestBaseClass):
 
     def test_exists_many_with_proper_parameters(self):
 
-        records = TestExistsMany.client.exists_many(self.keys, {'timeout': 1200})
+        records = TestExistsMany.client.exists_many(
+            self.keys, {'timeout': 1200})
 
         assert type(records) == list
         assert len(records) == 5
-        assert Counter([x[0][2] for x in records]) == Counter([0, 1, 2, 3,
-            4])
+        assert Counter([x[0][2] for x in records]) == Counter(
+            [0, 1, 2, 3, 4])
 
     def test_exists_many_with_none_policy(self):
 
@@ -78,15 +85,15 @@ class TestExistsMany(TestBaseClass):
 
         assert type(records) == list
         assert len(records) == 5
-        assert Counter([x[0][2] for x in records]) == Counter([0, 1, 2, 3,
-            4])
+        assert Counter([x[0][2] for x in records]) == Counter(
+            [0, 1, 2, 3, 4])
 
     def test_exists_many_with_none_keys(self):
 
         try:
-            TestExistsMany.client.exists_many( None, {} )
+            TestExistsMany.client.exists_many(None, {})
 
-        except ParamError as exception:
+        except e.ParamError as exception:
             assert exception.code == -2
             assert exception.msg == "Keys should be specified as a list or tuple."
 
@@ -98,8 +105,9 @@ class TestExistsMany(TestBaseClass):
 
         assert type(records) == list
         assert len(records) == 6
-        assert Counter([x[0][2] for x in records]) == Counter([0, 1, 2, 3,
-            4, 'some_key'])
+        assert Counter([x[0][2] for x in records]) == Counter(
+            [0, 1, 2, 3, 4, 'some_key'])
+
         for x in records:
             if x[0][2] == 'some_key':
                 assert x[1] == None
@@ -118,31 +126,33 @@ class TestExistsMany(TestBaseClass):
     def test_exists_many_with_invalid_key(self):
 
         try:
-            records = TestExistsMany.client.exists_many( "key" )
+            TestExistsMany.client.exists_many("key")
 
-        except ParamError as exception:
+        except e.ParamError as exception:
             assert exception.code == -2
             assert exception.msg == "Keys should be specified as a list or tuple."
 
     def test_exists_many_with_invalid_timeout(self):
 
-        policies = { 'timeout' : 0.2 }
+        policies = {'timeout': 0.2}
         try:
-            records = TestExistsMany.client.exists_many(self.keys, policies)
+            TestExistsMany.client.exists_many(self.keys, policies)
 
-        except ParamError as exception:
+        except e.ParamError as exception:
             assert exception.code == -2
             assert exception.msg == "timeout is invalid"
 
     def test_exists_many_with_initkey_as_digest(self):
 
         keys = []
-        key = ("test", "demo", None, bytearray("asd;as[d'as;djk;uyfl"))
+        key = ("test", "demo", None, bytearray(
+            "asd;as[d'as;djk;uyfl", "utf-8"))
         rec = {'name': 'name1', 'age': 1}
         TestExistsMany.client.put(key, rec)
         keys.append(key)
 
-        key = ("test", "demo", None, bytearray("ase;as[d'as;djk;uyfl"))
+        key = ("test", "demo", None, bytearray(
+            "ase;as[d'as;djk;uyfl", "utf-8"))
         rec = {'name': 'name2', 'age': 2}
         TestExistsMany.client.put(key, rec)
         keys.append(key)
@@ -166,7 +176,7 @@ class TestExistsMany(TestBaseClass):
 
         self.keys.append(('test', 'demo', 'some_key'))
 
-        for i in xrange(15, 20):
+        for i in range(15, 20):
             key = ('test', 'demo', i)
             rec = {'name': 'name%s' % (str(i)), 'age': i}
             TestExistsMany.client.put(key, rec)
@@ -174,14 +184,15 @@ class TestExistsMany(TestBaseClass):
 
         records = TestExistsMany.client.exists_many(self.keys)
 
-        for i in xrange(15, 20):
+        for i in range(15, 20):
             key = ('test', 'demo', i)
             TestExistsMany.client.remove(key)
 
         assert type(records) == list
         assert len(records) == 11
-        assert Counter([x[0][2] for x in records]) == Counter([0, 1, 2, 3,
-            4, 'some_key', 15, 16, 17, 18, 19])
+        assert Counter([x[0][2] for x in records]) == Counter(
+            [0, 1, 2, 3, 4, 'some_key', 15, 16, 17, 18, 19])
+
         for x in records:
             if x[0][2] == 'some_key':
                 assert x[1] == None
@@ -192,8 +203,8 @@ class TestExistsMany(TestBaseClass):
         client1 = aerospike.client(config)
 
         try:
-            records = client1.exists_many( self.keys, { 'timeout': 20 } )
+            client1.exists_many(self.keys, {'timeout': 20})
 
-        except ClusterError as exception:
-            assert exception.code == 11L
+        except e.ClusterError as exception:
+            assert exception.code == 11
             assert exception.msg == 'No connection to aerospike cluster'

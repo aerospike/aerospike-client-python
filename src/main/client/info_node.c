@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright 2013-2015 Aerospike, Inc.
+ * Copyright 2013-2016 Aerospike, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -99,7 +99,7 @@ static PyObject * AerospikeClient_InfoNode_Invoke(
 				address = PyString_AsString(py_addr);
 			} else if (PyUnicode_Check(py_addr)) {
 				py_ustr = PyUnicode_AsUTF8String(py_addr);
-				address = PyString_AsString(py_ustr);
+				address = PyBytes_AsString(py_ustr);
 			}
 			if ( PyInt_Check(py_port) ) {
 				port_no = (uint16_t) PyInt_AsLong(py_port);
@@ -116,7 +116,7 @@ static PyObject * AerospikeClient_InfoNode_Invoke(
 	char * request_str_p = NULL;
 	if (PyUnicode_Check(py_request_str)) {
 		py_ustr1 = PyUnicode_AsUTF8String(py_request_str);
-		request_str_p = PyString_AsString(py_ustr1);
+		request_str_p = PyBytes_AsString(py_ustr1);
 	} else if (PyString_Check(py_request_str)) {
 		request_str_p = PyString_AsString(py_request_str);
 	} else {
@@ -124,11 +124,11 @@ static PyObject * AerospikeClient_InfoNode_Invoke(
 		goto CLEANUP;
 	}
 
-    Py_BEGIN_ALLOW_THREADS
+	Py_BEGIN_ALLOW_THREADS
 	status = aerospike_info_host(self->as, &err, info_policy_p,
 		(const char *) address, (uint16_t) port_no, request_str_p,
 		&response_p);
-    Py_END_ALLOW_THREADS
+	Py_END_ALLOW_THREADS
 	if( err.code == AEROSPIKE_OK ) {
 		if (response_p && status == AEROSPIKE_OK){
 			py_response = PyString_FromString(response_p);

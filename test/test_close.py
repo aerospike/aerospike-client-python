@@ -2,33 +2,34 @@
 
 import pytest
 import sys
-import cPickle as pickle
-from test_base_class import TestBaseClass
+from .test_base_class import TestBaseClass
 
 aerospike = pytest.importorskip("aerospike")
 try:
-    from aerospike.exception import *
+    import aerospike
 except:
-    print "Please install aerospike python client."
+    print("Please install aerospike python client.")
     sys.exit(1)
 
+
 class TestClose(TestBaseClass):
+
     def setup_class(cls):
-        hostlist, user, password = TestBaseClass.get_hosts()
+        TestBaseClass.get_hosts()
 
     def test_close_positive(self):
         """
             Invoke close() after positive connect
         """
         config = {'hosts': TestClose.hostlist}
-        if TestClose.user == None and TestClose.password == None:
+        if TestClose.user is None and TestClose.password is None:
             self.client = aerospike.client(config).connect()
         else:
             self.client = aerospike.client(config).connect(TestClose.user,
                                                            TestClose.password)
 
         self.closeobject = self.client.close()
-        assert self.closeobject == None
+        assert self.closeobject is None
 
     def test_close_negative(self):
         """
@@ -36,11 +37,12 @@ class TestClose(TestBaseClass):
         """
         config = {'hosts': [('127.0.0.1', 2000)]}
 
-        with pytest.raises(Exception) as exception:
+        with pytest.raises(Exception):
             self.client = aerospike.client(config).connect()
         with pytest.raises(AttributeError) as attributeError:
             self.closeobject = self.client.close()
-        assert "'TestClose' object has no attribute 'client'" in attributeError.value
+        assert "'TestClose' object has no attribute 'client'" in str(
+            attributeError.value)
 
     def test_close_positive_without_connection(self):
         """
@@ -52,6 +54,6 @@ class TestClose(TestBaseClass):
         try:
             self.closeobject = self.client.close()
 
-        except ClusterError as exception:
-            assert exception.code == 11L
+        except aerospike.exception.ClusterError as exception:
+            assert exception.code == 11
             assert exception.msg == 'No connection to aerospike cluster'

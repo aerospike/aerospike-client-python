@@ -2,27 +2,30 @@
 
 import pytest
 import sys
-import cPickle as pickle
-from test_base_class import TestBaseClass
+from .test_base_class import TestBaseClass
+from aerospike import exception as e
 
 aerospike = pytest.importorskip("aerospike")
 try:
-    from aerospike.exception import *
+    import aerospike
 except:
-    print "Please install aerospike python client."
+    print("Please install aerospike python client.")
     sys.exit(1)
 
+
 class TestRemove(TestBaseClass):
+
     def setup_class(cls):
         """
         Setup class
         """
         hostlist, user, password = TestBaseClass.get_hosts()
         config = {'hosts': hostlist}
-        if user == None and password == None:
+        if user is None and password is None:
             TestRemove.client = aerospike.client(config).connect()
         else:
-            TestRemove.client = aerospike.client(config).connect(user, password)
+            TestRemove.client = aerospike.client(
+                config).connect(user, password)
 
     def teardown_class(cls):
         TestRemove.client.close()
@@ -31,7 +34,7 @@ class TestRemove(TestBaseClass):
         """
         Setup method.
         """
-        for i in xrange(5):
+        for i in range(5):
             key = ('test', 'demo', i)
             rec = {
                 'name': 'name%s' % (str(i)),
@@ -45,11 +48,11 @@ class TestRemove(TestBaseClass):
         """
         Teardoen method.
         """
-        for i in xrange(5):
+        for i in range(5):
             try:
                 key = ('test', 'demo', i)
                 TestRemove.client.remove(key)
-            except RecordError:
+            except e.RecordError:
                 pass
 
     def test_remove_with_no_parameters(self):
@@ -59,7 +62,8 @@ class TestRemove(TestBaseClass):
         with pytest.raises(TypeError) as typeError:
             TestRemove.client.remove()
 
-        assert "Required argument 'key' (pos 1) not found" in typeError.value
+        assert "Required argument 'key' (pos 1) not found" in str(
+            typeError.value)
 
     def test_remove_with_correct_parameters(self):
         """
@@ -68,14 +72,14 @@ class TestRemove(TestBaseClass):
         key = ('test', 'demo', 1)
         retobj = TestRemove.client.remove(key)
 
-        assert retobj == 0L
+        assert retobj == 0
 
         try:
-            (key, meta, bins) = TestRemove.client.get(key)
+            (key, _, _) = TestRemove.client.get(key)
 
-        except RecordNotFound as exception:
+        except e.RecordNotFound as exception:
             assert exception.code == 2
-        
+
         key = ('test', 'demo', 1)
         rec = {
             'name': 'name%s' % (str(1)),
@@ -95,14 +99,14 @@ class TestRemove(TestBaseClass):
 
         retobj = TestRemove.client.remove(key, meta, policy)
 
-        assert retobj == 0L
+        assert retobj == 0
 
         try:
-            (key, meta, bins) = TestRemove.client.get(key)
+            (key, meta, _) = TestRemove.client.get(key)
 
-        except RecordNotFound as exception:
+        except e.RecordNotFound as exception:
             assert exception.code == 2
-    
+
         key = ('test', 'demo', 1)
         rec = {
             'name': 'name%s' % (str(1)),
@@ -125,12 +129,12 @@ class TestRemove(TestBaseClass):
         }
         retobj = TestRemove.client.remove(key, meta, policy)
 
-        assert retobj == 0L
+        assert retobj == 0
 
         try:
-            (key, meta, bins) = TestRemove.client.get(key)
+            (key, meta, _) = TestRemove.client.get(key)
 
-        except RecordNotFound as exception:
+        except e.RecordNotFound as exception:
             assert exception.code == 2
 
         key = ('test', 'demo', 1)
@@ -157,18 +161,18 @@ class TestRemove(TestBaseClass):
         }
         retobj = TestRemove.client.put(key, policy)
 
-        assert retobj == 0L
+        assert retobj == 0
 
         retobj = TestRemove.client.remove(key, meta, policy)
 
-        assert retobj == 0L
+        assert retobj == 0
 
         try:
-            (key, meta, bins) = TestRemove.client.get(key)
+            (key, meta, _) = TestRemove.client.get(key)
 
-        except RecordNotFound as exception:
+        except e.RecordNotFound as exception:
             assert exception.code == 2
-        
+
     def test_remove_with_policy_gen_ignore(self):
         """
             Invoke remove() with policy gen ignore
@@ -184,12 +188,12 @@ class TestRemove(TestBaseClass):
 
         retobj = TestRemove.client.remove(key, meta, policy)
 
-        assert retobj == 0L
+        assert retobj == 0
 
         try:
-            (key, meta, bins) = TestRemove.client.get(key)
+            (key, meta, _) = TestRemove.client.get(key)
 
-        except RecordNotFound as exception:
+        except e.RecordNotFound as exception:
             assert exception.code == 2
 
         key = ('test', 'demo', 1)
@@ -206,7 +210,6 @@ class TestRemove(TestBaseClass):
             Invoke remove() with policy gen positive
         """
         key = ('test', 'demo', 1)
-        meta = {'gen': 0}
         policy = {
             'timeout': 1000,
             'retry': aerospike.POLICY_RETRY_ONCE,
@@ -215,15 +218,14 @@ class TestRemove(TestBaseClass):
         }
 
         (key, meta) = TestRemove.client.exists(key)
-        gen = meta['gen']
         retobj = TestRemove.client.remove(key, meta, policy)
 
-        assert retobj == 0L
+        assert retobj == 0
 
         try:
-            (key, meta, bins) = TestRemove.client.get(key)
+            (key, meta, _) = TestRemove.client.get(key)
 
-        except RecordNotFound as exception:
+        except e.RecordNotFound as exception:
             assert exception.code == 2
 
         key = ('test', 'demo', 1)
@@ -241,9 +243,7 @@ class TestRemove(TestBaseClass):
         """
         key = ('test', 'demo', 1)
 
-        (key, meta) = TestRemove.client.exists(key)
-        gen = meta['gen'] + 5
-        metadata = {'gen': gen}
+        (key, _) = TestRemove.client.exists(key)
         policy = {
             'timeout': 1000,
             'retry': aerospike.POLICY_RETRY_ONCE,
@@ -255,9 +255,9 @@ class TestRemove(TestBaseClass):
         gen = meta['gen'] + 5
 
         try:
-            retobj = TestRemove.client.remove(key, gen, policy)
+            TestRemove.client.remove(key, gen, policy)
 
-        except RecordGenerationError as exception:
+        except e.RecordGenerationError as exception:
             assert exception.code == 3
             assert exception.msg == 'AEROSPIKE_ERR_RECORD_GENERATION'
 
@@ -265,8 +265,8 @@ class TestRemove(TestBaseClass):
 
         assert key == ('test', 'demo', None, bytearray(
             b'\xb7\xf4\xb88\x89\xe2\xdag\xdeh>\x1d\xf6\x91\x9a\x1e\xac\xc4F\xc8')
-                      )
-        assert meta != None
+        )
+        assert meta is not None
         assert bins == {'addr': 'name1', 'age': 1, 'name': 'name1', 'no': 1}
 
     def test_remove_with_policy_gen_GT_lesser(self):
@@ -284,9 +284,9 @@ class TestRemove(TestBaseClass):
         (key, meta) = TestRemove.client.exists(key)
         gen = meta['gen']
         try:
-            retobj = TestRemove.client.remove(key, gen, policy)
+            TestRemove.client.remove(key, gen, policy)
 
-        except RecordGenerationError as exception:
+        except e.RecordGenerationError as exception:
             assert exception.code == 3
             assert exception.msg == 'AEROSPIKE_ERR_RECORD_GENERATION'
 
@@ -294,8 +294,8 @@ class TestRemove(TestBaseClass):
 
         assert key == ('test', 'demo', None, bytearray(
             b'\xb7\xf4\xb88\x89\xe2\xdag\xdeh>\x1d\xf6\x91\x9a\x1e\xac\xc4F\xc8')
-                      )
-        assert meta != None
+        )
+        assert meta is not None
         assert bins == {'addr': 'name1', 'age': 1, 'name': 'name1', 'no': 1}
 
     def test_remove_with_policy_gen_GT_positive(self):
@@ -315,12 +315,12 @@ class TestRemove(TestBaseClass):
         metadata = {'gen': gen}
         retobj = TestRemove.client.remove(key, metadata, policy)
 
-        assert retobj == 0L
+        assert retobj == 0
 
         try:
-            (key, meta, bins) = TestRemove.client.get(key)
+            (key, meta, _) = TestRemove.client.get(key)
 
-        except RecordNotFound as exception:
+        except e.RecordNotFound as exception:
             assert exception.code == 2
 
         key = ('test', 'demo', 1)
@@ -338,12 +338,12 @@ class TestRemove(TestBaseClass):
         """
         key = ('test', 'demo', 1)
         meta = {
-                'gen' : 0
-                }
+            'gen': 0
+        }
         try:
-            retobj = TestRemove.client.remove(key, meta, "")
+            TestRemove.client.remove(key, meta, "")
 
-        except ParamError as exception:
+        except e.ParamError as exception:
             assert exception.code == -2
             assert exception.msg == 'policy must be a dict'
 
@@ -355,18 +355,19 @@ class TestRemove(TestBaseClass):
         meta = {'gen': 0}
         policy = {'timeout': 1000}
         with pytest.raises(TypeError) as typeError:
-            retobj = TestRemove.client.remove(key, meta, policy, "")
+            TestRemove.client.remove(key, meta, policy, "")
 
-        assert "remove() takes at most 3 arguments (4 given)" in typeError.value
+        assert "remove() takes at most 3 arguments (4 given)" in str(
+            typeError.value)
 
     def test_remove_with_key_none(self):
         """
             Invoke remove() with key as None
         """
         try:
-            retobj = TestRemove.client.remove(None)
+            TestRemove.client.remove(None)
 
-        except ParamError as exception:
+        except e.ParamError as exception:
             assert exception.code == -2
             assert exception.msg == 'key is invalid'
 
@@ -376,9 +377,9 @@ class TestRemove(TestBaseClass):
         """
         key = ('test', 'demo', 15)
         try:
-            retobj = TestRemove.client.remove(key)
+            TestRemove.client.remove(key)
 
-        except RecordNotFound as exception:
+        except e.RecordNotFound as exception:
             assert exception.code == 2
             assert exception.msg == 'AEROSPIKE_ERR_RECORD_NOT_FOUND'
 
@@ -388,9 +389,9 @@ class TestRemove(TestBaseClass):
         """
         key = (None, 'demo', 1)
         try:
-            retobj = TestRemove.client.remove(key)
+            TestRemove.client.remove(key)
 
-        except ParamError as exception:
+        except e.ParamError as exception:
             assert exception.code == -2
             assert exception.msg == 'namespace must be a string'
 
@@ -400,9 +401,9 @@ class TestRemove(TestBaseClass):
         """
         key = ('test', None, 1)
         try:
-            retobj = TestRemove.client.remove(key)
+            TestRemove.client.remove(key)
 
-        except RecordNotFound as exception:
+        except e.RecordNotFound as exception:
             assert exception.code == 2
             assert exception.msg == 'AEROSPIKE_ERR_RECORD_NOT_FOUND'
 
@@ -415,8 +416,8 @@ class TestRemove(TestBaseClass):
         key = ('test', 'demo', 1)
 
         try:
-            retobj = client1.remove(key)
+            client1.remove(key)
 
-        except ClusterError as exception:
-            assert exception.code == 11L
+        except e.ClusterError as exception:
+            assert exception.code == 11
             assert exception.msg == 'No connection to aerospike cluster'

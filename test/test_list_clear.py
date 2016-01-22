@@ -1,45 +1,49 @@
 # -*- coding: utf-8 -*-
 import pytest
-import time
 import sys
 import random
-import cPickle as pickle
-from test_base_class import TestBaseClass
+from .test_base_class import TestBaseClass
+from aerospike import exception as e
 
 aerospike = pytest.importorskip("aerospike")
 try:
-    from aerospike.exception import *
+    import aerospike
 except:
-    print "Please install aerospike python client."
+    print("Please install aerospike python client.")
     sys.exit(1)
 
+
 class TestListClear(object):
+
     def setup_class(cls):
         """
         Setup method.
         """
         hostlist, user, password = TestBaseClass.get_hosts()
         config = {'hosts': hostlist}
-        if user == None and password == None:
+        if user is None and password is None:
             TestListClear.client = aerospike.client(config).connect()
         else:
-            TestListClear.client = aerospike.client(config).connect(user, password)
+            TestListClear.client = aerospike.client(
+                config).connect(user, password)
 
     def teardown_class(cls):
         TestListClear.client.close()
 
     def setup_method(self, method):
-        for i in xrange(5):
+        for i in range(5):
             key = ('test', 'demo', i)
-            rec = {'name': 'name%s' % (str(i)), 'contact_no': [i, i+1], 'city' : ['Pune', 'Dehli']}
+            rec = {'name': 'name%s' %
+                   (str(i)), 'contact_no': [i, i + 1],
+                   'city': ['Pune', 'Dehli']}
             TestListClear.client.put(key, rec)
 
     def teardown_method(self, method):
         """
         Teardoen method.
         """
-        #time.sleep(1)
-        for i in xrange(5):
+        # time.sleep(1)
+        for i in range(5):
             key = ('test', 'demo', i)
             TestListClear.client.remove(key)
 
@@ -51,28 +55,23 @@ class TestListClear(object):
 
         status = TestListClear.client.list_clear(key, 'contact_no')
 
-        assert status == 0L
+        assert status == 0
 
-        (key,meta, bins) = TestListClear.client.get(key)
-        assert bins == {'city': ['Pune', 'Dehli'], 'contact_no': [], 'name': 'name1'}
+        (key, _, bins) = TestListClear.client.get(key)
+        assert bins == {
+            'city': ['Pune', 'Dehli'], 'contact_no': [], 'name': 'name1'}
 
     def test_list_clear_list_with_correct_policy(self):
         """
         Invoke list_clear() removes all list elements with correct policy
         """
-        key = ('test', 'demo', 2)
-        policy = {
-            'timeout': 1000,
-            'retry': aerospike.POLICY_RETRY_ONCE,
-            'commit_level': aerospike.POLICY_COMMIT_LEVEL_MASTER
-        }
-        
+
         key = ('test', 'demo', 2)
 
         status = TestListClear.client.list_clear(key, 'city')
-        assert status == 0L
+        assert status == 0
 
-        (key,meta, bins) = TestListClear.client.get(key)
+        (key, _, bins) = TestListClear.client.get(key)
         assert bins == {'city': [], 'contact_no': [2, 3], 'name': 'name2'}
 
     def test_list_clear_with_no_parameters(self):
@@ -81,7 +80,8 @@ class TestListClear(object):
         """
         with pytest.raises(TypeError) as typeError:
             TestListClear.client.list_clear()
-        assert "Required argument 'key' (pos 1) not found" in typeError.value
+        assert "Required argument 'key' (pos 1) not found" in str(
+            typeError.value)
 
     def test_list_clear_with_incorrect_policy(self):
         """
@@ -94,7 +94,7 @@ class TestListClear(object):
         try:
             TestListClear.client.list_clear(key, "contact_no", {}, policy)
 
-        except ParamError as exception:
+        except e.ParamError as exception:
             assert exception.code == -2
             assert exception.msg == "timeout is invalid"
 
@@ -106,12 +106,13 @@ class TestListClear(object):
         minLength = 5
         maxLength = 30
         length = random.randint(minLength, maxLength)
-        key = ('test', 'demo', ''.join(map(lambda unused :
-            random.choice(charSet), range(length)))+".com")
+        key = ('test', 'demo', ''.join(map(lambda unused:
+                                           random.choice(charSet),
+                                           range(length))) + ".com")
         try:
             TestListClear.client.list_clear(key, "contact_no")
-        except BinIncompatibleType as exception:
-            assert exception.code == 12L
+        except e.BinIncompatibleType as exception:
+            assert exception.code == 12
 
     def test_list_clear_with_nonexistent_bin(self):
         """
@@ -122,12 +123,12 @@ class TestListClear(object):
         minLength = 5
         maxLength = 10
         length = random.randint(minLength, maxLength)
-        bin = ''.join(map(lambda unused :
-            random.choice(charSet), range(length)))+".com"
+        bin = ''.join(map(lambda unused:
+                          random.choice(charSet), range(length))) + ".com"
         try:
             TestListClear.client.list_clear(key, bin)
-        except BinIncompatibleType as exception:
-            assert exception.code == 12L
+        except e.BinIncompatibleType as exception:
+            assert exception.code == 12
 
     def test_list_clear_with_extra_parameter(self):
         """
@@ -138,7 +139,8 @@ class TestListClear(object):
         with pytest.raises(TypeError) as typeError:
             TestListClear.client.list_clear(key, "contact_no", {}, policy, "")
 
-        assert "list_clear() takes at most 4 arguments (5 given)" in typeError.value
+        assert "list_clear() takes at most 4 arguments (5 given)" in str(
+            typeError.value)
 
     def test_list_clear_policy_is_string(self):
         """
@@ -148,7 +150,7 @@ class TestListClear(object):
         try:
             TestListClear.client.list_clear(key, "contact_no", {}, "")
 
-        except ParamError as exception:
+        except e.ParamError as exception:
             assert exception.code == -2
             assert exception.msg == "policy must be a dict"
 
@@ -159,7 +161,7 @@ class TestListClear(object):
         try:
             TestListClear.client.list_clear(None, "contact_no")
 
-        except ParamError as exception:
+        except e.ParamError as exception:
             assert exception.code == -2
             assert exception.msg == "key is invalid"
 
@@ -171,7 +173,7 @@ class TestListClear(object):
         try:
             TestListClear.client.list_clear(key, None)
 
-        except ParamError as exception:
+        except e.ParamError as exception:
             assert exception.code == -2
             assert exception.msg == "Bin name should be of type string"
 
@@ -183,6 +185,6 @@ class TestListClear(object):
         try:
             TestListClear.client.list_clear(key, "contact_no", 888)
 
-        except ParamError as exception:
+        except e.ParamError as exception:
             assert exception.code == -2
             assert exception.msg == "Metadata should be of type dictionary"

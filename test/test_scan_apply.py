@@ -2,28 +2,30 @@
 import pytest
 import time
 import sys
-import cPickle as pickle
-from test_base_class import TestBaseClass
+from .test_base_class import TestBaseClass
+from aerospike import exception as e
 
 aerospike = pytest.importorskip("aerospike")
 try:
-    from aerospike.exception import *
+    import aerospike
 except:
-    print "Please install aerospike python client."
+    print("Please install aerospike python client.")
     sys.exit(1)
 
+
 class TestScanApply(object):
+
     def setup_method(self, method):
         """
         Setup method.
         """
         hostlist, user, password = TestBaseClass.get_hosts()
         config = {'hosts': hostlist}
-        if user == None and password == None:
+        if user is None and password is None:
             self.client = aerospike.client(config).connect()
         else:
             self.client = aerospike.client(config).connect(user, password)
-        for i in xrange(5):
+        for i in range(5):
             key = ('test', 'demo', i)
             rec = {'name': 'name%s' % (str(i)), 'age': i}
             self.client.put(key, rec)
@@ -34,11 +36,11 @@ class TestScanApply(object):
         """
         Teardoen method.
         """
-        for i in xrange(5):
+        for i in range(5):
             key = ('test', 'demo', i)
             try:
                 self.client.remove(key)
-            except TimeoutError:
+            except e.TimeoutError:
                 pass
         self.client.close()
 
@@ -48,7 +50,8 @@ class TestScanApply(object):
         """
         with pytest.raises(TypeError) as typeError:
             self.client.scan_apply()
-        assert "Required argument 'ns' (pos 1) not found" in typeError.value
+        assert "Required argument 'ns' (pos 1) not found" in str(
+            typeError.value)
 
     def test_scan_apply_with_correct_parameters(self):
         """
@@ -64,13 +67,13 @@ class TestScanApply(object):
                 break
             time.sleep(0.1)
 
-        for i in xrange(5):
+        for i in range(5):
             key = ('test', 'demo', i)
-            (key, meta, bins) = self.client.get(key)
+            (key, _, bins) = self.client.get(key)
             if bins['age'] != i + 2:
-                assert True == False
+                assert True is False
 
-        assert True == True
+        assert True is True
 
     def test_scan_apply_with_correct_policy(self):
         """
@@ -87,13 +90,13 @@ class TestScanApply(object):
                 break
             time.sleep(0.1)
 
-        for i in xrange(5):
+        for i in range(5):
             key = ('test', 'demo', i)
-            (key, meta, bins) = self.client.get(key)
+            (key, _, bins) = self.client.get(key)
             if bins['age'] != i + 2:
-                assert True == False
+                assert True is False
 
-        assert True == True
+        assert True is True
 
     def test_scan_apply_with_none_set(self):
         """
@@ -110,13 +113,13 @@ class TestScanApply(object):
                 break
             time.sleep(0.1)
 
-        for i in xrange(5):
+        for i in range(5):
             key = ('test', 'demo', i)
-            (key, meta, bins) = self.client.get(key)
+            (key, _, bins) = self.client.get(key)
             if bins['age'] != i + 2:
-                assert True == False
+                assert True is False
 
-        assert True == True
+        assert True is True
 
     def test_scan_apply_with_incorrect_policy(self):
         """
@@ -126,9 +129,10 @@ class TestScanApply(object):
             'timeout': 0.5
         }
         try:
-            scan_id = self.client.scan_apply("test", "demo", "bin_lua", "mytransform", ['age', 2], policy)
+            self.client.scan_apply(
+                "test", "demo", "bin_lua", "mytransform", ['age', 2], policy)
 
-        except ParamError as exception:
+        except e.ParamError as exception:
             assert exception.code == -2
             assert exception.msg == "timeout is invalid"
 
@@ -137,12 +141,13 @@ class TestScanApply(object):
         Invoke scan_apply() with incorrect ns and set
         """
         try:
-            scan_id = self.client.scan_apply("test1", "demo1", "bin_lua", "mytransform", ['age', 2])
+            self.client.scan_apply(
+                "test1", "demo1", "bin_lua", "mytransform", ['age', 2])
 
-        except NamespaceNotFound as exception:
-            assert exception.code == 20L
-        except ServerError as exception:
-            assert exception.code == 1L
+        except e.NamespaceNotFound as exception:
+            assert exception.code == 20
+        except e.ServerError as exception:
+            assert exception.code == 1
 
     def test_scan_apply_with_incorrect_module_name(self):
         """
@@ -158,13 +163,13 @@ class TestScanApply(object):
                 break
             time.sleep(0.1)
 
-        for i in xrange(5):
+        for i in range(5):
             key = ('test', 'demo', i)
-            (key, meta, bins) = self.client.get(key)
+            (key, _, bins) = self.client.get(key)
             if bins['age'] != i:
-                assert True == False
+                assert True is False
             else:
-                assert True == True
+                assert True is True
 
     def test_scan_apply_with_incorrect_function_name(self):
         """
@@ -180,23 +185,23 @@ class TestScanApply(object):
                 break
             time.sleep(0.1)
 
-        for i in xrange(5):
+        for i in range(5):
             key = ('test', 'demo', i)
-            (key, meta, bins) = self.client.get(key)
+            (key, _, bins) = self.client.get(key)
             if bins['age'] != i:
-                assert True == False
+                assert True is False
             else:
-                assert True == True
+                assert True is True
 
     def test_scan_apply_with_ns_set_none(self):
         """
         Invoke scan_apply() with ns and set as None
         """
         with pytest.raises(TypeError) as typeError:
-            scan_id = self.client.scan_apply(None, None, "bin_lua",
-                                             "mytransform", ['age', 2])
+            self.client.scan_apply(None, None, "bin_lua",
+                                   "mytransform", ['age', 2])
 
-        assert "scan_apply() argument 1 must be string, not None" in typeError.value
+        assert "scan_apply() argument 1 must be str" in str(typeError.value)
 
     def test_scan_apply_with_module_function_none(self):
         """
@@ -204,10 +209,10 @@ class TestScanApply(object):
         """
 
         try:
-            scan_id = self.client.scan_apply("test", "demo", None, None, ['age', 2])
+            self.client.scan_apply("test", "demo", None, None, ['age', 2])
 
-        except ParamError as exception:
-            assert exception.code == -2L
+        except e.ParamError as exception:
+            assert exception.code == -2
             assert exception.msg == "Module name should be string"
 
     def test_scan_apply_with_percent_string(self):
@@ -221,11 +226,11 @@ class TestScanApply(object):
             "priority": aerospike.SCAN_PRIORITY_HIGH
         }
         try:
-            scan_id = self.client.scan_apply("test", "demo", "bin_lua",
-                                             "mytransform_incorrect",
-                                             ['age', 2], policy, options)
+            self.client.scan_apply("test", "demo", "bin_lua",
+                                   "mytransform_incorrect",
+                                   ['age', 2], policy, options)
 
-        except ParamError as exception:
+        except e.ParamError as exception:
             assert exception.code == -2
             assert exception.msg == "Invalid value(type) for percent"
 
@@ -240,11 +245,11 @@ class TestScanApply(object):
             "priority": "aerospike.SCAN_PRIORITY_HIGH"
         }
         try:
-            scan_id = self.client.scan_apply("test", "demo", "bin_lua",
-                                             "mytransform_incorrect",
-                                             ['age', 2], policy, options)
+            self.client.scan_apply("test", "demo", "bin_lua",
+                                   "mytransform_incorrect",
+                                   ['age', 2], policy, options)
 
-        except ParamError as exception:
+        except e.ParamError as exception:
             assert exception.code == -2
             assert exception.msg == "Invalid value(type) for priority"
 
@@ -259,11 +264,11 @@ class TestScanApply(object):
             "priority": aerospike.SCAN_PRIORITY_HIGH
         }
         try:
-            scan_id = self.client.scan_apply("test", "demo", "bin_lua",
-                                             "mytransform_incorrect",
-                                             ['age', 2], policy, options)
+            self.client.scan_apply("test", "demo", "bin_lua",
+                                   "mytransform_incorrect",
+                                   ['age', 2], policy, options)
 
-        except ParamError as exception:
+        except e.ParamError as exception:
             assert exception.code == -2
             assert exception.msg == "Invalid value(type) for concurrent"
 
@@ -278,20 +283,22 @@ class TestScanApply(object):
             "priority": aerospike.SCAN_PRIORITY_HIGH
         }
         with pytest.raises(TypeError) as typeError:
-            scan_id = self.client.scan_apply("test", "demo", "bin_lua",
-                                             "mytransform_incorrect",
-                                             ['age', 2], policy, options, "")
+            self.client.scan_apply("test", "demo", "bin_lua",
+                                   "mytransform_incorrect",
+                                   ['age', 2], policy, options, "")
 
-        assert "scan_apply() takes at most 7 arguments (8 given)" in typeError.value
+        assert "scan_apply() takes at most 7 arguments (8 given)" in str(
+            typeError.value)
 
     def test_scan_apply_with_argument_is_string(self):
         """
         Invoke scan_apply() with arguments as string
         """
         try:
-            scan_id = self.client.scan_apply("test", "demo", "bin_lua", "mytransform", "")
+            self.client.scan_apply(
+                "test", "demo", "bin_lua", "mytransform", "")
 
-        except ParamError as exception:
+        except e.ParamError as exception:
             assert exception.code == -2
             assert exception.msg == "Arguments should be a list"
 
@@ -300,9 +307,10 @@ class TestScanApply(object):
         Invoke scan_apply() with arguments as None
         """
         try:
-            scan_id = self.client.scan_apply("test", "demo", "bin_lua", "mytransform", None)
+            self.client.scan_apply(
+                "test", "demo", "bin_lua", "mytransform", None)
 
-        except ParamError as exception:
+        except e.ParamError as exception:
             assert exception.code == -2
             assert exception.msg == "Arguments should be a list"
 
@@ -313,7 +321,7 @@ class TestScanApply(object):
         scan_id = self.client.scan_apply("test", "demo", "bin_lua",
                                          "mytransform", ['age', 2, 3])
 
-        #time.sleep(2)
+        # time.sleep(2)
 
         time.sleep(0.1)
         while True:
@@ -322,13 +330,13 @@ class TestScanApply(object):
                 break
             time.sleep(0.1)
 
-        for i in xrange(5):
+        for i in range(5):
             key = ('test', 'demo', i)
-            (key, meta, bins) = self.client.get(key)
+            (key, _, bins) = self.client.get(key)
             if bins['age'] != i + 2:
-                assert True == False
+                assert True is False
 
-        assert True == True
+        assert True is True
 
     def test_scan_apply_with_extra_parameter_in_lua(self):
         """
@@ -337,7 +345,7 @@ class TestScanApply(object):
         scan_id = self.client.scan_apply("test", "demo", "bin_lua",
                                          "mytransformextra", ['age', 2])
 
-        #time.sleep(2)
+        # time.sleep(2)
 
         time.sleep(0.1)
         while True:
@@ -346,13 +354,13 @@ class TestScanApply(object):
                 break
             time.sleep(0.1)
 
-        for i in xrange(5):
+        for i in range(5):
             key = ('test', 'demo', i)
-            (key, meta, bins) = self.client.get(key)
+            (key, _, bins) = self.client.get(key)
             if bins['age'] != i + 2:
-                assert True == False
+                assert True is False
 
-        assert True == True
+        assert True is True
 
     def test_scan_apply_with_less_parameter_in_lua(self):
         """
@@ -361,7 +369,7 @@ class TestScanApply(object):
         scan_id = self.client.scan_apply("test", "demo", "bin_lua",
                                          "mytransformless", ['age', 2])
 
-        #time.sleep(2)
+        # time.sleep(2)
 
         time.sleep(0.1)
         while True:
@@ -370,13 +378,13 @@ class TestScanApply(object):
                 break
             time.sleep(0.1)
 
-        for i in xrange(5):
+        for i in range(5):
             key = ('test', 'demo', i)
-            (key, meta, bins) = self.client.get(key)
+            (key, _, bins) = self.client.get(key)
             if bins['age'] != i:
-                assert True == False
+                assert True is False
             else:
-                assert True == True
+                assert True is True
 
     def test_scan_apply_with_options_positive(self):
         """
@@ -399,13 +407,13 @@ class TestScanApply(object):
                 break
             time.sleep(0.1)
 
-        for i in xrange(5):
+        for i in range(5):
             key = ('test', 'demo', i)
-            (key, meta, bins) = self.client.get(key)
+            (key, _, bins) = self.client.get(key)
             if bins['age'] != i + 2:
-                assert True == False
+                assert True is False
 
-        assert True == True
+        assert True is True
 
     def test_scan_apply_unicode_input(self):
         """
@@ -421,13 +429,13 @@ class TestScanApply(object):
                 break
             time.sleep(0.1)
 
-        for i in xrange(5):
+        for i in range(5):
             key = ('test', 'demo', i)
-            (key, meta, bins) = self.client.get(key)
+            (key, _, bins) = self.client.get(key)
             if bins['age'] != i + 2:
-                assert True == False
+                assert True is False
 
-        assert True == True
+        assert True is True
 
     def test_scan_apply_with_correct_parameters_without_connection(self):
         """
@@ -437,8 +445,9 @@ class TestScanApply(object):
         client1 = aerospike.client(config)
 
         try:
-            scan_id = client1.scan_apply("test", "demo", "bin_lua", "mytransform", ['age', 2])
+            client1.scan_apply(
+                "test", "demo", "bin_lua", "mytransform", ['age', 2])
 
-        except ClusterError as exception:
-            assert exception.code == 11L
+        except e.ClusterError as exception:
+            assert exception.code == 11
             assert exception.msg == 'No connection to aerospike cluster'

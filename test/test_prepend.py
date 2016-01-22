@@ -1,25 +1,26 @@
 # -*- coding: utf-8 -*-
 import pytest
-import time
 import sys
-import cPickle as pickle
-from test_base_class import TestBaseClass
+from .test_base_class import TestBaseClass
+from aerospike import exception as e
 
 aerospike = pytest.importorskip("aerospike")
 try:
-    from aerospike.exception import *
+    import aerospike
 except:
-    print "Please install aerospike python client."
+    print("Please install aerospike python client.")
     sys.exit(1)
 
+
 class TestPrepend(object):
+
     def setup_class(cls):
         """
         Setup method.
         """
         hostlist, user, password = TestBaseClass.get_hosts()
         config = {'hosts': hostlist}
-        if user == None and password == None:
+        if user is None and password is None:
             TestPrepend.client = aerospike.client(config).connect()
         else:
             TestPrepend.client = aerospike.client(config).connect(user,
@@ -29,19 +30,19 @@ class TestPrepend(object):
         TestPrepend.client.close()
 
     def setup_method(self, method):
-        for i in xrange(5):
+        for i in range(5):
             key = ('test', 'demo', i)
             rec = {'name': 'name%s' % (str(i)), 'age': i, 'nolist': [1, 2, 3]}
             TestPrepend.client.put(key, rec)
         key = ('test', 'demo', 'bytearray_key')
-        TestPrepend.client.put(key, {"bytearray_bin": bytearray("asd;as[d'as;d",
-            "utf-8")})
+        TestPrepend.client.put(
+            key, {"bytearray_bin": bytearray("asd;as[d'as;d", "utf-8")})
 
     def teardown_method(self, method):
         """
         Teardoen method.
         """
-        for i in xrange(5):
+        for i in range(5):
             key = ('test', 'demo', i)
             TestPrepend.client.remove(key)
         key = ('test', 'demo', 'bytearray_key')
@@ -53,7 +54,8 @@ class TestPrepend(object):
         """
         with pytest.raises(TypeError) as typeError:
             TestPrepend.client.prepend()
-        assert "Required argument 'key' (pos 1) not found" in typeError.value
+        assert "Required argument 'key' (pos 1) not found" in str(
+            typeError.value)
 
     def test_prepend_with_correct_paramters(self):
         """
@@ -62,7 +64,7 @@ class TestPrepend(object):
         key = ('test', 'demo', 1)
         TestPrepend.client.prepend(key, "name", "str")
 
-        (key, meta, bins) = TestPrepend.client.get(key)
+        (key, _, bins) = TestPrepend.client.get(key)
 
         assert bins == {'age': 1, 'name': 'strname1', 'nolist': [1, 2, 3]}
 
@@ -79,7 +81,7 @@ class TestPrepend(object):
 
         TestPrepend.client.prepend(key, "name", "str", {}, policy)
 
-        (key, meta, bins) = TestPrepend.client.get(key)
+        (key, _, bins) = TestPrepend.client.get(key)
 
         assert bins == {'age': 1, 'name': 'strname1', 'nolist': [1, 2, 3]}
 
@@ -96,12 +98,12 @@ class TestPrepend(object):
         }
         TestPrepend.client.prepend(key, "name", "str", {}, policy)
 
-        (key, meta, bins) = TestPrepend.client.get(key)
+        (key, _, bins) = TestPrepend.client.get(key)
 
         assert bins == {'age': 1, 'name': 'strname1', 'nolist': [1, 2, 3]}
         assert key == ('test', 'demo', None, bytearray(
             b'\xb7\xf4\xb88\x89\xe2\xdag\xdeh>\x1d\xf6\x91\x9a\x1e\xac\xc4F\xc8')
-                      )
+        )
 
     def test_prepend_with_policy_key_gen_EQ_ignore(self):
         """
@@ -123,7 +125,7 @@ class TestPrepend(object):
         assert bins == {'age': 1, 'name': 'strname1', 'nolist': [1, 2, 3]}
         assert key == ('test', 'demo', None, bytearray(
             b'\xb7\xf4\xb88\x89\xe2\xdag\xdeh>\x1d\xf6\x91\x9a\x1e\xac\xc4F\xc8')
-                      )
+        )
 
     def test_prepend_with_policy_key_gen_EQ_positive(self):
         """
@@ -147,7 +149,7 @@ class TestPrepend(object):
         assert bins == {'age': 1, 'name': 'strname1', 'nolist': [1, 2, 3]}
         assert key == ('test', 'demo', None, bytearray(
             b'\xb7\xf4\xb88\x89\xe2\xdag\xdeh>\x1d\xf6\x91\x9a\x1e\xac\xc4F\xc8')
-                      )
+        )
 
     def test_prepend_with_policy_key_gen_EQ_not_equal(self):
         """
@@ -162,7 +164,7 @@ class TestPrepend(object):
         }
         (key, meta) = TestPrepend.client.exists(key)
         gen = meta['gen']
-        
+
         meta = {
             'gen': gen + 5,
             'ttl': 1200
@@ -170,7 +172,7 @@ class TestPrepend(object):
         try:
             TestPrepend.client.prepend(key, "name", "str", meta, policy)
 
-        except RecordGenerationError as exception:
+        except e.RecordGenerationError as exception:
             assert exception.code == 3
             assert exception.msg == "AEROSPIKE_ERR_RECORD_GENERATION"
             assert exception.bin == 'name'
@@ -180,7 +182,7 @@ class TestPrepend(object):
         assert bins == {'age': 1, 'name': 'name1', 'nolist': [1, 2, 3]}
         assert key == ('test', 'demo', None, bytearray(
             b'\xb7\xf4\xb88\x89\xe2\xdag\xdeh>\x1d\xf6\x91\x9a\x1e\xac\xc4F\xc8')
-                      )
+        )
 
     def test_prepend_with_policy_key_gen_GT_lesser(self):
         """
@@ -203,7 +205,7 @@ class TestPrepend(object):
         try:
             TestPrepend.client.prepend(key, "name", "str", meta, policy)
 
-        except RecordGenerationError as exception:
+        except e.RecordGenerationError as exception:
             assert exception.code == 3
             assert exception.msg == "AEROSPIKE_ERR_RECORD_GENERATION"
             assert exception.bin == "name"
@@ -213,7 +215,7 @@ class TestPrepend(object):
         assert bins == {'age': 1, 'name': 'name1', 'nolist': [1, 2, 3]}
         assert key == ('test', 'demo', None, bytearray(
             b'\xb7\xf4\xb88\x89\xe2\xdag\xdeh>\x1d\xf6\x91\x9a\x1e\xac\xc4F\xc8')
-                      )
+        )
 
     def test_prepend_with_policy_key_gen_GT_positive(self):
         """
@@ -237,7 +239,7 @@ class TestPrepend(object):
         assert bins == {'age': 1, 'name': 'strname1', 'nolist': [1, 2, 3]}
         assert key == ('test', 'demo', None, bytearray(
             b'\xb7\xf4\xb88\x89\xe2\xdag\xdeh>\x1d\xf6\x91\x9a\x1e\xac\xc4F\xc8')
-                      )
+        )
 
     def test_prepend_with_policy_key_digest(self):
         """
@@ -255,7 +257,7 @@ class TestPrepend(object):
         }
         TestPrepend.client.prepend(key, "name", "str", {}, policy)
 
-        (key, meta, bins) = TestPrepend.client.get(key)
+        (key, _, bins) = TestPrepend.client.get(key)
 
         assert bins == {'age': 1, 'name': 'strname1', 'nolist': [1, 2, 3]}
         assert key == ('test', 'demo', None,
@@ -273,7 +275,6 @@ class TestPrepend(object):
         }
         TestPrepend.client.prepend(key, "age", "str", policy)
 
-
         (key , meta, bins) = TestPrepend.client.get(key)
 
         assert bins == { 'age': 1, 'name': 'strname1', 'nolist': [1, 2, 3]}
@@ -290,7 +291,7 @@ class TestPrepend(object):
         try:
             TestPrepend.client.prepend(key, "name", "str", {}, policy)
 
-        except ParamError as exception:
+        except e.ParamError as exception:
             assert exception.code == -2
             assert exception.msg == "timeout is invalid"
 
@@ -301,7 +302,7 @@ class TestPrepend(object):
         key = ('test', 'demo', 1000)
         status = TestPrepend.client.prepend(key, "name", "str")
 
-        assert status == 0L
+        assert status == 0
         TestPrepend.client.remove(key)
 
     def test_prepend_with_nonexistent_bin(self):
@@ -311,7 +312,7 @@ class TestPrepend(object):
         key = ('test', 'demo', 1)
         status = TestPrepend.client.prepend(key, "name1", "str")
 
-        assert status == 0L
+        assert status == 0
 
     def test_prepend_value_not_string(self):
         """
@@ -321,7 +322,7 @@ class TestPrepend(object):
         try:
             TestPrepend.client.prepend(key, "name", 2)
 
-        except ParamError as exception:
+        except e.ParamError as exception:
             assert exception.code == -2
             assert exception.msg == "Cannot concatenate 'str' and 'non-str' objects"
 
@@ -334,7 +335,8 @@ class TestPrepend(object):
         with pytest.raises(TypeError) as typeError:
             TestPrepend.client.prepend(key, "name", "str", {}, policy, "")
 
-        assert "prepend() takes at most 5 arguments (6 given)" in typeError.value
+        assert "prepend() takes at most 5 arguments (6 given)" in str(
+            typeError.value)
 
     def test_prepend_policy_is_string(self):
         """
@@ -344,7 +346,7 @@ class TestPrepend(object):
         try:
             TestPrepend.client.prepend(key, "name", "abc", {}, "")
 
-        except ParamError as exception:
+        except e.ParamError as exception:
             assert exception.code == -2
             assert exception.msg == "policy must be a dict"
 
@@ -355,7 +357,7 @@ class TestPrepend(object):
         try:
             TestPrepend.client.prepend(None, "name", "str")
 
-        except ParamError as exception:
+        except e.ParamError as exception:
             assert exception.code == -2
             assert exception.msg == "key is invalid"
 
@@ -367,18 +369,18 @@ class TestPrepend(object):
         try:
             TestPrepend.client.prepend(key, None, "str")
 
-        except ParamError as exception:
+        except e.ParamError as exception:
             assert exception.code == -2
             assert exception.msg == "Bin name should be of type string"
-    
+
     def test_prepend_unicode_string(self):
         """
         Invoke prepend() with unicode string
         """
         key = ('test', 'demo', 1)
-        res = TestPrepend.client.prepend(key, "name", u"age")
+        TestPrepend.client.prepend(key, "name", u"age")
 
-        key, meta, bins = TestPrepend.client.get(key)
+        key, _, bins = TestPrepend.client.get(key)
         assert bins['name'] == 'agename1'
 
     def test_prepend_unicode_bin_name(self):
@@ -386,9 +388,9 @@ class TestPrepend(object):
         Invoke prepend() with unicode string
         """
         key = ('test', 'demo', 1)
-        res = TestPrepend.client.prepend(key, u"add", u"address")
+        TestPrepend.client.prepend(key, u"add", u"address")
 
-        key, meta, bins = TestPrepend.client.get(key)
+        key, _, bins = TestPrepend.client.get(key)
         assert bins['add'] == 'address'
 
     def test_prepend_with_correct_parameters_without_connection(self):
@@ -402,8 +404,8 @@ class TestPrepend(object):
         try:
             client1.prepend(key, "name", "str")
 
-        except ClusterError as exception:
-            assert exception.code == 11L
+        except e.ClusterError as exception:
+            assert exception.code == 11
             assert exception.msg == 'No connection to aerospike cluster'
 
     def test_prepend_with_bytearray(self):
@@ -411,21 +413,24 @@ class TestPrepend(object):
         Invoke prepend() with bytearray value
         """
         key = ('test', 'demo', 'bytearray_key')
-        TestPrepend.client.prepend(key, "bytearray_bin", bytearray("abc"))
+        TestPrepend.client.prepend(
+            key, "bytearray_bin", bytearray("abc", "utf-8"))
 
-        (key, meta, bins) = TestPrepend.client.get(key)
+        (key, _, bins) = TestPrepend.client.get(key)
 
-        assert bins == {'bytearray_bin': "abcasd;as[d'as;d"}
+        assert bins == {
+            'bytearray_bin': bytearray("abcasd;as[d'as;d", "utf-8")}
 
     def test_prepend_with_bytearray_new_key(self):
         """
         Invoke prepend() with bytearray value with a new record(non-existing)
         """
         key = ('test', 'demo', 'bytearray_new')
-        TestPrepend.client.prepend(key, "bytearray_bin", bytearray("asd;as[d'as;d", "utf-8"))
+        TestPrepend.client.prepend(
+            key, "bytearray_bin", bytearray("asd;as[d'as;d", "utf-8"))
 
-        (key, meta, bins) = TestPrepend.client.get(key)
+        (key, _, bins) = TestPrepend.client.get(key)
 
-        assert bins == {'bytearray_bin': "asd;as[d'as;d"}
+        assert bins == {'bytearray_bin': bytearray("asd;as[d'as;d", "utf-8")}
 
         TestPrepend.client.remove(key)

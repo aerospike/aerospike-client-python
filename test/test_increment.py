@@ -1,25 +1,27 @@
 # -*- coding: utf-8 -*-
 import pytest
-import time
 import sys
-import cPickle as pickle
-from test_base_class import TestBaseClass
+
+from .test_base_class import TestBaseClass
+from aerospike import exception as e
 
 aerospike = pytest.importorskip("aerospike")
 try:
-    from aerospike.exception import *
+    import aerospike
 except:
-    print "Please install aerospike python client."
+    print("Please install aerospike python client.")
     sys.exit(1)
 
+
 class TestIncrement(object):
+
     def setup_class(cls):
         """
         Setup method.
         """
         hostlist, user, password = TestBaseClass.get_hosts()
         config = {'hosts': hostlist}
-        if user == None and password == None:
+        if user is None and password is None:
             TestIncrement.client = aerospike.client(config).connect()
         else:
             TestIncrement.client = aerospike.client(config).connect(user,
@@ -28,8 +30,9 @@ class TestIncrement(object):
         versioninfo = TestIncrement.client.info('version')
         for keys in versioninfo:
             for value in versioninfo[keys]:
-                if value != None:
-                    versionlist = value[value.find("build") + 6:value.find("\n")].split(".")
+                if value is not None:
+                    versionlist = value[
+                        value.find("build") + 6:value.find("\n")].split(".")
                     if int(versionlist[0]) >= 3 and int(versionlist[1]) >= 6:
                         TestIncrement.skip_old_server = False
 
@@ -37,7 +40,7 @@ class TestIncrement(object):
         TestIncrement.client.close()
 
     def setup_method(self, method):
-        for i in xrange(5):
+        for i in range(5):
             key = ('test', 'demo', i)
             rec = {'name': 'name%s' % (str(i)), 'age': i}
             TestIncrement.client.put(key, rec)
@@ -49,7 +52,7 @@ class TestIncrement(object):
         """
         Teardoen method.
         """
-        for i in xrange(5):
+        for i in range(5):
             key = ('test', 'demo', i)
             TestIncrement.client.remove(key)
 
@@ -59,7 +62,8 @@ class TestIncrement(object):
         """
         with pytest.raises(TypeError) as typeError:
             TestIncrement.client.increment()
-        assert "Required argument 'key' (pos 1) not found" in typeError.value
+        assert "Required argument 'key' (pos 1) not found" in str(
+            typeError.value)
 
     def test_increment_with_correct_parameters(self):
         """
@@ -68,7 +72,7 @@ class TestIncrement(object):
         key = ('test', 'demo', 1)
         TestIncrement.client.increment(key, "age", 5)
 
-        (key, meta, bins) = TestIncrement.client.get(key)
+        (key, _, bins) = TestIncrement.client.get(key)
 
         assert bins == {'age': 6, 'name': 'name1'}
 
@@ -76,12 +80,12 @@ class TestIncrement(object):
         """
         Invoke increment() with correct parameters and a float value
         """
-        if TestIncrement.skip_old_server == True:
+        if TestIncrement.skip_old_server is True:
             pytest.skip("Server does not support increment on float type")
         key = ('test', 'demo', 6)
         TestIncrement.client.increment(key, "age", 6.4)
 
-        (key, meta, bins) = TestIncrement.client.get(key)
+        (key, _, bins) = TestIncrement.client.get(key)
 
         assert bins == {'age': 12.9}
 
@@ -98,12 +102,12 @@ class TestIncrement(object):
         }
         TestIncrement.client.increment(key, "age", 5, {}, policy)
 
-        (key, meta, bins) = TestIncrement.client.get(key)
+        (key, _, bins) = TestIncrement.client.get(key)
 
         assert bins == {'age': 6, 'name': 'name1'}
         assert key == ('test', 'demo', None, bytearray(
             b'\xb7\xf4\xb88\x89\xe2\xdag\xdeh>\x1d\xf6\x91\x9a\x1e\xac\xc4F\xc8')
-                      )
+        )
 
     def test_increment_with_policy_key_digest(self):
         """
@@ -121,7 +125,7 @@ class TestIncrement(object):
         }
         TestIncrement.client.increment(key, "age", 5, {}, policy)
 
-        (key, meta, bins) = TestIncrement.client.get(key)
+        (key, _, bins) = TestIncrement.client.get(key)
 
         assert bins == {'age': 6, 'name': 'name1', 'nolist': [1, 2, 3]}
         assert key == ('test', 'demo', None,
@@ -136,7 +140,7 @@ class TestIncrement(object):
         policy = {'timeout': 1000, 'key': aerospike.POLICY_KEY_SEND}
         TestIncrement.client.increment(key, "age", 5, {}, policy)
 
-        (key, meta, bins) = TestIncrement.client.get(key)
+        (key, _, bins) = TestIncrement.client.get(key)
 
         assert bins == {'age': 6, 'name': 'name1'}
 
@@ -160,7 +164,7 @@ class TestIncrement(object):
         assert bins == {'age': 6, 'name': 'name1'}
         assert key == ('test', 'demo', None, bytearray(
             b'\xb7\xf4\xb88\x89\xe2\xdag\xdeh>\x1d\xf6\x91\x9a\x1e\xac\xc4F\xc8')
-                      )
+        )
 
     def test_increment_with_policy_key_gen_EQ_positive(self):
         """
@@ -184,7 +188,7 @@ class TestIncrement(object):
         assert bins == {'age': 6, 'name': 'name1'}
         assert key == ('test', 'demo', None, bytearray(
             b'\xb7\xf4\xb88\x89\xe2\xdag\xdeh>\x1d\xf6\x91\x9a\x1e\xac\xc4F\xc8')
-                      )
+        )
 
     def test_increment_with_policy_key_gen_EQ_not_equal(self):
         """
@@ -207,17 +211,17 @@ class TestIncrement(object):
         try:
             TestIncrement.client.increment(key, "age", 5, meta, policy)
 
-        except RecordGenerationError as exception:
+        except e.RecordGenerationError as exception:
             assert exception.code == 3
             assert exception.msg == "AEROSPIKE_ERR_RECORD_GENERATION"
             assert exception.bin == "age"
 
-        (key , meta, bins) = TestIncrement.client.get(key)
+        (key, meta, bins) = TestIncrement.client.get(key)
 
         assert bins == {'age': 1, 'name': 'name1'}
         assert key == ('test', 'demo', None, bytearray(
             b'\xb7\xf4\xb88\x89\xe2\xdag\xdeh>\x1d\xf6\x91\x9a\x1e\xac\xc4F\xc8')
-                      )
+        )
 
     def test_increment_with_policy_key_gen_GT_lesser(self):
         """
@@ -240,7 +244,7 @@ class TestIncrement(object):
         try:
             TestIncrement.client.increment(key, "age", 5, meta, policy)
 
-        except RecordGenerationError as exception:
+        except e.RecordGenerationError as exception:
             assert exception.code == 3
             assert exception.msg == "AEROSPIKE_ERR_RECORD_GENERATION"
 
@@ -249,7 +253,7 @@ class TestIncrement(object):
         assert bins == {'age': 1, 'name': 'name1'}
         assert key == ('test', 'demo', None, bytearray(
             b'\xb7\xf4\xb88\x89\xe2\xdag\xdeh>\x1d\xf6\x91\x9a\x1e\xac\xc4F\xc8')
-                      )
+        )
 
     def test_increment_with_policy_key_gen_GT_positive(self):
         """
@@ -273,7 +277,7 @@ class TestIncrement(object):
         assert bins == {'age': 6, 'name': 'name1'}
         assert key == ('test', 'demo', None, bytearray(
             b'\xb7\xf4\xb88\x89\xe2\xdag\xdeh>\x1d\xf6\x91\x9a\x1e\xac\xc4F\xc8')
-                      )
+        )
 
     def test_increment_with_incorrect_policy(self):
         """
@@ -286,7 +290,7 @@ class TestIncrement(object):
         try:
             TestIncrement.client.increment(key, "age", 5, {}, policy)
 
-        except ParamError as exception:
+        except e.ParamError as exception:
             assert exception.code == -2
             assert exception.msg == "timeout is invalid"
 
@@ -295,9 +299,9 @@ class TestIncrement(object):
         Invoke increment() with non-existent key
         """
         key = ('test', 'demo', 'non-existentkey')
-        status = TestIncrement.client.increment(key, "age", 5)
+        TestIncrement.client.increment(key, "age", 5)
 
-        (key, meta, bins) = TestIncrement.client.get(key)
+        (key, _, bins) = TestIncrement.client.get(key)
 
         assert bins == {'age': 5}
 
@@ -308,9 +312,9 @@ class TestIncrement(object):
         Invoke increment() with non-existent bin
         """
         key = ('test', 'demo', 1)
-        status = TestIncrement.client.increment(key, "age1", 5)
+        TestIncrement.client.increment(key, "age1", 5)
 
-        (key, meta, bins) = TestIncrement.client.get(key)
+        (key, _, bins) = TestIncrement.client.get(key)
 
         assert bins == {'age1': 5, 'name': u'name1', 'age': 1}
 
@@ -323,7 +327,8 @@ class TestIncrement(object):
         with pytest.raises(TypeError) as typeError:
             TestIncrement.client.increment(key, "age", 2, {}, policy, "")
 
-        assert "increment() takes at most 5 arguments (6 given)" in typeError.value
+        assert "increment() takes at most 5 arguments (6 given)" in str(
+            typeError.value)
 
     def test_increment_policy_is_string(self):
         """
@@ -333,7 +338,7 @@ class TestIncrement(object):
         try:
             TestIncrement.client.increment(key, "age", 2, {}, "")
 
-        except ParamError as exception:
+        except e.ParamError as exception:
             assert exception.code == -2
             assert exception.msg == "policy must be a dict"
 
@@ -344,7 +349,7 @@ class TestIncrement(object):
         try:
             TestIncrement.client.increment(None, "age", 2)
 
-        except ParamError as exception:
+        except e.ParamError as exception:
             assert exception.code == -2
             assert exception.msg == "key is invalid"
 
@@ -356,7 +361,7 @@ class TestIncrement(object):
         try:
             TestIncrement.client.increment(key, None, 2)
 
-        except ParamError as exception:
+        except e.ParamError as exception:
             assert exception.code == -2
             assert exception.msg == "Bin name should be of type string"
 
@@ -367,7 +372,7 @@ class TestIncrement(object):
         key = ('test', 'demo', 1)
         TestIncrement.client.increment(key, u"age", 10)
 
-        (key, meta, bins) = TestIncrement.client.get(key)
+        (key, _, bins) = TestIncrement.client.get(key)
 
         assert bins == {'age': 11, 'name': 'name1'}
 
@@ -382,8 +387,8 @@ class TestIncrement(object):
         try:
             client1.increment(key, "age", 5)
 
-        except ClusterError as exception:
-            assert exception.code == 11L
+        except e.ClusterError as exception:
+            assert exception.code == 11
             assert exception.msg == 'No connection to aerospike cluster'
 
     def test_increment_with_integer_greaterthan_maxsize(self):
@@ -395,6 +400,8 @@ class TestIncrement(object):
         TestIncrement.client.put(key, bins)
         try:
             TestIncrement.client.increment(key, 'age', 68786586756785785745)
+        except SystemError:
+            pass
         except Exception as exception:
             assert exception.code == -2
             assert exception.msg == 'integer value exceeds sys.maxsize'
@@ -407,7 +414,6 @@ class TestIncrement(object):
             key = ('test', 'demo', 1)
             TestIncrement.client.increment(key, "age", "5")
 
-        except ParamError as exception:
+        except e.ParamError as exception:
             assert exception.code == -2
             assert exception.msg == "Unsupported operand type(s) for +: only 'int' allowed"
-

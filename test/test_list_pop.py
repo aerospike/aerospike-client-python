@@ -1,37 +1,40 @@
 # -*- coding: utf-8 -*-
 import pytest
-import time
 import sys
 import random
-import cPickle as pickle
-from test_base_class import TestBaseClass
+from .test_base_class import TestBaseClass
+from aerospike import exception as e
 
 aerospike = pytest.importorskip("aerospike")
 try:
-    from aerospike.exception import *
+    import aerospike
 except:
-    print "Please install aerospike python client."
+    print("Please install aerospike python client.")
     sys.exit(1)
 
+
 class TestListPop(object):
+
     def setup_class(cls):
         """
         Setup method.
         """
         hostlist, user, password = TestBaseClass.get_hosts()
         config = {'hosts': hostlist}
-        if user == None and password == None:
+        if user is None and password is None:
             TestListPop.client = aerospike.client(config).connect()
         else:
-            TestListPop.client = aerospike.client(config).connect(user, password)
+            TestListPop.client = aerospike.client(
+                config).connect(user, password)
 
     def teardown_class(cls):
         TestListPop.client.close()
 
     def setup_method(self, method):
-        for i in xrange(5):
+        for i in range(5):
             key = ('test', 'demo', i)
-            rec = {'name': 'name%s' % (str(i)), 'contact_no': [i, i+1], 'city' : ['Pune', 'Dehli']}
+            rec = {'name': 'name%s' %
+                   (str(i)), 'contact_no': [i, i + 1], 'city': ['Pune', 'Dehli']}
             TestListPop.client.put(key, rec)
         key = ('test', 'demo', 2)
         TestListPop.client.list_append(key, "contact_no", [45, 50, 80])
@@ -40,8 +43,8 @@ class TestListPop(object):
         """
         Teardown method.
         """
-        #time.sleep(1)
-        for i in xrange(5):
+        # time.sleep(1)
+        for i in range(5):
             key = ('test', 'demo', i)
             TestListPop.client.remove(key)
 
@@ -50,7 +53,7 @@ class TestListPop(object):
         Invoke list_pop() pop string with correct parameters
         """
         key = ('test', 'demo', 1)
-        
+
         bins = TestListPop.client.list_pop(key, "contact_no", 0)
 
         assert bins == 1
@@ -76,7 +79,8 @@ class TestListPop(object):
         """
         with pytest.raises(TypeError) as typeError:
             TestListPop.client.list_pop()
-        assert "Required argument 'key' (pos 1) not found" in typeError.value
+        assert "Required argument 'key' (pos 1) not found" in str(
+            typeError.value)
 
     def test_list_pop_with_incorrect_policy(self):
         """
@@ -89,7 +93,7 @@ class TestListPop(object):
         try:
             TestListPop.client.list_pop(key, "contact_no", 0, {}, policy)
 
-        except ParamError as exception:
+        except e.ParamError as exception:
             assert exception.code == -2
             assert exception.msg == "timeout is invalid"
 
@@ -101,13 +105,14 @@ class TestListPop(object):
         minLength = 5
         maxLength = 30
         length = random.randint(minLength, maxLength)
-        key = ('test', 'demo', ''.join(map(lambda unused :
-            random.choice(charSet), range(length)))+".com")
+        key = ('test', 'demo', ''.join(map(lambda unused:
+                                           random.choice(charSet),
+                                           range(length))) + ".com")
         try:
             TestListPop.client.list_pop(key, "abc", 0)
 
-        except BinIncompatibleType as exception:
-            assert exception.code == 12L
+        except e.BinIncompatibleType as exception:
+            assert exception.code == 12
 
     def test_list_pop_with_nonexistent_bin(self):
         """
@@ -118,13 +123,13 @@ class TestListPop(object):
         minLength = 5
         maxLength = 10
         length = random.randint(minLength, maxLength)
-        bin = ''.join(map(lambda unused :
-            random.choice(charSet), range(length)))+".com"
+        bin = ''.join(map(lambda unused:
+                          random.choice(charSet), range(length))) + ".com"
         try:
             TestListPop.client.list_pop(key, bin, 0)
 
-        except BinIncompatibleType as exception:
-            assert exception.code == 12L
+        except e.BinIncompatibleType as exception:
+            assert exception.code == 12
 
     def test_list_pop_with_extra_parameter(self):
         """
@@ -135,7 +140,8 @@ class TestListPop(object):
         with pytest.raises(TypeError) as typeError:
             TestListPop.client.list_pop(key, "contact_no", 1, {}, policy, "")
 
-        assert "list_pop() takes at most 5 arguments (6 given)" in typeError.value
+        assert "list_pop() takes at most 5 arguments (6 given)" in str(
+            typeError.value)
 
     def test_list_pop_policy_is_string(self):
         """
@@ -145,7 +151,7 @@ class TestListPop(object):
         try:
             TestListPop.client.list_pop(key, "contact_no", 1, {}, "")
 
-        except ParamError as exception:
+        except e.ParamError as exception:
             assert exception.code == -2
             assert exception.msg == "policy must be a dict"
 
@@ -156,7 +162,7 @@ class TestListPop(object):
         try:
             TestListPop.client.list_pop(None, "contact_no", 0)
 
-        except ParamError as exception:
+        except e.ParamError as exception:
             assert exception.code == -2
             assert exception.msg == "key is invalid"
 
@@ -168,18 +174,18 @@ class TestListPop(object):
         try:
             TestListPop.client.list_pop(key, None, 1)
 
-        except ParamError as exception:
+        except e.ParamError as exception:
             assert exception.code == -2
             assert exception.msg == "Bin name should be of type string"
-    
+
     def test_list_pop_with_negative_index(self):
         """
         Invoke list_pop() with negative index
         """
         key = ('test', 'demo', 1)
         try:
-            bins = TestListPop.client.list_pop(key, "contact_no", -56)
-        except InvalidRequest as exception:
+            TestListPop.client.list_pop(key, "contact_no", -56)
+        except e.InvalidRequest as exception:
             assert exception.code == 4
 
     def test_list_pop_meta_type_integer(self):
@@ -190,7 +196,7 @@ class TestListPop(object):
         try:
             TestListPop.client.list_pop(key, "contact_no", 1, 888)
 
-        except ParamError as exception:
+        except e.ParamError as exception:
             assert exception.code == -2
             assert exception.msg == "Metadata should be of type dictionary"
 
@@ -202,4 +208,4 @@ class TestListPop(object):
 
         with pytest.raises(TypeError) as typeError:
             TestListPop.client.list_pop(key, "contact_no", "Fifth")
-        assert "an integer is required" in typeError.value
+        assert "an integer is required" in str(typeError.value)

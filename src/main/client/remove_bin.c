@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright 2013-2015 Aerospike, Inc.
+ * Copyright 2013-2016 Aerospike, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -81,7 +81,7 @@ PyObject * AerospikeClient_RemoveBin_Invoke(
 		PyObject * py_val = PyList_GetItem(py_binList, count);
 		if( PyUnicode_Check(py_val) ){
 			py_ustr = PyUnicode_AsUTF8String(py_val);
-			binName = PyString_AsString(py_ustr);
+			binName = PyBytes_AsString(py_ustr);
 		}
 		else if( PyString_Check(py_val) ) {
 			binName = PyString_AsString(py_val);
@@ -110,15 +110,15 @@ PyObject * AerospikeClient_RemoveBin_Invoke(
 			}
 			else if ( PyLong_Check(py_ttl) ) {
 				rec.ttl = (uint32_t) PyLong_AsLongLong(py_ttl);
-                if((uint32_t)-1 == rec.ttl) {
-				    as_error_update(err, AEROSPIKE_ERR_PARAM, "integer value for ttl exceeds sys.maxsize");
-			        goto CLEANUP;
-                }
+				if((uint32_t)-1 == rec.ttl) {
+					as_error_update(err, AEROSPIKE_ERR_PARAM, "integer value for ttl exceeds sys.maxsize");
+					goto CLEANUP;
+				}
 			}
 			else
 			{
 				as_error_update(err, AEROSPIKE_ERR_PARAM, "Ttl should be an int or long");
-			    goto CLEANUP;
+				goto CLEANUP;
 			}
 		}
 
@@ -128,23 +128,23 @@ PyObject * AerospikeClient_RemoveBin_Invoke(
 			}
 			else if ( PyLong_Check(py_gen) ) {
 				rec.gen = (uint16_t) PyLong_AsLongLong(py_gen);
-                if((uint16_t)-1 == rec.gen) {
-                    as_error_update(err, AEROSPIKE_ERR_PARAM, "integer value for gen exceeds sys.maxsize");
-			        goto CLEANUP;
-                }
+				if((uint16_t)-1 == rec.gen) {
+					as_error_update(err, AEROSPIKE_ERR_PARAM, "integer value for gen exceeds sys.maxsize");
+					goto CLEANUP;
+				}
 			}
 			else
 			{
 				as_error_update(err, AEROSPIKE_ERR_PARAM, "Generation should be an int or long");
-			    goto CLEANUP;
+				goto CLEANUP;
 			}
 		}
 	}
 
-    Py_BEGIN_ALLOW_THREADS
+	Py_BEGIN_ALLOW_THREADS
 	aerospike_key_put(self->as, err, write_policy_p, &key, &rec);
-    Py_END_ALLOW_THREADS
-    if (err->code != AEROSPIKE_OK)
+	Py_END_ALLOW_THREADS
+	if (err->code != AEROSPIKE_OK)
 	{
 		as_error_update(err, err->code, NULL);
 		goto CLEANUP;

@@ -2,15 +2,16 @@
 
 import pytest
 import sys
-import time
-from test_base_class import TestBaseClass
+from .test_base_class import TestBaseClass
+from aerospike import exception as e
 
 aerospike = pytest.importorskip("aerospike")
 try:
-    from aerospike.exception import *
+    import aerospike
 except:
-    print "Please install aerospike python client."
+    print("Please install aerospike python client.")
     sys.exit(1)
+
 
 class TestSetPassword(TestBaseClass):
 
@@ -30,7 +31,8 @@ class TestSetPassword(TestBaseClass):
             self.client.admin_drop_user("testsetpassworduser")
         except:
             pass
-        self.client.admin_create_user( "testsetpassworduser", "aerospike", ["read"], {})
+        self.client.admin_create_user(
+            "testsetpassworduser", "aerospike", ["read"], {})
 
         self.delete_users = []
 
@@ -39,24 +41,24 @@ class TestSetPassword(TestBaseClass):
         Teardown method
         """
 
-        self.client.admin_drop_user( "testsetpassworduser" )
+        self.client.admin_drop_user("testsetpassworduser")
 
         self.client.close()
 
     def test_set_password_without_any_parameters(self):
 
         with pytest.raises(TypeError) as typeError:
-            status = self.client.admin_set_password()
+            self.client.admin_set_password()
 
-        assert "Required argument 'user' (pos 1) not found" in typeError.value
+        assert "Required argument 'user' (pos 1) not found" in str(
+            typeError.value)
 
     def test_set_password_with_proper_parameters(self):
 
-        policy = {'timeout': 50}
         user = "testsetpassworduser"
         password = "newpassword"
 
-        status = self.client.admin_set_password( user, password )
+        status = self.client.admin_set_password(user, password)
 
         assert status == 0
 
@@ -67,9 +69,9 @@ class TestSetPassword(TestBaseClass):
         password = "newpassword"
 
         try:
-            status = self.client.admin_set_password( user, password, policy )
+            self.client.admin_set_password(user, password, policy)
 
-        except ParamError as exception:
+        except e.ParamError as exception:
             assert exception.code == -2
             assert exception.msg == "timeout is invalid"
 
@@ -79,33 +81,31 @@ class TestSetPassword(TestBaseClass):
         user = "testsetpassworduser"
         password = "newpassword"
 
-        status = self.client.admin_set_password( user, password, policy )
+        status = self.client.admin_set_password(user, password, policy)
 
         assert status == 0
 
     def test_set_password_with_none_username(self):
 
-        policy = {}
         user = None
         password = "newpassword"
 
         try:
-            status = self.client.admin_set_password( user, password )
+            self.client.admin_set_password(user, password)
 
-        except ParamError as exception:
+        except e.ParamError as exception:
             assert exception.code == -2
             assert exception.msg == "Username should be a string"
 
     def test_set_password_with_none_password(self):
 
-        policy = {}
         user = "testsetpassworduser"
         password = None
 
         try:
-            status = self.client.admin_set_password( user, password )
+            self.client.admin_set_password(user, password)
 
-        except ParamError as exception:
+        except e.ParamError as exception:
             assert exception.code == -2
             assert exception.msg == "Password should be a string"
 
@@ -116,9 +116,9 @@ class TestSetPassword(TestBaseClass):
         password = "newpassword"
 
         try:
-            status = self.client.admin_set_password( user, password, policy )
+            self.client.admin_set_password(user, password, policy)
 
-        except InvalidUser as exception:
+        except e.InvalidUser as exception:
             assert exception.code == 60
             assert exception.msg == "AEROSPIKE_INVALID_USER"
 
@@ -128,6 +128,6 @@ class TestSetPassword(TestBaseClass):
         user = "testsetpassworduser"
         password = "newpassword$" * 1000
 
-        status = self.client.admin_set_password( user, password, policy )
+        status = self.client.admin_set_password(user, password, policy)
 
         assert status == 0

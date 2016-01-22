@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright 2013-2015 Aerospike, Inc.
+ * Copyright 2013-2016 Aerospike, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -80,14 +80,14 @@ PyObject * create_pylist(PyObject * py_list, long operation, PyObject * py_bin,
 int check_type(AerospikeClient * self, PyObject * py_value, int op, as_error *err)
 {
 	if ((!PyInt_Check(py_value) && !PyLong_Check(py_value) && strcmp(py_value->ob_type->tp_name, "aerospike.null")) && (op == AS_OPERATOR_TOUCH)) {
-	    as_error_update(err, AEROSPIKE_ERR_PARAM, "Unsupported operand type(s) for touch : only int or long allowed");
+		as_error_update(err, AEROSPIKE_ERR_PARAM, "Unsupported operand type(s) for touch : only int or long allowed");
 		return 1;
 	} else if ( (!PyInt_Check(py_value) && !PyLong_Check(py_value) && (!PyFloat_Check(py_value) || !aerospike_has_double(self->as)) && 
 				strcmp(py_value->ob_type->tp_name, "aerospike.null")) && op == AS_OPERATOR_INCR){
-	    as_error_update(err, AEROSPIKE_ERR_PARAM, "Unsupported operand type(s) for +: only 'int' allowed");
+		as_error_update(err, AEROSPIKE_ERR_PARAM, "Unsupported operand type(s) for +: only 'int' allowed");
 		return 1;
 	} else if ((!PyString_Check(py_value) && !PyUnicode_Check(py_value) && !PyByteArray_Check(py_value) && strcmp(py_value->ob_type->tp_name, "aerospike.null")) && (op == AS_OPERATOR_APPEND || op == AS_OPERATOR_PREPEND)) {
-	    as_error_update(err, AEROSPIKE_ERR_PARAM, "Cannot concatenate 'str' and 'non-str' objects");
+		as_error_update(err, AEROSPIKE_ERR_PARAM, "Cannot concatenate 'str' and 'non-str' objects");
 		return 1;
 	}
 	return 0;
@@ -167,9 +167,10 @@ static void initialize_bin_for_strictypes(AerospikeClient *self, as_error *err, 
 		binop_bin->valuep = &binop_bin->value;	
 	} else if (PyUnicode_Check(py_value)) {
 		PyObject *py_ustr1 = PyUnicode_AsUTF8String(py_value);
-		char * val = PyString_AsString(py_ustr1);
+		char * val = PyBytes_AsString(py_ustr1);
 		as_string_init((as_string *) &binop_bin->value, val, false);
 		binop_bin->valuep = &binop_bin->value;	
+		Py_XDECREF(py_ustr1);
 	} else if (PyFloat_Check(py_value)) {
 		int64_t val = PyFloat_AsDouble(py_value);
 		if (aerospike_has_double(self->as)) {
@@ -307,13 +308,13 @@ PyObject *  AerospikeClient_Operate_Invoke(
 			if (py_bin) {
 				if (PyUnicode_Check(py_bin)) {
 					py_ustr = PyUnicode_AsUTF8String(py_bin);
-					bin = PyString_AsString(py_ustr);
+					bin = PyBytes_AsString(py_ustr);
 				} else if (PyString_Check(py_bin)) {
 					bin = PyString_AsString(py_bin);
 				} else if (PyByteArray_Check(py_bin)) {
-                    bin = PyByteArray_AsString(py_bin);
-                } else {
-                    as_error_update(err, AEROSPIKE_ERR_PARAM, "Bin name should be of type string");
+					bin = PyByteArray_AsString(py_bin);
+				} else {
+					as_error_update(err, AEROSPIKE_ERR_PARAM, "Bin name should be of type string");
 					goto CLEANUP;
 				}
 
@@ -346,7 +347,7 @@ PyObject *  AerospikeClient_Operate_Invoke(
 				case AS_OPERATOR_APPEND:
 					if (PyUnicode_Check(py_value)) {
 						py_ustr1 = PyUnicode_AsUTF8String(py_value);
-						val = PyString_AsString(py_ustr1);
+						val = PyBytes_AsString(py_ustr1);
 						as_operations_add_append_str(&ops, bin, val);
 					} else if (PyString_Check(py_value)) {
 						val = PyString_AsString(py_value);
@@ -368,7 +369,7 @@ PyObject *  AerospikeClient_Operate_Invoke(
 				case AS_OPERATOR_PREPEND:
 					if (PyUnicode_Check(py_value)) {
 						py_ustr1 = PyUnicode_AsUTF8String(py_value);
-						val = PyString_AsString(py_ustr1);
+						val = PyBytes_AsString(py_ustr1);
 						as_operations_add_prepend_str(&ops, bin, val);
 					} else if (PyString_Check(py_value)) {
 						val = PyString_AsString(py_value);
@@ -413,17 +414,17 @@ PyObject *  AerospikeClient_Operate_Invoke(
 					}
 					break;
 				case AS_OPERATOR_TOUCH:
-                    ops.ttl = 0;
+					ops.ttl = 0;
 					if (py_value && PyInt_Check(py_value)) {
-                        ops.ttl = PyInt_AsLong(py_value);
-                    } else if (py_value && PyLong_Check(py_value)) {
-                        ttl = PyLong_AsLong(py_value);
-                        if((uint32_t)-1 == ttl) {
-                            as_error_update(err, AEROSPIKE_ERR_PARAM, "integer value for ttl exceeds sys.maxsize");
-                            goto CLEANUP;
-                        }
-                        ops.ttl = ttl;
-                    }
+						ops.ttl = PyInt_AsLong(py_value);
+					} else if (py_value && PyLong_Check(py_value)) {
+						ttl = PyLong_AsLong(py_value);
+						if((uint32_t)-1 == ttl) {
+							as_error_update(err, AEROSPIKE_ERR_PARAM, "integer value for ttl exceeds sys.maxsize");
+							goto CLEANUP;
+						}
+						ops.ttl = ttl;
+					}
 					as_operations_add_touch(&ops);
 					break;
 				case AS_OPERATOR_READ:
@@ -968,7 +969,7 @@ PyObject * AerospikeClient_Operate(AerospikeClient * self, PyObject * args, PyOb
 
 	if ( py_list != NULL && PyList_Check(py_list) ) {
 		py_result = AerospikeClient_Operate_Invoke(self, &err, &key, py_list, py_meta,
-                operate_policy_p);
+				operate_policy_p);
 	} else {
 		as_error_update(&err, AEROSPIKE_ERR_PARAM, "Operations should be of type list");
 		goto CLEANUP;
@@ -1019,7 +1020,7 @@ PyObject * bin_strict_type_checking(AerospikeClient * self, as_error *err, PyObj
 	if (py_bin) {
 		if (PyUnicode_Check(py_bin)) {
 			py_ustr = PyUnicode_AsUTF8String(py_bin);
-			*bin = PyString_AsString(py_ustr);
+			*bin = PyBytes_AsString(py_ustr);
 		} else if (PyString_Check(py_bin)) {
 			*bin = PyString_AsString(py_bin);
 		} else if (PyByteArray_Check(py_bin)) {
@@ -1267,7 +1268,7 @@ PyObject * AerospikeClient_ListExtend(AerospikeClient * self, PyObject * args, P
 	pyobject_to_astype_write(self, &err, bin, py_append_val, &put_val, &ops,
 			&static_pool, SERIALIZER_PYTHON);
 	if (err.code != AEROSPIKE_OK) {
-        goto CLEANUP;
+		goto CLEANUP;
 	}
 	as_operations_add_list_append_items(&ops, bin, (as_list*) put_val);
 

@@ -2,20 +2,21 @@
 
 import pytest
 import sys
-import time
 import marshal
-from test_base_class import TestBaseClass
+
+from .test_base_class import TestBaseClass
+from aerospike import exception as e
 
 aerospike = pytest.importorskip("aerospike")
 try:
     import aerospike
-    from aerospike.exception import *
 except:
-    print "Please install aerospike python client."
+    print("Please install aerospike python client.")
     sys.exit(1)
 
 
 class TestPut(TestBaseClass):
+
     def setup_class(cls):
         """
             Setup class
@@ -23,18 +24,21 @@ class TestPut(TestBaseClass):
         hostlist, user, password = TestBaseClass.get_hosts()
         config = {"hosts": hostlist}
         config_strict_types = {"hosts": hostlist, "strict_types": False}
-        if user == None and password == None:
+        if user is None and password is None:
             TestPut.client = aerospike.client(config).connect()
-            TestPut.client_strict_types = aerospike.client(config_strict_types).connect()
+            TestPut.client_strict_types = aerospike.client(
+                config_strict_types).connect()
         else:
             TestPut.client = aerospike.client(config).connect(user, password)
-            TestPut.client_strict_types = aerospike.client(config_strict_types).connect(user, password)
+            TestPut.client_strict_types = aerospike.client(
+                config_strict_types).connect(user, password)
         TestPut.skip_old_server = True
         versioninfo = TestPut.client.info('version')
         for keys in versioninfo:
             for value in versioninfo[keys]:
-                if value != None:
-                    versionlist = value[value.find("build") + 6:value.find("\n")].split(".")
+                if value is not None:
+                    versionlist = value[
+                        value.find("build") + 6:value.find("\n")].split(".")
                     if int(versionlist[0]) >= 3 and int(versionlist[1]) >= 6:
                         TestPut.skip_old_server = False
 
@@ -55,18 +59,15 @@ class TestPut(TestBaseClass):
         for key in self.delete_keys:
             TestPut.client.remove(key)
 
-
     def test_put_with_string_record(self):
         """
             Invoke put() for a record with string data.
         """
         key = ('test', 'demo', 1)
-
         bins = {"name": "John"}
-
         assert 0 == TestPut.client.put(key, bins)
 
-        (key, meta, bins) = TestPut.client.get(key)
+        (key, _, bins) = TestPut.client.get(key)
 
         assert {"name": "John"} == bins
         self.delete_keys.append(key)
@@ -86,7 +87,7 @@ class TestPut(TestBaseClass):
         }
 
         assert 0 == TestPut.client.put(key, bins)
-        (key, meta, bins) = TestPut.client.get(key)
+        (key, _, bins) = TestPut.client.get(key)
 
         assert {
             'i': ["nanslkdl", 1, bytearray("asd;as[d'as;d", "utf-8")],
@@ -101,9 +102,10 @@ class TestPut(TestBaseClass):
             Invoke put() without any parameters.
         """
         with pytest.raises(TypeError) as typeError:
-            res = TestPut.client.put()
+            TestPut.client.put()
 
-        assert "Required argument 'key' (pos 1) not found" in typeError.value
+        assert "Required argument 'key' (pos 1) not found" in str(
+            typeError.value)
 
     def test_put_without_record(self):
         """
@@ -112,9 +114,10 @@ class TestPut(TestBaseClass):
         key = ('test', 'demo', 1)
 
         with pytest.raises(TypeError) as typeError:
-            res = TestPut.client.put(key)
+            TestPut.client.put(key)
 
-        assert "Required argument 'bins' (pos 2) not found" in typeError.value
+        assert "Required argument 'bins' (pos 2) not found" in str(
+            typeError.value)
 
     def test_put_with_none_key(self):
         """
@@ -123,9 +126,9 @@ class TestPut(TestBaseClass):
         bins = {"name": "John"}
 
         try:
-            res = TestPut.client.put(None, bins)
+            TestPut.client.put(None, bins)
 
-        except ParamError as exception:
+        except e.ParamError as exception:
             assert exception.code == -2
             assert exception.msg == 'key is invalid'
 
@@ -140,7 +143,7 @@ class TestPut(TestBaseClass):
         try:
             TestPut.client.put(key, bins)
 
-        except ParamError as exception:
+        except e.ParamError as exception:
             assert exception.code == -2
             assert exception.msg == "namespace must be a string"
 
@@ -171,7 +174,7 @@ class TestPut(TestBaseClass):
         try:
             TestPut.client.put(key, bins)
 
-        except ParamError as exception:
+        except e.ParamError as exception:
             assert exception.code == -2
             assert exception.msg == "either key or digest is required"
 
@@ -185,7 +188,7 @@ class TestPut(TestBaseClass):
 
         TestPut.client.put(key, bins)
 
-        (key, meta, bins) = TestPut.client.get(key)
+        (key, _, bins) = TestPut.client.get(key)
 
         assert bins == {"name": "John"}
 
@@ -200,9 +203,9 @@ class TestPut(TestBaseClass):
         kvs = "Name : John"
 
         try:
-            res = TestPut.client.put( key, kvs )
+            TestPut.client.put(key, kvs)
 
-        except ParamError as exception:
+        except e.ParamError as exception:
             assert exception.code == -2
             assert exception.msg == "Record should be passed as bin-value pair"
 
@@ -215,9 +218,9 @@ class TestPut(TestBaseClass):
         bins = {'a': ['!@#!#$%#', bytearray('ASD@#$AR#$@#ERQ#', 'utf-8')]}
 
         try:
-            res = TestPut.client.put( key, bins )
+            TestPut.client.put(key, bins)
 
-        except NamespaceNotFound as exception:
+        except e.NamespaceNotFound as exception:
             assert exception.code == 20
             assert exception.msg == 'AEROSPIKE_ERR_NAMESPACE_NOT_FOUND'
 
@@ -227,11 +230,11 @@ class TestPut(TestBaseClass):
         """
         key = ('test1', 'demo', 1)
 
-        bins = { 'i': 'asdadasd' }
+        bins = {'i': 'asdadasd'}
         try:
-            res = TestPut.client.put( key, bins )
+            TestPut.client.put(key, bins)
 
-        except NamespaceNotFound as exception:
+        except e.NamespaceNotFound as exception:
             assert exception.code == 20
             assert exception.msg == 'AEROSPIKE_ERR_NAMESPACE_NOT_FOUND'
 
@@ -247,7 +250,7 @@ class TestPut(TestBaseClass):
 
         assert res == 0
 
-        (key, meta, bins) = TestPut.client.get(key)
+        (key, _, bins) = TestPut.client.get(key)
 
         assert bins == {'a': {'k': [bytearray(b'askluy3oijs')]}}
 
@@ -265,12 +268,12 @@ class TestPut(TestBaseClass):
 
         assert res == 0
 
-        (key, meta, bins) = TestPut.client.get(key)
+        (key, _, bins) = TestPut.client.get(key)
 
         assert bins == {"is_present": False}
         self.delete_keys.append(key)
 
-    """ 
+    """
     def test_put_unicode_string(self):
             #Invoke put() for unicode record.
         key = ('test', 'demo', 1)
@@ -285,7 +288,7 @@ class TestPut(TestBaseClass):
         assert bins['unicode_string'] == u"\ud83d\ude04"
         self.delete_keys.append( key )
         #self.client.remove(key)
-    
+
     def test_put_unicode_key(self):
 
         #    Invoke put() for unicode key.
@@ -303,12 +306,12 @@ class TestPut(TestBaseClass):
         assert bins == rec
 
         key = ('test', 'demo', u"\ud83d\ude04")
-        
+
         self.delete_keys.append( key )
     """
 
     def test_put_unicode_string_in_map(self):
-        #Invoke put() for unicode record.
+        # Invoke put() for unicode record.
         key = ('test', 'demo', 1)
 
         rec = {'a': {u'aa': u'11'}, 'b': {u'bb': u'22'}}
@@ -317,12 +320,12 @@ class TestPut(TestBaseClass):
 
         assert res == 0
 
-        (key, meta, bins) = TestPut.client.get(key)
+        (key, _, bins) = TestPut.client.get(key)
         assert bins == rec
         self.delete_keys.append(key)
 
     def test_put_unicode_string_in_list(self):
-        #Invoke put() for unicode record.
+        # Invoke put() for unicode record.
         key = ('test', 'demo', 1)
 
         rec = {'a': [u'aa', u'bb', 1, u'bb', u'aa']}
@@ -331,22 +334,22 @@ class TestPut(TestBaseClass):
 
         assert res == 0
 
-        (key, meta, bins) = TestPut.client.get(key)
+        (key, _, bins) = TestPut.client.get(key)
 
         assert bins == rec
 
         self.delete_keys.append(key)
 
     def test_put_unicode_string_in_key(self):
-        #Invoke put() for unicode record.
-        key = ('test', 'demo', u"bb")
+        # Invoke put() for unicode record.
+        key = ('test', 'demo', "bb")
 
         rec = {'a': [u'aa', 2, u'aa', 4, u'cc', 3, 2, 1]}
         res = TestPut.client.put(key, rec)
 
         assert res == 0
 
-        (key, meta, bins) = TestPut.client.get(key)
+        (key, _, bins) = TestPut.client.get(key)
 
         assert bins == rec
 
@@ -354,7 +357,7 @@ class TestPut(TestBaseClass):
 
     def test_put_with_float_data(self):
 
-        #Invoke put() for float data record.
+        # Invoke put() for float data record.
         key = ('test', 'demo', 1)
 
         rec = {"pi": 3.141}
@@ -370,7 +373,7 @@ class TestPut(TestBaseClass):
 
     def test_put_with_float_data_within_list(self):
 
-        #Invoke put() for float data record within list.
+        # Invoke put() for float data record within list.
         key = ('test', 'demo', 1)
 
         rec = {"double_list": [3.141, 4.123, 6.285]}
@@ -386,10 +389,10 @@ class TestPut(TestBaseClass):
 
     def test_put_with_float_data_within_map(self):
 
-        #Invoke put() for float data record within map.
+        # Invoke put() for float data record within map.
         key = ('test', 'demo', 1)
 
-        rec = {"double_map": {"1": 3.141,"2": 4.123,"3": 6.285}}
+        rec = {"double_map": {"1": 3.141, "2": 4.123, "3": 6.285}}
 
         res = TestPut.client.put(key, rec)
 
@@ -409,9 +412,9 @@ class TestPut(TestBaseClass):
         rec = {'i': 12}
 
         try:
-            res = TestPut.client.put( key, rec, "meta", "policies")
+            TestPut.client.put(key, rec, "meta", "policies")
 
-        except ParamError as exception:
+        except e.ParamError as exception:
             assert exception.code == -2
             assert exception.msg == "policy must be a dict"
 
@@ -442,13 +445,13 @@ class TestPut(TestBaseClass):
         policy = {'timeout': 1000}
 
         try:
-            TestPut.client.put( key, rec, meta, policy )
+            TestPut.client.put(key, rec, meta, policy)
 
-        except ParamError as exception:
+        except e.ParamError as exception:
             assert exception.code == -2
             assert exception.msg == "Generation should be an int or long"
 
-        #self.delete_keys.append( key )
+        # self.delete_keys.append( key )
 
     def test_put_with_ttl_string(self):
         """
@@ -457,8 +460,8 @@ class TestPut(TestBaseClass):
         key = ('test', 'demo', 1)
 
         rec = {
-                "name" : "John"
-                }
+            "name": "John"
+        }
         meta = {
             'gen': 3,
             'ttl': "25000"
@@ -467,13 +470,13 @@ class TestPut(TestBaseClass):
             'timeout': 1000
         }
         try:
-            TestPut.client.put( key, rec, meta, policy )
+            TestPut.client.put(key, rec, meta, policy)
 
-        except ParamError as exception:
+        except e.ParamError as exception:
             assert exception.code == -2
-            #assert exception.msg == "TTL should be an int or long"
+            # assert exception.msg == "TTL should be an int or long"
 
-        #self.delete_keys.append( key )
+        # self.delete_keys.append( key )
 
     def test_put_with_generation_bool(self):
         """
@@ -514,19 +517,19 @@ class TestPut(TestBaseClass):
         key = ('test', 'demo', 1)
 
         rec = {
-                "name" : "John"
-                }
+            "name": "John"
+        }
         meta = {
             'gen': 3,
-            'ttl' :25000
+            'ttl': 25000
         }
         policy = {
             'timeout': "1000"
         }
         try:
-            TestPut.client.put( key, rec, meta, policy )
+            TestPut.client.put(key, rec, meta, policy)
 
-        except ParamError as exception:
+        except e.ParamError as exception:
             assert exception.code == -2
             assert exception.msg == 'timeout is invalid'
 
@@ -574,19 +577,18 @@ class TestPut(TestBaseClass):
         (key, meta, bins) = TestPut.client.get(key)
 
         assert {"name": "John"} == bins
-        gen = meta['gen']
         rec = {"name": "Smith"}
         policy = {'timeout': 1000, 'gen': aerospike.POLICY_GEN_EQ}
         meta = {'gen': 10}
 
         try:
-            TestPut.client.put( key, rec, meta, policy )
+            TestPut.client.put(key, rec, meta, policy)
 
-        except RecordGenerationError as exception:
+        except e.RecordGenerationError as exception:
             assert exception.code == 3
             assert exception.msg == 'AEROSPIKE_ERR_RECORD_GENERATION'
-        
-        ( key, meta, bins) = TestPut.client.get(key)
+
+        (key, meta, bins) = TestPut.client.get(key)
         assert {"name": "John"} == bins
 
         self.delete_keys.append(key)
@@ -616,9 +618,9 @@ class TestPut(TestBaseClass):
         meta = {'gen': 2}
 
         try:
-            TestPut.client.put( key, rec, meta, policy )
+            TestPut.client.put(key, rec, meta, policy)
 
-        except RecordExistsError as exception:
+        except e.RecordExistsError as exception:
             assert exception.code == 5
             assert exception.msg == 'AEROSPIKE_ERR_RECORD_EXISTS'
             assert exception.bin == {'name': 'Smith'}
@@ -667,13 +669,13 @@ class TestPut(TestBaseClass):
             'key': aerospike.POLICY_KEY_SEND
         }
         try:
-            assert 0 == TestPut.client.put( key, rec, meta, policy )
+            assert 0 == TestPut.client.put(key, rec, meta, policy)
 
-        except RecordNotFound as exception:
+        except e.RecordNotFound as exception:
             assert exception.code == 2
             assert exception.msg == 'AEROSPIKE_ERR_RECORD_NOT_FOUND'
 
-        #self.delete_keys.append( key )
+        # self.delete_keys.append( key )
 
     def test_put_with_policy_exists_create_or_replace_positive(self):
         """
@@ -795,13 +797,13 @@ class TestPut(TestBaseClass):
             'key': aerospike.POLICY_KEY_SEND
         }
         try:
-            assert 0 == TestPut.client.put( key, rec, meta, policy )
+            assert 0 == TestPut.client.put(key, rec, meta, policy)
 
-        except RecordNotFound as exception:
+        except e.RecordNotFound as exception:
             assert exception.code == 2
             assert exception.msg == 'AEROSPIKE_ERR_RECORD_NOT_FOUND'
 
-        #self.delete_keys.append( key )
+        # self.delete_keys.append( key )
     def test_put_with_policy_gen_GT_lesser(self):
         """
             Invoke put() for a record with generation as GT lesser
@@ -822,9 +824,9 @@ class TestPut(TestBaseClass):
         meta = {'gen': gen}
 
         try:
-            TestPut.client.put( key, rec, meta, policy )
+            TestPut.client.put(key, rec, meta, policy)
 
-        except RecordGenerationError as exception:
+        except e.RecordGenerationError as exception:
             assert exception.code == 3
             assert exception.msg == 'AEROSPIKE_ERR_RECORD_GENERATION'
 
@@ -891,13 +893,13 @@ class TestPut(TestBaseClass):
         """
             Invoke put() with set is unicode string.
         """
-        key = ('test', u'demo', 1)
+        key = ('test', 'demo', 1)
 
         rec = {"name": "John"}
 
         assert 0 == TestPut.client.put(key, rec)
 
-        (key, meta, bins) = TestPut.client.get(key)
+        (key, _, bins) = TestPut.client.get(key)
 
         assert {"name": "John"} == bins
         self.delete_keys.append(key)
@@ -916,7 +918,7 @@ class TestPut(TestBaseClass):
         }
 
         assert 0 == TestPut.client.put(key, rec)
-        (key, meta, bins) = TestPut.client.get(key)
+        (key, _, bins) = TestPut.client.get(key)
 
         assert {
             'i': ["nanslkdl", 1, bytearray("asd;as[d'as;d", "utf-8")],
@@ -938,7 +940,7 @@ class TestPut(TestBaseClass):
 
         assert res == 0
 
-        (key, meta, bins) = TestPut.client.get(key)
+        (key, _, bins) = TestPut.client.get(key)
 
         assert bins == {"is_present": set([1, 2])}
 
@@ -958,7 +960,7 @@ class TestPut(TestBaseClass):
 
         assert res == 0
 
-        (key, meta, bins) = TestPut.client.get(key)
+        (key, _, bins) = TestPut.client.get(key)
 
         assert bins == {'fSet': frozenset(["Frankfurt", "Basel", "Freiburg"])}
 
@@ -976,7 +978,7 @@ class TestPut(TestBaseClass):
 
         assert res == 0
 
-        (key, meta, bins) = TestPut.client.get(key)
+        (key, _, bins) = TestPut.client.get(key)
 
         assert bins == {'seq': ('a', 'b', 'c')}
 
@@ -994,7 +996,7 @@ class TestPut(TestBaseClass):
 
         assert res == 0
 
-        (key, meta, bins) = TestPut.client.get(key)
+        (key, _, bins) = TestPut.client.get(key)
 
         assert bins == {"is_present": None}
         self.delete_keys.append(key)
@@ -1011,7 +1013,7 @@ class TestPut(TestBaseClass):
 
         assert res == 0
 
-        (key, meta, bins) = TestPut.client.get(key)
+        (key, _, bins) = TestPut.client.get(key)
 
         assert bins == {'seq': {u'bb': ('a', 'b', 'c')}}
 
@@ -1019,8 +1021,8 @@ class TestPut(TestBaseClass):
 
     def test_put_serializer_default(self):
         """
-            Invoke put() with mixed data record with no class or instance
-            serializer or deserializer. Python option should get called by default
+        Invoke put() with mixed data record with no class or instance
+        serializer or deserializer. Python option should get called by default
         """
 
         key = ('test', 'demo', 1)
@@ -1067,8 +1069,8 @@ class TestPut(TestBaseClass):
 
     def test_put_user_serializer_no_deserializer(self):
         """
-            Invoke put() for float data record with user serializer is
-            registered, but deserializer is not registered.
+        Invoke put() for float data record with user serializer is
+        registered, but deserializer is not registered.
         """
 
         key = ('test', 'demo', 1)
@@ -1078,7 +1080,7 @@ class TestPut(TestBaseClass):
         def serialize_function(val):
             return marshal.dumps(val)
 
-        response = aerospike.set_serializer(serialize_function)
+        aerospike.set_serializer(serialize_function)
 
         res = TestPut.client.put(key, rec, {}, {}, aerospike.SERIALIZER_USER)
 
@@ -1086,7 +1088,7 @@ class TestPut(TestBaseClass):
 
         _, _, bins = TestPut.client.get(key)
 
-        if TestPut.skip_old_server == False:
+        if TestPut.skip_old_server is False:
             assert bins == {'pi': 3.14}
         else:
             assert bins == {'pi': bytearray(b'g\x1f\x85\xebQ\xb8\x1e\t@')}
@@ -1113,10 +1115,10 @@ class TestPut(TestBaseClass):
         }
 
         try:
-            TestPut.client.put( key, put_record)
+            TestPut.client.put(key, put_record)
 
-        except BinNameError as exception:
-            assert exception.code == 21L
+        except e.BinNameError as exception:
+            assert exception.code == 21
             assert exception.msg == "A bin name should not exceed 14 characters limit"
 
     def test_put_with_string_record_without_connection(self):
@@ -1131,10 +1133,10 @@ class TestPut(TestBaseClass):
         bins = {"name": "John"}
 
         try:
-            client1.put( key, bins )
+            client1.put(key, bins)
 
-        except ClusterError as exception:
-            assert exception.code == 11L
+        except e.ClusterError as exception:
+            assert exception.code == 11
             assert exception.msg == 'No connection to aerospike cluster'
 
     def test_put_with_integer_greater_than_maxisze(self):
@@ -1146,11 +1148,14 @@ class TestPut(TestBaseClass):
         bins = {"no": 111111111111111111111111111111111111111111111}
 
         try:
-            assert 0 == TestPut.client.put(key, bins)
+            TestPut.client.put(key, bins)
 
-        except ParamError as exception:
+        except e.ParamError as exception:
             assert exception.code == -2
             assert exception.msg == 'integer value exceeds sys.maxsize'
+
+        except SystemError as exception:
+            pass
 
     def test_put_with_integer_no_exception_raised_CLIENT598(self):
         """
@@ -1159,11 +1164,11 @@ class TestPut(TestBaseClass):
         """
         key = ('test', 'demo', 1)
 
-        bins = {"no": -1L}
+        bins = {"no": -1}
 
         TestPut.client.put(key, bins)
 
-        (key, meta, bins) = TestPut.client.get(key)
+        (key, _, bins) = TestPut.client.get(key)
 
         assert bins == {"no": -1}
         self.delete_keys.append(key)
@@ -1179,9 +1184,11 @@ class TestPut(TestBaseClass):
         try:
             assert 0 == TestPut.client.put(key, bins)
 
-        except ParamError as exception:
+        except e.ParamError as exception:
             assert exception.code == -2
             assert exception.msg == 'integer value for KEY exceeds sys.maxsize'
+        except SystemError as exception:
+            pass
 
     def test_put_record_set_to_aerospike_null(self):
         """
@@ -1193,7 +1200,7 @@ class TestPut(TestBaseClass):
 
         assert 0 == TestPut.client.put(key, bins)
 
-        (key, meta, bins) = TestPut.client.get(key)
+        (key, _, bins) = TestPut.client.get(key)
 
         assert {"name": "John", "no": 3} == bins
 
@@ -1201,7 +1208,7 @@ class TestPut(TestBaseClass):
 
         assert 0 == TestPut.client.put(key, bins)
 
-        (key, meta, bins) = TestPut.client.get(key)
+        (key, _, bins) = TestPut.client.get(key)
 
         assert {"name": "John"} == bins
 
@@ -1215,14 +1222,14 @@ class TestPut(TestBaseClass):
         key = ('test', 'demo', 1)
 
         maxlength = ""
-        for i in xrange(20):
+        for _ in range(20):
             maxlength = maxlength + "a"
 
         bins = {"name": "John", maxlength: 3}
 
         assert 0 == TestPut.client_strict_types.put(key, bins)
 
-        (key, meta, bins) = TestPut.client_strict_types.get(key)
+        (key, _, bins) = TestPut.client_strict_types.get(key)
 
         assert {"name": "John"} == bins
         self.delete_keys.append(key)
@@ -1238,6 +1245,6 @@ class TestPut(TestBaseClass):
 
         assert 0 == TestPut.client_strict_types.put(key, bins)
 
-        (key, meta, bins) = TestPut.client_strict_types.get(key)
+        (key, _, bins) = TestPut.client_strict_types.get(key)
 
-        assert None == bins
+        assert bins is None

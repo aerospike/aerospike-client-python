@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
-################################################################################
-# Copyright 2013-2015 Aerospike, Inc.
+##########################################################################
+# Copyright 2013-2016 Aerospike, Inc.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -13,7 +13,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-################################################################################
+##########################################################################
 
 from __future__ import print_function
 
@@ -22,9 +22,9 @@ import sys
 
 from optparse import OptionParser
 
-################################################################################
+##########################################################################
 # Options Parsing
-################################################################################
+##########################################################################
 
 usage = "usage: %prog [options]"
 
@@ -59,7 +59,7 @@ optparser.add_option(
     help="Port of the Aerospike server.")
 
 optparser.add_option(
-    "-b", "--bins", dest="bins", type="string", action="append", 
+    "-b", "--bins", dest="bins", type="string", action="append",
     help="Bins to select from each record.")
 
 (options, args) = optparser.parse_args()
@@ -69,17 +69,17 @@ if options.help:
     print()
     sys.exit(1)
 
-################################################################################
+##########################################################################
 # Client Configuration
-################################################################################
+##########################################################################
 
 config = {
-    'hosts': [ (options.host, options.port) ]
+    'hosts': [(options.host, options.port)]
 }
 
-################################################################################
+##########################################################################
 # Application
-################################################################################
+##########################################################################
 
 exitCode = 0
 
@@ -89,19 +89,20 @@ try:
     # Connect to Cluster
     # ----------------------------------------------------------------------------
 
-    client = aerospike.client(config).connect(options.username, options.password)
+    client = aerospike.client(config).connect(
+        options.username, options.password)
 
     # ----------------------------------------------------------------------------
     # Perform Operation
     # ----------------------------------------------------------------------------
 
     try:
-        
+
         namespace = options.namespace if options.namespace and options.namespace != 'None' else None
         set = options.set if options.set and options.set != 'None' else None
-        
+
         s = client.scan(namespace, set)
-        
+
         if options.bins and len(options.bins) > 0:
             # project specified bins
             s.select(*options.bins)
@@ -109,7 +110,8 @@ try:
         records = []
 
         # callback to be called for each record read
-        def callback((key, meta, record)):
+        def callback(input_tuple):
+            (_, _, record) = input_tuple
             records.append(record)
             print(record)
 
@@ -132,12 +134,12 @@ try:
 
     client.close()
 
-except Exception, eargs:
+except Exception as eargs:
     print("error: {0}".format(eargs), file=sys.stderr)
     exitCode = 3
 
-################################################################################
+##########################################################################
 # Exit
-################################################################################
+##########################################################################
 
 sys.exit(exitCode)

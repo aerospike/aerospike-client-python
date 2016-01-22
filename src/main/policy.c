@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright 2013-2015 Aerospike, Inc.
+ * Copyright 2013-2016 Aerospike, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -26,6 +26,7 @@
 #include "aerospike/as_job.h"
 
 #include "policy.h"
+#include "macros.h"
 
 // Policy names
 #define PY_POLICY_TIMEOUT "timeout"		// Number of milliseconds to wait
@@ -66,57 +67,57 @@ __policy##_init(policy);\
  */
 static
 AerospikeConstants aerospike_constants[] = {
-	{ AS_POLICY_RETRY_NONE                 ,   "POLICY_RETRY_NONE" },
-	{ AS_POLICY_RETRY_ONCE                 ,   "POLICY_RETRY_ONCE" },
-	{ AS_POLICY_EXISTS_IGNORE              ,   "POLICY_EXISTS_IGNORE" },
-	{ AS_POLICY_EXISTS_CREATE              ,   "POLICY_EXISTS_CREATE" },
-	{ AS_POLICY_EXISTS_UPDATE              ,   "POLICY_EXISTS_UPDATE" },
-	{ AS_POLICY_EXISTS_REPLACE             ,   "POLICY_EXISTS_REPLACE" },
-	{ AS_POLICY_EXISTS_CREATE_OR_REPLACE   ,   "POLICY_EXISTS_CREATE_OR_REPLACE" },
-	{ AS_UDF_TYPE_LUA                      ,   "UDF_TYPE_LUA" },
-	{ AS_POLICY_KEY_DIGEST                 ,   "POLICY_KEY_DIGEST" },
-	{ AS_POLICY_KEY_SEND                   ,   "POLICY_KEY_SEND" },
-	{ AS_POLICY_GEN_IGNORE                 ,   "POLICY_GEN_IGNORE" },
-	{ AS_POLICY_GEN_EQ                     ,   "POLICY_GEN_EQ" },
-	{ AS_POLICY_GEN_GT                     ,   "POLICY_GEN_GT" },
-	{ AS_SCAN_PRIORITY_AUTO                ,   "SCAN_PRIORITY_AUTO" },
-	{ AS_SCAN_PRIORITY_LOW                 ,   "SCAN_PRIORITY_LOW" },
-	{ AS_SCAN_PRIORITY_MEDIUM              ,   "SCAN_PRIORITY_MEDIUM" },
-	{ AS_SCAN_PRIORITY_HIGH                ,   "SCAN_PRIORITY_HIGH" },
-	{ AS_SCAN_STATUS_COMPLETED             ,   "SCAN_STATUS_COMPLETED" },
-	{ AS_SCAN_STATUS_ABORTED               ,   "SCAN_STATUS_ABORTED" },
-	{ AS_SCAN_STATUS_UNDEF                 ,   "SCAN_STATUS_UNDEF" },
-	{ AS_SCAN_STATUS_INPROGRESS            ,   "SCAN_STATUS_INPROGRESS" },
-	{ AS_JOB_STATUS_COMPLETED              ,   "JOB_STATUS_COMPLETED" },
-	{ AS_JOB_STATUS_UNDEF                  ,   "JOB_STATUS_UNDEF" },
-	{ AS_JOB_STATUS_INPROGRESS             ,   "JOB_STATUS_INPROGRESS" },
-	{ AS_POLICY_REPLICA_MASTER             ,   "POLICY_REPLICA_MASTER" },
+	{ AS_POLICY_RETRY_NONE                  ,   "POLICY_RETRY_NONE" },
+	{ AS_POLICY_RETRY_ONCE                  ,   "POLICY_RETRY_ONCE" },
+	{ AS_POLICY_EXISTS_IGNORE               ,   "POLICY_EXISTS_IGNORE" },
+	{ AS_POLICY_EXISTS_CREATE               ,   "POLICY_EXISTS_CREATE" },
+	{ AS_POLICY_EXISTS_UPDATE               ,   "POLICY_EXISTS_UPDATE" },
+	{ AS_POLICY_EXISTS_REPLACE              ,   "POLICY_EXISTS_REPLACE" },
+	{ AS_POLICY_EXISTS_CREATE_OR_REPLACE    ,   "POLICY_EXISTS_CREATE_OR_REPLACE" },
+	{ AS_UDF_TYPE_LUA                       ,   "UDF_TYPE_LUA" },
+	{ AS_POLICY_KEY_DIGEST                  ,   "POLICY_KEY_DIGEST" },
+	{ AS_POLICY_KEY_SEND                    ,   "POLICY_KEY_SEND" },
+	{ AS_POLICY_GEN_IGNORE                  ,   "POLICY_GEN_IGNORE" },
+	{ AS_POLICY_GEN_EQ                      ,   "POLICY_GEN_EQ" },
+	{ AS_POLICY_GEN_GT                      ,   "POLICY_GEN_GT" },
+	{ AS_SCAN_PRIORITY_AUTO                 ,   "SCAN_PRIORITY_AUTO" },
+	{ AS_SCAN_PRIORITY_LOW                  ,   "SCAN_PRIORITY_LOW" },
+	{ AS_SCAN_PRIORITY_MEDIUM               ,   "SCAN_PRIORITY_MEDIUM" },
+	{ AS_SCAN_PRIORITY_HIGH                 ,   "SCAN_PRIORITY_HIGH" },
+	{ AS_SCAN_STATUS_COMPLETED              ,   "SCAN_STATUS_COMPLETED" },
+	{ AS_SCAN_STATUS_ABORTED                ,   "SCAN_STATUS_ABORTED" },
+	{ AS_SCAN_STATUS_UNDEF                  ,   "SCAN_STATUS_UNDEF" },
+	{ AS_SCAN_STATUS_INPROGRESS             ,   "SCAN_STATUS_INPROGRESS" },
+	{ AS_JOB_STATUS_COMPLETED               ,   "JOB_STATUS_COMPLETED" },
+	{ AS_JOB_STATUS_UNDEF                   ,   "JOB_STATUS_UNDEF" },
+	{ AS_JOB_STATUS_INPROGRESS              ,   "JOB_STATUS_INPROGRESS" },
+	{ AS_POLICY_REPLICA_MASTER              ,   "POLICY_REPLICA_MASTER" },
 	{ AS_POLICY_REPLICA_ANY                 ,   "POLICY_REPLICA_ANY" },
 	{ AS_POLICY_CONSISTENCY_LEVEL_ONE       ,   "POLICY_CONSISTENCY_ONE" },
 	{ AS_POLICY_CONSISTENCY_LEVEL_ALL       ,   "POLICY_CONSISTENCY_ALL" },
 	{ AS_POLICY_COMMIT_LEVEL_ALL            ,   "POLICY_COMMIT_LEVEL_ALL" },
 	{ AS_POLICY_COMMIT_LEVEL_MASTER         ,   "POLICY_COMMIT_LEVEL_MASTER" },
-	{ SERIALIZER_PYTHON						,	"SERIALIZER_PYTHON" },
-	{ SERIALIZER_USER						,	"SERIALIZER_USER" },
-	{ SERIALIZER_JSON						,	"SERIALIZER_JSON" },
-	{ SERIALIZER_NONE						,	"SERIALIZER_NONE" },
-	{ AS_INDEX_STRING						,	"INDEX_STRING" },
-	{ AS_INDEX_NUMERIC						,	"INDEX_NUMERIC" },
-	{ AS_INDEX_TYPE_LIST					,	"INDEX_TYPE_LIST" },
-	{ AS_INDEX_TYPE_MAPKEYS					,	"INDEX_TYPE_MAPKEYS" },
-	{ AS_INDEX_TYPE_MAPVALUES				,	"INDEX_TYPE_MAPVALUES" },
-	{ AS_PRIVILEGE_USER_ADMIN				, 	"PRIV_USER_ADMIN" },
-	{ AS_PRIVILEGE_SYS_ADMIN				,	"PRIV_SYS_ADMIN"	},
-	{ AS_PRIVILEGE_DATA_ADMIN				,	"PRIV_DATA_ADMIN"	},
-	{ AS_PRIVILEGE_READ						,	"PRIV_READ"},
-	{ AS_PRIVILEGE_READ_WRITE				,	"PRIV_READ_WRITE"},
-	{ AS_PRIVILEGE_READ_WRITE_UDF			,	"PRIV_READ_WRITE_UDF"},
+	{ SERIALIZER_PYTHON                     ,   "SERIALIZER_PYTHON" },
+	{ SERIALIZER_USER                       ,   "SERIALIZER_USER" },
+	{ SERIALIZER_JSON                       ,   "SERIALIZER_JSON" },
+	{ SERIALIZER_NONE                       ,   "SERIALIZER_NONE" },
+	{ AS_INDEX_STRING                       ,   "INDEX_STRING" },
+	{ AS_INDEX_NUMERIC                      ,   "INDEX_NUMERIC" },
+	{ AS_INDEX_TYPE_LIST                    ,   "INDEX_TYPE_LIST" },
+	{ AS_INDEX_TYPE_MAPKEYS                 ,   "INDEX_TYPE_MAPKEYS" },
+	{ AS_INDEX_TYPE_MAPVALUES               ,   "INDEX_TYPE_MAPVALUES" },
+	{ AS_PRIVILEGE_USER_ADMIN               ,   "PRIV_USER_ADMIN" },
+	{ AS_PRIVILEGE_SYS_ADMIN                ,   "PRIV_SYS_ADMIN"	},
+	{ AS_PRIVILEGE_DATA_ADMIN               ,   "PRIV_DATA_ADMIN"	},
+	{ AS_PRIVILEGE_READ                     ,   "PRIV_READ"},
+	{ AS_PRIVILEGE_READ_WRITE               ,   "PRIV_READ_WRITE"},
+	{ AS_PRIVILEGE_READ_WRITE_UDF           ,   "PRIV_READ_WRITE_UDF"},
 };
 
 static
 AerospikeJobConstants aerospike_job_constants[] = {
-    { "scan"        ,     "JOB_SCAN"},
-    { "query"       ,     "JOB_QUERY"}
+	{ "scan"        ,     "JOB_SCAN"},
+	{ "query"       ,     "JOB_QUERY"}
 };
 /**
  * Function for setting scan parameters in scan.
@@ -222,13 +223,13 @@ as_status declare_policy_constants(PyObject *aerospike)
 		status = AEROSPIKE_ERR;
 		goto exit;
 	}
-	for (i = 0; i <= AEROSPIKE_CONSTANTS_ARR_SIZE; i++) {
+	for (i = 0; i <= (int)AEROSPIKE_CONSTANTS_ARR_SIZE; i++) {
 		PyModule_AddIntConstant(aerospike,
 				aerospike_constants[i].constant_str,
 				aerospike_constants[i].constantno);
 	}
 
-	for (i = 0; i <= AEROSPIKE_JOB_CONSTANTS_ARR_SIZE; i++) {
+	for (i = 0; i <= (int)AEROSPIKE_JOB_CONSTANTS_ARR_SIZE; i++) {
 		PyModule_AddStringConstant(aerospike,
 				aerospike_job_constants[i].exposed_job_str,
 				aerospike_job_constants[i].job_str);

@@ -2,10 +2,15 @@
 
 import pytest
 import sys
-import cPickle as pickle
-from test_base_class import TestBaseClass
+
+from .test_base_class import TestBaseClass
 
 aerospike = pytest.importorskip("aerospike")
+try:
+    import aerospike
+except:
+    print("Please install aerospike python client.")
+    sys.exit(1)
 
 
 class SomeClass(object):
@@ -14,13 +19,14 @@ class SomeClass(object):
 
 
 class TestGetKeyDigest(object):
+
     def setup_class(cls):
         """
         Setup method.
         """
         hostlist, user, password = TestBaseClass.get_hosts()
         config = {'hosts': hostlist}
-        if user == None and password == None:
+        if user is None and password is None:
             TestGetKeyDigest.client = aerospike.client(config).connect()
         else:
             TestGetKeyDigest.client = aerospike.client(config).connect(
@@ -49,7 +55,8 @@ class TestGetKeyDigest(object):
         with pytest.raises(TypeError) as typeError:
             TestGetKeyDigest.client.get_key_digest()
 
-        assert "Required argument 'ns' (pos 1) not found" in typeError.value
+        assert "Required argument 'ns' (pos 1) not found" in str(
+            typeError.value)
 
     def test_get_key_digest_with_only_ns(self):
         """
@@ -58,7 +65,8 @@ class TestGetKeyDigest(object):
         with pytest.raises(TypeError) as typeError:
             TestGetKeyDigest.client.get_key_digest("test")
 
-        assert "Required argument 'set' (pos 2) not found" in typeError.value
+        assert "Required argument 'set' (pos 2) not found" in str(
+            typeError.value)
 
     def test_get_key_digest_with_integer_key(self):
         """
@@ -85,10 +93,10 @@ class TestGetKeyDigest(object):
         """
 
         with pytest.raises(TypeError) as typeError:
-            digest = TestGetKeyDigest.client.get_key_digest(1, "demo",
-                                                            "get_digest_key")
+            TestGetKeyDigest.client.get_key_digest(1, "demo",
+                                                   "get_digest_key")
 
-        assert 'Namespace should be a string' in typeError.value
+        assert 'Namespace should be a string' in str(typeError.value)
 
     def test_get_key_digest_with_integer_set(self):
         """
@@ -96,29 +104,29 @@ class TestGetKeyDigest(object):
         """
 
         with pytest.raises(TypeError) as typeError:
-            digest = TestGetKeyDigest.client.get_key_digest("test", 1,
-                                                            "get_digest_key")
+            TestGetKeyDigest.client.get_key_digest("test", 1,
+                                                   "get_digest_key")
 
-        assert 'Set should be a string or unicode' in typeError.value
+        assert 'Set should be a string or unicode' in str(typeError.value)
 
     def test_get_key_digest_with_list_key(self):
 
-        #Invoke get_key_digest() with key as a list
+        # Invoke get_key_digest() with key as a list
         mylist = [1, 2, 3]
 
         with pytest.raises(TypeError) as typeError:
             TestGetKeyDigest.client.get_key_digest("test", "demo", mylist)
 
-        assert 'Key is invalid' in typeError.value
+        assert 'Key is invalid' in str(typeError.value)
 
     def test_get_key_digest_with_map_key(self):
-        #Invoke get_key_digest() with key as a map
+        # Invoke get_key_digest() with key as a map
         with pytest.raises(TypeError) as typeError:
-            digest = TestGetKeyDigest.client.get_key_digest("test", "set",
-                                                            {"a": 1,
-                                                             "b": 2})
+            TestGetKeyDigest.client.get_key_digest("test", "set",
+                                                   {"a": 1,
+                                                    "b": 2})
 
-        assert 'Key is invalid' in typeError.value
+        assert 'Key is invalid' in str(typeError.value)
 
     def test_get_key_digest_with_none_key(self):
         """
@@ -126,7 +134,7 @@ class TestGetKeyDigest(object):
         """
 
         with pytest.raises(TypeError) as typeError:
-            digest = TestGetKeyDigest.client.get_key_digest("test", "demo",
-                                                            None)
+            TestGetKeyDigest.client.get_key_digest("test", "demo",
+                                                   None)
 
-        assert 'Key is invalid' in typeError.value
+        assert 'Key is invalid' in str(typeError.value)

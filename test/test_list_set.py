@@ -1,37 +1,41 @@
 # -*- coding: utf-8 -*-
 import pytest
-import time
 import sys
 import random
-import cPickle as pickle
-from test_base_class import TestBaseClass
+from .test_base_class import TestBaseClass
+from aerospike import exception as e
 
 aerospike = pytest.importorskip("aerospike")
 try:
-    from aerospike.exception import *
+    import aerospike
 except:
-    print "Please install aerospike python client."
+    print("Please install aerospike python client.")
     sys.exit(1)
 
+
 class TestListSet(object):
+
     def setup_class(cls):
         """
         Setup method.
         """
         hostlist, user, password = TestBaseClass.get_hosts()
         config = {'hosts': hostlist}
-        if user == None and password == None:
+        if user is None and password is None:
             TestListSet.client = aerospike.client(config).connect()
         else:
-            TestListSet.client = aerospike.client(config).connect(user, password)
+            TestListSet.client = aerospike.client(
+                config).connect(user, password)
 
     def teardown_class(cls):
         TestListSet.client.close()
 
     def setup_method(self, method):
-        for i in xrange(5):
+        for i in range(5):
             key = ('test', 'demo', i)
-            rec = {'name': 'name%s' % (str(i)), 'contact_no': [i, i+1], 'city' : ['Pune', 'Dehli']}
+            rec = {'name': 'name%s' %
+                   (str(i)), 'contact_no': [i, i + 1],
+                   'city': ['Pune', 'Dehli']}
             TestListSet.client.put(key, rec)
         key = ('test', 'demo', 2)
         TestListSet.client.list_append(key, "contact_no", [45, 50, 80])
@@ -40,8 +44,8 @@ class TestListSet(object):
         """
         Teardown method.
         """
-        #time.sleep(1)
-        for i in xrange(5):
+        # time.sleep(1)
+        for i in range(5):
             key = ('test', 'demo', i)
             TestListSet.client.remove(key)
 
@@ -52,23 +56,25 @@ class TestListSet(object):
         key = ('test', 'demo', 1)
 
         status = TestListSet.client.list_set(key, "contact_no", 5, 1000)
-        assert status == 0L
+        assert status == 0
 
-        key, meta, bins = TestListSet.client.get(key)
-        assert bins == {'city': ['Pune', 'Dehli'], 'contact_no': [1, 2, None,
-            None, None, 1000], 'name': 'name1'}
+        key, _, bins = TestListSet.client.get(key)
+        assert bins == {'city': ['Pune', 'Dehli'],
+                        'contact_no': [1, 2, None,
+                                       None, None, 1000], 'name': 'name1'}
 
     def test_list_set_with_element_list_correct_paramters(self):
         """
         Invoke list_set() sets list element with list
         """
         key = ('test', 'demo', 1)
-        
-        status = TestListSet.client.list_set(key, "contact_no", 5, [500, 1000])
-        assert status == 0L
 
-        key, meta, bins = TestListSet.client.get(key)
-        assert bins == {'city': ['Pune', 'Dehli'], 'contact_no': [1, 2, None, None, None, [500, 1000]], 'name': 'name1'}
+        status = TestListSet.client.list_set(key, "contact_no", 5, [500, 1000])
+        assert status == 0
+
+        key, _, bins = TestListSet.client.get(key)
+        assert bins == {'city': ['Pune', 'Dehli'], 'contact_no': [
+            1, 2, None, None, None, [500, 1000]], 'name': 'name1'}
 
     def test_list_set_with_element_string(self):
         """
@@ -77,10 +83,11 @@ class TestListSet(object):
         key = ('test', 'demo', 1)
 
         status = TestListSet.client.list_set(key, "contact_no", 5, 'string')
-        assert status == 0L
+        assert status == 0
 
-        key, meta, bins = TestListSet.client.get(key)
-        assert bins == {'city': ['Pune', 'Dehli'], 'contact_no': [1, 2, None, None, None, 'string'], 'name': 'name1'}
+        key, _, bins = TestListSet.client.get(key)
+        assert bins == {'city': ['Pune', 'Dehli'], 'contact_no': [
+            1, 2, None, None, None, 'string'], 'name': 'name1'}
 
     def test_list_set_with_element_float(self):
         """
@@ -89,11 +96,12 @@ class TestListSet(object):
         key = ('test', 'demo', 1)
 
         status = TestListSet.client.list_set(key, "contact_no", 5, 45.896)
-        assert status == 0L
+        assert status == 0
 
-        key, meta, bins = TestListSet.client.get(key)
-        assert bins == {'city': ['Pune', 'Dehli'], 'contact_no': [1, 2, None,
-            None, None, 45.896], 'name': 'name1'}
+        key, _, bins = TestListSet.client.get(key)
+        assert bins == {'city': ['Pune', 'Dehli'],
+                        'contact_no': [1, 2, None,
+                                       None, None, 45.896], 'name': 'name1'}
 
     def test_list_set_with_element_boolean(self):
         """
@@ -102,11 +110,12 @@ class TestListSet(object):
         key = ('test', 'demo', 1)
 
         status = TestListSet.client.list_set(key, "contact_no", 5, False)
-        assert status == 0L
+        assert status == 0
 
-        key, meta, bins = TestListSet.client.get(key)
-        assert bins == {'city': ['Pune', 'Dehli'], 'contact_no': [1, 2, None,
-            None, None, 0], 'name': 'name1'}
+        key, _, bins = TestListSet.client.get(key)
+        assert bins == {'city': ['Pune', 'Dehli'],
+                        'contact_no': [1, 2, None,
+                                       None, None, 0], 'name': 'name1'}
 
     def test_list_set_with_element_bytearray(self):
         """
@@ -114,11 +123,14 @@ class TestListSet(object):
         """
         key = ('test', 'demo', 1)
 
-        TestListSet.client.list_set(key, "contact_no", 0, bytearray("asd;as[d'as;d", "utf-8"))
+        TestListSet.client.list_set(
+            key, "contact_no", 0, bytearray("asd;as[d'as;d", "utf-8"))
 
-        (key, meta, bins) = TestListSet.client.get(key)
+        (key, _, bins) = TestListSet.client.get(key)
 
-        assert bins == {'contact_no': [bytearray(b"asd;as[d\'as;d"), 2], 'city': ['Pune', 'Dehli'], 'name': 'name1'}
+        assert bins == {'contact_no': [
+            bytearray(b"asd;as[d\'as;d"), 2], 'city': ['Pune', 'Dehli'],
+            'name': 'name1'}
 
     def test_list_set_with_element_map(self):
         """
@@ -126,12 +138,14 @@ class TestListSet(object):
         """
         key = ('test', 'demo', 1)
 
-        status = TestListSet.client.list_set(key, "contact_no", 5, {'k1':56})
-        assert status == 0L
+        status = TestListSet.client.list_set(key, "contact_no", 5, {'k1': 56})
+        assert status == 0
 
-        key, meta, bins = TestListSet.client.get(key)
-        assert bins == {'city': ['Pune', 'Dehli'], 'contact_no': [1, 2, None,
-            None, None, {'k1':56}], 'name': 'name1'}
+        key, _, bins = TestListSet.client.get(key)
+        assert bins == {'city': ['Pune', 'Dehli'],
+                        'contact_no': [1, 2, None,
+                                       None, None,
+                                       {'k1': 56}], 'name': 'name1'}
 
     def test_list_set_with_correct_policy(self):
         """
@@ -144,11 +158,13 @@ class TestListSet(object):
             'commit_level': aerospike.POLICY_COMMIT_LEVEL_MASTER
         }
 
-        status = TestListSet.client.list_set(key, 'city', 7, 'Mumbai', {}, policy)
-        assert status == 0L
+        status = TestListSet.client.list_set(
+            key, 'city', 7, 'Mumbai', {}, policy)
+        assert status == 0
 
-        key, meta, bins = TestListSet.client.get(key)
-        assert bins == {'city': ['Pune', 'Dehli', None, None, None, None, None, 'Mumbai'],
+        key, _, bins = TestListSet.client.get(key)
+        assert bins == {
+            'city': ['Pune', 'Dehli', None, None, None, None, None, 'Mumbai'],
             'contact_no': [2, 3, [45, 50, 80]], 'name': 'name2'}
 
     def test_list_set_with_no_parameters(self):
@@ -157,7 +173,8 @@ class TestListSet(object):
         """
         with pytest.raises(TypeError) as typeError:
             TestListSet.client.list_set()
-        assert "Required argument 'key' (pos 1) not found" in typeError.value
+        assert "Required argument 'key' (pos 1) not found" in str(
+            typeError.value)
 
     def test_list_set_with_incorrect_policy(self):
         """
@@ -170,7 +187,7 @@ class TestListSet(object):
         try:
             TestListSet.client.list_set(key, "contact_no", 0, 850, {}, policy)
 
-        except ParamError as exception:
+        except e.ParamError as exception:
             assert exception.code == -2
             assert exception.msg == "timeout is invalid"
 
@@ -182,13 +199,14 @@ class TestListSet(object):
         minLength = 5
         maxLength = 30
         length = random.randint(minLength, maxLength)
-        key = ('test', 'demo', ''.join(map(lambda unused :
-            random.choice(charSet), range(length)))+".com")
+        key = ('test', 'demo', ''.join(map(lambda unused:
+                                           random.choice(charSet),
+                                           range(length))) + ".com")
         try:
             TestListSet.client.list_set(key, "contact_no", 0, 100)
 
-        except BinIncompatibleType as exception:
-            assert exception.code == 12L
+        except e.BinIncompatibleType as exception:
+            assert exception.code == 12
 
     def test_list_set_with_nonexistent_bin(self):
         """
@@ -199,13 +217,13 @@ class TestListSet(object):
         minLength = 5
         maxLength = 10
         length = random.randint(minLength, maxLength)
-        bin = ''.join(map(lambda unused :
-            random.choice(charSet), range(length)))+".com"
+        bin = ''.join(map(lambda unused:
+                          random.choice(charSet), range(length))) + ".com"
         try:
             TestListSet.client.list_set(key, bin, 0, 75)
 
-        except BinIncompatibleType as exception:
-            assert exception.code == 12L
+        except e.BinIncompatibleType as exception:
+            assert exception.code == 12
 
     def test_list_set_with_extra_parameter(self):
         """
@@ -214,9 +232,11 @@ class TestListSet(object):
         key = ('test', 'demo', 1)
         policy = {'timeout': 1000}
         with pytest.raises(TypeError) as typeError:
-            TestListSet.client.list_set(key, "contact_no", 1, 999, {}, policy, "")
+            TestListSet.client.list_set(
+                key, "contact_no", 1, 999, {}, policy, "")
 
-        assert "list_set() takes at most 6 arguments (7 given)" in typeError.value
+        assert "list_set() takes at most 6 arguments (7 given)" in str(
+            typeError.value)
 
     def test_list_set_policy_is_string(self):
         """
@@ -226,7 +246,7 @@ class TestListSet(object):
         try:
             TestListSet.client.list_set(key, "contact_no", 1, 30, {}, "")
 
-        except ParamError as exception:
+        except e.ParamError as exception:
             assert exception.code == -2
             assert exception.msg == "policy must be a dict"
 
@@ -237,7 +257,7 @@ class TestListSet(object):
         try:
             TestListSet.client.list_set(None, "contact_no", 0, 89)
 
-        except ParamError as exception:
+        except e.ParamError as exception:
             assert exception.code == -2
             assert exception.msg == "key is invalid"
 
@@ -249,18 +269,18 @@ class TestListSet(object):
         try:
             TestListSet.client.list_set(key, None, 1, 555)
 
-        except ParamError as exception:
+        except e.ParamError as exception:
             assert exception.code == -2
             assert exception.msg == "Bin name should be of type string"
-    
+
     def test_list_set_with_negative_index(self):
         """
         Invoke list_set() with negative index
         """
         key = ('test', 'demo', 1)
         try:
-            bins = TestListSet.client.list_set(key, "contact_no", -56, 12)
-        except InvalidRequest as exception:
+            TestListSet.client.list_set(key, "contact_no", -56, 12)
+        except e.InvalidRequest as exception:
             assert exception.code == 4
 
     def test_list_set_meta_type_integer(self):
@@ -271,7 +291,7 @@ class TestListSet(object):
         try:
             TestListSet.client.list_set(key, "contact_no", 0, 679, 888)
 
-        except ParamError as exception:
+        except e.ParamError as exception:
             assert exception.code == -2
             assert exception.msg == "Metadata should be of type dictionary"
 
@@ -283,4 +303,4 @@ class TestListSet(object):
 
         with pytest.raises(TypeError) as typeError:
             TestListSet.client.list_set(key, "contact_no", "Fifth", 448)
-        assert "an integer is required" in typeError.value
+        assert "an integer is required" in str(typeError.value)
