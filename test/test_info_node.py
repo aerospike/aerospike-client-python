@@ -279,7 +279,7 @@ class TestInfoNode(object):
         except e.InvalidHostError as exception:
             assert exception.code == -4
         except Exception as exception:
-            assert type(exception) == e.InvalidHostError
+            assert type(exception) == e.TimeoutError
 
     def test_info_node_positive_with_dns(self):
         """

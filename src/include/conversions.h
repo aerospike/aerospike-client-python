@@ -26,7 +26,6 @@
 #include <aerospike/as_udf.h>
 #include <aerospike/as_operations.h>
 
-#include "key.h"
 #include "types.h"
 
 as_status as_udf_file_to_pyobject(as_error *err, as_udf_file * entry, PyObject ** py_file);
@@ -40,8 +39,6 @@ as_status as_user_to_pyobject(as_error *err, as_user *user, PyObject **py_as_use
 as_status as_user_array_to_pyobject(as_error *err, as_user **users, PyObject **py_as_users, int users_size);
 
 as_status pyobject_to_strArray(as_error * err, PyObject * py_list,  char **arr);
-
-as_status pykey_to_key(as_error * err, AerospikeKey * py_key, as_key * key);
 
 as_status pyobject_to_val(AerospikeClient * self, as_error * err, PyObject * py_obj, as_val ** val, as_static_pool *static_pool, int serializer_type);
 

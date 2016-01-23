@@ -23,6 +23,7 @@
 #include <aerospike/as_error.h>
 #include <aerospike/as_policy.h>
 
+#include "client.h"
 #include "admin.h"
 #include "conversions.h"
 #include "exceptions.h"

@@ -175,12 +175,6 @@ static PyMethodDef AerospikeClient_Type_Methods[] = {
 		(PyCFunction) AerospikeClient_ListSize, METH_VARARGS | METH_KEYWORDS,
 		"Count the elements of the list value in bin"},
 
-	// Deprecated key-based API
-
-	{"key",
-		(PyCFunction) AerospikeClient_Key, METH_VARARGS | METH_KEYWORDS,
-		"**[DEPRECATED]** Create a new Key object for performing key operations."},
-
 	// QUERY OPERATIONS
 
 	{"query",
@@ -259,29 +253,10 @@ static PyMethodDef AerospikeClient_Type_Methods[] = {
 		(PyCFunction)AerospikeClient_Index_2dsphere_Create,	METH_VARARGS | METH_KEYWORDS,
 		"Creates a secondary geo2dsphere index"},
 
-	// LSTACK OPERATIONS
-
-	{"lstack",
-		(PyCFunction) AerospikeClient_LStack, METH_VARARGS | METH_KEYWORDS,
-		"LSTACK operations"},
-
-	// LSET OPERATIONS
-
-	{"lset",
-		(PyCFunction) AerospikeClient_LSet, METH_VARARGS | METH_KEYWORDS,
-		"LSET operations"},
-
-	// LLIST OPERATIONS
-
+    // LLIST OPERATIONS
 	{"llist",
 		(PyCFunction) AerospikeClient_LList, METH_VARARGS | METH_KEYWORDS,
 		"LLIST operations"},
-
-	// LMAP OPERATIONS
-
-	{"lmap",
-		(PyCFunction) AerospikeClient_LMap, METH_VARARGS | METH_KEYWORDS,
-		"LMAP operations"},
 
 	// BATCH OPERATIONS
 	{"get_many",

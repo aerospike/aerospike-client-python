@@ -37,7 +37,6 @@
 
 #include "conversions.h"
 #include "geo.h"
-#include "key.h"
 #include "policy.h"
 #include "serializer.h"
 
