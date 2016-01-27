@@ -249,12 +249,14 @@ PyObject *  AerospikeClient_Operate_Invoke(
 	long offset = 0;
 	double double_offset = 0.0;
 	uint32_t ttl = 0;
+	int index = 0;
 	long operation = 0;
 	int i = 0;
 	PyObject * py_rec = NULL;
 	PyObject * py_ustr = NULL;
 	PyObject * py_ustr1 = NULL;
 	PyObject * py_bin = NULL;
+	PyObject * py_index = NULL;
 	as_record * rec = NULL;
 
 	as_static_pool static_pool;
@@ -338,9 +340,26 @@ PyObject *  AerospikeClient_Operate_Invoke(
 						goto CLEANUP;
 					}
 				}
-			} else if ((!py_value) && (operation != AS_OPERATOR_READ && operation != AS_OPERATOR_TOUCH)) {
+			} else if ((!py_value) && (operation != AS_OPERATOR_READ && operation != AS_OPERATOR_TOUCH && 
+						operation != (AS_CDT_OP_LIST_POP + 1000) && operation != (AS_CDT_OP_LIST_REMOVE + 1000) && 
+						operation != (AS_CDT_OP_LIST_CLEAR + 1000))) {
 				as_error_update(err, AEROSPIKE_ERR_PARAM, "Value should be given");
 				goto CLEANUP;
+			}
+
+			if ((operation == (AS_CDT_OP_LIST_INSERT + 1000) || operation == (AS_CDT_OP_LIST_INSERT_ITEMS + 1000) || 
+						operation == (AS_CDT_OP_LIST_POP + 1000) || operation == (AS_CDT_OP_LIST_POP_RANGE + 1000) ||
+						operation == (AS_CDT_OP_LIST_REMOVE + 1000) || operation == (AS_CDT_OP_LIST_REMOVE_RANGE + 1000)) && !py_index) {
+				as_error_update(err, AEROSPIKE_ERR_PARAM, "List_insert operation needs an index value");
+				goto CLEANUP;
+			}
+			if (py_index) {
+				if (PyInt_Check(py_index)) {
+					index = PyInt_AsLong(py_index);
+				} else {
+					as_error_update(err, AEROSPIKE_ERR_PARAM, "Index should be an integer");
+					goto CLEANUP;
+				}
 			}
 
 			switch(operation) {
@@ -437,6 +456,80 @@ PyObject *  AerospikeClient_Operate_Invoke(
 						goto CLEANUP;
 					}
 					as_operations_add_write(&ops, bin, (as_bin_value *) put_val);
+					break;
+				case AS_CDT_OP_LIST_APPEND + 1000:
+					pyobject_to_astype_write(self, err, bin, py_value, &put_val, &ops,
+						&static_pool, SERIALIZER_PYTHON);
+					if (err->code != AEROSPIKE_OK) {
+						goto CLEANUP;
+					}
+					as_operations_add_list_append(&ops, bin, put_val);
+					break;
+				case AS_CDT_OP_LIST_APPEND_ITEMS + 1000:
+					pyobject_to_astype_write(self, err, bin, py_value, &put_val, &ops,
+						&static_pool, SERIALIZER_PYTHON);
+					if (err->code != AEROSPIKE_OK) {
+						goto CLEANUP;
+					}
+					as_operations_add_list_append_items(&ops, bin, (as_list*)put_val);
+					break;
+				case AS_CDT_OP_LIST_INSERT + 1000:
+					pyobject_to_astype_write(self, err, bin, py_value, &put_val, &ops,
+						&static_pool, SERIALIZER_PYTHON);
+					if (err->code != AEROSPIKE_OK) {
+						goto CLEANUP;
+					}
+					as_operations_add_list_insert(&ops, bin, index, put_val);
+					break;
+				case AS_CDT_OP_LIST_INSERT_ITEMS + 1000:
+					pyobject_to_astype_write(self, err, bin, py_value, &put_val, &ops,
+						&static_pool, SERIALIZER_PYTHON);
+					if (err->code != AEROSPIKE_OK) {
+						goto CLEANUP;
+					}
+					as_operations_add_list_insert_items(&ops, bin, index, (as_list*)put_val);
+					break;
+				case AS_CDT_OP_LIST_POP + 1000:
+					as_operations_add_list_pop(&ops, bin, index);
+				case AS_CDT_OP_LIST_POP_RANGE + 1000:
+					if (PyInt_Check(py_value)) {
+						offset = PyInt_AsLong(py_value);
+					} else if (PyLong_Check(py_value)) {
+						offset = PyLong_AsLong(py_value);
+						if (offset == -1 && PyErr_Occurred()) {
+							if (PyErr_ExceptionMatches(PyExc_OverflowError)) {
+								as_error_update(err, AEROSPIKE_ERR_PARAM, "integer value exceeds sys.maxsize");
+								goto CLEANUP;
+							}
+						}
+					} else {
+						as_error_update(err, AEROSPIKE_ERR_PARAM, "Offset should be of int or long type");
+						goto CLEANUP;
+					}
+					as_operations_add_list_pop_range(&ops, bin, index, offset);
+					break;
+				case AS_CDT_OP_LIST_REMOVE + 1000:
+					as_operations_add_list_remove(&ops, bin, index);
+					break;
+				case AS_CDT_OP_LIST_REMOVE_RANGE + 1000:
+					if (PyInt_Check(py_value)) {
+						offset = PyInt_AsLong(py_value);
+					} else if (PyLong_Check(py_value)) {
+						offset = PyLong_AsLong(py_value);
+						if (offset == -1 && PyErr_Occurred()) {
+							if (PyErr_ExceptionMatches(PyExc_OverflowError)) {
+								as_error_update(err, AEROSPIKE_ERR_PARAM, "integer value exceeds sys.maxsize");
+								goto CLEANUP;
+							}
+						}
+					} else {
+						as_error_update(err, AEROSPIKE_ERR_PARAM, "Offset should be of int or long type");
+						goto CLEANUP;
+					}
+					as_operations_add_list_remove_range(&ops, bin, index, offset);
+					break;
+				case AS_CDT_OP_LIST_CLEAR + 1000:
+					as_operations_add_list_clear(&ops, bin);
 					break;
 				default:
 					if (self->strict_types) {
