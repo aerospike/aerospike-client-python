@@ -508,6 +508,7 @@ PyObject *  AerospikeClient_Operate_Invoke(
 					break;
 				case AS_CDT_OP_LIST_POP + 1000:
 					as_operations_add_list_pop(&ops, bin, index);
+					break;
 				case AS_CDT_OP_LIST_POP_RANGE + 1000:
 					if (PyInt_Check(py_value)) {
 						offset = PyInt_AsLong(py_value);
