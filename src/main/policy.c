@@ -122,6 +122,11 @@ AerospikeConstants aerospike_constants[] = {
 	{ AS_CDT_OP_LIST_REMOVE + 1000			,   "OP_LIST_REMOVE"},
 	{ AS_CDT_OP_LIST_REMOVE_RANGE + 1000	,   "OP_LIST_REMOVE_RANGE"},
 	{ AS_CDT_OP_LIST_CLEAR + 1000			,   "OP_LIST_CLEAR"},
+	{ AS_CDT_OP_LIST_SET + 1000				,   "OP_LIST_SET"},
+	{ AS_CDT_OP_LIST_GET + 1000				,   "OP_LIST_GET"},
+	{ AS_CDT_OP_LIST_GET_RANGE + 1000		,   "OP_LIST_GET_RANGE"},
+	{ AS_CDT_OP_LIST_TRIM + 1000			,   "OP_LIST_TRIM"},
+	{ AS_CDT_OP_LIST_SIZE + 1000			,   "OP_LIST_SIZE"},
 };
 
 static
