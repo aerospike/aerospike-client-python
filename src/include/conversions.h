@@ -65,6 +65,8 @@ as_status metadata_to_pyobject(as_error * err, const as_record * rec, PyObject *
 
 as_status bins_to_pyobject(AerospikeClient * self, as_error * err, const as_record * rec, PyObject ** obj);
 
+as_status bins_to_pyobject_list(AerospikeClient * self, as_error * err, const as_record * rec, PyObject ** obj);
+
 bool error_to_pyobject(const as_error * err, PyObject ** obj);
 
 void initialize_ldt(as_error *error, as_ldt* ldt_p, char* bin_name, int type, char* module);

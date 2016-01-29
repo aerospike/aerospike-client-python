@@ -331,6 +331,7 @@ setup(
                 'src/main/client/info.c',
                 'src/main/client/put.c',
                 'src/main/client/operate.c',
+                'src/main/client/operate_ordered.c',
                 'src/main/client/query.c',
                 'src/main/client/remove.c',
                 'src/main/client/scan.c',
