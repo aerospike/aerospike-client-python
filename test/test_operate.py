@@ -11,7 +11,6 @@ except:
     print("Please install aerospike python client.")
     sys.exit(1)
 
-
 class TestOperate(object):
 
     def setup_class(cls):
@@ -19,12 +18,7 @@ class TestOperate(object):
         Setup method.
         """
         hostlist, user, password = TestBaseClass.get_hosts()
-        config = {'hosts': hostlist}
-        if user is None and password is None:
-            TestOperate.client = aerospike.client(config).connect()
-        else:
-            TestOperate.client = aerospike.client(config).connect(user,
-                                                                  password)
+
         config_no_typechecks = {'hosts': hostlist, 'strict_types': False}
         if user is None and password is None:
             TestOperate.client_no_typechecks = aerospike.client(
@@ -33,66 +27,62 @@ class TestOperate(object):
             TestOperate.client_no_typechecks = aerospike.client(
                 config_no_typechecks).connect(user, password)
 
-        TestOperate.skip_old_server = True
-        versioninfo = TestOperate.client.info('version')
-        for keys in versioninfo:
-            for value in versioninfo[keys]:
-                if value is not None:
-                    versionlist = value[
-                        value.find("build") + 6:value.find("\n")].split(".")
-                    if int(versionlist[0]) >= 3 and int(versionlist[1]) >= 6:
-                        TestOperate.skip_old_server = False
-
     def teardown_class(cls):
-        TestOperate.client.close()
         TestOperate.client_no_typechecks.close()
 
-    def setup_method(self, method):
-        TestOperate.keys = []
+
+    @pytest.fixture(autouse=True)
+    def setup(self, request, as_connection):
+        """
+        Setup Method
+        """
+        keys = []
 
         for i in range(5):
             key = ('test', 'demo', i)
             rec = {'name': 'name%s' % (str(i)), 'age': i}
-            TestOperate.client.put(key, rec)
+            as_connection.put(key, rec)
         key = ('test', 'demo', 6)
         rec = {"age": 6.3}
-        TestOperate.client.put(key, rec)
+        as_connection.put(key, rec)
 
         key = ('test', 'demo', 'bytearray_key')
         rec = {"bytearray_bin": bytearray("asd;as[d'as;d", "utf-8")}
-        TestOperate.client.put(key, rec)
+        as_connection.put(key, rec)
 
-        TestOperate.keys.append(key)
+        keys.append(key)
 
         key = ('test', 'demo', 'existing_key')
         rec = {"dict": {"a": 1}, "bytearray": bytearray("abc", "utf-8"),
                "float": 3.4, "list": ['a']}
-        TestOperate.client.put(key, rec)
+        as_connection.put(key, rec)
 
-        TestOperate.keys.append(key)
+        keys.append(key)
 
-    def teardown_method(self, method):
-        """
-        Teardoen method.
-        """
-        for i in range(5):
-            key = ('test', 'demo', i)
-            try:
-                TestOperate.client.remove(key)
-            except e.RecordNotFound:
-                pass
-        for key in TestOperate.keys:
-            try:
-                TestOperate.client.remove(key)
-            except e.RecordNotFound:
-                pass
+        def teardown():
+            """
+            Teardown Method
+            """
+            for i in range(5):
+                key = ('test', 'demo', i)
+                try:
+                    as_connection.remove(key)
+                except e.RecordNotFound:
+                    pass
+            for key in keys:
+                try:
+                    as_connection.remove(key)
+                except e.RecordNotFound:
+                    pass
+
+        request.addfinalizer(teardown)
 
     def test_operate_with_no_parameters_negative(self):
         """
         Invoke opearte() without any mandatory parameters.
         """
         with pytest.raises(TypeError) as typeError:
-            TestOperate.client.operate()
+            self.as_connection.operate()
         assert "Required argument 'key' (pos 1) not found" in str(
             typeError.value)
 
@@ -111,7 +101,7 @@ class TestOperate(object):
                          "bin": "name"}
         ]
 
-        key, _, bins = TestOperate.client.operate(key, llist)
+        key, _, bins = self.as_connection.operate(key, llist)
 
         assert bins == {'name': 'ramname1'}
 
@@ -130,7 +120,7 @@ class TestOperate(object):
              "bin": "age"}
         ]
 
-        key, _, bins = TestOperate.client.operate(key, llist)
+        key, _, bins = self.as_connection.operate(key, llist)
 
         assert bins == {'age': 9.8}
 
@@ -153,14 +143,14 @@ class TestOperate(object):
                   "val": 3}, {"op": aerospike.OPERATOR_READ,
                               "bin": "name"}]
 
-        key, _, bins = TestOperate.client.operate(key, llist, {}, policy)
+        key, _, bins = self.as_connection.operate(key, llist, {}, policy)
 
         assert bins == {'name': 'name1aa'}
         assert key == ('test', 'demo', 1, bytearray(
             b'\xb7\xf4\xb88\x89\xe2\xdag\xdeh>\x1d\xf6\x91\x9a\x1e\xac\xc4F\xc8')
         )
 
-        TestOperate.client.remove(key)
+        self.as_connection.remove(key)
 
     def test_operate_with_policy_key_digest(self):
         """
@@ -170,7 +160,7 @@ class TestOperate(object):
                                                "utf-8"))
         rec = {'name': 'name%s' % (str(1)), 'age': 1, }
         policy = {'timeout': 1000, 'key': aerospike.POLICY_KEY_DIGEST}
-        TestOperate.client.put(key, rec)
+        self.as_connection.put(key, rec)
 
         llist = [{"op": aerospike.OPERATOR_APPEND,
                   "bin": "name",
@@ -180,7 +170,7 @@ class TestOperate(object):
                   "val": 3}, {"op": aerospike.OPERATOR_READ,
                               "bin": "name"}]
 
-        key, _, bins = TestOperate.client.operate(key, llist, {}, policy)
+        key, _, bins = self.as_connection.operate(key, llist, {}, policy)
 
         assert bins == {'name': 'name1aa'}
         assert key == ('test', 'demo', None,
@@ -208,7 +198,7 @@ class TestOperate(object):
                   "val": 3}, {"op": aerospike.OPERATOR_READ,
                               "bin": "name"}]
 
-        key, meta, bins = TestOperate.client.operate(key, llist, meta, policy)
+        key, meta, bins = self.as_connection.operate(key, llist, meta, policy)
 
         assert bins == {'name': 'name1aa'}
         assert key == ('test', 'demo', 1, bytearray(
@@ -225,7 +215,7 @@ class TestOperate(object):
             'key': aerospike.POLICY_KEY_SEND,
             'gen': aerospike.POLICY_GEN_EQ
         }
-        (key, meta) = TestOperate.client.exists(key)
+        (key, meta) = self.as_connection.exists(key)
         gen = meta['gen']
         meta = {'gen': gen, 'ttl': 1200}
 
@@ -237,7 +227,7 @@ class TestOperate(object):
                   "val": 3}, {"op": aerospike.OPERATOR_READ,
                               "bin": "name"}]
 
-        (key, meta, bins) = TestOperate.client.operate(
+        (key, meta, bins) = self.as_connection.operate(
             key, llist, meta, policy)
 
         assert bins == {'name': 'name1aa'}
@@ -255,9 +245,9 @@ class TestOperate(object):
              "val": 4000}
         ]
 
-        TestOperate.client.operate(key, llist)
+        self.as_connection.operate(key, llist)
 
-        (key, meta) = TestOperate.client.exists(key)
+        (key, meta) = self.as_connection.exists(key)
 
         assert meta['ttl'] != None
 
@@ -272,9 +262,9 @@ class TestOperate(object):
              "val": 4000}
         ]
 
-        TestOperate.client.operate(key, llist)
+        self.as_connection.operate(key, llist)
 
-        (key, meta) = TestOperate.client.exists(key)
+        (key, meta) = self.as_connection.exists(key)
 
         assert meta['ttl'] != None
 
@@ -289,9 +279,9 @@ class TestOperate(object):
              "bin": "age"}
         ]
 
-        TestOperate.client.operate(key, llist)
+        self.as_connection.operate(key, llist)
 
-        (key, meta) = TestOperate.client.exists(key)
+        (key, meta) = self.as_connection.exists(key)
 
         assert meta['ttl'] != None
 
@@ -304,9 +294,9 @@ class TestOperate(object):
             {"op": aerospike.OPERATOR_TOUCH}
         ]
 
-        TestOperate.client.operate(key, llist)
+        self.as_connection.operate(key, llist)
 
-        (key, meta) = TestOperate.client.exists(key)
+        (key, meta) = self.as_connection.exists(key)
 
         assert meta['ttl'] != None
 
@@ -321,7 +311,7 @@ class TestOperate(object):
             'gen': aerospike.POLICY_GEN_EQ
         }
 
-        (key, meta) = TestOperate.client.exists(key)
+        (key, meta) = self.as_connection.exists(key)
         gen = meta['gen']
         meta = {
             'gen': gen + 5,
@@ -344,12 +334,12 @@ class TestOperate(object):
             }
         ]
         try:
-            key, meta, _ = TestOperate.client.operate(key, llist, meta, policy)
+            key, meta, _ = self.as_connection.operate(key, llist, meta, policy)
 
         except e.RecordGenerationError as exception:
             assert exception.code == 3
 
-        (key, meta, bins) = TestOperate.client.get(key)
+        (key, meta, bins) = self.as_connection.get(key)
         assert bins == {"age": 1, 'name': 'name1'}
         assert key == ('test', 'demo', None,
                        bytearray(b'\xb7\xf4\xb88\x89\xe2\xdag\xdeh>\x1d\xf6\x91\x9a\x1e\xac\xc4F\xc8'))
@@ -364,7 +354,7 @@ class TestOperate(object):
             'key': aerospike.POLICY_KEY_SEND,
             'gen': aerospike.POLICY_GEN_GT
         }
-        (key, meta) = TestOperate.client.exists(key)
+        (key, meta) = self.as_connection.exists(key)
         gen = meta['gen']
         meta = {'gen': gen, 'ttl': 1200}
 
@@ -377,13 +367,13 @@ class TestOperate(object):
                               "bin": "name"}]
 
         try:
-            (key, meta, _) = TestOperate.client.operate(
+            (key, meta, _) = self.as_connection.operate(
                 key, llist, meta, policy)
 
         except e.RecordGenerationError as exception:
             assert exception.code == 3
 
-        (key, meta, bins) = TestOperate.client.get(key)
+        (key, meta, bins) = self.as_connection.get(key)
         assert bins == {'age': 1, 'name': 'name1'}
         assert key == ('test', 'demo', None,
                        bytearray(b'\xb7\xf4\xb88\x89\xe2\xdag\xdeh>\x1d\xf6\x91\x9a\x1e\xac\xc4F\xc8'))
@@ -398,7 +388,7 @@ class TestOperate(object):
             'key': aerospike.POLICY_KEY_SEND,
             'gen': aerospike.POLICY_GEN_GT
         }
-        (key, meta) = TestOperate.client.exists(key)
+        (key, meta) = self.as_connection.exists(key)
         gen = meta['gen']
         meta = {'gen': gen + 5, 'ttl': 1200}
 
@@ -410,7 +400,7 @@ class TestOperate(object):
                   "val": 3}, {"op": aerospike.OPERATOR_READ,
                               "bin": "name"}]
 
-        (key, meta, bins) = TestOperate.client.operate(
+        (key, meta, bins) = self.as_connection.operate(
             key, llist, meta, policy)
 
         assert bins == {'name': 'name1aa'}
@@ -435,7 +425,7 @@ class TestOperate(object):
         ]
 
         try:
-            TestOperate.client.operate(key, llist, {}, policy)
+            self.as_connection.operate(key, llist, {}, policy)
 
         except e.ParamError as exception:
             assert exception.code == -2
@@ -461,7 +451,7 @@ class TestOperate(object):
         ]
 
         try:
-            TestOperate.client.operate(key, llist, {}, policy)
+            self.as_connection.operate(key, llist, {}, policy)
 
         except e.InvalidRequest as exception:
             assert exception.code == 4
@@ -477,10 +467,10 @@ class TestOperate(object):
              "val": "mumbai"}, {"op": aerospike.OPERATOR_READ,
                                 "bin": "loc"}
         ]
-        _, _, bins = TestOperate.client.operate(key1, llist)
+        _, _, bins = self.as_connection.operate(key1, llist)
 
         assert bins == {'loc': 'mumbai'}
-        TestOperate.client.remove(key1)
+        self.as_connection.remove(key1)
 
     def test_operate_with_nonexistent_bin_positive(self):
         """
@@ -493,7 +483,7 @@ class TestOperate(object):
              "val": "pune"}, {"op": aerospike.OPERATOR_READ,
                               "bin": "addr"}
         ]
-        key, _, bins = TestOperate.client.operate(key, llist)
+        key, _, bins = self.as_connection.operate(key, llist)
 
         assert bins == {'addr': 'pune'}
 
@@ -509,7 +499,7 @@ class TestOperate(object):
             }
         ]
         try:
-            TestOperate.client.operate("", llist)
+            self.as_connection.operate("", llist)
 
         except e.ParamError as exception:
             assert exception.code == -2
@@ -527,7 +517,7 @@ class TestOperate(object):
              "val": "ram"}
         ]
         with pytest.raises(TypeError) as typeError:
-            TestOperate.client.operate(key, llist, {}, policy, "")
+            self.as_connection.operate(key, llist, {}, policy, "")
 
         assert "operate() takes at most 4 arguments (5 given)" in str(
             typeError.value)
@@ -545,7 +535,7 @@ class TestOperate(object):
             }
         ]
         try:
-            TestOperate.client.operate(key, llist, {}, "")
+            self.as_connection.operate(key, llist, {}, "")
 
         except e.ParamError as exception:
             assert exception.code == -2
@@ -563,7 +553,7 @@ class TestOperate(object):
             }
         ]
         try:
-            TestOperate.client.operate(None, llist)
+            self.as_connection.operate(None, llist)
 
         except e.ParamError as exception:
             assert exception.code == -2
@@ -583,7 +573,7 @@ class TestOperate(object):
                   "val": 3}]
 
         try:
-            TestOperate.client.operate(key, llist, {}, policy)
+            self.as_connection.operate(key, llist, {}, policy)
 
         except e.ParamError as exception:
             assert exception.code == -2
@@ -604,7 +594,7 @@ class TestOperate(object):
         }, ]
 
         try:
-            TestOperate.client.operate(key, llist, {}, policy)
+            self.as_connection.operate(key, llist, {}, policy)
 
         except e.ParamError as exception:
             assert exception.code == -2
@@ -624,7 +614,7 @@ class TestOperate(object):
                               "bin": "name"}]
 
         try:
-            TestOperate.client.operate(key, llist)
+            self.as_connection.operate(key, llist)
         except e.ParamError as exception:
             assert exception.code == -2
             assert exception.msg == "Cannot concatenate 'str' and 'non-str' objects"
@@ -636,13 +626,13 @@ class TestOperate(object):
         key = ('test', 'demo', "non_existentkey")
         llist = [{"op": aerospike.OPERATOR_INCR, "bin": "age", "val": 5}]
 
-        TestOperate.client.operate(key, llist)
+        self.as_connection.operate(key, llist)
 
-        (key, _, bins) = TestOperate.client.get(key)
+        (key, _, bins) = self.as_connection.get(key)
 
         assert bins == {"age": 5}
 
-        TestOperate.client.remove(key)
+        self.as_connection.remove(key)
 
     def test_operate_increment_nonexistent_bin(self):
         """
@@ -651,9 +641,9 @@ class TestOperate(object):
         key = ('test', 'demo', 1)
         llist = [{"op": aerospike.OPERATOR_INCR, "bin": "my_age", "val": 5}]
 
-        TestOperate.client.operate(key, llist)
+        self.as_connection.operate(key, llist)
 
-        (key, _, bins) = TestOperate.client.get(key)
+        (key, _, bins) = self.as_connection.get(key)
 
         assert bins == {"my_age": 5, "age": 1, "name": "name1"}
 
@@ -671,7 +661,7 @@ class TestOperate(object):
         }, {"op": aerospike.OPERATOR_READ,
             "bin": "write_bin"}]
 
-        key, _, bins = TestOperate.client.operate(key, llist)
+        key, _, bins = self.as_connection.operate(key, llist)
 
         assert bins == {'write_bin': {u'no': 89.8}}
 
@@ -687,7 +677,7 @@ class TestOperate(object):
         }, {"op": aerospike.OPERATOR_READ,
             "bin": "write_bin"}]
 
-        key, _, bins = TestOperate.client.operate(key, llist)
+        key, _, bins = self.as_connection.operate(key, llist)
 
         assert bins == {'write_bin': {u'no': 89}}
 
@@ -703,7 +693,7 @@ class TestOperate(object):
         }, {"op": aerospike.OPERATOR_READ,
             "bin": "write_bin"}]
 
-        key, _, bins = TestOperate.client.operate(key, llist)
+        key, _, bins = self.as_connection.operate(key, llist)
 
         assert bins == {'write_bin': ('a', 'b', 'c')}
 
@@ -748,13 +738,13 @@ class TestOperate(object):
                       "val": "3"}, {"op": aerospike.OPERATOR_READ,
                                     "bin": "age"}]
 
-            key, _, _ = TestOperate.client.operate(key, llist, {}, policy)
+            key, _, _ = self.as_connection.operate(key, llist, {}, policy)
 
         except e.ParamError as exception:
             assert exception.code == -2
             assert exception.msg == "Unsupported operand type(s) for +: only 'int' allowed"
 
-        TestOperate.client.remove(key)
+        self.as_connection.remove(key)
 
     def test_operate_with_bin_bytearray_positive(self):
         """
@@ -769,7 +759,7 @@ class TestOperate(object):
                 "bin": bytearray("asd[;asjk", "utf-8")}
         ]
 
-        key, _, bins = TestOperate.client.operate(key, llist)
+        key, _, bins = self.as_connection.operate(key, llist)
 
         assert bins == {'asd[;asjk': 'ram'}
 
@@ -786,7 +776,7 @@ class TestOperate(object):
              "bin": "bytearray_bin"}
         ]
 
-        key, _, bins = TestOperate.client.operate(key, llist)
+        key, _, bins = self.as_connection.operate(key, llist)
 
         assert bins == {
             'bytearray_bin': bytearray("asd;as[d'as;dabc", "utf-8")}
@@ -805,11 +795,11 @@ class TestOperate(object):
              "bin": "bytearray_bin"}
         ]
 
-        key, _, bins = TestOperate.client.operate(key, llist)
+        key, _, bins = self.as_connection.operate(key, llist)
 
         assert bins == {'bytearray_bin': bytearray("asd;as[d'as;d", "utf-8")}
 
-        TestOperate.client.remove(key)
+        self.as_connection.remove(key)
 
     def test_operate_with_operatorprepend_valbytearray(self):
         """
@@ -824,7 +814,7 @@ class TestOperate(object):
              "bin": "bytearray_bin"}
         ]
 
-        key, _, bins = TestOperate.client.operate(key, llist)
+        key, _, bins = self.as_connection.operate(key, llist)
 
         assert bins == {
             'bytearray_bin': bytearray("abcasd;as[d'as;d", "utf-8")}
@@ -843,11 +833,11 @@ class TestOperate(object):
              "bin": "bytearray_bin"}
         ]
 
-        key, _, bins = TestOperate.client.operate(key, llist)
+        key, _, bins = self.as_connection.operate(key, llist)
 
         assert bins == {'bytearray_bin': bytearray("asd;as[d'as;d", "utf-8")}
 
-        TestOperate.client.remove(key)
+        self.as_connection.remove(key)
 
     def test_operate_write_set_to_aerospike_null(self):
         """
@@ -857,9 +847,9 @@ class TestOperate(object):
 
         bins = {"name": "John", "no": 3}
 
-        assert 0 == TestOperate.client.put(key, bins)
+        assert 0 == self.as_connection.put(key, bins)
 
-        (key, _, bins) = TestOperate.client.get(key)
+        (key, _, bins) = self.as_connection.get(key)
 
         assert {"name": "John", "no": 3} == bins
 
@@ -875,11 +865,11 @@ class TestOperate(object):
             }
         ]
 
-        (key, _, bins) = TestOperate.client.operate(key, llist)
+        (key, _, bins) = self.as_connection.operate(key, llist)
 
         assert {} == bins
 
-        TestOperate.client.remove(key)
+        self.as_connection.remove(key)
 
     def test_operate_prepend_with_int_new_record(self):
         """
@@ -1163,7 +1153,7 @@ class TestOperate(object):
         ]
 
         try:
-            key, _, _ = TestOperate.client.operate(key, llist)
+            key, _, _ = self.as_connection.operate(key, llist)
 
         except e.BinNameError as exception:
             assert exception.code == 21
@@ -1210,7 +1200,7 @@ class TestOperate(object):
         ]
 
         try:
-            key, _, _ = TestOperate.client.operate(key, llist)
+            key, _, _ = self.as_connection.operate(key, llist)
 
         except e.ParamError as exception:
             assert exception.code == -2
@@ -1243,9 +1233,9 @@ class TestOperate(object):
 
         bins = {"name": "John", "no": 3}
 
-        assert 0 == TestOperate.client.put(key, bins)
+        assert 0 == self.as_connection.put(key, bins)
 
-        (key, _, bins) = TestOperate.client.get(key)
+        (key, _, bins) = self.as_connection.get(key)
 
         assert {"name": "John", "no": 3} == bins
 
@@ -1262,8 +1252,8 @@ class TestOperate(object):
         ]
 
         try:
-            (key, _, bins) = TestOperate.client.operate(key, llist)
+            (key, _, bins) = self.as_connection.operate(key, llist)
 
         except e.InvalidRequest as exception:
             assert exception.code == 4
-        TestOperate.client.remove(key)
+        self.as_connection.remove(key)
