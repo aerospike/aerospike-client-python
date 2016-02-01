@@ -64,6 +64,12 @@ class TestOperate(object):
 
         TestOperate.keys.append(key)
 
+        key = ('test', 'demo', 'list_key')
+        rec = {"int_bin": [1, 2, 3, 4], "string_bin": ['a', 'b', 'c', 'd']}
+        TestOperate.client.put(key, rec)
+
+        TestOperate.keys.append(key)
+
         key = ('test', 'demo', 'existing_key')
         rec = {"dict": {"a": 1}, "bytearray": bytearray("abc", "utf-8"),
                "float": 3.4, "list": ['a']}
@@ -1267,3 +1273,245 @@ class TestOperate(object):
         except e.InvalidRequest as exception:
             assert exception.code == 4
         TestOperate.client.remove(key)
+
+    @pytest.mark.parametrize("list, result, bin, expected", [
+        ([
+            {"op": aerospike.OP_LIST_APPEND,
+             "bin": "int_bin",
+             "val": 7},
+            {"op": aerospike.OP_LIST_GET,
+             "bin": "int_bin",
+             "index": 4},
+            ], {"int_bin": 7}, "int_bin", [1, 2, 3, 4, 7]),
+        ([
+            {"op": aerospike.OP_LIST_APPEND_ITEMS,
+             "bin": "int_bin",
+             "val": [7, 9]},
+            {"op": aerospike.OP_LIST_GET_RANGE,
+             "bin": "int_bin",
+             "index": 3,
+             "val": 3},
+            ], {'int_bin': [4, 7, 9]}, "int_bin", [1, 2, 3, 4, 7,9]),
+        ([
+            {"op": aerospike.OP_LIST_INSERT,
+             "bin": "int_bin",
+             "val": 7,
+             "index": 2},
+            {"op": aerospike.OP_LIST_POP,
+             "bin": "int_bin",
+             "index": 2}
+        ], {'int_bin': 7}, "int_bin", [1, 2, 3, 4]),
+        ([
+            {"op": aerospike.OP_LIST_INSERT_ITEMS,
+             "bin": "int_bin",
+             "val": [7, 9],
+             "index": 2},
+            {"op": aerospike.OP_LIST_POP_RANGE,
+             "bin": "int_bin",
+             "index": 2,
+             "val": 2}
+        ], {'int_bin': [7, 9]}, "int_bin", [1, 2, 3, 4]),
+        ([
+            {"op": aerospike.OP_LIST_SET,
+             "bin": "int_bin",
+             "index": 2,
+             "val": 18},
+            {"op": aerospike.OP_LIST_GET,
+             "bin": "int_bin",
+             "index": 2}
+        ], {'int_bin': 18}, "int_bin", [1, 2, 18, 4])
+        ])
+    def test_pos_operate_with_list_addition_operations(self, list, result, bin,
+            expected):
+        """
+        Invoke operate() with list addition operations
+        """
+        key = ('test', 'demo', 'list_key')
+
+        key, _, bins = TestOperate.client.operate(key, list)
+
+        assert bins == result
+        
+        key, _, bins = TestOperate.client.get(key)
+
+        assert bins[bin] == expected
+
+    @pytest.mark.parametrize("list, bin, expected", [
+        ([
+            {"op": aerospike.OP_LIST_REMOVE,
+             "bin": "int_bin",
+             "index": 2},
+            ], "int_bin", [1, 2, 4]),
+        ([
+            {"op": aerospike.OP_LIST_REMOVE_RANGE,
+             "bin": "int_bin",
+             "index": 2,
+             "val": 2},
+            ], "int_bin", [1, 2]),
+        ([
+            {"op": aerospike.OP_LIST_TRIM,
+             "bin": "int_bin",
+             "index": 2,
+             "val": 2},
+            ], "int_bin", [3, 4]),
+        ([
+            {"op": aerospike.OP_LIST_CLEAR,
+             "bin": "int_bin"}
+            ], "int_bin", [])
+        ])
+    def test_pos_operate_with_list_remove_operations(self, list, bin,
+            expected):
+        """
+        Invoke operate() with list remove operations
+        """
+        key = ('test', 'demo', 'list_key')
+
+        TestOperate.client.operate(key, list)
+
+        key, _, bins = TestOperate.client.get(key)
+
+        assert bins[bin] == expected
+
+    def test_pos_operate_with_list_size(self):
+        """
+        Invoke operate() with list_size operation
+        """
+        key = ('test', 'demo', 'list_key')
+        list = [
+            {"op": aerospike.OP_LIST_SIZE,
+             "bin": "int_bin"}
+        ]
+
+        key, _, bins = TestOperate.client.operate(key, list)
+
+        assert bins == {'int_bin': 4}
+
+    def test_neg_operate_append_items_not_a_list(self):
+        """
+        Invoke operate() with list addition operations negative
+        """
+        key = ('test', 'demo', 'list_key')
+
+        list = [
+            {"op": aerospike.OP_LIST_APPEND_ITEMS,
+             "bin": "int_bin",
+             "val": 7},
+        ]
+
+        try:
+            key, _, bins = TestOperate.client.operate(key, list)
+        except e.ParamError as exception:
+            assert exception.code == -2
+            assert exception.msg == "Value of list_append_items should be of type list"
+
+    @pytest.mark.parametrize("list", [
+        ([{"op": aerospike.OP_LIST_GET,
+             "bin": "int_bin",
+             "index": 7}]), 
+        ([  {"op": aerospike.OP_LIST_CLEAR,
+            "bin": "int_bin"},
+            {"op": aerospike.OP_LIST_POP,
+             "bin": "int_bin",
+             "index": 2}]),
+        ([  {"op": aerospike.OP_LIST_CLEAR,
+            "bin": "int_bin"},
+            {"op": aerospike.OP_LIST_REMOVE,
+             "bin": "int_bin",
+             "index": 2}])
+        ])
+    def test_neg_operate_list_invalid_requests(self, list):
+        """
+        Invoke operate() with list addition operations negative
+        """
+        key = ('test', 'demo', 'list_key')
+        try:
+            key, _, bins = TestOperate.client.operate(key, list)
+        except e.InvalidRequest as exception:
+            assert True == False
+            assert exception.code == 4
+
+    def test_pos_operate_with_list_get_range_val_out_of_bounds(self):
+        """
+        Invoke operate() with list_get_range operation and value out of bounds
+        """
+        key = ('test', 'demo', 'list_key')
+        list = [{"op": aerospike.OP_LIST_GET_RANGE,
+             "bin": "int_bin",
+             "index": 2,
+             "val": 9}] 
+
+        (key, meta, bins) = TestOperate.client.operate(key, list)
+
+        assert bins == {'int_bin': [3, 4]}
+
+    def test_pos_operate_with_list_trim_val_negative(self):
+        """
+        Invoke operate() with list_trimoperation and value is negative
+        """
+        key = ('test', 'demo', 'list_key')
+        list = [{"op": aerospike.OP_LIST_TRIM,
+             "bin": "int_bin",
+             "index": 1,
+             "val": -9}] 
+
+        (key, meta, bins) = TestOperate.client.operate(key, list)
+        
+        (key, meta, bins) = TestOperate.client.get(key)
+
+        assert bins['int_bin'] == [2, 3, 4]
+
+    @pytest.mark.parametrize("list, result, bin, expected", [
+        ([
+            {"op": aerospike.OP_LIST_APPEND,
+             "bin": "string_bin",
+             "val": {"new_val": 1}},
+            {"op": aerospike.OP_LIST_GET,
+             "bin": "string_bin",
+             "index": 4}
+            ], {"string_bin": {"new_val": 1}}, "string_bin", ['a', 'b', 'c',
+                'd', {'new_val': 1}]),
+        ([
+            {"op": aerospike.OP_LIST_APPEND_ITEMS,
+             "bin": "string_bin",
+             "val": [['z', 'x'], ('y', 'w')]},
+            {"op": aerospike.OP_LIST_GET_RANGE,
+             "bin": "string_bin",
+             "index": 3,
+             "val": 3}
+            ], {"string_bin": ['d', ['z', 'x'], ('y', 'w')]}, "string_bin", ['a', 'b', 'c',
+                'd', ['z', 'x'], ('y', 'w')]),
+        ([
+            {"op": aerospike.OP_LIST_INSERT,
+             "bin": "string_bin",
+             "val": True,
+             "index": 2},
+            {"op": aerospike.OP_LIST_POP,
+             "bin": "string_bin",
+             "index": 2}
+        ], {'string_bin': True}, "string_bin", ['a', 'b', 'c', 'd']),
+        ([
+            {"op": aerospike.OP_LIST_INSERT_ITEMS,
+             "bin": "string_bin",
+             "val": [bytearray("abc"), u"xyz"],
+             "index": 2},
+            {"op": aerospike.OP_LIST_POP_RANGE,
+             "bin": "string_bin",
+             "index": 2,
+             "val": 2}
+        ], {'string_bin': [bytearray(b'abc'), 'xyz']}, "string_bin", ['a', 'b',
+            'c', 'd']),
+        ])
+    def test_pos_operate_with_list_operations_different_datatypes(self, list, result, bin,
+            expected):
+        """
+        Invoke operate() with list operations using different datatypes
+        """
+        key = ('test', 'demo', 'list_key')
+
+        key, _, bins = TestOperate.client.operate(key, list)
+
+        assert bins == result
+        
+        key, _, bins = TestOperate.client.get(key)
+
+        assert bins[bin] == expected

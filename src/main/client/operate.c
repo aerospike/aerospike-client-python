@@ -89,6 +89,12 @@ int check_type(AerospikeClient * self, PyObject * py_value, int op, as_error *er
 	} else if ((!PyString_Check(py_value) && !PyUnicode_Check(py_value) && !PyByteArray_Check(py_value) && strcmp(py_value->ob_type->tp_name, "aerospike.null")) && (op == AS_OPERATOR_APPEND || op == AS_OPERATOR_PREPEND)) {
 		as_error_update(err, AEROSPIKE_ERR_PARAM, "Cannot concatenate 'str' and 'non-str' objects");
 		return 1;
+	} else if (!PyList_Check(py_value) && op == (AS_CDT_OP_LIST_APPEND_ITEMS + 1000)) {
+		as_error_update(err, AEROSPIKE_ERR_PARAM, "Value of list_append_items should be of type list");
+		return 1;
+	} else if (!PyList_Check(py_value) && op == (AS_CDT_OP_LIST_INSERT_ITEMS + 1000)) {
+		as_error_update(err, AEROSPIKE_ERR_PARAM, "Value of list_insert_items should be of type list");
+		return 1;
 	}
 	return 0;
 }
@@ -355,7 +361,7 @@ PyObject *  AerospikeClient_Operate_Invoke(
 						operation == (AS_CDT_OP_LIST_REMOVE + 1000) || operation == (AS_CDT_OP_LIST_REMOVE_RANGE + 1000) ||
 						operation == (AS_CDT_OP_LIST_SET + 1000) || operation == (AS_CDT_OP_LIST_GET + 1000) ||
 						operation == (AS_CDT_OP_LIST_GET_RANGE + 1000) || operation == (AS_CDT_OP_LIST_TRIM + 1000)) && !py_index) {
-				as_error_update(err, AEROSPIKE_ERR_PARAM, "List_insert operation needs an index value");
+				as_error_update(err, AEROSPIKE_ERR_PARAM, "Operation needs an index value");
 				goto CLEANUP;
 			}
 
