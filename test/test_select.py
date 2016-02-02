@@ -59,13 +59,16 @@ class TestSelect(TestBaseClass):
 
         key = ("test", "demo", 1)
 
-        key, meta, bins = TestSelect.client.select(key, [])
+        try:
+            key, meta, bins = TestSelect.client.select(key, [])
 
-        assert bins == {}
+            assert bins == {}
 
-        assert meta is not None
+            assert meta is not None
 
-        assert key is not None
+            assert key is not None
+        except e.InvalidRequest:
+            pass
 
     def test_select_with_key_and_bins(self):
 
