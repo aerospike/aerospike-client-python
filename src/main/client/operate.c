@@ -262,7 +262,6 @@ PyObject *  AerospikeClient_Operate_Invoke(
 	PyObject * py_ustr = NULL;
 	PyObject * py_ustr1 = NULL;
 	PyObject * py_bin = NULL;
-	PyObject * py_index = NULL;
 	as_record * rec = NULL;
 
 	as_static_pool static_pool;
@@ -293,6 +292,7 @@ PyObject *  AerospikeClient_Operate_Invoke(
 		if ( PyDict_Check(py_val) ) {
 			PyObject *key_op = NULL, *value = NULL;
 			PyObject * py_value = NULL;
+			PyObject * py_index = NULL;
 			Py_ssize_t pos = 0;
 			while (PyDict_Next(py_val, &pos, &key_op, &value)) {
 				if ( ! PyString_Check(key_op) ) {
@@ -306,7 +306,7 @@ PyObject *  AerospikeClient_Operate_Invoke(
 						py_bin = value;
 					} else if (!strcmp(name, "index")) {
 						py_index = value;
-					} else if(!strcmp(name, "val")) {
+					} else if (!strcmp(name, "val")) {
 						py_value = value;
 					} else {
 						as_error_update(err, AEROSPIKE_ERR_PARAM, "operation can contain only op, bin, index and val keys");
@@ -436,7 +436,7 @@ PyObject *  AerospikeClient_Operate_Invoke(
 						as_operations_add_incr(&ops, bin, offset);
 					} else if ( PyLong_Check(py_value) ) {
 						offset = PyLong_AsLong(py_value);
-						if (offset == -1 && PyErr_Occurred()) {
+						if (offset == -1 && PyErr_Occurred() && self->strict_types) {
 							if (PyErr_ExceptionMatches(PyExc_OverflowError)) {
 								as_error_update(err, AEROSPIKE_ERR_PARAM, "integer value exceeds sys.maxsize");
 								goto CLEANUP;
@@ -461,7 +461,7 @@ PyObject *  AerospikeClient_Operate_Invoke(
 						ops.ttl = PyInt_AsLong(py_value);
 					} else if (py_value && PyLong_Check(py_value)) {
 						ttl = PyLong_AsLong(py_value);
-						if((uint32_t)-1 == ttl) {
+						if((uint32_t)-1 == ttl && self->strict_types) {
 							as_error_update(err, AEROSPIKE_ERR_PARAM, "integer value for ttl exceeds sys.maxsize");
 							goto CLEANUP;
 						}
@@ -520,7 +520,7 @@ PyObject *  AerospikeClient_Operate_Invoke(
 						offset = PyInt_AsLong(py_value);
 					} else if (PyLong_Check(py_value)) {
 						offset = PyLong_AsLong(py_value);
-						if (offset == -1 && PyErr_Occurred()) {
+						if (offset == -1 && PyErr_Occurred() && self->strict_types) {
 							if (PyErr_ExceptionMatches(PyExc_OverflowError)) {
 								as_error_update(err, AEROSPIKE_ERR_PARAM, "integer value exceeds sys.maxsize");
 								goto CLEANUP;
@@ -540,7 +540,7 @@ PyObject *  AerospikeClient_Operate_Invoke(
 						offset = PyInt_AsLong(py_value);
 					} else if (PyLong_Check(py_value)) {
 						offset = PyLong_AsLong(py_value);
-						if (offset == -1 && PyErr_Occurred()) {
+						if (offset == -1 && PyErr_Occurred() && self->strict_types) {
 							if (PyErr_ExceptionMatches(PyExc_OverflowError)) {
 								as_error_update(err, AEROSPIKE_ERR_PARAM, "integer value exceeds sys.maxsize");
 								goto CLEANUP;
@@ -570,7 +570,7 @@ PyObject *  AerospikeClient_Operate_Invoke(
 						offset = PyInt_AsLong(py_value);
 					} else if (PyLong_Check(py_value)) {
 						offset = PyLong_AsLong(py_value);
-						if (offset == -1 && PyErr_Occurred()) {
+						if (offset == -1 && PyErr_Occurred() && self->strict_types) {
 							if (PyErr_ExceptionMatches(PyExc_OverflowError)) {
 								as_error_update(err, AEROSPIKE_ERR_PARAM, "integer value exceeds sys.maxsize");
 								goto CLEANUP;
@@ -587,7 +587,7 @@ PyObject *  AerospikeClient_Operate_Invoke(
 						offset = PyInt_AsLong(py_value);
 					} else if (PyLong_Check(py_value)) {
 						offset = PyLong_AsLong(py_value);
-						if (offset == -1 && PyErr_Occurred()) {
+						if (offset == -1 && PyErr_Occurred() && self->strict_types) {
 							if (PyErr_ExceptionMatches(PyExc_OverflowError)) {
 								as_error_update(err, AEROSPIKE_ERR_PARAM, "integer value exceeds sys.maxsize");
 								goto CLEANUP;
