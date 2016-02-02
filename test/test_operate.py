@@ -1309,7 +1309,16 @@ class TestOperate(object):
             {"op": aerospike.OP_LIST_GET,
              "bin": "int_bin",
              "index": 2}
-        ], {'int_bin': 18}, "int_bin", [1, 2, 18, 4])
+        ], {'int_bin': 18}, "int_bin", [1, 2, 18, 4]),
+        ([
+            {"op": aerospike.OP_LIST_SET,
+             "bin": "int_bin",
+             "index": 6,
+             "val": 10},
+            {"op": aerospike.OP_LIST_GET,
+             "bin": "int_bin",
+             "index": 6}
+        ], {'int_bin': 10}, "int_bin", [1, 2, 3, 4, None, None, 10])
         ])
     def test_pos_operate_with_list_addition_operations(self, list, result, bin,
             expected):
@@ -1448,6 +1457,38 @@ class TestOperate(object):
         (key, meta, bins) = self.as_connection.get(key)
 
         assert bins['int_bin'] == [2, 3, 4]
+
+    def test_neg_operate_list_operation_bin_notlist(self):
+        """
+        Invoke operate() with a list operation and bin does not contain list
+        """
+        key = ('test', 'demo', 1)
+        list = [{"op": aerospike.OP_LIST_INSERT,
+             "bin": "age",
+             "index": 2,
+             "val": 9}] 
+
+        try:
+            (key, meta, bins) = self.as_connection.operate(key, list)
+
+        except e.BinIncompatibleType as exception:
+            assert exception.code == 12
+
+    """
+    def test_pos_operate_with_list_insert_index_negative(self):
+        Invoke operate() with list_insert and item index is a negative value
+        key = ('test', 'demo', 'list_key')
+        list = [{"op": aerospike.OP_LIST_INSERT,
+             "bin": "int_bin",
+             "index": -2,
+             "val": 9}] 
+
+        (key, meta, bins) = self.as_connection.operate(key, list)
+
+        (key, meta, bins) = self.as_connection.get(key)
+
+        assert bins['int_bin'] == [1, 2, 9, 3, 4]
+        """
 
     @pytest.mark.parametrize("list, result, bin, expected", [
         ([
