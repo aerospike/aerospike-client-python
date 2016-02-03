@@ -1474,9 +1474,10 @@ class TestOperate(object):
         except e.BinIncompatibleType as exception:
             assert exception.code == 12
 
-    """
     def test_pos_operate_with_list_insert_index_negative(self):
+        """
         Invoke operate() with list_insert and item index is a negative value
+        """
         key = ('test', 'demo', 'list_key')
         list = [{"op": aerospike.OP_LIST_INSERT,
              "bin": "int_bin",
@@ -1488,7 +1489,6 @@ class TestOperate(object):
         (key, meta, bins) = self.as_connection.get(key)
 
         assert bins['int_bin'] == [1, 2, 9, 3, 4]
-        """
 
     @pytest.mark.parametrize("list, result, bin, expected", [
         ([
