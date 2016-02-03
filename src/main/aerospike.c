@@ -110,7 +110,7 @@ MOD_INIT(aerospike)
 	Py_INCREF(scan);
 	PyModule_AddObject(aerospike, "Scan", (PyObject *) scan);
 
-	for (i = 0; i <= (int)OPERATOR_CONSTANTS_ARR_SIZE; i++) {
+	for (i = 0; i < (int)OPERATOR_CONSTANTS_ARR_SIZE; i++) {
 		PyModule_AddIntConstant(aerospike,
 				operator_constants[i].constant_str,
 				operator_constants[i].constantno);
