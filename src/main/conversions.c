@@ -1197,6 +1197,7 @@ as_status key_to_pyobject(as_error * err, const as_key * key, PyObject ** obj)
 
 static bool bins_to_pyobject_each(const char * name, const as_val * val, void * udata)
 {
+	printf("\nRon");
 	if ( name == NULL || val == NULL ) {
 		return false;
 	}
@@ -1215,34 +1216,6 @@ static bool bins_to_pyobject_each(const char * name, const as_val * val, void * 
 	PyDict_SetItemString(py_bins, name, py_val);
 
 	Py_DECREF(py_val);
-
-	convd->count++;
-	return true;
-}
-
-static bool bins_to_pyobject_list_each(const char * name, const as_val * val, void * udata)
-{
-	if ( name == NULL || val == NULL ) {
-		return false;
-	}
-
-	conversion_data * convd = (conversion_data *) udata;
-	as_error * err = convd->err;
-	PyObject * py_bins = (PyObject *) convd->udata;
-	PyObject * py_val = NULL;
-	PyObject * py_bins_tuple = PyTuple_New(2);
-
-	val_to_pyobject(convd->client, err, val, &py_val);
-
-	if ( err->code != AEROSPIKE_OK ) {
-		return false;
-	}
-
-	PyTuple_SetItem(py_bins_tuple, 0, PyString_FromString(name));
-	PyTuple_SetItem(py_bins_tuple, 1, py_val);
-
-	PyList_SetItem(py_bins, 0, py_bins_tuple);
-	//Py_DECREF(py_val);
 
 	convd->count++;
 	return true;
@@ -1267,34 +1240,6 @@ as_status bins_to_pyobject(AerospikeClient * self, as_error * err, const as_reco
 	};
 
 	as_record_foreach(rec, bins_to_pyobject_each, &convd);
-
-	if ( err->code != AEROSPIKE_OK ) {
-		Py_DECREF(*py_bins);
-		return err->code;
-	}
-
-	return err->code;
-}
-
-as_status bins_to_pyobject_list(AerospikeClient * self, as_error * err, const as_record * rec, PyObject ** py_bins)
-{
-	as_error_reset(err);
-
-	if ( !rec ) {
-		// this should never happen, but if it did...
-		return as_error_update(err, AEROSPIKE_ERR_CLIENT, "record is null");
-	}
-
-	*py_bins = PyList_New(1);
-
-	conversion_data convd = {
-		.err = err,
-		.count = 0,
-		.client = self,
-		.udata = *py_bins
-	};
-
-	as_record_foreach(rec, bins_to_pyobject_list_each, &convd);
 
 	if ( err->code != AEROSPIKE_OK ) {
 		Py_DECREF(*py_bins);
