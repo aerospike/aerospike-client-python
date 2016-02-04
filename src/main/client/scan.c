@@ -105,7 +105,7 @@ PyObject * AerospikeClient_ScanApply_Invoke(
 		goto CLEANUP;
 	}
 
-	if (!PyList_Check(py_args)) {
+	if (py_args && !PyList_Check(py_args)) {
 		as_error_update(&err, AEROSPIKE_ERR_PARAM, "Arguments should be a list");
 		goto CLEANUP;
 	}
@@ -164,10 +164,12 @@ PyObject * AerospikeClient_ScanApply_Invoke(
 		goto CLEANUP;
 	}
 
-	pyobject_to_list(self, &err, py_args, &arglist, &static_pool,
+	if (py_args) {
+		pyobject_to_list(self, &err, py_args, &arglist, &static_pool,
 			SERIALIZER_PYTHON);
-	if (err.code != AEROSPIKE_OK) {
-		goto CLEANUP;
+		if (err.code != AEROSPIKE_OK) {
+			goto CLEANUP;
+		}
 	}
 
 	if (!as_scan_apply_each(&scan, module_p, function_p, arglist)) {
