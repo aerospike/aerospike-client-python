@@ -1243,8 +1243,11 @@ class TestPut(TestBaseClass):
 
         bins = {}
 
-        assert 0 == TestPut.client_strict_types.put(key, bins)
+        try:
+            assert 0 == TestPut.client_strict_types.put(key, bins)
 
-        (key, _, bins) = TestPut.client_strict_types.get(key)
+            (key, _, bins) = TestPut.client_strict_types.get(key)
 
-        assert bins is None
+            assert bins is None
+        except e.InvalidRequest:
+            pass
