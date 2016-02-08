@@ -639,8 +639,9 @@ CLEANUP:
 	if (key->valuep) {
 		as_key_destroy(key);
 	}
-	if (put_val) {
-		as_val_destroy(put_val);
+
+	if (&ops) {
+		as_operations_destroy(&ops);
 	}
 
 	if ( err->code != AEROSPIKE_OK ) {

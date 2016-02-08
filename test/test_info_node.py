@@ -291,7 +291,8 @@ class TestInfoNode(object):
 
         except e.TimeoutError as exception:
             assert exception.code == 9
-            assert exception.msg == ""
+        except e.InvalidHostError as exception:
+            assert exception.code == -4
 
     def test_info_node_positive_without_connection(self):
         """
