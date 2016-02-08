@@ -76,7 +76,7 @@ AerospikeConstants operator_constants[] = {
 MOD_INIT(aerospike)
 {
 
-	static char version[6] = "1.0.61";
+	const char version[8] = "1.0.61";
 	// Makes things "thread-safe"
 	PyEval_InitThreads();
 	int i = 0;
@@ -110,7 +110,7 @@ MOD_INIT(aerospike)
 	Py_INCREF(scan);
 	PyModule_AddObject(aerospike, "Scan", (PyObject *) scan);
 
-	for (i = 0; i <= (int)OPERATOR_CONSTANTS_ARR_SIZE; i++) {
+	for (i = 0; i < (int)OPERATOR_CONSTANTS_ARR_SIZE; i++) {
 		PyModule_AddIntConstant(aerospike,
 				operator_constants[i].constant_str,
 				operator_constants[i].constantno);

@@ -323,11 +323,14 @@ class TestRemovebin(object):
         Invoke remove_bin() no bin
         """
         key = ('test', 'demo', 1)
-        TestRemovebin.client.remove_bin(key, [])
+        try:
+            TestRemovebin.client.remove_bin(key, [])
 
-        (key, _, bins) = TestRemovebin.client.get(key)
+            (key, _, bins) = TestRemovebin.client.get(key)
 
-        assert bins == {'name': 'name1', 'age': 1}
+            assert bins == {'name': 'name1', 'age': 1}
+        except e.InvalidRequest:
+            pass
 
     def test_remove_bin_all_bins(self):
         """

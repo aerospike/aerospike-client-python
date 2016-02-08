@@ -238,13 +238,13 @@ as_status declare_policy_constants(PyObject *aerospike)
 		status = AEROSPIKE_ERR;
 		goto exit;
 	}
-	for (i = 0; i <= (int)AEROSPIKE_CONSTANTS_ARR_SIZE; i++) {
+	for (i = 0; i < (int)AEROSPIKE_CONSTANTS_ARR_SIZE; i++) {
 		PyModule_AddIntConstant(aerospike,
 				aerospike_constants[i].constant_str,
 				aerospike_constants[i].constantno);
 	}
 
-	for (i = 0; i <= (int)AEROSPIKE_JOB_CONSTANTS_ARR_SIZE; i++) {
+	for (i = 0; i < (int)AEROSPIKE_JOB_CONSTANTS_ARR_SIZE; i++) {
 		PyModule_AddStringConstant(aerospike,
 				aerospike_job_constants[i].exposed_job_str,
 				aerospike_job_constants[i].job_str);
