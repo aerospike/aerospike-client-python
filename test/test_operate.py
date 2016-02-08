@@ -30,7 +30,6 @@ class TestOperate(object):
     def teardown_class(cls):
         TestOperate.client_no_typechecks.close()
 
-
     @pytest.fixture(autouse=True)
     def setup(self, request, as_connection):
         """
@@ -77,7 +76,7 @@ class TestOperate(object):
 
         request.addfinalizer(teardown)
 
-    def test_operate_with_no_parameters_negative(self):
+    def test_neg_operate_with_no_parameters(self):
         """
         Invoke opearte() without any mandatory parameters.
         """
@@ -86,26 +85,83 @@ class TestOperate(object):
         assert "Required argument 'key' (pos 1) not found" in str(
             typeError.value)
 
-    def test_operate_with_correct_paramters_positive(self):
-        """
-        Invoke operate() with correct parameters
-        """
-        key = ('test', 'demo', 1)
-        llist = [
-            {"op": aerospike.OPERATOR_PREPEND,
+    @pytest.mark.parametrize("key, llist, expected", [
+        (('test', 'demo', 1), 
+            [{"op": aerospike.OPERATOR_PREPEND,
              "bin": "name",
              "val": u"ram"},
             {"op": aerospike.OPERATOR_INCR,
              "bin": "age",
              "val": 3}, {"op": aerospike.OPERATOR_READ,
-                         "bin": "name"}
-        ]
+                         "bin": "name"}],
+            {'name': 'ramname1'}),
+        (('test', 'demo', 1),                           # with_write_float_value
+            [{"op": aerospike.OPERATOR_WRITE,
+                "bin": "write_bin",
+                "val": {"no": 89.8}}, 
+             {"op": aerospike.OPERATOR_READ,
+                "bin": "write_bin"}],
+             {'write_bin': {u'no': 89.8}}),
+        (('test', 'demo', 1),                            # write positive
+            [{"op": aerospike.OPERATOR_WRITE,
+                "bin": "write_bin",
+                "val": {"no": 89}}, 
+                {"op": aerospike.OPERATOR_READ, "bin": "write_bin"}], 
+            {'write_bin': {u'no': 89}}),
+        (('test', 'demo', 1),                               # write_tuple_positive
+            [{ "op": aerospike.OPERATOR_WRITE,
+                "bin": "write_bin",
+                "val": tuple('abc')}, 
+                {"op": aerospike.OPERATOR_READ, "bin": "write_bin"}],
+            {'write_bin': ('a', 'b', 'c')}),
+        (('test', 'demo', 1),                               # with_bin_bytearray
+            [{"op": aerospike.OPERATOR_PREPEND,
+             "bin": bytearray("asd[;asjk", "utf-8"),
+             "val": u"ram"},
+            {"op": aerospike.OPERATOR_READ,
+                "bin": bytearray("asd[;asjk", "utf-8")}],
+            {'asd[;asjk': 'ram'}),
+        (('test', 'demo', 'bytearray_key'),                  # with_operator append_val bytearray
+            [{"op": aerospike.OPERATOR_APPEND,
+             "bin": "bytearray_bin",
+             "val": bytearray("abc", "utf-8")},
+            {"op": aerospike.OPERATOR_READ,
+             "bin": "bytearray_bin"}],
+             {'bytearray_bin': bytearray("asd;as[d'as;dabc", "utf-8")}),
+        (('test', 'demo', 'bytearray_new'),                   # with_operator append_val bytearray_newrecord
+            [{"op": aerospike.OPERATOR_APPEND,
+             "bin": "bytearray_bin",
+             "val": bytearray("asd;as[d'as;d", "utf-8")},
+            {"op": aerospike.OPERATOR_READ,
+             "bin": "bytearray_bin"}],
+            {'bytearray_bin': bytearray("asd;as[d'as;d", "utf-8")}),
+        (('test', 'demo', 'bytearray_key'),                 #with_operatorprepend_valbytearray
+            [{"op": aerospike.OPERATOR_PREPEND,
+             "bin": "bytearray_bin",
+             "val": bytearray("abc", "utf-8")},
+            {"op": aerospike.OPERATOR_READ,
+             "bin": "bytearray_bin"}],
+            {'bytearray_bin': bytearray("abcasd;as[d'as;d", "utf-8")}),
+        (('test', 'demo', 'bytearray_new'),                 # with_operatorprepend_valbytearray_newrecord
+            [{"op": aerospike.OPERATOR_PREPEND,
+             "bin": "bytearray_bin",
+             "val": bytearray("asd;as[d'as;d", "utf-8")},
+            {"op": aerospike.OPERATOR_READ,
+             "bin": "bytearray_bin"}],
+            {'bytearray_bin': bytearray("asd;as[d'as;d", "utf-8")}),
+
+        ])
+    def test_pos_operate_with_correct_paramters(self, key, llist, expected):
+        """
+        Invoke operate() with correct parameters
+        """
 
         key, _, bins = self.as_connection.operate(key, llist)
 
-        assert bins == {'name': 'ramname1'}
+        assert bins == expected
+        self.as_connection.remove(key)
 
-    def test_operate_with_increment_positive_float_value(self):
+    def test_pos_operate_with_increment_positive_float_value(self):
         """
         Invoke operate() with correct parameters
         """
@@ -124,7 +180,7 @@ class TestOperate(object):
 
         assert bins == {'age': 9.8}
 
-    def test_operate_with_correct_policy_positive(self):
+    def test_pos_operate_with_correct_policy(self):
         """
         Invoke operate() with correct policy
         """
@@ -152,7 +208,7 @@ class TestOperate(object):
 
         self.as_connection.remove(key)
 
-    def test_operate_with_policy_key_digest(self):
+    def test_pos_operate_with_policy_key_digest(self):
         """
         Invoke operate() with correct policy
         """
@@ -176,27 +232,25 @@ class TestOperate(object):
         assert key == ('test', 'demo', None,
                        bytearray(b"asd;as[d\'as;djk;uyfl"))
 
-    def test_operate_with_policy_gen_ignore(self):
-        """
-        Invoke operate() with gen ignore.
-        """
-        key = ('test', 'demo', 1)
-        policy = {
-            'timeout': 1000,
+    @pytest.mark.parametrize("key, policy, meta, llist", [
+        (   ('test', 'demo', 1), 
+            {'timeout': 1000,
             'key': aerospike.POLICY_KEY_SEND,
             'gen': aerospike.POLICY_GEN_IGNORE,
-            'commit_level': aerospike.POLICY_COMMIT_LEVEL_ALL
-        }
-
-        meta = {'gen': 10, 'ttl': 1200}
-
-        llist = [{"op": aerospike.OPERATOR_APPEND,
+            'commit_level': aerospike.POLICY_COMMIT_LEVEL_ALL},
+            {'gen': 10, 'ttl': 1200}, 
+            [{"op": aerospike.OPERATOR_APPEND,
                   "bin": "name",
                   "val": "aa"},
                  {"op": aerospike.OPERATOR_INCR,
                   "bin": "age",
                   "val": 3}, {"op": aerospike.OPERATOR_READ,
-                              "bin": "name"}]
+                              "bin": "name"}]),
+    ])
+    def test_operate_with_policy_gen_ignore(self, key, policy, meta, llist):
+        """
+        Invoke operate() with gen ignore.
+        """
 
         key, meta, bins = self.as_connection.operate(key, llist, meta, policy)
 
@@ -204,7 +258,7 @@ class TestOperate(object):
         assert key == ('test', 'demo', 1, bytearray(
             b'\xb7\xf4\xb88\x89\xe2\xdag\xdeh>\x1d\xf6\x91\x9a\x1e\xac\xc4F\xc8')
         )
-
+    
     def test_operate_with_policy_gen_EQ_positive(self):
         """
         Invoke operate() with gen EQ positive.
@@ -235,71 +289,32 @@ class TestOperate(object):
             b'\xb7\xf4\xb88\x89\xe2\xdag\xdeh>\x1d\xf6\x91\x9a\x1e\xac\xc4F\xc8')
         )
 
-    def test_operate_touch_operation_nobin_withvalue(self):
-        """
-        Invoke operate() with touch value. No bin specified. Value is specified
-        """
-        key = ('test', 'demo', 1)
-        llist = [
-            {"op": aerospike.OPERATOR_TOUCH,
-             "val": 4000}
-        ]
-
-        self.as_connection.operate(key, llist)
-
-        (key, meta) = self.as_connection.exists(key)
-
-        assert meta['ttl'] != None
-
-    def test_operate_touch_operation_withbin_withvalue(self):
-        """
-        Invoke operate() with touch operation. Bin and value both specified
-        """
-        key = ('test', 'demo', 1)
-        llist = [
-            {"op": aerospike.OPERATOR_TOUCH,
+    @pytest.mark.parametrize("key, llist", [
+        ( ('test', 'demo', 1), 
+            [{"op": aerospike.OPERATOR_TOUCH,
+             "val": 4000}]),
+        ( ('test', 'demo', 1),
+            [{"op": aerospike.OPERATOR_TOUCH,
              "bin": "age",
-             "val": 4000}
-        ]
+             "val": 4000}]),
+        ( ('test', 'demo', 1),
+            [{"op": aerospike.OPERATOR_TOUCH,
+             "bin": "age"}]),
+        ( ('test', 'demo', 1),
+            [{"op": aerospike.OPERATOR_TOUCH}]),
+
+        ])
+    def test_operate_touch_operation_with_bin_and_value_combination(self, key, llist):
+        """
+        Invoke operate() with touch value with bin and value combination.
+        """
 
         self.as_connection.operate(key, llist)
 
         (key, meta) = self.as_connection.exists(key)
 
         assert meta['ttl'] != None
-
-    def test_operate_touch_operation_withbin_novalue(self):
-        """
-        Invoke operate() with touch operation. Bin is specified but no value
-        specified
-        """
-        key = ('test', 'demo', 1)
-        llist = [
-            {"op": aerospike.OPERATOR_TOUCH,
-             "bin": "age"}
-        ]
-
-        self.as_connection.operate(key, llist)
-
-        (key, meta) = self.as_connection.exists(key)
-
-        assert meta['ttl'] != None
-
-    def test_operate_touch_operation_nobin_novalue(self):
-        """
-        Invoke operate() with touch operation. Bin and value not specified
-        """
-        key = ('test', 'demo', 1)
-        llist = [
-            {"op": aerospike.OPERATOR_TOUCH}
-        ]
-
-        self.as_connection.operate(key, llist)
-
-        (key, meta) = self.as_connection.exists(key)
-
-        assert meta['ttl'] != None
-
+    
     def test_operate_with_policy_gen_EQ_not_equal(self):
         """
         Invoke operate() with gen not equal.
@@ -378,7 +393,7 @@ class TestOperate(object):
         assert key == ('test', 'demo', None,
                        bytearray(b'\xb7\xf4\xb88\x89\xe2\xdag\xdeh>\x1d\xf6\x91\x9a\x1e\xac\xc4F\xc8'))
 
-    def test_operate_with_policy_gen_GT_positive(self):
+    def test_pos_operate_with_policy_gen_GT(self):
         """
         Invoke operate() with gen GT positive.
         """
@@ -408,7 +423,7 @@ class TestOperate(object):
             b'\xb7\xf4\xb88\x89\xe2\xdag\xdeh>\x1d\xf6\x91\x9a\x1e\xac\xc4F\xc8')
         )
 
-    def test_opearte_with_incorrect_policy_negative(self):
+    def test_neg_opearte_with_incorrect_polic(self):
         """
         Invoke operate() with incorrect policy
         """
@@ -431,7 +446,7 @@ class TestOperate(object):
             assert exception.code == -2
             assert exception.msg == "timeout is invalid"
 
-    def test_opearte_on_same_bin_negative(self):
+    def test_neg_opearte_on_same_bin(self):
         """
         Invoke operate() on same bin
         """
@@ -456,7 +471,7 @@ class TestOperate(object):
         except e.InvalidRequest as exception:
             assert exception.code == 4
 
-    def test_operate_with_nonexistent_key_positive(self):
+    def test_pos_operate_with_nonexistent_key(self):
         """
         Invoke operate() with non-existent key
         """
@@ -472,7 +487,7 @@ class TestOperate(object):
         assert bins == {'loc': 'mumbai'}
         self.as_connection.remove(key1)
 
-    def test_operate_with_nonexistent_bin_positive(self):
+    def test_pos_operate_with_nonexistent_bin(self):
         """
         Invoke operate() with non-existent bin
         """
@@ -480,14 +495,15 @@ class TestOperate(object):
         llist = [
             {"op": aerospike.OPERATOR_APPEND,
              "bin": "addr",
-             "val": "pune"}, {"op": aerospike.OPERATOR_READ,
+             "val": "pune"}, 
+             {"op": aerospike.OPERATOR_READ,
                               "bin": "addr"}
         ]
         key, _, bins = self.as_connection.operate(key, llist)
 
         assert bins == {'addr': 'pune'}
 
-    def test_operate_empty_string_key_negative(self):
+    def test_neg_operate_empty_string_key(self):
         """
         Invoke operate() with empty string key
         """
@@ -505,7 +521,7 @@ class TestOperate(object):
             assert exception.code == -2
             assert exception.msg == "key is invalid"
 
-    def test_operate_with_extra_parameter_negative(self):
+    def test_neg_operate_with_extra_parameter(self):
         """
         Invoke operate() with extra parameter.
         """
@@ -522,7 +538,7 @@ class TestOperate(object):
         assert "operate() takes at most 4 arguments (5 given)" in str(
             typeError.value)
 
-    def test_operate_policy_is_string_negative(self):
+    def test_neg_operate_policy_is_string(self):
         """
         Invoke operate() with policy is string
         """
@@ -541,7 +557,7 @@ class TestOperate(object):
             assert exception.code == -2
             assert exception.msg == "policy must be a dict"
 
-    def test_operate_key_is_none_negative(self):
+    def test_neg_operate_key_is_none(self):
         """
         Invoke operate() with key is none
         """
@@ -559,48 +575,48 @@ class TestOperate(object):
             assert exception.code == -2
             assert exception.msg == "key is invalid"
 
-    def test_operate_append_withot_value_parameter_negative(self):
+    @pytest.mark.parametrize("key, policy, llist, ex_code, ex_msg", [
+        ( ('test', 'demo', 1), 
+          {'timeout': 1000}, 
+          [ {"op": aerospike.OPERATOR_APPEND,
+                  "bin": "name"},
+            {"op": aerospike.OPERATOR_INCR,
+             "bin": "age",
+             "val": 3}],
+             -2,
+             "Value should be given"),
+        ( ('test', 'demo', 1),
+            {'timeout': 1000},
+            [{ "op": aerospike.OPERATOR_APPEND,
+                "bin": "name",
+                "val": 3,
+                "aa": 89},],
+            -2,
+            "operation can contain only op, bin and val keys"),
+        ( ('test', 'demo', 1),                  # with_incr_value_string
+            {   'timeout': 1000,
+                'key': aerospike.POLICY_KEY_SEND,
+                'commit_level': aerospike.POLICY_COMMIT_LEVEL_MASTER },
+            [{"op": aerospike.OPERATOR_INCR,
+                      "bin": "age",
+                      "val": "3"}, {"op": aerospike.OPERATOR_READ,
+                                    "bin": "age"}],
+            -2, 
+            "Unsupported operand type(s) for +: only 'int' allowed"),
+        ])
+    def test_neg_operate_append_without_value_parameter(self, key, policy, llist, ex_code, ex_msg):
         """
         Invoke operate() with append operation and append val is not given
         """
-        key = ('test', 'demo', 1)
-        policy = {'timeout': 1000}
-
-        llist = [{"op": aerospike.OPERATOR_APPEND,
-                  "bin": "name"},
-                 {"op": aerospike.OPERATOR_INCR,
-                  "bin": "age",
-                  "val": 3}]
 
         try:
             self.as_connection.operate(key, llist, {}, policy)
 
         except e.ParamError as exception:
-            assert exception.code == -2
-            assert exception.msg == "Value should be given"
+            assert exception.code == ex_code
+            assert exception.msg == ex_msg
 
-    def test_operate_with_extra_parameter_negative2(self):
-        """
-        Invoke operate() with more than 3 parameters given
-        """
-        key = ('test', 'demo', 1)
-        policy = {'timeout': 1000}
-
-        llist = [{
-            "op": aerospike.OPERATOR_APPEND,
-            "bin": "name",
-            "val": 3,
-            "aa": 89
-        }, ]
-
-        try:
-            self.as_connection.operate(key, llist, {}, policy)
-
-        except e.ParamError as exception:
-            assert exception.code == -2
-            assert exception.msg == "operation can contain only op, bin and val keys"
-
-    def test_operate_append_value_integer_negative(self):
+    def test_neg_operate_append_value_integer(self):
         """
         Invoke operate() with append value is of type integer
         """
@@ -619,7 +635,7 @@ class TestOperate(object):
             assert exception.code == -2
             assert exception.msg == "Cannot concatenate 'str' and 'non-str' objects"
 
-    def test_operate_increment_nonexistent_key(self):
+    def test_pos_operate_increment_nonexistent_key(self):
         """
         Invoke operate() with increment with nonexistent_key
         """
@@ -634,7 +650,7 @@ class TestOperate(object):
 
         self.as_connection.remove(key)
 
-    def test_operate_increment_nonexistent_bin(self):
+    def test_pos_operate_increment_nonexistent_bin(self):
         """
         Invoke operate() with increment with nonexistent_bin
         """
@@ -647,57 +663,7 @@ class TestOperate(object):
 
         assert bins == {"my_age": 5, "age": 1, "name": "name1"}
 
-    def test_operate_with_write_positive_float_value(self):
-        """
-        Invoke operate() with write operation float value
-        """
-        if TestOperate.skip_old_server is True:
-            pytest.skip("Server does not support operation")
-        key = ('test', 'demo', 1)
-        llist = [{
-            "op": aerospike.OPERATOR_WRITE,
-            "bin": "write_bin",
-            "val": {"no": 89.8}
-        }, {"op": aerospike.OPERATOR_READ,
-            "bin": "write_bin"}]
-
-        key, _, bins = self.as_connection.operate(key, llist)
-
-        assert bins == {'write_bin': {u'no': 89.8}}
-
-    def test_operate_with_write_positive(self):
-        """
-        Invoke operate() with write operation
-        """
-        key = ('test', 'demo', 1)
-        llist = [{
-            "op": aerospike.OPERATOR_WRITE,
-            "bin": "write_bin",
-            "val": {"no": 89}
-        }, {"op": aerospike.OPERATOR_READ,
-            "bin": "write_bin"}]
-
-        key, _, bins = self.as_connection.operate(key, llist)
-
-        assert bins == {'write_bin': {u'no': 89}}
-
-    def test_operate_with_write_tuple_positive(self):
-        """
-        Invoke operate() with write operation
-        """
-        key = ('test', 'demo', 1)
-        llist = [{
-            "op": aerospike.OPERATOR_WRITE,
-            "bin": "write_bin",
-            "val": tuple('abc')
-        }, {"op": aerospike.OPERATOR_READ,
-            "bin": "write_bin"}]
-
-        key, _, bins = self.as_connection.operate(key, llist)
-
-        assert bins == {'write_bin': ('a', 'b', 'c')}
-
-    def test_operate_with_correct_paramters_positive_without_connection(self):
+    def test_pos_operate_with_correct_paramters_without_connection(self):
         """
         Invoke operate() with correct parameters without connection
         """
@@ -719,127 +685,8 @@ class TestOperate(object):
 
         except e.ClusterError as exception:
             assert exception.code == 11
-            assert exception.msg == 'No connection to aerospike cluster'
 
-    def test_operate_with_incr_value_string(self):
-        """
-        Invoke operate() with incr value negative
-        """
-        try:
-            key = ('test', 'demo', 1)
-            policy = {
-                'timeout': 1000,
-                'key': aerospike.POLICY_KEY_SEND,
-                'commit_level': aerospike.POLICY_COMMIT_LEVEL_MASTER
-            }
-
-            llist = [{"op": aerospike.OPERATOR_INCR,
-                      "bin": "age",
-                      "val": "3"}, {"op": aerospike.OPERATOR_READ,
-                                    "bin": "age"}]
-
-            key, _, _ = self.as_connection.operate(key, llist, {}, policy)
-
-        except e.ParamError as exception:
-            assert exception.code == -2
-            assert exception.msg == "Unsupported operand type(s) for +: only 'int' allowed"
-
-        self.as_connection.remove(key)
-
-    def test_operate_with_bin_bytearray_positive(self):
-        """
-        Invoke operate() with correct parameters
-        """
-        key = ('test', 'demo', 1)
-        llist = [
-            {"op": aerospike.OPERATOR_PREPEND,
-             "bin": bytearray("asd[;asjk", "utf-8"),
-             "val": u"ram"},
-            {"op": aerospike.OPERATOR_READ,
-                "bin": bytearray("asd[;asjk", "utf-8")}
-        ]
-
-        key, _, bins = self.as_connection.operate(key, llist)
-
-        assert bins == {'asd[;asjk': 'ram'}
-
-    def test_operate_with_operatorappend_valbytearray(self):
-        """
-        Invoke operate() with operator as append and value is a bytearray
-        """
-        key = ('test', 'demo', 'bytearray_key')
-        llist = [
-            {"op": aerospike.OPERATOR_APPEND,
-             "bin": "bytearray_bin",
-             "val": bytearray("abc", "utf-8")},
-            {"op": aerospike.OPERATOR_READ,
-             "bin": "bytearray_bin"}
-        ]
-
-        key, _, bins = self.as_connection.operate(key, llist)
-
-        assert bins == {
-            'bytearray_bin': bytearray("asd;as[d'as;dabc", "utf-8")}
-
-    def test_operate_with_operatorappend_valbytearray_newrecord(self):
-        """
-        Invoke operate() with operator as append and value is a bytearray and a
-        new record(does not exist)
-        """
-        key = ('test', 'demo', 'bytearray_new')
-        llist = [
-            {"op": aerospike.OPERATOR_APPEND,
-             "bin": "bytearray_bin",
-             "val": bytearray("asd;as[d'as;d", "utf-8")},
-            {"op": aerospike.OPERATOR_READ,
-             "bin": "bytearray_bin"}
-        ]
-
-        key, _, bins = self.as_connection.operate(key, llist)
-
-        assert bins == {'bytearray_bin': bytearray("asd;as[d'as;d", "utf-8")}
-
-        self.as_connection.remove(key)
-
-    def test_operate_with_operatorprepend_valbytearray(self):
-        """
-        Invoke operate() with operator as prepend and value is a bytearray
-        """
-        key = ('test', 'demo', 'bytearray_key')
-        llist = [
-            {"op": aerospike.OPERATOR_PREPEND,
-             "bin": "bytearray_bin",
-             "val": bytearray("abc", "utf-8")},
-            {"op": aerospike.OPERATOR_READ,
-             "bin": "bytearray_bin"}
-        ]
-
-        key, _, bins = self.as_connection.operate(key, llist)
-
-        assert bins == {
-            'bytearray_bin': bytearray("abcasd;as[d'as;d", "utf-8")}
-
-    def test_operate_with_operatorprepend_valbytearray_newrecord(self):
-        """
-        Invoke operate() with operator as prepend and value is a bytearray
-        and a new record(does not exist)
-        """
-        key = ('test', 'demo', 'bytearray_new')
-        llist = [
-            {"op": aerospike.OPERATOR_PREPEND,
-             "bin": "bytearray_bin",
-             "val": bytearray("asd;as[d'as;d", "utf-8")},
-            {"op": aerospike.OPERATOR_READ,
-             "bin": "bytearray_bin"}
-        ]
-
-        key, _, bins = self.as_connection.operate(key, llist)
-
-        assert bins == {'bytearray_bin': bytearray("asd;as[d'as;d", "utf-8")}
-
-        self.as_connection.remove(key)
-
-    def test_operate_write_set_to_aerospike_null(self):
+    def test_pos_operate_write_set_to_aerospike_null(self):
         """
         Invoke operate() with write command with bin set to aerospike_null
         """
@@ -871,234 +718,106 @@ class TestOperate(object):
 
         self.as_connection.remove(key)
 
-    def test_operate_prepend_with_int_new_record(self):
+    @pytest.mark.parametrize("key, llist, expected", [
+        (('test', 'demo', 'prepend_int'),                   # prepend_with_int
+            [{
+                "op": aerospike.OPERATOR_PREPEND,
+                "bin": "age",
+                "val": 4},
+            {
+                "op": aerospike.OPERATOR_READ,
+                "bin": "age"
+            }],
+            {'age': 4}),
+        (('test', 'demo', 'append_dict'),                  # append_with_dict        
+            [{
+                "op": aerospike.OPERATOR_APPEND,
+                "bin": "dict",
+                "val": {"a": 1, "b": 2}},
+            {
+                "op": aerospike.OPERATOR_READ,
+                "bin": "dict"
+            }],
+            {'dict': {"a": 1, "b": 2}}),
+        (('test', 'demo', 'incr_string'),               # incr_with_string
+          [{
+                "op": aerospike.OPERATOR_INCR,
+                "bin": "name",
+                "val": "aerospike"},
+            {
+                "op": aerospike.OPERATOR_READ,
+                "bin": "name"
+            }],
+            {'name': 'aerospike'}),
+        ])
+    def test_pos_operate_new_record(self, key, llist, expected):
         """
         Invoke operate() with prepend command on a new record
         """
-        key = ('test', 'demo', 'prepend_int')
-
-        llist = [
-            {
-                "op": aerospike.OPERATOR_PREPEND,
-                "bin": "age",
-                "val": 4
-            },
-            {
-                "op": aerospike.OPERATOR_READ,
-                "bin": "age"
-            }
-        ]
-
         (key, _, bins) = TestOperate.client_no_typechecks.operate(key, llist)
-
-        assert {'age': 4} == bins
-
+        assert expected == bins
         TestOperate.client_no_typechecks.remove(key)
 
-    def test_operate_prepend_with_int_existing_record(self):
-        """
-        Invoke operate() with prepend command on a existing record
-        """
-        key = ('test', 'demo', 1)
-
-        llist = [
-            {
+    @pytest.mark.parametrize("key, llist", [
+        (('test', 'demo', 1), 
+            [{                                          # int
                 "op": aerospike.OPERATOR_PREPEND,
                 "bin": "age",
-                "val": 4
-            },
+                "val": 4},
             {
                 "op": aerospike.OPERATOR_READ,
                 "bin": "age"
-            }
-        ]
-
-        try:
-            (key, _, _) = TestOperate.client_no_typechecks.operate(key, llist)
-
-        except e.BinIncompatibleType as exception:
-            assert exception.code == 12
-
-        TestOperate.client_no_typechecks.remove(key)
-
-    def test_operate_prepend_with_list_existing_record(self):
-        """
-        Invoke operate() with prepend command on a existing record
-        """
-        key = ('test', 'demo', 'existing_key')
-
-        (key, _) = TestOperate.client_no_typechecks.exists(key)
-
-        llist = [
-            {
+            }]), 
+        (('test', 'demo', 'existing_key'),                             # Existing list
+            [{
                 "op": aerospike.OPERATOR_PREPEND,
                 "bin": "list",
-                "val": ['c']
-            },
+                "val": ['c']},
             {
                 "op": aerospike.OPERATOR_READ,
                 "bin": "list"
-            }
-        ]
-
-        exception_raised = False
-        try:
-            (key, _, _) = TestOperate.client_no_typechecks.operate(key, llist)
-        except e.BinIncompatibleType as exception:
-            assert exception.code == 12
-            exception_raised = True
-        assert exception_raised is True
-
-        TestOperate.client_no_typechecks.remove(key)
-
-    def test_operate_append_with_dict_new_record(self):
-        """
-        Invoke operate() with append command on a new record
-        """
-        key = ('test', 'demo', 'append_dict')
-
-        llist = [
-            {
+            }]),
+        (('test', 'demo', 'existing_key'),                            # Existing dict
+            [{
                 "op": aerospike.OPERATOR_APPEND,
                 "bin": "dict",
-                "val": {"a": 1, "b": 2}
-            },
+                "val": {"c": 2}},
             {
                 "op": aerospike.OPERATOR_READ,
                 "bin": "dict"
-            }
-        ]
-
-        (key, _, bins) = TestOperate.client_no_typechecks.operate(key, llist)
-
-        assert {'dict': {"a": 1, "b": 2}} == bins
-
-        TestOperate.client_no_typechecks.remove(key)
-
-    def test_operate_append_with_dict_existing_record(self):
-        """
-        Invoke operate() with append command on a existing record
-        """
-        key = ('test', 'demo', 'existing_key')
-
-        (key, _) = TestOperate.client_no_typechecks.exists(key)
-
-        llist = [
-            {
-                "op": aerospike.OPERATOR_APPEND,
-                "bin": "dict",
-                "val": {"c": 2}
-            },
-            {
-                "op": aerospike.OPERATOR_READ,
-                "bin": "dict"
-            }
-        ]
-
-        exception_raised = False
-        try:
-            (key, _, _) = TestOperate.client_no_typechecks.operate(key, llist)
-        except e.BinIncompatibleType as exception:
-            assert exception.code == 12
-            exception_raised = True
-        assert exception_raised is True
-
-        TestOperate.client_no_typechecks.remove(key)
-
-    def test_operate_append_with_float_existing_record(self):
-        """
-        Invoke operate() with append command on a existing record
-        """
-        key = ('test', 'demo', 'existing_key')
-
-        llist = [
-            {
+            }]),
+        (('test', 'demo', 'existing_key'),                          # Exiting float
+            [{
                 "op": aerospike.OPERATOR_APPEND,
                 "bin": "float",
-                "val": 3.4
-            },
+                "val": 3.4},
             {
                 "op": aerospike.OPERATOR_READ,
                 "bin": "float"
-            }
-        ]
-
-        try:
-            (key, _, _) = TestOperate.client_no_typechecks.operate(key, llist)
-
-        except e.BinIncompatibleType as exception:
-            assert exception.code == 12
-
-        TestOperate.client_no_typechecks.remove(key)
-
-    def test_operate_incr_with_string_new_record(self):
-        """
-        Invoke operate() with incr command on a new record
-        """
-        key = ('test', 'demo', 'incr_string')
-
-        llist = [
-            {
+            }]),
+        (('test', 'demo', 1),                                       # Existing string
+            [{
                 "op": aerospike.OPERATOR_INCR,
                 "bin": "name",
-                "val": "aerospike"
-            },
+                "val": "aerospike"},
             {
                 "op": aerospike.OPERATOR_READ,
                 "bin": "name"
-            }
-        ]
-
-        (key, _, bins) = TestOperate.client_no_typechecks.operate(key, llist)
-
-        assert {'name': 'aerospike'} == bins
-
-        TestOperate.client_no_typechecks.remove(key)
-
-    def test_operate_incr_with_string_existing_record(self):
-        """
-        Invoke operate() with incr command on a existing record
-        """
-        key = ('test', 'demo', 1)
-
-        llist = [
-            {
-                "op": aerospike.OPERATOR_INCR,
-                "bin": "name",
-                "val": "aerospike"
-            },
-            {
-                "op": aerospike.OPERATOR_READ,
-                "bin": "name"
-            }
-        ]
-
-        try:
-            (key, _, _) = TestOperate.client_no_typechecks.operate(key, llist)
-
-        except e.BinIncompatibleType as exception:
-            assert exception.code == 12
-
-        TestOperate.client_no_typechecks.remove(key)
-
-    def test_operate_incr_with_bytearray_existing_record(self):
-        """
-        Invoke operate() with incr command on a new record
-        """
-        key = ('test', 'demo', 'existing_key')
-
-        llist = [
-            {
+            }]),
+        (('test', 'demo', 'existing_key'),                          # Existing Bytearray
+            [{
                 "op": aerospike.OPERATOR_INCR,
                 "bin": "bytearray",
-                "val": bytearray("abc", "utf-8")
-            },
+                "val": bytearray("abc", "utf-8")},
             {
                 "op": aerospike.OPERATOR_READ,
                 "bin": "bytearray"
-            }
-        ]
-
+            }]),
+        ])
+    def test_pos_operate_prepend_with_existing_record(self, key, llist):
+        """
+        Invoke operate() with prepend command on a existing record
+        """
         try:
             (key, _, _) = TestOperate.client_no_typechecks.operate(key, llist)
 
@@ -1132,7 +851,7 @@ class TestOperate(object):
             'coordinates': [42.34, 58.62], 'type': 'Point'}
         TestOperate.client_no_typechecks.remove(key)
 
-    def test_operate_with_bin_length_extra(self):
+    def test_neg_operate_with_bin_length_extra(self):
         """
         Invoke operate() with bin length extra. Strict types enabled
         """
@@ -1158,7 +877,7 @@ class TestOperate(object):
         except e.BinNameError as exception:
             assert exception.code == 21
 
-    def test_operate_with_bin_length_extra_nostricttypes(self):
+    def test_pos_operate_with_bin_length_extra_nostricttypes(self):
         """
         Invoke operate() with bin length extra. Strict types disabled
         """
@@ -1183,7 +902,7 @@ class TestOperate(object):
 
         assert bins == {"name": "ramname1", "age": 1}
 
-    def test_operate_with_command_invalid(self):
+    def test_neg_operate_with_command_invalid(self):
         """
         Invoke operate() with an invalid command. Strict types enabled
         """
@@ -1205,7 +924,7 @@ class TestOperate(object):
         except e.ParamError as exception:
             assert exception.code == -2
 
-    def test_operate_with_command_invalid_nostricttypes(self):
+    def test_pos_operate_with_command_invalid_nostricttypes(self):
         """
         Invoke operate() with an invalid command. Strict types disabled
         """
@@ -1225,7 +944,7 @@ class TestOperate(object):
 
         assert bins == {'name': 'ramname1'}
 
-    def test_operate_prepend_set_to_aerospike_null(self):
+    def test_pos_operate_prepend_set_to_aerospike_null(self):
         """
         Invoke operate() with prepend command with bin set to aerospike_null
         """
