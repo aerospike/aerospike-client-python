@@ -42,9 +42,11 @@ class TestOperate(object):
             key = ('test', 'demo', i)
             rec = {'name': 'name%s' % (str(i)), 'age': i}
             as_connection.put(key, rec)
+
         key = ('test', 'demo', 6)
         rec = {"age": 6.3}
         as_connection.put(key, rec)
+        keys.append(key)
 
         key = ('test', 'demo', 'bytearray_key')
         rec = {"bytearray_bin": bytearray("asd;as[d'as;d", "utf-8")}
@@ -181,6 +183,7 @@ class TestOperate(object):
         assert bins == {'name': 'name1aa'}
         assert key == ('test', 'demo', None,
                        bytearray(b"asd;as[d\'as;djk;uyfl"))
+        self.as_connection.remove(key)
 
     def test_operate_with_policy_gen_ignore(self):
         """
