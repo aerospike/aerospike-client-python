@@ -450,6 +450,7 @@ static PyObject *  AerospikeClient_OperateOrdered_Invoke(
 		as_error_update(err, err->code, NULL);
 		goto CLEANUP;
 	}
+
 	if (rec) {
 		py_rec = PyTuple_New(3);
 		PyObject * py_rec_key = NULL;
@@ -465,12 +466,16 @@ static PyObject *  AerospikeClient_OperateOrdered_Invoke(
 		for (i = 0; i < size; i++) {
 			if (ops.binops.entries[i].op == AS_OPERATOR_READ) {
 				PyObject *py_value = PyDict_GetItemString(py_rec_bins, ops.binops.entries[i].bin.name);
-				//Py_INCREF(py_value);
-
 				PyObject *py_rec_tuple = PyTuple_New(2);
-				PyTuple_SetItem(py_rec_tuple, 0, PyString_FromString(ops.binops.entries[i].bin.name));
-				PyTuple_SetItem(py_rec_tuple, 1, py_value);
-
+				if (py_value) {
+					Py_INCREF(py_value);
+					PyTuple_SetItem(py_rec_tuple, 0, PyString_FromString(ops.binops.entries[i].bin.name));
+					PyTuple_SetItem(py_rec_tuple, 1, py_value);
+				} else {
+					Py_INCREF(Py_None);
+					PyTuple_SetItem(py_rec_tuple, 0, PyString_FromString(ops.binops.entries[i].bin.name));
+					PyTuple_SetItem(py_rec_tuple, 1, Py_None);
+				}
 				PyList_SetItem(py_bins, i, py_rec_tuple);
 			} else {
 				Py_INCREF(Py_None);
@@ -482,7 +487,7 @@ static PyObject *  AerospikeClient_OperateOrdered_Invoke(
 		PyTuple_SetItem(py_rec, 1, py_rec_meta);
 		PyTuple_SetItem(py_rec, 2, py_bins);
 
-		//Py_DECREF(py_rec_bins);
+		Py_DECREF(py_rec_bins);
 	}
 
 CLEANUP:
@@ -498,8 +503,9 @@ CLEANUP:
 	if (key->valuep) {
 		as_key_destroy(key);
 	}
-	if (put_val) {
-		as_val_destroy(put_val);
+
+	if (&ops) {
+		as_operations_destroy(&ops);
 	}
 
 	if ( err->code != AEROSPIKE_OK ) {
