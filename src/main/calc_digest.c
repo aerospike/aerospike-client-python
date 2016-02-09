@@ -24,7 +24,6 @@
 #include "client.h"
 #include "conversions.h"
 #include "exceptions.h"
-#include "policy.h"
 #include "module_functions.h"
 
 static PyObject * Aerospike_Calc_Digest_Invoke(PyObject * py_ns, PyObject *py_set, PyObject * py_key)
@@ -78,12 +77,11 @@ static PyObject * Aerospike_Calc_Digest_Invoke(PyObject * py_ns, PyObject *py_se
 
 	// Invoke operation
 	digest = as_key_digest(&key);
-	if(digest->init) {
+	if (digest->init) {
 		len = sizeof(digest->value);
 		PyObject *py_len = PyLong_FromSize_t(len);
 		Py_ssize_t py_length =  PyLong_AsSsize_t(py_len);
-		py_value = PyByteArray_FromStringAndSize((const char *)digest->value,
-				py_length);
+		py_value = PyByteArray_FromStringAndSize((const char *)digest->value, py_length);
 		Py_DECREF(py_len);
 	} else {
 		as_error_update(&err, AEROSPIKE_ERR_CLIENT, "Digest could not be calculated");

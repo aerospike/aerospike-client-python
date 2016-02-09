@@ -63,7 +63,7 @@ static PyMethodDef Aerospike_Methods[] = {
 
 	//Calculate the digest of a key
 	{"calc_digest",
-		(PyCFunction)Aerospike_Calc_Digest,             			METH_VARARGS | METH_KEYWORDS,
+		(PyCFunction)Aerospike_Calc_Digest,                         METH_VARARGS | METH_KEYWORDS,
 		"Calculate the digest of a key"},
 	{NULL}
 };
