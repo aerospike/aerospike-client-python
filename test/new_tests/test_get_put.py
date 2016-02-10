@@ -6,9 +6,9 @@ try:
     import cPickle as pickle
 except:
     import pickle
-from collections import OrderedDict
-from .test_base_class import TestBaseClass 
 
+# from collections import OrderedDict
+from .test_base_class import TestBaseClass
 aerospike = pytest.importorskip("aerospike")
 try:
     import aerospike
@@ -16,6 +16,7 @@ try:
 except:
     print("Please install aerospike python client.")
     sys.exit(1)
+
 
 class SomeClass(object):
     pass
@@ -48,9 +49,9 @@ class TestGetPut():
         (('test', 'demo', 'map_key'), {'names': {'name': 'John', 'age': 24}}),
         (('test', 'demo', 'map_key_float'), {"double_map": {"1": 3.141,"2": 4.123,"3": 6.285}}),
         (('test', 'demo', 'map_key_unicode'), {'a': {u'aa': u'11'}, 'b': {u'bb': u'22'}}),
-        (('test', 'demo', 1),
-            {'odict': OrderedDict(sorted({'banana': 3, 'apple': 4, 'pear': 1, 'orange': 2}.items(), 
-                key=lambda t: t[0]))}),
+        #        (('test', 'demo', 1),
+        #            {'odict': OrderedDict(sorted({'banana': 3, 'apple': 4, 'pear': 1, 'orange': 2}.items(),
+        #                key=lambda t: t[0]))}),
 
         # Tuple Data
         (('test', 'demo', 'tuple_key'), {'tuple_seq': tuple('abc')}),
@@ -780,13 +781,13 @@ class TestGetPut():
             assert exception.code == 11
 
     @pytest.mark.parametrize("key, record, meta, policy, ex_code, ex_msg", [
-        (('test', 'demo', 1), {'name': 'john'}, 
+        (('test', 'demo', 1), {'name': 'john'},
             {'gen': "wrong", 'ttl': 25000}, {'timeout': 1000},  #Gen as string
             -2, "Generation should be an int or long"),
-        (('test', 'demo', 1), {'name': 'john'}, 
+        (('test', 'demo', 1), {'name': 'john'},
             {'gen': 3, 'ttl': "25000"}, {'timeout': 1000},      # ttl as string
             -2, "TTL should be an int or long"),
-        (('test', 'demo', 1), {'name': 'john'}, 
+        (('test', 'demo', 1), {'name': 'john'},
             {'gen': 3, 'ttl': 25000}, {'timeout': "1000"},      # Timeout as string
             -2, "timeout is invalid"),
         (('test', 'demo', 1), {'name': 'john'},             #Policy as string

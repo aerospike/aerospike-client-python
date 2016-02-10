@@ -266,14 +266,14 @@ class TestRemove():
             'timeout': 1000,
             'retry': aerospike.POLICY_RETRY_ONCE,
             'key': aerospike.POLICY_KEY_SEND,
-            'gen': aerospike.POLICY_GEN_GT 
+            'gen': aerospike.POLICY_GEN_GT
         }
 
-        (key, meta) = self.as_connection.exists(key) # Record had GEN = x
-        lesserGen = meta['gen'] -1  #Compute GEN = x - 1
+        (key, meta) = self.as_connection.exists(key)
+        lesserGen = meta['gen'] - 1
 
         with pytest.raises(e.RecordGenerationError) as exception:
-            self.as_connection.remove(key, {"gen", lesserGen}, policy)
+            self.as_connection.remove(key, ("gen", lesserGen), policy)
             (code, msg, _, _) = exception.value
             assert msg == "AEROSPIKE_ERR_RECORD_GENERATION"
             assert code == 3

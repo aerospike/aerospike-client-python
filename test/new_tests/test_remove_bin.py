@@ -140,9 +140,8 @@ class TestRemovebin(object):
         key = ('test', 'demo', 1)
         record = {'name': "jeff", 'age': 45}
         put_data(self.as_connection, key, record)
-        self.as_connection.remove_bin(key, [])
-
         try:
+            self.as_connection.remove_bin(key, [])
             (key, _, bins) = self.as_connection.get(key)
             assert bins == record
         except e.InvalidRequest:
