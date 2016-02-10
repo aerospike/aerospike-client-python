@@ -420,6 +420,8 @@ as_status pyobject_to_val(AerospikeClient * self, as_error * err, PyObject * py_
 		}
 	} else if (Py_None == py_obj) {
 		*val = as_val_reserve(&as_nil);
+	} else if (!strcmp(py_obj->ob_type->tp_name, "aerospike.null")) {
+		*val = (as_val *) &as_nil;
 	} else {
 		if (aerospike_has_double(self->as) && PyFloat_Check(py_obj)) {
 			double d = PyFloat_AsDouble(py_obj);

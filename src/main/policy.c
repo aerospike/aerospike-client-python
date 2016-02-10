@@ -21,6 +21,7 @@
 #include <aerospike/as_policy.h>
 #include <aerospike/as_status.h>
 #include <aerospike/as_admin.h>
+#include <aerospike/as_operations.h>
 #include <aerospike/aerospike_index.h>
 #include "aerospike/as_scan.h"
 #include "aerospike/as_job.h"
@@ -112,6 +113,20 @@ AerospikeConstants aerospike_constants[] = {
 	{ AS_PRIVILEGE_READ                     ,   "PRIV_READ"},
 	{ AS_PRIVILEGE_READ_WRITE               ,   "PRIV_READ_WRITE"},
 	{ AS_PRIVILEGE_READ_WRITE_UDF           ,   "PRIV_READ_WRITE_UDF"},
+	{ AS_CDT_OP_LIST_APPEND + 1000			,   "OP_LIST_APPEND"},
+	{ AS_CDT_OP_LIST_APPEND_ITEMS + 1000	,   "OP_LIST_APPEND_ITEMS"},
+	{ AS_CDT_OP_LIST_INSERT + 1000			,   "OP_LIST_INSERT"},
+	{ AS_CDT_OP_LIST_INSERT_ITEMS + 1000	,   "OP_LIST_INSERT_ITEMS"},
+	{ AS_CDT_OP_LIST_POP + 1000				,   "OP_LIST_POP"},
+	{ AS_CDT_OP_LIST_POP_RANGE + 1000		,   "OP_LIST_POP_RANGE"},
+	{ AS_CDT_OP_LIST_REMOVE + 1000			,   "OP_LIST_REMOVE"},
+	{ AS_CDT_OP_LIST_REMOVE_RANGE + 1000	,   "OP_LIST_REMOVE_RANGE"},
+	{ AS_CDT_OP_LIST_CLEAR + 1000			,   "OP_LIST_CLEAR"},
+	{ AS_CDT_OP_LIST_SET + 1000				,   "OP_LIST_SET"},
+	{ AS_CDT_OP_LIST_GET + 1000				,   "OP_LIST_GET"},
+	{ AS_CDT_OP_LIST_GET_RANGE + 1000		,   "OP_LIST_GET_RANGE"},
+	{ AS_CDT_OP_LIST_TRIM + 1000			,   "OP_LIST_TRIM"},
+	{ AS_CDT_OP_LIST_SIZE + 1000			,   "OP_LIST_SIZE"},
 };
 
 static
