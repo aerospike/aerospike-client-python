@@ -142,9 +142,11 @@ class TestRemovebin(object):
         put_data(self.as_connection, key, record)
         self.as_connection.remove_bin(key, [])
 
-        (key, _, bins) = self.as_connection.get(key)
-
-        assert bins == record
+        try:
+            (key, _, bins) = self.as_connection.get(key)
+            assert bins == record
+        except e.InvalidRequest:
+            pass
 
     @pytest.mark.parametrize("key, record, bins_for_removal", [
         (('test', 'demo', 1), {'name': "Devid", 'age': 30}, ["name", "age"]),
