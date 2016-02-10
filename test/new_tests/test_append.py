@@ -416,7 +416,7 @@ class TestAppend(object):
         }
         try:
             self.as_connection.append(key, "name", "str", {}, policy)
-        except TimeOutError as exception:
+        except TimeoutError as exception:
             assert exception.code == 9L
 
     def test_neg_append_with_non_existent_ns(self):
