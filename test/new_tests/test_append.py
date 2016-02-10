@@ -226,7 +226,6 @@ class TestAppend(object):
 
         key, meta, bins = self.as_connection.get(key)
         assert bins['add'] == 'address'
-        assert meta =={'gen': 2, 'ttl': 2592000}
 
 
     def test_pos_append_with_correct_timeout_policy(self):
@@ -244,7 +243,6 @@ class TestAppend(object):
         (key, meta, bins) = self.as_connection.get(key)
 
         assert bins == {'age': 1, 'name': 'name1str'}
-        assert meta =={'gen': 2, 'ttl': 2592000}
 
     def test_pos_append_with_bytearray(self):
         """
