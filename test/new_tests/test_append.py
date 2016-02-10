@@ -6,6 +6,7 @@ try:
     import cPickle as pickle
 except:
     import pickle
+from aerospike.exception import *
 from .test_base_class import TestBaseClass
 
 aerospike = pytest.importorskip("aerospike")
