@@ -4,6 +4,7 @@ import pytest
 import time
 import sys
 from .test_base_class import TestBaseClass
+
 try:
     from collections import Counter
 except ImportError:
@@ -11,11 +12,11 @@ except ImportError:
 
 aerospike = pytest.importorskip("aerospike")
 try:
-    from aerospike.exception import *
+    import aerospike
+    from aerospike import exception as e
 except:
     print("Please install aerospike python client.")
     sys.exit(1)
-
 
 @pytest.mark.usefixtures("as_connection")
 class TestExistsMany():
@@ -23,7 +24,7 @@ class TestExistsMany():
     def test_pos_exists_many_without_policy(self, put_data):
         self.keys = []
         rec_length = 5
-        for i in xrange(rec_length):
+        for i in range(rec_length):
             key = ('test', 'demo', i)
             record = {'name': 'name%s' % (str(i)), 'age': i}
             put_data(self.as_connection, key, record)
@@ -35,7 +36,7 @@ class TestExistsMany():
     def test_pos_exists_many_with_proper_parameters_without_connection(self, put_data):
         self.keys = []
         rec_length = 5
-        for i in xrange(rec_length):
+        for i in range(rec_length):
             key = ('test', 'demo', i)
             record = {'name': 'name%s' % (str(i)), 'age': i}
             put_data(self.as_connection, key, record)
@@ -50,7 +51,7 @@ class TestExistsMany():
     def test_pos_exists_many_with_none_policy(self, put_data):
         self.keys = []
         rec_length = 5
-        for i in xrange(rec_length):
+        for i in range(rec_length):
             key = ('test', 'demo', i)
             record = {'name': 'name%s' % (str(i)), 'age': i}
             put_data(self.as_connection, key, record)
@@ -66,7 +67,7 @@ class TestExistsMany():
     def test_pos_exists_many_with_non_existent_keys(self, put_data):
         self.keys = []
         rec_length = 5
-        for i in xrange(rec_length):
+        for i in range(rec_length):
             key = ('test', 'demo', i)
             record = {'name': 'name%s' % (str(i)), 'age': i}
             put_data(self.as_connection, key, record)
@@ -90,7 +91,6 @@ class TestExistsMany():
 
         records = self.as_connection.exists_many(keys)
 
-    	
         assert len(records) == 1
         for x in records:
             if x[0][2] == 'key':
@@ -99,12 +99,12 @@ class TestExistsMany():
     def test_pos_exists_many_with_initkey_as_digest(self, put_data):
 
         keys = []
-        key = ("test", "demo", None, bytearray("asd;as[d'as;djk;uyfl"))
+        key = ("test", "demo", None, bytearray("asd;as[d'as;djk;uyfl", "utf-8"))
         rec = {'name': 'name1', 'age': 1}
         self.as_connection.put(key, rec)
         keys.append(key)
 
-        key = ("test", "demo", None, bytearray("ase;as[d'as;djk;uyfl"))
+        key = ("test", "demo", None, bytearray("ase;as[d'as;djk;uyfl", "utf-8"))
         rec = {'name': 'name2', 'age': 2}
         put_data(self.as_connection, key, rec)
         keys.append(key)
@@ -124,7 +124,7 @@ class TestExistsMany():
     def test_pos_exists_many_with_non_existent_keys_in_middle(self, put_data):
         self.keys = []
         rec_length = 5
-        for i in xrange(rec_length):
+        for i in range(rec_length):
             key = ('test', 'demo', i)
             record = {'name': 'name%s' % (str(i)), 'age': i}
             put_data(self.as_connection, key, record)
@@ -132,7 +132,7 @@ class TestExistsMany():
 
         self.keys.append(('test', 'demo', 'some_key'))
 
-        for i in xrange(15, 20):
+        for i in range(15, 20):
             key = ('test', 'demo', i)
             rec = {'name': 'name%s' % (str(i)), 'age': i}
             put_data(self.as_connection, key, rec)
@@ -168,41 +168,41 @@ class TestExistsMany():
     def test_neg_exists_many_with_none_keys(self):
 
         try:
-            self.as_connection.exists_many( None, {} )
+            self.as_connection.exists_many(None, {})
 
-        except ParamError as exception:
+        except e.ParamError as exception:
             assert exception.code == -2
             assert exception.msg == "Keys should be specified as a list or tuple."
 
     def test_neg_exists_many_with_invalid_key(self):
 
         try:
-            records = self.as_connection.exists_many( "key" )
+            self.as_connection.exists_many("key")
 
-        except ParamError as exception:
+        except e.ParamError as exception:
             assert exception.code == -2
             assert exception.msg == "Keys should be specified as a list or tuple."
 
     def test_neg_exists_many_with_invalid_timeout(self, put_data):
         self.keys = []
         rec_length = 5
-        for i in xrange(rec_length):
+        for i in range(rec_length):
             key = ('test', 'demo', i)
             record = {'name': 'name%s' % (str(i)), 'age': i}
             put_data(self.as_connection, key, record)
             self.keys.append(key)
-        policies = { 'timeout' : 0.2 }
+        policies = {'timeout': 0.2}
         try:
-            records = self.as_connection.exists_many(self.keys, policies)
+            self.as_connection.exists_many(self.keys, policies)
 
-        except ParamError as exception:
+        except e.ParamError as exception:
             assert exception.code == -2
             assert exception.msg == "timeout is invalid"
 
     def test_neg_exists_many_with_proper_parameters_without_connection(self, put_data):
         self.keys = []
         rec_length = 5
-        for i in xrange(rec_length):
+        for i in range(rec_length):
             key = ('test', 'demo', i)
             record = {'name': 'name%s' % (str(i)), 'age': i}
             put_data(self.as_connection, key, record)
@@ -212,37 +212,37 @@ class TestExistsMany():
         client1 = aerospike.client(config)
 
         try:
-            records = client1.exists_many(self.keys, { 'timeout': 20 } )
-              
-        except ClusterError as exception:
-            assert exception.code == 11L
+            client1.exists_many(self.keys, {'timeout': 20})
+
+        except e.ClusterError as exception:
+            assert exception.code == 11
 
     def test_neg_exists_many_with_extra_parameter_in_key(self, put_data):
         keys = []
-        key = ("test", "demo", None, bytearray("asd;as[d'as;djk;uyfl"))
+        key = ("test", "demo", None, bytearray("asd;as[d'as;djk;uyfl", "utf-8"))
         rec = {'name': 'name1', 'age': 1}
         put_data(self.as_connection, key, rec)
         keys.append(key)
 
-        key = ("test", "demo", None, bytearray("ase;as[d'as;djk;uyfl"))
+        key = ("test", "demo", None, bytearray("ase;as[d'as;djk;uyfl", "utf-8"))
         rec = {'name': 'name2', 'age': 2}
         put_data(self.as_connection, key, rec)
         keys.append(key)
 
-        keys_get =[]
-        key = ("test", "demo", None, bytearray("asd;as[d'as;djk;uyfl"),None)
+        keys_get = []
+        key = ("test", "demo", None, bytearray("asd;as[d'as;djk;uyfl", "utf-8"), None)
         keys_get.append(key)
 
-        key = ("test", "demo", None, bytearray("ase;as[d'as;djk;uyfl"),None)
+        key = ("test", "demo", None, bytearray("ase;as[d'as;djk;uyfl", "utf-8"), None)
         keys_get.append(key)
 
         try:
-            self.as_connection.exists_many( keys_get )
+            self.as_connection.exists_many(keys_get)
 
-        except ParamError as exception:
-            assert exception.code == -2L
+        except e.ParamError as exception:
+            assert exception.code == -2
             assert exception.msg == "key tuple must be (Namespace, Set, Key) or (Namespace, Set, None, Digest)"
-        
+
         for key in keys:
             self.as_connection.remove(key)
 
@@ -252,34 +252,31 @@ class TestExistsMany():
         rec = {"name": "John"}
         meta = {'gen': 3, 'ttl': 1}
         policy = {'timeout': 2}
-        
+
         try:
             put_data(self.as_connection, key, rec, meta, policy)
-        except TimeoutError as exception:
-            assert exception.code == 9L
-        
+        except e.TimeoutError as exception:
+            assert exception.code == 9
+
         keys.append(key)
         records = self.as_connection.exists_many(keys)
         assert type(records) == list
         assert len(records) == 1
 
     def test_neg_exists_many_with_invalid_ns(self):
-        #ToDo: not sure about put operation
+        # ToDo: not sure about put operation
         keys = []
         key = ('test2', 'demo', 20)
-        rec = {"name": "John"}
-        meta = {'gen': 3, 'ttl': 300}
-        policy = {'timeout': 1000}
-        #self.as_connection.put(key, rec, meta, policy)
+        # self.as_connection.put(key, rec, meta, policy)
         keys.append(key)
         try:
-            records = self.as_connection.exists_many(keys)
-        except NamespaceNotFound as exception:
-            assert exception.code == 20L
+            self.as_connection.exists_many(keys)
+        except e.NamespaceNotFound as exception:
+            assert exception.code == 20
 
     def test_neg_exists_many_without_any_parameter(self):
 
         with pytest.raises(TypeError) as typeError:
             self.as_connection.exists_many()
 
-        assert "Required argument 'keys' (pos 1) not found" in typeError.value
+        assert "Required argument 'keys' (pos 1) not found" in str(typeError.value)

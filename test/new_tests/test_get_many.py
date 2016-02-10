@@ -10,7 +10,8 @@ except ImportError:
 
 aerospike = pytest.importorskip("aerospike")
 try:
-    from aerospike.exception import *
+    import aerospike
+    from aerospike import exception as e
 except:
     print("Please install aerospike python client.")
     sys.exit(1)
@@ -20,7 +21,7 @@ class TestGetMany():
     @pytest.fixture(autouse=True)
     def setup(self, request, as_connection):
         self.keys = []
-        for i in xrange(5):
+        for i in range(5):
             key = ('test', 'demo', i)
             rec = {'name': 'name%s' % (str(i)), 'age': i}
             as_connection.put(key, rec)
@@ -33,7 +34,7 @@ class TestGetMany():
             """
             Teardown method.
             """
-            for i in xrange(5):
+            for i in range(5):
                 key = ('test', 'demo', i)
                 as_connection.remove(key)
             key = ('test', 'demo', 'float_value')
@@ -57,12 +58,12 @@ class TestGetMany():
         assert Counter([x[0][2] for x in records]) == Counter([0, 1, 2, 3,
             4, 'float_value'])
         assert records[5][2] == {'float_value': 4.3}
-  
+
     def test_pos_get_many_with_none_policy(self):
 
         records = self.as_connection.get_many(self.keys, None)
         for x in records:
-            print x
+            print (x)
         assert type(records) == list
         assert len(records) == 6
         assert Counter([x[0][2] for x in records]) == Counter([0, 1, 2, 3,
@@ -96,13 +97,13 @@ class TestGetMany():
     def test_pos_get_many_with_initkey_as_digest(self):
 
         keys = []
-        key = ("test", "demo", None, bytearray("asd;as[d'as;djk;uyfl"))
+        key = ("test", "demo", None, bytearray("asd;as[d'as;djk;uyfl", "utf-8"))
         rec = {'name': 'name1', 'age': 1}
         self.as_connection.put(key, rec)
 
         keys.append(key)
 
-        key = ("test", "demo", None, bytearray("ase;as[d'as;djk;uyfl"))
+        key = ("test", "demo", None, bytearray("ase;as[d'as;djk;uyfl", "utf-8"))
         rec = {'name': 'name2', 'age': 2}
         self.as_connection.put(key, rec)
 
@@ -122,12 +123,12 @@ class TestGetMany():
             else:
                 assert x[0][3] == bytearray(b"asd;as[d'as;djk;uyfl")
             i = i+1
-    
+
     def test_pos_get_many_with_non_existent_keys_in_middle(self):
 
         self.keys.append(('test', 'demo', 'some_key'))
 
-        for i in xrange(15, 20):
+        for i in range(15, 20):
             key = ('test', 'demo', i)
             rec = {'name': 'name%s' % (str(i)), 'age': i}
             self.as_connection.put(key, rec)
@@ -135,7 +136,7 @@ class TestGetMany():
 
         records = self.as_connection.get_many(self.keys)
 
-        for i in xrange(15, 20):
+        for i in range(15, 20):
             key = ('test', 'demo', i)
             self.as_connection.remove(key)
 
@@ -173,53 +174,51 @@ class TestGetMany():
         Invoke get_many() without primary key
         """
         key = ('test', 'set')
-        policy = {'timeout': 1000}
         try:
-            key, meta, bins = self.as_connection.get(key)
+            key, _, _ = self.as_connection.get(key)
 
-        except ParamError as exception:
-            assert exception.code == -2L
+        except e.ParamError as exception:
+            assert exception.code == -2
             assert exception.msg == 'key tuple must be (Namespace, Set, Key) or (Namespace, Set, None, Digest)'
-    
+
     def test_neg_get_many_with_proper_parameters_without_connection(self):
         config = {'hosts': [('127.0.0.1', 3000)]}
         client1 = aerospike.client(config)
         try:
-            records = client1.get_many( self.keys, { 'timeout': 20 } )
+            client1.get_many(self.keys, {'timeout': 20})
 
-        except ClusterError as exception:
-            assert exception.code == 11L
+        except e.ClusterError as exception:
+            assert exception.code == 11
 
     def test_neg_prepend_Invalid_Key_without_set_name(self):
         """
         Invoke prepend() without set name
         """
         key = ('test', 1)
-        policy = {'timeout': 1000}
         try:
-           # TestGet.client.prepend(key, "name", "ABC", {}, policy)
-            key, meta, bins = self.as_connection.get(key)
+            # TestGet.client.prepend(key, "name", "ABC", {}, policy)
+            key, _, _ = self.as_connection.get(key)
 
-        except ParamError as exception:
-            assert exception.code == -2L
+        except e.ParamError as exception:
+            assert exception.code == -2
             assert exception.msg == 'key tuple must be (Namespace, Set, Key) or (Namespace, Set, None, Digest)'
 
     def test_neg_get_many_with_invalid_key(self):
 
         try:
-            records = self.as_connection.get_many( "key" )
+            self.as_connection.get_many("key")
 
-        except ParamError as exception:
+        except e.ParamError as exception:
             assert exception.code == -2
             assert exception.msg == "Keys should be specified as a list or tuple."
 
     def test_neg_get_many_with_invalid_timeout(self):
 
-        policies = { 'timeout' : 0.2 }
+        policies = {'timeout': 0.2}
         try:
-            records = self.as_connection.get_many(self.keys, policies)
+            self.as_connection.get_many(self.keys, policies)
 
-        except ParamError as exception:
+        except e.ParamError as exception:
             assert exception.code == -2
             assert exception.msg == "timeout is invalid"
 
@@ -228,14 +227,14 @@ class TestGetMany():
         with pytest.raises(TypeError) as typeError:
             self.as_connection.get_many()
 
-        assert "Required argument 'keys' (pos 1) not found" in typeError.value
+        assert "Required argument 'keys' (pos 1) not found" in str(typeError.value)
 
     def test_neg_get_many_with_none_keys(self):
 
         try:
-            self.as_connection.get_many( None, {} )
+            self.as_connection.get_many(None, {})
 
-        except ParamError as exception:
+        except e.ParamError as exception:
             assert exception.code == -2
             assert exception.msg == "Keys should be specified as a list or tuple."
 
@@ -244,9 +243,8 @@ class TestGetMany():
         Invoke prepend() invalid namespace
         """
         key = ('test1', 'demo', 1)
-        policy = {'timeout': 1000}
         try:
-            key, meta, bins = self.as_connection.get(key)
+            key, _, _ = self.as_connection.get(key)
 
-        except NamespaceNotFound as exception:
+        except e.NamespaceNotFound as exception:
             assert exception.code == 20

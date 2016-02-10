@@ -1,16 +1,12 @@
 # -*- coding: utf-8 -*-
 import pytest
-import time
 import sys
-try:
-    import cPickle as pickle
-except:
-    import pickle
 from .test_base_class import TestBaseClass
 
 aerospike = pytest.importorskip("aerospike")
 try:
-    from aerospike.exception import *
+    import aerospike
+    from aerospike import exception as e
 except:
     print("Please install aerospike python client.")
     sys.exit(1)
@@ -21,7 +17,7 @@ class TestPrepend():
         """
         Setup Method
         """
-        for i in xrange(5):
+        for i in range(5):
             key = ('test', 'demo', i)
             rec = {'name': 'name%s' % (str(i)), 'age': i, 'nolist': [1, 2, 3]}
             as_connection.put(key, rec)
@@ -33,7 +29,7 @@ class TestPrepend():
             """
             Teardown Method
             """
-            for i in xrange(5):
+            for i in range(5):
                 key = ('test', 'demo', i)
                 as_connection.remove(key)
 
@@ -49,7 +45,7 @@ class TestPrepend():
         key = ('test', 'demo', 1)
         self.as_connection.prepend(key, "name", "str")
 
-        (key, meta, bins) = self.as_connection.get(key)
+        (key, _, bins) = self.as_connection.get(key)
 
         assert bins == {'age': 1, 'name': 'strname1', 'nolist': [1, 2, 3]}
 
@@ -66,7 +62,7 @@ class TestPrepend():
 
         self.as_connection.prepend(key, "name", "str", {}, policy)
 
-        (key, meta, bins) = self.as_connection.get(key)
+        (key, _, bins) = self.as_connection.get(key)
 
         assert bins == {'age': 1, 'name': 'strname1', 'nolist': [1, 2, 3]}
 
@@ -83,7 +79,7 @@ class TestPrepend():
         }
         self.as_connection.prepend(key, "name", "str", {}, policy)
 
-        (key, meta, bins) = self.as_connection.get(key)
+        (key, _, bins) = self.as_connection.get(key)
 
         assert bins == {'age': 1, 'name': 'strname1', 'nolist': [1, 2, 3]}
         assert key == ('test', 'demo', None, bytearray(
@@ -176,7 +172,7 @@ class TestPrepend():
         }
         self.as_connection.prepend(key, "name", "str", {}, policy)
 
-        (key, meta, bins) = self.as_connection.get(key)
+        (key, _, bins) = self.as_connection.get(key)
 
         assert bins == {'age': 1, 'name': 'strname1', 'nolist': [1, 2, 3]}
         assert key == ('test', 'demo', None,
@@ -192,9 +188,9 @@ class TestPrepend():
         """
         Invoke prepend() with unicode parameters
         """
-        res = self.as_connection.prepend(key, bin, value)
+        self.as_connection.prepend(key, bin, value)
 
-        key, meta, bins = self.as_connection.get(key)
+        key, _, bins = self.as_connection.get(key)
         assert bins[bin] == expected
 
     def test_pos_prepend_key_with_none_set_name(self):
@@ -204,7 +200,7 @@ class TestPrepend():
         key = ('test', None, 1)
         policy = {'timeout': 1000}
         self.as_connection.prepend(key, "name", "ABC", {}, policy)
-        key, meta, bins = self.as_connection.get(key)
+        key, _, bins = self.as_connection.get(key)
         assert bins == {'name': 'ABC'}
         self.as_connection.remove(key)
 
@@ -215,8 +211,8 @@ class TestPrepend():
         key = ('test', 'demo', 1000)
         status = self.as_connection.prepend(key, "name", "str")
 
-        assert status == 0L
-        key, meta, bins = self.as_connection.get(key)
+        assert status == 0
+        key, _, bins = self.as_connection.get(key)
         assert bins['name'] == 'str'
 
         self.as_connection.remove(key)
@@ -228,8 +224,8 @@ class TestPrepend():
         key = ('test', 'demo', 1)
         status = self.as_connection.prepend(key, "name1", "str")
 
-        assert status == 0L
-        key, meta, bins = self.as_connection.get(key)
+        assert status == 0
+        key, _, bins = self.as_connection.get(key)
         assert bins['name1'] == 'str'
 
     def test_pos_prepend_with_bytearray(self):
@@ -266,7 +262,7 @@ class TestPrepend():
         """
         with pytest.raises(TypeError) as typeError:
             self.as_connection.prepend()
-        assert "Required argument 'key' (pos 1) not found" in typeError.value
+        assert "Required argument 'key' (pos 1) not found" in str(typeError.value)
 
     def test_neg_prepend_with_policy_key_gen_EQ_not_equal(self):
         """
@@ -281,7 +277,7 @@ class TestPrepend():
         }
         (key, meta) = self.as_connection.exists(key)
         gen = meta['gen']
-        
+
         meta = {
             'gen': gen + 5,
             'ttl': 1200
@@ -289,7 +285,7 @@ class TestPrepend():
         try:
             self.as_connection.prepend(key, "name", "str", meta, policy)
 
-        except RecordGenerationError as exception:
+        except e.RecordGenerationError as exception:
             assert exception.code == 3
             assert exception.bin == 'name'
 
@@ -321,7 +317,7 @@ class TestPrepend():
         try:
             self.as_connection.prepend(key, "name", "str", meta, policy)
 
-        except RecordGenerationError as exception:
+        except e.RecordGenerationError as exception:
             assert exception.code == 3
             assert exception.bin == "name"
 
@@ -343,7 +339,7 @@ class TestPrepend():
         try:
             self.as_connection.prepend(key, "name", "str", {}, policy)
 
-        except ParamError as exception:
+        except e.ParamError as exception:
             assert exception.code == -2
             assert exception.msg == "timeout is invalid"
 
@@ -360,7 +356,7 @@ class TestPrepend():
         try:
             self.as_connection.prepend(key, bin, value, meta, policy)
 
-        except ParamError as exception:
+        except e.ParamError as exception:
             assert exception.code == ex_code
             assert exception.msg == ex_msg
 
@@ -373,7 +369,7 @@ class TestPrepend():
         with pytest.raises(TypeError) as typeError:
             self.as_connection.prepend(key, "name", "str", {}, policy, "")
 
-        assert "prepend() takes at most 5 arguments (6 given)" in typeError.value
+        assert "prepend() takes at most 5 arguments (6 given)" in str(typeError.value)
 
     @pytest.mark.parametrize("key, bin, value, ex_code, ex_msg", [
         (None, "name", "str", -2, "key is invalid"),
@@ -386,7 +382,7 @@ class TestPrepend():
         try:
             self.as_connection.prepend(key, bin, value)
 
-        except ParamError as exception:
+        except e.ParamError as exception:
             assert exception.code == ex_code
             assert exception.msg == ex_msg
 
@@ -398,9 +394,9 @@ class TestPrepend():
         policy = {'timeout': 1000}
         try:
             self.as_connection.prepend(key, "name", "ABC", {}, policy)
-            key, meta, bins = self.as_connection.get(key)
+            key, _, _ = self.as_connection.get(key)
 
-        except NamespaceNotFound as exception:
+        except e.NamespaceNotFound as exception:
             assert exception.code == 20
 
     @pytest.mark.parametrize("key, bin, value, meta, policy, ex_code, ex_msg", [
@@ -409,15 +405,15 @@ class TestPrepend():
         (('test', 'demo', 1, 1, 1), "name", "ABC", {}, {'timeout': 1000}, -2, 'key tuple must be (Namespace, Set, Key) or (Namespace, Set, None, Digest)')
         ])
     def test_neg_prepend_invalid_key_combinations(self, key, bin, value,
-        meta, policy, ex_code, ex_msg):
+                                                  meta, policy, ex_code, ex_msg):
         """
         Invoke prepend() with invalid key combinations
         """
         try:
             self.as_connection.prepend(key, bin, value, meta, policy)
-            key, meta, bins = self.as_connection.get(key)
+            key, meta, _ = self.as_connection.get(key)
 
-        except ParamError as exception:
+        except e.ParamError as exception:
             assert exception.code == ex_code
             assert exception.msg == ex_msg
 
@@ -429,11 +425,11 @@ class TestPrepend():
         policy = {'timeout': 1000}
         try:
             self.as_connection.prepend(key, "ABC", {}, policy)
-            key, meta, bins = self.as_connection.get(key)
-        except ParamError as exception:
+            key, _, _ = self.as_connection.get(key)
+        except e.ParamError as exception:
             assert exception.code == -2
             assert exception.msg == "Cannot concatenate 'str' and 'non-str' objects"
- 
+
     def test_neg_prepend_with_correct_parameters_without_connection(self):
         """
         Invoke prepend() with correct parameters without connection
@@ -445,5 +441,5 @@ class TestPrepend():
         try:
             client1.prepend(key, "name", "str")
 
-        except ClusterError as exception:
-            assert exception.code == 11L
+        except e.ClusterError as exception:
+            assert exception.code == 11

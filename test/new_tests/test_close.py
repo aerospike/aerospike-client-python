@@ -2,15 +2,12 @@
 
 import pytest
 import sys
-try:
-    import cPickle as pickle
-except:
-    import pickle
 from .test_base_class import TestBaseClass
 
 aerospike = pytest.importorskip("aerospike")
 try:
-    from aerospike.exception import *
+    import aerospike
+    from aerospike import exception as e
 except:
     print("Please install aerospike python client.")
     sys.exit(1)
@@ -24,13 +21,13 @@ class TestClose():
             Invoke close() after positive connect
         """
         config = {'hosts': TestBaseClass.hostlist}
-        if TestClose.user == None and TestClose.password == None:
+        if TestClose.user is None and TestClose.password is None:
             self.client = aerospike.client(config).connect()
         else:
             self.client = aerospike.client(config).connect(TestClose.user,
                                                            TestClose.password)
         self.closeobject = self.client.close()
-        assert self.closeobject == None
+        assert self.closeobject is None
 
     def test_pos_close_without_connection(self):
         """
@@ -42,8 +39,8 @@ class TestClose():
         try:
             self.closeobject = self.client.close()
 
-        except ClusterError as exception:
-            assert exception.code == 11L
+        except e.ClusterError as exception:
+            assert exception.code == 11
 
     def test_neg_close(self):
         """
@@ -51,10 +48,10 @@ class TestClose():
         """
         config = {'hosts': [('127.0.0.1', 2000)]}
 
-        with pytest.raises(Exception) as exception:
+        with pytest.raises(Exception):
             self.client = aerospike.client(config).connect()
         with pytest.raises(AttributeError) as attributeError:
             self.closeobject = self.client.close()
-        assert "TestClose instance has no attribute 'client'" in attributeError.value
+        assert "has no attribute" in str(attributeError.value)
 
 

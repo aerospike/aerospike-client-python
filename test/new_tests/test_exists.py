@@ -7,11 +7,12 @@ try:
 except:
     import pickle
 from .test_base_class import TestBaseClass
-import time;
+import time
 
 aerospike = pytest.importorskip("aerospike")
 try:
-    from aerospike.exception import *
+    import aerospike
+    from aerospike import exception as e
 except:
     print("Please install aerospike python client.")
     sys.exit(1)
@@ -36,7 +37,7 @@ class TestExists():
 
         put_data(self.as_connection, key, record)
 
-        key, meta =self.as_connection.exists(key, policy)
+        key, meta = self.as_connection.exists(key, policy)
 
         assert meta['gen'] != None
         assert meta['ttl'] != None
@@ -62,7 +63,7 @@ class TestExists():
             Invoke exists() for diffrent record data.
         """
         put_data(self.as_connection, key, record)
-        key, meta =self.as_connection.exists(key)
+        key, meta = self.as_connection.exists(key)
 
         assert meta['gen'] != None
         assert meta['ttl'] != None
@@ -83,7 +84,7 @@ class TestExists():
             Invoke exists() with key and policy.
         """
         put_data(self.as_connection, key, record, _policy=policy)
-        key, meta =self.as_connection.exists(key, policy)
+        key, meta = self.as_connection.exists(key, policy)
 
         assert meta['gen'] != None
         assert meta['ttl'] != None
@@ -97,23 +98,23 @@ class TestExists():
         policy = {'timeout': 1000}
         put_data(self.as_connection, key, rec, meta, policy)
         time.sleep(2)
-        key, meta =self.as_connection.exists(key)
-        assert meta == None
+        key, meta = self.as_connection.exists(key)
+        assert meta is None
 
     @pytest.mark.parametrize("key, ex, ex_code", [
         # reason for xfail CLIENT-533
-        pytest.mark.xfail((('test', 'demo', 'non-existent'), RecordNotFound, 2)),     # non-existent key
-        pytest.mark.xfail((('test', 'set', 1), RecordNotFound, 2)),                    # non-existent set
-        (('namespace', 'demo', 1), NamespaceNotFound, 20L),           # non-existent Namespace
-        pytest.mark.xfail((('test', None, 2), RecordNotFound, 2)),                    #None set in key tuple.
-        pytest.mark.xfail((('test', 'demo', 'Non_existing_key'), RecordNotFound, 2)),  # Non_existing_key
+        pytest.mark.xfail((('test', 'demo', 'non-existent'), e.RecordNotFound, 2)),     # non-existent key
+        pytest.mark.xfail((('test', 'set', 1), e.RecordNotFound, 2)),                    # non-existent set
+        (('namespace', 'demo', 1), e.NamespaceNotFound, 20),           # non-existent Namespace
+        pytest.mark.xfail((('test', None, 2), e.RecordNotFound, 2)),                    #None set in key tuple.
+        pytest.mark.xfail((('test', 'demo', 'Non_existing_key'), e.RecordNotFound, 2)),  # Non_existing_key
         ])
     def test_neg_exists_with_non_existent_data(self, key, ex, ex_code):
         """
             Invoke exists() for non-existent data.
         """
         try:
-            key, meta =self.as_connection.exists( key )
+            key, _ = self.as_connection.exists(key)
 
             """
             We are making the api backward compatible. In case of RecordNotFound an
@@ -132,30 +133,30 @@ class TestExists():
         client1 = aerospike.client(config)
 
         try:
-            key, meta = client1.exists( key )
+            key, _ = client1.exists(key)
 
-        except ClusterError as exception:
-            assert exception.code == 11L
+        except e.ClusterError as exception:
+            assert exception.code == 11
 
     @pytest.mark.parametrize("key, record, meta, policy", [
         (('test', 'demo', 20), {"name": "John"}, {'gen': 3, 'ttl': 1}, {'timeout': 2}),
         ])
     def test_neg_exists_with_low_timeout(self, key, record, meta, policy, put_data):
         try:
-           put_data(self.as_connection, key, record, meta, policy)
-        except TimeoutError as exception:
-            assert exception.code == 9L
-        key,meta =self.as_connection.exists(key)
-        assert meta['gen'] !=None
+            put_data(self.as_connection, key, record, meta, policy)
+        except e.TimeoutError as exception:
+            assert exception.code == 9
+        key, meta = self.as_connection.exists(key)
+        assert meta['gen'] is not None
 
     def test_neg_exists_with_no_paramters(self):
         """
             Invoke self() without any mandatory parameters.
         """
         with pytest.raises(TypeError) as typeError:
-           self.as_connection.exists()
+            self.as_connection.exists()
 
-        assert "Required argument 'key' (pos 1) not found" in typeError.value
+        assert "Required argument 'key' (pos 1) not found" in str(typeError.value)
 
     @pytest.mark.parametrize("key, record, policy, ex_code, ex_msg",[
         # timeout_is_string
@@ -172,9 +173,9 @@ class TestExists():
         put_data(self.as_connection, key, record)
 
         try:
-            key, meta =self.as_connection.exists( key, policy)
+            key, _ = self.as_connection.exists(key, policy)
 
-        except ParamError as exception:
+        except e.ParamError as exception:
             assert exception.code == ex_code
             assert exception.msg == ex_msg
 
@@ -189,7 +190,7 @@ class TestExists():
             Invoke exists() with invalid key
         """
         try:
-            key, meta =self.as_connection.exists(key)
-        except ParamError as exception:
+            key, _ = self.as_connection.exists(key)
+        except e.ParamError as exception:
             assert exception.code == ex_code
             assert exception.msg == ex_msg
