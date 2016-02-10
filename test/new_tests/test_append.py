@@ -1,17 +1,11 @@
 # -*- coding: utf-8 -*-
 import pytest
-import time
 import sys
-try:
-    import cPickle as pickle
-except:
-    import pickle
-from aerospike.exception import *
-from .test_base_class import TestBaseClass
+from aerospike import exception as e
 
 aerospike = pytest.importorskip("aerospike")
 try:
-    from aerospike.exception import *
+    import aerospike
 except:
     print("Please install aerospike python client.")
     sys.exit(1)
@@ -24,7 +18,7 @@ class TestAppend(object):
         """
         Setup Method
         """
-        for i in xrange(5):
+        for i in range(5):
             key = ('test', 'demo', i)
             rec = {'name': 'name%s' % (str(i)), 'age': i}
             as_connection.put(key, rec)
@@ -37,7 +31,7 @@ class TestAppend(object):
             """
             Teardown Method
             """
-            for i in xrange(5):
+            for i in range(5):
                 key = ('test', 'demo', i)
                 as_connection.remove(key)
 
@@ -53,7 +47,7 @@ class TestAppend(object):
         key = ('test', 'demo', 1)
         self.as_connection.append(key, "name", "str")
 
-        (key, meta, bins) = self.as_connection.get(key)
+        (key, _, bins) = self.as_connection.get(key)
 
         assert bins == {'age': 1, 'name': 'name1str'}
 
@@ -62,12 +56,12 @@ class TestAppend(object):
         Invoke append() with correct policies
         """
         key = ('test', 'demo', 1)
-        policy = {'timeout': 1000, 
+        policy = {'timeout': 1000,
                 'retry': aerospike.POLICY_RETRY_ONCE,
                 'commit_level': aerospike.POLICY_COMMIT_LEVEL_MASTER }
         self.as_connection.append(key, "name", "str", {}, policy)
 
-        (key, meta, bins) = self.as_connection.get(key)
+        (key, _, bins) = self.as_connection.get(key)
 
         assert bins == {'age': 1, 'name': 'name1str'}
 
@@ -84,7 +78,7 @@ class TestAppend(object):
         }
         self.as_connection.append(key, "name", "str", {}, policy)
 
-        (key, meta, bins) = self.as_connection.get(key)
+        (key, _, bins) = self.as_connection.get(key)
 
         assert bins == {'age': 1, 'name': 'name1str'}
         assert key == ('test', 'demo', None, bytearray(
@@ -107,7 +101,7 @@ class TestAppend(object):
         }
         self.as_connection.append(key, "name", "str", {}, policy)
 
-        (key, meta, bins) = self.as_connection.get(key)
+        (key, _, bins) = self.as_connection.get(key)
 
         assert bins == {'age': 1, 'name': 'name1str', 'nolist': [1, 2, 3]}
         assert key == ('test', 'demo', None,
@@ -162,7 +156,6 @@ class TestAppend(object):
             b'\xb7\xf4\xb88\x89\xe2\xdag\xdeh>\x1d\xf6\x91\x9a\x1e\xac\xc4F\xc8')
                       )
 
-
     def test_pos_append_with_policy_key_gen_GT_positive(self):
         """
         Invoke append() with gen GT positive
@@ -194,7 +187,7 @@ class TestAppend(object):
         key = ('test', 'demo', 1000)
         status = self.as_connection.append(key, "name", "str")
 
-        assert status == 0L
+        assert status == 0
         self.as_connection.remove(key)
 
     def test_pos_append_with_nonexistent_bin(self):
@@ -204,17 +197,16 @@ class TestAppend(object):
         key = ('test', 'demo', 1)
         status = self.as_connection.append(key, "name1", "str")
 
-        assert status == 0L
+        assert status == 0
 
-    
     def test_pos_append_unicode_value(self):
         """
         Invoke append() with unicode string
         """
         key = ('test', 'demo', 1)
-        res = self.as_connection.append(key, "name", u"address")
+        self.as_connection.append(key, "name", u"address")
 
-        key, meta, bins = self.as_connection.get(key)
+        key, _, bins = self.as_connection.get(key)
         assert bins['name'] == 'name1address'
 
     def test_pos_append_unicode_bin_name(self):
@@ -222,11 +214,10 @@ class TestAppend(object):
         Invoke append() with unicode string
         """
         key = ('test', 'demo', 1)
-        res = self.as_connection.append(key, u"add", u"address")
+        self.as_connection.append(key, u"add", u"address")
 
-        key, meta, bins = self.as_connection.get(key)
+        key, _, bins = self.as_connection.get(key)
         assert bins['add'] == 'address'
-
 
     def test_pos_append_with_correct_timeout_policy(self):
         """
@@ -234,13 +225,13 @@ class TestAppend(object):
         """
         key = ('test', 'demo', 1)
         policy = {'gen': 5,
-            'timeout': 300,
-            'retry': aerospike.POLICY_RETRY_ONCE,
-            'commit_level': aerospike.POLICY_COMMIT_LEVEL_MASTER
-        }
+                  'timeout': 300,
+                  'retry': aerospike.POLICY_RETRY_ONCE,
+                  'commit_level': aerospike.POLICY_COMMIT_LEVEL_MASTER
+                  }
         self.as_connection.append(key, "name", "str", {}, policy)
 
-        (key, meta, bins) = self.as_connection.get(key)
+        (key, _, bins) = self.as_connection.get(key)
 
         assert bins == {'age': 1, 'name': 'name1str'}
 
@@ -270,14 +261,14 @@ class TestAppend(object):
 
         self.as_connection.remove(key)
 
-    #Negative append tests
+    # Negative append tests
     def test_neg_append_with_no_parameters(self):
         """
         Invoke append() without any mandatory parameters.
         """
         with pytest.raises(TypeError) as typeError:
             self.as_connection.append()
-        assert "Required argument 'key' (pos 1) not found" in typeError.value
+        assert "Required argument 'key' (pos 1) not found" in str(typeError.value)
 
     def test_neg_append_with_policy_key_gen_GT_lesser(self):
         """
@@ -300,10 +291,10 @@ class TestAppend(object):
         }
         try:
             self.as_connection.append(key, "name", "str", meta, policy)
-        except RecordGenerationError as exception:
+        except e.RecordGenerationError as exception:
             assert exception.code == 3
             assert exception.bin == "name"
-        (key , meta, bins) = self.as_connection.get(key)
+        (key, meta, bins) = self.as_connection.get(key)
         assert bins == {'age': 1, 'name': 'name1'}
         assert key == ('test', 'demo', None, bytearray(
             b'\xb7\xf4\xb88\x89\xe2\xdag\xdeh>\x1d\xf6\x91\x9a\x1e\xac\xc4F\xc8')
@@ -330,11 +321,11 @@ class TestAppend(object):
         try:
             self.as_connection.append(key, "name", "str", meta, policy)
 
-        except RecordGenerationError as exception:
+        except e.RecordGenerationError as exception:
             assert exception.code == 3
             assert exception.bin == "name"
 
-        (key , meta, bins) = self.as_connection.get(key)
+        (key, meta, bins) = self.as_connection.get(key)
 
         assert bins == {'age': 1, 'name': 'name1'}
         assert key == ('test', 'demo', None, bytearray(
@@ -347,7 +338,7 @@ class TestAppend(object):
         (('test', 'demo', 1), 3, "str", {}, {'gen': 5, 'timeout': 3000, 'retry':
             aerospike.POLICY_RETRY_ONCE, 'commit_level':
             aerospike.POLICY_COMMIT_LEVEL_MASTER}, -2, 'Bin name should be of type string'),
-        (('test', 'name'), "name", "str", {}, {"gen": 5}, -2, 
+        (('test', 'name'), "name", "str", {}, {"gen": 5}, -2,
             'key tuple must be (Namespace, Set, Key) or (Namespace, Set, None, Digest)'),
         (('test', 'demo', 1), "name", "str", {}, {'timeout': 0.5}, -2, "timeout is invalid")
             ])
@@ -359,7 +350,7 @@ class TestAppend(object):
         try:
             self.as_connection.append(key, bin, value, meta, policy)
 
-        except ParamError as exception:
+        except e.ParamError as exception:
             assert exception.code == ex_code
             assert exception.msg == ex_msg
 
@@ -372,7 +363,7 @@ class TestAppend(object):
         with pytest.raises(TypeError) as typeError:
             self.as_connection.append(key, "name", "str", {}, policy, "")
 
-        assert "append() takes at most 5 arguments (6 given)" in typeError.value
+        assert "append() takes at most 5 arguments (6 given)" in str(typeError.value)
 
     @pytest.mark.parametrize("key, bin, ex_code, ex_msg", [
         (None, "name", -2, "key is invalid"),
@@ -385,7 +376,7 @@ class TestAppend(object):
         try:
             self.as_connection.append(key, bin, "str")
 
-        except ParamError as exception:
+        except e.ParamError as exception:
             assert exception.code == ex_code
             assert exception.msg == ex_msg
 
@@ -400,8 +391,8 @@ class TestAppend(object):
         try:
             client1.append(key, "name", "str")
 
-        except ClusterError as exception:
-            assert exception.code == 11L
+        except e.ClusterError as exception:
+            assert exception.code == 11
 
     def test_neg_append_with_low_timeout(self):
 
@@ -410,14 +401,14 @@ class TestAppend(object):
         """
         key = ('test', 'demo', 1)
         policy = {'gen': 5,
-            'timeout': 1,
-            #'retry': aerospike.POLICY_RETRY_ONCE,
-            'commit_level': aerospike.POLICY_COMMIT_LEVEL_MASTER
-        }
+                  'timeout': 1,
+                  # 'retry': aerospike.POLICY_RETRY_ONCE,
+                  'commit_level': aerospike.POLICY_COMMIT_LEVEL_MASTER
+                  }
         try:
             self.as_connection.append(key, "name", "str", {}, policy)
-        except TimeoutError as exception:
-            assert exception.code == 9L
+        except e.TimeoutError as exception:
+            assert exception.code == 9
 
     def test_neg_append_with_non_existent_ns(self):
         """
@@ -425,10 +416,9 @@ class TestAppend(object):
         """
         key = ('test1', 'demo', 'name')
         policy = {'gen': 5,
-            'timeout': 300,
-        }
+                  'timeout': 300,
+                  }
         try:
             self.as_connection.append(key, "name", "str", {}, policy)
-        except NamespaceNotFound as exception:
-            assert exception.code == 20L
-
+        except e.NamespaceNotFound as exception:
+            assert exception.code == 20

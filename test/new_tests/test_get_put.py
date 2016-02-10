@@ -6,16 +6,17 @@ try:
     import cPickle as pickle
 except:
     import pickle
-from collections import OrderedDict
-from .test_base_class import TestBaseClass 
-import time
 
+# from collections import OrderedDict
+from .test_base_class import TestBaseClass
 aerospike = pytest.importorskip("aerospike")
 try:
-    from aerospike.exception import *
+    import aerospike
+    from aerospike import exception as e
 except:
     print("Please install aerospike python client.")
     sys.exit(1)
+
 
 class SomeClass(object):
     pass
@@ -43,14 +44,14 @@ class TestGetPut():
         (('test', 'demo', 'list_key'), {'names': ['John', 'Marlen', 1024]}),
         (('test', 'demo', 'list_key_unicode'), {'a': [u'aa', u'bb', 1, u'bb', u'aa']}),
         (('test', 'demo', 'objects'), {'objects': [pickle.dumps(SomeClass()), pickle.dumps(SomeClass())]}),
-        
+
         # Map Data
         (('test', 'demo', 'map_key'), {'names': {'name': 'John', 'age': 24}}),
         (('test', 'demo', 'map_key_float'), {"double_map": {"1": 3.141,"2": 4.123,"3": 6.285}}),
         (('test', 'demo', 'map_key_unicode'), {'a': {u'aa': u'11'}, 'b': {u'bb': u'22'}}),
-        (('test', 'demo', 1), 
-            {'odict': OrderedDict(sorted({'banana': 3, 'apple': 4, 'pear': 1, 'orange': 2}.items(), 
-                key=lambda t: t[0]))}),
+        #        (('test', 'demo', 1),
+        #            {'odict': OrderedDict(sorted({'banana': 3, 'apple': 4, 'pear': 1, 'orange': 2}.items(),
+        #                key=lambda t: t[0]))}),
 
         # Tuple Data
         (('test', 'demo', 'tuple_key'), {'tuple_seq': tuple('abc')}),
@@ -80,24 +81,24 @@ class TestGetPut():
         """
             Invoke get() with a key and not policy's dict.
         """
-        put_data(self.as_connection,_input, _expected)
-        key, meta, bins = self.as_connection.get(_input)
+        put_data(self.as_connection, _input, _expected)
+        _, _, bins = self.as_connection.get(_input)
         assert bins == _expected
 
     @pytest.mark.parametrize("_input, _expected", [
         (('test', 'demo', '1'), None),
         (('test', None, 2), None),                  # None is valid entry for set
         (('test', 'some_random_set', 1), None),
-        (('test', 'demo', 'non-existent'), None),      
+        (('test', 'demo', 'non-existent'), None),
         ])
     def test_pos_get_with_data_missing(self, _input, _expected):
         """
             Invoke get() with different combinations of None in key
         """
-        key, meta, bins = self.as_connection.get( _input )
+        _, meta, bins = self.as_connection.get(_input)
         assert bins == _expected
         assert meta == _expected
-      
+
     def test_pos_get_initkey_with_digest(self, put_data):
         """
             Invoke get() for a record having bytestring data.
@@ -110,20 +111,19 @@ class TestGetPut():
 
         put_data(self.as_connection, key, rec, policy)
 
-        key, meta, bins = self.as_connection.get(key, policy)
+        key, _, bins = self.as_connection.get(key, policy)
 
         assert bins == {'name': 'john'}
         assert key == ('test', 'demo', None,
                        bytearray(b"asd;as[d\'as;djk;uyfl"))
 
-
     @pytest.mark.parametrize("_input, _record, _policy, _expected", [
-        (('test', 'demo', 3), 
-            {'name': 'name%s' % (str(3)), 'age': 3}, 
+        (('test', 'demo', 3),
+            {'name': 'name%s' % (str(3)), 'age': 3},
             aerospike.POLICY_KEY_DIGEST,
             None),
-        (('test', 'demo', 3), 
-            {'name': 'name%s' % (str(3)), 'age': 3}, 
+        (('test', 'demo', 3),
+            {'name': 'name%s' % (str(3)), 'age': 3},
             aerospike.POLICY_KEY_SEND,
             3),
         ])
@@ -155,7 +155,7 @@ class TestGetPut():
 
         put_data(self.as_connection, key, rec, policy)
 
-        key, meta, bins = self.as_connection.get(key, policy)
+        key, _, bins = self.as_connection.get(key, policy)
 
         assert bins == {'name': 'john', 'age': 1}
         assert key == ('test', 'demo', 1, bytearray(
@@ -170,7 +170,7 @@ class TestGetPut():
         with pytest.raises(TypeError) as typeError:
             self.as_connection.get()
 
-        assert "Required argument 'key' (pos 1) not found" in typeError.value
+        assert "Required argument 'key' (pos 1) not found" in str(typeError.value)
 
     def test_neg_get_with_extra_parameter_in_key(self, put_data):
         """
@@ -184,7 +184,7 @@ class TestGetPut():
         try:
             put_data(self.as_connection, key, rec, policy)
 
-        except ParamError as exception:
+        except e.ParamError as exception:
             assert exception.code == -2
             assert exception.msg == 'key tuple must be (Namespace, Set, Key) or (Namespace, Set, None, Digest)'
 
@@ -193,23 +193,23 @@ class TestGetPut():
             Invoke get() with a key digest.
         """
         key = ('test', 'demo', 1)
-        key, meta = self.as_connection.exists(key)
+        key, _ = self.as_connection.exists(key)
         try:
-            key, meta, bins = self.as_connection.get((key[0], key[1], None, key[2]))
-        except ParamError as exception:
+            key, _, _ = self.as_connection.get((key[0], key[1], None, key[2]))
+        except e.ParamError as exception:
             assert exception.code == -2
             assert exception.msg == 'digest is invalid. expected a bytearray'
 
     @pytest.mark.parametrize("_input, _expected", [
-        ((None, 'demo', 2), 
+        ((None, 'demo', 2),
             (-2, 'namespace must be a string')),
-        (('test', 'demo', None), 
+        (('test', 'demo', None),
             (-2, 'either key or digest is required')),
-        (None , 
+        (None,
             (-2, 'key is invalid')),
-        (('test', 'demo'), 
+        (('test', 'demo'),
             (-2, 'key tuple must be (Namespace, Set, Key) or (Namespace, Set, None, Digest)')),
-        (('test', 'demo','',''), 
+        (('test', 'demo', '', ''),
             (-2, 'key tuple must be (Namespace, Set, Key) or (Namespace, Set, None, Digest)')),
         ])
     def test_neg_get_with_none(self, _input, _expected):
@@ -217,9 +217,9 @@ class TestGetPut():
             Invoke get() with None namespace/key in key tuple.
         """
         try:
-            key, meta, bins = self.as_connection.get(_input)
+            self.as_connection.get(_input)
 
-        except ParamError as exception:
+        except e.ParamError as exception:
             assert exception.code == _expected[0]
             assert exception.msg == _expected[1]
 
@@ -230,9 +230,9 @@ class TestGetPut():
         key = ('namespace', 'demo', 1)
 
         try:
-            key, meta, bins = self.as_connection.get(key)
+            key, _, _ = self.as_connection.get(key)
 
-        except NamespaceNotFound as exception:
+        except e.NamespaceNotFound as exception:
             assert exception.code == 20
 
     @pytest.mark.parametrize("_input, _expected", [
@@ -244,9 +244,9 @@ class TestGetPut():
         """
         put_data(self.as_connection, _input, _expected)
         self.as_connection.remove(_input)
-        key, meta, bins = self.as_connection.get(_input)
-        assert bins == None
-     
+        _, _, bins = self.as_connection.get(_input)
+        assert bins is None
+
     def test_neg_get_with_only_key_no_connection(self):
         """
             Invoke get() with a key and not policy's dict no connection
@@ -256,10 +256,10 @@ class TestGetPut():
         client1 = aerospike.client(config)
 
         try:
-            key, meta, bins = client1.get( key )
+            key, _, _ = client1.get(key)
 
-        except ClusterError as exception:
-            assert exception.code == 11L
+        except e.ClusterError as exception:
+            assert exception.code == 11
 
     # Put Tests
     def test_pos_put_with_policy_exists_create_or_replace(self):
@@ -282,7 +282,6 @@ class TestGetPut():
 
         (key, meta, bins) = self.as_connection.get(key)
         assert rec == bins
-
 
         rec = {"name": "John"}
         meta = {'gen': 2, 'ttl': 25000}
@@ -340,7 +339,6 @@ class TestGetPut():
 
         (key, meta, bins) = self.as_connection.get(key)
         assert rec == bins
-
 
         key = ('test', 'demo', 1)
 
@@ -470,12 +468,12 @@ class TestGetPut():
         assert rec == bins
         self.as_connection.remove(key)
 
-    @pytest.mark.parametrize("key, record, meta, policy",[
-        (('test', 'demo', 1), {'name': 'john'}, 
+    @pytest.mark.parametrize("key, record, meta, policy", [
+        (('test', 'demo', 1), {'name': 'john'},
             {'gen': True, 'ttl': 25000}, {'timeout': 1000}),
-        (('test', 'demo', 1), {'name': 'john'}, 
+        (('test', 'demo', 1), {'name': 'john'},
             {'gen': 3, 'ttl': True}, {'timeout': 1000}),
-        (('test', 'demo', 1), {'name': 'john'}, 
+        (('test', 'demo', 1), {'name': 'john'},
             {'gen': True, 'ttl': True}, {'timeout': 1000}),
         ])
     def test_pos_put_with_metadata_bool(self, key, record, meta, policy, put_data):
@@ -501,7 +499,7 @@ class TestGetPut():
         def serialize_function(val):
             return pickle.dumps(val)
 
-        response = aerospike.set_serializer(serialize_function)
+        aerospike.set_serializer(serialize_function)
 
         res = self.as_connection.put(key, rec, {}, {}, aerospike.SERIALIZER_USER)
 
@@ -509,7 +507,7 @@ class TestGetPut():
 
         _, _, bins = self.as_connection.get(key)
 
-        if self.skip_old_server == False:
+        if self.skip_old_server is False:
             assert bins == {'pi': 3.14}
         else:
             assert bins == {'pi': bytearray(b'F3.1400000000000001\n.')}
@@ -522,9 +520,9 @@ class TestGetPut():
             Invoke put() without any parameters.
         """
         with pytest.raises(TypeError) as typeError:
-            res = self.as_connection.put()
+            self.as_connection.put()
 
-        assert "Required argument 'key' (pos 1) not found" in typeError.value
+        assert "Required argument 'key' (pos 1) not found" in str(typeError.value)
 
     def test_neg_put_without_record(self):
         """
@@ -533,12 +531,12 @@ class TestGetPut():
         key = ('test', 'demo', 1)
 
         with pytest.raises(TypeError) as typeError:
-            res = self.as_connection.put(key)
+            self.as_connection.put(key)
 
-        assert "Required argument 'bins' (pos 2) not found" in typeError.value
+        assert "Required argument 'bins' (pos 2) not found" in str(typeError.value)
 
     @pytest.mark.parametrize("key, record, ex_code, ex_msg", [
-        (None, {"name": "John"}, -2, 'key is invalid'), 
+        (None, {"name": "John"}, -2, 'key is invalid'),
         # Invalid Namespace
         ((None, "demo", 1), {"name": "Steve"}, -2, "namespace must be a string" ),
         # Invalid Key
@@ -548,7 +546,7 @@ class TestGetPut():
         # Invalid set name
         (('test', 123, 1), {'a': ['!@#!#$%#', bytearray('ASD@#$AR#$@#ERQ#', 'utf-8')]}, -2, 'set must be a string'),
         # Invalid Namespace
-        ((123, 'demo', 1), { 'i': 'asdadasd' }, -2, 'namespace must be a string')
+        ((123, 'demo', 1), {'i': 'asdadasd'}, -2, 'namespace must be a string')
 
         ])
     def test_neg_put_with_none_key(self, key, record, ex_code, ex_msg):
@@ -557,16 +555,16 @@ class TestGetPut():
         """
 
         try:
-            res = self.as_connection.put(key, record)
+            self.as_connection.put(key, record)
 
-        except ParamError as exception:
+        except e.ParamError as exception:
             assert exception.code == ex_code
             assert exception.msg == ex_msg
 
     @pytest.mark.parametrize("key, record, exception_code", [
         # Non-existing NS & Set
         (('demo', 'test', 1), {'a': ['!@#!#$%#', bytearray('ASD@#$AR#$@#ERQ#', 'utf-8')]}, 20),
-        (('test1', 'demo', 1), { 'i': 'asdadasd' }, 20),    # Non-existing Namespace
+        (('test1', 'demo', 1), {'i': 'asdadasd'}, 20),    # Non-existing Namespace
 
         ])
     def test_neg_put_with_wrong_ns_and_set(self, key, record, exception_code):
@@ -574,9 +572,9 @@ class TestGetPut():
             Invoke put() with non-existent data
         """
         try:
-            res = self.as_connection.put( key, record)
+            self.as_connection.put(key, record)
 
-        except NamespaceNotFound as exception:
+        except e.NamespaceNotFound as exception:
             assert exception.code == exception_code
 
     def test_neg_put_with_policy_gen_EQ_less(self):
@@ -593,19 +591,18 @@ class TestGetPut():
         (key, meta, bins) = self.as_connection.get(key)
 
         assert {"name": "John"} == bins
-        gen = meta['gen']
         rec = {"name": "Smith"}
         policy = {'timeout': 1000, 'gen': aerospike.POLICY_GEN_EQ}
         meta = {'gen': 10}
 
         try:
-            self.as_connection.put( key, rec, meta, policy )
+            self.as_connection.put(key, rec, meta, policy)
 
-        except RecordGenerationError as exception:
+        except e.RecordGenerationError as exception:
             assert exception.code == 3
             assert exception.msg == 'AEROSPIKE_ERR_RECORD_GENERATION'
-        
-        ( key, meta, bins) = self.as_connection.get(key)
+
+        (key, meta, bins) = self.as_connection.get(key)
         assert {"name": "John"} == bins
 
         self.as_connection.remove(key)
@@ -624,19 +621,18 @@ class TestGetPut():
         (key, meta, bins) = self.as_connection.get(key)
 
         assert {"name": "John"} == bins
-        gen = meta['gen']
         rec = {"name": "Smith"}
         policy = {'timeout': 1000, 'gen': aerospike.POLICY_GEN_EQ}
         meta = {'gen': 4}
 
         try:
-            self.as_connection.put( key, rec, meta, policy )
+            self.as_connection.put(key, rec, meta, policy)
 
-        except RecordGenerationError as exception:
+        except e.RecordGenerationError as exception:
             assert exception.code == 3
             assert exception.msg == 'AEROSPIKE_ERR_RECORD_GENERATION'
-        
-        ( key, meta, bins) = self.as_connection.get(key)
+
+        (key, meta, bins) = self.as_connection.get(key)
         assert {"name": "John"} == bins
 
         self.as_connection.remove(key)
@@ -666,9 +662,9 @@ class TestGetPut():
         meta = {'gen': 2}
 
         try:
-            self.as_connection.put( key, rec, meta, policy )
+            self.as_connection.put(key, rec, meta, policy)
 
-        except RecordExistsError as exception:
+        except e.RecordExistsError as exception:
             assert exception.code == 5
             assert exception.msg == 'AEROSPIKE_ERR_RECORD_EXISTS'
             assert exception.bin == {'name': 'Smith'}
@@ -694,9 +690,9 @@ class TestGetPut():
             'key': aerospike.POLICY_KEY_SEND
         }
         try:
-            assert 0 == self.as_connection.put( key, rec, meta, policy )
+            assert 0 == self.as_connection.put(key, rec, meta, policy)
 
-        except RecordNotFound as exception:
+        except e.RecordNotFound as exception:
             assert exception.code == 2
             assert exception.msg == 'AEROSPIKE_ERR_RECORD_NOT_FOUND'
 
@@ -712,10 +708,10 @@ class TestGetPut():
 
         try:
             self.as_connection.put(key, rec, meta, policy)
-        except RecordNotFound as exception:
+        except e.RecordNotFound as exception:
             assert exception.code == 2
             assert exception.msg == 'AEROSPIKE_ERR_RECORD_NOT_FOUND'
- 
+
     def test_neg_put_with_policy_exists_update_negative(self):
         """
             Invoke put() for a record with update policy negative.
@@ -732,9 +728,9 @@ class TestGetPut():
             'key': aerospike.POLICY_KEY_SEND
         }
         try:
-            assert 0 == self.as_connection.put( key, rec, meta, policy )
+            assert 0 == self.as_connection.put(key, rec, meta, policy)
 
-        except RecordNotFound as exception:
+        except e.RecordNotFound as exception:
             assert exception.code == 2
             assert exception.msg == 'AEROSPIKE_ERR_RECORD_NOT_FOUND'
 
@@ -758,9 +754,9 @@ class TestGetPut():
         meta = {'gen': gen}
 
         try:
-            self.as_connection.put( key, rec, meta, policy )
+            self.as_connection.put(key, rec, meta, policy)
 
-        except RecordGenerationError as exception:
+        except e.RecordGenerationError as exception:
             assert exception.code == 3
             assert exception.msg == 'AEROSPIKE_ERR_RECORD_GENERATION'
 
@@ -780,18 +776,18 @@ class TestGetPut():
         bins = {"name": "John"}
 
         try:
-            client1.put( key, bins )
-        except ClusterError as exception:
-            assert exception.code == 11L
+            client1.put(key, bins)
+        except e.ClusterError as exception:
+            assert exception.code == 11
 
     @pytest.mark.parametrize("key, record, meta, policy, ex_code, ex_msg", [
-        (('test', 'demo', 1), {'name': 'john'}, 
+        (('test', 'demo', 1), {'name': 'john'},
             {'gen': "wrong", 'ttl': 25000}, {'timeout': 1000},  #Gen as string
             -2, "Generation should be an int or long"),
-        (('test', 'demo', 1), {'name': 'john'}, 
+        (('test', 'demo', 1), {'name': 'john'},
             {'gen': 3, 'ttl': "25000"}, {'timeout': 1000},      # ttl as string
             -2, "TTL should be an int or long"),
-        (('test', 'demo', 1), {'name': 'john'}, 
+        (('test', 'demo', 1), {'name': 'john'},
             {'gen': 3, 'ttl': 25000}, {'timeout': "1000"},      # Timeout as string
             -2, "timeout is invalid"),
         (('test', 'demo', 1), {'name': 'john'},             #Policy as string
@@ -811,7 +807,7 @@ class TestGetPut():
         try:
             put_data(self.as_connection, key, record, meta, policy)
             # self.as_connection.remove(key)
-        except ParamError as exception:
+        except e.ParamError as exception:
             assert exception.code == ex_code
             assert exception.msg == ex_msg
 
@@ -836,10 +832,10 @@ class TestGetPut():
         }
 
         try:
-            self.as_connection.put( key, put_record)
+            self.as_connection.put(key, put_record)
 
-        except BinNameError as exception:
-            assert exception.code == 21L
+        except e.BinNameError as exception:
+            assert exception.code == 21
 
     def test_edge_put_with_integer_greater_than_maxisze(self):
         """
@@ -852,9 +848,11 @@ class TestGetPut():
         try:
             assert 0 == self.as_connection.put(key, bins)
 
-        except ParamError as exception:
+        except e.ParamError as exception:
             assert exception.code == -2
             assert exception.msg == 'integer value exceeds sys.maxsize'
+        except SystemError as exception:
+            pass
 
     def test_edge_put_with_key_as_an_integer_greater_than_maxsize(self):
         """
@@ -867,6 +865,8 @@ class TestGetPut():
         try:
             assert 0 == self.as_connection.put(key, bins)
 
-        except ParamError as exception:
+        except e.ParamError as exception:
             assert exception.code == -2
             assert exception.msg == 'integer value for KEY exceeds sys.maxsize'
+        except SystemError as exception:
+            pass

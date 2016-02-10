@@ -1,16 +1,12 @@
 # -*- coding: utf-8 -*-
 import pytest
 import sys
-import time
-try:
-    import cPickle as pickle
-except:
-    import pickle
 from .test_base_class import TestBaseClass
 
 aerospike = pytest.importorskip("aerospike")
 try:
-    from aerospike.exception import *
+    import aerospike
+    from aerospike import exception as e
 except:
     print("Please install aerospike python client.")
     sys.exit(1)
@@ -30,7 +26,7 @@ class TestRemovebin(object):
         put_data(self.as_connection, key, record)
         self.as_connection.remove_bin(key, bin_for_removal)
 
-        (key, meta, bins) = self.as_connection.get(key)
+        (key, _, bins) = self.as_connection.get(key)
 
         del record[''.join(bin_for_removal)]
         assert bins == record
@@ -45,7 +41,7 @@ class TestRemovebin(object):
         put_data(self.as_connection, key, record)
         self.as_connection.remove_bin(key, ["age"], {}, policy)
 
-        (key, meta, bins) = self.as_connection.get(key)
+        (key, _, bins) = self.as_connection.get(key)
         del record["age"]
         assert bins == record
 
@@ -69,7 +65,7 @@ class TestRemovebin(object):
         (key, meta, bins) = self.as_connection.get(key)
         del record["age"]
         assert bins == record
-        assert key == ('test', 'demo', None,  
+        assert key == ('test', 'demo', None,
             bytearray(b"\xbd\x87-\x84\xae99|\x06z\x12\xf3\xef\x12\xb9\x1a\xa2\x1a;\'"))
 
     def test_pos_remove_bin_with_policy_send_gen_eq_positive(self, put_data):
@@ -111,7 +107,7 @@ class TestRemovebin(object):
         policy = {'timeout': 1000, 'key': aerospike.POLICY_KEY_DIGEST}
         self.as_connection.remove_bin(key, ["age"], {}, policy)
 
-        (key, meta, bins) = self.as_connection.get(key)
+        (key, _, bins) = self.as_connection.get(key)
 
         del record['age']
         assert bins == record
@@ -135,7 +131,7 @@ class TestRemovebin(object):
         self.as_connection.remove_bin(key, ["name"], {}, policy)
 
         _, _, bins = self.as_connection.get(key)
-        assert bins == None
+        assert bins is None
 
     def test_pos_remove_bin_no_bin(self, put_data):
         """
@@ -144,11 +140,12 @@ class TestRemovebin(object):
         key = ('test', 'demo', 1)
         record = {'name': "jeff", 'age': 45}
         put_data(self.as_connection, key, record)
-        self.as_connection.remove_bin(key, [])
-
-        (key , meta, bins) = self.as_connection.get(key)
-
-        assert bins == record
+        try:
+            self.as_connection.remove_bin(key, [])
+            (key, _, bins) = self.as_connection.get(key)
+            assert bins == record
+        except e.InvalidRequest:
+            pass
 
     @pytest.mark.parametrize("key, record, bins_for_removal", [
         (('test', 'demo', 1), {'name': "Devid", 'age': 30}, ["name", "age"]),
@@ -163,9 +160,9 @@ class TestRemovebin(object):
         self.as_connection.remove_bin(key, bins_for_removal)
 
         try:
-            (key , meta, bins) = self.as_connection.get(key)
+            (key, _, _) = self.as_connection.get(key)
 
-        except RecordNotFound as exception:
+        except e.RecordNotFound as exception:
             assert exception.code == 2
 
     @pytest.mark.parametrize("key, record, policy, bin_for_removal",[
@@ -219,18 +216,16 @@ class TestRemovebin(object):
         Invoke remove_bin() with policy exists create to check if it creates a record
         """
         key = ('test', 'demo', 20)
-        policy = {
-        'exists': aerospike.POLICY_EXISTS_CREATE
-       }  
+        policy = {'exists': aerospike.POLICY_EXISTS_CREATE}
         self.as_connection.remove_bin(key, ["age"], {}, policy)
 
-        (key, meta, bins) = self.as_connection.get(key)
+        (key, _, bins) = self.as_connection.get(key)
 
-        assert bins == None
+        assert bins is None
 
     # Negative Tests
 
-    @pytest.mark.parametrize("key, bin_for_removal, ex_code, ex_msg",[
+    @pytest.mark.parametrize("key, bin_for_removal, ex_code, ex_msg", [
         (None, ["age"], -2, "key is invalid"),                      # key_is_none
         (('test', 'demo', 1), None, -2, "Bins should be a list"),    #bin_is_none
         ])
@@ -241,7 +236,7 @@ class TestRemovebin(object):
         try:
             self.as_connection.remove_bin(None, bin_for_removal)
 
-        except ParamError as exception:
+        except e.ParamError as exception:
             assert exception.code == ex_code
             assert exception.msg == ex_msg
 
@@ -257,8 +252,8 @@ class TestRemovebin(object):
         try:
             client1.remove_bin(key, ["age"])
 
-        except ClusterError as exception:
-            assert exception.code == 11L
+        except e.ClusterError as exception:
+            assert exception.code == 11
 
     def test_neg_remove_bin_with_incorrect_meta(self):
         """
@@ -274,7 +269,7 @@ class TestRemovebin(object):
         try:
             self.as_connection.remove_bin(key, ["age"], policy)
 
-        except ClusterError as exception:
+        except e.ClusterError as exception:
             assert exception.code == -1
 
     def test_neg_remove_bin_with_incorrect_policy(self):
@@ -289,7 +284,7 @@ class TestRemovebin(object):
         try:
             self.as_connection.remove_bin(key, ["age"], {}, policy)
 
-        except ClientError as exception:
+        except e.ClientError as exception:
             assert exception.code == -1
 
     def test_neg_remove_bin_with_no_parameters(self):
@@ -298,7 +293,7 @@ class TestRemovebin(object):
         """
         with pytest.raises(TypeError) as typeError:
             self.as_connection.remove_bin()
-        assert "Required argument 'key' (pos 1) not found" in typeError.value
+        assert "Required argument 'key' (pos 1) not found" in str(typeError.value)
 
     def test_neg_remove_bin_with_policy_send_gen_eq_not_equal(self, put_data):
         """
@@ -321,7 +316,7 @@ class TestRemovebin(object):
         try:
             self.as_connection.remove_bin(key, ["age"], meta, policy)
 
-        except RecordGenerationError as exception:
+        except e.RecordGenerationError as exception:
             assert exception.code == 3
 
         (key, meta, bins) = self.as_connection.get(key)
@@ -352,7 +347,7 @@ class TestRemovebin(object):
         try:
             self.as_connection.remove_bin(key, ["age"], meta, policy)
 
-        except RecordGenerationError as exception:
+        except e.RecordGenerationError as exception:
             assert exception.code == 3
 
         (key, meta, bins) = self.as_connection.get(key)
@@ -374,12 +369,12 @@ class TestRemovebin(object):
         try:
             self.as_connection.remove_bin(key, ["age"], {}, policy)
 
-        except ClientError as exception:
+        except e.ClientError as exception:
             assert exception.code == -1
 
     @pytest.mark.parametrize("key, bin_for_removal, ex_code", [
-        (('test', 'demo', 1), ["non-existent"], 0L),               # non-existent bin
-        (('test', 'demo', "non-existent"), ["age"], 0L),        # non-existent key
+        (('test', 'demo', 1), ["non-existent"], 0),               # non-existent bin
+        (('test', 'demo', "non-existent"), ["age"], 0),        # non-existent key
         ])
     def test_neg_remove_bin_with_nonexistent_data(self, key, bin_for_removal, ex_code):
         """
@@ -387,7 +382,7 @@ class TestRemovebin(object):
         """
         status = self.as_connection.remove_bin(key, bin_for_removal)
 
-        assert status == 0L
+        assert status == 0
 
     def test_neg_remove_bin_with_extra_parameter(self):
         """
@@ -398,4 +393,4 @@ class TestRemovebin(object):
         with pytest.raises(TypeError) as typeError:
             self.as_connection.remove_bin(key, ["age"], {}, policy, "")
 
-        assert "remove_bin() takes at most 4 arguments (5 given)" in typeError.value
+        assert "remove_bin() takes at most 4 arguments (5 given)" in str(typeError.value)

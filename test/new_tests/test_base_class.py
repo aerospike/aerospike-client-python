@@ -1,6 +1,8 @@
 import pytest
-import ConfigParser
-
+try:
+    import ConfigParser as configparser
+except:
+    import configparser
 
 class TestBaseClass(object):
     hostlist = []
@@ -11,7 +13,7 @@ class TestBaseClass(object):
 
     @staticmethod
     def get_hosts():
-        config = ConfigParser.ConfigParser()
+        config = configparser.ConfigParser()
         config.read("config.conf")
         if config.has_option('enterprise-edition', 'hosts'):
             hosts_str = config.get('enterprise-edition','hosts')
