@@ -1,5 +1,5 @@
 import pytest
-from test_base_class import TestBaseClass
+from .test_base_class import TestBaseClass
 aerospike = pytest.importorskip("aerospike")
 
 

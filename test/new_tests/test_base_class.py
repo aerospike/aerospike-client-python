@@ -1,5 +1,5 @@
 import pytest
-import ConfigParser
+import configparser
 
 
 class TestBaseClass(object):
