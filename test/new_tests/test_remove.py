@@ -2,14 +2,17 @@
 
 import pytest
 import sys
-import cPickle as pickle
-from test_base_class import TestBaseClass
+try:
+    import cPickle as pickle
+except:
+    import pickle
+from .test_base_class import TestBaseClass
 
 aerospike = pytest.importorskip("aerospike")
 try:
     from aerospike.exception import *
 except:
-    print "Please install aerospike python client."
+    print("Please install aerospike python client.")
     sys.exit(1)
 
 @pytest.mark.usefixtures("as_connection")

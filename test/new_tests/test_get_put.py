@@ -2,17 +2,19 @@
 
 import pytest
 import sys
-import cPickle as pickle
+try:
+    import cPickle as pickle
+except:
+    import pickle
 from collections import OrderedDict
-from test_base_class import TestBaseClass 
-import pdb
+from .test_base_class import TestBaseClass 
 import time
 
 aerospike = pytest.importorskip("aerospike")
 try:
     from aerospike.exception import *
 except:
-    print "Please install aerospike python client."
+    print("Please install aerospike python client.")
     sys.exit(1)
 
 class SomeClass(object):

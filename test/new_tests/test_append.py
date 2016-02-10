@@ -2,14 +2,17 @@
 import pytest
 import time
 import sys
-import cPickle as pickle
-from test_base_class import TestBaseClass
+try:
+    import cPickle as pickle
+except:
+    import pickle
+from .test_base_class import TestBaseClass
 
 aerospike = pytest.importorskip("aerospike")
 try:
     from aerospike.exception import *
 except:
-    print "Please install aerospike python client."
+    print("Please install aerospike python client.")
     sys.exit(1)
 
 # @pytest.mark.usefixtures("as_connection")
@@ -25,6 +28,10 @@ class TestAppend(object):
             rec = {'name': 'name%s' % (str(i)), 'age': i}
             as_connection.put(key, rec)
 
+        key = ("test", "demo", "bytearray_key")
+        as_connection.put(key, {"bytearray_bin": bytearray("asd;as[d'as;d",
+            "utf-8")})
+
         def teardown():
             """
             Teardown Method
@@ -33,8 +40,10 @@ class TestAppend(object):
                 key = ('test', 'demo', i)
                 as_connection.remove(key)
 
-        request.addfinalizer(teardown)
+            key = ('test', 'demo', 'bytearray_key')
+            as_connection.remove(key)
 
+        request.addfinalizer(teardown)
 
     def test_pos_append_with_correct_paramters(self):
         """
@@ -236,6 +245,31 @@ class TestAppend(object):
         assert bins == {'age': 1, 'name': 'name1str'}
         assert meta =={'gen': 2, 'ttl': 2592000}
 
+    def test_pos_append_with_bytearray(self):
+        """
+        Invoke append() with bytearray value
+        """
+        key = ('test', 'demo', 'bytearray_key')
+        self.as_connection.append(key, "bytearray_bin", bytearray("abc", "utf-8"))
+
+        (key, _, bins) = self.as_connection.get(key)
+
+        assert bins == {
+            'bytearray_bin': bytearray("asd;as[d'as;dabc", "utf-8")}
+
+    def test_pos_append_with_bytearray_new_key(self):
+        """
+        Invoke append() with bytearray value with a new record(non-existing)
+        """
+        key = ('test', 'demo', 'bytearray_new')
+        self.as_connection.append(
+            key, "bytearray_bin", bytearray("asd;as[d'as;d", "utf-8"))
+
+        (key, _, bins) = self.as_connection.get(key)
+
+        assert bins == {'bytearray_bin': bytearray("asd;as[d'as;d", "utf-8")}
+
+        self.as_connection.remove(key)
 
     #Negative append tests
     def test_neg_append_with_no_parameters(self):

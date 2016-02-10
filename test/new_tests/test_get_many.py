@@ -2,7 +2,7 @@
 
 import pytest
 import sys
-from test_base_class import TestBaseClass
+from .test_base_class import TestBaseClass
 try:
     from collections import Counter
 except ImportError:
@@ -12,7 +12,7 @@ aerospike = pytest.importorskip("aerospike")
 try:
     from aerospike.exception import *
 except:
-    print "Please install aerospike python client."
+    print("Please install aerospike python client.")
     sys.exit(1)
 
 class TestGetMany():
@@ -20,7 +20,6 @@ class TestGetMany():
     @pytest.fixture(autouse=True)
     def setup(self, request, as_connection):
         self.keys = []
-
         for i in xrange(5):
             key = ('test', 'demo', i)
             rec = {'name': 'name%s' % (str(i)), 'age': i}
@@ -69,15 +68,6 @@ class TestGetMany():
         assert Counter([x[0][2] for x in records]) == Counter([0, 1, 2, 3,
             4, 'float_value'])
         assert records[5][2] == {'float_value': 4.3}
-
-    def test_pos_get_many_with_none_keys(self):
-
-        try:
-            self.as_connection.get_many( None, {} )
-
-        except ParamError as exception:
-            assert exception.code == -2
-            assert exception.msg == "Keys should be specified as a list or tuple."
 
     def test_pos_get_many_with_non_existent_keys(self):
 
@@ -132,18 +122,6 @@ class TestGetMany():
             else:
                 assert x[0][3] == bytearray(b"asd;as[d'as;djk;uyfl")
             i = i+1
-
-    def test_pos_prepend_Invalid_Key_Invalid_ns(self):
-        """
-        Invoke prepend() invalid namespace
-        """
-        key = ('test1', 'demo', 1)
-        policy = {'timeout': 1000}
-        try:
-            key, meta, bins = self.as_connection.get(key)
-
-        except NamespaceNotFound as exception:
-            assert exception.code == 20
     
     def test_pos_get_many_with_non_existent_keys_in_middle(self):
 
@@ -168,6 +146,26 @@ class TestGetMany():
         for x in records:
             if x[0][2] == 'some_key':
                 assert x[2] == None
+
+    def test_pos_get_many_with_use_batch_direct(self):
+
+        hostlist, user, password = TestBaseClass.get_hosts()
+        config = {'hosts': hostlist,
+                  'policies': {'use_batch_direct': True}}
+        if user is None and password is None:
+            client_batch_direct = aerospike.client(config).connect()
+        else:
+            client_batch_direct = aerospike.client(config).connect(user, password)
+
+        records = client_batch_direct.get_many(self.keys, {'timeout': 30})
+
+        assert type(records) == list
+        assert len(records) == 6
+        assert Counter([x[0][2] for x in records]) == Counter([0, 1, 2, 3,
+                                                               4, 'float_value'])
+        assert records[5][2] == {'float_value': 4.3}
+
+        client_batch_direct.close()
 
     # Negative Tests
     def test_neg_get_many_Invalid_Key_without_primary_key(self):
@@ -231,3 +229,24 @@ class TestGetMany():
             self.as_connection.get_many()
 
         assert "Required argument 'keys' (pos 1) not found" in typeError.value
+
+    def test_neg_get_many_with_none_keys(self):
+
+        try:
+            self.as_connection.get_many( None, {} )
+
+        except ParamError as exception:
+            assert exception.code == -2
+            assert exception.msg == "Keys should be specified as a list or tuple."
+
+    def test_neg_prepend_Invalid_Key_Invalid_ns(self):
+        """
+        Invoke prepend() invalid namespace
+        """
+        key = ('test1', 'demo', 1)
+        policy = {'timeout': 1000}
+        try:
+            key, meta, bins = self.as_connection.get(key)
+
+        except NamespaceNotFound as exception:
+            assert exception.code == 20

@@ -2,14 +2,17 @@
 import pytest
 import time
 import sys
-import cPickle as pickle
-from test_base_class import TestBaseClass
+try:
+    import cPickle as pickle
+except:
+    import pickle
+from .test_base_class import TestBaseClass
 
 aerospike = pytest.importorskip("aerospike")
 try:
     from aerospike.exception import *
 except:
-    print "Please install aerospike python client."
+    print("Please install aerospike python client.")
     sys.exit(1)
 
 class TestPrepend():
@@ -23,6 +26,9 @@ class TestPrepend():
             rec = {'name': 'name%s' % (str(i)), 'age': i, 'nolist': [1, 2, 3]}
             as_connection.put(key, rec)
 
+        key = ('test', 'demo', 'bytearray_key')
+        as_connection.put(key, {"bytearray_bin": bytearray("asd;as[d'as;d", "utf-8")})
+
         def teardown():
             """
             Teardown Method
@@ -30,6 +36,9 @@ class TestPrepend():
             for i in xrange(5):
                 key = ('test', 'demo', i)
                 as_connection.remove(key)
+
+            key = ('test', 'demo', 'bytearray_key')
+            as_connection.remove(key)
 
         request.addfinalizer(teardown)
 
@@ -222,6 +231,33 @@ class TestPrepend():
         assert status == 0L
         key, meta, bins = self.as_connection.get(key)
         assert bins['name1'] == 'str'
+
+    def test_pos_prepend_with_bytearray(self):
+        """
+        Invoke prepend() with bytearray value
+        """
+        key = ('test', 'demo', 'bytearray_key')
+        self.as_connection.prepend(
+            key, "bytearray_bin", bytearray("abc", "utf-8"))
+
+        (key, _, bins) = self.as_connection.get(key)
+
+        assert bins == {
+            'bytearray_bin': bytearray("abcasd;as[d'as;d", "utf-8")}
+
+    def test_pos_prepend_with_bytearray_new_key(self):
+        """
+        Invoke prepend() with bytearray value with a new record(non-existing)
+        """
+        key = ('test', 'demo', 'bytearray_new')
+        self.as_connection.prepend(
+            key, "bytearray_bin", bytearray("asd;as[d'as;d", "utf-8"))
+
+        (key, _, bins) = self.as_connection.get(key)
+
+        assert bins == {'bytearray_bin': bytearray("asd;as[d'as;d", "utf-8")}
+
+        self.as_connection.remove(key)
 
     #Negative tests
     def test_neg_prepend_with_no_parameters(self):

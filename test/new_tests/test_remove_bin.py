@@ -2,14 +2,17 @@
 import pytest
 import sys
 import time
-import cPickle as pickle
-from test_base_class import TestBaseClass
+try:
+    import cPickle as pickle
+except:
+    import pickle
+from .test_base_class import TestBaseClass
 
 aerospike = pytest.importorskip("aerospike")
 try:
     from aerospike.exception import *
 except:
-    print "Please install aerospike python client."
+    print("Please install aerospike python client.")
     sys.exit(1)
 
 @pytest.mark.usefixtures("as_connection")
@@ -211,6 +214,20 @@ class TestRemovebin(object):
         assert bins == record
         assert key == ('test', 'demo', None, key_digest)
 
+    def test_pos_remove_bin_with_policy_exists_create(self):
+        """
+        Invoke remove_bin() with policy exists create to check if it creates a record
+        """
+        key = ('test', 'demo', 20)
+        policy = {
+        'exists': aerospike.POLICY_EXISTS_CREATE
+       }  
+        self.as_connection.remove_bin(key, ["age"], {}, policy)
+
+        (key, meta, bins) = self.as_connection.get(key)
+
+        assert bins == None
+
     # Negative Tests
 
     @pytest.mark.parametrize("key, bin_for_removal, ex_code, ex_msg",[
@@ -282,20 +299,6 @@ class TestRemovebin(object):
         with pytest.raises(TypeError) as typeError:
             self.as_connection.remove_bin()
         assert "Required argument 'key' (pos 1) not found" in typeError.value
-
-    def test_pos_remove_bin_with_policy_exists_create(self):
-        """
-        Invoke remove_bin() with policy exists create to check if it creates a record
-        """
-        key = ('test', 'demo', 20)
-        policy = {
-        'exists': aerospike.POLICY_EXISTS_CREATE
-       }  
-        self.as_connection.remove_bin(key, ["age"], {}, policy)
-
-        (key, meta, bins) = self.as_connection.get(key)
-
-        assert bins == None
 
     def test_neg_remove_bin_with_policy_send_gen_eq_not_equal(self, put_data):
         """

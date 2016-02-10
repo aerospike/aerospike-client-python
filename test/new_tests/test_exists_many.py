@@ -3,8 +3,7 @@
 import pytest
 import time
 import sys
-import pdb
-from test_base_class import TestBaseClass
+from .test_base_class import TestBaseClass
 try:
     from collections import Counter
 except ImportError:
@@ -14,7 +13,7 @@ aerospike = pytest.importorskip("aerospike")
 try:
     from aerospike.exception import *
 except:
-    print "Please install aerospike python client."
+    print("Please install aerospike python client.")
     sys.exit(1)
 
 
