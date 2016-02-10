@@ -788,7 +788,7 @@ class TestGetPut():
             -2, "Generation should be an int or long"),
         (('test', 'demo', 1), {'name': 'john'}, 
             {'gen': 3, 'ttl': "25000"}, {'timeout': 1000},      # ttl as string
-            -2, "Ttl should be an int or long"),
+            -2, "TTL should be an int or long"),
         (('test', 'demo', 1), {'name': 'john'}, 
             {'gen': 3, 'ttl': 25000}, {'timeout': "1000"},      # Timeout as string
             -2, "timeout is invalid"),
