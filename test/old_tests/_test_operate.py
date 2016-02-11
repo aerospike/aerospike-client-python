@@ -608,7 +608,7 @@ class TestOperate(object):
 
         except e.ParamError as exception:
             assert exception.code == -2
-            assert exception.msg == "operation can contain only op, bin and val keys"
+            assert exception.msg == "operation can contain only op, bin, index and val keys"
 
     def test_operate_append_value_integer_negative(self):
         """
