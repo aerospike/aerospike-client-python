@@ -130,8 +130,11 @@ class TestRemovebin(object):
         policy = {'timeout': 1000}
         self.as_connection.remove_bin(key, ["name"], {}, policy)
 
-        _, _, bins = self.as_connection.get(key)
-        assert bins is None
+        try:
+            _, _, bins = self.as_connection.get(key)
+            assert bins is None
+        except e.RecordNotFound as exception:
+            assert exception.code == 2
 
     def test_pos_remove_bin_no_bin(self, put_data):
         """
@@ -219,9 +222,12 @@ class TestRemovebin(object):
         policy = {'exists': aerospike.POLICY_EXISTS_CREATE}
         self.as_connection.remove_bin(key, ["age"], {}, policy)
 
-        (key, _, bins) = self.as_connection.get(key)
+        try:
+            (key, _, bins) = self.as_connection.get(key)
 
-        assert bins is None
+            assert bins is None
+        except e.RecordNotFound as exception:
+            assert exception.code == 2
 
     # Negative Tests
 
