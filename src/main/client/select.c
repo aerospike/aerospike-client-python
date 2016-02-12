@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright 2013-2015 Aerospike, Inc.
+ * Copyright 2013-2016 Aerospike, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -25,7 +25,6 @@
 #include "client.h"
 #include "conversions.h"
 #include "exceptions.h"
-#include "key.h"
 #include "policy.h"
 
 /**
@@ -102,7 +101,7 @@ PyObject * AerospikeClient_Select_Invoke(
 			bins[i] = (char *) alloca(sizeof(char) * AS_BIN_NAME_MAX_SIZE);
 			if (PyUnicode_Check(py_val)) {
 				py_ustr = PyUnicode_AsUTF8String(py_val);
-				strncpy(bins[i], PyString_AsString(py_ustr), AS_BIN_NAME_MAX_LEN);
+				strncpy(bins[i], PyBytes_AsString(py_ustr), AS_BIN_NAME_MAX_LEN);
 				bins[i][AS_BIN_NAME_MAX_LEN] = '\0';
 			} else if ( PyString_Check(py_val) ) {
 				strncpy(bins[i], PyString_AsString(py_val), AS_BIN_NAME_MAX_LEN);
@@ -130,29 +129,12 @@ PyObject * AerospikeClient_Select_Invoke(
 	as_record_init(rec, 0);
 
 	// Invoke operation
-    Py_BEGIN_ALLOW_THREADS
+	Py_BEGIN_ALLOW_THREADS
 	aerospike_key_select(self->as, &err, read_policy_p, &key, (const char **) bins, &rec);
-    Py_END_ALLOW_THREADS
+	Py_END_ALLOW_THREADS
 
 	if ( err.code == AEROSPIKE_OK ) {
 		record_to_pyobject(self, &err, rec, &key, &py_rec);
-	}
-	else if( err.code == AEROSPIKE_ERR_RECORD_NOT_FOUND ) {
-		as_error_reset(&err);
-
-		PyObject * py_rec_key = NULL;
-		PyObject * py_rec_meta = Py_None;
-		PyObject * py_rec_bins = Py_None;
-
-		key_to_pyobject(&err, &key, &py_rec_key);
-
-		py_rec = PyTuple_New(3);
-		PyTuple_SetItem(py_rec, 0, py_rec_key);
-		PyTuple_SetItem(py_rec, 1, py_rec_meta);
-		PyTuple_SetItem(py_rec, 2, py_rec_bins);
-
-		Py_INCREF(py_rec_meta);
-		Py_INCREF(py_rec_bins);
 	}
 	else {
 		as_error_update(&err, err.code, NULL);

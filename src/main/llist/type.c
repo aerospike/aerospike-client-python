@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright 2013-2015 Aerospike, Inc.
+ * Copyright 2013-2016 Aerospike, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -150,55 +150,58 @@ static int AerospikeLList_Type_Init(AerospikeLList * self, PyObject * args, PyOb
 
 static void AerospikeLList_Type_Dealloc(PyObject * self)
 {
-	self->ob_type->tp_free((PyObject *) self);
+	Py_TYPE(self)->tp_free((PyObject *) self);
 }
 
 /*******************************************************************************
  * PYTHON TYPE DESCRIPTOR
  ******************************************************************************/
-
 static PyTypeObject AerospikeLList_Type = {
-	PyObject_HEAD_INIT(NULL)
-
-		.ob_size			= 0,
-	.tp_name			= "aerospike.LList",
-	.tp_basicsize		= sizeof(AerospikeLList),
-	.tp_itemsize		= 0,
-	.tp_dealloc			= (destructor) AerospikeLList_Type_Dealloc,
-	.tp_print			= 0,
-	.tp_getattr			= 0,
-	.tp_setattr			= 0,
-	.tp_compare			= 0,
-	.tp_repr			= 0,
-	.tp_as_number		= 0,
-	.tp_as_sequence		= 0,
-	.tp_as_mapping		= 0,
-	.tp_hash			= 0,
-	.tp_call			= 0,
-	.tp_str				= 0,
-	.tp_getattro		= 0,
-	.tp_setattro		= 0,
-	.tp_as_buffer		= 0,
-	.tp_flags			= Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE,
-	.tp_doc				=
-		"The LList class assists in populating the parameters of a LList.\n",
-	.tp_traverse		= 0,
-	.tp_clear			= 0,
-	.tp_richcompare		= 0,
-	.tp_weaklistoffset	= 0,
-	.tp_iter			= 0,
-	.tp_iternext		= 0,
-	.tp_methods			= AerospikeLList_Type_Methods,
-	.tp_members			= 0,
-	.tp_getset			= 0,
-	.tp_base			= 0,
-	.tp_dict			= 0,
-	.tp_descr_get		= 0,
-	.tp_descr_set		= 0,
-	.tp_dictoffset		= 0,
-	.tp_init			= (initproc) AerospikeLList_Type_Init,
-	.tp_alloc			= 0,
-	.tp_new				= AerospikeLList_Type_New
+	PyVarObject_HEAD_INIT(NULL, 0)
+	"aerospike.LList",                  // tp_name
+	sizeof(AerospikeLList),             // tp_basicsize
+	0,                                  // tp_itemsize
+	(destructor) AerospikeLList_Type_Dealloc,
+	                                    // tp_dealloc
+	0,                                  // tp_print
+	0,                                  // tp_getattr
+	0,                                  // tp_setattr
+	0,                                  // tp_compare
+	0,                                  // tp_repr
+	0,                                  // tp_as_number
+	0,                                  // tp_as_sequence
+	0,                                  // tp_as_mapping
+	0,                                  // tp_hash
+	0,                                  // tp_call
+	0,                                  // tp_str
+	0,                                  // tp_getattro
+	0,                                  // tp_setattro
+	0,                                  // tp_as_buffer
+	Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE,
+	                                    // tp_flags
+	"The LList class assists in populating the parameters of a LList.\n",
+	                                    // tp_doc
+	0,                                  // tp_traverse
+	0,                                  // tp_clear
+	0,                                  // tp_richcompare
+	0,                                  // tp_weaklistoffset
+	0,                                  // tp_iter
+	0,                                  // tp_iternext
+	AerospikeLList_Type_Methods,        // tp_methods
+	0,                                  // tp_members
+	0,                                  // tp_getset
+	0,                                  // tp_base
+	0,                                  // tp_dict
+	0,                                  // tp_descr_get
+	0,                                  // tp_descr_set
+	0,                                  // tp_dictoffset
+	(initproc) AerospikeLList_Type_Init,
+	                                    // tp_init
+	0,                                  // tp_alloc
+	AerospikeLList_Type_New,      		// tp_new
+	0,                                  // tp_free
+	0,                                  // tp_is_gc
+	0                                   // tp_bases
 };
 
 /*******************************************************************************

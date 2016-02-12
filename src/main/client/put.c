@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright 2013-2015 Aerospike, Inc.
+ * Copyright 2013-2016 Aerospike, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -25,7 +25,6 @@
 #include "client.h"
 #include "conversions.h"
 #include "exceptions.h"
-#include "key.h"
 #include "policy.h"
 
 /**
@@ -58,7 +57,7 @@ PyObject * AerospikeClient_Put_Invoke(
 	// Initialisation flags
 	bool key_initialised = false;
 	bool record_initialised = false;
-	int iter=0;
+	u_int32_t iter=0;
 
 	// Initialize record
 	as_record_init(&rec, 0);
@@ -79,6 +78,7 @@ PyObject * AerospikeClient_Put_Invoke(
 		as_error_update(&err, AEROSPIKE_ERR_CLUSTER, "No connection to aerospike cluster");
 		goto CLEANUP;
 	}
+
 	// Convert python key object to as_key
 	pyobject_to_key(&err, py_key, &key);
 	if ( err.code != AEROSPIKE_OK ) {
@@ -101,17 +101,17 @@ PyObject * AerospikeClient_Put_Invoke(
 	}
 
 	// Invoke operation
-    Py_BEGIN_ALLOW_THREADS
+	Py_BEGIN_ALLOW_THREADS
 	aerospike_key_put(self->as, &err, write_policy_p, &key, &rec);
-    Py_END_ALLOW_THREADS
+	Py_END_ALLOW_THREADS
 	if ( err.code != AEROSPIKE_OK ) {
 		as_error_update(&err, err.code, NULL);
 	}
 
 CLEANUP:
-    for (iter = 0; iter < static_pool.current_bytes_id; iter++) {
-        as_bytes_destroy(&static_pool.bytes_pool[iter]);
-    }
+	for (iter = 0; iter < static_pool.current_bytes_id; iter++) {
+		as_bytes_destroy(&static_pool.bytes_pool[iter]);
+	}
 	if (key_initialised == true){
 		// Destroy the key if it is initialised.
 		as_key_destroy(&key);
@@ -160,7 +160,7 @@ PyObject * AerospikeClient_Put(AerospikeClient * self, PyObject * args, PyObject
 	PyObject * py_bins = NULL;
 	PyObject * py_meta = NULL;
 	PyObject * py_policy = NULL;
-    PyObject * py_serializer_option = NULL;
+	PyObject * py_serializer_option = NULL;
 	long serializer_option = SERIALIZER_PYTHON;
 
 	// Python Function Keyword Arguments
@@ -172,14 +172,14 @@ PyObject * AerospikeClient_Put(AerospikeClient * self, PyObject * args, PyObject
 		return NULL;
 	}
 
-    if(py_serializer_option) {
-        if(PyInt_Check(py_serializer_option) || PyLong_Check(py_serializer_option)) {
-            self->is_client_put_serializer = true;
-            serializer_option = PyLong_AsLong(py_serializer_option);
-        }
-    } else {
-            self->is_client_put_serializer = false;
-    }
+	if(py_serializer_option) {
+		if(PyInt_Check(py_serializer_option) || PyLong_Check(py_serializer_option)) {
+			self->is_client_put_serializer = true;
+			serializer_option = PyLong_AsLong(py_serializer_option);
+		}
+	} else {
+			self->is_client_put_serializer = false;
+	}
 	// Invoke Operation
 	return AerospikeClient_Put_Invoke(self,
 		py_key, py_bins, py_meta, py_policy, serializer_option);

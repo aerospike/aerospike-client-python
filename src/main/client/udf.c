@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright 2013-2015 Aerospike, Inc.
+ * Copyright 2013-2016 Aerospike, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -90,7 +90,7 @@ PyObject * AerospikeClient_UDF_Put(AerospikeClient * self, PyObject *args, PyObj
 	char *filename = NULL;
 	if (PyUnicode_Check(py_filename)) {
 		py_ustr = PyUnicode_AsUTF8String(py_filename);
-		filename = PyString_AsString(py_ustr);
+		filename = PyBytes_AsString(py_ustr);
 	} else if (PyString_Check(py_filename)) {
 		filename = PyString_AsString(py_filename);
 	} else {
@@ -113,21 +113,21 @@ PyObject * AerospikeClient_UDF_Put(AerospikeClient * self, PyObject *args, PyObj
 
 	char copy_filepath[AS_CONFIG_PATH_MAX_LEN] = {0};
 	uint32_t user_path_len = strlen(self->as->config.lua.user_path);
-    memcpy( copy_filepath,
-        self->as->config.lua.user_path,
-        user_path_len);
-    if ( self->as->config.lua.user_path[user_path_len-1] != '/' ) {
-        memcpy( copy_filepath + user_path_len, "/", 1);
-        user_path_len = user_path_len + 1;
-    }
-    char* extracted_filename = strrchr(filename, '/');
-    if (extracted_filename) {
-        memcpy( copy_filepath + user_path_len, extracted_filename + 1, strlen(extracted_filename) - 1);
-        copy_filepath[user_path_len + strlen(extracted_filename) - 1] = '\0';
-    } else {
-        memcpy( copy_filepath + user_path_len, filename, strlen(filename));
-        copy_filepath[user_path_len + strlen(filename)] = '\0';
-    }
+	memcpy( copy_filepath,
+		self->as->config.lua.user_path,
+		user_path_len);
+	if ( self->as->config.lua.user_path[user_path_len-1] != '/' ) {
+		memcpy( copy_filepath + user_path_len, "/", 1);
+		user_path_len = user_path_len + 1;
+	}
+	char* extracted_filename = strrchr(filename, '/');
+	if (extracted_filename) {
+		memcpy( copy_filepath + user_path_len, extracted_filename + 1, strlen(extracted_filename) - 1);
+		copy_filepath[user_path_len + strlen(extracted_filename) - 1] = '\0';
+	} else {
+		memcpy( copy_filepath + user_path_len, filename, strlen(filename));
+		copy_filepath[user_path_len + strlen(filename)] = '\0';
+	}
 
 
 	if ( !file_p ) {
@@ -141,9 +141,9 @@ PyObject * AerospikeClient_UDF_Put(AerospikeClient * self, PyObject *args, PyObj
 		goto CLEANUP;
 	}
 
-    int size = 0;
+	int size = 0;
 
-    uint8_t * buff = bytes;
+	uint8_t * buff = bytes;
 
 	if (access(self->as->config.lua.user_path, W_OK) == 0) {
 		copy_file_p = fopen(copy_filepath, "r");
@@ -186,9 +186,9 @@ PyObject * AerospikeClient_UDF_Put(AerospikeClient * self, PyObject *args, PyObj
 	as_bytes_init_wrap(&content, bytes, size, true);
 
 	// Invoke operation
-    Py_BEGIN_ALLOW_THREADS
+	Py_BEGIN_ALLOW_THREADS
 	aerospike_udf_put(self->as, &err, info_policy_p, filename, udf_type, &content);
-    Py_END_ALLOW_THREADS
+	Py_END_ALLOW_THREADS
 	if( err.code != AEROSPIKE_OK ) {
 		as_error_update(&err, err.code, NULL);
 		goto CLEANUP;
@@ -277,7 +277,7 @@ PyObject * AerospikeClient_UDF_Remove(AerospikeClient * self, PyObject *args, Py
 	char *filename = NULL;
 	if (PyUnicode_Check(py_filename)) {
 		py_ustr = PyUnicode_AsUTF8String(py_filename);
-		filename = PyString_AsString(py_ustr);
+		filename = PyBytes_AsString(py_ustr);
 	} else if (PyString_Check(py_filename)) {
 		filename = PyString_AsString(py_filename);
 	} else {
@@ -290,9 +290,9 @@ PyObject * AerospikeClient_UDF_Remove(AerospikeClient * self, PyObject *args, Py
 			&self->as->config.policies.info);
 
 	// Invoke operation
-    Py_BEGIN_ALLOW_THREADS
+	Py_BEGIN_ALLOW_THREADS
 	aerospike_udf_remove(self->as, &err, info_policy_p, filename);
-    Py_END_ALLOW_THREADS
+	Py_END_ALLOW_THREADS
 	if ( err.code != AEROSPIKE_OK ) {
 		as_error_update(&err, err.code, NULL);
 		goto CLEANUP;
@@ -375,9 +375,9 @@ PyObject * AerospikeClient_UDF_List(AerospikeClient * self, PyObject *args, PyOb
 	init_udf_files = 1;
 
 	// Invoke operation
-    Py_BEGIN_ALLOW_THREADS
+	Py_BEGIN_ALLOW_THREADS
 	aerospike_udf_list(self->as, &err, info_policy_p, &files);
-    Py_END_ALLOW_THREADS
+	Py_END_ALLOW_THREADS
 	if ( err.code != AEROSPIKE_OK ) {
 		as_error_update(&err, err.code, NULL);
 		goto CLEANUP;
@@ -469,7 +469,7 @@ PyObject * AerospikeClient_UDF_Get_UDF(AerospikeClient * self, PyObject *args, P
 	char* strModule = NULL;
 	if ( PyUnicode_Check(py_module) ) {
 		py_ustr = PyUnicode_AsUTF8String(py_module);
-		strModule = PyString_AsString(py_ustr);
+		strModule = PyBytes_AsString(py_ustr);
 	}
 	else if ( PyString_Check(py_module)){
 		strModule = PyString_AsString(py_module);
@@ -494,9 +494,9 @@ PyObject * AerospikeClient_UDF_Get_UDF(AerospikeClient * self, PyObject *args, P
 	init_udf_file=true;
 
 	// Invoke operation
-    Py_BEGIN_ALLOW_THREADS
+	Py_BEGIN_ALLOW_THREADS
 	aerospike_udf_get(self->as, &err, info_policy_p, strModule, (language - AS_UDF_TYPE_LUA) , &file);
-    Py_END_ALLOW_THREADS
+	Py_END_ALLOW_THREADS
 	if ( err.code != AEROSPIKE_OK ) {
 		as_error_update(&err, err.code, NULL);
 		goto CLEANUP;

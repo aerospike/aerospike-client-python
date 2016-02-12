@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright 2013-2015 Aerospike, Inc.
+ * Copyright 2013-2016 Aerospike, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -54,13 +54,13 @@ AerospikeQuery * AerospikeQuery_Select(AerospikeQuery * self, PyObject * args, P
 		PyObject * py_bin = PyTuple_GetItem(args, i);
 		if (PyUnicode_Check(py_bin)){
 			py_ubin = PyUnicode_AsUTF8String(py_bin);
-			bin = PyString_AsString(py_ubin);
+			bin = PyBytes_AsString(py_ubin);
 		}
 		else if (PyString_Check(py_bin)) {
 			// TRACE();
 			bin = PyString_AsString(py_bin);
-        } else if (PyByteArray_Check(py_bin)) {
-            bin = PyByteArray_AsString(py_bin);
+		} else if (PyByteArray_Check(py_bin)) {
+			bin = PyByteArray_AsString(py_bin);
 		} else {
 			// TRACE();
 			as_error_update(&err, AEROSPIKE_ERR_PARAM, "Bin name should be of type string");

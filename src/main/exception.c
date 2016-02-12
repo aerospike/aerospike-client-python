@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright 2013-2015 Aerospike, Inc.
+ * Copyright 2013-2016 Aerospike, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -24,11 +24,13 @@
 #include <stdlib.h>
 #include "exceptions.h"
 #include "exception_types.h"
+#include "macros.h"
+
 static PyObject *module;
 
 PyObject * AerospikeException_New(void)
 {
-	module = Py_InitModule3("aerospike.exception", NULL, "Exception objects");
+	MOD_DEF(module, "aerospike.exception", "Exception objects", NULL);
 
 	struct exceptions exceptions_array;
 
@@ -38,7 +40,7 @@ PyObject * AerospikeException_New(void)
 		{&exceptions_array.InvalidRequest, &exceptions_array.ServerFull, &exceptions_array.NoXDR, 
 			&exceptions_array.UnsupportedFeature, &exceptions_array.DeviceOverload, &exceptions_array.NamespaceNotFound, 
 			&exceptions_array.ForbiddenError, &exceptions_array.QueryError, &exceptions_array.ClusterError, 
-            &exceptions_array.InvalidGeoJSON},
+			&exceptions_array.InvalidGeoJSON},
 		{"InvalidRequest", "ServerFull", "NoXDR", "UnsupportedFeature", "DeviceOverload", "NamespaceNotFound", 
 			"ForbiddenError", "QueryError", "ClusterError", "InvalidGeoJSON"},
 		{AEROSPIKE_ERR_REQUEST_INVALID, AEROSPIKE_ERR_SERVER_FULL, AEROSPIKE_ERR_NO_XDR, 

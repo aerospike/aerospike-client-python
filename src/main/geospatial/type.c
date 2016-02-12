@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright 2013-2015 Aerospike, Inc.
+ * Copyright 2013-2016 Aerospike, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -33,25 +33,25 @@
  * PYTHON TYPE METHODS
  ******************************************************************************/
 static PyMemberDef AerospikeGeospatial_Type_Members[] = {
-    {"geo_data", T_OBJECT, offsetof(AerospikeGeospatial, geo_data), 0, "The aerospike.GeoJSON object"},
-    {NULL}
+	{"geo_data", T_OBJECT, offsetof(AerospikeGeospatial, geo_data), 0, "The aerospike.GeoJSON object"},
+	{NULL}
 };
 static PyMethodDef AerospikeGeospatial_Type_Methods[] = {
 
-    {"wrap",	(PyCFunction) AerospikeGeospatial_Wrap,		METH_VARARGS | METH_KEYWORDS,
-    			"Sets the geospatial data in the aerospike.GeoJSON object"},
+	{"wrap",	(PyCFunction) AerospikeGeospatial_Wrap,		METH_VARARGS | METH_KEYWORDS,
+				"Sets the geospatial data in the aerospike.GeoJSON object"},
 
-    {"unwrap",	(PyCFunction) AerospikeGeospatial_Unwrap,	METH_VARARGS | METH_KEYWORDS,
-    			"Returns the geospatial data contained in the aerospike.GeoJSON object"},
+	{"unwrap",	(PyCFunction) AerospikeGeospatial_Unwrap,	METH_VARARGS | METH_KEYWORDS,
+				"Returns the geospatial data contained in the aerospike.GeoJSON object"},
 
-    {"loads",	(PyCFunction) AerospikeGeospatial_Loads,	METH_VARARGS | METH_KEYWORDS,
-    			"Set the geospatial data from a raw GeoJSON string"},
+	{"loads",	(PyCFunction) AerospikeGeospatial_Loads,	METH_VARARGS | METH_KEYWORDS,
+				"Set the geospatial data from a raw GeoJSON string"},
 
-    {"dumps",	(PyCFunction) AerospikeGeospatial_Dumps,	METH_VARARGS | METH_KEYWORDS,
-    			"Get the geospatial data in form of a GeoJSON string."},
+	{"dumps",	(PyCFunction) AerospikeGeospatial_Dumps,	METH_VARARGS | METH_KEYWORDS,
+				"Get the geospatial data in form of a GeoJSON string."},
 
-    /*{"where",	(PyCFunction) AerospikeQuery_Where,		METH_VARARGS,
-    			"Predicate to be applied to the query."},*/
+	/*{"where",	(PyCFunction) AerospikeQuery_Where,		METH_VARARGS,
+				"Predicate to be applied to the query."},*/
 
 	{NULL}
 };
@@ -86,8 +86,8 @@ static PyObject * AerospikeGeospatial_Type_New(PyTypeObject * type, PyObject * a
 
 static int AerospikeGeospatial_Type_Init(AerospikeGeospatial * self, PyObject * args, PyObject * kwds)
 {
-    PyObject *py_geodata = NULL;
-    PyObject* initresult = NULL;
+	PyObject *py_geodata = NULL;
+	PyObject* initresult = NULL;
 
 	as_error err;
 	as_error_init(&err);
@@ -131,8 +131,8 @@ CLEANUP:
 
 PyObject *AerospikeGeospatial_Type_Repr(self) AerospikeGeospatial* self;
 {
-    PyObject *initresult = NULL, *py_return = NULL;
-    char *new_repr_str = NULL;
+	PyObject *initresult = NULL, *py_return = NULL;
+	char *new_repr_str = NULL;
 	// Aerospike error object
 	as_error err;
 	// Initialize error object
@@ -144,14 +144,14 @@ PyObject *AerospikeGeospatial_Type_Repr(self) AerospikeGeospatial* self;
 	}
 
 	initresult = AerospikeGeospatial_DoDumps(self->geo_data, &err);
-    if(!initresult) {
-	    as_error_update(&err, AEROSPIKE_ERR_CLIENT, "Unable to call get data in str format");
+	if(!initresult) {
+		as_error_update(&err, AEROSPIKE_ERR_CLIENT, "Unable to call get data in str format");
 		goto CLEANUP;
-    }
-    char *initresult_str = PyString_AsString(initresult);
-    new_repr_str = (char *) malloc(strlen(initresult_str) + 3);
-    memset(new_repr_str, '\0', strlen(initresult_str) + 3);
-    snprintf(new_repr_str, strlen(initresult_str) + 3, "\'%s\'", initresult_str);
+	}
+	char *initresult_str = PyString_AsString(initresult);
+	new_repr_str = (char *) malloc(strlen(initresult_str) + 3);
+	memset(new_repr_str, '\0', strlen(initresult_str) + 3);
+	snprintf(new_repr_str, strlen(initresult_str) + 3, "\'%s\'", initresult_str);
 
 CLEANUP:
 
@@ -165,15 +165,15 @@ CLEANUP:
 		return NULL;
 	}
 
-    py_return = PyString_FromString(new_repr_str);
-    Py_DECREF(initresult);
-    free(new_repr_str);
-    return py_return;
+	py_return = PyString_FromString(new_repr_str);
+	Py_DECREF(initresult);
+	free(new_repr_str);
+	return py_return;
 }
 
 PyObject* AerospikeGeospatial_Type_Str(self) AerospikeGeospatial* self;
 {
-    PyObject *initresult = NULL;
+	PyObject *initresult = NULL;
 	// Aerospike error object
 	as_error err;
 	// Initialize error object
@@ -185,10 +185,10 @@ PyObject* AerospikeGeospatial_Type_Str(self) AerospikeGeospatial* self;
 	}
 
 	initresult = AerospikeGeospatial_DoDumps(self->geo_data, &err);
-    if(!initresult) {
-	    as_error_update(&err, AEROSPIKE_ERR_CLIENT, "Unable to call get data in str format");
+	if(!initresult) {
+		as_error_update(&err, AEROSPIKE_ERR_CLIENT, "Unable to call get data in str format");
 		goto CLEANUP;
-    }
+	}
 
 CLEANUP:
 
@@ -205,59 +205,62 @@ CLEANUP:
 }
 static void AerospikeGeospatial_Type_Dealloc(AerospikeGeospatial * self)
 {
-    if (self->geo_data) {
-        Py_DECREF(self->geo_data);
-    }
-    self->ob_type->tp_free((PyObject *) self);
+	if (self->geo_data) {
+		Py_DECREF(self->geo_data);
+	}
+	Py_TYPE(self)->tp_free((PyObject *) self);
 }
 
 /*******************************************************************************
  * PYTHON TYPE DESCRIPTOR
  ******************************************************************************/
-
 static PyTypeObject AerospikeGeospatial_Type = {
-	PyObject_HEAD_INIT(NULL)
-
-    .ob_size			= 0,
-    .tp_name			= "aerospike.Geospatial",
-    .tp_basicsize		= sizeof(AerospikeGeospatial),
-    .tp_itemsize		= 0,
-    .tp_dealloc			= (destructor) AerospikeGeospatial_Type_Dealloc,
-    .tp_print			= 0,
-    .tp_getattr			= 0,
-    .tp_setattr			= 0,
-    .tp_compare			= 0,
-    .tp_repr			= AerospikeGeospatial_Type_Repr,
-    .tp_as_number		= 0,
-    .tp_as_sequence		= 0,
-    .tp_as_mapping		= 0,
-    .tp_hash			= 0,
-    .tp_call			= 0,
-    .tp_str				= AerospikeGeospatial_Type_Str,
-    .tp_getattro		= 0,
-    .tp_setattro		= 0,
-    .tp_as_buffer		= 0,
-    .tp_flags			= Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE,
-    .tp_doc				=
-    		"The GeoJSON class casts geospatial data to and from the server's\n"
-    		"as_geojson type.\n",
-    .tp_traverse		= 0,
-    .tp_clear			= 0,
-    .tp_richcompare		= 0,
-    .tp_weaklistoffset	= 0,
-    .tp_iter			= 0,
-    .tp_iternext		= 0,
-    .tp_methods			= AerospikeGeospatial_Type_Methods,
-    .tp_members			= AerospikeGeospatial_Type_Members,
-    .tp_getset			= 0,
-    .tp_base			= 0,
-    .tp_dict			= 0,
-    .tp_descr_get		= 0,
-    .tp_descr_set		= 0,
-    .tp_dictoffset		= 0,
-    .tp_init			= (initproc) AerospikeGeospatial_Type_Init,
-    .tp_alloc			= 0,
-    .tp_new				= AerospikeGeospatial_Type_New
+	PyVarObject_HEAD_INIT(NULL, 0)
+	"aerospike.Geospatial",             // tp_name
+	sizeof(AerospikeGeospatial),        // tp_basicsize
+	0,                                  // tp_itemsize
+	(destructor) AerospikeGeospatial_Type_Dealloc,
+	                                    // tp_dealloc
+	0,                                  // tp_print
+	0,                                  // tp_getattr
+	0,                                  // tp_setattr
+	0,                                  // tp_compare
+	AerospikeGeospatial_Type_Repr,      // tp_repr
+	0,                                  // tp_as_number
+	0,                                  // tp_as_sequence
+	0,                                  // tp_as_mapping
+	0,                                  // tp_hash
+	0,                                  // tp_call
+	AerospikeGeospatial_Type_Str,       // tp_str
+	0,                                  // tp_getattro
+	0,                                  // tp_setattro
+	0,                                  // tp_as_buffer
+	Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE,
+	                                    // tp_flags
+	"The GeoJSON class casts geospatial data to and from the server's\n"
+			"as_geojson type.\n",
+	                                    // tp_doc
+	0,                                  // tp_traverse
+	0,                                  // tp_clear
+	0,                                  // tp_richcompare
+	0,                                  // tp_weaklistoffset
+	0,                                  // tp_iter
+	0,                                  // tp_iternext
+	AerospikeGeospatial_Type_Methods,   // tp_methods
+	AerospikeGeospatial_Type_Members,   // tp_members
+	0,                                  // tp_getset
+	0,                                  // tp_base
+	0,                                  // tp_dict
+	0,                                  // tp_descr_get
+	0,                                  // tp_descr_set
+	0,                                  // tp_dictoffset
+	(initproc) AerospikeGeospatial_Type_Init,
+	                                    // tp_init
+	0,                                  // tp_alloc
+	AerospikeGeospatial_Type_New,      	// tp_new
+	0,                                  // tp_free
+	0,                                  // tp_is_gc
+	0                                   // tp_bases
 };
 
 /*******************************************************************************
@@ -282,16 +285,16 @@ AerospikeGeospatial  * Aerospike_Set_Geo_Data(PyObject * parent, PyObject * args
 		return NULL;
 	}
 
-    if (PyDict_Check(py_geodata)) {
-        AerospikeGeospatial * self = (AerospikeGeospatial *) AerospikeGeospatial_Type.tp_new(&AerospikeGeospatial_Type, args, kwds);
-	    if (AerospikeGeospatial_Type.tp_init((PyObject *) self, args, kwds) == 0) {
-		    return self;
-	    } else {
-		    return NULL;
-	    }
-    } else {
-        as_error_update(&err, AEROSPIKE_ERR_PARAM, "The geospatial data should be a dictionary");
-    }
+	if (PyDict_Check(py_geodata)) {
+		AerospikeGeospatial * self = (AerospikeGeospatial *) AerospikeGeospatial_Type.tp_new(&AerospikeGeospatial_Type, args, kwds);
+		if (AerospikeGeospatial_Type.tp_init((PyObject *) self, args, kwds) == 0) {
+			return self;
+		} else {
+			return NULL;
+		}
+	} else {
+		as_error_update(&err, AEROSPIKE_ERR_PARAM, "The geospatial data should be a dictionary");
+	}
 
 	if ( err.code != AEROSPIKE_OK ) {
 		PyObject * py_err = NULL;
@@ -300,7 +303,7 @@ AerospikeGeospatial  * Aerospike_Set_Geo_Data(PyObject * parent, PyObject * args
 		PyErr_SetObject(exception_type, py_err);
 		Py_DECREF(py_err);
 	}
-    return NULL;
+	return NULL;
 }
 
 AerospikeGeospatial  * Aerospike_Set_Geo_Json(PyObject * parent, PyObject * args, PyObject * kwds)
@@ -316,16 +319,16 @@ AerospikeGeospatial  * Aerospike_Set_Geo_Json(PyObject * parent, PyObject * args
 		return NULL;
 	}
 
-    if (PyString_Check(py_geodata)) {
-        AerospikeGeospatial * self = (AerospikeGeospatial *) AerospikeGeospatial_Type.tp_new(&AerospikeGeospatial_Type, args, kwds);
-	    if (AerospikeGeospatial_Type.tp_init((PyObject *) self, args, kwds) == 0) {
-		    return self;
-	    } else {
-		    return NULL;
-	    }
-    } else {
-        as_error_update(&err, AEROSPIKE_ERR_PARAM, "The geospatial data should be a GeoJSON string");
-    }
+	if (PyString_Check(py_geodata)) {
+		AerospikeGeospatial * self = (AerospikeGeospatial *) AerospikeGeospatial_Type.tp_new(&AerospikeGeospatial_Type, args, kwds);
+		if (AerospikeGeospatial_Type.tp_init((PyObject *) self, args, kwds) == 0) {
+			return self;
+		} else {
+			return NULL;
+		}
+	} else {
+		as_error_update(&err, AEROSPIKE_ERR_PARAM, "The geospatial data should be a GeoJSON string");
+	}
 
 	if ( err.code != AEROSPIKE_OK ) {
 		PyObject * py_err = NULL;
@@ -334,7 +337,7 @@ AerospikeGeospatial  * Aerospike_Set_Geo_Json(PyObject * parent, PyObject * args
 		PyErr_SetObject(exception_type, py_err);
 		Py_DECREF(py_err);
 	}
-    return NULL;
+	return NULL;
 }
 
 PyObject * AerospikeGeospatial_New(as_error *err, PyObject * value)

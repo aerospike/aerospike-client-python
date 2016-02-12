@@ -23,10 +23,12 @@
 #include <aerospike/as_error.h>
 #include <aerospike/as_policy.h>
 
+#include "client.h"
 #include "admin.h"
 #include "conversions.h"
 #include "exceptions.h"
 #include "policy.h"
+#include "global_hosts.h"
 
 /**
  *******************************************************************************************************
@@ -211,7 +213,20 @@ PyObject * AerospikeClient_Admin_Drop_User( AerospikeClient *self, PyObject *arg
     Py_BEGIN_ALLOW_THREADS
 	aerospike_drop_user(self->as, &err, admin_policy_p, user);
     Py_END_ALLOW_THREADS
-	if(err.code != AEROSPIKE_OK) {
+
+	char *alias_to_search = NULL;
+	alias_to_search = return_search_string(self->as);
+	PyObject *py_persistent_item = NULL;
+
+	py_persistent_item = PyDict_GetItemString(py_global_hosts, alias_to_search); 
+	if (py_persistent_item) {
+		PyDict_DelItemString(py_global_hosts, alias_to_search);
+		AerospikeGlobalHosts_Del(py_persistent_item);
+	}
+	PyMem_Free(alias_to_search);
+	alias_to_search = NULL;
+
+	if (err.code != AEROSPIKE_OK) {
 		as_error_update(&err, err.code, NULL);
 		goto CLEANUP;
 	}
@@ -399,7 +414,20 @@ PyObject * AerospikeClient_Admin_Change_Password( AerospikeClient *self, PyObjec
     Py_BEGIN_ALLOW_THREADS
 	aerospike_change_password( self->as, &err, admin_policy_p, user, password );
     Py_END_ALLOW_THREADS
-	if(err.code != AEROSPIKE_OK) {
+
+	char *alias_to_search = NULL;
+	alias_to_search = return_search_string(self->as);
+	PyObject *py_persistent_item = NULL;
+
+	py_persistent_item = PyDict_GetItemString(py_global_hosts, alias_to_search); 
+	if (py_persistent_item) {
+		PyDict_DelItemString(py_global_hosts, alias_to_search);
+		AerospikeGlobalHosts_Del(py_persistent_item);
+	}
+	PyMem_Free(alias_to_search);
+	alias_to_search = NULL;
+
+	if (err.code != AEROSPIKE_OK) {
 		as_error_update(&err, err.code, NULL);
 		goto CLEANUP;
 	}

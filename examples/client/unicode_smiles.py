@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
-################################################################################
-# Copyright 2013-2015 Aerospike, Inc.
+##########################################################################
+# Copyright 2013-2016 Aerospike, Inc.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -13,19 +13,20 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-################################################################################
+##########################################################################
+
 
 from __future__ import print_function
 
 import aerospike
-from aerospike.exception import *
 import sys
 
 from optparse import OptionParser
+from aerospike import exception as e
 
-################################################################################
+##########################################################################
 # Options Parsing
-################################################################################
+##########################################################################
 
 usage = "usage: %prog [options]"
 
@@ -74,9 +75,9 @@ if options.help:
     print()
     sys.exit(1)
 
-################################################################################
+##########################################################################
 # Application
-################################################################################
+##########################################################################
 
 try:
 
@@ -85,12 +86,13 @@ try:
     # ----------------------------------------------------------------------------
 
     config = {
-        'hosts': [ (options.host, options.port) ],
+        'hosts': [(options.host, options.port)],
         'policies': {
             'timeout': options.timeout
         }
     }
-    client = aerospike.client(config).connect(options.username, options.password)
+    client = aerospike.client(config).connect(
+        options.username, options.password)
 
     # ----------------------------------------------------------------------------
     # Perform Operation
@@ -99,29 +101,32 @@ try:
     try:
         namespace = options.namespace if options.namespace and options.namespace != 'None' else None
         set = options.set if options.set and options.set != 'None' else None
-        smile = u"\ud83d\ude04"
+        smile = u"smilé"
+
         key = (namespace, set, smile)
         bins = {'smiley': smile, 'smile_count': 1, 'mood': 'happy'}
         print("Storing ", bins, "at a record identified by the tuple", key)
         # overwrite the record if it exists, otherwise create it
-        client.put(key, bins, 
+        client.put(key, bins,
                    policy={'exists': aerospike.POLICY_EXISTS_CREATE_OR_REPLACE,
                            'key': aerospike.POLICY_KEY_SEND})
         print("Retrieving the record from the server for comparison")
-        (key, meta, record) = client.get(key, policy={'timeout': options.read_timeout})
+        (key, meta, record) = client.get(
+            key, policy={'timeout': options.read_timeout})
         print("The value of the 'smiley' bin is", record['smiley'], "\n")
         print("By the way, this record has been written", meta['gen'], "times")
         future_gen = str(int(meta['gen']) + 2)
-        print("Expect the record generation to be", future_gen, "with two more write operations\n")
+        print("Expect the record generation to be",
+              future_gen, "with two more write operations\n")
 
         # add a dictionary under a bin named 'data'
-        bins = {'data': {'smiley_key': smile, smile:'this is a smiley '}}
+        bins = {'data': {'smiley_key': smile, smile: 'this is a smiley '}}
         print("Storing ", bins, "at the record", key)
         client.put(key,  bins)
         (key, metadata, bins) = client.get(key)
         print("The value of the 'smiley_key' of the 'data' bin is",
               bins['data']['smiley_key'], "\n")
-        #print("The value of the", smile, " key is:",
+        # print("The value of the", smile, " key is:",
         #      bins['data'][smile], "\n")
 
         # append to the value of the smile key
@@ -157,17 +162,17 @@ try:
 
         # example of a bytearray primary key
         print("Save a new record with a bytearray primary key")
-        smiley_pk = bytearray(smile, encoding="utf-8")
-        client.put((namespace, set, smiley_pk), {'smiley':smile, 'smiley_pk':
-                      smiley_pk})
+        smiley_pk = smile.encode("utf-8")
+        client.put((namespace, set, smiley_pk), {'smiley': smile, 'smiley_pk':
+                                                 smiley_pk})
         print("Display the bins of a record with a bytearray key")
         (key, meta, bins) = client.get((namespace, set, smiley_pk))
         print(bins)
         print("The value of the 'smiley_pk' bin is", bins['smiley_pk'], "\n")
         client.remove(key)
         exitCode = 0
-    except Exception as e:
-        print("error: {0}".format(e), file=sys.stderr)
+    except Exception as exception:
+        print("error: {0}".format(exception), file=sys.stderr)
         exitCode = 2
 
     # ----------------------------------------------------------------------------
@@ -176,12 +181,14 @@ try:
 
     client.close()
 
-except ClientError as e:
-    print("Error: {0} [{1}]".format(e.msg, e.code))
+except e.ClientError as exception:
+    print("Error: {0} [{1}]".format(exception.msg, exception.code))
     exitCode = 3
 
-################################################################################
+##########################################################################
 # Exit
-################################################################################
+##########################################################################
 
 sys.exit(exitCode)
+
+#

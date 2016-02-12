@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright 2013-2015 Aerospike, Inc.
+ * Copyright 2013-2016 Aerospike, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,6 +19,7 @@
 #include <Python.h>
 #include <stdbool.h>
 #include "types.h"
+#include "macros.h"
 
 #define TRACE() printf("%s:%d\n",__FILE__,__LINE__)
 
@@ -306,26 +307,6 @@ PyObject * AerospikeClient_ListTrim(AerospikeClient * self, PyObject * args, PyO
 PyObject * AerospikeClient_ListSize(AerospikeClient * self, PyObject * args, PyObject * kwds);
 
 /*******************************************************************************
- * KEY OPERATIONS (DEPRECATED)
- ******************************************************************************/
-
-/**
- * This will initialize a key object, which can be used to peform key
- * operations.
- *
- *		client.key(ns,set,key).put({
- *			"a": 123,
- *			"b": "xyz",
- *			"c": [1,2,3]
- *      })
- *
- *		rec = client.key(ns,set,key).get()
- *
- * @deprecated
- */
-AerospikeKey * AerospikeClient_Key(AerospikeClient * self, PyObject * args, PyObject * kwds);
-
-/*******************************************************************************
  * SCAN OPERATIONS
  ******************************************************************************/
 
@@ -515,36 +496,12 @@ PyObject * AerospikeClient_Set_Log_Level(AerospikeClient * self, PyObject *args,
 PyObject * AerospikeClient_Set_Log_Handler(AerospikeClient * self, PyObject *args, PyObject * kwds);
 
 /**
- * LSTACK Operations
- *
- *		client.lstack(key, bin)
- *
- */
-AerospikeLStack * AerospikeClient_LStack(AerospikeClient * self, PyObject * args, PyObject * kwds);
-
-/**
- * LSET Operations
- *
- *		client.lset(key, bin)
- *
- */
-AerospikeLSet * AerospikeClient_LSet(AerospikeClient * self, PyObject * args, PyObject * kwds);
-
-/**
  * LLIST Operations
  *
  *		client.llist(key, bin)
  *
  */
 AerospikeLList * AerospikeClient_LList(AerospikeClient * self, PyObject * args, PyObject * kwds);
-
-/**
- * LMAP Operations
- *
- *		client.lmap(key, bin)
- *
- */
-AerospikeLMap * AerospikeClient_LMap(AerospikeClient * self, PyObject * args, PyObject * kwds);
 
 /**
  * Get records in a batch

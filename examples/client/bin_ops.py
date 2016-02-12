@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
-################################################################################
-# Copyright 2013-2015 Aerospike, Inc.
+##########################################################################
+# Copyright 2013-2016 Aerospike, Inc.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -13,19 +13,19 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-################################################################################
+##########################################################################
+
 
 from __future__ import print_function
-
 import aerospike
 import pprint
 import sys
 
 from optparse import OptionParser
 
-################################################################################
+##########################################################################
 # Options Parsing
-################################################################################
+##########################################################################
 
 usage = "usage: %prog [options]"
 
@@ -57,9 +57,9 @@ if options.help:
     print()
     sys.exit(1)
 
-################################################################################
+##########################################################################
 # Application
-################################################################################
+##########################################################################
 
 exitCode = 0
 
@@ -68,21 +68,23 @@ try:
     # Connect to Cluster
     # ----------------------------------------------------------------------------
 
-    config = {'hosts': [ (options.host, options.port) ]}
-    client = aerospike.client(config).connect(options.username, options.password)
+    config = {'hosts': [(options.host, options.port)]}
+    client = aerospike.client(config).connect(
+        options.username, options.password)
     # ----------------------------------------------------------------------------
     # Perform Operations
     # ----------------------------------------------------------------------------
 
     try:
         pp = pprint.PrettyPrinter(indent=2)
-        client.put(('test', 'cats', 'mr. peppy'), {'breed':'persian'},
+        client.put(('test', 'cats', 'mr. peppy'), {'breed': 'persian'},
                    policy={'exists': aerospike.POLICY_EXISTS_CREATE_OR_REPLACE,
                            'key': aerospike.POLICY_KEY_DIGEST},
-                   meta={'ttl':120})
+                   meta={'ttl': 120})
         (key, meta, bins) = client.get(('test', 'cats', 'mr. peppy'))
         print("Before:", bins)
-        client.increment(key, 'lives', -1, {'gen': 2, 'ttl': 1000}, policy={'timeout': 1500})
+        client.increment(
+            key, 'lives', -1, {'gen': 2, 'ttl': 1000}, policy={'timeout': 1500})
         (key, meta, bins) = client.get(key)
         print("After:", bins)
         # the key we got back when we fetched the record with get() is useable
@@ -91,7 +93,7 @@ try:
         (key, meta, bins) = client.get(key)
         # kitty lost a life, unfortunately
         print("Poor Kitty:", bins)
-        client.put(key, {'owner':'Fry'})
+        client.put(key, {'owner': 'Fry'})
         client.prepend(key, 'owner', 'Philip J. ')
         client.append(key, 'owner', ' Esq.')
         # kitty loses another life, gains a color, all as part of a record
@@ -101,7 +103,8 @@ try:
                {'bin': 'ailments', 'op': aerospike.OPERATOR_READ},
                {'bin': 'lives', 'op': aerospike.OPERATOR_READ}]
         (key, meta, bins) = client.operate(key, ops)
-        print("After calling operate(), kitty is down to", bins['lives'], "lives")
+        print("After calling operate(), kitty is down to",
+              bins['lives'], "lives")
         pp.pprint(bins)
 
         # display the record as it is after all the operations
@@ -113,7 +116,7 @@ try:
         print("Bins\n----")
         pp.pprint(bins)
 
-    except Exception, eargs:
+    except Exception as eargs:
         print("error: {0}".format(eargs), file=sys.stderr)
         exitCode = 2
 
@@ -123,12 +126,12 @@ try:
 
     client.close()
 
-except Exception, eargs:
+except Exception as eargs:
     print("error: {0}".format(eargs), file=sys.stderr)
     exitCode = 3
 
-################################################################################
+##########################################################################
 # Exit
-################################################################################
+##########################################################################
 
 sys.exit(exitCode)

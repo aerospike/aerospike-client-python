@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
-################################################################################
-# Copyright 2013-2015 Aerospike, Inc.
+##########################################################################
+# Copyright 2013-2016 Aerospike, Inc.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -13,7 +13,8 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-################################################################################
+##########################################################################
+
 
 from __future__ import print_function
 
@@ -23,9 +24,9 @@ import sys
 from optparse import OptionParser
 
 
-################################################################################
+##########################################################################
 # Options Parsing
-################################################################################
+##########################################################################
 
 usage = "usage: %prog"
 
@@ -58,17 +59,17 @@ if options.help:
     print()
     sys.exit(1)
 
-################################################################################
+##########################################################################
 # Client Configuration
-################################################################################
+##########################################################################
 
 config = {
-    'hosts': [ (options.host, options.port) ]
+    'hosts': [(options.host, options.port)]
 }
 
-################################################################################
+##########################################################################
 # Application
-################################################################################
+##########################################################################
 
 exitCode = 0
 
@@ -78,7 +79,8 @@ try:
     # Connect to Cluster
     # ----------------------------------------------------------------------------
 
-    client = aerospike.client(config).connect(options.username, options.password)
+    client = aerospike.client(config).connect(
+        options.username, options.password)
 
     # ----------------------------------------------------------------------------
     # Perform Operation
@@ -87,14 +89,14 @@ try:
     try:
         response = client.get_nodes()
 
-        if response != None:
+        if response is not None:
             print(response)
             print("---")
         else:
             print('error: Not Found.', file=sys.stderr)
             exitCode = 1
 
-    except Exception, eargs:
+    except Exception as eargs:
         print("error: {0}".format(eargs), file=sys.stderr)
         exitCode = 2
 
@@ -104,12 +106,12 @@ try:
 
     client.close()
 
-except Exception, eargs:
+except Exception as eargs:
     print("error: {0}".format(eargs), file=sys.stderr)
     exitCode = 3
 
-################################################################################
+##########################################################################
 # Exit
-################################################################################
+##########################################################################
 
 sys.exit(exitCode)

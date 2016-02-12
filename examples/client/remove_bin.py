@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
-################################################################################
-# Copyright 2013-2015 Aerospike, Inc.
+##########################################################################
+# Copyright 2013-2016 Aerospike, Inc.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -13,7 +13,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-################################################################################
+##########################################################################
 
 from __future__ import print_function
 
@@ -22,9 +22,9 @@ import sys
 
 from optparse import OptionParser
 
-################################################################################
+##########################################################################
 # Options Parsing
-################################################################################
+##########################################################################
 
 usage = "usage: %prog [options] key bin_names"
 
@@ -70,17 +70,17 @@ if len(args) < 2:
     print()
     sys.exit(1)
 
-################################################################################
+##########################################################################
 # Client Configuration
-################################################################################
+##########################################################################
 
 config = {
-    'hosts': [ (options.host, options.port) ]
+    'hosts': [(options.host, options.port)]
 }
 
-################################################################################
+##########################################################################
 # Application
-################################################################################
+##########################################################################
 
 exitCode = 0
 
@@ -90,7 +90,8 @@ try:
     # Connect to Cluster
     # ----------------------------------------------------------------------------
 
-    client = aerospike.client(config).connect(options.username, options.password)
+    client = aerospike.client(config).connect(
+        options.username, options.password)
 
     # ----------------------------------------------------------------------------
     # Perform Operation
@@ -104,14 +105,15 @@ try:
         pk = args.pop(0)
         bin_names = args
         status = client.remove_bin((namespace, set, pk), bin_names)
-        print("Status of bin removal is: %d" %(status))
+        print("Status of bin removal is: %d" % (status))
         print("OK, bins removed from the record at", (namespace, set, pk))
 
-    except Exception, (code,msg,file,line):
-        if code == 602:
+    except Exception as exception:
+        if exception.code == 602:
             print("error: Record not found")
         else:
-            print("error: {0}".format((code,msg,file,line)), file=sys.stderr)
+            print("error: {0}".format(
+                (exception.code, exception.msg, file, exception.line)), file=sys.stderr)
             rc = 1
 
     # ----------------------------------------------------------------------------
@@ -120,12 +122,12 @@ try:
 
     client.close()
 
-except Exception, eargs:
+except Exception as eargs:
     print("error: {0}".format(eargs), file=sys.stderr)
     exitCode = 3
 
-################################################################################
+##########################################################################
 # Exit
-################################################################################
+##########################################################################
 
 sys.exit(exitCode)

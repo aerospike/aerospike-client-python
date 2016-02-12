@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
-################################################################################
-# Copyright 2013-2015 Aerospike, Inc.
+##########################################################################
+# Copyright 2013-2016 Aerospike, Inc.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -13,7 +13,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-################################################################################
+##########################################################################
 
 from __future__ import print_function
 
@@ -26,13 +26,15 @@ import os.path
 from optparse import OptionParser
 from aerospike import predicates as p
 
-################################################################################
+##########################################################################
 # Option Parsing
-################################################################################
+##########################################################################
 
 usage = "usage: %prog [options] [where]"
+
+
 def query_callback(option, opt, value, parser):
-  setattr(parser.values, option.dest, value.split(','))
+    setattr(parser.values, option.dest, value.split(','))
 
 optparser = OptionParser(usage=usage, add_help_option=False)
 
@@ -69,7 +71,7 @@ optparser.add_option(
     callback=query_callback,  help="UDF Arguments.")
 
 optparser.add_option(
-    "-b", "--bins", dest="bins", type="string", action="append", 
+    "-b", "--bins", dest="bins", type="string", action="append",
     help="Bins to select from each record.")
 
 optparser.add_option(
@@ -93,20 +95,20 @@ if len(args) > 1:
     print()
     sys.exit(1)
 
-################################################################################
+##########################################################################
 # Client Configuration
-################################################################################
+##########################################################################
 
 config = {
-    'hosts': [ (options.host, options.port) ],
+    'hosts': [(options.host, options.port)],
     'lua': {
         'user_path': os.path.dirname(__file__)
     }
 }
 
-################################################################################
+##########################################################################
 # Application
-################################################################################
+##########################################################################
 
 exitCode = 0
 
@@ -129,7 +131,8 @@ try:
         re_str_eq = "\s+=\s*(?:(?:\"(.*)\")|(?:\'(.*)\'))"
         re_int_eq = "\s+=\s*(\d+)"
         re_int_rg = "\s+between\s+\(\s*(\d+)\s*,\s*(\d+)\s*\)"
-        re_w = re.compile("%s(?:%s|%s|%s)" % (re_bin, re_str_eq, re_int_eq, re_int_rg))
+        re_w = re.compile("%s(?:%s|%s|%s)" %
+                          (re_bin, re_str_eq, re_int_eq, re_int_rg))
 
         namespace = options.namespace if options.namespace and options.namespace != 'None' else None
         set = options.set if options.set and options.set != 'None' else None
@@ -142,35 +145,39 @@ try:
 
         if len(args) == 1:
             w = re_w.match(args[0])
-            if w != None:
+            if w is not None:
 
                 # If predicate is provided, then perform a query
-                
+
                 if w.group(2):
                     b = w.group(1)
                     v = w.group(2)
                     query_id = client.query_apply(options.namespace,
-                            options.set, p.equals(b, v), options.module,
-                            options.function, options.arguments)
+                                                  options.set, p.equals(
+                                                      b, v), options.module,
+                                                  options.function, options.arguments)
                 elif w.group(3):
                     b = w.group(1)
                     v = w.group(3)
                     query_id = client.query_apply(options.namespace,
-                            options.set, p.equals(b, v), options.module,
-                            options.function, options.arguments)
+                                                  options.set, p.equals(
+                                                      b, v), options.module,
+                                                  options.function, options.arguments)
                 elif w.group(4):
                     b = w.group(1)
                     v = int(w.group(4))
                     query_id = client.query_apply(options.namespace,
-                            options.set, p.equals(b, v), options.module,
-                            options.function, options.arguments)
+                                                  options.set, p.equals(
+                                                      b, v), options.module,
+                                                  options.function, options.arguments)
                 elif w.group(5) and w.group(6):
                     b = w.group(1)
                     l = int(w.group(5))
                     u = int(w.group(6))
                     query_id = client.query_apply(options.namespace,
-                            options.set, p.between(b, l, u), options.module,
-                            options.function, options.arguments)
+                                                  options.set, p.between(
+                                                      b, l, u), options.module,
+                                                  options.function, options.arguments)
 
         while True:
             response = client.job_info(query_id, aerospike.JOB_QUERY)
@@ -181,8 +188,8 @@ try:
             print("Background query is successful")
         else:
             print("Query_apply failed")
-        
-    except Exception, eargs:
+
+    except Exception as eargs:
         print("error: {0}".format(eargs), file=sys.stderr)
         exitCode = 2
 
@@ -192,13 +199,13 @@ try:
 
     client.close()
 
-except Exception, eargs:
+except Exception as eargs:
     print("error: {0}".format(eargs), file=sys.stderr)
     exitCode = 3
 
 
-################################################################################
+##########################################################################
 # Exit
-################################################################################
+##########################################################################
 
 sys.exit(exitCode)

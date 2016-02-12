@@ -24,7 +24,6 @@
 
 #include "client.h"
 #include "conversions.h"
-#include "key.h"
 #include "exceptions.h"
 #include "policy.h"
 
@@ -93,9 +92,9 @@ PyObject * AerospikeClient_Get_Invoke(
 	record_initialised = true;
 
 	// Invoke operation
-    Py_BEGIN_ALLOW_THREADS
+	Py_BEGIN_ALLOW_THREADS
 	aerospike_key_get(self->as, &err, read_policy_p, &key, &rec);
-    Py_END_ALLOW_THREADS
+	Py_END_ALLOW_THREADS
 	if ( err.code == AEROSPIKE_OK ) {
 		record_to_pyobject(self, &err, rec, &key, &py_rec);
 		if ( read_policy_p == NULL || 
@@ -109,23 +108,6 @@ PyObject * AerospikeClient_Get_Invoke(
 			Py_INCREF(Py_None);
 			PyTuple_SetItem(p_key, 2, Py_None);
 		}
-	}
-	else if( err.code == AEROSPIKE_ERR_RECORD_NOT_FOUND ) {
-		as_error_reset(&err);
-
-		PyObject * py_rec_key = NULL;
-		PyObject * py_rec_meta = Py_None;
-		PyObject * py_rec_bins = Py_None;
-
-		key_to_pyobject(&err, &key, &py_rec_key);
-
-		py_rec = PyTuple_New(3);
-		PyTuple_SetItem(py_rec, 0, py_rec_key);
-		PyTuple_SetItem(py_rec, 1, py_rec_meta);
-		PyTuple_SetItem(py_rec, 2, py_rec_bins);
-
-		Py_INCREF(py_rec_meta);
-		Py_INCREF(py_rec_bins);
 	}
 	else {
 		as_error_update(&err, err.code, NULL);

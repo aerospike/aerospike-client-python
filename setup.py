@@ -70,7 +70,7 @@ os.putenv('ARCHFLAGS','-arch x86_64')
 os.environ['ARCHFLAGS'] = '-arch x86_64'
 AEROSPIKE_C_VERSION = os.getenv('AEROSPIKE_C_VERSION')
 if not AEROSPIKE_C_VERSION:
-    AEROSPIKE_C_VERSION = '3.1.25'
+    AEROSPIKE_C_VERSION = '4.0.0'
 DOWNLOAD_C_CLIENT = os.getenv('DOWNLOAD_C_CLIENT')
 AEROSPIKE_C_HOME = os.getenv('AEROSPIKE_C_HOME')
 PREFIX = None
@@ -99,7 +99,7 @@ def resolve_c_client(lua_src_path, lua_system_path):
         os.putenv('DOWNLOAD_C_CLIENT', DOWNLOAD_C_CLIENT)
 
     print('info: Executing','./scripts/aerospike-client-c.sh', file=sys.stdout)
-    os.chmod('./scripts/aerospike-client-c.sh',0755)
+    os.chmod('./scripts/aerospike-client-c.sh',0o0755)
     rc = call(['./scripts/aerospike-client-c.sh'])
     if rc != 0 :
         print("error: scripts/aerospike-client-c.sh", rc, file=sys.stderr)
@@ -287,6 +287,7 @@ setup(
         'Operating System :: MacOS :: MacOS X',
         'Programming Language :: Python :: 2.6',
         'Programming Language :: Python :: 2.7',
+        'Programming Language :: Python :: 3.5',
         'Programming Language :: Python :: Implementation :: CPython',
         'Topic :: Database'
     ],
@@ -328,7 +329,6 @@ setup(
                 'src/main/client/select_many.c',
                 'src/main/client/info_node.c',
                 'src/main/client/info.c',
-                'src/main/client/key.c',
                 'src/main/client/put.c',
                 'src/main/client/operate.c',
                 'src/main/client/query.c',
@@ -341,16 +341,7 @@ setup(
                 'src/main/serializer.c',
                 'src/main/client/remove_bin.c',
                 'src/main/client/get_key_digest.c',
-                'src/main/client/lstack.c',
-                'src/main/client/lset.c',
-                'src/main/client/lmap.c',
                 'src/main/client/llist.c',
-                'src/main/key/type.c',
-                'src/main/key/apply.c',
-                'src/main/key/exists.c',
-                'src/main/key/get.c',
-                'src/main/key/put.c',
-                'src/main/key/remove.c',
                 'src/main/query/type.c',
                 'src/main/query/apply.c',
                 'src/main/query/foreach.c',
@@ -361,14 +352,8 @@ setup(
                 'src/main/scan/foreach.c',
                 'src/main/scan/results.c',
                 'src/main/scan/select.c',
-                'src/main/lstack/type.c',
-                'src/main/lstack/lstack_operations.c',
-                'src/main/lset/type.c',
-                'src/main/lset/lset_operations.c',
                 'src/main/llist/type.c',
                 'src/main/llist/llist_operations.c',
-                'src/main/lmap/type.c',
-                'src/main/lmap/lmap_operations.c',
                 'src/main/geospatial/type.c',
                 'src/main/geospatial/wrap.c',
                 'src/main/geospatial/unwrap.c',

@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright 2013-2015 Aerospike, Inc.
+ * Copyright 2013-2016 Aerospike, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -25,29 +25,33 @@
 #include "exceptions.h"
 #include "geo.h"
 #include "policy.h"
+
 PyObject * AerospikeGeospatial_DoLoads(PyObject *py_geodata, as_error *err)
 {
-        PyObject* sysmodules = PyImport_GetModuleDict();
-		PyObject* json_module = NULL;
-		if (PyMapping_HasKeyString(sysmodules, "json")) {
-		    json_module = PyMapping_GetItemString(sysmodules, "json");
-	    } else {
-			json_module = PyImport_ImportModule("json");
-		}
+	PyObject* sysmodules = PyImport_GetModuleDict();
+	PyObject* json_module = NULL;
+	if (PyMapping_HasKeyString(sysmodules, "json")) {
+		json_module = PyMapping_GetItemString(sysmodules, "json");
+	} else {
+		json_module = PyImport_ImportModule("json");
+	}
 
-		PyObject* initresult = NULL;
-		if (!json_module) {
-		    /* insert error handling here! and exit this function */
-			as_error_update(err, AEROSPIKE_ERR_CLIENT, "Unable to load json module");
-		} else {
-            PyObject *py_funcname = PyString_FromString("loads");
-            Py_INCREF(json_module);
-            initresult = PyObject_CallMethodObjArgs(json_module, py_funcname, py_geodata, NULL);
-            Py_DECREF(json_module);
-            Py_DECREF(py_funcname);
-        }
-        return initresult;
+	PyObject* initresult = NULL;
+	if (!json_module) {
+		/* insert error handling here! and exit this function */
+		as_error_update(err, AEROSPIKE_ERR_CLIENT, "Unable to load json module");
+	} else {
+		PyObject *py_funcname = PyString_FromString("loads");
+		Py_INCREF(json_module);
+
+		initresult = PyObject_CallMethodObjArgs(json_module, py_funcname, py_geodata, NULL);
+
+		Py_DECREF(json_module);
+		Py_DECREF(py_funcname);
+	}
+	return initresult;
 }
+
 PyObject * AerospikeGeospatial_Loads(AerospikeGeospatial * self, PyObject * args, PyObject * kwds)
 {
 
@@ -70,20 +74,20 @@ PyObject * AerospikeGeospatial_Loads(AerospikeGeospatial * self, PyObject * args
 		goto CLEANUP;
 	}
 
-    PyObject* initresult = NULL;
-    if (PyString_Check(py_geodata))
-    {  
-        initresult = AerospikeGeospatial_DoLoads(py_geodata, &err);
-        if(!initresult) {
+	PyObject* initresult = NULL;
+	if (PyString_Check(py_geodata))
+	{
+		initresult = AerospikeGeospatial_DoLoads(py_geodata, &err);
+		if(!initresult) {
 			as_error_update(&err, AEROSPIKE_ERR_CLIENT, "String is not GeoJSON serializable");
 			goto CLEANUP;
-        } else {
-            store_geodata(self, &err, initresult);
-        }
-    } else {
+		} else {
+			store_geodata(self, &err, initresult);
+		}
+	} else {
 		as_error_update(&err, AEROSPIKE_ERR_PARAM, "Argument should be a GeoJSON string");
 		goto CLEANUP;
-    }
+	}
 
 CLEANUP:
 
