@@ -128,11 +128,9 @@ class KVTestCase(unittest.TestCase, TestBaseClass):
             Instead Ok response is returned withe the
             meta as None. This might change with further releases.
             """
+            assert meta is None
         except e.RecordNotFound as exception:
-            assert True is False
             assert exception.code == 2
-
-        assert meta is None
 
         # count records
         count = 0
@@ -218,11 +216,9 @@ class KVTestCase(unittest.TestCase, TestBaseClass):
             Instead Ok response is returned withe the
             meta as None. This might change with further releases.
             """
+            assert meta is None
         except e.RecordNotFound as exception:
-            assert True is False
             assert exception.code == 2
-
-        assert meta is None
 
         # count records
         count = 0
