@@ -69,7 +69,7 @@ in an in-memory primary index.
             * **thread_pool_size** number of threads in the pool that is used in batch/scan/query commands (default: 16)
             * **max_threads** size of the synchronous connection pool for each server node (default: 300)
             * **batch_direct** whether to use the batch-direct protocol (default: ``False``, so will use batch-index if available)
-            * **compression_threshold** compress data for transmission if the object size is greater than a given number of bytes (default: 0, or 'never compress')
+            * **compression_threshold** compress data for transmission if the object size is greater than a given number of bytes (default: 0, meaning 'never compress')
 
     :return: an instance of the :py:class:`aerospike.Client` class.
 
@@ -92,7 +92,7 @@ in an in-memory primary index.
             'shm':      { }}
         client = aerospike.client(config)
 
-    .. versionchanged:: 1.0.56
+    .. versionchanged:: 2.0.0
 
 
 .. rubric:: Serialization
@@ -328,29 +328,251 @@ in an in-memory primary index.
 Operators
 ---------
 
-.. data:: OPERATOR_APPEND
-
-    The append-to-bin operator for the multi-ops method :py:meth:`~aerospike.Client.operate`
-
-.. data:: OPERATOR_INCR
-
-    The increment-bin operator for the multi-ops method :py:meth:`~aerospike.Client.operate`
-
-.. data:: OPERATOR_PREPEND
-
-    The prepend-to-bin operator for the multi-ops method :py:meth:`~aerospike.Client.operate`
-
-.. data:: OPERATOR_READ
-
-    The read-bin operator for the multi-ops method :py:meth:`~aerospike.Client.operate`
-
-.. data:: OPERATOR_TOUCH
-
-    The touch-record operator for the multi-ops method :py:meth:`~aerospike.Client.operate`
+Operators for the multi-ops method :py:meth:`~aerospike.Client.operate`.
 
 .. data:: OPERATOR_WRITE
 
-    The write-bin operator for the multi-ops method :py:meth:`~aerospike.Client.operate`
+    Write a value into a bin
+
+    .. code-block:: python
+
+        {
+            "op" : aerospike.OPERATOR_WRITE,
+            "bin": "name",
+            "val": "Peanut"
+        }
+
+.. data:: OPERATOR_APPEND
+
+    Append to a bin with :class:`str` type data
+
+    .. code-block:: python
+
+        {
+            "op" : aerospike.OPERATOR_APPEND,
+            "bin": "name",
+            "val": "Mr. "
+        }
+
+.. data:: OPERATOR_PREPEND
+
+    Prepend to a bin with :class:`str` type data
+
+    .. code-block:: python
+
+        {
+            "op" : aerospike.OPERATOR_PREPEND,
+            "bin": "name",
+            "val": " Esq."
+        }
+
+.. data:: OPERATOR_INCR
+
+    Increment a bin with :class:`int` or :class:`float` type data
+
+    .. code-block:: python
+
+        {
+            "op" : aerospike.OPERATOR_INCR,
+            "bin": "age",
+            "val": 1
+        }
+
+.. data:: OPERATOR_READ
+
+    Read a specific bin
+
+    .. code-block:: python
+
+        {
+            "op" : aerospike.OPERATOR_READ,
+            "bin": "name"
+        }
+
+.. data:: OPERATOR_TOUCH
+
+    Touch a record, setting its TTL. May be combined with :const:`~aerospike.OPERATOR_READ`
+
+    .. code-block:: python
+
+        {
+            "op" : aerospike.OPERATOR_TOUCH
+        }
+
+.. data:: OP_LIST_APPEND
+
+    Append an element to a bin with :class:`list` type data
+
+    .. code-block:: python
+
+        {
+            "op" : aerospike.OP_LIST_APPEND,
+            "bin": "events",
+            "val": 1234
+        }
+
+.. data:: OP_LIST_APPEND_ITEMS
+
+    Extend a bin with :class:`list` type data with a list of items
+
+    .. code-block:: python
+
+        {
+            "op" : aerospike.OP_LIST_APPEND_ITEMS,
+            "bin": "events",
+            "val": [ 123, 456 ]
+        }
+
+.. data:: OP_LIST_INSERT
+
+    Insert an element at a specified index of a bin with :class:`list` type data
+
+    .. code-block:: python
+
+        {
+            "op" : aerospike.OP_LIST_INSERT,
+            "bin": "events",
+            "index": 2,
+            "val": 1234
+        }
+
+.. data:: OP_LIST_INSERT_ITEMS
+
+    Insert the items at a specified index of a bin with :class:`list` type data
+
+    .. code-block:: python
+
+        {
+            "op" : aerospike.OP_LIST_INSERT_ITEMS,
+            "bin": "events",
+            "index": 2,
+            "val": [ 123, 456 ]
+        }
+
+.. data:: OP_LIST_POP
+
+    Remove and return the element at a specified index of a bin with :class:`list` type data
+
+    .. code-block:: python
+
+        {
+            "op" : aerospike.OP_LIST_POP, # removes and returns a value
+            "bin": "events",
+            "index": 2
+        }
+
+.. data:: OP_LIST_POP_RANGE
+
+    Remove and return a list of elements at a specified index range of a bin with :class:`list` type data
+
+    .. code-block:: python
+
+        {
+            "op" : aerospike.OP_LIST_POP_RANGE,
+            "bin": "events",
+            "index": 2,
+            "val": 3 # remove and return 3 elements starting at index 2
+        }
+
+.. data:: OP_LIST_REMOVE
+
+    Remove the element at a specified index of a bin with :class:`list` type data
+
+    .. code-block:: python
+
+        {
+            "op" : aerospike.OP_LIST_REMOVE, # remove a value
+            "bin": "events",
+            "index": 2
+        }
+
+.. data:: OP_LIST_REMOVE_RANGE
+
+    Remove a list of elements at a specified index range of a bin with :class:`list` type data
+
+    .. code-block:: python
+
+        {
+            "op" : aerospike.OP_LIST_REMOVE_RANGE,
+            "bin": "events",
+            "index": 2,
+            "val": 3 # remove 3 elements starting at index 2
+        }
+
+.. data:: OP_LIST_CLEAR
+
+    Remove all the elements in a bin with :class:`list` type data
+
+    .. code-block:: python
+
+         {
+            "op" : aerospike.OP_LIST_CLEAR,
+            "bin": "events"
+        }
+
+.. data:: OP_LIST_SET
+
+    Set the element *val* in a specified index of a bin with :class:`list` type data
+
+    .. code-block:: python
+
+        {
+            "op" : aerospike.OP_LIST_SET,
+            "bin": "events",
+            "index": 2,
+            "val": "latest event at index 2" # set this value at index 2
+        }
+
+.. data:: OP_LIST_GET
+
+    Get the element at a specified index of a bin with :class:`list` type data
+
+    .. code-block:: python
+
+        {
+            "op" : aerospike.OP_LIST_GET,
+            "bin": "events",
+            "index": 2
+        }
+
+.. data:: OP_LIST_GET_RANGE
+
+    Get the list of elements starting at a specified index of a bin with :class:`list` type data
+
+    .. code-block:: python
+
+        {
+            "op" : aerospike.OP_LIST_GET_RANGE,
+            "bin": "events",
+            "index": 2,
+            "val": 3 # get 3 elements starting at index 2
+        }
+
+.. data:: OP_LIST_TRIM
+
+    Remove elements from a bin with :class:`list` type data which are not within the range starting at a given *index* plus *val*
+
+    .. code-block:: python
+
+        {
+            "op" : aerospike.OP_LIST_TRIM,
+            "bin": "events",
+            "index": 2,
+            "val": 3 # remove all elements not in the range between index 2 and index 2 + 3
+        }
+
+.. data:: OP_LIST_SIZE
+
+    Count the number of elements in a bin with :class:`list` type data
+
+    .. code-block:: python
+
+        {
+            "op" : aerospike.OP_LIST_SIZE,
+            "bin": "events" # gets the size of a list contained in the bin
+        }
+
+.. versionchanged:: 2.0.0
 
 .. _aerospike_policies:
 
