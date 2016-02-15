@@ -98,8 +98,11 @@ class TestExists():
         policy = {'timeout': 1000}
         put_data(self.as_connection, key, rec, meta, policy)
         time.sleep(2)
-        key, meta = self.as_connection.exists(key)
-        assert meta is None
+        try:
+            key, meta = self.as_connection.exists(key)
+            assert meta is None
+        except e.RecordNotFound as exception:
+            assert exception.code == 2
 
     @pytest.mark.parametrize("key, ex, ex_code", [
         # reason for xfail CLIENT-533

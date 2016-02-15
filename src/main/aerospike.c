@@ -81,7 +81,8 @@ AerospikeConstants operator_constants[] = {
 #define OPERATOR_CONSTANTS_ARR_SIZE (sizeof(operator_constants)/sizeof(AerospikeConstants))
 MOD_INIT(aerospike)
 {
-	const char version[8] = "1.0.61";
+
+	const char version[8] = "2.0.0";
 	// Makes things "thread-safe"
 	PyEval_InitThreads();
 	int i = 0;
