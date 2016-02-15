@@ -13,19 +13,18 @@ except:
 
 class TestCalcDigest(object):
 
-    def test_pos_calc_digest_with_integer_key(self):
+    @pytest.mark.parametrize("ns, set, key", [
+        ("test", "demo", 1), #integer key
+        ("test", "demo", "get_key_digest"), #string key
+        ("test", "demo", u"get_key_digest"), #unicode key
+        ("test", u"set", "get_key_digest"), #unicode set
+        ("test", "demo", bytearray("askluy3oijs", "utf-8")) #bytearray key
+        ])
+    def test_pos_calc_digest_with_key(self, ns, set, key):
         """
-            Invoke calc_digest() with integer key
+            Invoke calc_digest() with key
         """
-        digest = aerospike.calc_digest("test", "demo", 1)
-
-        assert type(digest) == bytearray
-
-    def test_pos_calc_digest_with_string_key(self):
-        """
-            Invoke calc_digest() with string key
-        """
-        digest = aerospike.calc_digest("test", "demo", "get_digest_key")
+        digest = aerospike.calc_digest(ns, set, key)
 
         assert type(digest) == bytearray
 
