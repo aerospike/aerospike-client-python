@@ -1199,7 +1199,6 @@ as_status key_to_pyobject(as_error * err, const as_key * key, PyObject ** obj)
 
 static bool bins_to_pyobject_each(const char * name, const as_val * val, void * udata)
 {
-	printf("\nRon");
 	if ( name == NULL || val == NULL ) {
 		return false;
 	}
