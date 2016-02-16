@@ -95,9 +95,12 @@ class TestGetPut():
         """
             Invoke get() with different combinations of None in key
         """
-        _, meta, bins = self.as_connection.get(_input)
-        assert bins == _expected
-        assert meta == _expected
+        try:
+            _, meta, bins = self.as_connection.get(_input)
+            assert bins == _expected
+            assert meta == _expected
+        except e.RecordNotFound as exception:
+            assert exception.code == 2
 
     def test_pos_get_initkey_with_digest(self, put_data):
         """
@@ -193,12 +196,14 @@ class TestGetPut():
             Invoke get() with a key digest.
         """
         key = ('test', 'demo', 1)
-        key, _ = self.as_connection.exists(key)
         try:
+            key, _ = self.as_connection.exists(key)
             key, _, _ = self.as_connection.get((key[0], key[1], None, key[2]))
         except e.ParamError as exception:
             assert exception.code == -2
             assert exception.msg == 'digest is invalid. expected a bytearray'
+        except e.RecordNotFound as exception:
+            assert exception.code == 2
 
     @pytest.mark.parametrize("_input, _expected", [
         ((None, 'demo', 2),
@@ -222,6 +227,8 @@ class TestGetPut():
         except e.ParamError as exception:
             assert exception.code == _expected[0]
             assert exception.msg == _expected[1]
+        except e.RecordNotFound as exception:
+            assert exception.code == 2
 
     def test_neg_get_with_non_existent_namespace(self):
         """
@@ -244,8 +251,11 @@ class TestGetPut():
         """
         put_data(self.as_connection, _input, _expected)
         self.as_connection.remove(_input)
-        _, _, bins = self.as_connection.get(_input)
-        assert bins is None
+        try:
+            _, _, bins = self.as_connection.get(_input)
+            assert bins is None
+        except e.RecordNotFound as exception:
+            assert exception.code == 2
 
     def test_neg_get_with_only_key_no_connection(self):
         """
