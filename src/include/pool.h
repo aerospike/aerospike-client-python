@@ -28,3 +28,8 @@ typedef struct bytes_static_pool {
     } else {                                                                   \
         as_error_update(err, AEROSPIKE_ERR, "Cannot allocate as_bytes");       \
     }
+
+#define POOL_DESTROY(static_pool)                                              \
+	for (u_int32_t iter = 0; iter < BYTES_CNT(static_pool); iter++) {          \
+		as_bytes_destroy(&BYTES_POOL(static_pool)[iter]);                      \
+	}

@@ -44,6 +44,9 @@ AerospikeQuery * AerospikeQuery_Apply(AerospikeQuery * self, PyObject * args, Py
 		return NULL;
 	}
 
+	as_static_pool static_pool;
+	memset(&static_pool, 0, sizeof(static_pool));
+
 	// Aerospike error object
 	as_error err;
 	// Initialize error object
@@ -98,7 +101,7 @@ AerospikeQuery * AerospikeQuery_Apply(AerospikeQuery * self, PyObject * args, Py
 		for ( int i = 0; i < size; i++ ) {
 			PyObject * py_val = PyList_GetItem(py_args, (Py_ssize_t)i);
 			as_val * val = NULL;
-			pyobject_to_val(self->client, &err, py_val, &val, &self->static_pool, SERIALIZER_PYTHON);
+			pyobject_to_val(self->client, &err, py_val, &val, &static_pool, SERIALIZER_PYTHON);
 			if ( err.code != AEROSPIKE_OK ) {
 				as_error_update(&err, err.code, NULL);
 				goto CLEANUP;
@@ -115,6 +118,7 @@ AerospikeQuery * AerospikeQuery_Apply(AerospikeQuery * self, PyObject * args, Py
 	Py_END_ALLOW_THREADS
 
 CLEANUP:
+	POOL_DESTROY(&static_pool);
 
 	if (py_ufunction) {
 		Py_DECREF(py_ufunction);
