@@ -38,7 +38,7 @@
 
 typedef struct operation_order{
 	uint32_t operation;
-	char bin_name[15];
+	char *bin_name;
 }op_order;
 
 /**
@@ -103,7 +103,7 @@ static void AerospikeClient_CheckForMeta(PyObject * py_meta, as_operations * ops
 		PyObject * py_gen = PyDict_GetItemString(py_meta, "gen");
 		PyObject * py_ttl = PyDict_GetItemString(py_meta, "ttl");
 		uint32_t ttl = 0;
-		uint16_t gen = 0; 
+		uint16_t gen = 0;
 		if ( py_ttl != NULL ){
 			if ( PyInt_Check(py_ttl) ) {
 				ttl = (uint32_t) PyInt_AsLong(py_ttl);
@@ -141,7 +141,7 @@ static void AerospikeClient_CheckForMeta(PyObject * py_meta, as_operations * ops
 }
 
 static void initialize_bin_for_strictypes(AerospikeClient *self, as_error *err, PyObject *py_value, as_binop *binop, char *bin, as_static_pool *static_pool) {
-	
+
 	as_bin *binop_bin = &binop->bin;
 	if (PyInt_Check(py_value)) {
 		int val = PyInt_AsLong(py_value);
@@ -154,12 +154,12 @@ static void initialize_bin_for_strictypes(AerospikeClient *self, as_error *err, 
 	} else if (PyString_Check(py_value)) {
 		char * val = PyString_AsString(py_value);
 		as_string_init((as_string *) &binop_bin->value, val, false);
-		binop_bin->valuep = &binop_bin->value;	
+		binop_bin->valuep = &binop_bin->value;
 	} else if (PyUnicode_Check(py_value)) {
 		PyObject *py_ustr1 = PyUnicode_AsUTF8String(py_value);
 		char * val = PyBytes_AsString(py_ustr1);
 		as_string_init((as_string *) &binop_bin->value, val, false);
-		binop_bin->valuep = &binop_bin->value;	
+		binop_bin->valuep = &binop_bin->value;
 		Py_XDECREF(py_ustr1);
 	} else if (PyFloat_Check(py_value)) {
 		int64_t val = PyFloat_AsDouble(py_value);
@@ -169,7 +169,7 @@ static void initialize_bin_for_strictypes(AerospikeClient *self, as_error *err, 
 		} else {
 			as_bytes *bytes;
 			GET_BYTES_POOL(bytes, static_pool, err);
-			serialize_based_on_serializer_policy(self, SERIALIZER_PYTHON, &bytes, py_value, err);	
+			serialize_based_on_serializer_policy(self, SERIALIZER_PYTHON, &bytes, py_value, err);
 			((as_val *) &binop_bin->value)->type = AS_UNKNOWN;
 			binop_bin->valuep = (as_bin_value *) bytes;
 		}
@@ -192,7 +192,7 @@ static void initialize_bin_for_strictypes(AerospikeClient *self, as_error *err, 
 		} else {
 			as_bytes *bytes;
 			GET_BYTES_POOL(bytes, static_pool, err);
-			serialize_based_on_serializer_policy(self, SERIALIZER_PYTHON, &bytes, py_data, err);	
+			serialize_based_on_serializer_policy(self, SERIALIZER_PYTHON, &bytes, py_data, err);
 			((as_val *) &binop_bin->value)->type = AS_UNKNOWN;
 			binop_bin->valuep = (as_bin_value *) bytes;
 		}
@@ -203,12 +203,12 @@ static void initialize_bin_for_strictypes(AerospikeClient *self, as_error *err, 
 		as_bytes *bytes;
 		GET_BYTES_POOL(bytes, static_pool, err);
 		serialize_based_on_serializer_policy(self, SERIALIZER_PYTHON, &bytes, py_value, err);
-		as_bytes_init_wrap((as_bytes *) &binop_bin->value, bytes->value, bytes->size, false);	
+		as_bytes_init_wrap((as_bytes *) &binop_bin->value, bytes->value, bytes->size, false);
 		binop_bin->valuep = &binop_bin->value;
 	} else {
 		as_bytes *bytes;
 		GET_BYTES_POOL(bytes, static_pool, err);
-		serialize_based_on_serializer_policy(self, SERIALIZER_PYTHON, &bytes, py_value, err);	
+		serialize_based_on_serializer_policy(self, SERIALIZER_PYTHON, &bytes, py_value, err);
 		((as_val *) &binop_bin->value)->type = AS_UNKNOWN;
 		binop_bin->valuep = (as_bin_value *) bytes;
 	}
@@ -313,7 +313,6 @@ static PyObject *  AerospikeClient_OperateOrdered_Invoke(
 					as_error_update(err, AEROSPIKE_ERR_PARAM, "Bin name should be of type string");
 					goto CLEANUP;
 				}
-				strcpy(order_of_ops[i].bin_name, bin);
 
 				if (self->strict_types) {
 					if (strlen(bin) > AS_BIN_NAME_MAX_LEN) {
@@ -325,6 +324,8 @@ static PyObject *  AerospikeClient_OperateOrdered_Invoke(
 						goto CLEANUP;
 					}
 				}
+				order_of_ops[i].bin_name = (char *)malloc(sizeof(char *) * strlen(bin));
+				strcpy(order_of_ops[i].bin_name, bin);
 			} else if (!py_bin && operation != AS_OPERATOR_TOUCH) {
 				as_error_update(err, AEROSPIKE_ERR_PARAM, "Bin is not given");
 				goto CLEANUP;
@@ -335,15 +336,15 @@ static PyObject *  AerospikeClient_OperateOrdered_Invoke(
 						goto CLEANUP;
 					}
 				}
-			} else if ((!py_value) && (operation != AS_OPERATOR_READ && operation != AS_OPERATOR_TOUCH && 
-						operation != (AS_CDT_OP_LIST_POP + 1000) && operation != (AS_CDT_OP_LIST_REMOVE + 1000) && 
+			} else if ((!py_value) && (operation != AS_OPERATOR_READ && operation != AS_OPERATOR_TOUCH &&
+						operation != (AS_CDT_OP_LIST_POP + 1000) && operation != (AS_CDT_OP_LIST_REMOVE + 1000) &&
 						operation != (AS_CDT_OP_LIST_CLEAR + 1000) && operation != (AS_CDT_OP_LIST_GET + 1000) &&
 						operation != (AS_CDT_OP_LIST_SIZE + 1000))) {
 				as_error_update(err, AEROSPIKE_ERR_PARAM, "Value should be given");
 				goto CLEANUP;
 			}
 
-			if ((operation == (AS_CDT_OP_LIST_INSERT + 1000) || operation == (AS_CDT_OP_LIST_INSERT_ITEMS + 1000) || 
+			if ((operation == (AS_CDT_OP_LIST_INSERT + 1000) || operation == (AS_CDT_OP_LIST_INSERT_ITEMS + 1000) ||
 						operation == (AS_CDT_OP_LIST_POP + 1000) || operation == (AS_CDT_OP_LIST_POP_RANGE + 1000) ||
 						operation == (AS_CDT_OP_LIST_REMOVE + 1000) || operation == (AS_CDT_OP_LIST_REMOVE_RANGE + 1000) ||
 						operation == (AS_CDT_OP_LIST_SET + 1000) || operation == (AS_CDT_OP_LIST_GET + 1000) ||
@@ -353,7 +354,7 @@ static PyObject *  AerospikeClient_OperateOrdered_Invoke(
 			}
 
 			if (self->strict_types) {
-				if (py_index && !(operation == (AS_CDT_OP_LIST_INSERT + 1000) || operation == (AS_CDT_OP_LIST_INSERT_ITEMS + 1000) || 
+				if (py_index && !(operation == (AS_CDT_OP_LIST_INSERT + 1000) || operation == (AS_CDT_OP_LIST_INSERT_ITEMS + 1000) ||
 						operation == (AS_CDT_OP_LIST_POP + 1000) || operation == (AS_CDT_OP_LIST_POP_RANGE + 1000) ||
 						operation == (AS_CDT_OP_LIST_REMOVE + 1000) || operation == (AS_CDT_OP_LIST_REMOVE_RANGE + 1000) ||
 						operation == (AS_CDT_OP_LIST_SET + 1000) || operation == (AS_CDT_OP_LIST_GET + 1000) ||
@@ -623,16 +624,21 @@ static PyObject *  AerospikeClient_OperateOrdered_Invoke(
 
 		py_bins = PyList_New(size);
 		for (i = 0; i < size; i++) {
-			if (ops.binops.entries[i].op == AS_OPERATOR_READ) {
-				PyObject *py_value = PyDict_GetItemString(py_rec_bins, ops.binops.entries[i].bin.name);
+			if (order_of_ops[i].operation == AS_OPERATOR_READ || order_of_ops[i].operation == (AS_CDT_OP_LIST_SIZE + 1000) ||
+				order_of_ops[i].operation == (AS_CDT_OP_LIST_REMOVE + 1000) || order_of_ops[i].operation ==
+				(AS_CDT_OP_LIST_REMOVE_RANGE + 1000) || order_of_ops[i].operation == (AS_CDT_OP_LIST_TRIM + 1000) ||
+				order_of_ops[i].operation == (AS_CDT_OP_LIST_CLEAR + 1000) || order_of_ops[i].operation ==
+				(AS_CDT_OP_LIST_GET_RANGE + 1000) || order_of_ops[i].operation == (AS_CDT_OP_LIST_INSERT + 1000))
+			{
+				PyObject *py_value = PyDict_GetItemString(py_rec_bins, order_of_ops[i].bin_name);
 				PyObject *py_rec_tuple = PyTuple_New(2);
 				if (py_value) {
 					Py_INCREF(py_value);
-					PyTuple_SetItem(py_rec_tuple, 0, PyString_FromString(ops.binops.entries[i].bin.name));
+					PyTuple_SetItem(py_rec_tuple, 0, PyString_FromString(order_of_ops[i].bin_name));
 					PyTuple_SetItem(py_rec_tuple, 1, py_value);
 				} else {
 					Py_INCREF(Py_None);
-					PyTuple_SetItem(py_rec_tuple, 0, PyString_FromString(ops.binops.entries[i].bin.name));
+					PyTuple_SetItem(py_rec_tuple, 0, PyString_FromString(order_of_ops[i].bin_name));
 					PyTuple_SetItem(py_rec_tuple, 1, Py_None);
 				}
 				PyList_SetItem(py_bins, i, py_rec_tuple);
@@ -650,6 +656,10 @@ static PyObject *  AerospikeClient_OperateOrdered_Invoke(
 	}
 
 CLEANUP:
+	for (i = 0; i < size; i++) {
+		free(order_of_ops[i].bin_name);
+	}
+
 	if (py_ustr) {
 		Py_DECREF(py_ustr);
 	}
@@ -756,7 +766,7 @@ CLEANUP:
 		PyObject *exception_type = raise_exception(&err);
 		if(PyObject_HasAttrString(exception_type, "key")) {
 			PyObject_SetAttrString(exception_type, "key", py_key);
-		} 
+		}
 		PyErr_SetObject(exception_type, py_err);
 		Py_DECREF(py_err);
 		return NULL;
