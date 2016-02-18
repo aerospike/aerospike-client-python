@@ -9,7 +9,7 @@
  * 5. Pool for Bytes
  *******************************************************************************************************
  */
-#define AS_MAX_STORE_SIZE 1024
+#define AS_MAX_STORE_SIZE 4096
 
 typedef struct bytes_static_pool {
     as_bytes         bytes_pool[AS_MAX_STORE_SIZE];
