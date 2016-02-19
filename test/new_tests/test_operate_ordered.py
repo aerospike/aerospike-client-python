@@ -345,7 +345,7 @@ class TestOperateOrdered(object):
             {
                 "op": aerospike.OPERATOR_WRITE,
                 "bin": "no",
-                "val": aerospike.null
+                "val": aerospike.null()
             },
             {
                 "op": aerospike.OPERATOR_READ,
@@ -706,7 +706,7 @@ class TestOperateOrdered(object):
             {
                 "op": aerospike.OPERATOR_PREPEND,
                 "bin": "no",
-                "val": aerospike.null
+                "val": aerospike.null()
             },
             {
                 "op": aerospike.OPERATOR_READ,
