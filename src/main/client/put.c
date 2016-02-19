@@ -57,7 +57,6 @@ PyObject * AerospikeClient_Put_Invoke(
 	// Initialisation flags
 	bool key_initialised = false;
 	bool record_initialised = false;
-	u_int32_t iter=0;
 
 	// Initialize record
 	as_record_init(&rec, 0);
@@ -109,9 +108,8 @@ PyObject * AerospikeClient_Put_Invoke(
 	}
 
 CLEANUP:
-	for (iter = 0; iter < static_pool.current_bytes_id; iter++) {
-		as_bytes_destroy(&static_pool.bytes_pool[iter]);
-	}
+	POOL_DESTROY(&static_pool);
+
 	if (key_initialised == true){
 		// Destroy the key if it is initialised.
 		as_key_destroy(&key);
