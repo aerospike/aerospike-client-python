@@ -657,7 +657,9 @@ static PyObject *  AerospikeClient_OperateOrdered_Invoke(
 
 CLEANUP:
 	for (i = 0; i < size; i++) {
-		free(order_of_ops[i].bin_name);
+		if (order_of_ops[i].bin_name) {
+			free(order_of_ops[i].bin_name);
+		}
 	}
 
 	if (py_ustr) {
