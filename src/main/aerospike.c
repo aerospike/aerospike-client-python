@@ -139,7 +139,7 @@ MOD_INIT(aerospike)
 	Py_INCREF(geospatial);
 	PyModule_AddObject(aerospike, "GeoJSON", (PyObject *) geospatial);
 
-	PyObject * null_object = AerospikeNullObject_New();
+	PyTypeObject * null_object = AerospikeNullObject_Ready();
 	Py_INCREF(null_object);
 	PyModule_AddObject(aerospike, "null", (PyObject *) null_object);
 
