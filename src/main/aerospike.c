@@ -30,6 +30,7 @@
 #include "log.h"
 #include <aerospike/as_operations.h>
 #include "serializer.h"
+#include "module_functions.h"
 #include "nullobject.h"
 
 PyObject *py_global_hosts;
@@ -38,8 +39,7 @@ bool user_shm_key = false;
 
 static PyMethodDef Aerospike_Methods[] = {
 
-	//Serializer Operations
-
+	//Serialization
 	{"set_serializer",
 		(PyCFunction)AerospikeClient_Set_Serializer,                METH_VARARGS | METH_KEYWORDS,
 		"Sets the serializer"},
@@ -49,6 +49,7 @@ static PyMethodDef Aerospike_Methods[] = {
 	{"unset_serializers",
 		(PyCFunction)AerospikeClient_Unset_Serializers,             METH_VARARGS | METH_KEYWORDS,
 		"Unsets the serializer and deserializer"},
+
 	{"client",		(PyCFunction) AerospikeClient_New,              METH_VARARGS | METH_KEYWORDS,
 		"Create a new instance of Client class."},
 	{"set_log_level",	(PyCFunction)Aerospike_Set_Log_Level,       METH_VARARGS | METH_KEYWORDS,
@@ -59,6 +60,11 @@ static PyMethodDef Aerospike_Methods[] = {
 		"Creates a GeoJSON object from geospatial data."},
 	{"geojson", (PyCFunction)Aerospike_Set_Geo_Json,                METH_VARARGS | METH_KEYWORDS,
 		"Creates a GeoJSON object from a raw GeoJSON string."},
+
+	//Calculate the digest of a key
+	{"calc_digest",
+		(PyCFunction)Aerospike_Calc_Digest,                         METH_VARARGS | METH_KEYWORDS,
+		"Calculate the digest of a key"},
 	{NULL}
 };
 
