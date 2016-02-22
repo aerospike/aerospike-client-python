@@ -186,8 +186,7 @@ class TestOperateOrdered(object):
 
         assert bins == [None, ('name', 'name1aa'), None]
         assert key == ('test', 'demo', 1, bytearray(
-            b"\xb7\xf4\xb88\x89\xe2\xdag\xdeh>"
-            "\x1d\xf6\x91\x9a\x1e\xac\xc4F\xc8")
+            b"\xb7\xf4\xb88\x89\xe2\xdag\xdeh>\x1d\xf6\x91\x9a\x1e\xac\xc4F\xc8")
         )
 
         self.as_connection.remove(key)
@@ -247,8 +246,7 @@ class TestOperateOrdered(object):
 
         assert bins == [None, None, ('name', 'name1aa')]
         assert key == ('test', 'demo', 1, bytearray(
-            b"\xb7\xf4\xb88\x89\xe2\xdag\xdeh>"
-            "\x1d\xf6\x91\x9a\x1e\xac\xc4F\xc8"))
+            b"\xb7\xf4\xb88\x89\xe2\xdag\xdeh>\x1d\xf6\x91\x9a\x1e\xac\xc4F\xc8"))
 
     def test_pos_operate_ordered_with_policy_gen_GT(self):
         """
@@ -278,8 +276,7 @@ class TestOperateOrdered(object):
 
         assert bins == [None, None, ('name', 'name1aa')]
         assert key == ('test', 'demo', 1, bytearray(
-            b"\xb7\xf4\xb88\x89\xe2\xdag\xdeh>"
-             "\x1d\xf6\x91\x9a\x1e\xac\xc4F\xc8")
+            b"\xb7\xf4\xb88\x89\xe2\xdag\xdeh>\x1d\xf6\x91\x9a\x1e\xac\xc4F\xc8")
         )
 
     def test_pos_operate_ordered_with_nonexistent_key(self):
@@ -629,8 +626,7 @@ class TestOperateOrdered(object):
         (key, meta, bins) = self.as_connection.get(key)
         assert bins == {"age": 1, 'name': 'name1'}
         assert key == ('test', 'demo', None,
-                       bytearray(b'\xb7\xf4\xb88\x89\xe2\xdag\xdeh>'
-                                  '\x1d\xf6\x91\x9a\x1e\xac\xc4F\xc8'))
+                       bytearray(b'\xb7\xf4\xb88\x89\xe2\xdag\xdeh>\x1d\xf6\x91\x9a\x1e\xac\xc4F\xc8'))
 
     def test_neg_operate_ordered_with_policy_gen_GT_lesser(self):
         """
@@ -665,8 +661,7 @@ class TestOperateOrdered(object):
         (key, meta, bins) = self.as_connection.get(key)
         assert bins == {'age': 1, 'name': 'name1'}
         assert key == ('test', 'demo', None,
-                       bytearray(b'\xb7\xf4\xb88\x89\xe2\xdag\xdeh>'
-                                 '\x1d\xf6\x91\x9a\x1e\xac\xc4F\xc8'))
+                       bytearray(b'\xb7\xf4\xb88\x89\xe2\xdag\xdeh>\x1d\xf6\x91\x9a\x1e\xac\xc4F\xc8'))
 
     def test_neg_operate_ordered_without_connection(self):
         """
