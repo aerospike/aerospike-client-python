@@ -256,6 +256,10 @@ static PyObject *  AerospikeClient_OperateOrdered_Invoke(
 	as_operations_inita(&ops, size);
 	op_order order_of_ops[size];
 
+	for (i=0; i<size; i++) {
+		order_of_ops[i].bin_name = NULL;
+	}
+
 	if (!self || !self->as) {
 		as_error_update(err, AEROSPIKE_ERR_PARAM, "Invalid aerospike object");
 		goto CLEANUP;
