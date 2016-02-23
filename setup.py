@@ -362,6 +362,7 @@ setup(
                 'src/main/geospatial/dumps.c',
                 'src/main/conversions.c',
                 'src/main/policy.c',
+                'src/main/calc_digest.c',
                 'src/main/predicates.c',
                 'src/main/global_hosts/type.c',
                 'src/main/nullobject/type.c',

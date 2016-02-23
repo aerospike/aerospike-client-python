@@ -29,6 +29,8 @@
 #include "exceptions.h"
 #include "policy.h"
 
+#define MAX_STACK_ALLOCATION 20000
+
 typedef struct {
 	PyObject * py_recs;
 	AerospikeClient * client;
@@ -244,7 +246,11 @@ static PyObject * batch_get_aerospike_batch_read(as_error *err, AerospikeClient 
 		Py_ssize_t size = PyList_Size(py_keys);
 
         py_recs = PyList_New(size);
-        as_batch_read_inita(&records, size);
+        if (size > MAX_STACK_ALLOCATION) {
+        	as_batch_read_init(&records, size);
+        } else {
+        	as_batch_read_inita(&records, size);
+        }
 
         // Batch object initialised
         batch_initialised = true;
@@ -272,7 +278,11 @@ static PyObject * batch_get_aerospike_batch_read(as_error *err, AerospikeClient 
 		Py_ssize_t size = PyTuple_Size(py_keys);
 
         py_recs = PyList_New(size);
-        as_batch_read_inita(&records, size);
+        if (size > MAX_STACK_ALLOCATION) {
+        	as_batch_read_init(&records, size);
+        } else {
+        	as_batch_read_inita(&records, size);
+        }
         // Batch object initialised
         batch_initialised = true;
 

@@ -1,9 +1,12 @@
 .DS_Store
+.cache
+.settings
 MANIFEST
 build/
 dist/
 /.cproject
 /.project
+/.pydevproject
 aerospike-client-c/
 aerospike.egg-info/
 *.log

@@ -13,11 +13,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  ******************************************************************************/
-
 #pragma once
 
 #include <Python.h>
-#include <stdbool.h>
 #include "types.h"
-PyObject * AerospikeNullObject_New();
-PyTypeObject * AerospikeNullObject_Ready();
+
+/**
+ * Calculates the digest of a key
+ *
+ *		aerospike.calc_digest()
+ *
+ */
+PyObject * Aerospike_Calc_Digest(PyObject * self, PyObject * args, PyObject * kwds);

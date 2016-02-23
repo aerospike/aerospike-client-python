@@ -69,7 +69,6 @@ typedef struct {
 	PyObject_HEAD
 	AerospikeClient * client;
 	as_query query;
-	as_static_pool static_pool;
 	UnicodePyObjects u_objs;
 } AerospikeQuery;
 

@@ -89,3 +89,9 @@ PyObject * AerospikeNullObject_New()
 {
 	return AerospikeNullObject_Type_New(&AerospikeNullObject_Type, Py_None, Py_None);
 }
+
+PyTypeObject * AerospikeNullObject_Ready()
+{
+	return PyType_Ready(&AerospikeNullObject_Type) == 0 ? &AerospikeNullObject_Type : NULL;
+}
+

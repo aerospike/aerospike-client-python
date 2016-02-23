@@ -146,14 +146,12 @@ class TestSelect(TestBaseClass):
             Instead Ok response is returned withe the
             meta as None. This might change with further releases.
             """
+            assert key is not None
+            assert meta is None
+            assert bins is None
         except e.RecordNotFound as exception:
-            assert True is False
             assert exception.code == 2
             assert exception.msg == 'AEROSPIKE_ERR_RECORD_NOT_FOUND'
-
-        assert key is not None
-        assert meta is None
-        assert bins is None
 
     def test_select_with_key_and_single_bin_to_select_not_a_list(self):
 
