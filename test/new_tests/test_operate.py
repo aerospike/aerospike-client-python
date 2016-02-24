@@ -523,7 +523,7 @@ class TestOperate(object):
             {
                 "op": aerospike.OPERATOR_WRITE,
                 "bin": "no",
-                "val": aerospike.null
+                "val": aerospike.null()
             },
             {
                 "op": aerospike.OPERATOR_READ,
@@ -532,7 +532,6 @@ class TestOperate(object):
         ]
 
         (key, _, bins) = self.as_connection.operate(key, llist)
-
         assert {} == bins
 
         self.as_connection.remove(key)
@@ -548,7 +547,7 @@ class TestOperate(object):
                 "bin": "age"
             }],
             {'age': 4}),
-        (('test', 'demo', 'append_dict'),                  # append_with_dict        
+        (('test', 'demo', 'append_dict'),                  # append_with_dict
             [{
                 "op": aerospike.OPERATOR_APPEND,
                 "bin": "dict",
@@ -578,7 +577,7 @@ class TestOperate(object):
         TestOperate.client_no_typechecks.remove(key)
 
     @pytest.mark.parametrize("key, llist", [
-        (('test', 'demo', 1), 
+        (('test', 'demo', 1),
             [{                                          # int
                 "op": aerospike.OPERATOR_PREPEND,
                 "bin": "age",
@@ -733,7 +732,7 @@ class TestOperate(object):
             {
                 "op": aerospike.OPERATOR_PREPEND,
                 "bin": "no",
-                "val": aerospike.null
+                "val": aerospike.null()
             },
             {
                 "op": aerospike.OPERATOR_READ,

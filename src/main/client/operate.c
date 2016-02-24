@@ -185,9 +185,11 @@ static void initialize_bin_for_strictypes(AerospikeClient *self, as_error *err, 
 		} else {
 			as_bytes *bytes;
 			GET_BYTES_POOL(bytes, static_pool, err);
-			serialize_based_on_serializer_policy(self, SERIALIZER_PYTHON, &bytes, py_value, err);	
-			((as_val *) &binop_bin->value)->type = AS_UNKNOWN;
-			binop_bin->valuep = (as_bin_value *) bytes;
+			if (err->code == AEROSPIKE_OK) {
+				serialize_based_on_serializer_policy(self, SERIALIZER_PYTHON, &bytes, py_value, err);
+				((as_val *) &binop_bin->value)->type = AS_UNKNOWN;
+				binop_bin->valuep = (as_bin_value *) bytes;
+			}
 		}
 	} else if (PyList_Check(py_value)) {
 		as_list * list = NULL;
@@ -208,9 +210,11 @@ static void initialize_bin_for_strictypes(AerospikeClient *self, as_error *err, 
 		} else {
 			as_bytes *bytes;
 			GET_BYTES_POOL(bytes, static_pool, err);
-			serialize_based_on_serializer_policy(self, SERIALIZER_PYTHON, &bytes, py_data, err);	
-			((as_val *) &binop_bin->value)->type = AS_UNKNOWN;
-			binop_bin->valuep = (as_bin_value *) bytes;
+			if (err->code == AEROSPIKE_OK) {
+				serialize_based_on_serializer_policy(self, SERIALIZER_PYTHON, &bytes, py_data, err);
+				((as_val *) &binop_bin->value)->type = AS_UNKNOWN;
+				binop_bin->valuep = (as_bin_value *) bytes;
+			}
 		}
 	} else if (!strcmp(py_value->ob_type->tp_name, "aerospike.null")) {
 		((as_val *) &binop_bin->value)->type = AS_UNKNOWN;
@@ -218,17 +222,23 @@ static void initialize_bin_for_strictypes(AerospikeClient *self, as_error *err, 
 	} else if (PyByteArray_Check(py_value)) {
 		as_bytes *bytes;
 		GET_BYTES_POOL(bytes, static_pool, err);
-		serialize_based_on_serializer_policy(self, SERIALIZER_PYTHON, &bytes, py_value, err);
-		as_bytes_init_wrap((as_bytes *) &binop_bin->value, bytes->value, bytes->size, false);	
-		binop_bin->valuep = &binop_bin->value;
+		if (err->code == AEROSPIKE_OK) {
+			serialize_based_on_serializer_policy(self, SERIALIZER_PYTHON, &bytes, py_value, err);
+			as_bytes_init_wrap((as_bytes *) &binop_bin->value, bytes->value, bytes->size, false);
+			binop_bin->valuep = &binop_bin->value;
+		}
 	} else {
 		as_bytes *bytes;
 		GET_BYTES_POOL(bytes, static_pool, err);
-		serialize_based_on_serializer_policy(self, SERIALIZER_PYTHON, &bytes, py_value, err);	
-		((as_val *) &binop_bin->value)->type = AS_UNKNOWN;
-		binop_bin->valuep = (as_bin_value *) bytes;
+		if (err->code == AEROSPIKE_OK) {
+			serialize_based_on_serializer_policy(self, SERIALIZER_PYTHON, &bytes, py_value, err);
+			((as_val *) &binop_bin->value)->type = AS_UNKNOWN;
+			binop_bin->valuep = (as_bin_value *) bytes;
+		}
 	}
-	strcpy(binop_bin->name, bin);
+	if (err->code == AEROSPIKE_OK) {
+		strcpy(binop_bin->name, bin);
+	}
 }
 /**
  *******************************************************************************************************
@@ -397,8 +407,10 @@ PyObject *  AerospikeClient_Operate_Invoke(
 					} else if (PyByteArray_Check(py_value)) {
 						as_bytes *bytes;
 						GET_BYTES_POOL(bytes, &static_pool, err);
-						serialize_based_on_serializer_policy(self, SERIALIZER_PYTHON, &bytes, py_value, err);
-						as_operations_add_append_raw(&ops, bin, bytes->value, bytes->size);
+						if (err->code == AEROSPIKE_OK) {
+							serialize_based_on_serializer_policy(self, SERIALIZER_PYTHON, &bytes, py_value, err);
+							as_operations_add_append_raw(&ops, bin, bytes->value, bytes->size);
+						}
 					} else {
 						if (!self->strict_types || !strcmp(py_value->ob_type->tp_name, "aerospike.null")) {
 							as_operations *pointer_ops = &ops;
@@ -419,8 +431,10 @@ PyObject *  AerospikeClient_Operate_Invoke(
 					} else if (PyByteArray_Check(py_value)) {
 						as_bytes *bytes;
 						GET_BYTES_POOL(bytes, &static_pool, err);
-						serialize_based_on_serializer_policy(self, SERIALIZER_PYTHON, &bytes, py_value, err);
-						as_operations_add_prepend_raw(&ops, bin, bytes->value, bytes->size);
+						if (err->code == AEROSPIKE_OK) {
+							serialize_based_on_serializer_policy(self, SERIALIZER_PYTHON, &bytes, py_value, err);
+							as_operations_add_prepend_raw(&ops, bin, bytes->value, bytes->size);
+						}
 					} else {
 						if (!self->strict_types || !strcmp(py_value->ob_type->tp_name, "aerospike.null")) {
 							as_operations *pointer_ops = &ops;
@@ -609,6 +623,10 @@ PyObject *  AerospikeClient_Operate_Invoke(
 					}
 			}
 		}
+	}
+	if (err->code != AEROSPIKE_OK) {
+		as_error_update(err, err->code, NULL);
+		goto CLEANUP;
 	}
 
 	// Initialize record

@@ -70,7 +70,7 @@ os.putenv('ARCHFLAGS','-arch x86_64')
 os.environ['ARCHFLAGS'] = '-arch x86_64'
 AEROSPIKE_C_VERSION = os.getenv('AEROSPIKE_C_VERSION')
 if not AEROSPIKE_C_VERSION:
-    AEROSPIKE_C_VERSION = '4.0.0'
+    AEROSPIKE_C_VERSION = '4.0.2'
 DOWNLOAD_C_CLIENT = os.getenv('DOWNLOAD_C_CLIENT')
 AEROSPIKE_C_HOME = os.getenv('AEROSPIKE_C_HOME')
 PREFIX = None
@@ -361,6 +361,7 @@ setup(
                 'src/main/geospatial/dumps.c',
                 'src/main/conversions.c',
                 'src/main/policy.c',
+                'src/main/calc_digest.c',
                 'src/main/predicates.c',
                 'src/main/global_hosts/type.c',
                 'src/main/nullobject/type.c',
