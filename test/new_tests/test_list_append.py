@@ -75,7 +75,7 @@ class TestListAppend(object):
             False,
             {'contact_no': [1, 2, 0],
              'city': ['Pune', 'Dehli'], 'name': 'name1'})
-        ])
+    ])
     def test_pos_list_append(self, key, field, append_value, expected):
         """
         Invoke list_append() append value to a list

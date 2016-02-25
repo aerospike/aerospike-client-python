@@ -11,6 +11,7 @@ except:
     print("Please install aerospike python client.")
     sys.exit(1)
 
+
 @pytest.mark.usefixtures("as_connection")
 class TestRemovebin(object):
 
@@ -18,8 +19,9 @@ class TestRemovebin(object):
         (('test', 'demo', 1), {"Name": "Steve", 'age': 60}, ["age"]),
         (('test', 'demo', 2), {'name': "jeff", 'age': 45}, [u"name"]),
 
-        ])
-    def test_pos_remove_bin_with_correct_parameters(self, key, record, bin_for_removal, put_data):
+    ])
+    def test_pos_remove_bin_with_correct_parameters(
+            self, key, record, bin_for_removal, put_data):
         """
         Invoke remove_bin() with correct parameters
         """
@@ -66,14 +68,17 @@ class TestRemovebin(object):
         del record["age"]
         assert bins == record
         assert key == ('test', 'demo', None,
-            bytearray(b"\xbd\x87-\x84\xae99|\x06z\x12\xf3\xef\x12\xb9\x1a\xa2\x1a;\'"))
+                       bytearray(b"\xbd\x87-\x84\xae99|\x06z\x12\xf3\xef\x12\xb9\x1a\xa2\x1a;\'"))
 
     def test_pos_remove_bin_with_policy_send_gen_eq_positive(self, put_data):
         """
         Invoke remove_bin() with policy gen eq less
         """
         key = ('test', 'demo', 1)
-        record = {"Company": "Apple", 'years': 30, 'address': '202, sillicon Vally'}
+        record = {
+            "Company": "Apple",
+            'years': 30,
+            'address': '202, sillicon Vally'}
         put_data(self.as_connection, key, record)
         policy = {
             'timeout': 1000,
@@ -154,8 +159,9 @@ class TestRemovebin(object):
         (('test', 'demo', 1), {'name': "Devid", 'age': 30}, ["name", "age"]),
         (('test', 'demo', 3), {'name': "jeff", 'age': 45}, [u"name", "age"]),
         (('test', 'demo', 4), {'name': "jeff", 'age': 45}, ["name", u"age"]),
-        ])
-    def test_pos_remove_bin_with_unicode_all(self, key, record, bins_for_removal, put_data):
+    ])
+    def test_pos_remove_bin_with_unicode_all(
+            self, key, record, bins_for_removal, put_data):
         """
         Invoke remove_bin() with unicode bin name
         """
@@ -168,33 +174,34 @@ class TestRemovebin(object):
         except e.RecordNotFound as exception:
             assert exception.code == 2
 
-    @pytest.mark.parametrize("key, record, policy, bin_for_removal",[
+    @pytest.mark.parametrize("key, record, policy, bin_for_removal", [
         (('test', 'demo', "p_commit_level_all"),
             {"Name": "John", 'age': 30, 'address': '202, washingtoon'},
             {'timeout': 1000,
-            'retry': aerospike.POLICY_RETRY_ONCE,
-            'key': aerospike.POLICY_KEY_SEND,
-            'commit': aerospike.POLICY_COMMIT_LEVEL_ALL
-            },
+             'retry': aerospike.POLICY_RETRY_ONCE,
+             'key': aerospike.POLICY_KEY_SEND,
+             'commit': aerospike.POLICY_COMMIT_LEVEL_ALL
+             },
             'age'),
         (('test', 'demo', "p_commit_level_master"),
             {"Name": "John", 'age': 30, 'address': '202, washingtoon'},
             {'timeout': 1000,
-            'retry': aerospike.POLICY_RETRY_ONCE,
-            'key': aerospike.POLICY_KEY_SEND,
-            'commit': aerospike.POLICY_COMMIT_LEVEL_MASTER
-            },
+             'retry': aerospike.POLICY_RETRY_ONCE,
+             'key': aerospike.POLICY_KEY_SEND,
+             'commit': aerospike.POLICY_COMMIT_LEVEL_MASTER
+             },
             'age'),
-        (('test', 'demo', "p_gen_GT"), 
+        (('test', 'demo', "p_gen_GT"),
             {"Name": "John", 'age': 30, 'address': '202, washingtoon'},
             {'timeout': 1000,
-            'retry': aerospike.POLICY_RETRY_ONCE,
-            'key': aerospike.POLICY_KEY_SEND,
-            'gen': aerospike.POLICY_GEN_GT
-            },
+             'retry': aerospike.POLICY_RETRY_ONCE,
+             'key': aerospike.POLICY_KEY_SEND,
+             'gen': aerospike.POLICY_GEN_GT
+             },
             'age'),
-        ])
-    def test_pos_remove_bin_with_policy(self, key, record, policy, bin_for_removal, put_data):
+    ])
+    def test_pos_remove_bin_with_policy(
+            self, key, record, policy, bin_for_removal, put_data):
         """
         Invoke remove_bin() with policy
         """
@@ -232,10 +239,12 @@ class TestRemovebin(object):
     # Negative Tests
 
     @pytest.mark.parametrize("key, bin_for_removal, ex_code, ex_msg", [
-        (None, ["age"], -2, "key is invalid"),                      # key_is_none
-        (('test', 'demo', 1), None, -2, "Bins should be a list"),    #bin_is_none
-        ])
-    def test_neg_remove_bin_with_none(self, key, bin_for_removal, ex_code, ex_msg):
+        # key_is_none
+        (None, ["age"], -2, "key is invalid"),
+        (('test', 'demo', 1), None, -2, "Bins should be a list"),  # bin_is_none
+    ])
+    def test_neg_remove_bin_with_none(
+            self, key, bin_for_removal, ex_code, ex_msg):
         """
         Invoke remove_bin() with none
         """
@@ -299,7 +308,8 @@ class TestRemovebin(object):
         """
         with pytest.raises(TypeError) as typeError:
             self.as_connection.remove_bin()
-        assert "Required argument 'key' (pos 1) not found" in str(typeError.value)
+        assert "Required argument 'key' (pos 1) not found" in str(
+            typeError.value)
 
     def test_neg_remove_bin_with_policy_send_gen_eq_not_equal(self, put_data):
         """
@@ -330,7 +340,7 @@ class TestRemovebin(object):
         assert bins == record
         assert key == ('test', 'demo', None, bytearray(
             b'\xb7\xf4\xb88\x89\xe2\xdag\xdeh>\x1d\xf6\x91\x9a\x1e\xac\xc4F\xc8')
-                      )
+        )
 
     def test_neg_remove_bin_with_policy_send_gen_GT_lesser(self, put_data):
         """
@@ -361,7 +371,7 @@ class TestRemovebin(object):
         assert bins == record
         assert key == ('test', 'demo', None, bytearray(
             b'\x1b\xb9\xda`\xa7\xbd\xe0\xc1\xdet1\xe4\x82\x94\xc7\xb3\xd8\xd5\x7f.')
-                      )
+        )
 
     def test_neg_remove_bin_with_incorrect_policy_value(self):
         """
@@ -379,10 +389,13 @@ class TestRemovebin(object):
             assert exception.code == -1
 
     @pytest.mark.parametrize("key, bin_for_removal, ex_code", [
-        (('test', 'demo', 1), ["non-existent"], 0),               # non-existent bin
-        (('test', 'demo', "non-existent"), ["age"], 0),        # non-existent key
-        ])
-    def test_neg_remove_bin_with_nonexistent_data(self, key, bin_for_removal, ex_code):
+        (('test', 'demo', 1), ["non-existent"],
+         0),               # non-existent bin
+        (('test', 'demo', "non-existent"),
+         ["age"], 0),        # non-existent key
+    ])
+    def test_neg_remove_bin_with_nonexistent_data(
+            self, key, bin_for_removal, ex_code):
         """
         Invoke remove_bin() with non-existent data
         """

@@ -150,7 +150,7 @@ class TestOperateOrdered(object):
              {"op": aerospike.OPERATOR_READ,
               "bin": "bytearray_bin"}],
             [None, ('bytearray_bin', bytearray("asd;as[d'as;d", "utf-8"))]),
-        ])
+    ])
     def test_pos_operate_ordered_correct_paramters(self, key, llist, expected):
         """
         Invoke operate_ordered() with correct parameters
@@ -235,7 +235,7 @@ class TestOperateOrdered(object):
            "val": 3},
           {"op": aerospike.OPERATOR_READ,
            "bin": "name"}]),
-        ])
+    ])
     def test_pos_operate_ordered_policy_gen_ignore(self, key, policy, meta,
                                                    llist):
         """
@@ -362,24 +362,24 @@ class TestOperateOrdered(object):
             {"op": aerospike.OP_LIST_REMOVE,
              "bin": "int_bin",
              "index": 2},
-            ], [("int_bin", 1)]),
+        ], [("int_bin", 1)]),
         ([
             {"op": aerospike.OP_LIST_REMOVE_RANGE,
              "bin": "int_bin",
              "index": 2,
              "val": 2},
-            ], [("int_bin", 2)]),
+        ], [("int_bin", 2)]),
         ([
             {"op": aerospike.OP_LIST_TRIM,
              "bin": "int_bin",
              "index": 2,
              "val": 2},
-            ], [("int_bin", 2)]),
+        ], [("int_bin", 2)]),
         ([
             {"op": aerospike.OP_LIST_CLEAR,
              "bin": "int_bin"}
-            ], [])
-        ])
+        ], [])
+    ])
     def test_pos_operate_ordered_with_list_remove_operations(self, list,
                                                              expected):
         """
@@ -487,7 +487,7 @@ class TestOperateOrdered(object):
                 "bin": "name"
             }],
             [None, ('name', 'aerospike')]),
-        ])
+    ])
     def test_pos_operate_ordered_new_record(self, key, llist, expected):
         """
         Invoke operate_ordered() with prepend command on a new record
@@ -519,8 +519,10 @@ class TestOperateOrdered(object):
         (key, _, bins) = TestOperateOrdered.client_no_typechecks.\
             operate_ordered(key, llist)
 
-        assert bins[0] == None
-        assert bins[1][1].unwrap() == {"type": "Point", "coordinates": [42.34, 58.62]}
+        assert bins[0] is None
+        assert bins[1][1].unwrap() == {
+            "type": "Point", "coordinates": [
+                42.34, 58.62]}
         TestOperateOrdered.client_no_typechecks.remove(key)
 
     def test_pos_operate_ordered_with_bin_length_extra_nostricttypes(self):
@@ -853,21 +855,21 @@ class TestOperateOrdered(object):
          [{"op": aerospike.OPERATOR_APPEND,
            "bin": "name",
            "val": 3,
-           "aa": 89},],
+           "aa": 89}, ],
          -2,
          "operation can contain only op, bin, index and val keys"),
         (('test', 'demo', 1),                  # with_incr_value_string
          {'timeout': 1000,
           'key': aerospike.POLICY_KEY_SEND,
-          'commit_level': aerospike.POLICY_COMMIT_LEVEL_MASTER },
+          'commit_level': aerospike.POLICY_COMMIT_LEVEL_MASTER},
          [{"op": aerospike.OPERATOR_INCR,
            "bin": "age",
            "val": "3"},
           {"op": aerospike.OPERATOR_READ,
            "bin": "age"}],
-          -2,
-          "Unsupported operand type(s) for +: only 'int' allowed"),
-        ])
+         -2,
+         "Unsupported operand type(s) for +: only 'int' allowed"),
+    ])
     def test_neg_operate_ordered_append_without_value_parameter(self, key,
                                                                 policy, list,
                                                                 ex_code,
@@ -961,7 +963,7 @@ class TestOperateOrdered(object):
         except e.ParamError as exception:
             assert exception.code == -2
             assert exception.msg == "Value of list_append_items"\
-            " should be of type list"
+                " should be of type list"
 
     @pytest.mark.parametrize("key, llist", [
         (('test', 'demo', 1),
@@ -1018,7 +1020,7 @@ class TestOperateOrdered(object):
                 "op": aerospike.OPERATOR_READ,
                 "bin": "bytearray"
             }]),
-        ])
+    ])
     def test_neg_operate_ordered_notypecheck_existing_record(self, key, llist):
         """
         Invoke operate() with no typecheck on existing record

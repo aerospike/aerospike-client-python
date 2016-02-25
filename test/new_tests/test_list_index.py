@@ -84,7 +84,7 @@ class TestListIndex(object):
         except e.InvalidRequest as exception:
             assert exception.code == 4
         except Exception as exception:
-            assert type(exception) == e.InvalidRequest
+            assert isinstance(exception, e.InvalidRequest)
 
     def test_pos_listindex_with_incorrect_bin(self):
         """
@@ -252,7 +252,7 @@ cfasdcalskdcbacfq34915rwcfasdcascnabscbaskjdbcalsjkbcdasc');
             assert exception.code == -2
             assert exception.msg == 'Set should be string, unicode or None'
         except Exception as exception:
-            assert type(exception) == e.ParamError
+            assert isinstance(exception, e.ParamError)
 
     def test_neg_listindex_with_set_is_none(self):
         """
