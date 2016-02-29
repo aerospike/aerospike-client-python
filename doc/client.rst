@@ -273,7 +273,7 @@ a cluster-tending thread.
                 # adding a bin
                 client.put(key, {'smiley': u"\ud83d\ude04"})
                 # removing a bin
-                client.put(key, {'i': aerospike.null})
+                client.put(key, {'i': aerospike.null()})
             except AerospikeError as e:
                 print("Error: {0} [{1}]".format(e.msg, e.code))
                 sys.exit(1)
@@ -385,6 +385,9 @@ a cluster-tending thread.
             pp.pprint(bins)
             client.close()
 
+        .. deprecated:: 2.0.1
+            use the function :func:`aerospike.calc_digest` instead.
+
     .. index::
         single: Bin Operations
 
@@ -396,7 +399,7 @@ a cluster-tending thread.
     .. method:: remove_bin(key, list[, meta[, policy]])
 
         Remove a list of bins from a record with a given *key*. Equivalent to \
-        setting those bins to :const:`aerospike.null` with a :meth:`~aerospike.Client.put`.
+        setting those bins to :meth:`aerospike.null` with a :meth:`~aerospike.Client.put`.
 
         :param tuple key: a :ref:`aerospike_key_tuple` associated with the record.
         :param list list: the bins names to be removed from the record.
@@ -902,6 +905,7 @@ a cluster-tending thread.
         :param list keys: a list of :ref:`aerospike_key_tuple`.
         :param dict policy: optional :ref:`aerospike_batch_policies`.
         :return: a :class:`list` of :ref:`aerospike_record_tuple`.
+        :raises: a :exc:`~aerospike.exception.ClientError` if the batch is too big.
 
         .. seealso:: More information about the \
             `Batch Index <https://www.aerospike.com/docs/guide/batch.html>`_ \
