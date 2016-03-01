@@ -172,7 +172,10 @@ static PyObject * AerospikePredicates_GeoWithin_Radius(PyObject * self, PyObject
 	PyDict_SetItemString(py_geo_object, "type", py_circle);
 	Py_DECREF(py_circle);
 
-	if (PyString_Check(py_bin) && PyFloat_Check(py_lat) && PyFloat_Check(py_long) && PyFloat_Check(py_radius)) {
+	if (PyString_Check(py_bin) &&
+			(PyFloat_Check(py_lat) || PyInt_Check(py_lat)) &&
+			(PyFloat_Check(py_long) || PyInt_Check(py_long)) &&
+			(PyFloat_Check(py_radius) || PyInt_Check(py_radius))) {
 		PyObject * py_outer_list = PyList_New(2);
 		PyObject * py_inner_list = PyList_New(2);
 		PyList_SetItem(py_inner_list, 0, py_lat);
@@ -190,7 +193,7 @@ static PyObject * AerospikePredicates_GeoWithin_Radius(PyObject * self, PyObject
 			goto CLEANUP;
 		}
 	} else {
-		as_error_update(&err, AEROSPIKE_ERR_PARAM, "Latitude, longitude and radius should be of double type, bin of string type");
+		as_error_update(&err, AEROSPIKE_ERR_PARAM, "Latitude, longitude and radius should be integer or double type, bin of string type");
 		goto CLEANUP;
 	}
 	
@@ -251,7 +254,7 @@ static PyObject * AerospikePredicates_GeoContains_Point(PyObject * self, PyObjec
 	PyDict_SetItemString(py_geo_object, "type", py_point);
 	Py_DECREF(py_point);
 
-	if (PyString_Check(py_bin) && PyFloat_Check(py_lat) && PyFloat_Check(py_long)) {
+	if (PyString_Check(py_bin) && (PyFloat_Check(py_lat) || PyInt_Check(py_lat)) && (PyFloat_Check(py_long) || PyInt_Check(py_long))) {
 		PyObject * py_list = PyList_New(2);
 		PyList_SetItem(py_list, 0, py_lat);
 		PyList_SetItem(py_list, 1, py_long);
@@ -265,7 +268,7 @@ static PyObject * AerospikePredicates_GeoContains_Point(PyObject * self, PyObjec
 			goto CLEANUP;
 		}
 	} else {
-		as_error_update(&err, AEROSPIKE_ERR_PARAM, "Latitude and longitude should be of double type, bin of string type");
+		as_error_update(&err, AEROSPIKE_ERR_PARAM, "Latitude and longitude should be integer or double type, bin of string type");
 		goto CLEANUP;
 	}
 	
