@@ -66,7 +66,6 @@ class TestGeospatial(TestBaseClass):
             key = ('test', 'demo', i)
             s = "{0}: [-{1}.{2}, {3}.{4}{5}".format(
                 pre, (lng // 10), (lng % 10), (lat // 10), (lat % 10), suf)
-            print(s)
             self.geo_object = aerospike.geojson(s)
             TestGeospatial.client.put(key, {"loc": self.geo_object})
             self.keys.append(key)
