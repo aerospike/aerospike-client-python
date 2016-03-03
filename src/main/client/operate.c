@@ -623,6 +623,15 @@ PyObject *  AerospikeClient_Operate_Invoke(
 					}
 			}
 		}
+
+		if (py_ustr) {
+			Py_DECREF(py_ustr);
+			py_ustr = NULL;
+		}
+		if (py_ustr1) {
+			Py_DECREF(py_ustr1);
+			py_ustr1 = NULL;
+		}
 	}
 	if (err->code != AEROSPIKE_OK) {
 		as_error_update(err, err->code, NULL);

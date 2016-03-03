@@ -148,6 +148,11 @@ static bool AerospikeClient_Info_each(as_error * err, const as_node * node, cons
 							PyDict_SetItemString(py_nodes, node->name, py_res);
 						}
 					}
+
+					if (py_ustr) {
+						Py_DECREF(py_ustr);
+						py_ustr = NULL;
+					}
 				}
 			} else if ( !PyList_Check( py_hosts )){
 				as_error_update(&udata_ptr->error, AEROSPIKE_ERR_PARAM, "Hosts should be specified in a list.");
@@ -162,6 +167,9 @@ static bool AerospikeClient_Info_each(as_error * err, const as_node * node, cons
 
 CLEANUP:
 	PyGILState_Release(gil_state);
+	if (py_ustr) {
+		Py_DECREF(py_ustr);
+	}
 	if ( udata_ptr->error.code != AEROSPIKE_OK ) {
 		PyObject * py_err = NULL;
 		error_to_pyobject( &udata_ptr->error, &py_err);

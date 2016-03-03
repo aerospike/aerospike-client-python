@@ -198,6 +198,11 @@ static int AerospikeQuery_Where_Add(AerospikeQuery * self, as_predicate_type pre
 				} else if (index_type == 1) {
 					as_query_where(&self->query, bin, as_geo_contains(val));
 				}
+
+				if (py_ubin) {
+					Py_DECREF(py_ubin);
+					py_ubin = NULL;
+				}
 			} else {
 				// If it ain't right, raise and error
 				as_error_update(&err, AEROSPIKE_ERR_PARAM, "range predicate type not supported");
