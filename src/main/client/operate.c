@@ -274,6 +274,8 @@ PyObject *  AerospikeClient_Operate_Invoke(
 	PyObject * py_bin = NULL;
 	as_record * rec = NULL;
 
+	as_vector * unicodeVector = as_vector_create(sizeof(PyObject *), 128);
+
 	as_static_pool static_pool;
 	memset(&static_pool, 0, sizeof(static_pool));
 
@@ -329,6 +331,7 @@ PyObject *  AerospikeClient_Operate_Invoke(
 				if (PyUnicode_Check(py_bin)) {
 					py_ustr = PyUnicode_AsUTF8String(py_bin);
 					bin = PyBytes_AsString(py_ustr);
+					as_vector_append(unicodeVector, &py_ustr);
 				} else if (PyString_Check(py_bin)) {
 					bin = PyString_AsString(py_bin);
 				} else if (PyByteArray_Check(py_bin)) {
@@ -401,6 +404,7 @@ PyObject *  AerospikeClient_Operate_Invoke(
 						py_ustr1 = PyUnicode_AsUTF8String(py_value);
 						val = PyBytes_AsString(py_ustr1);
 						as_operations_add_append_str(&ops, bin, val);
+						as_vector_append(unicodeVector, &py_ustr1);
 					} else if (PyString_Check(py_value)) {
 						val = PyString_AsString(py_value);
 						as_operations_add_append_str(&ops, bin, val);
@@ -425,6 +429,7 @@ PyObject *  AerospikeClient_Operate_Invoke(
 						py_ustr1 = PyUnicode_AsUTF8String(py_value);
 						val = PyBytes_AsString(py_ustr1);
 						as_operations_add_prepend_str(&ops, bin, val);
+						as_vector_append(unicodeVector, &py_ustr1);
 					} else if (PyString_Check(py_value)) {
 						val = PyString_AsString(py_value);
 						as_operations_add_prepend_str(&ops, bin, val);
@@ -623,15 +628,6 @@ PyObject *  AerospikeClient_Operate_Invoke(
 					}
 			}
 		}
-
-		if (py_ustr) {
-			Py_DECREF(py_ustr);
-			py_ustr = NULL;
-		}
-		if (py_ustr1) {
-			Py_DECREF(py_ustr1);
-			py_ustr1 = NULL;
-		}
 	}
 	if (err->code != AEROSPIKE_OK) {
 		as_error_update(err, err->code, NULL);
@@ -654,12 +650,11 @@ PyObject *  AerospikeClient_Operate_Invoke(
 	}
 
 CLEANUP:
-	if (py_ustr) {
-		Py_DECREF(py_ustr);
+	for (uint32_t i = 0; i < unicodeVector->size; i++) {
+		Py_DECREF(as_vector_get_ptr(unicodeVector, i));
 	}
-	if (py_ustr1) {
-		Py_DECREF(py_ustr1);
-	}
+	as_vector_destroy(unicodeVector);
+
 	if (rec) {
 		as_record_destroy(rec);
 	}
