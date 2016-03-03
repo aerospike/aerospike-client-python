@@ -156,6 +156,8 @@ class TestAggregate(TestBaseClass):
         except e.InvalidRequest as exception:
             assert exception.code == 4
             assert exception.msg == 'AEROSPIKE_ERR_REQUEST_INVALID'
+        except e.NamespaceNotFound as exception:
+            assert exception.code == 20
 
     def test_aggregate_with_where_incorrect(self):
         """

@@ -86,7 +86,7 @@ class TestGeospatial(TestBaseClass):
         if not TestGeospatial.skip_old_server:
             key = ('test', 'demo', 'circle')
             geo_circle = aerospike.GeoJSON(
-                {"type": "AeroCircle", "coordinates": [[-122.0, 37.5], 250.2]})
+                {"type": "AeroCircle", "coordinates": [[-122.0, 37.0], 250.2]})
             TestGeospatial.client.put(key, {"loc_circle": geo_circle})
             self.keys.append(key)
 
@@ -640,7 +640,7 @@ class TestGeospatial(TestBaseClass):
         query = TestGeospatial.client.query("test", "demo")
 
         geo_object2 = aerospike.GeoJSON({"type": "Point", "coordinates":
-                                         [-122.000000, 37.500000]})
+                                         [-122.000000, 37.000000]})
 
         query.where(
             p.geo_contains_geojson_point("loc_circle", geo_object2.dumps()))
@@ -653,7 +653,36 @@ class TestGeospatial(TestBaseClass):
 
         assert len(records) == 1
         expected = [
-            {'coordinates': [[-122.0, 37.5], 250.2], 'type': 'AeroCircle'}]
+            {'coordinates': [[-122.0, 37.0], 250.2], 'type': 'AeroCircle'}]
+        for r in records:
+            assert r['loc_circle'].unwrap() in expected
+
+    def test_geospatial_positive_query_with_point_in_aerocircle_int(self):
+        """
+            Perform a positive geospatial query for a point in aerocircle
+        """
+        if TestGeospatial.skip_old_server is True:
+            pytest.skip(
+                "Server does not support apply on AeroCircle for GeoJSON")
+
+        records = []
+        query = TestGeospatial.client.query("test", "demo")
+
+        geo_object2 = aerospike.GeoJSON({"type": "Point", "coordinates":
+                                         [-122, 37]})
+
+        query.where(
+            p.geo_contains_geojson_point("loc_circle", geo_object2.dumps()))
+
+        def callback(input_tuple):
+            _, _, record = input_tuple
+            records.append(record)
+
+        query.foreach(callback)
+
+        assert len(records) == 1
+        expected = [
+            {'coordinates': [[-122.0, 37.0], 250.2], 'type': 'AeroCircle'}]
         for r in records:
             assert r['loc_circle'].unwrap() in expected
 

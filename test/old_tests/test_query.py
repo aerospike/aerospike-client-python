@@ -183,6 +183,8 @@ class TestQuery(TestBaseClass):
         except e.InvalidRequest as exception:
             assert exception.code == 4
             assert exception.msg == 'AEROSPIKE_ERR_REQUEST_INVALID'
+        except e.NamespaceNotFound as exception:
+            assert exception.code == 20
 
     def test_query_with_ns_not_string(self):
         """
