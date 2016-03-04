@@ -352,11 +352,78 @@ class TestOperateOrdered(object):
 
         (key, _, bins) = self.as_connection.operate_ordered(key, llist)
 
-        assert {} == bins
+        assert [None, ('no', None)] == bins
 
         self.as_connection.remove(key)
 
     # List operation testcases
+    @pytest.mark.parametrize("list, expected", [
+        ([
+            {"op": aerospike.OP_LIST_APPEND,
+             "bin": "int_bin",
+             "val": 7},
+            {"op": aerospike.OP_LIST_GET,
+             "bin": "int_bin",
+             "index": 4},
+        ], [('int_bin', 5), ('int_bin', 7)]),
+        ([
+            {"op": aerospike.OP_LIST_APPEND_ITEMS,
+             "bin": "int_bin",
+             "val": [7, 9]},
+            {"op": aerospike.OP_LIST_GET_RANGE,
+             "bin": "int_bin",
+             "index": 3,
+             "val": 3},
+        ], [('int_bin', 6), ('int_bin', [4, 7, 9])]),
+        ([
+            {"op": aerospike.OP_LIST_INSERT,
+             "bin": "int_bin",
+             "val": 7,
+             "index": 2},
+            {"op": aerospike.OP_LIST_POP,
+             "bin": "int_bin",
+             "index": 2}
+        ], [('int_bin', 5), ('int_bin', 7)]),
+        ([
+            {"op": aerospike.OP_LIST_INSERT_ITEMS,
+             "bin": "int_bin",
+             "val": [7, 9],
+             "index": 2},
+            {"op": aerospike.OP_LIST_POP_RANGE,
+             "bin": "int_bin",
+             "index": 2,
+             "val": 2}
+        ], [('int_bin', 6), ('int_bin', [7, 9])]),
+        ([
+            {"op": aerospike.OP_LIST_SET,
+             "bin": "int_bin",
+             "index": 2,
+             "val": 18},
+            {"op": aerospike.OP_LIST_GET,
+             "bin": "int_bin",
+             "index": 2}
+        ], [('int_bin', None), ('int_bin', 18)]),
+        ([
+            {"op": aerospike.OP_LIST_SET,
+             "bin": "int_bin",
+             "index": 6,
+             "val": 10},
+            {"op": aerospike.OP_LIST_GET,
+             "bin": "int_bin",
+             "index": 6}
+        ], [('int_bin', None), ('int_bin', 10)])
+    ])
+    def test_pos_operate_ordered_with_list_addition_operations(self, list,
+                                                               expected):
+        """
+        Invoke operate_ordered() with list addition operations
+        """
+        key = ('test', 'demo', 'list_key')
+
+        key, _, bins = self.as_connection.operate_ordered(key, list)
+
+        assert bins == expected
+
     @pytest.mark.parametrize("list, expected", [
         ([
             {"op": aerospike.OP_LIST_REMOVE,
@@ -378,7 +445,7 @@ class TestOperateOrdered(object):
         ([
             {"op": aerospike.OP_LIST_CLEAR,
              "bin": "int_bin"}
-        ], [])
+        ], [('int_bin', None)])
     ])
     def test_pos_operate_ordered_with_list_remove_operations(self, list,
                                                              expected):
@@ -454,6 +521,55 @@ class TestOperateOrdered(object):
         (key, meta, bins) = self.as_connection.get(key)
 
         assert bins['int_bin'] == [1, 2, 9, 3, 4]
+
+    @pytest.mark.parametrize("list, expected", [
+        ([
+            {"op": aerospike.OP_LIST_APPEND,
+             "bin": "string_bin",
+             "val": {"new_val": 1}},
+            {"op": aerospike.OP_LIST_GET,
+             "bin": "string_bin",
+             "index": 4}
+         ], [('string_bin', 5), ('string_bin', {'new_val': 1})]),
+        ([
+            {"op": aerospike.OP_LIST_APPEND_ITEMS,
+             "bin": "string_bin",
+             "val": [['z', 'x'], ('y', 'w')]},
+            {"op": aerospike.OP_LIST_GET_RANGE,
+             "bin": "string_bin",
+             "index": 3,
+             "val": 3}
+        ], [('string_bin', 6), ('string_bin', ['d', ['z', 'x'], ('y', 'w')])]),
+        ([
+            {"op": aerospike.OP_LIST_INSERT,
+             "bin": "string_bin",
+             "val": True,
+             "index": 2},
+            {"op": aerospike.OP_LIST_POP,
+             "bin": "string_bin",
+             "index": 2}
+        ], [('string_bin', 5), ('string_bin', True)]),
+        ([
+            {"op": aerospike.OP_LIST_INSERT_ITEMS,
+             "bin": "string_bin",
+             "val": [bytearray("abc", "utf-8"), u"xyz"],
+             "index": 2},
+            {"op": aerospike.OP_LIST_POP_RANGE,
+             "bin": "string_bin",
+             "index": 2,
+             "val": 2}
+        ], [('string_bin', 6), ('string_bin', [bytearray(b'abc'), 'xyz'])]),
+    ])
+    def test_pos_operate_ordered_with_list_ops_different_datatypes(self, list,
+                                                                   expected):
+        """
+        Invoke operate_ordered() with list operations using different datatypes
+        """
+        key = ('test', 'demo', 'list_key')
+
+        key, _, bins = self.as_connection.operate_ordered(key, list)
+
+        assert bins == expected
 
     # No typecheck test cases
     @pytest.mark.parametrize("key, llist, expected", [
@@ -547,7 +663,7 @@ class TestOperateOrdered(object):
         _, _, bins = TestOperateOrdered.\
             client_no_typechecks.operate_ordered(key, llist)
 
-        assert bins == [None, None]
+        assert bins == [None]
 
         (key, _, bins) = TestOperateOrdered.client_no_typechecks.get(key)
 
@@ -573,7 +689,7 @@ class TestOperateOrdered(object):
         key, _, bins = TestOperateOrdered.\
             client_no_typechecks.operate_ordered(key, llist)
 
-        assert bins == [None, None, ('name', 'ramname1')]
+        assert bins == [None]
 
     # Negative tests
     def test_neg_operate_ordered_with_no_parameters(self):
@@ -684,7 +800,7 @@ class TestOperateOrdered(object):
         ]
 
         try:
-            key, _, _ = client1.operate(key, llist)
+            key, _, _ = client1.operate_ordered(key, llist)
 
         except e.ClusterError as exception:
             assert exception.code == 11
@@ -725,9 +841,6 @@ class TestOperateOrdered(object):
         key = ('test', 'demo', 1)
 
         llist = [
-            {"op": aerospike.OPERATOR_PREPEND,
-             "bin": "name",
-             "val": u"ram"},
             {"op": 3,
              "bin": "age",
              "val": 3},
@@ -752,9 +865,6 @@ class TestOperateOrdered(object):
             max_length = max_length + 'a'
 
         llist = [
-            {"op": aerospike.OPERATOR_PREPEND,
-             "bin": "name",
-             "val": u"ram"},
             {"op": aerospike.OPERATOR_INCR,
              "bin": max_length,
              "val": 3},
@@ -875,7 +985,7 @@ class TestOperateOrdered(object):
                                                                 ex_code,
                                                                 ex_msg):
         """
-        Invoke operate_ordered() with append operation and append val is not given
+        Invoke operate_ordered() with append op and append val is not given
         """
 
         try:
@@ -901,9 +1011,9 @@ class TestOperateOrdered(object):
 
         try:
             self.as_connection.operate_ordered(key, llist)
-        except e.ParamError as exception:
-            assert exception.code == -2
-            assert exception.msg == "Cannot concatenate 'str' and 'non-str' objects"
+        except e.ParamError as exc:
+            assert exc.code == -2
+            assert exc.msg == "Cannot concatenate 'str' and 'non-str' objects"
 
     def test_neg_operate_ordered_with_incorrect_policy(self):
         """

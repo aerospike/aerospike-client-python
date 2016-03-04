@@ -145,6 +145,7 @@ class TestListSet(object):
         assert status == 0
         key, _, bins = self.as_connection.get(key)
         assert bins == {'contact_no': [100]}
+        self.as_connection.remove(key)
 
     # Negative Tests
     def test_neg_list_set_with_no_parameters(self):

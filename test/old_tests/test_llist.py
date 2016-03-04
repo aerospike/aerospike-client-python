@@ -51,10 +51,10 @@ class TestLList(TestBaseClass):
         try:
             TestLList.llist_integer.destroy()
             TestLList.llist_string.destroy()
-            TestLList.list_float.destroy()
-            TestLList.client.remove(('test', 'demo', 'non_ldt_key'))
+            TestLList.llist_float.destroy()
         except:
             pass
+        TestLList.client.remove(('test', 'demo', 'non_ldt_ky'))
         self.client.close()
 
     # Add() - Add an object to the llist.
