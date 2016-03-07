@@ -650,7 +650,7 @@ PyObject *  AerospikeClient_Operate_Invoke(
 	}
 
 CLEANUP:
-	for (int i=0; i<unicodeStrVector->size ; i++) {
+	for (unsigned int i=0; i<unicodeStrVector->size ; i++) {
 		free(as_vector_get_ptr(unicodeStrVector, i));
 	}
 

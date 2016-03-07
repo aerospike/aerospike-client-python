@@ -273,6 +273,10 @@ static PyObject *  AerospikeClient_OperateOrdered_Invoke(
 		as_operations ops;
 		as_operations_init(&ops, 1);
 
+		// Initialize record
+		as_record_init(&rec, 0);
+		as_record *rec_ptr = &rec;
+
 		if (py_meta) {
 			AerospikeClient_CheckForMeta(py_meta, &ops, err);
 		}
@@ -601,10 +605,6 @@ static PyObject *  AerospikeClient_OperateOrdered_Invoke(
 					}
 			}
 		}
-
-		// Initialize record
-		as_record_init(&rec, 0);
-		as_record *rec_ptr = &rec;
 
 		Py_BEGIN_ALLOW_THREADS
 		aerospike_key_operate(self->as, err, operate_policy_p, key, &ops, &rec_ptr);
