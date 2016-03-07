@@ -203,7 +203,7 @@ static void initialize_bin_for_strictypes(AerospikeClient *self, as_error *err, 
 		as_bytes *bytes;
 		GET_BYTES_POOL(bytes, static_pool, err);
 		serialize_based_on_serializer_policy(self, SERIALIZER_PYTHON, &bytes, py_value, err);
-		as_bytes_init_wrap((as_bytes *) &binop_bin->value, bytes->value, bytes->size, false);
+		as_bytes_init_wrap((as_bytes *) &binop_bin->value, bytes->value, bytes->size, true);
 		binop_bin->valuep = &binop_bin->value;
 	} else {
 		as_bytes *bytes;
@@ -390,7 +390,7 @@ static PyObject *  AerospikeClient_OperateOrdered_Invoke(
 						as_bytes *bytes;
 						GET_BYTES_POOL(bytes, &static_pool, err);
 						serialize_based_on_serializer_policy(self, SERIALIZER_PYTHON, &bytes, py_value, err);
-						as_operations_add_append_raw(&ops, bin, bytes->value, bytes->size);
+						as_operations_add_append_rawp(&ops, bin, bytes->value, bytes->size, true);
 					} else {
 						if (!self->strict_types || !strcmp(py_value->ob_type->tp_name, "aerospike.null")) {
 							as_operations *pointer_ops = &ops;
@@ -412,7 +412,7 @@ static PyObject *  AerospikeClient_OperateOrdered_Invoke(
 						as_bytes *bytes;
 						GET_BYTES_POOL(bytes, &static_pool, err);
 						serialize_based_on_serializer_policy(self, SERIALIZER_PYTHON, &bytes, py_value, err);
-						as_operations_add_prepend_raw(&ops, bin, bytes->value, bytes->size);
+						as_operations_add_prepend_rawp(&ops, bin, bytes->value, bytes->size, true);
 					} else {
 						if (!self->strict_types || !strcmp(py_value->ob_type->tp_name, "aerospike.null")) {
 							as_operations *pointer_ops = &ops;
