@@ -6,7 +6,7 @@ try:
     import cPickle as pickle
 except:
     import pickle
-
+import test_data
 # from collections import OrderedDict
 from .test_base_class import TestBaseClass
 aerospike = pytest.importorskip("aerospike")
@@ -25,68 +25,7 @@ class SomeClass(object):
 @pytest.mark.usefixtures("as_connection")
 class TestGetPut():
 
-    @pytest.mark.parametrize("_input, _expected", [
-        (('test', 'demo', 1), {'age': 1, 'name': 'name1'}),
-        (('test', 'demo', 2), {'age': 2, 'name': 'Mr John', 'bmi': 3.55}),
-        (('test', 'demo', 'boolean_key'), {'is_present': True}),
-        (('test', 'demo', 'string'), {'place': "New York", 'name': 'John'}),
-        (('test', 'demo', u"bb"), {'a': [u'aa', 2, u'aa', 4, u'cc', 3, 2, 1]}),
-        (('test', u'demo', 1), {'age': 1, 'name': 'name1'}),
-        (('test', 'demo', 1), {"is_present": None}),
-        (('test', 'unknown_set', 1), {
-         'a': {'k': [bytearray("askluy3oijs", "utf-8")]}}),
-
-        # Bytearray
-        (("test", "demo", bytearray(
-            "asd;as[d'as;d", "utf-8")), {"name": "John"}),
-        (('test', 'demo', 'bytes_key'), {'bytes': bytearray('John', 'utf-8')}),
-
-        # List Data
-        (('test', 'demo', 'list_key'), {'names': ['John', 'Marlen', 'Steve']}),
-        (('test', 'demo', 'list_key'), {'names': [1, 2, 3, 4, 5]}),
-        (('test', 'demo', 'list_key'), {
-         'names': [1.5, 2.565, 3.676, 4, 5.89]}),
-        (('test', 'demo', 'list_key'), {'names': ['John', 'Marlen', 1024]}),
-        (('test', 'demo', 'list_key_unicode'), {
-         'a': [u'aa', u'bb', 1, u'bb', u'aa']}),
-        (('test', 'demo', 'objects'), {'objects': [
-         pickle.dumps(SomeClass()), pickle.dumps(SomeClass())]}),
-
-        # Map Data
-        (('test', 'demo', 'map_key'), {'names': {'name': 'John', 'age': 24}}),
-        (('test', 'demo', 'map_key_float'), {
-         "double_map": {"1": 3.141, "2": 4.123, "3": 6.285}}),
-        (('test', 'demo', 'map_key_unicode'), {
-         'a': {u'aa': u'11'}, 'b': {u'bb': u'22'}}),
-        #        (('test', 'demo', 1),
-        #            {'odict': OrderedDict(sorted({'banana': 3, 'apple': 4, 'pear': 1, 'orange': 2}.items(),
-        #                key=lambda t: t[0]))}),
-
-        # Tuple Data
-        (('test', 'demo', 'tuple_key'), {'tuple_seq': tuple('abc')}),
-
-        # Set Data
-        (('test', 'demo', 'set_key'), {"set_data": set([1, 2])}),
-        (('test', 'demo', 'fset_key'), {
-         "fset_data": frozenset(["Frankfurt", "Basel", "Freiburg"])}),
-
-        # Hybrid
-        (('test', 'demo', 'multiple_bins'), {
-            'i': ["nanslkdl", 1, bytearray("asd;as[d'as;d", "utf-8")],
-            's': {"key": "asd';q;'1';"},
-            'b': 1234,
-            'l': '!@#@#$QSDAsd;as'
-        }),
-        (('test', 'demo', 'list_map_key'), {
-            'names': ['John', 'Marlen', 'Steve'],
-            'names_and_age': [{'name': 'John',
-                               'age': 24}, {'name': 'Marlen',
-                                            'age': 25}]
-        }),
-        (('test', 'demo', 'map_tuple_key'), {
-            'seq': {'bb': tuple('abc')}
-        })
-    ])
+    @pytest.mark.parametrize("_input, _expected", test_data.pos_data)
     def test_pos_get_put_with_key(self, _input, _expected, put_data):
         """
             Invoke get() with a key and not policy's dict.
@@ -218,30 +157,27 @@ class TestGetPut():
         except e.RecordNotFound as exception:
             assert exception.code == 2
 
-    @pytest.mark.parametrize("_input, _expected", [
-        ((None, 'demo', 2),
-            (-2, 'namespace must be a string')),
-        (('test', 'demo', None),
-            (-2, 'either key or digest is required')),
-        (None,
-            (-2, 'key is invalid')),
-        (('test', 'demo'),
-            (-2, 'key tuple must be (Namespace, Set, Key) or (Namespace, Set, None, Digest)')),
-        (('test', 'demo', '', ''),
-            (-2, 'key tuple must be (Namespace, Set, Key) or (Namespace, Set, None, Digest)')),
-    ])
-    def test_neg_get_with_none(self, _input, _expected):
+    @pytest.mark.parametrize("key, ex_code, ex_msg", test_data.key_neg)
+    def test_neg_get_with_none(self, key, ex_code, ex_msg):
         """
             Invoke get() with None namespace/key in key tuple.
         """
         try:
-            self.as_connection.get(_input)
+            self.as_connection.get(key)
 
         except e.ParamError as exception:
-            assert exception.code == _expected[0]
-            assert exception.msg == _expected[1]
+            assert exception.code == ex_code
+            assert exception.msg == ex_msg
+
+    def test_neg_get_with_invalid_record(self):
+        """
+            Invoke get() with None namespace/key in key tuple.
+        """
+        key = ('test', 'demo', '', '')
+        try:
+            self.as_connection.get(key)
         except e.RecordNotFound as exception:
-            assert exception.code == 2
+            assert exception.code == 2L
 
     def test_neg_get_with_non_existent_namespace(self):
         """
@@ -563,25 +499,8 @@ class TestGetPut():
         assert "Required argument 'bins' (pos 2) not found" in str(
             typeError.value)
 
-    @pytest.mark.parametrize("key, record, ex_code, ex_msg", [
-        (None, {"name": "John"}, -2, 'key is invalid'),
-        # Invalid Namespace
-        ((None, "demo", 1), {"name": "Steve"}, - \
-         2, "namespace must be a string"),
-        # Invalid Key
-        (("test", "demo", None), {"name": "John"}, - \
-         2, "either key or digest is required"),
-        # Invalid bin
-        (('test', 'demo', 15), "Name : John", -2,
-         "Record should be passed as bin-value pair"),
-        # Invalid set name
-        (('test', 123, 1), {'a': ['!@#!#$%#', bytearray(
-            'ASD@#$AR#$@#ERQ#', 'utf-8')]}, -2, 'set must be a string'),
-        # Invalid Namespace
-        ((123, 'demo', 1), {'i': 'asdadasd'}, -2, 'namespace must be a string')
-
-    ])
-    def test_neg_put_with_none_key(self, key, record, ex_code, ex_msg):
+    @pytest.mark.parametrize("key, ex_code, ex_msg", test_data.key_neg)
+    def test_neg_put_with_none(self, key, ex_code, ex_msg, record = {}):
         """
             Invoke put() with invalid data
         """
@@ -593,6 +512,21 @@ class TestGetPut():
             assert exception.code == ex_code
             assert exception.msg == ex_msg
 
+    @pytest.mark.parametrize("key, ex_code, ex_msg, record", [
+        (("test", "demo", None), \
+          -2, "either key or digest is required", {"name": "John"}),
+        ])
+    def test_neg_put_with_invalid_record(self, key, ex_code, ex_msg, record):
+        """
+            Invoke put() with invalid data
+        """
+
+        try:
+            self.as_connection.put(key, record)
+
+        except e.ParamError as exception:
+            assert exception.code == ex_code
+            assert exception.msg == ex_msg
     @pytest.mark.parametrize("key, record, exception_code", [
         # Non-existing NS & Set
         (('demo', 'test', 1), {
