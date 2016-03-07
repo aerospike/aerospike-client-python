@@ -2,13 +2,9 @@
 
 import pytest
 import sys
-try:
-    import cPickle as pickle
-except:
-    import pickle
 from .test_base_class import TestBaseClass
 import time
-
+import test_data
 aerospike = pytest.importorskip("aerospike")
 try:
     import aerospike
@@ -25,6 +21,17 @@ class SomeClass(object):
 @pytest.mark.usefixtures("as_connection")
 class TestExists():
 
+    @pytest.mark.parametrize("key, record", test_data.pos_data)
+    def test_pos_exists_with_diff_datatype(self, key, record, put_data):
+        """
+            Invoke exists() for diffrent record data.
+        """
+        put_data(self.as_connection, key, record)
+        key, meta = self.as_connection.exists(key)
+
+        assert meta['gen'] is not None
+        assert meta['ttl'] is not None
+
     def test_pos_exists_with_key_and_policy(self, put_data):
         """
             Invoke exists() with a key and policy.
@@ -40,32 +47,6 @@ class TestExists():
         put_data(self.as_connection, key, record)
 
         key, meta = self.as_connection.exists(key, policy)
-
-        assert meta['gen'] is not None
-        assert meta['ttl'] is not None
-
-    @pytest.mark.parametrize("key, record", [
-        (('test', 'demo', 'key'), {"Name": "Jeff"}),
-        (('test', 'demo', 'list_key'), {'names': ['John', 'Marlen', 'Steve']}),
-        (('test', 'demo', 'map_key'), {'names': {'name': 'John', 'age': 24}}),
-        (('test', 'demo', 'bytes_key'), {'bytes': bytearray('John', 'utf-8')}),
-        # list of objects.
-        (('test', 'demo', 'objects'),
-            {'objects': [pickle.dumps(SomeClass()),
-                         pickle.dumps(SomeClass())]}),
-        (('test', 'demo', 'list_map_key'), {
-            'names': ['John', 'Marlen', 'Steve'],
-            'names_and_age': [{'name': 'John',
-                               'age': 24}, {'name': 'Marlen',
-                                            'age': 25}]
-        }),
-    ])
-    def test_pos_exists_with_diff_datatype(self, key, record, put_data):
-        """
-            Invoke exists() for diffrent record data.
-        """
-        put_data(self.as_connection, key, record)
-        key, meta = self.as_connection.exists(key)
 
         assert meta['gen'] is not None
         assert meta['ttl'] is not None
@@ -194,12 +175,7 @@ class TestExists():
             assert exception.code == ex_code
             assert exception.msg == ex_msg
 
-    @pytest.mark.parametrize("key, ex_code, ex_msg", [
-        (['test', 'demo', 'key_as_list'], -2, "key is invalid"),
-        (None, -2, "key is invalid"),
-        (('test', 'demo', None), -2, 'either key or digest is required'),
-        ((None, 'demo', 2), -2, 'namespace must be a string')
-    ])
+    @pytest.mark.parametrize("key, ex_code, ex_msg", test_data.key_neg)
     def test_neg_exists_key_invalid_data(self, key, ex_code, ex_msg):
         """
             Invoke exists() with invalid key
