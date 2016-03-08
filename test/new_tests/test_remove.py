@@ -3,7 +3,7 @@
 import pytest
 import sys
 from .test_base_class import TestBaseClass
-import test_data
+from .test_data import *
 aerospike = pytest.importorskip("aerospike")
 try:
     import aerospike
@@ -311,7 +311,7 @@ class TestRemove():
             self.as_connection.remove(key, meta, policy, "Extra Param")
         assert "remove() takes at most 3 arguments (4 given)" in str(typeError.value)
 
-    @pytest.mark.parametrize("key, ex_code, ex_msg", test_data.key_neg)
+    @pytest.mark.parametrize("key, ex_code, ex_msg", key_neg)
     def test_neg_remove_with_incorrect_data(self, key, ex_code, ex_msg):
         """
             Invoke remove() with namespace as None

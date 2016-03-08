@@ -4,7 +4,7 @@ import pytest
 import sys
 from .test_base_class import TestBaseClass
 import time
-import test_data
+from .test_data import *
 aerospike = pytest.importorskip("aerospike")
 try:
     import aerospike
@@ -17,11 +17,10 @@ except:
 class SomeClass(object):
     pass
 
-
 @pytest.mark.usefixtures("as_connection")
 class TestExists():
 
-    @pytest.mark.parametrize("key, record", test_data.pos_data)
+    @pytest.mark.parametrize("key, record", pos_data)
     def test_pos_exists_with_diff_datatype(self, key, record, put_data):
         """
             Invoke exists() for diffrent record data.
@@ -175,7 +174,7 @@ class TestExists():
             assert exception.code == ex_code
             assert exception.msg == ex_msg
 
-    @pytest.mark.parametrize("key, ex_code, ex_msg", test_data.key_neg)
+    @pytest.mark.parametrize("key, ex_code, ex_msg", key_neg)
     def test_neg_exists_key_invalid_data(self, key, ex_code, ex_msg):
         """
             Invoke exists() with invalid key
