@@ -6,7 +6,8 @@ try:
     import cPickle as pickle
 except:
     import pickle
-from .test_data import *
+from . import test_data
+
 # from collections import OrderedDict
 from .test_base_class import TestBaseClass
 aerospike = pytest.importorskip("aerospike")
@@ -25,7 +26,7 @@ class SomeClass(object):
 @pytest.mark.usefixtures("as_connection")
 class TestGetPut():
 
-    @pytest.mark.parametrize("_input, _expected", pos_data)
+    @pytest.mark.parametrize("_input, _expected", test_data.pos_data)
     def test_pos_get_put_with_key(self, _input, _expected, put_data):
         """
             Invoke get() with a key and not policy's dict.
@@ -157,7 +158,7 @@ class TestGetPut():
         except e.RecordNotFound as exception:
             assert exception.code == 2
 
-    @pytest.mark.parametrize("key, ex_code, ex_msg", key_neg)
+    @pytest.mark.parametrize("key, ex_code, ex_msg", test_data.key_neg)
     def test_neg_get_with_none(self, key, ex_code, ex_msg):
         """
             Invoke get() with None namespace/key in key tuple.
@@ -177,7 +178,7 @@ class TestGetPut():
         try:
             self.as_connection.get(key)
         except e.RecordNotFound as exception:
-            assert exception.code == 2L
+            assert exception.code == 2
 
     def test_neg_get_with_non_existent_namespace(self):
         """
@@ -499,7 +500,7 @@ class TestGetPut():
         assert "Required argument 'bins' (pos 2) not found" in str(
             typeError.value)
 
-    @pytest.mark.parametrize("key, ex_code, ex_msg", key_neg)
+    @pytest.mark.parametrize("key, ex_code, ex_msg", test_data.key_neg)
     def test_neg_put_with_none(self, key, ex_code, ex_msg, record = {}):
         """
             Invoke put() with invalid data

@@ -4,6 +4,7 @@ import pytest
 import sys
 from .test_base_class import TestBaseClass
 from .test_data import *
+
 aerospike = pytest.importorskip("aerospike")
 try:
     import aerospike
