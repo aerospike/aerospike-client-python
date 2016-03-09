@@ -135,6 +135,15 @@ PyObject * AerospikeClient_UDF_Put(AerospikeClient * self, PyObject *args, PyObj
 		goto CLEANUP;
 	}
 
+	fseek(file_p, 0, SEEK_END);
+	int fileSize = ftell(file_p);
+	fseek(file_p, 0, SEEK_SET);
+	if ( fileSize <= 0 ) {
+		as_error_update(&err, AEROSPIKE_ERR_LUA_FILE_NOT_FOUND, "Script file is empty");
+		fclose(file_p);
+		goto CLEANUP;
+	}
+
 	bytes = (uint8_t *) malloc(SCRIPT_LEN_MAX);
 	if ( bytes == NULL ) {
 		as_error_update(&err, errno, "malloc failed");
