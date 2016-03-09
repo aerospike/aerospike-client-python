@@ -189,6 +189,13 @@ PyObject * AerospikeClient_Touch(AerospikeClient * self, PyObject * args, PyObje
  *
  */
 PyObject * AerospikeClient_Operate(AerospikeClient * self, PyObject * args, PyObject * kwds);
+/**
+ * Performs operate ordered operations
+ *
+ *		client.operate_ordered((x,y,z))
+ *
+ */
+PyObject * AerospikeClient_OperateOrdered(AerospikeClient * self, PyObject * args, PyObject * kwds);
 
 /*******************************************************************************
  * LIST FUNCTIONS(CDT)
@@ -563,3 +570,7 @@ char* return_search_string(aerospike *as);
  * Close the aerospike object depending on the global_hosts entries
  */
 void close_aerospike_object(aerospike *as, as_error *err, char *alias_to_search, PyObject *py_persistent_item);
+/**
+ * Check type for 'operate' operation
+ */
+int check_type(AerospikeClient * self, PyObject * py_value, int op, as_error *err);

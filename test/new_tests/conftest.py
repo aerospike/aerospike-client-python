@@ -8,7 +8,7 @@ def as_connection(request):
     hostlist, user, password = TestBaseClass.get_hosts()
     config = {'hosts': hostlist}
     as_client = None
-    if user == None and password == None:
+    if user is None and password is None:
         as_client = aerospike.client(config).connect()
     else:
         as_client = aerospike.client(config).connect(user, password)
@@ -17,11 +17,12 @@ def as_connection(request):
     versioninfo = as_client.info('version')
     for keys in versioninfo:
         for value in versioninfo[keys]:
-            if value != None:
-                versionlist = value[value.find("build") + 6:value.find("\n")].split(".")
+            if value is not None:
+                versionlist = value[value.find("build") +
+                                    6:value.find("\n")].split(".")
                 if int(versionlist[0]) >= 3 and int(versionlist[1]) >= 6:
                     request.cls.skip_old_server = False
-                    
+
     request.cls.as_connection = as_client
 
     def close_connection():
@@ -30,12 +31,14 @@ def as_connection(request):
     request.addfinalizer(close_connection)
     return as_client
 
+
 @pytest.fixture()
 def put_data(request):
     put_data.key = None
     put_data.keys = []
     put_data.client = None
-    def put_key(client, _key,  _record, _meta=None, _policy=None):
+
+    def put_key(client, _key, _record, _meta=None, _policy=None):
         put_data.key = _key
         put_data.client = client
         try:

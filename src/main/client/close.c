@@ -61,7 +61,7 @@ PyObject * AerospikeClient_Close(AerospikeClient * self, PyObject * args, PyObje
 	} else {
 		aerospike_close(self->as, &err);
 
-		for (int i = 0; i < self->as->config.hosts_size; i++) {
+		for (unsigned int i = 0; i < self->as->config.hosts_size; i++) {
 			free((void *) self->as->config.hosts[i].addr);
 		}
 

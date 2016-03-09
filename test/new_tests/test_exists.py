@@ -2,13 +2,9 @@
 
 import pytest
 import sys
-try:
-    import cPickle as pickle
-except:
-    import pickle
 from .test_base_class import TestBaseClass
 import time
-
+from . import test_data
 aerospike = pytest.importorskip("aerospike")
 try:
     import aerospike
@@ -17,11 +13,23 @@ except:
     print("Please install aerospike python client.")
     sys.exit(1)
 
+
 class SomeClass(object):
     pass
 
 @pytest.mark.usefixtures("as_connection")
 class TestExists():
+
+    @pytest.mark.parametrize("key, record", test_data.pos_data)
+    def test_pos_exists_with_diff_datatype(self, key, record, put_data):
+        """
+            Invoke exists() for diffrent record data.
+        """
+        put_data(self.as_connection, key, record)
+        key, meta = self.as_connection.exists(key)
+
+        assert meta['gen'] is not None
+        assert meta['ttl'] is not None
 
     def test_pos_exists_with_key_and_policy(self, put_data):
         """
@@ -39,55 +47,30 @@ class TestExists():
 
         key, meta = self.as_connection.exists(key, policy)
 
-        assert meta['gen'] != None
-        assert meta['ttl'] != None
-
-    @pytest.mark.parametrize("key, record", [
-        (('test', 'demo', 'key'), {"Name": "Jeff"}),
-        (('test', 'demo', 'list_key'), {'names': ['John', 'Marlen', 'Steve']}),
-        (('test', 'demo', 'map_key'), {'names': {'name': 'John', 'age': 24}}),
-        (('test', 'demo', 'bytes_key'), {'bytes': bytearray('John', 'utf-8')}),
-        # list of objects.
-        (('test', 'demo', 'objects'),
-            {'objects': [pickle.dumps(SomeClass()),
-            pickle.dumps(SomeClass())]}),
-        (('test', 'demo', 'list_map_key'), {
-            'names': ['John', 'Marlen', 'Steve'],
-            'names_and_age': [{'name': 'John',
-                               'age': 24}, {'name': 'Marlen',
-                                            'age': 25}]
-        }),
-        ])
-    def test_pos_exists_with_diff_datatype(self, key, record, put_data):
-        """
-            Invoke exists() for diffrent record data.
-        """
-        put_data(self.as_connection, key, record)
-        key, meta = self.as_connection.exists(key)
-
-        assert meta['gen'] != None
-        assert meta['ttl'] != None
+        assert meta['gen'] is not None
+        assert meta['ttl'] is not None
 
     @pytest.mark.parametrize("key, record, policy", [
-    (('test', 'demo', 'p_None'),  {"name": "John"}, None),
-    (('test', 'demo', 'p_Replica'),  {"name": "Michel"}, {
-        'timeout': 1000,
-        'replica': aerospike.POLICY_REPLICA_ANY,
-        'consistency': aerospike.POLICY_CONSISTENCY_ONE}),
-    (('test', 'demo', "p_consistency_level"),{"name": "Michel"}, {
-        'timeout': 1000,
-        'replica': aerospike.POLICY_REPLICA_MASTER,
-        'consistency': aerospike.POLICY_CONSISTENCY_ALL}),
+        (('test', 'demo', 'p_None'), {"name": "John"}, None),
+        (('test', 'demo', 'p_Replica'), {"name": "Michel"}, {
+            'timeout': 1000,
+            'replica': aerospike.POLICY_REPLICA_ANY,
+            'consistency': aerospike.POLICY_CONSISTENCY_ONE}),
+        (('test', 'demo', "p_consistency_level"), {"name": "Michel"}, {
+            'timeout': 1000,
+            'replica': aerospike.POLICY_REPLICA_MASTER,
+            'consistency': aerospike.POLICY_CONSISTENCY_ALL}),
     ])
-    def test_pos_exists_with_key_and_policy(self, key, record, policy, put_data):
+    def test_pos_exists_with_key_and_policy(
+            self, key, record, policy, put_data):
         """
             Invoke exists() with key and policy.
         """
         put_data(self.as_connection, key, record, _policy=policy)
         key, meta = self.as_connection.exists(key, policy)
 
-        assert meta['gen'] != None
-        assert meta['ttl'] != None
+        assert meta['gen'] is not None
+        assert meta['ttl'] is not None
 
     # Negative Tests
 
@@ -106,12 +89,17 @@ class TestExists():
 
     @pytest.mark.parametrize("key, ex, ex_code", [
         # reason for xfail CLIENT-533
-        pytest.mark.xfail((('test', 'demo', 'non-existent'), e.RecordNotFound, 2)),     # non-existent key
-        pytest.mark.xfail((('test', 'set', 1), e.RecordNotFound, 2)),                    # non-existent set
-        (('namespace', 'demo', 1), e.NamespaceNotFound, 20),           # non-existent Namespace
-        pytest.mark.xfail((('test', None, 2), e.RecordNotFound, 2)),                    #None set in key tuple.
-        pytest.mark.xfail((('test', 'demo', 'Non_existing_key'), e.RecordNotFound, 2)),  # Non_existing_key
-        ])
+        pytest.mark.xfail((('test', 'demo', 'non-existent'),
+                           e.RecordNotFound, 2)),     # non-existent key
+        # non-existent set
+        pytest.mark.xfail((('test', 'set', 1), e.RecordNotFound, 2)),
+        (('namespace', 'demo', 1), e.NamespaceNotFound,
+         20),           # non-existent Namespace
+        # None set in key tuple.
+        pytest.mark.xfail((('test', None, 2), e.RecordNotFound, 2)),
+        pytest.mark.xfail((('test', 'demo', 'Non_existing_key'),
+                           e.RecordNotFound, 2)),  # Non_existing_key
+    ])
     def test_neg_exists_with_non_existent_data(self, key, ex, ex_code):
         """
             Invoke exists() for non-existent data.
@@ -142,9 +130,11 @@ class TestExists():
             assert exception.code == 11
 
     @pytest.mark.parametrize("key, record, meta, policy", [
-        (('test', 'demo', 20), {"name": "John"}, {'gen': 3, 'ttl': 1}, {'timeout': 2}),
-        ])
-    def test_neg_exists_with_low_timeout(self, key, record, meta, policy, put_data):
+        (('test', 'demo', 20), {"name": "John"},
+         {'gen': 3, 'ttl': 1}, {'timeout': 2}),
+    ])
+    def test_neg_exists_with_low_timeout(
+            self, key, record, meta, policy, put_data):
         try:
             put_data(self.as_connection, key, record, meta, policy)
         except e.TimeoutError as exception:
@@ -159,17 +149,19 @@ class TestExists():
         with pytest.raises(TypeError) as typeError:
             self.as_connection.exists()
 
-        assert "Required argument 'key' (pos 1) not found" in str(typeError.value)
+        assert "Required argument 'key' (pos 1) not found" in str(
+            typeError.value)
 
-    @pytest.mark.parametrize("key, record, policy, ex_code, ex_msg",[
+    @pytest.mark.parametrize("key, record, policy, ex_code, ex_msg", [
         # timeout_is_string
         (('test', 'demo', "timeout_is_string"),
             {'names': ['John', 'Marlen', 'Steve']},
             {'timeout': "1000"}, -2, 'timeout is invalid'),
         (('test', 'demo', "policy_is_string"),
             {"Name": "Jeff"}, "policy_str", -2, 'policy must be a dict'),
-        ])
-    def test_neg_exists_with_invalid_meta(self, key, record, policy, ex_code, ex_msg, put_data):
+    ])
+    def test_neg_exists_with_invalid_meta(
+            self, key, record, policy, ex_code, ex_msg, put_data):
         """
             Invoke exists() with a key and timeout as string.
         """
@@ -182,12 +174,7 @@ class TestExists():
             assert exception.code == ex_code
             assert exception.msg == ex_msg
 
-    @pytest.mark.parametrize("key, ex_code, ex_msg", [
-    (['test', 'demo', 'key_as_list'], -2, "key is invalid"),
-    (None, -2, "key is invalid"),
-    (('test', 'demo', None), -2, 'either key or digest is required'),
-    ((None, 'demo', 2), -2, 'namespace must be a string')
-    ])
+    @pytest.mark.parametrize("key, ex_code, ex_msg", test_data.key_neg)
     def test_neg_exists_key_invalid_data(self, key, ex_code, ex_msg):
         """
             Invoke exists() with invalid key
