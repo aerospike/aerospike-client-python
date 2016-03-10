@@ -74,8 +74,8 @@ static bool each_result(const as_val * val, void * udata)
 	if ( py_return == NULL ) {
 		// an exception was raised, handle it (someday)
 		// for now, we bail from the loop
-		as_error_update(err, AEROSPIKE_ERR_CLIENT, "Callback function contains an error");
-		rval = true;
+		as_error_update(err, AEROSPIKE_ERR_CLIENT, "Callback function raised an exception");
+		rval = false;
 	}
 	else if (  PyBool_Check(py_return) ) {
 		if ( Py_False == py_return ) {
@@ -117,7 +117,7 @@ PyObject * AerospikeScan_Foreach(AerospikeScan * self, PyObject * args, PyObject
 	// Create and initialize callback user-data
 	LocalData data;
 	data.callback = py_callback;
-    data.client = self->client;
+	data.client = self->client;
 	as_error_init(&data.error);
 
 	// Aerospike Client Arguments
