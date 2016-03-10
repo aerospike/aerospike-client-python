@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright 2013-2015 Aerospike, Inc.
+ * Copyright 2013-2016 Aerospike, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -33,7 +33,7 @@
 
 typedef struct {
 	PyObject * py_results;
-    AerospikeClient * client;
+	AerospikeClient * client;
 } LocalData;
 
 static bool each_result(const as_val * val, void * udata)
@@ -43,7 +43,7 @@ static bool each_result(const as_val * val, void * udata)
 	}
 
 	PyObject * py_results = NULL;
-    LocalData *data = (LocalData *) udata;
+	LocalData *data = (LocalData *) udata;
 	py_results = data->py_results;
 	PyObject * py_result = NULL;
 
@@ -72,7 +72,7 @@ PyObject * AerospikeScan_Results(AerospikeScan * self, PyObject * args, PyObject
 	as_policy_scan * scan_policy_p = NULL;
 
 	LocalData data;
-    data.client = self->client;
+	data.client = self->client;
 	static char * kwlist[] = {"policy", NULL};
 
 	if ( PyArg_ParseTupleAndKeywords(args, kwds, "|O:results", kwlist, &py_policy) == false ) {
@@ -100,7 +100,7 @@ PyObject * AerospikeScan_Results(AerospikeScan * self, PyObject * args, PyObject
 	}
 
 	py_results = PyList_New(0);
-    data.py_results = py_results;
+	data.py_results = py_results;
 
 	PyThreadState * _save = PyEval_SaveThread();
 

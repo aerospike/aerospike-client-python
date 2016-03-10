@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright 2013-2015 Aerospike, Inc.
+ * Copyright 2013-2016 Aerospike, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -84,9 +84,9 @@ extern PyObject * AerospikeClient_Exists_Invoke(
 	}
 
 	// Invoke operation
-    Py_BEGIN_ALLOW_THREADS
+	Py_BEGIN_ALLOW_THREADS
 	aerospike_key_exists(self->as, &err, read_policy_p, &key, &rec);
-    Py_END_ALLOW_THREADS
+	Py_END_ALLOW_THREADS
 
 	if ( err.code == AEROSPIKE_OK ) {
 

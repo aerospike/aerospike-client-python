@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright 2013-2015 Aerospike, Inc.
+ * Copyright 2013-2016 Aerospike, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -28,34 +28,34 @@
 
 PyObject * AerospikeGeospatial_DoDumps(PyObject *geo_data, as_error *err)
 {
-    PyObject *initresult = NULL;
+	PyObject *initresult = NULL;
 
-    PyObject* sysmodules = PyImport_GetModuleDict();
-    PyObject* json_module = NULL;
+	PyObject* sysmodules = PyImport_GetModuleDict();
+	PyObject* json_module = NULL;
 	if (PyMapping_HasKeyString(sysmodules, "json")) {
-        json_module = PyMapping_GetItemString(sysmodules, "json");
+		json_module = PyMapping_GetItemString(sysmodules, "json");
 	} else {
-	    json_module = PyImport_ImportModule("json");
-    }
+		json_module = PyImport_ImportModule("json");
+	}
 
 	if (!json_module) {
-        /* insert error handling here! and exit this function */
+		/* insert error handling here! and exit this function */
 		as_error_update(err, AEROSPIKE_ERR_CLIENT, "Unable to load json module");
 	} else {
-        PyObject *py_funcname = PyString_FromString("dumps");
-        Py_INCREF(json_module);
-        initresult = PyObject_CallMethodObjArgs(json_module, py_funcname, geo_data, NULL);
-        Py_DECREF(json_module);
-        Py_DECREF(py_funcname);
-    }
+		PyObject *py_funcname = PyString_FromString("dumps");
+		Py_INCREF(json_module);
+		initresult = PyObject_CallMethodObjArgs(json_module, py_funcname, geo_data, NULL);
+		Py_DECREF(json_module);
+		Py_DECREF(py_funcname);
+	}
 
-    return initresult;
+	return initresult;
 }
 
 PyObject * AerospikeGeospatial_Dumps(AerospikeGeospatial * self, PyObject * args, PyObject * kwds)
 {
 
-    PyObject *initresult = NULL;
+	PyObject *initresult = NULL;
 	// Aerospike error object
 	as_error err;
 	// Initialize error object
@@ -67,10 +67,10 @@ PyObject * AerospikeGeospatial_Dumps(AerospikeGeospatial * self, PyObject * args
 	}
 
 	initresult = AerospikeGeospatial_DoDumps(self->geo_data, &err);
-    if(!initresult) {
-	    as_error_update(&err, AEROSPIKE_ERR_CLIENT, "Unable to call dumps function");
+	if(!initresult) {
+		as_error_update(&err, AEROSPIKE_ERR_CLIENT, "Unable to call dumps function");
 		goto CLEANUP;
-    }
+	}
 
 CLEANUP:
 
