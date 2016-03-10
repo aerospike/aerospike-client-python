@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright 2013-2015 Aerospike, Inc.
+ * Copyright 2013-2016 Aerospike, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -90,10 +90,10 @@ PyObject * AerospikeClient_Remove_Invoke(
 						remove_policy_p->generation = (uint16_t) PyInt_AsLong(py_gen);
 					} else if ( PyLong_Check(py_gen) ) {
 						remove_policy_p->generation = (uint16_t) PyLong_AsLongLong(py_gen);
-                        if((uint16_t)-1 == remove_policy_p->generation) {
-						    as_error_update(&err, AEROSPIKE_ERR_PARAM, "integer value for gen exceeds sys.maxsize");
-			                goto CLEANUP;
-                        }
+						if((uint16_t)-1 == remove_policy_p->generation) {
+							as_error_update(&err, AEROSPIKE_ERR_PARAM, "integer value for gen exceeds sys.maxsize");
+							goto CLEANUP;
+						}
 					} else {
 						as_error_update(&err, AEROSPIKE_ERR_PARAM, "Generation should be an int or long");
 					}
@@ -103,9 +103,9 @@ PyObject * AerospikeClient_Remove_Invoke(
 	}
 
 	// Invoke operation
-    Py_BEGIN_ALLOW_THREADS
+	Py_BEGIN_ALLOW_THREADS
 	aerospike_key_remove(self->as, &err, remove_policy_p, &key);
-    Py_END_ALLOW_THREADS
+	Py_END_ALLOW_THREADS
 	if(err.code != AEROSPIKE_OK) {
 		as_error_update(&err, err.code, NULL);
 	}

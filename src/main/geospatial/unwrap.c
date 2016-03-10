@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright 2013-2015 Aerospike, Inc.
+ * Copyright 2013-2016 Aerospike, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -58,6 +58,6 @@ CLEANUP:
 		Py_DECREF(py_err);
 		return NULL;
 	}
-    Py_INCREF(self->geo_data);
-    return self->geo_data;
+	Py_INCREF(self->geo_data);
+	return self->geo_data;
 }

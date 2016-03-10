@@ -229,7 +229,7 @@ PyObject * AerospikeException_New(void)
 	Py_DECREF(py_index_dict);
 	py_code = PyInt_FromLong(AEROSPIKE_ERR_INDEX);
 	PyObject_SetAttrString(exceptions_array.IndexError, "code", py_code);
-    Py_DECREF(py_code);
+	Py_DECREF(py_code);
 	PyModule_AddObject(module, "IndexError", exceptions_array.IndexError);
 
 	count = sizeof(index_array.index_exceptions)/sizeof(index_array.index_exceptions[0]);

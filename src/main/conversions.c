@@ -125,7 +125,7 @@ as_status as_user_array_to_pyobject( as_error *err, as_user **users, PyObject **
 	PyObject * py_users = PyDict_New();
 	for(i = 0; i < users_size; i++) {
 
-		PyObject * py_user       = PyString_FromString(users[i]->name);
+		PyObject * py_user = PyString_FromString(users[i]->name);
 		PyObject * py_roles;
 		strArray_to_pyobject(err, users[i]->roles, &py_roles, users[i]->roles_size);
 		if( err->code != AEROSPIKE_OK) {
@@ -460,7 +460,7 @@ as_status pyobject_to_val(AerospikeClient * self, as_error * err, PyObject * py_
  * Returns AEROSPIKE_OK on success. On error, the err argument is populated.
  */
 as_status pyobject_to_record(AerospikeClient * self, as_error * err, PyObject * py_rec, PyObject * py_meta, 
-        as_record * rec, int serializer_type, as_static_pool *static_pool)
+		as_record * rec, int serializer_type, as_static_pool *static_pool)
 {
 	as_error_reset(err);
 	PyObject * py_result = NULL;
