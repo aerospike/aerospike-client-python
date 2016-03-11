@@ -115,7 +115,7 @@ For examples, to run the ``kvs.py``:
     python examples/client/kvs.py
 
 
-Becnhmarks
+Benchmarks
 ----------
 
 To run the benchmarks the python modules 'guppy' and 'tabulate' need to be installed.
