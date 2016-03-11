@@ -888,6 +888,60 @@ a cluster-tending thread.
 
         .. versionchanged:: 1.0.57
 
+    .. method:: operate_ordered(key, list[, meta[, policy]]) -> (key, meta, bins)
+
+            Perform multiple bin operations on a record with the results being \
+            returned as a list of (bin-name, result) tuples. The order of the \
+            elements in the list will correspond to the order of the operations \
+            from the input parameters.
+
+            :param tuple key: a :ref:`aerospike_key_tuple` associated with the record.
+            :param list list: a :class:`list` of one or more bin operations, each \
+                structured as the :class:`dict` \
+                ``{'bin': bin name, 'op': aerospike.OPERATOR_* [, 'val': value]}``. \
+                See :ref:`aerospike_operators`.
+            :param dict meta: optional record metadata to be set, with field
+                ``'ttl'`` set to :class:`int` number of seconds.
+            :param dict policy: optional :ref:`aerospike_operate_policies`.
+            :return: a :ref:`aerospike_record_tuple`. See :ref:`unicode_handling`.
+            :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
+
+            .. code-block:: python
+
+                from __future__ import print_function
+                import aerospike
+                from aerospike.exception import AerospikeError
+                import sys
+
+                config = { 'hosts': [('127.0.0.1', 3000)] }
+                client = aerospike.client(config).connect()
+                
+                try:
+                    key = ('test', 'demo', 1)
+                    policy = {
+                        'timeout': 1000,
+                        'key': aerospike.POLICY_KEY_SEND,
+                        'commit_level': aerospike.POLICY_COMMIT_LEVEL_MASTER
+                    }
+
+                    llist = [{"op": aerospike.OPERATOR_APPEND,
+                              "bin": "name",
+                              "val": "aa"},
+                             {"op": aerospike.OPERATOR_READ,
+                              "bin": "name"},
+                             {"op": aerospike.OPERATOR_INCR,
+                              "bin": "age",
+                              "val": 3}]
+
+                    client.operate_ordered(key, llist, {}, policy)
+                except AerospikeError as e:
+                    print("Error: {0} [{1}]".format(e.msg, e.code))
+                    sys.exit(1)
+                finally:
+                    client.close()
+                    
+        .. versionadded:: 2.0.2
+
 
     .. index::
         single: Batch Operations
