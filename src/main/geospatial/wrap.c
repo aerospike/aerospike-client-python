@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright 2013-2015 Aerospike, Inc.
+ * Copyright 2013-2016 Aerospike, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -48,7 +48,7 @@ PyObject * AerospikeGeospatial_Wrap(AerospikeGeospatial * self, PyObject * args,
 		goto CLEANUP;
 	}
 
-    store_geodata(self, &err, py_geodata);
+	store_geodata(self, &err, py_geodata);
 
 CLEANUP:
 
@@ -62,7 +62,7 @@ CLEANUP:
 		return NULL;
 	}
 
-    Py_INCREF(self->geo_data);
+	Py_INCREF(self->geo_data);
 	return PyLong_FromLong(0);
 }
 

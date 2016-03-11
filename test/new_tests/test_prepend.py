@@ -11,7 +11,9 @@ except:
     print("Please install aerospike python client.")
     sys.exit(1)
 
+
 class TestPrepend():
+
     @pytest.fixture(autouse=True)
     def setup(self, request, as_connection):
         """
@@ -23,7 +25,10 @@ class TestPrepend():
             as_connection.put(key, rec)
 
         key = ('test', 'demo', 'bytearray_key')
-        as_connection.put(key, {"bytearray_bin": bytearray("asd;as[d'as;d", "utf-8")})
+        as_connection.put(
+            key, {
+                "bytearray_bin": bytearray(
+                    "asd;as[d'as;d", "utf-8")})
 
         def teardown():
             """
@@ -84,7 +89,7 @@ class TestPrepend():
         assert bins == {'age': 1, 'name': 'strname1', 'nolist': [1, 2, 3]}
         assert key == ('test', 'demo', None, bytearray(
             b'\xb7\xf4\xb88\x89\xe2\xdag\xdeh>\x1d\xf6\x91\x9a\x1e\xac\xc4F\xc8')
-                      )
+        )
 
     def test_pos_prepend_with_policy_key_gen_EQ_ignore(self):
         """
@@ -106,7 +111,7 @@ class TestPrepend():
         assert bins == {'age': 1, 'name': 'strname1', 'nolist': [1, 2, 3]}
         assert key == ('test', 'demo', None, bytearray(
             b'\xb7\xf4\xb88\x89\xe2\xdag\xdeh>\x1d\xf6\x91\x9a\x1e\xac\xc4F\xc8')
-                      )
+        )
 
     def test_pos_prepend_with_policy_key_gen_EQ_positive(self):
         """
@@ -130,7 +135,7 @@ class TestPrepend():
         assert bins == {'age': 1, 'name': 'strname1', 'nolist': [1, 2, 3]}
         assert key == ('test', 'demo', None, bytearray(
             b'\xb7\xf4\xb88\x89\xe2\xdag\xdeh>\x1d\xf6\x91\x9a\x1e\xac\xc4F\xc8')
-                      )
+        )
 
     def test_pos_prepend_with_policy_key_gen_GT_positive(self):
         """
@@ -154,7 +159,7 @@ class TestPrepend():
         assert bins == {'age': 1, 'name': 'strname1', 'nolist': [1, 2, 3]}
         assert key == ('test', 'demo', None, bytearray(
             b'\xb7\xf4\xb88\x89\xe2\xdag\xdeh>\x1d\xf6\x91\x9a\x1e\xac\xc4F\xc8')
-                      )
+        )
 
     def test_pos_prepend_with_policy_key_digest(self):
         """
@@ -183,7 +188,7 @@ class TestPrepend():
     @pytest.mark.parametrize("key, bin, value, expected", [
         (('test', 'demo', 1), "name", u"age", 'agename1'),
         (('test', 'demo', 1), u"add", u"address", 'address')
-        ])
+    ])
     def test_pos_prepend_unicode_parameters(self, key, bin, value, expected):
         """
         Invoke prepend() with unicode parameters
@@ -255,14 +260,15 @@ class TestPrepend():
 
         self.as_connection.remove(key)
 
-    #Negative tests
+    # Negative tests
     def test_neg_prepend_with_no_parameters(self):
         """
         Invoke prepend() without any mandatory parameters.
         """
         with pytest.raises(TypeError) as typeError:
             self.as_connection.prepend()
-        assert "Required argument 'key' (pos 1) not found" in str(typeError.value)
+        assert "Required argument 'key' (pos 1) not found" in str(
+            typeError.value)
 
     def test_neg_prepend_with_policy_key_gen_EQ_not_equal(self):
         """
@@ -294,7 +300,7 @@ class TestPrepend():
         assert bins == {'age': 1, 'name': 'name1', 'nolist': [1, 2, 3]}
         assert key == ('test', 'demo', None, bytearray(
             b'\xb7\xf4\xb88\x89\xe2\xdag\xdeh>\x1d\xf6\x91\x9a\x1e\xac\xc4F\xc8')
-                      )
+        )
 
     def test_neg_prepend_with_policy_key_gen_GT_lesser(self):
         """
@@ -326,7 +332,7 @@ class TestPrepend():
         assert bins == {'age': 1, 'name': 'name1', 'nolist': [1, 2, 3]}
         assert key == ('test', 'demo', None, bytearray(
             b'\xb7\xf4\xb88\x89\xe2\xdag\xdeh>\x1d\xf6\x91\x9a\x1e\xac\xc4F\xc8')
-                      )
+        )
 
     def test_neg_prepend_with_incorrect_policy(self):
         """
@@ -344,12 +350,14 @@ class TestPrepend():
             assert exception.msg == "timeout is invalid"
 
     @pytest.mark.parametrize("key, bin, value, meta, policy, ex_code, ex_msg", [
-        (('test', 'demo', 1), "name", 2, {}, {}, -2, "Cannot concatenate 'str' and 'non-str' objects"),
+        (('test', 'demo', 1), "name", 2, {}, {}, -
+         2, "Cannot concatenate 'str' and 'non-str' objects"),
         (('test', 'demo', 1), "name", "abc", {}, "", -2, "policy must be a dict"),
-        (('test', 'demo', 1), 1, "ABC", {}, {"timeout": 1000}, -2, "Bin name should be of type string")
-        ])
+        (('test', 'demo', 1), 1, "ABC", {}, {"timeout": 1000}, -
+         2, "Bin name should be of type string")
+    ])
     def test_neg_prepend_parameters_incorrect_datatypes(self, key, bin, value,
-            meta, policy, ex_code, ex_msg):
+                                                        meta, policy, ex_code, ex_msg):
         """
         Invoke prepend() with parameters of incorrect datatypes
         """
@@ -374,8 +382,9 @@ class TestPrepend():
     @pytest.mark.parametrize("key, bin, value, ex_code, ex_msg", [
         (None, "name", "str", -2, "key is invalid"),
         (("test", "demo", 1), None, "str", -2, "Bin name should be of type string")
-        ])
-    def test_neg_prepend_parameters_as_none(self, key, bin, value, ex_code, ex_msg):
+    ])
+    def test_neg_prepend_parameters_as_none(
+            self, key, bin, value, ex_code, ex_msg):
         """
         Invoke prepend() with parameters as None
         """
@@ -400,10 +409,13 @@ class TestPrepend():
             assert exception.code == 20
 
     @pytest.mark.parametrize("key, bin, value, meta, policy, ex_code, ex_msg", [
-        (('test', 1), "name", "ABC", {}, {'timeout': 1000}, -2, 'key tuple must be (Namespace, Set, Key) or (Namespace, Set, None, Digest)'),
-        (('test', 'set'), "name", "ABC", {}, {'timeout': 1000}, -2, 'key tuple must be (Namespace, Set, Key) or (Namespace, Set, None, Digest)'),
-        (('test', 'demo', 1, 1, 1), "name", "ABC", {}, {'timeout': 1000}, -2, 'key tuple must be (Namespace, Set, Key) or (Namespace, Set, None, Digest)')
-        ])
+        (('test', 1), "name", "ABC", {}, {'timeout': 1000}, -2,
+         'key tuple must be (Namespace, Set, Key) or (Namespace, Set, None, Digest)'),
+        (('test', 'set'), "name", "ABC", {}, {'timeout': 1000}, -2,
+         'key tuple must be (Namespace, Set, Key) or (Namespace, Set, None, Digest)'),
+        (('test', 'demo', 1, 1, 1), "name", "ABC", {}, {'timeout': 1000}, -2,
+         'key tuple must be (Namespace, Set, Key) or (Namespace, Set, None, Digest)')
+    ])
     def test_neg_prepend_invalid_key_combinations(self, key, bin, value,
                                                   meta, policy, ex_code, ex_msg):
         """

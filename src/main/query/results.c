@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright 2013-2015 Aerospike, Inc.
+ * Copyright 2013-2016 Aerospike, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -34,7 +34,7 @@
 
 typedef struct {
 	PyObject * py_results;
-    AerospikeClient * client;
+	AerospikeClient * client;
 } LocalData;
 
 static bool each_result(const as_val * val, void * udata)
@@ -44,7 +44,7 @@ static bool each_result(const as_val * val, void * udata)
 	}
 
 	PyObject * py_results = NULL;
-    LocalData *data = (LocalData *) udata;
+	LocalData *data = (LocalData *) udata;
 	py_results = data->py_results;
 	PyObject * py_result = NULL;
 
@@ -86,7 +86,7 @@ PyObject * AerospikeQuery_Results(AerospikeQuery * self, PyObject * args, PyObje
 	static char * kwlist[] = {"policy", NULL};
 
 	LocalData data;
-    data.client = self->client;
+	data.client = self->client;
 
 	if ( PyArg_ParseTupleAndKeywords(args, kwds, "|O:results", kwlist, &py_policy) == false ) {
 		return NULL;
@@ -123,7 +123,7 @@ PyObject * AerospikeQuery_Results(AerospikeQuery * self, PyObject * args, PyObje
 	PyThreadState * _save = PyEval_SaveThread();
 
 	TRACE();
-    aerospike_query_foreach(self->client->as, &err, query_policy_p, &self->query, each_result, &data);
+	aerospike_query_foreach(self->client->as, &err, query_policy_p, &self->query, each_result, &data);
 
 	TRACE();
 	PyEval_RestoreThread(_save);

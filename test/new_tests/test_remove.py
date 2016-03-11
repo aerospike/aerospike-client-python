@@ -3,6 +3,7 @@
 import pytest
 import sys
 from .test_base_class import TestBaseClass
+from .test_data import *
 
 aerospike = pytest.importorskip("aerospike")
 try:
@@ -11,6 +12,7 @@ try:
 except:
     print("Please install aerospike python client.")
     sys.exit(1)
+
 
 @pytest.mark.usefixtures("as_connection")
 class TestRemove():
@@ -247,7 +249,7 @@ class TestRemove():
         }
 
         (key, meta) = self.as_connection.exists(key)
-        gen = meta['gen'] + 5 #Increment Generation by 5
+        gen = meta['gen'] + 5  # Increment Generation by 5
 
         with pytest.raises(e.RecordGenerationError) as exception:
             self.as_connection.remove(key, {"gen": gen}, policy)
@@ -280,7 +282,8 @@ class TestRemove():
 
         (key, meta, bins) = self.as_connection.get(key)
 
-        assert key == ('test', 'demo', None, bytearray(b'\xdd)Fs9\xa151\x91{\x1c\n\xc0\xac zV\x10Z+'))
+        assert key == ('test', 'demo', None, bytearray(
+            b'\xdd)Fs9\xa151\x91{\x1c\n\xc0\xac zV\x10Z+'))
         assert meta is not None
         assert bins == record
 
@@ -290,8 +293,8 @@ class TestRemove():
         """
         key = ('test', 'demo', 1)
         meta = {
-                'gen': 0
-                }
+            'gen': 0
+        }
         with pytest.raises(e.ParamError) as exception:
             self.as_connection.remove(key, meta, "String_policy")
             (code, msg, _, _) = exception.value
@@ -309,14 +312,7 @@ class TestRemove():
             self.as_connection.remove(key, meta, policy, "Extra Param")
         assert "remove() takes at most 3 arguments (4 given)" in str(typeError.value)
 
-    @pytest.mark.parametrize("key, ex_code, ex_msg", [
-        ((None, 'demo', 1), -2, "namespace must be a string"),
-        (None, -2, 'key is invalid'),
-        (('test', 123, 1), -2, "set must be a string"),
-        # reason="Invalid meta parameter has not been handled currently"
-        pytest.mark.xfail((('test', 'demo',1), -2, "meta must be a dict")),
-
-        ])
+    @pytest.mark.parametrize("key, ex_code, ex_msg", key_neg)
     def test_neg_remove_with_incorrect_data(self, key, ex_code, ex_msg):
         """
             Invoke remove() with namespace as None
@@ -333,7 +329,7 @@ class TestRemove():
         (('test', 'demo', "incorrect_key"), e.RecordNotFound, 2),
         (('test', 'demo', "missing_record"), e.RecordNotFound, 2)
 
-        ])
+    ])
     def test_neg_remove_with_missing_record(self, key, ex_name, ex_code):
         """
             Invoke remove() with set as None
@@ -363,4 +359,5 @@ class TestRemove():
         with pytest.raises(TypeError) as typeError:
             self.as_connection.remove()
 
-        assert "Required argument 'key' (pos 1) not found" in str(typeError.value)
+        assert "Required argument 'key' (pos 1) not found" in str(
+            typeError.value)

@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright 2013-2015 Aerospike, Inc.
+ * Copyright 2013-2016 Aerospike, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -31,7 +31,7 @@
 typedef struct {
 	as_error error;
 	PyObject * callback;
-    AerospikeClient * client;
+	AerospikeClient * client;
 } LocalData;
 
 
@@ -145,8 +145,8 @@ PyObject * AerospikeScan_Foreach(AerospikeScan * self, PyObject * args, PyObject
 	if (py_options && PyDict_Check(py_options)) {
 		set_scan_options(&err, &self->scan, py_options);
 		if(err.code != AEROSPIKE_OK) {
-        	goto CLEANUP;
-        }
+			goto CLEANUP;
+		}
 	}
 
 	// We are spawning multiple threads

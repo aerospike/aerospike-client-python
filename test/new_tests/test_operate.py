@@ -11,6 +11,7 @@ except:
     print("Please install aerospike python client.")
     sys.exit(1)
 
+
 class TestOperate(object):
 
     def setup_class(cls):
@@ -87,69 +88,69 @@ class TestOperate(object):
     @pytest.mark.parametrize("key, llist, expected", [
         (('test', 'demo', 1),
             [{"op": aerospike.OPERATOR_PREPEND,
-             "bin": "name",
-             "val": u"ram"},
-            {"op": aerospike.OPERATOR_INCR,
-             "bin": "age",
-             "val": 3}, {"op": aerospike.OPERATOR_READ,
-                         "bin": "name"}],
+              "bin": "name",
+              "val": u"ram"},
+             {"op": aerospike.OPERATOR_INCR,
+              "bin": "age",
+              "val": 3}, {"op": aerospike.OPERATOR_READ,
+                          "bin": "name"}],
             {'name': 'ramname1'}),
         (('test', 'demo', 1),                           # with_write_float_value
             [{"op": aerospike.OPERATOR_WRITE,
                 "bin": "write_bin",
-                "val": {"no": 89.8}}, 
+                "val": {"no": 89.8}},
              {"op": aerospike.OPERATOR_READ,
                 "bin": "write_bin"}],
-             {'write_bin': {u'no': 89.8}}),
+         {'write_bin': {u'no': 89.8}}),
         (('test', 'demo', 1),                            # write positive
             [{"op": aerospike.OPERATOR_WRITE,
                 "bin": "write_bin",
-                "val": {"no": 89}}, 
-                {"op": aerospike.OPERATOR_READ, "bin": "write_bin"}], 
+                "val": {"no": 89}},
+                {"op": aerospike.OPERATOR_READ, "bin": "write_bin"}],
             {'write_bin': {u'no': 89}}),
         (('test', 'demo', 1),                               # write_tuple_positive
-            [{ "op": aerospike.OPERATOR_WRITE,
+            [{"op": aerospike.OPERATOR_WRITE,
                 "bin": "write_bin",
-                "val": tuple('abc')}, 
+                "val": tuple('abc')},
                 {"op": aerospike.OPERATOR_READ, "bin": "write_bin"}],
             {'write_bin': ('a', 'b', 'c')}),
         (('test', 'demo', 1),                               # with_bin_bytearray
             [{"op": aerospike.OPERATOR_PREPEND,
-             "bin": bytearray("asd[;asjk", "utf-8"),
-             "val": u"ram"},
-            {"op": aerospike.OPERATOR_READ,
+              "bin": bytearray("asd[;asjk", "utf-8"),
+              "val": u"ram"},
+             {"op": aerospike.OPERATOR_READ,
                 "bin": bytearray("asd[;asjk", "utf-8")}],
             {'asd[;asjk': 'ram'}),
         (('test', 'demo', 'bytearray_key'),                  # with_operator append_val bytearray
             [{"op": aerospike.OPERATOR_APPEND,
-             "bin": "bytearray_bin",
-             "val": bytearray("abc", "utf-8")},
-            {"op": aerospike.OPERATOR_READ,
-             "bin": "bytearray_bin"}],
-             {'bytearray_bin': bytearray("asd;as[d'as;dabc", "utf-8")}),
+              "bin": "bytearray_bin",
+              "val": bytearray("abc", "utf-8")},
+             {"op": aerospike.OPERATOR_READ,
+              "bin": "bytearray_bin"}],
+         {'bytearray_bin': bytearray("asd;as[d'as;dabc", "utf-8")}),
         (('test', 'demo', 'bytearray_new'),                   # with_operator append_val bytearray_newrecord
             [{"op": aerospike.OPERATOR_APPEND,
-             "bin": "bytearray_bin",
-             "val": bytearray("asd;as[d'as;d", "utf-8")},
-            {"op": aerospike.OPERATOR_READ,
-             "bin": "bytearray_bin"}],
+              "bin": "bytearray_bin",
+              "val": bytearray("asd;as[d'as;d", "utf-8")},
+             {"op": aerospike.OPERATOR_READ,
+              "bin": "bytearray_bin"}],
             {'bytearray_bin': bytearray("asd;as[d'as;d", "utf-8")}),
-        (('test', 'demo', 'bytearray_key'),                 #with_operatorprepend_valbytearray
+        (('test', 'demo', 'bytearray_key'),  # with_operatorprepend_valbytearray
             [{"op": aerospike.OPERATOR_PREPEND,
-             "bin": "bytearray_bin",
-             "val": bytearray("abc", "utf-8")},
-            {"op": aerospike.OPERATOR_READ,
-             "bin": "bytearray_bin"}],
+              "bin": "bytearray_bin",
+              "val": bytearray("abc", "utf-8")},
+             {"op": aerospike.OPERATOR_READ,
+              "bin": "bytearray_bin"}],
             {'bytearray_bin': bytearray("abcasd;as[d'as;d", "utf-8")}),
         (('test', 'demo', 'bytearray_new'),                 # with_operatorprepend_valbytearray_newrecord
             [{"op": aerospike.OPERATOR_PREPEND,
-             "bin": "bytearray_bin",
-             "val": bytearray("asd;as[d'as;d", "utf-8")},
-            {"op": aerospike.OPERATOR_READ,
-             "bin": "bytearray_bin"}],
+              "bin": "bytearray_bin",
+              "val": bytearray("asd;as[d'as;d", "utf-8")},
+             {"op": aerospike.OPERATOR_READ,
+              "bin": "bytearray_bin"}],
             {'bytearray_bin': bytearray("asd;as[d'as;d", "utf-8")}),
 
-        ])
+    ])
     def test_pos_operate_with_correct_paramters(self, key, llist, expected):
         """
         Invoke operate() with correct parameters
@@ -233,21 +234,22 @@ class TestOperate(object):
         self.as_connection.remove(key)
 
     @pytest.mark.parametrize("key, policy, meta, llist", [
-        (   ('test', 'demo', 1), 
+        (('test', 'demo', 1),
             {'timeout': 1000,
-            'key': aerospike.POLICY_KEY_SEND,
-            'gen': aerospike.POLICY_GEN_IGNORE,
-            'commit_level': aerospike.POLICY_COMMIT_LEVEL_ALL},
-            {'gen': 10, 'ttl': 1200}, 
+             'key': aerospike.POLICY_KEY_SEND,
+             'gen': aerospike.POLICY_GEN_IGNORE,
+             'commit_level': aerospike.POLICY_COMMIT_LEVEL_ALL},
+            {'gen': 10, 'ttl': 1200},
             [{"op": aerospike.OPERATOR_APPEND,
-                  "bin": "name",
-                  "val": "aa"},
-                 {"op": aerospike.OPERATOR_INCR,
-                  "bin": "age",
-                  "val": 3}, {"op": aerospike.OPERATOR_READ,
-                              "bin": "name"}]),
-        ])
-    def test_pos_operate_with_policy_gen_ignore(self, key, policy, meta, llist):
+              "bin": "name",
+              "val": "aa"},
+             {"op": aerospike.OPERATOR_INCR,
+              "bin": "age",
+              "val": 3}, {"op": aerospike.OPERATOR_READ,
+                          "bin": "name"}]),
+    ])
+    def test_pos_operate_with_policy_gen_ignore(
+            self, key, policy, meta, llist):
         """
         Invoke operate() with gen ignore.
         """
@@ -290,21 +292,22 @@ class TestOperate(object):
         )
 
     @pytest.mark.parametrize("key, llist", [
-        ( ('test', 'demo', 1), 
+        (('test', 'demo', 1),
             [{"op": aerospike.OPERATOR_TOUCH,
-             "val": 4000}]),
-        ( ('test', 'demo', 1),
+              "val": 4000}]),
+        (('test', 'demo', 1),
             [{"op": aerospike.OPERATOR_TOUCH,
-             "bin": "age",
-             "val": 4000}]),
-        ( ('test', 'demo', 1),
+              "bin": "age",
+              "val": 4000}]),
+        (('test', 'demo', 1),
             [{"op": aerospike.OPERATOR_TOUCH,
-             "bin": "age"}]),
-        ( ('test', 'demo', 1),
+              "bin": "age"}]),
+        (('test', 'demo', 1),
             [{"op": aerospike.OPERATOR_TOUCH}]),
 
-        ])
-    def test_pos_operate_touch_operation_with_bin_and_value_combination(self, key, llist):
+    ])
+    def test_pos_operate_touch_operation_with_bin_and_value_combination(
+            self, key, llist):
         """
         Invoke operate() with touch value with bin and value combination.
         """
@@ -313,7 +316,7 @@ class TestOperate(object):
 
         (key, meta) = self.as_connection.exists(key)
 
-        assert meta['ttl'] != None
+        assert meta['ttl'] is not None
 
     def test_pos_operate_with_policy_gen_EQ_not_equal(self):
         """
@@ -567,7 +570,7 @@ class TestOperate(object):
                 "bin": "name"
             }],
             {'name': 'aerospike'}),
-        ])
+    ])
     def test_pos_operate_new_record(self, key, llist, expected):
         """
         Invoke operate() with prepend command on a new record
@@ -631,7 +634,7 @@ class TestOperate(object):
                 "op": aerospike.OPERATOR_READ,
                 "bin": "bytearray"
             }]),
-        ])
+    ])
     def test_pos_operate_prepend_with_existing_record(self, key, llist):
         """
         Invoke operate() with prepend command on a existing record
@@ -755,7 +758,7 @@ class TestOperate(object):
             {"op": aerospike.OP_LIST_GET,
              "bin": "int_bin",
              "index": 4},
-            ], {"int_bin": 7}, "int_bin", [1, 2, 3, 4, 7]),
+        ], {"int_bin": 7}, "int_bin", [1, 2, 3, 4, 7]),
         ([
             {"op": aerospike.OP_LIST_APPEND_ITEMS,
              "bin": "int_bin",
@@ -764,7 +767,7 @@ class TestOperate(object):
              "bin": "int_bin",
              "index": 3,
              "val": 3},
-            ], {'int_bin': [4, 7, 9]}, "int_bin", [1, 2, 3, 4, 7,9]),
+        ], {'int_bin': [4, 7, 9]}, "int_bin", [1, 2, 3, 4, 7, 9]),
         ([
             {"op": aerospike.OP_LIST_INSERT,
              "bin": "int_bin",
@@ -802,7 +805,7 @@ class TestOperate(object):
              "bin": "int_bin",
              "index": 6}
         ], {'int_bin': 10}, "int_bin", [1, 2, 3, 4, None, None, 10])
-        ])
+    ])
     def test_pos_operate_with_list_addition_operations(self, list, result, bin,
                                                        expected):
         """
@@ -823,24 +826,24 @@ class TestOperate(object):
             {"op": aerospike.OP_LIST_REMOVE,
              "bin": "int_bin",
              "index": 2},
-            ], "int_bin", [1, 2, 4]),
+        ], "int_bin", [1, 2, 4]),
         ([
             {"op": aerospike.OP_LIST_REMOVE_RANGE,
              "bin": "int_bin",
              "index": 2,
              "val": 2},
-            ], "int_bin", [1, 2]),
+        ], "int_bin", [1, 2]),
         ([
             {"op": aerospike.OP_LIST_TRIM,
              "bin": "int_bin",
              "index": 2,
              "val": 2},
-            ], "int_bin", [3, 4]),
+        ], "int_bin", [3, 4]),
         ([
             {"op": aerospike.OP_LIST_CLEAR,
              "bin": "int_bin"}
-            ], "int_bin", [])
-        ])
+        ], "int_bin", [])
+    ])
     def test_pos_operate_with_list_remove_operations(self, list, bin,
                                                      expected):
         """
@@ -874,9 +877,9 @@ class TestOperate(object):
         """
         key = ('test', 'demo', 'list_key')
         list = [{"op": aerospike.OP_LIST_GET_RANGE,
-             "bin": "int_bin",
-             "index": 2,
-             "val": 9}] 
+                 "bin": "int_bin",
+                 "index": 2,
+                 "val": 9}]
 
         (key, meta, bins) = self.as_connection.operate(key, list)
 
@@ -888,9 +891,9 @@ class TestOperate(object):
         """
         key = ('test', 'demo', 'list_key')
         list = [{"op": aerospike.OP_LIST_TRIM,
-             "bin": "int_bin",
-             "index": 1,
-             "val": -9}] 
+                 "bin": "int_bin",
+                 "index": 1,
+                 "val": -9}]
 
         (key, meta, bins) = self.as_connection.operate(key, list)
 
@@ -904,9 +907,9 @@ class TestOperate(object):
         """
         key = ('test', 'demo', 'list_key')
         list = [{"op": aerospike.OP_LIST_INSERT,
-             "bin": "int_bin",
-             "index": -2,
-             "val": 9}] 
+                 "bin": "int_bin",
+                 "index": -2,
+                 "val": 9}]
 
         (key, meta, bins) = self.as_connection.operate(key, list)
 
@@ -922,8 +925,8 @@ class TestOperate(object):
             {"op": aerospike.OP_LIST_GET,
              "bin": "string_bin",
              "index": 4}
-            ], {"string_bin": {"new_val": 1}}, "string_bin", ['a', 'b', 'c',
-                'd', {'new_val': 1}]),
+        ], {"string_bin": {"new_val": 1}}, "string_bin", ['a', 'b', 'c',
+                                                          'd', {'new_val': 1}]),
         ([
             {"op": aerospike.OP_LIST_APPEND_ITEMS,
              "bin": "string_bin",
@@ -932,8 +935,8 @@ class TestOperate(object):
              "bin": "string_bin",
              "index": 3,
              "val": 3}
-            ], {"string_bin": ['d', ['z', 'x'], ('y', 'w')]}, "string_bin", ['a', 'b', 'c',
-                'd', ['z', 'x'], ('y', 'w')]),
+        ], {"string_bin": ['d', ['z', 'x'], ('y', 'w')]}, "string_bin", ['a', 'b', 'c',
+                                                                         'd', ['z', 'x'], ('y', 'w')]),
         ([
             {"op": aerospike.OP_LIST_INSERT,
              "bin": "string_bin",
@@ -946,17 +949,17 @@ class TestOperate(object):
         ([
             {"op": aerospike.OP_LIST_INSERT_ITEMS,
              "bin": "string_bin",
-             "val": [bytearray("abc","utf-8"), u"xyz"],
+             "val": [bytearray("abc", "utf-8"), u"xyz"],
              "index": 2},
             {"op": aerospike.OP_LIST_POP_RANGE,
              "bin": "string_bin",
              "index": 2,
              "val": 2}
         ], {'string_bin': [bytearray(b'abc'), 'xyz']}, "string_bin", ['a', 'b',
-            'c', 'd']),
-        ])
+                                                                      'c', 'd']),
+    ])
     def test_pos_operate_with_list_operations_different_datatypes(self, list, result, bin,
-            expected):
+                                                                  expected):
         """
         Invoke operate() with list operations using different datatypes
         """
@@ -1016,19 +1019,19 @@ class TestOperate(object):
 
     @pytest.mark.parametrize("list", [
         ([{"op": aerospike.OP_LIST_GET,
-             "bin": "int_bin",
-             "index": 7}]), 
-        ([  {"op": aerospike.OP_LIST_CLEAR,
-            "bin": "int_bin"},
+           "bin": "int_bin",
+           "index": 7}]),
+        ([{"op": aerospike.OP_LIST_CLEAR,
+           "bin": "int_bin"},
             {"op": aerospike.OP_LIST_POP,
              "bin": "int_bin",
              "index": 2}]),
-        ([  {"op": aerospike.OP_LIST_CLEAR,
-            "bin": "int_bin"},
+        ([{"op": aerospike.OP_LIST_CLEAR,
+           "bin": "int_bin"},
             {"op": aerospike.OP_LIST_REMOVE,
              "bin": "int_bin",
              "index": 2}])
-        ])
+    ])
     def test_neg_operate_list_invalid_requests(self, list):
         """
         Invoke operate() with list addition operations negative
@@ -1160,35 +1163,36 @@ class TestOperate(object):
             assert exception.msg == "key is invalid"
 
     @pytest.mark.parametrize("key, policy, llist, ex_code, ex_msg", [
-        ( ('test', 'demo', 1),
-          {'timeout': 1000},
-          [ {"op": aerospike.OPERATOR_APPEND,
-                  "bin": "name"},
+        (('test', 'demo', 1),
+         {'timeout': 1000},
+         [{"op": aerospike.OPERATOR_APPEND,
+           "bin": "name"},
             {"op": aerospike.OPERATOR_INCR,
              "bin": "age",
              "val": 3}],
-             -2,
-             "Value should be given"),
-        ( ('test', 'demo', 1),
+         -2,
+         "Value should be given"),
+        (('test', 'demo', 1),
             {'timeout': 1000},
-            [{ "op": aerospike.OPERATOR_APPEND,
+            [{"op": aerospike.OPERATOR_APPEND,
                 "bin": "name",
                 "val": 3,
-                "aa": 89},],
+                "aa": 89}, ],
             -2,
             "operation can contain only op, bin, index and val keys"),
-        ( ('test', 'demo', 1),                  # with_incr_value_string
-            {   'timeout': 1000,
+        (('test', 'demo', 1),                  # with_incr_value_string
+            {'timeout': 1000,
                 'key': aerospike.POLICY_KEY_SEND,
-                'commit_level': aerospike.POLICY_COMMIT_LEVEL_MASTER },
+                'commit_level': aerospike.POLICY_COMMIT_LEVEL_MASTER},
             [{"op": aerospike.OPERATOR_INCR,
-                      "bin": "age",
-                      "val": "3"}, {"op": aerospike.OPERATOR_READ,
-                                    "bin": "age"}],
+              "bin": "age",
+              "val": "3"}, {"op": aerospike.OPERATOR_READ,
+                            "bin": "age"}],
             -2,
             "Unsupported operand type(s) for +: only 'int' allowed"),
-        ])
-    def test_neg_operate_append_without_value_parameter(self, key, policy, llist, ex_code, ex_msg):
+    ])
+    def test_neg_operate_append_without_value_parameter(
+            self, key, policy, llist, ex_code, ex_msg):
         """
         Invoke operate() with append operation and append val is not given
         """

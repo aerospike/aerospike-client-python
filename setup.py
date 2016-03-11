@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 ################################################################################
-# Copyright 2013-2015 Aerospike, Inc.
+# Copyright 2013-2016 Aerospike, Inc.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -331,6 +331,7 @@ setup(
                 'src/main/client/info.c',
                 'src/main/client/put.c',
                 'src/main/client/operate.c',
+                'src/main/client/operate_ordered.c',
                 'src/main/client/query.c',
                 'src/main/client/remove.c',
                 'src/main/client/scan.c',

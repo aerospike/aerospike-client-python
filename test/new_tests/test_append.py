@@ -11,6 +11,8 @@ except:
     sys.exit(1)
 
 # @pytest.mark.usefixtures("as_connection")
+
+
 class TestAppend(object):
 
     @pytest.fixture(autouse=True)
@@ -25,7 +27,7 @@ class TestAppend(object):
 
         key = ("test", "demo", "bytearray_key")
         as_connection.put(key, {"bytearray_bin": bytearray("asd;as[d'as;d",
-            "utf-8")})
+                                                           "utf-8")})
 
         def teardown():
             """
@@ -57,8 +59,8 @@ class TestAppend(object):
         """
         key = ('test', 'demo', 1)
         policy = {'timeout': 1000,
-                'retry': aerospike.POLICY_RETRY_ONCE,
-                'commit_level': aerospike.POLICY_COMMIT_LEVEL_MASTER }
+                  'retry': aerospike.POLICY_RETRY_ONCE,
+                  'commit_level': aerospike.POLICY_COMMIT_LEVEL_MASTER}
         self.as_connection.append(key, "name", "str", {}, policy)
 
         (key, _, bins) = self.as_connection.get(key)
@@ -83,7 +85,7 @@ class TestAppend(object):
         assert bins == {'age': 1, 'name': 'name1str'}
         assert key == ('test', 'demo', None, bytearray(
             b'\xb7\xf4\xb88\x89\xe2\xdag\xdeh>\x1d\xf6\x91\x9a\x1e\xac\xc4F\xc8')
-                      )
+        )
 
     def test_pos_append_with_policy_key_digest(self):
         """
@@ -129,7 +131,7 @@ class TestAppend(object):
         assert bins == {'age': 1, 'name': 'name1str'}
         assert key == ('test', 'demo', None, bytearray(
             b'\xb7\xf4\xb88\x89\xe2\xdag\xdeh>\x1d\xf6\x91\x9a\x1e\xac\xc4F\xc8')
-                      )
+        )
 
     def test_pos_append_with_policy_key_gen_EQ_positive(self):
         """
@@ -154,7 +156,7 @@ class TestAppend(object):
         assert bins == {'age': 1, 'name': 'name1str'}
         assert key == ('test', 'demo', None, bytearray(
             b'\xb7\xf4\xb88\x89\xe2\xdag\xdeh>\x1d\xf6\x91\x9a\x1e\xac\xc4F\xc8')
-                      )
+        )
 
     def test_pos_append_with_policy_key_gen_GT_positive(self):
         """
@@ -178,7 +180,7 @@ class TestAppend(object):
         assert bins == {'age': 1, 'name': 'name1str'}
         assert key == ('test', 'demo', None, bytearray(
             b'\xb7\xf4\xb88\x89\xe2\xdag\xdeh>\x1d\xf6\x91\x9a\x1e\xac\xc4F\xc8')
-                      )
+        )
 
     def test_pos_append_with_nonexistent_key(self):
         """
@@ -240,7 +242,9 @@ class TestAppend(object):
         Invoke append() with bytearray value
         """
         key = ('test', 'demo', 'bytearray_key')
-        self.as_connection.append(key, "bytearray_bin", bytearray("abc", "utf-8"))
+        self.as_connection.append(
+            key, "bytearray_bin", bytearray(
+                "abc", "utf-8"))
 
         (key, _, bins) = self.as_connection.get(key)
 
@@ -268,7 +272,8 @@ class TestAppend(object):
         """
         with pytest.raises(TypeError) as typeError:
             self.as_connection.append()
-        assert "Required argument 'key' (pos 1) not found" in str(typeError.value)
+        assert "Required argument 'key' (pos 1) not found" in str(
+            typeError.value)
 
     def test_neg_append_with_policy_key_gen_GT_lesser(self):
         """
@@ -298,7 +303,7 @@ class TestAppend(object):
         assert bins == {'age': 1, 'name': 'name1'}
         assert key == ('test', 'demo', None, bytearray(
             b'\xb7\xf4\xb88\x89\xe2\xdag\xdeh>\x1d\xf6\x91\x9a\x1e\xac\xc4F\xc8')
-                      )
+        )
 
     def test_neg_append_with_policy_key_gen_EQ_not_equal(self):
         """
@@ -330,20 +335,25 @@ class TestAppend(object):
         assert bins == {'age': 1, 'name': 'name1'}
         assert key == ('test', 'demo', None, bytearray(
             b'\xb7\xf4\xb88\x89\xe2\xdag\xdeh>\x1d\xf6\x91\x9a\x1e\xac\xc4F\xc8')
-                      )
+        )
 
     @pytest.mark.parametrize("key, bin, value, meta, policy, ex_code, ex_msg", [
-        (('test', 'demo', 1), "name", 2, {}, {}, -2, "Cannot concatenate 'str' and 'non-str' objects"),
-        (('test', 'demo', 1), "name", "pqr", {}, "", -2, "policy must be a dict"),
-        (('test', 'demo', 1), 3, "str", {}, {'gen': 5, 'timeout': 3000, 'retry':
-            aerospike.POLICY_RETRY_ONCE, 'commit_level':
-            aerospike.POLICY_COMMIT_LEVEL_MASTER}, -2, 'Bin name should be of type string'),
+        (('test', 'demo', 1), "name", 2, {}, {}, -2,
+            "Cannot concatenate 'str' and 'non-str' objects"),
+        (('test', 'demo', 1), "name", "pqr", {}, "", -2,
+            "policy must be a dict"),
+        (('test', 'demo', 1), 3, "str", {},
+            {'gen': 5, 'timeout': 3000,
+             'retry': aerospike.POLICY_RETRY_ONCE,
+             'commit_level': aerospike.POLICY_COMMIT_LEVEL_MASTER}, -2,
+            'Bin name should be of type string'),
         (('test', 'name'), "name", "str", {}, {"gen": 5}, -2,
             'key tuple must be (Namespace, Set, Key) or (Namespace, Set, None, Digest)'),
-        (('test', 'demo', 1), "name", "str", {}, {'timeout': 0.5}, -2, "timeout is invalid")
-            ])
-    def test_neg_append_parameters_of_incorrect_types(self, key, bin, value,
-            meta, policy, ex_code, ex_msg):
+        (('test', 'demo', 1), "name", "str", {}, {
+         'timeout': 0.5}, -2, "timeout is invalid")
+    ])
+    def test_neg_append_params_of_incorrect_types(self, key, bin, value, meta,
+                                                  policy, ex_code, ex_msg):
         """
         Invoke append() parameters of incorrect datatypes
         """
@@ -362,13 +372,13 @@ class TestAppend(object):
         policy = {'timeout': 1000}
         with pytest.raises(TypeError) as typeError:
             self.as_connection.append(key, "name", "str", {}, policy, "")
-
-        assert "append() takes at most 5 arguments (6 given)" in str(typeError.value)
+        msg = "append() takes at most 5 arguments (6 given)"
+        assert msg in str(typeError.value)
 
     @pytest.mark.parametrize("key, bin, ex_code, ex_msg", [
         (None, "name", -2, "key is invalid"),
         (('test', 'demo', 1), None, -2, "Bin name should be of type string")
-        ])
+    ])
     def test_neg_append_parameters_as_none(self, key, bin, ex_code, ex_msg):
         """
         Invoke append() with parametes as None
@@ -395,7 +405,6 @@ class TestAppend(object):
             assert exception.code == 11
 
     def test_neg_append_with_low_timeout(self):
-
         """
         Invoke append() with low timeout in policy
         """

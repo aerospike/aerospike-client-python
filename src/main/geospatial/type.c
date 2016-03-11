@@ -204,7 +204,7 @@ CLEANUP:
 		Py_DECREF(py_err);
 		return NULL;
 	}
-    return initresult;
+	return initresult;
 }
 static void AerospikeGeospatial_Type_Dealloc(AerospikeGeospatial * self)
 {

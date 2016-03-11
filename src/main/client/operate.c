@@ -224,7 +224,7 @@ static void initialize_bin_for_strictypes(AerospikeClient *self, as_error *err, 
 		GET_BYTES_POOL(bytes, static_pool, err);
 		if (err->code == AEROSPIKE_OK) {
 			serialize_based_on_serializer_policy(self, SERIALIZER_PYTHON, &bytes, py_value, err);
-			as_bytes_init_wrap((as_bytes *) &binop_bin->value, bytes->value, bytes->size, false);
+			as_bytes_init_wrap((as_bytes *) &binop_bin->value, bytes->value, bytes->size, true);
 			binop_bin->valuep = &binop_bin->value;
 		}
 	} else {
@@ -273,6 +273,8 @@ PyObject *  AerospikeClient_Operate_Invoke(
 	PyObject * py_ustr1 = NULL;
 	PyObject * py_bin = NULL;
 	as_record * rec = NULL;
+
+	as_vector * unicodeStrVector = as_vector_create(sizeof(char *), 128);
 
 	as_static_pool static_pool;
 	memset(&static_pool, 0, sizeof(static_pool));
@@ -328,7 +330,9 @@ PyObject *  AerospikeClient_Operate_Invoke(
 			if (py_bin) {
 				if (PyUnicode_Check(py_bin)) {
 					py_ustr = PyUnicode_AsUTF8String(py_bin);
-					bin = PyBytes_AsString(py_ustr);
+					bin = strdup(PyBytes_AsString(py_ustr));
+					as_vector_append(unicodeStrVector, &bin);
+					Py_DECREF(py_ustr);
 				} else if (PyString_Check(py_bin)) {
 					bin = PyString_AsString(py_bin);
 				} else if (PyByteArray_Check(py_bin)) {
@@ -340,10 +344,6 @@ PyObject *  AerospikeClient_Operate_Invoke(
 
 				if (self->strict_types) {
 					if (strlen(bin) > AS_BIN_NAME_MAX_LEN) {
-						if (py_ustr) {
-							Py_DECREF(py_ustr);
-							py_ustr = NULL;
-						}
 						as_error_update(err, AEROSPIKE_ERR_BIN_NAME, "A bin name should not exceed 14 characters limit");
 						goto CLEANUP;
 					}
@@ -399,8 +399,10 @@ PyObject *  AerospikeClient_Operate_Invoke(
 				case AS_OPERATOR_APPEND:
 					if (PyUnicode_Check(py_value)) {
 						py_ustr1 = PyUnicode_AsUTF8String(py_value);
-						val = PyBytes_AsString(py_ustr1);
+						val = strdup(PyBytes_AsString(py_ustr1));
 						as_operations_add_append_str(&ops, bin, val);
+						as_vector_append(unicodeStrVector, &val);
+						Py_DECREF(py_ustr1);
 					} else if (PyString_Check(py_value)) {
 						val = PyString_AsString(py_value);
 						as_operations_add_append_str(&ops, bin, val);
@@ -409,7 +411,7 @@ PyObject *  AerospikeClient_Operate_Invoke(
 						GET_BYTES_POOL(bytes, &static_pool, err);
 						if (err->code == AEROSPIKE_OK) {
 							serialize_based_on_serializer_policy(self, SERIALIZER_PYTHON, &bytes, py_value, err);
-							as_operations_add_append_raw(&ops, bin, bytes->value, bytes->size);
+							as_operations_add_append_rawp(&ops, bin, bytes->value, bytes->size, true);
 						}
 					} else {
 						if (!self->strict_types || !strcmp(py_value->ob_type->tp_name, "aerospike.null")) {
@@ -423,8 +425,10 @@ PyObject *  AerospikeClient_Operate_Invoke(
 				case AS_OPERATOR_PREPEND:
 					if (PyUnicode_Check(py_value)) {
 						py_ustr1 = PyUnicode_AsUTF8String(py_value);
-						val = PyBytes_AsString(py_ustr1);
+						val = strdup(PyBytes_AsString(py_ustr1));
 						as_operations_add_prepend_str(&ops, bin, val);
+						as_vector_append(unicodeStrVector, &val);
+						Py_DECREF(py_ustr1);
 					} else if (PyString_Check(py_value)) {
 						val = PyString_AsString(py_value);
 						as_operations_add_prepend_str(&ops, bin, val);
@@ -433,7 +437,7 @@ PyObject *  AerospikeClient_Operate_Invoke(
 						GET_BYTES_POOL(bytes, &static_pool, err);
 						if (err->code == AEROSPIKE_OK) {
 							serialize_based_on_serializer_policy(self, SERIALIZER_PYTHON, &bytes, py_value, err);
-							as_operations_add_prepend_raw(&ops, bin, bytes->value, bytes->size);
+							as_operations_add_prepend_rawp(&ops, bin, bytes->value, bytes->size, true);
 						}
 					} else {
 						if (!self->strict_types || !strcmp(py_value->ob_type->tp_name, "aerospike.null")) {
@@ -623,6 +627,7 @@ PyObject *  AerospikeClient_Operate_Invoke(
 					}
 			}
 		}
+
 	}
 	if (err->code != AEROSPIKE_OK) {
 		as_error_update(err, err->code, NULL);
@@ -645,12 +650,12 @@ PyObject *  AerospikeClient_Operate_Invoke(
 	}
 
 CLEANUP:
-	if (py_ustr) {
-		Py_DECREF(py_ustr);
+	for (unsigned int i=0; i<unicodeStrVector->size ; i++) {
+		free(as_vector_get_ptr(unicodeStrVector, i));
 	}
-	if (py_ustr1) {
-		Py_DECREF(py_ustr1);
-	}
+
+	as_vector_destroy(unicodeStrVector);
+
 	if (rec) {
 		as_record_destroy(rec);
 	}

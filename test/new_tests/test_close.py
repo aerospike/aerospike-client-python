@@ -12,7 +12,9 @@ except:
     print("Please install aerospike python client.")
     sys.exit(1)
 
+
 class TestClose():
+
     def setup_class(cls):
         TestClose.hostlist, TestClose.user, TestClose.password = TestBaseClass.get_hosts()
 
@@ -53,5 +55,3 @@ class TestClose():
         with pytest.raises(AttributeError) as attributeError:
             self.closeobject = self.client.close()
         assert "has no attribute" in str(attributeError.value)
-
-

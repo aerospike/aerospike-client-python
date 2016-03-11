@@ -95,6 +95,36 @@ in an in-memory primary index.
     .. versionchanged:: 2.0.0
 
 
+.. py:function:: null()
+
+    A type for distinguishing a server-side null from a Python :py:obj:`None`.
+    Replaces the constant ``aerospike.null``.
+
+    :return: a type representing the server-side type ``as_null``.
+
+    .. versionadded:: 2.0.1
+
+
+.. py:function:: calc_digest(ns, set, key) -> bytearray
+
+    Calculate the digest of a particular key. See: :ref:`aerospike_key_tuple`.
+
+    :param str ns: the namespace in the aerospike cluster.
+    :param str set: the set name.
+    :param key: the primary key identifier of the record within the set.
+    :type key: :class:`str`, :class:`int` or :class:`bytearray`
+    :return: a RIPEMD-160 digest of the input tuple.
+    :rtype: :class:`bytearray`
+
+    .. code-block:: python
+
+        import aerospike
+        import pprint
+
+        digest = aerospike.calc_digest("test", "demo", 1 )
+        pp.pprint(digest)
+
+
 .. rubric:: Serialization
 
 .. note::
@@ -720,7 +750,8 @@ Miscellaneous
 
     A value for distinguishing a server-side null from a Python :py:obj:`None` .
 
-    .. versionadded:: 1.0.57
+    .. deprecated:: 2.0.1
+        use the function :func:`aerospike.null` instead.
 
 .. data:: UDF_TYPE_LUA
 

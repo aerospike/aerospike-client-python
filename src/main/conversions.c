@@ -125,7 +125,7 @@ as_status as_user_array_to_pyobject( as_error *err, as_user **users, PyObject **
 	PyObject * py_users = PyDict_New();
 	for(i = 0; i < users_size; i++) {
 
-		PyObject * py_user       = PyString_FromString(users[i]->name);
+		PyObject * py_user = PyString_FromString(users[i]->name);
 		PyObject * py_roles;
 		strArray_to_pyobject(err, users[i]->roles, &py_roles, users[i]->roles_size);
 		if( err->code != AEROSPIKE_OK) {
@@ -371,6 +371,11 @@ as_status pyobject_to_val(AerospikeClient * self, as_error * err, PyObject * py_
 		}
 	} else if (PyInt_Check(py_obj)) {
 		int64_t i = (int64_t) PyInt_AsLong(py_obj);
+		if (i == -1 && PyErr_Occurred()) {
+			if (PyErr_ExceptionMatches(PyExc_OverflowError)) {
+				return as_error_update(err, AEROSPIKE_ERR_PARAM, "integer value exceeds sys.maxsize");
+			}
+		}
 		*val = (as_val *) as_integer_new(i);
 	} else if (PyLong_Check(py_obj)) {
 		int64_t l = (int64_t) PyLong_AsLongLong(py_obj);
@@ -455,7 +460,7 @@ as_status pyobject_to_val(AerospikeClient * self, as_error * err, PyObject * py_
  * Returns AEROSPIKE_OK on success. On error, the err argument is populated.
  */
 as_status pyobject_to_record(AerospikeClient * self, as_error * err, PyObject * py_rec, PyObject * py_meta, 
-        as_record * rec, int serializer_type, as_static_pool *static_pool)
+		as_record * rec, int serializer_type, as_static_pool *static_pool)
 {
 	as_error_reset(err);
 	PyObject * py_result = NULL;
@@ -509,6 +514,11 @@ as_status pyobject_to_record(AerospikeClient * self, as_error * err, PyObject * 
 				}
 			} else if (PyInt_Check(value)) {
 				int64_t val = (int64_t) PyInt_AsLong(value);
+				if (val == -1 && PyErr_Occurred()) {
+					if (PyErr_ExceptionMatches(PyExc_OverflowError)) {
+						return as_error_update(err, AEROSPIKE_ERR_PARAM, "integer value exceeds sys.maxsize");
+					}
+				}
 				ret_val = as_record_set_int64(rec, name, val);
 			} else if (PyLong_Check(value)) {
 				int64_t val = (int64_t) PyLong_AsLongLong(value);
@@ -607,6 +617,11 @@ as_status pyobject_to_record(AerospikeClient * self, as_error * err, PyObject * 
 			if (py_ttl != NULL) {
 				if ( PyInt_Check(py_ttl) ) {
 					rec->ttl = (uint32_t) PyInt_AsLong(py_ttl);
+					if (rec->ttl == (uint32_t)-1 && PyErr_Occurred()) {
+						if (PyErr_ExceptionMatches(PyExc_OverflowError)) {
+							as_error_update(err, AEROSPIKE_ERR_PARAM, "integer value exceeds sys.maxsize");
+						}
+					}
 				} else if (PyLong_Check(py_ttl)) {
 					rec->ttl = (uint32_t) PyLong_AsLongLong(py_ttl);
 					if (rec->ttl == (uint32_t)-1 && PyErr_Occurred()) {
@@ -622,6 +637,11 @@ as_status pyobject_to_record(AerospikeClient * self, as_error * err, PyObject * 
 			if (py_gen != NULL) {
 				if (PyInt_Check(py_gen)) {
 					rec->gen = (uint16_t) PyInt_AsLong(py_gen);
+					if (rec->gen == (uint16_t)-1 && PyErr_Occurred()) {
+						if (PyErr_ExceptionMatches(PyExc_OverflowError)) {
+							as_error_update(err, AEROSPIKE_ERR_PARAM, "integer value exceeds sys.maxsize");
+						}
+					}
 				} else if (PyLong_Check(py_gen)) {
 					rec->gen = (uint16_t) PyLong_AsLongLong(py_gen);
 					if (rec->gen == (uint16_t)-1 && PyErr_Occurred()) {
@@ -823,6 +843,9 @@ as_status pyobject_to_key(as_error * err, PyObject * py_keytuple, as_key * key)
 		}
 		else if ( PyInt_Check(py_key) ) {
 			int64_t k = (int64_t) PyInt_AsLong(py_key);
+			if(-1 == k) {
+				return as_error_update(err, AEROSPIKE_ERR_PARAM, "integer value for KEY exceeds sys.maxsize");
+			}
 			as_key_init_int64(key, ns, set, k);
 		}
 		else if ( PyLong_Check(py_key) ) {

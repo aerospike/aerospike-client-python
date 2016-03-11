@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright 2013-2015 Aerospike, Inc.
+ * Copyright 2013-2016 Aerospike, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -33,7 +33,7 @@
 typedef struct {
 	as_error error;
 	PyObject * callback;
-    AerospikeClient * client;
+	AerospikeClient * client;
 } LocalData;
 
 
@@ -116,7 +116,7 @@ PyObject * AerospikeQuery_Foreach(AerospikeQuery * self, PyObject * args, PyObje
 	// Initialize callback user data
 	LocalData data;
 	data.callback = py_callback;
-    data.client = self->client;
+	data.client = self->client;
 	as_error_init(&data.error);
 
 	// Aerospike Client Arguments
