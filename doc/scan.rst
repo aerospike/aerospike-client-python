@@ -165,6 +165,7 @@ Scan Policies
         :columns: 1
 
         * **timeout** maximum time in milliseconds to wait for the operation to complete. Default ``0`` means *do not timeout*.
+        * **fail_on_cluster_change** :class:`bool` whether to fail the scan if a change occurs on the cluster. Default ``True``.
 
 
 .. _aerospike_scan_options:
