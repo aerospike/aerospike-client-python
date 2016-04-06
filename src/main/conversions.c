@@ -824,6 +824,8 @@ as_status pyobject_to_key(as_error * err, PyObject * py_keytuple, as_key * key)
 		}
 	}
 
+	as_key *returnResult = key;
+
 	if ( py_key && py_key != Py_None ) {
 		if ( PyUnicode_Check(py_key) ) {
 			PyObject * py_ustr = PyUnicode_AsUTF8String(py_key);
@@ -831,7 +833,7 @@ as_status pyobject_to_key(as_error * err, PyObject * py_keytuple, as_key * key)
 			// free flag has to be true. Because, we are creating a new memory
 			// for a primary key string using strdup()
 			// This memory is destroyed when we call as_key_destroy()
-			as_key_init_strp(key, ns, set, strdup(k), true);
+			returnResult = as_key_init_strp(key, ns, set, strdup(k), true);
 			Py_DECREF(py_ustr);
 		}
 		else if ( PyString_Check(py_key) ) {
@@ -839,37 +841,40 @@ as_status pyobject_to_key(as_error * err, PyObject * py_keytuple, as_key * key)
 			// free flag is set to false, as char *k is an user memory
 			// when as_key_destroy is called, it will try to free this memory
 			// which is invalid.
-			as_key_init_strp(key, ns, set, k, false);
+			returnResult = as_key_init_strp(key, ns, set, k, false);
 		}
 		else if ( PyInt_Check(py_key) ) {
 			int64_t k = (int64_t) PyInt_AsLong(py_key);
 			if(-1 == k) {
-				return as_error_update(err, AEROSPIKE_ERR_PARAM, "integer value for KEY exceeds sys.maxsize");
+				as_error_update(err, AEROSPIKE_ERR_PARAM, "integer value for KEY exceeds sys.maxsize");
+			} else {
+				returnResult = as_key_init_int64(key, ns, set, k);
 			}
-			as_key_init_int64(key, ns, set, k);
 		}
 		else if ( PyLong_Check(py_key) ) {
 			int64_t k = (int64_t) PyLong_AsLongLong(py_key);
 			if(-1 == k) {
-				return as_error_update(err, AEROSPIKE_ERR_PARAM, "integer value for KEY exceeds sys.maxsize");
+				as_error_update(err, AEROSPIKE_ERR_PARAM, "integer value for KEY exceeds sys.maxsize");
+			} else {
+				returnResult = as_key_init_int64(key, ns, set, k);
 			}
-			as_key_init_int64(key, ns, set, k);
 		}
 		else if ( PyByteArray_Check(py_key) ) {
 			uint32_t sz = (uint32_t) PyByteArray_Size(py_key);
 
 			if ( sz <= 0 ) {
-				return as_error_update(err, AEROSPIKE_ERR_PARAM, "Byte array size cannot be 0");
+				as_error_update(err, AEROSPIKE_ERR_PARAM, "Byte array size cannot be 0");
+			} else {
+				uint8_t * byte_array = (uint8_t *) PyByteArray_AsString(py_key);
+				returnResult = as_key_init_raw(key, ns, set, byte_array, sz);
 			}
-			uint8_t * byte_array = (uint8_t *) PyByteArray_AsString(py_key);
-			as_key_init_raw(key, ns, set, byte_array, sz);
 		}
 		else if ( PyBytes_Check(py_key) ) {
 			char * k = PyBytes_AsString(py_key);
-			as_key_init_strp(key, ns, set, strdup(k), true);
+			returnResult = as_key_init_strp(key, ns, set, strdup(k), true);
 		}
 		else {
-			return as_error_update(err, AEROSPIKE_ERR_PARAM, "key is invalid");
+			as_error_update(err, AEROSPIKE_ERR_PARAM, "key is invalid");
 		}
 	}
 	else if ( py_digest && py_digest != Py_None ) {
@@ -877,21 +882,26 @@ as_status pyobject_to_key(as_error * err, PyObject * py_keytuple, as_key * key)
 			uint32_t sz = (uint32_t) PyByteArray_Size(py_digest);
 
 			if ( sz != AS_DIGEST_VALUE_SIZE ) {
-				return as_error_update(err, AEROSPIKE_ERR_PARAM, "digest size is invalid. should be 20 bytes, but received %d", sz);
+				as_error_update(err, AEROSPIKE_ERR_PARAM, "digest size is invalid. should be 20 bytes, but received %d", sz);
+			} else {
+				uint8_t * digest = (uint8_t *) PyByteArray_AsString(py_digest);
+				returnResult = as_key_init_digest(key, ns, set, digest);
 			}
-
-			uint8_t * digest = (uint8_t *) PyByteArray_AsString(py_digest);
-			as_key_init_digest(key, ns, set, digest);
 		}
 		else {
-			return as_error_update(err, AEROSPIKE_ERR_PARAM, "digest is invalid. expected a bytearray");
+			as_error_update(err, AEROSPIKE_ERR_PARAM, "digest is invalid. expected a bytearray");
 		}
 	}
 	else {
-		return as_error_update(err, AEROSPIKE_ERR_PARAM, "either key or digest is required");
+		as_error_update(err, AEROSPIKE_ERR_PARAM, "either key or digest is required");
 	}
+
 	if (py_ustr) {
 		Py_DECREF(py_ustr);
+	}
+
+	if (returnResult == NULL) {
+		as_error_update(err, AEROSPIKE_ERR_PARAM, "key is invalid");
 	}
 
 	return err->code;
