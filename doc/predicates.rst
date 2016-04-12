@@ -51,7 +51,7 @@
         config = { 'hosts': [ ('127.0.0.1', 3000)]}
         client = aerospike.client(config).connect()
         query = client.query('test', 'demo')
-        query.where(p.equal('name', 'that guy'))
+        query.where(p.equals('name', 'that guy'))
         res = query.results()
         print(res)
         client.close()
