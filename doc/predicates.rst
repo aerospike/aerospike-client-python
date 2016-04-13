@@ -56,7 +56,7 @@
         print(res)
         client.close()
 
-.. py:function:: geo_within_geojson_region(bin, shape)
+.. py:function:: geo_within_geojson_region(bin, shape[, index_type])
 
     Predicate for finding any point in bin which is within the given shape.
     Requires a geo2dsphere index
@@ -65,6 +65,7 @@
 
     :param str bin: the bin name.
     :param str shape: the shape formatted as a GeoJSON string.
+    :param index_type: Optional. Possible ``aerospike.INDEX_TYPE_*`` values are detailed in :ref:`aerospike_misc_constants`.
     :return: :py:func:`tuple` to be used in :meth:`aerospike.Query.where`.
 
     .. note:: Requires server version >= 3.7.0
@@ -104,7 +105,7 @@
 
     .. versionadded:: 1.0.58
 
-.. py:function:: geo_within_radius(bin, long, lat, radius_meters)
+.. py:function:: geo_within_radius(bin, long, lat, radius_meters[, index_type])
 
     Predicate helper builds an AeroCircle GeoJSON shape, and returns a
     'within GeoJSON region' predicate.
@@ -116,6 +117,7 @@
     :param float long: the longitude of the center point of the AeroCircle.
     :param float lat: the latitude of the center point of the AeroCircle.
     :param float radius_meters: the radius length in meters of the AeroCircle.
+    :param index_type: Optional. Possible ``aerospike.INDEX_TYPE_*`` values are detailed in :ref:`aerospike_misc_constants`.
     :return: :py:func:`tuple` to be used in :meth:`aerospike.Query.where`.
 
     .. note:: Requires server version >= 3.7.0
@@ -144,7 +146,7 @@
 
     .. versionadded:: 1.0.58
 
-.. py:function:: geo_contains_geojson_point(bin, point)
+.. py:function:: geo_contains_geojson_point(bin, point[, index_type])
 
     Predicate for finding any regions in the bin which contain the given point.
     Requires a geo2dsphere index
@@ -153,6 +155,7 @@
 
     :param str bin: the bin name.
     :param str point: the point formatted as a GeoJSON string.
+    :param index_type: Optional. Possible ``aerospike.INDEX_TYPE_*`` values are detailed in :ref:`aerospike_misc_constants`.
     :return: :py:func:`tuple` to be used in :meth:`aerospike.Query.where`.
 
     .. note:: Requires server version >= 3.7.0
@@ -189,7 +192,7 @@
 
     .. versionadded:: 1.0.58
 
-.. py:function:: geo_contains_point(bin, long, lat)
+.. py:function:: geo_contains_point(bin, long, lat[, index_type])
 
     Predicate helper builds a GeoJSON point, and returns a
     'contains GeoJSON point' predicate.
@@ -200,6 +203,7 @@
     :param str bin: the bin name.
     :param float long: the longitude of the point.
     :param float lat: the latitude of the point.
+    :param index_type: Optional. Possible ``aerospike.INDEX_TYPE_*`` values are detailed in :ref:`aerospike_misc_constants`.
     :return: :py:func:`tuple` to be used in :meth:`aerospike.Query.where`.
 
     .. note:: Requires server version >= 3.7.0

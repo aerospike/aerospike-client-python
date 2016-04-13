@@ -190,12 +190,13 @@ a cluster-tending thread.
     .. method:: exists(key[, policy]) -> (key, meta)
 
         Check if a record with a given *key* exists in the cluster and return \
-        the record as a :py:func:`tuple` consisting of *key* and *meta*.
+        the record as a :py:func:`tuple` consisting of *key* and *meta*.  If \
+        the record  does not exist the *meta* data will be :py:obj:`None`.
 
         :param tuple key: a :ref:`aerospike_key_tuple` associated with the record.
         :param dict policy: optional :ref:`aerospike_read_policies`.
         :rtype: :py:func:`tuple` (key, meta)
-        :raises: :exc:`~aerospike.exception.RecordNotFound`.
+        :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
 
         .. code-block:: python
 
@@ -222,14 +223,7 @@ a cluster-tending thread.
             finally:
                 client.close()
 
-        .. warning::
-
-            The client has been changed to raise a :py:exc:`~aerospike.exception.RecordNotFound` \
-            exception when :meth:`~aerospike.Client.exists` does not find the \
-            record. Code that used to check for ``meta != None`` should be \
-            modified.
-
-        .. versionchanged:: 2.0.0
+        .. versionchanged:: 2.0.3
 
 
     .. method:: put(key, bins[, meta[, policy[, serializer]]])
@@ -1444,61 +1438,55 @@ a cluster-tending thread.
 
     .. method:: index_list_create(ns, set, bin, index_datatype, index_name[, policy])
 
-        Create an index named *index_name* for either numeric or string values \
+        Create an index named *index_name* for numeric, string or GeoJSON values \
         (as defined by *index_datatype*) on records of the specified *ns*, *set* \
         whose *bin* is a list.
 
         :param str ns: the namespace in the aerospike cluster.
         :param str set: the set name.
         :param str bin: the name of bin the secondary index is built on.
-        :param index_datatype: Possible values are ``aerospike.INDEX_STRING`` and ``aerospike.INDEX_NUMERIC``.
+        :param index_datatype: Possible values are ``aerospike.INDEX_STRING``, ``aerospike.INDEX_NUMERIC`` and ``aerospike.INDEX_GEO2DSPHERE``.
         :param str index_name: the name of the index.
         :param dict policy: optional :ref:`aerospike_info_policies`.
         :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
 
-        .. warning::
-
-            This functionality will become available with a future release of the Aerospike server.
+        .. note:: Requires server version >= 3.8.0
 
         .. versionadded:: 1.0.42
 
     .. method:: index_map_keys_create(ns, set, bin, index_datatype, index_name[, policy])
 
-        Create an index named *index_name* for either numeric or string values \
+        Create an index named *index_name* for numeric, string or GeoJSON values \
         (as defined by *index_datatype*) on records of the specified *ns*, *set* \
         whose *bin* is a map. The index will include the keys of the map.
 
         :param str ns: the namespace in the aerospike cluster.
         :param str set: the set name.
         :param str bin: the name of bin the secondary index is built on.
-        :param index_datatype: Possible values are ``aerospike.INDEX_STRING`` and ``aerospike.INDEX_NUMERIC``.
+        :param index_datatype: Possible values are ``aerospike.INDEX_STRING``, ``aerospike.INDEX_NUMERIC`` and ``aerospike.INDEX_GEO2DSPHERE``.
         :param str index_name: the name of the index.
         :param dict policy: optional :ref:`aerospike_info_policies`.
         :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
 
-        .. warning::
-
-            This functionality will become available with a future release of the Aerospike Interfaces with the batch index interface on server.
+        .. note:: Requires server version >= 3.8.0
 
         .. versionadded:: 1.0.42
 
     .. method:: index_map_values_create(ns, set, bin, index_datatype, index_name[, policy])
 
-        Create an index named *index_name* for either numeric or string values \
+        Create an index named *index_name* for numeric, string or GeoJSON values \
         (as defined by *index_datatype*) on records of the specified *ns*, *set* \
         whose *bin* is a map. The index will include the values of the map.
 
         :param str ns: the namespace in the aerospike cluster.
         :param str set: the set name.
         :param str bin: the name of bin the secondary index is built on.
-        :param index_datatype: Possible values are ``aerospike.INDEX_STRING`` and ``aerospike.INDEX_NUMERIC``.
+        :param index_datatype: Possible values are ``aerospike.INDEX_STRING``, ``aerospike.INDEX_NUMERIC`` and ``aerospike.INDEX_GEO2DSPHERE``.
         :param str index_name: the name of the index.
         :param dict policy: optional :ref:`aerospike_info_policies`.
         :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
 
-        .. warning::
-
-            This functionality will become available with a future release of the Aerospike server.
+        .. note:: Requires server version >= 3.8.0
 
         .. code-block:: python
 
