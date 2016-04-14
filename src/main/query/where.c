@@ -193,11 +193,7 @@ static int AerospikeQuery_Where_Add(AerospikeQuery * self, as_predicate_type pre
 				}
 
 				as_query_where_init(&self->query, 1);
-				if (index_type == 0) {
-					as_query_where(&self->query, bin, as_geo_within(val));
-				} else if (index_type == 1) {
-					as_query_where(&self->query, bin, as_geo_contains(val));
-				}
+				as_query_where(&self->query, bin, AS_PREDICATE_RANGE, index_type, in_datatype, val);
 
 				if (py_ubin) {
 					Py_DECREF(py_ubin);

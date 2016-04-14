@@ -104,6 +104,7 @@ AerospikeConstants aerospike_constants[] = {
 	{ SERIALIZER_NONE                       ,   "SERIALIZER_NONE" },
 	{ AS_INDEX_STRING                       ,   "INDEX_STRING" },
 	{ AS_INDEX_NUMERIC                      ,   "INDEX_NUMERIC" },
+	{ AS_INDEX_GEO2DSPHERE                  ,   "INDEX_GEO2DSPHERE" },
 	{ AS_INDEX_TYPE_LIST                    ,   "INDEX_TYPE_LIST" },
 	{ AS_INDEX_TYPE_MAPKEYS                 ,   "INDEX_TYPE_MAPKEYS" },
 	{ AS_INDEX_TYPE_MAPVALUES               ,   "INDEX_TYPE_MAPVALUES" },

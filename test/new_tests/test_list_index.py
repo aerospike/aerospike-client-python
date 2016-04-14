@@ -25,6 +25,8 @@ class TestListIndex(object):
                 'addr': 'name%s' % (str(i)),
                 'numeric_list': [1, 2, 3, 4],
                 'string_list': ["a", "b", "c", "d"],
+                'geojson_list': [aerospike.GeoJSON({"type": "Point", "coordinates": [-122.096449, 37.421868]}),
+                                 aerospike.GeoJSON({"type": "Point", "coordinates": [-122.053321, 37.434212]})],
                 'age': i,
                 'no': i
             }
@@ -222,6 +224,18 @@ cfasdcalskdcbacfq34915rwcfasdcascnabscbaskjdbcalsjkbcdasc');
 
         assert retobj == 0
         self.as_connection.index_remove('test', u'uni_age_index', policy)
+
+    def test_pos_create_list_geojson_index(self):
+        """
+            Invoke createindex() with correct arguments
+        """
+        policy = {}
+        retobj = self.as_connection.index_list_create(
+            'test', 'demo', 'geojson_list', aerospike.INDEX_GEO2DSPHERE,
+            'geo_index', policy)
+
+        assert retobj == 0
+        self.as_connection.index_remove('test', 'geo_index', policy)
 
     # Negative tests
     def test_neg_listindex_with_namespace_is_none(self):

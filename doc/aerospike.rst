@@ -763,6 +763,10 @@ Miscellaneous
 
     An index whose values are of the aerospike integer data type
 
+.. data:: INDEX_GEO2DSPHERE
+
+    An index whose values are of the aerospike GetJSON data type
+    
 .. seealso:: `Data Types <http://www.aerospike.com/docs/guide/data-types.html>`_.
 
 .. data:: INDEX_TYPE_LIST
