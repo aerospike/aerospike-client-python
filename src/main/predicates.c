@@ -141,12 +141,12 @@ static PyObject * AerospikePredicates_GeoWithin_GeoJSONRegion(PyObject * self, P
 		goto exit;
 	}
 
+	if (py_indexType == NULL) {
+		py_indexType = Py_BuildValue("i", AS_INDEX_TYPE_DEFAULT);
+	}
+
 	if (PyString_Check(py_shape) || PyUnicode_Check(py_shape)) {
-		if (py_indexType != NULL) {
-			return Py_BuildValue("iiOOOO", AS_PREDICATE_RANGE, AS_INDEX_GEO2DSPHERE, py_bin, py_shape, Py_None, py_indexType);
-		} else {
-			return Py_BuildValue("iiOO", AS_PREDICATE_RANGE, AS_INDEX_GEO2DSPHERE, py_bin, py_shape);
-		}
+		return Py_BuildValue("iiOOOO", AS_PREDICATE_RANGE, AS_INDEX_GEO2DSPHERE, py_bin, py_shape, Py_None, py_indexType);
 	}
 
 exit:
@@ -172,6 +172,10 @@ static PyObject * AerospikePredicates_GeoWithin_Radius(PyObject * self, PyObject
 	if (PyArg_ParseTuple(args, "OOOO|O:geo_within_radius",
 			&py_bin, &py_lat, &py_long, &py_radius, &py_indexType) == false) {
 		goto CLEANUP;
+	}
+
+	if (py_indexType == NULL) {
+		py_indexType = Py_BuildValue("i", AS_INDEX_TYPE_DEFAULT);
 	}
 
 	PyObject *py_circle = PyString_FromString("AeroCircle");
@@ -203,11 +207,7 @@ static PyObject * AerospikePredicates_GeoWithin_Radius(PyObject * self, PyObject
 		goto CLEANUP;
 	}
 	
-	if (py_indexType != NULL) {
-		return Py_BuildValue("iiOOOO", AS_PREDICATE_RANGE, AS_INDEX_GEO2DSPHERE, py_bin, py_shape, Py_None, py_indexType);
-	} else {
-		return Py_BuildValue("iiOO", AS_PREDICATE_RANGE, AS_INDEX_GEO2DSPHERE, py_bin, py_shape);
-	}
+	return Py_BuildValue("iiOOOO", AS_PREDICATE_RANGE, AS_INDEX_GEO2DSPHERE, py_bin, py_shape, Py_None, py_indexType );
 
 CLEANUP:
 	// If an error occurred, tell Python.
@@ -234,12 +234,12 @@ static PyObject * AerospikePredicates_GeoContains_GeoJSONPoint(PyObject * self, 
 		goto exit;
 	}
 
+	if (py_indexType == NULL) {
+		py_indexType = Py_BuildValue("i", AS_INDEX_TYPE_DEFAULT);
+	}
+
 	if (PyString_Check(py_point) || PyUnicode_Check(py_point)) {
-		if (py_indexType != NULL) {
-			return Py_BuildValue("iiOOO", AS_PREDICATE_RANGE, AS_INDEX_GEO2DSPHERE, py_bin, py_point, Py_None, py_indexType);
-		} else {
-			return Py_BuildValue("iiOO", AS_PREDICATE_RANGE, AS_INDEX_GEO2DSPHERE, py_bin, py_point);
-		}
+		return Py_BuildValue("iiOOO", AS_PREDICATE_RANGE, AS_INDEX_GEO2DSPHERE, py_bin, py_point, Py_None, py_indexType);
 	}
 
 exit:
@@ -266,6 +266,10 @@ static PyObject * AerospikePredicates_GeoContains_Point(PyObject * self, PyObjec
 		goto CLEANUP;
 	}
 
+	if (py_indexType == NULL) {
+		py_indexType = Py_BuildValue("i", AS_INDEX_TYPE_DEFAULT);
+	}
+
 	PyObject *py_point = PyString_FromString("Point");
 	PyDict_SetItemString(py_geo_object, "type", py_point);
 	Py_DECREF(py_point);
@@ -288,11 +292,8 @@ static PyObject * AerospikePredicates_GeoContains_Point(PyObject * self, PyObjec
 		goto CLEANUP;
 	}
 	
-	if (py_indexType != NULL) {
-		return Py_BuildValue("iiOOO", AS_PREDICATE_RANGE, AS_INDEX_GEO2DSPHERE, py_bin, py_shape, Py_None, py_indexType);
-	} else {
-		return Py_BuildValue("iiOO", AS_PREDICATE_RANGE, AS_INDEX_GEO2DSPHERE, py_bin, py_shape);
-	}
+	return Py_BuildValue("iiOOO", AS_PREDICATE_RANGE, AS_INDEX_GEO2DSPHERE, py_bin, py_shape, Py_None, py_indexType);
+
 
 CLEANUP:
 	// If an error occurred, tell Python.
