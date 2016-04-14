@@ -134,14 +134,19 @@ static PyObject * AerospikePredicates_GeoWithin_GeoJSONRegion(PyObject * self, P
 {
 	PyObject * py_bin = NULL;
 	PyObject * py_shape = NULL;
+	PyObject * py_indexType = NULL;
 
-	if (PyArg_ParseTuple(args, "OO:geo_within_geojson_region",
-			&py_bin, &py_shape) == false) {
+	if (PyArg_ParseTuple(args, "OO|O:geo_within_geojson_region",
+			&py_bin, &py_shape, &py_indexType) == false) {
 		goto exit;
 	}
 
+	if (py_indexType == NULL) {
+		py_indexType = Py_BuildValue("i", AS_INDEX_TYPE_DEFAULT);
+	}
+
 	if (PyString_Check(py_shape) || PyUnicode_Check(py_shape)) {
-		return Py_BuildValue("iiOO", AS_PREDICATE_RANGE, AS_INDEX_GEO2DSPHERE, py_bin, py_shape);
+		return Py_BuildValue("iiOOOO", AS_PREDICATE_RANGE, AS_INDEX_GEO2DSPHERE, py_bin, py_shape, Py_None, py_indexType);
 	}
 
 exit:
@@ -157,15 +162,20 @@ static PyObject * AerospikePredicates_GeoWithin_Radius(PyObject * self, PyObject
 	PyObject * py_radius = NULL;
 	PyObject * py_geo_object = NULL;
 	PyObject * py_shape = NULL;
+	PyObject * py_indexType = NULL;
 
 	as_error err;
 	as_error_init(&err);
 
 	py_geo_object = PyDict_New();
 
-	if (PyArg_ParseTuple(args, "OOOO:geo_within_radius", 
-			&py_bin, &py_lat, &py_long, &py_radius) == false) {
+	if (PyArg_ParseTuple(args, "OOOO|O:geo_within_radius",
+			&py_bin, &py_lat, &py_long, &py_radius, &py_indexType) == false) {
 		goto CLEANUP;
+	}
+
+	if (py_indexType == NULL) {
+		py_indexType = Py_BuildValue("i", AS_INDEX_TYPE_DEFAULT);
 	}
 
 	PyObject *py_circle = PyString_FromString("AeroCircle");
@@ -197,7 +207,7 @@ static PyObject * AerospikePredicates_GeoWithin_Radius(PyObject * self, PyObject
 		goto CLEANUP;
 	}
 	
-	return Py_BuildValue("iiOO", AS_PREDICATE_RANGE, AS_INDEX_GEO2DSPHERE, py_bin, py_shape);
+	return Py_BuildValue("iiOOOO", AS_PREDICATE_RANGE, AS_INDEX_GEO2DSPHERE, py_bin, py_shape, Py_None, py_indexType );
 
 CLEANUP:
 	// If an error occurred, tell Python.
@@ -218,13 +228,18 @@ static PyObject * AerospikePredicates_GeoContains_GeoJSONPoint(PyObject * self, 
 {
 	PyObject * py_bin = NULL;
 	PyObject * py_point = NULL;
+	PyObject * py_indexType = NULL;
 
-	if (PyArg_ParseTuple(args, "OO:geo_contains_geojson_point", &py_bin, &py_point) == false) {
+	if (PyArg_ParseTuple(args, "OO|O:geo_contains_geojson_point", &py_bin, &py_point, &py_indexType) == false) {
 		goto exit;
 	}
 
+	if (py_indexType == NULL) {
+		py_indexType = Py_BuildValue("i", AS_INDEX_TYPE_DEFAULT);
+	}
+
 	if (PyString_Check(py_point) || PyUnicode_Check(py_point)) {
-		return Py_BuildValue("iiOOi", AS_PREDICATE_RANGE, AS_INDEX_GEO2DSPHERE, py_bin, py_point, 1);
+		return Py_BuildValue("iiOOO", AS_PREDICATE_RANGE, AS_INDEX_GEO2DSPHERE, py_bin, py_point, Py_None, py_indexType);
 	}
 
 exit:
@@ -239,15 +254,20 @@ static PyObject * AerospikePredicates_GeoContains_Point(PyObject * self, PyObjec
 	PyObject * py_long = NULL;
 	PyObject * py_geo_object = NULL;
 	PyObject * py_shape = NULL;
+	PyObject * py_indexType = NULL;
 
 	as_error err;
 	as_error_init(&err);
 
 	py_geo_object = PyDict_New();
 
-	if (PyArg_ParseTuple(args, "OOO:geo_contains_point", 
-			&py_bin, &py_lat, &py_long) == false) {
+	if (PyArg_ParseTuple(args, "OOO|O:geo_contains_point",
+			&py_bin, &py_lat, &py_long, &py_indexType) == false) {
 		goto CLEANUP;
+	}
+
+	if (py_indexType == NULL) {
+		py_indexType = Py_BuildValue("i", AS_INDEX_TYPE_DEFAULT);
 	}
 
 	PyObject *py_point = PyString_FromString("Point");
@@ -272,7 +292,8 @@ static PyObject * AerospikePredicates_GeoContains_Point(PyObject * self, PyObjec
 		goto CLEANUP;
 	}
 	
-	return Py_BuildValue("iiOOi", AS_PREDICATE_RANGE, AS_INDEX_GEO2DSPHERE, py_bin, py_shape, 1);
+	return Py_BuildValue("iiOOO", AS_PREDICATE_RANGE, AS_INDEX_GEO2DSPHERE, py_bin, py_shape, Py_None, py_indexType);
+
 
 CLEANUP:
 	// If an error occurred, tell Python.
