@@ -402,17 +402,35 @@ static int AerospikeClient_Type_Init(AerospikeClient * self, PyObject * args, Py
 
 		config.use_shm = true;
 
+		// This does not match documentation (wrong name and location in dict),
+		//  but leave it for now for customers who may be using it
 		PyObject * py_shm_max_nodes = PyDict_GetItemString( py_shm, "shm_max_nodes" );
 		if(py_shm_max_nodes && PyInt_Check(py_shm_max_nodes) ) {
 			config.shm_max_nodes = PyInt_AsLong(py_shm_max_nodes);
 		}
+		py_shm_max_nodes = PyDict_GetItemString( py_shm, "max_nodes" );
+		if(py_shm_max_nodes && PyInt_Check(py_shm_max_nodes) ) {
+			config.shm_max_nodes = PyInt_AsLong(py_shm_max_nodes);
+		}
 
+		// This does not match documentation (wrong name and location in dict),
+		//  but leave it for now for customers who may be using it
 		PyObject * py_shm_max_namespaces = PyDict_GetItemString(py_shm, "shm_max_namespaces");
 		if(py_shm_max_namespaces && PyInt_Check(py_shm_max_namespaces) ) {
 			config.shm_max_namespaces = PyInt_AsLong(py_shm_max_namespaces);
 		}
+		py_shm_max_namespaces = PyDict_GetItemString(py_shm, "max_namespaces");
+		if(py_shm_max_namespaces && PyInt_Check(py_shm_max_namespaces) ) {
+			config.shm_max_namespaces = PyInt_AsLong(py_shm_max_namespaces);
+		}
 
+		// This does not match documentation (wrong name and location in dict),
+		//  but leave it for now for customers who may be using it
 		PyObject* py_shm_takeover_threshold_sec = PyDict_GetItemString(py_shm, "shm_takeover_threshold_sec");
+		if(py_shm_takeover_threshold_sec && PyInt_Check(py_shm_takeover_threshold_sec) ) {
+			config.shm_takeover_threshold_sec = PyInt_AsLong( py_shm_takeover_threshold_sec);
+		}
+		py_shm_takeover_threshold_sec = PyDict_GetItemString(py_shm, "takeover_threshold_sec");
 		if(py_shm_takeover_threshold_sec && PyInt_Check(py_shm_takeover_threshold_sec) ) {
 			config.shm_takeover_threshold_sec = PyInt_AsLong( py_shm_takeover_threshold_sec);
 		}
@@ -489,17 +507,22 @@ static int AerospikeClient_Type_Init(AerospikeClient * self, PyObject * args, Py
 			config.policies.commit_level = PyInt_AsLong(py_commit_level);
 		}
 
+		// This does not match documentation (should not be in policies),
+		//  but leave it for now for customers who may be using it
 		PyObject * py_max_threads = PyDict_GetItemString(py_policies, "max_threads");
 		if ( py_max_threads && (PyInt_Check(py_max_threads) || PyLong_Check(py_max_threads))) {
 			config.max_threads = PyInt_AsLong(py_max_threads);
 		}
 
+		// This does not match documentation (should not be in policies),
+		//  but leave it for now for customers who may be using it
 		PyObject * py_thread_pool_size = PyDict_GetItemString(py_policies, "thread_pool_size");
 		if ( py_thread_pool_size && (PyInt_Check(py_thread_pool_size) || PyLong_Check(py_thread_pool_size))) {
 			config.thread_pool_size = PyInt_AsLong(py_thread_pool_size);
 		}
 
-		//Setting for use_batch_direct
+		// This does not match documentation (wrong name and location in dict),
+		//  but leave it for now for customers who may be using it
 		PyObject * py_use_batch_direct = PyDict_GetItemString(py_policies, "use_batch_direct");
 		if ( py_use_batch_direct && PyBool_Check(py_use_batch_direct)) {
 			config.policies.batch.use_batch_direct = PyInt_AsLong(py_use_batch_direct);
@@ -508,6 +531,24 @@ static int AerospikeClient_Type_Init(AerospikeClient * self, PyObject * args, Py
 		/*
 		 * Generation policy is removed from constructor.
 		 */
+	}
+
+	// thread_pool_size
+	PyObject * py_thread_pool_size = PyDict_GetItemString(py_config, "thread_pool_size");
+	if (py_thread_pool_size && PyInt_Check(py_thread_pool_size)) {
+		config.thread_pool_size = PyInt_AsLong(py_thread_pool_size);
+	}
+
+	// max_threads
+	PyObject * py_max_threads = PyDict_GetItemString(py_config, "max_threads");
+	if ( py_max_threads && (PyInt_Check(py_max_threads) || PyLong_Check(py_max_threads))) {
+		config.max_threads = PyInt_AsLong(py_max_threads);
+	}
+
+	// batch_direct
+	PyObject * py_batch_direct = PyDict_GetItemString(py_config, "batch_direct");
+	if ( py_batch_direct && PyBool_Check(py_batch_direct)) {
+		config.policies.batch.use_batch_direct = PyInt_AsLong(py_batch_direct);
 	}
 
 	//conn_timeout_ms
