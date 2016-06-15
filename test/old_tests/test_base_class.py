@@ -1,8 +1,34 @@
 
+import socket
+import time
+
 try:
     import configparser
 except ImportError:
     import ConfigParser as configparser
+
+
+def wait_for_port(address, port, interval=0.1, timeout=60):
+    """Wait for a TCP / IP port to accept a connection.
+
+    : param port: The port to check.
+    : param interval: The interval(seconds) between checks.
+    : param timeout: The total time(seconds) to check before quiting.
+    """
+    start = time.time()
+    while True:
+        current = time.time()
+        if current - start >= timeout:
+            break
+        try:
+            s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            s.connect((address, port))
+            s.close()
+            return True
+        except Exception as e:
+            pass
+        time.sleep(interval)
+    return False
 
 
 class TestBaseClass(object):
@@ -29,6 +55,10 @@ class TestBaseClass(object):
         else:
             TestBaseClass.hostlist = TestBaseClass.parse_hosts(
                 config.get('community-edition', 'hosts'))
+
+        for (a, p) in TestBaseClass.hostlist:
+            wait_for_port(a, p)
+
         return (TestBaseClass.hostlist, TestBaseClass.user,
                 TestBaseClass.password)
 
