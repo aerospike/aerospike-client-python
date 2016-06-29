@@ -64,12 +64,12 @@ PyObject * AerospikeClient_UDF_Put(AerospikeClient * self, PyObject *args, PyObj
 	static char * kwlist[] = {"filename", "udf_type", "policy", NULL};
 
 	// Python Function Argument Parsing
-	if ( PyArg_ParseTupleAndKeywords(args, kwds, "O|lO:udf_put", kwlist,
-				&py_filename, &language, &py_policy) == false ) {
+	if (PyArg_ParseTupleAndKeywords(args, kwds, "O|lO:udf_put", kwlist,
+				&py_filename, &language, &py_policy) == false) {
 		return NULL;
 	}
 
-	if(language != AS_UDF_TYPE_LUA)
+	if (language != AS_UDF_TYPE_LUA)
 	{
 		as_error_update(&err, AEROSPIKE_ERR_CLIENT, "Invalid UDF language");
 		goto CLEANUP;
@@ -101,7 +101,7 @@ PyObject * AerospikeClient_UDF_Put(AerospikeClient * self, PyObject *args, PyObj
 	// Convert python object to policy_info
 	pyobject_to_policy_info( &err, py_policy, &info_policy, &info_policy_p,
 			&self->as->config.policies.info);
-	if ( err.code != AEROSPIKE_OK ) {
+	if (err.code != AEROSPIKE_OK) {
 		goto CLEANUP;
 	}
 	as_udf_type udf_type = (as_udf_type)PyInt_AsLong(py_udf_type);
@@ -116,7 +116,7 @@ PyObject * AerospikeClient_UDF_Put(AerospikeClient * self, PyObject *args, PyObj
 	memcpy( copy_filepath,
 		self->as->config.lua.user_path,
 		user_path_len);
-	if ( self->as->config.lua.user_path[user_path_len-1] != '/' ) {
+	if (self->as->config.lua.user_path[user_path_len-1] != '/') {
 		memcpy( copy_filepath + user_path_len, "/", 1);
 		user_path_len = user_path_len + 1;
 	}
@@ -130,7 +130,7 @@ PyObject * AerospikeClient_UDF_Put(AerospikeClient * self, PyObject *args, PyObj
 	}
 
 
-	if ( !file_p ) {
+	if (!file_p) {
 		as_error_update(&err, AEROSPIKE_ERR_LUA_FILE_NOT_FOUND, "cannot open script file");
 		goto CLEANUP;
 	}
@@ -138,14 +138,14 @@ PyObject * AerospikeClient_UDF_Put(AerospikeClient * self, PyObject *args, PyObj
 	fseek(file_p, 0, SEEK_END);
 	int fileSize = ftell(file_p);
 	fseek(file_p, 0, SEEK_SET);
-	if ( fileSize <= 0 ) {
+	if (fileSize <= 0) {
 		as_error_update(&err, AEROSPIKE_ERR_LUA_FILE_NOT_FOUND, "Script file is empty");
 		fclose(file_p);
 		goto CLEANUP;
 	}
 
 	bytes = (uint8_t *) malloc(SCRIPT_LEN_MAX);
-	if ( bytes == NULL ) {
+	if (!bytes) {
 		as_error_update(&err, errno, "malloc failed");
 		goto CLEANUP;
 	}
@@ -198,7 +198,7 @@ PyObject * AerospikeClient_UDF_Put(AerospikeClient * self, PyObject *args, PyObj
 	Py_BEGIN_ALLOW_THREADS
 	aerospike_udf_put(self->as, &err, info_policy_p, filename, udf_type, &content);
 	Py_END_ALLOW_THREADS
-	if( err.code != AEROSPIKE_OK ) {
+	if (err.code != AEROSPIKE_OK) {
 		as_error_update(&err, err.code, NULL);
 		goto CLEANUP;
 	} else {
@@ -206,7 +206,7 @@ PyObject * AerospikeClient_UDF_Put(AerospikeClient * self, PyObject *args, PyObj
 	}
 
 CLEANUP:
-	if(bytes) {
+	if (bytes) {
 		free(bytes);
 	}
 
@@ -214,14 +214,14 @@ CLEANUP:
 		Py_DECREF(py_ustr);
 	}
 
-	if ( err.code != AEROSPIKE_OK ) {
+	if (err.code != AEROSPIKE_OK) {
 		PyObject * py_err = NULL;
 		error_to_pyobject(&err, &py_err);
 		PyObject *exception_type = raise_exception(&err);
-		if(PyObject_HasAttrString(exception_type, "module")) {
+		if (PyObject_HasAttrString(exception_type, "module")) {
 			PyObject_SetAttrString(exception_type, "module", Py_None);
 		} 
-		if(PyObject_HasAttrString(exception_type, "func")) {
+		if (PyObject_HasAttrString(exception_type, "func")) {
 			PyObject_SetAttrString(exception_type, "func", Py_None);
 		}
 		PyErr_SetObject(exception_type, py_err);
@@ -263,8 +263,8 @@ PyObject * AerospikeClient_UDF_Remove(AerospikeClient * self, PyObject *args, Py
 	static char * kwlist[] = {"filename", "policy", NULL};
 
 	// Python Function Argument Parsing
-	if ( PyArg_ParseTupleAndKeywords(args, kwds, "O|O:udf_remove", kwlist,
-				&py_filename, &py_policy) == false ) {
+	if (PyArg_ParseTupleAndKeywords(args, kwds, "O|O:udf_remove", kwlist,
+				&py_filename, &py_policy) == false) {
 		return NULL;
 	}
 
@@ -278,7 +278,7 @@ PyObject * AerospikeClient_UDF_Remove(AerospikeClient * self, PyObject *args, Py
 		goto CLEANUP;
 	}
 
-	if ( err.code != AEROSPIKE_OK ) {
+	if (err.code != AEROSPIKE_OK) {
 		goto CLEANUP;
 	}
 
@@ -302,7 +302,7 @@ PyObject * AerospikeClient_UDF_Remove(AerospikeClient * self, PyObject *args, Py
 	Py_BEGIN_ALLOW_THREADS
 	aerospike_udf_remove(self->as, &err, info_policy_p, filename);
 	Py_END_ALLOW_THREADS
-	if ( err.code != AEROSPIKE_OK ) {
+	if (err.code != AEROSPIKE_OK) {
 		as_error_update(&err, err.code, NULL);
 		goto CLEANUP;
 	}
@@ -312,14 +312,14 @@ CLEANUP:
 	if (py_ustr) {
 		Py_DECREF(py_ustr);
 	}
-	if ( err.code != AEROSPIKE_OK ) {
+	if (err.code != AEROSPIKE_OK) {
 		PyObject * py_err = NULL;
 		error_to_pyobject(&err, &py_err);
 		PyObject *exception_type = raise_exception(&err);
-		if(PyObject_HasAttrString(exception_type, "module")) {
+		if (PyObject_HasAttrString(exception_type, "module")) {
 			PyObject_SetAttrString(exception_type, "module", py_filename);
 		} 
-		if(PyObject_HasAttrString(exception_type, "func")) {
+		if (PyObject_HasAttrString(exception_type, "func")) {
 			PyObject_SetAttrString(exception_type, "func", Py_None);
 		}
 		PyErr_SetObject(exception_type, py_err);
@@ -358,7 +358,7 @@ PyObject * AerospikeClient_UDF_List(AerospikeClient * self, PyObject *args, PyOb
 	static char * kwlist[] = {"policy", NULL};
 
 	// Python Function Argument Parsing
-	if ( PyArg_ParseTupleAndKeywords(args, kwds, "|O:udf_list", kwlist, &py_policy) == false ) {
+	if (PyArg_ParseTupleAndKeywords(args, kwds, "|O:udf_list", kwlist, &py_policy) == false) {
 		return NULL;
 	}
 
@@ -375,7 +375,7 @@ PyObject * AerospikeClient_UDF_List(AerospikeClient * self, PyObject *args, PyOb
 	// Convert python object to policy_info
 	pyobject_to_policy_info( &err, py_policy, &info_policy, &info_policy_p,
 			&self->as->config.policies.info);
-	if ( err.code != AEROSPIKE_OK ) {
+	if (err.code != AEROSPIKE_OK) {
 		goto CLEANUP;
 	}
 
@@ -387,7 +387,7 @@ PyObject * AerospikeClient_UDF_List(AerospikeClient * self, PyObject *args, PyOb
 	Py_BEGIN_ALLOW_THREADS
 	aerospike_udf_list(self->as, &err, info_policy_p, &files);
 	Py_END_ALLOW_THREADS
-	if ( err.code != AEROSPIKE_OK ) {
+	if (err.code != AEROSPIKE_OK) {
 		as_error_update(&err, err.code, NULL);
 		goto CLEANUP;
 	}
@@ -396,7 +396,7 @@ PyObject * AerospikeClient_UDF_List(AerospikeClient * self, PyObject *args, PyOb
 	PyObject * py_files;
 	as_udf_files_to_pyobject(&err, &files, &py_files);
 
-	if ( err.code != AEROSPIKE_OK ) {
+	if (err.code != AEROSPIKE_OK) {
 		as_error_update(&err, err.code, NULL);
 		goto CLEANUP;
 	}
@@ -407,14 +407,14 @@ CLEANUP:
 		as_udf_files_destroy(&files);
 	}
 
-	if ( err.code != AEROSPIKE_OK ) {
+	if (err.code != AEROSPIKE_OK) {
 		PyObject * py_err = NULL;
 		error_to_pyobject(&err, &py_err);
 		PyObject *exception_type = raise_exception(&err);
-		if(PyObject_HasAttrString(exception_type, "module")) {
+		if (PyObject_HasAttrString(exception_type, "module")) {
 			PyObject_SetAttrString(exception_type, "module", Py_None);
 		} 
-		if(PyObject_HasAttrString(exception_type, "func")) {
+		if (PyObject_HasAttrString(exception_type, "func")) {
 			PyObject_SetAttrString(exception_type, "func", Py_None);
 		}
 		PyErr_SetObject(exception_type, py_err);
@@ -455,8 +455,8 @@ PyObject * AerospikeClient_UDF_Get_UDF(AerospikeClient * self, PyObject *args, P
 	static char * kwlist[] = {"module", "language", "policy", NULL};
 
 	// Python Function Argument Parsing
-	if ( PyArg_ParseTupleAndKeywords(args, kwds, "O|lO:udf_get", kwlist,
-				&py_module ,&language, &py_policy) == false ) {
+	if (PyArg_ParseTupleAndKeywords(args, kwds, "O|lO:udf_get", kwlist,
+				&py_module ,&language, &py_policy) == false) {
 		return NULL;
 	}
 
@@ -470,17 +470,17 @@ PyObject * AerospikeClient_UDF_Get_UDF(AerospikeClient * self, PyObject *args, P
 		goto CLEANUP;
 	}
 
-	if(language != AS_UDF_TYPE_LUA)
+	if (language != AS_UDF_TYPE_LUA)
 	{
 		as_error_update(&err, AEROSPIKE_ERR_CLIENT, "Invalid language");
 		goto CLEANUP;
 	}
 	char* strModule = NULL;
-	if ( PyUnicode_Check(py_module) ) {
+	if (PyUnicode_Check(py_module)) {
 		py_ustr = PyUnicode_AsUTF8String(py_module);
 		strModule = PyBytes_AsString(py_ustr);
 	}
-	else if ( PyString_Check(py_module)){
+	else if (PyString_Check(py_module)) {
 		strModule = PyString_AsString(py_module);
 	}
 	else
@@ -494,7 +494,7 @@ PyObject * AerospikeClient_UDF_Get_UDF(AerospikeClient * self, PyObject *args, P
 
 	pyobject_to_policy_info( &err, py_policy, &info_policy, &info_policy_p,
 			&self->as->config.policies.info);
-	if ( err.code != AEROSPIKE_OK ) {
+	if (err.code != AEROSPIKE_OK) {
 		goto CLEANUP;
 	}
 
@@ -506,7 +506,7 @@ PyObject * AerospikeClient_UDF_Get_UDF(AerospikeClient * self, PyObject *args, P
 	Py_BEGIN_ALLOW_THREADS
 	aerospike_udf_get(self->as, &err, info_policy_p, strModule, (language - AS_UDF_TYPE_LUA) , &file);
 	Py_END_ALLOW_THREADS
-	if ( err.code != AEROSPIKE_OK ) {
+	if (err.code != AEROSPIKE_OK) {
 		as_error_update(&err, err.code, NULL);
 		goto CLEANUP;
 	}
@@ -514,21 +514,20 @@ PyObject * AerospikeClient_UDF_Get_UDF(AerospikeClient * self, PyObject *args, P
 
 CLEANUP:
 
-	if (py_ustr){
+	if (py_ustr) {
 		Py_DECREF(py_ustr);
 	}
-	if(init_udf_file)
-	{
+	if (init_udf_file) {
 		as_udf_file_destroy(&file);
 	}
-	if ( err.code != AEROSPIKE_OK ) {
+	if (err.code != AEROSPIKE_OK) {
 		PyObject * py_err = NULL;
 		error_to_pyobject(&err, &py_err);
 		PyObject *exception_type = raise_exception(&err);
-		if(PyObject_HasAttrString(exception_type, "module")) {
+		if (PyObject_HasAttrString(exception_type, "module")) {
 			PyObject_SetAttrString(exception_type, "module", py_module);
 		} 
-		if(PyObject_HasAttrString(exception_type, "func")) {
+		if (PyObject_HasAttrString(exception_type, "func")) {
 			PyObject_SetAttrString(exception_type, "func", Py_None);
 		}
 		PyErr_SetObject(exception_type, py_err);

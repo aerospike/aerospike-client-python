@@ -99,10 +99,6 @@ static PyObject * AerospikeLList_Type_New(PyTypeObject * type, PyObject * args, 
 
 	self = (AerospikeLList *) type->tp_alloc(type, 0);
 
-	if ( self == NULL ) {
-		return NULL;
-	}
-
 	return (PyObject *) self;
 }
 
@@ -114,8 +110,8 @@ static int AerospikeLList_Type_Init(AerospikeLList * self, PyObject * args, PyOb
 
 	static char * kwlist[] = {"key", "bin", "module", NULL};
 
-	if ( PyArg_ParseTupleAndKeywords(args, kwds, "Os|s:llist", kwlist, &py_key,
-				&bin_name, &module) == false ) {
+	if (PyArg_ParseTupleAndKeywords(args, kwds, "Os|s:llist", kwlist, &py_key,
+				&bin_name, &module) == false) {
 		return -1;
 	}
 
@@ -229,8 +225,8 @@ AerospikeLList * AerospikeLList_New(AerospikeClient * client, PyObject * args, P
 		PyObject * py_key = NULL;
 		PyObject *exception_type = raise_exception(&err);
 		error_to_pyobject(&err, &py_err);
-		if(PyObject_HasAttrString(exception_type, "key")) {
-			if(&self->key) {
+		if (PyObject_HasAttrString(exception_type, "key")) {
+			if (&self->key) {
 				key_to_pyobject(&err, &self->key, &py_key);
 				PyObject_SetAttrString(exception_type, "key", py_key);
 				Py_DECREF(py_key);
@@ -238,8 +234,8 @@ AerospikeLList * AerospikeLList_New(AerospikeClient * client, PyObject * args, P
 				PyObject_SetAttrString(exception_type, "key", Py_None);
 			}
 		} 
-		if(PyObject_HasAttrString(exception_type, "bin")) {
-			if(&self->bin_name) {
+		if (PyObject_HasAttrString(exception_type, "bin")) {
+			if (&self->bin_name) {
 				PyObject *py_bins = PyString_FromString((char *)&self->bin_name);
 				PyObject_SetAttrString(exception_type, "bin", py_bins);
 				Py_DECREF(py_bins);

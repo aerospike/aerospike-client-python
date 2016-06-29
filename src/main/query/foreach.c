@@ -41,7 +41,7 @@ static bool each_result(const as_val * val, void * udata)
 {
 	bool rval = true;
 
-	if ( !val ) {
+	if (!val) {
 		return false;
 	}
 
@@ -72,14 +72,14 @@ static bool each_result(const as_val * val, void * udata)
 	// Release Python Function Arguments
 	Py_DECREF(py_arglist);
 	// handle return value
-	if ( py_return == NULL ) {
+	if (!py_return) {
 		// an exception was raised, handle it (someday)
 		// for now, we bail from the loop
 		as_error_update(err, AEROSPIKE_ERR_CLIENT, "Callback function contains an error");
 		rval = true;
 	}
-	else if (  PyBool_Check(py_return) ) {
-		if ( Py_False == py_return ) {
+	else if (PyBool_Check(py_return)) {
+		if (Py_False == py_return) {
 			rval = false;
 		}
 		else {
@@ -108,7 +108,7 @@ PyObject * AerospikeQuery_Foreach(AerospikeQuery * self, PyObject * args, PyObje
 	static char * kwlist[] = {"callback", "policy", NULL};
 
 	// Python Function Argument Parsing
-	if ( PyArg_ParseTupleAndKeywords(args, kwds, "O|O:foreach", kwlist, &py_callback, &py_policy) == false ) {
+	if (PyArg_ParseTupleAndKeywords(args, kwds, "O|O:foreach", kwlist, &py_callback, &py_policy) == false) {
 		as_query_destroy(&self->query);
 		return NULL;
 	}
@@ -140,7 +140,7 @@ PyObject * AerospikeQuery_Foreach(AerospikeQuery * self, PyObject * args, PyObje
 	// Convert python policy object to as_policy_exists
 	pyobject_to_policy_query(&err, py_policy, &query_policy, &query_policy_p,
 			&self->client->as->config.policies.query);
-	if ( err.code != AEROSPIKE_OK ) {
+	if (err.code != AEROSPIKE_OK) {
 		goto CLEANUP;
 	}
 
@@ -158,23 +158,23 @@ PyObject * AerospikeQuery_Foreach(AerospikeQuery * self, PyObject * args, PyObje
 	}
 
 CLEANUP:
-	if ( self->query.apply.arglist ){
+	if (self->query.apply.arglist) {
 		as_arraylist_destroy( (as_arraylist *) self->query.apply.arglist );
 	}
 	self->query.apply.arglist = NULL;
 
-	if ( err.code != AEROSPIKE_OK || data.error.code != AEROSPIKE_OK ) {
+	if (err.code != AEROSPIKE_OK || data.error.code != AEROSPIKE_OK) {
 		PyObject * py_err = NULL;
 		PyObject *exception_type = NULL;
-		if ( err.code != AEROSPIKE_OK ){
+		if (err.code != AEROSPIKE_OK) {
 			error_to_pyobject(&err, &py_err);
 			exception_type = raise_exception(&err);
 		}
-		if ( data.error.code != AEROSPIKE_OK ){
+		if (data.error.code != AEROSPIKE_OK) {
 			error_to_pyobject(&data.error, &py_err);
 			exception_type = raise_exception(&data.error);
 		}
-		if(PyObject_HasAttrString(exception_type, "name")) {
+		if (PyObject_HasAttrString(exception_type, "name")) {
 			PyObject_SetAttrString(exception_type, "name", Py_None);
 		}
 		PyErr_SetObject(exception_type, py_err);

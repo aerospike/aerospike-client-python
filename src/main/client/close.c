@@ -77,7 +77,7 @@ PyObject * AerospikeClient_Close(AerospikeClient * self, PyObject * args, PyObje
 	Py_INCREF(Py_None);
 
 CLEANUP:
-	if ( err.code != AEROSPIKE_OK ) {
+	if (err.code != AEROSPIKE_OK) {
 		PyObject * py_err = NULL;
 		error_to_pyobject(&err, &py_err);
 		PyObject *exception_type = raise_exception(&err);
@@ -132,23 +132,23 @@ char* return_search_string(aerospike *as)
 
 void close_aerospike_object(aerospike *as, as_error *err, char *alias_to_search, PyObject *py_persistent_item)
 {
-		if (((AerospikeGlobalHosts*)py_persistent_item)->ref_cnt == 1) {
-			PyDict_DelItemString(py_global_hosts, alias_to_search);
-			AerospikeGlobalHosts_Del(py_persistent_item);
-			aerospike_close(as, err);
+	if (((AerospikeGlobalHosts*)py_persistent_item)->ref_cnt == 1) {
+		PyDict_DelItemString(py_global_hosts, alias_to_search);
+		AerospikeGlobalHosts_Del(py_persistent_item);
+		aerospike_close(as, err);
 
-			/*
-			* Need to free memory allocated to host address string
-			* in AerospikeClient_Type_Init.
-			*/
-			for( int i = 0; i < (int)as->config.hosts_size; i++) {
-				free((void *) as->config.hosts[i].addr);
-			}
-
-			Py_BEGIN_ALLOW_THREADS
-			aerospike_destroy(as);
-			Py_END_ALLOW_THREADS
-		} else {
-			((AerospikeGlobalHosts*)py_persistent_item)->ref_cnt--;
+		/*
+		* Need to free memory allocated to host address string
+		* in AerospikeClient_Type_Init.
+		*/
+		for (int i = 0; i < (int)as->config.hosts_size; i++) {
+			free((void *) as->config.hosts[i].addr);
 		}
+
+		Py_BEGIN_ALLOW_THREADS
+		aerospike_destroy(as);
+		Py_END_ALLOW_THREADS
+	} else {
+		((AerospikeGlobalHosts*)py_persistent_item)->ref_cnt--;
+	}
 }

@@ -159,7 +159,7 @@ static int AerospikeQuery_Where_Add(AerospikeQuery * self, as_predicate_type pre
 					Py_DECREF(py_ubin);
 					py_ubin = NULL;
 				}
-			} else if ( in_datatype == AS_INDEX_STRING) {
+			} else if (in_datatype == AS_INDEX_STRING) {
 				// NOT IMPLEMENTED
 			} else if (in_datatype == AS_INDEX_GEO2DSPHERE) {
 
@@ -368,7 +368,7 @@ AerospikeQuery * AerospikeQuery_Where(AerospikeQuery * self, PyObject * args)
 				PyErr_SetObject(PyExc_Exception, py_err);
 				rc = 1;
 			}
-		} else if ( strcmp(op, "range") == 0 ) {
+		} else if (strcmp(op, "range") == 0) {
 			int index_type = 0;
 			if (PyInt_Check(py_arg3)) {
 				index_type = PyInt_AsLong(py_arg3);

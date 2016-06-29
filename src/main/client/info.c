@@ -78,13 +78,13 @@ static bool AerospikeClient_Info_each(as_error * err, const as_node * node, cons
 	// Need to make sure we have the GIL since we're back in python land now
 	PyGILState_STATE gil_state = PyGILState_Ensure();
 
-	if ( err && err->code != AEROSPIKE_OK ) {
+	if (err && err->code != AEROSPIKE_OK) {
 		as_error_update(err, err->code, NULL);
 		goto CLEANUP;
 	}
-	else if ( res != NULL ) {
+	else if (res) {
 		char * out = strchr(res,'\t');
-		if ( out != NULL ) {
+		if (out) {
 			out++;
 			py_out = PyString_FromString(out);
 		}
@@ -93,12 +93,12 @@ static bool AerospikeClient_Info_each(as_error * err, const as_node * node, cons
 		}
 	}
 
-	if ( py_err == NULL ) {
+	if (!py_err) {
 		Py_INCREF(Py_None);
 		py_err = Py_None;
 	}
 
-	if ( py_out == NULL ) {
+	if (!py_out) {
 		Py_INCREF(Py_None);
 		py_out = Py_None;
 	}
@@ -107,22 +107,22 @@ static bool AerospikeClient_Info_each(as_error * err, const as_node * node, cons
 	PyTuple_SetItem(py_res, 0, py_err);
 	PyTuple_SetItem(py_res, 1, py_out);
 
-	if(udata_ptr->host_lookup_p) {
+	if (udata_ptr->host_lookup_p) {
 		PyObject * py_hosts = (PyObject *)udata_ptr->host_lookup_p;
-			if ( py_hosts && PyList_Check(py_hosts) ) {
+			if (py_hosts && PyList_Check(py_hosts)) {
 				addr = as_node_get_address((as_node *)node);
 				int size = (int) PyList_Size(py_hosts);
-				for ( int i = 0; i < size && i < AS_CONFIG_HOSTS_SIZE; i++ ) {
+				for (int i = 0; i < size && i < AS_CONFIG_HOSTS_SIZE; i++) {
 					char * host_addr = NULL;
 					int port = -1;
 					PyObject * py_host = PyList_GetItem(py_hosts, i);
-					if ( PyTuple_Check(py_host) && PyTuple_Size(py_host) == 2 ) {
+					if (PyTuple_Check(py_host) && PyTuple_Size(py_host) == 2) {
 						PyObject * py_addr = PyTuple_GetItem(py_host,0);
 						PyObject * py_port = PyTuple_GetItem(py_host,1);
 						if (PyUnicode_Check(py_addr)) {
 							py_ustr = PyUnicode_AsUTF8String(py_addr);
 							host_addr = PyBytes_AsString(py_ustr);
-						} else if ( PyString_Check(py_addr) ) {
+						} else if (PyString_Check(py_addr)) {
 							host_addr = PyString_AsString(py_addr);
 						} else {
 							as_error_update(&udata_ptr->error, AEROSPIKE_ERR_PARAM, "Host address is of type incorrect");
@@ -132,17 +132,17 @@ static bool AerospikeClient_Info_each(as_error * err, const as_node * node, cons
 							PyGILState_Release(gil_state);
 							return false;
 						}
-						if ( PyInt_Check(py_port) ) {
+						if (PyInt_Check(py_port)) {
 							port = (uint16_t) PyInt_AsLong(py_port);
 						}
-						else if ( PyLong_Check(py_port) ) {
+						else if (PyLong_Check(py_port)) {
 							port = (uint16_t) PyLong_AsLong(py_port);
 						} else {
 							break;
 						}
 						char ip_port[IP_PORT_MAX_LEN];
 						inet_ntop(addr->sin_family, &(addr->sin_addr), ip_port, INET_ADDRSTRLEN);
-						if( (!strcmp(host_addr,ip_port)) && (port
+						if ((!strcmp(host_addr,ip_port)) && (port
 												== ntohs(addr->sin_port))) {
 							PyObject * py_nodes = (PyObject *) udata_ptr->udata_p;
 							PyDict_SetItemString(py_nodes, node->name, py_res);
@@ -154,7 +154,7 @@ static bool AerospikeClient_Info_each(as_error * err, const as_node * node, cons
 						py_ustr = NULL;
 					}
 				}
-			} else if ( !PyList_Check( py_hosts )){
+			} else if (!PyList_Check(py_hosts)) {
 				as_error_update(&udata_ptr->error, AEROSPIKE_ERR_PARAM, "Hosts should be specified in a list.");
 				goto CLEANUP;
 			}
@@ -170,7 +170,7 @@ CLEANUP:
 	if (py_ustr) {
 		Py_DECREF(py_ustr);
 	}
-	if ( udata_ptr->error.code != AEROSPIKE_OK ) {
+	if (udata_ptr->error.code != AEROSPIKE_OK) {
 		PyObject * py_err = NULL;
 		error_to_pyobject( &udata_ptr->error, &py_err);
 		PyObject *exception_type = raise_exception(&udata_ptr->error);
@@ -178,7 +178,7 @@ CLEANUP:
 		Py_DECREF(py_err);
 		return NULL;
 	}
-	if ( err->code != AEROSPIKE_OK ) {
+	if (err->code != AEROSPIKE_OK) {
 		PyObject * py_err = NULL;
 		error_to_pyobject(err, &py_err);
 		PyObject *exception_type = raise_exception(err);
@@ -213,7 +213,7 @@ PyObject * AerospikeClient_Info(AerospikeClient * self, PyObject * args, PyObjec
 
 	static char * kwlist[] = {"command", "hosts", "policy", NULL};
 
-	if ( PyArg_ParseTupleAndKeywords(args, kwds, "O|OO:info", kwlist, &py_req, &py_hosts, &py_policy) == false ) {
+	if (PyArg_ParseTupleAndKeywords(args, kwds, "O|OO:info", kwlist, &py_req, &py_hosts, &py_policy) == false) {
 		return NULL;
 	}
 
@@ -239,14 +239,14 @@ PyObject * AerospikeClient_Info(AerospikeClient * self, PyObject * args, PyObjec
 	// Convert python policy object to as_policy_info
 	pyobject_to_policy_info(&err, py_policy, &info_policy, &info_policy_p,
 					&self->as->config.policies.info);
-	if ( err.code != AEROSPIKE_OK ) {
+	if (err.code != AEROSPIKE_OK) {
 		goto CLEANUP;
 	}
 	char * req = NULL;
-	if ( PyUnicode_Check(py_req)) {
+	if (PyUnicode_Check(py_req)) {
 		py_ustr = PyUnicode_AsUTF8String(py_req);
 		req = strdup(PyBytes_AsString(py_ustr));
-	} else if( PyString_Check(py_req) ) {
+	} else if (PyString_Check(py_req)) {
 		req = PyString_AsString(py_req);
 	} else {
 		as_error_update(&err, AEROSPIKE_ERR_PARAM, "Request must be a string");
@@ -267,7 +267,7 @@ CLEANUP:
 	if (py_ustr) {
 		Py_DECREF(py_ustr);
 	}
-	if ( info_callback_udata.error.code != AEROSPIKE_OK ) {
+	if (info_callback_udata.error.code != AEROSPIKE_OK) {
 		PyObject * py_err = NULL;
 		error_to_pyobject(&info_callback_udata.error, &py_err);
 		PyObject *exception_type = raise_exception(&info_callback_udata.error);
@@ -278,7 +278,7 @@ CLEANUP:
 		}
 		return NULL;
 	}
-	if ( err.code != AEROSPIKE_OK ) {
+	if (err.code != AEROSPIKE_OK) {
 		PyObject * py_err = NULL;
 		error_to_pyobject(&err, &py_err);
 		PyObject *exception_type = raise_exception(&err);
@@ -320,7 +320,7 @@ PyObject * AerospikeClient_HasGeo(AerospikeClient * self, PyObject * args, PyObj
 
 CLEANUP:
 
-	if ( err.code != AEROSPIKE_OK ) {
+	if (err.code != AEROSPIKE_OK) {
 		PyObject * py_err = NULL;
 		error_to_pyobject(&err, &py_err);
 		PyObject *exception_type = raise_exception(&err);

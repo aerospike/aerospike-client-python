@@ -75,12 +75,12 @@ PyObject * Aerospike_Set_Log_Level(PyObject *parent, PyObject *args, PyObject * 
 	static char * kwlist[] = {"loglevel", NULL};
 
 	// Python Function Argument Parsing
-	if ( PyArg_ParseTupleAndKeywords(args, kwds, "O|:setLogLevel", kwlist, &py_log_level) == false ) {
+	if (PyArg_ParseTupleAndKeywords(args, kwds, "O|:setLogLevel", kwlist, &py_log_level) == false) {
 		return NULL;
 	}
 
 	// Type check for incoming parameters
-	if ( !PyInt_Check(py_log_level) ){
+	if (!PyInt_Check(py_log_level)) {
 		as_error_update(&err, AEROSPIKE_ERR_PARAM, "Invalid log level" );
 		goto CLEANUP;
 	}
@@ -99,7 +99,7 @@ PyObject * Aerospike_Set_Log_Level(PyObject *parent, PyObject *args, PyObject * 
 CLEANUP:
 
 	// Check error object and act accordingly
-	if ( err.code != AEROSPIKE_OK ) {
+	if (err.code != AEROSPIKE_OK) {
 		PyObject * py_err = NULL;
 		error_to_pyobject(&err, &py_err);
 		PyObject *exception_type = raise_exception(&err);
@@ -166,7 +166,7 @@ PyObject * Aerospike_Set_Log_Handler(PyObject *parent, PyObject *args, PyObject 
 	static char * kwlist[] = {"log_handler", NULL};
 
 	// Python function arguments parsing
-	if ( PyArg_ParseTupleAndKeywords(args, kwds, "O|:setLogHandler", kwlist, &py_callback) == false){
+	if (PyArg_ParseTupleAndKeywords(args, kwds, "O|:setLogHandler", kwlist, &py_callback) == false){
 		return NULL;
 	}
 

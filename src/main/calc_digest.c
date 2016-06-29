@@ -42,18 +42,18 @@ static PyObject * Aerospike_Calc_Digest_Invoke(PyObject * py_ns, PyObject *py_se
 	// Initialised flags
 	bool key_initialised = false;
 
-	if ( !PyString_Check(py_ns) ) {
+	if (!PyString_Check(py_ns)) {
 		PyErr_SetString(PyExc_TypeError, "Namespace should be a string");
 		return NULL;
 	}
 
-	if ( !PyString_Check(py_set)  && !PyUnicode_Check(py_set) ) {
+	if (!PyString_Check(py_set)  && !PyUnicode_Check(py_set)) {
 		PyErr_SetString(PyExc_TypeError, "Set should be a string or unicode");
 		return NULL;
 	}
 
-	if ( !PyString_Check(py_key)  && !PyUnicode_Check(py_key) && !PyInt_Check(py_key) && 
-			!PyLong_Check(py_key) && !PyByteArray_Check(py_key) ) {
+	if (!PyString_Check(py_key)  && !PyUnicode_Check(py_key) && !PyInt_Check(py_key) &&
+			!PyLong_Check(py_key) && !PyByteArray_Check(py_key)) {
 		PyErr_SetString(PyExc_TypeError, "Key is invalid");
 		return NULL;
 	}
@@ -68,7 +68,7 @@ static PyObject * Aerospike_Calc_Digest_Invoke(PyObject * py_ns, PyObject *py_se
 
 	// Convert python key object to as_key
 	pyobject_to_key(&err, py_keydict, &key);
-	if ( err.code != AEROSPIKE_OK ) {
+	if (err.code != AEROSPIKE_OK) {
 		goto CLEANUP;
 	}
 
@@ -98,7 +98,7 @@ CLEANUP:
 		Py_DECREF(py_keydict);
 	}
 
-	if ( err.code != AEROSPIKE_OK ) {
+	if (err.code != AEROSPIKE_OK) {
 		PyObject * py_err = NULL;
 		error_to_pyobject(&err, &py_err);
 		PyObject *exception_type = raise_exception(&err);
@@ -121,8 +121,8 @@ PyObject * Aerospike_Calc_Digest(PyObject * self, PyObject * args, PyObject * kw
 	static char * kwlist[] = {"ns", "set", "key", NULL};
 
 	// Python Function Argument Parsing
-	if ( PyArg_ParseTupleAndKeywords(args, kwds, "OOO:calc_digest", kwlist,
-			&py_ns, &py_set, &py_key) == false ) {
+	if (PyArg_ParseTupleAndKeywords(args, kwds, "OOO:calc_digest", kwlist,
+			&py_ns, &py_set, &py_key) == false) {
 		return NULL;
 	}
 

@@ -168,16 +168,16 @@ static void batch_get_recs(AerospikeClient *self, as_error *err, as_batch_read_r
 		py_rec = PyTuple_New(3);
 		p_key = PyTuple_New(4);
 
-		if ( batch->key.ns && strlen(batch->key.ns) > 0 ) {
+		if (batch->key.ns && strlen(batch->key.ns) > 0) {
 			PyTuple_SetItem(p_key, 0, PyString_FromString(batch->key.ns));
 		}
 
-		if ( batch->key.set && strlen(batch->key.set) > 0 ) {
+		if (batch->key.set && strlen(batch->key.set) > 0) {
 			PyTuple_SetItem(p_key, 1, PyString_FromString(batch->key.set));
 		}
 
-		if(batch->key.valuep) {
-			switch(((as_val*)(batch->key.valuep))->type){
+		if (batch->key.valuep) {
+			switch(((as_val*)(batch->key.valuep))->type) {
 				case AS_INTEGER:
 					PyTuple_SetItem(p_key, 2, PyInt_FromLong((long)batch->key.value.integer.value));
 					break;
@@ -199,7 +199,7 @@ static void batch_get_recs(AerospikeClient *self, as_error *err, as_batch_read_r
 
 		PyTuple_SetItem(py_rec, 0, p_key);
 
-		if ( batch->result == AEROSPIKE_OK ){
+		if (batch->result == AEROSPIKE_OK) {
 			record_to_pyobject(self, err, &batch->record, &batch->key, &rec);
 			PyObject *py_obj = PyTuple_GetItem(rec, 1);
 			Py_INCREF(py_obj);
@@ -242,7 +242,7 @@ static PyObject * batch_get_aerospike_batch_read(as_error *err, AerospikeClient 
 
 	// Convert python keys list to as_key ** and add it to as_batch.keys
 	// keys can be specified in PyList or PyTuple
-	if ( py_keys != NULL && PyList_Check(py_keys) ) {
+	if (py_keys && PyList_Check(py_keys)) {
 		Py_ssize_t size = PyList_Size(py_keys);
 
 		py_recs = PyList_New(size);
@@ -259,7 +259,7 @@ static PyObject * batch_get_aerospike_batch_read(as_error *err, AerospikeClient 
 
 			PyObject * py_key = PyList_GetItem(py_keys, i);
 
-			if ( !PyTuple_Check(py_key) ){
+			if (!PyTuple_Check(py_key)) {
 				as_error_update(err, AEROSPIKE_ERR_PARAM, "Key should be a tuple.");
 				goto CLEANUP;
 			}
@@ -269,12 +269,12 @@ static PyObject * batch_get_aerospike_batch_read(as_error *err, AerospikeClient 
 			pyobject_to_key(err, py_key, &record->key);
 			record->read_all_bins = true;
 
-			if ( err->code != AEROSPIKE_OK ) {
+			if (err->code != AEROSPIKE_OK) {
 				goto CLEANUP;
 			}
 		}
 	}
-	else if ( py_keys != NULL && PyTuple_Check(py_keys) ) {
+	else if (py_keys && PyTuple_Check(py_keys)) {
 		Py_ssize_t size = PyTuple_Size(py_keys);
 
 		py_recs = PyList_New(size);
@@ -289,7 +289,7 @@ static PyObject * batch_get_aerospike_batch_read(as_error *err, AerospikeClient 
 		for ( int i = 0; i < size; i++ ) {
 			PyObject * py_key = PyTuple_GetItem(py_keys, i);
 
-			if ( !PyTuple_Check(py_key) ){
+			if (!PyTuple_Check(py_key)) {
 				as_error_update(err, AEROSPIKE_ERR_PARAM, "Key should be a tuple.");
 				goto CLEANUP;
 			}
@@ -299,7 +299,7 @@ static PyObject * batch_get_aerospike_batch_read(as_error *err, AerospikeClient 
 			pyobject_to_key(err, py_key, &record->key);
 			record->read_all_bins = true;
 
-			if ( err->code != AEROSPIKE_OK ) {
+			if (err->code != AEROSPIKE_OK) {
 				goto CLEANUP;
 			}
 		}
@@ -320,7 +320,7 @@ static PyObject * batch_get_aerospike_batch_read(as_error *err, AerospikeClient 
 	batch_get_recs(self, err, &records, &py_recs);
 
 CLEANUP:
-	if (batch_initialised == true){
+	if (batch_initialised == true) {
 		// We should destroy batch object as we are using 'as_batch_init' for initialisation
 		// Also, pyobject_to_key is soing strdup() in case of Unicode. So, object destruction
 		// is necessary.
@@ -352,7 +352,7 @@ static PyObject * batch_get_aerospike_batch_get(as_error *err, AerospikeClient *
 
 	// Convert python keys list to as_key ** and add it to as_batch.keys
 	// keys can be specified in PyList or PyTuple
-	if ( py_keys != NULL && PyList_Check(py_keys) ) {
+	if (py_keys && PyList_Check(py_keys)) {
 		Py_ssize_t size = PyList_Size(py_keys);
 
 		py_recs = PyList_New(size);
@@ -366,19 +366,19 @@ static PyObject * batch_get_aerospike_batch_get(as_error *err, AerospikeClient *
 
 			PyObject * py_key = PyList_GetItem(py_keys, i);
 
-			if ( !PyTuple_Check(py_key) ){
+			if (!PyTuple_Check(py_key)) {
 				as_error_update(err, AEROSPIKE_ERR_PARAM, "Key should be a tuple.");
 				goto CLEANUP;
 			}
 
 			pyobject_to_key(err, py_key, as_batch_keyat(&batch, i));
 
-			if ( err->code != AEROSPIKE_OK ) {
+			if (err->code != AEROSPIKE_OK) {
 				goto CLEANUP;
 			}
 		}
 	}
-	else if ( py_keys != NULL && PyTuple_Check(py_keys) ) {
+	else if (py_keys && PyTuple_Check(py_keys)) {
 		Py_ssize_t size = PyTuple_Size(py_keys);
 
 		py_recs = PyList_New(size);
@@ -390,14 +390,14 @@ static PyObject * batch_get_aerospike_batch_get(as_error *err, AerospikeClient *
 		for ( int i = 0; i < size; i++ ) {
 			PyObject * py_key = PyTuple_GetItem(py_keys, i);
 
-			if ( !PyTuple_Check(py_key) ){
+			if (!PyTuple_Check(py_key)) {
 				as_error_update(err, AEROSPIKE_ERR_PARAM, "Key should be a tuple.");
 				goto CLEANUP;
 			}
 
 			pyobject_to_key(err, py_key, as_batch_keyat(&batch, i));
 
-			if ( err->code != AEROSPIKE_OK ) {
+			if (err->code != AEROSPIKE_OK) {
 				goto CLEANUP;
 			}
 		}
@@ -415,7 +415,7 @@ static PyObject * batch_get_aerospike_batch_get(as_error *err, AerospikeClient *
 	Py_END_ALLOW_THREADS
 
 CLEANUP:
-	if (batch_initialised == true){
+	if (batch_initialised == true) {
 		// We should destroy batch object as we are using 'as_batch_init' for initialisation
 		// Also, pyobject_to_key is soing strdup() in case of Unicode. So, object destruction
 		// is necessary.
@@ -466,7 +466,7 @@ PyObject * AerospikeClient_Get_Many_Invoke(
 	// Convert python policy object to as_policy_batch
 	pyobject_to_policy_batch(&err, py_policy, &policy, &batch_policy_p,
 			&self->as->config.policies.batch);
-	if ( err.code != AEROSPIKE_OK ) {
+	if (err.code != AEROSPIKE_OK) {
 		goto CLEANUP;
 	}
 
@@ -478,14 +478,14 @@ PyObject * AerospikeClient_Get_Many_Invoke(
 	}
 
 CLEANUP:
-	if ( err.code != AEROSPIKE_OK ) {
+	if (err.code != AEROSPIKE_OK) {
 		PyObject * py_err = NULL;
 		error_to_pyobject(&err, &py_err);
 		PyObject *exception_type = raise_exception(&err);
-		if(PyObject_HasAttrString(exception_type, "key")) {
+		if (PyObject_HasAttrString(exception_type, "key")) {
 			PyObject_SetAttrString(exception_type, "key", py_keys);
 		} 
-		if(PyObject_HasAttrString(exception_type, "bin")) {
+		if (PyObject_HasAttrString(exception_type, "bin")) {
 			PyObject_SetAttrString(exception_type, "bin", Py_None);
 		}
 		PyErr_SetObject(exception_type, py_err);
@@ -520,8 +520,8 @@ PyObject * AerospikeClient_Get_Many(AerospikeClient * self, PyObject * args, PyO
 	static char * kwlist[] = {"keys", "policy", NULL};
 
 	// Python Function Argument Parsing
-	if ( PyArg_ParseTupleAndKeywords(args, kwds, "O|O:get_many", kwlist,
-			&py_keys, &py_policy) == false ) {
+	if (PyArg_ParseTupleAndKeywords(args, kwds, "O|O:get_many", kwlist,
+			&py_keys, &py_policy) == false) {
 		return NULL;
 	}
 

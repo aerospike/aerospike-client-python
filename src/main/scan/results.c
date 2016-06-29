@@ -38,7 +38,7 @@ typedef struct {
 
 static bool each_result(const as_val * val, void * udata)
 {
-	if ( !val ) {
+	if (!val) {
 		return false;
 	}
 
@@ -54,7 +54,7 @@ static bool each_result(const as_val * val, void * udata)
 
 	val_to_pyobject(data->client, &err, val, &py_result);
 
-	if ( py_result ) {
+	if (py_result) {
 		PyList_Append(py_results, py_result);
 		Py_DECREF(py_result);
 	}
@@ -75,7 +75,7 @@ PyObject * AerospikeScan_Results(AerospikeScan * self, PyObject * args, PyObject
 	data.client = self->client;
 	static char * kwlist[] = {"policy", NULL};
 
-	if ( PyArg_ParseTupleAndKeywords(args, kwds, "|O:results", kwlist, &py_policy) == false ) {
+	if (PyArg_ParseTupleAndKeywords(args, kwds, "|O:results", kwlist, &py_policy) == false) {
 		return NULL;
 	}
 
@@ -94,7 +94,7 @@ PyObject * AerospikeScan_Results(AerospikeScan * self, PyObject * args, PyObject
 	// Convert python policy object to as_policy_scan
 	pyobject_to_policy_scan(&err, py_policy, &scan_policy, &scan_policy_p,
 			&self->client->as->config.policies.scan);
-	if ( err.code != AEROSPIKE_OK ) {
+	if (err.code != AEROSPIKE_OK) {
 		as_error_update(&err, err.code, NULL);
 		goto CLEANUP;
 	}
@@ -111,7 +111,7 @@ PyObject * AerospikeScan_Results(AerospikeScan * self, PyObject * args, PyObject
 
 CLEANUP:
 
-	if ( err.code != AEROSPIKE_OK ) {
+	if (err.code != AEROSPIKE_OK) {
 		PyObject * py_err = NULL;
 		error_to_pyobject(&err, &py_err);
 		PyObject *exception_type = raise_exception(&err);

@@ -176,7 +176,7 @@ PyObject * AerospikeException_New(void)
 	int count = sizeof(server_array.server_exceptions)/sizeof(server_array.server_exceptions[0]);
 	int i;
 	PyObject **current_exception;
-	for(i=0; i < count; i++) {
+	for (i=0; i < count; i++) {
 		current_exception = server_array.server_exceptions[i];
 		char * name = server_array.server_exceptions_name[i];
 		char prefix[40] = "exception.";
@@ -208,7 +208,7 @@ PyObject * AerospikeException_New(void)
 
 	//int count = sizeof(record_exceptions)/sizeof(record_exceptions[0]);
 	count = sizeof(record_array.record_exceptions)/sizeof(record_array.record_exceptions[0]);
-	for(i=0; i < count; i++) {
+	for (i=0; i < count; i++) {
 		current_exception = record_array.record_exceptions[i];
 		char * name = record_array.record_exceptions_name[i];
 		char prefix[40] = "exception.";
@@ -233,7 +233,7 @@ PyObject * AerospikeException_New(void)
 	PyModule_AddObject(module, "IndexError", exceptions_array.IndexError);
 
 	count = sizeof(index_array.index_exceptions)/sizeof(index_array.index_exceptions[0]);
-	for(i=0; i < count; i++) {
+	for (i=0; i < count; i++) {
 		current_exception = index_array.index_exceptions[i];
 		char * name = index_array.index_exceptions_name[i];
 		char prefix[40] = "exception.";
@@ -279,7 +279,7 @@ PyObject * AerospikeException_New(void)
 	PyModule_AddObject(module, "AdminError", exceptions_array.AdminError);
 
 	count = sizeof(admin_array.admin_exceptions)/sizeof(admin_array.admin_exceptions[0]);
-	for(i=0; i < count; i++) {
+	for (i=0; i < count; i++) {
 		current_exception = admin_array.admin_exceptions[i];
 		char * name = admin_array.admin_exceptions_name[i];
 		char prefix[40] = "exception.";
@@ -317,7 +317,7 @@ PyObject * AerospikeException_New(void)
 	PyModule_AddObject(module, "LDTError", exceptions_array.LDTError);
 
 	count = sizeof(ldt_array.ldt_exceptions)/sizeof(ldt_array.ldt_exceptions[0]);
-	for(i=0; i < count; i++) {
+	for (i=0; i < count; i++) {
 		current_exception = ldt_array.ldt_exceptions[i];
 		char * name = ldt_array.ldt_exceptions_name[i];
 		char prefix[40] = "exception.";
@@ -337,28 +337,28 @@ PyObject* raise_exception(as_error *err) {
 	PyObject * py_module_dict = PyModule_GetDict(module);
 	char * err_msg= err->message, *err_code = err->message;
 	char *final_code = NULL;
-	if(err->code == AEROSPIKE_ERR_UDF) {
-		while(strstr(err_code, ": ") != NULL) {
+	if (err->code == AEROSPIKE_ERR_UDF) {
+		while (strstr(err_code, ": ")) {
 			err_code++;
 		}
-		while(strstr(err_msg, ":LDT") != NULL) {
+		while (strstr(err_msg, ":LDT")) {
 			err_msg++;
 		}
 		final_code = (char *)malloc(err_msg - err_code + 2);
-		if(err_code != err->message && err_msg != err->message) {
+		if (err_code != err->message && err_msg != err->message) {
 			strncpy(final_code, err_code + 1, err_msg - err_code + 2);
 			err->code = atoi(final_code);
 			strcpy(err->message, err_msg);
 		}
 		free(final_code);
 	}
-	while(PyDict_Next(py_module_dict, &pos, &py_key, &py_value)) {
-		if(PyObject_HasAttrString(py_value, "code")) {
+	while (PyDict_Next(py_module_dict, &pos, &py_key, &py_value)) {
+		if (PyObject_HasAttrString(py_value, "code")) {
 			PyObject * py_code = PyObject_GetAttrString(py_value, "code");
-			if(py_code == Py_None) {
+			if (py_code == Py_None) {
 				continue;
 			}
-			if(err->code == PyInt_AsLong(py_code)) {
+			if (err->code == PyInt_AsLong(py_code)) {
 				PyObject *py_attr = NULL;
 				py_attr = PyString_FromString(err->message);
 				PyObject_SetAttrString(py_value, "msg", py_attr);

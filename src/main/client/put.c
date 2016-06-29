@@ -80,7 +80,7 @@ PyObject * AerospikeClient_Put_Invoke(
 
 	// Convert python key object to as_key
 	pyobject_to_key(&err, py_key, &key);
-	if ( err.code != AEROSPIKE_OK ) {
+	if (err.code != AEROSPIKE_OK) {
 		goto CLEANUP;
 	}
 	// Key is initialised successfully.
@@ -88,14 +88,14 @@ PyObject * AerospikeClient_Put_Invoke(
 
 	// Convert python bins and metadata objects to as_record
 	pyobject_to_record(self, &err, py_bins, py_meta, &rec, serializer_option, &static_pool);
-	if ( err.code != AEROSPIKE_OK ) {
+	if (err.code != AEROSPIKE_OK) {
 		goto CLEANUP;
 	}
 
 	// Convert python policy object to as_policy_write
 	pyobject_to_policy_write(&err, py_policy, &write_policy, &write_policy_p,
 			&self->as->config.policies.write);
-	if ( err.code != AEROSPIKE_OK ) {
+	if (err.code != AEROSPIKE_OK) {
 		goto CLEANUP;
 	}
 
@@ -103,31 +103,31 @@ PyObject * AerospikeClient_Put_Invoke(
 	Py_BEGIN_ALLOW_THREADS
 	aerospike_key_put(self->as, &err, write_policy_p, &key, &rec);
 	Py_END_ALLOW_THREADS
-	if ( err.code != AEROSPIKE_OK ) {
+	if (err.code != AEROSPIKE_OK) {
 		as_error_update(&err, err.code, NULL);
 	}
 
 CLEANUP:
 	POOL_DESTROY(&static_pool);
 
-	if (key_initialised == true){
+	if (key_initialised == true) {
 		// Destroy the key if it is initialised.
 		as_key_destroy(&key);
 	}
-	if (record_initialised == true){
+	if (record_initialised == true) {
 		// Destroy the record if it is initialised.
 		as_record_destroy(&rec);
 	}
 
 	// If an error occurred, tell Python.
-	if ( err.code != AEROSPIKE_OK ) {
+	if (err.code != AEROSPIKE_OK) {
 		PyObject * py_err = NULL;
 		error_to_pyobject(&err, &py_err);
 		PyObject *exception_type = raise_exception(&err);
-		if(PyObject_HasAttrString(exception_type, "key")) {
+		if (PyObject_HasAttrString(exception_type, "key")) {
 			PyObject_SetAttrString(exception_type, "key", py_key);
 		} 
-		if(PyObject_HasAttrString(exception_type, "bin")) {
+		if (PyObject_HasAttrString(exception_type, "bin")) {
 			PyObject_SetAttrString(exception_type, "bin", py_bins);
 		}
 		PyErr_SetObject(exception_type, py_err);
@@ -165,13 +165,13 @@ PyObject * AerospikeClient_Put(AerospikeClient * self, PyObject * args, PyObject
 	static char * kwlist[] = {"key", "bins", "meta", "policy", "serializer", NULL};
 
 	// Python Function Argument Parsing
-	if ( PyArg_ParseTupleAndKeywords(args, kwds, "OO|OOO:put", kwlist,
-			&py_key, &py_bins, &py_meta, &py_policy, &py_serializer_option) == false ) {
+	if (PyArg_ParseTupleAndKeywords(args, kwds, "OO|OOO:put", kwlist,
+			&py_key, &py_bins, &py_meta, &py_policy, &py_serializer_option) == false) {
 		return NULL;
 	}
 
-	if(py_serializer_option) {
-		if(PyInt_Check(py_serializer_option) || PyLong_Check(py_serializer_option)) {
+	if (py_serializer_option) {
+		if (PyInt_Check(py_serializer_option) || PyLong_Check(py_serializer_option)) {
 			self->is_client_put_serializer = true;
 			serializer_option = PyLong_AsLong(py_serializer_option);
 		}

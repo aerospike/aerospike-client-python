@@ -67,7 +67,7 @@ PyObject * AerospikeGeospatial_Dumps(AerospikeGeospatial * self, PyObject * args
 	}
 
 	initresult = AerospikeGeospatial_DoDumps(self->geo_data, &err);
-	if(!initresult) {
+	if (!initresult) {
 		as_error_update(&err, AEROSPIKE_ERR_CLIENT, "Unable to call dumps function");
 		goto CLEANUP;
 	}
@@ -75,7 +75,7 @@ PyObject * AerospikeGeospatial_Dumps(AerospikeGeospatial * self, PyObject * args
 CLEANUP:
 
 	// If an error occurred, tell Python.
-	if ( err.code != AEROSPIKE_OK ) {
+	if (err.code != AEROSPIKE_OK) {
 		PyObject * py_err = NULL;
 		error_to_pyobject(&err, &py_err);
 		PyObject *exception_type = raise_exception(&err);

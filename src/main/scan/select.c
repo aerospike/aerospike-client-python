@@ -51,7 +51,7 @@ AerospikeScan * AerospikeScan_Select(AerospikeScan * self, PyObject * args, PyOb
 
 	for ( int i = 0; i < nbins; i++ ) {
 		PyObject * py_bin = PyTuple_GetItem(args, i);
-		if ( py_bin) {
+		if (py_bin) {
 			TRACE();
 			if (PyUnicode_Check(py_bin)) {
 				py_ustr = PyUnicode_AsUTF8String(py_bin);
@@ -82,7 +82,7 @@ AerospikeScan * AerospikeScan_Select(AerospikeScan * self, PyObject * args, PyOb
 
 CLEANUP:
 
-	if ( err.code != AEROSPIKE_OK ) {
+	if (err.code != AEROSPIKE_OK) {
 		PyObject * py_err = NULL;
 		error_to_pyobject(&err, &py_err);
 		PyObject *exception_type = raise_exception(&err);
