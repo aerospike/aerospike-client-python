@@ -171,7 +171,6 @@ class TestConnect(TestBaseClass):
 
         except aerospike.exception.ClientError as exception:
             assert exception.code == -1
-            assert exception.msg == 'Failed to seed cluster'
 
     def test_connect_port_is_string(self):
         """
@@ -185,7 +184,6 @@ class TestConnect(TestBaseClass):
 
         except aerospike.exception.ClientError as exception:
             assert exception.code == -1
-            assert exception.msg == 'Failed to seed cluster'
 
     def test_connect_positive_shm_key(self):
         """

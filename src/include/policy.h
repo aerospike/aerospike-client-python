@@ -33,6 +33,23 @@ enum Aerospike_serializer_values {
 	SERIALIZER_USER,
 };
 
+enum Aerospike_list_operations {
+	OP_LIST_APPEND = 1001,
+	OP_LIST_APPEND_ITEMS,
+	OP_LIST_INSERT,
+	OP_LIST_INSERT_ITEMS,
+	OP_LIST_POP,
+	OP_LIST_POP_RANGE,
+	OP_LIST_REMOVE,
+	OP_LIST_REMOVE_RANGE,
+	OP_LIST_CLEAR,
+	OP_LIST_SET,
+	OP_LIST_GET,
+	OP_LIST_GET_RANGE,
+	OP_LIST_TRIM,
+	OP_LIST_SIZE
+};
+
 typedef struct Aerospike_Constants {
     long    constantno;
     char    constant_str[MAX_CONSTANT_STR_SIZE];

@@ -70,7 +70,7 @@ os.putenv('ARCHFLAGS','-arch x86_64')
 os.environ['ARCHFLAGS'] = '-arch x86_64'
 AEROSPIKE_C_VERSION = os.getenv('AEROSPIKE_C_VERSION')
 if not AEROSPIKE_C_VERSION:
-    AEROSPIKE_C_VERSION = '4.0.2'
+    AEROSPIKE_C_VERSION = '4.0.6'
 DOWNLOAD_C_CLIENT = os.getenv('DOWNLOAD_C_CLIENT')
 AEROSPIKE_C_HOME = os.getenv('AEROSPIKE_C_HOME')
 PREFIX = None
@@ -120,7 +120,7 @@ def resolve_c_client(lua_src_path, lua_system_path):
         sys.exit(3)
     print("info: aerospike.h found:", aerospike_h, file=sys.stdout)
     include_dirs = include_dirs + [
-        aerospike_c_prefix + '/include', 
+        aerospike_c_prefix + '/include',
         aerospike_c_prefix + '/include/ck'
         ]
 
@@ -199,6 +199,7 @@ if DARWIN:
         '-D_DARWIN_UNLIMITED_SELECT',
         '-DMARCH_x86_64'
         ]
+    extra_link_args = extra_link_args + ['-dynamiclib']
     if AEROSPIKE_C_HOME:
         PREFIX = AEROSPIKE_C_HOME + '/target/Darwin-x86_64'
 

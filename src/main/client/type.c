@@ -507,7 +507,7 @@ static int AerospikeClient_Type_Init(AerospikeClient * self, PyObject * args, Py
 		//  but leave it for now for customers who may be using it
 		PyObject * py_max_threads = PyDict_GetItemString(py_policies, "max_threads");
 		if (py_max_threads && (PyInt_Check(py_max_threads) || PyLong_Check(py_max_threads))) {
-			config.max_threads = PyInt_AsLong(py_max_threads);
+			config.max_conns_per_node = PyInt_AsLong(py_max_threads);
 		}
 
 		// This does not match documentation (should not be in policies),
@@ -538,7 +538,7 @@ static int AerospikeClient_Type_Init(AerospikeClient * self, PyObject * args, Py
 	// max_threads
 	PyObject * py_max_threads = PyDict_GetItemString(py_config, "max_threads");
 	if (py_max_threads && (PyInt_Check(py_max_threads) || PyLong_Check(py_max_threads))) {
-		config.max_threads = PyInt_AsLong(py_max_threads);
+		config.max_conns_per_node = PyInt_AsLong(py_max_threads);
 	}
 
 	// batch_direct

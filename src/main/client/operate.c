@@ -86,13 +86,14 @@ int check_type(AerospikeClient * self, PyObject * py_value, int op, as_error *er
 				strcmp(py_value->ob_type->tp_name, "aerospike.null")) && op == AS_OPERATOR_INCR) {
 		as_error_update(err, AEROSPIKE_ERR_PARAM, "Unsupported operand type(s) for +: only 'int' allowed");
 		return 1;
-	} else if ((!PyString_Check(py_value) && !PyUnicode_Check(py_value) && !PyByteArray_Check(py_value) && strcmp(py_value->ob_type->tp_name, "aerospike.null")) && (op == AS_OPERATOR_APPEND || op == AS_OPERATOR_PREPEND)) {
+	} else if ((!PyString_Check(py_value) && !PyUnicode_Check(py_value) && !PyByteArray_Check(py_value) &&
+				strcmp(py_value->ob_type->tp_name, "aerospike.null")) && (op == AS_OPERATOR_APPEND || op == AS_OPERATOR_PREPEND)) {
 		as_error_update(err, AEROSPIKE_ERR_PARAM, "Cannot concatenate 'str' and 'non-str' objects");
 		return 1;
-	} else if (!PyList_Check(py_value) && op == (AS_CDT_OP_LIST_APPEND_ITEMS + 1000)) {
+	} else if (!PyList_Check(py_value) && op == OP_LIST_APPEND_ITEMS) {
 		as_error_update(err, AEROSPIKE_ERR_PARAM, "Value of list_append_items should be of type list");
 		return 1;
-	} else if (!PyList_Check(py_value) && op == (AS_CDT_OP_LIST_INSERT_ITEMS + 1000)) {
+	} else if (!PyList_Check(py_value) && op == OP_LIST_INSERT_ITEMS) {
 		as_error_update(err, AEROSPIKE_ERR_PARAM, "Value of list_insert_items should be of type list");
 		return 1;
 	}
@@ -359,28 +360,28 @@ PyObject *  AerospikeClient_Operate_Invoke(
 					}
 				}
 			} else if ((!py_value) && (operation != AS_OPERATOR_READ && operation != AS_OPERATOR_TOUCH && 
-						operation != (AS_CDT_OP_LIST_POP + 1000) && operation != (AS_CDT_OP_LIST_REMOVE + 1000) && 
-						operation != (AS_CDT_OP_LIST_CLEAR + 1000) && operation != (AS_CDT_OP_LIST_GET + 1000) &&
-						operation != (AS_CDT_OP_LIST_SIZE + 1000))) {
+						operation != OP_LIST_POP && operation != OP_LIST_REMOVE &&
+						operation != OP_LIST_CLEAR && operation != OP_LIST_GET &&
+						operation != OP_LIST_SIZE)) {
 				as_error_update(err, AEROSPIKE_ERR_PARAM, "Value should be given");
 				goto CLEANUP;
 			}
 
-			if ((operation == (AS_CDT_OP_LIST_INSERT + 1000) || operation == (AS_CDT_OP_LIST_INSERT_ITEMS + 1000) || 
-						operation == (AS_CDT_OP_LIST_POP + 1000) || operation == (AS_CDT_OP_LIST_POP_RANGE + 1000) ||
-						operation == (AS_CDT_OP_LIST_REMOVE + 1000) || operation == (AS_CDT_OP_LIST_REMOVE_RANGE + 1000) ||
-						operation == (AS_CDT_OP_LIST_SET + 1000) || operation == (AS_CDT_OP_LIST_GET + 1000) ||
-						operation == (AS_CDT_OP_LIST_GET_RANGE + 1000) || operation == (AS_CDT_OP_LIST_TRIM + 1000)) && !py_index) {
+			if ((operation == OP_LIST_INSERT || operation == OP_LIST_INSERT_ITEMS ||
+						operation == OP_LIST_POP || operation == OP_LIST_POP_RANGE ||
+						operation == OP_LIST_REMOVE || operation == OP_LIST_REMOVE_RANGE ||
+						operation == OP_LIST_SET || operation == OP_LIST_GET ||
+						operation == OP_LIST_GET_RANGE || operation == OP_LIST_TRIM) && !py_index) {
 				as_error_update(err, AEROSPIKE_ERR_PARAM, "Operation needs an index value");
 				goto CLEANUP;
 			}
 
 			if (self->strict_types) {
-				if (py_index && !(operation == (AS_CDT_OP_LIST_INSERT + 1000) || operation == (AS_CDT_OP_LIST_INSERT_ITEMS + 1000) || 
-						operation == (AS_CDT_OP_LIST_POP + 1000) || operation == (AS_CDT_OP_LIST_POP_RANGE + 1000) ||
-						operation == (AS_CDT_OP_LIST_REMOVE + 1000) || operation == (AS_CDT_OP_LIST_REMOVE_RANGE + 1000) ||
-						operation == (AS_CDT_OP_LIST_SET + 1000) || operation == (AS_CDT_OP_LIST_GET + 1000) ||
-						operation == (AS_CDT_OP_LIST_GET_RANGE + 1000) || operation == (AS_CDT_OP_LIST_TRIM + 1000))) {
+				if (py_index && !(operation == OP_LIST_INSERT || operation == OP_LIST_INSERT_ITEMS ||
+						operation == OP_LIST_POP || operation == OP_LIST_POP_RANGE ||
+						operation == OP_LIST_REMOVE || operation == OP_LIST_REMOVE_RANGE ||
+						operation == OP_LIST_SET || operation == OP_LIST_GET ||
+						operation == OP_LIST_GET_RANGE || operation == OP_LIST_TRIM)) {
 					as_error_update(err, AEROSPIKE_ERR_PARAM, "Operation does not need an index value");
 					goto CLEANUP;
 				}
@@ -498,7 +499,7 @@ PyObject *  AerospikeClient_Operate_Invoke(
 					}
 					as_operations_add_write(&ops, bin, (as_bin_value *) put_val);
 					break;
-				case AS_CDT_OP_LIST_APPEND + 1000:
+				case OP_LIST_APPEND:
 					pyobject_to_astype_write(self, err, bin, py_value, &put_val, &ops,
 						&static_pool, SERIALIZER_PYTHON);
 					if (err->code != AEROSPIKE_OK) {
@@ -506,7 +507,7 @@ PyObject *  AerospikeClient_Operate_Invoke(
 					}
 					as_operations_add_list_append(&ops, bin, put_val);
 					break;
-				case AS_CDT_OP_LIST_APPEND_ITEMS + 1000:
+				case OP_LIST_APPEND_ITEMS:
 					pyobject_to_astype_write(self, err, bin, py_value, &put_val, &ops,
 						&static_pool, SERIALIZER_PYTHON);
 					if (err->code != AEROSPIKE_OK) {
@@ -514,7 +515,7 @@ PyObject *  AerospikeClient_Operate_Invoke(
 					}
 					as_operations_add_list_append_items(&ops, bin, (as_list*)put_val);
 					break;
-				case AS_CDT_OP_LIST_INSERT + 1000:
+				case OP_LIST_INSERT:
 					pyobject_to_astype_write(self, err, bin, py_value, &put_val, &ops,
 						&static_pool, SERIALIZER_PYTHON);
 					if (err->code != AEROSPIKE_OK) {
@@ -522,7 +523,7 @@ PyObject *  AerospikeClient_Operate_Invoke(
 					}
 					as_operations_add_list_insert(&ops, bin, index, put_val);
 					break;
-				case AS_CDT_OP_LIST_INSERT_ITEMS + 1000:
+				case OP_LIST_INSERT_ITEMS:
 					pyobject_to_astype_write(self, err, bin, py_value, &put_val, &ops,
 						&static_pool, SERIALIZER_PYTHON);
 					if (err->code != AEROSPIKE_OK) {
@@ -530,10 +531,10 @@ PyObject *  AerospikeClient_Operate_Invoke(
 					}
 					as_operations_add_list_insert_items(&ops, bin, index, (as_list*)put_val);
 					break;
-				case AS_CDT_OP_LIST_POP + 1000:
+				case OP_LIST_POP:
 					as_operations_add_list_pop(&ops, bin, index);
 					break;
-				case AS_CDT_OP_LIST_POP_RANGE + 1000:
+				case OP_LIST_POP_RANGE:
 					if (PyInt_Check(py_value)) {
 						offset = PyInt_AsLong(py_value);
 					} else if (PyLong_Check(py_value)) {
@@ -550,10 +551,10 @@ PyObject *  AerospikeClient_Operate_Invoke(
 					}
 					as_operations_add_list_pop_range(&ops, bin, index, offset);
 					break;
-				case AS_CDT_OP_LIST_REMOVE + 1000:
+				case OP_LIST_REMOVE:
 					as_operations_add_list_remove(&ops, bin, index);
 					break;
-				case AS_CDT_OP_LIST_REMOVE_RANGE + 1000:
+				case OP_LIST_REMOVE_RANGE:
 					if (PyInt_Check(py_value)) {
 						offset = PyInt_AsLong(py_value);
 					} else if (PyLong_Check(py_value)) {
@@ -570,20 +571,20 @@ PyObject *  AerospikeClient_Operate_Invoke(
 					}
 					as_operations_add_list_remove_range(&ops, bin, index, offset);
 					break;
-				case AS_CDT_OP_LIST_CLEAR + 1000:
+				case OP_LIST_CLEAR:
 					as_operations_add_list_clear(&ops, bin);
 					break;
-				case AS_CDT_OP_LIST_SET + 1000:
+				case OP_LIST_SET:
 					pyobject_to_astype_write(self, err, bin, py_value, &put_val, &ops, &static_pool, SERIALIZER_PYTHON);
 					if (err->code != AEROSPIKE_OK) {
 						goto CLEANUP;
 					}
 					as_operations_add_list_set(&ops, bin, index, put_val);
 					break;
-				case AS_CDT_OP_LIST_GET + 1000:
+				case OP_LIST_GET:
 					as_operations_add_list_get(&ops, bin, index);
 					break;
-				case AS_CDT_OP_LIST_GET_RANGE + 1000:
+				case OP_LIST_GET_RANGE:
 					if (PyInt_Check(py_value)) {
 						offset = PyInt_AsLong(py_value);
 					} else if (PyLong_Check(py_value)) {
@@ -600,7 +601,7 @@ PyObject *  AerospikeClient_Operate_Invoke(
 					}
 					as_operations_add_list_get_range(&ops, bin, index, offset);
 					break;
-				case AS_CDT_OP_LIST_TRIM + 1000:
+				case OP_LIST_TRIM:
 					if (PyInt_Check(py_value)) {
 						offset = PyInt_AsLong(py_value);
 					} else if (PyLong_Check(py_value)) {
@@ -617,7 +618,7 @@ PyObject *  AerospikeClient_Operate_Invoke(
 					}
 					as_operations_add_list_trim(&ops, bin, index, offset);
 					break;
-				case AS_CDT_OP_LIST_SIZE + 1000:
+				case OP_LIST_SIZE:
 					as_operations_add_list_size(&ops, bin);
 					break;
 				default:
