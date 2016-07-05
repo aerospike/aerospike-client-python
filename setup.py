@@ -199,7 +199,7 @@ if DARWIN:
         '-D_DARWIN_UNLIMITED_SELECT',
         '-DMARCH_x86_64'
         ]
-    extra_link_args = extra_link_args + ['-dynamiclib']
+    os.environ['MACOSX_DEPLOYMENT_TARGET'] = '10.11'
     if AEROSPIKE_C_HOME:
         PREFIX = AEROSPIKE_C_HOME + '/target/Darwin-x86_64'
 
