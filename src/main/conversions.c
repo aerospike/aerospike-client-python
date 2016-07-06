@@ -39,6 +39,7 @@
 #include "geo.h"
 #include "policy.h"
 #include "serializer.h"
+#include "exceptions.h"
 
 #define PY_KEYT_NAMESPACE 0
 #define PY_KEYT_SET 1
@@ -673,7 +674,7 @@ as_status pyobject_to_record(AerospikeClient * self, as_error * err, PyObject * 
  * Convert pyobject to as_* type.
  * Returns AEROSPIKE_OK on success. On error, the err argument is populated.
  */
-as_status pyobject_to_astype_write(AerospikeClient * self, as_error * err, char *bin_name,  PyObject * py_value, as_val **val,
+as_status pyobject_to_astype_write(AerospikeClient * self, as_error * err, PyObject * py_value, as_val **val,
 		as_operations * ops, as_static_pool *static_pool, int serializer_type)
 {
 	as_error_reset(err);
@@ -1381,3 +1382,161 @@ void initialize_ldt(as_error *error, as_ldt* ldt_p, char* bin_name,
 		as_error_update(error, AEROSPIKE_ERR_PARAM, "Unable to initialize LDT");
 	}
 }
+
+void initialize_bin_for_strictypes(AerospikeClient *self, as_error *err, PyObject *py_value, as_binop *binop, char *bin, as_static_pool *static_pool) {
+
+	as_bin *binop_bin = &binop->bin;
+	if (PyInt_Check(py_value)) {
+		int val = PyInt_AsLong(py_value);
+		as_integer_init((as_integer *) &binop_bin->value, val);
+		binop_bin->valuep = &binop_bin->value;
+	} else if (PyLong_Check(py_value)) {
+		long val = PyLong_AsLong(py_value);
+		as_integer_init((as_integer *) &binop_bin->value, val);
+		binop_bin->valuep = &binop_bin->value;
+	} else if (PyString_Check(py_value)) {
+		char * val = PyString_AsString(py_value);
+		as_string_init((as_string *) &binop_bin->value, val, false);
+		binop_bin->valuep = &binop_bin->value;
+	} else if (PyUnicode_Check(py_value)) {
+		PyObject *py_ustr1 = PyUnicode_AsUTF8String(py_value);
+		char * val = PyBytes_AsString(py_ustr1);
+		as_string_init((as_string *) &binop_bin->value, val, false);
+		binop_bin->valuep = &binop_bin->value;
+		Py_XDECREF(py_ustr1);
+	} else if (PyFloat_Check(py_value)) {
+		int64_t val = PyFloat_AsDouble(py_value);
+		if (aerospike_has_double(self->as)) {
+			as_double_init((as_double *) &binop_bin->value, val);
+			binop_bin->valuep = &binop_bin->value;
+		} else {
+			as_bytes *bytes;
+			GET_BYTES_POOL(bytes, static_pool, err);
+			serialize_based_on_serializer_policy(self, SERIALIZER_PYTHON, &bytes, py_value, err);
+			((as_val *) &binop_bin->value)->type = AS_UNKNOWN;
+			binop_bin->valuep = (as_bin_value *) bytes;
+		}
+	} else if (PyList_Check(py_value)) {
+		as_list * list = NULL;
+		pyobject_to_list(self, err, py_value, &list, static_pool, SERIALIZER_PYTHON);
+		((as_val *) &binop_bin->value)->type = AS_UNKNOWN;
+		binop_bin->valuep = (as_bin_value *) list;
+	} else if (PyDict_Check(py_value)) {
+		as_map * map = NULL;
+		pyobject_to_map(self, err, py_value, &map, static_pool, SERIALIZER_PYTHON);
+		((as_val *) &binop_bin->value)->type = AS_UNKNOWN;
+		binop_bin->valuep = (as_bin_value *) map;
+	} else if (!strcmp(py_value->ob_type->tp_name, "aerospike.Geospatial")) {
+		PyObject* py_data = PyObject_GenericGetAttr(py_value, PyString_FromString("geo_data"));
+		char *geo_value = PyString_AsString(AerospikeGeospatial_DoDumps(py_data, err));
+		if (aerospike_has_geo(self->as)) {
+			as_geojson_init((as_geojson *) &binop_bin->value, geo_value, false);
+			binop_bin->valuep = &binop_bin->value;
+		} else {
+			as_bytes *bytes;
+			GET_BYTES_POOL(bytes, static_pool, err);
+			serialize_based_on_serializer_policy(self, SERIALIZER_PYTHON, &bytes, py_data, err);
+			((as_val *) &binop_bin->value)->type = AS_UNKNOWN;
+			binop_bin->valuep = (as_bin_value *) bytes;
+		}
+	} else if (!strcmp(py_value->ob_type->tp_name, "aerospike.null")) {
+		((as_val *) &binop_bin->value)->type = AS_UNKNOWN;
+		binop_bin->valuep = (as_bin_value *) &as_nil;
+	} else if (PyByteArray_Check(py_value)) {
+		as_bytes *bytes;
+		GET_BYTES_POOL(bytes, static_pool, err);
+		serialize_based_on_serializer_policy(self, SERIALIZER_PYTHON, &bytes, py_value, err);
+		as_bytes_init_wrap((as_bytes *) &binop_bin->value, bytes->value, bytes->size, true);
+		binop_bin->valuep = &binop_bin->value;
+	} else {
+		as_bytes *bytes;
+		GET_BYTES_POOL(bytes, static_pool, err);
+		serialize_based_on_serializer_policy(self, SERIALIZER_PYTHON, &bytes, py_value, err);
+		((as_val *) &binop_bin->value)->type = AS_UNKNOWN;
+		binop_bin->valuep = (as_bin_value *) bytes;
+	}
+	strcpy(binop_bin->name, bin);
+}
+
+/**
+ *******************************************************************************************************
+ * This function converts PyObject key to as_key object, Also converts PyObject
+ * policy to as_policy_operate object.
+ *
+ * @param err                   The as_error to be populated by the function
+ *                              with the encountered error if any.
+ * @param py_key                The PyObject key.
+ * @param py_policy             The PyObject policy.
+ * @param key_p                 The C client's as_key that identifies the record.
+ * @param operate_policy_p      The as_policy_operate type pointer.
+ * @param operate_policy_pp     The as_policy_operate type pointer to pointer.
+ *******************************************************************************************************
+ */
+PyObject * convert_pythonObj_to_asType(
+	AerospikeClient * self, as_error *err, PyObject* py_key,
+	PyObject* py_policy, as_key* key_p,
+	as_policy_operate* operate_policy_p,
+	as_policy_operate** operate_policy_pp)
+{
+	pyobject_to_key(err, py_key, key_p);
+	if (err->code != AEROSPIKE_OK) {
+		goto CLEANUP;
+	}
+
+	if (py_policy) {
+		pyobject_to_policy_operate(err, py_policy, operate_policy_p, operate_policy_pp,
+				&self->as->config.policies.operate);
+	}
+
+CLEANUP:
+	if (err->code != AEROSPIKE_OK) {
+		PyObject * py_err = NULL;
+		error_to_pyobject(err, &py_err);
+		PyObject *exception_type = raise_exception(err);
+		PyErr_SetObject(exception_type, py_err);
+		Py_DECREF(py_err);
+		return NULL;
+	}
+	return PyLong_FromLong(0);
+}
+
+PyObject * bin_strict_type_checking(AerospikeClient * self, as_error *err, PyObject *py_bin, char **bin)
+{
+	PyObject * py_ustr = NULL;
+
+	if (py_bin) {
+		if (PyUnicode_Check(py_bin)) {
+			py_ustr = PyUnicode_AsUTF8String(py_bin);
+			*bin = PyBytes_AsString(py_ustr);
+		} else if (PyString_Check(py_bin)) {
+			*bin = PyString_AsString(py_bin);
+		} else if (PyByteArray_Check(py_bin)) {
+			*bin = PyByteArray_AsString(py_bin);
+		} else {
+			as_error_update(err, AEROSPIKE_ERR_PARAM, "Bin name should be of type string");
+			goto CLEANUP;
+		}
+
+		if (self->strict_types) {
+			if (strlen(*bin) > AS_BIN_NAME_MAX_LEN) {
+				if (py_ustr) {
+					Py_DECREF(py_ustr);
+					py_ustr = NULL;
+				}
+				as_error_update(err, AEROSPIKE_ERR_BIN_NAME, "A bin name should not exceed 14 characters limit");
+				goto CLEANUP;
+			}
+		}
+	}
+CLEANUP:
+	if (err->code != AEROSPIKE_OK) {
+		PyObject * py_err = NULL;
+		error_to_pyobject(err, &py_err);
+		PyObject *exception_type = raise_exception(err);
+		PyErr_SetObject(exception_type, py_err);
+		Py_DECREF(py_err);
+		return NULL;
+	}
+	return PyLong_FromLong(0);
+}
+
