@@ -14,6 +14,7 @@
  * limitations under the License.
  ******************************************************************************/
 
+
 #include <Python.h>
 #include <stdbool.h>
 
@@ -144,7 +145,8 @@ as_status as_user_array_to_pyobject( as_error *err, as_user **users, PyObject **
 	return err->code;
 }
 
-void pyobject_to_as_privileges(as_error *err, PyObject *py_privileges, as_privilege** privileges, int privileges_size) {
+as_status pyobject_to_as_privileges(as_error *err, PyObject *py_privileges, as_privilege** privileges, int privileges_size) {
+	as_error_reset(err);
 	for (int i = 0; i < privileges_size; i++) {
 		PyObject * py_val = PyList_GetItem(py_privileges, i);
 		if (PyDict_Check(py_val)) {
@@ -177,6 +179,7 @@ void pyobject_to_as_privileges(as_error *err, PyObject *py_privileges, as_privil
 			Py_DECREF(py_dict_key);
 		}
 	}
+	return err->code;
 }
 
 as_status as_role_array_to_pyobject( as_error *err, as_role **roles, PyObject **py_as_roles, int roles_size )
@@ -675,7 +678,7 @@ as_status pyobject_to_record(AerospikeClient * self, as_error * err, PyObject * 
  * Returns AEROSPIKE_OK on success. On error, the err argument is populated.
  */
 as_status pyobject_to_astype_write(AerospikeClient * self, as_error * err, PyObject * py_value, as_val **val,
-		as_operations * ops, as_static_pool *static_pool, int serializer_type)
+		as_static_pool *static_pool, int serializer_type)
 {
 	as_error_reset(err);
 	PyObject * py_result = NULL;
@@ -1014,6 +1017,41 @@ as_status val_to_pyobject(AerospikeClient * self, as_error * err, const as_val *
 				as_error_update(err, AEROSPIKE_ERR_CLIENT, "Unknown type for value");
 				return err->code;
 			}
+	}
+
+	return err->code;
+}
+
+as_status as_list_to_py_dict_key_value(AerospikeClient * self, as_error * err, const as_list * list, PyObject ** py_dict) {
+	* py_dict = PyDict_New();
+	PyObject * py_key;
+	PyObject * py_value;
+
+	int size = as_list_size((as_list *)list);
+
+	if (size%2 != 0) {
+		return as_error_update(err, AEROSPIKE_ERR_CLIENT, "Invalid key list of key/value pairs");
+	}
+
+	for (int i=0; i<size; i+=2) {
+		as_val * key = as_list_get(list, i);
+		as_val * value = as_list_get(list, i+1);
+
+		if (val_to_pyobject(self, err, key, &py_key) != AEROSPIKE_OK) {
+			goto CLEANUP;
+		}
+		if (val_to_pyobject(self, err, value, &py_value) != AEROSPIKE_OK) {
+			goto CLEANUP;
+		}
+		PyDict_SetItem(*py_dict, py_key, py_value);
+
+		Py_DECREF(py_key);
+		Py_DECREF(py_value);
+	}
+
+CLEANUP:
+	if (err->code != AEROSPIKE_OK) {
+		Py_DECREF(*py_dict);
 	}
 
 	return err->code;
@@ -1371,7 +1409,7 @@ bool error_to_pyobject(const as_error * err, PyObject ** obj)
  *
  * On failure it will set an error.
  */
-void initialize_ldt(as_error *error, as_ldt* ldt_p, char* bin_name,
+as_status initialize_ldt(as_error *error, as_ldt* ldt_p, char* bin_name,
 		int type, char* module)
 {
 	as_error_reset(error);
@@ -1381,6 +1419,8 @@ void initialize_ldt(as_error *error, as_ldt* ldt_p, char* bin_name,
 	if (!as_ldt_init(ldt_p, bin_name, type, module)) {
 		as_error_update(error, AEROSPIKE_ERR_PARAM, "Unable to initialize LDT");
 	}
+
+	return error->code;
 }
 
 void initialize_bin_for_strictypes(AerospikeClient *self, as_error *err, PyObject *py_value, as_binop *binop, char *bin, as_static_pool *static_pool) {
@@ -1458,50 +1498,10 @@ void initialize_bin_for_strictypes(AerospikeClient *self, as_error *err, PyObjec
 	strcpy(binop_bin->name, bin);
 }
 
-/**
- *******************************************************************************************************
- * This function converts PyObject key to as_key object, Also converts PyObject
- * policy to as_policy_operate object.
- *
- * @param err                   The as_error to be populated by the function
- *                              with the encountered error if any.
- * @param py_key                The PyObject key.
- * @param py_policy             The PyObject policy.
- * @param key_p                 The C client's as_key that identifies the record.
- * @param operate_policy_p      The as_policy_operate type pointer.
- * @param operate_policy_pp     The as_policy_operate type pointer to pointer.
- *******************************************************************************************************
- */
-PyObject * convert_pythonObj_to_asType(
-	AerospikeClient * self, as_error *err, PyObject* py_key,
-	PyObject* py_policy, as_key* key_p,
-	as_policy_operate* operate_policy_p,
-	as_policy_operate** operate_policy_pp)
+
+as_status bin_strict_type_checking(AerospikeClient * self, as_error *err, PyObject *py_bin, char **bin)
 {
-	pyobject_to_key(err, py_key, key_p);
-	if (err->code != AEROSPIKE_OK) {
-		goto CLEANUP;
-	}
-
-	if (py_policy) {
-		pyobject_to_policy_operate(err, py_policy, operate_policy_p, operate_policy_pp,
-				&self->as->config.policies.operate);
-	}
-
-CLEANUP:
-	if (err->code != AEROSPIKE_OK) {
-		PyObject * py_err = NULL;
-		error_to_pyobject(err, &py_err);
-		PyObject *exception_type = raise_exception(err);
-		PyErr_SetObject(exception_type, py_err);
-		Py_DECREF(py_err);
-		return NULL;
-	}
-	return PyLong_FromLong(0);
-}
-
-PyObject * bin_strict_type_checking(AerospikeClient * self, as_error *err, PyObject *py_bin, char **bin)
-{
+	as_error_reset(err);
 	PyObject * py_ustr = NULL;
 
 	if (py_bin) {
@@ -1524,10 +1524,10 @@ PyObject * bin_strict_type_checking(AerospikeClient * self, as_error *err, PyObj
 					py_ustr = NULL;
 				}
 				as_error_update(err, AEROSPIKE_ERR_BIN_NAME, "A bin name should not exceed 14 characters limit");
-				goto CLEANUP;
 			}
 		}
 	}
+
 CLEANUP:
 	if (err->code != AEROSPIKE_OK) {
 		PyObject * py_err = NULL;
@@ -1535,8 +1535,81 @@ CLEANUP:
 		PyObject *exception_type = raise_exception(err);
 		PyErr_SetObject(exception_type, py_err);
 		Py_DECREF(py_err);
-		return NULL;
 	}
-	return PyLong_FromLong(0);
+	return err->code;
+}
+
+/**
+ *******************************************************************************************************
+ * This function checks for metadata and if present set it into the
+ * as_operations.
+ *
+ * @param py_meta               The dictionary of metadata.
+ * @param ops                   The as_operations object.
+ * @param err                   The as_error to be populated by the function
+ *                              with the encountered error if any.
+ *
+ * Returns: error code.
+ *******************************************************************************************************
+ */
+as_status check_for_meta(PyObject * py_meta, as_operations * ops, as_error *err)
+{
+	as_error_reset(err);
+	if (py_meta && PyDict_Check(py_meta)) {
+		PyObject * py_gen = PyDict_GetItemString(py_meta, "gen");
+		PyObject * py_ttl = PyDict_GetItemString(py_meta, "ttl");
+		uint32_t ttl = 0;
+		uint16_t gen = 0;
+		if (py_ttl) {
+			if (PyInt_Check(py_ttl)) {
+				ttl = (uint32_t) PyInt_AsLong(py_ttl);
+			} else if (PyLong_Check(py_ttl)) {
+				ttl = (uint32_t) PyLong_AsLongLong(py_ttl);
+			} else {
+				return as_error_update(err, AEROSPIKE_ERR_PARAM, "Ttl should be an int or long");
+			}
+
+			if ((uint32_t)-1 == ttl) {
+				return as_error_update(err, AEROSPIKE_ERR_PARAM, "integer value for ttl exceeds sys.maxsize");
+			}
+			ops->ttl = ttl;
+		}
+
+		if (py_gen) {
+			if (PyInt_Check(py_gen)) {
+				gen = (uint16_t) PyInt_AsLong(py_gen);
+			} else if (PyLong_Check(py_gen)) {
+				gen = (uint16_t) PyLong_AsLongLong(py_gen);
+			} else {
+				return as_error_update(err, AEROSPIKE_ERR_PARAM, "Generation should be an int or long");
+			}
+
+			if ((uint16_t)-1 == gen) {
+				return as_error_update(err, AEROSPIKE_ERR_PARAM, "integer value for gen exceeds sys.maxsize");
+			}
+			ops->gen = gen;
+		}
+	} else {
+		return as_error_update(err, AEROSPIKE_ERR_PARAM, "Metadata should be of type dictionary");
+	}
+	return err->code;
+}
+
+
+as_status pyobject_to_index(AerospikeClient * self, as_error * err, PyObject * py_value, long * long_val) {
+	if (PyInt_Check(py_value)) {
+		*long_val = PyInt_AsLong(py_value);
+	} else if (PyLong_Check(py_value)) {
+		*long_val = PyLong_AsLong(py_value);
+		if (*long_val == -1 && PyErr_Occurred() && self->strict_types) {
+			if (PyErr_ExceptionMatches(PyExc_OverflowError)) {
+				return as_error_update(err, AEROSPIKE_ERR_PARAM, "integer value exceeds sys.maxsize");
+			}
+		}
+	} else {
+		return as_error_update(err, AEROSPIKE_ERR_PARAM, "Offset should be of int or long type");
+	}
+
+	return err->code;
 }
 

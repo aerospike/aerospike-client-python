@@ -894,7 +894,6 @@ class TestOperateOrdered(object):
 
         except e.ParamError as exception:
             assert exception.code == -2
-            assert exception.msg == "key is invalid"
 
     def test_neg_operate_ordered_with_extra_parameter(self):
         """
@@ -930,7 +929,6 @@ class TestOperateOrdered(object):
 
         except e.ParamError as exception:
             assert exception.code == -2
-            assert exception.msg == "policy must be a dict"
 
     def test_neg_operate_ordered_key_is_none(self):
         """
@@ -948,9 +946,8 @@ class TestOperateOrdered(object):
 
         except e.ParamError as exception:
             assert exception.code == -2
-            assert exception.msg == "key is invalid"
 
-    @pytest.mark.parametrize("key, policy, list, ex_code, ex_msg", [
+    @pytest.mark.parametrize("key, policy, list, ex_code", [
         (('test', 'demo', 1),
          {'timeout': 1000},
          [{"op": aerospike.OPERATOR_APPEND,
@@ -958,16 +955,14 @@ class TestOperateOrdered(object):
           {"op": aerospike.OPERATOR_INCR,
            "bin": "age",
            "val": 3}],
-         -2,
-         "Value should be given"),
+         -2),
         (('test', 'demo', 1),
          {'timeout': 1000},
          [{"op": aerospike.OPERATOR_APPEND,
            "bin": "name",
            "val": 3,
            "aa": 89}, ],
-         -2,
-         "operation can contain only op, bin, index and val keys"),
+         -2),
         (('test', 'demo', 1),                  # with_incr_value_string
          {'timeout': 1000,
           'key': aerospike.POLICY_KEY_SEND,
@@ -977,13 +972,11 @@ class TestOperateOrdered(object):
            "val": "3"},
           {"op": aerospike.OPERATOR_READ,
            "bin": "age"}],
-         -2,
-         "Unsupported operand type(s) for +: only 'int' allowed"),
+         -2),
     ])
     def test_neg_operate_ordered_append_without_value_parameter(self, key,
                                                                 policy, list,
-                                                                ex_code,
-                                                                ex_msg):
+                                                                ex_code):
         """
         Invoke operate_ordered() with append op and append val is not given
         """
@@ -993,7 +986,6 @@ class TestOperateOrdered(object):
 
         except e.ParamError as exception:
             assert exception.code == ex_code
-            assert exception.msg == ex_msg
 
     def test_neg_operate_ordered_append_value_integer(self):
         """
@@ -1013,7 +1005,6 @@ class TestOperateOrdered(object):
             self.as_connection.operate_ordered(key, llist)
         except e.ParamError as exc:
             assert exc.code == -2
-            assert exc.msg == "Cannot concatenate 'str' and 'non-str' objects"
 
     def test_neg_operate_ordered_with_incorrect_policy(self):
         """
@@ -1037,7 +1028,6 @@ class TestOperateOrdered(object):
 
         except e.ParamError as exception:
             assert exception.code == -2
-            assert exception.msg == "timeout is invalid"
 
     def test_neg_operate_ordered_list_operation_bin_notlist(self):
         """
@@ -1072,8 +1062,6 @@ class TestOperateOrdered(object):
 
         except e.ParamError as exception:
             assert exception.code == -2
-            assert exception.msg == "Value of list_append_items"\
-                " should be of type list"
 
     @pytest.mark.parametrize("key, llist", [
         (('test', 'demo', 1),

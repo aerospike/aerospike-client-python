@@ -17,6 +17,8 @@
 #include <Python.h>
 #include <aerospike/as_error.h>
 #include <aerospike/as_policy.h>
+#include <aerospike/as_policy.h>
+#include <aerospike/as_map_operations.h>
 
 #define MAX_CONSTANT_STR_SIZE 512
 
@@ -48,6 +50,34 @@ enum Aerospike_list_operations {
 	OP_LIST_GET_RANGE,
 	OP_LIST_TRIM,
 	OP_LIST_SIZE
+};
+
+enum Aerospike_map_operations {
+	OP_MAP_SET_POLICY = 1101,
+	OP_MAP_PUT,
+	OP_MAP_PUT_ITEMS,
+	OP_MAP_INCREMENT,
+	OP_MAP_DECREMENT,
+	OP_MAP_SIZE,
+	OP_MAP_CLEAR,
+	OP_MAP_REMOVE_BY_KEY,
+	OP_MAP_REMOVE_BY_KEY_LIST,
+	OP_MAP_REMOVE_BY_KEY_RANGE,
+	OP_MAP_REMOVE_BY_VALUE,
+	OP_MAP_REMOVE_BY_VALUE_LIST,
+	OP_MAP_REMOVE_BY_VALUE_RANGE,
+	OP_MAP_REMOVE_BY_INDEX,
+	OP_MAP_REMOVE_BY_INDEX_RANGE,
+	OP_MAP_REMOVE_BY_RANK,
+	OP_MAP_REMOVE_BY_RANK_RANGE,
+	OP_MAP_GET_BY_KEY,
+	OP_MAP_GET_BY_KEY_RANGE,
+	OP_MAP_GET_BY_VALUE,
+	OP_MAP_GET_BY_VALUE_RANGE,
+	OP_MAP_GET_BY_INDEX,
+	OP_MAP_GET_BY_INDEX_RANGE,
+	OP_MAP_GET_BY_RANK,
+	OP_MAP_GET_BY_RANK_RANGE,
 };
 
 typedef struct Aerospike_Constants {
@@ -111,6 +141,9 @@ as_status pyobject_to_policy_batch(as_error * err, PyObject * py_policy,
                                    as_policy_batch * policy,
                                    as_policy_batch ** policy_p,
 								   as_policy_batch * config_batch_policy);
+
+as_status pyobject_to_map_policy(as_error * err, PyObject * py_policy,
+									as_map_policy * policy);
 
 as_status declare_policy_constants(PyObject *aerospike);
 
