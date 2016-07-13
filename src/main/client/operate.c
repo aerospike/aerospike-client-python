@@ -1069,7 +1069,6 @@ static PyObject *  AerospikeClient_OperateOrdered_Invoke(
 		}
 
 		if (rec) {
-		printf("GOT RECORD\n");
 			PyObject *py_rec_bins = NULL;
 			if (i == 0) {
 				key_to_pyobject(err, key ? key : &rec->key, &py_rec_key);
@@ -1089,7 +1088,6 @@ static PyObject *  AerospikeClient_OperateOrdered_Invoke(
 				PyObject *py_value = PyDict_GetItemString(py_rec_bins, ops.binops.entries->bin.name);
 				PyObject *py_rec_tuple = PyTuple_New(2);
 				if (py_value) {
-		printf("GOT py_value\n");
 					Py_INCREF(py_value);
 					PyTuple_SetItem(py_rec_tuple, 0, PyString_FromString(ops.binops.entries->bin.name));
 					PyTuple_SetItem(py_rec_tuple, 1, py_value);
@@ -1102,7 +1100,6 @@ static PyObject *  AerospikeClient_OperateOrdered_Invoke(
 				PyList_Append(py_bins, py_rec_tuple);
 				Py_DECREF(py_rec_tuple);
 			} else {
-		printf("NOT STORING VALUE\n");
 				Py_INCREF(Py_None);
 				PyList_Append(py_bins, Py_None);
 			}
