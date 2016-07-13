@@ -576,6 +576,10 @@ PyObject *  AerospikeClient_Operate_Invoke(
 
 	as_vector * unicodeStrVector = as_vector_create(sizeof(char *), 128);
 
+	as_operations ops;
+	Py_ssize_t size = PyList_Size(py_list);
+	as_operations_inita(&ops, size);
+
 	if (py_policy) {
 		if(pyobject_to_policy_operate(err, py_policy, &operate_policy, &operate_policy_p,
 				&self->as->config.policies.operate) != AEROSPIKE_OK) {
@@ -585,10 +589,6 @@ PyObject *  AerospikeClient_Operate_Invoke(
 
 	as_static_pool static_pool;
 	memset(&static_pool, 0, sizeof(static_pool));
-
-	as_operations ops;
-	Py_ssize_t size = PyList_Size(py_list);
-	as_operations_inita(&ops, size);
 
 	CHECK_CONNECTED(err);
 
