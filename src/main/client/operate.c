@@ -336,7 +336,10 @@ as_status add_op(AerospikeClient * self, as_error * err, PyObject * py_val, as_v
 				as_bytes *bytes;
 				GET_BYTES_POOL(bytes, static_pool, err);
 				if (err->code == AEROSPIKE_OK) {
-					serialize_based_on_serializer_policy(self, SERIALIZER_PYTHON, &bytes, py_value, err);
+					if (serialize_based_on_serializer_policy(self, SERIALIZER_PYTHON,
+							&bytes, py_value, err) != AEROSPIKE_OK) {
+						return err->code;
+					}
 					as_operations_add_append_rawp(ops, bin, bytes->value, bytes->size, true);
 				}
 			} else {
@@ -362,7 +365,10 @@ as_status add_op(AerospikeClient * self, as_error * err, PyObject * py_val, as_v
 				as_bytes *bytes;
 				GET_BYTES_POOL(bytes, static_pool, err);
 				if (err->code == AEROSPIKE_OK) {
-					serialize_based_on_serializer_policy(self, SERIALIZER_PYTHON, &bytes, py_value, err);
+					if (serialize_based_on_serializer_policy(self, SERIALIZER_PYTHON,
+							&bytes, py_value, err) != AEROSPIKE_OK) {
+						return err->code;
+					}
 					as_operations_add_prepend_rawp(ops, bin, bytes->value, bytes->size, true);
 				}
 			} else {

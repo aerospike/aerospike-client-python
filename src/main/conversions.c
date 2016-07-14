@@ -360,7 +360,6 @@ as_status pyobject_to_map(AerospikeClient * self, as_error * err, PyObject * py_
 as_status pyobject_to_val(AerospikeClient * self, as_error * err, PyObject * py_obj, as_val ** val, as_static_pool *static_pool, int serializer_type)
 {
 	as_error_reset(err);
-	PyObject * py_result = NULL;
 
 	if (!py_obj) {
 		// this should never happen, but if it did...
@@ -369,8 +368,10 @@ as_status pyobject_to_val(AerospikeClient * self, as_error * err, PyObject * py_
 		as_bytes *bytes;
 		GET_BYTES_POOL(bytes, static_pool, err);
 		if (err->code == AEROSPIKE_OK) {
-			py_result = serialize_based_on_serializer_policy(self, serializer_type,
-				&bytes, py_obj, err);
+			if (serialize_based_on_serializer_policy(self, serializer_type,
+				&bytes, py_obj, err) != AEROSPIKE_OK) {
+				return err->code;
+			}
 			*val = (as_val *) bytes;
 		}
 	} else if (PyInt_Check(py_obj)) {
@@ -408,8 +409,10 @@ as_status pyobject_to_val(AerospikeClient * self, as_error * err, PyObject * py_
 			as_bytes *bytes;
 			GET_BYTES_POOL(bytes, static_pool, err);
 			if (err->code == AEROSPIKE_OK) {
-				py_result = serialize_based_on_serializer_policy(self, serializer_type,
-					&bytes, py_data, err);
+				if (serialize_based_on_serializer_policy(self, serializer_type,
+					&bytes, py_data, err) != AEROSPIKE_OK) {
+					return err->code;
+				}
 				*val = (as_val *) bytes;
 			}
 		}
@@ -417,8 +420,10 @@ as_status pyobject_to_val(AerospikeClient * self, as_error * err, PyObject * py_
 		as_bytes *bytes;
 		GET_BYTES_POOL(bytes, static_pool, err);
 		if (err->code == AEROSPIKE_OK) {
-			py_result = serialize_based_on_serializer_policy(self, serializer_type,
-					&bytes, py_obj, err);
+			if (serialize_based_on_serializer_policy(self, serializer_type,
+					&bytes, py_obj, err) != AEROSPIKE_OK) {
+				return err->code;
+			}
 			*val = (as_val *) bytes;
 		}
 	} else if (PyList_Check(py_obj)) {
@@ -445,15 +450,13 @@ as_status pyobject_to_val(AerospikeClient * self, as_error * err, PyObject * py_
 			as_bytes *bytes;
 			GET_BYTES_POOL(bytes, static_pool, err);
 			if (err->code == AEROSPIKE_OK) {
-				py_result = serialize_based_on_serializer_policy(self, serializer_type,
-					&bytes, py_obj, err);
+				if (serialize_based_on_serializer_policy(self, serializer_type,
+					&bytes, py_obj, err) != AEROSPIKE_OK) {
+					return err->code;
+				}
 				*val = (as_val *) bytes;
 			}
 		}
-	}
-
-	if (py_result) {
-		Py_DECREF(py_result);
 	}
 
 	return err->code;
@@ -467,7 +470,6 @@ as_status pyobject_to_record(AerospikeClient * self, as_error * err, PyObject * 
 		as_record * rec, int serializer_type, as_static_pool *static_pool)
 {
 	as_error_reset(err);
-	PyObject * py_result = NULL;
 
 	if (!py_rec) {
 		// this should never happen, but if it did...
@@ -512,8 +514,10 @@ as_status pyobject_to_record(AerospikeClient * self, as_error * err, PyObject * 
 				as_bytes *bytes;
 				GET_BYTES_POOL(bytes, static_pool, err);
 				if (err->code == AEROSPIKE_OK) {
-					py_result = serialize_based_on_serializer_policy(self, serializer_type,
-							&bytes, value, err);
+					if (serialize_based_on_serializer_policy(self, serializer_type,
+							&bytes, value, err) != AEROSPIKE_OK) {
+						return err->code;
+					}
 					ret_val = as_record_set_bytes(rec, name, bytes);
 				}
 			} else if (PyInt_Check(value)) {
@@ -544,8 +548,10 @@ as_status pyobject_to_record(AerospikeClient * self, as_error * err, PyObject * 
 					as_bytes *bytes;
 					GET_BYTES_POOL(bytes, static_pool, err);
 					if (err->code == AEROSPIKE_OK) {
-						py_result = serialize_based_on_serializer_policy(self, serializer_type,
-							&bytes, py_data, err);
+						if (serialize_based_on_serializer_policy(self, serializer_type,
+							&bytes, py_data, err) != AEROSPIKE_OK) {
+							return err->code;
+						}
 						ret_val = as_record_set_bytes(rec, name, bytes);
 					}
 				}
@@ -565,8 +571,10 @@ as_status pyobject_to_record(AerospikeClient * self, as_error * err, PyObject * 
 				as_bytes *bytes;
 				GET_BYTES_POOL(bytes, static_pool, err);
 				if (err->code == AEROSPIKE_OK) {
-					py_result = serialize_based_on_serializer_policy(self, serializer_type,
-							&bytes, value, err);
+					if (serialize_based_on_serializer_policy(self, serializer_type,
+							&bytes, value, err) != AEROSPIKE_OK) {
+						return err->code;
+					}
 					ret_val = as_record_set_bytes(rec, name, bytes);
 				}
 			} else if (PyList_Check(value)) {
@@ -595,8 +603,10 @@ as_status pyobject_to_record(AerospikeClient * self, as_error * err, PyObject * 
 					as_bytes *bytes;
 					GET_BYTES_POOL(bytes, static_pool, err);
 					if (err->code == AEROSPIKE_OK) {
-						py_result = serialize_based_on_serializer_policy(self, serializer_type,
-							&bytes, value, err);
+						if (serialize_based_on_serializer_policy(self, serializer_type,
+							&bytes, value, err) != AEROSPIKE_OK) {
+							return err->code;
+						}
 						ret_val = as_record_set_bytes(rec, name, bytes);
 					}
 				}
@@ -659,10 +669,6 @@ as_status pyobject_to_record(AerospikeClient * self, as_error * err, PyObject * 
 			}
 		}
 
-		if (py_result) {
-			Py_DECREF(py_result);
-		}
-
 		if (err->code != AEROSPIKE_OK) {
 			as_record_destroy(rec);
 		}
@@ -681,14 +687,15 @@ as_status pyobject_to_astype_write(AerospikeClient * self, as_error * err, PyObj
 		as_static_pool *static_pool, int serializer_type)
 {
 	as_error_reset(err);
-	PyObject * py_result = NULL;
 
 	if (PyBool_Check(py_value)) {
 		as_bytes *bytes;
 		GET_BYTES_POOL(bytes, static_pool, err);
 		if (err->code == AEROSPIKE_OK) {
-			py_result = serialize_based_on_serializer_policy(self, serializer_type,
-					&bytes, py_value, err);
+			if (serialize_based_on_serializer_policy(self, serializer_type,
+					&bytes, py_value, err)  != AEROSPIKE_OK) {
+				return err->code;
+			}
 			*val = (as_val *) bytes;
 		}
 	} else if (PyInt_Check(py_value)) {
@@ -716,8 +723,10 @@ as_status pyobject_to_astype_write(AerospikeClient * self, as_error * err, PyObj
 			as_bytes *bytes;
 			GET_BYTES_POOL(bytes, static_pool, err);
 			if (err->code == AEROSPIKE_OK) {
-				py_result = serialize_based_on_serializer_policy(self, serializer_type,
-					&bytes, py_data, err);
+				if (serialize_based_on_serializer_policy(self, serializer_type,
+					&bytes, py_data, err) != AEROSPIKE_OK) {
+					return err->code;
+				}
 				*val = (as_val *) bytes;
 			}
 		}
@@ -747,15 +756,13 @@ as_status pyobject_to_astype_write(AerospikeClient * self, as_error * err, PyObj
 			as_bytes *bytes;
 			GET_BYTES_POOL(bytes, static_pool, err);
 			if (err->code == AEROSPIKE_OK) {
-				py_result = serialize_based_on_serializer_policy(self, serializer_type,
-					&bytes, py_value, err);
+				if (serialize_based_on_serializer_policy(self, serializer_type,
+					&bytes, py_value, err) != AEROSPIKE_OK) {
+					return err->code;
+				}
 				*val = (as_val *) bytes;
 			}
 		}
-	}
-
-	if (py_result) {
-		Py_DECREF(py_result);
 	}
 
 	return err->code;
@@ -956,11 +963,9 @@ as_status val_to_pyobject(AerospikeClient * self, as_error * err, const as_val *
 		case AS_BYTES: {
 				//uint32_t bval_size = as_bytes_size(bval);
 				as_bytes * bval = as_bytes_fromval(val);
-				PyObject * py_result = deserialize_based_on_as_bytes_type(self, bval, py_val, err);
-				if (py_result) {
-					Py_DECREF(py_result);
+				if (deserialize_based_on_as_bytes_type(self, bval, py_val, err) != AEROSPIKE_OK) {
+					return err->code;
 				}
-				//*py_val = PyByteArray_FromStringAndSize((char *) as_bytes_get(bval), bval_size);
 				break;
 			}
 		case AS_LIST: {
@@ -1452,7 +1457,8 @@ void initialize_bin_for_strictypes(AerospikeClient *self, as_error *err, PyObjec
 		} else {
 			as_bytes *bytes;
 			GET_BYTES_POOL(bytes, static_pool, err);
-			serialize_based_on_serializer_policy(self, SERIALIZER_PYTHON, &bytes, py_value, err);
+			serialize_based_on_serializer_policy(self, SERIALIZER_PYTHON,
+					&bytes, py_value, err);
 			((as_val *) &binop_bin->value)->type = AS_UNKNOWN;
 			binop_bin->valuep = (as_bin_value *) bytes;
 		}
@@ -1475,7 +1481,8 @@ void initialize_bin_for_strictypes(AerospikeClient *self, as_error *err, PyObjec
 		} else {
 			as_bytes *bytes;
 			GET_BYTES_POOL(bytes, static_pool, err);
-			serialize_based_on_serializer_policy(self, SERIALIZER_PYTHON, &bytes, py_data, err);
+			serialize_based_on_serializer_policy(self, SERIALIZER_PYTHON,
+					&bytes, py_data, err);
 			((as_val *) &binop_bin->value)->type = AS_UNKNOWN;
 			binop_bin->valuep = (as_bin_value *) bytes;
 		}
@@ -1485,13 +1492,15 @@ void initialize_bin_for_strictypes(AerospikeClient *self, as_error *err, PyObjec
 	} else if (PyByteArray_Check(py_value)) {
 		as_bytes *bytes;
 		GET_BYTES_POOL(bytes, static_pool, err);
-		serialize_based_on_serializer_policy(self, SERIALIZER_PYTHON, &bytes, py_value, err);
+		serialize_based_on_serializer_policy(self, SERIALIZER_PYTHON,
+				&bytes, py_value, err);
 		as_bytes_init_wrap((as_bytes *) &binop_bin->value, bytes->value, bytes->size, true);
 		binop_bin->valuep = &binop_bin->value;
 	} else {
 		as_bytes *bytes;
 		GET_BYTES_POOL(bytes, static_pool, err);
-		serialize_based_on_serializer_policy(self, SERIALIZER_PYTHON, &bytes, py_value, err);
+		serialize_based_on_serializer_policy(self, SERIALIZER_PYTHON,
+				&bytes, py_value, err);
 		((as_val *) &binop_bin->value)->type = AS_UNKNOWN;
 		binop_bin->valuep = (as_bin_value *) bytes;
 	}
