@@ -162,7 +162,11 @@ bool opRequiresValue(int op) {
 	return (op != AS_OPERATOR_READ  && op != AS_OPERATOR_TOUCH  &&
 			op != OP_LIST_POP       && op != OP_LIST_REMOVE     &&
 			op != OP_LIST_CLEAR     && op != OP_LIST_GET        &&
-			op != OP_LIST_SIZE);
+			op != OP_LIST_SIZE		&& op != OP_MAP_GET_BY_KEY);
+}
+
+bool opRequiresRange(int op) {
+	return (op == OP_MAP_REMOVE_BY_VALUE_RANGE  || op == OP_MAP_GET_BY_VALUE_RANGE);
 }
 
 bool opReturnsResult(int op) {
@@ -177,9 +181,10 @@ bool opReturnsResult(int op) {
 }
 
 as_status add_op(AerospikeClient * self, as_error * err, PyObject * py_val, as_vector * unicodeStrVector,
-		as_static_pool * static_pool, as_operations * ops, long * op) {
+		as_static_pool * static_pool, as_operations * ops, long * op, long * ret_type) {
 	as_val* put_val = NULL;
 	as_val* put_key = NULL;
+	as_val* put_range = NULL;
 	char* bin = NULL;
 	char* val = NULL;
 	long offset = 0;
@@ -199,6 +204,7 @@ as_status add_op(AerospikeClient * self, as_error * err, PyObject * py_val, as_v
 	PyObject * py_value = NULL;
 	PyObject * py_key = NULL;
 	PyObject * py_index = NULL;
+	PyObject * py_range = NULL;
 	PyObject * py_map_policy = NULL;
 	PyObject * py_return_type = NULL;
 	Py_ssize_t pos = 0;
@@ -217,6 +223,8 @@ as_status add_op(AerospikeClient * self, as_error * err, PyObject * py_val, as_v
 				py_value = value;
 			} else if (!strcmp(name, "key")) {
 				py_key = value;
+			} else if (!strcmp(name, "range")) {
+				py_range = value;
 			} else if (!strcmp(name, "map_policy")) {
 				py_map_policy = value;
 			} else if (!strcmp(name, "return_type")) {
@@ -280,11 +288,21 @@ as_status add_op(AerospikeClient * self, as_error * err, PyObject * py_val, as_v
 		}
 	}
 
+	if (py_range) {
+		if (pyobject_to_astype_write(self, err, py_range, &put_range,
+				static_pool, SERIALIZER_PYTHON) != AEROSPIKE_OK) {
+			return err->code;
+		}
+	} else if (opRequiresRange(operation)) {
+		return as_error_update(err, AEROSPIKE_ERR_PARAM, "Range should be given");
+	}
+
 	if (py_return_type) {
 		if (!PyInt_Check(py_return_type)) {
 			return as_error_update(err, AEROSPIKE_ERR_PARAM, "Return type should be an integer");
 		}
 		return_type = PyInt_AsLong(py_return_type);
+		*ret_type = return_type;
 	}
 
 	if (!py_index && opRequiresIndex(operation)) {
@@ -393,6 +411,8 @@ as_status add_op(AerospikeClient * self, as_error * err, PyObject * py_val, as_v
 		case AS_OPERATOR_WRITE:
 			as_operations_add_write(ops, bin, (as_bin_value *) put_val);
 			break;
+
+		//------- LIST OPERATIONS ---------
 		case OP_LIST_APPEND:
 			as_operations_add_list_append(ops, bin, put_val);
 			break;
@@ -448,114 +468,91 @@ as_status add_op(AerospikeClient * self, as_error * err, PyObject * py_val, as_v
 			as_operations_add_list_size(ops, bin);
 			break;
 
+		//------- MAP OPERATIONS ---------
 		case OP_MAP_SET_POLICY:
 			if (pyobject_to_map_policy(err, py_value, &map_policy) != AEROSPIKE_OK) {\
 				return err->code;
 			}
 			as_operations_add_map_set_policy(ops, bin, &map_policy);
 			break;
-
 		case OP_MAP_PUT:
 			as_operations_add_map_put(ops, bin, &map_policy, put_key, put_val);
 			break;
-
 		case OP_MAP_PUT_ITEMS:
 			as_operations_add_map_put_items(ops, bin, &map_policy, (as_map *)put_val);
 			break;
-
 		case OP_MAP_INCREMENT:
 			as_operations_add_map_increment(ops, bin, &map_policy, put_key, put_val);
 			break;
-
 		case OP_MAP_DECREMENT:
 			as_operations_add_map_decrement(ops, bin, &map_policy, put_key, put_val);
 			break;
-
 		case OP_MAP_SIZE:
 			as_operations_add_map_size(ops, bin);
 			break;
-
 		case OP_MAP_CLEAR:
 			as_operations_add_map_clear(ops, bin);
 			break;
-
 		case OP_MAP_REMOVE_BY_KEY:
 			as_operations_add_map_remove_by_key(ops, bin, put_key, return_type);
 			break;
-
 		case OP_MAP_REMOVE_BY_KEY_LIST:
 			as_operations_add_map_remove_by_key_list(ops, bin, (as_list *)put_val, return_type);
 			break;
-
 		case OP_MAP_REMOVE_BY_KEY_RANGE:
 			as_operations_add_map_remove_by_key_range(ops, bin, put_key, put_val, return_type);
 			break;
-
 		case OP_MAP_REMOVE_BY_VALUE:
 			as_operations_add_map_remove_by_value(ops, bin, put_val, return_type);
 			break;
-
 		case OP_MAP_REMOVE_BY_VALUE_LIST:
 			as_operations_add_map_remove_by_value_list(ops, bin, (as_list *)put_val, return_type);
 			break;
-
 		case OP_MAP_REMOVE_BY_VALUE_RANGE:
-		//	as_operations_add_map_remove_by_value_range(ops, bin, put_val, index, return_type);
+			as_operations_add_map_remove_by_value_range(ops, bin, put_val, put_range, return_type);
 			break;
-
 		case OP_MAP_REMOVE_BY_INDEX:
 			as_operations_add_map_remove_by_index(ops, bin, index, return_type);
 			break;
-
 		case OP_MAP_REMOVE_BY_INDEX_RANGE:
 			if (pyobject_to_index(self, err, py_value, &offset) != AEROSPIKE_OK) {
 				return err->code;
 			}
 			as_operations_add_map_remove_by_index_range(ops, bin, index, offset, return_type);
 			break;
-
 		case OP_MAP_REMOVE_BY_RANK:
 			as_operations_add_map_remove_by_rank(ops, bin, index, return_type);
 			break;
-
 		case OP_MAP_REMOVE_BY_RANK_RANGE:
 			if (pyobject_to_index(self, err, py_value, &offset) != AEROSPIKE_OK) {
 				return err->code;
 			}
 			as_operations_add_map_remove_by_rank_range(ops, bin, index, offset, return_type);
 			break;
-
 		case OP_MAP_GET_BY_KEY:
 			as_operations_add_map_get_by_key(ops, bin, put_key, return_type);
 			break;
-
 		case OP_MAP_GET_BY_KEY_RANGE:
 			as_operations_add_map_get_by_key_range(ops, bin, put_key, put_val, return_type);
 			break;
-
 		case OP_MAP_GET_BY_VALUE:
 			as_operations_add_map_get_by_value(ops, bin, put_val, return_type);
 			break;
-
 		case OP_MAP_GET_BY_VALUE_RANGE:
-		//	as_operations_add_map_get_by_value_range(ops, bin, put_val, range_put, return_type);
+			as_operations_add_map_get_by_value_range(ops, bin, put_val, put_range, return_type);
 			break;
-
 		case OP_MAP_GET_BY_INDEX:
 			as_operations_add_map_get_by_index(ops, bin, index, return_type);
 			break;
-
 		case OP_MAP_GET_BY_INDEX_RANGE:
 			if (pyobject_to_index(self, err, py_value, &offset) != AEROSPIKE_OK) {
 				return err->code;
 			}
 			as_operations_add_map_get_by_index_range(ops, bin, index, offset, return_type);
 			break;
-
 		case OP_MAP_GET_BY_RANK:
 			as_operations_add_map_get_by_rank(ops, bin, index, return_type);
 			break;
-
 		case OP_MAP_GET_BY_RANK_RANGE:
 			if (pyobject_to_index(self, err, py_value, &offset) != AEROSPIKE_OK) {
 				return err->code;
@@ -570,6 +567,62 @@ as_status add_op(AerospikeClient * self, as_error * err, PyObject * py_val, as_v
 	}
 
 	return err->code;
+}
+
+/**
+ *******************************************************************************************************
+ * This function checks for metadata and if present set it into the
+ * as_operations.
+ *
+ * @param py_meta               The dictionary of metadata.
+ * @param ops                   The as_operations object.
+ * @param err                   The as_error to be populated by the function
+ *                              with the encountered error if any.
+ *
+ * Returns nothing.
+ *******************************************************************************************************
+ */
+static void AerospikeClient_CheckForMeta(PyObject * py_meta, as_operations * ops, as_error *err)
+{
+	if (py_meta && PyDict_Check(py_meta)) {
+		PyObject * py_gen = PyDict_GetItemString(py_meta, "gen");
+		PyObject * py_ttl = PyDict_GetItemString(py_meta, "ttl");
+		uint32_t ttl = 0;
+		uint16_t gen = 0;
+		if (py_ttl) {
+			if (PyInt_Check(py_ttl)) {
+				ttl = (uint32_t) PyInt_AsLong(py_ttl);
+			} else if (PyLong_Check(py_ttl)) {
+				ttl = (uint32_t) PyLong_AsLongLong(py_ttl);
+			} else {
+				as_error_update(err, AEROSPIKE_ERR_PARAM, "Ttl should be an int or long");
+			}
+
+			if ((uint32_t)-1 == ttl && PyErr_Occurred()) {
+				as_error_update(err, AEROSPIKE_ERR_PARAM, "integer value for ttl exceeds sys.maxsize");
+				return;
+			}
+			ops->ttl = ttl;
+		}
+
+		if (py_gen) {
+			if (PyInt_Check(py_gen)) {
+				gen = (uint16_t) PyInt_AsLong(py_gen);
+			} else if (PyLong_Check(py_gen)) {
+				gen = (uint16_t) PyLong_AsLongLong(py_gen);
+			} else {
+				as_error_update(err, AEROSPIKE_ERR_PARAM, "Generation should be an int or long");
+			}
+
+			if ((uint16_t)-1 == gen && PyErr_Occurred()) {
+				as_error_update(err, AEROSPIKE_ERR_PARAM, "integer value for gen exceeds sys.maxsize");
+				return;
+			}
+			ops->gen = gen;
+		}
+	} else {
+		as_error_update(err, AEROSPIKE_ERR_PARAM, "Metadata should be of type dictionary");
+	}
 }
 
 /**
@@ -593,6 +646,7 @@ PyObject *  AerospikeClient_Operate_Invoke(
 {
 	int i = 0;
 	long operation;
+	long return_type = -1;
 	PyObject * py_rec = NULL;
 	as_record * rec = NULL;
 	as_policy_operate operate_policy;
@@ -626,7 +680,7 @@ PyObject *  AerospikeClient_Operate_Invoke(
 		PyObject * py_val = PyList_GetItem(py_list, i);
 
 		if (PyDict_Check(py_val)) {
-			if (add_op(self, err, py_val, unicodeStrVector, &static_pool, &ops, &operation) != AEROSPIKE_OK) {
+			if (add_op(self, err, py_val, unicodeStrVector, &static_pool, &ops, &operation, &return_type) != AEROSPIKE_OK) {
 				goto CLEANUP;
 			}
 		}
@@ -683,188 +737,6 @@ CLEANUP:
 	}
 }
 
-/**
- *******************************************************************************************************
- * Appends a string to the string value in a bin.
- *
- * @param self                  AerospikeClient object
- * @param args                  The args is a tuple object containing an argument
- *                              list passed from Python to a C function
- * @param kwds                  Dictionary of keywords
- *
- * Returns an integer status. 0(Zero) is success value.
- * In case of error,appropriate exceptions will be raised.
- *******************************************************************************************************
- */
-PyObject * AerospikeClient_Append(AerospikeClient * self, PyObject * args, PyObject * kwds)
-{
-	BASE_VARIABLES
-
-	PyObject * py_bin = NULL;
-	PyObject * py_append_str = NULL;
-
-	// Python Function Keyword Arguments
-	static char * kwlist[] = {"key", "bin", "val", "meta", "policy", NULL};
-	if (PyArg_ParseTupleAndKeywords(args, kwds, "OOO|OO:append", kwlist,
-				&py_key, &py_bin, &py_append_str, &py_meta, &py_policy) == false) {
-		return NULL;
-	}
-
-	CHECK_CONNECTED(&err);
-
-	if (pyobject_to_key(&err, py_key, &key) != AEROSPIKE_OK) {
-		goto CLEANUP;
-	}
-
-	PyObject * py_list = NULL;
-	py_list = create_pylist(py_list, AS_OPERATOR_APPEND, py_bin, py_append_str);
-	py_result = AerospikeClient_Operate_Invoke(self, &err, &key, py_list,
-			py_meta, py_policy);
-
-	DECREF_LIST_AND_RESULT();
-
-CLEANUP:
-	EXCEPTION_ON_ERROR();
-
-	return PyLong_FromLong(0);
-}
-
-/**
- *******************************************************************************************************
- * Prepends a string to the string value in a bin
- *
- * @param self                  AerospikeClient object
- * @param args                  The args is a tuple object containing an argument
- *                              list passed from Python to a C function
- * @param kwds                  Dictionary of keywords
- *
- * Returns an integer status. 0(Zero) is success value.
- * In case of error,appropriate exceptions will be raised.
- *******************************************************************************************************
- */
-PyObject * AerospikeClient_Prepend(AerospikeClient * self, PyObject * args, PyObject * kwds)
-{
-	BASE_VARIABLES
-	PyObject * py_bin = NULL;
-	PyObject * py_prepend_str = NULL;
-
-	// Python Function Keyword Arguments
-	static char * kwlist[] = {"key", "bin", "val", "meta", "policy", NULL};
-	if (PyArg_ParseTupleAndKeywords(args, kwds, "OOO|OO:prepend", kwlist,
-				&py_key, &py_bin, &py_prepend_str, &py_meta, &py_policy) == false) {
-		return NULL;
-	}
-
-	CHECK_CONNECTED(&err);
-
-	if (pyobject_to_key(&err, py_key, &key) != AEROSPIKE_OK) {
-		goto CLEANUP;
-	}
-
-	PyObject * py_list = NULL;
-	py_list = create_pylist(py_list, AS_OPERATOR_PREPEND, py_bin, py_prepend_str);
-	py_result = AerospikeClient_Operate_Invoke(self, &err, &key, py_list,
-			py_meta, py_policy);
-
-	DECREF_LIST_AND_RESULT();
-
-CLEANUP:
-	EXCEPTION_ON_ERROR();
-
-	return PyLong_FromLong(0);
-}
-
-/**
- *******************************************************************************************************
- * Increments a numeric value in a bin.
- *
- * @param self                  AerospikeClient object
- * @param args                  The args is a tuple object containing an argument
- *                              list passed from Python to a C function
- * @param kwds                  Dictionary of keywords
- *
- * Returns an integer status. 0(Zero) is success value.
- * In case of error,appropriate exceptions will be raised.
- *******************************************************************************************************
- */
-PyObject * AerospikeClient_Increment(AerospikeClient * self, PyObject * args, PyObject * kwds)
-{
-	BASE_VARIABLES
-	PyObject * py_bin = NULL;
-	PyObject * py_offset_value = 0;
-
-	// Python Function Keyword Arguments
-	static char * kwlist[] = {"key", "bin", "offset", "meta", "policy", NULL};
-	if (PyArg_ParseTupleAndKeywords(args, kwds, "OOO|OO:increment", kwlist,
-				&py_key, &py_bin, &py_offset_value, &py_meta,
-				&py_policy) == false) {
-		return NULL;
-	}
-
-	CHECK_CONNECTED(&err);
-
-	if (pyobject_to_key(&err, py_key, &key) != AEROSPIKE_OK) {
-		goto CLEANUP;
-	}
-
-	PyObject * py_list = NULL;
-	py_list = create_pylist(py_list, AS_OPERATOR_INCR, py_bin, py_offset_value);
-	py_result = AerospikeClient_Operate_Invoke(self, &err, &key, py_list,
-			py_meta, py_policy);
-	
-	DECREF_LIST_AND_RESULT();
-
-CLEANUP:
-	EXCEPTION_ON_ERROR();
-
-	return PyLong_FromLong(0);
-}
-
-/**
- *******************************************************************************************************
- * Touch a record in the Aerospike DB
- *
- * @param self                  AerospikeClient object
- * @param args                  The args is a tuple object containing an argument
- *                              list passed from Python to a C function
- * @param kwds                  Dictionary of keywords
- *
- * Returns an integer status. 0(Zero) is success value.
- * In case of error,appropriate exceptions will be raised.
- *******************************************************************************************************
- */
-PyObject * AerospikeClient_Touch(AerospikeClient * self, PyObject * args, PyObject * kwds)
-{
-	BASE_VARIABLES
-
-	PyObject * py_touchvalue = NULL;
-	PyObject * py_bin = NULL;
-
-	// Python Function Keyword Arguments
-	static char * kwlist[] = {"key", "val", "meta", "policy", NULL};
-	if (PyArg_ParseTupleAndKeywords(args, kwds, "OO|OO:touch", kwlist,
-				&py_key, &py_touchvalue, &py_meta, &py_policy) == false) {
-		return NULL;
-	}
-
-	CHECK_CONNECTED(&err);
-
-	if (pyobject_to_key(&err, py_key, &key) != AEROSPIKE_OK) {
-		goto CLEANUP;
-	}
-
-	PyObject * py_list = NULL;
-	py_list = create_pylist(py_list, AS_OPERATOR_TOUCH, NULL, py_touchvalue);
-	py_result = AerospikeClient_Operate_Invoke(self, &err, &key, py_list,
-			py_meta, py_policy);
-
-	DECREF_LIST_AND_RESULT();
-
-CLEANUP:
-	EXCEPTION_ON_ERROR();
-
-	return PyLong_FromLong(0);
-}
 
 /**
  *******************************************************************************************************
@@ -882,7 +754,6 @@ CLEANUP:
 PyObject * AerospikeClient_Operate(AerospikeClient * self, PyObject * args, PyObject * kwds)
 {
 	BASE_VARIABLES
-
 	PyObject * py_list = NULL;
 	PyObject * py_bin = NULL;
 
@@ -915,63 +786,6 @@ CLEANUP:
 
 /**
  *******************************************************************************************************
- * This function checks for metadata and if present set it into the
- * as_operations.
- *
- * @param py_meta               The dictionary of metadata.
- * @param ops                   The as_operations object.
- * @param err                   The as_error to be populated by the function
- *                              with the encountered error if any.
- *
- * Returns nothing.
- *******************************************************************************************************
- */
-static void AerospikeClient_CheckForMeta(PyObject * py_meta, as_operations * ops, as_error *err)
-{
-	if (py_meta && PyDict_Check(py_meta)) {
-		PyObject * py_gen = PyDict_GetItemString(py_meta, "gen");
-		PyObject * py_ttl = PyDict_GetItemString(py_meta, "ttl");
-		uint32_t ttl = 0;
-		uint16_t gen = 0;
-		if (py_ttl) {
-			if (PyInt_Check(py_ttl)) {
-				ttl = (uint32_t) PyInt_AsLong(py_ttl);
-			} else if (PyLong_Check(py_ttl)) {
-				ttl = (uint32_t) PyLong_AsLongLong(py_ttl);
-			} else {
-				as_error_update(err, AEROSPIKE_ERR_PARAM, "Ttl should be an int or long");
-			}
-
-			if ((uint32_t)-1 == ttl) {
-				as_error_update(err, AEROSPIKE_ERR_PARAM, "integer value for ttl exceeds sys.maxsize");
-				return;
-			}
-			ops->ttl = ttl;
-		}
-
-		if (py_gen) {
-			if (PyInt_Check(py_gen)) {
-				gen = (uint16_t) PyInt_AsLong(py_gen);
-			} else if (PyLong_Check(py_gen)) {
-				gen = (uint16_t) PyLong_AsLongLong(py_gen);
-			} else {
-				as_error_update(err, AEROSPIKE_ERR_PARAM, "Generation should be an int or long");
-			}
-
-			if ((uint16_t)-1 == gen) {
-				as_error_update(err, AEROSPIKE_ERR_PARAM, "integer value for gen exceeds sys.maxsize");
-				return;
-			}
-			ops->gen = gen;
-		}
-	} else {
-		as_error_update(err, AEROSPIKE_ERR_PARAM, "Metadata should be of type dictionary");
-	}
-}
-
-
-/**
- *******************************************************************************************************
  * This function invokes csdk's API's.
  *
  * @param self                  AerospikeClient object
@@ -988,7 +802,8 @@ static PyObject *  AerospikeClient_OperateOrdered_Invoke(
 	as_key * key, PyObject * py_list, PyObject * py_meta,
 	PyObject * py_policy)
 {
-	long operation = 0;
+	long operation;
+	long return_type;
 	int i = 0;
 	PyObject * py_rec = NULL;
 	as_policy_operate operate_policy;
@@ -1035,8 +850,9 @@ static PyObject *  AerospikeClient_OperateOrdered_Invoke(
 
 		PyObject * py_val = PyList_GetItem(py_list, i);
 		operation = -1;
+		return_type = -1;
 		if (PyDict_Check(py_val)) {
-			if (add_op(self, err, py_val, unicodeStrVector, &static_pool, &ops, &operation) != AEROSPIKE_OK) {
+			if (add_op(self, err, py_val, unicodeStrVector, &static_pool, &ops, &operation, &return_type) != AEROSPIKE_OK) {
 				goto LOOP_CLEANUP;
 			}
 		}
@@ -1194,3 +1010,188 @@ CLEANUP:
 	}
 	return py_result;
 }
+
+/**
+ *******************************************************************************************************
+ * Appends a string to the string value in a bin.
+ *
+ * @param self                  AerospikeClient object
+ * @param args                  The args is a tuple object containing an argument
+ *                              list passed from Python to a C function
+ * @param kwds                  Dictionary of keywords
+ *
+ * Returns an integer status. 0(Zero) is success value.
+ * In case of error,appropriate exceptions will be raised.
+ *******************************************************************************************************
+ */
+PyObject * AerospikeClient_Append(AerospikeClient * self, PyObject * args, PyObject * kwds)
+{
+	BASE_VARIABLES
+	PyObject * py_bin = NULL;
+	PyObject * py_append_str = NULL;
+
+	// Python Function Keyword Arguments
+	static char * kwlist[] = {"key", "bin", "val", "meta", "policy", NULL};
+	if (PyArg_ParseTupleAndKeywords(args, kwds, "OOO|OO:append", kwlist,
+				&py_key, &py_bin, &py_append_str, &py_meta, &py_policy) == false) {
+		return NULL;
+	}
+
+	CHECK_CONNECTED(&err);
+
+	if (pyobject_to_key(&err, py_key, &key) != AEROSPIKE_OK) {
+		goto CLEANUP;
+	}
+
+	PyObject * py_list = NULL;
+	py_list = create_pylist(py_list, AS_OPERATOR_APPEND, py_bin, py_append_str);
+	py_result = AerospikeClient_Operate_Invoke(self, &err, &key, py_list,
+			py_meta, py_policy);
+
+	DECREF_LIST_AND_RESULT();
+
+CLEANUP:
+	EXCEPTION_ON_ERROR();
+
+	return PyLong_FromLong(0);
+}
+
+/**
+ *******************************************************************************************************
+ * Prepends a string to the string value in a bin
+ *
+ * @param self                  AerospikeClient object
+ * @param args                  The args is a tuple object containing an argument
+ *                              list passed from Python to a C function
+ * @param kwds                  Dictionary of keywords
+ *
+ * Returns an integer status. 0(Zero) is success value.
+ * In case of error,appropriate exceptions will be raised.
+ *******************************************************************************************************
+ */
+PyObject * AerospikeClient_Prepend(AerospikeClient * self, PyObject * args, PyObject * kwds)
+{
+	BASE_VARIABLES
+	PyObject * py_bin = NULL;
+	PyObject * py_prepend_str = NULL;
+
+	// Python Function Keyword Arguments
+	static char * kwlist[] = {"key", "bin", "val", "meta", "policy", NULL};
+	if (PyArg_ParseTupleAndKeywords(args, kwds, "OOO|OO:prepend", kwlist,
+				&py_key, &py_bin, &py_prepend_str, &py_meta, &py_policy) == false) {
+		return NULL;
+	}
+
+	CHECK_CONNECTED(&err);
+
+	if (pyobject_to_key(&err, py_key, &key) != AEROSPIKE_OK) {
+		goto CLEANUP;
+	}
+
+	PyObject * py_list = NULL;
+	py_list = create_pylist(py_list, AS_OPERATOR_PREPEND, py_bin, py_prepend_str);
+	py_result = AerospikeClient_Operate_Invoke(self, &err, &key, py_list,
+			py_meta, py_policy);
+
+	DECREF_LIST_AND_RESULT();
+
+CLEANUP:
+	EXCEPTION_ON_ERROR();
+
+	return PyLong_FromLong(0);
+}
+
+/**
+ *******************************************************************************************************
+ * Increments a numeric value in a bin.
+ *
+ * @param self                  AerospikeClient object
+ * @param args                  The args is a tuple object containing an argument
+ *                              list passed from Python to a C function
+ * @param kwds                  Dictionary of keywords
+ *
+ * Returns an integer status. 0(Zero) is success value.
+ * In case of error,appropriate exceptions will be raised.
+ *******************************************************************************************************
+ */
+PyObject * AerospikeClient_Increment(AerospikeClient * self, PyObject * args, PyObject * kwds)
+{
+	BASE_VARIABLES
+	PyObject * py_bin = NULL;
+	PyObject * py_offset_value = 0;
+
+	// Python Function Keyword Arguments
+	static char * kwlist[] = {"key", "bin", "offset", "meta", "policy", NULL};
+	if (PyArg_ParseTupleAndKeywords(args, kwds, "OOO|OO:increment", kwlist,
+				&py_key, &py_bin, &py_offset_value, &py_meta,
+				&py_policy) == false) {
+		return NULL;
+	}
+
+	CHECK_CONNECTED(&err);
+
+	if (pyobject_to_key(&err, py_key, &key) != AEROSPIKE_OK) {
+		goto CLEANUP;
+	}
+
+	PyObject * py_list = NULL;
+	py_list = create_pylist(py_list, AS_OPERATOR_INCR, py_bin, py_offset_value);
+	py_result = AerospikeClient_Operate_Invoke(self, &err, &key, py_list,
+			py_meta, py_policy);
+
+	DECREF_LIST_AND_RESULT();
+
+CLEANUP:
+	EXCEPTION_ON_ERROR();
+
+	return PyLong_FromLong(0);
+}
+
+/**
+ *******************************************************************************************************
+ * Touch a record in the Aerospike DB
+ *
+ * @param self                  AerospikeClient object
+ * @param args                  The args is a tuple object containing an argument
+ *                              list passed from Python to a C function
+ * @param kwds                  Dictionary of keywords
+ *
+ * Returns an integer status. 0(Zero) is success value.
+ * In case of error,appropriate exceptions will be raised.
+ *******************************************************************************************************
+ */
+PyObject * AerospikeClient_Touch(AerospikeClient * self, PyObject * args, PyObject * kwds)
+{
+	BASE_VARIABLES
+	PyObject * py_touchvalue = NULL;
+	PyObject * py_bin = NULL;
+
+	// Python Function Keyword Arguments
+	static char * kwlist[] = {"key", "val", "meta", "policy", NULL};
+	if (PyArg_ParseTupleAndKeywords(args, kwds, "OO|OO:touch", kwlist,
+				&py_key, &py_touchvalue, &py_meta, &py_policy) == false) {
+		return NULL;
+	}
+
+	CHECK_CONNECTED(&err);
+
+	if (pyobject_to_key(&err, py_key, &key) != AEROSPIKE_OK) {
+		goto CLEANUP;
+	}
+
+	PyObject * py_list = NULL;
+	py_list = create_pylist(py_list, AS_OPERATOR_TOUCH, NULL, py_touchvalue);
+	py_result = AerospikeClient_Operate_Invoke(self, &err, &key, py_list,
+			py_meta, py_policy);
+
+	DECREF_LIST_AND_RESULT();
+
+CLEANUP:
+	EXCEPTION_ON_ERROR();
+
+	return PyLong_FromLong(0);
+}
+
+
+
+
