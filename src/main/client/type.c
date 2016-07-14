@@ -648,6 +648,11 @@ static int AerospikeClient_Type_Init(AerospikeClient * self, PyObject * args, Py
 		}
 	}
 
+	PyObject * py_tend_interval = PyDict_GetItemString(py_config, "tend_interval");
+	if (py_tend_interval && PyInt_Check(py_tend_interval)) {
+		config.tender_interval = PyInt_AsLong(py_tend_interval);
+	}
+
 	//strict_types check
 	self->strict_types = true;
 	PyObject * py_strict_types = PyDict_GetItemString(py_config, "strict_types");
