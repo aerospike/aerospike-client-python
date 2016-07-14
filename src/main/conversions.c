@@ -849,7 +849,7 @@ as_status pyobject_to_key(as_error * err, PyObject * py_keytuple, as_key * key)
 		}
 		else if (PyInt_Check(py_key)) {
 			int64_t k = (int64_t) PyInt_AsLong(py_key);
-			if (-1 == k) {
+			if (-1 == k && PyErr_Occurred()) {
 				as_error_update(err, AEROSPIKE_ERR_PARAM, "integer value for KEY exceeds sys.maxsize");
 			} else {
 				returnResult = as_key_init_int64(key, ns, set, k);
@@ -857,7 +857,7 @@ as_status pyobject_to_key(as_error * err, PyObject * py_keytuple, as_key * key)
 		}
 		else if (PyLong_Check(py_key)) {
 			int64_t k = (int64_t) PyLong_AsLongLong(py_key);
-			if (-1 == k) {
+			if (-1 == k && PyErr_Occurred()) {
 				as_error_update(err, AEROSPIKE_ERR_PARAM, "integer value for KEY exceeds sys.maxsize");
 			} else {
 				returnResult = as_key_init_int64(key, ns, set, k);
@@ -1569,7 +1569,7 @@ as_status check_for_meta(PyObject * py_meta, as_operations * ops, as_error *err)
 				return as_error_update(err, AEROSPIKE_ERR_PARAM, "Ttl should be an int or long");
 			}
 
-			if ((uint32_t)-1 == ttl) {
+			if ((uint32_t)-1 == ttl  && PyErr_Occurred()) {
 				return as_error_update(err, AEROSPIKE_ERR_PARAM, "integer value for ttl exceeds sys.maxsize");
 			}
 			ops->ttl = ttl;
@@ -1584,7 +1584,7 @@ as_status check_for_meta(PyObject * py_meta, as_operations * ops, as_error *err)
 				return as_error_update(err, AEROSPIKE_ERR_PARAM, "Generation should be an int or long");
 			}
 
-			if ((uint16_t)-1 == gen) {
+			if ((uint16_t)-1 == gen  && PyErr_Occurred()) {
 				return as_error_update(err, AEROSPIKE_ERR_PARAM, "integer value for gen exceeds sys.maxsize");
 			}
 			ops->gen = gen;

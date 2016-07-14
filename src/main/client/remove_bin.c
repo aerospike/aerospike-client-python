@@ -110,7 +110,7 @@ PyObject * AerospikeClient_RemoveBin_Invoke(
 			}
 			else if (PyLong_Check(py_ttl)) {
 				rec.ttl = (uint32_t) PyLong_AsLongLong(py_ttl);
-				if ((uint32_t)-1 == rec.ttl) {
+				if ((uint32_t)-1 == rec.ttl && PyErr_Occurred()) {
 					as_error_update(err, AEROSPIKE_ERR_PARAM, "integer value for ttl exceeds sys.maxsize");
 					goto CLEANUP;
 				}
@@ -128,7 +128,7 @@ PyObject * AerospikeClient_RemoveBin_Invoke(
 			}
 			else if (PyLong_Check(py_gen)) {
 				rec.gen = (uint16_t) PyLong_AsLongLong(py_gen);
-				if ((uint16_t)-1 == rec.gen) {
+				if ((uint16_t)-1 == rec.gen && PyErr_Occurred()) {
 					as_error_update(err, AEROSPIKE_ERR_PARAM, "integer value for gen exceeds sys.maxsize");
 					goto CLEANUP;
 				}
