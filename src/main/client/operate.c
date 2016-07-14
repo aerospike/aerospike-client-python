@@ -72,6 +72,19 @@
 		return NULL;\
 	}
 
+#define DECREF_LIST_AND_RESULT()\
+	if (py_list) {\
+		Py_DECREF(py_list);\
+	}\
+	if (err.code != AEROSPIKE_OK) {\
+		as_error_update(&err, err.code, NULL);\
+		goto CLEANUP;\
+	} else if (!py_result) {\
+		return NULL;\
+	} else {\
+		Py_DECREF(py_result);\
+	}
+
 /**
  *******************************************************************************************************
  * This function will check whether operation can be performed
@@ -150,6 +163,17 @@ bool opRequiresValue(int op) {
 			op != OP_LIST_POP       && op != OP_LIST_REMOVE     &&
 			op != OP_LIST_CLEAR     && op != OP_LIST_GET        &&
 			op != OP_LIST_SIZE);
+}
+
+bool opReturnsResult(int op) {
+	return (op == AS_OPERATOR_READ || op == OP_LIST_APPEND       ||
+			op == OP_LIST_SIZE      || op == OP_LIST_APPEND_ITEMS ||
+			op == OP_LIST_REMOVE    || op == OP_LIST_REMOVE_RANGE ||
+			op == OP_LIST_TRIM      || op == OP_LIST_CLEAR        ||
+			op == OP_LIST_GET       || op == OP_LIST_GET_RANGE    ||
+			op == OP_LIST_INSERT    || op == OP_LIST_INSERT_ITEMS ||
+			op == OP_LIST_POP       || op == OP_LIST_POP_RANGE    ||
+			op == OP_LIST_SET);
 }
 
 as_status add_op(AerospikeClient * self, as_error * err, PyObject * py_val, as_vector * unicodeStrVector,
@@ -697,17 +721,7 @@ PyObject * AerospikeClient_Append(AerospikeClient * self, PyObject * args, PyObj
 	py_result = AerospikeClient_Operate_Invoke(self, &err, &key, py_list,
 			py_meta, py_policy);
 
-	if (py_list) {
-		Py_DECREF(py_list);
-	}
-	if (err.code != AEROSPIKE_OK) {
-		as_error_update(&err, err.code, NULL);
-		goto CLEANUP;
-	} else if (!py_result) {
-		return NULL;
-	} else {
-		Py_DECREF(py_result);
-	}
+	DECREF_LIST_AND_RESULT();
 
 CLEANUP:
 	EXCEPTION_ON_ERROR();
@@ -752,17 +766,7 @@ PyObject * AerospikeClient_Prepend(AerospikeClient * self, PyObject * args, PyOb
 	py_result = AerospikeClient_Operate_Invoke(self, &err, &key, py_list,
 			py_meta, py_policy);
 
-	if (py_list) {
-		Py_DECREF(py_list);
-	}
-	if (err.code != AEROSPIKE_OK) {
-		as_error_update(&err, err.code, NULL);
-		goto CLEANUP;
-	} else if (!py_result) {
-		return NULL;
-	} else {
-		Py_DECREF(py_result);
-	}
+	DECREF_LIST_AND_RESULT();
 
 CLEANUP:
 	EXCEPTION_ON_ERROR();
@@ -808,17 +812,7 @@ PyObject * AerospikeClient_Increment(AerospikeClient * self, PyObject * args, Py
 	py_result = AerospikeClient_Operate_Invoke(self, &err, &key, py_list,
 			py_meta, py_policy);
 	
-	if (py_list) {
-		Py_DECREF(py_list);
-	}
-	if (err.code != AEROSPIKE_OK) {
-		as_error_update(&err, err.code, NULL);
-		goto CLEANUP;
-	} else if (!py_result) {
-		return NULL;
-	} else {
-		Py_DECREF(py_result);
-	}
+	DECREF_LIST_AND_RESULT();
 
 CLEANUP:
 	EXCEPTION_ON_ERROR();
@@ -864,17 +858,7 @@ PyObject * AerospikeClient_Touch(AerospikeClient * self, PyObject * args, PyObje
 	py_result = AerospikeClient_Operate_Invoke(self, &err, &key, py_list,
 			py_meta, py_policy);
 
-	if (py_list) {
-		Py_DECREF(py_list);
-	}
-	if (err.code != AEROSPIKE_OK) {
-		as_error_update(&err, err.code, NULL);
-		goto CLEANUP;
-	} else if (!py_result) {
-		return NULL;
-	} else {
-		Py_DECREF(py_result);
-	}
+	DECREF_LIST_AND_RESULT();
 
 CLEANUP:
 	EXCEPTION_ON_ERROR();
@@ -927,8 +911,6 @@ CLEANUP:
 
 	return py_result;
 }
-
-
 
 
 /**
@@ -1076,14 +1058,7 @@ static PyObject *  AerospikeClient_OperateOrdered_Invoke(
 			}
 			bins_to_pyobject(self, err, rec, &py_rec_bins);
 
-			if (operation == AS_OPERATOR_READ || operation == (OP_LIST_APPEND) || operation ==
-				(OP_LIST_SIZE) || operation == (OP_LIST_APPEND_ITEMS) ||
-				operation == (OP_LIST_REMOVE) || operation == (OP_LIST_REMOVE_RANGE) ||
-				operation == (OP_LIST_TRIM) || operation == (OP_LIST_CLEAR) ||
-				operation == (OP_LIST_GET) || operation == (OP_LIST_GET_RANGE) ||
-				operation == (OP_LIST_INSERT) || operation == (OP_LIST_INSERT_ITEMS) ||
-				operation == (OP_LIST_POP) || operation == (OP_LIST_POP_RANGE) ||
-				operation == (OP_LIST_SET))
+			if (opReturnsResult(operation))
 			{
 				PyObject *py_value = PyDict_GetItemString(py_rec_bins, ops.binops.entries->bin.name);
 				PyObject *py_rec_tuple = PyTuple_New(2);

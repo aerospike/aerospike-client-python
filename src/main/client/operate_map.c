@@ -41,7 +41,6 @@
 	char* bin = NULL;\
 	as_key key;\
 
-
 #define CHECK_CONNECTED()\
 	if (!self || !self->as) {\
 		as_error_update(&err, AEROSPIKE_ERR_PARAM, "Invalid aerospike object");\
