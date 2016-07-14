@@ -115,7 +115,6 @@ class TestConnect(TestBaseClass):
 
         except aerospike.exception.ParamError as exception:
             assert exception.code == -2
-            assert exception.msg == 'No hosts provided'
 
     def test_connect_missing_hosts_key(self):
         """
@@ -129,7 +128,6 @@ class TestConnect(TestBaseClass):
 
         except aerospike.exception.ParamError as exception:
             assert exception.code == -2
-            assert exception.msg == 'No hosts provided'
 
     def test_connect_missing_address(self):
         """

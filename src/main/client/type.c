@@ -475,6 +475,8 @@ static int AerospikeClient_Type_Init(AerospikeClient * self, PyObject * args, Py
 				return -1;
 			}
 		}
+	} else {
+		return -1;
 	}
 
 	PyObject * py_shm = PyDict_GetItemString(py_config, "shm");
