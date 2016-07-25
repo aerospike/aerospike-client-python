@@ -28,8 +28,8 @@ class TestMapBasics(object):
         request.addfinalizer(teardown)
 
     @pytest.mark.parametrize("key, binname, map_key, map_value, expected", [
-        (('test', 'map_test', 1), 'my_map', 'age', 97, {'age': 97}),
-        (('test', 'map_test', 1), 'my_map2', 'name', 'dean', {'name': 'dean'})
+        (('test', 'map_test', 1), 'my_map', 'age', 97, [('age', 97)]),
+        (('test', 'map_test', 1), 'my_map2', 'name', 'dean', [('name', 'dean')])
     ])
     def test_pos_map_put_get(self, key, binname, map_key, map_value, expected):
         """
@@ -43,10 +43,10 @@ class TestMapBasics(object):
     @pytest.mark.parametrize("key, binname, map_items, map_key, expected", [
         (('test', 'map_test', 1), 'my_map',
             {'item1': 'value1', 'item2': 'value2'},
-            'item2', {'item2': 'value2'}),
+            'item2', [('item2', 'value2')]),
         (('test', 'map_test', 1), 'my_map',
             {15: 'value15', 23: 'value23'},
-            15, {15: 'value15'})
+            15, [(15, 'value15')])
     ])
     def test_pos_map_put_items(self, key, binname, map_items, map_key, expected):
         self.as_connection.map_put_items(key, binname, map_items)

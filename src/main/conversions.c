@@ -926,7 +926,8 @@ typedef struct {
 } conversion_data;
 
 
-as_status val_to_pyobject(AerospikeClient * self, as_error * err, const as_val * val, PyObject ** py_val)
+
+as_status do_val_to_pyobject(AerospikeClient * self, as_error * err, const as_val * val, PyObject ** py_val, bool cnvt_list_to_map)
 {
 	as_error_reset(err);
 	switch( as_val_type(val) ) {
@@ -972,7 +973,11 @@ as_status val_to_pyobject(AerospikeClient * self, as_error * err, const as_val *
 				as_list * l = as_list_fromval((as_val *) val);
 				if (l) {
 					PyObject * py_list = NULL;
-					list_to_pyobject(self, err, l, &py_list);
+					if (cnvt_list_to_map) {
+						as_list_of_map_to_py_tuple_list(self, err, l, &py_list);
+					} else {
+						list_to_pyobject(self, err, l, &py_list);
+					}
 					if (err->code == AEROSPIKE_OK) {
 						*py_val = py_list;
 					}
@@ -1027,16 +1032,26 @@ as_status val_to_pyobject(AerospikeClient * self, as_error * err, const as_val *
 	return err->code;
 }
 
-as_status as_list_to_py_dict_key_value(AerospikeClient * self, as_error * err, const as_list * list, PyObject ** py_dict) {
-	* py_dict = PyDict_New();
+as_status val_to_pyobject(AerospikeClient * self, as_error * err, const as_val * val, PyObject ** py_val) {
+	return do_val_to_pyobject(self, err, val, py_val, false);
+}
+
+as_status val_to_pyobject_cnvt_list_to_map(AerospikeClient * self, as_error * err, const as_val * val, PyObject ** py_val) {
+	return do_val_to_pyobject(self, err, val, py_val, true);
+}
+
+as_status as_list_of_map_to_py_tuple_list(AerospikeClient * self, as_error * err, const as_list * list, PyObject ** py_list) {
 	PyObject * py_key;
 	PyObject * py_value;
+	PyObject * py_tuple;
 
 	int size = as_list_size((as_list *)list);
 
 	if (size%2 != 0) {
 		return as_error_update(err, AEROSPIKE_ERR_CLIENT, "Invalid key list of key/value pairs");
 	}
+
+	*py_list = PyList_New(0);
 
 	for (int i=0; i<size; i+=2) {
 		as_val * key = as_list_get(list, i);
@@ -1048,15 +1063,16 @@ as_status as_list_to_py_dict_key_value(AerospikeClient * self, as_error * err, c
 		if (val_to_pyobject(self, err, value, &py_value) != AEROSPIKE_OK) {
 			goto CLEANUP;
 		}
-		PyDict_SetItem(*py_dict, py_key, py_value);
+		py_tuple = PyTuple_New(2);
+		PyTuple_SetItem(py_tuple, 0, py_key);
+		PyTuple_SetItem(py_tuple, 1, py_value);
 
-		Py_DECREF(py_key);
-		Py_DECREF(py_value);
+		PyList_Append(*py_list, py_tuple);
 	}
 
 CLEANUP:
 	if (err->code != AEROSPIKE_OK) {
-		Py_DECREF(*py_dict);
+		Py_DECREF(*py_list);
 	}
 
 	return err->code;
@@ -1161,7 +1177,7 @@ as_status map_to_pyobject(AerospikeClient * self, as_error * err, const as_map *
 	return err->code;
 }
 
-as_status record_to_pyobject(AerospikeClient * self, as_error * err, const as_record * rec, const as_key * key, PyObject ** obj)
+as_status do_record_to_pyobject(AerospikeClient * self, as_error * err, const as_record * rec, const as_key * key, PyObject ** obj, bool cnvt_list_to_map)
 {
 	as_error_reset(err);
 
@@ -1176,7 +1192,7 @@ as_status record_to_pyobject(AerospikeClient * self, as_error * err, const as_re
 
 	key_to_pyobject(err, key ? key : &rec->key, &py_rec_key);
 	metadata_to_pyobject(err, rec, &py_rec_meta);
-	bins_to_pyobject(self, err, rec, &py_rec_bins);
+	bins_to_pyobject(self, err, rec, &py_rec_bins, cnvt_list_to_map);
 
 	if (!py_rec_key) {
 		Py_INCREF(Py_None);
@@ -1200,6 +1216,16 @@ as_status record_to_pyobject(AerospikeClient * self, as_error * err, const as_re
 
 	*obj = py_rec;
 	return err->code;
+}
+
+as_status record_to_pyobject(AerospikeClient * self, as_error * err, const as_record * rec, const as_key * key, PyObject ** obj)
+{
+	return do_record_to_pyobject(self, err, rec, key, obj, false);
+}
+
+as_status record_to_pyobject_cnvt_list_to_map(AerospikeClient * self, as_error * err, const as_record * rec, const as_key * key, PyObject ** obj)
+{
+	return do_record_to_pyobject(self, err, rec, key, obj, true);
 }
 
 as_status key_to_pyobject(as_error * err, const as_key * key, PyObject ** obj)
@@ -1296,7 +1322,7 @@ as_status key_to_pyobject(as_error * err, const as_key * key, PyObject ** obj)
 	return err->code;
 }
 
-static bool bins_to_pyobject_each(const char * name, const as_val * val, void * udata)
+static bool do_bins_to_pyobject_each(const char * name, const as_val * val, void * udata, bool cnvt_list_to_map)
 {
 	if (!name || !val) {
 		return false;
@@ -1307,7 +1333,11 @@ static bool bins_to_pyobject_each(const char * name, const as_val * val, void * 
 	PyObject * py_bins = (PyObject *) convd->udata;
 	PyObject * py_val = NULL;
 
-	val_to_pyobject(convd->client, err, val, &py_val);
+	if (cnvt_list_to_map) {
+		val_to_pyobject_cnvt_list_to_map(convd->client, err, val, &py_val);
+	} else {
+		val_to_pyobject(convd->client, err, val, &py_val);
+	}
 
 	if (err->code != AEROSPIKE_OK) {
 		return false;
@@ -1321,7 +1351,17 @@ static bool bins_to_pyobject_each(const char * name, const as_val * val, void * 
 	return true;
 }
 
-as_status bins_to_pyobject(AerospikeClient * self, as_error * err, const as_record * rec, PyObject ** py_bins)
+static bool bins_to_pyobject_each_cnvt_list_to_map(const char * name, const as_val * val, void * udata)
+{
+	return do_bins_to_pyobject_each(name, val, udata, true);
+}
+
+static bool bins_to_pyobject_each(const char * name, const as_val * val, void * udata)
+{
+	return do_bins_to_pyobject_each(name, val, udata, false);
+}
+
+as_status bins_to_pyobject(AerospikeClient * self, as_error * err, const as_record * rec, PyObject ** py_bins, bool cnvt_list_to_map)
 {
 	as_error_reset(err);
 
@@ -1339,7 +1379,7 @@ as_status bins_to_pyobject(AerospikeClient * self, as_error * err, const as_reco
 		.udata = *py_bins
 	};
 
-	as_record_foreach(rec, bins_to_pyobject_each, &convd);
+	as_record_foreach(rec, cnvt_list_to_map ? bins_to_pyobject_each_cnvt_list_to_map : bins_to_pyobject_each, &convd);
 
 	if (err->code != AEROSPIKE_OK) {
 		Py_DECREF(*py_bins);

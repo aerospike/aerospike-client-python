@@ -93,7 +93,7 @@
 #define SETUP_RETURN_VAL()\
 	if (rec && rec->bins.size) {\
 		if (returnType == AS_MAP_RETURN_KEY_VALUE) {\
-			as_list_to_py_dict_key_value(self, &err, (as_list *) (rec->bins.entries[0].valuep), &py_result);\
+			val_to_pyobject_cnvt_list_to_map(self, &err, (as_val *) (rec->bins.entries[0].valuep), &py_result);\
 		} else {\
 			val_to_pyobject(self, &err, (as_val*) (rec->bins.entries[0].valuep), &py_result);\
 		}\

@@ -55,19 +55,23 @@ as_status pyobject_to_record(AerospikeClient * self, as_error * err, PyObject * 
 
 as_status val_to_pyobject(AerospikeClient * self, as_error * err, const as_val * val, PyObject ** py_map);
 
+as_status val_to_pyobject_cnvt_list_to_map(AerospikeClient * self, as_error * err, const as_val * val, PyObject ** py_map);
+
 as_status map_to_pyobject(AerospikeClient * self, as_error * err, const as_map * map, PyObject ** py_map);
 
 as_status list_to_pyobject(AerospikeClient * self, as_error * err, const as_list * list, PyObject ** py_list);
 
-as_status as_list_to_py_dict_key_value(AerospikeClient * self, as_error * err, const as_list * list, PyObject ** py_dict);
+as_status as_list_of_map_to_py_tuple_list(AerospikeClient * self, as_error * err, const as_list * list, PyObject ** py_list);
 
 as_status record_to_pyobject(AerospikeClient * self, as_error * err, const as_record * rec, const as_key * key, PyObject ** obj);
+
+as_status record_to_pyobject_cnvt_list_to_map(AerospikeClient * self, as_error * err, const as_record * rec, const as_key * key, PyObject ** obj);
 
 as_status key_to_pyobject(as_error * err, const as_key * key, PyObject ** obj);
 
 as_status metadata_to_pyobject(as_error * err, const as_record * rec, PyObject ** obj);
 
-as_status bins_to_pyobject(AerospikeClient * self, as_error * err, const as_record * rec, PyObject ** obj);
+as_status bins_to_pyobject(AerospikeClient * self, as_error * err, const as_record * rec, PyObject ** obj, bool cnvt_list_to_map);
 
 bool error_to_pyobject(const as_error * err, PyObject ** obj);
 

@@ -162,7 +162,7 @@ bool opRequiresValue(int op) {
 	return (op != AS_OPERATOR_READ  && op != AS_OPERATOR_TOUCH  &&
 			op != OP_LIST_POP       && op != OP_LIST_REMOVE     &&
 			op != OP_LIST_CLEAR     && op != OP_LIST_GET        &&
-			op != OP_LIST_SIZE		&& op != OP_MAP_GET_BY_KEY);
+			op != OP_LIST_SIZE      && op != OP_MAP_GET_BY_KEY);
 }
 
 bool opRequiresRange(int op) {
@@ -170,14 +170,14 @@ bool opRequiresRange(int op) {
 }
 
 bool opReturnsResult(int op) {
-	return (op == AS_OPERATOR_READ || op == OP_LIST_APPEND       ||
+	return (op == AS_OPERATOR_READ  || op == OP_LIST_APPEND       ||
 			op == OP_LIST_SIZE      || op == OP_LIST_APPEND_ITEMS ||
 			op == OP_LIST_REMOVE    || op == OP_LIST_REMOVE_RANGE ||
 			op == OP_LIST_TRIM      || op == OP_LIST_CLEAR        ||
 			op == OP_LIST_GET       || op == OP_LIST_GET_RANGE    ||
 			op == OP_LIST_INSERT    || op == OP_LIST_INSERT_ITEMS ||
 			op == OP_LIST_POP       || op == OP_LIST_POP_RANGE    ||
-			op == OP_LIST_SET);
+			op == OP_LIST_SET       || op == OP_MAP_GET_BY_KEY);
 }
 
 as_status add_op(AerospikeClient * self, as_error * err, PyObject * py_val, as_vector * unicodeStrVector,
@@ -476,7 +476,7 @@ as_status add_op(AerospikeClient * self, as_error * err, PyObject * py_val, as_v
 
 		//------- MAP OPERATIONS ---------
 		case OP_MAP_SET_POLICY:
-			if (pyobject_to_map_policy(err, py_value, &map_policy) != AEROSPIKE_OK) {\
+			if (pyobject_to_map_policy(err, py_value, &map_policy) != AEROSPIKE_OK) {
 				return err->code;
 			}
 			as_operations_add_map_set_policy(ops, bin, &map_policy);
@@ -708,7 +708,11 @@ PyObject *  AerospikeClient_Operate_Invoke(
 		goto CLEANUP;
 	}
 	if (rec) {
-		record_to_pyobject(self, err, rec, key, &py_rec);
+		if (return_type == AS_MAP_RETURN_KEY_VALUE) {
+			record_to_pyobject_cnvt_list_to_map(self, err, rec, key, &py_rec);
+		} else {
+			record_to_pyobject(self, err, rec, key, &py_rec);
+		}
 	}
 
 CLEANUP:
@@ -878,7 +882,7 @@ static PyObject *  AerospikeClient_OperateOrdered_Invoke(
 				key_to_pyobject(err, key ? key : &rec->key, &py_rec_key);
 				metadata_to_pyobject(err, rec, &py_rec_meta);
 			}
-			bins_to_pyobject(self, err, rec, &py_rec_bins);
+			bins_to_pyobject(self, err, rec, &py_rec_bins, return_type == AS_MAP_RETURN_KEY_VALUE);
 
 			if (opReturnsResult(operation))
 			{
