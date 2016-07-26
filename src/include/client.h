@@ -24,16 +24,6 @@
 #define TRACE() printf("%s:%d\n",__FILE__,__LINE__)
 
 /*******************************************************************************
- * Constants for Operate API's
- ******************************************************************************/
-#define OPERATOR_PREPEND 4
-#define OPERATOR_APPEND  5
-#define OPERATOR_TOUCH   8
-#define OPERATOR_INCR    2
-#define OPERATOR_READ    1
-#define OPERATOR_WRITE   0
-
-/*******************************************************************************
  * Macros for UDF operations.
  ******************************************************************************/
 

@@ -396,6 +396,28 @@ class TestOperate(object):
         assert key == ('test', 'demo', None,
                        bytearray(b'\xb7\xf4\xb88\x89\xe2\xdag\xdeh>\x1d\xf6\x91\x9a\x1e\xac\xc4F\xc8'))
 
+    def test_pos_operate_touch_with_meta(self):
+        """
+        Invoke operate() OPERATE_TOUCH using meta to pass in ttl.
+        """
+        key = ('test', 'demo', 1)
+        (key, _) = self.as_connection.exists(key)
+        meta = {'ttl': 1200}
+
+        llist = [{"op": aerospike.OPERATOR_TOUCH}]
+
+        try:
+            (key, meta, _) = self.as_connection.operate(
+                key, llist, meta)
+
+        except e.RecordGenerationError as exception:
+            assert exception.code == 3
+
+        (key, meta, bins) = self.as_connection.get(key)
+        assert bins == {'age': 1, 'name': 'name1'}
+        assert meta['ttl'] < 1200
+        assert meta['ttl'] > 1000
+
     def test_pos_operate_with_policy_gen_GT(self):
         """
         Invoke operate() with gen GT positive.

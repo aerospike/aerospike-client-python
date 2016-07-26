@@ -405,10 +405,12 @@ as_status add_op(AerospikeClient * self, as_error * err, PyObject * py_val, as_v
 			}
 			break;
 		case AS_OPERATOR_TOUCH:
-			if (py_value && (pyobject_to_index(self, err, py_value, &ttl) != AEROSPIKE_OK)) {
-				return err->code;
+			if (py_value) {
+				if (pyobject_to_index(self, err, py_value, &ttl) != AEROSPIKE_OK) {
+					return err->code;
+				}
+				ops->ttl = ttl;
 			}
-			ops->ttl = ttl;
 			as_operations_add_touch(ops);
 			break;
 		case AS_OPERATOR_READ:
