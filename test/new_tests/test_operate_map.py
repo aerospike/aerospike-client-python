@@ -140,3 +140,37 @@ class TestOperate(object):
 
         assert bins == expected
         self.as_connection.remove(key)
+
+    def test_pos_operate_set_map_policy(self):
+        key = ('test', 'map_test', 1)
+        llist = [{"op": aerospike.OP_MAP_SET_POLICY,
+                  "bin": "my_map",
+                  "map_policy": {'map_sort': aerospike.MAP_KEY_ORDERED}}]
+        key, _, _ = self.as_connection.operate(key, llist)
+        pass
+
+    def test_pos_map_clear(self):
+        key = ('test', 'map_test', 1)
+        binname = 'my_map'
+        llist = [{"op": aerospike.OP_MAP_PUT,
+                  "bin": binname,
+                  "key": "age",
+                  "val": 97}]
+        key, _, _ = self.as_connection.operate(key, llist)
+
+        llist = [{"op": aerospike.OP_MAP_SIZE,
+                  "bin": binname}]
+        key, _, bins = self.as_connection.operate(key, llist)
+
+        assert bins == {binname: 1}
+
+        key, _, _ = self.as_connection.operate(key, llist)
+        llist = [{"op": aerospike.OP_MAP_CLEAR,
+                  "bin": binname}]
+        key, _, _ = self.as_connection.operate(key, llist)
+
+        llist = [{"op": aerospike.OP_MAP_SIZE,
+                  "bin": binname}]
+        key, _, bins = self.as_connection.operate(key, llist)
+
+        assert bins == {binname: 0}

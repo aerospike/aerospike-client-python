@@ -162,7 +162,9 @@ bool opRequiresValue(int op) {
 	return (op != AS_OPERATOR_READ  && op != AS_OPERATOR_TOUCH  &&
 			op != OP_LIST_POP       && op != OP_LIST_REMOVE     &&
 			op != OP_LIST_CLEAR     && op != OP_LIST_GET        &&
-			op != OP_LIST_SIZE      && op != OP_MAP_GET_BY_KEY);
+			op != OP_LIST_SIZE      && op != OP_MAP_GET_BY_KEY  &&
+			op != OP_MAP_SET_POLICY && op != OP_MAP_SIZE        &&
+			op != OP_MAP_CLEAR);
 }
 
 bool opRequiresRange(int op) {
@@ -178,6 +180,10 @@ bool opReturnsResult(int op) {
 			op == OP_LIST_INSERT    || op == OP_LIST_INSERT_ITEMS ||
 			op == OP_LIST_POP       || op == OP_LIST_POP_RANGE    ||
 			op == OP_LIST_SET       || op == OP_MAP_GET_BY_KEY);
+}
+
+bool opRequiresMapPolicy(int op) {
+	return (op == OP_MAP_SET_POLICY);
 }
 
 as_status add_op(AerospikeClient * self, as_error * err, PyObject * py_val, as_vector * unicodeStrVector,
@@ -286,6 +292,8 @@ as_status add_op(AerospikeClient * self, as_error * err, PyObject * py_val, as_v
 		if (pyobject_to_map_policy(err, py_map_policy, &map_policy) != AEROSPIKE_OK) {
 			return err->code;
 		}
+	} else if (opRequiresMapPolicy(operation)) {
+		return as_error_update(err, AEROSPIKE_ERR_PARAM, "Operation requires map_policy parameter");
 	}
 
 	if (py_range) {
@@ -478,9 +486,6 @@ as_status add_op(AerospikeClient * self, as_error * err, PyObject * py_val, as_v
 
 		//------- MAP OPERATIONS ---------
 		case OP_MAP_SET_POLICY:
-			if (pyobject_to_map_policy(err, py_value, &map_policy) != AEROSPIKE_OK) {
-				return err->code;
-			}
 			as_operations_add_map_set_policy(ops, bin, &map_policy);
 			break;
 		case OP_MAP_PUT:
