@@ -621,10 +621,16 @@ static int AerospikeClient_Type_Init(AerospikeClient * self, PyObject * args, Py
 		config.thread_pool_size = PyInt_AsLong(py_thread_pool_size);
 	}
 
-	// max_threads
+	// max_threads (backward compatibility)
 	PyObject * py_max_threads = PyDict_GetItemString(py_config, "max_threads");
 	if (py_max_threads && (PyInt_Check(py_max_threads) || PyLong_Check(py_max_threads))) {
 		config.max_conns_per_node = PyInt_AsLong(py_max_threads);
+	}
+
+	// max_conns_per_node
+	PyObject * py_max_conns = PyDict_GetItemString(py_config, "max_conns_per_node");
+	if (py_max_conns && (PyInt_Check(py_max_conns) || PyLong_Check(py_max_conns))) {
+		config.max_conns_per_node = PyInt_AsLong(py_max_conns);
 	}
 
 	// batch_direct

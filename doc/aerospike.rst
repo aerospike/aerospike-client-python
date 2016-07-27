@@ -67,7 +67,8 @@ in an in-memory primary index.
                 * **shm_key** explicitly set the shm key for this client. It is otherwise implicitly evaluated per unique hostname, and can be inspected with :meth:`~aerospike.Client.shm_key` (default: 0xA5000000)
             * **serialization** an optional instance-level :py:func:`tuple` of (serializer, deserializer). Takes precedence over a class serializer registered with :func:`~aerospike.set_serializer`.
             * **thread_pool_size** number of threads in the pool that is used in batch/scan/query commands (default: 16)
-            * **max_threads** size of the synchronous connection pool for each server node (default: 300)
+            * **max_threads** size of the synchronous connection pool for each server node (default: 300) *DEPRECATED*
+            * **max_conns_per_node** maximum number of pipeline connections allowed for each node 
             * **batch_direct** whether to use the batch-direct protocol (default: ``False``, so will use batch-index if available)
             * **tend_interval** polling interval in milliseconds for tending the cluster (default: 1000)
             * **compression_threshold** compress data for transmission if the object size is greater than a given number of bytes (default: 0, meaning 'never compress')
