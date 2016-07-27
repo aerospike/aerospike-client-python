@@ -141,7 +141,7 @@ static PyObject * AerospikePredicates_GeoWithin_GeoJSONRegion(PyObject * self, P
 		goto exit;
 	}
 
-	if (py_indexType == NULL) {
+	if (!py_indexType) {
 		py_indexType = Py_BuildValue("i", AS_INDEX_TYPE_DEFAULT);
 	}
 
@@ -174,7 +174,7 @@ static PyObject * AerospikePredicates_GeoWithin_Radius(PyObject * self, PyObject
 		goto CLEANUP;
 	}
 
-	if (py_indexType == NULL) {
+	if (!py_indexType) {
 		py_indexType = Py_BuildValue("i", AS_INDEX_TYPE_DEFAULT);
 	}
 
@@ -234,7 +234,7 @@ static PyObject * AerospikePredicates_GeoContains_GeoJSONPoint(PyObject * self, 
 		goto exit;
 	}
 
-	if (py_indexType == NULL) {
+	if (!py_indexType) {
 		py_indexType = Py_BuildValue("i", AS_INDEX_TYPE_DEFAULT);
 	}
 
@@ -266,7 +266,7 @@ static PyObject * AerospikePredicates_GeoContains_Point(PyObject * self, PyObjec
 		goto CLEANUP;
 	}
 
-	if (py_indexType == NULL) {
+	if (!py_indexType) {
 		py_indexType = Py_BuildValue("i", AS_INDEX_TYPE_DEFAULT);
 	}
 

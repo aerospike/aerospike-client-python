@@ -39,7 +39,7 @@ typedef struct {
 
 static bool each_result(const as_val * val, void * udata)
 {
-	if ( !val ) {
+	if (!val) {
 		return false;
 	}
 
@@ -61,8 +61,7 @@ static bool each_result(const as_val * val, void * udata)
 
 	TRACE();
 
-	if ( py_result ) {
-
+	if (py_result) {
 		TRACE();
 		PyList_Append(py_results, py_result);
 
@@ -88,7 +87,7 @@ PyObject * AerospikeQuery_Results(AerospikeQuery * self, PyObject * args, PyObje
 	LocalData data;
 	data.client = self->client;
 
-	if ( PyArg_ParseTupleAndKeywords(args, kwds, "|O:results", kwlist, &py_policy) == false ) {
+	if (PyArg_ParseTupleAndKeywords(args, kwds, "|O:results", kwlist, &py_policy) == false) {
 		return NULL;
 	}
 
@@ -111,7 +110,7 @@ PyObject * AerospikeQuery_Results(AerospikeQuery * self, PyObject * args, PyObje
 	// Convert python policy object to as_policy_query
 	pyobject_to_policy_query(&err, py_policy, &query_policy, &query_policy_p,
 			&self->client->as->config.policies.query);
-	if ( err.code != AEROSPIKE_OK ) {
+	if (err.code != AEROSPIKE_OK) {
 		goto CLEANUP;
 	}
 
@@ -130,7 +129,7 @@ PyObject * AerospikeQuery_Results(AerospikeQuery * self, PyObject * args, PyObje
 
 CLEANUP:/*??trace()*/
 	TRACE();
-	if ( err.code != AEROSPIKE_OK ) {
+	if (err.code != AEROSPIKE_OK) {
 		PyObject * py_err = NULL;
 		error_to_pyobject(&err, &py_err);
 		PyObject *exception_type = raise_exception(&err);
@@ -142,7 +141,7 @@ CLEANUP:/*??trace()*/
 
 	TRACE();
 
-	if ( self->query.apply.arglist ){
+	if (self->query.apply.arglist) {
 		as_arraylist_destroy( (as_arraylist *) self->query.apply.arglist );
 	}
 	self->query.apply.arglist = NULL;

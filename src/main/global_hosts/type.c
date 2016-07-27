@@ -37,10 +37,6 @@ static PyObject * AerospikeGlobalHosts_Type_New(PyTypeObject * type, PyObject * 
 
 	self = (AerospikeGlobalHosts *) PyObject_New(AerospikeGlobalHosts, type);
 
-	if ( self == NULL ) {
-		return NULL;
-	}
-
 	return (PyObject *) self;
 }
 

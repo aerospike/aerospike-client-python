@@ -56,8 +56,8 @@ PyObject * AerospikeClient_Set_Serializer(AerospikeClient * self, PyObject * arg
 	as_error_init(&err);
 
 	// Python Function Argument Parsing
-	if ( PyArg_ParseTupleAndKeywords(args, kwds, "O:set_serializer", kwlist,
-				&py_func) == false ) {
+	if (PyArg_ParseTupleAndKeywords(args, kwds, "O:set_serializer", kwlist,
+				&py_func) == false) {
 		return NULL;
 	}
 
@@ -73,7 +73,7 @@ PyObject * AerospikeClient_Set_Serializer(AerospikeClient * self, PyObject * arg
 		goto CLEANUP;
 	}
 
-	if (user_serializer_call_info.callback != NULL) {
+	if (user_serializer_call_info.callback) {
 		Py_DECREF(user_serializer_call_info.callback);
 	}
 	is_user_serializer_registered = 1;
@@ -81,7 +81,7 @@ PyObject * AerospikeClient_Set_Serializer(AerospikeClient * self, PyObject * arg
 	Py_INCREF(py_func);
 
 CLEANUP:
-	if ( err.code != AEROSPIKE_OK ) {
+	if (err.code != AEROSPIKE_OK) {
 		PyObject * py_err = NULL;
 		error_to_pyobject(&err, &py_err);
 		PyObject *exception_type = raise_exception(&err);
@@ -116,8 +116,8 @@ PyObject * AerospikeClient_Set_Deserializer(AerospikeClient * self, PyObject * a
 	as_error_init(&err);
 
 	// Python Function Argument Parsing
-	if ( PyArg_ParseTupleAndKeywords(args, kwds, "O:set_deserializer", kwlist,
-				&py_func) == false ) {
+	if (PyArg_ParseTupleAndKeywords(args, kwds, "O:set_deserializer", kwlist,
+				&py_func) == false) {
 		return NULL;
 	}
 
@@ -134,14 +134,14 @@ PyObject * AerospikeClient_Set_Deserializer(AerospikeClient * self, PyObject * a
 		goto CLEANUP;
 	}
 	is_user_deserializer_registered = 1;
-	if (user_deserializer_call_info.callback != NULL) {
+	if (user_deserializer_call_info.callback) {
 		Py_DECREF(user_deserializer_call_info.callback);
 	}
 	user_deserializer_call_info.callback = py_func;
 	Py_INCREF(py_func);
 
 CLEANUP:
-	if ( err.code != AEROSPIKE_OK ) {
+	if (err.code != AEROSPIKE_OK) {
 		PyObject * py_err = NULL;
 		error_to_pyobject(&err, &py_err);
 		PyObject *exception_type = raise_exception(&err);
@@ -172,7 +172,7 @@ void set_as_bytes(as_bytes **bytes,
 		int32_t bytes_type,
 		as_error *error_p)
 {
-	if((!bytes) || (!bytes_string)) {
+	if ((!bytes) || (!bytes_string)) {
 		as_error_update(error_p, AEROSPIKE_ERR, "Unable to set as_bytes");
 		goto CLEANUP;
 	}
@@ -187,7 +187,7 @@ void set_as_bytes(as_bytes **bytes,
 
 CLEANUP:
 
-  if ( error_p->code != AEROSPIKE_OK ) {
+  if (error_p->code != AEROSPIKE_OK) {
 		PyObject * py_err = NULL;
 		error_to_pyobject(error_p, &py_err);
 		PyObject *exception_type = raise_exception(error_p);
@@ -227,7 +227,7 @@ void execute_user_callback(user_serializer_callback *user_callback_info,
 
 	if (serialize_flag) {
 		Py_XINCREF(*value);
-		if( PyTuple_SetItem(py_arglist, 0 , *value) != 0){
+		if (PyTuple_SetItem(py_arglist, 0 , *value) != 0) {
 			Py_DECREF(py_arglist);
 			goto CLEANUP;
 		}
@@ -275,7 +275,7 @@ void execute_user_callback(user_serializer_callback *user_callback_info,
 	}
 
 CLEANUP:
-  if ( error_p->code != AEROSPIKE_OK ) {
+  if (error_p->code != AEROSPIKE_OK) {
 		PyObject * py_err = NULL;
 		error_to_pyobject(error_p, &py_err);
 		PyObject *exception_type = raise_exception(error_p);
@@ -340,13 +340,13 @@ extern PyObject * serialize_based_on_serializer_policy(AerospikeClient * self,
 					/* get the sys.modules dictionary */
 					PyObject* sysmodules = PyImport_GetModuleDict();
 					PyObject* cpickle_module = NULL;
-					if(PyMapping_HasKeyString(sysmodules, "pickle")) {
+					if (PyMapping_HasKeyString(sysmodules, "pickle")) {
 						cpickle_module = PyMapping_GetItemString(sysmodules, "pickle");
 					} else {
 						cpickle_module = PyImport_ImportModule("pickle");
 					}
 
-					if(!cpickle_module) {
+					if (!cpickle_module) {
 						/* insert error handling here! and exit this function */
 						as_error_update(error_p, AEROSPIKE_ERR_CLIENT, "Unable to load pickle module");
 						goto CLEANUP;
@@ -359,7 +359,7 @@ extern PyObject * serialize_based_on_serializer_policy(AerospikeClient * self,
 						Py_DECREF(cpickle_module);
 						Py_DECREF(py_funcname);
 
-						if(!initresult) {
+						if (!initresult) {
 							/* more error handling &c */
 							as_error_update(error_p, AEROSPIKE_ERR_CLIENT, "Unable to call dumps function");
 							goto CLEANUP;
@@ -421,7 +421,7 @@ extern PyObject * serialize_based_on_serializer_policy(AerospikeClient * self,
 CLEANUP:
 
 	Py_XDECREF(initresult);
-	if ( error_p->code != AEROSPIKE_OK ) {
+	if (error_p->code != AEROSPIKE_OK) {
 		PyObject * py_err = NULL;
 		error_to_pyobject(error_p, &py_err);
 		PyObject *exception_type = raise_exception(error_p);
@@ -455,14 +455,14 @@ extern PyObject * deserialize_based_on_as_bytes_type(AerospikeClient * self,
 		case AS_BYTES_PYTHON: {
 								PyObject* sysmodules = PyImport_GetModuleDict();
 								PyObject* cpickle_module = NULL;
-								if(PyMapping_HasKeyString(sysmodules, "pickle")) {
+								if (PyMapping_HasKeyString(sysmodules, "pickle")) {
 									cpickle_module = PyMapping_GetItemString(sysmodules, "pickle");
 								} else {
 									cpickle_module = PyImport_ImportModule("pickle");
 								}
 
 								PyObject* initresult = NULL;
-								if(!cpickle_module) {
+								if (!cpickle_module) {
 									/* insert error handling here! and exit this function */
 									as_error_update(error_p, AEROSPIKE_ERR_CLIENT, "Unable to load pickle module");
 									goto CLEANUP;
@@ -476,7 +476,7 @@ extern PyObject * deserialize_based_on_as_bytes_type(AerospikeClient * self,
 									Py_DECREF(cpickle_module);
 									Py_DECREF(py_funcname);
 									Py_DECREF(py_value);
-									if(!initresult) {
+									if (!initresult) {
 										/* more error handling &c */
 										as_error_update(error_p, AEROSPIKE_ERR_CLIENT, "Unable to call loads function");
 										goto CLEANUP;
@@ -490,7 +490,7 @@ extern PyObject * deserialize_based_on_as_bytes_type(AerospikeClient * self,
 		case AS_BYTES_BLOB: {
 								if (self->user_deserializer_call_info.callback) {
 									execute_user_callback(&self->user_deserializer_call_info, &bytes, retval, false, error_p);
-									if(AEROSPIKE_OK != (error_p->code)) {
+									if (AEROSPIKE_OK != (error_p->code)) {
 										uint32_t bval_size = as_bytes_size(bytes);
 										PyObject *py_val = PyByteArray_FromStringAndSize((char *) as_bytes_get(bytes), bval_size);
 										if (!py_val) {
@@ -503,7 +503,7 @@ extern PyObject * deserialize_based_on_as_bytes_type(AerospikeClient * self,
 								} else {
 									if (is_user_deserializer_registered) {
 										execute_user_callback(&user_deserializer_call_info, &bytes, retval, false, error_p);
-										if(AEROSPIKE_OK != (error_p->code)) {
+										if (AEROSPIKE_OK != (error_p->code)) {
 											uint32_t bval_size = as_bytes_size(bytes);
 											PyObject *py_val = PyByteArray_FromStringAndSize((char *) as_bytes_get(bytes), bval_size);
 											if (!py_val) {
@@ -539,7 +539,7 @@ extern PyObject * deserialize_based_on_as_bytes_type(AerospikeClient * self,
 
 CLEANUP:
 
-	if ( error_p->code != AEROSPIKE_OK ) {
+	if (error_p->code != AEROSPIKE_OK) {
 		PyObject * py_err = NULL;
 		error_to_pyobject(error_p, &py_err);
 		PyObject *exception_type = raise_exception(error_p);

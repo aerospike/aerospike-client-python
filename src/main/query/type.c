@@ -63,10 +63,6 @@ static PyObject * AerospikeQuery_Type_New(PyTypeObject * type, PyObject * args, 
 
 	self = (AerospikeQuery *) type->tp_alloc(type, 0);
 
-	if (self == NULL) {
-		return NULL;
-	}
-
 	return (PyObject *) self;
 }
 
@@ -81,8 +77,8 @@ static int AerospikeQuery_Type_Init(AerospikeQuery * self, PyObject * args, PyOb
 
 	static char * kwlist[] = {"namespace", "set", NULL};
 
-	if ( PyArg_ParseTupleAndKeywords(args, kwds, "O|O:key", kwlist,
-		&py_namespace, &py_set) == false ) {
+	if (PyArg_ParseTupleAndKeywords(args, kwds, "O|O:key", kwlist,
+		&py_namespace, &py_set) == false) {
 		as_query_destroy(&self->query);
 		as_error_update(&err, AEROSPIKE_ERR_PARAM, "query() expects atleast 1 parameter");
 		goto CLEANUP;
@@ -91,14 +87,14 @@ static int AerospikeQuery_Type_Init(AerospikeQuery * self, PyObject * args, PyOb
 	char * namespace = NULL;
 	char * set = NULL;
 
-	if ( PyString_Check(py_namespace) ) {
+	if (PyString_Check(py_namespace)) {
 		namespace = PyString_AsString(py_namespace);
 	} else {
 		as_error_update(&err, AEROSPIKE_ERR_PARAM, "Namespace should be a string");
 		goto CLEANUP;
 	}
 
-	if(py_set) {
+	if (py_set) {
 		if (PyString_Check(py_set)) {
 			set = PyString_AsString(py_set);
 		} else if (PyUnicode_Check(py_set)) {
@@ -113,11 +109,11 @@ static int AerospikeQuery_Type_Init(AerospikeQuery * self, PyObject * args, PyOb
 	as_query_init(&self->query, namespace, set);
 
 CLEANUP:
-	if(py_ustr_set) {
+	if (py_ustr_set) {
 		Py_DECREF(py_ustr_set);
 	}
 
-	if ( err.code != AEROSPIKE_OK ) {
+	if (err.code != AEROSPIKE_OK) {
 		PyObject * py_err = NULL;
 		error_to_pyobject(&err, &py_err);
 		PyObject *exception_type = raise_exception(&err);
@@ -132,7 +128,7 @@ CLEANUP:
 static void AerospikeQuery_Type_Dealloc(AerospikeQuery * self)
 {
 	int i;
-	for (i=0; i < self->u_objs.size; i++){
+	for (i=0; i < self->u_objs.size; i++) {
 		Py_DECREF(self->u_objs.ob[i]);
 	}
 
@@ -223,8 +219,9 @@ AerospikeQuery * AerospikeQuery_New(AerospikeClient * client, PyObject * args, P
 		return NULL;
 	}
 }
-PyObject * StoreUnicodePyObject(AerospikeQuery * self, PyObject *obj){
 
+PyObject * StoreUnicodePyObject(AerospikeQuery * self, PyObject *obj)
+{
 	if (self->u_objs.size < MAX_UNICODE_OBJECTS) {
 		self->u_objs.ob[self->u_objs.size++] = obj;
 	}

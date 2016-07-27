@@ -77,10 +77,6 @@ static PyObject * AerospikeGeospatial_Type_New(PyTypeObject * type, PyObject * a
 
 	self = (AerospikeGeospatial *) type->tp_alloc(type, 0);
 
-	if (self == NULL) {
-		return NULL;
-	}
-
 	return (PyObject *) self;
 }
 
@@ -138,13 +134,13 @@ PyObject *AerospikeGeospatial_Type_Repr(self) AerospikeGeospatial* self;
 	// Initialize error object
 	as_error_init(&err);
 
-	if ( !self ){
+	if (!self) {
 		as_error_update(&err, AEROSPIKE_ERR_PARAM, "Invalid geospatial object");
 		goto CLEANUP;
 	}
 
 	initresult = AerospikeGeospatial_DoDumps(self->geo_data, &err);
-	if(!initresult) {
+	if (!initresult) {
 		as_error_update(&err, AEROSPIKE_ERR_CLIENT, "Unable to call get data in str format");
 		goto CLEANUP;
 	}
@@ -156,13 +152,13 @@ PyObject *AerospikeGeospatial_Type_Repr(self) AerospikeGeospatial* self;
 CLEANUP:
 
 	// If an error occurred, tell Python.
-	if ( err.code != AEROSPIKE_OK ) {
+	if (err.code != AEROSPIKE_OK) {
 		PyObject * py_err = NULL;
 		error_to_pyobject(&err, &py_err);
 		PyObject *exception_type = raise_exception(&err);
 		PyErr_SetObject(exception_type, py_err);
 		Py_DECREF(py_err);
-		if (new_repr_str != NULL) {
+		if (new_repr_str) {
 			free(new_repr_str);
 		}
 		return NULL;
@@ -182,13 +178,13 @@ PyObject* AerospikeGeospatial_Type_Str(self) AerospikeGeospatial* self;
 	// Initialize error object
 	as_error_init(&err);
 
-	if ( !self ){
+	if (!self) {
 		as_error_update(&err, AEROSPIKE_ERR_PARAM, "Invalid geospatial object");
 		goto CLEANUP;
 	}
 
 	initresult = AerospikeGeospatial_DoDumps(self->geo_data, &err);
-	if(!initresult) {
+	if (!initresult) {
 		as_error_update(&err, AEROSPIKE_ERR_CLIENT, "Unable to call get data in str format");
 		goto CLEANUP;
 	}
@@ -196,7 +192,7 @@ PyObject* AerospikeGeospatial_Type_Str(self) AerospikeGeospatial* self;
 CLEANUP:
 
 	// If an error occurred, tell Python.
-	if ( err.code != AEROSPIKE_OK ) {
+	if (err.code != AEROSPIKE_OK) {
 		PyObject * py_err = NULL;
 		error_to_pyobject(&err, &py_err);
 		PyObject *exception_type = raise_exception(&err);
@@ -284,7 +280,7 @@ AerospikeGeospatial  * Aerospike_Set_Geo_Data(PyObject * parent, PyObject * args
 	as_error err;
 	as_error_init(&err);
 
-	if ( PyArg_ParseTupleAndKeywords(args, kwds, "O:geodata", kwlist, &py_geodata) == false ){
+	if (PyArg_ParseTupleAndKeywords(args, kwds, "O:geodata", kwlist, &py_geodata) == false) {
 		return NULL;
 	}
 
@@ -299,7 +295,7 @@ AerospikeGeospatial  * Aerospike_Set_Geo_Data(PyObject * parent, PyObject * args
 		as_error_update(&err, AEROSPIKE_ERR_PARAM, "The geospatial data should be a dictionary");
 	}
 
-	if ( err.code != AEROSPIKE_OK ) {
+	if (err.code != AEROSPIKE_OK) {
 		PyObject * py_err = NULL;
 		error_to_pyobject(&err, &py_err);
 		PyObject *exception_type = raise_exception(&err);
@@ -318,7 +314,7 @@ AerospikeGeospatial  * Aerospike_Set_Geo_Json(PyObject * parent, PyObject * args
 	as_error err;
 	as_error_init(&err);
 
-	if ( PyArg_ParseTupleAndKeywords(args, kwds, "O:geojson", kwlist, &py_geodata) == false ){
+	if (PyArg_ParseTupleAndKeywords(args, kwds, "O:geojson", kwlist, &py_geodata) == false) {
 		return NULL;
 	}
 
@@ -333,7 +329,7 @@ AerospikeGeospatial  * Aerospike_Set_Geo_Json(PyObject * parent, PyObject * args
 		as_error_update(&err, AEROSPIKE_ERR_PARAM, "The geospatial data should be a GeoJSON string");
 	}
 
-	if ( err.code != AEROSPIKE_OK ) {
+	if (err.code != AEROSPIKE_OK) {
 		PyObject * py_err = NULL;
 		error_to_pyobject(&err, &py_err);
 		PyObject *exception_type = raise_exception(&err);

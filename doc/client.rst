@@ -1902,7 +1902,7 @@ Key Tuple
         {'a': 1, 'id': 0}
         >>> client.close()
 
-    .. seealso:: `Data Model: Key / Digest <https://www.aerospike.com/docs/architecture/data-model.html#key-digest>`_.
+    .. seealso:: `Data Model: Keys and Digests <https://www.aerospike.com/docs/architecture/data-model.html#records>`_.
 
     .. versionchanged:: 1.0.47
 
@@ -1976,18 +1976,17 @@ Write Policies
 
 .. object:: policy
 
-    A :class:`dict` of optional write policies which are applicable to :meth:`~Client.put`. See :ref:`aerospike_policies`.
+    A :class:`dict` of optional write policies which are applicable to :meth:`~Client.put`.
 
     .. hlist::
         :columns: 1
 
         * **timeout** write timeout in milliseconds
-        * **key** one of the `aerospike.POLICY_KEY_* <http://www.aerospike.com/apidocs/c/db/d65/group__client__policies.html#gaa9c8a79b2ab9d3812876c3ec5d1d50ec>`_ values
-        * **exists** one of the `aerospike_POLICY_EXISTS_* <http://www.aerospike.com/apidocs/c/db/d65/group__client__policies.html#ga50b94613bcf416c9c2691c9831b89238>`_ values
-        * **gen** one of the `aerospike.POLICY_GEN_* <http://www.aerospike.com/apidocs/c/db/d65/group__client__policies.html#ga38c1a40903e463e5d0af0141e8c64061>`_ values
-        * **retry** one of the `aerospike.POLICY_RETRY_* <http://www.aerospike.com/apidocs/c/db/d65/group__client__policies.html#gaa9730980a8b0eda8ab936a48009a6718>`_ values
-        * **commit_level** one of the `aerospike.POLICY_COMMIT_LEVEL_* <http://www.aerospike.com/apidocs/c/db/d65/group__client__policies.html#ga17faf52aeb845998e14ba0f3745e8f23>`_ values
-
+        * **key** one of the ``aerospike.POLICY_KEY_*`` values such as :data:`aerospike.POLICY_KEY_DIGEST`
+        * **exists** one of the ``aerospike.POLICY_EXISTS_*`` values such as :data:`aerospike.POLICY_EXISTS_CREATE`
+        * **gen** one of the ``aerospike.POLICY_GEN_*`` values such as :data:`aerospike.POLICY_GEN_IGNORE`
+        * **retry** one of the ``aerospike.POLICY_RETRY_*`` values such as :data:`aerospike.POLICY_RETRY_NONE`
+        * **commit_level** one of the ``aerospike.POLICY_COMMIT_LEVEL_*`` values such as :data:`aerospike.POLICY_COMMIT_LEVEL_ALL`
 
 .. _aerospike_read_policies:
 
@@ -1996,17 +1995,15 @@ Read Policies
 
 .. object:: policy
 
-     A :class:`dict` of optional read policies which are applicable to :meth:`~Client.get`. See :ref:`aerospike_policies`.
+    A :class:`dict` of optional read policies which are applicable to :meth:`~Client.get`.
 
     .. hlist::
         :columns: 1
 
-        * **timeout** write timeout in milliseconds
-        * **key** one of the `aerospike.POLICY_KEY_* <http://www.aerospike.com/apidocs/c/db/d65/group__client__policies.html#gaa9c8a79b2ab9d3812876c3ec5d1d50ec>`_ values
-        * **consistency_level** one of the `aerospike.POLICY_CONSISTENCY_LEVEL_* <http://www.aerospike.com/apidocs/c/db/d65/group__client__policies.html#ga34dbe8d01c941be845145af643f9b5ab>`_ values
-        * **replica** one of the `aerospike_POLICY_REPLICA_* <http://www.aerospike.com/apidocs/c/db/d65/group__client__policies.html#gabce1fb468ee9cbfe54b7ab834cec79ab>`_ values
-
-
+        * **timeout** read timeout in milliseconds
+        * **key** one of the ``aerospike.POLICY_KEY_*`` values such as :data:`aerospike.POLICY_KEY_DIGEST`
+        * **consistency_level** one of the ``aerospike.POLICY_CONSISTENCY_*`` values such as :data:`aerospike.POLICY_CONSISTENCY_ONE`
+        * **replica** one of the ``aerospike.POLICY_REPLICA_*`` values such as :data:`aerospike.POLICY_REPLICA_MASTER`
 
 .. _aerospike_operate_policies:
 
@@ -2015,18 +2012,18 @@ Operate Policies
 
 .. object:: policy
 
-     A :class:`dict` of optional operate policies which are applicable to :meth:`~Client.append`, :meth:`~Client.prepend`, :meth:`~Client.increment`, :meth:`~Client.operate`. See :ref:`aerospike_policies`.
+    A :class:`dict` of optional operate policies which are applicable to :meth:`~Client.append`, :meth:`~Client.prepend`, :meth:`~Client.increment`, :meth:`~Client.operate`, and atomic list operations.
 
     .. hlist::
         :columns: 1
 
-        * **timeout** write timeout in milliseconds
-        * **key** one of the `aerospike.POLICY_KEY_* <http://www.aerospike.com/apidocs/c/db/d65/group__client__policies.html#gaa9c8a79b2ab9d3812876c3ec5d1d50ec>`_ values
-        * **gen** one of the `aerospike.POLICY_GEN_* <http://www.aerospike.com/apidocs/c/db/d65/group__client__policies.html#ga38c1a40903e463e5d0af0141e8c64061>`_ values
-        * **replica** one of the `aerospike_POLICY_REPLICA_* <http://www.aerospike.com/apidocs/c/db/d65/group__client__policies.html#gabce1fb468ee9cbfe54b7ab834cec79ab>`_ values
-        * **retry** one of the `aerospike.POLICY_RETRY_* <http://www.aerospike.com/apidocs/c/db/d65/group__client__policies.html#gaa9730980a8b0eda8ab936a48009a6718>`_ values
-        * **commit_level** one of the `aerospike.POLICY_COMMIT_LEVEL_* <http://www.aerospike.com/apidocs/c/db/d65/group__client__policies.html#ga17faf52aeb845998e14ba0f3745e8f23>`_ values
-        * **consistency_level** one of the `aerospike.POLICY_CONSISTENCY_LEVEL_* <http://www.aerospike.com/apidocs/c/db/d65/group__client__policies.html#ga34dbe8d01c941be845145af643f9b5ab>`_ values
+        * **timeout** timeout for the operation in milliseconds
+        * **key** one of the ``aerospike.POLICY_KEY_*`` values such as :data:`aerospike.POLICY_KEY_DIGEST`
+        * **gen** one of the ``aerospike.POLICY_GEN_*`` values such as :data:`aerospike.POLICY_GEN_IGNORE`
+        * **replica** one of the ``aerospike.POLICY_REPLICA_*`` values such as :data:`aerospike.POLICY_REPLICA_MASTER`
+        * **retry** one of the ``aerospike.POLICY_RETRY_*`` values such as :data:`aerospike.POLICY_RETRY_NONE`
+        * **commit_level** one of the ``aerospike.POLICY_COMMIT_LEVEL_*`` values such as :data:`aerospike.POLICY_COMMIT_LEVEL_ALL`
+        * **consistency_level** one of the ``aerospike.POLICY_CONSISTENCY_*`` values such as :data:`aerospike.POLICY_CONSISTENCY_ONE`
 
 .. _aerospike_apply_policies:
 
@@ -2035,14 +2032,14 @@ Apply Policies
 
 .. object:: policy
 
-    A :class:`dict` of optional apply policies which are applicable to :meth:`~Client.apply`, and :class:`~aerospike.LList` methods. See :ref:`aerospike_policies`.
+    A :class:`dict` of optional apply policies which are applicable to :meth:`~Client.apply`, and :class:`~aerospike.LList` methods.
 
     .. hlist::
         :columns: 1
 
-        * **timeout** write timeout in milliseconds
-        * **key** one of the `aerospike.POLICY_KEY_* <http://www.aerospike.com/apidocs/c/db/d65/group__client__policies.html#gaa9c8a79b2ab9d3812876c3ec5d1d50ec>`_ values
-        * **commit_level** one of the `aerospike.POLICY_COMMIT_LEVEL_* <http://www.aerospike.com/apidocs/c/db/d65/group__client__policies.html#ga17faf52aeb845998e14ba0f3745e8f23>`_ values
+        * **timeout** timeout for the apply operation in milliseconds
+        * **key** one of the ``aerospike.POLICY_KEY_*`` values such as :data:`aerospike.POLICY_KEY_DIGEST`
+        * **commit_level** one of the ``aerospike.POLICY_COMMIT_LEVEL_*`` values such as :data:`aerospike.POLICY_COMMIT_LEVEL_ALL`
 
 
 .. _aerospike_remove_policies:
@@ -2052,16 +2049,16 @@ Remove Policies
 
 .. object:: policy
 
-     A :class:`dict` of optional remove policies which are applicable to :meth:`~Client.remove`. See :ref:`aerospike_policies`.
+    A :class:`dict` of optional remove policies which are applicable to :meth:`~Client.remove`.
 
     .. hlist::
         :columns: 1
 
         * **timeout** write timeout in milliseconds
-        * **commit_level** one of the `aerospike.POLICY_COMMIT_LEVEL_* <http://www.aerospike.com/apidocs/c/db/d65/group__client__policies.html#ga17faf52aeb845998e14ba0f3745e8f23>`_ values
-        * **key** one of the `aerospike.POLICY_KEY_* <http://www.aerospike.com/apidocs/c/db/d65/group__client__policies.html#gaa9c8a79b2ab9d3812876c3ec5d1d50ec>`_ values
-        * **retry** one of the `aerospike.POLICY_RETRY_* <http://www.aerospike.com/apidocs/c/db/d65/group__client__policies.html#gaa9730980a8b0eda8ab936a48009a6718>`_ values
-        * **gen** one of the `aerospike.POLICY_GEN_* <http://www.aerospike.com/apidocs/c/db/d65/group__client__policies.html#ga38c1a40903e463e5d0af0141e8c64061>`_ values
+        * **key** one of the ``aerospike.POLICY_KEY_*`` values such as :data:`aerospike.POLICY_KEY_DIGEST`
+        * **commit_level** one of the ``aerospike.POLICY_COMMIT_LEVEL_*`` values such as :data:`aerospike.POLICY_COMMIT_LEVEL_ALL`
+        * **gen** one of the ``aerospike.POLICY_GEN_*`` values such as :data:`aerospike.POLICY_GEN_IGNORE`
+        * **retry** one of the ``aerospike.POLICY_RETRY_*`` values such as :data:`aerospike.POLICY_RETRY_NONE`
 
 
 .. _aerospike_batch_policies:
@@ -2071,9 +2068,9 @@ Batch Policies
 
 .. object:: policy
 
-     A :class:`dict` of optional batch policies which are applicable to \
+    A :class:`dict` of optional batch policies which are applicable to \
      :meth:`~aerospike.Client.get_many`, :meth:`~aerospike.Client.exists_many` \
-     and :meth:`~aerospike.Client.select_many`. See :ref:`aerospike_policies`.
+     and :meth:`~aerospike.Client.select_many`.
 
     .. hlist::
         :columns: 1
@@ -2088,9 +2085,9 @@ Info Policies
 
 .. object:: policy
 
-     A :class:`dict` of optional info policies which are applicable to \
+    A :class:`dict` of optional info policies which are applicable to \
      :meth:`~aerospike.Client.info`, :meth:`~aerospike.Client.info_node` \
-     and index operations. See :ref:`aerospike_policies`.
+     and index operations.
 
     .. hlist::
         :columns: 1
@@ -2105,12 +2102,12 @@ Admin Policies
 
 .. object:: policy
 
-     A :class:`dict` of optional admin policies which are applicable to admin (security) operations. See :ref:`aerospike_policies`.
+    A :class:`dict` of optional admin policies which are applicable to admin (security) operations.
 
     .. hlist::
         :columns: 1
 
-        * **timeout** read timeout in milliseconds
+        * **timeout** admin operation timeout in milliseconds
 
 
 .. _aerospike_privilege_dict:
@@ -2125,7 +2122,7 @@ Privilege Objects
     .. hlist::
         :columns: 1
 
-        * **code** one of the `aerospike.PRIV_* <http://www.aerospike.com/apidocs/c/dd/d3f/as__admin_8h.html#a3abfbabd6287af263860154d044b44b3>`_ values
+        * **code** one of the ``aerospike.PRIV_*`` values such as :data:`aerospike.PRIV_READ`
         * **ns** optional namespace to which the privilege applies, otherwise the privilege applies globally.
         * **set** optional set within the *ns* to which the privilege applies, otherwise to the entire namespace.
 

@@ -48,11 +48,11 @@ PyObject * AerospikeClient_Connect(AerospikeClient * self, PyObject * args, PyOb
 	PyObject * py_username = NULL;
 	PyObject * py_password = NULL;
 
-	if ( PyArg_ParseTuple(args, "|OO:connect", &py_username, &py_password) == false ) {
+	if (PyArg_ParseTuple(args, "|OO:connect", &py_username, &py_password) == false) {
 		return NULL;
 	}
 
-	if ( py_username && PyString_Check(py_username) && py_password && PyString_Check(py_password) ) {
+	if (py_username && PyString_Check(py_username) && py_password && PyString_Check(py_password)) {
 		char * username = PyString_AsString(py_username);
 		char * password = PyString_AsString(py_password);
 		as_config_set_user(&self->as->config, username, password);
@@ -88,10 +88,9 @@ PyObject * AerospikeClient_Connect(AerospikeClient * self, PyObject * args, PyOb
 			} else {
 				shm_key = counter;
 			}
-			while(1) {
+			while (1) {
 				flag = 0;
-				while (PyDict_Next(py_global_hosts, &pos, &py_key, &py_value))
-				{
+				while (PyDict_Next(py_global_hosts, &pos, &py_key, &py_value)) {
 					if (((AerospikeGlobalHosts*)py_value)->as->config.use_shm) {
 						if (((AerospikeGlobalHosts*)py_value)->shm_key == shm_key) {
 							flag = 1;
@@ -120,7 +119,7 @@ PyObject * AerospikeClient_Connect(AerospikeClient * self, PyObject * args, PyOb
 	}
 
 CLEANUP:
-	if ( err.code != AEROSPIKE_OK ) {
+	if (err.code != AEROSPIKE_OK) {
 		PyObject * py_err = NULL;
 		error_to_pyobject(&err, &py_err);
 		PyObject *exception_type = raise_exception(&err);
@@ -194,7 +193,7 @@ PyObject * AerospikeClient_shm_key(AerospikeClient * self, PyObject * args, PyOb
 
 
 CLEANUP:
-	if ( err.code != AEROSPIKE_OK ) {
+	if (err.code != AEROSPIKE_OK) {
 		PyObject * py_err = NULL;
 		error_to_pyobject(&err, &py_err);
 		PyObject *exception_type = raise_exception(&err);

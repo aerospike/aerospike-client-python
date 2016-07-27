@@ -34,7 +34,7 @@ PyObject * AerospikeGeospatial_Wrap(AerospikeGeospatial * self, PyObject * args,
 	// Python function keyword arguments
 	static char * kwlist[] = {"geodata", NULL};
 
-	if ( PyArg_ParseTupleAndKeywords(args, kwds, "O:wrap", kwlist, &py_geodata) == false ){
+	if (PyArg_ParseTupleAndKeywords(args, kwds, "O:wrap", kwlist, &py_geodata) == false) {
 		return NULL;
 	}
 
@@ -53,7 +53,7 @@ PyObject * AerospikeGeospatial_Wrap(AerospikeGeospatial * self, PyObject * args,
 CLEANUP:
 
 	// If an error occurred, tell Python.
-	if ( err.code != AEROSPIKE_OK ) {
+	if (err.code != AEROSPIKE_OK) {
 		PyObject * py_err = NULL;
 		error_to_pyobject(&err, &py_err);
 		PyObject *exception_type = raise_exception(&err);

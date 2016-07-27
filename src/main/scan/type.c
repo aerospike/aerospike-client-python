@@ -58,10 +58,6 @@ static PyObject * AerospikeScan_Type_New(PyTypeObject * type, PyObject * args, P
 
 	self = (AerospikeScan *) type->tp_alloc(type, 0);
 
-	if ( self == NULL ) {
-		return NULL;
-	}
-
 	return (PyObject *) self;
 }
 
@@ -72,8 +68,8 @@ static int AerospikeScan_Type_Init(AerospikeScan * self, PyObject * args, PyObje
 
 	static char * kwlist[] = {"namespace", "set", NULL};
 
-	if ( PyArg_ParseTupleAndKeywords(args, kwds, "O|O:key", kwlist,
-		&py_namespace, &py_set) == false ) {
+	if (PyArg_ParseTupleAndKeywords(args, kwds, "O|O:key", kwlist,
+		&py_namespace, &py_set) == false) {
 		return 0;
 	}
 
@@ -87,13 +83,13 @@ static int AerospikeScan_Type_Init(AerospikeScan * self, PyObject * args, PyObje
 		return -1;
 	}
 
-	if ( py_set) {
+	if (py_set) {
 		if (PyUnicode_Check(py_set)) {
 			py_ustr = PyUnicode_AsUTF8String(py_set);
 			set = PyBytes_AsString(py_ustr);
 		} else if (PyString_Check(py_set)) {
 			set = PyString_AsString(py_set);
-		} else if ( Py_None == py_set ) {
+		} else if (Py_None == py_set) {
 			set = NULL;
 		}
 	}
@@ -181,7 +177,7 @@ AerospikeScan * AerospikeScan_New(AerospikeClient * client, PyObject * args, PyO
 	AerospikeScan * self  = (AerospikeScan *) AerospikeScan_Type.tp_new(&AerospikeScan_Type, args, kwds);
 	self->client = client;
 	Py_INCREF(client);
-	if ( AerospikeScan_Type.tp_init((PyObject *) self, args, kwds) != -1 ) {
+	if (AerospikeScan_Type.tp_init((PyObject *) self, args, kwds) != -1) {
 		return self;
 	}
 	else {

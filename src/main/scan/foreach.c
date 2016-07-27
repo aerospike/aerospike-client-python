@@ -39,7 +39,7 @@ static bool each_result(const as_val * val, void * udata)
 {
 	bool rval = true;
 
-	if ( !val ) {
+	if (!val) {
 		return false;
 	}
 
@@ -71,14 +71,14 @@ static bool each_result(const as_val * val, void * udata)
 	Py_DECREF(py_arglist);
 
 	// handle return value
-	if ( py_return == NULL ) {
+	if (!py_return) {
 		// an exception was raised, handle it (someday)
 		// for now, we bail from the loop
 		as_error_update(err, AEROSPIKE_ERR_CLIENT, "Callback function raised an exception");
 		rval = false;
 	}
-	else if (  PyBool_Check(py_return) ) {
-		if ( Py_False == py_return ) {
+	else if (PyBool_Check(py_return)) {
+		if (Py_False == py_return) {
 			rval = false;
 		}
 		else {
@@ -110,7 +110,7 @@ PyObject * AerospikeScan_Foreach(AerospikeScan * self, PyObject * args, PyObject
 	static char * kwlist[] = {"callback", "policy", "options", NULL};
 
 	// Python Function Argument Parsing
-	if ( PyArg_ParseTupleAndKeywords(args, kwds, "O|OO:foreach", kwlist, &py_callback, &py_policy, &py_options) == false ) {
+	if (PyArg_ParseTupleAndKeywords(args, kwds, "O|OO:foreach", kwlist, &py_callback, &py_policy, &py_options) == false) {
 		return NULL;
 	}
 
@@ -139,12 +139,12 @@ PyObject * AerospikeScan_Foreach(AerospikeScan * self, PyObject * args, PyObject
 	// Convert python policy object to as_policy_exists
 	pyobject_to_policy_scan(&err, py_policy, &scan_policy, &scan_policy_p,
 			&self->client->as->config.policies.scan);
-	if ( err.code != AEROSPIKE_OK ) {
+	if (err.code != AEROSPIKE_OK) {
 		goto CLEANUP;
 	}
 	if (py_options && PyDict_Check(py_options)) {
 		set_scan_options(&err, &self->scan, py_options);
-		if(err.code != AEROSPIKE_OK) {
+		if (err.code != AEROSPIKE_OK) {
 			goto CLEANUP;
 		}
 	}
@@ -164,13 +164,13 @@ PyObject * AerospikeScan_Foreach(AerospikeScan * self, PyObject * args, PyObject
 
 CLEANUP:
 
-	if ( err.code != AEROSPIKE_OK || data.error.code != AEROSPIKE_OK) {
+	if (err.code != AEROSPIKE_OK || data.error.code != AEROSPIKE_OK) {
 		PyObject * py_err = NULL, *exception_type = NULL;
-		if ( err.code != AEROSPIKE_OK ){
+		if (err.code != AEROSPIKE_OK){
 			error_to_pyobject(&err, &py_err);
 			exception_type = raise_exception(&err);
 		}
-		if ( data.error.code != AEROSPIKE_OK){
+		if (data.error.code != AEROSPIKE_OK){
 			error_to_pyobject(&data.error, &py_err);
 			exception_type = raise_exception(&data.error);
 		}

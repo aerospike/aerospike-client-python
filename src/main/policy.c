@@ -38,10 +38,10 @@
 
 #define POLICY_INIT(__policy) \
 	as_error_reset(err);\
-if ( ! py_policy || py_policy == Py_None ) {\
+if (!py_policy || py_policy == Py_None) {\
 	return err->code;\
 }\
-if ( ! PyDict_Check(py_policy) ) {\
+if (!PyDict_Check(py_policy)) {\
 	return as_error_update(err, AEROSPIKE_ERR_PARAM, "policy must be a dict");\
 }\
 __policy##_init(policy);\
@@ -51,8 +51,8 @@ __policy##_init(policy);\
 
 #define POLICY_SET_FIELD(__field, __type) { \
 	PyObject * py_field = PyDict_GetItemString(py_policy, #__field);\
-	if ( py_field ) {\
-		if ( PyInt_Check(py_field) ) {\
+	if (py_field) {\
+		if (PyInt_Check(py_field)) {\
 			policy->__field = (__type) PyInt_AsLong(py_field);\
 		}\
 		else {\

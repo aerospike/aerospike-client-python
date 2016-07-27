@@ -1,6 +1,31 @@
 import pytest
+import socket
+import time
 from .test_base_class import TestBaseClass
 aerospike = pytest.importorskip("aerospike")
+
+
+def wait_for_port(address, port, interval=0.1, timeout=60):
+    """Wait for a TCP / IP port to accept a connection.
+
+    : param port: The port to check.
+    : param interval: The interval(seconds) between checks.
+    : param timeout: The total time(seconds) to check before quiting.
+    """
+    start = time.time()
+    while True:
+        current = time.time()
+        if current - start >= timeout:
+            break
+        try:
+            s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            s.connect((address, port))
+            s.close()
+            return True
+        except Exception as e:
+            pass
+        time.sleep(interval)
+    return False
 
 
 @pytest.fixture(scope="class")
@@ -8,6 +33,10 @@ def as_connection(request):
     hostlist, user, password = TestBaseClass.get_hosts()
     config = {'hosts': hostlist}
     as_client = None
+
+    for (a, p) in hostlist:
+        wait_for_port(a, p)
+
     if user is None and password is None:
         as_client = aerospike.client(config).connect()
     else:

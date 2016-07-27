@@ -63,7 +63,7 @@ PyObject * AerospikeClient_convert_pythonObj_to_asType(
 	as_policy_operate** operate_policy_pp)
 {
 	pyobject_to_key(err, py_key, key_p);
-	if ( err->code != AEROSPIKE_OK ) {
+	if (err->code != AEROSPIKE_OK) {
 		goto CLEANUP;
 	}
 
@@ -73,7 +73,7 @@ PyObject * AerospikeClient_convert_pythonObj_to_asType(
 	}
 
 CLEANUP:
-	if ( err->code != AEROSPIKE_OK ) {
+	if (err->code != AEROSPIKE_OK) {
 		PyObject * py_err = NULL;
 		error_to_pyobject(err, &py_err);
 		PyObject *exception_type = raise_exception(err);
@@ -99,37 +99,37 @@ CLEANUP:
  */
 static void AerospikeClient_CheckForMeta(PyObject * py_meta, as_operations * ops, as_error *err)
 {
-	if ( py_meta && PyDict_Check(py_meta) ) {
+	if (py_meta && PyDict_Check(py_meta)) {
 		PyObject * py_gen = PyDict_GetItemString(py_meta, "gen");
 		PyObject * py_ttl = PyDict_GetItemString(py_meta, "ttl");
 		uint32_t ttl = 0;
 		uint16_t gen = 0;
-		if ( py_ttl != NULL ){
-			if ( PyInt_Check(py_ttl) ) {
+		if (py_ttl) {
+			if (PyInt_Check(py_ttl)) {
 				ttl = (uint32_t) PyInt_AsLong(py_ttl);
-			} else if ( PyLong_Check(py_ttl) ) {
+			} else if (PyLong_Check(py_ttl)) {
 				ttl = (uint32_t) PyLong_AsLongLong(py_ttl);
 			} else {
 				as_error_update(err, AEROSPIKE_ERR_PARAM, "Ttl should be an int or long");
 			}
 
-			if((uint32_t)-1 == ttl) {
+			if ((uint32_t)-1 == ttl) {
 				as_error_update(err, AEROSPIKE_ERR_PARAM, "integer value for ttl exceeds sys.maxsize");
 				return;
 			}
 			ops->ttl = ttl;
 		}
 
-		if( py_gen != NULL ){
-			if ( PyInt_Check(py_gen) ) {
+		if (py_gen) {
+			if (PyInt_Check(py_gen)) {
 				gen = (uint16_t) PyInt_AsLong(py_gen);
-			} else if ( PyLong_Check(py_gen) ) {
+			} else if (PyLong_Check(py_gen)) {
 				gen = (uint16_t) PyLong_AsLongLong(py_gen);
 			} else {
 				as_error_update(err, AEROSPIKE_ERR_PARAM, "Generation should be an int or long");
 			}
 
-			if((uint16_t)-1 == gen) {
+			if ((uint16_t)-1 == gen) {
 				as_error_update(err, AEROSPIKE_ERR_PARAM, "integer value for gen exceeds sys.maxsize");
 				return;
 			}
@@ -269,7 +269,7 @@ static PyObject *  AerospikeClient_OperateOrdered_Invoke(
 
 	py_bins = PyList_New(0);
 
-	for ( i = 0; i < size; i++) {
+	for (i = 0; i < size; i++) {
 		as_operations ops;
 		as_operations_init(&ops, 1);
 
@@ -285,24 +285,24 @@ static PyObject *  AerospikeClient_OperateOrdered_Invoke(
 		operation = -1;
 		offset = 0;
 		double_offset = 0.0;
-		if ( PyDict_Check(py_val) ) {
+		if (PyDict_Check(py_val)) {
 			PyObject *key_op = NULL, *value = NULL;
 			PyObject * py_index = NULL;
 			PyObject * py_value = NULL;
 			Py_ssize_t pos = 0;
 			while (PyDict_Next(py_val, &pos, &key_op, &value)) {
-				if ( ! PyString_Check(key_op) ) {
+				if (!PyString_Check(key_op)) {
 					as_error_update(err, AEROSPIKE_ERR_CLIENT, "A operation key must be a string.");
 					goto LOOP_CLEANUP;
 				} else {
 					char * name = PyString_AsString(key_op);
-					if(!strcmp(name,"op") && (PyInt_Check(value) || PyLong_Check(value))) {
+					if (!strcmp(name,"op") && (PyInt_Check(value) || PyLong_Check(value))) {
 						operation = PyInt_AsLong(value);
 					} else if (!strcmp(name, "bin")) {
 						py_bin = value;
 					} else if (!strcmp(name, "index")) {
 						py_index = value;
-					} else if(!strcmp(name, "val")) {
+					} else if (!strcmp(name, "val")) {
 						py_value = value;
 					} else {
 						as_error_update(err, AEROSPIKE_ERR_PARAM, "operation can contain only op, bin, index and val keys");
@@ -430,7 +430,7 @@ static PyObject *  AerospikeClient_OperateOrdered_Invoke(
 					if (PyInt_Check(py_value)) {
 						offset = PyInt_AsLong(py_value);
 						as_operations_add_incr(&ops, bin, offset);
-					} else if ( PyLong_Check(py_value) ) {
+					} else if (PyLong_Check(py_value)) {
 						offset = PyLong_AsLong(py_value);
 						if (offset == -1 && PyErr_Occurred()) {
 							if (PyErr_ExceptionMatches(PyExc_OverflowError)) {
@@ -457,7 +457,7 @@ static PyObject *  AerospikeClient_OperateOrdered_Invoke(
 						ops.ttl = PyInt_AsLong(py_value);
 					} else if (py_value && PyLong_Check(py_value)) {
 						ttl = PyLong_AsLong(py_value);
-						if((uint32_t)-1 == ttl) {
+						if ((uint32_t)-1 == ttl) {
 							as_error_update(err, AEROSPIKE_ERR_PARAM, "integer value for ttl exceeds sys.maxsize");
 							goto LOOP_CLEANUP;
 						}
@@ -690,7 +690,7 @@ CLEANUP:
 		as_key_destroy(key);
 	}
 
-	if ( err->code != AEROSPIKE_OK ) {
+	if (err->code != AEROSPIKE_OK) {
 		PyObject * py_err = NULL;
 		error_to_pyobject(err, &py_err);
 		PyObject *exception_type = raise_exception(err);
@@ -741,8 +741,8 @@ PyObject * AerospikeClient_OperateOrdered(AerospikeClient * self, PyObject * arg
 	static char * kwlist[] = {"key", "list", "meta", "policy", NULL};
 
 	// Python Function Argument Parsing
-	if ( PyArg_ParseTupleAndKeywords(args, kwds, "OO|OO:operate_ordered", kwlist,
-				&py_key, &py_list, &py_meta, &py_policy) == false ) {
+	if (PyArg_ParseTupleAndKeywords(args, kwds, "OO|OO:operate_ordered", kwlist,
+				&py_key, &py_list, &py_meta, &py_policy) == false) {
 		return NULL;
 	}
 
@@ -764,7 +764,7 @@ PyObject * AerospikeClient_OperateOrdered(AerospikeClient * self, PyObject * arg
 		Py_DECREF(py_result);
 	}
 
-	if (py_list != NULL && PyList_Check(py_list)) {
+	if (py_list && PyList_Check(py_list)) {
 		py_result = AerospikeClient_OperateOrdered_Invoke(self, &err, &key, py_list, py_meta,
 				operate_policy_p);
 	} else {
@@ -773,11 +773,11 @@ PyObject * AerospikeClient_OperateOrdered(AerospikeClient * self, PyObject * arg
 	}
 
 CLEANUP:
-	if ( err.code != AEROSPIKE_OK ) {
+	if (err.code != AEROSPIKE_OK) {
 		PyObject * py_err = NULL;
 		error_to_pyobject(&err, &py_err);
 		PyObject *exception_type = raise_exception(&err);
-		if(PyObject_HasAttrString(exception_type, "key")) {
+		if (PyObject_HasAttrString(exception_type, "key")) {
 			PyObject_SetAttrString(exception_type, "key", py_key);
 		}
 		PyErr_SetObject(exception_type, py_err);

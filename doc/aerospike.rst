@@ -27,7 +27,7 @@ Records are uniquely identified by their key, and record metadata is contained
 in an in-memory primary index.
 
 .. seealso::
-    `System Overview <http://www.aerospike.com/docs/architecture/index.html>`_
+    `Architecture Overview <http://www.aerospike.com/docs/architecture/index.html>`_
     and `Aerospike Data Model
     <http://www.aerospike.com/docs/architecture/data-model.html>`_ for more
     information about Aerospike.
@@ -51,21 +51,21 @@ in an in-memory primary index.
             * **lua** an optional :class:`dict` containing the paths to two types of Lua modules
                 * **system_path** the location of the system modules such as ``aerospike.lua`` (default: ``/usr/local/aerospike/lua``)
                 * **user_path** the location of the user's record and stream UDFs
-            * **serialization** an optional instance-level :py:func:`tuple` of (serializer, deserializer). Takes precedence over a class serializer registered with :func:`~aerospike.set_serializer`.
             * **policies** a :class:`dict` of policies
-                * **timeout** default timeout in milliseconds
-                * **key** default key policy for this client
-                * **exists** default exists policy for this client
-                * **gen** default generation policy for this client
-                * **retry** default retry policy for this client
-                * **consistency_level** default consistency level policy for this client
-                * **replica** default replica policy for this client
-                * **commit_level** default commit level policy for this client
+                * **timeout** default connection timeout in milliseconds
+                * **key** default key policy, with values such as :data:`aerospike.POLICY_KEY_DIGEST`
+                * **exists** default exists policy, with values such as :data:`aerospike.POLICY_EXISTS_CREATE`
+                * **gen** default generation policy, with values such as :data:`aerospike.POLICY_GEN_IGNORE`
+                * **retry** default retry policy, with values such as :data:`aerospike.POLICY_RETRY_NONE`
+                * **consistency_level** default consistency level policy, with values such as :data:`aerospike.POLICY_CONSISTENCY_ONE`
+                * **replica** default replica policy, with values such as :data:`aerospike.POLICY_REPLICA_MASTER`
+                * **commit_level** default commit level policy, with values such as :data:`aerospike.POLICY_COMMIT_LEVEL_ALL`
             * **shm** a :class:`dict` with optional shared-memory cluster tending parameters. Shared-memory cluster tending is on if the :class:`dict` is provided. If multiple clients are instantiated talking to the same cluster the *shm* cluster-tending should be used.
                 * **max_nodes** maximum number of nodes allowed. Pad so new nodes can be added without configuration changes (default: 16)
                 * **max_namespaces** similarly pad (default: 8)
                 * **takeover_threshold_sec** take over tending if the cluster hasn't been checked for this many seconds (default: 30)
                 * **shm_key** explicitly set the shm key for this client. It is otherwise implicitly evaluated per unique hostname, and can be inspected with :meth:`~aerospike.Client.shm_key` (default: 0xA5000000)
+            * **serialization** an optional instance-level :py:func:`tuple` of (serializer, deserializer). Takes precedence over a class serializer registered with :func:`~aerospike.set_serializer`.
             * **thread_pool_size** number of threads in the pool that is used in batch/scan/query commands (default: 16)
             * **max_threads** size of the synchronous connection pool for each server node (default: 300)
             * **batch_direct** whether to use the batch-direct protocol (default: ``False``, so will use batch-index if available)
@@ -74,8 +74,7 @@ in an in-memory primary index.
     :return: an instance of the :py:class:`aerospike.Client` class.
 
     .. seealso::
-        `Client Policies <http://www.aerospike.com/apidocs/c/db/d65/group__client__policies.html>`_ and \
-        `Shared Memory <https://www.aerospike.com/docs/client/c/usage/shm.html>`_.
+        `Shared Memory <https://www.aerospike.com/docs/client/c/usage/shm.html>`_ and `Per-Transaction Consistency Guarantees <http://www.aerospike.com/docs/architecture/consistency.html>`_.
 
     .. code-block:: python
 
@@ -609,55 +608,105 @@ Operators for the multi-ops method :py:meth:`~aerospike.Client.operate`.
 Policies
 --------
 
+.. rubric:: Commit Level Policy Options
+
+Specifies the number of replicas required to be successfully committed before returning success in a write operation to provide the desired consistency guarantee.
+
 .. data:: POLICY_COMMIT_LEVEL_ALL
 
-    An option of the *'commit_level'* policy
+    Return succcess only after successfully committing all replicas
 
 .. data:: POLICY_COMMIT_LEVEL_MASTER
 
-.. data:: POLICY_CONSISTENCY_ALL
+    Return succcess after successfully committing the master replica
 
-    An option of the *'consistency_level'* policy
+.. rubric:: Consistency Level Policy Options
+
+Specifies the number of replicas to be consulted in a read operation to provide the desired consistency guarantee.
 
 .. data:: POLICY_CONSISTENCY_ONE
 
+    Involve a single replica in the operation
+
+.. data:: POLICY_CONSISTENCY_ALL
+
+    Involve all replicas in the operation
+
+.. rubric:: Existence Policy Options
+
+Specifies the behavior for writing the record depending whether or not it exists.
+
 .. data:: POLICY_EXISTS_CREATE
 
-    An option of the *'exists'* policy
+    Create a record, ONLY if it doesn't exist
 
 .. data:: POLICY_EXISTS_CREATE_OR_REPLACE
 
+    Completely replace a record if it exists, otherwise create it
+
 .. data:: POLICY_EXISTS_IGNORE
+
+    Write the record, regardless of existence. (i.e. create or update)
 
 .. data:: POLICY_EXISTS_REPLACE
 
+    Completely replace a record, ONLY if it exists
+
 .. data:: POLICY_EXISTS_UPDATE
 
-.. data:: POLICY_GEN_EQ
+    Update a record, ONLY if it exists
 
-    An option of the *'gen'* policy
+.. rubric:: Generation Policy Options
 
-.. data:: POLICY_GEN_GT
+Specifies the behavior of record modifications with regard to the generation value.
 
 .. data:: POLICY_GEN_IGNORE
 
+    Write a record, regardless of generation
+
+.. data:: POLICY_GEN_EQ
+
+    Write a record, ONLY if generations are equal
+
+.. data:: POLICY_GEN_GT
+
+    Write a record, ONLY if local generation is greater-than remote generation
+
+.. rubric:: Key Policy Options
+
+Specifies the behavior for whether keys or digests should be sent to the cluster.
+
 .. data:: POLICY_KEY_DIGEST
 
-    An option of the *'key'* policy
+    Calculate the digest on the client-side and send it to the server
 
 .. data:: POLICY_KEY_SEND
 
-.. data:: POLICY_REPLICA_ANY
+    Send the key in addition to the digest. This policy causes a write operation to store the key on the server
 
-    An option of the *'replica'* policy
+.. rubric:: Replica Options
+
+Specifies which partition replica to read from.
 
 .. data:: POLICY_REPLICA_MASTER
 
+    Read from the partition master replica node
+
+.. data:: POLICY_REPLICA_ANY
+
+    Read from an unspecified replica node
+
+.. rubric:: Retry Policy Options
+
+Specifies the behavior of failed operations.
+
 .. data:: POLICY_RETRY_NONE
 
-    An option of the *'retry'* policy
+    Only attempt an operation once
 
 .. data:: POLICY_RETRY_ONCE
+
+    If an operation fails, attempt the operation one more time
 
 .. _aerospike_scan_constants:
 
@@ -804,6 +853,8 @@ Log Level
 Privileges
 ----------
 
+Permission codes define the type of permission granted for a user's role.
+
 .. data:: PRIV_READ
 
     The user is granted read access.
@@ -818,10 +869,13 @@ Privileges
 
 .. data:: PRIV_SYS_ADMIN
 
-    The user is granted the ability to perform system administration operations.
+    The user is granted the ability to perform system administration operations. Global scope only.
 
 .. data:: PRIV_USER_ADMIN
 
-    The user is granted the ability to perform user administration operations.
+    The user is granted the ability to perform user administration operations. Global scope only.
 
+.. data:: PRIV_DATA_ADMIN
+
+    User can perform systems administration functions on a database that do not involve user administration. Examples include setting dynamic server configuration. Global scope only.
 

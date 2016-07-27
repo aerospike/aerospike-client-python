@@ -54,11 +54,11 @@ static int query_where_add(as_query **query, as_predicate_type predicate, as_ind
 	PyObject * py_ubin = NULL;
 	switch (predicate) {
 		case AS_PREDICATE_EQUAL: {
-			if ( in_datatype == AS_INDEX_STRING ){
-				if (PyUnicode_Check(py_bin)){
+			if (in_datatype == AS_INDEX_STRING) {
+				if (PyUnicode_Check(py_bin)) {
 					py_ubin = PyUnicode_AsUTF8String(py_bin);
 					bin = PyBytes_AsString(py_ubin);
-				} else if (PyString_Check(py_bin) ){
+				} else if (PyString_Check(py_bin)) {
 					bin = PyString_AsString(py_bin);
 				} else if (PyByteArray_Check(py_bin)) {
 					bin = PyByteArray_AsString(py_bin);
@@ -66,9 +66,9 @@ static int query_where_add(as_query **query, as_predicate_type predicate, as_ind
 					return 1;
 				}
 
-				if (PyUnicode_Check(py_val1)){ 
+				if (PyUnicode_Check(py_val1)) {
 					val = strdup(PyBytes_AsString(PyUnicode_AsUTF8String(py_val1)));
-				} else if (PyString_Check(py_val1) ){
+				} else if (PyString_Check(py_val1)) {
 					val = strdup(PyString_AsString(py_val1));
 				}
 				else {
@@ -76,27 +76,27 @@ static int query_where_add(as_query **query, as_predicate_type predicate, as_ind
 				}
 
 				as_query_where_init(*query, 1);
-				if(index_type == 0) {
+				if (index_type == 0) {
 					as_query_where(*query, bin, as_equals( STRING, val ));
-				} else if(index_type == 1) {
+				} else if (index_type == 1) {
 					as_query_where(*query, bin, as_contains( LIST, STRING, val ));
-				} else if(index_type == 2) {
+				} else if (index_type == 2) {
 					as_query_where(*query, bin, as_contains( MAPKEYS, STRING, val ));
-				} else if(index_type == 3) {
+				} else if (index_type == 3) {
 					as_query_where(*query, bin, as_contains( MAPVALUES, STRING, val ));
 				} else {
 					return 1;
 				}
-				if (py_ubin){
+				if (py_ubin) {
 					Py_DECREF(py_ubin);
 					py_ubin = NULL;
 				}
 			}
-			else if ( in_datatype == AS_INDEX_NUMERIC ){
-				if (PyUnicode_Check(py_bin)){
+			else if (in_datatype == AS_INDEX_NUMERIC) {
+				if (PyUnicode_Check(py_bin)) {
 					py_ubin = PyUnicode_AsUTF8String(py_bin);
 					bin = PyBytes_AsString(py_ubin);
-				} else if (PyString_Check(py_bin) ){
+				} else if (PyString_Check(py_bin)) {
 					bin = PyString_AsString(py_bin);
 				} else if (PyByteArray_Check(py_bin)) {
 					bin = PyByteArray_AsString(py_bin);
@@ -106,18 +106,18 @@ static int query_where_add(as_query **query, as_predicate_type predicate, as_ind
 				int64_t val = pyobject_to_int64(py_val1);
 
 				as_query_where_init(*query, 1);
-				if(index_type == 0) {
+				if (index_type == 0) {
 					as_query_where(*query, bin, as_equals( NUMERIC, val ));
-				} else if(index_type == 1) {
+				} else if (index_type == 1) {
 					as_query_where(*query, bin, as_contains( LIST, NUMERIC, val ));
-				} else if(index_type == 2) {
+				} else if (index_type == 2) {
 					as_query_where(*query, bin, as_contains( MAPKEYS, NUMERIC, val ));
-				} else if(index_type == 3) {
+				} else if (index_type == 3) {
 					as_query_where(*query, bin, as_contains( MAPVALUES, NUMERIC, val ));
 				} else {
 					return 1;
 				}
-				if (py_ubin){
+				if (py_ubin) {
 					Py_DECREF(py_ubin);
 					py_ubin = NULL;
 				}
@@ -134,11 +134,11 @@ static int query_where_add(as_query **query, as_predicate_type predicate, as_ind
 			break;
 		}
 		case AS_PREDICATE_RANGE: {
-			if ( in_datatype == AS_INDEX_NUMERIC) {
-				if (PyUnicode_Check(py_bin)){
+			if (in_datatype == AS_INDEX_NUMERIC) {
+				if (PyUnicode_Check(py_bin)) {
 					py_ubin = PyUnicode_AsUTF8String(py_bin);
 					bin = PyBytes_AsString(py_ubin);
-				} else if (PyString_Check(py_bin)){
+				} else if (PyString_Check(py_bin)) {
 					bin = PyString_AsString(py_bin);
 				} else if (PyByteArray_Check(py_bin)) {
 					bin = PyByteArray_AsString(py_bin);
@@ -149,23 +149,23 @@ static int query_where_add(as_query **query, as_predicate_type predicate, as_ind
 				int64_t max = pyobject_to_int64(py_val2);
 
 				as_query_where_init(*query, 1);
-				if(index_type == 0) {
+				if (index_type == 0) {
 					as_query_where(*query, bin, as_range( DEFAULT, NUMERIC, min, max ));
-				} else if(index_type == 1) {
+				} else if (index_type == 1) {
 					as_query_where(*query, bin, as_range( LIST, NUMERIC, min, max ));
-				} else if(index_type == 2) {
+				} else if (index_type == 2) {
 					as_query_where(*query, bin, as_range( MAPKEYS, NUMERIC, min, max ));
-				} else if(index_type == 3) {
+				} else if (index_type == 3) {
 					as_query_where(*query, bin, as_range( MAPVALUES, NUMERIC, min, max ));
 				} else {
 					return 1;
 				}
-				if (py_ubin){
+				if (py_ubin) {
 					Py_DECREF(py_ubin);
 					py_ubin = NULL;
 				}
 			}
-			else if ( in_datatype == AS_INDEX_STRING) {
+			else if (in_datatype == AS_INDEX_STRING) {
 				// NOT IMPLEMENTED
 			}
 			else {
@@ -258,7 +258,7 @@ PyObject * AerospikeClient_QueryApply_Invoke(
 		set_p = PyBytes_AsString(py_ustr1);
 	} else if (PyString_Check(py_set)) {
 		set_p = PyString_AsString(py_set);
-	} else if( Py_None != py_set ) {
+	} else if (Py_None != py_set) {
 		// Scan whole namespace if set is 'None' else error
 		as_error_update(&err, AEROSPIKE_ERR_PARAM, "Set name should be string");
 		goto CLEANUP;
@@ -305,10 +305,10 @@ PyObject * AerospikeClient_QueryApply_Invoke(
 	}
 
 	as_query *query_ptr = &query;
-	if ( PyTuple_Check(py_predicate) ) {
+	if (PyTuple_Check(py_predicate)) {
 
 		Py_ssize_t size = PyTuple_Size(py_predicate);
-		if ( size < 1 ) {
+		if (size < 1) {
 			// If it ain't atleast 1, then raise error
 			return NULL;
 		}
@@ -316,7 +316,7 @@ PyObject * AerospikeClient_QueryApply_Invoke(
 		PyObject * py_op = PyTuple_GetItem(py_predicate, 0);
 		PyObject * py_op_data = PyTuple_GetItem(py_predicate, 1);
 
-		if ( PyInt_Check(py_op) && PyInt_Check(py_op_data)) {
+		if (PyInt_Check(py_op) && PyInt_Check(py_op_data)) {
 			as_predicate_type op = (as_predicate_type) PyInt_AsLong(py_op);
 			as_index_datatype op_data = (as_index_datatype) PyInt_AsLong(py_op_data);
 			rc = query_where_add(
@@ -339,8 +339,8 @@ PyObject * AerospikeClient_QueryApply_Invoke(
 	aerospike_query_background(self->as, &err, write_policy_p, &query, &query_id);
 	Py_END_ALLOW_THREADS
 	arglist = NULL;
-	if(err.code == AEROSPIKE_OK) {
-		if(block) {
+	if (err.code == AEROSPIKE_OK) {
+		if (block) {
 			if (py_policy) {
 				pyobject_to_policy_info(&err, py_policy, &info_policy, &info_policy_p,
 						&self->as->config.policies.info);
@@ -351,7 +351,7 @@ PyObject * AerospikeClient_QueryApply_Invoke(
 			Py_BEGIN_ALLOW_THREADS
 			aerospike_query_wait(self->as, &err, info_policy_p, &query, query_id, 0);
 			Py_END_ALLOW_THREADS
-			if(err.code != AEROSPIKE_OK) {
+			if (err.code != AEROSPIKE_OK) {
 				as_error_update(&err, AEROSPIKE_ERR_PARAM, "Unable to perform query_wait on the query");
 			}
 		}
@@ -383,7 +383,7 @@ CLEANUP:
 		as_query_destroy(&query);
 	}
 
-	if ( err.code != AEROSPIKE_OK ) {
+	if (err.code != AEROSPIKE_OK) {
 		PyObject * py_err = NULL;
 		error_to_pyobject(&err, &py_err);
 		PyObject *exception_type = raise_exception(&err);
@@ -422,8 +422,8 @@ PyObject * AerospikeClient_QueryApply(AerospikeClient * self, PyObject * args, P
 	PyObject *py_predicate = NULL;
 
 	// Python Function Argument Parsing
-	if ( PyArg_ParseTupleAndKeywords(args, kwds, "sOOOO|OO:query_apply", kwlist, &namespace, &py_set,
-				&py_predicate, &py_module, &py_function, &py_args, &py_policy) == false ) {
+	if (PyArg_ParseTupleAndKeywords(args, kwds, "sOOOO|OO:query_apply", kwlist, &namespace, &py_set,
+				&py_predicate, &py_module, &py_function, &py_args, &py_policy) == false) {
 		return NULL;
 	}
 
@@ -465,7 +465,7 @@ PyObject * AerospikeClient_JobInfo(AerospikeClient * self, PyObject * args, PyOb
 	static char * kwlist[] = {"job_id", "module", "policy", NULL};
 
 	// Python Function Argument Parsing
-	if ( PyArg_ParseTupleAndKeywords(args, kwds, "ls|O:job_info", kwlist, &ljobId, &module, &py_policy) == false ) {
+	if (PyArg_ParseTupleAndKeywords(args, kwds, "ls|O:job_info", kwlist, &ljobId, &module, &py_policy) == false) {
 		return NULL;
 	}
 
@@ -482,7 +482,7 @@ PyObject * AerospikeClient_JobInfo(AerospikeClient * self, PyObject * args, PyOb
 	// Convert python object to policy_info
 	pyobject_to_policy_info( &err, py_policy, &info_policy, &info_policy_p,
 			&self->as->config.policies.info);
-	if ( err.code != AEROSPIKE_OK ) {
+	if (err.code != AEROSPIKE_OK) {
 		goto CLEANUP;
 	}
 
@@ -498,7 +498,7 @@ PyObject * AerospikeClient_JobInfo(AerospikeClient * self, PyObject * args, PyOb
 	}
 	Py_END_ALLOW_THREADS
 
-	if(retObj)
+	if (retObj)
 	{
 		PyObject * py_longobject = NULL;
 		py_longobject = PyLong_FromLong(job_info.progress_pct);
@@ -514,7 +514,7 @@ PyObject * AerospikeClient_JobInfo(AerospikeClient * self, PyObject * args, PyOb
 
 CLEANUP:
 
-	if ( err.code != AEROSPIKE_OK ) {
+	if (err.code != AEROSPIKE_OK) {
 		PyObject * py_err = NULL;
 		error_to_pyobject(&err, &py_err);
 		PyObject *exception_type = raise_exception(&err);

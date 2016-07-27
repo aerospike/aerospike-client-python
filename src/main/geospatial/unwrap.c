@@ -33,7 +33,7 @@ PyObject * AerospikeGeospatial_Unwrap(AerospikeGeospatial * self, PyObject * arg
 	// Python function keyword arguments
 	static char * kwlist[] = {NULL};
 
-	if ( PyArg_ParseTupleAndKeywords(args, kwds, ":unwrap", kwlist) == false ){
+	if (PyArg_ParseTupleAndKeywords(args, kwds, ":unwrap", kwlist) == false) {
 		return NULL;
 	}
 
@@ -42,7 +42,7 @@ PyObject * AerospikeGeospatial_Unwrap(AerospikeGeospatial * self, PyObject * arg
 	// Initialize error object
 	as_error_init(&err);
 
-	if ( !self ){
+	if (!self) {
 		as_error_update(&err, AEROSPIKE_ERR_PARAM, "Invalid geospatial object");
 		goto CLEANUP;
 	}
@@ -50,7 +50,7 @@ PyObject * AerospikeGeospatial_Unwrap(AerospikeGeospatial * self, PyObject * arg
 CLEANUP:
 
 	// If an error occurred, tell Python.
-	if ( err.code != AEROSPIKE_OK ) {
+	if (err.code != AEROSPIKE_OK) {
 		PyObject * py_err = NULL;
 		error_to_pyobject(&err, &py_err);
 		PyObject *exception_type = raise_exception(&err);
