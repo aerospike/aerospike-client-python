@@ -760,6 +760,471 @@ a cluster-tending thread.
 
         .. versionadded:: 1.0.59
 
+    .. method:: map_set_policy(key, bin, map_policy)
+
+        Set the map policy for the given *bin*.
+
+        :param tuple key: a :ref:`aerospike_key_tuple` tuple associated with the record.
+        :param str bin: the name of the bin.
+        :param dict map_policy: :ref:`aerospike_map_policies`.
+        :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
+
+        .. note:: Requires server version >= 3.8.4
+
+        .. versionadded:: 2.0.4
+
+    .. method:: map_put(key, bin, map_key, val[, map_policy, [, meta[, policy]]])
+
+        Add the given *map_key*/*value* pair to the map record specified by *key* and *bin*.
+
+        :param tuple key: a :ref:`aerospike_key_tuple` tuple associated with the record.
+        :param str bin: the name of the bin.
+        :param map_key: :py:class:`int`, :py:class:`str`, \
+           :py:class:`float`, :py:class:`bytearray`. An unsupported type will be serialized.
+        :param val: :py:class:`int`, :py:class:`str`, \
+           :py:class:`float`, :py:class:`bytearray`, :py:class:`list`, \
+           :py:class:`dict`. An unsupported type will be serialized.
+        :param dict map_policy: optional :ref:`aerospike_map_policies`.
+        :param dict meta: optional record metadata to be set, with field
+            ``'ttl'`` set to :class:`int` number of seconds.
+        :param dict policy: optional :ref:`aerospike_operate_policies`.
+        :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
+
+        .. note:: Requires server version >= 3.8.4
+
+        .. versionadded:: 2.0.4
+
+    .. method:: map_put_items(key, bin, items[, map_policy, [, meta[, policy]]])
+
+        Add the given *items* dict of key/value pairs to the map record specified by *key* and *bin*.
+
+        :param tuple key: a :ref:`aerospike_key_tuple` tuple associated with the record.
+        :param str bin: the name of the bin.
+        :param dict items: key/value pairs.
+        :param dict map_policy: optional :ref:`aerospike_map_policies`.
+        :param dict meta: optional record metadata to be set, with field
+            ``'ttl'`` set to :class:`int` number of seconds.
+        :param dict policy: optional :ref:`aerospike_operate_policies`.
+        :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
+
+        .. note:: Requires server version >= 3.8.4
+
+        .. versionadded:: 2.0.4
+
+    .. method:: map_increment(key, bin, map_key, incr[, map_policy, [, meta[, policy]]])
+ 
+        Increment the value of the map entry by given *incr*. Map entry is specified by *key*, *bin* and *map_key*.
+
+        :param tuple key: a :ref:`aerospike_key_tuple` tuple associated with the record.
+        :param str bin: the name of the bin.
+        :param map_key: :py:class:`int`, :py:class:`str`, \
+           :py:class:`float`, :py:class:`bytearray`. An unsupported type will be serialized.
+        :param incr: :py:class:`int` or :py:class:`float`
+        :param dict map_policy: optional :ref:`aerospike_map_policies`.
+        :param dict meta: optional record metadata to be set, with field
+            ``'ttl'`` set to :class:`int` number of seconds.
+        :param dict policy: optional :ref:`aerospike_operate_policies`.
+        :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
+
+        .. note:: Requires server version >= 3.8.4
+
+        .. versionadded:: 2.0.4
+
+    .. method:: map_decrement(key, bin, map_key, decr[, map_policy, [, meta[, policy]]])
+
+        Decrement the value of the map entry by given *decr*. Map entry is specified by *key*, *bin* and *map_key*.
+
+        :param tuple key: a :ref:`aerospike_key_tuple` tuple associated with the record.
+        :param str bin: the name of the bin.
+        :param map_key: :py:class:`int`, :py:class:`str`, \
+           :py:class:`float`, :py:class:`bytearray`. An unsupported type will be serialized.
+        :param decr: :py:class:`int` or :py:class:`float`
+        :param dict map_policy: optional :ref:`aerospike_map_policies`.
+        :param dict meta: optional record metadata to be set, with field
+            ``'ttl'`` set to :class:`int` number of seconds.
+        :param dict policy: optional :ref:`aerospike_operate_policies`.
+        :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
+
+        .. note:: Requires server version >= 3.8.4
+
+        .. versionadded:: 2.0.4
+
+    .. method:: map_size(key, bin[, meta[, policy]]) -> count
+
+        Return the size of the map specified by *key* and *bin*.
+
+        :param tuple key: a :ref:`aerospike_key_tuple` tuple associated with the record.
+        :param str bin: the name of the bin.
+        :param dict meta: optional record metadata to be set, with field
+            ``'ttl'`` set to :class:`int` number of seconds.
+        :param dict policy: optional :ref:`aerospike_operate_policies`.
+        :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
+        :return: a :class:`int`.
+
+        .. note:: Requires server version >= 3.8.4
+
+        .. versionadded:: 2.0.4
+
+    .. method:: map_clear(key, bin[, meta[, policy]])
+
+        Remove all entries from the map specified by *key* and *bin*.
+
+        :param tuple key: a :ref:`aerospike_key_tuple` tuple associated with the record.
+        :param str bin: the name of the bin.
+        :param dict meta: optional record metadata to be set, with field
+            ``'ttl'`` set to :class:`int` number of seconds.
+        :param dict policy: optional :ref:`aerospike_operate_policies`.
+        :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
+
+        .. note:: Requires server version >= 3.8.4
+
+        .. versionadded:: 2.0.4
+
+    .. method:: map_remove_by_key(key, bin, map_key, return_type[, meta[, policy]])
+
+        Remove and optionally return first map entry from the map specified by *key* and *bin* which matches given *map_key*.
+
+        :param tuple key: a :ref:`aerospike_key_tuple` tuple associated with the record.
+        :param str bin: the name of the bin.
+        :param map_key: :py:class:`int`, :py:class:`str`, \
+           :py:class:`float`, :py:class:`bytearray`. An unsupported type will be serialized.
+        :param return_type: :py:class:`int` :ref:`map_return_types`
+        :param dict meta: optional record metadata to be set, with field
+            ``'ttl'`` set to :class:`int` number of seconds.
+        :param dict policy: optional :ref:`aerospike_operate_policies`.
+        :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
+        :return: depends on return_type parameter
+
+        .. note:: Requires server version >= 3.8.4
+
+        .. versionadded:: 2.0.4
+
+    .. method:: map_remove_by_key_list(key, bin, list, return_type[, meta[, policy]][, meta[, policy]])
+
+        Remove and optionally return map entries from the map specified by *key* and *bin* which have keys that match the given *list* of keys.
+
+        :param tuple key: a :ref:`aerospike_key_tuple` tuple associated with the record.
+        :param str bin: the name of the bin.
+        :param list: :py:class:`list` the list of keys to match
+        :param return_type: :py:class:`int` :ref:`map_return_types`
+        :param dict meta: optional record metadata to be set, with field
+            ``'ttl'`` set to :class:`int` number of seconds.
+        :param dict policy: optional :ref:`aerospike_operate_policies`.
+        :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
+        :return: depends on return_type parameter
+
+        .. note:: Requires server version >= 3.8.4
+
+        .. versionadded:: 2.0.4
+
+    .. method:: map_remove_by_key_range(key, bin, map_key, range, return_type[, meta[, policy]])
+
+        Remove and optionally return map entries from the map specified by *key* and *bin* identified by the key range (*map_key* inclusive, *range* exclusive).
+
+        :param tuple key: a :ref:`aerospike_key_tuple` tuple associated with the record.
+        :param str bin: the name of the bin.
+        :param map_key: :py:class:`int`, :py:class:`str`, \
+           :py:class:`float`, :py:class:`bytearray`. An unsupported type will be serialized.
+        :param range: :py:class:`int`, :py:class:`str`, \
+           :py:class:`float`, :py:class:`bytearray`. An unsupported type will be serialized.
+        :param return_type: :py:class:`int` :ref:`map_return_types`
+        :param dict meta: optional record metadata to be set, with field
+            ``'ttl'`` set to :class:`int` number of seconds.
+        :param dict policy: optional :ref:`aerospike_operate_policies`.
+        :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
+        :return: depends on return_type parameter
+
+        .. note:: Requires server version >= 3.8.4
+
+        .. versionadded:: 2.0.4
+
+    .. method:: map_remove_by_value(key, bin, val, return_type[, meta[, policy]])
+
+        Remove and optionally return map entries from the map specified by *key* and *bin* which have a value matching *val* parameter.
+
+        :param tuple key: a :ref:`aerospike_key_tuple` tuple associated with the record.
+        :param str bin: the name of the bin.
+        :param val: :py:class:`int`, :py:class:`str`, \
+           :py:class:`float`, :py:class:`bytearray`. An unsupported type will be serialized.
+        :param return_type: :py:class:`int` :ref:`map_return_types`
+        :param dict meta: optional record metadata to be set, with field
+            ``'ttl'`` set to :class:`int` number of seconds.
+        :param dict policy: optional :ref:`aerospike_operate_policies`.
+        :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
+        :return: depends on return_type parameter
+
+        .. note:: Requires server version >= 3.8.4
+
+        .. versionadded:: 2.0.4
+
+    .. method:: map_remove_by_value_list(key, bin, list, return_type[, meta[, policy]])
+
+        Remove and optionally return map entries from the map specified by *key* and *bin* which have a value matching the *list* of values.
+
+        :param tuple key: a :ref:`aerospike_key_tuple` tuple associated with the record.
+        :param str bin: the name of the bin.
+        :param list: :py:class:`list` the list of values to match
+        :param return_type: :py:class:`int` :ref:`map_return_types`
+        :param dict meta: optional record metadata to be set, with field
+            ``'ttl'`` set to :class:`int` number of seconds.
+        :param dict policy: optional :ref:`aerospike_operate_policies`.
+        :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
+        :return: depends on return_type parameter
+
+        .. note:: Requires server version >= 3.8.4
+
+        .. versionadded:: 2.0.4
+
+    .. method:: map_remove_by_value_range(key, bin, val, range, return_type[, meta[, policy]])
+
+        Remove and optionally return map entries from the map specified by *key* and *bin* identified by the value range (*val* inclusive, *range* exclusive).
+
+        :param tuple key: a :ref:`aerospike_key_tuple` tuple associated with the record.
+        :param str bin: the name of the bin.
+        :param val: :py:class:`int`, :py:class:`str`, \
+           :py:class:`float`, :py:class:`bytearray`. An unsupported type will be serialized.
+        :param range: :py:class:`int`, :py:class:`str`, \
+           :py:class:`float`, :py:class:`bytearray`. An unsupported type will be serialized.
+        :param return_type: :py:class:`int` :ref:`map_return_types`
+        :param dict meta: optional record metadata to be set, with field
+            ``'ttl'`` set to :class:`int` number of seconds.
+        :param dict policy: optional :ref:`aerospike_operate_policies`.
+        :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
+        :return: depends on return_type parameter
+
+        .. note:: Requires server version >= 3.8.4
+
+        .. versionadded:: 2.0.4
+
+    .. method:: map_remove_by_index(key, bin, index, return_type[, meta[, policy]])
+
+        Remove and optionally return the map entry from the map specified by *key* and *bin* at the given *index* location.
+
+        :param tuple key: a :ref:`aerospike_key_tuple` tuple associated with the record.
+        :param str bin: the name of the bin.
+        :param index: :py:class:`int` the index location of the map entry
+        :param return_type: :py:class:`int` :ref:`map_return_types`
+        :param dict meta: optional record metadata to be set, with field
+            ``'ttl'`` set to :class:`int` number of seconds.
+        :param dict policy: optional :ref:`aerospike_operate_policies`.
+        :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
+        :return: depends on return_type parameter
+
+        .. note:: Requires server version >= 3.8.4
+
+        .. versionadded:: 2.0.4
+
+    .. method:: map_remove_by_index_range(key, bin, index, range, return_type[, meta[, policy]])
+
+        Remove and optionally return the map entries from the map specified by *key* and *bin* starting at the given *index* location and removing *range* number of items.
+
+        :param tuple key: a :ref:`aerospike_key_tuple` tuple associated with the record.
+        :param str bin: the name of the bin.
+        :param index: :py:class:`int` the index location of the first map entry to remove
+        :param range: :py:class:`int` the number of items to remove from the map 
+        :param return_type: :py:class:`int` :ref:`map_return_types`
+        :param dict meta: optional record metadata to be set, with field
+            ``'ttl'`` set to :class:`int` number of seconds.
+        :param dict policy: optional :ref:`aerospike_operate_policies`.
+        :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
+        :return: depends on return_type parameter
+
+        .. note:: Requires server version >= 3.8.4
+
+        .. versionadded:: 2.0.4
+
+    .. method:: map_remove_by_rank(key, bin, rank, return_type[, meta[, policy]])
+
+        Remove and optionally return the map entry from the map specified by *key* and *bin* with a value that has the given *rank*.
+
+        :param tuple key: a :ref:`aerospike_key_tuple` tuple associated with the record.
+        :param str bin: the name of the bin.
+        :param rank: :py:class:`int` the rank of the value of the entry in the map
+        :param return_type: :py:class:`int` :ref:`map_return_types`
+        :param dict meta: optional record metadata to be set, with field
+            ``'ttl'`` set to :class:`int` number of seconds.
+        :param dict policy: optional :ref:`aerospike_operate_policies`.
+        :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
+        :return: depends on return_type parameter
+
+        .. note:: Requires server version >= 3.8.4
+
+        .. versionadded:: 2.0.4
+
+    .. method:: map_remove_by_rank_range(key, bin, rank, range, return_type[, meta[, policy]])
+
+        Remove and optionally return the map entries from the map specified by *key* and *bin* which have a value rank starting at *rank* and removing *range* number of items.
+
+        :param tuple key: a :ref:`aerospike_key_tuple` tuple associated with the record.
+        :param str bin: the name of the bin.
+        :param rank: :py:class:`int` the rank of the value of the first map entry to remove
+        :param range: :py:class:`int` the number of items to remove from the map 
+        :param return_type: :py:class:`int` :ref:`map_return_types`
+        :param dict meta: optional record metadata to be set, with field
+            ``'ttl'`` set to :class:`int` number of seconds.
+        :param dict policy: optional :ref:`aerospike_operate_policies`.
+        :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
+        :return: depends on return_type parameter
+
+        .. note:: Requires server version >= 3.8.4
+
+        .. versionadded:: 2.0.4
+
+    .. method:: map_get_by_key(key, bin, map_key, return_type[, meta[, policy]])
+       
+        Return map entry from the map specified by *key* and *bin* which has a key that matches the given *map_key*.
+
+        :param tuple key: a :ref:`aerospike_key_tuple` tuple associated with the record.
+        :param str bin: the name of the bin.
+        :param map_key:  :py:class:`int`, :py:class:`str`, \
+           :py:class:`float`, :py:class:`bytearray`. An unsupported type will be serialized.
+        :param return_type: :py:class:`int` :ref:`map_return_types`
+        :param dict meta: optional record metadata to be set, with field
+            ``'ttl'`` set to :class:`int` number of seconds.
+        :param dict policy: optional :ref:`aerospike_operate_policies`.
+        :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
+        :return: depends on return_type parameter
+
+        .. note:: Requires server version >= 3.8.4
+
+        .. versionadded:: 2.0.4
+
+    .. method:: map_get_by_key_range(key, bin, map_key, range, return_type[, meta[, policy]])
+
+        Return map entries from the map specified by *key* and *bin* identified by the key range (*map_key* inclusive, *range* exclusive).
+
+        :param tuple key: a :ref:`aerospike_key_tuple` tuple associated with the record.
+        :param str bin: the name of the bin.
+        :param map_key: :py:class:`int`, :py:class:`str`, \
+           :py:class:`float`, :py:class:`bytearray`. An unsupported type will be serialized.
+        :param range: :py:class:`int`, :py:class:`str`, \
+           :py:class:`float`, :py:class:`bytearray`. An unsupported type will be serialized.
+        :param return_type: :py:class:`int` :ref:`map_return_types`
+        :param dict meta: optional record metadata to be set, with field
+            ``'ttl'`` set to :class:`int` number of seconds.
+        :param dict policy: optional :ref:`aerospike_operate_policies`.
+        :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
+        :return: depends on return_type parameter
+
+        .. note:: Requires server version >= 3.8.4
+
+        .. versionadded:: 2.0.4
+
+    .. method:: map_get_by_value(key, bin, val, return_type[, meta[, policy]])
+
+        Return map entries from the map specified by *key* and *bin* which have a value matching *val* parameter.
+
+        :param tuple key: a :ref:`aerospike_key_tuple` tuple associated with the record.
+        :param str bin: the name of the bin.
+        :param val: :py:class:`int`, :py:class:`str`, \
+           :py:class:`float`, :py:class:`bytearray`. An unsupported type will be serialized.
+        :param return_type: :py:class:`int` :ref:`map_return_types`
+        :param dict meta: optional record metadata to be set, with field
+            ``'ttl'`` set to :class:`int` number of seconds.
+        :param dict policy: optional :ref:`aerospike_operate_policies`.
+        :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
+        :return: depends on return_type parameter
+
+        .. note:: Requires server version >= 3.8.4
+
+        .. versionadded:: 2.0.4
+
+    .. method:: map_get_by_value_range(key, bin, val, range, return_type[, meta[, policy]])
+
+        Return map entries from the map specified by *key* and *bin* identified by the value range (*val* inclusive, *range* exclusive).
+
+        :param tuple key: a :ref:`aerospike_key_tuple` tuple associated with the record.
+        :param str bin: the name of the bin.
+        :param val: :py:class:`int`, :py:class:`str`, \
+           :py:class:`float`, :py:class:`bytearray`. An unsupported type will be serialized.
+        :param range: :py:class:`int`, :py:class:`str`, \
+           :py:class:`float`, :py:class:`bytearray`. An unsupported type will be serialized.
+        :param return_type: :py:class:`int` :ref:`map_return_types`
+        :param dict meta: optional record metadata to be set, with field
+            ``'ttl'`` set to :class:`int` number of seconds.
+        :param dict policy: optional :ref:`aerospike_operate_policies`.
+        :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
+        :return: depends on return_type parameter
+
+        .. note:: Requires server version >= 3.8.4
+
+        .. versionadded:: 2.0.4
+
+    .. method:: map_get_by_index(key, bin, index, return_type[, meta[, policy]])
+
+        Return the map entry from the map specified by *key* and *bin* at the given *index* location.
+
+        :param tuple key: a :ref:`aerospike_key_tuple` tuple associated with the record.
+        :param str bin: the name of the bin.
+        :param index: :py:class:`int` the index location of the map entry
+        :param return_type: :py:class:`int` :ref:`map_return_types`
+        :param dict meta: optional record metadata to be set, with field
+            ``'ttl'`` set to :class:`int` number of seconds.
+        :param dict policy: optional :ref:`aerospike_operate_policies`.
+        :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
+        :return: depends on return_type parameter
+
+ 
+        .. note:: Requires server version >= 3.8.4
+
+        .. versionadded:: 2.0.4
+
+    .. method:: map_get_by_index_range(key, bin, index, range, return_type[, meta[, policy]])
+
+        Return the map entries from the map specified by *key* and *bin* starting at the given *index* location and removing *range* number of items.
+
+        :param tuple key: a :ref:`aerospike_key_tuple` tuple associated with the record.
+        :param str bin: the name of the bin.
+        :param index: :py:class:`int` the index location of the first map entry to remove
+        :param range: :py:class:`int` the number of items to remove from the map 
+        :param return_type: :py:class:`int` :ref:`map_return_types`
+        :param dict meta: optional record metadata to be set, with field
+            ``'ttl'`` set to :class:`int` number of seconds.
+        :param dict policy: optional :ref:`aerospike_operate_policies`.
+        :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
+        :return: depends on return_type parameter
+
+        .. note:: Requires server version >= 3.8.4
+
+        .. versionadded:: 2.0.4
+
+    .. method:: map_get_by_rank(key, bin, rank, return_type[, meta[, policy]])
+
+        Return the map entry from the map specified by *key* and *bin* with a value that has the given *rank*.
+
+        :param tuple key: a :ref:`aerospike_key_tuple` tuple associated with the record.
+        :param str bin: the name of the bin.
+        :param rank: :py:class:`int` the rank of the value of the entry in the map
+        :param return_type: :py:class:`int` :ref:`map_return_types`
+        :param dict meta: optional record metadata to be set, with field
+            ``'ttl'`` set to :class:`int` number of seconds.
+        :param dict policy: optional :ref:`aerospike_operate_policies`.
+        :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
+        :return: depends on return_type parameter
+
+        .. note:: Requires server version >= 3.8.4
+
+        .. versionadded:: 2.0.4
+
+    .. method:: map_get_by_rank_range(key, bin, rank, range, return_type[, meta[, policy]])
+   
+        Return the map entries from the map specified by *key* and *bin* which have a value rank starting at *rank* and removing *range* number of items.
+
+        :param tuple key: a :ref:`aerospike_key_tuple` tuple associated with the record.
+        :param str bin: the name of the bin.
+        :param rank: :py:class:`int` the rank of the value of the first map entry to remove
+        :param range: :py:class:`int` the number of items to remove from the map 
+        :param return_type: :py:class:`int` :ref:`map_return_types`
+        :param dict meta: optional record metadata to be set, with field
+            ``'ttl'`` set to :class:`int` number of seconds.
+        :param dict policy: optional :ref:`aerospike_operate_policies`.
+        :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
+        :return: depends on return_type parameter
+        .. note:: Requires server version >= 3.8.4
+
+        .. versionadded:: 2.0.4
+
+
     .. method:: operate(key, list[, meta[, policy]]) -> (key, meta, bins)
 
         Perform multiple bin operations on a record with a given *key*, \
@@ -1969,6 +2434,7 @@ Read methods such as :meth:`~aerospike.Client.get`,
 
 .. versionchanged:: 1.0.43
 
+
 .. _aerospike_write_policies:
 
 Write Policies
@@ -2108,6 +2574,22 @@ Admin Policies
         :columns: 1
 
         * **timeout** admin operation timeout in milliseconds
+
+
+.. _aerospike_map_policies:
+
+Map Policies
+--------------
+
+.. object:: policy
+
+    A :class:`dict` of optional map policies which are applicable to map operations.
+
+    .. hlist::
+        :columns: 1
+
+        * **map_write_mode** write mode for the map. Valid values: aerospike.MAP_UPDATE, aerospike.MAP_UPDATE_ONLY, aerospike.MAP_CREATE_ONLY
+        * **map_order** ordering to maintain for the map entries. Valid values: aerospike.MAP_UNORDERED, aerospike.MAP_KEY_ORDERED, aerospike.MAP_KEY_VALUE_ORDERED
 
 
 .. _aerospike_privilege_dict:
