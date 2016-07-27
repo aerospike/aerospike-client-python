@@ -24,16 +24,6 @@
 #define TRACE() printf("%s:%d\n",__FILE__,__LINE__)
 
 /*******************************************************************************
- * Constants for Operate API's
- ******************************************************************************/
-#define OPERATOR_PREPEND 4
-#define OPERATOR_APPEND  5
-#define OPERATOR_TOUCH   8
-#define OPERATOR_INCR    2
-#define OPERATOR_READ    1
-#define OPERATOR_WRITE   0
-
-/*******************************************************************************
  * Macros for UDF operations.
  ******************************************************************************/
 
@@ -313,6 +303,54 @@ PyObject * AerospikeClient_ListTrim(AerospikeClient * self, PyObject * args, PyO
  */
 PyObject * AerospikeClient_ListSize(AerospikeClient * self, PyObject * args, PyObject * kwds);
 
+
+
+
+/*******************************************************************************
+ * MAP FUNCTIONS
+ ******************************************************************************/
+/**
+ * Append a single val to the map value in bin.
+ *
+ *		client.map_put((x,y,z))
+ *
+ */
+
+PyObject * AerospikeClient_MapSetPolicy(AerospikeClient * self, PyObject * args, PyObject * kwds);
+PyObject * AerospikeClient_MapPut(AerospikeClient * self, PyObject * args, PyObject * kwds);
+PyObject * AerospikeClient_MapPutItems(AerospikeClient * self, PyObject * args, PyObject * kwds);
+PyObject * AerospikeClient_MapIncrement(AerospikeClient * self, PyObject * args, PyObject * kwds);
+PyObject * AerospikeClient_MapDecrement(AerospikeClient * self, PyObject * args, PyObject * kwds);
+PyObject * AerospikeClient_MapSize(AerospikeClient * self, PyObject * args, PyObject * kwds);
+PyObject * AerospikeClient_MapClear(AerospikeClient * self, PyObject * args, PyObject * kwds);
+
+PyObject * AerospikeClient_MapRemoveByKey(AerospikeClient * self, PyObject * args, PyObject * kwds);
+PyObject * AerospikeClient_MapRemoveByKeyList(AerospikeClient * self, PyObject * args, PyObject * kwds);
+PyObject * AerospikeClient_MapRemoveByKeyRange(AerospikeClient * self, PyObject * args, PyObject * kwds);
+
+PyObject * AerospikeClient_MapRemoveByValue(AerospikeClient * self, PyObject * args, PyObject * kwds);
+PyObject * AerospikeClient_MapRemoveByValueList(AerospikeClient * self, PyObject * args, PyObject * kwds);
+PyObject * AerospikeClient_MapRemoveByValueRange(AerospikeClient * self, PyObject * args, PyObject * kwds);
+
+PyObject * AerospikeClient_MapRemoveByIndex(AerospikeClient * self, PyObject * args, PyObject * kwds);
+PyObject * AerospikeClient_MapRemoveByIndexRange(AerospikeClient * self, PyObject * args, PyObject * kwds);
+
+PyObject * AerospikeClient_MapRemoveByRank(AerospikeClient * self, PyObject * args, PyObject * kwds);
+PyObject * AerospikeClient_MapRemoveByRankRange(AerospikeClient * self, PyObject * args, PyObject * kwds);
+
+PyObject * AerospikeClient_MapGetByKey(AerospikeClient * self, PyObject * args, PyObject * kwds);
+PyObject * AerospikeClient_MapGetByKeyRange(AerospikeClient * self, PyObject * args, PyObject * kwds);
+
+PyObject * AerospikeClient_MapGetByValue(AerospikeClient * self, PyObject * args, PyObject * kwds);
+PyObject * AerospikeClient_MapGetByValueRange(AerospikeClient * self, PyObject * args, PyObject * kwds);
+
+PyObject * AerospikeClient_MapGetByIndex(AerospikeClient * self, PyObject * args, PyObject * kwds);
+PyObject * AerospikeClient_MapGetByIndexRange(AerospikeClient * self, PyObject * args, PyObject * kwds);
+
+PyObject * AerospikeClient_MapGetByRank(AerospikeClient * self, PyObject * args, PyObject * kwds);
+PyObject * AerospikeClient_MapGetByRankRange(AerospikeClient * self, PyObject * args, PyObject * kwds);
+
+
 /*******************************************************************************
  * SCAN OPERATIONS
  ******************************************************************************/
@@ -337,9 +375,7 @@ PyObject * AerospikeClient_ListSize(AerospikeClient * self, PyObject * args, PyO
  *
  */
 AerospikeScan * AerospikeClient_Scan(AerospikeClient * self, PyObject * args, PyObject * kwds);
-
 PyObject * AerospikeClient_ScanApply(AerospikeClient * self, PyObject * args, PyObject * kwds);
-
 PyObject * AerospikeClient_ScanInfo(AerospikeClient * self, PyObject * args, PyObject * kwds);
 
 /*******************************************************************************

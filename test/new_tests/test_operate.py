@@ -396,6 +396,28 @@ class TestOperate(object):
         assert key == ('test', 'demo', None,
                        bytearray(b'\xb7\xf4\xb88\x89\xe2\xdag\xdeh>\x1d\xf6\x91\x9a\x1e\xac\xc4F\xc8'))
 
+    def test_pos_operate_touch_with_meta(self):
+        """
+        Invoke operate() OPERATE_TOUCH using meta to pass in ttl.
+        """
+        key = ('test', 'demo', 1)
+        (key, _) = self.as_connection.exists(key)
+        meta = {'ttl': 1200}
+
+        llist = [{"op": aerospike.OPERATOR_TOUCH}]
+
+        try:
+            (key, meta, _) = self.as_connection.operate(
+                key, llist, meta)
+
+        except e.RecordGenerationError as exception:
+            assert exception.code == 3
+
+        (key, meta, bins) = self.as_connection.get(key)
+        assert bins == {'age': 1, 'name': 'name1'}
+        assert meta['ttl'] <= 1300
+        assert meta['ttl'] > 1000
+
     def test_pos_operate_with_policy_gen_GT(self):
         """
         Invoke operate() with gen GT positive.
@@ -1015,7 +1037,6 @@ class TestOperate(object):
             key, _, bins = self.as_connection.operate(key, list)
         except e.ParamError as exception:
             assert exception.code == -2
-            assert exception.msg == "Value of list_append_items should be of type list"
 
     @pytest.mark.parametrize("list", [
         ([{"op": aerospike.OP_LIST_GET,
@@ -1106,7 +1127,6 @@ class TestOperate(object):
 
         except e.ParamError as exception:
             assert exception.code == -2
-            assert exception.msg == "key is invalid"
 
     def test_neg_operate_with_extra_parameter(self):
         """
@@ -1142,7 +1162,6 @@ class TestOperate(object):
 
         except e.ParamError as exception:
             assert exception.code == -2
-            assert exception.msg == "policy must be a dict"
 
     def test_neg_operate_key_is_none(self):
         """
@@ -1160,9 +1179,8 @@ class TestOperate(object):
 
         except e.ParamError as exception:
             assert exception.code == -2
-            assert exception.msg == "key is invalid"
 
-    @pytest.mark.parametrize("key, policy, llist, ex_code, ex_msg", [
+    @pytest.mark.parametrize("key, policy, llist, ex_code", [
         (('test', 'demo', 1),
          {'timeout': 1000},
          [{"op": aerospike.OPERATOR_APPEND,
@@ -1170,16 +1188,14 @@ class TestOperate(object):
             {"op": aerospike.OPERATOR_INCR,
              "bin": "age",
              "val": 3}],
-         -2,
-         "Value should be given"),
+         -2),
         (('test', 'demo', 1),
             {'timeout': 1000},
             [{"op": aerospike.OPERATOR_APPEND,
                 "bin": "name",
                 "val": 3,
                 "aa": 89}, ],
-            -2,
-            "operation can contain only op, bin, index and val keys"),
+            -2),
         (('test', 'demo', 1),                  # with_incr_value_string
             {'timeout': 1000,
                 'key': aerospike.POLICY_KEY_SEND,
@@ -1188,11 +1204,10 @@ class TestOperate(object):
               "bin": "age",
               "val": "3"}, {"op": aerospike.OPERATOR_READ,
                             "bin": "age"}],
-            -2,
-            "Unsupported operand type(s) for +: only 'int' allowed"),
+            -2),
     ])
     def test_neg_operate_append_without_value_parameter(
-            self, key, policy, llist, ex_code, ex_msg):
+            self, key, policy, llist, ex_code):
         """
         Invoke operate() with append operation and append val is not given
         """
@@ -1202,7 +1217,6 @@ class TestOperate(object):
 
         except e.ParamError as exception:
             assert exception.code == ex_code
-            assert exception.msg == ex_msg
 
     def test_neg_operate_append_value_integer(self):
         """
@@ -1221,7 +1235,6 @@ class TestOperate(object):
             self.as_connection.operate(key, llist)
         except e.ParamError as exception:
             assert exception.code == -2
-            assert exception.msg == "Cannot concatenate 'str' and 'non-str' objects"
 
     def test_neg_opearte_with_incorrect_polic(self):
         """
@@ -1244,7 +1257,6 @@ class TestOperate(object):
 
         except e.ParamError as exception:
             assert exception.code == -2
-            assert exception.msg == "timeout is invalid"
 
     def test_neg_opearte_on_same_bin(self):
         """

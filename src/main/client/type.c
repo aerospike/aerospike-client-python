@@ -135,6 +135,9 @@ static PyMethodDef AerospikeClient_Type_Methods[] = {
 	{"operate_ordered",
 		(PyCFunction) AerospikeClient_OperateOrdered, METH_VARARGS | METH_KEYWORDS,
 		"Performs operate ordered operation"},
+
+	// LIST OPERATIONS
+
 	{"list_append",
 		(PyCFunction) AerospikeClient_ListAppend, METH_VARARGS | METH_KEYWORDS,
 		"Appends a single val to the list value in bin"},
@@ -178,6 +181,84 @@ static PyMethodDef AerospikeClient_Type_Methods[] = {
 		(PyCFunction) AerospikeClient_ListSize, METH_VARARGS | METH_KEYWORDS,
 		"Count the elements of the list value in bin"},
 
+	// MAP OPERATIONS
+
+	{"map_set_policy",
+		(PyCFunction) AerospikeClient_MapSetPolicy, METH_VARARGS | METH_KEYWORDS,
+		"Set the policy for the given map"},
+	{"map_put",
+		(PyCFunction) AerospikeClient_MapPut, METH_VARARGS | METH_KEYWORDS,
+		"Add the key/value to the given map"},
+	{"map_put_items",
+		(PyCFunction) AerospikeClient_MapPutItems, METH_VARARGS | METH_KEYWORDS,
+		"Add the dictionary to the given map"},
+	{"map_increment",
+		(PyCFunction) AerospikeClient_MapIncrement, METH_VARARGS | METH_KEYWORDS,
+		"Increment value of a map"},
+	{"map_decrement",
+		(PyCFunction) AerospikeClient_MapDecrement, METH_VARARGS | METH_KEYWORDS,
+		"Decrement value of a map"},
+	{"map_size",
+		(PyCFunction) AerospikeClient_MapSize, METH_VARARGS | METH_KEYWORDS,
+		"Return the size of the given map"},
+	{"map_clear",
+		(PyCFunction) AerospikeClient_MapClear, METH_VARARGS | METH_KEYWORDS,
+		"Clear the contents of the given map"},
+	{"map_remove_by_key",
+		(PyCFunction) AerospikeClient_MapRemoveByKey, METH_VARARGS | METH_KEYWORDS,
+		"Remove the item with the given key and optionally return it"},
+	{"map_remove_by_key_list",
+		(PyCFunction) AerospikeClient_MapRemoveByKeyList, METH_VARARGS | METH_KEYWORDS,
+		"Remove one or more items identified by keys and optionally return them"},
+	{"map_remove_by_key_range",
+		(PyCFunction) AerospikeClient_MapRemoveByKeyRange, METH_VARARGS | METH_KEYWORDS,
+		"Remove the items that have keys within the given range and optionally return them"},
+	{"map_remove_by_value",
+		(PyCFunction) AerospikeClient_MapRemoveByValue, METH_VARARGS | METH_KEYWORDS,
+		"Remove the items identified by a single value and optionally return them"},
+	{"map_remove_by_value_list",
+		(PyCFunction) AerospikeClient_MapRemoveByValueList, METH_VARARGS | METH_KEYWORDS,
+		"Remove the items identified by a list of values and optionally return them"},
+	{"map_remove_by_value_range",
+		(PyCFunction) AerospikeClient_MapRemoveByValueRange, METH_VARARGS | METH_KEYWORDS,
+		"Remove the items identified by a range of values and optionally return them"},
+	{"map_remove_by_index",
+		(PyCFunction) AerospikeClient_MapRemoveByIndex, METH_VARARGS | METH_KEYWORDS,
+		"Remove the item a the given index and optionally return it"},
+	{"map_remove_by_index_range",
+		(PyCFunction) AerospikeClient_MapRemoveByIndexRange, METH_VARARGS | METH_KEYWORDS,
+		"Remove the items in the specified index range and optionally return them"},
+	{"map_remove_by_rank",
+		(PyCFunction) AerospikeClient_MapRemoveByRank, METH_VARARGS | METH_KEYWORDS,
+		"Remove the item with the given rank and optionally return it"},
+	{"map_remove_by_rank_range",
+		(PyCFunction) AerospikeClient_MapRemoveByRankRange, METH_VARARGS | METH_KEYWORDS,
+		"Remove the items identified by the range of ranks and optionally return them"},
+	{"map_get_by_key",
+		(PyCFunction) AerospikeClient_MapGetByKey, METH_VARARGS | METH_KEYWORDS,
+		"Return the item identified by the given key"},
+	{"map_get_by_key_range",
+		(PyCFunction) AerospikeClient_MapGetByKeyRange, METH_VARARGS | METH_KEYWORDS,
+		"Return the items identified by the given range of keys"},
+	{"map_get_by_value",
+		(PyCFunction) AerospikeClient_MapGetByValue, METH_VARARGS | METH_KEYWORDS,
+		"Return the item(s) identified by the given value"},
+	{"map_get_by_value_range",
+		(PyCFunction) AerospikeClient_MapGetByValueRange, METH_VARARGS | METH_KEYWORDS,
+		"Return the item(s) identified by the given value range"},
+	{"map_get_by_index",
+		(PyCFunction) AerospikeClient_MapGetByIndex, METH_VARARGS | METH_KEYWORDS,
+		"Return the item at the given index location"},
+	{"map_get_by_index_range",
+		(PyCFunction) AerospikeClient_MapGetByIndexRange, METH_VARARGS | METH_KEYWORDS,
+		"Return the item(s) within the given index range"},
+	{"map_get_by_rank",
+		(PyCFunction) AerospikeClient_MapGetByRank, METH_VARARGS | METH_KEYWORDS,
+		"Return the item identified by the given rank"},
+	{"map_get_by_rank_range",
+		(PyCFunction) AerospikeClient_MapGetByRankRange, METH_VARARGS | METH_KEYWORDS,
+		"Return the item(s) identified by the given rank range"},
+
 	// QUERY OPERATIONS
 
 	{"query",
@@ -204,6 +285,7 @@ static PyMethodDef AerospikeClient_Type_Methods[] = {
 		"Gets Scan Info."},
 
 	// INFO OPERATIONS
+
 	{"info",
 		(PyCFunction) AerospikeClient_Info, METH_VARARGS | METH_KEYWORDS,
 		"Send an info request to the cluster."},
@@ -257,11 +339,13 @@ static PyMethodDef AerospikeClient_Type_Methods[] = {
 		"Creates a secondary geo2dsphere index"},
 
     // LLIST OPERATIONS
+
 	{"llist",
 		(PyCFunction) AerospikeClient_LList, METH_VARARGS | METH_KEYWORDS,
 		"LLIST operations"},
 
 	// BATCH OPERATIONS
+
 	{"get_many",
 		(PyCFunction)AerospikeClient_Get_Many, METH_VARARGS | METH_KEYWORDS,
 		"Get many records at a time."},
@@ -391,6 +475,8 @@ static int AerospikeClient_Type_Init(AerospikeClient * self, PyObject * args, Py
 				return -1;
 			}
 		}
+	} else {
+		return -1;
 	}
 
 	PyObject * py_shm = PyDict_GetItemString(py_config, "shm");
@@ -507,7 +593,7 @@ static int AerospikeClient_Type_Init(AerospikeClient * self, PyObject * args, Py
 		//  but leave it for now for customers who may be using it
 		PyObject * py_max_threads = PyDict_GetItemString(py_policies, "max_threads");
 		if (py_max_threads && (PyInt_Check(py_max_threads) || PyLong_Check(py_max_threads))) {
-			config.max_threads = PyInt_AsLong(py_max_threads);
+			config.max_conns_per_node = PyInt_AsLong(py_max_threads);
 		}
 
 		// This does not match documentation (should not be in policies),
@@ -535,10 +621,16 @@ static int AerospikeClient_Type_Init(AerospikeClient * self, PyObject * args, Py
 		config.thread_pool_size = PyInt_AsLong(py_thread_pool_size);
 	}
 
-	// max_threads
+	// max_threads (backward compatibility)
 	PyObject * py_max_threads = PyDict_GetItemString(py_config, "max_threads");
 	if (py_max_threads && (PyInt_Check(py_max_threads) || PyLong_Check(py_max_threads))) {
-		config.max_threads = PyInt_AsLong(py_max_threads);
+		config.max_conns_per_node = PyInt_AsLong(py_max_threads);
+	}
+
+	// max_conns_per_node
+	PyObject * py_max_conns = PyDict_GetItemString(py_config, "max_conns_per_node");
+	if (py_max_conns && (PyInt_Check(py_max_conns) || PyLong_Check(py_max_conns))) {
+		config.max_conns_per_node = PyInt_AsLong(py_max_conns);
 	}
 
 	// batch_direct
@@ -562,6 +654,11 @@ static int AerospikeClient_Type_Init(AerospikeClient * self, PyObject * args, Py
 		} else {
 			return -1;
 		}
+	}
+
+	PyObject * py_tend_interval = PyDict_GetItemString(py_config, "tend_interval");
+	if (py_tend_interval && PyInt_Check(py_tend_interval)) {
+		config.tender_interval = PyInt_AsLong(py_tend_interval);
 	}
 
 	//strict_types check

@@ -90,7 +90,7 @@ PyObject * AerospikeClient_Remove_Invoke(
 						remove_policy_p->generation = (uint16_t) PyInt_AsLong(py_gen);
 					} else if (PyLong_Check(py_gen)) {
 						remove_policy_p->generation = (uint16_t) PyLong_AsLongLong(py_gen);
-						if ((uint16_t)-1 == remove_policy_p->generation) {
+						if ((uint16_t)-1 == remove_policy_p->generation && PyErr_Occurred()) {
 							as_error_update(&err, AEROSPIKE_ERR_PARAM, "integer value for gen exceeds sys.maxsize");
 							goto CLEANUP;
 						}

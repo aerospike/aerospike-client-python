@@ -298,7 +298,7 @@ CLEANUP:
  *                                  with encountered error if any.
  *******************************************************************************************************
  */
-extern PyObject * serialize_based_on_serializer_policy(AerospikeClient * self,
+extern as_status serialize_based_on_serializer_policy(AerospikeClient * self,
 		int32_t serializer_policy,
 		as_bytes **bytes,
 		PyObject *value,
@@ -427,10 +427,9 @@ CLEANUP:
 		PyObject *exception_type = raise_exception(error_p);
 		PyErr_SetObject(exception_type, py_err);
 		Py_DECREF(py_err);
-		return NULL;
 	}
 
-	return PyLong_FromLong(0);
+	return error_p->code;
 }
 
 /*
@@ -446,7 +445,7 @@ CLEANUP:
  *                              with encountered error if any.
  *******************************************************************************************************
  */
-extern PyObject * deserialize_based_on_as_bytes_type(AerospikeClient * self,
+extern as_status deserialize_based_on_as_bytes_type(AerospikeClient * self,
 		as_bytes  *bytes,
 		PyObject  **retval,
 		as_error  *error_p)
@@ -545,10 +544,9 @@ CLEANUP:
 		PyObject *exception_type = raise_exception(error_p);
 		PyErr_SetObject(exception_type, py_err);
 		Py_DECREF(py_err);
-		return NULL;
 	}
 
-	return PyLong_FromLong(0);
+	return error_p->code;
 }
 PyObject * AerospikeClient_Unset_Serializers(AerospikeClient * self, PyObject * args, PyObject * kwds)
 {

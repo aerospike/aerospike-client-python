@@ -67,8 +67,10 @@ in an in-memory primary index.
                 * **shm_key** explicitly set the shm key for this client. It is otherwise implicitly evaluated per unique hostname, and can be inspected with :meth:`~aerospike.Client.shm_key` (default: 0xA5000000)
             * **serialization** an optional instance-level :py:func:`tuple` of (serializer, deserializer). Takes precedence over a class serializer registered with :func:`~aerospike.set_serializer`.
             * **thread_pool_size** number of threads in the pool that is used in batch/scan/query commands (default: 16)
-            * **max_threads** size of the synchronous connection pool for each server node (default: 300)
+            * **max_threads** size of the synchronous connection pool for each server node (default: 300) *DEPRECATED*
+            * **max_conns_per_node** maximum number of pipeline connections allowed for each node 
             * **batch_direct** whether to use the batch-direct protocol (default: ``False``, so will use batch-index if available)
+            * **tend_interval** polling interval in milliseconds for tending the cluster (default: 1000)
             * **compression_threshold** compress data for transmission if the object size is greater than a given number of bytes (default: 0, meaning 'never compress')
 
     :return: an instance of the :py:class:`aerospike.Client` class.
@@ -601,7 +603,333 @@ Operators for the multi-ops method :py:meth:`~aerospike.Client.operate`.
             "bin": "events" # gets the size of a list contained in the bin
         }
 
-.. versionchanged:: 2.0.0
+.. data:: OP_MAP_SET_POLICY
+
+    Set the policy for a map bin. The policy controls the write mode and the ordering of the map entries.
+
+    .. code-block:: python
+
+        {
+            "op" : aerospike.OP_MAP_SET_POLICY,
+            "bin": "scores",
+            "map_policy": {"map_write_mode": Aeorspike.MAP_UPDATE, "map_order": Aerospike.MAP_KEY_VALUE_ORDERED}
+        }
+
+.. data:: OP_MAP_PUT
+
+    Put a key/value pair into a map.
+
+    .. code-block:: python
+
+        {
+            "op" : aerospike.OP_MAP_PUT,
+            "bin": "my_map",
+            "key": "age"
+            "val": 97
+        }
+
+.. data:: OP_MAP_PUT_ITEMS
+
+    Put a dictionary of key/value pairs into a map.
+
+    .. code-block:: python
+
+        {
+            "op" : aerospike.OP_MAP_PUT_ITEMS,
+            "bin": "my_map",
+            "val": {"name": "bubba", "occupation": "dancer"}
+        }
+
+.. data:: OP_MAP_INCREMENT
+
+    Increment the value of map entry by the given "val" argument.
+
+    .. code-block:: python
+
+        {
+            "op" : aerospike.OP_MAP_INCREMENT,
+            "bin": "my_map",
+            "key": "age",
+            "val": 1
+        }
+
+.. data:: OP_MAP_DECREMENT
+
+    Decrement the value of map entry by the given "val" argument.
+
+    .. code-block:: python
+
+        {
+            "op" : aerospike.OP_MAP_DECREMENT,
+            "bin": "my_map",
+            "key": "age",
+            "val": 1
+        }
+
+.. data:: OP_MAP_SIZE
+
+    Return the number of entries in the given map bin.
+
+    .. code-block:: python
+
+        {
+            "op" : aerospike.OP_MAP_SIZE,
+            "bin": "my_map"
+        }
+
+.. data:: OP_MAP_CLEAR
+
+    Remove all entries from the given map bin.
+
+    .. code-block:: python
+
+        {
+            "op" : aerospike.OP_MAP_CLEAR,
+            "bin": "my_map"
+        }
+
+Note that if "return_type" is not specified in the parameters for a map operation, the default is aerospike.MAP_RETURN_NONE
+
+.. data:: OP_MAP_REMOVE_BY_KEY
+
+    Remove the first entry from the map bin that matches the given key.
+
+    .. code-block:: python
+
+        {
+            "op" : aerospike.OP_MAP_REMOVE_BY_KEY,
+            "bin": "my_map",
+            "key": "age",
+            "return_type": aerospike.MAP_RETURN_VALUE
+        }
+
+.. data:: OP_MAP_REMOVE_BY_KEY_LIST
+
+    Remove the entries from the map bin that match the list of given keys.
+
+    .. code-block:: python
+
+        {
+            "op" : aerospike.OP_MAP_REMOVE_BY_KEY_LIST,
+            "bin": "my_map",
+            "val": ["name", "rank", "serial"]
+        }
+
+.. data:: OP_MAP_REMOVE_BY_KEY_RANGE
+
+    Remove the entries from the map bin that have keys which fall between the given "key" (inclusive) and "val" (exclusive).
+
+    .. code-block:: python
+
+        {
+            "op" : aerospike.OP_MAP_REMOVE_BY_KEY_RANGE,
+            "bin": "my_map",
+            "key": "i",
+            "val": "j",
+            "return_type": aerospike.MAP_RETURN_KEY_VALUE
+        }
+
+.. data:: OP_MAP_REMOVE_BY_VALUE
+
+    Remove the entry or entries from the map bin that have values which match the given "val" parameter.
+
+    .. code-block:: python
+
+        {
+            "op" : aerospike.OP_MAP_REMOVE_BY_VALUE,
+            "bin": "my_map",
+            "val": 97,
+            "return_type": aerospike.MAP_RETURN_KEY
+        }
+
+.. data:: OP_MAP_REMOVE_BY_VALUE_LIST
+
+    Remove the entries from the map bin that have values which match the list of values given in the "val" parameter.
+
+    .. code-block:: python
+
+        {
+            "op" : aerospike.OP_MAP_REMOVE_BY_VALUE_LIST,
+            "bin": "my_map",
+            "val": [97, 98, 99],
+            "return_type": aerospike.MAP_RETURN_KEY
+        }
+
+.. data:: OP_MAP_REMOVE_BY_VALUE_RANGE
+
+    Remove the entries from the map bin that have values starting with the given "val" parameter (inclusive) up to the given "range" parameter (exclusive).
+
+    .. code-block:: python
+
+        {
+            "op" : aerospike.OP_MAP_REMOVE_BY_VALUE_RANGE,
+            "bin": "my_map",
+            "val": 97,
+            "range": 100,
+            "return_type": aerospike.MAP_RETURN_KEY
+        }
+
+.. data:: OP_MAP_REMOVE_BY_INDEX
+
+    Remove the entry from the map bin at the given "index" location.
+
+    .. code-block:: python
+
+        {
+            "op" : aerospike.OP_MAP_REMOVE_BY_INDEX,
+            "bin": "my_map",
+            "index": 0,
+            "return_type": aerospike.MAP_RETURN_KEY_VALUE
+        }
+
+.. data:: OP_MAP_REMOVE_BY_INDEX_RANGE
+
+    Remove the entries from the map bin starting at the given "index" location and removing "range" items.
+
+    .. code-block:: python
+
+        {
+            "op" : aerospike.OP_MAP_REMOVE_BY_INDEX_RANGE,
+            "bin": "my_map",
+            "index": 0,
+            "range": 2,
+            "return_type": aerospike.MAP_RETURN_KEY_VALUE
+        }
+        
+.. data:: OP_MAP_REMOVE_BY_RANK
+
+    Remove the first entry from the map bin that has a value with a rank matching the given "index".
+
+    .. code-block:: python
+
+        {
+            "op" : aerospike.OP_MAP_REMOVE_BY_RANK,
+            "bin": "my_map",
+            "index": 10
+        }
+
+.. data:: OP_MAP_REMOVE_BY_RANK_RANGE
+
+    Remove the entries from the map bin that have values with a rank starting at the given "index" and removing "range" items.
+
+    .. code-block:: python
+
+        {
+            "op" : aerospike.OP_MAP_REMOVE_BY_RANK_RANGE,
+            "bin": "my_map",
+            "index": 10,
+            "range": 2,
+            "return_type": aerospike.MAP_RETURN_KEY_VALUE
+        }
+
+.. data:: OP_MAP_GET_BY_KEY
+
+    Return the entry from the map bin that which has a key that matches the given "key" parameter.
+
+    .. code-block:: python
+
+        {
+            "op" : aerospike.OP_MAP_GET_BY_KEY,
+            "bin": "my_map",
+            "key": "age",
+            "return_type": aerospike.MAP_RETURN_KEY_VALUE
+        }
+
+.. data:: OP_MAP_GET_BY_KEY_RANGE
+
+    Return the entries from the map bin that have keys which fall between the given "key" (inclusive) and "val" (exclusive).
+
+    .. code-block:: python
+
+        {
+            "op" : aerospike.OP_MAP_GET_BY_KEY_RANGE,
+            "bin": "my_map",
+            "key": "i",
+            "val": "j",
+            "return_type": aerospike.MAP_RETURN_KEY_VALUE
+        }
+
+.. data:: OP_MAP_GET_BY_VALUE
+
+    Return the entry or entries from the map bin that have values which match the given "val" parameter.
+
+    .. code-block:: python
+
+        {
+            "op" : aerospike.OP_MAP_GET_BY_VALUE,
+            "bin": "my_map",
+            "val": 97,
+            "return_type": aerospike.MAP_RETURN_KEY
+        }
+
+.. data:: OP_MAP_GET_BY_VALUE_RANGE
+
+    Return the entries from the map bin that have values starting with the given "val" parameter (inclusive) up to the given "range" parameter (exclusive).
+
+    .. code-block:: python
+
+        {
+            "op" : aerospike.OP_MAP_GET_BY_VALUE_RANGE,
+            "bin": "my_map",
+            "val": 97,
+            "range": 100,
+            "return_type": aerospike.MAP_RETURN_KEY
+        }
+
+.. data:: OP_MAP_GET_BY_INDEX
+
+    Return the entry from the map bin at the given "index" location.
+
+    .. code-block:: python
+
+        {
+            "op" : aerospike.OP_MAP_GET_BY_INDEX,
+            "bin": "my_map",
+            "index": 0,
+            "return_type": aerospike.MAP_RETURN_KEY_VALUE
+        }
+
+.. data:: OP_MAP_GET_BY_INDEX_RANGE
+
+    Return the entries from the map bin starting at the given "index" location and removing "range" items.
+
+    .. code-block:: python
+
+        {
+            "op" : aerospike.OP_MAP_GET_BY_INDEX_RANGE,
+            "bin": "my_map",
+            "index": 0,
+            "range": 2,
+            "return_type": aerospike.MAP_RETURN_KEY_VALUE
+        }
+
+.. data:: OP_MAP_GET_BY_RANK
+
+    Return the first entry from the map bin that has a value with a rank matching the given "index".
+
+    .. code-block:: python
+
+        {
+            "op" : aerospike.OP_MAP_GET_BY_RANK,
+            "bin": "my_map",
+            "index": 10
+        }
+
+.. data:: OP_MAP_GET_BY_RANK_RANGE
+
+    Return the entries from the map bin that have values with a rank starting at the given "index" and removing "range" items.
+
+    .. code-block:: python
+
+        {
+            "op" : aerospike.OP_MAP_GET_BY_RANK_RANGE,
+            "bin": "my_map",
+            "index": 10,
+            "range": 2,
+            "return_type": aerospike.MAP_RETURN_KEY_VALUE
+        }
+
+.. versionchanged:: 2.0.4
 
 .. _aerospike_policies:
 
@@ -878,4 +1206,48 @@ Permission codes define the type of permission granted for a user's role.
 .. data:: PRIV_DATA_ADMIN
 
     User can perform systems administration functions on a database that do not involve user administration. Examples include setting dynamic server configuration. Global scope only.
+
+
+.. _map_return_types:
+
+Map Return Types
+----------------
+
+Return types used by various map operations
+
+.. data:: MAP_RETURN_NONE
+
+    Do not return any value.
+
+.. data:: MAP_RETURN_INDEX
+
+    Return key index order.
+
+.. data:: MAP_RETURN_REVERSE_INDEX
+
+    Return reverse key order.
+
+.. data:: MAP_RETURN_RANK
+
+    Return value order.
+
+.. data:: MAP_RETURN_REVERSE_RANK
+
+    Return reserve value order.
+
+.. data:: MAP_RETURN_COUNT
+
+    Return count of items selected.
+
+.. data:: MAP_RETURN_KEY
+
+    Return key for single key read and key list for range read.
+
+.. data:: MAP_RETURN_VALUE
+
+    Return value for single key read and value list for range read.
+
+.. data:: MAP_RETURN_KEY_VALUE
+
+    Return key/value items. Note that key/value pairs will be returned as a list of tuples (i.e. [(key1, value1), (key2, value2)])
 
