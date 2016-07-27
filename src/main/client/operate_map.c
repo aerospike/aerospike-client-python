@@ -163,7 +163,7 @@ PyObject * AerospikeClient_MapPut(AerospikeClient * self, PyObject * args, PyObj
 
 	CHECK_CONNECTED();
 
-	static char * kwlist[] = {"key", "bin", "map_key", "value", "map_policy", "meta", "policy", NULL};
+	static char * kwlist[] = {"key", "bin", "map_key", "val", "map_policy", "meta", "policy", NULL};
 	if (PyArg_ParseTupleAndKeywords(args, kwds, "OOOO|OOO:map_put", kwlist,
 				&py_key, &py_bin, &py_mapKey, &py_mapValue, &py_mapPolicy, &py_meta, &py_policy) == false) {
 		goto CLEANUP;
@@ -336,9 +336,9 @@ PyObject * AerospikeClient_MapSize(AerospikeClient * self, PyObject * args, PyOb
 
 	CHECK_CONNECTED();
 
-	static char * kwlist[] = {"key", "bin", NULL};
-	if (PyArg_ParseTupleAndKeywords(args, kwds, "OO:map_size", kwlist,
-				&py_key, &py_bin) == false) {
+	static char * kwlist[] = {"key", "bin", "meta", "policy", NULL};
+	if (PyArg_ParseTupleAndKeywords(args, kwds, "OO|OO:map_size", kwlist,
+				&py_key, &py_bin, &py_meta, &py_policy) == false) {
 		goto CLEANUP;
 	}
 
@@ -541,7 +541,7 @@ PyObject * AerospikeClient_MapRemoveByValue(AerospikeClient * self, PyObject * a
 
 	CHECK_CONNECTED();
 
-	static char * kwlist[] = {"key", "bin", "value", "return_type", "meta", "policy",  NULL};
+	static char * kwlist[] = {"key", "bin", "val", "return_type", "meta", "policy",  NULL};
 	if (PyArg_ParseTupleAndKeywords(args, kwds, "OOOl|OO:map_remove_by_value", kwlist,
 				&py_key, &py_bin, &py_mapValue, &returnType, &py_meta, &py_policy) == false) {
 		goto CLEANUP;
@@ -634,7 +634,7 @@ PyObject * AerospikeClient_MapRemoveByValueRange(AerospikeClient * self, PyObjec
 
 	CHECK_CONNECTED();
 
-	static char * kwlist[] = {"key", "bin", "value", "range", "return_type", "meta", "policy", NULL};
+	static char * kwlist[] = {"key", "bin", "val", "range", "return_type", "meta", "policy", NULL};
 	if (PyArg_ParseTupleAndKeywords(args, kwds, "OOOOl|OO:map_remove_by_value_range", kwlist,
 				&py_key, &py_bin, &py_mapValue, &py_range, &returnType, &py_meta, &py_policy) == false) {
 		goto CLEANUP;
@@ -861,7 +861,7 @@ PyObject * AerospikeClient_MapGetByValue(AerospikeClient * self, PyObject * args
 
 	CHECK_CONNECTED();
 
-	static char * kwlist[] = {"key", "bin", "value", "return_type", "meta", "policy", NULL};
+	static char * kwlist[] = {"key", "bin", "val", "return_type", "meta", "policy", NULL};
 	if (PyArg_ParseTupleAndKeywords(args, kwds, "OOOl|OO:map_get_by_value", kwlist,
 				&py_key, &py_bin, &py_mapValue, &returnType, &py_meta, &py_policy) == false) {
 		goto CLEANUP;
@@ -953,7 +953,7 @@ PyObject * AerospikeClient_MapGetByValueRange(AerospikeClient * self, PyObject *
 
 	CHECK_CONNECTED();
 
-	static char * kwlist[] = {"key", "bin", "value", "range", "return_type", "meta", "policy", NULL};
+	static char * kwlist[] = {"key", "bin", "val", "range", "return_type", "meta", "policy", NULL};
 	if (PyArg_ParseTupleAndKeywords(args, kwds, "OOOOl|OO:map_get_by_value_range", kwlist,
 				&py_key, &py_bin, &py_mapValue, &py_range, &returnType, &py_meta, &py_policy) == false) {
 		goto CLEANUP;

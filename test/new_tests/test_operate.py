@@ -415,7 +415,7 @@ class TestOperate(object):
 
         (key, meta, bins) = self.as_connection.get(key)
         assert bins == {'age': 1, 'name': 'name1'}
-        assert meta['ttl'] <= 1200
+        assert meta['ttl'] <= 1300
         assert meta['ttl'] > 1000
 
     def test_pos_operate_with_policy_gen_GT(self):

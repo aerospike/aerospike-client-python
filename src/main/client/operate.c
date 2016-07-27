@@ -151,20 +151,26 @@ int check_type(AerospikeClient * self, PyObject * py_value, int op, as_error *er
 }
 
 bool opRequiresIndex(int op) {
-	return (op == OP_LIST_INSERT    || op == OP_LIST_INSERT_ITEMS ||
-			op == OP_LIST_POP       || op == OP_LIST_POP_RANGE    ||
-			op == OP_LIST_REMOVE    || op == OP_LIST_REMOVE_RANGE ||
-			op == OP_LIST_SET       || op == OP_LIST_GET          ||
-			op == OP_LIST_GET_RANGE || op == OP_LIST_TRIM);
+	return (op == OP_LIST_INSERT               || op == OP_LIST_INSERT_ITEMS  ||
+			op == OP_LIST_POP                  || op == OP_LIST_POP_RANGE     ||
+			op == OP_LIST_REMOVE               || op == OP_LIST_REMOVE_RANGE  ||
+			op == OP_LIST_SET                  || op == OP_LIST_GET           ||
+			op == OP_LIST_GET_RANGE            || op == OP_LIST_TRIM          ||
+			op == OP_MAP_REMOVE_BY_INDEX       || op == OP_MAP_REMOVE_BY_RANK ||
+			op == OP_MAP_REMOVE_BY_RANK_RANGE  || op == OP_MAP_GET_BY_INDEX   ||
+			op == OP_MAP_GET_BY_INDEX_RANGE    || op == OP_MAP_GET_BY_RANK    ||
+			op == OP_MAP_GET_BY_RANK_RANGE);
 }
 
 bool opRequiresValue(int op) {
-	return (op != AS_OPERATOR_READ  && op != AS_OPERATOR_TOUCH  &&
-			op != OP_LIST_POP       && op != OP_LIST_REMOVE     &&
-			op != OP_LIST_CLEAR     && op != OP_LIST_GET        &&
-			op != OP_LIST_SIZE      && op != OP_MAP_GET_BY_KEY  &&
-			op != OP_MAP_SET_POLICY && op != OP_MAP_SIZE        &&
-			op != OP_MAP_CLEAR);
+	return (op != AS_OPERATOR_READ       && op != AS_OPERATOR_TOUCH     &&
+			op != OP_LIST_POP            && op != OP_LIST_REMOVE        &&
+			op != OP_LIST_CLEAR          && op != OP_LIST_GET           &&
+			op != OP_LIST_SIZE           && op != OP_MAP_GET_BY_KEY     &&
+			op != OP_MAP_SET_POLICY      && op != OP_MAP_SIZE           &&
+			op != OP_MAP_CLEAR           && op != OP_MAP_REMOVE_BY_KEY  &&
+			op != OP_MAP_REMOVE_BY_INDEX && op != OP_MAP_REMOVE_BY_RANK &&
+			op != OP_MAP_GET_BY_KEY      && op != OP_MAP_GET_BY_INDEX);
 }
 
 bool opRequiresRange(int op) {
@@ -179,11 +185,19 @@ bool opReturnsResult(int op) {
 			op == OP_LIST_GET       || op == OP_LIST_GET_RANGE    ||
 			op == OP_LIST_INSERT    || op == OP_LIST_INSERT_ITEMS ||
 			op == OP_LIST_POP       || op == OP_LIST_POP_RANGE    ||
-			op == OP_LIST_SET       || op == OP_MAP_GET_BY_KEY);
+			op == OP_LIST_SET       || op == OP_MAP_GET_BY_KEY    ||
+			op == OP_MAP_GET_BY_KEY_RANGE);
 }
 
 bool opRequiresMapPolicy(int op) {
 	return (op == OP_MAP_SET_POLICY);
+}
+
+bool opRequiresKey(int op) {
+	return (op == OP_MAP_PUT                 || op == OP_MAP_INCREMENT     ||
+			op == OP_MAP_DECREMENT           || op == OP_MAP_REMOVE_BY_KEY ||
+			op == OP_MAP_REMOVE_BY_KEY_RANGE || op == OP_MAP_GET_BY_KEY    ||
+			op == OP_MAP_GET_BY_KEY_RANGE);
 }
 
 as_status add_op(AerospikeClient * self, as_error * err, PyObject * py_val, as_vector * unicodeStrVector,
@@ -286,6 +300,8 @@ as_status add_op(AerospikeClient * self, as_error * err, PyObject * py_val, as_v
 				static_pool, SERIALIZER_PYTHON) != AEROSPIKE_OK) {
 			return err->code;
 		}
+	} else if (opRequiresKey(operation)) {
+		return as_error_update(err, AEROSPIKE_ERR_PARAM, "Operation requires key parameter");
 	}
 
 	if (py_map_policy) {
@@ -310,23 +326,20 @@ as_status add_op(AerospikeClient * self, as_error * err, PyObject * py_val, as_v
 			return as_error_update(err, AEROSPIKE_ERR_PARAM, "Return type should be an integer");
 		}
 		return_type = PyInt_AsLong(py_return_type);
-		*ret_type = return_type;
 	}
-
-	if (!py_index && opRequiresIndex(operation)) {
-		return as_error_update(err, AEROSPIKE_ERR_PARAM, "Operation needs an index value");
-	}
-
-	if (self->strict_types && py_index && !opRequiresIndex(operation)) {
-		return as_error_update(err, AEROSPIKE_ERR_PARAM, "Operation does not need an index value");
-	}
+	*ret_type = return_type;
 
 	if (py_index) {
+		if (self->strict_types && !opRequiresIndex(operation)) {
+			return as_error_update(err, AEROSPIKE_ERR_PARAM, "Operation does not need an index value");
+		}
 		if (PyInt_Check(py_index)) {
 			index = PyInt_AsLong(py_index);
 		} else {
 			return as_error_update(err, AEROSPIKE_ERR_PARAM, "Index should be an integer");
 		}
+	} else if (opRequiresIndex(operation)) {
+		return as_error_update(err, AEROSPIKE_ERR_PARAM, "Operation needs an index value");
 	}
 
 	switch(operation) {
@@ -546,7 +559,7 @@ as_status add_op(AerospikeClient * self, as_error * err, PyObject * py_val, as_v
 			as_operations_add_map_get_by_key(ops, bin, put_key, return_type);
 			break;
 		case OP_MAP_GET_BY_KEY_RANGE:
-			as_operations_add_map_get_by_key_range(ops, bin, put_key, put_val, return_type);
+			as_operations_add_map_get_by_key_range(ops, bin, put_key, put_range, return_type);
 			break;
 		case OP_MAP_GET_BY_VALUE:
 			as_operations_add_map_get_by_value(ops, bin, put_val, return_type);
@@ -582,61 +595,6 @@ as_status add_op(AerospikeClient * self, as_error * err, PyObject * py_val, as_v
 	return err->code;
 }
 
-/**
- *******************************************************************************************************
- * This function checks for metadata and if present set it into the
- * as_operations.
- *
- * @param py_meta               The dictionary of metadata.
- * @param ops                   The as_operations object.
- * @param err                   The as_error to be populated by the function
- *                              with the encountered error if any.
- *
- * Returns nothing.
- *******************************************************************************************************
- */
-static void AerospikeClient_CheckForMeta(PyObject * py_meta, as_operations * ops, as_error *err)
-{
-	if (py_meta && PyDict_Check(py_meta)) {
-		PyObject * py_gen = PyDict_GetItemString(py_meta, "gen");
-		PyObject * py_ttl = PyDict_GetItemString(py_meta, "ttl");
-		uint32_t ttl = 0;
-		uint16_t gen = 0;
-		if (py_ttl) {
-			if (PyInt_Check(py_ttl)) {
-				ttl = (uint32_t) PyInt_AsLong(py_ttl);
-			} else if (PyLong_Check(py_ttl)) {
-				ttl = (uint32_t) PyLong_AsLongLong(py_ttl);
-			} else {
-				as_error_update(err, AEROSPIKE_ERR_PARAM, "Ttl should be an int or long");
-			}
-
-			if ((uint32_t)-1 == ttl && PyErr_Occurred()) {
-				as_error_update(err, AEROSPIKE_ERR_PARAM, "integer value for ttl exceeds sys.maxsize");
-				return;
-			}
-			ops->ttl = ttl;
-		}
-
-		if (py_gen) {
-			if (PyInt_Check(py_gen)) {
-				gen = (uint16_t) PyInt_AsLong(py_gen);
-			} else if (PyLong_Check(py_gen)) {
-				gen = (uint16_t) PyLong_AsLongLong(py_gen);
-			} else {
-				as_error_update(err, AEROSPIKE_ERR_PARAM, "Generation should be an int or long");
-			}
-
-			if ((uint16_t)-1 == gen && PyErr_Occurred()) {
-				as_error_update(err, AEROSPIKE_ERR_PARAM, "integer value for gen exceeds sys.maxsize");
-				return;
-			}
-			ops->gen = gen;
-		}
-	} else {
-		as_error_update(err, AEROSPIKE_ERR_PARAM, "Metadata should be of type dictionary");
-	}
-}
 
 /**
  *******************************************************************************************************
@@ -862,7 +820,9 @@ static PyObject *  AerospikeClient_OperateOrdered_Invoke(
 		as_record * rec = NULL;
 
 		if (py_meta) {
-			AerospikeClient_CheckForMeta(py_meta, &ops, err);
+			if (check_for_meta(py_meta, &ops, err) != AEROSPIKE_OK) {
+				goto LOOP_CLEANUP;
+			}
 		}
 
 		PyObject * py_val = PyList_GetItem(py_list, i);
@@ -1208,7 +1168,4 @@ CLEANUP:
 
 	return PyLong_FromLong(0);
 }
-
-
-
 
