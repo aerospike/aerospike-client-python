@@ -22,6 +22,7 @@
 #include <aerospike/as_status.h>
 #include <aerospike/as_admin.h>
 #include <aerospike/as_operations.h>
+#include <aerospike/as_map_operations.h>
 #include <aerospike/aerospike_index.h>
 #include "aerospike/as_scan.h"
 #include "aerospike/as_job.h"
@@ -54,6 +55,18 @@ __policy##_init(policy);\
 	if (py_field) {\
 		if (PyInt_Check(py_field)) {\
 			policy->__field = (__type) PyInt_AsLong(py_field);\
+		}\
+		else {\
+			return as_error_update(err, AEROSPIKE_ERR_PARAM, "%s is invalid", #__field);\
+		}\
+	}\
+}
+
+#define MAP_POLICY_SET_FIELD(__field) { \
+	PyObject * py_field = PyDict_GetItemString(py_policy, #__field);\
+	if (py_field) {\
+		if (PyInt_Check(py_field)) {\
+			__field = PyInt_AsLong(py_field);\
 		}\
 		else {\
 			return as_error_update(err, AEROSPIKE_ERR_PARAM, "%s is invalid", #__field);\
@@ -114,20 +127,65 @@ AerospikeConstants aerospike_constants[] = {
 	{ AS_PRIVILEGE_READ                     ,   "PRIV_READ"},
 	{ AS_PRIVILEGE_READ_WRITE               ,   "PRIV_READ_WRITE"},
 	{ AS_PRIVILEGE_READ_WRITE_UDF           ,   "PRIV_READ_WRITE_UDF"},
-	{ AS_CDT_OP_LIST_APPEND + 1000			,   "OP_LIST_APPEND"},
-	{ AS_CDT_OP_LIST_APPEND_ITEMS + 1000	,   "OP_LIST_APPEND_ITEMS"},
-	{ AS_CDT_OP_LIST_INSERT + 1000			,   "OP_LIST_INSERT"},
-	{ AS_CDT_OP_LIST_INSERT_ITEMS + 1000	,   "OP_LIST_INSERT_ITEMS"},
-	{ AS_CDT_OP_LIST_POP + 1000				,   "OP_LIST_POP"},
-	{ AS_CDT_OP_LIST_POP_RANGE + 1000		,   "OP_LIST_POP_RANGE"},
-	{ AS_CDT_OP_LIST_REMOVE + 1000			,   "OP_LIST_REMOVE"},
-	{ AS_CDT_OP_LIST_REMOVE_RANGE + 1000	,   "OP_LIST_REMOVE_RANGE"},
-	{ AS_CDT_OP_LIST_CLEAR + 1000			,   "OP_LIST_CLEAR"},
-	{ AS_CDT_OP_LIST_SET + 1000				,   "OP_LIST_SET"},
-	{ AS_CDT_OP_LIST_GET + 1000				,   "OP_LIST_GET"},
-	{ AS_CDT_OP_LIST_GET_RANGE + 1000		,   "OP_LIST_GET_RANGE"},
-	{ AS_CDT_OP_LIST_TRIM + 1000			,   "OP_LIST_TRIM"},
-	{ AS_CDT_OP_LIST_SIZE + 1000			,   "OP_LIST_SIZE"},
+
+	{ OP_LIST_APPEND                        ,   "OP_LIST_APPEND"},
+	{ OP_LIST_APPEND_ITEMS                  ,   "OP_LIST_APPEND_ITEMS"},
+	{ OP_LIST_INSERT                        ,   "OP_LIST_INSERT"},
+	{ OP_LIST_INSERT_ITEMS                  ,   "OP_LIST_INSERT_ITEMS"},
+	{ OP_LIST_POP                           ,   "OP_LIST_POP"},
+	{ OP_LIST_POP_RANGE                     ,   "OP_LIST_POP_RANGE"},
+	{ OP_LIST_REMOVE                        ,   "OP_LIST_REMOVE"},
+	{ OP_LIST_REMOVE_RANGE                  ,   "OP_LIST_REMOVE_RANGE"},
+	{ OP_LIST_CLEAR                         ,   "OP_LIST_CLEAR"},
+	{ OP_LIST_SET                           ,   "OP_LIST_SET"},
+	{ OP_LIST_GET                           ,   "OP_LIST_GET"},
+	{ OP_LIST_GET_RANGE                     ,   "OP_LIST_GET_RANGE"},
+	{ OP_LIST_TRIM                          ,   "OP_LIST_TRIM"},
+	{ OP_LIST_SIZE                          ,   "OP_LIST_SIZE"},
+
+	{ OP_MAP_SET_POLICY                     ,   "OP_MAP_SET_POLICY"},
+	{ OP_MAP_PUT                            ,   "OP_MAP_PUT"},
+	{ OP_MAP_PUT_ITEMS                      ,   "OP_MAP_PUT_ITEMS"},
+	{ OP_MAP_INCREMENT                      ,   "OP_MAP_INCREMENT"},
+	{ OP_MAP_DECREMENT                      ,   "OP_MAP_DECREMENT"},
+	{ OP_MAP_SIZE                           ,   "OP_MAP_SIZE"},
+	{ OP_MAP_CLEAR                          ,   "OP_MAP_CLEAR"},
+	{ OP_MAP_REMOVE_BY_KEY                  ,   "OP_MAP_REMOVE_BY_KEY"},
+	{ OP_MAP_REMOVE_BY_KEY_LIST             ,   "OP_MAP_REMOVE_BY_KEY_LIST"},
+	{ OP_MAP_REMOVE_BY_KEY_RANGE            ,   "OP_MAP_REMOVE_BY_KEY_RANGE"},
+	{ OP_MAP_REMOVE_BY_VALUE                ,   "OP_MAP_REMOVE_BY_VALUE"},
+	{ OP_MAP_REMOVE_BY_VALUE_LIST           ,   "OP_MAP_REMOVE_BY_VALUE_LIST"},
+	{ OP_MAP_REMOVE_BY_VALUE_RANGE          ,   "OP_MAP_REMOVE_BY_VALUE_RANGE"},
+	{ OP_MAP_REMOVE_BY_INDEX                ,   "OP_MAP_REMOVE_BY_INDEX"},
+	{ OP_MAP_REMOVE_BY_INDEX_RANGE          ,   "OP_MAP_REMOVE_BY_INDEX_RANGE"},
+	{ OP_MAP_REMOVE_BY_RANK                 ,   "OP_MAP_REMOVE_BY_RANK"},
+	{ OP_MAP_REMOVE_BY_RANK_RANGE           ,   "OP_MAP_REMOVE_BY_RANK_RANGE"},
+	{ OP_MAP_GET_BY_KEY                     ,   "OP_MAP_GET_BY_KEY"},
+	{ OP_MAP_GET_BY_KEY_RANGE               ,   "OP_MAP_GET_BY_KEY_RANGE"},
+	{ OP_MAP_GET_BY_VALUE                   ,   "OP_MAP_GET_BY_VALUE"},
+	{ OP_MAP_GET_BY_VALUE_RANGE             ,   "OP_MAP_GET_BY_VALUE_RANGE"},
+	{ OP_MAP_GET_BY_INDEX                   ,   "OP_MAP_GET_BY_INDEX"},
+	{ OP_MAP_GET_BY_INDEX_RANGE             ,   "OP_MAP_GET_BY_INDEX_RANGE"},
+	{ OP_MAP_GET_BY_RANK                    ,   "OP_MAP_GET_BY_RANK"},
+	{ OP_MAP_GET_BY_RANK_RANGE              ,   "OP_MAP_GET_BY_RANK_RANGE"},
+
+	{ AS_MAP_UNORDERED                      ,   "MAP_UNORDERED"},
+	{ AS_MAP_KEY_ORDERED                    ,   "MAP_KEY_ORDERED"},
+	{ AS_MAP_KEY_VALUE_ORDERED              ,   "MAP_KEY_VALUE_ORDERED"},
+
+	{ AS_MAP_UPDATE                         ,   "MAP_UPDATE"},
+	{ AS_MAP_UPDATE_ONLY                    ,   "MAP_UPDATE_ONLY"},
+	{ AS_MAP_CREATE_ONLY                    ,   "MAP_CREATE_ONLY"},
+
+	{ AS_MAP_RETURN_NONE                    ,   "MAP_RETURN_NONE"},
+	{ AS_MAP_RETURN_INDEX                   ,   "MAP_RETURN_INDEX"},
+	{ AS_MAP_RETURN_REVERSE_INDEX           ,   "MAP_RETURN_REVERSE_INDEX"},
+	{ AS_MAP_RETURN_RANK                    ,   "MAP_RETURN_RANK"},
+	{ AS_MAP_RETURN_REVERSE_RANK            ,   "MAP_RETURN_REVERSE_RANK"},
+	{ AS_MAP_RETURN_COUNT                   ,   "MAP_RETURN_COUNT"},
+	{ AS_MAP_RETURN_KEY                     ,   "MAP_RETURN_KEY"},
+	{ AS_MAP_RETURN_VALUE                   ,   "MAP_RETURN_VALUE"},
+	{ AS_MAP_RETURN_KEY_VALUE               ,   "MAP_RETURN_KEY_VALUE"}
 };
 
 static
@@ -536,5 +594,21 @@ as_status pyobject_to_policy_batch(as_error * err, PyObject * py_policy,
 	POLICY_UPDATE();
 
 	return err->code;
+}
 
+as_status pyobject_to_map_policy(as_error * err, PyObject * py_policy,
+		as_map_policy * policy)
+{
+	// Initialize Policy
+	POLICY_INIT(as_map_policy);
+
+	long map_order = AS_MAP_UNORDERED;
+	long map_write_mode = AS_MAP_UPDATE;
+
+	MAP_POLICY_SET_FIELD(map_write_mode);
+	MAP_POLICY_SET_FIELD(map_order);
+
+	as_map_policy_set(policy, map_order, map_write_mode);
+
+	return err->code;
 }
