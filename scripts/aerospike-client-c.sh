@@ -72,16 +72,21 @@ detect_linux()
         echo "ubuntu12"  "deb"
         return 0
         ;;
-        
-      "ubuntu14" | "ubuntu15" | "ubuntu16" | "linuxmint17" )
+
+      "ubuntu14" | "ubuntu15" | "linuxmint17" )
         echo "ubuntu14"  "deb"
+        return 0
+        ;;
+
+      "ubuntu16" | "linuxmint18" )
+        echo "ubuntu16" "deb"
         return 0
         ;;
 
       "amazonami"* )
         echo "el6" "rpm"
-	return 0
-	;;
+    	return 0
+    	;;
 
       * )
         echo "error: ${DIST_NAME} is not supported."
@@ -155,9 +160,14 @@ detect_linux()
             echo "ubuntu12"  "deb"
             return 0
             ;;
-            
-          "14."* | "15."* | "16."* )
+
+          "14."* | "15."* )
             echo "ubuntu14"  "deb"
+            return 0
+            ;;
+
+          "16."* )
+            echo "ubuntu16" "deb"
             return 0
             ;;
 
