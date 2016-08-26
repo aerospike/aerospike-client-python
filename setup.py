@@ -253,7 +253,7 @@ data_files = [
 
 if not has_c_client:
     if ('build' in sys.argv or 'build_ext' in sys.argv or
-        'install' in sys.argv):
+        'install' in sys.argv or 'bdist_wheel' in sys.argv):
         resolve_c_client(lua_src_path, lua_system_path)
 
 ################################################################################
