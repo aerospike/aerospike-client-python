@@ -37,9 +37,10 @@ class TestScan(TestBaseClass):
                   "val": u"john"}]
         self.client.operate(key, llist)
 
-        key = ('test', u'demo', 'ldt_key')
-        self.llist_bin = self.client.llist(key, 'llist_key')
-        self.llist_bin.add(10)
+        if TestBaseClass.has_ldt_support():
+            key = ('test', u'demo', 'ldt_key')
+            self.llist_bin = self.client.llist(key, 'llist_key')
+            self.llist_bin.add(10)
 
     def teardown_method(self, method):
         """
@@ -52,10 +53,12 @@ class TestScan(TestBaseClass):
 
         key = ('test', 'demo', 122)
         self.client.remove(key)
-        self.llist_bin.remove(10)
 
-        key = ('test', 'demo', 'ldt_key')
-        self.client.remove(key)
+        if TestBaseClass.has_ldt_support():
+            self.llist_bin.remove(10)
+            key = ('test', 'demo', 'ldt_key')
+            self.client.remove(key)
+
         self.client.close()
 
     def test_scan_without_any_parameter(self):
@@ -343,6 +346,8 @@ class TestScan(TestBaseClass):
             assert exception.code == -2
             assert exception.msg == 'Invalid value(type) for nobins'
 
+    @pytest.mark.skipif(TestBaseClass.has_ldt_support() == False,
+                        reason="LDTs are not enabled for namespace 'test'")
     def test_scan_with_options_includeldt_positive(self):
         """
             Invoke scan() with include ldt set to True
@@ -374,6 +379,8 @@ class TestScan(TestBaseClass):
         assert value == [10]
         assert len(records) != 0
 
+    @pytest.mark.skipif(TestBaseClass.has_ldt_support() == False,
+                        reason="LDTs are not enabled for namespace 'test'")
     def test_scan_with_options_includeldt_negative(self):
         """
             Invoke scan() with include ldt set to False
