@@ -2,9 +2,9 @@
 
 .. currentmodule:: aerospike
 
-=================================
+================================
 Client Class --- :class:`Client`
-=================================
+================================
 
 :class:`Client`
 ===============
@@ -2453,6 +2453,7 @@ Write Policies
         * **gen** one of the ``aerospike.POLICY_GEN_*`` values such as :data:`aerospike.POLICY_GEN_IGNORE`
         * **retry** one of the ``aerospike.POLICY_RETRY_*`` values such as :data:`aerospike.POLICY_RETRY_NONE`
         * **commit_level** one of the ``aerospike.POLICY_COMMIT_LEVEL_*`` values such as :data:`aerospike.POLICY_COMMIT_LEVEL_ALL`
+        * **durable_delete** boolean value: True to perform durable delete (requires Enterprise version)
 
 .. _aerospike_read_policies:
 
@@ -2490,6 +2491,7 @@ Operate Policies
         * **retry** one of the ``aerospike.POLICY_RETRY_*`` values such as :data:`aerospike.POLICY_RETRY_NONE`
         * **commit_level** one of the ``aerospike.POLICY_COMMIT_LEVEL_*`` values such as :data:`aerospike.POLICY_COMMIT_LEVEL_ALL`
         * **consistency_level** one of the ``aerospike.POLICY_CONSISTENCY_*`` values such as :data:`aerospike.POLICY_CONSISTENCY_ONE`
+        * **durable_delete** boolean value: True to perform durable delete (requires Enterprise version)
 
 .. _aerospike_apply_policies:
 
@@ -2506,7 +2508,7 @@ Apply Policies
         * **timeout** timeout for the apply operation in milliseconds
         * **key** one of the ``aerospike.POLICY_KEY_*`` values such as :data:`aerospike.POLICY_KEY_DIGEST`
         * **commit_level** one of the ``aerospike.POLICY_COMMIT_LEVEL_*`` values such as :data:`aerospike.POLICY_COMMIT_LEVEL_ALL`
-
+        * **durable_delete** boolean value: True to perform durable delete (requires Enterprise version)
 
 .. _aerospike_remove_policies:
 
@@ -2525,7 +2527,7 @@ Remove Policies
         * **commit_level** one of the ``aerospike.POLICY_COMMIT_LEVEL_*`` values such as :data:`aerospike.POLICY_COMMIT_LEVEL_ALL`
         * **gen** one of the ``aerospike.POLICY_GEN_*`` values such as :data:`aerospike.POLICY_GEN_IGNORE`
         * **retry** one of the ``aerospike.POLICY_RETRY_*`` values such as :data:`aerospike.POLICY_RETRY_NONE`
-
+        * **durable_delete** boolean value: True to perform durable delete (requires Enterprise version)
 
 .. _aerospike_batch_policies:
 
@@ -2579,7 +2581,7 @@ Admin Policies
 .. _aerospike_map_policies:
 
 Map Policies
---------------
+------------
 
 .. object:: policy
 
