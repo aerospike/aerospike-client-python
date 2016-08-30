@@ -118,7 +118,7 @@ CLEANUP:
 		error_to_pyobject(&err, &py_err);
 		PyObject *exception_type = raise_exception(&err);
 		PyErr_SetObject(exception_type, py_err);
-		Py_DECREF(py_err);
+		Py_XDECREF(py_err);
 		return -1;
 	}
 
@@ -129,7 +129,7 @@ static void AerospikeQuery_Type_Dealloc(AerospikeQuery * self)
 {
 	int i;
 	for (i=0; i < self->u_objs.size; i++) {
-		Py_DECREF(self->u_objs.ob[i]);
+		Py_XDECREF(self->u_objs.ob[i]);
 	}
 
 	for (i = 0; i < self->query.where.size; i++) {
@@ -212,8 +212,9 @@ AerospikeQuery * AerospikeQuery_New(AerospikeClient * client, PyObject * args, P
 {
 	AerospikeQuery * self = (AerospikeQuery *) AerospikeQuery_Type.tp_new(&AerospikeQuery_Type, args, kwds);
 	self->client = client;
-	Py_INCREF(client);
+
 	if (AerospikeQuery_Type.tp_init((PyObject *) self, args, kwds) == 0) {
+		Py_INCREF(client);
 		return self;
 	} else {
 		return NULL;

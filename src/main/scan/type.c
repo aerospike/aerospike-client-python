@@ -106,7 +106,6 @@ static void AerospikeScan_Type_Dealloc(PyObject * self)
 {
 	as_scan_destroy(&((AerospikeScan *)self)->scan);
 	Py_TYPE(self)->tp_free((PyObject *) self);
-//    self->ob_type->tp_free((PyObject *) self);
 }
 
 /*******************************************************************************
@@ -181,7 +180,7 @@ AerospikeScan * AerospikeScan_New(AerospikeClient * client, PyObject * args, PyO
 		return self;
 	}
 	else {
-		Py_DECREF(self);
+		Py_XDECREF(self);
 		as_error err;
 		as_error_init(&err);
 		as_error_update(&err, AEROSPIKE_ERR_PARAM, "Parameters are incorrect");
@@ -189,7 +188,7 @@ AerospikeScan * AerospikeScan_New(AerospikeClient * client, PyObject * args, PyO
 		error_to_pyobject(&err, &py_err);
 		PyObject *exception_type = raise_exception(&err);
 		PyErr_SetObject(exception_type, py_err);
-		Py_DECREF(py_err);
+		Py_XDECREF(py_err);
 		return NULL;
 	}
 }
