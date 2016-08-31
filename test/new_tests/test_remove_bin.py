@@ -268,7 +268,6 @@ class TestRemovebin(object):
         }
         try:
             self.as_connection.remove_bin(key, ["age"], policy)
-            self.fail("remove_bin should throw exception")
 
         except (e.ClusterError, e.RecordNotFound):
             pass
@@ -284,7 +283,6 @@ class TestRemovebin(object):
         }
         try:
             self.as_connection.remove_bin(key, ["age"], {}, policy)
-            self.fail("remove_bin should throw exception")
 
         except (e.ClientError, e.RecordNotFound):
             pass
@@ -388,7 +386,6 @@ class TestRemovebin(object):
         """
         try:
             self.as_connection.remove_bin(key, bin_for_removal)
-            self.fail("remove_bin should throw exception")
 
         except e.RecordNotFound:
             pass
