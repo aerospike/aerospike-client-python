@@ -296,8 +296,8 @@ a cluster-tending thread.
                     print(meta)
                     print('============')
                     client.put(('test','test','key1'), {'id':1,'a':2},
-                        policy={'gen':aerospike.POLICY_GEN_EQ},
-                        meta={'gen': 33})
+                        meta={'gen': 33},
+                        policy={'gen':aerospike.POLICY_GEN_EQ})
                     print('Record written.')
                 except RecordGenerationError:
                     print("put() failed due to generation policy mismatch")
