@@ -221,21 +221,6 @@ class TestRemovebin(object):
         assert bins == record
         assert key == ('test', 'demo', None, key_digest)
 
-    def test_pos_remove_bin_with_policy_exists_create(self):
-        """
-        Invoke remove_bin() with policy exists create to check if it creates a record
-        """
-        key = ('test', 'demo', 20)
-        policy = {'exists': aerospike.POLICY_EXISTS_CREATE}
-        self.as_connection.remove_bin(key, ["age"], {}, policy)
-
-        try:
-            (key, _, bins) = self.as_connection.get(key)
-
-            assert bins is None
-        except e.RecordNotFound as exception:
-            assert exception.code == 2
-
     # Negative Tests
 
     @pytest.mark.parametrize("key, bin_for_removal, ex_code, ex_msg", [
@@ -284,8 +269,8 @@ class TestRemovebin(object):
         try:
             self.as_connection.remove_bin(key, ["age"], policy)
 
-        except e.ClusterError as exception:
-            assert exception.code == -1
+        except (e.ClusterError, e.RecordNotFound):
+            pass
 
     def test_neg_remove_bin_with_incorrect_policy(self):
         """
@@ -299,8 +284,8 @@ class TestRemovebin(object):
         try:
             self.as_connection.remove_bin(key, ["age"], {}, policy)
 
-        except e.ClientError as exception:
-            assert exception.code == -1
+        except (e.ClientError, e.RecordNotFound):
+            pass
 
     def test_neg_remove_bin_with_no_parameters(self):
         """
@@ -399,9 +384,11 @@ class TestRemovebin(object):
         """
         Invoke remove_bin() with non-existent data
         """
-        status = self.as_connection.remove_bin(key, bin_for_removal)
+        try:
+            self.as_connection.remove_bin(key, bin_for_removal)
 
-        assert status == 0
+        except e.RecordNotFound:
+            pass
 
     def test_neg_remove_bin_with_extra_parameter(self):
         """

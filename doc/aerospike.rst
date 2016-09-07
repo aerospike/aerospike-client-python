@@ -617,18 +617,18 @@ Operators for the multi-ops method :py:meth:`~aerospike.Client.operate`.
 
 .. data:: OP_MAP_PUT
 
-    Put a key/value pair into a map.
+    Put a key/value pair into a map. Operator accepts an optional map_policy dictionary (see OP_MAP_SET_POLICY for an example)
 
     .. code-block:: python
 
         {
             "op" : aerospike.OP_MAP_PUT,
             "bin": "my_map",
-            "key": "age"
+            "key": "age",
             "val": 97
         }
 
-.. data:: OP_MAP_PUT_ITEMS
+.. data:: OP_MAP_PUT_ITEMS. Operator accepts an optional map_policy dictionary (see OP_MAP_SET_POLICY for an example)
 
     Put a dictionary of key/value pairs into a map.
 
@@ -640,7 +640,7 @@ Operators for the multi-ops method :py:meth:`~aerospike.Client.operate`.
             "val": {"name": "bubba", "occupation": "dancer"}
         }
 
-.. data:: OP_MAP_INCREMENT
+.. data:: OP_MAP_INCREMENT. Operator accepts an optional map_policy dictionary (see OP_MAP_SET_POLICY for an example)
 
     Increment the value of map entry by the given "val" argument.
 
@@ -653,7 +653,7 @@ Operators for the multi-ops method :py:meth:`~aerospike.Client.operate`.
             "val": 1
         }
 
-.. data:: OP_MAP_DECREMENT
+.. data:: OP_MAP_DECREMENT. Operator accepts an optional map_policy dictionary (see OP_MAP_SET_POLICY for an example)
 
     Decrement the value of map entry by the given "val" argument.
 

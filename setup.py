@@ -70,7 +70,7 @@ os.putenv('ARCHFLAGS','-arch x86_64')
 os.environ['ARCHFLAGS'] = '-arch x86_64'
 AEROSPIKE_C_VERSION = os.getenv('AEROSPIKE_C_VERSION')
 if not AEROSPIKE_C_VERSION:
-    AEROSPIKE_C_VERSION = '4.0.6'
+    AEROSPIKE_C_VERSION = '4.0.7'
 DOWNLOAD_C_CLIENT = os.getenv('DOWNLOAD_C_CLIENT')
 AEROSPIKE_C_HOME = os.getenv('AEROSPIKE_C_HOME')
 PREFIX = None
@@ -253,7 +253,7 @@ data_files = [
 
 if not has_c_client:
     if ('build' in sys.argv or 'build_ext' in sys.argv or
-        'install' in sys.argv):
+        'install' in sys.argv or 'bdist_wheel' in sys.argv):
         resolve_c_client(lua_src_path, lua_system_path)
 
 ################################################################################

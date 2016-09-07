@@ -127,8 +127,8 @@ try:
         client.udf_put('simple.lua')
 
         for i in range(1, 1000):
-            val1 = client.key('test', 'demo', 'key{0}'.format(i)).apply(
-                'simple', 'concat', ['a', 30000])
+            key = ('test', 'demo', 'key{0}'.format(i))
+            val1 = client.apply(key, 'simple', 'concat', ['a', 30000])
             print(val1)
 
         print(
@@ -139,16 +139,6 @@ try:
 
         for i in range(1, 1000):
             client.remove(('test', 'demo', str(i)))
-
-        print(
-            '########################################################################')
-        print('GET')
-        print(
-            '########################################################################')
-
-        for i in range(1, 1000):
-            rec1 = client.get(('test', 'demo', str(i)))
-            print(rec1)
 
     except Exception as eargs:
         print("error: {0}".format(eargs), file=sys.stderr)

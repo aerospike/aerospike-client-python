@@ -157,7 +157,7 @@ CLEANUP:
 		error_to_pyobject(&err, &py_err);
 		PyObject *exception_type = raise_exception(&err);
 		PyErr_SetObject(exception_type, py_err);
-		Py_DECREF(py_err);
+		Py_XDECREF(py_err);
 		if (new_repr_str) {
 			free(new_repr_str);
 		}
@@ -165,7 +165,7 @@ CLEANUP:
 	}
 
 	py_return = PyString_FromString(new_repr_str);
-	Py_DECREF(initresult);
+	Py_XDECREF(initresult);
 	free(new_repr_str);
 	return py_return;
 }
@@ -197,7 +197,7 @@ CLEANUP:
 		error_to_pyobject(&err, &py_err);
 		PyObject *exception_type = raise_exception(&err);
 		PyErr_SetObject(exception_type, py_err);
-		Py_DECREF(py_err);
+		Py_XDECREF(py_err);
 		return NULL;
 	}
 	return initresult;
@@ -300,7 +300,7 @@ AerospikeGeospatial  * Aerospike_Set_Geo_Data(PyObject * parent, PyObject * args
 		error_to_pyobject(&err, &py_err);
 		PyObject *exception_type = raise_exception(&err);
 		PyErr_SetObject(exception_type, py_err);
-		Py_DECREF(py_err);
+		Py_XDECREF(py_err);
 	}
 	return NULL;
 }
@@ -334,7 +334,7 @@ AerospikeGeospatial  * Aerospike_Set_Geo_Json(PyObject * parent, PyObject * args
 		error_to_pyobject(&err, &py_err);
 		PyObject *exception_type = raise_exception(&err);
 		PyErr_SetObject(exception_type, py_err);
-		Py_DECREF(py_err);
+		Py_XDECREF(py_err);
 	}
 	return NULL;
 }
@@ -343,6 +343,6 @@ PyObject * AerospikeGeospatial_New(as_error *err, PyObject * value)
 {
 	AerospikeGeospatial * self = (AerospikeGeospatial *) AerospikeGeospatial_Type.tp_new(&AerospikeGeospatial_Type, Py_None, Py_None);
 	store_geodata(self, err, value);
-	Py_INCREF(self->geo_data);
+	Py_XINCREF(self->geo_data);
 	return (PyObject *) self;
 }

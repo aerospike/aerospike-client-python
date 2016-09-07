@@ -30,13 +30,6 @@
 #include "policy.h"
 #include "macros.h"
 
-// Policy names
-#define PY_POLICY_TIMEOUT "timeout"		// Number of milliseconds to wait
-#define PY_POLICY_RETRY   "retry"		// Behavior of failed operations
-#define PY_POLICY_KEY     "key"			// Behavior of the key
-#define PY_POLICY_GEN     "gen"			// Behavior of the Generation value
-#define PY_POLICY_EXISTS  "exists"		// Behavior for record existence
-
 #define POLICY_INIT(__policy) \
 	as_error_reset(err);\
 if (!py_policy || py_policy == Py_None) {\
@@ -359,6 +352,7 @@ as_status pyobject_to_policy_apply(as_error * err, PyObject * py_policy,
 	// Set policy fields
 	POLICY_SET_FIELD(timeout, uint32_t);
 	POLICY_SET_FIELD(key, as_policy_key);
+	POLICY_SET_FIELD(durable_delete, bool);
 
 	// Update the policy
 	POLICY_UPDATE();
@@ -473,6 +467,7 @@ as_status pyobject_to_policy_remove(as_error * err, PyObject * py_policy,
 	POLICY_SET_FIELD(key, as_policy_key);
 	POLICY_SET_FIELD(gen, as_policy_gen);
 	POLICY_SET_FIELD(commit_level, as_policy_commit_level);
+	POLICY_SET_FIELD(durable_delete, bool);
 
 	// Update the policy
 	POLICY_UPDATE();
@@ -500,6 +495,7 @@ as_status pyobject_to_policy_scan(as_error * err, PyObject * py_policy,
 	// Set policy fields
 	POLICY_SET_FIELD(timeout, uint32_t);
 	POLICY_SET_FIELD(fail_on_cluster_change, bool);
+	POLICY_SET_FIELD(durable_delete, bool);
 
 	// Update the policy
 	POLICY_UPDATE();
@@ -531,6 +527,7 @@ as_status pyobject_to_policy_write(as_error * err, PyObject * py_policy,
 	POLICY_SET_FIELD(gen, as_policy_gen);
 	POLICY_SET_FIELD(exists, as_policy_exists);
 	POLICY_SET_FIELD(commit_level, as_policy_commit_level);
+	POLICY_SET_FIELD(durable_delete, bool);
 
 	// Update the policy
 	POLICY_UPDATE();
@@ -563,6 +560,7 @@ as_status pyobject_to_policy_operate(as_error * err, PyObject * py_policy,
 	POLICY_SET_FIELD(commit_level, as_policy_commit_level);
 	POLICY_SET_FIELD(consistency_level, as_policy_consistency_level);
 	POLICY_SET_FIELD(replica, as_policy_replica);
+	POLICY_SET_FIELD(durable_delete, bool);
 
 	// Update the policy
 	POLICY_UPDATE();
