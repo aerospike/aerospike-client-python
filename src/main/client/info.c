@@ -112,7 +112,7 @@ static bool AerospikeClient_Info_each(as_error * err, const as_node * node, cons
 			if (py_hosts && PyList_Check(py_hosts)) {
 				addr = as_node_get_address((as_node *)node);
 				int size = (int) PyList_Size(py_hosts);
-				for (int i = 0; i < size && i < AS_CONFIG_HOSTS_SIZE; i++) {
+				for (int i = 0; i < size; i++) {
 					char * host_addr = NULL;
 					int port = -1;
 					PyObject * py_host = PyList_GetItem(py_hosts, i);

@@ -61,8 +61,9 @@ PyObject * AerospikeClient_Close(AerospikeClient * self, PyObject * args, PyObje
 	} else {
 		aerospike_close(self->as, &err);
 
-		for (unsigned int i = 0; i < self->as->config.hosts_size; i++) {
-			free((void *) self->as->config.hosts[i].addr);
+		for (unsigned int i = 0; i < self->as->config.hosts->size; i++) {
+			as_host* host = as_vector_get(self->as->config.hosts, i);
+			as_host_destroy(host);
 		}
 
 		Py_BEGIN_ALLOW_THREADS
@@ -97,9 +98,10 @@ char* return_search_string(aerospike *as)
 	int delimiter_size = 0;
 	int i =0;
 	//Calculate total size for search string
-	for (i = 0; i < (int)as->config.hosts_size; i++)
+	for (i = 0; i < (int)as->config.hosts->size; i++)
 	{
-		tot_address_size = tot_address_size + strlen(as->config.hosts[i].addr);
+		as_host* host = as_vector_get(as->config.hosts, i);
+		tot_address_size = tot_address_size + strlen(host->name);
 		tot_port_size = tot_port_size + MAX_PORT_SIZE;
 		delimiter_size = delimiter_size + 3;
 	}
@@ -107,8 +109,9 @@ char* return_search_string(aerospike *as)
 	char* alias_to_search = (char*) PyMem_Malloc(tot_address_size + strlen(as->config.user) + tot_port_size + delimiter_size);
 
 	//Create search string
-	strcpy(alias_to_search, as->config.hosts[0].addr);
-	int port = as->config.hosts[0].port;
+	as_host* host = as_vector_get(as->config.hosts, 0);
+	strcpy(alias_to_search, host->name);
+	int port = host->port;
 	sprintf(port_str, "%d", port);
 	strcat(alias_to_search, ":");
 	strcat(alias_to_search, port_str);
@@ -116,10 +119,11 @@ char* return_search_string(aerospike *as)
 	strcat(alias_to_search, as->config.user);
 	strcat(alias_to_search, ";");
 
-	for (i = 1; i < (int)as->config.hosts_size; i++) {
-		port = as->config.hosts[i].port;
+	for (i = 1; i < (int)as->config.hosts->size; i++) {
+		as_host* host = as_vector_get(as->config.hosts, i);
+		port = host->port;
 		sprintf(port_str, "%d", port);
-		strcat(alias_to_search, as->config.hosts[i].addr);
+		strcat(alias_to_search, host->name);
 		strcat(alias_to_search, ":");
 		strcat(alias_to_search, port_str);
 		strcat(alias_to_search, ":");
@@ -141,8 +145,9 @@ void close_aerospike_object(aerospike *as, as_error *err, char *alias_to_search,
 		* Need to free memory allocated to host address string
 		* in AerospikeClient_Type_Init.
 		*/
-		for (int i = 0; i < (int)as->config.hosts_size; i++) {
-			free((void *) as->config.hosts[i].addr);
+		for (int i = 0; i < (int)as->config.hosts->size; i++) {
+			as_host* host = as_vector_get(as->config.hosts, i);
+			as_host_destroy(host);
 		}
 
 		Py_BEGIN_ALLOW_THREADS
