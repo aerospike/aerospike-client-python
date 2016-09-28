@@ -33,7 +33,7 @@ install:
 - ../../scripts/wait-for-node.sh var/log/aerospike.log
 - cd ../..
 script:
-- python setup.py install --lua-system-path=./
+- AEROSPIKE_C_VERSION=4.1.0 python setup.py install --lua-system-path=./
 - cd test
 - ./run -v
 notifications:
