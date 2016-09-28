@@ -184,7 +184,7 @@ detect_linux()
         ;;
 
       "arch linux"* )
-        echo "ubuntu16" "deb"
+        echo "ubuntu16" "pacman"
         return 0
         ;;
 
@@ -365,17 +365,18 @@ if [ $DOWNLOAD ] && [ $DOWNLOAD == 1 ]; then
     ##############################################################################
 
     # Extract the contents of the `devel` installer package into `aerospike-client`
+    printf "info: extracting files from '${INST_PATH}'\n"
     case ${PKG_TYPE} in
+      "pacman" )
+        ar p aerospike-client-c-devel-*.deb data.tar.xz | tar xJ
+        ;;
       "rpm" )
-        printf "info: extracting files from '${INST_PATH}'\n"
         rpm2cpio aerospike-client-c-devel-*.rpm | cpio -idm --no-absolute-filenames
         ;;
       "deb" )
-        printf "info: extracting files from '${INST_PATH}'\n"
         dpkg -x aerospike-client-c-devel-*.deb .
         ;;
       "pkg" )
-        printf "info: extracting files from '${INST_PATH}'\n"
         xar -xf aerospike-client-c-devel-*.pkg
         cat Payload | gunzip -dc | cpio -i
         rm Bom PackageInfo Payload
