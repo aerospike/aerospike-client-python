@@ -55,6 +55,15 @@ The dependencies can be installed through the OS X package manager [Homebrew](ht
     brew install openssl
 
 
+### Archlinux
+
+Dependencies:
+
+```
+sudo pacman -S binutils gcc
+```
+
+
 ## Build
 
 To build the library:
