@@ -19,6 +19,7 @@
 
 #include <aerospike/as_error.h>
 #include <aerospike/as_policy.h>
+#include <aerospike/as_record.h>
 #include <aerospike/as_status.h>
 #include <aerospike/as_admin.h>
 #include <aerospike/as_operations.h>
@@ -178,7 +179,11 @@ AerospikeConstants aerospike_constants[] = {
 	{ AS_MAP_RETURN_COUNT                   ,   "MAP_RETURN_COUNT"},
 	{ AS_MAP_RETURN_KEY                     ,   "MAP_RETURN_KEY"},
 	{ AS_MAP_RETURN_VALUE                   ,   "MAP_RETURN_VALUE"},
-	{ AS_MAP_RETURN_KEY_VALUE               ,   "MAP_RETURN_KEY_VALUE"}
+	{ AS_MAP_RETURN_KEY_VALUE               ,   "MAP_RETURN_KEY_VALUE"},
+
+	{ AS_RECORD_DEFAULT_TTL                 ,   "TTL_NAMESPACE_DEFAULT"},
+	{ AS_RECORD_NO_EXPIRE_TTL               ,   "TTL_NEVER_EXPIRE"},
+	{ -2                                    ,   "TTL_DONT_UPDATE"}
 };
 
 static
