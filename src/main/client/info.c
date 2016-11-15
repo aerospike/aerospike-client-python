@@ -73,7 +73,7 @@ static bool AerospikeClient_Info_each(as_error * err, const as_node * node, cons
 	PyObject * py_ustr = NULL;
 	PyObject * py_out = NULL;
 	foreach_callback_info_udata* udata_ptr = (foreach_callback_info_udata *) udata;
-	struct sockaddr_in* addr = NULL;
+	as_address* addr = NULL;
 
 	// Need to make sure we have the GIL since we're back in python land now
 	PyGILState_STATE gil_state = PyGILState_Ensure();
@@ -112,7 +112,7 @@ static bool AerospikeClient_Info_each(as_error * err, const as_node * node, cons
 			if (py_hosts && PyList_Check(py_hosts)) {
 				addr = as_node_get_address((as_node *)node);
 				int size = (int) PyList_Size(py_hosts);
-				for (int i = 0; i < size && i < AS_CONFIG_HOSTS_SIZE; i++) {
+				for (int i = 0; i < size; i++) {
 					char * host_addr = NULL;
 					int port = -1;
 					PyObject * py_host = PyList_GetItem(py_hosts, i);
@@ -141,9 +141,8 @@ static bool AerospikeClient_Info_each(as_error * err, const as_node * node, cons
 							break;
 						}
 						char ip_port[IP_PORT_MAX_LEN];
-						inet_ntop(addr->sin_family, &(addr->sin_addr), ip_port, INET_ADDRSTRLEN);
-						if ((!strcmp(host_addr,ip_port)) && (port
-												== ntohs(addr->sin_port))) {
+						sprintf(ip_port, "%s:%d", host_addr, port);
+						if ( !strcmp(ip_port, addr->name) ) {
 							PyObject * py_nodes = (PyObject *) udata_ptr->udata_p;
 							PyDict_SetItemString(py_nodes, node->name, py_res);
 						}

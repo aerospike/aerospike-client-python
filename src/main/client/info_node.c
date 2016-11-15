@@ -59,8 +59,9 @@ static PyObject * AerospikeClient_InfoNode_Invoke(
 	PyObject * py_ustr1 = NULL;
 	as_policy_info info_policy;
 	as_policy_info* info_policy_p = NULL;
-	char* address = (char *) self->as->config.hosts[0].addr;
-	long port_no = self->as->config.hosts[0].port;
+	as_host * host = NULL;
+	char* address =NULL;
+	long port_no;
 	char* response_p = NULL;
 	as_status status = AEROSPIKE_OK;
 
@@ -76,6 +77,15 @@ static PyObject * AerospikeClient_InfoNode_Invoke(
 		as_error_update(&err, AEROSPIKE_ERR_CLUSTER, "No connection to aerospike cluster");
 		goto CLEANUP;
 	}
+
+	if (self->as->config.hosts->size == 0) {
+		as_error_update(&err, AEROSPIKE_ERR_CLUSTER, "No hosts in configuration");
+		goto CLEANUP;
+	}
+
+	host = (as_host *)as_vector_get(self->as->config.hosts, 0);
+	address = host->name;
+	port_no = host->port;
 
 	if (py_policy) {
 		if (PyDict_Check(py_policy)) {

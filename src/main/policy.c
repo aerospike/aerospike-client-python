@@ -244,7 +244,7 @@ void set_scan_options(as_error *err, as_scan* scan_p, PyObject * py_options)
 				}
 				val = (int64_t)PyObject_IsTrue(value);
 				if (val == -1 || (!as_scan_set_concurrent(scan_p, val))) {
-					as_error_update(err, AEROSPIKE_ERR_PARAM, "Unable to set scan percentage");
+					as_error_update(err, AEROSPIKE_ERR_PARAM, "Unable to set scan concurrent");
 					break;
 				}
 			} else if (strcmp("nobins", key_name) == 0) {

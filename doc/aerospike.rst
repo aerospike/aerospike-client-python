@@ -72,6 +72,7 @@ in an in-memory primary index.
             * **batch_direct** whether to use the batch-direct protocol (default: ``False``, so will use batch-index if available)
             * **tend_interval** polling interval in milliseconds for tending the cluster (default: 1000)
             * **compression_threshold** compress data for transmission if the object size is greater than a given number of bytes (default: 0, meaning 'never compress')
+            * **cluster_name** only server nodes matching this name will be used when determining the cluster
 
     :return: an instance of the :py:class:`aerospike.Client` class.
 
