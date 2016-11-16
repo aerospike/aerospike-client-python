@@ -58,7 +58,7 @@ PyObject * AerospikeClient_Connect(AerospikeClient * self, PyObject * args, PyOb
 		as_config_set_user(&self->as->config, username, password);
 	}
 
-	if (self->as->config.hosts_size) {
+	if (self->as->config.hosts->size) {
 		alias_to_search = return_search_string(self->as);
 
 		PyObject * py_persistent_item = PyDict_GetItemString(py_global_hosts, alias_to_search);

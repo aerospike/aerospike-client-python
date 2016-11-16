@@ -70,7 +70,7 @@ os.putenv('ARCHFLAGS','-arch x86_64')
 os.environ['ARCHFLAGS'] = '-arch x86_64'
 AEROSPIKE_C_VERSION = os.getenv('AEROSPIKE_C_VERSION')
 if not AEROSPIKE_C_VERSION:
-    AEROSPIKE_C_VERSION = '4.0.7'
+    AEROSPIKE_C_VERSION = '4.1.1'
 DOWNLOAD_C_CLIENT = os.getenv('DOWNLOAD_C_CLIENT')
 AEROSPIKE_C_HOME = os.getenv('AEROSPIKE_C_HOME')
 PREFIX = None
@@ -120,6 +120,7 @@ def resolve_c_client(lua_src_path, lua_system_path):
         sys.exit(3)
     print("info: aerospike.h found:", aerospike_h, file=sys.stdout)
     include_dirs = include_dirs + [
+        '/usr/local/opt/openssl/include',
         aerospike_c_prefix + '/include',
         aerospike_c_prefix + '/include/ck'
         ]
@@ -178,7 +179,7 @@ extra_compile_args = [
     ]
 extra_objects = []
 extra_link_args = []
-library_dirs = []
+library_dirs = ['/usr/local/opt/openssl/lib']
 libraries = [
   'ssl',
   'crypto',
