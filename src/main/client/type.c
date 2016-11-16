@@ -692,7 +692,7 @@ static void AerospikeClient_Type_Dealloc(PyObject * self)
 
 			py_persistent_item = PyDict_GetItemString(py_global_hosts, alias_to_search);
 			if (py_persistent_item) {
-				close_aerospike_object(((AerospikeClient*)self)->as, &err, alias_to_search, py_persistent_item);
+				close_aerospike_object(((AerospikeClient*)self)->as, &err, alias_to_search, py_persistent_item, true);
 				((AerospikeClient*)self)->as = NULL;
 			}
 			PyMem_Free(alias_to_search);

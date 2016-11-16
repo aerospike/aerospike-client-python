@@ -57,16 +57,11 @@ PyObject * AerospikeClient_Close(AerospikeClient * self, PyObject * args, PyObje
 
 	py_persistent_item = PyDict_GetItemString(py_global_hosts, alias_to_search); 
 	if (py_persistent_item) {
-		close_aerospike_object(self->as, &err, alias_to_search, py_persistent_item);
+		close_aerospike_object(self->as, &err, alias_to_search, py_persistent_item, false);
 	} else {
 		aerospike_close(self->as, &err);
-
-		Py_BEGIN_ALLOW_THREADS
-		aerospike_destroy(self->as);
-		Py_END_ALLOW_THREADS
 	}
 	self->is_conn_16 = false;
-	self->as = NULL;
 	PyMem_Free(alias_to_search);
 	alias_to_search = NULL;
 
@@ -120,16 +115,18 @@ char* return_search_string(aerospike *as)
 	return alias_to_search;
 }
 
-void close_aerospike_object(aerospike *as, as_error *err, char *alias_to_search, PyObject *py_persistent_item)
+void close_aerospike_object(aerospike *as, as_error *err, char *alias_to_search, PyObject *py_persistent_item, bool do_destroy)
 {
 	if (((AerospikeGlobalHosts*)py_persistent_item)->ref_cnt == 1) {
 		PyDict_DelItemString(py_global_hosts, alias_to_search);
 		AerospikeGlobalHosts_Del(py_persistent_item);
 		aerospike_close(as, err);
 
-		Py_BEGIN_ALLOW_THREADS
-		aerospike_destroy(as);
-		Py_END_ALLOW_THREADS
+		if (do_destroy) {
+			Py_BEGIN_ALLOW_THREADS
+			aerospike_destroy(as);
+			Py_END_ALLOW_THREADS
+		}
 	} else {
 		((AerospikeGlobalHosts*)py_persistent_item)->ref_cnt--;
 	}
