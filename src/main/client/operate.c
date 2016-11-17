@@ -85,6 +85,23 @@
 		Py_DECREF(py_result);\
 	}
 
+#define CONVERT_VAL_TO_AS_VAL()\
+	if (pyobject_to_astype_write(self, err, py_value, &put_val,\
+		static_pool, SERIALIZER_PYTHON) != AEROSPIKE_OK) {\
+		return err->code;\
+	}
+
+#define CONVERT_KEY_TO_AS_VAL()\
+	if (pyobject_to_astype_write(self, err, py_key, &put_key,\
+			static_pool, SERIALIZER_PYTHON) != AEROSPIKE_OK) {\
+		return err->code;\
+	}
+
+#define CONVERT_RANGE_TO_AS_VAL()\
+	if (pyobject_to_astype_write(self, err, py_range, &put_range,\
+			static_pool, SERIALIZER_PYTHON) != AEROSPIKE_OK) {\
+		return err->code;\
+	}
 /**
  *******************************************************************************************************
  * This function will check whether operation can be performed
@@ -287,20 +304,11 @@ as_status add_op(AerospikeClient * self, as_error * err, PyObject * py_val, as_v
 				return err->code;
 			}
 		}
-		if (pyobject_to_astype_write(self, err, py_value, &put_val,
-				static_pool, SERIALIZER_PYTHON) != AEROSPIKE_OK) {
-			return err->code;
-		}
 	} else if (opRequiresValue(operation)) {
 		return as_error_update(err, AEROSPIKE_ERR_PARAM, "Value should be given");
 	}
 
-	if (py_key) {
-		if (pyobject_to_astype_write(self, err, py_key, &put_key,
-				static_pool, SERIALIZER_PYTHON) != AEROSPIKE_OK) {
-			return err->code;
-		}
-	} else if (opRequiresKey(operation)) {
+	if (!py_key && opRequiresKey(operation)) {
 		return as_error_update(err, AEROSPIKE_ERR_PARAM, "Operation requires key parameter");
 	}
 
@@ -312,12 +320,7 @@ as_status add_op(AerospikeClient * self, as_error * err, PyObject * py_val, as_v
 		return as_error_update(err, AEROSPIKE_ERR_PARAM, "Operation requires map_policy parameter");
 	}
 
-	if (py_range) {
-		if (pyobject_to_astype_write(self, err, py_range, &put_range,
-				static_pool, SERIALIZER_PYTHON) != AEROSPIKE_OK) {
-			return err->code;
-		}
-	} else if (opRequiresRange(operation)) {
+	if (!py_range && opRequiresRange(operation)) {
 		return as_error_update(err, AEROSPIKE_ERR_PARAM, "Range should be given");
 	}
 
@@ -438,20 +441,25 @@ as_status add_op(AerospikeClient * self, as_error * err, PyObject * py_val, as_v
 			as_operations_add_read(ops, bin);
 			break;
 		case AS_OPERATOR_WRITE:
+			CONVERT_VAL_TO_AS_VAL();
 			as_operations_add_write(ops, bin, (as_bin_value *) put_val);
 			break;
 
 		//------- LIST OPERATIONS ---------
 		case OP_LIST_APPEND:
+			CONVERT_VAL_TO_AS_VAL();
 			as_operations_add_list_append(ops, bin, put_val);
 			break;
 		case OP_LIST_APPEND_ITEMS:
+			CONVERT_VAL_TO_AS_VAL();
 			as_operations_add_list_append_items(ops, bin, (as_list*)put_val);
 			break;
 		case OP_LIST_INSERT:
+			CONVERT_VAL_TO_AS_VAL();
 			as_operations_add_list_insert(ops, bin, index, put_val);
 			break;
 		case OP_LIST_INSERT_ITEMS:
+			CONVERT_VAL_TO_AS_VAL();
 			as_operations_add_list_insert_items(ops, bin, index, (as_list*)put_val);
 			break;
 		case OP_LIST_POP:
@@ -476,6 +484,7 @@ as_status add_op(AerospikeClient * self, as_error * err, PyObject * py_val, as_v
 			as_operations_add_list_clear(ops, bin);
 			break;
 		case OP_LIST_SET:
+			CONVERT_VAL_TO_AS_VAL();
 			as_operations_add_list_set(ops, bin, index, put_val);
 			break;
 		case OP_LIST_GET:
@@ -502,15 +511,22 @@ as_status add_op(AerospikeClient * self, as_error * err, PyObject * py_val, as_v
 			as_operations_add_map_set_policy(ops, bin, &map_policy);
 			break;
 		case OP_MAP_PUT:
+			CONVERT_VAL_TO_AS_VAL();
+			CONVERT_KEY_TO_AS_VAL();
 			as_operations_add_map_put(ops, bin, &map_policy, put_key, put_val);
 			break;
 		case OP_MAP_PUT_ITEMS:
+			CONVERT_VAL_TO_AS_VAL();
 			as_operations_add_map_put_items(ops, bin, &map_policy, (as_map *)put_val);
 			break;
 		case OP_MAP_INCREMENT:
+			CONVERT_VAL_TO_AS_VAL();
+			CONVERT_KEY_TO_AS_VAL();
 			as_operations_add_map_increment(ops, bin, &map_policy, put_key, put_val);
 			break;
 		case OP_MAP_DECREMENT:
+			CONVERT_VAL_TO_AS_VAL();
+			CONVERT_KEY_TO_AS_VAL();
 			as_operations_add_map_decrement(ops, bin, &map_policy, put_key, put_val);
 			break;
 		case OP_MAP_SIZE:
@@ -520,21 +536,29 @@ as_status add_op(AerospikeClient * self, as_error * err, PyObject * py_val, as_v
 			as_operations_add_map_clear(ops, bin);
 			break;
 		case OP_MAP_REMOVE_BY_KEY:
+			CONVERT_KEY_TO_AS_VAL();
 			as_operations_add_map_remove_by_key(ops, bin, put_key, return_type);
 			break;
 		case OP_MAP_REMOVE_BY_KEY_LIST:
+			CONVERT_VAL_TO_AS_VAL();
 			as_operations_add_map_remove_by_key_list(ops, bin, (as_list *)put_val, return_type);
 			break;
 		case OP_MAP_REMOVE_BY_KEY_RANGE:
+			CONVERT_VAL_TO_AS_VAL();
+			CONVERT_KEY_TO_AS_VAL();
 			as_operations_add_map_remove_by_key_range(ops, bin, put_key, put_val, return_type);
 			break;
 		case OP_MAP_REMOVE_BY_VALUE:
+			CONVERT_VAL_TO_AS_VAL();
 			as_operations_add_map_remove_by_value(ops, bin, put_val, return_type);
 			break;
 		case OP_MAP_REMOVE_BY_VALUE_LIST:
+			CONVERT_VAL_TO_AS_VAL();
 			as_operations_add_map_remove_by_value_list(ops, bin, (as_list *)put_val, return_type);
 			break;
 		case OP_MAP_REMOVE_BY_VALUE_RANGE:
+			CONVERT_VAL_TO_AS_VAL();
+			CONVERT_RANGE_TO_AS_VAL();
 			as_operations_add_map_remove_by_value_range(ops, bin, put_val, put_range, return_type);
 			break;
 		case OP_MAP_REMOVE_BY_INDEX:
@@ -556,15 +580,21 @@ as_status add_op(AerospikeClient * self, as_error * err, PyObject * py_val, as_v
 			as_operations_add_map_remove_by_rank_range(ops, bin, index, offset, return_type);
 			break;
 		case OP_MAP_GET_BY_KEY:
+			CONVERT_KEY_TO_AS_VAL();
 			as_operations_add_map_get_by_key(ops, bin, put_key, return_type);
 			break;
 		case OP_MAP_GET_BY_KEY_RANGE:
+			CONVERT_RANGE_TO_AS_VAL();
+			CONVERT_KEY_TO_AS_VAL();
 			as_operations_add_map_get_by_key_range(ops, bin, put_key, put_range, return_type);
 			break;
 		case OP_MAP_GET_BY_VALUE:
+			CONVERT_VAL_TO_AS_VAL();
 			as_operations_add_map_get_by_value(ops, bin, put_val, return_type);
 			break;
 		case OP_MAP_GET_BY_VALUE_RANGE:
+			CONVERT_VAL_TO_AS_VAL();
+			CONVERT_RANGE_TO_AS_VAL();
 			as_operations_add_map_get_by_value_range(ops, bin, put_val, put_range, return_type);
 			break;
 		case OP_MAP_GET_BY_INDEX:

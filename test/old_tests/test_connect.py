@@ -248,3 +248,26 @@ class TestConnect(TestBaseClass):
 
         except aerospike.exception.ClientError as exception:
             assert exception.code == -1
+
+    def test_connect_positive_reconnect(self):
+        """
+            Connect/Close/Connect to client
+        """
+        config = {'hosts': TestConnect.hostlist}
+        if TestConnect.user is None and TestConnect.password is None:
+            self.client = aerospike.client(config).connect()
+        else:
+            self.client = aerospike.client(config).connect(
+                TestConnect.user, TestConnect.password)
+
+        assert self.client is not None
+        assert self.client.is_connected() == True
+        self.client.close()
+        assert self.client.is_connected() == False
+        if TestConnect.user is None and TestConnect.password is None:
+            self.client.connect()
+        else:
+            self.client.connect(
+                TestConnect.user, TestConnect.password)
+        assert self.client.is_connected() == True
+        self.client.close()
