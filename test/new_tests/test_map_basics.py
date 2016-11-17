@@ -241,3 +241,30 @@ class TestMapBasics(object):
         count = self.as_connection.map_get_by_rank_range(key, binname, 0, 2, aerospike.MAP_RETURN_COUNT)
         self.as_connection.map_clear(key, binname)
         assert count == 2
+
+    def test_pos_map_insert_empty_map(self):
+        key = ('test', 'map_test', 1)
+        binname = 'my_map'
+        self.as_connection.map_put_items(key, binname, {})
+        size = self.as_connection.map_size(key, binname)
+        assert size == 0
+
+    def test_pos_map_insert_none_value(self):
+        key = ('test', 'map_test', 1)
+        binname = 'my_map'
+        self.as_connection.map_put(key, binname, 'my_key', None)
+        size = self.as_connection.map_size(key, binname)
+        assert size == 1
+        value = self.as_connection.map_get_by_key(key, binname, 'my_key', aerospike.MAP_RETURN_VALUE)
+        assert value is None
+        self.as_connection.map_clear(key, binname)
+
+    def test_pos_map_insert_empty_value(self):
+        key = ('test', 'map_test', 1)
+        binname = 'my_map'
+        self.as_connection.map_put(key, binname, 'my_key', {})
+        size = self.as_connection.map_size(key, binname)
+        assert size == 1
+        value = self.as_connection.map_get_by_key(key, binname, 'my_key', aerospike.MAP_RETURN_VALUE)
+        assert value == {}
+        self.as_connection.map_clear(key, binname)

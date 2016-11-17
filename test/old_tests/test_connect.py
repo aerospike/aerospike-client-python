@@ -235,3 +235,39 @@ class TestConnect(TestBaseClass):
         assert self.client.is_connected() == True
         assert self.client.shm_key() == None
         self.client.close()
+
+    def test_connect_positive_cluster_name(self):
+        """
+            Invoke connect() giving a cluster name
+        """
+        config = {'hosts': TestConnect.hostlist,
+                  'cluster_name': 'test-cluster'
+                  }
+        try:
+            self.client = aerospike.client(config).connect()
+
+        except aerospike.exception.ClientError as exception:
+            assert exception.code == -1
+
+    def test_connect_positive_reconnect(self):
+        """
+            Connect/Close/Connect to client
+        """
+        config = {'hosts': TestConnect.hostlist}
+        if TestConnect.user is None and TestConnect.password is None:
+            self.client = aerospike.client(config).connect()
+        else:
+            self.client = aerospike.client(config).connect(
+                TestConnect.user, TestConnect.password)
+
+        assert self.client is not None
+        assert self.client.is_connected() == True
+        self.client.close()
+        assert self.client.is_connected() == False
+        if TestConnect.user is None and TestConnect.password is None:
+            self.client.connect()
+        else:
+            self.client.connect(
+                TestConnect.user, TestConnect.password)
+        assert self.client.is_connected() == True
+        self.client.close()

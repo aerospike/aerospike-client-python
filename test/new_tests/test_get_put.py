@@ -436,6 +436,10 @@ class TestGetPut():
             {'gen': 3, 'ttl': True}, {'timeout': 1000}),
         (('test', 'demo', 1), {'name': 'john'},
             {'gen': True, 'ttl': True}, {'timeout': 1000}),
+        (('test', 'demo', 1), {'name': 'john'},
+            {'gen': True, 'ttl': aerospike.TTL_NAMESPACE_DEFAULT}, {'timeout': 1000}),
+        (('test', 'demo', 1), {'name': 'john'},
+            {'gen': True, 'ttl': aerospike.TTL_NEVER_EXPIRE}, {'timeout': 1000}),
     ])
     def test_pos_put_with_metadata_bool(
             self, key, record, meta, policy, put_data):

@@ -436,7 +436,7 @@ static int AerospikeClient_Type_Init(AerospikeClient * self, PyObject * args, Py
 	PyObject * py_hosts = PyDict_GetItemString(py_config, "hosts");
 	if (py_hosts && PyList_Check(py_hosts)) {
 		int size = (int) PyList_Size(py_hosts);
-		for (int i = 0; i < size && i < AS_CONFIG_HOSTS_SIZE; i++) {
+		for (int i = 0; i < size; i++) {
 			char *addr = NULL;
 			uint16_t port = 3000;
 			PyObject * py_host = PyList_GetItem(py_hosts, i);
@@ -470,8 +470,8 @@ static int AerospikeClient_Type_Init(AerospikeClient * self, PyObject * args, Py
 			}
 			if (addr) {
 				as_config_add_host(&config, addr, port);
-			} else {
 				free(addr);
+			} else {
 				return -1;
 			}
 		}
@@ -661,6 +661,11 @@ static int AerospikeClient_Type_Init(AerospikeClient * self, PyObject * args, Py
 		config.tender_interval = PyInt_AsLong(py_tend_interval);
 	}
 
+	PyObject * py_cluster_name = PyDict_GetItemString(py_config, "cluster_name");
+	if (py_cluster_name && PyString_Check(py_cluster_name)) {
+		as_config_set_cluster_name(&config, strdup(PyString_AsString(py_cluster_name)));
+	}
+
 	//strict_types check
 	self->strict_types = true;
 	PyObject * py_strict_types = PyDict_GetItemString(py_config, "strict_types");
@@ -681,13 +686,13 @@ static void AerospikeClient_Type_Dealloc(PyObject * self)
 	as_error_init(&err);
 
 	if (((AerospikeClient*)self)->as && ((AerospikeClient*)self)->is_conn_16) {
-		if (((AerospikeClient*)self)->as->config.hosts_size) {
+		if (((AerospikeClient*)self)->as->config.hosts->size) {
 			char * alias_to_search = return_search_string(((AerospikeClient*)self)->as);
 			PyObject *py_persistent_item = NULL;
 
 			py_persistent_item = PyDict_GetItemString(py_global_hosts, alias_to_search);
 			if (py_persistent_item) {
-				close_aerospike_object(((AerospikeClient*)self)->as, &err, alias_to_search, py_persistent_item);
+				close_aerospike_object(((AerospikeClient*)self)->as, &err, alias_to_search, py_persistent_item, true);
 				((AerospikeClient*)self)->as = NULL;
 			}
 			PyMem_Free(alias_to_search);
