@@ -470,8 +470,8 @@ static int AerospikeClient_Type_Init(AerospikeClient * self, PyObject * args, Py
 			}
 			if (addr) {
 				as_config_add_host(&config, addr, port);
-			} else {
 				free(addr);
+			} else {
 				return -1;
 			}
 		}
