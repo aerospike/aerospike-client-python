@@ -367,11 +367,9 @@ PyObject * AerospikeClient_MapGetByRankRange(AerospikeClient * self, PyObject * 
  *
  *		scan = client.scan(ns,set).foreach(each_result)
  *
- * Alternatively, you can use `results()` which is a generator that will yield a
- * result for each iteration:
+ * Alternatively, you can use `results()` which will return a list containing
+ * all the results.
  *
- *		for record in client.scan(ns,set).results():
- *			print record
  *
  */
 AerospikeScan * AerospikeClient_Scan(AerospikeClient * self, PyObject * args, PyObject * kwds);
