@@ -200,7 +200,7 @@ if DARWIN:
         '-D_DARWIN_UNLIMITED_SELECT',
         '-DMARCH_x86_64'
         ]
-    os.environ['MACOSX_DEPLOYMENT_TARGET'] = '10.11'
+    os.environ['MACOSX_DEPLOYMENT_TARGET'] = '10.12'
     if AEROSPIKE_C_HOME:
         PREFIX = AEROSPIKE_C_HOME + '/target/Darwin-x86_64'
 
