@@ -101,6 +101,7 @@ AerospikeConstants aerospike_constants[] = {
 	{ AS_JOB_STATUS_INPROGRESS              ,   "JOB_STATUS_INPROGRESS" },
 	{ AS_POLICY_REPLICA_MASTER              ,   "POLICY_REPLICA_MASTER" },
 	{ AS_POLICY_REPLICA_ANY                 ,   "POLICY_REPLICA_ANY" },
+	{ AS_POLICY_REPLICA_SEQUENCE            ,   "POLICY_REPLICA_SEQUENCE" },
 	{ AS_POLICY_CONSISTENCY_LEVEL_ONE       ,   "POLICY_CONSISTENCY_ONE" },
 	{ AS_POLICY_CONSISTENCY_LEVEL_ALL       ,   "POLICY_CONSISTENCY_ALL" },
 	{ AS_POLICY_COMMIT_LEVEL_ALL            ,   "POLICY_COMMIT_LEVEL_ALL" },
@@ -357,6 +358,7 @@ as_status pyobject_to_policy_apply(as_error * err, PyObject * py_policy,
 	// Set policy fields
 	POLICY_SET_FIELD(timeout, uint32_t);
 	POLICY_SET_FIELD(key, as_policy_key);
+	POLICY_SET_FIELD(retry_on_timeout, bool);
 	POLICY_SET_FIELD(durable_delete, bool);
 
 	// Update the policy
@@ -441,6 +443,7 @@ as_status pyobject_to_policy_read(as_error * err, PyObject * py_policy,
 	POLICY_SET_FIELD(key, as_policy_key);
 	POLICY_SET_FIELD(consistency_level, as_policy_consistency_level);
 	POLICY_SET_FIELD(replica, as_policy_replica);
+	POLICY_SET_FIELD(retry_on_timeout, bool);
 
 	// Update the policy
 	POLICY_UPDATE();
@@ -472,6 +475,7 @@ as_status pyobject_to_policy_remove(as_error * err, PyObject * py_policy,
 	POLICY_SET_FIELD(key, as_policy_key);
 	POLICY_SET_FIELD(gen, as_policy_gen);
 	POLICY_SET_FIELD(commit_level, as_policy_commit_level);
+	POLICY_SET_FIELD(retry_on_timeout, bool);
 	POLICY_SET_FIELD(durable_delete, bool);
 
 	// Update the policy
@@ -532,6 +536,7 @@ as_status pyobject_to_policy_write(as_error * err, PyObject * py_policy,
 	POLICY_SET_FIELD(gen, as_policy_gen);
 	POLICY_SET_FIELD(exists, as_policy_exists);
 	POLICY_SET_FIELD(commit_level, as_policy_commit_level);
+	POLICY_SET_FIELD(retry_on_timeout, bool);
 	POLICY_SET_FIELD(durable_delete, bool);
 
 	// Update the policy
@@ -565,6 +570,7 @@ as_status pyobject_to_policy_operate(as_error * err, PyObject * py_policy,
 	POLICY_SET_FIELD(commit_level, as_policy_commit_level);
 	POLICY_SET_FIELD(consistency_level, as_policy_consistency_level);
 	POLICY_SET_FIELD(replica, as_policy_replica);
+	POLICY_SET_FIELD(retry_on_timeout, bool);
 	POLICY_SET_FIELD(durable_delete, bool);
 
 	// Update the policy
@@ -592,6 +598,7 @@ as_status pyobject_to_policy_batch(as_error * err, PyObject * py_policy,
 
 	// Set policy fields
 	POLICY_SET_FIELD(timeout, uint32_t);
+	POLICY_SET_FIELD(retry_on_timeout, bool);
 
 	// Update the policy
 	POLICY_UPDATE();

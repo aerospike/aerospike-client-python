@@ -82,7 +82,7 @@ AerospikeConstants operator_constants[] = {
 MOD_INIT(aerospike)
 {
 
-	const char version[8] = "2.0.6";
+	const char version[8] = "2.0.7";
 	// Makes things "thread-safe"
 	PyEval_InitThreads();
 	int i = 0;
@@ -93,7 +93,6 @@ MOD_INIT(aerospike)
 	MOD_DEF(aerospike, "aerospike", "Aerospike Python Client", Aerospike_Methods)
 
 	py_global_hosts = PyDict_New();
-	declare_policy_constants(aerospike);
 
 	PyModule_AddStringConstant(aerospike, "__version__", version);
 
@@ -109,23 +108,20 @@ MOD_INIT(aerospike)
 	Py_INCREF(query);
 	PyModule_AddObject(aerospike, "Query", (PyObject *) query);
 
-	declare_policy_constants(aerospike);
-	declare_log_constants(aerospike);
-
 	PyTypeObject * scan = AerospikeScan_Ready();
 	Py_INCREF(scan);
 	PyModule_AddObject(aerospike, "Scan", (PyObject *) scan);
 
+	/*
+	 * Add constants to module.
+	 */
 	for (i = 0; i < (int)OPERATOR_CONSTANTS_ARR_SIZE; i++) {
 		PyModule_AddIntConstant(aerospike,
 				operator_constants[i].constant_str,
 				operator_constants[i].constantno);
 	}
-
-	/*
-	 * Add constants to module.
-	 */
 	declare_policy_constants(aerospike);
+	declare_log_constants(aerospike);
 
 	PyObject * predicates = AerospikePredicates_New();
 	Py_INCREF(predicates);

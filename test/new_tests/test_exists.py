@@ -60,6 +60,10 @@ class TestExists():
             'timeout': 1000,
             'replica': aerospike.POLICY_REPLICA_MASTER,
             'consistency': aerospike.POLICY_CONSISTENCY_ALL}),
+        (('test', 'demo', "p_consistency_level"), {"name": "Michel"}, {
+            'timeout': 1000,
+            'replica': aerospike.POLICY_REPLICA_SEQUENCE,
+            'consistency': aerospike.POLICY_CONSISTENCY_ONE}),
     ])
     def test_pos_exists_with_key_and_policy(
             self, key, record, policy, put_data):
