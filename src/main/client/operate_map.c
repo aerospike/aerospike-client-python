@@ -102,6 +102,7 @@
 #define CLEANUP_AND_EXCEPTION_ON_ERROR(__err)\
 	as_operations_destroy(&ops);\
 	as_record_destroy(rec);\
+	as_key_destroy(&key);\
 	if (__err.code != AEROSPIKE_OK) {\
 		PyObject * py_err = NULL;\
 		error_to_pyobject(&__err, &py_err);\

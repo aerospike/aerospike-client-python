@@ -541,7 +541,19 @@ as_status pyobject_to_record(AerospikeClient * self, as_error * err, PyObject * 
 				PyObject* py_data = PyObject_GenericGetAttr(value, py_geo_string);
 				Py_DECREF(py_geo_string);
 				PyObject *py_dumps = AerospikeGeospatial_DoDumps(py_data, err);
-				char *geo_value = PyString_AsString(py_dumps);
+				PyObject * py_ustr = NULL;
+				char *geo_value = NULL;
+
+				if (PyUnicode_Check(py_dumps)) {
+					PyObject * py_ustr = PyUnicode_AsUTF8String(py_dumps);
+					if (!py_ustr) {
+						return as_error_update(err, AEROSPIKE_ERR_CLIENT, "Unicode value not encoded in utf-8.");
+					}
+					geo_value = PyBytes_AsString(py_ustr);
+				} else {
+					geo_value = PyString_AsString(py_dumps);
+				}
+
 				if (aerospike_has_geo(self->as)) {
 					ret_val = as_record_set_geojson_str(rec, name, geo_value);
 				} else {
@@ -554,6 +566,9 @@ as_status pyobject_to_record(AerospikeClient * self, as_error * err, PyObject * 
 						}
 						ret_val = as_record_set_bytes(rec, name, bytes);
 					}
+				}
+				if (py_ustr != NULL) {
+					Py_DECREF(py_ustr);
 				}
 				Py_DECREF(py_dumps);
 			} else if (PyUnicode_Check(value)) {
