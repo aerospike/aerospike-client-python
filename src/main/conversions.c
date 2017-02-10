@@ -570,6 +570,7 @@ as_status pyobject_to_record(AerospikeClient * self, as_error * err, PyObject * 
 				if (py_ustr != NULL) {
 					Py_DECREF(py_ustr);
 				}
+				Py_DECREF(py_data);
 				Py_DECREF(py_dumps);
 			} else if (PyUnicode_Check(value)) {
 				PyObject * py_ustr = PyUnicode_AsUTF8String(value);
@@ -1566,13 +1567,9 @@ void initialize_bin_for_strictypes(AerospikeClient *self, as_error *err, PyObjec
 as_status bin_strict_type_checking(AerospikeClient * self, as_error *err, PyObject *py_bin, char **bin)
 {
 	as_error_reset(err);
-	PyObject * py_ustr = NULL;
 
 	if (py_bin) {
-		if (PyUnicode_Check(py_bin)) {
-			py_ustr = PyUnicode_AsUTF8String(py_bin);
-			*bin = PyBytes_AsString(py_ustr);
-		} else if (PyString_Check(py_bin)) {
+		if (PyString_Check(py_bin)) {
 			*bin = PyString_AsString(py_bin);
 		} else if (PyByteArray_Check(py_bin)) {
 			*bin = PyByteArray_AsString(py_bin);
@@ -1583,10 +1580,6 @@ as_status bin_strict_type_checking(AerospikeClient * self, as_error *err, PyObje
 
 		if (self->strict_types) {
 			if (strlen(*bin) > AS_BIN_NAME_MAX_LEN) {
-				if (py_ustr) {
-					Py_DECREF(py_ustr);
-					py_ustr = NULL;
-				}
 				as_error_update(err, AEROSPIKE_ERR_BIN_NAME, "A bin name should not exceed 14 characters limit");
 			}
 		}

@@ -327,6 +327,15 @@ CLEANUP:
 		as_batch_read_destroy(&records);
 	}
 
+	if (err->code != AEROSPIKE_OK) {
+		PyObject * py_err = NULL;
+		error_to_pyobject(err, &py_err);
+		PyObject *exception_type = raise_exception(err);
+		PyErr_SetObject(exception_type, py_err);
+		Py_DECREF(py_err);
+		return NULL;
+	}
+
 	return py_recs;
 }
 /**
@@ -420,6 +429,15 @@ CLEANUP:
 		// Also, pyobject_to_key is soing strdup() in case of Unicode. So, object destruction
 		// is necessary.
 		as_batch_destroy(&batch);
+	}
+
+	if (err->code != AEROSPIKE_OK) {
+		PyObject * py_err = NULL;
+		error_to_pyobject(err, &py_err);
+		PyObject *exception_type = raise_exception(err);
+		PyErr_SetObject(exception_type, py_err);
+		Py_DECREF(py_err);
+		return NULL;
 	}
 
 	return py_recs;

@@ -51,7 +51,7 @@
  * Returns information about a host.
  ********************************************************************************************************/
 static PyObject * AerospikeClient_InfoNode_Invoke(
-	AerospikeClient * self,
+	as_error * err, AerospikeClient * self,
 	PyObject * py_request_str, PyObject * py_host, PyObject * py_policy) {
 
 	PyObject * py_response = NULL;
@@ -65,21 +65,18 @@ static PyObject * AerospikeClient_InfoNode_Invoke(
 	char* response_p = NULL;
 	as_status status = AEROSPIKE_OK;
 
-	as_error err;
-	as_error_init(&err);
-
 	if (!self || !self->as) {
-		as_error_update(&err, AEROSPIKE_ERR_PARAM, "Invalid aerospike object");
+		as_error_update(err, AEROSPIKE_ERR_PARAM, "Invalid aerospike object");
 		goto CLEANUP;
 	}
 
 	if (!self->is_conn_16) {
-		as_error_update(&err, AEROSPIKE_ERR_CLUSTER, "No connection to aerospike cluster");
+		as_error_update(err, AEROSPIKE_ERR_CLUSTER, "No connection to aerospike cluster");
 		goto CLEANUP;
 	}
 
 	if (self->as->config.hosts->size == 0) {
-		as_error_update(&err, AEROSPIKE_ERR_CLUSTER, "No hosts in configuration");
+		as_error_update(err, AEROSPIKE_ERR_CLUSTER, "No hosts in configuration");
 		goto CLEANUP;
 	}
 
@@ -89,13 +86,13 @@ static PyObject * AerospikeClient_InfoNode_Invoke(
 
 	if (py_policy) {
 		if (PyDict_Check(py_policy)) {
-			pyobject_to_policy_info(&err, py_policy, &info_policy, &info_policy_p,
+			pyobject_to_policy_info(err, py_policy, &info_policy, &info_policy_p,
 					&self->as->config.policies.info);
-			if (err.code != AEROSPIKE_OK) {
+			if (err->code != AEROSPIKE_OK) {
 				goto CLEANUP;
 			}
 		} else {
-			as_error_update(&err, AEROSPIKE_ERR_PARAM, "Policy should be a dictionary");
+			as_error_update(err, AEROSPIKE_ERR_PARAM, "Policy should be a dictionary");
 			goto CLEANUP;
 		}
 	}
@@ -118,7 +115,7 @@ static PyObject * AerospikeClient_InfoNode_Invoke(
 				port_no = (uint16_t) PyLong_AsLong(py_port);
 			}
 		} else if (!PyTuple_Check(py_host)) {
-			as_error_update(&err, AEROSPIKE_ERR_PARAM, "Host should be a specified in form of Tuple.");
+			as_error_update(err, AEROSPIKE_ERR_PARAM, "Host should be a specified in form of Tuple.");
 			goto CLEANUP;
 		}
 	}
@@ -130,28 +127,28 @@ static PyObject * AerospikeClient_InfoNode_Invoke(
 	} else if (PyString_Check(py_request_str)) {
 		request_str_p = PyString_AsString(py_request_str);
 	} else {
-		as_error_update(&err, AEROSPIKE_ERR_PARAM, "Request should be of string type");
+		as_error_update(err, AEROSPIKE_ERR_PARAM, "Request should be of string type");
 		goto CLEANUP;
 	}
 
 	Py_BEGIN_ALLOW_THREADS
-	status = aerospike_info_host(self->as, &err, info_policy_p,
+	status = aerospike_info_host(self->as, err, info_policy_p,
 		(const char *) address, (uint16_t) port_no, request_str_p,
 		&response_p);
 	Py_END_ALLOW_THREADS
-	if (err.code == AEROSPIKE_OK) {
+	if (err->code == AEROSPIKE_OK) {
 		if (response_p && status == AEROSPIKE_OK) {
 			py_response = PyString_FromString(response_p);
 			free(response_p);
 		} else if (!response_p) {
-			as_error_update(&err, AEROSPIKE_ERR_CLIENT, "Invalid info operation");
+			as_error_update(err, AEROSPIKE_ERR_CLIENT, "Invalid info operation");
 			goto CLEANUP;
 		} else if (status != AEROSPIKE_OK) {
-			as_error_update(&err, status, "Info operation failed");
+			as_error_update(err, status, "Info operation failed");
 			goto CLEANUP;
 		}
 	} else {
-		as_error_update(&err, err.code, NULL);
+		as_error_update(err, err->code, err->message);
 		goto CLEANUP;
 	}
 
@@ -164,10 +161,10 @@ CLEANUP:
 		Py_DECREF(py_ustr1);
 	}
 
-	if (err.code != AEROSPIKE_OK) {
+	if (err->code != AEROSPIKE_OK) {
 		PyObject * py_err = NULL;
-		error_to_pyobject(&err, &py_err);
-		PyObject *exception_type = raise_exception(&err);
+		error_to_pyobject(err, &py_err);
+		PyObject *exception_type = raise_exception(err);
 		PyErr_SetObject(exception_type, py_err);
 		Py_DECREF(py_err);
 		return NULL;
@@ -193,6 +190,9 @@ PyObject * AerospikeClient_InfoNode(AerospikeClient * self, PyObject * args, PyO
 
 	PyObject * py_request = NULL;
 
+	as_error err;
+	as_error_init(&err);
+
 	static char * kwlist[] = {"command", "host", "policy", NULL};
 
 	if (PyArg_ParseTupleAndKeywords(args, kwds, "OO|O:info_node", kwlist,
@@ -200,7 +200,7 @@ PyObject * AerospikeClient_InfoNode(AerospikeClient * self, PyObject * args, PyO
 		return NULL;
 	}
 
-	return AerospikeClient_InfoNode_Invoke(self, py_request, py_host, py_policy);
+	return AerospikeClient_InfoNode_Invoke(&err, self, py_request, py_host, py_policy);
 
 }
 /**
@@ -320,18 +320,22 @@ static PyObject * AerospikeClient_GetNodes_Invoke(
 
 	PyObject * py_req_str = NULL;
 	py_req_str = PyString_FromString("services");
-	response_services_p = AerospikeClient_InfoNode_Invoke(self, py_req_str, NULL, NULL);
+	response_services_p = AerospikeClient_InfoNode_Invoke(&err, self, py_req_str, NULL, NULL);
 	Py_DECREF(py_req_str);
 	if (!response_services_p) {
-		as_error_update(&err, AEROSPIKE_ERR_CLIENT, "Services call returned an error");
+		if (err.code == AEROSPIKE_OK) {
+			as_error_update(&err, AEROSPIKE_ERR_CLIENT, "Services call returned an error");
+		}
 		goto CLEANUP;
 	}
 
 	py_req_str = PyString_FromString("service");
-	response_service_p = AerospikeClient_InfoNode_Invoke(self, py_req_str, NULL, NULL);
+	response_service_p = AerospikeClient_InfoNode_Invoke(&err, self, py_req_str, NULL, NULL);
 	Py_DECREF(py_req_str);
 	if (!response_service_p) {
-		as_error_update(&err, AEROSPIKE_ERR_CLIENT, "Service call returned an error");
+		if (err.code == AEROSPIKE_OK) {
+			as_error_update(&err, AEROSPIKE_ERR_CLIENT, "Service call returned an error");
+		}
 		goto CLEANUP;
 	}
 
