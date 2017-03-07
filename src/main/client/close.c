@@ -86,6 +86,7 @@ char* return_search_string(aerospike *as)
 	int tot_address_size = 0;
 	int tot_port_size = 0;
 	int delimiter_size = 0;
+	int tot_user_size = 0;
 	int i =0;
 
 	//Calculate total size for search string
@@ -95,9 +96,10 @@ char* return_search_string(aerospike *as)
 		tot_address_size = tot_address_size + strlen(host->name);
 		tot_port_size = tot_port_size + MAX_PORT_SIZE;
 		delimiter_size = delimiter_size + 3;
+		tot_user_size = tot_user_size + strlen(as->config.user);
 	}
 
-	char* alias_to_search = (char*) PyMem_Malloc(tot_address_size + strlen(as->config.user) + tot_port_size + delimiter_size);
+	char* alias_to_search = (char*) PyMem_Malloc(tot_address_size + tot_user_size + tot_port_size + delimiter_size);
 	alias_to_search[0] = '\0';
 
 	for (i=0; i<as->config.hosts->size; i++) {
