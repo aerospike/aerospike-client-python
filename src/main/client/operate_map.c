@@ -381,7 +381,7 @@ PyObject * AerospikeClient_MapSize(AerospikeClient * self, PyObject * args, PyOb
 	as_operations_add_map_size(&ops, bin);
 	DO_OPERATION();
 
-	if (rec) {
+	if (rec && as_val_type(rec->bins.entries[0].valuep) != AS_NIL) {
 		size = rec->bins.entries[0].valuep->integer.value;
 	}
 

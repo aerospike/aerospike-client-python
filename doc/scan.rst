@@ -166,6 +166,7 @@ Scan Policies
 
         * **timeout** maximum time in milliseconds to wait for the operation to complete. Default ``0`` means *do not timeout*.
         * **fail_on_cluster_change** :class:`bool` whether to fail the scan if a change occurs on the cluster. Default ``True``.
+        * **socket_timeout** Maximum time in milliseconds for server side socket timeout. ``0`` means there is no socket timeout. Default ``10000``. Added in version 2.0.11.
 
 
 .. _aerospike_scan_options:

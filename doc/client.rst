@@ -2191,6 +2191,68 @@ a cluster-tending thread.
 
         .. versionadded:: 1.0.56
 
+    .. method:: truncate(namespace, set, nanos[, policy])
+
+        Remove records in specified namespace/set efficiently.  This method is many orders of magnitude
+        faster than deleting records one at a time.  Works with Aerospike Server versions >= 3.12.
+ 
+        This asynchronous server call may return before the truncation is complete.  The user can still
+        write new records after the server returns because new records will have last update times
+        greater than the truncate cutoff (set at the time of truncate call)
+        
+        :param str namespace: The namespace on which the truncation operation should be performed.
+        :param str set: The set to truncate. Pass in ``None`` to indicate that all records in the namespace should be truncated.
+        :param long nanos:  A cutoff threshold indicating that records last updated before the threshold will be removed.Units are in nanoseconds since unix epoch (1970-01-01). A value of ``0`` indicates that all records in the set should be truncated regardless of update time. The value must not be in the future.
+        :param dict policy: Optional :ref:`aerospike_info_policies`
+        :rtype: Status indicating the success of the operation.
+        :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
+
+        .. versionadded:: 2.0.11
+        .. code-block:: python
+
+            import aerospike
+            import time
+
+            client = aerospike.client({'hosts': [('localhost', 3000)]}).connect()
+
+            # Store 10 items in the database
+            for i in range(10):
+                key = ('test', 'truncate', i)
+                record = {'item': i}
+                client.put(key, record)
+
+            time.sleep(2)
+            current_time = time.time()
+            # Convert the current time to nanoseconds since epoch
+            threshold_ns = int(current_time * 10 ** 9)
+
+            time.sleep(2)  # Make sure some time passes before next round of additions
+
+            # Store another 10 items into the database
+            for i in range(10, 20):
+                key = ('test', 'truncate', i)
+                record = {'item': i}
+                client.put(key, record)
+
+            # Store a record in the 'test' namespace without a set
+            key = ('test', None, 'no set')
+            record = ({'item': 'no set'})
+            client.put(key, record)
+
+            # Remove all items created before the threshold time
+            # The first 10 records we added will be removed by this call.
+            # The second 10 will remain.
+            client.truncate('test', 'truncate', threshold_ns)
+
+
+            # Remove all records from test/truncate.
+            # After this the record with key ('test', None, 'no set') still exists
+            client.truncate('test', 'truncate', 0)
+
+            # Remove all records from the test namespace
+            client.truncate('test', None, 0)
+
+            client.close()
 
     .. rubric:: LList
 

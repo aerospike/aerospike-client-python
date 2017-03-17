@@ -61,7 +61,14 @@ static bool each_result(const as_val * val, void * udata)
 
 	// Convert as_val to a Python Object
 	val_to_pyobject(data->client, err, val, &py_result);
-
+	
+	// The record could not be converted to a python object
+	if (!py_result) {
+		//TBD set error here
+		// Must release the interpreter lock before returning
+		PyGILState_Release(gstate);
+		return true;
+	}
 	// Build Python Function Arguments
 	py_arglist = PyTuple_New(1);
 	PyTuple_SetItem(py_arglist, 0, py_result);

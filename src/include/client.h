@@ -608,3 +608,10 @@ void close_aerospike_object(aerospike *as, as_error *err, char *alias_to_search,
  * Check type for 'operate' operation
  */
 int check_type(AerospikeClient * self, PyObject * py_value, int op, as_error *err);
+
+
+/*******************************************************************************
+ * TRUNCATE OPERATIONS
+ ******************************************************************************/
+
+PyObject* AerospikeClient_Truncate(AerospikeClient * self, PyObject * args, PyObject * kwds);

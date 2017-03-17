@@ -60,6 +60,10 @@ static bool each_result(const as_val * val, void * udata)
 	// Convert as_val to a Python Object
 	val_to_pyobject(data->client, err, val, &py_result);
 
+	if (!py_result) {
+		PyGILState_Release(gstate);
+		return true;
+	}
 	// Build Python Function Arguments
 	py_arglist = PyTuple_New(1);
 	PyTuple_SetItem(py_arglist, 0, py_result);

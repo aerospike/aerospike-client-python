@@ -91,24 +91,24 @@ class TestExists():
 
     @pytest.mark.parametrize("key, ex, ex_code", [
         # reason for xfail CLIENT-533
-        pytest.mark.xfail((('test', 'demo', 'non-existent'),
-                           e.RecordNotFound, 2)),     # non-existent key
+        (('test', 'demo', 'non-existent'),
+         e.RecordNotFound, 2),     # non-existent key
         # non-existent set
-        pytest.mark.xfail((('test', 'set', 1), e.RecordNotFound, 2)),
+        (('test', 'set', 1), e.RecordNotFound, 2),
         (('namespace', 'demo', 1), e.NamespaceNotFound,
          20),           # non-existent Namespace
         # None set in key tuple.
-        pytest.mark.xfail((('test', None, 2), e.RecordNotFound, 2)),
-        pytest.mark.xfail((('test', 'demo', 'Non_existing_key'),
-                           e.RecordNotFound, 2)),  # Non_existing_key
+        (('test', None, 2), e.RecordNotFound, 2),
+        (('test', 'demo', 'Non_existing_key'),
+         e.RecordNotFound, 2),  # Non_existing_key
     ])
     def test_neg_exists_with_non_existent_data(self, key, ex, ex_code):
         """
             Invoke exists() for non-existent data.
         """
         try:
-            key, _ = self.as_connection.exists(key)
-
+            key, meta = self.as_connection.exists(key)
+            assert meta is None
             """
             We are making the api backward compatible. In case of RecordNotFound an
             exception will not be raised. Instead Ok response is returned withe the

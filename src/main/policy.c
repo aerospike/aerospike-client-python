@@ -502,6 +502,8 @@ as_status pyobject_to_policy_scan(as_error * err, PyObject * py_policy,
 	as_policy_scan_copy(config_scan_policy, policy);
 
 	// Set policy fields
+	// server side socket_timeout
+	POLICY_SET_FIELD(socket_timeout, uint32_t);
 	POLICY_SET_FIELD(timeout, uint32_t);
 	POLICY_SET_FIELD(fail_on_cluster_change, bool);
 	POLICY_SET_FIELD(durable_delete, bool);
