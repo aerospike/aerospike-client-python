@@ -257,19 +257,15 @@ class TestSelect(object):
     def test_select_invalid_bin_name_tuple_raises_error(self):
 
         bins_to_select = (1, 2)
-        #  This test fails with pytest.raises, but does actually raise
-        #  the error
+
         with pytest.raises(e.ParamError):
             self.as_connection.select(self.test_key, bins_to_select)
 
-    @pytest.mark.xfail(reason="Bin names in list are not type checked")
     def test_select_with_invalid_bin_name_types_raises_error(self):
-        # This really should behave the same as the previous test
         bins_to_select = [1, 2]
         with pytest.raises(e.ParamError):
             self.as_connection.select(self.test_key, bins_to_select)
 
-    @pytest.mark.xfail(reason="Unicode conversion not performed on list arg")
     def test_select_with_unicode_bin_value_list(self):
 
         bins_to_select = [u'a']

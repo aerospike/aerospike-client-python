@@ -766,12 +766,12 @@ class TestGetPut():
         (('test', 'demo', 1), {'name': 'john'},  # Policy as string
             {'gen': 3, 'ttl': 25000}, "Policy",
             -2, "policy must be a dict"),
-        pytest.mark.xfail((('test', 'demo', 1), {'i': 13},  # Meta as string
-                           "OK", {'timeout': 1000},
-                           -2, "meta must be a dict")),
-        pytest.mark.xfail((('test', 'demo', 1), {'i': 13},  # Meta as string
-                           1234, {'timeout': 1000},
-                           -2, "meta must be a dict")),
+        (('test', 'demo', 1), {'i': 13},  # Meta as string
+            "OK", {'timeout': 1000},
+            -2, "meta must be a dict"),
+        (('test', 'demo', 1), {'i': 13},  # Meta as string
+            1234, {'timeout': 1000},
+            -2, "meta must be a dict"),
     ])
     def test_neg_put_with_invalid_metadata(
             self, key, record, meta, policy, ex_code, ex_msg, put_data):

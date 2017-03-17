@@ -476,9 +476,18 @@ extern as_status deserialize_based_on_as_bytes_type(AerospikeClient * self,
 									Py_DECREF(py_funcname);
 									Py_DECREF(py_value);
 									if (!initresult) {
-										/* more error handling &c */
-										as_error_update(error_p, AEROSPIKE_ERR_CLIENT, "Unable to call loads function");
-										goto CLEANUP;
+										// At this point we want to try to fallback to returning a byte array
+										uint32_t bval_size = as_bytes_size(bytes);
+										initresult = PyByteArray_FromStringAndSize((char *) as_bytes_get(bytes), bval_size);
+										// We couldn't convert the value into a byte array
+										if (!initresult) {
+											as_error_update(error_p, AEROSPIKE_ERR_CLIENT, "Unable to deserialize bytes");
+											Py_XDECREF(cpickle_module);
+											goto CLEANUP;
+										}
+										// The fallback deserialization succeeded
+										*retval = initresult;
+										as_error_update(error_p, AEROSPIKE_OK, NULL);
 									} else {
 										*retval = initresult;
 									}
@@ -529,11 +538,18 @@ extern as_status deserialize_based_on_as_bytes_type(AerospikeClient * self,
 								*retval = Py_None;
 							}
 							break;
-		default:
-
-							as_error_update(error_p, AEROSPIKE_ERR,
-									"Unable to deserialize bytes");
-							goto CLEANUP;
+		default:			{
+								// First try to return a raw byte array, if that fails raise an error
+								uint32_t bval_size = as_bytes_size(bytes);
+								PyObject* py_val = PyBytes_FromStringAndSize((char*)as_bytes_get(bytes), bval_size);
+								if (py_val) {
+									*retval = py_val;
+								} else {
+									as_error_update(error_p, AEROSPIKE_ERR,
+											"Unable to deserialize bytes");
+									goto CLEANUP;
+								}
+							}
 	}
 
 CLEANUP:
@@ -545,7 +561,9 @@ CLEANUP:
 		PyErr_SetObject(exception_type, py_err);
 		Py_DECREF(py_err);
 	}
-
+	// If one of the deserializers failed and the fallback to byte array conversion
+	// was successful, we clear any error state left by Python
+	PyErr_Clear();
 	return error_p->code;
 }
 PyObject * AerospikeClient_Unset_Serializers(AerospikeClient * self, PyObject * args, PyObject * kwds)

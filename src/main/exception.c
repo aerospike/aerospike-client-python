@@ -172,6 +172,13 @@ PyObject * AerospikeException_New(void)
 	PyObject_SetAttrString(exceptions_array.InvalidHostError, "code", py_code);
 	Py_DECREF(py_code);
 
+	exceptions_array.ConnectionError= PyErr_NewException("exception.ConnectionError", exceptions_array.ClientError, NULL);
+	Py_INCREF(exceptions_array.ConnectionError);
+	PyModule_AddObject(module, "ConnectionError", exceptions_array.ConnectionError);
+	py_code = PyInt_FromLong(AEROSPIKE_ERR_CONNECTION);
+	PyObject_SetAttrString(exceptions_array.ConnectionError, "code", py_code);
+	Py_DECREF(py_code);
+
 	//Server Exceptions
 	int count = sizeof(server_array.server_exceptions)/sizeof(server_array.server_exceptions[0]);
 	int i;

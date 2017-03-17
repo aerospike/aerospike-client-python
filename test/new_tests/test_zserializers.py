@@ -519,8 +519,9 @@ class TestPythonSerializer(object):
                     self.test_key, self.mixed_record,
                     serializer=aerospike.SERIALIZER_USER)
 
-    @pytest.mark.skip(reason="This raises a system error and crashes pytest")
     def test_deserializer_raises_error(self):
+        # If the deserializer failed, we should get a bytearray
+        # representation of the item
         aerospike.set_serializer(class_serializer)
         aerospike.set_deserializer(deserializer_error)
 
@@ -528,5 +529,7 @@ class TestPythonSerializer(object):
             self.test_key, self.mixed_record,
             serializer=aerospike.SERIALIZER_USER)
 
-        with pytest.raises(e.ClientError):
-            self.as_connection.get(self.test_key)
+        _, _, response = self.as_connection.get(self.test_key)
+
+        assert response['normal'] == 1234
+        assert isinstance(response['tuple'], bytearray)

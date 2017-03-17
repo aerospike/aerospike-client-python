@@ -40,6 +40,7 @@ struct exceptions {
 	PyObject *ParamError;
 	PyObject *InvalidHostError;
 	PyObject *NamespaceNotFound;
+	PyObject *ConnectionError;
 
 	//Record exceptions
 	PyObject *RecordError;

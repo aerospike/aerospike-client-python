@@ -359,6 +359,11 @@ static PyMethodDef AerospikeClient_Type_Methods[] = {
 		(PyCFunction)AerospikeClient_Get_Key_Digest, METH_VARARGS | METH_KEYWORDS,
 		"Get key digest"},
 
+	// TRUNCATE OPERATIONS
+	{"truncate",
+		(PyCFunction)AerospikeClient_Truncate, METH_VARARGS | METH_KEYWORDS,
+		"Truncate records from the database"},
+
 	{NULL}
 };
 
