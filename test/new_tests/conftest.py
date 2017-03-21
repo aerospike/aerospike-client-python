@@ -1,6 +1,7 @@
 import pytest
 import socket
 import time
+from . import invalid_data
 from .test_base_class import TestBaseClass
 aerospike = pytest.importorskip("aerospike")
 
@@ -61,6 +62,57 @@ def as_connection(request):
     return as_client
 
 
+@pytest.fixture(scope='class')
+def connection_with_udf(request, as_connection):
+    """
+    Injects an as_client() as a dependency, loads a udf to it,
+    and at the end of the test class removes it.
+    Note: if the requesting class does not have a class attr:
+    `udf_to_load`, this is essentially a noop
+    """
+    udf_status = {'loaded': False, 'name': None}
+    # if the class doesn't have the correct information,
+    # don't bother loading a UDF
+    if hasattr(request.cls, 'udf_to_load'):
+        udf_status['name'] = request.cls.udf_to_load
+        as_connection.udf_put(udf_status['name'], 0, {})
+        udf_status['loaded'] = True
+
+    # Yield to the requesting context
+    yield as_connection
+
+    # If a UDF has been loaded, remove it
+    if udf_status['loaded']:
+        try:
+            as_connection.udf_remove(udf_status['name'])
+        except:  # If this fails, it has already been removed
+            pass
+
+
+@pytest.fixture(scope='class')
+def connection_with_config_funcs(request, as_connection):
+    """
+    Injects a connected as_client() as a dependency, and runs arbitrary
+    setup functions on it, ideally these would be expensive functions
+    which should only be run once per test category: indexing
+    loading udfs. Then yields the connection back to the requesting context
+    """
+    setup_status = False
+    if hasattr(request.cls, 'connection_setup_functions'):
+        for func in request.cls.connection_setup_functions:
+            func(as_connection)
+        setup_status = True
+
+    # Yield to the requesting context
+    yield as_connection
+
+    # If any setup was done, run the corresponding teardown functions
+    if setup_status and hasattr(request.cls, 'connection_teardown_functions'):
+        for func in request.cls.connection_teardown_functions:
+            func(as_connection)
+        setup_status = False
+
+
 @pytest.fixture()
 def put_data(request):
     put_data.key = None
@@ -87,3 +139,19 @@ def put_data(request):
 
     request.addfinalizer(remove_key)
     return put_key
+
+
+@pytest.fixture(scope="class")
+def connection_config(request):
+    """
+    Sets the class attribute to be the config object passed in
+     to create the as_connection
+    """
+    hostlist, _, _ = TestBaseClass.get_hosts()
+    config = {'hosts': hostlist}
+    request.cls.connection_config = config
+
+
+@pytest.fixture(params=invalid_data.INVALID_KEYS)
+def invalid_key(request):
+    yield request.param

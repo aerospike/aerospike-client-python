@@ -281,6 +281,8 @@ cfasdcalskdcbacfq34915rwcfasdcascnabscbaskjdbcalsjkbcdasc');
         except e.ParamError as exception:
             assert exception.code == -2
             assert exception.msg == 'Set should be a string'
+        self.as_connection.index_remove('test', 'test_string_list_index',
+                                        policy)
 
     def test_neg_listindex_with_bin_is_none(self):
         """

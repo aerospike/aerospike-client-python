@@ -17,15 +17,20 @@ class TestMapBasics(object):
     @pytest.fixture(autouse=True)
     def setup(self, request, as_connection):
 
+        key = ('test', 'map_test', 1)
+        rec = {'blank': 'blank'}
+        as_connection.put(key, rec)
+
         def teardown():
             """
             Teardown method.
             """
             key = ('test', 'map_test', 1)
             binname = 'my_map'
-            self.as_connection.map_clear(key, binname)
+            self.as_connection.remove(key)
 
         request.addfinalizer(teardown)
+
 
     @pytest.mark.parametrize("key, binname, map_key, map_value, expected", [
         (('test', 'map_test', 1), 'my_map', 'age', 97, [('age', 97)]),
@@ -182,7 +187,6 @@ class TestMapBasics(object):
     def test_pos_map_get_by_key_range(self):
         key = ('test', 'map_test', 1)
         binname = 'my_map'
-        self.as_connection.map_clear(key, binname)
         self.as_connection.map_put_items(key, binname, {'item1': 'value1', 'item2': 'value2'})
         values = self.as_connection.map_get_by_key_range(key, binname, 'i', 'j', aerospike.MAP_RETURN_VALUE)
         self.as_connection.map_clear(key, binname)
@@ -208,7 +212,6 @@ class TestMapBasics(object):
     def test_pos_map_get_by_index(self):
         key = ('test', 'map_test', 1)
         binname = 'my_map'
-        self.as_connection.map_clear(key, binname)
         self.as_connection.map_set_policy(key, binname, {'map_sort': aerospike.MAP_KEY_ORDERED})
         self.as_connection.map_put_items(key, binname, {'item1': 'value1', 'item2': 'value2'})
         value1 = self.as_connection.map_get_by_index(key, binname, 0, aerospike.MAP_RETURN_VALUE)
@@ -242,9 +245,11 @@ class TestMapBasics(object):
         self.as_connection.map_clear(key, binname)
         assert count == 2
 
-    def test_pos_map_insert_empty_map(self):
+    def test_pos_map_insert_empty_map_into_cleared_map(self):
         key = ('test', 'map_test', 1)
         binname = 'my_map'
+        self.as_connection.map_put_items(key, binname, {'item1': 3})
+        self.as_connection.map_clear(key, binname)
         self.as_connection.map_put_items(key, binname, {})
         size = self.as_connection.map_size(key, binname)
         assert size == 0
@@ -268,3 +273,62 @@ class TestMapBasics(object):
         value = self.as_connection.map_get_by_key(key, binname, 'my_key', aerospike.MAP_RETURN_VALUE)
         assert value == {}
         self.as_connection.map_clear(key, binname)
+
+    @pytest.mark.xfail(reason="This returns a garbage value, and should" +
+                              "probably raise an error")
+    def test_map_size_nonexistent_bin(self):
+        key = ('test', 'map_test', 1)
+        binname = 'non_a_real_bin'
+        size = self.as_connection.map_size(key, binname)
+        assert size == 0
+
+    @pytest.mark.xfail(reason="This inserts nothing and " +
+                              " returns a garbage value")
+    def test_map_size_on_empty_map(self):
+        key = ('test', 'map_test', 1)
+        binname = 'my_map'
+        self.as_connection.map_put_items(key, binname, {})
+        size = self.as_connection.map_size(key, binname)
+        assert size == 0
+
+    def test_map_insert_invalid_key(self):
+        key = ()
+        binname = 'my_map'
+        with pytest.raises(e.ParamError):
+            self.as_connection.map_put(key, binname, 'my_key', {})
+
+    @pytest.mark.parametrize(
+        "method_name",
+        [
+            "map_set_policy",
+            "map_put",
+            "map_put_items",
+            "map_increment",
+            "map_decrement",
+            "map_size",
+            "map_clear",
+            "map_remove_by_key",
+            "map_remove_by_key_list",
+            "map_remove_by_key_range",
+            "map_remove_by_value",
+            "map_remove_by_value_list",
+            "map_remove_by_value_range",
+            "map_remove_by_index",
+            "map_remove_by_rank",
+            "map_remove_by_rank_range",
+            "map_get_by_key",
+            "map_get_by_key_range",
+            "map_get_by_value",
+            "map_get_by_value_range",
+            "map_get_by_index",
+            "map_get_by_index_range",
+            "map_get_by_rank",
+            "map_get_by_rank_range"
+        ])
+    def test_call_to_methods_with_no_args(self, method_name):
+        '''
+        Call each of the map_* methods with no arguments
+        '''
+        method = getattr(self.as_connection, method_name)
+        with pytest.raises(TypeError):
+            method()

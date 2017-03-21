@@ -51,7 +51,9 @@ class TestGetMany():
         assert len(records) == 6
 
     def test_pos_get_many_with_proper_parameters(self):
-
+        '''
+        Proper call to the method
+        '''
         records = self.as_connection.get_many(self.keys, {'timeout': 30})
 
         assert isinstance(records, list)
@@ -72,7 +74,10 @@ class TestGetMany():
         assert records[5][2] == {'float_value': 4.3}
 
     def test_pos_get_many_with_non_existent_keys(self):
-
+        '''
+        Verify that non existent keys show up in the result
+        set with no associated records
+        '''
         self.keys.append(('test', 'demo', 'non-existent'))
 
         records = self.as_connection.get_many(self.keys)
@@ -96,7 +101,10 @@ class TestGetMany():
                              bytearray(b"\x8da\xd1\x12\x1a\x8f\xa2\xfc*m\xbc\xc7}\xb0\xc8\x13\x80;\'\x07")), None, None)]
 
     def test_pos_get_many_with_initkey_as_digest(self):
-
+        '''
+        Verify that the method may be called with a key tuple
+        with no primary key and only a digest
+        '''
         keys = []
         key = (
             "test",
@@ -210,7 +218,6 @@ class TestGetMany():
         """
         key = ('test', 1)
         try:
-            # TestGet.client.prepend(key, "name", "ABC", {}, policy)
             key, _, _ = self.as_connection.get(key)
 
         except e.ParamError as exception:

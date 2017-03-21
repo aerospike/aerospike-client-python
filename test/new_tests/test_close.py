@@ -55,3 +55,19 @@ class TestClose():
         with pytest.raises(AttributeError) as attributeError:
             self.closeobject = self.client.close()
         assert "has no attribute" in str(attributeError.value)
+
+    def test_close_twice_in_a_row(self):
+        config = {'hosts': TestBaseClass.hostlist}
+        if TestClose.user is None and TestClose.password is None:
+            self.client = aerospike.client(config).connect()
+        else:
+            self.client = aerospike.client(config).connect(TestClose.user,
+                                                           TestClose.password)
+
+        assert self.client.is_connected()
+        self.client.close()
+        assert self.client.is_connected() is False
+
+        # This second call should not raise any errors
+        self.client.close()
+        assert self.client.is_connected() is False

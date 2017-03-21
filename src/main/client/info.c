@@ -165,7 +165,6 @@ static bool AerospikeClient_Info_each(as_error * err, const as_node * node, cons
 	Py_DECREF(py_res);
 
 CLEANUP:
-	PyGILState_Release(gil_state);
 	if (py_ustr) {
 		Py_DECREF(py_ustr);
 	}
@@ -175,6 +174,7 @@ CLEANUP:
 		PyObject *exception_type = raise_exception(&udata_ptr->error);
 		PyErr_SetObject(exception_type, py_err);
 		Py_DECREF(py_err);
+		PyGILState_Release(gil_state);
 		return NULL;
 	}
 	if (err->code != AEROSPIKE_OK) {
@@ -183,8 +183,11 @@ CLEANUP:
 		PyObject *exception_type = raise_exception(err);
 		PyErr_SetObject(exception_type, py_err);
 		Py_DECREF(py_err);
+		PyGILState_Release(gil_state);
 		return NULL;
 	}
+
+	PyGILState_Release(gil_state);
 	return true;
 }
 
