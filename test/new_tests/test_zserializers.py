@@ -92,10 +92,7 @@ class TestPythonSerializer(object):
         method_config = {
             'hosts': hostlist,
             'serialization': (instance_serializer, instance_deserializer)}
-        if user is None and password is None:
-            client = aerospike.client(method_config).connect()
-        else:
-            client = aerospike.client(method_config).connect(user, password)
+        client = TestBaseClass.get_new_connection(method_config)
 
         response = client.put(
             self.test_key, self.mixed_record,
@@ -120,10 +117,7 @@ class TestPythonSerializer(object):
         method_config = {
             'hosts': hostlist,
             'serialization': (instance_serializer, instance_deserializer)}
-        if user is None and password is None:
-            client = aerospike.client(method_config).connect()
-        else:
-            client = aerospike.client(method_config).connect(user, password)
+        client = TestBaseClass.get_new_connection(method_config)
 
         response = client.put(
             self.test_key, self.mixed_record)
@@ -165,10 +159,7 @@ class TestPythonSerializer(object):
         method_config = {
             'hosts': hostlist,
             'serialization': (instance_serializer, instance_deserializer)}
-        if user is None and password is None:
-            client = aerospike.client(method_config).connect()
-        else:
-            client = aerospike.client(method_config).connect(user, password)
+        client = TestBaseClass.get_new_connection(method_config)
 
         response = client.put(
             self.test_key, self.mixed_record,
@@ -233,10 +224,7 @@ class TestPythonSerializer(object):
         method_config = {
             'hosts': hostlist,
             'serialization': (instance_serializer, instance_deserializer)}
-        if user is None and password is None:
-            client = aerospike.client(method_config).connect()
-        else:
-            client = aerospike.client(method_config).connect(user, password)
+        client = TestBaseClass.get_new_connection(method_config)
 
         rec = {'normal': 1234, 'tuple': (1, 2, 3)}
         response = client.put(
@@ -263,10 +251,7 @@ class TestPythonSerializer(object):
         method_config = {
             'hosts': hostlist,
             'serialization': (instance_serializer, instance_deserializer)}
-        if user is None and password is None:
-            client = aerospike.client(method_config).connect()
-        else:
-            client = aerospike.client(method_config).connect(user, password)
+        client = TestBaseClass.get_new_connection(method_config)
 
         response = client.put(
             self.test_key, self.mixed_record,
@@ -292,10 +277,7 @@ class TestPythonSerializer(object):
         method_config = {
             'hosts': hostlist
         }
-        if user is None and password is None:
-            client = aerospike.client(method_config).connect()
-        else:
-            client = aerospike.client(method_config).connect(user, password)
+        client = TestBaseClass.get_new_connection(method_config)
 
         aerospike.unset_serializers()
         response = client.put(
@@ -317,10 +299,7 @@ class TestPythonSerializer(object):
         method_config = {
             'hosts': hostlist,
             'serialization': (instance_serializer, instance_deserializer)}
-        if user is None and password is None:
-            client = aerospike.client(method_config).connect()
-        else:
-            client = aerospike.client(method_config).connect(user, password)
+        client = TestBaseClass.get_new_connection(method_config)
 
         aerospike.unset_serializers()
         response = client.put(
@@ -419,10 +398,7 @@ class TestPythonSerializer(object):
         method_config = {
             'hosts': hostlist
         }
-        if user is None and password is None:
-            client = aerospike.client(method_config).connect()
-        else:
-            client = aerospike.client(method_config).connect(user, password)
+        client = TestBaseClass.get_new_connection(method_config)
 
         aerospike.unset_serializers()
         with pytest.raises(e.ClientError) as err_info:

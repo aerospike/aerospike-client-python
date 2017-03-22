@@ -22,12 +22,7 @@ class TestClose():
         """
             Invoke close() after positive connect
         """
-        config = {'hosts': TestBaseClass.hostlist}
-        if TestClose.user is None and TestClose.password is None:
-            self.client = aerospike.client(config).connect()
-        else:
-            self.client = aerospike.client(config).connect(TestClose.user,
-                                                           TestClose.password)
+        self.client = TestBaseClass.get_new_connection()
         self.closeobject = self.client.close()
         assert self.closeobject is None
 
@@ -57,7 +52,7 @@ class TestClose():
         assert "has no attribute" in str(attributeError.value)
 
     def test_close_twice_in_a_row(self):
-        config = {'hosts': TestBaseClass.hostlist}
+        config = TestBaseClass.get_connection_config()
         if TestClose.user is None and TestClose.password is None:
             self.client = aerospike.client(config).connect()
         else:

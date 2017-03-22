@@ -18,15 +18,8 @@ class TestOperateOrdered(object):
         """
         Setup class.
         """
-        hostlist, user, password = TestBaseClass.get_hosts()
-
-        config_no_typechecks = {'hosts': hostlist, 'strict_types': False}
-        if user is None and password is None:
-            TestOperateOrdered.client_no_typechecks = aerospike.client(
-                config_no_typechecks).connect()
-        else:
-            TestOperateOrdered.client_no_typechecks = aerospike.client(
-                config_no_typechecks).connect(user, password)
+        cls.client_no_typechecks = TestBaseClass.get_new_connection(
+          {'strict_types': False})
 
     def teardown_class(cls):
         TestOperateOrdered.client_no_typechecks.close()

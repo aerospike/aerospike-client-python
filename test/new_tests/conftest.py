@@ -32,11 +32,13 @@ def wait_for_port(address, port, interval=0.1, timeout=60):
 @pytest.fixture(scope="class")
 def as_connection(request):
     hostlist, user, password = TestBaseClass.get_hosts()
-    config = {'hosts': hostlist}
+    tls_info = TestBaseClass.get_tls_info()
+    config = {'hosts': hostlist, 'tls': tls_info}
     as_client = None
-
-    for (a, p) in hostlist:
-        wait_for_port(a, p)
+    if len(hostlist) == 2:
+        for (a, p) in hostlist:
+            wait_for_port(a, p)
+    # We are using tls otherwise, so rely on the server being ready
 
     if user is None and password is None:
         as_client = aerospike.client(config).connect()
@@ -50,7 +52,8 @@ def as_connection(request):
             if value is not None:
                 versionlist = value[value.find("build") +
                                     6:value.find("\n")].split(".")
-                if int(versionlist[0]) >= 3 and int(versionlist[1]) >= 6:
+                if ((int(versionlist[0]) > 3) or
+                   (int(versionlist[0]) == 3 and int(versionlist[1]) >= 7)):
                     request.cls.skip_old_server = False
 
     request.cls.as_connection = as_client
@@ -148,7 +151,7 @@ def connection_config(request):
      to create the as_connection
     """
     hostlist, _, _ = TestBaseClass.get_hosts()
-    config = {'hosts': hostlist}
+    config = {'hosts': hostlist, 'tls': TestBaseClass.get_tls_info()}
     request.cls.connection_config = config
 
 

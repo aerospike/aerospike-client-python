@@ -55,13 +55,8 @@ class TestUserSerializer(object):
         """
             Setup class
         """
-        hostlist, user, password = TestBaseClass.get_hosts()
-        config = {'hosts': hostlist}
-        if user is None and password is None:
-            TestUserSerializer.client = aerospike.client(config).connect()
-        else:
-            TestUserSerializer.client = aerospike.client(
-                config).connect(user, password)
+        cls.client = TestBaseClass.get_new_connection()
+
         TestUserSerializer.skip_old_server = True
         versioninfo = TestUserSerializer.client.info('version')
         for keys in versioninfo:
