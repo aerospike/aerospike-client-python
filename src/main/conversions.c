@@ -1084,6 +1084,7 @@ as_status as_list_of_map_to_py_tuple_list(AerospikeClient * self, as_error * err
 		PyTuple_SetItem(py_tuple, 1, py_value);
 
 		PyList_Append(*py_list, py_tuple);
+		Py_DECREF(py_tuple);
 	}
 
 CLEANUP:

@@ -57,7 +57,7 @@ class TestBaseClass(object):
         response = client.info(
             'get-config:context=namespace;id=test',
             config['hosts'])
-        namespace_config = response.values()[0][1]
+        namespace_config = list(response.values())[0][1]
         if namespace_config.find('ldt-enabled=true') == -1:
             TestBaseClass.has_ldt = False
         else:

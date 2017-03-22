@@ -39,6 +39,7 @@
 	PyObject * py_key = NULL;\
 	PyObject * py_bin = NULL;\
 	char* bin = NULL;\
+	bool key_created = false;\
 	as_key key;\
 
 #define CHECK_CONNECTED()\
@@ -60,6 +61,8 @@
 	}\
 	if (pyobject_to_key(&err, py_key, &key) != AEROSPIKE_OK) {\
 		goto CLEANUP;\
+	} else {\
+		key_created = true;\
 	}\
 	if (py_meta) {\
 		if (check_for_meta(py_meta, &ops, &err) != AEROSPIKE_OK) {\
@@ -76,7 +79,9 @@
 	}\
 	if (pyobject_to_key(&err, py_key, &key) != AEROSPIKE_OK) {\
 		goto CLEANUP;\
-	}
+	} else {\
+		key_created = true;\
+	}\
 
 #define SETUP_MAP_POLICY()\
 	if (py_mapPolicy) {\
@@ -102,7 +107,9 @@
 #define CLEANUP_AND_EXCEPTION_ON_ERROR(__err)\
 	as_operations_destroy(&ops);\
 	as_record_destroy(rec);\
-	as_key_destroy(&key);\
+	if (key_created) {\
+		as_key_destroy(&key);\
+	}\
 	if (__err.code != AEROSPIKE_OK) {\
 		PyObject * py_err = NULL;\
 		error_to_pyobject(&__err, &py_err);\
@@ -119,12 +126,14 @@ PyObject * AerospikeClient_MapSetPolicy(AerospikeClient * self, PyObject * args,
 	PyObject * py_mapPolicy = NULL;
 	as_map_policy map_policy;
 	as_record *rec = NULL;
+	bool error_occured = false;
 
 	CHECK_CONNECTED();
 
 	static char * kwlist[] = {"key", "bin", "map_policy", NULL};
 	if (PyArg_ParseTupleAndKeywords(args, kwds, "OOO:map_set_policy", kwlist,
 				&py_key, &py_bin, &py_mapPolicy) == false) {
+		error_occured = true;
 		goto CLEANUP;
 	}
 
@@ -140,6 +149,9 @@ PyObject * AerospikeClient_MapSetPolicy(AerospikeClient * self, PyObject * args,
 CLEANUP:
 	CLEANUP_AND_EXCEPTION_ON_ERROR(err);
 
+	if (error_occured) {
+		return NULL;
+	}
 	return PyLong_FromLong(0);
 }
 
@@ -161,12 +173,14 @@ PyObject * AerospikeClient_MapPut(AerospikeClient * self, PyObject * args, PyObj
 	as_record *rec = NULL;
 	as_policy_operate operate_policy;
 	as_policy_operate *operate_policy_p = NULL;
+	bool error_occured = false;
 
 	CHECK_CONNECTED();
 
 	static char * kwlist[] = {"key", "bin", "map_key", "val", "map_policy", "meta", "policy", NULL};
 	if (PyArg_ParseTupleAndKeywords(args, kwds, "OOOO|OOO:map_put", kwlist,
 				&py_key, &py_bin, &py_mapKey, &py_mapValue, &py_mapPolicy, &py_meta, &py_policy) == false) {
+		error_occured = true;
 		goto CLEANUP;
 	}
 
@@ -188,6 +202,9 @@ PyObject * AerospikeClient_MapPut(AerospikeClient * self, PyObject * args, PyObj
 CLEANUP:
 	CLEANUP_AND_EXCEPTION_ON_ERROR(err);
 
+	if (error_occured) {
+		return NULL;
+	}
 	return PyLong_FromLong(0);
 }
 
@@ -207,12 +224,14 @@ PyObject * AerospikeClient_MapPutItems(AerospikeClient * self, PyObject * args, 
 	as_map * put_items = NULL;
 	as_policy_operate operate_policy;
 	as_policy_operate *operate_policy_p = NULL;
+	bool error_occured = false;
 
 	CHECK_CONNECTED();
 
 	static char * kwlist[] = {"key", "bin", "items", "map_policy", "meta", "policy", NULL};
 	if (PyArg_ParseTupleAndKeywords(args, kwds, "OOO|OOO:map_put_items", kwlist,
 				&py_key, &py_bin, &py_items, &py_mapPolicy, &py_meta, &py_policy) == false) {
+		error_occured = true;
 		goto CLEANUP;
 	}
 
@@ -229,7 +248,9 @@ PyObject * AerospikeClient_MapPutItems(AerospikeClient * self, PyObject * args, 
 
 CLEANUP:
 	CLEANUP_AND_EXCEPTION_ON_ERROR(err);
-
+	if (error_occured) {
+		return NULL;
+	}
 	return PyLong_FromLong(0);
 }
 
@@ -250,12 +271,14 @@ PyObject * AerospikeClient_MapIncrement(AerospikeClient * self, PyObject * args,
 	as_map_policy_init(&map_policy);
 	as_policy_operate operate_policy;
 	as_policy_operate *operate_policy_p = NULL;
+	bool error_occured = false;
 
 	CHECK_CONNECTED();
 
 	static char * kwlist[] = {"key", "bin", "map_key", "incr", "map_policy", "meta", "policy", NULL};
 	if (PyArg_ParseTupleAndKeywords(args, kwds, "OOOO|OOO:map_increment", kwlist,
 			&py_key, &py_bin, &py_mapKey, &py_incr, &py_mapPolicy, &py_meta, &py_policy) == false) {
+		error_occured = true;
 		goto CLEANUP;
 	}
 
@@ -276,6 +299,9 @@ PyObject * AerospikeClient_MapIncrement(AerospikeClient * self, PyObject * args,
 CLEANUP:
 	CLEANUP_AND_EXCEPTION_ON_ERROR(err);
 
+	if (error_occured) {
+		return NULL;
+	}
 	return PyLong_FromLong(0);
 }
 
@@ -296,12 +322,14 @@ PyObject * AerospikeClient_MapDecrement(AerospikeClient * self, PyObject * args,
 	as_map_policy_init(&map_policy);
 	as_policy_operate operate_policy;
 	as_policy_operate *operate_policy_p = NULL;
+	bool error_occured = false;
 
 	CHECK_CONNECTED();
 
 	static char * kwlist[] = {"key", "bin", "map_key", "decr", "map_policy", "meta", "policy", NULL};
 	if (PyArg_ParseTupleAndKeywords(args, kwds, "OOOO|OOO:map_decrement", kwlist,
 			&py_key, &py_bin, &py_mapKey, &py_decr, &py_meta, &py_policy) == false) {
+		error_occured = true;
 		goto CLEANUP;
 	}
 
@@ -322,6 +350,9 @@ PyObject * AerospikeClient_MapDecrement(AerospikeClient * self, PyObject * args,
 CLEANUP:
 	CLEANUP_AND_EXCEPTION_ON_ERROR(err);
 
+	if (error_occured) {
+		return NULL;
+	}
 	return PyLong_FromLong(0);
 }
 
@@ -334,12 +365,14 @@ PyObject * AerospikeClient_MapSize(AerospikeClient * self, PyObject * args, PyOb
 	int64_t size = 0;
 	as_policy_operate operate_policy;
 	as_policy_operate *operate_policy_p = NULL;
+	bool error_occured = false;
 
 	CHECK_CONNECTED();
 
 	static char * kwlist[] = {"key", "bin", "meta", "policy", NULL};
 	if (PyArg_ParseTupleAndKeywords(args, kwds, "OO|OO:map_size", kwlist,
 				&py_key, &py_bin, &py_meta, &py_policy) == false) {
+		error_occured = true;
 		goto CLEANUP;
 	}
 
@@ -355,6 +388,9 @@ PyObject * AerospikeClient_MapSize(AerospikeClient * self, PyObject * args, PyOb
 CLEANUP:
 	CLEANUP_AND_EXCEPTION_ON_ERROR(err);
 
+	if (error_occured) {
+		return NULL;
+	}
 	return PyLong_FromLong(size);
 }
 
@@ -365,7 +401,7 @@ PyObject * AerospikeClient_MapClear(AerospikeClient * self, PyObject * args, PyO
 	PyObject * py_policy = NULL;
 	as_policy_operate operate_policy;
 	as_policy_operate *operate_policy_p = NULL;
-
+	bool error_occured = false;
 	as_record *rec = NULL;
 
 	CHECK_CONNECTED();
@@ -373,6 +409,7 @@ PyObject * AerospikeClient_MapClear(AerospikeClient * self, PyObject * args, PyO
 	static char * kwlist[] = {"key", "bin", "meta", "policy", NULL};
 	if (PyArg_ParseTupleAndKeywords(args, kwds, "OO|OO:map_clear", kwlist,
 				&py_key, &py_bin, &py_meta, &py_policy) == false) {
+		error_occured = true;
 		goto CLEANUP;
 	}
 
@@ -383,7 +420,9 @@ PyObject * AerospikeClient_MapClear(AerospikeClient * self, PyObject * args, PyO
 
 CLEANUP:
 	CLEANUP_AND_EXCEPTION_ON_ERROR(err);
-
+	if (error_occured) {
+		return NULL;
+	}
 	return PyLong_FromLong(0);
 }
 

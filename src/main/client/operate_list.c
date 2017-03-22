@@ -46,7 +46,8 @@
 	as_policy_operate operate_policy;\
 	as_policy_operate *operate_policy_p = NULL;\
 	as_key key;\
-	char* bin = NULL;
+	bool key_created = false;\
+	char* bin = NULL;\
 
 #define CHECK_CONNECTED_AND_CDT_SUPPORT()\
 	if (!self || !self->as) {\
@@ -71,6 +72,8 @@
 	}\
 	if (pyobject_to_key(&err, py_key, &key) != AEROSPIKE_OK) {\
 		goto CLEANUP;\
+	} else {\
+		key_created = true;\
 	}\
 	if (py_meta) {\
 		if (check_for_meta(py_meta, &ops, &err) != AEROSPIKE_OK) {\
@@ -87,6 +90,9 @@
 	Py_END_ALLOW_THREADS
 
 #define EXCEPTION_ON_ERROR()\
+	if (key_created) {\
+		as_key_destroy(&key);\
+	}\
 	if (err.code != AEROSPIKE_OK) {\
 		PyObject * py_err = NULL;\
 		error_to_pyobject(&err, &py_err);\

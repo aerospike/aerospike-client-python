@@ -400,3 +400,30 @@ class TestRemovebin(object):
             self.as_connection.remove_bin(key, ["age"], {}, policy, "")
 
         assert "remove_bin() takes at most 4 arguments (5 given)" in str(typeError.value)
+
+    def test_remove_bin_with_non_string_bin_nane(self):
+        """
+        Invoke remove_bin() with extra parameter.
+        """
+        key = ('test', 'demo', 1)
+        with pytest.raises(e.ClientError) as typeError:
+            self.as_connection.remove_bin(key, [1.5])
+
+    @pytest.mark.skip(reason="system error")
+    def test_remove_bin_with_ttl_too_large(self, put_data):
+        key = ('test', 'demo', 1)
+        record = {"Name": "Herry", 'age': 60}
+        put_data(self.as_connection, key, record)
+        pytest.set_trace()
+        meta = {'gen': 2, 'ttl': 2 ** 65}
+        with pytest.raises(e.ClientError) as typeError:
+            self.as_connection.remove_bin(key, ["age"], meta=meta)
+
+    @pytest.mark.skip(reason="system error")
+    def test_remove_bin_with_gen_too_large(self, put_data):
+        key = ('test', 'demo', 1)
+        record = {"Name": "Herry", 'age': 60}
+        put_data(self.as_connection, key, record)
+        meta = {'gen': 2 ** 65, 'ttl': 2}
+        with pytest.raises(e.ClientError) as typeError:
+            self.as_connection.remove_bin(key, ["age"], meta=meta)

@@ -163,6 +163,7 @@ static PyObject * AerospikePredicates_GeoWithin_Radius(PyObject * self, PyObject
 	PyObject * py_geo_object = NULL;
 	PyObject * py_shape = NULL;
 	PyObject * py_indexType = NULL;
+	PyObject * ret_val = NULL;
 
 	as_error err;
 	as_error_init(&err);
@@ -188,9 +189,20 @@ static PyObject * AerospikePredicates_GeoWithin_Radius(PyObject * self, PyObject
 			(PyFloat_Check(py_radius) || PyInt_Check(py_radius))) {
 
 		PyObject * py_inner_list = Py_BuildValue("[OO]", py_lat, py_long);
+
+		if (!py_inner_list) {
+			goto CLEANUP;
+		}
+
 		PyObject * py_outer_list = Py_BuildValue("[OO]", py_inner_list, py_radius);
 
+		if (!py_outer_list) {
+			goto CLEANUP;
+		}
+		Py_DECREF(py_inner_list);
+
 		PyDict_SetItemString(py_geo_object, "coordinates", py_outer_list);
+		Py_DECREF(py_outer_list);
 
 		py_shape = AerospikeGeospatial_DoDumps(py_geo_object, &err);
 
@@ -202,11 +214,19 @@ static PyObject * AerospikePredicates_GeoWithin_Radius(PyObject * self, PyObject
 		as_error_update(&err, AEROSPIKE_ERR_PARAM, "Latitude, longitude and radius should be integer or double type, bin of string type");
 		goto CLEANUP;
 	}
+	Py_CLEAR(py_geo_object);
 
-	return Py_BuildValue("iiOOOO", AS_PREDICATE_RANGE, AS_INDEX_GEO2DSPHERE, py_bin, py_shape, Py_None, py_indexType );
+	ret_val = Py_BuildValue("iiOOOO", AS_PREDICATE_RANGE, AS_INDEX_GEO2DSPHERE, py_bin, py_shape, Py_None, py_indexType );
+	if (ret_val) {
+		Py_DECREF(py_shape);
+		return ret_val;
+	} else {
+		goto CLEANUP;
+	}
 
 CLEANUP:
 	// If an error occurred, tell Python.
+	Py_XDECREF(py_geo_object);
 	if (err.code != AEROSPIKE_OK) {
 		PyObject * py_err = NULL;
 		error_to_pyobject(&err, &py_err);
@@ -235,7 +255,7 @@ static PyObject * AerospikePredicates_GeoContains_GeoJSONPoint(PyObject * self, 
 	}
 
 	if (PyString_Check(py_point) || PyUnicode_Check(py_point)) {
-		return Py_BuildValue("iiOOO", AS_PREDICATE_RANGE, AS_INDEX_GEO2DSPHERE, py_bin, py_point, Py_None, py_indexType);
+		return Py_BuildValue("iiOOOO", AS_PREDICATE_RANGE, AS_INDEX_GEO2DSPHERE, py_bin, py_point, Py_None, py_indexType);
 	}
 
 exit:
@@ -251,6 +271,7 @@ static PyObject * AerospikePredicates_GeoContains_Point(PyObject * self, PyObjec
 	PyObject * py_geo_object = NULL;
 	PyObject * py_shape = NULL;
 	PyObject * py_indexType = NULL;
+	PyObject * py_list = NULL;
 
 	as_error err;
 	as_error_init(&err);
@@ -271,11 +292,13 @@ static PyObject * AerospikePredicates_GeoContains_Point(PyObject * self, PyObjec
 	Py_DECREF(py_point);
 
 	if (PyString_Check(py_bin) && (PyFloat_Check(py_lat) || PyInt_Check(py_lat)) && (PyFloat_Check(py_long) || PyInt_Check(py_long))) {
-		PyObject * py_list = Py_BuildValue("[OO]", py_lat, py_long);
+		py_list = Py_BuildValue("[OO]", py_lat, py_long);
 
 		PyDict_SetItemString(py_geo_object, "coordinates", py_list);
+		Py_CLEAR(py_list);
 
 		py_shape = AerospikeGeospatial_DoDumps(py_geo_object, &err);
+		Py_CLEAR(py_geo_object);
 
 		if (!py_shape) {
 			as_error_update(&err, AEROSPIKE_ERR_CLIENT, "Unable to call dumps function");
@@ -285,11 +308,18 @@ static PyObject * AerospikePredicates_GeoContains_Point(PyObject * self, PyObjec
 		as_error_update(&err, AEROSPIKE_ERR_PARAM, "Latitude and longitude should be integer or double type, bin of string type");
 		goto CLEANUP;
 	}
-	
-	return Py_BuildValue("iiOOO", AS_PREDICATE_RANGE, AS_INDEX_GEO2DSPHERE, py_bin, py_shape, Py_None, py_indexType);
+	PyObject* ret_val = Py_BuildValue("iiOOOO", AS_PREDICATE_RANGE, AS_INDEX_GEO2DSPHERE, py_bin, py_shape, Py_None, py_indexType);
+	if(ret_val) {
+		Py_DECREF(py_shape);
+	} else {
+		goto CLEANUP;
+	}
+	return ret_val;
 
 
 CLEANUP:
+		Py_XDECREF(py_geo_object);
+		Py_XDECREF(py_list);
 	// If an error occurred, tell Python.
 	if (err.code != AEROSPIKE_OK) {
 		PyObject * py_err = NULL;

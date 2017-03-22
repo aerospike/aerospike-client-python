@@ -147,6 +147,7 @@ class TestOperate(object):
                   "bin": "my_map",
                   "map_policy": {'map_sort': aerospike.MAP_KEY_ORDERED}}]
         key, _, _ = self.as_connection.operate(key, llist)
+        self.as_connection.remove(key)
         pass
 
     def test_pos_map_clear(self):
@@ -174,3 +175,4 @@ class TestOperate(object):
         key, _, bins = self.as_connection.operate(key, llist)
 
         assert bins == {binname: 0}
+        self.as_connection.remove(key)

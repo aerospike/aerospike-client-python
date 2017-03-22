@@ -109,7 +109,7 @@ class TestExistsMany():
                 "asd;as[d'as;djk;uyfl",
                 "utf-8"))
         rec = {'name': 'name1', 'age': 1}
-        self.as_connection.put(key, rec)
+        put_data(self.as_connection, key, rec)
         keys.append(key)
 
         key = (
