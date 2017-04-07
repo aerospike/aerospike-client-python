@@ -157,3 +157,11 @@ class TestInfo(object):
 
         assert err_info.value.code == -2
         assert err_info.value.msg == "Host address is of type incorrect"
+
+    def test_host_address_too_long(self):
+        request = 'statistics'
+        addr = '1' * 47  # longest possible ipv6 is 45 characters
+        # longest port is 5 characters
+        # we are using a 4 char port, so we add 2
+        with pytest.raises(e.ParamError):
+            self.as_connection.info(request, [(addr, 3000)])

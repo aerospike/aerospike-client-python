@@ -141,6 +141,14 @@ static bool AerospikeClient_Info_each(as_error * err, const as_node * node, cons
 							break;
 						}
 						char ip_port[IP_PORT_MAX_LEN];
+						// If the address is longer than the max length of an ipv6 address, raise an error and exit
+						if (strnlen(host_addr, INET6_ADDRSTRLEN) >= INET6_ADDRSTRLEN) {
+							as_error_update(&udata_ptr->error, AEROSPIKE_ERR_PARAM, "Host address is too long");
+							if (py_res) {
+								Py_DECREF(py_res);
+							}
+							goto CLEANUP;
+						}
 						sprintf(ip_port, "%s:%d", host_addr, port);
 						if ( !strcmp(ip_port, addr->name) ) {
 							PyObject * py_nodes = (PyObject *) udata_ptr->udata_p;

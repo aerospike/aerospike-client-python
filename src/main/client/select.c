@@ -89,6 +89,15 @@ PyObject * AerospikeClient_Select_Invoke(
 			if (PyString_Check(py_val)) {
 				strncpy(bins[i], PyString_AsString(py_val), AS_BIN_NAME_MAX_LEN);
 				bins[i][AS_BIN_NAME_MAX_LEN] = '\0';
+			} else if (PyUnicode_Check(py_val)) {
+				py_ustr = PyUnicode_AsUTF8String(py_val);
+				strncpy(bins[i], PyString_AsString(py_val), AS_BIN_NAME_MAX_LEN);
+				Py_CLEAR(py_ustr);
+				bins[i][AS_BIN_NAME_MAX_LEN] = '\0';
+			} else {
+				// Bin name wasn't a string raise error and exit
+				as_error_update(&err, AEROSPIKE_ERR_PARAM, "Bin name must be a string");
+				goto CLEANUP;
 			}
 		}
 		bins[size] = NULL;

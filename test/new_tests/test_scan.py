@@ -102,6 +102,23 @@ class TestScan(TestBaseClass):
 
         assert len(records) == self.record_count
 
+    def test_scan_with_socket_timeout_policy(self):
+
+        ns = 'test'
+        st = 'demo'
+
+        records = []
+
+        def callback(input_tuple):
+            _, _, bins = input_tuple
+            records.append(bins)
+
+        scan_obj = self.as_connection.scan(self.test_ns, self.test_set)
+
+        scan_obj.foreach(callback, {'socket_timeout': 9876})
+
+        assert len(records) == self.record_count
+
     def test_scan_with_callback_returning_false(self):
         """
             Invoke scan() with callback function returns false

@@ -70,7 +70,7 @@ os.putenv('ARCHFLAGS','-arch x86_64')
 os.environ['ARCHFLAGS'] = '-arch x86_64'
 AEROSPIKE_C_VERSION = os.getenv('AEROSPIKE_C_VERSION')
 if not AEROSPIKE_C_VERSION:
-    AEROSPIKE_C_VERSION = '4.1.4'
+    AEROSPIKE_C_VERSION = '4.1.5'
 DOWNLOAD_C_CLIENT = os.getenv('DOWNLOAD_C_CLIENT')
 AEROSPIKE_C_HOME = os.getenv('AEROSPIKE_C_HOME')
 PREFIX = None
@@ -339,6 +339,7 @@ setup(
                 'src/main/client/remove.c',
                 'src/main/client/scan.c',
                 'src/main/client/select.c',
+                'src/main/client/truncate.c',
                 'src/main/client/admin.c',
                 'src/main/client/udf.c',
                 'src/main/client/sec_index.c',
