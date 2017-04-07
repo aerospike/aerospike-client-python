@@ -72,7 +72,7 @@ class TestScanApply(object):
         """
         Invoke scan_apply() with correct policy
         """
-        policy = {'timeout': 1000}
+        policy = {'timeout': 1000, 'socket_timeout': 9876}
         scan_id = self.as_connection.scan_apply("test", "demo", "bin_lua",
                                                 "mytransform", ['age', 2],
                                                 policy)

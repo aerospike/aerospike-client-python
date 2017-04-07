@@ -274,20 +274,9 @@ class TestMapBasics(object):
         assert value == {}
         self.as_connection.map_clear(key, binname)
 
-    @pytest.mark.xfail(reason="This returns a garbage value, and should" +
-                              "probably raise an error")
     def test_map_size_nonexistent_bin(self):
         key = ('test', 'map_test', 1)
         binname = 'non_a_real_bin'
-        size = self.as_connection.map_size(key, binname)
-        assert size == 0
-
-    @pytest.mark.xfail(reason="This inserts nothing and " +
-                              " returns a garbage value")
-    def test_map_size_on_empty_map(self):
-        key = ('test', 'map_test', 1)
-        binname = 'my_map'
-        self.as_connection.map_put_items(key, binname, {})
         size = self.as_connection.map_size(key, binname)
         assert size == 0
 

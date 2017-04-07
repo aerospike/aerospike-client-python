@@ -59,7 +59,8 @@ PyObject * AerospikeClient_UDF_Put(AerospikeClient * self, PyObject *args, PyObj
 	uint8_t * bytes = NULL;
 	as_policy_info info_policy;
 	as_policy_info *info_policy_p = NULL;
-
+	FILE * file_p = NULL;
+	FILE * copy_file_p = NULL;
 	// Python Function Keyword Arguments
 	static char * kwlist[] = {"filename", "udf_type", "policy", NULL};
 
@@ -108,8 +109,7 @@ PyObject * AerospikeClient_UDF_Put(AerospikeClient * self, PyObject *args, PyObj
 
 	// Convert lua file to content
 	as_bytes content;
-	FILE * file_p = fopen(filename,"r");
-	FILE * copy_file_p = NULL;
+	file_p = fopen(filename,"r");
 
 	char copy_filepath[AS_CONFIG_PATH_MAX_LEN] = {0};
 	uint32_t user_path_len = strlen(self->as->config.lua.user_path);
@@ -155,9 +155,9 @@ PyObject * AerospikeClient_UDF_Put(AerospikeClient * self, PyObject *args, PyObj
 	uint8_t * buff = bytes;
 
 	if (access(self->as->config.lua.user_path, W_OK) == 0) {
-		copy_file_p = fopen(copy_filepath, "r");
-		if (!copy_file_p) {
-			copy_file_p = fopen(copy_filepath, "w+");
+
+		copy_file_p = fopen(copy_filepath, "w+");
+		if (copy_file_p) {
 			int read  = (int)fread(buff, 1, LUA_FILE_BUFFER_FRAME, file_p);
 			if (read && fwrite(buff, 1, read, copy_file_p)) {
 				while (read) {
@@ -173,23 +173,12 @@ PyObject * AerospikeClient_UDF_Put(AerospikeClient * self, PyObject *args, PyObj
 				goto CLEANUP;
 			}
 		} else {
-			int read  = (int)fread(buff, 1, LUA_FILE_BUFFER_FRAME, file_p);
-			while (read) {
-				size += read;
-				buff += read;
-				read = (int)fread(buff, 1, LUA_FILE_BUFFER_FRAME, file_p);
-			}
+			as_error_update(&err, AEROSPIKE_ERR_CLIENT, "Write of lua file to user path failed");
+			goto CLEANUP;
 		}
 	} else {
 		as_error_update(&err, AEROSPIKE_ERR_CLIENT, "No permissions to write lua file to user path");
 		goto CLEANUP;
-	}
-
-	if (file_p) {
-		fclose(file_p);
-	}
-	if (copy_file_p) {
-		fclose(copy_file_p);
 	}
 
 	as_bytes_init_wrap(&content, bytes, size, true);
@@ -212,6 +201,13 @@ CLEANUP:
 
 	if (py_ustr) {
 		Py_DECREF(py_ustr);
+	}
+
+	if (file_p) {
+		fclose(file_p);
+	}
+	if (copy_file_p) {
+		fclose(copy_file_p);
 	}
 
 	if (err.code != AEROSPIKE_OK) {
