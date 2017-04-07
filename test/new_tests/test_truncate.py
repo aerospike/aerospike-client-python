@@ -53,13 +53,28 @@ class TestTruncate(object):
 
     def _assert_truncation_status(self, keys, exists=False):
         # Give the server some time to finish the call
-        time.sleep(1.1)
-        for key in keys:
-            _, meta = self.as_connection.exists(key)
-            if exists:
+        # If a truncation was expected, give more time
+        # to finish it
+
+        attempts = 5
+        if not exists:
+            while attempts > 0:
+                attempts = attempts - 1
+                truncated = True
+                time.sleep(1)
+                for key in keys:
+                    _, meta = self.as_connection.exists(key)
+                    if meta is not None:
+                        truncated = False
+                if truncated:
+                    break
+            assert truncated
+        else:
+            # Wait for a potential truncation command to come in
+            time.sleep(1)
+            for key in keys:
+                _, meta = self.as_connection.exists(key)
                 assert meta is not None
-            else:
-                assert meta is None
 
     def test_whole_set_truncation(self):
         self.as_connection.truncate("test", "truncate", 0)
@@ -115,9 +130,7 @@ class TestTruncate(object):
         before_lut = self.truncate_threshold - 10 ** 11
         self.as_connection.truncate("test", "truncate", before_lut)
 
-        for key in self.truncated_keys:
-            _, meta = self.as_connection.exists(key)
-            assert meta is not None
+        self._assert_truncation_status(self.truncated_keys, exists=True)
 
     @pytest.mark.parametrize(
         "namespace, test_set",
@@ -130,9 +143,7 @@ class TestTruncate(object):
     def test_whole_set_unicode_truncation(self, namespace, test_set):
         self.as_connection.truncate(namespace, test_set, 0)
 
-        for key in self.truncated_keys:
-            _, meta = self.as_connection.exists(key)
-            assert meta is None
+        self._assert_truncation_status(self.truncated_keys, exists=False)
 
     @pytest.mark.parametrize(
         "fake_namespace, fake_set",
