@@ -36,7 +36,7 @@ class TestTruncate(object):
             self.keys.append(key)
             self.un_truncated_keys.append(key)
         # Give some time for time differences to resolve themselves
-        time.sleep(.5)
+        time.sleep(1.1)
         self.truncate_threshold = int(time.time()) * 10 ** 9
 
         def teardown():
@@ -53,7 +53,7 @@ class TestTruncate(object):
 
     def _assert_truncation_status(self, keys, exists=False):
         # Give the server some time to finish the call
-        time.sleep(.25)
+        time.sleep(1.1)
         for key in keys:
             _, meta = self.as_connection.exists(key)
             if exists:
