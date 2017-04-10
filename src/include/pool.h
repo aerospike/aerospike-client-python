@@ -13,7 +13,7 @@
 
 typedef struct bytes_static_pool {
     as_bytes         bytes_pool[AS_MAX_STORE_SIZE];
-    u_int32_t        current_bytes_id;
+    uint32_t        current_bytes_id;
 } as_static_pool;
 
 #define BYTES_CNT(static_pool)                                                 \
