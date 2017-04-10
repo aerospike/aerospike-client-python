@@ -179,6 +179,46 @@ PyObject * AerospikeException_New(void)
 	PyObject_SetAttrString(exceptions_array.ConnectionError, "code", py_code);
 	Py_DECREF(py_code);
 
+	// TLSError, AEROSPIKE_ERR_TLS_ERROR, -9
+	exceptions_array.TLSError = PyErr_NewException("exception.TLSError", exceptions_array.ClientError, NULL);
+	Py_INCREF(exceptions_array.TLSError);
+	PyModule_AddObject(module, "TLSError", exceptions_array.TLSError);
+	py_code = PyInt_FromLong(AEROSPIKE_ERR_TLS_ERROR);
+	PyObject_SetAttrString(exceptions_array.TLSError, "code", py_code);
+	Py_DECREF(py_code);
+
+	// InvalidNodeError, AEROSPIKE_ERR_INVALID_NODE, -8
+	exceptions_array.InvalidNodeError = PyErr_NewException("exception.InvalidNodeError", exceptions_array.ClientError, NULL);
+	Py_INCREF(exceptions_array.InvalidNodeError);
+	PyModule_AddObject(module, "InvalidNodeError", exceptions_array.InvalidNodeError);
+	py_code = PyInt_FromLong(AEROSPIKE_ERR_INVALID_NODE);
+	PyObject_SetAttrString(exceptions_array.InvalidNodeError, "code", py_code);
+	Py_DECREF(py_code);
+
+	// NoMoreConnectionsError, AEROSPIKE_ERR_NO_MORE_CONNECTIONS, -7
+	exceptions_array.NoMoreConnectionsError = PyErr_NewException("exception.NoMoreConnectionsError", exceptions_array.ClientError, NULL);
+	Py_INCREF(exceptions_array.NoMoreConnectionsError);
+	PyModule_AddObject(module, "NoMoreConnectionsError", exceptions_array.NoMoreConnectionsError);
+	py_code = PyInt_FromLong(AEROSPIKE_ERR_NO_MORE_CONNECTIONS);
+	PyObject_SetAttrString(exceptions_array.NoMoreConnectionsError, "code", py_code);
+	Py_DECREF(py_code);
+
+	// AsyncConnectionError, AEROSPIKE_ERR_ASYNC_CONNECTION, -6
+	exceptions_array.AsyncConnectionError = PyErr_NewException("exception.AsyncConnectionError", exceptions_array.ClientError, NULL);
+	Py_INCREF(exceptions_array.AsyncConnectionError);
+	PyModule_AddObject(module, "AsyncConnectionError", exceptions_array.AsyncConnectionError);
+	py_code = PyInt_FromLong(AEROSPIKE_ERR_ASYNC_CONNECTION);
+	PyObject_SetAttrString(exceptions_array.AsyncConnectionError, "code", py_code);
+	Py_DECREF(py_code);
+
+	// ClientAbortError, AEROSPIKE_ERR_CLIENT_ABORT, -5
+	exceptions_array.ClientAbortError = PyErr_NewException("exception.ClientAbortError", exceptions_array.ClientError, NULL);
+	Py_INCREF(exceptions_array.ClientAbortError);
+	PyModule_AddObject(module, "ClientAbortError", exceptions_array.ClientAbortError);
+	py_code = PyInt_FromLong(AEROSPIKE_ERR_CLIENT_ABORT);
+	PyObject_SetAttrString(exceptions_array.ClientAbortError, "code", py_code);
+	Py_DECREF(py_code);
+
 	//Server Exceptions
 	int count = sizeof(server_array.server_exceptions)/sizeof(server_array.server_exceptions[0]);
 	int i;
@@ -200,6 +240,63 @@ PyObject * AerospikeException_New(void)
 	PyModule_AddObject(module, "ClusterChangeError", exceptions_array.ClusterChangeError);
 	py_code = PyInt_FromLong(AEROSPIKE_ERR_CLUSTER_CHANGE);
 	PyObject_SetAttrString(exceptions_array.ClusterChangeError, "code", py_code);
+	Py_DECREF(py_code);
+
+	//Extra Server Errors
+	// ScanAbortedError , AEROSPIKE_ERR_SCAN_ABORTED, 15
+	exceptions_array.ScanAbortedError = PyErr_NewException("exception.ScanAbortedError", exceptions_array.ServerError, NULL);
+	Py_INCREF(exceptions_array.ScanAbortedError);
+	PyModule_AddObject(module, "ScanAbortedError", exceptions_array.ScanAbortedError);
+	py_code = PyInt_FromLong(AEROSPIKE_ERR_SCAN_ABORTED);
+	PyObject_SetAttrString(exceptions_array.ScanAbortedError, "code", py_code);
+	Py_DECREF(py_code);
+
+	// ElementNotFoundError , AEROSPIKE_ERR_FAIL_ELEMENT_NOT_FOUND, 23
+	exceptions_array.ElementNotFoundError = PyErr_NewException("exception.ElementNotFoundError", exceptions_array.ServerError, NULL);
+	Py_INCREF(exceptions_array.ElementNotFoundError);
+	PyModule_AddObject(module, "ElementNotFoundError", exceptions_array.ElementNotFoundError);
+	py_code = PyInt_FromLong(AEROSPIKE_ERR_FAIL_ELEMENT_NOT_FOUND);
+	PyObject_SetAttrString(exceptions_array.ElementNotFoundError, "code", py_code);
+	Py_DECREF(py_code);
+
+	// ElementExistsError , AEROSPIKE_ERR_FAIL_ELEMENT_EXISTS, 24
+	exceptions_array.ElementExistsError = PyErr_NewException("exception.ElementExistsError", exceptions_array.ServerError, NULL);
+	Py_INCREF(exceptions_array.ElementExistsError);
+	PyModule_AddObject(module, "ElementExistsError", exceptions_array.ElementExistsError);
+	py_code = PyInt_FromLong(AEROSPIKE_ERR_FAIL_ELEMENT_EXISTS);
+	PyObject_SetAttrString(exceptions_array.ElementExistsError, "code", py_code);
+	Py_DECREF(py_code);
+
+	// BatchDisabledError , AEROSPIKE_ERR_BATCH_DISABLED, 150
+	exceptions_array.BatchDisabledError = PyErr_NewException("exception.BatchDisabledError", exceptions_array.ServerError, NULL);
+	Py_INCREF(exceptions_array.BatchDisabledError);
+	PyModule_AddObject(module, "BatchDisabledError", exceptions_array.BatchDisabledError);
+	py_code = PyInt_FromLong(AEROSPIKE_ERR_BATCH_DISABLED);
+	PyObject_SetAttrString(exceptions_array.BatchDisabledError, "code", py_code);
+	Py_DECREF(py_code);
+
+	// BatchMaxRequestError , AEROSPIKE_ERR_BATCH_MAX_REQUESTS_EXCEEDED, 151
+	exceptions_array.BatchMaxRequestError = PyErr_NewException("exception.BatchMaxRequestError", exceptions_array.ServerError, NULL);
+	Py_INCREF(exceptions_array.BatchMaxRequestError);
+	PyModule_AddObject(module, "BatchMaxRequestError", exceptions_array.BatchMaxRequestError);
+	py_code = PyInt_FromLong(AEROSPIKE_ERR_BATCH_MAX_REQUESTS_EXCEEDED);
+	PyObject_SetAttrString(exceptions_array.BatchMaxRequestError, "code", py_code);
+	Py_DECREF(py_code);
+
+	// BatchQueueFullError , AEROSPIKE_ERR_BATCH_QUEUES_FULL, 152
+	exceptions_array.BatchQueueFullError = PyErr_NewException("exception.BatchQueueFullError", exceptions_array.ServerError, NULL);
+	Py_INCREF(exceptions_array.BatchQueueFullError);
+	PyModule_AddObject(module, "BatchQueueFullError", exceptions_array.BatchQueueFullError);
+	py_code = PyInt_FromLong(AEROSPIKE_ERR_BATCH_QUEUES_FULL);
+	PyObject_SetAttrString(exceptions_array.BatchQueueFullError, "code", py_code);
+	Py_DECREF(py_code);
+
+	// QueryAbortedError , AEROSPIKE_ERR_QUERY_ABORTED, 210
+	exceptions_array.QueryAbortedError = PyErr_NewException("exception.QueryAbortedError", exceptions_array.ServerError, NULL);
+	Py_INCREF(exceptions_array.QueryAbortedError);
+	PyModule_AddObject(module, "QueryAbortedError", exceptions_array.QueryAbortedError);
+	py_code = PyInt_FromLong(AEROSPIKE_ERR_QUERY_ABORTED);
+	PyObject_SetAttrString(exceptions_array.QueryAbortedError, "code", py_code);
 	Py_DECREF(py_code);
 
 	//Record exceptions

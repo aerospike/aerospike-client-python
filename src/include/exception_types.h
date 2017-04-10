@@ -35,12 +35,24 @@ struct exceptions {
 	PyObject *ForbiddenError;
 	PyObject *QueryError;
 	PyObject *InvalidGeoJSON;
+	PyObject *ScanAbortedError; //15
+	PyObject *ElementNotFoundError; //23
+	PyObject *ElementExistsError; //24
+	PyObject *BatchDisabledError; //150
+	PyObject *BatchMaxRequestError; //151
+	PyObject *BatchQueueFullError; //152
+	PyObject *QueryAbortedError; //210
 
 	//Client exceptions
 	PyObject *ParamError;
 	PyObject *InvalidHostError;
 	PyObject *NamespaceNotFound;
 	PyObject *ConnectionError;
+	PyObject *TLSError; //-9
+	PyObject *InvalidNodeError; //-8
+	PyObject *NoMoreConnectionsError; // -7
+	PyObject *AsyncConnectionError; // -6
+	PyObject *ClientAbortError; // -5
 
 	//Record exceptions
 	PyObject *RecordError;
