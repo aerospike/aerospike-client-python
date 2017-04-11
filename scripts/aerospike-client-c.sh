@@ -53,7 +53,7 @@ detect_linux()
 
     case ${DIST_NAME} in
 
-      "centos6" | "centos7" | "redhatenterpriseserver6" | "redhatenterpriseserver7" | "fedora20" | "fedora21" | "fedora22" | "oracleserver6" | "scientific6" )
+      "centos6" | "centos7" | "redhatenterpriseserver6" | "redhatenterpriseserver7" | "fedora20" | "fedora21" | "fedora22" | "fedora23" | "fedora24"| "fedora25" | "fedora26" | "fedora27" | "oracleserver6" | "scientific6" )
         echo "el6" "rpm"
         return 0
         ;;
