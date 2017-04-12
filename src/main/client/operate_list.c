@@ -149,6 +149,8 @@ PyObject * AerospikeClient_ListAppend(AerospikeClient * self, PyObject * args, P
 	BASE_VARIABLES
 
 	PyObject * py_append_val = NULL;
+	as_operations ops;
+	as_operations_inita(&ops, 1);
 
 	// Python Function Keyword Arguments
 	static char * kwlist[] = {"key", "bin", "val", "meta", "policy", NULL};
@@ -158,9 +160,6 @@ PyObject * AerospikeClient_ListAppend(AerospikeClient * self, PyObject * args, P
 	}
 
 	CHECK_CONNECTED_AND_CDT_SUPPORT();
-
-	as_operations ops;
-	as_operations_inita(&ops, 1);
 
 	as_static_pool static_pool;
 	memset(&static_pool, 0, sizeof(static_pool));
@@ -201,6 +200,8 @@ PyObject * AerospikeClient_ListExtend(AerospikeClient * self, PyObject * args, P
 	BASE_VARIABLES
 
 	PyObject * py_append_val = NULL;
+	as_operations ops;
+	as_operations_inita(&ops, 1);
 
 	// Python Function Keyword Arguments
 	static char * kwlist[] = {"key", "bin", "items", "meta", "policy", NULL};
@@ -210,9 +211,6 @@ PyObject * AerospikeClient_ListExtend(AerospikeClient * self, PyObject * args, P
 	}
 
 	CHECK_CONNECTED_AND_CDT_SUPPORT();
-
-	as_operations ops;
-	as_operations_inita(&ops, 1);
 
 	as_static_pool static_pool;
 	memset(&static_pool, 0, sizeof(static_pool));
@@ -260,7 +258,8 @@ PyObject * AerospikeClient_ListInsert(AerospikeClient * self, PyObject * args, P
 
 	PyObject * py_insert_val = NULL;
 	uint64_t index;
-
+	as_operations ops;
+	as_operations_inita(&ops, 1);
 	// Python Function Keyword Arguments
 	static char * kwlist[] = {"key", "bin", "index", "val", "meta", "policy", NULL};
 	if (PyArg_ParseTupleAndKeywords(args, kwds, "OOlO|OO:list_insert", kwlist,
@@ -269,9 +268,6 @@ PyObject * AerospikeClient_ListInsert(AerospikeClient * self, PyObject * args, P
 	}
 
 	CHECK_CONNECTED_AND_CDT_SUPPORT();
-
-	as_operations ops;
-	as_operations_inita(&ops, 1);
 
 	as_static_pool static_pool;
 	memset(&static_pool, 0, sizeof(static_pool));
@@ -315,7 +311,8 @@ PyObject * AerospikeClient_ListInsertItems(AerospikeClient * self, PyObject * ar
 
 	PyObject * py_insert_val = NULL;
 	uint64_t index;
-
+	as_operations ops;
+	as_operations_inita(&ops, 1);
 	// Python Function Keyword Arguments
 	static char * kwlist[] = {"key", "bin", "index", "items", "meta", "policy", NULL};
 	if (PyArg_ParseTupleAndKeywords(args, kwds, "OOlO|OO:list_insert_items", kwlist,
@@ -324,9 +321,6 @@ PyObject * AerospikeClient_ListInsertItems(AerospikeClient * self, PyObject * ar
 	}
 
 	CHECK_CONNECTED_AND_CDT_SUPPORT();
-
-	as_operations ops;
-	as_operations_inita(&ops, 1);
 
 	as_static_pool static_pool;
 	memset(&static_pool, 0, sizeof(static_pool));
@@ -375,6 +369,8 @@ PyObject * AerospikeClient_ListSize(AerospikeClient * self, PyObject * args, PyO
 
 	int64_t list_size = 0;
 	as_record *rec = NULL;
+	as_operations ops;
+	as_operations_inita(&ops, 1);
 
 	// Python Function Keyword Arguments
 	static char * kwlist[] = {"key", "bin", "meta", "policy", NULL};
@@ -384,9 +380,6 @@ PyObject * AerospikeClient_ListSize(AerospikeClient * self, PyObject * args, PyO
 	}
 
 	CHECK_CONNECTED_AND_CDT_SUPPORT();
-
-	as_operations ops;
-	as_operations_inita(&ops, 1);
 
 	POLICY_KEY_META_BIN();
 
@@ -434,7 +427,8 @@ PyObject * AerospikeClient_ListPop(AerospikeClient * self, PyObject * args, PyOb
 
 	uint64_t index;
 	as_record *rec = NULL;
-
+	as_operations ops;
+	as_operations_inita(&ops, 1);
 	// Python Function Keyword Arguments
 	static char * kwlist[] = {"key", "bin", "index", "meta", "policy", NULL};
 	if (PyArg_ParseTupleAndKeywords(args, kwds, "OOl|OO:list_pop", kwlist,
@@ -443,9 +437,6 @@ PyObject * AerospikeClient_ListPop(AerospikeClient * self, PyObject * args, PyOb
 	}
 
 	CHECK_CONNECTED_AND_CDT_SUPPORT();
-
-	as_operations ops;
-	as_operations_inita(&ops, 1);
 
 	POLICY_KEY_META_BIN();
 
@@ -492,7 +483,8 @@ PyObject * AerospikeClient_ListPopRange(AerospikeClient * self, PyObject * args,
 	uint64_t index;
 	uint64_t count = -1;
 	as_record *rec = NULL;
-
+	as_operations ops;
+	as_operations_inita(&ops, 1);
 	// Python Function Keyword Arguments
 	static char * kwlist[] = {"key", "bin", "index", "count", "meta", "policy", NULL};
 	if (PyArg_ParseTupleAndKeywords(args, kwds, "OOll|OO:list_pop_range", kwlist,
@@ -506,9 +498,6 @@ PyObject * AerospikeClient_ListPopRange(AerospikeClient * self, PyObject * args,
 	}
 
 	CHECK_CONNECTED_AND_CDT_SUPPORT();
-
-	as_operations ops;
-	as_operations_inita(&ops, 1);
 
 	POLICY_KEY_META_BIN();
 
@@ -551,6 +540,8 @@ PyObject * AerospikeClient_ListRemove(AerospikeClient * self, PyObject * args, P
 	BASE_VARIABLES
 
 	uint64_t index;
+	as_operations ops;
+	as_operations_inita(&ops, 1);
 
 	// Python Function Keyword Arguments
 	static char * kwlist[] = {"key", "bin", "index", "meta", "policy", NULL};
@@ -560,9 +551,6 @@ PyObject * AerospikeClient_ListRemove(AerospikeClient * self, PyObject * args, P
 	}
 
 	CHECK_CONNECTED_AND_CDT_SUPPORT();
-
-	as_operations ops;
-	as_operations_inita(&ops, 1);
 
 	POLICY_KEY_META_BIN();
 
@@ -596,6 +584,8 @@ PyObject * AerospikeClient_ListRemoveRange(AerospikeClient * self, PyObject * ar
 
 	uint64_t index;
 	uint64_t count = -1;
+	as_operations ops;
+	as_operations_inita(&ops, 1);
 
 	// Python Function Keyword Arguments
 	static char * kwlist[] = {"key", "bin", "index", "count", "meta", "policy", NULL};
@@ -605,9 +595,6 @@ PyObject * AerospikeClient_ListRemoveRange(AerospikeClient * self, PyObject * ar
 	}
 
 	CHECK_CONNECTED_AND_CDT_SUPPORT();
-
-	as_operations ops;
-	as_operations_inita(&ops, 1);
 
 	POLICY_KEY_META_BIN();
 
@@ -638,7 +625,8 @@ CLEANUP:
 PyObject * AerospikeClient_ListClear(AerospikeClient * self, PyObject * args, PyObject * kwds)
 {
 	BASE_VARIABLES
-
+	as_operations ops;
+	as_operations_inita(&ops, 1);
 	// Python Function Keyword Arguments
 	static char * kwlist[] = {"key", "bin", "meta", "policy", NULL};
 	if (PyArg_ParseTupleAndKeywords(args, kwds, "OO|OO:list_clear", kwlist,
@@ -647,9 +635,6 @@ PyObject * AerospikeClient_ListClear(AerospikeClient * self, PyObject * args, Py
 	}
 
 	CHECK_CONNECTED_AND_CDT_SUPPORT();
-
-	as_operations ops;
-	as_operations_inita(&ops, 1);
 
 	POLICY_KEY_META_BIN();
 
@@ -683,7 +668,8 @@ PyObject * AerospikeClient_ListSet(AerospikeClient * self, PyObject * args, PyOb
 
 	PyObject * py_val = NULL;
 	uint64_t index;
-
+	as_operations ops;
+	as_operations_inita(&ops, 1);
 	// Python Function Keyword Arguments
 	static char * kwlist[] = {"key", "bin", "index", "val", "meta", "policy", NULL};
 	if (PyArg_ParseTupleAndKeywords(args, kwds, "OOlO|OO:list_set", kwlist,
@@ -692,9 +678,6 @@ PyObject * AerospikeClient_ListSet(AerospikeClient * self, PyObject * args, PyOb
 	}
 
 	CHECK_CONNECTED_AND_CDT_SUPPORT();
-
-	as_operations ops;
-	as_operations_inita(&ops, 1);
 
 	as_static_pool static_pool;
 	memset(&static_pool, 0, sizeof(static_pool));
@@ -737,7 +720,8 @@ PyObject * AerospikeClient_ListGet(AerospikeClient * self, PyObject * args, PyOb
 
 	uint64_t index;
 	as_record *rec = NULL;
-
+	as_operations ops;
+	as_operations_inita(&ops, 1);
 	// Python Function Keyword Arguments
 	static char * kwlist[] = {"key", "bin", "index", "meta", "policy", NULL};
 	if (PyArg_ParseTupleAndKeywords(args, kwds, "OOl|OO:list_get", kwlist,
@@ -746,9 +730,6 @@ PyObject * AerospikeClient_ListGet(AerospikeClient * self, PyObject * args, PyOb
 	}
 
 	CHECK_CONNECTED_AND_CDT_SUPPORT();
-
-	as_operations ops;
-	as_operations_inita(&ops, 1);
 
 	POLICY_KEY_META_BIN();
 
@@ -797,7 +778,8 @@ PyObject * AerospikeClient_ListGetRange(AerospikeClient * self, PyObject * args,
 	uint64_t index;
 	uint64_t count;
 	as_record *rec = NULL;
-
+	as_operations ops;
+	as_operations_inita(&ops, 1);
 	// Python Function Keyword Arguments
 	static char * kwlist[] = {"key", "bin", "index", "count", "meta", "policy", NULL};
 
@@ -808,9 +790,6 @@ PyObject * AerospikeClient_ListGetRange(AerospikeClient * self, PyObject * args,
 	}
 
 	CHECK_CONNECTED_AND_CDT_SUPPORT();
-
-	as_operations ops;
-	as_operations_inita(&ops, 1);
 
 	POLICY_KEY_META_BIN();
 
@@ -860,7 +839,8 @@ PyObject * AerospikeClient_ListTrim(AerospikeClient * self, PyObject * args, PyO
 	uint64_t index;
 	uint64_t count;
 	as_record *rec = NULL;
-
+	as_operations ops;
+	as_operations_inita(&ops, 1);
 	// Python Function Keyword Arguments
 	static char * kwlist[] = {"key", "bin", "index", "count", "meta", "policy", NULL};
 
@@ -871,9 +851,6 @@ PyObject * AerospikeClient_ListTrim(AerospikeClient * self, PyObject * args, PyO
 	}
 
 	CHECK_CONNECTED_AND_CDT_SUPPORT();
-
-	as_operations ops;
-	as_operations_inita(&ops, 1);
 
 	POLICY_KEY_META_BIN();
 
