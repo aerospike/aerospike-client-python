@@ -141,6 +141,7 @@ PyObject * AerospikeClient_UDF_Put(AerospikeClient * self, PyObject *args, PyObj
 	if (fileSize <= 0) {
 		as_error_update(&err, AEROSPIKE_ERR_LUA_FILE_NOT_FOUND, "Script file is empty");
 		fclose(file_p);
+		file_p = NULL;
 		goto CLEANUP;
 	}
 

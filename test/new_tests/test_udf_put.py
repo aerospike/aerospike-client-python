@@ -99,6 +99,14 @@ class TestUdfPut(TestBaseClass):
 
         assert present
 
+    def test_udf_put_empty_script_file(self):
+
+        policy = {}
+        filename = "empty.lua"
+        udf_type = 0
+        with pytest.raises(e.LuaFileNotFound):
+            status = self.as_connection.udf_put(filename, udf_type, policy)
+
     def test_udf_put_with_proper_parameters_without_connection(self):
 
         policy = {}
