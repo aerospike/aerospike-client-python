@@ -687,23 +687,6 @@ static int AerospikeClient_Type_Init(AerospikeClient * self, PyObject * args, Py
 
 static void AerospikeClient_Type_Dealloc(PyObject * self)
 {
-	as_error err;
-	as_error_init(&err);
-
-	if (((AerospikeClient*)self)->as && ((AerospikeClient*)self)->is_conn_16) {
-		if (((AerospikeClient*)self)->as->config.hosts->size) {
-			char * alias_to_search = return_search_string(((AerospikeClient*)self)->as);
-			PyObject *py_persistent_item = NULL;
-
-			py_persistent_item = PyDict_GetItemString(py_global_hosts, alias_to_search);
-			if (py_persistent_item) {
-				close_aerospike_object(((AerospikeClient*)self)->as, &err, alias_to_search, py_persistent_item, true);
-				((AerospikeClient*)self)->as = NULL;
-			}
-			PyMem_Free(alias_to_search);
-			alias_to_search = NULL;
-		}
-	}
 	self->ob_type->tp_free((PyObject *) self);
 }
 
