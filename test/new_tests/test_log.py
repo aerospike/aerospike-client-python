@@ -117,7 +117,6 @@ class TestLog(object):
         except:
             pass
 
-    @pytest.mark.xfail(reason="These don't raise errors")
     @pytest.mark.parametrize("callback",
                              [1, 'a', False, None])
     def test_set_log_handler_with_non_callables(self, callback):
