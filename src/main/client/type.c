@@ -406,12 +406,21 @@ static int AerospikeClient_Type_Init(AerospikeClient * self, PyObject * args, Py
 		PyObject * py_lua_system_path = PyDict_GetItemString(py_lua, "system_path");
 		if (py_lua_system_path && PyString_Check(py_lua_system_path)) {
 			lua_system_path = TRUE;
+			if(strnlen(PyString_AsString(py_lua_system_path), AS_CONFIG_PATH_MAX_SIZE) >
+			   AS_CONFIG_PATH_MAX_LEN) {
+				return -1;
+
+			}
 			strcpy(config.lua.system_path, PyString_AsString(py_lua_system_path));
 		}
 
 		PyObject * py_lua_user_path = PyDict_GetItemString(py_lua, "user_path");
 		if (py_lua_user_path && PyString_Check(py_lua_user_path)) {
 			lua_user_path = TRUE;
+			if(strnlen(PyString_AsString(py_lua_user_path), AS_CONFIG_PATH_MAX_SIZE) >
+			   AS_CONFIG_PATH_MAX_LEN) {
+				return -1;
+			}
 			strcpy(config.lua.user_path, PyString_AsString(py_lua_user_path));
 		}
 	}

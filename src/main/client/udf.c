@@ -55,7 +55,9 @@ PyObject * AerospikeClient_UDF_Put(AerospikeClient * self, PyObject *args, PyObj
 	PyObject * py_udf_type = NULL;
 	PyObject * py_policy = NULL;
 	PyObject * py_ustr = NULL;
-
+	// This lets each component be 255 characters, and allows a '/'' in between them
+	uint32_t max_copy_path_length = AS_CONFIG_PATH_MAX_SIZE * 2 - 1;
+	uint32_t filename_length = 0;
 	uint8_t * bytes = NULL;
 	as_policy_info info_policy;
 	as_policy_info *info_policy_p = NULL;
@@ -111,7 +113,9 @@ PyObject * AerospikeClient_UDF_Put(AerospikeClient * self, PyObject *args, PyObj
 	as_bytes content;
 	file_p = fopen(filename,"r");
 
-	char copy_filepath[AS_CONFIG_PATH_MAX_LEN] = {0};
+	// Make this equal to twice the path size, so the path and the filename
+	// may be 255 characters each. The max size should then be 255 + 255 + 1 + 1
+	char copy_filepath[AS_CONFIG_PATH_MAX_SIZE * 2] = {0};
 	uint32_t user_path_len = strlen(self->as->config.lua.user_path);
 	memcpy( copy_filepath,
 		self->as->config.lua.user_path,
@@ -122,9 +126,19 @@ PyObject * AerospikeClient_UDF_Put(AerospikeClient * self, PyObject *args, PyObj
 	}
 	char* extracted_filename = strrchr(filename, '/');
 	if (extracted_filename) {
+		filename_length = strlen(extracted_filename) - 1; // Length of the filename after the last '/'
+		if(user_path_len + filename_length > max_copy_path_length) {
+			as_error_update(&err, AEROSPIKE_ERR_PARAM, "Lua file pathname too long");
+			goto CLEANUP;
+		}
 		memcpy( copy_filepath + user_path_len, extracted_filename + 1, strlen(extracted_filename) - 1);
 		copy_filepath[user_path_len + strlen(extracted_filename) - 1] = '\0';
 	} else {
+		filename_length = strlen(filename);
+		if(user_path_len + filename_length > max_copy_path_length) {
+			as_error_update(&err, AEROSPIKE_ERR_PARAM, "Lua file pathname too long");
+			goto CLEANUP;
+		}
 		memcpy( copy_filepath + user_path_len, filename, strlen(filename));
 		copy_filepath[user_path_len + strlen(filename)] = '\0';
 	}
@@ -140,6 +154,13 @@ PyObject * AerospikeClient_UDF_Put(AerospikeClient * self, PyObject *args, PyObj
 	fseek(file_p, 0, SEEK_SET);
 	if (fileSize <= 0) {
 		as_error_update(&err, AEROSPIKE_ERR_LUA_FILE_NOT_FOUND, "Script file is empty");
+		fclose(file_p);
+		file_p = NULL;
+		goto CLEANUP;
+	}
+
+	if (fileSize >= SCRIPT_LEN_MAX) {
+		as_error_update(&err, AEROSPIKE_ERR_LUA_FILE_NOT_FOUND, "Script File is too large");
 		fclose(file_p);
 		file_p = NULL;
 		goto CLEANUP;
