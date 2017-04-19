@@ -222,3 +222,10 @@ class TestConnect(object):
 
         assert err_info.value.code == err_code
         assert err_info.value.msg == err_msg
+
+    def test_connect_empty_host_list(self):
+        config = {
+            'hosts': []
+        }
+        with pytest.raises(e.ParamError):
+            aerospike.client(config).connect()
