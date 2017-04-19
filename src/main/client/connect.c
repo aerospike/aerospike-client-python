@@ -58,65 +58,69 @@ PyObject * AerospikeClient_Connect(AerospikeClient * self, PyObject * args, PyOb
 		as_config_set_user(&self->as->config, username, password);
 	}
 
-	if (self->as->config.hosts->size) {
-		alias_to_search = return_search_string(self->as);
+	if (!self || !self->as || !self->as->config.hosts || !self->as->config.hosts->size) {
+		as_error_update(&err, AEROSPIKE_ERR_PARAM, "Invalid aerospike object or hosts not configured");
+		goto CLEANUP;
+	}
 
-		PyObject * py_persistent_item = PyDict_GetItemString(py_global_hosts, alias_to_search);
-		if (py_persistent_item) {
-			aerospike *as = ((AerospikeGlobalHosts*)py_persistent_item)->as;
-			//Destroy the initial aerospike object as it has to point to the one in
-			//the persistent list now
-			if (as != self->as) {
-				aerospike_destroy(self->as);
-				self->as = as;
-				self->as->config.shm_key = ((AerospikeGlobalHosts*)py_persistent_item)->shm_key;
+	alias_to_search = return_search_string(self->as);
 
-				//Increase ref count of object containing same *as object
-				((AerospikeGlobalHosts*)py_persistent_item)->ref_cnt++;
-			}
-			goto CLEANUP;
+	PyObject * py_persistent_item = PyDict_GetItemString(py_global_hosts, alias_to_search);
+	if (py_persistent_item) {
+		aerospike *as = ((AerospikeGlobalHosts*)py_persistent_item)->as;
+		//Destroy the initial aerospike object as it has to point to the one in
+		//the persistent list now
+		if (as != self->as) {
+			aerospike_destroy(self->as);
+			self->as = as;
+			self->as->config.shm_key = ((AerospikeGlobalHosts*)py_persistent_item)->shm_key;
+
+			//Increase ref count of object containing same *as object
+			((AerospikeGlobalHosts*)py_persistent_item)->ref_cnt++;
 		}
-		//Generate unique shm_key
-		PyObject *py_key, *py_value;
-		Py_ssize_t pos = 0;
-		int flag = 0;
-		int shm_key;
-		if (self->as->config.use_shm) {
-			if (user_shm_key) {
-				shm_key = self->as->config.shm_key;
-				user_shm_key = false;
-			} else {
-				shm_key = counter;
-			}
-			while (1) {
-				flag = 0;
-				while (PyDict_Next(py_global_hosts, &pos, &py_key, &py_value)) {
-					if (((AerospikeGlobalHosts*)py_value)->as->config.use_shm) {
-						if (((AerospikeGlobalHosts*)py_value)->shm_key == shm_key) {
-							flag = 1;
-							break;
-						}
+		goto CLEANUP;
+	}
+	//Generate unique shm_key
+	PyObject *py_key, *py_value;
+	Py_ssize_t pos = 0;
+	int flag = 0;
+	int shm_key;
+	if (self->as->config.use_shm) {
+		if (user_shm_key) {
+			shm_key = self->as->config.shm_key;
+			user_shm_key = false;
+		} else {
+			shm_key = counter;
+		}
+		while (1) {
+			flag = 0;
+			while (PyDict_Next(py_global_hosts, &pos, &py_key, &py_value)) {
+				if (((AerospikeGlobalHosts*)py_value)->as->config.use_shm) {
+					if (((AerospikeGlobalHosts*)py_value)->shm_key == shm_key) {
+						flag = 1;
+						break;
 					}
 				}
-				if (!flag) {
-					self->as->config.shm_key = shm_key;
-					break;
-				}
-				shm_key = shm_key + 1;
 			}
-			self->as->config.shm_key = shm_key;
+			if (!flag) {
+				self->as->config.shm_key = shm_key;
+				break;
+			}
+			shm_key = shm_key + 1;
 		}
-		Py_BEGIN_ALLOW_THREADS
-		aerospike_connect(self->as, &err);
-		Py_END_ALLOW_THREADS
-		if (err.code != AEROSPIKE_OK) {
-			goto CLEANUP;
-		}
-		PyObject * py_newobject = (PyObject *)AerospikeGobalHosts_New(self->as);
-		PyDict_SetItemString(py_global_hosts, alias_to_search, py_newobject);
-		PyMem_Free(alias_to_search);
-		alias_to_search = NULL;
+		self->as->config.shm_key = shm_key;
 	}
+	Py_BEGIN_ALLOW_THREADS
+	aerospike_connect(self->as, &err);
+	Py_END_ALLOW_THREADS
+	if (err.code != AEROSPIKE_OK) {
+		goto CLEANUP;
+	}
+	PyObject * py_newobject = (PyObject *)AerospikeGobalHosts_New(self->as);
+	PyDict_SetItemString(py_global_hosts, alias_to_search, py_newobject);
+	PyMem_Free(alias_to_search);
+	alias_to_search = NULL;
+
 
 CLEANUP:
 	if (err.code != AEROSPIKE_OK) {
