@@ -450,6 +450,9 @@ static int AerospikeClient_Type_Init(AerospikeClient * self, PyObject * args, Py
 	PyObject * py_hosts = PyDict_GetItemString(py_config, "hosts");
 	if (py_hosts && PyList_Check(py_hosts)) {
 		int size = (int) PyList_Size(py_hosts);
+		if (!size) {
+			return -1;
+		}
 		for (int i = 0; i < size; i++) {
 			char *addr = NULL;
 			uint16_t port = 3000;
