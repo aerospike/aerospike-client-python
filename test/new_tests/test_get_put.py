@@ -53,6 +53,16 @@ class TestGetPut():
         except e.RecordNotFound as exception:
             assert exception.code == 2
 
+    @pytest.mark.skip(reason="byte key not currently handled")
+    def test_get_information_using_bytes_key(self):
+        record = {'bytes': 'are_cool'}
+        key = ('test', 'demo', b'\x83X\xb5\xde')
+        self.as_connection.put(key, record)
+        _, _, rec = self.as_connection.get(key)
+
+        assert rec == record
+        self.as_connection.remove(key)
+
     def test_pos_get_initkey_with_digest(self, put_data):
         """
             Invoke get() for a record having bytestring data.
