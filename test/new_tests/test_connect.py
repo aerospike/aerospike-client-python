@@ -196,11 +196,11 @@ class TestConnect(object):
     @pytest.mark.parametrize(
         "config, err, err_code, err_msg",
         [
-            (1, e.ParamError, -2, "Parameters are incorrect"),
-            ({}, e.ParamError, -2, "Parameters are incorrect"),
+            (1, e.ParamError, -2, "Config must be a dict"),
+            ({}, e.ParamError, -2, "Hosts must be a list"),
             ({'': [('127.0.0.1', 3000)]},
-             e.ParamError, -2, "Parameters are incorrect"),
-            ({'hosts': [3000]}, e.ParamError, -2, "Parameters are incorrect"),
+             e.ParamError, -2, "Hosts must be a list"),
+            ({'hosts': [3000]}, e.ParamError, -2, "Invalid host"),
 
             ({'hosts': [('127.0.0.1', 2000)]}, e.ClientError, -1,
              "Failed to connect"),
