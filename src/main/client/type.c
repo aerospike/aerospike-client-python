@@ -30,6 +30,11 @@
 #include "conversions.h"
 #include "exceptions.h"
 
+
+enum {INIT_NO_CONFIG_ERR = 1, INIT_CONFIG_TYPE_ERR, INIT_LUA_USER_ERR,
+	  INIT_LUA_SYS_ERR,  INIT_HOST_TYPE_ERR, INIT_EMPTY_HOSTS_ERR,
+	  INIT_INVALID_ADRR_ERR, INIT_SERIALIZE_ERR, INIT_DESERIALIZE_ERR,
+	  INIT_COMPRESSION_ERR} ;
 /*******************************************************************************
  * PYTHON TYPE METHODS
  ******************************************************************************/
@@ -387,11 +392,11 @@ static int AerospikeClient_Type_Init(AerospikeClient * self, PyObject * args, Py
 	static char * kwlist[] = {"config", NULL};
 
 	if (PyArg_ParseTupleAndKeywords(args, kwds, "O:client", kwlist, &py_config) == false) {
-		return -1;
+		return INIT_NO_CONFIG_ERR;
 	}
 
 	if (!PyDict_Check(py_config)) {
-		return -1;
+		return INIT_CONFIG_TYPE_ERR;
 	}
 
 	as_config config;
@@ -408,7 +413,7 @@ static int AerospikeClient_Type_Init(AerospikeClient * self, PyObject * args, Py
 			lua_system_path = TRUE;
 			if (strnlen(PyString_AsString(py_lua_system_path), AS_CONFIG_PATH_MAX_SIZE) >
 			    AS_CONFIG_PATH_MAX_LEN) {
-				return -1;
+					return INIT_LUA_SYS_ERR;
 
 			}
 			strcpy(config.lua.system_path, PyString_AsString(py_lua_system_path));
@@ -419,7 +424,7 @@ static int AerospikeClient_Type_Init(AerospikeClient * self, PyObject * args, Py
 			lua_user_path = TRUE;
 			if (strnlen(PyString_AsString(py_lua_user_path), AS_CONFIG_PATH_MAX_SIZE) >
 			    AS_CONFIG_PATH_MAX_LEN) {
-				return -1;
+					return INIT_LUA_USER_ERR;
 			}
 			strcpy(config.lua.user_path, PyString_AsString(py_lua_user_path));
 		}
@@ -451,7 +456,7 @@ static int AerospikeClient_Type_Init(AerospikeClient * self, PyObject * args, Py
 	if (py_hosts && PyList_Check(py_hosts)) {
 		int size = (int) PyList_Size(py_hosts);
 		if (!size) {
-			return -1;
+			return INIT_EMPTY_HOSTS_ERR;
 		}
 		for (int i = 0; i < size; i++) {
 			char *addr = NULL;
@@ -489,11 +494,11 @@ static int AerospikeClient_Type_Init(AerospikeClient * self, PyObject * args, Py
 				as_config_add_host(&config, addr, port);
 				free(addr);
 			} else {
-				return -1;
+				return INIT_INVALID_ADRR_ERR;
 			}
 		}
 	} else {
-		return -1;
+		return INIT_HOST_TYPE_ERR;
 	}
 
 	PyObject * py_shm = PyDict_GetItemString(py_config, "shm");
@@ -549,7 +554,7 @@ static int AerospikeClient_Type_Init(AerospikeClient * self, PyObject * args, Py
 		PyObject *py_serializer = PyTuple_GetItem(py_serializer_option, 0);
 		if (py_serializer && py_serializer != Py_None) {
 			if (!PyCallable_Check(py_serializer)) {
-				return -1;
+				return INIT_SERIALIZE_ERR;
 			}
 			memset(&self->user_serializer_call_info, 0, sizeof(self->user_serializer_call_info));
 			self->user_serializer_call_info.callback = py_serializer;
@@ -557,7 +562,7 @@ static int AerospikeClient_Type_Init(AerospikeClient * self, PyObject * args, Py
 		PyObject *py_deserializer = PyTuple_GetItem(py_serializer_option, 1);
 		if (py_deserializer && py_deserializer != Py_None) {
 			if (!PyCallable_Check(py_deserializer)) {
-				return -1;
+				return INIT_DESERIALIZE_ERR;
 			}
 			memset(&self->user_deserializer_call_info, 0, sizeof(self->user_deserializer_call_info));
 			self->user_deserializer_call_info.callback = py_deserializer;
@@ -669,7 +674,7 @@ static int AerospikeClient_Type_Init(AerospikeClient * self, PyObject * args, Py
 		if (compression_value >= 0) {
 			config.policies.write.compression_threshold = compression_value;
 		} else {
-			return -1;
+			return INIT_COMPRESSION_ERR;
 		}
 	}
 
@@ -768,20 +773,68 @@ PyTypeObject * AerospikeClient_Ready()
 AerospikeClient * AerospikeClient_New(PyObject * parent, PyObject * args, PyObject * kwds)
 {
 	AerospikeClient * self = (AerospikeClient *) AerospikeClient_Type.tp_new(&AerospikeClient_Type, args, kwds);
-	if (AerospikeClient_Type.tp_init((PyObject *) self, args, kwds) == 0) {
-		// Initialize connection flag
-		self->is_conn_16 = false;
-		return self;
+	as_error err;
+	as_error_init(&err);
+	int return_code = 0;
+	return_code = AerospikeClient_Type.tp_init((PyObject *) self, args, kwds);
+
+	switch(return_code) {
+		case 0	: {
+				// Initialize connection flag
+			self->is_conn_16 = false;
+			return self;
+			}
+		case INIT_NO_CONFIG_ERR: {
+			as_error_update(&err, AEROSPIKE_ERR_PARAM, "No config argument");
+			break;
+			}
+		case INIT_CONFIG_TYPE_ERR: {
+			as_error_update(&err, AEROSPIKE_ERR_PARAM, "Config must be a dict");
+			break;
+			}
+		case INIT_LUA_USER_ERR: {
+			as_error_update(&err, AEROSPIKE_ERR_PARAM, "Lua user path too long");
+			break;
+		}
+		case INIT_LUA_SYS_ERR: {
+			as_error_update(&err, AEROSPIKE_ERR_PARAM, "Lua system path too long");
+			break;
+		}
+		case INIT_HOST_TYPE_ERR: {
+			as_error_update(&err, AEROSPIKE_ERR_PARAM, "Hosts must be a list");
+			break;
+		}
+		case INIT_EMPTY_HOSTS_ERR: {
+			as_error_update(&err, AEROSPIKE_ERR_PARAM, "Hosts must not be empty");
+			break;
+		}
+		case INIT_INVALID_ADRR_ERR: {
+			as_error_update(&err, AEROSPIKE_ERR_PARAM, "Invalid host");
+			break;
+		}
+		case INIT_SERIALIZE_ERR: {
+			as_error_update(&err, AEROSPIKE_ERR_PARAM, "Serializer must be callable");
+			break;
+		}
+		case INIT_DESERIALIZE_ERR: {
+			as_error_update(&err, AEROSPIKE_ERR_PARAM, "Deserializer must be callable");
+			break;
+		}
+		case INIT_COMPRESSION_ERR: {
+			as_error_update(&err, AEROSPIKE_ERR_PARAM, "Compression value must not be negative");
+			break;
+		}
+		default:
+			// If a generic error was caught during init, use this message
+			as_error_update(&err, AEROSPIKE_ERR_PARAM, "Invalid Parameters");
+			break;
 	}
-	else {
-		as_error err;
-		as_error_init(&err);
-		as_error_update(&err, AEROSPIKE_ERR_PARAM, "Parameters are incorrect");
-		PyObject * py_err = NULL;
-		error_to_pyobject(&err, &py_err);
-		PyObject *exception_type = raise_exception(&err);
-		PyErr_SetObject(exception_type, py_err);
-		Py_DECREF(py_err);
-		return NULL;
-	}
+
+	PyObject * py_err = NULL;
+	error_to_pyobject(&err, &py_err);
+	PyObject *exception_type = raise_exception(&err);
+	PyErr_SetObject(exception_type, py_err);
+	Py_DECREF(py_err);
+	return NULL;
+
 }
