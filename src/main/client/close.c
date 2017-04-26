@@ -44,6 +44,7 @@ PyObject * AerospikeClient_Close(AerospikeClient * self, PyObject * args, PyObje
 {
 	as_error err;
 	char *alias_to_search = NULL;
+	PyObject *py_persistent_item = NULL;
 
 	// Initialize error
 	as_error_init(&err);
@@ -52,6 +53,22 @@ PyObject * AerospikeClient_Close(AerospikeClient * self, PyObject * args, PyObje
 		as_error_update(&err, AEROSPIKE_ERR_PARAM, "Invalid aerospike object");
 		goto CLEANUP;
 	}
+
+	if (!self->is_conn_16) {
+		goto CLEANUP;
+	}
+
+	alias_to_search = return_search_string(self->as);
+	py_persistent_item = PyDict_GetItemString(py_global_hosts, alias_to_search);
+
+	if (py_persistent_item) {
+		close_aerospike_object(self->as, &err, alias_to_search, py_persistent_item, false);
+	} else {
+		aerospike_close(self->as, &err);
+	}
+
+	PyMem_Free(alias_to_search);
+	alias_to_search = NULL;
 
 	self->is_conn_16 = false;
 
@@ -123,12 +140,6 @@ void close_aerospike_object(aerospike *as, as_error *err, char *alias_to_search,
 		PyDict_DelItemString(py_global_hosts, alias_to_search);
 		AerospikeGlobalHosts_Del(py_persistent_item);
 		aerospike_close(as, err);
-
-		if (do_destroy) {
-			Py_BEGIN_ALLOW_THREADS
-			aerospike_destroy(as);
-			Py_END_ALLOW_THREADS
-		}
 	} else {
 		((AerospikeGlobalHosts*)py_persistent_item)->ref_cnt--;
 	}
