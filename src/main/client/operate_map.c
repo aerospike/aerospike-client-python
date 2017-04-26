@@ -160,6 +160,7 @@ PyObject * AerospikeClient_MapPut(AerospikeClient * self, PyObject * args, PyObj
 	BASE_VARIABLES
 
 	as_static_pool static_pool;
+	memset(&static_pool, 0, sizeof(static_pool));
 
 	PyObject * py_mapKey = NULL;
 	PyObject * py_mapValue = NULL;
@@ -213,6 +214,7 @@ PyObject * AerospikeClient_MapPutItems(AerospikeClient * self, PyObject * args, 
 	BASE_VARIABLES
 
 	as_static_pool static_pool;
+	memset(&static_pool, 0, sizeof(static_pool));
 
 	PyObject * py_items = NULL;
 	PyObject * py_policy = NULL;
@@ -258,6 +260,7 @@ PyObject * AerospikeClient_MapIncrement(AerospikeClient * self, PyObject * args,
 	BASE_VARIABLES
 
 	as_static_pool pool;
+	memset(&pool, 0, sizeof(pool));
 
 	PyObject * py_mapKey = NULL;
 	PyObject * py_incr = NULL;
@@ -309,7 +312,7 @@ PyObject * AerospikeClient_MapDecrement(AerospikeClient * self, PyObject * args,
 	BASE_VARIABLES
 
 	as_static_pool pool;
-
+	memset(&pool, 0, sizeof(pool));
 	PyObject * py_mapKey = NULL;
 	PyObject * py_decr = NULL;
 	PyObject * py_meta = NULL;
@@ -431,6 +434,7 @@ PyObject * AerospikeClient_MapRemoveByKey(AerospikeClient * self, PyObject * arg
 	BASE_VARIABLES
 
 	as_static_pool pool;
+	memset(&pool, 0, sizeof(pool));
 
 	PyObject * py_result = NULL;
 	PyObject * py_mapKey = NULL;
@@ -473,6 +477,7 @@ PyObject * AerospikeClient_MapRemoveByKeyList(AerospikeClient * self, PyObject *
 	BASE_VARIABLES
 
 	as_static_pool pool;
+	memset(&pool, 0, sizeof(pool));
 
 	PyObject * py_result = NULL;
 	PyObject * py_list = NULL;
@@ -520,6 +525,7 @@ PyObject * AerospikeClient_MapRemoveByKeyRange(AerospikeClient * self, PyObject 
 	BASE_VARIABLES
 
 	as_static_pool pool;
+	memset(&pool, 0, sizeof(pool));
 
 	PyObject * py_mapKey = NULL;
 	PyObject * py_result = NULL;
@@ -568,6 +574,7 @@ PyObject * AerospikeClient_MapRemoveByValue(AerospikeClient * self, PyObject * a
 	BASE_VARIABLES
 
 	as_static_pool pool;
+	memset(&pool, 0, sizeof(pool));
 
 	PyObject * py_mapValue = NULL;
 	PyObject * py_result = NULL;
@@ -611,6 +618,7 @@ PyObject * AerospikeClient_MapRemoveByValueList(AerospikeClient * self, PyObject
 	BASE_VARIABLES
 
 	as_static_pool pool;
+	memset(&pool, 0, sizeof(pool));
 
 	PyObject * py_result = NULL;
 	PyObject * py_list = NULL;
@@ -659,6 +667,7 @@ PyObject * AerospikeClient_MapRemoveByValueRange(AerospikeClient * self, PyObjec
 	BASE_VARIABLES
 
 	as_static_pool pool;
+	memset(&pool, 0, sizeof(pool));
 
 	PyObject * py_mapValue = NULL;
 	PyObject * py_result = NULL;
@@ -845,6 +854,7 @@ PyObject * AerospikeClient_MapGetByKey(AerospikeClient * self, PyObject * args, 
 	BASE_VARIABLES
 
 	as_static_pool pool;
+	memset(&pool, 0, sizeof(pool));
 
 	PyObject * py_mapKey = NULL;
 	PyObject * py_result = NULL;
@@ -888,6 +898,7 @@ PyObject * AerospikeClient_MapGetByValue(AerospikeClient * self, PyObject * args
 	BASE_VARIABLES
 
 	as_static_pool pool;
+	memset(&pool, 0, sizeof(pool));
 
 	PyObject * py_mapValue = NULL;
 	PyObject * py_result = NULL;
@@ -930,6 +941,7 @@ PyObject * AerospikeClient_MapGetByKeyRange(AerospikeClient * self, PyObject * a
 	BASE_VARIABLES
 
 	as_static_pool pool;
+	memset(&pool, 0, sizeof(pool));
 
 	PyObject * py_mapKey = NULL;
 	PyObject * py_result = NULL;
@@ -978,6 +990,7 @@ PyObject * AerospikeClient_MapGetByValueRange(AerospikeClient * self, PyObject *
 	BASE_VARIABLES
 
 	as_static_pool pool;
+	memset(&pool, 0, sizeof(pool));
 
 	PyObject * py_mapValue = NULL;
 	PyObject * py_result = NULL;
