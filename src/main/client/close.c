@@ -45,6 +45,7 @@ PyObject * AerospikeClient_Close(AerospikeClient * self, PyObject * args, PyObje
 	as_error err;
 	char *alias_to_search = NULL;
 	PyObject *py_persistent_item = NULL;
+	AerospikeGlobalHosts* global_host = NULL;
 
 	// Initialize error
 	as_error_init(&err);
@@ -62,9 +63,12 @@ PyObject * AerospikeClient_Close(AerospikeClient * self, PyObject * args, PyObje
 	py_persistent_item = PyDict_GetItemString(py_global_hosts, alias_to_search);
 
 	if (py_persistent_item) {
-		close_aerospike_object(self->as, &err, alias_to_search, py_persistent_item, false);
-	} else {
-		aerospike_close(self->as, &err);
+		global_host = (AerospikeGlobalHosts*)py_persistent_item;
+		// It is only safe to do a reference counted close if the
+		// local as is pointing to the global as
+		if (self->as == global_host->as) {
+			close_aerospike_object(self->as, &err, alias_to_search, py_persistent_item, false);
+		}
 	}
 
 	PyMem_Free(alias_to_search);
