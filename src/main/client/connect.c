@@ -71,12 +71,24 @@ PyObject * AerospikeClient_Connect(AerospikeClient * self, PyObject * args, PyOb
 		//Destroy the initial aerospike object as it has to point to the one in
 		//the persistent list now
 		if (as != self->as) {
-			aerospike_destroy(self->as);
+			// If the client has previously connected
+			// Other clients may share its aerospike* pointer
+			// So it is not safe to destroy it
+			if (!self->has_connected) {
+				aerospike_destroy(self->as);
+			}
 			self->as = as;
 			self->as->config.shm_key = ((AerospikeGlobalHosts*)py_persistent_item)->shm_key;
 
-			//Increase ref count of object containing same *as object
+			//Increase ref count of global host entry
 			((AerospikeGlobalHosts*)py_persistent_item)->ref_cnt++;
+		} else {
+			// If there is a matching global host entry,
+			// and this client was disconnected, increment the ref_cnt of the global.
+			// If the client is already connected, do nothing.
+			if(!self->is_conn_16) {
+				((AerospikeGlobalHosts*)py_persistent_item)->ref_cnt++;
+			}
 		}
 		goto CLEANUP;
 	}
@@ -132,6 +144,7 @@ CLEANUP:
 		return NULL;
 	}
 	self->is_conn_16 = true;
+	self->has_connected = true;
 	Py_INCREF(self);
 	return (PyObject *) self;
 }

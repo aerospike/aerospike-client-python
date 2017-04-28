@@ -63,6 +63,7 @@ typedef struct {
 	user_serializer_callback user_deserializer_call_info;
 	uint8_t is_client_put_serializer;
 	uint8_t strict_types;
+	bool has_connected;
 } AerospikeClient;
 
 typedef struct {
