@@ -391,6 +391,7 @@ static int AerospikeClient_Type_Init(AerospikeClient * self, PyObject * args, Py
 
 	static char * kwlist[] = {"config", NULL};
 
+	self->has_connected = false;
 	if (PyArg_ParseTupleAndKeywords(args, kwds, "O:client", kwlist, &py_config) == false) {
 		return INIT_NO_CONFIG_ERR;
 	}
@@ -704,6 +705,31 @@ static int AerospikeClient_Type_Init(AerospikeClient * self, PyObject * args, Py
 
 static void AerospikeClient_Type_Dealloc(PyObject * self)
 {
+
+	as_error err;
+	char *alias_to_search = NULL;
+	PyObject *py_persistent_item = NULL;
+	AerospikeGlobalHosts* global_host = NULL;
+	AerospikeClient* client = (AerospikeClient*)self;
+
+	// If the client has never connected
+	// It is safe to destroy the aerospike structure
+	if (!client->has_connected) {
+		aerospike_destroy(client->as);
+	}
+
+	// If this client was still connected, deal with the global host object
+	if (client->is_conn_16) {
+		alias_to_search = return_search_string(client->as);
+		py_persistent_item = PyDict_GetItemString(py_global_hosts, alias_to_search);
+		if (py_persistent_item) {
+			global_host = (AerospikeGlobalHosts*) py_persistent_item;
+			// Only modify the global as object if the client points to it
+			if (client->as == global_host->as) {
+				close_aerospike_object(client->as, &err, alias_to_search, py_persistent_item, false);
+			}
+		}
+	}
 	self->ob_type->tp_free((PyObject *) self);
 }
 

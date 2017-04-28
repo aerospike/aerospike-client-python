@@ -14,7 +14,6 @@ except:
     sys.exit(1)
 
 
-@pytest.mark.skip(reason="These will crash until pytest version is > 3.0.5")
 class TestScan(TestBaseClass):
 
     @pytest.fixture(autouse=True)
@@ -396,7 +395,6 @@ class TestScan(TestBaseClass):
     def test_scan_without_any_parameter(self):
 
         with pytest.raises(e.ParamError) as err:
-            pytest.set_trace()
             scan_obj = self.as_connection.scan()
             assert True
 
