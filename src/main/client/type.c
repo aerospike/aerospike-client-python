@@ -392,6 +392,8 @@ static int AerospikeClient_Type_Init(AerospikeClient * self, PyObject * args, Py
 	static char * kwlist[] = {"config", NULL};
 
 	self->has_connected = false;
+	self->use_shared_connection = false;
+
 	if (PyArg_ParseTupleAndKeywords(args, kwds, "O:client", kwlist, &py_config) == false) {
 		return INIT_NO_CONFIG_ERR;
 	}
@@ -403,15 +405,15 @@ static int AerospikeClient_Type_Init(AerospikeClient * self, PyObject * args, Py
 	as_config config;
 	as_config_init(&config);
 
-	bool lua_system_path = FALSE;
-	bool lua_user_path = FALSE;
+	bool lua_system_path = false;
+	bool lua_user_path = false;
 
 	PyObject * py_lua = PyDict_GetItemString(py_config, "lua");
 	if (py_lua && PyDict_Check(py_lua)) {
 
 		PyObject * py_lua_system_path = PyDict_GetItemString(py_lua, "system_path");
 		if (py_lua_system_path && PyString_Check(py_lua_system_path)) {
-			lua_system_path = TRUE;
+			lua_system_path = true;
 			if (strnlen(PyString_AsString(py_lua_system_path), AS_CONFIG_PATH_MAX_SIZE) >
 			    AS_CONFIG_PATH_MAX_LEN) {
 					return INIT_LUA_SYS_ERR;
@@ -422,7 +424,7 @@ static int AerospikeClient_Type_Init(AerospikeClient * self, PyObject * args, Py
 
 		PyObject * py_lua_user_path = PyDict_GetItemString(py_lua, "user_path");
 		if (py_lua_user_path && PyString_Check(py_lua_user_path)) {
-			lua_user_path = TRUE;
+			lua_user_path = true;
 			if (strnlen(PyString_AsString(py_lua_user_path), AS_CONFIG_PATH_MAX_SIZE) >
 			    AS_CONFIG_PATH_MAX_LEN) {
 					return INIT_LUA_USER_ERR;
@@ -668,6 +670,12 @@ static int AerospikeClient_Type_Init(AerospikeClient * self, PyObject * args, Py
 		config.conn_timeout_ms = PyInt_AsLong(py_connect_timeout);
 	}
 
+	//Whether to utilize shared connection
+	PyObject * py_share_connect = PyDict_GetItemString(py_config, "use_shared_connection");
+	if (py_share_connect) {
+		self->use_shared_connection = PyObject_IsTrue(py_share_connect);
+	}
+
 	//compression_threshold
 	PyObject * py_compression_threshold = PyDict_GetItemString(py_config, "compression_threshold");
 	if (py_compression_threshold && PyInt_Check(py_compression_threshold)) {
@@ -716,18 +724,28 @@ static void AerospikeClient_Type_Dealloc(PyObject * self)
 	// It is safe to destroy the aerospike structure
 	if (!client->has_connected) {
 		aerospike_destroy(client->as);
-	}
+	} else {
 
-	// If this client was still connected, deal with the global host object
-	if (client->is_conn_16) {
-		alias_to_search = return_search_string(client->as);
-		py_persistent_item = PyDict_GetItemString(py_global_hosts, alias_to_search);
-		if (py_persistent_item) {
-			global_host = (AerospikeGlobalHosts*) py_persistent_item;
-			// Only modify the global as object if the client points to it
-			if (client->as == global_host->as) {
-				close_aerospike_object(client->as, &err, alias_to_search, py_persistent_item, false);
+		// If the connection is possibly shared, use reference counted deletes
+		if (client->use_shared_connection) {
+			// If this client was still connected, deal with the global host object
+			if (client->is_conn_16) {
+				alias_to_search = return_search_string(client->as);
+				py_persistent_item = PyDict_GetItemString(py_global_hosts, alias_to_search);
+				if (py_persistent_item) {
+					global_host = (AerospikeGlobalHosts*) py_persistent_item;
+					// Only modify the global as object if the client points to it
+					if (client->as == global_host->as) {
+						close_aerospike_object(client->as, &err, alias_to_search, py_persistent_item, false);
+					}
+				}
 			}
+		// Connection is not shared, so it is safe to destroy the as object
+		} else {
+			if (client->is_conn_16) {
+				aerospike_close(client->as, &err);
+			}
+			aerospike_destroy(client->as);
 		}
 	}
 	self->ob_type->tp_free((PyObject *) self);
