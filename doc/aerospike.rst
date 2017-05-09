@@ -65,6 +65,7 @@ in an in-memory primary index.
                 * **max_namespaces** similarly pad (default: 8)
                 * **takeover_threshold_sec** take over tending if the cluster hasn't been checked for this many seconds (default: 30)
                 * **shm_key** explicitly set the shm key for this client. It is otherwise implicitly evaluated per unique hostname, and can be inspected with :meth:`~aerospike.Client.shm_key` (default: 0xA5000000)
+            * **use_shared_connection** :class:`bool` indicating whether this instance should share its connection to the Aerospike cluster with other client instances. (default: ``False``)
             * **serialization** an optional instance-level :py:func:`tuple` of (serializer, deserializer). Takes precedence over a class serializer registered with :func:`~aerospike.set_serializer`.
             * **thread_pool_size** number of threads in the pool that is used in batch/scan/query commands (default: 16)
             * **max_threads** size of the synchronous connection pool for each server node (default: 300) *DEPRECATED*
