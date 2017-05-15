@@ -1282,7 +1282,11 @@ as_status key_to_pyobject(as_error * err, const as_key * key, PyObject ** obj)
 				py_key = PyString_FromString( as_string_get(sval) );
 				if (!py_key){
 					py_key = PyUnicode_DecodeUTF8(as_string_get(sval), as_string_len(sval), NULL);
+					PyErr_Clear();
 				}
+				if (!py_key) {
+					py_key = PyBytes_FromString(as_string_get(sval));
+                }
 				if (!py_key) {
 					as_error_update(err, AEROSPIKE_ERR_CLIENT, "Unknown type for value");
 					return err->code;
