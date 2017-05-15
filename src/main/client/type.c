@@ -30,6 +30,11 @@
 #include "conversions.h"
 #include "exceptions.h"
 
+
+enum {INIT_NO_CONFIG_ERR = 1, INIT_CONFIG_TYPE_ERR, INIT_LUA_USER_ERR,
+	  INIT_LUA_SYS_ERR,  INIT_HOST_TYPE_ERR, INIT_EMPTY_HOSTS_ERR,
+	  INIT_INVALID_ADRR_ERR, INIT_SERIALIZE_ERR, INIT_DESERIALIZE_ERR,
+	  INIT_COMPRESSION_ERR} ;
 /*******************************************************************************
  * PYTHON TYPE METHODS
  ******************************************************************************/
@@ -386,32 +391,44 @@ static int AerospikeClient_Type_Init(AerospikeClient * self, PyObject * args, Py
 
 	static char * kwlist[] = {"config", NULL};
 
+	self->has_connected = false;
+	self->use_shared_connection = false;
+
 	if (PyArg_ParseTupleAndKeywords(args, kwds, "O:client", kwlist, &py_config) == false) {
-		return -1;
+		return INIT_NO_CONFIG_ERR;
 	}
 
 	if (!PyDict_Check(py_config)) {
-		return -1;
+		return INIT_CONFIG_TYPE_ERR;
 	}
 
 	as_config config;
 	as_config_init(&config);
 
-	bool lua_system_path = FALSE;
-	bool lua_user_path = FALSE;
+	bool lua_system_path = false;
+	bool lua_user_path = false;
 
 	PyObject * py_lua = PyDict_GetItemString(py_config, "lua");
 	if (py_lua && PyDict_Check(py_lua)) {
 
 		PyObject * py_lua_system_path = PyDict_GetItemString(py_lua, "system_path");
 		if (py_lua_system_path && PyString_Check(py_lua_system_path)) {
-			lua_system_path = TRUE;
+			lua_system_path = true;
+			if (strnlen(PyString_AsString(py_lua_system_path), AS_CONFIG_PATH_MAX_SIZE) >
+			    AS_CONFIG_PATH_MAX_LEN) {
+					return INIT_LUA_SYS_ERR;
+
+			}
 			strcpy(config.lua.system_path, PyString_AsString(py_lua_system_path));
 		}
 
 		PyObject * py_lua_user_path = PyDict_GetItemString(py_lua, "user_path");
 		if (py_lua_user_path && PyString_Check(py_lua_user_path)) {
-			lua_user_path = TRUE;
+			lua_user_path = true;
+			if (strnlen(PyString_AsString(py_lua_user_path), AS_CONFIG_PATH_MAX_SIZE) >
+			    AS_CONFIG_PATH_MAX_LEN) {
+					return INIT_LUA_USER_ERR;
+			}
 			strcpy(config.lua.user_path, PyString_AsString(py_lua_user_path));
 		}
 	}
@@ -441,6 +458,9 @@ static int AerospikeClient_Type_Init(AerospikeClient * self, PyObject * args, Py
 	PyObject * py_hosts = PyDict_GetItemString(py_config, "hosts");
 	if (py_hosts && PyList_Check(py_hosts)) {
 		int size = (int) PyList_Size(py_hosts);
+		if (!size) {
+			return INIT_EMPTY_HOSTS_ERR;
+		}
 		for (int i = 0; i < size; i++) {
 			char *addr = NULL;
 			uint16_t port = 3000;
@@ -477,11 +497,11 @@ static int AerospikeClient_Type_Init(AerospikeClient * self, PyObject * args, Py
 				as_config_add_host(&config, addr, port);
 				free(addr);
 			} else {
-				return -1;
+				return INIT_INVALID_ADRR_ERR;
 			}
 		}
 	} else {
-		return -1;
+		return INIT_HOST_TYPE_ERR;
 	}
 
 	PyObject * py_shm = PyDict_GetItemString(py_config, "shm");
@@ -537,7 +557,7 @@ static int AerospikeClient_Type_Init(AerospikeClient * self, PyObject * args, Py
 		PyObject *py_serializer = PyTuple_GetItem(py_serializer_option, 0);
 		if (py_serializer && py_serializer != Py_None) {
 			if (!PyCallable_Check(py_serializer)) {
-				return -1;
+				return INIT_SERIALIZE_ERR;
 			}
 			memset(&self->user_serializer_call_info, 0, sizeof(self->user_serializer_call_info));
 			self->user_serializer_call_info.callback = py_serializer;
@@ -545,7 +565,7 @@ static int AerospikeClient_Type_Init(AerospikeClient * self, PyObject * args, Py
 		PyObject *py_deserializer = PyTuple_GetItem(py_serializer_option, 1);
 		if (py_deserializer && py_deserializer != Py_None) {
 			if (!PyCallable_Check(py_deserializer)) {
-				return -1;
+				return INIT_DESERIALIZE_ERR;
 			}
 			memset(&self->user_deserializer_call_info, 0, sizeof(self->user_deserializer_call_info));
 			self->user_deserializer_call_info.callback = py_deserializer;
@@ -650,6 +670,12 @@ static int AerospikeClient_Type_Init(AerospikeClient * self, PyObject * args, Py
 		config.conn_timeout_ms = PyInt_AsLong(py_connect_timeout);
 	}
 
+	//Whether to utilize shared connection
+	PyObject * py_share_connect = PyDict_GetItemString(py_config, "use_shared_connection");
+	if (py_share_connect) {
+		self->use_shared_connection = PyObject_IsTrue(py_share_connect);
+	}
+
 	//compression_threshold
 	PyObject * py_compression_threshold = PyDict_GetItemString(py_config, "compression_threshold");
 	if (py_compression_threshold && PyInt_Check(py_compression_threshold)) {
@@ -657,7 +683,7 @@ static int AerospikeClient_Type_Init(AerospikeClient * self, PyObject * args, Py
 		if (compression_value >= 0) {
 			config.policies.write.compression_threshold = compression_value;
 		} else {
-			return -1;
+			return INIT_COMPRESSION_ERR;
 		}
 	}
 
@@ -687,21 +713,39 @@ static int AerospikeClient_Type_Init(AerospikeClient * self, PyObject * args, Py
 
 static void AerospikeClient_Type_Dealloc(PyObject * self)
 {
+
 	as_error err;
-	as_error_init(&err);
+	char *alias_to_search = NULL;
+	PyObject *py_persistent_item = NULL;
+	AerospikeGlobalHosts* global_host = NULL;
+	AerospikeClient* client = (AerospikeClient*)self;
 
-	if (((AerospikeClient*)self)->as && ((AerospikeClient*)self)->is_conn_16) {
-		if (((AerospikeClient*)self)->as->config.hosts->size) {
-			char * alias_to_search = return_search_string(((AerospikeClient*)self)->as);
-			PyObject *py_persistent_item = NULL;
+	// If the client has never connected
+	// It is safe to destroy the aerospike structure
+	if (!client->has_connected) {
+		aerospike_destroy(client->as);
+	} else {
 
-			py_persistent_item = PyDict_GetItemString(py_global_hosts, alias_to_search);
-			if (py_persistent_item) {
-				close_aerospike_object(((AerospikeClient*)self)->as, &err, alias_to_search, py_persistent_item, true);
-				((AerospikeClient*)self)->as = NULL;
+		// If the connection is possibly shared, use reference counted deletes
+		if (client->use_shared_connection) {
+			// If this client was still connected, deal with the global host object
+			if (client->is_conn_16) {
+				alias_to_search = return_search_string(client->as);
+				py_persistent_item = PyDict_GetItemString(py_global_hosts, alias_to_search);
+				if (py_persistent_item) {
+					global_host = (AerospikeGlobalHosts*) py_persistent_item;
+					// Only modify the global as object if the client points to it
+					if (client->as == global_host->as) {
+						close_aerospike_object(client->as, &err, alias_to_search, py_persistent_item, false);
+					}
+				}
 			}
-			PyMem_Free(alias_to_search);
-			alias_to_search = NULL;
+		// Connection is not shared, so it is safe to destroy the as object
+		} else {
+			if (client->is_conn_16) {
+				aerospike_close(client->as, &err);
+			}
+			aerospike_destroy(client->as);
 		}
 	}
 	self->ob_type->tp_free((PyObject *) self);
@@ -773,20 +817,68 @@ PyTypeObject * AerospikeClient_Ready()
 AerospikeClient * AerospikeClient_New(PyObject * parent, PyObject * args, PyObject * kwds)
 {
 	AerospikeClient * self = (AerospikeClient *) AerospikeClient_Type.tp_new(&AerospikeClient_Type, args, kwds);
-	if (AerospikeClient_Type.tp_init((PyObject *) self, args, kwds) == 0) {
-		// Initialize connection flag
-		self->is_conn_16 = false;
-		return self;
+	as_error err;
+	as_error_init(&err);
+	int return_code = 0;
+	return_code = AerospikeClient_Type.tp_init((PyObject *) self, args, kwds);
+
+	switch(return_code) {
+		case 0	: {
+				// Initialize connection flag
+			self->is_conn_16 = false;
+			return self;
+			}
+		case INIT_NO_CONFIG_ERR: {
+			as_error_update(&err, AEROSPIKE_ERR_PARAM, "No config argument");
+			break;
+			}
+		case INIT_CONFIG_TYPE_ERR: {
+			as_error_update(&err, AEROSPIKE_ERR_PARAM, "Config must be a dict");
+			break;
+			}
+		case INIT_LUA_USER_ERR: {
+			as_error_update(&err, AEROSPIKE_ERR_PARAM, "Lua user path too long");
+			break;
+		}
+		case INIT_LUA_SYS_ERR: {
+			as_error_update(&err, AEROSPIKE_ERR_PARAM, "Lua system path too long");
+			break;
+		}
+		case INIT_HOST_TYPE_ERR: {
+			as_error_update(&err, AEROSPIKE_ERR_PARAM, "Hosts must be a list");
+			break;
+		}
+		case INIT_EMPTY_HOSTS_ERR: {
+			as_error_update(&err, AEROSPIKE_ERR_PARAM, "Hosts must not be empty");
+			break;
+		}
+		case INIT_INVALID_ADRR_ERR: {
+			as_error_update(&err, AEROSPIKE_ERR_PARAM, "Invalid host");
+			break;
+		}
+		case INIT_SERIALIZE_ERR: {
+			as_error_update(&err, AEROSPIKE_ERR_PARAM, "Serializer must be callable");
+			break;
+		}
+		case INIT_DESERIALIZE_ERR: {
+			as_error_update(&err, AEROSPIKE_ERR_PARAM, "Deserializer must be callable");
+			break;
+		}
+		case INIT_COMPRESSION_ERR: {
+			as_error_update(&err, AEROSPIKE_ERR_PARAM, "Compression value must not be negative");
+			break;
+		}
+		default:
+			// If a generic error was caught during init, use this message
+			as_error_update(&err, AEROSPIKE_ERR_PARAM, "Invalid Parameters");
+			break;
 	}
-	else {
-		as_error err;
-		as_error_init(&err);
-		as_error_update(&err, AEROSPIKE_ERR_PARAM, "Parameters are incorrect");
-		PyObject * py_err = NULL;
-		error_to_pyobject(&err, &py_err);
-		PyObject *exception_type = raise_exception(&err);
-		PyErr_SetObject(exception_type, py_err);
-		Py_DECREF(py_err);
-		return NULL;
-	}
+
+	PyObject * py_err = NULL;
+	error_to_pyobject(&err, &py_err);
+	PyObject *exception_type = raise_exception(&err);
+	PyErr_SetObject(exception_type, py_err);
+	Py_DECREF(py_err);
+	return NULL;
+
 }

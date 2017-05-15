@@ -25,6 +25,7 @@
 #include "global_hosts.h"
 
 #define MAX_PORT_SIZE 6
+#define MAX_SHM_SIZE 19
 
 /**
  *******************************************************************************************************
@@ -43,6 +44,8 @@ PyObject * AerospikeClient_Close(AerospikeClient * self, PyObject * args, PyObje
 {
 	as_error err;
 	char *alias_to_search = NULL;
+	PyObject *py_persistent_item = NULL;
+	AerospikeGlobalHosts* global_host = NULL;
 
 	// Initialize error
 	as_error_init(&err);
@@ -52,20 +55,29 @@ PyObject * AerospikeClient_Close(AerospikeClient * self, PyObject * args, PyObje
 		goto CLEANUP;
 	}
 
-	alias_to_search = return_search_string(self->as);
-	PyObject *py_persistent_item = NULL;
+	if (!self->is_conn_16) {
+		goto CLEANUP;
+	}
 
-	py_persistent_item = PyDict_GetItemString(py_global_hosts, alias_to_search); 
-	if (py_persistent_item) {
-		close_aerospike_object(self->as, &err, alias_to_search, py_persistent_item, false);
+	if (self->use_shared_connection) {
+		alias_to_search = return_search_string(self->as);
+		py_persistent_item = PyDict_GetItemString(py_global_hosts, alias_to_search);
+
+		if (py_persistent_item) {
+			global_host = (AerospikeGlobalHosts*)py_persistent_item;
+			// It is only safe to do a reference counted close if the
+			// local as is pointing to the global as
+			if (self->as == global_host->as) {
+				close_aerospike_object(self->as, &err, alias_to_search, py_persistent_item, false);
+			}
+		}
+
+		PyMem_Free(alias_to_search);
+		alias_to_search = NULL;
 	} else {
 		aerospike_close(self->as, &err);
 	}
 	self->is_conn_16 = false;
-	PyMem_Free(alias_to_search);
-	alias_to_search = NULL;
-
-	Py_INCREF(Py_None);
 
 CLEANUP:
 	if (err.code != AEROSPIKE_OK) {
@@ -76,6 +88,8 @@ CLEANUP:
 		Py_DECREF(py_err);
 		return NULL;
 	}
+
+	Py_INCREF(Py_None);
 	return Py_None;
 }
 
@@ -87,7 +101,8 @@ char* return_search_string(aerospike *as)
 	int tot_port_size = 0;
 	int delimiter_size = 0;
 	int tot_user_size = 0;
-	int i =0;
+	int tot_shm_size = 0;
+	int i = 0;
 
 	//Calculate total size for search string
 	for (i = 0; i < (int)as->config.hosts->size; i++)
@@ -98,8 +113,11 @@ char* return_search_string(aerospike *as)
 		delimiter_size = delimiter_size + 3;
 		tot_user_size = tot_user_size + strlen(as->config.user);
 	}
+	if (as->config.use_shm) {
+		tot_shm_size = MAX_SHM_SIZE;
+	}
 
-	char* alias_to_search = (char*) PyMem_Malloc(tot_address_size + tot_user_size + tot_port_size + delimiter_size);
+	char* alias_to_search = (char*) PyMem_Malloc(tot_address_size + tot_user_size + tot_port_size + delimiter_size + tot_shm_size);
 	alias_to_search[0] = '\0';
 
 	for (i=0; i<as->config.hosts->size; i++) {
@@ -114,6 +132,12 @@ char* return_search_string(aerospike *as)
 		strcat(alias_to_search, ";");
 	}
 
+	if (as->config.use_shm) {
+		char shm_str[MAX_SHM_SIZE];
+		sprintf(shm_str, "%x", as->config.shm_key);
+		strcat(alias_to_search, shm_str);
+	}
+
 	return alias_to_search;
 }
 
@@ -123,12 +147,6 @@ void close_aerospike_object(aerospike *as, as_error *err, char *alias_to_search,
 		PyDict_DelItemString(py_global_hosts, alias_to_search);
 		AerospikeGlobalHosts_Del(py_persistent_item);
 		aerospike_close(as, err);
-
-		if (do_destroy) {
-			Py_BEGIN_ALLOW_THREADS
-			aerospike_destroy(as);
-			Py_END_ALLOW_THREADS
-		}
 	} else {
 		((AerospikeGlobalHosts*)py_persistent_item)->ref_cnt--;
 	}

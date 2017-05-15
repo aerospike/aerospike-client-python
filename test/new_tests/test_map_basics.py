@@ -34,6 +34,10 @@ class TestMapBasics(object):
 
     @pytest.mark.parametrize("key, binname, map_key, map_value, expected", [
         (('test', 'map_test', 1), 'my_map', 'age', 97, [('age', 97)]),
+        (('test', 'map_test', 1), 'my_map', 'bytes',
+         bytearray('1234', 'utf-8'), [('bytes', bytearray('1234', 'utf-8'))]),
+        (('test', 'map_test', 1), 'my_map', bytearray('1234', 'utf-8'), 1234,
+         [(bytearray('1234', 'utf-8'), 1234)]),
         (('test', 'map_test', 1), 'my_map2', 'name', 'dean', [('name', 'dean')])
     ])
     def test_pos_map_put_get(self, key, binname, map_key, map_value, expected):
@@ -51,7 +55,10 @@ class TestMapBasics(object):
             'item2', [('item2', 'value2')]),
         (('test', 'map_test', 1), 'my_map',
             {15: 'value15', 23: 'value23'},
-            15, [(15, 'value15')])
+            15, [(15, 'value15')]),
+        (('test', 'map_test', 1), 'my_map',
+            {15: bytearray('1234', 'utf-8'), 23: 'value23'},
+            15, [(15, bytearray('1234', 'utf-8'))])
     ])
     def test_pos_map_put_items(self, key, binname, map_items, map_key, expected):
         self.as_connection.map_put_items(key, binname, map_items)
@@ -71,6 +78,8 @@ class TestMapBasics(object):
 
     @pytest.mark.parametrize("key, binname, map_key, map_value, map_increment, expected", [
         (('test', 'map_test', 1), 'my_map', 'int', 99, 1, 100),
+        (('test', 'map_test', 1), 'my_map', bytearray('1234', 'utf-8'),
+         99, 1, 100),
         (('test', 'map_test', 1), 'my_map2', 'float', 2.1, 1.2, 3.3)
     ])
     def test_pos_map_increment(self, key, binname, map_key, map_value, map_increment, expected):
@@ -82,7 +91,9 @@ class TestMapBasics(object):
 
     @pytest.mark.parametrize("key, binname, map_key, map_value, map_decrement, expected", [
         (('test', 'map_test', 1), 'my_map', 'int', 99, 1, 98),
-        (('test', 'map_test', 1), 'my_map2', 'float', 2.1, 1.1, 1.0)
+        (('test', 'map_test', 1), 'my_map2', 'float', 2.1, 1.1, 1.0),
+        (('test', 'map_test', 1), 'my_map', bytearray('1234', 'utf-8'),
+         100, 1, 99),
     ])
     def test_pos_map_decrement(self, key, binname, map_key, map_value, map_decrement, expected):
         self.as_connection.map_put(key, binname, map_key, map_value)
@@ -94,9 +105,19 @@ class TestMapBasics(object):
     def test_pos_map_remove_by_key(self):
         key = ('test', 'map_test', 1)
         binname = 'my_map'
+
         self.as_connection.map_put(key, binname, 'age', 97)
         value = self.as_connection.map_remove_by_key(key, binname, 'age', aerospike.MAP_RETURN_VALUE)
         value2 = self.as_connection.map_remove_by_key(key, binname, 'age', aerospike.MAP_RETURN_VALUE)
+        assert value == 97
+        assert value2 is None
+
+        byte_map_bin = bytearray('1234', 'utf-8')
+        self.as_connection.map_put(key, binname, byte_map_bin, 97)
+        value = self.as_connection.map_remove_by_key(
+            key, binname, byte_map_bin, aerospike.MAP_RETURN_VALUE)
+        value2 = self.as_connection.map_remove_by_key(
+            key, binname, byte_map_bin, aerospike.MAP_RETURN_VALUE)
         assert value == 97
         assert value2 is None
 
@@ -108,11 +129,41 @@ class TestMapBasics(object):
         size = self.as_connection.map_size(key, binname)
         assert size == 0
 
+    def test_pos_map_remove_by_key_list_bytes(self):
+        key = ('test', 'map_test', 1)
+        binname = 'my_map'
+        self.as_connection.map_put(
+            key, binname, bytearray('1234', 'utf-8'), 5)
+        self.as_connection.map_put(
+            key, binname, bytearray('1235', 'utf-8'), 6)
+        self.as_connection.map_remove_by_key_list(
+            key, binname,
+            [bytearray('1234', 'utf-8'), bytearray('1235', 'utf-8')],
+            aerospike.MAP_RETURN_NONE)
+        size = self.as_connection.map_size(key, binname)
+        assert size == 0
+
+
     def test_pos_map_remove_by_key_range(self):
         key = ('test', 'map_test', 1)
         binname = 'my_map'
         self.as_connection.map_put_items(key, binname, {'item1': 'value1', 'item2': 'value2'})
         self.as_connection.map_remove_by_key_range(key, binname, 'i', 'j', aerospike.MAP_RETURN_NONE)
+        size = self.as_connection.map_size(key, binname)
+        assert size == 0
+
+    def test_pos_map_remove_by_key_range_bytes(self):
+        key = ('test', 'map_test', 1)
+        binname = 'my_map'
+        self.as_connection.map_put(
+            key, binname, bytearray([1, 2, 3, 4]), 5)
+        self.as_connection.map_put(
+            key, binname, bytearray([1, 9, 9, 9]), 6)
+
+        self.as_connection.map_remove_by_key_range(
+            key, binname, bytearray([1, 2, 3, 4]),
+            bytearray([2, 0, 0, 0]), aerospike.MAP_RETURN_NONE)
+
         size = self.as_connection.map_size(key, binname)
         assert size == 0
 
@@ -127,6 +178,22 @@ class TestMapBasics(object):
         assert count2 == 1
         assert size == 0
 
+    def test_pos_map_remove_by_value_bytes(self):
+        key = ('test', 'map_test', 1)
+        binname = 'my_map'
+        val1 = bytearray([1, 2, 3, 4])
+        val2 = bytearray([1, 2, 3, 5])
+        self.as_connection.map_put_items(
+            key, binname, {'item1': val1, 'item2': val2})
+        count1 = self.as_connection.map_remove_by_value(
+            key, binname, val1, aerospike.MAP_RETURN_COUNT)
+        count2 = self.as_connection.map_remove_by_value(
+            key, binname, val2, aerospike.MAP_RETURN_COUNT)
+        size = self.as_connection.map_size(key, binname)
+        assert count1 == 1
+        assert count2 == 1
+        assert size == 0
+
     def test_pos_map_remove_by_value_list(self):
         key = ('test', 'map_test', 1)
         binname = 'my_map'
@@ -135,11 +202,36 @@ class TestMapBasics(object):
         size = self.as_connection.map_size(key, binname)
         assert size == 0
 
+    def test_pos_map_remove_by_value_list_bytes(self):
+        key = ('test', 'map_test', 1)
+        binname = 'my_map'
+        val1 = bytearray([1, 2, 3, 4])
+        val2 = bytearray([1, 2, 3, 5])
+        self.as_connection.map_put_items(
+            key, binname, {'item1': val1, 'item2': val2})
+        self.as_connection.map_remove_by_value_list(
+            key, binname, [val1, val2], aerospike.MAP_RETURN_NONE)
+        size = self.as_connection.map_size(key, binname)
+        assert size == 0
+
     def test_pos_map_remove_by_value_range(self):
         key = ('test', 'map_test', 1)
         binname = 'my_map'
         self.as_connection.map_put_items(key, binname, {'item1': 'value1', 'item2': 'value2'})
         self.as_connection.map_remove_by_value_range(key, binname, 'v', 'w', aerospike.MAP_RETURN_NONE)
+        size = self.as_connection.map_size(key, binname)
+        assert size == 0
+
+    def test_pos_map_remove_by_value_range_bytes(self):
+        key = ('test', 'map_test', 1)
+        binname = 'my_map'
+        val1 = bytearray([1, 2, 3, 4])
+        val2 = bytearray([1, 2, 3, 6])
+        self.as_connection.map_put_items(
+            key, binname, {'item1': val1, 'item2': val2})
+        self.as_connection.map_remove_by_value_range(
+            key, binname,  bytearray([1, 2, 3, 3]),
+            bytearray([1, 2, 3, 7]), aerospike.MAP_RETURN_NONE)
         size = self.as_connection.map_size(key, binname)
         assert size == 0
 
@@ -192,6 +284,20 @@ class TestMapBasics(object):
         self.as_connection.map_clear(key, binname)
         assert values == ['value1', 'value2']
 
+    def test_pos_map_get_by_key_range_bytes(self):
+        key = ('test', 'map_test', 1)
+        binname = 'my_map'
+        self.as_connection.map_put(
+            key, binname, bytearray([1, 2, 3, 4]), 5)
+        self.as_connection.map_put(
+            key, binname, bytearray([1, 9, 9, 9]), 6)
+
+        values = self.as_connection.map_get_by_key_range(
+            key, binname, bytearray([1, 2, 3, 4]),
+            bytearray([2, 0, 0, 0]), aerospike.MAP_RETURN_VALUE)
+        self.as_connection.map_clear(key, binname)
+        assert values == [5, 6]
+
     def test_pos_map_get_by_value(self):
         key = ('test', 'map_test', 1)
         binname = 'my_map'
@@ -208,6 +314,20 @@ class TestMapBasics(object):
         keys = self.as_connection.map_get_by_value_range(key, binname, 'value1', 'value3', aerospike.MAP_RETURN_KEY)
         self.as_connection.map_clear(key, binname)
         assert keys == ['item1', 'item2']
+
+    def test_pos_map_get_by_value_range_bytes(self):
+        key = ('test', 'map_test', 1)
+        binname = 'my_map'
+        self.as_connection.map_put(
+            key, binname, 5, bytearray([1, 2, 3, 4]))
+        self.as_connection.map_put(
+            key, binname, 6, bytearray([1, 9, 9, 9]))
+
+        values = self.as_connection.map_get_by_value_range(
+            key, binname, bytearray([1, 2, 3, 4]),
+            bytearray([2, 0, 0, 0]), aerospike.MAP_RETURN_KEY)
+        self.as_connection.map_clear(key, binname)
+        assert values == [5, 6]
 
     def test_pos_map_get_by_index(self):
         key = ('test', 'map_test', 1)

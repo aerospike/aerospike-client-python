@@ -467,12 +467,25 @@ PyObject* raise_exception(as_error *err) {
 				py_attr = PyString_FromString(err->message);
 				PyObject_SetAttrString(py_value, "msg", py_attr);
 				Py_DECREF(py_attr);
-				py_attr = PyString_FromString(err->file);
-				PyObject_SetAttrString(py_value, "file", py_attr);
-				Py_DECREF(py_attr);
-				py_attr = PyInt_FromLong(err->line);
-				PyObject_SetAttrString(py_value, "line", py_attr);
-				Py_DECREF(py_attr);
+
+				// as_error.file is a char* so this may be null
+				if(err->file) {
+					py_attr = PyString_FromString(err->file);
+					PyObject_SetAttrString(py_value, "file", py_attr);
+					Py_DECREF(py_attr);
+				} else {
+					PyObject_SetAttrString(py_value, "file", Py_None);
+
+				}
+				// If the line is 0, set it as None
+				if(err->line > 0) {
+					py_attr = PyInt_FromLong(err->line);
+					PyObject_SetAttrString(py_value, "line", py_attr);
+					Py_DECREF(py_attr);
+				} else {
+					PyObject_SetAttrString(py_value, "line", Py_None);
+				}
+
 				break;
 			}
 			Py_DECREF(py_code);

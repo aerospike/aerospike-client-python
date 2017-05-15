@@ -161,7 +161,8 @@ PyObject * Aerospike_Set_Log_Handler(PyObject *parent, PyObject *args, PyObject 
 {
 	// Python variables
 	PyObject *py_callback = NULL;
-
+	as_error err;
+	as_error_init(&err);
 	// Python function keyword arguments
 	static char * kwlist[] = {"log_handler", NULL};
 
@@ -169,12 +170,26 @@ PyObject * Aerospike_Set_Log_Handler(PyObject *parent, PyObject *args, PyObject 
 	if (PyArg_ParseTupleAndKeywords(args, kwds, "O|:setLogHandler", kwlist, &py_callback) == false){
 		return NULL;
 	}
-
+	if (!PyCallable_Check(py_callback)) {
+		as_error_update(&err, AEROSPIKE_ERR_PARAM, "Log handler must be callable");
+		goto CLEANUP;
+	}
 	// Store user callback
+	Py_INCREF(py_callback);
 	user_callback.callback = py_callback;
 
 	// Register callback to C-SDK
 	as_log_set_callback((as_log_callback) log_cb);
 
+
+CLEANUP:
+	if (err.code != AEROSPIKE_OK) {
+		PyObject * py_err = NULL;
+		error_to_pyobject(&err, &py_err);
+		PyObject *exception_type = raise_exception(&err);
+		PyErr_SetObject(exception_type, py_err);
+		Py_DECREF(py_err);
+		return NULL;
+	}
 	return PyLong_FromLong(0);
 }

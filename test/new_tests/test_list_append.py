@@ -230,3 +230,9 @@ class TestListAppend(object):
         except e.ParamError as exception:
             assert exception.code == -2
             assert exception.msg == "Metadata should be of type dictionary"
+
+    def test_list_append_with_no_connection(self):
+        client = aerospike.client({'hosts': [('localhost', 3000)]})
+        k = ('test', 'demo', 'no_con')
+        with pytest.raises(e.ClusterError):
+            client.list_append(k, 'bob', 'item')
