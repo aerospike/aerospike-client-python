@@ -78,7 +78,7 @@ detect_linux()
         return 0
         ;;
 
-      "ubuntu16" | "linuxmint18" )
+      "ubuntu16" | "ubuntu17" | "linuxmint18" )
         echo "ubuntu16" "deb"
         return 0
         ;;
