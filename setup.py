@@ -24,7 +24,7 @@ from distutils.command.build import build
 from setuptools.command.install import install
 from setuptools import setup, Extension
 from shutil import copytree, copy2
-from subprocess import call
+from subprocess import Popen
 
 
 class InstallCommand(install):
@@ -100,7 +100,9 @@ def resolve_c_client(lua_src_path, lua_system_path):
 
     print('info: Executing','./scripts/aerospike-client-c.sh', file=sys.stdout)
     os.chmod('./scripts/aerospike-client-c.sh',0o0755)
-    rc = call(['./scripts/aerospike-client-c.sh'])
+    p = Popen(['./scripts/aerospike-client-c.sh'], env=os.environ)
+    rc = p.wait()
+
     if rc != 0 :
         print("error: scripts/aerospike-client-c.sh", rc, file=sys.stderr)
         sys.exit(1)
