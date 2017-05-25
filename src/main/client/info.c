@@ -46,7 +46,8 @@ typedef struct foreach_callback_info_udata_t {
 #define INET6_ADDRSTRLEN 46
 #define INET_PORT 5
 #define IP_PORT_SEPARATOR_LEN 1
-#define IP_PORT_MAX_LEN INET6_ADDRSTRLEN + INET_PORT + IP_PORT_SEPARATOR_LEN
+// Add 2 to the length to facilitate [] around the edges
+#define IP_PORT_MAX_LEN INET6_ADDRSTRLEN + INET_PORT + IP_PORT_SEPARATOR_LEN + 2
 
 /**
  *******************************************************************************************************
@@ -153,6 +154,12 @@ static bool AerospikeClient_Info_each(as_error * err, const as_node * node, cons
 						if ( !strcmp(ip_port, addr->name) ) {
 							PyObject * py_nodes = (PyObject *) udata_ptr->udata_p;
 							PyDict_SetItemString(py_nodes, node->name, py_res);
+						} else {
+							sprintf(ip_port, "[%s]:%d", host_addr, port);
+							if ( !strcmp(ip_port, addr->name) ) {
+								PyObject * py_nodes = (PyObject *) udata_ptr->udata_p;
+								PyDict_SetItemString(py_nodes, node->name, py_res);
+							}
 						}
 					}
 

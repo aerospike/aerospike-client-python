@@ -27,11 +27,12 @@ class TestIsConnected(object):
         Private method to connect self.client to the server
         with or without username and password
         """
-        if self.user is None and self.password is None:
-            self.client = aerospike.client(self.config).connect()
-        else:
-            self.client = aerospike.client(self.config).connect(self.user,
-                                                                self.password)
+        # if self.user is None and self.password is None:
+        #     self.client = aerospike.client(self.config).connect()
+        # else:
+        #     self.client = aerospike.client(self.config).connect(self.user,
+        #                                                         self.password)
+        self.client = TestBaseClass.get_new_connection()
 
     def test_is_connected_before_connect(self):
         """

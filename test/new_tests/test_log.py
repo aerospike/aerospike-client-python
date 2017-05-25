@@ -58,14 +58,8 @@ class TestLog(object):
         response = aerospike.set_log_level(aerospike.LOG_LEVEL_DEBUG)
         aerospike.set_log_handler(handler)
 
-        hostlist, user, password = TestBaseClass.get_hosts()
-        config = {
-            "hosts": hostlist
-        }
-        if user is None and password is None:
-            client = aerospike.client(config).connect()
-        else:
-            client = aerospike.client(config).connect(user, password)
+        # Forces an event to be logged
+        client = TestBaseClass.get_new_connection()
 
         assert response == 0
         client.close()

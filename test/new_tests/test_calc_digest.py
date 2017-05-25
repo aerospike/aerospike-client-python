@@ -33,12 +33,7 @@ class TestCalcDigest(object):
         """
             Invoke calc_digest() on inserted key
         """
-        hostlist, user, password = TestBaseClass.get_hosts()
-        config = {'hosts': hostlist}
-        if user is None and password is None:
-            client = aerospike.client(config).connect()
-        else:
-            client = aerospike.client(config).connect(user, password)
+        client = TestBaseClass.get_new_connection()
 
         key = ('test', 'demo', 'get_digest_key')
         client.put(key, {"bin1": 1})

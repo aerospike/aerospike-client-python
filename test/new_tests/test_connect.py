@@ -6,7 +6,8 @@ import json
 from contextlib import contextmanager
 from .test_base_class import TestBaseClass
 from aerospike import exception as e
-
+host, user, password = TestBaseClass.get_hosts()
+using_auth = user or password
 aerospike = pytest.importorskip("aerospike")
 try:
     import aerospike
@@ -21,11 +22,7 @@ def open_as_connection(config):
     Context manager to let us open aerospike connections with
     specified config
     """
-    if TestBaseClass.user is None and TestBaseClass.password is None:
-        as_connection = aerospike.client(config).connect()
-    else:
-        as_connection = aerospike.client(config).connect(
-            TestBaseClass.user, TestBaseClass.password)
+    as_connection = TestBaseClass.get_new_connection(config)
 
     # Connection is setup, so yield it
     yield as_connection
@@ -86,13 +83,15 @@ class TestConnect(object):
         uni = json.dumps(self.connection_config['hosts'][0])
         hostlist = json.loads(uni)
         config = {
-            'hosts': [(hostlist[0], hostlist[1])],
+            'hosts': [tuple(hostlist)],
             'policies': {'use_batch_direct': True}
         }
         with open_as_connection(config) as client:
             assert client is not None
             assert client.is_connected()
 
+    @pytest.mark.skip(TestBaseClass.tls_in_use(),
+                      reason="no default port for tls")
     def test_connect_hosts_missing_port(self):
         """
             Invoke connect() with missing port in config dict.
@@ -100,13 +99,9 @@ class TestConnect(object):
         config = {
             'hosts': [('127.0.0.1')]
         }
-        client = aerospike.client(config)
 
-        client.connect()
-        assert client.is_connected()
-        client.close()
-
-        assert client.is_connected() is False
+        with open_as_connection(config) as client:
+            assert client.is_connected()
 
     def test_connect_positive_shm_key(self):
         """
@@ -222,10 +217,3 @@ class TestConnect(object):
 
         assert err_info.value.code == err_code
         assert err_info.value.msg == err_msg
-
-    def test_connect_empty_host_list(self):
-        config = {
-            'hosts': []
-        }
-        with pytest.raises(e.ParamError):
-            aerospike.client(config).connect()

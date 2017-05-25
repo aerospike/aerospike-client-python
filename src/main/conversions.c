@@ -555,7 +555,7 @@ as_status pyobject_to_record(AerospikeClient * self, as_error * err, PyObject * 
 				}
 
 				if (aerospike_has_geo(self->as)) {
-					ret_val = as_record_set_geojson_str(rec, name, geo_value);
+					ret_val = as_record_set_geojson_strp(rec, name, strdup(geo_value), true);
 				} else {
 					as_bytes *bytes;
 					GET_BYTES_POOL(bytes, static_pool, err);

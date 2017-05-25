@@ -172,27 +172,13 @@ class TestGeospatial(object):
             remove_geo_data
         )
 
-        hostlist, user, password = TestBaseClass.get_hosts()
-        config = {'hosts': hostlist}
-
-        client = aerospike.client(config).connect()
-        cls.skip_old_server = True
-        versioninfo = client.info('version')
-        for keys in versioninfo:
-            for value in versioninfo[keys]:
-                if value is not None:
-                    versionlist = value[
-                        value.find("build") + 6:value.find("\n")].split(".")
-                    if ((int(versionlist[0]) > 3) or
-                        (int(versionlist[0]) == 3 and
-                         int(versionlist[1]) >= 7)):
-                            cls.skip_old_server = False
-
     @pytest.fixture(autouse=True)
     def setup(self, request, connection_with_config_funcs):
         as_connection = connection_with_config_funcs
         self.keys = []
-
+        if not as_connection.has_geo():
+            pytest.skip(
+                reason="Server does not support geospatial data")
         if not self.skip_old_server:
             key = ('test', 'demo', 'circle')
             geo_circle = aerospike.GeoJSON(
@@ -239,7 +225,6 @@ class TestGeospatial(object):
         """
         records = []
         query = self.as_connection.query("test", "demo")
-
         geo_object2 = aerospike.GeoJSON({"type": "Polygon",
                                          "coordinates": [[
                                              [-122.500000, 37.000000],

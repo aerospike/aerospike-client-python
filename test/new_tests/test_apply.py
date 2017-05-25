@@ -91,27 +91,6 @@ class TestApply(TestBaseClass):
         cls.connection_setup_functions = [add_indexes_and_udfs]
         cls.connection_teardown_functions = [remove_indexes_and_udfs]
 
-        hostlist, user, password = TestBaseClass.get_hosts()
-        config = {'hosts': hostlist}
-        if user is None and password is None:
-            TestApply.client = aerospike.client(config).connect()
-        else:
-            TestApply.client = aerospike.client(config).connect(user, password)
-        TestApply.skip_old_server = True
-        versioninfo = TestApply.client.info('version')
-        for keys in versioninfo:
-            for value in versioninfo[keys]:
-                if value is not None:
-                    versionlist = value[
-                        value.find("build") + 6:value.find("\n")].split(".")
-                    if (
-                        int(versionlist[0]) > 3 or
-                        (int(versionlist[0]) == 3 and int(versionlist[1]) >= 6)
-                       ):
-                        TestApply.skip_old_server = False
-
-        TestApply.client.close()
-
     @pytest.fixture(autouse=True)
     def setup(self, request, connection_with_config_funcs):
         as_connection = connection_with_config_funcs
@@ -183,7 +162,7 @@ class TestApply(TestBaseClass):
             Invoke apply() with correct arguments with a floating value in the
             list of arguments
         """
-        if TestApply.skip_old_server is True:
+        if self.skip_old_server is True:
             pytest.skip(
                 "Server does not support apply on float type as lua argument")
         key = ('test', 'demo', 1)

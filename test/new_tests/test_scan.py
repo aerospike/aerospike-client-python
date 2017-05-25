@@ -390,8 +390,6 @@ class TestScan(TestBaseClass):
 
         assert len(records) == 1
 
-    @pytest.mark.skip(
-         reason="this raises a SystemError, and crashes pytest")
     def test_scan_without_any_parameter(self):
 
         with pytest.raises(e.ParamError) as err:

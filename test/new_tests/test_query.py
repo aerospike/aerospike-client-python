@@ -18,13 +18,7 @@ except:
 class TestQuery(TestBaseClass):
 
     def setup_class(cls):
-        hostlist, user, password = TestBaseClass.get_hosts()
-        config = {'hosts': hostlist}
-        if user is None and password is None:
-            client = aerospike.client(config).connect()
-        else:
-            client = aerospike.client(config).connect(user, password)
-
+        client = TestBaseClass.get_new_connection()
         client.index_integer_create('test', 'demo', 'test_age',
                                     'age_index')
         client.index_string_create('test', 'demo', 'addr',
@@ -57,12 +51,8 @@ class TestQuery(TestBaseClass):
         client.close()
 
     def teardown_class(cls):
-        hostlist, user, password = TestBaseClass.get_hosts()
-        config = {'hosts': hostlist}
-        if user is None and password is None:
-            client = aerospike.client(config).connect()
-        else:
-            client = aerospike.client(config).connect(user, password)
+        client = TestBaseClass.get_new_connection()
+
         policy = {}
         client.index_remove('test', 'age_index', policy)
         client.index_remove('test', 'age_index1', policy)

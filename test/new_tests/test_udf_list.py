@@ -19,14 +19,7 @@ class TestUdfList(object):
         """
         Setup class
         """
-        hostlist, user, password = TestBaseClass.get_hosts()
-        config = {'hosts': hostlist}
-
-        if user is None and password is None:
-            cls.client = aerospike.client(config).connect()
-        else:
-            cls.client = aerospike.client(config).connect(user,
-                                                          password)
+        cls.client = TestBaseClass.get_new_connection()
         cls.client.udf_put('example.lua', 0, {})
 
     def teardown_class(cls):
