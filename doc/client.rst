@@ -2126,6 +2126,7 @@ a cluster-tending thread.
 
         .. versionchanged:: 1.0.41
 
+        .. warning:: ``get_nodes`` will not work when using TLS
 
      .. method:: info(command[, hosts[, policy]]) -> {}
 
@@ -2173,6 +2174,8 @@ a cluster-tending thread.
         .. seealso:: `Info Command Reference <http://www.aerospike.com/docs/reference/info/>`_.
 
         .. versionchanged:: 1.0.41
+
+        .. warning:: ``info_node`` will not work when using TLS
 
     .. method:: has_geo()  ->  bool
 

@@ -29,12 +29,13 @@
 #include "policy.h"
 #include "conversions.h"
 #include "exceptions.h"
-
+#include "tls_config.h"
 
 enum {INIT_NO_CONFIG_ERR = 1, INIT_CONFIG_TYPE_ERR, INIT_LUA_USER_ERR,
 	  INIT_LUA_SYS_ERR,  INIT_HOST_TYPE_ERR, INIT_EMPTY_HOSTS_ERR,
 	  INIT_INVALID_ADRR_ERR, INIT_SERIALIZE_ERR, INIT_DESERIALIZE_ERR,
 	  INIT_COMPRESSION_ERR} ;
+
 /*******************************************************************************
  * PYTHON TYPE METHODS
  ******************************************************************************/
@@ -455,6 +456,11 @@ static int AerospikeClient_Type_Init(AerospikeClient * self, PyObject * args, Py
 		}
 	}
 
+	PyObject * py_tls = PyDict_GetItemString(py_config, "tls");
+	if (py_tls && PyDict_Check(py_tls)) {
+		setup_tls_config(&config, py_tls);
+	}
+
 	PyObject * py_hosts = PyDict_GetItemString(py_config, "hosts");
 	if (py_hosts && PyList_Check(py_hosts)) {
 		int size = (int) PyList_Size(py_hosts);
@@ -463,11 +469,12 @@ static int AerospikeClient_Type_Init(AerospikeClient * self, PyObject * args, Py
 		}
 		for (int i = 0; i < size; i++) {
 			char *addr = NULL;
+			char *tls_name = NULL;
 			uint16_t port = 3000;
 			PyObject * py_host = PyList_GetItem(py_hosts, i);
-			PyObject * py_addr, * py_port;
+			PyObject * py_addr, * py_port, *py_tls_name;
 
-			if (PyTuple_Check(py_host) && PyTuple_Size(py_host) == 2) {
+			if (PyTuple_Check(py_host) && PyTuple_Size(py_host) >= 2 && PyTuple_Size(py_host) <= 3 ) {
 
 				py_addr = PyTuple_GetItem(py_host, 0);
 				if (PyString_Check(py_addr)) {
@@ -484,6 +491,17 @@ static int AerospikeClient_Type_Init(AerospikeClient * self, PyObject * args, Py
 				else {
 					port = 0;
 				}
+				// Set TLS Name if provided
+				if (PyTuple_Size(py_host) == 3) {
+					py_tls_name = PyTuple_GetItem(py_host, 2);
+					if (PyString_Check(py_tls_name)) {
+						tls_name = strdup(PyString_AsString(py_tls_name));
+					} else if (PyUnicode_Check(py_tls_name)) {
+						PyObject* py_ustr = PyUnicode_AsUTF8String(py_tls_name);
+						tls_name = strdup(PyBytes_AsString(py_ustr));
+						Py_DECREF(py_ustr);
+					}
+				}
 			}
 			else if (PyString_Check(py_host)) {
 				addr = strdup( strtok( PyString_AsString(py_host), ":" ) );
@@ -494,7 +512,12 @@ static int AerospikeClient_Type_Init(AerospikeClient * self, PyObject * args, Py
 				}
 			}
 			if (addr) {
-				as_config_add_host(&config, addr, port);
+				if (tls_name) {
+					as_config_tls_add_host(&config, addr, tls_name, port);
+					free(tls_name);
+				} else {
+					as_config_add_host(&config, addr, port);
+				}
 				free(addr);
 			} else {
 				return INIT_INVALID_ADRR_ERR;

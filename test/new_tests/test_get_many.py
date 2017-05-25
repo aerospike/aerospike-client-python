@@ -65,8 +65,7 @@ class TestGetMany():
     def test_pos_get_many_with_none_policy(self):
 
         records = self.as_connection.get_many(self.keys, None)
-        for x in records:
-            print (x)
+
         assert isinstance(records, list)
         assert len(records) == 6
         assert Counter([x[0][2] for x in records]) == Counter([0, 1, 2, 3,
@@ -172,13 +171,8 @@ class TestGetMany():
     def test_pos_get_many_with_use_batch_direct(self):
 
         hostlist, user, password = TestBaseClass.get_hosts()
-        config = {'hosts': hostlist,
-                  'policies': {'use_batch_direct': True}}
-        if user is None and password is None:
-            client_batch_direct = aerospike.client(config).connect()
-        else:
-            client_batch_direct = aerospike.client(
-                config).connect(user, password)
+        config = {'policies': {'use_batch_direct': True}}
+        client_batch_direct = TestBaseClass.get_new_connection(add_config=config)
 
         records = client_batch_direct.get_many(self.keys, {'timeout': 30})
 

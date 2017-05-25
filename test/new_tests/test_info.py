@@ -18,9 +18,8 @@ class TestInfo(object):
 
     def test_info_for_statistics(self):
         request = "statistics"
-
-        nodes_info = self.as_connection.info(request,
-                                             self.connection_config['hosts'])
+        hosts = [host[:2] for host in self.connection_config['hosts']]
+        nodes_info = self.as_connection.info(request, hosts)
 
         assert nodes_info is not None
 
@@ -44,8 +43,9 @@ class TestInfo(object):
         rec = {'names': ['John', 'Marlen', 'Steve']}
 
         self.as_connection.put(key, rec)
-        response = self.as_connection.info(container_type,
-                                           self.connection_config['hosts'])
+        hosts = [host[:2] for host in self.connection_config['hosts']]
+
+        response = self.as_connection.info(container_type, hosts)
         self.as_connection.remove(key)
         found = False
         for keys in response.keys():
@@ -60,8 +60,10 @@ class TestInfo(object):
 
         request = "statistics"
         policy = {'timeout': 1000}
+        hosts = [host[:2] for host in self.connection_config['hosts']]
+
         nodes_info = self.as_connection.info(
-            request, self.connection_config['hosts'], policy)
+            request, hosts, policy)
 
         assert nodes_info is not None
         assert isinstance(nodes_info, dict)
@@ -69,9 +71,8 @@ class TestInfo(object):
     def test_info_for_invalid_request(self):
 
         request = "no_info"
-
-        nodes_info = self.as_connection.info(request,
-                                             self.connection_config['hosts'])
+        hosts = [host[:2] for host in self.connection_config['hosts']]
+        nodes_info = self.as_connection.info(request, hosts)
 
         assert isinstance(nodes_info, dict)
         assert nodes_info.values() is not None
@@ -81,9 +82,10 @@ class TestInfo(object):
         Test that sending None as the request raises an error
         '''
         request = None
+        hosts = [host[:2] for host in self.connection_config['hosts']]
 
         try:
-            self.as_connection.info(request, self.connection_config['hosts'])
+            self.as_connection.info(request, hosts)
 
         except e.ParamError as exception:
             assert exception.code == -2

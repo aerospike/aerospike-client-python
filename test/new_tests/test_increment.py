@@ -16,31 +16,6 @@ except:
 
 class TestIncrement(object):
 
-    def setup_class(cls):
-        """
-        Setup method.
-        """
-        hostlist, user, password = TestBaseClass.get_hosts()
-        config = {'hosts': hostlist}
-        if user is None and password is None:
-            TestIncrement.client = aerospike.client(config).connect()
-        else:
-            TestIncrement.client = aerospike.client(config).connect(user,
-                                                                    password)
-        TestIncrement.skip_old_server = True
-        versioninfo = TestIncrement.client.info('version')
-        for keys in versioninfo:
-            for value in versioninfo[keys]:
-                if value is not None:
-                    versionlist = value[
-                        value.find("build") + 6:value.find("\n")].split(".")
-                    if int(versionlist[0]) > 3 or (int(versionlist[0]) == 3 and
-                                                   int(versionlist[1]) >= 6):
-                        TestIncrement.skip_old_server = False
-                        break
-
-        TestIncrement.client.close()
-
     @pytest.fixture(autouse=True)
     def setup(self, request, as_connection):
         for i in range(5):
