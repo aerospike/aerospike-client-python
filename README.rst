@@ -77,7 +77,7 @@ Aerospike Python Client can be installed using ``pip``:
     # to troubleshoot pip versions >= 6.0 you can
     pip install --no-cache-dir aerospike
 
-    # to trouleshoot installation on OS X El-Capitan (10.11)
+    # to trouleshoot installation on OS X El-Capitan (10.11) or OS X Sierra (10.12)
     pip install --no-cache-dir --user aerospike
 
     # to have pip copy the Lua system files to a dir other than /usr/local/aerospike/lua
@@ -86,9 +86,15 @@ Aerospike Python Client can be installed using ``pip``:
 If you run into trouble installing the client on a supported OS, you may be
 using an outdated ``pip``.
 Versions of ``pip`` older than 7.0.0 should be upgraded, as well as versions of
-``setuptools`` older than 18.0.0. Upgrading ``pip`` on OS X El-Capitan (10.11)
+``setuptools`` older than 18.0.0.
+
+OS X Installation
+~~~~~~~~~~~~~~~~~~
+Upgrading ``pip`` on OS X El-Capitan (10.11) or OS X Sierra(10.12)
 runs into `SIP issues <https://apple.stackexchange.com/questions/209572/how-to-use-pip-after-the-el-capitan-max-os-x-upgrade>`__
-with ``pip install --user <module>`` as the recommended workaround.
+with ``pip install --user aerospike`` as the recommended workaround to install aerospike on those versions of OS X.
+
+If the version of Python is not in the officially supported list, or the ``--install-option`` argument is provided ``pip install --user aerospike``, will attempt to compile the client from source.
 
 
 Build
@@ -118,8 +124,14 @@ For examples, to run the ``kvs.py``:
 Benchmarks
 ----------
 
-To run the benchmarks the python modules 'guppy' and 'tabulate' need to be installed.
+To run the benchmarks the python module 'tabulate' need to be installed. In order to display heap information the module `guppy` must be installed.
+Note that `guppy` is only available for Python2. If `guppy` is not installed the benchmarks will still be runnable.
 Benchmark applications are provided in the `benchmarks directory of the GitHub repository <https://github.com/aerospike/aerospike-client-python/tree/master/benchmarks>`__
+
+By default the benchmarks will try to connect to a server located at 127.0.0.1:3000 , instructions on changing that setting and other command line flags may be displayed by appending the `--help` argument to the benchmark script. For example:
+::
+
+    python benchmarks/keygen.py --help
 
 License
 -------

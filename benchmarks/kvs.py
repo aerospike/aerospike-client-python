@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 ##########################################################################
-# Copyright 2013-2016 Aerospike, Inc.
+# Copyright 2013-2017 Aerospike, Inc.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -24,10 +24,22 @@ import sys
 import string
 import time
 
-# from guppy import hpy
+
 from optparse import OptionParser
 import copy
 from tabulate import tabulate
+
+# Guppy is only available in python 2.7, try to load it
+try:
+    from guppy import hpy
+    HAVE_HEAPY = True
+except ImportError:
+    HAVE_HEAPY = False
+# set maximum integer value compatible in python2 and 3
+try:
+    MAX_INT = sys.maxint
+except AttributeError:
+    MAX_INT = sys.maxsize
 
 ##########################################################################
 # Options Parsing
@@ -63,11 +75,11 @@ optparser.add_option(
 
 optparser.add_option(
     "-n", "--namespace", dest="namespace", type="string", default="test", metavar="<NS>",
-    help="Port of the Aerospike server.")
+    help="Namespace that records will be stored and retrieved from.")
 
 optparser.add_option(
     "-s", "--set", dest="set", type="string", default="demo", metavar="<SET>",
-    help="Port of the Aerospike server.")
+    help="Set that records will be stored and retrieved from.")
 
 optparser.add_option(
     "-v", "--verbose", dest="verbose", action="store_true", metavar="<PORT>",
@@ -94,7 +106,7 @@ optparser.add_option(
     help="Minimum value for generated integers.")
 
 optparser.add_option(
-    "--int-max", dest="int_max", type="int", default=sys.maxint,
+    "--int-max", dest="int_max", type="int", default=MAX_INT,
     help="Maximum value for generated integere.")
 
 optparser.add_option(
@@ -158,6 +170,7 @@ CHOICE_OP = [READ_OP, WRITE_OP]
 def operation(r, w):
     rn = r
     wn = w
+    total = r + w
     while rn + wn > 0:
         if rn > 0 and wn > 0:
             op = random.randint(0, 100)
@@ -210,7 +223,8 @@ read_count = 0
 write_count = 0
 start = 0
 intervals = []
-heapy = hpy()
+if HAVE_HEAPY:
+    heapy = hpy()
 
 no_of_buckets, range_increment = [
     int(elem.strip()) for elem in options.latency.split(',')]
@@ -275,8 +289,9 @@ def total_summary():
     table = [info for info in interprete_summary()]
     print(tabulate(table, headers=get_latency_table_headers()))
     print()
-    print("Heap: ")
-    print(heapy.heap())
+    if HAVE_HEAPY:
+        print("Heap: ")
+        print(heapy.heap())
 
     sys.exit(0)
 
@@ -317,7 +332,8 @@ try:
 
         start = time.time()
 
-        print("HEAP@{0}: {1}".format(0, heapy.heap()))
+        if HAVE_HEAPY:
+            print("HEAP@{0}: {1}".format(0, heapy.heap()))
 
         # run the operatons
         for op in operation(r, w):
@@ -351,7 +367,8 @@ try:
                 write_count += 1
 
             if options.heap_interval > 0 and (total_count % options.heap_interval) == 0:
-                print("HEAP@{0}: {1}".format(total_count, heapy.heap()))
+                if HAVE_HEAPY:
+                    print("HEAP@{0}: {1}".format(total_count, heapy.heap()))
 
     except KeyboardInterrupt:
         total_summary()
