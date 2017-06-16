@@ -79,7 +79,7 @@ error similar to: `error: could not create '/usr/local/aerospike/lua': Permissio
 - Rerun the build command with the additional command line flags `--user --prefix=` *Note that there are no charcters after the '='.* This will cause the library to only be installed for the current user, and store the library's data files in a user specific location.
 - rerun the command with sudo.
 
-If an error similar to `ld: targeted OS version does not support use of thread local variables` appears, it can by temporarily setting the `MACOSX_DEPLOYMENT_TARGET` environment variable to `'10.12'` e.g.
+If an error similar to `ld: targeted OS version does not support use of thread local variables` appears, it can be fixed by temporarily setting the `MACOSX_DEPLOYMENT_TARGET` environment variable to `'10.12'` e.g.
 
 ```
 MACOSX_DEPLOYMENT_TARGET=10.12 python setup.py build --force

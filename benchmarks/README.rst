@@ -5,7 +5,7 @@ Python client Benchmarks
 Prerequisites
 ~~~~~~~~~~~~~~
 To run the benchmarks the python module 'tabulate' needs to be installed. In order to display heap information the module `guppy` must be installed.
-Note that `guppy` is only available for Python2. If `guppy` is not installed the benchmarks will still be runnable, but not heap information
+Note that `guppy` is only available for Python2. If `guppy` is not installed the benchmarks will still be runnable, but no heap information
 will be displayed.
 
 Available Benchmarks
