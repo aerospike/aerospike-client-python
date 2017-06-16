@@ -207,12 +207,7 @@ if DARWIN:
         '-D_DARWIN_UNLIMITED_SELECT',
         '-DMARCH_x86_64'
         ]
-    # If there is not an explicit deployment target set, look for the interpreter
-    # value. If that is not set, default to '10.11'
-    if 'MACOSX_DEPLOYMENT_TARGET' not in os.environ:
-        osx_target = get_config_vars().get('MACOSX_DEPLOYMENT_TARGET', '10.11')
-        if osx_target:
-            os.environ['MACOSX_DEPLOYMENT_TARGET'] = osx_target
+
     if AEROSPIKE_C_HOME:
         PREFIX = AEROSPIKE_C_HOME + '/target/Darwin-x86_64'
 
