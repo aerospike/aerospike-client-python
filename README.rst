@@ -94,7 +94,11 @@ Upgrading ``pip`` on OS X El-Capitan (10.11) or OS X Sierra(10.12)
 runs into `SIP issues <https://apple.stackexchange.com/questions/209572/how-to-use-pip-after-the-el-capitan-max-os-x-upgrade>`__
 with ``pip install --user aerospike`` as the recommended workaround to install aerospike on those versions of OS X.
 
-If the version of Python is not in the officially supported list, or the ``--install-option`` argument is provided ``pip install --user aerospike``, will attempt to compile the client from source.
+Attempting to install the client with pip for the system default Python may cause permssions issues when copying necesarry files. In order to avoid
+those issues the client can be installed for the current user only with the command: ``pip install --user aerospike``
+
+If the version of Python is not in the officially supported list, or the ``--install-option`` argument is provided, pip will attempt to compile the client from source. Please see the `build directions in the GitHub repository <https://github.com/aerospike/aerospike-client-python/blob/master/BUILD.md>`__
+to troubleshoot any issues caused by compiling the client.
 
 
 Build
