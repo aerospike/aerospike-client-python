@@ -98,10 +98,13 @@ def resolve_c_client(lua_src_path, lua_system_path):
 
     if PREFIX:
         os.putenv('PREFIX', PREFIX)
+        os.environ['PREFIX'] = PREFIX
     if AEROSPIKE_C_VERSION:
         os.putenv('AEROSPIKE_C_VERSION', AEROSPIKE_C_VERSION)
+        os.environ['AEROSPIKE_C_VERSION'] = AEROSPIKE_C_VERSION
     if DOWNLOAD_C_CLIENT:
         os.putenv('DOWNLOAD_C_CLIENT', DOWNLOAD_C_CLIENT)
+        os.environ['DOWNLOAD_C_CLIENT'] = DOWNLOAD_C_CLIENT
 
     print('info: Executing', './scripts/aerospike-client-c.sh', file=sys.stdout)
     os.chmod('./scripts/aerospike-client-c.sh', 0o0755)
@@ -148,8 +151,11 @@ def resolve_c_client(lua_src_path, lua_system_path):
     # Environment Variables
     # ---------------------------------------------------------------------------
     os.putenv('CPATH', ':'.join(include_dirs))
+    os.environ['CPATH'] = ':'.join(include_dirs)
     os.putenv('LD_LIBRARY_PATH', ':'.join(library_dirs))
+    os.environ['LD_LIBRARY_PATH'] = ':'.join(library_dirs)
     os.putenv('DYLD_LIBRARY_PATH', ':'.join(library_dirs))
+    os.environ['DYLD_LIBRARY_PATH'] = ':'.join(library_dirs)
 
     # ---------------------------------------------------------------------------
     # Deploying the system lua files
