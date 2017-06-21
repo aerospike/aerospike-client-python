@@ -38,6 +38,7 @@ def remove_map_keys(client):
         client.remove(key)
 
 
+@pytest.mark.skip(reason="rapid index creation and drop can create timeouts")
 @pytest.mark.usefixtures("connection_with_config_funcs")
 class TestMapKeysIndex(object):
 
@@ -253,6 +254,7 @@ class TestMapKeysIndex(object):
 
         assert response_code == AerospikeStatus.AEROSPIKE_OK
 
+    @pytest.mark.skip(reason="rapidly creating and dropping same index can cause timeout")
     def test_create_same_mapindex_multiple_times(self):
         """
             Invoke createindex() with same arguments
@@ -269,6 +271,7 @@ class TestMapKeysIndex(object):
         self.as_connection.index_remove('test', 'test_numeric_map_index',
                                         policy)
 
+    @pytest.mark.skip(reason="rapidly creating and dropping same index can cause timeout")
     def test_create_same_mapindex_multiple_times_different_bin(self):
         """
             Invoke createindex with the same name on multiple bins
@@ -290,6 +293,7 @@ class TestMapKeysIndex(object):
         self.as_connection.index_remove(
             'test', 'test_string_map_index', policy)
 
+    @pytest.mark.skip(reason="rapidly creating and dropping same index can cause timeout")
     def test_create_different_mapindex_multiple_times_same_bin(self):
         """
             Call createindex on the same bin with different names

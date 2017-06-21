@@ -66,6 +66,25 @@ download the appropriate C client. However, if one is present this will not
 happen, and a build may fail against an old client. At that point you should
 remove the directory `aerospike-client-c` and run the build command again.
 
+If you see the error `error: need permission to copy the Lua system files to /usr/local/aerospike/lua or change the --lua-system-path`
+
+You may need to either run the command with sudo, or alternatively specify a different location for the Lua system modules to be installed:
+
+	python setup.py build --force --lua-system-path=/path/to/lua
+
+### Troubleshooting OS X builds
+Building on OS X versions >= 10.11 , may cause a few additional errors to be generated. If the build command fails with an
+error similar to: `error: could not create '/usr/local/aerospike/lua': Permission denied` there are a couple of options:
+	
+- Rerun the build command with the additional command line flags `--user --prefix=` *Note that there are no charcters after the '='.* This will cause the library to only be installed for the current user, and store the library's data files in a user specific location.
+- rerun the command with sudo.
+
+If an error similar to `ld: targeted OS version does not support use of thread local variables` appears, it can be fixed by temporarily setting the `MACOSX_DEPLOYMENT_TARGET` environment variable to `'10.12'` e.g.
+
+```
+MACOSX_DEPLOYMENT_TARGET=10.12 python setup.py build --force
+MACOSX_DEPLOYMENT_TARGET=10.12 python setup.py install --force
+```
 
 ### Building on an Unsupported Linux Distro
 
@@ -98,6 +117,20 @@ To install the library:
 
     python setup.py install --force
 
+If you see the error `error: need permission to copy the Lua system files to /usr/local/aerospike/lua or change the --lua-system-path`
+
+You may need to either run the command with sudo, or alternatively specify a different location for the Lua system modules to be installed:
+
+	python setup.py install --force --lua-system-path=/path/to/lua
+
+
+### Troubleshooting OS X Installation
+Installing on OS X versions >= 10.11 , may cause a few additional errors to be generated. If the install command fails with an
+error similar to: `error: could not create '/usr/local/aerospike/lua': Permission denied` there are a couple of options:
+	
+- Rerun the install command with the additional command line flags `--user --prefix=` *Note that there are no charcters after the '='.* This will cause the library to only be installed for the current user, and store the library's data files in a user specific location.
+- rerun the command with sudo.
+
 ### Lua System Modules
 
 Stream UDF functionality requires a local copy of the system Lua modules.
@@ -106,6 +139,11 @@ A different directory can be created, then set:
 
     python setup.py install --lua-system-path=/path/to/lua
 
+
+**Note** If you do not use the default location, and you wish to perform Stream UDF operations it will be necessary to specify the locations of the system modules as a configuration parameter to the Aerospike client constructor:
+
+	config = {'hosts': [('127.0.0.1', 3000)], 'lua': {'system_path': '/path/to/lua'} ...}
+	my_client = aerospike.client(config)
 
 ## Examples
 

@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 ################################################################################
-# Copyright 2013-2016 Aerospike, Inc.
+# Copyright 2013-2017 Aerospike, Inc.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -22,6 +22,7 @@ import platform
 import sys
 from distutils.command.build import build
 from setuptools.command.install import install
+from distutils.sysconfig import get_config_vars
 from setuptools import setup, Extension
 from shutil import copytree, copy2
 from subprocess import Popen
@@ -43,6 +44,7 @@ class InstallCommand(install):
         global lua_system_path
         lua_system_path = self.lua_system_path
         install.run(self)
+
 
 class BuildCommand(build):
     user_options = build.user_options + [
@@ -66,7 +68,7 @@ class BuildCommand(build):
 # ENVIRONMENT VARIABLES
 ################################################################################
 
-os.putenv('ARCHFLAGS','-arch x86_64')
+os.putenv('ARCHFLAGS', '-arch x86_64')
 os.environ['ARCHFLAGS'] = '-arch x86_64'
 AEROSPIKE_C_VERSION = os.getenv('AEROSPIKE_C_VERSION')
 if not AEROSPIKE_C_VERSION:
@@ -74,7 +76,7 @@ if not AEROSPIKE_C_VERSION:
 DOWNLOAD_C_CLIENT = os.getenv('DOWNLOAD_C_CLIENT')
 AEROSPIKE_C_HOME = os.getenv('AEROSPIKE_C_HOME')
 PREFIX = None
-PLATFORM =  platform.platform(1)
+PLATFORM = platform.platform(1)
 LINUX = 'Linux' in PLATFORM
 DARWIN = 'Darwin' in PLATFORM
 CWD = os.path.abspath(os.path.dirname(__file__))
@@ -82,10 +84,13 @@ CWD = os.path.abspath(os.path.dirname(__file__))
 ################################################################################
 # HELPER FUNCTION FOR RESOLVING THE C CLIENT DEPENDENCY
 ################################################################################
+
+
 def lua_syspath_error(lua_system_path, exit_code):
     print("error: need permission to copy the Lua system files to ",
           lua_system_path, "or change the --lua-system-path")
     sys.exit(exit_code)
+
 
 def resolve_c_client(lua_src_path, lua_system_path):
     global PREFIX, AEROSPIKE_C_VERSION, DOWNLOAD_C_CLIENT
@@ -93,17 +98,20 @@ def resolve_c_client(lua_src_path, lua_system_path):
 
     if PREFIX:
         os.putenv('PREFIX', PREFIX)
+        os.environ['PREFIX'] = PREFIX
     if AEROSPIKE_C_VERSION:
         os.putenv('AEROSPIKE_C_VERSION', AEROSPIKE_C_VERSION)
+        os.environ['AEROSPIKE_C_VERSION'] = AEROSPIKE_C_VERSION
     if DOWNLOAD_C_CLIENT:
         os.putenv('DOWNLOAD_C_CLIENT', DOWNLOAD_C_CLIENT)
+        os.environ['DOWNLOAD_C_CLIENT'] = DOWNLOAD_C_CLIENT
 
-    print('info: Executing','./scripts/aerospike-client-c.sh', file=sys.stdout)
-    os.chmod('./scripts/aerospike-client-c.sh',0o0755)
+    print('info: Executing', './scripts/aerospike-client-c.sh', file=sys.stdout)
+    os.chmod('./scripts/aerospike-client-c.sh', 0o0755)
     p = Popen(['./scripts/aerospike-client-c.sh'], env=os.environ)
     rc = p.wait()
 
-    if rc != 0 :
+    if rc != 0:
         print("error: scripts/aerospike-client-c.sh", rc, file=sys.stderr)
         sys.exit(1)
 
@@ -113,9 +121,9 @@ def resolve_c_client(lua_src_path, lua_system_path):
         print("error: Directory not found:", aerospike_c_prefix, file=sys.stderr)
         sys.exit(2)
 
-    #-------------------------------------------------------------------------------
+    # -------------------------------------------------------------------------------
     # Check for aerospike.h
-    #-------------------------------------------------------------------------------
+    # -------------------------------------------------------------------------------
     aerospike_h = aerospike_c_prefix + '/include/aerospike/aerospike.h'
     if not os.path.isfile(aerospike_h):
         print("error: aerospike.h not found:", aerospike_h, file=sys.stderr)
@@ -127,9 +135,9 @@ def resolve_c_client(lua_src_path, lua_system_path):
         aerospike_c_prefix + '/include/ck'
         ]
 
-    #-------------------------------------------------------------------------------
+    # -------------------------------------------------------------------------------
     # Check for libaerospike.a
-    #-------------------------------------------------------------------------------
+    # -------------------------------------------------------------------------------
     aerospike_a = aerospike_c_prefix + '/lib/libaerospike.a'
     if not os.path.isfile(aerospike_a):
         print("error: libaerospike.a not found:", aerospike_a, file=sys.stderr)
@@ -139,16 +147,19 @@ def resolve_c_client(lua_src_path, lua_system_path):
         aerospike_a
         ]
 
-    #---------------------------------------------------------------------------
+    # ---------------------------------------------------------------------------
     # Environment Variables
-    #---------------------------------------------------------------------------
+    # ---------------------------------------------------------------------------
     os.putenv('CPATH', ':'.join(include_dirs))
+    os.environ['CPATH'] = ':'.join(include_dirs)
     os.putenv('LD_LIBRARY_PATH', ':'.join(library_dirs))
+    os.environ['LD_LIBRARY_PATH'] = ':'.join(library_dirs)
     os.putenv('DYLD_LIBRARY_PATH', ':'.join(library_dirs))
+    os.environ['DYLD_LIBRARY_PATH'] = ':'.join(library_dirs)
 
-    #---------------------------------------------------------------------------
+    # ---------------------------------------------------------------------------
     # Deploying the system lua files
-    #---------------------------------------------------------------------------
+    # ---------------------------------------------------------------------------
     print("copying from", lua_src_path, "to", lua_system_path)
     if not os.path.isdir(lua_system_path):
         try:
@@ -195,21 +206,21 @@ libraries = [
 ################################################################################
 
 if DARWIN:
-    #---------------------------------------------------------------------------
+    # ---------------------------------------------------------------------------
     # Mac Specific Compiler and Linker Settings
-    #---------------------------------------------------------------------------
+    # ---------------------------------------------------------------------------
     extra_compile_args = extra_compile_args + [
         '-D_DARWIN_UNLIMITED_SELECT',
         '-DMARCH_x86_64'
         ]
-    os.environ['MACOSX_DEPLOYMENT_TARGET'] = '10.11'
+
     if AEROSPIKE_C_HOME:
         PREFIX = AEROSPIKE_C_HOME + '/target/Darwin-x86_64'
 
 elif LINUX:
-    #---------------------------------------------------------------------------
+    # ---------------------------------------------------------------------------
     # Linux Specific Compiler and Linker Settings
-    #---------------------------------------------------------------------------
+    # ---------------------------------------------------------------------------
     extra_compile_args = extra_compile_args + [
         '-rdynamic', '-finline-functions',
         '-DMARCH_x86_64'
@@ -247,16 +258,15 @@ data_files = [
     ('aerospike', []),
     ('aerospike/usr-lua', []),
     ('aerospike/lua', [
-        lua_src_path + '/aerospike.lua',
-        lua_src_path + '/as.lua',
-        lua_src_path + '/stream_ops.lua'
-        ]
-    )
+            lua_src_path + '/aerospike.lua',
+            lua_src_path + '/as.lua',
+            lua_src_path + '/stream_ops.lua'
+        ])
 ]
 
 if not has_c_client:
-    if ('build' in sys.argv or 'build_ext' in sys.argv or
-        'install' in sys.argv or 'bdist_wheel' in sys.argv):
+    if (('build' in sys.argv or 'build_ext' in sys.argv or
+         'install' in sys.argv or 'bdist_wheel' in sys.argv)):
         resolve_c_client(lua_src_path, lua_system_path)
 
 ################################################################################
@@ -276,16 +286,16 @@ setup(
         'build': BuildCommand,
         'install': InstallCommand,
     },
-    name = 'aerospike',
-    version = version.strip(),
-    description = 'Aerospike Client Library for Python',
-    long_description = long_description,
-    author = 'Aerospike, Inc.',
-    author_email = 'info@aerospike.com',
-    url = 'http://aerospike.com',
-    license = 'Apache Software License',
-    keywords = ['aerospike', 'nosql', 'database'],
-    classifiers = [
+    name='aerospike',
+    version=version.strip(),
+    description='Aerospike Client Library for Python',
+    long_description=long_description,
+    author='Aerospike, Inc.',
+    author_email='info@aerospike.com',
+    url='http://aerospike.com',
+    license='Apache Software License',
+    keywords=['aerospike', 'nosql', 'database'],
+    classifiers=[
         'License :: OSI Approved :: Apache Software License',
         'Operating System :: POSIX :: Linux',
         'Operating System :: MacOS :: MacOS X',
@@ -297,22 +307,22 @@ setup(
     ],
 
     # Package Data Files
-    zip_safe = False,
-    include_package_data = True,
-    package_data = {
+    zip_safe=False,
+    include_package_data=True,
+    package_data={
         'aerospike': [
             lua_src_path + '/*.lua',
         ]
     },
 
     # Data files
-    data_files = data_files,
-    eager_resources = [
+    data_files=data_files,
+    eager_resources=[
         lua_src_path + '/aerospike.lua',
         lua_src_path + '/as.lua',
         lua_src_path + '/stream_ops.lua',
     ],
-    ext_modules = [
+    ext_modules=[
         Extension(
             # Extension Name
             'aerospike',
@@ -376,15 +386,14 @@ setup(
             ],
 
             # Compile
-            include_dirs = include_dirs,
-            extra_compile_args = extra_compile_args,
+            include_dirs=include_dirs,
+            extra_compile_args=extra_compile_args,
 
             # Link
-            library_dirs = library_dirs,
-            libraries = libraries,
-            extra_objects = extra_objects,
-            extra_link_args = extra_link_args,
+            library_dirs=library_dirs,
+            libraries=libraries,
+            extra_objects=extra_objects,
+            extra_link_args=extra_link_args,
         )
     ]
 )
-
