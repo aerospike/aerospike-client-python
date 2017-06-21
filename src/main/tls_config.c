@@ -32,7 +32,6 @@ get_string_from_string_like(PyObject* string_like);
 void
 setup_tls_config(as_config* config, PyObject* tls_config)
 {
-	uint32_t max_val = 0xFFFFFFFF; // 2 ^ 32 -1
 	long long_timeout;
 	PyObject* config_value = NULL;
 	int truth_value = -1;
@@ -89,15 +88,6 @@ setup_tls_config(as_config* config, PyObject* tls_config)
 		if(truth_value != -1) {
 			config->tls.log_session_info = (bool)truth_value;
 			truth_value = -1;
-		}
-	}
-
-	// Setup the uint32_t item if present and valid
-	config_value = PyDict_GetItemString(tls_config, "max_socket_idle");
-	if (config_value && PyInt_Check(config_value)) {
-		long_timeout = PyInt_AsLong(config_value);
-		if (long_timeout >= 0 && long_timeout <= max_val) {
-			config->tls.max_socket_idle = (uint32_t)long_timeout;
 		}
 	}
 

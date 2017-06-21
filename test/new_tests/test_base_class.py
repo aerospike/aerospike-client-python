@@ -1,3 +1,4 @@
+import os
 import pytest
 try:
     import ConfigParser as configparser
@@ -14,6 +15,7 @@ class TestBaseClass(object):
     has_geo = None
     using_tls = False
     using_auth = False
+    should_xfail = False
 
     @staticmethod
     def get_hosts():
@@ -35,6 +37,15 @@ class TestBaseClass(object):
                 config.get('community-edition', 'hosts'))
         print(TestBaseClass.using_auth)
         return TestBaseClass.hostlist, TestBaseClass.user, TestBaseClass.password
+
+    @staticmethod
+    def temporary_xfail():
+        if TestBaseClass.should_xfail:
+            return True
+        else:
+            env_val = os.environ.get('TEMPORARY_XFAIL')
+            TestBaseClass.should_xfail = bool(env_val)
+        return TestBaseClass.should_xfail
 
     @staticmethod
     def get_tls_info():
