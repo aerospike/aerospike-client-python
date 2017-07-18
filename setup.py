@@ -161,26 +161,6 @@ def resolve_c_client(lua_src_path, lua_system_path):
     # Deploying the system lua files
     # ---------------------------------------------------------------------------
 
-    if lua_system_path:
-        print("copying from", lua_src_path, "to", lua_system_path)
-        if not os.path.isdir(lua_system_path):
-            try:
-                copytree(lua_src_path, lua_system_path)
-            except OSError as e:
-                lua_syspath_error(lua_system_path, 5)
-        else:
-            for fname in os.listdir(lua_src_path):
-                try:
-                    copytree(os.path.join(lua_src_path, fname), lua_system_path)
-                except OSError as e:
-                    if e.errno == errno.ENOTDIR:
-                        try:
-                            copy2(os.path.join(lua_src_path, fname), lua_system_path)
-                        except:
-                            lua_syspath_error(lua_system_path, 6)
-                    else:
-                        lua_syspath_error(lua_system_path, 7)
-
 ################################################################################
 # GENERIC BUILD SETTINGS
 ################################################################################
@@ -238,12 +218,15 @@ else:
 # RESOLVE C CLIENT DEPENDENCY AND LUA SYSTEM PATH
 ################################################################################
 
-# Determine where the system lua files should be copied to
+# Determine where the system lua files should be installed to
+# this defaults to sys.exec_prefix
 lua_system_path = ''
 for arg in sys.argv:
     if arg[0:17] == '--lua-system-path':
         option, val = arg.split('=')
         lua_system_path = val.strip()
+        if lua_system_path:
+            lua_system_path = os.path.abspath(lua_system_path)
 
 # If the C client is packaged elsewhere, assume the libraries are available
 lua_src_path = "modules/aerospike-lua-core/src"
@@ -267,10 +250,11 @@ for file in lua_files:
         sys.exit(4)
 
 
+# If system-path isn't specified this will install relative to sys.exec_prefix
 data_files = [
-    ('aerospike', []),
-    ('aerospike/usr-lua', []),
-    ('aerospike/lua', lua_files)
+    (os.path.join(lua_system_path, 'aerospike'), []),
+    (os.path.join(lua_system_path, 'aerospike/usr-lua'), []),
+    (os.path.join(lua_system_path, 'aerospike/lua'), lua_files)
 ]
 
 if not has_c_client:

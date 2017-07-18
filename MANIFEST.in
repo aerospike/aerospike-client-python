@@ -4,4 +4,3 @@ include VERSION
 recursive-include scripts *
 recursive-include src *
 include modules/aerospike-lua-core/src/*.lua
-include aerospike-client-c/lua/*.lua

@@ -59,7 +59,9 @@ The dependencies can be installed through the OS X package manager [Homebrew](ht
 
 To build the library:
 
+    git submodule update --init
     python setup.py build --force
+
 
 The helper `scripts/aerospike-client-c.sh` is triggered by `setup.py` to
 download the appropriate C client. However, if one is present this will not
@@ -134,13 +136,13 @@ error similar to: `error: could not create '/usr/local/aerospike/lua': Permissio
 ### Lua System Modules
 
 Stream UDF functionality requires a local copy of the system Lua modules.
-By default, those Lua files are copied to `/usr/local/aerospike/lua`.
-A different directory can be created, then set:
+By default, those Lua files are copied to an `aerospike` directory inside of Python's' installation path for system dependent packages. This directory can be viewed by running  `python -c "import sys; print(sys.prefix);" `
+To store the files in an additional location: specify the additional location with the `--lua-system-path` option to setup.py
 
     python setup.py install --lua-system-path=/path/to/lua
 
 
-**Note** If you do not use the default location, and you wish to perform Stream UDF operations it will be necessary to specify the locations of the system modules as a configuration parameter to the Aerospike client constructor:
+**Note** If the .lua files are stored somewhere besides `/usr/local/aerospike/lua`. and you wish to perform Stream UDF operations it will be necessary to specify the locations of the system modules as a configuration parameter to the Aerospike client constructor:
 
 	config = {'hosts': [('127.0.0.1', 3000)], 'lua': {'system_path': '/path/to/lua'} ...}
 	my_client = aerospike.client(config)

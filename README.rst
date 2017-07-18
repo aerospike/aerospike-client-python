@@ -80,13 +80,24 @@ Aerospike Python Client can be installed using ``pip``:
     # to trouleshoot installation on OS X El-Capitan (10.11) or OS X Sierra (10.12)
     pip install --no-cache-dir --user aerospike
 
-    # to have pip copy the Lua system files to a dir other than /usr/local/aerospike/lua
-    pip install aerospike --install-option="--lua-system-path=/opt/aerospike/lua"
-
 If you run into trouble installing the client on a supported OS, you may be
 using an outdated ``pip``.
 Versions of ``pip`` older than 7.0.0 should be upgraded, as well as versions of
 ``setuptools`` older than 18.0.0.
+
+Lua files
+~~~~~~~~~~
+
+The system .lua files used for client side aggregation will be installed.
+By default pip will install the .lua files in a subdirectory named aerospike inside of the Python
+installations directory for platform specific files. This directory can be seen by running
+``python -c "import sys; print(sys.exec_prefix);"``
+
+If you would like the files to be placed into an additional location during installation, specify
+a ``--lua-system-path`` option when running setup.py:
+
+``python setup.py install --lua-system-path=/path/to/lua/install``
+
 
 OS X Installation
 ~~~~~~~~~~~~~~~~~~
