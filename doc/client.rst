@@ -2699,7 +2699,14 @@ Batch Policies
         :columns: 1
 
         * **timeout** read timeout in milliseconds
-
+        * **retry** Maximum number of retries when a transaction fails due to a network error. Default: `1`
+        * **sleep_between_retries** Milliseconds to sleep between retries. Default: `0` (do not sleep)
+        * **consistency_level** one of the ``aerospike.POLICY_CONSISTENCY_*`` values such as :data:`aerospike.POLICY_CONSISTENCY_ONE`
+        * **retry_on_timeout** :class:`bool`  Should the client retry a command if the timeout is reached. `False`: Return error when the timeout has been reached. Note that retries can still occur if a command fails on a network error before the timeout has been reached. `True` Retry command with same timeout when the timeout has been reached.  The maximum number of retries is defined by `retry`. Default `False`
+        * **concurrent** :class:`bool` Determine if batch commands to each server are run in parallel threads. Default `False`
+        * **allow_inline** :class:`bool` . Allow batch to be processed immediately in the server's receiving thread when the server deems it to be appropriate.  If `False`, the batch will always be processed in separate transaction threads.  This field is only relevant for the new batch index protocol. Default `True`.
+        * **send_set_name** :class:`bool` Send set name field to server for every key in the batch for batch index protocol. This is only necessary when authentication is enabled and security roles are defined on a per set basis. Default: `False`
+        * **deserialize** :class:`bool` Should raw bytes be deserialized to as_list or as_map. Set to `False` for backup programs that just need access to raw bytes. Default: `True`
 
 .. _aerospike_info_policies:
 
