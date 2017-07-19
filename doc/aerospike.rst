@@ -113,6 +113,44 @@ in an in-memory primary index.
     .. versionchanged:: 2.0.0
 
 
+    .. code-block:: python
+
+        import aerospike
+        import sys
+
+        # NOTE: Use of TLS Requires Aerospike Enterprise Server Version >= 3.11 and Python Client version 2.1.0 or greater
+        # To view Instructions for server configuration for TLS see https://www.aerospike.com/docs/guide/security/tls.html
+        tls_name = "some-server-tls-name"
+        tls_ip = "127.0.0.1"
+        tls_port = 4333
+
+        # If tls-name is specified, it must match the tls-name specified in the node’s server configuration file
+        # and match the server’s CA certificate.
+        tls_host_tuple = (tls_ip, tls_port, tls_name)
+        hosts = [tls_host_tuple]
+
+        # Example configuration which will use TLS to encrypt only
+        tls_config = {
+            "cafile": "/path/to/cacert.pem",
+            "enable": True,
+            "encrypt_only": True,
+        }
+
+        client = aerospike.client({
+            "hosts": hosts,
+            "tls": tls_config
+        })
+        try:
+            client.connect()
+        except Exception as e:
+            print(e)
+            print("Failed to connect")
+            sys.exit()
+
+        key = ('test', 'demo', 1)
+        client.put(key, {'aerospike': 'aerospike'})
+        print(client.get(key))
+
 .. py:function:: null()
 
     A type for distinguishing a server-side null from a Python :py:obj:`None`.

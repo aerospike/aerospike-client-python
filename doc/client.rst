@@ -75,7 +75,7 @@ a cluster-tending thread.
                  established to a seed node (any single node in the cluster from which the client \
                  learns of the other nodes).
 
-        .. seealso:: `Security features article <https://www.aerospike.com/docs/guide/security.html>`_.
+        .. seealso:: `Security features article <https://www.aerospike.com/docs/guide/security/index.html>`_.
 
     .. method:: is_connected()
 
@@ -2314,7 +2314,7 @@ a cluster-tending thread.
                 print("Error [{0}]: {1}".format(e.code, e.msg))
             client.close()
 
-        .. seealso:: `Security features article <https://www.aerospike.com/docs/guide/security.html>`_.
+        .. seealso:: `Security features article <https://www.aerospike.com/docs/guide/security/index.html>`_.
 
 
     .. method:: admin_create_role(role, privileges[, policy])
