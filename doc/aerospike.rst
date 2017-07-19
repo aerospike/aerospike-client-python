@@ -1039,7 +1039,7 @@ Specifies which partition replica to read from.
 
 .. data:: POLICY_REPLICA_ANY
 
-    Read from an unspecified replica node
+    Distribute reads across nodes containing key's master and replicated partition in round-robin fashion. Currently restricted to master and one prole.
 
 .. rubric:: Retry Policy Options
 
