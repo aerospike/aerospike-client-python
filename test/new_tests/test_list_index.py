@@ -13,7 +13,6 @@ except:
     sys.exit(1)
 
 
-@pytest.mark.skip(reason="rapid index creation and drop can create timeouts")
 class TestListIndex(object):
 
     @pytest.fixture(autouse=True)
@@ -102,7 +101,6 @@ class TestListIndex(object):
         self.as_connection.index_remove('test', 'test_string_list_index',
                                         policy)
 
-    @pytest.mark.skip(reason="rapidly creating and dropping same index can cause timeout")
     def test_pos_create_same_listindex_multiple_times(self):
         """
             Invoke createindex() with multiple times on same bin
@@ -121,7 +119,6 @@ class TestListIndex(object):
         else:
             assert True is False
 
-    @pytest.mark.skip(reason="rapidly creating and dropping same index can cause timeout")
     def test_pos_create_same_listindex_multiple_times_different_bin(self):
         """
             Invoke createindex() with multiple times on different bin
@@ -140,7 +137,6 @@ class TestListIndex(object):
         else:
             assert True is False
 
-    @pytest.mark.skip(reason="rapidly creating and dropping same index can cause timeout")
     def test_pos_create_different_listindex_multiple_times_same_bin(self):
         """
             Invoke createindex() with multiple times on same bin with different
