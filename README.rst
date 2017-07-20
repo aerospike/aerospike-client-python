@@ -110,7 +110,7 @@ For instructions on manually building the Python client, please refer to the
 Documentation
 -------------
 
-Documentation is hosted at `pythonhosted.org/aerospike <https://pythonhosted.org/aerospike/>`__
+Documentation is hosted at `aerospike-python-client.readthedocs.io <https://aerospike-python-client.readthedocs.io/>`__
 and at `aerospike.com/apidocs/python <http://www.aerospike.com/apidocs/python/>`__.
 
 Examples

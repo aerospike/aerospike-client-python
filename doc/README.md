@@ -3,7 +3,7 @@
 ## API Docs Online
 
 The API docs are online at http://www.aerospike.com/apidocs/python/
-and https://pythonhosted.org/aerospike/
+and https://aerospike-python-client.readthedocs.io/
 
 ## Generating Local Documentation
 
