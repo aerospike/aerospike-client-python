@@ -184,6 +184,16 @@ class TestGetMany():
 
         client_batch_direct.close()
 
+    def test_pos_get_many_with_use_batch_direct_as_method_arg(self):
+
+        hostlist, user, password = TestBaseClass.get_hosts()
+        policies = {'use_batch_direct': True}
+
+        records = self.as_connection.get_many(self.keys, policies)
+
+        assert isinstance(records, list)
+        assert len(records) == len(self.keys)
+
     # Negative Tests
     def test_neg_get_many_Invalid_Key_without_primary_key(self):
         """

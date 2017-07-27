@@ -467,7 +467,7 @@ PyObject * AerospikeClient_Get_Many_Invoke(
 	as_policy_batch policy;
 	as_policy_batch * batch_policy_p = NULL;
 	bool has_batch_index = false;
-
+	bool policy_batch_direct = false;
 	// Initialize error
 	as_error_init(&err);
 
@@ -488,8 +488,12 @@ PyObject * AerospikeClient_Get_Many_Invoke(
 		goto CLEANUP;
 	}
 
+	if (batch_policy_p) {
+		policy_batch_direct = batch_policy_p->use_batch_direct;
+	}
+
 	has_batch_index = aerospike_has_batch_index(self->as);
-	if (has_batch_index && !(self->as->config.policies.batch.use_batch_direct)) {
+	if (has_batch_index && !policy_batch_direct) {
 		py_recs = batch_get_aerospike_batch_read(&err, self, py_keys, batch_policy_p);
 	} else {
 		py_recs = batch_get_aerospike_batch_get(&err, self, py_keys, batch_policy_p);

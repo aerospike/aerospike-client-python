@@ -262,7 +262,7 @@ PyObject * AerospikeClient_Info(AerospikeClient * self, PyObject * args, PyObjec
 	char * req = NULL;
 	if (PyUnicode_Check(py_req)) {
 		py_ustr = PyUnicode_AsUTF8String(py_req);
-		req = strdup(PyBytes_AsString(py_ustr));
+		req = PyBytes_AsString(py_ustr);
 	} else if (PyString_Check(py_req)) {
 		req = PyString_AsString(py_req);
 	} else {
