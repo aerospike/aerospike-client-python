@@ -90,9 +90,12 @@ PyObject * AerospikeClient_Admin_Create_User(AerospikeClient * self, PyObject *a
 			roles[i] = cf_malloc(sizeof(char) * AS_ROLE_SIZE);
 			memset(roles[i], 0, sizeof(char) * AS_ROLE_SIZE);
 		}
+	} else {
+		as_error_update(&err, AEROSPIKE_ERR_PARAM, "Roles should be a list");
+		goto CLEANUP;
 	}
 
-	pyobject_to_strArray(&err, py_roles, roles);
+	pyobject_to_strArray(&err, py_roles, roles, AS_ROLE_SIZE);
 	if (err.code != AEROSPIKE_OK) {
 		goto CLEANUP;
 	}
@@ -507,7 +510,7 @@ PyObject * AerospikeClient_Admin_Grant_Roles( AerospikeClient *self, PyObject *a
 		}
 	}
 
-	pyobject_to_strArray(&err, py_roles, roles);
+	pyobject_to_strArray(&err, py_roles, roles, AS_ROLE_SIZE);
 	if (err.code != AEROSPIKE_OK) {
 		goto CLEANUP;
 	}
@@ -615,7 +618,7 @@ PyObject * AerospikeClient_Admin_Revoke_Roles( AerospikeClient *self, PyObject *
 		}
 	}
 
-	pyobject_to_strArray(&err, py_roles, roles);
+	pyobject_to_strArray(&err, py_roles, roles, AS_ROLE_SIZE);
 	if (err.code != AEROSPIKE_OK) {
 		goto CLEANUP;
 	}

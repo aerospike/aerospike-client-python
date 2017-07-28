@@ -13,6 +13,7 @@ class TestBaseClass(object):
     has_ldt = None
     has_geo = None
     using_tls = False
+    using_auth = False
 
     @staticmethod
     def get_hosts():
@@ -28,9 +29,11 @@ class TestBaseClass(object):
             if config.has_option('enterprise-edition', 'password'):
                 TestBaseClass.password = config.get(
                     'enterprise-edition', 'password')
+                TestBaseClass.using_auth = True
         else:
             TestBaseClass.hostlist = TestBaseClass.parse_hosts(
                 config.get('community-edition', 'hosts'))
+        print(TestBaseClass.using_auth)
         return TestBaseClass.hostlist, TestBaseClass.user, TestBaseClass.password
 
     @staticmethod
@@ -175,6 +178,14 @@ class TestBaseClass(object):
             TestBaseClass.get_tls_info()
 
         return TestBaseClass.using_tls
+
+    @staticmethod
+    def auth_in_use():
+        if TestBaseClass.using_auth:
+            return True
+        else:
+            TestBaseClass.get_hosts()
+        return TestBaseClass.using_auth
 
     @staticmethod
     def get_connection_config():

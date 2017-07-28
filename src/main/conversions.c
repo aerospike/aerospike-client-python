@@ -272,22 +272,54 @@ as_status as_privilege_to_pyobject( as_error * err, as_privilege privileges[], P
 	return err->code;
 }
 
-as_status pyobject_to_strArray( as_error * err, PyObject * py_list,  char ** arr )
+as_status pyobject_to_strArray( as_error * err, PyObject * py_list,  char ** arr , uint32_t max_len)
 {
-	as_error_reset(err);
 
-	Py_ssize_t size = PyList_Size(py_list);
+	as_error_reset(err);
+	PyObject* py_u_str = NULL;
+
 	if (!PyList_Check(py_list)) {
 		return as_error_update(err, AEROSPIKE_ERR_CLIENT, "not a list");
 	}
 
+	Py_ssize_t size = PyList_Size(py_list);
+
 	char *s;
 	for ( int i = 0; i < size; i++ ) {
 		PyObject * py_val = PyList_GetItem(py_list, i);
+
 		if (PyString_Check(py_val)) {
 			s = PyString_AsString(py_val);
-			strcpy(arr[i], s);
+
+			if (strlen(s) < max_len) {
+				strcpy(arr[i], s);
+			} else {
+				as_error_update(err, AEROSPIKE_ERR_CLIENT, "String exceeds max length");
+				return err->code;
+			}
+
+		} else if (PyUnicode_Check(py_val)) {
+			py_u_str = PyUnicode_AsUTF8String(py_val);
+			if (!py_u_str) {
+				as_error_update(err, AEROSPIKE_ERR_CLIENT, "Unable to convert unicode string");
+				return err->code;
+			}
+			s = PyBytes_AsString(py_u_str);
+
+			if (strlen(s) < max_len) {
+				strcpy(arr[i], s);
+				Py_DECREF(py_u_str);
+			} else {
+				Py_DECREF(py_u_str);
+				as_error_update(err, AEROSPIKE_ERR_CLIENT, "String exceeds max length");
+				return err->code;
+			}
+
+		} else {
+			as_error_update(err, AEROSPIKE_ERR_CLIENT, "Item is not a string");
+			return err->code;
 		}
+
 	}
 
 	return err->code;

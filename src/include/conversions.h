@@ -38,7 +38,7 @@ as_status as_user_to_pyobject(as_error *err, as_user *user, PyObject **py_as_use
 
 as_status as_user_array_to_pyobject(as_error *err, as_user **users, PyObject **py_as_users, int users_size);
 
-as_status pyobject_to_strArray(as_error * err, PyObject * py_list,  char **arr);
+as_status pyobject_to_strArray(as_error * err, PyObject * py_list,  char **arr, uint32_t max_len);
 
 as_status pyobject_to_val(AerospikeClient * self, as_error * err, PyObject * py_obj, as_val ** val, as_static_pool *static_pool, int serializer_type);
 
