@@ -1442,6 +1442,10 @@ a cluster-tending thread.
             elements in the list will correspond to the order of the operations \
             from the input parameters.
 
+            .. warning::
+
+                Unlike :meth:`operate` this function will apply each of the operations separately, making multiple calls to the server.
+
             :param tuple key: a :ref:`aerospike_key_tuple` associated with the record.
             :param list list: a :class:`list` of one or more bin operations, each \
                 structured as the :class:`dict` \
