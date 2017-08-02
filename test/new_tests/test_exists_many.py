@@ -177,6 +177,88 @@ class TestExistsMany():
         for x in records:
             assert x[1] is None
 
+    def test_exists_many_with_batch_direct_as_constructor_arg(self, put_data):
+
+        hostlist, user, password = TestBaseClass.get_hosts()
+        config = {'policies': {'use_batch_direct': True}}
+        client_batch_direct = TestBaseClass.get_new_connection(add_config=config)
+
+        self.keys = []
+        rec_length = 5
+        for i in range(rec_length):
+            key = ('test', 'demo', i)
+            record = {'name': 'name%s' % (str(i)), 'age': i}
+            put_data(self.as_connection, key, record)
+            self.keys.append(key)
+
+        self.keys.append(('test', 'demo', 'some_key'))
+
+        for i in range(15, 20):
+            key = ('test', 'demo', i)
+            rec = {'name': 'name%s' % (str(i)), 'age': i}
+            put_data(self.as_connection, key, rec)
+            self.keys.append(key)
+
+        records = client_batch_direct.exists_many(self.keys)
+
+        assert isinstance(records, list)
+        assert len(records) == len(self.keys)
+
+        client_batch_direct.close()
+
+    def test_with_batch_direct_true_in_constructor_false_in_args(self, put_data):
+
+        hostlist, user, password = TestBaseClass.get_hosts()
+        config = {'policies': {'use_batch_direct': True}}
+        client_batch_direct = TestBaseClass.get_new_connection(add_config=config)
+        policies = {'use_batch_direct': False}
+        self.keys = []
+        rec_length = 5
+        for i in range(rec_length):
+            key = ('test', 'demo', i)
+            record = {'name': 'name%s' % (str(i)), 'age': i}
+            put_data(self.as_connection, key, record)
+            self.keys.append(key)
+
+        self.keys.append(('test', 'demo', 'some_key'))
+
+        for i in range(15, 20):
+            key = ('test', 'demo', i)
+            rec = {'name': 'name%s' % (str(i)), 'age': i}
+            put_data(self.as_connection, key, rec)
+            self.keys.append(key)
+
+        records = client_batch_direct.exists_many(self.keys)
+
+        assert isinstance(records, list)
+        assert len(records) == len(self.keys)
+
+        client_batch_direct.close()
+
+    def test_exists_many_with_batch_direct_as_method_arg(self, put_data):
+
+        policies = {'use_batch_direct': True}
+
+        self.keys = []
+        rec_length = 5
+        for i in range(rec_length):
+            key = ('test', 'demo', i)
+            record = {'name': 'name%s' % (str(i)), 'age': i}
+            put_data(self.as_connection, key, record)
+            self.keys.append(key)
+
+        self.keys.append(('test', 'demo', 'some_key'))
+
+        for i in range(15, 20):
+            key = ('test', 'demo', i)
+            rec = {'name': 'name%s' % (str(i)), 'age': i}
+            put_data(self.as_connection, key, rec)
+            self.keys.append(key)
+
+        records = self.as_connection.exists_many(self.keys, policies)
+
+        assert isinstance(records, list)
+        assert len(records) == len(self.keys)
     # Negative Tests
 
     def test_neg_exists_many_with_none_keys(self):
