@@ -12,18 +12,19 @@
     :py:class:`int`, :py:class:`str`, :py:class:`float`, :py:class:`bytearray`, \
     :py:class:`list`, :py:class:`dict` to matching aerospike server \
     `types <http://www.aerospike.com/docs/guide/data-types.html>`_ \
-    (int, string, double, bytes, list, map). When an unsupported type is \
+    (int, string, double, blob, list, map). When an unsupported type is \
     encountered, the module uses \
     `cPickle <https://docs.python.org/2/library/pickle.html?highlight=cpickle#module-cPickle>`_ \
-    to serialize and deserialize the data, storing it into *as_bytes* of type \
+    to serialize and deserialize the data, storing it into a blob of type \
     `'Python' <https://www.aerospike.com/docs/udf/api/bytes.html#encoding-type>`_ \
     (`AS_BYTES_PYTHON <http://www.aerospike.com/apidocs/c/d0/dd4/as__bytes_8h.html#a0cf2a6a1f39668f606b19711b3a98bf3>`_).
 
     The functions :func:`~aerospike.set_serializer` and :func:`~aerospike.set_deserializer` \
-    allow for user-defined functions to handle serialization, instead. \
+    allow for user-defined functions to handle serialization, instead. The user provided function will be run instead of cPickle. \
     The serialized data is stored as \
-    'Generic' *as_bytes* of type (\
+    type (\
     `AS_BYTES_BLOB <http://www.aerospike.com/apidocs/c/d0/dd4/as__bytes_8h.html#a0cf2a6a1f39668f606b19711b3a98bf3>`_). \
+    This type allows the storage of binary data readable by Aerospike Clients in other languages. \
     The *serialization* config param of :func:`aerospike.client` registers an \
     instance-level pair of functions that handle serialization.
 
@@ -47,10 +48,12 @@ The following table shows which Python types map directly to Aerospike server ty
 +--------------------------+--------------+
 |list                      |list          |
 +--------------------------+--------------+
-|bytearray                 |bytes         |
+|bytearray                 |blob          |
 +--------------------------+--------------+
 |aerospike.GeoJSON         |GeoJSON       |
 +--------------------------+--------------+
+
+It is possible to nest these datatypes. For example a list may contain a dictionary, or a dictionary may contain a list as a value.
 
 .. note::
 
