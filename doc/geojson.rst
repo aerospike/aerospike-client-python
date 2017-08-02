@@ -55,7 +55,7 @@ GeoJSON Class --- :class:`GeoJSON`
         client.put(('test', 'pads', 'launchpad1'), bins)
 
         # Read the record.
-        (k, m, b) = client.get(('test', 'demo', 'launchpad1'))
+        (k, m, b) = client.get(('test', 'pads', 'launchpad1'))
         print(b)
         client.close()
 
