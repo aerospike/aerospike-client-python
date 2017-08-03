@@ -808,139 +808,132 @@ static PyObject *  AerospikeClient_OperateOrdered_Invoke(
 	PyObject * py_policy)
 {
 	long operation;
-	long return_type;
-	int i = 0;
+	long return_type = -1;
 	PyObject * py_rec = NULL;
+	as_record * rec = NULL;
 	as_policy_operate operate_policy;
 	as_policy_operate *operate_policy_p = NULL;
 
 	as_vector * unicodeStrVector = as_vector_create(sizeof(char *), 128);
 
-	if (py_policy) {
-		if(pyobject_to_policy_operate(err, py_policy, &operate_policy, &operate_policy_p,
-				&self->as->config.policies.operate) != AEROSPIKE_OK) {
-			goto CLEANUP;
-		}
-	}
-
 	as_static_pool static_pool;
 	memset(&static_pool, 0, sizeof(static_pool));
 
-	Py_ssize_t size = PyList_Size(py_list);
+	as_operations ops;
+	Py_ssize_t ops_list_size = PyList_Size(py_list);
+	as_operations_inita(&ops, ops_list_size);
 
-	if (!self || !self->as) {
-		as_error_update(err, AEROSPIKE_ERR_PARAM, "Invalid aerospike object");
-		goto CLEANUP;
+	/* These are the values which will be returned in a 3 element list */
+	PyObject* py_return_key = NULL;
+	PyObject* py_return_meta = NULL;
+	PyObject* py_return_bins = NULL;
+
+	CHECK_CONNECTED(err);
+
+	if (py_policy) {
+		if (pyobject_to_policy_operate(err, py_policy, &operate_policy,
+				&operate_policy_p, &self->as->config.policies.operate) != AEROSPIKE_OK) {
+			goto CLEANUP;
+		}
+	}
+
+	if (py_meta) {
+		if (check_for_meta(py_meta, &ops, err) != AEROSPIKE_OK) {
+			goto CLEANUP;
+		}
+	}
+
+	for (Py_ssize_t i = 0; i < ops_list_size; i++) {
+
+		PyObject* py_current_op = NULL;
+		py_current_op = PyList_GetItem(py_list, i);
+
+		if (PyDict_Check(py_current_op)) {
+			if (add_op(self, err, py_current_op, unicodeStrVector, &static_pool,
+					&ops, &operation, &return_type) != AEROSPIKE_OK) {
+				goto CLEANUP;
+			}
+		} else {
+			as_error_update(err, AEROSPIKE_ERR_PARAM, "Operation must be a dict");
+			goto CLEANUP;
+		}
 	}
 
 	if (err->code != AEROSPIKE_OK) {
+		as_error_update(err, err->code, err->message);
 		goto CLEANUP;
 	}
 
-	PyObject * py_rec_key = NULL;
-	PyObject * py_rec_meta = NULL;
-	PyObject * py_bins = NULL;
+	// Initialize record
+	as_record_init(rec, 0);
 
-	py_bins = PyList_New(0);
+	Py_BEGIN_ALLOW_THREADS
+	aerospike_key_operate(self->as, err, operate_policy_p, key, &ops, &rec);
+	Py_END_ALLOW_THREADS
 
-	for (i = 0; i < size; i++) {
-		as_operations ops;
-		as_operations_init(&ops, 1);
-
-		as_record * rec = NULL;
-
-		if (py_meta) {
-			if (check_for_meta(py_meta, &ops, err) != AEROSPIKE_OK) {
-				goto LOOP_CLEANUP;
-			}
-		}
-
-		PyObject * py_val = PyList_GetItem(py_list, i);
-		operation = -1;
-		return_type = -1;
-		if (PyDict_Check(py_val)) {
-			if (add_op(self, err, py_val, unicodeStrVector, &static_pool, &ops, &operation, &return_type) != AEROSPIKE_OK) {
-				goto LOOP_CLEANUP;
-			}
-		}
-
-		Py_BEGIN_ALLOW_THREADS
-		aerospike_key_operate(self->as, err, operate_policy_p, key, &ops, &rec);
-		Py_END_ALLOW_THREADS
-
-		if (err->code != AEROSPIKE_OK) {
-			as_error_update(err, err->code, NULL);
-			goto LOOP_CLEANUP;
-		}
-
-		if (rec) {
-			PyObject *py_rec_bins = NULL;
-			if (i == 0) {
-				key_to_pyobject(err, key ? key : &rec->key, &py_rec_key);
-				metadata_to_pyobject(err, rec, &py_rec_meta);
-			}
-			bins_to_pyobject(self, err, rec, &py_rec_bins, return_type == AS_MAP_RETURN_KEY_VALUE);
-
-			if (opReturnsResult(operation))
-			{
-				PyObject *py_value = PyDict_GetItemString(py_rec_bins, ops.binops.entries->bin.name);
-				PyObject *py_rec_tuple = PyTuple_New(2);
-				if (py_value) {
-					Py_INCREF(py_value);
-					PyTuple_SetItem(py_rec_tuple, 0, PyString_FromString(ops.binops.entries->bin.name));
-					PyTuple_SetItem(py_rec_tuple, 1, py_value);
-				} else {
-					Py_INCREF(Py_None);
-					PyTuple_SetItem(py_rec_tuple, 0, PyString_FromString(ops.binops.entries->bin.name));
-					PyTuple_SetItem(py_rec_tuple, 1, Py_None);
-				}
-
-				PyList_Append(py_bins, py_rec_tuple);
-				Py_DECREF(py_rec_tuple);
-			} else {
-				Py_INCREF(Py_None);
-				PyList_Append(py_bins, Py_None);
-			}
-			Py_DECREF(py_rec_bins);
-		}
-
-LOOP_CLEANUP:
-		as_operations_destroy(&ops);
-
-		if (rec) {
-			as_record_destroy(rec);
-		}
-
-		if (err->code != AEROSPIKE_OK && i == 0) {
-			goto CLEANUP;
-		} else if (err->code != AEROSPIKE_OK) {
-			as_error_reset(err);
-			break;
-		}
+	if (err->code != AEROSPIKE_OK) {
+		as_error_update(err, err->code, err->message);
+		goto CLEANUP;
 	}
 
-	py_rec = PyTuple_New(3);
+	if (rec) {
+		/* Build the return tuple: (key, meta, bins) */
+		key_to_pyobject(err, key, &py_return_key);
+		if (err->code != AEROSPIKE_OK || !py_return_key) {
+			goto CLEANUP;
+		}
 
-	PyTuple_SetItem(py_rec, 0, py_rec_key);
-	PyTuple_SetItem(py_rec, 1, py_rec_meta);
-	PyTuple_SetItem(py_rec, 2, py_bins);
+		metadata_to_pyobject(err, rec, &py_return_meta);
+		if (err->code != AEROSPIKE_OK || !py_return_meta) {
+			Py_XDECREF(py_return_meta);
+			goto CLEANUP;
+		}
+
+		operate_bins_to_pyobject(self, err, rec, &py_return_bins);
+		if (err->code != AEROSPIKE_OK || !py_return_bins) {
+			Py_XDECREF(py_return_key);
+			Py_XDECREF(py_return_meta);
+			goto CLEANUP;
+		}
+
+
+		py_rec = Py_BuildValue("OOO", py_return_key, py_return_meta, py_return_bins);
+		if (!py_rec) {
+			as_error_update(err, AEROSPIKE_ERR_CLIENT, "Unable to build return tuple");
+		}
+
+		/* If Py_BuildValue succeeded it increased the reference count of all 3 of these to 2,
+		 * so we decref them.*
+		 * If Py_BuildValue failed, we aren't returning anything, so they need to be
+		 * decref'd in that case as well.
+		 */
+		Py_XDECREF(py_return_key);
+		Py_XDECREF(py_return_bins);
+		Py_XDECREF(py_return_meta);
+	}
 
 CLEANUP:
 	for (unsigned int i=0; i<unicodeStrVector->size ; i++) {
 		free(as_vector_get_ptr(unicodeStrVector, i));
 	}
+
 	as_vector_destroy(unicodeStrVector);
 
+	if (rec) {
+		as_record_destroy(rec);
+	}
 	if (key->valuep) {
 		as_key_destroy(key);
 	}
+
+	as_operations_destroy(&ops);
 
 	if (err->code != AEROSPIKE_OK) {
 		PyObject * py_err = NULL;
 		error_to_pyobject(err, &py_err);
 		PyObject *exception_type = raise_exception(err);
 		PyErr_SetObject(exception_type, py_err);
-		Py_DECREF(py_err);
+		Py_XDECREF(py_err);
 		return NULL;
 	}
 

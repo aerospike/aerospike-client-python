@@ -35,6 +35,7 @@
 #include <aerospike/as_operations.h>
 #include <aerospike/as_bytes.h>
 #include <aerospike/as_double.h>
+#include <aerospike/as_record_iterator.h>
 
 #include "conversions.h"
 #include "geo.h"
@@ -1439,6 +1440,66 @@ as_status bins_to_pyobject(AerospikeClient * self, as_error * err, const as_reco
 		return err->code;
 	}
 
+	return err->code;
+}
+
+/*
+ * operate_bins_to_pyobject
+ *
+ * Because operate returns a record with multiple entries per bin value, this function
+ * iterates over each bin and adds a tuple of the form (bin_name, bin_value). These tuples
+ * are stored in a list.
+ * e.g. [('bin1', 5), ('bin1', 6), ('bin2', [3,4,5])]
+ * Other converter functions assume one entry per bin name.
+ * @param self A pointer to a Python Client aerospike wrapper, needed for deserialization
+ * @param err pointer to as_error. It will be filled if an error is encountered.
+ * @param rec the C client record to be converted to a list of tuples of bin values
+ * @param py_bins Pointer to pointer to PyObject. It will be allocated and filled with list of tuples of bin values
+ */
+as_status operate_bins_to_pyobject(AerospikeClient * self, as_error * err, const as_record * rec, PyObject ** py_bins)
+{
+	as_error_reset(err);
+	PyObject* py_bin_value = NULL;
+	PyObject* py_bin_pair = NULL;
+
+	if (!rec) {
+		// this should never happen, but if it did...
+		return as_error_update(err, AEROSPIKE_ERR_CLIENT, "record is null");
+	}
+
+	*py_bins = PyList_New(0);
+	as_record_iterator it;
+	as_record_iterator_init(&it, rec);
+
+	while ( as_record_iterator_has_next(&it) ) {
+	    as_bin * bin = as_record_iterator_next(&it);
+	    py_bin_value = NULL;
+	    py_bin_pair = NULL;
+	    val_to_pyobject(self, err, (as_val*)as_bin_get_value(bin), &py_bin_value);
+	    if (err->code != AEROSPIKE_OK) {
+	    	goto CLEANUP;
+	    }
+	    if (!py_bin_value) {
+	    	as_error_update(err, AEROSPIKE_ERR_CLIENT, "Null entry in operate ordered conversion");
+	    	goto CLEANUP;
+	    }
+	    py_bin_pair = Py_BuildValue("sO", as_bin_get_name(bin), py_bin_value);
+	    if (!py_bin_pair) {
+	    	as_error_update(err, AEROSPIKE_ERR_CLIENT, "Unable to build bin entry");
+		    Py_DECREF(py_bin_value);
+	    	goto CLEANUP;
+	    }
+	    Py_DECREF(py_bin_value);
+	    PyList_Append(*py_bins, py_bin_pair);
+	    Py_DECREF(py_bin_pair);
+	}
+
+CLEANUP:
+	if (err->code != AEROSPIKE_OK) {
+		Py_DECREF(*py_bins);
+	}
+
+	as_record_iterator_destroy(&it);
 	return err->code;
 }
 
