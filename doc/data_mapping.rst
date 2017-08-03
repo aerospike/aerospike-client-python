@@ -28,6 +28,7 @@
     The *serialization* config param of :func:`aerospike.client` registers an \
     instance-level pair of functions that handle serialization.
 
+    Unless a user specified serializer has been provided, all other types will be stored as Python specific bytes. Python specific bytes may not be readable by Aerospike Clients for other languages.
 
 The following table shows which Python types map directly to Aerospike server types.
 

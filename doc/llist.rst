@@ -6,10 +6,17 @@
 Large Ordered List Class --- :class:`LList`
 =============================================
 
+.. warning::
+    LDT Functionality is deprecated as of version 2.1.2 and will be removed in a future release of the Python Client
+
 :class:`LList`
 ===============
 
 .. class:: LList
+
+    .. deprecated:: 2.1.2
+        See `Blog about LDT Removal <http://www.aerospike.com/blog/aerospike-ldt>`_ \
+        for more information.
 
     Large Ordered List (LList) is a collection of elements sorted by ``key`` \
     order, which is capable of growing unbounded. There are two ways in which \
