@@ -176,7 +176,7 @@ bool opRequiresIndex(int op) {
 			op == OP_MAP_REMOVE_BY_INDEX       || op == OP_MAP_REMOVE_BY_RANK ||
 			op == OP_MAP_REMOVE_BY_RANK_RANGE  || op == OP_MAP_GET_BY_INDEX   ||
 			op == OP_MAP_GET_BY_INDEX_RANGE    || op == OP_MAP_GET_BY_RANK    ||
-			op == OP_MAP_GET_BY_RANK_RANGE);
+			op == OP_MAP_GET_BY_RANK_RANGE     || op == OP_MAP_REMOVE_BY_INDEX_RANGE);
 }
 
 bool opRequiresValue(int op) {
@@ -187,11 +187,13 @@ bool opRequiresValue(int op) {
 			op != OP_MAP_SET_POLICY      && op != OP_MAP_SIZE           &&
 			op != OP_MAP_CLEAR           && op != OP_MAP_REMOVE_BY_KEY  &&
 			op != OP_MAP_REMOVE_BY_INDEX && op != OP_MAP_REMOVE_BY_RANK &&
-			op != OP_MAP_GET_BY_KEY      && op != OP_MAP_GET_BY_INDEX);
+			op != OP_MAP_GET_BY_KEY      && op != OP_MAP_GET_BY_INDEX   &&
+			op != OP_MAP_GET_BY_KEY_RANGE && op != OP_MAP_GET_BY_RANK);
 }
 
 bool opRequiresRange(int op) {
-	return (op == OP_MAP_REMOVE_BY_VALUE_RANGE  || op == OP_MAP_GET_BY_VALUE_RANGE);
+	return (op == OP_MAP_REMOVE_BY_VALUE_RANGE  || op == OP_MAP_GET_BY_VALUE_RANGE ||
+			op == OP_MAP_GET_BY_KEY_RANGE);
 }
 
 bool opReturnsResult(int op) {

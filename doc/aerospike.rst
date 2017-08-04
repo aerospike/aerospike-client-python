@@ -847,7 +847,7 @@ Note that if "return_type" is not specified in the parameters for a map operatio
             "op" : aerospike.OP_MAP_REMOVE_BY_INDEX_RANGE,
             "bin": "my_map",
             "index": 0,
-            "range": 2,
+            "val": 2,
             "return_type": aerospike.MAP_RETURN_KEY_VALUE
         }
         
@@ -873,7 +873,7 @@ Note that if "return_type" is not specified in the parameters for a map operatio
             "op" : aerospike.OP_MAP_REMOVE_BY_RANK_RANGE,
             "bin": "my_map",
             "index": 10,
-            "range": 2,
+            "val": 2,
             "return_type": aerospike.MAP_RETURN_KEY_VALUE
         }
 
@@ -900,7 +900,7 @@ Note that if "return_type" is not specified in the parameters for a map operatio
             "op" : aerospike.OP_MAP_GET_BY_KEY_RANGE,
             "bin": "my_map",
             "key": "i",
-            "val": "j",
+            "range": "j",
             "return_type": aerospike.MAP_RETURN_KEY_VALUE
         }
 
@@ -954,7 +954,7 @@ Note that if "return_type" is not specified in the parameters for a map operatio
             "op" : aerospike.OP_MAP_GET_BY_INDEX_RANGE,
             "bin": "my_map",
             "index": 0,
-            "range": 2,
+            "val": 2,
             "return_type": aerospike.MAP_RETURN_KEY_VALUE
         }
 
@@ -980,7 +980,7 @@ Note that if "return_type" is not specified in the parameters for a map operatio
             "op" : aerospike.OP_MAP_GET_BY_RANK_RANGE,
             "bin": "my_map",
             "index": 10,
-            "range": 2,
+            "val": 2,
             "return_type": aerospike.MAP_RETURN_KEY_VALUE
         }
 

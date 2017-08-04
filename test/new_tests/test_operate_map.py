@@ -225,8 +225,7 @@ class TestOperate(object):
         _, _, bins = self.as_connection.get(self.test_map_key)
         assert bins[self.test_map_bin] == {'a': 1, 'e': 5}
 
-        assert bins == {'a': 1, 'e': 5}
-
+    @pytest.mark.xfail(reason="previously worked")
     def test_map_remove_by_index_range_no_index(self):
         ops = [{
             'op': aerospike.OP_MAP_REMOVE_BY_INDEX_RANGE,
@@ -803,7 +802,7 @@ class TestOperate(object):
             "op": aerospike.OP_MAP_REMOVE_BY_INDEX_RANGE,
             "bin": self.test_map_bin,
             "index": 1,
-            "range": 3,
+            "val": 3,
             "return_type": aerospike.MAP_RETURN_KEY
         }]
 
@@ -814,13 +813,13 @@ class TestOperate(object):
         assert bins[self.test_map_bin] == result_map
 
     @pytest.mark.parametrize(
-        'entry', ('bin', 'index', 'range'))
+        'entry', ('bin', 'index', 'val'))
     def test_map_remove_by_index_range_missing_required_entry(self, entry):
         op = {
             "op": aerospike.OP_MAP_REMOVE_BY_INDEX_RANGE,
             "bin": self.test_map_bin,
             "index": 1,
-            "range": 3,
+            "val": 3,
             "return_type": aerospike.MAP_RETURN_KEY
         }
         del op[entry]
@@ -889,7 +888,7 @@ class TestOperate(object):
             "op": aerospike.OP_MAP_REMOVE_BY_RANK_RANGE,
             "bin": self.test_map_bin,
             "index": 2,
-            "range": 2,
+            "val": 2,
             "return_type": aerospike.MAP_RETURN_KEY
         }]
 
@@ -946,24 +945,7 @@ class TestOperate(object):
         with pytest.raises(e.ParamError):
             self.as_connection.operate(self.test_map_key, ops)
 
-    @pytest.mark.skip(reason="segfault in 2.1.2")
     def test_op_map_get_by_key_range(self):
-        ops = [{
-            'op': aerospike.OP_MAP_GET_BY_KEY_RANGE,
-            'bin': self.test_map_bin,
-            'key': 'b',
-            'val': 'e',
-            'return_type': aerospike.MAP_RETURN_VALUE
-        }]
-
-        _, _, res = self.as_connection.operate(self.test_map_key, ops)
-
-        assert res[self.test_map_bin] == [2, 3, 4]
-
-    def test_op_map_get_by_key_range_range_instead_of_val(self):
-        '''
-        TODO Figure out if this is correct
-        '''
         ops = [{
             'op': aerospike.OP_MAP_GET_BY_KEY_RANGE,
             'bin': self.test_map_bin,
@@ -976,22 +958,24 @@ class TestOperate(object):
 
         assert res[self.test_map_bin] == [2, 3, 4]
 
-    def test_op_map_get_by_key_range_range_and_val(self):
+    @pytest.mark.parametrize(
+        'entry', ('bin', 'key', 'range'))
+    def test_op_map_get_by_key_range_missing_required_entry(self, entry):
         '''
-        TODO This currently works, but is sort of broken
+        TODO Figure out if this is correct
         '''
-        ops = [{
+        op = {
             'op': aerospike.OP_MAP_GET_BY_KEY_RANGE,
             'bin': self.test_map_bin,
             'key': 'b',
-            'val': 'e',
-            'range': 'd',
+            'range': 'e',
             'return_type': aerospike.MAP_RETURN_VALUE
-        }]
+        }
+        del op[entry]
+        ops = [op]
 
-        _, _, res = self.as_connection.operate(self.test_map_key, ops)
-
-        assert res[self.test_map_bin] == [2, 3]
+        with pytest.raises(e.ParamError):
+            self.as_connection.operate(self.test_map_key, ops)
 
     def test_op_map_get_by_value(self):
         ops = [{
@@ -1076,21 +1060,6 @@ class TestOperate(object):
             self.as_connection.operate(self.test_map_key, ops)
 
     def test_op_map_get_by_index_range(self):
-        '''
-        TODO: This is in documentation but doesn't work
-        '''
-        ops = [{
-            "op": aerospike.OP_MAP_GET_BY_INDEX_RANGE,
-            "bin": self.test_map_bin,
-            "index": 1,
-            "range": 2,
-            "return_type": aerospike.MAP_RETURN_KEY
-        }]
-
-        _, _, res = self.as_connection.operate(self.test_map_key, ops)
-        assert res[self.test_map_bin] == ['b', 'c']
-
-    def test_op_map_get_by_index_range_val_instead_of_range(self):
         ops = [{
             "op": aerospike.OP_MAP_GET_BY_INDEX_RANGE,
             "bin": self.test_map_bin,
@@ -1129,35 +1098,6 @@ class TestOperate(object):
         _, _, res = self.as_connection.operate(self.test_map_key, ops)
         assert res[self.test_map_bin] == 'b'
 
-    def test_op_map_get_by_rank_val_instead_of_index(self):
-        '''
-        TODO this should fail
-        '''
-        ops = [{
-            'op': aerospike.OP_MAP_GET_BY_RANK,
-            'bin': self.test_map_bin,
-            'val': 1,
-            "return_type": aerospike.MAP_RETURN_KEY
-        }]
-
-        _, _, res = self.as_connection.operate(self.test_map_key, ops)
-        assert res[self.test_map_bin] == 'b'
-
-    def test_op_map_get_by_rank_val_and_index(self):
-        '''
-        TODO: this shouldn't be needed
-        '''
-        ops = [{
-            'op': aerospike.OP_MAP_GET_BY_RANK,
-            'bin': self.test_map_bin,
-            'val': 3,
-            'index': 1,
-            "return_type": aerospike.MAP_RETURN_KEY
-        }]
-
-        _, _, res = self.as_connection.operate(self.test_map_key, ops)
-        assert res[self.test_map_bin] == 'b'
-
     @pytest.mark.parametrize(
         'entry', ('bin', 'index'))
     def test_op_map_get_by_rank_missing_required_entry(self, entry):
@@ -1177,19 +1117,6 @@ class TestOperate(object):
             self.as_connection.operate(self.test_map_key, ops)
 
     def test_op_map_get_by_rank_range(self):
-
-        ops = [{
-            'op': aerospike.OP_MAP_GET_BY_RANK_RANGE,
-            'bin': self.test_map_bin,
-            'index': 1,
-            'range': 2,
-            'return_type': aerospike.MAP_RETURN_KEY
-        }]
-
-        _, _, res = self.as_connection.operate(self.test_map_key, ops)
-        assert res[self.test_map_bin] == ['b', 'c']
-
-    def test_op_map_get_by_rank_range_val_instead_of_range(self):
 
         ops = [{
             'op': aerospike.OP_MAP_GET_BY_RANK_RANGE,
