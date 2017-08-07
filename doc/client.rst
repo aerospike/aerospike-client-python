@@ -1332,6 +1332,9 @@ a cluster-tending thread.
         :return: a :ref:`aerospike_record_tuple`. See :ref:`unicode_handling`.
         :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
 
+        .. warning::
+            As of version 2.1.3 the return format for operations on maps specifying a "return_type" of aerospike.MAP_RETURN_KEY_VALUE is deprecated. The return format will be changing in an upcoming version.
+
         .. note::
 
             :meth:`operate` can now have multiple write operations on a single
@@ -1455,6 +1458,18 @@ a cluster-tending thread.
             :return: a :ref:`aerospike_record_tuple`. See :ref:`unicode_handling`.
             :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
 
+            .. note::
+                In version `2.1.3` the return format of this method, **only in cases when a map operation specifying a `return_type` is used**, has changed. Map operations using "return_type" of aerospike.MAP_RETURN_KEY_VALUE will now return \
+                a list of keys and corresponding values, rather than a list of key/value tuples. See the following code block for details. In addition, some operations which did not return a value in versions <= 2.1.2 will now return a response.
+
+            .. code-block:: python
+
+                # pre 2.1.3 formatting of key/value return
+                [('key1', 'val1'), ('key2', 'val2'), ('key3', 'val3')]
+
+                # >= 2.1.3 formatting
+                ['key1', 'val1', 'key2', 'val2', 'key3', 'val3']
+
             .. code-block:: python
 
                 from __future__ import print_function
@@ -1490,7 +1505,7 @@ a cluster-tending thread.
                     client.close()
                     
         .. versionadded:: 2.0.2
-
+        .. versionchanged:: 2.1.3
 
     .. index::
         single: Batch Operations
