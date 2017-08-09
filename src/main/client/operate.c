@@ -705,11 +705,7 @@ PyObject *  AerospikeClient_Operate_Invoke(
 		goto CLEANUP;
 	}
 	if (rec) {
-		if (return_type == AS_MAP_RETURN_KEY_VALUE) {
-			record_to_pyobject_cnvt_list_to_map(self, err, rec, key, &py_rec);
-		} else {
-			record_to_pyobject(self, err, rec, key, &py_rec);
-		}
+		record_to_pyobject(self, err, rec, key, &py_rec);
 	}
 
 CLEANUP:

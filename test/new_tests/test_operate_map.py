@@ -116,7 +116,7 @@ class TestOperate(object):
               "bin": "my_map",
               "key": "name",
               "return_type": aerospike.MAP_RETURN_KEY_VALUE}],
-            {'my_map': [('name', 'bubba')]})
+            {'my_map': ['name', 'bubba']})
     ])
     def test_pos_operate_with_correct_paramters(self, key, llist, expected):
         """
@@ -515,9 +515,8 @@ class TestOperate(object):
         }]
 
         _, _, bins = self.as_connection.operate(self.test_map_key, ops)
-        assert bins[self.test_map_bin] == [('c', self.test_map['c'])]
+        assert bins[self.test_map_bin] == ['c', self.test_map['c']]
 
-    @pytest.mark.xfail(reason="This will be fixed by operate format change")
     def test_map_remove_by_key_ret_key_val_test_with_list_read_odd(self):
         result_map = self.test_map.copy()
         self.as_connection.put(self.test_map_key, {'cool_list': [1, 2, 3]})
@@ -537,7 +536,6 @@ class TestOperate(object):
         _, _, bins = self.as_connection.operate(self.test_map_key, ops)
         assert bins['cool_list'] == [1, 2, 3]
 
-    @pytest.mark.xfail(reason="This will be fixed by operate format change")
     def test_map_remove_by_key_ret_key_val_test_with_list_read_even(self):
         result_map = self.test_map.copy()
         self.as_connection.put(self.test_map_key, {'cool_list': [1, 2, 3, 4]})
