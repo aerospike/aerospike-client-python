@@ -174,7 +174,7 @@ class TestGetMany():
         config = {'policies': {'use_batch_direct': True}}
         client_batch_direct = TestBaseClass.get_new_connection(add_config=config)
 
-        records = client_batch_direct.get_many(self.keys, {'timeout': 30})
+        records = client_batch_direct.get_many(self.keys)
 
         assert isinstance(records, list)
         assert len(records) == 6
@@ -183,6 +183,32 @@ class TestGetMany():
         assert records[5][2] == {'float_value': 4.3}
 
         client_batch_direct.close()
+
+    def test_pos_get_many_with_constructor_batch_direct_and_method_arg(self):
+        '''
+        This sets use batch_direct to true in the constructor
+        and sets it to false in the policy argument to the function
+        '''
+        hostlist, user, password = TestBaseClass.get_hosts()
+        config = {'policies': {'use_batch_direct': True}}
+        client_batch_direct = TestBaseClass.get_new_connection(add_config=config)
+
+        policy = {'use_batch_direct': False}
+        records = client_batch_direct.get_many(self.keys)
+
+        assert isinstance(records, list)
+        assert len(records) == 6
+
+        client_batch_direct.close()
+
+    def test_pos_get_many_with_use_batch_direct_as_method_arg(self):
+
+        policies = {'use_batch_direct': True}
+
+        records = self.as_connection.get_many(self.keys, policies)
+
+        assert isinstance(records, list)
+        assert len(records) == len(self.keys)
 
     # Negative Tests
     def test_neg_get_many_Invalid_Key_without_primary_key(self):

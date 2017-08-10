@@ -249,6 +249,7 @@ class TestInfoNodeIncorrectUsage(object):
             self.as_connection.info_node(
                 command, self.connection_config['hosts'][0][:2])
 
+    @pytest.mark.skipif(TestBaseClass.auth_in_use(), reason="this will cause an auth error")
     @pytest.mark.parametrize(
         "port",
         (None, "5", [5], {}, 3000.0)

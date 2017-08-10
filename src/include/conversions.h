@@ -38,7 +38,7 @@ as_status as_user_to_pyobject(as_error *err, as_user *user, PyObject **py_as_use
 
 as_status as_user_array_to_pyobject(as_error *err, as_user **users, PyObject **py_as_users, int users_size);
 
-as_status pyobject_to_strArray(as_error * err, PyObject * py_list,  char **arr);
+as_status pyobject_to_strArray(as_error * err, PyObject * py_list,  char **arr, uint32_t max_len);
 
 as_status pyobject_to_val(AerospikeClient * self, as_error * err, PyObject * py_obj, as_val ** val, as_static_pool *static_pool, int serializer_type);
 
@@ -64,6 +64,8 @@ as_status list_to_pyobject(AerospikeClient * self, as_error * err, const as_list
 as_status as_list_of_map_to_py_tuple_list(AerospikeClient * self, as_error * err, const as_list * list, PyObject ** py_list);
 
 as_status record_to_pyobject(AerospikeClient * self, as_error * err, const as_record * rec, const as_key * key, PyObject ** obj);
+
+as_status operate_bins_to_pyobject(AerospikeClient * self, as_error * err, const as_record * rec, PyObject ** py_bins);
 
 as_status record_to_pyobject_cnvt_list_to_map(AerospikeClient * self, as_error * err, const as_record * rec, const as_key * key, PyObject ** obj);
 

@@ -11,6 +11,53 @@ except:
     print("Please install aerospike python client.")
     sys.exit(1)
 
+# OPERATIONS
+# aerospike.OPERATOR_WRITE
+# aerospike.OPERATOR_APPEND
+# aerospike.OPERATOR_PREPEND
+# aerospike.OPERATOR_INCR
+# aerospike.OPERATOR_READ
+# aerospike.OPERATOR_TOUCH
+# aerospike.OP_LIST_APPEND
+# aerospike.OP_LIST_APPEND_ITEMS
+# aerospike.OP_LIST_INSERT
+# aerospike.OP_LIST_INSERT_ITEMS
+# aerospike.OP_LIST_POP
+# aerospike.OP_LIST_POP_RANGE
+# aerospike.OP_LIST_REMOVE
+# aerospike.OP_LIST_REMOVE_RANGE
+# aerospike.OP_LIST_CLEAR
+# aerospike.OP_LIST_SET
+# aerospike.OP_LIST_GET
+# aerospike.OP_LIST_GET_RANGE
+# aerospike.OP_LIST_TRIM
+# aerospike.OP_LIST_SIZE
+# aerospike.OP_MAP_SET_POLICY
+# aerospike.OP_MAP_PUT
+# aerospike.OP_MAP_PUT_ITEMS
+# aerospike.OP_MAP_INCREMENT
+# aerospike.OP_MAP_DECREMENT
+# aerospike.OP_MAP_SIZE
+# aerospike.OP_MAP_CLEAR
+# aerospike.OP_MAP_REMOVE_BY_KEY
+# aerospike.OP_MAP_REMOVE_BY_KEY_LIST
+# aerospike.OP_MAP_REMOVE_BY_KEY_RANGE
+# aerospike.OP_MAP_REMOVE_BY_VALUE
+# aerospike.OP_MAP_REMOVE_BY_VALUE_LIST
+# aerospike.OP_MAP_REMOVE_BY_VALUE_RANGE
+# aerospike.OP_MAP_REMOVE_BY_INDEX
+# aerospike.OP_MAP_REMOVE_BY_INDEX_RANGE
+# aerospike.OP_MAP_REMOVE_BY_RANK
+# aerospike.OP_MAP_REMOVE_BY_RANK_RANGE
+# aerospike.OP_MAP_GET_BY_KEY
+# aerospike.OP_MAP_GET_BY_KEY_RANGE
+# aerospike.OP_MAP_GET_BY_VALUE
+# aerospike.OP_MAP_GET_BY_VALUE_RANGE
+# aerospike.OP_MAP_GET_BY_INDEX
+# aerospike.OP_MAP_GET_BY_INDEX_RANGE
+# aerospike.OP_MAP_GET_BY_RANK
+# aerospike.OP_MAP_GET_BY_RANK_RANGE
+
 
 class TestOperate(object):
 

@@ -88,71 +88,70 @@ class TestOperateOrdered(object):
               "val": 3},
              {"op": aerospike.OPERATOR_READ,
               "bin": "name"}],
-            [None, None, ('name', 'ramname1')]),
+            [('name', 'ramname1')]),
         (('test', 'demo', 1),                 # with_write_float_value
             [{"op": aerospike.OPERATOR_WRITE,
               "bin": "write_bin",
               "val": {"no": 89.8}},
              {"op": aerospike.OPERATOR_READ,
               "bin": "write_bin"}],
-            [None, ('write_bin', {u'no': 89.8})]),
+            [('write_bin', {u'no': 89.8})]),
         (('test', 'demo', 1),                            # write positive
             [{"op": aerospike.OPERATOR_WRITE,
               "bin": "write_bin",
               "val": {"no": 89}},
              {"op": aerospike.OPERATOR_READ, "bin": "write_bin"}],
-            [None, ('write_bin', {u'no': 89})]),
+            [('write_bin', {u'no': 89})]),
         (('test', 'demo', 1),                       # write_tuple_positive
             [{"op": aerospike.OPERATOR_WRITE,
               "bin": "write_bin",
               "val": tuple('abc')},
              {"op": aerospike.OPERATOR_READ, "bin": "write_bin"}],
-            [None, ('write_bin', ('a', 'b', 'c'))]),
+            [('write_bin', ('a', 'b', 'c'))]),
         (('test', 'demo', 1),                # with_bin_bytearray
             [{"op": aerospike.OPERATOR_PREPEND,
               "bin": bytearray("asd[;asjk", "utf-8"),
               "val": u"ram"},
              {"op": aerospike.OPERATOR_READ,
               "bin": bytearray("asd[;asjk", "utf-8")}],
-            [None, ('asd[;asjk', 'ram')]),
+            [('asd[;asjk', 'ram')]),
         (('test', 'demo', 'bytearray_key'),  # append_val bytearray
             [{"op": aerospike.OPERATOR_APPEND,
               "bin": "bytearray_bin",
               "val": bytearray("abc", "utf-8")},
              {"op": aerospike.OPERATOR_READ,
               "bin": "bytearray_bin"}],
-            [None, ('bytearray_bin', bytearray("asd;as[d'as;dabc", "utf-8"))]),
+            [('bytearray_bin', bytearray("asd;as[d'as;dabc", "utf-8"))]),
         (('test', 'demo', 'bytearray_new'),  # append bytearray_newrecord
             [{"op": aerospike.OPERATOR_APPEND,
               "bin": "bytearray_bin",
               "val": bytearray("asd;as[d'as;d", "utf-8")},
              {"op": aerospike.OPERATOR_READ,
               "bin": "bytearray_bin"}],
-            [None, ('bytearray_bin', bytearray("asd;as[d'as;d", "utf-8"))]),
+            [('bytearray_bin', bytearray("asd;as[d'as;d", "utf-8"))]),
         (('test', 'demo', 'bytearray_key'),  # prepend_valbytearray
             [{"op": aerospike.OPERATOR_PREPEND,
               "bin": "bytearray_bin",
               "val": bytearray("abc", "utf-8")},
              {"op": aerospike.OPERATOR_READ,
               "bin": "bytearray_bin"}],
-            [None, ('bytearray_bin', bytearray("abcasd;as[d'as;d", "utf-8"))]),
+            [('bytearray_bin', bytearray("abcasd;as[d'as;d", "utf-8"))]),
         (('test', 'demo', 'bytearray_new'),  # prepend_valbytearray_newrecord
             [{"op": aerospike.OPERATOR_PREPEND,
               "bin": "bytearray_bin",
               "val": bytearray("asd;as[d'as;d", "utf-8")},
              {"op": aerospike.OPERATOR_READ,
               "bin": "bytearray_bin"}],
-            [None, ('bytearray_bin', bytearray("asd;as[d'as;d", "utf-8"))]),
+            [('bytearray_bin', bytearray("asd;as[d'as;d", "utf-8"))]),
     ])
     def test_pos_operate_ordered_correct_paramters(self, key, llist, expected):
         """
         Invoke operate_ordered() with correct parameters
         """
 
-        key, _, bins = self.as_connection.operate_ordered(key, llist)
-
-        assert bins == expected
+        _, _, bins = self.as_connection.operate_ordered(key, llist)
         self.as_connection.remove(key)
+        assert bins == expected
 
     def test_pos_operate_ordered_with_correct_policy(self):
         """
@@ -174,15 +173,10 @@ class TestOperateOrdered(object):
                   "bin": "age",
                   "val": 3}]
 
-        key, _, bins = self.as_connection.operate_ordered(key, llist,
-                                                          {}, policy)
-
-        assert bins == [None, ('name', 'name1aa'), None]
-        assert key == ('test', 'demo', 1, bytearray(
-            b"\xb7\xf4\xb88\x89\xe2\xdag\xdeh>\x1d\xf6\x91\x9a\x1e\xac\xc4F\xc8")
-        )
-
+        _, _, bins = self.as_connection.operate_ordered(
+          key, llist, {}, policy)
         self.as_connection.remove(key)
+        assert bins == [('name', 'name1aa')]
 
     def test_pos_operate_ordered_with_policy_key_digest(self):
         """
@@ -205,12 +199,10 @@ class TestOperateOrdered(object):
                  {"op": aerospike.OPERATOR_READ,
                   "bin": "age"}]
 
-        key, _, bins = self.as_connection.operate_ordered(key, llist, {},
-                                                          policy)
+        _, _, bins = self.as_connection.operate_ordered(
+          key, llist, {}, policy)
 
-        assert bins == [None, ('name', 'name1aa'), None, ('age', 4)]
-        assert key == ('test', 'demo', None,
-                       bytearray(b"asd;as[d\'as;djk;uyfl"))
+        assert bins == [('name', 'name1aa'), ('age', 4)]
         self.as_connection.remove(key)
 
     @pytest.mark.parametrize("key, policy, meta, llist", [
@@ -237,9 +229,7 @@ class TestOperateOrdered(object):
         key, meta, bins = self.as_connection.operate_ordered(key, llist,
                                                              meta, policy)
 
-        assert bins == [None, None, ('name', 'name1aa')]
-        assert key == ('test', 'demo', 1, bytearray(
-            b"\xb7\xf4\xb88\x89\xe2\xdag\xdeh>\x1d\xf6\x91\x9a\x1e\xac\xc4F\xc8"))
+        assert bins == [('name', 'name1aa')]
 
     def test_pos_operate_ordered_with_policy_gen_GT(self):
         """
@@ -267,10 +257,7 @@ class TestOperateOrdered(object):
         (key, meta, bins) = self.as_connection.operate_ordered(
             key, llist, meta, policy)
 
-        assert bins == [None, None, ('name', 'name1aa')]
-        assert key == ('test', 'demo', 1, bytearray(
-            b"\xb7\xf4\xb88\x89\xe2\xdag\xdeh>\x1d\xf6\x91\x9a\x1e\xac\xc4F\xc8")
-        )
+        assert bins == [('name', 'name1aa')]
 
     def test_pos_operate_ordered_with_nonexistent_key(self):
         """
@@ -285,9 +272,8 @@ class TestOperateOrdered(object):
              "bin": "loc"}
         ]
         _, _, bins = self.as_connection.operate_ordered(key1, llist)
-
-        assert bins == [None, ('loc', 'mumbai')]
         self.as_connection.remove(key1)
+        assert bins == [('loc', 'mumbai')]
 
     def test_pos_operate_ordered_increment_nonexistent_key(self):
         """
@@ -296,15 +282,12 @@ class TestOperateOrdered(object):
         key = ('test', 'demo', "non_existentkey")
         llist = [{"op": aerospike.OPERATOR_INCR, "bin": "age", "val": 5}]
 
-        key, _, bins = self.as_connection.operate_ordered(key, llist)
-
-        assert bins == [None]
-
-        (key, _, bins) = self.as_connection.get(key)
-
-        assert bins == {"age": 5}
-
+        _, _, op_bins = self.as_connection.operate_ordered(key, llist)
+        _, _, get_bins = self.as_connection.get(key)
         self.as_connection.remove(key)
+
+        assert op_bins == []
+        assert get_bins == {"age": 5}
 
     def test_pos_operate_ordered_increment_nonexistent_bin(self):
         """
@@ -313,13 +296,10 @@ class TestOperateOrdered(object):
         key = ('test', 'demo', 1)
         llist = [{"op": aerospike.OPERATOR_INCR, "bin": "my_age", "val": 5}]
 
-        key, _, bins = self.as_connection.operate_ordered(key, llist)
-
-        assert bins == [None]
-
-        (key, _, bins) = self.as_connection.get(key)
-
-        assert bins == {"my_age": 5, "age": 1, "name": "name1"}
+        _, _, op_bins = self.as_connection.operate_ordered(key, llist)
+        _, _, get_bins = self.as_connection.get(key)
+        assert op_bins == []
+        assert get_bins == {"my_age": 5, "age": 1, "name": "name1"}
 
     def test_pos_operate_ordered_write_set_to_aerospike_null(self):
         """
@@ -343,11 +323,10 @@ class TestOperateOrdered(object):
             }
         ]
 
-        (key, _, bins) = self.as_connection.operate_ordered(key, llist)
-
-        assert [None, ('no', None)] == bins
-
+        _, _, bins = self.as_connection.operate_ordered(key, llist)
         self.as_connection.remove(key)
+        # we read a non existent bin, so nothing is returned
+        assert [] == bins
 
     # List operation testcases
     @pytest.mark.parametrize("list, expected", [
@@ -395,7 +374,7 @@ class TestOperateOrdered(object):
             {"op": aerospike.OP_LIST_GET,
              "bin": "int_bin",
              "index": 2}
-        ], [('int_bin', None), ('int_bin', 18)]),
+        ], [('int_bin', 18)]),
         ([
             {"op": aerospike.OP_LIST_SET,
              "bin": "int_bin",
@@ -404,7 +383,7 @@ class TestOperateOrdered(object):
             {"op": aerospike.OP_LIST_GET,
              "bin": "int_bin",
              "index": 6}
-        ], [('int_bin', None), ('int_bin', 10)])
+        ], [('int_bin', 10)])
     ])
     def test_pos_operate_ordered_with_list_addition_operations(self, list,
                                                                expected):
@@ -438,7 +417,7 @@ class TestOperateOrdered(object):
         ([
             {"op": aerospike.OP_LIST_CLEAR,
              "bin": "int_bin"}
-        ], [('int_bin', None)])
+        ], [])
     ])
     def test_pos_operate_ordered_with_list_remove_operations(self, list,
                                                              expected):
@@ -575,7 +554,7 @@ class TestOperateOrdered(object):
                 "op": aerospike.OPERATOR_READ,
                 "bin": "age"
             }],
-            [None, ('age', 4)]),
+            [('age', 4)]),
         (('test', 'demo', 'append_dict'),                  # append_with_dict
             [{
                 "op": aerospike.OPERATOR_APPEND,
@@ -585,7 +564,7 @@ class TestOperateOrdered(object):
                 "op": aerospike.OPERATOR_READ,
                 "bin": "dict"
             }],
-            [None, ('dict', {"a": 1, "b": 2})]),
+            [('dict', {"a": 1, "b": 2})]),
         (('test', 'demo', 'incr_string'),               # incr_with_string
             [{
                 "op": aerospike.OPERATOR_INCR,
@@ -595,44 +574,23 @@ class TestOperateOrdered(object):
                 "op": aerospike.OPERATOR_READ,
                 "bin": "name"
             }],
-            [None, ('name', 'aerospike')]),
+            [('name', 'aerospike')]),
     ])
     def test_pos_operate_ordered_new_record(self, key, llist, expected):
         """
         Invoke operate_ordered() with prepend command on a new record
         """
-        _, _, bins = TestOperateOrdered.\
-            client_no_typechecks.operate_ordered(key, llist)
-        assert expected == bins
-        TestOperateOrdered.client_no_typechecks.remove(key)
+        try:
+            self.as_connection.remove(key)
+        except:
+            pass
+        _, _, bins = TestOperateOrdered.client_no_typechecks.operate_ordered(key, llist)
+        assert bins == expected
 
-    def test_pos_operate_ordered_incr_with_geospatial_new_record(self):
-        """
-        Invoke operate_ordered() with incr command with geospatial data
-        """
-        key = ('test', 'demo', 'geospatial_key')
-
-        llist = [
-            {
-                "op": aerospike.OPERATOR_INCR,
-                "bin": "geospatial",
-                "val": aerospike.GeoJSON({"type": "Point", "coordinates":
-                                          [42.34, 58.62]})
-            },
-            {
-                "op": aerospike.OPERATOR_READ,
-                "bin": "geospatial"
-            }
-        ]
-
-        (key, _, bins) = TestOperateOrdered.client_no_typechecks.\
-            operate_ordered(key, llist)
-
-        assert bins[0] is None
-        assert bins[1][1].unwrap() == {
-            "type": "Point", "coordinates": [
-                42.34, 58.62]}
-        TestOperateOrdered.client_no_typechecks.remove(key)
+        try:
+            self.as_connection.remove(key)
+        except:
+            pass
 
     def test_pos_operate_ordered_with_bin_length_extra_nostricttypes(self):
         """
@@ -640,9 +598,7 @@ class TestOperateOrdered(object):
         """
         key = ('test', 'demo', 1)
 
-        max_length = 'a'
-        for _ in range(20):
-            max_length = max_length + 'a'
+        max_length = 'a' * 21
 
         llist = [
             {"op": aerospike.OPERATOR_PREPEND,
@@ -656,7 +612,7 @@ class TestOperateOrdered(object):
         _, _, bins = TestOperateOrdered.\
             client_no_typechecks.operate_ordered(key, llist)
 
-        assert bins == [None]
+        assert bins == []
 
         (key, _, bins) = TestOperateOrdered.client_no_typechecks.get(key)
 
@@ -679,10 +635,10 @@ class TestOperateOrdered(object):
              "bin": "name"}
         ]
 
-        key, _, bins = TestOperateOrdered.\
+        _, _, bins = TestOperateOrdered.\
             client_no_typechecks.operate_ordered(key, llist)
 
-        assert bins == [None]
+        assert bins == [('name', 'ramname1')]
 
     # Negative tests
     def test_neg_operate_ordered_with_no_parameters(self):

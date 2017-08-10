@@ -16,7 +16,7 @@ except:
 class TestChangePassword(TestBaseClass):
 
     pytestmark = pytest.mark.skipif(
-        TestBaseClass().get_hosts()[1] == None,
+        TestBaseClass().get_hosts()[1] is None,
         reason="No user specified, may be not secured cluster.")
 
     def setup_method(self, method):
@@ -46,10 +46,8 @@ class TestChangePassword(TestBaseClass):
 
     def test_change_password_without_any_parameters(self):
 
-        with pytest.raises(TypeError) as typeError:
+        with pytest.raises(TypeError):
             self.client.admin_change_password()
-
-        assert "Required argument 'user' (pos 1) not found" in typeError.value
 
     def test_change_password_with_proper_parameters(self):
 
@@ -73,10 +71,8 @@ class TestChangePassword(TestBaseClass):
 
         except aerospike.exception.InvalidPassword as exception:
             assert exception.code == 62
-            assert exception.msg is None
         except aerospike.exception.ClientError as exception:
             assert exception.code == -1
-            assert exception.msg == "Failed to seed cluster"
 
         self.clientreaduserright = aerospike.client(config).connect(
             user, "newpassword")
@@ -106,7 +102,7 @@ class TestChangePassword(TestBaseClass):
         self.clientreaduser = aerospike.client(config).connect(user,
                                                                "aerospike")
 
-        policy = {'timeout': 100}
+        policy = {'timeout': 1000}
         password = "newpassword"
 
         status = self.clientreaduser.admin_change_password(
@@ -127,7 +123,6 @@ class TestChangePassword(TestBaseClass):
             assert exception.msg is None
         except aerospike.exception.ClientError as exception:
             assert exception.code == -1
-            assert exception.msg == "Failed to seed cluster"
 
         self.clientreaduserright = aerospike.client(config).connect(
             user, "newpassword")
@@ -204,7 +199,6 @@ class TestChangePassword(TestBaseClass):
             assert exception.msg is None
         except aerospike.exception.ClientError as exception:
             assert exception.code == -1
-            assert exception.msg == "Failed to seed cluster"
 
         self.clientreaduserright = aerospike.client(config).connect(user,
                                                                     password)

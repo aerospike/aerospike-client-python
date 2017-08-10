@@ -17,7 +17,7 @@ except:
 class TestRevokeRoles(TestBaseClass):
 
     pytestmark = pytest.mark.skipif(
-        TestBaseClass().get_hosts()[1] == None,
+        TestBaseClass().get_hosts()[1] is None,
         reason="No user specified, may be not secured cluster.")
 
     def setup_method(self, method):
@@ -217,3 +217,12 @@ class TestRevokeRoles(TestBaseClass):
         assert status == 0
         status = self.client.admin_drop_user(user)
         assert status == 0
+
+    def test_revoke_roles_with_roles_exceeding_max_length(self):
+
+        policy = {}
+        user = "example-test"
+        roles = ["read" * 50]
+
+        with pytest.raises(e.ClientError):
+            self.client.admin_revoke_roles(user, roles, policy)

@@ -44,7 +44,7 @@ PyObject * AerospikeClient_Connect(AerospikeClient * self, PyObject * args, PyOb
 	as_error err;
 	as_error_init(&err);
 	char *alias_to_search = NULL;
-
+	bool free_alias_to_search = false;
 	PyObject * py_username = NULL;
 	PyObject * py_password = NULL;
 
@@ -64,6 +64,7 @@ PyObject * AerospikeClient_Connect(AerospikeClient * self, PyObject * args, PyOb
 	}
 
 	alias_to_search = return_search_string(self->as);
+	free_alias_to_search = true;
 
 	if (self->use_shared_connection) {
 		PyObject * py_persistent_item = PyDict_GetItemString(py_global_hosts, alias_to_search);
@@ -133,11 +134,15 @@ PyObject * AerospikeClient_Connect(AerospikeClient * self, PyObject * args, PyOb
 		PyObject * py_newobject = (PyObject *)AerospikeGobalHosts_New(self->as);
 		PyDict_SetItemString(py_global_hosts, alias_to_search, py_newobject);
 	}
-	PyMem_Free(alias_to_search);
-	alias_to_search = NULL;
+
 
 
 CLEANUP:
+	if (free_alias_to_search && alias_to_search) {
+		PyMem_Free(alias_to_search);
+		alias_to_search = NULL;
+	}
+
 	if (err.code != AEROSPIKE_OK) {
 		PyObject * py_err = NULL;
 		error_to_pyobject(&err, &py_err);

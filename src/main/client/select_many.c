@@ -448,6 +448,7 @@ PyObject * AerospikeClient_Select_Many_Invoke(
 	Py_ssize_t bins_size = 0;
 	char **filter_bins = NULL;
 	bool has_batch_index = false;
+	bool use_batch_direct = false;
 
 	// Unicode object's pool
 	UnicodePyObjects u_objs;
@@ -513,8 +514,14 @@ PyObject * AerospikeClient_Select_Many_Invoke(
 		goto CLEANUP;
 	}
 
+	if (batch_policy_p) {
+		use_batch_direct = batch_policy_p->use_batch_direct;
+	} else {
+		use_batch_direct = self->as->config.policies.batch.use_batch_direct;
+	}
+
 	has_batch_index = aerospike_has_batch_index(self->as);
-	if (has_batch_index && !(self->as->config.policies.batch.use_batch_direct)) {
+	if (has_batch_index && !use_batch_direct) {
 		py_recs = batch_select_aerospike_batch_read(&err, self, py_keys, batch_policy_p, filter_bins, bins_size);
 	} else {
 		py_recs = batch_select_aerospike_batch_get(&err, self, py_keys, batch_policy_p, filter_bins, bins_size);

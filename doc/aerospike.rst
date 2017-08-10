@@ -65,7 +65,7 @@ in an in-memory primary index.
                 * **max_nodes** maximum number of nodes allowed. Pad so new nodes can be added without configuration changes (default: 16)
                 * **max_namespaces** similarly pad (default: 8)
                 * **takeover_threshold_sec** take over tending if the cluster hasn't been checked for this many seconds (default: 30)
-                * **shm_key** explicitly set the shm key for this client. It is otherwise implicitly evaluated per unique hostname, and can be inspected with :meth:`~aerospike.Client.shm_key` (default: 0xA5000000)
+                * **shm_key** explicitly set the shm key for this client. If **use_shared_connection** is not set, or set to `False`, the user must provide a value for this field in order for shared memory to work correctly. If , and only if, **use_shared_connection** is set to `True`, the key will be implicitly evaluated per unique hostname, and can be inspected with :meth:`~aerospike.Client.shm_key` . It is still possible to specify a key when using **use_shared_connection** = `True`. (default: 0xA5000000)
             * **use_shared_connection** :class:`bool` indicating whether this instance should share its connection to the Aerospike cluster with other client instances in the same process. (default: ``False``)
             * **tls** a :class:`dict` of optional TLS configuration parameters. **TLS usage requires Aerospike Enterprise Edition**
                 * **enable** a :class:`bool` indicating whether tls should be enabled or not. Default: ``False``
@@ -847,7 +847,7 @@ Note that if "return_type" is not specified in the parameters for a map operatio
             "op" : aerospike.OP_MAP_REMOVE_BY_INDEX_RANGE,
             "bin": "my_map",
             "index": 0,
-            "range": 2,
+            "val": 2,
             "return_type": aerospike.MAP_RETURN_KEY_VALUE
         }
         
@@ -873,7 +873,7 @@ Note that if "return_type" is not specified in the parameters for a map operatio
             "op" : aerospike.OP_MAP_REMOVE_BY_RANK_RANGE,
             "bin": "my_map",
             "index": 10,
-            "range": 2,
+            "val": 2,
             "return_type": aerospike.MAP_RETURN_KEY_VALUE
         }
 
@@ -900,7 +900,7 @@ Note that if "return_type" is not specified in the parameters for a map operatio
             "op" : aerospike.OP_MAP_GET_BY_KEY_RANGE,
             "bin": "my_map",
             "key": "i",
-            "val": "j",
+            "range": "j",
             "return_type": aerospike.MAP_RETURN_KEY_VALUE
         }
 
@@ -954,7 +954,7 @@ Note that if "return_type" is not specified in the parameters for a map operatio
             "op" : aerospike.OP_MAP_GET_BY_INDEX_RANGE,
             "bin": "my_map",
             "index": 0,
-            "range": 2,
+            "val": 2,
             "return_type": aerospike.MAP_RETURN_KEY_VALUE
         }
 
@@ -980,7 +980,7 @@ Note that if "return_type" is not specified in the parameters for a map operatio
             "op" : aerospike.OP_MAP_GET_BY_RANK_RANGE,
             "bin": "my_map",
             "index": 10,
-            "range": 2,
+            "val": 2,
             "return_type": aerospike.MAP_RETURN_KEY_VALUE
         }
 

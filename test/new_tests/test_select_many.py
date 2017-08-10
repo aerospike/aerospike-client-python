@@ -9,6 +9,8 @@ try:
 except ImportError:
     from counter26 import Counter
 
+from .test_base_class import TestBaseClass
+
 aerospike = pytest.importorskip("aerospike")
 try:
     import aerospike
@@ -169,6 +171,37 @@ class TestSelectMany(object):
                 None
             )
         ]
+
+    def test_with_use_batch_direct_true_argument(self):
+        policies = {'use_batch_direct': True}
+        records = self.as_connection.select_many(self.keys, [], policies)
+        assert isinstance(records, list)
+        assert len(records) == len(self.keys)
+
+    def test_with_use_batch_direct_true_in_constructor_false_argument(self):
+
+        hostlist, user, password = TestBaseClass.get_hosts()
+        config = {'policies': {'use_batch_direct': False}}
+        client_batch_direct = TestBaseClass.get_new_connection(add_config=config)
+
+        policies = {'use_batch_direct': False}
+        records = client_batch_direct.select_many(self.keys, [], policies)
+        assert isinstance(records, list)
+        assert len(records) == len(self.keys)
+
+        client_batch_direct.close()
+
+    def test_with_use_batch_direct_true_in_constructor(self):
+
+        hostlist, user, password = TestBaseClass.get_hosts()
+        config = {'policies': {'use_batch_direct': True}}
+        client_batch_direct = TestBaseClass.get_new_connection(add_config=config)
+
+        records = self.as_connection.select_many(self.keys, [])
+        assert isinstance(records, list)
+        assert len(records) == len(self.keys)
+
+        client_batch_direct.close()
 
     @pytest.mark.skip(reason="This test checks for the same thing twice")
     def test_select_many_with_initkey_as_digest(self):

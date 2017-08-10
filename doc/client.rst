@@ -1306,6 +1306,7 @@ a cluster-tending thread.
         :param dict policy: optional :ref:`aerospike_operate_policies`.
         :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
         :return: depends on return_type parameter
+
         .. note:: Requires server version >= 3.8.4
 
         .. versionadded:: 2.0.4
@@ -1314,10 +1315,11 @@ a cluster-tending thread.
     .. method:: operate(key, list[, meta[, policy]]) -> (key, meta, bins)
 
         Perform multiple bin operations on a record with a given *key*, \
-        with write operations happening before read ops. In Aerospike server \
+        In Aerospike server \
         versions prior to 3.6.0, non-existent bins being read will have a \
         :py:obj:`None` value. Starting with 3.6.0 non-existent bins will not be \
-        present in the returned :ref:`aerospike_record_tuple`.
+        present in the returned :ref:`aerospike_record_tuple`. \
+        The returned record tuple will only contain one entry per bin, even if multiple operations were performed on the bin.
 
         :param tuple key: a :ref:`aerospike_key_tuple` associated with the record.
         :param list list: a :class:`list` of one or more bin operations, each \
@@ -1331,6 +1333,18 @@ a cluster-tending thread.
         :param dict policy: optional :ref:`aerospike_operate_policies`.
         :return: a :ref:`aerospike_record_tuple`. See :ref:`unicode_handling`.
         :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
+
+        .. note::
+            In version `2.1.3` the return format of certain bin entries for this method, **only in cases when a map operation specifying a `return_type` is used**, has changed. Bin entries for map operations using "return_type" of aerospike.MAP_RETURN_KEY_VALUE will now return \
+            a bin value of a list of keys and corresponding values, rather than a list of key/value tuples. See the following code block for details.
+
+        .. code-block:: python
+
+            # pre 2.1.3 formatting of key/value bin value
+            [('key1', 'val1'), ('key2', 'val2'), ('key3', 'val3')]
+
+            # >= 2.1.3 formatting
+            ['key1', 'val1', 'key2', 'val2', 'key3', 'val3']
 
         .. note::
 
@@ -1433,7 +1447,7 @@ a cluster-tending thread.
             finally:
                 client.close()
 
-        .. versionchanged:: 1.0.57
+        .. versionchanged:: 2.1.3
 
     .. method:: operate_ordered(key, list[, meta[, policy]]) -> (key, meta, bins)
 
@@ -1458,6 +1472,18 @@ a cluster-tending thread.
             :param dict policy: optional :ref:`aerospike_operate_policies`.
             :return: a :ref:`aerospike_record_tuple`. See :ref:`unicode_handling`.
             :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
+
+            .. note::
+                In version `2.1.3` the return format of bin entries for this method, **only in cases when a map operation specifying a `return_type` is used**, has changed. Map operations using "return_type" of aerospike.MAP_RETURN_KEY_VALUE will now return \
+                a bin value of a list of keys and corresponding values, rather than a list of key/value tuples. See the following code block for details. In addition, some operations which did not return a value in versions <= 2.1.2 will now return a response.
+
+            .. code-block:: python
+
+                # pre 2.1.3 formatting of key/value bin value
+                [('key1', 'val1'), ('key2', 'val2'), ('key3', 'val3')]
+
+                # >= 2.1.3 formatting
+                ['key1', 'val1', 'key2', 'val2', 'key3', 'val3']
 
             .. code-block:: python
 
@@ -1494,7 +1520,7 @@ a cluster-tending thread.
                     client.close()
                     
         .. versionadded:: 2.0.2
-
+        .. versionchanged:: 2.1.3
 
     .. index::
         single: Batch Operations

@@ -17,7 +17,7 @@ except:
 class TestGrantRoles(TestBaseClass):
 
     pytestmark = pytest.mark.skipif(
-        TestBaseClass().get_hosts()[1] == None,
+        TestBaseClass().get_hosts()[1] is None,
         reason="No user specified, may be not secured cluster.")
 
     def setup_method(self, method):
@@ -55,10 +55,8 @@ class TestGrantRoles(TestBaseClass):
 
     def test_grant_roles_without_any_parameters(self):
 
-        with pytest.raises(TypeError) as typeError:
+        with pytest.raises(TypeError):
             self.client.admin_grant_roles()
-
-        assert "Required argument 'user' (pos 1) not found" in typeError.value
 
     def test_grant_roles_with_proper_parameters(self):
 
@@ -178,3 +176,12 @@ class TestGrantRoles(TestBaseClass):
         except e.InvalidRole as exception:
             assert exception.code == 70
             assert exception.msg == "AEROSPIKE_INVALID_ROLE"
+
+    def test_grant_roles_with_role_name_exceeding_max_length(self):
+
+        policy = {'timeout': 1000}
+        user = "example-test"
+        roles = ["read" * 25, "read-write" * 25]
+
+        with pytest.raises(e.ClientError) as err:
+            status = self.client.admin_grant_roles(user, roles)

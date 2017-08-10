@@ -17,7 +17,7 @@ except:
 class TestCreateUser(TestBaseClass):
 
     pytestmark = pytest.mark.skipif(
-        TestBaseClass().get_hosts()[1] == None,
+        TestBaseClass().get_hosts()[1] is None,
         reason="No user specified, may be not secured cluster.")
 
     def setup_method(self, method):
@@ -332,3 +332,62 @@ class TestCreateUser(TestBaseClass):
             assert exception.code == 81
 
         self.delete_users.append("non_admin_test")
+
+    @pytest.mark.parametrize(
+        "roles",
+        [
+            {},
+            (),
+            5,
+            "read-write"
+        ])
+    def test_create_user_with_non_list_roles(self, roles):
+
+        policy = {}
+        user = "user7"
+        password = "user7"
+        try:
+            self.client.admin_drop_user(user, policy)
+        except:
+            pass
+
+        with pytest.raises(e.ParamError):
+            self.client.admin_create_user(user, password, roles)
+
+    @pytest.mark.parametrize(
+        "list_item",
+        [
+            {},
+            (),
+            5,
+            []
+        ])
+    def test_create_user_with_invalid_roles_types(self, list_item):
+
+        policy = {}
+        user = "user7"
+        password = "user7"
+        roles = ['read-write', list_item]
+        print(roles)
+        try:
+            self.client.admin_drop_user(user, policy)
+        except:
+            pass
+
+        with pytest.raises(e.ClientError):
+            self.client.admin_create_user(user, password, roles)
+
+    def test_create_user_with_very_long_role_name(self):
+
+        policy = {}
+        user = "user7"
+        password = "user7"
+        roles = ['read-write', "abc" * 50]
+        print(roles)
+        try:
+            self.client.admin_drop_user(user, policy)
+        except:
+            pass
+
+        with pytest.raises(e.ClientError):
+            self.client.admin_create_user(user, password, roles)
