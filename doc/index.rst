@@ -12,6 +12,8 @@ the Aerospike C client.
 
 * :mod:`aerospike.exception` is a submodule containing the exception hierarchy for AerospikeError and its subclasses.
 
+* :ref:`Data_Mapping` How Python types map to Aerospike Server types
+
 .. seealso::
     The `Python Client Manual <http://www.aerospike.com/docs/client/python/>`_
     for a quick guide.
@@ -23,6 +25,7 @@ Content
     :maxdepth: 3
 
     aerospike
+    data_mapping
     client
     scan
     query
