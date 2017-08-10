@@ -883,7 +883,7 @@ static PyObject *  AerospikeClient_OperateOrdered_Invoke(
 
 		metadata_to_pyobject(err, rec, &py_return_meta);
 		if (err->code != AEROSPIKE_OK || !py_return_meta) {
-			Py_XDECREF(py_return_meta);
+			Py_XDECREF(py_return_key);
 			goto CLEANUP;
 		}
 
