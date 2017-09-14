@@ -137,8 +137,7 @@ class TestBaseClass(object):
         client = TestBaseClass.get_new_connection()
 
         response = client.info(
-            'get-config:context=namespace;id=test',
-            hostlist)
+            'get-config:context=namespace;id=test')
         namespace_config = list(response.values())[0][1]
         if namespace_config.find('ldt-enabled=true') == -1:
             TestBaseClass.has_ldt = False
