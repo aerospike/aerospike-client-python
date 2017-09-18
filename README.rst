@@ -89,9 +89,11 @@ Lua files
 ~~~~~~~~~~
 
 The system .lua files used for client side aggregation will be installed.
-By default pip will install the .lua files in a subdirectory named aerospike inside of the Python
-installations directory for platform specific files. This directory can be seen by running
-``python -c "import sys; print(sys.exec_prefix);"``
+By default pip will install the .lua files in a subdirectory named `aerospike/lua/` inside of the Python
+installations directory for platform specific files. The location of the files can be found by running:
+
+``pip show -f aerospike``
+
 
 If you would like the aerospike directory files to be placed into a different location during installation, specify
 a ``--lua-system-path`` option when running setup.py:
