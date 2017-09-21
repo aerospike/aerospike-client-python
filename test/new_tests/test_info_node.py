@@ -22,6 +22,8 @@ def as_unicode(string):
         pass
     return string
 
+
+@pytest.mark.xfail(TestBaseClass.temporary_xfail(), reason="xfail variable set")
 @pytest.mark.xfail(TestBaseClass.tls_in_use(), reason="info_node may fail when using TLS")
 @pytest.mark.usefixtures("as_connection", "connection_config")
 class TestInfoNode(object):
@@ -134,6 +136,7 @@ class TestInfoNode(object):
 
 
 # Tests for incorrect usage
+@pytest.mark.xfail(TestBaseClass.temporary_xfail(), reason="xfail variable set")
 @pytest.mark.xfail(TestBaseClass.tls_in_use(), reason="info_node may fail when using TLS")
 @pytest.mark.usefixtures("as_connection", "connection_config")
 class TestInfoNodeIncorrectUsage(object):

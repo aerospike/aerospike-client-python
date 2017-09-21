@@ -72,7 +72,7 @@ os.putenv('ARCHFLAGS', '-arch x86_64')
 os.environ['ARCHFLAGS'] = '-arch x86_64'
 AEROSPIKE_C_VERSION = os.getenv('AEROSPIKE_C_VERSION')
 if not AEROSPIKE_C_VERSION:
-    AEROSPIKE_C_VERSION = '4.1.6'
+    AEROSPIKE_C_VERSION = '4.1.8'
 DOWNLOAD_C_CLIENT = os.getenv('DOWNLOAD_C_CLIENT')
 AEROSPIKE_C_HOME = os.getenv('AEROSPIKE_C_HOME')
 PREFIX = None
@@ -160,24 +160,6 @@ def resolve_c_client(lua_src_path, lua_system_path):
     # ---------------------------------------------------------------------------
     # Deploying the system lua files
     # ---------------------------------------------------------------------------
-    print("copying from", lua_src_path, "to", lua_system_path)
-    if not os.path.isdir(lua_system_path):
-        try:
-            copytree(lua_src_path, lua_system_path)
-        except OSError as e:
-            lua_syspath_error(lua_system_path, 5)
-    else:
-        for fname in os.listdir(lua_src_path):
-            try:
-                copytree(os.path.join(lua_src_path, fname), lua_system_path)
-            except OSError as e:
-                if e.errno == errno.ENOTDIR:
-                    try:
-                        copy2(os.path.join(lua_src_path, fname), lua_system_path)
-                    except:
-                        lua_syspath_error(lua_system_path, 6)
-                else:
-                    lua_syspath_error(lua_system_path, 7)
 
 ################################################################################
 # GENERIC BUILD SETTINGS
@@ -236,32 +218,43 @@ else:
 # RESOLVE C CLIENT DEPENDENCY AND LUA SYSTEM PATH
 ################################################################################
 
-# Determine where the system lua files should be copied to
+# Determine where the system lua files should be installed to
+# this defaults to sys.exec_prefix
 lua_system_path = ''
 for arg in sys.argv:
     if arg[0:17] == '--lua-system-path':
         option, val = arg.split('=')
         lua_system_path = val.strip()
-if not lua_system_path:
-    lua_system_path = '/usr/local/aerospike/lua'
+        if lua_system_path:
+            lua_system_path = os.path.abspath(lua_system_path)
 
 # If the C client is packaged elsewhere, assume the libraries are available
+lua_src_path = "modules/aerospike-lua-core/src"
+
 if os.environ.get('NO_RESOLVE_C_CLIENT_DEP', None):
     has_c_client = True
     libraries = libraries + ['aerospike']
-    lua_src_path = os.environ.get('AEROSPIKE_LUA_PATH', lua_system_path)
+    lua_src_path = os.environ.get('AEROSPIKE_LUA_PATH', lua_src_path)
 else:
     has_c_client = False
-    lua_src_path = "aerospike-client-c/lua"
 
+lua_files = [
+                lua_src_path + '/aerospike.lua',
+                lua_src_path + '/as.lua',
+                lua_src_path + '/stream_ops.lua'
+            ]
+
+for file in lua_files:
+    if not os.path.isfile(file):
+        print("Warning: lua file {} not found, exiting".format(file), file=sys.stderr)
+        sys.exit(4)
+
+
+# If system-path isn't specified this will install relative to sys.exec_prefix
 data_files = [
-    ('aerospike', []),
-    ('aerospike/usr-lua', []),
-    ('aerospike/lua', [
-            lua_src_path + '/aerospike.lua',
-            lua_src_path + '/as.lua',
-            lua_src_path + '/stream_ops.lua'
-        ])
+    (os.path.join(lua_system_path, 'aerospike'), []),
+    (os.path.join(lua_system_path, 'aerospike/usr-lua'), []),
+    (os.path.join(lua_system_path, 'aerospike/lua'), lua_files)
 ]
 
 if not has_c_client:
@@ -299,9 +292,9 @@ setup(
         'License :: OSI Approved :: Apache Software License',
         'Operating System :: POSIX :: Linux',
         'Operating System :: MacOS :: MacOS X',
-        'Programming Language :: Python :: 2.6',
         'Programming Language :: Python :: 2.7',
         'Programming Language :: Python :: 3.5',
+        'Programming Language :: Python :: 3.6',
         'Programming Language :: Python :: Implementation :: CPython',
         'Topic :: Database'
     ],
@@ -317,11 +310,6 @@ setup(
 
     # Data files
     data_files=data_files,
-    eager_resources=[
-        lua_src_path + '/aerospike.lua',
-        lua_src_path + '/as.lua',
-        lua_src_path + '/stream_ops.lua',
-    ],
     ext_modules=[
         Extension(
             # Extension Name

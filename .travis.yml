@@ -2,6 +2,7 @@ language: python
 python:
 - 2.7
 - 3.5
+- 3.6
 sudo: false
 os:
 - linux
@@ -32,7 +33,7 @@ install:
 - ../../scripts/wait-for-node.sh var/log/aerospike.log
 - cd ../..
 script:
-- python setup.py install --lua-system-path=./
+- python setup.py install
 - cd test
 - ./run -v
 notifications:

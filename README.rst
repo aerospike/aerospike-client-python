@@ -11,7 +11,7 @@ Aerospike Python Client
 Dependencies
 ------------
 
-The Python client for Aerospike works with Python 2.6, 2.7, 3.4, 3.5 running on
+The Python client for Aerospike works with Python 2.7, 3.4, 3.5, 3.6 running on
 **64-bit** OS X 10.9+ and Linux.
 
 The client depends on:
@@ -80,13 +80,37 @@ Aerospike Python Client can be installed using ``pip``:
     # to trouleshoot installation on OS X El-Capitan (10.11) or OS X Sierra (10.12)
     pip install --no-cache-dir --user aerospike
 
-    # to have pip copy the Lua system files to a dir other than /usr/local/aerospike/lua
-    pip install aerospike --install-option="--lua-system-path=/opt/aerospike/lua"
-
 If you run into trouble installing the client on a supported OS, you may be
 using an outdated ``pip``.
 Versions of ``pip`` older than 7.0.0 should be upgraded, as well as versions of
 ``setuptools`` older than 18.0.0.
+
+Lua files
+~~~~~~~~~~
+
+The system .lua files used for client side aggregation will be installed.
+By default pip will install the .lua files in a subdirectory named `aerospike/lua/` inside of the Python
+installations directory for platform specific files. The location of the files can be found by running:
+
+``pip show -f aerospike``
+
+
+If you would like the aerospike directory files to be placed into a different location during installation, specify
+a ``--lua-system-path`` option when running setup.py:
+
+``python setup.py install --lua-system-path=/path/to/lua/install``
+
+or when running pip:
+
+``pip install aerospike --install-option="--lua-system-path=/path/to/lua/install``"
+
+**Note** Specifying an ``--install-option`` will prevent binary wheels from being used, and will require the extension to be compiled
+
+**Note** If the .lua files are stored somewhere besides `/usr/local/aerospike/lua`. and you wish to perform Stream UDF operations it will be necessary to specify the locations of the system modules as a configuration parameter to the Aerospike client constructor:
+
+    config = {'hosts': [('127.0.0.1', 3000)], 'lua': {'system_path': '/path/to/lua'} ...}
+    my_client = aerospike.client(config)
+
 
 OS X Installation
 ~~~~~~~~~~~~~~~~~~

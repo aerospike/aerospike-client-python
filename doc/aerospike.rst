@@ -80,10 +80,15 @@ in an in-memory primary index.
                 * **crl_check** :class:`bool` Enable CRL checking for the certificate chain leaf certificate. An error occurs if a suitable CRL cannot be found. By default CRL checking is disabled.
                 * **crl_check_all** :class:`bool` Enable CRL checking for the entire certificate chain. An error occurs if a suitable CRL cannot be found. By default CRL checking is disabled.
                 * **log_session_info** :class:`bool` Log session information for each connection.
-                * **max_socket_idle** :class:`int` Maximum socket idle in seconds for TLS connections. TLS Socket connection pools will discard sockets that have been idle longer than the maximum. The value is limited to 24 hours (86400). It's important to set this value to a few seconds less than the server's proto-fd-idle-ms (default 60000 milliseconds or 1 minute), so the client does not attempt to use a socket that has already been reaped by the server. Default: 55 seconds
             * **serialization** an optional instance-level :py:func:`tuple` of (serializer, deserializer). Takes precedence over a class serializer registered with :func:`~aerospike.set_serializer`.
             * **thread_pool_size** number of threads in the pool that is used in batch/scan/query commands (default: 16)
             * **max_threads** size of the synchronous connection pool for each server node (default: 300) *DEPRECATED*
+            * **max_socket_idle** Maximum socket idle time in seconds.  Connection pools will discard sockets that have
+			been idle longer than the maximum.  The value is limited to 24 hours (86400).
+	 		It's important to set this value to a few seconds less than the server's proto-fd-idle-ms
+			(default 60000 milliseconds or 1 minute), so the client does not attempt to use a socket
+			that has already been reaped by the server.
+			Default: 0 seconds (disabled) for non-TLS connections, 55 seconds for TLS connections.
             * **max_conns_per_node** maximum number of pipeline connections allowed for each node 
             * **batch_direct** whether to use the batch-direct protocol (default: ``False``, so will use batch-index if available)
             * **tend_interval** polling interval in milliseconds for tending the cluster (default: 1000)

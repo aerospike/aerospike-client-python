@@ -1,6 +1,8 @@
 import pytest
 import socket
 import time
+import os
+import sys
 from . import invalid_data
 from .test_base_class import TestBaseClass
 aerospike = pytest.importorskip("aerospike")
@@ -33,7 +35,10 @@ def wait_for_port(address, port, interval=0.1, timeout=60):
 def as_connection(request):
     hostlist, user, password = TestBaseClass.get_hosts()
     tls_info = TestBaseClass.get_tls_info()
-    config = {'hosts': hostlist, 'tls': tls_info}
+    lua_system_path = os.path.join(sys.exec_prefix, "aerospike", "lua")
+    lua_user_path = os.path.join(sys.exec_prefix, "aerospike", "usr-lua")
+    lua_info = {'system_path': lua_system_path, 'user_path': lua_user_path}
+    config = {'hosts': hostlist, 'tls': tls_info, 'lua': lua_info}
     as_client = None
     if len(hostlist) == 2:
         for (a, p) in hostlist:

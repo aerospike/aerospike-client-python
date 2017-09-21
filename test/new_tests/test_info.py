@@ -4,6 +4,7 @@ import pytest
 import sys
 
 from aerospike import exception as e
+from .test_base_class import TestBaseClass
 
 aerospike = pytest.importorskip("aerospike")
 try:
@@ -13,6 +14,7 @@ except:
     sys.exit(1)
 
 
+@pytest.mark.xfail(TestBaseClass.temporary_xfail(), reason="xfail variable set")
 @pytest.mark.usefixtures("as_connection", "connection_config")
 class TestInfo(object):
 
