@@ -239,8 +239,6 @@ for file in lua_files:
 
 # If system-path isn't specified this will install relative to sys.exec_prefix
 data_files = [
-    ('aerospike', []),
-    ('aerospike/usr-lua', []),
     ('aerospike/lua', lua_files)
 ]
 

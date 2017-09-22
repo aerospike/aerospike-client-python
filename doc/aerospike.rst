@@ -51,7 +51,7 @@ in an in-memory primary index.
               server configuration file and match the server's CA certificate. **Note: use of TLS requires Aerospike Enterprise Edition**
             * **lua** an optional :class:`dict` containing the paths to two types of Lua modules
                 * **system_path** the location of the system modules such as ``aerospike.lua`` (default: ``/usr/local/aerospike/lua``)
-                * **user_path** the location of the user's record and stream UDFs
+                * **user_path** the location of the user's record and stream UDFs . (default: ``./``)
             * **policies** a :class:`dict` of policies
                 * **timeout** default connection timeout in milliseconds
                 * **key** default key policy, with values such as :data:`aerospike.POLICY_KEY_DIGEST`
