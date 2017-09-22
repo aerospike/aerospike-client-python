@@ -86,13 +86,7 @@ CWD = os.path.abspath(os.path.dirname(__file__))
 ################################################################################
 
 
-def lua_syspath_error(lua_system_path, exit_code):
-    print("error: need permission to copy the Lua system files to ",
-          lua_system_path, "or change the --lua-system-path")
-    sys.exit(exit_code)
-
-
-def resolve_c_client(lua_src_path, lua_system_path):
+def resolve_c_client(lua_src_path):
     global PREFIX, AEROSPIKE_C_VERSION, DOWNLOAD_C_CLIENT
     global extra_objects, include_dirs
 
@@ -218,15 +212,8 @@ else:
 # RESOLVE C CLIENT DEPENDENCY AND LUA SYSTEM PATH
 ################################################################################
 
-# Determine where the system lua files should be installed to
-# this defaults to sys.exec_prefix
 lua_system_path = ''
-for arg in sys.argv:
-    if arg[0:17] == '--lua-system-path':
-        option, val = arg.split('=')
-        lua_system_path = val.strip()
-        if lua_system_path:
-            lua_system_path = os.path.abspath(lua_system_path)
+
 
 # If the C client is packaged elsewhere, assume the libraries are available
 lua_src_path = "modules/aerospike-lua-core/src"
@@ -252,15 +239,13 @@ for file in lua_files:
 
 # If system-path isn't specified this will install relative to sys.exec_prefix
 data_files = [
-    (os.path.join(lua_system_path, 'aerospike'), []),
-    (os.path.join(lua_system_path, 'aerospike/usr-lua'), []),
-    (os.path.join(lua_system_path, 'aerospike/lua'), lua_files)
+    ('aerospike/lua', lua_files)
 ]
 
 if not has_c_client:
     if (('build' in sys.argv or 'build_ext' in sys.argv or
          'install' in sys.argv or 'bdist_wheel' in sys.argv)):
-        resolve_c_client(lua_src_path, lua_system_path)
+        resolve_c_client(lua_src_path)
 
 ################################################################################
 # SETUP
