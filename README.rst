@@ -95,17 +95,6 @@ installations directory for platform specific files. The location of the files c
 ``pip show -f aerospike``
 
 
-If you would like the aerospike directory files to be placed into a different location during installation, specify
-a ``--lua-system-path`` option when running setup.py:
-
-``python setup.py install --lua-system-path=/path/to/lua/install``
-
-or when running pip:
-
-``pip install aerospike --install-option="--lua-system-path=/path/to/lua/install``"
-
-**Note** Specifying an ``--install-option`` will prevent binary wheels from being used, and will require the extension to be compiled
-
 **Note** If the .lua files are stored somewhere besides `/usr/local/aerospike/lua`. and you wish to perform Stream UDF operations it will be necessary to specify the locations of the system modules as a configuration parameter to the Aerospike client constructor:
 
     config = {'hosts': [('127.0.0.1', 3000)], 'lua': {'system_path': '/path/to/lua'} ...}

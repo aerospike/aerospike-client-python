@@ -68,11 +68,6 @@ download the appropriate C client. However, if one is present this will not
 happen, and a build may fail against an old client. At that point you should
 remove the directory `aerospike-client-c` and run the build command again.
 
-If you see the error `error: need permission to copy the Lua system files to /usr/local/aerospike/lua or change the --lua-system-path`
-
-You may need to either run the command with sudo, or alternatively specify a different location for the Lua system modules to be installed:
-
-	python setup.py build --force --lua-system-path=/path/to/lua
 
 ### Troubleshooting OS X builds
 Building on OS X versions >= 10.11 , may cause a few additional errors to be generated. If the build command fails with an
@@ -119,11 +114,6 @@ To install the library:
 
     python setup.py install --force
 
-If you see the error `error: need permission to copy the Lua system files to /usr/local/aerospike/lua or change the --lua-system-path`
-
-You may need to either run the command with sudo, or alternatively specify a different location for the Lua system modules to be installed:
-
-	python setup.py install --force --lua-system-path=/path/to/lua
 
 
 ### Troubleshooting OS X Installation
@@ -137,12 +127,9 @@ error similar to: `error: could not create '/usr/local/aerospike/lua': Permissio
 
 Stream UDF functionality requires a local copy of the system Lua modules.
 By default, those Lua files are copied to an `aerospike` directory inside of Python's' installation path for system dependent packages. This directory can be viewed by running  `python -c "import sys; print(sys.prefix);" `
-To store the files in an additional location: specify the additional location with the `--lua-system-path` option to setup.py
-
-    python setup.py install --lua-system-path=/path/to/lua
 
 
-**Note** If the .lua files are stored somewhere besides `/usr/local/aerospike/lua`. and you wish to perform Stream UDF operations it will be necessary to specify the locations of the system modules as a configuration parameter to the Aerospike client constructor:
+**Note** The default search location for the lua system files is `/usr/local/aerospike/lua`. If the .lua files are stored somewhere besides `/usr/local/aerospike/lua`. and you wish to perform Stream UDF operations it will be necessary to specify the locations of the system modules as a configuration parameter to the Aerospike client constructor:
 
 	config = {'hosts': [('127.0.0.1', 3000)], 'lua': {'system_path': '/path/to/lua'} ...}
 	my_client = aerospike.client(config)
