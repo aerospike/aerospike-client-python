@@ -66,6 +66,9 @@ main() {
 		*'scientific'* )
 			distro_id='scientific'
 			;;
+		*'amazon linux'* )
+			distro_id='ami'
+			;;
 		* )
 			error "/etc/issue contained an unsupported linux distibution: $issue"
 			exit 1
@@ -86,6 +89,9 @@ main() {
 		'debian' )
 			debian_version=$(cat /etc/debian_version | tr '[:upper:]' '[:lower:]')
 			distro_version=${debian_version%%.*}
+			;;
+		'ami' )
+			distro_version='ami'
 			;;
 		* )
 			error "/etc/issue contained an unsupported linux distibution: $issue"
@@ -157,7 +163,7 @@ main() {
 		distro_version=${distro_version%.*}
 		distro_short="${distro_id}${distro_version}"
 		;;
-	'amzn' )
+	'amzn' | 'ami' )
 		distro_long="ami"
 		distro_short="ami"
 		;;
