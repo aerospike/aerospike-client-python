@@ -30,6 +30,26 @@
 #include "exceptions.h"
 #include "macros.h"
 
+/*******************************************************************************
+ * PYTHON DOC METHODS
+ ******************************************************************************/
+
+PyDoc_STRVAR(foreach_doc,
+"foreach(callback[, policy[, options]])\n\
+\n\
+Invoke the callback function for each of the records streaming back from the scan.");
+
+PyDoc_STRVAR(select_doc,
+"select(bin1[, bin2[, bin3..]])\n\
+\n\
+Set a filter on the record bins resulting from results() or foreach(). \
+If a selected bin does not exist in a record it will not appear in the bins portion of that record tuple.");
+
+PyDoc_STRVAR(results_doc,
+"results([policy]) -> list of (key, meta, bins)\n\
+\n\
+Buffer the records resulting from the scan, and return them as a list of records.");
+
 
 /*******************************************************************************
  * PYTHON TYPE METHODS
@@ -38,13 +58,13 @@
 static PyMethodDef AerospikeScan_Type_Methods[] = {
 
 	{"foreach",	(PyCFunction) AerospikeScan_Foreach,	METH_VARARGS | METH_KEYWORDS,
-				"Iterate over each result and call the callback function."},
+				foreach_doc},
 
 	{"select",	(PyCFunction) AerospikeScan_Select,		METH_VARARGS | METH_KEYWORDS,
-				"Add bins to select in the query."},
+				select_doc},
 
 	{"results",	(PyCFunction) AerospikeScan_Results,	METH_VARARGS | METH_KEYWORDS,
-				"Get a record."},
+				results_doc},
 	{NULL}
 };
 
