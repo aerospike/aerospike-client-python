@@ -37,6 +37,18 @@ PyObject *py_global_hosts;
 int counter = 0xA5000000;
 bool user_shm_key = false;
 
+PyDoc_STRVAR(client_doc,
+"client(config) -> client object\n\
+\n\
+Creates a new instance of the Client class.\n\
+This client can connect() to the cluster and perform operations against it, such as put() and get() records.\n\
+\n\
+config = {\n\
+    'hosts':    [ ('127.0.0.1', 3000) ],\n\
+    'policies': {'timeout': 1000},\n\
+}\n\
+client = aerospike.client(config)");
+
 static PyMethodDef Aerospike_Methods[] = {
 
 	//Serialization
@@ -51,7 +63,7 @@ static PyMethodDef Aerospike_Methods[] = {
 		"Unsets the serializer and deserializer"},
 
 	{"client",		(PyCFunction) AerospikeClient_New,              METH_VARARGS | METH_KEYWORDS,
-		"Create a new instance of Client class."},
+		client_doc},
 	{"set_log_level",	(PyCFunction)Aerospike_Set_Log_Level,       METH_VARARGS | METH_KEYWORDS,
 		"Sets the log level"},
 	{"set_log_handler", (PyCFunction)Aerospike_Set_Log_Handler,     METH_VARARGS | METH_KEYWORDS,
