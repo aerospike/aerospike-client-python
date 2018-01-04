@@ -82,7 +82,7 @@ if len(args) != 1:
 config = {
     'hosts': [(options.host, options.port)],
     'policies': {
-        'timeout': options.timeout
+        'read': {'total_timeout': options.timeout}
     }
 }
 

@@ -35,12 +35,6 @@ class TestScan(TestBaseClass):
         as_connection.operate(key, llist)
         self.record_count = 20
 
-        if TestBaseClass.has_ldt_support():
-            key = ('test', u'demo', 'ldt_key')
-            self.llist_bin = as_connection.llist(key, 'llist_key')
-            self.llist_bin.add(10)
-            self.record_count += 1
-
         def teardown():
             for i in range(19):
                 key = ('test', u'demo', i)
@@ -48,11 +42,6 @@ class TestScan(TestBaseClass):
 
             key = ('test', 'demo', 122)
             as_connection.remove(key)
-
-            if TestBaseClass.has_ldt_support():
-                self.llist_bin.remove(10)
-                key = ('test', 'demo', 'ldt_key')
-                as_connection.remove(key)
 
         request.addfinalizer(teardown)
 
@@ -269,73 +258,6 @@ class TestScan(TestBaseClass):
 
         for record in records:
             assert record != {}
-
-    def test_scan_with_options_includeldt_positive(self):
-        """
-            Invoke scan() with include ldt set to True
-        """
-        if not TestBaseClass.has_ldt_support():
-            pytest.skip()
-
-        ns = 'test'
-        st = 'demo'
-
-        records = []
-
-        options = {
-            "percent": 100,
-            "concurrent": True,
-            "priority": aerospike.SCAN_PRIORITY_HIGH,
-            "include_ldt": True
-        }
-
-        def callback(input_tuple):
-            _, _, bins = input_tuple
-            records.append(bins)
-
-        scan_obj = self.as_connection.scan(ns, st)
-
-        scan_obj.foreach(callback, {}, options)
-        value = 0
-        for x in records:
-            if 'llist_key' in x.keys():
-                value = x['llist_key']
-
-        assert value == [10]
-        assert len(records) != 0
-
-    def test_scan_with_options_includeldt_negative(self):
-        """
-            Invoke scan() with include ldt set to False
-        """
-        if not TestBaseClass.has_ldt_support():
-            pytest.skip()
-        ns = 'test'
-        st = 'demo'
-
-        records = []
-
-        options = {
-            "percent": 100,
-            "concurrent": True,
-            "priority": aerospike.SCAN_PRIORITY_HIGH,
-            "include_ldt": False
-        }
-
-        def callback(input_tuple):
-            _, _, bins = input_tuple
-            records.append(bins)
-
-        scan_obj = self.as_connection.scan(ns, st)
-
-        scan_obj.foreach(callback, {}, options)
-        value = 0
-        for x in records:
-            if 'llist_key' in x.keys():
-                value = x['llist_key']
-
-        assert value is None
-        assert len(records) != 0
 
     def test_scan_with_multiple_foreach_on_same_scan_object(self):
         """

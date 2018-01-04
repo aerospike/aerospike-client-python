@@ -365,7 +365,7 @@ class TestRemovebin(object):
         key = ('test', 'demo', 1)
 
         policy = {
-            'timeout': 0.5
+            'total_timeout': 0.5
         }
         try:
             self.as_connection.remove_bin(key, ["age"], {}, policy)

@@ -51,6 +51,7 @@ PyObject * AerospikeClient_RemoveBin_Invoke(
 	as_policy_write write_policy;
 	as_policy_write * write_policy_p = NULL;
 	as_key key;
+	bool key_initialized = false;
 	as_record rec;
 	char* binName = NULL;
 	int count = 0;
@@ -66,6 +67,7 @@ PyObject * AerospikeClient_RemoveBin_Invoke(
 	if (err->code != AEROSPIKE_OK) {
 		goto CLEANUP;
 	}
+	key_initialized = true;
 
 	// Convert python policy object to as_policy_write
 	pyobject_to_policy_write(err, py_policy, &write_policy, &write_policy_p,
@@ -152,6 +154,10 @@ PyObject * AerospikeClient_RemoveBin_Invoke(
 CLEANUP:
 
 	as_record_destroy(&rec);
+
+	if (key_initialized) {
+		as_key_destroy(&key);
+	}
 
 	if (err->code != AEROSPIKE_OK) {
 		PyObject * py_err = NULL;

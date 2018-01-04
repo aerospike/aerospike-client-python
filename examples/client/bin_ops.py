@@ -84,7 +84,7 @@ try:
         (key, meta, bins) = client.get(('test', 'cats', 'mr. peppy'))
         print("Before:", bins)
         client.increment(
-            key, 'lives', -1, {'gen': 2, 'ttl': 1000}, policy={'timeout': 1500})
+            key, 'lives', -1, {'gen': 2, 'ttl': 1000}, policy={'total_timeout': 1500})
         (key, meta, bins) = client.get(key)
         print("After:", bins)
         # the key we got back when we fetched the record with get() is useable

@@ -25,7 +25,6 @@
 #include <aerospike/as_record.h>
 #include <aerospike/as_geojson.h>
 
-#include <aerospike/as_ldt.h>
 #include <aerospike/as_arraylist.h>
 #include <aerospike/as_hashmap.h>
 #include <aerospike/as_list.h>
@@ -673,50 +672,55 @@ as_status pyobject_to_record(AerospikeClient * self, as_error * err, PyObject * 
 			}
 		}
 
-		if (py_meta && PyDict_Check(py_meta)) {
-			PyObject * py_gen = PyDict_GetItemString(py_meta, "gen");
-			PyObject * py_ttl = PyDict_GetItemString(py_meta, "ttl");
+		if (py_meta  && py_meta != Py_None) {
+			if (!PyDict_Check(py_meta)) {
+				as_error_update(err, AEROSPIKE_ERR_PARAM, "meta must be a dictionary");
+			} else {
+				PyObject * py_gen = PyDict_GetItemString(py_meta, "gen");
+				PyObject * py_ttl = PyDict_GetItemString(py_meta, "ttl");
 
-			if (py_ttl) {
-				if (PyInt_Check(py_ttl)) {
-					rec->ttl = (uint32_t) PyInt_AsLong(py_ttl);
-					if (rec->ttl == (uint32_t)-1 && PyErr_Occurred()) {
-						if (PyErr_ExceptionMatches(PyExc_OverflowError)) {
-							as_error_update(err, AEROSPIKE_ERR_PARAM, "integer value exceeds sys.maxsize");
+				if (py_ttl) {
+					if (PyInt_Check(py_ttl)) {
+						rec->ttl = (uint32_t) PyInt_AsLong(py_ttl);
+						if (rec->ttl == (uint32_t)-1 && PyErr_Occurred()) {
+							if (PyErr_ExceptionMatches(PyExc_OverflowError)) {
+								as_error_update(err, AEROSPIKE_ERR_PARAM, "integer value exceeds sys.maxsize");
+							}
 						}
-					}
-				} else if (PyLong_Check(py_ttl)) {
-					rec->ttl = (uint32_t) PyLong_AsLongLong(py_ttl);
-					if (rec->ttl == (uint32_t)-1 && PyErr_Occurred()) {
-						if (PyErr_ExceptionMatches(PyExc_OverflowError)) {
-							as_error_update(err, AEROSPIKE_ERR_PARAM, "integer value exceeds sys.maxsize");
+					} else if (PyLong_Check(py_ttl)) {
+						rec->ttl = (uint32_t) PyLong_AsLongLong(py_ttl);
+						if (rec->ttl == (uint32_t)-1 && PyErr_Occurred()) {
+							if (PyErr_ExceptionMatches(PyExc_OverflowError)) {
+								as_error_update(err, AEROSPIKE_ERR_PARAM, "integer value exceeds sys.maxsize");
+							}
 						}
+					} else {
+						as_error_update(err, AEROSPIKE_ERR_PARAM, "TTL should be an int or long");
 					}
-				} else {
-					as_error_update(err, AEROSPIKE_ERR_PARAM, "TTL should be an int or long");
 				}
-			}
 
-			if (py_gen) {
-				if (PyInt_Check(py_gen)) {
-					rec->gen = (uint16_t) PyInt_AsLong(py_gen);
-					if (rec->gen == (uint16_t)-1 && PyErr_Occurred()) {
-						if (PyErr_ExceptionMatches(PyExc_OverflowError)) {
-							as_error_update(err, AEROSPIKE_ERR_PARAM, "integer value exceeds sys.maxsize");
+				if (py_gen) {
+					if (PyInt_Check(py_gen)) {
+						rec->gen = (uint16_t) PyInt_AsLong(py_gen);
+						if (rec->gen == (uint16_t)-1 && PyErr_Occurred()) {
+							if (PyErr_ExceptionMatches(PyExc_OverflowError)) {
+								as_error_update(err, AEROSPIKE_ERR_PARAM, "integer value exceeds sys.maxsize");
+							}
 						}
-					}
-				} else if (PyLong_Check(py_gen)) {
-					rec->gen = (uint16_t) PyLong_AsLongLong(py_gen);
-					if (rec->gen == (uint16_t)-1 && PyErr_Occurred()) {
-						if (PyErr_ExceptionMatches(PyExc_OverflowError)) {
-							as_error_update(err, AEROSPIKE_ERR_PARAM, "integer value exceeds sys.maxsize");
+					} else if (PyLong_Check(py_gen)) {
+						rec->gen = (uint16_t) PyLong_AsLongLong(py_gen);
+						if (rec->gen == (uint16_t)-1 && PyErr_Occurred()) {
+							if (PyErr_ExceptionMatches(PyExc_OverflowError)) {
+								as_error_update(err, AEROSPIKE_ERR_PARAM, "integer value exceeds sys.maxsize");
+							}
 						}
+					} else {
+						as_error_update(err, AEROSPIKE_ERR_PARAM, "Generation should be an int or long");
 					}
-				} else {
-					as_error_update(err, AEROSPIKE_ERR_PARAM, "Generation should be an int or long");
 				}
 			}
 		}
+
 
 		if (err->code != AEROSPIKE_OK) {
 			as_record_destroy(rec);
@@ -1557,30 +1561,6 @@ bool error_to_pyobject(const as_error * err, PyObject ** obj)
 	return true;
 }
 
-/**
- * This method will initialize ldt.
- *
- * @param error                 The error parameter
- * @param ldt_p                 The LDT instance
- * @param bin_name              The ldt bin name
- * @param type                  The type of LDT
- * @param module                The UDF module
- *
- * On failure it will set an error.
- */
-as_status initialize_ldt(as_error *error, as_ldt* ldt_p, char* bin_name,
-		int type, char* module)
-{
-	as_error_reset(error);
-	if (!bin_name) {
-		as_error_update(error, AEROSPIKE_ERR_PARAM, "Bin name is null");
-	}
-	if (!as_ldt_init(ldt_p, bin_name, type, module)) {
-		as_error_update(error, AEROSPIKE_ERR_PARAM, "Unable to initialize LDT");
-	}
-
-	return error->code;
-}
 
 void initialize_bin_for_strictypes(AerospikeClient *self, as_error *err, PyObject *py_value, as_binop *binop, char *bin, as_static_pool *static_pool) {
 
@@ -1744,7 +1724,7 @@ as_status check_for_meta(PyObject * py_meta, as_operations * ops, as_error *err)
 			}
 			ops->gen = gen;
 		}
-	} else {
+	} else if (py_meta && (py_meta != Py_None)) {
 		return as_error_update(err, AEROSPIKE_ERR_PARAM, "Metadata should be of type dictionary");
 	}
 	return err->code;
@@ -1768,3 +1748,104 @@ as_status pyobject_to_index(AerospikeClient * self, as_error * err, PyObject * p
 	return err->code;
 }
 
+as_status
+as_batch_read_results_to_pyobject(as_error* err, AerospikeClient* client, const as_batch_read* results,
+		uint32_t size, PyObject** py_records)
+{
+	*py_records = NULL;
+	PyObject* temp_py_recs = PyList_New(0);
+
+	if (!temp_py_recs) {
+		return as_error_update(err, AEROSPIKE_ERR_CLIENT, "Failed to allocate memory for batch results");
+	}
+
+	// Loop over results array
+	for (uint32_t i = 0; i < size; i++) {
+		PyObject * py_rec = NULL;
+		PyObject * py_key = NULL;
+		if (results[i].result == AEROSPIKE_OK) {
+			/* There was a record for the item, but we failed to convert it, probably a deserialize issue, error out */
+			record_to_pyobject(client, err, &results[i].record, results[i].key, &py_rec);
+			if (!py_rec || err->code != AEROSPIKE_OK) {
+				Py_XDECREF(temp_py_recs);
+				return err->code;
+			}
+		/* The record wasn't found, build a (key, None, None) tuple */
+		} else {
+			key_to_pyobject(err, results[i].key, &py_key);
+			if (!py_key || err->code != AEROSPIKE_OK) {
+				Py_XDECREF(temp_py_recs);
+				return err->code;
+			}
+			py_rec = Py_BuildValue("OOO", py_key, Py_None, Py_None);
+			Py_DECREF(py_key);
+		}
+
+		if (!py_rec) {
+			/* This means that build value, failed, so we are in trouble*/
+			Py_XDECREF(temp_py_recs);
+			return as_error_update(err, AEROSPIKE_ERR_CLIENT, "Failed to allocate memory for record entry");
+		}
+
+		if (PyList_Append(temp_py_recs, py_rec) != 0) {
+			Py_DECREF(py_rec);
+			Py_DECREF(temp_py_recs);
+			return as_error_update(err, AEROSPIKE_ERR_CLIENT, "Failed to add record to results");
+		}
+		Py_DECREF(py_rec);
+
+	}
+
+	// Release Python State
+	*py_records = temp_py_recs;
+	return AEROSPIKE_OK;
+}
+
+as_status
+batch_read_records_to_pyobject(AerospikeClient *self, as_error *err, as_batch_read_records* records, PyObject **py_recs)
+{
+	*py_recs = PyList_New(0);
+
+	if (!(*py_recs)) {
+		return as_error_update(err, AEROSPIKE_ERR_CLIENT, "Failed to allocate return list of records");
+	}
+	as_vector* list = &records->list;
+	for (uint32_t i = 0; i < list->size; i++) {
+
+		as_batch_read_record* batch = as_vector_get(list, i);
+		PyObject* py_rec = NULL;
+		PyObject* py_key = NULL;
+
+		/* There should be a record, so convert it to a tuple */
+		if (batch->result == AEROSPIKE_OK) {
+			record_to_pyobject(self, err, &batch->record, &batch->key, &py_rec);
+			if (!py_rec || err->code != AEROSPIKE_OK) {
+				Py_CLEAR(*py_recs);
+				return err->code;
+			}
+		/* No record, convert to (key, None, None) */
+		} else {
+			key_to_pyobject(err, &batch->key, &py_key);
+			if (!py_key || err->code != AEROSPIKE_OK) {
+				Py_CLEAR(*py_recs);
+				return err->code;
+			}
+			py_rec = Py_BuildValue("OOO", py_key, Py_None, Py_None);
+			Py_DECREF(py_key);
+			if (!py_rec) {
+				as_error_update(err, AEROSPIKE_ERR_CLIENT, "Failed to create a record tuple");
+				Py_CLEAR(*py_recs);
+				return err->code;
+			}
+		}
+
+		if (PyList_Append(*py_recs, py_rec) != 0) {
+			as_error_update(err, AEROSPIKE_ERR_CLIENT, "Failed to add record tuple to return list");
+			Py_XDECREF(py_rec);
+			Py_CLEAR(*py_recs);
+			return err->code;
+		}
+		Py_DECREF(py_rec);
+	}
+	return AEROSPIKE_OK;
+}

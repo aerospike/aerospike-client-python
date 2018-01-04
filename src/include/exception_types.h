@@ -29,7 +29,7 @@ struct exceptions {
 	//Server exceptions
 	PyObject *InvalidRequest;
 	PyObject *ServerFull;
-	PyObject *NoXDR;
+	PyObject *AlwaysForbidden;
 	PyObject *UnsupportedFeature;
 	PyObject *DeviceOverload;
 	PyObject *ForbiddenError;
@@ -109,45 +109,6 @@ struct exceptions {
 	PyObject *QueryQueueFull;
 	PyObject *QueryTimeout;
 
-	//LDT exceptions
-	PyObject *LDTError;
-	PyObject *LargeItemNotFound;
-	PyObject *LDTInternalError;
-	PyObject *LDTNotFound;
-	PyObject *LDTUniqueKeyError;
-	PyObject *LDTInsertError;
-	PyObject *LDTSearchError;
-	PyObject *LDTDeleteError;
-	PyObject *LDTInputParamError;
-	PyObject *LDTTypeMismatch;
-	PyObject *LDTBinNameNull;
-	PyObject *LDTBinNameNotString;
-	PyObject *LDTBinNameTooLong;
-	PyObject *LDTTooManyOpenSubrecs;
-	PyObject *LDTTopRecNotFound;
-	PyObject *LDTSubRecNotFound;
-	PyObject *LDTBinNotFound;
-	PyObject *LDTBinExistsError;
-	PyObject *LDTBinDamaged;
-	PyObject *LDTSubrecPoolDamaged;
-	PyObject *LDTSubrecDamaged;
-	PyObject *LDTSubrecOpenError;
-	PyObject *LDTSubrecUpdateError;
-	PyObject *LDTSubrecCreateError;
-	PyObject *LDTSubrecDeleteError;
-	PyObject *LDTSubrecCloseError;
-	PyObject *LDTToprecUpdateError;
-	PyObject *LDTToprecCreateError;
-	PyObject *LDTFilterFunctionBad;
-	PyObject *LDTFilterFunctionNotFound;
-	PyObject *LDTKeyFunctionBad;
-	PyObject *LDTKeyFunctionNotFound;
-	PyObject *LDTTransFunctionBad;
-	PyObject *LDTTransFunctionNotFound;
-	PyObject *LDTUntransFunctionBad;
-	PyObject *LDTUntransFunctionNotFound;
-	PyObject *LDTUserModuleBad;
-	PyObject *LDTUserModuleNotFound;
 };
 
 struct server_exceptions_struct {
@@ -173,8 +134,3 @@ struct admin_exceptions_struct {
 	int admin_exceptions_codes[17];
 };
 
-struct ldt_exceptions_struct {
-	PyObject * *ldt_exceptions[37];
-	char * ldt_exceptions_name[37];
-	int ldt_exceptions_codes[37];
-};

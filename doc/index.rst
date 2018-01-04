@@ -32,7 +32,6 @@ Content
     predicates
     geojson
     exception
-    llist
 
 
 Indices and tables

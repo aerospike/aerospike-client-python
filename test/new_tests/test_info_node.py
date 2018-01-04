@@ -24,7 +24,6 @@ def as_unicode(string):
 
 
 @pytest.mark.xfail(TestBaseClass.temporary_xfail(), reason="xfail variable set")
-@pytest.mark.xfail(TestBaseClass.tls_in_use(), reason="info_node may fail when using TLS")
 @pytest.mark.usefixtures("as_connection", "connection_config")
 class TestInfoNode(object):
 
@@ -32,7 +31,7 @@ class TestInfoNode(object):
     def setup(self, request, as_connection, connection_config):
         key = ('test', 'demo', 'list_key')
         rec = {'names': ['John', 'Marlen', 'Steve']}
-        self.host_name = self.connection_config['hosts'][0][:2]
+        self.host_name = self.connection_config['hosts'][0]
         self.as_connection.put(key, rec)
 
         yield
@@ -126,8 +125,13 @@ class TestInfoNode(object):
         """
         Test info with all parameters
         """
-        host = (as_unicode(self.connection_config['hosts'][0][0]),
-                self.connection_config['hosts'][0][1])
+        if TestBaseClass.tls_in_use():
+            host = (as_unicode(self.connection_config['hosts'][0][0]),
+                    self.connection_config['hosts'][0][1],
+                    as_unicode(self.connection_config['hosts'][0][2]))
+        else:
+            host = (as_unicode(self.connection_config['hosts'][0][0]),
+                    self.connection_config['hosts'][0][1])
         policy = {
             'timeout': 1000
         }
@@ -137,7 +141,6 @@ class TestInfoNode(object):
 
 # Tests for incorrect usage
 @pytest.mark.xfail(TestBaseClass.temporary_xfail(), reason="xfail variable set")
-@pytest.mark.xfail(TestBaseClass.tls_in_use(), reason="info_node may fail when using TLS")
 @pytest.mark.usefixtures("as_connection", "connection_config")
 class TestInfoNodeIncorrectUsage(object):
     """
@@ -158,23 +161,7 @@ class TestInfoNodeIncorrectUsage(object):
         """
         with pytest.raises(e.ClientError) as err_info:
             self.as_connection.info_node(
-                'abcd', self.connection_config['hosts'][0][:2])
-
-        assert err_info.value.code == AerospikeStatus.AEROSPIKE_ERR_CLIENT
-        assert err_info.value.msg == "Invalid info operation"
-
-    @pytest.mark.skip(reason=("This goes to intranet ip"))
-    def test_info_node_positive_with_valid_host(self):
-        """
-        Test info with incorrect host????
-        #         """
-        host = ("192.168.244.244", 3000)
-        try:
-            self.as_connection.info_node('bins', host)
-        except e.ClientError as exception:
-            assert exception.code == -1
-        except e.TimeoutError as exception:
-            assert exception.code == 9
+                'abcd', self.connection_config['hosts'][0])
 
     def test_info_node_positive_invalid_host(self):
         """
@@ -194,21 +181,6 @@ class TestInfoNodeIncorrectUsage(object):
         host = ("localhost" * 100, 3000)
         with pytest.raises(e.InvalidHostError) as err_info:
             self.as_connection.info_node('bins', host)
-
-    @pytest.mark.skip(reason="This goes to google's website")
-    def test_info_node_positive_with_dns(self):
-        """
-        Test info with incorrect host
-        # why is this hitting google's website?
-        """
-        host = ("google.com", 3000)
-        try:
-            self.as_connection.info_node('bins', host)
-
-        except e.TimeoutError as exception:
-            assert exception.code == 9
-        except e.InvalidHostError as exception:
-            assert exception.code == -4
 
     def test_info_node_positive_without_connection(self):
         """

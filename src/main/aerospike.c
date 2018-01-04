@@ -25,7 +25,6 @@
 #include "scan.h"
 #include "predicates.h"
 #include "exceptions.h"
-#include "llist.h"
 #include "policy.h"
 #include "log.h"
 #include <aerospike/as_operations.h>
@@ -34,7 +33,7 @@
 #include "nullobject.h"
 
 PyObject *py_global_hosts;
-int counter = 0xA5000000;
+int counter = 0xA7000000;
 bool user_shm_key = false;
 
 static PyMethodDef Aerospike_Methods[] = {
@@ -82,7 +81,7 @@ AerospikeConstants operator_constants[] = {
 MOD_INIT(aerospike)
 {
 
-	const char version[8] = "2.2.3";
+	const char version[8] = "3.0.0";
 	// Makes things "thread-safe"
 	PyEval_InitThreads();
 	int i = 0;
@@ -126,10 +125,6 @@ MOD_INIT(aerospike)
 	PyObject * predicates = AerospikePredicates_New();
 	Py_INCREF(predicates);
 	PyModule_AddObject(aerospike, "predicates", predicates);
-
-	PyTypeObject * llist = AerospikeLList_Ready();
-	Py_INCREF(llist);
-	PyModule_AddObject(aerospike, "llist", (PyObject *) llist);
 
 	PyTypeObject * geospatial = AerospikeGeospatial_Ready();
 	Py_INCREF(geospatial);

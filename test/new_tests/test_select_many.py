@@ -172,6 +172,23 @@ class TestSelectMany(object):
             )
         ]
 
+    def test_get_many_with_bytearray_key(self):
+        '''
+        Make sure that get many can handle a a key with a bytearray pk
+        '''
+        keys = [('test', 'demo', bytearray([1, 2, 3]))]
+        for key in keys:
+            self.as_connection.put(key, {'byte': 'array'})
+
+        records = self.as_connection.select_many(keys, [])
+        self.as_connection.remove(keys[0])
+
+        bytearray_key = records[0][0]
+        assert len(bytearray_key) == 4
+
+        bytearray_pk = bytearray_key[2]
+        assert bytearray_pk == bytearray([1, 2, 3])
+
     def test_with_use_batch_direct_true_argument(self):
         policies = {'use_batch_direct': True}
         records = self.as_connection.select_many(self.keys, [], policies)
@@ -355,12 +372,18 @@ class TestSelectMany(object):
 
     def test_select_many_with_invalid_timeout(self):
 
-        policies = {'timeout': 0.2}
+        policies = {'total_timeout': 0.2}
         with pytest.raises(e.ParamError) as err_info:
             self.as_connection.select_many(self.keys, [], policies)
 
         assert err_info.value.code == AerospikeStatus.AEROSPIKE_ERR_PARAM
 
+    def test_select_many_with_an_invalid_key_in_list_batch_direct(self):
+
+        with pytest.raises(e.ParamError):
+            self.as_connection.select_many([('test', 'demo', 1), ('test', 'demo', 2), None],
+                                           ["title"],
+                                           {'use_batch_direct': True})
     # Tests for invalid argument types
 
     @pytest.mark.parametrize('keys_arg', (None, {}, False, 'a', 1))

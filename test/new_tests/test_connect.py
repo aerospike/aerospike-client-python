@@ -57,7 +57,7 @@ class TestConnect(object):
         """
 
         config = self.connection_config.copy()
-        config['policies'] = {'timeout': 10000}
+        config['policies'] = {'read': {'total_timeout': 10000}}
 
         with open_as_connection(config) as client:
             assert client is not None
@@ -197,9 +197,9 @@ class TestConnect(object):
              e.ParamError, -2, "Hosts must be a list"),
             ({'hosts': [3000]}, e.ParamError, -2, "Invalid host"),
 
-            ({'hosts': [('127.0.0.1', 2000)]}, e.ClientError, -1,
+            ({'hosts': [('127.0.0.1', 2000)]}, e.ClientError, -10,
              "Failed to connect"),
-            ({'hosts': [('127.0.0.1', '3000')]}, e.ClientError, -1,
+            ({'hosts': [('127.0.0.1', '3000')]}, e.ClientError, -10,
              "Failed to connect")
         ],
         ids=[

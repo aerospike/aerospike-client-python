@@ -19,52 +19,140 @@ class TestQuery(TestBaseClass):
 
     def setup_class(cls):
         client = TestBaseClass.get_new_connection()
-        client.index_integer_create('test', 'demo', 'test_age',
-                                    'age_index')
-        client.index_string_create('test', 'demo', 'addr',
-                                   'addr_index')
-        client.index_integer_create('test', 'demo', 'age1',
-                                    'age_index1')
-        client.index_list_create('test', 'demo', 'numeric_list',
-                                 aerospike.INDEX_NUMERIC,
-                                 'numeric_list_index')
-        client.index_list_create('test', 'demo', 'string_list',
-                                 aerospike.INDEX_STRING,
-                                 'string_list_index')
-        client.index_map_keys_create('test', 'demo', 'numeric_map',
+
+        try:
+            client.index_integer_create('test', 'demo', 'test_age',
+                                        'age_index')
+        except e.IndexFoundError:
+            pass
+
+        try:
+            client.index_string_create('test', 'demo', 'addr',
+                                       'addr_index')
+        except e.IndexFoundError:
+            pass
+
+        try:
+            client.index_integer_create('test', 'demo', 'age1',
+                                        'age_index1')
+        except e.IndexFoundError:
+            pass
+
+        try:
+            client.index_list_create('test', 'demo', 'numeric_list',
                                      aerospike.INDEX_NUMERIC,
-                                     'numeric_map_index')
-        client.index_map_keys_create('test', 'demo', 'string_map',
+                                     'numeric_list_index')
+        except e.IndexFoundError:
+            pass
+
+        try:
+            client.index_list_create('test', 'demo', 'string_list',
                                      aerospike.INDEX_STRING,
-                                     'string_map_index')
-        client.index_map_values_create('test', 'demo', 'numeric_map',
-                                       aerospike.INDEX_NUMERIC,
-                                       'numeric_map_values_index')
-        client.index_map_values_create('test', 'demo', 'string_map',
-                                       aerospike.INDEX_STRING,
-                                       'string_map_values_index')
-        client.index_integer_create('test', None, 'test_age_none',
-                                    'age_index_none')
-        client.index_integer_create('test', 'demo',
-                                    bytearray("sal\0kj", "utf-8"),
-                                    'sal_index')
+                                     'string_list_index')
+        except e.IndexFoundError:
+            pass
+
+        try:
+            client.index_map_keys_create('test', 'demo', 'numeric_map',
+                                         aerospike.INDEX_NUMERIC,
+                                         'numeric_map_index')
+        except e.IndexFoundError:
+            pass
+
+        try:
+            client.index_map_keys_create('test', 'demo', 'string_map',
+                                         aerospike.INDEX_STRING,
+                                         'string_map_index')
+        except e.IndexFoundError:
+            pass
+
+        try:
+            client.index_map_values_create('test', 'demo', 'numeric_map',
+                                           aerospike.INDEX_NUMERIC,
+                                           'numeric_map_values_index')
+        except e.IndexFoundError:
+            pass
+
+        try:
+            client.index_map_values_create('test', 'demo', 'string_map',
+                                           aerospike.INDEX_STRING,
+                                           'string_map_values_index')
+        except e.IndexFoundError:
+            pass
+
+        try:
+            client.index_integer_create('test', None, 'test_age_none',
+                                        'age_index_none')
+        except e.IndexFoundError:
+            pass
+
+        try:
+            client.index_integer_create('test', 'demo',
+                                        bytearray("sal\0kj", "utf-8"),
+                                        'sal_index')
+        except e.IndexFoundError:
+            pass
+
         client.close()
 
     def teardown_class(cls):
         client = TestBaseClass.get_new_connection()
 
         policy = {}
-        client.index_remove('test', 'age_index', policy)
-        client.index_remove('test', 'age_index1', policy)
-        client.index_remove('test', 'addr_index', policy)
-        client.index_remove('test', 'numeric_list_index', policy)
-        client.index_remove('test', 'string_list_index', policy)
-        client.index_remove('test', 'numeric_map_index', policy)
-        client.index_remove('test', 'string_map_index', policy)
-        client.index_remove('test', 'numeric_map_values_index', policy)
-        client.index_remove('test', 'string_map_values_index', policy)
-        client.index_remove('test', 'age_index_none', policy)
-        client.index_remove('test', 'sal_index')
+        try:
+            client.index_remove('test', 'age_index', policy)
+        except e.IndexNotFound:
+            pass
+
+        try:
+            client.index_remove('test', 'age_index1', policy)
+        except e.IndexNotFound:
+            pass
+
+        try:
+            client.index_remove('test', 'addr_index', policy)
+        except e.IndexNotFound:
+            pass
+
+        try:
+            client.index_remove('test', 'numeric_list_index', policy)
+        except e.IndexNotFound:
+            pass
+
+        try:
+            client.index_remove('test', 'string_list_index', policy)
+        except e.IndexNotFound:
+            pass
+
+        try:
+            client.index_remove('test', 'numeric_map_index', policy)
+        except e.IndexNotFound:
+            pass
+
+        try:
+            client.index_remove('test', 'string_map_index', policy)
+        except e.IndexNotFound:
+            pass
+
+        try:
+            client.index_remove('test', 'numeric_map_values_index', policy)
+        except e.IndexNotFound:
+            pass
+
+        try:
+            client.index_remove('test', 'string_map_values_index', policy)
+        except e.IndexNotFound:
+            pass
+
+        try:
+            client.index_remove('test', 'age_index_none', policy)
+        except e.IndexNotFound:
+            pass
+
+        try:
+            client.index_remove('test', 'sal_index')
+        except e.IndexNotFound:
+            pass
         client.close()
 
     @pytest.fixture(autouse=True)
@@ -247,9 +335,28 @@ class TestQuery(TestBaseClass):
         query.foreach(callback, policy)
         assert len(records) == 1
 
-    def test_query_with_extra_argument(self):
+    @pytest.mark.xfail(reason="Only pass with server version >= 3.15")
+    def test_query_with_no_bins_option(self):
         """
-            Invoke query() with extra argument
+            Invoke query() with policy
+        """
+        policy = {'total_timeout': 1000}
+        options = {'nobins': True}
+        query = self.as_connection.query('test', 'demo')
+        query.select('name', 'test_age')
+        query.where(p.equals('test_age', 1))
+        records = []
+
+        def callback(input_tuple):
+            _, _, bins = input_tuple
+            print(bins)
+            assert len(bins) == 0
+
+        query.foreach(callback, policy, options=options)
+
+    def test_query_with_invalid_options_argument_type(self):
+        """
+            Invoke query() with incorrect options type, should be a dictionary
         """
         policy = {'timeout': 1000}
         query = self.as_connection.query('test', 'demo')
@@ -260,11 +367,23 @@ class TestQuery(TestBaseClass):
             _, metadata, _ = input_tuple
             assert metadata['gen'] is None
 
-        with pytest.raises(TypeError) as typeError:
+        with pytest.raises(e.ParamError):
             query.foreach(callback, policy, "")
 
-        assert "foreach() takes at most 2 arguments (3 given)" in str(
-            typeError.value)
+    def test_query_with_invalid_nobins_value(self):
+        """
+            Invoke query() with options['nobins'] type
+        """
+        policy = {'total_timeout': 1000}
+        query = self.as_connection.query('test', 'demo')
+        query.select('name', 'test_age')
+        query.where(p.equals('test_age', 1))
+
+        def callback(input_tuple):
+            pass
+
+        with pytest.raises(e.ParamError):
+            query.foreach(callback, policy, {'nobins': 'False'})
 
     def test_query_with_put_in_callback(self):
         """
@@ -338,6 +457,37 @@ class TestQuery(TestBaseClass):
 
         records = query.results()
         assert len(records) == 1
+
+    def test_query_with_results_nobins_options(self):
+        """
+            Invoke query() with correct arguments
+        """
+        query = self.as_connection.query('test', 'demo')
+        query.select('name', 'test_age')
+        query.where(p.equals('test_age', 1))
+
+        records = query.results(options={'nobins': True})
+        assert len(records) == 1
+
+    def test_query_with_results_invalid_options_type(self):
+        """
+            Invoke query() with correct arguments
+        """
+        query = self.as_connection.query('test', 'demo')
+        query.select('name', 'test_age')
+        query.where(p.equals('test_age', 1))
+        with pytest.raises(e.ParamError):
+            records = query.results(options=False)
+
+    def test_query_with_results_invalid_nobins_options(self):
+        """
+            Invoke query() with correct arguments
+        """
+        query = self.as_connection.query('test', 'demo')
+        query.select('name', 'test_age')
+        query.where(p.equals('test_age', 1))
+        with pytest.raises(e.ParamError):
+            records = query.results(options={'nobins': "false"})
 
     def test_query_with_unicode_binnames_in_select_and_where(self):
         """
@@ -440,42 +590,17 @@ class TestQuery(TestBaseClass):
         query.foreach(callback)
         assert len(records) == 2
 
-    def test_query_with_correct_parameters_rangecontains_notuple(self):
+    #  All of these removed tests feature undocumented fragile behavior removed in 3.0.0
+    def test_removed_query_with_correct_parameters_rangecontains_notuple(self):
         """
-            Invoke query() with correct arguments and non tuple argument form
-            on numeric mapvalue index
-            Since the records 'test_age_bins' map has 3 values
-            i, i + 1, i + 2
-
-            and i goes from 0 to 9
-            there should be 8 values in the range [1,3]
-
-            0, 1, 2
-            1, 2, 3
-            2, 3, 4,
-            3, 4, 5
-
-            1 twice, 2 3 times, and 3 3 times
         """
         query = self.as_connection.query('test', 'demo')
         query.select('name', 'test_age')
-        query.where('numeric_map', "range", aerospike.INDEX_TYPE_MAPVALUES,
-                    aerospike.INDEX_NUMERIC, 1, 3)
+        with pytest.raises(e.ParamError):
+            query.where('numeric_map', "range", aerospike.INDEX_TYPE_MAPVALUES,
+                        aerospike.INDEX_NUMERIC, 1, 3)
 
-        records = []
-
-        def callback(input_tuple):
-            _, _, record = input_tuple
-            records.append(record)
-
-        query.foreach(callback)
-        #   The callback should be called once for every matching value in
-        #   a map
-        #   Since 2 records have a value of 1, 3 have a value of 2 and 3
-        #   have a value of 3, this is 8 calls to the callback
-        assert len(records) == 8
-
-    def test_query_with_correct_parameters_containsstring_mapvalues_notuple(
+    def test_removed_query_with_correct_parameters_containsstring_mapvalues_notuple(
         self
     ):
         """
@@ -484,74 +609,39 @@ class TestQuery(TestBaseClass):
         """
         query = self.as_connection.query('test', 'demo')
         query.select('name', 'test_age')
-        query.where('string_map', 'contains', aerospike.INDEX_TYPE_MAPVALUES,
-                    aerospike.INDEX_STRING, "a1")
+        with pytest.raises(e.ParamError):
+            query.where('string_map', 'contains', aerospike.INDEX_TYPE_MAPVALUES,
+                        aerospike.INDEX_STRING, "a1")
 
-        records = []
-
-        def callback(input_tuple):
-            _, _, record = input_tuple
-            records.append(record)
-
-        query.foreach(callback)
-        assert len(records) == 1
-
-    def test_query_with_correct_parameters_containsstring_notuple(self):
+    def test_test_removed_query_containsstring_notuple(self):
         """
             Invoke query() with correct a
             and a string list index arguments and using predicate contains
         """
         query = self.as_connection.query('test', 'demo')
         query.select('name', 'test_age')
-        query.where('string_list', "contains", aerospike.INDEX_TYPE_LIST,
-                    aerospike.INDEX_STRING, "str3")
+        with pytest.raises(e.ParamError):
+            query.where('string_list', "contains", aerospike.INDEX_TYPE_LIST,
+                        aerospike.INDEX_STRING, "str3")
 
-        records = []
-
-        def callback(input_tuple):
-            _, _, record = input_tuple
-            records.append(record)
-
-        query.foreach(callback)
-        assert len(records) == 3
-
-    def test_query_with_correct_parameters_between_notuple(self):
+    def test_removed_query_with_correct_parameters_between_notuple(self):
         """
             Invoke query() with correct arguments and using predicate between
         """
         query = self.as_connection.query('test', 'demo')
         query.select('name', 'test_age')
-        query.where('test_age', 'between', 1, 4)
+        with pytest.raises(e.ParamError):
+            query.where('test_age', 'between', 1, 4)
 
-        records = []
-
-        def callback(input_tuple):
-            _, _, record = input_tuple
-            records.append(record)
-
-        query.foreach(callback)
-        assert len(records) == 4
-
-    @pytest.mark.skip(reason="This segfaults")
     def test_between_predicate_between_one_arg(self):
         """
             Invoke query and using predicate between with invalid predicate
             arguments
         """
         query = self.as_connection.query('test', 'demo')
-        query.select('name', 'test_age')
-        query.where('test_age', 'between', 1)
+        with pytest.raises(e.ParamError):
+            query.where('test_age', 'between', 1)
 
-        records = []
-
-        def callback(input_tuple):
-            _, _, record = input_tuple
-            records.append(record)
-
-        query.foreach(callback)
-        assert len(records) == 4
-
-    @pytest.mark.skip(reason="This segfaults")
     def test_between_predicate_between_no_args(self):
         """
             Invoke query and using predicate between with invalid predicate
@@ -559,16 +649,8 @@ class TestQuery(TestBaseClass):
         """
         query = self.as_connection.query('test', 'demo')
         query.select('name', 'test_age')
-        query.where('test_age', 'between')
-
-        records = []
-
-        def callback(input_tuple):
-            _, _, record = input_tuple
-            records.append(record)
-
-        query.foreach(callback)
-        assert len(records) == 4
+        with pytest.raises(e.ParamError):
+            query.where('test_age', 'between')
 
     def test_query_with_policy_notuple(self):
         """
@@ -577,18 +659,8 @@ class TestQuery(TestBaseClass):
         policy = {'timeout': 1000}
         query = self.as_connection.query('test', 'demo')
         query.select('name', 'test_age')
-        query.where('test_age', 'equals', 1)
-        records = []
-
-        def callback(input_tuple):
-            _, _, record = input_tuple
-            records.append(record)
-
-        query.foreach(callback, policy)
-        assert len(records) == 1
-        records = []
-        query.foreach(callback)
-        assert len(records) == 1
+        with pytest.raises(e.ParamError):
+            query.where('test_age', 'equals', 1)
 
     def test_query_with_multiple_results_call_on_same_query_object(self):
         """
@@ -693,13 +765,14 @@ class TestQuery(TestBaseClass):
         """
             Invoke query() with invalid policy passed to foreach
         """
-        policy = {'timeout': ""}
+        policy = {'total_timeout': ""}
         query = self.as_connection.query('test', 'demo')
         query.select('name', 'test_age')
         query.where(p.equals('test_age', 1))
 
         def callback(input_tuple):
             _, metadata, _ = input_tuple
+            print(metadata)
             assert metadata['gen'] is None
 
         with pytest.raises(e.ParamError) as err_info:

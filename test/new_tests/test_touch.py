@@ -225,9 +225,8 @@ class TestTouch(object):
         Invoke touch() with incorrect policy
         """
         key = ('test', 'demo', 1)
-        policy = {
-            'timeout': 0.5
-        }
+        policy = {'total_timeout': 0.5}
+
         with pytest.raises(e.ParamError) as err_info:
             self.as_connection.touch(key, 120, {}, policy)
 

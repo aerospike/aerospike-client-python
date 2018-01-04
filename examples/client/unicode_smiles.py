@@ -88,7 +88,7 @@ try:
     config = {
         'hosts': [(options.host, options.port)],
         'policies': {
-            'timeout': options.timeout
+            'total_timeout': options.timeout
         }
     }
     client = aerospike.client(config).connect(
@@ -112,7 +112,7 @@ try:
                            'key': aerospike.POLICY_KEY_SEND})
         print("Retrieving the record from the server for comparison")
         (key, meta, record) = client.get(
-            key, policy={'timeout': options.read_timeout})
+            key, policy={'total_timeout': options.read_timeout})
         print("The value of the 'smiley' bin is", record['smiley'], "\n")
         print("By the way, this record has been written", meta['gen'], "times")
         future_gen = str(int(meta['gen']) + 2)
