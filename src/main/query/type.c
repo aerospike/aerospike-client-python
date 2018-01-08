@@ -30,25 +30,57 @@
 #include "exceptions.h"
 
 /*******************************************************************************
+ * PYTHON DOC METHODS
+ ******************************************************************************/
+
+PyDoc_STRVAR(apply_doc,
+"apply(module, function[, arguments])\n\
+\n\
+Aggregate the results() using a stream UDF. \
+If no predicate is attached to the Query the stream UDF will aggregate over all the records in the specified set.");
+
+PyDoc_STRVAR(foreach_doc,
+"foreach(callback[, policy])\n\
+\n\
+Invoke the callback function for each of the records streaming back from the query.");
+
+PyDoc_STRVAR(results_doc,
+"results([policy]) -> list of (key, meta, bins)\n\
+\n\
+Buffer the records resulting from the query, and return them as a list of records.");
+
+PyDoc_STRVAR(select_doc,
+"select(bin1[, bin2[, bin3..]])\n\
+\n\
+Set a filter on the record bins resulting from results() or foreach(). \
+If a selected bin does not exist in a record it will not appear in the bins portion of that record tuple.");
+
+PyDoc_STRVAR(where_doc,
+"where(predicate)\n\
+\n\
+Set a where predicate for the query, without which the query will behave similar to aerospike.Scan. \
+The predicate is produced by one of the aerospike.predicates methods equals() and between().");
+
+/*******************************************************************************
  * PYTHON TYPE METHODS
  ******************************************************************************/
 
 static PyMethodDef AerospikeQuery_Type_Methods[] = {
 
 	{"apply",	(PyCFunction) AerospikeQuery_Apply,		METH_VARARGS | METH_KEYWORDS,
-				"Apply a Stream UDF on the resultset of the query."},
+				apply_doc},
 
 	{"foreach",	(PyCFunction) AerospikeQuery_Foreach,	METH_VARARGS | METH_KEYWORDS,
-				"Iterate over each record in the resultset and call the callback function."},
+				foreach_doc},
 
 	{"results",	(PyCFunction) AerospikeQuery_Results,	METH_VARARGS | METH_KEYWORDS,
-				"Return a list of all records in the resultset."},
+				results_doc},
 
 	{"select",	(PyCFunction) AerospikeQuery_Select,	METH_VARARGS | METH_KEYWORDS,
-				"Bins to project in the query."},
+				select_doc},
 
 	{"where",	(PyCFunction) AerospikeQuery_Where,		METH_VARARGS,
-				"Predicate to be applied to the query."},
+				where_doc},
 
 	{NULL}
 };
