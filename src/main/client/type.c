@@ -120,9 +120,7 @@ PyDoc_STRVAR(operate_ordered_doc,
 "operate_ordered(key, list[, meta[, policy]]) -> (key, meta, bins)\n\
 \n\
 Perform multiple bin operations on a record with the results being returned as a list of (bin-name, result) tuples. \
-The order of the elements in the list will correspond to the order of the operations from the input parameters.\n\
-\n\
-Unlike operate() this function will apply each of the operations separately, making multiple calls to the server.");
+The order of the elements in the list will correspond to the order of the operations from the input parameters.");
 
 PyDoc_STRVAR(list_append_doc,
 "list_append(key, bin, val[, meta[, policy]])\n\
@@ -399,7 +397,7 @@ Register a UDF module with the cluster.");
 PyDoc_STRVAR(udf_remove_doc,
 "udf_remove(module[, policy])\n\
 \n\
-Register a UDF module with the cluster.");
+Remove a  previously registered UDF module from the cluster.");
 
 PyDoc_STRVAR(udf_list_doc,
 "udf_list([policy]) -> []\n\
@@ -449,11 +447,6 @@ PyDoc_STRVAR(index_geo2dsphere_create_doc,
 \n\
 Create a geospatial 2D spherical index with index_name on the bin in the specified ns, set.");
 
-PyDoc_STRVAR(llist_doc,
-"llist(key, bin[, module]) -> LList\n\
-\n\
-Return a aerospike.LList object on a specified key and bin.");
-
 PyDoc_STRVAR(get_many_doc,
 "get_many(keys[, policy]) -> [ (key, meta, bins)]\n\
 \n\
@@ -461,7 +454,7 @@ Batch-read multiple records, and return them as a list. \
 Any record that does not exist will have a None value for metadata and bins in the record tuple.");
 
 PyDoc_STRVAR(select_many_doc,
-"select_many(keys, bins[, policy]) -> {primary_key: (key, meta, bins)}\n\
+"select_many(keys, bins[, policy]) -> [(key, meta, bins)]\n\
 \n\
 Batch-read multiple records, and return them as a list. \
 Any record that does not exist will have a None value for metadata and bins in the record tuple. \

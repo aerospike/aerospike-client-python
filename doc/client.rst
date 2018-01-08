@@ -1616,7 +1616,7 @@ a cluster-tending thread.
         .. versionchanged:: 1.0.50
 
 
-    .. method:: select_many(keys, bins[, policy]) -> {primary_key: (key, meta, bins)}
+    .. method:: select_many(keys, bins[, policy]) -> [(key, meta, bins), ...]}
 
         Batch-read multiple records, and return them as a :class:`list`. Any \
         record that does not exist will have a :py:obj:`None` value for metadata \
@@ -1744,7 +1744,7 @@ a cluster-tending thread.
 
     .. method:: udf_remove(module[, policy])
 
-        Register a UDF module with the cluster.
+        Remove a  previously registered UDF module from the cluster.
 
         :param str module: the UDF module to be deregistered from the cluster.
         :param dict policy: currently **timeout** in milliseconds is the available policy.
