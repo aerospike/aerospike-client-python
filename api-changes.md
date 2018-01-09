@@ -1,13 +1,19 @@
-# Backwards Incompatible API changes
+# API Changes
 
 ## Version 3.0.0
 
-### LDT Removal
-Removed LDT (`client#llist`) methods and support. Server version 3.14 is the last version of the Aerospike server to support the functionality.
+
+### Additional Features
+
+* Updated to C client `4.3.1`
+* Added a new list increment operation OP_LIST_INCREMENT . It can be used to increase an element of a list by a provided amount.
+* Added the option to specify a specific node to run on a scan on, via a new optional nodename parameter.
+* Added the option to specify that Query.results and Query.foreach should not return bins, via a new optional parameter options to both methods.
+* Added aerospike.info_all() to allow sending of an info command to all nodes in the current cluster.
+* Added linearize_read option to read policies. Requires Enterprise server >= 4.0.0
 
 ### Deprecations
-`client#info` has been deprecated. In order to send requests to the entire cluster, the new method `client#info_all` should be used. In order to send requests to
-hosts specified in a list, we recommend a  loop invoking multiple calls to aerospike.info_node. See below for an example implementation:
+* `client#info` has been deprecated. In order to send requests to the entire cluster, the new method `client#info_all` should be used. In order to send requests to hosts specified in a list, we recommend a  loop invoking multiple calls to aerospike.info_node. See below for an example implementation:
 
 ```python
 
@@ -23,12 +29,25 @@ def info_to_host_list(client, request, hosts, policy=None):
 	return output
 ```
 
-Setting of global policy defaults via top level entries in the 'policies' dictionary in the constructor config dict has been deprecated. See the constructor documentation for the new recommended method of specifying defaults.
-
-Updated documentation for the client policies to show new field names and defaults.
+* Setting of global policy defaults via top level entries in the 'policies' dictionary in the constructor config dict has been deprecated. See the constructor documentation for the new recommended method of specifying defaults.
 
 
-### Changed and removed policy field names:
+### Backwards Incompatible API changes
+#### LDT Removal
+Removed LDT (`client#llist`) methods and support. Server version 3.14 is the last version of the Aerospike server to support the functionality.
+
+
+#### Index Methods
+
+* Methods which create indexes, ( `index_string_create`, `index_integer_create`, `index_list_create`, `index_map_keys_create`, `index_map_values_create` and, `index_geo2dsphere_create` ),  will now raise an `IndexFoundError` if the specified bin has already been indexed, or if an index with the same name already exists.
+
+* Methods which drop indexes (`index_remove`), will now raise an `IndexNotFound` if the named index does not exist.
+
+#### Shared memory layout change
+Shared memory layout has changed, and accordingly the default SHM key has changed from `0xA6000000` to `0xA7000000` . If manually specifiying an
+SHM key, it is crucial to ensure that a separate key is used in order to prevent this version's client from sharing memory with a previous version.
+
+#### Changed and removed policy field names:
 In all policies, (except for `info` and `admin`), `timeout` has been split into `total_timeout` and `socket_timeout`
 `total_timeout` is an int representing total transaction timeout in milliseconds. The `total_timeout` is tracked on the client and sent to the server along with the transaction in the wire protocol. The client will most likely timeout first, but the server also has the capability to timeout the transaction. If `total_timeout` is not zero and `total_timeout` is reached before the transaction completes, the transaction will return error `TimeoutError`. If `total_timeout` is zero, there will be no total time limit. See the documentation for individual policies for the default values.
 
@@ -42,7 +61,7 @@ WARNING: Database writes that are not idempotent (such as `client#increment`) sh
 
 The default value for `max_retries` is 2.
 
-### Changes in policy defaults for `aerospike.client` constructor
+#### Changes in policy defaults for `aerospike.client` constructor
 In this version, individual config dictionaries (`read`, `write`, `apply`, `operate`, `scan`, `query`, `batch`, `remove`) for method types should be used inside of the top level `policies` dictionary for setting policies. In previous versions, individual policies were set at the top level `policies` dictionary rather than in per method type dictionaries. The type of policy which affects each method can be found in the documenation. See the main documentation for the keys and values available for these new configuration dictionaries. See below for an example of the change in constructor usage:
 
 ```python
@@ -50,7 +69,7 @@ In this version, individual config dictionaries (`read`, `write`, `apply`, `oper
 
 hosts = [('localhost', 3000)]
 
-timeout = 2430
+timeout = 2345
 key_policy = aerospike.POLICY_KEY_SEND
 
 # This changes defaults for all methods, requiring a config dictionary to be passed in to all methods which
@@ -83,7 +102,3 @@ config = {'hosts': hosts, 'policies': policies}
 
 client = aerospike.client(config)
 ```
-
-### Shared memory layout change
-Shared memory layout has changed, and accordingly the default SHM key has changed from `0xA6000000` to `0xA7000000` . If manually specifiying an
-SHM key, it is crucial to ensure that a separate key is used in order to prevent this version's client from sharing memory with a previous version.

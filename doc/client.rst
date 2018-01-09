@@ -2120,9 +2120,9 @@ a cluster-tending thread.
 
                 [('127.0.0.1', 3000), ('127.0.0.1', 3010)]
 
-        .. versionchanged:: 1.0.41
+        .. versionchanged:: 3.0.0
 
-        .. warning:: ``get_nodes`` will not work when using TLS
+        .. warning:: In versions < 3.0.0 ``get_nodes`` will not work when using TLS
 
      .. method:: info(command[, hosts[, policy]]) -> {}
 
