@@ -11,7 +11,6 @@ class TestBaseClass(object):
     hostlist = []
     user = None
     password = None
-    has_ldt = None
     has_geo = None
     using_tls = False
     using_auth = False
@@ -76,10 +75,6 @@ class TestBaseClass(object):
             if config.has_option('tls', 'certfile'):
                 tls_dict['certfile'] = config.get('tls', 'certfile')
 
-            if config.has_option('tls', 'encrypt_only'):
-                if config.get('tls', 'encrypt_only') == 'True':
-                    tls_dict['encrypt_only'] = True
-
             if config.has_option('tls', 'crl_check'):
                 if config.get('tls', 'crl_check') == 'True':
                     tls_dict['crl_check'] = True
@@ -124,27 +119,6 @@ class TestBaseClass(object):
                     host.append(tls_name)
                 hosts.append(tuple(host))
         return hosts
-
-    @staticmethod
-    def has_ldt_support():
-        if TestBaseClass.has_ldt is not None:
-            return TestBaseClass.has_ldt
-
-        hostlist, _, _ = TestBaseClass.get_hosts()
-        # Convert each host to a two item tuple.
-        hostlist = [host[0:2] for host in hostlist]
-
-        client = TestBaseClass.get_new_connection()
-
-        response = client.info(
-            'get-config:context=namespace;id=test')
-        namespace_config = list(response.values())[0][1]
-        if namespace_config.find('ldt-enabled=true') == -1:
-            TestBaseClass.has_ldt = False
-        else:
-            TestBaseClass.has_ldt = True
-        client.close()
-        return TestBaseClass.has_ldt
 
     @staticmethod
     def has_geo_support():

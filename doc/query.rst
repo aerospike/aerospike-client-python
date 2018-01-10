@@ -53,12 +53,13 @@ Query Class --- :class:`Query`
         .. note:: Currently, you can assign at most one predicate to the query.
 
 
-    .. method:: results([policy]) -> list of (key, meta, bins)
+    .. method:: results([,policy [, options]]) -> list of (key, meta, bins)
 
         Buffer the records resulting from the query, and return them as a \
         :class:`list` of records.
 
         :param dict policy: optional :ref:`aerospike_query_policies`.
+        :param dict options: optional :ref:`aerospike_query_options`.
         :return: a :class:`list` of :ref:`aerospike_record_tuple`.
 
         .. code-block:: python
@@ -75,7 +76,7 @@ Query Class --- :class:`Query`
             query.select('name', 'age') # matched records return with the values of these bins
             # assuming there is a secondary index on the 'age' bin of test.demo
             query.where(p.equals('age', 40))
-            records = query.results( {'timeout':2000})
+            records = query.results( {'total_timeout':2000})
             pp.pprint(records)
             client.close()
 
@@ -84,13 +85,14 @@ Query Class --- :class:`Query`
             Queries require a secondary index to exist on the *bin* being queried.
 
 
-    .. method:: foreach(callback[, policy])
+    .. method:: foreach(callback[, policy [, options]])
 
         Invoke the *callback* function for each of the records streaming back \
         from the query.
 
         :param callable callback: the function to invoke for each record.
         :param dict policy: optional :ref:`aerospike_query_policies`.
+        :param dict options: optional :ref:`aerospike_query_options`.
 
         .. note:: A :ref:`aerospike_record_tuple` is passed as the argument to the callback function.
 
@@ -113,7 +115,7 @@ Query Class --- :class:`Query`
                 pp.pprint(bins)
                 names.append(bins['name'])
 
-            query.foreach(matched_names, {'timeout':2000})
+            query.foreach(matched_names, {'total_timeout':2000})
             pp.pprint(names)
             client.close()
 
@@ -250,6 +252,50 @@ Query Policies
     .. hlist::
         :columns: 1
 
-        * **timeout** maximum time in milliseconds to wait for the operation to complete. Default ``0`` means *do not timeout*.
+        * **max_retries**
+            | An :class:`int`. Maximum number of retries before aborting the current transaction. The initial attempt is not counted as a retry.
+            |
+            | If max_retries is exceeded, the transaction will return error ``AEROSPIKE_ERR_TIMEOUT``.
+            |
+            | **WARNING**: Database writes that are not idempotent (such as "add") should not be retried because the write operation may be performed multiple times
+            | if the client timed out previous transaction attempts. It's important to use a distinct write policy for non-idempotent writes which sets max_retries = `0`;
+            |
+            | Default: ``0``
+        * **sleep_between_retries**
+            | An :class:`int`. Milliseconds to sleep between retries. Enter zero to skip sleep. Default: ``0``
+        * **socket_timeout**
+            | An :class:`int`. Socket idle timeout in milliseconds when processing a database command.
+            |
+            | If socket_timeout is not zero and the socket has been idle for at least socket_timeout, both max_retries and total_timeout are checked. If max_retries and total_timeout are not exceeded, the transaction is retried.
+            |
+            | If both ``socket_timeout`` and ``total_timeout`` are non-zero and ``socket_timeout`` > ``total_timeout``, then ``socket_timeout`` will be set to ``total_timeout``. If ``socket_timeout`` is zero, there will be no socket idle limit.
+            |
+            | Default: ``10000``.
+        * **total_timeout**
+            | An :class:`int`. Total transaction timeout in milliseconds.
+            |
+            | The total_timeout is tracked on the client and sent to the server along with the transaction in the wire protocol. The client will most likely timeout first, but the server also has the capability to timeout the transaction.
+            |
+            | If ``total_timeout`` is not zero and ``total_timeout`` is reached before the transaction completes, the transaction will return error ``AEROSPIKE_ERR_TIMEOUT``. If ``total_timeout`` is zero, there will be no total time limit.
+            |
+            | Default: ``0``
+        * **deserialize**
+            | :class:`bool` Should raw bytes representing a list or map be deserialized to a list or dictionary.
+            | Set to `False` for backup programs that just need access to raw bytes.
+            | Default: ``True``
 
+.. _aerospike_query_options:
 
+Query Options
+--------------
+
+.. object:: options
+
+    A :class:`dict` of optional scan options which are applicable to :meth:`Query.foreach` and :meth:`Query.results`.
+
+    .. hlist::
+        :columns: 1
+
+        * **nobins** :class:`bool` whether to return the *bins* portion of the :ref:`aerospike_record_tuple`. Default ``False``.
+
+    .. versionadded:: 3.0.0

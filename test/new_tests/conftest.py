@@ -51,7 +51,7 @@ def as_connection(request):
         as_client = aerospike.client(config).connect(user, password)
 
     request.cls.skip_old_server = True
-    versioninfo = as_client.info('version')
+    versioninfo = as_client.info_all('version')
     for keys in versioninfo:
         for value in versioninfo[keys]:
             if value is not None:

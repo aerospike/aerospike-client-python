@@ -46,10 +46,12 @@ AerospikeQuery * AerospikeClient_Query(AerospikeClient * self, PyObject * args, 
 {
 	return AerospikeQuery_New(self, args, kwds);
 }
-static int query_where_add(as_query **query, as_predicate_type predicate, as_index_datatype in_datatype, PyObject * py_bin, PyObject * py_val1, PyObject * py_val2, int index_type)
+static int query_where_add(as_query **query, as_predicate_type predicate, as_index_datatype in_datatype, PyObject * py_bin,
+						   PyObject * py_val1, PyObject * py_val2, int index_type, as_error* err)
 
 {
-	as_error err;
+	int64_t min;
+	int64_t max;
 	char * val = NULL, * bin = NULL;
 	PyObject * py_ubin = NULL;
 	switch (predicate) {
@@ -63,6 +65,7 @@ static int query_where_add(as_query **query, as_predicate_type predicate, as_ind
 				} else if (PyByteArray_Check(py_bin)) {
 					bin = PyByteArray_AsString(py_bin);
 				} else {
+					as_error_update(err, AEROSPIKE_ERR_PARAM, "Bin must be a string or unicode");
 					return 1;
 				}
 
@@ -72,6 +75,7 @@ static int query_where_add(as_query **query, as_predicate_type predicate, as_ind
 					val = strdup(PyString_AsString(py_val1));
 				}
 				else {
+					as_error_update(err, AEROSPIKE_ERR_PARAM, "Comparison value for string equality must be a string");
 					return 1;
 				}
 
@@ -85,6 +89,7 @@ static int query_where_add(as_query **query, as_predicate_type predicate, as_ind
 				} else if (index_type == 3) {
 					as_query_where(*query, bin, as_contains( MAPVALUES, STRING, val ));
 				} else {
+					as_error_update(err, AEROSPIKE_ERR_PARAM, "Invalid query index type");
 					return 1;
 				}
 				if (py_ubin) {
@@ -101,6 +106,7 @@ static int query_where_add(as_query **query, as_predicate_type predicate, as_ind
 				} else if (PyByteArray_Check(py_bin)) {
 					bin = PyByteArray_AsString(py_bin);
 				} else {
+					as_error_update(err, AEROSPIKE_ERR_PARAM, "Bin must be a string or unicode");
 					return 1;
 				}
 				int64_t val = pyobject_to_int64(py_val1);
@@ -115,6 +121,7 @@ static int query_where_add(as_query **query, as_predicate_type predicate, as_ind
 				} else if (index_type == 3) {
 					as_query_where(*query, bin, as_contains( MAPVALUES, NUMERIC, val ));
 				} else {
+					as_error_update(err, AEROSPIKE_ERR_PARAM, "Invalid query index types");
 					return 1;
 				}
 				if (py_ubin) {
@@ -124,10 +131,7 @@ static int query_where_add(as_query **query, as_predicate_type predicate, as_ind
 			}
 			else {
 				// If it ain't expected, raise and error
-				as_error_update(&err, AEROSPIKE_ERR_PARAM, "predicate 'equals' expects a string or integer value.");
-				PyObject * py_err = NULL;
-				error_to_pyobject(&err, &py_err);
-				PyErr_SetObject(PyExc_Exception, py_err);
+				as_error_update(err, AEROSPIKE_ERR_PARAM, "predicate 'equals' expects a string or integer value.");
 				return 1;
 			}
 
@@ -143,10 +147,27 @@ static int query_where_add(as_query **query, as_predicate_type predicate, as_ind
 				} else if (PyByteArray_Check(py_bin)) {
 					bin = PyByteArray_AsString(py_bin);
 				} else {
+					as_error_update(err, AEROSPIKE_ERR_PARAM, "Bin must be a string or unicode");
 					return 1;
 				}
-				int64_t min = pyobject_to_int64(py_val1);
-				int64_t max = pyobject_to_int64(py_val2);
+
+				if (py_val1 == Py_None || py_val2 == Py_None) {
+					as_error_update(err, AEROSPIKE_ERR_PARAM, "Min and max must be provided for a range query");
+					return 1;
+				}
+				if (PyInt_Check(py_val1) || PyLong_Check(py_val1)) {
+					min = pyobject_to_int64(py_val1);
+				} else {
+					as_error_update(err, AEROSPIKE_ERR_PARAM, "Min value must be an integer or long");
+					return 1;
+				}
+
+				if (PyInt_Check(py_val2) || PyLong_Check(py_val2)) {
+					max = pyobject_to_int64(py_val2);
+				} else {
+					as_error_update(err, AEROSPIKE_ERR_PARAM, "Max value must be an integer or long");
+					return 1;
+				}
 
 				as_query_where_init(*query, 1);
 				if (index_type == 0) {
@@ -166,24 +187,19 @@ static int query_where_add(as_query **query, as_predicate_type predicate, as_ind
 				}
 			}
 			else if (in_datatype == AS_INDEX_STRING) {
-				// NOT IMPLEMENTED
+				as_error_update(err, AEROSPIKE_ERR_PARAM, "Range predicate not supported for strings");
+				return 1;
 			}
 			else {
 				// If it ain't right, raise and error
-				as_error_update(&err, AEROSPIKE_ERR_PARAM, "predicate 'between' expects two integer values.");
-				PyObject * py_err = NULL;
-				error_to_pyobject(&err, &py_err);
-				PyErr_SetObject(PyExc_Exception, py_err);
+				as_error_update(err, AEROSPIKE_ERR_PARAM, "predicate 'between' expects two integer values.");
 				return 1;
 			}
 			break;
 		}
 		default: {
 			// If it ain't supported, raise and error
-			as_error_update(&err, AEROSPIKE_ERR_PARAM, "unknown predicate type");
-			PyObject * py_err = NULL;
-			error_to_pyobject(&err, &py_err);
-			PyErr_SetObject(PyExc_Exception, py_err);
+			as_error_update(err, AEROSPIKE_ERR_PARAM, "unknown predicate type");
 			return 1;
 		}
 	}
@@ -308,28 +324,45 @@ PyObject * AerospikeClient_QueryApply_Invoke(
 	if (PyTuple_Check(py_predicate)) {
 
 		Py_ssize_t size = PyTuple_Size(py_predicate);
-		if (size < 1) {
-			// If it ain't atleast 1, then raise error
-			return NULL;
+		if (size < 2) {
+			as_error_update(&err, AEROSPIKE_ERR_PARAM, "Invalid predicate");
+			goto CLEANUP;
 		}
 
 		PyObject * py_op = PyTuple_GetItem(py_predicate, 0);
 		PyObject * py_op_data = PyTuple_GetItem(py_predicate, 1);
 
-		if (PyInt_Check(py_op) && PyInt_Check(py_op_data)) {
-			as_predicate_type op = (as_predicate_type) PyInt_AsLong(py_op);
-			as_index_datatype op_data = (as_index_datatype) PyInt_AsLong(py_op_data);
-			rc = query_where_add(
-				&query_ptr,
-				op,
-				op_data,
-				size > 2 ? PyTuple_GetItem(py_predicate, 2) : Py_None,
-				size > 3 ? PyTuple_GetItem(py_predicate, 3) : Py_None,
-				size > 4 ? PyTuple_GetItem(py_predicate, 4) : Py_None,
-				size > 5 ? PyInt_AsLong(PyTuple_GetItem(py_predicate, 5)) : 0
-			);
+		if (!py_op || !py_op_data) {
+			as_error_update(&err, AEROSPIKE_ERR_CLIENT, "Failed to get predicate elements");
+			goto CLEANUP;
 		}
+		if (!PyInt_Check(py_op) || !PyInt_Check(py_op_data)) {
+			as_error_update(&err, AEROSPIKE_ERR_PARAM, "Invalid Predicate");
+			goto CLEANUP;
+		}
+
+		as_predicate_type op = (as_predicate_type) PyInt_AsLong(py_op);
+		as_index_datatype op_data = (as_index_datatype) PyInt_AsLong(py_op_data);
+		rc = query_where_add(
+			&query_ptr,
+			op,
+			op_data,
+			size > 2 ? PyTuple_GetItem(py_predicate, 2) : Py_None,
+			size > 3 ? PyTuple_GetItem(py_predicate, 3) : Py_None,
+			size > 4 ? PyTuple_GetItem(py_predicate, 4) : Py_None,
+			size > 5 ? PyInt_AsLong(PyTuple_GetItem(py_predicate, 5)) : 0,
+			&err
+		);
+
+		if (rc) {
+			goto CLEANUP;
+		}
+
+	} else {
+		as_error_update(&err, AEROSPIKE_ERR_PARAM, "Predicate must be a tuple");
+		goto CLEANUP;
 	}
+
 	if (!as_query_apply(&query, module_p, function_p, arglist)) {
 		as_error_update(&err, AEROSPIKE_ERR_PARAM, "Unable to apply UDF on the scan");
 		goto CLEANUP;
@@ -360,9 +393,6 @@ PyObject * AerospikeClient_QueryApply_Invoke(
 	}
 
 CLEANUP:
-	if (rc) {
-		return NULL;
-	}
 	if (py_ustr1) {
 		Py_DECREF(py_ustr1);
 	}

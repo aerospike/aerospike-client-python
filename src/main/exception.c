@@ -37,13 +37,13 @@ PyObject * AerospikeException_New(void)
 	memset(&exceptions_array, 0, sizeof(exceptions_array));
 
 	struct server_exceptions_struct server_array = { 
-		{&exceptions_array.InvalidRequest, &exceptions_array.ServerFull, &exceptions_array.NoXDR, 
+		{&exceptions_array.InvalidRequest, &exceptions_array.ServerFull, &exceptions_array.AlwaysForbidden,
 			&exceptions_array.UnsupportedFeature, &exceptions_array.DeviceOverload, &exceptions_array.NamespaceNotFound, 
 			&exceptions_array.ForbiddenError, &exceptions_array.QueryError, &exceptions_array.ClusterError, 
 			&exceptions_array.InvalidGeoJSON},
-		{"InvalidRequest", "ServerFull", "NoXDR", "UnsupportedFeature", "DeviceOverload", "NamespaceNotFound", 
+		{"InvalidRequest", "ServerFull", "AlwaysForbidden", "UnsupportedFeature", "DeviceOverload", "NamespaceNotFound",
 			"ForbiddenError", "QueryError", "ClusterError", "InvalidGeoJSON"},
-		{AEROSPIKE_ERR_REQUEST_INVALID, AEROSPIKE_ERR_SERVER_FULL, AEROSPIKE_ERR_NO_XDR, 
+		{AEROSPIKE_ERR_REQUEST_INVALID, AEROSPIKE_ERR_SERVER_FULL, AEROSPIKE_ERR_ALWAYS_FORBIDDEN,
 			AEROSPIKE_ERR_UNSUPPORTED_FEATURE, AEROSPIKE_ERR_DEVICE_OVERLOAD, AEROSPIKE_ERR_NAMESPACE_NOT_FOUND,  
 			AEROSPIKE_ERR_FAIL_FORBIDDEN, AEROSPIKE_ERR_QUERY, AEROSPIKE_ERR_CLUSTER, AEROSPIKE_ERR_GEO_INVALID_GEOJSON}
 	};
@@ -87,41 +87,6 @@ PyObject * AerospikeException_New(void)
 			AEROSPIKE_INVALID_PRIVILEGE, AEROSPIKE_NOT_AUTHENTICATED}
 	};
 
-	struct ldt_exceptions_struct ldt_array = { 
-		{&exceptions_array.LargeItemNotFound, &exceptions_array.LDTInternalError, &exceptions_array.LDTNotFound, 
-			&exceptions_array.LDTUniqueKeyError, &exceptions_array.LDTInsertError, &exceptions_array.LDTSearchError, 
-			&exceptions_array.LDTDeleteError, &exceptions_array.LDTInputParamError, &exceptions_array.LDTTypeMismatch, 
-			&exceptions_array.LDTBinNameNull, &exceptions_array.LDTBinNameNotString, &exceptions_array.LDTBinNameTooLong, 
-			&exceptions_array.LDTTooManyOpenSubrecs, &exceptions_array.LDTTopRecNotFound, &exceptions_array.LDTSubRecNotFound, 
-			&exceptions_array.LDTBinNotFound, &exceptions_array.LDTBinExistsError, &exceptions_array.LDTBinDamaged, 
-			&exceptions_array.LDTSubrecPoolDamaged, &exceptions_array.LDTSubrecDamaged, &exceptions_array.LDTSubrecOpenError, 
-			&exceptions_array.LDTSubrecUpdateError, &exceptions_array.LDTSubrecCreateError, &exceptions_array.LDTSubrecDeleteError, 
-			&exceptions_array.LDTSubrecCloseError, &exceptions_array.LDTToprecUpdateError, &exceptions_array.LDTToprecCreateError, 
-			&exceptions_array.LDTFilterFunctionBad, &exceptions_array.LDTFilterFunctionNotFound, &exceptions_array.LDTKeyFunctionBad, 
-			&exceptions_array.LDTKeyFunctionNotFound, &exceptions_array.LDTTransFunctionBad, &exceptions_array.LDTTransFunctionNotFound, 
-			&exceptions_array.LDTUntransFunctionBad, &exceptions_array.LDTUntransFunctionNotFound, &exceptions_array.LDTUserModuleBad, 
-			&exceptions_array.LDTUserModuleNotFound},
-		{"LargeItemNotFound", "LDTInternalError", "LDTNotFound", "LDTUniqueKeyError", "LDTInsertError", "LDTSearchError", 
-			"LDTDeleteError", "LDTInputParamError", "LDTTypeMismatch", "LDTBinNameNull", "LDTBinNameNotString", "LDTBinNameTooLong", 
-			"LDTTooManyOpenSubrecs", "LDTTopRecNotFound", "LDTSubRecNotFound", "LDTBinNotFound", "LDTBinExistsError", "LDTBinDamaged", 
-			"LDTSubrecPoolDamaged", "LDTSubrecDamaged", "LDTSubrecOpenError", "LDTSubrecUpdateError", "LDTSubrecCreateError", 
-			"LDTSubrecDeleteError", "LDTSubrecCloseError", "LDTToprecUpdateError", "LDTToprecCreateError", "LDTFilterFunctionBad",
-			"LDTFilterFunctionNotFound", "LDTKeyFunctionBad", "LDTKeyFunctionNotFound", "LDTTransFunctionBad", "LDTTransFunctionNotFound", 
-			"LDTUntransFunctionBad", "LDTUntransFunctionNotFound", "LDTUserModuleBad", "LDTUserModuleNotFound"},
-		{AEROSPIKE_ERR_LARGE_ITEM_NOT_FOUND, AEROSPIKE_ERR_LDT_INTERNAL, AEROSPIKE_ERR_LDT_NOT_FOUND, 
-			AEROSPIKE_ERR_LDT_UNIQUE_KEY, AEROSPIKE_ERR_LDT_INSERT, AEROSPIKE_ERR_LDT_SEARCH, 
-			AEROSPIKE_ERR_LDT_DELETE, AEROSPIKE_ERR_LDT_INPUT_PARM, AEROSPIKE_ERR_LDT_TYPE_MISMATCH, 
-			AEROSPIKE_ERR_LDT_NULL_BIN_NAME, AEROSPIKE_ERR_LDT_BIN_NAME_NOT_STRING, AEROSPIKE_ERR_LDT_BIN_NAME_TOO_LONG, 
-			AEROSPIKE_ERR_LDT_TOO_MANY_OPEN_SUBRECS, AEROSPIKE_ERR_LDT_TOP_REC_NOT_FOUND, AEROSPIKE_ERR_LDT_SUB_REC_NOT_FOUND, 
-			AEROSPIKE_ERR_LDT_BIN_DOES_NOT_EXIST, AEROSPIKE_ERR_LDT_BIN_ALREADY_EXISTS, AEROSPIKE_ERR_LDT_BIN_DAMAGED, 
-			AEROSPIKE_ERR_LDT_SUBREC_POOL_DAMAGED, AEROSPIKE_ERR_LDT_SUBREC_DAMAGED, AEROSPIKE_ERR_LDT_SUBREC_OPEN, 
-			AEROSPIKE_ERR_LDT_SUBREC_UPDATE, AEROSPIKE_ERR_LDT_SUBREC_CREATE, AEROSPIKE_ERR_LDT_SUBREC_DELETE, 
-			AEROSPIKE_ERR_LDT_SUBREC_CLOSE, AEROSPIKE_ERR_LDT_TOPREC_UPDATE, AEROSPIKE_ERR_LDT_TOPREC_CREATE, 
-			AEROSPIKE_ERR_LDT_FILTER_FUNCTION_BAD, AEROSPIKE_ERR_LDT_FILTER_FUNCTION_NOT_FOUND, AEROSPIKE_ERR_LDT_KEY_FUNCTION_BAD, 
-			AEROSPIKE_ERR_LDT_KEY_FUNCTION_NOT_FOUND, AEROSPIKE_ERR_LDT_TRANS_FUNCTION_BAD, AEROSPIKE_ERR_LDT_TRANS_FUNCTION_NOT_FOUND, 
-			AEROSPIKE_ERR_LDT_UNTRANS_FUNCTION_BAD, AEROSPIKE_ERR_LDT_UNTRANS_FUNCTION_NOT_FOUND, AEROSPIKE_ERR_LDT_USER_MODULE_BAD, 
-			AEROSPIKE_ERR_LDT_USER_MODULE_NOT_FOUND}
-	};
 
 	PyObject *py_code = NULL;
 	PyObject *py_dict = PyDict_New();
@@ -410,28 +375,6 @@ PyObject * AerospikeException_New(void)
 	PyObject_SetAttrString(exceptions_array.QueryQueueFull, "code", py_code);
 	Py_DECREF(py_code);
 
-	//LDT exceptions
-	PyObject *py_ldt_dict = PyDict_New();
-	PyDict_SetItemString(py_ldt_dict, "key", Py_None);
-	PyDict_SetItemString(py_ldt_dict, "bin", Py_None);
-	exceptions_array.LDTError = PyErr_NewException("exception.LDTError", exceptions_array.ServerError, py_ldt_dict);
-	PyObject_SetAttrString(exceptions_array.LDTError, "code", Py_None);
-	Py_INCREF(exceptions_array.LDTError);
-	Py_DECREF(py_ldt_dict);
-	PyModule_AddObject(module, "LDTError", exceptions_array.LDTError);
-
-	count = sizeof(ldt_array.ldt_exceptions)/sizeof(ldt_array.ldt_exceptions[0]);
-	for (i=0; i < count; i++) {
-		current_exception = ldt_array.ldt_exceptions[i];
-		char * name = ldt_array.ldt_exceptions_name[i];
-		char prefix[40] = "exception.";
-		*current_exception = PyErr_NewException(strcat(prefix, name), exceptions_array.LDTError, NULL);
-		Py_INCREF(*current_exception);
-		PyModule_AddObject(module, name, *current_exception);
-		PyObject *py_code = PyInt_FromLong(ldt_array.ldt_exceptions_codes[i]);
-		PyObject_SetAttrString(*current_exception, "code", py_code);
-		Py_DECREF(py_code);
-	}
 	return module;
 }
 
@@ -439,23 +382,7 @@ PyObject* raise_exception(as_error *err) {
 	PyObject * py_key = NULL, *py_value = NULL;
 	Py_ssize_t pos = 0;
 	PyObject * py_module_dict = PyModule_GetDict(module);
-	char * err_msg= err->message, *err_code = err->message;
-	char *final_code = NULL;
-	if (err->code == AEROSPIKE_ERR_UDF) {
-		while (strstr(err_code, ": ")) {
-			err_code++;
-		}
-		while (strstr(err_msg, ":LDT")) {
-			err_msg++;
-		}
-		final_code = (char *)malloc(err_msg - err_code + 2);
-		if (err_code != err->message && err_msg != err->message) {
-			strncpy(final_code, err_code + 1, err_msg - err_code + 2);
-			err->code = atoi(final_code);
-			strcpy(err->message, err_msg);
-		}
-		free(final_code);
-	}
+
 	while (PyDict_Next(py_module_dict, &pos, &py_key, &py_value)) {
 		if (PyObject_HasAttrString(py_value, "code")) {
 			PyObject * py_code = PyObject_GetAttrString(py_value, "code");

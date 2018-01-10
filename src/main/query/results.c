@@ -81,13 +81,14 @@ PyObject * AerospikeQuery_Results(AerospikeQuery * self, PyObject * args, PyObje
 {
 	PyObject * py_policy = NULL;
 	PyObject * py_results = NULL;
+	PyObject* py_options = NULL;
 
-	static char * kwlist[] = {"policy", NULL};
+	static char * kwlist[] = {"policy", "options", NULL};
 
 	LocalData data;
 	data.client = self->client;
 
-	if (PyArg_ParseTupleAndKeywords(args, kwds, "|O:results", kwlist, &py_policy) == false) {
+	if (PyArg_ParseTupleAndKeywords(args, kwds, "|OO:results", kwlist, &py_policy, &py_options) == false) {
 		return NULL;
 	}
 
@@ -111,6 +112,10 @@ PyObject * AerospikeQuery_Results(AerospikeQuery * self, PyObject * args, PyObje
 	pyobject_to_policy_query(&err, py_policy, &query_policy, &query_policy_p,
 			&self->client->as->config.policies.query);
 	if (err.code != AEROSPIKE_OK) {
+		goto CLEANUP;
+	}
+
+	if (set_query_options(&err, py_options,  &self->query) != AEROSPIKE_OK) {
 		goto CLEANUP;
 	}
 

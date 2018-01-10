@@ -16,7 +16,7 @@
     from aerospike.exception import *
 
     try:
-        config = { 'hosts': [ ('127.0.0.1', 3000)], 'policies': { 'timeout': 1200}}
+        config = { 'hosts': [ ('127.0.0.1', 3000)], 'policies': { 'total_timeout': 1200}}
         client = aerospike.client(config).connect()
         client.close()
     except ClientError as e:

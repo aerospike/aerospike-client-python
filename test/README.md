@@ -99,7 +99,6 @@ The following entries are used if provided:
 * keyfile Path to the client's key for mutual authentication. By default mutual authentication is disabled.
 * protocols Specifies enabled protocols. This format is the same as Apache's SSLProtocol documented at https://httpd.apache.org/docs/current/mod/mod_ssl.html#sslprotocol . If not specified the client will use "-all +TLSv1.2".
 * cipher_suite Specifies enabled cipher suites. The format is the same as OpenSSL's Cipher List Format documented at https://www.openssl.org/docs/manmaster/apps/ciphers.html
-* encrypt_only (True to enable)
 * crl_check (True to enable) Enable CRL checking for the certificate chain leaf certificate. An error occurs if a suitable CRL cannot be found. By default CRL checking is disabled.
 * crl_check_all (True to enable) Enable CRL checking for the entire certificate chain. An error occurs if a suitable CRL cannot be found. By default CRL checking is disabled.
 * log_session_info (True to enable)

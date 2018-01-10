@@ -53,19 +53,26 @@ in an in-memory primary index.
                 * **system_path** the location of the system modules such as ``aerospike.lua`` (default: ``/usr/local/aerospike/lua``)
                 * **user_path** the location of the user's record and stream UDFs . (default: ``./``)
             * **policies** a :class:`dict` of policies
-                * **timeout** default connection timeout in milliseconds
-                * **key** default key policy, with values such as :data:`aerospike.POLICY_KEY_DIGEST`
-                * **exists** default exists policy, with values such as :data:`aerospike.POLICY_EXISTS_CREATE`
-                * **gen** default generation policy, with values such as :data:`aerospike.POLICY_GEN_IGNORE`
-                * **retry** default retry policy, with values such as :data:`aerospike.POLICY_RETRY_NONE`
-                * **consistency_level** default consistency level policy, with values such as :data:`aerospike.POLICY_CONSISTENCY_ONE`
-                * **replica** default replica policy, with values such as :data:`aerospike.POLICY_REPLICA_MASTER`
-                * **commit_level** default commit level policy, with values such as :data:`aerospike.POLICY_COMMIT_LEVEL_ALL`
+                * **read** A dictionary containing read policies. See :ref:`aerospike_read_policies` for available policy fields and values.
+                * **write** A dictionary containing write policies. See :ref:`aerospike_write_policies` for available policy fields and values.
+                * **apply** A dictionary containing apply policies. See :ref:`aerospike_apply_policies` for available policy fields and values.
+                * **operate** A dictionary containing operate policies. See :ref:`aerospike_operate_policies` for available policy fields and values.
+                * **remove** A dictionary containing remove policies. See :ref:`aerospike_remove_policies` for available policy fields and values.
+                * **query** A dictionary containing query policies. See :ref:`aerospike_query_policies` for available policy fields and values.
+                * **scan** A dictionary containing scan policies. See :ref:`aerospike_scan_policies` for available policy fields and values.
+                * **batch** A dictionary containing batch policies. See :ref:`aerospike_batch_policies` for available policy fields and values.
+                * **total_timeout** default connection timeout in milliseconds (**Deprecated**: set this the individual policy dictionaries)
+                * **key** default key policy, with values such as :data:`aerospike.POLICY_KEY_DIGEST` (**Deprecated**: set this individually in the 'read', 'write', 'apply', 'operate', 'remove' policy dictionaries)
+                * **exists** default exists policy, with values such as :data:`aerospike.POLICY_EXISTS_CREATE` (**Deprecated**: set in the 'write' policies dictionary)
+                * **max_retries** a :class:`int` representing the number of times to retry a transaction (**Deprecated**: set this the individual policy dictionaries)
+                * **consistency_level** default consistency level policy, with values such as :data:`aerospike.POLICY_CONSISTENCY_ONE` (**Deprecated**: set this individually as needed in the 'read','operate', 'batch' policy dictionaries)
+                * **replica** default replica policy, with values such as :data:`aerospike.POLICY_REPLICA_MASTER` (**Deprecated**: set this in one or all of the 'read', 'write', 'apply', 'operate', 'remove' policy dictionaries)
+                * **commit_level** default commit level policy, with values such as :data:`aerospike.POLICY_COMMIT_LEVEL_ALL` (**Deprecated**: set this as needed individually in the 'write', 'apply', 'operate', 'remove' policy dictionaries)
             * **shm** a :class:`dict` with optional shared-memory cluster tending parameters. Shared-memory cluster tending is on if the :class:`dict` is provided. If multiple clients are instantiated talking to the same cluster the *shm* cluster-tending should be used.
                 * **max_nodes** maximum number of nodes allowed. Pad so new nodes can be added without configuration changes (default: 16)
                 * **max_namespaces** similarly pad (default: 8)
                 * **takeover_threshold_sec** take over tending if the cluster hasn't been checked for this many seconds (default: 30)
-                * **shm_key** explicitly set the shm key for this client. If **use_shared_connection** is not set, or set to `False`, the user must provide a value for this field in order for shared memory to work correctly. If , and only if, **use_shared_connection** is set to `True`, the key will be implicitly evaluated per unique hostname, and can be inspected with :meth:`~aerospike.Client.shm_key` . It is still possible to specify a key when using **use_shared_connection** = `True`. (default: 0xA5000000)
+                * **shm_key** explicitly set the shm key for this client. If **use_shared_connection** is not set, or set to `False`, the user must provide a value for this field in order for shared memory to work correctly. If , and only if, **use_shared_connection** is set to `True`, the key will be implicitly evaluated per unique hostname, and can be inspected with :meth:`~aerospike.Client.shm_key` . It is still possible to specify a key when using **use_shared_connection** = `True`. (default: 0xA7000000)
             * **use_shared_connection** :class:`bool` indicating whether this instance should share its connection to the Aerospike cluster with other client instances in the same process. (default: ``False``)
             * **tls** a :class:`dict` of optional TLS configuration parameters. **TLS usage requires Aerospike Enterprise Edition**
                 * **enable** a :class:`bool` indicating whether tls should be enabled or not. Default: ``False``
@@ -76,13 +83,11 @@ in an in-memory primary index.
                 * **keyfile** :class:`str` Path to the client's key for mutual authentication. By default mutual authentication is disabled.
                 * **cert_blacklist** :class:`str` Path to a certificate blacklist file. The file should contain one line for each blacklisted certificate. Each line starts with the certificate serial number expressed in hex. Each entry may optionally specify the issuer name of the certificate (serial numbers are only required to be unique per issuer). Example records: 867EC87482B2 /C=US/ST=CA/O=Acme/OU=Engineering/CN=Test Chain CA E2D4B0E570F9EF8E885C065899886461
                 * **certfile** :class:`str` Path to the client's certificate chain file for mutual authentication. By default mutual authentication is disabled.
-                * **encrypt_only** :class:`bool` If ``True`` Only encrypt connections; do not verify certificates. By default TLS will verify certificates.
                 * **crl_check** :class:`bool` Enable CRL checking for the certificate chain leaf certificate. An error occurs if a suitable CRL cannot be found. By default CRL checking is disabled.
                 * **crl_check_all** :class:`bool` Enable CRL checking for the entire certificate chain. An error occurs if a suitable CRL cannot be found. By default CRL checking is disabled.
                 * **log_session_info** :class:`bool` Log session information for each connection.
             * **serialization** an optional instance-level :py:func:`tuple` of (serializer, deserializer). Takes precedence over a class serializer registered with :func:`~aerospike.set_serializer`.
             * **thread_pool_size** number of threads in the pool that is used in batch/scan/query commands (default: 16)
-            * **max_threads** size of the synchronous connection pool for each server node (default: 300) *DEPRECATED*
             * **max_socket_idle** Maximum socket idle time in seconds.  Connection pools will discard sockets that have
 			been idle longer than the maximum.  The value is limited to 24 hours (86400).
 	 		It's important to set this value to a few seconds less than the server's proto-fd-idle-ms
@@ -90,9 +95,9 @@ in an in-memory primary index.
 			that has already been reaped by the server.
 			Default: 0 seconds (disabled) for non-TLS connections, 55 seconds for TLS connections.
             * **max_conns_per_node** maximum number of pipeline connections allowed for each node 
-            * **batch_direct** whether to use the batch-direct protocol (default: ``False``, so will use batch-index if available)
+            * **batch_direct** whether to use the batch-direct protocol (default: ``False``, so will use batch-index if available) (**Deprecated**: set 'use_batch_direct' in the batch policy dictionary)
             * **tend_interval** polling interval in milliseconds for tending the cluster (default: 1000)
-            * **compression_threshold** compress data for transmission if the object size is greater than a given number of bytes (default: 0, meaning 'never compress')
+            * **compression_threshold** compress data for transmission if the object size is greater than a given number of bytes (default: 0, meaning 'never compress') (**Deprecated**, set this in the 'write' policy dictionary)
             * **cluster_name** only server nodes matching this name will be used when determining the cluster
 
     :return: an instance of the :py:class:`aerospike.Client` class.
@@ -111,7 +116,7 @@ in an in-memory primary index.
         # which is appropriate for a multi-process context, such as a webserver
         config = {
             'hosts':    [ ('127.0.0.1', 3000) ],
-            'policies': {'timeout': 1000},
+            'policies': {'read': {total_timeout': 1000}},
             'shm':      { }}
         client = aerospike.client(config)
 
@@ -134,11 +139,10 @@ in an in-memory primary index.
         tls_host_tuple = (tls_ip, tls_port, tls_name)
         hosts = [tls_host_tuple]
 
-        # Example configuration which will use TLS to encrypt only
+        # Example configuration which will use TLS with the specifed cafile
         tls_config = {
             "cafile": "/path/to/cacert.pem",
-            "enable": True,
-            "encrypt_only": True,
+            "enable": True
         }
 
         client = aerospike.client({
@@ -538,6 +542,19 @@ Operators for the multi-ops method :py:meth:`~aerospike.Client.operate`.
             "bin": "events",
             "index": 2,
             "val": [ 123, 456 ]
+        }
+
+.. data:: OP_LIST_INCREMENT
+
+    Increment the value of an item at the given index in a list stored in the specified bin
+
+    .. code-block:: python
+
+        {
+            "op": aerospike.OP_LIST_INCREMENT,
+            "bin": "bin_name",
+            "index": 2,
+            "val": 5
         }
 
 .. data:: OP_LIST_POP

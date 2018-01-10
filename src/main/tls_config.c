@@ -32,7 +32,7 @@ get_string_from_string_like(PyObject* string_like);
 void
 setup_tls_config(as_config* config, PyObject* tls_config)
 {
-	long long_timeout;
+
 	PyObject* config_value = NULL;
 	int truth_value = -1;
 
@@ -51,15 +51,6 @@ setup_tls_config(as_config* config, PyObject* tls_config)
 		truth_value = PyObject_IsTrue(config_value);
 		if(truth_value != -1) {
 			config->tls.enable = (bool)truth_value;
-			truth_value = -1;
-		}
-	}
-
-	config_value = PyDict_GetItemString(tls_config, "encrypt_only");
-	if (config_value) {
-		truth_value = PyObject_IsTrue(config_value);
-		if(truth_value != -1) {
-			config->tls.encrypt_only = (bool)truth_value;
 			truth_value = -1;
 		}
 	}

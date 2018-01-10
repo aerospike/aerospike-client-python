@@ -102,10 +102,10 @@ char* return_search_string(aerospike *as)
 	int delimiter_size = 0;
 	int tot_user_size = 0;
 	int tot_shm_size = 0;
-	int i = 0;
+	uint32_t i = 0;
 
 	//Calculate total size for search string
-	for (i = 0; i < (int)as->config.hosts->size; i++)
+	for (i = 0; i < as->config.hosts->size; i++)
 	{
 		as_host *host = (as_host *)as_vector_get(as->config.hosts, i);
 		tot_address_size = tot_address_size + strlen(host->name);

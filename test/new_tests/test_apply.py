@@ -57,10 +57,16 @@ def add_indexes_and_udfs(client):
     Load the UDFs used in the tests and setup indexes
     '''
     policy = {}
-    client.index_integer_create(
-        'test', 'demo', 'age', 'age_index', policy)
-    client.index_integer_create(
-        'test', 'demo', 'age1', 'age_index1', policy)
+    try:
+        client.index_integer_create(
+            'test', 'demo', 'age', 'age_index', policy)
+    except e.IndexFoundError:
+        pass
+    try:
+        client.index_integer_create(
+            'test', 'demo', 'age1', 'age_index1', policy)
+    except e.IndexFoundError:
+        pass
 
     udf_type = 0
     udf_files = ("sample.lua", "test_record_udf.lua", "udf_basic_ops.lua")
@@ -75,8 +81,15 @@ def remove_indexes_and_udfs(client):
     '''
     policy = {}
 
-    client.index_remove('test', 'age_index', policy)
-    client.index_remove('test', 'age_index1', policy)
+    try:
+        client.index_remove('test', 'age_index', policy)
+    except e.IndexNotFound:
+        pass
+
+    try:
+        client.index_remove('test', 'age_index1', policy)
+    except e.IndexNotFound:
+        pass
 
     udf_files = ("sample.lua", "test_record_udf.lua", "udf_basic_ops.lua")
 
@@ -177,7 +190,7 @@ class TestApply(TestBaseClass):
         """
             Invoke apply() with policy
         """
-        policy = {'timeout': 1000}
+        policy = {'total_timeout': 1000}
         key = ('test', 'demo', 1)
         retval = self.as_connection.apply(
             key, 'sample', 'list_append', ['name', 'car'], policy)
@@ -328,7 +341,7 @@ class TestApply(TestBaseClass):
         """
             Invoke apply() with incorrect policy
         """
-        policy = {'timeout': 0.1}
+        policy = {'total_timeout': 0.1}
         key = ('test', 'demo', 1)
         with pytest.raises(e.ParamError) as err_info:
             self.as_connection.apply(key, 'sample', 'list_append',
@@ -341,7 +354,7 @@ class TestApply(TestBaseClass):
         """
             Invoke apply() with extra argument.
         """
-        policy = {'timeout': 1000}
+        policy = {'total_timeout': 1000}
         key = ('test', 'demo', 1)
         with pytest.raises(TypeError) as typeError:
             self.as_connection.apply(key, 'sample', 'list_append',
@@ -401,10 +414,7 @@ class TestApply(TestBaseClass):
             Invoke apply() with incorrect ns and set
         """
 
-        with pytest.raises(e.NamespaceNotFound) as err_info:
+        with pytest.raises(e.ClientError) as err_info:
             key = ('test1', 'demo', 1)
             self.as_connection.apply(key, 'sample', 'list_prepend',
                                      ['name', 'car'])
-
-            err_code = err_info.value.code
-            assert err_code == AerospikeStatus.AEROSPIKE_ERR_NAMESPACE_NOT_FOUND

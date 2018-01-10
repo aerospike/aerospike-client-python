@@ -24,7 +24,6 @@
 #include <aerospike/as_query.h>
 #include <aerospike/as_scan.h>
 #include <aerospike/as_bin.h>
-#include <aerospike/as_ldt.h>
 #include "pool.h"
 
 // Bin names can be of type Unicode in Python
@@ -84,11 +83,3 @@ typedef struct {
 	PyObject_HEAD
 	PyObject *geo_data;
 } AerospikeGeospatial;
-
-typedef struct {
-    PyObject_HEAD
-    AerospikeClient * client;
-    as_ldt llist;
-    as_key key;
-    char bin_name[AS_BIN_NAME_MAX_LEN];
-} AerospikeLList;

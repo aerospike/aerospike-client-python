@@ -93,7 +93,7 @@ if len(args) != 1:
 config = {
     'hosts': [(options.host, options.port)],
     'policies': {
-        'timeout': options.timeout
+        'total_timeout': options.timeout
     }
 }
 
@@ -121,7 +121,7 @@ try:
         set = options.set if options.set and options.set != 'None' else None
         key = args.pop()
         policy = {
-            'timeout': options.read_timeout
+            'total_timeout': options.read_timeout
         }
 
         (key, metadata, record) = client.get((namespace, set, key), policy)

@@ -176,7 +176,8 @@ bool opRequiresIndex(int op) {
 			op == OP_MAP_REMOVE_BY_INDEX       || op == OP_MAP_REMOVE_BY_RANK ||
 			op == OP_MAP_REMOVE_BY_RANK_RANGE  || op == OP_MAP_GET_BY_INDEX   ||
 			op == OP_MAP_GET_BY_INDEX_RANGE    || op == OP_MAP_GET_BY_RANK    ||
-			op == OP_MAP_GET_BY_RANK_RANGE     || op == OP_MAP_REMOVE_BY_INDEX_RANGE);
+			op == OP_MAP_GET_BY_RANK_RANGE     || op == OP_MAP_REMOVE_BY_INDEX_RANGE ||
+			op == OP_LIST_INCREMENT);
 }
 
 bool opRequiresValue(int op) {
@@ -205,7 +206,7 @@ bool opReturnsResult(int op) {
 			op == OP_LIST_INSERT    || op == OP_LIST_INSERT_ITEMS ||
 			op == OP_LIST_POP       || op == OP_LIST_POP_RANGE    ||
 			op == OP_LIST_SET       || op == OP_MAP_GET_BY_KEY    ||
-			op == OP_MAP_GET_BY_KEY_RANGE);
+			op == OP_MAP_GET_BY_KEY_RANGE || op == OP_LIST_INCREMENT);
 }
 
 bool opRequiresMapPolicy(int op) {
@@ -463,6 +464,10 @@ as_status add_op(AerospikeClient * self, as_error * err, PyObject * py_val, as_v
 		case OP_LIST_INSERT_ITEMS:
 			CONVERT_VAL_TO_AS_VAL();
 			as_operations_add_list_insert_items(ops, bin, index, (as_list*)put_val);
+			break;
+		case OP_LIST_INCREMENT:
+			CONVERT_VAL_TO_AS_VAL();
+			as_operations_add_list_increment(ops, bin, index, put_val);
 			break;
 		case OP_LIST_POP:
 			as_operations_add_list_pop(ops, bin, index);

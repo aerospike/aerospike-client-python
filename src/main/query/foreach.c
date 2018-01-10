@@ -110,12 +110,12 @@ PyObject * AerospikeQuery_Foreach(AerospikeQuery * self, PyObject * args, PyObje
 	// Python Function Arguments
 	PyObject * py_callback = NULL;
 	PyObject * py_policy = NULL;
-
+	PyObject * py_options = NULL;
 	// Python Function Keyword Arguments
-	static char * kwlist[] = {"callback", "policy", NULL};
+	static char * kwlist[] = {"callback", "policy", "options", NULL};
 
 	// Python Function Argument Parsing
-	if (PyArg_ParseTupleAndKeywords(args, kwds, "O|O:foreach", kwlist, &py_callback, &py_policy) == false) {
+	if (PyArg_ParseTupleAndKeywords(args, kwds, "O|OO:foreach", kwlist, &py_callback, &py_policy, &py_options) == false) {
 		as_query_destroy(&self->query);
 		return NULL;
 	}
@@ -148,6 +148,10 @@ PyObject * AerospikeQuery_Foreach(AerospikeQuery * self, PyObject * args, PyObje
 	pyobject_to_policy_query(&err, py_policy, &query_policy, &query_policy_p,
 			&self->client->as->config.policies.query);
 	if (err.code != AEROSPIKE_OK) {
+		goto CLEANUP;
+	}
+
+	if (set_query_options(&err, py_options, &self->query) != AEROSPIKE_OK) {
 		goto CLEANUP;
 	}
 

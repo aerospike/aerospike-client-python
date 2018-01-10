@@ -30,7 +30,7 @@ a cluster-tending thread.
         from __future__ import print_function
         # import the module
         import aerospike
-        from aerospike.exception import *
+        from aerospike import exception as ex
         import sys
 
         # Configure the client
@@ -38,10 +38,16 @@ a cluster-tending thread.
             'hosts': [ ('127.0.0.1', 3000) ]
         }
 
+        # Optionally set policies for various method types
+        write_policies = {'total_timeout': 2000, 'max_retries': 0}
+        read_policies = {'total_timeout': 1500, 'max_retries': 1}
+        policies = {'write': write_policies, 'read': read_policies}
+        config['policies'] = policies
+
         # Create a client and connect it to the cluster
         try:
             client = aerospike.client(config).connect()
-        except ClientError as e:
+        except ex.ClientError as e:
             print("Error: {0} [{1}]".format(e.msg, e.code))
             sys.exit(1)
 
@@ -54,7 +60,7 @@ a cluster-tending thread.
                 'name': 'John Doe',
                 'age': 32
             })
-        except RecordError as e:
+        except ex.RecordError as e:
             print("Error: {0} [{1}]".format(e.msg, e.code))
 
         # Read a record
@@ -106,10 +112,10 @@ a cluster-tending thread.
 
             from __future__ import print_function
             import aerospike
-            from aerospike.exception import AerospikeError
+            from aerospike import exception as ex
             import sys
 
-            config = { 'hosts': [('127.0.0.1', 3000)] }
+            config = {'hosts': [('127.0.0.1', 3000)]}
             client = aerospike.client(config).connect()
 
             try:
@@ -121,9 +127,9 @@ a cluster-tending thread.
                 print(meta)
                 print('--------------------------')
                 print(bins)
-            except RecordNotFound:
+            except ex.RecordNotFound:
                 print("Record not found:", key)
-            except AerospikeError as e:
+            except ex.AerospikeError as e:
                 print("Error: {0} [{1}]".format(e.msg, e.code))
                 sys.exit(1)
             finally:
@@ -158,7 +164,7 @@ a cluster-tending thread.
 
             from __future__ import print_function
             import aerospike
-            from aerospike.exception import AerospikeError
+            from aerospike import exception as ex
             import sys
 
             config = { 'hosts': [('127.0.0.1', 3000)] }
@@ -169,9 +175,9 @@ a cluster-tending thread.
                 key = ('test', 'demo', 1)
                 (key, meta, bins) = client.select(key, ['name'])
                 print("name: ", bins.get('name'))
-            except RecordNotFound:
+            except ex.RecordNotFound:
                 print("Record not found:", key)
-            except AerospikeError as e:
+            except ex.AerospikeError as e:
                 print("Error: {0} [{1}]".format(e.msg, e.code))
                 sys.exit(1)
             finally:
@@ -202,7 +208,7 @@ a cluster-tending thread.
 
             from __future__ import print_function
             import aerospike
-            from aerospike.exception import AerospikeError
+            from aerospike import exception as ex
             import sys
 
             config = { 'hosts': [('127.0.0.1', 3000)] }
@@ -215,9 +221,9 @@ a cluster-tending thread.
                 print(key)
                 print('--------------------------')
                 print(meta)
-            except RecordNotFound:
+            except ex.RecordNotFound:
                 print("Record not found:", key)
-            except AerospikeError as e:
+            except ex.AerospikeError as e:
                 print("Error: {0} [{1}]".format(e.msg, e.code))
                 sys.exit(1)
             finally:
@@ -247,11 +253,11 @@ a cluster-tending thread.
 
             from __future__ import print_function
             import aerospike
-            from aerospike.exception import AerospikeError
+            from aerospike import exception as ex
 
             config = {
                 'hosts': [ ('127.0.0.1', 3000) ],
-                'timeout': 1500
+                'total_timeout': 1500
             }
             client = aerospike.client(config).connect()
             try:
@@ -270,7 +276,7 @@ a cluster-tending thread.
                 client.put(key, {'smiley': u"\ud83d\ude04"})
                 # removing a bin
                 client.put(key, {'i': aerospike.null()})
-            except AerospikeError as e:
+            except ex.AerospikeError as e:
                 print("Error: {0} [{1}]".format(e.msg, e.code))
                 sys.exit(1)
             finally:
@@ -287,7 +293,7 @@ a cluster-tending thread.
 
                 from __future__ import print_function
                 import aerospike
-                from aerospike.exception import *
+                from aerospike import exception as ex
                 import sys
 
                 config = { 'hosts': [ ('127.0.0.1',3000)]}
@@ -301,15 +307,15 @@ a cluster-tending thread.
                         meta={'gen': 33},
                         policy={'gen':aerospike.POLICY_GEN_EQ})
                     print('Record written.')
-                except RecordGenerationError:
+                except ex.RecordGenerationError:
                     print("put() failed due to generation policy mismatch")
-                except AerospikeError as e:
+                except ex.AerospikeError as e:
                     print("Error: {0} [{1}]".format(e.msg, e.code))
                 client.close()
 
     .. method:: touch(key[, val=0[, meta[, policy]]])
 
-        Touch the given record, resetting its \
+        Touch the given record, setting its \
         `time-to-live <http://www.aerospike.com/docs/client/c/usage/kvs/write.html#change-record-time-to-live-ttl>`_ \
         and incrementing its generation.
 
@@ -330,7 +336,7 @@ a cluster-tending thread.
             client = aerospike.client(config).connect()
 
             key = ('test', 'demo', 1)
-            client.touch(key, 120, policy={'timeout': 100})
+            client.touch(key, 120, policy={'total_timeout': 100})
             client.close()
 
 
@@ -437,7 +443,7 @@ a cluster-tending thread.
 
             from __future__ import print_function
             import aerospike
-            from aerospike.exception import AerospikeError
+            from aerospike import exception as ex
             import sys
 
             config = { 'hosts': [('127.0.0.1', 3000)] }
@@ -445,8 +451,8 @@ a cluster-tending thread.
 
             try:
                 key = ('test', 'demo', 1)
-                client.append(key, 'name', ' jr.', policy={'timeout': 1200})
-            except AerospikeError as e:
+                client.append(key, 'name', ' jr.', policy={'total_timeout': 1200})
+            except ex.AerospikeError as e:
                 print("Error: {0} [{1}]".format(e.msg, e.code))
                 sys.exit(1)
             finally:
@@ -471,7 +477,7 @@ a cluster-tending thread.
 
             from __future__ import print_function
             import aerospike
-            from aerospike.exception import AerospikeError
+            from aerospike import exception as ex
             import sys
 
             config = { 'hosts': [('127.0.0.1', 3000)] }
@@ -479,8 +485,8 @@ a cluster-tending thread.
 
             try:
                 key = ('test', 'demo', 1)
-                client.prepend(key, 'name', 'Dr. ', policy={'timeout': 1200})
-            except AerospikeError as e:
+                client.prepend(key, 'name', 'Dr. ', policy={'total_timeout': 1200})
+            except ex.AerospikeError as e:
                 print("Error: {0} [{1}]".format(e.msg, e.code))
                 sys.exit(1)
             finally:
@@ -506,7 +512,7 @@ a cluster-tending thread.
 
             from __future__ import print_function
             import aerospike
-            from aerospike.exception import AerospikeError
+            from aerospike import exception as ex
             import sys
 
             config = { 'hosts': [('127.0.0.1', 3000)] }
@@ -523,7 +529,7 @@ a cluster-tending thread.
                 (key, meta, bins) = client.get(key)
                 print("Poor Kitty:", bins, "\n")
                 print(bins)
-            except AerospikeError as e:
+            except ex.AerospikeError as e:
                 print("Error: {0} [{1}]".format(e.msg, e.code))
                 sys.exit(1)
             finally:
@@ -728,10 +734,7 @@ a cluster-tending thread.
         :param tuple key: a :ref:`aerospike_key_tuple` tuple associated with the record.
         :param str bin: the name of the bin.
         :param int index: the position in the index where the value should be set.
-        :param dict meta: optional record metadata to be set, with field
-            ``'ttl'`` set to :class:`int` number of seconds or one of 
-            :const:`aerospike.TTL_NAMESPACE_DEFAULT`, :const:`aerospike.TTL_NEVER_EXPIRE`, 
-            :const:`aerospike.TTL_DONT_UPDATE`
+        :param dict meta: unused for this operation
         :param dict policy: optional :ref:`aerospike_operate_policies`.
         :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
         :return: the list elements at the given index.
@@ -747,10 +750,7 @@ a cluster-tending thread.
         :param tuple key: a :ref:`aerospike_key_tuple` tuple associated with the record.
         :param str bin: the name of the bin.
         :param int index: the position in the index where the value should be set.
-        :param dict meta: optional record metadata to be set, with field
-            ``'ttl'`` set to :class:`int` number of seconds or one of 
-            :const:`aerospike.TTL_NAMESPACE_DEFAULT`, :const:`aerospike.TTL_NEVER_EXPIRE`, 
-            :const:`aerospike.TTL_DONT_UPDATE`
+        :param dict meta: unused for this operation
         :param dict policy: optional :ref:`aerospike_operate_policies`.
         :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
         :return: a :class:`list` of elements.
@@ -786,10 +786,7 @@ a cluster-tending thread.
 
         :param tuple key: a :ref:`aerospike_key_tuple` tuple associated with the record.
         :param str bin: the name of the bin.
-        :param dict meta: optional record metadata to be set, with field
-            ``'ttl'`` set to :class:`int` number of seconds or one of 
-            :const:`aerospike.TTL_NAMESPACE_DEFAULT`, :const:`aerospike.TTL_NEVER_EXPIRE`, 
-            :const:`aerospike.TTL_DONT_UPDATE`
+        :param dict meta: unused for this operation
         :param dict policy: optional :ref:`aerospike_operate_policies`.
         :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
         :return: a :class:`int`.
@@ -901,10 +898,7 @@ a cluster-tending thread.
 
         :param tuple key: a :ref:`aerospike_key_tuple` tuple associated with the record.
         :param str bin: the name of the bin.
-        :param dict meta: optional record metadata to be set, with field
-            ``'ttl'`` set to :class:`int` number of seconds or one of 
-            :const:`aerospike.TTL_NAMESPACE_DEFAULT`, :const:`aerospike.TTL_NEVER_EXPIRE`, 
-            :const:`aerospike.TTL_DONT_UPDATE`
+        :param dict meta: unused for this operation
         :param dict policy: optional :ref:`aerospike_operate_policies`.
         :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
         :return: a :class:`int`.
@@ -1149,10 +1143,7 @@ a cluster-tending thread.
         :param map_key:  :py:class:`int`, :py:class:`str`, \
            :py:class:`float`, :py:class:`bytearray`. An unsupported type will be serialized.
         :param return_type: :py:class:`int` :ref:`map_return_types`
-        :param dict meta: optional record metadata to be set, with field
-            ``'ttl'`` set to :class:`int` number of seconds or one of 
-            :const:`aerospike.TTL_NAMESPACE_DEFAULT`, :const:`aerospike.TTL_NEVER_EXPIRE`, 
-            :const:`aerospike.TTL_DONT_UPDATE`
+        :param dict meta: unused for this operation
         :param dict policy: optional :ref:`aerospike_operate_policies`.
         :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
         :return: depends on return_type parameter
@@ -1172,10 +1163,7 @@ a cluster-tending thread.
         :param range: :py:class:`int`, :py:class:`str`, \
            :py:class:`float`, :py:class:`bytearray`. An unsupported type will be serialized.
         :param return_type: :py:class:`int` :ref:`map_return_types`
-        :param dict meta: optional record metadata to be set, with field
-            ``'ttl'`` set to :class:`int` number of seconds or one of 
-            :const:`aerospike.TTL_NAMESPACE_DEFAULT`, :const:`aerospike.TTL_NEVER_EXPIRE`, 
-            :const:`aerospike.TTL_DONT_UPDATE`
+        :param dict meta: unused for this operation
         :param dict policy: optional :ref:`aerospike_operate_policies`.
         :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
         :return: depends on return_type parameter
@@ -1193,10 +1181,7 @@ a cluster-tending thread.
         :param val: :py:class:`int`, :py:class:`str`, \
            :py:class:`float`, :py:class:`bytearray`. An unsupported type will be serialized.
         :param return_type: :py:class:`int` :ref:`map_return_types`
-        :param dict meta: optional record metadata to be set, with field
-            ``'ttl'`` set to :class:`int` number of seconds or one of 
-            :const:`aerospike.TTL_NAMESPACE_DEFAULT`, :const:`aerospike.TTL_NEVER_EXPIRE`, 
-            :const:`aerospike.TTL_DONT_UPDATE`
+        :param dict meta: unused for this operation
         :param dict policy: optional :ref:`aerospike_operate_policies`.
         :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
         :return: depends on return_type parameter
@@ -1216,10 +1201,7 @@ a cluster-tending thread.
         :param range: :py:class:`int`, :py:class:`str`, \
            :py:class:`float`, :py:class:`bytearray`. An unsupported type will be serialized.
         :param return_type: :py:class:`int` :ref:`map_return_types`
-        :param dict meta: optional record metadata to be set, with field
-            ``'ttl'`` set to :class:`int` number of seconds or one of 
-            :const:`aerospike.TTL_NAMESPACE_DEFAULT`, :const:`aerospike.TTL_NEVER_EXPIRE`, 
-            :const:`aerospike.TTL_DONT_UPDATE`
+        :param dict meta: unused for this operation
         :param dict policy: optional :ref:`aerospike_operate_policies`.
         :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
         :return: depends on return_type parameter
@@ -1236,10 +1218,7 @@ a cluster-tending thread.
         :param str bin: the name of the bin.
         :param index: :py:class:`int` the index location of the map entry
         :param return_type: :py:class:`int` :ref:`map_return_types`
-        :param dict meta: optional record metadata to be set, with field
-            ``'ttl'`` set to :class:`int` number of seconds or one of 
-            :const:`aerospike.TTL_NAMESPACE_DEFAULT`, :const:`aerospike.TTL_NEVER_EXPIRE`, 
-            :const:`aerospike.TTL_DONT_UPDATE`
+        :param dict meta: unused for this operation
         :param dict policy: optional :ref:`aerospike_operate_policies`.
         :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
         :return: depends on return_type parameter
@@ -1258,10 +1237,7 @@ a cluster-tending thread.
         :param index: :py:class:`int` the index location of the first map entry to remove
         :param range: :py:class:`int` the number of items to remove from the map 
         :param return_type: :py:class:`int` :ref:`map_return_types`
-        :param dict meta: optional record metadata to be set, with field
-            ``'ttl'`` set to :class:`int` number of seconds or one of 
-            :const:`aerospike.TTL_NAMESPACE_DEFAULT`, :const:`aerospike.TTL_NEVER_EXPIRE`, 
-            :const:`aerospike.TTL_DONT_UPDATE`
+        :param dict meta: unused for this operation
         :param dict policy: optional :ref:`aerospike_operate_policies`.
         :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
         :return: depends on return_type parameter
@@ -1278,10 +1254,7 @@ a cluster-tending thread.
         :param str bin: the name of the bin.
         :param rank: :py:class:`int` the rank of the value of the entry in the map
         :param return_type: :py:class:`int` :ref:`map_return_types`
-        :param dict meta: optional record metadata to be set, with field
-            ``'ttl'`` set to :class:`int` number of seconds or one of 
-            :const:`aerospike.TTL_NAMESPACE_DEFAULT`, :const:`aerospike.TTL_NEVER_EXPIRE`, 
-            :const:`aerospike.TTL_DONT_UPDATE`
+        :param dict meta: unused for this operation
         :param dict policy: optional :ref:`aerospike_operate_policies`.
         :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
         :return: depends on return_type parameter
@@ -1299,10 +1272,7 @@ a cluster-tending thread.
         :param rank: :py:class:`int` the rank of the value of the first map entry to remove
         :param range: :py:class:`int` the number of items to remove from the map 
         :param return_type: :py:class:`int` :ref:`map_return_types`
-        :param dict meta: optional record metadata to be set, with field
-            ``'ttl'`` set to :class:`int` number of seconds or one of 
-            :const:`aerospike.TTL_NAMESPACE_DEFAULT`, :const:`aerospike.TTL_NEVER_EXPIRE`, 
-            :const:`aerospike.TTL_DONT_UPDATE`
+        :param dict meta: unused for this operation
         :param dict policy: optional :ref:`aerospike_operate_policies`.
         :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
         :return: depends on return_type parameter
@@ -1355,7 +1325,7 @@ a cluster-tending thread.
 
             from __future__ import print_function
             import aerospike
-            from aerospike.exception import AerospikeError
+            from aerospike import exception as ex
             import sys
 
             config = { 'hosts': [('127.0.0.1', 3000)] }
@@ -1394,14 +1364,14 @@ a cluster-tending thread.
                       "bin": "career"
                     }
                 ]
-                (key, meta, bins) = client.operate(key, ops, {'ttl':360}, {'timeout':500})
+                (key, meta, bins) = client.operate(key, ops, {'ttl':360}, {'total_timeout':500})
 
                 print(key)
                 print('--------------------------')
                 print(meta)
                 print('--------------------------')
                 print(bins) # will display all bins selected by OPERATOR_READ operations
-            except AerospikeError as e:
+            except ex.AerospikeError as e:
                 print("Error: {0} [{1}]".format(e.msg, e.code))
                 sys.exit(1)
             finally:
@@ -1422,7 +1392,7 @@ a cluster-tending thread.
 
             from __future__ import print_function
             import aerospike
-            from aerospike.exception import AerospikeError
+            from aerospike import exception as ex
             import sys
 
             config = { 'hosts': [('127.0.0.1', 3000)] }
@@ -1441,7 +1411,7 @@ a cluster-tending thread.
                 ]
                 (key, meta, bins) = client.operate(key, ops, {'ttl':1800})
                 print("Touched the record for {0}, extending its ttl by 30m".format(bins))
-            except AerospikeError as e:
+            except ex.AerospikeError as e:
                 print("Error: {0} [{1}]".format(e.msg, e.code))
                 sys.exit(1)
             finally:
@@ -1455,10 +1425,6 @@ a cluster-tending thread.
             returned as a list of (bin-name, result) tuples. The order of the \
             elements in the list will correspond to the order of the operations \
             from the input parameters.
-
-            .. warning::
-
-                Unlike :meth:`operate` this function will apply each of the operations separately, making multiple calls to the server.
 
             :param tuple key: a :ref:`aerospike_key_tuple` associated with the record.
             :param list list: a :class:`list` of one or more bin operations, each \
@@ -1489,7 +1455,7 @@ a cluster-tending thread.
 
                 from __future__ import print_function
                 import aerospike
-                from aerospike.exception import AerospikeError
+                from aerospike import exception as ex
                 import sys
 
                 config = { 'hosts': [('127.0.0.1', 3000)] }
@@ -1498,7 +1464,7 @@ a cluster-tending thread.
                 try:
                     key = ('test', 'demo', 1)
                     policy = {
-                        'timeout': 1000,
+                        'total_timeout': 1000,
                         'key': aerospike.POLICY_KEY_SEND,
                         'commit_level': aerospike.POLICY_COMMIT_LEVEL_MASTER
                     }
@@ -1513,7 +1479,7 @@ a cluster-tending thread.
                               "val": 3}]
 
                     client.operate_ordered(key, llist, {}, policy)
-                except AerospikeError as e:
+                except ex.AerospikeError as e:
                     print("Error: {0} [{1}]".format(e.msg, e.code))
                     sys.exit(1)
                 finally:
@@ -1548,7 +1514,7 @@ a cluster-tending thread.
 
             from __future__ import print_function
             import aerospike
-            from aerospike.exception import AerospikeError
+            from aerospike import exception as ex
             import sys
 
             config = { 'hosts': [('127.0.0.1', 3000)] }
@@ -1564,7 +1530,7 @@ a cluster-tending thread.
                 ]
                 records = client.get_many(keys)
                 print records
-            except AerospikeError as e:
+            except ex.AerospikeError as e:
                 print("Error: {0} [{1}]".format(e.msg, e.code))
                 sys.exit(1)
             finally:
@@ -1608,7 +1574,7 @@ a cluster-tending thread.
 
             from __future__ import print_function
             import aerospike
-            from aerospike.exception import AerospikeError
+            from aerospike import exception as ex
             import sys
 
             config = { 'hosts': [('127.0.0.1', 3000)] }
@@ -1624,7 +1590,7 @@ a cluster-tending thread.
                 ]
                 records = client.exists_many(keys)
                 print records
-            except AerospikeError as e:
+            except ex.AerospikeError as e:
                 print("Error: {0} [{1}]".format(e.msg, e.code))
                 sys.exit(1)
             finally:
@@ -1650,7 +1616,7 @@ a cluster-tending thread.
         .. versionchanged:: 1.0.50
 
 
-    .. method:: select_many(keys, bins[, policy]) -> {primary_key: (key, meta, bins)}
+    .. method:: select_many(keys, bins[, policy]) -> [(key, meta, bins), ...]}
 
         Batch-read multiple records, and return them as a :class:`list`. Any \
         record that does not exist will have a :py:obj:`None` value for metadata \
@@ -1669,7 +1635,7 @@ a cluster-tending thread.
 
             from __future__ import print_function
             import aerospike
-            from aerospike.exception import AerospikeError
+            from aerospike import exception as ex
             import sys
 
             config = { 'hosts': [('127.0.0.1', 3000)] }
@@ -1685,7 +1651,7 @@ a cluster-tending thread.
                 ]
                 records = client.select_many(keys, [u'name'])
                 print records
-            except AerospikeError as e:
+            except ex.AerospikeError as e:
                 print("Error: {0} [{1}]".format(e.msg, e.code))
                 sys.exit(1)
             finally:
@@ -1778,7 +1744,7 @@ a cluster-tending thread.
 
     .. method:: udf_remove(module[, policy])
 
-        Register a UDF module with the cluster.
+        Remove a  previously registered UDF module from the cluster.
 
         :param str module: the UDF module to be deregistered from the cluster.
         :param dict policy: currently **timeout** in milliseconds is the available policy.
@@ -1894,7 +1860,7 @@ a cluster-tending thread.
         :param str module: the name of the UDF module.
         :param str function: the name of the UDF to apply to the records matched by the query.
         :param list args: the arguments to the UDF.
-        :param dict policy: optional :ref:`aerospike_query_policies`.
+        :param dict policy: optional :ref:`aerospike_write_policies`.
         :rtype: :class:`int`
         :return: a job ID that can be used with :meth:`job_info` to track the status of the ``aerospike.JOB_QUERY`` , as it runs in the background.
         :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
@@ -1923,7 +1889,7 @@ a cluster-tending thread.
 
             from __future__ import print_function
             import aerospike
-            from aerospike.exception import AerospikeError
+            from aerospike import exception as ex
             import time
 
             config = {'hosts': [ ('127.0.0.1', 3000)]}
@@ -1939,7 +1905,7 @@ a cluster-tending thread.
                 print("Job ", str(job_id), " completed")
                 print("Progress percentage : ", response['progress_pct'])
                 print("Number of scanned records : ", response['records_read'])
-            except AerospikeError as e:
+            except ex.AerospikeError as e:
                 print("Error: {0} [{1}]".format(e.msg, e.code))
             client.close()
 
@@ -1962,7 +1928,7 @@ a cluster-tending thread.
 
             from __future__ import print_function
             import aerospike
-            from aerospike.exception import AerospikeError
+            from aerospike import exception as ex
 
             config = {'hosts': [ ('127.0.0.1', 3000)]}
             client = aerospike.client(config).connect()
@@ -1980,7 +1946,7 @@ a cluster-tending thread.
                     print("Background scan status : ", "SCAN_STATUS_COMPLETED")
                 else:
                     print("Scan_apply failed")
-            except AerospikeError as e:
+            except ex.AerospikeError as e:
                 print("Error: {0} [{1}]".format(e.msg, e.code))
             client.close()
 
@@ -2154,13 +2120,29 @@ a cluster-tending thread.
 
                 [('127.0.0.1', 3000), ('127.0.0.1', 3010)]
 
-        .. versionchanged:: 1.0.41
+        .. versionchanged:: 3.0.0
 
-        .. warning:: ``get_nodes`` will not work when using TLS
+        .. warning:: In versions < 3.0.0 ``get_nodes`` will not work when using TLS
 
      .. method:: info(command[, hosts[, policy]]) -> {}
 
-        Send an info *command* to multiple nodes specified in a *hosts* list.
+        .. deprecated:: 3.0.0
+            Use :meth:`info_node` to send a request to a single node, or :meth:`info_all` to send a request to the entire cluster. Sending requests to specific nodes can be better handled with a simple Python function such as:
+
+            .. code-block:: python
+
+                def info_to_host_list(client, request, hosts, policy=None):
+                    output = {}
+                    for host in hosts:
+                        try:
+                            response = client.info_node(request, host, policy)
+                            output[host] = response
+                        except Exception as e:
+                            #  Handle the error gracefully here
+                            output[host] = e
+                    return output
+
+        Send an info *command* to all nodes in the cluster and filter responses to only include nodes specified in a *hosts* list.
 
         :param str command: the info command.
         :param list hosts: a :class:`list` containing an *address*, *port* :py:func:`tuple`. Example: ``[('127.0.0.1', 3000)]``
@@ -2188,24 +2170,54 @@ a cluster-tending thread.
 
                 {'BB9581F41290C00': (None, '127.0.0.1:3000\n'), 'BC3581F41290C00': (None, '127.0.0.1:3010\n')}
 
-        .. versionchanged:: 1.0.41
+        .. versionchanged:: 3.0.0
 
+     .. method:: info_all(command[, policy]]) -> {}
+
+        Send an info *command* to all nodes in the cluster to which the client is connected. If any of the individual requests fail, this will raise an exception.
+
+        :param str command: the info command.
+        :param dict policy: optional :ref:`aerospike_info_policies`.
+        :rtype: :class:`dict`
+        :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
+
+        .. seealso:: `Info Command Reference <http://www.aerospike.com/docs/reference/info/>`_.
+
+        .. code-block:: python
+
+            import aerospike
+
+            config = {'hosts': [('127.0.0.1', 3000)] }
+            client = aerospike.client(config).connect()
+
+            response = client.info_all(command)
+            client.close()
+
+        .. note::
+
+            We expect to see something like:
+
+            .. code-block:: python
+
+                {'BB9581F41290C00': (None, '127.0.0.1:3000\n'), 'BC3581F41290C00': (None, '127.0.0.1:3010\n')}
+
+        .. versionadded:: 3.0.0
 
      .. method:: info_node(command, host[, policy]) -> str
 
         Send an info *command* to a single node specified by *host*.
 
         :param str command: the info command.
-        :param tuple host: a :py:func:`tuple` containing an *address*, *port* pair. Example: ``('127.0.0.1', 3000)``
+        :param tuple host: a :py:func:`tuple` containing an *address*, *port* , optional *tls-name* . Example: ``('127.0.0.1', 3000)`` or when using TLS ``('127.0.0.1', 4333, 'server-tls-name')``. In order to send an info request when TLS is enabled, the *tls-name* must be present.
         :param dict policy: optional :ref:`aerospike_info_policies`.
         :rtype: :class:`str`
         :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
 
         .. seealso:: `Info Command Reference <http://www.aerospike.com/docs/reference/info/>`_.
 
-        .. versionchanged:: 1.0.41
+        .. versionchanged:: 3.0.0
 
-        .. warning:: ``info_node`` will not work when using TLS
+        .. warning:: for client versions < 3.0.0 ``info_node`` will not work when using TLS
 
     .. method:: has_geo()  ->  bool
 
@@ -2287,20 +2299,6 @@ a cluster-tending thread.
 
             client.close()
 
-    .. rubric:: LList
-
-    .. method:: llist(key, bin[, module]) -> LList
-
-        Return a :class:`aerospike.LList` object on a specified *key* and *bin*.
-
-        :param tuple key: a :ref:`aerospike_key_tuple` associated with the record.
-        :param str bin: the name of the bin containing the :class:`~aerospike.LList`.
-        :param str module: an optional UDF module that contains filtering \
-                           functions to be used in conjunction with LList methods.
-        :return: an :py:class:`aerospike.LList` class.
-        :raises: a subclass of :exc:`~aerospike.exception.LDTError`.
-
-
     .. index::
         single: Admin Operations
 
@@ -2326,7 +2324,7 @@ a cluster-tending thread.
         .. code-block:: python
 
             import aerospike
-            from aerospike.exception import *
+            from aerospike import exception as ex
             import time
 
             config = {'hosts': [('127.0.0.1', 3000)] }
@@ -2340,7 +2338,7 @@ a cluster-tending thread.
                 time.sleep(1)
                 print(client.admin_query_user('dev'))
                 print(admin_query_users())
-            except AdminError as e:
+            except ex.AdminError as e:
                 print("Error [{0}]: {1}".format(e.code, e.msg))
             client.close()
 
@@ -2627,16 +2625,41 @@ Write Policies
 
 .. object:: policy
 
-    A :class:`dict` of optional write policies which are applicable to :meth:`~Client.put`.
+    A :class:`dict` of optional write policies which are applicable to :meth:`~Client.put`, :meth:`~Client.query_apply`. :meth:`~Client.remove_bin`.
 
     .. hlist::
         :columns: 1
 
-        * **timeout** write timeout in milliseconds
+        * **max_retries**
+            | An :class:`int`. Maximum number of retries before aborting the current transaction. The initial attempt is not counted as a retry.
+            |
+            | If max_retries is exceeded, the transaction will return error ``AEROSPIKE_ERR_TIMEOUT``.
+            |
+            | **WARNING**: Database writes that are not idempotent (such as "add") should not be retried because the write operation may be performed multiple times
+            | if the client timed out previous transaction attempts. It's important to use a distinct write policy for non-idempotent writes which sets max_retries = `0`;
+            |
+            | Default: ``0``
+        * **sleep_between_retries**
+            | An :class:`int`. Milliseconds to sleep between retries. Enter zero to skip sleep. Default: ``0``
+        * **socket_timeout**
+            | An :class:`int`. Socket idle timeout in milliseconds when processing a database command.
+            |
+            | If socket_timeout is not zero and the socket has been idle for at least socket_timeout, both max_retries and total_timeout are checked. If max_retries and total_timeout are not exceeded, the transaction is retried.
+            |
+            | If both ``socket_timeout`` and ``total_timeout`` are non-zero and ``socket_timeout`` > ``total_timeout``, then ``socket_timeout`` will be set to ``total_timeout``. If ``socket_timeout`` is zero, there will be no socket idle limit.
+            |
+            | Default: ``0``.
+        * **total_timeout**
+            | An :class:`int`. Total transaction timeout in milliseconds.
+            |
+            | The total_timeout is tracked on the client and sent to the server along with the transaction in the wire protocol. The client will most likely timeout first, but the server also has the capability to timeout the transaction.
+            |
+            | If ``total_timeout`` is not zero and ``total_timeout`` is reached before the transaction completes, the transaction will return error ``AEROSPIKE_ERR_TIMEOUT``. If ``total_timeout`` is zero, there will be no total time limit.
+            |
+            | Default: ``1000``
         * **key** one of the ``aerospike.POLICY_KEY_*`` values such as :data:`aerospike.POLICY_KEY_DIGEST`
         * **exists** one of the ``aerospike.POLICY_EXISTS_*`` values such as :data:`aerospike.POLICY_EXISTS_CREATE`
         * **gen** one of the ``aerospike.POLICY_GEN_*`` values such as :data:`aerospike.POLICY_GEN_IGNORE`
-        * **retry** one of the ``aerospike.POLICY_RETRY_*`` values such as :data:`aerospike.POLICY_RETRY_NONE`
         * **commit_level** one of the ``aerospike.POLICY_COMMIT_LEVEL_*`` values such as :data:`aerospike.POLICY_COMMIT_LEVEL_ALL`
         * **durable_delete** boolean value: True to perform durable delete (requires Enterprise server version >= 3.10)
 
@@ -2647,12 +2670,47 @@ Read Policies
 
 .. object:: policy
 
-    A :class:`dict` of optional read policies which are applicable to :meth:`~Client.get`.
+    A :class:`dict` of optional read policies which are applicable to :meth:`~Client.get`, :meth:`~Client.exists`, :meth:`~Client.select`.
 
     .. hlist::
         :columns: 1
 
-        * **timeout** read timeout in milliseconds
+
+        * **max_retries**
+            | An :class:`int`. Maximum number of retries before aborting the current transaction. The initial attempt is not counted as a retry.
+            |
+            | If max_retries is exceeded, the transaction will return error ``AEROSPIKE_ERR_TIMEOUT``.
+            |
+            | **WARNING**: Database writes that are not idempotent (such as "add") should not be retried because the write operation may be performed multiple times
+            | if the client timed out previous transaction attempts. It's important to use a distinct write policy for non-idempotent writes which sets max_retries = `0`;
+            |
+            | Default: ``2``
+        * **sleep_between_retries**
+            | An :class:`int`. Milliseconds to sleep between retries. Enter zero to skip sleep. Default: ``0``
+        * **socket_timeout**
+            | An :class:`int`. Socket idle timeout in milliseconds when processing a database command.
+            |
+            | If socket_timeout is not zero and the socket has been idle for at least socket_timeout, both max_retries and total_timeout are checked. If max_retries and total_timeout are not exceeded, the transaction is retried.
+            |
+            | If both ``socket_timeout`` and ``total_timeout`` are non-zero and ``socket_timeout`` > ``total_timeout``, then ``socket_timeout`` will be set to ``total_timeout``. If ``socket_timeout`` is zero, there will be no socket idle limit.
+            |
+            | Default: ``0``.
+        * **total_timeout**
+            | An :class:`int`. Total transaction timeout in milliseconds.
+            |
+            | The total_timeout is tracked on the client and sent to the server along with the transaction in the wire protocol. The client will most likely timeout first, but the server also has the capability to timeout the transaction.
+            |
+            | If ``total_timeout`` is not zero and ``total_timeout`` is reached before the transaction completes, the transaction will return error ``AEROSPIKE_ERR_TIMEOUT``. If ``total_timeout`` is zero, there will be no total time limit.
+            |
+            | Default: ``1000``
+        * **deserialize**
+            | :class:`bool` Should raw bytes representing a list or map be deserialized to a list or dictionary.
+            | Set to `False` for backup programs that just need access to raw bytes.
+            | Default: ``True``
+        * **linearize_read**
+            | :class:`bool`
+            | Force reads to be linearized for server namespaces that support CP mode. Setting this policy to ``True`` requires an Enterprise server with version 4.0.0 or greater.
+            | Default: ``False``
         * **key** one of the ``aerospike.POLICY_KEY_*`` values such as :data:`aerospike.POLICY_KEY_DIGEST`
         * **consistency_level** one of the ``aerospike.POLICY_CONSISTENCY_*`` values such as :data:`aerospike.POLICY_CONSISTENCY_ONE`
         * **replica** one of the ``aerospike.POLICY_REPLICA_*`` values such as :data:`aerospike.POLICY_REPLICA_MASTER`
@@ -2664,16 +2722,47 @@ Operate Policies
 
 .. object:: policy
 
-    A :class:`dict` of optional operate policies which are applicable to :meth:`~Client.append`, :meth:`~Client.prepend`, :meth:`~Client.increment`, :meth:`~Client.operate`, and atomic list operations.
+    A :class:`dict` of optional operate policies which are applicable to :meth:`~Client.append`, :meth:`~Client.prepend`, :meth:`~Client.increment`, :meth:`~Client.operate`, and atomic list and map operations.
 
     .. hlist::
         :columns: 1
 
-        * **timeout** timeout for the operation in milliseconds
+        * **max_retries**
+            | An :class:`int`. Maximum number of retries before aborting the current transaction. The initial attempt is not counted as a retry.
+            |
+            | If max_retries is exceeded, the transaction will return error ``AEROSPIKE_ERR_TIMEOUT``.
+            |
+            | **WARNING**: Database writes that are not idempotent (such as "add") should not be retried because the write operation may be performed multiple times
+            | if the client timed out previous transaction attempts. It's important to use a distinct write policy for non-idempotent writes which sets max_retries = `0`;
+            |
+            | Default: ``0``
+        * **sleep_between_retries**
+            | An :class:`int`. Milliseconds to sleep between retries. Enter zero to skip sleep.
+            |
+            | Default: ``0``
+        * **socket_timeout**
+            | An :class:`int`. Socket idle timeout in milliseconds when processing a database command.
+            |
+            | If socket_timeout is not zero and the socket has been idle for at least socket_timeout, both max_retries and total_timeout are checked. If max_retries and total_timeout are not exceeded, the transaction is retried.
+            |
+            | If both ``socket_timeout`` and ``total_timeout`` are non-zero and ``socket_timeout`` > ``total_timeout``, then ``socket_timeout`` will be set to ``total_timeout``. If ``socket_timeout`` is zero, there will be no socket idle limit.
+            |
+            | Default: ``0``.
+        * **total_timeout**
+            | An :class:`int`. Total transaction timeout in milliseconds.
+            |
+            | The total_timeout is tracked on the client and sent to the server along with the transaction in the wire protocol. The client will most likely timeout first, but the server also has the capability to timeout the transaction.
+            |
+            | If ``total_timeout`` is not zero and ``total_timeout`` is reached before the transaction completes, the transaction will return error ``AEROSPIKE_ERR_TIMEOUT``. If ``total_timeout`` is zero, there will be no total time limit.
+            |
+            | Default: ``1000``
+        * **linearize_read**
+            | :class:`bool`
+            | Force reads to be linearized for server namespaces that support CP mode. Setting this policy to ``True`` requires an Enterprise server with version 4.0.0 or greater.
+            | Default: ``False``
         * **key** one of the ``aerospike.POLICY_KEY_*`` values such as :data:`aerospike.POLICY_KEY_DIGEST`
         * **gen** one of the ``aerospike.POLICY_GEN_*`` values such as :data:`aerospike.POLICY_GEN_IGNORE`
         * **replica** one of the ``aerospike.POLICY_REPLICA_*`` values such as :data:`aerospike.POLICY_REPLICA_MASTER`
-        * **retry** one of the ``aerospike.POLICY_RETRY_*`` values such as :data:`aerospike.POLICY_RETRY_NONE`
         * **commit_level** one of the ``aerospike.POLICY_COMMIT_LEVEL_*`` values such as :data:`aerospike.POLICY_COMMIT_LEVEL_ALL`
         * **consistency_level** one of the ``aerospike.POLICY_CONSISTENCY_*`` values such as :data:`aerospike.POLICY_CONSISTENCY_ONE`
         * **durable_delete** boolean value: True to perform durable delete (requires Enterprise server version >= 3.10)
@@ -2685,12 +2774,42 @@ Apply Policies
 
 .. object:: policy
 
-    A :class:`dict` of optional apply policies which are applicable to :meth:`~Client.apply`, and :class:`~aerospike.LList` methods.
+    A :class:`dict` of optional apply policies which are applicable to :meth:`~Client.apply`.
 
     .. hlist::
         :columns: 1
 
-        * **timeout** timeout for the apply operation in milliseconds
+        * **max_retries**
+            | An :class:`int`. Maximum number of retries before aborting the current transaction. The initial attempt is not counted as a retry.
+            |
+            | If max_retries is exceeded, the transaction will return error ``AEROSPIKE_ERR_TIMEOUT``.
+            |
+            | **WARNING**: Database writes that are not idempotent (such as "add") should not be retried because the write operation may be performed multiple times
+            | if the client timed out previous transaction attempts. It's important to use a distinct write policy for non-idempotent writes which sets max_retries = `0`;
+            |
+            | Default: ``0``
+        * **sleep_between_retries**
+            | An :class:`int`. Milliseconds to sleep between retries. Enter zero to skip sleep. Default: ``0``
+        * **socket_timeout**
+            | An :class:`int`. Socket idle timeout in milliseconds when processing a database command.
+            |
+            | If socket_timeout is not zero and the socket has been idle for at least socket_timeout, both max_retries and total_timeout are checked. If max_retries and total_timeout are not exceeded, the transaction is retried.
+            |
+            | If both ``socket_timeout`` and ``total_timeout`` are non-zero and ``socket_timeout`` > ``total_timeout``, then ``socket_timeout`` will be set to ``total_timeout``. If ``socket_timeout`` is zero, there will be no socket idle limit.
+            |
+            | Default: ``0``.
+        * **total_timeout**
+            | An :class:`int`. Total transaction timeout in milliseconds.
+            |
+            | The total_timeout is tracked on the client and sent to the server along with the transaction in the wire protocol. The client will most likely timeout first, but the server also has the capability to timeout the transaction.
+            |
+            | If ``total_timeout`` is not zero and ``total_timeout`` is reached before the transaction completes, the transaction will return error ``AEROSPIKE_ERR_TIMEOUT``. If ``total_timeout`` is zero, there will be no total time limit.
+            |
+            | Default: ``1000``
+        * **linearize_read**
+            | :class:`bool`
+            | Force reads to be linearized for server namespaces that support CP mode. Setting this policy to ``True`` requires an Enterprise server with version 4.0.0 or greater.
+            | Default: ``False``
         * **key** one of the ``aerospike.POLICY_KEY_*`` values such as :data:`aerospike.POLICY_KEY_DIGEST`
         * **commit_level** one of the ``aerospike.POLICY_COMMIT_LEVEL_*`` values such as :data:`aerospike.POLICY_COMMIT_LEVEL_ALL`
         * **durable_delete** boolean value: True to perform durable delete (requires Enterprise server version >= 3.10)
@@ -2707,11 +2826,37 @@ Remove Policies
     .. hlist::
         :columns: 1
 
-        * **timeout** write timeout in milliseconds
+        * **max_retries**
+            | An :class:`int`. Maximum number of retries before aborting the current transaction. The initial attempt is not counted as a retry.
+            |
+            | If max_retries is exceeded, the transaction will return error ``AEROSPIKE_ERR_TIMEOUT``.
+            |
+            | **WARNING**: Database writes that are not idempotent (such as "add") should not be retried because the write operation may be performed multiple times
+            | if the client timed out previous transaction attempts. It's important to use a distinct write policy for non-idempotent writes which sets max_retries = `0`;
+            |
+            | Default: ``0``
+        * **sleep_between_retries**
+            | An :class:`int`. Milliseconds to sleep between retries. Enter zero to skip sleep. Default: ``0``
+        * **socket_timeout**
+            | An :class:`int`. Socket idle timeout in milliseconds when processing a database command.
+            |
+            | If socket_timeout is not zero and the socket has been idle for at least socket_timeout, both max_retries and total_timeout are checked. If max_retries and total_timeout are not exceeded, the transaction is retried.
+            |
+            | If both ``socket_timeout`` and ``total_timeout`` are non-zero and ``socket_timeout`` > ``total_timeout``, then ``socket_timeout`` will be set to ``total_timeout``. If ``socket_timeout`` is zero, there will be no socket idle limit.
+            |
+            | Default: ``0``.
+        * **total_timeout**
+            | An :class:`int`. Total transaction timeout in milliseconds.
+            |
+            | The total_timeout is tracked on the client and sent to the server along with the transaction in the wire protocol. The client will most likely timeout first, but the server also has the capability to timeout the transaction.
+            |
+            | If ``total_timeout`` is not zero and ``total_timeout`` is reached before the transaction completes, the transaction will return error ``AEROSPIKE_ERR_TIMEOUT``. If ``total_timeout`` is zero, there will be no total time limit.
+            |
+            | Default: ``1000``
         * **key** one of the ``aerospike.POLICY_KEY_*`` values such as :data:`aerospike.POLICY_KEY_DIGEST`
         * **commit_level** one of the ``aerospike.POLICY_COMMIT_LEVEL_*`` values such as :data:`aerospike.POLICY_COMMIT_LEVEL_ALL`
         * **gen** one of the ``aerospike.POLICY_GEN_*`` values such as :data:`aerospike.POLICY_GEN_IGNORE`
-        * **retry** one of the ``aerospike.POLICY_RETRY_*`` values such as :data:`aerospike.POLICY_RETRY_NONE`
+        * **max_retries** integer, number of times to retry the operation if it fails due to netowrk error. Default `2`
         * **durable_delete** boolean value: True to perform durable delete (requires Enterprise server version >= 3.10)
 
 .. _aerospike_batch_policies:
@@ -2728,11 +2873,40 @@ Batch Policies
     .. hlist::
         :columns: 1
 
-        * **timeout** read timeout in milliseconds
-        * **retry** Maximum number of retries when a transaction fails due to a network error. Default: `1`
-        * **sleep_between_retries** Milliseconds to sleep between retries. Default: `0` (do not sleep)
+        * **max_retries**
+            | An :class:`int`. Maximum number of retries before aborting the current transaction. The initial attempt is not counted as a retry.
+            |
+            | If max_retries is exceeded, the transaction will return error ``AEROSPIKE_ERR_TIMEOUT``.
+            |
+            | **WARNING**: Database writes that are not idempotent (such as "add") should not be retried because the write operation may be performed multiple times
+            | if the client timed out previous transaction attempts. It's important to use a distinct write policy for non-idempotent writes which sets max_retries = `0`;
+            |
+            | Default: ``2``
+        * **sleep_between_retries**
+            | An :class:`int`. Milliseconds to sleep between retries. Enter zero to skip sleep.
+            |
+            | Default: ``0``
+        * **socket_timeout**
+            | An :class:`int`. Socket idle timeout in milliseconds when processing a database command.
+            |
+            | If socket_timeout is not zero and the socket has been idle for at least socket_timeout, both max_retries and total_timeout are checked. If max_retries and total_timeout are not exceeded, the transaction is retried.
+            |
+            | If both ``socket_timeout`` and ``total_timeout`` are non-zero and ``socket_timeout`` > ``total_timeout``, then ``socket_timeout`` will be set to ``total_timeout``. If ``socket_timeout`` is zero, there will be no socket idle limit.
+            |
+            | Default: ``0``.
+        * **total_timeout**
+            | An :class:`int`. Total transaction timeout in milliseconds.
+            |
+            | The total_timeout is tracked on the client and sent to the server along with the transaction in the wire protocol. The client will most likely timeout first, but the server also has the capability to timeout the transaction.
+            |
+            | If ``total_timeout`` is not zero and ``total_timeout`` is reached before the transaction completes, the transaction will return error ``AEROSPIKE_ERR_TIMEOUT``. If ``total_timeout`` is zero, there will be no total time limit.
+            |
+            | Default: ``1000``
+        * **linearize_read**
+            | :class:`bool`
+            | Force reads to be linearized for server namespaces that support CP mode. Setting this policy to ``True`` requires an Enterprise server with version 4.0.0 or greater.
+            | Default: ``False``
         * **consistency_level** one of the ``aerospike.POLICY_CONSISTENCY_*`` values such as :data:`aerospike.POLICY_CONSISTENCY_ONE`
-        * **retry_on_timeout** :class:`bool`  Should the client retry a command if the timeout is reached. `False`: Return error when the timeout has been reached. Note that retries can still occur if a command fails on a network error before the timeout has been reached. `True` Retry command with same timeout when the timeout has been reached.  The maximum number of retries is defined by `retry`. Default `False`
         * **concurrent** :class:`bool` Determine if batch commands to each server are run in parallel threads. Default `False`
         * **allow_inline** :class:`bool` . Allow batch to be processed immediately in the server's receiving thread when the server deems it to be appropriate.  If `False`, the batch will always be processed in separate transaction threads.  This field is only relevant for the new batch index protocol. Default `True`.
         * **send_set_name** :class:`bool` Send set name field to server for every key in the batch for batch index protocol. This is only necessary when authentication is enabled and security roles are defined on a per set basis. Default: `False`

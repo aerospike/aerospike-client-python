@@ -68,14 +68,18 @@ PyObject * AerospikeScan_Results(AerospikeScan * self, PyObject * args, PyObject
 {
 	PyObject * py_policy = NULL;
 	PyObject * py_results = NULL;
+	PyObject * py_nodename = NULL;
+	PyObject* py_ustr = NULL;
+
 	as_policy_scan scan_policy;
 	as_policy_scan * scan_policy_p = NULL;
 
+	char* nodename = NULL;
 	LocalData data;
 	data.client = self->client;
-	static char * kwlist[] = {"policy", NULL};
+	static char * kwlist[] = {"policy", "nodename", NULL};
 
-	if (PyArg_ParseTupleAndKeywords(args, kwds, "|O:results", kwlist, &py_policy) == false) {
+	if (PyArg_ParseTupleAndKeywords(args, kwds, "|OO:results", kwlist, &py_policy, &py_nodename) == false) {
 		return NULL;
 	}
 
@@ -99,17 +103,45 @@ PyObject * AerospikeScan_Results(AerospikeScan * self, PyObject * args, PyObject
 		goto CLEANUP;
 	}
 
+	/*
+	 * If the user specified a nodename, validate and convert it to a char*
+	 */
+	if (py_nodename) {
+		if (PyString_Check(py_nodename)) {
+			nodename = PyString_AsString(py_nodename);
+		} else if (PyUnicode_Check(py_nodename)) {
+			/* The decoding could fail, so we need to check for null */
+			py_ustr = PyUnicode_AsUTF8String(py_nodename);
+			if (!py_ustr) {
+				as_error_update(&err, AEROSPIKE_ERR_PARAM, "Invalid unicode nodename");
+				goto CLEANUP;
+			}
+			nodename = PyBytes_AsString(py_ustr);
+		}
+		else {
+			as_error_update(&err, AEROSPIKE_ERR_PARAM, "nodename must be a string");
+			goto CLEANUP;
+		}
+	}
+
 	py_results = PyList_New(0);
 	data.py_results = py_results;
 
-	PyThreadState * _save = PyEval_SaveThread();
+	Py_BEGIN_ALLOW_THREADS
 
-	aerospike_scan_foreach(self->client->as, &err, scan_policy_p, &self->scan, each_result, &data);
+	if (nodename) {
+		aerospike_scan_node(self->client->as, &err, scan_policy_p, &self->scan, nodename, each_result, &data);
+	} else {
+		aerospike_scan_foreach(self->client->as, &err, scan_policy_p, &self->scan, each_result, &data);
+	}
 
-	PyEval_RestoreThread(_save);
+
+	Py_END_ALLOW_THREADS
 
 
 CLEANUP:
+
+	Py_XDECREF(py_ustr);
 
 	if (err.code != AEROSPIKE_OK) {
 		PyObject * py_err = NULL;

@@ -7,6 +7,7 @@ from .test_base_class import TestBaseClass
 from .as_status_codes import AerospikeStatus
 from aerospike import exception as e
 from aerospike import predicates as p
+import time
 
 aerospike = pytest.importorskip("aerospike")
 try:
@@ -28,36 +29,65 @@ def get_geo_object():
 
 
 def add_geo_indexes(connection):
-    connection.index_geo2dsphere_create(
-        "test", "demo", "loc", "loc_index")
-    connection.index_geo2dsphere_create(
-        "test", "demo", "loc_polygon", "loc_polygon_index")
-    connection.index_geo2dsphere_create(
-        "test", "demo", "loc_circle", "loc_circle_index")
+    try:
+        connection.index_geo2dsphere_create(
+            "test", "demo", "loc", "loc_index")
+    except(e.IndexFoundError):
+        pass
 
-    connection.index_list_create(
-        "test", "demo", "geo_list", aerospike.INDEX_GEO2DSPHERE,
-        "geo_list_index")
+    try:
+        connection.index_geo2dsphere_create(
+            "test", "demo", "loc_polygon", "loc_polygon_index")
+    except(e.IndexFoundError):
+        pass
 
-    connection.index_map_keys_create(
-        "test", "demo", "geo_map_keys", aerospike.INDEX_GEO2DSPHERE,
-        "geo_map_key_index")
+    try:
+        connection.index_geo2dsphere_create(
+            "test", "demo", "loc_circle", "loc_circle_index")
+    except(e.IndexFoundError):
+        pass
 
-    connection.index_map_values_create(
-        "test", "demo", "geo_map_vals", aerospike.INDEX_GEO2DSPHERE,
-        "geo_map_val_index")
+    try:
+        connection.index_list_create(
+            "test", "demo", "geo_list", aerospike.INDEX_GEO2DSPHERE,
+            "geo_list_index")
+    except(e.IndexFoundError):
+        pass
 
-    connection.index_list_create(
-        "test", "demo", "geo_loc_list", aerospike.INDEX_GEO2DSPHERE,
-        "geo_loc_list_index")
+    try:
+        connection.index_map_keys_create(
+            "test", "demo", "geo_map_keys", aerospike.INDEX_GEO2DSPHERE,
+            "geo_map_key_index")
+    except(e.IndexFoundError):
+        pass
 
-    connection.index_map_keys_create(
-        "test", "demo", "geo_loc_mk", aerospike.INDEX_GEO2DSPHERE,
-        "geo_loc_map_key_index")
+    try:
+        connection.index_map_values_create(
+            "test", "demo", "geo_map_vals", aerospike.INDEX_GEO2DSPHERE,
+            "geo_map_val_index")
+    except(e.IndexFoundError):
+        pass
 
-    connection.index_map_values_create(
-        "test", "demo", "geo_loc_mv", aerospike.INDEX_GEO2DSPHERE,
-        "geo_loc_map_val_index")
+    try:
+        connection.index_list_create(
+            "test", "demo", "geo_loc_list", aerospike.INDEX_GEO2DSPHERE,
+            "geo_loc_list_index")
+    except(e.IndexFoundError):
+        pass
+
+    try:
+        connection.index_map_keys_create(
+            "test", "demo", "geo_loc_mk", aerospike.INDEX_GEO2DSPHERE,
+            "geo_loc_map_key_index")
+    except(e.IndexFoundError):
+        pass
+
+    try:
+        connection.index_map_values_create(
+            "test", "demo", "geo_loc_mv", aerospike.INDEX_GEO2DSPHERE,
+            "geo_loc_map_val_index")
+    except(e.IndexFoundError):
+        pass
 
 
 def add_geo_data(connection):
@@ -129,15 +159,50 @@ def add_geo_data(connection):
 
 
 def remove_geo_indexes(connection):
-    connection.index_remove('test', 'loc_index')
-    connection.index_remove('test', 'loc_polygon_index')
-    connection.index_remove('test', 'loc_circle_index')
-    connection.index_remove('test', 'geo_list_index')
-    connection.index_remove('test', 'geo_map_key_index')
-    connection.index_remove('test', 'geo_map_val_index')
-    connection.index_remove('test', 'geo_loc_list_index')
-    connection.index_remove('test', 'geo_loc_map_key_index')
-    connection.index_remove('test', 'geo_loc_map_val_index')
+    try:
+        connection.index_remove('test', 'loc_index')
+    except:
+        pass
+
+    try:
+        connection.index_remove('test', 'loc_polygon_index')
+    except:
+        pass
+
+    try:
+        connection.index_remove('test', 'loc_circle_index')
+    except:
+        pass
+
+    try:
+        connection.index_remove('test', 'geo_list_index')
+    except:
+        pass
+
+    try:
+        connection.index_remove('test', 'geo_map_key_index')
+    except:
+        pass
+
+    try:
+        connection.index_remove('test', 'geo_map_val_index')
+    except:
+        pass
+
+    try:
+        connection.index_remove('test', 'geo_loc_list_index')
+    except:
+        pass
+
+    try:
+        connection.index_remove('test', 'geo_loc_map_key_index')
+    except:
+        pass
+
+    try:
+        connection.index_remove('test', 'geo_loc_map_val_index')
+    except:
+        pass
 
 
 def remove_geo_data(connection):
@@ -291,8 +356,12 @@ class TestGeospatial(object):
             self.as_connection.put(key, {"loc": geo_object})
             keys.append(key)
 
-        self.as_connection.index_geo2dsphere_create(
-            "test", None, "loc", "loc_index_no_set")
+        try:
+            self.as_connection.index_geo2dsphere_create(
+                "test", None, "loc", "loc_index_no_set")
+        except(e.IndexFoundError):
+            pass
+
         records = []
         query = self.as_connection.query("test", None)
 
@@ -311,8 +380,11 @@ class TestGeospatial(object):
             records.append(record)
 
         query.foreach(callback)
+        try:
+            self.as_connection.index_remove('test', 'loc_index_no_set')
+        except(Exception):
+            pass
 
-        self.as_connection.index_remove('test', 'loc_index_no_set')
         for key in keys:
             self.as_connection.remove(key)
 
@@ -668,7 +740,7 @@ class TestGeospatial(object):
             Perform a positive 2d index creation
         """
         status = self.as_connection.index_remove('test', 'loc_index')
-
+        time.sleep(2)
         assert status == 0
 
         status = self.as_connection.index_geo2dsphere_create(
@@ -681,6 +753,7 @@ class TestGeospatial(object):
             Perform a positive 2d index creation with policy
         """
         status = self.as_connection.index_remove('test', 'loc_index')
+        time.sleep(2)
 
         assert status == 0
 

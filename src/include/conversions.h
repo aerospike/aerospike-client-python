@@ -25,6 +25,7 @@
 #include <aerospike/as_record.h>
 #include <aerospike/as_udf.h>
 #include <aerospike/as_operations.h>
+#include <aerospike/aerospike_batch.h>
 
 #include "types.h"
 
@@ -77,8 +78,6 @@ as_status bins_to_pyobject(AerospikeClient * self, as_error * err, const as_reco
 
 bool error_to_pyobject(const as_error * err, PyObject ** obj);
 
-as_status initialize_ldt(as_error *error, as_ldt* ldt_p, char* bin_name, int type, char* module);
-
 as_status pyobject_to_astype_write(AerospikeClient * self, as_error * err, PyObject * py_value, as_val **val,
 	as_static_pool *static_pool, int serializer_type);
 
@@ -95,3 +94,8 @@ void initialize_bin_for_strictypes(AerospikeClient *self, as_error *err, PyObjec
 as_status bin_strict_type_checking(AerospikeClient * self, as_error *err, PyObject *py_bin, char **bin);
 
 as_status check_for_meta(PyObject * py_meta, as_operations * ops, as_error *err);
+
+as_status as_batch_read_results_to_pyobject(as_error* err, AerospikeClient* client, const as_batch_read* results,
+		uint32_t size, PyObject** py_records);
+
+as_status batch_read_records_to_pyobject(AerospikeClient *self, as_error *err, as_batch_read_records* records, PyObject **py_recs);

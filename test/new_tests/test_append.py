@@ -58,7 +58,7 @@ class TestAppend(object):
         Invoke append() with correct policies
         """
         key = ('test', 'demo', 1)
-        policy = {'timeout': 1000,
+        policy = {'total_timeout': 1000,
                   'retry': aerospike.POLICY_RETRY_ONCE,
                   'commit_level': aerospike.POLICY_COMMIT_LEVEL_MASTER}
         self.as_connection.append(key, "name", "str", {}, policy)
@@ -73,7 +73,7 @@ class TestAppend(object):
         """
         key = ('test', 'demo', 1)
         policy = {
-            'timeout': 1000,
+            'total_timeout': 1000,
             'key': aerospike.POLICY_KEY_SEND,
             'retry': aerospike.POLICY_RETRY_ONCE,
             'commit_level': aerospike.POLICY_COMMIT_LEVEL_ALL
@@ -97,7 +97,7 @@ class TestAppend(object):
         self.as_connection.put(key, rec)
 
         policy = {
-            'timeout': 1000,
+            'total_timeout': 1000,
             'key': aerospike.POLICY_KEY_DIGEST,
             'retry': aerospike.POLICY_RETRY_NONE
         }
@@ -117,7 +117,7 @@ class TestAppend(object):
         """
         key = ('test', 'demo', 1)
         policy = {
-            'timeout': 1000,
+            'total_timeout': 1000,
             'key': aerospike.POLICY_KEY_SEND,
             'retry': aerospike.POLICY_RETRY_ONCE,
             'gen': aerospike.POLICY_GEN_IGNORE
@@ -139,7 +139,7 @@ class TestAppend(object):
         """
         key = ('test', 'demo', 1)
         policy = {
-            'timeout': 1000,
+            'total_timeout': 1000,
             'key': aerospike.POLICY_KEY_SEND,
             'retry': aerospike.POLICY_RETRY_ONCE,
             'gen': aerospike.POLICY_GEN_EQ
@@ -164,7 +164,7 @@ class TestAppend(object):
         """
         key = ('test', 'demo', 1)
         policy = {
-            'timeout': 1000,
+            'total_timeout': 1000,
             'key': aerospike.POLICY_KEY_SEND,
             'retry': aerospike.POLICY_RETRY_ONCE,
             'gen': aerospike.POLICY_GEN_GT
@@ -227,7 +227,7 @@ class TestAppend(object):
         """
         key = ('test', 'demo', 1)
         policy = {'gen': 5,
-                  'timeout': 300,
+                  'total_timeout': 300,
                   'retry': aerospike.POLICY_RETRY_ONCE,
                   'commit_level': aerospike.POLICY_COMMIT_LEVEL_MASTER
                   }
@@ -281,7 +281,7 @@ class TestAppend(object):
         """
         key = ('test', 'demo', 1)
         policy = {
-            'timeout': 1000,
+            'total_timeout': 1000,
             'key': aerospike.POLICY_KEY_SEND,
             'retry': aerospike.POLICY_RETRY_ONCE,
             'gen': aerospike.POLICY_GEN_GT
@@ -311,7 +311,7 @@ class TestAppend(object):
         """
         key = ('test', 'demo', 1)
         policy = {
-            'timeout': 1000,
+            'total_timeout': 1000,
             'key': aerospike.POLICY_KEY_SEND,
             'retry': aerospike.POLICY_RETRY_ONCE,
             'gen': aerospike.POLICY_GEN_EQ
@@ -343,33 +343,29 @@ class TestAppend(object):
         (('test', 'demo', 1), "name", "pqr", {}, "", -2,
             "policy must be a dict"),
         (('test', 'demo', 1), 3, "str", {},
-            {'gen': 5, 'timeout': 3000,
+            {'gen': 5, 'total_timeout': 3000,
              'retry': aerospike.POLICY_RETRY_ONCE,
              'commit_level': aerospike.POLICY_COMMIT_LEVEL_MASTER}, -2,
             'Bin name should be of type string'),
         (('test', 'name'), "name", "str", {}, {"gen": 5}, -2,
             'key tuple must be (Namespace, Set, Key) or (Namespace, Set, None, Digest)'),
         (('test', 'demo', 1), "name", "str", {}, {
-         'timeout': 0.5}, -2, "timeout is invalid")
+         'total_timeout': 0.5}, -2, "total_timeout is invalid")
     ])
     def test_neg_append_params_of_incorrect_types(self, key, bin, value, meta,
                                                   policy, ex_code, ex_msg):
         """
         Invoke append() parameters of incorrect datatypes
         """
-        try:
+        with pytest.raises(e.ParamError):
             self.as_connection.append(key, bin, value, meta, policy)
-
-        except e.ParamError as exception:
-            assert exception.code == ex_code
-            assert exception.msg == ex_msg
 
     def test_neg_append_with_extra_parameter(self):
         """
         Invoke append() with extra parameter.
         """
         key = ('test', 'demo', 1)
-        policy = {'timeout': 1000}
+        policy = {'total_timeout': 1000}
         with pytest.raises(TypeError) as typeError:
             self.as_connection.append(key, "name", "str", {}, policy, "")
         msg = "append() takes at most 5 arguments (6 given)"
@@ -383,12 +379,8 @@ class TestAppend(object):
         """
         Invoke append() with parametes as None
         """
-        try:
+        with pytest.raises(e.ParamError):
             self.as_connection.append(key, bin, "str")
-
-        except e.ParamError as exception:
-            assert exception.code == ex_code
-            assert exception.msg == ex_msg
 
     def test_neg_append_with_correct_parameters_without_connection(self):
         """
@@ -410,7 +402,7 @@ class TestAppend(object):
         """
         key = ('test', 'demo', 1)
         policy = {'gen': 5,
-                  'timeout': 1,
+                  'total_timeout': 1,
                   # 'retry': aerospike.POLICY_RETRY_ONCE,
                   'commit_level': aerospike.POLICY_COMMIT_LEVEL_MASTER
                   }
@@ -425,9 +417,7 @@ class TestAppend(object):
         """
         key = ('test1', 'demo', 'name')
         policy = {'gen': 5,
-                  'timeout': 300,
+                  'total_timeout': 300,
                   }
-        try:
+        with pytest.raises(e.ClientError):
             self.as_connection.append(key, "name", "str", {}, policy)
-        except e.NamespaceNotFound as exception:
-            assert exception.code == 20

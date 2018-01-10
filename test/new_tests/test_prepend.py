@@ -401,12 +401,8 @@ class TestPrepend():
         """
         key = ('test1', 'demo', 1)
         policy = {'timeout': 1000}
-        try:
+        with pytest.raises(e.ClientError):
             self.as_connection.prepend(key, "name", "ABC", {}, policy)
-            key, _, _ = self.as_connection.get(key)
-
-        except e.NamespaceNotFound as exception:
-            assert exception.code == 20
 
     @pytest.mark.parametrize("key, bin, value, meta, policy, ex_code, ex_msg", [
         (('test', 1), "name", "ABC", {}, {'timeout': 1000}, -2,

@@ -385,12 +385,10 @@ class TestScanApply(object):
         policy = {
             'timeout': 0.5
         }
-        with pytest.raises(e.ParamError) as err_info:
+
+        with pytest.raises(e.ParamError):
             self.as_connection.scan_apply(
                 "test", "demo", "bin_lua", "mytransform", ['age', 2], policy)
-
-        err_code = err_info.value.code
-        assert err_code is AerospikeStatus.AEROSPIKE_ERR_PARAM
 
     def test_scan_apply_with_non_existent_ns(self):
         """

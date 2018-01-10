@@ -942,6 +942,97 @@ class TestOperate(object):
 
         assert bins == {'int_bin': 4}
 
+    def test_list_increment_with_valid_value(self):
+        '''
+        previous list was [1, 2, 3, 4]
+        new should be [1, 2, 23, 4]
+        '''
+        key = ('test', 'demo', 'list_key')
+        list = [
+            {
+              "op": aerospike.OP_LIST_INCREMENT,
+              "bin": "int_bin",
+              "index": 2,
+              "val": 20
+            }
+        ]
+
+        _, _, bins = self.as_connection.operate(key, list)
+
+        assert bins == {'int_bin': 23}
+        _, _, bins = self.as_connection.get(key)
+
+        assert bins['int_bin'] == [1, 2, 23, 4]
+
+    def test_list_increment_with_missing_value(self):
+        '''
+        previous list was [1, 2, 3, 4]
+        new should be [1, 2, 23, 4]
+        '''
+        key = ('test', 'demo', 'list_key')
+        list = [
+            {
+              "op": aerospike.OP_LIST_INCREMENT,
+              "bin": "int_bin",
+              "index": 2,
+            }
+        ]
+
+        with pytest.raises(e.ParamError):
+            self.as_connection.operate(key, list)
+
+    def test_list_increment_with_missing_index(self):
+        '''
+        previous list was [1, 2, 3, 4]
+        new should be [1, 2, 23, 4]
+        '''
+        key = ('test', 'demo', 'list_key')
+        list = [
+            {
+              "op": aerospike.OP_LIST_INCREMENT,
+              "bin": "int_bin",
+              "val": 20
+            }
+        ]
+
+        with pytest.raises(e.ParamError):
+            self.as_connection.operate(key, list)
+
+    def test_list_increment_with_missing_bin(self):
+        '''
+        previous list was [1, 2, 3, 4]
+        new should be [1, 2, 23, 4]
+        '''
+        key = ('test', 'demo', 'list_key')
+        list = [
+            {
+              "op": aerospike.OP_LIST_INCREMENT,
+              "index": 2,
+              "val": 20
+            }
+        ]
+
+        with pytest.raises(e.ParamError):
+            self.as_connection.operate(key, list)
+
+    def test_list_increment_with_incorrect_value_type(self):
+        '''
+        previous list was [1, 2, 3, 4]
+        new should be [1, 2, 23, 4]
+        '''
+        key = ('test', 'demo', 'list_key')
+        list = [
+            {
+              "op": aerospike.OP_LIST_INCREMENT,
+              "index": 2,
+              "bin": "int_bin",
+              "val": "twenty"
+            }
+        ]
+
+        with pytest.raises(e.AerospikeError):
+            self.as_connection.operate(key, list)
+
     def test_pos_operate_with_list_get_range_val_out_of_bounds(self):
         """
         Invoke operate() with list_get_range operation and value out of bounds
