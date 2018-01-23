@@ -25,7 +25,7 @@ class TestUdfPut(TestBaseClass):
         """
         Teardown method
         """
-        udf_list = self.as_connection.udf_list({'timeout': 100})
+        udf_list = self.as_connection.udf_list()
         for udf in udf_list:
             if udf['name'] == self.udf_name:
                 self.as_connection.udf_remove(self.udf_name)
