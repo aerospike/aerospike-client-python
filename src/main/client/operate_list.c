@@ -860,7 +860,9 @@ PyObject * AerospikeClient_ListTrim(AerospikeClient * self, PyObject * args, PyO
 
 CLEANUP:
 	as_operations_destroy(&ops);
-
+	if (rec) {
+		as_record_destroy(rec);
+	}
 	EXCEPTION_ON_ERROR();
 
 	return PyLong_FromLong(0);

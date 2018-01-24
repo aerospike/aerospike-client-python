@@ -413,6 +413,8 @@ PyObject* raise_exception(as_error *err) {
 					PyObject_SetAttrString(py_value, "line", Py_None);
 				}
 
+				PyObject_SetAttrString(py_value, "in_doubt", PyBool_FromLong(err->in_doubt));
+
 				break;
 			}
 			Py_DECREF(py_code);

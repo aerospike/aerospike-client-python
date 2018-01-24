@@ -101,7 +101,6 @@ static PyObject * batch_select_aerospike_batch_read(as_error *err, AerospikeClie
 	if (py_keys && PyList_Check(py_keys)) {
 		Py_ssize_t size = PyList_Size(py_keys);
 
-		py_recs = PyList_New(size);
 		as_batch_read_inita(&records, size);
 
 		// Batch object initialised
@@ -133,7 +132,6 @@ static PyObject * batch_select_aerospike_batch_read(as_error *err, AerospikeClie
 	else if (py_keys && PyTuple_Check(py_keys)) {
 		Py_ssize_t size = PyTuple_Size(py_keys);
 
-		py_recs = PyList_New(size);
 		as_batch_read_inita(&records, size);
 		// Batch object initialised
 		batch_initialised = true;

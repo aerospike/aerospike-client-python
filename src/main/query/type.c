@@ -167,7 +167,7 @@ static void AerospikeQuery_Type_Dealloc(AerospikeQuery * self)
 	for (i = 0; i < self->query.where.size; i++) {
 		as_predicate * p = &self->query.where.entries[i];
 		if (p) {
-			if (p->dtype == AS_INDEX_STRING) {
+			if (p->dtype == AS_INDEX_STRING || p->dtype == AS_INDEX_GEO2DSPHERE) {
 				free(p->value.string);
 			}
 		}

@@ -2238,8 +2238,7 @@ a cluster-tending thread.
 
     .. method:: truncate(namespace, set, nanos[, policy])
 
-        Remove records in specified namespace/set efficiently.  This method is many orders of magnitude
-        faster than deleting records one at a time.  Works with Aerospike Server versions >= 3.12.
+        Remove records in specified namespace/set efficiently. This method is many orders of magnitude faster than deleting records one at a time. Works with Aerospike Server versions >= 3.12. See `Truncate command reference <https://www.aerospike.com/docs/reference/info#truncate>`_.
  
         This asynchronous server call may return before the truncation is complete.  The user can still
         write new records after the server returns because new records will have last update times
