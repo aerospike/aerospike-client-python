@@ -93,7 +93,6 @@ static PyObject * batch_get_aerospike_batch_read(as_error *err, AerospikeClient 
 	if (py_keys && PyList_Check(py_keys)) {
 		Py_ssize_t size = PyList_Size(py_keys);
 
-		py_recs = PyList_New(size);
 		if (size > MAX_STACK_ALLOCATION) {
 			as_batch_read_init(&records, size);
 		} else {
