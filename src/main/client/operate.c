@@ -863,7 +863,7 @@ static PyObject *  AerospikeClient_OperateOrdered_Invoke(
 	}
 
 	if (err->code != AEROSPIKE_OK) {
-		as_error_update(err, err->code, err->message);
+		as_error_update(err, err->code, NULL);
 		goto CLEANUP;
 	}
 
@@ -875,7 +875,7 @@ static PyObject *  AerospikeClient_OperateOrdered_Invoke(
 	Py_END_ALLOW_THREADS
 
 	if (err->code != AEROSPIKE_OK) {
-		as_error_update(err, err->code, err->message);
+		as_error_update(err, err->code, NULL);
 		goto CLEANUP;
 	}
 

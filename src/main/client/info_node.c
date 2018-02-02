@@ -174,7 +174,7 @@ static PyObject * AerospikeClient_InfoNode_Invoke(
 			goto CLEANUP;
 		}
 	} else {
-		as_error_update(err, err->code, err->message);
+		as_error_update(err, err->code, NULL);
 		goto CLEANUP;
 	}
 
