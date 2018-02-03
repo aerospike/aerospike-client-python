@@ -15,7 +15,13 @@
  ******************************************************************************/
 #include "policy_config.h"
 
-
+as_status set_optional_key(as_policy_key* target_ptr, PyObject* py_policy, const char* name);
+as_status set_optional_replica(as_policy_replica* target_ptr, PyObject* py_policy, const char* name);
+as_status set_optional_commit_level(as_policy_commit_level* target_ptr, PyObject* py_policy, const char* name);
+as_status set_optional_consistency_level(as_policy_consistency_level* target_ptr, PyObject* py_policy, const char* name);
+as_status set_optional_gen(as_policy_gen* target_ptr, PyObject* py_policy, const char* name);
+as_status set_optional_exists(as_policy_exists* target_ptr, PyObject* py_policy, const char* name);
+as_status get_uint32_value(PyObject* py_policy_val, uint32_t* return_uint32);
 /*
  * py_policies must exist, and be a dictionary
  */
@@ -90,17 +96,17 @@ as_status set_read_policy(as_policy_read* read_policy, PyObject* py_policy) {
 		return status;
 	}
 
-	status = set_optional_uint32_property((uint32_t*)&read_policy->key, py_policy, "key");
+	status = set_optional_key(&read_policy->key, py_policy, "key");
 	if (status != AEROSPIKE_OK) {
 		return status;
 	}
 
-	status = set_optional_uint32_property((uint32_t*)&read_policy->replica, py_policy, "replica");
+	status = set_optional_replica(&read_policy->replica, py_policy, "replica");
 	if (status != AEROSPIKE_OK) {
 		return status;
 	}
 
-	status = set_optional_uint32_property((uint32_t*)&read_policy->consistency_level, py_policy, "consistency_level");
+	status = set_optional_consistency_level(&read_policy->consistency_level, py_policy, "consistency_level");
 	if (status != AEROSPIKE_OK) {
 		return status;
 	}
@@ -135,27 +141,27 @@ as_status set_write_policy(as_policy_write* write_policy, PyObject* py_policy) {
 		return status;
 	}
 
-	status = set_optional_uint32_property((uint32_t*)&write_policy->key, py_policy, "key");
+	status = set_optional_key(&write_policy->key, py_policy, "key");
 	if (status != AEROSPIKE_OK) {
 		return status;
 	}
 
-	status = set_optional_uint32_property((uint32_t*)&write_policy->replica, py_policy, "replica");
+	status = set_optional_replica(&write_policy->replica, py_policy, "replica");
 	if (status != AEROSPIKE_OK) {
 		return status;
 	}
 
-	status = set_optional_uint32_property((uint32_t*)&write_policy->commit_level, py_policy, "commit_level");
+	status = set_optional_commit_level(&write_policy->commit_level, py_policy, "commit_level");
 	if (status != AEROSPIKE_OK) {
 		return status;
 	}
 
-	status = set_optional_uint32_property((uint32_t*)&write_policy->gen, py_policy, "gen");
+	status = set_optional_gen(&write_policy->gen, py_policy, "gen");
 	if (status != AEROSPIKE_OK) {
 		return status;
 	}
 
-	status = set_optional_uint32_property((uint32_t*)&write_policy->exists, py_policy, "exists");
+	status = set_optional_exists(&write_policy->exists, py_policy, "exists");
 	if (status != AEROSPIKE_OK) {
 		return status;
 	}
@@ -190,22 +196,22 @@ as_status set_apply_policy(as_policy_apply* apply_policy, PyObject* py_policy) {
 		return status;
 	}
 
-	status = set_optional_uint32_property((uint32_t*)&apply_policy->key, py_policy, "key");
+	status = set_optional_key(&apply_policy->key, py_policy, "key");
 	if (status != AEROSPIKE_OK) {
 		return status;
 	}
 
-	status = set_optional_uint32_property((uint32_t*)&apply_policy->replica, py_policy, "replica");
+	status = set_optional_replica(&apply_policy->replica, py_policy, "replica");
 	if (status != AEROSPIKE_OK) {
 		return status;
 	}
 
-	status = set_optional_uint32_property((uint32_t*)&apply_policy->gen, py_policy, "gen");
+	status = set_optional_gen(&apply_policy->gen, py_policy, "gen");
 	if (status != AEROSPIKE_OK) {
 		return status;
 	}
 
-	status = set_optional_uint32_property((uint32_t*)&apply_policy->commit_level, py_policy, "commit_level");
+	status = set_optional_commit_level(&apply_policy->commit_level, py_policy, "commit_level");
 	if (status != AEROSPIKE_OK) {
 		return status;
 	}
@@ -240,22 +246,22 @@ as_status set_remove_policy(as_policy_remove* remove_policy, PyObject* py_policy
 		return status;
 	}
 
-	status = set_optional_uint32_property((uint32_t*)&remove_policy->key, py_policy, "key");
+	status = set_optional_key(&remove_policy->key, py_policy, "key");
 	if (status != AEROSPIKE_OK) {
 		return status;
 	}
 
-	status = set_optional_uint32_property((uint32_t*)&remove_policy->replica, py_policy, "replica");
+	status = set_optional_replica(&remove_policy->replica, py_policy, "replica");
 	if (status != AEROSPIKE_OK) {
 		return status;
 	}
 
-	status = set_optional_uint32_property((uint32_t*)&remove_policy->commit_level, py_policy, "commit_level");
+	status = set_optional_commit_level(&remove_policy->commit_level, py_policy, "commit_level");
 	if (status != AEROSPIKE_OK) {
 		return status;
 	}
 
-	status = set_optional_uint32_property((uint32_t*)&remove_policy->gen, py_policy, "gen");
+	status = set_optional_gen(&remove_policy->gen, py_policy, "gen");
 	if (status != AEROSPIKE_OK) {
 		return status;
 	}
@@ -339,27 +345,27 @@ as_status set_operate_policy(as_policy_operate* operate_policy, PyObject* py_pol
 		return status;
 	}
 
-	status = set_optional_uint32_property((uint32_t*)&operate_policy->key, py_policy, "key");
+	status = set_optional_key(&operate_policy->key, py_policy, "key");
 	if (status != AEROSPIKE_OK) {
 		return status;
 	}
 
-	status = set_optional_uint32_property((uint32_t*)&operate_policy->replica, py_policy, "replica");
+	status = set_optional_replica(&operate_policy->replica, py_policy, "replica");
 	if (status != AEROSPIKE_OK) {
 		return status;
 	}
 
-	status = set_optional_uint32_property((uint32_t*)&operate_policy->commit_level, py_policy, "commit_level");
+	status = set_optional_commit_level(&operate_policy->commit_level, py_policy, "commit_level");
 	if (status != AEROSPIKE_OK) {
 		return status;
 	}
 
-	status = set_optional_uint32_property((uint32_t*)&operate_policy->gen, py_policy, "gen");
+	status = set_optional_gen(&operate_policy->gen, py_policy, "gen");
 	if (status != AEROSPIKE_OK) {
 		return status;
 	}
 
-	status = set_optional_uint32_property((uint32_t*)&operate_policy->consistency_level, py_policy, "consistency_level");
+	status = set_optional_consistency_level(&operate_policy->consistency_level, py_policy, "consistency_level");
 	if (status != AEROSPIKE_OK) {
 		return status;
 	}
@@ -399,7 +405,7 @@ as_status set_batch_policy(as_policy_batch* batch_policy, PyObject* py_policy) {
 		return status;
 	}
 
-	status = set_optional_uint32_property((uint32_t*)&batch_policy->consistency_level, py_policy, "consistency_level");
+	status = set_optional_consistency_level(&batch_policy->consistency_level, py_policy, "consistency_level");
 	if (status != AEROSPIKE_OK) {
 		return status;
 	}
@@ -473,6 +479,30 @@ as_status set_base_policy(as_policy_base* base_policy, PyObject* py_policy) {
 	return AEROSPIKE_OK;
 }
 
+as_status get_uint32_value(PyObject* py_policy_val, uint32_t* return_uint32) {
+	long long int uint32_max = 0xFFFFFFFF;
+
+	if (!py_policy_val) {
+		return AEROSPIKE_ERR_PARAM;
+	}
+	if (PyInt_Check(py_policy_val)) {
+		long int_value = PyInt_AsLong(py_policy_val);
+
+		if (int_value == -1 && PyErr_Occurred()) {
+			PyErr_Clear();
+			return AEROSPIKE_ERR_PARAM;
+		}
+
+		if (int_value < 0 || int_value > uint32_max) {
+			return AEROSPIKE_ERR_PARAM;
+		}
+
+		*return_uint32 = (uint32_t)int_value;
+		return AEROSPIKE_OK;
+	}
+	return AEROSPIKE_ERR_PARAM;
+}
+
 as_status set_optional_uint32_property(uint32_t* target_ptr, PyObject* py_policy, const char* name) {
 	PyObject* py_policy_val = NULL;
 	long long int uint32_max = 0xFFFFFFFF;
@@ -520,4 +550,124 @@ as_status set_optional_bool_property(bool* target_ptr, PyObject* py_policy, cons
 		return AEROSPIKE_OK;
 	}
 	return AEROSPIKE_ERR_PARAM;
+}
+
+as_status set_optional_key(as_policy_key* target_ptr, PyObject* py_policy, const char* name) {
+	PyObject* py_policy_val = NULL;
+	if (!py_policy || !PyDict_Check(py_policy)) {
+		return AEROSPIKE_OK;
+	}
+
+	py_policy_val = PyDict_GetItemString(py_policy, name);
+	if (!py_policy_val || py_policy_val == Py_None) {
+		return AEROSPIKE_OK;
+	}
+
+	uint32_t out_uint32;
+	as_status status = get_uint32_value(py_policy, &out_uint32);
+	if (status != AEROSPIKE_OK) {
+		return status;
+	}
+	*target_ptr = (as_policy_key)out_uint32;
+	return AEROSPIKE_OK;
+}
+
+as_status set_optional_replica(as_policy_replica* target_ptr, PyObject* py_policy, const char* name) {
+	PyObject* py_policy_val = NULL;
+	if (!py_policy || !PyDict_Check(py_policy)) {
+		return AEROSPIKE_OK;
+	}
+
+	py_policy_val = PyDict_GetItemString(py_policy, name);
+	if (!py_policy_val || py_policy_val == Py_None) {
+		return AEROSPIKE_OK;
+	}
+
+	uint32_t out_uint32;
+	as_status status = get_uint32_value(py_policy, &out_uint32);
+	if (status != AEROSPIKE_OK) {
+		return status;
+	}
+	*target_ptr = (as_policy_replica)out_uint32;
+	return AEROSPIKE_OK;
+}
+
+as_status set_optional_commit_level(as_policy_commit_level* target_ptr, PyObject* py_policy, const char* name) {
+	PyObject* py_policy_val = NULL;
+	if (!py_policy || !PyDict_Check(py_policy)) {
+		return AEROSPIKE_OK;
+	}
+
+	py_policy_val = PyDict_GetItemString(py_policy, name);
+	if (!py_policy_val || py_policy_val == Py_None) {
+		return AEROSPIKE_OK;
+	}
+
+	uint32_t out_uint32;
+	as_status status = get_uint32_value(py_policy, &out_uint32);
+	if (status != AEROSPIKE_OK) {
+		return status;
+	}
+	*target_ptr = (as_policy_commit_level)out_uint32;
+	return AEROSPIKE_OK;
+}
+
+as_status set_optional_consistency_level(as_policy_consistency_level* target_ptr, PyObject* py_policy, const char* name) {
+	PyObject* py_policy_val = NULL;
+	if (!py_policy || !PyDict_Check(py_policy)) {
+		return AEROSPIKE_OK;
+	}
+
+	py_policy_val = PyDict_GetItemString(py_policy, name);
+	if (!py_policy_val || py_policy_val == Py_None) {
+		return AEROSPIKE_OK;
+	}
+
+	uint32_t out_uint32;
+	as_status status = get_uint32_value(py_policy, &out_uint32);
+	if (status != AEROSPIKE_OK) {
+		return status;
+	}
+	*target_ptr = (as_policy_consistency_level)out_uint32;
+	return AEROSPIKE_OK;
+}
+
+as_status set_optional_gen(as_policy_gen* target_ptr, PyObject* py_policy, const char* name) {
+	PyObject* py_policy_val = NULL;
+	if (!py_policy || !PyDict_Check(py_policy)) {
+		return AEROSPIKE_OK;
+	}
+
+	py_policy_val = PyDict_GetItemString(py_policy, name);
+	if (!py_policy_val || py_policy_val == Py_None) {
+		return AEROSPIKE_OK;
+	}
+
+	uint32_t out_uint32;
+	as_status status = get_uint32_value(py_policy, &out_uint32);
+	if (status != AEROSPIKE_OK) {
+		return status;
+	}
+	*target_ptr = (as_policy_gen)out_uint32;
+	return AEROSPIKE_OK;
+}
+
+as_status set_optional_exists(as_policy_exists* target_ptr, PyObject* py_policy, const char* name) {
+	PyObject* py_policy_val = NULL;
+	if (!py_policy || !PyDict_Check(py_policy)) {
+		return AEROSPIKE_OK;
+	}
+
+	py_policy_val = PyDict_GetItemString(py_policy, name);
+	if (!py_policy_val || py_policy_val == Py_None) {
+		return AEROSPIKE_OK;
+	}
+
+	uint32_t out_uint32;
+	as_status status = get_uint32_value(py_policy, &out_uint32);
+	if (status != AEROSPIKE_OK) {
+		return status;
+	}
+	*target_ptr = (as_policy_exists)out_uint32;
+	return AEROSPIKE_OK;
 }
