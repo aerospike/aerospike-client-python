@@ -53,27 +53,37 @@ class TestBaseClass(object):
         config.read("config.conf")
 
         if (config.has_option('tls', 'enable') and (
-           config.get('tls', 'enable') == 'True')):
+           config.getboolean('tls', 'enable'))):
             TestBaseClass.using_tls = True
             tls_dict['enable'] = True
 
             if config.has_option('tls', 'cafile'):
-                tls_dict['cafile'] = config.get('tls', 'cafile')
+                if config.get('tls', 'cafile') != '':
+                    tls_dict['cafile'] = config.get('tls', 'cafile')
 
             if config.has_option('tls', 'capath'):
-                tls_dict['capath'] = config.get('tls', 'capath')
+                if config.get('tls', 'capath') != '':
+                    tls_dict['capath'] = config.get('tls', 'capath')
 
             if config.has_option('tls', 'protocols'):
-                tls_dict['protocols'] = config.get('tls', 'protocols')
+                if config.get('tls', 'protocols') != '':
+                    tls_dict['protocols'] = config.get('tls', 'protocols')
 
             if config.has_option('tls', 'cipher_suite'):
-                tls_dict['cipher_suite'] = config.get('tls', 'cipher_suite')
+                if config.get('tls', 'cipher_suite') != '':
+                    tls_dict['cipher_suite'] = config.get('tls', 'cipher_suite')
 
             if config.has_option('tls', 'keyfile'):
-                tls_dict['keyfile'] = config.get('tls', 'keyfile')
+                if config.get('tls', 'keyfile') != '':
+                    tls_dict['keyfile'] = config.get('tls', 'keyfile')
+
+            if config.has_option('tls', 'cert_blacklist'):
+                if config.get('tls', 'cert_blacklist') != '':
+                    tls_dict['cert_blacklist'] = config.get('tls', 'cert_blacklist')
 
             if config.has_option('tls', 'certfile'):
-                tls_dict['certfile'] = config.get('tls', 'certfile')
+                if config.get('tls', 'certfile') != '':
+                    tls_dict['certfile'] = config.get('tls', 'certfile')
 
             if config.has_option('tls', 'crl_check'):
                 if config.get('tls', 'crl_check') == 'True':
