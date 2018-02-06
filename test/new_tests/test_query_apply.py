@@ -110,7 +110,7 @@ class TestQueryApply(object):
         """
         Invoke query_apply() with correct policy
         """
-        policy = {'timeout': 1000}
+        policy = {'total_timeout': 0}
         query_id = self.as_connection.query_apply(
             "test", "demo", self.age_range_pred, "bin_lua",
             "mytransform", ['age', 2], policy)
@@ -136,7 +136,7 @@ class TestQueryApply(object):
         Invoke query_apply() with correct policy,
         Should casuse no changes as the
         """
-        policy = {'timeout': 1000}
+        policy = {'total_timeout': 0}
         query_id = self.as_connection.query_apply(
             "test", None, self.age_range_pred, "bin_lua",
             "mytransform", ['age', 2], policy)
