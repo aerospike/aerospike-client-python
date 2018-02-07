@@ -42,9 +42,15 @@ def create_records(client):
 def drop_records(client):
     for i in range(1, 10):
         key = ('test', 'demo', i)
-        client.remove(key)
-    client.remove(('test', None, "no_set"))
+        try:
+            client.remove(key)
+        except e.RecordNotFound:
+            pass
 
+    try:
+        client.remove(('test', None, "no_set"))
+    except e.RecordNotFound:
+        pass
 
 def add_test_udf(client):
     policy = {}
@@ -64,8 +70,8 @@ class TestQueryApply(object):
 
     # These functions will run once for this test class, and do all of the
     # required setup and teardown
-    connection_setup_functions = (add_test_udf, add_indexes_to_client)
-    connection_teardown_functions = (drop_test_udf, remove_indexes_from_client)
+    connection_setup_functions = (add_test_udf, add_indexes_to_client, create_records)
+    connection_teardown_functions = (drop_test_udf, remove_indexes_from_client, drop_records)
     age_range_pred = p.between('age', 0, 4)  # Predicate for ages between [0,5)
     no_set_key = ('test', None, "no_set")  # Key for item stored in a namespace but not in a set
 
