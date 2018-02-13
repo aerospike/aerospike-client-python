@@ -115,11 +115,8 @@ class TestListRemoveRange(object):
         key = ('test', 'demo', ''.join(map(lambda unused:
                                            random.choice(charSet),
                                            range(length))) + ".com")
-        try:
+        with pytest.raises(e.RecordNotFound):
             self.as_connection.list_remove_range(key, "abc", 0, 1)
-
-        except e.BinIncompatibleType as exception:
-            assert exception.code == 12
 
     def test_neg_list_remove_range_with_nonexistent_bin(self):
         """

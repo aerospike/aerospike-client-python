@@ -110,11 +110,9 @@ class TestListRemove(object):
         key = ('test', 'demo', ''.join(map(lambda unused:
                                            random.choice(charSet),
                                            range(length))) + ".com")
-        try:
-            self.as_connection.list_remove(key, "contact_no", 0)
 
-        except e.BinIncompatibleType as exception:
-            assert exception.code == 12
+        with pytest.raises(e.RecordNotFound):
+            self.as_connection.list_remove(key, "contact_no", 0)
 
     def test_neg_list_remove_with_nonexistent_bin(self):
         """

@@ -103,11 +103,9 @@ class TestListPop(object):
         key = ('test', 'demo', ''.join(map(lambda unused:
                                            random.choice(charSet),
                                            range(length))) + ".com")
-        try:
-            self.as_connection.list_pop(key, "abc", 0)
 
-        except e.BinIncompatibleType as exception:
-            assert exception.code == 12
+        with pytest.raises(e.RecordNotFound):
+            self.as_connection.list_pop(key, "abc", 0)
 
     def test_neg_list_pop_with_nonexistent_bin(self):
         """

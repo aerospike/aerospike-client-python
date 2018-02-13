@@ -85,17 +85,10 @@ class TestListClear(object):
         """
         Invoke list_clear() with non-existent key
         """
-        charSet = 'abcdefghijklmnopqrstuvwxyz1234567890'
-        minLength = 5
-        maxLength = 30
-        length = random.randint(minLength, maxLength)
-        key = ('test', 'demo', ''.join(map(lambda unused:
-                                           random.choice(charSet),
-                                           range(length))) + ".com")
-        try:
+
+        key = ('test', 'demo', 'test_neg_list_clear_with_nonexistent_key')
+        with pytest.raises(e.RecordNotFound):
             self.as_connection.list_clear(key, "contact_no")
-        except e.BinIncompatibleType as exception:
-            assert exception.code == 12
 
     def test_neg_list_clear_with_nonexistent_bin(self):
         """
