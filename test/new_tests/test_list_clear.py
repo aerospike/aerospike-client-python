@@ -85,7 +85,8 @@ class TestListClear(object):
         """
         Invoke list_clear() with non-existent key
         """
-
+        if self.server_version < [3, 15, 2]:
+            pytest.skip("Change of error beginning in 3.15")
         key = ('test', 'demo', 'test_neg_list_clear_with_nonexistent_key')
         with pytest.raises(e.RecordNotFound):
             self.as_connection.list_clear(key, "contact_no")

@@ -108,6 +108,8 @@ class TestListRemoveRange(object):
         """
         Invoke list_remove_range() with non-existent key
         """
+        if self.server_version < [3, 15, 2]:
+            pytest.skip("Change of error beginning in 3.15")
         charSet = 'abcdefghijklmnopqrstuvwxyz1234567890'
         minLength = 5
         maxLength = 30
