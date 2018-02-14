@@ -22,10 +22,25 @@
     except ClientError as e:
         print("Error: {0} [{1}]".format(e.msg, e.code))
 
-
 .. versionadded:: 1.0.44
 
+In Doubt Status
+---------------
+  The in doubt status of a caught exception can be checked by looking at the 5th element of its `args` tuple
 
+  .. code-block:: python
+
+      key = 'test', 'demo', 1
+      record = {'some': 'thing'}
+      try:
+        client.put(key, record)
+      except AerospikeError as exc:
+        print("The in doubt nature of the operation is: {}".format(exc.args[4])
+
+.. versionadded:: 3.0.1
+
+Exception Types
+---------------
 .. py:exception:: AerospikeError
 
     The parent class of all exceptions raised by the Aerospike client, inherits
@@ -69,9 +84,9 @@
     reserved for the specified namespace.
     Subclass of :py:exc:`~aerospike.exception.ServerError`.
 
-.. py:exception:: NoXDR
+.. py:exception:: AlwaysForbidden
 
-    XDR is not available for the cluster.
+    Operation not allowed in current configuration.
     Subclass of :py:exc:`~aerospike.exception.ServerError`.
 
 .. py:exception:: UnsupportedFeature
@@ -311,167 +326,6 @@
 
     Subclass of :py:exc:`~aerospike.exception.UDFError`.
 
-.. py:exception:: LDTError
-
-    The parent class for Large Data Type exceptions.
-    Subclass of :py:exc:`~aerospike.exception.ServerError`.
-
-    .. py:attribute:: key
-
-        The key identifying the record.
-
-    .. py:attribute:: bin
-
-        The bin containing the LDT.
-
-.. py:exception:: LargeItemNotFound
-
-    Subclass of :py:exc:`~aerospike.exception.LDTError`.
-
-.. py:exception:: LDTInternalError
-
-    Subclass of :py:exc:`~aerospike.exception.LDTError`.
-
-.. py:exception:: LDTNotFound
-
-    Subclass of :py:exc:`~aerospike.exception.LDTError`.
-
-.. py:exception:: LDTUniqueKeyError
-
-    Subclass of :py:exc:`~aerospike.exception.LDTError`.
-
-.. py:exception:: LDTInsertError
-
-    Subclass of :py:exc:`~aerospike.exception.LDTError`.
-
-.. py:exception:: LDTSearchError
-
-    Subclass of :py:exc:`~aerospike.exception.LDTError`.
-
-.. py:exception:: LDTDeleteError
-
-    Subclass of :py:exc:`~aerospike.exception.LDTError`.
-
-.. py:exception:: LDTInputParamError
-
-    Subclass of :py:exc:`~aerospike.exception.LDTError`.
-
-.. py:exception:: LDTTypeMismatch
-
-    Subclass of :py:exc:`~aerospike.exception.LDTError`.
-
-.. py:exception:: LDTBinNameNull
-
-    Subclass of :py:exc:`~aerospike.exception.LDTError`.
-
-.. py:exception:: LDTBinNameNotString
-
-    Subclass of :py:exc:`~aerospike.exception.LDTError`.
-
-.. py:exception:: LDTBinNameTooLong
-
-    Subclass of :py:exc:`~aerospike.exception.LDTError`.
-
-.. py:exception:: LDTTooManyOpenSubrecs
-
-    Subclass of :py:exc:`~aerospike.exception.LDTError`.
-
-.. py:exception:: LDTTopRecNotFound
-
-    Subclass of :py:exc:`~aerospike.exception.LDTError`.
-
-.. py:exception:: LDTSubRecNotFound
-
-    Subclass of :py:exc:`~aerospike.exception.LDTError`.
-
-.. py:exception:: LDTBinNotFound
-
-    Subclass of :py:exc:`~aerospike.exception.LDTError`.
-
-.. py:exception:: LDTBinExistsError
-
-    Subclass of :py:exc:`~aerospike.exception.LDTError`.
-
-.. py:exception:: LDTBinDamaged
-
-    Subclass of :py:exc:`~aerospike.exception.LDTError`.
-
-.. py:exception:: LDTSubrecPoolDamaged
-
-    Subclass of :py:exc:`~aerospike.exception.LDTError`.
-
-.. py:exception:: LDTSubrecDamaged
-
-    Subclass of :py:exc:`~aerospike.exception.LDTError`.
-
-.. py:exception:: LDTSubrecOpenError
-
-    Subclass of :py:exc:`~aerospike.exception.LDTError`.
-
-.. py:exception:: LDTSubrecUpdateError
-
-    Subclass of :py:exc:`~aerospike.exception.LDTError`.
-
-.. py:exception:: LDTSubrecCreateError
-
-    Subclass of :py:exc:`~aerospike.exception.LDTError`.
-
-.. py:exception:: LDTSubrecDeleteError
-
-    Subclass of :py:exc:`~aerospike.exception.LDTError`.
-
-.. py:exception:: LDTSubrecCloseError
-
-    Subclass of :py:exc:`~aerospike.exception.LDTError`.
-
-.. py:exception:: LDTToprecUpdateError
-
-    Subclass of :py:exc:`~aerospike.exception.LDTError`.
-
-.. py:exception:: LDTToprecCreateError
-
-    Subclass of :py:exc:`~aerospike.exception.LDTError`.
-
-.. py:exception:: LDTFilterFunctionBad
-
-    Subclass of :py:exc:`~aerospike.exception.LDTError`.
-
-.. py:exception:: LDTFilterFunctionNotFound
-
-    Subclass of :py:exc:`~aerospike.exception.LDTError`.
-
-.. py:exception:: LDTKeyFunctionBad
-
-    Subclass of :py:exc:`~aerospike.exception.LDTError`.
-
-.. py:exception:: LDTKeyFunctionNotFound
-
-    Subclass of :py:exc:`~aerospike.exception.LDTError`.
-
-.. py:exception:: LDTTransFunctionBad
-
-    Subclass of :py:exc:`~aerospike.exception.LDTError`.
-
-.. py:exception:: LDTTransFunctionNotFound
-
-    Subclass of :py:exc:`~aerospike.exception.LDTError`.
-
-.. py:exception:: LDTUntransFunctionBad
-
-    Subclass of :py:exc:`~aerospike.exception.LDTError`.
-
-.. py:exception:: LDTUntransFunctionNotFound
-
-    Subclass of :py:exc:`~aerospike.exception.LDTError`.
-
-.. py:exception:: LDTUserModuleBad
-
-    Subclass of :py:exc:`~aerospike.exception.LDTError`.
-
-.. py:exception:: LDTUserModuleNotFound
-
-    Subclass of :py:exc:`~aerospike.exception.LDTError`.
-
 
 Exception Hierarchy
 -------------------
@@ -486,7 +340,7 @@ Exception Hierarchy
      +-- ServerError (1)
           +-- InvalidRequest (4)
           +-- ServerFull (8)
-          +-- NoXDR (10)
+          +-- AlwaysForbidden (10)
           +-- UnsupportedFeature (16)
           +-- DeviceOverload (18)
           +-- NamespaceNotFound (20)
@@ -533,45 +387,5 @@ Exception Hierarchy
           |    +-- InvalidPrivilege (72)
           |    +-- NotAuthenticated (80)
           +-- UDFError (*)
-          |    +-- UDFNotFound (1301)
-          |    +-- LuaFileNotFound (1302)
-          +-- LDTError (*)
-               +-- LargeItemNotFound (125)
-               +-- LDTInternalError (1400)
-               +-- LDTNotFound (1401)
-               +-- LDTUniqueKeyError (1402)
-               +-- LDTInsertError (1403)
-               +-- LDTSearchError (1404)
-               +-- LDTDeleteError (1405)
-               +-- LDTInputParamError (1409)
-               +-- LDTTypeMismatch (1410)
-               +-- LDTBinNameNull (1411)
-               +-- LDTBinNameNotString (1412)
-               +-- LDTBinNameTooLong (1413)
-               +-- LDTTooManyOpenSubrecs (1414)
-               +-- LDTTopRecNotFound (1415)
-               +-- LDTSubRecNotFound (1416)
-               +-- LDTBinNotFound (1417)
-               +-- LDTBinExistsError (1418)
-               +-- LDTBinDamaged (1419)
-               +-- LDTSubrecPoolDamaged (1420)
-               +-- LDTSubrecDamaged (1421)
-               +-- LDTSubrecOpenError (1422)
-               +-- LDTSubrecUpdateError (1423)
-               +-- LDTSubrecCreateError (1424)
-               +-- LDTSubrecDeleteError (1425)
-               +-- LDTSubrecCloseError (1426)
-               +-- LDTToprecUpdateError (1427)
-               +-- LDTToprecCreateError (1428)
-               +-- LDTFilterFunctionBad (1430)
-               +-- LDTFilterFunctionNotFound (1431)
-               +-- LDTKeyFunctionBad (1432)
-               +-- LDTKeyFunctionNotFound (1433)
-               +-- LDTTransFunctionBad (1434)
-               +-- LDTTransFunctionNotFound (1435)
-               +-- LDTUntransFunctionBad (1436)
-               +-- LDTUntransFunctionNotFound (1437)
-               +-- LDTUserModuleBad (1438)
-               +-- LDTUserModuleNotFound (1439)
-
-
+               +-- UDFNotFound (1301)
+               +-- LuaFileNotFound (1302)
