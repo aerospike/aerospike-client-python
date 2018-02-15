@@ -36,7 +36,10 @@ class TestInfoNode(object):
         self.host_name = self.connection_config['hosts'][0]
         try:
             host_addrinfo = socket.getaddrinfo(self.host_name[0], self.host_name[1], socket.AF_INET)
-            self.host_name = host_addrinfo[0][4]
+            if len(self.host_name) == 3:
+                self.host_name = (host_addrinfo[0][4][0], host_addrinfo[0][4][0], self.host_name[2])
+            else:
+                self.host_name = host_addrinfo[0][4]
         except socket.gaierror:
             self.pytest_skip = True
         self.as_connection.put(key, rec)
@@ -145,12 +148,12 @@ class TestInfoNode(object):
         if self.pytest_skip:
             pytest.xfail()
         if TestBaseClass.tls_in_use():
-            host = (as_unicode(self.connection_config['hosts'][0][0]),
-                    self.connection_config['hosts'][0][1],
-                    as_unicode(self.connection_config['hosts'][0][2]))
+            host = (as_unicode(self.host_name[0]),
+                    self.host_name[1],
+                    as_unicode(self.host_name[2]))
         else:
-            host = (as_unicode(self.connection_config['hosts'][0][0]),
-                    self.connection_config['hosts'][0][1])
+            host = (as_unicode(self.host_name[0]),
+                    self.host_name[1])
         policy = {
             'timeout': 1000
         }
