@@ -28,13 +28,37 @@ def add_indexes_to_client(client):
         pass
 
 
+def create_records(client):
+    for i in range(1, 10):
+        key = ('test', 'demo', i)
+        rec = {'name': str(i), 'age': i, 'val': i}
+        client.put(key, rec)
+
+    key = ('test', None, "no_set")
+    rec = {'name': 'no_set_name', 'age': 0}
+    client.put(key, rec)
+
+
+def drop_records(client):
+    for i in range(1, 10):
+        key = ('test', 'demo', i)
+        try:
+            client.remove(key)
+        except e.RecordNotFound:
+            pass
+
+    try:
+        client.remove(('test', None, "no_set"))
+    except e.RecordNotFound:
+        pass
+
 def add_test_udf(client):
     policy = {}
-    client.udf_put(u"bin_lua.lua", 0, policy)
+    client.udf_put(u"query_apply.lua", 0, policy)
 
 
 def drop_test_udf(client):
-    client.udf_remove("bin_lua.lua")
+    client.udf_remove("query_apply.lua")
 
 
 def remove_indexes_from_client(client):
@@ -46,31 +70,15 @@ class TestQueryApply(object):
 
     # These functions will run once for this test class, and do all of the
     # required setup and teardown
-    connection_setup_functions = (add_test_udf, add_indexes_to_client)
-    connection_teardown_functions = (drop_test_udf, remove_indexes_from_client)
-    age_range_pred = p.between('age', 0, 5)  # Predicate for ages between [0,5)
+    connection_setup_functions = (add_test_udf, add_indexes_to_client, create_records)
+    connection_teardown_functions = (drop_test_udf, remove_indexes_from_client, drop_records)
+    age_range_pred = p.between('age', 0, 4)  # Predicate for ages between [0,5)
+    no_set_key = ('test', None, "no_set")  # Key for item stored in a namespace but not in a set
 
     @pytest.fixture(autouse=True)
     def setup(self, request, connection_with_config_funcs):
         client = connection_with_config_funcs
-        for i in range(1, 5):
-            key = ('test', 'demo', i)
-            rec = {'name': 'name%s' % (str(i)), 'age': i}
-            client.put(key, rec)
-
-        key = ('test', None, "no_set")
-        self.no_set_key = key
-        rec = {'name': 'no_set_name', 'age': 0}
-        client.put(key, rec)
-
-        def teardown():
-            for i in range(1, 5):
-                key = ('test', 'demo', i)
-                client.remove(key)
-
-            client.remove(self.no_set_key)
-
-        request.addfinalizer(teardown)
+        create_records(client)
 
     def test_query_apply_with_no_parameters(self):
         """
@@ -80,85 +88,43 @@ class TestQueryApply(object):
         with pytest.raises(TypeError) as typeError:
             self.as_connection.query_apply()
 
-    def test_query_apply_with_correct_parameters(self):
+    def test_query_apply_with_correct_parameters_no_policy(self):
         """
         Invoke query_apply() with correct parameters.
         It should apply the proper UDF, and
         """
         query_id = self.as_connection.query_apply(
-            "test", "demo", self.age_range_pred, "bin_lua",
-            "mytransform", ['age', 2])
+            "test", "demo", self.age_range_pred, "query_apply",
+            "mark_as_applied", ['name', 2])
 
-        time.sleep(0.1)
-        while True:
-            response = self.as_connection.job_info(
-                query_id, aerospike.JOB_QUERY)
-            if response['status'] != aerospike.JOB_STATUS_INPROGRESS:
-                break
-            time.sleep(0.1)
+        self._wait_for_query_complete(query_id)
 
-        for i in range(1, 5):
-            key = ('test', 'demo', i)
-            _, _, bins = self.as_connection.get(key)
-
-            assert bins['age'] == i + 2
-
-        _, _, bins = self.as_connection.get(self.no_set_key)
-        assert bins['age'] == 0
+        self._correct_items_have_been_applied()
 
     def test_query_apply_with_correct_policy(self):
         """
         Invoke query_apply() with correct policy
         """
-        policy = {'timeout': 1000}
+        policy = {'total_timeout': 0}
         query_id = self.as_connection.query_apply(
-            "test", "demo", self.age_range_pred, "bin_lua",
-            "mytransform", ['age', 2], policy)
+            "test", "demo", self.age_range_pred, "query_apply",
+            "mark_as_applied", ['name', 2], policy)
 
-        time.sleep(0.1)
-        while True:
-            response = self.as_connection.job_info(
-                query_id, aerospike.JOB_QUERY)
-            if response['status'] != aerospike.JOB_STATUS_INPROGRESS:
-                break
-            time.sleep(0.1)
+        self._wait_for_query_complete(query_id)
+        self._correct_items_have_been_applied()
 
-        for i in range(1, 5):
-            key = ('test', 'demo', i)
-            _, _, bins = self.as_connection.get(key)
-            assert bins['age'] == i + 2
-
-        _, _, bins = self.as_connection.get(self.no_set_key)
-        assert bins['age'] == 0
-
-    def test_query_apply_with_none_set(self):
+    def test_query_apply_with_set_argument_as_none(self):
         """
         Invoke query_apply() with correct policy,
         Should casuse no changes as the
         """
-        policy = {'timeout': 1000}
+        policy = {'total_timeout': 0}
         query_id = self.as_connection.query_apply(
-            "test", None, self.age_range_pred, "bin_lua",
-            "mytransform", ['age', 2], policy)
+            "test", None, self.age_range_pred, "query_apply",
+            "mark_as_applied", ['name', 2], policy)
 
-        time.sleep(0.1)
-        while True:
-            response = self.as_connection.job_info(
-                query_id, aerospike.JOB_QUERY)
-            if response['status'] != aerospike.JOB_STATUS_INPROGRESS:
-                break
-            time.sleep(0.1)
-
-        # Since this query passes no set, the records stored in a set should
-        # not be affected
-        for i in range(1, 5):
-            key = ('test', 'demo', i)
-            _, _, bins = self.as_connection.get(key)
-            assert bins['age'] == i
-
-        # the setless record should have been changed
-        _, _, bins = self.as_connection.get(self.no_set_key)
-        assert bins['age'] == 2
+        self._wait_for_query_complete(query_id)
+        self._items_without_set_have_been_applied()
 
     def test_query_apply_with_incorrect_policy(self):
         """
@@ -168,25 +134,19 @@ class TestQueryApply(object):
             'timeout': 0.5
         }
 
-        with pytest.raises(e.ParamError) as err_info:
+        with pytest.raises(e.ParamError):
             self.as_connection.query_apply(
-                "test", "demo", self.age_range_pred, "bin_lua",
-                "mytransform", ['age', 2], policy)
+                "test", "demo", self.age_range_pred, "query_apply",
+                "mark_as_applied", ['name', 2], policy)
 
-        err_code = err_info.value.code
-        assert err_code == AerospikeStatus.AEROSPIKE_ERR_PARAM
-
-    def test_query_apply_with_incorrect_ns_set(self):
+    def test_query_apply_with_nonexistent_set(self):
         """
         Invoke query_apply() with incorrect ns and set
         """
-        with pytest.raises(e.NamespaceNotFound) as err_info:
+        with pytest.raises(e.NamespaceNotFound):
             self.as_connection.query_apply(
-                "test1", "demo1", self.age_range_pred, "bin_lua",
-                "mytransform", ['age', 2])
-
-        err_code = err_info.value.code
-        assert err_code == AerospikeStatus.AEROSPIKE_ERR_NAMESPACE_NOT_FOUND
+                "test1", "demo1", self.age_range_pred, "query_apply",
+                "mark_as_applied", ['name', 2])
 
     def test_query_apply_with_incorrect_module_name(self):
         """
@@ -195,21 +155,11 @@ class TestQueryApply(object):
         not call a function
         """
         query_id = self.as_connection.query_apply(
-            "test", "demo", self.age_range_pred, "bin_lua_incorrect",
-            "mytransform", ['age', 2])
+            "test", "demo", self.age_range_pred, "query_apply_incorrect",
+            "mark_as_applied", ['name', 2])
 
-        time.sleep(0.1)
-        while True:
-            response = self.as_connection.job_info(
-                query_id, aerospike.JOB_QUERY)
-            if response['status'] != aerospike.JOB_STATUS_INPROGRESS:
-                break
-            time.sleep(0.1)
-
-        for i in range(1, 5):
-            key = ('test', 'demo', i)
-            _, _, bins = self.as_connection.get(key)
-            assert bins['age'] == i
+        self._wait_for_query_complete(query_id)
+        self._no_items_have_been_applied()
 
     def test_query_apply_with_incorrect_function_name(self):
         """
@@ -217,82 +167,58 @@ class TestQueryApply(object):
         does not invoke a different function
         """
         query_id = self.as_connection.query_apply(
-            "test", "demo", self.age_range_pred, "bin_lua",
-            "mytransform_incorrect", ['age', 2])
+            "test", "demo", self.age_range_pred, "query_apply",
+            "mytransform_incorrect", ['name', 2])
 
-        time.sleep(0.1)
-        while True:
-            response = self.as_connection.job_info(
-                query_id, aerospike.JOB_QUERY)
-            if response['status'] != aerospike.JOB_STATUS_INPROGRESS:
-                break
-            time.sleep(0.1)
-
-        for i in range(1, 5):
-            key = ('test', 'demo', i)
-            _, _, bins = self.as_connection.get(key)
-            assert bins['age'] == i
+        self._wait_for_query_complete(query_id)
+        self._no_items_have_been_applied()
 
     def test_query_apply_with_ns_set_none(self):
         """
         Invoke query_apply() with ns and set as None
         """
-        with pytest.raises(TypeError) as typeError:
+        with pytest.raises(TypeError):
             self.as_connection.query_apply(None, None, self.age_range_pred,
-                                           "bin_lua", "mytransform",
-                                           ['age', 2])
+                                           "query_apply", "mark_as_applied",
+                                           ['name', 2])
 
-        assert "query_apply() argument 1 must be str" in str(typeError.value)
-
-    def test_query_apply_with_module_function_none(self):
+    def test_query_apply_with_module_argument_value_is_none(self):
         """
         Invoke query_apply() with None module function
         """
 
-        with pytest.raises(e.ParamError) as err_info:
+        with pytest.raises(e.ParamError):
             self.as_connection.query_apply(
-                "test", "demo", self.age_range_pred, None, None, ['age', 2])
+                "test", "demo", self.age_range_pred, None, None, ['name', 2])
 
-        err_code = err_info.value.code
-        assert err_code == AerospikeStatus.AEROSPIKE_ERR_PARAM
-
-    def test_query_apply_with_extra_argument(self):
+    def test_query_apply_with_too_many_arguments(self):
         """
         Invoke query_apply() with extra argument
         """
         policy = {'timeout': 1000}
-        with pytest.raises(TypeError) as typeError:
+        with pytest.raises(TypeError):
             self.as_connection.query_apply(
-                "test", "demo", self.age_range_pred, "bin_lua",
-                "mytransform_incorrect", ['age', 2], policy, "")
+                "test", "demo", self.age_range_pred, "query_apply",
+                "mytransform_incorrect", ['name', 2], policy, "")
 
-        assert "query_apply() takes at most 7 arguments (8 given)" in str(
-            typeError.value)
-
-    def test_query_apply_with_argument_is_string(self):
+    def test_query_apply_with_udf_arguments_as_string(self):
         """
         Invoke query_apply() with arguments as string
         """
-        with pytest.raises(e.ParamError) as err_info:
+        with pytest.raises(e.ParamError):
             self.as_connection.query_apply("test", "demo", self.age_range_pred,
-                                           "bin_lua", "mytransform", "")
+                                           "query_apply", "mark_as_applied", "")
 
-        err_code = err_info.value.code
-        assert err_code == AerospikeStatus.AEROSPIKE_ERR_PARAM
-
-    def test_query_apply_with_argument_is_none(self):
+    def test_query_apply_with_udf_argument_as_none(self):
         """
         Invoke query_apply() with arguments as None
         """
-        with pytest.raises(e.ParamError) as err_info:
+        with pytest.raises(e.ParamError):
             self.as_connection.query_apply(
                 "test", "demo", self.age_range_pred,
-                "bin_lua", "mytransform", None)
+                "query_apply", "mark_as_applied", None)
 
-        err_code = err_info.value.code
-        assert err_code == AerospikeStatus.AEROSPIKE_ERR_PARAM
-
-    def test_query_apply_with_extra_call_to_lua(self):
+    def test_query_apply_with_extra_parameter_to_lua_function(self):
         """
         Invoke query_apply() with extra call to lua
         test that passing an extra argument to a udf does
@@ -300,96 +226,37 @@ class TestQueryApply(object):
         """
         query_id = self.as_connection.query_apply(
             "test", "demo", self.age_range_pred,
-            "bin_lua", "mytransform", ['age', 2, 3])
+            "query_apply", "mark_as_applied", ['name', 2, 3])
 
         # time.sleep(2)
 
-        time.sleep(0.1)
-        while True:
-            response = self.as_connection.job_info(
-                query_id, aerospike.JOB_QUERY)
-            if response['status'] != aerospike.JOB_STATUS_INPROGRESS:
-                break
-            time.sleep(0.1)
+        self._wait_for_query_complete(query_id)
+        self._correct_items_have_been_applied()
 
-        for i in range(1, 5):
-            key = ('test', 'demo', i)
-            _, _, bins = self.as_connection.get(key)
-            assert bins['age'] == i + 2
-
-    def test_query_apply_with_extra_parameter_in_lua(self):
+    def test_query_apply_with_missing_parameter_to_function(self):
         """
         Invoke query_apply() with a missing argument
         to a lua function does not cause an error
         """
         query_id = self.as_connection.query_apply(
             "test", "demo", self.age_range_pred,
-            "bin_lua", "mytransformextra", ['age', 2])
+            "query_apply", "mark_as_applied_three_arg", ['name', 2])
 
         # time.sleep(2)
 
-        time.sleep(0.1)
-        while True:
-            response = self.as_connection.job_info(
-                query_id, aerospike.JOB_QUERY)
-            if response['status'] != aerospike.JOB_STATUS_INPROGRESS:
-                break
-            time.sleep(0.1)
+        self._wait_for_query_complete(query_id)
+        self._correct_items_have_been_applied()
 
-        for i in range(1, 5):
-            key = ('test', 'demo', i)
-            _, _, bins = self.as_connection.get(key)
-            assert bins['age'] == i + 2
-
-    def test_query_apply_with_less_parameter_in_lua(self):
-        """
-        Invoke query_apply() with less parameter in lua
-        this verifies that passing 3 arguments to a lua
-        function which expects 2, will cause an undefined int
-        to be treated as 0, and not crash.
-        """
-        query_id = self.as_connection.query_apply(
-            "test", "demo", self.age_range_pred,
-            "bin_lua", "mytransformless", ['age', 2])
-
-        # time.sleep(2)
-
-        time.sleep(0.1)
-        while True:
-            response = self.as_connection.job_info(
-                query_id, aerospike.JOB_QUERY)
-            if response['status'] != aerospike.JOB_STATUS_INPROGRESS:
-                break
-            time.sleep(0.1)
-
-        for i in range(1, 5):
-            key = ('test', 'demo', i)
-            _, _, bins = self.as_connection.get(key)
-            if bins['age'] != i:
-                assert True is False
-            else:
-                assert True is True
-
-    def test_query_apply_unicode_input(self):
+    def test_query_apply_unicode_literal_for_strings(self):
         """
         Invoke query_apply() with unicode udf
         """
         query_id = self.as_connection.query_apply(
-            "test", "demo", self.age_range_pred, u"bin_lua",
-            u"mytransform", ['age', 2])
+            "test", "demo", self.age_range_pred, u"query_apply",
+            u"mark_as_applied", ['name', 2])
 
-        time.sleep(0.1)
-        while True:
-            response = self.as_connection.job_info(
-                query_id, aerospike.JOB_QUERY)
-            if response['status'] != aerospike.JOB_STATUS_INPROGRESS:
-                break
-            time.sleep(0.1)
-
-        for i in range(1, 5):
-            key = ('test', 'demo', i)
-            _, _, bins = self.as_connection.get(key)
-            assert bins['age'] == i + 2
+        self._wait_for_query_complete(query_id)
+        self._correct_items_have_been_applied()
 
     def test_query_apply_with_correct_parameters_without_connection(self):
         """
@@ -400,31 +267,12 @@ class TestQueryApply(object):
 
         with pytest.raises(e.ClusterError) as err_info:
             client1.query_apply("test", "demo", self.age_range_pred,
-                                "bin_lua", "mytransform", ['age', 2])
+                                "query_apply", "mark_as_applied", ['name', 2])
 
         err_code = err_info.value.code
 
         assert err_code == AerospikeStatus.AEROSPIKE_CLUSTER_ERROR
 
-    @pytest.mark.skip(reason="This isn't a test for query_apply," +
-                             " but for job_info")
-    def test_job_info_with_incorrect_module_type(self):
-        """
-        Invoke query_apply() with incorrect module type
-        """
-        query_id = self.as_connection.query_apply(
-            "test", "demo", self.age_range_pred, "bin_lua",
-            "mytransform", ['age', 2])
-
-        with pytest.raises(e.ParamError) as err_info:
-            time.sleep(0.1)
-            self.as_connection.job_info(query_id, "aggregate")
-        err_code = err_info.value.code
-
-        assert err_code == AerospikeStatus.AEROSPIKE_ERR_PARAM
-
-    # @pytest.mark.xfail(reason="Passing an invalid predicate currently works " +
-    #                           " or raises a System Error")
     @pytest.mark.parametrize(
         "predicate",
         (
@@ -436,12 +284,53 @@ class TestQueryApply(object):
             (1, 1, 'bin')  # start of a valid predicate
         )
     )
-    def test_invalid_predicate(self, predicate):
+    def test_invalid_predicate_tuple(self, predicate):
 
         with pytest.raises(e.ParamError) as err_info:
             query_id = self.as_connection.query_apply(
-                "test", "demo", predicate, "bin_lua",
-                "mytransform", ['age', 2])
+                "test", "demo", predicate, "query_apply",
+                "mark_as_applied", ['name', 2])
 
         err_code = err_info.value.code
         assert err_code == AerospikeStatus.AEROSPIKE_ERR_PARAM
+
+    def _correct_items_have_been_applied(self):
+        for i in range(1, 5):
+            key = ('test', 'demo', i)
+            _, _, bins = self.as_connection.get(key)
+            assert bins['name'] == 'aerospike'
+
+        for i in range(5, 10):
+            key = ('test', 'demo', i)
+            _, _, bins = self.as_connection.get(key)
+            assert bins['name'] != 'aerospike'
+
+        _, _, bins = self.as_connection.get(self.no_set_key)
+        assert bins['name'] != 'aerospike'
+
+    def _items_without_set_have_been_applied(self):
+        for i in range(1, 10):
+            key = ('test', 'demo', i)
+            _, _, bins = self.as_connection.get(key)
+            assert bins['name'] != 'aerospike'
+
+        _, _, bins = self.as_connection.get(self.no_set_key)
+        assert bins['name'] == 'aerospike'
+
+    def _wait_for_query_complete(self, query_id):
+        while True:
+            response = self.as_connection.job_info(
+                query_id, aerospike.JOB_QUERY)
+            if response['status'] != aerospike.JOB_STATUS_INPROGRESS:
+                return
+            time.sleep(0.1)
+
+    def _no_items_have_been_applied(self):
+
+        for i in range(1, 10):
+            key = ('test', 'demo', i)
+            _, _, bins = self.as_connection.get(key)
+            assert bins['name'] != 'aerospike'
+
+        _, _, bins = self.as_connection.get(self.no_set_key)
+        assert bins['name'] != 'aerospike'

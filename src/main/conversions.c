@@ -51,6 +51,7 @@
 #define PY_EXCEPTION_MSG 1
 #define PY_EXCEPTION_FILE 2
 #define PY_EXCEPTION_LINE 3
+#define AS_PY_EXCEPTION_IN_DOUBT 4
 
 as_status as_udf_file_to_pyobject( as_error *err, as_udf_file * entry, PyObject ** py_file )
 {
@@ -1552,11 +1553,15 @@ bool error_to_pyobject(const as_error * err, PyObject ** obj)
 	PyObject * py_code = PyLong_FromLongLong(err->code);
 	PyObject * py_message = PyString_FromString(err->message);
 
-	PyObject * py_err = PyTuple_New(4);
+	PyObject* py_in_doubt = err->in_doubt ? Py_True : Py_False;
+	Py_INCREF(py_in_doubt);
+
+	PyObject * py_err = PyTuple_New(5);
 	PyTuple_SetItem(py_err, PY_EXCEPTION_CODE, py_code);
 	PyTuple_SetItem(py_err, PY_EXCEPTION_MSG, py_message);
 	PyTuple_SetItem(py_err, PY_EXCEPTION_FILE, py_file);
 	PyTuple_SetItem(py_err, PY_EXCEPTION_LINE, py_line);
+	PyTuple_SetItem(py_err, AS_PY_EXCEPTION_IN_DOUBT, py_in_doubt);
 	*obj = py_err;
 	return true;
 }

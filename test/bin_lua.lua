@@ -1,4 +1,5 @@
 function mytransform(rec, bin, offset)
+    info("my transform: %s", tostring(record.digest(rec)))
     rec['age'] = rec['age'] + offset
     aerospike:update(rec)
 end

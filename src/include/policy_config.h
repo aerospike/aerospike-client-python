@@ -24,6 +24,13 @@ as_status set_optional_uint32_property(uint32_t* target_ptr, PyObject* policy_di
 as_status set_optional_bool_property(bool* target_ptr, PyObject* py_policy, const char* name);
 as_status set_base_policy(as_policy_base* base, PyObject* py_policy);
 
+as_status set_optional_key(as_policy_key* target_ptr, PyObject* py_policy, const char* name);
+as_status set_optional_replica(as_policy_replica* target_ptr, PyObject* py_policy, const char* name);
+as_status set_optional_commit_level(as_policy_commit_level* target_ptr, PyObject* py_policy, const char* name);
+as_status set_optional_consistency_level(as_policy_consistency_level* target_ptr, PyObject* py_policy, const char* name);
+as_status set_optional_gen(as_policy_gen* target_ptr, PyObject* py_policy, const char* name);
+as_status set_optional_exists(as_policy_exists* target_ptr, PyObject* py_policy, const char* name);
+
 as_status set_subpolicies(as_config* config, PyObject* py_policies);
 as_status set_read_policy(as_policy_read* read_policy, PyObject* py_policy);
 as_status set_write_policy(as_policy_write* write_policy, PyObject* py_policy);

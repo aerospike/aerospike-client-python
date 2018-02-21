@@ -2,6 +2,7 @@
 import pytest
 import time
 import sys
+import socket
 
 from .test_base_class import TestBaseClass
 from .as_status_codes import AerospikeStatus
@@ -26,12 +27,21 @@ def as_unicode(string):
 @pytest.mark.xfail(TestBaseClass.temporary_xfail(), reason="xfail variable set")
 @pytest.mark.usefixtures("as_connection", "connection_config")
 class TestInfoNode(object):
+    pytest_skip = False
 
     @pytest.fixture(autouse=True)
     def setup(self, request, as_connection, connection_config):
         key = ('test', 'demo', 'list_key')
         rec = {'names': ['John', 'Marlen', 'Steve']}
         self.host_name = self.connection_config['hosts'][0]
+        try:
+            host_addrinfo = socket.getaddrinfo(self.host_name[0], self.host_name[1], socket.AF_INET)
+            if len(self.host_name) == 3:
+                self.host_name = (host_addrinfo[0][4][0], host_addrinfo[0][4][0], self.host_name[2])
+            else:
+                self.host_name = host_addrinfo[0][4]
+        except socket.gaierror:
+            self.pytest_skip = True
         self.as_connection.put(key, rec)
 
         yield
@@ -42,6 +52,8 @@ class TestInfoNode(object):
         """
         Test info with correct arguments
         """
+        if self.pytest_skip:
+            pytest.xfail()
         response = self.as_connection.info_node(
             'bins', self.host_name)
 
@@ -52,7 +64,8 @@ class TestInfoNode(object):
         """
         Test info with 'namespaces' as the command
         """
-
+        if self.pytest_skip:
+            pytest.xfail()
         response = self.as_connection.info_node(
             'namespaces', self.host_name)
 
@@ -62,7 +75,8 @@ class TestInfoNode(object):
         """
         Test info with 'sets' as the command
         """
-
+        if self.pytest_skip:
+            pytest.xfail()
         response = self.as_connection.info_node(
             'sets', self.host_name)
 
@@ -72,6 +86,8 @@ class TestInfoNode(object):
         """
         Test creating an index through an info call
         """
+        if self.pytest_skip:
+            pytest.xfail()
         try:
             self.as_connection.index_remove('test', 'names_test_index')
             time.sleep(2)
@@ -92,7 +108,8 @@ class TestInfoNode(object):
         """
         Test info call with bins as command and a timeout policy
         """
-
+        if self.pytest_skip:
+            pytest.xfail()
         host = self.host_name
         policy = {'timeout': 1000}
         response = self.as_connection.info_node('bins', host, policy)
@@ -103,7 +120,8 @@ class TestInfoNode(object):
         """
         Test info with correct host
         """
-
+        if self.pytest_skip:
+            pytest.xfail()
         host = self.host_name
         response = self.as_connection.info_node('bins', host)
 
@@ -113,6 +131,8 @@ class TestInfoNode(object):
         """
         Test info with all parameters
         """
+        if self.pytest_skip:
+            pytest.xfail()
         policy = {
             'timeout': 1000
         }
@@ -125,13 +145,15 @@ class TestInfoNode(object):
         """
         Test info with all parameters
         """
+        if self.pytest_skip:
+            pytest.xfail()
         if TestBaseClass.tls_in_use():
-            host = (as_unicode(self.connection_config['hosts'][0][0]),
-                    self.connection_config['hosts'][0][1],
-                    as_unicode(self.connection_config['hosts'][0][2]))
+            host = (as_unicode(self.host_name[0]),
+                    self.host_name[1],
+                    as_unicode(self.host_name[2]))
         else:
-            host = (as_unicode(self.connection_config['hosts'][0][0]),
-                    self.connection_config['hosts'][0][1])
+            host = (as_unicode(self.host_name[0]),
+                    self.host_name[1])
         policy = {
             'timeout': 1000
         }

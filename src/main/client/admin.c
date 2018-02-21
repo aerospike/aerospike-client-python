@@ -830,7 +830,7 @@ PyObject * AerospikeClient_Admin_Query_Users( AerospikeClient * self, PyObject *
 	aerospike_query_users(self->as, &err, admin_policy_p, &users, &users_size);
 	Py_END_ALLOW_THREADS
 	if (err.code != AEROSPIKE_OK) {
-		as_error_update(&err, err.code, err.message);
+		as_error_update(&err, err.code, NULL);
 		goto CLEANUP;
 	}
 
