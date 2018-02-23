@@ -26,7 +26,7 @@
 
 In Doubt Status
 ---------------
-  The in doubt status of a caught exception can be checked by looking at the 5th element of its `args` tuple
+  The in doubt status of a caught AerospikeError can be checked by looking at the 5th element of its `args` tuple
 
   .. code-block:: python
 
@@ -37,7 +37,7 @@ In Doubt Status
       except AerospikeError as exc:
         print("The in doubt nature of the operation is: {}".format(exc.args[4])
 
-.. versionadded:: 3.0.1
+.. versionadded:: 3.1.0
 
 Exception Types
 ---------------

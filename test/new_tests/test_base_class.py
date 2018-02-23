@@ -52,49 +52,50 @@ class TestBaseClass(object):
         config = configparser.ConfigParser()
         config.read("config.conf")
 
-        if (config.has_option('tls', 'enable') and (
-           config.getboolean('tls', 'enable'))):
+        if (config.has_option('tls', 'enable') and
+            (config.get('tls', 'enable').strip() != "") and
+                (config.getboolean('tls', 'enable', fallback=False))):
             TestBaseClass.using_tls = True
             tls_dict['enable'] = True
 
             if config.has_option('tls', 'cafile'):
-                if config.get('tls', 'cafile') != '':
+                if config.get('tls', 'cafile').strip() != '':
                     tls_dict['cafile'] = config.get('tls', 'cafile')
 
             if config.has_option('tls', 'capath'):
-                if config.get('tls', 'capath') != '':
+                if config.get('tls', 'capath').strip() != '':
                     tls_dict['capath'] = config.get('tls', 'capath')
 
             if config.has_option('tls', 'protocols'):
-                if config.get('tls', 'protocols') != '':
+                if config.get('tls', 'protocols').strip() != '':
                     tls_dict['protocols'] = config.get('tls', 'protocols')
 
             if config.has_option('tls', 'cipher_suite'):
-                if config.get('tls', 'cipher_suite') != '':
+                if config.get('tls', 'cipher_suite').strip() != '':
                     tls_dict['cipher_suite'] = config.get('tls', 'cipher_suite')
 
             if config.has_option('tls', 'keyfile'):
-                if config.get('tls', 'keyfile') != '':
+                if config.get('tls', 'keyfile').strip() != '':
                     tls_dict['keyfile'] = config.get('tls', 'keyfile')
 
             if config.has_option('tls', 'cert_blacklist'):
-                if config.get('tls', 'cert_blacklist') != '':
+                if config.get('tls', 'cert_blacklist').strip() != '':
                     tls_dict['cert_blacklist'] = config.get('tls', 'cert_blacklist')
 
             if config.has_option('tls', 'certfile'):
-                if config.get('tls', 'certfile') != '':
+                if config.get('tls', 'certfile').strip() != '':
                     tls_dict['certfile'] = config.get('tls', 'certfile')
 
             if config.has_option('tls', 'crl_check'):
-                if config.get('tls', 'crl_check') == 'True':
+                if config.get('tls', 'crl_check').strip() == 'True':
                     tls_dict['crl_check'] = True
 
             if config.has_option('tls', 'crl_check_all'):
-                if config.get('tls', 'crl_check_all') == 'True':
+                if config.get('tls', 'crl_check_all').strip() == 'True':
                     tls_dict['crl_check_all'] = True
 
             if config.has_option('tls', 'log_session_info'):
-                if config.get('tls', 'log_session_info') == 'True':
+                if config.get('tls', 'log_session_info').strip() == 'True':
                     tls_dict['log_session_info'] = True
 
             if config.has_option('tls', 'max_socket_idle'):
