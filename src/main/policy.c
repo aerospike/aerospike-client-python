@@ -655,6 +655,7 @@ as_status pyobject_to_policy_operate(as_error * err, PyObject * py_policy,
 	POLICY_SET_FIELD(durable_delete, bool);
 	POLICY_SET_FIELD(deserialize, bool);
 	POLICY_SET_FIELD(linearize_read, bool);
+	POLICY_SET_FIELD(exists, as_policy_exists);
 
 	// Update the policy
 	POLICY_UPDATE();

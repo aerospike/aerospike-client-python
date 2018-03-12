@@ -1093,6 +1093,10 @@ Specifies the behavior for whether keys or digests should be sent to the cluster
 
 Specifies which partition replica to read from.
 
+.. data:: POLICY_REPLICA_SEQUENCE
+
+    Always try node containing master partition first. If connection fails and `retry_on_timeout` is true, try node containing prole partition. Currently restricted to master and one prole.
+
 .. data:: POLICY_REPLICA_MASTER
 
     Read from the partition master replica node
