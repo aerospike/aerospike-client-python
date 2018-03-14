@@ -2657,10 +2657,15 @@ Write Policies
             |
             | Default: ``1000``
         * **key** one of the ``aerospike.POLICY_KEY_*`` values such as :data:`aerospike.POLICY_KEY_DIGEST`
+            | Default: ``aerospike.POLICY_KEY_DIGEST``
         * **exists** one of the ``aerospike.POLICY_EXISTS_*`` values such as :data:`aerospike.POLICY_EXISTS_CREATE`
+            | Default: ```aerospike.POLICY_GEN_IGNORE``
         * **gen** one of the ``aerospike.POLICY_GEN_*`` values such as :data:`aerospike.POLICY_GEN_IGNORE`
+            | Default: ``aerospike.POLICY_GEN_IGNORE``
         * **commit_level** one of the ``aerospike.POLICY_COMMIT_LEVEL_*`` values such as :data:`aerospike.POLICY_COMMIT_LEVEL_ALL`
+            | Default: ``aerospike.POLICY_COMMIT_LEVEL_ALL``
         * **durable_delete** boolean value: True to perform durable delete (requires Enterprise server version >= 3.10)
+            | Default: ``False``
 
 .. _aerospike_read_policies:
 
@@ -2711,8 +2716,11 @@ Read Policies
             | Force reads to be linearized for server namespaces that support CP mode. Setting this policy to ``True`` requires an Enterprise server with version 4.0.0 or greater.
             | Default: ``False``
         * **key** one of the ``aerospike.POLICY_KEY_*`` values such as :data:`aerospike.POLICY_KEY_DIGEST`
+            | Default: ``aerospike.POLICY_KEY_DIGEST``
         * **consistency_level** one of the ``aerospike.POLICY_CONSISTENCY_*`` values such as :data:`aerospike.POLICY_CONSISTENCY_ONE`
+            | Default: ``aerospike.POLICY_CONSISTENCY_ONE``
         * **replica** one of the ``aerospike.POLICY_REPLICA_*`` values such as :data:`aerospike.POLICY_REPLICA_MASTER`
+            | Default: ``aerospike.POLICY_REPLICA_SEQUENCE``
 
 .. _aerospike_operate_policies:
 
@@ -2760,11 +2768,18 @@ Operate Policies
             | Force reads to be linearized for server namespaces that support CP mode. Setting this policy to ``True`` requires an Enterprise server with version 4.0.0 or greater.
             | Default: ``False``
         * **key** one of the ``aerospike.POLICY_KEY_*`` values such as :data:`aerospike.POLICY_KEY_DIGEST`
+            | Default: ``aerospike.POLICY_KEY_DIGEST``
         * **gen** one of the ``aerospike.POLICY_GEN_*`` values such as :data:`aerospike.POLICY_GEN_IGNORE`
+            | Default: ``aerospike.POLICY_GEN_IGNORE``
         * **replica** one of the ``aerospike.POLICY_REPLICA_*`` values such as :data:`aerospike.POLICY_REPLICA_MASTER`
+            | Default: ``aerospike.POLICY_REPLICA_SEQUENCE``
         * **commit_level** one of the ``aerospike.POLICY_COMMIT_LEVEL_*`` values such as :data:`aerospike.POLICY_COMMIT_LEVEL_ALL`
+            | Default: ``aerospike.POLICY_COMMIT_LEVEL_ALL``
         * **consistency_level** one of the ``aerospike.POLICY_CONSISTENCY_*`` values such as :data:`aerospike.POLICY_CONSISTENCY_ONE`
-        * **durable_delete** boolean value: True to perform durable delete (requires Enterprise server version >= 3.10)
+            | Default: ``aerospike.POLICY_CONSISTENCY_ONE``
+        * **exists** one of the ``aerospike.POLICY_EXISTS_*`` values such as :data:`aerospike.POLICY_EXISTS_CREATE`
+            | Default: ```aerospike.POLICY_GEN_IGNORE``
+        * **durable_delete** boolean value: True to perform durable delete (requires Enterprise server version >= 3.10) Default: ``False``
 
 .. _aerospike_apply_policies:
 
@@ -2810,8 +2825,15 @@ Apply Policies
             | Force reads to be linearized for server namespaces that support CP mode. Setting this policy to ``True`` requires an Enterprise server with version 4.0.0 or greater.
             | Default: ``False``
         * **key** one of the ``aerospike.POLICY_KEY_*`` values such as :data:`aerospike.POLICY_KEY_DIGEST`
+            | Default: ``aerospike.POLICY_KEY_DIGEST``
+        * **replica** one of the ``aerospike.POLICY_REPLICA_*`` values such as :data:`aerospike.POLICY_REPLICA_MASTER`
+            | Default: ``aerospike.POLICY_REPLICA_SEQUENCE``
+        * **gen** one of the ``aerospike.POLICY_GEN_*`` values such as :data:`aerospike.POLICY_GEN_IGNORE`
+            | Default: ``aerospike.POLICY_GEN_IGNORE``
         * **commit_level** one of the ``aerospike.POLICY_COMMIT_LEVEL_*`` values such as :data:`aerospike.POLICY_COMMIT_LEVEL_ALL`
+            | Default: ``aerospike.POLICY_COMMIT_LEVEL_ALL``
         * **durable_delete** boolean value: True to perform durable delete (requires Enterprise server version >= 3.10)
+            | Default: ``False``
 
 .. _aerospike_remove_policies:
 
@@ -2853,10 +2875,14 @@ Remove Policies
             |
             | Default: ``1000``
         * **key** one of the ``aerospike.POLICY_KEY_*`` values such as :data:`aerospike.POLICY_KEY_DIGEST`
+            | Default: ``aerospike.POLICY_KEY_DIGEST``
         * **commit_level** one of the ``aerospike.POLICY_COMMIT_LEVEL_*`` values such as :data:`aerospike.POLICY_COMMIT_LEVEL_ALL`
+            | Default: ``aerospike.POLICY_COMMIT_LEVEL_ALL``
         * **gen** one of the ``aerospike.POLICY_GEN_*`` values such as :data:`aerospike.POLICY_GEN_IGNORE`
-        * **max_retries** integer, number of times to retry the operation if it fails due to netowrk error. Default `2`
-        * **durable_delete** boolean value: True to perform durable delete (requires Enterprise server version >= 3.10)
+            | Default: ``aerospike.POLICY_GEN_IGNORE``
+        * **durable_delete** boolean value: True to perform durable delete (requires Enterprise server version >= 3.10) Default: ``False``
+        * **replica** one of the ``aerospike.POLICY_REPLICA_*`` values such as :data:`aerospike.POLICY_REPLICA_MASTER`
+            | Default: ``aerospike.POLICY_REPLICA_SEQUENCE``
 
 .. _aerospike_batch_policies:
 
@@ -2906,6 +2932,7 @@ Batch Policies
             | Force reads to be linearized for server namespaces that support CP mode. Setting this policy to ``True`` requires an Enterprise server with version 4.0.0 or greater.
             | Default: ``False``
         * **consistency_level** one of the ``aerospike.POLICY_CONSISTENCY_*`` values such as :data:`aerospike.POLICY_CONSISTENCY_ONE`
+            | Default: ``aerospike.POLICY_CONSISTENCY_ONE``
         * **concurrent** :class:`bool` Determine if batch commands to each server are run in parallel threads. Default `False`
         * **allow_inline** :class:`bool` . Allow batch to be processed immediately in the server's receiving thread when the server deems it to be appropriate.  If `False`, the batch will always be processed in separate transaction threads.  This field is only relevant for the new batch index protocol. Default `True`.
         * **send_set_name** :class:`bool` Send set name field to server for every key in the batch for batch index protocol. This is only necessary when authentication is enabled and security roles are defined on a per set basis. Default: `False`

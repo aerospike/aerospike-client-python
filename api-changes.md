@@ -1,5 +1,37 @@
 # API Changes
 
+## Version 3.1.0
+
+### Additional Features
+* Updated to C client `4.3.6`
+* Added `exists` policy field to operate policies
+
+### Backwards Incompatible API changes
+* Updated the args passed to AerospikeError constructor internally to contain 5 arguments.
+  The arguments previously were `error code`, `error message`, `error file`, `error line`.
+  A fifth argument `in_doubt` has been added to the internal calls. so the arguments passed to the constructor are now : `error_code`, `error_message`, `error_file`, `error_line`, `in_doubt`
+
+  This means that code such as the following will now raise a ValueError
+
+```python
+try:
+    client.get(key)
+except AerospikeError as e:
+    code, msg, file, line = e.args
+    print(code, msg, file, line)
+```
+
+  This can be fixed by unpacking the fifth value from the Error's `args` tuple
+
+```python
+try:
+    client.get(key)
+except AerospikeError as e:
+    code, msg, file, line, in_doubt = e.args
+    print(code, msg, file, line)
+```
+
+
 ## Version 3.0.0
 
 
