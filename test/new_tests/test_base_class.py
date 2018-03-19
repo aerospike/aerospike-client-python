@@ -53,7 +53,8 @@ class TestBaseClass(object):
         config.read("config.conf")
 
         if (config.has_option('tls', 'enable') and (
-           config.getboolean('tls', 'enable'))):
+                config.get('tls', 'enable') != '' and
+                config.get('tls', 'enable') != '0')):
             TestBaseClass.using_tls = True
             tls_dict['enable'] = True
 
