@@ -564,7 +564,7 @@ as_status set_optional_key(as_policy_key* target_ptr, PyObject* py_policy, const
 	}
 
 	uint32_t out_uint32;
-	as_status status = get_uint32_value(py_policy, &out_uint32);
+	as_status status = get_uint32_value(py_policy_val, &out_uint32);
 	if (status != AEROSPIKE_OK) {
 		return status;
 	}
@@ -584,7 +584,7 @@ as_status set_optional_replica(as_policy_replica* target_ptr, PyObject* py_polic
 	}
 
 	uint32_t out_uint32;
-	as_status status = get_uint32_value(py_policy, &out_uint32);
+	as_status status = get_uint32_value(py_policy_val, &out_uint32);
 	if (status != AEROSPIKE_OK) {
 		return status;
 	}
@@ -604,7 +604,7 @@ as_status set_optional_commit_level(as_policy_commit_level* target_ptr, PyObject
 	}
 
 	uint32_t out_uint32;
-	as_status status = get_uint32_value(py_policy, &out_uint32);
+	as_status status = get_uint32_value(py_policy_val, &out_uint32);
 	if (status != AEROSPIKE_OK) {
 		return status;
 	}
@@ -624,7 +624,7 @@ as_status set_optional_consistency_level(as_policy_consistency_level* target_ptr
 	}
 
 	uint32_t out_uint32;
-	as_status status = get_uint32_value(py_policy, &out_uint32);
+	as_status status = get_uint32_value(py_policy_val, &out_uint32);
 	if (status != AEROSPIKE_OK) {
 		return status;
 	}
@@ -644,7 +644,7 @@ as_status set_optional_gen(as_policy_gen* target_ptr, PyObject* py_policy, const
 	}
 
 	uint32_t out_uint32;
-	as_status status = get_uint32_value(py_policy, &out_uint32);
+	as_status status = get_uint32_value(py_policy_val, &out_uint32);
 	if (status != AEROSPIKE_OK) {
 		return status;
 	}
@@ -664,7 +664,7 @@ as_status set_optional_exists(as_policy_exists* target_ptr, PyObject* py_policy,
 	}
 
 	uint32_t out_uint32;
-	as_status status = get_uint32_value(py_policy, &out_uint32);
+	as_status status = get_uint32_value(py_policy_val, &out_uint32);
 	if (status != AEROSPIKE_OK) {
 		return status;
 	}
