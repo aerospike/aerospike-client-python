@@ -30,6 +30,6 @@ typedef struct bytes_static_pool {
     }
 
 #define POOL_DESTROY(static_pool)                                              \
-	for (u_int32_t iter = 0; iter < BYTES_CNT(static_pool); iter++) {          \
+	for (uint32_t iter = 0; iter < BYTES_CNT(static_pool); iter++) {          \
 		as_bytes_destroy(&BYTES_POOL(static_pool)[iter]);                      \
 	}
