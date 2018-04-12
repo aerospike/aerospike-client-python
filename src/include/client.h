@@ -343,6 +343,8 @@ PyObject * AerospikeClient_MapGetByKeyRange(AerospikeClient * self, PyObject * a
 
 PyObject * AerospikeClient_MapGetByValue(AerospikeClient * self, PyObject * args, PyObject * kwds);
 PyObject * AerospikeClient_MapGetByValueRange(AerospikeClient * self, PyObject * args, PyObject * kwds);
+PyObject* AerospikeClient_MapGetByValueList(AerospikeClient* self, PyObject* args, PyObject* kwds);
+PyObject* AerospikeClient_MapGetByKeyList(AerospikeClient* self, PyObject* args, PyObject* kwds);
 
 PyObject * AerospikeClient_MapGetByIndex(AerospikeClient * self, PyObject * args, PyObject * kwds);
 PyObject * AerospikeClient_MapGetByIndexRange(AerospikeClient * self, PyObject * args, PyObject * kwds);

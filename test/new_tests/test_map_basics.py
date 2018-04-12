@@ -329,6 +329,76 @@ class TestMapBasics(object):
         self.as_connection.map_clear(key, binname)
         assert values == [5, 6]
 
+    @pytest.mark.parametrize(
+        'policy, meta',
+        [
+            (None, None),
+            ({'total_timeout': 10000}, {'ttl': -1})
+        ])
+    def test_map_get_by_value_list(self, policy, meta):
+        key = ('test', 'map_test', 1)
+        binname = 'my_map'
+        map_entry = {'a': 1, 'b': 2, 'c': 3, 'd': 4, 'e': 1}
+        self.as_connection.put(key, {binname: map_entry})
+        if policy:
+            fetched_keys = self.as_connection.map_get_by_value_list(
+                key, binname, [1, 3, 4], aerospike.MAP_RETURN_KEY,
+                policy=policy, meta=meta)
+        else:
+            fetched_keys = self.as_connection.map_get_by_value_list(
+                key, binname, [1, 3, 4], aerospike.MAP_RETURN_KEY)
+
+        assert set(fetched_keys) == set(['a', 'c', 'd', 'e'])
+        self.as_connection.map_clear(key, binname)
+
+    def test_map_get_by_value_list_no_matching_items(self):
+        key = ('test', 'map_test', 1)
+        binname = 'my_map'
+        map_entry = {'a': 1, 'b': 2, 'c': 3, 'd': 4, 'e': 1}
+        self.as_connection.put(key, {binname: map_entry})
+        fetched_keys = self.as_connection.map_get_by_value_list(
+            key, binname, [7, 8, 9], aerospike.MAP_RETURN_KEY,
+            policy={'total_timeout': 10000}, meta={'ttl': -1})
+
+        assert fetched_keys == []
+        self.as_connection.map_clear(key, binname)
+
+    @pytest.mark.parametrize(
+        'policy, meta',
+        [
+            (None, None),
+            ({'total_timeout': 10000}, {'ttl': -1})
+        ])
+    def test_map_get_by_key_list(self, policy, meta):
+        key = ('test', 'map_test', 1)
+        binname = 'my_map'
+        map_entry = {'a': 1, 'b': 2, 'c': 3, 'd': 4, 'e': 1}
+        self.as_connection.put(key, {binname: map_entry})
+        if policy:
+            fetched_vals = self.as_connection.map_get_by_key_list(
+                key, binname, ['a', 'c', 'e'], aerospike.MAP_RETURN_VALUE,
+                policy=policy, meta=meta)
+        else:
+            fetched_vals = self.as_connection.map_get_by_key_list(
+                key, binname, ['a', 'c', 'e'], aerospike.MAP_RETURN_VALUE)
+
+        fetched_vals.sort()
+        assert fetched_vals == [1, 1, 3]
+
+        self.as_connection.map_clear(key, binname)
+
+    def test_map_get_by_key_list_no_matching(self):
+        key = ('test', 'map_test', 1)
+        binname = 'my_map'
+        map_entry = {'a': 1, 'b': 2, 'c': 3, 'd': 4, 'e': 1}
+        self.as_connection.put(key, {binname: map_entry})
+        fetched_vals = self.as_connection.map_get_by_key_list(
+            key, binname, ['aero', 'spike'], aerospike.MAP_RETURN_VALUE)
+
+        assert fetched_vals == []
+
+        self.as_connection.map_clear(key, binname)
+
     def test_pos_map_get_by_index(self):
         key = ('test', 'map_test', 1)
         binname = 'my_map'
@@ -394,6 +464,34 @@ class TestMapBasics(object):
         assert value == {}
         self.as_connection.map_clear(key, binname)
 
+    def test_map_get_by_value_list_non_list(self):
+        key = ('test', 'demo', 1)
+        binname = 'my_map'
+        with pytest.raises(e.ParamError):
+            self.as_connection.map_get_by_value_list(
+                key, binname, 'A value', aerospike.MAP_RETURN_KEY)
+
+    def test_map_get_by_key_list_non_list(self):
+        key = ('test', 'demo', 1)
+        binname = 'my_map'
+        with pytest.raises(e.ParamError):
+            self.as_connection.map_get_by_key_list(
+                key, binname, 'A key, and another', aerospike.MAP_RETURN_KEY)
+
+    def test_map_get_by_value_list_no_return_type(self):
+        key = ('test', 'demo', 1)
+        binname = 'my_map'
+        with pytest.raises(TypeError):
+            self.as_connection.map_get_by_value_list(
+                key, binname, [1, 2, 3])
+
+    def test_map_get_by_key_list_no_return_type(self):
+        key = ('test', 'demo', 1)
+        binname = 'my_map'
+        with pytest.raises(TypeError):
+            self.as_connection.map_get_by_key_list(
+                key, binname, ['k1', 'k2', 'k3'])
+
     def test_map_size_nonexistent_bin(self):
         key = ('test', 'map_test', 1)
         binname = 'non_a_real_bin'
@@ -432,7 +530,9 @@ class TestMapBasics(object):
             "map_get_by_index",
             "map_get_by_index_range",
             "map_get_by_rank",
-            "map_get_by_rank_range"
+            "map_get_by_rank_range",
+            "map_get_by_key_list",
+            "map_get_by_value_list"
         ])
     def test_call_to_methods_with_no_args(self, method_name):
         '''

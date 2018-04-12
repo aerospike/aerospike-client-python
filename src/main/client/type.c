@@ -307,6 +307,18 @@ PyDoc_STRVAR(map_get_by_value_range_doc,
 Return map entries from the map specified by key and bin identified by the value \
 range (val inclusive, range exclusive).");
 
+PyDoc_STRVAR(map_get_by_value_list_doc,
+"map_get_by_value_range(key, bin, value_list, return_type[, meta[, policy]])\n\
+\n\
+Return map entries from the map specified by key and bin which contain a value matching one\
+of the values in the provided value_list");
+
+PyDoc_STRVAR(map_get_by_key_list_doc,
+"map_get_by_value_range(key, bin, key_list, return_type[, meta[, policy]])\n\
+\n\
+Return map entries from the map specified by key and bin for keys matching those\
+in the provided key_list");
+
 PyDoc_STRVAR(map_get_by_index_doc,
 "map_get_by_index(key, bin, index, return_type[, meta[, policy]])\n\
 \n\
@@ -692,12 +704,18 @@ static PyMethodDef AerospikeClient_Type_Methods[] = {
 	{"map_get_by_key_range",
 		(PyCFunction) AerospikeClient_MapGetByKeyRange, METH_VARARGS | METH_KEYWORDS,
 		map_get_by_key_range_doc},
+	{"map_get_by_key_list",
+			(PyCFunction) AerospikeClient_MapGetByKeyList, METH_VARARGS | METH_KEYWORDS,
+			map_get_by_key_list_doc},
 	{"map_get_by_value",
 		(PyCFunction) AerospikeClient_MapGetByValue, METH_VARARGS | METH_KEYWORDS,
 		map_get_by_value_doc},
 	{"map_get_by_value_range",
 		(PyCFunction) AerospikeClient_MapGetByValueRange, METH_VARARGS | METH_KEYWORDS,
 		map_get_by_value_range_doc},
+	{"map_get_by_value_list",
+		(PyCFunction) AerospikeClient_MapGetByValueList, METH_VARARGS | METH_KEYWORDS,
+		map_get_by_value_list_doc},
 	{"map_get_by_index",
 		(PyCFunction) AerospikeClient_MapGetByIndex, METH_VARARGS | METH_KEYWORDS,
 		map_get_by_index_doc},

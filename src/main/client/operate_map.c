@@ -1034,6 +1034,134 @@ CLEANUP:
 	return py_result;
 }
 
+/*
+ * key = ('test', 'demo', 1)
+ * res = client.map_get_by_value_list(key, 'map_bin', ['val1', 'val2'], aerospike.MAP_RETURN_VALUE)
+ */
+PyObject* AerospikeClient_MapGetByValueList(AerospikeClient* self, PyObject* args, PyObject* kwds) {
+	BASE_VARIABLES
+
+	// Parameter vars
+	PyObject * py_meta = NULL;
+	PyObject * py_policy = NULL;
+	PyObject* py_value_list = NULL;
+	uint64_t returnType;
+
+	// C client function arg vars
+	as_policy_operate operate_policy;
+	as_policy_operate *operate_policy_p = NULL;
+	as_val* as_value_list = NULL;
+	as_record *rec = NULL;
+
+	// Return Vars
+	PyObject* py_result = NULL;
+
+	//Util Vars
+	as_static_pool pool;
+	memset(&pool, 0, sizeof(pool));
+
+	CHECK_CONNECTED();
+
+	static char* kwlist[] = {"key", "bin", "value_list", "return_type", "meta", "policy", NULL};
+	if (PyArg_ParseTupleAndKeywords(args, kwds, "OOOl|OO:map_get_by_value_list",
+			kwlist, &py_key, &py_bin, &py_value_list, &returnType, &py_meta, &py_policy) == false) {
+		goto CLEANUP;
+	}
+
+	// Initialize the variables
+	POLICY_KEY_META_BIN()
+
+	if (!py_value_list || !PyList_Check(py_value_list)) {
+		as_error_update(&err, AEROSPIKE_ERR_PARAM, "type of value_list must be list");
+		goto CLEANUP;
+	}
+
+	if (pyobject_to_val(self, &err, py_value_list, &as_value_list, &pool, SERIALIZER_PYTHON) != AEROSPIKE_OK) {
+		goto CLEANUP;
+	}
+
+	if (!as_list_fromval(as_value_list)) {
+		as_error_update(&err, AEROSPIKE_ERR_PARAM, "Failed to convert Python list");
+		goto CLEANUP;
+	}
+
+	if (!as_operations_add_map_get_by_value_list(&ops, bin, as_list_fromval(as_value_list), (as_map_return_type)returnType)) {
+		as_error_update(&err, AEROSPIKE_ERR_PARAM, "Failed to add map_get_by_value_list operation");
+		goto CLEANUP;
+	}
+
+	DO_OPERATION()
+	SETUP_RETURN_VAL()
+
+CLEANUP:
+	CLEANUP_AND_EXCEPTION_ON_ERROR(err);
+	return py_result;
+}
+
+/*
+ * key = ('test', 'demo', 1)
+ * res = client.map_get_by_key_list(key, 'map_bin', ['key1', 'key2'], aerospike.MAP_RETURN_VALUE)
+ */
+PyObject* AerospikeClient_MapGetByKeyList(AerospikeClient* self, PyObject* args, PyObject* kwds) {
+	BASE_VARIABLES
+
+	// Parameter vars
+	PyObject * py_meta = NULL;
+	PyObject * py_policy = NULL;
+	PyObject* py_key_list = NULL;
+	uint64_t returnType;
+
+	// C client function arg vars
+	as_policy_operate operate_policy;
+	as_policy_operate *operate_policy_p = NULL;
+	as_val* as_key_list = NULL;
+	as_record *rec = NULL;
+
+	// Return Vars
+	PyObject* py_result = NULL;
+
+	//Util Vars
+	as_static_pool pool;
+	memset(&pool, 0, sizeof(pool));
+
+	CHECK_CONNECTED();
+
+	static char* kwlist[] = {"key", "bin", "key_list", "return_type", "meta", "policy", NULL};
+	if (PyArg_ParseTupleAndKeywords(args, kwds, "OOOl|OO:map_get_by_key_list",
+			kwlist, &py_key, &py_bin, &py_key_list, &returnType, &py_meta, &py_policy) == false) {
+		goto CLEANUP;
+	}
+
+	// Initialize the variables
+	POLICY_KEY_META_BIN()
+
+	if (!py_key_list || !PyList_Check(py_key_list)) {
+		as_error_update(&err, AEROSPIKE_ERR_PARAM, "type of key_list must be list");
+		goto CLEANUP;
+	}
+
+	if (pyobject_to_val(self, &err, py_key_list, &as_key_list, &pool, SERIALIZER_PYTHON) != AEROSPIKE_OK) {
+		goto CLEANUP;
+	}
+
+	if (!as_list_fromval(as_key_list)) {
+		as_error_update(&err, AEROSPIKE_ERR_PARAM, "Failed to convert Python list");
+		goto CLEANUP;
+	}
+
+	if (!as_operations_add_map_get_by_key_list(&ops, bin, as_list_fromval(as_key_list), (as_map_return_type)returnType)) {
+		as_error_update(&err, AEROSPIKE_ERR_PARAM, "Failed to add map_get_by_key_list operation");
+		goto CLEANUP;
+	}
+
+	DO_OPERATION()
+	SETUP_RETURN_VAL()
+
+CLEANUP:
+	CLEANUP_AND_EXCEPTION_ON_ERROR(err);
+	return py_result;
+}
+
 PyObject * AerospikeClient_MapGetByIndex(AerospikeClient * self, PyObject * args, PyObject * kwds)
 {
 	BASE_VARIABLES
