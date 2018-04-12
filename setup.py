@@ -336,6 +336,7 @@ setup(
                 'src/main/query/type.c',
                 'src/main/query/apply.c',
                 'src/main/query/foreach.c',
+                'src/main/query/predexp.c',
                 'src/main/query/results.c',
                 'src/main/query/select.c',
                 'src/main/query/where.c',
@@ -368,5 +369,5 @@ setup(
             extra_objects=extra_objects,
             extra_link_args=extra_link_args,
         )
-    ]
+    ],
 )

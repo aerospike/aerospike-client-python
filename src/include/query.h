@@ -64,6 +64,14 @@ AerospikeQuery * AerospikeQuery_Where(AerospikeQuery * self, PyObject * args);
  *		query.apply(module, function, arglist)
  *
  */
+AerospikeQuery * AerospikeQuery_Predexp(AerospikeQuery * self, PyObject * args);
+
+/**
+ * Apply a list of predicates to the query
+ *
+ *		query.predexp(predexps)
+ *
+ */
 AerospikeQuery * AerospikeQuery_Apply(AerospikeQuery * self, PyObject * args, PyObject * kwds);
 
 /**
@@ -94,5 +102,10 @@ PyObject * AerospikeQuery_Results(AerospikeQuery * self, PyObject * args, PyObje
  *
  */
 PyObject * StoreUnicodePyObject(AerospikeQuery * self, PyObject * obj);
+
+/* Initialize the predexp module */
+PyObject * AerospikePredExp_New(void);
+
+as_status RegisterPredExpConstants(PyObject* module);
 
 int64_t pyobject_to_int64(PyObject * py_obj);

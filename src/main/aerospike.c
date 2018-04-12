@@ -93,7 +93,7 @@ AerospikeConstants operator_constants[] = {
 MOD_INIT(aerospike)
 {
 
-	const char version[8] = "3.2.1";
+	const char version[8] = "3.3.0";
 	// Makes things "thread-safe"
 	PyEval_InitThreads();
 	int i = 0;
@@ -132,11 +132,16 @@ MOD_INIT(aerospike)
 				operator_constants[i].constantno);
 	}
 	declare_policy_constants(aerospike);
+	RegisterPredExpConstants(aerospike);
 	declare_log_constants(aerospike);
 
 	PyObject * predicates = AerospikePredicates_New();
 	Py_INCREF(predicates);
 	PyModule_AddObject(aerospike, "predicates", predicates);
+
+	PyObject* predexps = AerospikePredExp_New();
+	Py_INCREF(predexps);
+	PyModule_AddObject(aerospike, "predexp", predexps);
 
 	PyTypeObject * geospatial = AerospikeGeospatial_Ready();
 	Py_INCREF(geospatial);
