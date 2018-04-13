@@ -310,14 +310,16 @@ range (val inclusive, range exclusive).");
 PyDoc_STRVAR(map_get_by_value_list_doc,
 "map_get_by_value_range(key, bin, value_list, return_type[, meta[, policy]])\n\
 \n\
-Return map entries from the map specified by key and bin which contain a value matching one\
-of the values in the provided value_list");
+Return map entries from the map specified by key and bin which contain a value matching one \
+of the values in the provided value_list.\n\
+Requires Aerospike Server versions >= 3.16.0.1");
 
 PyDoc_STRVAR(map_get_by_key_list_doc,
 "map_get_by_value_range(key, bin, key_list, return_type[, meta[, policy]])\n\
 \n\
-Return map entries from the map specified by key and bin for keys matching those\
-in the provided key_list");
+Return map entries from the map specified by key and bin for keys matching those \
+in the provided key_list.\n\
+Requires Aerospike Server versions >= 3.16.0.1");
 
 PyDoc_STRVAR(map_get_by_index_doc,
 "map_get_by_index(key, bin, index, return_type[, meta[, policy]])\n\
