@@ -1,5 +1,12 @@
 # API Changes
 
+
+## Version 3.2.0
+### Additional Features
+* Updated to C client `4.3.10`
+* Added `client.map_get_by_value_list` and `client.map_get_by_key_list` These methods require Aerospike Server version >= 3.16.0.1 .
+
+
 ## Version 3.1.0
 
 ### Additional Features
