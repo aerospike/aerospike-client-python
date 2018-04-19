@@ -1199,6 +1199,16 @@ static int AerospikeClient_Type_Init(AerospikeClient * self, PyObject * args, Py
 		if (set_subpolicies(&config, py_policies) != AEROSPIKE_OK) {
 			return INIT_POLICY_PARAM_ERR;
 		}
+
+		PyObject * py_login_timeout = PyDict_GetItemString(py_policies, "login_timeout_ms");
+		if (py_login_timeout && PyInt_Check(py_login_timeout)) {
+			config.login_timeout_ms = PyInt_AsLong(py_login_timeout);
+		}
+
+		PyObject * py_auth_mode = PyDict_GetItemString(py_policies, "auth_mode");
+		if (py_auth_mode && PyInt_Check(py_auth_mode)) {
+			config.auth_mode = PyInt_AsLong(py_auth_mode);
+		}
 	}
 
 	// thread_pool_size
