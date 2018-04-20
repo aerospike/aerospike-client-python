@@ -1207,7 +1207,12 @@ static int AerospikeClient_Type_Init(AerospikeClient * self, PyObject * args, Py
 
 		PyObject * py_auth_mode = PyDict_GetItemString(py_policies, "auth_mode");
 		if (py_auth_mode && PyInt_Check(py_auth_mode)) {
-			config.auth_mode = PyInt_AsLong(py_auth_mode);
+			long auth_mode = PyInt_AsLong(py_auth_mode);
+			if ((long)AS_AUTH_INTERNAL == auth_mode ||
+				(long)AS_AUTH_EXTERNAL == auth_mode ||
+				(long)AS_AUTH_EXTERNAL_INSECURE == auth_mode) {
+					config.auth_mode = auth_mode;
+			}
 		}
 	}
 
