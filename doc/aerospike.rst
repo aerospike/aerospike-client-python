@@ -62,6 +62,8 @@ in an in-memory primary index.
                 * **scan** A dictionary containing scan policies. See :ref:`aerospike_scan_policies` for available policy fields and values.
                 * **batch** A dictionary containing batch policies. See :ref:`aerospike_batch_policies` for available policy fields and values.
                 * **total_timeout** default connection timeout in milliseconds (**Deprecated**: set this the individual policy dictionaries)
+                * **auth_mode** a value defining how to authenticate with the server such as :data:`aerospike.AUTH_INTERNAL` .
+                * **login_timeout_ms** An integer representing Node login timeout in milliseconds. Default: ``5000``.
                 * **key** default key policy, with values such as :data:`aerospike.POLICY_KEY_DIGEST` (**Deprecated**: set this individually in the 'read', 'write', 'apply', 'operate', 'remove' policy dictionaries)
                 * **exists** default exists policy, with values such as :data:`aerospike.POLICY_EXISTS_CREATE` (**Deprecated**: set in the 'write' policies dictionary)
                 * **max_retries** a :class:`int` representing the number of times to retry a transaction (**Deprecated**: set this the individual policy dictionaries)
@@ -86,6 +88,7 @@ in an in-memory primary index.
                 * **crl_check** :class:`bool` Enable CRL checking for the certificate chain leaf certificate. An error occurs if a suitable CRL cannot be found. By default CRL checking is disabled.
                 * **crl_check_all** :class:`bool` Enable CRL checking for the entire certificate chain. An error occurs if a suitable CRL cannot be found. By default CRL checking is disabled.
                 * **log_session_info** :class:`bool` Log session information for each connection.
+                * **for_login_only** :class:`bool` Log session information for each connection. Use TLS connections only for login authentication. All other communication with the server will be done with non-TLS connections. Default: ``False`` (Use TLS connections for all communication with server.)
             * **serialization** an optional instance-level :py:func:`tuple` of (serializer, deserializer). Takes precedence over a class serializer registered with :func:`~aerospike.set_serializer`.
             * **thread_pool_size** number of threads in the pool that is used in batch/scan/query commands (default: 16)
             * **max_socket_idle** Maximum socket idle time in seconds.  Connection pools will discard sockets that have
@@ -1116,6 +1119,22 @@ Specifies the behavior of failed operations.
 .. data:: POLICY_RETRY_ONCE
 
     If an operation fails, attempt the operation one more time
+
+.. rubric:: Auth Mode Constants
+
+Specifies the type of authentication to be used when communicating with the server
+
+.. data:: AUTH_INTERNAL
+
+    Use internal authentication only.  Hashed password is stored on the server. Do not send clear password. This is the default.
+
+.. data:: AUTH_EXTERNAL
+
+    Use external authentication (like LDAP).  Specific external authentication is configured on server.  If TLS defined, send clear password on node login via TLS. Throw exception if TLS is not defined.
+
+.. data:: AUTH_EXTERNAL_INSECURE
+
+    Use external authentication (like LDAP).  Specific external authentication is configured on server.  Send clear password on node login whether or not TLS is defined. This mode should only be used for testing purposes because it is not secure authentication.
 
 .. _aerospike_scan_constants:
 
