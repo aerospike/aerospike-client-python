@@ -505,7 +505,7 @@ a cluster-tending thread.
             ``'ttl'`` set to :class:`int` number of seconds or one of 
             :const:`aerospike.TTL_NAMESPACE_DEFAULT`, :const:`aerospike.TTL_NEVER_EXPIRE`, 
             :const:`aerospike.TTL_DONT_UPDATE`
-        :param dict policy: optional :ref:`aerospike_operate_policies`.
+        :param dict policy: optional :ref:`aerospike_operate_policies`. Note: the ``exists`` policy option may not be: ``aerospike.POLICY_EXISTS_CREATE_OR_REPLACE`` nor ``aerospike.POLICY_EXISTS_REPLACE``
         :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
 
         .. code-block:: python
