@@ -852,18 +852,23 @@ static PyObject * AerospikeClient_Type_New(PyTypeObject * type, PyObject * args,
 static int AerospikeClient_Type_Init(AerospikeClient * self, PyObject * args, PyObject * kwds)
 {
 	PyObject * py_config = NULL;
-
+	int error_code = 0;
+	as_error constructor_err;
+	as_error_init(&constructor_err);
 	static char * kwlist[] = {"config", NULL};
 
 	self->has_connected = false;
 	self->use_shared_connection = false;
+	self->as=NULL;
 
 	if (PyArg_ParseTupleAndKeywords(args, kwds, "O:client", kwlist, &py_config) == false) {
-		return INIT_NO_CONFIG_ERR;
+		error_code = INIT_NO_CONFIG_ERR;
+		goto CONSTRUCTOR_ERROR;
 	}
 
 	if (!PyDict_Check(py_config)) {
-		return INIT_CONFIG_TYPE_ERR;
+		error_code = INIT_CONFIG_TYPE_ERR;
+		goto CONSTRUCTOR_ERROR;
 	}
 
 	as_config config;
@@ -880,7 +885,8 @@ static int AerospikeClient_Type_Init(AerospikeClient * self, PyObject * args, Py
 			lua_system_path = true;
 			if (strnlen(PyString_AsString(py_lua_system_path), AS_CONFIG_PATH_MAX_SIZE) >
 			    AS_CONFIG_PATH_MAX_LEN) {
-					return INIT_LUA_SYS_ERR;
+					error_code = INIT_LUA_SYS_ERR;
+					goto CONSTRUCTOR_ERROR;
 
 			}
 			strcpy(config.lua.system_path, PyString_AsString(py_lua_system_path));
@@ -891,7 +897,8 @@ static int AerospikeClient_Type_Init(AerospikeClient * self, PyObject * args, Py
 			lua_user_path = true;
 			if (strnlen(PyString_AsString(py_lua_user_path), AS_CONFIG_PATH_MAX_SIZE) >
 			    AS_CONFIG_PATH_MAX_LEN) {
-					return INIT_LUA_USER_ERR;
+					error_code = INIT_LUA_USER_ERR;
+					goto CONSTRUCTOR_ERROR;
 			}
 			strcpy(config.lua.user_path, PyString_AsString(py_lua_user_path));
 		}
@@ -928,7 +935,8 @@ static int AerospikeClient_Type_Init(AerospikeClient * self, PyObject * args, Py
 	if (py_hosts && PyList_Check(py_hosts)) {
 		int size = (int) PyList_Size(py_hosts);
 		if (!size) {
-			return INIT_EMPTY_HOSTS_ERR;
+			error_code = INIT_EMPTY_HOSTS_ERR;
+			goto CONSTRUCTOR_ERROR;
 		}
 		for (int i = 0; i < size; i++) {
 			char *addr = NULL;
@@ -983,11 +991,13 @@ static int AerospikeClient_Type_Init(AerospikeClient * self, PyObject * args, Py
 				}
 				free(addr);
 			} else {
-				return INIT_INVALID_ADRR_ERR;
+				error_code = INIT_INVALID_ADRR_ERR;
+				goto CONSTRUCTOR_ERROR;
 			}
 		}
 	} else {
-		return INIT_HOST_TYPE_ERR;
+		error_code = INIT_HOST_TYPE_ERR;
+		goto CONSTRUCTOR_ERROR;
 	}
 
 	PyObject * py_shm = PyDict_GetItemString(py_config, "shm");
@@ -1043,7 +1053,8 @@ static int AerospikeClient_Type_Init(AerospikeClient * self, PyObject * args, Py
 		PyObject *py_serializer = PyTuple_GetItem(py_serializer_option, 0);
 		if (py_serializer && py_serializer != Py_None) {
 			if (!PyCallable_Check(py_serializer)) {
-				return INIT_SERIALIZE_ERR;
+				error_code = INIT_SERIALIZE_ERR;
+				goto CONSTRUCTOR_ERROR;
 			}
 			memset(&self->user_serializer_call_info, 0, sizeof(self->user_serializer_call_info));
 			self->user_serializer_call_info.callback = py_serializer;
@@ -1051,7 +1062,8 @@ static int AerospikeClient_Type_Init(AerospikeClient * self, PyObject * args, Py
 		PyObject *py_deserializer = PyTuple_GetItem(py_serializer_option, 1);
 		if (py_deserializer && py_deserializer != Py_None) {
 			if (!PyCallable_Check(py_deserializer)) {
-				return INIT_DESERIALIZE_ERR;
+				error_code = INIT_DESERIALIZE_ERR;
+				goto CONSTRUCTOR_ERROR;
 			}
 			memset(&self->user_deserializer_call_info, 0, sizeof(self->user_deserializer_call_info));
 			self->user_deserializer_call_info.callback = py_deserializer;
@@ -1197,7 +1209,8 @@ static int AerospikeClient_Type_Init(AerospikeClient * self, PyObject * args, Py
 		 * */
 
 		if (set_subpolicies(&config, py_policies) != AEROSPIKE_OK) {
-			return INIT_POLICY_PARAM_ERR;
+			error_code = INIT_POLICY_PARAM_ERR;
+			goto CONSTRUCTOR_ERROR;
 		}
 
 		PyObject * py_login_timeout = PyDict_GetItemString(py_policies, "login_timeout_ms");
@@ -1259,7 +1272,8 @@ static int AerospikeClient_Type_Init(AerospikeClient * self, PyObject * args, Py
 		if (compression_value >= 0) {
 			config.policies.write.compression_threshold = compression_value;
 		} else {
-			return INIT_COMPRESSION_ERR;
+			error_code = INIT_COMPRESSION_ERR;
+			goto CONSTRUCTOR_ERROR;
 		}
 	}
 
@@ -1293,6 +1307,72 @@ static int AerospikeClient_Type_Init(AerospikeClient * self, PyObject * args, Py
 	self->as = aerospike_new(&config);
 
 	return 0;
+
+CONSTRUCTOR_ERROR:
+
+	switch(error_code) {
+		// 0 Is success
+		case 0: {
+				// Initialize connection flag
+			return 0;
+			}
+		case INIT_NO_CONFIG_ERR: {
+			as_error_update(&constructor_err, AEROSPIKE_ERR_PARAM, "No config argument");
+			break;
+			}
+		case INIT_CONFIG_TYPE_ERR: {
+			as_error_update(&constructor_err, AEROSPIKE_ERR_PARAM, "Config must be a dict");
+			break;
+			}
+		case INIT_LUA_USER_ERR: {
+			as_error_update(&constructor_err, AEROSPIKE_ERR_PARAM, "Lua user path too long");
+			break;
+		}
+		case INIT_LUA_SYS_ERR: {
+			as_error_update(&constructor_err, AEROSPIKE_ERR_PARAM, "Lua system path too long");
+			break;
+		}
+		case INIT_HOST_TYPE_ERR: {
+			as_error_update(&constructor_err, AEROSPIKE_ERR_PARAM, "Hosts must be a list");
+			break;
+		}
+		case INIT_EMPTY_HOSTS_ERR: {
+			as_error_update(&constructor_err, AEROSPIKE_ERR_PARAM, "Hosts must not be empty");
+			break;
+		}
+		case INIT_INVALID_ADRR_ERR: {
+			as_error_update(&constructor_err, AEROSPIKE_ERR_PARAM, "Invalid host");
+			break;
+		}
+		case INIT_SERIALIZE_ERR: {
+			as_error_update(&constructor_err, AEROSPIKE_ERR_PARAM, "Serializer must be callable");
+			break;
+		}
+		case INIT_DESERIALIZE_ERR: {
+			as_error_update(&constructor_err, AEROSPIKE_ERR_PARAM, "Deserializer must be callable");
+			break;
+		}
+		case INIT_COMPRESSION_ERR: {
+			as_error_update(&constructor_err, AEROSPIKE_ERR_PARAM, "Compression value must not be negative");
+			break;
+		}
+		case INIT_POLICY_PARAM_ERR: {
+			as_error_update(&constructor_err, AEROSPIKE_ERR_PARAM, "Invalid Policy setting value");
+			break;
+		}
+		default:
+			// If a generic error was caught during init, use this message
+			as_error_update(&constructor_err, AEROSPIKE_ERR_PARAM, "Invalid Parameters");
+			break;
+	}
+
+	PyObject * py_err = NULL;
+	error_to_pyobject(&constructor_err, &py_err);
+	PyObject *exception_type = raise_exception(&constructor_err);
+	PyErr_SetObject(exception_type, py_err);
+	Py_DECREF(py_err);
+	return -1;
+
 }
 
 static void AerospikeClient_Type_Dealloc(PyObject * self)
@@ -1306,30 +1386,32 @@ static void AerospikeClient_Type_Dealloc(PyObject * self)
 
 	// If the client has never connected
 	// It is safe to destroy the aerospike structure
-	if (!client->has_connected) {
-		aerospike_destroy(client->as);
-	} else {
+	if (client->as) {
+		if (!client->has_connected) {
+			aerospike_destroy(client->as);
+		} else {
 
-		// If the connection is possibly shared, use reference counted deletes
-		if (client->use_shared_connection) {
-			// If this client was still connected, deal with the global host object
-			if (client->is_conn_16) {
-				alias_to_search = return_search_string(client->as);
-				py_persistent_item = PyDict_GetItemString(py_global_hosts, alias_to_search);
-				if (py_persistent_item) {
-					global_host = (AerospikeGlobalHosts*) py_persistent_item;
-					// Only modify the global as object if the client points to it
-					if (client->as == global_host->as) {
-						close_aerospike_object(client->as, &err, alias_to_search, py_persistent_item, false);
+			// If the connection is possibly shared, use reference counted deletes
+			if (client->use_shared_connection) {
+				// If this client was still connected, deal with the global host object
+				if (client->is_conn_16) {
+					alias_to_search = return_search_string(client->as);
+					py_persistent_item = PyDict_GetItemString(py_global_hosts, alias_to_search);
+					if (py_persistent_item) {
+						global_host = (AerospikeGlobalHosts*) py_persistent_item;
+						// Only modify the global as object if the client points to it
+						if (client->as == global_host->as) {
+							close_aerospike_object(client->as, &err, alias_to_search, py_persistent_item, false);
+						}
 					}
 				}
+			// Connection is not shared, so it is safe to destroy the as object
+			} else {
+				if (client->is_conn_16) {
+					aerospike_close(client->as, &err);
+				}
+				aerospike_destroy(client->as);
 			}
-		// Connection is not shared, so it is safe to destroy the as object
-		} else {
-			if (client->is_conn_16) {
-				aerospike_close(client->as, &err);
-			}
-			aerospike_destroy(client->as);
 		}
 	}
 	self->ob_type->tp_free((PyObject *) self);
@@ -1413,57 +1495,22 @@ AerospikeClient * AerospikeClient_New(PyObject * parent, PyObject * args, PyObje
 			self->is_conn_16 = false;
 			return self;
 			}
-		case INIT_NO_CONFIG_ERR: {
-			as_error_update(&err, AEROSPIKE_ERR_PARAM, "No config argument");
-			break;
+		case -1: {
+			if (PyErr_Occurred()) {
+				return NULL;
 			}
-		case INIT_CONFIG_TYPE_ERR: {
-			as_error_update(&err, AEROSPIKE_ERR_PARAM, "Config must be a dict");
 			break;
+		}
+		default: {
+			if (PyErr_Occurred()) {
+				return NULL;
 			}
-		case INIT_LUA_USER_ERR: {
-			as_error_update(&err, AEROSPIKE_ERR_PARAM, "Lua user path too long");
 			break;
 		}
-		case INIT_LUA_SYS_ERR: {
-			as_error_update(&err, AEROSPIKE_ERR_PARAM, "Lua system path too long");
-			break;
-		}
-		case INIT_HOST_TYPE_ERR: {
-			as_error_update(&err, AEROSPIKE_ERR_PARAM, "Hosts must be a list");
-			break;
-		}
-		case INIT_EMPTY_HOSTS_ERR: {
-			as_error_update(&err, AEROSPIKE_ERR_PARAM, "Hosts must not be empty");
-			break;
-		}
-		case INIT_INVALID_ADRR_ERR: {
-			as_error_update(&err, AEROSPIKE_ERR_PARAM, "Invalid host");
-			break;
-		}
-		case INIT_SERIALIZE_ERR: {
-			as_error_update(&err, AEROSPIKE_ERR_PARAM, "Serializer must be callable");
-			break;
-		}
-		case INIT_DESERIALIZE_ERR: {
-			as_error_update(&err, AEROSPIKE_ERR_PARAM, "Deserializer must be callable");
-			break;
-		}
-		case INIT_COMPRESSION_ERR: {
-			as_error_update(&err, AEROSPIKE_ERR_PARAM, "Compression value must not be negative");
-			break;
-		}
-		case INIT_POLICY_PARAM_ERR: {
-			as_error_update(&err, AEROSPIKE_ERR_PARAM, "Invalid Policy setting value");
-			break;
-		}
-		default:
-			// If a generic error was caught during init, use this message
-			as_error_update(&err, AEROSPIKE_ERR_PARAM, "Invalid Parameters");
-			break;
 	}
 
 	PyObject * py_err = NULL;
+	as_error_update(&err, AEROSPIKE_ERR_PARAM, "Failed to construct object");
 	error_to_pyobject(&err, &py_err);
 	PyObject *exception_type = raise_exception(&err);
 	PyErr_SetObject(exception_type, py_err);
