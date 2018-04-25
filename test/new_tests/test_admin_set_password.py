@@ -128,6 +128,5 @@ class TestSetPassword(TestBaseClass):
         user = "testsetpassworduser"
         password = "newpassword$" * 1000
 
-        status = self.client.admin_set_password(user, password, policy)
-
-        assert status == 0
+        with pytest.raises(e.ClientError):
+            self.client.admin_set_password(user, password, policy)
