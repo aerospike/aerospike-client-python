@@ -414,7 +414,6 @@ class TestRemovebin(object):
         key = ('test', 'demo', 1)
         record = {"Name": "Herry", 'age': 60}
         put_data(self.as_connection, key, record)
-        pytest.set_trace()
         meta = {'gen': 2, 'ttl': 2 ** 65}
         with pytest.raises(e.ClientError) as typeError:
             self.as_connection.remove_bin(key, ["age"], meta=meta)
