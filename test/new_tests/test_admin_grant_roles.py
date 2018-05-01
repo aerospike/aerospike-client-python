@@ -147,9 +147,12 @@ class TestGrantRoles(TestBaseClass):
         password = "abcd"
         roles = ["read-write"]
 
-        status = self.client.admin_create_user(user, password, roles, policy)
+        try:
+            self.client.admin_create_user(user, password, roles, policy)
+            time.sleep(1)
+        except e.UserExistsError:
+            pass
 
-        assert status == 0
         roles = ["read"]
         status = self.client.admin_grant_roles(user, roles, policy)
 
@@ -159,10 +162,9 @@ class TestGrantRoles(TestBaseClass):
 
         user_details = self.client.admin_query_user(user)
 
-        assert user_details == ['read', 'read-write']
+        assert set(user_details) == set(['read', 'read-write'])
 
-        status = self.client.admin_drop_user("!#Q#AEQ@#$%&^*((^&*~~~````[")
-        assert status == 0
+        self.client.admin_drop_user(user)
 
     def test_grant_roles_with_empty_roles_list(self):
 

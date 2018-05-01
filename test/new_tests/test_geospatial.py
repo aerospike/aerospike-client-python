@@ -739,9 +739,11 @@ class TestGeospatial(object):
         """
             Perform a positive 2d index creation
         """
-        status = self.as_connection.index_remove('test', 'loc_index')
-        time.sleep(2)
-        assert status == 0
+        try:
+            status = self.as_connection.index_remove('test', 'loc_index')
+            time.sleep(2)
+        except:
+            pass
 
         status = self.as_connection.index_geo2dsphere_create(
             "test", "demo", "loc", "loc_index")
@@ -752,10 +754,11 @@ class TestGeospatial(object):
         """
             Perform a positive 2d index creation with policy
         """
-        status = self.as_connection.index_remove('test', 'loc_index')
-        time.sleep(2)
-
-        assert status == 0
+        try:
+            status = self.as_connection.index_remove('test', 'loc_index')
+            time.sleep(2)
+        except:
+            pass
 
         status = self.as_connection.index_geo2dsphere_create(
             "test", "demo", "loc", "loc_index", {"timeout": 2000})

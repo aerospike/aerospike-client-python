@@ -156,7 +156,6 @@ class TestBaseClass(object):
         config['tls'] = tls_dict
         for key in add_config:
             config[key] = add_config[key]
-
         client = aerospike.client(config)
         if username and password:
             client.connect(username, password)

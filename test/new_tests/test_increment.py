@@ -491,7 +491,6 @@ class TestIncrement(object):
         self.as_connection.increment(key, 'age', 2)
 
         _, _, data = self.as_connection.get(key)
-        pytest.set_trace()
         self.as_connection.remove(key)
         assert data['age'] > 2 ** 63 - 1
 
@@ -504,7 +503,6 @@ class TestIncrement(object):
         self.as_connection.increment(key, 'age', -2)
 
         _, _, data = self.as_connection.get(key)
-        pytest.set_trace()
         self.as_connection.remove(key)
         assert data['age'] < -2 ** 63
 

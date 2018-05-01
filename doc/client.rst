@@ -505,7 +505,7 @@ a cluster-tending thread.
             ``'ttl'`` set to :class:`int` number of seconds or one of 
             :const:`aerospike.TTL_NAMESPACE_DEFAULT`, :const:`aerospike.TTL_NEVER_EXPIRE`, 
             :const:`aerospike.TTL_DONT_UPDATE`
-        :param dict policy: optional :ref:`aerospike_operate_policies`.
+        :param dict policy: optional :ref:`aerospike_operate_policies`. Note: the ``exists`` policy option may not be: ``aerospike.POLICY_EXISTS_CREATE_OR_REPLACE`` nor ``aerospike.POLICY_EXISTS_REPLACE``
         :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
 
         .. code-block:: python
@@ -1172,6 +1172,24 @@ a cluster-tending thread.
 
         .. versionadded:: 2.0.4
 
+    .. method:: map_get_by_key_list(key, bin, key_list, return_type[, meta[, policy]])
+
+        Return map entries from the map specified by *key* and *bin* having keys present in the *key_list*.
+
+        :param tuple key: a :ref:`aerospike_key_tuple` tuple associated with the record.
+        :param str bin: the name of the bin.
+        :param key_list: :py:class:`list` A list of map keys to fetch entries for
+        :param return_type: :py:class:`int` :ref:`map_return_types`
+        :param dict meta: unused for this operation
+        :param dict policy: optional :ref:`aerospike_operate_policies`.
+        :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
+        :return: depends on return_type parameter
+
+        .. note:: Requires server version >= 3.16.0.1
+
+        .. versionadded:: 3.2.0
+
+
     .. method:: map_get_by_value(key, bin, val, return_type[, meta[, policy]])
 
         Return map entries from the map specified by *key* and *bin* which have a value matching *val* parameter.
@@ -1209,6 +1227,23 @@ a cluster-tending thread.
         .. note:: Requires server version >= 3.8.4
 
         .. versionadded:: 2.0.4
+
+    .. method:: map_get_by_value_list(key, bin, value_list, return_type[, meta[, policy]])
+
+        Return map entries from the map specified by *key* and *bin* having values present in the *value_list*.
+
+        :param tuple key: a :ref:`aerospike_key_tuple` tuple associated with the record.
+        :param str bin: the name of the bin.
+        :param value_list: :py:class:`list` A list of map values specifying the entries to be retrieved.
+        :param return_type: :py:class:`int` :ref:`map_return_types`
+        :param dict meta: unused for this operation
+        :param dict policy: optional :ref:`aerospike_operate_policies`.
+        :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
+        :return: depends on return_type parameter
+
+        .. note:: Requires server version >= 3.16.0.1
+
+        .. versionadded:: 3.2.0
 
     .. method:: map_get_by_index(key, bin, index, return_type[, meta[, policy]])
 

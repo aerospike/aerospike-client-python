@@ -120,7 +120,6 @@ class TestChangePassword(TestBaseClass):
 
         except aerospike.exception.InvalidPassword as exception:
             assert exception.code == 62
-            assert exception.msg is None
         except aerospike.exception.ClientError as exception:
             assert exception.code == -1
 
@@ -181,29 +180,8 @@ class TestChangePassword(TestBaseClass):
         policy = {'timeout': 100}
         password = "password" * 1000
 
-        status = self.clientreaduser.admin_change_password(
-            user, password, policy)
+        with pytest.raises(aerospike.exception.ClientError):
+            status = self.clientreaduser.admin_change_password(
+                user, password, policy)
 
-        assert status == 0
-
-        config = {
-            "hosts": TestChangePassword.hostlist
-        }
-
-        try:
-            self.clientreaduserwrong = aerospike.client(
-                config).connect(user, "aerospike")
-
-        except aerospike.exception.InvalidPassword as exception:
-            assert exception.code == 62
-            assert exception.msg is None
-        except aerospike.exception.ClientError as exception:
-            assert exception.code == -1
-
-        self.clientreaduserright = aerospike.client(config).connect(user,
-                                                                    password)
-
-        assert self.clientreaduserright is not None
-
-        self.clientreaduserright.close()
         self.clientreaduser.close()

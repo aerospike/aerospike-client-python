@@ -257,6 +257,9 @@ class TestCreateUser(TestBaseClass):
             assert exception.code == 60
             assert exception.msg == "AEROSPIKE_INVALID_USER"
 
+        except e.ClientError:
+            pass
+
     def test_create_user_with_too_long_password(self):
 
         policy = {'timeout': 1000}
@@ -269,16 +272,8 @@ class TestCreateUser(TestBaseClass):
         except:
             pass
 
-        status = self.client.admin_create_user(user, password, roles, policy)
-
-        assert status == 0
-        time.sleep(1)
-
-        user_details = self.client.admin_query_user(user, policy)
-
-        assert user_details == ['read-write']
-
-        self.delete_users.append(user)
+        with pytest.raises(e.ClientError):
+            self.client.admin_create_user(user, password, roles, policy)
 
     def test_create_user_with_empty_roles_list(self):
 

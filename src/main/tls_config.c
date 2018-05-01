@@ -82,6 +82,15 @@ setup_tls_config(as_config* config, PyObject* tls_config)
 		}
 	}
 
+	config_value = PyDict_GetItemString(tls_config, "for_login_only");
+	if (config_value) {
+		truth_value = PyObject_IsTrue(config_value);
+		if(truth_value != -1) {
+			config->tls.for_login_only = (bool)truth_value;
+			truth_value = -1;
+		}
+	}
+
 }
 
 /***

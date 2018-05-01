@@ -60,6 +60,7 @@ class TestDropRole(TestBaseClass):
             self.client.admin_query_role("usr-sys-admin-test")
             # role exists, clear it out.
             self.client.admin_drop_role("usr-sys-admin-test")
+            time.sleep(1)
         except e.InvalidRole:
             pass  # we are good, no such role exists
 
@@ -68,35 +69,15 @@ class TestDropRole(TestBaseClass):
                                         "ns": "test", "set": "demo"}],
                                       {'timeout': 1000})
         time.sleep(1)
-        roles = self.client.admin_query_role("usr-sys-admin-test")
-        assert roles == [{"code": 10, "ns": "test", "set": "demo"}]
-
-        try:
-            self.client.admin_query_user("testcreaterole")
-            # user exists, clear it out.
-            self.client.admin_drop_user("testcreaterole")
-        except e.AdminError:
-            pass  # we are good, no such user exists
-
-        status = self.client.admin_create_user("testcreaterole", "createrole",
-                                               ["usr-sys-admin-test"])
-
-        assert status == 0
-        time.sleep(1)
-        users = self.client.admin_query_user("testcreaterole")
-
-        assert users == ["usr-sys-admin-test"]
 
         status = self.client.admin_drop_role(
             "usr-sys-admin-test", {'timeout': 1000})
 
         assert status == 0
+        time.sleep(1)
 
-        users = self.client.admin_query_user("testcreaterole")
-
-        assert users == []
-
-        self.client.admin_drop_user("testcreaterole")
+        with pytest.raises(e.InvalidRole):
+            self.client.admin_query_role("usr-sys-admin-test")
 
     def test_drop_role_positive(self):
         """
@@ -106,6 +87,8 @@ class TestDropRole(TestBaseClass):
             self.client.admin_query_role("usr-sys-admin-test")
             # role exists, clear it out.
             self.client.admin_drop_role("usr-sys-admin-test")
+            time.sleep(1)
+
         except e.InvalidRole:
             pass  # we are good, no such role exists
 
@@ -113,35 +96,15 @@ class TestDropRole(TestBaseClass):
                                       [{"code": aerospike.PRIV_USER_ADMIN},
                                        {"code": aerospike.PRIV_SYS_ADMIN}])
         time.sleep(1)
-        roles = self.client.admin_query_role("usr-sys-admin-test")
-        assert roles == [
+        privs = self.client.admin_query_role("usr-sys-admin-test")
+        assert privs == [
             {"code": 0, "ns": "", "set": ""}, {"code": 1, "ns": "", "set": ""}]
 
-        try:
-            self.client.admin_query_user("testcreaterole")
-            # user exists, clear it out.
-            self.client.admin_drop_user("testcreaterole")
-        except e.AdminError:
-            pass  # we are good, no such user exists
-
-        status = self.client.admin_create_user("testcreaterole", "createrole",
-                                               ["usr-sys-admin-test"])
-
-        assert status == 0
+        self.client.admin_drop_role("usr-sys-admin-test")
         time.sleep(1)
-        users = self.client.admin_query_user("testcreaterole")
 
-        assert users == ["usr-sys-admin-test"]
-
-        status = self.client.admin_drop_role("usr-sys-admin-test")
-
-        assert status == 0
-
-        users = self.client.admin_query_user("testcreaterole")
-
-        assert users == []
-
-        self.client.admin_drop_user("testcreaterole")
+        with pytest.raises(e.InvalidRole):
+            self.client.admin_query_role("usr-sys-admin-test")
 
     def test_drop_non_existent_role(self):
         """

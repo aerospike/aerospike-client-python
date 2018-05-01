@@ -210,7 +210,10 @@ AerospikeConstants aerospike_constants[] = {
 
 	{ AS_RECORD_DEFAULT_TTL                 ,   "TTL_NAMESPACE_DEFAULT"},
 	{ AS_RECORD_NO_EXPIRE_TTL               ,   "TTL_NEVER_EXPIRE"},
-	{ AS_RECORD_NO_CHANGE_TTL               ,   "TTL_DONT_UPDATE"}
+	{ AS_RECORD_NO_CHANGE_TTL               ,   "TTL_DONT_UPDATE"},
+	{ AS_AUTH_INTERNAL, "AUTH_INTERNAL"},
+	{ AS_AUTH_EXTERNAL, "AUTH_EXTERNAL"},
+	{ AS_AUTH_EXTERNAL_INSECURE, "AUTH_EXTERNAL_INSECURE"}
 };
 
 static

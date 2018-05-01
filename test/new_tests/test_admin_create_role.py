@@ -42,7 +42,10 @@ class TestCreateRole(TestBaseClass):
         policy = {}
 
         for user in self.delete_users:
-            self.client.admin_drop_user(user, policy)
+            try:
+                self.client.admin_drop_user(user, policy)
+            except Exception:
+                pass
 
         self.client.close()
 
@@ -78,17 +81,9 @@ class TestCreateRole(TestBaseClass):
 
         assert status == 0
         time.sleep(1)
-        users = self.client.admin_query_user("testcreaterole")
+        roles = self.client.admin_query_user("testcreaterole")
 
-        assert users == ["usr-sys-admin-test"]
-
-        status = self.client.admin_drop_role("usr-sys-admin-test")
-
-        assert status == 0
-
-        users = self.client.admin_query_user("testcreaterole")
-
-        assert users == []
+        assert roles == ["usr-sys-admin-test"]
 
         self.client.admin_drop_user("testcreaterole")
 
@@ -112,24 +107,7 @@ class TestCreateRole(TestBaseClass):
         assert roles == [
             {"code": 0, 'ns': '', 'set': ''}, {"code": 1, 'ns': '', 'set': ''}]
 
-        status = self.client.admin_create_user("testcreaterole", "createrole",
-                                               ["usr-sys-admin-test"])
-
-        assert status == 0
-        time.sleep(1)
-        users = self.client.admin_query_user("testcreaterole")
-
-        assert users == ["usr-sys-admin-test"]
-
         status = self.client.admin_drop_role("usr-sys-admin-test")
-
-        assert status == 0
-
-        users = self.client.admin_query_user("testcreaterole")
-
-        assert users == []
-
-        self.client.admin_drop_user("testcreaterole")
 
     def test_create_role_incorrect_role_type(self):
         """
@@ -223,17 +201,17 @@ class TestCreateRole(TestBaseClass):
 
         assert status == 0
         time.sleep(1)
-        users = self.client.admin_query_user("testcreaterole")
+        roles = self.client.admin_query_user("testcreaterole")
 
-        assert users == [role_name]
+        assert roles == [role_name]
 
-        status = self.client.admin_drop_role(role_name)
+        self.client.admin_drop_role(role_name)
 
-        assert status == 0
+        time.sleep(1)
 
-        users = self.client.admin_query_user("testcreaterole")
+        roles = self.client.admin_query_user("testcreaterole")
 
-        assert users == []
+        assert roles == []
 
         self.client.admin_drop_user("testcreaterole")
 
