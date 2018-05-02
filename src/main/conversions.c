@@ -1198,11 +1198,23 @@ static bool map_to_pyobject_each(const as_val * key, const as_val * val, void * 
 	val_to_pyobject(convd->client, convd->err, val, &py_val);
 
 	if (err->code != AEROSPIKE_OK) {
-		PyObject_Del(py_key);
+		Py_DECREF(py_key);
 		return false;
 	}
 
-	PyDict_SetItem(py_dict, py_key, py_val);
+	/* We failed to set a dictionary item. This is probably
+	 * due to an unhashable keytype
+	 */
+	if(PyDict_SetItem(py_dict, py_key, py_val) == -1) {
+		Py_CLEAR(py_key);
+		Py_CLEAR(py_val);
+		if (PyErr_Occurred() && PyErr_ExceptionMatches(PyExc_TypeError)) {
+			as_error_update(err, AEROSPIKE_ERR_CLIENT, "Unable to use unhashable type as a dictionary key");
+		} else {
+			as_error_update(err, AEROSPIKE_ERR_CLIENT, "Unable to add dictionary item");
+		}
+		return false;
+	}
 
 	Py_DECREF(py_key);
 	Py_DECREF(py_val);
@@ -1225,7 +1237,7 @@ as_status map_to_pyobject(AerospikeClient * self, as_error * err, const as_map *
 	as_map_foreach(map, map_to_pyobject_each, &convd);
 
 	if (err->code != AEROSPIKE_OK) {
-		PyObject_Del(*py_map);
+		Py_DECREF(*py_map);
 		return err->code;
 	}
 
@@ -1235,6 +1247,7 @@ as_status map_to_pyobject(AerospikeClient * self, as_error * err, const as_map *
 as_status do_record_to_pyobject(AerospikeClient * self, as_error * err, const as_record * rec, const as_key * key, PyObject ** obj, bool cnvt_list_to_map)
 {
 	as_error_reset(err);
+	*obj = NULL;
 
 	if (!rec) {
 		return as_error_update(err, AEROSPIKE_ERR_CLIENT, "record is null");
@@ -1245,9 +1258,21 @@ as_status do_record_to_pyobject(AerospikeClient * self, as_error * err, const as
 	PyObject * py_rec_meta = NULL;
 	PyObject * py_rec_bins = NULL;
 
-	key_to_pyobject(err, key ? key : &rec->key, &py_rec_key);
-	metadata_to_pyobject(err, rec, &py_rec_meta);
-	bins_to_pyobject(self, err, rec, &py_rec_bins, cnvt_list_to_map);
+
+	if (key_to_pyobject(err, key ? key : &rec->key, &py_rec_key) != AEROSPIKE_OK) {
+		return err->code;
+	}
+
+	if (metadata_to_pyobject(err, rec, &py_rec_meta) != AEROSPIKE_OK) {
+		Py_CLEAR(py_rec_key);
+		return err->code;
+	}
+
+	if (bins_to_pyobject(self, err, rec, &py_rec_bins, cnvt_list_to_map) != AEROSPIKE_OK) {
+		Py_CLEAR(py_rec_key);
+		Py_CLEAR(py_rec_meta);
+		return err->code;
+	}
 
 	if (!py_rec_key) {
 		Py_INCREF(Py_None);

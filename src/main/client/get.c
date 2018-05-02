@@ -96,7 +96,9 @@ PyObject * AerospikeClient_Get_Invoke(
 	aerospike_key_get(self->as, &err, read_policy_p, &key, &rec);
 	Py_END_ALLOW_THREADS
 	if (err.code == AEROSPIKE_OK) {
-		record_to_pyobject(self, &err, rec, &key, &py_rec);
+		if (record_to_pyobject(self, &err, rec, &key, &py_rec) != AEROSPIKE_OK) {
+			goto CLEANUP;
+		}
 		if (!read_policy_p ||
 				( read_policy_p && read_policy_p->key == AS_POLICY_KEY_DIGEST)) {
 			// This is a special case.
