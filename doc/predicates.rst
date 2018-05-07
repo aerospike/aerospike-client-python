@@ -120,7 +120,7 @@
     :param index_type: Optional. Possible ``aerospike.INDEX_TYPE_*`` values are detailed in :ref:`aerospike_misc_constants`.
     :return: :py:func:`tuple` to be used in :meth:`aerospike.Query.where`.
 
-    .. note:: Requires server version >= 3.7.0
+    .. note:: Requires server version >= 3.8.1
 
     .. code-block:: python
 
@@ -249,9 +249,7 @@
     :type val: :py:class:`str` or :py:class:`int`
     :return: :py:func:`tuple` to be used in :meth:`aerospike.Query.where`.
 
-    .. warning::
-
-        This functionality will become production-ready in a future release of the Aerospike server.
+    .. note:: Requires server version >= 3.8.1
 
     .. code-block:: python
 
@@ -289,9 +287,7 @@
     :param int max: the maximum value to be used for matching with the range operator.
     :return: :py:func:`tuple` to be used in :meth:`aerospike.Query.where`.
 
-    .. warning::
-
-        This functionality will become production-ready in a future release of the Aerospike server.
+    .. note:: Requires server version >= 3.8.1
 
     .. code-block:: python
 
