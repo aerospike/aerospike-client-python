@@ -70,6 +70,14 @@ a cluster-tending thread.
         client.close()
 
 
+    .. index::
+        single: Connection
+
+    .. _aerospike_connection_operations:
+
+Connection
+----------
+
     .. method:: connect([username, password])
 
         Connect to the cluster. The optional *username* and *password* only
@@ -98,139 +106,12 @@ a cluster-tending thread.
         Close all connections to the cluster. It is recommended to explicitly \
         call this method when the program is done communicating with the cluster.
 
-    .. method:: get(key[, policy]) -> (key, meta, bins)
 
-        Read a record with a given *key*, and return the record as a \
-        :py:func:`tuple` consisting of *key*, *meta* and *bins*.
+    .. index::
+        single: Record Operations
 
-        :param tuple key: a :ref:`aerospike_key_tuple` associated with the record.
-        :param dict policy: optional :ref:`aerospike_read_policies`.
-        :return: a :ref:`aerospike_record_tuple`. See :ref:`unicode_handling`.
-        :raises: :exc:`~aerospike.exception.RecordNotFound`.
-
-        .. code-block:: python
-
-            from __future__ import print_function
-            import aerospike
-            from aerospike import exception as ex
-            import sys
-
-            config = {'hosts': [('127.0.0.1', 3000)]}
-            client = aerospike.client(config).connect()
-
-            try:
-                # assuming a record with such a key exists in the cluster
-                key = ('test', 'demo', 1)
-                (key, meta, bins) = client.get(key)
-                print(key)
-                print('--------------------------')
-                print(meta)
-                print('--------------------------')
-                print(bins)
-            except ex.RecordNotFound:
-                print("Record not found:", key)
-            except ex.AerospikeError as e:
-                print("Error: {0} [{1}]".format(e.msg, e.code))
-                sys.exit(1)
-            finally:
-                client.close()
-
-        .. warning::
-
-            The client has been changed to raise a :py:exc:`~aerospike.exception.RecordNotFound` \
-            exception when :meth:`~aerospike.Client.get` does not find the \
-            record. Code that used to check for ``meta != None`` should be \
-            modified.
-
-        .. versionchanged:: 2.0.0
-
-
-    .. method:: select(key, bins[, policy]) -> (key, meta, bins)
-
-        Read a record with a given *key*, and return the record as a \
-        :py:func:`tuple` consisting of *key*, *meta* and *bins*, with the \
-        specified bins projected. Prior to Aerospike server 3.6.0, if a selected \
-        bin does not exist its value will be :py:obj:`None`. Starting with 3.6.0, if
-        a bin does not exist it will not be present in the returned \
-        :ref:`aerospike_record_tuple`.
-
-        :param tuple key: a :ref:`aerospike_key_tuple` associated with the record.
-        :param list bins: a list of bin names to select from the record.
-        :param dict policy: optional :ref:`aerospike_read_policies`.
-        :return: a :ref:`aerospike_record_tuple`. See :ref:`unicode_handling`.
-        :raises: :exc:`~aerospike.exception.RecordNotFound`.
-
-        .. code-block:: python
-
-            from __future__ import print_function
-            import aerospike
-            from aerospike import exception as ex
-            import sys
-
-            config = { 'hosts': [('127.0.0.1', 3000)] }
-            client = aerospike.client(config).connect()
-
-            try:
-                # assuming a record with such a key exists in the cluster
-                key = ('test', 'demo', 1)
-                (key, meta, bins) = client.select(key, ['name'])
-                print("name: ", bins.get('name'))
-            except ex.RecordNotFound:
-                print("Record not found:", key)
-            except ex.AerospikeError as e:
-                print("Error: {0} [{1}]".format(e.msg, e.code))
-                sys.exit(1)
-            finally:
-                client.close()
-
-        .. warning::
-
-            The client has been changed to raise a :py:exc:`~aerospike.exception.RecordNotFound` \
-            exception when :meth:`~aerospike.Client.select` does not find the \
-            record. Code that used to check for ``meta != None`` should be \
-            modified.
-
-        .. versionchanged:: 2.0.0
-
-
-    .. method:: exists(key[, policy]) -> (key, meta)
-
-        Check if a record with a given *key* exists in the cluster and return \
-        the record as a :py:func:`tuple` consisting of *key* and *meta*.  If \
-        the record  does not exist the *meta* data will be :py:obj:`None`.
-
-        :param tuple key: a :ref:`aerospike_key_tuple` associated with the record.
-        :param dict policy: optional :ref:`aerospike_read_policies`.
-        :rtype: :py:func:`tuple` (key, meta)
-        :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
-
-        .. code-block:: python
-
-            from __future__ import print_function
-            import aerospike
-            from aerospike import exception as ex
-            import sys
-
-            config = { 'hosts': [('127.0.0.1', 3000)] }
-            client = aerospike.client(config).connect()
-
-            try:
-                # assuming a record with such a key exists in the cluster
-                key = ('test', 'demo', 1)
-                (key, meta) = client.exists(key)
-                print(key)
-                print('--------------------------')
-                print(meta)
-            except ex.RecordNotFound:
-                print("Record not found:", key)
-            except ex.AerospikeError as e:
-                print("Error: {0} [{1}]".format(e.msg, e.code))
-                sys.exit(1)
-            finally:
-                client.close()
-
-        .. versionchanged:: 2.0.3
-
+Record Operations
+-----------------
 
     .. method:: put(key, bins[, meta[, policy[, serializer]]])
 
@@ -313,6 +194,138 @@ a cluster-tending thread.
                     print("Error: {0} [{1}]".format(e.msg, e.code))
                 client.close()
 
+
+    .. method:: exists(key[, policy]) -> (key, meta)
+
+        Check if a record with a given *key* exists in the cluster and return \
+        the record as a :py:func:`tuple` consisting of *key* and *meta*.  If \
+        the record  does not exist the *meta* data will be :py:obj:`None`.
+
+        :param tuple key: a :ref:`aerospike_key_tuple` associated with the record.
+        :param dict policy: optional :ref:`aerospike_read_policies`.
+        :rtype: :py:func:`tuple` (key, meta)
+        :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
+
+        .. code-block:: python
+
+            from __future__ import print_function
+            import aerospike
+            from aerospike import exception as ex
+            import sys
+
+            config = { 'hosts': [('127.0.0.1', 3000)] }
+            client = aerospike.client(config).connect()
+
+            try:
+                # assuming a record with such a key exists in the cluster
+                key = ('test', 'demo', 1)
+                (key, meta) = client.exists(key)
+                print(key)
+                print('--------------------------')
+                print(meta)
+            except ex.RecordNotFound:
+                print("Record not found:", key)
+            except ex.AerospikeError as e:
+                print("Error: {0} [{1}]".format(e.msg, e.code))
+                sys.exit(1)
+            finally:
+                client.close()
+
+        .. versionchanged:: 2.0.3
+
+    .. method:: get(key[, policy]) -> (key, meta, bins)
+
+        Read a record with a given *key*, and return the record as a \
+        :py:func:`tuple` consisting of *key*, *meta* and *bins*.
+
+        :param tuple key: a :ref:`aerospike_key_tuple` associated with the record.
+        :param dict policy: optional :ref:`aerospike_read_policies`.
+        :return: a :ref:`aerospike_record_tuple`. See :ref:`unicode_handling`.
+        :raises: :exc:`~aerospike.exception.RecordNotFound`.
+
+        .. code-block:: python
+
+            from __future__ import print_function
+            import aerospike
+            from aerospike import exception as ex
+            import sys
+
+            config = {'hosts': [('127.0.0.1', 3000)]}
+            client = aerospike.client(config).connect()
+
+            try:
+                # assuming a record with such a key exists in the cluster
+                key = ('test', 'demo', 1)
+                (key, meta, bins) = client.get(key)
+                print(key)
+                print('--------------------------')
+                print(meta)
+                print('--------------------------')
+                print(bins)
+            except ex.RecordNotFound:
+                print("Record not found:", key)
+            except ex.AerospikeError as e:
+                print("Error: {0} [{1}]".format(e.msg, e.code))
+                sys.exit(1)
+            finally:
+                client.close()
+
+        .. warning::
+
+            The client has been changed to raise a :py:exc:`~aerospike.exception.RecordNotFound` \
+            exception when :meth:`~aerospike.Client.get` does not find the \
+            record. Code that used to check for ``meta != None`` should be \
+            modified.
+
+        .. versionchanged:: 2.0.0
+
+    .. method:: select(key, bins[, policy]) -> (key, meta, bins)
+
+        Read a record with a given *key*, and return the record as a \
+        :py:func:`tuple` consisting of *key*, *meta* and *bins*, with the \
+        specified bins projected. Prior to Aerospike server 3.6.0, if a selected \
+        bin does not exist its value will be :py:obj:`None`. Starting with 3.6.0, if
+        a bin does not exist it will not be present in the returned \
+        :ref:`aerospike_record_tuple`.
+
+        :param tuple key: a :ref:`aerospike_key_tuple` associated with the record.
+        :param list bins: a list of bin names to select from the record.
+        :param dict policy: optional :ref:`aerospike_read_policies`.
+        :return: a :ref:`aerospike_record_tuple`. See :ref:`unicode_handling`.
+        :raises: :exc:`~aerospike.exception.RecordNotFound`.
+
+        .. code-block:: python
+
+            from __future__ import print_function
+            import aerospike
+            from aerospike import exception as ex
+            import sys
+
+            config = { 'hosts': [('127.0.0.1', 3000)] }
+            client = aerospike.client(config).connect()
+
+            try:
+                # assuming a record with such a key exists in the cluster
+                key = ('test', 'demo', 1)
+                (key, meta, bins) = client.select(key, ['name'])
+                print("name: ", bins.get('name'))
+            except ex.RecordNotFound:
+                print("Record not found:", key)
+            except ex.AerospikeError as e:
+                print("Error: {0} [{1}]".format(e.msg, e.code))
+                sys.exit(1)
+            finally:
+                client.close()
+
+        .. warning::
+
+            The client has been changed to raise a :py:exc:`~aerospike.exception.RecordNotFound` \
+            exception when :meth:`~aerospike.Client.select` does not find the \
+            record. Code that used to check for ``meta != None`` should be \
+            modified.
+
+        .. versionchanged:: 2.0.0
+
     .. method:: touch(key[, val=0[, meta[, policy]]])
 
         Touch the given record, setting its \
@@ -390,13 +403,8 @@ a cluster-tending thread.
         .. deprecated:: 2.0.1
             use the function :func:`aerospike.calc_digest` instead.
 
-    .. index::
-        single: Bin Operations
 
-    .. _aerospike_bin_operations:
-
-    .. rubric:: Bin Operations
-
+    .. rubric:: Removing a Bin
 
     .. method:: remove_bin(key, list[, meta[, policy]])
 
@@ -424,6 +432,192 @@ a cluster-tending thread.
             client.remove_bin(key, ['name', 'age'], meta, {'retry': aerospike.POLICY_RETRY_ONCE})
             client.close()
 
+
+    .. index::
+        single: Batch Operations
+
+Batch Operations
+----------------
+
+    .. method:: get_many(keys[, policy]) -> [ (key, meta, bins)]
+
+        Batch-read multiple records, and return them as a :class:`list`. Any \
+        record that does not exist will have a :py:obj:`None` value for metadata \
+        and bins in the record tuple.
+
+        :param list keys: a list of :ref:`aerospike_key_tuple`.
+        :param dict policy: optional :ref:`aerospike_batch_policies`.
+        :return: a :class:`list` of :ref:`aerospike_record_tuple`.
+        :raises: a :exc:`~aerospike.exception.ClientError` if the batch is too big.
+
+        .. seealso:: More information about the \
+            `Batch Index <https://www.aerospike.com/docs/guide/batch.html>`_ \
+            interface new to Aerospike server >= 3.6.0.
+
+        .. code-block:: python
+
+            from __future__ import print_function
+            import aerospike
+            from aerospike import exception as ex
+            import sys
+
+            config = { 'hosts': [('127.0.0.1', 3000)] }
+            client = aerospike.client(config).connect()
+
+            try:
+                # assume the fourth key has no matching record
+                keys = [
+                  ('test', 'demo', '1'),
+                  ('test', 'demo', '2'),
+                  ('test', 'demo', '3'),
+                  ('test', 'demo', '4')
+                ]
+                records = client.get_many(keys)
+                print(records)
+            except ex.AerospikeError as e:
+                print("Error: {0} [{1}]".format(e.msg, e.code))
+                sys.exit(1)
+            finally:
+                client.close()
+
+        .. note::
+
+            We expect to see something like:
+
+            .. code-block:: python
+
+                [
+                  (('test', 'demo', '1', bytearray(b'ev\xb4\x88\x8c\xcf\x92\x9c \x0bo\xbd\x90\xd0\x9d\xf3\xf6\xd1\x0c\xf3')), {'gen': 1, 'ttl': 2592000}, {'age': 1, 'name': u'Name1'}),
+                  (('test', 'demo', '2', bytearray(b'n\xcd7p\x88\xdcF\xe1\xd6\x0e\x05\xfb\xcbs\xa68I\xf0T\xfd')), {'gen': 1, 'ttl': 2592000}, {'age': 2, 'name': u'Name2'}),
+                  (('test', 'demo', '3', bytearray(b'\x9f\xf2\xe3\xf3\xc0\xc1\xc3q\xb5$n\xf8\xccV\xa9\xed\xd91a\x86')), {'gen': 1, 'ttl': 2592000}, {'age': 3, 'name': u'Name3'}),
+                  (('test', 'demo', '4', bytearray(b'\x8eu\x19\xbe\xe0(\xda ^\xfa\x8ca\x93s\xe8\xb3%\xa8]\x8b')), None, None)
+                ]
+
+        .. warning::
+
+            The return type changed to :class:`list` starting with version 1.0.50.
+
+    .. method:: exists_many(keys[, policy]) -> [ (key, meta)]
+
+        Batch-read metadata for multiple keys, and return it as a :class:`list`. \
+        Any record that does not exist will have a :py:obj:`None` value for metadata in \
+        the result tuple.
+
+        :param list keys: a list of :ref:`aerospike_key_tuple`.
+        :param dict policy: optional :ref:`aerospike_batch_policies`.
+        :return: a :class:`list` of (key, metadata) :py:func:`tuple`.
+
+        .. seealso:: More information about the \
+            `Batch Index <https://www.aerospike.com/docs/guide/batch.html>`_ \
+            interface new to Aerospike server >= 3.6.0.
+
+        .. code-block:: python
+
+            from __future__ import print_function
+            import aerospike
+            from aerospike import exception as ex
+            import sys
+
+            config = { 'hosts': [('127.0.0.1', 3000)] }
+            client = aerospike.client(config).connect()
+
+            try:
+                # assume the fourth key has no matching record
+                keys = [
+                  ('test', 'demo', '1'),
+                  ('test', 'demo', '2'),
+                  ('test', 'demo', '3'),
+                  ('test', 'demo', '4')
+                ]
+                records = client.exists_many(keys)
+                print(records)
+            except ex.AerospikeError as e:
+                print("Error: {0} [{1}]".format(e.msg, e.code))
+                sys.exit(1)
+            finally:
+                client.close()
+
+        .. note::
+
+            We expect to see something like:
+
+            .. code-block:: python
+
+               [
+                  (('test', 'demo', '1', bytearray(b'ev\xb4\x88\x8c\xcf\x92\x9c \x0bo\xbd\x90\xd0\x9d\xf3\xf6\xd1\x0c\xf3')), {'gen': 2, 'ttl': 2592000}),
+                  (('test', 'demo', '2', bytearray(b'n\xcd7p\x88\xdcF\xe1\xd6\x0e\x05\xfb\xcbs\xa68I\xf0T\xfd')), {'gen': 7, 'ttl': 1337}),
+                  (('test', 'demo', '3', bytearray(b'\x9f\xf2\xe3\xf3\xc0\xc1\xc3q\xb5$n\xf8\xccV\xa9\xed\xd91a\x86')), {'gen': 9, 'ttl': 543}),
+                  (('test', 'demo', '4', bytearray(b'\x8eu\x19\xbe\xe0(\xda ^\xfa\x8ca\x93s\xe8\xb3%\xa8]\x8b')), None)
+               ]
+
+        .. warning::
+
+            The return type changed to :class:`list` starting with version 1.0.50.
+
+    .. method:: select_many(keys, bins[, policy]) -> [(key, meta, bins), ...]}
+
+        Batch-read multiple records, and return them as a :class:`list`. Any \
+        record that does not exist will have a :py:obj:`None` value for metadata \
+        and bins in the record tuple. The *bins* will be filtered as specified.
+
+        :param list keys: a list of :ref:`aerospike_key_tuple`.
+        :param list bins: the bin names to select from the matching records.
+        :param dict policy: optional :ref:`aerospike_batch_policies`.
+        :return: a :class:`list` of :ref:`aerospike_record_tuple`.
+
+        .. seealso:: More information about the \
+            `Batch Index <https://www.aerospike.com/docs/guide/batch.html>`_ \
+            interface new to Aerospike server >= 3.6.0.
+
+        .. code-block:: python
+
+            from __future__ import print_function
+            import aerospike
+            from aerospike import exception as ex
+            import sys
+
+            config = { 'hosts': [('127.0.0.1', 3000)] }
+            client = aerospike.client(config).connect()
+
+            try:
+                # assume the fourth key has no matching record
+                keys = [
+                  ('test', 'demo', None, bytearray(b'ev\xb4\x88\x8c\xcf\x92\x9c \x0bo\xbd\x90\xd0\x9d\xf3\xf6\xd1\x0c\xf3'),
+                  ('test', 'demo', None, bytearray(b'n\xcd7p\x88\xdcF\xe1\xd6\x0e\x05\xfb\xcbs\xa68I\xf0T\xfd'),
+                  ('test', 'demo', None, bytearray(b'\x9f\xf2\xe3\xf3\xc0\xc1\xc3q\xb5$n\xf8\xccV\xa9\xed\xd91a\x86'),
+                  ('test', 'demo', None, bytearray(b'\x8eu\x19\xbe\xe0(\xda ^\xfa\x8ca\x93s\xe8\xb3%\xa8]\x8b')
+                ]
+                records = client.select_many(keys, [u'name'])
+                print(records)
+            except ex.AerospikeError as e:
+                print("Error: {0} [{1}]".format(e.msg, e.code))
+                sys.exit(1)
+            finally:
+                client.close()
+
+        .. note::
+
+            We expect to see something like:
+
+            .. code-block:: python
+
+                [
+                  (('test', 'demo', None, bytearray(b'ev\xb4\x88\x8c\xcf\x92\x9c \x0bo\xbd\x90\xd0\x9d\xf3\xf6\xd1\x0c\xf3'), {'gen': 1, 'ttl': 2592000}, {'name': u'Name1'}),
+                  (('test', 'demo', None, bytearray(b'n\xcd7p\x88\xdcF\xe1\xd6\x0e\x05\xfb\xcbs\xa68I\xf0T\xfd'), {'gen': 1, 'ttl': 2592000}, {'name': u'Name2'}),
+                  (('test', 'demo', None, bytearray(b'\x9f\xf2\xe3\xf3\xc0\xc1\xc3q\xb5$n\xf8\xccV\xa9\xed\xd91a\x86'), {'gen': 1, 'ttl': 2592000}, {'name': u'Name3'}),
+                  (('test', 'demo', None, bytearray(b'\x8eu\x19\xbe\xe0(\xda ^\xfa\x8ca\x93s\xe8\xb3%\xa8]\x8b'), None, None)
+                ]
+
+        .. warning::
+
+            The return type changed to :class:`list` starting with version 1.0.50.
+
+
+    .. index::
+        single: String Operations
+
+String Operations
+-----------------
 
     .. method:: append(key, bin, val[, meta[, policy]])
 
@@ -493,6 +687,12 @@ a cluster-tending thread.
                 client.close()
 
 
+    .. index::
+        single: Numeric Operations
+
+Numeric Operations
+------------------
+
     .. method:: increment(key, bin, offset[, meta[, policy]])
 
         Increment the integer value in *bin* by the integer *val*.
@@ -535,6 +735,32 @@ a cluster-tending thread.
             finally:
                 client.close()
 
+
+    .. index::
+        single: List Operations
+
+List Operations
+---------------
+
+    .. note:: List operations require server version >= 3.7.0
+
+        List operations support negative indexing. If the index is negative,
+        the resolved index starts backwards from end of list.
+
+        Index examples:
+         * 0: first element in the list
+         * 4: fifth element in the list
+         * -1: last element in the list
+        Index range examples:
+         * 1, count 2: second and third elements in the list
+         * -3, count 3: last three elements in the list
+
+        If an index is out of bounds, a parameter error will be returned.
+        If a range is partially out of bounds, the valid part of the range will be returned.
+
+    .. seealso:: `Lists (Data Types) <https://www.aerospike.com/docs/guide/cdt-list.html>`_.
+
+
     .. method:: list_append(key, bin, val[, meta[, policy]])
 
         Append a single element to a list value in *bin*.
@@ -551,10 +777,6 @@ a cluster-tending thread.
         :param dict policy: optional :ref:`aerospike_operate_policies`.
         :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
 
-        .. note:: Requires server version >= 3.7.0
-
-        .. versionadded:: 1.0.59
-
     .. method:: list_extend(key, bin, items[, meta[, policy]])
 
         Extend the list value in *bin* with the given *items*.
@@ -568,10 +790,6 @@ a cluster-tending thread.
             :const:`aerospike.TTL_DONT_UPDATE`
         :param dict policy: optional :ref:`aerospike_operate_policies`.
         :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
-
-        .. note:: Requires server version >= 3.7.0
-
-        .. versionadded:: 1.0.59
 
     .. method:: list_insert(key, bin, index, val[, meta[, policy]])
 
@@ -590,10 +808,6 @@ a cluster-tending thread.
         :param dict policy: optional :ref:`aerospike_operate_policies`.
         :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
 
-        .. note:: Requires server version >= 3.7.0
-
-        .. versionadded:: 1.0.59
-
     .. method:: list_insert_items(key, bin, index, items[, meta[, policy]])
 
         Insert the *items* at the specified *index* of a list value in *bin*.
@@ -609,10 +823,6 @@ a cluster-tending thread.
         :param dict policy: optional :ref:`aerospike_operate_policies`.
         :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
 
-        .. note:: Requires server version >= 3.7.0
-
-        .. versionadded:: 1.0.59
-
     .. method:: list_pop(key, bin, index[, meta[, policy]]) -> val
 
         Remove and get back a list element at a given *index* of a list value in *bin*.
@@ -627,10 +837,6 @@ a cluster-tending thread.
         :param dict policy: optional :ref:`aerospike_operate_policies`.
         :return: a single list element.
         :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
-
-        .. note:: Requires server version >= 3.7.0
-
-        .. versionadded:: 1.0.59
 
     .. method:: list_pop_range(key, bin, index, count[, meta[, policy]]) -> val
 
@@ -648,10 +854,6 @@ a cluster-tending thread.
         :return: a :class:`list` of elements.
         :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
 
-        .. note:: Requires server version >= 3.7.0
-
-        .. versionadded:: 1.0.59
-
     .. method:: list_remove(key, bin, index[, meta[, policy]])
 
         Remove a list element at a given *index* of a list value in *bin*.
@@ -665,10 +867,6 @@ a cluster-tending thread.
             :const:`aerospike.TTL_DONT_UPDATE`
         :param dict policy: optional :ref:`aerospike_operate_policies`.
         :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
-
-        .. note:: Requires server version >= 3.7.0
-
-        .. versionadded:: 1.0.59
 
     .. method:: list_remove_range(key, bin, index, count[, meta[, policy]])
 
@@ -685,10 +883,6 @@ a cluster-tending thread.
         :param dict policy: optional :ref:`aerospike_operate_policies`.
         :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
 
-        .. note:: Requires server version >= 3.7.0
-
-        .. versionadded:: 1.0.59
-
     .. method:: list_clear(key, bin[, meta[, policy]])
 
         Remove all the elements from a list value in *bin*.
@@ -701,10 +895,6 @@ a cluster-tending thread.
             :const:`aerospike.TTL_DONT_UPDATE`
         :param dict policy: optional :ref:`aerospike_operate_policies`.
         :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
-
-        .. note:: Requires server version >= 3.7.0
-
-        .. versionadded:: 1.0.59
 
     .. method:: list_set(key, bin, index, val[, meta[, policy]])
 
@@ -723,10 +913,6 @@ a cluster-tending thread.
         :param dict policy: optional :ref:`aerospike_operate_policies`.
         :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
 
-        .. note:: Requires server version >= 3.7.0
-
-        .. versionadded:: 1.0.59
-
     .. method:: list_get(key, bin, index[, meta[, policy]]) -> val
 
         Get the list element at the specified *index* of a list value in *bin*.
@@ -739,10 +925,6 @@ a cluster-tending thread.
         :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
         :return: the list elements at the given index.
 
-        .. note:: Requires server version >= 3.7.0
-
-        .. versionadded:: 1.0.59
-
     .. method:: list_get_range(key, bin, index, count[, meta[, policy]]) -> val
 
         Get the list of *count* elements starting at a specified *index* of a list value in *bin*.
@@ -754,10 +936,6 @@ a cluster-tending thread.
         :param dict policy: optional :ref:`aerospike_operate_policies`.
         :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
         :return: a :class:`list` of elements.
-
-        .. note:: Requires server version >= 3.7.0
-
-        .. versionadded:: 1.0.59
 
     .. method:: list_trim(key, bin, index, count[, meta[, policy]]) -> val
 
@@ -776,10 +954,6 @@ a cluster-tending thread.
         :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
         :return: a :class:`list` of elements.
 
-        .. note:: Requires server version >= 3.7.0
-
-        .. versionadded:: 1.0.59
-
     .. method:: list_size(key, bin[, meta[, policy]]) -> count
 
         Count the number of elements in the list value in *bin*.
@@ -791,9 +965,85 @@ a cluster-tending thread.
         :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
         :return: a :class:`int`.
 
-        .. note:: Requires server version >= 3.7.0
 
-        .. versionadded:: 1.0.59
+    .. index::
+        single: Map Operations
+
+Map Operations
+--------------
+
+    .. note:: Map operations require server version >= 3.8.4
+
+        All maps maintain an index and a rank.  Map supports negative indexing for index and rank.
+
+        An index in the context of the map API is the order of a particular key in a map. The key with the lowest key value has index 0.
+
+        A rank is the order of a particular value in a map. If multiple copies of a value exist, the ranks of those copies are based on their key ordering.
+
+        Index examples:
+         * 0: lowest key in the map
+         * 4: fifth key in the map
+         * -1: highest key in the map
+        Index range examples:
+         * 1, count 2: second and third keys in the map
+         * -3, count 3: highest three key in the map
+        Rank examples:
+         * 0: element with the lowest value rank in the map
+         * -1: element with the highest ranked value in the map
+        Rank range examples:
+         * 1, count 2: second and third lowest ranked elements in the map
+         * -3, count 3: top three ranked elements in the map.
+
+        The default map order is ``aerospike.MAP_UNORDERED``.
+
+        .. code-block:: python
+
+            from __future__ import print_function
+            import aerospike
+            from aerospike import exception as e
+
+            config = {'hosts': [('127.0.0.1', 3000)]}
+            try:
+                client = aerospike.client(config).connect()
+            except e.ClientError as e:
+                print("Error: {0} [{1}]".format(e.msg, e.code))
+                sys.exit(2)
+
+            key = ('test', 'demo', 'map-example')
+            abc = {}
+            for i in xrange(1, 10, 1):
+                abc[chr(64 + i)] = i
+            for i in xrange(11, 26, 1):
+                abc[chr(64 + i)] = i
+
+            try:
+                map_policy = {
+                    'map_write_mode': aerospike.MAP_UPDATE,
+                    'map_order': aerospike.MAP_KEY_VALUE_ORDERED
+                }
+                client.map_put_items(key, 'abc', abc, map_policy)
+                client.map_put(key, 'abc', 'J', 10, map_policy)
+                print(client.map_get_by_key_range(key, 'abc', 'A', 'D', aerospike.MAP_RETURN_KEY_VALUE))
+                client.map_put(key, 'abc', 'Z', 26, map_policy)
+                print(client.map_get_by_index_range(key, 'abc', -3, -1, aerospike.MAP_RETURN_KEY))
+                print(client.map_get_by_rank_range(key, 'abc', 7, 3, aerospike.MAP_RETURN_VALUE))
+            except e.AerospikeError as e:
+                print("Error: {0} [{1}]".format(e.msg, e.code))
+
+            client.close()
+
+        .. note::
+
+            We expect to see something like:
+
+            .. code-block:: python
+
+                [('A', 1), ('B', 2), ('C', 3)]
+                ['X', 'Y', 'Z']
+                [8, 9, 10]
+
+    .. seealso:: `Maps (Data Types) <https://www.aerospike.com/docs/guide/cdt-map.html>`_.
+
 
     .. method:: map_set_policy(key, bin, map_policy)
 
@@ -803,10 +1053,6 @@ a cluster-tending thread.
         :param str bin: the name of the bin.
         :param dict map_policy: :ref:`aerospike_map_policies`.
         :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
-
-        .. note:: Requires server version >= 3.8.4
-
-        .. versionadded:: 2.0.4
 
     .. method:: map_put(key, bin, map_key, val[, map_policy, [, meta[, policy]]])
 
@@ -827,10 +1073,6 @@ a cluster-tending thread.
         :param dict policy: optional :ref:`aerospike_operate_policies`.
         :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
 
-        .. note:: Requires server version >= 3.8.4
-
-        .. versionadded:: 2.0.4
-
     .. method:: map_put_items(key, bin, items[, map_policy, [, meta[, policy]]])
 
         Add the given *items* dict of key/value pairs to the map record specified by *key* and *bin*.
@@ -845,10 +1087,6 @@ a cluster-tending thread.
             :const:`aerospike.TTL_DONT_UPDATE`
         :param dict policy: optional :ref:`aerospike_operate_policies`.
         :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
-
-        .. note:: Requires server version >= 3.8.4
-
-        .. versionadded:: 2.0.4
 
     .. method:: map_increment(key, bin, map_key, incr[, map_policy, [, meta[, policy]]])
  
@@ -867,10 +1105,6 @@ a cluster-tending thread.
         :param dict policy: optional :ref:`aerospike_operate_policies`.
         :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
 
-        .. note:: Requires server version >= 3.8.4
-
-        .. versionadded:: 2.0.4
-
     .. method:: map_decrement(key, bin, map_key, decr[, map_policy, [, meta[, policy]]])
 
         Decrement the value of the map entry by given *decr*. Map entry is specified by *key*, *bin* and *map_key*.
@@ -888,10 +1122,6 @@ a cluster-tending thread.
         :param dict policy: optional :ref:`aerospike_operate_policies`.
         :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
 
-        .. note:: Requires server version >= 3.8.4
-
-        .. versionadded:: 2.0.4
-
     .. method:: map_size(key, bin[, meta[, policy]]) -> count
 
         Return the size of the map specified by *key* and *bin*.
@@ -902,10 +1132,6 @@ a cluster-tending thread.
         :param dict policy: optional :ref:`aerospike_operate_policies`.
         :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
         :return: a :class:`int`.
-
-        .. note:: Requires server version >= 3.8.4
-
-        .. versionadded:: 2.0.4
 
     .. method:: map_clear(key, bin[, meta[, policy]])
 
@@ -919,10 +1145,6 @@ a cluster-tending thread.
             :const:`aerospike.TTL_DONT_UPDATE`
         :param dict policy: optional :ref:`aerospike_operate_policies`.
         :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
-
-        .. note:: Requires server version >= 3.8.4
-
-        .. versionadded:: 2.0.4
 
     .. method:: map_remove_by_key(key, bin, map_key, return_type[, meta[, policy]])
 
@@ -941,10 +1163,6 @@ a cluster-tending thread.
         :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
         :return: depends on return_type parameter
 
-        .. note:: Requires server version >= 3.8.4
-
-        .. versionadded:: 2.0.4
-
     .. method:: map_remove_by_key_list(key, bin, list, return_type[, meta[, policy]][, meta[, policy]])
 
         Remove and optionally return map entries from the map specified by *key* and *bin* which have keys that match the given *list* of keys.
@@ -960,10 +1178,6 @@ a cluster-tending thread.
         :param dict policy: optional :ref:`aerospike_operate_policies`.
         :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
         :return: depends on return_type parameter
-
-        .. note:: Requires server version >= 3.8.4
-
-        .. versionadded:: 2.0.4
 
     .. method:: map_remove_by_key_range(key, bin, map_key, range, return_type[, meta[, policy]])
 
@@ -984,10 +1198,6 @@ a cluster-tending thread.
         :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
         :return: depends on return_type parameter
 
-        .. note:: Requires server version >= 3.8.4
-
-        .. versionadded:: 2.0.4
-
     .. method:: map_remove_by_value(key, bin, val, return_type[, meta[, policy]])
 
         Remove and optionally return map entries from the map specified by *key* and *bin* which have a value matching *val* parameter.
@@ -1005,10 +1215,6 @@ a cluster-tending thread.
         :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
         :return: depends on return_type parameter
 
-        .. note:: Requires server version >= 3.8.4
-
-        .. versionadded:: 2.0.4
-
     .. method:: map_remove_by_value_list(key, bin, list, return_type[, meta[, policy]])
 
         Remove and optionally return map entries from the map specified by *key* and *bin* which have a value matching the *list* of values.
@@ -1024,10 +1230,6 @@ a cluster-tending thread.
         :param dict policy: optional :ref:`aerospike_operate_policies`.
         :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
         :return: depends on return_type parameter
-
-        .. note:: Requires server version >= 3.8.4
-
-        .. versionadded:: 2.0.4
 
     .. method:: map_remove_by_value_range(key, bin, val, range, return_type[, meta[, policy]])
 
@@ -1048,10 +1250,6 @@ a cluster-tending thread.
         :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
         :return: depends on return_type parameter
 
-        .. note:: Requires server version >= 3.8.4
-
-        .. versionadded:: 2.0.4
-
     .. method:: map_remove_by_index(key, bin, index, return_type[, meta[, policy]])
 
         Remove and optionally return the map entry from the map specified by *key* and *bin* at the given *index* location.
@@ -1067,10 +1265,6 @@ a cluster-tending thread.
         :param dict policy: optional :ref:`aerospike_operate_policies`.
         :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
         :return: depends on return_type parameter
-
-        .. note:: Requires server version >= 3.8.4
-
-        .. versionadded:: 2.0.4
 
     .. method:: map_remove_by_index_range(key, bin, index, range, return_type[, meta[, policy]])
 
@@ -1089,10 +1283,6 @@ a cluster-tending thread.
         :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
         :return: depends on return_type parameter
 
-        .. note:: Requires server version >= 3.8.4
-
-        .. versionadded:: 2.0.4
-
     .. method:: map_remove_by_rank(key, bin, rank, return_type[, meta[, policy]])
 
         Remove and optionally return the map entry from the map specified by *key* and *bin* with a value that has the given *rank*.
@@ -1108,10 +1298,6 @@ a cluster-tending thread.
         :param dict policy: optional :ref:`aerospike_operate_policies`.
         :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
         :return: depends on return_type parameter
-
-        .. note:: Requires server version >= 3.8.4
-
-        .. versionadded:: 2.0.4
 
     .. method:: map_remove_by_rank_range(key, bin, rank, range, return_type[, meta[, policy]])
 
@@ -1130,10 +1316,6 @@ a cluster-tending thread.
         :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
         :return: depends on return_type parameter
 
-        .. note:: Requires server version >= 3.8.4
-
-        .. versionadded:: 2.0.4
-
     .. method:: map_get_by_key(key, bin, map_key, return_type[, meta[, policy]])
        
         Return map entry from the map specified by *key* and *bin* which has a key that matches the given *map_key*.
@@ -1147,10 +1329,6 @@ a cluster-tending thread.
         :param dict policy: optional :ref:`aerospike_operate_policies`.
         :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
         :return: depends on return_type parameter
-
-        .. note:: Requires server version >= 3.8.4
-
-        .. versionadded:: 2.0.4
 
     .. method:: map_get_by_key_range(key, bin, map_key, range, return_type[, meta[, policy]])
 
@@ -1167,10 +1345,6 @@ a cluster-tending thread.
         :param dict policy: optional :ref:`aerospike_operate_policies`.
         :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
         :return: depends on return_type parameter
-
-        .. note:: Requires server version >= 3.8.4
-
-        .. versionadded:: 2.0.4
 
     .. method:: map_get_by_key_list(key, bin, key_list, return_type[, meta[, policy]])
 
@@ -1204,10 +1378,6 @@ a cluster-tending thread.
         :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
         :return: depends on return_type parameter
 
-        .. note:: Requires server version >= 3.8.4
-
-        .. versionadded:: 2.0.4
-
     .. method:: map_get_by_value_range(key, bin, val, range, return_type[, meta[, policy]])
 
         Return map entries from the map specified by *key* and *bin* identified by the value range (*val* inclusive, *range* exclusive).
@@ -1223,10 +1393,6 @@ a cluster-tending thread.
         :param dict policy: optional :ref:`aerospike_operate_policies`.
         :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
         :return: depends on return_type parameter
-
-        .. note:: Requires server version >= 3.8.4
-
-        .. versionadded:: 2.0.4
 
     .. method:: map_get_by_value_list(key, bin, value_list, return_type[, meta[, policy]])
 
@@ -1259,10 +1425,6 @@ a cluster-tending thread.
         :return: depends on return_type parameter
 
  
-        .. note:: Requires server version >= 3.8.4
-
-        .. versionadded:: 2.0.4
-
     .. method:: map_get_by_index_range(key, bin, index, range, return_type[, meta[, policy]])
 
         Return the map entries from the map specified by *key* and *bin* starting at the given *index* location and removing *range* number of items.
@@ -1277,10 +1439,6 @@ a cluster-tending thread.
         :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
         :return: depends on return_type parameter
 
-        .. note:: Requires server version >= 3.8.4
-
-        .. versionadded:: 2.0.4
-
     .. method:: map_get_by_rank(key, bin, rank, return_type[, meta[, policy]])
 
         Return the map entry from the map specified by *key* and *bin* with a value that has the given *rank*.
@@ -1294,12 +1452,8 @@ a cluster-tending thread.
         :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
         :return: depends on return_type parameter
 
-        .. note:: Requires server version >= 3.8.4
-
-        .. versionadded:: 2.0.4
-
     .. method:: map_get_by_rank_range(key, bin, rank, range, return_type[, meta[, policy]])
-   
+
         Return the map entries from the map specified by *key* and *bin* which have a value rank starting at *rank* and removing *range* number of items.
 
         :param tuple key: a :ref:`aerospike_key_tuple` tuple associated with the record.
@@ -1312,10 +1466,12 @@ a cluster-tending thread.
         :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
         :return: depends on return_type parameter
 
-        .. note:: Requires server version >= 3.8.4
 
-        .. versionadded:: 2.0.4
+    .. index::
+        single: Multi-Ops
 
+Multi-Ops (Operate)
+-------------------
 
     .. method:: operate(key, list[, meta[, policy]]) -> (key, meta, bins)
 
@@ -1456,263 +1612,80 @@ a cluster-tending thread.
 
     .. method:: operate_ordered(key, list[, meta[, policy]]) -> (key, meta, bins)
 
-            Perform multiple bin operations on a record with the results being \
-            returned as a list of (bin-name, result) tuples. The order of the \
-            elements in the list will correspond to the order of the operations \
-            from the input parameters.
+        Perform multiple bin operations on a record with the results being \
+        returned as a list of (bin-name, result) tuples. The order of the \
+        elements in the list will correspond to the order of the operations \
+        from the input parameters.
 
-            :param tuple key: a :ref:`aerospike_key_tuple` associated with the record.
-            :param list list: a :class:`list` of one or more bin operations, each \
-                structured as the :class:`dict` \
-                ``{'bin': bin name, 'op': aerospike.OPERATOR_* [, 'val': value]}``. \
-                See :ref:`aerospike_operators`.
-            :param dict meta: optional record metadata to be set, with field
-                ``'ttl'`` set to :class:`int` number of seconds or one of 
-                :const:`aerospike.TTL_NAMESPACE_DEFAULT`, :const:`aerospike.TTL_NEVER_EXPIRE`, 
-                :const:`aerospike.TTL_DONT_UPDATE`
-            :param dict policy: optional :ref:`aerospike_operate_policies`.
-            :return: a :ref:`aerospike_record_tuple`. See :ref:`unicode_handling`.
-            :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
+        :param tuple key: a :ref:`aerospike_key_tuple` associated with the record.
+        :param list list: a :class:`list` of one or more bin operations, each \
+            structured as the :class:`dict` \
+            ``{'bin': bin name, 'op': aerospike.OPERATOR_* [, 'val': value]}``. \
+            See :ref:`aerospike_operators`.
+        :param dict meta: optional record metadata to be set, with field
+            ``'ttl'`` set to :class:`int` number of seconds or one of 
+            :const:`aerospike.TTL_NAMESPACE_DEFAULT`, :const:`aerospike.TTL_NEVER_EXPIRE`, 
+            :const:`aerospike.TTL_DONT_UPDATE`
+        :param dict policy: optional :ref:`aerospike_operate_policies`.
+        :return: a :ref:`aerospike_record_tuple`. See :ref:`unicode_handling`.
+        :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
 
-            .. note::
-                In version `2.1.3` the return format of bin entries for this method, **only in cases when a map operation specifying a `return_type` is used**, has changed. Map operations using "return_type" of aerospike.MAP_RETURN_KEY_VALUE will now return \
-                a bin value of a list of keys and corresponding values, rather than a list of key/value tuples. See the following code block for details. In addition, some operations which did not return a value in versions <= 2.1.2 will now return a response.
+        .. note::
+            In version `2.1.3` the return format of bin entries for this method, **only in cases when a map operation specifying a `return_type` is used**, has changed. Map operations using "return_type" of aerospike.MAP_RETURN_KEY_VALUE will now return \
+            a bin value of a list of keys and corresponding values, rather than a list of key/value tuples. See the following code block for details. In addition, some operations which did not return a value in versions <= 2.1.2 will now return a response.
 
-            .. code-block:: python
+        .. code-block:: python
 
-                # pre 2.1.3 formatting of key/value bin value
-                [('key1', 'val1'), ('key2', 'val2'), ('key3', 'val3')]
+            # pre 2.1.3 formatting of key/value bin value
+            [('key1', 'val1'), ('key2', 'val2'), ('key3', 'val3')]
 
-                # >= 2.1.3 formatting
-                ['key1', 'val1', 'key2', 'val2', 'key3', 'val3']
+            # >= 2.1.3 formatting
+            ['key1', 'val1', 'key2', 'val2', 'key3', 'val3']
 
-            .. code-block:: python
+        .. code-block:: python
 
-                from __future__ import print_function
-                import aerospike
-                from aerospike import exception as ex
-                import sys
+            from __future__ import print_function
+            import aerospike
+            from aerospike import exception as ex
+            import sys
 
-                config = { 'hosts': [('127.0.0.1', 3000)] }
-                client = aerospike.client(config).connect()
-                
-                try:
-                    key = ('test', 'demo', 1)
-                    policy = {
-                        'total_timeout': 1000,
-                        'key': aerospike.POLICY_KEY_SEND,
-                        'commit_level': aerospike.POLICY_COMMIT_LEVEL_MASTER
-                    }
+            config = { 'hosts': [('127.0.0.1', 3000)] }
+            client = aerospike.client(config).connect()
 
-                    llist = [{"op": aerospike.OPERATOR_APPEND,
-                              "bin": "name",
-                              "val": "aa"},
-                             {"op": aerospike.OPERATOR_READ,
-                              "bin": "name"},
-                             {"op": aerospike.OPERATOR_INCR,
-                              "bin": "age",
-                              "val": 3}]
+            try:
+                key = ('test', 'demo', 1)
+                policy = {
+                    'total_timeout': 1000,
+                    'key': aerospike.POLICY_KEY_SEND,
+                    'commit_level': aerospike.POLICY_COMMIT_LEVEL_MASTER
+                }
 
-                    client.operate_ordered(key, llist, {}, policy)
-                except ex.AerospikeError as e:
-                    print("Error: {0} [{1}]".format(e.msg, e.code))
-                    sys.exit(1)
-                finally:
-                    client.close()
-                    
-        .. versionadded:: 2.0.2
+                llist = [{"op": aerospike.OPERATOR_APPEND,
+                          "bin": "name",
+                          "val": "aa"},
+                         {"op": aerospike.OPERATOR_READ,
+                          "bin": "name"},
+                         {"op": aerospike.OPERATOR_INCR,
+                          "bin": "age",
+                          "val": 3}]
+
+                client.operate_ordered(key, llist, {}, policy)
+            except ex.AerospikeError as e:
+                print("Error: {0} [{1}]".format(e.msg, e.code))
+                sys.exit(1)
+            finally:
+                client.close()
+
         .. versionchanged:: 2.1.3
 
+
     .. index::
-        single: Batch Operations
+        single: Scan and Query
 
-    .. _aerospike_batch_operations:
+    .. _aerospike_scan_and_query:
 
-    .. rubric:: Batch Operations
-
-    .. method:: get_many(keys[, policy]) -> [ (key, meta, bins)]
-
-        Batch-read multiple records, and return them as a :class:`list`. Any \
-        record that does not exist will have a :py:obj:`None` value for metadata \
-        and bins in the record tuple.
-
-        :param list keys: a list of :ref:`aerospike_key_tuple`.
-        :param dict policy: optional :ref:`aerospike_batch_policies`.
-        :return: a :class:`list` of :ref:`aerospike_record_tuple`.
-        :raises: a :exc:`~aerospike.exception.ClientError` if the batch is too big.
-
-        .. seealso:: More information about the \
-            `Batch Index <https://www.aerospike.com/docs/guide/batch.html>`_ \
-            interface new to Aerospike server >= 3.6.0.
-
-        .. code-block:: python
-
-            from __future__ import print_function
-            import aerospike
-            from aerospike import exception as ex
-            import sys
-
-            config = { 'hosts': [('127.0.0.1', 3000)] }
-            client = aerospike.client(config).connect()
-
-            try:
-                # assume the fourth key has no matching record
-                keys = [
-                  ('test', 'demo', '1'),
-                  ('test', 'demo', '2'),
-                  ('test', 'demo', '3'),
-                  ('test', 'demo', '4')
-                ]
-                records = client.get_many(keys)
-                print records
-            except ex.AerospikeError as e:
-                print("Error: {0} [{1}]".format(e.msg, e.code))
-                sys.exit(1)
-            finally:
-                client.close()
-
-        .. note::
-
-            We expect to see something like:
-
-            .. code-block:: python
-
-                [
-                  (('test', 'demo', '1', bytearray(b'ev\xb4\x88\x8c\xcf\x92\x9c \x0bo\xbd\x90\xd0\x9d\xf3\xf6\xd1\x0c\xf3')), {'gen': 1, 'ttl': 2592000}, {'age': 1, 'name': u'Name1'}),
-                  (('test', 'demo', '2', bytearray(b'n\xcd7p\x88\xdcF\xe1\xd6\x0e\x05\xfb\xcbs\xa68I\xf0T\xfd')), {'gen': 1, 'ttl': 2592000}, {'age': 2, 'name': u'Name2'}),
-                  (('test', 'demo', '3', bytearray(b'\x9f\xf2\xe3\xf3\xc0\xc1\xc3q\xb5$n\xf8\xccV\xa9\xed\xd91a\x86')), {'gen': 1, 'ttl': 2592000}, {'age': 3, 'name': u'Name3'}),
-                  (('test', 'demo', '4', bytearray(b'\x8eu\x19\xbe\xe0(\xda ^\xfa\x8ca\x93s\xe8\xb3%\xa8]\x8b')), None, None)
-                ]
-
-        .. warning::
-
-            The return type changed to :class:`list` starting with version 1.0.50.
-
-        .. versionchanged:: 1.0.50
-
-
-    .. method:: exists_many(keys[, policy]) -> [ (key, meta)]
-
-        Batch-read metadata for multiple keys, and return it as a :class:`list`. \
-        Any record that does not exist will have a :py:obj:`None` value for metadata in \
-        the result tuple.
-
-        :param list keys: a list of :ref:`aerospike_key_tuple`.
-        :param dict policy: optional :ref:`aerospike_batch_policies`.
-        :return: a :class:`list` of (key, metadata) :py:func:`tuple`.
-
-        .. seealso:: More information about the \
-            `Batch Index <https://www.aerospike.com/docs/guide/batch.html>`_ \
-            interface new to Aerospike server >= 3.6.0.
-
-        .. code-block:: python
-
-            from __future__ import print_function
-            import aerospike
-            from aerospike import exception as ex
-            import sys
-
-            config = { 'hosts': [('127.0.0.1', 3000)] }
-            client = aerospike.client(config).connect()
-
-            try:
-                # assume the fourth key has no matching record
-                keys = [
-                  ('test', 'demo', '1'),
-                  ('test', 'demo', '2'),
-                  ('test', 'demo', '3'),
-                  ('test', 'demo', '4')
-                ]
-                records = client.exists_many(keys)
-                print records
-            except ex.AerospikeError as e:
-                print("Error: {0} [{1}]".format(e.msg, e.code))
-                sys.exit(1)
-            finally:
-                client.close()
-
-        .. note::
-
-            We expect to see something like:
-
-            .. code-block:: python
-
-               [
-                  (('test', 'demo', '1', bytearray(b'ev\xb4\x88\x8c\xcf\x92\x9c \x0bo\xbd\x90\xd0\x9d\xf3\xf6\xd1\x0c\xf3')), {'gen': 2, 'ttl': 2592000}),
-                  (('test', 'demo', '2', bytearray(b'n\xcd7p\x88\xdcF\xe1\xd6\x0e\x05\xfb\xcbs\xa68I\xf0T\xfd')), {'gen': 7, 'ttl': 1337}),
-                  (('test', 'demo', '3', bytearray(b'\x9f\xf2\xe3\xf3\xc0\xc1\xc3q\xb5$n\xf8\xccV\xa9\xed\xd91a\x86')), {'gen': 9, 'ttl': 543}),
-                  (('test', 'demo', '4', bytearray(b'\x8eu\x19\xbe\xe0(\xda ^\xfa\x8ca\x93s\xe8\xb3%\xa8]\x8b')), None)
-               ]
-
-        .. warning::
-
-            The return type changed to :class:`list` starting with version 1.0.50.
-
-        .. versionchanged:: 1.0.50
-
-
-    .. method:: select_many(keys, bins[, policy]) -> [(key, meta, bins), ...]}
-
-        Batch-read multiple records, and return them as a :class:`list`. Any \
-        record that does not exist will have a :py:obj:`None` value for metadata \
-        and bins in the record tuple. The *bins* will be filtered as specified.
-
-        :param list keys: a list of :ref:`aerospike_key_tuple`.
-        :param list bins: the bin names to select from the matching records.
-        :param dict policy: optional :ref:`aerospike_batch_policies`.
-        :return: a :class:`list` of :ref:`aerospike_record_tuple`.
-
-        .. seealso:: More information about the \
-            `Batch Index <https://www.aerospike.com/docs/guide/batch.html>`_ \
-            interface new to Aerospike server >= 3.6.0.
-
-        .. code-block:: python
-
-            from __future__ import print_function
-            import aerospike
-            from aerospike import exception as ex
-            import sys
-
-            config = { 'hosts': [('127.0.0.1', 3000)] }
-            client = aerospike.client(config).connect()
-
-            try:
-                # assume the fourth key has no matching record
-                keys = [
-                  ('test', 'demo', None, bytearray(b'ev\xb4\x88\x8c\xcf\x92\x9c \x0bo\xbd\x90\xd0\x9d\xf3\xf6\xd1\x0c\xf3'),
-                  ('test', 'demo', None, bytearray(b'n\xcd7p\x88\xdcF\xe1\xd6\x0e\x05\xfb\xcbs\xa68I\xf0T\xfd'),
-                  ('test', 'demo', None, bytearray(b'\x9f\xf2\xe3\xf3\xc0\xc1\xc3q\xb5$n\xf8\xccV\xa9\xed\xd91a\x86'),
-                  ('test', 'demo', None, bytearray(b'\x8eu\x19\xbe\xe0(\xda ^\xfa\x8ca\x93s\xe8\xb3%\xa8]\x8b')
-                ]
-                records = client.select_many(keys, [u'name'])
-                print records
-            except ex.AerospikeError as e:
-                print("Error: {0} [{1}]".format(e.msg, e.code))
-                sys.exit(1)
-            finally:
-                client.close()
-
-        .. note::
-
-            We expect to see something like:
-
-            .. code-block:: python
-
-                [
-                  (('test', 'demo', None, bytearray(b'ev\xb4\x88\x8c\xcf\x92\x9c \x0bo\xbd\x90\xd0\x9d\xf3\xf6\xd1\x0c\xf3'), {'gen': 1, 'ttl': 2592000}, {'name': u'Name1'}),
-                  (('test', 'demo', None, bytearray(b'n\xcd7p\x88\xdcF\xe1\xd6\x0e\x05\xfb\xcbs\xa68I\xf0T\xfd'), {'gen': 1, 'ttl': 2592000}, {'name': u'Name2'}),
-                  (('test', 'demo', None, bytearray(b'\x9f\xf2\xe3\xf3\xc0\xc1\xc3q\xb5$n\xf8\xccV\xa9\xed\xd91a\x86'), {'gen': 1, 'ttl': 2592000}, {'name': u'Name3'}),
-                  (('test', 'demo', None, bytearray(b'\x8eu\x19\xbe\xe0(\xda ^\xfa\x8ca\x93s\xe8\xb3%\xa8]\x8b'), None, None)
-                ]
-
-        .. warning::
-
-            The return type changed to :class:`list` starting with version 1.0.50.
-
-        .. versionchanged:: 1.0.50
-
-
-    .. rubric:: Scans
+Scan and Query
+--------------
 
     .. method:: scan(namespace[, set]) -> Scan
 
@@ -1726,8 +1699,6 @@ a cluster-tending thread.
           *namespace* will be scanned.
         :return: an :py:class:`aerospike.Scan` class.
 
-
-    .. rubric:: Queries
 
     .. method:: query(namespace[, set]) -> Query
 
@@ -1743,12 +1714,14 @@ a cluster-tending thread.
           different from not providing the *set* in :meth:`scan`).
         :return: an :py:class:`aerospike.Query` class.
 
+
     .. index::
-        single: UDF Operations
+        single: User Defined Functions
 
     .. _aerospike_udf_operations:
 
-    .. rubric:: UDFs
+User Defined Functions
+----------------------
 
     .. method:: udf_put(filename[, udf_type=aerospike.UDF_TYPE_LUA[, policy]])
 
@@ -1774,9 +1747,6 @@ a cluster-tending thread.
                 client.udf_put('/path/to/my_module.lua')
                 client.close()
 
-        .. versionchanged:: 1.0.45
-
-
     .. method:: udf_remove(module[, policy])
 
         Remove a  previously registered UDF module from the cluster.
@@ -1788,9 +1758,6 @@ a cluster-tending thread.
         .. code-block:: python
 
             client.udf_remove('my_module.lua')
-
-        .. versionchanged:: 1.0.39
-
 
     .. method:: udf_list([policy]) -> []
 
@@ -1833,9 +1800,6 @@ a cluster-tending thread.
                   'name': 'module.lua',
                   'type': 0}]
 
-        .. versionchanged:: 1.0.39
-
-
     .. method:: udf_get(module[, language=aerospike.UDF_TYPE_LUA[, policy]]) -> str
 
         Return the content of a UDF module which is registered with the cluster.
@@ -1845,9 +1809,6 @@ a cluster-tending thread.
         :param dict policy: currently **timeout** in milliseconds is the available policy.
         :rtype: :class:`str`
         :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
-
-        .. versionchanged:: 1.0.39
-
 
     .. method:: apply(key, module, function, args[, policy])
 
@@ -1907,8 +1868,6 @@ a cluster-tending thread.
 
             This functionality will become available with a future release of the Aerospike server.
 
-        .. versionadded:: 1.0.50
-
 
     .. method:: job_info(job_id, module[, policy]) -> dict
 
@@ -1943,8 +1902,6 @@ a cluster-tending thread.
             except ex.AerospikeError as e:
                 print("Error: {0} [{1}]".format(e.msg, e.code))
             client.close()
-
-        .. versionadded:: 1.0.50
 
 
     .. method:: scan_info(scan_id) -> dict
@@ -1989,145 +1946,8 @@ a cluster-tending thread.
     .. index::
         single: Info Operations
 
-    .. _aerospike_info_operations:
-
-    .. rubric:: Info
-
-    .. method:: index_string_create(ns, set, bin, index_name[, policy])
-
-        Create a string index with *index_name* on the *bin* in the specified \
-        *ns*, *set*.
-
-        :param str ns: the namespace in the aerospike cluster.
-        :param str set: the set name.
-        :param str bin: the name of bin the secondary index is built on.
-        :param str index_name: the name of the index.
-        :param dict policy: optional :ref:`aerospike_info_policies`.
-        :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
-
-        .. versionchanged:: 1.0.39
-
-
-    .. method:: index_integer_create(ns, set, bin, index_name[, policy])
-
-        Create an integer index with *index_name* on the *bin* in the specified \
-        *ns*, *set*.
-
-        :param str ns: the namespace in the aerospike cluster.
-        :param str set: the set name.
-        :param str bin: the name of bin the secondary index is built on.
-        :param str index_name: the name of the index.
-        :param dict policy: optional :ref:`aerospike_info_policies`.
-        :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
-
-        .. versionchanged:: 1.0.39
-
-    .. method:: index_list_create(ns, set, bin, index_datatype, index_name[, policy])
-
-        Create an index named *index_name* for numeric, string or GeoJSON values \
-        (as defined by *index_datatype*) on records of the specified *ns*, *set* \
-        whose *bin* is a list.
-
-        :param str ns: the namespace in the aerospike cluster.
-        :param str set: the set name.
-        :param str bin: the name of bin the secondary index is built on.
-        :param index_datatype: Possible values are ``aerospike.INDEX_STRING``, ``aerospike.INDEX_NUMERIC`` and ``aerospike.INDEX_GEO2DSPHERE``.
-        :param str index_name: the name of the index.
-        :param dict policy: optional :ref:`aerospike_info_policies`.
-        :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
-
-        .. note:: Requires server version >= 3.8.0
-
-        .. versionadded:: 1.0.42
-
-    .. method:: index_map_keys_create(ns, set, bin, index_datatype, index_name[, policy])
-
-        Create an index named *index_name* for numeric, string or GeoJSON values \
-        (as defined by *index_datatype*) on records of the specified *ns*, *set* \
-        whose *bin* is a map. The index will include the keys of the map.
-
-        :param str ns: the namespace in the aerospike cluster.
-        :param str set: the set name.
-        :param str bin: the name of bin the secondary index is built on.
-        :param index_datatype: Possible values are ``aerospike.INDEX_STRING``, ``aerospike.INDEX_NUMERIC`` and ``aerospike.INDEX_GEO2DSPHERE``.
-        :param str index_name: the name of the index.
-        :param dict policy: optional :ref:`aerospike_info_policies`.
-        :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
-
-        .. note:: Requires server version >= 3.8.0
-
-        .. versionadded:: 1.0.42
-
-    .. method:: index_map_values_create(ns, set, bin, index_datatype, index_name[, policy])
-
-        Create an index named *index_name* for numeric, string or GeoJSON values \
-        (as defined by *index_datatype*) on records of the specified *ns*, *set* \
-        whose *bin* is a map. The index will include the values of the map.
-
-        :param str ns: the namespace in the aerospike cluster.
-        :param str set: the set name.
-        :param str bin: the name of bin the secondary index is built on.
-        :param index_datatype: Possible values are ``aerospike.INDEX_STRING``, ``aerospike.INDEX_NUMERIC`` and ``aerospike.INDEX_GEO2DSPHERE``.
-        :param str index_name: the name of the index.
-        :param dict policy: optional :ref:`aerospike_info_policies`.
-        :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
-
-        .. note:: Requires server version >= 3.8.0
-
-        .. code-block:: python
-
-            import aerospike
-
-            client = aerospike.client({ 'hosts': [ ('127.0.0.1', 3000)]}).connect()
-
-            # assume the bin fav_movies in the set test.demo bin should contain
-            # a dict { (str) _title_ : (int) _times_viewed_ }
-            # create a secondary index for string values of test.demo records whose 'fav_movies' bin is a map
-            client.index_map_keys_create('test', 'demo', 'fav_movies', aerospike.INDEX_STRING, 'demo_fav_movies_titles_idx')
-            # create a secondary index for integer values of test.demo records whose 'fav_movies' bin is a map
-            client.index_map_values_create('test', 'demo', 'fav_movies', aerospike.INDEX_NUMERIC, 'demo_fav_movies_views_idx')
-            client.close()
-
-        .. versionadded:: 1.0.42
-
-    .. method:: index_geo2dsphere_create(ns, set, bin, index_name[, policy])
-
-        Create a geospatial 2D spherical index with *index_name* on the *bin* \
-        in the specified *ns*, *set*.
-
-        :param str ns: the namespace in the aerospike cluster.
-        :param str set: the set name.
-        :param str bin: the name of bin the secondary index is built on.
-        :param str index_name: the name of the index.
-        :param dict policy: optional :ref:`aerospike_info_policies`.
-        :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
-
-        .. seealso:: :class:`aerospike.GeoJSON`, :mod:`aerospike.predicates`
-
-        .. note:: Requires server version >= 3.7.0
-
-        .. code-block:: python
-
-            import aerospike
-
-            client = aerospike.client({ 'hosts': [ ('127.0.0.1', 3000)]}).connect()
-            client.index_geo2dsphere_create('test', 'pads', 'loc', 'pads_loc_geo')
-            client.close()
-
-        .. versionadded:: 1.0.53
-
-
-    .. method:: index_remove(ns, index_name[, policy])
-
-        Remove the index with *index_name* from the namespace.
-
-        :param str ns: the namespace in the aerospike cluster.
-        :param str index_name: the name of the index.
-        :param dict policy: optional :ref:`aerospike_info_policies`.
-        :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
-
-        .. versionchanged:: 1.0.39
-
+Info Operations
+---------------
 
     .. method:: get_nodes() -> []
 
@@ -2159,7 +1979,7 @@ a cluster-tending thread.
 
         .. warning:: In versions < 3.0.0 ``get_nodes`` will not work when using TLS
 
-     .. method:: info(command[, hosts[, policy]]) -> {}
+    .. method:: info(command[, hosts[, policy]]) -> {}
 
         .. deprecated:: 3.0.0
             Use :meth:`info_node` to send a request to a single node, or :meth:`info_all` to send a request to the entire cluster. Sending requests to specific nodes can be better handled with a simple Python function such as:
@@ -2207,7 +2027,7 @@ a cluster-tending thread.
 
         .. versionchanged:: 3.0.0
 
-     .. method:: info_all(command[, policy]]) -> {}
+    .. method:: info_all(command[, policy]]) -> {}
 
         Send an info *command* to all nodes in the cluster to which the client is connected. If any of the individual requests fail, this will raise an exception.
 
@@ -2238,7 +2058,7 @@ a cluster-tending thread.
 
         .. versionadded:: 3.0.0
 
-     .. method:: info_node(command, host[, policy]) -> str
+    .. method:: info_node(command, host[, policy]) -> str
 
         Send an info *command* to a single node specified by *host*.
 
@@ -2261,15 +2081,11 @@ a cluster-tending thread.
         :rtype: :class:`bool`
         :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
 
-        .. versionadded:: 1.0.53
-
     .. method:: shm_key()  ->  int
 
         Expose the value of the shm_key for this client if shared-memory cluster tending is enabled, 
 
         :rtype: :class:`int` or :py:obj:`None`
-
-        .. versionadded:: 1.0.56
 
     .. method:: truncate(namespace, set, nanos[, policy])
 
@@ -2278,7 +2094,7 @@ a cluster-tending thread.
         This asynchronous server call may return before the truncation is complete.  The user can still
         write new records after the server returns because new records will have last update times
         greater than the truncate cutoff (set at the time of truncate call)
-        
+
         :param str namespace: The namespace on which the truncation operation should be performed.
         :param str set: The set to truncate. Pass in ``None`` to indicate that all records in the namespace should be truncated.
         :param long nanos:  A cutoff threshold indicating that records last updated before the threshold will be removed.Units are in nanoseconds since unix epoch (1970-01-01). A value of ``0`` indicates that all records in the set should be truncated regardless of update time. The value must not be in the future.
@@ -2286,7 +2102,6 @@ a cluster-tending thread.
         :rtype: Status indicating the success of the operation.
         :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
 
-        .. versionadded:: 2.0.11
         .. code-block:: python
 
             import aerospike
@@ -2333,12 +2148,139 @@ a cluster-tending thread.
 
             client.close()
 
+
+    .. index::
+        single: Index Operations
+
+Index Operations
+----------------
+
+    .. method:: index_string_create(ns, set, bin, index_name[, policy])
+
+        Create a string index with *index_name* on the *bin* in the specified \
+        *ns*, *set*.
+
+        :param str ns: the namespace in the aerospike cluster.
+        :param str set: the set name.
+        :param str bin: the name of bin the secondary index is built on.
+        :param str index_name: the name of the index.
+        :param dict policy: optional :ref:`aerospike_info_policies`.
+        :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
+
+    .. method:: index_integer_create(ns, set, bin, index_name[, policy])
+
+        Create an integer index with *index_name* on the *bin* in the specified \
+        *ns*, *set*.
+
+        :param str ns: the namespace in the aerospike cluster.
+        :param str set: the set name.
+        :param str bin: the name of bin the secondary index is built on.
+        :param str index_name: the name of the index.
+        :param dict policy: optional :ref:`aerospike_info_policies`.
+        :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
+
+    .. method:: index_list_create(ns, set, bin, index_datatype, index_name[, policy])
+
+        Create an index named *index_name* for numeric, string or GeoJSON values \
+        (as defined by *index_datatype*) on records of the specified *ns*, *set* \
+        whose *bin* is a list.
+
+        :param str ns: the namespace in the aerospike cluster.
+        :param str set: the set name.
+        :param str bin: the name of bin the secondary index is built on.
+        :param index_datatype: Possible values are ``aerospike.INDEX_STRING``, ``aerospike.INDEX_NUMERIC`` and ``aerospike.INDEX_GEO2DSPHERE``.
+        :param str index_name: the name of the index.
+        :param dict policy: optional :ref:`aerospike_info_policies`.
+        :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
+
+        .. note:: Requires server version >= 3.8.0
+
+    .. method:: index_map_keys_create(ns, set, bin, index_datatype, index_name[, policy])
+
+        Create an index named *index_name* for numeric, string or GeoJSON values \
+        (as defined by *index_datatype*) on records of the specified *ns*, *set* \
+        whose *bin* is a map. The index will include the keys of the map.
+
+        :param str ns: the namespace in the aerospike cluster.
+        :param str set: the set name.
+        :param str bin: the name of bin the secondary index is built on.
+        :param index_datatype: Possible values are ``aerospike.INDEX_STRING``, ``aerospike.INDEX_NUMERIC`` and ``aerospike.INDEX_GEO2DSPHERE``.
+        :param str index_name: the name of the index.
+        :param dict policy: optional :ref:`aerospike_info_policies`.
+        :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
+
+        .. note:: Requires server version >= 3.8.0
+
+    .. method:: index_map_values_create(ns, set, bin, index_datatype, index_name[, policy])
+
+        Create an index named *index_name* for numeric, string or GeoJSON values \
+        (as defined by *index_datatype*) on records of the specified *ns*, *set* \
+        whose *bin* is a map. The index will include the values of the map.
+
+        :param str ns: the namespace in the aerospike cluster.
+        :param str set: the set name.
+        :param str bin: the name of bin the secondary index is built on.
+        :param index_datatype: Possible values are ``aerospike.INDEX_STRING``, ``aerospike.INDEX_NUMERIC`` and ``aerospike.INDEX_GEO2DSPHERE``.
+        :param str index_name: the name of the index.
+        :param dict policy: optional :ref:`aerospike_info_policies`.
+        :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
+
+        .. note:: Requires server version >= 3.8.0
+
+        .. code-block:: python
+
+            import aerospike
+
+            client = aerospike.client({ 'hosts': [ ('127.0.0.1', 3000)]}).connect()
+
+            # assume the bin fav_movies in the set test.demo bin should contain
+            # a dict { (str) _title_ : (int) _times_viewed_ }
+            # create a secondary index for string values of test.demo records whose 'fav_movies' bin is a map
+            client.index_map_keys_create('test', 'demo', 'fav_movies', aerospike.INDEX_STRING, 'demo_fav_movies_titles_idx')
+            # create a secondary index for integer values of test.demo records whose 'fav_movies' bin is a map
+            client.index_map_values_create('test', 'demo', 'fav_movies', aerospike.INDEX_NUMERIC, 'demo_fav_movies_views_idx')
+            client.close()
+
+    .. method:: index_geo2dsphere_create(ns, set, bin, index_name[, policy])
+
+        Create a geospatial 2D spherical index with *index_name* on the *bin* \
+        in the specified *ns*, *set*.
+
+        :param str ns: the namespace in the aerospike cluster.
+        :param str set: the set name.
+        :param str bin: the name of bin the secondary index is built on.
+        :param str index_name: the name of the index.
+        :param dict policy: optional :ref:`aerospike_info_policies`.
+        :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
+
+        .. seealso:: :class:`aerospike.GeoJSON`, :mod:`aerospike.predicates`
+
+        .. note:: Requires server version >= 3.7.0
+
+        .. code-block:: python
+
+            import aerospike
+
+            client = aerospike.client({ 'hosts': [ ('127.0.0.1', 3000)]}).connect()
+            client.index_geo2dsphere_create('test', 'pads', 'loc', 'pads_loc_geo')
+            client.close()
+
+
+    .. method:: index_remove(ns, index_name[, policy])
+
+        Remove the index with *index_name* from the namespace.
+
+        :param str ns: the namespace in the aerospike cluster.
+        :param str index_name: the name of the index.
+        :param dict policy: optional :ref:`aerospike_info_policies`.
+        :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
+
+
     .. index::
         single: Admin Operations
 
-    .. _aerospike_admin_operations:
-
-    .. rubric:: Admin
+Admin Operations
+----------------
 
     .. note::
 
@@ -2389,9 +2331,6 @@ a cluster-tending thread.
         :param dict policy: optional :ref:`aerospike_admin_policies`.
         :raises: one of the :exc:`~aerospike.exception.AdminError` subclasses.
 
-        .. versionchanged:: 1.0.44
-
-
     .. method:: admin_drop_role(role[, policy])
 
         Drop a custom *role*.
@@ -2399,9 +2338,6 @@ a cluster-tending thread.
         :param str role: the name of the role.
         :param dict policy: optional :ref:`aerospike_admin_policies`.
         :raises: one of the :exc:`~aerospike.exception.AdminError` subclasses.
-
-        .. versionchanged:: 1.0.44
-
 
     .. method:: admin_grant_privileges(role, privileges[, policy])
 
@@ -2412,9 +2348,6 @@ a cluster-tending thread.
         :param dict policy: optional :ref:`aerospike_admin_policies`.
         :raises: one of the :exc:`~aerospike.exception.AdminError` subclasses.
 
-        .. versionchanged:: 1.0.44
-
-
     .. method:: admin_revoke_privileges(role, privileges[, policy])
 
         Remove *privileges* from a *role*.
@@ -2423,9 +2356,6 @@ a cluster-tending thread.
         :param list privileges: a list of :ref:`aerospike_privilege_dict`.
         :param dict policy: optional :ref:`aerospike_admin_policies`.
         :raises: one of the :exc:`~aerospike.exception.AdminError` subclasses.
-
-        .. versionchanged:: 1.0.44
-
 
     .. method:: admin_query_role(role[, policy]) -> []
 
@@ -2436,9 +2366,6 @@ a cluster-tending thread.
         :return: a :class:`list` of :ref:`aerospike_privilege_dict`.
         :raises: one of the :exc:`~aerospike.exception.AdminError` subclasses.
 
-        .. versionchanged:: 1.0.44
-
-
     .. method:: admin_query_roles([policy]) -> {}
 
         Get all named roles and their privileges.
@@ -2446,9 +2373,6 @@ a cluster-tending thread.
         :param dict policy: optional :ref:`aerospike_admin_policies`.
         :return: a :class:`dict` of :ref:`aerospike_privilege_dict` keyed by role name.
         :raises: one of the :exc:`~aerospike.exception.AdminError` subclasses.
-
-        .. versionchanged:: 1.0.44
-
 
     .. method:: admin_create_user(username, password, roles[, policy])
 
@@ -2460,9 +2384,6 @@ a cluster-tending thread.
         :param dict policy: optional :ref:`aerospike_admin_policies`.
         :raises: one of the :exc:`~aerospike.exception.AdminError` subclasses.
 
-        .. versionchanged:: 1.0.44
-
-
     .. method:: admin_drop_user(username[, policy])
 
         Drop the user with a specified *username* from the cluster.
@@ -2470,9 +2391,6 @@ a cluster-tending thread.
         :param str username: the username to be dropped from the aerospike cluster.
         :param dict policy: optional :ref:`aerospike_admin_policies`.
         :raises: one of the :exc:`~aerospike.exception.AdminError` subclasses.
-
-        .. versionchanged:: 1.0.44
-
 
     .. method:: admin_change_password(username, password[, policy])
 
@@ -2484,9 +2402,6 @@ a cluster-tending thread.
         :param dict policy: optional :ref:`aerospike_admin_policies`.
         :raises: one of the :exc:`~aerospike.exception.AdminError` subclasses.
 
-        .. versionchanged:: 1.0.44
-
-
     .. method:: admin_set_password(username, password[, policy])
 
         Set the *password* of the user *username* by a user administrator.
@@ -2495,9 +2410,6 @@ a cluster-tending thread.
         :param str password: the password associated with the given username.
         :param dict policy: optional :ref:`aerospike_admin_policies`.
         :raises: one of the :exc:`~aerospike.exception.AdminError` subclasses.
-
-        .. versionchanged:: 1.0.44
-
 
     .. method:: admin_grant_roles(username, roles[, policy])
 
@@ -2508,9 +2420,6 @@ a cluster-tending thread.
         :param dict policy: optional :ref:`aerospike_admin_policies`.
         :raises: one of the :exc:`~aerospike.exception.AdminError` subclasses.
 
-        .. versionchanged:: 1.0.44
-
-
     .. method:: admin_revoke_roles(username, roles[, policy])
 
         Remove *roles* from the user *username*.
@@ -2519,9 +2428,6 @@ a cluster-tending thread.
         :param list roles: a list of role names.
         :param dict policy: optional :ref:`aerospike_admin_policies`.
         :raises: one of the :exc:`~aerospike.exception.AdminError` subclasses.
-
-        .. versionchanged:: 1.0.44
-
 
     .. method:: admin_query_user (username[, policy]) -> []
 
@@ -2532,9 +2438,6 @@ a cluster-tending thread.
         :return: a :class:`list` of role names.
         :raises: one of the :exc:`~aerospike.exception.AdminError` subclasses.
 
-        .. versionchanged:: 1.0.44
-
-
     .. method:: admin_query_users ([policy]) -> {}
 
         Return the :class:`dict` of users, with their roles keyed by username.
@@ -2543,9 +2446,6 @@ a cluster-tending thread.
         :return: a :class:`dict` of roles keyed by username.
         :raises: one of the :exc:`~aerospike.exception.AdminError` subclasses.
 
-        .. versionchanged:: 1.0.44
-
-
 .. _aerospike_key_tuple:
 
 Key Tuple
@@ -2553,7 +2453,7 @@ Key Tuple
 
 .. object:: key
 
-    The key tuple which is sent and returned by various operations contains
+    The key tuple, which is sent and returned by various operations, has the structure
 
     ``(namespace, set, primary key[, the record's RIPEMD-160 digest])``
 
@@ -2585,8 +2485,6 @@ Key Tuple
         >>> client.close()
 
     .. seealso:: `Data Model: Keys and Digests <https://www.aerospike.com/docs/architecture/data-model.html#records>`_.
-
-    .. versionchanged:: 1.0.47
 
 
 .. _aerospike_record_tuple:
@@ -2649,9 +2547,6 @@ Read methods such as :meth:`~aerospike.Client.get`,
     ☃
 
 
-.. versionchanged:: 1.0.43
-
-
 .. _aerospike_write_policies:
 
 Write Policies
@@ -2659,7 +2554,7 @@ Write Policies
 
 .. object:: policy
 
-    A :class:`dict` of optional write policies which are applicable to :meth:`~Client.put`, :meth:`~Client.query_apply`. :meth:`~Client.remove_bin`.
+    A :class:`dict` of optional write policies, which are applicable to :meth:`~Client.put`, :meth:`~Client.query_apply`. :meth:`~Client.remove_bin`.
 
     .. hlist::
         :columns: 1
@@ -2670,7 +2565,7 @@ Write Policies
             | If max_retries is exceeded, the transaction will return error ``AEROSPIKE_ERR_TIMEOUT``.
             |
             | **WARNING**: Database writes that are not idempotent (such as "add") should not be retried because the write operation may be performed multiple times
-            | if the client timed out previous transaction attempts. It's important to use a distinct write policy for non-idempotent writes which sets max_retries = `0`;
+            | if the client timed out previous transaction attempts. It's important to use a distinct write policy for non-idempotent writes, which sets max_retries = `0`;
             |
             | Default: ``0``
         * **sleep_between_retries**
@@ -2709,7 +2604,7 @@ Read Policies
 
 .. object:: policy
 
-    A :class:`dict` of optional read policies which are applicable to :meth:`~Client.get`, :meth:`~Client.exists`, :meth:`~Client.select`.
+    A :class:`dict` of optional read policies, which are applicable to :meth:`~Client.get`, :meth:`~Client.exists`, :meth:`~Client.select`.
 
     .. hlist::
         :columns: 1
@@ -2721,7 +2616,7 @@ Read Policies
             | If max_retries is exceeded, the transaction will return error ``AEROSPIKE_ERR_TIMEOUT``.
             |
             | **WARNING**: Database writes that are not idempotent (such as "add") should not be retried because the write operation may be performed multiple times
-            | if the client timed out previous transaction attempts. It's important to use a distinct write policy for non-idempotent writes which sets max_retries = `0`;
+            | if the client timed out previous transaction attempts. It's important to use a distinct write policy for non-idempotent writes, which sets max_retries = `0`;
             |
             | Default: ``2``
         * **sleep_between_retries**
@@ -2764,7 +2659,7 @@ Operate Policies
 
 .. object:: policy
 
-    A :class:`dict` of optional operate policies which are applicable to :meth:`~Client.append`, :meth:`~Client.prepend`, :meth:`~Client.increment`, :meth:`~Client.operate`, and atomic list and map operations.
+    A :class:`dict` of optional operate policies, which are applicable to :meth:`~Client.append`, :meth:`~Client.prepend`, :meth:`~Client.increment`, :meth:`~Client.operate`, and atomic list and map operations.
 
     .. hlist::
         :columns: 1
@@ -2775,7 +2670,7 @@ Operate Policies
             | If max_retries is exceeded, the transaction will return error ``AEROSPIKE_ERR_TIMEOUT``.
             |
             | **WARNING**: Database writes that are not idempotent (such as "add") should not be retried because the write operation may be performed multiple times
-            | if the client timed out previous transaction attempts. It's important to use a distinct write policy for non-idempotent writes which sets max_retries = `0`;
+            | if the client timed out previous transaction attempts. It's important to use a distinct write policy for non-idempotent writes, which sets max_retries = `0`;
             |
             | Default: ``0``
         * **sleep_between_retries**
@@ -2823,7 +2718,7 @@ Apply Policies
 
 .. object:: policy
 
-    A :class:`dict` of optional apply policies which are applicable to :meth:`~Client.apply`.
+    A :class:`dict` of optional apply policies, which are applicable to :meth:`~Client.apply`.
 
     .. hlist::
         :columns: 1
@@ -2834,7 +2729,7 @@ Apply Policies
             | If max_retries is exceeded, the transaction will return error ``AEROSPIKE_ERR_TIMEOUT``.
             |
             | **WARNING**: Database writes that are not idempotent (such as "add") should not be retried because the write operation may be performed multiple times
-            | if the client timed out previous transaction attempts. It's important to use a distinct write policy for non-idempotent writes which sets max_retries = `0`;
+            | if the client timed out previous transaction attempts. It's important to use a distinct write policy for non-idempotent writes, which sets max_retries = `0`;
             |
             | Default: ``0``
         * **sleep_between_retries**
@@ -2877,7 +2772,7 @@ Remove Policies
 
 .. object:: policy
 
-    A :class:`dict` of optional remove policies which are applicable to :meth:`~Client.remove`.
+    A :class:`dict` of optional remove policies, which are applicable to :meth:`~Client.remove`.
 
     .. hlist::
         :columns: 1
@@ -2888,7 +2783,7 @@ Remove Policies
             | If max_retries is exceeded, the transaction will return error ``AEROSPIKE_ERR_TIMEOUT``.
             |
             | **WARNING**: Database writes that are not idempotent (such as "add") should not be retried because the write operation may be performed multiple times
-            | if the client timed out previous transaction attempts. It's important to use a distinct write policy for non-idempotent writes which sets max_retries = `0`;
+            | if the client timed out previous transaction attempts. It's important to use a distinct write policy for non-idempotent writes, which sets max_retries = `0`;
             |
             | Default: ``0``
         * **sleep_between_retries**
@@ -2926,7 +2821,7 @@ Batch Policies
 
 .. object:: policy
 
-    A :class:`dict` of optional batch policies which are applicable to \
+    A :class:`dict` of optional batch policies, which are applicable to \
      :meth:`~aerospike.Client.get_many`, :meth:`~aerospike.Client.exists_many` \
      and :meth:`~aerospike.Client.select_many`.
 
@@ -2939,7 +2834,7 @@ Batch Policies
             | If max_retries is exceeded, the transaction will return error ``AEROSPIKE_ERR_TIMEOUT``.
             |
             | **WARNING**: Database writes that are not idempotent (such as "add") should not be retried because the write operation may be performed multiple times
-            | if the client timed out previous transaction attempts. It's important to use a distinct write policy for non-idempotent writes which sets max_retries = `0`;
+            | if the client timed out previous transaction attempts. It's important to use a distinct write policy for non-idempotent writes, which sets max_retries = `0`;
             |
             | Default: ``2``
         * **sleep_between_retries**
@@ -2980,7 +2875,7 @@ Info Policies
 
 .. object:: policy
 
-    A :class:`dict` of optional info policies which are applicable to \
+    A :class:`dict` of optional info policies, which are applicable to \
      :meth:`~aerospike.Client.info`, :meth:`~aerospike.Client.info_node` \
      and index operations.
 
@@ -2997,7 +2892,7 @@ Admin Policies
 
 .. object:: policy
 
-    A :class:`dict` of optional admin policies which are applicable to admin (security) operations.
+    A :class:`dict` of optional admin policies, which are applicable to admin (security) operations.
 
     .. hlist::
         :columns: 1
@@ -3012,13 +2907,13 @@ Map Policies
 
 .. object:: policy
 
-    A :class:`dict` of optional map policies which are applicable to map operations.
+    A :class:`dict` of optional map policies, which are applicable to map operations.
 
     .. hlist::
         :columns: 1
 
-        * **map_write_mode** write mode for the map. Valid values: aerospike.MAP_UPDATE, aerospike.MAP_UPDATE_ONLY, aerospike.MAP_CREATE_ONLY
-        * **map_order** ordering to maintain for the map entries. Valid values: aerospike.MAP_UNORDERED, aerospike.MAP_KEY_ORDERED, aerospike.MAP_KEY_VALUE_ORDERED
+        * **map_write_mode** write mode for the map. Valid values: ``aerospike.MAP_UPDATE``, ``aerospike.MAP_UPDATE_ONLY``, ``aerospike.MAP_CREATE_ONLY``
+        * **map_order** ordering to maintain for the map entries. Valid values: ``aerospike.MAP_UNORDERED``, ``aerospike.MAP_KEY_ORDERED``, ``aerospike.MAP_KEY_VALUE_ORDERED``
 
 
 .. _aerospike_privilege_dict:
@@ -3034,8 +2929,8 @@ Privilege Objects
         :columns: 1
 
         * **code** one of the ``aerospike.PRIV_*`` values such as :data:`aerospike.PRIV_READ`
-        * **ns** optional namespace to which the privilege applies, otherwise the privilege applies globally.
-        * **set** optional set within the *ns* to which the privilege applies, otherwise to the entire namespace.
+        * **ns** optional namespace, to which the privilege applies, otherwise the privilege applies globally.
+        * **set** optional set within the *ns*, to which the privilege applies, otherwise to the entire namespace.
 
     Example:
 
