@@ -78,6 +78,8 @@ a cluster-tending thread.
 Connection
 ----------
 
+.. class:: Client
+
     .. method:: connect([username, password])
 
         Connect to the cluster. The optional *username* and *password* only
@@ -112,6 +114,8 @@ Connection
 
 Record Operations
 -----------------
+
+.. class:: Client
 
     .. method:: put(key, bins[, meta[, policy[, serializer]]])
 
@@ -439,6 +443,8 @@ Record Operations
 Batch Operations
 ----------------
 
+.. class:: Client
+
     .. method:: get_many(keys[, policy]) -> [ (key, meta, bins)]
 
         Batch-read multiple records, and return them as a :class:`list`. Any \
@@ -619,6 +625,8 @@ Batch Operations
 String Operations
 -----------------
 
+.. class:: Client
+
     .. method:: append(key, bin, val[, meta[, policy]])
 
         Append the string *val* to the string value in *bin*.
@@ -693,6 +701,8 @@ String Operations
 Numeric Operations
 ------------------
 
+.. class:: Client
+
     .. method:: increment(key, bin, offset[, meta[, policy]])
 
         Increment the integer value in *bin* by the integer *val*.
@@ -741,6 +751,8 @@ Numeric Operations
 
 List Operations
 ---------------
+
+.. class:: Client
 
     .. note:: List operations require server version >= 3.7.0
 
@@ -971,6 +983,8 @@ List Operations
 
 Map Operations
 --------------
+
+.. class:: Client
 
     .. note:: Map operations require server version >= 3.8.4
 
@@ -1487,6 +1501,8 @@ Map Operations
 Multi-Ops (Operate)
 -------------------
 
+.. class:: Client
+
     .. method:: operate(key, list[, meta[, policy]]) -> (key, meta, bins)
 
         Perform multiple bin operations on a record with a given *key*, \
@@ -1701,6 +1717,8 @@ Multi-Ops (Operate)
 Scan and Query
 --------------
 
+.. class:: Client
+
     .. method:: scan(namespace[, set]) -> Scan
 
         Return a :class:`aerospike.Scan` object to be used for executing scans \
@@ -1736,6 +1754,8 @@ Scan and Query
 
 User Defined Functions
 ----------------------
+
+.. class:: Client
 
     .. method:: udf_put(filename[, udf_type=aerospike.UDF_TYPE_LUA[, policy]])
 
@@ -1959,6 +1979,8 @@ User Defined Functions
 Info Operations
 ---------------
 
+.. class:: Client
+
     .. method:: get_nodes() -> []
 
         Return the list of hosts present in a connected cluster.
@@ -2165,6 +2187,8 @@ Info Operations
 Index Operations
 ----------------
 
+.. class:: Client
+
     .. method:: index_string_create(ns, set, bin, index_name[, policy])
 
         Create a string index with *index_name* on the *bin* in the specified \
@@ -2291,6 +2315,8 @@ Index Operations
 
 Admin Operations
 ----------------
+
+.. class:: Client
 
     .. note::
 
