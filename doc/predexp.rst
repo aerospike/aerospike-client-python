@@ -15,6 +15,7 @@ The following methods allow a user to define a predicate expression filter. Pred
     Create an AND logical predicate expression.
 
     :param nexpr: :class:`int` Number of expressions to combine with "and"
+    :return: :py:func:`tuple` to be used in :meth:`aerospike.Query.predexp`.
 
     For example, the following sequence of predicate expressions selects records where the value of bin "c" is between 11 and 20 inclusive:
 
@@ -36,6 +37,7 @@ The following methods allow a user to define a predicate expression filter. Pred
     Create an Or logical predicate expression.
 
     :param nexpr: :class:`int` Number of expressions to combine with "or"
+    :return: :py:func:`tuple` to be used in :meth:`aerospike.Query.predexp`.
 
     For example, the following sequence of predicate expressions selects records where the value of bin "pet" is "dog" or "cat"
 
@@ -56,6 +58,8 @@ The following methods allow a user to define a predicate expression filter. Pred
 
     Create a not logical predicate expression which negates the previouse predicate expression on the stack.
 
+    :return: :py:func:`tuple` to be used in :meth:`aerospike.Query.predexp`.
+
     For example, the following sequence of predicate expressions selects records where the value of bin "pet" is not "cat"
 
     .. code-block :: python
@@ -73,6 +77,7 @@ The following methods allow a user to define a predicate expression filter. Pred
     Create an integer bin value predicate expression.
 
     :param bin_name: :class:`str` The name of the bin containing an integer.
+    :return: :py:func:`tuple` to be used in :meth:`aerospike.Query.predexp`.
 
     For example, the following sequence of predicate expressions selects records where the value of bin "age" is 42
 
@@ -90,6 +95,7 @@ The following methods allow a user to define a predicate expression filter. Pred
     Create a string bin value predicate expression.
 
     :param bin_name: :class:`str` The name of the bin containing a string.
+    :return: :py:func:`tuple` to be used in :meth:`aerospike.Query.predexp`.
 
     For example, the following sequence of predicate expressions selects records where the value of bin "name" is "Bob".
 
@@ -107,6 +113,7 @@ The following methods allow a user to define a predicate expression filter. Pred
     Create a GeoJSON bin value predicate expression.
 
     :param bin_name: :class:`str` The name of the bin containing a GeoJSON value.
+    :return: :py:func:`tuple` to be used in :meth:`aerospike.Query.predexp`.
 
     For example, the following sequence of predicate expressions selects records where the value of bin "location" is within a specified region.
 
@@ -126,6 +133,7 @@ The following methods allow a user to define a predicate expression filter. Pred
     Create a list bin value predicate expression.
 
     :param bin_name: :class:`str` The name of the bin containing a list.
+    :return: :py:func:`tuple` to be used in :meth:`aerospike.Query.predexp`.
 
     For example, the following sequence of predicate expressions selects records where the list in bin "names" contains an entry equal to "Alice"
 
@@ -145,6 +153,7 @@ The following methods allow a user to define a predicate expression filter. Pred
     Create a map bin value predicate expression.
 
     :param bin_name: :class:`str` The name of the bin containing a map value.
+    :return: :py:func:`tuple` to be used in :meth:`aerospike.Query.predexp`.
 
     For example, the following sequence of predicate expressions selects records where the map in bin "pet_count" has an entry with a key equal to "Cat"
 
@@ -164,6 +173,7 @@ The following methods allow a user to define a predicate expression filter. Pred
     Create a GeoJSON value predicate expression.
 
     :param bin_name: :class:`str` The geojson string.
+    :return: :py:func:`tuple` to be used in :meth:`aerospike.Query.predexp`.
 
     For example, the following sequence of predicate expressions selects records where the value of bin "location" is within a specified region.
 
@@ -183,6 +193,7 @@ The following methods allow a user to define a predicate expression filter. Pred
     Create an integer value predicate expression.
 
     :param bin_name: :class:`int` The integer value
+    :return: :py:func:`tuple` to be used in :meth:`aerospike.Query.predexp`.
 
     For example, the following sequence of predicate expressions selects records where the value of bin "age" is 42
 
@@ -200,6 +211,7 @@ The following methods allow a user to define a predicate expression filter. Pred
     Create a string value predicate expression.
 
     :param bin_name: :class:`str` The string value.
+    :return: :py:func:`tuple` to be used in :meth:`aerospike.Query.predexp`.
 
     For example, the following sequence of predicate expressions selects records where the value of bin "name" is "Bob".
 
@@ -217,6 +229,7 @@ The following methods allow a user to define a predicate expression filter. Pred
     Create an integer iteration variable predicate expression.
 
     :param var_name: `str` The name of the variable. This should match a value used when specifying the iteration.
+    :return: :py:func:`tuple` to be used in :meth:`aerospike.Query.predexp`.
 
     For example the following selects a record where the list in bin "numbers" contains an entry equal to ``42``
 
@@ -236,6 +249,7 @@ The following methods allow a user to define a predicate expression filter. Pred
     Create an string iteration variable predicate expression.
 
     :param var_name: `str` The name of the variable. This should match a value used when specifying the iteration.
+    :return: :py:func:`tuple` to be used in :meth:`aerospike.Query.predexp`.
 
     For example the following selects a record where the list in bin "languages" contains an entry equal to ``"Python"``
 
@@ -255,12 +269,14 @@ The following methods allow a user to define a predicate expression filter. Pred
     Create an GeoJSON iteration variable predicate expression.
 
     :param var_name: `str` The name of the variable. This should match a value used when specifying the iteration.
+    :return: :py:func:`tuple` to be used in :meth:`aerospike.Query.predexp`.
 
 .. py:function:: list_iterate_or(var_name)
 
     Create an list iteration OR logical predicate expression.
 
     :param bin_name: :class:`str` The name of the iteration variable
+    :return: :py:func:`tuple` to be used in :meth:`aerospike.Query.predexp`.
 
     For example, the following sequence of predicate expressions selects records where the list in bin "names" contains an entry equal to "Alice"
 
@@ -280,6 +296,7 @@ The following methods allow a user to define a predicate expression filter. Pred
     Create an list iteration And logical predicate expression.
 
     :param var_name: :class:`str` The name of the iteration variable
+    :return: :py:func:`tuple` to be used in :meth:`aerospike.Query.predexp`.
 
     For example, the following sequence of predicate expressions selects records where the list in bin "names" contains no entries equal to "Bob".
 
@@ -300,6 +317,7 @@ The following methods allow a user to define a predicate expression filter. Pred
     Create an map key iteration Or logical predicate expression.
 
     :param var_name: :class:`str` The name of the iteration variable
+    :return: :py:func:`tuple` to be used in :meth:`aerospike.Query.predexp`.
 
     For example, the following sequence of predicate expressions selects records where the map in bin "pet_count" has an entry with a key equal to "Cat"
 
@@ -319,6 +337,7 @@ The following methods allow a user to define a predicate expression filter. Pred
     Create an map key iteration AND logical predicate expression.
 
     :param var_name: :class:`str` The name of the iteration variable
+    :return: :py:func:`tuple` to be used in :meth:`aerospike.Query.predexp`.
 
     For example, the following sequence of predicate expressions selects records where the map in bin "pet_count" does not contain entry with a key equal to "Cat".
 
@@ -339,6 +358,7 @@ The following methods allow a user to define a predicate expression filter. Pred
     Create an map value iteration Or logical predicate expression.
 
     :param var_name: :class:`str` The name of the iteration variable
+    :return: :py:func:`tuple` to be used in :meth:`aerospike.Query.predexp`.
 
     For example, the following sequence of predicate expressions selects records where at least one of the values in the map in bin "pet_count" is ``0``
 
@@ -358,6 +378,7 @@ The following methods allow a user to define a predicate expression filter. Pred
     Create an map value iteration AND logical predicate expression.
 
     :param var_name: :class:`str` The name of the iteration variable
+    :return: :py:func:`tuple` to be used in :meth:`aerospike.Query.predexp`.
 
     For example, the following sequence of predicate expressions selects records where none of the values in the map in bin "pet_count" is ``0``
 
@@ -376,7 +397,9 @@ The following methods allow a user to define a predicate expression filter. Pred
 .. py:function:: rec_digest_modulo(mod)
 
     Create a digest modulo record metadata value predicate expression.
+
     :param mod: :class:`int` The value of this expression assumes the value of 4 bytes of the digest modulo this argument.
+    :return: :py:func:`tuple` to be used in :meth:`aerospike.Query.predexp`.
 
     For example, the following sequence of predicate expressions selects records that have digest(key) % 3 == 1):
 
@@ -393,6 +416,8 @@ The following methods allow a user to define a predicate expression filter. Pred
 
     Create a last update record metadata value predicate expression. The record last update expression assumes the value of the number of nanoseconds since the unix epoch that the record was last updated.
 
+    :return: :py:func:`tuple` to be used in :meth:`aerospike.Query.predexp`.
+
     For example, the following sequence of predicate expressions selects records that have been updated after a timestamp:
 
     .. code-block :: python
@@ -407,6 +432,8 @@ The following methods allow a user to define a predicate expression filter. Pred
 .. py:function:: rec_void_time()
 
     Create a void time record metadata value predicate expression. The record void time expression assumes the value of the number of nanoseconds since the unix epoch when the record will expire. The special value of 0 means the record will not expire.
+
+    :return: :py:func:`tuple` to be used in :meth:`aerospike.Query.predexp`.
 
     For example, the following sequence of predicate expressions selects records that have void time set to 0 (no expiration):
 
@@ -423,6 +450,8 @@ The following methods allow a user to define a predicate expression filter. Pred
 
     Create a record device size metadata value predicate expression. The record device size expression assumes the value of the size in bytes that the record occupies on device storage. For non-persisted records, this value is 0.
 
+    :return: :py:func:`tuple` to be used in :meth:`aerospike.Query.predexp`.
+
     For example, the following sequence of predicate expressions selects records whose device storage size is larger than 65K:
 
     .. code-block :: python
@@ -437,6 +466,8 @@ The following methods allow a user to define a predicate expression filter. Pred
 .. py:function:: integer_equal()
 
     Create an integer comparison logical predicate expression.
+
+    :return: :py:func:`tuple` to be used in :meth:`aerospike.Query.predexp`.
 
     For example, the following sequence of predicate expressions selects records that have bin "foo" equal to 42:
 
@@ -453,6 +484,8 @@ The following methods allow a user to define a predicate expression filter. Pred
 
     Create an integer comparison logical predicate expression.
 
+    :return: :py:func:`tuple` to be used in :meth:`aerospike.Query.predexp`.
+
     For example, the following sequence of predicate expressions selects records that have bin "foo" greater than 42:
 
     .. code-block :: python
@@ -467,6 +500,8 @@ The following methods allow a user to define a predicate expression filter. Pred
 .. py:function:: integer_greatereq()
 
     Create an integer comparison logical predicate expression.
+
+    :return: :py:func:`tuple` to be used in :meth:`aerospike.Query.predexp`.
 
     For example, the following sequence of predicate expressions selects records that have bin "foo" greater than or equal to 42:
 
@@ -483,6 +518,8 @@ The following methods allow a user to define a predicate expression filter. Pred
 
     Create an integer comparison logical predicate expression.
 
+    :return: :py:func:`tuple` to be used in :meth:`aerospike.Query.predexp`.
+
     For example, the following sequence of predicate expressions selects records that have bin "foo" less than 42:
 
     .. code-block :: python
@@ -497,6 +534,8 @@ The following methods allow a user to define a predicate expression filter. Pred
 .. py:function:: integer_lesseq()
 
     Create an integer comparison logical predicate expression.
+
+    :return: :py:func:`tuple` to be used in :meth:`aerospike.Query.predexp`.
 
     For example, the following sequence of predicate expressions selects records that have bin "foo" greater than or equal to 42:
 
@@ -513,6 +552,8 @@ The following methods allow a user to define a predicate expression filter. Pred
 
     Create an integer comparison logical predicate expression.
 
+    :return: :py:func:`tuple` to be used in :meth:`aerospike.Query.predexp`.
+
     For example, the following sequence of predicate expressions selects records that have bin "foo" not equal to 42:
 
     .. code-block :: python
@@ -527,6 +568,8 @@ The following methods allow a user to define a predicate expression filter. Pred
 .. py:function:: string_equal()
 
     Create an integer comparison logical predicate expression.
+
+    :return: :py:func:`tuple` to be used in :meth:`aerospike.Query.predexp`.
 
     For example, the following sequence of predicate expressions selects records that have bin "foo" equal to "bar":
 
@@ -543,6 +586,8 @@ The following methods allow a user to define a predicate expression filter. Pred
 
     Create an integer comparison logical predicate expression.
 
+    :return: :py:func:`tuple` to be used in :meth:`aerospike.Query.predexp`.
+
     For example, the following sequence of predicate expressions selects records that have bin "foo" not equal to "bar":
 
     .. code-block :: python
@@ -558,6 +603,8 @@ The following methods allow a user to define a predicate expression filter. Pred
 
     Create a Geojson within predicate expression.
 
+    :return: :py:func:`tuple` to be used in :meth:`aerospike.Query.predexp`.
+
     .. code-block :: python
 
         from aerospike import predexp as predexp
@@ -570,6 +617,8 @@ The following methods allow a user to define a predicate expression filter. Pred
 .. py:function:: geojson_contains()
 
     Create a Geojson contains predicate expression.
+
+    :return: :py:func:`tuple` to be used in :meth:`aerospike.Query.predexp`.
 
     .. code-block :: python
 
@@ -585,6 +634,7 @@ The following methods allow a user to define a predicate expression filter. Pred
     Create a string regex predicate. May be called without any arguments to specify default behavior.
 
     :param flags: :class:`int` :ref:`regex_constants` Any, or none of the aerospike REGEX constants
+    :return: :py:func:`tuple` to be used in :meth:`aerospike.Query.predexp`.
 
     For example, the following sequence of predicate expressions selects records that have bin "hex" value ending in '1' or '2':
 

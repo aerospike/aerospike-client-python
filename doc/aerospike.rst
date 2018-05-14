@@ -1365,13 +1365,13 @@ Flags used for the `predexp.string_regex` function
 .. data:: REGEX_ICASE
 
     Do not differentiate case.
-    
+
 .. data:: REGEX_EXTENDED
-   
+
     Use POSIX Extended Regular Expression syntax when interpreting regex.
 
 .. data:: REGEX_NOSUB
-    
+
     Do not report position of matches.
 
 .. data:: REGEX_NEWLINE
