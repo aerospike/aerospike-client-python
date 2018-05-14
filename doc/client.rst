@@ -986,7 +986,7 @@ Map Operations
          * -1: highest key in the map
         Index range examples:
          * 1, count 2: second and third keys in the map
-         * -3, count 3: highest three key in the map
+         * -3, count 3: highest three keys in the map
         Rank examples:
          * 0: element with the lowest value rank in the map
          * -1: element with the highest ranked value in the map
@@ -1017,6 +1017,8 @@ Map Operations
                 abc[chr(64 + i)] = i
 
             try:
+                if client.exists(key):
+                    client.remove(key)
                 map_policy = {
                     'map_write_mode': aerospike.MAP_UPDATE,
                     'map_order': aerospike.MAP_KEY_VALUE_ORDERED
@@ -1025,8 +1027,15 @@ Map Operations
                 client.map_put(key, 'abc', 'J', 10, map_policy)
                 print(client.map_get_by_key_range(key, 'abc', 'A', 'D', aerospike.MAP_RETURN_KEY_VALUE))
                 client.map_put(key, 'abc', 'Z', 26, map_policy)
-                print(client.map_get_by_index_range(key, 'abc', -3, -1, aerospike.MAP_RETURN_KEY))
-                print(client.map_get_by_rank_range(key, 'abc', 7, 3, aerospike.MAP_RETURN_VALUE))
+                print(client.map_get_by_index_range(key, 'abc', -3, 3, aerospike.MAP_RETURN_VALUE))
+                print(client.map_get_by_rank_range(key, 'abc', 0, 10, aerospike.MAP_RETURN_KEY))
+
+                print("\nRound 2")
+                more = {'AA': 100, 'BB': 200, 'ZZ': 2600}
+                client.map_put_items(key, 'abc', more, map_policy)
+                print(client.map_get_by_key_range(key, 'abc', 'A', 'D', aerospike.MAP_RETURN_KEY_VALUE))
+                print(client.map_get_by_index_range(key, 'abc', -3, 3, aerospike.MAP_RETURN_VALUE))
+                print(client.map_get_by_rank_range(key, 'abc', 0, 10, aerospike.MAP_RETURN_KEY))
             except e.AerospikeError as e:
                 print("Error: {0} [{1}]".format(e.msg, e.code))
 
@@ -1034,13 +1043,18 @@ Map Operations
 
         .. note::
 
-            We expect to see something like:
+            We expect to see
 
             .. code-block:: python
 
                 [('A', 1), ('B', 2), ('C', 3)]
-                ['X', 'Y', 'Z']
-                [8, 9, 10]
+                [24, 25, 26]
+                ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J']
+
+                Round 2
+                [('A', 1), ('AA', 100), ('B', 2), ('BB', 200), ('C', 3)]
+                [25, 26, 2600]
+                ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J']
 
     .. seealso:: `Maps (Data Types) <https://www.aerospike.com/docs/guide/cdt-map.html>`_.
 
@@ -1056,7 +1070,7 @@ Map Operations
 
     .. method:: map_put(key, bin, map_key, val[, map_policy, [, meta[, policy]]])
 
-        Add the given *map_key*/*value* pair to the map record specified by *key* and *bin*.
+        Add the given *map_key*/*val* pair to the map at *key* and *bin*.
 
         :param tuple key: a :ref:`aerospike_key_tuple` tuple associated with the record.
         :param str bin: the name of the bin.
@@ -1075,7 +1089,7 @@ Map Operations
 
     .. method:: map_put_items(key, bin, items[, map_policy, [, meta[, policy]]])
 
-        Add the given *items* dict of key/value pairs to the map record specified by *key* and *bin*.
+        Add the given *items* dict of key/value pairs to the map at *key* and *bin*.
 
         :param tuple key: a :ref:`aerospike_key_tuple` tuple associated with the record.
         :param str bin: the name of the bin.
@@ -1090,7 +1104,7 @@ Map Operations
 
     .. method:: map_increment(key, bin, map_key, incr[, map_policy, [, meta[, policy]]])
  
-        Increment the value of the map entry by given *incr*. Map entry is specified by *key*, *bin* and *map_key*.
+        Increment the value of a numeric map element by *incr*. Element is specified by *key*, *bin* and *map_key*.
 
         :param tuple key: a :ref:`aerospike_key_tuple` tuple associated with the record.
         :param str bin: the name of the bin.
@@ -1107,7 +1121,7 @@ Map Operations
 
     .. method:: map_decrement(key, bin, map_key, decr[, map_policy, [, meta[, policy]]])
 
-        Decrement the value of the map entry by given *decr*. Map entry is specified by *key*, *bin* and *map_key*.
+        Decrement the value of a numeric map element by *decr*. Element is specified by *key*, *bin* and *map_key*.
 
         :param tuple key: a :ref:`aerospike_key_tuple` tuple associated with the record.
         :param str bin: the name of the bin.
@@ -1124,7 +1138,7 @@ Map Operations
 
     .. method:: map_size(key, bin[, meta[, policy]]) -> count
 
-        Return the size of the map specified by *key* and *bin*.
+        Return the size of the map at *key* and *bin*.
 
         :param tuple key: a :ref:`aerospike_key_tuple` tuple associated with the record.
         :param str bin: the name of the bin.
@@ -1135,7 +1149,7 @@ Map Operations
 
     .. method:: map_clear(key, bin[, meta[, policy]])
 
-        Remove all entries from the map specified by *key* and *bin*.
+        Remove all elements from the map at *key* and *bin*.
 
         :param tuple key: a :ref:`aerospike_key_tuple` tuple associated with the record.
         :param str bin: the name of the bin.
@@ -1148,7 +1162,7 @@ Map Operations
 
     .. method:: map_remove_by_key(key, bin, map_key, return_type[, meta[, policy]])
 
-        Remove and optionally return first map entry from the map specified by *key* and *bin* which matches given *map_key*.
+        Remove and return a map element specified by *key*, *bin* and *map_key*.
 
         :param tuple key: a :ref:`aerospike_key_tuple` tuple associated with the record.
         :param str bin: the name of the bin.
@@ -1165,7 +1179,7 @@ Map Operations
 
     .. method:: map_remove_by_key_list(key, bin, list, return_type[, meta[, policy]][, meta[, policy]])
 
-        Remove and optionally return map entries from the map specified by *key* and *bin* which have keys that match the given *list* of keys.
+        Remove and return map elements specified by *key*, *bin* and *list* of keys.
 
         :param tuple key: a :ref:`aerospike_key_tuple` tuple associated with the record.
         :param str bin: the name of the bin.
@@ -1181,7 +1195,7 @@ Map Operations
 
     .. method:: map_remove_by_key_range(key, bin, map_key, range, return_type[, meta[, policy]])
 
-        Remove and optionally return map entries from the map specified by *key* and *bin* identified by the key range (*map_key* inclusive, *range* exclusive).
+        Remove and return map elements specified by *key*, *bin* and identified by a key range [*map_key* inclusive, *range* exclusive).
 
         :param tuple key: a :ref:`aerospike_key_tuple` tuple associated with the record.
         :param str bin: the name of the bin.
@@ -1200,7 +1214,7 @@ Map Operations
 
     .. method:: map_remove_by_value(key, bin, val, return_type[, meta[, policy]])
 
-        Remove and optionally return map entries from the map specified by *key* and *bin* which have a value matching *val* parameter.
+        Remove and return map elements specified by *key*, *bin* and *val*.
 
         :param tuple key: a :ref:`aerospike_key_tuple` tuple associated with the record.
         :param str bin: the name of the bin.
@@ -1217,7 +1231,7 @@ Map Operations
 
     .. method:: map_remove_by_value_list(key, bin, list, return_type[, meta[, policy]])
 
-        Remove and optionally return map entries from the map specified by *key* and *bin* which have a value matching the *list* of values.
+        Remove and return map elements specified by *key*, *bin* and *list* of values.
 
         :param tuple key: a :ref:`aerospike_key_tuple` tuple associated with the record.
         :param str bin: the name of the bin.
@@ -1233,7 +1247,7 @@ Map Operations
 
     .. method:: map_remove_by_value_range(key, bin, val, range, return_type[, meta[, policy]])
 
-        Remove and optionally return map entries from the map specified by *key* and *bin* identified by the value range (*val* inclusive, *range* exclusive).
+        Remove and return map elements specified by *key*, *bin* and value range [*val* inclusive, *range* exclusive).
 
         :param tuple key: a :ref:`aerospike_key_tuple` tuple associated with the record.
         :param str bin: the name of the bin.
@@ -1252,11 +1266,11 @@ Map Operations
 
     .. method:: map_remove_by_index(key, bin, index, return_type[, meta[, policy]])
 
-        Remove and optionally return the map entry from the map specified by *key* and *bin* at the given *index* location.
+        Remove and return map elements specified by *key*, *bin* and *index*.
 
         :param tuple key: a :ref:`aerospike_key_tuple` tuple associated with the record.
         :param str bin: the name of the bin.
-        :param index: :py:class:`int` the index location of the map entry
+        :param index: :py:class:`int` the index position of the map element
         :param return_type: :py:class:`int` :ref:`map_return_types`
         :param dict meta: optional record metadata to be set, with field
             ``'ttl'`` set to :class:`int` number of seconds or one of 
@@ -1268,11 +1282,11 @@ Map Operations
 
     .. method:: map_remove_by_index_range(key, bin, index, range, return_type[, meta[, policy]])
 
-        Remove and optionally return the map entries from the map specified by *key* and *bin* starting at the given *index* location and removing *range* number of items.
+        Remove and return map elements specified by *key*, *bin* starting at *index* position and removing *range* number of elements.
 
         :param tuple key: a :ref:`aerospike_key_tuple` tuple associated with the record.
         :param str bin: the name of the bin.
-        :param index: :py:class:`int` the index location of the first map entry to remove
+        :param index: :py:class:`int` the index position of the first map element to remove
         :param range: :py:class:`int` the number of items to remove from the map 
         :param return_type: :py:class:`int` :ref:`map_return_types`
         :param dict meta: optional record metadata to be set, with field
@@ -1285,11 +1299,11 @@ Map Operations
 
     .. method:: map_remove_by_rank(key, bin, rank, return_type[, meta[, policy]])
 
-        Remove and optionally return the map entry from the map specified by *key* and *bin* with a value that has the given *rank*.
+        Remove and return map elements specified by *key*, *bin* and *rank*.
 
         :param tuple key: a :ref:`aerospike_key_tuple` tuple associated with the record.
         :param str bin: the name of the bin.
-        :param rank: :py:class:`int` the rank of the value of the entry in the map
+        :param rank: :py:class:`int` the rank of the value of the element in the map
         :param return_type: :py:class:`int` :ref:`map_return_types`
         :param dict meta: optional record metadata to be set, with field
             ``'ttl'`` set to :class:`int` number of seconds or one of 
@@ -1301,11 +1315,11 @@ Map Operations
 
     .. method:: map_remove_by_rank_range(key, bin, rank, range, return_type[, meta[, policy]])
 
-        Remove and optionally return the map entries from the map specified by *key* and *bin* which have a value rank starting at *rank* and removing *range* number of items.
+        Remove and return map elements specified by *key*, *bin* with starting *rank* and removing *range* number of elements.
 
         :param tuple key: a :ref:`aerospike_key_tuple` tuple associated with the record.
         :param str bin: the name of the bin.
-        :param rank: :py:class:`int` the rank of the value of the first map entry to remove
+        :param rank: :py:class:`int` the rank of the value of the first map element to remove
         :param range: :py:class:`int` the number of items to remove from the map 
         :param return_type: :py:class:`int` :ref:`map_return_types`
         :param dict meta: optional record metadata to be set, with field
@@ -1317,8 +1331,8 @@ Map Operations
         :return: depends on return_type parameter
 
     .. method:: map_get_by_key(key, bin, map_key, return_type[, meta[, policy]])
-       
-        Return map entry from the map specified by *key* and *bin* which has a key that matches the given *map_key*.
+
+        Return map element specified by *key*, *bin* and *map_key*.
 
         :param tuple key: a :ref:`aerospike_key_tuple` tuple associated with the record.
         :param str bin: the name of the bin.
@@ -1332,7 +1346,7 @@ Map Operations
 
     .. method:: map_get_by_key_range(key, bin, map_key, range, return_type[, meta[, policy]])
 
-        Return map entries from the map specified by *key* and *bin* identified by the key range (*map_key* inclusive, *range* exclusive).
+        Return map elements specified by *key*, *bin* and key range [*map_key* inclusive, *range* exclusive).
 
         :param tuple key: a :ref:`aerospike_key_tuple` tuple associated with the record.
         :param str bin: the name of the bin.
@@ -1348,7 +1362,7 @@ Map Operations
 
     .. method:: map_get_by_key_list(key, bin, key_list, return_type[, meta[, policy]])
 
-        Return map entries from the map specified by *key* and *bin* having keys present in the *key_list*.
+        Return map elements specified by *key*, *bin* and *key_list*.
 
         :param tuple key: a :ref:`aerospike_key_tuple` tuple associated with the record.
         :param str bin: the name of the bin.
@@ -1366,7 +1380,7 @@ Map Operations
 
     .. method:: map_get_by_value(key, bin, val, return_type[, meta[, policy]])
 
-        Return map entries from the map specified by *key* and *bin* which have a value matching *val* parameter.
+        Return map elements specified by *key*, *bin* and *val*.
 
         :param tuple key: a :ref:`aerospike_key_tuple` tuple associated with the record.
         :param str bin: the name of the bin.
@@ -1380,7 +1394,7 @@ Map Operations
 
     .. method:: map_get_by_value_range(key, bin, val, range, return_type[, meta[, policy]])
 
-        Return map entries from the map specified by *key* and *bin* identified by the value range (*val* inclusive, *range* exclusive).
+        Return map elements specified by *key*, *bin* and value range [*val* inclusive, *range* exclusive).
 
         :param tuple key: a :ref:`aerospike_key_tuple` tuple associated with the record.
         :param str bin: the name of the bin.
@@ -1396,7 +1410,7 @@ Map Operations
 
     .. method:: map_get_by_value_list(key, bin, value_list, return_type[, meta[, policy]])
 
-        Return map entries from the map specified by *key* and *bin* having values present in the *value_list*.
+        Return map elements specified by *key*, *bin* and *value_list*.
 
         :param tuple key: a :ref:`aerospike_key_tuple` tuple associated with the record.
         :param str bin: the name of the bin.
@@ -1413,11 +1427,11 @@ Map Operations
 
     .. method:: map_get_by_index(key, bin, index, return_type[, meta[, policy]])
 
-        Return the map entry from the map specified by *key* and *bin* at the given *index* location.
+        Return the map element specified by *key*, *bin* and *index* position.
 
         :param tuple key: a :ref:`aerospike_key_tuple` tuple associated with the record.
         :param str bin: the name of the bin.
-        :param index: :py:class:`int` the index location of the map entry
+        :param index: :py:class:`int` the index position of the map element
         :param return_type: :py:class:`int` :ref:`map_return_types`
         :param dict meta: unused for this operation
         :param dict policy: optional :ref:`aerospike_operate_policies`.
@@ -1427,12 +1441,12 @@ Map Operations
  
     .. method:: map_get_by_index_range(key, bin, index, range, return_type[, meta[, policy]])
 
-        Return the map entries from the map specified by *key* and *bin* starting at the given *index* location and removing *range* number of items.
+        Return a *range* number of elements from the map at *key* and *bin*, starting at the given *index*.
 
         :param tuple key: a :ref:`aerospike_key_tuple` tuple associated with the record.
         :param str bin: the name of the bin.
-        :param index: :py:class:`int` the index location of the first map entry to remove
-        :param range: :py:class:`int` the number of items to remove from the map 
+        :param index: :py:class:`int` the starting index for the range
+        :param range: :py:class:`int` number of elements in the range
         :param return_type: :py:class:`int` :ref:`map_return_types`
         :param dict meta: unused for this operation
         :param dict policy: optional :ref:`aerospike_operate_policies`.
@@ -1441,11 +1455,11 @@ Map Operations
 
     .. method:: map_get_by_rank(key, bin, rank, return_type[, meta[, policy]])
 
-        Return the map entry from the map specified by *key* and *bin* with a value that has the given *rank*.
+        Return the map element specified by *key*, *bin* and *rank*.
 
         :param tuple key: a :ref:`aerospike_key_tuple` tuple associated with the record.
         :param str bin: the name of the bin.
-        :param rank: :py:class:`int` the rank of the value of the entry in the map
+        :param rank: :py:class:`int` the rank of the value of the element in the map
         :param return_type: :py:class:`int` :ref:`map_return_types`
         :param dict meta: unused for this operation
         :param dict policy: optional :ref:`aerospike_operate_policies`.
@@ -1454,11 +1468,11 @@ Map Operations
 
     .. method:: map_get_by_rank_range(key, bin, rank, range, return_type[, meta[, policy]])
 
-        Return the map entries from the map specified by *key* and *bin* which have a value rank starting at *rank* and removing *range* number of items.
+        Return map elements specified by *key*, *bin* with starting *rank* and *range* number of elements.
 
         :param tuple key: a :ref:`aerospike_key_tuple` tuple associated with the record.
         :param str bin: the name of the bin.
-        :param rank: :py:class:`int` the rank of the value of the first map entry to remove
+        :param rank: :py:class:`int` the rank of the value of the first map element to remove
         :param range: :py:class:`int` the number of items to remove from the map 
         :param return_type: :py:class:`int` :ref:`map_return_types`
         :param dict meta: unused for this operation
@@ -1480,7 +1494,7 @@ Multi-Ops (Operate)
         versions prior to 3.6.0, non-existent bins being read will have a \
         :py:obj:`None` value. Starting with 3.6.0 non-existent bins will not be \
         present in the returned :ref:`aerospike_record_tuple`. \
-        The returned record tuple will only contain one entry per bin, even if multiple operations were performed on the bin.
+        The returned record tuple will only contain one element per bin, even if multiple operations were performed on the bin.
 
         :param tuple key: a :ref:`aerospike_key_tuple` associated with the record.
         :param list list: a :class:`list` of one or more bin operations, each \
@@ -1863,10 +1877,6 @@ User Defined Functions
 
         .. seealso:: `Record UDF <http://www.aerospike.com/docs/guide/record_udf.html>`_ \
           and `Developing Record UDFs <http://www.aerospike.com/docs/udf/developing_record_udfs.html>`_.
-
-        .. warning::
-
-            This functionality will become available with a future release of the Aerospike server.
 
 
     .. method:: job_info(job_id, module[, policy]) -> dict
