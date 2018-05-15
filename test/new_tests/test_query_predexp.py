@@ -106,7 +106,7 @@ def clean_test_demo_namespace(as_connection):
 
 
 @pytest.mark.usefixtures('clean_test_demo_namespace')
-class TestListPopRange(object):
+class TestQueryPredexp(object):
 
     @pytest.fixture(autouse=True)
     def setup(self, request, as_connection):
@@ -476,5 +476,80 @@ class TestListPopRange(object):
             predexp.integer_equal(),
             5
         ]
+        with pytest.raises(e.ParamError):
+            self.query.predexp(predexps)
+
+    @pytest.mark.parametrize(
+        "func",
+        [
+            predexp.integer_value,
+            predexp.predexp_and,
+            predexp.predexp_or,
+            predexp.rec_digest_modulo,
+        ])
+    def test_with_wrong_predicate_argument_type_expecting_int(self, func):
+        '''
+        These functions all expect an integer argument, call with a string
+        '''
+        predexps = [
+            func("five")
+        ]
+        with pytest.raises(e.ParamError):
+            self.query.predexp(predexps)
+
+    @pytest.mark.parametrize(
+        "func",
+        [
+            predexp.integer_bin,
+            predexp.string_bin,
+            predexp.geojson_bin,
+            predexp.map_bin,
+            predexp.list_bin,
+            predexp.string_value,
+            predexp.geojson_value,
+            predexp.integer_var,
+            predexp.string_var,
+            predexp.geojson_var,
+            predexp.list_iterate_or,
+            predexp.list_iterate_and,
+            predexp.mapkey_iterate_or,
+            predexp.mapkey_iterate_and,
+            predexp.mapval_iterate_and,
+            predexp.mapval_iterate_or
+        ])
+    def test_with_wrong_predicate_argument_type_expecting_str(self, func):
+        '''
+        These functions all expect an integer argument, call with a string
+        '''
+        predexps = [
+            func(5)
+        ]
+        with pytest.raises(e.ParamError):
+            self.query.predexp(predexps)
+
+    def test_with_invalid_predicate_tuple(self):
+        '''
+        This passes something which isn't a predicate
+        '''
+        predexps = [
+            (1234, "not real")
+        ]
+        with pytest.raises(e.ParamError):
+            self.query.predexp(predexps)
+
+    def test_with_empty_predexp_list(self):
+        '''
+        Pass an empty list of predicates
+        '''
+        predexps = []
+        with pytest.raises(e.ParamError):
+            self.query.predexp(predexps)
+
+
+    def test_with_non_list_predicate(self):
+        '''
+        This passes something which isn't a list
+        '''
+        predexps = "integer_bin(a) ,5, integer_equal"
         with pytest.raises(e.ParamError):
             self.query.predexp(predexps)
