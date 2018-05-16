@@ -291,7 +291,7 @@ Query Policies
             |
             | If both ``socket_timeout`` and ``total_timeout`` are non-zero and ``socket_timeout`` > ``total_timeout``, then ``socket_timeout`` will be set to ``total_timeout``. If ``socket_timeout`` is zero, there will be no socket idle limit.
             |
-            | Default: ``10000``.
+            | Default: ``30000``.
         * **total_timeout**
             | An :class:`int`. Total transaction timeout in milliseconds.
             |
