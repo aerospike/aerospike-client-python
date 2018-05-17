@@ -1,8 +1,11 @@
 # -*- coding: utf-8 -*-
 import pytest
+import sys
+import time
+
 from aerospike import predexp as predexp
 from aerospike import exception as e
-import time
+
 aerospike = pytest.importorskip('aerospike')
 try:
     import aerospike
@@ -10,6 +13,12 @@ except:
     print('Please install aerospike python client.')
     sys.exit(1)
 
+
+def seconds_to_nanos(num):
+    '''
+    converter seconds to nanoseconds
+    '''
+    return int(num) * (10 ** 9)
 
 # GeoConstants
 geo_object1 = aerospike.GeoJSON(
@@ -465,6 +474,101 @@ class TestQueryPredexp(object):
         assert_each_record_bins(
             results,
             lambda b: all([b['map'][key] != 3 for key in b['map']]))
+
+    @pytest.mark.xfail(reason="This only works when not running data in memory")
+    def test_rec_device_size(self):
+        long_str_len = 65 * 1024
+        long_str = long_str_len * 'a'  # A 65K string
+
+        # Store 5 records with a string of 65K
+        for i in range(5):
+            key = 'test', 'dev_size', i
+            self.as_connection.put(key, {'string': long_str})
+
+        # Store 3 records with a size much less than 65K
+        for i in range(5, 8):
+            key = 'test', 'dev_size', i
+            self.as_connection.put(key, {'string': "short"})
+
+        query = self.as_connection.query('test', 'dev_size')
+        predexps = [
+            predexp.rec_device_size(),
+            predexp.integer_value(64 * 1024),
+            predexp.integer_greater()
+        ]
+        query.predexp(predexps)
+        results = query.results()
+        assert len(results) == 5
+        assert_each_record_bins(
+            results,
+            lambda b: len(b['string']) == long_str_len) # This is faster than doing a string compare
+
+    def test_rec_last_update(self):
+        '''
+        This could fail due to clock skew
+        '''
+        for i in range(7):
+            key = 'test', 'lut', i
+            self.as_connection.put(key, {'time': 'earlier'})
+
+        cutoff_nanos = seconds_to_nanos(int(time.time() + 2))
+
+        time.sleep(5) # Make sure that we wait long enough
+
+        # Store 5 records after the cutoff
+        for i in range(7, 12):
+            key = 'test', 'lut', i
+            self.as_connection.put(key, {'time': 'later'})
+
+        query = self.as_connection.query('test', 'lut')
+        predexps = [
+            predexp.rec_last_update(),
+            predexp.integer_value(cutoff_nanos),
+            predexp.integer_less()
+        ]
+        query.predexp(predexps)
+        results = query.results()
+        assert len(results) == 7
+        assert_each_record_bins(
+            results,
+            lambda b: b['time'] == 'earlier')
+
+    def test_rec_void_time(self):
+        '''
+        This could fail due to clock skew
+        '''
+        for i in range(7):
+            key = 'test', 'ttl', i
+            self.as_connection.put(key, {'time': 'earlier'}, meta={'ttl': 100})
+
+        # 150 second range for record TTLs should be enough, we are storing with
+        # Current time + 100s and current time +5000s, so only one of the group should be found
+        void_time_range_start = seconds_to_nanos(int(time.time() + 50))
+        void_time_range_end = seconds_to_nanos(int(time.time() + 150))
+
+        # Store 5 records after the cutoff
+        for i in range(7, 12):
+            key = 'test', 'ttl', i
+            self.as_connection.put(key, {'time': 'later'}, meta={'ttl': 1000})
+
+        query = self.as_connection.query('test', 'ttl')
+        predexps = [
+            predexp.rec_void_time(),
+            predexp.integer_value(void_time_range_start),
+            predexp.integer_greater(),
+
+            predexp.rec_void_time(),
+            predexp.integer_value(void_time_range_end),
+            predexp.integer_less(),
+
+            predexp.predexp_and(2)
+        ]
+        query.predexp(predexps)
+        results = query.results()
+        assert len(results) == 7
+        assert_each_record_bins(
+            results,
+            lambda b: b['time'] == 'earlier')
 
     def test_with_invalid_predicate(self):
         '''

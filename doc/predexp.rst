@@ -228,7 +228,7 @@ The following methods allow a user to define a predicate expression filter. Pred
 
     Create an integer iteration variable predicate expression.
 
-    :param var_name: `str` The name of the variable. This should match a value used when specifying the iteration.
+    :param var_name: :class:`str` The name of the variable. This should match a value used when specifying the iteration.
     :return: :py:func:`tuple` to be used in :meth:`aerospike.Query.predexp`.
 
     For example the following selects a record where the list in bin "numbers" contains an entry equal to ``42``
@@ -248,7 +248,7 @@ The following methods allow a user to define a predicate expression filter. Pred
 
     Create an string iteration variable predicate expression.
 
-    :param var_name: `str` The name of the variable. This should match a value used when specifying the iteration.
+    :param var_name: :class:`str` The name of the variable. This should match a value used when specifying the iteration.
     :return: :py:func:`tuple` to be used in :meth:`aerospike.Query.predexp`.
 
     For example the following selects a record where the list in bin "languages" contains an entry equal to ``"Python"``
@@ -268,7 +268,7 @@ The following methods allow a user to define a predicate expression filter. Pred
 
     Create an GeoJSON iteration variable predicate expression.
 
-    :param var_name: `str` The name of the variable. This should match a value used when specifying the iteration.
+    :param var_name: :class:`str` The name of the variable. This should match a value used when specifying the iteration.
     :return: :py:func:`tuple` to be used in :meth:`aerospike.Query.predexp`.
 
 .. py:function:: list_iterate_or(var_name)
@@ -277,6 +277,13 @@ The following methods allow a user to define a predicate expression filter. Pred
 
     :param bin_name: :class:`str` The name of the iteration variable
     :return: :py:func:`tuple` to be used in :meth:`aerospike.Query.predexp`.
+
+    The list iteration expression pops two children off the expression stack. The left child (pushed earlier) must contain a logical subexpression
+    containing one or more matching iteration variable expressions.  The right child (pushed later) must specify a list bin. The list iteration traverses the list
+    and repeatedly evaluates the subexpression substituting each list element's value into the matching iteration variable.
+    The result of the iteration expression is a logical OR of all of the individual element evaluations.
+
+    If the list bin contains zero elements :meth:`list_iterate_or` will evaluate to false.
 
     For example, the following sequence of predicate expressions selects records where the list in bin "names" contains an entry equal to "Alice"
 
@@ -291,12 +298,19 @@ The following methods allow a user to define a predicate expression filter. Pred
             predexp.list_iterate_or("list_entry")
         ]
 
-.. py:function:: list_iterate_or(var_name)
+.. py:function:: list_iterate_and(var_name)
 
     Create an list iteration And logical predicate expression.
 
     :param var_name: :class:`str` The name of the iteration variable
     :return: :py:func:`tuple` to be used in :meth:`aerospike.Query.predexp`.
+
+    The list iteration expression pops two children off the expression stack. The left child (pushed earlier) must contain a logical subexpression
+    containing one or more matching iteration variable expressions.  The right child (pushed later) must specify a list bin. The list iteration traverses the list
+    and repeatedly evaluates the subexpression substituting each list element's value into the matching iteration variable.
+    The result of the iteration expression is a logical AND of all of the individual element evaluations.
+
+    If the list bin contains zero elements :meth:`list_iterate_and` will evaluate to true. This is useful when testing for exclusion (see example).
 
     For example, the following sequence of predicate expressions selects records where the list in bin "names" contains no entries equal to "Bob".
 
@@ -319,6 +333,13 @@ The following methods allow a user to define a predicate expression filter. Pred
     :param var_name: :class:`str` The name of the iteration variable
     :return: :py:func:`tuple` to be used in :meth:`aerospike.Query.predexp`.
 
+    The mapkey iteration expression pops two children off the expression stack.
+    The left child (pushed earlier) must contain a logical subexpression containing one or more matching iteration variable expressions.
+    The right child (pushed later) must specify a map bin.
+    The mapkey iteration traverses the map and repeatedly evaluates the subexpression substituting each map key value into The matching iteration variable.
+    The result of the iteration expression is a logical OR of all of the individual element evaluations.
+
+    If the map bin contains zero elements :meth:`mapkey_iterate_or` will return false.
     For example, the following sequence of predicate expressions selects records where the map in bin "pet_count" has an entry with a key equal to "Cat"
 
     .. code-block :: python
@@ -339,7 +360,15 @@ The following methods allow a user to define a predicate expression filter. Pred
     :param var_name: :class:`str` The name of the iteration variable
     :return: :py:func:`tuple` to be used in :meth:`aerospike.Query.predexp`.
 
-    For example, the following sequence of predicate expressions selects records where the map in bin "pet_count" does not contain entry with a key equal to "Cat".
+    The mapkey iteration expression pops two children off the expression stack.
+    The left child (pushed earlier) must contain a logical subexpression containing one or more matching iteration variable expressions.
+    The right child (pushed later) must specify a map bin.
+    The mapkey iteration traverses the map and repeatedly evaluates the subexpression substituting each map key value into The matching iteration variable.
+    The result of the iteration expression is a logical AND of all of the individual element evaluations.
+
+    If the map bin contains zero elements :meth:`mapkey_iterate_and` will return true. This is useful when testing for exclusion (see example).
+
+    For example, the following sequence of predicate expressions selects records where the map in bin "pet_count" does not contain an entry with a key equal to "Cat".
 
     .. code-block :: python
 
@@ -360,6 +389,14 @@ The following methods allow a user to define a predicate expression filter. Pred
     :param var_name: :class:`str` The name of the iteration variable
     :return: :py:func:`tuple` to be used in :meth:`aerospike.Query.predexp`.
 
+    The mapval iteration expression pops two children off the expression stack.
+    The left child (pushed earlier) must contain a logical subexpression containing one or more matching iteration variable expressions.
+    The right child (pushed later) must specify a map bin.
+    The mapval iteration traverses the map and repeatedly evaluates the subexpression substituting each map value into the matching iteration variable.
+    The result of the iteration expression is a logical OR of all of the individual element evaluations.
+
+    If the map bin contains zero elements :meth:`mapval_iterate_or` will return false.
+
     For example, the following sequence of predicate expressions selects records where at least one of the values in the map in bin "pet_count" is ``0``
 
     .. code-block :: python
@@ -379,6 +416,14 @@ The following methods allow a user to define a predicate expression filter. Pred
 
     :param var_name: :class:`str` The name of the iteration variable
     :return: :py:func:`tuple` to be used in :meth:`aerospike.Query.predexp`.
+
+    The mapval iteration expression pops two children off the expression stack.
+    The left child (pushed earlier) must contain a logical subexpression containing one or more matching iteration variable expressions.
+    The right child (pushed later) must specify a map bin.
+    The mapval iteration traverses the map and repeatedly evaluates the subexpression substituting each map value into the matching iteration variable.
+    The result of the iteration expression is a logical AND of all of the individual element evaluations.
+
+    If the map bin contains zero elements :meth:`mapval_iterate_and` will return true. This is useful when testing for exclusion (see example).
 
     For example, the following sequence of predicate expressions selects records where none of the values in the map in bin "pet_count" is ``0``
 
@@ -401,7 +446,7 @@ The following methods allow a user to define a predicate expression filter. Pred
     :param mod: :class:`int` The value of this expression assumes the value of 4 bytes of the digest modulo this argument.
     :return: :py:func:`tuple` to be used in :meth:`aerospike.Query.predexp`.
 
-    For example, the following sequence of predicate expressions selects records that have digest(key) % 3 == 1):
+    For example, the following sequence of predicate expressions selects records that have ``digest(key) % 3 == 1`` :
 
     .. code-block :: python
 
@@ -466,6 +511,7 @@ The following methods allow a user to define a predicate expression filter. Pred
 .. py:function:: integer_equal()
 
     Create an integer comparison logical predicate expression.
+    If the value of either of the child expressions is unknown because a specified bin does not exist or contains a value of the wrong type the result of the comparison is false. If a true outcome is desirable in this situation use the complimentary comparison and enclose in a logical NOT.
 
     :return: :py:func:`tuple` to be used in :meth:`aerospike.Query.predexp`.
 
@@ -537,7 +583,7 @@ The following methods allow a user to define a predicate expression filter. Pred
 
     :return: :py:func:`tuple` to be used in :meth:`aerospike.Query.predexp`.
 
-    For example, the following sequence of predicate expressions selects records that have bin "foo" greater than or equal to 42:
+    For example, the following sequence of predicate expressions selects records that have bin "foo" less than or equal to 42:
 
     .. code-block :: python
 
@@ -554,7 +600,11 @@ The following methods allow a user to define a predicate expression filter. Pred
 
     :return: :py:func:`tuple` to be used in :meth:`aerospike.Query.predexp`.
 
+    This expression will evaluate to true if, and only if, both children of the expression exist, and are of type integer, and are not equal to each other.
+    If this is not desired, utilize :meth:`aerospike.predexp.integer_equal` in conjunction with :meth:`aerospike.predexp.predexp_not`.
+
     For example, the following sequence of predicate expressions selects records that have bin "foo" not equal to 42:
+
 
     .. code-block :: python
 
@@ -568,6 +618,7 @@ The following methods allow a user to define a predicate expression filter. Pred
 .. py:function:: string_equal()
 
     Create an integer comparison logical predicate expression.
+    If the value of either of the child expressions is unknown because a specified bin does not exist or contains a value of the wrong type the result of the comparison is false. If a true outcome is desirable in this situation use the complimentary comparison and enclose in a logical NOT.
 
     :return: :py:func:`tuple` to be used in :meth:`aerospike.Query.predexp`.
 
@@ -587,6 +638,9 @@ The following methods allow a user to define a predicate expression filter. Pred
     Create an integer comparison logical predicate expression.
 
     :return: :py:func:`tuple` to be used in :meth:`aerospike.Query.predexp`.
+
+    This expression will evaluate to true if, and only if, both children of the expression exist, and are of type string, and are not equal to each other.
+    If this is not desired, utilize :meth:`aerospike.predexp.string_equal` in conjunction with :meth:`aerospike.predexp.predexp_not`.
 
     For example, the following sequence of predicate expressions selects records that have bin "foo" not equal to "bar":
 

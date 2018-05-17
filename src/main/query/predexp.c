@@ -456,9 +456,13 @@ as_status add_integer_val(as_query* query, PyObject* predicate, as_error* err){
 	if (!py_int_val || !PyInt_Check(py_int_val)) {
 		return as_error_update(err, AEROSPIKE_ERR_PARAM, "Or predicate must contain an integer number of items");
 	}
-	int int_val = PyInt_AsLong(py_int_val);
+	int64_t int_val = PyLong_AsLong(py_int_val);
+	if (int_val == -1 && PyErr_Occurred()){
+		PyErr_Clear();
+		return as_error_update(err, AEROSPIKE_ERR_PARAM, "Failed to add integer_val predicate, due to integer conversion failure");
+	}
 	if (!as_query_predexp_add(query, as_predexp_integer_value(int_val))) {
-		return as_error_update(err, AEROSPIKE_ERR_PARAM, "Failed to add or predicate");
+		return as_error_update(err, AEROSPIKE_ERR_PARAM, "Failed to add interger_val");
 	}
 	return err->code;
 }
@@ -524,7 +528,11 @@ as_status add_rec_digest_modulo(as_query* query, PyObject* predicate, as_error* 
 	if (!py_int_val || !PyInt_Check(py_int_val)) {
 		return as_error_update(err, AEROSPIKE_ERR_PARAM, "Digest modulo predicate must contain an integer modulo");
 	}
-	int32_t int_val = (int32_t)PyInt_AsLong(py_int_val);
+	int32_t int_val = (int32_t)PyLong_AsLong(py_int_val);
+	if (int_val == -1 && PyErr_Occurred()){
+		PyErr_Clear();
+		return as_error_update(err, AEROSPIKE_ERR_PARAM, "Failed to add rec_digest_modulo predicate, due to integer conversion failure");
+	}
 	if (!as_query_predexp_add(query, as_predexp_rec_digest_modulo(int_val))) {
 		return as_error_update(err, AEROSPIKE_ERR_PARAM, "Failed to add digest modulo predicate");
 	}
