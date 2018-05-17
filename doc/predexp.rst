@@ -12,9 +12,9 @@ The following methods allow a user to define a predicate expression filter. Pred
 
 .. py:function:: predexp_and(nexpr)
 
-    Create an AND logical predicate expression.
+    Create an AND logical predicate expression. 
 
-    :param nexpr: :class:`int` Number of expressions to combine with "and"
+    :param nexpr: :class:`int` Number of expressions to combine with "and" . The value of nexpr must be between 1 and 65535.
     :return: :py:func:`tuple` to be used in :meth:`aerospike.Query.predexp`.
 
     For example, the following sequence of predicate expressions selects records where the value of bin "c" is between 11 and 20 inclusive:
@@ -36,7 +36,7 @@ The following methods allow a user to define a predicate expression filter. Pred
 
     Create an Or logical predicate expression.
 
-    :param nexpr: :class:`int` Number of expressions to combine with "or"
+    :param nexpr: :class:`int` Number of expressions to combine with "or". The value of nexpr must be between 1 and 65535.
     :return: :py:func:`tuple` to be used in :meth:`aerospike.Query.predexp`.
 
     For example, the following sequence of predicate expressions selects records where the value of bin "pet" is "dog" or "cat"

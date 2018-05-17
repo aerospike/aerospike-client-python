@@ -34,7 +34,7 @@ The following are dependencies for:
     sudo yum install python-devel
     sudo yum install openssl-devel
 
-Debian 6+ and Ubuntu 12.04+
+Debian 6+ and Ubuntu 14.04+
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 The following are dependencies for:
@@ -47,6 +47,12 @@ The following are dependencies for:
 
     sudo apt-get install python-dev
     sudo apt-get install libssl-dev
+
+- You may also need libz:
+
+::
+
+    sudo apt-get install zlib1g-dev
 
 OS X
 ~~~~~~~~

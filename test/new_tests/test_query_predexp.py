@@ -570,6 +570,18 @@ class TestQueryPredexp(object):
             results,
             lambda b: b['time'] == 'earlier')
 
+    def test_with_or_nexpr_too_big(self):
+        predexps = [predexp.predexp_or(1 << 65)] # This needs to be over 2 ^ 63 - 1
+        query = self.as_connection.query('test', 'or')
+        with pytest.raises(e.ParamError):
+            query.predexp(predexps)
+
+    def test_with_and_nexpr_too_big(self):
+        predexps = [predexp.predexp_and(1 << 65)] # This needs to be over 2 ^ 63 - 1
+        query = self.as_connection.query('test', 'or')
+        with pytest.raises(e.ParamError):
+            query.predexp(predexps)
+
     def test_with_invalid_predicate(self):
         '''
         This passes something which isn't a predicate

@@ -423,6 +423,13 @@ as_status add_and(as_query* query, PyObject* predicate, as_error* err) {
 		return as_error_update(err, AEROSPIKE_ERR_PARAM, "And predicate must contain an integer number of items");
 	}
 	uint16_t nitems = (uint16_t) PyInt_AsLong(py_and_count);
+	if (PyErr_Occurred()) {
+		if (nitems == (uint16_t)-1 && PyErr_ExceptionMatches(PyExc_OverflowError)) {
+			return as_error_update(err, AEROSPIKE_ERR_PARAM, "Number of items for predexp_and exceeds maximum");
+		 } else {
+			return as_error_update(err, AEROSPIKE_ERR_PARAM, "Invalid number of items for predexp_and");
+		 }
+	}
 	if (!as_query_predexp_add(query, as_predexp_and(nitems))) {
 		return as_error_update(err, AEROSPIKE_ERR_PARAM, "Failed to add and predicate");
 	}
@@ -438,6 +445,14 @@ as_status add_or(as_query* query, PyObject* predicate, as_error* err){
 		return as_error_update(err, AEROSPIKE_ERR_PARAM, "Or predicate must contain an integer number of items");
 	}
 	uint16_t nitems = (uint16_t) PyInt_AsLong(py_or_count);
+	// This conversion could have overflowed, if somebody did something odd like pass 1 << 64 as the number of items
+	if (PyErr_Occurred()) {
+		if (nitems == (uint16_t)-1 && PyErr_ExceptionMatches(PyExc_OverflowError)) {
+			return as_error_update(err, AEROSPIKE_ERR_PARAM, "Number of items for predexp_or exceeds maximum");
+		 } else {
+			return as_error_update(err, AEROSPIKE_ERR_PARAM, "Invalid number of items for predexp_or");
+		 }
+	}
 	if (!as_query_predexp_add(query, as_predexp_or(nitems))) {
 		return as_error_update(err, AEROSPIKE_ERR_PARAM, "Failed to add or predicate");
 	}
@@ -581,6 +596,13 @@ as_status add_string_regex(as_query* query, PyObject* predicate, as_error* err) 
 		return as_error_update(err, AEROSPIKE_ERR_PARAM, "String regex predicate must contain an integer number of items");
 	}
 	uint32_t flags = PyInt_AsLong(py_int_val);
+	if (PyErr_Occurred()) {
+		if (flags == (uint32_t)-1 && PyErr_ExceptionMatches(PyExc_OverflowError)) {
+			return as_error_update(err, AEROSPIKE_ERR_PARAM, "Flags value exceeds maximum for string_regex.");
+		} else {
+			return as_error_update(err, AEROSPIKE_ERR_PARAM, "Invalid flags for string_regex.");
+		}
+	}
 	if (!as_query_predexp_add(query, as_predexp_string_regex(flags))) {
 		return as_error_update(err, AEROSPIKE_ERR_PARAM, "Failed to add string regex predicate");
 	}
