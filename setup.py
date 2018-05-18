@@ -308,6 +308,7 @@ setup(
                 'src/main/log.c',
                 'src/main/client/type.c',
                 'src/main/client/apply.c',
+                'src/main/client/cdt_list_operate.c',
                 'src/main/client/close.c',
                 'src/main/client/connect.c',
                 'src/main/client/exists.c',

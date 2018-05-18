@@ -1879,3 +1879,30 @@ batch_read_records_to_pyobject(AerospikeClient *self, as_error *err, as_batch_re
 	}
 	return AEROSPIKE_OK;
 }
+
+/*
+This fetches a string from a Python String like. If it is a unicode in Python27, we need to convert it
+to a bytes like object first, and keep track of the intermediate object for later deletion.
+*/
+as_status
+string_and_pyuni_from_pystring(PyObject* py_string, PyObject** pyuni_r, char** c_str_ptr, as_error* err) {
+	/* Not needed if we drop support for Python > 3 < 3.3 */
+
+	PyObject* intermediate_uni = NULL;
+	*c_str_ptr = NULL;
+	if (PyString_Check(py_string)) {
+		*c_str_ptr = PyString_AsString(py_string);
+		return AEROSPIKE_OK;
+
+	} else if (PyUnicode_Check(py_string)) {
+		intermediate_uni = PyUnicode_AsUTF8String(py_string);
+		if (!intermediate_uni) {
+			return as_error_update(err, AEROSPIKE_ERR_PARAM, "Invalid unicode value");
+		}
+
+		*c_str_ptr = PyBytes_AsString(intermediate_uni);
+		*pyuni_r = intermediate_uni;
+		return AEROSPIKE_OK;
+	}
+	return as_error_update(err, AEROSPIKE_ERR_PARAM, "String value required");
+}
