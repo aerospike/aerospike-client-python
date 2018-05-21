@@ -23,7 +23,6 @@
 #include <aerospike/as_status.h>
 #include <aerospike/as_admin.h>
 #include <aerospike/as_operations.h>
-#include <aerospike/as_map_operations.h>
 #include <aerospike/aerospike_index.h>
 #include "aerospike/as_scan.h"
 #include "aerospike/as_job.h"
@@ -229,6 +228,7 @@ AerospikeConstants aerospike_constants[] = {
 	{OP_LIST_REMOVE_BY_VALUE, "OP_LIST_REMOVE_BY_VALUE"},
 	{OP_LIST_REMOVE_BY_VALUE_LIST, "OP_LIST_REMOVE_BY_VALUE_LIST"},
 	{OP_LIST_REMOVE_BY_VALUE_RANGE, "OP_LIST_REMOVE_BY_VALUE_RANGE"},
+	{OP_LIST_SET_ORDER, "OP_LIST_SET_ORDER"},
 	{AS_LIST_RETURN_NONE, "LIST_RETURN_NONE"},
 	{AS_LIST_RETURN_INDEX, "LIST_RETURN_INDEX"},
 	{AS_LIST_RETURN_REVERSE_INDEX, "LIST_RETURN_REVERSE_INDEX"},
@@ -238,7 +238,9 @@ AerospikeConstants aerospike_constants[] = {
 	{AS_LIST_RETURN_VALUE, "LIST_RETURN_VALUE"},
 	{AS_LIST_SORT_DROP_DUPLICATES, "LIST_SORT_DROP_DUPLICATES"},
 	{AS_LIST_WRITE_ADD_UNIQUE, "LIST_WRITE_ADD_UNIQUE"},
-	{AS_LIST_WRITE_INSERT_BOUNDED, "LIST_WRITE_INSERT_BOUNDED"}
+	{AS_LIST_WRITE_INSERT_BOUNDED, "LIST_WRITE_INSERT_BOUNDED"},
+	{AS_LIST_ORDERED, "LIST_ORDERED"},
+	{AS_LIST_UNORDERED, "LIST_UNORDERED"}
 
 };
 
@@ -746,4 +748,65 @@ as_status pyobject_to_map_policy(as_error * err, PyObject * py_policy,
 	as_map_policy_set(policy, map_order, map_write_mode);
 
 	return err->code;
+}
+
+as_status
+pyobject_to_list_policy(as_error* err, PyObject* py_policy, as_list_policy* list_policy)
+{
+	as_list_policy_init(list_policy);
+	PyObject* py_val = NULL;
+	long list_order = AS_LIST_UNORDERED;
+	long flags = AS_LIST_WRITE_DEFAULT;
+
+	if (!py_policy || py_policy == Py_None) {
+		return AEROSPIKE_OK;
+	}
+
+	if (!PyDict_Check(py_policy)) {
+		return as_error_update(err, AEROSPIKE_ERR_PARAM, "List policy must be a dictionary.");
+	}
+
+	py_val = PyDict_GetItemString(py_policy, "list_order");
+    if (py_val && py_val != Py_None) {
+        if (PyInt_Check(py_val)) {
+            list_order = (int64_t)PyInt_AsLong(py_val);
+            if (PyErr_Occurred()) {
+                return as_error_update(err, AEROSPIKE_ERR_PARAM, "Failed to convert list_order");
+
+            }
+    	}
+        else if (PyLong_Check(py_val)) {
+        	list_order = (int64_t)PyLong_AsLong(py_val);
+            if (PyErr_Occurred()) {
+                return as_error_update(err, AEROSPIKE_ERR_PARAM, "Failed to convert list_order");
+            }
+        }
+        else {
+            return as_error_update(err, AEROSPIKE_ERR_PARAM, "Invalid List order");
+        }
+	}
+
+	py_val = PyDict_GetItemString(py_policy, "write_flags");
+    if (py_val && py_val != Py_None) {
+        if (PyInt_Check(py_val)) {
+        	flags = (int64_t)PyInt_AsLong(py_val);
+            if (PyErr_Occurred()) {
+                return as_error_update(err, AEROSPIKE_ERR_PARAM, "Failed to convert write_flags");
+
+            }
+    	}
+        else if (PyLong_Check(py_val)) {
+        	flags = (int64_t)PyLong_AsLong(py_val);
+            if (PyErr_Occurred()) {
+                return as_error_update(err, AEROSPIKE_ERR_PARAM, "Failed to convert write_flags");
+            }
+        }
+        else {
+            return as_error_update(err, AEROSPIKE_ERR_PARAM, "Invalid write_flags");
+        }
+	}
+
+	as_list_policy_set(list_policy, (as_list_order)list_order, (as_list_write_flags)flags);
+
+	return AEROSPIKE_OK;
 }

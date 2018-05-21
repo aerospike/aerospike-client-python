@@ -20,6 +20,7 @@
 #include <aerospike/as_policy.h>
 #include <aerospike/as_policy.h>
 #include <aerospike/as_map_operations.h>
+#include <aerospike/as_list_operations.h>
 
 #define MAX_CONSTANT_STR_SIZE 512
 
@@ -65,7 +66,8 @@ enum Aerospike_list_operations {
 	OP_LIST_REMOVE_BY_RANK_RANGE,
 	OP_LIST_REMOVE_BY_VALUE,
 	OP_LIST_REMOVE_BY_VALUE_LIST,
-	OP_LIST_REMOVE_BY_VALUE_RANGE
+	OP_LIST_REMOVE_BY_VALUE_RANGE,
+	OP_LIST_SET_ORDER
 };
 
 enum Aerospike_map_operations {
@@ -166,4 +168,7 @@ as_status declare_policy_constants(PyObject *aerospike);
 void set_scan_options(as_error *err, as_scan* scan_p, PyObject * py_options);
 
 as_status set_query_options(as_error* err, PyObject* query_options, as_query* query);
+
+as_status pyobject_to_list_policy(as_error * err, PyObject * py_policy,
+									as_list_policy * policy);
 

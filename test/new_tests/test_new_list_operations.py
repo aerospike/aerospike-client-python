@@ -582,3 +582,12 @@ class TestNewListOperations(object):
         _, _, bins = self.as_connection.get(self.test_key)
         assert bins[self.test_bin] == [6, 5]
 
+    def test_list_set_order(self):
+        operation = {
+            'op': aerospike.OP_LIST_SET_ORDER,
+            'list_order': aerospike.LIST_ORDERED,
+            'bin': self.test_bin
+        }
+        self.as_connection.operate(self.test_key, [operation])
+        _, _, bins = self.as_connection.get(self.test_key)
+        assert bins[self.test_bin] == sorted(self.test_list)

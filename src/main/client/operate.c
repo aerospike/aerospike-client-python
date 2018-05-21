@@ -174,39 +174,38 @@ int check_type(AerospikeClient * self, PyObject * py_value, int op, as_error *er
 	return 0;
 }
 
-/* Is this a list operation */
-#define IS_LIST_OP(_op) \
-	((_op) == OP_LIST_APPEND || \
-	(_op) == OP_LIST_APPEND_ITEMS || \
-	(_op) == OP_LIST_INSERT || \
-	(_op) == OP_LIST_INSERT_ITEMS ||\
-	(_op) == OP_LIST_POP ||\
-	(_op) == OP_LIST_POP_RANGE ||\
-	(_op) == OP_LIST_REMOVE ||\
-	(_op) == OP_LIST_REMOVE_RANGE ||\
-	(_op) == OP_LIST_CLEAR ||\
-	(_op) == OP_LIST_SET ||\
-	(_op) == OP_LIST_GET || \
-	(_op) == OP_LIST_GET_RANGE ||\
-	(_op) == OP_LIST_TRIM ||\
-	(_op) == OP_LIST_SIZE ||\
-	(_op) == OP_LIST_INCREMENT ||\
-	(_op) == OP_LIST_GET_BY_INDEX ||\
-	(_op) == OP_LIST_GET_BY_INDEX_RANGE ||\
-	(_op) == OP_LIST_GET_BY_RANK ||\
-	(_op) == OP_LIST_GET_BY_RANK_RANGE ||\
-	(_op) == OP_LIST_GET_BY_VALUE ||\
-	(_op) == OP_LIST_GET_BY_VALUE_LIST ||\
-	(_op) == OP_LIST_GET_BY_VALUE_RANGE ||\
-	(_op) == OP_LIST_REMOVE_BY_INDEX ||\
-	(_op) == OP_LIST_REMOVE_BY_INDEX_RANGE ||\
-	(_op) == OP_LIST_REMOVE_BY_RANK ||\
-	(_op) == OP_LIST_REMOVE_BY_RANK_RANGE ||\
-	(_op) == OP_LIST_REMOVE_BY_VALUE ||\
-	(_op) == OP_LIST_REMOVE_BY_VALUE_LIST ||\
-	(_op) == OP_LIST_REMOVE_BY_VALUE_RANGE)
-
-
+static inline bool isListOp(int op) {
+	return (op == OP_LIST_APPEND ||
+			op == OP_LIST_APPEND_ITEMS ||
+			op == OP_LIST_INSERT ||
+			op == OP_LIST_INSERT_ITEMS ||
+			op == OP_LIST_POP ||
+			op == OP_LIST_POP_RANGE ||
+			op == OP_LIST_REMOVE ||
+			op == OP_LIST_REMOVE_RANGE ||
+			op == OP_LIST_CLEAR ||
+			op == OP_LIST_SET ||
+			op == OP_LIST_GET ||
+			op == OP_LIST_GET_RANGE ||
+			op == OP_LIST_TRIM ||
+			op == OP_LIST_SIZE ||
+			op == OP_LIST_INCREMENT ||
+			op == OP_LIST_GET_BY_INDEX ||
+			op == OP_LIST_GET_BY_INDEX_RANGE ||
+			op == OP_LIST_GET_BY_RANK ||
+			op == OP_LIST_GET_BY_RANK_RANGE ||
+			op == OP_LIST_GET_BY_VALUE ||
+			op == OP_LIST_GET_BY_VALUE_LIST ||
+			op == OP_LIST_GET_BY_VALUE_RANGE ||
+			op == OP_LIST_REMOVE_BY_INDEX ||
+			op == OP_LIST_REMOVE_BY_INDEX_RANGE ||
+			op == OP_LIST_REMOVE_BY_RANK ||
+			op == OP_LIST_REMOVE_BY_RANK_RANGE ||
+			op == OP_LIST_REMOVE_BY_VALUE ||
+			op == OP_LIST_REMOVE_BY_VALUE_LIST ||
+			op == OP_LIST_REMOVE_BY_VALUE_RANGE ||
+			op == OP_LIST_SET_ORDER);
+}
 bool opRequiresIndex(int op) {
 	return (op == OP_LIST_INSERT               || op == OP_LIST_INSERT_ITEMS  ||
 			op == OP_LIST_POP                  || op == OP_LIST_POP_RANGE     ||
@@ -293,10 +292,11 @@ as_status add_op(AerospikeClient * self, as_error * err, PyObject * py_val, as_v
 		return err->code;
 	}
 
-	/* Handle the new list operations with a helper */
-	if (IS_LIST_OP(operation)) {
+	/* Handle the list operations with a helper in the cdt_list_operate.c file */
+	if (isListOp(operation)) {
 		return add_new_list_op(self, err, py_val, unicodeStrVector, static_pool,
-			ops, operation, ret_type, SERIALIZER_PYTHON); //This serializer should not be hardcoded
+			ops, operation, ret_type, SERIALIZER_PYTHON); //This hardcoding matches current behavior
+
 	}
 
 	while (PyDict_Next(py_val, &pos, &key_op, &value)) {
@@ -497,71 +497,6 @@ as_status add_op(AerospikeClient * self, as_error * err, PyObject * py_val, as_v
 		case AS_OPERATOR_WRITE:
 			CONVERT_VAL_TO_AS_VAL();
 			as_operations_add_write(ops, bin, (as_bin_value *) put_val);
-			break;
-
-		//------- LIST OPERATIONS ---------
-		case OP_LIST_APPEND:
-			CONVERT_VAL_TO_AS_VAL();
-			as_operations_add_list_append(ops, bin, put_val);
-			break;
-		case OP_LIST_APPEND_ITEMS:
-			CONVERT_VAL_TO_AS_VAL();
-			as_operations_add_list_append_items(ops, bin, (as_list*)put_val);
-			break;
-		case OP_LIST_INSERT:
-			CONVERT_VAL_TO_AS_VAL();
-			as_operations_add_list_insert(ops, bin, index, put_val);
-			break;
-		case OP_LIST_INSERT_ITEMS:
-			CONVERT_VAL_TO_AS_VAL();
-			as_operations_add_list_insert_items(ops, bin, index, (as_list*)put_val);
-			break;
-		case OP_LIST_INCREMENT:
-			CONVERT_VAL_TO_AS_VAL();
-			as_operations_add_list_increment(ops, bin, index, put_val);
-			break;
-		case OP_LIST_POP:
-			as_operations_add_list_pop(ops, bin, index);
-			break;
-		case OP_LIST_POP_RANGE:
-			if (py_value && (pyobject_to_index(self, err, py_value, &offset) != AEROSPIKE_OK)) {
-				return err->code;
-			}
-			as_operations_add_list_pop_range(ops, bin, index, offset);
-			break;
-		case OP_LIST_REMOVE:
-			as_operations_add_list_remove(ops, bin, index);
-			break;
-		case OP_LIST_REMOVE_RANGE:
-			if (py_value && (pyobject_to_index(self, err, py_value, &offset) != AEROSPIKE_OK)) {
-				return err->code;
-			}
-			as_operations_add_list_remove_range(ops, bin, index, offset);
-			break;
-		case OP_LIST_CLEAR:
-			as_operations_add_list_clear(ops, bin);
-			break;
-		case OP_LIST_SET:
-			CONVERT_VAL_TO_AS_VAL();
-			as_operations_add_list_set(ops, bin, index, put_val);
-			break;
-		case OP_LIST_GET:
-			as_operations_add_list_get(ops, bin, index);
-			break;
-		case OP_LIST_GET_RANGE:
-			if (py_value && (pyobject_to_index(self, err, py_value, &offset) != AEROSPIKE_OK)) {
-				return err->code;
-			}
-			as_operations_add_list_get_range(ops, bin, index, offset);
-			break;
-		case OP_LIST_TRIM:
-			if (py_value && (pyobject_to_index(self, err, py_value, &offset) != AEROSPIKE_OK)) {
-				return err->code;
-			}
-			as_operations_add_list_trim(ops, bin, index, offset);
-			break;
-		case OP_LIST_SIZE:
-			as_operations_add_list_size(ops, bin);
 			break;
 
 		//------- MAP OPERATIONS ---------

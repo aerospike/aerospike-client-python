@@ -14,15 +14,6 @@
  * limitations under the License.
  ******************************************************************************/
 
-#define AS_PY_BIN_KEY "bin"
-#define AS_PY_VAL_KEY "val"
-#define AS_PY_VALUES_KEY "value_list"
-#define AS_PY_VAL_BEGIN_KEY "value_begin"
-#define AS_PY_VAL_END_KEY "value_end"
-#define AS_PY_INDEX_KEY "index"
-#define AS_PY_COUNT_KEY "count"
-#define AS_PY_RANK_KEY "rank"
-#define AS_PY_LIST_RETURN_KEY "return_type"
 
 #include <Python.h>
 #include <stdbool.h>
@@ -38,6 +29,17 @@
 #include "serializer.h"
 #include "cdt_list_operations.h"
 
+#define AS_PY_BIN_KEY "bin"
+#define AS_PY_VAL_KEY "val"
+#define AS_PY_VALUES_KEY "value_list"
+#define AS_PY_VAL_BEGIN_KEY "value_begin"
+#define AS_PY_VAL_END_KEY "value_end"
+#define AS_PY_INDEX_KEY "index"
+#define AS_PY_COUNT_KEY "count"
+#define AS_PY_RANK_KEY "rank"
+#define AS_PY_LIST_RETURN_KEY "return_type"
+#define AS_PY_LIST_ORDER "list_order"
+#define AS_PY_LIST_POLICY "list_policy"
 /*
 This handles
 	(_op) == OP_LIST_GET_BY_INDEX ||\
@@ -65,10 +67,13 @@ get_asval(AerospikeClient * self, as_error * err, char* key, PyObject * op_dict,
              as_static_pool * static_pool, int serializer_type, bool required);
 
 static as_status
-get_val_list(AerospikeClient * self, as_error * err, PyObject * op_dict, as_list** list, as_static_pool * static_pool, int serializer_type);
+get_val_list(AerospikeClient * self, as_error * err, const char* list_key, PyObject * op_dict, as_list** list, as_static_pool * static_pool, int serializer_type);
 
 static as_status
 get_int64_t(as_error * err, const char* key, PyObject * op_dict, int64_t* count);
+
+static as_status
+get_list_policy(as_error * err, PyObject * op_dict, as_list_policy* policy, bool* found);
 
 static as_status
 get_optional_int64_t(as_error * err, const char* key,  PyObject * op_dict, int64_t* count, bool* found);
@@ -76,7 +81,66 @@ get_optional_int64_t(as_error * err, const char* key,  PyObject * op_dict, int64
 static as_status
 get_list_return_type(as_error * err, PyObject * op_dict, int* return_type);
 
-/* NEW CDT LIST OPERATIONS*/
+/*
+ * Previously implemented list operations
+ */
+static as_status
+add_op_list_append(AerospikeClient* self, as_error * err, char* bin,
+                         PyObject * op_dict, as_operations * ops,
+                         as_static_pool* static_pool, int serializer_type);
+
+static as_status
+add_op_list_append_items(AerospikeClient* self, as_error* err, char* bin,
+						 PyObject* op_dict, as_operations* ops,
+						 as_static_pool* static_pool, int serializer_type);
+
+static as_status
+add_op_list_insert(AerospikeClient* self, as_error * err, char* bin,
+                         PyObject * op_dict, as_operations * ops,
+                         as_static_pool* static_pool, int serializer_type);
+
+static as_status
+add_op_list_insert_items(AerospikeClient* self, as_error* err, char* bin,
+						 PyObject* op_dict, as_operations* ops,
+						 as_static_pool* static_pool, int serializer_type);
+
+static as_status
+add_op_list_increment(AerospikeClient* self, as_error * err, char* bin,
+                         PyObject * op_dict, as_operations * ops,
+                         as_static_pool* static_pool, int serializer_type);
+
+static as_status
+add_op_list_size(as_error * err, char* bin, as_operations * ops);
+
+static as_status
+add_op_list_pop(as_error * err, char* bin, PyObject * op_dict, as_operations * ops);
+
+static as_status
+add_op_list_pop_range(as_error * err, char* bin, PyObject * op_dict, as_operations * ops);
+
+static as_status
+add_op_list_remove(as_error * err, char* bin, PyObject * op_dict, as_operations * ops);
+
+static as_status
+add_op_list_remove_range(as_error * err, char* bin, PyObject * op_dict, as_operations * ops);
+
+static as_status
+add_op_list_clear(as_error * err, char* bin,as_operations * ops);
+
+static as_status
+add_op_list_get(as_error * err, char* bin, PyObject * op_dict, as_operations * ops);
+
+static as_status
+add_op_list_get_range(as_error * err, char* bin, PyObject * op_dict, as_operations * ops);
+
+static as_status
+add_op_list_trim(as_error * err, char* bin, PyObject * op_dict, as_operations * ops);
+
+static as_status
+add_op_list_set(AerospikeClient* self, as_error * err, char* bin, PyObject * op_dict, as_operations * ops,
+            as_static_pool* static_pool, int serializer_type);
+
+/* NEW CDT LIST OPERATIONS Post 3.16.0.1*/
 /* GET BY */
 static as_status
 add_op_list_get_by_index(as_error * err, char* bin, PyObject * op_dict, as_vector * unicodeStrVector, as_operations * ops);
@@ -135,6 +199,11 @@ add_op_list_remove_by_value_range(AerospikeClient* self, as_error * err, char* b
                                PyObject * op_dict, as_vector * unicodeStrVector, as_operations * ops,
                                as_static_pool* static_pool, int serializer_type);
 
+
+/* Set Order */
+static as_status
+add_op_list_set_order(as_error * err, char* bin, PyObject * op_dict, as_operations * ops);
+
 /* End forwards */
 as_status 
 add_new_list_op(AerospikeClient * self, as_error * err, PyObject * op_dict, as_vector * unicodeStrVector,
@@ -148,7 +217,53 @@ add_new_list_op(AerospikeClient * self, as_error * err, PyObject * op_dict, as_v
     }
 
     switch(operation_code) {
-		case OP_LIST_GET_BY_INDEX: {
+    	case OP_LIST_APPEND:
+    		return add_op_list_append(self, err, bin, op_dict, ops, static_pool, serializer_type);
+
+    	case OP_LIST_APPEND_ITEMS:
+    		return add_op_list_append_items(self, err, bin, op_dict, ops, static_pool, serializer_type);
+
+    	case OP_LIST_SIZE:
+    		return add_op_list_size(err, bin, ops);
+
+    	case OP_LIST_INSERT:
+    		return add_op_list_insert(self, err, bin, op_dict, ops, static_pool, serializer_type);
+
+    	case OP_LIST_INSERT_ITEMS:
+    		return add_op_list_insert_items(self, err, bin, op_dict, ops, static_pool, serializer_type);
+
+    	case OP_LIST_INCREMENT:
+    		return add_op_list_increment(self, err, bin, op_dict, ops, static_pool, serializer_type);
+
+    	case OP_LIST_POP:
+    		return add_op_list_pop(err, bin, op_dict, ops);
+
+    	case OP_LIST_POP_RANGE:
+    		return add_op_list_pop_range(err, bin, op_dict, ops);
+
+    	case OP_LIST_REMOVE:
+    		return add_op_list_remove(err, bin, op_dict, ops);
+
+    	case OP_LIST_REMOVE_RANGE:
+    		return add_op_list_remove_range(err, bin, op_dict, ops);
+
+    	case OP_LIST_CLEAR:
+    		return add_op_list_clear(err, bin, ops);
+
+    	case OP_LIST_SET:
+    		return add_op_list_set(self, err, bin, op_dict, ops, static_pool, serializer_type);
+
+    	case OP_LIST_GET:
+    		return add_op_list_get(err, bin, op_dict, ops);
+
+    	case OP_LIST_GET_RANGE:
+    		return add_op_list_get_range(err, bin, op_dict, ops);
+
+    	case OP_LIST_TRIM:
+    		return add_op_list_trim(err, bin, op_dict, ops);
+    	/***** New List ops ****/
+
+    	case OP_LIST_GET_BY_INDEX: {
             return add_op_list_get_by_index(err, bin, op_dict, unicodeStrVector, ops);
 		}
 
@@ -202,6 +317,10 @@ add_new_list_op(AerospikeClient * self, as_error * err, PyObject * op_dict, as_v
 
 		case OP_LIST_REMOVE_BY_VALUE_RANGE: {
             return add_op_list_remove_by_value_range(self, err, bin, op_dict, unicodeStrVector, ops, static_pool, serializer_type);
+		}
+
+		case OP_LIST_SET_ORDER: {
+			return add_op_list_set_order(err, bin, op_dict, ops);
 		}
 
         default:
@@ -272,10 +391,10 @@ get_asval(AerospikeClient * self, as_error * err, char* key, PyObject * op_dict,
 }
 
 static as_status
-get_val_list(AerospikeClient * self, as_error * err, PyObject * op_dict, as_list** list_val, as_static_pool * static_pool, int serializer_type)
+get_val_list(AerospikeClient * self, as_error * err, const char* list_key, PyObject * op_dict, as_list** list_val, as_static_pool * static_pool, int serializer_type)
 {
         *list_val = NULL;
-        PyObject* py_val = PyDict_GetItemString(op_dict, AS_PY_VALUES_KEY);
+        PyObject* py_val = PyDict_GetItemString(op_dict, list_key);
         if (!py_val) {
             return as_error_update(err, AEROSPIKE_ERR_PARAM, "Operation must contain a \"values\" entry");
         }
@@ -311,10 +430,10 @@ get_optional_int64_t(as_error * err, const char* key,  PyObject * op_dict, int64
             *count = (int64_t)PyInt_AsLong(py_val);
             if (PyErr_Occurred()) {
                 if(PyErr_ExceptionMatches(PyExc_OverflowError)) {
-                    return as_error_update(err, AEROSPIKE_ERR_PARAM, "count too large");
+                    return as_error_update(err, AEROSPIKE_ERR_PARAM, "%s too large", key);
                 }
 
-                return as_error_update(err, AEROSPIKE_ERR_PARAM, "Failed to convert count");
+                return as_error_update(err, AEROSPIKE_ERR_PARAM, "Failed to convert %s", key);
 
             }
         }
@@ -322,14 +441,14 @@ get_optional_int64_t(as_error * err, const char* key,  PyObject * op_dict, int64
             *count = (int64_t)PyLong_AsLong(py_val);
             if (PyErr_Occurred()) {
                 if(PyErr_ExceptionMatches(PyExc_OverflowError)) {
-                    return as_error_update(err, AEROSPIKE_ERR_PARAM, "count too large");
+                    return as_error_update(err, AEROSPIKE_ERR_PARAM, "%s too large", key);
                 }
 
-                return as_error_update(err, AEROSPIKE_ERR_PARAM, "Failed to convert count");
+                return as_error_update(err, AEROSPIKE_ERR_PARAM, "Failed to convert %s", key);
             }
         }
         else {
-            return as_error_update(err, AEROSPIKE_ERR_PARAM, "count must be an integer");
+            return as_error_update(err, AEROSPIKE_ERR_PARAM, "%s must be an integer", key);
         }
     
         *found = true;
@@ -511,7 +630,7 @@ add_op_list_get_by_value_list(AerospikeClient* self, as_error * err, char* bin, 
                 return err->code;
             }
 
-            if (get_val_list(self, err, op_dict, &value_list, static_pool, serializer_type) != AEROSPIKE_OK) {
+            if (get_val_list(self, err, AS_PY_VALUES_KEY, op_dict, &value_list, static_pool, serializer_type) != AEROSPIKE_OK) {
                 return err->code;
             }
 
@@ -712,7 +831,7 @@ add_op_list_remove_by_value_list(AerospikeClient* self, as_error * err, char* bi
                 return err->code;
             }
 
-            if (get_val_list(self, err, op_dict, &value_list, static_pool, serializer_type) != AEROSPIKE_OK) {
+            if (get_val_list(self, err, AS_PY_VALUES_KEY, op_dict, &value_list, static_pool, serializer_type) != AEROSPIKE_OK) {
                 return err->code;
             }
 
@@ -761,4 +880,345 @@ ERROR:
         as_val_destroy(val_end);
     }
     return err->code;
+}
+
+static as_status
+add_op_list_set_order(as_error * err, char* bin, PyObject * op_dict, as_operations * ops)
+{
+	int64_t order_type_int;
+    if (get_int64_t(err, AS_PY_LIST_ORDER, op_dict, &order_type_int) != AEROSPIKE_OK) {
+        return err->code;
+    }
+
+    if (!as_operations_add_list_set_order(ops, bin, (as_list_order)order_type_int)) {
+        as_error_update(err, AEROSPIKE_ERR_CLIENT, "Failed to add list_set_order operation");
+    }
+
+	return AEROSPIKE_OK;
+}
+
+/* Previously implemented list operations */
+
+static as_status
+add_op_list_append(AerospikeClient* self, as_error * err, char* bin, PyObject * op_dict, as_operations * ops,
+            as_static_pool* static_pool, int serializer_type)
+{
+		as_val* val = NULL;
+		as_list_policy list_policy;
+		bool policy_in_use = false;
+
+		if (get_list_policy(err, op_dict, &list_policy, &policy_in_use) != AEROSPIKE_OK) {
+			return err->code;
+		}
+
+		if (get_asval(self, err, AS_PY_VAL_KEY, op_dict, &val, static_pool, serializer_type, true) != AEROSPIKE_OK) {
+			return err->code;
+		}
+
+		if (policy_in_use) {
+			if (!as_operations_add_list_append_with_policy(ops, bin, &list_policy, val)) {
+				as_val_destroy(val);
+				return as_error_update(err, AEROSPIKE_ERR_CLIENT, "Failed to add list_append operation");
+			}
+		}
+		else {
+			if (!as_operations_add_list_append(ops, bin, val)) {
+				as_val_destroy(val);
+				return as_error_update(err, AEROSPIKE_ERR_CLIENT, "Failed to add list_append operation");
+			}
+		}
+
+		return AEROSPIKE_OK;
+}
+
+static as_status
+add_op_list_append_items(AerospikeClient* self, as_error* err, char* bin,
+						 PyObject* op_dict, as_operations* ops,
+						 as_static_pool* static_pool, int serializer_type) {
+	as_list* items_list = NULL;
+
+    if (get_val_list(self, err, AS_PY_VAL_KEY, op_dict, &items_list, static_pool, serializer_type) != AEROSPIKE_OK) {
+        return err->code;
+    }
+
+	if (!as_operations_add_list_append_items(ops, bin, items_list)) {
+		as_val_destroy(items_list);
+		return as_error_update(err, AEROSPIKE_ERR_CLIENT, "Failed to add list_append_items operation");
+	}
+
+	return AEROSPIKE_OK;
+}
+
+static as_status
+add_op_list_insert(AerospikeClient* self, as_error * err, char* bin, PyObject * op_dict, as_operations * ops,
+            as_static_pool* static_pool, int serializer_type)
+{
+		as_val* val = NULL;
+		int64_t index;
+
+		if (get_int64_t(err, AS_PY_INDEX_KEY, op_dict, &index) != AEROSPIKE_OK) {
+			return err->code;
+		}
+
+		if (get_asval(self, err, AS_PY_VAL_KEY, op_dict, &val, static_pool, serializer_type, true) != AEROSPIKE_OK) {
+			return err->code;
+		}
+
+		if (!as_operations_add_list_insert(ops, bin, index, val)) {
+			as_val_destroy(val);
+			return as_error_update(err, AEROSPIKE_ERR_CLIENT, "Failed to add list_insert operation");
+		}
+
+		return AEROSPIKE_OK;
+}
+
+static as_status
+add_op_list_insert_items(AerospikeClient* self, as_error* err, char* bin,
+						 PyObject* op_dict, as_operations* ops,
+						 as_static_pool* static_pool, int serializer_type) {
+	as_list* items_list = NULL;
+	int64_t index;
+
+	if (get_int64_t(err, AS_PY_INDEX_KEY, op_dict, &index) != AEROSPIKE_OK) {
+		return err->code;
+	}
+
+    if (get_val_list(self, err, AS_PY_VAL_KEY, op_dict, &items_list, static_pool, serializer_type) != AEROSPIKE_OK) {
+        return err->code;
+    }
+
+	if (!as_operations_add_list_insert_items(ops, bin, index, items_list)) {
+		as_val_destroy(items_list);
+		return as_error_update(err, AEROSPIKE_ERR_CLIENT, "Failed to add list_insert_items operation");
+	}
+
+	return AEROSPIKE_OK;
+}
+
+static as_status
+add_op_list_increment(AerospikeClient* self, as_error * err, char* bin,
+                         PyObject * op_dict, as_operations * ops,
+                         as_static_pool* static_pool, int serializer_type)
+{
+	as_val* incr = NULL;
+	int64_t index;
+
+	if (get_int64_t(err, AS_PY_INDEX_KEY, op_dict, &index) != AEROSPIKE_OK) {
+		return err->code;
+	}
+
+	if (get_asval(self, err, AS_PY_VAL_KEY, op_dict, &incr, static_pool, serializer_type, true) != AEROSPIKE_OK) {
+		return err->code;
+	}
+
+	if (!as_operations_add_list_increment(ops, bin, index, incr)) {
+		as_val_destroy(incr);
+		return as_error_update(err, AEROSPIKE_ERR_CLIENT, "Failed to add list_increment operation");
+	}
+
+	return AEROSPIKE_OK;
+}
+
+static as_status
+add_op_list_pop(as_error * err, char* bin, PyObject * op_dict, as_operations * ops)
+{
+            int64_t index;
+
+            /* Get the index*/
+            if (get_int64_t(err, AS_PY_INDEX_KEY, op_dict, &index) != AEROSPIKE_OK) {
+                return err->code;
+            }
+
+            if (!as_operations_add_list_pop(ops, bin, index)) {
+                as_error_update(err, AEROSPIKE_ERR_CLIENT, "Failed to add list_pop operation");
+            }
+
+            return err->code;
+}
+
+static as_status
+add_op_list_pop_range(as_error * err, char* bin, PyObject * op_dict, as_operations * ops)
+{
+            int64_t index;
+            int64_t count;
+
+            /* Get the index*/
+            if (get_int64_t(err, AS_PY_INDEX_KEY, op_dict, &index) != AEROSPIKE_OK) {
+                return err->code;
+            }
+
+            /* Get the count*/
+            if (get_int64_t(err, AS_PY_VAL_KEY, op_dict, &count) != AEROSPIKE_OK) {
+                return err->code;
+            }
+
+            if (!as_operations_add_list_pop_range(ops, bin, index, (uint64_t)count)) {
+                as_error_update(err, AEROSPIKE_ERR_CLIENT, "Failed to list_pop_range operation");
+            }
+
+            return err->code;
+}
+
+static as_status
+add_op_list_remove(as_error * err, char* bin, PyObject * op_dict, as_operations * ops)
+{
+		int64_t index;
+
+		if (get_int64_t(err, AS_PY_INDEX_KEY, op_dict, &index) != AEROSPIKE_OK) {
+			return err->code;
+		}
+
+		if (!as_operations_add_list_remove(ops, bin, index)) {
+			return as_error_update(err, AEROSPIKE_ERR_CLIENT, "Failed to add list_remove operation");
+		}
+
+		return AEROSPIKE_OK;
+}
+
+static as_status
+add_op_list_remove_range(as_error * err, char* bin, PyObject * op_dict, as_operations * ops)
+{
+            int64_t index;
+            int64_t count;
+
+            /* Get the index*/
+            if (get_int64_t(err, AS_PY_INDEX_KEY, op_dict, &index) != AEROSPIKE_OK) {
+                return err->code;
+            }
+
+            /* Get the count*/
+            if (get_int64_t(err, AS_PY_VAL_KEY, op_dict, &count) != AEROSPIKE_OK) {
+                return err->code;
+            }
+
+            if (!as_operations_add_list_remove_range(ops, bin, index, (uint64_t)count)) {
+                as_error_update(err, AEROSPIKE_ERR_CLIENT, "Failed to list_remove_range operation");
+            }
+
+            return err->code;
+}
+
+static as_status
+add_op_list_clear(as_error * err, char* bin, as_operations * ops)
+{
+
+    if (!as_operations_add_list_clear(ops, bin)) {
+        as_error_update(err, AEROSPIKE_ERR_CLIENT, "Failed to add list_clear operation");
+    }
+
+	return AEROSPIKE_OK;
+}
+
+static as_status
+add_op_list_set(AerospikeClient* self, as_error * err, char* bin, PyObject * op_dict, as_operations * ops,
+            as_static_pool* static_pool, int serializer_type)
+{
+		as_val* val = NULL;
+		int64_t index;
+
+		if (get_int64_t(err, AS_PY_INDEX_KEY, op_dict, &index) != AEROSPIKE_OK) {
+			return err->code;
+		}
+
+		if (get_asval(self, err, AS_PY_VAL_KEY, op_dict, &val, static_pool, serializer_type, true) != AEROSPIKE_OK) {
+			return err->code;
+		}
+
+		if (!as_operations_add_list_set(ops, bin, index, val)) {
+			as_val_destroy(val);
+			return as_error_update(err, AEROSPIKE_ERR_CLIENT, "Failed to add list_set operation");
+		}
+
+		return AEROSPIKE_OK;
+}
+
+static as_status
+add_op_list_get(as_error * err, char* bin, PyObject * op_dict, as_operations * ops)
+{
+		int64_t index;
+
+		if (get_int64_t(err, AS_PY_INDEX_KEY, op_dict, &index) != AEROSPIKE_OK) {
+			return err->code;
+		}
+
+		if (!as_operations_add_list_get(ops, bin, index)) {
+			return as_error_update(err, AEROSPIKE_ERR_CLIENT, "Failed to add list_get operation");
+		}
+
+		return AEROSPIKE_OK;
+}
+
+static as_status
+add_op_list_get_range(as_error * err, char* bin, PyObject * op_dict, as_operations * ops)
+{
+            int64_t index;
+            int64_t count;
+
+            /* Get the index*/
+            if (get_int64_t(err, AS_PY_INDEX_KEY, op_dict, &index) != AEROSPIKE_OK) {
+                return err->code;
+            }
+
+            /* Get the count*/
+            if (get_int64_t(err, AS_PY_VAL_KEY, op_dict, &count) != AEROSPIKE_OK) {
+                return err->code;
+            }
+
+            if (!as_operations_add_list_get_range(ops, bin, index, (uint64_t)count)) {
+                as_error_update(err, AEROSPIKE_ERR_CLIENT, "Failed to list_get_range operation");
+            }
+
+            return err->code;
+}
+
+static as_status
+add_op_list_trim(as_error * err, char* bin, PyObject * op_dict, as_operations * ops)
+{
+            int64_t index;
+            int64_t count;
+
+            /* Get the index*/
+            if (get_int64_t(err, AS_PY_INDEX_KEY, op_dict, &index) != AEROSPIKE_OK) {
+                return err->code;
+            }
+
+            /* Get the count*/
+            if (get_int64_t(err, AS_PY_VAL_KEY, op_dict, &count) != AEROSPIKE_OK) {
+                return err->code;
+            }
+
+            if (!as_operations_add_list_trim(ops, bin, index, (uint64_t)count)) {
+                as_error_update(err, AEROSPIKE_ERR_CLIENT, "Failed to list_trim operation");
+            }
+
+            return err->code;
+}
+
+static as_status
+add_op_list_size(as_error * err, char* bin, as_operations * ops)
+{
+
+    if (!as_operations_add_list_size(ops, bin)) {
+        as_error_update(err, AEROSPIKE_ERR_CLIENT, "Failed to add list_size operation");
+    }
+
+	return AEROSPIKE_OK;
+}
+
+
+static as_status
+get_list_policy(as_error * err, PyObject * op_dict, as_list_policy* policy, bool* found) {
+	*found = false;
+
+	PyObject* list_policy = PyDict_GetItemString(op_dict, AS_PY_LIST_POLICY);
+
+	if (list_policy) {
+		if (pyobject_to_list_policy(err, list_policy, policy) != AEROSPIKE_OK) {
+			return err->code;
+		}
+		/* We succesfully converted the policy*/
+		*found = true;
+	}
+
+	return AEROSPIKE_OK;
 }
