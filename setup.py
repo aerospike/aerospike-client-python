@@ -371,4 +371,6 @@ setup(
             extra_link_args=extra_link_args,
         )
     ],
+    packages=['aerospike_helpers', 'aerospike_helpers.operations']
+
 )
