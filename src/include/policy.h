@@ -67,7 +67,8 @@ enum Aerospike_list_operations {
 	OP_LIST_REMOVE_BY_VALUE,
 	OP_LIST_REMOVE_BY_VALUE_LIST,
 	OP_LIST_REMOVE_BY_VALUE_RANGE,
-	OP_LIST_SET_ORDER
+	OP_LIST_SET_ORDER,
+	OP_LIST_SORT
 };
 
 enum Aerospike_map_operations {

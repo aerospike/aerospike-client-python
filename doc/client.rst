@@ -2936,6 +2936,32 @@ Admin Policies
         * **timeout** admin operation timeout in milliseconds
 
 
+
+.. _aerospike_list_policies:
+
+List Policies
+-------------
+
+.. object:: policy
+
+    A :class:`dict` of optional list policies, which are applicable to list operations.
+
+    .. hlist::
+        :columns: 1
+
+        * **write_flags** Write flags for the operation. Valid values: ``aerospike.LIST_WRITE_ADD_UNIQUE``, ``aerospike.LIST_WRITE_INSERT_BOUNDED``, ``aerospike.LIST_WRITE_DEFAULT``
+            values should be or'd together: ``aerospike.LIST_WRITE_ADD_UNIQUE | aerospike.LIST_WRITE_INSERT_BOUNDED``
+        * **list_order** ordering to maintain for the list. Valid values: values are ``aerospike.LIST_ORDERED``, ``aerospike.LIST_UNORDERED``
+
+    Example:
+
+     .. code-block:: python
+
+        list_policy = {
+            "write_flags": aerospike.LIST_WRITE_ADD_UNIQUE | aerospike.LIST_WRITE_INSERT_BOUNDED,
+            "list_order": aerospike.LIST_ORDERED
+        }
+
 .. _aerospike_map_policies:
 
 Map Policies

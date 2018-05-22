@@ -591,3 +591,19 @@ class TestNewListOperations(object):
         self.as_connection.operate(self.test_key, [operation])
         _, _, bins = self.as_connection.get(self.test_key)
         assert bins[self.test_bin] == sorted(self.test_list)
+
+    def test_list_set_order(self):
+        unsorted_dups = [2, 5, 2, 5]
+        sort_key = 'test', 'demo', 'dup_list'
+        self.keys.append(sort_key)
+        self.as_connection.put(sort_key, {self.test_bin: unsorted_dups})
+        
+        operation = {
+            'op': aerospike.OP_LIST_SORT,
+            'sort_flags': aerospike.LIST_SORT_DROP_DUPLICATES,
+            'bin': self.test_bin
+        }
+       
+        self.as_connection.operate(sort_key, [operation])
+        _, _, bins = self.as_connection.get(sort_key)
+        assert bins[self.test_bin] == [2, 5]

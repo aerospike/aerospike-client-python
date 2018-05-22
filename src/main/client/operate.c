@@ -204,7 +204,8 @@ static inline bool isListOp(int op) {
 			op == OP_LIST_REMOVE_BY_VALUE ||
 			op == OP_LIST_REMOVE_BY_VALUE_LIST ||
 			op == OP_LIST_REMOVE_BY_VALUE_RANGE ||
-			op == OP_LIST_SET_ORDER);
+			op == OP_LIST_SET_ORDER||
+			op == OP_LIST_SORT);
 }
 bool opRequiresIndex(int op) {
 	return (op == OP_LIST_INSERT               || op == OP_LIST_INSERT_ITEMS  ||

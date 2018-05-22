@@ -39,6 +39,7 @@
 #define AS_PY_RANK_KEY "rank"
 #define AS_PY_LIST_RETURN_KEY "return_type"
 #define AS_PY_LIST_ORDER "list_order"
+#define AS_PY_LIST_SORT_FLAGS "sort_flags"
 #define AS_PY_LIST_POLICY "list_policy"
 /*
 This handles
@@ -204,6 +205,10 @@ add_op_list_remove_by_value_range(AerospikeClient* self, as_error * err, char* b
 static as_status
 add_op_list_set_order(as_error * err, char* bin, PyObject * op_dict, as_operations * ops);
 
+/* List sort */
+static as_status
+add_op_list_sort(as_error * err, char* bin, PyObject * op_dict, as_operations * ops);
+
 /* End forwards */
 as_status 
 add_new_list_op(AerospikeClient * self, as_error * err, PyObject * op_dict, as_vector * unicodeStrVector,
@@ -321,6 +326,10 @@ add_new_list_op(AerospikeClient * self, as_error * err, PyObject * op_dict, as_v
 
 		case OP_LIST_SET_ORDER: {
 			return add_op_list_set_order(err, bin, op_dict, ops);
+		}
+
+		case OP_LIST_SORT: {
+			return add_op_list_sort(err, bin, op_dict, ops); // Sort the thing
 		}
 
         default:
@@ -891,10 +900,26 @@ add_op_list_set_order(as_error * err, char* bin, PyObject * op_dict, as_operatio
     }
 
     if (!as_operations_add_list_set_order(ops, bin, (as_list_order)order_type_int)) {
-        as_error_update(err, AEROSPIKE_ERR_CLIENT, "Failed to add list_set_order operation");
+       return as_error_update(err, AEROSPIKE_ERR_CLIENT, "Failed to add list_set_order operation");
     }
 
 	return AEROSPIKE_OK;
+}
+
+
+/* List sort */
+static as_status
+add_op_list_sort(as_error * err, char* bin, PyObject * op_dict, as_operations * ops) {
+	int64_t sort_flags;
+    if (get_int64_t(err, AS_PY_LIST_SORT_FLAGS, op_dict, &sort_flags) != AEROSPIKE_OK) {
+        return err->code;
+    }
+
+    if (!as_operations_add_list_sort(ops, bin, (as_list_sort_flags)sort_flags)) {
+    	return as_error_update(err, AEROSPIKE_ERR_CLIENT, "Failed to add list_sort operation");
+    }
+
+    return AEROSPIKE_OK;
 }
 
 /* Previously implemented list operations */
@@ -936,15 +961,30 @@ add_op_list_append_items(AerospikeClient* self, as_error* err, char* bin,
 						 PyObject* op_dict, as_operations* ops,
 						 as_static_pool* static_pool, int serializer_type) {
 	as_list* items_list = NULL;
+	as_list_policy list_policy;
+	bool policy_in_use = false;
+
+	if (get_list_policy(err, op_dict, &list_policy, &policy_in_use) != AEROSPIKE_OK) {
+		return err->code;
+	}
 
     if (get_val_list(self, err, AS_PY_VAL_KEY, op_dict, &items_list, static_pool, serializer_type) != AEROSPIKE_OK) {
         return err->code;
     }
 
-	if (!as_operations_add_list_append_items(ops, bin, items_list)) {
-		as_val_destroy(items_list);
-		return as_error_update(err, AEROSPIKE_ERR_CLIENT, "Failed to add list_append_items operation");
-	}
+    if (policy_in_use) {
+    	if (!as_operations_add_list_append_items_with_policy(ops, bin, &list_policy, items_list)) {
+    		as_val_destroy(items_list);
+    		return as_error_update(err, AEROSPIKE_ERR_CLIENT, "Failed to add list_append_items operation");
+    	}
+    }
+    else {
+    	if (!as_operations_add_list_append_items(ops, bin, items_list)) {
+    		as_val_destroy(items_list);
+    		return as_error_update(err, AEROSPIKE_ERR_CLIENT, "Failed to add list_append_items operation");
+    	}
+    }
+
 
 	return AEROSPIKE_OK;
 }
@@ -955,8 +995,14 @@ add_op_list_insert(AerospikeClient* self, as_error * err, char* bin, PyObject * 
 {
 		as_val* val = NULL;
 		int64_t index;
+		as_list_policy list_policy;
+		bool policy_in_use = false;
 
 		if (get_int64_t(err, AS_PY_INDEX_KEY, op_dict, &index) != AEROSPIKE_OK) {
+			return err->code;
+		}
+
+		if (get_list_policy(err, op_dict, &list_policy, &policy_in_use) != AEROSPIKE_OK) {
 			return err->code;
 		}
 
@@ -964,11 +1010,18 @@ add_op_list_insert(AerospikeClient* self, as_error * err, char* bin, PyObject * 
 			return err->code;
 		}
 
-		if (!as_operations_add_list_insert(ops, bin, index, val)) {
-			as_val_destroy(val);
-			return as_error_update(err, AEROSPIKE_ERR_CLIENT, "Failed to add list_insert operation");
+		if (policy_in_use) {
+			if (!as_operations_add_list_insert_with_policy(ops, bin, &list_policy, index, val)) {
+				as_val_destroy(val);
+				return as_error_update(err, AEROSPIKE_ERR_CLIENT, "Failed to add list_insert operation");
+			}
 		}
-
+		else {
+			if (!as_operations_add_list_insert(ops, bin, index, val)) {
+				as_val_destroy(val);
+				return as_error_update(err, AEROSPIKE_ERR_CLIENT, "Failed to add list_insert operation");
+			}
+		}
 		return AEROSPIKE_OK;
 }
 
@@ -978,8 +1031,14 @@ add_op_list_insert_items(AerospikeClient* self, as_error* err, char* bin,
 						 as_static_pool* static_pool, int serializer_type) {
 	as_list* items_list = NULL;
 	int64_t index;
+	as_list_policy list_policy;
+	bool policy_in_use = false;
 
 	if (get_int64_t(err, AS_PY_INDEX_KEY, op_dict, &index) != AEROSPIKE_OK) {
+		return err->code;
+	}
+
+	if (get_list_policy(err, op_dict, &list_policy, &policy_in_use) != AEROSPIKE_OK) {
 		return err->code;
 	}
 
@@ -987,10 +1046,18 @@ add_op_list_insert_items(AerospikeClient* self, as_error* err, char* bin,
         return err->code;
     }
 
-	if (!as_operations_add_list_insert_items(ops, bin, index, items_list)) {
-		as_val_destroy(items_list);
-		return as_error_update(err, AEROSPIKE_ERR_CLIENT, "Failed to add list_insert_items operation");
-	}
+    if (policy_in_use) {
+		if (!as_operations_add_list_insert_items_with_policy(ops, bin, &list_policy, index, items_list)) {
+			as_val_destroy(items_list);
+			return as_error_update(err, AEROSPIKE_ERR_CLIENT, "Failed to add list_insert_items operation");
+		}
+    }
+    else {
+		if (!as_operations_add_list_insert_items(ops, bin, index, items_list)) {
+			as_val_destroy(items_list);
+			return as_error_update(err, AEROSPIKE_ERR_CLIENT, "Failed to add list_insert_items operation");
+		}
+    }
 
 	return AEROSPIKE_OK;
 }
@@ -1002,6 +1069,12 @@ add_op_list_increment(AerospikeClient* self, as_error * err, char* bin,
 {
 	as_val* incr = NULL;
 	int64_t index;
+	as_list_policy list_policy;
+	bool policy_in_use = false;
+
+	if (get_list_policy(err, op_dict, &list_policy, &policy_in_use) != AEROSPIKE_OK) {
+		return err->code;
+	}
 
 	if (get_int64_t(err, AS_PY_INDEX_KEY, op_dict, &index) != AEROSPIKE_OK) {
 		return err->code;
@@ -1011,9 +1084,17 @@ add_op_list_increment(AerospikeClient* self, as_error * err, char* bin,
 		return err->code;
 	}
 
-	if (!as_operations_add_list_increment(ops, bin, index, incr)) {
-		as_val_destroy(incr);
-		return as_error_update(err, AEROSPIKE_ERR_CLIENT, "Failed to add list_increment operation");
+	if (policy_in_use) {
+		if (!as_operations_add_list_increment_with_policy(ops, bin, &list_policy, index, incr)) {
+			as_val_destroy(incr);
+			return as_error_update(err, AEROSPIKE_ERR_CLIENT, "Failed to add list_increment operation");
+		}
+	}
+	else {
+		if (!as_operations_add_list_increment(ops, bin, index, incr)) {
+			as_val_destroy(incr);
+			return as_error_update(err, AEROSPIKE_ERR_CLIENT, "Failed to add list_increment operation");
+		}
 	}
 
 	return AEROSPIKE_OK;
@@ -1115,6 +1196,12 @@ add_op_list_set(AerospikeClient* self, as_error * err, char* bin, PyObject * op_
 {
 		as_val* val = NULL;
 		int64_t index;
+		as_list_policy list_policy;
+		bool policy_in_use = false;
+
+		if (get_list_policy(err, op_dict, &list_policy, &policy_in_use) != AEROSPIKE_OK) {
+			return err->code;
+		}
 
 		if (get_int64_t(err, AS_PY_INDEX_KEY, op_dict, &index) != AEROSPIKE_OK) {
 			return err->code;
@@ -1124,11 +1211,18 @@ add_op_list_set(AerospikeClient* self, as_error * err, char* bin, PyObject * op_
 			return err->code;
 		}
 
-		if (!as_operations_add_list_set(ops, bin, index, val)) {
-			as_val_destroy(val);
-			return as_error_update(err, AEROSPIKE_ERR_CLIENT, "Failed to add list_set operation");
+		if (policy_in_use) {
+			if (!as_operations_add_list_set_with_policy(ops, bin, &list_policy, index, val)) {
+				as_val_destroy(val);
+				return as_error_update(err, AEROSPIKE_ERR_CLIENT, "Failed to add list_set operation");
+			}
 		}
-
+		else {
+			if (!as_operations_add_list_set(ops, bin, index, val)) {
+				as_val_destroy(val);
+				return as_error_update(err, AEROSPIKE_ERR_CLIENT, "Failed to add list_set operation");
+			}
+		}
 		return AEROSPIKE_OK;
 }
 
