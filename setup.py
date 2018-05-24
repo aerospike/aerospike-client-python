@@ -72,7 +72,7 @@ os.putenv('ARCHFLAGS', '-arch x86_64')
 os.environ['ARCHFLAGS'] = '-arch x86_64'
 AEROSPIKE_C_VERSION = os.getenv('AEROSPIKE_C_VERSION')
 if not AEROSPIKE_C_VERSION:
-    AEROSPIKE_C_VERSION = '4.3.11'
+    AEROSPIKE_C_VERSION = '4.3.12'
 DOWNLOAD_C_CLIENT = os.getenv('DOWNLOAD_C_CLIENT')
 AEROSPIKE_C_HOME = os.getenv('AEROSPIKE_C_HOME')
 PREFIX = None
@@ -336,6 +336,7 @@ setup(
                 'src/main/query/type.c',
                 'src/main/query/apply.c',
                 'src/main/query/foreach.c',
+                'src/main/query/predexp.c',
                 'src/main/query/results.c',
                 'src/main/query/select.c',
                 'src/main/query/where.c',
@@ -368,5 +369,5 @@ setup(
             extra_objects=extra_objects,
             extra_link_args=extra_link_args,
         )
-    ]
+    ],
 )

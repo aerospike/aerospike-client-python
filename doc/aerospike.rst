@@ -1351,3 +1351,30 @@ Return types used by various map operations
 
     Return key/value items. Note that key/value pairs will be returned as a list of tuples (i.e. [(key1, value1), (key2, value2)])
 
+
+.. _regex_constants:
+
+Regex Flag Values
+------------------
+Flags used for the `predexp.string_regex` function
+
+.. data:: REGEX_NONE
+
+    Use default behavior.
+
+.. data:: REGEX_ICASE
+
+    Do not differentiate case.
+
+.. data:: REGEX_EXTENDED
+
+    Use POSIX Extended Regular Expression syntax when interpreting regex.
+
+.. data:: REGEX_NOSUB
+
+    Do not report position of matches.
+
+.. data:: REGEX_NEWLINE
+
+    Match-any-character operators don't match a newline.
+
