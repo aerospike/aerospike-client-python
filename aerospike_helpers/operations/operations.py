@@ -209,13 +209,13 @@ class ASOperationsBuilder(object):
 
     def map_remove_key_list(self, bin_name, key_list, return_type=None):
         self.operations.append(
-            map_ops.map_remove_key_list(bin_name, key_list, return_type=return_type)
+            map_ops.map_remove_by_key_list(bin_name, key_list, return_type=return_type)
         )
         return self
 
     def map_remove_by_key_range(self, bin_name, key_range_start, key_range_end, return_type=None):
         self.operations.append(
-            map_ops.map_remove_key_range(bin_name, key_range_start, key_range_end, return_type=return_type))
+            map_ops.map_remove_by_key_range(bin_name, key_range_start, key_range_end, return_type=return_type))
         return self
 
     def map_remove_by_value(self, bin_name, value, return_type=None):
@@ -225,7 +225,7 @@ class ASOperationsBuilder(object):
 
     def map_remove_by_value_list(self, bin_name, value_list, return_type=None):
         self.operations.append(
-            map_ops.map_remove_by_value_list(self, bin_name, value_list, return_type=return_type))
+            map_ops.map_remove_by_value_list(bin_name, value_list, return_type=return_type))
         return self
 
     def map_remove_by_value_range(self, bin_name, value_start, value_end, return_type=None):
@@ -246,58 +246,58 @@ class ASOperationsBuilder(object):
 
     def map_remove_by_rank(self, bin_name, rank, return_type=None):
         self.operations.append(
-            as_map_operations.map_remove_by_rank(
+            map_ops.map_remove_by_rank(
                 bin_name, rank, return_type=return_type))
         return self
 
     def map_remove_by_rank_range(self, bin_name, rank, amount, return_type=None):
         self.operations.append(
-            as_map_operations.map_remove_by_rank_range(
+            map_ops.map_remove_by_rank_range(
                 bin_name, rank, amount, return_type=return_type))
         return self
 
     def map_get_by_key(self, bin_name, key, return_type=None):
         self.operations.append(
-            as_map_operations.map_get_by_key(bin_name, key, return_type=return_type))
+            map_ops.map_get_by_key(bin_name, key, return_type=return_type))
         return self
 
     def map_get_key_range(self, bin_name, key_range_start, key_range_end, return_type=None):
         self.operations.append(
-            as_map_operations.map_get_key_range(bin_name, key_range_start, key_range_end, return_type=return_type))
+            map_ops.map_get_by_key_range(bin_name, key_range_start, key_range_end, return_type=return_type))
         return self
 
     def map_get_by_value(self, bin_name, value, return_type=None):
         self.operations.append(
-            as_map_operations.map_get_by_value(bin_name, value, return_type=return_type))
+            map_ops.map_get_by_value(bin_name, value, return_type=return_type))
         return self
 
     def map_get_by_value_range(self, bin_name, value_start, value_end, return_type=None):
         self.operations.append(
-            as_map_operations.map_get_by_value_range(bin_name, value_start, value_end, return_type=return_type))
+            map_ops.map_get_by_value_range(bin_name, value_start, value_end, return_type=return_type))
         return self
 
     def map_get_by_index(self, bin_name, index, return_type=None):
         self.operations.append(
-            as_map_operations.map_get_by_index(bin_name, index, return_type=return_type))
+            map_ops.map_get_by_index(bin_name, index, return_type=return_type))
         return self
 
     def map_get_by_index_range(self, bin_name, index_start, get_amt, return_type=None):
         self.operations.append(
-            as_map_operations.map_get_by_index_range(bin_name, index_start, get_amt, return_type=return_type))
+            map_ops.map_get_by_index_range(bin_name, index_start, get_amt, return_type=return_type))
         return self
 
     def map_get_by_rank(self, bin_name, rank, return_type=None):
         self.operations.append(
-            as_map_operations.map_get_by_rank(bin_name, rank, return_type=return_type))
+            map_ops.map_get_by_rank(bin_name, rank, return_type=return_type))
         return self
 
     def map_get_by_rank_range(self, bin_name, rank, get_amt, return_type=None):
         self.operations.append(
-            as_map_operations.map_get_by_rank_range(bin_name, rank, get_amt, return_type=return_type))
+            map_ops.map_get_by_rank_range(bin_name, rank, get_amt, return_type=return_type))
         return self
 
     def build(self):
         '''
         return a copy of the internal list
         '''
-        return operations[:]
+        return self.operations[:]

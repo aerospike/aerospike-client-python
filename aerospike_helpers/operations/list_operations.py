@@ -69,6 +69,20 @@ def list_insert_items(bin_name, index, values, policy=None):
     
     return op_dict
 
+def list_increment(bin_name, index, value, policy=None):
+
+    op_dict = {
+        OP_KEY: aerospike.OP_LIST_INCREMENT,
+        BIN_KEY: bin_name,
+        INDEX_KEY: index,
+        VALUE_KEY: value
+    }
+
+    if policy:
+        op_dict[LIST_POLICY_KEY] = policy
+    
+    return op_dict
+
 def list_pop(bin_name, index):
     return {
         OP_KEY: aerospike.OP_LIST_POP,
@@ -77,12 +91,12 @@ def list_pop(bin_name, index):
     }
 
 
-def list_pop_range(bin_name, range_start, range_end):
+def list_pop_range(bin_name, index, count):
     return {
         OP_KEY: aerospike.OP_LIST_POP_RANGE,
         BIN_KEY: bin_name,
-        INDEX_KEY: range_start,
-        VALUE_KEY: range_end
+        INDEX_KEY: index,
+        VALUE_KEY: count
     }
 
 
@@ -94,12 +108,12 @@ def list_remove(bin_name, index):
     }
 
 
-def list_remove_range(bin_name, range_start, range_end):
+def list_remove_range(bin_name, index, count):
     return {
         OP_KEY: aerospike.OP_LIST_REMOVE_RANGE,
         BIN_KEY: bin_name,
-        INDEX_KEY: range_start,
-        VALUE_KEY: range_end
+        INDEX_KEY: index,
+        VALUE_KEY: count
     }
 
 
@@ -131,21 +145,21 @@ def list_get(bin_name, index):
     }
 
 
-def list_get_range(bin_name, range_start, range_end):
+def list_get_range(bin_name, index, count):
     return {
         OP_KEY: aerospike.OP_LIST_GET_RANGE,
         BIN_KEY: bin_name,
-        INDEX_KEY: range_start,
-        VALUE_KEY: range_end
+        INDEX_KEY: index,
+        VALUE_KEY: count
     }
 
 
-def list_trim(bin_name, range_start, range_end):
+def list_trim(bin_name, index, count):
     return {
         OP_KEY: aerospike.OP_LIST_TRIM,
         BIN_KEY: bin_name,
-        INDEX_KEY: range_start,
-        VALUE_KEY: range_end
+        INDEX_KEY: index,
+        VALUE_KEY: count
     }
 
 
