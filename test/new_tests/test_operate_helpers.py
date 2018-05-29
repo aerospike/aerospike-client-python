@@ -895,10 +895,10 @@ class TestOperate(object):
         """
         Invoke operate() with list addition operations negative
         """
-
-        with pytest.raises(TypeError):
-            list_operations.list_append_items("int_bin", 7)
-
+        key = ('test', 'demo', 1)
+        ops = [list_operations.list_append_items("int_bin", 7)]
+        with pytest.raises(e.ParamError):
+            self.as_connection.operate(key, ops)
 
     @pytest.mark.parametrize("list", [
         (

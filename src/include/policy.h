@@ -97,6 +97,8 @@ enum Aerospike_map_operations {
 	OP_MAP_GET_BY_INDEX_RANGE,
 	OP_MAP_GET_BY_RANK,
 	OP_MAP_GET_BY_RANK_RANGE,
+	OP_MAP_GET_BY_VALUE_LIST,
+	OP_MAP_GET_BY_KEY_LIST
 };
 
 typedef struct Aerospike_Constants {

@@ -109,6 +109,8 @@ get_operation(as_error* err, PyObject* op_dict, long* operation_ptr);
 			static_pool, SERIALIZER_PYTHON) != AEROSPIKE_OK) {\
 		return err->code;\
 	}
+
+static as_status invertIfSpecified(as_error* err, PyObject* op_dict, uint64_t* return_value);
 /**
  *******************************************************************************************************
  * This function will check whether operation can be performed
@@ -321,6 +323,9 @@ as_status add_op(AerospikeClient * self, as_error * err, PyObject * py_val, as_v
 				py_map_policy = value;
 			} else if (!strcmp(name, "return_type")) {
 				py_return_type = value;
+			}
+			else if (strcmp(name, "inverted") == 0) {
+				continue;
 			} else {
 				return as_error_update(err, AEROSPIKE_ERR_PARAM,
 						"Operation can contain only op, bin, index, key, val, return_type and map_policy keys");
@@ -385,6 +390,17 @@ as_status add_op(AerospikeClient * self, as_error * err, PyObject * py_val, as_v
 		}
 		return_type = PyInt_AsLong(py_return_type);
 	}
+
+	/* Add the inverted flag to the return type if it's present */
+	if (invertIfSpecified(err, py_val, &return_type) != AEROSPIKE_OK) {
+		return err->code;
+	}
+	
+	if (err->code != AEROSPIKE_OK) {
+		return err->code;
+	}
+	
+	
 	*ret_type = return_type;
 
 	if (py_index) {
@@ -582,6 +598,10 @@ as_status add_op(AerospikeClient * self, as_error * err, PyObject * py_val, as_v
 			CONVERT_KEY_TO_AS_VAL();
 			as_operations_add_map_get_by_key_range(ops, bin, put_key, put_range, return_type);
 			break;
+		case OP_MAP_GET_BY_KEY_LIST:
+			CONVERT_VAL_TO_AS_VAL();
+			as_operations_add_map_get_by_key_list(ops, bin, (as_list *)put_val, return_type);
+			break;
 		case OP_MAP_GET_BY_VALUE:
 			CONVERT_VAL_TO_AS_VAL();
 			as_operations_add_map_get_by_value(ops, bin, put_val, return_type);
@@ -590,6 +610,10 @@ as_status add_op(AerospikeClient * self, as_error * err, PyObject * py_val, as_v
 			CONVERT_VAL_TO_AS_VAL();
 			CONVERT_RANGE_TO_AS_VAL();
 			as_operations_add_map_get_by_value_range(ops, bin, put_val, put_range, return_type);
+			break;
+		case OP_MAP_GET_BY_VALUE_LIST:
+			CONVERT_VAL_TO_AS_VAL();
+			as_operations_add_map_get_by_value_list(ops, bin, (as_list *)put_val, return_type);
 			break;
 		case OP_MAP_GET_BY_INDEX:
 			as_operations_add_map_get_by_index(ops, bin, index, return_type);
@@ -1203,4 +1227,25 @@ get_operation(as_error* err, PyObject* op_dict, long* operation_ptr)
             }
         }
         return AEROSPIKE_OK;
+}
+
+static as_status
+invertIfSpecified(as_error* err, PyObject* op_dict, uint64_t* return_value) {
+	PyObject* pyInverted = PyDict_GetItemString(op_dict, "inverted");
+	int truthValue;
+	if (!pyInverted) {
+		return false;
+	}
+	truthValue = PyObject_IsTrue(pyInverted);
+
+	/* An error ocurred, update the flag */
+	if (truthValue == -1) {
+		return as_error_update(err, AEROSPIKE_ERR_PARAM, "Invalid inverted value");
+	}
+
+	if (truthValue) {
+		*return_value |= AS_MAP_RETURN_INVERTED;
+	}
+
+	return AEROSPIKE_OK;
 }

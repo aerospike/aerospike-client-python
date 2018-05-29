@@ -1,10 +1,11 @@
 # -*- coding: utf-8 -*-
-import pytest
 import sys
-import pdb
-from .test_base_class import TestBaseClass
 
+import pytest
+
+from .test_base_class import TestBaseClass
 aerospike = pytest.importorskip("aerospike")
+
 try:
     import aerospike
     from aerospike import exception as e
