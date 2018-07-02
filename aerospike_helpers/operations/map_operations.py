@@ -6,12 +6,12 @@ import aerospike
 
 OP_KEY = "op"
 BIN_KEY = "bin"
-POLICY_KEY = "policy"
+POLICY_KEY = "map_policy"
 VALUE_KEY = "val"
 KEY_KEY = "key"
 INDEX_KEY = "index"
 RETURN_TYPE_KEY = "return_type"
-INVERTED_KEY = "return_type"
+INVERTED_KEY = "inverted"
 RANGE_KEY = "range"
 
 
@@ -91,7 +91,7 @@ def map_remove_by_key_list(bin_name, key_list, return_type=None, inverted=False)
     op_dict = {
         OP_KEY: aerospike.OP_MAP_REMOVE_BY_KEY_LIST,
         BIN_KEY: bin_name,
-        KEY_KEY: key_list
+        VALUE_KEY: key_list
     }
     if return_type:
         op_dict[RETURN_TYPE_KEY] = return_type

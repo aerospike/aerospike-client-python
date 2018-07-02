@@ -23,6 +23,7 @@
 #include <aerospike/as_error.h>
 #include <aerospike/as_record.h>
 #include <aerospike/as_operations.h>
+#include <aerospike/as_map_operations.h>
 #include <aerospike/aerospike_info.h>
 #include "client.h"
 #include "conversions.h"
