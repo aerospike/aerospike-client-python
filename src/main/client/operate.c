@@ -32,6 +32,7 @@
 #include "serializer.h"
 #include "geo.h"
 #include "cdt_list_operations.h"
+#include "cdt_map_operations.h"
 
 #include <aerospike/as_double.h>
 #include <aerospike/as_integer.h>
@@ -42,6 +43,9 @@
 
 static as_status
 get_operation(as_error* err, PyObject* op_dict, long* operation_ptr);
+
+static inline bool isListOp(int op);
+static inline bool isNewMapOp(int op);
 
 #define PY_OPERATION_KEY "op"
 
@@ -208,8 +212,18 @@ static inline bool isListOp(int op) {
 			op == OP_LIST_REMOVE_BY_VALUE_LIST ||
 			op == OP_LIST_REMOVE_BY_VALUE_RANGE ||
 			op == OP_LIST_SET_ORDER||
-			op == OP_LIST_SORT);
+			op == OP_LIST_SORT ||
+			op == OP_LIST_REMOVE_BY_VALUE_RANK_RANGE_REL ||
+			op == OP_LIST_GET_BY_VALUE_RANK_RANGE_REL);
 }
+
+static inline bool isNewMapOp(int op) {
+	return (op == OP_MAP_REMOVE_BY_KEY_INDEX_RANGE_REL ||
+			op == OP_MAP_REMOVE_BY_VALUE_RANK_RANGE_REL ||
+			op == OP_MAP_GET_BY_VALUE_RANK_RANGE_REL ||
+			op == OP_MAP_GET_BY_KEY_INDEX_RANGE_REL);
+}
+
 bool opRequiresIndex(int op) {
 	return (op == OP_LIST_INSERT               || op == OP_LIST_INSERT_ITEMS  ||
 			op == OP_LIST_POP                  || op == OP_LIST_POP_RANGE     ||
@@ -301,6 +315,11 @@ as_status add_op(AerospikeClient * self, as_error * err, PyObject * py_val, as_v
 		return add_new_list_op(self, err, py_val, unicodeStrVector, static_pool,
 			ops, operation, ret_type, SERIALIZER_PYTHON); //This hardcoding matches current behavior
 
+	}
+
+	if (isNewMapOp(operation)) {
+		return add_new_map_op(self, err, py_val, unicodeStrVector, static_pool,
+			ops, operation, ret_type, SERIALIZER_PYTHON);
 	}
 
 	while (PyDict_Next(py_val, &pos, &key_op, &value)) {
@@ -396,12 +415,12 @@ as_status add_op(AerospikeClient * self, as_error * err, PyObject * py_val, as_v
 	if (invertIfSpecified(err, py_val, &return_type) != AEROSPIKE_OK) {
 		return err->code;
 	}
-	
+
 	if (err->code != AEROSPIKE_OK) {
 		return err->code;
 	}
-	
-	
+
+
 	*ret_type = return_type;
 
 	if (py_index) {
@@ -1217,7 +1236,7 @@ get_operation(as_error* err, PyObject* op_dict, long* operation_ptr)
         if (!PyInt_Check(py_operation)) {
             return as_error_update(err, AEROSPIKE_ERR_PARAM, "Operation must be an integer");
         }
-        
+
         *operation_ptr = PyLong_AsLong(py_operation);
         if (PyErr_Occurred()) {
             if (*operation_ptr == -1 && PyErr_ExceptionMatches(PyExc_OverflowError)) {

@@ -13,6 +13,8 @@ INDEX_KEY = "index"
 RETURN_TYPE_KEY = "return_type"
 INVERTED_KEY = "inverted"
 RANGE_KEY = "range"
+COUNT_KEY = "count"
+RANK_KEY = "rank"
 
 
 def map_set_policy(bin_name, policy):
@@ -690,5 +692,185 @@ def map_get_by_rank_range(bin_name, rank_start, get_amt, return_type, inverted=F
         RETURN_TYPE_KEY: return_type,
         INVERTED_KEY: inverted
     }
+
+    return op_dict
+
+def map_remove_by_value_rank_range_relative(
+    bin_name, value, offset, return_type, count=None, inverted=False):
+    """Create a map remove by value rank range relative operation
+
+    Create map remove by value relative to rank range operation.
+    Server removes and returns map items nearest to value and greater by relative rank.
+    Server returns selected data specified by return_type.
+
+    * Examples for map [0: 6, 5: 12, 10: 18, 15: 24]
+
+    (value, offset, count) = [removed keys]
+    (6,0,None) = [0, 5, 10, 15]
+    (5,0,2) = [0, 5]
+    (7,-1, 1) = [0]
+    (7, -1, 3) = [0, 5, 10]
+
+    Args:
+        bin_name (str): The name of the bin containing the map.
+        value: The value of the entry in the map for which to search
+        offset (int): Begin removing and returning items with rank == rank(found_item) + offset
+        count (int): If specified, the number of items to remove and return. If None,
+            all items with rank greater than found_item are returned.
+        return_type: Specifies what to return from the operation.
+        inverted (bool): If true keep items specified by the range and rmeove others.
+
+    Returns:
+        A dictionary usable in operate or operate_ordered.The format of the dictionary
+        should be considered an internal detail, and subject to change.
+    """
+    op_dict = {
+        OP_KEY: aerospike.OP_MAP_REMOVE_BY_VALUE_RANK_RANGE_REL,
+        BIN_KEY: bin_name,
+        VALUE_KEY: value,
+        RANK_KEY: offset,
+        RETURN_TYPE_KEY: return_type
+
+    }
+    if count is not None:
+        op_dict[COUNT_KEY] = count
+
+    if inverted:
+        op_dict[INVERTED_KEY] = True
+
+    return op_dict
+
+
+def map_get_by_value_rank_range_relative(
+    bin_name, value, offset, return_type, count=None, inverted=False):
+    """Create a map remove by value rank range relative operation
+
+    Create list remove by value relative to rank range operation.
+    Server removes and returns list items nearest to value and greater by relative rank.
+    Server returns selected data specified by return_type.
+
+    * Examples for map [0: 6, 5: 12, 10: 18, 15: 24]
+
+    (value, offset, count) = [removed keys]
+    (6,0,None) = [0, 5, 10, 15]
+    (5,0,2) = [0, 5]
+    (7,-1, 1) = [0]
+    (7, -1, 3) = [0, 5, 10]
+
+    Args:
+        bin_name (str): The name of the bin containing the map.
+        value (str): The value of the item in the list for which to search
+        offset (int): Begin removing and returning items with rank == rank(fount_item) + offset
+        count (int): If specified, the number of items to remove and return. If None, all items until end of list are returned.
+
+    Returns:
+        A dictionary usable in operate or operate_ordered.The format of the dictionary
+        should be considered an internal detail, and subject to change.
+    """
+    op_dict = {
+        OP_KEY: aerospike.OP_MAP_GET_BY_VALUE_RANK_RANGE_REL,
+        BIN_KEY: bin_name,
+        VALUE_KEY: value,
+        RANK_KEY: offset,
+        RETURN_TYPE_KEY: return_type
+
+    }
+    if count is not None:
+        op_dict[COUNT_KEY] = count
+
+    if inverted:
+        op_dict[INVERTED_KEY] = True
+
+    return op_dict
+
+
+def map_remove_by_key_index_range_relative(
+    bin_name, value, offset, return_type, count=None, inverted=False):
+    """Create a map get by value rank range relative operation
+
+    Create list remove by value relative to rank range operation.
+    Server removes and returns list items nearest to value and greater by relative rank.
+    Server returns selected data specified by return_type.
+
+    * Examples for ordered list [0,4,5,9,11,15]:
+
+    (value, offset, count) = [selected items]
+    (5,0,None) = [5,9,11,15]
+    (5,0,2) = [5, 9]
+    (5,-1, None) = [4,5,9,11,15]
+    (5, -1, 3) = [4,5,9]
+    (3,3, None) = [11,15]
+    (3,-3, None) = [0,4,5,9,11,15]
+    (3, 0, None) = [4,5,9,11,15]
+
+    Args:
+        bin_name (str): The name of the bin containing the list.
+        value (str): The value of the item in the list for which to search
+        offset (int): Begin removing and returning items with rank == rank(fount_item) + offset
+        count (int): If specified, the number of items to remove and return. If None, all items until end of list are returned.
+
+    Returns:
+        A dictionary usable in operate or operate_ordered.The format of the dictionary
+        should be considered an internal detail, and subject to change.
+    """
+    op_dict = {
+        OP_KEY: aerospike.OP_MAP_REMOVE_BY_KEY_INDEX_RANGE_REL,
+        BIN_KEY: bin_name,
+        KEY_KEY: value,
+        INDEX_KEY: offset,
+        RETURN_TYPE_KEY: return_type
+
+    }
+    if count is not None:
+        op_dict[COUNT_KEY] = count
+
+    if inverted:
+        op_dict[INVERTED_KEY] = True
+
+    return op_dict
+
+
+def map_get_by_key_index_range_relative(
+    bin_name, value, offset, return_type, count=None, inverted=False):
+    """Create a map get by value rank range relative operation
+
+    Create list remove by value relative to rank range operation.
+    Server removes and returns list items nearest to value and greater by relative rank.
+    Server returns selected data specified by return_type.
+
+    * Examples for ordered list [0,4,5,9,11,15]:
+
+    (value, offset, count) = [selected items]
+    (5,0,None) = [5,9,11,15]
+    (5,0,2) = [5, 9]
+    (5,-1, None) = [4,5,9,11,15]
+    (5, -1, 3) = [4,5,9]
+    (3,3, None) = [11,15]
+    (3,-3, None) = [0,4,5,9,11,15]
+    (3, 0, None) = [4,5,9,11,15]
+
+    Args:
+        bin_name (str): The name of the bin containing the list.
+        value (str): The value of the item in the list for which to search
+        offset (int): Begin removing and returning items with rank == rank(fount_item) + offset
+        count (int): If specified, the number of items to remove and return. If None, all items until end of list are returned.
+
+    Returns:
+        A dictionary usable in operate or operate_ordered.The format of the dictionary
+        should be considered an internal detail, and subject to change.
+    """
+    op_dict = {
+        OP_KEY: aerospike.OP_MAP_GET_BY_KEY_INDEX_RANGE_REL,
+        BIN_KEY: bin_name,
+        KEY_KEY: value,
+        INDEX_KEY: offset,
+        RETURN_TYPE_KEY: return_type
+
+    }
+    if count is not None:
+        op_dict[COUNT_KEY] = count
+
+    if inverted:
+        op_dict[INVERTED_KEY] = True
 
     return op_dict

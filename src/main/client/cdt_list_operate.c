@@ -28,15 +28,8 @@
 #include "policy.h"
 #include "serializer.h"
 #include "cdt_list_operations.h"
+#include "cdt_operation_utils.h"
 
-#define AS_PY_BIN_KEY "bin"
-#define AS_PY_VAL_KEY "val"
-#define AS_PY_VALUES_KEY "value_list"
-#define AS_PY_VAL_BEGIN_KEY "value_begin"
-#define AS_PY_VAL_END_KEY "value_end"
-#define AS_PY_INDEX_KEY "index"
-#define AS_PY_COUNT_KEY "count"
-#define AS_PY_RANK_KEY "rank"
 #define AS_PY_LIST_RETURN_KEY "return_type"
 #define AS_PY_LIST_ORDER "list_order"
 #define AS_PY_LIST_SORT_FLAGS "sort_flags"
@@ -56,28 +49,15 @@ This handles
 	(_op) == OP_LIST_REMOVE_BY_RANK_RANGE ||\
 	(_op) == OP_LIST_REMOVE_BY_VALUE ||\
 	(_op) == OP_LIST_REMOVE_BY_VALUE_LIST ||\
-	(_op) == OP_LIST_REMOVE_BY_VALUE_RANGE ||)
+	(_op) == OP_LIST_REMOVE_BY_VALUE_RANGE || \
+    (_op) == OP_LIST_REMOVE_BY_VALUE_RANK_RANGE_REL || \
+    (_op) == OP_LIST_GET_BY_VALUE_RANK_RANGE_REL)
 */
 
 /* Dictionary field extraction functions */
-static as_status
-get_bin(as_error * err, PyObject * op_dict, as_vector * unicodeStrVector, char** binName);
-
-static as_status
-get_asval(AerospikeClient * self, as_error * err, char* key, PyObject * op_dict, as_val** val,
-             as_static_pool * static_pool, int serializer_type, bool required);
-
-static as_status
-get_val_list(AerospikeClient * self, as_error * err, const char* list_key, PyObject * op_dict, as_list** list, as_static_pool * static_pool, int serializer_type);
-
-static as_status
-get_int64_t(as_error * err, const char* key, PyObject * op_dict, int64_t* count);
 
 static as_status
 get_list_policy(as_error * err, PyObject * op_dict, as_list_policy* policy, bool* found);
-
-static as_status
-get_optional_int64_t(as_error * err, const char* key,  PyObject * op_dict, int64_t* count, bool* found);
 
 static as_status
 get_list_return_type(as_error * err, PyObject * op_dict, int* return_type);
@@ -209,8 +189,19 @@ add_op_list_set_order(as_error * err, char* bin, PyObject * op_dict, as_operatio
 static as_status
 add_op_list_sort(as_error * err, char* bin, PyObject * op_dict, as_operations * ops);
 
+/* Server 4.3.0 relative operations */
+
+static as_status
+add_add_op_list_remove_by_value_rel_rank_range(AerospikeClient * self, as_error* err,
+                                               char* bin, PyObject* op_dict, as_operations* ops,
+                                               as_static_pool* static_pool, int serializer_type);
+
+static as_status
+add_add_op_list_get_by_value_rel_rank_range(AerospikeClient * self, as_error* err,
+                                               char* bin, PyObject* op_dict, as_operations* ops,
+                                               as_static_pool* static_pool, int serializer_type);
 /* End forwards */
-as_status 
+as_status
 add_new_list_op(AerospikeClient * self, as_error * err, PyObject * op_dict, as_vector * unicodeStrVector,
 		as_static_pool * static_pool, as_operations * ops, long operation_code, long * ret_type, int serializer_type)
 
@@ -332,136 +323,22 @@ add_new_list_op(AerospikeClient * self, as_error * err, PyObject * op_dict, as_v
 			return add_op_list_sort(err, bin, op_dict, ops); // Sort the thing
 		}
 
+        case OP_LIST_REMOVE_BY_VALUE_RANK_RANGE_REL: {
+            return add_add_op_list_remove_by_value_rel_rank_range(self, err, bin, op_dict, ops, static_pool, serializer_type);
+        }
+
+        case OP_LIST_GET_BY_VALUE_RANK_RANGE_REL: {
+            return add_add_op_list_get_by_value_rel_rank_range(self, err, bin, op_dict, ops, static_pool, serializer_type);
+        }
+
         default:
             // This should never be possible since we only get here if we know that the operation is valid.
             return as_error_update(err, AEROSPIKE_ERR_PARAM, "Unknown operation");
     }
-        
+
 
 
 	return err->code;
-}
-
-/*
-The caller of this does not own the pointer to binName, and should not free it. It is either
-held by Python, or is added to the list of chars to free later.
-*/
-static as_status
-get_bin(as_error * err, PyObject * op_dict, as_vector * unicodeStrVector, char** binName)
-{
-        PyObject* intermediateUnicode = NULL;
-
-        PyObject* py_bin = PyDict_GetItemString(op_dict, AS_PY_BIN_KEY);
-
-        if (!py_bin) {
-            return as_error_update(err, AEROSPIKE_ERR_PARAM, "Operation must contain a \"bin\" entry");
-        }
-
-        if (string_and_pyuni_from_pystring(py_bin, &intermediateUnicode, binName, err) != AEROSPIKE_OK) {
-            return err->code;
-        }
-
-        if (intermediateUnicode) {
-            /*
-            If this happened, we have an  extra pyobject. For historical reasons, we are strduping it's char value,
-            then decref'ing the item itself.
-            and storing the char* on a list of items to delete.
-            */
-            char* dupStr = strdup(*binName);
-            *binName = dupStr;
-            as_vector_append(unicodeStrVector, dupStr);
-            Py_DecRef(intermediateUnicode);
-        }        
-        return AEROSPIKE_OK;
-}
-
-static as_status
-get_asval(AerospikeClient * self, as_error * err, char* key, PyObject * op_dict, as_val** val,
-             as_static_pool * static_pool, int serializer_type, bool required)
-{
-        *val = NULL;
-        PyObject* py_val = PyDict_GetItemString(op_dict, key);
-        if (!py_val) {
-            if (required) {  
-                return as_error_update(err, AEROSPIKE_ERR_PARAM, "Operation must contain a \"%s\" entry", key);
-            }
-            else {
-                *val = NULL;
-                return AEROSPIKE_OK;
-            }
-        }
-        
-        /* If the value isn't required, None indicates that it isn't provided */
-        if (py_val == Py_None && !required) {
-            *val = NULL;
-            return AEROSPIKE_OK;
-        }
-        return pyobject_to_val(self, err, py_val, val, static_pool, serializer_type);
-}
-
-static as_status
-get_val_list(AerospikeClient * self, as_error * err, const char* list_key, PyObject * op_dict, as_list** list_val, as_static_pool * static_pool, int serializer_type)
-{
-        *list_val = NULL;
-        PyObject* py_val = PyDict_GetItemString(op_dict, list_key);
-        if (!py_val) {
-            return as_error_update(err, AEROSPIKE_ERR_PARAM, "Operation must contain a \"values\" entry");
-        }
-        if (!PyList_Check(py_val)) {
-            return as_error_update(err, AEROSPIKE_ERR_PARAM, "Value must be a list");
-        }
-        return pyobject_to_list(self, err, py_val, list_val, static_pool, serializer_type);
-}
-
-static as_status
-get_int64_t(as_error * err, const char* key, PyObject * op_dict, int64_t* count)
-{
-        bool found = false;
-        if (get_optional_int64_t(err, key, op_dict, count, &found) != AEROSPIKE_OK) {
-            return err->code;
-        }
-        if (!found) {
-            return as_error_update(err, AEROSPIKE_ERR_PARAM, "Operation missing required entry %s", key);
-        }
-        return AEROSPIKE_OK;
-}
-
-static as_status
-get_optional_int64_t(as_error * err, const char* key,  PyObject * op_dict, int64_t* count, bool* found)
-{
-        *found = false;
-        PyObject* py_val = PyDict_GetItemString(op_dict, key);
-        if (!py_val) {
-            return AEROSPIKE_OK;
-        }
-        
-        if (PyInt_Check(py_val)) {
-            *count = (int64_t)PyInt_AsLong(py_val);
-            if (PyErr_Occurred()) {
-                if(PyErr_ExceptionMatches(PyExc_OverflowError)) {
-                    return as_error_update(err, AEROSPIKE_ERR_PARAM, "%s too large", key);
-                }
-
-                return as_error_update(err, AEROSPIKE_ERR_PARAM, "Failed to convert %s", key);
-
-            }
-        }
-        else if (PyLong_Check(py_val)) {
-            *count = (int64_t)PyLong_AsLong(py_val);
-            if (PyErr_Occurred()) {
-                if(PyErr_ExceptionMatches(PyExc_OverflowError)) {
-                    return as_error_update(err, AEROSPIKE_ERR_PARAM, "%s too large", key);
-                }
-
-                return as_error_update(err, AEROSPIKE_ERR_PARAM, "Failed to convert %s", key);
-            }
-        }
-        else {
-            return as_error_update(err, AEROSPIKE_ERR_PARAM, "%s must be an integer", key);
-        }
-    
-        *found = true;
-        return AEROSPIKE_OK;
 }
 
 static as_status
@@ -540,7 +417,7 @@ add_op_list_get_by_index_range(as_error * err, char* bin, PyObject * op_dict, as
             else {
                 success = as_operations_add_list_get_by_index_range_to_end(ops, bin, index, return_type);
             }
-            
+
             if (!success) {
                 as_error_update(err, AEROSPIKE_ERR_CLIENT, "Failed to add get_by_list_index_range operation");
             }
@@ -598,7 +475,7 @@ add_op_list_get_by_rank_range(as_error * err, char* bin, PyObject * op_dict, as_
             else {
                 success = as_operations_add_list_get_by_rank_range_to_end(ops, bin, rank, return_type);
             }
-            
+
             if (!success) {
                 as_error_update(err, AEROSPIKE_ERR_CLIENT, "Failed to add list_get_by_rank_range operation");
             }
@@ -740,7 +617,7 @@ add_op_list_remove_by_index_range(as_error * err, char* bin, PyObject * op_dict,
             else {
                 success = as_operations_add_list_remove_by_index_range_to_end(ops, bin, index, return_type);
             }
-            
+
             if (!success) {
                 as_error_update(err, AEROSPIKE_ERR_CLIENT, "Failed to add remove_by_list_index_range operation");
             }
@@ -799,7 +676,7 @@ add_op_list_remove_by_rank_range(as_error * err, char* bin, PyObject * op_dict, 
             else {
                 success = as_operations_add_list_remove_by_rank_range_to_end(ops, bin, rank, return_type);
             }
-            
+
             if (!success) {
                 as_error_update(err, AEROSPIKE_ERR_CLIENT, "Failed to add list_remove_by_rank_range operation");
             }
@@ -1184,7 +1061,7 @@ add_op_list_clear(as_error * err, char* bin, as_operations * ops)
 {
 
     if (!as_operations_add_list_clear(ops, bin)) {
-        as_error_update(err, AEROSPIKE_ERR_CLIENT, "Failed to add list_clear operation");
+        return as_error_update(err, AEROSPIKE_ERR_CLIENT, "Failed to add list_clear operation");
     }
 
 	return AEROSPIKE_OK;
@@ -1293,12 +1170,95 @@ add_op_list_size(as_error * err, char* bin, as_operations * ops)
 {
 
     if (!as_operations_add_list_size(ops, bin)) {
-        as_error_update(err, AEROSPIKE_ERR_CLIENT, "Failed to add list_size operation");
+        return as_error_update(err, AEROSPIKE_ERR_CLIENT, "Failed to add list_size operation");
     }
 
 	return AEROSPIKE_OK;
 }
 
+static as_status
+add_add_op_list_remove_by_value_rel_rank_range(AerospikeClient * self, as_error* err,
+    char* bin, PyObject* op_dict, as_operations* ops,
+    as_static_pool* static_pool, int serializer_type) {
+/*as_operations_add_list_remove_by_value_rel_rank_range_to_end(as_operations* ops, const as_bin_name name, as_val* value, int64_t rank, as_list_return_type return_type);
+*/
+    //value
+    //rank
+    //return_type
+    bool count_present = false;
+    int64_t count;
+    int return_type;
+    int64_t rank;
+    as_val* value = NULL;
+
+    if (get_list_return_type(err, op_dict, &return_type) != AEROSPIKE_OK) {
+        return err->code;
+    }
+
+    if (get_int64_t(err, AS_PY_RANK_KEY, op_dict, &rank) != AEROSPIKE_OK) {
+        return err->code;
+    }
+
+    if (get_optional_int64_t(err, AS_PY_COUNT_KEY, op_dict, &count, &count_present) != AEROSPIKE_OK) {
+        return err->code;
+    }
+
+    if (get_asval(self, err, AS_PY_VAL_KEY, op_dict, &value, static_pool, serializer_type, true) != AEROSPIKE_OK) {
+        return err->code;
+    }
+
+    if (count_present) {
+        if (! as_operations_add_list_remove_by_value_rel_rank_range(ops, bin, value, rank, (uint64_t)count, return_type) ) {
+            return as_error_update(err, AEROSPIKE_ERR_CLIENT, "Failed to add list remove by value rank relative operation");
+        }
+    }
+    else {
+        if (! as_operations_add_list_remove_by_value_rel_rank_range_to_end(ops, bin, value, rank, return_type) ) {
+            return as_error_update(err, AEROSPIKE_ERR_CLIENT, "Failed to add list remove by value rank relative operation");
+        }
+    }
+    return AEROSPIKE_OK;
+}
+
+static as_status
+add_add_op_list_get_by_value_rel_rank_range(AerospikeClient * self, as_error* err,
+    char* bin, PyObject* op_dict, as_operations* ops,
+    as_static_pool* static_pool, int serializer_type) {
+
+    bool count_present = false;
+    int64_t count;
+    int return_type;
+    int64_t rank;
+    as_val* value = NULL;
+
+    if (get_list_return_type(err, op_dict, &return_type) != AEROSPIKE_OK) {
+        return err->code;
+    }
+
+    if (get_int64_t(err, AS_PY_RANK_KEY, op_dict, &rank) != AEROSPIKE_OK) {
+        return err->code;
+    }
+
+    if (get_optional_int64_t(err, AS_PY_COUNT_KEY, op_dict, &count, &count_present) != AEROSPIKE_OK) {
+        return err->code;
+    }
+
+    if (get_asval(self, err, AS_PY_VAL_KEY, op_dict, &value, static_pool, serializer_type, true) != AEROSPIKE_OK) {
+        return err->code;
+    }
+
+    if (count_present) {
+        if (! as_operations_add_list_get_by_value_rel_rank_range(ops, bin, value, rank, (uint64_t)count, return_type) ) {
+            return as_error_update(err, AEROSPIKE_ERR_CLIENT, "Failed to add list remove by value rank relative operation");
+        }
+    }
+    else {
+        if (! as_operations_add_list_get_by_value_rel_rank_range_to_end(ops, bin, value, rank, return_type) ) {
+            return as_error_update(err, AEROSPIKE_ERR_CLIENT, "Failed to add list remove by value rank relative operation");
+        }
+    }
+    return AEROSPIKE_OK;
+}
 
 static as_status
 get_list_policy(as_error * err, PyObject * op_dict, as_list_policy* policy, bool* found) {

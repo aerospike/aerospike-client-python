@@ -828,3 +828,84 @@ def list_sort(bin_name, sort_flags=aerospike.LIST_SORT_DEFAULT):
     }
 
     return op_dict
+
+def list_get_by_value_rank_range_relative(bin_name, value, offset, return_type, count=None):
+    """Create a list get by value rank range relative operation
+
+    Create list get by value relative to rank range operation.
+    Server selects list items nearest to value and greater by relative rank.
+    Server returns selected data specified by return_type.
+
+    * Examples for ordered list [0,4,5,9,11,15]:
+
+    (value, offset, count) = [selected items]
+    (5,0,None) = [5,9,11,15]
+    (5,0,2) = [5, 9]
+    (5,-1, None) = [4,5,9,11,15]
+    (5, -1, 3) = [4,5,9]
+    (3,3, None) = [11,15]
+    (3,-3, None) = [0,4,5,9,11,15]
+    (3, 0, None) = [4,5,9,11,15]
+
+    Args:
+        bin_name (str): The name of the bin containing the list.
+        value (str): The value of the item in the list for which to search
+        offset (int): Begin returning items with rank == rank(fount_item) + offset
+        count (int): If specified, the number of items to return. If None, all items until end of list are returned.
+
+    Returns:
+        A dictionary usable in operate or operate_ordered.The format of the dictionary
+        should be considered an internal detail, and subject to change.
+    """
+    op_dict = {
+        OP_KEY: aerospike.OP_LIST_GET_BY_VALUE_RANK_RANGE_REL,
+        BIN_KEY: bin_name,
+        VALUE_KEY: value,
+        RANK_KEY: offset,
+        RETURN_TYPE_KEY: return_type
+    }
+    if count is not None:
+        op_dict[COUNT_KEY] = count
+
+    return op_dict
+
+def list_remove_by_value_rank_range_relative(bin_name, value, offset, return_type, count=None):
+    """Create a list get by value rank range relative operation
+
+    Create list remove by value relative to rank range operation.
+    Server removes and returns list items nearest to value and greater by relative rank.
+    Server returns selected data specified by return_type.
+
+    * Examples for ordered list [0,4,5,9,11,15]:
+
+    (value, offset, count) = [selected items]
+    (5,0,None) = [5,9,11,15]
+    (5,0,2) = [5, 9]
+    (5,-1, None) = [4,5,9,11,15]
+    (5, -1, 3) = [4,5,9]
+    (3,3, None) = [11,15]
+    (3,-3, None) = [0,4,5,9,11,15]
+    (3, 0, None) = [4,5,9,11,15]
+
+    Args:
+        bin_name (str): The name of the bin containing the list.
+        value (str): The value of the item in the list for which to search
+        offset (int): Begin removing and returning items with rank == rank(fount_item) + offset
+        count (int): If specified, the number of items to remove and return. If None, all items until end of list are returned.
+
+    Returns:
+        A dictionary usable in operate or operate_ordered.The format of the dictionary
+        should be considered an internal detail, and subject to change.
+    """
+    op_dict = {
+        OP_KEY: aerospike.OP_LIST_REMOVE_BY_VALUE_RANK_RANGE_REL,
+        BIN_KEY: bin_name,
+        VALUE_KEY: value,
+        RANK_KEY: offset,
+        RETURN_TYPE_KEY: return_type
+
+    }
+    if count is not None:
+        op_dict[COUNT_KEY] = count
+
+    return op_dict
