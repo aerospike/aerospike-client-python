@@ -420,7 +420,7 @@ def list_get_by_index_range(bin_name, index, return_type, count=None, inverted=F
         INDEX_KEY: index,
     }
 
-    if count:
+    if count is not None:
         op_dict[COUNT_KEY] = count
 
     if inverted:
@@ -480,7 +480,7 @@ def list_get_by_rank_range(bin_name, rank, return_type, count=None, inverted=Fal
         RANK_KEY: rank
     }
 
-    if count:
+    if count is not None:
         op_dict[COUNT_KEY] = count
 
     if inverted:
@@ -575,10 +575,10 @@ def list_get_by_value_range(bin_name, return_type, value_begin, value_end, inver
         RETURN_TYPE_KEY: return_type,
     }
 
-    if value_begin:
+    if value_begin is not None:
         op_dict[VALUE_BEGIN_KEY] = value_begin
 
-    if value_end:
+    if value_end is not None:
         op_dict[VALUE_END_KEY] = value_end
 
     if inverted:
@@ -638,7 +638,7 @@ def list_remove_by_index_range(bin_name, index, return_type, count=None, inverte
         INDEX_KEY: index,
     }
 
-    if count:
+    if count is not None:
         op_dict[COUNT_KEY] = count
 
     if inverted:
@@ -698,7 +698,7 @@ def list_remove_by_rank_range(bin_name, rank, return_type, count=None, inverted=
         RANK_KEY: rank
     }
 
-    if count:
+    if count is not None:
         op_dict[COUNT_KEY] = count
 
     if inverted:
@@ -796,10 +796,10 @@ def list_remove_by_value_range(bin_name, return_type, value_begin=None,
         RETURN_TYPE_KEY: return_type,
     }
 
-    if value_begin:
+    if value_begin is not None:
         op_dict[VALUE_BEGIN_KEY] = value_begin
 
-    if value_end:
+    if value_end is not None:
         op_dict[VALUE_END_KEY] = value_end
 
     if inverted:
@@ -846,7 +846,7 @@ def list_sort(bin_name, sort_flags=None):
         BIN_KEY: bin_name
     }
 
-    if sort_flags:
+    if sort_flags is not None:
         op_dict[SORT_FLAGS_KEY] = sort_flags
 
     return op_dict
