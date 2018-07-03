@@ -40,7 +40,7 @@ Debian 6+ and Ubuntu 14.04+
 The following are dependencies for:
 
 - Debian 6 or newer
-- Ubuntu 12.04 or newer
+- Ubuntu 14.04 or newer
 - Related distributions which use the ``apt`` package manager
 
 ::

@@ -16,11 +16,12 @@
 ##########################################################################
 
 from __future__ import print_function
+import sys
+from optparse import OptionParser
 
 import aerospike
-import sys
+from aerospike_helpers.operations import operations as op_helpers
 
-from optparse import OptionParser
 
 ##########################################################################
 # Option Parsing
@@ -109,8 +110,9 @@ try:
     try:
 
         namespace = options.namespace if options.namespace and options.namespace != 'None' else None
-        set = options.set if options.set and options.set != 'None' else None
+        setname = options.set if options.set and options.set != 'None' else None
         key = args.pop()
+        record_key = (namespace, setname, key)
 
         record = {
             'example_name': 'John',
@@ -122,41 +124,30 @@ try:
 
         # invoke operation
 
-        client.put((namespace, set, key), record, meta, policy)
+        client.put(record_key, record, meta, policy)
 
         print("---")
         print("OK, 1 record written.")
 
-        (returnedkey, meta, bins) = client.get((namespace, set, key))
+        _, _, bins = client.get(record_key)
 
         print("---")
         print("Before operate operation")
         print(bins)
 
         operation_list = [
-            {
-                "op": aerospike.OPERATOR_PREPEND,
-                "bin": "example_name",
-                "val": "Mr "
-            },
-            {
-                "op": aerospike.OPERATOR_INCR,
-                "bin": "example_age",
-                "val": 3
-            },
-            {
-                "op": aerospike.OPERATOR_READ,
-                "bin": "example_name"
-            }
+            op_helpers.prepend("example_name", "Mr "),
+            op_helpers.increment("example_age", 3),
+            op_helpers.read("example_name")
         ]
 
-        (returnedkey, meta, bins) = client.operate(
-            (namespace, set, key), operation_list, meta, policy)
+        _, _, bins = client.operate(
+            record_key, operation_list, meta, policy)
         print("---")
         print("Record returned on operate completion")
         print(bins)
 
-        (returnedkey, meta, bins) = client.get((namespace, set, key))
+        _, _, bins = client.get(record_key)
 
         print("---")
         print("After operate operation")

@@ -33,12 +33,12 @@ sudo yum install python-setuptools
 To get `python26-devel` on older distros such as CentOS 5, see [Stack Overflow](http://stackoverflow.com/a/11684053/582436).
 
 
-### Debian 6+ and Ubuntu 12.04+
+### Debian 6+ and Ubuntu 14.04+
 
 The following are dependencies for:
 
  - Debian 6 or newer
- - Ubuntu 12.04 or newer
+ - Ubuntu 14.04 or newer
  - Related distributions which use the `apt` package manager
 
 ```
