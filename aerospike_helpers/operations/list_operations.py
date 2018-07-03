@@ -1,5 +1,5 @@
 """
-This module provides helper functions to produce dictionarys to be used with the
+This module provides helper functions to produce dictionaries to be used with the
 `client.operate` and `client.operate_ordered` methods of the aerospike module.
 """
 import aerospike

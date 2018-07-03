@@ -1,6 +1,6 @@
 '''
-Helper functions to create arguments to the operate and operate_ordered
-methods of the aerospike client.
+Helper functions to create map operation dictionaries arguments for
+the operate and operate_ordered methods of the aerospike client.
 '''
 import aerospike
 

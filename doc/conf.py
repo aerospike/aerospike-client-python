@@ -1,18 +1,21 @@
 # -*- coding: utf-8 -*-
 
 import sys, os
-
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
+sys.path.append(
+    os.path.abspath(
+        os.path.join(os.path.dirname(__name__), '..'))
+)
 #sys.path.append(os.path.abspath('/usr/local/lib/python2.7/site-packages/aerospike-1.0.44-py2.7-macosx-10.9-x86_64.egg/'))
 
 # -- General configuration -----------------------------------------------------
 
 # Add any Sphinx extension module names here, as strings. They can be extensions
 # coming with Sphinx (named 'sphinx.ext.*') or your custom ones.
-extensions = ['sphinx.ext.todo', 'sphinx.ext.autodoc', 'sphinx.ext.intersphinx']
-
+extensions = ['sphinx.ext.todo', 'sphinx.ext.autodoc', 'sphinx.ext.intersphinx', 'sphinx.ext.napoleon']
+napoleon_google_docstring = True
 intersphinx_mapping = {'python': ('https://docs.python.org/2.7', None)}
 
 # Add any paths that contain templates here, relative to this directory.
@@ -29,7 +32,7 @@ master_doc = 'index'
 
 # General information about the project.
 project = u'aerospike'
-copyright = u'2014-2017, Aerospike'
+copyright = u'2014-2018, Aerospike'
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the

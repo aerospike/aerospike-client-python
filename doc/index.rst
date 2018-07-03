@@ -16,6 +16,8 @@ the Aerospike C client.
 
 * :ref:`Data_Mapping` How Python types map to Aerospike Server types
 
+* :mod:`aerospike_helpers.operations` Operation helper functions.
+
 .. seealso::
     The `Python Client Manual <http://www.aerospike.com/docs/client/python/>`_
     for a quick guide.
@@ -35,6 +37,7 @@ Content
     predexp
     geojson
     exception
+    modules
 
 
 Indices and tables
