@@ -828,7 +828,7 @@ def list_set_order(bin_name, list_order):
     }
 
 
-def list_sort(bin_name, sort_flags=None):
+def list_sort(bin_name, sort_flags=aerospike.LIST_SORT_DEFAULT):
     """Create a list sort operation
 
     The list sort operation will sort the specified list bin.
@@ -843,10 +843,8 @@ def list_sort(bin_name, sort_flags=None):
     """
     op_dict = {
         OP_KEY: aerospike.OP_LIST_SORT,
-        BIN_KEY: bin_name
+        BIN_KEY: bin_name,
+        SORT_FLAGS_KEY: sort_flags
     }
-
-    if sort_flags is not None:
-        op_dict[SORT_FLAGS_KEY] = sort_flags
 
     return op_dict
