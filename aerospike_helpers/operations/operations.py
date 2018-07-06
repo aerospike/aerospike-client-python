@@ -10,10 +10,13 @@ import aerospike
 
 def read(bin_name):
     """Create a read operation dictionary
+
+    The read operation reads and returns the value in `bin_name`
+
     Args:
         bin: String the name of the bin from which to read
-
-    Returns: A dictionary to be passed to operate or operate_ordered
+    Returns:
+        A dictionary to be passed to operate or operate_ordered
     """
 
     return {
@@ -24,10 +27,14 @@ def read(bin_name):
 
 def write(bin_name, write_item):
     """Create a read operation dictionary
+
+    The write operation writes `write_item` into the bin specified by bin_name
+
     Args:
         bin (string): The name of the bin into which `write_item` will be stored.
         write_item: The value which will be written into the bin
-    Returns: A dictionary to be passed to operate or operate_ordered
+    Returns:
+        A dictionary to be passed to operate or operate_ordered
     """
     return {
         "op": aerospike.OPERATOR_WRITE,
@@ -38,10 +45,14 @@ def write(bin_name, write_item):
 
 def append(bin_name, append_item):
     """Create an append operation dictionary
+
+    The append operation appends `append_item` to the value in bin_name
+
     Args:
         bin (string): The name of the bin to be used.
         append_item: The value which will be appended to the item contained in the specified bin.
-    Returns: A dictionary to be passed to operate or operate_ordered
+    Returns:
+        A dictionary to be passed to operate or operate_ordered
     """
     return {
         "op": aerospike.OPERATOR_APPEND,
@@ -52,10 +63,14 @@ def append(bin_name, append_item):
 
 def prepend(bin_name, prepend_item):
     """Create a prepend operation dictionary
+
+    The prepend operation prepends `prepend_item` to the value in bin_name
+
     Args:
         bin (string): The name of the bin to be used.
         prepend_item: The value which will be prepended to the item contained in the specified bin.
-    Returns: A dictionary to be passed to operate or operate_ordered
+    Returns:
+        A dictionary to be passed to operate or operate_ordered
     """
     return {
         "op": aerospike.OPERATOR_PREPEND,
@@ -66,10 +81,15 @@ def prepend(bin_name, prepend_item):
 
 def increment(bin_name, amount):
     """Create a prepend operation dictionary
+
+    The increment operation increases a value in bin_name by the specified amount,
+    or creates a bin with the value of amount
+
     Args:
         bin (string): The name of the bin to be incremented.
         amount: The amount by which to increment the item in the specified bin.
-    Returns: A dictionary to be passed to operate or operate_ordered
+    Returns:
+        A dictionary to be passed to operate or operate_ordered
     """
     return {
         "op": aerospike.OPERATOR_INCR,
@@ -88,7 +108,8 @@ def touch(ttl=None):
             This should be set in the metadata passed to the operate or
             operate_ordered methods.
         amount: The amount by which to increment the item in the specified bin.
-    Returns: A dictionary to be passed to operate or operate_ordered
+    Returns:
+        A dictionary to be passed to operate or operate_ordered
     """
     op_dict = {"op": aerospike.OPERATOR_TOUCH}
     if ttl:

@@ -394,9 +394,9 @@ def list_get_by_index(bin_name, index, return_type):
 
 
 def list_get_by_index_range(bin_name, index, return_type, count=None, inverted=False):
-    """Create a list get index operation.
+    """Create a list get index range operation.
 
-    The list get by index operation gets `count` items starting at `index` and returns a value
+    The list get by index range operation gets `count` items starting at `index` and returns a value
     specified by `return_type`
 
     Args:
@@ -604,7 +604,7 @@ def list_remove_by_index(bin_name, index, return_type):
 def list_remove_by_index_range(bin_name, index, return_type, count=None, inverted=False):
     """Create a list remove by index range operation.
 
-    The list get by index operation removes `count` starting at `index` and returns a value
+    The list remove by index range operation removes `count` starting at `index` and returns a value
     specified by `return_type`
 
     Args:

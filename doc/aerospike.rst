@@ -83,7 +83,7 @@ in an in-memory primary index.
                 * **protocols** Specifies enabled protocols. This format is the same as Apache's SSLProtocol documented at https://httpd.apache.org/docs/current/mod/mod_ssl.html#sslprotocol . If not specified the client will use "-all +TLSv1.2".
                 * **cipher_suite** :class:`str` Specifies enabled cipher suites. The format is the same as OpenSSL's Cipher List Format documented at https://www.openssl.org/docs/manmaster/apps/ciphers.html .If not specified the OpenSSL default cipher suite described in the ciphers documentation will be used. If you are not sure what cipher suite to select this option is best left unspecified 
                 * **keyfile** :class:`str` Path to the client's key for mutual authentication. By default mutual authentication is disabled.
-                * **keyfile_pw** :clas:`str` Decryption password for the client's key for mutual authentication. By default the key is assumed not to be encrypted.
+                * **keyfile_pw** :class:`str` Decryption password for the client's key for mutual authentication. By default the key is assumed not to be encrypted.
                 * **cert_blacklist** :class:`str` Path to a certificate blacklist file. The file should contain one line for each blacklisted certificate. Each line starts with the certificate serial number expressed in hex. Each entry may optionally specify the issuer name of the certificate (serial numbers are only required to be unique per issuer). Example records: 867EC87482B2 /C=US/ST=CA/O=Acme/OU=Engineering/CN=Test Chain CA E2D4B0E570F9EF8E885C065899886461
                 * **certfile** :class:`str` Path to the client's certificate chain file for mutual authentication. By default mutual authentication is disabled.
                 * **crl_check** :class:`bool` Enable CRL checking for the certificate chain leaf certificate. An error occurs if a suitable CRL cannot be found. By default CRL checking is disabled.
@@ -428,6 +428,11 @@ Operators
 ---------
 
 Operators for the multi-ops method :py:meth:`~aerospike.Client.operate`.
+
+.. note::
+
+    Beginning in version 3.4.0, it is recommended to use the operation helpers module :ref:`aerospike_operation_helpers` 
+    To create the arguments for the :py:meth:`~aerospike.Client.operate` and :py:meth:`~aerospike.Client.operate`
 
 .. data:: OPERATOR_WRITE
 

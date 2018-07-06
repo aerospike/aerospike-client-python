@@ -18,7 +18,7 @@ RANGE_KEY = "range"
 def map_set_policy(bin_name, policy):
     """Creates a map_set_policy_operation to be used with operate or operate_ordered
 
-    The operation allows a user to set the order of the list.
+    The operation allows a user to set the policy for the map.
 
     Args:
         bin_name (str): The name of the bin containing the map.
@@ -397,7 +397,7 @@ def map_remove_by_rank(bin_name, rank, return_type):
 def map_remove_by_rank_range(bin_name, rank_start, remove_amt, return_type, inverted=False):
     """Creates a map_remove_by_rank_range operation to be used with operate or operate_ordered
 
-    The operation removes the item with the specified rank from the map.
+    The operation removes `remove_amt` items beginning with the item with the specified rank from the map.
 
     Args:
         bin_name (str): The name of the bin containing the map.
