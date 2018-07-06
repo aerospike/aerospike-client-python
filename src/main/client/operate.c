@@ -1235,7 +1235,7 @@ invertIfSpecified(as_error* err, PyObject* op_dict, uint64_t* return_value) {
 	PyObject* pyInverted = PyDict_GetItemString(op_dict, "inverted");
 	int truthValue;
 	if (!pyInverted) {
-		return false;
+		return AEROSPIKE_OK;
 	}
 	truthValue = PyObject_IsTrue(pyInverted);
 

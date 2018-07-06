@@ -151,7 +151,7 @@ def map_clear(bin_name):
     }
 
 
-def map_remove_by_key(bin_name, key, return_type=None, inverted=False):
+def map_remove_by_key(bin_name, key, return_type):
     """Creates a map_remove_by_key operation to be used with operate or operate_ordered
 
     The operation removes an item, specified by the key from the map stored in the specified bin.
@@ -168,18 +168,14 @@ def map_remove_by_key(bin_name, key, return_type=None, inverted=False):
     op_dict = {
         OP_KEY: aerospike.OP_MAP_REMOVE_BY_KEY,
         BIN_KEY: bin_name,
-        KEY_KEY: key
+        KEY_KEY: key,
+        RETURN_TYPE_KEY: return_type
     }
-    if return_type:
-        op_dict[RETURN_TYPE_KEY] = return_type
-
-    if inverted:
-        op_dict[INVERTED_KEY] = True
 
     return op_dict
 
 
-def map_remove_by_key_list(bin_name, key_list, return_type=None, inverted=False):
+def map_remove_by_key_list(bin_name, key_list, return_type, inverted=False):
     """Creates a map_remove_by_key operation to be used with operate or operate_ordered
 
     The operation removes items, specified by the keys in key_list from the map stored in the specified bin.
@@ -198,19 +194,16 @@ def map_remove_by_key_list(bin_name, key_list, return_type=None, inverted=False)
     op_dict = {
         OP_KEY: aerospike.OP_MAP_REMOVE_BY_KEY_LIST,
         BIN_KEY: bin_name,
-        VALUE_KEY: key_list
+        VALUE_KEY: key_list,
+        RETURN_TYPE_KEY: return_type,
+        INVERTED_KEY: inverted
     }
-    if return_type:
-        op_dict[RETURN_TYPE_KEY] = return_type
-
-    if inverted:
-        op_dict[INVERTED_KEY] = True
 
     return op_dict
 
 
 def map_remove_by_key_range(bin_name, key_range_start,
-                            key_range_end, return_type=None, inverted=False):
+                            key_range_end, return_type, inverted=False):
     """Creates a map_remove_by_key_range operation to be used with operate or operate_ordered
 
     The operation removes items, with keys between key_range_start(inclusive) and
@@ -232,19 +225,15 @@ def map_remove_by_key_range(bin_name, key_range_start,
         OP_KEY: aerospike.OP_MAP_REMOVE_BY_KEY_RANGE,
         BIN_KEY: bin_name,
         KEY_KEY: key_range_start,
-        VALUE_KEY: key_range_end
+        VALUE_KEY: key_range_end,
+        RETURN_TYPE_KEY: return_type,
+        INVERTED_KEY: inverted
     }
-
-    if return_type:
-        op_dict[RETURN_TYPE_KEY] = return_type
-
-    if inverted:
-        op_dict[INVERTED_KEY] = True
 
     return op_dict
 
 
-def map_remove_by_value(bin_name, value, return_type=None, inverted=False):
+def map_remove_by_value(bin_name, value, return_type, inverted=False):
     """Creates a map_remove_by_value operation to be used with operate or operate_ordered
 
     The operation removes key value pairs whose value matches the specified value.
@@ -263,19 +252,15 @@ def map_remove_by_value(bin_name, value, return_type=None, inverted=False):
     op_dict = {
         OP_KEY: aerospike.OP_MAP_REMOVE_BY_VALUE,
         BIN_KEY: bin_name,
-        VALUE_KEY: value
+        VALUE_KEY: value,
+        RETURN_TYPE_KEY: return_type,
+        INVERTED_KEY: inverted
     }
-
-    if return_type:
-        op_dict[RETURN_TYPE_KEY] = return_type
-
-    if inverted:
-        op_dict[INVERTED_KEY] = True
 
     return op_dict
 
 
-def map_remove_by_value_list(bin_name, value_list, return_type=None, inverted=False):
+def map_remove_by_value_list(bin_name, value_list, return_type, inverted=False):
     """Creates a map_remove_by_value_list operation to be used with operate or operate_ordered
 
     The operation removes key value pairs whose values are specified in the value_list.
@@ -294,18 +279,15 @@ def map_remove_by_value_list(bin_name, value_list, return_type=None, inverted=Fa
     op_dict = {
         OP_KEY: aerospike.OP_MAP_REMOVE_BY_VALUE_LIST,
         BIN_KEY: bin_name,
-        VALUE_KEY: value_list
+        VALUE_KEY: value_list,
+        RETURN_TYPE_KEY: return_type,
+        INVERTED_KEY: inverted
     }
-    if return_type:
-        op_dict[RETURN_TYPE_KEY] = return_type
-
-    if inverted:
-        op_dict[INVERTED_KEY] = True
 
     return op_dict
 
 
-def map_remove_by_value_range(bin_name, value_start, value_end, return_type=None, inverted=False):
+def map_remove_by_value_range(bin_name, value_start, value_end, return_type, inverted=False):
     """Creates a map_remove_by_value_range operation to be used with operate or operate_ordered
 
     The operation removes items, with values between value_start(inclusive) and
@@ -327,19 +309,15 @@ def map_remove_by_value_range(bin_name, value_start, value_end, return_type=None
         OP_KEY: aerospike.OP_MAP_REMOVE_BY_VALUE_RANGE,
         BIN_KEY: bin_name,
         VALUE_KEY: value_start,
-        RANGE_KEY: value_end
+        RANGE_KEY: value_end,
+        RETURN_TYPE_KEY: return_type,
+        INVERTED_KEY: inverted
     }
-
-    if return_type:
-        op_dict[RETURN_TYPE_KEY] = return_type
-
-    if inverted:
-        op_dict[INVERTED_KEY] = True
 
     return op_dict
 
 
-def map_remove_by_index(bin_name, index, return_type=None, inverted=False):
+def map_remove_by_index(bin_name, index, return_type):
     """Creates a map_remove_by_index operation to be used with operate or operate_ordered
 
     The operation removes the entry at index from the map.
@@ -356,19 +334,14 @@ def map_remove_by_index(bin_name, index, return_type=None, inverted=False):
     op_dict = {
         OP_KEY: aerospike.OP_MAP_REMOVE_BY_INDEX,
         BIN_KEY: bin_name,
-        INDEX_KEY: index
+        INDEX_KEY: index,
+        RETURN_TYPE_KEY: return_type
     }
-
-    if return_type:
-        op_dict[RETURN_TYPE_KEY] = return_type
-
-    if inverted:
-        op_dict[INVERTED_KEY] = True
 
     return op_dict
 
 
-def map_remove_by_index_range(bin_name, index_start, remove_amt, return_type=None, inverted=False):
+def map_remove_by_index_range(bin_name, index_start, remove_amt, return_type, inverted=False):
     """Creates a map_remove_by_index_range operation to be used with operate or operate_ordered
 
     The operation removes remove_amt entries starting at index_start from the map.
@@ -389,18 +362,15 @@ def map_remove_by_index_range(bin_name, index_start, remove_amt, return_type=Non
         OP_KEY: aerospike.OP_MAP_REMOVE_BY_INDEX_RANGE,
         BIN_KEY: bin_name,
         INDEX_KEY: index_start,
-        VALUE_KEY: remove_amt
+        VALUE_KEY: remove_amt,
+        RETURN_TYPE_KEY: return_type,
+        INVERTED_KEY: inverted
     }
-    if return_type:
-        op_dict[RETURN_TYPE_KEY] = return_type
-
-    if inverted:
-        op_dict[INVERTED_KEY] = True
 
     return op_dict
 
 
-def map_remove_by_rank(bin_name, rank, return_type=None, inverted=False):
+def map_remove_by_rank(bin_name, rank, return_type):
     """Creates a map_remove_by_rank operation to be used with operate or operate_ordered
 
     The operation removes the item with the specified rank from the map.
@@ -417,19 +387,14 @@ def map_remove_by_rank(bin_name, rank, return_type=None, inverted=False):
     op_dict = {
         OP_KEY: aerospike.OP_MAP_REMOVE_BY_RANK,
         BIN_KEY: bin_name,
-        INDEX_KEY: rank
+        INDEX_KEY: rank,
+        RETURN_TYPE_KEY: return_type
     }
-
-    if return_type:
-        op_dict[RETURN_TYPE_KEY] = return_type
-
-    if inverted:
-        op_dict[INVERTED_KEY] = True
 
     return op_dict
 
 
-def map_remove_by_rank_range(bin_name, rank_start, remove_amt, return_type=None, inverted=False):
+def map_remove_by_rank_range(bin_name, rank_start, remove_amt, return_type, inverted=False):
     """Creates a map_remove_by_rank_range operation to be used with operate or operate_ordered
 
     The operation removes the item with the specified rank from the map.
@@ -450,19 +415,15 @@ def map_remove_by_rank_range(bin_name, rank_start, remove_amt, return_type=None,
         OP_KEY: aerospike.OP_MAP_REMOVE_BY_RANK_RANGE,
         BIN_KEY: bin_name,
         INDEX_KEY: rank_start,
-        VALUE_KEY: remove_amt
+        VALUE_KEY: remove_amt,
+        RETURN_TYPE_KEY: return_type,
+        INVERTED_KEY: inverted
     }
-
-    if return_type:
-        op_dict[RETURN_TYPE_KEY] = return_type
-
-    if inverted:
-        op_dict[INVERTED_KEY] = True
 
     return op_dict
 
 
-def map_get_by_key(bin_name, key, return_type=None, inverted=False):
+def map_get_by_key(bin_name, key, return_type):
     """Creates a map_get_by_key operation to be used with operate or operate_ordered
 
     The operation returns an item, specified by the key from the map stored in the specified bin.
@@ -479,20 +440,15 @@ def map_get_by_key(bin_name, key, return_type=None, inverted=False):
     op_dict = {
         OP_KEY: aerospike.OP_MAP_GET_BY_KEY,
         BIN_KEY: bin_name,
-        KEY_KEY: key
+        KEY_KEY: key,
+        RETURN_TYPE_KEY: return_type
     }
-
-    if return_type:
-        op_dict[RETURN_TYPE_KEY] = return_type
-
-    if inverted:
-        op_dict[INVERTED_KEY] = True
 
     return op_dict
 
 
 def map_get_by_key_range(bin_name, key_range_start,
-                         key_range_end, return_type=None, inverted=False):
+                         key_range_end, return_type, inverted=False):
     """Creates a map_get_by_key_range operation to be used with operate or operate_ordered
 
     The operation returns items with keys between key_range_start(inclusive) and
@@ -514,19 +470,15 @@ def map_get_by_key_range(bin_name, key_range_start,
         OP_KEY: aerospike.OP_MAP_GET_BY_KEY_RANGE,
         BIN_KEY: bin_name,
         KEY_KEY: key_range_start,
-        RANGE_KEY: key_range_end
+        RANGE_KEY: key_range_end,
+        RETURN_TYPE_KEY: return_type,
+        INVERTED_KEY: inverted
     }
-
-    if return_type:
-        op_dict[RETURN_TYPE_KEY] = return_type
-
-    if inverted:
-        op_dict[INVERTED_KEY] = True
 
     return op_dict
 
 
-def map_get_by_key_list(bin_name, key_list, return_type=None, inverted=False):
+def map_get_by_key_list(bin_name, key_list, return_type, inverted=False):
     """Creates a map_get_by_key_list operation to be used with operate or operate_ordered
 
     The operation returns items, specified by the keys in key_list from the map stored in the specified bin.
@@ -545,17 +497,14 @@ def map_get_by_key_list(bin_name, key_list, return_type=None, inverted=False):
     op_dict = {
         OP_KEY: aerospike.OP_MAP_GET_BY_KEY_LIST,
         BIN_KEY: bin_name,
-        VALUE_KEY: key_list
+        VALUE_KEY: key_list,
+        RETURN_TYPE_KEY: return_type,
+        INVERTED_KEY: inverted
     }
-    if return_type:
-        op_dict[RETURN_TYPE_KEY] = return_type
-
-    if inverted:
-        op_dict[INVERTED_KEY] = True
 
     return op_dict
 
-def map_get_by_value(bin_name, value, return_type=None, inverted=False):
+def map_get_by_value(bin_name, value, return_type, inverted=False):
     """Creates a map_get_by_value operation to be used with operate or operate_ordered
 
     The operation returns entries whose value matches the specified value.
@@ -574,19 +523,15 @@ def map_get_by_value(bin_name, value, return_type=None, inverted=False):
     op_dict = {
         OP_KEY: aerospike.OP_MAP_GET_BY_VALUE,
         BIN_KEY: bin_name,
-        VALUE_KEY: value
+        VALUE_KEY: value,
+        RETURN_TYPE_KEY: return_type,
+        INVERTED_KEY: inverted
     }
-
-    if return_type:
-        op_dict[RETURN_TYPE_KEY] = return_type
-
-    if inverted:
-        op_dict[INVERTED_KEY] = True
 
     return op_dict
 
 
-def map_get_by_value_range(bin_name, value_start, value_end, return_type=None, inverted=False):
+def map_get_by_value_range(bin_name, value_start, value_end, return_type, inverted=False):
     """Creates a map_get_by_value_range operation to be used with operate or operate_ordered
 
     The operation returns items, with values between value_start(inclusive) and
@@ -608,19 +553,15 @@ def map_get_by_value_range(bin_name, value_start, value_end, return_type=None, i
         OP_KEY: aerospike.OP_MAP_GET_BY_VALUE_RANGE,
         BIN_KEY: bin_name,
         VALUE_KEY: value_start,
-        RANGE_KEY: value_end
+        RANGE_KEY: value_end,
+        RETURN_TYPE_KEY: return_type,
+        INVERTED_KEY: inverted
     }
-
-    if return_type:
-        op_dict[RETURN_TYPE_KEY] = return_type
-
-    if inverted:
-        op_dict[INVERTED_KEY] = True
 
     return op_dict
 
 
-def map_get_by_value_list(bin_name, key_list, return_type=None, inverted=False):
+def map_get_by_value_list(bin_name, key_list, return_type, inverted=False):
     """Creates a map_get_by_value_list operation to be used with operate or operate_ordered
 
     The operation returns entries whose values are specified in the value_list.
@@ -639,18 +580,15 @@ def map_get_by_value_list(bin_name, key_list, return_type=None, inverted=False):
     op_dict = {
         OP_KEY: aerospike.OP_MAP_GET_BY_VALUE_LIST,
         BIN_KEY: bin_name,
-        VALUE_KEY: key_list
+        VALUE_KEY: key_list,
+        RETURN_TYPE_KEY: return_type,
+        INVERTED_KEY: inverted
     }
-    if return_type:
-        op_dict[RETURN_TYPE_KEY] = return_type
-
-    if inverted:
-        op_dict[INVERTED_KEY] = True
 
     return op_dict
 
 
-def map_get_by_index(bin_name, index, return_type=None, inverted=False):
+def map_get_by_index(bin_name, index, return_type):
     """Creates a map_get_by_index operation to be used with operate or operate_ordered
 
     The operation returns the entry at index from the map.
@@ -667,19 +605,14 @@ def map_get_by_index(bin_name, index, return_type=None, inverted=False):
     op_dict = {
         OP_KEY: aerospike.OP_MAP_GET_BY_INDEX,
         BIN_KEY: bin_name,
-        INDEX_KEY: index
+        INDEX_KEY: index,
+        RETURN_TYPE_KEY: return_type
     }
-
-    if return_type:
-        op_dict[RETURN_TYPE_KEY] = return_type
-
-    if inverted:
-        op_dict[INVERTED_KEY] = True
 
     return op_dict
 
 
-def map_get_by_index_range(bin_name, index_start, get_amt, return_type=None, inverted=False):
+def map_get_by_index_range(bin_name, index_start, get_amt, return_type, inverted=False):
     """Creates a map_get_by_index_range operation to be used with operate or operate_ordered
 
     The operation returns get_amt entries starting at index_start from the map.
@@ -700,19 +633,15 @@ def map_get_by_index_range(bin_name, index_start, get_amt, return_type=None, inv
         OP_KEY: aerospike.OP_MAP_GET_BY_INDEX_RANGE,
         BIN_KEY: bin_name,
         INDEX_KEY: index_start,
-        VALUE_KEY: get_amt
+        VALUE_KEY: get_amt,
+        RETURN_TYPE_KEY: return_type,
+        INVERTED_KEY: inverted
     }
-
-    if return_type:
-        op_dict[RETURN_TYPE_KEY] = return_type
-
-    if inverted:
-        op_dict[INVERTED_KEY] = True
 
     return op_dict
 
 
-def map_get_by_rank(bin_name, rank, return_type=None, inverted=False):
+def map_get_by_rank(bin_name, rank, return_type):
     """Creates a map_get_by_rank operation to be used with operate or operate_ordered
 
     The operation returns the item with the specified rank from the map.
@@ -729,19 +658,14 @@ def map_get_by_rank(bin_name, rank, return_type=None, inverted=False):
     op_dict = {
         OP_KEY: aerospike.OP_MAP_GET_BY_RANK,
         BIN_KEY: bin_name,
-        INDEX_KEY: rank
+        INDEX_KEY: rank,
+        RETURN_TYPE_KEY: return_type       
     }
-
-    if return_type:
-        op_dict[RETURN_TYPE_KEY] = return_type
-
-    if inverted:
-        op_dict[INVERTED_KEY] = True
 
     return op_dict
 
 
-def map_get_by_rank_range(bin_name, rank_start, get_amt, return_type=None, inverted=False):
+def map_get_by_rank_range(bin_name, rank_start, get_amt, return_type, inverted=False):
     """Creates a map_get_by_rank_range operation to be used with operate or operate_ordered
 
     The operation returns item within the specified rank range from the map.
@@ -762,13 +686,9 @@ def map_get_by_rank_range(bin_name, rank_start, get_amt, return_type=None, inver
         OP_KEY: aerospike.OP_MAP_GET_BY_RANK_RANGE,
         BIN_KEY: bin_name,
         INDEX_KEY: rank_start,
-        VALUE_KEY: get_amt
+        VALUE_KEY: get_amt,
+        RETURN_TYPE_KEY: return_type,
+        INVERTED_KEY: inverted
     }
-
-    if return_type:
-        op_dict[RETURN_TYPE_KEY] = return_type
-
-    if inverted:
-        op_dict[INVERTED_KEY] = True
 
     return op_dict
