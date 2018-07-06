@@ -418,13 +418,11 @@ def list_get_by_index_range(bin_name, index, return_type, count=None, inverted=F
         BIN_KEY: bin_name,
         RETURN_TYPE_KEY: return_type,
         INDEX_KEY: index,
+        INVERTED_KEY: inverted
     }
 
     if count is not None:
         op_dict[COUNT_KEY] = count
-
-    if inverted:
-        op_dict[INVERTED_KEY] = True
 
     return op_dict
 
@@ -477,14 +475,12 @@ def list_get_by_rank_range(bin_name, rank, return_type, count=None, inverted=Fal
         OP_KEY: aerospike.OP_LIST_GET_BY_RANK_RANGE,
         BIN_KEY: bin_name,
         RETURN_TYPE_KEY: return_type,
-        RANK_KEY: rank
+        RANK_KEY: rank,
+        INVERTED_KEY: inverted
     }
 
     if count is not None:
         op_dict[COUNT_KEY] = count
-
-    if inverted:
-        op_dict[INVERTED_KEY] = True
 
     return op_dict
 
@@ -510,11 +506,9 @@ def list_get_by_value(bin_name, value, return_type, inverted=False):
         OP_KEY: aerospike.OP_LIST_GET_BY_VALUE,
         BIN_KEY: bin_name,
         RETURN_TYPE_KEY: return_type,
-        VALUE_KEY: value
+        VALUE_KEY: value,
+        INVERTED_KEY: inverted
     }
-
-    if inverted:
-        op_dict[INVERTED_KEY] = True
 
     return op_dict
 
@@ -541,11 +535,9 @@ def list_get_by_value_list(bin_name, value_list, return_type, inverted=False):
         OP_KEY: aerospike.OP_LIST_GET_BY_VALUE_LIST,
         BIN_KEY: bin_name,
         RETURN_TYPE_KEY: return_type,
-        VALUE_LIST_KEY: value_list
+        VALUE_LIST_KEY: value_list,
+        INVERTED_KEY: inverted
     }
-
-    if inverted:
-        op_dict[INVERTED_KEY] = True
 
     return op_dict
 
@@ -573,6 +565,7 @@ def list_get_by_value_range(bin_name, return_type, value_begin, value_end, inver
         OP_KEY: aerospike.OP_LIST_GET_BY_VALUE_RANGE,
         BIN_KEY: bin_name,
         RETURN_TYPE_KEY: return_type,
+        INVERTED_KEY: inverted
     }
 
     if value_begin is not None:
@@ -580,9 +573,6 @@ def list_get_by_value_range(bin_name, return_type, value_begin, value_end, inver
 
     if value_end is not None:
         op_dict[VALUE_END_KEY] = value_end
-
-    if inverted:
-        op_dict[INVERTED_KEY] = True
 
     return op_dict
 
@@ -636,13 +626,11 @@ def list_remove_by_index_range(bin_name, index, return_type, count=None, inverte
         BIN_KEY: bin_name,
         RETURN_TYPE_KEY: return_type,
         INDEX_KEY: index,
+        INVERTED_KEY: inverted
     }
 
     if count is not None:
         op_dict[COUNT_KEY] = count
-
-    if inverted:
-        op_dict[INVERTED_KEY] = True
 
     return op_dict
 
@@ -695,14 +683,12 @@ def list_remove_by_rank_range(bin_name, rank, return_type, count=None, inverted=
         OP_KEY: aerospike.OP_LIST_REMOVE_BY_RANK_RANGE,
         BIN_KEY: bin_name,
         RETURN_TYPE_KEY: return_type,
-        RANK_KEY: rank
+        RANK_KEY: rank,
+        INVERTED_KEY: inverted
     }
 
     if count is not None:
         op_dict[COUNT_KEY] = count
-
-    if inverted:
-        op_dict[INVERTED_KEY] = True
 
     return op_dict
 
@@ -729,11 +715,9 @@ def list_remove_by_value(bin_name, value, return_type, inverted=False):
         OP_KEY: aerospike.OP_LIST_REMOVE_BY_VALUE,
         BIN_KEY: bin_name,
         RETURN_TYPE_KEY: return_type,
-        VALUE_KEY: value
+        VALUE_KEY: value,
+        INVERTED_KEY: inverted
     }
-
-    if inverted:
-        op_dict[INVERTED_KEY] = True
 
     return op_dict
 
@@ -761,11 +745,9 @@ def list_remove_by_value_list(bin_name, value_list, return_type, inverted=False)
         OP_KEY: aerospike.OP_LIST_REMOVE_BY_VALUE_LIST,
         BIN_KEY: bin_name,
         RETURN_TYPE_KEY: return_type,
-        VALUE_LIST_KEY: value_list
+        VALUE_LIST_KEY: value_list,
+        INVERTED_KEY: inverted
     }
-
-    if inverted:
-        op_dict[INVERTED_KEY] = True
 
     return op_dict
 
@@ -794,6 +776,7 @@ def list_remove_by_value_range(bin_name, return_type, value_begin=None,
         OP_KEY: aerospike.OP_LIST_REMOVE_BY_VALUE_RANGE,
         BIN_KEY: bin_name,
         RETURN_TYPE_KEY: return_type,
+        INVERTED_KEY: inverted
     }
 
     if value_begin is not None:
@@ -801,9 +784,6 @@ def list_remove_by_value_range(bin_name, return_type, value_begin=None,
 
     if value_end is not None:
         op_dict[VALUE_END_KEY] = value_end
-
-    if inverted:
-        op_dict[INVERTED_KEY] = True
 
     return op_dict
 
