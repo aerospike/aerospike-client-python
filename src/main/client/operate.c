@@ -23,6 +23,7 @@
 #include <aerospike/as_error.h>
 #include <aerospike/as_record.h>
 #include <aerospike/as_operations.h>
+#include <aerospike/as_map_operations.h>
 #include <aerospike/aerospike_info.h>
 #include "client.h"
 #include "conversions.h"
@@ -30,12 +31,19 @@
 #include "policy.h"
 #include "serializer.h"
 #include "geo.h"
+#include "cdt_list_operations.h"
 
 #include <aerospike/as_double.h>
 #include <aerospike/as_integer.h>
 #include <aerospike/as_geojson.h>
 #include <aerospike/as_nil.h>
 
+
+
+static as_status
+get_operation(as_error* err, PyObject* op_dict, long* operation_ptr);
+
+#define PY_OPERATION_KEY "op"
 
 #define BASE_VARIABLES\
 	as_error err;\
@@ -102,6 +110,8 @@
 			static_pool, SERIALIZER_PYTHON) != AEROSPIKE_OK) {\
 		return err->code;\
 	}
+
+static as_status invertIfSpecified(as_error* err, PyObject* op_dict, uint64_t* return_value);
 /**
  *******************************************************************************************************
  * This function will check whether operation can be performed
@@ -167,6 +177,39 @@ int check_type(AerospikeClient * self, PyObject * py_value, int op, as_error *er
 	return 0;
 }
 
+static inline bool isListOp(int op) {
+	return (op == OP_LIST_APPEND ||
+			op == OP_LIST_APPEND_ITEMS ||
+			op == OP_LIST_INSERT ||
+			op == OP_LIST_INSERT_ITEMS ||
+			op == OP_LIST_POP ||
+			op == OP_LIST_POP_RANGE ||
+			op == OP_LIST_REMOVE ||
+			op == OP_LIST_REMOVE_RANGE ||
+			op == OP_LIST_CLEAR ||
+			op == OP_LIST_SET ||
+			op == OP_LIST_GET ||
+			op == OP_LIST_GET_RANGE ||
+			op == OP_LIST_TRIM ||
+			op == OP_LIST_SIZE ||
+			op == OP_LIST_INCREMENT ||
+			op == OP_LIST_GET_BY_INDEX ||
+			op == OP_LIST_GET_BY_INDEX_RANGE ||
+			op == OP_LIST_GET_BY_RANK ||
+			op == OP_LIST_GET_BY_RANK_RANGE ||
+			op == OP_LIST_GET_BY_VALUE ||
+			op == OP_LIST_GET_BY_VALUE_LIST ||
+			op == OP_LIST_GET_BY_VALUE_RANGE ||
+			op == OP_LIST_REMOVE_BY_INDEX ||
+			op == OP_LIST_REMOVE_BY_INDEX_RANGE ||
+			op == OP_LIST_REMOVE_BY_RANK ||
+			op == OP_LIST_REMOVE_BY_RANK_RANGE ||
+			op == OP_LIST_REMOVE_BY_VALUE ||
+			op == OP_LIST_REMOVE_BY_VALUE_LIST ||
+			op == OP_LIST_REMOVE_BY_VALUE_RANGE ||
+			op == OP_LIST_SET_ORDER||
+			op == OP_LIST_SORT);
+}
 bool opRequiresIndex(int op) {
 	return (op == OP_LIST_INSERT               || op == OP_LIST_INSERT_ITEMS  ||
 			op == OP_LIST_POP                  || op == OP_LIST_POP_RANGE     ||
@@ -248,13 +291,25 @@ as_status add_op(AerospikeClient * self, as_error * err, PyObject * py_val, as_v
 	PyObject * py_map_policy = NULL;
 	PyObject * py_return_type = NULL;
 	Py_ssize_t pos = 0;
+
+	if (get_operation(err, py_val, &operation) != AEROSPIKE_OK) {
+		return err->code;
+	}
+
+	/* Handle the list operations with a helper in the cdt_list_operate.c file */
+	if (isListOp(operation)) {
+		return add_new_list_op(self, err, py_val, unicodeStrVector, static_pool,
+			ops, operation, ret_type, SERIALIZER_PYTHON); //This hardcoding matches current behavior
+
+	}
+
 	while (PyDict_Next(py_val, &pos, &key_op, &value)) {
 		if (!PyString_Check(key_op)) {
 			return as_error_update(err, AEROSPIKE_ERR_CLIENT, "An operation key must be a string.");
 		} else {
 			char * name = PyString_AsString(key_op);
-			if (!strcmp(name,"op") && (PyInt_Check(value) || PyLong_Check(value))) {
-				operation = PyInt_AsLong(value);
+			if (!strcmp(name,"op")) {
+				continue;
 			} else if (!strcmp(name, "bin")) {
 				py_bin = value;
 			} else if (!strcmp(name, "index")) {
@@ -269,6 +324,9 @@ as_status add_op(AerospikeClient * self, as_error * err, PyObject * py_val, as_v
 				py_map_policy = value;
 			} else if (!strcmp(name, "return_type")) {
 				py_return_type = value;
+			}
+			else if (strcmp(name, "inverted") == 0) {
+				continue;
 			} else {
 				return as_error_update(err, AEROSPIKE_ERR_PARAM,
 						"Operation can contain only op, bin, index, key, val, return_type and map_policy keys");
@@ -333,6 +391,17 @@ as_status add_op(AerospikeClient * self, as_error * err, PyObject * py_val, as_v
 		}
 		return_type = PyInt_AsLong(py_return_type);
 	}
+
+	/* Add the inverted flag to the return type if it's present */
+	if (invertIfSpecified(err, py_val, &return_type) != AEROSPIKE_OK) {
+		return err->code;
+	}
+	
+	if (err->code != AEROSPIKE_OK) {
+		return err->code;
+	}
+	
+	
 	*ret_type = return_type;
 
 	if (py_index) {
@@ -448,71 +517,6 @@ as_status add_op(AerospikeClient * self, as_error * err, PyObject * py_val, as_v
 			as_operations_add_write(ops, bin, (as_bin_value *) put_val);
 			break;
 
-		//------- LIST OPERATIONS ---------
-		case OP_LIST_APPEND:
-			CONVERT_VAL_TO_AS_VAL();
-			as_operations_add_list_append(ops, bin, put_val);
-			break;
-		case OP_LIST_APPEND_ITEMS:
-			CONVERT_VAL_TO_AS_VAL();
-			as_operations_add_list_append_items(ops, bin, (as_list*)put_val);
-			break;
-		case OP_LIST_INSERT:
-			CONVERT_VAL_TO_AS_VAL();
-			as_operations_add_list_insert(ops, bin, index, put_val);
-			break;
-		case OP_LIST_INSERT_ITEMS:
-			CONVERT_VAL_TO_AS_VAL();
-			as_operations_add_list_insert_items(ops, bin, index, (as_list*)put_val);
-			break;
-		case OP_LIST_INCREMENT:
-			CONVERT_VAL_TO_AS_VAL();
-			as_operations_add_list_increment(ops, bin, index, put_val);
-			break;
-		case OP_LIST_POP:
-			as_operations_add_list_pop(ops, bin, index);
-			break;
-		case OP_LIST_POP_RANGE:
-			if (py_value && (pyobject_to_index(self, err, py_value, &offset) != AEROSPIKE_OK)) {
-				return err->code;
-			}
-			as_operations_add_list_pop_range(ops, bin, index, offset);
-			break;
-		case OP_LIST_REMOVE:
-			as_operations_add_list_remove(ops, bin, index);
-			break;
-		case OP_LIST_REMOVE_RANGE:
-			if (py_value && (pyobject_to_index(self, err, py_value, &offset) != AEROSPIKE_OK)) {
-				return err->code;
-			}
-			as_operations_add_list_remove_range(ops, bin, index, offset);
-			break;
-		case OP_LIST_CLEAR:
-			as_operations_add_list_clear(ops, bin);
-			break;
-		case OP_LIST_SET:
-			CONVERT_VAL_TO_AS_VAL();
-			as_operations_add_list_set(ops, bin, index, put_val);
-			break;
-		case OP_LIST_GET:
-			as_operations_add_list_get(ops, bin, index);
-			break;
-		case OP_LIST_GET_RANGE:
-			if (py_value && (pyobject_to_index(self, err, py_value, &offset) != AEROSPIKE_OK)) {
-				return err->code;
-			}
-			as_operations_add_list_get_range(ops, bin, index, offset);
-			break;
-		case OP_LIST_TRIM:
-			if (py_value && (pyobject_to_index(self, err, py_value, &offset) != AEROSPIKE_OK)) {
-				return err->code;
-			}
-			as_operations_add_list_trim(ops, bin, index, offset);
-			break;
-		case OP_LIST_SIZE:
-			as_operations_add_list_size(ops, bin);
-			break;
-
 		//------- MAP OPERATIONS ---------
 		case OP_MAP_SET_POLICY:
 			as_operations_add_map_set_policy(ops, bin, &map_policy);
@@ -595,6 +599,10 @@ as_status add_op(AerospikeClient * self, as_error * err, PyObject * py_val, as_v
 			CONVERT_KEY_TO_AS_VAL();
 			as_operations_add_map_get_by_key_range(ops, bin, put_key, put_range, return_type);
 			break;
+		case OP_MAP_GET_BY_KEY_LIST:
+			CONVERT_VAL_TO_AS_VAL();
+			as_operations_add_map_get_by_key_list(ops, bin, (as_list *)put_val, return_type);
+			break;
 		case OP_MAP_GET_BY_VALUE:
 			CONVERT_VAL_TO_AS_VAL();
 			as_operations_add_map_get_by_value(ops, bin, put_val, return_type);
@@ -603,6 +611,10 @@ as_status add_op(AerospikeClient * self, as_error * err, PyObject * py_val, as_v
 			CONVERT_VAL_TO_AS_VAL();
 			CONVERT_RANGE_TO_AS_VAL();
 			as_operations_add_map_get_by_value_range(ops, bin, put_val, put_range, return_type);
+			break;
+		case OP_MAP_GET_BY_VALUE_LIST:
+			CONVERT_VAL_TO_AS_VAL();
+			as_operations_add_map_get_by_value_list(ops, bin, (as_list *)put_val, return_type);
 			break;
 		case OP_MAP_GET_BY_INDEX:
 			as_operations_add_map_get_by_index(ops, bin, index, return_type);
@@ -1195,3 +1207,46 @@ CLEANUP:
 	return PyLong_FromLong(0);
 }
 
+static as_status
+get_operation(as_error* err, PyObject* op_dict, long* operation_ptr)
+{
+        PyObject* py_operation = PyDict_GetItemString(op_dict, PY_OPERATION_KEY);
+        if (!py_operation) {
+            return as_error_update(err, AEROSPIKE_ERR_PARAM, "Operation must contain an \"op\" entry");
+        }
+        if (!PyInt_Check(py_operation)) {
+            return as_error_update(err, AEROSPIKE_ERR_PARAM, "Operation must be an integer");
+        }
+        
+        *operation_ptr = PyLong_AsLong(py_operation);
+        if (PyErr_Occurred()) {
+            if (*operation_ptr == -1 && PyErr_ExceptionMatches(PyExc_OverflowError)) {
+                return as_error_update(err, AEROSPIKE_ERR_PARAM, "Operation code too large");
+            }
+            else {
+                return as_error_update(err, AEROSPIKE_ERR_PARAM, "Invalid operation");
+            }
+        }
+        return AEROSPIKE_OK;
+}
+
+static as_status
+invertIfSpecified(as_error* err, PyObject* op_dict, uint64_t* return_value) {
+	PyObject* pyInverted = PyDict_GetItemString(op_dict, "inverted");
+	int truthValue;
+	if (!pyInverted) {
+		return AEROSPIKE_OK;
+	}
+	truthValue = PyObject_IsTrue(pyInverted);
+
+	/* An error ocurred, update the flag */
+	if (truthValue == -1) {
+		return as_error_update(err, AEROSPIKE_ERR_PARAM, "Invalid inverted value");
+	}
+
+	if (truthValue) {
+		*return_value |= AS_MAP_RETURN_INVERTED;
+	}
+
+	return AEROSPIKE_OK;
+}

@@ -44,6 +44,7 @@ setup_tls_config(as_config* config, PyObject* tls_config)
 	_set_config_str_if_present(config, tls_config, "cert_blacklist");
 	_set_config_str_if_present(config, tls_config, "keyfile");
 	_set_config_str_if_present(config, tls_config, "certfile");
+	_set_config_str_if_present(config, tls_config, "keyfile_pw");
 
 	// Setup The boolean values of the struct if they are present
 	config_value = PyDict_GetItemString(tls_config, "enable");
@@ -147,6 +148,9 @@ _set_config_str_if_present(as_config* config, PyObject* tls_config,
 			else if (strcmp("certfile", key) == 0) {
 				as_config_tls_set_certfile(config,
 										   (const char*)config_value_str);
+			}
+			else if (strcmp("keyfile_pw", key) == 0) {
+				as_config_tls_set_keyfile_pw(config, (const char*) config_value_str);
 			}
 		}
 	}

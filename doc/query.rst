@@ -304,6 +304,8 @@ Query Policies
             | :class:`bool` Should raw bytes representing a list or map be deserialized to a list or dictionary.
             | Set to `False` for backup programs that just need access to raw bytes.
             | Default: ``True``
+        * **fail_on_cluster_change**
+            | :class:`bool` Terminate query if cluster is in migration state. Default ``False``
 
 .. _aerospike_query_options:
 

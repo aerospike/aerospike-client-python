@@ -119,6 +119,9 @@
 		return NULL;\
 	}
 
+/* Forward declaration for function which inverts an operation */
+static as_status invertIfSpecified(as_error* err, PyObject* py_inverted, uint64_t* returnType);
+
 PyObject * AerospikeClient_MapSetPolicy(AerospikeClient * self, PyObject * args, PyObject * kwds)
 {
 	BASE_VARIABLES
@@ -440,6 +443,8 @@ PyObject * AerospikeClient_MapRemoveByKey(AerospikeClient * self, PyObject * arg
 	PyObject * py_mapKey = NULL;
 	PyObject * py_meta = NULL;
 	PyObject * py_policy = NULL;
+	PyObject * py_inverted = NULL;
+
 	uint64_t returnType;
 	as_record *rec = NULL;
 	as_val * key_put;
@@ -448,9 +453,13 @@ PyObject * AerospikeClient_MapRemoveByKey(AerospikeClient * self, PyObject * arg
 
 	CHECK_CONNECTED();
 
-	static char * kwlist[] = {"key", "bin", "map_key", "return_type", "meta", "policy", NULL};
-	if (PyArg_ParseTupleAndKeywords(args, kwds, "OOOl|OO:map_remove_by_key", kwlist,
-				&py_key, &py_bin, &py_mapKey, &returnType, &py_meta, &py_policy) == false) {
+	static char * kwlist[] = {"key", "bin", "map_key", "return_type", "meta", "policy", "inverted", NULL};
+	if (PyArg_ParseTupleAndKeywords(args, kwds, "OOOl|OOO:map_remove_by_key", kwlist,
+				&py_key, &py_bin, &py_mapKey, &returnType, &py_meta, &py_policy, &py_inverted) == false) {
+		goto CLEANUP;
+	}
+
+	if (invertIfSpecified(&err, py_inverted, &returnType) != AEROSPIKE_OK) {
 		goto CLEANUP;
 	}
 
@@ -483,6 +492,7 @@ PyObject * AerospikeClient_MapRemoveByKeyList(AerospikeClient * self, PyObject *
 	PyObject * py_list = NULL;
 	PyObject * py_meta = NULL;
 	PyObject * py_policy = NULL;
+	PyObject* py_inverted = NULL;
 	uint64_t returnType;
 	as_record *rec = NULL;
 	as_val * list_put;
@@ -491,9 +501,13 @@ PyObject * AerospikeClient_MapRemoveByKeyList(AerospikeClient * self, PyObject *
 
 	CHECK_CONNECTED();
 
-	static char * kwlist[] = {"key", "bin", "list", "return_type", "meta", "policy", NULL};
-	if (PyArg_ParseTupleAndKeywords(args, kwds, "OOOl|OO:map_remove_by_key_list", kwlist,
-				&py_key, &py_bin, &py_list, &returnType, &py_meta, &py_policy) == false) {
+	static char * kwlist[] = {"key", "bin", "list", "return_type", "meta", "policy", "inverted", NULL};
+	if (PyArg_ParseTupleAndKeywords(args, kwds, "OOOl|OOO:map_remove_by_key_list", kwlist,
+				&py_key, &py_bin, &py_list, &returnType, &py_meta, &py_policy, &py_inverted) == false) {
+		goto CLEANUP;
+	}
+
+	if (invertIfSpecified(&err, py_inverted, &returnType) != AEROSPIKE_OK) {
 		goto CLEANUP;
 	}
 
@@ -532,6 +546,8 @@ PyObject * AerospikeClient_MapRemoveByKeyRange(AerospikeClient * self, PyObject 
 	PyObject * py_range = NULL;
 	PyObject * py_meta = NULL;
 	PyObject * py_policy = NULL;
+	PyObject* py_inverted = NULL;
+
 	uint64_t returnType;
 	as_record *rec = NULL;
 	as_val * key_put;
@@ -541,9 +557,13 @@ PyObject * AerospikeClient_MapRemoveByKeyRange(AerospikeClient * self, PyObject 
 
 	CHECK_CONNECTED();
 
-	static char * kwlist[] = {"key", "bin", "map_key", "range", "return_type", "meta", "policy", NULL};
-	if (PyArg_ParseTupleAndKeywords(args, kwds, "OOOOl|OO:map_remove_by_key_range", kwlist,
-				&py_key, &py_bin, &py_mapKey, &py_range, &returnType, &py_meta, &py_policy) == false) {
+	static char * kwlist[] = {"key", "bin", "map_key", "range", "return_type", "meta", "policy", "inverted", NULL};
+	if (PyArg_ParseTupleAndKeywords(args, kwds, "OOOOl|OOO:map_remove_by_key_range", kwlist,
+				&py_key, &py_bin, &py_mapKey, &py_range, &returnType, &py_meta, &py_policy, &py_inverted) == false) {
+		goto CLEANUP;
+	}
+
+	if (invertIfSpecified(&err, py_inverted, &returnType) != AEROSPIKE_OK) {
 		goto CLEANUP;
 	}
 
@@ -580,6 +600,7 @@ PyObject * AerospikeClient_MapRemoveByValue(AerospikeClient * self, PyObject * a
 	PyObject * py_result = NULL;
 	PyObject * py_meta = NULL;
 	PyObject * py_policy = NULL;
+	PyObject* py_inverted = NULL;
 	uint64_t returnType;
 	as_record *rec = NULL;
 	as_val * value_put;
@@ -588,9 +609,13 @@ PyObject * AerospikeClient_MapRemoveByValue(AerospikeClient * self, PyObject * a
 
 	CHECK_CONNECTED();
 
-	static char * kwlist[] = {"key", "bin", "val", "return_type", "meta", "policy",  NULL};
-	if (PyArg_ParseTupleAndKeywords(args, kwds, "OOOl|OO:map_remove_by_value", kwlist,
-				&py_key, &py_bin, &py_mapValue, &returnType, &py_meta, &py_policy) == false) {
+	static char * kwlist[] = {"key", "bin", "val", "return_type", "meta", "policy", "inverted",  NULL};
+	if (PyArg_ParseTupleAndKeywords(args, kwds, "OOOl|OOO:map_remove_by_value", kwlist,
+				&py_key, &py_bin, &py_mapValue, &returnType, &py_meta, &py_policy, &py_inverted) == false) {
+		goto CLEANUP;
+	}
+
+	if (invertIfSpecified(&err, py_inverted, &returnType) != AEROSPIKE_OK) {
 		goto CLEANUP;
 	}
 
@@ -624,6 +649,8 @@ PyObject * AerospikeClient_MapRemoveByValueList(AerospikeClient * self, PyObject
 	PyObject * py_list = NULL;
 	PyObject * py_meta = NULL;
 	PyObject * py_policy = NULL;
+	PyObject* py_inverted = NULL;
+
 	uint64_t returnType;
 	as_record *rec = NULL;
 	as_val * list_put;
@@ -632,9 +659,13 @@ PyObject * AerospikeClient_MapRemoveByValueList(AerospikeClient * self, PyObject
 
 	CHECK_CONNECTED();
 
-	static char * kwlist[] = {"key", "bin", "list", "return_type", "meta", "policy", NULL};
-	if (PyArg_ParseTupleAndKeywords(args, kwds, "OOOl|OO:map_remove_by_value_list", kwlist,
-				&py_key, &py_bin, &py_list, &returnType, &py_meta, &py_policy) == false) {
+	static char * kwlist[] = {"key", "bin", "list", "return_type", "meta", "policy", "inverted", NULL};
+	if (PyArg_ParseTupleAndKeywords(args, kwds, "OOOl|OOO:map_remove_by_value_list", kwlist,
+				&py_key, &py_bin, &py_list, &returnType, &py_meta, &py_policy, &py_inverted) == false) {
+		goto CLEANUP;
+	}
+
+	if (invertIfSpecified(&err, py_inverted, &returnType) != AEROSPIKE_OK) {
 		goto CLEANUP;
 	}
 
@@ -674,6 +705,8 @@ PyObject * AerospikeClient_MapRemoveByValueRange(AerospikeClient * self, PyObjec
 	PyObject * py_range = NULL;
 	PyObject * py_meta = NULL;
 	PyObject * py_policy = NULL;
+	PyObject* py_inverted = NULL;
+
 	uint64_t returnType;
 	as_record *rec = NULL;
 	as_val * value_put;
@@ -683,9 +716,13 @@ PyObject * AerospikeClient_MapRemoveByValueRange(AerospikeClient * self, PyObjec
 
 	CHECK_CONNECTED();
 
-	static char * kwlist[] = {"key", "bin", "val", "range", "return_type", "meta", "policy", NULL};
-	if (PyArg_ParseTupleAndKeywords(args, kwds, "OOOOl|OO:map_remove_by_value_range", kwlist,
-				&py_key, &py_bin, &py_mapValue, &py_range, &returnType, &py_meta, &py_policy) == false) {
+	static char * kwlist[] = {"key", "bin", "val", "range", "return_type", "meta", "policy", "inverted", NULL};
+	if (PyArg_ParseTupleAndKeywords(args, kwds, "OOOOl|OOO:map_remove_by_value_range", kwlist,
+				&py_key, &py_bin, &py_mapValue, &py_range, &returnType, &py_meta, &py_policy, &py_inverted) == false) {
+		goto CLEANUP;
+	}
+
+	if (invertIfSpecified(&err, py_inverted, &returnType) != AEROSPIKE_OK) {
 		goto CLEANUP;
 	}
 
@@ -718,6 +755,8 @@ PyObject * AerospikeClient_MapRemoveByIndex(AerospikeClient * self, PyObject * a
 	PyObject * py_result = NULL;
 	PyObject * py_meta = NULL;
 	PyObject * py_policy = NULL;
+	PyObject* py_inverted = NULL;
+
 	uint64_t index;
 	uint64_t returnType;
 	as_record *rec = NULL;
@@ -726,9 +765,13 @@ PyObject * AerospikeClient_MapRemoveByIndex(AerospikeClient * self, PyObject * a
 
 	CHECK_CONNECTED();
 
-	static char * kwlist[] = {"key", "bin", "index", "return_type", "meta", "policy", NULL};
-	if (PyArg_ParseTupleAndKeywords(args, kwds, "OOll|OO:map_remove_by_index", kwlist,
-				&py_key, &py_bin, &index, &returnType, &py_meta, &py_policy) == false) {
+	static char * kwlist[] = {"key", "bin", "index", "return_type", "meta", "policy", "inverted", NULL};
+	if (PyArg_ParseTupleAndKeywords(args, kwds, "OOll|OOO:map_remove_by_index", kwlist,
+				&py_key, &py_bin, &index, &returnType, &py_meta, &py_policy, &py_inverted) == false) {
+		goto CLEANUP;
+	}
+
+	if (invertIfSpecified(&err, py_inverted, &returnType) != AEROSPIKE_OK) {
 		goto CLEANUP;
 	}
 
@@ -752,6 +795,7 @@ PyObject * AerospikeClient_MapRemoveByIndexRange(AerospikeClient * self, PyObjec
 	PyObject * py_result = NULL;
 	PyObject * py_meta = NULL;
 	PyObject * py_policy = NULL;
+	PyObject* py_inverted = NULL;
 	uint64_t returnType;
 	uint64_t index;
 	uint64_t range;
@@ -761,9 +805,13 @@ PyObject * AerospikeClient_MapRemoveByIndexRange(AerospikeClient * self, PyObjec
 
 	CHECK_CONNECTED();
 
-	static char * kwlist[] = {"key", "bin", "index", "range", "return_type", "meta", "policy", NULL};
-	if (PyArg_ParseTupleAndKeywords(args, kwds, "OOlll|OO:map_remove_by_index_range", kwlist,
-				&py_key, &py_bin, &index, &range, &returnType, &py_meta, &py_policy) == false) {
+	static char * kwlist[] = {"key", "bin", "index", "range", "return_type", "meta", "policy", "inverted", NULL};
+	if (PyArg_ParseTupleAndKeywords(args, kwds, "OOlll|OOO:map_remove_by_index_range", kwlist,
+				&py_key, &py_bin, &index, &range, &returnType, &py_meta, &py_policy, &py_inverted) == false) {
+		goto CLEANUP;
+	}
+
+	if (invertIfSpecified(&err, py_inverted, &returnType) != AEROSPIKE_OK) {
 		goto CLEANUP;
 	}
 
@@ -787,6 +835,7 @@ PyObject * AerospikeClient_MapRemoveByRank(AerospikeClient * self, PyObject * ar
 	PyObject * py_result = NULL;
 	PyObject * py_meta = NULL;
 	PyObject * py_policy = NULL;
+	PyObject* py_inverted = NULL;
 	uint64_t rank;
 	uint64_t returnType;
 	as_record *rec = NULL;
@@ -795,9 +844,13 @@ PyObject * AerospikeClient_MapRemoveByRank(AerospikeClient * self, PyObject * ar
 
 	CHECK_CONNECTED();
 
-	static char * kwlist[] = {"key", "bin", "rank", "return_type", "meta", "policy", NULL};
-	if (PyArg_ParseTupleAndKeywords(args, kwds, "OOll|OO:map_remove_by_rank", kwlist,
-				&py_key, &py_bin, &rank, &returnType, &py_meta, &py_policy) == false) {
+	static char * kwlist[] = {"key", "bin", "rank", "return_type", "meta", "policy","inverted", NULL};
+	if (PyArg_ParseTupleAndKeywords(args, kwds, "OOll|OOO:map_remove_by_rank", kwlist,
+				&py_key, &py_bin, &rank, &returnType, &py_meta, &py_policy, &py_inverted) == false) {
+		goto CLEANUP;
+	}
+
+	if (invertIfSpecified(&err, py_inverted, &returnType) != AEROSPIKE_OK) {
 		goto CLEANUP;
 	}
 
@@ -821,6 +874,8 @@ PyObject * AerospikeClient_MapRemoveByRankRange(AerospikeClient * self, PyObject
 	PyObject * py_result = NULL;
 	PyObject * py_meta = NULL;
 	PyObject * py_policy = NULL;
+	PyObject* py_inverted = NULL;
+
 	uint64_t returnType;
 	uint64_t rank;
 	uint64_t range;
@@ -830,9 +885,13 @@ PyObject * AerospikeClient_MapRemoveByRankRange(AerospikeClient * self, PyObject
 
 	CHECK_CONNECTED();
 
-	static char * kwlist[] = {"key", "bin", "rank", "range", "return_type", "meta", "policy", NULL};
-	if (PyArg_ParseTupleAndKeywords(args, kwds, "OOlll|OO:map_remove_by_rank_range", kwlist,
-				&py_key, &py_bin, &rank, &range, &returnType, &py_meta, &py_policy) == false) {
+	static char * kwlist[] = {"key", "bin", "rank", "range", "return_type", "meta", "policy", "inverted", NULL};
+	if (PyArg_ParseTupleAndKeywords(args, kwds, "OOlll|OOO:map_remove_by_rank_range", kwlist,
+				&py_key, &py_bin, &rank, &range, &returnType, &py_meta, &py_policy, &py_inverted) == false) {
+		goto CLEANUP;
+	}
+
+	if (invertIfSpecified(&err, py_inverted, &returnType) != AEROSPIKE_OK) {
 		goto CLEANUP;
 	}
 
@@ -860,6 +919,7 @@ PyObject * AerospikeClient_MapGetByKey(AerospikeClient * self, PyObject * args, 
 	PyObject * py_result = NULL;
 	PyObject * py_meta = NULL;
 	PyObject * py_policy = NULL;
+	PyObject* py_inverted = NULL;
 	uint64_t returnType;
 	as_record* rec = NULL;
 	as_val * key_put;
@@ -868,9 +928,13 @@ PyObject * AerospikeClient_MapGetByKey(AerospikeClient * self, PyObject * args, 
 
 	CHECK_CONNECTED();
 
-	static char * kwlist[] = {"key", "bin", "map_key", "return_type", "meta", "policy", NULL};
-	if (PyArg_ParseTupleAndKeywords(args, kwds, "OOOl|OO:map_get_by_key", kwlist,
-				 &py_key, &py_bin, &py_mapKey, &returnType, &py_meta, &py_policy) == false) {
+	static char * kwlist[] = {"key", "bin", "map_key", "return_type", "meta", "policy", "inverted", NULL};
+	if (PyArg_ParseTupleAndKeywords(args, kwds, "OOOl|OOO:map_get_by_key", kwlist,
+				 &py_key, &py_bin, &py_mapKey, &returnType, &py_meta, &py_policy, &py_inverted) == false) {
+		goto CLEANUP;
+	}
+
+	if (invertIfSpecified(&err, py_inverted, &returnType) != AEROSPIKE_OK) {
 		goto CLEANUP;
 	}
 
@@ -904,6 +968,8 @@ PyObject * AerospikeClient_MapGetByValue(AerospikeClient * self, PyObject * args
 	PyObject * py_result = NULL;
 	PyObject * py_meta = NULL;
 	PyObject * py_policy = NULL;
+	PyObject* py_inverted = NULL;
+
 	uint64_t returnType;
 	as_record *rec = NULL;
 	as_val * value_put;
@@ -912,9 +978,13 @@ PyObject * AerospikeClient_MapGetByValue(AerospikeClient * self, PyObject * args
 
 	CHECK_CONNECTED();
 
-	static char * kwlist[] = {"key", "bin", "val", "return_type", "meta", "policy", NULL};
-	if (PyArg_ParseTupleAndKeywords(args, kwds, "OOOl|OO:map_get_by_value", kwlist,
-				&py_key, &py_bin, &py_mapValue, &returnType, &py_meta, &py_policy) == false) {
+	static char * kwlist[] = {"key", "bin", "val", "return_type", "meta", "policy", "inverted", NULL};
+	if (PyArg_ParseTupleAndKeywords(args, kwds, "OOOl|OOO:map_get_by_value", kwlist,
+				&py_key, &py_bin, &py_mapValue, &returnType, &py_meta, &py_policy, &py_inverted) == false) {
+		goto CLEANUP;
+	}
+
+	if (invertIfSpecified(&err, py_inverted, &returnType) != AEROSPIKE_OK) {
 		goto CLEANUP;
 	}
 
@@ -948,6 +1018,7 @@ PyObject * AerospikeClient_MapGetByKeyRange(AerospikeClient * self, PyObject * a
 	PyObject * py_meta = NULL;
 	PyObject * py_policy = NULL;
 	PyObject * py_range = NULL;
+	PyObject* py_inverted = NULL;
 	uint64_t returnType;
 	as_record *rec = NULL;
 	as_val * map_key;
@@ -957,9 +1028,13 @@ PyObject * AerospikeClient_MapGetByKeyRange(AerospikeClient * self, PyObject * a
 
 	CHECK_CONNECTED();
 
-	static char * kwlist[] = {"key", "bin", "map_key", "range", "return_type", "meta", "policy", NULL};
-	if (PyArg_ParseTupleAndKeywords(args, kwds, "OOOOl|OO:map_get_by_key_range", kwlist,
-				&py_key, &py_bin, &py_mapKey, &py_range, &returnType, &py_meta, &py_policy) == false) {
+	static char * kwlist[] = {"key", "bin", "map_key", "range", "return_type", "meta", "policy", "inverted", NULL};
+	if (PyArg_ParseTupleAndKeywords(args, kwds, "OOOOl|OOO:map_get_by_key_range", kwlist,
+				&py_key, &py_bin, &py_mapKey, &py_range, &returnType, &py_meta, &py_policy, &py_inverted) == false) {
+		goto CLEANUP;
+	}
+
+	if (invertIfSpecified(&err, py_inverted, &returnType) != AEROSPIKE_OK) {
 		goto CLEANUP;
 	}
 
@@ -997,6 +1072,7 @@ PyObject * AerospikeClient_MapGetByValueRange(AerospikeClient * self, PyObject *
 	PyObject * py_meta = NULL;
 	PyObject * py_policy = NULL;
 	PyObject * py_range = NULL;
+	PyObject* py_inverted = NULL;
 	uint64_t returnType;
 	as_record *rec = NULL;
 	as_val * value_put;
@@ -1006,9 +1082,13 @@ PyObject * AerospikeClient_MapGetByValueRange(AerospikeClient * self, PyObject *
 
 	CHECK_CONNECTED();
 
-	static char * kwlist[] = {"key", "bin", "val", "range", "return_type", "meta", "policy", NULL};
-	if (PyArg_ParseTupleAndKeywords(args, kwds, "OOOOl|OO:map_get_by_value_range", kwlist,
-				&py_key, &py_bin, &py_mapValue, &py_range, &returnType, &py_meta, &py_policy) == false) {
+	static char * kwlist[] = {"key", "bin", "val", "range", "return_type", "meta", "policy", "inverted", NULL};
+	if (PyArg_ParseTupleAndKeywords(args, kwds, "OOOOl|OOO:map_get_by_value_range", kwlist,
+				&py_key, &py_bin, &py_mapValue, &py_range, &returnType, &py_meta, &py_policy, &py_inverted) == false) {
+		goto CLEANUP;
+	}
+
+	if (invertIfSpecified(&err, py_inverted, &returnType) != AEROSPIKE_OK) {
 		goto CLEANUP;
 	}
 
@@ -1045,6 +1125,7 @@ PyObject* AerospikeClient_MapGetByValueList(AerospikeClient* self, PyObject* arg
 	PyObject * py_meta = NULL;
 	PyObject * py_policy = NULL;
 	PyObject* py_value_list = NULL;
+	PyObject* py_inverted = NULL;
 	uint64_t returnType;
 
 	// C client function arg vars
@@ -1062,9 +1143,13 @@ PyObject* AerospikeClient_MapGetByValueList(AerospikeClient* self, PyObject* arg
 
 	CHECK_CONNECTED();
 
-	static char* kwlist[] = {"key", "bin", "value_list", "return_type", "meta", "policy", NULL};
-	if (PyArg_ParseTupleAndKeywords(args, kwds, "OOOl|OO:map_get_by_value_list",
-			kwlist, &py_key, &py_bin, &py_value_list, &returnType, &py_meta, &py_policy) == false) {
+	static char* kwlist[] = {"key", "bin", "value_list", "return_type", "meta", "policy", "inverted", NULL};
+	if (PyArg_ParseTupleAndKeywords(args, kwds, "OOOl|OOO:map_get_by_value_list",
+			kwlist, &py_key, &py_bin, &py_value_list, &returnType, &py_meta, &py_policy, &py_inverted) == false) {
+		goto CLEANUP;
+	}
+
+	if (invertIfSpecified(&err, py_inverted, &returnType) != AEROSPIKE_OK) {
 		goto CLEANUP;
 	}
 
@@ -1109,6 +1194,7 @@ PyObject* AerospikeClient_MapGetByKeyList(AerospikeClient* self, PyObject* args,
 	PyObject * py_meta = NULL;
 	PyObject * py_policy = NULL;
 	PyObject* py_key_list = NULL;
+	PyObject* py_inverted = NULL;
 	uint64_t returnType;
 
 	// C client function arg vars
@@ -1126,9 +1212,13 @@ PyObject* AerospikeClient_MapGetByKeyList(AerospikeClient* self, PyObject* args,
 
 	CHECK_CONNECTED();
 
-	static char* kwlist[] = {"key", "bin", "key_list", "return_type", "meta", "policy", NULL};
-	if (PyArg_ParseTupleAndKeywords(args, kwds, "OOOl|OO:map_get_by_key_list",
-			kwlist, &py_key, &py_bin, &py_key_list, &returnType, &py_meta, &py_policy) == false) {
+	static char* kwlist[] = {"key", "bin", "key_list", "return_type", "meta", "policy", "inverted", NULL};
+	if (PyArg_ParseTupleAndKeywords(args, kwds, "OOOl|OOO:map_get_by_key_list",
+			kwlist, &py_key, &py_bin, &py_key_list, &returnType, &py_meta, &py_policy, &py_inverted) == false) {
+		goto CLEANUP;
+	}
+
+	if (invertIfSpecified(&err, py_inverted, &returnType) != AEROSPIKE_OK) {
 		goto CLEANUP;
 	}
 
@@ -1169,6 +1259,7 @@ PyObject * AerospikeClient_MapGetByIndex(AerospikeClient * self, PyObject * args
 	PyObject * py_result = NULL;
 	PyObject * py_meta = NULL;
 	PyObject * py_policy = NULL;
+	PyObject* py_inverted = NULL;
 	uint64_t returnType;
 	uint64_t index;
 	as_record *rec = NULL;
@@ -1177,9 +1268,13 @@ PyObject * AerospikeClient_MapGetByIndex(AerospikeClient * self, PyObject * args
 
 	CHECK_CONNECTED();
 
-	static char * kwlist[] = {"key", "bin", "index", "return_type", "meta", "policy", NULL};
-	if (PyArg_ParseTupleAndKeywords(args, kwds, "OOll|OO:map_get_by_index", kwlist,
-				&py_key, &py_bin, &index, &returnType, &py_meta, &py_policy) == false) {
+	static char * kwlist[] = {"key", "bin", "index", "return_type", "meta", "policy", "inverted", NULL};
+	if (PyArg_ParseTupleAndKeywords(args, kwds, "OOll|OOO:map_get_by_index", kwlist,
+				&py_key, &py_bin, &index, &returnType, &py_meta, &py_policy, &py_inverted) == false) {
+		goto CLEANUP;
+	}
+
+	if (invertIfSpecified(&err, py_inverted, &returnType) != AEROSPIKE_OK) {
 		goto CLEANUP;
 	}
 
@@ -1203,6 +1298,7 @@ PyObject * AerospikeClient_MapGetByIndexRange(AerospikeClient * self, PyObject *
 	PyObject * py_result = NULL;
 	PyObject * py_meta = NULL;
 	PyObject * py_policy = NULL;
+	PyObject* py_inverted = NULL;
 	uint64_t returnType;
 	uint64_t index;
 	uint64_t range;
@@ -1212,9 +1308,13 @@ PyObject * AerospikeClient_MapGetByIndexRange(AerospikeClient * self, PyObject *
 
 	CHECK_CONNECTED();
 
-	static char * kwlist[] = {"key", "bin", "index", "range", "return_type", "meta", "policy", NULL};
-	if (PyArg_ParseTupleAndKeywords(args, kwds, "OOlll|OO:map_get_by_index_range", kwlist,
-				&py_key, &py_bin, &index, &range, &returnType, &py_meta, &py_policy ) == false) {
+	static char * kwlist[] = {"key", "bin", "index", "range", "return_type", "meta", "policy", "inverted", NULL};
+	if (PyArg_ParseTupleAndKeywords(args, kwds, "OOlll|OOO:map_get_by_index_range", kwlist,
+				&py_key, &py_bin, &index, &range, &returnType, &py_meta, &py_policy, &py_inverted) == false) {
+		goto CLEANUP;
+	}
+
+	if (invertIfSpecified(&err, py_inverted, &returnType) != AEROSPIKE_OK) {
 		goto CLEANUP;
 	}
 
@@ -1238,6 +1338,8 @@ PyObject * AerospikeClient_MapGetByRank(AerospikeClient * self, PyObject * args,
 	PyObject * py_result = NULL;
 	PyObject * py_meta = NULL;
 	PyObject * py_policy = NULL;
+	PyObject* py_inverted = NULL;
+
 	uint64_t returnType;
 	uint64_t rank;
 	as_record *rec = NULL;
@@ -1246,9 +1348,13 @@ PyObject * AerospikeClient_MapGetByRank(AerospikeClient * self, PyObject * args,
 
 	CHECK_CONNECTED();
 
-	static char * kwlist[] = {"key", "bin", "rank", "return_type", "meta", "policy", NULL};
-	if (PyArg_ParseTupleAndKeywords(args, kwds, "OOll|OO:map_get_by_rank", kwlist,
-				&py_key, &py_bin, &rank, &returnType, &py_meta, &py_policy) == false) {
+	static char * kwlist[] = {"key", "bin", "rank", "return_type", "meta", "policy", "inverted", NULL};
+	if (PyArg_ParseTupleAndKeywords(args, kwds, "OOll|OOO:map_get_by_rank", kwlist,
+				&py_key, &py_bin, &rank, &returnType, &py_meta, &py_policy, &py_inverted) == false) {
+		goto CLEANUP;
+	}
+
+	if (invertIfSpecified(&err, py_inverted, &returnType) != AEROSPIKE_OK) {
 		goto CLEANUP;
 	}
 
@@ -1272,6 +1378,7 @@ PyObject * AerospikeClient_MapGetByRankRange(AerospikeClient * self, PyObject * 
 	PyObject * py_result = NULL;
 	PyObject * py_meta = NULL;
 	PyObject * py_policy = NULL;
+	PyObject* py_inverted = NULL;
 	uint64_t returnType;
 	uint64_t rank;
 	uint64_t range;
@@ -1281,9 +1388,13 @@ PyObject * AerospikeClient_MapGetByRankRange(AerospikeClient * self, PyObject * 
 
 	CHECK_CONNECTED();
 
-	static char * kwlist[] = {"key", "bin", "rank", "range", "return_type", "meta", "policy", NULL};
-	if (PyArg_ParseTupleAndKeywords(args, kwds, "OOlll|OO:map_get_by_rank_range", kwlist,
-				&py_key, &py_bin, &rank, &range, &returnType, &py_meta, &py_policy) == false) {
+	static char * kwlist[] = {"key", "bin", "rank", "range", "return_type", "meta", "policy", "inverted", NULL};
+	if (PyArg_ParseTupleAndKeywords(args, kwds, "OOlll|OOO:map_get_by_rank_range", kwlist,
+				&py_key, &py_bin, &rank, &range, &returnType, &py_meta, &py_policy, &py_inverted) == false) {
+		goto CLEANUP;
+	}
+
+	if (invertIfSpecified(&err, py_inverted, &returnType) != AEROSPIKE_OK) {
 		goto CLEANUP;
 	}
 
@@ -1298,4 +1409,24 @@ CLEANUP:
 	CLEANUP_AND_EXCEPTION_ON_ERROR(err);
 
 	return py_result;
+}
+
+static as_status
+invertIfSpecified(as_error* err, PyObject* py_inverted, uint64_t* returnType) {
+	if (!py_inverted) {
+		return AEROSPIKE_OK;
+	}
+
+	int truthValue = PyObject_IsTrue(py_inverted);
+
+	/* An error ocurred, update the flag */
+	if (truthValue == -1) {
+		return as_error_update(err, AEROSPIKE_ERR_PARAM, "Invalid inverted value");
+	}
+
+	if (truthValue) {
+		*returnType |= AS_MAP_RETURN_INVERTED;
+	}
+
+	return AEROSPIKE_OK;
 }

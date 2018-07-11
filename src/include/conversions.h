@@ -99,3 +99,6 @@ as_status as_batch_read_results_to_pyobject(as_error* err, AerospikeClient* clie
 		uint32_t size, PyObject** py_records);
 
 as_status batch_read_records_to_pyobject(AerospikeClient *self, as_error *err, as_batch_read_records* records, PyObject **py_recs);
+
+as_status
+string_and_pyuni_from_pystring(PyObject* py_string, PyObject** pyuni_r, char** c_str_ptr, as_error* err);

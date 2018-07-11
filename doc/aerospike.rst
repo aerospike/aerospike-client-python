@@ -83,6 +83,7 @@ in an in-memory primary index.
                 * **protocols** Specifies enabled protocols. This format is the same as Apache's SSLProtocol documented at https://httpd.apache.org/docs/current/mod/mod_ssl.html#sslprotocol . If not specified the client will use "-all +TLSv1.2".
                 * **cipher_suite** :class:`str` Specifies enabled cipher suites. The format is the same as OpenSSL's Cipher List Format documented at https://www.openssl.org/docs/manmaster/apps/ciphers.html .If not specified the OpenSSL default cipher suite described in the ciphers documentation will be used. If you are not sure what cipher suite to select this option is best left unspecified 
                 * **keyfile** :class:`str` Path to the client's key for mutual authentication. By default mutual authentication is disabled.
+                * **keyfile_pw** :class:`str` Decryption password for the client's key for mutual authentication. By default the key is assumed not to be encrypted.
                 * **cert_blacklist** :class:`str` Path to a certificate blacklist file. The file should contain one line for each blacklisted certificate. Each line starts with the certificate serial number expressed in hex. Each entry may optionally specify the issuer name of the certificate (serial numbers are only required to be unique per issuer). Example records: 867EC87482B2 /C=US/ST=CA/O=Acme/OU=Engineering/CN=Test Chain CA E2D4B0E570F9EF8E885C065899886461
                 * **certfile** :class:`str` Path to the client's certificate chain file for mutual authentication. By default mutual authentication is disabled.
                 * **crl_check** :class:`bool` Enable CRL checking for the certificate chain leaf certificate. An error occurs if a suitable CRL cannot be found. By default CRL checking is disabled.
@@ -428,6 +429,11 @@ Operators
 
 Operators for the multi-ops method :py:meth:`~aerospike.Client.operate`.
 
+.. note::
+
+    Beginning in version 3.4.0, it is recommended to use the operation helpers module :ref:`aerospike_operation_helpers` 
+    To create the arguments for the :py:meth:`~aerospike.Client.operate` and :py:meth:`~aerospike.Client.operate`
+
 .. data:: OPERATOR_WRITE
 
     Write a value into a bin
@@ -506,8 +512,11 @@ Operators for the multi-ops method :py:meth:`~aerospike.Client.operate`.
         {
             "op" : aerospike.OP_LIST_APPEND,
             "bin": "events",
-            "val": 1234
+            "val": 1234,
+            "list_policy": {"write_flags": aerospike.LIST_WRITE_ADD_UNIQUE} # Optional, new in client 3.4.0
         }
+
+    .. versionchanged:: 3.4.0
 
 .. data:: OP_LIST_APPEND_ITEMS
 
@@ -518,8 +527,11 @@ Operators for the multi-ops method :py:meth:`~aerospike.Client.operate`.
         {
             "op" : aerospike.OP_LIST_APPEND_ITEMS,
             "bin": "events",
-            "val": [ 123, 456 ]
+            "val": [ 123, 456 ],
+            "list_policy": {"write_flags": aerospike.LIST_WRITE_ADD_UNIQUE} # Optional, new in client 3.4.0
         }
+
+    .. versionchanged:: 3.4.0
 
 .. data:: OP_LIST_INSERT
 
@@ -531,8 +543,11 @@ Operators for the multi-ops method :py:meth:`~aerospike.Client.operate`.
             "op" : aerospike.OP_LIST_INSERT,
             "bin": "events",
             "index": 2,
-            "val": 1234
+            "val": 1234,
+            "list_policy": {"write_flags": aerospike.LIST_WRITE_ADD_UNIQUE} # Optional, new in client 3.4.0
         }
+
+    .. versionchanged:: 3.4.0
 
 .. data:: OP_LIST_INSERT_ITEMS
 
@@ -545,7 +560,10 @@ Operators for the multi-ops method :py:meth:`~aerospike.Client.operate`.
             "bin": "events",
             "index": 2,
             "val": [ 123, 456 ]
+            "list_policy": {"write_flags": aerospike.LIST_WRITE_ADD_UNIQUE} # Optional, new in client 3.4.0
         }
+
+    .. versionchanged:: 3.4.0
 
 .. data:: OP_LIST_INCREMENT
 
@@ -557,8 +575,11 @@ Operators for the multi-ops method :py:meth:`~aerospike.Client.operate`.
             "op": aerospike.OP_LIST_INCREMENT,
             "bin": "bin_name",
             "index": 2,
-            "val": 5
+            "val": 5,
+            "list_policy": {"write_flags": aerospike.LIST_WRITE_ADD_UNIQUE} # Optional, new in client 3.4.0
         }
+
+    .. versionchanged:: 3.4.0
 
 .. data:: OP_LIST_POP
 
@@ -631,8 +652,11 @@ Operators for the multi-ops method :py:meth:`~aerospike.Client.operate`.
             "op" : aerospike.OP_LIST_SET,
             "bin": "events",
             "index": 2,
-            "val": "latest event at index 2" # set this value at index 2
+            "val": "latest event at index 2" # set this value at index 2,
+            "list_policy": {"write_flags": aerospike.LIST_WRITE_ADD_UNIQUE} # Optional, new in client 3.4.0
         }
+
+    .. versionchanged:: 3.4.0
 
 .. data:: OP_LIST_GET
 
@@ -682,6 +706,290 @@ Operators for the multi-ops method :py:meth:`~aerospike.Client.operate`.
             "op" : aerospike.OP_LIST_SIZE,
             "bin": "events" # gets the size of a list contained in the bin
         }
+
+.. data:: OP_LIST_GET_BY_INDEX
+
+    Get the item at the specified index from a list bin. Server selects list item identified by index
+    and returns selected data specified by ``return_type``.
+
+    .. code-block:: python
+
+        {
+            "op" : aerospike.OP_LIST_GET_BY_INDEX,
+            "bin": "events",
+            "index": 2, # Index of the item to fetch
+            "return_type": aerospike.LIST_RETURN_VALUE
+        }
+
+    .. versionadded:: 3.4.0
+
+.. data:: OP_LIST_GET_BY_INDEX_RANGE
+
+    Server selects ``count`` list items starting at specified index and returns selected data specified by return_type.
+    if ``count`` is omitted, the server returns all items from ``index`` to the end of list.
+
+    If ``inverted`` is set to ``True``, return all items outside of the specified range.
+
+    .. code-block:: python
+
+        {
+            "op" : aerospike.OP_LIST_GET_BY_INDEX_RANGE,
+            "bin": "events",
+            "index": 2, # Beginning index of range,
+            "count": 2, # Optional Count.
+            "return_type": aerospike.LIST_RETURN_VALUE,
+            "inverted": False # Optional.
+        }
+
+    .. versionadded:: 3.4.0
+
+.. data:: OP_LIST_GET_BY_RANK
+
+    Server selects list item identified by ``rank`` and returns selected data specified by return_type.
+
+    .. code-block:: python
+
+        {
+            "op" : aerospike.OP_LIST_GET_BY_RANK,
+            "bin": "events",
+            "rank": 2, # Rank of the item to fetch
+            "return_type": aerospike.LIST_RETURN_VALUE
+        }
+
+    .. versionadded:: 3.4.0
+
+.. data:: OP_LIST_GET_BY_RANK_RANGE
+
+    Server selects ``count`` list items starting at specified rank and returns selected data specified by return_type.
+    If ``count`` is not specified, the server returns items starting at the specified rank to the last ranked item.
+
+    If ``inverted`` is set to ``True``, return all items outside of the specified range.
+
+    .. code-block:: python
+
+        {
+            "op" : aerospike.OP_LIST_GET_BY_RANK_RANGE,
+            "bin": "events",
+            "rank": 2, # Rank of the item to fetch
+            "count": 3,
+            "return_type": aerospike.LIST_RETURN_VALUE,
+            "inverted": False # Optional, defaults to False
+        }
+
+    .. versionadded:: 3.4.0
+
+.. data:: OP_LIST_GET_BY_VALUE
+
+    Server selects list items identified by ``val`` and returns selected data specified by return_type.
+
+    .. code-block:: python
+
+        {
+            "op" : aerospike.OP_LIST_GET_BY_VALUE,
+            "bin": "events",
+            "val": 5, 
+            "return_type": aerospike.LIST_RETURN_COUNT
+        }
+
+    .. versionadded:: 3.4.0
+
+.. data:: OP_LIST_GET_BY_VALUE_LIST
+
+    Server selects list items contained in by ``value_list`` and returns selected data specified by return_type.
+    
+    If ``inverted`` is set to ``True``, returns items not included in ``value_list``
+
+    .. code-block:: python
+
+        {
+            "op" : aerospike.OP_LIST_GET_BY_VALUE_LIST,
+            "bin": "events",
+            "value_list": [5, 6, 7],
+            "return_type": aerospike.LIST_RETURN_COUNT,
+            "inverted": False # Optional, defaults to False
+        }
+
+    .. versionadded:: 3.4.0
+
+.. data:: OP_LIST_GET_BY_VALUE_RANGE
+
+    Create list get by value range operation. Server selects list items identified by value range (begin inclusive, end exclusive).
+    If ``value_begin`` is not present the range is less than ``value_end``. If ``value_end`` is not specified, the range is greater
+    than or equal to ``value_begin``.
+    
+    If ``inverted`` is set to ``True``, returns items not included in the specified range.
+
+    .. code-block:: python
+
+        {
+            "op" : aerospike.OP_LIST_GET_BY_VALUE_RANGE,
+            "bin": "events",
+            "value_begin": 3, # Optional
+            "value_end": 6, Optional
+            "return_type": aerospike.LIST_RETURN_VALUE,
+            "inverted": False # Optional, defaults to False
+        }
+
+    .. versionadded:: 3.4.0
+
+.. data:: OP_LIST_REMOVE_BY_INDEX
+
+    Remove and return the item at the specified index from a list bin. Server selects list item identified by index
+    and returns selected data specified by ``return_type``.
+
+    .. code-block:: python
+
+        {
+            "op" : aerospike.OP_LIST_REMOVE_BY_INDEX,
+            "bin": "events",
+            "index": 2, # Index of the item to fetch
+            "return_type": aerospike.LIST_RETURN_VALUE
+        }
+
+    .. versionadded:: 3.4.0
+
+.. data:: OP_LIST_REMOVE_BY_INDEX_RANGE
+
+    Server remove ``count`` list items starting at specified index and returns selected data specified by return_type.
+    if ``count`` is omitted, the server removes and returns all items from ``index`` to the end of list.
+
+    If ``inverted`` is set to ``True``, remove and return all items outside of the specified range.
+
+    .. code-block:: python
+
+        {
+            "op" : aerospike.OP_LIST_REMOVE_BY_INDEX_RANGE,
+            "bin": "events",
+            "index": 2, # Beginning index of range,
+            "count": 2, # Optional Count.
+            "return_type": aerospike.LIST_RETURN_VALUE,
+            "inverted": False # Optional. 
+        }
+
+    .. versionadded:: 3.4.0
+
+.. data:: OP_LIST_REMOVE_BY_RANK
+
+    Server removes and returns list item identified by ``rank`` and returns selected data specified by return_type.
+
+    .. code-block:: python
+
+        {
+            "op" : aerospike.OP_LIST_REMOVE_BY_RANK,
+            "bin": "events",
+            "rank": 2, # Rank of the item to fetch
+            "return_type": aerospike.LIST_RETURN_VALUE
+        }
+
+    .. versionadded:: 3.4.0
+
+.. data:: OP_LIST_REMOVE_BY_RANK_RANGE
+
+    Server removes and returns ``count`` list items starting at specified rank and returns selected data specified by return_type.
+    If ``count`` is not specified, the server removes and returns items starting at the specified rank to the last ranked item.
+
+    If ``inverted`` is set to ``True``, removes return all items outside of the specified range.
+
+    .. code-block:: python
+
+        {
+            "op" : aerospike.OP_LIST_REMOVE_BY_RANK_RANGE,
+            "bin": "events",
+            "rank": 2, # Rank of the item to fetch
+            "count": 3,
+            "return_type": aerospike.LIST_RETURN_VALUE,
+            "inverted": False # Optional, defaults to False
+        }
+
+    .. versionadded:: 3.4.0
+
+.. data:: OP_LIST_REMOVE_BY_VALUE
+
+    Server removes and returns list items identified by ``val`` and returns selected data specified by return_type.
+
+    If ``inverted`` is set to ``True``, removes and returns list items with a value not equal to ``val``.
+
+    .. code-block:: python
+
+        {
+            "op" : aerospike.OP_LIST_REMOVE_BY_VALUE,
+            "bin": "events",
+            "val": 5, 
+            "return_type": aerospike.LIST_RETURN_COUNT,
+            "inverted", # Optional, defaults to False
+        }
+
+    .. versionadded:: 3.4.0
+
+.. data:: OP_LIST_REMOVE_BY_VALUE_LIST
+
+    Server removes and returns list items contained in by ``value_list`` and returns selected data specified by return_type.
+    
+    If ``inverted`` is set to ``True``, removes and returns items not included in ``value_list``
+
+    .. code-block:: python
+
+        {
+            "op" : aerospike.OP_LIST_REMOVE_BY_VALUE_LIST,
+            "bin": "events",
+            "value_list": [5, 6, 7],
+            "return_type": aerospike.LIST_RETURN_COUNT,
+            "inverted": False # Optional, defaults to False
+        }
+
+    .. versionadded:: 3.4.0
+
+.. data:: OP_LIST_REMOVE_BY_VALUE_RANGE
+
+    Create list remove by value range operation. Server removes and returns list items identified by value range (begin inclusive, end exclusive).
+    If ``value_begin`` is not present the range is less than ``value_end``. If ``value_end`` is not specified, the range is greater
+    than or equal to ``value_begin``.
+    
+    If ``inverted`` is set to ``True``, removes and returns items not included in the specified range.
+
+    .. code-block:: python
+
+        {
+            "op" : aerospike.OP_LIST_REMOVE_BY_VALUE_RANGE,
+            "bin": "events",
+            "value_begin": 3, # Optional
+            "value_end": 6, Optional
+            "return_type": aerospike.LIST_RETURN_VALUE,
+            "inverted": False # Optional, defaults to False
+        }
+
+    .. versionadded:: 3.4.0
+
+.. data:: OP_LIST_SET_ORDER
+
+    Assign an ordering to the specified list bin.
+    ``list_order`` should be one of ``aerospike.LIST_ORDERED``, ``aerospike.LIST_UNORDERED``.
+
+    .. code-block:: python
+
+        {
+            "op": aerospike.OP_LIST_SET_ORDER,
+            "list_order": aerospike.LIST_ORDERED,
+            "bin": "events"
+        }
+
+    .. versionadded:: 3.4.0
+
+.. data:: OP_LIST_SORT
+
+    Perform a sort operation on the bin.
+    ``sort_flags``, if provided, can be one of: ``aerospike.LIST_SORT_DROP_DUPLICATES`` indicating that duplicate elements
+    should be removed from the sorted list.
+
+    .. code-block:: python
+
+        {
+            'op': aerospike.OP_LIST_SORT,
+            'sort_flags': aerospike.LIST_SORT_DROP_DUPLICATES, # Optional flags or'd together specifying behavior
+            'bin': self.test_bin
+        }
+
+    .. versionadded:: 3.4.0
 
 .. data:: OP_MAP_SET_POLICY
 
@@ -1350,6 +1658,42 @@ Return types used by various map operations
 .. data:: MAP_RETURN_KEY_VALUE
 
     Return key/value items. Note that key/value pairs will be returned as a list of tuples (i.e. [(key1, value1), (key2, value2)])
+
+
+.. _list_return_types:
+
+List Return Types
+------------------
+
+Return types used by various map operations
+
+.. data:: LIST_RETURN_NONE
+
+    Do not return any value.
+
+.. data:: LIST_RETURN_INDEX
+
+    Return key index order.
+
+.. data:: LIST_RETURN_REVERSE_INDEX
+
+    Return reverse key order.
+
+.. data:: LIST_RETURN_RANK
+
+    Return value order.
+
+.. data:: LIST_RETURN_REVERSE_RANK
+
+    Return reserve value order.
+
+.. data:: LIST_RETURN_COUNT
+
+    Return count of items selected.
+
+.. data:: LIST_RETURN_VALUE
+
+    Return value for single key read and value list for range read.
 
 
 .. _regex_constants:

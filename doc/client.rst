@@ -1546,6 +1546,7 @@ Multi-Ops (Operate)
 
             from __future__ import print_function
             import aerospike
+            from aerospike_helpers.operations import operations as op_helpers
             from aerospike import exception as ex
             import sys
 
@@ -1556,34 +1557,13 @@ Multi-Ops (Operate)
                 key = ('test', 'demo', 1)
                 client.put(key, {'age': 25, 'career': 'delivery boy'})
                 ops = [
-                    {
-                      "op" : aerospike.OPERATOR_INCR,
-                      "bin": "age",
-                      "val": 1000
-                    },
-                    {
-                      "op" : aerospike.OPERATOR_WRITE,
-                      "bin": "name",
-                      "val": "J."
-                    },
-                    {
-                      "op" : aerospike.OPERATOR_PREPEND,
-                      "bin": "name",
-                      "val": "Phillip "
-                    },
-                    {
-                      "op" : aerospike.OPERATOR_APPEND,
-                      "bin": "name",
-                      "val": " Fry"
-                    },
-                    {
-                      "op" : aerospike.OPERATOR_READ,
-                      "bin": "name"
-                    },
-                    {
-                      "op" : aerospike.OPERATOR_READ,
-                      "bin": "career"
-                    }
+                op_helpers.increment("age", 1000),
+                op_helpers.write("name", "J."),
+                op_helpers.prepend("name", "Phillip "),
+                op_helpers.append("name", " Fry"),
+                op_helpers.read("name"),
+                op_helpers.read("career"),
+                op_helpers.read("age")
                 ]
                 (key, meta, bins) = client.operate(key, ops, {'ttl':360}, {'total_timeout':500})
 
@@ -1677,6 +1657,7 @@ Multi-Ops (Operate)
             from __future__ import print_function
             import aerospike
             from aerospike import exception as ex
+            from aerospike_helpers.operations import operations as op_helpers
             import sys
 
             config = { 'hosts': [('127.0.0.1', 3000)] }
@@ -1690,14 +1671,12 @@ Multi-Ops (Operate)
                     'commit_level': aerospike.POLICY_COMMIT_LEVEL_MASTER
                 }
 
-                llist = [{"op": aerospike.OPERATOR_APPEND,
-                          "bin": "name",
-                          "val": "aa"},
-                         {"op": aerospike.OPERATOR_READ,
-                          "bin": "name"},
-                         {"op": aerospike.OPERATOR_INCR,
-                          "bin": "age",
-                          "val": 3}]
+                llist = [
+                    op_helpers.append("name", "aa"),
+                    op_helpers.read("name"),
+                    op_helpers.increment("age", 3),
+                    op_helpers.read("age")
+                ]
 
                 client.operate_ordered(key, llist, {}, policy)
             except ex.AerospikeError as e:
@@ -2935,6 +2914,32 @@ Admin Policies
 
         * **timeout** admin operation timeout in milliseconds
 
+
+
+.. _aerospike_list_policies:
+
+List Policies
+-------------
+
+.. object:: policy
+
+    A :class:`dict` of optional list policies, which are applicable to list operations.
+
+    .. hlist::
+        :columns: 1
+
+        * **write_flags** Write flags for the operation. Valid values: ``aerospike.LIST_WRITE_ADD_UNIQUE``, ``aerospike.LIST_WRITE_INSERT_BOUNDED``, ``aerospike.LIST_WRITE_DEFAULT``
+            values should be or'd together: ``aerospike.LIST_WRITE_ADD_UNIQUE | aerospike.LIST_WRITE_INSERT_BOUNDED``
+        * **list_order** ordering to maintain for the list. Valid values: values are ``aerospike.LIST_ORDERED``, ``aerospike.LIST_UNORDERED``
+
+    Example:
+
+     .. code-block:: python
+
+        list_policy = {
+            "write_flags": aerospike.LIST_WRITE_ADD_UNIQUE | aerospike.LIST_WRITE_INSERT_BOUNDED,
+            "list_order": aerospike.LIST_ORDERED
+        }
 
 .. _aerospike_map_policies:
 
