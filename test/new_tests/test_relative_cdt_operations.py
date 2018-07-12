@@ -18,6 +18,7 @@ def get_list_result_from_operation(client, key, operation, binname):
     return result_bins[binname]
 
 
+@pytest.mark.xfail(reason="Requires Aerospike Server 4.3.0 or greater")
 class TestNewRelativeListOperations(object):
 
     @pytest.fixture(autouse=True)
@@ -248,6 +249,7 @@ def get_list_result_from_operation(client, key, operation, binname):
     return result_bins[binname]
 
 
+@pytest.mark.xfail(reason="Requires Aerospike Server 4.3.0 or greater")
 class TestNewRelativeMapOperations(object):
 
     @pytest.fixture(autouse=True)
