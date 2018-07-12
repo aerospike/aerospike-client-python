@@ -186,6 +186,62 @@ class TestNewRelativeListOperations(object):
         with pytest.raises(expected_err):
             self.as_connection.operate(self.test_key, [operation])
 
+    # INVERTED TESTS
+    # LIST = [3, 1, 5, 7, 9, 11]
+    @pytest.mark.parametrize(
+        "value, offset, count, expected",
+        (
+            (5, 0, None, [1, 3]),
+            (5, 0, 2, [ 1, 3, 9, 11]),
+            (4, -2, 3, [7, 9, 11]),
+            (0, 0, 3, [7, 9, 11]),
+            (150, 0, None, [1, 3, 5, 7, 9, 11])
+        ))
+    def test_list_get_by_value_rank_range_relative_inverted(self, value, offset, count, expected):
+        '''
+        Without a return type this should return the value
+        '''
+        operation = list_operations.list_get_by_value_rank_range_relative(
+            self.test_bin, value, offset, return_type=aerospike.LIST_RETURN_VALUE,
+            count=count, inverted=True)
+
+        result = get_list_result_from_operation(
+            self.as_connection, self.test_key, operation, self.test_bin)
+
+        assert result == expected
+
+
+    @pytest.mark.parametrize(
+        "value, offset, count, expected",
+        (
+            (5, 0, None, [1, 3]),
+            (5, 0, 2, [1, 3, 9, 11]),
+            (4, -2, 3, [7, 9, 11]),
+            (0, 0, 3, [7, 9, 11]),
+            (150, 0, None, [1, 3, 5, 7, 9, 11])
+        ))
+    def test_list_remove_by_value_rank_range_relative_inverted(self, value, offset, count, expected):
+        '''
+        Without a return type this should return the value
+        '''
+        operation = list_operations.list_remove_by_value_rank_range_relative(
+            self.test_bin, value, offset, return_type=aerospike.LIST_RETURN_VALUE,
+            count=count, inverted=True)
+
+        result = get_list_result_from_operation(
+            self.as_connection, self.test_key, operation, self.test_bin)
+        assert result == expected
+
+        _, _, bins = self.as_connection.get(self.test_key)
+        list_items = bins[self.test_bin]
+
+        # Ensure that the correct number of items were removed
+        assert len(list_items) == (len(self.test_list) - len(expected))
+
+        # Ensure that the expected items were removed
+        for item in list_items:
+            assert item not in expected
+
 
 def get_list_result_from_operation(client, key, operation, binname):
     _, _, result_bins = client.operate(key, [operation])

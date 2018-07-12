@@ -696,20 +696,28 @@ def map_get_by_rank_range(bin_name, rank_start, get_amt, return_type, inverted=F
     return op_dict
 
 def map_remove_by_value_rank_range_relative(
-    bin_name, value, offset, return_type, count=None, inverted=False):
+        bin_name, value, offset, return_type, count=None, inverted=False):
     """Create a map remove by value rank range relative operation
 
     Create map remove by value relative to rank range operation.
     Server removes and returns map items nearest to value and greater by relative rank.
     Server returns selected data specified by return_type.
 
-    * Examples for map [0: 6, 5: 12, 10: 18, 15: 24]
+    Note:
+        This operation requires server version 4.3.0 or greater.
 
-    (value, offset, count) = [removed keys]
-    (6,0,None) = [0, 5, 10, 15]
-    (5,0,2) = [0, 5]
-    (7,-1, 1) = [0]
-    (7, -1, 3) = [0, 5, 10]
+    Examples:
+
+        Examples for map ``{0: 6, 10: 18, 6: 12, 15: 24}``
+        and return type of ``aerospike.MAP_RETURN_KEY``
+
+        ::
+
+            (value, offset, count) = [removed keys]
+            (6, 0, None) = [0, 6, 10, 15]
+            (5, 0, 2) = [0, 6]
+            (7, -1, 1) = [0]
+            (7, -1, 3) = [0, 6, 10]
 
     Args:
         bin_name (str): The name of the bin containing the map.
@@ -718,7 +726,8 @@ def map_remove_by_value_rank_range_relative(
         count (int): If specified, the number of items to remove and return. If None,
             all items with rank greater than found_item are returned.
         return_type: Specifies what to return from the operation.
-        inverted (bool): If true keep items specified by the range and rmeove others.
+        inverted (bool): If True, the operation is inverted
+            and items outside of the specified range are returned.
 
     Returns:
         A dictionary usable in operate or operate_ordered.The format of the dictionary
@@ -742,26 +751,36 @@ def map_remove_by_value_rank_range_relative(
 
 
 def map_get_by_value_rank_range_relative(
-    bin_name, value, offset, return_type, count=None, inverted=False):
+        bin_name, value, offset, return_type, count=None, inverted=False):
     """Create a map remove by value rank range relative operation
 
-    Create list remove by value relative to rank range operation.
-    Server removes and returns list items nearest to value and greater by relative rank.
-    Server returns selected data specified by return_type.
+    Create list map get by value relative to rank range operation.
+    Server returns map items with value nearest to value and greater
+    by relative rank. Server returns selected data specified by return_type.
 
-    * Examples for map [0: 6, 5: 12, 10: 18, 15: 24]
+    Note:
+        This operation requires server version 4.3.0 or greater.
 
-    (value, offset, count) = [removed keys]
-    (6,0,None) = [0, 5, 10, 15]
-    (5,0,2) = [0, 5]
-    (7,-1, 1) = [0]
-    (7, -1, 3) = [0, 5, 10]
+    Examples:
+
+        Examples for map ``{0: 6, 10: 18, 6: 12, 15: 24}`` and return type of ``aerospike.MAP_RETURN_KEY``
+
+        ::
+
+        (value, offset, count) = [returned keys]
+        (6, 0, None) = [0, 6, 10, 15]
+        (5, 0, 2) = [0, 6]
+        (7, -1, 1) = [0]
+        (7, -1, 3) = [0, 6, 10]
 
     Args:
         bin_name (str): The name of the bin containing the map.
         value (str): The value of the item in the list for which to search
         offset (int): Begin removing and returning items with rank == rank(fount_item) + offset
-        count (int): If specified, the number of items to remove and return. If None, all items until end of list are returned.
+        count (int): If specified, the number of items to remove and return. If None,
+            all items until end of list are returned.
+        inverted (bool): If True, the operation is inverted
+            and items outside of the specified range are returned.
 
     Returns:
         A dictionary usable in operate or operate_ordered.The format of the dictionary
@@ -785,29 +804,39 @@ def map_get_by_value_rank_range_relative(
 
 
 def map_remove_by_key_index_range_relative(
-    bin_name, value, offset, return_type, count=None, inverted=False):
+        bin_name, value, offset, return_type, count=None, inverted=False):
     """Create a map get by value rank range relative operation
 
-    Create list remove by value relative to rank range operation.
-    Server removes and returns list items nearest to value and greater by relative rank.
+    Create map remove by key relative to index range operation.
+    Server removes and returns map items with key nearest to value and greater by relative index.
     Server returns selected data specified by return_type.
 
-    * Examples for ordered list [0,4,5,9,11,15]:
+    Note:
+        This operation requires server version 4.3.0 or greater.
 
-    (value, offset, count) = [selected items]
-    (5,0,None) = [5,9,11,15]
-    (5,0,2) = [5, 9]
-    (5,-1, None) = [4,5,9,11,15]
-    (5, -1, 3) = [4,5,9]
-    (3,3, None) = [11,15]
-    (3,-3, None) = [0,4,5,9,11,15]
-    (3, 0, None) = [4,5,9,11,15]
+    Examples:
+
+        Examples for a key ordered map ``{0: 6, 6: 12, 10: 18, 15: 24}``
+        and return type of ``aerospike.MAP_RETURN_KEY``
+
+    ::
+
+    (value, offset, count) = [removed keys]
+    (5, 0, None) = [6, 10, 15]
+    (5, 0, 2) = [6, 10]
+    (5,-1, None) = [0, 6, 10, 15]
+    (5, -1, 3) = [0, 6, 10]
+    (3, 2, None) = [15]
+    (3, 5, None) = []
 
     Args:
         bin_name (str): The name of the bin containing the list.
         value (str): The value of the item in the list for which to search
         offset (int): Begin removing and returning items with rank == rank(fount_item) + offset
-        count (int): If specified, the number of items to remove and return. If None, all items until end of list are returned.
+        count (int): If specified, the number of items to remove and return. If None,
+            all items until end of list are returned.
+        inverted (bool): If True, the operation is inverted
+            and items outside of the specified range are returned.
 
     Returns:
         A dictionary usable in operate or operate_ordered.The format of the dictionary
@@ -831,29 +860,40 @@ def map_remove_by_key_index_range_relative(
 
 
 def map_get_by_key_index_range_relative(
-    bin_name, value, offset, return_type, count=None, inverted=False):
+        bin_name, value, offset, return_type, count=None, inverted=False):
     """Create a map get by value rank range relative operation
 
-    Create list remove by value relative to rank range operation.
-    Server removes and returns list items nearest to value and greater by relative rank.
+    Create map get by key relative to index range operation.
+    Server removes and returns map items with key nearest to value and greater by relative index.
     Server returns selected data specified by return_type.
 
-    * Examples for ordered list [0,4,5,9,11,15]:
+    Note:
+        This operation requires server version 4.3.0 or greater.
 
-    (value, offset, count) = [selected items]
-    (5,0,None) = [5,9,11,15]
-    (5,0,2) = [5, 9]
-    (5,-1, None) = [4,5,9,11,15]
-    (5, -1, 3) = [4,5,9]
-    (3,3, None) = [11,15]
-    (3,-3, None) = [0,4,5,9,11,15]
-    (3, 0, None) = [4,5,9,11,15]
+    Examples:
+
+        Examples for a key ordered map ``{0: 6, 6: 12, 10: 18, 15: 24}``
+        and return type of ``aerospike.MAP_RETURN_KEY``
+
+        ::
+
+        (value, offset, count) = [returned keys]
+        (5, 0, None) = [6, 10, 15]
+        (5, 0, 2) = [6, 10]
+        (5,-1, None) = [0, 6, 10, 15]
+        (5, -1, 3) = [0, 6, 10]
+        (3, 2, None) = [15]
+        (3, 5, None) = []
 
     Args:
         bin_name (str): The name of the bin containing the list.
         value (str): The value of the item in the list for which to search
         offset (int): Begin removing and returning items with rank == rank(fount_item) + offset
-        count (int): If specified, the number of items to remove and return. If None, all items until end of list are returned.
+        count (int): If specified, the number of items to remove and return. If None,
+            all items until end of list are returned.
+        inverted (bool): If True, the operation is inverted
+            and items outside of the specified range are returned.
+
 
     Returns:
         A dictionary usable in operate or operate_ordered.The format of the dictionary
