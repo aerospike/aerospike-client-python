@@ -131,12 +131,12 @@ add_op_map_remove_by_value_rel_rank_range(AerospikeClient * self, as_error* err,
 
     if (count_present) {
         if (! as_operations_add_map_remove_by_value_rel_rank_range(ops, bin, value, rank, (uint64_t)count, return_type) ) {
-            return as_error_update(err, AEROSPIKE_ERR_CLIENT, "Failed to add list remove by value rank relative operation");
+            return as_error_update(err, AEROSPIKE_ERR_CLIENT, "Failed to add map remove by value rank relative operation");
         }
     }
     else {
         if (! as_operations_add_map_remove_by_value_rel_rank_range_to_end(ops, bin, value, rank, return_type) ) {
-            return as_error_update(err, AEROSPIKE_ERR_CLIENT, "Failed to add list remove by value rank relative operation");
+            return as_error_update(err, AEROSPIKE_ERR_CLIENT, "Failed to add map remove by value rank relative operation");
         }
     }
     return AEROSPIKE_OK;
@@ -176,12 +176,12 @@ add_op_map_get_by_value_rel_rank_range(AerospikeClient * self, as_error* err,
 
     if (count_present) {
         if (! as_operations_add_map_get_by_value_rel_rank_range(ops, bin, value, rank, (uint64_t)count, return_type) ) {
-            return as_error_update(err, AEROSPIKE_ERR_CLIENT, "Failed to add list remove by value rank relative operation");
+            return as_error_update(err, AEROSPIKE_ERR_CLIENT, "Failed to add map get by value rank relative operation");
         }
     }
     else {
         if (! as_operations_add_map_get_by_value_rel_rank_range_to_end(ops, bin, value, rank, return_type) ) {
-            return as_error_update(err, AEROSPIKE_ERR_CLIENT, "Failed to add list remove by value rank relative operation");
+            return as_error_update(err, AEROSPIKE_ERR_CLIENT, "Failed to add map get by value rank relative operation");
         }
     }
     return AEROSPIKE_OK;
@@ -221,12 +221,12 @@ add_op_map_remove_by_key_rel_index_range(AerospikeClient * self, as_error* err,
 
     if (count_present) {
         if (! as_operations_add_map_remove_by_key_rel_index_range(ops, bin, key, rank, (uint64_t)count, return_type) ) {
-            return as_error_update(err, AEROSPIKE_ERR_CLIENT, "Failed to add list remove by value rank relative operation");
+            return as_error_update(err, AEROSPIKE_ERR_CLIENT, "Failed to add map remove by key rank relative operation");
         }
     }
     else {
         if (! as_operations_add_map_remove_by_key_rel_index_range_to_end(ops, bin, key, rank, return_type) ) {
-            return as_error_update(err, AEROSPIKE_ERR_CLIENT, "Failed to add list remove by value rank relative operation");
+            return as_error_update(err, AEROSPIKE_ERR_CLIENT, "Failed to add map remove by key rank relative operation");
         }
     }
     return AEROSPIKE_OK;
@@ -266,12 +266,12 @@ add_op_map_get_by_key_rel_index_range(AerospikeClient * self, as_error* err,
 
     if (count_present) {
         if (! as_operations_add_map_get_by_key_rel_index_range(ops, bin, key, rank, (uint64_t)count, return_type) ) {
-            return as_error_update(err, AEROSPIKE_ERR_CLIENT, "Failed to add list remove by value rank relative operation");
+            return as_error_update(err, AEROSPIKE_ERR_CLIENT, "Failed to add map get by key rank relative operation");
         }
     }
     else {
         if (! as_operations_add_map_get_by_key_rel_index_range_to_end(ops, bin, key, rank, return_type) ) {
-            return as_error_update(err, AEROSPIKE_ERR_CLIENT, "Failed to add list remove by value rank relative operation");
+            return as_error_update(err, AEROSPIKE_ERR_CLIENT, "Failed to add map get by key rank relative operation");
         }
     }
     return AEROSPIKE_OK;
@@ -297,7 +297,7 @@ get_map_return_type(as_error * err, PyObject * op_dict, int* return_type)
             return as_error_update(err, AEROSPIKE_ERR_PARAM, "Invalid inverted option");
         }
         if (py_bool_val == 1) {
-            *return_type |= AS_LIST_RETURN_INVERTED;
+            *return_type |= AS_MAP_RETURN_INVERTED;
         }
     }
 
