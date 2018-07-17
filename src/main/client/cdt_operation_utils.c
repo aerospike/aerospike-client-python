@@ -33,7 +33,7 @@ get_bin(as_error * err, PyObject * op_dict, as_vector * unicodeStrVector, char**
             char* dupStr = strdup(*binName);
             *binName = dupStr;
             as_vector_append(unicodeStrVector, dupStr);
-            Py_DecRef(intermediateUnicode);
+            Py_DECREF(intermediateUnicode);
         }        
         return AEROSPIKE_OK;
 }
