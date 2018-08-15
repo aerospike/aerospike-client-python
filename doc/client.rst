@@ -2928,7 +2928,9 @@ List Policies
     .. hlist::
         :columns: 1
 
-        * **write_flags** Write flags for the operation. Valid values: ``aerospike.LIST_WRITE_ADD_UNIQUE``, ``aerospike.LIST_WRITE_INSERT_BOUNDED``, ``aerospike.LIST_WRITE_DEFAULT``
+        * **write_flags** Write flags for the operation. Valid values: ``aerospike.LIST_WRITE_ADD_UNIQUE``, ``aerospike.LIST_WRITE_INSERT_BOUNDED``, ``aerospike.LIST_WRITE_DEFAULT``,
+            ``aerospike.LIST_WRITE_PARTIAL`` and ``aerospike.LIST_WRITE_NO_FAIL``.
+            ``aerospike.LIST_WRITE_PARTIAL`` and ``aerospike.LIST_WRITE_NO_FAIL`` require server version 4.3.0 or greater.
             values should be or'd together: ``aerospike.LIST_WRITE_ADD_UNIQUE | aerospike.LIST_WRITE_INSERT_BOUNDED``
         * **list_order** ordering to maintain for the list. Valid values: values are ``aerospike.LIST_ORDERED``, ``aerospike.LIST_UNORDERED``
 
@@ -2953,7 +2955,10 @@ Map Policies
     .. hlist::
         :columns: 1
 
-        * **map_write_mode** write mode for the map. Valid values: ``aerospike.MAP_UPDATE``, ``aerospike.MAP_UPDATE_ONLY``, ``aerospike.MAP_CREATE_ONLY``
+        * **map_write_mode** write mode for the map. Valid values: ``aerospike.MAP_UPDATE``, ``aerospike.MAP_UPDATE_ONLY``, ``aerospike.MAP_CREATE_ONLY``,
+            ``aerospike.MAP_WRITE_PARTIAL`` and ``aerospike.MAP_WRITE_NO_FAIL``.
+            ``aerospike.MAP_WRITE_PARTIAL`` and ``aerospike.MAP_WRITE_NO_FAIL``. require server version 4.3.0 or greater. The values may be or'd together:
+            ``aerospike.MAP_UPDATE_ONLY | aerospike.MAP_WRITE_NO_FAIL``
         * **map_order** ordering to maintain for the map entries. Valid values: ``aerospike.MAP_UNORDERED``, ``aerospike.MAP_KEY_ORDERED``, ``aerospike.MAP_KEY_VALUE_ORDERED``
 
 

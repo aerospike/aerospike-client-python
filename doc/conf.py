@@ -1,6 +1,16 @@
 # -*- coding: utf-8 -*-
 
 import sys, os
+
+try:
+    from unittest.mock import MagicMock
+except ImportError:
+    try:
+        from mock import Mock as MagicMock
+    except ImportError as e:
+        print("mock is missing: pip install mock")
+        raise e
+
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
@@ -8,6 +18,18 @@ sys.path.append(
     os.path.abspath(
         os.path.join(os.path.dirname(__name__), '..'))
 )
+
+# Mock out aerospike,
+# see https://docs.readthedocs.io/en/latest/faq.html#i-get-import-errors-on-libraries-that-depend-on-c-modules
+
+
+class Mock(MagicMock):
+    @classmethod
+    def __getattr__(cls, name):
+        return MagicMock()
+
+sys.modules.update({'aerospike': Mock()})
+
 #sys.path.append(os.path.abspath('/usr/local/lib/python2.7/site-packages/aerospike-1.0.44-py2.7-macosx-10.9-x86_64.egg/'))
 
 # -- General configuration -----------------------------------------------------

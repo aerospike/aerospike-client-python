@@ -72,7 +72,7 @@ os.putenv('ARCHFLAGS', '-arch x86_64')
 os.environ['ARCHFLAGS'] = '-arch x86_64'
 AEROSPIKE_C_VERSION = os.getenv('AEROSPIKE_C_VERSION')
 if not AEROSPIKE_C_VERSION:
-    AEROSPIKE_C_VERSION = '4.3.13'
+    AEROSPIKE_C_VERSION = '4.3.14'
 DOWNLOAD_C_CLIENT = os.getenv('DOWNLOAD_C_CLIENT')
 AEROSPIKE_C_HOME = os.getenv('AEROSPIKE_C_HOME')
 PREFIX = None
@@ -309,6 +309,8 @@ setup(
                 'src/main/client/type.c',
                 'src/main/client/apply.c',
                 'src/main/client/cdt_list_operate.c',
+                'src/main/client/cdt_map_operate.c',
+                'src/main/client/cdt_operation_utils.c',
                 'src/main/client/close.c',
                 'src/main/client/connect.c',
                 'src/main/client/exists.c',

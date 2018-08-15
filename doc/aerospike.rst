@@ -1094,18 +1094,21 @@ Note that if "return_type" is not specified in the parameters for a map operatio
 .. data:: OP_MAP_REMOVE_BY_KEY_LIST
 
     Remove the entries from the map bin that match the list of given keys.
+    If ``inverted`` is set to ``True``, remove all items except those in the list of keys.
 
     .. code-block:: python
 
         {
             "op" : aerospike.OP_MAP_REMOVE_BY_KEY_LIST,
             "bin": "my_map",
-            "val": ["name", "rank", "serial"]
+            "val": ["name", "rank", "serial"],
+            "inverted": False #Optional
         }
 
 .. data:: OP_MAP_REMOVE_BY_KEY_RANGE
 
     Remove the entries from the map bin that have keys which fall between the given "key" (inclusive) and "val" (exclusive).
+    If ``inverted`` is set to ``True``, remove all items outside of the specified range.
 
     .. code-block:: python
 
@@ -1114,12 +1117,14 @@ Note that if "return_type" is not specified in the parameters for a map operatio
             "bin": "my_map",
             "key": "i",
             "val": "j",
-            "return_type": aerospike.MAP_RETURN_KEY_VALUE
+            "return_type": aerospike.MAP_RETURN_KEY_VALUE,
+            "inverted": False # Optional
         }
 
 .. data:: OP_MAP_REMOVE_BY_VALUE
 
     Remove the entry or entries from the map bin that have values which match the given "val" parameter.
+    If ``inverted`` is set to ``True``, remove all items with a value other than ``val``
 
     .. code-block:: python
 
@@ -1128,11 +1133,13 @@ Note that if "return_type" is not specified in the parameters for a map operatio
             "bin": "my_map",
             "val": 97,
             "return_type": aerospike.MAP_RETURN_KEY
+            "inverted": False #optional
         }
 
 .. data:: OP_MAP_REMOVE_BY_VALUE_LIST
 
     Remove the entries from the map bin that have values which match the list of values given in the "val" parameter.
+    If ``inverted`` is set to ``True``, remove all items with values not contained in the list of values.
 
     .. code-block:: python
 
@@ -1140,12 +1147,14 @@ Note that if "return_type" is not specified in the parameters for a map operatio
             "op" : aerospike.OP_MAP_REMOVE_BY_VALUE_LIST,
             "bin": "my_map",
             "val": [97, 98, 99],
-            "return_type": aerospike.MAP_RETURN_KEY
+            "return_type": aerospike.MAP_RETURN_KEY,
+            "inverted": False # Optional
         }
 
 .. data:: OP_MAP_REMOVE_BY_VALUE_RANGE
 
     Remove the entries from the map bin that have values starting with the given "val" parameter (inclusive) up to the given "range" parameter (exclusive).
+    If ``inverted`` is set to ``True``, remove all items outside of the specified range.
 
     .. code-block:: python
 
@@ -1154,7 +1163,8 @@ Note that if "return_type" is not specified in the parameters for a map operatio
             "bin": "my_map",
             "val": 97,
             "range": 100,
-            "return_type": aerospike.MAP_RETURN_KEY
+            "return_type": aerospike.MAP_RETURN_KEY,
+            "inverted": False # Optional
         }
 
 .. data:: OP_MAP_REMOVE_BY_INDEX
@@ -1173,6 +1183,8 @@ Note that if "return_type" is not specified in the parameters for a map operatio
 .. data:: OP_MAP_REMOVE_BY_INDEX_RANGE
 
     Remove the entries from the map bin starting at the given "index" location and removing "range" items.
+    If ``inverted`` is set to ``True``, remove all items outside of the specified range.
+
 
     .. code-block:: python
 
@@ -1181,7 +1193,8 @@ Note that if "return_type" is not specified in the parameters for a map operatio
             "bin": "my_map",
             "index": 0,
             "val": 2,
-            "return_type": aerospike.MAP_RETURN_KEY_VALUE
+            "return_type": aerospike.MAP_RETURN_KEY_VALUE,
+            "inverted": False # Optional
         }
         
 .. data:: OP_MAP_REMOVE_BY_RANK
@@ -1199,6 +1212,7 @@ Note that if "return_type" is not specified in the parameters for a map operatio
 .. data:: OP_MAP_REMOVE_BY_RANK_RANGE
 
     Remove the entries from the map bin that have values with a rank starting at the given "index" and removing "range" items.
+    If ``inverted`` is set to ``True``, remove all items outside of the specified range.
 
     .. code-block:: python
 
@@ -1207,7 +1221,8 @@ Note that if "return_type" is not specified in the parameters for a map operatio
             "bin": "my_map",
             "index": 10,
             "val": 2,
-            "return_type": aerospike.MAP_RETURN_KEY_VALUE
+            "return_type": aerospike.MAP_RETURN_KEY_VALUE,
+            "inverted": False # Optional
         }
 
 .. data:: OP_MAP_GET_BY_KEY
@@ -1226,6 +1241,7 @@ Note that if "return_type" is not specified in the parameters for a map operatio
 .. data:: OP_MAP_GET_BY_KEY_RANGE
 
     Return the entries from the map bin that have keys which fall between the given "key" (inclusive) and "val" (exclusive).
+    If ``inverted`` is set to ``True``, return all items outside of the specified range.
 
     .. code-block:: python
 
@@ -1235,11 +1251,13 @@ Note that if "return_type" is not specified in the parameters for a map operatio
             "key": "i",
             "range": "j",
             "return_type": aerospike.MAP_RETURN_KEY_VALUE
+            "inverted": False # Optional
         }
 
 .. data:: OP_MAP_GET_BY_VALUE
 
     Return the entry or entries from the map bin that have values which match the given "val" parameter.
+    If ``inverted`` is set to ``True``, return all items with a value not equal to the given "val" parameter.
 
     .. code-block:: python
 
@@ -1253,6 +1271,8 @@ Note that if "return_type" is not specified in the parameters for a map operatio
 .. data:: OP_MAP_GET_BY_VALUE_RANGE
 
     Return the entries from the map bin that have values starting with the given "val" parameter (inclusive) up to the given "range" parameter (exclusive).
+    If ``inverted`` is set to ``True``, return all items outside of the specified range.
+
 
     .. code-block:: python
 
@@ -1261,7 +1281,8 @@ Note that if "return_type" is not specified in the parameters for a map operatio
             "bin": "my_map",
             "val": 97,
             "range": 100,
-            "return_type": aerospike.MAP_RETURN_KEY
+            "return_type": aerospike.MAP_RETURN_KEY,
+            "inverted": False # Optional
         }
 
 .. data:: OP_MAP_GET_BY_INDEX
@@ -1279,7 +1300,8 @@ Note that if "return_type" is not specified in the parameters for a map operatio
 
 .. data:: OP_MAP_GET_BY_INDEX_RANGE
 
-    Return the entries from the map bin starting at the given "index" location and removing "range" items.
+    Return the entries from the map bin starting at the given "index" location and returning "range" items.
+    If ``inverted`` is set to ``True``, return all items outside of the specified range.
 
     .. code-block:: python
 
@@ -1288,7 +1310,8 @@ Note that if "return_type" is not specified in the parameters for a map operatio
             "bin": "my_map",
             "index": 0,
             "val": 2,
-            "return_type": aerospike.MAP_RETURN_KEY_VALUE
+            "return_type": aerospike.MAP_RETURN_KEY_VALUE,
+            "inverted": False # Optional
         }
 
 .. data:: OP_MAP_GET_BY_RANK
@@ -1306,6 +1329,7 @@ Note that if "return_type" is not specified in the parameters for a map operatio
 .. data:: OP_MAP_GET_BY_RANK_RANGE
 
     Return the entries from the map bin that have values with a rank starting at the given "index" and removing "range" items.
+    If ``inverted`` is set to ``True``, return all items outside of the specified range.
 
     .. code-block:: python
 
@@ -1314,7 +1338,8 @@ Note that if "return_type" is not specified in the parameters for a map operatio
             "bin": "my_map",
             "index": 10,
             "val": 2,
-            "return_type": aerospike.MAP_RETURN_KEY_VALUE
+            "return_type": aerospike.MAP_RETURN_KEY_VALUE,
+            "inverted": False # Optional
         }
 
 .. versionchanged:: 2.0.4
