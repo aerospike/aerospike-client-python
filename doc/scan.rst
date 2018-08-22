@@ -36,7 +36,7 @@ Scan Class --- :class:`Scan`
         :class:`list` of records.
 
         :param dict policy: optional :ref:`aerospike_scan_policies`.
-        :param str nodename: optional name of node used to limit the scan to a single node.
+        :param str nodename: optional Node ID of node used to limit the scan to a single node.
 
         :return: a :class:`list` of :ref:`aerospike_record_tuple`.
 
@@ -89,7 +89,7 @@ Scan Class --- :class:`Scan`
         :param callable callback: the function to invoke for each record.
         :param dict policy: optional :ref:`aerospike_scan_policies`.
         :param dict options: the :ref:`aerospike_scan_options` that will apply to the scan.
-        :param str nodename: optional name of node used to limit the scan to a single node.
+        :param str nodename: optional Node ID of node used to limit the scan to a single node.
 
         .. note:: A :ref:`aerospike_record_tuple` is passed as the argument to the callback function.
 
