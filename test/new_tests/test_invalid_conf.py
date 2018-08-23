@@ -52,16 +52,6 @@ class TestInvalidClientConfig(object):
                 })
         assert "Lua user path too long" in err.value.msg
 
-    def test_lua_sys_path_too_long(self):
-        with pytest.raises(e.ParamError) as err:
-            client = aerospike.client(
-                {
-                    'hosts': [
-                        ("localhost", 3000)],
-                    'lua': {'system_path': 'a' * 256}
-                })
-        assert "Lua system path too long" in err.value.msg
-
     def test_non_callable_serializer(self):
         with pytest.raises(e.ParamError) as err:
             client = aerospike.client(
