@@ -193,7 +193,6 @@ class TestMapValuesIndex(object):
         err_code = err_info.value.code
         assert err_code == AerospikeStatus.AEROSPIKE_ERR_PARAM
 
-    @pytest.mark.xfail()
     @pytest.mark.parametrize("idx_val", (None, "a", ()))
     def test_mapvaluesindex_with_invalid_idx_values(self, idx_val):
 

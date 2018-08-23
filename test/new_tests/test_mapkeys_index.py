@@ -212,17 +212,16 @@ class TestMapKeysIndex(object):
                 'test_string_map_index', {}),
             ('test', 'demo', None, aerospike.INDEX_STRING,
                 'test_string_map_index', {}),
-            # These 3 invalid index types, end up getting
-            # translated to strings
-            pytest.mark.xfail(
-                              ('test', 'demo', 'string_map', None,
-                               'test_string_map_index', {})),
-            pytest.mark.xfail(
-                              ('test', 'demo', 'string_map', 100,
-                               'test_string_map_index', {})),
-            pytest.mark.xfail(
-                              ('test', 'demo', 'string_map', 'numeric',
-                               'test_string_map_index', {})),
+
+            ('test', 'demo', 'string_map', None,
+                'test_string_map_index', {}),
+
+            ('test', 'demo', 'string_map', (),
+                'test_string_map_index', {}),
+
+            ('test', 'demo', 'string_map', 'numeric',
+                'test_string_map_index', {}),
+
             ('test', 'demo', 'string_map', aerospike.INDEX_STRING, None, {}),
             ('test', 'demo', 'string_map', aerospike.INDEX_STRING, 15, {}),
             ('test', 'demo', 'string_map', aerospike.INDEX_STRING,
@@ -236,7 +235,7 @@ class TestMapKeysIndex(object):
             'Set is int',
             'Bin is None',
             'Index type is None',
-            'Index value is invalid',
+            'Index value is tuple',
             'Index type is string',
             'index name is None',
             'Index name is wrong type',
