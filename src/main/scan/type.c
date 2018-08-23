@@ -35,9 +35,10 @@
  ******************************************************************************/
 
 PyDoc_STRVAR(foreach_doc,
-"foreach(callback[, policy[, options]])\n\
+"foreach(callback[, policy[, options [, nodename]])\n\
 \n\
-Invoke the callback function for each of the records streaming back from the scan.");
+Invoke the callback function for each of the records streaming back from the scan. If provided \
+nodename should be the Node ID of a node to limit the scan to.");
 
 PyDoc_STRVAR(select_doc,
 "select(bin1[, bin2[, bin3..]])\n\
@@ -46,9 +47,10 @@ Set a filter on the record bins resulting from results() or foreach(). \
 If a selected bin does not exist in a record it will not appear in the bins portion of that record tuple.");
 
 PyDoc_STRVAR(results_doc,
-"results([policy]) -> list of (key, meta, bins)\n\
+"results([policy [, nodename]) -> list of (key, meta, bins)\n\
 \n\
-Buffer the records resulting from the scan, and return them as a list of records.");
+Buffer the records resulting from the scan, and return them as a list of records.If provided \
+nodename should be the Node ID of a node to limit the scan to.");
 
 
 /*******************************************************************************
