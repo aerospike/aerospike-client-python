@@ -16,18 +16,11 @@
 ################################################################################
 
 from __future__ import print_function
-import errno
+from subprocess import Popen
 import os
 import platform
 import sys
-from distutils.command.build import build
-from setuptools.command.install import install
-from distutils.sysconfig import get_config_vars
 from setuptools import setup, Extension
-from shutil import copytree, copy2
-from subprocess import Popen
-
-
 
 ################################################################################
 # ENVIRONMENT VARIABLES
