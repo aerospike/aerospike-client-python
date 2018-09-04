@@ -34,7 +34,6 @@ class TestBaseClass(object):
         else:
             TestBaseClass.hostlist = TestBaseClass.parse_hosts(
                 config.get('community-edition', 'hosts'))
-        print(TestBaseClass.using_auth)
         return TestBaseClass.hostlist, TestBaseClass.user, TestBaseClass.password
 
     @staticmethod

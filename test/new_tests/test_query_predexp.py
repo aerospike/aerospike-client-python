@@ -292,6 +292,7 @@ class TestQueryPredexp(object):
         ]
         self.query.predexp(predexps)
         results = self.query.results()
+
         assert len(results) == 99
         assert_each_record_bins(results, lambda b: b['positive_i'] != 5)
 
