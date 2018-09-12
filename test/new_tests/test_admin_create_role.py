@@ -17,7 +17,7 @@ except:
 class TestCreateRole(TestBaseClass):
 
     pytestmark = pytest.mark.skipif(
-        TestBaseClass().get_hosts()[1] == None,
+        not TestBaseClass.auth_in_use(),
         reason="No user specified, may be not secured cluster.")
 
     def setup_method(self, method):
@@ -95,6 +95,8 @@ class TestCreateRole(TestBaseClass):
             self.client.admin_query_role("usr-sys-admin-test")
             # role exists, clear it out.
             self.client.admin_drop_role("usr-sys-admin-test")
+            # Give some time for the role removal to take place
+            time.sleep(2)
         except e.InvalidRole:
             pass  # we are good, no such role exists
 

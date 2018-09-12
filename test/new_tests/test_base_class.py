@@ -30,7 +30,13 @@ class TestBaseClass(object):
             if config.has_option('enterprise-edition', 'password'):
                 TestBaseClass.password = config.get(
                     'enterprise-edition', 'password')
-                TestBaseClass.using_auth = True
+
+                # If the password is empty, assume we aren't using authentication
+                if not TestBaseClass.password.strip():
+                    TestBaseClass.password = None
+                    TestBaseClass.user = None
+                else:
+                    TestBaseClass.using_auth = True
         else:
             TestBaseClass.hostlist = TestBaseClass.parse_hosts(
                 config.get('community-edition', 'hosts'))

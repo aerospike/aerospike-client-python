@@ -17,7 +17,7 @@ except:
 class TestCreateUser(TestBaseClass):
 
     pytestmark = pytest.mark.skipif(
-        TestBaseClass().get_hosts()[1] is None,
+        not TestBaseClass.auth_in_use(),
         reason="No user specified, may be not secured cluster.")
 
     def setup_method(self, method):
@@ -363,7 +363,6 @@ class TestCreateUser(TestBaseClass):
         user = "user7"
         password = "user7"
         roles = ['read-write', list_item]
-        print(roles)
         try:
             self.client.admin_drop_user(user, policy)
         except:
@@ -378,7 +377,6 @@ class TestCreateUser(TestBaseClass):
         user = "user7"
         password = "user7"
         roles = ['read-write', "abc" * 50]
-        print(roles)
         try:
             self.client.admin_drop_user(user, policy)
         except:

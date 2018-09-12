@@ -16,7 +16,7 @@ except:
 class TestChangePassword(TestBaseClass):
 
     pytestmark = pytest.mark.skipif(
-        TestBaseClass().get_hosts()[1] is None,
+        not TestBaseClass.auth_in_use(),
         reason="No user specified, may be not secured cluster.")
 
     def setup_method(self, method):
@@ -65,14 +65,13 @@ class TestChangePassword(TestBaseClass):
         config = {
             "hosts": TestChangePassword.hostlist
         }
-        try:
+
+        # Assert that connecting to the server with the old password fails
+        with pytest.raises(
+            (aerospike.exception.InvalidPassword,
+                aerospike.exception.InvalidCredential)):
             self.clientreaduserwrong = aerospike.client(
                 config).connect(user, "aerospike")
-
-        except aerospike.exception.InvalidPassword as exception:
-            assert exception.code == 62
-        except aerospike.exception.ClientError as exception:
-            assert exception.code == -1
 
         self.clientreaduserright = aerospike.client(config).connect(
             user, "newpassword")
@@ -114,14 +113,11 @@ class TestChangePassword(TestBaseClass):
             "hosts": TestChangePassword.hostlist
         }
 
-        try:
+        with pytest.raises(
+            (aerospike.exception.InvalidPassword,
+                aerospike.exception.InvalidCredential)):
             self.clientreaduserwrong = aerospike.client(
                 config).connect(user, "aerospike")
-
-        except aerospike.exception.InvalidPassword as exception:
-            assert exception.code == 62
-        except aerospike.exception.ClientError as exception:
-            assert exception.code == -1
 
         self.clientreaduserright = aerospike.client(config).connect(
             user, "newpassword")
