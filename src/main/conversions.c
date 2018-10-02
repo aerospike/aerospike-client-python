@@ -35,6 +35,7 @@
 #include <aerospike/as_bytes.h>
 #include <aerospike/as_double.h>
 #include <aerospike/as_record_iterator.h>
+#include <aerospike/as_msgpack_ext.h>
 
 #include "conversions.h"
 #include "geo.h"
@@ -474,7 +475,9 @@ as_status pyobject_to_val(AerospikeClient * self, as_error * err, PyObject * py_
 	} else if (Py_None == py_obj) {
 		*val = as_val_reserve(&as_nil);
 	} else if (!strcmp(py_obj->ob_type->tp_name, "aerospike.null")) {
-		*val = (as_val *) &as_nil;
+		*val = (as_val *) as_val_reserve(&as_nil);
+	} else if (!strcmp(py_obj->ob_type->tp_name, "aerospike.null")) {
+		*val = (as_val *) &AS_CMP_WILDCARD;
 	} else {
 		if (aerospike_has_double(self->as) && PyFloat_Check(py_obj)) {
 			double d = PyFloat_AsDouble(py_obj);

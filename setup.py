@@ -289,6 +289,7 @@ setup(
                 'src/main/tls_config.c',
                 'src/main/global_hosts/type.c',
                 'src/main/nullobject/type.c',
+                'src/main/cdt_types/type.c',
             ],
 
             # Compile
