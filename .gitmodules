@@ -1,3 +1,0 @@
-[submodule "modules/aerospike-lua-core"]
-	path = modules/aerospike-lua-core
-	url = https://github.com/aerospike/aerospike-lua-core

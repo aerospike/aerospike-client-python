@@ -16,53 +16,11 @@
 ################################################################################
 
 from __future__ import print_function
-import errno
+from subprocess import Popen
 import os
 import platform
 import sys
-from distutils.command.build import build
-from setuptools.command.install import install
-from distutils.sysconfig import get_config_vars
 from setuptools import setup, Extension
-from shutil import copytree, copy2
-from subprocess import Popen
-
-
-class InstallCommand(install):
-    user_options = install.user_options + [
-        ('lua-system-path=', None, 'Path to the lua system files')
-    ]
-
-    def initialize_options(self):
-        install.initialize_options(self)
-        self.lua_system_path = None
-
-    def finalize_options(self):
-        install.finalize_options(self)
-
-    def run(self):
-        global lua_system_path
-        lua_system_path = self.lua_system_path
-        install.run(self)
-
-
-class BuildCommand(build):
-    user_options = build.user_options + [
-        ('lua-system-path=', None, 'Path to the lua system files')
-    ]
-
-    def initialize_options(self):
-        build.initialize_options(self)
-        self.lua_system_path = None
-
-    def finalize_options(self):
-        build.finalize_options(self)
-
-    def run(self):
-        global lua_system_path
-        lua_system_path = self.lua_system_path
-        build.run(self)
-
 
 ################################################################################
 # ENVIRONMENT VARIABLES
@@ -72,7 +30,7 @@ os.putenv('ARCHFLAGS', '-arch x86_64')
 os.environ['ARCHFLAGS'] = '-arch x86_64'
 AEROSPIKE_C_VERSION = os.getenv('AEROSPIKE_C_VERSION')
 if not AEROSPIKE_C_VERSION:
-    AEROSPIKE_C_VERSION = '4.3.14'
+    AEROSPIKE_C_VERSION = '4.3.17'
 DOWNLOAD_C_CLIENT = os.getenv('DOWNLOAD_C_CLIENT')
 AEROSPIKE_C_HOME = os.getenv('AEROSPIKE_C_HOME')
 PREFIX = None
@@ -86,7 +44,7 @@ CWD = os.path.abspath(os.path.dirname(__file__))
 ################################################################################
 
 
-def resolve_c_client(lua_src_path):
+def resolve_c_client():
     global PREFIX, AEROSPIKE_C_VERSION, DOWNLOAD_C_CLIENT
     global extra_objects, include_dirs
 
@@ -210,43 +168,24 @@ else:
     sys.exit(8)
 
 ################################################################################
-# RESOLVE C CLIENT DEPENDENCY AND LUA SYSTEM PATH
+# RESOLVE C CLIENT DEPENDENCY
 ################################################################################
 
-lua_system_path = ''
 
 
 # If the C client is packaged elsewhere, assume the libraries are available
-lua_src_path = "modules/aerospike-lua-core/src"
 
 if os.environ.get('NO_RESOLVE_C_CLIENT_DEP', None):
     has_c_client = True
     libraries = libraries + ['aerospike']
-    lua_src_path = os.environ.get('AEROSPIKE_LUA_PATH', lua_src_path)
 else:
     has_c_client = False
 
-lua_files = [
-                lua_src_path + '/aerospike.lua',
-                lua_src_path + '/as.lua',
-                lua_src_path + '/stream_ops.lua'
-            ]
-
-for file in lua_files:
-    if not os.path.isfile(file):
-        print("Warning: lua file {} not found, exiting".format(file), file=sys.stderr)
-        sys.exit(4)
-
-
-# If system-path isn't specified this will install relative to sys.exec_prefix
-data_files = [
-    ('aerospike/lua', lua_files)
-]
 
 if not has_c_client:
     if (('build' in sys.argv or 'build_ext' in sys.argv or
          'install' in sys.argv or 'bdist_wheel' in sys.argv)):
-        resolve_c_client(lua_src_path)
+        resolve_c_client()
 
 ################################################################################
 # SETUP
@@ -261,10 +200,6 @@ with open(os.path.join(CWD, 'VERSION')) as f:
     version = f.read()
 
 setup(
-    cmdclass={
-        'build': BuildCommand,
-        'install': InstallCommand,
-    },
     name='aerospike',
     version=version.strip(),
     description='Aerospike Client Library for Python',
@@ -288,14 +223,8 @@ setup(
     # Package Data Files
     zip_safe=False,
     include_package_data=True,
-    package_data={
-        'aerospike': [
-            lua_src_path + '/*.lua',
-        ]
-    },
 
     # Data files
-    data_files=data_files,
     ext_modules=[
         Extension(
             # Extension Name

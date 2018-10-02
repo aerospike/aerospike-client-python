@@ -1070,8 +1070,11 @@ as_status do_val_to_pyobject(AerospikeClient * self, as_error * err, const as_va
 			char * locstr = as_geojson_get(gp);
 			PyObject *py_locstr = PyString_FromString(locstr);
 			PyObject *py_loads = AerospikeGeospatial_DoLoads(py_locstr, err);
-			*py_val = AerospikeGeospatial_New(err, py_loads);
 			Py_DECREF(py_locstr);
+			if (err->code != AEROSPIKE_OK) {
+				break;
+			}
+			*py_val = AerospikeGeospatial_New(err, py_loads);
 			if (py_loads) {
 				Py_DECREF(py_loads);
 			}

@@ -745,24 +745,11 @@ class TestGetPut():
         """
         key = ('test', 'demo', 'put_rec')
         put_record = {
-            'containers_free': [],
-            'containers_used': [
-                {'cluster_id': 'bob',
-                 'container_id': 1,
-                 'port': 4000}
-            ],
-            'list_of_map': [{'test': 'bar'}],
-            'map_of_list': {'fizz': ['b', 'u', 'z', 'z']},
-            'ports_free': [],
-            'ports_unused': [4100, 4200, 4300],
-            'provider_id': u'i-f01fc206'
+            'a' * 50: "unimportant"
         }
 
-        try:
+        with pytest.raises(e.BinNameError):
             self.as_connection.put(key, put_record)
-
-        except e.BinNameError as exception:
-            assert exception.code == 21
 
     def test_edge_put_with_integer_greater_than_maxisze(self):
         """

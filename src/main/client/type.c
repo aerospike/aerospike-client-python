@@ -874,23 +874,11 @@ static int AerospikeClient_Type_Init(AerospikeClient * self, PyObject * args, Py
 	as_config config;
 	as_config_init(&config);
 
-	bool lua_system_path = false;
 	bool lua_user_path = false;
 
 	PyObject * py_lua = PyDict_GetItemString(py_config, "lua");
 	if (py_lua && PyDict_Check(py_lua)) {
 
-		PyObject * py_lua_system_path = PyDict_GetItemString(py_lua, "system_path");
-		if (py_lua_system_path && PyString_Check(py_lua_system_path)) {
-			lua_system_path = true;
-			if (strnlen(PyString_AsString(py_lua_system_path), AS_CONFIG_PATH_MAX_SIZE) >
-			    AS_CONFIG_PATH_MAX_LEN) {
-					error_code = INIT_LUA_SYS_ERR;
-					goto CONSTRUCTOR_ERROR;
-
-			}
-			strcpy(config.lua.system_path, PyString_AsString(py_lua_system_path));
-		}
 
 		PyObject * py_lua_user_path = PyDict_GetItemString(py_lua, "user_path");
 		if (py_lua_user_path && PyString_Check(py_lua_user_path)) {
@@ -901,19 +889,6 @@ static int AerospikeClient_Type_Init(AerospikeClient * self, PyObject * args, Py
 					goto CONSTRUCTOR_ERROR;
 			}
 			strcpy(config.lua.user_path, PyString_AsString(py_lua_user_path));
-		}
-	}
-
-	if (!lua_system_path) {
-		char system_path[AS_CONFIG_PATH_MAX_LEN];
-		strcpy(system_path, "/usr/local/aerospike/lua");
-
-		struct stat info;
-		if (stat(system_path, &info) == 0 && (info.st_mode & S_IFDIR) && (access(system_path, R_OK)) == 0) {
-			strcpy(config.lua.system_path, system_path);
-		}
-		else {
-			config.lua.system_path[0] = '\0';
 		}
 	}
 
