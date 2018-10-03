@@ -86,16 +86,14 @@ PyObject * AerospikeClient_Get_Invoke(
 		goto CLEANUP;
 	}
 
-	// Initialize record
-	as_record_init(rec, 0);
-	// Record initialised successfully.
-	record_initialised = true;
 
 	// Invoke operation
 	Py_BEGIN_ALLOW_THREADS
 	aerospike_key_get(self->as, &err, read_policy_p, &key, &rec);
 	Py_END_ALLOW_THREADS
 	if (err.code == AEROSPIKE_OK) {
+		record_initialised = true;
+
 		if (record_to_pyobject(self, &err, rec, &key, &py_rec) != AEROSPIKE_OK) {
 			goto CLEANUP;
 		}
@@ -121,7 +119,7 @@ CLEANUP:
 		// Destroy key only if it is initialised.
 		as_key_destroy(&key);
 	}
-	if (record_initialised == true) {
+	if (rec && record_initialised) {
 		// Destroy record only if it is initialised.
 		as_record_destroy(rec);
 	}

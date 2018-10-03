@@ -53,6 +53,8 @@ PyObject * AerospikeClient_Select_Invoke(
 	as_policy_read * read_policy_p = NULL;
 	as_key key;
 	as_record * rec = NULL;
+    // It's only safe to free the record if this succeeded.
+	bool select_succeeded = false;
 	char ** bins = NULL;
 
 	// Initialisation flags
@@ -135,15 +137,13 @@ PyObject * AerospikeClient_Select_Invoke(
 		goto CLEANUP;
 	}
 
-	// Initialize record
-	as_record_init(rec, 0);
-
 	// Invoke operation
 	Py_BEGIN_ALLOW_THREADS
 	aerospike_key_select(self->as, &err, read_policy_p, &key, (const char **) bins, &rec);
 	Py_END_ALLOW_THREADS
 
 	if (err.code == AEROSPIKE_OK) {
+		select_succeeded = true;
 		record_to_pyobject(self, &err, rec, &key, &py_rec);
 	}
 	else {
@@ -161,7 +161,9 @@ CLEANUP:
 		as_key_destroy(&key);
 	}
 
-	as_record_destroy(rec);
+	if (rec && select_succeeded) {
+		as_record_destroy(rec);
+	}
 
 	if (err.code != AEROSPIKE_OK) {
 		PyObject * py_err = NULL;
