@@ -103,6 +103,10 @@ static PyObject * AerospikeQuery_Type_New(PyTypeObject * type, PyObject * args, 
 
 	self = (AerospikeQuery *) type->tp_alloc(type, 0);
 
+    if (self) {
+        self->client = NULL;
+    }
+
 	return (PyObject *) self;
 }
 
@@ -182,6 +186,7 @@ static void AerospikeQuery_Type_Dealloc(AerospikeQuery * self)
 	}
 
 	as_query_destroy(&self->query);
+    Py_CLEAR(self->client);
 	Py_TYPE(self)->tp_free((PyObject *) self);
 }
 

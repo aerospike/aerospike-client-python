@@ -80,7 +80,11 @@ static PyObject * AerospikeScan_Type_New(PyTypeObject * type, PyObject * args, P
 
 	self = (AerospikeScan *) type->tp_alloc(type, 0);
 
-	return (PyObject *) self;
+    if (self) {
+        self->client = NULL;
+    }
+
+    return (PyObject *) self;
 }
 
 static int AerospikeScan_Type_Init(AerospikeScan * self, PyObject * args, PyObject * kwds)
@@ -127,6 +131,7 @@ static int AerospikeScan_Type_Init(AerospikeScan * self, PyObject * args, PyObje
 static void AerospikeScan_Type_Dealloc(PyObject * self)
 {
 	as_scan_destroy(&((AerospikeScan *)self)->scan);
+    Py_CLEAR(((AerospikeScan *)self)->client);
 	Py_TYPE(self)->tp_free((PyObject *) self);
 }
 
