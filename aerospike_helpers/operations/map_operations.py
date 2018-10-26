@@ -24,7 +24,7 @@ def map_set_policy(bin_name, policy):
 
     Args:
         bin_name (str): The name of the bin containing the map.
-        policy (dict): The map policy dictionary
+        policy (dict): The map policy dictionary. See: See :ref:`aerospike_map_policies`
     Returns:
         A dictionary usable in operate or operate_ordered. The format of the dictionary
         should be considered an internal detail, and subject to change.
@@ -36,7 +36,7 @@ def map_set_policy(bin_name, policy):
     }
 
 
-def map_put(bin_name, key, value):
+def map_put(bin_name, key, value, map_policy=None):
     """Creates a map_put operation to be used with operate or operate_ordered
 
     The operation allows a user to set the value of an item in the map stored
@@ -46,19 +46,25 @@ def map_put(bin_name, key, value):
         bin_name (str): The name of the bin containing the map.
         key: The key for the map.
         value: The item to store in the map with the corresponding key.
+        map_policy (dict, optional):  Optional map_policy dictionary dictates the type of map to create when it does not exist.
+            The map policy also specifies the mode used when writing items to the map. Defaults to `None`. See :ref:`aerospike_map_policies`
     Returns:
         A dictionary usable in operate or operate_ordered. The format of the dictionary
         should be considered an internal detail, and subject to change.
     """
-    return {
+    op_dict = {
         OP_KEY: aerospike.OP_MAP_PUT,
         BIN_KEY: bin_name,
         KEY_KEY: key,
         VALUE_KEY: value
     }
+    if map_policy is not None:
+        op_dict[POLICY_KEY] = map_policy
+    
+    return op_dict
 
 
-def map_put_items(bin_name, item_dict):
+def map_put_items(bin_name, item_dict, map_policy=None):
     """Creates a map_put_items operation to be used with operate or operate_ordered
 
     The operation allows a user to add or update items in the map stored on the server.
@@ -66,6 +72,8 @@ def map_put_items(bin_name, item_dict):
     Args:
         bin_name (str): The name of the bin containing the map.
         item_dict (dict): A dictionary of key value pairs to be added to the map on the server.
+        map_policy (dict, optional):  Optional map_policy dictionary dictates the type of map to create when it does not exist.
+            The map policy also specifies the mode used when writing items to the map. Defaults to `None`. See :ref:`aerospike_map_policies`
     Returns:
         A dictionary usable in operate or operate_ordered. The format of the dictionary
         should be considered an internal detail, and subject to change.
@@ -76,8 +84,12 @@ def map_put_items(bin_name, item_dict):
         VALUE_KEY: item_dict
     }
 
+    if map_policy is not None:
+        op_dict[POLICY_KEY] = map_policy
+    
+    return op_dict
 
-def map_increment(bin_name, key, amount):
+def map_increment(bin_name, key, amount, map_policy=None):
     """Creates a map_increment operation to be used with operate or operate_ordered
 
     The operation allows a user to increment the value of a value stored in the map on the server.
@@ -86,19 +98,26 @@ def map_increment(bin_name, key, amount):
         bin_name (str): The name of the bin containing the map.
         key: The key for the value to be incremented.
         amount: The amount by which to increment the value stored in map[key]
+        map_policy (dict, optional):  Optional map_policy dictionary dictates the type of map to create when it does not exist.
+            The map policy also specifies the mode used when writing items to the map. Defaults to `None`. See See :ref:`aerospike_map_policies`
     Returns:
         A dictionary usable in operate or operate_ordered. The format of the dictionary
         should be considered an internal detail, and subject to change.
     """
-    return {
+    op_dict =  {
         OP_KEY: aerospike.OP_MAP_INCREMENT,
         BIN_KEY: bin_name,
         KEY_KEY: key,
         VALUE_KEY: amount
     }
 
+    if map_policy is not None:
+        op_dict[POLICY_KEY] = map_policy
+    
+    return op_dict
 
-def map_decrement(bin_name, key, amount):
+
+def map_decrement(bin_name, key, amount, map_policy=None):
     """Creates a map_decrement operation to be used with operate or operate_ordered
 
     The operation allows a user to decrement the value of a value stored in the map on the server.
@@ -107,17 +126,23 @@ def map_decrement(bin_name, key, amount):
         bin_name (str): The name of the bin containing the map.
         key: The key for the value to be decremented.
         amount: The amount by which to decrement the value stored in map[key]
+        map_policy (dict, optional):  Optional map_policy dictionary dictates the type of map to create when it does not exist.
+            The map policy also specifies the mode used when writing items to the map. Defaults to `None`. See See :ref:`aerospike_map_policies`
     Returns:
         A dictionary usable in operate or operate_ordered. The format of the dictionary
         should be considered an internal detail, and subject to change.
     """
-    return {
+    op_dict = {
         OP_KEY: aerospike.OP_MAP_DECREMENT,
         BIN_KEY: bin_name,
         KEY_KEY: key,
         VALUE_KEY: amount
     }
 
+    if map_policy is not None:
+        op_dict[POLICY_KEY] = map_policy
+    
+    return op_dict
 
 def map_size(bin_name):
     """Creates a map_size operation to be used with operate or operate_ordered
