@@ -46,6 +46,14 @@ sudo apt-get install libssl-dev
 sudo apt-get install build-essential python-dev
 ```
 
+### Archlinux
+
+AUR package is available for both Python 2 and 3.
+
+```
+yaourt -S aerospike-client-python
+```
+
 
 ### OS X
 
