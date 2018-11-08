@@ -415,11 +415,6 @@ as_status set_batch_policy(as_policy_batch* batch_policy, PyObject* py_policy) {
 		return status;
 	}
 
-	status = set_optional_bool_property(&batch_policy->use_batch_direct, py_policy, "use_batch_direct");
-	if (status != AEROSPIKE_OK) {
-		return status;
-	}
-
 	status = set_optional_bool_property(&batch_policy->allow_inline, py_policy, "allow_inline");
 	if (status != AEROSPIKE_OK) {
 		return status;

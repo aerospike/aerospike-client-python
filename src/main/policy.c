@@ -737,7 +737,6 @@ as_status pyobject_to_policy_batch(as_error * err, PyObject * py_policy,
 
 	POLICY_SET_FIELD(consistency_level, as_policy_consistency_level);
 	POLICY_SET_FIELD(concurrent, bool);
-	POLICY_SET_FIELD(use_batch_direct, bool);
 	POLICY_SET_FIELD(allow_inline, bool);
 	POLICY_SET_FIELD(send_set_name, bool);
 	POLICY_SET_FIELD(deserialize, bool);

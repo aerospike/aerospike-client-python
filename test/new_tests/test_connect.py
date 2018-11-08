@@ -83,8 +83,7 @@ class TestConnect(object):
         uni = json.dumps(self.connection_config['hosts'][0])
         hostlist = json.loads(uni)
         config = {
-            'hosts': [tuple(hostlist)],
-            'policies': {'use_batch_direct': True}
+            'hosts': [tuple(hostlist)]
         }
         with open_as_connection(config) as client:
             assert client is not None

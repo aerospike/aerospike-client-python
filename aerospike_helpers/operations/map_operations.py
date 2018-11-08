@@ -113,7 +113,7 @@ def map_increment(bin_name, key, amount, map_policy=None):
 
     if map_policy is not None:
         op_dict[POLICY_KEY] = map_policy
-    
+
     return op_dict
 
 
@@ -141,7 +141,7 @@ def map_decrement(bin_name, key, amount, map_policy=None):
 
     if map_policy is not None:
         op_dict[POLICY_KEY] = map_policy
-    
+
     return op_dict
 
 def map_size(bin_name):

@@ -99,7 +99,6 @@ in an in-memory primary index.
 			that has already been reaped by the server.
 			Default: 0 seconds (disabled) for non-TLS connections, 55 seconds for TLS connections.
             * **max_conns_per_node** maximum number of pipeline connections allowed for each node 
-            * **batch_direct** whether to use the batch-direct protocol (default: ``False``, so will use batch-index if available) (**Deprecated**: set 'use_batch_direct' in the batch policy dictionary)
             * **tend_interval** polling interval in milliseconds for tending the cluster (default: 1000)
             * **compression_threshold** compress data for transmission if the object size is greater than a given number of bytes (default: 0, meaning 'never compress') (**Deprecated**, set this in the 'write' policy dictionary)
             * **cluster_name** only server nodes matching this name will be used when determining the cluster
