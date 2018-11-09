@@ -95,6 +95,12 @@ PyObject * AerospikeQuery_Foreach(AerospikeQuery * self, PyObject * args, PyObje
 PyObject * AerospikeQuery_Results(AerospikeQuery * self, PyObject * args, PyObject * kwds);
 
 /**
+ * Execute a UDF in the background. Returns the query id to allow status of the query to be monitored
+ * */
+
+PyObject * AerospikeQuery_ExecuteBackground(AerospikeQuery * self, PyObject * args, PyObject * kwds);
+
+/**
  * Store the Unicode -> UTF8 string converted PyObject into 
  * a pool of PyObjects. So that, they will be decref'ed at later stages
  * without leaving memory trails behind.

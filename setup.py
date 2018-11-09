@@ -272,6 +272,7 @@ setup(
                 'src/main/query/results.c',
                 'src/main/query/select.c',
                 'src/main/query/where.c',
+                'src/main/query/execute_background.c',
                 'src/main/scan/type.c',
                 'src/main/scan/foreach.c',
                 'src/main/scan/results.c',
