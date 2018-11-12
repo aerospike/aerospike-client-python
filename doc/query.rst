@@ -261,6 +261,23 @@ Query Class --- :class:`Query`
             big_records = query.results()
             client.close()
 
+    .. method:: execute_background([, policy])
+
+        Execute a record UDF on records found by the query in the background. This method returns before the query has completed.
+        A UDF must have been added to the query with :meth:`Query.apply` .
+
+        :param dict policy: optional :ref:`aerospike_write_policies`.
+
+        :return: a job ID that can be used with :meth:`aerospike.Client.job_info` to track the status of the ``aerospike.JOB_QUERY`` , as it runs in the background.
+
+        .. code-block:: python
+
+            import aerospike
+            query = client.query('test', 'demo')
+            query.apply('myudfs', 'myfunction', ['a', 1])
+            # This id can be used to monitor the progress of the background query
+            query_id = query.execute_background()
+
 .. _aerospike_query_policies:
 
 Query Policies
