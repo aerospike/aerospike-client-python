@@ -44,7 +44,7 @@ def validate_records(client, keys, validator):
 def clean_test_background(as_connection):
     keys = [(TEST_NS, TEST_SET, i) for i in range(50)]
     for i, key in enumerate(keys):
-        as_connection.put(key, {'number': i}, policy={'exists': aerospike.POLICY_EXISTS_REPLACE})
+        as_connection.put(key, {'number': i})
     yield
 
 class TestQueryApply(object):
