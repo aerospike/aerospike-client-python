@@ -30,6 +30,8 @@
 #include "policy.h"
 #include "macros.h"
 
+#define MAP_WRITE_FLAGS_KEY "map_write_flags"
+
 #define POLICY_INIT(__policy) \
 	as_error_reset(err);\
 if (!py_policy || py_policy == Py_None) {\
@@ -256,7 +258,14 @@ AerospikeConstants aerospike_constants[] = {
 	{ AS_MAP_WRITE_PARTIAL, "MAP_WRITE_PARTIAL"},
 
 	{ AS_LIST_WRITE_NO_FAIL, "LIST_WRITE_NO_FAIL"},
-	{ AS_LIST_WRITE_PARTIAL, "LIST_WRITE_PARTIAL"}
+	{ AS_LIST_WRITE_PARTIAL, "LIST_WRITE_PARTIAL"},
+
+	/* Map write flags post 3.5.0 */
+	{ AS_MAP_WRITE_DEFAULT, "MAP_WRITE_FLAGS_DEFAULT"},
+	{ AS_MAP_WRITE_CREATE_ONLY, "MAP_WRITE_FLAGS_CREATE_ONLY"},
+	{ AS_MAP_WRITE_UPDATE_ONLY, "MAP_WRITE_FLAGS_UPDATE_ONLY"},
+	{ AS_MAP_WRITE_NO_FAIL, "MAP_WRITE_FLAGS_NO_FAIL"},
+	{ AS_MAP_WRITE_PARTIAL, "MAP_WRITE_FLAGS_PARTIAL"}
 };
 
 static
@@ -756,10 +765,27 @@ as_status pyobject_to_map_policy(as_error * err, PyObject * py_policy,
 
 	long map_order = AS_MAP_UNORDERED;
 	long map_write_mode = AS_MAP_UPDATE;
+	uint32_t map_write_flags = AS_MAP_WRITE_DEFAULT;
+
+	MAP_POLICY_SET_FIELD(map_order);
+	PyObject* mode_or_flags = PyDict_GetItemString(py_policy, MAP_WRITE_FLAGS_KEY);
+
+	/*
+	This only works for client >= 3.5.0 and server >= 4.3.0
+	If py_policy["map_write_flags"] is set, we use it
+	otherwise we use py_policy["map_write_mode"]
+	*/
+	if (mode_or_flags) {
+		if (PyInt_Check(mode_or_flags)) {
+			map_write_flags = (uint32_t)PyInt_AsLong(mode_or_flags);
+			as_map_policy_set_flags(policy, map_order, map_write_flags);
+		} else {
+			as_error_update(err, AEROSPIKE_ERR_PARAM, "map write flags must be an integer");
+		}
+		return err->code;
+	}
 
 	MAP_POLICY_SET_FIELD(map_write_mode);
-	MAP_POLICY_SET_FIELD(map_order);
-
 	as_map_policy_set(policy, map_order, map_write_mode);
 
 	return err->code;
