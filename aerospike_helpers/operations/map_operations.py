@@ -78,7 +78,7 @@ def map_put_items(bin_name, item_dict, map_policy=None):
         A dictionary usable in operate or operate_ordered. The format of the dictionary
         should be considered an internal detail, and subject to change.
     """
-    return {
+    op_dict = {
         OP_KEY: aerospike.OP_MAP_PUT_ITEMS,
         BIN_KEY: bin_name,
         VALUE_KEY: item_dict
