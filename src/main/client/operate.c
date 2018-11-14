@@ -686,6 +686,7 @@ PyObject *  AerospikeClient_Operate_Invoke(
 	int i = 0;
 	long operation;
 	long return_type = -1;
+	bool operation_succeeded = false;
 	PyObject * py_rec = NULL;
 	as_record * rec = NULL;
 	as_policy_operate operate_policy;
@@ -729,8 +730,6 @@ PyObject *  AerospikeClient_Operate_Invoke(
 		goto CLEANUP;
 	}
 
-	// Initialize record
-	as_record_init(rec, 0);
 
 	Py_BEGIN_ALLOW_THREADS
 	aerospike_key_operate(self->as, err, operate_policy_p, key, &ops, &rec);
@@ -740,6 +739,9 @@ PyObject *  AerospikeClient_Operate_Invoke(
 		as_error_update(err, err->code, NULL);
 		goto CLEANUP;
 	}
+	/* The op succeeded; it's now safe to free the record */
+	operation_succeeded = true;
+
 	if (rec) {
 		record_to_pyobject(self, err, rec, key, &py_rec);
 	}
@@ -751,7 +753,7 @@ CLEANUP:
 
 	as_vector_destroy(unicodeStrVector);
 
-	if (rec) {
+	if (rec && operation_succeeded) {
 		as_record_destroy(rec);
 	}
 	if (key->valuep) {
@@ -843,6 +845,8 @@ static PyObject *  AerospikeClient_OperateOrdered_Invoke(
 {
 	long operation;
 	long return_type = -1;
+	bool operation_succeeded = false;
+
 	PyObject * py_rec = NULL;
 	as_record * rec = NULL;
 	as_policy_operate operate_policy;
@@ -898,9 +902,6 @@ static PyObject *  AerospikeClient_OperateOrdered_Invoke(
 		goto CLEANUP;
 	}
 
-	// Initialize record
-	as_record_init(rec, 0);
-
 	Py_BEGIN_ALLOW_THREADS
 	aerospike_key_operate(self->as, err, operate_policy_p, key, &ops, &rec);
 	Py_END_ALLOW_THREADS
@@ -910,6 +911,7 @@ static PyObject *  AerospikeClient_OperateOrdered_Invoke(
 		goto CLEANUP;
 	}
 
+	operation_succeeded = true;
 	if (rec) {
 		/* Build the return tuple: (key, meta, bins) */
 		key_to_pyobject(err, key, &py_return_key);
@@ -953,7 +955,7 @@ CLEANUP:
 
 	as_vector_destroy(unicodeStrVector);
 
-	if (rec) {
+	if (rec && operation_succeeded) {
 		as_record_destroy(rec);
 	}
 	if (key->valuep) {

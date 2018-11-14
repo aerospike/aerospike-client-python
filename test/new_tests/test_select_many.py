@@ -189,12 +189,6 @@ class TestSelectMany(object):
         bytearray_pk = bytearray_key[2]
         assert bytearray_pk == bytearray([1, 2, 3])
 
-    def test_with_use_batch_direct_true_argument(self):
-        policies = {'use_batch_direct': True}
-        records = self.as_connection.select_many(self.keys, [], policies)
-        assert isinstance(records, list)
-        assert len(records) == len(self.keys)
-
     def test_with_use_batch_direct_true_in_constructor_false_argument(self):
 
         hostlist, user, password = TestBaseClass.get_hosts()

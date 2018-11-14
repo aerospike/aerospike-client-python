@@ -2950,17 +2950,39 @@ Map Policies
 
 .. object:: policy
 
-    A :class:`dict` of optional map policies, which are applicable to map operations.
+    A :class:`dict` of optional map policies, which are applicable to map operations. Only one of ``map_write_mode`` or ``map_write_flags`` should
+    be provided. ``map_write_mode`` should be used for Aerospike Server versions < `4.3.0` and ``map_write_flags`` should be used for Aerospike server versions
+    greater than or equal to `4.3.0` .
 
     .. hlist::
         :columns: 1
 
-        * **map_write_mode** write mode for the map. Valid values: ``aerospike.MAP_UPDATE``, ``aerospike.MAP_UPDATE_ONLY``, ``aerospike.MAP_CREATE_ONLY``,
-            ``aerospike.MAP_WRITE_PARTIAL`` and ``aerospike.MAP_WRITE_NO_FAIL``.
-            ``aerospike.MAP_WRITE_PARTIAL`` and ``aerospike.MAP_WRITE_NO_FAIL``. require server version 4.3.0 or greater. The values may be or'd together:
-            ``aerospike.MAP_UPDATE_ONLY | aerospike.MAP_WRITE_NO_FAIL``
+        * **map_write_mode** write mode for the map. This should only be used for Server version < 4.3.0 Valid values: ``aerospike.MAP_UPDATE``, ``aerospike.MAP_UPDATE_ONLY``, ``aerospike.MAP_CREATE_ONLY``,
+        * **map_write_flags** Flags to apply to the map operation. This is only valid for Aerospike Server versions >= 4.3.0:
+
+            | Possible values are  ``aerospike.MAP_WRITE_FLAGS_DEFAULT``, ``aerospike.MAP_WRITE_FLAGS_CREATE_ONLY``, ``aerospike.MAP_WRITE_FLAGS_UPDATE_ONLY``,
+            | ``aerospike.MAP_WRITE_FLAGS_PARTIAL`` and ``aerospike.MAP_WRITE_FLAGS_NO_FAIL``. 
+            | The values may be or'd together:
+            | ``aerospike.MAP_WRITE_FLAGS_UPDATE_ONLY | aerospike.MAP_WRITE_FLAGS_NO_FAIL``
+            | `New in version 3.5.0`
+
         * **map_order** ordering to maintain for the map entries. Valid values: ``aerospike.MAP_UNORDERED``, ``aerospike.MAP_KEY_ORDERED``, ``aerospike.MAP_KEY_VALUE_ORDERED``
 
+    Example:
+
+    .. code-block:: python
+
+        # Server >= 4.3.0
+        map_policy = {
+            'map_order': aerospike.MAP_UNORDERED,
+            'map_write_flags': aerospike.MAP_WRITE_FLAGS_CREATE_ONLY
+        }
+
+        # Server < 4.3.0
+        map_policy = {
+            'map_order': aerospike.MAP_UNORDERED,
+            'map_write_mode': aerospike.MAP_CREATE_ONLY
+        }
 
 .. _aerospike_privilege_dict:
 

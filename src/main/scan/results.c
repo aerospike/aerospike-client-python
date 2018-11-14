@@ -144,6 +144,7 @@ CLEANUP:
 	Py_XDECREF(py_ustr);
 
 	if (err.code != AEROSPIKE_OK) {
+		Py_XDECREF(py_results);
 		PyObject * py_err = NULL;
 		error_to_pyobject(&err, &py_err);
 		PyObject *exception_type = raise_exception(&err);

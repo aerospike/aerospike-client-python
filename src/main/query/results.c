@@ -50,30 +50,18 @@ static bool each_result(const as_val * val, void * udata)
 
 	as_error err;
 
-	TRACE();
-
 	PyGILState_STATE gstate;
 	gstate = PyGILState_Ensure();
 
-	TRACE();
-
 	val_to_pyobject(data->client, &err, val, &py_result);
 
-	TRACE();
 
 	if (py_result) {
-		TRACE();
 		PyList_Append(py_results, py_result);
-
-		TRACE();
 		Py_DECREF(py_result);
 	}
-
-	TRACE();
-
 	PyGILState_Release(gstate);
 
-	TRACE();
 	return true;
 }
 
@@ -119,32 +107,25 @@ PyObject * AerospikeQuery_Results(AerospikeQuery * self, PyObject * args, PyObje
 		goto CLEANUP;
 	}
 
-	TRACE();
 	py_results = PyList_New(0);
 	data.py_results = py_results;
 
-	TRACE();
 	PyThreadState * _save = PyEval_SaveThread();
 
-	TRACE();
 	aerospike_query_foreach(self->client->as, &err, query_policy_p, &self->query, each_result, &data);
 
-	TRACE();
 	PyEval_RestoreThread(_save);
 
 CLEANUP:/*??trace()*/
-	TRACE();
 	if (err.code != AEROSPIKE_OK) {
+		Py_XDECREF(py_results);
 		PyObject * py_err = NULL;
 		error_to_pyobject(&err, &py_err);
 		PyObject *exception_type = raise_exception(&err);
 		PyErr_SetObject(exception_type, py_err);
 		Py_DECREF(py_err);
-		TRACE();
 		return NULL;
 	}
-
-	TRACE();
 
 	if (self->query.apply.arglist) {
 		as_arraylist_destroy( (as_arraylist *) self->query.apply.arglist );

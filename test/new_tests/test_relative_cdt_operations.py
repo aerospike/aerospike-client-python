@@ -17,8 +17,11 @@ def get_list_result_from_operation(client, key, operation, binname):
     _, _, result_bins = client.operate(key, [operation])
     return result_bins[binname]
 
+def skip_less_than_430(version):
+    if version < [4, 3]:
+        print(version)
+        pytest.skip("Requires server > 4.3.0 to work")
 
-@pytest.mark.xfail(reason="Requires Aerospike Server 4.3.0 or greater")
 class TestNewRelativeListOperations(object):
 
     @pytest.fixture(autouse=True)
@@ -26,6 +29,7 @@ class TestNewRelativeListOperations(object):
         """
         Setup Method
         """
+        skip_less_than_430(self.server_version)
         self.keys = []
         # INDEXES    0, 1, 2, 3, 4, 05
         # RINDEX     5, 4, 3, 2, 1, 0
@@ -249,7 +253,6 @@ def get_list_result_from_operation(client, key, operation, binname):
     return result_bins[binname]
 
 
-@pytest.mark.xfail(reason="Requires Aerospike Server 4.3.0 or greater")
 class TestNewRelativeMapOperations(object):
 
     @pytest.fixture(autouse=True)
@@ -257,6 +260,9 @@ class TestNewRelativeMapOperations(object):
         """
         Setup Method
         """
+
+        skip_less_than_430(self.server_version)
+
         self.keys = []
         # INDEXES    0, 1, 2, 3, 4, 05
         # RINDEX     5, 4, 3, 2, 1, 0

@@ -99,7 +99,6 @@ in an in-memory primary index.
 			that has already been reaped by the server.
 			Default: 0 seconds (disabled) for non-TLS connections, 55 seconds for TLS connections.
             * **max_conns_per_node** maximum number of pipeline connections allowed for each node 
-            * **batch_direct** whether to use the batch-direct protocol (default: ``False``, so will use batch-index if available) (**Deprecated**: set 'use_batch_direct' in the batch policy dictionary)
             * **tend_interval** polling interval in milliseconds for tending the cluster (default: 1000)
             * **compression_threshold** compress data for transmission if the object size is greater than a given number of bytes (default: 0, meaning 'never compress') (**Deprecated**, set this in the 'write' policy dictionary)
             * **cluster_name** only server nodes matching this name will be used when determining the cluster
@@ -172,6 +171,56 @@ in an in-memory primary index.
     :return: a type representing the server-side type ``as_null``.
 
     .. versionadded:: 2.0.1
+
+
+.. py:function:: CDTWildcard()
+
+    A type representing a wildcard object. This type may only be used as a comparison value in operations.
+    It may not be stored in the database.
+
+    :return: a type representing a wildcard value.
+
+    .. code-block:: python
+
+        import aerospike
+        from aerospike_helpers.operations import list_operations as list_ops
+
+        client = aerospike.client({'hosts': [('localhost', 3000)]}).connect()
+        key = 'test', 'demo', 1
+
+        #  get all values of the form [1, ...] from a list of lists.
+        #  For example if list is [[1, 2, 3], [2, 3, 4], [1, 'a']], this operation will match
+        #  [1, 2, 3] and [1, 'a']
+        operations = [list_ops.list_get_by_value('list_bin', [1, aerospike.CDTWildcard()], aerospike.LIST_RETURN_VALUE)]
+        _, _, bins = client.operate(key, operations)
+
+    .. versionadded:: 3.5.0
+    .. note:: This requires Aerospike Server 4.3.1.3 or greater
+
+
+.. py:function:: CDTInfinite()
+
+    A type representing an infinte value. This type may only be used as a comparison value in operations.
+    It may not be stored in the database.
+
+    :return: a type representing an infinite value.
+
+    .. code-block:: python
+
+        import aerospike
+        from aerospike_helpers.operations import list_operations as list_ops
+
+        client = aerospike.client({'hosts': [('localhost', 3000)]}).connect()
+        key = 'test', 'demo', 1
+
+        #  get all values of the form [1, ...] from a list of lists.
+        #  For example if list is [[1, 2, 3], [2, 3, 4], [1, 'a']], this operation will match
+        #  [1, 2, 3] and [1, 'a']
+        operations = [list_ops.list_get_by_value_range('list_bin', aerospike.LIST_RETURN_VALUE, [1],  [1, aerospike.CDTInfinite()])]
+        _, _, bins = client.operate(key, operations)
+
+    .. versionadded:: 3.5.0
+    .. note:: This requires Aerospike Server 4.3.1.3 or greater
 
 
 .. py:function:: calc_digest(ns, set, key) -> bytearray

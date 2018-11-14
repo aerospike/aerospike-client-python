@@ -35,7 +35,7 @@ static PyObject * AerospikePredicates_Equals(PyObject * self, PyObject * args)
 
 	if (PyArg_ParseTuple(args, "OO:equals", 
 			&py_bin, &py_val) == false) {
-		goto exit;
+		return NULL;
 	}
 
 	if (PyInt_Check(py_val) || PyLong_Check(py_val)) {
@@ -44,7 +44,6 @@ static PyObject * AerospikePredicates_Equals(PyObject * self, PyObject * args)
 		return Py_BuildValue("iiOO", AS_PREDICATE_EQUAL, AS_INDEX_STRING, py_bin, py_val);
 	}
 
-exit:
 	Py_INCREF(Py_None);
 	return Py_None;
 }
@@ -58,7 +57,7 @@ static PyObject * AerospikePredicates_Contains(PyObject * self, PyObject * args)
 
 	if (PyArg_ParseTuple(args, "OOO:equals", 
 				&py_bin, &py_indextype, &py_val) == false) {
-		goto exit;
+		return NULL;
 	}
 
 	if (PyInt_Check(py_indextype)) {
@@ -90,7 +89,7 @@ static PyObject * AerospikePredicates_RangeContains(PyObject * self, PyObject * 
 
 	if (PyArg_ParseTuple(args, "OOOO:equals",
 			&py_bin, &py_indextype, &py_min, &py_max) == false) {
-		goto exit;
+		return NULL;
 	}
 
 	if (PyInt_Check(py_indextype)) {
@@ -118,14 +117,13 @@ static PyObject * AerospikePredicates_Between(PyObject * self, PyObject * args)
 
 	if (PyArg_ParseTuple(args, "OOO:between",
 			&py_bin, &py_min, &py_max) == false) {
-		goto exit;
+		return NULL;
 	}
 
 	if ((PyInt_Check(py_min) || PyLong_Check(py_min)) && (PyInt_Check(py_max) || PyLong_Check(py_max))) {
 		return Py_BuildValue("iiOOO", AS_PREDICATE_RANGE, AS_INDEX_NUMERIC, py_bin, py_min, py_max);
 	}
 
-exit:
 	Py_INCREF(Py_None);
 	return Py_None;
 }
@@ -138,7 +136,7 @@ static PyObject * AerospikePredicates_GeoWithin_GeoJSONRegion(PyObject * self, P
 
 	if (PyArg_ParseTuple(args, "OO|O:geo_within_geojson_region",
 			&py_bin, &py_shape, &py_indexType) == false) {
-		goto exit;
+		return NULL;
 	}
 
 	if (!py_indexType) {
@@ -149,7 +147,6 @@ static PyObject * AerospikePredicates_GeoWithin_GeoJSONRegion(PyObject * self, P
 		return Py_BuildValue("iiOOOO", AS_PREDICATE_RANGE, AS_INDEX_GEO2DSPHERE, py_bin, py_shape, Py_None, py_indexType);
 	}
 
-exit:
 	Py_INCREF(Py_None);
 	return Py_None;
 }
@@ -168,17 +165,16 @@ static PyObject * AerospikePredicates_GeoWithin_Radius(PyObject * self, PyObject
 	as_error err;
 	as_error_init(&err);
 
-	py_geo_object = PyDict_New();
-
 	if (PyArg_ParseTuple(args, "OOOO|O:geo_within_radius",
 			&py_bin, &py_lat, &py_long, &py_radius, &py_indexType) == false) {
-		goto CLEANUP;
+		return NULL;
 	}
 
 	if (!py_indexType) {
 		py_indexType = Py_BuildValue("i", AS_INDEX_TYPE_DEFAULT);
 	}
 
+    py_geo_object = PyDict_New();
 	PyObject *py_circle = PyString_FromString("AeroCircle");
 	PyDict_SetItemString(py_geo_object, "type", py_circle);
 	Py_DECREF(py_circle);
@@ -247,7 +243,7 @@ static PyObject * AerospikePredicates_GeoContains_GeoJSONPoint(PyObject * self, 
 	PyObject * py_indexType = NULL;
 
 	if (PyArg_ParseTuple(args, "OO|O:geo_contains_geojson_point", &py_bin, &py_point, &py_indexType) == false) {
-		goto exit;
+		return NULL;
 	}
 
 	if (!py_indexType) {
@@ -258,7 +254,6 @@ static PyObject * AerospikePredicates_GeoContains_GeoJSONPoint(PyObject * self, 
 		return Py_BuildValue("iiOOOO", AS_PREDICATE_RANGE, AS_INDEX_GEO2DSPHERE, py_bin, py_point, Py_None, py_indexType);
 	}
 
-exit:
 	Py_INCREF(Py_None);
 	return Py_None;
 }
@@ -276,17 +271,16 @@ static PyObject * AerospikePredicates_GeoContains_Point(PyObject * self, PyObjec
 	as_error err;
 	as_error_init(&err);
 
-	py_geo_object = PyDict_New();
-
 	if (PyArg_ParseTuple(args, "OOO|O:geo_contains_point",
 			&py_bin, &py_lat, &py_long, &py_indexType) == false) {
-		goto CLEANUP;
+		return NULL;
 	}
 
 	if (!py_indexType) {
 		py_indexType = Py_BuildValue("i", AS_INDEX_TYPE_DEFAULT);
 	}
 
+    py_geo_object = PyDict_New();
 	PyObject *py_point = PyString_FromString("Point");
 	PyDict_SetItemString(py_geo_object, "type", py_point);
 	Py_DECREF(py_point);

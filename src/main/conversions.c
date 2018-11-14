@@ -35,12 +35,14 @@
 #include <aerospike/as_bytes.h>
 #include <aerospike/as_double.h>
 #include <aerospike/as_record_iterator.h>
+#include <aerospike/as_msgpack_ext.h>
 
 #include "conversions.h"
 #include "geo.h"
 #include "policy.h"
 #include "serializer.h"
 #include "exceptions.h"
+#include "cdt_types.h"
 
 #define PY_KEYT_NAMESPACE 0
 #define PY_KEYT_SET 1
@@ -474,7 +476,11 @@ as_status pyobject_to_val(AerospikeClient * self, as_error * err, PyObject * py_
 	} else if (Py_None == py_obj) {
 		*val = as_val_reserve(&as_nil);
 	} else if (!strcmp(py_obj->ob_type->tp_name, "aerospike.null")) {
-		*val = (as_val *) &as_nil;
+		*val = (as_val *) as_val_reserve(&as_nil);
+	} else if (AS_Matches_Classname(py_obj, AS_CDT_WILDCARD_NAME)) {
+		*val = (as_val *) as_val_reserve(&as_cmp_wildcard);
+	} else if (AS_Matches_Classname(py_obj, AS_CDT_INFINITE_NAME)) {
+		*val = (as_val *) as_val_reserve(&as_cmp_inf);
 	} else {
 		if (aerospike_has_double(self->as) && PyFloat_Check(py_obj)) {
 			double d = PyFloat_AsDouble(py_obj);
@@ -800,9 +806,13 @@ as_status pyobject_to_astype_write(AerospikeClient * self, as_error * err, PyObj
 		if (err->code == AEROSPIKE_OK) {
 			*val = (as_val *) map;
 		}
-	} else if (!strcmp(py_value->ob_type->tp_name, "aerospike.null")) {
+	} else if (AS_Matches_Classname(py_value, "aerospike.null")) {
 		*val = (as_val *) &as_nil;
-	} else {
+	} else if (AS_Matches_Classname(py_value, AS_CDT_WILDCARD_NAME)) {
+		*val = (as_val *) as_val_reserve(&as_cmp_wildcard);
+	} else if (AS_Matches_Classname(py_value, AS_CDT_INFINITE_NAME)) {
+		*val = (as_val *) as_val_reserve(&as_cmp_inf);
+	}else {
 		if (aerospike_has_double(self->as) && PyFloat_Check(py_value)) {
 			double d = PyFloat_AsDouble(py_value);
 			*val = (as_val *) as_double_new(d);

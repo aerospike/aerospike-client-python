@@ -31,6 +31,7 @@
 #include "serializer.h"
 #include "module_functions.h"
 #include "nullobject.h"
+#include "cdt_types.h"
 
 PyObject *py_global_hosts;
 int counter = 0xA7000000;
@@ -93,7 +94,7 @@ AerospikeConstants operator_constants[] = {
 MOD_INIT(aerospike)
 {
 
-	const char version[8] = "3.4.2";
+	const char version[8] = "3.5.0";
 	// Makes things "thread-safe"
 	PyEval_InitThreads();
 	int i = 0;
@@ -150,6 +151,14 @@ MOD_INIT(aerospike)
 	PyTypeObject * null_object = AerospikeNullObject_Ready();
 	Py_INCREF(null_object);
 	PyModule_AddObject(aerospike, "null", (PyObject *) null_object);
+
+	PyTypeObject * wildcard_object = AerospikeWildcardObject_Ready();
+	Py_INCREF(wildcard_object);
+	PyModule_AddObject(aerospike, "CDTWildcard", (PyObject *) wildcard_object);
+
+	PyTypeObject * infinite_object = AerospikeInfiniteObject_Ready();
+	Py_INCREF(infinite_object);
+	PyModule_AddObject(aerospike, "CDTInfinite", (PyObject *) infinite_object);
 
 	return MOD_SUCCESS_VAL(aerospike);
 }

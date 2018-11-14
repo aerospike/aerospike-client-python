@@ -30,7 +30,7 @@ os.putenv('ARCHFLAGS', '-arch x86_64')
 os.environ['ARCHFLAGS'] = '-arch x86_64'
 AEROSPIKE_C_VERSION = os.getenv('AEROSPIKE_C_VERSION')
 if not AEROSPIKE_C_VERSION:
-    AEROSPIKE_C_VERSION = '4.3.17'
+    AEROSPIKE_C_VERSION = '4.3.20'
 DOWNLOAD_C_CLIENT = os.getenv('DOWNLOAD_C_CLIENT')
 AEROSPIKE_C_HOME = os.getenv('AEROSPIKE_C_HOME')
 PREFIX = None
@@ -272,6 +272,7 @@ setup(
                 'src/main/query/results.c',
                 'src/main/query/select.c',
                 'src/main/query/where.c',
+                'src/main/query/execute_background.c',
                 'src/main/scan/type.c',
                 'src/main/scan/foreach.c',
                 'src/main/scan/results.c',
@@ -289,6 +290,7 @@ setup(
                 'src/main/tls_config.c',
                 'src/main/global_hosts/type.c',
                 'src/main/nullobject/type.c',
+                'src/main/cdt_types/type.c',
             ],
 
             # Compile

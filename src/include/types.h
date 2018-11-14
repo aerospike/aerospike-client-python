@@ -39,6 +39,14 @@ typedef struct {
 
 typedef struct {
 	PyObject_HEAD
+} AerospikeCDTWildcardObject;
+
+typedef struct {
+	PyObject_HEAD
+} AerospikeCDTInfObject;
+
+typedef struct {
+	PyObject_HEAD
 	aerospike * as;
 	int shm_key;
 	int ref_cnt;

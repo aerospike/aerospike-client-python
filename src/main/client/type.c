@@ -1047,7 +1047,6 @@ static int AerospikeClient_Type_Init(AerospikeClient * self, PyObject * args, Py
 
 	as_policies_init(&config.policies);
 	//Set default value of use_batch_direct
-	config.policies.batch.use_batch_direct = false;
 
 	PyObject * py_policies = PyDict_GetItemString(py_config, "policies");
 	if (py_policies && PyDict_Check(py_policies)) {
@@ -1167,13 +1166,6 @@ static int AerospikeClient_Type_Init(AerospikeClient * self, PyObject * args, Py
 			config.thread_pool_size = PyInt_AsLong(py_thread_pool_size);
 		}
 
-		// This does not match documentation (wrong name and location in dict),
-		//  but leave it for now for customers who may be using it
-		PyObject * py_use_batch_direct = PyDict_GetItemString(py_policies, "use_batch_direct");
-		if (py_use_batch_direct && PyBool_Check(py_use_batch_direct)) {
-			config.policies.batch.use_batch_direct = PyInt_AsLong(py_use_batch_direct);
-		}
-
 		/*
 		 * Generation policy is removed from constructor.
 		 */
@@ -1222,11 +1214,6 @@ static int AerospikeClient_Type_Init(AerospikeClient * self, PyObject * args, Py
 		config.max_conns_per_node = PyInt_AsLong(py_max_conns);
 	}
 
-	// batch_direct
-	PyObject * py_batch_direct = PyDict_GetItemString(py_config, "batch_direct");
-	if (py_batch_direct && PyBool_Check(py_batch_direct)) {
-		config.policies.batch.use_batch_direct = PyInt_AsLong(py_batch_direct);
-	}
 
 	//conn_timeout_ms
 	PyObject * py_connect_timeout = PyDict_GetItemString(py_config, "connect_timeout");

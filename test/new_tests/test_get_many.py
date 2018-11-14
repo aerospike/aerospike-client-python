@@ -185,22 +185,6 @@ class TestGetMany():
         bytearray_pk = bytearray_key[2]
         assert bytearray_pk == bytearray([1, 2, 3])
 
-    def test_pos_get_many_with_use_batch_direct(self):
-
-        hostlist, user, password = TestBaseClass.get_hosts()
-        config = {'policies': {'batch': {'use_batch_direct': True}}}
-        client_batch_direct = TestBaseClass.get_new_connection(add_config=config)
-
-        records = client_batch_direct.get_many(self.keys)
-
-        assert isinstance(records, list)
-        assert len(records) == 6
-        assert Counter([x[0][2] for x in records]) == Counter([0, 1, 2, 3,
-                                                               4, 'float_value'])
-        assert records[5][2] == {'float_value': 4.3}
-
-        client_batch_direct.close()
-
     def test_pos_get_many_with_constructor_batch_direct_and_method_arg(self):
         '''
         This sets use batch_direct to true in the constructor
