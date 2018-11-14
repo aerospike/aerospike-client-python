@@ -213,3 +213,26 @@ class TestMapWriteFlags(object):
         assert 'new1' not in map_bin
         assert 'new2' not in map_bin
 
+
+    def test_non_int_write_flag_raises_exception(self):
+        skip_less_than_430(self.server_version)
+        key = 'test', 'write_flags', 1
+        self.keys.append(key)
+        self.as_connection.put(key, {'map': {'existing': 'old'}})
+
+        map_policy = {
+            'map_write_flags': "waving flag"
+        }
+        ops = [
+            map_ops.map_put_items(
+                'map',
+                {
+                    'existing': 'new',
+                    'new1': 'new1',
+                    'new2': 'new2'
+                }, 
+                map_policy=map_policy),
+        ]
+
+        with pytest.raises(e.ParamError):
+            self.as_connection.operate(key, ops)
