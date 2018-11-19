@@ -63,8 +63,6 @@ struct exceptions {
 	PyObject *RecordExistsError;
 	PyObject *RecordTooBig;
 	PyObject *RecordBusy;
-	PyObject *BinExistsError;
-	PyObject *BinNotFound;
 	PyObject *BinIncompatibleType;
 
 	//Index exceptions
