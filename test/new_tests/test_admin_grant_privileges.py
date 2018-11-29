@@ -32,7 +32,8 @@ class TestGrantPrivileges(TestBaseClass):
 
         try:
             self.client.admin_drop_role("usr-sys-admin-test")
-        except:
+            time.sleep(1)
+        except e.InvalidRole:
             pass
         self.client.admin_create_role("usr-sys-admin-test",
                                       [{"code": aerospike.PRIV_USER_ADMIN},
@@ -45,7 +46,11 @@ class TestGrantPrivileges(TestBaseClass):
         Teardown method
         """
 
-        self.client.admin_drop_role("usr-sys-admin-test")
+        try:
+            self.client.admin_drop_role("usr-sys-admin-test")
+            time.sleep(1)
+        except e.InvalidRole:
+            pass
         self.client.close()
 
     def test_admin_grant_privileges_no_parameters(self):

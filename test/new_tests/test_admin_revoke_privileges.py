@@ -31,19 +31,23 @@ class TestRevokePrivilege(TestBaseClass):
         self.client = aerospike.client(config).connect(user, password)
         try:
             self.client.admin_drop_role("usr-sys-admin-test")
-        except:
+            time.sleep(1)
+        except e.InvalidRole:
             pass
         self.client.admin_create_role("usr-sys-admin-test",
                                       [{"code": aerospike.PRIV_USER_ADMIN},
                                        {"code": aerospike.PRIV_SYS_ADMIN}])
+        time.sleep(1)
         self.delete_users = []
 
     def teardown_method(self, method):
         """
         Teardown method
         """
-
-        self.client.admin_drop_role("usr-sys-admin-test")
+        try:
+            self.client.admin_drop_role("usr-sys-admin-test")
+        except e.InvalidRole:
+            pass
         self.client.close()
 
     def test_admin_revoke_privileges_no_parameters(self):
