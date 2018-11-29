@@ -62,11 +62,8 @@ class TestQueryUser(TestBaseClass):
 
     def test_query_user_without_any_parameters(self):
 
-        with pytest.raises(TypeError) as typeError:
+        with pytest.raises(TypeError):
             self.client.admin_query_user()
-
-        assert "Required argument 'user' (pos 1) not found" in str(
-            typeError.value)
 
     def test_query_user_with_proper_parameters(self):
 

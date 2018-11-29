@@ -62,11 +62,8 @@ class TestRevokeRoles(TestBaseClass):
 
     def test_revoke_roles_without_any_parameters(self):
 
-        with pytest.raises(TypeError) as typeError:
+        with pytest.raises(TypeError):
             self.client.admin_revoke_roles()
-
-        assert "Required argument 'user' (pos 1) not found" in str(
-            typeError.value)
 
     def test_revoke_roles_with_proper_parameters(self):
 

@@ -57,11 +57,8 @@ class TestGrantPrivileges(TestBaseClass):
         """
             Grant privileges with no parameters
         """
-        with pytest.raises(TypeError) as typeError:
+        with pytest.raises(TypeError):
             self.client.admin_grant_privileges()
-
-        assert "Required argument 'role' (pos 1) not found" in str(
-            typeError.value)
 
     def test_admin_grant_privileges_positive(self):
         """

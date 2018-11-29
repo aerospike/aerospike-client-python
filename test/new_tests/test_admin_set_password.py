@@ -2,6 +2,7 @@
 
 import pytest
 import sys
+import time
 from .test_base_class import TestBaseClass
 from aerospike import exception as e
 
@@ -29,11 +30,17 @@ class TestSetPassword(TestBaseClass):
         self.client = aerospike.client(config).connect(user, password)
         try:
             self.client.admin_drop_user("testsetpassworduser")
-        except:
+            time.sleep(2)
+        except e.InvalidUser:
             pass
-        self.client.admin_create_user(
-            "testsetpassworduser", "aerospike", ["read"], {})
 
+        try:
+            self.client.admin_create_user(
+                "testsetpassworduser", "aerospike", ["read"], {})
+        except e.UserExistsError:
+            pass
+
+        time.sleep(2)
         self.delete_users = []
 
     def teardown_method(self, method):
@@ -41,8 +48,11 @@ class TestSetPassword(TestBaseClass):
         Teardown method
         """
 
-        self.client.admin_drop_user("testsetpassworduser")
-
+        try:
+            self.client.admin_drop_user("testsetpassworduser")
+            time.sleep(2)
+        except e.InvalidUser:
+            pass
         self.client.close()
 
     def test_set_password_without_any_parameters(self):
