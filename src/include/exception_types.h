@@ -115,9 +115,9 @@ struct server_exceptions_struct {
 	int server_exceptions_codes[10];
 };
 struct record_exceptions_struct {
-	PyObject * *record_exceptions[10];
-	char * record_exceptions_name[10];
-	int record_exceptions_codes[10];
+	PyObject * *record_exceptions[8];
+	char * record_exceptions_name[8];
+	int record_exceptions_codes[8];
 };
 
 struct index_exceptions_struct {
