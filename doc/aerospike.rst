@@ -74,7 +74,12 @@ in an in-memory primary index.
                 * **max_nodes** maximum number of nodes allowed. Pad so new nodes can be added without configuration changes (default: 16)
                 * **max_namespaces** similarly pad (default: 8)
                 * **takeover_threshold_sec** take over tending if the cluster hasn't been checked for this many seconds (default: 30)
-                * **shm_key** explicitly set the shm key for this client. If **use_shared_connection** is not set, or set to `False`, the user must provide a value for this field in order for shared memory to work correctly. If , and only if, **use_shared_connection** is set to `True`, the key will be implicitly evaluated per unique hostname, and can be inspected with :meth:`~aerospike.Client.shm_key` . It is still possible to specify a key when using **use_shared_connection** = `True`. (default: 0xA7000000)
+                * **shm_key**
+                    | explicitly set the shm key for this client.
+                    | If **use_shared_connection** is not set, or set to `False`, the user must provide a value for this field in order for shared memory to work correctly.
+                    | If , and only if, **use_shared_connection** is set to `True`, the key will be implicitly evaluated per unique hostname, and can be inspected with :meth:`~aerospike.Client.shm_key` .
+                    | It is still possible to specify a key when using **use_shared_connection** = `True`.
+                    | (default: 0xA8000000)
             * **use_shared_connection** :class:`bool` indicating whether this instance should share its connection to the Aerospike cluster with other client instances in the same process. (default: ``False``)
             * **tls** a :class:`dict` of optional TLS configuration parameters. **TLS usage requires Aerospike Enterprise Edition**
                 * **enable** a :class:`bool` indicating whether tls should be enabled or not. Default: ``False``
@@ -102,6 +107,16 @@ in an in-memory primary index.
             * **tend_interval** polling interval in milliseconds for tending the cluster (default: 1000)
             * **compression_threshold** compress data for transmission if the object size is greater than a given number of bytes (default: 0, meaning 'never compress') (**Deprecated**, set this in the 'write' policy dictionary)
             * **cluster_name** only server nodes matching this name will be used when determining the cluster
+            * **rack_id**
+                | An integer. Rack where this client instance resides.
+                | **rack_aware** and **POLICY_REPLICA_PREFER_RACK** and server rack configuration must also be set to enable this functionality.
+                | Default 0.
+            * **rack_aware**
+                | Boolean. Track server rack data.
+                | This field is useful when directing read commands to the server node that contains the key and exists on the same rack as the client.
+                | This serves to lower cloud provider costs when nodes are distributed across different racks/data centers.
+                | **rack_id** and **POLICY_REPLICA_PREFER_RACK** and server rack configuration must also be set to enable this functionality.
+                | Default False
 
     :return: an instance of the :py:class:`aerospike.Client` class.
 
