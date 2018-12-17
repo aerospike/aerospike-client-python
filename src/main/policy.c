@@ -128,6 +128,7 @@ AerospikeConstants aerospike_constants[] = {
 	{ AS_POLICY_REPLICA_MASTER              ,   "POLICY_REPLICA_MASTER" },
 	{ AS_POLICY_REPLICA_ANY                 ,   "POLICY_REPLICA_ANY" },
 	{ AS_POLICY_REPLICA_SEQUENCE            ,   "POLICY_REPLICA_SEQUENCE" },
+	{ AS_POLICY_REPLICA_PREFER_RACK         ,   "POLICY_REPLICA_PREFER_RACK" },
 	{ AS_POLICY_CONSISTENCY_LEVEL_ONE       ,   "POLICY_CONSISTENCY_ONE" },
 	{ AS_POLICY_CONSISTENCY_LEVEL_ALL       ,   "POLICY_CONSISTENCY_ALL" },
 	{ AS_POLICY_COMMIT_LEVEL_ALL            ,   "POLICY_COMMIT_LEVEL_ALL" },
@@ -750,6 +751,7 @@ as_status pyobject_to_policy_batch(as_error * err, PyObject * py_policy,
 	POLICY_SET_FIELD(send_set_name, bool);
 	POLICY_SET_FIELD(deserialize, bool);
 	POLICY_SET_FIELD(linearize_read, bool);
+	POLICY_SET_FIELD(replica, as_policy_replica);
 
 	// Update the policy
 	POLICY_UPDATE();

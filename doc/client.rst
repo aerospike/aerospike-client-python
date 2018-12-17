@@ -2878,6 +2878,8 @@ Batch Policies
             | Default: ``False``
         * **consistency_level** one of the ``aerospike.POLICY_CONSISTENCY_*`` values such as :data:`aerospike.POLICY_CONSISTENCY_ONE`
             | Default: ``aerospike.POLICY_CONSISTENCY_ONE``
+        * **replica** one of the ``aerospike.POLICY_REPLICA_*`` values such as :data:`aerospike.POLICY_REPLICA_MASTER`
+            | Default: ``aerospike.POLICY_REPLICA_SEQUENCE``
         * **concurrent** :class:`bool` Determine if batch commands to each server are run in parallel threads. Default `False`
         * **allow_inline** :class:`bool` . Allow batch to be processed immediately in the server's receiving thread when the server deems it to be appropriate.  If `False`, the batch will always be processed in separate transaction threads.  This field is only relevant for the new batch index protocol. Default `True`.
         * **send_set_name** :class:`bool` Send set name field to server for every key in the batch for batch index protocol. This is only necessary when authentication is enabled and security roles are defined on a per set basis. Default: `False`

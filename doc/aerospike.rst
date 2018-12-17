@@ -1490,6 +1490,12 @@ Specifies which partition replica to read from.
 
     Distribute reads across nodes containing key's master and replicated partition in round-robin fashion. Currently restricted to master and one prole.
 
+.. data:: POLICY_REPLICA_PREFER_RACK
+
+	Try node on the same rack as the client first.  If there are no nodes on the same rack, use POLICY_REPLICA_SEQUENCE instead.
+
+    **rack_aware** and **rack_id** must be set in the config argument of the client constructor in order to enable this functionality
+
 .. rubric:: Retry Policy Options
 
 Specifies the behavior of failed operations.
