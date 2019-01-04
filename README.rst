@@ -91,21 +91,6 @@ using an outdated ``pip``.
 Versions of ``pip`` older than 7.0.0 should be upgraded, as well as versions of
 ``setuptools`` older than 18.0.0.
 
-Lua files
-~~~~~~~~~~
-
-The system .lua files used for client side aggregation will be installed.
-By default pip will install the .lua files in a subdirectory named `aerospike/lua/` inside of the Python
-installations directory for platform specific files. The location of the files can be found by running:
-
-``pip show -f aerospike``
-
-
-**Note** If the .lua files are stored somewhere besides `/usr/local/aerospike/lua`. and you wish to perform Stream UDF operations it will be necessary to specify the locations of the system modules as a configuration parameter to the Aerospike client constructor:
-
-    config = {'hosts': [('127.0.0.1', 3000)], 'lua': {'system_path': '/path/to/lua'} ...}
-    my_client = aerospike.client(config)
-
 
 OS X Installation
 ~~~~~~~~~~~~~~~~~~
