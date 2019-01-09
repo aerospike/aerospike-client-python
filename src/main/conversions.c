@@ -482,7 +482,7 @@ as_status pyobject_to_val(AerospikeClient * self, as_error * err, PyObject * py_
 	} else if (AS_Matches_Classname(py_obj, AS_CDT_INFINITE_NAME)) {
 		*val = (as_val *) as_val_reserve(&as_cmp_inf);
 	} else {
-		if (aerospike_has_double(self->as) && PyFloat_Check(py_obj)) {
+		if (PyFloat_Check(py_obj)) {
 			double d = PyFloat_AsDouble(py_obj);
 			*val = (as_val *) as_double_new(d);
 		} else {
@@ -651,7 +651,7 @@ as_status pyobject_to_record(AerospikeClient * self, as_error * err, PyObject * 
 			} else if (!strcmp(value->ob_type->tp_name, "aerospike.null")) {
 				ret_val = as_record_set_nil(rec, name);
 			} else {
-				if (aerospike_has_double(self->as) && PyFloat_Check(value)) {
+				if (PyFloat_Check(value)) {
 					double val = PyFloat_AsDouble(value);
 					ret_val = as_record_set_double(rec, name, val);
 				} else {
@@ -813,7 +813,7 @@ as_status pyobject_to_astype_write(AerospikeClient * self, as_error * err, PyObj
 	} else if (AS_Matches_Classname(py_value, AS_CDT_INFINITE_NAME)) {
 		*val = (as_val *) as_val_reserve(&as_cmp_inf);
 	}else {
-		if (aerospike_has_double(self->as) && PyFloat_Check(py_value)) {
+		if (PyFloat_Check(py_value)) {
 			double d = PyFloat_AsDouble(py_value);
 			*val = (as_val *) as_double_new(d);
 		} else {
@@ -1628,17 +1628,8 @@ void initialize_bin_for_strictypes(AerospikeClient *self, as_error *err, PyObjec
 		Py_XDECREF(py_ustr1);
 	} else if (PyFloat_Check(py_value)) {
 		int64_t val = PyFloat_AsDouble(py_value);
-		if (aerospike_has_double(self->as)) {
-			as_double_init((as_double *) &binop_bin->value, val);
-			binop_bin->valuep = &binop_bin->value;
-		} else {
-			as_bytes *bytes;
-			GET_BYTES_POOL(bytes, static_pool, err);
-			serialize_based_on_serializer_policy(self, SERIALIZER_PYTHON,
-					&bytes, py_value, err);
-			((as_val *) &binop_bin->value)->type = AS_UNKNOWN;
-			binop_bin->valuep = (as_bin_value *) bytes;
-		}
+		as_double_init((as_double *) &binop_bin->value, val);
+		binop_bin->valuep = &binop_bin->value;
 	} else if (PyList_Check(py_value)) {
 		as_list * list = NULL;
 		pyobject_to_list(self, err, py_value, &list, static_pool, SERIALIZER_PYTHON);

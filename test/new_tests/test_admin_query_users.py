@@ -31,15 +31,19 @@ class TestQueryUsers(TestBaseClass):
 
         try:
             self.client.admin_drop_user("example-test")
-        except:
+            time.sleep(1)
+        except e.InvalidUser:
             pass
         policy = {}
         user = "example-test"
         password = "foo2"
         roles = ["read-write", "sys-admin", "read"]
 
-        self.client.admin_create_user(user, password, roles, policy)
-
+        try:
+            self.client.admin_create_user(user, password, roles, policy)
+            time.sleep(1)
+        except e.UserExistsError:
+            pass
         self.delete_users = []
 
     def teardown_method(self, method):

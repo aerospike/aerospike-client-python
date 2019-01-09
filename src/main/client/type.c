@@ -32,7 +32,10 @@
 #include "tls_config.h"
 #include "policy_config.h"
 
-enum {INIT_NO_CONFIG_ERR = 1, INIT_CONFIG_TYPE_ERR, INIT_LUA_USER_ERR,
+
+static int set_rack_aware_config(as_config* conf, PyObject* config_dict);
+
+enum {INIT_SUCCESS, INIT_NO_CONFIG_ERR, INIT_CONFIG_TYPE_ERR, INIT_LUA_USER_ERR,
 	  INIT_LUA_SYS_ERR,  INIT_HOST_TYPE_ERR, INIT_EMPTY_HOSTS_ERR,
 	  INIT_INVALID_ADRR_ERR, INIT_SERIALIZE_ERR, INIT_DESERIALIZE_ERR,
 	  INIT_COMPRESSION_ERR, INIT_POLICY_PARAM_ERR};
@@ -1258,6 +1261,12 @@ static int AerospikeClient_Type_Init(AerospikeClient * self, PyObject * args, Py
  		}
 	}
 
+    if (set_rack_aware_config(&config, py_config) != INIT_SUCCESS) {
+
+        return INIT_POLICY_PARAM_ERR;
+    }
+
+
 	PyObject* py_max_socket_idle = NULL;
 	py_max_socket_idle = PyDict_GetItemString(py_config, "max_socket_idle");
 	if (py_max_socket_idle && PyInt_Check(py_max_socket_idle)) {
@@ -1335,6 +1344,39 @@ CONSTRUCTOR_ERROR:
 	Py_DECREF(py_err);
 	return -1;
 
+}
+
+static int set_rack_aware_config(as_config*conf, PyObject* config_dict) {
+    PyObject* py_config_value;
+    long rack_id;
+    py_config_value = PyDict_GetItemString(config_dict, "rack_aware");
+    if (py_config_value) {
+        if (PyBool_Check(py_config_value)) {
+            conf->rack_aware = PyObject_IsTrue(py_config_value);
+        } else {
+            return INIT_POLICY_PARAM_ERR;  // A non boolean was passed in as the value of rack_aware
+        }
+    }
+
+    py_config_value = PyDict_GetItemString(config_dict, "rack_id");
+    if (py_config_value) {
+        if (PyLong_Check(py_config_value)) {
+            rack_id = PyLong_AsLong(py_config_value);
+        } else if (PyInt_Check(py_config_value)) {
+            rack_id = PyInt_AsLong(py_config_value);
+        } else {
+            return INIT_POLICY_PARAM_ERR;  // A non integer passed in.
+        }
+        if (rack_id == -1 && PyErr_Occurred()) {
+            return INIT_POLICY_PARAM_ERR; // We had overflow.
+        }
+
+        if (rack_id > INT_MAX || rack_id < INT_MIN) {
+            return INIT_POLICY_PARAM_ERR; // Magnitude too great for an integer in C.
+        }
+        conf->rack_id = (int)rack_id;
+    }
+    return INIT_SUCCESS;
 }
 
 static void AerospikeClient_Type_Dealloc(PyObject * self)

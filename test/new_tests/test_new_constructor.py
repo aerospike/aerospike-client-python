@@ -78,3 +78,27 @@ def test_setting_wrong_type():
     config = {'hosts': host, 'policies': policies}
     with pytest.raises(e.ParamError):
         client = aerospike.client(config)
+
+def test_setting_rack_aware_and_rack_id():
+    config = {'hosts': host, 'rack_aware': True, 'rack_id': 0x1234}
+    client = aerospike.client(config)
+    assert client is not None
+
+def test_setting_rack_aware_non_bool():
+    config = {'hosts': host, 'rack_aware': "True"}
+    with pytest.raises(e.ParamError):
+        client = aerospike.client(config)
+
+@pytest.mark.parametrize(
+    "rack_id",
+    (
+        'test_id', # String
+        '3.14', # Float
+        -(1 << 40), # Too small
+        (1 << 32), # Too large
+    )    
+)
+def test_setting_rack_id_wrong_type(rack_id):
+    config = {'hosts': host, 'rack_id': rack_id}
+    with pytest.raises(e.ParamError):
+        client = aerospike.client(config)

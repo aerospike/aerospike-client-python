@@ -51,14 +51,12 @@ PyObject * AerospikeException_New(void)
 	struct record_exceptions_struct record_array = { 
 		{&exceptions_array.RecordKeyMismatch, &exceptions_array.RecordNotFound, &exceptions_array.RecordGenerationError, 
 			&exceptions_array.RecordExistsError, &exceptions_array.RecordTooBig, &exceptions_array.RecordBusy, 
-			&exceptions_array.BinNameError, &exceptions_array.BinExistsError, &exceptions_array.BinNotFound, 
-			&exceptions_array.BinIncompatibleType},
+			&exceptions_array.BinNameError,	&exceptions_array.BinIncompatibleType},
 		{"RecordKeyMismatch", "RecordNotFound", "RecordGenerationError", "RecordExistsError", "RecordTooBig", "RecordBusy", 
-			"BinNameError", "BinExistsError", "BinNotFound", "BinIncompatibleType"},
+			"BinNameError",  "BinIncompatibleType"},
 		{AEROSPIKE_ERR_RECORD_KEY_MISMATCH, AEROSPIKE_ERR_RECORD_NOT_FOUND, AEROSPIKE_ERR_RECORD_GENERATION, 
 			AEROSPIKE_ERR_RECORD_EXISTS, AEROSPIKE_ERR_RECORD_TOO_BIG, AEROSPIKE_ERR_RECORD_BUSY, 
-			AEROSPIKE_ERR_BIN_NAME, AEROSPIKE_ERR_BIN_EXISTS, AEROSPIKE_ERR_BIN_NOT_FOUND, 
-			AEROSPIKE_ERR_BIN_INCOMPATIBLE_TYPE}
+			AEROSPIKE_ERR_BIN_NAME, AEROSPIKE_ERR_BIN_INCOMPATIBLE_TYPE}
 	};
 
 	struct index_exceptions_struct index_array = { 

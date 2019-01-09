@@ -57,11 +57,8 @@ class TestQueryRole(TestBaseClass):
         """
         Query role with no parameters
         """
-        with pytest.raises(TypeError) as typeError:
+        with pytest.raises(TypeError):
             self.client.admin_query_role()
-
-        assert "Required argument 'role' (pos 1) not found" in str(
-            typeError.value)
 
     def test_admin_query_role_positive(self):
         """
