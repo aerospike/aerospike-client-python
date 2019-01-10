@@ -31,40 +31,7 @@
 
 #define MAX_STACK_ALLOCATION 4000
 
-static void
-make_batch_safe_to_free(as_batch* batch, int size);
 
-typedef struct {
-	PyObject** py_recs;
-	AerospikeClient * client;
-	as_error cb_error;
-} LocalData;
-/**
- *******************************************************************************************************
- * This callback will be called with the results with aerospike_batch_get().
- *
- * @param results               An array of n as_batch_read entries
- * @param n                     The number of results from the batch request
- * @param udata                 The return value to be filled with result of
- *                              get_many()
- *
- * Returns boolean value(true or false).
- *******************************************************************************************************
- */
-static bool batch_get_cb(const as_batch_read* results, uint32_t n, void* udata)
-{
-	// Typecast udata back to PyObject
-	LocalData* data = (LocalData *) udata;
-
-	// Lock Python State
-	PyGILState_STATE gstate;
-	gstate = PyGILState_Ensure();
-
-	as_batch_read_results_to_pyobject(&data->cb_error, data->client, results, n, data->py_recs);
-	PyGILState_Release(gstate);
-
-	return data->cb_error.code == AEROSPIKE_OK;
-}
 
 /**
  *******************************************************************************************************
@@ -184,120 +151,7 @@ CLEANUP:
 
 	return py_recs;
 }
-/**
- *******************************************************************************************************
- * This function will get a batch of records from the Aerospike DB.
- *
- * @param err                   as_error object
- * @param self                  AerospikeClient object
- * @param py_keys               The list of keys
- * @param batch_policy_p        as_policy_batch object
- *
- * Returns the record if key exists otherwise NULL.
- *******************************************************************************************************
- */
-static PyObject * batch_get_aerospike_batch_get(as_error *err, AerospikeClient * self, PyObject *py_keys, as_policy_batch * batch_policy_p)
-{
-	PyObject * py_recs = NULL;
 
-	LocalData data;
-	data.client = self;
-	as_batch batch;
-	bool batch_initialised = false;
-
-	data.py_recs = &py_recs;
-	as_error_init(&data.cb_error);
-	as_error_init(err);
-
-	// Convert python keys list to as_key ** and add it to as_batch.keys
-	// keys can be specified in PyList or PyTuple
-	if (py_keys && PyList_Check(py_keys)) {
-		Py_ssize_t size = PyList_Size(py_keys);
-
-
-		as_batch_init(&batch, size);
-		make_batch_safe_to_free(&batch, size);
-		// Batch object initialised
-		batch_initialised = true;
-
-		for ( int i = 0; i < size; i++ ) {
-
-			PyObject * py_key = PyList_GetItem(py_keys, i);
-
-			if (!PyTuple_Check(py_key)) {
-				as_error_update(err, AEROSPIKE_ERR_PARAM, "Key should be a tuple.");
-				goto CLEANUP;
-			}
-
-			pyobject_to_key(err, py_key, as_batch_keyat(&batch, i));
-
-			if (err->code != AEROSPIKE_OK) {
-				goto CLEANUP;
-			}
-		}
-	}
-	else if (py_keys && PyTuple_Check(py_keys)) {
-		Py_ssize_t size = PyTuple_Size(py_keys);
-
-		as_batch_init(&batch, size);
-		make_batch_safe_to_free(&batch, size);
-		// Batch object initialised
-		batch_initialised = true;
-
-		for ( int i = 0; i < size; i++ ) {
-			PyObject * py_key = PyTuple_GetItem(py_keys, i);
-
-			if (!PyTuple_Check(py_key)) {
-				as_error_update(err, AEROSPIKE_ERR_PARAM, "Key should be a tuple.");
-				goto CLEANUP;
-			}
-
-			pyobject_to_key(err, py_key, as_batch_keyat(&batch, i));
-
-			if (err->code != AEROSPIKE_OK) {
-				goto CLEANUP;
-			}
-		}
-	}
-	else {
-		as_error_update(err, AEROSPIKE_ERR_PARAM, "Keys should be specified as a list or tuple.");
-		goto CLEANUP;
-	}
-
-	// Invoke C-client API
-	Py_BEGIN_ALLOW_THREADS
-	aerospike_batch_get(self->as, err, batch_policy_p,
-		&batch, (aerospike_batch_read_callback) batch_get_cb,
-		&data);
-	Py_END_ALLOW_THREADS
-
-CLEANUP:
-	if (batch_initialised == true) {
-		// We should destroy batch object as we are using 'as_batch_init' for initialisation
-		// Also, pyobject_to_key is soing strdup() in case of Unicode. So, object destruction
-		// is necessary.
-		as_batch_destroy(&batch);
-	}
-
-	if (err->code != AEROSPIKE_OK) {
-		PyObject * py_err = NULL;
-		error_to_pyobject(err, &py_err);
-		PyObject *exception_type = raise_exception(err);
-		PyErr_SetObject(exception_type, py_err);
-		Py_DECREF(py_err);
-		return NULL;
-	} else if (data.cb_error.code != AEROSPIKE_OK) {
-		as_error_update(err, data.cb_error.code, data.cb_error.message);
-		PyObject * py_err = NULL;
-		error_to_pyobject(&data.cb_error, &py_err);
-		PyObject *exception_type = raise_exception(&data.cb_error);
-		PyErr_SetObject(exception_type, py_err);
-		Py_DECREF(py_err);
-		return NULL;
-	}
-
-	return py_recs;
-}
 /**
  *******************************************************************************************************
  * This function will checks if latest batch protocol and calls appropriate
@@ -322,7 +176,6 @@ PyObject * AerospikeClient_Get_Many_Invoke(
 	as_error err;
 	as_policy_batch policy;
 	as_policy_batch * batch_policy_p = NULL;
-	bool has_batch_index = false;
 	// Initialize error
 	as_error_init(&err);
 
@@ -343,12 +196,9 @@ PyObject * AerospikeClient_Get_Many_Invoke(
 		goto CLEANUP;
 	}
 
-	has_batch_index = aerospike_has_batch_index(self->as);
-	if (has_batch_index) {
-		py_recs = batch_get_aerospike_batch_read(&err, self, py_keys, batch_policy_p);
-	} else {
-		py_recs = batch_get_aerospike_batch_get(&err, self, py_keys, batch_policy_p);
-	}
+
+	py_recs = batch_get_aerospike_batch_read(&err, self, py_keys, batch_policy_p);
+
 
 CLEANUP:
 	if (err.code != AEROSPIKE_OK) {
@@ -400,21 +250,4 @@ PyObject * AerospikeClient_Get_Many(AerospikeClient * self, PyObject * args, PyO
 
 	// Invoke Operation
 	return AerospikeClient_Get_Many_Invoke(self, py_keys, py_policy);
-}
-
-/*
- * This marks each key in the batch's value pointer as null
- * and sets it to not be freed on as_key_destroy.
- * This is needed so that as_batch_destroy does not try to free
- * any uninitialized data.
- */
-static void
-make_batch_safe_to_free(as_batch* batch, int size) {
-	for (int i = 0; i < size; i++) {
-		as_key* batch_key = as_batch_keyat(batch, i);
-		if (batch_key) {
-			batch_key->valuep = NULL;
-			batch_key->_free = false;
-		}
-	}
 }

@@ -29,14 +29,6 @@
 #include "exceptions.h"
 #include "policy.h"
 
-static void
-make_batch_safe_to_free(as_batch* batch, int size);
-
-typedef struct {
-	PyObject** py_recs;
-	AerospikeClient * client;
-	as_error cb_error;
-} LocalData;
 /**
  *************************************************************************
  * This function will store all the Unicode objects in a pool, created in
@@ -53,27 +45,6 @@ PyObject * store_unicode_bins(UnicodePyObjects *u_obj, PyObject * py_uobj) {
 	}
 	return py_uobj;
 }
-
-/**
- ***********************************************************************
- *
- * Callback method, invoked by aerospike_batch_get_bins
- *
- * *********************************************************************
- **/
-static bool batch_select_cb(const as_batch_read* results, uint32_t n, void* udata)
-{
-	// Typecast udata back to PyObject
-	LocalData *data = (LocalData *) udata;
-	PyGILState_STATE gstate;
-	gstate = PyGILState_Ensure();
-
-	as_batch_read_results_to_pyobject(&data->cb_error, data->client, results, n, data->py_recs);
-	PyGILState_Release(gstate);
-
-	return data->cb_error.code == AEROSPIKE_OK;
-}
-
 
 /**
  *******************************************************************************************************
@@ -184,107 +155,7 @@ CLEANUP:
 
 	return py_recs;
 }
-/**
- *******************************************************************************************************
- * This function will get a batch of records from the Aeropike DB.
- *
- * @param err                   as_error object
- * @param self                  AerospikeClient object
- * @param py_keys               The list of keys
- * @param batch_policy_p        as_policy_batch object
- *
- * Returns the record if key exists otherwise NULL.
- *******************************************************************************************************
- */
-static PyObject * batch_select_aerospike_batch_get(as_error *err, AerospikeClient * self, PyObject *py_keys, as_policy_batch * batch_policy_p, char **filter_bins, Py_ssize_t bins_size)
-{
-	PyObject * py_recs = NULL;
 
-	as_batch batch;
-	bool batch_initialised = false;
-
-	LocalData data;
-	data.py_recs = &py_recs;
-	as_error_init(&data.cb_error);
-	data.client = self;
-
-	// Convert python keys list to as_key ** and add it to as_batch.keys
-	// keys can be specified in PyList or PyTuple
-	if (py_keys && PyList_Check(py_keys)) {
-		Py_ssize_t size = PyList_Size(py_keys);
-
-		as_batch_init(&batch, size);
-		make_batch_safe_to_free(&batch, size);
-
-		// Batch object initialised
-		batch_initialised = true;
-
-		for (int i = 0; i < size; i++) {
-			PyObject * py_key = PyList_GetItem(py_keys, i);
-
-			if (!PyTuple_Check(py_key)) {
-				as_error_update(err, AEROSPIKE_ERR_PARAM, "Key should be a tuple.");
-				goto CLEANUP;
-			}
-
-			pyobject_to_key(err, py_key, as_batch_keyat(&batch, i));
-
-			if (err->code != AEROSPIKE_OK) {
-				goto CLEANUP;
-			}
-		}
-	}
-	else if (py_keys && PyTuple_Check(py_keys)) {
-		Py_ssize_t size = PyTuple_Size(py_keys);
-
-		as_batch_init(&batch, size);
-		make_batch_safe_to_free(&batch, size);
-		// Batch object initialised
-		batch_initialised = true;
-
-		for (int i = 0; i < size; i++) {
-			PyObject * py_key = PyTuple_GetItem(py_keys, i);
-
-			if (!PyTuple_Check(py_key)) {
-				as_error_update(err, AEROSPIKE_ERR_PARAM, "Key should be a tuple.");
-				goto CLEANUP;
-			}
-
-			pyobject_to_key(err, py_key, as_batch_keyat(&batch, i));
-
-			if (err->code != AEROSPIKE_OK) {
-				goto CLEANUP;
-			}
-		}
-	}
-	else {
-		as_error_update(err, AEROSPIKE_ERR_PARAM, "Keys should be specified as a list or tuple.");
-		goto CLEANUP;
-	}
-
-	// Invoke C-client API
-	Py_BEGIN_ALLOW_THREADS
-	aerospike_batch_get_bins(self->as, err, batch_policy_p,
-		&batch, (const char **) filter_bins, bins_size,
-		(aerospike_batch_read_callback) batch_select_cb,
-		&data);
-	Py_END_ALLOW_THREADS
-
-CLEANUP:
-
-	if (data.cb_error.code != AEROSPIKE_OK) {
-		as_error_update(err, data.cb_error.code, data.cb_error.message);
-	}
-
-	if (batch_initialised == true) {
-		// We should destroy batch object as we are using 'as_batch_init' for initialisation
-		// Also, pyobject_to_key is soing strdup() in case of Unicode. So, object destruction
-		// is necessary.
-		as_batch_destroy(&batch);
-	}
-
-	return py_recs;
-}
 /**
  *********************************************************************
  * This function will invoke aerospike_batch_get_bins to get filtered
@@ -311,7 +182,6 @@ PyObject * AerospikeClient_Select_Many_Invoke(
 	as_policy_batch * batch_policy_p = NULL;
 	Py_ssize_t bins_size = 0;
 	char **filter_bins = NULL;
-	bool has_batch_index = false;
 
 	// Unicode object's pool
 	UnicodePyObjects u_objs;
@@ -377,12 +247,8 @@ PyObject * AerospikeClient_Select_Many_Invoke(
 		goto CLEANUP;
 	}
 
-	has_batch_index = aerospike_has_batch_index(self->as);
-	if (has_batch_index) {
-		py_recs = batch_select_aerospike_batch_read(&err, self, py_keys, batch_policy_p, filter_bins, bins_size);
-	} else {
-		py_recs = batch_select_aerospike_batch_get(&err, self, py_keys, batch_policy_p, filter_bins, bins_size);
-	}
+
+	py_recs = batch_select_aerospike_batch_read(&err, self, py_keys, batch_policy_p, filter_bins, bins_size);
 
 CLEANUP:
 
@@ -430,21 +296,4 @@ PyObject * AerospikeClient_Select_Many(AerospikeClient * self, PyObject * args, 
 
 	// Invoke Operation
 	return AerospikeClient_Select_Many_Invoke(self, py_keys, py_bins, py_policy);
-}
-
-/*
- * This marks each key in the batch's value pointer as null
- * and sets it to not be freed on as_key_destroy.
- * This is needed so that as_batch_destroy does not try to free
- * any uninitialized data.
- */
-static void
-make_batch_safe_to_free(as_batch* batch, int size) {
-	for (int i = 0; i < size; i++) {
-		as_key* batch_key = as_batch_keyat(batch, i);
-		if (batch_key) {
-			batch_key->valuep = NULL;
-			batch_key->_free = false;
-		}
-	}
 }
