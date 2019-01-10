@@ -163,7 +163,7 @@ int check_type(AerospikeClient * self, PyObject * py_value, int op, as_error *er
 	if ((!PyInt_Check(py_value) && !PyLong_Check(py_value) && strcmp(py_value->ob_type->tp_name, "aerospike.null")) && (op == AS_OPERATOR_TOUCH)) {
 		as_error_update(err, AEROSPIKE_ERR_PARAM, "Unsupported operand type(s) for touch : only int or long allowed");
 		return 1;
-	} else if ((!PyInt_Check(py_value) && !PyLong_Check(py_value) && (!PyFloat_Check(py_value) || !aerospike_has_double(self->as)) &&
+	} else if ((!PyInt_Check(py_value) && !PyLong_Check(py_value) && (!PyFloat_Check(py_value) ) &&
 				strcmp(py_value->ob_type->tp_name, "aerospike.null")) && op == AS_OPERATOR_INCR) {
 		as_error_update(err, AEROSPIKE_ERR_PARAM, "Unsupported operand type(s) for +: only 'int' allowed");
 		return 1;
