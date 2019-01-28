@@ -57,6 +57,8 @@ def as_connection(request):
             if value is not None:
                 versionlist = value[value.find("build") +
                                     6:value.find("\n")].split(".")
+                version_str = '.'.join(versionlist)
+                request.cls.string_server_version = version_str
                 request.cls.server_version = [int(n) for n in versionlist[:2]]
                 if ((int(versionlist[0]) > 3) or
                    (int(versionlist[0]) == 3 and int(versionlist[1]) >= 7)):
