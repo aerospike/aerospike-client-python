@@ -51,17 +51,17 @@ def as_connection(request):
 
     request.cls.skip_old_server = True
     request.cls.server_version = []
-    versioninfo = as_client.info_all('version')
+    versioninfo = as_client.info_all('build')
     for keys in versioninfo:
         for value in versioninfo[keys]:
             if value is not None:
-                versionlist = value[value.find("build") +
-                                    6:value.find("\n")].split(".")
-                version_str = '.'.join(versionlist)
+                version_str = value.strip()
+                versionlist = version_str.split('.')
                 request.cls.string_server_version = version_str
                 request.cls.server_version = [int(n) for n in versionlist[:2]]
-                if ((int(versionlist[0]) > 3) or
-                   (int(versionlist[0]) == 3 and int(versionlist[1]) >= 7)):
+                if (
+                        (int(versionlist[0]) > 3) or
+                        (int(versionlist[0]) == 3 and int(versionlist[1]) >= 7)):
                     request.cls.skip_old_server = False
 
     request.cls.as_connection = as_client

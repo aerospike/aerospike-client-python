@@ -1,17 +1,18 @@
 # -*- coding: utf-8 -*-
+from __future__ import print_function
 
-import pytest
 import sys
+
+from distutils.version import LooseVersion
+import pytest
 from .as_status_codes import AerospikeStatus
 from .udf_helpers import wait_for_udf_removal, wait_for_udf_to_exist
-from .test_base_class import TestBaseClass
 from aerospike import exception as e
-from packaging import version
 
 aerospike = pytest.importorskip("aerospike")
 try:
     import aerospike
-except:
+except ImportError:
     print("Please install aerospike python client.")
     sys.exit(1)
 
@@ -20,7 +21,7 @@ def is_greater_451(version_str):
     '''
     Is the server version 4.5.1.0-pre or newer
     '''
-    return version.parse(version_str) > version.parse("4.5.1.0pre")
+    return LooseVersion(version_str) >= LooseVersion("4.5.1.0pre")
 
 
 class TestUdfRemove(object):
