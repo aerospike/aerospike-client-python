@@ -1,12 +1,47 @@
-import pytest
 import socket
 import time
 import os
 import sys
+from distutils.version import LooseVersion
+
+import pytest
 from . import invalid_data
 from .test_base_class import TestBaseClass
 aerospike = pytest.importorskip("aerospike")
 
+
+def compare_server_versions(version1, version2):
+    '''
+    Compare two strings version1 and version 2
+
+    Returns:
+    -1 if version1 < version2
+    0 if version1 == version2
+    1 if version1 > version2
+    '''
+    version1_pre = 'pre' in version1
+    version2_pre = 'pre' in version2
+
+    # Remove any suffix and build version of that
+    loose_version1 = LooseVersion(version1.split('-')[0])
+    loose_version2 = LooseVersion(version2.split('-')[0])
+
+    if loose_version1 < loose_version2:
+        return -1
+    elif loose_version1 > loose_version2:
+        return 1
+
+    # Versions without suffix match
+
+    # Both are preleases or neither is a prelease
+    if version1_pre == version2_pre:
+        return 0
+
+    # Version 1 is pre release
+    if version1_pre:
+        return -1
+
+    return 1
 
 def wait_for_port(address, port, interval=0.1, timeout=60):
     """Wait for a TCP / IP port to accept a connection.
