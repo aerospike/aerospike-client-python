@@ -21,7 +21,7 @@ def is_greater_451(version_str):
     '''
     Is the server version 4.5.1.0-pre or newer
     '''
-    return LooseVersion(version_str) >= LooseVersion("4.5.1.0pre")
+    return LooseVersion(version_str) >= LooseVersion("4.5.1")
 
 
 class TestUdfRemove(object):
