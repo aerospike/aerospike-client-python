@@ -53,8 +53,10 @@ class TestQueryUsers(TestBaseClass):
 
         policy = {}
 
-        self.client.admin_drop_user("example-test", policy)
-
+        try:
+            self.client.admin_drop_user("example-test", policy)
+        except:
+            pass
         self.client.close()
 
     def test_query_users_with_proper_parameters(self):

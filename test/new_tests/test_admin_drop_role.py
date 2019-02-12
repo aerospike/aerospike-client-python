@@ -40,7 +40,10 @@ class TestDropRole(TestBaseClass):
         policy = {}
 
         for user in self.delete_users:
-            self.client.admin_drop_user(user, policy)
+            try:
+                self.client.admin_drop_user(user, policy)
+            except:
+                pass
 
         self.client.close()
 
@@ -137,12 +140,14 @@ class TestDropRole(TestBaseClass):
             [{"code": aerospike.PRIV_USER_ADMIN}])
 
         assert status == 0
-
+        time.sleep(3)
         try:
             self.client.admin_drop_role("usr-sys-admin-test", {"timeout": 0.2})
 
         except e.ParamError as exception:
             assert exception.code == -2
             assert exception.msg == 'timeout is invalid'
-
-        self.client.admin_drop_role("usr-sys-admin-test")
+        try:
+            self.client.admin_drop_role("usr-sys-admin-test")
+        except:
+            pass

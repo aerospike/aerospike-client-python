@@ -50,7 +50,10 @@ class TestQueryRole(TestBaseClass):
         """
         Teardown method
         """
-        self.client.admin_drop_role("usr-sys-admin-test")
+        try:
+            self.client.admin_drop_role("usr-sys-admin-test")
+        except:
+            pass
         self.client.close()
 
     def test_admin_query_role_no_parameters(self):
