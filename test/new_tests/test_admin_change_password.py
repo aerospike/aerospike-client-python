@@ -40,7 +40,10 @@ class TestChangePassword(TestBaseClass):
         Teardown method
         """
 
-        self.client.admin_drop_user("testchangepassworduser")
+        try:
+            self.client.admin_drop_user("testchangepassworduser")
+        except:
+            pass
 
         self.client.close()
 

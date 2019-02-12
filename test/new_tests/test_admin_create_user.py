@@ -39,7 +39,10 @@ class TestCreateUser(TestBaseClass):
         policy = {}
 
         for user in self.delete_users:
-            self.client.admin_drop_user(user, policy)
+            try:
+                self.client.admin_drop_user(user, policy)
+            except:
+                pass
 
         self.client.close()
 
