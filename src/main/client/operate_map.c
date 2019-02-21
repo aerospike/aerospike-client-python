@@ -93,7 +93,8 @@
 #define DO_OPERATION()\
 	Py_BEGIN_ALLOW_THREADS\
 	aerospike_key_operate(self->as, &err, operate_policy_p, &key, &ops, &rec);\
-	Py_END_ALLOW_THREADS
+	Py_END_ALLOW_THREADS\
+    if (err.code != AEROSPIKE_OK) { goto CLEANUP;}
 
 #define SETUP_RETURN_VAL()\
 	if (rec && rec->bins.size) {\
