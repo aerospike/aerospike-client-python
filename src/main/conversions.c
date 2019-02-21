@@ -1125,7 +1125,7 @@ as_status as_list_of_map_to_py_tuple_list(AerospikeClient * self, as_error * err
 	}
 
 	*py_list = PyList_New(0);
-	if (!py_list) {
+	if (! *py_list) {
 		return as_error_update(err, AEROSPIKE_ERR_CLIENT, "Failed to allocate memory for list.");
 	}
 
