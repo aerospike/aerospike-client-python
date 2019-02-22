@@ -13,8 +13,8 @@ except:
     print("Please install aerospike python client.")
     sys.exit(1)
 
-
-class TestDropRole(TestBaseClass):
+@pytest.mark.usefixtures("connection_config")
+class TestDropRole(object):
 
     pytestmark = pytest.mark.skipif(
         not TestBaseClass.auth_in_use(),
@@ -25,9 +25,7 @@ class TestDropRole(TestBaseClass):
         Setup method
         """
         hostlist, user, password = TestBaseClass().get_hosts()
-        config = {
-            "hosts": hostlist
-        }
+        config = TestBaseClass.get_connection_config()
         self.client = aerospike.client(config).connect(user, password)
 
         self.delete_users = []

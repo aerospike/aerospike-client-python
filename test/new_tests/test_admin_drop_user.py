@@ -14,12 +14,8 @@ except:
     sys.exit(1)
 
 
-class SomeClass(object):
-
-    pass
-
-
-class TestDropUser(TestBaseClass):
+@pytest.mark.usefixtures("connection_config")
+class TestDropUser(object):
 
     pytestmark = pytest.mark.skipif(
         not TestBaseClass.auth_in_use(),
@@ -30,7 +26,7 @@ class TestDropUser(TestBaseClass):
         Setup method.
         """
         hostlist, user, password = TestBaseClass().get_hosts()
-        config = {'hosts': hostlist}
+        config = TestBaseClass.get_connection_config()
         TestDropUser.Me = self
         self.client = aerospike.client(config).connect(user, password)
         try:

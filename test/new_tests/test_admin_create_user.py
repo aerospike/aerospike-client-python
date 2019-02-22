@@ -13,8 +13,8 @@ except:
     print("Please install aerospike python client.")
     sys.exit(1)
 
-
-class TestCreateUser(TestBaseClass):
+@pytest.mark.usefixtures("connection_config")
+class TestCreateUser(object):
 
     pytestmark = pytest.mark.skipif(
         not TestBaseClass.auth_in_use(),
@@ -25,7 +25,7 @@ class TestCreateUser(TestBaseClass):
         Setup method
         """
         hostlist, user, password = TestBaseClass().get_hosts()
-        config = {"hosts": hostlist}
+        config = TestBaseClass.get_connection_config()
 
         self.client = aerospike.client(config).connect(user, password)
 
@@ -324,7 +324,7 @@ class TestCreateUser(TestBaseClass):
 
         assert status == 0
 
-        config = {"hosts": TestCreateUser.hostlist}
+        config = self.connection_config
 
         non_admin_client = None
 

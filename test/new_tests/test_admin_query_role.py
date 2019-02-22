@@ -25,9 +25,7 @@ class TestQueryRole(TestBaseClass):
         Setup method
         """
         hostlist, user, password = TestBaseClass().get_hosts()
-        config = {
-            "hosts": hostlist
-        }
+        config = TestBaseClass.get_connection_config()
         self.client = aerospike.client(config).connect(user, password)
         try:
             self.client.admin_drop_role("usr-sys-admin")
