@@ -25,7 +25,7 @@ class TestQueryUsers(TestBaseClass):
         Setup method
         """
         hostlist, user, password = TestBaseClass().get_hosts()
-        config = {"hosts": hostlist}
+        config = TestBaseClass.get_connection_config()
         TestQueryUsers.Me = self
         self.client = aerospike.client(config).connect(user, password)
 

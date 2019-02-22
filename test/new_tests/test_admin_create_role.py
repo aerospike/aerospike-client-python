@@ -14,7 +14,8 @@ except:
     sys.exit(1)
 
 
-class TestCreateRole(TestBaseClass):
+@pytest.mark.usefixtures("connection_config")
+class TestCreateRole(object):
 
     pytestmark = pytest.mark.skipif(
         not TestBaseClass.auth_in_use(),
@@ -25,7 +26,7 @@ class TestCreateRole(TestBaseClass):
         Setup method
         """
         hostlist, user, password = TestBaseClass().get_hosts()
-        config = {"hosts": hostlist}
+        config = TestBaseClass.get_connection_config()
         self.client = aerospike.client(config).connect(user, password)
         try:
             self.client.admin_drop_user("testcreaterole")

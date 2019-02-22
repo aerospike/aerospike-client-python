@@ -14,7 +14,7 @@ except:
     sys.exit(1)
 
 
-class TestGrantPrivileges(TestBaseClass):
+class TestGrantPrivileges(object):
 
     pytestmark = pytest.mark.skipif(
         not TestBaseClass.auth_in_use(),
@@ -25,9 +25,7 @@ class TestGrantPrivileges(TestBaseClass):
         Setup method
         """
         hostlist, user, password = TestBaseClass().get_hosts()
-        config = {
-            "hosts": hostlist
-        }
+        config = TestBaseClass.get_connection_config()
         self.client = aerospike.client(config).connect(user, password)
 
         try:

@@ -13,7 +13,8 @@ except:
     sys.exit(1)
 
 
-class TestChangePassword(TestBaseClass):
+@pytest.mark.usefixtures("connection_config")
+class TestChangePassword(object):
 
     pytestmark = pytest.mark.skipif(
         not TestBaseClass.auth_in_use(),
@@ -24,7 +25,8 @@ class TestChangePassword(TestBaseClass):
             Setup method
             """
         hostlist, user, password = TestBaseClass().get_hosts()
-        config = {"hosts": hostlist}
+        tls_info = TestBaseClass().get_tls_info()
+        config = TestBaseClass.get_connection_config()
         self.client = aerospike.client(config).connect(user, password)
 
         try:
@@ -55,7 +57,7 @@ class TestChangePassword(TestBaseClass):
     def test_change_password_with_proper_parameters(self):
 
         user = "testchangepassworduser"
-        config = {"hosts": TestChangePassword.hostlist}
+        config = self.connection_config
         self.clientreaduser = aerospike.client(config).connect(user,
                                                                "aerospike")
 
@@ -67,9 +69,7 @@ class TestChangePassword(TestBaseClass):
         assert status == 0
 
         time.sleep(2)
-        config = {
-            "hosts": TestChangePassword.hostlist
-        }
+        config = self.connection_config
 
         # Assert that connecting to the server with the old password fails
         with pytest.raises(
@@ -102,7 +102,7 @@ class TestChangePassword(TestBaseClass):
     def test_change_password_with_proper_timeout_policy_value(self):
 
         user = "testchangepassworduser"
-        config = {"hosts": TestChangePassword.hostlist}
+        config = self.connection_config
         self.clientreaduser = aerospike.client(config).connect(user,
                                                                "aerospike")
 
@@ -114,9 +114,7 @@ class TestChangePassword(TestBaseClass):
 
         assert status == 0
         time.sleep(2)
-        config = {
-            "hosts": TestChangePassword.hostlist
-        }
+        config = self.connection_config
 
         with pytest.raises(
             (aerospike.exception.InvalidPassword,
@@ -174,7 +172,7 @@ class TestChangePassword(TestBaseClass):
     def test_change_password_with_too_long_password(self):
 
         user = "testchangepassworduser"
-        config = {"hosts": TestChangePassword.hostlist}
+        config = self.connection_config
         self.clientreaduser = aerospike.client(config).connect(user,
                                                                "aerospike")
 

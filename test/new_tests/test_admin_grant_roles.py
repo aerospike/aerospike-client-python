@@ -25,7 +25,7 @@ class TestGrantRoles(TestBaseClass):
         Setup method
         """
         hostlist, user, password = TestBaseClass().get_hosts()
-        config = {"hosts": hostlist}
+        config = TestBaseClass.get_connection_config()
         TestGrantRoles.Me = self
         self.client = aerospike.client(config).connect(user, password)
 
