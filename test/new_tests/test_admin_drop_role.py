@@ -42,6 +42,7 @@ class TestDropRole(TestBaseClass):
         for user in self.delete_users:
             try:
                 self.client.admin_drop_user(user, policy)
+                time.sleep(2)
             except:
                 pass
 

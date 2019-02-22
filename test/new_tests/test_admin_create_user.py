@@ -43,7 +43,7 @@ class TestCreateUser(TestBaseClass):
                 self.client.admin_drop_user(user, policy)
             except:
                 pass
-
+        time.sleep(2)
         self.client.close()
 
     def test_create_user_without_any_parameters(self):
@@ -63,6 +63,7 @@ class TestCreateUser(TestBaseClass):
 
         try:
             self.client.admin_drop_user(user, policy)
+            time.sleep(2)
         except:
             pass
 
@@ -87,6 +88,7 @@ class TestCreateUser(TestBaseClass):
 
         try:
             self.client.admin_drop_user(user, policy)
+            time.sleep(2)
         except:
             pass
 
@@ -111,6 +113,7 @@ class TestCreateUser(TestBaseClass):
 
         try:
             self.client.admin_drop_user(user, policy)
+            time.sleep(2)
         except:
             pass
 
@@ -130,6 +133,7 @@ class TestCreateUser(TestBaseClass):
 
         try:
             self.client.admin_drop_user(user, policy)
+            time.sleep(2)
         except:
             pass
 
@@ -182,6 +186,7 @@ class TestCreateUser(TestBaseClass):
 
         try:
             self.client.admin_drop_user(user, policy)
+            time.sleep(2)
         except:
             pass
 
@@ -214,6 +219,7 @@ class TestCreateUser(TestBaseClass):
 
         try:
             self.client.admin_drop_user(user, policy)
+            time.sleep(2)
         except:
             pass
 
@@ -232,6 +238,7 @@ class TestCreateUser(TestBaseClass):
 
         try:
             self.client.admin_drop_user(user, policy)
+            time.sleep(2)
         except:
             pass
 
@@ -250,6 +257,7 @@ class TestCreateUser(TestBaseClass):
 
         try:
             self.client.admin_drop_user(user, policy)
+            time.sleep(2)
         except:
             pass
 
@@ -272,6 +280,7 @@ class TestCreateUser(TestBaseClass):
 
         try:
             self.client.admin_drop_user(user, policy)
+            time.sleep(2)
         except:
             pass
 
@@ -287,6 +296,7 @@ class TestCreateUser(TestBaseClass):
 
         try:
             self.client.admin_drop_user(user, policy)
+            time.sleep(2)
         except:
             pass
 
@@ -306,6 +316,7 @@ class TestCreateUser(TestBaseClass):
 
         try:
             self.client.admin_drop_user(user, policy)
+            time.sleep()
         except:
             pass
 
@@ -382,6 +393,7 @@ class TestCreateUser(TestBaseClass):
         roles = ['read-write', "abc" * 50]
         try:
             self.client.admin_drop_user(user, policy)
+            time.sleep(2)
         except:
             pass
 

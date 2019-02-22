@@ -31,13 +31,13 @@ class TestRevokePrivilege(TestBaseClass):
         self.client = aerospike.client(config).connect(user, password)
         try:
             self.client.admin_drop_role("usr-sys-admin-test")
-            time.sleep(1)
+            time.sleep(2)
         except e.InvalidRole:
             pass
         self.client.admin_create_role("usr-sys-admin-test",
                                       [{"code": aerospike.PRIV_USER_ADMIN},
                                        {"code": aerospike.PRIV_SYS_ADMIN}])
-        time.sleep(1)
+        time.sleep(2)
         self.delete_users = []
 
     def teardown_method(self, method):
@@ -66,7 +66,7 @@ class TestRevokePrivilege(TestBaseClass):
             [{"code": aerospike.PRIV_READ}])
 
         assert status == 0
-        time.sleep(1)
+        time.sleep(2)
         roles = self.client.admin_query_role("usr-sys-admin-test")
         assert roles == [{'code': 0, 'ns': '', 'set': ''},
                          {'code': 1, 'ns': '', 'set': ''},
@@ -77,7 +77,7 @@ class TestRevokePrivilege(TestBaseClass):
             [{"code": aerospike.PRIV_READ}])
 
         assert status == 0
-        time.sleep(1)
+        time.sleep(2)
         roles = self.client.admin_query_role("usr-sys-admin-test")
         assert roles == [{'code': 0, 'ns': '', 'set': ''},
                          {'code': 1, 'ns': '', 'set': ''}]
@@ -91,7 +91,7 @@ class TestRevokePrivilege(TestBaseClass):
             [{"code": aerospike.PRIV_READ}], {'timeout': 1000})
 
         assert status == 0
-        time.sleep(1)
+        time.sleep(2)
         roles = self.client.admin_query_role("usr-sys-admin-test")
         assert roles == [{'code': 0, 'ns': '', 'set': ''},
                          {'code': 1, 'ns': '', 'set': ''},

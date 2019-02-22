@@ -31,7 +31,7 @@ class TestQueryUsers(TestBaseClass):
 
         try:
             self.client.admin_drop_user("example-test")
-            time.sleep(1)
+            time.sleep(2)
         except e.InvalidUser:
             pass
         policy = {}
@@ -41,7 +41,7 @@ class TestQueryUsers(TestBaseClass):
 
         try:
             self.client.admin_create_user(user, password, roles, policy)
-            time.sleep(1)
+            time.sleep(2)
         except e.UserExistsError:
             pass
         self.delete_users = []

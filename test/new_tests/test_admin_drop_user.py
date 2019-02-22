@@ -35,6 +35,7 @@ class TestDropUser(TestBaseClass):
         self.client = aerospike.client(config).connect(user, password)
         try:
             self.client.admin_drop_user("foo-test")
+            time.sleep(2)
         except:
             pass
 
@@ -115,7 +116,7 @@ class TestDropUser(TestBaseClass):
         status = self.client.admin_drop_user(user, policy)
         assert status == 0
 
-        time.sleep(1)
+        time.sleep(2)
 
         try:
             user_details = self.client.admin_query_user(user, policy)

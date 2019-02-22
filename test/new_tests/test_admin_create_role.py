@@ -29,6 +29,7 @@ class TestCreateRole(TestBaseClass):
         self.client = aerospike.client(config).connect(user, password)
         try:
             self.client.admin_drop_user("testcreaterole")
+            time.sleep(2)
         except:
             pass  # do nothing, EAFP
 
@@ -65,6 +66,7 @@ class TestCreateRole(TestBaseClass):
             self.client.admin_query_role("usr-sys-admin-test")
             # role exists, clear it out.
             self.client.admin_drop_role("usr-sys-admin-test")
+            time.sleep(2)
         except e.InvalidRole:
             pass  # we are good, no such role exists
 
@@ -130,6 +132,7 @@ class TestCreateRole(TestBaseClass):
             self.client.admin_query_role("usr-sys-admin-test")
             # role exists, clear it out.
             self.client.admin_drop_role("usr-sys-admin-test")
+            time.sleep(2)
         except e.InvalidRole:
             pass  # we are good, no such role exists
 
@@ -157,6 +160,7 @@ class TestCreateRole(TestBaseClass):
             self.client.admin_query_role("usr-sys-admin-test")
             # role exists, clear it out.
             self.client.admin_drop_role("usr-sys-admin-test")
+            time.sleep(2)
         except e.InvalidRole:
             pass  # we are good, no such role exists
 
@@ -184,6 +188,7 @@ class TestCreateRole(TestBaseClass):
         role_name = "!#Q#AEQ@#$%&^*((^&*~~~````"
         try:
             self.client.admin_drop_role(role_name)  # clear out if it exists
+            time.sleep(2)
         except:
             pass  # EAFP
         status = self.client.admin_create_role(

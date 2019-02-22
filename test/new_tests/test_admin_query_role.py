@@ -31,6 +31,7 @@ class TestQueryRole(TestBaseClass):
         self.client = aerospike.client(config).connect(user, password)
         try:
             self.client.admin_drop_role("usr-sys-admin")
+            time.sleep(2)
         except:
             pass
         usr_sys_admin_privs = [
@@ -38,6 +39,7 @@ class TestQueryRole(TestBaseClass):
             {"code": aerospike.PRIV_SYS_ADMIN}]
         try:
             self.client.admin_drop_role("usr-sys-admin-test")
+            time.sleep(2)
         except:
             pass
         self.client.admin_create_role(
