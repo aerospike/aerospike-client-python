@@ -63,8 +63,10 @@ class TestChangePassword(TestBaseClass):
 
         status = self.clientreaduser.admin_change_password(user, password)
 
+
         assert status == 0
 
+        time.sleep(2)
         config = {
             "hosts": TestChangePassword.hostlist
         }
@@ -111,7 +113,7 @@ class TestChangePassword(TestBaseClass):
             user, password, policy)
 
         assert status == 0
-
+        time.sleep(2)
         config = {
             "hosts": TestChangePassword.hostlist
         }
