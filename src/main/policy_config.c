@@ -18,7 +18,8 @@
 as_status set_optional_key(as_policy_key* target_ptr, PyObject* py_policy, const char* name);
 as_status set_optional_replica(as_policy_replica* target_ptr, PyObject* py_policy, const char* name);
 as_status set_optional_commit_level(as_policy_commit_level* target_ptr, PyObject* py_policy, const char* name);
-as_status set_optional_consistency_level(as_policy_consistency_level* target_ptr, PyObject* py_policy, const char* name);
+as_status set_optional_ap_read_mode(as_policy_read_mode_ap* target_ptr, PyObject* py_policy, const char* name);
+as_status set_optional_sc_read_mode(as_policy_read_mode_sc* target_ptr, PyObject* py_policy, const char* name);
 as_status set_optional_gen(as_policy_gen* target_ptr, PyObject* py_policy, const char* name);
 as_status set_optional_exists(as_policy_exists* target_ptr, PyObject* py_policy, const char* name);
 as_status get_uint32_value(PyObject* py_policy_val, uint32_t* return_uint32);
@@ -106,17 +107,18 @@ as_status set_read_policy(as_policy_read* read_policy, PyObject* py_policy) {
 		return status;
 	}
 
-	status = set_optional_consistency_level(&read_policy->consistency_level, py_policy, "consistency_level");
-	if (status != AEROSPIKE_OK) {
-		return status;
-	}
-
 	status = set_optional_bool_property(&read_policy->deserialize, py_policy, "deserialize");
 	if (status != AEROSPIKE_OK) {
 		return status;
 	}
 
-	status = set_optional_bool_property(&read_policy->linearize_read, py_policy, "linearize_read");
+
+	status = set_optional_ap_read_mode(&read_policy->read_mode_ap, py_policy, "read_mode_ap");
+	if (status != AEROSPIKE_OK) {
+		return status;
+	}
+
+	status = set_optional_sc_read_mode(&read_policy->read_mode_sc, py_policy, "read_mode_sc");
 	if (status != AEROSPIKE_OK) {
 		return status;
 	}
@@ -217,11 +219,6 @@ as_status set_apply_policy(as_policy_apply* apply_policy, PyObject* py_policy) {
 	}
 
 	status = set_optional_bool_property(&apply_policy->durable_delete, py_policy, "durable_delete");
-	if (status != AEROSPIKE_OK) {
-		return status;
-	}
-
-	status = set_optional_bool_property(&apply_policy->linearize_read, py_policy, "linearize_read");
 	if (status != AEROSPIKE_OK) {
 		return status;
 	}
@@ -365,11 +362,6 @@ as_status set_operate_policy(as_policy_operate* operate_policy, PyObject* py_pol
 		return status;
 	}
 
-	status = set_optional_consistency_level(&operate_policy->consistency_level, py_policy, "consistency_level");
-	if (status != AEROSPIKE_OK) {
-		return status;
-	}
-
 	status = set_optional_bool_property(&operate_policy->durable_delete, py_policy, "durable_delete");
 	if (status != AEROSPIKE_OK) {
 		return status;
@@ -380,11 +372,18 @@ as_status set_operate_policy(as_policy_operate* operate_policy, PyObject* py_pol
 		return status;
 	}
 
-	status = set_optional_bool_property(&operate_policy->linearize_read, py_policy, "linearize_read");
+
+    // 4.0.0 onwards
+
+	status = set_optional_ap_read_mode(&operate_policy->read_mode_ap, py_policy, "read_mode_ap");
 	if (status != AEROSPIKE_OK) {
 		return status;
 	}
 
+	status = set_optional_sc_read_mode(&operate_policy->read_mode_sc, py_policy, "read_mode_sc");
+	if (status != AEROSPIKE_OK) {
+		return status;
+	}
 
 	return AEROSPIKE_OK;
 }
@@ -401,11 +400,6 @@ as_status set_batch_policy(as_policy_batch* batch_policy, PyObject* py_policy) {
 	}
 
 	status = set_base_policy(&batch_policy->base, py_policy);
-	if (status != AEROSPIKE_OK) {
-		return status;
-	}
-
-	status = set_optional_consistency_level(&batch_policy->consistency_level, py_policy, "consistency_level");
 	if (status != AEROSPIKE_OK) {
 		return status;
 	}
@@ -430,11 +424,16 @@ as_status set_batch_policy(as_policy_batch* batch_policy, PyObject* py_policy) {
 		return status;
 	}
 
-	status = set_optional_bool_property(&batch_policy->linearize_read, py_policy, "linearize_read");
+
+	status = set_optional_ap_read_mode(&batch_policy->read_mode_ap, py_policy, "read_mode_ap");
 	if (status != AEROSPIKE_OK) {
 		return status;
 	}
 
+	status = set_optional_sc_read_mode(&batch_policy->read_mode_sc, py_policy, "read_mode_sc");
+	if (status != AEROSPIKE_OK) {
+		return status;
+	}
 
 	return AEROSPIKE_OK;
 }
@@ -607,7 +606,8 @@ as_status set_optional_commit_level(as_policy_commit_level* target_ptr, PyObject
 	return AEROSPIKE_OK;
 }
 
-as_status set_optional_consistency_level(as_policy_consistency_level* target_ptr, PyObject* py_policy, const char* name) {
+
+as_status set_optional_ap_read_mode(as_policy_read_mode_ap* target_ptr, PyObject* py_policy, const char* name) {
 	PyObject* py_policy_val = NULL;
 	if (!py_policy || !PyDict_Check(py_policy)) {
 		return AEROSPIKE_OK;
@@ -623,7 +623,27 @@ as_status set_optional_consistency_level(as_policy_consistency_level* target_ptr
 	if (status != AEROSPIKE_OK) {
 		return status;
 	}
-	*target_ptr = (as_policy_consistency_level)out_uint32;
+	*target_ptr = (as_policy_read_mode_ap)out_uint32;
+	return AEROSPIKE_OK;
+}
+
+as_status set_optional_sc_read_mode(as_policy_read_mode_sc* target_ptr, PyObject* py_policy, const char* name) {
+	PyObject* py_policy_val = NULL;
+	if (!py_policy || !PyDict_Check(py_policy)) {
+		return AEROSPIKE_OK;
+	}
+
+	py_policy_val = PyDict_GetItemString(py_policy, name);
+	if (!py_policy_val || py_policy_val == Py_None) {
+		return AEROSPIKE_OK;
+	}
+
+	uint32_t out_uint32;
+	as_status status = get_uint32_value(py_policy_val, &out_uint32);
+	if (status != AEROSPIKE_OK) {
+		return status;
+	}
+	*target_ptr = (as_policy_read_mode_sc)out_uint32;
 	return AEROSPIKE_OK;
 }
 
