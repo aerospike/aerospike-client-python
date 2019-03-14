@@ -1138,12 +1138,20 @@ static int AerospikeClient_Type_Init(AerospikeClient * self, PyObject * args, Py
 			config.policies.remove.replica = long_replica;
 		}
 
-		PyObject * py_consistency_level = PyDict_GetItemString(py_policies, "consistency_level");
-		if (py_consistency_level && PyInt_Check(py_consistency_level)) {
-			long long_consistency_level = PyInt_AsLong(py_consistency_level);
-			config.policies.read.consistency_level = long_consistency_level;
-			config.policies.operate.consistency_level = long_consistency_level;
-			config.policies.batch.consistency_level = long_consistency_level;
+		PyObject * py_ap_read_mode = PyDict_GetItemString(py_policies, "read_mode_ap");
+		if (py_ap_read_mode && PyInt_Check(py_ap_read_mode)) {
+			as_policy_read_mode_ap ap_read_mode = (as_policy_read_mode_ap)PyInt_AsLong(py_ap_read_mode);
+			config.policies.read.read_mode_ap = ap_read_mode;
+			config.policies.operate.read_mode_ap = ap_read_mode;
+			config.policies.batch.read_mode_ap = ap_read_mode;
+		}
+
+		PyObject * py_sc_read_mode = PyDict_GetItemString(py_policies, "read_mode_sc");
+		if (py_sc_read_mode && PyInt_Check(py_sc_read_mode)) {
+			as_policy_read_mode_sc sc_read_mode = (as_policy_read_mode_sc)PyInt_AsLong(py_sc_read_mode);
+			config.policies.read.read_mode_sc = sc_read_mode;
+			config.policies.operate.read_mode_sc = sc_read_mode;
+			config.policies.batch.read_mode_sc = sc_read_mode;
 		}
 
 		PyObject * py_commit_level = PyDict_GetItemString(py_policies, "commit_level");

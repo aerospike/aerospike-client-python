@@ -129,8 +129,6 @@ AerospikeConstants aerospike_constants[] = {
 	{ AS_POLICY_REPLICA_ANY                 ,   "POLICY_REPLICA_ANY" },
 	{ AS_POLICY_REPLICA_SEQUENCE            ,   "POLICY_REPLICA_SEQUENCE" },
 	{ AS_POLICY_REPLICA_PREFER_RACK         ,   "POLICY_REPLICA_PREFER_RACK" },
-	{ AS_POLICY_CONSISTENCY_LEVEL_ONE       ,   "POLICY_CONSISTENCY_ONE" },
-	{ AS_POLICY_CONSISTENCY_LEVEL_ALL       ,   "POLICY_CONSISTENCY_ALL" },
 	{ AS_POLICY_COMMIT_LEVEL_ALL            ,   "POLICY_COMMIT_LEVEL_ALL" },
 	{ AS_POLICY_COMMIT_LEVEL_MASTER         ,   "POLICY_COMMIT_LEVEL_MASTER" },
 	{ SERIALIZER_PYTHON                     ,   "SERIALIZER_PYTHON" },
@@ -266,7 +264,19 @@ AerospikeConstants aerospike_constants[] = {
 	{ AS_MAP_WRITE_CREATE_ONLY, "MAP_WRITE_FLAGS_CREATE_ONLY"},
 	{ AS_MAP_WRITE_UPDATE_ONLY, "MAP_WRITE_FLAGS_UPDATE_ONLY"},
 	{ AS_MAP_WRITE_NO_FAIL, "MAP_WRITE_FLAGS_NO_FAIL"},
-	{ AS_MAP_WRITE_PARTIAL, "MAP_WRITE_FLAGS_PARTIAL"}
+	{ AS_MAP_WRITE_PARTIAL, "MAP_WRITE_FLAGS_PARTIAL"},
+
+    /* READ Mode constants 4.0.0 */
+
+    // AP Read Mode
+    { AS_POLICY_READ_MODE_AP_ONE, "POLICY_READ_MODE_AP_ONE"},
+    { AS_POLICY_READ_MODE_AP_ALL, "POLICY_READ_MODE_AP_ALL"},
+    // SC Read Mode
+    { AS_POLICY_READ_MODE_SC_SESSION, "POLICY_READ_MODE_SC_SESSION" },
+    { AS_POLICY_READ_MODE_SC_LINEARIZE, "POLICY_READ_MODE_SC_LINEARIZE"},
+    { AS_POLICY_READ_MODE_SC_ALLOW_REPLICA, "POLICY_READ_MODE_SC_ALLOW_REPLICA"},
+    { AS_POLICY_READ_MODE_SC_ALLOW_UNAVAILABLE, "POLICY_READ_MODE_SC_ALLOW_UNAVAILABLE"}
+
 };
 
 static
@@ -459,7 +469,6 @@ as_status pyobject_to_policy_apply(as_error * err, PyObject * py_policy,
 	POLICY_SET_FIELD(gen, as_policy_gen);
 	POLICY_SET_FIELD(commit_level, as_policy_commit_level);
 	POLICY_SET_FIELD(durable_delete, bool);
-	POLICY_SET_FIELD(linearize_read, bool);
 
 	// Update the policy
 	POLICY_UPDATE();
@@ -554,10 +563,12 @@ as_status pyobject_to_policy_read(as_error * err, PyObject * py_policy,
 	POLICY_SET_BASE_FIELD(sleep_between_retries, uint32_t);
 
 	POLICY_SET_FIELD(key, as_policy_key);
-	POLICY_SET_FIELD(consistency_level, as_policy_consistency_level);
 	POLICY_SET_FIELD(replica, as_policy_replica);
 	POLICY_SET_FIELD(deserialize, bool);
-	POLICY_SET_FIELD(linearize_read, bool);
+
+	// 4.0.0 new policies
+	POLICY_SET_FIELD(read_mode_ap, as_policy_read_mode_ap);
+	POLICY_SET_FIELD(read_mode_sc, as_policy_read_mode_sc);
 
 	// Update the policy
 	POLICY_UPDATE();
@@ -707,12 +718,14 @@ as_status pyobject_to_policy_operate(as_error * err, PyObject * py_policy,
 	POLICY_SET_FIELD(key, as_policy_key);
 	POLICY_SET_FIELD(gen, as_policy_gen);
 	POLICY_SET_FIELD(commit_level, as_policy_commit_level);
-	POLICY_SET_FIELD(consistency_level, as_policy_consistency_level);
 	POLICY_SET_FIELD(replica, as_policy_replica);
 	POLICY_SET_FIELD(durable_delete, bool);
 	POLICY_SET_FIELD(deserialize, bool);
-	POLICY_SET_FIELD(linearize_read, bool);
 	POLICY_SET_FIELD(exists, as_policy_exists);
+
+	// 4.0.0 new policies
+	POLICY_SET_FIELD(read_mode_ap, as_policy_read_mode_ap);
+	POLICY_SET_FIELD(read_mode_sc, as_policy_read_mode_sc);
 
 	// Update the policy
 	POLICY_UPDATE();
@@ -745,13 +758,15 @@ as_status pyobject_to_policy_batch(as_error * err, PyObject * py_policy,
 	POLICY_SET_BASE_FIELD(max_retries, uint32_t);
 	POLICY_SET_BASE_FIELD(sleep_between_retries, uint32_t);
 
-	POLICY_SET_FIELD(consistency_level, as_policy_consistency_level);
 	POLICY_SET_FIELD(concurrent, bool);
 	POLICY_SET_FIELD(allow_inline, bool);
 	POLICY_SET_FIELD(send_set_name, bool);
 	POLICY_SET_FIELD(deserialize, bool);
-	POLICY_SET_FIELD(linearize_read, bool);
 	POLICY_SET_FIELD(replica, as_policy_replica);
+
+	// 4.0.0 new policies
+	POLICY_SET_FIELD(read_mode_ap, as_policy_read_mode_ap);
+	POLICY_SET_FIELD(read_mode_sc, as_policy_read_mode_sc);
 
 	// Update the policy
 	POLICY_UPDATE();
