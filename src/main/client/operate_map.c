@@ -103,7 +103,9 @@
 		} else {\
 			val_to_pyobject(self, &err, (as_val*) (rec->bins.entries[0].valuep), &py_result);\
 		}\
-	}
+	} else {\
+        as_error_update(&err, AEROSPIKE_ERR_CLIENT, "Unexpected empty return");\
+    }
 
 #define CLEANUP_AND_EXCEPTION_ON_ERROR(__err)\
 	as_operations_destroy(&ops);\
@@ -388,7 +390,7 @@ PyObject * AerospikeClient_MapSize(AerospikeClient * self, PyObject * args, PyOb
 	as_operations_add_map_size(&ops, bin);
 	DO_OPERATION();
 
-	if (rec && as_val_type(rec->bins.entries[0].valuep) != AS_NIL) {
+	if (rec && rec->bins.entries &&  rec->bins.size > 0 && as_val_type(rec->bins.entries[0].valuep) != AS_NIL) {
 		size = rec->bins.entries[0].valuep->integer.value;
 	}
 
