@@ -40,8 +40,6 @@ class TestExists():
         record = {"Name": "Jeff"}
         policy = {
             'timeout': 1000,
-            'replica': aerospike.POLICY_REPLICA_MASTER,
-            'consistency': aerospike.POLICY_CONSISTENCY_ONE
         }
 
         put_data(self.as_connection, key, record)
@@ -54,17 +52,11 @@ class TestExists():
     @pytest.mark.parametrize("key, record, policy", [
         (('test', 'demo', 'p_None'), {"name": "John"}, None),
         (('test', 'demo', 'p_Replica'), {"name": "Michel"}, {
-            'total_timeout': 1000,
-            'replica': aerospike.POLICY_REPLICA_ANY,
-            'consistency': aerospike.POLICY_CONSISTENCY_ONE}),
+            'total_timeout': 1000}),
         (('test', 'demo', "p_consistency_level"), {"name": "Michel"}, {
-            'total_timeout': 1000,
-            'replica': aerospike.POLICY_REPLICA_MASTER,
-            'consistency': aerospike.POLICY_CONSISTENCY_ALL}),
+            'total_timeout': 1000}),
         (('test', 'demo', "p_consistency_level"), {"name": "Michel"}, {
-            'total_timeout': 1000,
-            'replica': aerospike.POLICY_REPLICA_SEQUENCE,
-            'consistency': aerospike.POLICY_CONSISTENCY_ONE}),
+            'total_timeout': 1000}),
     ])
     def test_pos_exists_with_key_and_policy(
             self, key, record, policy, put_data):

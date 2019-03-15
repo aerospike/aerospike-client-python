@@ -103,9 +103,7 @@ class TestGetPut():
         rec = {'name': 'john', 'age': 1}
 
         policy = {
-            'key': aerospike.POLICY_KEY_SEND,
-            'replica': aerospike.POLICY_REPLICA_ANY,
-            'consistency': aerospike.POLICY_CONSISTENCY_ONE
+            'key': aerospike.POLICY_KEY_SEND
         }
 
         put_data(self.as_connection, key, rec, policy)

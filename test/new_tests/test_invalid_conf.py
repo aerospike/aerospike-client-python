@@ -105,7 +105,6 @@ class TestInvalidClientConfig(object):
                              [
                                 ("deserialize", "nope"),
                                 ("key", "send"),
-                                ("consistency_level", "very consistent"),
                                 ("replica", "maybe?")
                              ])
     def test_invalid_read_policy_types(self, key, value):
@@ -140,7 +139,6 @@ class TestInvalidClientConfig(object):
                              [
                                 ("key", "send"),  # should be int
                                 ("gen", "should be a constant integer"),  # should be int
-                                ("consistency_level", "very consistent"),  # should be int
                                 ("replica", "maybe?"),  # should be int
                                 ("commit_level", "committed"),  # should be int
                                 ("durable_delete", "durable")  # should be bool
@@ -157,7 +155,6 @@ class TestInvalidClientConfig(object):
 
     @pytest.mark.parametrize("key, value",
                              [
-                                ("consistency_level", "very consistent"),  # should be int
                                 ("concurrent", "concurrent"),  # should be bool
                                 ("allow_inline", "False"),  # should be bool
                                 ("send_set_name", "False"),  # should be bool
