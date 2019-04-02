@@ -44,7 +44,9 @@ Exception Types
 .. py:exception:: AerospikeError
 
     The parent class of all exceptions raised by the Aerospike client, inherits
-    from :py:exc:`exceptions.Exception`
+    from :py:exc:`exceptions.Exception` . `These attributes should be checked by
+    executing `exc.args[i]` where i is the index of the attribute. For example
+    to check `in_doubt`, run `exc.args[4]`
 
     .. py:attribute:: code
 
@@ -56,6 +58,10 @@ Exception Types
 
     .. py:attribute:: file
     .. py:attribute:: line
+
+    .. py:attribute:: in_doubt
+
+        True if it is possible that the operation succeeded.
 
 .. py:exception:: ClientError
 
@@ -109,6 +115,18 @@ Exception Types
     Operation not allowed at this time.
     Subclass of :py:exc:`~aerospike.exception.ServerError`.
 
+.. py:exception:: ElementExistsError
+
+    Raised when trying to alter a map key which already exists, when using a create_only policy.
+
+    Subclass of :py:exc:`~aerospike.exception.ServerError`.
+
+.. py:exception:: ElementNotFoundError
+
+    Raised when trying to alter a map key which does not exist, when using an update_only policy.
+
+    Subclass of :py:exc:`~aerospike.exception.ServerError`.
+
 .. py:exception:: RecordError
 
     The parent class for record and bin exceptions exceptions associated with
@@ -145,27 +163,17 @@ Exception Types
 
 .. py:exception:: RecordBusy
 
-    Record being (re-)written can't fit in a storage write block.
+    Too may concurrent requests for one record - a "hot-key" situation.
     Subclass of :py:exc:`~aerospike.exception.RecordError`.
 
 .. py:exception:: RecordTooBig
 
-    Too may concurrent requests for one record - a "hot-key" situation.
+    Record being (re-)written can't fit in a storage write block.
     Subclass of :py:exc:`~aerospike.exception.RecordError`.
 
 .. py:exception:: BinNameError
 
     Length of bin name exceeds the limit of 14 characters.
-    Subclass of :py:exc:`~aerospike.exception.RecordError`.
-
-.. py:exception:: BinExistsError
-
-    Bin already exists. Occurs only if the client has that check enabled.
-    Subclass of :py:exc:`~aerospike.exception.RecordError`.
-
-.. py:exception:: BinNotFound
-
-    Bin-level replace-only supported on server but not on client.
     Subclass of :py:exc:`~aerospike.exception.RecordError`.
 
 .. py:exception:: BinIncompatibleType
@@ -345,6 +353,8 @@ Exception Hierarchy
           +-- DeviceOverload (18)
           +-- NamespaceNotFound (20)
           +-- ForbiddenError (22)
+          +-- ElementNotFoundError (23)
+          +-- ElementExistsError (24)
           +-- RecordError (*)
           |    +-- RecordKeyMismatch (19)
           |    +-- RecordNotFound (2)
@@ -353,8 +363,6 @@ Exception Hierarchy
           |    +-- RecordTooBig (13)
           |    +-- RecordBusy (14)
           |    +-- BinNameError (21)
-          |    +-- BinExistsError (6)
-          |    +-- BinNotFound (17)
           |    +-- BinIncompatibleType (12)
           +-- IndexError (204)
           |    +-- IndexNotFound (201)
