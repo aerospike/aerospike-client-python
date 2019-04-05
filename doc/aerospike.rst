@@ -67,7 +67,6 @@ in an in-memory primary index.
                 * **key** default key policy, with values such as :data:`aerospike.POLICY_KEY_DIGEST` (**Deprecated**: set this individually in the 'read', 'write', 'apply', 'operate', 'remove' policy dictionaries)
                 * **exists** default exists policy, with values such as :data:`aerospike.POLICY_EXISTS_CREATE` (**Deprecated**: set in the 'write' policies dictionary)
                 * **max_retries** a :class:`int` representing the number of times to retry a transaction (**Deprecated**: set this the individual policy dictionaries)
-                * **consistency_level** default consistency level policy, with values such as :data:`aerospike.POLICY_CONSISTENCY_ONE` (**Deprecated**: set this individually as needed in the 'read','operate', 'batch' policy dictionaries)
                 * **replica** default replica policy, with values such as :data:`aerospike.POLICY_REPLICA_MASTER` (**Deprecated**: set this in one or all of the 'read', 'write', 'apply', 'operate', 'remove' policy dictionaries)
                 * **commit_level** default commit level policy, with values such as :data:`aerospike.POLICY_COMMIT_LEVEL_ALL` (**Deprecated**: set this as needed individually in the 'write', 'apply', 'operate', 'remove' policy dictionaries)
             * **shm** a :class:`dict` with optional shared-memory cluster tending parameters. Shared-memory cluster tending is on if the :class:`dict` is provided. If multiple clients are instantiated talking to the same cluster the *shm* cluster-tending should be used.
@@ -1425,17 +1424,37 @@ Specifies the number of replicas required to be successfully committed before re
 
     Return succcess after successfully committing the master replica
 
-.. rubric:: Consistency Level Policy Options
+.. rubric:: AP Read Mode Policy Options
 
-Specifies the number of replicas to be consulted in a read operation to provide the desired consistency guarantee.
+Read policy for AP (availability) namespaces.
 
-.. data:: POLICY_CONSISTENCY_ONE
+.. data:: POLICY_READ_MODE_AP_ONE
 
-    Involve a single replica in the operation
+    Involve single node in the read operation.
 
-.. data:: POLICY_CONSISTENCY_ALL
+.. data:: POLICY_READ_MODE_AP_ALL
 
-    Involve all replicas in the operation
+    Involve all duplicates in the read operation.
+
+.. rubric:: SC Read Mode Policy Options
+
+Read policy for SC (strong consistency) namespaces.
+
+.. data:: POLICY_READ_MODE_SC_SESSION
+
+    Ensures this client will only see an increasing sequence of record versions. Server only reads from master. This is the default.
+
+.. data:: POLICY_READ_MODE_SC_LINEARIZE
+
+    Ensures ALL clients will only see an increasing sequence of record versions. Server only reads from master.
+
+.. data:: POLICY_READ_MODE_SC_ALLOW_REPLICA
+
+    Server may read from master or any full (non-migrating) replica. Increasing sequence of record versions is not guaranteed.
+
+.. data:: POLICY_READ_MODE_SC_ALLOW_UNAVAILABLE
+
+    Server may read from master or any full (non-migrating) replica or from unavailable partitions. Increasing sequence of record versions is not guaranteed.
 
 .. rubric:: Existence Policy Options
 

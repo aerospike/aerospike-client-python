@@ -2656,14 +2656,12 @@ Read Policies
             | :class:`bool` Should raw bytes representing a list or map be deserialized to a list or dictionary.
             | Set to `False` for backup programs that just need access to raw bytes.
             | Default: ``True``
-        * **linearize_read**
-            | :class:`bool`
-            | Force reads to be linearized for server namespaces that support CP mode. Setting this policy to ``True`` requires an Enterprise server with version 4.0.0 or greater.
-            | Default: ``False``
         * **key** one of the ``aerospike.POLICY_KEY_*`` values such as :data:`aerospike.POLICY_KEY_DIGEST`
             | Default: ``aerospike.POLICY_KEY_DIGEST``
-        * **consistency_level** one of the ``aerospike.POLICY_CONSISTENCY_*`` values such as :data:`aerospike.POLICY_CONSISTENCY_ONE`
-            | Default: ``aerospike.POLICY_CONSISTENCY_ONE``
+        * **read_mode_ap** one of the ``aerospike.POLICY_READ_MODE_AP_*`` values such as :data:`aerospike.AS_POLICY_READ_MODE_AP_ONE`
+            | Default: ``aerospike.AS_POLICY_READ_MODE_AP_ONE``
+        * **read_mode_sc** one of the ``aerospike.POLICY_READ_MODE_SC_*`` values such as :data:`aerospike.POLICY_READ_MODE_SC_SESSION`
+            | Default: ``aerospike.POLICY_READ_MODE_SC_SESSION``
         * **replica** one of the ``aerospike.POLICY_REPLICA_*`` values such as :data:`aerospike.POLICY_REPLICA_MASTER`
             | Default: ``aerospike.POLICY_REPLICA_SEQUENCE``
 
@@ -2708,10 +2706,6 @@ Operate Policies
             | If ``total_timeout`` is not zero and ``total_timeout`` is reached before the transaction completes, the transaction will return error ``AEROSPIKE_ERR_TIMEOUT``. If ``total_timeout`` is zero, there will be no total time limit.
             |
             | Default: ``1000``
-        * **linearize_read**
-            | :class:`bool`
-            | Force reads to be linearized for server namespaces that support CP mode. Setting this policy to ``True`` requires an Enterprise server with version 4.0.0 or greater.
-            | Default: ``False``
         * **key** one of the ``aerospike.POLICY_KEY_*`` values such as :data:`aerospike.POLICY_KEY_DIGEST`
             | Default: ``aerospike.POLICY_KEY_DIGEST``
         * **gen** one of the ``aerospike.POLICY_GEN_*`` values such as :data:`aerospike.POLICY_GEN_IGNORE`
@@ -2720,8 +2714,10 @@ Operate Policies
             | Default: ``aerospike.POLICY_REPLICA_SEQUENCE``
         * **commit_level** one of the ``aerospike.POLICY_COMMIT_LEVEL_*`` values such as :data:`aerospike.POLICY_COMMIT_LEVEL_ALL`
             | Default: ``aerospike.POLICY_COMMIT_LEVEL_ALL``
-        * **consistency_level** one of the ``aerospike.POLICY_CONSISTENCY_*`` values such as :data:`aerospike.POLICY_CONSISTENCY_ONE`
-            | Default: ``aerospike.POLICY_CONSISTENCY_ONE``
+        * **read_mode_ap** one of the ``aerospike.POLICY_READ_MODE_AP_*`` values such as :data:`aerospike.AS_POLICY_READ_MODE_AP_ONE`
+            | Default: ``aerospike.AS_POLICY_READ_MODE_AP_ONE``
+        * **read_mode_sc** one of the ``aerospike.POLICY_READ_MODE_SC_*`` values such as :data:`aerospike.POLICY_READ_MODE_SC_SESSION`
+            | Default: ``aerospike.POLICY_READ_MODE_SC_SESSION``
         * **exists** one of the ``aerospike.POLICY_EXISTS_*`` values such as :data:`aerospike.POLICY_EXISTS_CREATE`
             | Default: ```aerospike.POLICY_GEN_IGNORE``
         * **durable_delete** boolean value: True to perform durable delete (requires Enterprise server version >= 3.10) Default: ``False``
@@ -2765,10 +2761,6 @@ Apply Policies
             | If ``total_timeout`` is not zero and ``total_timeout`` is reached before the transaction completes, the transaction will return error ``AEROSPIKE_ERR_TIMEOUT``. If ``total_timeout`` is zero, there will be no total time limit.
             |
             | Default: ``1000``
-        * **linearize_read**
-            | :class:`bool`
-            | Force reads to be linearized for server namespaces that support CP mode. Setting this policy to ``True`` requires an Enterprise server with version 4.0.0 or greater.
-            | Default: ``False``
         * **key** one of the ``aerospike.POLICY_KEY_*`` values such as :data:`aerospike.POLICY_KEY_DIGEST`
             | Default: ``aerospike.POLICY_KEY_DIGEST``
         * **replica** one of the ``aerospike.POLICY_REPLICA_*`` values such as :data:`aerospike.POLICY_REPLICA_MASTER`
@@ -2872,12 +2864,10 @@ Batch Policies
             | If ``total_timeout`` is not zero and ``total_timeout`` is reached before the transaction completes, the transaction will return error ``AEROSPIKE_ERR_TIMEOUT``. If ``total_timeout`` is zero, there will be no total time limit.
             |
             | Default: ``1000``
-        * **linearize_read**
-            | :class:`bool`
-            | Force reads to be linearized for server namespaces that support CP mode. Setting this policy to ``True`` requires an Enterprise server with version 4.0.0 or greater.
-            | Default: ``False``
-        * **consistency_level** one of the ``aerospike.POLICY_CONSISTENCY_*`` values such as :data:`aerospike.POLICY_CONSISTENCY_ONE`
-            | Default: ``aerospike.POLICY_CONSISTENCY_ONE``
+        * **read_mode_ap** one of the ``aerospike.POLICY_READ_MODE_AP_*`` values such as :data:`aerospike.AS_POLICY_READ_MODE_AP_ONE`
+            | Default: ``aerospike.AS_POLICY_READ_MODE_AP_ONE``
+        * **read_mode_sc** one of the ``aerospike.POLICY_READ_MODE_SC_*`` values such as :data:`aerospike.POLICY_READ_MODE_SC_SESSION`
+            | Default: ``aerospike.POLICY_READ_MODE_SC_SESSION``
         * **replica** one of the ``aerospike.POLICY_REPLICA_*`` values such as :data:`aerospike.POLICY_REPLICA_MASTER`
             | Default: ``aerospike.POLICY_REPLICA_SEQUENCE``
         * **concurrent** :class:`bool` Determine if batch commands to each server are run in parallel threads. Default `False`
