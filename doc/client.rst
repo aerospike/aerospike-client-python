@@ -2660,8 +2660,10 @@ Read Policies
             | Default: ``aerospike.POLICY_KEY_DIGEST``
         * **read_mode_ap** one of the ``aerospike.POLICY_READ_MODE_AP_*`` values such as :data:`aerospike.AS_POLICY_READ_MODE_AP_ONE`
             | Default: ``aerospike.AS_POLICY_READ_MODE_AP_ONE``
+            | **New in version 3.7.0**
         * **read_mode_sc** one of the ``aerospike.POLICY_READ_MODE_SC_*`` values such as :data:`aerospike.POLICY_READ_MODE_SC_SESSION`
             | Default: ``aerospike.POLICY_READ_MODE_SC_SESSION``
+            | **New in version 3.7.0**
         * **replica** one of the ``aerospike.POLICY_REPLICA_*`` values such as :data:`aerospike.POLICY_REPLICA_MASTER`
             | Default: ``aerospike.POLICY_REPLICA_SEQUENCE``
 
@@ -2716,8 +2718,10 @@ Operate Policies
             | Default: ``aerospike.POLICY_COMMIT_LEVEL_ALL``
         * **read_mode_ap** one of the ``aerospike.POLICY_READ_MODE_AP_*`` values such as :data:`aerospike.AS_POLICY_READ_MODE_AP_ONE`
             | Default: ``aerospike.AS_POLICY_READ_MODE_AP_ONE``
+            | **New in version 3.7.0**
         * **read_mode_sc** one of the ``aerospike.POLICY_READ_MODE_SC_*`` values such as :data:`aerospike.POLICY_READ_MODE_SC_SESSION`
             | Default: ``aerospike.POLICY_READ_MODE_SC_SESSION``
+            | **New in version 3.7.0**
         * **exists** one of the ``aerospike.POLICY_EXISTS_*`` values such as :data:`aerospike.POLICY_EXISTS_CREATE`
             | Default: ```aerospike.POLICY_GEN_IGNORE``
         * **durable_delete** boolean value: True to perform durable delete (requires Enterprise server version >= 3.10) Default: ``False``
@@ -2866,8 +2870,10 @@ Batch Policies
             | Default: ``1000``
         * **read_mode_ap** one of the ``aerospike.POLICY_READ_MODE_AP_*`` values such as :data:`aerospike.AS_POLICY_READ_MODE_AP_ONE`
             | Default: ``aerospike.AS_POLICY_READ_MODE_AP_ONE``
+            | **New in version 3.7.0**
         * **read_mode_sc** one of the ``aerospike.POLICY_READ_MODE_SC_*`` values such as :data:`aerospike.POLICY_READ_MODE_SC_SESSION`
             | Default: ``aerospike.POLICY_READ_MODE_SC_SESSION``
+            | **New in version 3.7.0**
         * **replica** one of the ``aerospike.POLICY_REPLICA_*`` values such as :data:`aerospike.POLICY_REPLICA_MASTER`
             | Default: ``aerospike.POLICY_REPLICA_SEQUENCE``
         * **concurrent** :class:`bool` Determine if batch commands to each server are run in parallel threads. Default `False`
