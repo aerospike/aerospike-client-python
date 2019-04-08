@@ -6,6 +6,7 @@ from .test_base_class import TestBaseClass
 from .as_status_codes import AerospikeStatus
 from aerospike import exception as e
 from aerospike import predicates as p
+from threading import Lock
 
 aerospike = pytest.importorskip("aerospike")
 try:
@@ -435,14 +436,15 @@ class TestQuery(TestBaseClass):
         query = self.as_connection.query('test', 'demo')
         query.select('name', 'test_age')
         query.where(p.between('test_age', 1, 5))
-
+        lock = Lock()
         records = []
 
         def callback(input_tuple):
             key, _, _ = input_tuple
-            if len(records) == 2:
-                return False
-            records.append(key)
+            with lock:
+                if len(records) == 2:
+                    return False
+                records.append(key)
 
         query.foreach(callback)
         assert len(records) == 2
