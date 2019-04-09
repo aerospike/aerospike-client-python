@@ -57,7 +57,7 @@ main() {
 		*'centos'* )
 			distro_id='centos'
 			;;
-		*'redhat'* )
+		*'red hat'* )
 			distro_id='redhat'
 			;;
 		*'debian'* )
