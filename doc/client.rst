@@ -357,12 +357,13 @@ Record Operations
             client.close()
 
 
-    .. method:: remove(key[, policy])
+    .. method:: remove(key[meta, policy])
 
         Remove a record matching the *key* from the cluster.
 
         :param tuple key: a :ref:`aerospike_key_tuple` associated with the record.
-        :param dict policy: optional :ref:`aerospike_remove_policies`.
+        :param dict meta: Optional dictonary allowing a user to specify the expected generation of the record.
+        :param dict policy: optional :ref:`aerospike_remove_policies`. May be passed as a keyword argument.
         :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
 
         .. code-block:: python
@@ -373,7 +374,7 @@ Record Operations
             client = aerospike.client(config).connect()
 
             key = ('test', 'demo', 1)
-            client.remove(key, {'retry': aerospike.POLICY_RETRY_ONCE
+            client.remove(key, meta={'gen': 5}, policy={'gen': aerospike.POLICY_GEN_EQ})
             client.close()
 
 
