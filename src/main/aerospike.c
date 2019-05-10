@@ -34,7 +34,7 @@
 #include "cdt_types.h"
 
 PyObject *py_global_hosts;
-int counter = 0xA7000000;
+int counter = 0xA8000000;
 bool user_shm_key = false;
 
 PyDoc_STRVAR(client_doc,
@@ -94,7 +94,7 @@ AerospikeConstants operator_constants[] = {
 MOD_INIT(aerospike)
 {
 
-	const char version[8] = "3.7.0";
+	const char version[8] = "3.7.1";
 	// Makes things "thread-safe"
 	PyEval_InitThreads();
 	int i = 0;
