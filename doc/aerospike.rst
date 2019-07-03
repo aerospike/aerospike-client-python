@@ -40,6 +40,9 @@ in an in-memory primary index.
     against it, such as :meth:`~aerospike.Client.put` and
     :meth:`~aerospike.Client.get` records.
 
+    This is a wrapper function which calls the constructor for the :class:`~aerospike.Client` class.
+    The client may also be constructed by calling the constructor directly.
+
     :param dict config: the client's configuration.
 
         .. hlist::
