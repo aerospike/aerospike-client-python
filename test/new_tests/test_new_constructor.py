@@ -84,6 +84,11 @@ def test_setting_rack_aware_and_rack_id():
     client = aerospike.client(config)
     assert client is not None
 
+def test_setting_use_services_alternate():
+    config = {'hosts': host, 'use_services_alternate': True}
+    client = aerospike.client(config)
+    assert client is not None
+
 def test_setting_rack_aware_non_bool():
     config = {'hosts': host, 'rack_aware': "True"}
     with pytest.raises(e.ParamError):
@@ -100,5 +105,13 @@ def test_setting_rack_aware_non_bool():
 )
 def test_setting_rack_id_wrong_type(rack_id):
     config = {'hosts': host, 'rack_id': rack_id}
+    with pytest.raises(e.ParamError):
+        client = aerospike.client(config)
+
+def test_setting_wrong_type_services_alternate():
+    '''
+    'use_services_alternate' should be a boolean
+    '''
+    config = {'hosts': host, 'use_services_alternate': "True"}
     with pytest.raises(e.ParamError):
         client = aerospike.client(config)
