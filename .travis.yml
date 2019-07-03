@@ -6,14 +6,14 @@ python:
 sudo: false
 os:
 - linux
-dist: trusty
+dist: xenial
 addons:
   apt:
     packages:
       - libssl-dev
       - python-dev
 install:
-- wget -O aerospike-server.tgz http://aerospike.com/download/server/latest/artifact/tgz
+- wget -O aerospike-server.tgz https://aerospike.com/download/server/latest/artifact/tgz
 - tar xvzf aerospike-server.tgz
 - cp -f .travis/aerospike.conf ./aerospike-server/share/etc
 - cd aerospike-server
