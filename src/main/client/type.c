@@ -34,6 +34,7 @@
 
 
 static int set_rack_aware_config(as_config* conf, PyObject* config_dict);
+static int set_use_services_alternate(as_config* conf, PyObject* config_dict);
 
 enum {INIT_SUCCESS, INIT_NO_CONFIG_ERR, INIT_CONFIG_TYPE_ERR, INIT_LUA_USER_ERR,
 	  INIT_LUA_SYS_ERR,  INIT_HOST_TYPE_ERR, INIT_EMPTY_HOSTS_ERR,
@@ -1270,10 +1271,11 @@ static int AerospikeClient_Type_Init(AerospikeClient * self, PyObject * args, Py
 	}
 
     if (set_rack_aware_config(&config, py_config) != INIT_SUCCESS) {
-
         return INIT_POLICY_PARAM_ERR;
     }
-
+    if (set_use_services_alternate(&config, py_config) != INIT_SUCCESS) {
+        return INIT_POLICY_PARAM_ERR;
+    }
 
 	PyObject* py_max_socket_idle = NULL;
 	py_max_socket_idle = PyDict_GetItemString(py_config, "max_socket_idle");
@@ -1383,6 +1385,19 @@ static int set_rack_aware_config(as_config*conf, PyObject* config_dict) {
             return INIT_POLICY_PARAM_ERR; // Magnitude too great for an integer in C.
         }
         conf->rack_id = (int)rack_id;
+    }
+    return INIT_SUCCESS;
+}
+
+static int set_use_services_alternate(as_config* conf, PyObject* config_dict) {
+    PyObject* py_config_value;
+    py_config_value = PyDict_GetItemString(config_dict, "use_services_alternate");
+    if (py_config_value) {
+        if (PyBool_Check(py_config_value)) {
+            conf->use_services_alternate = PyObject_IsTrue(py_config_value);
+        } else {
+            return INIT_POLICY_PARAM_ERR;  // A non boolean was passed in as the value of use_services_alternate
+        }
     }
     return INIT_SUCCESS;
 }

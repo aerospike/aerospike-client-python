@@ -116,6 +116,10 @@ in an in-memory primary index.
                 | This serves to lower cloud provider costs when nodes are distributed across different racks/data centers.
                 | **rack_id** and **POLICY_REPLICA_PREFER_RACK** and server rack configuration must also be set to enable this functionality.
                 | Default False
+            * **use_services_alternate**
+                | Boolean. Flag to signify if "services-alternate" should be used instead of "services"
+                | Default False
+
 
     :return: an instance of the :py:class:`aerospike.Client` class.
 
