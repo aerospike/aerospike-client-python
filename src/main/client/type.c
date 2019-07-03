@@ -1271,10 +1271,12 @@ static int AerospikeClient_Type_Init(AerospikeClient * self, PyObject * args, Py
 	}
 
     if (set_rack_aware_config(&config, py_config) != INIT_SUCCESS) {
-        return INIT_POLICY_PARAM_ERR;
+        error_code = INIT_POLICY_PARAM_ERR;
+        goto CONSTRUCTOR_ERROR;
     }
     if (set_use_services_alternate(&config, py_config) != INIT_SUCCESS) {
-        return INIT_POLICY_PARAM_ERR;
+        error_code = INIT_POLICY_PARAM_ERR;
+        goto CONSTRUCTOR_ERROR;
     }
 
 	PyObject* py_max_socket_idle = NULL;
