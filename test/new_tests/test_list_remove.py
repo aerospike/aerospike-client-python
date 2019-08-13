@@ -188,8 +188,8 @@ class TestListRemove(object):
         key = ('test', 'demo', 1)
         try:
             self.as_connection.list_remove(key, "contact_no", -56)
-        except e.InvalidRequest as exception:
-            assert exception.code == 4
+        except e.OpNotApplicable as exception:
+            assert exception.code == 26
 
     def test_neg_list_remove_meta_type_integer(self):
         """
