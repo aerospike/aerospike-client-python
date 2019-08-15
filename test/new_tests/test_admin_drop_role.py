@@ -81,6 +81,33 @@ class TestDropRole(object):
         with pytest.raises(e.InvalidRole):
             self.client.admin_query_role("usr-sys-admin-test")
 
+    def test_drop_role_positive_with_policy_write(self):
+        """
+            Drop write role positive with policy
+        """
+        try:
+            self.client.admin_query_role("usr-sys-admin-test")
+            # role exists, clear it out.
+            self.client.admin_drop_role("usr-sys-admin-test")
+            time.sleep(1)
+        except e.InvalidRole:
+            pass  # we are good, no such role exists
+
+        self.client.admin_create_role("usr-sys-admin-test",
+                                      [{"code": aerospike.PRIV_WRITE,
+                                        "ns": "test", "set": "demo"}],
+                                      {'timeout': 1000})
+        time.sleep(1)
+
+        status = self.client.admin_drop_role(
+            "usr-sys-admin-test", {'timeout': 1000})
+
+        assert status == 0
+        time.sleep(1)
+
+        with pytest.raises(e.InvalidRole):
+            self.client.admin_query_role("usr-sys-admin-test")
+
     def test_drop_role_positive(self):
         """
             Drop role positive

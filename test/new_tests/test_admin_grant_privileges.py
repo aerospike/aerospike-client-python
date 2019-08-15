@@ -81,7 +81,7 @@ class TestGrantPrivileges(object):
 
     def test_admin_grant_privileges_positive_write(self):
         """
-            Grant privileges positive
+            Grant write privileges positive
         """
         status = self.client.admin_grant_privileges(
             "usr-sys-admin-test",
