@@ -90,6 +90,37 @@ class TestCreateRole(object):
 
         self.client.admin_drop_user("testcreaterole")
 
+    def test_create_role_positive_with_policy_write(self):
+        """
+            Create role with write privilege positive
+        """
+        try:
+            self.client.admin_query_role("usr-sys-admin-test")
+            # role exists, clear it out.
+            self.client.admin_drop_role("usr-sys-admin-test")
+            time.sleep(2)
+        except e.InvalidRole:
+            pass  # we are good, no such role exists
+
+        self.client.admin_create_role("usr-sys-admin-test",
+                                      [{"code": aerospike.PRIV_WRITE,
+                                          "ns": "test", "set": "demo"}],
+                                      {'timeout': 1000})
+        time.sleep(1)
+        roles = self.client.admin_query_role("usr-sys-admin-test")
+        assert roles == [{'code': 13, 'ns': 'test', 'set': 'demo'}]
+
+        status = self.client.admin_create_user(
+            "testcreaterole", "createrole", ["usr-sys-admin-test"])
+
+        assert status == 0
+        time.sleep(1)
+        roles = self.client.admin_query_user("testcreaterole")
+
+        assert roles == ["usr-sys-admin-test"]
+
+        self.client.admin_drop_user("testcreaterole")
+
     def test_create_role_positive(self):
         """
             Create role positive

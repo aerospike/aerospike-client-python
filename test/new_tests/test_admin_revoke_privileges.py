@@ -80,6 +80,31 @@ class TestRevokePrivilege(TestBaseClass):
         assert roles == [{'code': 0, 'ns': '', 'set': ''},
                          {'code': 1, 'ns': '', 'set': ''}]
 
+    def test_admin_revoke_privileges_positive_write(self):
+        """
+            revoke write privileges positive
+        """
+        status = self.client.admin_grant_privileges(
+            "usr-sys-admin-test",
+            [{"code": aerospike.PRIV_WRITE}])
+
+        assert status == 0
+        time.sleep(2)
+        roles = self.client.admin_query_role("usr-sys-admin-test")
+        assert roles == [{'code': 0, 'ns': '', 'set': ''},
+                         {'code': 1, 'ns': '', 'set': ''},
+                         {'code': 13, 'ns': '', 'set': ''}]
+
+        status = self.client.admin_revoke_privileges(
+            "usr-sys-admin-test",
+            [{"code": aerospike.PRIV_WRITE}])
+
+        assert status == 0
+        time.sleep(2)
+        roles = self.client.admin_query_role("usr-sys-admin-test")
+        assert roles == [{'code': 0, 'ns': '', 'set': ''},
+                         {'code': 1, 'ns': '', 'set': ''}]
+
     def test_admin_revoke_privileges_positive_with_policy(self):
         """
             Revoke privileges positive with policy
@@ -98,6 +123,31 @@ class TestRevokePrivilege(TestBaseClass):
         status = self.client.admin_revoke_privileges(
             "usr-sys-admin-test",
             [{"code": aerospike.PRIV_READ}], {'timeout': 1000})
+
+        time.sleep(1)
+        assert status == 0
+        roles = self.client.admin_query_role("usr-sys-admin-test")
+        assert roles == [{'code': 0, 'ns': '', 'set': ''},
+                         {'code': 1, 'ns': '', 'set': ''}]
+
+    def test_admin_revoke_privileges_positive_with_policy_write(self):
+        """
+            Revoke write privileges positive with policy
+        """
+        status = self.client.admin_grant_privileges(
+            "usr-sys-admin-test",
+            [{"code": aerospike.PRIV_WRITE}], {'timeout': 1000})
+
+        assert status == 0
+        time.sleep(2)
+        roles = self.client.admin_query_role("usr-sys-admin-test")
+        assert roles == [{'code': 0, 'ns': '', 'set': ''},
+                         {'code': 1, 'ns': '', 'set': ''},
+                         {'code': 13, 'ns': '', 'set': ''}]
+
+        status = self.client.admin_revoke_privileges(
+            "usr-sys-admin-test",
+            [{"code": aerospike.PRIV_WRITE}], {'timeout': 1000})
 
         time.sleep(1)
         assert status == 0

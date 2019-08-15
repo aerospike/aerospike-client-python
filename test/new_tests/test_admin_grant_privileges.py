@@ -79,6 +79,27 @@ class TestGrantPrivileges(object):
 
         assert status == 0
 
+    def test_admin_grant_privileges_positive_write(self):
+        """
+            Grant privileges positive
+        """
+        status = self.client.admin_grant_privileges(
+            "usr-sys-admin-test",
+            [{"code": aerospike.PRIV_WRITE}])
+
+        assert status == 0
+        time.sleep(1)
+        roles = self.client.admin_query_role("usr-sys-admin-test")
+        assert roles == [{'code': 0, 'ns': '', 'set': ''},
+                         {'code': 1, 'ns': '', 'set': ''},
+                         {'code': 13, 'ns': '', 'set': ''}]
+
+        status = self.client.admin_revoke_privileges(
+            "usr-sys-admin-test",
+            [{"code":  aerospike.PRIV_WRITE}])
+
+        assert status == 0
+
     def test_admin_grant_privileges_positive_with_policy(self):
         """
             Grant privileges positive with policy
