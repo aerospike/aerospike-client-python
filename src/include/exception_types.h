@@ -35,6 +35,7 @@ struct exceptions {
 	PyObject *ForbiddenError;
 	PyObject *QueryError;
 	PyObject *InvalidGeoJSON;
+	PyObject *OpNotApplicable; //26
 	PyObject *ScanAbortedError; //15
 	PyObject *ElementNotFoundError; //23
 	PyObject *ElementExistsError; //24
@@ -110,9 +111,9 @@ struct exceptions {
 };
 
 struct server_exceptions_struct {
-	PyObject * *server_exceptions[10];
-	char * server_exceptions_name[10];
-	int server_exceptions_codes[10];
+	PyObject * *server_exceptions[11];
+	char * server_exceptions_name[11];
+	int server_exceptions_codes[11];
 };
 struct record_exceptions_struct {
 	PyObject * *record_exceptions[8];

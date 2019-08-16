@@ -1200,8 +1200,8 @@ class TestOperate(object):
         key = ('test', 'demo', 'list_key')
         try:
             key, _, _ = self.as_connection.operate(key, list)
-        except e.InvalidRequest as exception:
-            assert exception.code == 4
+        except e.OpNotApplicable as exception:
+            assert exception.code == 26
 
     def test_neg_operate_with_command_invalid(self):
         """

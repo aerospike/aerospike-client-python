@@ -84,6 +84,11 @@ Exception Types
 
     Protocol-level error. Subclass of :py:exc:`~aerospike.exception.ServerError`.
 
+.. py:exception:: OpNotApplicable
+
+    The operation cannot be applied to the current bin value on the server.
+    Subclass of :py:exc:`~aerospike.exception.ServerError`.
+
 .. py:exception:: ServerFull
 
     The server node is running out of memory and/or storage device space

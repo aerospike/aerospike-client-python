@@ -1734,6 +1734,10 @@ Permission codes define the type of permission granted for a user's role.
 
     The user is granted read access.
 
+.. data:: PRIV_WRITE
+
+    The user is granted write access.
+
 .. data:: PRIV_READ_WRITE
 
     The user is granted read and write access.

@@ -922,7 +922,7 @@ class TestOperate(object):
         Invoke operate() with list addition operations negative
         """
         key = ('test', 'demo', 'list_key')
-        with pytest.raises(e.InvalidRequest):
+        with pytest.raises(e.OpNotApplicable):
             self.as_connection.operate(key, list)
 
 

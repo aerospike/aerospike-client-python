@@ -247,8 +247,8 @@ class TestListInsert(object):
 
         try:
             self.as_connection.list_insert(key, "age", -6, False)
-        except e.InvalidRequest as exception:
-            assert exception.code == 4
+        except e.OpNotApplicable as exception:
+            assert exception.code == 26
 
     def test_neg_list_insert_index_type_string(self):
         """

@@ -6,14 +6,12 @@ from .as_status_codes import AerospikeStatus
 from .index_helpers import ensure_dropped_index
 from aerospike import exception as e
 
-
 aerospike = pytest.importorskip("aerospike")
 try:
     import aerospike
 except:
     print("Please install aerospike python client.")
     sys.exit(1)
-
 
 class TestIndex(object):
 
