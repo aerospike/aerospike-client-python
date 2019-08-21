@@ -14,6 +14,10 @@ Dependencies
 The Python client for Aerospike works with Python 2.7, 3.4, 3.5, 3.6 running on
 **64-bit** OS X 10.9+ and Linux.
 
+NOTE: The following dependencies only apply to installations that build from source
+on linux, or OS X installations.
+For client>=3.8.0 and pip>=19.0 on linux platforms, can skip to "Install" section. 
+
 The client depends on:
 
 - Python devel package
@@ -80,6 +84,10 @@ Aerospike Python Client can be installed using ``pip``:
 
     pip install aerospike
 
+    # client >=3.8.0 will attempt a manylinux2010 wheel installation for linux distros
+    # to force a pip install from source:
+    pip install aerospike --no-binary :all:
+
     # to troubleshoot pip versions >= 6.0 you can
     pip install --no-cache-dir aerospike
 
@@ -98,7 +106,7 @@ Upgrading ``pip`` on OS X El-Capitan (10.11) or OS X Sierra(10.12)
 runs into `SIP issues <https://apple.stackexchange.com/questions/209572/how-to-use-pip-after-the-el-capitan-max-os-x-upgrade>`__
 with ``pip install --user aerospike`` as the recommended workaround to install aerospike on those versions of OS X.
 
-Attempting to install the client with pip for the system default Python may cause permssions issues when copying necesarry files. In order to avoid
+Attempting to install the client with pip for the system default Python may cause permissions issues when copying necessary files. In order to avoid
 those issues the client can be installed for the current user only with the command: ``pip install --user aerospike``
 
 If the version of Python is not in the officially supported list, or the ``--install-option`` argument is provided, pip will attempt to compile the client from source. Please see the `build directions in the GitHub repository <https://github.com/aerospike/aerospike-client-python/blob/master/BUILD.md>`__
