@@ -1,0 +1,25 @@
+name: aerospike-client-python
+
+dependency:
+  - url: git@github.com:citrusleaf/aerospike-client-c
+    dir: client-c
+    ref: 4.6.5
+  - url: git@github.com:citrusleaf/aerospike-lua-core
+    dir: lua
+    ref: master
+
+container:
+  - base:
+      - docker.qe.aerospike.com/build/aerospike-client-python:manylinux
+
+build:
+  - name: build
+    environment:
+      DOWNLOAD_C_CLIENT: 0
+      AEROSPIKE_C_HOME: /work/source/client-c
+      AEROSPIKE_LUA_PATH: /work/source/lua
+    script:
+      - make -C client-c
+      - scripts/manylinuxbuild.sh
+    artifact:
+      - /work/wheels/*.whl
