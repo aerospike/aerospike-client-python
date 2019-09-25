@@ -433,6 +433,10 @@ as_status pyobject_to_val(AerospikeClient * self, as_error * err, PyObject * py_
 	} else if (PyString_Check(py_obj)) {
 		char * s = PyString_AsString(py_obj);
 		*val = (as_val *) as_string_new(s, false);
+	 } else if (PyBytes_Check(py_obj)) {
+	 	uint8_t * b = (uint8_t *) PyBytes_AsString(py_obj);
+	 	uint32_t b_len  = (uint32_t)  PyBytes_Size(py_obj);
+	 	*val = (as_val *) as_bytes_new_wrap(b, b_len, false);
 	} else if (!strcmp(py_obj->ob_type->tp_name, "aerospike.Geospatial")) {
 		PyObject *py_parameter = PyString_FromString("geo_data");
 		PyObject* py_data = PyObject_GenericGetAttr(py_obj, py_parameter);

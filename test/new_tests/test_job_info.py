@@ -104,6 +104,16 @@ class TestScanInfo(object):
 
         assert response['status'] == aerospike.JOB_STATUS_COMPLETED
 
+    def test_job_info_with_largeid(self):
+        """
+        Invoke job_info() with a large scan id,
+        this should not raise an error
+        """
+        response = self.as_connection.job_info(
+            13287138843617152748, aerospike.JOB_SCAN)
+
+        assert response['status'] == aerospike.JOB_STATUS_COMPLETED
+
     def test_job_info_with_scanid_string(self):
         """
         Invoke job_info() with scan id incorrect
@@ -111,7 +121,8 @@ class TestScanInfo(object):
 
         with pytest.raises(TypeError) as typeError:
             self.as_connection.job_info("string")
-        assert "an integer is required" in str(typeError.value)
+        assert(any(["job_info() argument 1 must be int" in str(typeError.value),
+         "job_info() argument 1 must be an int" in str(typeError.value)]))
 
     def test_job_info_with_correct_parameters_without_connection(self):
         """

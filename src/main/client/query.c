@@ -484,7 +484,7 @@ PyObject * AerospikeClient_JobInfo(AerospikeClient * self, PyObject * args, PyOb
 	PyObject * py_policy = NULL;
 	PyObject * retObj = PyDict_New();
 
-	long ljobId = 0;
+	uint64_t ujobId = 0;
 	char *module = NULL;
 
 	as_policy_info info_policy;
@@ -495,7 +495,7 @@ PyObject * AerospikeClient_JobInfo(AerospikeClient * self, PyObject * args, PyOb
 	static char * kwlist[] = {"job_id", "module", "policy", NULL};
 
 	// Python Function Argument Parsing
-	if (PyArg_ParseTupleAndKeywords(args, kwds, "ls|O:job_info", kwlist, &ljobId, &module, &py_policy) == false) {
+	if (PyArg_ParseTupleAndKeywords(args, kwds, "Ks|O:job_info", kwlist, &ujobId, &module, &py_policy) == false) {
 		return NULL;
 	}
 
@@ -523,7 +523,7 @@ PyObject * AerospikeClient_JobInfo(AerospikeClient * self, PyObject * args, PyOb
 
 	Py_BEGIN_ALLOW_THREADS
 	if (AEROSPIKE_OK != (aerospike_job_info(self->as, &err,
-					info_policy_p, module, ljobId, false, &job_info))) {
+					info_policy_p, module, ujobId, false, &job_info))) {
 		goto CLEANUP;
 	}
 	Py_END_ALLOW_THREADS

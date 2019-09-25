@@ -19,12 +19,15 @@
 
 #include <aerospike/as_arraylist.h>
 #include <aerospike/as_error.h>
+#include "cdt_types.h"
 
 #include "client.h"
 #include "conversions.h"
 #include "exceptions.h"
 #include "query.h"
 #include "policy.h"
+
+bool Illegal_UDF_Args_Check(PyObject * py_args);
 
 AerospikeQuery * AerospikeQuery_Apply(AerospikeQuery * self, PyObject * args, PyObject * kwds)
 {
@@ -40,7 +43,8 @@ AerospikeQuery * AerospikeQuery_Apply(AerospikeQuery * self, PyObject * args, Py
 	// Python function keyword arguments
 	static char * kwlist[] = {"module", "function", "arguments", "policy", NULL};
 
-	if ( PyArg_ParseTupleAndKeywords(args, kwds, "OO|OO:apply", kwlist, &py_module, &py_function, &py_args, &py_policy) == false ){
+	if ( PyArg_ParseTupleAndKeywords(args, kwds, "OO|OO:apply", kwlist,
+	 &py_module, &py_function, &py_args, &py_policy) == false ){
 		return NULL;
 	}
 
@@ -93,10 +97,16 @@ AerospikeQuery * AerospikeQuery_Apply(AerospikeQuery * self, PyObject * args, Py
 		goto CLEANUP;
 	}
 
-	if ( py_args && PyList_Check(py_args) ){
+	if ( py_args && PyList_Check(py_args) ) {
+
 		Py_ssize_t size = PyList_Size(py_args);
 
 		arglist = as_arraylist_new(size, 0);
+
+		if( Illegal_UDF_Args_Check(py_args) ) {
+			as_error_update(&err, AEROSPIKE_ERR_CLIENT, "udf function argument type must be supported by Aerospike");
+		 	goto CLEANUP;
+		}
 
 		for ( int i = 0; i < size; i++ ) {
 			PyObject * py_val = PyList_GetItem(py_args, (Py_ssize_t)i);
@@ -111,12 +121,13 @@ AerospikeQuery * AerospikeQuery_Apply(AerospikeQuery * self, PyObject * args, Py
 			}
 		}
 	}
-
-
+	else {
+		as_error_update(&err, AEROSPIKE_ERR_CLIENT, "udf function arguments must be enclosed in a list");
+		goto CLEANUP;
+	}
 	Py_BEGIN_ALLOW_THREADS
 	as_query_apply(&self->query, module, function, (as_list *) arglist);
 	Py_END_ALLOW_THREADS
-
 CLEANUP:
 	POOL_DESTROY(&static_pool);
 
@@ -145,4 +156,45 @@ CLEANUP:
 
 	Py_INCREF(self);
 	return self;
+}
+
+bool Illegal_UDF_Args_Check(PyObject * py_args) {
+	Py_ssize_t size = PyList_Size(py_args);
+	PyObject * py_args_copy = PyList_GetSlice(py_args, (Py_ssize_t)0, (Py_ssize_t)size);
+	for ( int i = 0; i < size; i++ ) {
+		PyObject * py_val = PyList_GetItem(py_args_copy, (Py_ssize_t)i);
+		if ( PyList_Check(py_val) ) {
+			Py_ssize_t nested_size = PyList_Size(py_val);
+			for ( int j = 0; j < nested_size; j++, size++ ) {
+					PyList_Append(py_args_copy, PyList_GetItem(py_val, (Py_ssize_t)j));
+			}
+		} 
+		else if ( PyDict_Check(py_val) ) {
+			PyObject * dict_values = PyDict_Values(py_val);
+			Py_ssize_t nested_size = PyList_Size(dict_values);
+			for ( int j = 0; j < nested_size; j++, size++ ) {
+					PyList_Append(py_args_copy, PyList_GetItem(dict_values, (Py_ssize_t)j));
+			}
+			Py_DECREF(dict_values);
+		}
+		else if ( !(
+			PyInt_Check(py_val)                                             || 
+			PyLong_Check(py_val)                                            ||
+			PyFloat_Check(py_val)                                           ||
+			PyString_Check(py_val)                                          ||
+			PyBool_Check(py_val)                                            ||
+			PyUnicode_Check(py_val)                                         ||
+			!strcmp(py_val->ob_type->tp_name, "aerospike.Geospatial")       ||
+			PyByteArray_Check(py_val)                                       ||
+			(Py_None == py_val)                                             ||
+			(!strcmp(py_val->ob_type->tp_name, "aerospike.null"))           ||
+			AS_Matches_Classname(py_val, AS_CDT_WILDCARD_NAME)              ||
+			AS_Matches_Classname(py_val, AS_CDT_INFINITE_NAME)              ||
+			PyBytes_Check(py_val)
+		) ) {
+			return true;
+		}
+	}
+	Py_DECREF(py_args_copy);
+	return false;
 }

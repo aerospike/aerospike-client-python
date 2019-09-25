@@ -2,6 +2,7 @@
 import pytest
 import time
 import sys
+import pickle
 from .as_status_codes import AerospikeStatus
 from aerospike import exception as e
 from aerospike import predicates as p
@@ -52,13 +53,23 @@ def drop_records(client):
     except e.RecordNotFound:
         pass
 
+
 def add_test_udf(client):
     policy = {}
     client.udf_put(u"query_apply.lua", 0, policy)
 
 
 def drop_test_udf(client):
-    client.udf_remove("query_apply.lua")
+    client.udf_remove(u"query_apply.lua")
+
+
+def add_test_parameter_udf(client):
+    policy = {}
+    client.udf_put(u"query_apply_parameters.lua", 0, policy)
+
+
+def drop_test_parameter_udf(client):
+    client.udf_remove(u"query_apply_parameters.lua")
 
 
 def remove_indexes_from_client(client):
@@ -70,8 +81,10 @@ class TestQueryApply(object):
 
     # These functions will run once for this test class, and do all of the
     # required setup and teardown
-    connection_setup_functions = (add_test_udf, add_indexes_to_client, create_records)
-    connection_teardown_functions = (drop_test_udf, remove_indexes_from_client, drop_records)
+    connection_setup_functions = (add_test_udf, add_test_parameter_udf,
+     add_indexes_to_client, create_records)
+    connection_teardown_functions = (drop_test_udf, drop_test_parameter_udf,
+     remove_indexes_from_client, drop_records)
     age_range_pred = p.between('age', 0, 4)  # Predicate for ages between [0,5)
     no_set_key = ('test', None, "no_set")  # Key for item stored in a namespace but not in a set
 
@@ -293,6 +306,119 @@ class TestQueryApply(object):
 
         err_code = err_info.value.code
         assert err_code == AerospikeStatus.AEROSPIKE_ERR_PARAM
+
+    def test_stream_udf_parameters(self):
+        """
+        Invoke query.apply() with a stream udf. 
+        that accepts additional arguments.
+        """
+        query_results = self.as_connection.query(
+            "test", "demo",
+        ).apply(
+            'query_apply_parameters', 'query_params', [['age', 5]]
+        ).results()
+        
+        query_results.sort()
+        assert query_results == [6,7,8,9]
+
+    def test_stream_udf_parameters_with_set(self):
+        """
+        Invoke query.apply() with a stream udf. 
+        arguments contain an unsuported set. 
+        """
+        with pytest.raises(e.ClientError) as err_info:
+            query_id = self.as_connection.query(
+                "test", "demo",
+            ).apply(
+                'query_apply_parameters', 'query_params', [['job_type', 'job_type', 18],
+                ['id', ['john', {'id', 'args', 'kwargs', 'john'}, ['john', {'mary' : 39}]]], []]
+            )
+        
+        err_text = err_info.value.msg
+        assert 'udf function argument type must be supported by Aerospike' in err_text
+        err_code = err_info.value.code
+        assert err_code == AerospikeStatus.AEROSPIKE_ERR_CLIENT
+
+        with pytest.raises(e.ClientError) as err_info_dict:
+            query_id = self.as_connection.query(
+                "test", "demo",
+            ).apply(
+                'query_apply_parameters', 'query_params', [['job_type', 'job_type', 18],
+                ['id', ['john', ['john', {'mary' : 39, 'ken': {'lary', 'quinton', 'julie', 'mark'}}]]], []]
+            )
+        
+        err_text = err_info_dict.value.msg
+        assert 'udf function argument type must be supported by Aerospike' in err_text
+        err_code = err_info_dict.value.code
+        assert err_code == AerospikeStatus.AEROSPIKE_ERR_CLIENT
+    
+
+    def test_stream_udf_parameters_with_tuple(self):
+        """
+        Invoke query.apply() with a stream udf. 
+        arguments contain an unsuported tuple. 
+        """
+        with pytest.raises(e.ClientError) as err_info:
+            query_id = self.as_connection.query(
+                "test", "demo",
+            ).apply(
+                'query_apply_parameters', 'query_params', [['job_type', 'job_type', 18],
+                ['id', ['john', ('id', 'args'), ['john', {'mary' : 39}]]], []]
+            )
+        
+        err_text = err_info.value.msg
+        assert 'udf function argument type must be supported by Aerospike' in err_text
+        err_code = err_info.value.code
+        assert err_code == AerospikeStatus.AEROSPIKE_ERR_CLIENT
+
+
+    def test_stream_udf_parameters_with_string(self):
+        """
+        Invoke query.apply() with a stream udf. 
+        arguments contain a string not wrapped in a list.
+        This should cause an exception.
+        """
+        with pytest.raises(e.ClientError) as err_info:
+            query_id = self.as_connection.query(
+                "test", "demo",
+            ).apply(
+                'query_apply_parameters', 'query_params', 'age'
+            )
+        
+        err_text = err_info.value.msg
+        assert 'udf function arguments must be enclosed in a list' in err_text
+        err_code = err_info.value.code
+        assert err_code == AerospikeStatus.AEROSPIKE_ERR_CLIENT
+
+    def test_stream_udf_parameters_with_serialized_set(self):
+        """
+        Invoke query.apply() with a stream udf. 
+        arguments contain a serialized set.
+        """
+        query_results = self.as_connection.query(
+            "test", "demo",
+        ).apply(
+            'query_apply_parameters', 'query_params', [['age', 5]
+            ,pickle.dumps({'lary', 'quinton', 'julie', 'mark'})]
+        ).results()
+        
+        query_results.sort()
+        assert query_results == [6,7,8,9]
+
+    def test_stream_udf_complicated_parameters(self):
+        """
+        Invoke query.apply() with a stream udf. 
+        that accepts additional arguments.
+        """
+        query_results = self.as_connection.query(
+            "test", "demo",
+        ).apply(
+            'query_apply_parameters', 'query_params', [['age', 2],
+            ['id', ['john', ['hi']], ['john', {'mary' : 39}]], []]
+        ).results()
+        
+        query_results.sort()
+        assert query_results == [3,4,5,6,7,8,9]
 
     def _correct_items_have_been_applied(self):
         for i in range(1, 5):

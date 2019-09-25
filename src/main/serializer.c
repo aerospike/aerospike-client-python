@@ -335,6 +335,10 @@ extern as_status serialize_based_on_serializer_policy(AerospikeClient * self,
 					uint8_t *bytes_array = (uint8_t *) PyByteArray_AsString(value);
 					uint32_t bytes_array_len  = (uint32_t)  PyByteArray_Size(value);
 					set_as_bytes(bytes, bytes_array, bytes_array_len, AS_BYTES_BLOB, error_p);
+				} else if (PyBytes_Check(value)) {
+					uint8_t *my_bytes = (uint8_t *) PyBytes_AsString(value);
+					uint32_t my_bytes_len  = (uint32_t)  PyBytes_Size(value);
+					set_as_bytes(bytes, my_bytes, my_bytes_len, AS_BYTES_BLOB, error_p);
 				} else {
 
 					/* get the sys.modules dictionary */
