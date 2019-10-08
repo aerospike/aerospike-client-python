@@ -52,7 +52,7 @@ download() {
   printf "info: downloading '%s' to '%s'\n" "${url}" "${dest}"
 
   if has_cmd curl; then
-    curl -L ${url} > ${dest}
+    curl -f -L ${url} --output ${dest}
     if [ $? != 0 ]; then
       echo "error: Unable to download package from '${url}'"
       exit 1
