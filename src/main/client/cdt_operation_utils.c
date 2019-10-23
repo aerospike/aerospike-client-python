@@ -77,10 +77,10 @@ get_val_list(AerospikeClient * self, as_error * err, const char* list_key, PyObj
 }
 
 as_status
-get_int64_t(as_error * err, const char* key, PyObject * op_dict, int64_t* count)
+get_int64_t(as_error * err, const char* key, PyObject * op_dict, int64_t* i64_valptr)
 {
         bool found = false;
-        if (get_optional_int64_t(err, key, op_dict, count, &found) != AEROSPIKE_OK) {
+        if (get_optional_int64_t(err, key, op_dict, i64_valptr, &found) != AEROSPIKE_OK) {
             return err->code;
         }
         if (!found) {
@@ -90,7 +90,7 @@ get_int64_t(as_error * err, const char* key, PyObject * op_dict, int64_t* count)
 }
 
 as_status
-get_optional_int64_t(as_error * err, const char* key,  PyObject * op_dict, int64_t* count, bool* found)
+get_optional_int64_t(as_error * err, const char* key,  PyObject * op_dict, int64_t* i64_valptr, bool* found)
 {
         *found = false;
         PyObject* py_val = PyDict_GetItemString(op_dict, key);
@@ -99,7 +99,7 @@ get_optional_int64_t(as_error * err, const char* key,  PyObject * op_dict, int64
         }
         
         if (PyInt_Check(py_val)) {
-            *count = (int64_t)PyInt_AsLong(py_val);
+            *i64_valptr = (int64_t)PyInt_AsLong(py_val);
             if (PyErr_Occurred()) {
                 if(PyErr_ExceptionMatches(PyExc_OverflowError)) {
                     return as_error_update(err, AEROSPIKE_ERR_PARAM, "%s too large", key);
@@ -110,7 +110,7 @@ get_optional_int64_t(as_error * err, const char* key,  PyObject * op_dict, int64
             }
         }
         else if (PyLong_Check(py_val)) {
-            *count = (int64_t)PyLong_AsLong(py_val);
+            *i64_valptr = (int64_t)PyLong_AsLong(py_val);
             if (PyErr_Occurred()) {
                 if(PyErr_ExceptionMatches(PyExc_OverflowError)) {
                     return as_error_update(err, AEROSPIKE_ERR_PARAM, "%s too large", key);

@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright 2013-2017 Aerospike, Inc.
+ * Copyright 2013-2019 Aerospike, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -54,6 +54,10 @@
 #define PY_EXCEPTION_FILE 2
 #define PY_EXCEPTION_LINE 3
 #define AS_PY_EXCEPTION_IN_DOUBT 4
+
+#define CTX_KEY "ctx"
+
+bool requires_int(uint64_t op);
 
 as_status as_udf_file_to_pyobject( as_error *err, as_udf_file * entry, PyObject ** py_file )
 {
@@ -1949,4 +1953,111 @@ string_and_pyuni_from_pystring(PyObject* py_string, PyObject** pyuni_r, char** c
 		return AEROSPIKE_OK;
 	}
 	return as_error_update(err, AEROSPIKE_ERR_PARAM, "String value required");
+}
+
+// This function converts a list of cdt_ctx from aerospike_helpers.ctx to
+// an as_cdt_ctx object for use with the c-client. the cdt_ctx parameter should be an uninitialized as_cdt_ctx
+// object. This function will initilaise it, and free it IF an error occurs, otherwise, the caller must destroy
+// the as_cdt_ctx when it is done.
+as_status get_cdt_ctx(AerospikeClient* self, as_error* err, as_cdt_ctx* cdt_ctx, 
+    PyObject* op_dict, bool* ctx_in_use, as_static_pool* static_pool, int serializer_type)
+{
+    PyObject* py_ctx = PyDict_GetItemString(op_dict, CTX_KEY);
+    int int_val = 0;
+    as_val* val = NULL;
+
+    if (!py_ctx) {
+        return AEROSPIKE_OK;
+    }
+    *ctx_in_use = true;
+
+    if (PyList_Check(py_ctx)) {
+        Py_ssize_t py_list_size = PyList_Size(py_ctx);
+        as_cdt_ctx_init(cdt_ctx, (int)py_list_size);
+
+        for (int i = 0; i < py_list_size; i++) {
+            PyObject* py_val = PyList_GetItem(py_ctx, (Py_ssize_t)i);
+
+            PyObject* id_temp = PyObject_GetAttrString(py_val, "id");
+            if (PyErr_Occurred()) {
+				as_cdt_ctx_destroy(cdt_ctx);
+                return as_error_update(err, AEROSPIKE_ERR_PARAM, "Failed to convert %s", CTX_KEY);
+            }
+
+            PyObject* value_temp = PyObject_GetAttrString(py_val, "value");
+            if (PyErr_Occurred()) {
+				as_cdt_ctx_destroy(cdt_ctx);
+                return as_error_update(err, AEROSPIKE_ERR_PARAM, "Failed to convert %s", CTX_KEY);
+            }
+
+            uint64_t item_type = PyLong_AsUnsignedLong(id_temp);
+            if (PyErr_Occurred()) {
+				as_cdt_ctx_destroy(cdt_ctx);
+                return as_error_update(err, AEROSPIKE_ERR_PARAM, "Failed to convert %s", CTX_KEY);
+            }
+
+            // add an as_cdt_ctx with value to cdt_ctx
+            if (requires_int(item_type)) {
+                int_val = PyLong_AsLong(value_temp);
+                if (PyErr_Occurred()) {
+					as_cdt_ctx_destroy(cdt_ctx);
+                    return as_error_update(err, AEROSPIKE_ERR_PARAM, "Failed to convert %s", CTX_KEY);
+                }
+                switch(item_type) {
+                    case AS_CDT_CTX_LIST_INDEX:
+                        as_cdt_ctx_add_list_index(cdt_ctx, int_val);
+                        break;
+                    case AS_CDT_CTX_LIST_RANK:
+                        as_cdt_ctx_add_list_rank(cdt_ctx, int_val);
+                        break;
+                    case AS_CDT_CTX_MAP_INDEX:
+                        as_cdt_ctx_add_map_index(cdt_ctx, int_val);
+                        break;
+                    case AS_CDT_CTX_MAP_RANK:
+                        as_cdt_ctx_add_map_rank(cdt_ctx, int_val);
+                        break;
+                    default:
+						as_cdt_ctx_destroy(cdt_ctx);
+                        return as_error_update(err, AEROSPIKE_ERR_PARAM, "Failed to convert, unknown ctx operation %s", CTX_KEY);
+                }
+            } else {
+                if (pyobject_to_val(self, err, value_temp, &val, static_pool, serializer_type) != AEROSPIKE_OK) {
+                    return as_error_update(err, AEROSPIKE_ERR_PARAM, "Failed to convert %s", CTX_KEY);
+                }
+                switch(item_type) {
+                    case AS_CDT_CTX_LIST_VALUE:
+                        as_cdt_ctx_add_list_value(cdt_ctx, val);
+                        break;
+                    case AS_CDT_CTX_MAP_KEY:
+                        as_cdt_ctx_add_map_key(cdt_ctx, val);
+                        break;
+                    case AS_CDT_CTX_MAP_VALUE:
+                        as_cdt_ctx_add_map_value(cdt_ctx, val);
+                        break;
+                    default:
+						as_cdt_ctx_destroy(cdt_ctx);
+                        return as_error_update(err, AEROSPIKE_ERR_PARAM, "Failed to convert, unknown ctx operation %s", CTX_KEY);
+                }
+            }
+
+            Py_DECREF(id_temp);
+            Py_DECREF(value_temp);
+        }
+    }
+    else {
+		as_cdt_ctx_destroy(cdt_ctx);
+        return as_error_update(err, AEROSPIKE_ERR_PARAM, "Failed to convert %s", CTX_KEY);
+    }
+
+    return AEROSPIKE_OK;
+}
+
+bool
+requires_int(uint64_t op) {
+    return(
+        op == AS_CDT_CTX_LIST_INDEX ||
+        op == AS_CDT_CTX_LIST_RANK  ||
+        op == AS_CDT_CTX_MAP_INDEX  ||
+        op == AS_CDT_CTX_MAP_RANK
+    );
 }

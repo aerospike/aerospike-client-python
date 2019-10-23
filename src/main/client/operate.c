@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright 2013-2017 Aerospike, Inc.
+ * Copyright 2013-2019 Aerospike, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -33,6 +33,7 @@
 #include "geo.h"
 #include "cdt_list_operations.h"
 #include "cdt_map_operations.h"
+#include "bit_operations.h"
 
 #include <aerospike/as_double.h>
 #include <aerospike/as_integer.h>
@@ -46,6 +47,8 @@ get_operation(as_error* err, PyObject* op_dict, long* operation_ptr);
 
 static inline bool isListOp(int op);
 static inline bool isNewMapOp(int op);
+static inline bool isBitOp(int op);
+
 
 #define PY_OPERATION_KEY "op"
 
@@ -105,6 +108,12 @@ static inline bool isNewMapOp(int op);
 
 #define CONVERT_KEY_TO_AS_VAL()\
 	if (pyobject_to_astype_write(self, err, py_key, &put_key,\
+			static_pool, SERIALIZER_PYTHON) != AEROSPIKE_OK) {\
+		return err->code;\
+	}
+
+#define CONVERT_PY_CTX_TO_AS_CTX()\
+	if (get_cdt_ctx(self, err, &ctx, py_val, &ctx_in_use,\
 			static_pool, SERIALIZER_PYTHON) != AEROSPIKE_OK) {\
 		return err->code;\
 	}
@@ -224,6 +233,12 @@ static inline bool isNewMapOp(int op) {
 			op == OP_MAP_GET_BY_KEY_INDEX_RANGE_REL);
 }
 
+static inline bool isBitOp(int op) {
+	int bit_start = OP_BIT_RESIZE;
+	int bit_end = OP_BIT_RSCAN;
+	return (op >= bit_start && op <= bit_end);
+}
+
 bool opRequiresIndex(int op) {
 	return (op == OP_LIST_INSERT               || op == OP_LIST_INSERT_ITEMS  ||
 			op == OP_LIST_POP                  || op == OP_LIST_POP_RANGE     ||
@@ -282,6 +297,9 @@ as_status add_op(AerospikeClient * self, as_error * err, PyObject * py_val, as_v
 	as_val* put_val = NULL;
 	as_val* put_key = NULL;
 	as_val* put_range = NULL;
+	as_cdt_ctx ctx;
+	as_cdt_ctx* ctx_ref = NULL;
+	bool ctx_in_use = false;
 	char* bin = NULL;
 	char* val = NULL;
 	long offset = 0;
@@ -322,6 +340,11 @@ as_status add_op(AerospikeClient * self, as_error * err, PyObject * py_val, as_v
 			ops, operation, ret_type, SERIALIZER_PYTHON);
 	}
 
+    if (isBitOp(operation)) {
+		return add_new_bit_op(self, err, py_val, unicodeStrVector, static_pool,
+			ops, operation, ret_type, SERIALIZER_PYTHON);
+    }
+
 	while (PyDict_Next(py_val, &pos, &key_op, &value)) {
 		if (!PyString_Check(key_op)) {
 			return as_error_update(err, AEROSPIKE_ERR_CLIENT, "An operation key must be a string.");
@@ -343,9 +366,11 @@ as_status add_op(AerospikeClient * self, as_error * err, PyObject * py_val, as_v
 				py_map_policy = value;
 			} else if (!strcmp(name, "return_type")) {
 				py_return_type = value;
-			}
-			else if (strcmp(name, "inverted") == 0) {
+			} else if (strcmp(name, "inverted") == 0) {
 				continue;
+			} else if (strcmp(name, "ctx") == 0) {
+				CONVERT_PY_CTX_TO_AS_CTX();
+				ctx_ref = (ctx_in_use ? &ctx : NULL);
 			} else {
 				return as_error_update(err, AEROSPIKE_ERR_PARAM,
 						"Operation can contain only op, bin, index, key, val, return_type and map_policy keys");
@@ -538,126 +563,130 @@ as_status add_op(AerospikeClient * self, as_error * err, PyObject * py_val, as_v
 
 		//------- MAP OPERATIONS ---------
 		case OP_MAP_SET_POLICY:
-			as_operations_add_map_set_policy(ops, bin, &map_policy);
+			as_operations_map_set_policy(ops, bin, ctx_ref, &map_policy);
 			break;
 		case OP_MAP_PUT:
 			CONVERT_VAL_TO_AS_VAL();
 			CONVERT_KEY_TO_AS_VAL();
-			as_operations_add_map_put(ops, bin, &map_policy, put_key, put_val);
+			as_operations_map_put(ops, bin, ctx_ref, &map_policy, put_key, put_val);
 			break;
 		case OP_MAP_PUT_ITEMS:
 			CONVERT_VAL_TO_AS_VAL();
-			as_operations_add_map_put_items(ops, bin, &map_policy, (as_map *)put_val);
+			as_operations_map_put_items(ops, bin, ctx_ref, &map_policy, (as_map *)put_val);
 			break;
 		case OP_MAP_INCREMENT:
 			CONVERT_VAL_TO_AS_VAL();
 			CONVERT_KEY_TO_AS_VAL();
-			as_operations_add_map_increment(ops, bin, &map_policy, put_key, put_val);
+			as_operations_map_increment(ops, bin, ctx_ref, &map_policy, put_key, put_val);
 			break;
 		case OP_MAP_DECREMENT:
 			CONVERT_VAL_TO_AS_VAL();
 			CONVERT_KEY_TO_AS_VAL();
-			as_operations_add_map_decrement(ops, bin, &map_policy, put_key, put_val);
+			as_operations_map_decrement(ops, bin, ctx_ref, &map_policy, put_key, put_val);
 			break;
 		case OP_MAP_SIZE:
-			as_operations_add_map_size(ops, bin);
+			as_operations_map_size(ops, bin, ctx_ref);
 			break;
 		case OP_MAP_CLEAR:
-			as_operations_add_map_clear(ops, bin);
+			as_operations_map_clear(ops, bin, ctx_ref);
 			break;
 		case OP_MAP_REMOVE_BY_KEY:
 			CONVERT_KEY_TO_AS_VAL();
-			as_operations_add_map_remove_by_key(ops, bin, put_key, return_type);
+			as_operations_map_remove_by_key(ops, bin, ctx_ref, put_key, return_type);
 			break;
 		case OP_MAP_REMOVE_BY_KEY_LIST:
 			CONVERT_VAL_TO_AS_VAL();
-			as_operations_add_map_remove_by_key_list(ops, bin, (as_list *)put_val, return_type);
+			as_operations_map_remove_by_key_list(ops, bin, ctx_ref, (as_list *)put_val, return_type);
 			break;
 		case OP_MAP_REMOVE_BY_KEY_RANGE:
 			CONVERT_VAL_TO_AS_VAL();
 			CONVERT_KEY_TO_AS_VAL();
-			as_operations_add_map_remove_by_key_range(ops, bin, put_key, put_val, return_type);
+			as_operations_map_remove_by_key_range(ops, bin, ctx_ref, put_key, put_val, return_type);
 			break;
 		case OP_MAP_REMOVE_BY_VALUE:
 			CONVERT_VAL_TO_AS_VAL();
-			as_operations_add_map_remove_by_value(ops, bin, put_val, return_type);
+			as_operations_map_remove_by_value(ops, bin, ctx_ref, put_val, return_type);
 			break;
 		case OP_MAP_REMOVE_BY_VALUE_LIST:
 			CONVERT_VAL_TO_AS_VAL();
-			as_operations_add_map_remove_by_value_list(ops, bin, (as_list *)put_val, return_type);
+			as_operations_map_remove_by_value_list(ops, bin, ctx_ref, (as_list *)put_val, return_type);
 			break;
 		case OP_MAP_REMOVE_BY_VALUE_RANGE:
 			CONVERT_VAL_TO_AS_VAL();
 			CONVERT_RANGE_TO_AS_VAL();
-			as_operations_add_map_remove_by_value_range(ops, bin, put_val, put_range, return_type);
+			as_operations_map_remove_by_value_range(ops, bin, ctx_ref, put_val, put_range, return_type);
 			break;
 		case OP_MAP_REMOVE_BY_INDEX:
-			as_operations_add_map_remove_by_index(ops, bin, index, return_type);
+			as_operations_map_remove_by_index(ops, bin, ctx_ref, index, return_type);
 			break;
 		case OP_MAP_REMOVE_BY_INDEX_RANGE:
 			if (pyobject_to_index(self, err, py_value, &offset) != AEROSPIKE_OK) {
 				return err->code;
 			}
-			as_operations_add_map_remove_by_index_range(ops, bin, index, offset, return_type);
+			as_operations_map_remove_by_index_range(ops, bin, ctx_ref, index, offset, return_type);
 			break;
 		case OP_MAP_REMOVE_BY_RANK:
-			as_operations_add_map_remove_by_rank(ops, bin, index, return_type);
+			as_operations_map_remove_by_rank(ops, bin, ctx_ref, index, return_type);
 			break;
 		case OP_MAP_REMOVE_BY_RANK_RANGE:
 			if (pyobject_to_index(self, err, py_value, &offset) != AEROSPIKE_OK) {
 				return err->code;
 			}
-			as_operations_add_map_remove_by_rank_range(ops, bin, index, offset, return_type);
+			as_operations_map_remove_by_rank_range(ops, bin, ctx_ref, index, offset, return_type);
 			break;
 		case OP_MAP_GET_BY_KEY:
 			CONVERT_KEY_TO_AS_VAL();
-			as_operations_add_map_get_by_key(ops, bin, put_key, return_type);
+			as_operations_map_get_by_key(ops, bin, ctx_ref, put_key, return_type);
 			break;
 		case OP_MAP_GET_BY_KEY_RANGE:
 			CONVERT_RANGE_TO_AS_VAL();
 			CONVERT_KEY_TO_AS_VAL();
-			as_operations_add_map_get_by_key_range(ops, bin, put_key, put_range, return_type);
+			as_operations_map_get_by_key_range(ops, bin, ctx_ref, put_key, put_range, return_type);
 			break;
 		case OP_MAP_GET_BY_KEY_LIST:
 			CONVERT_VAL_TO_AS_VAL();
-			as_operations_add_map_get_by_key_list(ops, bin, (as_list *)put_val, return_type);
+			as_operations_map_get_by_key_list(ops, bin, ctx_ref, (as_list *)put_val, return_type);
 			break;
 		case OP_MAP_GET_BY_VALUE:
 			CONVERT_VAL_TO_AS_VAL();
-			as_operations_add_map_get_by_value(ops, bin, put_val, return_type);
+			as_operations_map_get_by_value(ops, bin, ctx_ref, put_val, return_type);
 			break;
 		case OP_MAP_GET_BY_VALUE_RANGE:
 			CONVERT_VAL_TO_AS_VAL();
 			CONVERT_RANGE_TO_AS_VAL();
-			as_operations_add_map_get_by_value_range(ops, bin, put_val, put_range, return_type);
+			as_operations_map_get_by_value_range(ops, bin, ctx_ref, put_val, put_range, return_type);
 			break;
 		case OP_MAP_GET_BY_VALUE_LIST:
 			CONVERT_VAL_TO_AS_VAL();
-			as_operations_add_map_get_by_value_list(ops, bin, (as_list *)put_val, return_type);
+			as_operations_map_get_by_value_list(ops, bin, ctx_ref, (as_list *)put_val, return_type);
 			break;
 		case OP_MAP_GET_BY_INDEX:
-			as_operations_add_map_get_by_index(ops, bin, index, return_type);
+			as_operations_map_get_by_index(ops, bin, ctx_ref, index, return_type);
 			break;
 		case OP_MAP_GET_BY_INDEX_RANGE:
 			if (pyobject_to_index(self, err, py_value, &offset) != AEROSPIKE_OK) {
 				return err->code;
 			}
-			as_operations_add_map_get_by_index_range(ops, bin, index, offset, return_type);
+			as_operations_map_get_by_index_range(ops, bin, ctx_ref, index, offset, return_type);
 			break;
 		case OP_MAP_GET_BY_RANK:
-			as_operations_add_map_get_by_rank(ops, bin, index, return_type);
+			as_operations_map_get_by_rank(ops, bin, ctx_ref, index, return_type);
 			break;
 		case OP_MAP_GET_BY_RANK_RANGE:
 			if (pyobject_to_index(self, err, py_value, &offset) != AEROSPIKE_OK) {
 				return err->code;
 			}
-			as_operations_add_map_get_by_rank_range(ops, bin, index, offset, return_type);
+			as_operations_map_get_by_rank_range(ops, bin, ctx_ref, index, offset, return_type);
 			break;
 
 		default:
 			if (self->strict_types) {
 				return as_error_update(err, AEROSPIKE_ERR_PARAM, "Invalid operation given");
 			}
+	}
+
+	if (ctx_in_use) {
+		as_cdt_ctx_destroy(&ctx);
 	}
 
 	return err->code;

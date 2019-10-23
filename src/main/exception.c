@@ -52,12 +52,13 @@ PyObject * AerospikeException_New(void)
 	struct record_exceptions_struct record_array = { 
 		{&exceptions_array.RecordKeyMismatch, &exceptions_array.RecordNotFound, &exceptions_array.RecordGenerationError, 
 			&exceptions_array.RecordExistsError, &exceptions_array.RecordTooBig, &exceptions_array.RecordBusy, 
-			&exceptions_array.BinNameError,	&exceptions_array.BinIncompatibleType},
+			&exceptions_array.BinNameError,	&exceptions_array.BinIncompatibleType,
+            &exceptions_array.BinExistsError, &exceptions_array.BinNotFound},
 		{"RecordKeyMismatch", "RecordNotFound", "RecordGenerationError", "RecordExistsError", "RecordTooBig", "RecordBusy", 
-			"BinNameError",  "BinIncompatibleType"},
+			"BinNameError",  "BinIncompatibleType", "BinExistsError", "BinNotFound"},
 		{AEROSPIKE_ERR_RECORD_KEY_MISMATCH, AEROSPIKE_ERR_RECORD_NOT_FOUND, AEROSPIKE_ERR_RECORD_GENERATION, 
 			AEROSPIKE_ERR_RECORD_EXISTS, AEROSPIKE_ERR_RECORD_TOO_BIG, AEROSPIKE_ERR_RECORD_BUSY, 
-			AEROSPIKE_ERR_BIN_NAME, AEROSPIKE_ERR_BIN_INCOMPATIBLE_TYPE}
+			AEROSPIKE_ERR_BIN_NAME, AEROSPIKE_ERR_BIN_INCOMPATIBLE_TYPE, AEROSPIKE_ERR_BIN_EXISTS, AEROSPIKE_ERR_BIN_NOT_FOUND}
 	};
 
 	struct index_exceptions_struct index_array = { 
@@ -381,6 +382,7 @@ PyObject* raise_exception(as_error *err) {
 	PyObject * py_key = NULL, *py_value = NULL;
 	Py_ssize_t pos = 0;
 	PyObject * py_module_dict = PyModule_GetDict(module);
+	bool found = false;
 
 	while (PyDict_Next(py_module_dict, &pos, &py_key, &py_value)) {
 		if (PyObject_HasAttrString(py_value, "code")) {
@@ -389,6 +391,7 @@ PyObject* raise_exception(as_error *err) {
 				continue;
 			}
 			if (err->code == PyInt_AsLong(py_code)) {
+				found = true;
 				PyObject *py_attr = NULL;
 				py_attr = PyString_FromString(err->message);
 				PyObject_SetAttrString(py_value, "msg", py_attr);
@@ -419,6 +422,12 @@ PyObject* raise_exception(as_error *err) {
 			Py_DECREF(py_code);
 		}
 	}
-
+    // We haven't found the right exception, just use AerospikeError
+	if (!found) {
+		PyObject* base_exception = PyDict_GetItemString(py_module_dict, "AerospikeError");
+		if (base_exception) {
+			py_value = base_exception;
+		}
+	}
 	return py_value;
 }

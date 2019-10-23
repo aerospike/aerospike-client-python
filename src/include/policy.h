@@ -21,6 +21,7 @@
 #include <aerospike/as_policy.h>
 #include <aerospike/as_map_operations.h>
 #include <aerospike/as_list_operations.h>
+#include <aerospike/as_bit_operations.h>
 
 #define MAX_CONSTANT_STR_SIZE 512
 
@@ -107,6 +108,27 @@ enum Aerospike_map_operations {
 	OP_MAP_GET_BY_KEY_INDEX_RANGE_REL
 };
 
+enum aerospike_bitwise_operations {
+    OP_BIT_RESIZE = 2000,
+    OP_BIT_INSERT,
+    OP_BIT_REMOVE,
+    OP_BIT_SET,
+    OP_BIT_OR,
+    OP_BIT_XOR,
+    OP_BIT_AND,
+    OP_BIT_NOT,
+    OP_BIT_LSHIFT,
+    OP_BIT_RSHIFT,
+    OP_BIT_ADD,
+    OP_BIT_SUBTRACT,
+    OP_BIT_GET_INT,
+    OP_BIT_SET_INT,
+    OP_BIT_GET,
+    OP_BIT_COUNT,
+    OP_BIT_LSCAN,
+    OP_BIT_RSCAN
+};
+
 typedef struct Aerospike_Constants {
     long    constantno;
     char    constant_str[MAX_CONSTANT_STR_SIZE];
@@ -181,3 +203,4 @@ as_status set_query_options(as_error* err, PyObject* query_options, as_query* qu
 as_status pyobject_to_list_policy(as_error * err, PyObject * py_policy,
 									as_list_policy * policy);
 
+as_status pyobject_to_bit_policy(as_error* err, PyObject* py_policy, as_bit_policy* policy);

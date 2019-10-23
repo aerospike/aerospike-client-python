@@ -18,6 +18,11 @@
 
 #include <Python.h>
 
+#define RECORD_EXCEPTION_COUNT 10
+#define SERVER_EXCEPTION_COUNT 11
+#define INDEX_EXCEPTION_COUNT 6
+#define ADMIN_EXCEPTION_COUNT 17
+
 struct exceptions {
 	PyObject *AerospikeError;
 
@@ -65,6 +70,8 @@ struct exceptions {
 	PyObject *RecordTooBig;
 	PyObject *RecordBusy;
 	PyObject *BinIncompatibleType;
+	PyObject *BinExistsError;
+	PyObject *BinNotFound;
 
 	//Index exceptions
 	PyObject *IndexError;
@@ -111,25 +118,25 @@ struct exceptions {
 };
 
 struct server_exceptions_struct {
-	PyObject * *server_exceptions[11];
-	char * server_exceptions_name[11];
-	int server_exceptions_codes[11];
+	PyObject** server_exceptions[SERVER_EXCEPTION_COUNT];
+	char* server_exceptions_name[SERVER_EXCEPTION_COUNT];
+	int server_exceptions_codes[SERVER_EXCEPTION_COUNT];
 };
 struct record_exceptions_struct {
-	PyObject * *record_exceptions[8];
-	char * record_exceptions_name[8];
-	int record_exceptions_codes[8];
+	PyObject** record_exceptions[RECORD_EXCEPTION_COUNT];
+	char * record_exceptions_name[RECORD_EXCEPTION_COUNT];
+	int record_exceptions_codes[RECORD_EXCEPTION_COUNT];
 };
 
 struct index_exceptions_struct {
-	PyObject * *index_exceptions[6];
-	char * index_exceptions_name[6];
-	int index_exceptions_codes[6];
+	PyObject** index_exceptions[INDEX_EXCEPTION_COUNT];
+	char* index_exceptions_name[INDEX_EXCEPTION_COUNT];
+	int index_exceptions_codes[INDEX_EXCEPTION_COUNT];
 };
 
 struct admin_exceptions_struct {
-	PyObject * *admin_exceptions[17];
-	char * admin_exceptions_name[17];
-	int admin_exceptions_codes[17];
+	PyObject** admin_exceptions[ADMIN_EXCEPTION_COUNT];
+	char* admin_exceptions_name[ADMIN_EXCEPTION_COUNT];
+	int admin_exceptions_codes[ADMIN_EXCEPTION_COUNT];
 };
 

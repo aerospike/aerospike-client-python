@@ -1659,6 +1659,66 @@ Serialization Constants
 
 .. versionadded:: 1.0.47
 
+.. _aerospike_bitwise_constants:
+
+Bitwise Constants
+-----------------------
+
+.. data:: BIT_WRITE_DEFAULT
+
+    Allow create or update (default).
+
+.. data:: BIT_WRITE_CREATE_ONLY
+
+    If bin already exists the operation is denied. Otherwise the bin is created.
+
+.. data:: BIT_WRITE_UPDATE_ONLY
+
+    If bin does not exist the operation is denied. Otherwise the bin is updated.
+
+.. data:: BIT_WRITE_NO_FAIL
+
+    Do not raise error if operation failed.
+
+.. data:: BIT_WRITE_PARTIAL
+
+    Allow other valid operations to be committed if this operation is denied due to
+    flag constraints. i.e. If the number of bytes from the offset to the end of the existing
+    Bytes bin is less than the specified number of bytes, then only apply operations 
+    from the offset to the end.
+
+.. data:: BIT_RESIZE_DEFAULT
+
+    Add/remove bytes from the end (default).
+
+.. data:: BIT_RESIZE_FROM_FRONT
+
+    Add/remove bytes from the front.
+
+.. data:: BIT_RESIZE_GROW_ONLY
+
+    Only allow the bitmap size to increase.
+
+.. data:: BIT_RESIZE_SHRINK_ONLY
+
+    Only allow the bitmap size to decrease.
+
+.. data:: BIT_OVERFLOW_FAIL
+
+    Operation will fail on overflow/underflow.
+
+.. data:: BIT_OVERFLOW_SATURATE
+
+    If add or subtract ops overflow/underflow, set to max/min value.
+    Example: MAXINT + 1 = MAXINT.
+
+.. data:: BIT_OVERFLOW_WRAP
+
+    If add or subtract ops overflow/underflow, wrap the value.
+    Example: MAXINT + 1 = MININT.
+
+.. versionadded:: 3.9.0
+
 .. _aerospike_misc_constants:
 
 Miscellaneous

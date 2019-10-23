@@ -1497,6 +1497,318 @@ Map Operations
 
 
     .. index::
+        single: Bit Operations
+
+Bit Operations
+--------------
+
+.. class:: Client
+
+    .. note:: Bit operations require server version >= 4.6.0.2
+
+        Bit operations create operation dictionaries for use with client.operate().
+        Bit offsets are oriented left to right. Negative offsets are supported and start backwards
+        from the end of the target bitmap.
+
+        Offset examples:
+         * 0: leftmost bit in the map
+         * 4: fifth bit in the map
+         * -1: rightmost bit in the map
+         * -4: 3 bits from rightmost
+
+        .. code-block:: python
+
+            from __future__ import print_function
+            import aerospike
+            from aerospike import exception as e
+            from aerospike_helpers.operations import bitwise_operations
+
+            config = {'hosts': [('127.0.0.1', 3000)]}
+            try:
+                client = aerospike.client(config).connect()
+            except e.ClientError as e:
+                print("Error: {0} [{1}]".format(e.msg, e.code))
+                sys.exit(2)
+
+            key = ('test', 'demo', 'bit_example')
+            five_one_blob = bytearray([1] * 5)
+            five_one_bin = 'bitwise1'
+
+            try:
+                if client.exists(key):
+                    client.remove(key)
+                bit_policy = {
+                    'map_write_mode': aerospike.BIT_WRITE_DEFAULT,
+                }
+                client.put(
+                    key,
+                    {
+                        five_one_bin: five_one_blob
+                    }
+                )
+
+                # Example 1: read bits
+                ops = [
+                    bitwise_operations.bit_get(five_one_bin, 0, 40)
+                ]
+                print('=====EXAMPLE1=====')
+                _, _, results = client.operate(key, ops)
+                print(results)
+
+                # Example 2: modify bits using the 'or' op, then read bits
+                ops = [
+                    bitwise_operations.bit_or(five_one_bin, 0, 8, 1, bytearray([255]), bit_policy),
+                    bitwise_operations.bit_get(five_one_bin, 0, 40)
+                ]
+                print('=====EXAMPLE2=====')
+                _, _, results = client.operate(key, ops)
+                print(results)
+
+                # Example 3: modify bits using the 'remove' op, then read bits'
+                ops = [
+                    bitwise_operations.bit_remove(five_one_bin, 0, 2, bit_policy),
+                    bitwise_operations.bit_get(five_one_bin, 0, 24)
+                ]
+                print('=====EXAMPLE3=====')
+                _, _, results = client.operate(key, ops)
+                print(results)
+
+            except e.AerospikeError as e:
+                print("Error: {0} [{1}]".format(e.msg, e.code))
+
+            client.close()
+
+        .. note::
+
+            We expect to see
+
+            .. code-block:: python
+
+                =====EXAMPLE1=====
+                {'bitwise1': bytearray(b'\x01\x01\x01\x01\x01')}
+                =====EXAMPLE2=====
+                {'bitwise1': bytearray(b'\xff\x01\x01\x01\x01')}
+                =====EXAMPLE3=====
+                {'bitwise1': bytearray(b'\x01\x01\x01')}
+
+    .. seealso:: `Bits (Data Types) <https://www.aerospike.com/docs/guide/bitwise.html>`_.
+
+
+    .. method:: bit_resize(bin_name, byte_size, policy=None, resize_flags=aerospike.BIT_RESIZE_DEFAULT)
+        
+        Change the size of bytes stored in a record.
+
+        :param str bin_name: The name of the bin containing the map.
+        :param int byte_size: The new size of the bytes.
+        :param dict policy: Optional bit_policy policy dictionary. See: :ref:`aerospike_bit_policies`. default: None
+        :param int resize_flags: Optional flags modifying the behavior of the resize.
+            This should be constructed by bitwise or'ing together any of the values: `aerospike.BIT_RESIZE_DEFAULT`, `aerospike.BIT_RESIZE_FROM_FRONT`.
+            `aerospike.BIT_RESIZE_GROW_ONLY`, `aerospike.BIT_RESIZE_SHRINK_ONLY` . e.g. `aerospike.BIT_RESIZE_GROW_ONLY | aerospike.BIT_RESIZE_FROM_FRONT`.
+            See: :ref:`aerospike_bitwise_constants` for details on each value.
+        :raises: A subclass of :exc:`~aerospike.exception.AerospikeError`.
+        :return: A dictionary usable in operate or operate_ordered. The format of the dictionary should be considered an internal detail, and subject to change.
+
+    .. method:: bit_remove(bin_name, byte_offset, byte_size, policy=None)
+        
+        Remove bytes from bitmap at byte_offset for byte_size.
+
+        :param str bin_name: The name of the bin containing the map.
+        :param int byte_offset: Position of bytes to be removed.
+        :param int byte_size: How many bytes to remove.
+        :param dict policy: Optional bit_policy policy dictionary. See: :ref:`aerospike_bit_policies`. default: None
+        :raises: A subclass of :exc:`~aerospike.exception.AerospikeError`.
+        :return: A dictionary usable in operate or operate_ordered. The format of the dictionary should be considered an internal detail, and subject to change.
+
+    .. method:: bit_set(bin_name, bit_offset, bit_size, value_byte_size, value, policy=None)
+        
+        Set the value on a bitmap at bit_offset for bit_size.
+
+        :param str bin_name: The name of the bin containing the map.
+        :param int bit_offset: the offset where the bits will be set.
+        :param int bit_size: How many bits of the value to set.
+        :param int value_byte_size: Size of value in bytes.
+        :param bytes/byte_array value: The value to be set.
+        :param dict policy: optional bit_policy policy dictionary. See: See :ref:`aerospike_bit_policies`. default: None
+        :raises: A subclass of :exc:`~aerospike.exception.AerospikeError`.
+        :return: A dictionary usable in operate or operate_ordered. The format of the dictionary should be considered an internal detail, and subject to change.
+
+    .. method:: bit_count(bin_name, bit_offset, bit_size)
+        
+        Server returns an integer count of all set bits starting at bit_offset for bit_size bits.
+
+        :param str bin_name: The name of the bin containing the map.
+        :param int bit_offset: The offset where counting begins.
+        :param int bit_size: How many bits will be considered for counting.
+        :raises: A subclass of :exc:`~aerospike.exception.AerospikeError`.
+        :return: A dictionary usable in operate or operate_ordered. The format of the dictionary should be considered an internal detail, and subject to change.
+
+    .. method:: bit_add(bin_name, bit_offset, bit_size, value, sign, action, policy=None)
+        
+        Server adds value to the bin at bit_offset for bit_size.
+            bit_size must <= 64. If Sign is true value will be treated as a signed number.
+            If an underflow or overflow occurs, action is used. Server returns nothing.
+        
+        :param str bin_name: The name of the bin containing the map.
+        :param int bit_offset: The offset where bits will be added.
+        :param int bit_size: How many bits of value to add.
+        :param int value: The value to be added.
+        :param bool sign: True: treat value as signed, False: treat value as unsigned.
+        :param aerospike.constant action: Action taken if overflow/underflow occurs See: :ref:`aerospike_bitwise_constants`.
+        :param dict policy: Optional bit_policy policy dictionary. See: :ref:`aerospike_bit_policies`. default: None
+        :raises: A subclass of :exc:`~aerospike.exception.AerospikeError`.
+        :return: A dictionary usable in operate or operate_ordered. The format of the dictionary should be considered an internal detail, and subject to change.
+
+    .. method:: bit_and(bin_name, bit_offset, bit_size, value_byte_size, value, policy=None)
+        
+        Server performs an and op with value and bitmap in bin at bit_offset for bit_size.
+        
+        :param str bin_name: The name of the bin containing the map.
+        :param int bit_offset: The offset where bits will be modified.
+        :param int bit_size: How many bits of value to and.
+        :param int value_byte_size: Length of value in bytes.
+        :param int value: The value to be used in the and op.
+        :param dict policy: Optional bit_policy policy dictionary. See: :ref:`aerospike_bit_policies`. default: None
+        :raises: A subclass of :exc:`~aerospike.exception.AerospikeError`.
+        :return: A dictionary usable in operate or operate_ordered. The format of the dictionary should be considered an internal detail, and subject to change.
+
+    .. method:: bit_get(bin_name, bit_offset, bit_size)
+        
+        Server returns bits from bitmap starting at bit_offset for bit_size.
+
+        :param str bin_name: The name of the bin containing the map.
+        :param int bit_offset: The offset where bits will start being read.
+        :param int bit_size: How many bits to get.
+        :raises: A subclass of :exc:`~aerospike.exception.AerospikeError`.
+        :return: A dictionary usable in operate or operate_ordered. The format of the dictionary should be considered an internal detail, and subject to change.
+
+    .. method:: bit_get_int(bin_name, bit_offset, bit_size, sign)
+        
+        Server returns an integer formed from the bits read from bitmap starting at bit_offset for bit_size.
+
+        :param str bin_name: The name of the bin containing the map.
+        :param int bit_offset: The offset where bits will start being read.
+        :param int bit_size: How many bits to get.
+        :param bool sign: True: treat read value as signed, False: treat read value as unsigned.
+        :raises: A subclass of :exc:`~aerospike.exception.AerospikeError`.
+        :return: A dictionary usable in operate or operate_ordered. The format of the dictionary should be considered an internal detail, and subject to change.
+
+    .. method:: bit_insert(bin_name, byte_offset, value_byte_size, value, policy=None)
+        
+        Insert the bytes from value into the bitmap at byte_offset. No value is returned.
+
+        :param str bin_name: The name of the bin containing the map.
+        :param int byte_offset: The offset where the bytes will be inserted.
+        :param value_byte_size: The size of value in bytes.
+        :param bytes/byte_array value: The value to be inserted.
+        :param dict policy: Optional bit_policy policy dictionary. See: :ref:`aerospike_bit_policies`. default: None
+        :raises: A subclass of :exc:`~aerospike.exception.AerospikeError`.
+        :return: A dictionary usable in operate or operate_ordered. The format of the dictionary should be considered an internal detail, and subject to change.
+
+    .. method:: bit_lscan(bin_name, bit_offset, bit_size, value)
+        
+        Server returns an integer representing the bit offset of the first occurence
+        of the specified value bit. Starts scanning at bit_offset for bit_size. Returns
+        -1 if value not found.
+
+        :param str bin_name: The name of the bin containing the map.
+        :param int bit_offset: The offset where bits will start being scanned.
+        :param int bit_size: How many bits to scan.
+        :param bool value: True: look for 1, False: look for 0.
+        :raises: A subclass of :exc:`~aerospike.exception.AerospikeError`.
+        :return: A dictionary usable in operate or operate_ordered. The format of the dictionary should be considered an internal detail, and subject to change.
+
+    .. method:: bit_lshift(bin_name, bit_offset, bit_size, value)
+        
+        Left shifts bitmap starting at bit_offset for bit_size by shift bits.
+        No value is returned.
+
+        :param str bin_name: The name of the bin containing the map.
+        :param int bit_offset: The offset where bits will start being shifted.
+        :param int bit_size: The number of bits that will be shifted by shift places.
+        :param int shift: Number of bits to shift by.
+        :raises: A subclass of :exc:`~aerospike.exception.AerospikeError`.
+        :return: A dictionary usable in operate or operate_ordered. The format of the dictionary should be considered an internal detail, and subject to change.
+
+    .. method:: bit_not(bin_name, bit_offset, bit_size, polcy=None)
+        
+        Negates bitmap starting at bit_offset for bit_size. No value is returned.
+
+        :param str bin_name: The name of the bin containing the map.
+        :param int bit_offset: The offset where bits will start being negated.
+        :param int bit_size: How many bits to negate.
+        :param dict policy: Optional bit_policy policy dictionary. See: :ref:`aerospike_bit_policies`. default: None
+        :raises: A subclass of :exc:`~aerospike.exception.AerospikeError`.
+        :return: A dictionary usable in operate or operate_ordered. The format of the dictionary should be considered an internal detail, and subject to change.
+
+    .. method:: bit_or(bin_name, bit_offset, bit_size, value_byte_size, value, policy=None)
+        
+        Perform a bitwise or with value and bitmap at bit_offset for bit_size. Server returns nothing.
+        
+        :param str bin_name: The name of the bin containing the map.
+        :param int bit_offset: The offset where bits will be modified.
+        :param int bit_size: How many bits of value to or.
+        :param int value_byte_size: Length of value in bytes.
+        :param int value: The value to be used in the or op.
+        :param dict policy: Optional bit_policy policy dictionary. See: :ref:`aerospike_bit_policies`. default: None
+        :raises: A subclass of :exc:`~aerospike.exception.AerospikeError`.
+        :return: A dictionary usable in operate or operate_ordered. The format of the dictionary should be considered an internal detail, and subject to change.
+
+    .. method:: bit_rscan(bin_name, bit_offset, bit_size, value)
+        
+        Server returns an integer representing the bit offset of the last occurence
+        of the specified value bit. Starts scanning at bit_offset for bit_size. Returns
+        -1 if value not found.
+
+        :param str bin_name: The name of the bin containing the map.
+        :param int bit_offset: The offset where bits will start being scanned.
+        :param int bit_size: How many bits to scan.
+        :param bool value: True: look for 1, False: look for 0.
+        :raises: A subclass of :exc:`~aerospike.exception.AerospikeError`.
+        :return: A dictionary usable in operate or operate_ordered. The format of the dictionary should be considered an internal detail, and subject to change.
+
+    .. method:: bit_rshift(bin_name, bit_offset, bit_size, value)
+        
+        Right shifts bitmap starting at bit_offset for bit_size by shift bits.
+        No value is returned.
+
+        :param str bin_name: The name of the bin containing the map.
+        :param int bit_offset: The offset where bits will start being shifted.
+        :param int bit_size: The number of bits that will be shifted by shift places.
+        :param int shift: Number of bits to shift by.
+        :raises: A subclass of :exc:`~aerospike.exception.AerospikeError`.
+        :return: A dictionary usable in operate or operate_ordered. The format of the dictionary should be considered an internal detail, and subject to change.
+
+    .. method:: bit_subtract(bin_name, bit_offset, bit_size, value, sign, action, policy=None)
+        
+        Server subtracts value from the bin at bit_offset for bit_size.
+            bit_size must <= 64. If Sign is true value will be treated as a signed number.
+            If an underflow or overflow occurs, as_bit_overflow_action is used. Server returns nothing.
+        
+        :param str bin_name: The name of the bin containing the map.
+        :param int bit_offset: The offset where bits will be subtracted.
+        :param int bit_size: How many bits of value to subtract.
+        :param int value: The value to be subtracted.
+        :param bool sign: True: treat value as signed, False: treat value as unsigned.
+        :param aerospike.constant action: Action taken if overflow/underflow occurs See: :ref:`aerospike_bitwise_constants`.
+        :param dict policy: Optional bit_policy policy dictionary. See: :ref:`aerospike_bit_policies`. default: None
+        :raises: A subclass of :exc:`~aerospike.exception.AerospikeError`.
+        :return: A dictionary usable in operate or operate_ordered. The format of the dictionary should be considered an internal detail, and subject to change.
+
+    .. method:: bit_xor(bin_name, bit_offset, bit_size, value_byte_size, value, policy=None)
+        
+        Perform a bitwise xor with value and bitmap at bit_offset for bit_size. Server returns nothing.
+        
+        :param str bin_name: The name of the bin containing the map.
+        :param int bit_offset: The offset where bits will be modified.
+        :param int bit_size: How many bits of value to xor.
+        :param int value_byte_size: Length of value in bytes.
+        :param int value: The value to be used in the xor op.
+        :param dict policy: Optional bit_policy policy dictionary. See: :ref:`aerospike_bit_policies`. default: None
+        :raises: A subclass of :exc:`~aerospike.exception.AerospikeError`.
+        :return: A dictionary usable in operate or operate_ordered. The format of the dictionary should be considered an internal detail, and subject to change.
+
+
+    .. index::
         single: Multi-Ops
 
 Multi-Ops (Operate)
@@ -2981,6 +3293,29 @@ Map Policies
         map_policy = {
             'map_order': aerospike.MAP_UNORDERED,
             'map_write_mode': aerospike.MAP_CREATE_ONLY
+        }
+
+.. _aerospike_bit_policies:
+
+Bit Policies
+------------
+
+.. object:: policy
+
+    A :class:`dict` of optional bit policies, which are applicable to bit operations.
+
+    .. hlist::
+        :columns: 1
+
+        * **bit_write_flags** write mode for the bit op. valid values: ``aerospike.BIT_WRITE_DEFAULT``, ``aerospike.BIT_WRITE_CREATE_ONLY``, ``aerospike.BIT_WRITE_UPDATE_ONLY``, ``aerospike.BIT_WRITE_NO_FAIL``, ``aerospike.BIT_WRITE_PARTIAL``
+
+    See: :ref:`aerospike_bit_policies` for details about each value.
+    Example:
+
+    .. code-block:: python
+
+        bit_policy = {
+            'bit_write_flags': aerospike.BIT_WRITE_UPDATE_ONLY
         }
 
 .. _aerospike_privilege_dict:

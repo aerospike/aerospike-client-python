@@ -22,6 +22,14 @@ aerospike\_helpers\.operations\.map\_operations module
     :undoc-members:
     :show-inheritance:
 
+aerospike\_helpers\.operations\.bit\_operations module
+------------------------------------------------------
+
+.. automodule:: aerospike_helpers.operations.bitwise_operations
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
 aerospike\_helpers\.operations\.operations module
 -------------------------------------------------
 

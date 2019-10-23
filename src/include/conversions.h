@@ -102,3 +102,6 @@ as_status batch_read_records_to_pyobject(AerospikeClient *self, as_error *err, a
 
 as_status
 string_and_pyuni_from_pystring(PyObject* py_string, PyObject** pyuni_r, char** c_str_ptr, as_error* err);
+
+as_status
+get_cdt_ctx(AerospikeClient* self, as_error* err, as_cdt_ctx* cdt_ctx, PyObject* op_dict, bool* ctx_in_use, as_static_pool* static_pool, int serializer_type);

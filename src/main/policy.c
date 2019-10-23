@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright 2013-2017 Aerospike, Inc.
+ * Copyright 2013-2019 Aerospike, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -31,6 +31,7 @@
 #include "macros.h"
 
 #define MAP_WRITE_FLAGS_KEY "map_write_flags"
+#define BIT_WRITE_FLAGS_KEY "bit_write_flags"
 
 #define POLICY_INIT(__policy) \
 	as_error_reset(err);\
@@ -267,17 +268,61 @@ AerospikeConstants aerospike_constants[] = {
 	{ AS_MAP_WRITE_NO_FAIL, "MAP_WRITE_FLAGS_NO_FAIL"},
 	{ AS_MAP_WRITE_PARTIAL, "MAP_WRITE_FLAGS_PARTIAL"},
 
-    /* READ Mode constants 4.0.0 */
+	/* READ Mode constants 4.0.0 */
 
-    // AP Read Mode
-    { AS_POLICY_READ_MODE_AP_ONE, "POLICY_READ_MODE_AP_ONE"},
-    { AS_POLICY_READ_MODE_AP_ALL, "POLICY_READ_MODE_AP_ALL"},
-    // SC Read Mode
-    { AS_POLICY_READ_MODE_SC_SESSION, "POLICY_READ_MODE_SC_SESSION" },
-    { AS_POLICY_READ_MODE_SC_LINEARIZE, "POLICY_READ_MODE_SC_LINEARIZE"},
-    { AS_POLICY_READ_MODE_SC_ALLOW_REPLICA, "POLICY_READ_MODE_SC_ALLOW_REPLICA"},
-    { AS_POLICY_READ_MODE_SC_ALLOW_UNAVAILABLE, "POLICY_READ_MODE_SC_ALLOW_UNAVAILABLE"}
+	// AP Read Mode
+	{ AS_POLICY_READ_MODE_AP_ONE, "POLICY_READ_MODE_AP_ONE"},
+	{ AS_POLICY_READ_MODE_AP_ALL, "POLICY_READ_MODE_AP_ALL"},
+	// SC Read Mode
+	{ AS_POLICY_READ_MODE_SC_SESSION, "POLICY_READ_MODE_SC_SESSION" },
+	{ AS_POLICY_READ_MODE_SC_LINEARIZE, "POLICY_READ_MODE_SC_LINEARIZE"},
+	{ AS_POLICY_READ_MODE_SC_ALLOW_REPLICA, "POLICY_READ_MODE_SC_ALLOW_REPLICA"},
+	{ AS_POLICY_READ_MODE_SC_ALLOW_UNAVAILABLE, "POLICY_READ_MODE_SC_ALLOW_UNAVAILABLE"},
 
+	/* Bitwise constants: 3.9.0 */
+	{ AS_BIT_WRITE_DEFAULT, "BIT_WRITE_DEFAULT"},
+	{ AS_BIT_WRITE_CREATE_ONLY, "BIT_WRITE_CREATE_ONLY"},
+	{ AS_BIT_WRITE_UPDATE_ONLY, "BIT_WRITE_UPDATE_ONLY"},
+	{ AS_BIT_WRITE_NO_FAIL, "BIT_WRITE_NO_FAIL"},
+	{ AS_BIT_WRITE_PARTIAL, "BIT_WRITE_PARTIAL"},
+
+	{ AS_BIT_RESIZE_DEFAULT, "BIT_RESIZE_DEFAULT"},
+	{ AS_BIT_RESIZE_FROM_FRONT, "BIT_RESIZE_FROM_FRONT"},
+	{ AS_BIT_RESIZE_GROW_ONLY, "BIT_RESIZE_GROW_ONLY"},
+	{ AS_BIT_RESIZE_SHRINK_ONLY, "BIT_RESIZE_SHRINK_ONLY"},
+
+	{ AS_BIT_OVERFLOW_FAIL, "BIT_OVERFLOW_FAIL"},
+	{ AS_BIT_OVERFLOW_SATURATE, "BIT_OVERFLOW_SATURATE"},
+	{ AS_BIT_OVERFLOW_WRAP, "BIT_OVERFLOW_WRAP"},
+
+    /* BITWISE OPS: 3.9.0 */
+	{ OP_BIT_INSERT, "OP_BIT_INSERT"},
+	{ OP_BIT_RESIZE, "OP_BIT_RESIZE"},
+	{ OP_BIT_REMOVE, "OP_BIT_REMOVE"},
+	{ OP_BIT_SET, "OP_BIT_SET"},
+	{ OP_BIT_OR, "OP_BIT_OR"},
+	{ OP_BIT_XOR, "OP_BIT_XOR"},
+	{ OP_BIT_AND, "OP_BIT_AND"},
+	{ OP_BIT_NOT, "OP_BIT_NOT"},
+	{ OP_BIT_LSHIFT, "OP_BIT_LSHIFT"},
+	{ OP_BIT_RSHIFT, "OP_BIT_RSHIFT"},
+	{ OP_BIT_ADD, "OP_BIT_ADD" },
+	{ OP_BIT_SUBTRACT, "OP_BIT_SUBTRACT"},
+	{ OP_BIT_GET_INT, "OP_BIT_GET_INT"},
+	{ OP_BIT_SET_INT, "OP_BIT_SET_INT"},
+	{ OP_BIT_GET, "OP_BIT_GET"},
+	{ OP_BIT_COUNT, "OP_BIT_COUNT"},
+	{ OP_BIT_LSCAN, "OP_BIT_LSCAN"},
+	{ OP_BIT_RSCAN, "OP_BIT_RSCAN"},
+
+	/* Nested CDT constants: 3.9.0 */
+	{ AS_CDT_CTX_LIST_INDEX, "CDT_CTX_LIST_INDEX"},
+	{ AS_CDT_CTX_LIST_RANK, "CDT_CTX_LIST_RANK"},
+	{ AS_CDT_CTX_LIST_VALUE, "CDT_CTX_LIST_VALUE"},
+	{ AS_CDT_CTX_MAP_INDEX, "CDT_CTX_MAP_INDEX"},
+	{ AS_CDT_CTX_MAP_RANK, "CDT_CTX_MAP_RANK"},
+	{ AS_CDT_CTX_MAP_KEY, "CDT_CTX_MAP_KEY"},
+	{ AS_CDT_CTX_MAP_VALUE, "CDT_CTX_MAP_VALUE"}
 };
 
 static
@@ -774,7 +819,25 @@ as_status pyobject_to_policy_batch(as_error * err, PyObject * py_policy,
 
 	return err->code;
 }
+as_status
+pyobject_to_bit_policy(as_error* err, PyObject* py_policy, as_bit_policy* policy) {
+    as_bit_policy_init(policy);
+    POLICY_INIT(as_bit_policy);
 
+    PyObject* py_bit_flags = PyDict_GetItemString(py_policy, BIT_WRITE_FLAGS_KEY);
+    if (py_bit_flags) {
+        if (PyInt_Check(py_bit_flags)){
+        	as_bit_write_flags bit_write_flags = (as_bit_write_flags)PyInt_AsLong(py_bit_flags);
+            as_bit_policy_set_write_flags(policy, bit_write_flags);
+        }
+    } else if (PyErr_Occurred()) {
+        /* Fetching a map key failed internally for some reason, raise an error and exit.*/
+        PyErr_Clear();
+        return as_error_update(err, AEROSPIKE_ERR_CLIENT, "Unable to get bit_write_flags");
+    }
+    
+    return err->code;
+}
 as_status pyobject_to_map_policy(as_error * err, PyObject * py_policy,
 		as_map_policy * policy)
 {
