@@ -1,6 +1,77 @@
 '''
 Helper functions to create bit operation dictionary arguments for
 the operate and operate_ordered methods of the aerospike client.
+
+Example::
+
+    from __future__ import print_function
+    import aerospike
+    from aerospike import exception as ex
+    from aerospike_helpers import cdt_ctx
+    from aerospike_helpers.operations import bitwise_operations
+    import sys
+
+    # Configure the client.
+    config = {"hosts": [("127.0.0.1", 3000)]}
+
+    # Create a client and connect it to the cluster.
+    try:
+        client = aerospike.client(config).connect()
+    except ex.ClientError as e:
+        print("Error: {0} [{1}]".format(e.msg, e.code))
+        sys.exit(1)
+
+    key = ("test", "demo", "foo")
+    five_ones_bin_name = "bitwise1"
+    five_one_blob = bytearray([1] * 5)
+
+    # Write the record.
+    try:
+        client.put(key, {five_ones_bin_name: five_one_blob})
+    except ex.RecordError as e:
+        print("Error: {0} [{1}]".format(e.msg, e.code))
+
+    # EXAMPLE 1: resize the five_ones bin to a bytesize of 10.
+    try:
+        ops = [bitwise_operations.bit_resize(five_ones_bin_name, 10)]
+
+        _, _, bins = client.get(key)
+        _, _, _ = client.operate(key, ops)
+        _, _, newbins = client.get(key)
+        print("EXAMPLE 1: before resize: ", bins)
+        print("EXAMPLE 1: is now: ", newbins)
+    except ex.ClientError as e:
+        print("Error: {0} [{1}]".format(e.msg, e.code))
+        sys.exit(1)
+
+    # EXAMPLE 2: shrink the five_ones bin to a bytesize of 5 from the front.
+    try:
+        ops = [
+            bitwise_operations.bit_resize(
+                five_ones_bin_name, 5, resize_flags=aerospike.BIT_RESIZE_FROM_FRONT
+            )
+        ]
+
+        _, _, bins = client.get(key)
+        _, _, _ = client.operate(key, ops)
+        _, _, newbins = client.get(key)
+        print("EXAMPLE 2: before resize: ", bins)
+        print("EXAMPLE 2: is now: ", newbins)
+    except ex.ClientError as e:
+        print("Error: {0} [{1}]".format(e.msg, e.code))
+        sys.exit(1)
+
+    # Cleanup and close the connection to the Aerospike cluster.
+    client.remove(key)
+    client.close()
+
+    """
+    EXPECTED OUTPUT:
+    EXAMPLE 1: before resize:  {'bitwise1': bytearray(b'\\x01\\x01\\x01\\x01\\x01')}
+    EXAMPLE 1: is now:  {'bitwise1': bytearray(b'\\x01\\x01\\x01\\x01\\x01\\x00\\x00\\x00\\x00\\x00')}
+    EXAMPLE 2: before resize:  {'bitwise1': bytearray(b'\\x01\\x01\\x01\\x01\\x01\\x00\\x00\\x00\\x00\\x00')}
+    EXAMPLE 2: is now:  {'bitwise1': bytearray(b'\\x00\\x00\\x00\\x00\\x00')}
+    """
 '''
 import aerospike
 
