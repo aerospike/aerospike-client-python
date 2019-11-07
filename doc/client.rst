@@ -3239,10 +3239,23 @@ List Policies
     .. hlist::
         :columns: 1
 
-        * **write_flags** Write flags for the operation. Valid values: ``aerospike.LIST_WRITE_ADD_UNIQUE``, ``aerospike.LIST_WRITE_INSERT_BOUNDED``, ``aerospike.LIST_WRITE_DEFAULT``,
-            ``aerospike.LIST_WRITE_PARTIAL`` and ``aerospike.LIST_WRITE_NO_FAIL``.
-            ``aerospike.LIST_WRITE_PARTIAL`` and ``aerospike.LIST_WRITE_NO_FAIL`` require server version 4.3.0 or greater.
-            values should be or'd together: ``aerospike.LIST_WRITE_ADD_UNIQUE | aerospike.LIST_WRITE_INSERT_BOUNDED``
+        * **write_flags** Write flags for the operation. 
+		
+		+---------------------------+---------------------------------------------------------------------------------------------------------------------------------------------------------------+
+		| Write Flag                | Description                                                                                                                                                   |
+		+---------------------------+---------------------------------------------------------------------------------------------------------------------------------------------------------------+
+		| LIST_WRITE_DEFAULT        | Default. Allow duplicate values and insertions at any index.                                                                                                  |
+		+---------------------------+---------------------------------------------------------------------------------------------------------------------------------------------------------------+
+		| LIST_WRITE_ADD_UNIQUE     | Only add unique values.                                                                                                                                       |
+		+---------------------------+---------------------------------------------------------------------------------------------------------------------------------------------------------------+
+		| LIST_WRITE_INSERT_BOUNDED | Enforce list boundaries when inserting. Do not allow values to be inserted at index outside current list boundaries. Require server version 4.3.0 or greater. |
+		+---------------------------+---------------------------------------------------------------------------------------------------------------------------------------------------------------+
+		| LIST_WRITE_NO_FAIL        | Do not raise error if a list item fails due to write flag constraints. Require server version 4.3.0 or greater                                                |
+		+---------------------------+---------------------------------------------------------------------------------------------------------------------------------------------------------------+
+		| LIST_WRITE_PARTIAL        | Allow other valid list items to be committed if a list item fails due to write flag constraints.                                                              |
+		+---------------------------+---------------------------------------------------------------------------------------------------------------------------------------------------------------+		
+
+		Values should be or'd together: ``aerospike.LIST_WRITE_ADD_UNIQUE | aerospike.LIST_WRITE_INSERT_BOUNDED``
         * **list_order** ordering to maintain for the list. Valid values: values are ``aerospike.LIST_ORDERED``, ``aerospike.LIST_UNORDERED``
 
     Example:
@@ -3268,16 +3281,45 @@ Map Policies
     .. hlist::
         :columns: 1
 
-        * **map_write_mode** write mode for the map. This should only be used for Server version < 4.3.0 Valid values: ``aerospike.MAP_UPDATE``, ``aerospike.MAP_UPDATE_ONLY``, ``aerospike.MAP_CREATE_ONLY``,
-        * **map_write_flags** Flags to apply to the map operation. This is only valid for Aerospike Server versions >= 4.3.0:
+        * **map_write_mode** [obselete] write mode for the map. This should only be used for Server version < 4.3.0.
 
-            | Possible values are  ``aerospike.MAP_WRITE_FLAGS_DEFAULT``, ``aerospike.MAP_WRITE_FLAGS_CREATE_ONLY``, ``aerospike.MAP_WRITE_FLAGS_UPDATE_ONLY``,
-            | ``aerospike.MAP_WRITE_FLAGS_PARTIAL`` and ``aerospike.MAP_WRITE_FLAGS_NO_FAIL``. 
-            | The values may be or'd together:
-            | ``aerospike.MAP_WRITE_FLAGS_UPDATE_ONLY | aerospike.MAP_WRITE_FLAGS_NO_FAIL``
-            | `New in version 3.5.0`
+		+--------------------------------+--------------------------------------------------------------------------------------------------------------+
+		| Write Modes                    | Description                                                                                                  |
+		+--------------------------------+--------------------------------------------------------------------------------------------------------------+
+		| MAP_UPDATE                     | Default. Allow create or update.                                                                             |
+		+--------------------------------+--------------------------------------------------------------------------------------------------------------+
+		| MAP_CREATE_ONLY                | If the key already exists, the item will be denied. If the key does not exist, a new item will be created.   |
+		+--------------------------------+--------------------------------------------------------------------------------------------------------------+
+		| MAP_UPDATE_ONLY                | If the key already exists, the item will be overwritten. If the key does not exist, the item will be denied. |
+		+--------------------------------+--------------------------------------------------------------------------------------------------------------+
+        
+        * **map_write_flags** Flags to apply to the map operation. This is only valid for Aerospike Server versions >= 4.3.0. 
+		
+		+--------------------------------+--------------------------------------------------------------------------------------------------------------+
+		| Write Flags                    | Description                                                                                                  |
+		+--------------------------------+--------------------------------------------------------------------------------------------------------------+
+		| MAP_WRITE_FLAGS_DEFAULT        | Default. Allow create or update.                                                                             |
+		+--------------------------------+--------------------------------------------------------------------------------------------------------------+
+		| MAP_WRITE_FLAGS_CREATE_ONLY    | If the key already exists, the item will be denied. If the key does not exist, a new item will be created.   |
+		+--------------------------------+--------------------------------------------------------------------------------------------------------------+
+		| MAP_WRITE_FLAGS_UPDATE_ONLY    | If the key already exists, the item will be overwritten. If the key does not exist, the item will be denied. |
+		+--------------------------------+--------------------------------------------------------------------------------------------------------------+
+		| MAP_WRITE_FLAGS_NO_FAIL        | Do not raise error if a map item is denied due to write flag constraints.                                    |
+		+--------------------------------+--------------------------------------------------------------------------------------------------------------+
+		| PARTIALMAP_WRITE_FLAGS_PARTIAL | Allow other valid map items to be committed if a map item is denied due to write flag constraints.           |
+		+--------------------------------+--------------------------------------------------------------------------------------------------------------+
 
-        * **map_order** ordering to maintain for the map entries. Valid values: ``aerospike.MAP_UNORDERED``, ``aerospike.MAP_KEY_ORDERED``, ``aerospike.MAP_KEY_VALUE_ORDERED``
+        * **map_order** ordering to maintain for the map entries. 
+
+		+-------------------+------------------------------------------+
+		| Map Order         | Description                              |
+		+-------------------+------------------------------------------+
+		| UNORDERED         | Map is not ordered. This is the default. |
+		+-------------------+------------------------------------------+
+		| KEY_ORDERED       | Order map by key.                        |
+		+-------------------+------------------------------------------+
+		| KEY_VALUE_ORDERED | Order map by key, then value.            |
+		+-------------------+------------------------------------------+
 
     Example:
 
@@ -3307,7 +3349,20 @@ Bit Policies
     .. hlist::
         :columns: 1
 
-        * **bit_write_flags** write mode for the bit op. valid values: ``aerospike.BIT_WRITE_DEFAULT``, ``aerospike.BIT_WRITE_CREATE_ONLY``, ``aerospike.BIT_WRITE_UPDATE_ONLY``, ``aerospike.BIT_WRITE_NO_FAIL``, ``aerospike.BIT_WRITE_PARTIAL``
+        * **bit_write_flags** write mode for the bit op. 
+		+-----------------------+------------------------------------------------------------------------------------------------------------------+
+		| Write flags           | Description                                                                                                      |
+		+-----------------------+------------------------------------------------------------------------------------------------------------------+
+		| BIT_WRITE_DEFAULT     | Default. Allow create or update.                                                                                 |
+		+-----------------------+------------------------------------------------------------------------------------------------------------------+
+		| BIT_WRITE_CREATE_ONLY | If the bin already exists, the operation will be denied. If the bin does not exist, a new bin will be created.   |
+		+-----------------------+------------------------------------------------------------------------------------------------------------------+
+		| BIT_WRITE_UPDATE_ONLY | If the bin already exists, the bin will be overwritten. If the bin does not exist, the operation will be denied. |
+		+-----------------------+------------------------------------------------------------------------------------------------------------------+
+		| BIT_WRITE_NO_FAIL     | Do not raise error if operation is denied.                                                                       |
+		+-----------------------+------------------------------------------------------------------------------------------------------------------+
+		| BIT_WRITE_PARTIAL     | Allow other valid operations to be committed if this operations is denied due to flag constraints.               |
+		+-----------------------+------------------------------------------------------------------------------------------------------------------+
 
     See: :ref:`aerospike_bit_policies` for details about each value.
     Example:
