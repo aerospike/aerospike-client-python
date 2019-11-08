@@ -3250,7 +3250,7 @@ List Policies
 		+---------------------------+---------------------------------------------------------------------------------------------------------------------------------------------------------------+
 		| LIST_WRITE_INSERT_BOUNDED | Enforce list boundaries when inserting. Do not allow values to be inserted at index outside current list boundaries. Require server version 4.3.0 or greater. |
 		+---------------------------+---------------------------------------------------------------------------------------------------------------------------------------------------------------+
-		| LIST_WRITE_NO_FAIL        | Do not raise error if a list item fails due to write flag constraints. Require server version 4.3.0 or greater                                                |
+		| LIST_WRITE_NO_FAIL        | Do not raise error if a list item fails due to write flag constraints (always succeed). Require server version 4.3.0 or greater                               |
 		+---------------------------+---------------------------------------------------------------------------------------------------------------------------------------------------------------+
 		| LIST_WRITE_PARTIAL        | Allow other valid list items to be committed if a list item fails due to write flag constraints.                                                              |
 		+---------------------------+---------------------------------------------------------------------------------------------------------------------------------------------------------------+		
@@ -3304,9 +3304,9 @@ Map Policies
 		+--------------------------------+--------------------------------------------------------------------------------------------------------------+
 		| MAP_WRITE_FLAGS_UPDATE_ONLY    | If the key already exists, the item will be overwritten. If the key does not exist, the item will be denied. |
 		+--------------------------------+--------------------------------------------------------------------------------------------------------------+
-		| MAP_WRITE_FLAGS_NO_FAIL        | Do not raise error if a map item is denied due to write flag constraints.                                    |
+		| MAP_WRITE_FLAGS_NO_FAIL        | Do not raise error if a map item is denied due to write flag constraints (always succeed).                   |
 		+--------------------------------+--------------------------------------------------------------------------------------------------------------+
-		| PARTIALMAP_WRITE_FLAGS_PARTIAL | Allow other valid map items to be committed if a map item is denied due to write flag constraints.           |
+		| MAP_WRITE_FLAGS_PARTIAL        | Allow other valid map items to be committed if a map item is denied due to write flag constraints.           |
 		+--------------------------------+--------------------------------------------------------------------------------------------------------------+
 
         * **map_order** ordering to maintain for the map entries. 
@@ -3359,7 +3359,7 @@ Bit Policies
 		+-----------------------+------------------------------------------------------------------------------------------------------------------+
 		| BIT_WRITE_UPDATE_ONLY | If the bin already exists, the bin will be overwritten. If the bin does not exist, the operation will be denied. |
 		+-----------------------+------------------------------------------------------------------------------------------------------------------+
-		| BIT_WRITE_NO_FAIL     | Do not raise error if operation is denied.                                                                       |
+		| BIT_WRITE_NO_FAIL     | Do not raise error if operation is denied (always succeed).                                                      |
 		+-----------------------+------------------------------------------------------------------------------------------------------------------+
 		| BIT_WRITE_PARTIAL     | Allow other valid operations to be committed if this operations is denied due to flag constraints.               |
 		+-----------------------+------------------------------------------------------------------------------------------------------------------+
