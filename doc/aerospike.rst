@@ -1659,6 +1659,165 @@ Serialization Constants
 
 .. versionadded:: 1.0.47
 
+.. _aerospike_list_constants:
+
+List Constants
+--------------------
+Flags used by list write flag:
+
+.. data:: LIST_WRITE_DEFAULT
+
+    Default. Allow duplicate values and insertions at any index.
+
+.. data:: LIST_WRITE_ADD_UNIQUE
+
+    Only add unique values.
+
+.. data:: LIST_WRITE_INSERT_BOUNDED
+
+    Enforce list boundaries when inserting. Do not allow values to be inserted at index outside current list boundaries. Require server version 4.3.0 or greater.
+
+.. data:: LIST_WRITE_NO_FAIL
+
+    Do not raise error if a list item fails due to write flag constraints (always succeed). Require server version 4.3.0 or greater.
+
+.. data:: LIST_WRITE_PARTIAL
+
+    Allow other valid list items to be committed if a list item fails due to write flag constraints.
+
+.. _list_return_types:
+
+List Return Types
+------------------
+
+Return types used by various list operations
+
+.. data:: LIST_RETURN_NONE
+
+    Do not return any value.
+
+.. data:: LIST_RETURN_INDEX
+
+    Return key index order.
+
+.. data:: LIST_RETURN_REVERSE_INDEX
+
+    Return reverse key order.
+
+.. data:: LIST_RETURN_RANK
+
+    Return value order.
+
+.. data:: LIST_RETURN_REVERSE_RANK
+
+    Return reserve value order.
+
+.. data:: LIST_RETURN_COUNT
+
+    Return count of items selected.
+
+.. data:: LIST_RETURN_VALUE
+
+    Return value for single key read and value list for range read.
+
+.. _aerospike_map_constants:
+
+Map Constants
+-----------------
+Flags used by map write flag (This is only valid for Aerospike Server versions >= 4.3.0).
+
+.. data:: MAP_WRITE_FLAGS_DEFAULT
+
+    Default. Allow create or update.
+
+.. data:: MAP_WRITE_FLAGS_CREATE_ONLY
+
+    If the key already exists, the item will be denied. If the key does not exist, a new item will be created.
+
+.. data:: MAP_WRITE_FLAGS_UPDATE_ONLY
+
+    If the key already exists, the item will be overwritten. If the key does not exist, the item will be denied.
+
+.. data:: MAP_WRITE_FLAGS_NO_FAIL
+
+    Do not raise error if a map item is denied due to write flag constraints (always succeed).
+
+.. data:: MAP_WRITE_FLAGS_PARTIAL
+
+    Allow other valid map items to be committed if a map item is denied due to write flag constraints.
+
+Flags used by map write mode (This should only be used for Server version < 4.3.0).
+
+.. data:: MAP_UPDATE
+
+    Default. Allow create or update.
+
+.. data:: MAP_CREATE_ONLY
+
+    If the key already exists, the item will be denied. If the key does not exist, a new item will be created.
+
+.. data:: MAP_UPDATE_ONLY
+
+    If the key already exists, the item will be overwritten. If the key does not exist, the item will be denied.
+
+Flags used by map order:
+
+.. data:: UNORDERED
+
+    Map is not ordered. This is the default.
+
+.. data:: KEY_ORDERED
+
+    Order map by key.
+
+.. data:: MAP_UPDATE_ONLY
+
+    Order map by key, then value.
+
+.. _map_return_types:
+
+Map Return Types
+----------------
+
+Return types used by various map operations
+
+.. data:: MAP_RETURN_NONE
+
+    Do not return any value.
+
+.. data:: MAP_RETURN_INDEX
+
+    Return key index order.
+
+.. data:: MAP_RETURN_REVERSE_INDEX
+
+    Return reverse key order.
+
+.. data:: MAP_RETURN_RANK
+
+    Return value order.
+
+.. data:: MAP_RETURN_REVERSE_RANK
+
+    Return reserve value order.
+
+.. data:: MAP_RETURN_COUNT
+
+    Return count of items selected.
+
+.. data:: MAP_RETURN_KEY
+
+    Return key for single key read and key list for range read.
+
+.. data:: MAP_RETURN_VALUE
+
+    Return value for single key read and value list for range read.
+
+.. data:: MAP_RETURN_KEY_VALUE
+
+    Return key/value items. Note that key/value pairs will be returned as a list of tuples (i.e. [(key1, value1), (key2, value2)])
+
+
 .. _aerospike_bitwise_constants:
 
 Bitwise Constants
@@ -1817,86 +1976,6 @@ Permission codes define the type of permission granted for a user's role.
 .. data:: PRIV_DATA_ADMIN
 
     User can perform systems administration functions on a database that do not involve user administration. Examples include setting dynamic server configuration. Global scope only.
-
-
-.. _map_return_types:
-
-Map Return Types
-----------------
-
-Return types used by various map operations
-
-.. data:: MAP_RETURN_NONE
-
-    Do not return any value.
-
-.. data:: MAP_RETURN_INDEX
-
-    Return key index order.
-
-.. data:: MAP_RETURN_REVERSE_INDEX
-
-    Return reverse key order.
-
-.. data:: MAP_RETURN_RANK
-
-    Return value order.
-
-.. data:: MAP_RETURN_REVERSE_RANK
-
-    Return reserve value order.
-
-.. data:: MAP_RETURN_COUNT
-
-    Return count of items selected.
-
-.. data:: MAP_RETURN_KEY
-
-    Return key for single key read and key list for range read.
-
-.. data:: MAP_RETURN_VALUE
-
-    Return value for single key read and value list for range read.
-
-.. data:: MAP_RETURN_KEY_VALUE
-
-    Return key/value items. Note that key/value pairs will be returned as a list of tuples (i.e. [(key1, value1), (key2, value2)])
-
-
-.. _list_return_types:
-
-List Return Types
-------------------
-
-Return types used by various map operations
-
-.. data:: LIST_RETURN_NONE
-
-    Do not return any value.
-
-.. data:: LIST_RETURN_INDEX
-
-    Return key index order.
-
-.. data:: LIST_RETURN_REVERSE_INDEX
-
-    Return reverse key order.
-
-.. data:: LIST_RETURN_RANK
-
-    Return value order.
-
-.. data:: LIST_RETURN_REVERSE_RANK
-
-    Return reserve value order.
-
-.. data:: LIST_RETURN_COUNT
-
-    Return count of items selected.
-
-.. data:: LIST_RETURN_VALUE
-
-    Return value for single key read and value list for range read.
 
 
 .. _regex_constants:
