@@ -1710,7 +1710,7 @@ Return types used by various list operations
 
 .. data:: LIST_RETURN_REVERSE_RANK
 
-    Return reserve value order.
+    Return reverse value order.
 
 .. data:: LIST_RETURN_COUNT
 
@@ -1770,7 +1770,7 @@ Flags used by map order:
 
     Order map by key.
 
-.. data:: MAP_UPDATE_ONLY
+.. data:: MAP_KEY_VALUE_ORDERED
 
     Order map by key, then value.
 
