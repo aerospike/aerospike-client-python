@@ -1,6 +1,17 @@
 '''
 Helper functions to create bit operation dictionary arguments for
-the operate and operate_ordered methods of the aerospike client.
+the :mod:`aerospike.Client.operate` and :mod:`aerospike.Client.operate_ordered` methods of the aerospike client.
+
+.. note:: Bit operations require server version >= 4.6.0.2
+
+    Bit offsets are oriented left to right. Negative offsets are supported and start backwards
+    from the end of the target bitmap.
+
+    Offset examples:
+        * 0: leftmost bit in the map
+        * 4: fifth bit in the map
+        * -1: rightmost bit in the map
+        * -4: 3 bits from rightmost
 
 Example::
 
@@ -72,6 +83,80 @@ Example::
     EXAMPLE 2: before resize:  {'bitwise1': bytearray(b'\\x01\\x01\\x01\\x01\\x01\\x00\\x00\\x00\\x00\\x00')}
     EXAMPLE 2: is now:  {'bitwise1': bytearray(b'\\x00\\x00\\x00\\x00\\x00')}
     """
+
+Example::
+
+    from __future__ import print_function
+    import aerospike
+    from aerospike import exception as e
+    from aerospike_helpers.operations import bitwise_operations
+
+    config = {'hosts': [('127.0.0.1', 3000)]}
+    try:
+        client = aerospike.client(config).connect()
+    except e.ClientError as e:
+        print("Error: {0} [{1}]".format(e.msg, e.code))
+        sys.exit(2)
+
+    key = ('test', 'demo', 'bit_example')
+    five_one_blob = bytearray([1] * 5)
+    five_one_bin = 'bitwise1'
+
+    try:
+        if client.exists(key):
+            client.remove(key)
+        bit_policy = {
+            'map_write_mode': aerospike.BIT_WRITE_DEFAULT,
+        }
+        client.put(
+            key,
+            {
+                five_one_bin: five_one_blob
+            }
+        )
+
+        # Example 1: read bits
+        ops = [
+            bitwise_operations.bit_get(five_one_bin, 0, 40)
+        ]
+        print('=====EXAMPLE1=====')
+        _, _, results = client.operate(key, ops)
+        print(results)
+
+        # Example 2: modify bits using the 'or' op, then read bits
+        ops = [
+            bitwise_operations.bit_or(five_one_bin, 0, 8, 1, bytearray([255]), bit_policy),
+            bitwise_operations.bit_get(five_one_bin, 0, 40)
+        ]
+        print('=====EXAMPLE2=====')
+        _, _, results = client.operate(key, ops)
+        print(results)
+
+        # Example 3: modify bits using the 'remove' op, then read bits'
+        ops = [
+            bitwise_operations.bit_remove(five_one_bin, 0, 2, bit_policy),
+            bitwise_operations.bit_get(five_one_bin, 0, 24)
+        ]
+        print('=====EXAMPLE3=====')
+        _, _, results = client.operate(key, ops)
+        print(results)
+
+    except e.AerospikeError as e:
+        print("Error: {0} [{1}]".format(e.msg, e.code))
+
+    client.close()
+
+    """
+    EXPECTED OUTPUT:
+    =====EXAMPLE1=====
+    {'bitwise1': bytearray(b'\\x01\\x01\\x01\\x01\\x01')}
+    =====EXAMPLE2=====
+    {'bitwise1': bytearray(b'\\xff\\x01\\x01\\x01\\x01')}
+    =====EXAMPLE3=====
+    {'bitwise1': bytearray(b'\\x01\\x01\\x01')}
+    """
+
+.. seealso:: `Bits (Data Types) <https://www.aerospike.com/docs/guide/bitwise.html>`_.
 '''
 import aerospike
 

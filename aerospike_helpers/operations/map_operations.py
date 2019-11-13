@@ -1,9 +1,9 @@
 '''
 Helper functions to create map operation dictionaries arguments for.
-the operate and operate_ordered methods of the aerospike client.
+the :mod:`aerospike.Client.operate` and :mod:`aerospike.Client.operate_ordered` methods of the aerospike client.
 
 Map operations support nested CDTs through an optional ctx context argument.
-    The ctx argument is a list of cdt_ctx objects. See the section on aerospike_helpers.cdt_ctx.
+    The ctx argument is a list of cdt_ctx objects. See :mod:`aerospike_helpers.cdt_ctx`.
 '''
 import aerospike
 

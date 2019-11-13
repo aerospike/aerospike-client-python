@@ -1,6 +1,6 @@
 '''
 Module with helper functions to create dictionaries consumed by
-the operate and operate_ordered methods for the aerospike.client class.
+the :mod:`aerospike.Client.operate` and :mod:`aerospike.Client.operate_ordered` methods for the aerospike.client class.
 '''
 import warnings
 

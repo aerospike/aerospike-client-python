@@ -1,9 +1,9 @@
 """
 This module provides helper functions to produce dictionaries to be used with the
-`client.operate` and `client.operate_ordered` methods of the aerospike module.
+:mod:`aerospike.Client.operate` and :mod:`aerospike.Client.operate_ordered` methods of the aerospike module.
 
 List operations support nested CDTs through an optional ctx context argument.
-    The ctx argument is a list of cdt_ctx objects. See the section on aerospike_helpers.cdt_ctx.
+    The ctx argument is a list of cdt_ctx objects. See :mod:`aerospike_helpers.cdt_ctx`.
 """
 import aerospike
 
