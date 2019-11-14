@@ -1,8 +1,9 @@
-aerospike\_helpers package
-==========================
+.. aerospike\_helpers:
 
-Module contents
----------------
+******************************************************
+:mod:`aerospike\_helpers` --- Aerospike Helper Package
+******************************************************
+
 This package contains helpers to be used by the operate and operate_ordered for lists, maps and bitwise operations
 
 .. automodule:: aerospike_helpers
