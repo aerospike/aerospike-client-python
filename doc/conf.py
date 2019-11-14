@@ -53,8 +53,8 @@ source_suffix = '.rst'
 master_doc = 'index'
 
 # General information about the project.
-project = u'aerospike'
-copyright = u'2014-2018, Aerospike'
+project = u'Aerospike'
+copyright = u'2014-2019, Aerospike'
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the

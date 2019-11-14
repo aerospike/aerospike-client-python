@@ -1,4 +1,4 @@
-.. _aerospike_operation_helpers:
+.. _aerospike_operation_helpers.operations:
 
 aerospike\_helpers\.operations package
 ======================================
