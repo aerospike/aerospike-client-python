@@ -1,8 +1,8 @@
 .. aerospike\_helpers:
 
-******************************************************
-:mod:`aerospike\_helpers` --- Aerospike Helper Package
-******************************************************
+***************************************************************************************
+:mod:`aerospike\_helpers` --- Aerospike Helper Package for list, map and bit operations
+***************************************************************************************
 
 This package contains helpers to be used by the operate and operate_ordered for lists, maps and bitwise operations
 

@@ -1,4 +1,4 @@
-.. _geojson:
+.. _aerospike.geojson:
 
 .. currentmodule:: aerospike
 
