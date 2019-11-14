@@ -1,25 +1,23 @@
 aerospike\_helpers package
 ==========================
 
-Subpackages
------------
-
-.. toctree::
-
-    aerospike_helpers.operations
-
 Module contents
 ---------------
+This package contains helpers to be used by the list, map, bitwise and other operations
 
 .. automodule:: aerospike_helpers
     :members:
     :undoc-members:
     :show-inheritance:
 
-aerospike\_helpers\.cdt_ctx module
-------------------------------------------------------
+Subpackages
+------------
 
-.. automodule:: aerospike_helpers.cdt_ctx
-    :members:
-    :undoc-members:
-    :show-inheritance:
+.. toctree::
+
+    aerospike_helpers.operations
+    aerospike_helpers.cdt_ctx
+
+
+	
+	

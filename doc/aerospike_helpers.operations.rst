@@ -3,9 +3,6 @@
 aerospike\_helpers\.operations package
 ======================================
 
-Submodules
-----------
-
 aerospike\_helpers\.operations\.list\_operations module
 -------------------------------------------------------
 
@@ -39,10 +36,3 @@ aerospike\_helpers\.operations\.operations module
     :show-inheritance:
 
 
-Module contents
----------------
-
-.. automodule:: aerospike_helpers.operations
-    :members:
-    :undoc-members:
-    :show-inheritance:
