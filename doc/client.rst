@@ -688,7 +688,7 @@ String Operations
 
 .. class:: Client
 
-    .. note:: Please see :mod:`aerospike_helpers.operations` for the new way to use operations.
+    .. note:: Please see :mod:`aerospike_helpers.operations.operations` for the new way to use string operations.
 
     .. method:: append(key, bin, val[, meta[, policy]])
 
@@ -766,7 +766,7 @@ Numeric Operations
 
 .. class:: Client
 
-    .. note:: Please see :mod:`aerospike_helpers.operations` for the new way to use operations.
+    .. note:: Please see :mod:`aerospike_helpers.operations.operations` for the new way to use numeric operations.
 
     .. method:: increment(key, bin, offset[, meta[, policy]])
 
@@ -1584,7 +1584,7 @@ Multi-Ops (Operate)
         :param list list: a :class:`list` of one or more bin operations, each \
             structured as the :class:`dict` \
             ``{'bin': bin name, 'op': aerospike.OPERATOR_* [, 'val': value]}``. \
-            See :mod:`aerospike_helpers.operations`.
+            See :ref:`aerospike_operation_helpers.operations`.
         :param dict meta: optional record metadata to be set, with field
             ``'ttl'`` set to :class:`int` number of seconds or one of 
             :const:`aerospike.TTL_NAMESPACE_DEFAULT`, :const:`aerospike.TTL_NEVER_EXPIRE`, 
@@ -1699,7 +1699,7 @@ Multi-Ops (Operate)
         :param list list: a :class:`list` of one or more bin operations, each \
             structured as the :class:`dict` \
             ``{'bin': bin name, 'op': aerospike.OPERATOR_* [, 'val': value]}``. \
-            See :mod:`aerospike_helpers.operations`.
+            See :ref:`aerospike_operation_helpers.operations`.
         :param dict meta: optional record metadata to be set, with field
             ``'ttl'`` set to :class:`int` number of seconds or one of 
             :const:`aerospike.TTL_NAMESPACE_DEFAULT`, :const:`aerospike.TTL_NEVER_EXPIRE`, 
