@@ -33,7 +33,7 @@
 The following table shows which Python types map directly to Aerospike server types.
 
 +--------------------------+--------------+
-| Python Type              | server type  |
+| Python Type              | Server type  |
 +==========================+==============+
 |int                       |integer       |
 +--------------------------+--------------+
