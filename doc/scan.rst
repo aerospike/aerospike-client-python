@@ -9,8 +9,6 @@ Scan Class --- :class:`Scan`
 :class:`Scan`
 ===============
 
-.. class:: Scan
-
     The Scan object is used to return all the records in a specified set (which \
     can be ommitted or :py:obj:`None`). A Scan with a :py:obj:`None` set returns all the \
     records in the namespace.
@@ -22,6 +20,10 @@ Scan Class --- :class:`Scan`
         `Scans <http://www.aerospike.com/docs/guide/scan.html>`_ and \
         `Managing Scans <http://www.aerospike.com/docs/operations/manage/scans/>`_.
 
+
+Scan Methods
+-------------
+.. class:: Scan
 
     .. method:: select(bin1[, bin2[, bin3..]])
 
@@ -167,8 +169,8 @@ Scan Policies
     .. hlist::
         :columns: 1
 
-        * **max_retries**
-            | An :class:`int`. Maximum number of retries before aborting the current transaction. The initial attempt is not counted as a retry.
+        * **max_retries** :class:`int`
+            | Maximum number of retries before aborting the current transaction. The initial attempt is not counted as a retry.
             |
             | If max_retries is exceeded, the transaction will return error ``AEROSPIKE_ERR_TIMEOUT``.
             |
@@ -176,34 +178,36 @@ Scan Policies
             | if the client timed out previous transaction attempts. It's important to use a distinct write policy for non-idempotent writes which sets max_retries = `0`;
             |
             | Default: ``0``
-        * **sleep_between_retries**
-            | An :class:`int`. Milliseconds to sleep between retries. Enter zero to skip sleep. Default: ``0``
-        * **socket_timeout**
-            | An :class:`int`. Socket idle timeout in milliseconds when processing a database command.
+        * **sleep_between_retries** :class:`int`
+            | Milliseconds to sleep between retries. Enter zero to skip sleep. 
+            |
+            | Default: ``0``
+        * **socket_timeout** :class:`int`
+            | Socket idle timeout in milliseconds when processing a database command.
             |
             | If socket_timeout is not zero and the socket has been idle for at least socket_timeout, both max_retries and total_timeout are checked. If max_retries and total_timeout are not exceeded, the transaction is retried.
             |
             | If both ``socket_timeout`` and ``total_timeout`` are non-zero and ``socket_timeout`` > ``total_timeout``, then ``socket_timeout`` will be set to ``total_timeout``. If ``socket_timeout`` is zero, there will be no socket idle limit.
             |
             | Default: ``30000``.
-        * **total_timeout**
-            | An :class:`int`. Total transaction timeout in milliseconds.
+        * **total_timeout** :class:`int`
+            | Total transaction timeout in milliseconds.
             |
             | The total_timeout is tracked on the client and sent to the server along with the transaction in the wire protocol. The client will most likely timeout first, but the server also has the capability to timeout the transaction.
             |
             | If ``total_timeout`` is not zero and ``total_timeout`` is reached before the transaction completes, the transaction will return error ``AEROSPIKE_ERR_TIMEOUT``. If ``total_timeout`` is zero, there will be no total time limit.
             |
             | Default: ``0``
-        * **fail_on_cluster_change** :class:`bool`: Abort the scan if the cluster is not in a stable state. Default: ``False``
-        * **durable_delete**
-            | A :class:`bool` : If the transaction results in a record deletion, leave a tombstone for the record.
+        * **fail_on_cluster_change** :class:`bool`
+            | Abort the scan if the cluster is not in a stable state. 
+            | 
+            | Default: ``False``
+        * **durable_delete** :class:`bool` 
+            | Perform durable delete (requires Enterprise server version >= 3.10) 
+            | If the transaction results in a record deletion, leave a tombstone for the record.
             |
-            | This prevents deleted records from reappearing after node failures.
-            |
-            | Valid for Aerospike Server Enterprise Edition only.
-            |
-            | Default: ``False`` (do not tombstone deleted records).
-
+            | Default: ``False``
+            
 
 .. _aerospike_scan_options:
 
