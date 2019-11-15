@@ -18,7 +18,7 @@ the Aerospike C client.
 
 * :mod:`aerospike.exception` is a submodule containing the exception hierarchy for AerospikeError and its subclasses.
 
-* :mod:`aerospike_helpers` is a helper package for the list, map and bitwise operate commands.
+* :mod:`aerospike_helpers` is a helper package for bin operations. (list, map, bitwise, etc)
 
 * :ref:`aerospike.geojson` is a class to handle GeoJSON type data
 

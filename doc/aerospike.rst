@@ -501,8 +501,8 @@ Operators for the multi-ops method :py:meth:`~aerospike.Client.operate`.
 
 .. note::
 
-    Beginning in version 3.4.0, it is recommended to use the operation helpers module :ref:`aerospike_operation_helpers` 
-    To create the arguments for the :py:meth:`~aerospike.Client.operate` and :py:meth:`~aerospike.Client.operate`
+    Beginning in version 3.4.0, it is recommended to use the operation helpers module :mod:`aerospike_operation_helpers` 
+    To create the arguments for :py:meth:`~aerospike.Client.operate` and :py:meth:`~aerospike.Client.operate`
 
 .. data:: OPERATOR_WRITE
 

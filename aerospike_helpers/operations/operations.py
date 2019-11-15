@@ -26,7 +26,7 @@ def read(bin_name):
 
 
 def write(bin_name, write_item):
-    """Create a read operation dictionary
+    """Create a write operation dictionary
 
     The write operation writes `write_item` into the bin specified by bin_name
 
@@ -80,7 +80,7 @@ def prepend(bin_name, prepend_item):
 
 
 def increment(bin_name, amount):
-    """Create a prepend operation dictionary
+    """Create an increment operation dictionary
 
     The increment operation increases a value in bin_name by the specified amount,
     or creates a bin with the value of amount
@@ -107,7 +107,6 @@ def touch(ttl=None):
         ttl (int): Deprecated. The ttl that should be set for the record.
             This should be set in the metadata passed to the operate or
             operate_ordered methods.
-        amount: The amount by which to increment the item in the specified bin.
     Returns:
         A dictionary to be passed to operate or operate_ordered
     """
