@@ -3028,7 +3028,9 @@ Map Policies
     .. hlist::
         :columns: 1
 
-        * **map_write_mode** [obselete] write mode for the map. This should only be used for Server version < 4.3.0.
+        * **map_write_mode** write mode for the map. 
+
+        .. note:: This should only be used for Server version < 4.3.0.
 
 		+--------------------------------+--------------------------------------------------------------------------------------------------------------+
 		| Write Modes                    | Description                                                                                                  |
@@ -3040,7 +3042,9 @@ Map Policies
 		| MAP_UPDATE_ONLY                | If the key already exists, the item will be overwritten. If the key does not exist, the item will be denied. |
 		+--------------------------------+--------------------------------------------------------------------------------------------------------------+
         
-        * **map_write_flags** Flags to apply to the map operation. This is only valid for Aerospike Server versions >= 4.3.0. 
+        * **map_write_flags** Flags to apply to the map operation. 
+
+        .. note:: This is only valid for Aerospike Server versions >= 4.3.0. 
 		
 		+--------------------------------+--------------------------------------------------------------------------------------------------------------+
 		| Write Flags                    | Description                                                                                                  |
@@ -3092,6 +3096,8 @@ Bit Policies
 .. object:: policy
 
     A :class:`dict` of optional bit policies, which are applicable to bit operations.
+
+    .. note:: Requires server version >= 4.6.0
 
     .. hlist::
         :columns: 1

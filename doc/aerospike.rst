@@ -1714,11 +1714,15 @@ Flags used by list write flag:
 
 .. data:: LIST_WRITE_INSERT_BOUNDED
 
-    Enforce list boundaries when inserting. Do not allow values to be inserted at index outside current list boundaries. Require server version 4.3.0 or greater.
+    Enforce list boundaries when inserting. Do not allow values to be inserted at index outside current list boundaries. 
+    
+    .. note:: Requires server version >= 4.3.0
 
 .. data:: LIST_WRITE_NO_FAIL
 
-    Do not raise error if a list item fails due to write flag constraints (always succeed). Require server version 4.3.0 or greater.
+    Do not raise error if a list item fails due to write flag constraints (always succeed). 
+    
+    .. note:: Requires server version >= 4.3.0
 
 .. data:: LIST_WRITE_PARTIAL
 
@@ -1763,7 +1767,9 @@ Return types used by various list operations
 
 Map Constants
 -----------------
-Flags used by map write flag (This is only valid for Aerospike Server versions >= 4.3.0).
+Flags used by map write flag 
+
+.. note:: Requires server version >= 4.3.0
 
 .. data:: MAP_WRITE_FLAGS_DEFAULT
 
@@ -1785,7 +1791,9 @@ Flags used by map write flag (This is only valid for Aerospike Server versions >
 
     Allow other valid map items to be committed if a map item is denied due to write flag constraints.
 
-Flags used by map write mode (This should only be used for Server version < 4.3.0).
+Flags used by map write mode
+
+.. note:: This should only be used for Server version < 4.3.0
 
 .. data:: MAP_UPDATE
 
