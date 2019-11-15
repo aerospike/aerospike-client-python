@@ -48,10 +48,11 @@ in an in-memory primary index.
         .. hlist::
             :columns: 1
 
-            * **hosts** a required :class:`list` of (address, port, [tls-name]) tuples identifying a node (or multiple nodes) in the cluster. \
-              The client will connect to the first available node in the list, the *seed node*, \
-              and will learn about the cluster and partition map from it. If tls-name is specified, it must match the tls-name specified in the node's
-              server configuration file and match the server's CA certificate. **Note: use of TLS requires Aerospike Enterprise Edition**
+            * **hosts** a required :class:`list` of (address, port, [tls-name]) tuples identifying a node (or multiple nodes) in the cluster. 
+                | The client will connect to the first available node in the list, the *seed node*, 
+                | and will learn about the cluster and partition map from it. If tls-name is specified, it must match the tls-name specified in the node's
+                | server configuration file and match the server's CA certificate.  
+                | **Note: use of TLS requires Aerospike Enterprise Edition**
             * **lua** an optional :class:`dict` containing the paths to two types of Lua modules
                 * **system_path** the location of the system modules such as ``aerospike.lua`` (default: ``/usr/local/aerospike/lua``)
                 * **user_path** the location of the user's record and stream UDFs . (default: ``./``)
@@ -83,7 +84,9 @@ in an in-memory primary index.
                     | It is still possible to specify a key when using **use_shared_connection** = `True`.
                     | (default: 0xA8000000)
             * **use_shared_connection** :class:`bool` indicating whether this instance should share its connection to the Aerospike cluster with other client instances in the same process. (default: ``False``)
-            * **tls** a :class:`dict` of optional TLS configuration parameters. **TLS usage requires Aerospike Enterprise Edition**
+            * **tls** a :class:`dict` of optional TLS configuration parameters.
+                | **TLS usage requires Aerospike Enterprise Edition**
+
                 * **enable** a :class:`bool` indicating whether tls should be enabled or not. Default: ``False``
                 * **cafile** :class:`str` Path to a trusted CA certificate file. By default TLS will use system standard trusted CA certificates
                 * **capath** :class:`str` Path to a directory of trusted certificates. See the OpenSSL SSL_CTX_load_verify_locations manual page for more information about the format of the directory.
@@ -99,12 +102,13 @@ in an in-memory primary index.
                 * **for_login_only** :class:`bool` Log session information for each connection. Use TLS connections only for login authentication. All other communication with the server will be done with non-TLS connections. Default: ``False`` (Use TLS connections for all communication with server.)
             * **serialization** an optional instance-level :py:func:`tuple` of (serializer, deserializer). Takes precedence over a class serializer registered with :func:`~aerospike.set_serializer`.
             * **thread_pool_size** number of threads in the pool that is used in batch/scan/query commands (default: 16)
-            * **max_socket_idle** Maximum socket idle time in seconds.  Connection pools will discard sockets that have
-			been idle longer than the maximum.  The value is limited to 24 hours (86400).
-	 		It's important to set this value to a few seconds less than the server's proto-fd-idle-ms
-			(default 60000 milliseconds or 1 minute), so the client does not attempt to use a socket
-			that has already been reaped by the server.
-			Default: 0 seconds (disabled) for non-TLS connections, 55 seconds for TLS connections.
+            * **max_socket_idle** 
+                | Maximum socket idle time in seconds.  Connection pools will discard sockets that have
+                | been idle longer than the maximum.  The value is limited to 24 hours (86400).
+                | It's important to set this value to a few seconds less than the server's proto-fd-idle-ms
+                | (default 60000 milliseconds or 1 minute), so the client does not attempt to use a socket
+                | that has already been reaped by the server.
+                | (Default: 0 seconds (disabled) for non-TLS connections, 55 seconds for TLS connections)
             * **max_conns_per_node** maximum number of pipeline connections allowed for each node 
             * **tend_interval** polling interval in milliseconds for tending the cluster (default: 1000)
             * **compression_threshold** compress data for transmission if the object size is greater than a given number of bytes (default: 0, meaning 'never compress') (**Deprecated**, set this in the 'write' policy dictionary)
@@ -112,16 +116,16 @@ in an in-memory primary index.
             * **rack_id**
                 | An integer. Rack where this client instance resides.
                 | **rack_aware** and **POLICY_REPLICA_PREFER_RACK** and server rack configuration must also be set to enable this functionality.
-                | Default 0.
+                | (Default 0)
             * **rack_aware**
                 | Boolean. Track server rack data.
                 | This field is useful when directing read commands to the server node that contains the key and exists on the same rack as the client.
                 | This serves to lower cloud provider costs when nodes are distributed across different racks/data centers.
                 | **rack_id** and **POLICY_REPLICA_PREFER_RACK** and server rack configuration must also be set to enable this functionality.
-                | Default False
+                | (Default False)
             * **use_services_alternate**
                 | Boolean. Flag to signify if "services-alternate" should be used instead of "services"
-                | Default False
+                | (Default False)
 
 
     :return: an instance of the :py:class:`aerospike.Client` class.
@@ -1075,7 +1079,7 @@ Operators for the multi-ops method :py:meth:`~aerospike.Client.operate`.
 
 .. data:: OP_MAP_PUT
 
-    Put a key/value pair into a map. Operator accepts an optional map_policy dictionary (see OP_MAP_SET_POLICY for an example)
+    Put a key/value pair into a map. Operator accepts an optional map_policy dictionary (see OP_MAP_SET_POLICY for an example).
 
     .. code-block:: python
 
@@ -1086,9 +1090,9 @@ Operators for the multi-ops method :py:meth:`~aerospike.Client.operate`.
             "val": 97
         }
 
-.. data:: OP_MAP_PUT_ITEMS. Operator accepts an optional map_policy dictionary (see OP_MAP_SET_POLICY for an example)
-
-    Put a dictionary of key/value pairs into a map.
+.. data:: OP_MAP_PUT_ITEM
+    
+    Put a dictionary of key/value pairs into a map. Operator accepts an optional map_policy dictionary (see OP_MAP_SET_POLICY for an example).
 
     .. code-block:: python
 
@@ -1098,9 +1102,9 @@ Operators for the multi-ops method :py:meth:`~aerospike.Client.operate`.
             "val": {"name": "bubba", "occupation": "dancer"}
         }
 
-.. data:: OP_MAP_INCREMENT. Operator accepts an optional map_policy dictionary (see OP_MAP_SET_POLICY for an example)
+.. data:: OP_MAP_INCREMENT
 
-    Increment the value of map entry by the given "val" argument.
+    Increment the value of map entry by the given "val" argument. Operator accepts an optional map_policy dictionary (see OP_MAP_SET_POLICY for an example).
 
     .. code-block:: python
 
@@ -1111,9 +1115,10 @@ Operators for the multi-ops method :py:meth:`~aerospike.Client.operate`.
             "val": 1
         }
 
-.. data:: OP_MAP_DECREMENT. Operator accepts an optional map_policy dictionary (see OP_MAP_SET_POLICY for an example)
+.. data:: OP_MAP_DECREMENT
 
-    Decrement the value of map entry by the given "val" argument.
+    Decrement the value of map entry by the given "val" argument. Operator accepts an optional map_policy dictionary (see OP_MAP_SET_POLICY for an example).
+
 
     .. code-block:: python
 
@@ -1551,7 +1556,7 @@ Specifies which partition replica to read from.
 
 .. data:: POLICY_REPLICA_PREFER_RACK
 
-	Try node on the same rack as the client first.  If there are no nodes on the same rack, use POLICY_REPLICA_SEQUENCE instead.
+    Try node on the same rack as the client first.  If there are no nodes on the same rack, use POLICY_REPLICA_SEQUENCE instead.
 
     **rack_aware** and **rack_id** must be set in the config argument of the client constructor in order to enable this functionality
 
