@@ -18,11 +18,11 @@ the Aerospike C client.
 
 * :mod:`aerospike.exception` is a submodule containing the exception hierarchy for AerospikeError and its subclasses.
 
-* :mod:`aerospike_helpers` is a helper package for bin operations. (list, map, bitwise, etc)
+* :mod:`aerospike_helpers` is a helper package for bin operations (list, map, bitwise, etc.).
 
-* :ref:`aerospike.geojson` is a class to handle GeoJSON type data
+* :ref:`aerospike.geojson` is a class to handle GeoJSON type data.
 
-* :ref:`Data_Mapping` How Python types map to Aerospike Server types
+* :ref:`Data_Mapping` How Python types map to Aerospike Server types.
 
 .. seealso::
     The `Python Client Manual <http://www.aerospike.com/docs/client/python/>`_
@@ -41,10 +41,10 @@ Content
     predicates
     predexp
     exception
-    aerospike_helpers 
+    aerospike_helpers
     geojson
     data_mapping
-	
+
 Indices and tables
 ##################
 
