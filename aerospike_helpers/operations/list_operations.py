@@ -4,6 +4,9 @@ This module provides helper functions to produce dictionaries to be used with th
 
 List operations support nested CDTs through an optional ctx context argument.
     The ctx argument is a list of cdt_ctx objects. See :mod:`aerospike_helpers.cdt_ctx`.
+
+.. note:: Nested CDT (ctx) requires server version >= 4.6.0
+
 """
 import aerospike
 
