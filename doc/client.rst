@@ -23,9 +23,7 @@ a cluster-tending thread.
     <https://www.aerospike.com/docs/architecture/clients.html>`_ and
     `Data Distribution <https://www.aerospike.com/docs/architecture/data-distribution.html>`_.
 
-.. class:: Client
-
-    Example::
+Example::
 
         from __future__ import print_function
         # import the module
@@ -111,6 +109,68 @@ Connection
 
     .. index::
         single: Record Operations
+
+.. _aerospike_key_tuple:
+
+Key Tuple
+---------
+
+    .. object:: key
+
+    The key tuple, which is sent and returned by various operations, has the structure
+
+    ``(namespace, set, primary key[, the record's RIPEMD-160 digest])``
+
+    .. hlist::
+        :columns: 1
+
+        * *namespace* the :class:`str` name of the namespace, which must be \
+          preconfigured on the cluster.
+        * *set* the :class:`str` name of the set. Will be created automatically \
+          if it does not exist.
+        * *primary key* the value by which the client-side application \
+          identifies the record, which can be of type :class:`str`, :class:`int` \
+          or :class:`bytearray`.
+        * *digest* the first three parts of the tuple get hashed through \
+          RIPEMD-160, and the digest used by the clients and cluster nodes \
+          to locate the record. A key tuple is also valid if it has the \
+          digest part filled and the primary key part set to :py:obj:`None`.
+
+    .. code-block:: python
+
+        >>> client = aerospike.client(config).connect()
+        >>> client.put(('test','demo','oof'), {'id':0, 'a':1})
+        >>> (key, meta, bins) = client.get(('test','demo','oof'))
+        >>> key
+        ('test', 'demo', None, bytearray(b'\ti\xcb\xb9\xb6V#V\xecI#\xealu\x05\x00H\x98\xe4='))
+        >>> (key2, meta2, bins2) = client.get(key)
+        >>> bins2
+        {'a': 1, 'id': 0}
+        >>> client.close()
+
+    .. seealso:: `Data Model: Keys and Digests <https://www.aerospike.com/docs/architecture/data-model.html#records>`_.
+
+
+.. _aerospike_record_tuple:
+
+Record Tuple
+------------
+
+.. object:: record
+
+    The record tuple ``(key, meta, bins)`` which is returned by various read operations.
+
+    .. hlist::
+        :columns: 1
+
+        * *key* the :ref:`aerospike_key_tuple`.
+        * *meta* a :class:`dict` containing  ``{'gen' : genration value, 'ttl': ttl value}``.
+        * *bins* a :class:`dict` containing bin-name/bin-value pairs.
+
+    .. seealso:: `Data Model: Record <https://www.aerospike.com/docs/architecture/data-model.html#records>`_.
+
+Operations
+==========
 
 Record Operations
 -----------------
@@ -2469,106 +2529,9 @@ Admin Operations
         :return: a :class:`dict` of roles keyed by username.
         :raises: one of the :exc:`~aerospike.exception.AdminError` subclasses.
 
-.. _aerospike_key_tuple:
 
-Key Tuple
----------
-
-.. object:: key
-
-    The key tuple, which is sent and returned by various operations, has the structure
-
-    ``(namespace, set, primary key[, the record's RIPEMD-160 digest])``
-
-    .. hlist::
-        :columns: 1
-
-        * *namespace* the :class:`str` name of the namespace, which must be \
-          preconfigured on the cluster.
-        * *set* the :class:`str` name of the set. Will be created automatically \
-          if it does not exist.
-        * *primary key* the value by which the client-side application \
-          identifies the record, which can be of type :class:`str`, :class:`int` \
-          or :class:`bytearray`.
-        * *digest* the first three parts of the tuple get hashed through \
-          RIPEMD-160, and the digest used by the clients and cluster nodes \
-          to locate the record. A key tuple is also valid if it has the \
-          digest part filled and the primary key part set to :py:obj:`None`.
-
-    .. code-block:: python
-
-        >>> client = aerospike.client(config).connect()
-        >>> client.put(('test','demo','oof'), {'id':0, 'a':1})
-        >>> (key, meta, bins) = client.get(('test','demo','oof'))
-        >>> key
-        ('test', 'demo', None, bytearray(b'\ti\xcb\xb9\xb6V#V\xecI#\xealu\x05\x00H\x98\xe4='))
-        >>> (key2, meta2, bins2) = client.get(key)
-        >>> bins2
-        {'a': 1, 'id': 0}
-        >>> client.close()
-
-    .. seealso:: `Data Model: Keys and Digests <https://www.aerospike.com/docs/architecture/data-model.html#records>`_.
-
-
-.. _aerospike_record_tuple:
-
-Record Tuple
-------------
-
-.. object:: record
-
-    The record tuple ``(key, meta, bins)`` which is returned by various read operations.
-
-    .. hlist::
-        :columns: 1
-
-        * *key* the :ref:`aerospike_key_tuple`.
-        * *meta* a :class:`dict` containing  ``{'gen' : genration value, 'ttl': ttl value}``.
-        * *bins* a :class:`dict` containing bin-name/bin-value pairs.
-
-    .. seealso:: `Data Model: Record <https://www.aerospike.com/docs/architecture/data-model.html#records>`_.
-
-
-.. _unicode_handling:
-
-Unicode Handling
-----------------
-
-Both :class:`str` and :func:`unicode` values are converted by the
-client into UTF-8 encoded strings for storage on the aerospike server.
-Read methods such as :meth:`~aerospike.Client.get`,
-:meth:`~aerospike.Client.query`, :meth:`~aerospike.Client.scan` and
-:meth:`~aerospike.Client.operate` will return that data as UTF-8 encoded
-:class:`str` values. To get a :func:`unicode` you will need to manually decode.
-
-.. warning::
-
-    Prior to release 1.0.43 read operations always returned strings as :func:`unicode`.
-
-.. code-block:: python
-
-    >>> client.put(key, { 'name': 'Dr. Zeta Alphabeta', 'age': 47})
-    >>> (key, meta, record) = client.get(key)
-    >>> type(record['name'])
-    <type 'str'>
-    >>> record['name']
-    'Dr. Zeta Alphabeta'
-    >>> client.put(key, { 'name': unichr(0x2603), 'age': 21})
-    >>> (key, meta, record) = client.get(key)
-    >>> type(record['name'])
-    <type 'str'>
-    >>> record['name']
-    '\xe2\x98\x83'
-    >>> print(record['name'])
-    ☃
-    >>> name = record['name'].decode('utf-8')
-    >>> type(name)
-    <type 'unicode'>
-    >>> name
-    u'\u2603'
-    >>> print(name)
-    ☃
-
+Policies
+========
 
 .. _aerospike_write_policies:
 
@@ -2582,8 +2545,8 @@ Write Policies
     .. hlist::
         :columns: 1
 
-        * **max_retries**
-            | An :class:`int`. Maximum number of retries before aborting the current transaction. The initial attempt is not counted as a retry.
+        * **max_retries** :class:`int`
+            | Maximum number of retries before aborting the current transaction. The initial attempt is not counted as a retry.
             |
             | If max_retries is exceeded, the transaction will return error ``AEROSPIKE_ERR_TIMEOUT``.
             |
@@ -2591,33 +2554,45 @@ Write Policies
             | if the client timed out previous transaction attempts. It's important to use a distinct write policy for non-idempotent writes, which sets max_retries = `0`;
             |
             | Default: ``0``
-        * **sleep_between_retries**
-            | An :class:`int`. Milliseconds to sleep between retries. Enter zero to skip sleep. Default: ``0``
-        * **socket_timeout**
-            | An :class:`int`. Socket idle timeout in milliseconds when processing a database command.
+        * **sleep_between_retries** :class:`int`
+            | Milliseconds to sleep between retries. Enter zero to skip sleep. 
+            |
+            | Default: ``0``
+        * **socket_timeout** :class:`int`
+            | Socket idle timeout in milliseconds when processing a database command.
             |
             | If socket_timeout is not zero and the socket has been idle for at least socket_timeout, both max_retries and total_timeout are checked. If max_retries and total_timeout are not exceeded, the transaction is retried.
             |
             | If both ``socket_timeout`` and ``total_timeout`` are non-zero and ``socket_timeout`` > ``total_timeout``, then ``socket_timeout`` will be set to ``total_timeout``. If ``socket_timeout`` is zero, there will be no socket idle limit.
             |
-            | Default: ``0``.
-        * **total_timeout**
-            | An :class:`int`. Total transaction timeout in milliseconds.
+            | Default: ``0``
+        * **total_timeout** :class:`int`
+            | Total transaction timeout in milliseconds.
             |
             | The total_timeout is tracked on the client and sent to the server along with the transaction in the wire protocol. The client will most likely timeout first, but the server also has the capability to timeout the transaction.
             |
             | If ``total_timeout`` is not zero and ``total_timeout`` is reached before the transaction completes, the transaction will return error ``AEROSPIKE_ERR_TIMEOUT``. If ``total_timeout`` is zero, there will be no total time limit.
             |
             | Default: ``1000``
-        * **key** one of the ``aerospike.POLICY_KEY_*`` values such as :data:`aerospike.POLICY_KEY_DIGEST`
+        * **key** 
+            | One of the ``aerospike.POLICY_KEY_*`` values such as :data:`aerospike.POLICY_KEY_DIGEST`
+            |
             | Default: ``aerospike.POLICY_KEY_DIGEST``
-        * **exists** one of the ``aerospike.POLICY_EXISTS_*`` values such as :data:`aerospike.POLICY_EXISTS_CREATE`
+        * **exists** 
+            | One of the ``aerospike.POLICY_EXISTS_*`` values such as :data:`aerospike.POLICY_EXISTS_CREATE`
+            |
             | Default: ```aerospike.POLICY_GEN_IGNORE``
-        * **gen** one of the ``aerospike.POLICY_GEN_*`` values such as :data:`aerospike.POLICY_GEN_IGNORE`
+        * **gen** 
+            | One of the ``aerospike.POLICY_GEN_*`` values such as :data:`aerospike.POLICY_GEN_IGNORE`
+            |
             | Default: ``aerospike.POLICY_GEN_IGNORE``
-        * **commit_level** one of the ``aerospike.POLICY_COMMIT_LEVEL_*`` values such as :data:`aerospike.POLICY_COMMIT_LEVEL_ALL`
+        * **commit_level** 
+            | One of the ``aerospike.POLICY_COMMIT_LEVEL_*`` values such as :data:`aerospike.POLICY_COMMIT_LEVEL_ALL`
+            |
             | Default: ``aerospike.POLICY_COMMIT_LEVEL_ALL``
-        * **durable_delete** boolean value: True to perform durable delete (requires Enterprise server version >= 3.10)
+        * **durable_delete** :class:`bool` 
+            | Perform durable delete (requires Enterprise server version >= 3.10) 
+            |
             | Default: ``False``
 
 .. _aerospike_read_policies:
@@ -2632,9 +2607,8 @@ Read Policies
     .. hlist::
         :columns: 1
 
-
-        * **max_retries**
-            | An :class:`int`. Maximum number of retries before aborting the current transaction. The initial attempt is not counted as a retry.
+        * **max_retries** :class:`int`
+            | Maximum number of retries before aborting the current transaction. The initial attempt is not counted as a retry.
             |
             | If max_retries is exceeded, the transaction will return error ``AEROSPIKE_ERR_TIMEOUT``.
             |
@@ -2642,37 +2616,47 @@ Read Policies
             | if the client timed out previous transaction attempts. It's important to use a distinct write policy for non-idempotent writes, which sets max_retries = `0`;
             |
             | Default: ``2``
-        * **sleep_between_retries**
-            | An :class:`int`. Milliseconds to sleep between retries. Enter zero to skip sleep. Default: ``0``
-        * **socket_timeout**
-            | An :class:`int`. Socket idle timeout in milliseconds when processing a database command.
+        * **sleep_between_retries** :class:`int`
+            | Milliseconds to sleep between retries. Enter zero to skip sleep. 
+            |
+            | Default: ``0``
+        * **socket_timeout** :class:`int`
+            | Socket idle timeout in milliseconds when processing a database command.
             |
             | If socket_timeout is not zero and the socket has been idle for at least socket_timeout, both max_retries and total_timeout are checked. If max_retries and total_timeout are not exceeded, the transaction is retried.
             |
             | If both ``socket_timeout`` and ``total_timeout`` are non-zero and ``socket_timeout`` > ``total_timeout``, then ``socket_timeout`` will be set to ``total_timeout``. If ``socket_timeout`` is zero, there will be no socket idle limit.
             |
-            | Default: ``0``.
-        * **total_timeout**
-            | An :class:`int`. Total transaction timeout in milliseconds.
+            | Default: ``0``
+        * **total_timeout** :class:`int`
+            | Total transaction timeout in milliseconds.
             |
             | The total_timeout is tracked on the client and sent to the server along with the transaction in the wire protocol. The client will most likely timeout first, but the server also has the capability to timeout the transaction.
             |
             | If ``total_timeout`` is not zero and ``total_timeout`` is reached before the transaction completes, the transaction will return error ``AEROSPIKE_ERR_TIMEOUT``. If ``total_timeout`` is zero, there will be no total time limit.
             |
             | Default: ``1000``
-        * **deserialize**
-            | :class:`bool` Should raw bytes representing a list or map be deserialized to a list or dictionary.
+        * **deserialize** :class:`bool` 
+            | Should raw bytes representing a list or map be deserialized to a list or dictionary.
             | Set to `False` for backup programs that just need access to raw bytes.
             | Default: ``True``
-        * **key** one of the ``aerospike.POLICY_KEY_*`` values such as :data:`aerospike.POLICY_KEY_DIGEST`
+        * **key** 
+            | One of the ``aerospike.POLICY_KEY_*`` values such as :data:`aerospike.POLICY_KEY_DIGEST`
+            |
             | Default: ``aerospike.POLICY_KEY_DIGEST``
-        * **read_mode_ap** one of the ``aerospike.POLICY_READ_MODE_AP_*`` values such as :data:`aerospike.AS_POLICY_READ_MODE_AP_ONE`
+        * **read_mode_ap** 
+            | One of the ``aerospike.POLICY_READ_MODE_AP_*`` values such as :data:`aerospike.AS_POLICY_READ_MODE_AP_ONE`
+            |
             | Default: ``aerospike.AS_POLICY_READ_MODE_AP_ONE``
             | **New in version 3.7.0**
-        * **read_mode_sc** one of the ``aerospike.POLICY_READ_MODE_SC_*`` values such as :data:`aerospike.POLICY_READ_MODE_SC_SESSION`
+        * **read_mode_sc** 
+            | One of the ``aerospike.POLICY_READ_MODE_SC_*`` values such as :data:`aerospike.POLICY_READ_MODE_SC_SESSION`
+            |
             | Default: ``aerospike.POLICY_READ_MODE_SC_SESSION``
             | **New in version 3.7.0**
-        * **replica** one of the ``aerospike.POLICY_REPLICA_*`` values such as :data:`aerospike.POLICY_REPLICA_MASTER`
+        * **replica** 
+            | One of the ``aerospike.POLICY_REPLICA_*`` values such as :data:`aerospike.POLICY_REPLICA_MASTER`
+            |
             | Default: ``aerospike.POLICY_REPLICA_SEQUENCE``
 
 .. _aerospike_operate_policies:
@@ -2687,8 +2671,8 @@ Operate Policies
     .. hlist::
         :columns: 1
 
-        * **max_retries**
-            | An :class:`int`. Maximum number of retries before aborting the current transaction. The initial attempt is not counted as a retry.
+        * **max_retries** :class:`int`
+            | Maximum number of retries before aborting the current transaction. The initial attempt is not counted as a retry.
             |
             | If max_retries is exceeded, the transaction will return error ``AEROSPIKE_ERR_TIMEOUT``.
             |
@@ -2696,43 +2680,60 @@ Operate Policies
             | if the client timed out previous transaction attempts. It's important to use a distinct write policy for non-idempotent writes, which sets max_retries = `0`;
             |
             | Default: ``0``
-        * **sleep_between_retries**
-            | An :class:`int`. Milliseconds to sleep between retries. Enter zero to skip sleep.
+        * **sleep_between_retries** :class:`int`
+            | Milliseconds to sleep between retries. Enter zero to skip sleep.
             |
             | Default: ``0``
-        * **socket_timeout**
-            | An :class:`int`. Socket idle timeout in milliseconds when processing a database command.
+        * **socket_timeout** :class:`int`
+            | Socket idle timeout in milliseconds when processing a database command.
             |
             | If socket_timeout is not zero and the socket has been idle for at least socket_timeout, both max_retries and total_timeout are checked. If max_retries and total_timeout are not exceeded, the transaction is retried.
             |
             | If both ``socket_timeout`` and ``total_timeout`` are non-zero and ``socket_timeout`` > ``total_timeout``, then ``socket_timeout`` will be set to ``total_timeout``. If ``socket_timeout`` is zero, there will be no socket idle limit.
             |
-            | Default: ``0``.
-        * **total_timeout**
-            | An :class:`int`. Total transaction timeout in milliseconds.
+            | Default: ``0``
+        * **total_timeout** :class:`int`
+            | Total transaction timeout in milliseconds.
             |
             | The total_timeout is tracked on the client and sent to the server along with the transaction in the wire protocol. The client will most likely timeout first, but the server also has the capability to timeout the transaction.
             |
             | If ``total_timeout`` is not zero and ``total_timeout`` is reached before the transaction completes, the transaction will return error ``AEROSPIKE_ERR_TIMEOUT``. If ``total_timeout`` is zero, there will be no total time limit.
             |
             | Default: ``1000``
-        * **key** one of the ``aerospike.POLICY_KEY_*`` values such as :data:`aerospike.POLICY_KEY_DIGEST`
+        * **key** 
+            | One of the ``aerospike.POLICY_KEY_*`` values such as :data:`aerospike.POLICY_KEY_DIGEST`
+            |
             | Default: ``aerospike.POLICY_KEY_DIGEST``
-        * **gen** one of the ``aerospike.POLICY_GEN_*`` values such as :data:`aerospike.POLICY_GEN_IGNORE`
+        * **gen** 
+            | One of the ``aerospike.POLICY_GEN_*`` values such as :data:`aerospike.POLICY_GEN_IGNORE`
+            |
             | Default: ``aerospike.POLICY_GEN_IGNORE``
-        * **replica** one of the ``aerospike.POLICY_REPLICA_*`` values such as :data:`aerospike.POLICY_REPLICA_MASTER`
+        * **replica** 
+            | One of the ``aerospike.POLICY_REPLICA_*`` values such as :data:`aerospike.POLICY_REPLICA_MASTER`
+            |
             | Default: ``aerospike.POLICY_REPLICA_SEQUENCE``
-        * **commit_level** one of the ``aerospike.POLICY_COMMIT_LEVEL_*`` values such as :data:`aerospike.POLICY_COMMIT_LEVEL_ALL`
+        * **commit_level** 
+            | One of the ``aerospike.POLICY_COMMIT_LEVEL_*`` values such as :data:`aerospike.POLICY_COMMIT_LEVEL_ALL`
+            |
             | Default: ``aerospike.POLICY_COMMIT_LEVEL_ALL``
-        * **read_mode_ap** one of the ``aerospike.POLICY_READ_MODE_AP_*`` values such as :data:`aerospike.AS_POLICY_READ_MODE_AP_ONE`
+        * **read_mode_ap** 
+            | One of the ``aerospike.POLICY_READ_MODE_AP_*`` values such as :data:`aerospike.AS_POLICY_READ_MODE_AP_ONE`
+            | 
             | Default: ``aerospike.AS_POLICY_READ_MODE_AP_ONE``
             | **New in version 3.7.0**
-        * **read_mode_sc** one of the ``aerospike.POLICY_READ_MODE_SC_*`` values such as :data:`aerospike.POLICY_READ_MODE_SC_SESSION`
+        * **read_mode_sc** 
+            | One of the ``aerospike.POLICY_READ_MODE_SC_*`` values such as :data:`aerospike.POLICY_READ_MODE_SC_SESSION`
+            |
             | Default: ``aerospike.POLICY_READ_MODE_SC_SESSION``
             | **New in version 3.7.0**
-        * **exists** one of the ``aerospike.POLICY_EXISTS_*`` values such as :data:`aerospike.POLICY_EXISTS_CREATE`
+        * **exists** 
+            | One of the ``aerospike.POLICY_EXISTS_*`` values such as :data:`aerospike.POLICY_EXISTS_CREATE`
+            |
             | Default: ```aerospike.POLICY_GEN_IGNORE``
-        * **durable_delete** boolean value: True to perform durable delete (requires Enterprise server version >= 3.10) Default: ``False``
+        * **durable_delete** :class:`bool` 
+            | Perform durable delete (requires Enterprise server version >= 3.10) 
+            |
+            | Default: ``False``
 
 .. _aerospike_apply_policies:
 
@@ -2746,8 +2747,8 @@ Apply Policies
     .. hlist::
         :columns: 1
 
-        * **max_retries**
-            | An :class:`int`. Maximum number of retries before aborting the current transaction. The initial attempt is not counted as a retry.
+        * **max_retries** :class:`int`
+            | Maximum number of retries before aborting the current transaction. The initial attempt is not counted as a retry.
             |
             | If max_retries is exceeded, the transaction will return error ``AEROSPIKE_ERR_TIMEOUT``.
             |
@@ -2755,34 +2756,47 @@ Apply Policies
             | if the client timed out previous transaction attempts. It's important to use a distinct write policy for non-idempotent writes, which sets max_retries = `0`;
             |
             | Default: ``0``
-        * **sleep_between_retries**
-            | An :class:`int`. Milliseconds to sleep between retries. Enter zero to skip sleep. Default: ``0``
-        * **socket_timeout**
-            | An :class:`int`. Socket idle timeout in milliseconds when processing a database command.
+        * **sleep_between_retries** :class:`int`
+            | Milliseconds to sleep between retries. Enter zero to skip sleep. 
+            |
+            | Default: ``0``
+        * **socket_timeout** :class:`int`
+            | Socket idle timeout in milliseconds when processing a database command.
             |
             | If socket_timeout is not zero and the socket has been idle for at least socket_timeout, both max_retries and total_timeout are checked. If max_retries and total_timeout are not exceeded, the transaction is retried.
             |
             | If both ``socket_timeout`` and ``total_timeout`` are non-zero and ``socket_timeout`` > ``total_timeout``, then ``socket_timeout`` will be set to ``total_timeout``. If ``socket_timeout`` is zero, there will be no socket idle limit.
             |
-            | Default: ``0``.
-        * **total_timeout**
-            | An :class:`int`. Total transaction timeout in milliseconds.
+            | Default: ``0``
+        * **total_timeout** :class:`int`
+            | Total transaction timeout in milliseconds.
             |
             | The total_timeout is tracked on the client and sent to the server along with the transaction in the wire protocol. The client will most likely timeout first, but the server also has the capability to timeout the transaction.
             |
             | If ``total_timeout`` is not zero and ``total_timeout`` is reached before the transaction completes, the transaction will return error ``AEROSPIKE_ERR_TIMEOUT``. If ``total_timeout`` is zero, there will be no total time limit.
             |
             | Default: ``1000``
-        * **key** one of the ``aerospike.POLICY_KEY_*`` values such as :data:`aerospike.POLICY_KEY_DIGEST`
+        * **key** 
+            | One of the ``aerospike.POLICY_KEY_*`` values such as :data:`aerospike.POLICY_KEY_DIGEST`
+            |
             | Default: ``aerospike.POLICY_KEY_DIGEST``
-        * **replica** one of the ``aerospike.POLICY_REPLICA_*`` values such as :data:`aerospike.POLICY_REPLICA_MASTER`
+        * **replica** 
+            | One of the ``aerospike.POLICY_REPLICA_*`` values such as :data:`aerospike.POLICY_REPLICA_MASTER`
+            |
             | Default: ``aerospike.POLICY_REPLICA_SEQUENCE``
-        * **gen** one of the ``aerospike.POLICY_GEN_*`` values such as :data:`aerospike.POLICY_GEN_IGNORE`
+        * **gen** 
+            | One of the ``aerospike.POLICY_GEN_*`` values such as :data:`aerospike.POLICY_GEN_IGNORE`
+            | 
             | Default: ``aerospike.POLICY_GEN_IGNORE``
-        * **commit_level** one of the ``aerospike.POLICY_COMMIT_LEVEL_*`` values such as :data:`aerospike.POLICY_COMMIT_LEVEL_ALL`
+        * **commit_level** 
+            | One of the ``aerospike.POLICY_COMMIT_LEVEL_*`` values such as :data:`aerospike.POLICY_COMMIT_LEVEL_ALL`
+            |
             | Default: ``aerospike.POLICY_COMMIT_LEVEL_ALL``
-        * **durable_delete** boolean value: True to perform durable delete (requires Enterprise server version >= 3.10)
+        * **durable_delete** :class:`bool` 
+            | Perform durable delete (requires Enterprise server version >= 3.10) 
+            |
             | Default: ``False``
+
 
 .. _aerospike_remove_policies:
 
@@ -2796,8 +2810,8 @@ Remove Policies
     .. hlist::
         :columns: 1
 
-        * **max_retries**
-            | An :class:`int`. Maximum number of retries before aborting the current transaction. The initial attempt is not counted as a retry.
+        * **max_retries** :class:`int`
+            | Maximum number of retries before aborting the current transaction. The initial attempt is not counted as a retry.
             |
             | If max_retries is exceeded, the transaction will return error ``AEROSPIKE_ERR_TIMEOUT``.
             |
@@ -2805,32 +2819,43 @@ Remove Policies
             | if the client timed out previous transaction attempts. It's important to use a distinct write policy for non-idempotent writes, which sets max_retries = `0`;
             |
             | Default: ``0``
-        * **sleep_between_retries**
-            | An :class:`int`. Milliseconds to sleep between retries. Enter zero to skip sleep. Default: ``0``
-        * **socket_timeout**
-            | An :class:`int`. Socket idle timeout in milliseconds when processing a database command.
+        * **sleep_between_retries** :class:`int`
+            | Milliseconds to sleep between retries. Enter zero to skip sleep. Default: ``0``
+        * **socket_timeout** :class:`int`
+            | Socket idle timeout in milliseconds when processing a database command.
             |
             | If socket_timeout is not zero and the socket has been idle for at least socket_timeout, both max_retries and total_timeout are checked. If max_retries and total_timeout are not exceeded, the transaction is retried.
             |
             | If both ``socket_timeout`` and ``total_timeout`` are non-zero and ``socket_timeout`` > ``total_timeout``, then ``socket_timeout`` will be set to ``total_timeout``. If ``socket_timeout`` is zero, there will be no socket idle limit.
             |
-            | Default: ``0``.
-        * **total_timeout**
-            | An :class:`int`. Total transaction timeout in milliseconds.
+            | Default: ``0``
+        * **total_timeout** :class:`int`
+            | Total transaction timeout in milliseconds.
             |
             | The total_timeout is tracked on the client and sent to the server along with the transaction in the wire protocol. The client will most likely timeout first, but the server also has the capability to timeout the transaction.
             |
             | If ``total_timeout`` is not zero and ``total_timeout`` is reached before the transaction completes, the transaction will return error ``AEROSPIKE_ERR_TIMEOUT``. If ``total_timeout`` is zero, there will be no total time limit.
             |
             | Default: ``1000``
-        * **key** one of the ``aerospike.POLICY_KEY_*`` values such as :data:`aerospike.POLICY_KEY_DIGEST`
+        * **key** 
+            | One of the ``aerospike.POLICY_KEY_*`` values such as :data:`aerospike.POLICY_KEY_DIGEST`
+            |
             | Default: ``aerospike.POLICY_KEY_DIGEST``
-        * **commit_level** one of the ``aerospike.POLICY_COMMIT_LEVEL_*`` values such as :data:`aerospike.POLICY_COMMIT_LEVEL_ALL`
+        * **commit_level** 
+            | One of the ``aerospike.POLICY_COMMIT_LEVEL_*`` values such as :data:`aerospike.POLICY_COMMIT_LEVEL_ALL`
+            | 
             | Default: ``aerospike.POLICY_COMMIT_LEVEL_ALL``
-        * **gen** one of the ``aerospike.POLICY_GEN_*`` values such as :data:`aerospike.POLICY_GEN_IGNORE`
+        * **gen** 
+            | One of the ``aerospike.POLICY_GEN_*`` values such as :data:`aerospike.POLICY_GEN_IGNORE`
+            | 
             | Default: ``aerospike.POLICY_GEN_IGNORE``
-        * **durable_delete** boolean value: True to perform durable delete (requires Enterprise server version >= 3.10) Default: ``False``
-        * **replica** one of the ``aerospike.POLICY_REPLICA_*`` values such as :data:`aerospike.POLICY_REPLICA_MASTER`
+        * **durable_delete** :class:`bool` 
+            | Perform durable delete (requires Enterprise server version >= 3.10) 
+            |
+            | Default: ``False``
+        * **replica** 
+            | One of the ``aerospike.POLICY_REPLICA_*`` values such as :data:`aerospike.POLICY_REPLICA_MASTER`
+            | 
             | Default: ``aerospike.POLICY_REPLICA_SEQUENCE``
 
 .. _aerospike_batch_policies:
@@ -2840,24 +2865,21 @@ Batch Policies
 
 .. object:: policy
 
-    A :class:`dict` of optional batch policies, which are applicable to \
-     :meth:`~aerospike.Client.get_many`, :meth:`~aerospike.Client.exists_many` \
-     and :meth:`~aerospike.Client.select_many`.
+    A :class:`dict` of optional batch policies, which are applicable to :meth:`~aerospike.Client.get_many`, :meth:`~aerospike.Client.exists_many` and :meth:`~aerospike.Client.select_many`.
 
     .. hlist::
         :columns: 1
 
-        * **max_retries**
-            | An :class:`int`. Maximum number of retries before aborting the current transaction. The initial attempt is not counted as a retry.
+        * **max_retries** :class:`int`
+            | Maximum number of retries before aborting the current transaction. The initial attempt is not counted as a retry.
             |
             | If max_retries is exceeded, the transaction will return error ``AEROSPIKE_ERR_TIMEOUT``.
             |
-            | **WARNING**: Database writes that are not idempotent (such as "add") should not be retried because the write operation may be performed multiple times
-            | if the client timed out previous transaction attempts. It's important to use a distinct write policy for non-idempotent writes, which sets max_retries = `0`;
+            | **WARNING**: Database writes that are not idempotent (such as "add") should not be retried because the write operation may be performed multiple times if the client timed out previous transaction attempts. It's important to use a distinct write policy for non-idempotent writes, which sets max_retries = `0`;
             |
             | Default: ``2``
-        * **sleep_between_retries**
-            | An :class:`int`. Milliseconds to sleep between retries. Enter zero to skip sleep.
+        * **sleep_between_retries** :class:`int`
+            | Milliseconds to sleep between retries. Enter zero to skip sleep.
             |
             | Default: ``0``
         * **socket_timeout**
@@ -2867,27 +2889,45 @@ Batch Policies
             |
             | If both ``socket_timeout`` and ``total_timeout`` are non-zero and ``socket_timeout`` > ``total_timeout``, then ``socket_timeout`` will be set to ``total_timeout``. If ``socket_timeout`` is zero, there will be no socket idle limit.
             |
-            | Default: ``0``.
-        * **total_timeout**
-            | An :class:`int`. Total transaction timeout in milliseconds.
+            | Default: ``0``
+        * **total_timeout** :class:`int`
+            | Total transaction timeout in milliseconds.
             |
             | The total_timeout is tracked on the client and sent to the server along with the transaction in the wire protocol. The client will most likely timeout first, but the server also has the capability to timeout the transaction.
             |
             | If ``total_timeout`` is not zero and ``total_timeout`` is reached before the transaction completes, the transaction will return error ``AEROSPIKE_ERR_TIMEOUT``. If ``total_timeout`` is zero, there will be no total time limit.
             |
             | Default: ``1000``
-        * **read_mode_ap** one of the ``aerospike.POLICY_READ_MODE_AP_*`` values such as :data:`aerospike.AS_POLICY_READ_MODE_AP_ONE`
+        * **read_mode_ap** 
+            | One of the ``aerospike.POLICY_READ_MODE_AP_*`` values such as :data:`aerospike.AS_POLICY_READ_MODE_AP_ONE`
+            | 
             | Default: ``aerospike.AS_POLICY_READ_MODE_AP_ONE``
             | **New in version 3.7.0**
-        * **read_mode_sc** one of the ``aerospike.POLICY_READ_MODE_SC_*`` values such as :data:`aerospike.POLICY_READ_MODE_SC_SESSION`
+        * **read_mode_sc** 
+            | One of the ``aerospike.POLICY_READ_MODE_SC_*`` values such as :data:`aerospike.POLICY_READ_MODE_SC_SESSION`
+            | 
             | Default: ``aerospike.POLICY_READ_MODE_SC_SESSION``
             | **New in version 3.7.0**
-        * **replica** one of the ``aerospike.POLICY_REPLICA_*`` values such as :data:`aerospike.POLICY_REPLICA_MASTER`
+        * **replica** 
+            | One of the ``aerospike.POLICY_REPLICA_*`` values such as :data:`aerospike.POLICY_REPLICA_MASTER`
+            | 
             | Default: ``aerospike.POLICY_REPLICA_SEQUENCE``
-        * **concurrent** :class:`bool` Determine if batch commands to each server are run in parallel threads. Default `False`
-        * **allow_inline** :class:`bool` . Allow batch to be processed immediately in the server's receiving thread when the server deems it to be appropriate.  If `False`, the batch will always be processed in separate transaction threads.  This field is only relevant for the new batch index protocol. Default `True`.
-        * **send_set_name** :class:`bool` Send set name field to server for every key in the batch for batch index protocol. This is only necessary when authentication is enabled and security roles are defined on a per set basis. Default: `False`
-        * **deserialize** :class:`bool` Should raw bytes be deserialized to as_list or as_map. Set to `False` for backup programs that just need access to raw bytes. Default: `True`
+        * **concurrent** :class:`bool` 
+            | Determine if batch commands to each server are run in parallel threads. 
+            | 
+            | Default ``False``
+        * **allow_inline** :class:`bool` 
+            | Allow batch to be processed immediately in the server's receiving thread when the server deems it to be appropriate.  If `False`, the batch will always be processed in separate transaction threads.  This field is only relevant for the new batch index protocol. 
+            | 
+            | Default ``True``
+        * **send_set_name** :class:`bool` 
+            | Send set name field to server for every key in the batch for batch index protocol. This is only necessary when authentication is enabled and security roles are defined on a per set basis. 
+            | 
+            | Default: ``False``
+        * **deserialize** :class:`bool` 
+            | Should raw bytes be deserialized to as_list or as_map. Set to `False` for backup programs that just need access to raw bytes. 
+            | 
+            | Default: ``True``
 
 .. _aerospike_info_policies:
 
@@ -2895,15 +2935,14 @@ Info Policies
 -------------
 
 .. object:: policy
-
-    A :class:`dict` of optional info policies, which are applicable to \
-     :meth:`~aerospike.Client.info`, :meth:`~aerospike.Client.info_node` \
-     and index operations.
+    
+    A :class:`dict` of optional info policies, which are applicable to :meth:`~aerospike.Client.info`, :meth:`~aerospike.Client.info_node` and index operations.
 
     .. hlist::
         :columns: 1
 
-        * **timeout** read timeout in milliseconds
+        * **timeout** :class:`int`
+            | Read timeout in milliseconds
 
 
 .. _aerospike_admin_policies:
@@ -2918,8 +2957,8 @@ Admin Policies
     .. hlist::
         :columns: 1
 
-        * **timeout** admin operation timeout in milliseconds
-
+        * **timeout** :class:`int`
+            | Admin operation timeout in milliseconds
 
 
 .. _aerospike_list_policies:
@@ -3070,6 +3109,11 @@ Bit Policies
 
 .. _aerospike_privilege_dict:
 
+.. _unicode_handling:
+
+Misc
+====
+
 Privilege Objects
 -----------------
 
@@ -3088,3 +3132,40 @@ Privilege Objects
 
     ``{'code': aerospike.PRIV_READ, 'ns': 'test', 'set': 'demo'}``
 
+Unicode Handling
+----------------
+
+Both :class:`str` and :func:`unicode` values are converted by the
+client into UTF-8 encoded strings for storage on the aerospike server.
+Read methods such as :meth:`~aerospike.Client.get`,
+:meth:`~aerospike.Client.query`, :meth:`~aerospike.Client.scan` and
+:meth:`~aerospike.Client.operate` will return that data as UTF-8 encoded
+:class:`str` values. To get a :func:`unicode` you will need to manually decode.
+
+.. warning::
+
+    Prior to release 1.0.43 read operations always returned strings as :func:`unicode`.
+
+.. code-block:: python
+
+    >>> client.put(key, { 'name': 'Dr. Zeta Alphabeta', 'age': 47})
+    >>> (key, meta, record) = client.get(key)
+    >>> type(record['name'])
+    <type 'str'>
+    >>> record['name']
+    'Dr. Zeta Alphabeta'
+    >>> client.put(key, { 'name': unichr(0x2603), 'age': 21})
+    >>> (key, meta, record) = client.get(key)
+    >>> type(record['name'])
+    <type 'str'>
+    >>> record['name']
+    '\xe2\x98\x83'
+    >>> print(record['name'])
+    ☃
+    >>> name = record['name'].decode('utf-8')
+    >>> type(name)
+    <type 'unicode'>
+    >>> name
+    u'\u2603'
+    >>> print(name)
+    ☃
