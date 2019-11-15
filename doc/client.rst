@@ -3030,35 +3030,35 @@ Map Policies
 
         * **map_write_mode** write mode for the map. 
 
-        .. note:: This should only be used for Server version < 4.3.0.
+            .. note:: This should only be used for Server version < 4.3.0.
 
-		+--------------------------------+--------------------------------------------------------------------------------------------------------------+
-		| Write Modes                    | Description                                                                                                  |
-		+--------------------------------+--------------------------------------------------------------------------------------------------------------+
-		| MAP_UPDATE                     | Default. Allow create or update.                                                                             |
-		+--------------------------------+--------------------------------------------------------------------------------------------------------------+
-		| MAP_CREATE_ONLY                | If the key already exists, the item will be denied. If the key does not exist, a new item will be created.   |
-		+--------------------------------+--------------------------------------------------------------------------------------------------------------+
-		| MAP_UPDATE_ONLY                | If the key already exists, the item will be overwritten. If the key does not exist, the item will be denied. |
-		+--------------------------------+--------------------------------------------------------------------------------------------------------------+
+            +--------------------------------+--------------------------------------------------------------------------------------------------------------+
+            | Write Modes                    | Description                                                                                                  |
+            +--------------------------------+--------------------------------------------------------------------------------------------------------------+
+            | MAP_UPDATE                     | Default. Allow create or update.                                                                             |
+            +--------------------------------+--------------------------------------------------------------------------------------------------------------+
+            | MAP_CREATE_ONLY                | If the key already exists, the item will be denied. If the key does not exist, a new item will be created.   |
+            +--------------------------------+--------------------------------------------------------------------------------------------------------------+
+            | MAP_UPDATE_ONLY                | If the key already exists, the item will be overwritten. If the key does not exist, the item will be denied. |
+            +--------------------------------+--------------------------------------------------------------------------------------------------------------+
         
         * **map_write_flags** Flags to apply to the map operation. 
 
-        .. note:: This is only valid for Aerospike Server versions >= 4.3.0. 
+            .. note:: This is only valid for Aerospike Server versions >= 4.3.0. 
 		
-		+--------------------------------+--------------------------------------------------------------------------------------------------------------+
-		| Write Flags                    | Description                                                                                                  |
-		+--------------------------------+--------------------------------------------------------------------------------------------------------------+
-		| MAP_WRITE_FLAGS_DEFAULT        | Default. Allow create or update.                                                                             |
-		+--------------------------------+--------------------------------------------------------------------------------------------------------------+
-		| MAP_WRITE_FLAGS_CREATE_ONLY    | If the key already exists, the item will be denied. If the key does not exist, a new item will be created.   |
-		+--------------------------------+--------------------------------------------------------------------------------------------------------------+
-		| MAP_WRITE_FLAGS_UPDATE_ONLY    | If the key already exists, the item will be overwritten. If the key does not exist, the item will be denied. |
-		+--------------------------------+--------------------------------------------------------------------------------------------------------------+
-		| MAP_WRITE_FLAGS_NO_FAIL        | Do not raise error if a map item is denied due to write flag constraints (always succeed).                   |
-		+--------------------------------+--------------------------------------------------------------------------------------------------------------+
-		| MAP_WRITE_FLAGS_PARTIAL        | Allow other valid map items to be committed if a map item is denied due to write flag constraints.           |
-		+--------------------------------+--------------------------------------------------------------------------------------------------------------+
+            +--------------------------------+--------------------------------------------------------------------------------------------------------------+
+            | Write Flags                    | Description                                                                                                  |
+            +--------------------------------+--------------------------------------------------------------------------------------------------------------+
+            | MAP_WRITE_FLAGS_DEFAULT        | Default. Allow create or update.                                                                             |
+            +--------------------------------+--------------------------------------------------------------------------------------------------------------+
+            | MAP_WRITE_FLAGS_CREATE_ONLY    | If the key already exists, the item will be denied. If the key does not exist, a new item will be created.   |
+            +--------------------------------+--------------------------------------------------------------------------------------------------------------+
+            | MAP_WRITE_FLAGS_UPDATE_ONLY    | If the key already exists, the item will be overwritten. If the key does not exist, the item will be denied. |
+            +--------------------------------+--------------------------------------------------------------------------------------------------------------+
+            | MAP_WRITE_FLAGS_NO_FAIL        | Do not raise error if a map item is denied due to write flag constraints (always succeed).                   |
+            +--------------------------------+--------------------------------------------------------------------------------------------------------------+
+            | MAP_WRITE_FLAGS_PARTIAL        | Allow other valid map items to be committed if a map item is denied due to write flag constraints.           |
+            +--------------------------------+--------------------------------------------------------------------------------------------------------------+
 
         * **map_order** ordering to maintain for the map entries. 
 
