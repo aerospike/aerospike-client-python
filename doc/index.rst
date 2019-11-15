@@ -8,15 +8,21 @@ the Aerospike C client.
 
 * :mod:`aerospike` - the module containing the Client, Query, and Scan Classes.
 
+* :ref:`aerospike.scan` is a class built to handle scan operations of entire sets.
+
+* :ref:`aerospike.query` is a class built to handle queries over secondary indexes.
+
 * :mod:`aerospike.predicates` is a submodule containing predicate helpers for use with the Query class.
 
 * :mod:`aerospike.predexp` is a submodule containing predicate expression helpers for use with the Query class.
 
 * :mod:`aerospike.exception` is a submodule containing the exception hierarchy for AerospikeError and its subclasses.
 
-* :ref:`Data_Mapping` How Python types map to Aerospike Server types
+* :mod:`aerospike_helpers` is a helper package for the list, map and bitwise operate commands.
 
-* :mod:`aerospike_helpers.operations` Operation helper functions.
+* :ref:`aerospike.geojson` is a class to handle GeoJSON type data
+
+* :ref:`Data_Mapping` How Python types map to Aerospike Server types
 
 .. seealso::
     The `Python Client Manual <http://www.aerospike.com/docs/client/python/>`_
@@ -26,20 +32,19 @@ Content
 #######
 
 .. toctree::
-    :maxdepth: 3
+    :maxdepth: 4
 
     aerospike
-    data_mapping
     client
     scan
     query
     predicates
     predexp
-    geojson
     exception
-    modules
-
-
+    aerospike_helpers 
+    geojson
+    data_mapping
+	
 Indices and tables
 ##################
 

@@ -1,4 +1,4 @@
-.. _query:
+.. _aerospike.query:
 
 .. currentmodule:: aerospike
 

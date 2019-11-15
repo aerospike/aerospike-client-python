@@ -1,25 +1,24 @@
-aerospike\_helpers package
-==========================
+.. aerospike\_helpers:
 
-Subpackages
------------
+***************************************************************************************
+:mod:`aerospike\_helpers` --- Aerospike Helper Package for list, map and bit operations
+***************************************************************************************
 
-.. toctree::
-
-    aerospike_helpers.operations
-
-Module contents
----------------
+This package contains helpers to be used by the operate and operate_ordered methods for bin operations. (list, map, bitwise, etc)
 
 .. automodule:: aerospike_helpers
     :members:
     :undoc-members:
     :show-inheritance:
 
-aerospike\_helpers\.cdt_ctx module
-------------------------------------------------------
+Subpackages
+------------
 
-.. automodule:: aerospike_helpers.cdt_ctx
-    :members:
-    :undoc-members:
-    :show-inheritance:
+.. toctree::
+
+    aerospike_helpers.operations
+    aerospike_helpers.cdt_ctx
+
+
+	
+	
