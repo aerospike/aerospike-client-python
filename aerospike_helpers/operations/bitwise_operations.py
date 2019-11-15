@@ -2,16 +2,15 @@
 Helper functions to create bit operation dictionary arguments for
 the :mod:`aerospike.Client.operate` and :mod:`aerospike.Client.operate_ordered` methods of the aerospike client.
 
-.. note:: Bit operations require server version >= 4.6.0.2
+    .. note:: Bitwise operations require server version >= 4.6.0
 
-    Bit offsets are oriented left to right. Negative offsets are supported and start backwards
-    from the end of the target bitmap.
+Bit offsets are oriented left to right. Negative offsets are supported and start backwards from the end of the target bitmap.
 
-    Offset examples:
-        * 0: leftmost bit in the map
-        * 4: fifth bit in the map
-        * -1: rightmost bit in the map
-        * -4: 3 bits from rightmost
+Offset examples:
+    * 0: leftmost bit in the map
+    * 4: fifth bit in the map
+    * -1: rightmost bit in the map
+    * -4: 3 bits from rightmost
 
 Example::
 
