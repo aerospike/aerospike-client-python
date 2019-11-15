@@ -2168,8 +2168,11 @@ Info Operations
 
     .. method:: truncate(namespace, set, nanos[, policy])
 
-        Remove records in specified namespace/set efficiently. This method is many orders of magnitude faster than deleting records one at a time. Works with Aerospike Server versions >= 3.12. See `Truncate command reference <https://www.aerospike.com/docs/reference/info#truncate>`_.
+        Remove records in specified namespace/set efficiently. This method is many orders of magnitude faster than deleting records one at a time. 
+        See `Truncate command reference <https://www.aerospike.com/docs/reference/info#truncate>`_.
  
+        .. note:: Works with Aerospike Server versions >= 3.12
+        
         This asynchronous server call may return before the truncation is complete.  The user can still
         write new records after the server returns because new records will have last update times
         greater than the truncate cutoff (set at the time of truncate call)
@@ -2592,9 +2595,12 @@ Write Policies
             |
             | Default: ``aerospike.POLICY_COMMIT_LEVEL_ALL``
         * **durable_delete** :class:`bool` 
-            | Perform durable delete (requires Enterprise server version >= 3.10) 
-            |
+            | Perform durable delete
+
+            .. note:: Requires Enterprise server version >= 3.10
+
             | Default: ``False``
+            
 
 .. _aerospike_read_policies:
 
@@ -2732,8 +2738,10 @@ Operate Policies
             |
             | Default: ```aerospike.POLICY_GEN_IGNORE``
         * **durable_delete** :class:`bool` 
-            | Perform durable delete (requires Enterprise server version >= 3.10) 
-            |
+            | Perform durable delete
+
+            .. note:: Requires Enterprise server version >= 3.10
+
             | Default: ``False``
 
 .. _aerospike_apply_policies:
@@ -2794,8 +2802,10 @@ Apply Policies
             |
             | Default: ``aerospike.POLICY_COMMIT_LEVEL_ALL``
         * **durable_delete** :class:`bool` 
-            | Perform durable delete (requires Enterprise server version >= 3.10) 
-            |
+            | Perform durable delete
+
+            .. note:: Requires Enterprise server version >= 3.10
+
             | Default: ``False``
 
 
@@ -2851,8 +2861,10 @@ Remove Policies
             | 
             | Default: ``aerospike.POLICY_GEN_IGNORE``
         * **durable_delete** :class:`bool` 
-            | Perform durable delete (requires Enterprise server version >= 3.10) 
-            |
+            | Perform durable delete
+
+            .. note:: Requires Enterprise server version >= 3.10
+
             | Default: ``False``
         * **replica** 
             | One of the ``aerospike.POLICY_REPLICA_*`` values such as :data:`aerospike.POLICY_REPLICA_MASTER`
