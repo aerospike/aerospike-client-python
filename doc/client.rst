@@ -2555,15 +2555,16 @@ Write Policies
             |
             | Default: ``0``
         * **sleep_between_retries** :class:`int`
-            | Milliseconds to sleep between retries. Enter zero to skip sleep. 
+            | Milliseconds to sleep between retries. Enter ``0`` to skip sleep. 
             |
             | Default: ``0``
         * **socket_timeout** :class:`int`
             | Socket idle timeout in milliseconds when processing a database command.
             |
-            | If socket_timeout is not zero and the socket has been idle for at least socket_timeout, both max_retries and total_timeout are checked. If max_retries and total_timeout are not exceeded, the transaction is retried.
+            | If socket_timeout is not ``0`` and the socket has been idle for at least socket_timeout, both max_retries and total_timeout are checked. If max_retries and total_timeout are not exceeded, the transaction is retried.
             |
-            | If both ``socket_timeout`` and ``total_timeout`` are non-zero and ``socket_timeout`` > ``total_timeout``, then ``socket_timeout`` will be set to ``total_timeout``. If ``socket_timeout`` is zero, there will be no socket idle limit.
+            | If both ``socket_timeout`` and ``total_timeout`` are non-zero and ``socket_timeout`` > ``total_timeout``, then ``socket_timeout`` will be set to ``total_timeout``. \
+              If ``socket_timeout`` is ``0``, there will be no socket idle limit.
             |
             | Default: ``0``
         * **total_timeout** :class:`int`
@@ -2571,7 +2572,7 @@ Write Policies
             |
             | The total_timeout is tracked on the client and sent to the server along with the transaction in the wire protocol. The client will most likely timeout first, but the server also has the capability to timeout the transaction.
             |
-            | If ``total_timeout`` is not zero and ``total_timeout`` is reached before the transaction completes, the transaction will return error ``AEROSPIKE_ERR_TIMEOUT``. If ``total_timeout`` is zero, there will be no total time limit.
+            | If ``total_timeout`` is not ``0`` and ``total_timeout`` is reached before the transaction completes, the transaction will return error ``AEROSPIKE_ERR_TIMEOUT``. If ``total_timeout`` is ``0``, there will be no total time limit.
             |
             | Default: ``1000``
         * **key** 
@@ -2617,15 +2618,15 @@ Read Policies
             |
             | Default: ``2``
         * **sleep_between_retries** :class:`int`
-            | Milliseconds to sleep between retries. Enter zero to skip sleep. 
+            | Milliseconds to sleep between retries. Enter ``0`` to skip sleep. 
             |
             | Default: ``0``
         * **socket_timeout** :class:`int`
             | Socket idle timeout in milliseconds when processing a database command.
             |
-            | If socket_timeout is not zero and the socket has been idle for at least socket_timeout, both max_retries and total_timeout are checked. If max_retries and total_timeout are not exceeded, the transaction is retried.
+            | If socket_timeout is not ``0`` and the socket has been idle for at least socket_timeout, both max_retries and total_timeout are checked. If max_retries and total_timeout are not exceeded, the transaction is retried.
             |
-            | If both ``socket_timeout`` and ``total_timeout`` are non-zero and ``socket_timeout`` > ``total_timeout``, then ``socket_timeout`` will be set to ``total_timeout``. If ``socket_timeout`` is zero, there will be no socket idle limit.
+            | If both ``socket_timeout`` and ``total_timeout`` are non-zero and ``socket_timeout`` > ``total_timeout``, then ``socket_timeout`` will be set to ``total_timeout``. If ``socket_timeout`` is ``0``, there will be no socket idle limit.
             |
             | Default: ``0``
         * **total_timeout** :class:`int`
@@ -2633,7 +2634,7 @@ Read Policies
             |
             | The total_timeout is tracked on the client and sent to the server along with the transaction in the wire protocol. The client will most likely timeout first, but the server also has the capability to timeout the transaction.
             |
-            | If ``total_timeout`` is not zero and ``total_timeout`` is reached before the transaction completes, the transaction will return error ``AEROSPIKE_ERR_TIMEOUT``. If ``total_timeout`` is zero, there will be no total time limit.
+            | If ``total_timeout`` is not ``0`` and ``total_timeout`` is reached before the transaction completes, the transaction will return error ``AEROSPIKE_ERR_TIMEOUT``. If ``total_timeout`` is ``0``, there will be no total time limit.
             |
             | Default: ``1000``
         * **deserialize** :class:`bool` 
@@ -2681,15 +2682,15 @@ Operate Policies
             |
             | Default: ``0``
         * **sleep_between_retries** :class:`int`
-            | Milliseconds to sleep between retries. Enter zero to skip sleep.
+            | Milliseconds to sleep between retries. Enter ``0`` to skip sleep.
             |
             | Default: ``0``
         * **socket_timeout** :class:`int`
             | Socket idle timeout in milliseconds when processing a database command.
             |
-            | If socket_timeout is not zero and the socket has been idle for at least socket_timeout, both max_retries and total_timeout are checked. If max_retries and total_timeout are not exceeded, the transaction is retried.
+            | If socket_timeout is not ``0`` and the socket has been idle for at least socket_timeout, both max_retries and total_timeout are checked. If max_retries and total_timeout are not exceeded, the transaction is retried.
             |
-            | If both ``socket_timeout`` and ``total_timeout`` are non-zero and ``socket_timeout`` > ``total_timeout``, then ``socket_timeout`` will be set to ``total_timeout``. If ``socket_timeout`` is zero, there will be no socket idle limit.
+            | If both ``socket_timeout`` and ``total_timeout`` are non-zero and ``socket_timeout`` > ``total_timeout``, then ``socket_timeout`` will be set to ``total_timeout``. If ``socket_timeout`` is ``0``, there will be no socket idle limit.
             |
             | Default: ``0``
         * **total_timeout** :class:`int`
@@ -2697,7 +2698,7 @@ Operate Policies
             |
             | The total_timeout is tracked on the client and sent to the server along with the transaction in the wire protocol. The client will most likely timeout first, but the server also has the capability to timeout the transaction.
             |
-            | If ``total_timeout`` is not zero and ``total_timeout`` is reached before the transaction completes, the transaction will return error ``AEROSPIKE_ERR_TIMEOUT``. If ``total_timeout`` is zero, there will be no total time limit.
+            | If ``total_timeout`` is not ``0`` and ``total_timeout`` is reached before the transaction completes, the transaction will return error ``AEROSPIKE_ERR_TIMEOUT``. If ``total_timeout`` is ``0``, there will be no total time limit.
             |
             | Default: ``1000``
         * **key** 
@@ -2757,15 +2758,15 @@ Apply Policies
             |
             | Default: ``0``
         * **sleep_between_retries** :class:`int`
-            | Milliseconds to sleep between retries. Enter zero to skip sleep. 
+            | Milliseconds to sleep between retries. Enter ``0`` to skip sleep. 
             |
             | Default: ``0``
         * **socket_timeout** :class:`int`
             | Socket idle timeout in milliseconds when processing a database command.
             |
-            | If socket_timeout is not zero and the socket has been idle for at least socket_timeout, both max_retries and total_timeout are checked. If max_retries and total_timeout are not exceeded, the transaction is retried.
+            | If socket_timeout is not ``0`` and the socket has been idle for at least socket_timeout, both max_retries and total_timeout are checked. If max_retries and total_timeout are not exceeded, the transaction is retried.
             |
-            | If both ``socket_timeout`` and ``total_timeout`` are non-zero and ``socket_timeout`` > ``total_timeout``, then ``socket_timeout`` will be set to ``total_timeout``. If ``socket_timeout`` is zero, there will be no socket idle limit.
+            | If both ``socket_timeout`` and ``total_timeout`` are non-zero and ``socket_timeout`` > ``total_timeout``, then ``socket_timeout`` will be set to ``total_timeout``. If ``socket_timeout`` is ``0``, there will be no socket idle limit.
             |
             | Default: ``0``
         * **total_timeout** :class:`int`
@@ -2773,7 +2774,7 @@ Apply Policies
             |
             | The total_timeout is tracked on the client and sent to the server along with the transaction in the wire protocol. The client will most likely timeout first, but the server also has the capability to timeout the transaction.
             |
-            | If ``total_timeout`` is not zero and ``total_timeout`` is reached before the transaction completes, the transaction will return error ``AEROSPIKE_ERR_TIMEOUT``. If ``total_timeout`` is zero, there will be no total time limit.
+            | If ``total_timeout`` is not ``0`` and ``total_timeout`` is reached before the transaction completes, the transaction will return error ``AEROSPIKE_ERR_TIMEOUT``. If ``total_timeout`` is ``0``, there will be no total time limit.
             |
             | Default: ``1000``
         * **key** 
@@ -2820,13 +2821,13 @@ Remove Policies
             |
             | Default: ``0``
         * **sleep_between_retries** :class:`int`
-            | Milliseconds to sleep between retries. Enter zero to skip sleep. Default: ``0``
+            | Milliseconds to sleep between retries. Enter ``0`` to skip sleep. Default: ``0``
         * **socket_timeout** :class:`int`
             | Socket idle timeout in milliseconds when processing a database command.
             |
-            | If socket_timeout is not zero and the socket has been idle for at least socket_timeout, both max_retries and total_timeout are checked. If max_retries and total_timeout are not exceeded, the transaction is retried.
+            | If socket_timeout is not ``0`` and the socket has been idle for at least socket_timeout, both max_retries and total_timeout are checked. If max_retries and total_timeout are not exceeded, the transaction is retried.
             |
-            | If both ``socket_timeout`` and ``total_timeout`` are non-zero and ``socket_timeout`` > ``total_timeout``, then ``socket_timeout`` will be set to ``total_timeout``. If ``socket_timeout`` is zero, there will be no socket idle limit.
+            | If both ``socket_timeout`` and ``total_timeout`` are non-zero and ``socket_timeout`` > ``total_timeout``, then ``socket_timeout`` will be set to ``total_timeout``. If ``socket_timeout`` is ``0``, there will be no socket idle limit.
             |
             | Default: ``0``
         * **total_timeout** :class:`int`
@@ -2834,7 +2835,7 @@ Remove Policies
             |
             | The total_timeout is tracked on the client and sent to the server along with the transaction in the wire protocol. The client will most likely timeout first, but the server also has the capability to timeout the transaction.
             |
-            | If ``total_timeout`` is not zero and ``total_timeout`` is reached before the transaction completes, the transaction will return error ``AEROSPIKE_ERR_TIMEOUT``. If ``total_timeout`` is zero, there will be no total time limit.
+            | If ``total_timeout`` is not ``0`` and ``total_timeout`` is reached before the transaction completes, the transaction will return error ``AEROSPIKE_ERR_TIMEOUT``. If ``total_timeout`` is ``0``, there will be no total time limit.
             |
             | Default: ``1000``
         * **key** 
@@ -2879,15 +2880,15 @@ Batch Policies
             |
             | Default: ``2``
         * **sleep_between_retries** :class:`int`
-            | Milliseconds to sleep between retries. Enter zero to skip sleep.
+            | Milliseconds to sleep between retries. Enter ``0`` to skip sleep.
             |
             | Default: ``0``
         * **socket_timeout**
             | An :class:`int`. Socket idle timeout in milliseconds when processing a database command.
             |
-            | If socket_timeout is not zero and the socket has been idle for at least socket_timeout, both max_retries and total_timeout are checked. If max_retries and total_timeout are not exceeded, the transaction is retried.
+            | If socket_timeout is not ``0`` and the socket has been idle for at least socket_timeout, both max_retries and total_timeout are checked. If max_retries and total_timeout are not exceeded, the transaction is retried.
             |
-            | If both ``socket_timeout`` and ``total_timeout`` are non-zero and ``socket_timeout`` > ``total_timeout``, then ``socket_timeout`` will be set to ``total_timeout``. If ``socket_timeout`` is zero, there will be no socket idle limit.
+            | If both ``socket_timeout`` and ``total_timeout`` are non-zero and ``socket_timeout`` > ``total_timeout``, then ``socket_timeout`` will be set to ``total_timeout``. If ``socket_timeout`` is ``0``, there will be no socket idle limit.
             |
             | Default: ``0``
         * **total_timeout** :class:`int`
@@ -2895,7 +2896,7 @@ Batch Policies
             |
             | The total_timeout is tracked on the client and sent to the server along with the transaction in the wire protocol. The client will most likely timeout first, but the server also has the capability to timeout the transaction.
             |
-            | If ``total_timeout`` is not zero and ``total_timeout`` is reached before the transaction completes, the transaction will return error ``AEROSPIKE_ERR_TIMEOUT``. If ``total_timeout`` is zero, there will be no total time limit.
+            | If ``total_timeout`` is not ``0`` and ``total_timeout`` is reached before the transaction completes, the transaction will return error ``AEROSPIKE_ERR_TIMEOUT``. If ``total_timeout`` is ``0``, there will be no total time limit.
             |
             | Default: ``1000``
         * **read_mode_ap** 
