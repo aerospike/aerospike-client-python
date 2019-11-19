@@ -225,10 +225,20 @@ Scan Options
     .. hlist::
         :columns: 1
 
-        * **priority** See :ref:`aerospike_scan_constants` for values. Default ``aerospike.SCAN_PRIORITY_AUTO``.
-        * **nobins** :class:`bool` whether to return the *bins* portion of the :ref:`aerospike_record_tuple`. Default ``False``.
-        * **concurrent** :class:`bool` whether to run the scan concurrently on all nodes of the cluster. Default ``False``.
-        * **percent** :class:`int` percentage of records to return from the scan. Default ``100``.
+        * **priority** See :ref:`aerospike_scan_constants` for values. 
+            | Default ``aerospike.SCAN_PRIORITY_AUTO``.
+        * **nobins** :class:`bool` 
+            | whether to return the *bins* portion of the :ref:`aerospike_record_tuple`. 
+            |
+            | Default ``False``.
+        * **concurrent** :class:`bool` 
+            | Whether to run the scan concurrently on all nodes of the cluster. 
+            |
+            | Default ``False``.
+        * **percent** :class:`int` 
+            | Percentage of records to return from the scan. 
+            |
+            | Default ``100``.
 
     .. versionadded:: 1.0.39
 

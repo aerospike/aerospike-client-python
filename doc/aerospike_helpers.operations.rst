@@ -30,8 +30,6 @@ aerospike\_helpers\.operations\.map\_operations module
 aerospike\_helpers\.operations\.bit\_operations module
 ------------------------------------------------------
 
-.. note:: Requires server version >= 4.6.0
-
 .. automodule:: aerospike_helpers.operations.bitwise_operations
     :members:
     :undoc-members:
