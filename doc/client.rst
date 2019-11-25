@@ -837,6 +837,13 @@ List Operations
         If an index is out of bounds, a parameter error will be returned.
         If a range is partially out of bounds, the valid part of the range will be returned.
 
+        Comparisons:
+         * A wildcard function is available :meth:`aerospike.CDTWildcard`.
+         * An infinite function is available :meth:`aerospike.CDTInfinite`.
+        
+        Those values are for comparison only and will not be saved in the data.
+
+
     .. seealso:: `Lists (Data Types) <https://www.aerospike.com/docs/guide/cdt-list.html>`_.
 
 
@@ -1078,6 +1085,12 @@ Map Operations
          * -3, count 3: top three ranked elements in the map.
 
         The default map order is ``aerospike.MAP_UNORDERED``.
+
+        Comparisons:
+         * A wildcard function is available :meth:`aerospike.CDTWildcard`.
+         * An infinite function is available :meth:`aerospike.CDTInfinite`.
+
+        Those values are for comparison only and will not be saved in the data.
 
         .. code-block:: python
 
