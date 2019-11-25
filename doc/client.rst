@@ -841,7 +841,7 @@ List Operations
          * A wildcard function is available :meth:`aerospike.CDTWildcard`.
          * An infinite function is available :meth:`aerospike.CDTInfinite`.
         
-        Those values are for comparison only and will not be saved in the data.
+        Those values are for comparison only and will not be saved in the database.
 
 
     .. seealso:: `Lists (Data Types) <https://www.aerospike.com/docs/guide/cdt-list.html>`_.
@@ -1090,7 +1090,7 @@ Map Operations
          * A wildcard function is available :meth:`aerospike.CDTWildcard`.
          * An infinite function is available :meth:`aerospike.CDTInfinite`.
 
-        Those values are for comparison only and will not be saved in the data.
+        Those values are for comparison only and will not be saved in the database.
 
         .. code-block:: python
 
