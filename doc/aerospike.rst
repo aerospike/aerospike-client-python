@@ -59,9 +59,11 @@ Methods
                 .. note:: TLS usage requires Aerospike Enterprise Edition
 
             * **lua** an optional :class:`dict` containing the paths to two types of Lua modules
-                * **system_path** the location of the system modules such as ``aerospike.lua`` 
+                * **system_path** 
+                    | The location of the system modules such as ``aerospike.lua`` 
                     | Default: ``/usr/local/aerospike/lua``
-                * **user_path** the location of the user's record and stream UDFs . 
+                * **user_path** 
+                    | The location of the user's record and stream UDFs . 
                     | Default: ``./``
             * **policies** a :class:`dict` of policies
                 * **read** A dictionary containing read policies. See :ref:`aerospike_read_policies` for available policy fields and values.
@@ -90,11 +92,14 @@ Methods
                 | Shared-memory cluster tending is on if the :class:`dict` is provided. \
                   If multiple clients are instantiated talking to the same cluster the *shm* cluster-tending should be used.
 
-                * **max_nodes** maximum number of nodes allowed. Pad so new nodes can be added without configuration changes 
+                * **max_nodes** 
+                    | Maximum number of nodes allowed. Pad so new nodes can be added without configuration changes 
                     | Default: ``16``
-                * **max_namespaces** similarly pad 
+                * **max_namespaces** 
+                    | Similarly pad 
                     | Default: ``8``
-                * **takeover_threshold_sec** take over tending if the cluster hasn't been checked for this many seconds 
+                * **takeover_threshold_sec** 
+                    | Take over tending if the cluster hasn't been checked for this many seconds 
                     | Default: ``30``
                 * **shm_key**
                     | Explicitly set the shm key for this client.
@@ -102,44 +107,64 @@ Methods
                     | If , and only if, **use_shared_connection** is set to ``True``, the key will be implicitly evaluated per unique hostname, and can be inspected with :meth:`~aerospike.Client.shm_key` .
                     | It is still possible to specify a key when using **use_shared_connection** = `True`.
                     | default: ``0xA8000000``
-            * **use_shared_connection** :class:`bool` indicating whether this instance should share its connection to the Aerospike cluster with other client instances in the same process. 
+            * **use_shared_connection** :class:`bool` 
+                | Indicating whether this instance should share its connection to the Aerospike cluster with other client instances in the same process. 
                 | Default: ``False``
             * **tls** a :class:`dict` of optional TLS configuration parameters.
             
                 .. note:: TLS usage requires Aerospike Enterprise Edition
 
-                * **enable** a :class:`bool` indicating whether tls should be enabled or not. 
+                * **enable** a :class:`bool` 
+                    | Indicating whether tls should be enabled or not. 
                     | Default: ``False``
-                * **cafile** :class:`str` Path to a trusted CA certificate file. By default TLS will use system standard trusted CA certificates
-                * **capath** :class:`str` Path to a directory of trusted certificates. See the OpenSSL SSL_CTX_load_verify_locations manual page for more information about the format of the directory.
-                * **protocols** :class:`str` Specifies enabled protocols. This format is the same as Apache's SSLProtocol documented at https://httpd.apache.org/docs/current/mod/mod_ssl.html#sslprotocol . 
+                * **cafile** :class:`str` 
+                    | Path to a trusted CA certificate file. By default TLS will use system standard trusted CA certificates
+                * **capath** :class:`str` 
+                    | Path to a directory of trusted certificates. See the OpenSSL SSL_CTX_load_verify_locations manual page for more information about the format of the directory.
+                * **protocols** :class:`str` 
+                    | Specifies enabled protocols. This format is the same as Apache's SSLProtocol documented at https://httpd.apache.org/docs/current/mod/mod_ssl.html#sslprotocol . 
                     | If not specified the client will use "-all +TLSv1.2".
-                * **cipher_suite** :class:`str` Specifies enabled cipher suites. The format is the same as OpenSSL's Cipher List Format documented at https://www.openssl.org/docs/manmaster/apps/ciphers.html .
+                * **cipher_suite** :class:`str` 
+                    | Specifies enabled cipher suites. The format is the same as OpenSSL's Cipher List Format documented at https://www.openssl.org/docs/manmaster/apps/ciphers.html .
                     | If not specified the OpenSSL default cipher suite described in the ciphers documentation will be used. If you are not sure what cipher suite to select this option is best left unspecified 
-                * **keyfile** :class:`str` Path to the client's key for mutual authentication. By default mutual authentication is disabled.
-                * **keyfile_pw** :class:`str` Decryption password for the client's key for mutual authentication. By default the key is assumed not to be encrypted.
-                * **cert_blacklist** :class:`str` Path to a certificate blacklist file. The file should contain one line for each blacklisted certificate. Each line starts with the certificate serial number expressed in hex. Each entry may optionally specify the issuer name of the certificate (serial numbers are only required to be unique per issuer). Example records: 867EC87482B2 /C=US/ST=CA/O=Acme/OU=Engineering/CN=Test Chain CA E2D4B0E570F9EF8E885C065899886461
-                * **certfile** :class:`str` Path to the client's certificate chain file for mutual authentication. By default mutual authentication is disabled.
-                * **crl_check** :class:`bool` Enable CRL checking for the certificate chain leaf certificate. An error occurs if a suitable CRL cannot be found. By default CRL checking is disabled.
-                * **crl_check_all** :class:`bool` Enable CRL checking for the entire certificate chain. An error occurs if a suitable CRL cannot be found. By default CRL checking is disabled.
-                * **log_session_info** :class:`bool` Log session information for each connection.
-                * **for_login_only** :class:`bool` Log session information for each connection. Use TLS connections only for login authentication. All other communication with the server will be done with non-TLS connections.
+                * **keyfile** :class:`str` 
+                    | Path to the client's key for mutual authentication. By default mutual authentication is disabled.
+                * **keyfile_pw** :class:`str` 
+                    | Decryption password for the client's key for mutual authentication. By default the key is assumed not to be encrypted.
+                * **cert_blacklist** :class:`str` 
+                    | Path to a certificate blacklist file. The file should contain one line for each blacklisted certificate. Each line starts with the certificate serial number expressed in hex. Each entry may optionally specify the issuer name of the certificate (serial numbers are only required to be unique per issuer). Example records: 867EC87482B2 /C=US/ST=CA/O=Acme/OU=Engineering/CN=Test Chain CA E2D4B0E570F9EF8E885C065899886461
+                * **certfile** :class:`str` 
+                    | Path to the client's certificate chain file for mutual authentication. By default mutual authentication is disabled.
+                * **crl_check** :class:`bool` 
+                    | Enable CRL checking for the certificate chain leaf certificate. An error occurs if a suitable CRL cannot be found. By default CRL checking is disabled.
+                * **crl_check_all** :class:`bool` 
+                    | Enable CRL checking for the entire certificate chain. An error occurs if a suitable CRL cannot be found. By default CRL checking is disabled.
+                * **log_session_info** :class:`bool` 
+                    | Log session information for each connection.
+                * **for_login_only** :class:`bool` 
+                    | Log session information for each connection. Use TLS connections only for login authentication. All other communication with the server will be done with non-TLS connections.
                     | Default: ``False`` (Use TLS connections for all communication with server.)
-            * **serialization** an optional instance-level :py:func:`tuple` of (serializer, deserializer). Takes precedence over a class serializer registered with :func:`~aerospike.set_serializer`.
-            * **thread_pool_size** :class:`int` number of threads in the pool that is used in batch/scan/query commands. 
+            * **serialization** an optional instance-level :py:func:`tuple` of (serializer, deserializer). 
+                | Takes precedence over a class serializer registered with :func:`~aerospike.set_serializer`.
+            * **thread_pool_size** :class:`int` 
+                | Number of threads in the pool that is used in batch/scan/query commands. 
                 | Default: ``16``
             * **max_socket_idle** :class:`int`
                 | Maximum socket idle time in seconds.  Connection pools will discard sockets that have been idle longer than the maximum. \
                   The value is limited to 24 hours (86400). It's important to set this value to a few seconds less than the server's proto-fd-idle-ms \
                  (default 60000 milliseconds, or 1 minute), so the client does not attempt to use a socket that has already been reaped by the server.
                 | Default: ``0`` seconds (disabled) for non-TLS connections, 55 seconds for TLS connections
-            * **max_conns_per_node**:class:`int` maximum number of pipeline connections allowed for each node 
-            * **tend_interval** :class:`int` polling interval in milliseconds for tending the cluster 
+            * **max_conns_per_node** :class:`int` 
+                | Maximum number of pipeline connections allowed for each node 
+            * **tend_interval** :class:`int` 
+                | Polling interval in milliseconds for tending the cluster 
                 | Default: ``1000``
-            * **compression_threshold** :class:`int` compress data for transmission if the object size is greater than a given number of bytes 
+            * **compression_threshold** :class:`int` 
+                | Compress data for transmission if the object size is greater than a given number of bytes 
                 | Default: ``0``, meaning 'never compress' 
                 | **Deprecated**, set this in the 'write' policy dictionary.
-            * **cluster_name** :class:`str` only server nodes matching this name will be used when determining the cluster name.
+            * **cluster_name** :class:`str` 
+                | Only server nodes matching this name will be used when determining the cluster name.
             * **rack_id** :class:`int`
                 | Rack id where this client instance resides.
                 | In order to enable this functionality, the `rack_aware` needs to be set to true, the `read policy` `replica` needs to be set to :data:`POLICY_REPLICA_PREFER_RACK`. \
