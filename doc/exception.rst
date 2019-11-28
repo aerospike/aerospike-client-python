@@ -13,13 +13,13 @@
     from __future__ import print_function
 
     import aerospike
-    from aerospike.exception import *
+    from aerospike import exception as ex
 
     try:
         config = { 'hosts': [ ('127.0.0.1', 3000)], 'policies': { 'total_timeout': 1200}}
         client = aerospike.client(config).connect()
         client.close()
-    except ClientError as e:
+    except ex.AerospikeError as e:
         print("Error: {0} [{1}]".format(e.msg, e.code))
 
 .. versionadded:: 1.0.44
