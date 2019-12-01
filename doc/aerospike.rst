@@ -1480,7 +1480,8 @@ Note that if "return_type" is not specified in the parameters for a map operatio
 Policy Options
 ==============
 
-.. rubric:: Commit Level Policy Options
+Commit Level Policy Options
+---------------------------
 
 Specifies the number of replicas required to be successfully committed before returning success in a write operation to provide the desired consistency guarantee.
 
@@ -1492,7 +1493,9 @@ Specifies the number of replicas required to be successfully committed before re
 
     Return succcess after successfully committing the master replica
 
-.. rubric:: AP Read Mode Policy Options
+
+AP Read Mode Policy Options
+---------------------------
 
 Read policy for AP (availability) namespaces.
 
@@ -1510,7 +1513,9 @@ Read policy for AP (availability) namespaces.
 
     .. versionadded:: 3.7.0
 
-.. rubric:: SC Read Mode Policy Options
+
+SC Read Mode Policy Options
+---------------------------
 
 Read policy for SC (strong consistency) namespaces.
 
@@ -1540,9 +1545,8 @@ Read policy for SC (strong consistency) namespaces.
 
     .. versionadded:: 3.7.0
 
-.. rubric:: Existence Policy Options
-
-
+Existence Policy Options
+------------------------
 
 Specifies the behavior for writing the record depending whether or not it exists.
 
@@ -1566,7 +1570,9 @@ Specifies the behavior for writing the record depending whether or not it exists
 
     Update a record, ONLY if it exists
 
-.. rubric:: Generation Policy Options
+
+Generation Policy Options
+-------------------------
 
 Specifies the behavior of record modifications with regard to the generation value.
 
@@ -1582,7 +1588,9 @@ Specifies the behavior of record modifications with regard to the generation val
 
     Write a record, ONLY if local generation is greater-than remote generation
 
-.. rubric:: Key Policy Options
+
+Key Policy Options
+------------------
 
 Specifies the behavior for whether keys or digests should be sent to the cluster.
 
@@ -1594,7 +1602,9 @@ Specifies the behavior for whether keys or digests should be sent to the cluster
 
     Send the key in addition to the digest. This policy causes a write operation to store the key on the server
 
-.. rubric:: Replica Options
+
+Replica Options
+---------------
 
 Specifies which partition replica to read from.
 
@@ -1616,7 +1626,9 @@ Specifies which partition replica to read from.
 
     **rack_aware** and **rack_id** must be set in the config argument of the client constructor in order to enable this functionality
 
-.. rubric:: Retry Policy Options
+
+Retry Policy Options
+--------------------
 
 Specifies the behavior of failed operations.
 
@@ -1628,7 +1640,13 @@ Specifies the behavior of failed operations.
 
     If an operation fails, attempt the operation one more time
 
-.. rubric:: Auth Mode Constants
+
+Constants
+=========
+
+
+Auth Mode Constants
+-------------------
 
 Specifies the type of authentication to be used when communicating with the server
 
@@ -1645,9 +1663,6 @@ Specifies the type of authentication to be used when communicating with the serv
     Use external authentication (like LDAP).  Specific external authentication is configured on server.  Send clear password on node login whether or not TLS is defined. This mode should only be used for testing purposes because it is not secure authentication.
 
 .. _aerospike_scan_constants:
-
-Constants
-=========
 
 Scan Constants
 --------------
