@@ -2389,8 +2389,7 @@ Admin Operations
 
     .. method:: admin_create_role(role, privileges[, policy])
 
-        Create a custom, named *role* containing a :class:`list` of
-        *privileges*.
+        Create a custom, named *role* containing a :class:`list` of *privileges*.
 
         :param str role: the name of the role.
         :param list privileges: a list of :ref:`aerospike_privilege_dict`.
@@ -3106,12 +3105,12 @@ Bit Policies
             'bit_write_flags': aerospike.BIT_WRITE_UPDATE_ONLY
         }
 
-.. _aerospike_privilege_dict:
 
-.. _unicode_handling:
 
 Misc
 ====
+
+.. _aerospike_privilege_dict:
 
 Privilege Objects
 -----------------
@@ -3130,6 +3129,8 @@ Privilege Objects
     Example:
 
     ``{'code': aerospike.PRIV_READ, 'ns': 'test', 'set': 'demo'}``
+
+.. _unicode_handling:
 
 Unicode Handling
 ----------------
