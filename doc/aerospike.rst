@@ -542,7 +542,7 @@ Methods
     Helper for creating an instance of the :class:`~aerospike.GeoJSON` class \
     from a raw GeoJSON :class:`str`.
 
-    :param dict geojson_str: a  (:class:`str`)of raw GeoJSON.
+    :param dict geojson_str: a :class:`str` of raw GeoJSON.
     :return: an instance of the :py:class:`aerospike.GeoJSON` class.
 
     .. code-block:: python
@@ -580,7 +580,7 @@ Operators for the multi-ops method :py:meth:`~aerospike.Client.operate`.
 
 .. data:: OPERATOR_APPEND
 
-    Append to a bin with (:class:`str`)type data
+    Append to a bin with :class:`str` type data
 
     .. code-block:: python
 
@@ -592,7 +592,7 @@ Operators for the multi-ops method :py:meth:`~aerospike.Client.operate`.
 
 .. data:: OPERATOR_PREPEND
 
-    Prepend to a bin with (:class:`str`)type data
+    Prepend to a bin with :class:`str` type data
 
     .. code-block:: python
 
@@ -604,7 +604,7 @@ Operators for the multi-ops method :py:meth:`~aerospike.Client.operate`.
 
 .. data:: OPERATOR_INCR
 
-    Increment a bin with :class:`int`or :class:`float` type data
+    Increment a bin with :class:`int` or :class:`float` type data
 
     .. code-block:: python
 
