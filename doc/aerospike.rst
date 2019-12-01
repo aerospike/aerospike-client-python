@@ -66,119 +66,121 @@ Methods
                     | The location of the user's record and stream UDFs . 
                     | Default: ``./``
             * **policies** a :class:`dict` of policies
-                * **read** A dictionary containing read policies. See :ref:`aerospike_read_policies` for available policy fields and values.
-                * **write** A dictionary containing write policies. See :ref:`aerospike_write_policies` for available policy fields and values.
-                * **apply** A dictionary containing apply policies. See :ref:`aerospike_apply_policies` for available policy fields and values.
-                * **operate** A dictionary containing operate policies. See :ref:`aerospike_operate_policies` for available policy fields and values.
-                * **remove** A dictionary containing remove policies. See :ref:`aerospike_remove_policies` for available policy fields and values.
-                * **query** A dictionary containing query policies. See :ref:`aerospike_query_policies` for available policy fields and values.
-                * **scan** A dictionary containing scan policies. See :ref:`aerospike_scan_policies` for available policy fields and values.
-                * **batch** A dictionary containing batch policies. See :ref:`aerospike_batch_policies` for available policy fields and values.
+                * **read** A dictionary containing :ref:`aerospike_read_policies`.
+                * **write** A dictionary containing :ref:`aerospike_write_policies`.
+                * **apply** A dictionary containing :ref:`aerospike_apply_policies`.
+                * **operate** A dictionary containing :ref:`aerospike_operate_policies`.
+                * **remove** A dictionary containing :ref:`aerospike_remove_policies`.
+                * **query** A dictionary containing :ref:`aerospike_query_policies`.
+                * **scan** A dictionary containing :ref:`aerospike_scan_policies`.
+                * **batch** A dictionary containing :ref:`aerospike_batch_policies`.
                 * **total_timeout** default connection timeout in milliseconds 
-                    | **Deprecated**: set this the individual policy dictionaries
-                * **auth_mode** a value defining how the authentication mode with the server such as :data:`aerospike.AUTH_INTERNAL`.
-                * **login_timeout_ms** An integer representing Node login timeout in milliseconds. Default: ``5000``.
-                * **key** default key policy, with values such as :data:`aerospike.POLICY_KEY_DIGEST`
-                    | **Deprecated**: set this individually in the 'read', 'write', 'apply', 'operate', 'remove' policy dictionaries
-                * **exists** default exists policy, with values such as :data:`aerospike.POLICY_EXISTS_CREATE` 
-                    | **Deprecated**: set in the 'write' policies dictionary
-                * **max_retries** a :class:`int` representing the number of times to retry a transaction 
-                    | **Deprecated**: set this the individual policy dictionaries
-                * **replica** default replica policy, with values such as :data:`aerospike.POLICY_REPLICA_MASTER` 
-                    | **Deprecated**: set this in one or all of the 'read', 'write', 'apply', 'operate', 'remove' policy dictionaries
-                * **commit_level** default commit level policy, with values such as :data:`aerospike.POLICY_COMMIT_LEVEL_ALL` 
-                    | **Deprecated**: set this as needed individually in the 'write', 'apply', 'operate', 'remove' policy dictionaries
+                    | **Deprecated**: set this individually in the :ref:`aerospike_polices` dictionaries.
+                * **auth_mode** a value of :ref:`auth_mode` defining how the authentication mode with the server, such as :data:`aerospike.AUTH_INTERNAL`.
+                * **login_timeout_ms** (:class:`int`) 
+                    | Representing the node login timeout in milliseconds. 
+                    | Default: ``5000``.
+                * **key** default key policy
+                    | **Deprecated**: set this individually in the :ref:`aerospike_polices` dictionaries.
+                * **exists** default exists policy
+                    | **Deprecated**: set in the :ref:`aerospike_write_policies` dictionary
+                * **max_retries** representing the number of times to retry a transaction 
+                    | **Deprecated**: set this individually in the :ref:`aerospike_polices` dictionaries.
+                * **replica** default replica policy
+                    | **Deprecated**: set this in one or all of the other policies' :ref:`aerospike_read_policies`, :ref:`aerospike_write_policies`, :ref:`aerospike_apply_policies`, :ref:`aerospike_operate_policies`, :ref:`aerospike_remove_policies` dictionaries.
+                * **commit_level** default commit level policy
+                    | **Deprecated**: set this as needed individually in the :ref:`aerospike_write_policies`, :ref:`aerospike_apply_policies`, :ref:`aerospike_operate_policies`, :ref:`aerospike_remove_policies` dictionaries.
             * **shm** a :class:`dict` with optional shared-memory cluster tending parameters
                 | Shared-memory cluster tending is on if the :class:`dict` is provided. \
                   If multiple clients are instantiated talking to the same cluster the *shm* cluster-tending should be used.
 
-                * **max_nodes** 
+                * **max_nodes** (:class:`int`)
                     | Maximum number of nodes allowed. Pad so new nodes can be added without configuration changes 
                     | Default: ``16``
-                * **max_namespaces** 
+                * **max_namespaces** (:class:`int`)
                     | Similarly pad 
                     | Default: ``8``
-                * **takeover_threshold_sec** 
+                * **takeover_threshold_sec**  (:class:`int`)
                     | Take over tending if the cluster hasn't been checked for this many seconds 
                     | Default: ``30``
-                * **shm_key**
+                * **shm_key** 
                     | Explicitly set the shm key for this client.
                     | If **use_shared_connection** is not set, or set to ``False``, the user must provide a value for this field in order for shared memory to work correctly.
                     | If , and only if, **use_shared_connection** is set to ``True``, the key will be implicitly evaluated per unique hostname, and can be inspected with :meth:`~aerospike.Client.shm_key` .
                     | It is still possible to specify a key when using **use_shared_connection** = `True`.
                     | default: ``0xA8000000``
-            * **use_shared_connection** :class:`bool` 
+            * **use_shared_connection** (:class:`bool`)
                 | Indicating whether this instance should share its connection to the Aerospike cluster with other client instances in the same process. 
                 | Default: ``False``
             * **tls** a :class:`dict` of optional TLS configuration parameters.
             
                 .. note:: TLS usage requires Aerospike Enterprise Edition
 
-                * **enable** a :class:`bool` 
+                * **enable** (:class:`bool`)
                     | Indicating whether tls should be enabled or not. 
                     | Default: ``False``
-                * **cafile** :class:`str` 
+                * **cafile** (:class:`str`)
                     | Path to a trusted CA certificate file. By default TLS will use system standard trusted CA certificates
-                * **capath** :class:`str` 
+                * **capath** (:class:`str`)
                     | Path to a directory of trusted certificates. See the OpenSSL SSL_CTX_load_verify_locations manual page for more information about the format of the directory.
-                * **protocols** :class:`str` 
+                * **protocols** (:class:`str`)
                     | Specifies enabled protocols. This format is the same as Apache's SSLProtocol documented at https://httpd.apache.org/docs/current/mod/mod_ssl.html#sslprotocol . 
                     | If not specified the client will use "-all +TLSv1.2".
-                * **cipher_suite** :class:`str` 
+                * **cipher_suite** (:class:`str`)
                     | Specifies enabled cipher suites. The format is the same as OpenSSL's Cipher List Format documented at https://www.openssl.org/docs/manmaster/apps/ciphers.html .
                     | If not specified the OpenSSL default cipher suite described in the ciphers documentation will be used. If you are not sure what cipher suite to select this option is best left unspecified 
-                * **keyfile** :class:`str` 
+                * **keyfile** (:class:`str`)
                     | Path to the client's key for mutual authentication. By default mutual authentication is disabled.
-                * **keyfile_pw** :class:`str` 
+                * **keyfile_pw** (:class:`str`)
                     | Decryption password for the client's key for mutual authentication. By default the key is assumed not to be encrypted.
-                * **cert_blacklist** :class:`str` 
+                * **cert_blacklist** (:class:`str`)
                     | Path to a certificate blacklist file. The file should contain one line for each blacklisted certificate. Each line starts with the certificate serial number expressed in hex. Each entry may optionally specify the issuer name of the certificate (serial numbers are only required to be unique per issuer). Example records: 867EC87482B2 /C=US/ST=CA/O=Acme/OU=Engineering/CN=Test Chain CA E2D4B0E570F9EF8E885C065899886461
-                * **certfile** :class:`str` 
+                * **certfile** (:class:`str`)
                     | Path to the client's certificate chain file for mutual authentication. By default mutual authentication is disabled.
-                * **crl_check** :class:`bool` 
+                * **crl_check** (:class:`bool`)
                     | Enable CRL checking for the certificate chain leaf certificate. An error occurs if a suitable CRL cannot be found. By default CRL checking is disabled.
-                * **crl_check_all** :class:`bool` 
+                * **crl_check_all** (:class:`bool`)
                     | Enable CRL checking for the entire certificate chain. An error occurs if a suitable CRL cannot be found. By default CRL checking is disabled.
-                * **log_session_info** :class:`bool` 
+                * **log_session_info** (:class:`bool`)
                     | Log session information for each connection.
-                * **for_login_only** :class:`bool` 
+                * **for_login_only** (:class:`bool`)
                     | Log session information for each connection. Use TLS connections only for login authentication. All other communication with the server will be done with non-TLS connections.
                     | Default: ``False`` (Use TLS connections for all communication with server.)
             * **serialization** an optional instance-level :py:func:`tuple` of (serializer, deserializer). 
                 | Takes precedence over a class serializer registered with :func:`~aerospike.set_serializer`.
-            * **thread_pool_size** :class:`int` 
+            * **thread_pool_size** (:class:`int`) 
                 | Number of threads in the pool that is used in batch/scan/query commands. 
                 | Default: ``16``
-            * **max_socket_idle** :class:`int`
+            * **max_socket_idle** (:class:`int`)
                 | Maximum socket idle time in seconds.  Connection pools will discard sockets that have been idle longer than the maximum. \
                   The value is limited to 24 hours (86400). It's important to set this value to a few seconds less than the server's proto-fd-idle-ms \
                  (default 60000 milliseconds, or 1 minute), so the client does not attempt to use a socket that has already been reaped by the server.
                 | Default: ``0`` seconds (disabled) for non-TLS connections, 55 seconds for TLS connections
-            * **max_conns_per_node** :class:`int` 
+            * **max_conns_per_node** (:class:`int`)
                 | Maximum number of pipeline connections allowed for each node 
-            * **tend_interval** :class:`int` 
+            * **tend_interval** (:class:`int`)
                 | Polling interval in milliseconds for tending the cluster 
                 | Default: ``1000``
-            * **compression_threshold** :class:`int` 
+            * **compression_threshold** (:class:`int`)
                 | Compress data for transmission if the object size is greater than a given number of bytes 
                 | Default: ``0``, meaning 'never compress' 
                 | **Deprecated**, set this in the 'write' policy dictionary.
-            * **cluster_name** :class:`str` 
+            * **cluster_name** (:class:`str`)
                 | Only server nodes matching this name will be used when determining the cluster name.
-            * **rack_id** :class:`int`
+            * **rack_id** (:class:`int`)
                 | Rack id where this client instance resides.
-                | In order to enable this functionality, the `rack_aware` needs to be set to true, the `read policy` `replica` needs to be set to :data:`POLICY_REPLICA_PREFER_RACK`. \
+                | In order to enable this functionality, the `rack_aware` needs to be set to true, the :ref:`aerospike_read_policies` `replica` needs to be set to :data:`POLICY_REPLICA_PREFER_RACK`. \
                   The server rack configuration must also be configured.
                 |
                 | Default: ``0``
-            * **rack_aware** :class:`bool`
+            * **rack_aware** (:class:`bool`)
                 | Track server rack data. This is useful when directing read operations to run on the same rack as the client.
                 | This is useful to lower cloud provider costs when nodes are distributed across different availability zones (represented as racks).
                 | In order to enable this functionality, the `rack_id` needs to be set to local rack, the `read policy` `replica` needs to be set to :data:`POLICY_REPLICA_PREFER_RACK`. \
                   The server rack configuration must also be configured.
                 |
                 | Default: ``False``
-            * **use_services_alternate** :class:`bool`
+            * **use_services_alternate** (:class:`bool`)
                 | Flag to signify if "services-alternate" should be used instead of "services"
                 |
                 | Default: ``False``
@@ -540,7 +542,7 @@ Methods
     Helper for creating an instance of the :class:`~aerospike.GeoJSON` class \
     from a raw GeoJSON :class:`str`.
 
-    :param dict geojson_str: a :class:`str` of raw GeoJSON.
+    :param dict geojson_str: a  (:class:`str`)of raw GeoJSON.
     :return: an instance of the :py:class:`aerospike.GeoJSON` class.
 
     .. code-block:: python
@@ -578,7 +580,7 @@ Operators for the multi-ops method :py:meth:`~aerospike.Client.operate`.
 
 .. data:: OPERATOR_APPEND
 
-    Append to a bin with :class:`str` type data
+    Append to a bin with (:class:`str`)type data
 
     .. code-block:: python
 
@@ -590,7 +592,7 @@ Operators for the multi-ops method :py:meth:`~aerospike.Client.operate`.
 
 .. data:: OPERATOR_PREPEND
 
-    Prepend to a bin with :class:`str` type data
+    Prepend to a bin with (:class:`str`)type data
 
     .. code-block:: python
 
@@ -602,7 +604,7 @@ Operators for the multi-ops method :py:meth:`~aerospike.Client.operate`.
 
 .. data:: OPERATOR_INCR
 
-    Increment a bin with :class:`int` or :class:`float` type data
+    Increment a bin with :class:`int`or :class:`float` type data
 
     .. code-block:: python
 
@@ -1662,6 +1664,7 @@ Specifics the TTL constants
     
     Do not change the current TTL of the record.
 
+.. _auth_mode:
 
 Auth Mode Constants
 -------------------
