@@ -1643,6 +1643,25 @@ Specifies the behavior of failed operations.
 Constants
 =========
 
+.. _TTL_CONSTANTS:
+
+TTL Constants
+-------------
+
+Specifics the TTL constants
+
+.. data:: TTL_NAMESPACE_DEFAULT
+    
+    Use the namespace default TTL.
+    
+.. data:: TTL_NEVER_EXPIRE
+    
+    Set TTL to never expire.
+    
+.. data:: TTL_DONT_UPDATE
+    
+    Do not change the current TTL of the record.
+
 
 Auth Mode Constants
 -------------------
