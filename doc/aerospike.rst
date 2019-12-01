@@ -1499,51 +1499,38 @@ AP Read Mode Policy Options
 
 Read policy for AP (availability) namespaces.
 
-.. versionadded:: 3.7.0
-
 .. data:: POLICY_READ_MODE_AP_ONE
 
     Involve single node in the read operation.
-
-    .. versionadded:: 3.7.0
 
 .. data:: POLICY_READ_MODE_AP_ALL
 
     Involve all duplicates in the read operation.
 
-    .. versionadded:: 3.7.0
-
+.. versionadded:: 3.7.0
 
 SC Read Mode Policy Options
 ---------------------------
 
 Read policy for SC (strong consistency) namespaces.
 
-.. versionadded:: 3.7.0
-
 .. data:: POLICY_READ_MODE_SC_SESSION
 
     Ensures this client will only see an increasing sequence of record versions. Server only reads from master. This is the default.
-
-    .. versionadded:: 3.7.0
 
 .. data:: POLICY_READ_MODE_SC_LINEARIZE
 
     Ensures ALL clients will only see an increasing sequence of record versions. Server only reads from master.
 
-    .. versionadded:: 3.7.0
-
 .. data:: POLICY_READ_MODE_SC_ALLOW_REPLICA
 
     Server may read from master or any full (non-migrating) replica. Increasing sequence of record versions is not guaranteed.
-
-    .. versionadded:: 3.7.0
 
 .. data:: POLICY_READ_MODE_SC_ALLOW_UNAVAILABLE
 
     Server may read from master or any full (non-migrating) replica or from unavailable partitions. Increasing sequence of record versions is not guaranteed.
 
-    .. versionadded:: 3.7.0
+.. versionadded:: 3.7.0
 
 Existence Policy Options
 ------------------------
