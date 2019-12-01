@@ -2598,7 +2598,7 @@ Write Policies
         * **exists** 
             | One of the ``aerospike.POLICY_EXISTS_*`` values such as :data:`aerospike.POLICY_EXISTS_CREATE`
             |
-            | Default: ```aerospike.POLICY_GEN_IGNORE``
+            | Default: ``aerospike.POLICY_EXISTS_IGNORE``
         * **gen** 
             | One of the ``aerospike.POLICY_GEN_*`` values such as :data:`aerospike.POLICY_GEN_IGNORE`
             |

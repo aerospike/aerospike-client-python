@@ -1477,8 +1477,8 @@ Note that if "return_type" is not specified in the parameters for a map operatio
 
 .. _aerospike_policies:
 
-Policies
-========
+Policy Options
+==============
 
 .. rubric:: Commit Level Policy Options
 
