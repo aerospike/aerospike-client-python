@@ -1480,6 +1480,8 @@ Note that if "return_type" is not specified in the parameters for a map operatio
 Policy Options
 ==============
 
+.. _POLICY_COMMIT_LEVEL:
+
 Commit Level Policy Options
 ---------------------------
 
@@ -1493,6 +1495,8 @@ Specifies the number of replicas required to be successfully committed before re
 
     Return succcess after successfully committing the master replica
 
+
+.. _POLICY_READ_MODE_AP:
 
 AP Read Mode Policy Options
 ---------------------------
@@ -1508,6 +1512,8 @@ Read policy for AP (availability) namespaces.
     Involve all duplicates in the read operation.
 
 .. versionadded:: 3.7.0
+
+.. _POLICY_READ_MODE_SC:
 
 SC Read Mode Policy Options
 ---------------------------
@@ -1531,6 +1537,8 @@ Read policy for SC (strong consistency) namespaces.
     Server may read from master or any full (non-migrating) replica or from unavailable partitions. Increasing sequence of record versions is not guaranteed.
 
 .. versionadded:: 3.7.0
+
+.. _POLICY_EXISTS: 
 
 Existence Policy Options
 ------------------------
@@ -1557,6 +1565,7 @@ Specifies the behavior for writing the record depending whether or not it exists
 
     Update a record, ONLY if it exists
 
+.. _POLICY_GEN:
 
 Generation Policy Options
 -------------------------
@@ -1576,6 +1585,8 @@ Specifies the behavior of record modifications with regard to the generation val
     Write a record, ONLY if local generation is greater-than remote generation
 
 
+.. _POLICY_KEY:
+
 Key Policy Options
 ------------------
 
@@ -1589,6 +1600,7 @@ Specifies the behavior for whether keys or digests should be sent to the cluster
 
     Send the key in addition to the digest. This policy causes a write operation to store the key on the server
 
+.. _POLICY_REPLICA:
 
 Replica Options
 ---------------
@@ -1696,6 +1708,11 @@ Job Constants
 .. data:: JOB_QUERY
 
     Query job type argument for the module parameter of :meth:`~aerospike.Client.job_info`
+
+.. _aerospike_job_constants_status:
+
+Job Statuses
+------------
 
 .. data:: JOB_STATUS_UNDEF
 

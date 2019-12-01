@@ -1822,7 +1822,7 @@ User Defined Functions
         Register a UDF module with the cluster.
 
         :param str filename: the path to the UDF module to be registered with the cluster.
-        :param int udf_type: one of ``aerospike.UDF_TYPE_\*``
+        :param int udf_type: :data:`aerospike.UDF_TYPE_LUA`.
         :param dict policy: currently **timeout** in milliseconds is the available policy.
         :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
 
@@ -1899,7 +1899,7 @@ User Defined Functions
         Return the content of a UDF module which is registered with the cluster.
 
         :param str module: the UDF module to read from the cluster.
-        :param int udf_type: one of ``aerospike.UDF_TYPE_\*``
+        :param int udf_type: :data:`aerospike.UDF_TYPE_LUA`
         :param dict policy: currently **timeout** in milliseconds is the available policy.
         :rtype: :class:`str`
         :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
@@ -1933,7 +1933,7 @@ User Defined Functions
         :param dict policy: optional :ref:`aerospike_scan_policies`.
         :param dict options: the :ref:`aerospike_scan_options` that will apply to the scan.
         :rtype: :class:`int`
-        :return: a job ID that can be used with :meth:`job_info` to track the status of the ``aerospike.JOB_SCAN``, as it runs in the background.
+        :return: a job ID that can be used with :meth:`job_info` to track the status of the :data:`aerospike.JOB_SCAN`, as it runs in the background.
         :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
 
         .. seealso:: `Record UDF <http://www.aerospike.com/docs/guide/record_udf.html>`_ \
@@ -1952,7 +1952,7 @@ User Defined Functions
         :param list args: the arguments to the UDF.
         :param dict policy: optional :ref:`aerospike_write_policies`.
         :rtype: :class:`int`
-        :return: a job ID that can be used with :meth:`job_info` to track the status of the ``aerospike.JOB_QUERY`` , as it runs in the background.
+        :return: a job ID that can be used with :meth:`job_info` to track the status of the :data:`aerospike.JOB_QUERY`, as it runs in the background.
         :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
 
         .. seealso:: `Record UDF <http://www.aerospike.com/docs/guide/record_udf.html>`_ \
@@ -1964,9 +1964,9 @@ User Defined Functions
         Return the status of a job running in the background.
 
         :param int job_id: the job ID returned by :meth:`scan_apply` and :meth:`query_apply`.
-        :param module: one of ``aerospike.JOB_SCAN`` or ``aerospike.JOB_QUERY``.
+        :param module: one of :ref:`aerospike_job_constants`.
         :returns: a :class:`dict` with keys *status*, *records_read*, and \
-          *progress_pct*. The value of *status* is one of ``aerospike.JOB_STATUS_*``. See: :ref:`aerospike_job_constants`.
+          *progress_pct*. The value of *status* is one of :ref:`aerospike_job_constants_status`.
         :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
 
         .. code-block:: python
@@ -2000,7 +2000,7 @@ User Defined Functions
 
         :param int scan_id: the scan ID returned by :meth:`scan_apply`.
         :returns: a :class:`dict` with keys *status*, *records_scanned*, and \
-          *progress_pct*. The value of *status* is one of ``aerospike.SCAN_STATUS_*``. See: :ref:`aerospike_scan_constants`.
+          *progress_pct*. The value of *status* is one of :ref:`aerospike_job_constants_status`.
         :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
 
         .. deprecated:: 1.0.50
@@ -2592,19 +2592,19 @@ Write Policies
             |
             | Default: ``1000``
         * **key** 
-            | One of the ``aerospike.POLICY_KEY_*`` values such as :data:`aerospike.POLICY_KEY_DIGEST`
+            | One of the :ref:`POLICY_KEY` values such as :data:`aerospike.POLICY_KEY_DIGEST`
             |
             | Default: ``aerospike.POLICY_KEY_DIGEST``
         * **exists** 
-            | One of the ``aerospike.POLICY_EXISTS_*`` values such as :data:`aerospike.POLICY_EXISTS_CREATE`
+            | One of the :ref:`POLICY_EXISTS` values such as :data:`aerospike.POLICY_EXISTS_CREATE`
             |
             | Default: ``aerospike.POLICY_EXISTS_IGNORE``
         * **gen** 
-            | One of the ``aerospike.POLICY_GEN_*`` values such as :data:`aerospike.POLICY_GEN_IGNORE`
+            | One of the :ref:`POLICY_GEN` values such as :data:`aerospike.POLICY_GEN_IGNORE`
             |
             | Default: ``aerospike.POLICY_GEN_IGNORE``
         * **commit_level** 
-            | One of the ``aerospike.POLICY_COMMIT_LEVEL_*`` values such as :data:`aerospike.POLICY_COMMIT_LEVEL_ALL`
+            | One of the :ref:`POLICY_COMMIT_LEVEL` values such as :data:`aerospike.POLICY_COMMIT_LEVEL_ALL`
             |
             | Default: ``aerospike.POLICY_COMMIT_LEVEL_ALL``
         * **durable_delete** :class:`bool` 
@@ -2661,21 +2661,21 @@ Read Policies
             | Set to `False` for backup programs that just need access to raw bytes.
             | Default: ``True``
         * **key** 
-            | One of the ``aerospike.POLICY_KEY_*`` values such as :data:`aerospike.POLICY_KEY_DIGEST`
+            | One of the :ref:`POLICY_KEY` values such as :data:`aerospike.POLICY_KEY_DIGEST`
             |
             | Default: ``aerospike.POLICY_KEY_DIGEST``
         * **read_mode_ap** 
-            | One of the ``aerospike.POLICY_READ_MODE_AP_*`` values such as :data:`aerospike.AS_POLICY_READ_MODE_AP_ONE`
+            | One of the :ref:`POLICY_READ_MODE_AP` values such as :data:`aerospike.AS_POLICY_READ_MODE_AP_ONE`
             |
             | Default: ``aerospike.AS_POLICY_READ_MODE_AP_ONE``
             | **New in version 3.7.0**
         * **read_mode_sc** 
-            | One of the ``aerospike.POLICY_READ_MODE_SC_*`` values such as :data:`aerospike.POLICY_READ_MODE_SC_SESSION`
+            | One of the :ref:`POLICY_READ_MODE_SC` values such as :data:`aerospike.POLICY_READ_MODE_SC_SESSION`
             |
             | Default: ``aerospike.POLICY_READ_MODE_SC_SESSION``
             | **New in version 3.7.0**
         * **replica** 
-            | One of the ``aerospike.POLICY_REPLICA_*`` values such as :data:`aerospike.POLICY_REPLICA_MASTER`
+            | One of the :ref:`POLICY_REPLICA` values such as :data:`aerospike.POLICY_REPLICA_MASTER`
             |
             | Default: ``aerospike.POLICY_REPLICA_SEQUENCE``
 
@@ -2721,33 +2721,33 @@ Operate Policies
             |
             | Default: ``1000``
         * **key** 
-            | One of the ``aerospike.POLICY_KEY_*`` values such as :data:`aerospike.POLICY_KEY_DIGEST`
+            | One of the :ref:`POLICY_KEY` values such as :data:`aerospike.POLICY_KEY_DIGEST`
             |
             | Default: ``aerospike.POLICY_KEY_DIGEST``
         * **gen** 
-            | One of the ``aerospike.POLICY_GEN_*`` values such as :data:`aerospike.POLICY_GEN_IGNORE`
+            | One of the :ref:`POLICY_GEN` values such as :data:`aerospike.POLICY_GEN_IGNORE`
             |
             | Default: ``aerospike.POLICY_GEN_IGNORE``
         * **replica** 
-            | One of the ``aerospike.POLICY_REPLICA_*`` values such as :data:`aerospike.POLICY_REPLICA_MASTER`
+            | One of the :ref:`POLICY_REPLICA` values such as :data:`aerospike.POLICY_REPLICA_MASTER`
             |
             | Default: ``aerospike.POLICY_REPLICA_SEQUENCE``
         * **commit_level** 
-            | One of the ``aerospike.POLICY_COMMIT_LEVEL_*`` values such as :data:`aerospike.POLICY_COMMIT_LEVEL_ALL`
+            | One of the :ref:`POLICY_COMMIT_LEVEL` values such as :data:`aerospike.POLICY_COMMIT_LEVEL_ALL`
             |
             | Default: ``aerospike.POLICY_COMMIT_LEVEL_ALL``
         * **read_mode_ap** 
-            | One of the ``aerospike.POLICY_READ_MODE_AP_*`` values such as :data:`aerospike.AS_POLICY_READ_MODE_AP_ONE`
+            | One of the :ref:`POLICY_READ_MODE_AP` values such as :data:`aerospike.AS_POLICY_READ_MODE_AP_ONE`
             | 
             | Default: ``aerospike.AS_POLICY_READ_MODE_AP_ONE``
             | **New in version 3.7.0**
         * **read_mode_sc** 
-            | One of the ``aerospike.POLICY_READ_MODE_SC_*`` values such as :data:`aerospike.POLICY_READ_MODE_SC_SESSION`
+            | One of the :ref:`POLICY_READ_MODE_SC` values such as :data:`aerospike.POLICY_READ_MODE_SC_SESSION`
             |
             | Default: ``aerospike.POLICY_READ_MODE_SC_SESSION``
             | **New in version 3.7.0**
         * **exists** 
-            | One of the ``aerospike.POLICY_EXISTS_*`` values such as :data:`aerospike.POLICY_EXISTS_CREATE`
+            | One of the :ref:`POLICY_EXISTS` values such as :data:`aerospike.POLICY_EXISTS_CREATE`
             |
             | Default: ```aerospike.POLICY_GEN_IGNORE``
         * **durable_delete** :class:`bool` 
@@ -2799,19 +2799,19 @@ Apply Policies
             |
             | Default: ``1000``
         * **key** 
-            | One of the ``aerospike.POLICY_KEY_*`` values such as :data:`aerospike.POLICY_KEY_DIGEST`
+            | One of the :ref:`POLICY_KEY` values such as :data:`aerospike.POLICY_KEY_DIGEST`
             |
             | Default: ``aerospike.POLICY_KEY_DIGEST``
         * **replica** 
-            | One of the ``aerospike.POLICY_REPLICA_*`` values such as :data:`aerospike.POLICY_REPLICA_MASTER`
+            | One of the :ref:`POLICY_REPLICA` values such as :data:`aerospike.POLICY_REPLICA_MASTER`
             |
             | Default: ``aerospike.POLICY_REPLICA_SEQUENCE``
         * **gen** 
-            | One of the ``aerospike.POLICY_GEN_*`` values such as :data:`aerospike.POLICY_GEN_IGNORE`
+            | One of the :ref:`POLICY_GEN` values such as :data:`aerospike.POLICY_GEN_IGNORE`
             | 
             | Default: ``aerospike.POLICY_GEN_IGNORE``
         * **commit_level** 
-            | One of the ``aerospike.POLICY_COMMIT_LEVEL_*`` values such as :data:`aerospike.POLICY_COMMIT_LEVEL_ALL`
+            | One of the :ref:`POLICY_COMMIT_LEVEL` values such as :data:`aerospike.POLICY_COMMIT_LEVEL_ALL`
             |
             | Default: ``aerospike.POLICY_COMMIT_LEVEL_ALL``
         * **durable_delete** :class:`bool` 
@@ -2862,15 +2862,15 @@ Remove Policies
             |
             | Default: ``1000``
         * **key** 
-            | One of the ``aerospike.POLICY_KEY_*`` values such as :data:`aerospike.POLICY_KEY_DIGEST`
+            | One of the :ref:`POLICY_KEY` values such as :data:`aerospike.POLICY_KEY_DIGEST`
             |
             | Default: ``aerospike.POLICY_KEY_DIGEST``
         * **commit_level** 
-            | One of the ``aerospike.POLICY_COMMIT_LEVEL_*`` values such as :data:`aerospike.POLICY_COMMIT_LEVEL_ALL`
+            | One of the :ref:`POLICY_COMMIT_LEVEL` values such as :data:`aerospike.POLICY_COMMIT_LEVEL_ALL`
             | 
             | Default: ``aerospike.POLICY_COMMIT_LEVEL_ALL``
         * **gen** 
-            | One of the ``aerospike.POLICY_GEN_*`` values such as :data:`aerospike.POLICY_GEN_IGNORE`
+            | One of the :ref:`POLICY_GEN` values such as :data:`aerospike.POLICY_GEN_IGNORE`
             | 
             | Default: ``aerospike.POLICY_GEN_IGNORE``
         * **durable_delete** :class:`bool` 
@@ -2880,7 +2880,7 @@ Remove Policies
 
             | Default: ``False``
         * **replica** 
-            | One of the ``aerospike.POLICY_REPLICA_*`` values such as :data:`aerospike.POLICY_REPLICA_MASTER`
+            | One of the :ref:`POLICY_REPLICA` values such as :data:`aerospike.POLICY_REPLICA_MASTER`
             | 
             | Default: ``aerospike.POLICY_REPLICA_SEQUENCE``
 
@@ -2925,17 +2925,17 @@ Batch Policies
             |
             | Default: ``1000``
         * **read_mode_ap** 
-            | One of the ``aerospike.POLICY_READ_MODE_AP_*`` values such as :data:`aerospike.AS_POLICY_READ_MODE_AP_ONE`
+            | One of the :ref:`POLICY_READ_MODE_AP` values such as :data:`aerospike.AS_POLICY_READ_MODE_AP_ONE`
             | 
             | Default: ``aerospike.AS_POLICY_READ_MODE_AP_ONE``
             | **New in version 3.7.0**
         * **read_mode_sc** 
-            | One of the ``aerospike.POLICY_READ_MODE_SC_*`` values such as :data:`aerospike.POLICY_READ_MODE_SC_SESSION`
+            | One of the :ref:`POLICY_READ_MODE_SC` values such as :data:`aerospike.POLICY_READ_MODE_SC_SESSION`
             | 
             | Default: ``aerospike.POLICY_READ_MODE_SC_SESSION``
             | **New in version 3.7.0**
         * **replica** 
-            | One of the ``aerospike.POLICY_REPLICA_*`` values such as :data:`aerospike.POLICY_REPLICA_MASTER`
+            | One of the :ref:`POLICY_REPLICA` values such as :data:`aerospike.POLICY_REPLICA_MASTER`
             | 
             | Default: ``aerospike.POLICY_REPLICA_SEQUENCE``
         * **concurrent** :class:`bool` 
@@ -3156,7 +3156,7 @@ Privilege Objects
     .. hlist::
         :columns: 1
 
-        * **code** one of the ``aerospike.PRIV_*`` values such as :data:`aerospike.PRIV_READ`
+        * **code** one of the :ref:`aerospike_privileges` values such as :data:`aerospike.PRIV_READ`
         * **ns** optional namespace, to which the privilege applies, otherwise the privilege applies globally.
         * **set** optional set within the *ns*, to which the privilege applies, otherwise to the entire namespace.
 
