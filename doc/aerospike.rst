@@ -2007,6 +2007,7 @@ Miscellaneous
         use the function :func:`aerospike.null` instead.
 
 .. data:: UDF_TYPE_LUA
+    
     UDF type is LUA (which is the only UDF type).
 
 .. data:: INDEX_STRING
