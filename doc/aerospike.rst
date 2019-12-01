@@ -2001,38 +2001,39 @@ Miscellaneous
 
 .. data:: null
 
-    A value for distinguishing a server-side null from a Python :py:obj:`None` .
+    A value for distinguishing a server-side null from a Python :py:obj:`None`.
 
     .. deprecated:: 2.0.1
         use the function :func:`aerospike.null` instead.
 
 .. data:: UDF_TYPE_LUA
+    UDF type is LUA (which is the only UDF type).
 
 .. data:: INDEX_STRING
 
-    An index whose values are of the aerospike string data type
+    An index whose values are of the aerospike string data type.
 
 .. data:: INDEX_NUMERIC
 
-    An index whose values are of the aerospike integer data type
+    An index whose values are of the aerospike integer data type.
 
 .. data:: INDEX_GEO2DSPHERE
 
-    An index whose values are of the aerospike GetJSON data type
+    An index whose values are of the aerospike GetJSON data type.
     
 .. seealso:: `Data Types <http://www.aerospike.com/docs/guide/data-types.html>`_.
 
 .. data:: INDEX_TYPE_LIST
 
-    Index a bin whose contents is an aerospike list
+    Index a bin whose contents is an aerospike list.
 
 .. data:: INDEX_TYPE_MAPKEYS
 
-    Index the keys of a bin whose contents is an aerospike map
+    Index the keys of a bin whose contents is an aerospike map.
 
 .. data:: INDEX_TYPE_MAPVALUES
 
-    Index the values of a bin whose contents is an aerospike map
+    Index the values of a bin whose contents is an aerospike map.
 
 .. _aerospike_log_levels:
 
