@@ -184,9 +184,8 @@ Record Operations
         :param tuple key: a :ref:`aerospike_key_tuple` tuple associated with the record.
         :param dict bins: a :class:`dict` of bin-name / bin-value pairs.
         :param dict meta: optional record metadata to be set, with field
-            ``'ttl'`` set to :class:`int` number of seconds or one of 
-            :const:`aerospike.TTL_NAMESPACE_DEFAULT`, :const:`aerospike.TTL_NEVER_EXPIRE`, 
-            :const:`aerospike.TTL_DONT_UPDATE`
+            ``'ttl'`` set to :class:`int` number of seconds or one of the :ref:`TTL_CONSTANTS`, \
+            and ``'gen'`` set to :class:`int` generation number to compare.
         :param dict policy: optional :ref:`aerospike_write_policies`.
         :param serializer: optionally override the serialization mode of the
             client with one of the :ref:`aerospike_serialization_constants`. To
@@ -479,9 +478,8 @@ Record Operations
         :param tuple key: a :ref:`aerospike_key_tuple` associated with the record.
         :param list list: the bins names to be removed from the record.
         :param dict meta: optional record metadata to be set, with field
-            ``'ttl'`` set to :class:`int` number of seconds or one of 
-            :const:`aerospike.TTL_NAMESPACE_DEFAULT`, :const:`aerospike.TTL_NEVER_EXPIRE`, 
-            :const:`aerospike.TTL_DONT_UPDATE`
+            ``'ttl'`` set to :class:`int` number of seconds or one of the :ref:`TTL_CONSTANTS`, \
+            and ``'gen'`` set to :class:`int` generation number to compare.
         :param dict policy: optional :ref:`aerospike_write_policies`.
         :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
 
@@ -698,9 +696,8 @@ String Operations
         :param str bin: the name of the bin.
         :param str val: the string to append to the value of *bin*.
         :param dict meta: optional record metadata to be set, with field
-            ``'ttl'`` set to :class:`int` number of seconds or one of 
-            :const:`aerospike.TTL_NAMESPACE_DEFAULT`, :const:`aerospike.TTL_NEVER_EXPIRE`, 
-            :const:`aerospike.TTL_DONT_UPDATE`
+            ``'ttl'`` set to :class:`int` number of seconds or one of the :ref:`TTL_CONSTANTS`, \
+            and ``'gen'`` set to :class:`int` generation number to compare.
         :param dict policy: optional :ref:`aerospike_operate_policies`.
         :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
 
@@ -732,9 +729,8 @@ String Operations
         :param str bin: the name of the bin.
         :param str val: the string to prepend to the value of *bin*.
         :param dict meta: optional record metadata to be set, with field
-            ``'ttl'`` set to :class:`int` number of seconds or one of 
-            :const:`aerospike.TTL_NAMESPACE_DEFAULT`, :const:`aerospike.TTL_NEVER_EXPIRE`, 
-            :const:`aerospike.TTL_DONT_UPDATE`
+            ``'ttl'`` set to :class:`int` number of seconds or one of the :ref:`TTL_CONSTANTS`, \
+            and ``'gen'`` set to :class:`int` generation number to compare.
         :param dict policy: optional :ref:`aerospike_operate_policies`.
         :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
 
@@ -777,9 +773,8 @@ Numeric Operations
         :param int offset: the value by which to increment the value in *bin*.
         :type offset: :py:class:`int` or :py:class:`float`
         :param dict meta: optional record metadata to be set, with field
-            ``'ttl'`` set to :class:`int` number of seconds or one of 
-            :const:`aerospike.TTL_NAMESPACE_DEFAULT`, :const:`aerospike.TTL_NEVER_EXPIRE`, 
-            :const:`aerospike.TTL_DONT_UPDATE`
+            ``'ttl'`` set to :class:`int` number of seconds or one of the :ref:`TTL_CONSTANTS`, \
+            and ``'gen'`` set to :class:`int` generation number to compare.
         :param dict policy: optional :ref:`aerospike_operate_policies`. Note: the ``exists`` policy option may not be: ``aerospike.POLICY_EXISTS_CREATE_OR_REPLACE`` nor ``aerospike.POLICY_EXISTS_REPLACE``
         :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
 
@@ -857,9 +852,8 @@ List Operations
                    :py:class:`float`, :py:class:`bytearray`, :py:class:`list`, \
                    :py:class:`dict`. An unsupported type will be serialized.
         :param dict meta: optional record metadata to be set, with field
-            ``'ttl'`` set to :class:`int` number of seconds or one of 
-            :const:`aerospike.TTL_NAMESPACE_DEFAULT`, :const:`aerospike.TTL_NEVER_EXPIRE`, 
-            :const:`aerospike.TTL_DONT_UPDATE`
+            ``'ttl'`` set to :class:`int` number of seconds or one of the :ref:`TTL_CONSTANTS`, \
+            and ``'gen'`` set to :class:`int` generation number to compare.
         :param dict policy: optional :ref:`aerospike_operate_policies`.
         :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
 
@@ -871,9 +865,8 @@ List Operations
         :param str bin: the name of the bin.
         :param list items: the items to append the list in *bin*.
         :param dict meta: optional record metadata to be set, with field
-            ``'ttl'`` set to :class:`int` number of seconds or one of 
-            :const:`aerospike.TTL_NAMESPACE_DEFAULT`, :const:`aerospike.TTL_NEVER_EXPIRE`, 
-            :const:`aerospike.TTL_DONT_UPDATE`
+            ``'ttl'`` set to :class:`int` number of seconds or one of the :ref:`TTL_CONSTANTS`, \
+            and ``'gen'`` set to :class:`int` generation number to compare.
         :param dict policy: optional :ref:`aerospike_operate_policies`.
         :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
 
@@ -888,9 +881,8 @@ List Operations
                    :py:class:`float`, :py:class:`bytearray`, :py:class:`list`, \
                    :py:class:`dict`. An unsupported type will be serialized.
         :param dict meta: optional record metadata to be set, with field
-            ``'ttl'`` set to :class:`int` number of seconds or one of 
-            :const:`aerospike.TTL_NAMESPACE_DEFAULT`, :const:`aerospike.TTL_NEVER_EXPIRE`, 
-            :const:`aerospike.TTL_DONT_UPDATE`
+            ``'ttl'`` set to :class:`int` number of seconds or one of the :ref:`TTL_CONSTANTS`, \
+            and ``'gen'`` set to :class:`int` generation number to compare.
         :param dict policy: optional :ref:`aerospike_operate_policies`.
         :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
 
@@ -903,9 +895,8 @@ List Operations
         :param int index: the position in the index where the items should be inserted.
         :param list items: the items to insert into the list in *bin*.
         :param dict meta: optional record metadata to be set, with field
-            ``'ttl'`` set to :class:`int` number of seconds or one of 
-            :const:`aerospike.TTL_NAMESPACE_DEFAULT`, :const:`aerospike.TTL_NEVER_EXPIRE`, 
-            :const:`aerospike.TTL_DONT_UPDATE`
+            ``'ttl'`` set to :class:`int` number of seconds or one of the :ref:`TTL_CONSTANTS`, \
+            and ``'gen'`` set to :class:`int` generation number to compare.
         :param dict policy: optional :ref:`aerospike_operate_policies`.
         :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
 
@@ -917,9 +908,8 @@ List Operations
         :param str bin: the name of the bin.
         :param int index: the index position in the list element which should be removed and returned.
         :param dict meta: optional record metadata to be set, with field
-            ``'ttl'`` set to :class:`int` number of seconds or one of 
-            :const:`aerospike.TTL_NAMESPACE_DEFAULT`, :const:`aerospike.TTL_NEVER_EXPIRE`, 
-            :const:`aerospike.TTL_DONT_UPDATE`
+            ``'ttl'`` set to :class:`int` number of seconds or one of the :ref:`TTL_CONSTANTS`, \
+            and ``'gen'`` set to :class:`int` generation number to compare.
         :param dict policy: optional :ref:`aerospike_operate_policies`.
         :return: a single list element.
         :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
@@ -933,9 +923,8 @@ List Operations
         :param int index: the index of first element in a range which should be removed and returned.
         :param int count: the number of elements in the range.
         :param dict meta: optional record metadata to be set, with field
-            ``'ttl'`` set to :class:`int` number of seconds or one of 
-            :const:`aerospike.TTL_NAMESPACE_DEFAULT`, :const:`aerospike.TTL_NEVER_EXPIRE`, 
-            :const:`aerospike.TTL_DONT_UPDATE`
+            ``'ttl'`` set to :class:`int` number of seconds or one of the :ref:`TTL_CONSTANTS`, \
+            and ``'gen'`` set to :class:`int` generation number to compare.
         :param dict policy: optional :ref:`aerospike_operate_policies`.
         :return: a :class:`list` of elements.
         :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
@@ -948,9 +937,8 @@ List Operations
         :param str bin: the name of the bin.
         :param int index: the index position in the list element which should be removed.
         :param dict meta: optional record metadata to be set, with field
-            ``'ttl'`` set to :class:`int` number of seconds or one of 
-            :const:`aerospike.TTL_NAMESPACE_DEFAULT`, :const:`aerospike.TTL_NEVER_EXPIRE`, 
-            :const:`aerospike.TTL_DONT_UPDATE`
+            ``'ttl'`` set to :class:`int` number of seconds or one of the :ref:`TTL_CONSTANTS`, \
+            and ``'gen'`` set to :class:`int` generation number to compare.
         :param dict policy: optional :ref:`aerospike_operate_policies`.
         :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
 
@@ -963,9 +951,8 @@ List Operations
         :param int index: the index of first element in a range which should be removed.
         :param int count: the number of elements in the range.
         :param dict meta: optional record metadata to be set, with field
-            ``'ttl'`` set to :class:`int` number of seconds or one of 
-            :const:`aerospike.TTL_NAMESPACE_DEFAULT`, :const:`aerospike.TTL_NEVER_EXPIRE`, 
-            :const:`aerospike.TTL_DONT_UPDATE`
+            ``'ttl'`` set to :class:`int` number of seconds or one of the :ref:`TTL_CONSTANTS`, \
+            and ``'gen'`` set to :class:`int` generation number to compare.
         :param dict policy: optional :ref:`aerospike_operate_policies`.
         :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
 
@@ -976,9 +963,8 @@ List Operations
         :param tuple key: a :ref:`aerospike_key_tuple` tuple associated with the record.
         :param str bin: the name of the bin.
         :param dict meta: optional record metadata to be set, with field
-            ``'ttl'`` set to :class:`int` number of seconds or one of 
-            :const:`aerospike.TTL_NAMESPACE_DEFAULT`, :const:`aerospike.TTL_NEVER_EXPIRE`, 
-            :const:`aerospike.TTL_DONT_UPDATE`
+            ``'ttl'`` set to :class:`int` number of seconds or one of the :ref:`TTL_CONSTANTS`, \
+            and ``'gen'`` set to :class:`int` generation number to compare.
         :param dict policy: optional :ref:`aerospike_operate_policies`.
         :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
 
@@ -993,9 +979,8 @@ List Operations
                    :py:class:`float`, :py:class:`bytearray`, :py:class:`list`, \
                    :py:class:`dict`. An unsupported type will be serialized.
         :param dict meta: optional record metadata to be set, with field
-            ``'ttl'`` set to :class:`int` number of seconds or one of 
-            :const:`aerospike.TTL_NAMESPACE_DEFAULT`, :const:`aerospike.TTL_NEVER_EXPIRE`, 
-            :const:`aerospike.TTL_DONT_UPDATE`
+            ``'ttl'`` set to :class:`int` number of seconds or one of the :ref:`TTL_CONSTANTS`, \
+            and ``'gen'`` set to :class:`int` generation number to compare.
         :param dict policy: optional :ref:`aerospike_operate_policies`.
         :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
 
@@ -1033,9 +1018,8 @@ List Operations
         :param int index: the index position of the first element in a range which should not be removed.
         :param int count: the number of elements in the range.
         :param dict meta: optional record metadata to be set, with field
-            ``'ttl'`` set to :class:`int` number of seconds or one of 
-            :const:`aerospike.TTL_NAMESPACE_DEFAULT`, :const:`aerospike.TTL_NEVER_EXPIRE`, 
-            :const:`aerospike.TTL_DONT_UPDATE`
+            ``'ttl'`` set to :class:`int` number of seconds or one of the :ref:`TTL_CONSTANTS`, \
+            and ``'gen'`` set to :class:`int` generation number to compare.
         :param dict policy: optional :ref:`aerospike_operate_policies`.
         :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
         :return: a :class:`list` of elements.
@@ -1177,9 +1161,8 @@ Map Operations
            :py:class:`dict`. An unsupported type will be serialized.
         :param dict map_policy: optional :ref:`aerospike_map_policies`.
         :param dict meta: optional record metadata to be set, with field
-            ``'ttl'`` set to :class:`int` number of seconds or one of 
-            :const:`aerospike.TTL_NAMESPACE_DEFAULT`, :const:`aerospike.TTL_NEVER_EXPIRE`, 
-            :const:`aerospike.TTL_DONT_UPDATE`
+            ``'ttl'`` set to :class:`int` number of seconds or one of the :ref:`TTL_CONSTANTS`, \
+            and ``'gen'`` set to :class:`int` generation number to compare.
         :param dict policy: optional :ref:`aerospike_operate_policies`.
         :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
 
@@ -1192,9 +1175,8 @@ Map Operations
         :param dict items: key/value pairs.
         :param dict map_policy: optional :ref:`aerospike_map_policies`.
         :param dict meta: optional record metadata to be set, with field
-            ``'ttl'`` set to :class:`int` number of seconds or one of 
-            :const:`aerospike.TTL_NAMESPACE_DEFAULT`, :const:`aerospike.TTL_NEVER_EXPIRE`, 
-            :const:`aerospike.TTL_DONT_UPDATE`
+            ``'ttl'`` set to :class:`int` number of seconds or one of the :ref:`TTL_CONSTANTS`, \
+            and ``'gen'`` set to :class:`int` generation number to compare.
         :param dict policy: optional :ref:`aerospike_operate_policies`.
         :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
 
@@ -1209,9 +1191,8 @@ Map Operations
         :param incr: :py:class:`int` or :py:class:`float`
         :param dict map_policy: optional :ref:`aerospike_map_policies`.
         :param dict meta: optional record metadata to be set, with field
-            ``'ttl'`` set to :class:`int` number of seconds or one of 
-            :const:`aerospike.TTL_NAMESPACE_DEFAULT`, :const:`aerospike.TTL_NEVER_EXPIRE`, 
-            :const:`aerospike.TTL_DONT_UPDATE`
+            ``'ttl'`` set to :class:`int` number of seconds or one of the :ref:`TTL_CONSTANTS`, \
+            and ``'gen'`` set to :class:`int` generation number to compare.
         :param dict policy: optional :ref:`aerospike_operate_policies`.
         :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
 
@@ -1226,9 +1207,8 @@ Map Operations
         :param decr: :py:class:`int` or :py:class:`float`
         :param dict map_policy: optional :ref:`aerospike_map_policies`.
         :param dict meta: optional record metadata to be set, with field
-            ``'ttl'`` set to :class:`int` number of seconds or one of 
-            :const:`aerospike.TTL_NAMESPACE_DEFAULT`, :const:`aerospike.TTL_NEVER_EXPIRE`, 
-            :const:`aerospike.TTL_DONT_UPDATE`
+            ``'ttl'`` set to :class:`int` number of seconds or one of the :ref:`TTL_CONSTANTS`, \
+            and ``'gen'`` set to :class:`int` generation number to compare.
         :param dict policy: optional :ref:`aerospike_operate_policies`.
         :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
 
@@ -1250,9 +1230,8 @@ Map Operations
         :param tuple key: a :ref:`aerospike_key_tuple` tuple associated with the record.
         :param str bin: the name of the bin.
         :param dict meta: optional record metadata to be set, with field
-            ``'ttl'`` set to :class:`int` number of seconds or one of 
-            :const:`aerospike.TTL_NAMESPACE_DEFAULT`, :const:`aerospike.TTL_NEVER_EXPIRE`, 
-            :const:`aerospike.TTL_DONT_UPDATE`
+            ``'ttl'`` set to :class:`int` number of seconds or one of the :ref:`TTL_CONSTANTS`, \
+            and ``'gen'`` set to :class:`int` generation number to compare.
         :param dict policy: optional :ref:`aerospike_operate_policies`.
         :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
 
@@ -1266,9 +1245,8 @@ Map Operations
            :py:class:`float`, :py:class:`bytearray`. An unsupported type will be serialized.
         :param return_type: :py:class:`int` :ref:`map_return_types`
         :param dict meta: optional record metadata to be set, with field
-            ``'ttl'`` set to :class:`int` number of seconds or one of 
-            :const:`aerospike.TTL_NAMESPACE_DEFAULT`, :const:`aerospike.TTL_NEVER_EXPIRE`, 
-            :const:`aerospike.TTL_DONT_UPDATE`
+            ``'ttl'`` set to :class:`int` number of seconds or one of the :ref:`TTL_CONSTANTS`, \
+            and ``'gen'`` set to :class:`int` generation number to compare.
         :param dict policy: optional :ref:`aerospike_operate_policies`.
         :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
         :return: depends on return_type parameter
@@ -1282,9 +1260,8 @@ Map Operations
         :param list: :py:class:`list` the list of keys to match
         :param return_type: :py:class:`int` :ref:`map_return_types`
         :param dict meta: optional record metadata to be set, with field
-            ``'ttl'`` set to :class:`int` number of seconds or one of 
-            :const:`aerospike.TTL_NAMESPACE_DEFAULT`, :const:`aerospike.TTL_NEVER_EXPIRE`, 
-            :const:`aerospike.TTL_DONT_UPDATE`
+            ``'ttl'`` set to :class:`int` number of seconds or one of the :ref:`TTL_CONSTANTS`, \
+            and ``'gen'`` set to :class:`int` generation number to compare.
         :param dict policy: optional :ref:`aerospike_operate_policies`.
         :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
         :return: depends on return_type parameter
@@ -1301,9 +1278,8 @@ Map Operations
            :py:class:`float`, :py:class:`bytearray`. An unsupported type will be serialized.
         :param return_type: :py:class:`int` :ref:`map_return_types`
         :param dict meta: optional record metadata to be set, with field
-            ``'ttl'`` set to :class:`int` number of seconds or one of 
-            :const:`aerospike.TTL_NAMESPACE_DEFAULT`, :const:`aerospike.TTL_NEVER_EXPIRE`, 
-            :const:`aerospike.TTL_DONT_UPDATE`
+            ``'ttl'`` set to :class:`int` number of seconds or one of the :ref:`TTL_CONSTANTS`, \
+            and ``'gen'`` set to :class:`int` generation number to compare.
         :param dict policy: optional :ref:`aerospike_operate_policies`.
         :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
         :return: depends on return_type parameter
@@ -1318,9 +1294,8 @@ Map Operations
            :py:class:`float`, :py:class:`bytearray`. An unsupported type will be serialized.
         :param return_type: :py:class:`int` :ref:`map_return_types`
         :param dict meta: optional record metadata to be set, with field
-            ``'ttl'`` set to :class:`int` number of seconds or one of 
-            :const:`aerospike.TTL_NAMESPACE_DEFAULT`, :const:`aerospike.TTL_NEVER_EXPIRE`, 
-            :const:`aerospike.TTL_DONT_UPDATE`
+            ``'ttl'`` set to :class:`int` number of seconds or one of the :ref:`TTL_CONSTANTS`, \
+            and ``'gen'`` set to :class:`int` generation number to compare.
         :param dict policy: optional :ref:`aerospike_operate_policies`.
         :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
         :return: depends on return_type parameter
@@ -1334,9 +1309,8 @@ Map Operations
         :param list: :py:class:`list` the list of values to match
         :param return_type: :py:class:`int` :ref:`map_return_types`
         :param dict meta: optional record metadata to be set, with field
-            ``'ttl'`` set to :class:`int` number of seconds or one of 
-            :const:`aerospike.TTL_NAMESPACE_DEFAULT`, :const:`aerospike.TTL_NEVER_EXPIRE`, 
-            :const:`aerospike.TTL_DONT_UPDATE`
+            ``'ttl'`` set to :class:`int` number of seconds or one of the :ref:`TTL_CONSTANTS`, \
+            and ``'gen'`` set to :class:`int` generation number to compare.
         :param dict policy: optional :ref:`aerospike_operate_policies`.
         :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
         :return: depends on return_type parameter
@@ -1353,9 +1327,8 @@ Map Operations
            :py:class:`float`, :py:class:`bytearray`. An unsupported type will be serialized.
         :param return_type: :py:class:`int` :ref:`map_return_types`
         :param dict meta: optional record metadata to be set, with field
-            ``'ttl'`` set to :class:`int` number of seconds or one of 
-            :const:`aerospike.TTL_NAMESPACE_DEFAULT`, :const:`aerospike.TTL_NEVER_EXPIRE`, 
-            :const:`aerospike.TTL_DONT_UPDATE`
+            ``'ttl'`` set to :class:`int` number of seconds or one of the :ref:`TTL_CONSTANTS`, \
+            and ``'gen'`` set to :class:`int` generation number to compare.
         :param dict policy: optional :ref:`aerospike_operate_policies`.
         :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
         :return: depends on return_type parameter
@@ -1369,9 +1342,8 @@ Map Operations
         :param index: :py:class:`int` the index position of the map element
         :param return_type: :py:class:`int` :ref:`map_return_types`
         :param dict meta: optional record metadata to be set, with field
-            ``'ttl'`` set to :class:`int` number of seconds or one of 
-            :const:`aerospike.TTL_NAMESPACE_DEFAULT`, :const:`aerospike.TTL_NEVER_EXPIRE`, 
-            :const:`aerospike.TTL_DONT_UPDATE`
+            ``'ttl'`` set to :class:`int` number of seconds or one of the :ref:`TTL_CONSTANTS`, \
+            and ``'gen'`` set to :class:`int` generation number to compare.
         :param dict policy: optional :ref:`aerospike_operate_policies`.
         :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
         :return: depends on return_type parameter
@@ -1386,9 +1358,8 @@ Map Operations
         :param range: :py:class:`int` the number of items to remove from the map 
         :param return_type: :py:class:`int` :ref:`map_return_types`
         :param dict meta: optional record metadata to be set, with field
-            ``'ttl'`` set to :class:`int` number of seconds or one of 
-            :const:`aerospike.TTL_NAMESPACE_DEFAULT`, :const:`aerospike.TTL_NEVER_EXPIRE`, 
-            :const:`aerospike.TTL_DONT_UPDATE`
+            ``'ttl'`` set to :class:`int` number of seconds or one of the :ref:`TTL_CONSTANTS`, \
+            and ``'gen'`` set to :class:`int` generation number to compare.
         :param dict policy: optional :ref:`aerospike_operate_policies`.
         :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
         :return: depends on return_type parameter
@@ -1402,9 +1373,8 @@ Map Operations
         :param rank: :py:class:`int` the rank of the value of the element in the map
         :param return_type: :py:class:`int` :ref:`map_return_types`
         :param dict meta: optional record metadata to be set, with field
-            ``'ttl'`` set to :class:`int` number of seconds or one of 
-            :const:`aerospike.TTL_NAMESPACE_DEFAULT`, :const:`aerospike.TTL_NEVER_EXPIRE`, 
-            :const:`aerospike.TTL_DONT_UPDATE`
+            ``'ttl'`` set to :class:`int` number of seconds or one of the :ref:`TTL_CONSTANTS`, \
+            and ``'gen'`` set to :class:`int` generation number to compare.
         :param dict policy: optional :ref:`aerospike_operate_policies`.
         :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
         :return: depends on return_type parameter
@@ -1419,9 +1389,8 @@ Map Operations
         :param range: :py:class:`int` the number of items to remove from the map 
         :param return_type: :py:class:`int` :ref:`map_return_types`
         :param dict meta: optional record metadata to be set, with field
-            ``'ttl'`` set to :class:`int` number of seconds or one of 
-            :const:`aerospike.TTL_NAMESPACE_DEFAULT`, :const:`aerospike.TTL_NEVER_EXPIRE`, 
-            :const:`aerospike.TTL_DONT_UPDATE`
+            ``'ttl'`` set to :class:`int` number of seconds or one of the :ref:`TTL_CONSTANTS`, \
+            and ``'gen'`` set to :class:`int` generation number to compare.
         :param dict policy: optional :ref:`aerospike_operate_policies`.
         :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
         :return: depends on return_type parameter
@@ -1599,9 +1568,8 @@ Multi-Ops (Operate)
             ``{'bin': bin name, 'op': aerospike.OPERATOR_* [, 'val': value]}``. \
             See :ref:`aerospike_operation_helpers.operations`.
         :param dict meta: optional record metadata to be set, with field
-            ``'ttl'`` set to :class:`int` number of seconds or one of 
-            :const:`aerospike.TTL_NAMESPACE_DEFAULT`, :const:`aerospike.TTL_NEVER_EXPIRE`, 
-            :const:`aerospike.TTL_DONT_UPDATE`
+            ``'ttl'`` set to :class:`int` number of seconds or one of the :ref:`TTL_CONSTANTS`, \
+            and ``'gen'`` set to :class:`int` generation number to compare.
         :param dict policy: optional :ref:`aerospike_operate_policies`.
         :return: a :ref:`aerospike_record_tuple`. See :ref:`unicode_handling`.
         :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
@@ -1714,9 +1682,8 @@ Multi-Ops (Operate)
             ``{'bin': bin name, 'op': aerospike.OPERATOR_* [, 'val': value]}``. \
             See :ref:`aerospike_operation_helpers.operations`.
         :param dict meta: optional record metadata to be set, with field
-            ``'ttl'`` set to :class:`int` number of seconds or one of 
-            :const:`aerospike.TTL_NAMESPACE_DEFAULT`, :const:`aerospike.TTL_NEVER_EXPIRE`, 
-            :const:`aerospike.TTL_DONT_UPDATE`
+            ``'ttl'`` set to :class:`int` number of seconds or one of the :ref:`TTL_CONSTANTS`, \
+            and ``'gen'`` set to :class:`int` generation number to compare.
         :param dict policy: optional :ref:`aerospike_operate_policies`.
         :return: a :ref:`aerospike_record_tuple`. See :ref:`unicode_handling`.
         :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
@@ -1822,7 +1789,7 @@ User Defined Functions
         Register a UDF module with the cluster.
 
         :param str filename: the path to the UDF module to be registered with the cluster.
-        :param int udf_type: one of ``aerospike.UDF_TYPE_\*``
+        :param int udf_type: :data:`aerospike.UDF_TYPE_LUA`.
         :param dict policy: currently **timeout** in milliseconds is the available policy.
         :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
 
@@ -1899,7 +1866,7 @@ User Defined Functions
         Return the content of a UDF module which is registered with the cluster.
 
         :param str module: the UDF module to read from the cluster.
-        :param int udf_type: one of ``aerospike.UDF_TYPE_\*``
+        :param int udf_type: :data:`aerospike.UDF_TYPE_LUA`
         :param dict policy: currently **timeout** in milliseconds is the available policy.
         :rtype: :class:`str`
         :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
@@ -1933,7 +1900,7 @@ User Defined Functions
         :param dict policy: optional :ref:`aerospike_scan_policies`.
         :param dict options: the :ref:`aerospike_scan_options` that will apply to the scan.
         :rtype: :class:`int`
-        :return: a job ID that can be used with :meth:`job_info` to track the status of the ``aerospike.JOB_SCAN``, as it runs in the background.
+        :return: a job ID that can be used with :meth:`job_info` to track the status of the :data:`aerospike.JOB_SCAN`, as it runs in the background.
         :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
 
         .. seealso:: `Record UDF <http://www.aerospike.com/docs/guide/record_udf.html>`_ \
@@ -1952,7 +1919,7 @@ User Defined Functions
         :param list args: the arguments to the UDF.
         :param dict policy: optional :ref:`aerospike_write_policies`.
         :rtype: :class:`int`
-        :return: a job ID that can be used with :meth:`job_info` to track the status of the ``aerospike.JOB_QUERY`` , as it runs in the background.
+        :return: a job ID that can be used with :meth:`job_info` to track the status of the :data:`aerospike.JOB_QUERY`, as it runs in the background.
         :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
 
         .. seealso:: `Record UDF <http://www.aerospike.com/docs/guide/record_udf.html>`_ \
@@ -1964,9 +1931,9 @@ User Defined Functions
         Return the status of a job running in the background.
 
         :param int job_id: the job ID returned by :meth:`scan_apply` and :meth:`query_apply`.
-        :param module: one of ``aerospike.JOB_SCAN`` or ``aerospike.JOB_QUERY``.
+        :param module: one of :ref:`aerospike_job_constants`.
         :returns: a :class:`dict` with keys *status*, *records_read*, and \
-          *progress_pct*. The value of *status* is one of ``aerospike.JOB_STATUS_*``. See: :ref:`aerospike_job_constants`.
+          *progress_pct*. The value of *status* is one of :ref:`aerospike_job_constants_status`.
         :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
 
         .. code-block:: python
@@ -2000,7 +1967,7 @@ User Defined Functions
 
         :param int scan_id: the scan ID returned by :meth:`scan_apply`.
         :returns: a :class:`dict` with keys *status*, *records_scanned*, and \
-          *progress_pct*. The value of *status* is one of ``aerospike.SCAN_STATUS_*``. See: :ref:`aerospike_scan_constants`.
+          *progress_pct*. The value of *status* is one of :ref:`aerospike_job_constants_status`.
         :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
 
         .. deprecated:: 1.0.50
@@ -2422,8 +2389,7 @@ Admin Operations
 
     .. method:: admin_create_role(role, privileges[, policy])
 
-        Create a custom, named *role* containing a :class:`list` of
-        *privileges*.
+        Create a custom, named *role* containing a :class:`list` of *privileges*.
 
         :param str role: the name of the role.
         :param list privileges: a list of :ref:`aerospike_privilege_dict`.
@@ -2546,6 +2512,8 @@ Admin Operations
         :raises: one of the :exc:`~aerospike.exception.AdminError` subclasses.
 
 
+.. _aerospike_polices:
+
 Policies
 ========
 
@@ -2561,20 +2529,21 @@ Write Policies
     .. hlist::
         :columns: 1
 
-        * **max_retries** :class:`int`
+        * **max_retries** (:class:`int`)
             | Maximum number of retries before aborting the current transaction. The initial attempt is not counted as a retry.
             |
             | If max_retries is exceeded, the transaction will return error ``AEROSPIKE_ERR_TIMEOUT``.
             |
-            | **WARNING**: Database writes that are not idempotent (such as "add") should not be retried because the write operation may be performed multiple times
-            | if the client timed out previous transaction attempts. It's important to use a distinct write policy for non-idempotent writes, which sets max_retries = `0`;
-            |
             | Default: ``0``
-        * **sleep_between_retries** :class:`int`
+            
+            .. warning:: Database writes that are not idempotent (such as "add") should not be retried because the write operation may be performed multiple times \
+               if the client timed out previous transaction attempts. It's important to use a distinct write policy for non-idempotent writes, which sets max_retries = `0`;
+            
+        * **sleep_between_retries** (:class:`int`)
             | Milliseconds to sleep between retries. Enter ``0`` to skip sleep. 
             |
             | Default: ``0``
-        * **socket_timeout** :class:`int`
+        * **socket_timeout** (:class:`int`)
             | Socket idle timeout in milliseconds when processing a database command.
             |
             | If socket_timeout is not ``0`` and the socket has been idle for at least socket_timeout, both max_retries and total_timeout are checked. If max_retries and total_timeout are not exceeded, the transaction is retried.
@@ -2583,7 +2552,7 @@ Write Policies
               If ``socket_timeout`` is ``0``, there will be no socket idle limit.
             |
             | Default: ``0``
-        * **total_timeout** :class:`int`
+        * **total_timeout** (:class:`int`)
             | Total transaction timeout in milliseconds.
             |
             | The total_timeout is tracked on the client and sent to the server along with the transaction in the wire protocol. The client will most likely timeout first, but the server also has the capability to timeout the transaction.
@@ -2592,27 +2561,27 @@ Write Policies
             |
             | Default: ``1000``
         * **key** 
-            | One of the ``aerospike.POLICY_KEY_*`` values such as :data:`aerospike.POLICY_KEY_DIGEST`
+            | One of the :ref:`POLICY_KEY` values such as :data:`aerospike.POLICY_KEY_DIGEST`
             |
-            | Default: ``aerospike.POLICY_KEY_DIGEST``
+            | Default: :data:`aerospike.POLICY_KEY_DIGEST`
         * **exists** 
-            | One of the ``aerospike.POLICY_EXISTS_*`` values such as :data:`aerospike.POLICY_EXISTS_CREATE`
+            | One of the :ref:`POLICY_EXISTS` values such as :data:`aerospike.POLICY_EXISTS_CREATE`
             |
-            | Default: ```aerospike.POLICY_GEN_IGNORE``
+            | Default: :data:`aerospike.POLICY_EXISTS_IGNORE`
         * **gen** 
-            | One of the ``aerospike.POLICY_GEN_*`` values such as :data:`aerospike.POLICY_GEN_IGNORE`
+            | One of the :ref:`POLICY_GEN` values such as :data:`aerospike.POLICY_GEN_IGNORE`
             |
-            | Default: ``aerospike.POLICY_GEN_IGNORE``
+            | Default: :data:`aerospike.POLICY_GEN_IGNORE`
         * **commit_level** 
-            | One of the ``aerospike.POLICY_COMMIT_LEVEL_*`` values such as :data:`aerospike.POLICY_COMMIT_LEVEL_ALL`
+            | One of the :ref:`POLICY_COMMIT_LEVEL` values such as :data:`aerospike.POLICY_COMMIT_LEVEL_ALL`
             |
-            | Default: ``aerospike.POLICY_COMMIT_LEVEL_ALL``
-        * **durable_delete** :class:`bool` 
+            | Default: :data:`aerospike.POLICY_COMMIT_LEVEL_ALL`
+        * **durable_delete** (:class:`bool`)
             | Perform durable delete
+            |
+            | Default: ``False``
 
             .. note:: Requires Enterprise server version >= 3.10
-
-            | Default: ``False``
             
 
 .. _aerospike_read_policies:
@@ -2627,20 +2596,17 @@ Read Policies
     .. hlist::
         :columns: 1
 
-        * **max_retries** :class:`int`
+        * **max_retries** (:class:`int`)
             | Maximum number of retries before aborting the current transaction. The initial attempt is not counted as a retry.
             |
             | If max_retries is exceeded, the transaction will return error ``AEROSPIKE_ERR_TIMEOUT``.
             |
-            | **WARNING**: Database writes that are not idempotent (such as "add") should not be retried because the write operation may be performed multiple times
-            | if the client timed out previous transaction attempts. It's important to use a distinct write policy for non-idempotent writes, which sets max_retries = `0`;
-            |
             | Default: ``2``
-        * **sleep_between_retries** :class:`int`
+        * **sleep_between_retries** (:class:`int`)
             | Milliseconds to sleep between retries. Enter ``0`` to skip sleep. 
             |
             | Default: ``0``
-        * **socket_timeout** :class:`int`
+        * **socket_timeout** (:class:`int`)
             | Socket idle timeout in milliseconds when processing a database command.
             |
             | If socket_timeout is not ``0`` and the socket has been idle for at least socket_timeout, both max_retries and total_timeout are checked. If max_retries and total_timeout are not exceeded, the transaction is retried.
@@ -2648,7 +2614,7 @@ Read Policies
             | If both ``socket_timeout`` and ``total_timeout`` are non-zero and ``socket_timeout`` > ``total_timeout``, then ``socket_timeout`` will be set to ``total_timeout``. If ``socket_timeout`` is ``0``, there will be no socket idle limit.
             |
             | Default: ``0``
-        * **total_timeout** :class:`int`
+        * **total_timeout** (:class:`int`)
             | Total transaction timeout in milliseconds.
             |
             | The total_timeout is tracked on the client and sent to the server along with the transaction in the wire protocol. The client will most likely timeout first, but the server also has the capability to timeout the transaction.
@@ -2656,28 +2622,32 @@ Read Policies
             | If ``total_timeout`` is not ``0`` and ``total_timeout`` is reached before the transaction completes, the transaction will return error ``AEROSPIKE_ERR_TIMEOUT``. If ``total_timeout`` is ``0``, there will be no total time limit.
             |
             | Default: ``1000``
-        * **deserialize** :class:`bool` 
+        * **deserialize** (:class:`bool`)
             | Should raw bytes representing a list or map be deserialized to a list or dictionary.
             | Set to `False` for backup programs that just need access to raw bytes.
             | Default: ``True``
         * **key** 
-            | One of the ``aerospike.POLICY_KEY_*`` values such as :data:`aerospike.POLICY_KEY_DIGEST`
+            | One of the :ref:`POLICY_KEY` values such as :data:`aerospike.POLICY_KEY_DIGEST`
             |
-            | Default: ``aerospike.POLICY_KEY_DIGEST``
+            | Default: :data:`aerospike.POLICY_KEY_DIGEST`
         * **read_mode_ap** 
-            | One of the ``aerospike.POLICY_READ_MODE_AP_*`` values such as :data:`aerospike.AS_POLICY_READ_MODE_AP_ONE`
+            | One of the :ref:`POLICY_READ_MODE_AP` values such as :data:`aerospike.AS_POLICY_READ_MODE_AP_ONE`
             |
-            | Default: ``aerospike.AS_POLICY_READ_MODE_AP_ONE``
-            | **New in version 3.7.0**
+            | Default: :data:`aerospike.AS_POLICY_READ_MODE_AP_ONE`
+
+            .. versionadded:: 3.7.0
+
         * **read_mode_sc** 
-            | One of the ``aerospike.POLICY_READ_MODE_SC_*`` values such as :data:`aerospike.POLICY_READ_MODE_SC_SESSION`
+            | One of the :ref:`POLICY_READ_MODE_SC` values such as :data:`aerospike.POLICY_READ_MODE_SC_SESSION`
             |
-            | Default: ``aerospike.POLICY_READ_MODE_SC_SESSION``
-            | **New in version 3.7.0**
+            | Default: :data:`aerospike.POLICY_READ_MODE_SC_SESSION`
+
+            .. versionadded:: 3.7.0
+
         * **replica** 
-            | One of the ``aerospike.POLICY_REPLICA_*`` values such as :data:`aerospike.POLICY_REPLICA_MASTER`
+            | One of the :ref:`POLICY_REPLICA` values such as :data:`aerospike.POLICY_REPLICA_MASTER`
             |
-            | Default: ``aerospike.POLICY_REPLICA_SEQUENCE``
+            | Default: :data:`aerospike.POLICY_REPLICA_SEQUENCE`
 
 .. _aerospike_operate_policies:
 
@@ -2691,20 +2661,21 @@ Operate Policies
     .. hlist::
         :columns: 1
 
-        * **max_retries** :class:`int`
+        * **max_retries** (:class:`int`)
             | Maximum number of retries before aborting the current transaction. The initial attempt is not counted as a retry.
             |
             | If max_retries is exceeded, the transaction will return error ``AEROSPIKE_ERR_TIMEOUT``.
             |
-            | **WARNING**: Database writes that are not idempotent (such as "add") should not be retried because the write operation may be performed multiple times
-            | if the client timed out previous transaction attempts. It's important to use a distinct write policy for non-idempotent writes, which sets max_retries = `0`;
-            |
             | Default: ``0``
-        * **sleep_between_retries** :class:`int`
+
+            .. warning::  Database writes that are not idempotent (such as "add") should not be retried because the write operation may be performed multiple times \
+               if the client timed out previous transaction attempts. It's important to use a distinct write policy for non-idempotent writes, which sets max_retries = `0`;
+
+        * **sleep_between_retries** (:class:`int`)
             | Milliseconds to sleep between retries. Enter ``0`` to skip sleep.
             |
             | Default: ``0``
-        * **socket_timeout** :class:`int`
+        * **socket_timeout** (:class:`int`)
             | Socket idle timeout in milliseconds when processing a database command.
             |
             | If socket_timeout is not ``0`` and the socket has been idle for at least socket_timeout, both max_retries and total_timeout are checked. If max_retries and total_timeout are not exceeded, the transaction is retried.
@@ -2712,7 +2683,7 @@ Operate Policies
             | If both ``socket_timeout`` and ``total_timeout`` are non-zero and ``socket_timeout`` > ``total_timeout``, then ``socket_timeout`` will be set to ``total_timeout``. If ``socket_timeout`` is ``0``, there will be no socket idle limit.
             |
             | Default: ``0``
-        * **total_timeout** :class:`int`
+        * **total_timeout** (:class:`int`)
             | Total transaction timeout in milliseconds.
             |
             | The total_timeout is tracked on the client and sent to the server along with the transaction in the wire protocol. The client will most likely timeout first, but the server also has the capability to timeout the transaction.
@@ -2721,41 +2692,45 @@ Operate Policies
             |
             | Default: ``1000``
         * **key** 
-            | One of the ``aerospike.POLICY_KEY_*`` values such as :data:`aerospike.POLICY_KEY_DIGEST`
+            | One of the :ref:`POLICY_KEY` values such as :data:`aerospike.POLICY_KEY_DIGEST`
             |
-            | Default: ``aerospike.POLICY_KEY_DIGEST``
+            | Default: :data:`aerospike.POLICY_KEY_DIGEST`
         * **gen** 
-            | One of the ``aerospike.POLICY_GEN_*`` values such as :data:`aerospike.POLICY_GEN_IGNORE`
+            | One of the :ref:`POLICY_GEN` values such as :data:`aerospike.POLICY_GEN_IGNORE`
             |
-            | Default: ``aerospike.POLICY_GEN_IGNORE``
+            | Default: :data:`aerospike.POLICY_GEN_IGNORE`
         * **replica** 
-            | One of the ``aerospike.POLICY_REPLICA_*`` values such as :data:`aerospike.POLICY_REPLICA_MASTER`
+            | One of the :ref:`POLICY_REPLICA` values such as :data:`aerospike.POLICY_REPLICA_MASTER`
             |
-            | Default: ``aerospike.POLICY_REPLICA_SEQUENCE``
+            | Default: :data:`aerospike.POLICY_REPLICA_SEQUENCE`
         * **commit_level** 
-            | One of the ``aerospike.POLICY_COMMIT_LEVEL_*`` values such as :data:`aerospike.POLICY_COMMIT_LEVEL_ALL`
+            | One of the :ref:`POLICY_COMMIT_LEVEL` values such as :data:`aerospike.POLICY_COMMIT_LEVEL_ALL`
             |
-            | Default: ``aerospike.POLICY_COMMIT_LEVEL_ALL``
+            | Default: :data:`aerospike.POLICY_COMMIT_LEVEL_ALL`
         * **read_mode_ap** 
-            | One of the ``aerospike.POLICY_READ_MODE_AP_*`` values such as :data:`aerospike.AS_POLICY_READ_MODE_AP_ONE`
+            | One of the :ref:`POLICY_READ_MODE_AP` values such as :data:`aerospike.AS_POLICY_READ_MODE_AP_ONE`
             | 
-            | Default: ``aerospike.AS_POLICY_READ_MODE_AP_ONE``
-            | **New in version 3.7.0**
+            | Default: :data:`aerospike.AS_POLICY_READ_MODE_AP_ONE`
+
+            .. versionadded:: 3.7.0
+
         * **read_mode_sc** 
-            | One of the ``aerospike.POLICY_READ_MODE_SC_*`` values such as :data:`aerospike.POLICY_READ_MODE_SC_SESSION`
+            | One of the :ref:`POLICY_READ_MODE_SC` values such as :data:`aerospike.POLICY_READ_MODE_SC_SESSION`
             |
-            | Default: ``aerospike.POLICY_READ_MODE_SC_SESSION``
-            | **New in version 3.7.0**
+            | Default: :data:`aerospike.POLICY_READ_MODE_SC_SESSION`
+
+            .. versionadded:: 3.7.0
+
         * **exists** 
-            | One of the ``aerospike.POLICY_EXISTS_*`` values such as :data:`aerospike.POLICY_EXISTS_CREATE`
+            | One of the :ref:`POLICY_EXISTS` values such as :data:`aerospike.POLICY_EXISTS_CREATE`
             |
-            | Default: ```aerospike.POLICY_GEN_IGNORE``
-        * **durable_delete** :class:`bool` 
+            | Default: :data:`aerospike.POLICY_GEN_IGNORE`
+        * **durable_delete** (:class:`bool`)
             | Perform durable delete
+            |
+            | Default: ``False``
 
             .. note:: Requires Enterprise server version >= 3.10
-
-            | Default: ``False``
 
 .. _aerospike_apply_policies:
 
@@ -2769,20 +2744,21 @@ Apply Policies
     .. hlist::
         :columns: 1
 
-        * **max_retries** :class:`int`
+        * **max_retries** (:class:`int`)
             | Maximum number of retries before aborting the current transaction. The initial attempt is not counted as a retry.
             |
             | If max_retries is exceeded, the transaction will return error ``AEROSPIKE_ERR_TIMEOUT``.
             |
-            | **WARNING**: Database writes that are not idempotent (such as "add") should not be retried because the write operation may be performed multiple times
-            | if the client timed out previous transaction attempts. It's important to use a distinct write policy for non-idempotent writes, which sets max_retries = `0`;
-            |
             | Default: ``0``
-        * **sleep_between_retries** :class:`int`
+            
+            .. warning::  Database writes that are not idempotent (such as "add") should not be retried because the write operation may be performed multiple times \
+               if the client timed out previous transaction attempts. It's important to use a distinct write policy for non-idempotent writes, which sets max_retries = `0`;
+
+        * **sleep_between_retries** (:class:`int`)
             | Milliseconds to sleep between retries. Enter ``0`` to skip sleep. 
             |
             | Default: ``0``
-        * **socket_timeout** :class:`int`
+        * **socket_timeout** (:class:`int`)
             | Socket idle timeout in milliseconds when processing a database command.
             |
             | If socket_timeout is not ``0`` and the socket has been idle for at least socket_timeout, both max_retries and total_timeout are checked. If max_retries and total_timeout are not exceeded, the transaction is retried.
@@ -2790,7 +2766,7 @@ Apply Policies
             | If both ``socket_timeout`` and ``total_timeout`` are non-zero and ``socket_timeout`` > ``total_timeout``, then ``socket_timeout`` will be set to ``total_timeout``. If ``socket_timeout`` is ``0``, there will be no socket idle limit.
             |
             | Default: ``0``
-        * **total_timeout** :class:`int`
+        * **total_timeout** (:class:`int`)
             | Total transaction timeout in milliseconds.
             |
             | The total_timeout is tracked on the client and sent to the server along with the transaction in the wire protocol. The client will most likely timeout first, but the server also has the capability to timeout the transaction.
@@ -2799,27 +2775,27 @@ Apply Policies
             |
             | Default: ``1000``
         * **key** 
-            | One of the ``aerospike.POLICY_KEY_*`` values such as :data:`aerospike.POLICY_KEY_DIGEST`
+            | One of the :ref:`POLICY_KEY` values such as :data:`aerospike.POLICY_KEY_DIGEST`
             |
-            | Default: ``aerospike.POLICY_KEY_DIGEST``
+            | Default: :data:`aerospike.POLICY_KEY_DIGEST`
         * **replica** 
-            | One of the ``aerospike.POLICY_REPLICA_*`` values such as :data:`aerospike.POLICY_REPLICA_MASTER`
+            | One of the :ref:`POLICY_REPLICA` values such as :data:`aerospike.POLICY_REPLICA_MASTER`
             |
-            | Default: ``aerospike.POLICY_REPLICA_SEQUENCE``
+            | Default: :data:`aerospike.POLICY_REPLICA_SEQUENCE`
         * **gen** 
-            | One of the ``aerospike.POLICY_GEN_*`` values such as :data:`aerospike.POLICY_GEN_IGNORE`
+            | One of the :ref:`POLICY_GEN` values such as :data:`aerospike.POLICY_GEN_IGNORE`
             | 
-            | Default: ``aerospike.POLICY_GEN_IGNORE``
+            | Default: :data:`aerospike.POLICY_GEN_IGNORE`
         * **commit_level** 
-            | One of the ``aerospike.POLICY_COMMIT_LEVEL_*`` values such as :data:`aerospike.POLICY_COMMIT_LEVEL_ALL`
+            | One of the :ref:`POLICY_COMMIT_LEVEL` values such as :data:`aerospike.POLICY_COMMIT_LEVEL_ALL`
             |
-            | Default: ``aerospike.POLICY_COMMIT_LEVEL_ALL``
-        * **durable_delete** :class:`bool` 
+            | Default: :data:`aerospike.POLICY_COMMIT_LEVEL_ALL`
+        * **durable_delete** (:class:`bool`)
             | Perform durable delete
+            |
+            | Default: ``False``
 
             .. note:: Requires Enterprise server version >= 3.10
-
-            | Default: ``False``
 
 
 .. _aerospike_remove_policies:
@@ -2834,18 +2810,20 @@ Remove Policies
     .. hlist::
         :columns: 1
 
-        * **max_retries** :class:`int`
+        * **max_retries** (:class:`int`)
             | Maximum number of retries before aborting the current transaction. The initial attempt is not counted as a retry.
             |
             | If max_retries is exceeded, the transaction will return error ``AEROSPIKE_ERR_TIMEOUT``.
             |
-            | **WARNING**: Database writes that are not idempotent (such as "add") should not be retried because the write operation may be performed multiple times
-            | if the client timed out previous transaction attempts. It's important to use a distinct write policy for non-idempotent writes, which sets max_retries = `0`;
-            |
             | Default: ``0``
-        * **sleep_between_retries** :class:`int`
-            | Milliseconds to sleep between retries. Enter ``0`` to skip sleep. Default: ``0``
-        * **socket_timeout** :class:`int`
+
+            .. warning::  Database writes that are not idempotent (such as "add") should not be retried because the write operation may be performed multiple times \
+               if the client timed out previous transaction attempts. It's important to use a distinct write policy for non-idempotent writes, which sets max_retries = `0`;
+
+        * **sleep_between_retries** (:class:`int`)
+            | Milliseconds to sleep between retries. Enter ``0`` to skip sleep. 
+            | Default: ``0``
+        * **socket_timeout** (:class:`int`)
             | Socket idle timeout in milliseconds when processing a database command.
             |
             | If socket_timeout is not ``0`` and the socket has been idle for at least socket_timeout, both max_retries and total_timeout are checked. If max_retries and total_timeout are not exceeded, the transaction is retried.
@@ -2853,7 +2831,7 @@ Remove Policies
             | If both ``socket_timeout`` and ``total_timeout`` are non-zero and ``socket_timeout`` > ``total_timeout``, then ``socket_timeout`` will be set to ``total_timeout``. If ``socket_timeout`` is ``0``, there will be no socket idle limit.
             |
             | Default: ``0``
-        * **total_timeout** :class:`int`
+        * **total_timeout** (:class:`int`)
             | Total transaction timeout in milliseconds.
             |
             | The total_timeout is tracked on the client and sent to the server along with the transaction in the wire protocol. The client will most likely timeout first, but the server also has the capability to timeout the transaction.
@@ -2862,27 +2840,28 @@ Remove Policies
             |
             | Default: ``1000``
         * **key** 
-            | One of the ``aerospike.POLICY_KEY_*`` values such as :data:`aerospike.POLICY_KEY_DIGEST`
+            | One of the :ref:`POLICY_KEY` values such as :data:`aerospike.POLICY_KEY_DIGEST`
             |
-            | Default: ``aerospike.POLICY_KEY_DIGEST``
+            | Default: :data:`aerospike.POLICY_KEY_DIGEST`
         * **commit_level** 
-            | One of the ``aerospike.POLICY_COMMIT_LEVEL_*`` values such as :data:`aerospike.POLICY_COMMIT_LEVEL_ALL`
+            | One of the :ref:`POLICY_COMMIT_LEVEL` values such as :data:`aerospike.POLICY_COMMIT_LEVEL_ALL`
             | 
-            | Default: ``aerospike.POLICY_COMMIT_LEVEL_ALL``
+            | Default: :data:`aerospike.POLICY_COMMIT_LEVEL_ALL`
         * **gen** 
-            | One of the ``aerospike.POLICY_GEN_*`` values such as :data:`aerospike.POLICY_GEN_IGNORE`
+            | One of the :ref:`POLICY_GEN` values such as :data:`aerospike.POLICY_GEN_IGNORE`
             | 
-            | Default: ``aerospike.POLICY_GEN_IGNORE``
-        * **durable_delete** :class:`bool` 
+            | Default: :data:`aerospike.POLICY_GEN_IGNORE`
+        * **durable_delete** (:class:`bool`)
             | Perform durable delete
+            |
+            | Default: ``False``
 
             .. note:: Requires Enterprise server version >= 3.10
 
-            | Default: ``False``
         * **replica** 
-            | One of the ``aerospike.POLICY_REPLICA_*`` values such as :data:`aerospike.POLICY_REPLICA_MASTER`
+            | One of the :ref:`POLICY_REPLICA` values such as :data:`aerospike.POLICY_REPLICA_MASTER`
             | 
-            | Default: ``aerospike.POLICY_REPLICA_SEQUENCE``
+            | Default: :data:`aerospike.POLICY_REPLICA_SEQUENCE`
 
 .. _aerospike_batch_policies:
 
@@ -2896,15 +2875,16 @@ Batch Policies
     .. hlist::
         :columns: 1
 
-        * **max_retries** :class:`int`
+        * **max_retries** (:class:`int`)
             | Maximum number of retries before aborting the current transaction. The initial attempt is not counted as a retry.
             |
             | If max_retries is exceeded, the transaction will return error ``AEROSPIKE_ERR_TIMEOUT``.
             |
-            | **WARNING**: Database writes that are not idempotent (such as "add") should not be retried because the write operation may be performed multiple times if the client timed out previous transaction attempts. It's important to use a distinct write policy for non-idempotent writes, which sets max_retries = `0`;
-            |
             | Default: ``2``
-        * **sleep_between_retries** :class:`int`
+
+            .. warning: Database writes that are not idempotent (such as "add") should not be retried because the write operation may be performed multiple times if the client timed out previous  transaction attempts. It's important to use a distinct write policy for non-idempotent writes, which sets max_retries = `0`;
+
+        * **sleep_between_retries** (:class:`int`)
             | Milliseconds to sleep between retries. Enter ``0`` to skip sleep.
             |
             | Default: ``0``
@@ -2916,7 +2896,7 @@ Batch Policies
             | If both ``socket_timeout`` and ``total_timeout`` are non-zero and ``socket_timeout`` > ``total_timeout``, then ``socket_timeout`` will be set to ``total_timeout``. If ``socket_timeout`` is ``0``, there will be no socket idle limit.
             |
             | Default: ``0``
-        * **total_timeout** :class:`int`
+        * **total_timeout** (:class:`int`)
             | Total transaction timeout in milliseconds.
             |
             | The total_timeout is tracked on the client and sent to the server along with the transaction in the wire protocol. The client will most likely timeout first, but the server also has the capability to timeout the transaction.
@@ -2925,32 +2905,36 @@ Batch Policies
             |
             | Default: ``1000``
         * **read_mode_ap** 
-            | One of the ``aerospike.POLICY_READ_MODE_AP_*`` values such as :data:`aerospike.AS_POLICY_READ_MODE_AP_ONE`
+            | One of the :ref:`POLICY_READ_MODE_AP` values such as :data:`aerospike.AS_POLICY_READ_MODE_AP_ONE`
             | 
-            | Default: ``aerospike.AS_POLICY_READ_MODE_AP_ONE``
-            | **New in version 3.7.0**
+            | Default: :data:`aerospike.AS_POLICY_READ_MODE_AP_ONE`
+            
+            .. versionadded:: 3.7.0
+        
         * **read_mode_sc** 
-            | One of the ``aerospike.POLICY_READ_MODE_SC_*`` values such as :data:`aerospike.POLICY_READ_MODE_SC_SESSION`
+            | One of the :ref:`POLICY_READ_MODE_SC` values such as :data:`aerospike.POLICY_READ_MODE_SC_SESSION`
             | 
-            | Default: ``aerospike.POLICY_READ_MODE_SC_SESSION``
-            | **New in version 3.7.0**
+            | Default: :data:`aerospike.POLICY_READ_MODE_SC_SESSION`
+
+            .. versionadded:: 3.7.0
+
         * **replica** 
-            | One of the ``aerospike.POLICY_REPLICA_*`` values such as :data:`aerospike.POLICY_REPLICA_MASTER`
+            | One of the :ref:`POLICY_REPLICA` values such as :data:`aerospike.POLICY_REPLICA_MASTER`
             | 
-            | Default: ``aerospike.POLICY_REPLICA_SEQUENCE``
-        * **concurrent** :class:`bool` 
+            | Default: :data:`aerospike.POLICY_REPLICA_SEQUENCE`
+        * **concurrent** (:class:`bool`)
             | Determine if batch commands to each server are run in parallel threads. 
             | 
             | Default ``False``
-        * **allow_inline** :class:`bool` 
+        * **allow_inline** (:class:`bool`)
             | Allow batch to be processed immediately in the server's receiving thread when the server deems it to be appropriate.  If `False`, the batch will always be processed in separate transaction threads.  This field is only relevant for the new batch index protocol. 
             | 
             | Default ``True``
-        * **send_set_name** :class:`bool` 
+        * **send_set_name** (:class:`bool`) 
             | Send set name field to server for every key in the batch for batch index protocol. This is only necessary when authentication is enabled and security roles are defined on a per set basis. 
             | 
             | Default: ``False``
-        * **deserialize** :class:`bool` 
+        * **deserialize** (:class:`bool`) 
             | Should raw bytes be deserialized to as_list or as_map. Set to `False` for backup programs that just need access to raw bytes. 
             | 
             | Default: ``True``
@@ -2967,7 +2951,7 @@ Info Policies
     .. hlist::
         :columns: 1
 
-        * **timeout** :class:`int`
+        * **timeout** (:class:`int`)
             | Read timeout in milliseconds
 
 
@@ -2983,7 +2967,7 @@ Admin Policies
     .. hlist::
         :columns: 1
 
-        * **timeout** :class:`int`
+        * **timeout** (:class:`int`)
             | Admin operation timeout in milliseconds
 
 
@@ -3139,12 +3123,12 @@ Bit Policies
             'bit_write_flags': aerospike.BIT_WRITE_UPDATE_ONLY
         }
 
-.. _aerospike_privilege_dict:
 
-.. _unicode_handling:
 
 Misc
 ====
+
+.. _aerospike_privilege_dict:
 
 Privilege Objects
 -----------------
@@ -3156,13 +3140,15 @@ Privilege Objects
     .. hlist::
         :columns: 1
 
-        * **code** one of the ``aerospike.PRIV_*`` values such as :data:`aerospike.PRIV_READ`
+        * **code** one of the :ref:`aerospike_privileges` values such as :data:`aerospike.PRIV_READ`
         * **ns** optional namespace, to which the privilege applies, otherwise the privilege applies globally.
         * **set** optional set within the *ns*, to which the privilege applies, otherwise to the entire namespace.
 
     Example:
 
     ``{'code': aerospike.PRIV_READ, 'ns': 'test', 'set': 'demo'}``
+
+.. _unicode_handling:
 
 Unicode Handling
 ----------------

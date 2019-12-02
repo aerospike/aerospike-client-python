@@ -298,11 +298,12 @@ Query Policies
             |
             | If max_retries is exceeded, the transaction will return error ``AEROSPIKE_ERR_TIMEOUT``.
             |
-            | **WARNING**: Database writes that are not idempotent (such as "add") should not be retried because the write operation may be performed \
+            | Default: ``0``
+
+            .. warning:: : Database writes that are not idempotent (such as "add") should not be retried because the write operation may be performed \
               multiple times if the client timed out previous transaction attempts. It's important to use a distinct write policy for non-idempotent writes \
               which sets max_retries = `0`;
-            |
-            | Default: ``0``
+
         * **sleep_between_retries** :class:`int`
             | Milliseconds to sleep between retries. Enter ``0`` to skip sleep. 
             |

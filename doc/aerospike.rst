@@ -59,101 +59,128 @@ Methods
                 .. note:: TLS usage requires Aerospike Enterprise Edition
 
             * **lua** an optional :class:`dict` containing the paths to two types of Lua modules
-                * **system_path** the location of the system modules such as ``aerospike.lua`` 
+                * **system_path** 
+                    | The location of the system modules such as ``aerospike.lua`` 
                     | Default: ``/usr/local/aerospike/lua``
-                * **user_path** the location of the user's record and stream UDFs . 
+                * **user_path** 
+                    | The location of the user's record and stream UDFs . 
                     | Default: ``./``
             * **policies** a :class:`dict` of policies
-                * **read** A dictionary containing read policies. See :ref:`aerospike_read_policies` for available policy fields and values.
-                * **write** A dictionary containing write policies. See :ref:`aerospike_write_policies` for available policy fields and values.
-                * **apply** A dictionary containing apply policies. See :ref:`aerospike_apply_policies` for available policy fields and values.
-                * **operate** A dictionary containing operate policies. See :ref:`aerospike_operate_policies` for available policy fields and values.
-                * **remove** A dictionary containing remove policies. See :ref:`aerospike_remove_policies` for available policy fields and values.
-                * **query** A dictionary containing query policies. See :ref:`aerospike_query_policies` for available policy fields and values.
-                * **scan** A dictionary containing scan policies. See :ref:`aerospike_scan_policies` for available policy fields and values.
-                * **batch** A dictionary containing batch policies. See :ref:`aerospike_batch_policies` for available policy fields and values.
+                * **read** A dictionary containing :ref:`aerospike_read_policies`.
+                * **write** A dictionary containing :ref:`aerospike_write_policies`.
+                * **apply** A dictionary containing :ref:`aerospike_apply_policies`.
+                * **operate** A dictionary containing :ref:`aerospike_operate_policies`.
+                * **remove** A dictionary containing :ref:`aerospike_remove_policies`.
+                * **query** A dictionary containing :ref:`aerospike_query_policies`.
+                * **scan** A dictionary containing :ref:`aerospike_scan_policies`.
+                * **batch** A dictionary containing :ref:`aerospike_batch_policies`.
                 * **total_timeout** default connection timeout in milliseconds 
-                    | **Deprecated**: set this the individual policy dictionaries
-                * **auth_mode** a value defining how the authentication mode with the server such as :data:`aerospike.AUTH_INTERNAL`.
-                * **login_timeout_ms** An integer representing Node login timeout in milliseconds. Default: ``5000``.
-                * **key** default key policy, with values such as :data:`aerospike.POLICY_KEY_DIGEST`
-                    | **Deprecated**: set this individually in the 'read', 'write', 'apply', 'operate', 'remove' policy dictionaries
-                * **exists** default exists policy, with values such as :data:`aerospike.POLICY_EXISTS_CREATE` 
-                    | **Deprecated**: set in the 'write' policies dictionary
-                * **max_retries** a :class:`int` representing the number of times to retry a transaction 
-                    | **Deprecated**: set this the individual policy dictionaries
-                * **replica** default replica policy, with values such as :data:`aerospike.POLICY_REPLICA_MASTER` 
-                    | **Deprecated**: set this in one or all of the 'read', 'write', 'apply', 'operate', 'remove' policy dictionaries
-                * **commit_level** default commit level policy, with values such as :data:`aerospike.POLICY_COMMIT_LEVEL_ALL` 
-                    | **Deprecated**: set this as needed individually in the 'write', 'apply', 'operate', 'remove' policy dictionaries
+                    | **Deprecated**: set this individually in the :ref:`aerospike_polices` dictionaries.
+                * **auth_mode** a value of :ref:`auth_mode` defining how the authentication mode with the server, such as :data:`aerospike.AUTH_INTERNAL`.
+                * **login_timeout_ms** (:class:`int`) 
+                    | Representing the node login timeout in milliseconds. 
+                    | Default: ``5000``.
+                * **key** default key policy
+                    | **Deprecated**: set this individually in the :ref:`aerospike_polices` dictionaries.
+                * **exists** default exists policy
+                    | **Deprecated**: set in the :ref:`aerospike_write_policies` dictionary
+                * **max_retries** representing the number of times to retry a transaction 
+                    | **Deprecated**: set this individually in the :ref:`aerospike_polices` dictionaries.
+                * **replica** default replica policy
+                    | **Deprecated**: set this in one or all of the other policies' :ref:`aerospike_read_policies`, :ref:`aerospike_write_policies`, :ref:`aerospike_apply_policies`, :ref:`aerospike_operate_policies`, :ref:`aerospike_remove_policies` dictionaries.
+                * **commit_level** default commit level policy
+                    | **Deprecated**: set this as needed individually in the :ref:`aerospike_write_policies`, :ref:`aerospike_apply_policies`, :ref:`aerospike_operate_policies`, :ref:`aerospike_remove_policies` dictionaries.
             * **shm** a :class:`dict` with optional shared-memory cluster tending parameters
                 | Shared-memory cluster tending is on if the :class:`dict` is provided. \
                   If multiple clients are instantiated talking to the same cluster the *shm* cluster-tending should be used.
 
-                * **max_nodes** maximum number of nodes allowed. Pad so new nodes can be added without configuration changes 
+                * **max_nodes** (:class:`int`)
+                    | Maximum number of nodes allowed. Pad so new nodes can be added without configuration changes 
                     | Default: ``16``
-                * **max_namespaces** similarly pad 
+                * **max_namespaces** (:class:`int`)
+                    | Similarly pad 
                     | Default: ``8``
-                * **takeover_threshold_sec** take over tending if the cluster hasn't been checked for this many seconds 
+                * **takeover_threshold_sec**  (:class:`int`)
+                    | Take over tending if the cluster hasn't been checked for this many seconds 
                     | Default: ``30``
-                * **shm_key**
+                * **shm_key** 
                     | Explicitly set the shm key for this client.
                     | If **use_shared_connection** is not set, or set to ``False``, the user must provide a value for this field in order for shared memory to work correctly.
                     | If , and only if, **use_shared_connection** is set to ``True``, the key will be implicitly evaluated per unique hostname, and can be inspected with :meth:`~aerospike.Client.shm_key` .
                     | It is still possible to specify a key when using **use_shared_connection** = `True`.
                     | default: ``0xA8000000``
-            * **use_shared_connection** :class:`bool` indicating whether this instance should share its connection to the Aerospike cluster with other client instances in the same process. 
+            * **use_shared_connection** (:class:`bool`)
+                | Indicating whether this instance should share its connection to the Aerospike cluster with other client instances in the same process. 
                 | Default: ``False``
             * **tls** a :class:`dict` of optional TLS configuration parameters.
             
                 .. note:: TLS usage requires Aerospike Enterprise Edition
 
-                * **enable** a :class:`bool` indicating whether tls should be enabled or not. 
+                * **enable** (:class:`bool`)
+                    | Indicating whether tls should be enabled or not. 
                     | Default: ``False``
-                * **cafile** :class:`str` Path to a trusted CA certificate file. By default TLS will use system standard trusted CA certificates
-                * **capath** :class:`str` Path to a directory of trusted certificates. See the OpenSSL SSL_CTX_load_verify_locations manual page for more information about the format of the directory.
-                * **protocols** :class:`str` Specifies enabled protocols. This format is the same as Apache's SSLProtocol documented at https://httpd.apache.org/docs/current/mod/mod_ssl.html#sslprotocol . 
+                * **cafile** (:class:`str`)
+                    | Path to a trusted CA certificate file. By default TLS will use system standard trusted CA certificates
+                * **capath** (:class:`str`)
+                    | Path to a directory of trusted certificates. See the OpenSSL SSL_CTX_load_verify_locations manual page for more information about the format of the directory.
+                * **protocols** (:class:`str`)
+                    | Specifies enabled protocols. This format is the same as Apache's SSLProtocol documented at https://httpd.apache.org/docs/current/mod/mod_ssl.html#sslprotocol . 
                     | If not specified the client will use "-all +TLSv1.2".
-                * **cipher_suite** :class:`str` Specifies enabled cipher suites. The format is the same as OpenSSL's Cipher List Format documented at https://www.openssl.org/docs/manmaster/apps/ciphers.html .
+                * **cipher_suite** (:class:`str`)
+                    | Specifies enabled cipher suites. The format is the same as OpenSSL's Cipher List Format documented at https://www.openssl.org/docs/manmaster/apps/ciphers.html .
                     | If not specified the OpenSSL default cipher suite described in the ciphers documentation will be used. If you are not sure what cipher suite to select this option is best left unspecified 
-                * **keyfile** :class:`str` Path to the client's key for mutual authentication. By default mutual authentication is disabled.
-                * **keyfile_pw** :class:`str` Decryption password for the client's key for mutual authentication. By default the key is assumed not to be encrypted.
-                * **cert_blacklist** :class:`str` Path to a certificate blacklist file. The file should contain one line for each blacklisted certificate. Each line starts with the certificate serial number expressed in hex. Each entry may optionally specify the issuer name of the certificate (serial numbers are only required to be unique per issuer). Example records: 867EC87482B2 /C=US/ST=CA/O=Acme/OU=Engineering/CN=Test Chain CA E2D4B0E570F9EF8E885C065899886461
-                * **certfile** :class:`str` Path to the client's certificate chain file for mutual authentication. By default mutual authentication is disabled.
-                * **crl_check** :class:`bool` Enable CRL checking for the certificate chain leaf certificate. An error occurs if a suitable CRL cannot be found. By default CRL checking is disabled.
-                * **crl_check_all** :class:`bool` Enable CRL checking for the entire certificate chain. An error occurs if a suitable CRL cannot be found. By default CRL checking is disabled.
-                * **log_session_info** :class:`bool` Log session information for each connection.
-                * **for_login_only** :class:`bool` Log session information for each connection. Use TLS connections only for login authentication. All other communication with the server will be done with non-TLS connections.
+                * **keyfile** (:class:`str`)
+                    | Path to the client's key for mutual authentication. By default mutual authentication is disabled.
+                * **keyfile_pw** (:class:`str`)
+                    | Decryption password for the client's key for mutual authentication. By default the key is assumed not to be encrypted.
+                * **cert_blacklist** (:class:`str`)
+                    | Path to a certificate blacklist file. The file should contain one line for each blacklisted certificate. Each line starts with the certificate serial number expressed in hex. Each entry may optionally specify the issuer name of the certificate (serial numbers are only required to be unique per issuer). Example records: 867EC87482B2 /C=US/ST=CA/O=Acme/OU=Engineering/CN=Test Chain CA E2D4B0E570F9EF8E885C065899886461
+                * **certfile** (:class:`str`)
+                    | Path to the client's certificate chain file for mutual authentication. By default mutual authentication is disabled.
+                * **crl_check** (:class:`bool`)
+                    | Enable CRL checking for the certificate chain leaf certificate. An error occurs if a suitable CRL cannot be found. By default CRL checking is disabled.
+                * **crl_check_all** (:class:`bool`)
+                    | Enable CRL checking for the entire certificate chain. An error occurs if a suitable CRL cannot be found. By default CRL checking is disabled.
+                * **log_session_info** (:class:`bool`)
+                    | Log session information for each connection.
+                * **for_login_only** (:class:`bool`)
+                    | Log session information for each connection. Use TLS connections only for login authentication. All other communication with the server will be done with non-TLS connections.
                     | Default: ``False`` (Use TLS connections for all communication with server.)
-            * **serialization** an optional instance-level :py:func:`tuple` of (serializer, deserializer). Takes precedence over a class serializer registered with :func:`~aerospike.set_serializer`.
-            * **thread_pool_size** :class:`int` number of threads in the pool that is used in batch/scan/query commands. 
+            * **serialization** an optional instance-level :py:func:`tuple` of (serializer, deserializer). 
+                | Takes precedence over a class serializer registered with :func:`~aerospike.set_serializer`.
+            * **thread_pool_size** (:class:`int`) 
+                | Number of threads in the pool that is used in batch/scan/query commands. 
                 | Default: ``16``
-            * **max_socket_idle** :class:`int`
+            * **max_socket_idle** (:class:`int`)
                 | Maximum socket idle time in seconds.  Connection pools will discard sockets that have been idle longer than the maximum. \
                   The value is limited to 24 hours (86400). It's important to set this value to a few seconds less than the server's proto-fd-idle-ms \
                  (default 60000 milliseconds, or 1 minute), so the client does not attempt to use a socket that has already been reaped by the server.
                 | Default: ``0`` seconds (disabled) for non-TLS connections, 55 seconds for TLS connections
-            * **max_conns_per_node**:class:`int` maximum number of pipeline connections allowed for each node 
-            * **tend_interval** :class:`int` polling interval in milliseconds for tending the cluster 
+            * **max_conns_per_node** (:class:`int`)
+                | Maximum number of pipeline connections allowed for each node 
+            * **tend_interval** (:class:`int`)
+                | Polling interval in milliseconds for tending the cluster 
                 | Default: ``1000``
-            * **compression_threshold** :class:`int` compress data for transmission if the object size is greater than a given number of bytes 
+            * **compression_threshold** (:class:`int`)
+                | Compress data for transmission if the object size is greater than a given number of bytes 
                 | Default: ``0``, meaning 'never compress' 
                 | **Deprecated**, set this in the 'write' policy dictionary.
-            * **cluster_name** :class:`str` only server nodes matching this name will be used when determining the cluster name.
-            * **rack_id** :class:`int`
+            * **cluster_name** (:class:`str`)
+                | Only server nodes matching this name will be used when determining the cluster name.
+            * **rack_id** (:class:`int`)
                 | Rack id where this client instance resides.
-                | In order to enable this functionality, the `rack_aware` needs to be set to true, the `read policy` `replica` needs to be set to :data:`POLICY_REPLICA_PREFER_RACK`. \
+                | In order to enable this functionality, the `rack_aware` needs to be set to true, the :ref:`aerospike_read_policies` `replica` needs to be set to :data:`POLICY_REPLICA_PREFER_RACK`. \
                   The server rack configuration must also be configured.
                 |
                 | Default: ``0``
-            * **rack_aware** :class:`bool`
+            * **rack_aware** (:class:`bool`)
                 | Track server rack data. This is useful when directing read operations to run on the same rack as the client.
                 | This is useful to lower cloud provider costs when nodes are distributed across different availability zones (represented as racks).
                 | In order to enable this functionality, the `rack_id` needs to be set to local rack, the `read policy` `replica` needs to be set to :data:`POLICY_REPLICA_PREFER_RACK`. \
                   The server rack configuration must also be configured.
                 |
                 | Default: ``False``
-            * **use_services_alternate** :class:`bool`
+            * **use_services_alternate** (:class:`bool`)
                 | Flag to signify if "services-alternate" should be used instead of "services"
                 |
                 | Default: ``False``
@@ -537,7 +564,7 @@ Operators for the multi-ops method :py:meth:`~aerospike.Client.operate`.
 .. note::
 
     Starting version 3.4.0, it is highly recommended to use the :ref:`aerospike_operation_helpers.operations` \
-    to create the arguments for :py:meth:`~aerospike.Client.operate` and :py:meth:`~aerospike.Client.operate`
+    to create the arguments for :py:meth:`~aerospike.Client.operate` and :py:meth:`~aerospike.Client.operate_ordered`
 
 .. data:: OPERATOR_WRITE
 
@@ -1452,10 +1479,13 @@ Note that if "return_type" is not specified in the parameters for a map operatio
 
 .. _aerospike_policies:
 
-Policies
-========
+Policy Options
+==============
 
-.. rubric:: Commit Level Policy Options
+.. _POLICY_COMMIT_LEVEL:
+
+Commit Level Policy Options
+---------------------------
 
 Specifies the number of replicas required to be successfully committed before returning success in a write operation to provide the desired consistency guarantee.
 
@@ -1467,57 +1497,53 @@ Specifies the number of replicas required to be successfully committed before re
 
     Return succcess after successfully committing the master replica
 
-.. rubric:: AP Read Mode Policy Options
+
+.. _POLICY_READ_MODE_AP:
+
+AP Read Mode Policy Options
+---------------------------
 
 Read policy for AP (availability) namespaces.
-
-.. versionadded:: 3.7.0
 
 .. data:: POLICY_READ_MODE_AP_ONE
 
     Involve single node in the read operation.
 
-    .. versionadded:: 3.7.0
-
 .. data:: POLICY_READ_MODE_AP_ALL
 
     Involve all duplicates in the read operation.
 
-    .. versionadded:: 3.7.0
+.. versionadded:: 3.7.0
 
-.. rubric:: SC Read Mode Policy Options
+.. _POLICY_READ_MODE_SC:
+
+SC Read Mode Policy Options
+---------------------------
 
 Read policy for SC (strong consistency) namespaces.
-
-.. versionadded:: 3.7.0
 
 .. data:: POLICY_READ_MODE_SC_SESSION
 
     Ensures this client will only see an increasing sequence of record versions. Server only reads from master. This is the default.
 
-    .. versionadded:: 3.7.0
-
 .. data:: POLICY_READ_MODE_SC_LINEARIZE
 
     Ensures ALL clients will only see an increasing sequence of record versions. Server only reads from master.
-
-    .. versionadded:: 3.7.0
 
 .. data:: POLICY_READ_MODE_SC_ALLOW_REPLICA
 
     Server may read from master or any full (non-migrating) replica. Increasing sequence of record versions is not guaranteed.
 
-    .. versionadded:: 3.7.0
-
 .. data:: POLICY_READ_MODE_SC_ALLOW_UNAVAILABLE
 
     Server may read from master or any full (non-migrating) replica or from unavailable partitions. Increasing sequence of record versions is not guaranteed.
 
-    .. versionadded:: 3.7.0
+.. versionadded:: 3.7.0
 
-.. rubric:: Existence Policy Options
+.. _POLICY_EXISTS: 
 
-
+Existence Policy Options
+------------------------
 
 Specifies the behavior for writing the record depending whether or not it exists.
 
@@ -1541,7 +1567,10 @@ Specifies the behavior for writing the record depending whether or not it exists
 
     Update a record, ONLY if it exists
 
-.. rubric:: Generation Policy Options
+.. _POLICY_GEN:
+
+Generation Policy Options
+-------------------------
 
 Specifies the behavior of record modifications with regard to the generation value.
 
@@ -1557,7 +1586,11 @@ Specifies the behavior of record modifications with regard to the generation val
 
     Write a record, ONLY if local generation is greater-than remote generation
 
-.. rubric:: Key Policy Options
+
+.. _POLICY_KEY:
+
+Key Policy Options
+------------------
 
 Specifies the behavior for whether keys or digests should be sent to the cluster.
 
@@ -1569,7 +1602,10 @@ Specifies the behavior for whether keys or digests should be sent to the cluster
 
     Send the key in addition to the digest. This policy causes a write operation to store the key on the server
 
-.. rubric:: Replica Options
+.. _POLICY_REPLICA:
+
+Replica Options
+---------------
 
 Specifies which partition replica to read from.
 
@@ -1591,7 +1627,9 @@ Specifies which partition replica to read from.
 
     **rack_aware** and **rack_id** must be set in the config argument of the client constructor in order to enable this functionality
 
-.. rubric:: Retry Policy Options
+
+Retry Policy Options
+--------------------
 
 Specifies the behavior of failed operations.
 
@@ -1603,7 +1641,33 @@ Specifies the behavior of failed operations.
 
     If an operation fails, attempt the operation one more time
 
-.. rubric:: Auth Mode Constants
+
+Constants
+=========
+
+.. _TTL_CONSTANTS:
+
+TTL Constants
+-------------
+
+Specifics the TTL constants
+
+.. data:: TTL_NAMESPACE_DEFAULT
+    
+    Use the namespace default TTL.
+    
+.. data:: TTL_NEVER_EXPIRE
+    
+    Set TTL to never expire.
+    
+.. data:: TTL_DONT_UPDATE
+    
+    Do not change the current TTL of the record.
+
+.. _auth_mode:
+
+Auth Mode Constants
+-------------------
 
 Specifies the type of authentication to be used when communicating with the server
 
@@ -1620,9 +1684,6 @@ Specifies the type of authentication to be used when communicating with the serv
     Use external authentication (like LDAP).  Specific external authentication is configured on server.  Send clear password on node login whether or not TLS is defined. This mode should only be used for testing purposes because it is not secure authentication.
 
 .. _aerospike_scan_constants:
-
-Constants
-=========
 
 Scan Constants
 --------------
@@ -1669,6 +1730,11 @@ Job Constants
 .. data:: JOB_QUERY
 
     Query job type argument for the module parameter of :meth:`~aerospike.Client.job_info`
+
+.. _aerospike_job_constants_status:
+
+Job Statuses
+------------
 
 .. data:: JOB_STATUS_UNDEF
 
@@ -1938,38 +2004,40 @@ Miscellaneous
 
 .. data:: null
 
-    A value for distinguishing a server-side null from a Python :py:obj:`None` .
+    A value for distinguishing a server-side null from a Python :py:obj:`None`.
 
     .. deprecated:: 2.0.1
         use the function :func:`aerospike.null` instead.
 
 .. data:: UDF_TYPE_LUA
+    
+    UDF type is LUA (which is the only UDF type).
 
 .. data:: INDEX_STRING
 
-    An index whose values are of the aerospike string data type
+    An index whose values are of the aerospike string data type.
 
 .. data:: INDEX_NUMERIC
 
-    An index whose values are of the aerospike integer data type
+    An index whose values are of the aerospike integer data type.
 
 .. data:: INDEX_GEO2DSPHERE
 
-    An index whose values are of the aerospike GetJSON data type
+    An index whose values are of the aerospike GetJSON data type.
     
 .. seealso:: `Data Types <http://www.aerospike.com/docs/guide/data-types.html>`_.
 
 .. data:: INDEX_TYPE_LIST
 
-    Index a bin whose contents is an aerospike list
+    Index a bin whose contents is an aerospike list.
 
 .. data:: INDEX_TYPE_MAPKEYS
 
-    Index the keys of a bin whose contents is an aerospike map
+    Index the keys of a bin whose contents is an aerospike map.
 
 .. data:: INDEX_TYPE_MAPVALUES
 
-    Index the values of a bin whose contents is an aerospike map
+    Index the values of a bin whose contents is an aerospike map.
 
 .. _aerospike_log_levels:
 
