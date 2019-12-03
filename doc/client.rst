@@ -3022,16 +3022,16 @@ Map Policies
     .. hlist::
         :columns: 1
 
-        * **map_write_mode** write mode for the map. 
-            | Write mode for the operation. 
+        * **map_write_mode**  
+            | Write mode for the map operation. 
             | One of the :ref:`aerospike_map_write_mode` values such as :data:`aerospike.MAP_UPDATE`
             | 
             | Default: :data:`aerospike.MAP_UPDATE`
 
             .. note:: This should only be used for Server version < 4.3.0.
         
-        * **map_write_flags** Flags to apply to the map operation. 
-            | Write flags for the operation. 
+        * **map_write_flags**  
+            | Write flags for the map operation. 
             | One of the :ref:`aerospike_map_write_flag` values such as :data:`aerospike.MAP_WRITE_FLAGS_DEFAULT`
             | 
             | Default: :data:`aerospike.MAP_WRITE_FLAGS_DEFAULT`
@@ -3041,8 +3041,8 @@ Map Policies
 
             .. note:: This is only valid for Aerospike Server versions >= 4.3.0. 
 		
-        * **map_order** ordering to maintain for the map entries. 
-            | Ordering to maintain for the map. 
+        * **map_order**  
+            | Ordering to maintain for the map entries. 
             | One of :ref:`aerospike_map_order`, such as :data:`aerospike.KEY_ORDERED` 
             |
             | Default: :data:`aerospike.UNORDERED`
