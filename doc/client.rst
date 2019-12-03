@@ -2888,8 +2888,8 @@ Batch Policies
             | Milliseconds to sleep between retries. Enter ``0`` to skip sleep.
             |
             | Default: ``0``
-        * **socket_timeout**
-            | An :class:`int`. Socket idle timeout in milliseconds when processing a database command.
+        * **socket_timeout** (:class:`int`)
+            | Socket idle timeout in milliseconds when processing a database command.
             |
             | If socket_timeout is not ``0`` and the socket has been idle for at least socket_timeout, both max_retries and total_timeout are checked. If max_retries and total_timeout are not exceeded, the transaction is retried.
             |
