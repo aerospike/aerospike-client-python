@@ -1764,9 +1764,9 @@ Serialization Constants
 
 .. versionadded:: 1.0.47
 
-.. _aerospike_list_constants:
+.. _aerospike_list_write_flag:
 
-List Constants
+List Write Flags
 --------------------
 Flags used by list write flag:
 
@@ -1829,9 +1829,24 @@ Return types used by various list operations
 
     Return value for single key read and value list for range read.
 
-.. _aerospike_map_constants:
+.. _aerospike_list_order:
 
-Map Constants
+List Order
+-----------------
+Flags used by list order:
+
+.. data:: LIST_UNORDERED
+
+    List is not ordered. This is the default.
+
+.. data:: LIST_ORDERED
+
+    Ordered list.
+
+
+.. _aerospike_map_write_flag:
+
+Map Write Flag
 -----------------
 Flags used by map write flag 
 
@@ -1857,7 +1872,12 @@ Flags used by map write flag
 
     Allow other valid map items to be committed if a map item is denied due to write flag constraints.
 
-Flags used by map write mode
+.. _aerospike_map_write_mode:
+
+Map Write Mode
+==============
+
+Flags used by map *write mode*
 
 .. note:: This should only be used for Server version < 4.3.0
 
@@ -1873,6 +1893,10 @@ Flags used by map write mode
 
     If the key already exists, the item will be overwritten. If the key does not exist, the item will be denied.
 
+.. _aerospike_map_order:
+
+Map Order
+-----------------
 Flags used by map order:
 
 .. data:: UNORDERED
@@ -1931,9 +1955,9 @@ Return types used by various map operations
     Return key/value items. Note that key/value pairs will be returned as a list of tuples (i.e. [(key1, value1), (key2, value2)])
 
 
-.. _aerospike_bitwise_constants:
+.. _aerospike_bitwise_write_flag:
 
-Bitwise Constants
+Bitwise Write Flags
 -----------------------
 
 .. data:: BIT_WRITE_DEFAULT
@@ -1959,6 +1983,13 @@ Bitwise Constants
     Bytes bin is less than the specified number of bytes, then only apply operations 
     from the offset to the end.
 
+.. versionadded:: 3.9.0
+
+.. _aerospike_bitwise_resize_flag:
+
+Bitwise Resize Flags
+----------------------
+
 .. data:: BIT_RESIZE_DEFAULT
 
     Add/remove bytes from the end (default).
@@ -1974,6 +2005,13 @@ Bitwise Constants
 .. data:: BIT_RESIZE_SHRINK_ONLY
 
     Only allow the bitmap size to decrease.
+
+.. _aerospike_bitwise_overflow:
+
+.. versionadded:: 3.9.0
+
+Bitwise Overflow
+----------------------
 
 .. data:: BIT_OVERFLOW_FAIL
 

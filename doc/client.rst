@@ -2888,8 +2888,8 @@ Batch Policies
             | Milliseconds to sleep between retries. Enter ``0`` to skip sleep.
             |
             | Default: ``0``
-        * **socket_timeout**
-            | An :class:`int`. Socket idle timeout in milliseconds when processing a database command.
+        * **socket_timeout** (:class:`int`)
+            | Socket idle timeout in milliseconds when processing a database command.
             |
             | If socket_timeout is not ``0`` and the socket has been idle for at least socket_timeout, both max_retries and total_timeout are checked. If max_retries and total_timeout are not exceeded, the transaction is retried.
             |
@@ -2980,27 +2980,24 @@ List Policies
 
     A :class:`dict` of optional list policies, which are applicable to list operations.
 
+
     .. hlist::
         :columns: 1
 
-        * **write_flags** Write flags for the operation. 
-		
-		+---------------------------+---------------------------------------------------------------------------------------------------------------------------------------------------------------+
-		| Write Flag                | Description                                                                                                                                                   |
-		+---------------------------+---------------------------------------------------------------------------------------------------------------------------------------------------------------+
-		| LIST_WRITE_DEFAULT        | Default. Allow duplicate values and insertions at any index.                                                                                                  |
-		+---------------------------+---------------------------------------------------------------------------------------------------------------------------------------------------------------+
-		| LIST_WRITE_ADD_UNIQUE     | Only add unique values.                                                                                                                                       |
-		+---------------------------+---------------------------------------------------------------------------------------------------------------------------------------------------------------+
-		| LIST_WRITE_INSERT_BOUNDED | Enforce list boundaries when inserting. Do not allow values to be inserted at index outside current list boundaries. Require server version 4.3.0 or greater. |
-		+---------------------------+---------------------------------------------------------------------------------------------------------------------------------------------------------------+
-		| LIST_WRITE_NO_FAIL        | Do not raise error if a list item fails due to write flag constraints (always succeed). Require server version 4.3.0 or greater                               |
-		+---------------------------+---------------------------------------------------------------------------------------------------------------------------------------------------------------+
-		| LIST_WRITE_PARTIAL        | Allow other valid list items to be committed if a list item fails due to write flag constraints.                                                              |
-		+---------------------------+---------------------------------------------------------------------------------------------------------------------------------------------------------------+		
-
-		Values should be or'd together: ``aerospike.LIST_WRITE_ADD_UNIQUE | aerospike.LIST_WRITE_INSERT_BOUNDED``
-        * **list_order** ordering to maintain for the list. Valid values: values are ``aerospike.LIST_ORDERED``, ``aerospike.LIST_UNORDERED``
+        * **write_flags** 
+            | Write flags for the operation. 
+            | One of the :ref:`aerospike_list_write_flag` values such as :data:`aerospike.LIST_WRITE_DEFAULT`
+            | 
+            | Default: :data:`aerospike.LIST_WRITE_DEFAULT`
+            |
+            | Values should be or'd together: 
+            | ``aerospike.LIST_WRITE_ADD_UNIQUE | aerospike.LIST_WRITE_INSERT_BOUNDED``
+            
+        * **list_order** 
+            | Ordering to maintain for the list. 
+            | One of :ref:`aerospike_list_order`, such as :data:`aerospike.LIST_ORDERED` 
+            |
+            | Default: :data:`aerospike.LIST_UNORDERED`
 
     Example:
 
@@ -3025,50 +3022,31 @@ Map Policies
     .. hlist::
         :columns: 1
 
-        * **map_write_mode** write mode for the map. 
+        * **map_write_mode**  
+            | Write mode for the map operation. 
+            | One of the :ref:`aerospike_map_write_mode` values such as :data:`aerospike.MAP_UPDATE`
+            | 
+            | Default: :data:`aerospike.MAP_UPDATE`
 
             .. note:: This should only be used for Server version < 4.3.0.
-
-            +--------------------------------+--------------------------------------------------------------------------------------------------------------+
-            | Write Modes                    | Description                                                                                                  |
-            +--------------------------------+--------------------------------------------------------------------------------------------------------------+
-            | MAP_UPDATE                     | Default. Allow create or update.                                                                             |
-            +--------------------------------+--------------------------------------------------------------------------------------------------------------+
-            | MAP_CREATE_ONLY                | If the key already exists, the item will be denied. If the key does not exist, a new item will be created.   |
-            +--------------------------------+--------------------------------------------------------------------------------------------------------------+
-            | MAP_UPDATE_ONLY                | If the key already exists, the item will be overwritten. If the key does not exist, the item will be denied. |
-            +--------------------------------+--------------------------------------------------------------------------------------------------------------+
         
-        * **map_write_flags** Flags to apply to the map operation. 
+        * **map_write_flags**  
+            | Write flags for the map operation. 
+            | One of the :ref:`aerospike_map_write_flag` values such as :data:`aerospike.MAP_WRITE_FLAGS_DEFAULT`
+            | 
+            | Default: :data:`aerospike.MAP_WRITE_FLAGS_DEFAULT`
+            |
+            | Values should be or'd together: 
+            | ``aerospike.LIST_WRITE_ADD_UNIQUE | aerospike.LIST_WRITE_INSERT_BOUNDED``
 
             .. note:: This is only valid for Aerospike Server versions >= 4.3.0. 
 		
-            +--------------------------------+--------------------------------------------------------------------------------------------------------------+
-            | Write Flags                    | Description                                                                                                  |
-            +--------------------------------+--------------------------------------------------------------------------------------------------------------+
-            | MAP_WRITE_FLAGS_DEFAULT        | Default. Allow create or update.                                                                             |
-            +--------------------------------+--------------------------------------------------------------------------------------------------------------+
-            | MAP_WRITE_FLAGS_CREATE_ONLY    | If the key already exists, the item will be denied. If the key does not exist, a new item will be created.   |
-            +--------------------------------+--------------------------------------------------------------------------------------------------------------+
-            | MAP_WRITE_FLAGS_UPDATE_ONLY    | If the key already exists, the item will be overwritten. If the key does not exist, the item will be denied. |
-            +--------------------------------+--------------------------------------------------------------------------------------------------------------+
-            | MAP_WRITE_FLAGS_NO_FAIL        | Do not raise error if a map item is denied due to write flag constraints (always succeed).                   |
-            +--------------------------------+--------------------------------------------------------------------------------------------------------------+
-            | MAP_WRITE_FLAGS_PARTIAL        | Allow other valid map items to be committed if a map item is denied due to write flag constraints.           |
-            +--------------------------------+--------------------------------------------------------------------------------------------------------------+
-
-        * **map_order** ordering to maintain for the map entries. 
-
-		+-------------------+------------------------------------------+
-		| Map Order         | Description                              |
-		+-------------------+------------------------------------------+
-		| UNORDERED         | Map is not ordered. This is the default. |
-		+-------------------+------------------------------------------+
-		| KEY_ORDERED       | Order map by key.                        |
-		+-------------------+------------------------------------------+
-		| KEY_VALUE_ORDERED | Order map by key, then value.            |
-		+-------------------+------------------------------------------+
-
+        * **map_order**  
+            | Ordering to maintain for the map entries. 
+            | One of :ref:`aerospike_map_order`, such as :data:`aerospike.KEY_ORDERED` 
+            |
+            | Default: :data:`aerospike.UNORDERED`
+            
     Example:
 
     .. code-block:: python
@@ -3099,22 +3077,12 @@ Bit Policies
     .. hlist::
         :columns: 1
 
-        * **bit_write_flags** write mode for the bit op. 
-		+-----------------------+------------------------------------------------------------------------------------------------------------------+
-		| Write flags           | Description                                                                                                      |
-		+-----------------------+------------------------------------------------------------------------------------------------------------------+
-		| BIT_WRITE_DEFAULT     | Default. Allow create or update.                                                                                 |
-		+-----------------------+------------------------------------------------------------------------------------------------------------------+
-		| BIT_WRITE_CREATE_ONLY | If the bin already exists, the operation will be denied. If the bin does not exist, a new bin will be created.   |
-		+-----------------------+------------------------------------------------------------------------------------------------------------------+
-		| BIT_WRITE_UPDATE_ONLY | If the bin already exists, the bin will be overwritten. If the bin does not exist, the operation will be denied. |
-		+-----------------------+------------------------------------------------------------------------------------------------------------------+
-		| BIT_WRITE_NO_FAIL     | Do not raise error if operation is denied (always succeed).                                                      |
-		+-----------------------+------------------------------------------------------------------------------------------------------------------+
-		| BIT_WRITE_PARTIAL     | Allow other valid operations to be committed if this operations is denied due to flag constraints.               |
-		+-----------------------+------------------------------------------------------------------------------------------------------------------+
+        * **bit_write_flags** 
+            | Write flags for the bit operation. 
+            | One of the :ref:`aerospike_bitwise_write_flag` values such as :data:`aerospike.BIT_WRITE_DEFAULT`
+            | 
+            | Default: :data:`aerospike.BIT_WRITE_DEFAULT`
 
-    See: :ref:`aerospike_bit_policies` for details about each value.
     Example:
 
     .. code-block:: python
