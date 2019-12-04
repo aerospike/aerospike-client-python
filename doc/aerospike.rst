@@ -1875,7 +1875,7 @@ Flags used by map write flag
 .. _aerospike_map_write_mode:
 
 Map Write Mode
-==============
+--------------
 
 Flags used by map *write mode*
 
