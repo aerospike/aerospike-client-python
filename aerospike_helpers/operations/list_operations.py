@@ -37,8 +37,8 @@ def list_append(bin_name, value, policy=None, ctx=None):
     Args:
         bin_name (str): The name of the bin to be operated on.
         value: The value to be appended to the end of the list.
-        policy (dict): An optional dictionary of list write options.
-        ctx (list): An optional object for nested CDT operations.
+        policy (dict): An optional dictionary of :ref:`list write options <aerospike_list_policies>`.
+        ctx (list): An optional list of nested CDT context operations (:mod:`cdt_cdx <aerospike_helpers.cdt_ctx>` object) for use on nested CDTs.
     Returns:
         A dictionary usable in operate or operate_ordered. The format of the dictionary
         should be considered an internal detail, and subject to change.
@@ -67,8 +67,8 @@ def list_append_items(bin_name, values, policy=None, ctx=None):
     Args:
         bin_name (str): The name of the bin to be operated on.
         values: (list): A sequence of items to be appended to the end of the list.
-        policy (dict): An optional dictionary of list write options.
-        ctx (list, optional): An optional list of nested CDT context objects (cdt_ctx) for use on nested CDTs.
+        policy (dict): An optional dictionary of :ref:`list write options <aerospike_list_policies>`.
+        ctx (list): An optional list of nested CDT context operations (:mod:`cdt_cdx <aerospike_helpers.cdt_ctx>` object) for use on nested CDTs.
     Returns:
         A dictionary usable in operate or operate_ordered. The format of the dictionary
         should be considered an internal detail, and subject to change.
@@ -98,8 +98,8 @@ def list_insert(bin_name, index, value, policy=None, ctx=None):
         index (int): The index at which to insert an item. The value may be positive to use
             zero based indexing or negative to index from the end of the list.
         value: The value to be inserted into the list.
-        policy (dict): An optional dictionary of list write options.
-        ctx (list, optional): An optional list of nested CDT context operations (cdt_ctx object) for use on nested CDTs.
+        policy (dict): An optional dictionary of :ref:`list write options <aerospike_list_policies>`.
+        ctx (list): An optional list of nested CDT context operations (:mod:`cdt_cdx <aerospike_helpers.cdt_ctx>` object) for use on nested CDTs.
     Returns:
         A dictionary usable in operate or operate_ordered. The format of the dictionary
         should be considered an internal detail, and subject to change.
@@ -130,8 +130,8 @@ def list_insert_items(bin_name, index, values, policy=None, ctx=None):
         index (int): The index at which to insert the items. The value may be positive to use
             zero based indexing or negative to index from the end of the list.
         values (list): The values to be inserted into the list.
-        policy (dict): An optional dictionary of list write options.
-        ctx (list, optional): An optional list of nested CDT context operations (cdt_ctx object) for use on nested CDTs.
+        policy (dict): An optional dictionary of :ref:`list write options <aerospike_list_policies>`.
+        ctx (list): An optional list of nested CDT context operations (:mod:`cdt_cdx <aerospike_helpers.cdt_ctx>` object) for use on nested CDTs.
     Returns:
         A dictionary usable in operate or operate_ordered. The format of the dictionary
         should be considered an internal detail, and subject to change.
@@ -161,8 +161,8 @@ def list_increment(bin_name, index, value, policy=None, ctx=None):
         bin_name (str): The name of the bin to be operated on.
         index (int): The index of the list item to increment.
         value (int, float) : The value to be added to the list item.
-        policy (dict): An optional dictionary of list write options.
-        ctx (list, optional): An optional list of nested CDT context operations (cdt_ctx object) for use on nested CDTs.
+        policy (dict): An optional dictionary of :ref:`list write options <aerospike_list_policies>`.
+        ctx (list): An optional list of nested CDT context operations (:mod:`cdt_cdx <aerospike_helpers.cdt_ctx>` object) for use on nested CDTs.
     Returns:
         A dictionary usable in operate or operate_ordered. The format of the dictionary
         should be considered an internal detail, and subject to change.
@@ -192,7 +192,7 @@ def list_pop(bin_name, index, ctx=None):
     Args:
         bin_name (str): The name of the bin to be operated on.
         index (int): The index of the item to be removed.
-        ctx (list, optional): An optional list of nested CDT context operations (cdt_ctx object) for use on nested CDTs.
+        ctx (list): An optional list of nested CDT context operations (:mod:`cdt_cdx <aerospike_helpers.cdt_ctx>` object) for use on nested CDTs.
     Returns:
         A dictionary usable in operate or operate_ordered. The format of the dictionary
         should be considered an internal detail, and subject to change.
@@ -220,7 +220,7 @@ def list_pop_range(bin_name, index, count, ctx=None):
         index (int): The index of the first item to be removed.
         count (int): A positive number indicating how many items, including the first,
         to be removed and returned
-        ctx (list, optional): An optional list of nested CDT context operations (cdt_ctx object) for use on nested CDTs.
+        ctx (list): An optional list of nested CDT context operations (:mod:`cdt_cdx <aerospike_helpers.cdt_ctx>` object) for use on nested CDTs.
     Returns:
         A dictionary usable in operate or operate_ordered. The format of the dictionary
         should be considered an internal detail, and subject to change.
@@ -246,7 +246,7 @@ def list_remove(bin_name, index, ctx=None):
     Args:
         bin_name (str): The name of the bin containing the item to be removed.
         index (int): The index at which to remove the item.
-        ctx (list, optional): An optional list of nested CDT context operations (cdt_ctx object) for use on nested CDTs.
+        ctx (list): An optional list of nested CDT context operations (:mod:`cdt_cdx <aerospike_helpers.cdt_ctx>` object) for use on nested CDTs.
     Returns:
         A dictionary usable in operate or operate_ordered. The format of the dictionary
         should be considered an internal detail, and subject to change.
@@ -273,7 +273,7 @@ def list_remove_range(bin_name, index, count, ctx=None):
         bin_name (str): The name of the bin containing the items to be removed.
         index (int): The index of the first item to remove.
         count (int): A positive number representing the number of items to be removed.
-        ctx (list, optional): An optional list of nested CDT context operations (cdt_ctx object) for use on nested CDTs.
+        ctx (list): An optional list of nested CDT context operations (:mod:`cdt_cdx <aerospike_helpers.cdt_ctx>` object) for use on nested CDTs.
     Returns:
         A dictionary usable in operate or operate_ordered. The format of the dictionary
         should be considered an internal detail, and subject to change.
@@ -298,7 +298,7 @@ def list_clear(bin_name, ctx=None):
 
     Args:
         bin_name (str): The name of the bin containing the list to be cleared
-        ctx (list, optional): An optional list of nested CDT context operations (cdt_ctx object) for use on nested CDTs.
+        ctx (list): An optional list of nested CDT context operations (:mod:`cdt_cdx <aerospike_helpers.cdt_ctx>` object) for use on nested CDTs.
 
     Returns:
         A dictionary usable in operate or operate_ordered. The format of the dictionary
@@ -324,8 +324,8 @@ def list_set(bin_name, index, value, policy=None, ctx=None):
         bin_name (str): The name of the bin containing the list to be operated on.
         index (int): The index of the item to be set.
         value: The value to be assigned to the list item.
-        policy (dict): An optional dictionary of list write options.
-        ctx (list, optional): An optional list of nested CDT context operations (cdt_ctx object) for use on nested CDTs.
+        policy (dict): An optional dictionary of :ref:`list write options <aerospike_list_policies>`.
+        ctx (list): An optional list of nested CDT context operations (:mod:`cdt_cdx <aerospike_helpers.cdt_ctx>` object) for use on nested CDTs.
 
     Returns:
         A dictionary usable in operate or operate_ordered. The format of the dictionary
@@ -354,7 +354,7 @@ def list_get(bin_name, index, ctx=None):
     Args:
         bin_name (str): The name of the bin containing the list to fetch items from.
         index (int): The index of the item to be returned.
-        ctx (list, optional): An optional list of nested CDT context operations (cdt_ctx object) for use on nested CDTs.
+        ctx (list): An optional list of nested CDT context operations (:mod:`cdt_cdx <aerospike_helpers.cdt_ctx>` object) for use on nested CDTs.
 
     Returns:
         A dictionary usable in operate or operate_ordered. The format of the dictionary
@@ -381,7 +381,7 @@ def list_get_range(bin_name, index, count, ctx=None):
         bin_name (str): The name of the bin containing the list to fetch items from.
         index (int): The index of the item to be returned.
         count (int): A positive number of items to be returned.
-        ctx (list, optional): An optional list of nested CDT context operations (cdt_ctx object) for use on nested CDTs.
+        ctx (list): An optional list of nested CDT context operations (:mod:`cdt_cdx <aerospike_helpers.cdt_ctx>` object) for use on nested CDTs.
 
     Returns:
         A dictionary usable in operate or operate_ordered. The format of the dictionary
@@ -409,7 +409,7 @@ def list_trim(bin_name, index, count, ctx=None):
         bin_name (str): The name of the bin containing the list to be trimmed.
         index (int): The index of the items to be kept.
         count (int): A positive number of items to be kept.
-        ctx (list, optional): An optional list of nested CDT context operations (cdt_ctx object) for use on nested CDTs.
+        ctx (list): An optional list of nested CDT context operations (:mod:`cdt_cdx <aerospike_helpers.cdt_ctx>` object) for use on nested CDTs.
 
     Returns:
         A dictionary usable in operate or operate_ordered. The format of the dictionary
@@ -435,7 +435,7 @@ def list_size(bin_name, ctx=None):
 
     Args:
         bin_name (str): The name of the bin containing the list.
-        ctx (list, optional): An optional list of nested CDT context operations (cdt_ctx object) for use on nested CDTs.
+        ctx (list): An optional list of nested CDT context operations (:mod:`cdt_cdx <aerospike_helpers.cdt_ctx>` object) for use on nested CDTs.
 
     Returns:
         A dictionary usable in operate or operate_ordered. The format of the dictionary
@@ -464,8 +464,8 @@ def list_get_by_index(bin_name, index, return_type, ctx=None):
         bin_name (str): The name of the bin containing the list to fetch items from.
         index (int): The index of the item to be returned.
         return_type (int): Value specifying what should be returned from the operation.
-            This should be one of the aerospike.LIST_RETURN_* values
-        ctx (list, optional): An optional list of nested CDT context operations (cdt_ctx object) for use on nested CDTs.
+            This should be one of the :ref:`list_return_types` values
+        ctx (list): An optional list of nested CDT context operations (:mod:`cdt_cdx <aerospike_helpers.cdt_ctx>` object) for use on nested CDTs.
 
     Returns:
         A dictionary usable in operate or operate_ordered. The format of the dictionary
@@ -495,11 +495,11 @@ def list_get_by_index_range(bin_name, index, return_type, count=None, inverted=F
         index (int): The index of the first item to be returned.
         count (int): The number of list items to be selected.
         return_type (int): Value specifying what should be returned from the operation.
-            This should be one of the aerospike.LIST_RETURN_* values.
+            This should be one of the :ref:`list_return_types` values.
         inverted (bool): Optional bool specifying whether to invert the return type.
-            If set to true, all items outside of the specified range will be returned.
+            If set to `True`, all items outside of the specified range will be returned.
             Default: `False`
-        ctx (list, optional): An optional list of nested CDT context operations (cdt_ctx object) for use on nested CDTs.
+        ctx (list): An optional list of nested CDT context operations (:mod:`cdt_cdx <aerospike_helpers.cdt_ctx>` object) for use on nested CDTs.
 
     Returns:
         A dictionary usable in operate or operate_ordered. The format of the dictionary
@@ -532,8 +532,8 @@ def list_get_by_rank(bin_name, rank, return_type, ctx=None):
         bin_name (str): The name of the bin containing the list to fetch a value from.
         rank (int): The rank of the item to be fetched.
         return_type (int): Value specifying what should be returned from the operation.
-            This should be one of the aerospike.LIST_RETURN_* values
-        ctx (list, optional): An optional list of nested CDT context operations (cdt_ctx object) for use on nested CDTs.
+            This should be one of the :ref:`list_return_types` values
+        ctx (list): An optional list of nested CDT context operations (:mod:`cdt_cdx <aerospike_helpers.cdt_ctx>` object) for use on nested CDTs.
 
     Returns:
         A dictionary usable in operate or operate_ordered. The format of the dictionary
@@ -563,10 +563,10 @@ def list_get_by_rank_range(bin_name, rank, return_type, count=None, inverted=Fal
         rank (int): The rank of the first items to be returned.
         count (int): A positive number indicating number of items to be returned.
         return_type (int): Value specifying what should be returned from the operation.
-        ctx (list, optional): An optional list of nested CDT context operations (cdt_ctx object) for use on nested CDTs.
-            This should be one of the aerospike.LIST_RETURN_* values
+        ctx (list): An optional list of nested CDT context operations (:mod:`cdt_cdx <aerospike_helpers.cdt_ctx>` object) for use on nested CDTs.
+            This should be one of the :ref:`list_return_types` values
         inverted (bool): Optional bool specifying whether to invert the return type.
-            If set to true, all items outside of the specified rank range will be returned.
+            If set to `True`, all items outside of the specified rank range will be returned.
             Default: `False`
 
     Returns:
@@ -600,10 +600,10 @@ def list_get_by_value(bin_name, value, return_type, inverted=False, ctx=None):
         bin_name (str): The name of the bin containing the list to fetch items from.
         value: The server returns all items matching this value
         return_type (int): Value specifying what should be returned from the operation.
-            This should be one of the aerospike.LIST_RETURN_* values
+            This should be one of the :ref:`list_return_types` values
         inverted (bool): Optional bool specifying whether to invert the return type.
-            If set to true, all items not equal to `value` will be selected. Default: `False`
-        ctx (list, optional): An optional list of nested CDT context operations (cdt_ctx object) for use on nested CDTs.
+            If set to `True`, all items not equal to `value` will be selected. Default: `False`
+        ctx (list): An optional list of nested CDT context operations (:mod:`cdt_cdx <aerospike_helpers.cdt_ctx>` object) for use on nested CDTs.
     Returns:
         A dictionary usable in operate or operate_ordered.The format of the dictionary
         should be considered an internal detail, and subject to change.
@@ -632,11 +632,11 @@ def list_get_by_value_list(bin_name, value_list, return_type, inverted=False, ct
         bin_name (str): The name of the bin containing the list to fetch items from.
         value_list (list): Return items from the list matching an item in this list.
         return_type (int): Value specifying what should be returned from the operation.
-            This should be one of the aerospike.LIST_RETURN_* values
+            This should be one of the :ref:`list_return_types` values
         inverted (bool): Optional bool specifying whether to invert the return type.
             If set to `True`, all items not matching an entry in `value_list` will be selected.
             Default: `False`
-        ctx (list, optional): An optional list of nested CDT context operations (cdt_ctx object) for use on nested CDTs.
+        ctx (list): An optional list of nested CDT context operations (:mod:`cdt_cdx <aerospike_helpers.cdt_ctx>` object) for use on nested CDTs.
     Returns:
         A dictionary usable in operate or operate_ordered.The format of the dictionary
         should be considered an internal detail, and subject to change.
@@ -666,11 +666,11 @@ def list_get_by_value_range(bin_name, return_type, value_begin, value_end, inver
         value_begin: The start of the value range.
         value_end: The end of the value range.
         return_type (int): Value specifying what should be returned from the operation.
-            This should be one of the aerospike.LIST_RETURN_* values
+            This should be one of the :ref:`list_return_types` values
         inverted (bool): Optional bool specifying whether to invert the return type.
             If set to `True`, all items not included in the specified range will be returned.
             Default: `False`
-        ctx (list, optional): An optional list of nested CDT context operations (cdt_ctx object) for use on nested CDTs.
+        ctx (list): An optional list of nested CDT context operations (:mod:`cdt_cdx <aerospike_helpers.cdt_ctx>` object) for use on nested CDTs.
     Returns:
         A dictionary usable in operate or operate_ordered.The format of the dictionary
         should be considered an internal detail, and subject to change.
@@ -704,8 +704,8 @@ def list_remove_by_index(bin_name, index, return_type, ctx=None):
         bin_name (str): The name of the bin containing the list to remove an item from.
         index (int): The index of the item to be removed.
         return_type (int): Value specifying what should be returned from the operation.
-            This should be one of the aerospike.LIST_RETURN_* values
-        ctx (list, optional): An optional list of nested CDT context operations (cdt_ctx object) for use on nested CDTs.
+            This should be one of the :ref:`list_return_types` values
+        ctx (list): An optional list of nested CDT context operations (:mod:`cdt_cdx <aerospike_helpers.cdt_ctx>` object) for use on nested CDTs.
 
     Returns:
         A dictionary usable in operate or operate_ordered. The format of the dictionary
@@ -735,11 +735,11 @@ def list_remove_by_index_range(bin_name, index, return_type, count=None, inverte
         index (int): The index of the first item to be removed.
         count (int): The number of items to be removed
         return_type (int): Value specifying what should be returned from the operation.
-            This should be one of the aerospike.LIST_RETURN_* values.
+            This should be one of the :ref:`list_return_types` values.
         inverted (bool): Optional bool specifying whether to invert the operation.
-            If set to true, all items outside of the specified range will be removed.
+            If set to `True`, all items outside of the specified range will be removed.
             Default: `False`
-        ctx (list, optional): An optional list of nested CDT context operations (cdt_ctx object) for use on nested CDTs.
+        ctx (list): An optional list of nested CDT context operations (:mod:`cdt_cdx <aerospike_helpers.cdt_ctx>` object) for use on nested CDTs.
 
     Returns:
         A dictionary usable in operate or operate_ordered. The format of the dictionary
@@ -772,8 +772,8 @@ def list_remove_by_rank(bin_name, rank, return_type, ctx=None):
         bin_name (str): The name of the bin containing the list to fetch a value from.
         rank (int): The rank of the item to be removed.
         return_type (int): Value specifying what should be returned from the operation.
-            This should be one of the aerospike.LIST_RETURN_* values
-        ctx (list, optional): An optional list of nested CDT context operations (cdt_ctx object) for use on nested CDTs.
+            This should be one of the :ref:`list_return_types` values
+        ctx (list): An optional list of nested CDT context operations (:mod:`cdt_cdx <aerospike_helpers.cdt_ctx>` object) for use on nested CDTs.
 
     Returns:
         A dictionary usable in operate or operate_ordered. The format of the dictionary
@@ -803,11 +803,11 @@ def list_remove_by_rank_range(bin_name, rank, return_type, count=None, inverted=
         rank (int): The rank of the first item to removed.
         count (int): A positive number indicating number of items to be removed.
         return_type (int): Value specifying what should be returned from the operation.
-            This should be one of the aerospike.LIST_RETURN_* values
+            This should be one of the :ref:`list_return_types` values
         inverted (bool): Optional bool specifying whether to invert the operation.
-            If set to true, all items outside of the specified rank range will be removed.
+            If set to `True`, all items outside of the specified rank range will be removed.
             Default: `False`
-        ctx (list, optional): An optional list of nested CDT context operations (cdt_ctx object) for use on nested CDTs.
+        ctx (list): An optional list of nested CDT context operations (:mod:`cdt_cdx <aerospike_helpers.cdt_ctx>` object) for use on nested CDTs.
 
     Returns:
         A dictionary usable in operate or operate_ordered. The format of the dictionary
@@ -840,11 +840,11 @@ def list_remove_by_value(bin_name, value, return_type, inverted=False, ctx=None)
         bin_name (str): The name of the bin containing the list to remove items from.
         value: The server removes all list items matching this value.
         return_type (int): Value specifying what should be returned from the operation.
-            This should be one of the aerospike.LIST_RETURN_* values
+            This should be one of the :ref:`list_return_types` values
         inverted (bool): Optional bool specifying whether to invert the operation.
-            If set to true, all items not equal to `value` will be removed.
+            If set to `True`, all items not equal to `value` will be removed.
             Default: `False`
-        ctx (list, optional): An optional list of nested CDT context operations (cdt_ctx object) for use on nested CDTs.
+        ctx (list): An optional list of nested CDT context operations (:mod:`cdt_cdx <aerospike_helpers.cdt_ctx>` object) for use on nested CDTs.
     Returns:
         A dictionary usable in operate or operate_ordered.The format of the dictionary
         should be considered an internal detail, and subject to change.
@@ -873,12 +873,11 @@ def list_remove_by_value_list(bin_name, value_list, return_type, inverted=False,
         bin_name (str): The name of the bin containing the list to remove items from.
         value_list (list): The server removes all list items matching one of these values.
         return_type (int): Value specifying what should be returned from the operation.
-            This should be one of the aerospike.LIST_RETURN_* values
+            This should be one of the :ref:`list_return_types` values
         inverted (bool): Optional bool specifying whether to invert the operation.
-            If set to true, all items not equal to a value contained in
-            `value_list` will be removed.
+            If set to `True`, all items not equal to a value contained in `value_list` will be removed.
             Default: `False`
-        ctx (list, optional): An optional list of nested CDT context operations (cdt_ctx object) for use on nested CDTs.
+        ctx (list): An optional list of nested CDT context operations (:mod:`cdt_cdx <aerospike_helpers.cdt_ctx>` object) for use on nested CDTs.
     Returns:
         A dictionary usable in operate or operate_ordered.The format of the dictionary
         should be considered an internal detail, and subject to change.
@@ -909,11 +908,11 @@ def list_remove_by_value_range(bin_name, return_type, value_begin=None,
         value_begin: The start of the value range.
         value_end: The end of the value range.
         return_type (int): Value specifying what should be returned from the operation.
-            This should be one of the aerospike.LIST_RETURN_* values
+            This should be one of the :ref:`list_return_types` values
         inverted (bool): Optional bool specifying whether to invert the operation.
             If set to `True`, all items not included in the specified range will be removed.
             Default: `False`
-        ctx (list, optional): An optional list of nested CDT context operations (cdt_ctx object) for use on nested CDTs.
+        ctx (list): An optional list of nested CDT context operations (:mod:`cdt_cdx <aerospike_helpers.cdt_ctx>` object) for use on nested CDTs.
     Returns:
         A dictionary usable in operate or operate_ordered.The format of the dictionary
         should be considered an internal detail, and subject to change.
@@ -946,7 +945,7 @@ def list_set_order(bin_name, list_order, ctx=None):
         bin_name (str): The name of the list bin.
         list_order: The ordering to apply to the list. Should be aerospike.LIST_ORDERED or
             aerospike.LIST_UNORDERED .
-        ctx (list, optional): An optional list of nested CDT context operations (cdt_ctx object) for use on nested CDTs.
+        ctx (list): An optional list of nested CDT context operations (:mod:`cdt_cdx <aerospike_helpers.cdt_ctx>` object) for use on nested CDTs.
     Returns:
         A dictionary usable in operate or operate_ordered.The format of the dictionary
         should be considered an internal detail, and subject to change.
@@ -972,7 +971,7 @@ def list_sort(bin_name, sort_flags=aerospike.LIST_SORT_DEFAULT, ctx=None):
         bin_name (str): The name of the bin to sort.
         sort_flags: Optional. A list of flags bitwise or'd together.
             Available flags are currently `aerospike.LIST_SORT_DROP_DUPLICATES`
-        ctx (list, optional): An optional list of nested CDT context operations (cdt_ctx object) for use on nested CDTs.
+        ctx (list): An optional list of nested CDT context operations (:mod:`cdt_cdx <aerospike_helpers.cdt_ctx>` object) for use on nested CDTs.
     Returns:
         A dictionary usable in operate or operate_ordered.The format of the dictionary
         should be considered an internal detail, and subject to change.
@@ -1024,7 +1023,7 @@ def list_get_by_value_rank_range_relative(bin_name, value, offset, return_type, 
             all items until end of list are returned.
         inverted (bool): If True, the operation is inverted, and items outside
             of the specified range are returned.
-        ctx (list, optional): An optional list of nested CDT context operations (cdt_ctx object) for use on nested CDTs.
+        ctx (list): An optional list of nested CDT context operations (:mod:`cdt_cdx <aerospike_helpers.cdt_ctx>` object) for use on nested CDTs.
 
     Returns:
         A dictionary usable in operate or operate_ordered.The format of the dictionary
@@ -1081,7 +1080,7 @@ def list_remove_by_value_rank_range_relative(bin_name, value, offset, return_typ
             all items until end of list are returned.
         inverted (bool): If True, the operation is inverted, and items outside of the specified
             range are removed and returned.
-        ctx (list, optional): An optional list of nested CDT context operations (cdt_ctx object) for use on nested CDTs.
+        ctx (list): An optional list of nested CDT context operations (:mod:`cdt_cdx <aerospike_helpers.cdt_ctx>` object) for use on nested CDTs.
 
     Returns:
         A dictionary usable in operate or operate_ordered.The format of the dictionary

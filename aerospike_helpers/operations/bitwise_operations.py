@@ -17,7 +17,6 @@ Example::
     from __future__ import print_function
     import aerospike
     from aerospike import exception as ex
-    from aerospike_helpers import cdt_ctx
     from aerospike_helpers.operations import bitwise_operations
     import sys
 
@@ -185,10 +184,11 @@ def bit_resize(bin_name, byte_size, policy=None, resize_flags=aerospike.BIT_RESI
     Args:
         bin_name (str): The name of the bin containing the map.
         byte_size (int): The new size of the bytes.
-        policy (dict, optional): The bit_policy policy dictionary. See: See :ref:`aerospike_bit_policies`. default: None
+        policy (dict, optional): The :ref:`bit_policy policy <aerospike_bit_policies>` dictionary. default: None.
         resize_flags (int, optional): Flags modifying the behavior of the resize.
-            This should be constructed by bitwise or'ing together any of the values: `aerospike.BIT_RESIZE_DEFAULT`, `aerospike.BIT_RESIZE_FROM_FRONT`
-            `aerospike.BIT_RESIZE_GROW_ONLY`, `aerospike.BIT_RESIZE_SHRINK_ONLY` . e.g. `aerospike.BIT_RESIZE_GROW_ONLY | aerospike.BIT_RESIZE_FROM_FRONT`
+            This should be constructed by bitwise or'ing together any of the values: :ref:`aerospike_bitwise_resize_flag` . 
+            e.g. `aerospike.BIT_RESIZE_GROW_ONLY | aerospike.BIT_RESIZE_FROM_FRONT`
+            default: :data:`aerospike.BIT_RESIZE_DEFAULT`
 
     Returns:
         A dictionary usable in operate or operate_ordered. The format of the dictionary
@@ -212,7 +212,7 @@ def bit_remove(bin_name, byte_offset, byte_size, policy=None):
         bin_name (str): The name of the bin containing the map.
         byte_offset (int): Position of bytes to be removed.
         byte_size (int): How many bytes to remove.
-        policy (dict, optional): The bit_policy policy dictionary. See: See :ref:`aerospike_bit_policies`. default: None
+        policy (dict, optional): The :ref:`bit_policy policy <aerospike_bit_policies>` dictionary. default: None.
 
     Returns:
         A dictionary usable in operate or operate_ordered. The format of the dictionary
@@ -238,7 +238,7 @@ def bit_set(bin_name, bit_offset, bit_size, value_byte_size, value, policy=None)
         bit_size (int): How many bits of value to write.
         value_byte_size (int): Size of value in bytes.
         value (bytes/byte array): The value to be set.
-        policy (dict, optional): The bit_policy policy dictionary. See: See :ref:`aerospike_bit_policies`. default: None
+        policy (dict, optional): The :ref:`bit_policy policy <aerospike_bit_policies>` dictionary. default: None.
 
     Returns:
         A dictionary usable in operate or operate_ordered. The format of the dictionary
@@ -291,7 +291,7 @@ def bit_add(bin_name, bit_offset, bit_size, value, sign, action, policy=None):
         value (int): The value to be added.
         sign (bool): True: treat value as signed, False: treat value as unsigned.
         action (aerospike.constant): Action taken if an overflow/underflow occurs.
-        policy (dict, optional): The bit_policy policy dictionary. See: See :ref:`aerospike_bit_policies`. default: None
+        policy (dict, optional): The :ref:`bit_policy policy <aerospike_bit_policies>` dictionary. default: None.
 
     Returns:
         A dictionary usable in operate or operate_ordered. The format of the dictionary
@@ -321,7 +321,7 @@ def bit_and(bin_name, bit_offset, bit_size, value_byte_size, value, policy=None)
         bit_size (int): How many bits of value to and.
         value_byte_size (int): Length of value in bytes.
         value (bytes/byte array): Bytes to be used in and operation.
-        policy (dict, optional): The bit_policy policy dictionary. See: See :ref:`aerospike_bit_policies`. default: None
+        policy (dict, optional): The :ref:`bit_policy policy <aerospike_bit_policies>` dictionary. default: None.
 
     Returns:
         A dictionary usable in operate or operate_ordered. The format of the dictionary
@@ -396,7 +396,7 @@ def bit_insert(bin_name, byte_offset, value_byte_size, value, policy=None):
         byte_offset (int): The offset where the bytes will be inserted.
         value_byte_size (int): Size of value in bytes.
         value (bytes/byte array) The value to be inserted.
-        policy (dict, optional): The bit_policy policy dictionary. See: See :ref:`aerospike_bit_policies`. default: None
+        policy (dict, optional): The :ref:`bit_policy policy <aerospike_bit_policies>` dictionary. default: None.
 
 
     Returns:
@@ -450,7 +450,7 @@ def bit_lshift(bin_name, bit_offset, bit_size, shift, policy=None):
         bit_offset (int): The offset where the bits will start being shifted.
         bit_size (int): The number of bits that will be shifted by shift places.
         shift (int): How many bits to shift by.
-        policy (dict, optional): The bit_policy policy dictionary. See: See :ref:`aerospike_bit_policies`. default: None
+        policy (dict, optional): The :ref:`bit_policy policy <aerospike_bit_policies>` dictionary. default: None.
 
     Returns:
         A dictionary usable in operate or operate_ordered. The format of the dictionary
@@ -476,7 +476,7 @@ def bit_not(bin_name, bit_offset, bit_size, policy=None):
         bin_name (str): The name of the bin containing the map.
         bit_offset (int): The offset where the bits will start being scanned.
         bit_size (int): How many bits to scan.
-        policy (dict, optional): The bit_policy policy dictionary. See: See :ref:`aerospike_bit_policies`. default: None
+        policy (dict, optional): The :ref:`bit_policy policy <aerospike_bit_policies>` dictionary. default: None.
 
     Returns:
         A dictionary usable in operate or operate_ordered. The format of the dictionary
@@ -503,7 +503,7 @@ def bit_or(bin_name, bit_offset, bit_size, value_byte_size, value, policy=None):
         bit_size (int): How many bits of value to or.
         value_byte_size (int): Length of value in bytes.
         value (bytes/byte array): Value to be used in or operation.
-        policy (dict, optional): The bit_policy policy dictionary. See: See :ref:`aerospike_bit_policies`. default: None
+        policy (dict, optional): The :ref:`bit_policy policy <aerospike_bit_policies>` dictionary. default: None.
 
     Returns:
         A dictionary usable in operate or operate_ordered. The format of the dictionary
@@ -557,7 +557,7 @@ def bit_rshift(bin_name, bit_offset, bit_size, shift, policy=None):
         bit_offset (int): The offset where the bits will start being shifted.
         bit_size (int): The number of bits that will be shifted by shift places.
         shift (int): How many bits to shift by.
-        policy (dict, optional): The bit_policy policy dictionary. See: See :ref:`aerospike_bit_policies`. default: None
+        policy (dict, optional): The :ref:`bit_policy policy <aerospike_bit_policies>` dictionary. default: None.
 
     Returns:
         A dictionary usable in operate or operate_ordered. The format of the dictionary
@@ -587,7 +587,7 @@ def bit_subtract(bin_name, bit_offset, bit_size, value, sign, action, policy=Non
         value (int): The value to be subtracted.
         sign (bool): True: treat value as signed, False: treat value as unsigned.
         action (aerospike.constant): Action taken if an overflow/underflow occurs.
-        policy (dict, optional): The bit_policy policy dictionary. See: See :ref:`aerospike_bit_policies`. default: None
+        policy (dict, optional): The :ref:`bit_policy policy <aerospike_bit_policies>` dictionary. default: None.
 
     Returns:
         A dictionary usable in operate or operate_ordered. The format of the dictionary
@@ -617,7 +617,7 @@ def bit_xor(bin_name, bit_offset, bit_size, value_byte_size, value, policy=None)
         bit_size (int): How many bits of value to xor.
         value_byte_size (int): Length of value in bytes.
         value (bytes/byte array): Value to be used in xor operation.
-        policy (dict, optional): The bit_policy policy dictionary. See: See :ref:`aerospike_bit_policies`. default: None
+        policy (dict, optional): The :ref:`bit_policy policy <aerospike_bit_policies>` dictionary. default: None.
 
     Returns:
         A dictionary usable in operate or operate_ordered. The format of the dictionary

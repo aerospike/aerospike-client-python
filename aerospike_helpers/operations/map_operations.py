@@ -31,8 +31,8 @@ def map_set_policy(bin_name, policy, ctx=None):
 
     Args:
         bin_name (str): The name of the bin containing the map.
-        policy (dict): The map policy dictionary. See: See :ref:`aerospike_map_policies`
-        ctx (list, optional): An optional list of nested CDT context operations (cdt_ctx object) for use on nested CDTs.
+        policy (dict): The :ref:`map_policy dictionary <aerospike_map_policies>`.
+        ctx (list): An optional list of nested CDT context operations (:mod:`cdt_cdx <aerospike_helpers.cdt_ctx>` object) for use on nested CDTs.
     Returns:
         A dictionary usable in operate or operate_ordered. The format of the dictionary
         should be considered an internal detail, and subject to change.
@@ -58,9 +58,9 @@ def map_put(bin_name, key, value, map_policy=None, ctx=None):
         bin_name (str): The name of the bin containing the map.
         key: The key for the map.
         value: The item to store in the map with the corresponding key.
-        map_policy (list, optional):  Optional map_policy dictionary dictates the type of map to create when it does not exist.
-            The map policy also specifies the mode used when writing items to the map. Defaults to `None`. See :ref:`aerospike_map_policies`
-        ctx (list, optional): An optional list of nested CDT context operations (cdt_ctx object) for use on nested CDTs.
+        map_policy (list, optional):  Optional :ref:`map_policy dictionary <aerospike_map_policies>` dictates the type of map to create when it does not exist.
+            The map policy also specifies the mode used when writing items to the map. Defaults to `None`.
+        ctx (list): An optional list of nested CDT context operations (:mod:`cdt_cdx <aerospike_helpers.cdt_ctx>` object) for use on nested CDTs.
     Returns:
         A dictionary usable in operate or operate_ordered. The format of the dictionary
         should be considered an internal detail, and subject to change.
@@ -89,9 +89,9 @@ def map_put_items(bin_name, item_dict, map_policy=None, ctx=None):
     Args:
         bin_name (str): The name of the bin containing the map.
         item_dict (dict): A dictionary of key value pairs to be added to the map on the server.
-        map_policy (list, optional):  Optional map_policy dictionary dictates the type of map to create when it does not exist.
-            The map policy also specifies the mode used when writing items to the map. Defaults to `None`. See :ref:`aerospike_map_policies`
-        ctx (list, optional): An optional list of nested CDT context operations (cdt_ctx object) for use on nested CDTs.
+        map_policy (list, optional):  Optional :ref:`map_policy dictionary <aerospike_map_policies>` dictates the type of map to create when it does not exist.
+            The map policy also specifies the mode used when writing items to the map. Defaults to `None`.
+        ctx (list): An optional list of nested CDT context operations (:mod:`cdt_cdx <aerospike_helpers.cdt_ctx>` object) for use on nested CDTs.
     Returns:
         A dictionary usable in operate or operate_ordered. The format of the dictionary
         should be considered an internal detail, and subject to change.
@@ -119,9 +119,9 @@ def map_increment(bin_name, key, amount, map_policy=None, ctx=None):
         bin_name (str): The name of the bin containing the map.
         key: The key for the value to be incremented.
         amount: The amount by which to increment the value stored in map[key]
-        map_policy (list, optional):  Optional map_policy dictionary dictates the type of map to create when it does not exist.
-            The map policy also specifies the mode used when writing items to the map. Defaults to `None`. See See :ref:`aerospike_map_policies`
-        ctx (list, optional): An optional list of nested CDT context operations (cdt_ctx object) for use on nested CDTs.
+        map_policy (list, optional):  Optional :ref:`map_policy dictionary <aerospike_map_policies>` dictates the type of map to create when it does not exist.
+            The map policy also specifies the mode used when writing items to the map. Defaults to `None`.
+        ctx (list): An optional list of nested CDT context operations (:mod:`cdt_cdx <aerospike_helpers.cdt_ctx>` object) for use on nested CDTs.
     Returns:
         A dictionary usable in operate or operate_ordered. The format of the dictionary
         should be considered an internal detail, and subject to change.
@@ -151,9 +151,9 @@ def map_decrement(bin_name, key, amount, map_policy=None, ctx=None):
         bin_name (str): The name of the bin containing the map.
         key: The key for the value to be decremented.
         amount: The amount by which to decrement the value stored in map[key]
-        map_policy (list, optional):  Optional map_policy dictionary dictates the type of map to create when it does not exist.
-            The map policy also specifies the mode used when writing items to the map. Defaults to `None`. See See :ref:`aerospike_map_policies`
-        ctx (list, optional): An optional list of nested CDT context operations (cdt_ctx object) for use on nested CDTs.
+        map_policy (list, optional):  Optional :ref:`map_policy dictionary <aerospike_map_policies>` dictates the type of map to create when it does not exist.
+            The map policy also specifies the mode used when writing items to the map. Defaults to `None`.
+        ctx (list): An optional list of nested CDT context operations (:mod:`cdt_cdx <aerospike_helpers.cdt_ctx>` object) for use on nested CDTs.
     Returns:
         A dictionary usable in operate or operate_ordered. The format of the dictionary
         should be considered an internal detail, and subject to change.
@@ -180,7 +180,7 @@ def map_size(bin_name, ctx=None):
 
     Args:
         bin_name (str): The name of the bin containing the map.
-        ctx (list, optional): An optional list of nested CDT context operations (cdt_ctx object) for use on nested CDTs.
+        ctx (list): An optional list of nested CDT context operations (:mod:`cdt_cdx <aerospike_helpers.cdt_ctx>` object) for use on nested CDTs.
     Returns:
         A dictionary usable in operate or operate_ordered. The format of the dictionary
         should be considered an internal detail, and subject to change.
@@ -203,7 +203,7 @@ def map_clear(bin_name, ctx=None):
 
     Args:
         bin_name (str): The name of the bin containing the map.
-        ctx (list, optional): An optional list of nested CDT context operations (cdt_ctx object) for use on nested CDTs.
+        ctx (list): An optional list of nested CDT context operations (:mod:`cdt_cdx <aerospike_helpers.cdt_ctx>` object) for use on nested CDTs.
     Returns:
         A dictionary usable in operate or operate_ordered. The format of the dictionary
         should be considered an internal detail, and subject to change.
@@ -228,8 +228,8 @@ def map_remove_by_key(bin_name, key, return_type, ctx=None):
         bin_name (str): The name of the bin containing the map.
         key: The key to be removed from the map
         return_type (int): Value specifying what should be returned from the operation.
-            This should be one of the aerospike.MAP_RETURN_* values.
-        ctx (list, optional): An optional list of nested CDT context operations (cdt_ctx object) for use on nested CDTs.
+            This should be one of the :ref:`map_return_types` values.
+        ctx (list): An optional list of nested CDT context operations (:mod:`cdt_cdx <aerospike_helpers.cdt_ctx>` object) for use on nested CDTs.
     Returns:
         A dictionary usable in operate or operate_ordered. The format of the dictionary
         should be considered an internal detail, and subject to change.
@@ -256,10 +256,10 @@ def map_remove_by_key_list(bin_name, key_list, return_type, inverted=False, ctx=
         bin_name (str): The name of the bin containing the map.
         key_list (list): A list of keys to be removed from the map.
         return_type (int): Value specifying what should be returned from the operation.
-            This should be one of the aerospike.MAP_RETURN_* values.
+            This should be one of the :ref:`map_return_types` values.
         inverted (bool): If true, keys with values not specified in the key_list will be removed,
             and those keys specified in the key_list will be kept. Default: False
-        ctx (list, optional): An optional list of nested CDT context operations (cdt_ctx object) for use on nested CDTs.
+        ctx (list): An optional list of nested CDT context operations (:mod:`cdt_cdx <aerospike_helpers.cdt_ctx>` object) for use on nested CDTs.
     Returns:
         A dictionary usable in operate or operate_ordered. The format of the dictionary
         should be considered an internal detail, and subject to change.
@@ -290,10 +290,10 @@ def map_remove_by_key_range(bin_name, key_range_start,
         key_range_start: The start of the range of keys to be removed. (Inclusive)
         key_range_end: The end of the range of keys to be removed. (Exclusive)
         return_type (int): Value specifying what should be returned from the operation.
-            This should be one of the aerospike.MAP_RETURN_* values.
+            This should be one of the :ref:`map_return_types` values.
         inverted (bool): If True, values outside of the specified range will be removed, and
             values inside of the range will be kept. Default: False
-        ctx (list, optional): An optional list of nested CDT context operations (cdt_ctx object) for use on nested CDTs.
+        ctx (list): An optional list of nested CDT context operations (:mod:`cdt_cdx <aerospike_helpers.cdt_ctx>` object) for use on nested CDTs.
     Returns:
         A dictionary usable in operate or operate_ordered. The format of the dictionary
         should be considered an internal detail, and subject to change.
@@ -322,10 +322,10 @@ def map_remove_by_value(bin_name, value, return_type, inverted=False, ctx=None):
         bin_name (str): The name of the bin containing the map.
         value: Entries with a value matching this argument will be removed from the map.
         return_type (int): Value specifying what should be returned from the operation.
-            This should be one of the aerospike.MAP_RETURN_* values.
+            This should be one of the :ref:`map_return_types` values.
         inverted (bool): If True, entries with a value different than the specified value will be removed.
             Default: False
-        ctx (list, optional): An optional list of nested CDT context operations (cdt_ctx object) for use on nested CDTs.
+        ctx (list): An optional list of nested CDT context operations (:mod:`cdt_cdx <aerospike_helpers.cdt_ctx>` object) for use on nested CDTs.
     Returns:
         A dictionary usable in operate or operate_ordered. The format of the dictionary
         should be considered an internal detail, and subject to change.
@@ -353,10 +353,10 @@ def map_remove_by_value_list(bin_name, value_list, return_type, inverted=False, 
         bin_name (str): The name of the bin containing the map.
         value_list (list): Entries with a value contained in this list will be removed from the map.
         return_type (int): Value specifying what should be returned from the operation.
-            This should be one of the aerospike.MAP_RETURN_* values.
+            This should be one of the :ref:`map_return_types` values.
         inverted (bool): If True, entries with a value contained in value_list will be kept, and all others
             will be removed and returned.
-        ctx (list, optional): An optional list of nested CDT context operations (cdt_ctx object) for use on nested CDTs.
+        ctx (list): An optional list of nested CDT context operations (:mod:`cdt_cdx <aerospike_helpers.cdt_ctx>` object) for use on nested CDTs.
     Returns:
         A dictionary usable in operate or operate_ordered. The format of the dictionary
         should be considered an internal detail, and subject to change.
@@ -386,10 +386,10 @@ def map_remove_by_value_range(bin_name, value_start, value_end, return_type, inv
         value_start: The start of the range of values to be removed. (Inclusive)
         value_end: The end of the range of values to be removed. (Exclusive)
         return_type (int): Value specifying what should be returned from the operation.
-            This should be one of the aerospike.MAP_RETURN_* values.
+            This should be one of the :ref:`map_return_types` values.
         inverted (bool): If True, values outside of the specified range will be removed, and
             values inside of the range will be kept. Default: False
-        ctx (list, optional): An optional list of nested CDT context operations (cdt_ctx object) for use on nested CDTs.
+        ctx (list): An optional list of nested CDT context operations (:mod:`cdt_cdx <aerospike_helpers.cdt_ctx>` object) for use on nested CDTs.
     Returns:
         A dictionary usable in operate or operate_ordered. The format of the dictionary
         should be considered an internal detail, and subject to change.
@@ -418,8 +418,8 @@ def map_remove_by_index(bin_name, index, return_type, ctx=None):
         bin_name (str): The name of the bin containing the map.
         index (int): The index of the entry to remove.
         return_type (int): Value specifying what should be returned from the operation.
-            This should be one of the aerospike.MAP_RETURN_* values.
-        ctx (list, optional): An optional list of nested CDT context operations (cdt_ctx object) for use on nested CDTs.
+            This should be one of the :ref:`map_return_types` values.
+        ctx (list): An optional list of nested CDT context operations (:mod:`cdt_cdx <aerospike_helpers.cdt_ctx>` object) for use on nested CDTs.
     Returns:
         A dictionary usable in operate or operate_ordered. The format of the dictionary
         should be considered an internal detail, and subject to change.
@@ -447,10 +447,10 @@ def map_remove_by_index_range(bin_name, index_start, remove_amt, return_type, in
         index_start (int): The index of the first entry to remove.
         remove_amt (int): The number of entries to remove from the map.
         return_type (int): Value specifying what should be returned from the operation.
-            This should be one of the aerospike.MAP_RETURN_* values.
+            This should be one of the :ref:`map_return_types` values.
         inverted (bool): If true, entries in the specified index range should be kept, and all other
             entries removed. Default: False
-        ctx (list, optional): An optional list of nested CDT context operations (cdt_ctx object) for use on nested CDTs.
+        ctx (list): An optional list of nested CDT context operations (:mod:`cdt_cdx <aerospike_helpers.cdt_ctx>` object) for use on nested CDTs.
     Returns:
         A dictionary usable in operate or operate_ordered. The format of the dictionary
         should be considered an internal detail, and subject to change.
@@ -479,8 +479,8 @@ def map_remove_by_rank(bin_name, rank, return_type, ctx=None):
         bin_name (str): The name of the bin containing the map.
         rank (int): The rank of the entry to remove.
         return_type (int): Value specifying what should be returned from the operation.
-            This should be one of the aerospike.MAP_RETURN_* values.
-        ctx (list, optional): An optional list of nested CDT context operations (cdt_ctx object) for use on nested CDTs.
+            This should be one of the :ref:`map_return_types` values.
+        ctx (list): An optional list of nested CDT context operations (:mod:`cdt_cdx <aerospike_helpers.cdt_ctx>` object) for use on nested CDTs.
     Returns:
         A dictionary usable in operate or operate_ordered. The format of the dictionary
         should be considered an internal detail, and subject to change.
@@ -508,10 +508,10 @@ def map_remove_by_rank_range(bin_name, rank_start, remove_amt, return_type, inve
         rank_start (int): The rank of the entry to remove.
         remove_amt (int): The number of entries to remove.
         return_type (int): Value specifying what should be returned from the operation.
-            This should be one of the aerospike.MAP_RETURN_* values.
+            This should be one of the :ref:`map_return_types` values.
         inverted (bool): If True, items with ranks inside the specified range should be kept,
             and all other entries removed. Default: False.
-        ctx (list, optional): An optional list of nested CDT context operations (cdt_ctx object) for use on nested CDTs.
+        ctx (list): An optional list of nested CDT context operations (:mod:`cdt_cdx <aerospike_helpers.cdt_ctx>` object) for use on nested CDTs.
     Returns:
         A dictionary usable in operate or operate_ordered. The format of the dictionary
         should be considered an internal detail, and subject to change.
@@ -540,8 +540,8 @@ def map_get_by_key(bin_name, key, return_type, ctx=None):
         bin_name (str): The name of the bin containing the map.
         key: The key of the item to be returned from the map
         return_type (int): Value specifying what should be returned from the operation.
-            This should be one of the aerospike.MAP_RETURN_* values.
-        ctx (list, optional): An optional list of nested CDT context operations (cdt_ctx object) for use on nested CDTs.
+            This should be one of the :ref:`map_return_types` values.
+        ctx (list): An optional list of nested CDT context operations (:mod:`cdt_cdx <aerospike_helpers.cdt_ctx>` object) for use on nested CDTs.
     Returns:
         A dictionary usable in operate or operate_ordered. The format of the dictionary
         should be considered an internal detail, and subject to change.
@@ -571,10 +571,10 @@ def map_get_by_key_range(bin_name, key_range_start,
         key_range_start: The start of the range of keys to be returned. (Inclusive)
         key_range_end: The end of the range of keys to be returned. (Exclusive)
         return_type (int): Value specifying what should be returned from the operation.
-            This should be one of the aerospike.MAP_RETURN_* values.
+            This should be one of the :ref:`map_return_types` values.
         inverted (bool): If True, values outside of the specified range will be returned, and
             values inside of the range will be ignored. Default: False
-        ctx (list, optional): An optional list of nested CDT context operations (cdt_ctx object) for use on nested CDTs.
+        ctx (list): An optional list of nested CDT context operations (:mod:`cdt_cdx <aerospike_helpers.cdt_ctx>` object) for use on nested CDTs.
     Returns:
         A dictionary usable in operate or operate_ordered. The format of the dictionary
         should be considered an internal detail, and subject to change.
@@ -603,10 +603,10 @@ def map_get_by_key_list(bin_name, key_list, return_type, inverted=False, ctx=Non
         bin_name (str): The name of the bin containing the map.
         key_list (list): A list of keys to be returned from the map.
         return_type (int): Value specifying what should be returned from the operation.
-            This should be one of the aerospike.MAP_RETURN_* values.
+            This should be one of the :ref:`map_return_types` values.
         inverted (bool): If true, keys with values not specified in the key_list will be returned,
             and those keys specified in the key_list will be ignored. Default: False
-        ctx (list, optional): An optional list of nested CDT context operations (cdt_ctx object) for use on nested CDTs.
+        ctx (list): An optional list of nested CDT context operations (:mod:`cdt_cdx <aerospike_helpers.cdt_ctx>` object) for use on nested CDTs.
     Returns:
         A dictionary usable in operate or operate_ordered. The format of the dictionary
         should be considered an internal detail, and subject to change.
@@ -633,10 +633,10 @@ def map_get_by_value(bin_name, value, return_type, inverted=False, ctx=None):
         bin_name (str): The name of the bin containing the map.
         value: Entries with a value matching this argument will be returned from the map.
         return_type (int): Value specifying what should be returned from the operation.
-            This should be one of the aerospike.MAP_RETURN_* values.
+            This should be one of the :ref:`map_return_types` values.
         inverted (bool): If True, entries with a value different than the specified value will be returned.
             Default: False
-        ctx (list, optional): An optional list of nested CDT context operations (cdt_ctx object) for use on nested CDTs.
+        ctx (list): An optional list of nested CDT context operations (:mod:`cdt_cdx <aerospike_helpers.cdt_ctx>` object) for use on nested CDTs.
     Returns:
         A dictionary usable in operate or operate_ordered. The format of the dictionary
         should be considered an internal detail, and subject to change.
@@ -666,10 +666,10 @@ def map_get_by_value_range(bin_name, value_start, value_end, return_type, invert
         value_start: The start of the range of values to be returned. (Inclusive)
         value_end: The end of the range of values to be returned. (Exclusive)
         return_type (int): Value specifying what should be returned from the operation.
-            This should be one of the aerospike.MAP_RETURN_* values.
+            This should be one of the :ref:`map_return_types` values.
         inverted (bool): If True, values outside of the specified range will be returned, and
             values inside of the range will be ignored. Default: False
-        ctx (list, optional): An optional list of nested CDT context operations (cdt_ctx object) for use on nested CDTs.
+        ctx (list): An optional list of nested CDT context operations (:mod:`cdt_cdx <aerospike_helpers.cdt_ctx>` object) for use on nested CDTs.
     Returns:
         A dictionary usable in operate or operate_ordered. The format of the dictionary
         should be considered an internal detail, and subject to change.
@@ -698,10 +698,10 @@ def map_get_by_value_list(bin_name, key_list, return_type, inverted=False, ctx=N
         bin_name (str): The name of the bin containing the map.
         value_list (list): Entries with a value contained in this list will be returned from the map.
         return_type (int): Value specifying what should be returned from the operation.
-            This should be one of the aerospike.MAP_RETURN_* values.
+            This should be one of the :ref:`map_return_types` values.
         inverted (bool): If True, entries with a value contained in value_list will be ignored, and all others
             will be returned.
-        ctx (list, optional): An optional list of nested CDT context operations (cdt_ctx object) for use on nested CDTs.
+        ctx (list): An optional list of nested CDT context operations (:mod:`cdt_cdx <aerospike_helpers.cdt_ctx>` object) for use on nested CDTs.
     Returns:
         A dictionary usable in operate or operate_ordered. The format of the dictionary
         should be considered an internal detail, and subject to change.
@@ -729,8 +729,8 @@ def map_get_by_index(bin_name, index, return_type, ctx=None):
         bin_name (str): The name of the bin containing the map.
         index (int): The index of the entry to return.
         return_type (int): Value specifying what should be returned from the operation.
-            This should be one of the aerospike.MAP_RETURN_* values.
-        ctx (list, optional): An optional list of nested CDT context operations (cdt_ctx object) for use on nested CDTs.
+            This should be one of the :ref:`map_return_types` values.
+        ctx (list): An optional list of nested CDT context operations (:mod:`cdt_cdx <aerospike_helpers.cdt_ctx>` object) for use on nested CDTs.
     Returns:
         A dictionary usable in operate or operate_ordered. The format of the dictionary
         should be considered an internal detail, and subject to change.
@@ -758,10 +758,10 @@ def map_get_by_index_range(bin_name, index_start, get_amt, return_type, inverted
         index_start (int): The index of the first entry to return.
         get_amt (int): The number of entries to return from the map.
         return_type (int): Value specifying what should be returned from the operation.
-            This should be one of the aerospike.MAP_RETURN_* values.
+            This should be one of the :ref:`map_return_types` values.
         inverted (bool): If true, entries in the specified index range should be ignored, and all other
             entries returned. Default: False
-        ctx (list, optional): An optional list of nested CDT context operations (cdt_ctx object) for use on nested CDTs.
+        ctx (list): An optional list of nested CDT context operations (:mod:`cdt_cdx <aerospike_helpers.cdt_ctx>` object) for use on nested CDTs.
     Returns:
         A dictionary usable in operate or operate_ordered. The format of the dictionary
         should be considered an internal detail, and subject to change.
@@ -790,8 +790,8 @@ def map_get_by_rank(bin_name, rank, return_type, ctx=None):
         bin_name (str): The name of the bin containing the map.
         rank (int): The rank of the entry to return.
         return_type (int): Value specifying what should be returned from the operation.
-            This should be one of the aerospike.MAP_RETURN_* values.
-        ctx (list, optional): An optional list of nested CDT context operations (cdt_ctx object) for use on nested CDTs.
+            This should be one of the :ref:`map_return_types` values.
+        ctx (list): An optional list of nested CDT context operations (:mod:`cdt_cdx <aerospike_helpers.cdt_ctx>` object) for use on nested CDTs.
     Returns:
         A dictionary usable in operate or operate_ordered. The format of the dictionary
         should be considered an internal detail, and subject to change.
@@ -819,10 +819,10 @@ def map_get_by_rank_range(bin_name, rank_start, get_amt, return_type, inverted=F
         rank_start (int): The start of the rank of the entries to return.
         get_amt (int): The number of entries to return.
         return_type (int): Value specifying what should be returned from the operation.
-            This should be one of the aerospike.MAP_RETURN_* values.
+            This should be one of the :ref:`map_return_types` values.
         inverted (bool): If True, items with ranks inside the specified range should be ignored,
             and all other entries returned. Default: False.
-        ctx (list, optional): An optional list of nested CDT context operations (cdt_ctx object) for use on nested CDTs.
+        ctx (list): An optional list of nested CDT context operations (:mod:`cdt_cdx <aerospike_helpers.cdt_ctx>` object) for use on nested CDTs.
     Returns:
         A dictionary usable in operate or operate_ordered. The format of the dictionary
         should be considered an internal detail, and subject to change.
@@ -874,7 +874,7 @@ def map_remove_by_value_rank_range_relative(
         return_type: Specifies what to return from the operation.
         inverted (bool): If True, the operation is inverted
             and items outside of the specified range are returned.
-        ctx (list, optional): An optional list of nested CDT context operations (cdt_ctx object) for use on nested CDTs.
+        ctx (list): An optional list of nested CDT context operations (:mod:`cdt_cdx <aerospike_helpers.cdt_ctx>` object) for use on nested CDTs.
 
     Returns:
         A dictionary usable in operate or operate_ordered.The format of the dictionary
@@ -931,7 +931,7 @@ def map_get_by_value_rank_range_relative(
             all items until end of list are returned.
         inverted (bool): If True, the operation is inverted
             and items outside of the specified range are returned.
-        ctx (list, optional): An optional list of nested CDT context operations (cdt_ctx object) for use on nested CDTs.
+        ctx (list): An optional list of nested CDT context operations (:mod:`cdt_cdx <aerospike_helpers.cdt_ctx>` object) for use on nested CDTs.
 
     Returns:
         A dictionary usable in operate or operate_ordered.The format of the dictionary
@@ -991,7 +991,7 @@ def map_remove_by_key_index_range_relative(
             all items until end of list are returned.
         inverted (bool): If True, the operation is inverted
             and items outside of the specified range are returned.
-        ctx (list, optional): An optional list of nested CDT context operations (cdt_ctx object) for use on nested CDTs.
+        ctx (list): An optional list of nested CDT context operations (:mod:`cdt_cdx <aerospike_helpers.cdt_ctx>` object) for use on nested CDTs.
 
     Returns:
         A dictionary usable in operate or operate_ordered.The format of the dictionary
@@ -1051,7 +1051,7 @@ def map_get_by_key_index_range_relative(
             all items until end of list are returned.
         inverted (bool): If True, the operation is inverted
             and items outside of the specified range are returned.
-        ctx (list, optional): An optional list of nested CDT context operations (cdt_ctx object) for use on nested CDTs.
+        ctx (list): An optional list of nested CDT context operations (:mod:`cdt_cdx <aerospike_helpers.cdt_ctx>` object) for use on nested CDTs.
 
     Returns:
         A dictionary usable in operate or operate_ordered.The format of the dictionary
