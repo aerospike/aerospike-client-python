@@ -66,17 +66,27 @@ Methods
                     | The location of the user's record and stream UDFs . 
                     | Default: ``./``
             * **policies** a :class:`dict` of policies
-                * **read** A dictionary containing :ref:`aerospike_read_policies`.
-                * **write** A dictionary containing :ref:`aerospike_write_policies`.
-                * **apply** A dictionary containing :ref:`aerospike_apply_policies`.
-                * **operate** A dictionary containing :ref:`aerospike_operate_policies`.
-                * **remove** A dictionary containing :ref:`aerospike_remove_policies`.
-                * **query** A dictionary containing :ref:`aerospike_query_policies`.
-                * **scan** A dictionary containing :ref:`aerospike_scan_policies`.
-                * **batch** A dictionary containing :ref:`aerospike_batch_policies`.
+                * **read** (:class:`dict`) 
+                    | A dictionary containing :ref:`aerospike_read_policies`.
+                * **write** (:class:`dict`) 
+                    | A dictionary containing :ref:`aerospike_write_policies`.
+                * **apply** (:class:`dict`) 
+                    | A dictionary containing :ref:`aerospike_apply_policies`.
+                * **operate** (:class:`dict`) 
+                    | A dictionary containing :ref:`aerospike_operate_policies`.
+                * **remove** (:class:`dict`) 
+                    | A dictionary containing :ref:`aerospike_remove_policies`.
+                * **query** (:class:`dict`) 
+                    | A dictionary containing :ref:`aerospike_query_policies`.
+                * **scan** (:class:`dict`) 
+                    | A dictionary containing :ref:`aerospike_scan_policies`.
+                * **batch** (:class:`dict`) 
+                    | A dictionary containing :ref:`aerospike_batch_policies`.
                 * **total_timeout** default connection timeout in milliseconds 
                     | **Deprecated**: set this individually in the :ref:`aerospike_polices` dictionaries.
-                * **auth_mode** a value of :ref:`auth_mode` defining how the authentication mode with the server, such as :data:`aerospike.AUTH_INTERNAL`.
+                * **auth_mode** 
+                    | A value of :ref:`auth_mode` defining how the authentication mode with the server, such as :data:`aerospike.AUTH_INTERNAL`.
+                    | Default: :data:`aerospike.AUTH_INTERNAL`
                 * **login_timeout_ms** (:class:`int`) 
                     | Representing the node login timeout in milliseconds. 
                     | Default: ``5000``.
