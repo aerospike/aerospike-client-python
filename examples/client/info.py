@@ -90,7 +90,7 @@ try:
         if len(args) > 0:
             request = ' '.join(args)
 
-        for node, (err, res) in list(client.info(request).items()):
+        for node, (err, res) in list(client.info_all(request).items()):
             if res is not None:
                 res = res.strip()
                 if len(res) > 0:
