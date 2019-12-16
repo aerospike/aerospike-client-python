@@ -9,14 +9,14 @@ import aerospike
 
 
 def read(bin_name):
-    """Create a read operation dictionary
+    """Create a read operation dictionary.
 
-    The read operation reads and returns the value in `bin_name`
+    The read operation reads and returns the value in `bin_name`.
 
     Args:
-        bin: String the name of the bin from which to read
+        bin: String the name of the bin from which to read.
     Returns:
-        A dictionary to be passed to operate or operate_ordered
+        A dictionary to be passed to operate or operate_ordered.
     """
 
     return {
@@ -26,15 +26,15 @@ def read(bin_name):
 
 
 def write(bin_name, write_item):
-    """Create a write operation dictionary
+    """Create a write operation dictionary.
 
-    The write operation writes `write_item` into the bin specified by bin_name
+    The write operation writes `write_item` into the bin specified by bin_name.
 
     Args:
         bin (string): The name of the bin into which `write_item` will be stored.
-        write_item: The value which will be written into the bin
+        write_item: The value which will be written into the bin.
     Returns:
-        A dictionary to be passed to operate or operate_ordered
+        A dictionary to be passed to operate or operate_ordered.
     """
     return {
         "op": aerospike.OPERATOR_WRITE,
@@ -43,16 +43,30 @@ def write(bin_name, write_item):
     }
 
 
-def append(bin_name, append_item):
-    """Create an append operation dictionary
+def delete():
+    """Create a delete operation dictionary.
 
-    The append operation appends `append_item` to the value in bin_name
+    The delete operation deletes a record.
+
+    Returns:
+        A dictionary to be passed to operate or operate_ordered.
+    """
+
+    return {
+        "op": aerospike.OPERATOR_DELETE,
+    }
+
+
+def append(bin_name, append_item):
+    """Create an append operation dictionary.
+
+    The append operation appends `append_item` to the value in bin_name.
 
     Args:
         bin (string): The name of the bin to be used.
         append_item: The value which will be appended to the item contained in the specified bin.
     Returns:
-        A dictionary to be passed to operate or operate_ordered
+        A dictionary to be passed to operate or operate_ordered.
     """
     return {
         "op": aerospike.OPERATOR_APPEND,
@@ -62,15 +76,15 @@ def append(bin_name, append_item):
 
 
 def prepend(bin_name, prepend_item):
-    """Create a prepend operation dictionary
+    """Create a prepend operation dictionary.
 
-    The prepend operation prepends `prepend_item` to the value in bin_name
+    The prepend operation prepends `prepend_item` to the value in bin_name.
 
     Args:
         bin (string): The name of the bin to be used.
         prepend_item: The value which will be prepended to the item contained in the specified bin.
     Returns:
-        A dictionary to be passed to operate or operate_ordered
+        A dictionary to be passed to operate or operate_ordered.
     """
     return {
         "op": aerospike.OPERATOR_PREPEND,
@@ -80,16 +94,16 @@ def prepend(bin_name, prepend_item):
 
 
 def increment(bin_name, amount):
-    """Create an increment operation dictionary
+    """Create an increment operation dictionary.
 
     The increment operation increases a value in bin_name by the specified amount,
-    or creates a bin with the value of amount
+    or creates a bin with the value of amount.
 
     Args:
         bin (string): The name of the bin to be incremented.
         amount: The amount by which to increment the item in the specified bin.
     Returns:
-        A dictionary to be passed to operate or operate_ordered
+        A dictionary to be passed to operate or operate_ordered.
     """
     return {
         "op": aerospike.OPERATOR_INCR,
@@ -99,16 +113,16 @@ def increment(bin_name, amount):
 
 
 def touch(ttl=None):
-    """Create a touch operation dictionary
+    """Create a touch operation dictionary.
 
-    Using ttl here is deprecated. It should be set in the record metadata for the operate method
+    Using ttl here is deprecated. It should be set in the record metadata for the operate method.
 
     Args:
         ttl (int): Deprecated. The ttl that should be set for the record.
             This should be set in the metadata passed to the operate or
             operate_ordered methods.
     Returns:
-        A dictionary to be passed to operate or operate_ordered
+        A dictionary to be passed to operate or operate_ordered.
     """
     op_dict = {"op": aerospike.OPERATOR_TOUCH}
     if ttl:

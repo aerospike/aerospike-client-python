@@ -167,7 +167,7 @@ class TestUdfPut(TestBaseClass):
         with pytest.raises(TypeError) as typeError:
             self.as_connection.udf_put()
 
-        assert "Required argument 'filename' (pos 1) not found" in str(
+        assert "argument 'filename' (pos 1)" in str(
             typeError.value)
 
     def test_udf_put_with_non_existent_filename(self):

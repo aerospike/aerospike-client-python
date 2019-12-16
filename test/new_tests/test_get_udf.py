@@ -69,7 +69,7 @@ class TestGetRegistered(object):
         with pytest.raises(TypeError) as typeError:
             self.as_connection.udf_get()
 
-        assert "Required argument 'module' (pos 1) not found" in str(
+        assert "argument 'module' (pos 1)" in str(
             typeError.value)
 
     def test_udf_get_with_incorrect_policy(self):

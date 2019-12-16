@@ -74,7 +74,7 @@ Exception Types
 
 .. py:exception:: ParamError
 
-    Subclass of :py:exc:`~aerospike.exception.ClientError`.
+    The operation was not performed because of invalid parameters.
 
 .. py:exception:: ServerError
 
@@ -88,6 +88,10 @@ Exception Types
 
     The operation cannot be applied to the current bin value on the server.
     Subclass of :py:exc:`~aerospike.exception.ServerError`.
+
+.. py:exception:: FilteredOut
+
+    The transaction was not performed because the predexp was false.
 
 .. py:exception:: ServerFull
 

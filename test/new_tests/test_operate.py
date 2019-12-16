@@ -1142,7 +1142,7 @@ class TestOperate(object):
         """
         with pytest.raises(TypeError) as typeError:
             self.as_connection.operate()
-        assert "Required argument 'key' (pos 1) not found" in str(
+        assert "argument 'key' (pos 1)" in str(
             typeError.value)
 
     def test_neg_operate_list_operation_bin_notlist(self):

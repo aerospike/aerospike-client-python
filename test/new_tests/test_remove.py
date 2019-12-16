@@ -359,5 +359,5 @@ class TestRemove():
         with pytest.raises(TypeError) as typeError:
             self.as_connection.remove()
 
-        assert "Required argument 'key' (pos 1) not found" in str(
+        assert "argument 'key' (pos 1)" in str(
             typeError.value)

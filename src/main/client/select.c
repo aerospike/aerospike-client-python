@@ -57,6 +57,10 @@ PyObject * AerospikeClient_Select_Invoke(
 	bool select_succeeded = false;
 	char ** bins = NULL;
 
+	// For converting predexp.
+	as_predexp_list predexp_list;
+	as_predexp_list* predexp_list_p = NULL;
+
 	// Initialisation flags
 	bool key_initialised = false;
 
@@ -132,7 +136,7 @@ PyObject * AerospikeClient_Select_Invoke(
 
 	// Convert python policy object to as_policy_exists
 	pyobject_to_policy_read(&err, py_policy, &read_policy, &read_policy_p,
-			&self->as->config.policies.read);
+			&self->as->config.policies.read, &predexp_list, &predexp_list_p);
 	if (err.code != AEROSPIKE_OK) {
 		goto CLEANUP;
 	}
@@ -151,6 +155,9 @@ PyObject * AerospikeClient_Select_Invoke(
 	}
 
 CLEANUP:
+	if (predexp_list_p) {
+		as_predexp_list_destroy(&predexp_list);
+	}
 
 	if (py_ustr) {
 		Py_DECREF(py_ustr);

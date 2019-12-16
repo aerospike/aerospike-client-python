@@ -267,7 +267,7 @@ class TestPrepend():
         """
         with pytest.raises(TypeError) as typeError:
             self.as_connection.prepend()
-        assert "Required argument 'key' (pos 1) not found" in str(
+        assert "argument 'key' (pos 1)" in str(
             typeError.value)
 
     def test_neg_prepend_with_policy_key_gen_EQ_not_equal(self):

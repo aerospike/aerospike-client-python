@@ -77,7 +77,7 @@ class TestListSize(object):
         """
         with pytest.raises(TypeError) as typeError:
             TestListSize.client.list_size()
-        assert "Required argument 'key' (pos 1) not found" in str(
+        assert "argument 'key' (pos 1)" in str(
             typeError.value)
 
     def test_list_size_with_incorrect_policy(self):

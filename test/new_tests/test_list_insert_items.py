@@ -175,7 +175,7 @@ class TestListInsertItems(object):
         """
         with pytest.raises(TypeError) as typeError:
             self.as_connection.list_insert_items()
-        assert "Required argument 'key' (pos 1) not found" in str(
+        assert "argument 'key' (pos 1)" in str(
             typeError.value)
 
     def test_neg_list_insert_items_with_incorrect_policy(self):

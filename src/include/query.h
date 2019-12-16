@@ -51,25 +51,37 @@ AerospikeQuery * AerospikeQuery_New(AerospikeClient * client, PyObject * args, P
 AerospikeQuery * AerospikeQuery_Select(AerospikeQuery * self, PyObject * args, PyObject * kwds);
 
 /**
+ * Add a list of write operations to the query.
+ *
+ */
+AerospikeQuery * AerospikeQuery_Add_Ops(AerospikeQuery * self, PyObject * args, PyObject * kwds);
+
+/**
  * Add a where predicate to the query.
  *
- *		query.where(bin, predicate)
+ * Selecting a single bin:
+ *
+ *		query.select(bin)
+ *
+ * Selecting multiple bins:
+ *
+ *		query.select(bin, bin, bin)
  *
  */
 AerospikeQuery * AerospikeQuery_Where(AerospikeQuery * self, PyObject * args);
 
 /**
- * Apply the specified udf on the results of the query.
+ * Apply a list of predicates to the query.
  *
- *		query.apply(module, function, arglist)
+ *		query.predexp(predexps)
  *
  */
 AerospikeQuery * AerospikeQuery_Predexp(AerospikeQuery * self, PyObject * args);
 
 /**
- * Apply a list of predicates to the query
+ * Apply the specified udf on the results of the query.
  *
- *		query.predexp(predexps)
+ *		query.apply(module, function, arglist)
  *
  */
 AerospikeQuery * AerospikeQuery_Apply(AerospikeQuery * self, PyObject * args, PyObject * kwds);
@@ -86,7 +98,7 @@ AerospikeQuery * AerospikeQuery_Apply(AerospikeQuery * self, PyObject * args, Py
 PyObject * AerospikeQuery_Foreach(AerospikeQuery * self, PyObject * args, PyObject * kwds);
 
 /**
- * Execute the query and return a generator
+ * Execute the query and return a generator.
  *
  *		for result in query.results():
  *			print result
@@ -95,7 +107,7 @@ PyObject * AerospikeQuery_Foreach(AerospikeQuery * self, PyObject * args, PyObje
 PyObject * AerospikeQuery_Results(AerospikeQuery * self, PyObject * args, PyObject * kwds);
 
 /**
- * Execute a UDF in the background. Returns the query id to allow status of the query to be monitored
+ * Execute a UDF in the background. Returns the query id to allow status of the query to be monitored.
  * */
 
 PyObject * AerospikeQuery_ExecuteBackground(AerospikeQuery * self, PyObject * args, PyObject * kwds);

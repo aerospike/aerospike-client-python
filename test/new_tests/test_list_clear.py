@@ -172,5 +172,5 @@ class TestListClear(object):
         """
         with pytest.raises(TypeError) as typeError:
             self.as_connection.list_clear()
-        assert "Required argument 'key' (pos 1) not found" in str(
+        assert "argument 'key' (pos 1)" in str(
             typeError.value)

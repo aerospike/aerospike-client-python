@@ -1698,13 +1698,10 @@ Specifies the type of authentication to be used when communicating with the serv
 Scan Constants
 --------------
 
-.. data:: SCAN_PRIORITY_AUTO
+.. data:: SCAN_PRIORITY
 
-.. data:: SCAN_PRIORITY_HIGH
-
-.. data:: SCAN_PRIORITY_LOW
-
-.. data:: SCAN_PRIORITY_MEDIUM
+    .. deprecated:: 3.10.0
+        Scan priority has been replaced by the records_per_second policy see :ref:`aerospike_scan_policies`.
 
 .. data:: SCAN_STATUS_ABORTED
 

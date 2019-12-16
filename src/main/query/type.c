@@ -39,6 +39,13 @@ PyDoc_STRVAR(apply_doc,
 Aggregate the results() using a stream UDF. \
 If no predicate is attached to the Query the stream UDF will aggregate over all the records in the specified set.");
 
+PyDoc_STRVAR(add_ops_doc,
+"add_ops(ops)\n\
+\n\
+Add a list of write ops to the query. \
+When used with :meth:`Query.execute_background` the query will perform the write ops on any records found. \
+If no predicate is attached to the Query it will apply ops to all the records in the specified set.");
+
 PyDoc_STRVAR(foreach_doc,
 "foreach(callback[, policy])\n\
 \n\
@@ -94,8 +101,12 @@ static PyMethodDef AerospikeQuery_Type_Methods[] = {
 
 	{"predexp", (PyCFunction) AerospikeQuery_Predexp,   METH_VARARGS,
 			   predexp_doc},
+
     {"execute_background", (PyCFunction) AerospikeQuery_ExecuteBackground, METH_VARARGS | METH_KEYWORDS,
                 execute_background_doc},
+
+	{"add_ops",	(PyCFunction) AerospikeQuery_Add_Ops,	METH_VARARGS | METH_KEYWORDS,
+				add_ops_doc},
 
 	{NULL}
 };
@@ -181,6 +192,10 @@ static void AerospikeQuery_Type_Dealloc(AerospikeQuery * self)
 	int i;
 	for (i=0; i < self->u_objs.size; i++) {
 		Py_XDECREF(self->u_objs.ob[i]);
+	}
+
+	if (self->query.ops) {
+		as_operations_destroy(&self->ops);
 	}
 
 	for (i = 0; i < self->query.where.size; i++) {

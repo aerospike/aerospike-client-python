@@ -51,7 +51,7 @@ class TestDropRole(object):
         with pytest.raises(TypeError) as typeError:
             self.client.admin_drop_role()
 
-        assert "Required argument 'role' (pos 1) not found" in str(
+        assert "argument 'role' (pos 1)" in str(
             typeError.value)
 
     def test_drop_role_positive_with_policy(self):

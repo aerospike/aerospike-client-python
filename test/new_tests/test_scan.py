@@ -4,6 +4,7 @@ import pytest
 import sys
 from .test_base_class import TestBaseClass
 from aerospike import exception as e
+from aerospike import predexp as as_predexp
 from .as_status_codes import AerospikeStatus
 
 aerospike = pytest.importorskip("aerospike")
@@ -90,6 +91,54 @@ class TestScan(TestBaseClass):
 
         assert len(records) == self.record_count
 
+    def test_scan_with_predexp_policy(self):
+
+        ns = 'test'
+        st = 'demo'
+
+        records = []
+
+        predexp = [
+            as_predexp.string_bin('name'),
+            as_predexp.string_value('name4'),
+            as_predexp.string_equal(),
+            as_predexp.predexp_not()
+        ]
+
+        def callback(input_tuple):
+            _, _, bins = input_tuple
+            records.append(bins)
+
+        scan_obj = self.as_connection.scan(self.test_ns, self.test_set)
+
+        scan_obj.foreach(callback, {'timeout': 2000, 'predexp': predexp})
+
+        assert len(records) == self.record_count - 1
+
+    def test_scan_with_predexp_policy_no_set(self):
+
+        ns = 'test'
+        st = None
+
+        records = []
+
+        predexp = [
+            as_predexp.string_bin('name'),
+            as_predexp.string_value('name4'),
+            as_predexp.string_equal(),
+            as_predexp.predexp_not()
+        ]
+
+        def callback(input_tuple):
+            _, _, bins = input_tuple
+            records.append(bins)
+
+        scan_obj = self.as_connection.scan(self.test_ns, self.test_set)
+
+        scan_obj.foreach(callback, {'timeout': 2000, 'predexp': predexp})
+
+        assert len(records) == self.record_count - 1
+
     def test_scan_with_socket_timeout_policy(self):
 
         ns = 'test'
@@ -105,6 +154,22 @@ class TestScan(TestBaseClass):
 
         scan_obj.foreach(callback, {'socket_timeout': 9876})
 
+        assert len(records) == self.record_count
+
+    def test_scan_with_records_per_second_policy(self):
+
+        ns = 'test'
+        st = 'demo'
+
+        records = []
+
+        def callback(input_tuple):
+            _, _, bins = input_tuple
+            records.append(bins)
+
+        scan_obj = self.as_connection.scan(self.test_ns, self.test_set)
+
+        scan_obj.foreach(callback, {'records_per_second': 10})
         assert len(records) == self.record_count
 
     def test_scan_with_callback_returning_false(self):
@@ -167,6 +232,27 @@ class TestScan(TestBaseClass):
         # Only 19/20 records contain a bin called 'name' or 'age'
         # Depending on ldt support this could be record count -1 or minus 2
         assert 19 <= len(records) < self.record_count
+
+    def test_scan_with_results_method_and_predexp(self):
+
+        ns = 'test'
+        st = 'demo'
+
+        predexp = [
+            as_predexp.string_bin('name'),
+            as_predexp.string_value('name4'),
+            as_predexp.string_equal(),
+            as_predexp.predexp_not()
+        ]
+
+        scan_obj = self.as_connection.scan(ns, st)
+
+        scan_obj.select(u'name', u'age')
+
+        records = scan_obj.results({'predexp': predexp})
+        # Only 19/20 records contain a bin called 'name' or 'age'
+        # Depending on ldt support this could be record count -2 or minus 3
+        assert 18 <= len(records) < self.record_count - 1
 
     def test_scan_with_options_positive(self):
         """
@@ -397,3 +483,26 @@ class TestScan(TestBaseClass):
 
         err_code = err_info.value.code
         assert err_code == AerospikeStatus.AEROSPIKE_ERR_CLIENT
+
+    def test_scan_with_invalid_predexp_policy(self):
+
+        ns = 'test'
+        st = 'demo'
+
+        records = []
+
+        predexp = [
+            as_predexp.string_bin('name'),
+            as_predexp.string_value(2),
+            as_predexp.string_equal(),
+            as_predexp.predexp_not()
+        ]
+
+        def callback(input_tuple):
+            _, _, bins = input_tuple
+            records.append(bins)
+
+        scan_obj = self.as_connection.scan(self.test_ns, self.test_set)
+
+        with pytest.raises(e.ParamError):
+            scan_obj.foreach(callback, {'timeout': 2000, 'predexp': predexp})

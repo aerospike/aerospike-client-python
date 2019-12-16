@@ -14,17 +14,19 @@ Query Class --- :class:`Query`
     can be omitted or :py:obj:`None`). For queries, the :py:obj:`None` set contains those \
     records which are not part of any named set.
 
-    The Query can (optionally) be assigned one of the \
-    :mod:`~aerospike.predicates` (:meth:`~aerospike.predicates.between` \
-    or :meth:`~aerospike.predicates.equals`) using :meth:`where`. A query \
-    without a predicate will match all the records in the given set, similar \
+    The Query can (optionally) be assigned one of the following \
+
+    * One of the :mod:`~aerospike.predicates` (:meth:`~aerospike.predicates.between` or :meth:`~aerospike.predicates.equals`) using :meth:`~aerospike.Query.where`. \
+    * A list of :mod:`~aerospike.predexp` using :meth:`~aerospike.Query.predexp` \
+    
+    A query without a predicate will match all the records in the given set, similar \
     to a :class:`~aerospike.Scan`.
 
-    The query is invoked using either :meth:`foreach` or :meth:`results`. \
+    The query is invoked using :meth:`~aerospike.Query.foreach`, :meth:`~aerospike.Query.results`, or :meth:`~aerospike.Query.execute_background` \
     The bins returned can be filtered by using :meth:`select`.
 
     Finally, a `stream UDF <http://www.aerospike.com/docs/udf/developing_stream_udfs.html>`_ \
-    may be applied with :meth:`apply`. It will aggregate results out of the \
+    may be applied with :meth:`~aerospike.Query.apply`. It will aggregate results out of the \
     records streaming back from the query.
 
     .. seealso::
@@ -85,6 +87,79 @@ Query Methods
         .. note::
 
             Queries require a secondary index to exist on the *bin* being queried.
+        
+    .. note::
+        Version >= 3.10.0 Supports predicate expressions for results, foreach, and execute_background see :mod:`~aerospike.predexp`.
+
+        .. code-block:: python
+
+            from __future__ import print_function
+            import aerospike
+            from aerospike import predexp
+            from aerospike import exception as ex
+            import sys
+
+            config = { 'hosts': [('127.0.0.1', 3000)]}
+            client = aerospike.client(config).connect()
+
+            # register udf
+            try:
+                client.udf_put('/path/to/my_udf.lua')
+            except ex.FilteredOut as e:
+                print("Error: {0} [{1}]".format(e.msg, e.code))
+                client.close()
+                sys.exit(1)
+
+
+            # put records and apply udf
+            try:
+                keys = [('test', 'demo', 1), ('test', 'demo', 2), ('test', 'demo', 3)]
+                records = [{'number': 1}, {'number': 2}, {'number': 3}]
+                for i in range(3):
+                    client.put(keys[i], records[i])
+
+                preds = [ # check that the record has value < 2 or == 3 in bin 'name'
+                    predexp.integer_bin('number'),
+                    predexp.integer_value(2),
+                    predexp.integer_less(),
+                    predexp.integer_bin('number'),
+                    predexp.integer_value(3),
+                    predexp.integer_equal(),
+                    predexp.predexp_or(2)
+                ]
+
+                policy = {
+                    'predexp': preds
+                }
+
+                client.scan_apply("test", None, "my_udf", "my_udf", ['number', 10], policy)
+                records = client.get_many(keys)
+
+                print(records)
+            except ex.FilteredOut as e:
+                print("Error: {0} [{1}]".format(e.msg, e.code))
+                sys.exit(1)
+            finally:
+                client.close()
+            # the udf has only modified the records that matched the preds
+            # EXPECTED OUTPUT:
+            # [
+            #   (('test', 'demo', 1, bytearray(b'\xb7\xf4\xb88\x89\xe2\xdag\xdeh>\x1d\xf6\x91\x9a\x1e\xac\xc4F\xc8')), {'gen': 2, 'ttl': 2591999}, {'number': 11}),
+            #   (('test', 'demo', 2, bytearray(b'\xaejQ_7\xdeJ\xda\xccD\x96\xe2\xda\x1f\xea\x84\x8c:\x92p')), {'gen': 12, 'ttl': 2591999}, {'number': 2}),
+            #   (('test', 'demo', 3, bytearray(b'\xb1\xa5`g\xf6\xd4\xa8\xa4D9\xd3\xafb\xbf\xf8ha\x01\x94\xcd')), {'gen': 13, 'ttl': 2591999}, {'number': 13})
+            # ]
+        
+        .. code-block:: python
+
+            # contents of my_udf.lua
+            function my_udf(rec, bin, offset)
+                info("my transform: %s", tostring(record.digest(rec)))
+                rec[bin] = rec[bin] + offset
+                aerospike:update(rec)
+            end
+        
+        .. note::
+            For a similar example using .results() see :meth:`aerospike.Scan.results`.
 
 
     .. method:: foreach(callback[, policy [, options]])
@@ -242,6 +317,32 @@ Query Methods
             The default value for the Lua ``system_path`` is
             ``/usr/local/aerospike/lua``.
 
+    .. method:: add_ops(ops)
+
+        Add a list of write ops to the query.
+        When used with :meth:`Query.execute_background` the query will perform the write ops on any records found.
+        If no predicate is attached to the Query it will apply ops to all the records in the specified set.
+
+        :param ops: `list` A list of write operations generated by the aerospike_helpers e.g. list_operations, map_operations, etc.
+
+        .. code-block:: python
+
+            import aerospike
+            from aerospike_helpers.operations import list_operations
+            from aerospike_helpers.operations import operations
+            query = client.query('test', 'demo')
+
+            ops =  [
+                operations.append(test_bin, 'val_to_append'),
+                list_operations.list_remove_by_index(test_bin, list_index_to_remove, aerospike.LIST_RETURN_NONE)
+            ]
+            query.add_ops(ops)
+
+            id = query.execute_background()
+            client.close()
+
+        For a more comprehensive example, see using a list of write ops with :meth:`Query.execute_background` .
+
     .. method:: predexp(predicates)
 
         Set the predicate expression filters to be used by this query.
@@ -266,8 +367,8 @@ Query Methods
 
     .. method:: execute_background([, policy])
 
-        Execute a record UDF on records found by the query in the background. This method returns before the query has completed.
-        A UDF must have been added to the query with :meth:`Query.apply` .
+        Execute a record UDF or write operations on records found by the query in the background. This method returns before the query has completed.
+        A UDF or a list of write operations must have been added to the query with :meth:`Query.apply` or :meth:`Query.add_ops` respectively.
 
         :param dict policy: optional :ref:`aerospike_write_policies`.
 
@@ -275,11 +376,113 @@ Query Methods
 
         .. code-block:: python
 
+            # Using a record UDF
             import aerospike
             query = client.query('test', 'demo')
             query.apply('myudfs', 'myfunction', ['a', 1])
-            # This id can be used to monitor the progress of the background query
             query_id = query.execute_background()
+            # This id can be used to monitor the progress of the background query
+
+        .. code-block:: python
+
+            # Using a list of write ops.
+            from __future__ import print_function
+            import aerospike
+            from aerospike import predicates
+            from aerospike import exception as ex
+            from aerospike_helpers.operations import list_operations
+            import sys
+            import time
+
+            # Configure the client.
+            config = {"hosts": [("127.0.0.1", 3000)]}
+
+            # Create a client and connect it to the cluster.
+            try:
+                client = aerospike.client(config).connect()
+            except ex.ClientError as e:
+                print("Error: {0} [{1}]".format(e.msg, e.code))
+                sys.exit(1)
+
+            TEST_NS = "test"
+            TEST_SET = "demo"
+            nested_list = [{"name": "John", "id": 100}, {"name": "Bill", "id": 200}]
+            # Write the records.
+            try:
+                keys = [(TEST_NS, TEST_SET, i) for i in range(5)]
+                for i, key in enumerate(keys):
+                    client.put(key, {"account_number": i, "members": nested_list})
+            except ex.RecordError as e:
+                print("Error: {0} [{1}]".format(e.msg, e.code))
+
+            # EXAMPLE 1: Append a new account member to all accounts.
+            try:
+                new_member = {"name": "Cindy", "id": 300}
+
+                ops = [list_operations.list_append("members", new_member)]
+
+                query = client.query(TEST_NS, TEST_SET)
+                query.add_ops(ops)
+                id = query.execute_background()
+                # allow for query to complete
+                time.sleep(3)
+                print("EXAMPLE 1")
+
+                for i, key in enumerate(keys):
+                    _, _, bins = client.get(key)
+                    print(bins)
+            except ex.ClientError as e:
+                print("Error: {0} [{1}]".format(e.msg, e.code))
+                sys.exit(1)
+
+            # EXAMPLE 2: Remove a member from a specific account using predicates.
+            try:
+                # Add index to the records for use with predex.
+                client.index_integer_create(
+                    TEST_NS, TEST_SET, "account_number", "test_demo_account_number_idx"
+                )
+
+                ops = [
+                    list_operations.list_remove_by_index("members", 0, aerospike.LIST_RETURN_NONE)
+                ]
+
+                query = client.query(TEST_NS, TEST_SET)
+                number_predicate = predicates.equals("account_number", 3)
+                query.where(number_predicate)
+                query.add_ops(ops)
+                id = query.execute_background()
+                # allow for query to complete
+                time.sleep(3)
+                print("EXAMPLE 2")
+
+                for i, key in enumerate(keys):
+                    _, _, bins = client.get(key)
+                    print(bins)
+            except ex.ClientError as e:
+                print("Error: {0} [{1}]".format(e.msg, e.code))
+                sys.exit(1)
+
+            # Cleanup and close the connection to the Aerospike cluster.
+            for i, key in enumerate(keys):
+                client.remove(key)
+            client.index_remove(TEST_NS, "test_demo_account_number_idx")
+            client.close()
+
+            """
+            EXPECTED OUTPUT:
+            EXAMPLE 1
+            {'account_number': 0, 'members': [{'name': 'John', 'id': 100}, {'name': 'Bill', 'id': 200}, {'name': 'Cindy', 'id': 300}]}
+            {'account_number': 1, 'members': [{'name': 'John', 'id': 100}, {'name': 'Bill', 'id': 200}, {'name': 'Cindy', 'id': 300}]}
+            {'account_number': 2, 'members': [{'name': 'John', 'id': 100}, {'name': 'Bill', 'id': 200}, {'name': 'Cindy', 'id': 300}]}
+            {'account_number': 3, 'members': [{'name': 'John', 'id': 100}, {'name': 'Bill', 'id': 200}, {'name': 'Cindy', 'id': 300}]}
+            {'account_number': 4, 'members': [{'name': 'John', 'id': 100}, {'name': 'Bill', 'id': 200}, {'name': 'Cindy', 'id': 300}]}
+            EXAMPLE 2
+            {'account_number': 0, 'members': [{'name': 'John', 'id': 100}, {'name': 'Bill', 'id': 200}, {'name': 'Cindy', 'id': 300}]}
+            {'account_number': 1, 'members': [{'name': 'John', 'id': 100}, {'name': 'Bill', 'id': 200}, {'name': 'Cindy', 'id': 300}]}
+            {'account_number': 2, 'members': [{'name': 'John', 'id': 100}, {'name': 'Bill', 'id': 200}, {'name': 'Cindy', 'id': 300}]}
+            {'account_number': 3, 'members': [{'name': 'Bill', 'id': 200}, {'name': 'Cindy', 'id': 300}]}
+            {'account_number': 4, 'members': [{'name': 'John', 'id': 100}, {'name': 'Bill', 'id': 200}, {'name': 'Cindy', 'id': 300}]}
+            """
 
 .. _aerospike_query_policies:
 

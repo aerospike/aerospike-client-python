@@ -188,7 +188,7 @@ class TestIncorrectCallsToUDFRemove(object):
         """
         with pytest.raises(TypeError) as typeError:
             self.as_connection.udf_remove()
-        assert "Required argument 'filename' (pos 1) not found" in str(
+        assert "argument 'filename' (pos 1)" in str(
             typeError.value)
 
     def test_udf_remove_with_none_as_parameters(self):

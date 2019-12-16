@@ -174,7 +174,7 @@ class TestInfoNodeIncorrectUsage(object):
         """
         with pytest.raises(TypeError) as typeError:
             self.as_connection.info_node()
-        assert "Required argument 'command' (pos 1) not found" in str(
+        assert "argument 'command' (pos 1)" in str(
             typeError.value)
 
     def test_info_node_for_incorrect_command(self):

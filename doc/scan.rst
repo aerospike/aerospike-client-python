@@ -32,6 +32,20 @@ Scan Methods
         not appear in the *bins* portion of that record tuple.
 
 
+    .. method:: apply(module, function[, arguments])
+
+        Aggregate the :meth:`results` using a stream \
+        `UDF <http://www.aerospike.com/docs/guide/udf.html>`_.
+
+        :param str module: the name of the Lua module.
+        :param str function: the name of the Lua function within the *module*.
+        :param list arguments: optional arguments to pass to the *function*. NOTE: these arguments must be types supported by Aerospike See: `supported data types <http://www.aerospike.com/docs/guide/data-types.html>`_.
+            If you need to use an unsuported type, (e.g. set or tuple) you can use a serializer like pickle first.
+        :return: one of the supported types, :class:`int`, :class:`str`, :class:`float` (double), :class:`list`, :class:`dict` (map), :class:`bytearray` (bytes).
+
+        .. seealso:: `Developing Stream UDFs <http://www.aerospike.com/docs/udf/developing_stream_udfs.html>`_
+
+
     .. method:: results([policy[, nodename]]) -> list of (key, meta, bins)
 
         Buffer the records resulting from the scan, and return them as a \
@@ -81,6 +95,76 @@ Scan Methods
                       bytearray(b'\x1cJ\xce\xa7\xd4Vj\xef+\xdf@W\xa5\xd8o\x8d:\xc9\xf4\xde')),
                     { 'gen': 52, 'ttl': 2592000},
                     { 'a': 1, 'id': 1})]
+        
+        .. note::
+            Version >= 3.10.0 Supports predicate expressions for results, foreach, and execute_background see :mod:`~aerospike.predexp`.
+
+            .. code-block:: python
+
+                from __future__ import print_function
+                import aerospike
+                from aerospike import predexp
+                from aerospike import exception as ex
+                import sys
+                import time
+
+                config = { 'hosts': [('127.0.0.1', 3000)]}
+                client = aerospike.client(config).connect()
+
+                # register udf
+                try:
+                    client.udf_put('/path/to/my_udf.lua')
+                except ex.FilteredOut as e:
+                    print("Error: {0} [{1}]".format(e.msg, e.code))
+                    client.close()
+                    sys.exit(1)
+
+                # put records and run scan
+                try:
+                    keys = [('test', 'demo', 1), ('test', 'demo', 2), ('test', 'demo', 3)]
+                    records = [{'number': 1}, {'number': 2}, {'number': 3}]
+                    for i in range(3):
+                        client.put(keys[i], records[i])
+
+                    scan = client.scan('test', 'demo')
+
+                    preds = [ # check that the record has value < 2 or value == 3 in bin 'name'
+                        predexp.integer_bin('number'),
+                        predexp.integer_value(2),
+                        predexp.integer_less(),
+                        predexp.integer_bin('number'),
+                        predexp.integer_value(3),
+                        predexp.integer_equal(),
+                        predexp.predexp_or(2)
+                    ]
+
+                    policy = {
+                        'predexp': preds
+                    }
+
+                    records = scan.results(policy)
+                    print(records)
+                except ex.FilteredOut as e:
+                    print("Error: {0} [{1}]".format(e.msg, e.code))
+                    sys.exit(1)
+                finally:
+                    client.close()
+                # the scan only returns records that match the predexp
+                # EXPECTED OUTPUT:
+                # [
+                #   (('test', 'demo', 1, bytearray(b'\xb7\xf4\xb88\x89\xe2\xdag\xdeh>\x1d\xf6\x91\x9a\x1e\xac\xc4F\xc8')), {'gen': 2, 'ttl': 2591999}, {'number': 1}),
+                #   (('test', 'demo', 3, bytearray(b'\xb1\xa5`g\xf6\xd4\xa8\xa4D9\xd3\xafb\xbf\xf8ha\x01\x94\xcd')), {'gen': 13, 'ttl': 2591999}, {'number': 3})
+                # ]
+            
+            .. code-block:: python
+
+                # contents of my_udf.lua
+                function my_udf(rec, bin, offset)
+                    info("my transform: %s", tostring(record.digest(rec)))
+                    rec[bin] = rec[bin] + offset
+                    aerospike:update(rec)
+                end
+
 
 
     .. method:: foreach(callback[, policy[, options[, nodename]]])
@@ -156,6 +240,82 @@ Scan Methods
                 print(len(keys)) # this will be 100 if the number of matching records > 100
                 client.close()
 
+    .. method:: execute_background([, policy])
+
+        Execute a record UDF on records found by the scan in the background. This method returns before the scan has completed.
+        A UDF can be added to the scan with :meth:`Scan.apply`.
+
+        :param dict policy: optional :ref:`aerospike_write_policies`.
+
+        :return: a job ID that can be used with :meth:`aerospike.Client.job_info` to track the status of the ``aerospike.JOB_SCAN``, as it runs in the background.
+
+        .. code-block:: python
+
+            from __future__ import print_function
+            import aerospike
+            from aerospike import predexp
+            from aerospike import exception as ex
+            import sys
+            import time
+
+            config = { 'hosts': [('127.0.0.1', 3000)]}
+            client = aerospike.client(config).connect()
+
+            # register udf
+            try:
+                client.udf_put('/path/to/my_udf.lua')
+            except ex.FilteredOut as e:
+                print("Error: {0} [{1}]".format(e.msg, e.code))
+                client.close()
+                sys.exit(1)
+
+            # put records and apply udf
+            try:
+                keys = [('test', 'demo', 1), ('test', 'demo', 2), ('test', 'demo', 3)]
+                records = [{'number': 1}, {'number': 2}, {'number': 3}]
+                for i in range(3):
+                    client.put(keys[i], records[i])
+
+                try:
+                    client.index_integer_create('test', 'demo', 'number', 'test_demo_number_idx')
+                except ex.IndexFoundError:
+                    pass
+
+                query = client.query('test', 'demo')
+                query.apply('my_udf', 'my_udf', ['number', 10])
+                job_id = query.execute_background()
+
+                # wait for job to finish
+                while True:
+                    response = client.job_info(job_id, aerospike.JOB_SCAN)
+                    print(response)
+                    if response['status'] != aerospike.JOB_STATUS_INPROGRESS:
+                        break
+                    time.sleep(0.25)
+
+                records = client.get_many(keys)
+                print(records)
+            except ex.FilteredOut as e:
+                print("Error: {0} [{1}]".format(e.msg, e.code))
+                sys.exit(1)
+            finally:
+                client.close()
+            # EXPECTED OUTPUT:
+            # [
+            #   (('test', 'demo', 1, bytearray(b'\xb7\xf4\xb88\x89\xe2\xdag\xdeh>\x1d\xf6\x91\x9a\x1e\xac\xc4F\xc8')), {'gen': 2, 'ttl': 2591999}, {'number': 11}),
+            #   (('test', 'demo', 2, bytearray(b'\xaejQ_7\xdeJ\xda\xccD\x96\xe2\xda\x1f\xea\x84\x8c:\x92p')), {'gen': 12, 'ttl': 2591999}, {'number': 12}),
+            #   (('test', 'demo', 3, bytearray(b'\xb1\xa5`g\xf6\xd4\xa8\xa4D9\xd3\xafb\xbf\xf8ha\x01\x94\xcd')), {'gen': 13, 'ttl': 2591999}, {'number': 13})
+            # ]
+        
+        .. code-block:: python
+
+            # contents of my_udf.lua
+            function my_udf(rec, bin, offset)
+                info("my transform: %s", tostring(record.digest(rec)))
+                rec[bin] = rec[bin] + offset
+                aerospike:update(rec)
+            end
+
 
 .. _aerospike_scan_policies:
 
@@ -212,6 +372,10 @@ Scan Policies
             | If the transaction results in a record deletion, leave a tombstone for the record.
             |
             | Default: ``False``
+        * **records_per_second** :class:`int`
+            | Limit the scan to process records at records_per_second.
+            |
+            | Default: ``0`` (no limit).
             
 
 .. _aerospike_scan_options:
@@ -226,10 +390,10 @@ Scan Options
     .. hlist::
         :columns: 1
 
-        * **priority** See :ref:`aerospike_scan_constants` for values. 
-            | Default ``aerospike.SCAN_PRIORITY_AUTO``.
+        * **priority** 
+            | Scan priority has been replaced by the records_per_second policy see :ref:`aerospike_scan_policies`.
         * **nobins** :class:`bool` 
-            | whether to return the *bins* portion of the :ref:`aerospike_record_tuple`. 
+            | Whether to return the *bins* portion of the :ref:`aerospike_record_tuple`. 
             |
             | Default ``False``.
         * **concurrent** :class:`bool` 

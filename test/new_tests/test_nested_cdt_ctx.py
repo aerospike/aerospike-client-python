@@ -41,7 +41,7 @@ except:
     print("Please install aerospike python client.")
     sys.exit(1)
 
-class TestBitwiseOperations(object):
+class TestCTXOperations(object):
 
     @pytest.fixture(autouse=True)
     def setup(self, request, as_connection):
@@ -3049,3 +3049,17 @@ class TestBitwiseOperations(object):
 
         with pytest.raises(expected):
             self.as_connection.operate(self.test_key, ops)
+
+    def test_non_list_ctx(self):
+        """
+        Test ctx conversion with a non list ctx.
+        """
+        ctx = [cdt_ctx.cdt_ctx_map_key(1)]
+
+        ops = [
+            map_operations.map_get_by_key(self.nested_map_bin, 'greet', aerospike.MAP_RETURN_VALUE, ctx[0])
+        ]
+
+        for i in range(10):
+            with pytest.raises(e.ParamError):
+                self.as_connection.operate(self.test_key, ops)

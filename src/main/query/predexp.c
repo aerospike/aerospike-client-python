@@ -218,184 +218,112 @@ as_status add_predexp(as_query* query, PyObject* predicate, as_error* err) {
 	}
 
 	predicate_type = PyLong_AsLong(py_pred_type);
-
 	switch (predicate_type) {
-
-		case AS_PREDEXP_AND: {
+		case AS_PREDEXP_AND:
 			add_and(query, predicate, err);
 			break;
-		}
-
-		case AS_PREDEXP_OR: {
+		case AS_PREDEXP_OR:
 			add_or(query, predicate, err);
 			break;
-		}
-
-		case AS_PREDEXP_NOT: {
+		case AS_PREDEXP_NOT:
 			add_not(query, predicate, err);
 			break;
-		}
-
-		case AS_PREDEXP_INTEGER_VALUE: {
+		case AS_PREDEXP_INTEGER_VALUE:
 			add_integer_val(query, predicate, err);
 			break;
-		}
-
-		case AS_PREDEXP_STRING_VALUE: {
+		case AS_PREDEXP_STRING_VALUE:
 			add_string_val(query, predicate, err);
 			break;
-		}
-
-		case AS_PREDEXP_GEOJSON_VALUE: {
+		case AS_PREDEXP_GEOJSON_VALUE:
 			add_geojson_val(query, predicate, err);
 			break;
-		}
-
-		case AS_PREDEXP_INTEGER_BIN: {
+		case AS_PREDEXP_INTEGER_BIN:
 			add_int_bin(query, predicate, err);
 			break;
-		}
-
-		case AS_PREDEXP_STRING_BIN: {
+		case AS_PREDEXP_STRING_BIN:
 			add_string_bin(query, predicate, err);
 			break;
-		}
-
-		case AS_PREDEXP_GEOJSON_BIN: {
+		case AS_PREDEXP_GEOJSON_BIN:
 			add_geo_bin(query, predicate, err);
 			break;
-		}
-
-		case AS_PREDEXP_LIST_BIN: {
+		case AS_PREDEXP_LIST_BIN:
 			add_list_bin(query, predicate, err);
 			break;
-		}
-
-		case AS_PREDEXP_MAP_BIN: {
+		case AS_PREDEXP_MAP_BIN:
 			add_map_bin(query, predicate, err);
 			break;
-		}
-
-		case AS_PREDEXP_INTEGER_VAR: {
+		case AS_PREDEXP_INTEGER_VAR:
 			add_integer_var(query, predicate, err);
 			break;
-		}
-
-		case AS_PREDEXP_STRING_VAR: {
+		case AS_PREDEXP_STRING_VAR:
 			add_string_var(query, predicate, err);
 			break;
-		}
-
-		case AS_PREDEXP_GEOJSON_VAR: {
+		case AS_PREDEXP_GEOJSON_VAR:
 			add_geojson_var(query, predicate, err);
 			break;
-		}
-
-		case AS_PREDEXP_REC_DEVICE_SIZE: {
+		case AS_PREDEXP_REC_DEVICE_SIZE:
 			add_rec_device_size(query, predicate, err);
 			break;
-		}
-
-		case AS_PREDEXP_REC_LAST_UPDATE: {
+		case AS_PREDEXP_REC_LAST_UPDATE:
 			add_rec_last_update(query, predicate, err);
 			break;
-		}
-
-		case AS_PREDEXP_REC_VOID_TIME: {
+		case AS_PREDEXP_REC_VOID_TIME:
 			add_rec_void_time(query, predicate, err);
 			break;
-		}
-
-		case AS_PREDEXP_REC_DIGEST_MODULO: {
+		case AS_PREDEXP_REC_DIGEST_MODULO:
 			add_rec_digest_modulo(query, predicate, err);
 			break;
-		}
-
-		case AS_PREDEXP_INTEGER_EQUAL: {
+		case AS_PREDEXP_INTEGER_EQUAL:
 			add_integer_equal(query, predicate, err);
 			break;
-		}
-
-		case AS_PREDEXP_INTEGER_UNEQUAL: {
+		case AS_PREDEXP_INTEGER_UNEQUAL:
 			add_integer_unequal(query, predicate, err);
 			break;
-		}
-
-		case AS_PREDEXP_INTEGER_GREATER: {
+		case AS_PREDEXP_INTEGER_GREATER:
 			add_integer_greater(query, predicate, err);
 			break;
-		}
-
-		case AS_PREDEXP_INTEGER_GREATEREQ: {
+		case AS_PREDEXP_INTEGER_GREATEREQ:
 			add_integer_greatereq(query, predicate, err);
 			break;
-		}
-
-		case AS_PREDEXP_INTEGER_LESS: {
+		case AS_PREDEXP_INTEGER_LESS:
 			add_integer_less(query, predicate, err);
 			break;
-		}
-
-		case AS_PREDEXP_INTEGER_LESSEQ: {
+		case AS_PREDEXP_INTEGER_LESSEQ:
 			add_integer_lesseq(query, predicate, err);
 			break;
-		}
-
-		case AS_PREDEXP_STRING_EQUAL: {
+		case AS_PREDEXP_STRING_EQUAL:
 			add_string_equal(query, predicate, err);
 			break;
-		}
-
-		case AS_PREDEXP_STRING_UNEQUAL: {
+		case AS_PREDEXP_STRING_UNEQUAL:
 			add_string_unequal(query, predicate, err);
 			break;
-		}
-
-		case AS_PREDEXP_STRING_REGEX: {
+		case AS_PREDEXP_STRING_REGEX:
 			add_string_regex(query, predicate, err);
 			break;
-		}
-
-		case AS_PREDEXP_GEOJSON_WITHIN: {
+		case AS_PREDEXP_GEOJSON_WITHIN:
 			add_geojson_within(query, predicate, err);
 			break;
-		}
-
-		case AS_PREDEXP_GEOJSON_CONTAINS: {
+		case AS_PREDEXP_GEOJSON_CONTAINS:
 			add_geojson_contains(query, predicate, err);
 			break;
-		}
-
-		case AS_PREDEXP_LIST_ITERATE_OR: {
+		case AS_PREDEXP_LIST_ITERATE_OR:
 			add_list_iterate_or(query, predicate, err);
 			break;
-		}
-
-		case AS_PREDEXP_MAPKEY_ITERATE_OR: {
+		case AS_PREDEXP_MAPKEY_ITERATE_OR:
 			add_mapkey_iterate_or(query, predicate, err);
 			break;
-		}
-
-		case AS_PREDEXP_MAPVAL_ITERATE_OR: {
+		case AS_PREDEXP_MAPVAL_ITERATE_OR:
 			add_mapval_iterate_or(query, predicate, err);
 			break;
-		}
-
-		case AS_PREDEXP_LIST_ITERATE_AND: {
+		case AS_PREDEXP_LIST_ITERATE_AND:
 			add_list_iterate_and(query, predicate, err);
 			break;
-		}
-
-		case AS_PREDEXP_MAPKEY_ITERATE_AND: {
+		case AS_PREDEXP_MAPKEY_ITERATE_AND:
 			add_mapkey_iterate_and(query, predicate, err);
 			break;
-		}
-
-		case AS_PREDEXP_MAPVAL_ITERATE_AND: {
+		case AS_PREDEXP_MAPVAL_ITERATE_AND:
 			add_mapval_iterate_and(query, predicate, err);
 			break;
-		}
-
 		default:
 			return as_error_update(err, AEROSPIKE_ERR_PARAM, "Unknown predicate type");
 	}
@@ -646,7 +574,7 @@ add_single_string_arg_predicate(as_query* query, PyObject* predicate, as_error* 
 	}
 
 	PyObject* py_str_val = PyTuple_GetItem(predicate, 1);
-	if ( !py_str_val ||
+	if (! py_str_val ||
 		!(PyString_Check(py_str_val) || PyUnicode_Check(py_str_val))) {
 		return as_error_update(err, AEROSPIKE_ERR_PARAM, "Invalid %s predicate", predicate_name);
 	}

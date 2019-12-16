@@ -47,8 +47,22 @@ class TestScanInfo(object):
         """
         with pytest.raises(TypeError) as typeError:
             self.as_connection.job_info()
-        assert "Required argument 'job_id' (pos 1) not found" in str(
+        assert "argument 'job_id' (pos 1)" in str(
             typeError.value)
+
+    @pytest.mark.xfail(reason="This test fails if job_info() finishes in < 1ms")
+    def test_job_info_with_small_timeout(self, connection_with_udf):
+        """
+        Invoke job_info() with correct policy and an expected timeout
+        """
+        policy = {'timeout': 1}
+
+        self.job_id = connection_with_udf.scan_apply(
+            "test", "demo", "bin_lua", "mytransform", ['age', 2], block=False)
+
+        with pytest.raises(e.TimeoutError):
+            job_info = self.as_connection.job_info(
+                self.job_id, aerospike.JOB_SCAN, policy)
 
     def test_job_info_with_correct_parameters(self):
         """

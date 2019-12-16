@@ -293,7 +293,8 @@ class TestRemovebin(object):
         """
         with pytest.raises(TypeError) as typeError:
             self.as_connection.remove_bin()
-        assert "Required argument 'key' (pos 1) not found" in str(
+        print("hi", str(typeError.value))
+        assert "argument 'key' (pos 1)" in str(
             typeError.value)
 
     def test_neg_remove_bin_with_policy_send_gen_eq_not_equal(self, put_data):

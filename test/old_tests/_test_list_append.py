@@ -205,7 +205,7 @@ class TestListAppend(object):
         """
         with pytest.raises(TypeError) as typeError:
             TestListAppend.client.list_append()
-        assert "Required argument 'key' (pos 1) not found" in str(
+        assert "argument 'key' (pos 1)" in str(
             typeError.value)
 
     def test_list_append_with_incorrect_policy(self):

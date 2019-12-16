@@ -30,7 +30,7 @@ os.putenv('ARCHFLAGS', '-arch x86_64')
 os.environ['ARCHFLAGS'] = '-arch x86_64'
 AEROSPIKE_C_VERSION = os.getenv('AEROSPIKE_C_VERSION')
 if not AEROSPIKE_C_VERSION:
-    AEROSPIKE_C_VERSION = '4.6.8'
+    AEROSPIKE_C_VERSION = '4.6.9'
 DOWNLOAD_C_CLIENT = os.getenv('DOWNLOAD_C_CLIENT')
 AEROSPIKE_C_HOME = os.getenv('AEROSPIKE_C_HOME')
 PREFIX = None
@@ -216,6 +216,7 @@ setup(
         'Programming Language :: Python :: 2.7',
         'Programming Language :: Python :: 3.5',
         'Programming Language :: Python :: 3.6',
+        'Programming Language :: Python :: 3.7',
         'Programming Language :: Python :: Implementation :: CPython',
         'Topic :: Database'
     ],
@@ -268,6 +269,7 @@ setup(
                 'src/main/client/get_key_digest.c',
                 'src/main/query/type.c',
                 'src/main/query/apply.c',
+		'src/main/query/add_ops.c',
                 'src/main/query/foreach.c',
                 'src/main/query/predexp.c',
                 'src/main/query/results.c',
@@ -278,12 +280,16 @@ setup(
                 'src/main/scan/foreach.c',
                 'src/main/scan/results.c',
                 'src/main/scan/select.c',
+                'src/main/scan/execute_background.c',
+                'src/main/scan/apply.c',
+                'src/main/scan/add_ops.c',
                 'src/main/geospatial/type.c',
                 'src/main/geospatial/wrap.c',
                 'src/main/geospatial/unwrap.c',
                 'src/main/geospatial/loads.c',
                 'src/main/geospatial/dumps.c',
                 'src/main/conversions.c',
+		'src/main/convert_predexp.c',
                 'src/main/policy.c',
                 'src/main/policy_config.c',
                 'src/main/calc_digest.c',

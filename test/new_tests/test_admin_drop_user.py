@@ -48,7 +48,7 @@ class TestDropUser(object):
         with pytest.raises(TypeError) as typeError:
             self.client.admin_drop_user()
 
-        assert "Required argument 'user' (pos 1) not found" in str(
+        assert "argument 'user' (pos 1)" in str(
             typeError.value)
 
     def test_drop_user_with_policy_none(self):

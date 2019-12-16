@@ -123,7 +123,7 @@ class TestGetPut():
         with pytest.raises(TypeError) as typeError:
             self.as_connection.get()
 
-        assert "Required argument 'key' (pos 1) not found" in str(
+        assert "argument 'key' (pos 1)" in str(
             typeError.value)
 
     def test_neg_get_with_extra_parameter_in_key(self, put_data):
@@ -471,7 +471,7 @@ class TestGetPut():
         with pytest.raises(TypeError) as typeError:
             self.as_connection.put()
 
-        assert "Required argument 'key' (pos 1) not found" in str(
+        assert "argument 'key' (pos 1)" in str(
             typeError.value)
 
     def test_neg_put_without_record(self):
@@ -483,7 +483,7 @@ class TestGetPut():
         with pytest.raises(TypeError) as typeError:
             self.as_connection.put(key)
 
-        assert "Required argument 'bins' (pos 2) not found" in str(
+        assert "argument 'bins' (pos 2)" in str(
             typeError.value)
 
     @pytest.mark.parametrize("key, ex_code, ex_msg", test_data.key_neg)

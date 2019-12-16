@@ -330,7 +330,7 @@ class TestSelectMany(object):
         with pytest.raises(TypeError) as typeError:
             self.as_connection.select_many()
 
-        assert "Required argument 'keys' (pos 1) not found" in str(
+        assert "argument 'keys' (pos 1)" in str(
             typeError.value)
 
     def test_select_many_with_proper_parameters_without_connection(self):

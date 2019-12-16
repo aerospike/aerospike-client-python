@@ -82,6 +82,10 @@ PyObject * AerospikeClient_ScanApply_Invoke(
 	PyObject *py_ustr2 = NULL;
 	PyObject *py_ustr3 = NULL;
 
+	// For converting predexp.
+	as_predexp_list predexp_list;
+	as_predexp_list* predexp_list_p = NULL;
+
 	as_static_pool static_pool;
 	memset(&static_pool, 0, sizeof(static_pool));
 
@@ -127,7 +131,7 @@ PyObject * AerospikeClient_ScanApply_Invoke(
 
 	if (py_policy) {
 		pyobject_to_policy_scan(&err, py_policy, &scan_policy, &scan_policy_p,
-				&self->as->config.policies.scan);
+				&self->as->config.policies.scan, &predexp_list, &predexp_list_p);
 
 		if (err.code != AEROSPIKE_OK) {
 			goto CLEANUP;
@@ -202,6 +206,10 @@ PyObject * AerospikeClient_ScanApply_Invoke(
 	}
 
 CLEANUP:
+	if (predexp_list_p) {
+		as_predexp_list_destroy(&predexp_list);
+	}
+
 	if (py_ustr1) {
 		Py_DECREF(py_ustr1);
 	}
@@ -326,11 +334,12 @@ PyObject * AerospikeClient_ScanInfo(AerospikeClient * self, PyObject * args, PyO
 	}
 
 	Py_BEGIN_ALLOW_THREADS
-	if (AEROSPIKE_OK != (aerospike_scan_info(self->as, &err,
-					info_policy_p, lscanId, &scan_info))) {
+	aerospike_scan_info(self->as, &err, info_policy_p, lscanId, &scan_info);
+	Py_END_ALLOW_THREADS
+
+	if (err.code != AEROSPIKE_OK) {
 		goto CLEANUP;
 	}
-	Py_END_ALLOW_THREADS
 
 	if (retObj)
 	{

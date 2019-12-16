@@ -324,5 +324,5 @@ class TestExistsMany():
         with pytest.raises(TypeError) as typeError:
             self.as_connection.exists_many()
 
-        assert "Required argument 'keys' (pos 1) not found" in str(
+        assert "argument 'keys' (pos 1)" in str(
             typeError.value)

@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright 2013-2017 Aerospike, Inc.
+ * Copyright 2013-2019 Aerospike, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -28,7 +28,11 @@
 	#define PyString_FromString         PyUnicode_FromString
 	#define PyString_FromStringAndSize  PyUnicode_FromStringAndSize
 
-	#define PyString_AsString           PyUnicode_AsUTF8
+	#if PY_MINOR_VERSION < 7
+			#define PyString_AsString           PyUnicode_AsUTF8
+	#else
+			#define PyString_AsString           (char*)PyUnicode_AsUTF8
+	#endif
 
 	#define PyString_Size               PyUnicode_GET_SIZE
 	#define PyString_GET_SIZE           PyUnicode_GET_SIZE

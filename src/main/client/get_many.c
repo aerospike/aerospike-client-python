@@ -179,6 +179,10 @@ PyObject * AerospikeClient_Get_Many_Invoke(
 	// Initialize error
 	as_error_init(&err);
 
+	// For converting predexp.
+	as_predexp_list predexp_list;
+	as_predexp_list* predexp_list_p = NULL;
+
 	if (!self || !self->as) {
 		as_error_update(&err, AEROSPIKE_ERR_PARAM, "Invalid aerospike object");
 		goto CLEANUP;
@@ -191,16 +195,20 @@ PyObject * AerospikeClient_Get_Many_Invoke(
 
 	// Convert python policy object to as_policy_batch
 	pyobject_to_policy_batch(&err, py_policy, &policy, &batch_policy_p,
-			&self->as->config.policies.batch);
+			&self->as->config.policies.batch, &predexp_list, &predexp_list_p);
 	if (err.code != AEROSPIKE_OK) {
 		goto CLEANUP;
 	}
-
 
 	py_recs = batch_get_aerospike_batch_read(&err, self, py_keys, batch_policy_p);
 
 
 CLEANUP:
+
+	if (predexp_list_p) {
+		as_predexp_list_destroy(&predexp_list);
+	}
+
 	if (err.code != AEROSPIKE_OK) {
 		PyObject * py_err = NULL;
 		error_to_pyobject(&err, &py_err);

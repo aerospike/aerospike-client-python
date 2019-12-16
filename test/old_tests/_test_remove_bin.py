@@ -55,7 +55,7 @@ class TestRemovebin(object):
         """
         with pytest.raises(TypeError) as typeError:
             TestRemovebin.client.remove_bin()
-        assert "Required argument 'key' (pos 1) not found" in str(
+        assert "argument 'key' (pos 1)" in str(
             typeError.value)
 
     def test_remove_bin_with_correct_parameters(self):

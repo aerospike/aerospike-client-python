@@ -55,7 +55,7 @@ class TestMapKeysIndex(object):
         with pytest.raises(TypeError) as typeError:
             self.as_connection.index_map_keys_create()
 
-        assert "Required argument 'ns' (pos 1) not found" in str(
+        assert "argument 'ns' (pos 1)" in str(
             typeError.value)
 
     def test_mapkeysindex_with_extra_paramters(self):

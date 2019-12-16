@@ -87,14 +87,15 @@ AerospikeConstants operator_constants[] = {
 	{ AS_OPERATOR_INCR                 ,   "OPERATOR_INCR"    },
 	{ AS_OPERATOR_APPEND               ,   "OPERATOR_APPEND"  },
 	{ AS_OPERATOR_PREPEND              ,   "OPERATOR_PREPEND" },
-	{ AS_OPERATOR_TOUCH                ,   "OPERATOR_TOUCH"   }
+	{ AS_OPERATOR_TOUCH                ,   "OPERATOR_TOUCH"   },
+	{ AS_OPERATOR_DELETE               ,   "OPERATOR_DELETE"  }
 };
 
 #define OPERATOR_CONSTANTS_ARR_SIZE (sizeof(operator_constants)/sizeof(AerospikeConstants))
 MOD_INIT(aerospike)
 {
 
-	const char version[8] = "3.9.0";
+	const char version[8] = "3.10.0";
 	// Makes things "thread-safe"
 	PyEval_InitThreads();
 	int i = 0;

@@ -53,7 +53,7 @@ class TestCalcDigest(object):
         with pytest.raises(TypeError) as typeError:
             aerospike.calc_digest()
 
-        assert "Required argument 'ns' (pos 1) not found" in str(
+        assert "argument 'ns' (pos 1)" in str(
             typeError.value)
 
     def test_neg_calc_digest_with_only_ns(self):
@@ -63,7 +63,7 @@ class TestCalcDigest(object):
         with pytest.raises(TypeError) as typeError:
             aerospike.calc_digest("test")
 
-        assert "Required argument 'set' (pos 2) not found" in str(
+        assert "argument 'set' (pos 2)" in str(
             typeError.value)
 
     @pytest.mark.parametrize("ns, set, key, err_msg", [

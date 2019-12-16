@@ -98,7 +98,7 @@ class TestInfo(object):
         with pytest.raises(TypeError) as err_info:
             self.as_connection.info()
 
-        assert "Required argument 'command' (pos 1) not found" in str(
+        assert "argument 'command' (pos 1)" in str(
             err_info.value)
 
     def test_info_positive_for_sets_without_connection(self):

@@ -115,6 +115,10 @@ PyObject * AerospikeScan_Foreach(AerospikeScan * self, PyObject * args, PyObject
 	as_policy_scan scan_policy;
 	as_policy_scan * scan_policy_p = NULL;
 
+	// For converting predexp.
+	as_predexp_list predexp_list;
+	as_predexp_list* predexp_list_p = NULL;
+
 	// Python Function Keyword Arguments
 	static char * kwlist[] = {"callback", "policy", "options", "nodename", NULL};
 
@@ -147,7 +151,7 @@ PyObject * AerospikeScan_Foreach(AerospikeScan * self, PyObject * args, PyObject
 
 	// Convert python policy object to as_policy_exists
 	pyobject_to_policy_scan(&err, py_policy, &scan_policy, &scan_policy_p,
-			&self->client->as->config.policies.scan);
+			&self->client->as->config.policies.scan, &predexp_list, &predexp_list_p);
 	if (err.code != AEROSPIKE_OK) {
 		goto CLEANUP;
 	}
@@ -192,6 +196,9 @@ PyObject * AerospikeScan_Foreach(AerospikeScan * self, PyObject * args, PyObject
 	}
 
 CLEANUP:
+	if (predexp_list_p) {
+		as_predexp_list_destroy(&predexp_list);
+	}
 
 	Py_XDECREF(py_ustr);
 

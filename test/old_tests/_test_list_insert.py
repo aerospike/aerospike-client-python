@@ -208,7 +208,7 @@ class TestListInsert(object):
         """
         with pytest.raises(TypeError) as typeError:
             TestListInsert.client.list_insert()
-        assert "Required argument 'key' (pos 1) not found" in str(
+        assert "argument 'key' (pos 1)" in str(
             typeError.value)
 
     def test_list_insert_with_incorrect_policy(self):

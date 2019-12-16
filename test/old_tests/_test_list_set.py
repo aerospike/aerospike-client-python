@@ -173,7 +173,7 @@ class TestListSet(object):
         """
         with pytest.raises(TypeError) as typeError:
             TestListSet.client.list_set()
-        assert "Required argument 'key' (pos 1) not found" in str(
+        assert "argument 'key' (pos 1)" in str(
             typeError.value)
 
     def test_list_set_with_incorrect_policy(self):

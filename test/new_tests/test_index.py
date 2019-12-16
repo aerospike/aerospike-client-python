@@ -50,13 +50,13 @@ class TestIndex(object):
         with pytest.raises(TypeError) as typeError:
             self.as_connection.index_string_create()
 
-        assert "Required argument 'ns' (pos 1) not found" in str(
+        assert "argument 'ns' (pos 1)" in str(
             typeError.value)
 
         with pytest.raises(TypeError) as typeError:
             self.as_connection.index_integer_create()
 
-        assert "Required argument 'ns' (pos 1) not found" in str(
+        assert "argument 'ns' (pos 1)" in str(
             typeError.value)
 
     def test_create_integer_index_with_correct_parameters(self):

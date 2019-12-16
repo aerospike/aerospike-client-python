@@ -372,7 +372,7 @@ Return a `aerospike.Scan` object to be used for executing scans over a specified
 (which can be omitted or None) in a namespace. A scan with a None set returns all the records in the namespace.");
 
 PyDoc_STRVAR(scan_apply_doc,
-"scan_apply(ns, set, module, function[, args[, policy[, options]]]) -> int\n\
+"scan_apply(ns, set, module, function[, args[, policy[, options,[ block]]]]) -> int\n\
 \n\
 Initiate a background scan and apply a record UDF to each record matched by the scan.");
 

@@ -38,7 +38,7 @@ class TestTouch(object):
         """
         with pytest.raises(TypeError) as typeError:
             self.as_connection.touch()
-        assert "Required argument 'key' (pos 1) not found" in str(
+        assert "argument 'key' (pos 1)" in str(
             typeError.value)
 
     def test_touch_with_correct_paramters(self):

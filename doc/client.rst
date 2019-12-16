@@ -226,6 +226,52 @@ Record Operations
             finally:
                 client.close()
 
+        .. note::
+            Version >= 3.10.0 Supports predicate expressions for record operations see :mod:`~aerospike.predexp`.
+
+            .. code-block:: python
+
+                from __future__ import print_function
+                import aerospike
+                from aerospike import predexp
+                from aerospike import exception as ex
+                import sys
+
+                config = { 'hosts': [('127.0.0.1', 3000)]}
+                client = aerospike.client(config).connect()
+
+                try:
+                    keys = [('test', 'demo', 1), ('test', 'demo', 2), ('test', 'demo', 3)]
+                    records = [{'number': 1}, {'number': 2}, {'number': 3}]
+                    for i in range(3):
+                        client.put(keys[i], records[i])
+
+                    preds = [ # check that the record has a value < 2 bin 'name'
+                        predexp.integer_bin('number'),
+                        predexp.integer_value(2),
+                        predexp.integer_less()
+                    ]
+                    records = []
+
+                    for i in range(3):
+                        try:
+                            records.append(client.get(keys[i], policy={'predexp': preds}))
+                        except ex.FilteredOut as e:
+                            print("Error: {0} [{1}]".format(e.msg, e.code))
+                    
+                    print(records)
+                except ex.AerospikeError as e:
+                    print("Error: {0} [{1}]".format(e.msg, e.code))
+                    sys.exit(1)
+                finally:
+                    client.close()
+                # the get only returns records that match the preds
+                # otherwise, an error is returned
+                # EXPECTED OUTPUT:
+                # Error: 127.0.0.1:3000 AEROSPIKE_FILTERED_OUT [27]
+                # Error: 127.0.0.1:3000 AEROSPIKE_FILTERED_OUT [27]
+                # [(('test', 'demo', 1, bytearray(b'\xb7\xf4\xb88\x89\xe2\xdag\xdeh>\x1d\xf6\x91\x9a\x1e\xac\xc4F\xc8')), {'gen': 8, 'ttl': 2592000}, {'charges': [10, 20, 14], 'name': 'John', 'number': 1})]
+
         .. note:: Using Generation Policy
 
             The generation policy allows a record to be written only when the \
@@ -557,6 +603,46 @@ Batch Operations
                   (('test', 'demo', '3', bytearray(b'\x9f\xf2\xe3\xf3\xc0\xc1\xc3q\xb5$n\xf8\xccV\xa9\xed\xd91a\x86')), {'gen': 1, 'ttl': 2592000}, {'age': 3, 'name': u'Name3'}),
                   (('test', 'demo', '4', bytearray(b'\x8eu\x19\xbe\xe0(\xda ^\xfa\x8ca\x93s\xe8\xb3%\xa8]\x8b')), None, None)
                 ]
+
+        .. note::
+            Version >= 3.10.0 Supports predicate expressions for batch operations see :mod:`~aerospike.predexp`.
+
+            .. code-block:: python
+
+                from __future__ import print_function
+                import aerospike
+                from aerospike import predexp
+                from aerospike import exception as ex
+                import sys
+
+                config = { 'hosts': [('127.0.0.1', 3000)]}
+                client = aerospike.client(config).connect()
+
+                try:
+                    keys = [('test', 'demo', 1), ('test', 'demo', 2), ('test', 'demo', 3)]
+                    records = [{'number': 1}, {'number': 2}, {'number': 3}]
+                    for i in range(3):
+                        client.put(keys[i], records[i])
+
+                    preds = [ # check that the record has a value less than 2 in bin 'name'
+                        predexp.integer_bin('number'),
+                        predexp.integer_value(2),
+                        predexp.integer_less()
+                    ]
+                    records = client.get_many(keys, policy={'predexp': preds})
+                    print(records)
+                except ex.FilteredOut as e:
+                    print("Error: {0} [{1}]".format(e.msg, e.code))
+                    sys.exit(1)
+                finally:
+                    client.close()
+                # the get_many only returns the records that matched the preds
+                # EXPECTED OUTPUT:
+                # [
+                #   (('test', 'demo', 1, bytearray(b'\xb7\xf4\xb88\x89\xe2\xdag\xdeh>\x1d\xf6\x91\x9a\x1e\xac\xc4F\xc8')), {'gen': 8, 'ttl': 2592000}, {'charges': [10, 20, 14], 'name': 'John', 'number': 1}),
+                #   (('test', 'demo', 2, bytearray(b'\xaejQ_7\xdeJ\xda\xccD\x96\xe2\xda\x1f\xea\x84\x8c:\x92p')), None, None),
+                #   ('test', 'demo', 3, bytearray(b'\xb1\xa5`g\xf6\xd4\xa8\xa4D9\xd3\xafb\xbf\xf8ha\x01\x94\xcd')), None, None)
+                # ]
 
         .. warning::
 
@@ -1546,6 +1632,318 @@ Map Operations
         :return: depends on return_type parameter
 
     .. index::
+        single: Bit Operations
+
+Bit Operations
+--------------
+
+.. class:: Client
+
+    .. note:: Bit operations require server version >= 4.6.0.2
+
+        Bit operations create operation dictionaries for use with client.operate().
+        Bit offsets are oriented left to right. Negative offsets are supported and start backwards
+        from the end of the target bitmap.
+
+        Offset examples:
+         * 0: leftmost bit in the map
+         * 4: fifth bit in the map
+         * -1: rightmost bit in the map
+         * -4: 3 bits from rightmost
+
+        .. code-block:: python
+
+            from __future__ import print_function
+            import aerospike
+            from aerospike import exception as e
+            from aerospike_helpers.operations import bitwise_operations
+
+            config = {'hosts': [('127.0.0.1', 3000)]}
+            try:
+                client = aerospike.client(config).connect()
+            except e.ClientError as e:
+                print("Error: {0} [{1}]".format(e.msg, e.code))
+                sys.exit(2)
+
+            key = ('test', 'demo', 'bit_example')
+            five_one_blob = bytearray([1] * 5)
+            five_one_bin = 'bitwise1'
+
+            try:
+                if client.exists(key):
+                    client.remove(key)
+                bit_policy = {
+                    'map_write_mode': aerospike.BIT_WRITE_DEFAULT,
+                }
+                client.put(
+                    key,
+                    {
+                        five_one_bin: five_one_blob
+                    }
+                )
+
+                # Example 1: read bits
+                ops = [
+                    bitwise_operations.bit_get(five_one_bin, 0, 40)
+                ]
+                print('=====EXAMPLE1=====')
+                _, _, results = client.operate(key, ops)
+                print(results)
+
+                # Example 2: modify bits using the 'or' op, then read bits
+                ops = [
+                    bitwise_operations.bit_or(five_one_bin, 0, 8, 1, bytearray([255]), bit_policy),
+                    bitwise_operations.bit_get(five_one_bin, 0, 40)
+                ]
+                print('=====EXAMPLE2=====')
+                _, _, results = client.operate(key, ops)
+                print(results)
+
+                # Example 3: modify bits using the 'remove' op, then read bits'
+                ops = [
+                    bitwise_operations.bit_remove(five_one_bin, 0, 2, bit_policy),
+                    bitwise_operations.bit_get(five_one_bin, 0, 24)
+                ]
+                print('=====EXAMPLE3=====')
+                _, _, results = client.operate(key, ops)
+                print(results)
+
+            except e.AerospikeError as e:
+                print("Error: {0} [{1}]".format(e.msg, e.code))
+
+            client.close()
+
+        .. note::
+
+            We expect to see
+
+            .. code-block:: python
+
+                =====EXAMPLE1=====
+                {'bitwise1': bytearray(b'\x01\x01\x01\x01\x01')}
+                =====EXAMPLE2=====
+                {'bitwise1': bytearray(b'\xff\x01\x01\x01\x01')}
+                =====EXAMPLE3=====
+                {'bitwise1': bytearray(b'\x01\x01\x01')}
+
+    .. seealso:: `Bits (Data Types) <https://www.aerospike.com/docs/guide/bitwise.html>`_.
+
+
+    .. method:: bit_resize(bin_name, byte_size, policy=None, resize_flags=aerospike.BIT_RESIZE_DEFAULT)
+        
+        Change the size of bytes stored in a record.
+
+        :param str bin_name: The name of the bin containing the map.
+        :param int byte_size: The new size of the bytes.
+        :param dict policy: Optional bit_policy policy dictionary. See: :ref:`aerospike_bit_policies`. default: None
+        :param int resize_flags: Optional flags modifying the behavior of the resize.
+            This should be constructed by bitwise or'ing together any of the values: `aerospike.BIT_RESIZE_DEFAULT`, `aerospike.BIT_RESIZE_FROM_FRONT`.
+            `aerospike.BIT_RESIZE_GROW_ONLY`, `aerospike.BIT_RESIZE_SHRINK_ONLY` . e.g. `aerospike.BIT_RESIZE_GROW_ONLY | aerospike.BIT_RESIZE_FROM_FRONT`.
+            See: :ref:`aerospike_bitwise_constants` for details on each value.
+        :raises: A subclass of :exc:`~aerospike.exception.AerospikeError`.
+        :return: A dictionary usable in operate or operate_ordered. The format of the dictionary should be considered an internal detail, and subject to change.
+
+    .. method:: bit_remove(bin_name, byte_offset, byte_size, policy=None)
+        
+        Remove bytes from bitmap at byte_offset for byte_size.
+
+        :param str bin_name: The name of the bin containing the map.
+        :param int byte_offset: Position of bytes to be removed.
+        :param int byte_size: How many bytes to remove.
+        :param dict policy: Optional bit_policy policy dictionary. See: :ref:`aerospike_bit_policies`. default: None
+        :raises: A subclass of :exc:`~aerospike.exception.AerospikeError`.
+        :return: A dictionary usable in operate or operate_ordered. The format of the dictionary should be considered an internal detail, and subject to change.
+
+    .. method:: bit_set(bin_name, bit_offset, bit_size, value_byte_size, value, policy=None)
+        
+        Set the value on a bitmap at bit_offset for bit_size.
+
+        :param str bin_name: The name of the bin containing the map.
+        :param int bit_offset: the offset where the bits will be set.
+        :param int bit_size: How many bits of the value to set.
+        :param int value_byte_size: Size of value in bytes.
+        :param bytes/byte_array value: The value to be set.
+        :param dict policy: optional bit_policy policy dictionary. See: See :ref:`aerospike_bit_policies`. default: None
+        :raises: A subclass of :exc:`~aerospike.exception.AerospikeError`.
+        :return: A dictionary usable in operate or operate_ordered. The format of the dictionary should be considered an internal detail, and subject to change.
+
+    .. method:: bit_count(bin_name, bit_offset, bit_size)
+        
+        Server returns an integer count of all set bits starting at bit_offset for bit_size bits.
+
+        :param str bin_name: The name of the bin containing the map.
+        :param int bit_offset: The offset where counting begins.
+        :param int bit_size: How many bits will be considered for counting.
+        :raises: A subclass of :exc:`~aerospike.exception.AerospikeError`.
+        :return: A dictionary usable in operate or operate_ordered. The format of the dictionary should be considered an internal detail, and subject to change.
+
+    .. method:: bit_add(bin_name, bit_offset, bit_size, value, sign, action, policy=None)
+        
+        Server adds value to the bin at bit_offset for bit_size.
+            bit_size must <= 64. If Sign is true value will be treated as a signed number.
+            If an underflow or overflow occurs, action is used. Server returns nothing.
+        
+        :param str bin_name: The name of the bin containing the map.
+        :param int bit_offset: The offset where bits will be added.
+        :param int bit_size: How many bits of value to add.
+        :param int value: The value to be added.
+        :param bool sign: True: treat value as signed, False: treat value as unsigned.
+        :param aerospike.constant action: Action taken if overflow/underflow occurs See: :ref:`aerospike_bitwise_constants`.
+        :param dict policy: Optional bit_policy policy dictionary. See: :ref:`aerospike_bit_policies`. default: None
+        :raises: A subclass of :exc:`~aerospike.exception.AerospikeError`.
+        :return: A dictionary usable in operate or operate_ordered. The format of the dictionary should be considered an internal detail, and subject to change.
+
+    .. method:: bit_and(bin_name, bit_offset, bit_size, value_byte_size, value, policy=None)
+        
+        Server performs an and op with value and bitmap in bin at bit_offset for bit_size.
+        
+        :param str bin_name: The name of the bin containing the map.
+        :param int bit_offset: The offset where bits will be modified.
+        :param int bit_size: How many bits of value to and.
+        :param int value_byte_size: Length of value in bytes.
+        :param int value: The value to be used in the and op.
+        :param dict policy: Optional bit_policy policy dictionary. See: :ref:`aerospike_bit_policies`. default: None
+        :raises: A subclass of :exc:`~aerospike.exception.AerospikeError`.
+        :return: A dictionary usable in operate or operate_ordered. The format of the dictionary should be considered an internal detail, and subject to change.
+
+    .. method:: bit_get(bin_name, bit_offset, bit_size)
+        
+        Server returns bits from bitmap starting at bit_offset for bit_size.
+
+        :param str bin_name: The name of the bin containing the map.
+        :param int bit_offset: The offset where bits will start being read.
+        :param int bit_size: How many bits to get.
+        :raises: A subclass of :exc:`~aerospike.exception.AerospikeError`.
+        :return: A dictionary usable in operate or operate_ordered. The format of the dictionary should be considered an internal detail, and subject to change.
+
+    .. method:: bit_get_int(bin_name, bit_offset, bit_size, sign)
+        
+        Server returns an integer formed from the bits read from bitmap starting at bit_offset for bit_size.
+
+        :param str bin_name: The name of the bin containing the map.
+        :param int bit_offset: The offset where bits will start being read.
+        :param int bit_size: How many bits to get.
+        :param bool sign: True: treat read value as signed, False: treat read value as unsigned.
+        :raises: A subclass of :exc:`~aerospike.exception.AerospikeError`.
+        :return: A dictionary usable in operate or operate_ordered. The format of the dictionary should be considered an internal detail, and subject to change.
+
+    .. method:: bit_insert(bin_name, byte_offset, value_byte_size, value, policy=None)
+        
+        Insert the bytes from value into the bitmap at byte_offset. No value is returned.
+
+        :param str bin_name: The name of the bin containing the map.
+        :param int byte_offset: The offset where the bytes will be inserted.
+        :param value_byte_size: The size of value in bytes.
+        :param bytes/byte_array value: The value to be inserted.
+        :param dict policy: Optional bit_policy policy dictionary. See: :ref:`aerospike_bit_policies`. default: None
+        :raises: A subclass of :exc:`~aerospike.exception.AerospikeError`.
+        :return: A dictionary usable in operate or operate_ordered. The format of the dictionary should be considered an internal detail, and subject to change.
+
+    .. method:: bit_lscan(bin_name, bit_offset, bit_size, value)
+        
+        Server returns an integer representing the bit offset of the first occurence
+        of the specified value bit. Starts scanning at bit_offset for bit_size. Returns
+        -1 if value not found.
+
+        :param str bin_name: The name of the bin containing the map.
+        :param int bit_offset: The offset where bits will start being scanned.
+        :param int bit_size: How many bits to scan.
+        :param bool value: True: look for 1, False: look for 0.
+        :raises: A subclass of :exc:`~aerospike.exception.AerospikeError`.
+        :return: A dictionary usable in operate or operate_ordered. The format of the dictionary should be considered an internal detail, and subject to change.
+
+    .. method:: bit_lshift(bin_name, bit_offset, bit_size, value)
+        
+        Left shifts bitmap starting at bit_offset for bit_size by shift bits.
+        No value is returned.
+
+        :param str bin_name: The name of the bin containing the map.
+        :param int bit_offset: The offset where bits will start being shifted.
+        :param int bit_size: The number of bits that will be shifted by shift places.
+        :param int shift: Number of bits to shift by.
+        :raises: A subclass of :exc:`~aerospike.exception.AerospikeError`.
+        :return: A dictionary usable in operate or operate_ordered. The format of the dictionary should be considered an internal detail, and subject to change.
+
+    .. method:: bit_not(bin_name, bit_offset, bit_size, polcy=None)
+        
+        Negates bitmap starting at bit_offset for bit_size. No value is returned.
+
+        :param str bin_name: The name of the bin containing the map.
+        :param int bit_offset: The offset where bits will start being negated.
+        :param int bit_size: How many bits to negate.
+        :param dict policy: Optional bit_policy policy dictionary. See: :ref:`aerospike_bit_policies`. default: None
+        :raises: A subclass of :exc:`~aerospike.exception.AerospikeError`.
+        :return: A dictionary usable in operate or operate_ordered. The format of the dictionary should be considered an internal detail, and subject to change.
+
+    .. method:: bit_or(bin_name, bit_offset, bit_size, value_byte_size, value, policy=None)
+        
+        Perform a bitwise or with value and bitmap at bit_offset for bit_size. Server returns nothing.
+        
+        :param str bin_name: The name of the bin containing the map.
+        :param int bit_offset: The offset where bits will be modified.
+        :param int bit_size: How many bits of value to or.
+        :param int value_byte_size: Length of value in bytes.
+        :param int value: The value to be used in the or op.
+        :param dict policy: Optional bit_policy policy dictionary. See: :ref:`aerospike_bit_policies`. default: None
+        :raises: A subclass of :exc:`~aerospike.exception.AerospikeError`.
+        :return: A dictionary usable in operate or operate_ordered. The format of the dictionary should be considered an internal detail, and subject to change.
+
+    .. method:: bit_rscan(bin_name, bit_offset, bit_size, value)
+        
+        Server returns an integer representing the bit offset of the last occurence
+        of the specified value bit. Starts scanning at bit_offset for bit_size. Returns
+        -1 if value not found.
+
+        :param str bin_name: The name of the bin containing the map.
+        :param int bit_offset: The offset where bits will start being scanned.
+        :param int bit_size: How many bits to scan.
+        :param bool value: True: look for 1, False: look for 0.
+        :raises: A subclass of :exc:`~aerospike.exception.AerospikeError`.
+        :return: A dictionary usable in operate or operate_ordered. The format of the dictionary should be considered an internal detail, and subject to change.
+
+    .. method:: bit_rshift(bin_name, bit_offset, bit_size, value)
+        
+        Right shifts bitmap starting at bit_offset for bit_size by shift bits.
+        No value is returned.
+
+        :param str bin_name: The name of the bin containing the map.
+        :param int bit_offset: The offset where bits will start being shifted.
+        :param int bit_size: The number of bits that will be shifted by shift places.
+        :param int shift: Number of bits to shift by.
+        :raises: A subclass of :exc:`~aerospike.exception.AerospikeError`.
+        :return: A dictionary usable in operate or operate_ordered. The format of the dictionary should be considered an internal detail, and subject to change.
+
+    .. method:: bit_subtract(bin_name, bit_offset, bit_size, value, sign, action, policy=None)
+        
+        Server subtracts value from the bin at bit_offset for bit_size.
+            bit_size must <= 64. If Sign is true value will be treated as a signed number.
+            If an underflow or overflow occurs, as_bit_overflow_action is used. Server returns nothing.
+        
+        :param str bin_name: The name of the bin containing the map.
+        :param int bit_offset: The offset where bits will be subtracted.
+        :param int bit_size: How many bits of value to subtract.
+        :param int value: The value to be subtracted.
+        :param bool sign: True: treat value as signed, False: treat value as unsigned.
+        :param aerospike.constant action: Action taken if overflow/underflow occurs See: :ref:`aerospike_bitwise_constants`.
+        :param dict policy: Optional bit_policy policy dictionary. See: :ref:`aerospike_bit_policies`. default: None
+        :raises: A subclass of :exc:`~aerospike.exception.AerospikeError`.
+        :return: A dictionary usable in operate or operate_ordered. The format of the dictionary should be considered an internal detail, and subject to change.
+
+    .. method:: bit_xor(bin_name, bit_offset, bit_size, value_byte_size, value, policy=None)
+        
+        Perform a bitwise xor with value and bitmap at bit_offset for bit_size. Server returns nothing.
+        
+        :param str bin_name: The name of the bin containing the map.
+        :param int bit_offset: The offset where bits will be modified.
+        :param int bit_size: How many bits of value to xor.
+        :param int value_byte_size: Length of value in bytes.
+        :param int value: The value to be used in the xor op.
+        :param dict policy: Optional bit_policy policy dictionary. See: :ref:`aerospike_bit_policies`. default: None
+        :raises: A subclass of :exc:`~aerospike.exception.AerospikeError`.
+        :return: A dictionary usable in operate or operate_ordered. The format of the dictionary should be considered an internal detail, and subject to change.
+
+
+    .. index::
         single: Multi-Ops
 
 Multi-Ops (Operate)
@@ -1573,6 +1971,46 @@ Multi-Ops (Operate)
         :param dict policy: optional :ref:`aerospike_operate_policies`.
         :return: a :ref:`aerospike_record_tuple`. See :ref:`unicode_handling`.
         :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
+
+        .. note::
+            Version >= 3.10.0 Supports predicate expressions for Multi-Ops see :mod:`~aerospike.predexp`.
+
+            .. code-block:: python
+
+                from __future__ import print_function
+                import aerospike
+                from aerospike import predexp
+                from aerospike_helpers.operations import list_operations
+                from aerospike import exception as ex
+                import sys
+
+                config = { 'hosts': [('127.0.0.1', 3000)]}
+                client = aerospike.client(config).connect()
+
+                try:
+                    unique_id = 1
+                    key = ('test', 'demo', unique_id)
+                    client.put(key, {'name': 'John', 'charges': [10, 20, 14]})
+
+                    ops = [
+                        list_operations.list_append('charges', 25)
+                    ]
+
+                    preds = [ # check that the record has value 'Kim' in bin 'name'
+                        predexp.string_bin('name'),
+                        predexp.string_value('Kim'),
+                        predexp.string_equal()
+                    ]
+                    client.operate(key, ops, policy={'predexp': preds})
+                except ex.FilteredOut as e:
+                    print("Error: {0} [{1}]".format(e.msg, e.code))
+                    sys.exit(1)
+                finally:
+                    client.close()
+                # the operation was not applied because the preds evaluate to false
+                # instead, an error is returned
+                # EXPECTED OUTPUT:
+                # Error: 127.0.0.1:3000 AEROSPIKE_FILTERED_OUT [27]
 
         .. note::
             In version `2.1.3` the return format of certain bin entries for this method, **only in cases when a map operation specifying a `return_type` is used**, has changed. Bin entries for map operations using "return_type" of aerospike.MAP_RETURN_KEY_VALUE will now return \
@@ -1887,10 +2325,79 @@ User Defined Functions
         .. seealso:: `Record UDF <http://www.aerospike.com/docs/guide/record_udf.html>`_ \
           and `Developing Record UDFs <http://www.aerospike.com/docs/udf/developing_record_udfs.html>`_.
 
+    .. note::
+        Version >= 3.10.0 Supports predicate expressions for apply, scan_apply, and query_apply see :mod:`~aerospike.predexp`.
+
+        .. code-block:: python
+
+            from __future__ import print_function
+            import aerospike
+            from aerospike import predexp
+            from aerospike import exception as ex
+            import sys
+
+            config = { 'hosts': [('127.0.0.1', 3000)]}
+            client = aerospike.client(config).connect()
+
+            # register udf
+            try:
+                client.udf_put('/path/to/my_udf.lua')
+            except ex.FilteredOut as e:
+                print("Error: {0} [{1}]".format(e.msg, e.code))
+                client.close()
+                sys.exit(1)
+
+
+            # put records and apply udf
+            try:
+                keys = [('test', 'demo', 1), ('test', 'demo', 2), ('test', 'demo', 3)]
+                records = [{'number': 1}, {'number': 2}, {'number': 3}]
+                for i in range(3):
+                    client.put(keys[i], records[i])
+
+                preds = [ # check that the record has value < 2 or == 3 in bin 'name'
+                    predexp.integer_bin('number'),
+                    predexp.integer_value(2),
+                    predexp.integer_less(),
+                    predexp.integer_bin('number'),
+                    predexp.integer_value(3),
+                    predexp.integer_equal(),
+                    predexp.predexp_or(2)
+                ]
+
+                policy = {
+                    'predexp': preds
+                }
+
+                client.scan_apply("test", None, "my_udf", "my_udf", ['number', 10], policy)
+                records = client.get_many(keys)
+
+                print(records)
+            except ex.FilteredOut as e:
+                print("Error: {0} [{1}]".format(e.msg, e.code))
+                sys.exit(1)
+            finally:
+                client.close()
+            # the udf has only modified the records that matched the preds
+            # EXPECTED OUTPUT:
+            # [
+            #   (('test', 'demo', 1, bytearray(b'\xb7\xf4\xb88\x89\xe2\xdag\xdeh>\x1d\xf6\x91\x9a\x1e\xac\xc4F\xc8')), {'gen': 2, 'ttl': 2591999}, {'number': 11}),
+            #   (('test', 'demo', 2, bytearray(b'\xaejQ_7\xdeJ\xda\xccD\x96\xe2\xda\x1f\xea\x84\x8c:\x92p')), {'gen': 12, 'ttl': 2591999}, {'number': 2}),
+            #   (('test', 'demo', 3, bytearray(b'\xb1\xa5`g\xf6\xd4\xa8\xa4D9\xd3\xafb\xbf\xf8ha\x01\x94\xcd')), {'gen': 13, 'ttl': 2591999}, {'number': 13})
+            # ]
+        
+        .. code-block:: python
+
+            # contents of my_udf.lua
+            function my_udf(rec, bin, offset)
+                info("my transform: %s", tostring(record.digest(rec)))
+                rec[bin] = rec[bin] + offset
+                aerospike:update(rec)
+            end
 
     .. method:: scan_apply(ns, set, module, function[, args[, policy[, options]]]) -> int
 
-        Initiate a background scan and apply a record UDF to each record matched by the scan.
+        Initiate a synchronus scan and apply a record UDF to each record matched by the scan.
 
         :param str ns: the namespace in the aerospike cluster.
         :param str set: the set name. Should be :py:obj:`None` if the entire namespace is to be scanned.
@@ -1900,7 +2407,7 @@ User Defined Functions
         :param dict policy: optional :ref:`aerospike_scan_policies`.
         :param dict options: the :ref:`aerospike_scan_options` that will apply to the scan.
         :rtype: :class:`int`
-        :return: a job ID that can be used with :meth:`job_info` to track the status of the :data:`aerospike.JOB_SCAN`, as it runs in the background.
+        :return: a job ID that can be used with :meth:`job_info` to check the status of the ``aerospike.JOB_SCAN``.
         :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
 
         .. seealso:: `Record UDF <http://www.aerospike.com/docs/guide/record_udf.html>`_ \
@@ -1909,7 +2416,7 @@ User Defined Functions
 
     .. method:: query_apply(ns, set, predicate, module, function[, args[, policy]]) -> int
 
-        Initiate a background query and apply a record UDF to each record matched by the query.
+        Initiate a synchronus query and apply a record UDF to each record matched by the query.
 
         :param str ns: the namespace in the aerospike cluster.
         :param str set: the set name. Should be :py:obj:`None` if you want to query records in the *ns* which are in no set.
@@ -1919,7 +2426,7 @@ User Defined Functions
         :param list args: the arguments to the UDF.
         :param dict policy: optional :ref:`aerospike_write_policies`.
         :rtype: :class:`int`
-        :return: a job ID that can be used with :meth:`job_info` to track the status of the :data:`aerospike.JOB_QUERY`, as it runs in the background.
+        :return: a job ID that can be used with :meth:`job_info` to check the status of the ``aerospike.JOB_QUERY``.
         :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
 
         .. seealso:: `Record UDF <http://www.aerospike.com/docs/guide/record_udf.html>`_ \
@@ -2582,6 +3089,10 @@ Write Policies
             | Default: ``False``
 
             .. note:: Requires Enterprise server version >= 3.10
+        * **predexp** :class:`list`
+            | A list of :mod:`aerospike.predexp` used as a predicate filter for record, bin, batch, and record UDF operations.
+            |
+            | Default: None
             
 
 .. _aerospike_read_policies:
@@ -2647,7 +3158,11 @@ Read Policies
         * **replica** 
             | One of the :ref:`POLICY_REPLICA` values such as :data:`aerospike.POLICY_REPLICA_MASTER`
             |
-            | Default: :data:`aerospike.POLICY_REPLICA_SEQUENCE`
+            | Default: ``aerospike.POLICY_REPLICA_SEQUENCE``
+        * **predexp** :class:`list`
+            | A list of :mod:`aerospike.predexp` used as a predicate filter for record, bin, batch, and record UDF operations.
+            |
+            | Default: None
 
 .. _aerospike_operate_policies:
 
@@ -2731,6 +3246,10 @@ Operate Policies
             | Default: ``False``
 
             .. note:: Requires Enterprise server version >= 3.10
+        * **predexp** :class:`list`
+            | A list of :mod:`aerospike.predexp` used as a predicate filter for record, bin, batch, and record UDF operations.
+            |
+            | Default: None
 
 .. _aerospike_apply_policies:
 
@@ -2796,6 +3315,10 @@ Apply Policies
             | Default: ``False``
 
             .. note:: Requires Enterprise server version >= 3.10
+        * **predexp** :class:`list`
+            | A list of :mod:`aerospike.predexp` used as a predicate filter for record, bin, batch, and record UDF operations.
+            |
+            | Default: None
 
 
 .. _aerospike_remove_policies:
@@ -2861,7 +3384,11 @@ Remove Policies
         * **replica** 
             | One of the :ref:`POLICY_REPLICA` values such as :data:`aerospike.POLICY_REPLICA_MASTER`
             | 
-            | Default: :data:`aerospike.POLICY_REPLICA_SEQUENCE`
+            | Default: ``aerospike.POLICY_REPLICA_SEQUENCE``
+        * **predexp** :class:`list`
+            | A list of :mod:`aerospike.predexp` used as a predicate filter for record, bin, batch, and record UDF operations.
+            |
+            | Default: None
 
 .. _aerospike_batch_policies:
 
@@ -2938,6 +3465,10 @@ Batch Policies
             | Should raw bytes be deserialized to as_list or as_map. Set to `False` for backup programs that just need access to raw bytes. 
             | 
             | Default: ``True``
+        * **predexp** :class:`list`
+            | A list of :mod:`aerospike.predexp` used as a predicate filter for record, bin, batch, and record UDF operations.
+            |
+            | Default: None
 
 .. _aerospike_info_policies:
 

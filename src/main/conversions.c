@@ -1969,7 +1969,6 @@ as_status get_cdt_ctx(AerospikeClient* self, as_error* err, as_cdt_ctx* cdt_ctx,
     if (!py_ctx) {
         return AEROSPIKE_OK;
     }
-    *ctx_in_use = true;
 
     if (PyList_Check(py_ctx)) {
         Py_ssize_t py_list_size = PyList_Size(py_ctx);
@@ -2045,11 +2044,11 @@ as_status get_cdt_ctx(AerospikeClient* self, as_error* err, as_cdt_ctx* cdt_ctx,
         }
     }
     else {
-		as_cdt_ctx_destroy(cdt_ctx);
         return as_error_update(err, AEROSPIKE_ERR_PARAM, "Failed to convert %s", CTX_KEY);
     }
 
-    return AEROSPIKE_OK;
+	*ctx_in_use = true;
+	return AEROSPIKE_OK;
 }
 
 bool

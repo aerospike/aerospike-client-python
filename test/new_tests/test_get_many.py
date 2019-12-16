@@ -250,7 +250,7 @@ class TestGetMany():
         with pytest.raises(TypeError) as typeError:
             self.as_connection.get_many()
 
-        assert "Required argument 'keys' (pos 1) not found" in str(
+        assert "argument 'keys' (pos 1)" in str(
             typeError.value)
 
     def test_neg_get_many_with_none_keys(self):

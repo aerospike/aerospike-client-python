@@ -24,6 +24,7 @@
 #include <aerospike/as_query.h>
 #include <aerospike/as_scan.h>
 #include <aerospike/as_bin.h>
+#include <aerospike/as_operations.h>
 #include "pool.h"
 
 // Bin names can be of type Unicode in Python
@@ -79,12 +80,14 @@ typedef struct {
 	AerospikeClient * client;
 	as_query query;
 	UnicodePyObjects u_objs;
+	as_operations ops;
 } AerospikeQuery;
 
 typedef struct {
 	PyObject_HEAD
 	AerospikeClient * client;
 	as_scan scan;
+	as_operations ops;
 } AerospikeScan;
 
 typedef struct {

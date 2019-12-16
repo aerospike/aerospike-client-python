@@ -90,7 +90,7 @@ class TestListTrim(object):
         """
         with pytest.raises(TypeError) as typeError:
             TestListTrim.client.list_trim()
-        assert "Required argument 'key' (pos 1) not found" in str(
+        assert "argument 'key' (pos 1)" in str(
             typeError.value)
 
     def test_list_trim_with_incorrect_policy(self):

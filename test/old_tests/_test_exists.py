@@ -104,7 +104,7 @@ class TestExists(TestBaseClass):
         with pytest.raises(TypeError) as typeError:
             TestExists.client.exists()
 
-        assert "Required argument 'key' (pos 1) not found" in str(
+        assert "argument 'key' (pos 1)" in str(
             typeError.value)
 
     def test_exists_with_only_key(self):

@@ -62,7 +62,7 @@ class TestIncrement(object):
         """
         with pytest.raises(TypeError) as typeError:
             TestIncrement.client.increment()
-        assert "Required argument 'key' (pos 1) not found" in str(
+        assert "argument 'key' (pos 1)" in str(
             typeError.value)
 
     def test_increment_with_correct_parameters(self):

@@ -6,6 +6,7 @@ from .test_base_class import TestBaseClass
 from .as_status_codes import AerospikeStatus
 from aerospike import exception as e
 from aerospike import predicates as p
+from aerospike import predexp as as_predexp
 from threading import Lock
 
 aerospike = pytest.importorskip("aerospike")
@@ -266,7 +267,7 @@ class TestQuery(TestBaseClass):
         with pytest.raises(TypeError) as typeError:
             query.foreach()
 
-        assert "Required argument 'callback' (pos 1) not found" in str(
+        assert "argument 'callback'" in str(
             typeError.value)
 
     def test_query_with_nonindexed_bin(self):
@@ -324,6 +325,24 @@ class TestQuery(TestBaseClass):
             Invoke query() with policy
         """
         policy = {'timeout': 1000}
+        query = self.as_connection.query('test', 'demo')
+        query.select('name', 'test_age')
+        query.where(p.equals('test_age', 1))
+        records = []
+
+        def callback(input_tuple):
+            _, _, record = input_tuple
+            records.append(record)
+
+        query.foreach(callback, policy)
+        assert len(records) == 1
+    
+    @pytest.mark.xfail(reason="Query policies do not support rps")
+    def test_query_with_policy_records_per_second(self):
+        """
+            Invoke query() with the records_per_second policy set
+        """
+        policy = {'timeout': 1000, 'records_per_second': 10}
         query = self.as_connection.query('test', 'demo')
         query.select('name', 'test_age')
         query.where(p.equals('test_age', 1))
@@ -460,6 +479,46 @@ class TestQuery(TestBaseClass):
         records = query.results()
         assert len(records) == 1
 
+    def test_query_with_results_method_and_predexp(self):
+        """
+            Invoke query() with correct arguments
+        """
+        predexp = [
+            as_predexp.integer_bin('test_age'),
+            as_predexp.integer_value(1),
+            as_predexp.integer_equal()
+        ]
+
+        policy = {
+            'predexp': predexp
+        }
+
+        query = self.as_connection.query('test', 'demo')
+        query.select('name', 'test_age')
+
+        records = query.results(policy)
+        assert len(records) == 1
+
+    def test_query_with_results_method_and_invalid_predexp(self):
+        """
+            Invoke query() with correct arguments
+        """
+        predexp = [
+            as_predexp.integer_bin('test_age'),
+            as_predexp.integer_value('1'),
+            as_predexp.integer_equal()
+        ]
+
+        policy = {
+            'predexp': predexp
+        }
+
+        query = self.as_connection.query('test', 'demo')
+        query.select('name', 'test_age')
+
+        with pytest.raises(e.ParamError):
+            query.results(policy)
+
     def test_query_with_results_nobins_options(self):
         """
             Invoke query() with correct arguments
@@ -571,6 +630,31 @@ class TestQuery(TestBaseClass):
 
         query.foreach(callback)
         assert len(records) == expected_length
+
+    def test_query_with_correct_parameters_predexp(self):
+        """
+            Invoke query() with correct arguments and using predexp
+        """
+
+        predexp = [
+            as_predexp.integer_bin('test_age'),
+            as_predexp.integer_value(4),
+            as_predexp.integer_equal(),
+        ]
+
+        query = self.as_connection.query('test', 'demo')
+        query.select('name', 'test_age')
+        #query.where(predicate)
+
+        records = []
+
+        def callback(input_tuple):
+            _, _, record = input_tuple
+            records.append(record)
+
+        query.foreach(callback, {'predexp': predexp})
+        assert len(records) == 1
+        assert records[0]['test_age'] == 4
 
     def test_query_with_multiple_foreach_on_same_query_object(self):
         """

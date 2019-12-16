@@ -11,7 +11,7 @@ Aerospike Python Client
 Dependencies
 ------------
 
-The Python client for Aerospike works with Python 2.7, 3.4, 3.5, 3.6 running on
+The Python client for Aerospike works with Python 2.7, 3.4, 3.5, 3.6, 3.7 running on
 **64-bit** OS X 10.9+ and Linux.
 
 NOTE: The following dependencies only apply to installations that build from source

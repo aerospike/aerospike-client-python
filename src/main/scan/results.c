@@ -38,7 +38,7 @@ typedef struct {
 
 static bool each_result(const as_val * val, void * udata)
 {
-	if (!val) {
+	if (! val) {
 		return false;
 	}
 
@@ -79,6 +79,10 @@ PyObject * AerospikeScan_Results(AerospikeScan * self, PyObject * args, PyObject
 	data.client = self->client;
 	static char * kwlist[] = {"policy", "nodename", NULL};
 
+	// For converting predexp.
+	as_predexp_list predexp_list;
+	as_predexp_list* predexp_list_p = NULL;
+
 	if (PyArg_ParseTupleAndKeywords(args, kwds, "|OO:results", kwlist, &py_policy, &py_nodename) == false) {
 		return NULL;
 	}
@@ -86,18 +90,18 @@ PyObject * AerospikeScan_Results(AerospikeScan * self, PyObject * args, PyObject
 	as_error err;
 	as_error_init(&err);
 
-	if (!self || !self->client->as) {
+	if (! self || !self->client->as) {
 		as_error_update(&err, AEROSPIKE_ERR_PARAM, "Invalid aerospike object");
 		goto CLEANUP;
 	}
-	if (!self->client->is_conn_16) {
+	if (! self->client->is_conn_16) {
 		as_error_update(&err, AEROSPIKE_ERR_CLUSTER, "No connection to aerospike cluster");
 		goto CLEANUP;
 	}
 
 	// Convert python policy object to as_policy_scan
 	pyobject_to_policy_scan(&err, py_policy, &scan_policy, &scan_policy_p,
-			&self->client->as->config.policies.scan);
+			&self->client->as->config.policies.scan, &predexp_list, &predexp_list_p);
 	if (err.code != AEROSPIKE_OK) {
 		as_error_update(&err, err.code, NULL);
 		goto CLEANUP;
@@ -112,7 +116,7 @@ PyObject * AerospikeScan_Results(AerospikeScan * self, PyObject * args, PyObject
 		} else if (PyUnicode_Check(py_nodename)) {
 			/* The decoding could fail, so we need to check for null */
 			py_ustr = PyUnicode_AsUTF8String(py_nodename);
-			if (!py_ustr) {
+			if (! py_ustr) {
 				as_error_update(&err, AEROSPIKE_ERR_PARAM, "Invalid unicode nodename");
 				goto CLEANUP;
 			}
@@ -140,6 +144,9 @@ PyObject * AerospikeScan_Results(AerospikeScan * self, PyObject * args, PyObject
 
 
 CLEANUP:
+	if (predexp_list_p) {
+		as_predexp_list_destroy(&predexp_list);
+	}
 
 	Py_XDECREF(py_ustr);
 

@@ -80,7 +80,7 @@ class TestListGet(object):
         """
         with pytest.raises(TypeError) as typeError:
             TestListGet.client.list_get()
-        assert "Required argument 'key' (pos 1) not found" in str(
+        assert "argument 'key' (pos 1)" in str(
             typeError.value)
 
     def test_list_get_with_incorrect_policy(self):

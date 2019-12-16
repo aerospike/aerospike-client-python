@@ -43,8 +43,8 @@ AerospikeQuery * AerospikeQuery_Apply(AerospikeQuery * self, PyObject * args, Py
 	// Python function keyword arguments
 	static char * kwlist[] = {"module", "function", "arguments", "policy", NULL};
 
-	if ( PyArg_ParseTupleAndKeywords(args, kwds, "OO|OO:apply", kwlist,
-	 &py_module, &py_function, &py_args, &py_policy) == false ){
+	if (! PyArg_ParseTupleAndKeywords(args, kwds, "OO|OO:apply", kwlist,
+	 &py_module, &py_function, &py_args, &py_policy) ){
 		return NULL;
 	}
 
@@ -56,7 +56,7 @@ AerospikeQuery * AerospikeQuery_Apply(AerospikeQuery * self, PyObject * args, Py
 	// Initialize error object
 	as_error_init(&err);
 
-	if ( !self || !self->client->as ){
+	if (! self || !self->client->as ){
 		as_error_update(&err, AEROSPIKE_ERR_PARAM, "Invalid query object");
 		goto CLEANUP;
 	}
@@ -177,7 +177,7 @@ bool Illegal_UDF_Args_Check(PyObject * py_args) {
 			}
 			Py_DECREF(dict_values);
 		}
-		else if ( !(
+		else if (! (
 			PyInt_Check(py_val)                                             || 
 			PyLong_Check(py_val)                                            ||
 			PyFloat_Check(py_val)                                           ||

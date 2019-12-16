@@ -67,6 +67,16 @@ static PyMethodDef AerospikeScan_Type_Methods[] = {
 
 	{"results",	(PyCFunction) AerospikeScan_Results,	METH_VARARGS | METH_KEYWORDS,
 				results_doc},
+	
+	{"execute_background",	(PyCFunction) AerospikeScan_ExecuteBackground,	METH_VARARGS | METH_KEYWORDS,
+				results_doc},
+
+	{"apply",	(PyCFunction) AerospikeScan_Apply,	METH_VARARGS | METH_KEYWORDS,
+				results_doc},
+
+	{"add_ops",	(PyCFunction) AerospikeScan_Add_Ops,	METH_VARARGS | METH_KEYWORDS,
+				results_doc},
+
 	{NULL}
 };
 
@@ -130,6 +140,10 @@ static int AerospikeScan_Type_Init(AerospikeScan * self, PyObject * args, PyObje
 
 static void AerospikeScan_Type_Dealloc(PyObject * self)
 {
+	AerospikeScan *as_scan = (AerospikeScan *)self;
+	if (as_scan->scan.ops) {
+		as_operations_destroy(&as_scan->ops);
+	}
 	as_scan_destroy(&((AerospikeScan *)self)->scan);
     Py_CLEAR(((AerospikeScan *)self)->client);
 	Py_TYPE(self)->tp_free((PyObject *) self);

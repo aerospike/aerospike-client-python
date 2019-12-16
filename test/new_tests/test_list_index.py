@@ -386,5 +386,5 @@ cfasdcalskdcbacfq34915rwcfasdcascnabscbaskjdbcalsjkbcdasc');
         with pytest.raises(TypeError) as typeError:
             self.as_connection.index_list_create()
 
-        assert "Required argument 'ns' (pos 1) not found" in str(typeError.
+        assert "argument 'ns' (pos 1)" in str(typeError.
                                                                  value)

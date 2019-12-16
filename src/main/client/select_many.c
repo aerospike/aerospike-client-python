@@ -183,6 +183,10 @@ PyObject * AerospikeClient_Select_Many_Invoke(
 	Py_ssize_t bins_size = 0;
 	char **filter_bins = NULL;
 
+	// For converting predexp.
+	as_predexp_list predexp_list;
+	as_predexp_list* predexp_list_p = NULL;
+
 	// Unicode object's pool
 	UnicodePyObjects u_objs;
 	u_objs.size = 0;
@@ -242,11 +246,10 @@ PyObject * AerospikeClient_Select_Many_Invoke(
 
 	// Convert python policy object to as_policy_batch
 	pyobject_to_policy_batch(&err, py_policy, &policy, &batch_policy_p,
-			&self->as->config.policies.batch);
+			&self->as->config.policies.batch, &predexp_list, &predexp_list_p);
 	if (err.code != AEROSPIKE_OK) {
 		goto CLEANUP;
 	}
-
 
 	py_recs = batch_select_aerospike_batch_read(&err, self, py_keys, batch_policy_p, filter_bins, bins_size);
 
@@ -254,6 +257,10 @@ CLEANUP:
 
 	if (filter_bins) {
 		free(filter_bins);
+	}
+
+	if (predexp_list_p) {
+		as_predexp_list_destroy(&predexp_list);
 	}
 
 	// DECREFed all the unicode objects stored in Pool

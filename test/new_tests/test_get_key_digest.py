@@ -63,7 +63,7 @@ class TestGetKeyDigest(object):
         with pytest.raises(TypeError) as typeError:
             self.as_connection.get_key_digest()
 
-        assert "Required argument 'ns' (pos 1) not found" in str(
+        assert "argument 'ns' (pos 1)" in str(
             typeError.value)
 
     def test_get_key_digest_with_only_ns(self):

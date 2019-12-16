@@ -56,7 +56,7 @@ class TestAppend(object):
         """
         with pytest.raises(TypeError) as typeError:
             TestAppend.client.append()
-        assert "Required argument 'key' (pos 1) not found" in str(
+        assert "argument 'key' (pos 1)" in str(
             typeError.value)
 
     def test_append_with_correct_paramters(self):

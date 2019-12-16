@@ -199,7 +199,6 @@ class TestOperate(object):
                 operations.read("bytearray_bin")
             ],
             {'bytearray_bin': bytearray("asd;as[d'as;d", "utf-8")}),
-
     ])
     def test_pos_operate_with_correct_paramters(self, key, llist, expected):
         """
@@ -210,6 +209,25 @@ class TestOperate(object):
 
         assert bins == expected
         self.as_connection.remove(key)
+
+    @pytest.mark.parametrize("key, llist, expected", [
+        (
+            ('test', 'demo', 1),
+            [
+                operations.write("write_bin", {"no": 89.8}),
+                operations.write("write_bin2", {"no": 100}),
+                operations.delete(),
+            ],
+            {}),
+    ])
+    def test_pos_operate_delete_with_correct_paramters(self, key, llist, expected):
+        """
+        Invoke operate() with correct parameters
+        """
+
+        key, _, bins = self.as_connection.operate(key, llist)
+
+        assert bins == expected
 
     def test_pos_operate_with_increment_positive_float_value(self):
         """
@@ -872,12 +890,27 @@ class TestOperate(object):
     # Negative Tests
     def test_neg_operate_with_no_parameters(self):
         """
-        Invoke opearte() without any mandatory parameters.
+        Invoke operate() without any mandatory parameters.
         """
         with pytest.raises(TypeError) as typeError:
             self.as_connection.operate()
-        assert "Required argument 'key' (pos 1) not found" in str(
-            typeError.value)
+        assert "key" in str(typeError.value)
+
+    @pytest.mark.parametrize("key, llist, expected", [
+        (
+            ('test', 'demo', 'bad_key'),
+            [
+                operations.delete(),
+            ],
+            e.RecordNotFound)
+    ])
+    def test_pos_operate_delete_with_incorrect_paramters(self, key, llist, expected):
+        """
+        Invoke operate() with correct parameters
+        """
+
+        with pytest.raises(expected):
+            self.as_connection.operate(key, llist)
 
     def test_neg_operate_list_operation_bin_notlist(self):
         """

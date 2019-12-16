@@ -79,7 +79,7 @@ class TestListPop(object):
         """
         with pytest.raises(TypeError) as typeError:
             TestListPop.client.list_pop()
-        assert "Required argument 'key' (pos 1) not found" in str(
+        assert "argument 'key' (pos 1)" in str(
             typeError.value)
 
     def test_list_pop_with_incorrect_policy(self):

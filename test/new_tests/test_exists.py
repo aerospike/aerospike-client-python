@@ -144,7 +144,7 @@ class TestExists():
         with pytest.raises(TypeError) as typeError:
             self.as_connection.exists()
 
-        assert "Required argument 'key' (pos 1) not found" in str(
+        assert "argument 'key' (pos 1)" in str(
             typeError.value)
 
     @pytest.mark.parametrize("key, record, policy, ex_code, ex_msg", [

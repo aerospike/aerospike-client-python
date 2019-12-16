@@ -93,7 +93,7 @@ class TestOperate(object):
         """
         with pytest.raises(TypeError) as typeError:
             TestOperate.client.operate()
-        assert "Required argument 'key' (pos 1) not found" in str(
+        assert "argument 'key' (pos 1)" in str(
             typeError.value)
 
     def test_operate_with_correct_paramters_positive(self):

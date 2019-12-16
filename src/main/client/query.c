@@ -240,6 +240,10 @@ PyObject * AerospikeClient_QueryApply_Invoke(
 	PyObject *py_ustr2 = NULL;
 	PyObject *py_ustr3 = NULL;
 
+	// For converting predexp.
+	as_predexp_list predexp_list;
+	as_predexp_list* predexp_list_p = NULL;
+
 	as_static_pool static_pool;
 	memset(&static_pool, 0, sizeof(static_pool));
 
@@ -285,7 +289,7 @@ PyObject * AerospikeClient_QueryApply_Invoke(
 
 	if (py_policy) {
 		pyobject_to_policy_write(&err, py_policy, &write_policy, &write_policy_p,
-				&self->as->config.policies.write);
+				&self->as->config.policies.write, &predexp_list, &predexp_list_p);
 
 		if (err.code != AEROSPIKE_OK) {
 			goto CLEANUP;
@@ -393,6 +397,10 @@ PyObject * AerospikeClient_QueryApply_Invoke(
 	}
 
 CLEANUP:
+	if (predexp_list_p) {
+		as_predexp_list_destroy(&predexp_list);
+	}
+
 	if (py_ustr1) {
 		Py_DECREF(py_ustr1);
 	}
@@ -522,11 +530,12 @@ PyObject * AerospikeClient_JobInfo(AerospikeClient * self, PyObject * args, PyOb
 	}
 
 	Py_BEGIN_ALLOW_THREADS
-	if (AEROSPIKE_OK != (aerospike_job_info(self->as, &err,
-					info_policy_p, module, ujobId, false, &job_info))) {
+	aerospike_job_info(self->as, &err, info_policy_p, module, ujobId, false, &job_info);
+	Py_END_ALLOW_THREADS
+
+	if (err.code != AEROSPIKE_OK) {
 		goto CLEANUP;
 	}
-	Py_END_ALLOW_THREADS
 
 	if (retObj)
 	{

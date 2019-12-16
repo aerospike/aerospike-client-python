@@ -6,6 +6,7 @@ import pickle
 from .as_status_codes import AerospikeStatus
 from aerospike import exception as e
 from aerospike import predicates as p
+from aerospike import predexp as as_predexp
 
 aerospike = pytest.importorskip("aerospike")
 try:
@@ -125,6 +126,61 @@ class TestQueryApply(object):
 
         self._wait_for_query_complete(query_id)
         self._correct_items_have_been_applied()
+
+    def test_query_apply_with_new_predexp(self):
+        """
+        Invoke query_apply() with correct policy and predexp
+        """
+
+        predexp = [
+            as_predexp.integer_bin('age'),
+            as_predexp.integer_value(2),
+            as_predexp.integer_equal(),
+            as_predexp.integer_bin('val'),
+            as_predexp.integer_value(3),
+            as_predexp.integer_equal(),
+            as_predexp.predexp_or(2)
+        ]
+
+        policy = {'total_timeout': 0, 'predexp': predexp}
+        query_id = self.as_connection.query_apply(
+            "test", "demo", self.age_range_pred, "query_apply",
+            "mark_as_applied", ['name', 2], policy)
+
+        self._wait_for_query_complete(query_id)
+
+        recs = []
+
+        for i in range(1, 10):
+            key = ('test', 'demo', i)
+            _, _, bins = self.as_connection.get(key)
+            if bins['name'] == 'aerospike':
+                recs.append(bins)
+        
+        assert len(recs) == 2
+        for rec in recs:
+            assert rec['age'] == 2 or rec['val'] == 3
+
+    def test_query_apply_with_bad_new_predexp(self):
+        """
+        Invoke query_apply() with correct policy and predexp
+        """
+
+        predexp = [
+            as_predexp.integer_bin('age'),
+            as_predexp.string_value(2),
+            as_predexp.integer_equal(),
+            as_predexp.integer_bin('val'),
+            as_predexp.integer_value(3),
+            as_predexp.integer_equal(),
+            as_predexp.predexp_or(2)
+        ]
+
+        policy = {'total_timeout': 0, 'predexp': predexp}
+        with pytest.raises(e.ParamError):
+            query_id = self.as_connection.query_apply(
+                "test", "demo", self.age_range_pred, "query_apply",
+                "mark_as_applied", ['name', 2], policy)
 
     def test_query_apply_with_set_argument_as_none(self):
         """

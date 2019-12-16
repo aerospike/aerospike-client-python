@@ -9,6 +9,7 @@ from aerospike import exception as e
 aerospike = pytest.importorskip("aerospike")
 try:
     import aerospike
+    from aerospike import predexp as as_predexp
 except:
     print("Please install aerospike python client.")
     sys.exit(1)
@@ -154,6 +155,37 @@ class TestApply(TestBaseClass):
 
         _, _, bins = self.as_connection.get(key)
 
+        assert bins[test_bin] == expected
+        assert retval == 0  # the list_append UDF returns 0
+
+    @pytest.mark.parametrize(
+        "func_args, test_bin, predexp, expected",
+        (
+            (
+                ['name', 1],
+                'name',
+                [
+                as_predexp.integer_bin('age'),
+                as_predexp.integer_value(1),
+                as_predexp.integer_equal()
+                ],
+                ['name1', 1]
+            ),
+        ), ids=[
+            "Integer",
+        ]
+    )
+    def test_apply_causing_list_append_with_correct_params_with_predexp(
+            self, func_args, test_bin, predexp, expected):
+
+        key = ('test', 'demo', 1)
+        retval = self.as_connection.apply(
+            key, 'sample', 'list_append', func_args, policy={'predexp': predexp})
+
+        _, _, bins = self.as_connection.get(key)
+
+        print(expected)
+        print(bins[test_bin])
         assert bins[test_bin] == expected
         assert retval == 0  # the list_append UDF returns 0
 
@@ -324,7 +356,7 @@ class TestApply(TestBaseClass):
         with pytest.raises(TypeError) as typeError:
             self.as_connection.apply()
 
-        assert "Required argument 'key' (pos 1) not found" in str(
+        assert "argument 'key' (pos 1)" in str(
             typeError.value)
 
     def test_apply_with_no_argument_in_lua(self):
@@ -334,7 +366,7 @@ class TestApply(TestBaseClass):
         key = ('test', 'demo', 1)
         with pytest.raises(TypeError) as typeError:
             self.as_connection.apply(key, 'sample', 'list_append_extra')
-        assert "Required argument 'args' (pos 4) not found" in str(
+        assert "argument 'args' (pos 4)" in str(
             typeError.value)
 
     def test_apply_with_incorrect_policy(self):

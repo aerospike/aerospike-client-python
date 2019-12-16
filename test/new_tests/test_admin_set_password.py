@@ -60,7 +60,7 @@ class TestSetPassword(TestBaseClass):
         with pytest.raises(TypeError) as typeError:
             self.client.admin_set_password()
 
-        assert "Required argument 'user' (pos 1) not found" in str(
+        assert "argument 'user' (pos 1)" in str(
             typeError.value)
 
     def test_set_password_with_proper_parameters(self):

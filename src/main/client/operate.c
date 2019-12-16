@@ -261,7 +261,8 @@ bool opRequiresValue(int op) {
 			op != OP_MAP_CLEAR           && op != OP_MAP_REMOVE_BY_KEY  &&
 			op != OP_MAP_REMOVE_BY_INDEX && op != OP_MAP_REMOVE_BY_RANK &&
 			op != OP_MAP_GET_BY_KEY      && op != OP_MAP_GET_BY_INDEX   &&
-			op != OP_MAP_GET_BY_KEY_RANGE && op != OP_MAP_GET_BY_RANK);
+			op != OP_MAP_GET_BY_KEY_RANGE && op != OP_MAP_GET_BY_RANK   &&
+			op != AS_OPERATOR_DELETE);
 }
 
 bool opRequiresRange(int op) {
@@ -399,7 +400,7 @@ as_status add_op(AerospikeClient * self, as_error * err, PyObject * py_val, as_v
 				return as_error_update(err, AEROSPIKE_ERR_BIN_NAME, "A bin name should not exceed 14 characters limit");
 			}
 		}
-	} else if (operation != AS_OPERATOR_TOUCH) {
+	} else if (operation != AS_OPERATOR_TOUCH && operation != AS_OPERATOR_DELETE) {
 		return as_error_update(err, AEROSPIKE_ERR_PARAM, "Bin is not given");
 	}
 
@@ -556,6 +557,9 @@ as_status add_op(AerospikeClient * self, as_error * err, PyObject * py_val, as_v
 		case AS_OPERATOR_READ:
 			as_operations_add_read(ops, bin);
 			break;
+		case AS_OPERATOR_DELETE:
+			as_operations_add_delete(ops);
+			break;
 		case AS_OPERATOR_WRITE:
 			CONVERT_VAL_TO_AS_VAL();
 			as_operations_add_write(ops, bin, (as_bin_value *) put_val);
@@ -621,6 +625,9 @@ as_status add_op(AerospikeClient * self, as_error * err, PyObject * py_val, as_v
 			break;
 		case OP_MAP_REMOVE_BY_INDEX_RANGE:
 			if (pyobject_to_index(self, err, py_value, &offset) != AEROSPIKE_OK) {
+				if (ctx_in_use) {
+					as_cdt_ctx_destroy(&ctx);
+				}
 				return err->code;
 			}
 			as_operations_map_remove_by_index_range(ops, bin, ctx_ref, index, offset, return_type);
@@ -630,6 +637,9 @@ as_status add_op(AerospikeClient * self, as_error * err, PyObject * py_val, as_v
 			break;
 		case OP_MAP_REMOVE_BY_RANK_RANGE:
 			if (pyobject_to_index(self, err, py_value, &offset) != AEROSPIKE_OK) {
+				if (ctx_in_use) {
+					as_cdt_ctx_destroy(&ctx);
+				}
 				return err->code;
 			}
 			as_operations_map_remove_by_rank_range(ops, bin, ctx_ref, index, offset, return_type);
@@ -665,6 +675,9 @@ as_status add_op(AerospikeClient * self, as_error * err, PyObject * py_val, as_v
 			break;
 		case OP_MAP_GET_BY_INDEX_RANGE:
 			if (pyobject_to_index(self, err, py_value, &offset) != AEROSPIKE_OK) {
+				if (ctx_in_use) {
+					as_cdt_ctx_destroy(&ctx);
+				}
 				return err->code;
 			}
 			as_operations_map_get_by_index_range(ops, bin, ctx_ref, index, offset, return_type);
@@ -674,6 +687,9 @@ as_status add_op(AerospikeClient * self, as_error * err, PyObject * py_val, as_v
 			break;
 		case OP_MAP_GET_BY_RANK_RANGE:
 			if (pyobject_to_index(self, err, py_value, &offset) != AEROSPIKE_OK) {
+				if (ctx_in_use) {
+					as_cdt_ctx_destroy(&ctx);
+				}
 				return err->code;
 			}
 			as_operations_map_get_by_rank_range(ops, bin, ctx_ref, index, offset, return_type);
@@ -681,6 +697,9 @@ as_status add_op(AerospikeClient * self, as_error * err, PyObject * py_val, as_v
 
 		default:
 			if (self->strict_types) {
+				if (ctx_in_use) {
+					as_cdt_ctx_destroy(&ctx);
+				}
 				return as_error_update(err, AEROSPIKE_ERR_PARAM, "Invalid operation given");
 			}
 	}
@@ -721,6 +740,10 @@ PyObject *  AerospikeClient_Operate_Invoke(
 	as_policy_operate operate_policy;
 	as_policy_operate *operate_policy_p = NULL;
 
+	// For predexp conversion.
+	as_predexp_list predexp_list;
+	as_predexp_list* predexp_list_p = NULL;
+
 	as_vector * unicodeStrVector = as_vector_create(sizeof(char *), 128);
 
 	as_operations ops;
@@ -729,14 +752,13 @@ PyObject *  AerospikeClient_Operate_Invoke(
 
 	if (py_policy) {
 		if(pyobject_to_policy_operate(err, py_policy, &operate_policy, &operate_policy_p,
-				&self->as->config.policies.operate) != AEROSPIKE_OK) {
+				&self->as->config.policies.operate, &predexp_list, &predexp_list_p) != AEROSPIKE_OK) {
 			goto CLEANUP;
 		}
 	}
 
 	as_static_pool static_pool;
 	memset(&static_pool, 0, sizeof(static_pool));
-
 	CHECK_CONNECTED(err);
 
 	if (py_meta) {
@@ -759,7 +781,6 @@ PyObject *  AerospikeClient_Operate_Invoke(
 		goto CLEANUP;
 	}
 
-
 	Py_BEGIN_ALLOW_THREADS
 	aerospike_key_operate(self->as, err, operate_policy_p, key, &ops, &rec);
 	Py_END_ALLOW_THREADS
@@ -780,6 +801,10 @@ CLEANUP:
 		free(as_vector_get_ptr(unicodeStrVector, i));
 	}
 
+	if (predexp_list_p) {
+		as_predexp_list_destroy(&predexp_list);
+	}
+	
 	as_vector_destroy(unicodeStrVector);
 
 	if (rec && operation_succeeded) {
@@ -890,6 +915,10 @@ static PyObject *  AerospikeClient_OperateOrdered_Invoke(
 	Py_ssize_t ops_list_size = PyList_Size(py_list);
 	as_operations_inita(&ops, ops_list_size);
 
+	// For predexp conversion.
+	as_predexp_list predexp_list;
+	as_predexp_list* predexp_list_p = NULL;
+
 	/* These are the values which will be returned in a 3 element list */
 	PyObject* py_return_key = NULL;
 	PyObject* py_return_meta = NULL;
@@ -899,7 +928,7 @@ static PyObject *  AerospikeClient_OperateOrdered_Invoke(
 
 	if (py_policy) {
 		if (pyobject_to_policy_operate(err, py_policy, &operate_policy,
-				&operate_policy_p, &self->as->config.policies.operate) != AEROSPIKE_OK) {
+				&operate_policy_p, &self->as->config.policies.operate, &predexp_list, &predexp_list_p) != AEROSPIKE_OK) {
 			goto CLEANUP;
 		}
 	}
@@ -983,6 +1012,10 @@ CLEANUP:
 	}
 
 	as_vector_destroy(unicodeStrVector);
+
+	if (predexp_list_p) {
+		as_predexp_list_destroy(&predexp_list);
+	}
 
 	if (rec && operation_succeeded) {
 		as_record_destroy(rec);

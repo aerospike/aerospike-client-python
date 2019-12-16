@@ -54,6 +54,10 @@ PyObject * AerospikeClient_Get_Invoke(
 	as_key key;
 	as_record * rec = NULL;
 
+	// For converting predexp.
+	as_predexp_list predexp_list;
+	as_predexp_list* predexp_list_p = NULL;
+
 	// Initialised flags
 	bool key_initialised = false;
 	bool record_initialised = false;
@@ -81,11 +85,10 @@ PyObject * AerospikeClient_Get_Invoke(
 
 	// Convert python policy object to as_policy_exists
 	pyobject_to_policy_read(&err, py_policy, &read_policy, &read_policy_p,
-			&self->as->config.policies.read);
+			&self->as->config.policies.read, &predexp_list, &predexp_list_p);
 	if (err.code != AEROSPIKE_OK) {
 		goto CLEANUP;
 	}
-
 
 	// Invoke operation
 	Py_BEGIN_ALLOW_THREADS
@@ -115,10 +118,15 @@ PyObject * AerospikeClient_Get_Invoke(
 
 CLEANUP:
 
+	if (predexp_list_p) {
+		as_predexp_list_destroy(&predexp_list);
+	}
+
 	if (key_initialised == true) {
 		// Destroy key only if it is initialised.
 		as_key_destroy(&key);
 	}
+
 	if (rec && record_initialised) {
 		// Destroy record only if it is initialised.
 		as_record_destroy(rec);

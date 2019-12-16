@@ -272,7 +272,7 @@ class TestAppend(object):
         """
         with pytest.raises(TypeError) as typeError:
             self.as_connection.append()
-        assert "Required argument 'key' (pos 1) not found" in str(
+        assert "argument 'key' (pos 1)" in str(
             typeError.value)
 
     def test_neg_append_with_policy_key_gen_GT_lesser(self):
