@@ -120,7 +120,7 @@ AerospikeScan * AerospikeScan_Apply(AerospikeScan * self, PyObject * args, PyObj
 	}
 	else {
 		as_error_update(&err, AEROSPIKE_ERR_CLIENT, "udf function arguments must be enclosed in a list");
-		as_arraylist_destroy(&arglist);
+		as_arraylist_destroy(arglist);
 		goto CLEANUP;
 	}
 
