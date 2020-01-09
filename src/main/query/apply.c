@@ -113,7 +113,7 @@ AerospikeQuery * AerospikeQuery_Apply(AerospikeQuery * self, PyObject * args, Py
 			pyobject_to_val(self->client, &err, py_val, &val, &static_pool, SERIALIZER_PYTHON);
 			if ( err.code != AEROSPIKE_OK ) {
 				as_error_update(&err, err.code, NULL);
-				as_arraylist_destroy(&arglist);
+				as_arraylist_destroy(arglist);
 				goto CLEANUP;
 			}
 			else {
@@ -123,7 +123,7 @@ AerospikeQuery * AerospikeQuery_Apply(AerospikeQuery * self, PyObject * args, Py
 	}
 	else {
 		as_error_update(&err, AEROSPIKE_ERR_CLIENT, "udf function arguments must be enclosed in a list");
-		as_arraylist_destroy(&arglist);
+		as_arraylist_destroy(arglist);
 		goto CLEANUP;
 	}
 	Py_BEGIN_ALLOW_THREADS
