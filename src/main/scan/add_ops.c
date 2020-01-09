@@ -62,7 +62,7 @@ AerospikeScan* AerospikeScan_Add_Ops(AerospikeScan * self, PyObject * args, PyOb
 
     if (PyList_Check(py_ops)) {
         Py_ssize_t size = PyList_Size(py_ops);
-        as_operations_inita(&(self->ops), size);
+        as_operations_init(&(self->ops), size);
 
         for (int i = 0; i < size; i++) {
             PyObject * py_val = PyList_GetItem(py_ops, (Py_ssize_t)i);

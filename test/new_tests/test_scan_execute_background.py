@@ -132,7 +132,7 @@ class TestScanApply(object):
             else:
                 assert(bins.get(test_bin) == i)
 
-    @pytest.mark.xfail(reason="predicate and predexp used at same time, scan does not implement .where() yet")
+    @pytest.mark.xfail(reason="scan does not implement .where()")
     def test_background_execute_predexp_and_predicate(self):
         """
         Ensure that Scan.execute_background() gets applied to records that match the predicate
@@ -171,7 +171,6 @@ class TestScanApply(object):
             else:
                 assert(bins.get(test_bin) is None)
 
-    @pytest.mark.xfail(reason="Server does not support scan write ops yet")
     def test_background_execute_with_ops_and_predexp(self):
         """
         Ensure that Scan.execute_background() applies ops to records that match the predexp
@@ -212,7 +211,6 @@ class TestScanApply(object):
             else:
                 assert(bins.get(test_bin) is None)
 
-    @pytest.mark.xfail(reason="Server does not support scan write ops yet")
     def test_background_execute_with_ops_and_predexp_None_set(self):
         """
         Ensure that Scan.execute_background() applies ops to all records in the NS that match the predexp
@@ -260,7 +258,6 @@ class TestScanApply(object):
             else:
                 assert(bins.get(test_bin) is None)
 
-    @pytest.mark.xfail(reason="Server does not support scan write ops yet")
     def test_background_execute_with_ops(self):
         """
         Ensure that Scan.execute_background() applies ops to all records
@@ -285,7 +282,7 @@ class TestScanApply(object):
             lambda rec: rec[test_bin] == 'new_val'
         )
 
-    @pytest.mark.xfail(reason="Scan does not implement .where() yet")
+    @pytest.mark.xfail(reason="Scan does not implement .where()")
     def test_background_execute_with_ops_and_preds(self):
         """
         Ensure that Scan.execute_background() applies ops to records that match the predicate
@@ -327,7 +324,7 @@ class TestScanApply(object):
             lambda rec: rec[test_bin] == 'aerospike'
         )
 
-    @pytest.mark.xfail(reason="Scan does not implement .where() yet")
+    @pytest.mark.xfail(reason="Scan does not implement .where()")
     def test_background_execute_sindex_predicate(self):
         """
         Ensure that Scan.execute_background() only applies to records matched by

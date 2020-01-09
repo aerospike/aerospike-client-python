@@ -9,12 +9,12 @@ Query Class --- :class:`Query`
 :class:`Query`
 ===============
 
-    The Query object created by calling :meth:`aerospike.Client.query` is used \
+    The query object created by calling :meth:`aerospike.Client.query` is used \
     for executing queries over a secondary index of a specified set (which \
     can be omitted or :py:obj:`None`). For queries, the :py:obj:`None` set contains those \
     records which are not part of any named set.
 
-    The Query can (optionally) be assigned one of the following \
+    The query can (optionally) be assigned one of the following \
 
     * One of the :mod:`~aerospike.predicates` (:meth:`~aerospike.predicates.between` or :meth:`~aerospike.predicates.equals`) using :meth:`~aerospike.Query.where`. \
     * A list of :mod:`~aerospike.predexp` using :meth:`~aerospike.Query.predexp` \
@@ -24,6 +24,8 @@ Query Class --- :class:`Query`
 
     The query is invoked using :meth:`~aerospike.Query.foreach`, :meth:`~aerospike.Query.results`, or :meth:`~aerospike.Query.execute_background` \
     The bins returned can be filtered by using :meth:`select`.
+
+    If a list of write operations is added to the query with :meth:`~aerospike.Query.add_ops`, they will be applied to each record processed by the query. See available write operations at See :mod:`aerospike_helpers` \
 
     Finally, a `stream UDF <http://www.aerospike.com/docs/udf/developing_stream_udfs.html>`_ \
     may be applied with :meth:`~aerospike.Query.apply`. It will aggregate results out of the \
@@ -188,7 +190,8 @@ Query Methods
             # assuming there is a secondary index on the 'age' bin of test.demo
             query.where(p.between('age', 20, 30))
             names = []
-            def matched_names((key, metadata, bins)):
+            def matched_names(record):
+                key, metadata, bins = record
                 pp.pprint(bins)
                 names.append(bins['name'])
 
@@ -209,7 +212,8 @@ Query Methods
 
                 def limit(lim, result):
                     c = [0] # integers are immutable so a list (mutable) is used for the counter
-                    def key_add((key, metadata, bins)):
+                    def key_add(record):
+                        key, metadata, bins = record
                         if c[0] < lim:
                             result.append(key)
                             c[0] = c[0] + 1
