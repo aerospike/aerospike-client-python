@@ -228,6 +228,7 @@ Record Operations
 
         .. note::
             Version >= 3.10.0 Supports predicate expressions for record operations see :mod:`~aerospike.predexp`.
+            Requires server version >= 4.7.0.
 
             .. code-block:: python
 
@@ -237,28 +238,28 @@ Record Operations
                 from aerospike import exception as ex
                 import sys
 
-                config = { 'hosts': [('127.0.0.1', 3000)]}
+                config = {"hosts": [("127.0.0.1", 3000)]}
                 client = aerospike.client(config).connect()
 
                 try:
-                    keys = [('test', 'demo', 1), ('test', 'demo', 2), ('test', 'demo', 3)]
-                    records = [{'number': 1}, {'number': 2}, {'number': 3}]
+                    keys = [("test", "demo", 1), ("test", "demo", 2), ("test", "demo", 3)]
+                    records = [{"number": 1}, {"number": 2}, {"number": 3}]
                     for i in range(3):
                         client.put(keys[i], records[i])
 
-                    preds = [ # check that the record has a value < 2 bin 'name'
-                        predexp.integer_bin('number'),
+                    preds = [  # check that the record has a value < 2 bin 'name'
+                        predexp.integer_bin("number"),
                         predexp.integer_value(2),
-                        predexp.integer_less()
+                        predexp.integer_less(),
                     ]
                     records = []
 
                     for i in range(3):
                         try:
-                            records.append(client.get(keys[i], policy={'predexp': preds}))
+                            records.append(client.get(keys[i], policy={"predexp": preds}))
                         except ex.FilteredOut as e:
                             print("Error: {0} [{1}]".format(e.msg, e.code))
-                    
+
                     print(records)
                 except ex.AerospikeError as e:
                     print("Error: {0} [{1}]".format(e.msg, e.code))
@@ -606,6 +607,7 @@ Batch Operations
 
         .. note::
             Version >= 3.10.0 Supports predicate expressions for batch operations see :mod:`~aerospike.predexp`.
+            Requires server version >= 4.7.0
 
             .. code-block:: python
 
@@ -615,23 +617,23 @@ Batch Operations
                 from aerospike import exception as ex
                 import sys
 
-                config = { 'hosts': [('127.0.0.1', 3000)]}
+                config = {"hosts": [("127.0.0.1", 3000)]}
                 client = aerospike.client(config).connect()
 
                 try:
-                    keys = [('test', 'demo', 1), ('test', 'demo', 2), ('test', 'demo', 3)]
-                    records = [{'number': 1}, {'number': 2}, {'number': 3}]
+                    keys = [("test", "demo", 1), ("test", "demo", 2), ("test", "demo", 3)]
+                    records = [{"number": 1}, {"number": 2}, {"number": 3}]
                     for i in range(3):
                         client.put(keys[i], records[i])
 
-                    preds = [ # check that the record has a value less than 2 in bin 'name'
-                        predexp.integer_bin('number'),
+                    preds = [  # check that the record has a value less than 2 in bin 'name'
+                        predexp.integer_bin("number"),
                         predexp.integer_value(2),
-                        predexp.integer_less()
+                        predexp.integer_less(),
                     ]
-                    records = client.get_many(keys, policy={'predexp': preds})
+                    records = client.get_many(keys, policy={"predexp": preds})
                     print(records)
-                except ex.FilteredOut as e:
+                except ex.AerospikeError as e:
                     print("Error: {0} [{1}]".format(e.msg, e.code))
                     sys.exit(1)
                 finally:
@@ -1663,43 +1665,64 @@ Multi-Ops (Operate)
 
         .. note::
             Version >= 3.10.0 Supports predicate expressions for Multi-Ops see :mod:`~aerospike.predexp`.
+            Requires server version >= 4.7.0.
 
             .. code-block:: python
 
                 from __future__ import print_function
                 import aerospike
                 from aerospike import predexp
-                from aerospike_helpers.operations import list_operations
+                from aerospike_helpers.operations import list_operations, operations
                 from aerospike import exception as ex
                 import sys
 
-                config = { 'hosts': [('127.0.0.1', 3000)]}
+                config = {"hosts": [("127.0.0.1", 3000)]}
                 client = aerospike.client(config).connect()
 
                 try:
                     unique_id = 1
-                    key = ('test', 'demo', unique_id)
-                    client.put(key, {'name': 'John', 'charges': [10, 20, 14]})
+                    key = ("test", "demo", unique_id)
+                    client.put(key, {"name": "John", "charges": [10, 20, 14]})
 
-                    ops = [
-                        list_operations.list_append('charges', 25)
+                    ops = [list_operations.list_append("charges", 25)]
+
+                    preds = [  # check that the record has value 'Kim' in bin 'name'
+                        predexp.string_bin("name"),
+                        predexp.string_value("Kim"),
+                        predexp.string_equal(),
                     ]
 
-                    preds = [ # check that the record has value 'Kim' in bin 'name'
-                        predexp.string_bin('name'),
-                        predexp.string_value('Kim'),
-                        predexp.string_equal()
+                    # Because the record's name bin is 'John' and not 'Kim',
+                    # client.operate() will fail with AEROSPIKE_FILTERED_OUT and the
+                    # operations will not be applied.
+                    try:
+                        client.operate(key, ops, policy={"predexp": preds})
+                    except ex.FilteredOut as e:
+                        print("Error: {0} [{1}]".format(e.msg, e.code))
+
+                    record = client.get(key)
+                    print(record)
+
+                    # This client.operate() will succeed because the name bin is 'John'.
+                    preds = [  # check that the record has value 'John' in bin 'name'
+                        predexp.string_bin("name"),
+                        predexp.string_value("John"),
+                        predexp.string_equal(),
                     ]
-                    client.operate(key, ops, policy={'predexp': preds})
-                except ex.FilteredOut as e:
+
+                    client.operate(key, ops, policy={"predexp": preds})
+
+                    record = client.get(key)
+                    print(record)
+
+                except ex.AerospikeError as e:
                     print("Error: {0} [{1}]".format(e.msg, e.code))
                     sys.exit(1)
                 finally:
                     client.close()
-                # the operation was not applied because the preds evaluate to false
-                # instead, an error is returned
-                # EXPECTED OUTPUT:
                 # Error: 127.0.0.1:3000 AEROSPIKE_FILTERED_OUT [27]
+                # (('test', 'demo', None, bytearray(b'\xb7\xf4\xb88\x89\xe2\xdag\xdeh>\x1d\xf6\x91\x9a\x1e\xac\xc4F\xc8')), {'ttl': 2592000, 'gen': 23}, {'number': 1, 'name': 'John', 'charges': [10, 20, 14]})
+                # (('test', 'demo', None, bytearray(b'\xb7\xf4\xb88\x89\xe2\xdag\xdeh>\x1d\xf6\x91\x9a\x1e\xac\xc4F\xc8')), {'ttl': 2592000, 'gen': 24}, {'number': 1, 'name': 'John', 'charges': [10, 20, 14, 25]})
 
         .. note::
             In version `2.1.3` the return format of certain bin entries for this method, **only in cases when a map operation specifying a `return_type` is used**, has changed. Bin entries for map operations using "return_type" of aerospike.MAP_RETURN_KEY_VALUE will now return \
@@ -2016,6 +2039,7 @@ User Defined Functions
 
     .. note::
         Version >= 3.10.0 Supports predicate expressions for apply, scan_apply, and query_apply see :mod:`~aerospike.predexp`.
+        Requires server version 4.7.0.
 
         .. code-block:: python
 
@@ -2025,12 +2049,12 @@ User Defined Functions
             from aerospike import exception as ex
             import sys
 
-            config = { 'hosts': [('127.0.0.1', 3000)]}
+            config = {"hosts": [("127.0.0.1", 3000)]}
             client = aerospike.client(config).connect()
 
             # register udf
             try:
-                client.udf_put('/path/to/my_udf.lua')
+                client.udf_put("/path/to/my_udf.lua")
             except ex.FilteredOut as e:
                 print("Error: {0} [{1}]".format(e.msg, e.code))
                 client.close()
@@ -2039,30 +2063,28 @@ User Defined Functions
 
             # put records and apply udf
             try:
-                keys = [('test', 'demo', 1), ('test', 'demo', 2), ('test', 'demo', 3)]
-                records = [{'number': 1}, {'number': 2}, {'number': 3}]
+                keys = [("test", "demo", 1), ("test", "demo", 2), ("test", "demo", 3)]
+                records = [{"number": 1}, {"number": 2}, {"number": 3}]
                 for i in range(3):
                     client.put(keys[i], records[i])
 
-                preds = [ # check that the record has value < 2 or == 3 in bin 'name'
-                    predexp.integer_bin('number'),
+                preds = [  # check that the record has value < 2 or == 3 in bin 'name'
+                    predexp.integer_bin("number"),
                     predexp.integer_value(2),
                     predexp.integer_less(),
-                    predexp.integer_bin('number'),
+                    predexp.integer_bin("number"),
                     predexp.integer_value(3),
                     predexp.integer_equal(),
-                    predexp.predexp_or(2)
+                    predexp.predexp_or(2),
                 ]
 
-                policy = {
-                    'predexp': preds
-                }
+                policy = {"predexp": preds}
 
-                client.scan_apply("test", None, "my_udf", "my_udf", ['number', 10], policy)
+                client.scan_apply("test", None, "my_udf", "my_udf", ["number", 10], policy)
                 records = client.get_many(keys)
 
                 print(records)
-            except ex.FilteredOut as e:
+            except ex.AerospikeError as e:
                 print("Error: {0} [{1}]".format(e.msg, e.code))
                 sys.exit(1)
             finally:

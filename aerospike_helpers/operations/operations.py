@@ -46,7 +46,8 @@ def write(bin_name, write_item):
 def delete():
     """Create a delete operation dictionary.
 
-    The delete operation deletes a record.
+    The delete operation deletes a record and all associated bins.
+    Requires server version >= 4.7.0.8.
 
     Returns:
         A dictionary to be passed to operate or operate_ordered.
