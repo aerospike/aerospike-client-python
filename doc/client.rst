@@ -2950,7 +2950,7 @@ Operate Policies
         * **exists** 
             | One of the :ref:`POLICY_EXISTS` values such as :data:`aerospike.POLICY_EXISTS_CREATE`
             |
-            | Default: :data:`aerospike.POLICY_GEN_IGNORE`
+            | Default: :data:`aerospike.POLICY_EXISTS_IGNORE`
         * **durable_delete** (:class:`bool`)
             | Perform durable delete
             |
