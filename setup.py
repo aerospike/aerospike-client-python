@@ -36,7 +36,7 @@ AEROSPIKE_C_HOME = os.getenv('AEROSPIKE_C_HOME')
 PREFIX = None
 PLATFORM = platform.platform(1)
 LINUX = 'Linux' in PLATFORM
-DARWIN = 'Darwin' in PLATFORM
+DARWIN = 'Darwin' in PLATFORM or 'macOS' in PLATFORM
 CWD = os.path.abspath(os.path.dirname(__file__))
 
 ################################################################################
