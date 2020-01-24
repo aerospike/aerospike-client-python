@@ -39,7 +39,7 @@ Scan Methods
 
     .. method:: apply(module, function[, arguments])
 
-        apply a record UDF to each record found by the scan \
+        Apply a record UDF to each record found by the scan \
         `UDF <http://www.aerospike.com/docs/guide/udf.html>`_.
 
         :param str module: the name of the Lua module.
