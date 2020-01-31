@@ -194,6 +194,9 @@ Methods
                 | Flag to signify if "services-alternate" should be used instead of "services"
                 |
                 | Default: ``False``
+            * **connect_timeout** (:class:`int`) 
+                | Initial host connection timeout in milliseconds. The timeout when opening a connection to the server host for the first time.
+                | Default: ``1000``.
 
 
     :return: an instance of the :py:class:`aerospike.Client` class.
