@@ -115,6 +115,29 @@ class TestGetPut():
             b'\xb7\xf4\xb88\x89\xe2\xdag\xdeh>\x1d\xf6\x91\x9a\x1e\xac\xc4F\xc8')
         )
 
+    def test_pos_get_initkey_with_policy_send_and_compress(self, put_data):
+        """
+            Invoke get() for a record having string data.
+        """
+
+        key = ('test', 'demo', 1)
+
+        rec = {'name': 'john', 'age': 1}
+
+        policy = {
+            'key': aerospike.POLICY_KEY_SEND,
+            'compress': True
+        }
+
+        put_data(self.as_connection, key, rec, policy)
+
+        key, _, bins = self.as_connection.get(key, policy)
+
+        assert bins == {'name': 'john', 'age': 1}
+        assert key == ('test', 'demo', 1, bytearray(
+            b'\xb7\xf4\xb88\x89\xe2\xdag\xdeh>\x1d\xf6\x91\x9a\x1e\xac\xc4F\xc8')
+        )
+
     # Negative get tests
     def test_neg_get_with_no_parameter(self):
         """

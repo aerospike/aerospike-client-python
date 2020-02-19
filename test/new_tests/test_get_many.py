@@ -72,6 +72,17 @@ class TestGetMany():
                                                                4, 'float_value'])
         assert records[5][2] == {'float_value': 4.3}
 
+    def test_pos_get_many_with_compress_policy(self):
+
+        policy = {'compress': True}
+        records = self.as_connection.get_many(self.keys, policy)
+
+        assert isinstance(records, list)
+        assert len(records) == 6
+        assert Counter([x[0][2] for x in records]) == Counter([0, 1, 2, 3,
+                                                               4, 'float_value'])
+        assert records[5][2] == {'float_value': 4.3}
+
     def test_pos_get_many_with_non_existent_keys(self):
         '''
         Verify that non existent keys show up in the result

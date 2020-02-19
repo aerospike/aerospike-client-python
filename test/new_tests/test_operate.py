@@ -237,7 +237,8 @@ class TestOperate(object):
         policy = {
             'timeout': 1000,
             'key': aerospike.POLICY_KEY_SEND,
-            'commit_level': aerospike.POLICY_COMMIT_LEVEL_MASTER
+            'commit_level': aerospike.POLICY_COMMIT_LEVEL_MASTER,
+            'compress': True
         }
 
         llist = [{"op": aerospike.OPERATOR_APPEND,

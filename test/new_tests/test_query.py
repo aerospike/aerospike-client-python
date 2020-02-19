@@ -324,7 +324,7 @@ class TestQuery(TestBaseClass):
         """
             Invoke query() with policy
         """
-        policy = {'timeout': 1000}
+        policy = {'timeout': 1000, 'compress': True}
         query = self.as_connection.query('test', 'demo')
         query.select('name', 'test_age')
         query.where(p.equals('test_age', 1))
