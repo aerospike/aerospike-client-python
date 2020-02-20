@@ -21,12 +21,12 @@ class TestBaseClass(object):
     def get_hosts():
         config = configparser.ConfigParser()
         config.read("config.conf")
-        if config.has_section('enterprise-edition'):
-            TestBaseClass.using_enterprise = True
         if config.has_option('enterprise-edition', 'hosts'):
             hosts_str = config.get('enterprise-edition', 'hosts')
             if hosts_str != 'None':
                 TestBaseClass.hostlist = TestBaseClass.parse_hosts(hosts_str)
+                if TestBaseClass.hostlist:
+                    TestBaseClass.using_enterprise = True
         if len(TestBaseClass.hostlist) > 0:
             if config.has_option('enterprise-edition', 'user'):
                 TestBaseClass.user = config.get('enterprise-edition', 'user')
