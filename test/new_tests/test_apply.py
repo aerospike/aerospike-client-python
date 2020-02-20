@@ -222,7 +222,7 @@ class TestApply(TestBaseClass):
         """
             Invoke apply() with policy
         """
-        policy = {'total_timeout': 1000, 'compress': True}
+        policy = {'total_timeout': 1000}
         key = ('test', 'demo', 1)
         retval = self.as_connection.apply(
             key, 'sample', 'list_append', ['name', 'car'], policy)

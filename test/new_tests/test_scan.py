@@ -91,23 +91,6 @@ class TestScan(TestBaseClass):
 
         assert len(records) == self.record_count
 
-    def test_scan_with_compress_policy(self):
-
-        ns = 'test'
-        st = 'demo'
-
-        records = []
-
-        def callback(input_tuple):
-            _, _, bins = input_tuple
-            records.append(bins)
-
-        scan_obj = self.as_connection.scan(self.test_ns, self.test_set)
-
-        scan_obj.foreach(callback, {'compress': True})
-
-        assert len(records) == self.record_count
-
     def test_scan_with_predexp_policy(self):
 
         ns = 'test'
