@@ -1660,7 +1660,7 @@ Constants
 TTL Constants
 -------------
 
-Specifics the TTL constants
+Specifics the TTL constants.
 
 .. data:: TTL_NAMESPACE_DEFAULT
     
@@ -1679,7 +1679,7 @@ Specifics the TTL constants
 Auth Mode Constants
 -------------------
 
-Specifies the type of authentication to be used when communicating with the server
+Specifies the type of authentication to be used when communicating with the server.
 
 .. data:: AUTH_INTERNAL
 
@@ -1775,7 +1775,7 @@ Serialization Constants
 
 List Write Flags
 --------------------
-Flags used by list write flag:
+Flags used by list write flag.
 
 .. data:: LIST_WRITE_DEFAULT
 
@@ -1806,7 +1806,7 @@ Flags used by list write flag:
 List Return Types
 ------------------
 
-Return types used by various list operations
+Return types used by various list operations.
 
 .. data:: LIST_RETURN_NONE
 
@@ -1840,7 +1840,7 @@ Return types used by various list operations
 
 List Order
 -----------------
-Flags used by list order:
+Flags used by list order.
 
 .. data:: LIST_UNORDERED
 
@@ -1850,12 +1850,25 @@ Flags used by list order:
 
     Ordered list.
 
+.. _aerospike_list_sort_flag:
+
+List Sort Flags
+-----------------
+Flags used by list sort.
+
+.. data:: aerospike.LIST_SORT_DEFAULT
+
+    Default. Preserve duplicates when sorting the list.
+
+.. data:: aerospike.LIST_SORT_DROP_DUPLICATES
+
+    Drop duplicate values when sorting the list.
 
 .. _aerospike_map_write_flag:
 
 Map Write Flag
 -----------------
-Flags used by map write flag 
+Flags used by map write flag. 
 
 .. note:: Requires server version >= 4.3.0
 
@@ -1884,7 +1897,7 @@ Flags used by map write flag
 Map Write Mode
 --------------
 
-Flags used by map *write mode*
+Flags used by map *write mode*.
 
 .. note:: This should only be used for Server version < 4.3.0
 
@@ -1904,7 +1917,7 @@ Flags used by map *write mode*
 
 Map Order
 -----------------
-Flags used by map order:
+Flags used by map order.
 
 .. data:: UNORDERED
 
@@ -1923,7 +1936,7 @@ Flags used by map order:
 Map Return Types
 ----------------
 
-Return types used by various map operations
+Return types used by various map operations.
 
 .. data:: MAP_RETURN_NONE
 
@@ -2142,7 +2155,7 @@ Permission codes define the type of permission granted for a user's role.
 
 Regex Flag Values
 ------------------
-Flags used for the `predexp.string_regex` function
+Flags used for the `predexp.string_regex` function.
 
 .. data:: REGEX_NONE
 
