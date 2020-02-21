@@ -4,12 +4,13 @@ import time
 
 import aerospike
 from aerospike import exception, predicates
-from aerospike_helpers.operations import operations
+from aerospike_helpers.operations import operations, map_operations
 from aerospike import predexp as as_predexp
 
 TEST_NS = 'test'
 TEST_SET = 'background_scan1'
 TEST_SET2 = 'background_scan2'
+TEST_SET3 = 'background_scan3'
 TEST_UDF_MODULE = 'bin_lua'
 TEST_UDF_FUNCTION = 'mytransformscan'
 # Hack to get long to exist in Python 3
@@ -56,6 +57,10 @@ class TestScanApply(object):
         keys = [(TEST_NS, TEST_SET2, i) for i in range(10)]
         for i, key in enumerate(keys):
             self.as_connection.put(key, {'number': i})
+        keys = [(TEST_NS, TEST_SET3, i) for i in range(10)]
+        for i, key in enumerate(keys):
+            self.as_connection.put(key, {'numbers': {1: i, 2: 2 * i, 3: 3 * i}})
+        
         
         def teardown():
             drop_test_udf(self.as_connection)
@@ -70,7 +75,7 @@ class TestScanApply(object):
 
     def test_background_execute_return_val(self):
         """
-        Ensure that Scan.execute_background() returns an int like object
+        Ensure that Scan.execute_background() returns an int like object.
         """
         test_bin = 'St1'
         scan = self.as_connection.scan(TEST_NS, TEST_SET)
@@ -80,7 +85,7 @@ class TestScanApply(object):
 
     def test_background_execute_no_predicate(self):
         """
-        Ensure that Scan.execute_background() gets applied to all records
+        Ensure that Scan.execute_background() gets applied to all records.
         """
         test_bin = 'number'
         keys = [(TEST_NS, TEST_SET, i) for i in range(50)]
@@ -97,7 +102,7 @@ class TestScanApply(object):
 
     def test_background_execute_predexp_everywhere(self):
         """
-        Ensure that Scan.execute_background() gets applied to records that match the predexp
+        Ensure that Scan.execute_background() gets applied to records that match the predexp.
         """
         test_bin = 'number'
         keys = [(TEST_NS, TEST_SET, i) for i in range(50)]
@@ -112,14 +117,11 @@ class TestScanApply(object):
             as_predexp.predexp_or(2)
         ]
 
-        #number_predicate = predicates.equals('number', 3)
-
         policy = {
             'predexp': predexp
         }
 
         scan = self.as_connection.scan(TEST_NS, TEST_SET)
-        #scan.where(number_predicate)
         scan.apply(TEST_UDF_MODULE, TEST_UDF_FUNCTION, [test_bin, 1])
         job_id = scan.execute_background(policy)
         # Give time for the scan to finish
@@ -135,7 +137,7 @@ class TestScanApply(object):
     @pytest.mark.xfail(reason="scan does not implement .where()")
     def test_background_execute_predexp_and_predicate(self):
         """
-        Ensure that Scan.execute_background() gets applied to records that match the predicate
+        Ensure that Scan.execute_background() gets applied to records that match the predicate.
         NOTE: the predicate overrides the predexp
         """
         test_bin = 'Stpredold'
@@ -173,7 +175,7 @@ class TestScanApply(object):
 
     def test_background_execute_with_ops_and_predexp(self):
         """
-        Ensure that Scan.execute_background() applies ops to records that match the predexp
+        Ensure that Scan.execute_background() applies ops to records that match the predexp.
         """
         test_bin = 'Stops_preds'
         keys = [(TEST_NS, TEST_SET, i) for i in range(50)]
@@ -213,7 +215,7 @@ class TestScanApply(object):
 
     def test_background_execute_with_ops_and_predexp_None_set(self):
         """
-        Ensure that Scan.execute_background() applies ops to all records in the NS that match the predexp
+        Ensure that Scan.execute_background() applies ops to all records in the NS that match the predexp.
         """
         test_bin = 'Stops_noset'
         keys = [(TEST_NS, TEST_SET, i) for i in range(50)]
@@ -260,7 +262,7 @@ class TestScanApply(object):
 
     def test_background_execute_with_ops(self):
         """
-        Ensure that Scan.execute_background() applies ops to all records
+        Ensure that Scan.execute_background() applies ops to all records.
         """
         test_bin = 'Stops'
         keys = [(TEST_NS, TEST_SET, i) for i in range(50)]
@@ -282,10 +284,35 @@ class TestScanApply(object):
             lambda rec: rec[test_bin] == 'new_val'
         )
 
+    def test_background_execute_with_map_ops(self):
+        """
+        Ensure that Scan.execute_background() applies ops to all records.
+        """
+        test_bin = 'numbers'
+        keys = [(TEST_NS, TEST_SET3, i) for i in range(10)]
+
+        scan = self.as_connection.scan(TEST_NS, TEST_SET3)
+
+        ops = [
+            map_operations.map_remove_by_value_range(test_bin, 20, 35, aerospike.MAP_RETURN_NONE)
+        ]
+
+        scan.add_ops(ops)
+        job_id = scan.execute_background()
+        # Give time for the scan to finish
+        wait_for_job_completion(self.as_connection, job_id)
+
+        records = self.as_connection.get_many(keys)
+        for i, rec in enumerate(records):
+            if i * 3 < 20:
+                assert rec[2]['numbers'] == {1: i, 2: i * 2, 3: i * 3}
+            else:
+                assert rec[2]['numbers'] == {1: i, 2: i * 2}
+
     @pytest.mark.xfail(reason="Scan does not implement .where()")
     def test_background_execute_with_ops_and_preds(self):
         """
-        Ensure that Scan.execute_background() applies ops to records that match the predicate
+        Ensure that Scan.execute_background() applies ops to records that match the predicate.
         """
         test_bin = 'St1'
         keys = [(TEST_NS, TEST_SET, i) for i in range(50)]
@@ -328,7 +355,7 @@ class TestScanApply(object):
     def test_background_execute_sindex_predicate(self):
         """
         Ensure that Scan.execute_background() only applies to records matched by
-        the specified predicate
+        the specified predicate.
         """
         test_bin = 'St3'
         keys = [(TEST_NS, TEST_SET, i) for i in range(50)]
@@ -351,7 +378,7 @@ class TestScanApply(object):
 
     def test_background_execute_with_policy(self):
         """
-        Ensure that Scan.execute_background() returns an int like object
+        Ensure that Scan.execute_background() returns an int like object.
         """
         test_bin = 'St5'
         scan = self.as_connection.scan(TEST_NS, TEST_SET)
@@ -361,7 +388,7 @@ class TestScanApply(object):
 
     def test_background_execute_with_policy_kwarg(self):
         """
-        Ensure that Scan.execute_background() returns an int like object
+        Ensure that Scan.execute_background() returns an int like object.
         """
         test_bin = 'St6'
         scan = self.as_connection.scan(TEST_NS, TEST_SET)
@@ -371,7 +398,7 @@ class TestScanApply(object):
 
     def test_background_execute_with_invalid_policy_type(self):
         """
-        Ensure that Scan.execute_background() returns an int like object
+        Ensure that Scan.execute_background() returns an int like object.
         """
         test_bin = 'St6'
         scan = self.as_connection.scan(TEST_NS, TEST_SET)
