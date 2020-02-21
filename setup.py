@@ -30,13 +30,13 @@ os.putenv('ARCHFLAGS', '-arch x86_64')
 os.environ['ARCHFLAGS'] = '-arch x86_64'
 AEROSPIKE_C_VERSION = os.getenv('AEROSPIKE_C_VERSION')
 if not AEROSPIKE_C_VERSION:
-    AEROSPIKE_C_VERSION = '4.6.10'
+    AEROSPIKE_C_VERSION = '4.6.13'
 DOWNLOAD_C_CLIENT = os.getenv('DOWNLOAD_C_CLIENT')
 AEROSPIKE_C_HOME = os.getenv('AEROSPIKE_C_HOME')
 PREFIX = None
 PLATFORM = platform.platform(1)
 LINUX = 'Linux' in PLATFORM
-DARWIN = 'Darwin' in PLATFORM
+DARWIN = 'Darwin' in PLATFORM or 'macOS' in PLATFORM
 CWD = os.path.abspath(os.path.dirname(__file__))
 
 ################################################################################
@@ -214,9 +214,9 @@ setup(
         'Operating System :: POSIX :: Linux',
         'Operating System :: MacOS :: MacOS X',
         'Programming Language :: Python :: 2.7',
-        'Programming Language :: Python :: 3.5',
         'Programming Language :: Python :: 3.6',
         'Programming Language :: Python :: 3.7',
+        'Programming Language :: Python :: 3.8',
         'Programming Language :: Python :: Implementation :: CPython',
         'Topic :: Database'
     ],
