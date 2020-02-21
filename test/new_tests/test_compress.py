@@ -50,8 +50,27 @@ class TestGetMany():
 
         request.addfinalizer(teardown)
 
-    def test_batch_with_compress_policy(self):
+    def test_put_get_with_compress_policy(self):
+        """
+            Invoke put() and get() with compression.
+        """
+        key = ('test', 'demo', 1)
+        expected = 'john' * (5 * 1024)
+        rec = {'val': expected}
 
+        policy = {
+            'compress': True
+        }
+
+        self.as_connection.put(key, rec, policy)
+        _, _, bins = self.as_connection.get(key, policy)
+
+        assert bins['val'] == expected
+
+    def test_batch_with_compress_policy(self):
+        """
+        Invoke get_many() with compression policy.
+        """
         policy = {'compress': True}
         records = self.as_connection.get_many(self.keys, policy)
 
@@ -63,7 +82,7 @@ class TestGetMany():
 
     def test_operate_with_compress_policy(self):
         """
-        Invoke operate() with correct policy
+        Invoke operate() with compression policy.
         """
         key = ('test', 'demo', 1)
         policy = {
@@ -92,9 +111,7 @@ class TestGetMany():
         """
             Invoke get() for a record having string data.
         """
-
         key = ('test', 'demo', 1)
-
         rec = {'name': 'john', 'age': 1}
 
         policy = {
@@ -112,7 +129,9 @@ class TestGetMany():
         )
 
     def test_scan_with_compress_policy(self):
-
+        """
+            Invoke execute_background() for a scan with compression enabled.
+        """
         ns = 'test'
         st = 'demo'
 
