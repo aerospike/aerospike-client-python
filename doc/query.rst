@@ -558,7 +558,7 @@ Query Options
 
 .. object:: options
 
-    A :class:`dict` of optional scan options which are applicable to :meth:`Query.foreach` and :meth:`Query.results`.
+    A :class:`dict` of optional query options which are applicable to :meth:`Query.foreach` and :meth:`Query.results`.
 
     .. hlist::
         :columns: 1
