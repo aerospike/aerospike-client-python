@@ -286,7 +286,7 @@ class TestScanApply(object):
 
     def test_background_execute_with_map_ops(self):
         """
-        Ensure that Scan.execute_background() applies ops to all records.
+        Ensure that Scan.execute_background() applies ops to matching map bins.
         """
         test_bin = 'numbers'
         keys = [(TEST_NS, TEST_SET3, i) for i in range(10)]

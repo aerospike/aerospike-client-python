@@ -17,11 +17,11 @@ except:
     sys.exit(1)
 
 
-class TestGetMany():
+class TestCompress():
 
     pytestmark = pytest.mark.skipif(
         not TestBaseClass.enterprise_in_use(),
-        reason="No user specified, may be not secured cluster.")
+        reason="No enterprise hosts, maybe cluster is not enterprise.")
 
     @pytest.fixture(autouse=True)
     def setup(self, request, as_connection):
@@ -52,7 +52,7 @@ class TestGetMany():
 
     def test_put_get_with_compress_policy(self):
         """
-            Invoke put() and get() with compression.
+            Invoke put() and get() with compression policy.
         """
         key = ('test', 'demo', 1)
         expected = 'john' * (5 * 1024)
@@ -109,7 +109,7 @@ class TestGetMany():
 
     def test_read_with_compress_policy(self, put_data):
         """
-            Invoke get() for a record having string data.
+            Invoke get() for a record with compression policy.
         """
         key = ('test', 'demo', 1)
         rec = {'name': 'john', 'age': 1}
