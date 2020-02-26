@@ -541,6 +541,14 @@ Query Policies
              ``AEROSPIKE_ERR_TIMEOUT``. If ``total_timeout`` is ``0``, there will be no total time limit.
             |
             | Default: ``0``
+        * **compress** (:class:`bool`)
+            | Compress client requests and server responses.
+            |
+            | Use zlib compression on write or batch read commands when the command buffer size is greater than 128 bytes. In addition, tell the server to compress it's response on read commands. The server response compression threshold is also 128 bytes.
+            |
+            | This option will increase cpu and memory usage (for extra compressed buffers), but decrease the size of data sent over the network.
+            |
+            | Default: ``False``
         * **deserialize** :class:`bool`
             | Should raw bytes representing a list or map be deserialized to a list or dictionary.
             | Set to `False` for backup programs that just need access to raw bytes.
