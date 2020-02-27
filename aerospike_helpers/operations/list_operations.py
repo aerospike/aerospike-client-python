@@ -969,7 +969,7 @@ def list_sort(bin_name, sort_flags=aerospike.LIST_SORT_DEFAULT, ctx=None):
 
     Args:
         bin_name (str): The name of the bin to sort.
-        sort_flags: Optional. Flags modifiying the behavior of list_sort. This should be constructed by bitwise or'ing together values from :ref:`aerospike_list_sort_flag`.
+        sort_flags: Optional flags modifiying the behavior of list_sort. This should be constructed by bitwise or'ing together values from :ref:`aerospike_list_sort_flag`.
         ctx (list): An optional list of nested CDT context operations (:mod:`cdt_cdx <aerospike_helpers.cdt_ctx>` object) for use on nested CDTs.
     Returns:
         A dictionary usable in operate or operate_ordered.The format of the dictionary

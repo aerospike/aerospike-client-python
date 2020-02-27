@@ -93,7 +93,6 @@ class TestScanApply(object):
         scan = self.as_connection.scan(TEST_NS, TEST_SET)
         scan.apply(TEST_UDF_MODULE, TEST_UDF_FUNCTION, [test_bin, 1])
         job_id = scan.execute_background()
-        # Give time for the scan to finish
         wait_for_job_completion(self.as_connection, job_id)
 
         for i, key in enumerate(keys):
@@ -124,7 +123,6 @@ class TestScanApply(object):
         scan = self.as_connection.scan(TEST_NS, TEST_SET)
         scan.apply(TEST_UDF_MODULE, TEST_UDF_FUNCTION, [test_bin, 1])
         job_id = scan.execute_background(policy)
-        # Give time for the scan to finish
         wait_for_job_completion(self.as_connection, job_id)
 
         for i, key in enumerate(keys):
@@ -163,7 +161,6 @@ class TestScanApply(object):
         scan.where(number_predicate)
         scan.apply(TEST_UDF_MODULE, TEST_UDF_FUNCTION, [test_bin])
         job_id = scan.execute_background(policy)
-        # Give time for the scan to finish
         wait_for_job_completion(self.as_connection, job_id)
 
         for key in keys:
@@ -203,7 +200,6 @@ class TestScanApply(object):
 
         scan.add_ops(ops)
         job_id = scan.execute_background(policy)
-        # Give time for the scan to finish
         wait_for_job_completion(self.as_connection, job_id)
 
         for key in keys:
@@ -243,7 +239,6 @@ class TestScanApply(object):
 
         scan.add_ops(ops)
         job_id = scan.execute_background(policy)
-        # Give time for the scan to finish
         wait_for_job_completion(self.as_connection, job_id)
 
         for key in keys:
@@ -276,7 +271,6 @@ class TestScanApply(object):
 
         scan.add_ops(ops)
         job_id = scan.execute_background()
-        # Give time for the scan to finish
         wait_for_job_completion(self.as_connection, job_id)
 
         validate_records(
@@ -299,7 +293,6 @@ class TestScanApply(object):
 
         scan.add_ops(ops)
         job_id = scan.execute_background()
-        # Give time for the scan to finish
         wait_for_job_completion(self.as_connection, job_id)
 
         records = self.as_connection.get_many(keys)
@@ -328,7 +321,6 @@ class TestScanApply(object):
         scan.add_ops(ops)
         scan.where(number_predicate)
         job_id = scan.execute_background()
-        # Give time for the scan to finish
         wait_for_job_completion(self.as_connection, job_id)
 
         _, _, num_5_record = self.as_connection.get((TEST_NS, TEST_SET, 5))
@@ -365,7 +357,6 @@ class TestScanApply(object):
         scan.where(number_predicate)
         scan.apply(TEST_UDF_MODULE, TEST_UDF_FUNCTION, [test_bin])
         job_id = scan.execute_background()
-        # Give time for the scan to finish
         wait_for_job_completion(self.as_connection, job_id)
 
         keys = [(TEST_NS, TEST_SET, i) for i in range(50) if i != 5]
