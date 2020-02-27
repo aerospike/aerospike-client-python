@@ -1663,7 +1663,7 @@ Constants
 TTL Constants
 -------------
 
-Specifics the TTL constants.
+Specifies the TTL constants.
 
 .. data:: TTL_NAMESPACE_DEFAULT
     
