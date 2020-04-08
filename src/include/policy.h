@@ -129,6 +129,10 @@ enum aerospike_bitwise_operations {
     OP_BIT_RSCAN
 };
 
+enum aerospike_hll_operations {
+	OP_HLL_ADD = 2100
+};
+
 typedef struct Aerospike_Constants {
     long    constantno;
     char    constant_str[MAX_CONSTANT_STR_SIZE];
