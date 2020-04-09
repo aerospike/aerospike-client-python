@@ -40,10 +40,10 @@ class TestListAppend(object):
         Invoke list_append() append value to a list
         """
         ops = [
-            hll_operations.hll_add()
+            hll_operations.hll_add('list_bin', [1, 4, 3], 2)
         ]
 
-        _, _, res = self.as_connection.operate(self.test_key)
+        _, _, res = self.as_connection.operate(self.test_key, ops)
 
         (key, _, bins) = self.as_connection.get(self.test_key)
         print(bins)

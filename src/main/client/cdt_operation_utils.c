@@ -126,3 +126,15 @@ get_optional_int64_t(as_error * err, const char* key,  PyObject * op_dict, int64
         *found = true;
         return AEROSPIKE_OK;
 }
+
+as_status 
+get_int(as_error* err, const char* key, PyObject* op_dict, int* int_pointer) {
+    int64_t int64_return_type;
+
+    if (get_int64_t(err, key, op_dict, &int64_return_type) != AEROSPIKE_OK) {
+        return err->code;
+    }
+    *int_pointer = int64_return_type;
+
+    return AEROSPIKE_OK;
+}

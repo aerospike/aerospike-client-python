@@ -20,7 +20,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <aerospike/as_operations.h>
-#include <aerospike/as_list_operations.h>
+#include <aerospike/as_hll_operations.h>
 #include <aerospike/as_cdt_ctx.h>
 
 #include "client.h"
@@ -28,13 +28,18 @@
 #include "exceptions.h"
 #include "policy.h"
 #include "serializer.h"
-#include "cdt_list_operations.h"
+#include "cdt_hll_operations.h"
 #include "cdt_operation_utils.h"
 
 #define AS_PY_LIST_RETURN_KEY "return_type"
 #define AS_PY_LIST_ORDER "list_order"
 #define AS_PY_LIST_SORT_FLAGS "sort_flags"
-#define AS_PY_LIST_POLICY "list_policy"
+#define AS_PY_HLL_POLICY "list_policy"
+#define AS_PY_HLL_INDEX_BIT_COUNT "index_bit_count"
+
+
+static as_status
+get_hll_policy(as_error* err, PyObject* op_dict, as_hll_policy* policy, bool* found);
 
 static as_status
 add_op_hll_add(AerospikeClient* self, as_error* err, char* bin,
@@ -69,17 +74,19 @@ add_op_hll_add(AerospikeClient* self, as_error* err, char* bin,
         PyObject* op_dict, as_operations* ops,
         as_static_pool* static_pool, int serializer_type)
 {
-    int64_t index;
-    int return_type = AS_LIST_RETURN_VALUE;
-    bool ctx_in_use = false;
-    as_cdt_ctx ctx;
 
-    /* Get the index*/
-    if (get_int64_t(err, AS_PY_INDEX_KEY, op_dict, &index) != AEROSPIKE_OK) {
+    as_list* value_list = NULL;
+    as_hll_policy hll_policy;
+    int index_bit_count;
+    as_cdt_ctx ctx;
+    bool ctx_in_use = false;
+    bool policy_in_use = false;
+
+    if (get_int(err, AS_PY_HLL_INDEX_BIT_COUNT, op_dict, &index_bit_count) != AEROSPIKE_OK) {
         return err->code;
     }
 
-    if (get_list_return_type(err, op_dict, &return_type) != AEROSPIKE_OK) {
+    if (get_hll_policy(err, op_dict, &hll_policy, &policy_in_use) != AEROSPIKE_OK) {
         return err->code;
     }
 
@@ -87,8 +94,12 @@ add_op_hll_add(AerospikeClient* self, as_error* err, char* bin,
         return err->code;
     }
 
-    if (! as_operations_hll_add(ops, bin, (ctx_in_use ? &ctx : NULL), index, return_type)) {
-        as_error_update(err, AEROSPIKE_ERR_CLIENT, "Failed to add get_by_list_index operation");
+    if (get_val_list(self, err, AS_PY_VALUES_KEY, op_dict, &value_list, static_pool, serializer_type) != AEROSPIKE_OK) {
+        return err->code;
+    }
+
+    if (as_operations_hll_add(ops, bin, NULL, &hll_policy, value_list, index_bit_count)){
+        return err->code;
     }
 
     if (ctx_in_use) {
@@ -96,4 +107,20 @@ add_op_hll_add(AerospikeClient* self, as_error* err, char* bin,
     }
 
     return err->code;
+}
+
+static as_status
+get_hll_policy(as_error* err, PyObject* op_dict, as_hll_policy* policy, bool* found) {
+    *found = false;
+
+    PyObject* hll_policy = PyDict_GetItemString(op_dict, AS_PY_HLL_POLICY);
+
+    if (hll_policy) {
+        if (pyobject_to_hll_policy(err, hll_policy, policy) != AEROSPIKE_OK) {
+            return err -> code;
+        }
+        *found = true;
+    }
+
+    return AEROSPIKE_OK;
 }

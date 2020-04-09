@@ -241,6 +241,7 @@ setup(
                 'src/main/client/bit_operate.c',
                 'src/main/client/cdt_list_operate.c',
                 'src/main/client/cdt_map_operate.c',
+                'src/main/client/cdt_hll_operate.c',
                 'src/main/client/cdt_operation_utils.c',
                 'src/main/client/close.c',
                 'src/main/client/connect.c',

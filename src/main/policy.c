@@ -340,7 +340,7 @@ AerospikeConstants aerospike_constants[] = {
 	{ AS_CDT_CTX_MAP_VALUE, "CDT_CTX_MAP_VALUE"},
 
 	/* HLL constants */
-	{ OP_HLL_ADD, "OP_HLL_ADD" }
+	{ OP_HLL_ADD, "OP_HLL_ADD"}
 };
 
 static
@@ -990,6 +990,45 @@ pyobject_to_list_policy(as_error* err, PyObject* py_policy, as_list_policy* list
 	}
 
 	as_list_policy_set(list_policy, (as_list_order)list_order, (as_list_write_flags)flags);
+
+	return AEROSPIKE_OK;
+}
+
+as_status
+pyobject_to_hll_policy(as_error* err, PyObject* py_policy, as_hll_policy* hll_policy) {
+	int64_t flags = 0;
+	as_hll_policy_init(hll_policy);
+	PyObject* py_val = NULL;
+
+	if (!py_policy || py_policy == Py_None) {
+		return AEROSPIKE_OK;
+	}
+
+	if (!PyDict_Check(py_policy)) {
+		return as_error_update(err, AEROSPIKE_ERR_PARAM, "Hll policy must be a dictionary.");
+	}
+
+	py_val = PyDict_GetItemString(py_policy, "flags");
+    if (py_val && py_val != Py_None) {
+        if (PyInt_Check(py_val)) {
+            flags = (int64_t)PyInt_AsLong(py_val);
+            if (PyErr_Occurred()) {
+                return as_error_update(err, AEROSPIKE_ERR_PARAM, "Failed to convert flags.");
+
+            }
+    	}
+        else if (PyLong_Check(py_val)) {
+        	flags = (int64_t)PyLong_AsLong(py_val);
+            if (PyErr_Occurred()) {
+                return as_error_update(err, AEROSPIKE_ERR_PARAM, "Failed to convert flags.");
+            }
+        }
+        else {
+            return as_error_update(err, AEROSPIKE_ERR_PARAM, "Invalid hll policy flags.");
+        }
+	}
+
+	as_hll_policy_set_write_flags(hll_policy, flags);
 
 	return AEROSPIKE_OK;
 }

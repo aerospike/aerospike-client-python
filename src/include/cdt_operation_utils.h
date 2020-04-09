@@ -47,3 +47,6 @@ get_int64_t(as_error * err, const char* key, PyObject * op_dict, int64_t* i64_va
 
 as_status
 get_optional_int64_t(as_error * err, const char* key,  PyObject * op_dict, int64_t* i64_valptr, bool* found);
+
+as_status
+get_int(as_error* err, const char* key, PyObject* op_dict, int* int_pointer);

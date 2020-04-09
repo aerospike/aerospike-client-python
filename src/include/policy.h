@@ -22,6 +22,7 @@
 #include <aerospike/as_map_operations.h>
 #include <aerospike/as_list_operations.h>
 #include <aerospike/as_bit_operations.h>
+#include <aerospike/as_hll_operations.h>
 
 #define MAX_CONSTANT_STR_SIZE 512
 
@@ -224,3 +225,5 @@ as_status pyobject_to_list_policy(as_error * err, PyObject * py_policy,
 									as_list_policy * policy);
 
 as_status pyobject_to_bit_policy(as_error* err, PyObject* py_policy, as_bit_policy* policy);
+
+as_status pyobject_to_hll_policy(as_error* err, PyObject* py_policy, as_hll_policy* hll_policy);
