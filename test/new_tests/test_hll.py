@@ -19,9 +19,14 @@ class TestListAppend(object):
     @pytest.fixture(autouse=True)
     def setup(self, request, as_connection):
         key = ('test', 'demo', 1)
-        rec = {'list_bin': [1, 2, 3]}
-        as_connection.put(key, rec)
+        # rec = {'list_bin': [1, 2, 3]}
+        # as_connection.put(key, rec)
+
+        ops = [
+            hll_operations.hll_init('hll_bin', 8)
+        ]
         self.test_key = key
+        _, _, _ = as_connection.operate(self.test_key, ops)
 
         def teardown():
             """
@@ -40,10 +45,9 @@ class TestListAppend(object):
         Invoke list_append() append value to a list
         """
         ops = [
-            hll_operations.hll_add('list_bin', [1, 4, 3], 2)
+            hll_operations.hll_add('new_bin', ['key1', 'key2', 'key3'], 8)
         ]
 
         _, _, res = self.as_connection.operate(self.test_key, ops)
 
         (key, _, bins) = self.as_connection.get(self.test_key)
-        print(bins)

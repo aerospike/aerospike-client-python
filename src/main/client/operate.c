@@ -242,9 +242,8 @@ static inline bool isBitOp(int op) {
 }
 
 static inline bool isHllOp(int op) {
-	return (op == OP_HLL_ADD);
 	int hll_start = OP_HLL_ADD;
-	int hll_end = OP_HLL_ADD;
+	int hll_end = OP_HLL_INIT;
 	return (op >= hll_start && op <= hll_end);
 }
 

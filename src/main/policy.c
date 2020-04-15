@@ -340,7 +340,8 @@ AerospikeConstants aerospike_constants[] = {
 	{ AS_CDT_CTX_MAP_VALUE, "CDT_CTX_MAP_VALUE"},
 
 	/* HLL constants */
-	{ OP_HLL_ADD, "OP_HLL_ADD"}
+	{ OP_HLL_ADD, "OP_HLL_ADD"},
+	{ OP_HLL_INIT, "OP_HLL_INIT"}
 };
 
 static

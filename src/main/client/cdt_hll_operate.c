@@ -46,6 +46,11 @@ add_op_hll_add(AerospikeClient* self, as_error* err, char* bin,
         PyObject* op_dict, as_operations* ops,
         as_static_pool* static_pool, int serializer_type);
 
+static as_status
+add_op_hll_init(AerospikeClient* self, as_error* err, char* bin,
+        PyObject* op_dict, as_operations* ops,
+        as_static_pool* static_pool, int serializer_type);
+
 as_status
 add_new_hll_op(AerospikeClient* self, as_error* err, PyObject* op_dict, as_vector* unicodeStrVector,
 	    as_static_pool* static_pool, as_operations* ops, long operation_code, long* ret_type, int serializer_type)
@@ -60,6 +65,9 @@ add_new_hll_op(AerospikeClient* self, as_error* err, PyObject* op_dict, as_vecto
     switch(operation_code) {
     	case OP_HLL_ADD:
     		return add_op_hll_add(self, err, bin, op_dict, ops, static_pool, serializer_type);
+        
+        case OP_HLL_INIT:
+            return add_op_hll_init(self, err, bin, op_dict, ops, static_pool, serializer_type);
 
         default:
             // This should never be possible since we only get here if we know that the operation is valid.
@@ -98,7 +106,42 @@ add_op_hll_add(AerospikeClient* self, as_error* err, char* bin,
         return err->code;
     }
 
-    if (as_operations_hll_add(ops, bin, NULL, &hll_policy, value_list, index_bit_count)){
+    if (as_operations_hll_add(ops, bin, NULL, &hll_policy, value_list, index_bit_count) != AEROSPIKE_OK){
+        return err->code;
+    }
+
+    if (ctx_in_use) {
+        as_cdt_ctx_destroy(&ctx);
+    }
+
+    return err->code;
+}
+
+static as_status
+add_op_hll_init(AerospikeClient* self, as_error* err, char* bin,
+        PyObject* op_dict, as_operations* ops,
+        as_static_pool* static_pool, int serializer_type)
+{
+
+    as_hll_policy hll_policy;
+    int index_bit_count;
+    as_cdt_ctx ctx;
+    bool ctx_in_use = false;
+    bool policy_in_use = false;
+
+    if (get_int(err, AS_PY_HLL_INDEX_BIT_COUNT, op_dict, &index_bit_count) != AEROSPIKE_OK) {
+        return err->code;
+    }
+
+    if (get_hll_policy(err, op_dict, &hll_policy, &policy_in_use) != AEROSPIKE_OK) {
+        return err->code;
+    }
+
+    if (get_cdt_ctx(self, err, &ctx, op_dict, &ctx_in_use, static_pool, serializer_type) != AEROSPIKE_OK) {
+        return err->code;
+    }
+
+    if (as_operations_hll_init(ops, bin, NULL, &hll_policy, index_bit_count) != AEROSPIKE_OK){
         return err->code;
     }
 
