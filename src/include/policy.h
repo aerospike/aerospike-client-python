@@ -132,7 +132,19 @@ enum aerospike_bitwise_operations {
 
 enum aerospike_hll_operations {
 	OP_HLL_ADD = 2100,
-	OP_HLL_INIT
+	OP_HLL_ADD_MH,
+	OP_HLL_DESCRIBE,
+	OP_HLL_FOLD,
+	OP_HLL_GET_COUNT,
+	OP_HLL_GET_INTERSECT_COUNT,
+	OP_HLL_GET_SIMILARITY,
+	OP_HLL_GET_UNION,
+	OP_HLL_GET_UNION_COUNT,
+	OP_HLL_INIT,
+	OP_HLL_INIT_MH,
+	OP_HLL_REFRESH_COUNT,
+	OP_SET_UNION,
+	OP_HLL_UPDATE
 };
 
 typedef struct Aerospike_Constants {
