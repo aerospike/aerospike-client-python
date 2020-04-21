@@ -143,7 +143,7 @@ enum aerospike_hll_operations {
 	OP_HLL_INIT,
 	OP_HLL_INIT_MH,
 	OP_HLL_REFRESH_COUNT,
-	OP_SET_UNION,
+	OP_HLL_SET_UNION,
 	OP_HLL_UPDATE
 };
 
