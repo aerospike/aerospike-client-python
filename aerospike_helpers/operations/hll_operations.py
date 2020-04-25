@@ -323,3 +323,30 @@ def hll_set_union(bin_name, hll_list, policy=None, ctx=None):
         op_dict[CTX_KEY] = ctx
 
     return op_dict
+
+def hll_update(bin_name, values, policy=None, ctx=None):
+    """Creates a hll_set_union operation to be used with operate, or operate_ordered.
+
+    This operation assumes the HLL bin already exists.
+    Server adds values to HLL set.
+    Server returns number of entries that caused HLL to update a register.
+
+    Args:
+        bin_name (str): The name of the bin to be operated on.
+        values (list): The values to be added.
+        policy (dict): An optional dictionary of :ref:`hll policy options <aerospike_hll_policies>`.
+        ctx (list): An optional list of nested CDT context operations (:mod:`cdt_cdx <aerospike_helpers.cdt_ctx>` object) for use on nested CDTs.
+    """
+    op_dict = {
+        OP_KEY: aerospike.OP_HLL_UPDATE,
+        BIN_KEY: bin_name,
+        VALUE_LIST_KEY: values
+    }
+
+    if policy:
+        op_dict[HLL_POLICY_KEY] = policy
+
+    if ctx:
+        op_dict[CTX_KEY] = ctx
+
+    return op_dict

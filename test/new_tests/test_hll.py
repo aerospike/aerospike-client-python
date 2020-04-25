@@ -33,7 +33,7 @@ class TestHLL(object):
             # print(['key%s' % str(i) for i in range(100)])
 
             ops = [
-                hll_operations.hll_init('hll_bin', 10),
+                hll_operations.hll_init('hll_bine', 10),
                 hll_operations.hll_add('hll_bin', ['key%s' % str(i) for i in range(x + 1)], 8),
                 hll_operations.hll_add_mh('mh_bin', ['key%s' % str(i) for i in range(x + 1)], 6, 12),
                 hll_operations.hll_add('hll_binl', ['key%s' % str(i) for i in range(100)], 8),
@@ -55,20 +55,36 @@ class TestHLL(object):
 
         request.addfinalizer(teardown)
 
-
-    def test_pos_hll_add(self):
+    @pytest.mark.parametrize("policy, expected_result", [
+        (None, 3),
+        ({'flags': aerospike.HLL_WRITE_CREATE_ONLY}, 3),
+        ({'flags': aerospike.HLL_WRITE_UPDATE_ONLY | aerospike.HLL_WRITE_NO_FAIL}, 3)
+    ])
+    def test_pos_hll_add(self, policy, expected_result):
         """
         Invoke hll_add() creating a new HLL.
         """
         ops = [
-            hll_operations.hll_add('new_bin', ['key1', 'key2', 'key3'], 8)
+            hll_operations.hll_add('new_bin', ['key1', 'key2', 'key3'], 8, policy)
         ]
 
         _, _, res = self.as_connection.operate(self.test_keys[0], ops)
 
-        assert res['new_bin'] == 3
-        #TODO use get_count to actually check the new hll
-        #(key, _, bins) = self.as_connection.get(self.test_key)
+        assert res['new_bin'] == expected_result
+
+    @pytest.mark.parametrize("policy, expected_result", [
+        ({'flags': aerospike.HLL_WRITE_UPDATE_ONLY}, e.OpNotApplicable)
+    ])
+    def test_neg_hll_add(self, policy, expected_result):
+        """
+        Invoke hll_add() creating a new HLL with expected failures.
+        """
+        ops = [
+            hll_operations.hll_add('new_bin', ['key1', 'key2', 'key3'], 8, policy)
+        ]
+
+        with pytest.raises(expected_result):
+            self.as_connection.operate(self.test_keys[0], ops)
 
     def test_pos_hll_add_mh(self):
         """
@@ -245,3 +261,15 @@ class TestHLL(object):
 
         assert res['hll_bin'] == 10
         assert res['hll_binu'] == 5
+
+    def test_pos_hll_update(self):
+        """
+        Invoke hll_update() creating a new HLL.
+        """
+        ops = [
+            hll_operations.hll_update('hll_bine', ['key1', 'key2', 'key3'])
+        ]
+
+        _, _, res = self.as_connection.operate(self.test_keys[0], ops)
+
+        assert res['hll_bine'] == 3
