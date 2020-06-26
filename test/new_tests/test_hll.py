@@ -5,7 +5,9 @@ import random
 import time
 from .test_base_class import TestBaseClass
 from aerospike import exception as e
-from aerospike_helpers.operations import hll_operations 
+from aerospike_helpers.operations import hll_operations
+
+import pytest
 
 aerospike = pytest.importorskip("aerospike")
 try:
@@ -58,7 +60,7 @@ class TestHLL(object):
     @pytest.mark.parametrize("policy, expected_result", [
         (None, 3),
         ({'flags': aerospike.HLL_WRITE_CREATE_ONLY}, 3),
-        ({'flags': aerospike.HLL_WRITE_UPDATE_ONLY | aerospike.HLL_WRITE_NO_FAIL}, 3)
+        ({'flags': aerospike.HLL_WRITE_NO_FAIL}, 3)
     ])
     def test_pos_hll_add(self, policy, expected_result):
         """
@@ -73,7 +75,7 @@ class TestHLL(object):
         assert res['new_bin'] == expected_result
 
     @pytest.mark.parametrize("policy, expected_result", [
-        ({'flags': aerospike.HLL_WRITE_UPDATE_ONLY}, e.OpNotApplicable)
+        ({'flags': aerospike.HLL_WRITE_UPDATE_ONLY}, e.InvalidRequest)
     ])
     def test_neg_hll_add(self, policy, expected_result):
         """
@@ -100,6 +102,20 @@ class TestHLL(object):
         #TODO use get_count to actually check the new hll
         #(key, _, bins) = self.as_connection.get(self.test_key)
 
+    @pytest.mark.parametrize("policy, expected_result", [
+        ({'flags': aerospike.HLL_WRITE_CREATE_ONLY}, e.BinExistsError)
+    ])
+    def test_neg_hll_add_mh(self, policy, expected_result):
+        """
+        Invoke hll_add_mh() failing to creating a new min hash HLL.
+        """
+        ops = [
+            hll_operations.hll_add_mh('hll_binl', ['key101', 'key102', 'key103'], 6, 8, policy)
+        ]
+
+        with pytest.raises(expected_result):
+            self.as_connection.operate(self.test_keys[0], ops)
+
     def test_pos_hll_get_count(self):
         """
         Invoke hll_get_count() to check an HLL's count.
@@ -111,6 +127,17 @@ class TestHLL(object):
         _, _, res = self.as_connection.operate(self.test_keys[2], ops)
         assert res['hll_bin'] == 3
 
+    def test_neg_hll_get_count(self):
+        """
+        Invoke hll_get_count() with a non existent bin.
+        """
+        ops = [
+            hll_operations.hll_get_count('fake_hll_bin')
+        ]
+
+        _, _, res = self.as_connection.operate(self.test_keys[2], ops)
+        assert res['fake_hll_bin'] == None
+
     def test_pos_hll_describe(self):
         """
         Invoke hll_describe() and check index and min hash bits.
@@ -121,6 +148,17 @@ class TestHLL(object):
 
         _, _, res = self.as_connection.operate(self.test_keys[0], ops)
         assert res['mh_bin'] == [6, 12]
+
+    def test_neg_hll_describe(self):
+        """
+        Invoke hll_describe() with a non existent hll bin.
+        """
+        ops = [
+            hll_operations.hll_describe('fake_hll_bin')
+        ]
+
+        _, _, res = self.as_connection.operate(self.test_keys[0], ops)
+        assert res['fake_hll_bin'] == None
 
     def test_pos_hll_fold(self):
         """
@@ -134,19 +172,65 @@ class TestHLL(object):
         _, _, res = self.as_connection.operate(self.test_keys[2], ops)
         assert res['hll_bin'] == [6, 0]
 
+    @pytest.mark.parametrize("index_bits, bin, expected_result", [
+        (2, 'hll_bin', e.InvalidRequest),
+        (4, 'mh_bin', e.OpNotApplicable)
+    ])
+    def test_neg_hll_fold(self, index_bits, bin, expected_result):
+        """
+        Invoke hll_fold() expecting errors.
+        """
+        ops = [
+            hll_operations.hll_fold(bin, index_bits),
+            hll_operations.hll_describe(bin)
+        ]
+
+        with pytest.raises(expected_result):
+            self.as_connection.operate(self.test_keys[2], ops)
+
     def test_pos_hll_get_intersect_count(self):
         """
         Invoke hll_get_intersect_count().
         """
 
-        records =  [record[2]['hll_binl'] for record in self.as_connection.get_many(self.test_keys)]
+        records =  [record[2]['hll_binl'] for record in self.as_connection.get_many(self.test_keys[:1])]
 
         ops = [
             hll_operations.hll_get_intersect_count('hll_binl', records)
         ]
 
         _, _, res = self.as_connection.operate(self.test_keys[4], ops)
-        assert res['hll_binl'] == 485
+        assert res['hll_binl'] >= 97 or res['hll_binl'] <= 103
+
+    def test_pos_hll_get_intersect_count_mh(self):
+        """
+        Invoke hll_get_intersect_count() on min hash bins.
+        """
+        records =  [record[2]['mh_bin'] for record in self.as_connection.get_many(self.test_keys[:4])]
+
+        ops = [
+            hll_operations.hll_get_intersect_count('mh_bin', records)
+        ]
+
+        _, _, res = self.as_connection.operate(self.test_keys[4], ops)
+        assert res['mh_bin'] == 1
+
+    @pytest.mark.parametrize("hll_bins, bin, expected_result", [
+        (5, 'hll_binl', e.InvalidRequest)
+    ])
+    def test_neg_hll_get_intersect_count(self, hll_bins, bin, expected_result):
+        """
+        Invoke hll_get_intersect_count().
+        """
+
+        records =  [record[2][bin] for record in self.as_connection.get_many(self.test_keys[:hll_bins - 1])]
+
+        ops = [
+            hll_operations.hll_get_intersect_count(bin, records)
+        ]
+
+        with pytest.raises(expected_result):
+            self.as_connection.operate(self.test_keys[4], ops)
 
     def test_pos_hll_get_similarity(self):
         """
@@ -161,6 +245,23 @@ class TestHLL(object):
 
         _, _, res = self.as_connection.operate(self.test_keys[4], ops)
         assert res['hll_bin'] >= 0.050 and res['hll_bin'] <= 0.059
+
+    @pytest.mark.parametrize("hll_bins, bin, expected_result", [
+        (5, 'hll_binl', e.InvalidRequest)
+    ])
+    def test_neg_hll_get_similarity(self, hll_bins, bin, expected_result):
+        """
+        Invoke hll_get_similarity() with errors.
+        """
+
+        records =  [record[2][bin] for record in self.as_connection.get_many(self.test_keys[:hll_bins - 1])]
+
+        ops = [
+            hll_operations.hll_get_similarity(bin, records)
+        ]
+
+        with pytest.raises(expected_result):
+            self.as_connection.operate(self.test_keys[4], ops)
 
     def test_pos_hll_get_union(self):
         """
@@ -199,6 +300,49 @@ class TestHLL(object):
         _, _, res = self.as_connection.operate(self.test_keys[0], ops)
 
         assert res['hll_binu'] == 10
+
+    def test_neg_hll_get_union_count(self):
+        """
+        Invoke hll_get_union_count() with errors.
+        """
+
+        records =  []
+
+        ops = [
+            hll_operations.hll_get_union_count('hll_binu', records)
+        ]
+
+        with pytest.raises(e.InvalidRequest):
+            self.as_connection.operate(self.test_keys[0], ops)
+
+    def test_pos_hll_init_mh(self):
+        """
+        Invoke hll_add_mh() creating a new min hash HLL.
+        """
+        ops = [
+            hll_operations.hll_init_mh('new_mhbin', 6, 8)
+        ]
+
+        _, _, _ = self.as_connection.operate(self.test_keys[0], ops)
+
+        record = self.as_connection.get(self.test_keys[0])
+        assert record[2]['new_mhbin']
+
+    @pytest.mark.parametrize("hll_bins, bin, expected_result", [
+        (5, 'hll_binl', e.InvalidRequest)
+    ])
+    def test_neg_hll_init_mh(self, hll_bins, bin, expected_result):
+        """
+        Invoke hll_add_mh() creating a new min hash HLL.
+        """
+        ops = [
+            hll_operations.hll_init_mh('new_mhbin', 6, 8)
+        ]
+
+        _, _, _ = self.as_connection.operate(self.test_keys[0], ops)
+
+        record = self.as_connection.get(self.test_keys[0])
+        assert record[2]['new_mhbin']
 
     def test_pos_hll_init_mh(self):
         """

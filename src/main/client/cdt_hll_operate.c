@@ -191,10 +191,6 @@ add_op_hll_add(AerospikeClient* self, as_error* err, char* bin,
         return err->code;
     }
 
-    if (policy_in_use) {
-        printf("add is using policy\n");
-    }
-
     if (get_cdt_ctx(self, err, &ctx, op_dict, &ctx_in_use, static_pool, serializer_type) != AEROSPIKE_OK) {
         return err->code;
     }
@@ -247,7 +243,7 @@ add_op_hll_add_mh(AerospikeClient* self, as_error* err, char* bin,
         return err->code;
     }
 
-    if (as_operations_hll_add_mh(ops, bin, NULL, NULL, value_list, index_bit_count, mh_bit_count) != AEROSPIKE_OK) {
+    if (as_operations_hll_add_mh(ops, bin, NULL, policy_in_use ? &hll_policy : NULL, value_list, index_bit_count, mh_bit_count) != AEROSPIKE_OK) {
         //TODO destroy val_list
         return err->code;
     }
