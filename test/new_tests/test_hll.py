@@ -328,21 +328,21 @@ class TestHLL(object):
         record = self.as_connection.get(self.test_keys[0])
         assert record[2]['new_mhbin']
 
-    @pytest.mark.parametrize("hll_bins, bin, expected_result", [
-        (5, 'hll_binl', e.InvalidRequest)
+    @pytest.mark.parametrize("index_bits, mh_bits, bin, policy, expected_result", [
+        (0, 0, 'new_mhbin', None, e.InvalidRequest),
+        (6, 8, 'mh_bin', {'flags': aerospike.HLL_WRITE_CREATE_ONLY}, e.BinExistsError),
+        (6, 8, 'new_mhbin', {'flags': aerospike.HLL_WRITE_UPDATE_ONLY}, e.BinNotFound)
     ])
-    def test_neg_hll_init_mh(self, hll_bins, bin, expected_result):
+    def test_neg_hll_init_mh(self, index_bits, mh_bits, bin, policy, expected_result):
         """
         Invoke hll_add_mh() creating a new min hash HLL.
         """
         ops = [
-            hll_operations.hll_init_mh('new_mhbin', 6, 8)
+            hll_operations.hll_init_mh(bin, index_bits, mh_bits, policy)
         ]
 
-        _, _, _ = self.as_connection.operate(self.test_keys[0], ops)
-
-        record = self.as_connection.get(self.test_keys[0])
-        assert record[2]['new_mhbin']
+        with pytest.raises(expected_result):
+            self.as_connection.operate(self.test_keys[0], ops)
 
     def test_pos_hll_init_mh(self):
         """
@@ -357,6 +357,22 @@ class TestHLL(object):
         record = self.as_connection.get(self.test_keys[0])
         assert record[2]['new_mhbin']
 
+    @pytest.mark.parametrize("index_bits, bin, policy, expected_result", [
+        (0, 'new_hll', None, e.InvalidRequest),
+        (6, 'hll_binl', {'flags': aerospike.HLL_WRITE_CREATE_ONLY}, e.BinExistsError),
+        (6, 'new_hll', {'flags': aerospike.HLL_WRITE_UPDATE_ONLY}, e.BinNotFound)
+    ])
+    def test_neg_hll_init(self, index_bits, bin, policy, expected_result):
+        """
+        Invoke hll_add_mh() with errors.
+        """
+        ops = [
+            hll_operations.hll_init(bin, index_bits, policy)
+        ]
+
+        with pytest.raises(expected_result):
+            self.as_connection.operate(self.test_keys[0], ops)
+
     def test_pos_hll_init(self):
         """
         Invoke hll_add_mh() creating a new min hash HLL.
@@ -370,6 +386,17 @@ class TestHLL(object):
         record = self.as_connection.get(self.test_keys[0])
         assert record[2]['new_hll']
 
+    def test_neg_hll_refresh_count(self):
+        """
+        Invoke hll_refresh_count().
+        """
+        ops = [
+            hll_operations.hll_refresh_count('new_hll')
+        ]
+
+        with pytest.raises(e.BinNotFound):
+            self.as_connection.operate(self.test_keys[0], ops)
+
     def test_pos_hll_refresh_count(self):
         """
         Invoke hll_refresh_count().
@@ -380,6 +407,31 @@ class TestHLL(object):
 
         _, _, res = self.as_connection.operate(self.test_keys[0], ops)
         assert res['hll_binl'] == 97
+
+    # @pytest.mark.parametrize("bin, policy, expected_result", [
+    #     ('new_hll', None, e.InvalidRequest),
+    #     ('hll_binl', {'flags': 577388}, e.BinExistsError),
+    #     ('ggn', {'flags': aerospike.HLL_WRITE_UPDATE_ONLY}, e.BinNotFound),
+    #     ('new_hll', {'flags': aerospike.HLL_WRITE_ALLOW_FOLD}, e.BinNotFound)
+    # ])
+    # def test_neg_hll_set_union(self, bin, policy, expected_result):
+    #     """
+    #     Invoke hll_set_union().
+    #     """
+
+    #     records =  [record[2]['hll_binu'] for record in self.as_connection.get_many(self.test_keys)]
+
+    #     ops = [
+    #         hll_operations.hll_set_union(bin, [records[4]])
+    #     ]
+
+    #     self.as_connection.operate(self.test_keys[4], ops, policy)
+    #     union_hll = self.as_connection.get(self.test_keys[4])[2]['hll_bin']
+    #     print(union_hll)
+
+    #     with pytest.raises(expected_result):
+    #         self.as_connection.operate(self.test_keys[4], ops, policy)
+        
 
     def test_pos_hll_set_union(self):
         """
@@ -405,6 +457,20 @@ class TestHLL(object):
 
         assert res['hll_bin'] == 10
         assert res['hll_binu'] == 5
+
+    @pytest.mark.parametrize("bin, policy, expected_result", [
+        ('new_hll', {'flags': aerospike.HLL_WRITE_CREATE_ONLY}, e.OpNotApplicable)
+    ])
+    def test_neg_hll_update(self, bin, policy, expected_result):
+        """
+        Invoke hll_update() with errors.
+        """
+        ops = [
+            hll_operations.hll_update(bin, ['key1', 'key2', 'key3'], policy)
+        ]
+
+        with pytest.raises(expected_result):
+            self.as_connection.operate(self.test_keys[0], ops, policy)
 
     def test_pos_hll_update(self):
         """

@@ -278,7 +278,7 @@ add_op_hll_init(AerospikeClient* self, as_error* err, char* bin,
         return err->code;
     }
 
-    if (as_operations_hll_init(ops, bin, NULL, NULL, index_bit_count) != AEROSPIKE_OK) {
+    if (as_operations_hll_init(ops, bin, NULL, policy_in_use ? &hll_policy : NULL, index_bit_count) != AEROSPIKE_OK) {
         return err->code;
     }
 
@@ -317,7 +317,7 @@ add_op_hll_init_mh(AerospikeClient* self, as_error* err, char* bin,
         return err->code;
     }
 
-    if (as_operations_hll_init_mh(ops, bin, NULL, NULL, index_bit_count, mh_bit_count) != AEROSPIKE_OK) {
+    if (as_operations_hll_init_mh(ops, bin, NULL, policy_in_use ? &hll_policy : NULL, index_bit_count, mh_bit_count) != AEROSPIKE_OK) {
         return err->code;
     }
 
@@ -582,7 +582,7 @@ add_op_hll_set_union(AerospikeClient* self, as_error* err, char* bin,
         goto cleanup;
     }
 
-    if (as_operations_hll_set_union(ops, bin, NULL, NULL, value_list) != AEROSPIKE_OK){
+    if (as_operations_hll_set_union(ops, bin, NULL, policy_in_use ? &hll_policy : NULL, value_list) != AEROSPIKE_OK){
         goto cleanup;
     }
 
