@@ -408,32 +408,31 @@ class TestHLL(object):
         _, _, res = self.as_connection.operate(self.test_keys[0], ops)
         assert res['hll_binl'] == 97
 
-    # @pytest.mark.parametrize("bin, policy, expected_result", [
-    #     ('new_hll', None, e.InvalidRequest),
-    #     ('hll_binl', {'flags': 577388}, e.BinExistsError),
-    #     ('ggn', {'flags': aerospike.HLL_WRITE_UPDATE_ONLY}, e.BinNotFound),
-    #     ('new_hll', {'flags': aerospike.HLL_WRITE_ALLOW_FOLD}, e.BinNotFound)
-    # ])
-    # def test_neg_hll_set_union(self, bin, policy, expected_result):
-    #     """
-    #     Invoke hll_set_union().
-    #     """
+    @pytest.mark.parametrize("bin, policy, expected_result", [
+        ('hll_bine', {}, e.OpNotApplicable),
+        ('hll_binl', {'flags': aerospike.HLL_WRITE_CREATE_ONLY}, e.BinExistsError),
+        ('new_hll', {'flags': aerospike.HLL_WRITE_UPDATE_ONLY}, e.BinNotFound)
+    ])
+    def test_neg_hll_set_union(self, bin, policy, expected_result):
+        """
+        Invoke hll_set_union().
+        """
 
-    #     records =  [record[2]['hll_binu'] for record in self.as_connection.get_many(self.test_keys)]
+        records =  [record[2]['hll_binl'] for record in self.as_connection.get_many(self.test_keys)]
 
-    #     ops = [
-    #         hll_operations.hll_set_union(bin, [records[4]])
-    #     ]
+        ops = [
+            hll_operations.hll_set_union(bin, records, policy)
+        ]
 
-    #     self.as_connection.operate(self.test_keys[4], ops, policy)
-    #     union_hll = self.as_connection.get(self.test_keys[4])[2]['hll_bin']
-    #     print(union_hll)
-
-    #     with pytest.raises(expected_result):
-    #         self.as_connection.operate(self.test_keys[4], ops, policy)
+        with pytest.raises(expected_result):
+            self.as_connection.operate(self.test_keys[4], ops)
         
 
-    def test_pos_hll_set_union(self):
+    @pytest.mark.parametrize("bin, ubin, policy, expected_res", [
+        ('hll_bin', 'hll_bin', {}, 10),
+        ('hll_bine', 'hll_binl', {'flags': aerospike.HLL_WRITE_ALLOW_FOLD}, 5)
+    ])
+    def test_pos_hll_set_union(self, bin, ubin, expected_res, policy):
         """
         Invoke hll_set_union().
         """
@@ -441,21 +440,21 @@ class TestHLL(object):
         records =  [record[2]['hll_binu'] for record in self.as_connection.get_many(self.test_keys)]
 
         ops = [
-            hll_operations.hll_set_union('hll_bin', [records[4]])
+            hll_operations.hll_set_union(bin, [records[4]], policy)
         ]
 
         _, _, _ = self.as_connection.operate(self.test_keys[4], ops)
         
-        union_hll = self.as_connection.get(self.test_keys[4])[2]['hll_bin']
+        union_hll = self.as_connection.get(self.test_keys[4])[2][ubin]
 
         ops = [
-            hll_operations.hll_get_intersect_count('hll_bin', [union_hll]),
+            hll_operations.hll_get_intersect_count(bin, [union_hll]),
             hll_operations.hll_get_intersect_count('hll_binu', [union_hll])
         ]
 
         _, _, res = self.as_connection.operate(self.test_keys[4], ops)
 
-        assert res['hll_bin'] == 10
+        assert res[bin] == expected_res
         assert res['hll_binu'] == 5
 
     @pytest.mark.parametrize("bin, policy, expected_result", [
