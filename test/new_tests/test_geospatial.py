@@ -886,7 +886,7 @@ class TestGeospatial(object):
         query = self.as_connection.query("test", "demo")
 
         geo_object2 = aerospike.GeoJSON({"type": "Point", "coordinates":
-                                         [-122.000000, 450.200]})
+                                         [-122.0, 48.0]})
 
         query.where(
             p.geo_contains_geojson_point("loc_circle", geo_object2.dumps()))
