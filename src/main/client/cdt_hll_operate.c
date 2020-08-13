@@ -648,7 +648,7 @@ add_op_hll_update(AerospikeClient* self, as_error* err, char* bin,
         goto cleanup;
     }
 
-    if (! as_operations_hll_update(ops, bin, NULL, &hll_policy, value_list)) {
+    if (! as_operations_hll_update(ops, bin, NULL, policy_in_use ? &hll_policy : NULL, value_list)) {
         as_error_update(err, AEROSPIKE_ERR_CLIENT, "Failed to add hll_update operation.");
         goto cleanup;
     }
