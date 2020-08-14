@@ -42,7 +42,7 @@ def hll_add(bin_name, values, index_bit_count, policy=None, ctx=None):
 
 
 def hll_add_mh(bin_name, values, index_bit_count, mh_bit_count, policy=None, ctx=None):
-    """Creates a hll_add operation to be used with operate, or operate_ordered.
+    """Creates a hll_add_mh operation to be used with operate, or operate_ordered.
 
     Server will add values to the HLL set. 
     If the HLL bin does not exist, it will be created with index_bit_count.
@@ -150,8 +150,8 @@ def hll_fold(bin_name, index_bit_count, ctx=None):
 
     Args:
         bin_name (str): The name of the bin to be operated on.
-        ctx (list): An optional list of nested CDT context operations (:mod:`cdt_cdx <aerospike_helpers.cdt_ctx>` object) for use on nested CDTs.
         index_bit_count: number of index bits. Must be bewtween 4 and 16 inclusive.
+        ctx (list): An optional list of nested CDT context operations (:mod:`cdt_cdx <aerospike_helpers.cdt_ctx>` object) for use on nested CDTs.
     """
     op_dict = {
         OP_KEY: aerospike.OP_HLL_FOLD,
@@ -211,7 +211,7 @@ def hll_get_union(bin_name, hll_list, ctx=None):
     """Creates a hll_get_union operation to be used with operate, or operate_ordered.
 
     Server returns an HLL object that is the union of all specified HLL objects
-    in hll_list the with the HLL bin.
+    in hll_list with the HLL bin.
 
     Args:
         bin_name (str): The name of the bin to be operated on.
@@ -261,6 +261,7 @@ def hll_init_mh(bin_name, index_bit_count, mh_bit_count, policy=None, ctx=None):
         bin_name (str): The name of the bin to be operated on.
         index_bit_count: number of index bits. Must be bewtween 4 and 16 inclusive.
         mh_bit_count: number of min hash bits. Must be bewtween 4 and 58 inclusive.
+        policy (dict): An optional dictionary of :ref:`hll policy options <aerospike_hll_policies>`.
         ctx (list): An optional list of nested CDT context operations (:mod:`cdt_cdx <aerospike_helpers.cdt_ctx>` object) for use on nested CDTs.
     """
     op_dict = {
@@ -325,7 +326,7 @@ def hll_set_union(bin_name, hll_list, policy=None, ctx=None):
     return op_dict
 
 def hll_update(bin_name, values, policy=None, ctx=None):
-    """Creates a hll_set_union operation to be used with operate, or operate_ordered.
+    """Creates a hll_update operation to be used with operate, or operate_ordered.
 
     This operation assumes the HLL bin already exists.
     Server adds values to HLL set.
