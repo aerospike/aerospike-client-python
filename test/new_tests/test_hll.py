@@ -351,6 +351,7 @@ class TestHLL(object):
         (4, 51, 'new_mhbin', None),
         (9, 51, 'new_mhbin', None),
         (6, 8, 'new_mhbin', {'flags': aerospike.HLL_WRITE_CREATE_ONLY}),
+        (6, 8, 'new_mhbin', {'flags': aerospike.HLL_WRITE_DEFAULT}),
         (6, 8, 'mh_bin', {'flags': aerospike.HLL_WRITE_UPDATE_ONLY})
     ])
     def test_pos_hll_init_mh(self, index_bits, mh_bits, bin, policy):
