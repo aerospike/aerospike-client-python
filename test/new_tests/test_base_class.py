@@ -15,6 +15,7 @@ class TestBaseClass(object):
     using_tls = False
     using_auth = False
     should_xfail = False
+    using_enterprise = False
 
     @staticmethod
     def get_hosts():
@@ -24,6 +25,8 @@ class TestBaseClass(object):
             hosts_str = config.get('enterprise-edition', 'hosts')
             if hosts_str != 'None':
                 TestBaseClass.hostlist = TestBaseClass.parse_hosts(hosts_str)
+                if TestBaseClass.hostlist:
+                    TestBaseClass.using_enterprise = True
         if len(TestBaseClass.hostlist) > 0:
             if config.has_option('enterprise-edition', 'user'):
                 TestBaseClass.user = config.get('enterprise-edition', 'user')
@@ -185,6 +188,14 @@ class TestBaseClass(object):
         else:
             TestBaseClass.get_hosts()
         return TestBaseClass.using_auth
+
+    @staticmethod
+    def enterprise_in_use():
+        if TestBaseClass.using_enterprise:
+            return True
+        else:
+            TestBaseClass.get_hosts()
+        return TestBaseClass.using_enterprise
 
     @staticmethod
     def get_connection_config():
