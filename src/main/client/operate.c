@@ -34,7 +34,7 @@
 #include "cdt_list_operations.h"
 #include "cdt_map_operations.h"
 #include "bit_operations.h"
-#include "cdt_hll_operations.h"
+#include "hll_operations.h"
 
 #include <aerospike/as_double.h>
 #include <aerospike/as_integer.h>

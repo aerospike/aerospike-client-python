@@ -28,7 +28,7 @@
 #include "exceptions.h"
 #include "policy.h"
 #include "serializer.h"
-#include "cdt_hll_operations.h"
+#include "hll_operations.h"
 #include "cdt_operation_utils.h"
 
 #define AS_PY_HLL_POLICY "hll_policy"
