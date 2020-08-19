@@ -346,29 +346,42 @@ class TestHLL(object):
         with pytest.raises(e.InvalidRequest):
             self.as_connection.operate(self.test_keys[0], ops)
 
-    def test_pos_hll_init_mh(self):
+    @pytest.mark.parametrize("index_bits, mh_bits, bin, policy", [
+        (4, 4, 'new_mhbin', None),
+        (4, 51, 'new_mhbin', None),
+        (9, 51, 'new_mhbin', None),
+        (6, 8, 'new_mhbin', {'flags': aerospike.HLL_WRITE_CREATE_ONLY}),
+        (6, 8, 'mh_bin', {'flags': aerospike.HLL_WRITE_UPDATE_ONLY})
+    ])
+    def test_pos_hll_init_mh(self, index_bits, mh_bits, bin, policy):
         """
-        Invoke hll_add_mh() creating a new min hash HLL.
+        Invoke hll_init_mh() creating a new min hash HLL.
         """
         ops = [
-            hll_operations.hll_init_mh('new_mhbin', 6, 8)
+            hll_operations.hll_init_mh(bin, index_bits, mh_bits, policy)
         ]
 
         _, _, _ = self.as_connection.operate(self.test_keys[0], ops)
 
         record = self.as_connection.get(self.test_keys[0])
-        assert record[2]['new_mhbin']
+        assert record[2][bin]
 
     @pytest.mark.parametrize("index_bits, mh_bits, bin, policy, expected_result", [
         (0, 0, 'new_mhbin', None, e.InvalidRequest),
+        ('bad_ind_bits', 4, 'new_mhbin', None, e.ParamError),
+        (4, 'bad_mh_bits', 'new_mhbin', None, e.ParamError),
+        (4, 4, 'new_mhbin', 'bad_policy', e.ParamError),
+        (4, 4, ['bad_bin'], None, e.ParamError),
         (4, 52, 'new_mhbin', None, e.InvalidRequest),
+        (4, 59, 'new_mhbin', None, e.InvalidRequest),
+        (17, 48, 'new_mhbin', None, e.InvalidRequest),
         (20, 8, 'new_mhbin', None, e.InvalidRequest),
         (6, 8, 'mh_bin', {'flags': aerospike.HLL_WRITE_CREATE_ONLY}, e.BinExistsError),
         (6, 8, 'new_mhbin', {'flags': aerospike.HLL_WRITE_UPDATE_ONLY}, e.BinNotFound)
     ])
     def test_neg_hll_init_mh(self, index_bits, mh_bits, bin, policy, expected_result):
         """
-        Invoke hll_add_mh() expecting failures.
+        Invoke hll_init_mh() expecting failures.
         """
         ops = [
             hll_operations.hll_init_mh(bin, index_bits, mh_bits, policy)
