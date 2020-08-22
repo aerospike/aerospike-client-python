@@ -43,10 +43,10 @@ as_status
 get_val_list(AerospikeClient * self, as_error * err, const char* list_key, PyObject * op_dict, as_list** list, as_static_pool * static_pool, int serializer_type);
 
 as_status
-get_int64_t(as_error * err, const char* key, PyObject * op_dict, int64_t* i64_valptr);
+get_int64_t(as_error * err, const char * key, PyObject * op_dict, int64_t * i64_valptr);
 
 as_status
-get_optional_int64_t(as_error * err, const char* key,  PyObject * op_dict, int64_t* i64_valptr, bool* found);
+get_optional_int64_t(as_error * err, const char * key,  PyObject * op_dict, int64_t * i64_valptr, bool * found);
 
 as_status
-get_int(as_error* err, const char* key, PyObject* op_dict, int* int_pointer);
+get_int(as_error * err, const char * key, PyObject * op_dict, int * int_pointer);

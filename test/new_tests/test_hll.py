@@ -30,7 +30,7 @@ class TestHLL(object):
             ops = [
                 hll_operations.hll_init('hll_bine', 10),
                 hll_operations.hll_add('hll_bin', ['key%s' % str(i) for i in range(x + 1)], 8),
-                hll_operations.hll_add_mh('mh_bin', ['key%s' % str(i) for i in range(x + 1)], 6, 12),
+                hll_operations.hll_add('mh_bin', ['key%s' % str(i) for i in range(x + 1)], 6, 12),
                 hll_operations.hll_add('hll_binl', ['key%s' % str(i) for i in range(100)], 8),
                 hll_operations.hll_add('hll_binlh', ['key%s' % str(i) for i in range(50)], 8),
                 hll_operations.hll_add('hll_bin_big', ['key%s' % str(i) for i in range(1000)], 10),
@@ -78,7 +78,7 @@ class TestHLL(object):
         Invoke hll_add() creating a new HLL.
         """
         ops = [
-            hll_operations.hll_add('new_bin', ['key1', 'key2', 'key3'], 8, policy)
+            hll_operations.hll_add('new_bin', ['key1', 'key2', 'key3'], index_bit_count=8, policy=policy)
         ]
 
         _, _, res = self.as_connection.operate(self.test_keys[0], ops)
@@ -93,7 +93,7 @@ class TestHLL(object):
         Invoke hll_add() creating with expected failures.
         """
         ops = [
-            hll_operations.hll_add('new_bin', ['key1', 'key2', 'key3'], 8, policy)
+            hll_operations.hll_add('new_bin', ['key1', 'key2', 'key3'], index_bit_count=8, policy=policy)
         ]
 
         with pytest.raises(expected_result):
@@ -101,10 +101,10 @@ class TestHLL(object):
 
     def test_pos_hll_add_mh(self):
         """
-        Invoke hll_add_mh() creating a new min hash HLL.
+        Invoke hll_add() creating a new min hash HLL.
         """
         ops = [
-            hll_operations.hll_add_mh('new_bin', ['key1', 'key2', 'key3'], 6, 8)
+            hll_operations.hll_add('new_bin', ['key1', 'key2', 'key3'], 6, 8)
         ]
 
         _, _, res = self.as_connection.operate(self.test_keys[0], ops)
@@ -116,10 +116,10 @@ class TestHLL(object):
     ])
     def test_neg_hll_add_mh(self, policy, expected_result):
         """
-        Invoke hll_add_mh() failing to creating a new min hash HLL.
+        Invoke hll_add() failing to creating a new min hash HLL.
         """
         ops = [
-            hll_operations.hll_add_mh('hll_binl', ['key101', 'key102', 'key103'], 6, 8, policy)
+            hll_operations.hll_add('hll_binl', ['key101', 'key102', 'key103'], 6, 8, policy)
         ]
 
         with pytest.raises(expected_result):
@@ -357,7 +357,7 @@ class TestHLL(object):
         Invoke hll_init_mh() creating a new min hash HLL.
         """
         ops = [
-            hll_operations.hll_init_mh(bin, index_bits, mh_bits, policy)
+            hll_operations.hll_init(bin, index_bits, mh_bits, policy)
         ]
 
         _, _, _ = self.as_connection.operate(self.test_keys[0], ops)
@@ -383,7 +383,7 @@ class TestHLL(object):
         Invoke hll_init_mh() expecting failures.
         """
         ops = [
-            hll_operations.hll_init_mh(bin, index_bits, mh_bits, policy)
+            hll_operations.hll_init(bin, index_bits, mh_bits, policy)
         ]
 
         with pytest.raises(expected_result):
@@ -413,7 +413,7 @@ class TestHLL(object):
         Invoke hll_init() expecting failures.
         """
         ops = [
-            hll_operations.hll_init(bin, index_bits, policy)
+            hll_operations.hll_init(bin, index_bits, policy=policy)
         ]
 
         with pytest.raises(expected_result):
@@ -498,7 +498,7 @@ class TestHLL(object):
         Invoke hll_update() with errors.
         """
         ops = [
-            hll_operations.hll_update(bin, ['key1', 'key2', 'key3'], policy)
+            hll_operations.hll_add(bin, ['key1', 'key2', 'key3'], policy=policy)
         ]
 
         with pytest.raises(expected_result):
@@ -509,7 +509,7 @@ class TestHLL(object):
         Invoke hll_update() creating a new HLL.
         """
         ops = [
-            hll_operations.hll_update('hll_bine', ['key1', 'key2', 'key3'])
+            hll_operations.hll_add('hll_bine', ['key1', 'key2', 'key3'])
         ]
 
         _, _, res = self.as_connection.operate(self.test_keys[0], ops)

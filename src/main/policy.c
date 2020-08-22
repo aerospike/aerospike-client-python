@@ -339,9 +339,8 @@ AerospikeConstants aerospike_constants[] = {
 	{ AS_CDT_CTX_MAP_KEY, "CDT_CTX_MAP_KEY"},
 	{ AS_CDT_CTX_MAP_VALUE, "CDT_CTX_MAP_VALUE"},
 
-	/* HLL constants */
+	/* HLL constants 3.11.0 */
 	{ OP_HLL_ADD, "OP_HLL_ADD"},
-	{ OP_HLL_ADD_MH, "OP_HLL_ADD_MH"},
 	{ OP_HLL_DESCRIBE, "OP_HLL_DESCRIBE"},
 	{ OP_HLL_FOLD, "OP_HLL_FOLD"},
 	{ OP_HLL_GET_COUNT, "OP_HLL_GET_COUNT"},
@@ -351,10 +350,8 @@ AerospikeConstants aerospike_constants[] = {
 	{ OP_HLL_GET_UNION_COUNT, "OP_HLL_GET_UNION_COUNT"},
 	{ OP_HLL_GET_SIMILARITY, "OP_HLL_GET_SIMILARITY"},
 	{ OP_HLL_INIT, "OP_HLL_INIT"},
-	{ OP_HLL_INIT_MH, "OP_HLL_INIT_MH"},
 	{ OP_HLL_REFRESH_COUNT, "OP_HLL_REFRESH_COUNT"},
 	{ OP_HLL_SET_UNION, "OP_HLL_SET_UNION"},
-	{ OP_HLL_UPDATE, "OP_HLL_UPDATE"},
 
 	{ AS_HLL_WRITE_DEFAULT, "HLL_WRITE_DEFAULT"},
 	{ AS_HLL_WRITE_CREATE_ONLY, "HLL_WRITE_CREATE_ONLY"},
@@ -1040,16 +1037,15 @@ pyobject_to_hll_policy(as_error* err, PyObject* py_policy, as_hll_policy* hll_po
 	py_val = PyDict_GetItemString(py_policy, "flags");
     if (py_val && py_val != Py_None) {
         if (PyInt_Check(py_val)) {
-            flags = (int64_t)PyInt_AsLong(py_val);
-            if (PyErr_Occurred()) {
-                return as_error_update(err, AEROSPIKE_ERR_PARAM, "Failed to convert flags.");
-
-            }
+			flags = (int64_t)PyInt_AsLong(py_val);
+			if (PyErr_Occurred()) {
+				return as_error_update(err, AEROSPIKE_ERR_PARAM, "Failed to convert flags.");
+			}
     	}
         else if (PyLong_Check(py_val)) {
         	flags = (int64_t)PyLong_AsLong(py_val);
             if (PyErr_Occurred()) {
-                return as_error_update(err, AEROSPIKE_ERR_PARAM, "Failed to convert flags.");
+            	return as_error_update(err, AEROSPIKE_ERR_PARAM, "Failed to convert flags.");
             }
         }
         else {
