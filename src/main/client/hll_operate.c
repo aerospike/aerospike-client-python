@@ -174,9 +174,21 @@ add_op_hll_add(AerospikeClient* self, as_error* err, char* bin,
         goto cleanup;
     }
 
-    if (! as_operations_hll_add_mh(ops, bin, NULL, hll_policy_p, value_list, index_bit_count, mh_bit_count)) {\
-        as_error_update(err, AEROSPIKE_ERR_CLIENT, "Failed to add hll_add_mh operation.");
-        goto cleanup;
+    if (mh_bit_count != -1) {
+        if (! as_operations_hll_add_mh(ops, bin, NULL, hll_policy_p, value_list, index_bit_count, mh_bit_count)) {
+            as_error_update(err, AEROSPIKE_ERR_CLIENT, "Failed to add hll_add_mh operation.");
+            goto cleanup;
+        }
+    } else if (index_bit_count != -1){
+        if (! as_operations_hll_add(ops, bin, NULL, hll_policy_p, value_list, index_bit_count)) {
+            as_error_update(err, AEROSPIKE_ERR_CLIENT, "Failed to add hll_add_mh operation.");
+            goto cleanup;
+        }
+    } else {
+        if (! as_operations_hll_update(ops, bin, NULL, hll_policy_p, value_list)) {
+            as_error_update(err, AEROSPIKE_ERR_CLIENT, "Failed to add hll_add_mh operation.");
+            goto cleanup;
+        }
     }
 
 cleanup:
@@ -209,9 +221,16 @@ add_op_hll_init(AerospikeClient* self, as_error* err, char* bin,
         goto cleanup;
     }
 
-    if (! as_operations_hll_init_mh(ops, bin, NULL, hll_policy_p, index_bit_count, mh_bit_count)) {
-        as_error_update(err, AEROSPIKE_ERR_CLIENT, "Failed to add hll_init operation.");
-        goto cleanup;
+    if (mh_bit_count != -1) {
+        if (! as_operations_hll_init_mh(ops, bin, NULL, hll_policy_p, index_bit_count, mh_bit_count)) {
+            as_error_update(err, AEROSPIKE_ERR_CLIENT, "Failed to add hll_init operation.");
+            goto cleanup;
+        }
+    } else {
+        if (! as_operations_hll_init(ops, bin, NULL, hll_policy_p, index_bit_count)) {
+            as_error_update(err, AEROSPIKE_ERR_CLIENT, "Failed to add hll_init operation.");
+            goto cleanup;
+        }
     }
 
 cleanup:

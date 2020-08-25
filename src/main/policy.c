@@ -1035,22 +1035,22 @@ pyobject_to_hll_policy(as_error* err, PyObject* py_policy, as_hll_policy* hll_po
 	}
 
 	py_val = PyDict_GetItemString(py_policy, "flags");
-    if (py_val && py_val != Py_None) {
-        if (PyInt_Check(py_val)) {
+	if (py_val && py_val != Py_None) {
+		if (PyInt_Check(py_val)) {
 			flags = (int64_t)PyInt_AsLong(py_val);
 			if (PyErr_Occurred()) {
 				return as_error_update(err, AEROSPIKE_ERR_PARAM, "Failed to convert flags.");
 			}
-    	}
-        else if (PyLong_Check(py_val)) {
-        	flags = (int64_t)PyLong_AsLong(py_val);
-            if (PyErr_Occurred()) {
-            	return as_error_update(err, AEROSPIKE_ERR_PARAM, "Failed to convert flags.");
-            }
-        }
-        else {
-            return as_error_update(err, AEROSPIKE_ERR_PARAM, "Invalid hll policy flags.");
-        }
+		}
+		else if (PyLong_Check(py_val)) {
+			flags = (int64_t)PyLong_AsLong(py_val);
+			if (PyErr_Occurred()) {
+				return as_error_update(err, AEROSPIKE_ERR_PARAM, "Failed to convert flags.");
+			}
+		}
+		else {
+			return as_error_update(err, AEROSPIKE_ERR_PARAM, "Invalid hll policy flags.");
+		}
 	}
 
 	as_hll_policy_set_write_flags(hll_policy, flags);
