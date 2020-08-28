@@ -2052,6 +2052,33 @@ Bitwise Overflow
 
 .. versionadded:: 3.9.0
 
+.. _aerospike_hll_write_flags:
+
+HyperLogLog Write Flags
+-----------------------
+
+.. data:: HLL_WRITE_DEFAULT
+
+    Default. Allow create or update.
+
+.. data:: HLL_WRITE_CREATE_ONLY
+
+    If the bin already exists, the operation will be denied. If the bin does not exist, a new bin will be created.
+
+.. data:: HLL_WRITE_UPDATE_ONLY
+
+    If the bin already exists, the bin will be overwritten. If the bin does not exist, the operation will be denied.
+
+.. data:: HLL_WRITE_NO_FAIL
+
+    Do not raise error if operation is denied.
+
+.. data:: HLL_WRITE_ALLOW_FOLD
+
+    Allow the resulting set to be the minimum of provided index bits. Also, allow the usage of less precise HLL algorithms when minhash bits of all participating sets do not match.
+
+.. versionadded:: 3.11.0
+
 .. _aerospike_misc_constants:
 
 Miscellaneous
