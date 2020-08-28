@@ -2075,7 +2075,7 @@ HyperLogLog Write Flags
 
 .. data:: HLL_WRITE_ALLOW_FOLD
 
-    Allow the resulting set to be the minimum of provided index bits. Also, allow the usage of less precise HLL algorithms when minhash bits of all participating sets do not match.
+    Allow the resulting set to be the minimum of provided index bits. For intersect_counts and similarity, allow the usage of less precise HLL algorithms when minhash bits of all participating sets do not match.
 
 .. versionadded:: 3.11.0
 
