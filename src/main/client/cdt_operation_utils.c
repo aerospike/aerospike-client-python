@@ -146,6 +146,7 @@ get_int(as_error* err, const char* key, PyObject* op_dict, int* int_pointer) {
 as_status 
 get_optional_int(as_error* err, const char* key, PyObject* op_dict, int* integer, int** int_p) {
     int64_t int64_return_type;
+    bool found = false;
 
     if (get_optional_int64_t_check_none(err, key, op_dict, &int64_return_type, &found) != AEROSPIKE_OK) {
         *int_p = NULL;
