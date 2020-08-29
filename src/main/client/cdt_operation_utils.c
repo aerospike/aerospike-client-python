@@ -4,6 +4,10 @@
 #include "exceptions.h"
 #include "policy.h"
 #include "conversions.h"
+
+static as_status
+get_optional_int64_t_check_none(as_error * err, const char* key,  PyObject * op_dict, int64_t* i64_valptr, bool* found);
+
 /*
 The caller of this does not own the pointer to binName, and should not free it. It is either
 held by Python, or is added to the list of chars to free later.
@@ -136,5 +140,63 @@ get_int(as_error* err, const char* key, PyObject* op_dict, int* int_pointer) {
     }
 
     *int_pointer = int64_return_type;
+    return AEROSPIKE_OK;
+}
+
+as_status 
+get_optional_int(as_error* err, const char* key, PyObject* op_dict, int* integer, int** int_p) {
+    int64_t int64_return_type;
+
+    if (get_optional_int64_t_check_none(err, key, op_dict, &int64_return_type, &found) != AEROSPIKE_OK) {
+        *int_p = NULL;
+        return err->code;
+    }
+
+    if ( ! found) {
+        *int_p = NULL;
+    }
+
+    *integer = int64_return_type;
+    return AEROSPIKE_OK;
+}
+
+static as_status
+get_optional_int64_t_check_none(as_error * err, const char* key,  PyObject * op_dict, int64_t* i64_valptr, bool* found)
+{
+    *found = false;
+    PyObject* py_val = PyDict_GetItemString(op_dict, key);
+    if (!py_val) {
+        return AEROSPIKE_OK;
+    }
+    
+    if (PyInt_Check(py_val)) {
+        *i64_valptr = (int64_t)PyInt_AsLong(py_val);
+        if (PyErr_Occurred()) {
+            if(PyErr_ExceptionMatches(PyExc_OverflowError)) {
+                return as_error_update(err, AEROSPIKE_ERR_PARAM, "%s too large", key);
+            }
+
+            return as_error_update(err, AEROSPIKE_ERR_PARAM, "Failed to convert %s", key);
+
+        }
+    }
+    else if (PyLong_Check(py_val)) {
+        *i64_valptr = (int64_t)PyLong_AsLong(py_val);
+        if (PyErr_Occurred()) {
+            if(PyErr_ExceptionMatches(PyExc_OverflowError)) {
+                return as_error_update(err, AEROSPIKE_ERR_PARAM, "%s too large", key);
+            }
+
+            return as_error_update(err, AEROSPIKE_ERR_PARAM, "Failed to convert %s", key);
+        }
+    }
+    else if (py_val == Py_None) {
+        return AEROSPIKE_OK;
+    }
+    else {
+        return as_error_update(err, AEROSPIKE_ERR_PARAM, "%s must be an integer", key);
+    }
+
+    *found = true;
     return AEROSPIKE_OK;
 }

@@ -142,7 +142,7 @@ MH_BIT_COUNT_KEY = "mh_bit_count"
 VALUE_LIST_KEY = "value_list"
 
 
-def hll_add(bin_name, values, index_bit_count=-1, mh_bit_count=-1, policy=None):
+def hll_add(bin_name, values, index_bit_count=None, mh_bit_count=None, policy=None):
     """Creates a hll_add operation to be used with operate, or operate_ordered.
 
     Server will add the values to the hll bin.
@@ -295,7 +295,7 @@ def hll_get_union_count(bin_name, hll_list):
     return op_dict
 
 
-def hll_init(bin_name, index_bit_count, mh_bit_count=0, policy=None):
+def hll_init(bin_name, index_bit_count, mh_bit_count=None, policy=None):
     """Creates a hll_init operation to be used with operate, or operate_ordered.
 
     Server creates a new HLL or resets an existing HLL.
