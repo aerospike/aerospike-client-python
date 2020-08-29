@@ -159,8 +159,8 @@ def hll_add(bin_name, values, index_bit_count=None, mh_bit_count=None, policy=No
         OP_KEY: aerospike.OP_HLL_ADD,
         BIN_KEY: bin_name,
         VALUE_LIST_KEY: values,
-        INDEX_BIT_COUNT_KEY: index_bit_count,
-        MH_BIT_COUNT_KEY: mh_bit_count
+        INDEX_BIT_COUNT_KEY: -1 if index_bit_count is None else index_bit_count,
+        MH_BIT_COUNT_KEY: -1 if mh_bit_count is None else mh_bit_count
     }
 
     if policy:
@@ -311,7 +311,7 @@ def hll_init(bin_name, index_bit_count, mh_bit_count=None, policy=None):
         OP_KEY: aerospike.OP_HLL_INIT,
         BIN_KEY: bin_name,
         INDEX_BIT_COUNT_KEY: index_bit_count,
-        MH_BIT_COUNT_KEY: mh_bit_count
+        MH_BIT_COUNT_KEY: -1 if mh_bit_count is None else mh_bit_count
     }
 
     if policy:

@@ -156,15 +156,13 @@ add_op_hll_add(AerospikeClient* self, as_error* err, char* bin,
     as_hll_policy hll_policy;
     int index_bit_count;
     int mh_bit_count;
-    int* index_bit_count_p = &index_bit_count;
-    int* mh_bit_count_p = &mh_bit_count;
     as_hll_policy* hll_policy_p = &hll_policy;
 
-    if (get_optional_int(err, AS_PY_HLL_INDEX_BIT_COUNT, op_dict, &index_bit_count, &index_bit_count_p) != AEROSPIKE_OK) {
+    if (get_int(err, AS_PY_HLL_INDEX_BIT_COUNT, op_dict, &index_bit_count) != AEROSPIKE_OK) {
         goto cleanup;
     }
 
-    if (get_optional_int(err, AS_PY_HLL_MH_BIT_COUNT_KEY, op_dict, &mh_bit_count, &mh_bit_count_p) != AEROSPIKE_OK) {
+    if (get_int(err, AS_PY_HLL_MH_BIT_COUNT_KEY, op_dict, &mh_bit_count) != AEROSPIKE_OK) {
         goto cleanup;
     }
 
@@ -176,12 +174,12 @@ add_op_hll_add(AerospikeClient* self, as_error* err, char* bin,
         goto cleanup;
     }
 
-    if (mh_bit_count_p != NULL) {
+    if (mh_bit_count != -1) {
         if (! as_operations_hll_add_mh(ops, bin, NULL, hll_policy_p, value_list, index_bit_count, mh_bit_count)) {
             as_error_update(err, AEROSPIKE_ERR_CLIENT, "Failed to add hll_add_mh operation.");
             goto cleanup;
         }
-    } else if (index_bit_count_p != NULL){
+    } else if (index_bit_count != -1){
         if (! as_operations_hll_add(ops, bin, NULL, hll_policy_p, value_list, index_bit_count)) {
             as_error_update(err, AEROSPIKE_ERR_CLIENT, "Failed to add hll_add operation.");
             goto cleanup;
@@ -209,14 +207,13 @@ add_op_hll_init(AerospikeClient* self, as_error* err, char* bin,
     as_hll_policy hll_policy;
     int index_bit_count;
     int mh_bit_count;
-    int * mh_bit_count_p = &mh_bit_count;
     as_hll_policy* hll_policy_p = &hll_policy;
 
     if (get_int(err, AS_PY_HLL_INDEX_BIT_COUNT, op_dict, &index_bit_count) != AEROSPIKE_OK) {
         goto cleanup;
     }
 
-    if (get_optional_int(err, AS_PY_HLL_MH_BIT_COUNT_KEY, op_dict, &mh_bit_count, &mh_bit_count_p) != AEROSPIKE_OK) {
+    if (get_int(err, AS_PY_HLL_MH_BIT_COUNT_KEY, op_dict, &mh_bit_count) != AEROSPIKE_OK) {
         goto cleanup;
     }
 
@@ -224,7 +221,7 @@ add_op_hll_init(AerospikeClient* self, as_error* err, char* bin,
         goto cleanup;
     }
 
-    if (mh_bit_count_p != NULL) {
+    if (mh_bit_count != -1) {
         if (! as_operations_hll_init_mh(ops, bin, NULL, hll_policy_p, index_bit_count, mh_bit_count)) {
             as_error_update(err, AEROSPIKE_ERR_CLIENT, "Failed to add hll_init_mh operation.");
             goto cleanup;
