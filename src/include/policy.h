@@ -22,6 +22,7 @@
 #include <aerospike/as_map_operations.h>
 #include <aerospike/as_list_operations.h>
 #include <aerospike/as_bit_operations.h>
+#include <aerospike/as_hll_operations.h>
 
 #define MAX_CONSTANT_STR_SIZE 512
 
@@ -129,6 +130,20 @@ enum aerospike_bitwise_operations {
     OP_BIT_RSCAN
 };
 
+enum aerospike_hll_operations {
+	OP_HLL_ADD = 2100,
+	OP_HLL_DESCRIBE,
+	OP_HLL_FOLD,
+	OP_HLL_GET_COUNT,
+	OP_HLL_GET_INTERSECT_COUNT,
+	OP_HLL_GET_SIMILARITY,
+	OP_HLL_GET_UNION,
+	OP_HLL_GET_UNION_COUNT,
+	OP_HLL_INIT,
+	OP_HLL_REFRESH_COUNT,
+	OP_HLL_SET_UNION,
+};
+
 typedef struct Aerospike_Constants {
     long    constantno;
     char    constant_str[MAX_CONSTANT_STR_SIZE];
@@ -220,3 +235,5 @@ as_status pyobject_to_list_policy(as_error * err, PyObject * py_policy,
 									as_list_policy * policy);
 
 as_status pyobject_to_bit_policy(as_error* err, PyObject* py_policy, as_bit_policy* policy);
+
+as_status pyobject_to_hll_policy(as_error* err, PyObject* py_policy, as_hll_policy* hll_policy);

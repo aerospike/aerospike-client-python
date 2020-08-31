@@ -3381,6 +3381,34 @@ Bit Policies
             'bit_write_flags': aerospike.BIT_WRITE_UPDATE_ONLY
         }
 
+.. _aerospike_hll_policies:
+
+HyperLogLog Policies
+--------------------
+
+.. object:: policy
+
+    A :class:`dict` of optional HyperLogLog policies, which are applicable to bit operations.
+
+    .. note:: Requires server version >= 4.9.0
+
+    .. hlist::
+        :columns: 1
+
+        * **flags** 
+            | Write flags for the HLL operation. 
+            | One of the :ref:`aerospike_hll_write_flags` values such as :data:`aerospike.HLL_WRITE_DEFAULT`
+            | 
+            | Default: :data:`aerospike.HLL_WRITE_DEFAULT`
+
+    Example:
+
+    .. code-block:: python
+
+        HLL_policy = {
+            'hll_write_flags': aerospike.HLL_WRITE_UPDATE_ONLY
+        }
+
 
 
 Misc
