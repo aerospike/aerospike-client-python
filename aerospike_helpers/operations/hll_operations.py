@@ -300,7 +300,7 @@ def hll_init(bin_name, index_bit_count=None, mh_bit_count=None, policy=None):
     If index_bit_count and mh_bit_count are None, an existing HLL bin will be reset but retain its configuration.
     If 1 of index_bit_count or mh_bit_count are set,
     an existing HLL bin will set that config and retain its current value for the unset config.
-    If the HLL bin does not exist, index_bit_count and/or mh_bit_count are required to create it.
+    If the HLL bin does not exist, index_bit_count is required to create it, mh_bit_count is optional.
     Server does not return a value.
 
     Args:
