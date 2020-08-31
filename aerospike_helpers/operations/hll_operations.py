@@ -6,14 +6,13 @@ of members in the union or intersection between multiple HyperLogLog bins.
 HyperLogLog’s estimates are a balance between complete accuracy and efficient savings
 in space and speed in dealing with extremely large datasets.
 
-    .. note:: HyperLogLog operations require server version >= 4.11.0
+    .. note:: HyperLogLog operations require server version >= 4.9.0
 
     .. seealso:: `HyperLogLog (Data Type) more info. <https://www.aerospike.com/docs/guide/hyperloglog.html>`_.
 
 Example::
 
     from __future__ import print_function
-    from math import sqrt
     import sys
 
     import aerospike
@@ -74,12 +73,11 @@ Example::
         print("Error: {0} [{1}]".format(e.msg, e.code))
         sys.exit(1)
 
-    # expected answer is 250 +/- error given by intersect_error or 235 +/- 37
     print(
         "Estimated items viewed intersection: %d."
         % res["viewed"]
     )
-    print("Actual intersection: 250.\n")  # might need to convert percent error
+    print("Actual intersection: 250.\\n")
 
     # Find out how many unique products Amy, Farnsworth, and Scruffy have viewed.
     Farnsworth_viewed = client.get(customer_record_keys[1])[2]["viewed"]
@@ -97,7 +95,7 @@ Example::
         "Estimated items viewed union: %d."
         % res["viewed"]
     )
-    print("Actual union: 1000.\n")
+    print("Actual union: 1000.\\n")
 
     # Find the similarity of Amy, Farnsworth, and Scruffy's product views.
     Farnsworth_viewed = client.get(customer_record_keys[1])[2]["viewed"]
@@ -126,7 +124,7 @@ Example::
     Actual union: 1000.
 
     Estimated items viewed similarity: 25.488069%.
-    Actual similarity: 1000.
+    Actual similarity: 25%.
     """
 
 '''
@@ -151,8 +149,8 @@ def hll_add(bin_name, values, index_bit_count=None, mh_bit_count=None, policy=No
     Args:
         bin_name (str): The name of the bin to be operated on.
         values: The values to be added to the HLL set.
-        index_bit_count: number of index bits. Must be bewtween 4 and 16 inclusive.
-        mh_bit_count: number of min hash bits. Must be bewtween 4 and 58 inclusive.
+        index_bit_count: An optional number of index bits. Must be bewtween 4 and 16 inclusive.
+        mh_bit_count: An optional number of min hash bits. Must be bewtween 4 and 58 inclusive.
         policy (dict): An optional dictionary of :ref:`hll policy options <aerospike_hll_policies>`.
     """
     op_dict = {
@@ -295,22 +293,26 @@ def hll_get_union_count(bin_name, hll_list):
     return op_dict
 
 
-def hll_init(bin_name, index_bit_count, mh_bit_count=None, policy=None):
+def hll_init(bin_name, index_bit_count=None, mh_bit_count=None, policy=None):
     """Creates a hll_init operation to be used with operate, or operate_ordered.
 
     Server creates a new HLL or resets an existing HLL.
+    If index_bit_count and mh_bit_count are None, an existing HLL bin will be reset but retain its configuration.
+    If 1 of index_bit_count or mh_bit_count are set,
+    an existing HLL bin will set that config and retain its current value for the unset config.
+    If the HLL bin does not exist, index_bit_count and/or mh_bit_count are required to create it.
     Server does not return a value.
 
     Args:
         bin_name (str): The name of the bin to be operated on.
-        index_bit_count: number of index bits. Must be bewtween 4 and 16 inclusive.
+        index_bit_count: An optional number of index bits. Must be bewtween 4 and 16 inclusive.
         mh_bit_count: An optional number of min hash bits. Must be bewtween 4 and 58 inclusive.
         policy (dict): An optional dictionary of :ref:`hll policy options <aerospike_hll_policies>`.
     """
     op_dict = {
         OP_KEY: aerospike.OP_HLL_INIT,
         BIN_KEY: bin_name,
-        INDEX_BIT_COUNT_KEY: index_bit_count,
+        INDEX_BIT_COUNT_KEY: -1 if index_bit_count is None else index_bit_count,
         MH_BIT_COUNT_KEY: -1 if mh_bit_count is None else mh_bit_count
     }
 
