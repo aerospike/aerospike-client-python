@@ -30,7 +30,7 @@ os.putenv('ARCHFLAGS', '-arch x86_64')
 os.environ['ARCHFLAGS'] = '-arch x86_64'
 AEROSPIKE_C_VERSION = os.getenv('AEROSPIKE_C_VERSION')
 if not AEROSPIKE_C_VERSION:
-    AEROSPIKE_C_VERSION = '4.6.15'
+    AEROSPIKE_C_VERSION = '4.6.18'
 DOWNLOAD_C_CLIENT = os.getenv('DOWNLOAD_C_CLIENT')
 AEROSPIKE_C_HOME = os.getenv('AEROSPIKE_C_HOME')
 PREFIX = None
@@ -120,7 +120,7 @@ def resolve_c_client():
 
 include_dirs = ['src/include'] + [x for x in os.getenv('CPATH', '').split(':') if len(x) > 0]
 extra_compile_args = [
-    '-std=gnu99', '-g', '-Wall', '-fPIC', '-O1',
+    '-std=gnu99', '-g', '-Wall', '-fPIC', '-O0',
     '-fno-common', '-fno-strict-aliasing', '-Wno-strict-prototypes',
     '-march=nocona',
     '-D_FILE_OFFSET_BITS=64', '-D_REENTRANT', '-D_GNU_SOURCE'
@@ -291,6 +291,7 @@ setup(
                 'src/main/geospatial/dumps.c',
                 'src/main/conversions.c',
 		'src/main/convert_predexp.c',
+		'src/main/convert_predexp2.c',
                 'src/main/policy.c',
                 'src/main/policy_config.c',
                 'src/main/calc_digest.c',

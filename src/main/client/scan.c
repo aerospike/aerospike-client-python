@@ -85,6 +85,8 @@ PyObject * AerospikeClient_ScanApply_Invoke(
 	// For converting predexp.
 	as_predexp_list predexp_list;
 	as_predexp_list* predexp_list_p = NULL;
+	as_exp predexp2_list;
+	as_exp* predexp2_list_p = NULL;
 
 	as_static_pool static_pool;
 	memset(&static_pool, 0, sizeof(static_pool));
@@ -131,7 +133,8 @@ PyObject * AerospikeClient_ScanApply_Invoke(
 
 	if (py_policy) {
 		pyobject_to_policy_scan(&err, py_policy, &scan_policy, &scan_policy_p,
-				&self->as->config.policies.scan, &predexp_list, &predexp_list_p);
+				&self->as->config.policies.scan, &predexp_list, &predexp_list_p,
+				&predexp2_list, &predexp2_list_p);
 
 		if (err.code != AEROSPIKE_OK) {
 			goto CLEANUP;
@@ -208,6 +211,10 @@ PyObject * AerospikeClient_ScanApply_Invoke(
 CLEANUP:
 	if (predexp_list_p) {
 		as_predexp_list_destroy(&predexp_list);
+	}
+
+	if (predexp2_list_p) {
+		as_exp_destroy(&predexp2_list);
 	}
 
 	if (py_ustr1) {

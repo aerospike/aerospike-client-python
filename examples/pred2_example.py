@@ -20,7 +20,7 @@ except ex.AerospikeError as e:
 # put records and run scan
 try:
     keys = [('test', 'demo', 1), ('test', 'demo', 2), ('test', 'demo', 3)]
-    records = [{'number': 1}, {'number': 2}, {'number': 3}]
+    records = [{'buz': 1, 'baz': 1, 'foo': 5}, {'buz': 2, 'baz': 3, 'foo': 5}, {'buz': 3, 'baz': 3, 'foo': 3}]
     for i in range(3):
         client.put(keys[i], records[i])
 
@@ -36,9 +36,16 @@ try:
     #     predexp.predexp_or(2)
     # ]
 
-    expr = predexp.And(predexp.EQ(predexp.IntBin("foo"), 5),
-               predexp.EQ(predexp.IntBin("bar"), predexp.IntBin("baz")),
-               predexp.EQ(predexp.IntBin("buz"), predexp.IntBin("baz")))
+    expr = predexp.And(
+               predexp.EQ(predexp.IntBin("foo"), 3),
+               predexp.EQ(predexp.IntBin("buz"), predexp.IntBin("foo")),
+               predexp.EQ(predexp.IntBin("buz"), predexp.IntBin("baz"))
+            )
+
+    #expr = predexp.EQ(predexp.IntBin("foo"), 5)
+
+    #expr = predexp.EQ(predexp.IntBin("buz"), predexp.IntBin("baz"))
+    #expr = predexp.IntBin("bux")
     
     print(expr.compile())
 
@@ -46,7 +53,16 @@ try:
         'predexp': expr.compile()
     }
 
+    #try:
     records = scan.results(policy)
+    # except:
+    #     print('hi')
+    #     exc_type, exc_value, tb = sys.exc_info()
+    #     from pprint import pprint
+    #     pprint(tb.tb_frame.f_locals)
+    #     inner_frame = tb.tb_next.tb_frame
+    #     pprint(inner_frame.f_locals)
+    
     print(records)
 except ex.AerospikeError as e:
     print("Error: {0} [{1}]".format(e.msg, e.code))

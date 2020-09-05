@@ -82,6 +82,8 @@ PyObject * AerospikeScan_Results(AerospikeScan * self, PyObject * args, PyObject
 	// For converting predexp.
 	as_predexp_list predexp_list;
 	as_predexp_list* predexp_list_p = NULL;
+	as_exp predexp2_list;
+	as_exp* predexp2_list_p = NULL;
 
 	if (PyArg_ParseTupleAndKeywords(args, kwds, "|OO:results", kwlist, &py_policy, &py_nodename) == false) {
 		return NULL;
@@ -101,7 +103,8 @@ PyObject * AerospikeScan_Results(AerospikeScan * self, PyObject * args, PyObject
 
 	// Convert python policy object to as_policy_scan
 	pyobject_to_policy_scan(&err, py_policy, &scan_policy, &scan_policy_p,
-			&self->client->as->config.policies.scan, &predexp_list, &predexp_list_p);
+			&self->client->as->config.policies.scan, &predexp_list, &predexp_list_p,
+			&predexp2_list, &predexp2_list_p);
 	if (err.code != AEROSPIKE_OK) {
 		as_error_update(&err, err.code, NULL);
 		goto CLEANUP;
@@ -146,6 +149,10 @@ PyObject * AerospikeScan_Results(AerospikeScan * self, PyObject * args, PyObject
 CLEANUP:
 	if (predexp_list_p) {
 		as_predexp_list_destroy(&predexp_list);
+	}
+
+	if (predexp2_list_p) {
+		as_exp_destroy(predexp2_list_p);
 	}
 
 	Py_XDECREF(py_ustr);

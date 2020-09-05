@@ -25,6 +25,7 @@
 #include <aerospike/as_operations.h>
 #include <aerospike/aerospike_index.h>
 #include <aerospike/as_predexp.h>
+#include <aerospike/as_exp.h>
 #include "aerospike/as_scan.h"
 #include "aerospike/as_job.h"
 
@@ -81,6 +82,17 @@ __policy##_init(policy);\
 			convert_predexp_list(py_predexp_list, predexp_list, err);\
 			policy->base.predexp = predexp_list;\
 			*predexp_list_p = predexp_list;\
+		}\
+	}\
+}
+
+#define POLICY_SET_PREDEXP2_BASE_FIELD() {\
+	if (predexp2_list) {\
+		PyObject* py_predexp2_list = PyDict_GetItemString(py_policy, "predexp2");\
+		if (py_predexp2_list) {\
+			convert_predexp2_list(py_predexp2_list, &predexp2_list, err);\
+			policy->base.predexp2 = predexp2_list;\
+			*predexp2_list_p = predexp2_list;\
 		}\
 	}\
 }
@@ -733,7 +745,9 @@ as_status pyobject_to_policy_scan(as_error * err, PyObject * py_policy,
 		as_policy_scan ** policy_p,
 		as_policy_scan * config_scan_policy,
 		as_predexp_list * predexp_list,
-		as_predexp_list ** predexp_list_p)
+		as_predexp_list ** predexp_list_p,
+		as_exp * predexp2_list,
+		as_exp ** predexp2_list_p)
 {
 	// Initialize Policy
 	POLICY_INIT(as_policy_scan);
@@ -756,6 +770,9 @@ as_status pyobject_to_policy_scan(as_error * err, PyObject * py_policy,
 
 	// C client 4.6.7 new policy
 	POLICY_SET_PREDEXP_BASE_FIELD();
+
+	// predexp2.0
+	POLICY_SET_PREDEXP2_BASE_FIELD();
 
 	// Update the policy
 	POLICY_UPDATE();
