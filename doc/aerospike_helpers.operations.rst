@@ -35,5 +35,13 @@ aerospike\_helpers\.operations\.bit\_operations module
     :undoc-members:
     :show-inheritance:
 
+aerospike\_helpers\.operations\.hll\_operations module
+------------------------------------------------------
+
+.. automodule:: aerospike_helpers.operations.hll_operations
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
 
 

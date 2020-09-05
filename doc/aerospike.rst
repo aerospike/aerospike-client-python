@@ -1663,7 +1663,7 @@ Constants
 TTL Constants
 -------------
 
-Specifics the TTL constants
+Specifies the TTL constants.
 
 .. data:: TTL_NAMESPACE_DEFAULT
     
@@ -1682,7 +1682,7 @@ Specifics the TTL constants
 Auth Mode Constants
 -------------------
 
-Specifies the type of authentication to be used when communicating with the server
+Specifies the type of authentication to be used when communicating with the server.
 
 .. data:: AUTH_INTERNAL
 
@@ -1778,7 +1778,7 @@ Serialization Constants
 
 List Write Flags
 --------------------
-Flags used by list write flag:
+Flags used by list write flag.
 
 .. data:: LIST_WRITE_DEFAULT
 
@@ -1809,7 +1809,7 @@ Flags used by list write flag:
 List Return Types
 ------------------
 
-Return types used by various list operations
+Return types used by various list operations.
 
 .. data:: LIST_RETURN_NONE
 
@@ -1843,7 +1843,7 @@ Return types used by various list operations
 
 List Order
 -----------------
-Flags used by list order:
+Flags used by list order.
 
 .. data:: LIST_UNORDERED
 
@@ -1853,12 +1853,25 @@ Flags used by list order:
 
     Ordered list.
 
+.. _aerospike_list_sort_flag:
+
+List Sort Flags
+-----------------
+Flags used by list sort.
+
+.. data:: aerospike.LIST_SORT_DEFAULT
+
+    Default. Preserve duplicates when sorting the list.
+
+.. data:: aerospike.LIST_SORT_DROP_DUPLICATES
+
+    Drop duplicate values when sorting the list.
 
 .. _aerospike_map_write_flag:
 
 Map Write Flag
 -----------------
-Flags used by map write flag 
+Flags used by map write flag. 
 
 .. note:: Requires server version >= 4.3.0
 
@@ -1887,7 +1900,7 @@ Flags used by map write flag
 Map Write Mode
 --------------
 
-Flags used by map *write mode*
+Flags used by map *write mode*.
 
 .. note:: This should only be used for Server version < 4.3.0
 
@@ -1907,7 +1920,7 @@ Flags used by map *write mode*
 
 Map Order
 -----------------
-Flags used by map order:
+Flags used by map order.
 
 .. data:: UNORDERED
 
@@ -1926,7 +1939,7 @@ Flags used by map order:
 Map Return Types
 ----------------
 
-Return types used by various map operations
+Return types used by various map operations.
 
 .. data:: MAP_RETURN_NONE
 
@@ -2039,6 +2052,33 @@ Bitwise Overflow
 
 .. versionadded:: 3.9.0
 
+.. _aerospike_hll_write_flags:
+
+HyperLogLog Write Flags
+-----------------------
+
+.. data:: HLL_WRITE_DEFAULT
+
+    Default. Allow create or update.
+
+.. data:: HLL_WRITE_CREATE_ONLY
+
+    If the bin already exists, the operation will be denied. If the bin does not exist, a new bin will be created.
+
+.. data:: HLL_WRITE_UPDATE_ONLY
+
+    If the bin already exists, the bin will be overwritten. If the bin does not exist, the operation will be denied.
+
+.. data:: HLL_WRITE_NO_FAIL
+
+    Do not raise error if operation is denied.
+
+.. data:: HLL_WRITE_ALLOW_FOLD
+
+    Allow the resulting set to be the minimum of provided index bits. For intersect_counts and similarity, allow the usage of less precise HLL algorithms when minhash bits of all participating sets do not match.
+
+.. versionadded:: 3.11.0
+
 .. _aerospike_misc_constants:
 
 Miscellaneous
@@ -2145,7 +2185,7 @@ Permission codes define the type of permission granted for a user's role.
 
 Regex Flag Values
 ------------------
-Flags used for the `predexp.string_regex` function
+Flags used for the `predexp.string_regex` function.
 
 .. data:: REGEX_NONE
 

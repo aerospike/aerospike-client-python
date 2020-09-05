@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 import pytest
 import sys
-import random
-import time
 from .test_base_class import TestBaseClass
 from aerospike import exception as e
 from aerospike_helpers.operations import hll_operations
@@ -32,7 +30,7 @@ class TestHLL(object):
             ops = [
                 hll_operations.hll_init('hll_bine', 10),
                 hll_operations.hll_add('hll_bin', ['key%s' % str(i) for i in range(x + 1)], 8),
-                hll_operations.hll_add_mh('mh_bin', ['key%s' % str(i) for i in range(x + 1)], 6, 12),
+                hll_operations.hll_add('mh_bin', ['key%s' % str(i) for i in range(x + 1)], 6, 12),
                 hll_operations.hll_add('hll_binl', ['key%s' % str(i) for i in range(100)], 8),
                 hll_operations.hll_add('hll_binlh', ['key%s' % str(i) for i in range(50)], 8),
                 hll_operations.hll_add('hll_bin_big', ['key%s' % str(i) for i in range(1000)], 10),
@@ -80,7 +78,7 @@ class TestHLL(object):
         Invoke hll_add() creating a new HLL.
         """
         ops = [
-            hll_operations.hll_add('new_bin', ['key1', 'key2', 'key3'], 8, policy)
+            hll_operations.hll_add('new_bin', ['key1', 'key2', 'key3'], index_bit_count=8, policy=policy)
         ]
 
         _, _, res = self.as_connection.operate(self.test_keys[0], ops)
@@ -95,7 +93,7 @@ class TestHLL(object):
         Invoke hll_add() creating with expected failures.
         """
         ops = [
-            hll_operations.hll_add('new_bin', ['key1', 'key2', 'key3'], 8, policy)
+            hll_operations.hll_add('new_bin', ['key1', 'key2', 'key3'], index_bit_count=8, policy=policy)
         ]
 
         with pytest.raises(expected_result):
@@ -103,10 +101,10 @@ class TestHLL(object):
 
     def test_pos_hll_add_mh(self):
         """
-        Invoke hll_add_mh() creating a new min hash HLL.
+        Invoke hll_add() creating a new min hash HLL.
         """
         ops = [
-            hll_operations.hll_add_mh('new_bin', ['key1', 'key2', 'key3'], 6, 8)
+            hll_operations.hll_add('new_bin', ['key1', 'key2', 'key3'], 6, 8)
         ]
 
         _, _, res = self.as_connection.operate(self.test_keys[0], ops)
@@ -118,10 +116,10 @@ class TestHLL(object):
     ])
     def test_neg_hll_add_mh(self, policy, expected_result):
         """
-        Invoke hll_add_mh() failing to creating a new min hash HLL.
+        Invoke hll_add() failing to creating a new min hash HLL.
         """
         ops = [
-            hll_operations.hll_add_mh('hll_binl', ['key101', 'key102', 'key103'], 6, 8, policy)
+            hll_operations.hll_add('hll_binl', ['key101', 'key102', 'key103'], 6, 8, policy)
         ]
 
         with pytest.raises(expected_result):
@@ -346,32 +344,46 @@ class TestHLL(object):
         with pytest.raises(e.InvalidRequest):
             self.as_connection.operate(self.test_keys[0], ops)
 
-    def test_pos_hll_init_mh(self):
+    @pytest.mark.parametrize("index_bits, mh_bits, bin, policy", [
+        (4, 4, 'new_mhbin', None),
+        (4, 51, 'new_mhbin', None),
+        (9, 51, 'new_mhbin', None),
+        (6, 8, 'new_mhbin', {'flags': aerospike.HLL_WRITE_CREATE_ONLY}),
+        (6, 8, 'new_mhbin', {'flags': aerospike.HLL_WRITE_DEFAULT}),
+        (6, 8, 'mh_bin', {'flags': aerospike.HLL_WRITE_UPDATE_ONLY})
+    ])
+    def test_pos_hll_init_mh(self, index_bits, mh_bits, bin, policy):
         """
-        Invoke hll_add_mh() creating a new min hash HLL.
+        Invoke hll_init_mh() creating a new min hash HLL.
         """
         ops = [
-            hll_operations.hll_init_mh('new_mhbin', 6, 8)
+            hll_operations.hll_init(bin, index_bits, mh_bits, policy)
         ]
 
         _, _, _ = self.as_connection.operate(self.test_keys[0], ops)
 
         record = self.as_connection.get(self.test_keys[0])
-        assert record[2]['new_mhbin']
+        assert record[2][bin]
 
     @pytest.mark.parametrize("index_bits, mh_bits, bin, policy, expected_result", [
         (0, 0, 'new_mhbin', None, e.InvalidRequest),
+        ('bad_ind_bits', 4, 'new_mhbin', None, e.ParamError),
+        (4, 'bad_mh_bits', 'new_mhbin', None, e.ParamError),
+        (4, 4, 'new_mhbin', 'bad_policy', e.ParamError),
+        (4, 4, ['bad_bin'], None, e.ParamError),
         (4, 52, 'new_mhbin', None, e.InvalidRequest),
+        (4, 59, 'new_mhbin', None, e.InvalidRequest),
+        (17, 48, 'new_mhbin', None, e.InvalidRequest),
         (20, 8, 'new_mhbin', None, e.InvalidRequest),
         (6, 8, 'mh_bin', {'flags': aerospike.HLL_WRITE_CREATE_ONLY}, e.BinExistsError),
         (6, 8, 'new_mhbin', {'flags': aerospike.HLL_WRITE_UPDATE_ONLY}, e.BinNotFound)
     ])
     def test_neg_hll_init_mh(self, index_bits, mh_bits, bin, policy, expected_result):
         """
-        Invoke hll_add_mh() expecting failures.
+        Invoke hll_init_mh() expecting failures.
         """
         ops = [
-            hll_operations.hll_init_mh(bin, index_bits, mh_bits, policy)
+            hll_operations.hll_init(bin, index_bits, mh_bits, policy)
         ]
 
         with pytest.raises(expected_result):
@@ -401,7 +413,7 @@ class TestHLL(object):
         Invoke hll_init() expecting failures.
         """
         ops = [
-            hll_operations.hll_init(bin, index_bits, policy)
+            hll_operations.hll_init(bin, index_bits, policy=policy)
         ]
 
         with pytest.raises(expected_result):
@@ -486,7 +498,7 @@ class TestHLL(object):
         Invoke hll_update() with errors.
         """
         ops = [
-            hll_operations.hll_update(bin, ['key1', 'key2', 'key3'], policy)
+            hll_operations.hll_add(bin, ['key1', 'key2', 'key3'], policy=policy)
         ]
 
         with pytest.raises(expected_result):
@@ -497,7 +509,7 @@ class TestHLL(object):
         Invoke hll_update() creating a new HLL.
         """
         ops = [
-            hll_operations.hll_update('hll_bine', ['key1', 'key2', 'key3'])
+            hll_operations.hll_add('hll_bine', ['key1', 'key2', 'key3'])
         ]
 
         _, _, res = self.as_connection.operate(self.test_keys[0], ops)

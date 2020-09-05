@@ -165,7 +165,7 @@ Exception Types
     Generation of record in database does not satisfy write policy.
     Subclass of :py:exc:`~aerospike.exception.RecordError`.
 
-.. py:exception:: RecordGenerationError
+.. py:exception:: RecordExistsError
 
     Record already exists. May be returned by write with policy
     :py:data:`aerospike.POLICY_EXISTS_CREATE`. Subclass of :py:exc:`~aerospike.exception.RecordError`.

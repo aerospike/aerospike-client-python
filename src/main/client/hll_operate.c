@@ -28,7 +28,7 @@
 #include "exceptions.h"
 #include "policy.h"
 #include "serializer.h"
-#include "cdt_hll_operations.h"
+#include "hll_operations.h"
 #include "cdt_operation_utils.h"
 
 #define AS_PY_HLL_POLICY "hll_policy"
@@ -37,7 +37,7 @@
 
 
 static as_status
-get_hll_policy(as_error* err, PyObject* op_dict, as_hll_policy* policy, bool* found);
+get_hll_policy(as_error* err, PyObject* op_dict, as_hll_policy* policy, as_hll_policy** policy_p);
 
 static as_status
 add_op_hll_add(AerospikeClient* self, as_error* err, char* bin,
@@ -51,11 +51,6 @@ add_op_hll_init(AerospikeClient* self, as_error* err, char* bin,
 
 static as_status
 add_op_hll_get_count(AerospikeClient* self, as_error* err, char* bin,
-        PyObject* op_dict, as_operations* ops,
-        as_static_pool* static_pool, int serializer_type);
-
-static as_status
-add_op_hll_add_mh(AerospikeClient* self, as_error* err, char* bin,
         PyObject* op_dict, as_operations* ops,
         as_static_pool* static_pool, int serializer_type);
 
@@ -90,22 +85,12 @@ add_op_hll_get_union_count(AerospikeClient* self, as_error* err, char* bin,
         as_static_pool* static_pool, int serializer_type);
 
 static as_status
-add_op_hll_init_mh(AerospikeClient* self, as_error* err, char* bin,
-        PyObject* op_dict, as_operations* ops,
-        as_static_pool* static_pool, int serializer_type);
-
-static as_status
 add_op_hll_refresh_count(AerospikeClient* self, as_error* err, char* bin,
         PyObject* op_dict, as_operations* ops,
         as_static_pool* static_pool, int serializer_type);
 
 static as_status
 add_op_hll_set_union(AerospikeClient* self, as_error* err, char* bin,
-        PyObject* op_dict, as_operations* ops,
-        as_static_pool* static_pool, int serializer_type);
-
-static as_status
-add_op_hll_update(AerospikeClient* self, as_error* err, char* bin,
         PyObject* op_dict, as_operations* ops,
         as_static_pool* static_pool, int serializer_type);
 
@@ -130,9 +115,6 @@ add_new_hll_op(AerospikeClient* self, as_error* err, PyObject* op_dict, as_vecto
         case OP_HLL_GET_COUNT:
             return add_op_hll_get_count(self, err, bin, op_dict, ops, static_pool, serializer_type);
 
-        case OP_HLL_ADD_MH:
-            return add_op_hll_add_mh(self, err, bin, op_dict, ops, static_pool, serializer_type);
-
         case OP_HLL_DESCRIBE:
             return add_op_hll_describe(self, err, bin, op_dict, ops, static_pool, serializer_type);
 
@@ -151,17 +133,11 @@ add_new_hll_op(AerospikeClient* self, as_error* err, PyObject* op_dict, as_vecto
         case OP_HLL_GET_UNION_COUNT:
             return add_op_hll_get_union_count(self, err, bin, op_dict, ops, static_pool, serializer_type);
 
-        case OP_HLL_INIT_MH:
-            return add_op_hll_init_mh(self, err, bin, op_dict, ops, static_pool, serializer_type);
-
         case OP_HLL_REFRESH_COUNT:
             return add_op_hll_refresh_count(self, err, bin, op_dict, ops, static_pool, serializer_type);
 
         case OP_HLL_SET_UNION:
             return add_op_hll_set_union(self, err, bin, op_dict, ops, static_pool, serializer_type);
-
-        case OP_HLL_UPDATE:
-            return add_op_hll_update(self, err, bin, op_dict, ops, static_pool, serializer_type);
 
         default:
             // This should never be possible since we only get here if we know that the operation is valid.
@@ -179,55 +155,8 @@ add_op_hll_add(AerospikeClient* self, as_error* err, char* bin,
     as_list* value_list = NULL;
     as_hll_policy hll_policy;
     int index_bit_count;
-    as_cdt_ctx ctx;
-    bool ctx_in_use = false;
-    bool policy_in_use = false;
-
-    if (get_int(err, AS_PY_HLL_INDEX_BIT_COUNT, op_dict, &index_bit_count) != AEROSPIKE_OK) {
-        goto cleanup;
-    }
-
-    if (get_hll_policy(err, op_dict, &hll_policy, &policy_in_use) != AEROSPIKE_OK) {
-        goto cleanup;
-    }
-
-    if (get_cdt_ctx(self, err, &ctx, op_dict, &ctx_in_use, static_pool, serializer_type) != AEROSPIKE_OK) {
-        goto cleanup;
-    }
-
-    if (get_val_list(self, err, AS_PY_VALUES_KEY, op_dict, &value_list, static_pool, serializer_type) != AEROSPIKE_OK) {
-        goto cleanup;
-    }
-
-    if (! as_operations_hll_add(ops, bin, NULL, policy_in_use ? &hll_policy : NULL, value_list, index_bit_count)) {
-        as_error_update(err, AEROSPIKE_ERR_CLIENT, "Failed to add hll_add operation.");
-        goto cleanup;
-    }
-
-cleanup:
-    if (ctx_in_use) {
-        as_cdt_ctx_destroy(&ctx);
-    }
-
-    if (value_list) {
-        as_val_destroy(value_list);
-    }
-
-    return err->code;
-}
-
-static as_status
-add_op_hll_add_mh(AerospikeClient* self, as_error* err, char* bin,
-        PyObject* op_dict, as_operations* ops,
-        as_static_pool* static_pool, int serializer_type)
-{
-    as_list* value_list = NULL;
-    as_hll_policy hll_policy;
-    int index_bit_count;
     int mh_bit_count;
-    as_cdt_ctx ctx;
-    bool ctx_in_use = false;
-    bool policy_in_use = false;
+    as_hll_policy* hll_policy_p = &hll_policy;
 
     if (get_int(err, AS_PY_HLL_INDEX_BIT_COUNT, op_dict, &index_bit_count) != AEROSPIKE_OK) {
         goto cleanup;
@@ -237,11 +166,7 @@ add_op_hll_add_mh(AerospikeClient* self, as_error* err, char* bin,
         goto cleanup;
     }
 
-    if (get_hll_policy(err, op_dict, &hll_policy, &policy_in_use) != AEROSPIKE_OK) {
-        goto cleanup;
-    }
-
-    if (get_cdt_ctx(self, err, &ctx, op_dict, &ctx_in_use, static_pool, serializer_type) != AEROSPIKE_OK) {
+    if (get_hll_policy(err, op_dict, &hll_policy, &hll_policy_p) != AEROSPIKE_OK) {
         goto cleanup;
     }
 
@@ -249,16 +174,24 @@ add_op_hll_add_mh(AerospikeClient* self, as_error* err, char* bin,
         goto cleanup;
     }
 
-    if (! as_operations_hll_add_mh(ops, bin, NULL, policy_in_use ? &hll_policy : NULL, value_list, index_bit_count, mh_bit_count)) {\
-        as_error_update(err, AEROSPIKE_ERR_CLIENT, "Failed to add hll_add_mh operation.");
-        goto cleanup;
+    if (mh_bit_count != -1) {
+        if (! as_operations_hll_add_mh(ops, bin, NULL, hll_policy_p, value_list, index_bit_count, mh_bit_count)) {
+            as_error_update(err, AEROSPIKE_ERR_CLIENT, "Failed to add hll_add_mh operation.");
+            goto cleanup;
+        }
+    } else if (index_bit_count != -1){
+        if (! as_operations_hll_add(ops, bin, NULL, hll_policy_p, value_list, index_bit_count)) {
+            as_error_update(err, AEROSPIKE_ERR_CLIENT, "Failed to add hll_add operation.");
+            goto cleanup;
+        }
+    } else {
+        if (! as_operations_hll_update(ops, bin, NULL, hll_policy_p, value_list)) {
+            as_error_update(err, AEROSPIKE_ERR_CLIENT, "Failed to add hll_update operation.");
+            goto cleanup;
+        }
     }
 
 cleanup:
-    if (ctx_in_use) {
-        as_cdt_ctx_destroy(&ctx);
-    }
-
     if (value_list) {
         as_val_destroy(value_list);
     }
@@ -273,46 +206,8 @@ add_op_hll_init(AerospikeClient* self, as_error* err, char* bin,
 {
     as_hll_policy hll_policy;
     int index_bit_count;
-    as_cdt_ctx ctx;
-    bool ctx_in_use = false;
-    bool policy_in_use = false;
-
-    if (get_int(err, AS_PY_HLL_INDEX_BIT_COUNT, op_dict, &index_bit_count) != AEROSPIKE_OK) {
-        goto cleanup;
-    }
-
-    if (get_hll_policy(err, op_dict, &hll_policy, &policy_in_use) != AEROSPIKE_OK) {
-        goto cleanup;
-    }
-
-    if (get_cdt_ctx(self, err, &ctx, op_dict, &ctx_in_use, static_pool, serializer_type) != AEROSPIKE_OK) {
-        goto cleanup;
-    }
-
-    if (! as_operations_hll_init(ops, bin, NULL, policy_in_use ? &hll_policy : NULL, index_bit_count)) {
-        as_error_update(err, AEROSPIKE_ERR_CLIENT, "Failed to add hll_init operation.");
-        goto cleanup;
-    }
-
-cleanup:
-    if (ctx_in_use) {
-        as_cdt_ctx_destroy(&ctx);
-    }
-
-    return err->code;
-}
-
-static as_status
-add_op_hll_init_mh(AerospikeClient* self, as_error* err, char* bin,
-        PyObject* op_dict, as_operations* ops,
-        as_static_pool* static_pool, int serializer_type)
-{
-    as_hll_policy hll_policy;
-    int index_bit_count;
     int mh_bit_count;
-    as_cdt_ctx ctx;
-    bool ctx_in_use = false;
-    bool policy_in_use = false;
+    as_hll_policy* hll_policy_p = &hll_policy;
 
     if (get_int(err, AS_PY_HLL_INDEX_BIT_COUNT, op_dict, &index_bit_count) != AEROSPIKE_OK) {
         goto cleanup;
@@ -322,24 +217,23 @@ add_op_hll_init_mh(AerospikeClient* self, as_error* err, char* bin,
         goto cleanup;
     }
 
-    if (get_hll_policy(err, op_dict, &hll_policy, &policy_in_use) != AEROSPIKE_OK) {
+    if (get_hll_policy(err, op_dict, &hll_policy, &hll_policy_p) != AEROSPIKE_OK) {
         goto cleanup;
     }
 
-    if (get_cdt_ctx(self, err, &ctx, op_dict, &ctx_in_use, static_pool, serializer_type) != AEROSPIKE_OK) {
-        goto cleanup;
-    }
-
-    if (! as_operations_hll_init_mh(ops, bin, NULL, policy_in_use ? &hll_policy : NULL, index_bit_count, mh_bit_count)) {
-        as_error_update(err, AEROSPIKE_ERR_CLIENT, "Failed to add hll_init_mh operation.");
-        goto cleanup;
+    if (mh_bit_count != -1) {
+        if (! as_operations_hll_init_mh(ops, bin, NULL, hll_policy_p, index_bit_count, mh_bit_count)) {
+            as_error_update(err, AEROSPIKE_ERR_CLIENT, "Failed to add hll_init_mh operation.");
+            goto cleanup;
+        }
+    } else {
+        if (! as_operations_hll_init(ops, bin, NULL, hll_policy_p, index_bit_count)) {
+            as_error_update(err, AEROSPIKE_ERR_CLIENT, "Failed to add hll_init operation.");
+            goto cleanup;
+        }
     }
 
 cleanup:
-    if (ctx_in_use) {
-        as_cdt_ctx_destroy(&ctx);
-    }
-
     return err->code;
 }
 
@@ -348,23 +242,12 @@ add_op_hll_get_count(AerospikeClient* self, as_error* err, char* bin,
         PyObject* op_dict, as_operations* ops,
         as_static_pool* static_pool, int serializer_type)
 {
-    as_cdt_ctx ctx;
-    bool ctx_in_use = false;
-
-    if (get_cdt_ctx(self, err, &ctx, op_dict, &ctx_in_use, static_pool, serializer_type) != AEROSPIKE_OK) {
-        goto cleanup;
-    }
-
     if (! as_operations_hll_get_count(ops, bin, NULL)){
         as_error_update(err, AEROSPIKE_ERR_CLIENT, "Failed to add hll_get_count operation.");
         goto cleanup;
     }
 
 cleanup:
-    if (ctx_in_use) {
-        as_cdt_ctx_destroy(&ctx);
-    }
-
     return err->code;
 }
 
@@ -373,23 +256,12 @@ add_op_hll_describe(AerospikeClient* self, as_error* err, char* bin,
         PyObject* op_dict, as_operations* ops,
         as_static_pool* static_pool, int serializer_type)
 {
-    as_cdt_ctx ctx;
-    bool ctx_in_use = false;
-
-    if (get_cdt_ctx(self, err, &ctx, op_dict, &ctx_in_use, static_pool, serializer_type) != AEROSPIKE_OK) {
-        goto cleanup;
-    }
-
     if (! as_operations_hll_describe(ops, bin, NULL)){
         as_error_update(err, AEROSPIKE_ERR_CLIENT, "Failed to add hll_describe operation.");
         goto cleanup;
     }
 
 cleanup:
-    if (ctx_in_use) {
-        as_cdt_ctx_destroy(&ctx);
-    }
-
     return err->code;
 }
 
@@ -398,15 +270,9 @@ add_op_hll_fold(AerospikeClient* self, as_error* err, char* bin,
         PyObject* op_dict, as_operations* ops,
         as_static_pool* static_pool, int serializer_type)
 {
-    as_cdt_ctx ctx;
-    bool ctx_in_use = false;
     int index_bit_count;
 
     if (get_int(err, AS_PY_HLL_INDEX_BIT_COUNT, op_dict, &index_bit_count) != AEROSPIKE_OK) {
-        goto cleanup;
-    }
-
-    if (get_cdt_ctx(self, err, &ctx, op_dict, &ctx_in_use, static_pool, serializer_type) != AEROSPIKE_OK) {
         goto cleanup;
     }
 
@@ -416,10 +282,6 @@ add_op_hll_fold(AerospikeClient* self, as_error* err, char* bin,
     }
 
 cleanup:
-    if (ctx_in_use) {
-        as_cdt_ctx_destroy(&ctx);
-    }
-
     return err->code;
 }
 
@@ -429,12 +291,6 @@ add_op_hll_get_intersect_count(AerospikeClient* self, as_error* err, char* bin,
         as_static_pool* static_pool, int serializer_type)
 {
     as_list* value_list = NULL;
-    as_cdt_ctx ctx;
-    bool ctx_in_use = false;
-
-    if (get_cdt_ctx(self, err, &ctx, op_dict, &ctx_in_use, static_pool, serializer_type) != AEROSPIKE_OK) {
-        goto cleanup;
-    }
 
     if (get_val_list(self, err, AS_PY_VALUES_KEY, op_dict, &value_list, static_pool, serializer_type) != AEROSPIKE_OK) {
         goto cleanup;
@@ -446,10 +302,6 @@ add_op_hll_get_intersect_count(AerospikeClient* self, as_error* err, char* bin,
     }
 
 cleanup:
-    if (ctx_in_use) {
-        as_cdt_ctx_destroy(&ctx);
-    }
-
     if (value_list) {
         as_val_destroy(value_list);
     }
@@ -463,12 +315,6 @@ add_op_hll_get_similarity(AerospikeClient* self, as_error* err, char* bin,
         as_static_pool* static_pool, int serializer_type)
 {
     as_list* value_list = NULL;
-    as_cdt_ctx ctx;
-    bool ctx_in_use = false;
-
-    if (get_cdt_ctx(self, err, &ctx, op_dict, &ctx_in_use, static_pool, serializer_type) != AEROSPIKE_OK) {
-        goto cleanup;
-    }
 
     if (get_val_list(self, err, AS_PY_VALUES_KEY, op_dict, &value_list, static_pool, serializer_type) != AEROSPIKE_OK) {
         goto cleanup;
@@ -480,10 +326,6 @@ add_op_hll_get_similarity(AerospikeClient* self, as_error* err, char* bin,
     }
 
 cleanup:
-    if (ctx_in_use) {
-        as_cdt_ctx_destroy(&ctx);
-    }
-
     if (value_list) {
         as_val_destroy(value_list);
     }
@@ -497,12 +339,6 @@ add_op_hll_get_union(AerospikeClient* self, as_error* err, char* bin,
         as_static_pool* static_pool, int serializer_type)
 {
     as_list* value_list = NULL;
-    as_cdt_ctx ctx;
-    bool ctx_in_use = false;
-
-    if (get_cdt_ctx(self, err, &ctx, op_dict, &ctx_in_use, static_pool, serializer_type) != AEROSPIKE_OK) {
-        goto cleanup;
-    }
 
     if (get_val_list(self, err, AS_PY_VALUES_KEY, op_dict, &value_list, static_pool, serializer_type) != AEROSPIKE_OK) {
         goto cleanup;
@@ -514,10 +350,6 @@ add_op_hll_get_union(AerospikeClient* self, as_error* err, char* bin,
     }
 
 cleanup:
-    if (ctx_in_use) {
-        as_cdt_ctx_destroy(&ctx);
-    }
-
     if (value_list) {
         as_val_destroy(value_list);
     }
@@ -531,13 +363,6 @@ add_op_hll_get_union_count(AerospikeClient* self, as_error* err, char* bin,
         as_static_pool* static_pool, int serializer_type)
 {
     as_list* value_list = NULL;
-    as_cdt_ctx ctx;
-    bool ctx_in_use = false;
-    
-
-    if (get_cdt_ctx(self, err, &ctx, op_dict, &ctx_in_use, static_pool, serializer_type) != AEROSPIKE_OK) {
-        goto cleanup;
-    }
 
     if (get_val_list(self, err, AS_PY_VALUES_KEY, op_dict, &value_list, static_pool, serializer_type) != AEROSPIKE_OK) {
         goto cleanup;
@@ -549,10 +374,6 @@ add_op_hll_get_union_count(AerospikeClient* self, as_error* err, char* bin,
     }
 
 cleanup:
-    if (ctx_in_use) {
-        as_cdt_ctx_destroy(&ctx);
-    }
-
     if (value_list) {
         as_val_destroy(value_list);
     }
@@ -565,23 +386,12 @@ add_op_hll_refresh_count(AerospikeClient* self, as_error* err, char* bin,
         PyObject* op_dict, as_operations* ops,
         as_static_pool* static_pool, int serializer_type)
 {
-    as_cdt_ctx ctx;
-    bool ctx_in_use = false;
-
-    if (get_cdt_ctx(self, err, &ctx, op_dict, &ctx_in_use, static_pool, serializer_type) != AEROSPIKE_OK) {
-        goto cleanup;
-    }
-
     if (! as_operations_hll_refresh_count(ops, bin, NULL)){
         as_error_update(err, AEROSPIKE_ERR_CLIENT, "Failed to add hll_refresh_count operation.");
         goto cleanup;
     }
 
 cleanup:
-    if (ctx_in_use) {
-        as_cdt_ctx_destroy(&ctx);
-    }
-
     return err->code;
 }
 
@@ -591,16 +401,10 @@ add_op_hll_set_union(AerospikeClient* self, as_error* err, char* bin,
         as_static_pool* static_pool, int serializer_type)
 {
     as_list* value_list = NULL;
-    as_cdt_ctx ctx;
-    bool ctx_in_use = false;
     as_hll_policy hll_policy;
-    bool policy_in_use = false;
+    as_hll_policy* hll_policy_p = &hll_policy;
 
-    if (get_cdt_ctx(self, err, &ctx, op_dict, &ctx_in_use, static_pool, serializer_type) != AEROSPIKE_OK) {
-        goto cleanup;
-    }
-
-    if (get_hll_policy(err, op_dict, &hll_policy, &policy_in_use) != AEROSPIKE_OK) {
+    if (get_hll_policy(err, op_dict, &hll_policy, &hll_policy_p) != AEROSPIKE_OK) {
         goto cleanup;
     }
 
@@ -608,16 +412,12 @@ add_op_hll_set_union(AerospikeClient* self, as_error* err, char* bin,
         goto cleanup;
     }
 
-    if (! as_operations_hll_set_union(ops, bin, NULL, policy_in_use ? &hll_policy : NULL, value_list)){
+    if (! as_operations_hll_set_union(ops, bin, NULL, hll_policy_p, value_list)){
         as_error_update(err, AEROSPIKE_ERR_CLIENT, "Failed to add hll_set_union operation.");
         goto cleanup;
     }
 
 cleanup:
-    if (ctx_in_use) {
-        as_cdt_ctx_destroy(&ctx);
-    }
-
     if (value_list) {
         as_val_destroy(value_list);
     }
@@ -626,56 +426,16 @@ cleanup:
 }
 
 static as_status
-add_op_hll_update(AerospikeClient* self, as_error* err, char* bin,
-        PyObject* op_dict, as_operations* ops,
-        as_static_pool* static_pool, int serializer_type)
-{
-    as_list* value_list = NULL;
-    as_hll_policy hll_policy;
-    as_cdt_ctx ctx;
-    bool ctx_in_use = false;
-    bool policy_in_use = false;
-
-    if (get_hll_policy(err, op_dict, &hll_policy, &policy_in_use) != AEROSPIKE_OK) {
-        goto cleanup;
-    }
-
-    if (get_cdt_ctx(self, err, &ctx, op_dict, &ctx_in_use, static_pool, serializer_type) != AEROSPIKE_OK) {
-        goto cleanup;
-    }
-
-    if (get_val_list(self, err, AS_PY_VALUES_KEY, op_dict, &value_list, static_pool, serializer_type) != AEROSPIKE_OK) {
-        goto cleanup;
-    }
-
-    if (! as_operations_hll_update(ops, bin, NULL, &hll_policy, value_list)) {
-        as_error_update(err, AEROSPIKE_ERR_CLIENT, "Failed to add hll_update operation.");
-        goto cleanup;
-    }
-
-cleanup:
-    if (ctx_in_use) {
-        as_cdt_ctx_destroy(&ctx);
-    }
-
-    if (value_list) {
-        as_val_destroy(value_list);
-    }
-
-    return err->code;
-}
-
-static as_status
-get_hll_policy(as_error* err, PyObject* op_dict, as_hll_policy* policy, bool* found) {
-    *found = false;
-
+get_hll_policy(as_error* err, PyObject* op_dict, as_hll_policy* policy, as_hll_policy** policy_p) {
     PyObject* hll_policy = PyDict_GetItemString(op_dict, AS_PY_HLL_POLICY);
 
     if (hll_policy) {
         if (pyobject_to_hll_policy(err, hll_policy, policy) != AEROSPIKE_OK) {
+            *policy_p = NULL;
             return err -> code;
         }
-        *found = true;
+    } else {
+        *policy_p = NULL;
     }
 
     return AEROSPIKE_OK;

@@ -351,9 +351,8 @@ AerospikeConstants aerospike_constants[] = {
 	{ AS_CDT_CTX_MAP_KEY, "CDT_CTX_MAP_KEY"},
 	{ AS_CDT_CTX_MAP_VALUE, "CDT_CTX_MAP_VALUE"},
 
-	/* HLL constants */
+	/* HLL constants 3.11.0 */
 	{ OP_HLL_ADD, "OP_HLL_ADD"},
-	{ OP_HLL_ADD_MH, "OP_HLL_ADD_MH"},
 	{ OP_HLL_DESCRIBE, "OP_HLL_DESCRIBE"},
 	{ OP_HLL_FOLD, "OP_HLL_FOLD"},
 	{ OP_HLL_GET_COUNT, "OP_HLL_GET_COUNT"},
@@ -363,10 +362,8 @@ AerospikeConstants aerospike_constants[] = {
 	{ OP_HLL_GET_UNION_COUNT, "OP_HLL_GET_UNION_COUNT"},
 	{ OP_HLL_GET_SIMILARITY, "OP_HLL_GET_SIMILARITY"},
 	{ OP_HLL_INIT, "OP_HLL_INIT"},
-	{ OP_HLL_INIT_MH, "OP_HLL_INIT_MH"},
 	{ OP_HLL_REFRESH_COUNT, "OP_HLL_REFRESH_COUNT"},
 	{ OP_HLL_SET_UNION, "OP_HLL_SET_UNION"},
-	{ OP_HLL_UPDATE, "OP_HLL_UPDATE"},
 
 	{ AS_HLL_WRITE_DEFAULT, "HLL_WRITE_DEFAULT"},
 	{ AS_HLL_WRITE_CREATE_ONLY, "HLL_WRITE_CREATE_ONLY"},
@@ -562,6 +559,7 @@ as_status pyobject_to_policy_apply(as_error * err, PyObject * py_policy,
 	POLICY_SET_BASE_FIELD(socket_timeout, uint32_t);
 	POLICY_SET_BASE_FIELD(max_retries, uint32_t);
 	POLICY_SET_BASE_FIELD(sleep_between_retries, uint32_t);
+	POLICY_SET_BASE_FIELD(compress, bool);
 
 	POLICY_SET_FIELD(key, as_policy_key);
 	POLICY_SET_FIELD(replica, as_policy_replica);
@@ -632,6 +630,7 @@ as_status pyobject_to_policy_query(as_error * err, PyObject * py_policy,
 	POLICY_SET_BASE_FIELD(socket_timeout, uint32_t);
 	POLICY_SET_BASE_FIELD(max_retries, uint32_t);
 	POLICY_SET_BASE_FIELD(sleep_between_retries, uint32_t);
+	POLICY_SET_BASE_FIELD(compress, bool);
 
 
 	POLICY_SET_FIELD(deserialize, bool);
@@ -672,6 +671,7 @@ as_status pyobject_to_policy_read(as_error * err, PyObject * py_policy,
 	POLICY_SET_BASE_FIELD(socket_timeout, uint32_t);
 	POLICY_SET_BASE_FIELD(max_retries, uint32_t);
 	POLICY_SET_BASE_FIELD(sleep_between_retries, uint32_t);
+	POLICY_SET_BASE_FIELD(compress, bool);
 
 	POLICY_SET_FIELD(key, as_policy_key);
 	POLICY_SET_FIELD(replica, as_policy_replica);
@@ -716,6 +716,7 @@ as_status pyobject_to_policy_remove(as_error * err, PyObject * py_policy,
 	POLICY_SET_BASE_FIELD(socket_timeout, uint32_t);
 	POLICY_SET_BASE_FIELD(max_retries, uint32_t);
 	POLICY_SET_BASE_FIELD(sleep_between_retries, uint32_t);
+	POLICY_SET_BASE_FIELD(compress, bool);
 
 	POLICY_SET_FIELD(generation, uint16_t);
 
@@ -763,6 +764,7 @@ as_status pyobject_to_policy_scan(as_error * err, PyObject * py_policy,
 	POLICY_SET_BASE_FIELD(socket_timeout, uint32_t);
 	POLICY_SET_BASE_FIELD(max_retries, uint32_t);
 	POLICY_SET_BASE_FIELD(sleep_between_retries, uint32_t);
+	POLICY_SET_BASE_FIELD(compress, bool);
 
 	POLICY_SET_FIELD(fail_on_cluster_change, bool);
 	POLICY_SET_FIELD(durable_delete, bool);
@@ -807,6 +809,7 @@ as_status pyobject_to_policy_write(as_error * err, PyObject * py_policy,
 	POLICY_SET_BASE_FIELD(socket_timeout, uint32_t);
 	POLICY_SET_BASE_FIELD(max_retries, uint32_t);
 	POLICY_SET_BASE_FIELD(sleep_between_retries, uint32_t);
+	POLICY_SET_BASE_FIELD(compress, bool);
 
 	POLICY_SET_FIELD(key, as_policy_key);
 	POLICY_SET_FIELD(gen, as_policy_gen);
@@ -851,6 +854,7 @@ as_status pyobject_to_policy_operate(as_error * err, PyObject * py_policy,
 	POLICY_SET_BASE_FIELD(socket_timeout, uint32_t);
 	POLICY_SET_BASE_FIELD(max_retries, uint32_t);
 	POLICY_SET_BASE_FIELD(sleep_between_retries, uint32_t);
+	POLICY_SET_BASE_FIELD(compress, bool);
 
 	POLICY_SET_FIELD(key, as_policy_key);
 	POLICY_SET_FIELD(gen, as_policy_gen);
@@ -899,6 +903,7 @@ as_status pyobject_to_policy_batch(as_error * err, PyObject * py_policy,
 	POLICY_SET_BASE_FIELD(socket_timeout, uint32_t);
 	POLICY_SET_BASE_FIELD(max_retries, uint32_t);
 	POLICY_SET_BASE_FIELD(sleep_between_retries, uint32_t);
+	POLICY_SET_BASE_FIELD(compress, bool);
 
 	POLICY_SET_FIELD(concurrent, bool);
 	POLICY_SET_FIELD(allow_inline, bool);
@@ -1047,23 +1052,22 @@ pyobject_to_hll_policy(as_error* err, PyObject* py_policy, as_hll_policy* hll_po
 	}
 
 	py_val = PyDict_GetItemString(py_policy, "flags");
-    if (py_val && py_val != Py_None) {
-        if (PyInt_Check(py_val)) {
-            flags = (int64_t)PyInt_AsLong(py_val);
-            if (PyErr_Occurred()) {
-                return as_error_update(err, AEROSPIKE_ERR_PARAM, "Failed to convert flags.");
-
-            }
-    	}
-        else if (PyLong_Check(py_val)) {
-        	flags = (int64_t)PyLong_AsLong(py_val);
-            if (PyErr_Occurred()) {
-                return as_error_update(err, AEROSPIKE_ERR_PARAM, "Failed to convert flags.");
-            }
-        }
-        else {
-            return as_error_update(err, AEROSPIKE_ERR_PARAM, "Invalid hll policy flags.");
-        }
+	if (py_val && py_val != Py_None) {
+		if (PyInt_Check(py_val)) {
+			flags = (int64_t)PyInt_AsLong(py_val);
+			if (PyErr_Occurred()) {
+				return as_error_update(err, AEROSPIKE_ERR_PARAM, "Failed to convert flags.");
+			}
+		}
+		else if (PyLong_Check(py_val)) {
+			flags = (int64_t)PyLong_AsLong(py_val);
+			if (PyErr_Occurred()) {
+				return as_error_update(err, AEROSPIKE_ERR_PARAM, "Failed to convert flags.");
+			}
+		}
+		else {
+			return as_error_update(err, AEROSPIKE_ERR_PARAM, "Invalid hll policy flags.");
+		}
 	}
 
 	as_hll_policy_set_write_flags(hll_policy, flags);

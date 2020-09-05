@@ -34,7 +34,7 @@
 #include "cdt_list_operations.h"
 #include "cdt_map_operations.h"
 #include "bit_operations.h"
-#include "cdt_hll_operations.h"
+#include "hll_operations.h"
 
 #include <aerospike/as_double.h>
 #include <aerospike/as_integer.h>
@@ -243,7 +243,7 @@ static inline bool isBitOp(int op) {
 
 static inline bool isHllOp(int op) {
 	int hll_start = OP_HLL_ADD;
-	int hll_end = OP_HLL_UPDATE;
+	int hll_end = OP_HLL_SET_UNION;
 	return (op >= hll_start && op <= hll_end);
 }
 

@@ -36,7 +36,7 @@ AEROSPIKE_C_HOME = os.getenv('AEROSPIKE_C_HOME')
 PREFIX = None
 PLATFORM = platform.platform(1)
 LINUX = 'Linux' in PLATFORM
-DARWIN = 'Darwin' in PLATFORM
+DARWIN = 'Darwin' in PLATFORM or 'macOS' in PLATFORM
 CWD = os.path.abspath(os.path.dirname(__file__))
 
 ################################################################################
@@ -217,6 +217,7 @@ setup(
         'Programming Language :: Python :: 3.5',
         'Programming Language :: Python :: 3.6',
         'Programming Language :: Python :: 3.7',
+        'Programming Language :: Python :: 3.8',
         'Programming Language :: Python :: Implementation :: CPython',
         'Topic :: Database'
     ],
@@ -241,7 +242,7 @@ setup(
                 'src/main/client/bit_operate.c',
                 'src/main/client/cdt_list_operate.c',
                 'src/main/client/cdt_map_operate.c',
-                'src/main/client/cdt_hll_operate.c',
+                'src/main/client/hll_operate.c',
                 'src/main/client/cdt_operation_utils.c',
                 'src/main/client/close.c',
                 'src/main/client/connect.c',
