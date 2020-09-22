@@ -14,6 +14,10 @@
  * limitations under the License.
  ******************************************************************************/
 
+// define PY_SSIZE_T_CLEAN is for py3.8 comptaibility see: https://bugs.python.org/issue36381
+#define PY_SSIZE_T_CLEAN
+#define SCRIPT_LEN_MAX 1048576
+
 #include <Python.h>
 #include <stdbool.h>
 
@@ -29,7 +33,6 @@
 #include "exceptions.h"
 #include "policy.h"
 
-#define SCRIPT_LEN_MAX 1048576
 
 /**
  *******************************************************************************************************

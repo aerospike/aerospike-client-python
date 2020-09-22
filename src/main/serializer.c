@@ -537,11 +537,6 @@ extern as_status deserialize_based_on_as_bytes_type(AerospikeClient * self,
 								}
 							}
 							break;
-		case AS_BYTES_LDT:  {
-								Py_INCREF(Py_None);
-								*retval = Py_None;
-							}
-							break;
 		default:			{
 								// First try to return a raw byte array, if that fails raise an error
 								uint32_t bval_size = as_bytes_size(bytes);
