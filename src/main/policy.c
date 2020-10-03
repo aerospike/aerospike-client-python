@@ -90,7 +90,7 @@ __policy##_init(policy);\
 	if (predexp2_list) {\
 		PyObject* py_predexp2_list = PyDict_GetItemString(py_policy, "predexp2");\
 		if (py_predexp2_list) {\
-			convert_predexp2_list(py_predexp2_list, &predexp2_list, err);\
+			convert_predexp2_list(self, py_predexp2_list, &predexp2_list, err);\
 			policy->base.predexp2 = predexp2_list;\
 			*predexp2_list_p = predexp2_list;\
 		}\
@@ -370,6 +370,40 @@ AerospikeConstants aerospike_constants[] = {
 	{ AS_HLL_WRITE_UPDATE_ONLY, "HLL_WRITE_UPDATE_ONLY"},
 	{ AS_HLL_WRITE_NO_FAIL, "HLL_WRITE_NO_FAIL"},
 	{ AS_HLL_WRITE_ALLOW_FOLD, "HLL_WRITE_ALLOW_FOLD"},
+
+	{ OP_LIST_EXP_APPEND, "OP_LIST_EXP_APPEND"},
+	{ OP_LIST_EXP_APPEND_ITEMS, "OP_LIST_EXP_APPEND_ITEMS"},
+	{ OP_LIST_EXP_INSERT, "OP_LIST_EXP_INSERT"},
+	{ OP_LIST_EXP_INSERT_ITEMS, "OP_LIST_EXP_INSERT_ITEMS"},
+	{ OP_LIST_EXP_POP, "OP_LIST_EXP_POP"},
+	{ OP_LIST_EXP_POP_RANGE, "OP_LIST_EXP_POP_RANGE"},
+	{ OP_LIST_EXP_REMOVE, "OP_LIST_EXP_REMOVE"},
+	{ OP_LIST_EXP_REMOVE_RANGE, "OP_LIST_EXP_REMOVE_RANGE"},
+	{ OP_LIST_EXP_CLEAR, "OP_LIST_EXP_CLEAR"},
+	{ OP_LIST_EXP_SET, "OP_LIST_EXP_SET"},
+	{ OP_LIST_EXP_GET, "OP_LIST_EXP_GET"},
+	{ OP_LIST_EXP_GET_RANGE, "OP_LIST_EXP_GET_RANGE"},
+	{ OP_LIST_EXP_TRIM, "OP_LIST_EXP_TRIM"},
+	{ OP_LIST_EXP_SIZE, "OP_LIST_EXP_SIZE"},
+	{ OP_LIST_EXP_INCREMENT, "OP_LIST_EXP_INCREMENT"},
+	{ OP_LIST_EXP_GET_BY_INDEX, "OP_LIST_EXP_GET_BY_INDEX"},
+	{ OP_LIST_EXP_GET_BY_INDEX_RANGE, "OP_LIST_EXP_GET_BY_INDEX_RANGE"},
+	{ OP_LIST_EXP_GET_BY_RANK, "OP_LIST_EXP_GET_BY_RANK"},
+	{ OP_LIST_EXP_GET_BY_RANK_RANGE, "OP_LIST_EXP_GET_BY_RANK_RANGE"},
+	{ OP_LIST_EXP_GET_BY_VALUE, "OP_LIST_EXP_GET_BY_VALUE"},
+	{ OP_LIST_EXP_GET_BY_VALUE_LIST, "OP_LIST_EXP_GET_BY_VALUE_LIST"},
+	{ OP_LIST_EXP_GET_BY_VALUE_RANGE, "OP_LIST_EXP_GET_BY_VALUE_RANGE"},
+	{ OP_LIST_EXP_REMOVE_BY_INDEX, "OP_LIST_EXP_REMOVE_BY_INDEX"},
+	{ OP_LIST_EXP_REMOVE_BY_INDEX_RANGE, "OP_LIST_EXP_REMOVE_BY_INDEX_RANGE"},
+	{ OP_LIST_EXP_REMOVE_BY_RANK, "OP_LIST_EXP_REMOVE_BY_RANK"},
+	{ OP_LIST_EXP_REMOVE_BY_RANK_RANGE, "OP_LIST_EXP_REMOVE_BY_RANK_RANGE"},
+	{ OP_LIST_EXP_REMOVE_BY_VALUE, "OP_LIST_EXP_REMOVE_BY_VALUE"},
+	{ OP_LIST_EXP_REMOVE_BY_VALUE_LIST, "OP_LIST_EXP_REMOVE_BY_VALUE_LIST"},
+	{ OP_LIST_EXP_REMOVE_BY_VALUE_RANGE, "OP_LIST_EXP_REMOVE_BY_VALUE_RANGE"},
+	{ OP_LIST_EXP_SET_ORDER, "OP_LIST_EXP_SET_ORDER"},
+	{ OP_LIST_EXP_SORT, "OP_LIST_EXP_SORT"},
+	{ OP_LIST_EXP_REMOVE_BY_VALUE_RANK_RANGE_REL, "OP_LIST_EXP_REMOVE_BY_VALUE_RANK_RANGE_REL"},
+	{ OP_LIST_EXP_GET_BY_VALUE_RANK_RANGE_REL, "OP_LIST_EXP_GET_BY_VALUE_RANK_RANGE_REL"}
 
 };
 
@@ -741,7 +775,7 @@ as_status pyobject_to_policy_remove(as_error * err, PyObject * py_policy,
  * We assume that the error object and the policy object are already allocated
  * and initialized (although, we do reset the error object here).
  */
-as_status pyobject_to_policy_scan(as_error * err, PyObject * py_policy,
+as_status pyobject_to_policy_scan(AerospikeClient * self, as_error * err, PyObject * py_policy,
 		as_policy_scan * policy,
 		as_policy_scan ** policy_p,
 		as_policy_scan * config_scan_policy,

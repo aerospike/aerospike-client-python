@@ -1,5 +1,13 @@
 from itertools import chain
 from typing import List, Optional, Tuple, Union
+import aerospike
+from aerospike_helpers.operations import list_operations as lop
+
+
+BIN_TYPE_KEY = "bin_type"
+INDEX_KEY = "index"
+RETURN_TYPE_KEY = "return_type"
+CTX_KEY = "ctx"
 
 
 class ExprOp():
@@ -31,6 +39,18 @@ class ExprOp():
 
     CALL = 127
 
+    # LIST_SORT = 128
+    # LIST_APPEND = 129
+    # LIST_APPEND_ITEMS = 130
+    # LIST_INSERT = 131
+    # LIST_INSERT_ITEMS = 132
+    # LIST_INCREMENT = 133
+    # LIST_SET = 134
+    # LIST_REMOVE_BY_VALUE = 135
+    # LIST_ = 136
+    # LIST_SORT = 137
+
+
 
 class ResultType():
     BOOLEAN = 1
@@ -61,7 +81,7 @@ class AtomExpr():
 
 
 TypeResultType = Optional[int]
-TypeFixedEle = Union[int, float, str, bytes]
+TypeFixedEle = Union[int, float, str, bytes, dict]
 TypeFixed = Optional[Tuple[TypeFixedEle, ...]]
 TypeCompiledOp = Tuple[int, TypeResultType, TypeFixed, int]
 TypeExpression = List[TypeCompiledOp]
@@ -210,6 +230,31 @@ class MetaSetName(BaseExpr):
 class MetaKeyExists(BaseExpr):
     op = ExprOp.META_KEY_EXISTS
     rt = ResultType.BOOLEAN
+
+
+class ListGetByIndex(BaseExpr):
+    op = aerospike.OP_LIST_EXP_GET_BY_INDEX
+    
+    def __init__(self, bin_name: str, bin_type: int, index: int, return_type: int, ctx=None):
+        self.fixed = (bin_name, {BIN_TYPE_KEY: bin_type, INDEX_KEY: index, RETURN_TYPE_KEY: return_type})
+
+        if ctx is not None:
+            self.fixed[1][CTX_KEY] = ctx
+
+
+
+class ListSize(BaseExpr):
+    op = aerospike.OP_LIST_EXP_SIZE
+    
+    def __init__(self, bin_name: str, ctx=None):
+        self.fixed = (bin_name, {})
+
+        if ctx is not None:
+            self.fixed[1][CTX_KEY] = ctx
+
+
+
+
 
 
 # def example():

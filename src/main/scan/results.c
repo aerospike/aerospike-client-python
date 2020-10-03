@@ -102,7 +102,7 @@ PyObject * AerospikeScan_Results(AerospikeScan * self, PyObject * args, PyObject
 	}
 
 	// Convert python policy object to as_policy_scan
-	pyobject_to_policy_scan(&err, py_policy, &scan_policy, &scan_policy_p,
+	pyobject_to_policy_scan(self->client, &err, py_policy, &scan_policy, &scan_policy_p,
 			&self->client->as->config.policies.scan, &predexp_list, &predexp_list_p,
 			&predexp2_list, &predexp2_list_p);
 	if (err.code != AEROSPIKE_OK) {

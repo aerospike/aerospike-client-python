@@ -111,4 +111,4 @@ as_status
 convert_predexp_list(PyObject* py_predexp_list, as_predexp_list* predexp_list, as_error* err);
 
 as_status 
-convert_predexp2_list(PyObject* py_predexp_list, as_exp** predexp_list, as_error* err);
+convert_predexp2_list(AerospikeClient * self, PyObject* py_predexp_list, as_exp** predexp_list, as_error* err);

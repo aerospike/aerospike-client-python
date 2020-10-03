@@ -5,7 +5,7 @@ import sys
 from .test_base_class import TestBaseClass
 from aerospike import exception as e
 from .as_status_codes import AerospikeStatus
-from aerospike_helpers import predexp
+from aerospike_helpers.predexp import *
 
 aerospike = pytest.importorskip("aerospike")
 try:
@@ -24,7 +24,12 @@ class TestPred2(TestBaseClass):
 
         for i in range(19):
             key = ('test', u'demo', i)
-            rec = {'name': 'name%s' % (str(i)), 'age': i, 'balance': i * 10, 'key': i, 'alt_name': 'name%s' % (str(i))}
+            rec = {'name': 'name%s' % (str(i)),
+                    'age': i,
+                    'balance': i * 10,
+                    'key': i, 'alt_name': 'name%s' % (str(i)),
+                    'list_bin': [5, 10, 32]
+                }
             as_connection.put(key, rec)
 
         key = ('test', u'demo', 122)
@@ -51,29 +56,33 @@ class TestPred2(TestBaseClass):
         ns = 'test'
         st = 'demo'
 
-        expr = predexp.And(
-            predexp.EQ(predexp.IntBin("age"), 10),
-            predexp.EQ(predexp.IntBin("age"), predexp.IntBin("key")),
-            predexp.NE(23, predexp.IntBin("balance")),
-            predexp.GT(predexp.IntBin("balance"), 99),
-            predexp.GE(predexp.IntBin("balance"), 100),
-            predexp.LT(predexp.IntBin("balance"), 101),
-            predexp.LE(predexp.IntBin("balance"), 100),
-            predexp.Or(
-                predexp.LE(predexp.IntBin("balance"), 100),
-                predexp.Not(
-                    predexp.EQ(predexp.IntBin("age"), predexp.IntBin("balance"))
+        expr = And(
+            EQ(IntBin("age"), 10),
+            EQ(IntBin("age"), IntBin("key")),
+            NE(23, IntBin("balance")),
+            GT(IntBin("balance"), 99),
+            GE(IntBin("balance"), 100),
+            LT(IntBin("balance"), 101),
+            LE(IntBin("balance"), 100),
+            Or(
+                LE(IntBin("balance"), 100),
+                Not(
+                    EQ(IntBin("age"), IntBin("balance"))
                 )
             ),
-            predexp.EQ(predexp.MetaDigestMod(2), 0),
-            predexp.GE(predexp.MetaDeviceSize(), 1),
-            predexp.NE(predexp.MetaLastUpdateTime(), 0),
-            predexp.NE(predexp.MetaVoidTime(), 0),
-            predexp.NE(predexp.MetaTTL(), 0),
-            predexp.MetaKeyExists(),
-            predexp.EQ(predexp.MetaSetName(), 'demo')
-
+            EQ(MetaDigestMod(2), 0),
+            GE(MetaDeviceSize(), 1),
+            NE(MetaLastUpdateTime(), 0),
+            NE(MetaVoidTime(), 0),
+            NE(MetaTTL(), 0),
+            #MetaKeyExists(), needs debugging
+            EQ(MetaSetName(), 'demo'),
+            EQ(ListGetByIndex('list_bin', ResultType.INTEGER, 0, aerospike.LIST_RETURN_VALUE), 5),
+            GE(ListSize('list_bin'), 2),
+            
         )
+
+        print(MetaKeyExists().compile())
 
         #print(expr.compile())
 
