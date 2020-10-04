@@ -21,12 +21,14 @@
 #include <aerospike/as_error.h>
 #include <aerospike/as_exp.h>
 #include <aerospike/as_vector.h>
+#include <aerospike/as_geojson.h>
 
 #include "client.h"
 #include "conversions.h"
 #include "exceptions.h"
 #include "policy.h"
 #include "cdt_operation_utils.h"
+#include "geo.h"
 
 /**********
 * TODO
@@ -81,7 +83,7 @@
 #define END_VA_ARGS 128
 
 // UTILITY CONSTANTS
-#define MAX_ELEMENTS 8 //TODO find largest macro and adjust this val
+#define MAX_ELEMENTS 10 //TODO find largest macro and adjust this val
 #define FIXED_ACTIVE 1
 #define fixed_num_ACTIVE 2
 
@@ -240,14 +242,15 @@ as_status get_int64_t_from_pydict(int64_t * var, PyObject * op_dict, char * key,
 // as_status get_exp_bin_from_pyval
 
 static
-as_status get_exp_val_from_pyval(as_exp_entry * new_entry, PyObject * py_obj, as_error * err) {
+as_status get_exp_val_from_pyval(AerospikeClient * self, as_static_pool * static_pool, int serializer_type, as_exp_entry * new_entry, PyObject * py_obj, as_error * err) {
 	//as_exp_entry new_entries[] = {AS_EXP_VAL_INT(pred->fixed_num)};
 	//TODO why not pass in the array and do the copy in here
 	as_error_reset(err);
 
 	if (!py_obj) {
 		return as_error_update(err, AEROSPIKE_ERR_CLIENT, "value is null");
-	} else if (PyBool_Check(py_obj)) {
+	} else if (PyBool_Check(py_obj)) { //TODO
+		return as_error_update(err, AEROSPIKE_ERR, "NOT YET IMPLEMENTED1\n");
 		// as_bytes *bytes;
 		// GET_BYTES_POOL(bytes, static_pool, err);
 		// if (err->code == AEROSPIKE_OK) {
@@ -264,7 +267,11 @@ as_status get_exp_val_from_pyval(as_exp_entry * new_entry, PyObject * py_obj, as
 				return as_error_update(err, AEROSPIKE_ERR_PARAM, "integer value exceeds sys.maxsize");
 			}
 		}
-		as_exp_entry temp_exp = AS_EXP_VAL_INT(pred->fixed_num);
+
+		{
+			as_exp_entry tmp_entry = AS_EXP_VAL_INT(i);
+			*new_entry = tmp_entry;
+		}
 	} else if (PyLong_Check(py_obj)) {
 		int64_t l = (int64_t) PyLong_AsLongLong(py_obj);
 		if (l == -1 && PyErr_Occurred()) {
@@ -272,88 +279,120 @@ as_status get_exp_val_from_pyval(as_exp_entry * new_entry, PyObject * py_obj, as
 				return as_error_update(err, AEROSPIKE_ERR_PARAM, "integer value exceeds sys.maxsize");
 			}
 		}
-		*val = (as_val *) as_integer_new(l);
+
+		{
+			as_exp_entry tmp_entry = AS_EXP_VAL_INT(l);
+			*new_entry = tmp_entry;
+		}
 	} else if (PyUnicode_Check(py_obj)) {
 		PyObject * py_ustr = PyUnicode_AsUTF8String(py_obj);
 		char * str = PyBytes_AsString(py_ustr);
-		*val = (as_val *) as_string_new(strdup(str), true);
+		{
+			as_exp_entry tmp_entry = AS_EXP_VAL_STR(strdup(str));
+			*new_entry = tmp_entry;
+		}
 		Py_DECREF(py_ustr);
 	} else if (PyString_Check(py_obj)) {
 		char * s = PyString_AsString(py_obj);
-		*val = (as_val *) as_string_new(s, false);
-	 } else if (PyBytes_Check(py_obj)) {
-	 	uint8_t * b = (uint8_t *) PyBytes_AsString(py_obj);
-	 	uint32_t b_len  = (uint32_t)  PyBytes_Size(py_obj);
-	 	*val = (as_val *) as_bytes_new_wrap(b, b_len, false);
+		{
+			as_exp_entry tmp_entry = AS_EXP_VAL_STR(s);
+			*new_entry = tmp_entry;
+		}
+	 } else if (PyBytes_Check(py_obj)) { //TODO
+	 	return as_error_update(err, AEROSPIKE_ERR, "NOT YET IMPLEMENTED1\n");
+	 	// uint8_t * b = (uint8_t *) PyBytes_AsString(py_obj);
+	 	// uint32_t b_len  = (uint32_t)  PyBytes_Size(py_obj);
+	 	// *val = (as_val *) as_bytes_new_wrap(b, b_len, false);
 	} else if (!strcmp(py_obj->ob_type->tp_name, "aerospike.Geospatial")) {
 		PyObject *py_parameter = PyString_FromString("geo_data");
 		PyObject* py_data = PyObject_GenericGetAttr(py_obj, py_parameter);
 		Py_DECREF(py_parameter);
 		char *geo_value = PyString_AsString(AerospikeGeospatial_DoDumps(py_data, err));
 		if (aerospike_has_geo(self->as)) {
-			*val = (as_val *) as_geojson_new(geo_value, false);
-		} else {
-			as_bytes *bytes;
-			GET_BYTES_POOL(bytes, static_pool, err);
-			if (err->code == AEROSPIKE_OK) {
-				if (serialize_based_on_serializer_policy(self, serializer_type,
-					&bytes, py_data, err) != AEROSPIKE_OK) {
-					return err->code;
-				}
-				*val = (as_val *) bytes;
+			{
+				as_exp_entry tmp_entry = AS_EXP_VAL_GEO(geo_value);
+				*new_entry = tmp_entry;
 			}
+		} else { // TODO
+			return as_error_update(err, AEROSPIKE_ERR, "NOT YET IMPLEMENTED1\n");
+			// as_bytes *bytes;
+			// GET_BYTES_POOL(bytes, static_pool, err);
+			// if (err->code == AEROSPIKE_OK) {
+			// 	if (serialize_based_on_serializer_policy(self, serializer_type,
+			// 		&bytes, py_data, err) != AEROSPIKE_OK) {
+			// 		return err->code;
+			// 	}
+			// 	*val = (as_val *) bytes;
+			// }
 		}
-	} else if (PyByteArray_Check(py_obj)) {
-		as_bytes *bytes;
-		GET_BYTES_POOL(bytes, static_pool, err);
-		if (err->code == AEROSPIKE_OK) {
-			if (serialize_based_on_serializer_policy(self, serializer_type,
-					&bytes, py_obj, err) != AEROSPIKE_OK) {
-				return err->code;
-			}
-			*val = (as_val *) bytes;
-		}
+	} else if (PyByteArray_Check(py_obj)) { // TODO
+		return as_error_update(err, AEROSPIKE_ERR, "NOT YET IMPLEMENTED1\n");
+		// as_bytes *bytes;
+		// GET_BYTES_POOL(bytes, static_pool, err);
+		// if (err->code == AEROSPIKE_OK) {
+		// 	if (serialize_based_on_serializer_policy(self, serializer_type,
+		// 			&bytes, py_obj, err) != AEROSPIKE_OK) {
+		// 		return err->code;
+		// 	}
+		// 	*val = (as_val *) bytes;
+		// }
 	} else if (PyList_Check(py_obj)) {
 		as_list * list = NULL;
 		pyobject_to_list(self, err, py_obj, &list, static_pool, serializer_type);
 		if (err->code == AEROSPIKE_OK) {
-			*val = (as_val *) list;
+			{
+				as_exp_entry tmp_entry = AS_EXP_VAL((as_val *) list);
+				*new_entry = tmp_entry;
+			}
 		}
 	} else if (PyDict_Check(py_obj)) {
 		as_map * map = NULL;
 		pyobject_to_map(self, err, py_obj, &map, static_pool, serializer_type);
 		if (err->code == AEROSPIKE_OK) {
-			*val = (as_val *) map;
+			{
+				as_exp_entry tmp_entry = AS_EXP_VAL((as_val *) map);
+				*new_entry = tmp_entry;
+			}
 		}
 	} else if (Py_None == py_obj) {
-		*val = as_val_reserve(&as_nil);
+		{
+			as_exp_entry tmp_entry = AS_EXP_NIL();
+			*new_entry = tmp_entry;
+		}
 	} else if (!strcmp(py_obj->ob_type->tp_name, "aerospike.null")) {
-		*val = (as_val *) as_val_reserve(&as_nil);
-	} else if (AS_Matches_Classname(py_obj, AS_CDT_WILDCARD_NAME)) {
-		*val = (as_val *) as_val_reserve(&as_cmp_wildcard);
-	} else if (AS_Matches_Classname(py_obj, AS_CDT_INFINITE_NAME)) {
-		*val = (as_val *) as_val_reserve(&as_cmp_inf);
+		{
+			as_exp_entry tmp_entry = AS_EXP_NIL();
+			*new_entry = tmp_entry;
+		}
+	// } else if (AS_Matches_Classname(py_obj, AS_CDT_WILDCARD_NAME)) { // NA?
+	// 	*val = (as_val *) as_val_reserve(&as_cmp_wildcard);
+	// } else if (AS_Matches_Classname(py_obj, AS_CDT_INFINITE_NAME)) { // NA?
+	// 	*val = (as_val *) as_val_reserve(&as_cmp_inf);
 	} else {
 		if (PyFloat_Check(py_obj)) {
 			double d = PyFloat_AsDouble(py_obj);
-			*val = (as_val *) as_double_new(d);
-		} else {
-			as_bytes *bytes;
-			GET_BYTES_POOL(bytes, static_pool, err);
-			if (err->code == AEROSPIKE_OK) {
-				if (serialize_based_on_serializer_policy(self, serializer_type,
-					&bytes, py_obj, err) != AEROSPIKE_OK) {
-					return err->code;
-				}
-				*val = (as_val *) bytes;
+			{
+				as_exp_entry tmp_entry = AS_EXP_VAL_FLOAT(d);
+				*new_entry = tmp_entry;
 			}
+		} else { //TODO
+			return as_error_update(err, AEROSPIKE_ERR, "NOT YET IMPLEMENTED1\n");
+			// as_bytes *bytes;
+			// GET_BYTES_POOL(bytes, static_pool, err);
+			// if (err->code == AEROSPIKE_OK) {
+			// 	if (serialize_based_on_serializer_policy(self, serializer_type,
+			// 		&bytes, py_obj, err) != AEROSPIKE_OK) {
+			// 		return err->code;
+			// 	}
+			// 	*val = (as_val *) bytes;
+			// }
 		}
 	}
 
 	return err->code;
 }
 
-as_status add_pred_macros(as_exp_entry ** expressions, pred_op * pred, as_error * err) {
+as_status add_pred_macros(AerospikeClient * self, as_static_pool * static_pool, int serializer_type, as_exp_entry ** expressions, pred_op * pred, as_error * err) {
 	// PyObject * tuple_py_val = NULL;
 	// PyObject * utf8_temp = NULL;
 	// char* bin_name = NULL;
@@ -416,8 +455,12 @@ as_status add_pred_macros(as_exp_entry ** expressions, pred_op * pred, as_error 
 			}
 			break;
 		case VAL:;
-			as_exp_entry new_entries[] = {AS_EXP_VAL_INT(pred->fixed_num)};
-			append_array(1);
+			{
+				as_exp_entry tmp_expr;
+				get_exp_val_from_pyval(self, static_pool, serializer_type, &tmp_expr, pred->pyfixed, err);
+				as_exp_entry new_entries[] = {tmp_expr};
+				append_array(1);
+			}
 			break;
 		case EQ:;
 			{
@@ -569,19 +612,18 @@ as_status add_pred_macros(as_exp_entry ** expressions, pred_op * pred, as_error 
 				append_array(sizeof(new_entries) / sizeof(as_exp_entry));
 			}
 			break;
-		case OP_LIST_EXP_GET_BY_INDEX:;
-			printf("in get_by_index\n");
+		case OP_LIST_EXP_GET_BY_VALUE:;
+			printf("in get_by_val\n");
 			{
-				get_int64_t(err, AS_PY_BIN_TYPE, pred->pyval1, &lval1);
-				get_int64_t(err, AS_PY_LIST_RETURN_KEY, pred->pyval1, &lval2);
-				get_int64_t(err, AS_PY_INDEX_KEY, pred->pyval1, &lval3);
-				as_exp_entry new_entries[] = {AS_EXP_LIST_GET_BY_INDEX(
-					lval1,
+				as_exp_entry tmp_expr;
+				get_exp_val_from_pyval(self, static_pool, serializer_type, &tmp_expr, PyDict_GetItemString(pred->pyval1, AS_PY_VAL_KEY), err);
+				get_int64_t(err, AS_PY_LIST_RETURN_KEY, pred->pyval1, &lval1);
+				as_exp_entry new_entries[] = {AS_EXP_LIST_GET_BY_VALUE(
 					pred->ctx,
-					lval2,
-					AS_EXP_VAL_INT(lval3),
-					AS_EXP_BIN_LIST(pred->fixed_str) // bin name only
-					)}; //why not convert here?
+					lval1,
+					tmp_expr,
+					AS_EXP_BIN_LIST(pred->fixed_str)
+					)};
 				printf("size is: %d\n", sizeof(new_entries) / sizeof(as_exp_entry));
 				append_array(sizeof(new_entries) / sizeof(as_exp_entry));
 			}
@@ -691,7 +733,7 @@ as_status convert_predexp2_list(AerospikeClient * self, PyObject* py_predexp_lis
 				pred.pyfixed = fixed;
 				pred.fixed_str = NULL;
 			}
-			else {
+			else if PyUnicode_Check(fixed_arg0){
 				PyObject * py_ustr = PyUnicode_AsUTF8String(fixed_arg0); //TODO this needs py 2 string handling
 				//py_strings[++str_bottom] = PyBytes_AsString(py_ustr);
 				//pred.fixed_str = PyBytes_AsString(py_ustr);
@@ -701,6 +743,11 @@ as_status convert_predexp2_list(AerospikeClient * self, PyObject* py_predexp_lis
 				memcpy(pred.fixed_str, tmp, strlen(tmp)); //TODO decref the new object from this
 				pred.fixed_num = 0; // try storing these ^
 				pred.pyfixed = py_ustr;
+			}
+			else {
+				pred.pyfixed = fixed_arg0;
+				pred.fixed_str = NULL;
+				pred.fixed_num = 0;
 			}
 
 			//get op args
@@ -737,7 +784,7 @@ as_status convert_predexp2_list(AerospikeClient * self, PyObject* py_predexp_lis
 
 	for ( int i = 0; i < size; ++i ) {
 		pred_op * pred = (pred_op *) as_vector_get(&pred_queue, (uint32_t)i);
-		add_pred_macros(&c_pred_entries, pred, err);
+		add_pred_macros(self, &static_pool, SERIALIZER_PYTHON, &c_pred_entries, pred, err);
 	}
 
 	*predexp_list = as_exp_build(c_pred_entries, bottom + 1);

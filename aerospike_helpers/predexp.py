@@ -8,6 +8,7 @@ BIN_TYPE_KEY = "bin_type"
 INDEX_KEY = "index"
 RETURN_TYPE_KEY = "return_type"
 CTX_KEY = "ctx"
+VALUE_KEY = "val"
 
 
 class ExprOp():
@@ -242,12 +243,21 @@ class ListGetByIndex(BaseExpr):
             self.fixed[1][CTX_KEY] = ctx
 
 
-
 class ListSize(BaseExpr):
     op = aerospike.OP_LIST_EXP_SIZE
     
     def __init__(self, bin_name: str, ctx=None):
         self.fixed = (bin_name, {})
+
+        if ctx is not None:
+            self.fixed[1][CTX_KEY] = ctx
+
+
+class ListGetByValue(BaseExpr):
+    op = aerospike.OP_LIST_EXP_GET_BY_VALUE
+    
+    def __init__(self, bin_name: str, value, return_type: int, ctx=None):
+        self.fixed = (bin_name, {VALUE_KEY: value, RETURN_TYPE_KEY: return_type})
 
         if ctx is not None:
             self.fixed[1][CTX_KEY] = ctx
