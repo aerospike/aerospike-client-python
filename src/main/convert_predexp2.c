@@ -96,7 +96,7 @@ typedef struct {
 	// };
 	//PyObject * fixed;
 	PyObject * pyfixed;
-	char * fixed_str;
+	PyObject * fixed_str;
 	int64_t fixed_num;
 	PyObject * pyval1;
 	as_cdt_ctx * ctx;
@@ -269,7 +269,7 @@ as_status get_exp_val_from_pyval(AerospikeClient * self, as_static_pool * static
 		}
 
 		{
-			as_exp_entry tmp_entry = AS_EXP_VAL_INT(i);
+			as_exp_entry tmp_entry = AS_EXP_INT(i);
 			*new_entry = tmp_entry;
 		}
 	} else if (PyLong_Check(py_obj)) {
@@ -281,25 +281,25 @@ as_status get_exp_val_from_pyval(AerospikeClient * self, as_static_pool * static
 		}
 
 		{
-			as_exp_entry tmp_entry = AS_EXP_VAL_INT(l);
+			as_exp_entry tmp_entry = AS_EXP_INT(l);
 			*new_entry = tmp_entry;
 		}
 	} else if (PyUnicode_Check(py_obj)) {
 		PyObject * py_ustr = PyUnicode_AsUTF8String(py_obj);
 		char * str = PyBytes_AsString(py_ustr);
 		{
-			as_exp_entry tmp_entry = AS_EXP_VAL_STR(strdup(str));
+			as_exp_entry tmp_entry = AS_EXP_STR(strdup(str));
 			*new_entry = tmp_entry;
 		}
 		Py_DECREF(py_ustr);
 	} else if (PyString_Check(py_obj)) {
 		char * s = PyString_AsString(py_obj);
 		{
-			as_exp_entry tmp_entry = AS_EXP_VAL_STR(s);
+			as_exp_entry tmp_entry = AS_EXP_STR(s);
 			*new_entry = tmp_entry;
 		}
 	 } else if (PyBytes_Check(py_obj)) { //TODO
-	 	return as_error_update(err, AEROSPIKE_ERR, "NOT YET IMPLEMENTED1\n");
+	 	return as_error_update(err, AEROSPIKE_ERR, "NOT YET IMPLEMENTED2\n");
 	 	// uint8_t * b = (uint8_t *) PyBytes_AsString(py_obj);
 	 	// uint32_t b_len  = (uint32_t)  PyBytes_Size(py_obj);
 	 	// *val = (as_val *) as_bytes_new_wrap(b, b_len, false);
@@ -310,11 +310,11 @@ as_status get_exp_val_from_pyval(AerospikeClient * self, as_static_pool * static
 		char *geo_value = PyString_AsString(AerospikeGeospatial_DoDumps(py_data, err));
 		if (aerospike_has_geo(self->as)) {
 			{
-				as_exp_entry tmp_entry = AS_EXP_VAL_GEO(geo_value);
+				as_exp_entry tmp_entry = AS_EXP_GEO(geo_value);
 				*new_entry = tmp_entry;
 			}
 		} else { // TODO
-			return as_error_update(err, AEROSPIKE_ERR, "NOT YET IMPLEMENTED1\n");
+			return as_error_update(err, AEROSPIKE_ERR, "NOT YET IMPLEMENTED3\n");
 			// as_bytes *bytes;
 			// GET_BYTES_POOL(bytes, static_pool, err);
 			// if (err->code == AEROSPIKE_OK) {
@@ -326,7 +326,7 @@ as_status get_exp_val_from_pyval(AerospikeClient * self, as_static_pool * static
 			// }
 		}
 	} else if (PyByteArray_Check(py_obj)) { // TODO
-		return as_error_update(err, AEROSPIKE_ERR, "NOT YET IMPLEMENTED1\n");
+		return as_error_update(err, AEROSPIKE_ERR, "NOT YET IMPLEMENTED4\n");
 		// as_bytes *bytes;
 		// GET_BYTES_POOL(bytes, static_pool, err);
 		// if (err->code == AEROSPIKE_OK) {
@@ -372,11 +372,11 @@ as_status get_exp_val_from_pyval(AerospikeClient * self, as_static_pool * static
 		if (PyFloat_Check(py_obj)) {
 			double d = PyFloat_AsDouble(py_obj);
 			{
-				as_exp_entry tmp_entry = AS_EXP_VAL_FLOAT(d);
+				as_exp_entry tmp_entry = AS_EXP_FLOAT(d);
 				*new_entry = tmp_entry;
 			}
 		} else { //TODO
-			return as_error_update(err, AEROSPIKE_ERR, "NOT YET IMPLEMENTED1\n");
+			return as_error_update(err, AEROSPIKE_ERR, "NOT YET IMPLEMENTED5\n");
 			// as_bytes *bytes;
 			// GET_BYTES_POOL(bytes, static_pool, err);
 			// if (err->code == AEROSPIKE_OK) {
@@ -400,55 +400,60 @@ as_status add_pred_macros(AerospikeClient * self, as_static_pool * static_pool, 
 	int64_t lval2 = 0;
 	int64_t lval3 = 0;
 	int64_t lval4 = 0;
+	char * py_fixed_str = NULL;
+
+	if (pred->fixed_str != NULL) {
+		py_fixed_str = PyBytes_AsString(pred->fixed_str);
+	}
 	
 	switch (pred->op) {
 		case BIN:
 			switch (pred->result_type) { //remove switch
 				case INTEGER:;
 					{
-						as_exp_entry new_entries[] = {AS_EXP_BIN_INT(pred->fixed_str)};
+						as_exp_entry new_entries[] = {AS_EXP_BIN_INT(py_fixed_str)};
 						append_array(3);
 					}
 				break;
 				case STRING:;
 					{
-						as_exp_entry new_entries[] = {AS_EXP_BIN_STR(pred->fixed_str)};
+						as_exp_entry new_entries[] = {AS_EXP_BIN_STR(py_fixed_str)};
 						append_array(3);
 					}
 				break;
 				case LIST:;
 					{
-						as_exp_entry new_entries[] = {AS_EXP_BIN_LIST(pred->fixed_str)};
+						as_exp_entry new_entries[] = {AS_EXP_BIN_LIST(py_fixed_str)};
 						append_array(3);
 					}
 				break;
 				case MAP:;
 					{
-						as_exp_entry new_entries[] = {AS_EXP_BIN_MAP(pred->fixed_str)};
+						as_exp_entry new_entries[] = {AS_EXP_BIN_MAP(py_fixed_str)};
 						append_array(3);
 					}
 				break;
 				case BLOB:;
 					{
-						as_exp_entry new_entries[] = {AS_EXP_BIN_BLOB(pred->fixed_str)};
+						as_exp_entry new_entries[] = {AS_EXP_BIN_BLOB(py_fixed_str)};
 						append_array(3);
 					}
 				break;
 				case FLOAT:;
 					{
-						as_exp_entry new_entries[] = {AS_EXP_BIN_FLOAT(pred->fixed_str)};
+						as_exp_entry new_entries[] = {AS_EXP_BIN_FLOAT(py_fixed_str)};
 						append_array(3);
 					}
 				break;
 				case GEOJSON:;
 					{
-						as_exp_entry new_entries[] = {AS_EXP_BIN_GEO(pred->fixed_str)};
+						as_exp_entry new_entries[] = {AS_EXP_BIN_GEO(py_fixed_str)};
 						append_array(3);
 					}
 				break;
 				case HLL:;
 					{
-						as_exp_entry new_entries[] = {AS_EXP_BIN_HLL(pred->fixed_str)};
+						as_exp_entry new_entries[] = {AS_EXP_BIN_HLL(py_fixed_str)};
 						append_array(3);
 					}
 				break;
@@ -457,9 +462,9 @@ as_status add_pred_macros(AerospikeClient * self, as_static_pool * static_pool, 
 		case VAL:;
 			{
 				as_exp_entry tmp_expr;
-				get_exp_val_from_pyval(self, static_pool, serializer_type, &tmp_expr, pred->pyfixed, err);
+				get_exp_val_from_pyval(self, static_pool, serializer_type, &tmp_expr, PyTuple_GetItem(pred->pyfixed, 0), err);
 				as_exp_entry new_entries[] = {tmp_expr};
-				append_array(1);
+				append_array(sizeof(new_entries) / sizeof(as_exp_entry));
 			}
 			break;
 		case EQ:;
@@ -555,17 +560,17 @@ as_status add_pred_macros(AerospikeClient * self, as_static_pool * static_pool, 
 		case META_SET_NAME:;
 			{
 				as_exp_entry new_entries[] = {AS_EXP_META_SET_NAME()};
-				append_array(1);
+				append_array(sizeof(new_entries) / sizeof(as_exp_entry));
 			}
 			break;
 		case META_KEY_EXISTS:;
 			{
 				as_exp_entry new_entries[] = {AS_EXP_META_KEY_EXIST()};
-				append_array(1);
+				append_array(sizeof(new_entries) / sizeof(as_exp_entry));
 			}
 			break;
 		case REC_KEY:;
-			if (pred->fixed_str) {
+			if (py_fixed_str) {
 				{
 					as_exp_entry new_entries[] = {AS_EXP_KEY_STR()};
 					append_array(3);
@@ -580,7 +585,7 @@ as_status add_pred_macros(AerospikeClient * self, as_static_pool * static_pool, 
 			break;
 		case BIN_TYPE:;
 			{
-				as_exp_entry new_entries[] = {AS_EXP_BIN_TYPE(pred->fixed_str)};
+				as_exp_entry new_entries[] = {AS_EXP_BIN_TYPE(py_fixed_str)};
 				append_array(2);
 			}
 			break;
@@ -594,8 +599,8 @@ as_status add_pred_macros(AerospikeClient * self, as_static_pool * static_pool, 
 					lval1,
 					pred->ctx,
 					lval2,
-					AS_EXP_VAL_INT(lval3),
-					AS_EXP_BIN_LIST(pred->fixed_str) // bin name only
+					AS_EXP_INT(lval3),
+					AS_EXP_BIN_LIST(py_fixed_str) // bin name only
 					)}; //why not convert here?
 				printf("size is: %d\n", sizeof(new_entries) / sizeof(as_exp_entry));
 				append_array(sizeof(new_entries) / sizeof(as_exp_entry));
@@ -606,7 +611,7 @@ as_status add_pred_macros(AerospikeClient * self, as_static_pool * static_pool, 
 			{
 				as_exp_entry new_entries[] = {AS_EXP_LIST_SIZE(
 					pred->ctx,
-					AS_EXP_BIN_LIST(pred->fixed_str)
+					AS_EXP_BIN_LIST(py_fixed_str)
 					)};
 				printf("size is: %d\n", sizeof(new_entries) / sizeof(as_exp_entry));
 				append_array(sizeof(new_entries) / sizeof(as_exp_entry));
@@ -622,7 +627,7 @@ as_status add_pred_macros(AerospikeClient * self, as_static_pool * static_pool, 
 					pred->ctx,
 					lval1,
 					tmp_expr,
-					AS_EXP_BIN_LIST(pred->fixed_str)
+					AS_EXP_BIN_LIST(py_fixed_str)
 					)};
 				printf("size is: %d\n", sizeof(new_entries) / sizeof(as_exp_entry));
 				append_array(sizeof(new_entries) / sizeof(as_exp_entry));
@@ -638,8 +643,8 @@ as_status add_pred_macros(AerospikeClient * self, as_static_pool * static_pool, 
 	return AEROSPIKE_OK;
 }
 
-as_status convert_predexp2_list(AerospikeClient * self, PyObject* py_predexp_list, as_exp** predexp_list, as_error* err) {
-	Py_ssize_t size = PyList_Size(py_predexp_list);
+as_status convert_predexp2_list(AerospikeClient * self, PyObject* py_exp_list, as_exp** exp_list, as_error* err) {
+	Py_ssize_t size = PyList_Size(py_exp_list);
 	if (size <= 0) {
 		return AEROSPIKE_OK;
 	}
@@ -653,7 +658,6 @@ as_status convert_predexp2_list(AerospikeClient * self, PyObject* py_predexp_lis
 	bool ctx_in_use = false;
 	PyObject * py_pred_tuple = NULL;
     PyObject * fixed = NULL;
-	PyObject * py_strings = NULL;
 	as_vector pred_queue;
 	pred_op pred;
 	pred_op * pred_p = NULL;
@@ -662,18 +666,7 @@ as_status convert_predexp2_list(AerospikeClient * self, PyObject* py_predexp_lis
 	as_static_pool static_pool;
 	memset(&static_pool, 0, sizeof(static_pool));
 
-
 	as_vector_inita(&pred_queue, sizeof(pred_op), size);
-
-	pred_p = (pred_op*) calloc(1, sizeof(pred_op));
-	if (pred_p == NULL) {
-		as_error_update(err, AEROSPIKE_ERR, "could not calloc mem for pred_p");
-	}
-
-	py_strings = (PyObject*) calloc(size, sizeof(PyObject)); // iter and count elem?
-	if (py_strings == NULL) {
-		as_error_update(err, AEROSPIKE_ERR, "could not calloc mem for py_strings");
-	}
 
 	c_pred_entries = (as_exp_entry*) calloc((size * MAX_ELEMENTS), sizeof(as_exp_entry)); // iter and count elem?
 	if (c_pred_entries == NULL) {
@@ -688,16 +681,16 @@ as_status convert_predexp2_list(AerospikeClient * self, PyObject* py_predexp_lis
 		// pred.pyval4 = NULL;
 		pred.pyfixed = NULL;
 		pred.pytuple = NULL;
+		pred.fixed_str = NULL;
 
-		if (child_count == 0 && va_flag >= 1) {
+		if (child_count == 0 && va_flag >= 1) { //this handles AND, OR
 			pred.op=END_VA_ARGS;
-			memcpy(pred_p, &pred, sizeof(pred_op)); //TODO error check
-			as_vector_append(&pred_queue, (void*) pred_p);
+			as_vector_append(&pred_queue, (void*) &pred);
 			--va_flag;
 			continue;
 		}
 
-        py_pred_tuple = PyList_GetItem(py_predexp_list, (Py_ssize_t)i);
+        py_pred_tuple = PyList_GetItem(py_exp_list, (Py_ssize_t)i);
 		pred.pytuple = py_pred_tuple;
 		Py_INCREF(py_pred_tuple);
         op = PyInt_AsLong(PyTuple_GetItem(py_pred_tuple, 0));
@@ -734,18 +727,19 @@ as_status convert_predexp2_list(AerospikeClient * self, PyObject* py_predexp_lis
 				pred.fixed_str = NULL;
 			}
 			else if PyUnicode_Check(fixed_arg0){
-				PyObject * py_ustr = PyUnicode_AsUTF8String(fixed_arg0); //TODO this needs py 2 string handling
+				pred.fixed_str = PyUnicode_AsUTF8String(fixed_arg0); //TODO this needs py 2 string handling
 				//py_strings[++str_bottom] = PyBytes_AsString(py_ustr);
 				//pred.fixed_str = PyBytes_AsString(py_ustr);
 				//Py_INCREF(fixed_str);
-				pred.fixed_str = calloc(20, sizeof(char));
-				char * tmp = PyBytes_AsString(py_ustr);
-				memcpy(pred.fixed_str, tmp, strlen(tmp)); //TODO decref the new object from this
+				//pred.fixed_str = calloc(20, sizeof(char)); // free this
+				//char * tmp = PyBytes_AsString(py_ustr);
+				//PY_DECREF(py_ustr);
+				//memcpy(pred.fixed_str, tmp, strlen(tmp)); //TODO decref the new object from this
 				pred.fixed_num = 0; // try storing these ^
-				pred.pyfixed = py_ustr;
+				pred.pyfixed = fixed;
 			}
 			else {
-				pred.pyfixed = fixed_arg0;
+				pred.pyfixed = fixed;
 				pred.fixed_str = NULL;
 				pred.fixed_num = 0;
 			}
@@ -775,8 +769,7 @@ as_status convert_predexp2_list(AerospikeClient * self, PyObject* py_predexp_lis
 		pred.op = op;
 		pred.result_type = result_type;
 		pred.num_children = num_children;
-		memcpy(pred_p, &pred, sizeof(pred_op)); //TODO error check
-		as_vector_append(&pred_queue, (void*) pred_p);
+		as_vector_append(&pred_queue, (void*) &pred);
 		if (va_flag) {
 			child_count += num_children - 1;
 		}
@@ -787,14 +780,18 @@ as_status convert_predexp2_list(AerospikeClient * self, PyObject* py_predexp_lis
 		add_pred_macros(self, &static_pool, SERIALIZER_PYTHON, &c_pred_entries, pred, err);
 	}
 
-	*predexp_list = as_exp_build(c_pred_entries, bottom + 1);
+	*exp_list = as_exp_build(c_pred_entries, bottom + 1);
+
+
+CLEANUP:
 
 	for (int i = 0; i < size; ++i) {
 		printf("here\n");
 		pred_op * pred = (pred_op *) as_vector_get(&pred_queue, (uint32_t)i);
 		printf("got: %d\n", pred->pyval1);
-		Py_XDECREF(pred->pyfixed);
 		Py_XDECREF(pred->pyval1);
+		Py_XDECREF(pred->fixed_str);
+		Py_XDECREF(pred->pyfixed);
 		// Py_XDECREF(pred->pyval2);
 		// Py_XDECREF(pred->pyval3);
 		// Py_XDECREF(pred->pyval4);
@@ -804,8 +801,15 @@ as_status convert_predexp2_list(AerospikeClient * self, PyObject* py_predexp_lis
 		// pred->pyval3 = NULL;
 		// pred->pyval4 = NULL;
 		pred->pyfixed = NULL;
+		pred->fixed_str = NULL;
 		pred->pytuple = NULL;
 	}
+
+	POOL_DESTROY(&static_pool);
+	as_vector_clear(&pred_queue);
+	free(c_pred_entries);
+	bottom = -1;
+
 	// Py_DECREF(fixed); //this needs more decrefs for each fixed
 	// fixed = NULL;
 	// Py_DECREF(py_pred_tuple);

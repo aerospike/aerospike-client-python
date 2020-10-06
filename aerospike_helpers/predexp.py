@@ -224,7 +224,7 @@ class MetaTTL(BaseExpr):
 
 
 class MetaSetName(BaseExpr):
-    op = ExprOp.META_TTL
+    op = ExprOp.META_SET_NAME
     rt = ResultType.STRING
 
 

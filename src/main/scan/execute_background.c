@@ -39,10 +39,8 @@ PyObject * AerospikeScan_ExecuteBackground(AerospikeScan * self, PyObject * args
 	static char * kwlist[] = {"policy", NULL};
 
 	// For converting predexp.
-	as_predexp_list predexp_list;
-	as_predexp_list* predexp_list_p = NULL;
-	as_exp predexp2_list;
-	as_exp* predexp2_list_p = NULL;
+	as_exp exp_list;
+	as_exp* exp_list_p = NULL;
 
 	if (PyArg_ParseTupleAndKeywords(args, kwds, "|O:execute_background", kwlist, &py_policy) == false) {
 		return NULL;
@@ -62,8 +60,7 @@ PyObject * AerospikeScan_ExecuteBackground(AerospikeScan * self, PyObject * args
 
     if (py_policy) {
         if (pyobject_to_policy_scan(self->client, &err, py_policy, &scan_policy, &scan_policy_p,
-            &self->client->as->config.policies.scan, &predexp_list, &predexp_list_p,
-			&predexp2_list, &predexp2_list_p) != AEROSPIKE_OK) {
+            &self->client->as->config.policies.scan, &exp_list, &exp_list_p) != AEROSPIKE_OK) {
                 goto CLEANUP;
             }
     }
@@ -74,12 +71,8 @@ PyObject * AerospikeScan_ExecuteBackground(AerospikeScan * self, PyObject * args
 
 CLEANUP:
 
-	if (predexp_list_p) {
-		as_predexp_list_destroy(&predexp_list);
-	}
-
-	if (predexp2_list_p) {
-		as_exp_destroy(&predexp2_list);
+	if (exp_list_p) {
+		as_exp_destroy(&exp_list);
 	}
 
 	if (err.code != AEROSPIKE_OK) {

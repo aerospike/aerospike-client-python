@@ -754,8 +754,8 @@ PyObject *  AerospikeClient_Operate_Invoke(
 	as_policy_operate *operate_policy_p = NULL;
 
 	// For predexp conversion.
-	as_predexp_list predexp_list;
-	as_predexp_list* predexp_list_p = NULL;
+	as_exp exp_list;
+	as_exp* exp_list_p = NULL;
 
 	as_vector * unicodeStrVector = as_vector_create(sizeof(char *), 128);
 
@@ -764,8 +764,8 @@ PyObject *  AerospikeClient_Operate_Invoke(
 	as_operations_inita(&ops, size);
 
 	if (py_policy) {
-		if(pyobject_to_policy_operate(err, py_policy, &operate_policy, &operate_policy_p,
-				&self->as->config.policies.operate, &predexp_list, &predexp_list_p) != AEROSPIKE_OK) {
+		if(pyobject_to_policy_operate(self, err, py_policy, &operate_policy, &operate_policy_p,
+				&self->as->config.policies.operate, &exp_list, &exp_list_p) != AEROSPIKE_OK) {
 			goto CLEANUP;
 		}
 	}
@@ -814,8 +814,8 @@ CLEANUP:
 		free(as_vector_get_ptr(unicodeStrVector, i));
 	}
 
-	if (predexp_list_p) {
-		as_predexp_list_destroy(&predexp_list);
+	if (exp_list_p) {
+		as_exp_destroy(&exp_list);
 	}
 	
 	as_vector_destroy(unicodeStrVector);
@@ -929,8 +929,8 @@ static PyObject *  AerospikeClient_OperateOrdered_Invoke(
 	as_operations_inita(&ops, ops_list_size);
 
 	// For predexp conversion.
-	as_predexp_list predexp_list;
-	as_predexp_list* predexp_list_p = NULL;
+	as_exp exp_list;
+	as_exp* exp_list_p = NULL;
 
 	/* These are the values which will be returned in a 3 element list */
 	PyObject* py_return_key = NULL;
@@ -940,8 +940,8 @@ static PyObject *  AerospikeClient_OperateOrdered_Invoke(
 	CHECK_CONNECTED(err);
 
 	if (py_policy) {
-		if (pyobject_to_policy_operate(err, py_policy, &operate_policy,
-				&operate_policy_p, &self->as->config.policies.operate, &predexp_list, &predexp_list_p) != AEROSPIKE_OK) {
+		if (pyobject_to_policy_operate(self, err, py_policy, &operate_policy,
+				&operate_policy_p, &self->as->config.policies.operate, &exp_list, &exp_list_p) != AEROSPIKE_OK) {
 			goto CLEANUP;
 		}
 	}
@@ -1026,8 +1026,8 @@ CLEANUP:
 
 	as_vector_destroy(unicodeStrVector);
 
-	if (predexp_list_p) {
-		as_predexp_list_destroy(&predexp_list);
+	if (exp_list_p) {
+		as_exp_destroy(&exp_list);
 	}
 
 	if (rec && operation_succeeded) {

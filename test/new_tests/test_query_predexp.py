@@ -654,7 +654,7 @@ class TestQueryPredexp(object):
         with pytest.raises(e.ParamError):
             self.query.predexp(predexps)
 
-    def test_with_empty_predexp_list(self):
+    def test_with_empty_exp_list(self):
         '''
         Pass an empty list of predicates
         '''
