@@ -654,6 +654,28 @@ as_status add_pred_macros(AerospikeClient * self, as_static_pool * static_pool, 
 				printf("size is: %d\n", sizeof(new_entries) / sizeof(as_exp_entry));
 				append_array(sizeof(new_entries) / sizeof(as_exp_entry));
 			}
+		case OP_LIST_EXP_GET_BY_VALUE_RANGE:;
+			printf("in get_by_val_range\n");
+			{
+				as_exp_entry tmp_expr_b;
+				if (get_exp_val_from_pyval(self, static_pool, serializer_type, &tmp_expr_b, PyDict_GetItemString(pred->pyval1, AS_PY_VAL_BEGIN_KEY), err) != AEROSPIKE_OK) {
+					return err->code;
+				}
+				as_exp_entry tmp_expr_e;
+				if (get_exp_val_from_pyval(self, static_pool, serializer_type, &tmp_expr_e, PyDict_GetItemString(pred->pyval1, AS_PY_VAL_END_KEY), err) != AEROSPIKE_OK) {
+					return err->code;
+				}
+				get_int64_t(err, AS_PY_LIST_RETURN_KEY, pred->pyval1, &lval1);
+				as_exp_entry new_entries[] = {AS_EXP_LIST_GET_BY_VALUE_RANGE(
+					pred->ctx,
+					lval1,
+					tmp_expr_b,
+					tmp_expr_e,
+					AS_EXP_BIN_LIST(py_fixed_str)
+					)};
+				printf("size is: %d\n", sizeof(new_entries) / sizeof(as_exp_entry));
+				append_array(sizeof(new_entries) / sizeof(as_exp_entry));
+			}
 		// case OP_LIST_EXP_APPEND:;
 		// 	{
 		// 		as_exp_entry new_entries[] = {AS_EXP_LIST_APPEND(pred->fixed)};

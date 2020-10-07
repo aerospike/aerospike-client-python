@@ -9,6 +9,8 @@ INDEX_KEY = "index"
 RETURN_TYPE_KEY = "return_type"
 CTX_KEY = "ctx"
 VALUE_KEY = "val"
+VALUE_BEGIN_KEY = "value_begin"
+VALUE_END_KEY = "value_end"
 
 
 class ExprOp():
@@ -233,7 +235,7 @@ class MetaKeyExists(BaseExpr):
     rt = ResultType.BOOLEAN
 
 
-class ListGetByIndex(BaseExpr):
+class ListGetByIndex(BaseExpr): #TODO change return type order
     op = aerospike.OP_LIST_EXP_GET_BY_INDEX
     
     def __init__(self, bin_name: str, bin_type: int, index: int, return_type: int, ctx=None):
@@ -253,11 +255,27 @@ class ListSize(BaseExpr):
             self.fixed[1][CTX_KEY] = ctx
 
 
-class ListGetByValue(BaseExpr):
+class ListGetByValue(BaseExpr): #TODO change return type order
     op = aerospike.OP_LIST_EXP_GET_BY_VALUE
     
     def __init__(self, bin_name: str, value, return_type: int, ctx=None):
         self.fixed = (bin_name, {VALUE_KEY: value, RETURN_TYPE_KEY: return_type})
+
+        if ctx is not None:
+            self.fixed[1][CTX_KEY] = ctx
+
+
+class ListGetByValueRange(BaseExpr):
+    op = aerospike.OP_LIST_EXP_GET_BY_VALUE_RANGE
+    
+    def __init__(self, bin_name: str, return_type: int, value_begin=None, value_end=None, ctx=None):
+        self.fixed = (bin_name, {RETURN_TYPE_KEY: return_type})
+
+        if value_begin is not None:
+            self.fixed[1][VALUE_BEGIN_KEY] = value_begin
+
+        if value_end is not None:
+            self.fixed[1][VALUE_END_KEY] = value_end
 
         if ctx is not None:
             self.fixed[1][CTX_KEY] = ctx
