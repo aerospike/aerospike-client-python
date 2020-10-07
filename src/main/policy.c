@@ -76,9 +76,10 @@ __policy##_init(policy);\
 	if (exp_list) {\
 		PyObject* py_exp_list = PyDict_GetItemString(py_policy, "predexp2");\
 		if (py_exp_list) {\
-			convert_exp_list(self, py_exp_list, &exp_list, err);\
-			policy->base.filter_exp = exp_list;\
-			*exp_list_p = exp_list;\
+			if (convert_exp_list(self, py_exp_list, &exp_list, err) == AEROSPIKE_OK) {\
+				policy->base.filter_exp = exp_list;\
+				*exp_list_p = exp_list;\
+			}\
 		}\
 	}\
 }

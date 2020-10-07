@@ -25,6 +25,7 @@
 
 #include "client.h"
 #include "conversions.h"
+#include "serializer.h"
 #include "exceptions.h"
 #include "policy.h"
 #include "cdt_operation_utils.h"
@@ -250,15 +251,21 @@ as_status get_exp_val_from_pyval(AerospikeClient * self, as_static_pool * static
 	if (!py_obj) {
 		return as_error_update(err, AEROSPIKE_ERR_CLIENT, "value is null");
 	} else if (PyBool_Check(py_obj)) { //TODO
-		return as_error_update(err, AEROSPIKE_ERR, "NOT YET IMPLEMENTED1\n");
-		// as_bytes *bytes;
-		// GET_BYTES_POOL(bytes, static_pool, err);
-		// if (err->code == AEROSPIKE_OK) {
-		// 	if (serialize_based_on_serializer_policy(self, serializer_type,
-		// 		&bytes, py_obj, err) != AEROSPIKE_OK) {
-		// 		return err->code;
-		// 	}
-		// 	*val = (as_val *) bytes;
+		//return as_error_update(err, AEROSPIKE_ERR, "NOT YET IMPLEMENTED1\n");
+		as_bytes *bytes;
+		GET_BYTES_POOL(bytes, static_pool, err);
+		if (err->code == AEROSPIKE_OK) {
+			if (serialize_based_on_serializer_policy(self, serializer_type,
+				&bytes, py_obj, err) != AEROSPIKE_OK) {
+				return err->code;
+			}
+
+			as_exp_entry tmp_entry = AS_EXP_BYTES(bytes->value, bytes->size);
+			*new_entry = tmp_entry;
+		}
+		// {
+		// 	as_exp_entry tmp_entry = AS_EXP_BOOL(PyObject_IsTrue(py_obj));
+		// 	*new_entry = tmp_entry;
 		// }
 	} else if (PyInt_Check(py_obj)) {
 		int64_t i = (int64_t) PyInt_AsLong(py_obj);
@@ -299,10 +306,14 @@ as_status get_exp_val_from_pyval(AerospikeClient * self, as_static_pool * static
 			*new_entry = tmp_entry;
 		}
 	 } else if (PyBytes_Check(py_obj)) { //TODO
-	 	return as_error_update(err, AEROSPIKE_ERR, "NOT YET IMPLEMENTED2\n");
-	 	// uint8_t * b = (uint8_t *) PyBytes_AsString(py_obj);
-	 	// uint32_t b_len  = (uint32_t)  PyBytes_Size(py_obj);
-	 	// *val = (as_val *) as_bytes_new_wrap(b, b_len, false);
+	 	//return as_error_update(err, AEROSPIKE_ERR, "NOT YET IMPLEMENTED2\n");
+	 	uint8_t * b = (uint8_t *) PyBytes_AsString(py_obj);
+	 	uint32_t b_len  = (uint32_t)  PyBytes_Size(py_obj);
+		{
+			as_exp_entry tmp_entry = AS_EXP_BYTES(b, b_len);
+			*new_entry = tmp_entry;
+		}
+	 	//*val = (as_val *) as_bytes_new_wrap(b, b_len, false);
 	} else if (!strcmp(py_obj->ob_type->tp_name, "aerospike.Geospatial")) {
 		PyObject *py_parameter = PyString_FromString("geo_data");
 		PyObject* py_data = PyObject_GenericGetAttr(py_obj, py_parameter);
@@ -326,16 +337,19 @@ as_status get_exp_val_from_pyval(AerospikeClient * self, as_static_pool * static
 			// }
 		}
 	} else if (PyByteArray_Check(py_obj)) { // TODO
-		return as_error_update(err, AEROSPIKE_ERR, "NOT YET IMPLEMENTED4\n");
-		// as_bytes *bytes;
-		// GET_BYTES_POOL(bytes, static_pool, err);
-		// if (err->code == AEROSPIKE_OK) {
-		// 	if (serialize_based_on_serializer_policy(self, serializer_type,
-		// 			&bytes, py_obj, err) != AEROSPIKE_OK) {
-		// 		return err->code;
-		// 	}
-		// 	*val = (as_val *) bytes;
-		// }
+		//return as_error_update(err, AEROSPIKE_ERR, "NOT YET IMPLEMENTED4\n");
+		as_bytes *bytes;
+		GET_BYTES_POOL(bytes, static_pool, err);
+		if (err->code == AEROSPIKE_OK) {
+			if (serialize_based_on_serializer_policy(self, serializer_type,
+					&bytes, py_obj, err) != AEROSPIKE_OK) {
+				return err->code;
+			}
+			{
+				as_exp_entry tmp_entry = AS_EXP_BYTES(bytes->value, bytes->size);
+				*new_entry = tmp_entry;
+			}
+		}
 	} else if (PyList_Check(py_obj)) {
 		as_list * list = NULL;
 		pyobject_to_list(self, err, py_obj, &list, static_pool, serializer_type);
@@ -376,16 +390,20 @@ as_status get_exp_val_from_pyval(AerospikeClient * self, as_static_pool * static
 				*new_entry = tmp_entry;
 			}
 		} else { //TODO
-			return as_error_update(err, AEROSPIKE_ERR, "NOT YET IMPLEMENTED5\n");
-			// as_bytes *bytes;
-			// GET_BYTES_POOL(bytes, static_pool, err);
-			// if (err->code == AEROSPIKE_OK) {
-			// 	if (serialize_based_on_serializer_policy(self, serializer_type,
-			// 		&bytes, py_obj, err) != AEROSPIKE_OK) {
-			// 		return err->code;
-			// 	}
-			// 	*val = (as_val *) bytes;
-			// }
+			//return as_error_update(err, AEROSPIKE_ERR, "NOT YET IMPLEMENTED5\n");
+			as_bytes *bytes;
+			GET_BYTES_POOL(bytes, static_pool, err);
+			if (err->code == AEROSPIKE_OK) {
+				if (serialize_based_on_serializer_policy(self, serializer_type,
+					&bytes, py_obj, err) != AEROSPIKE_OK) {
+					return err->code;
+				}
+
+				{
+					as_exp_entry tmp_entry = AS_EXP_BYTES(bytes->value, bytes->size);
+					*new_entry = tmp_entry;
+				}
+			}
 		}
 	}
 
@@ -462,7 +480,9 @@ as_status add_pred_macros(AerospikeClient * self, as_static_pool * static_pool, 
 		case VAL:;
 			{
 				as_exp_entry tmp_expr;
-				get_exp_val_from_pyval(self, static_pool, serializer_type, &tmp_expr, PyTuple_GetItem(pred->pyfixed, 0), err);
+				if (get_exp_val_from_pyval(self, static_pool, serializer_type, &tmp_expr, PyTuple_GetItem(pred->pyfixed, 0), err) != AEROSPIKE_OK) {
+					return err->code;
+				}
 				as_exp_entry new_entries[] = {tmp_expr};
 				append_array(sizeof(new_entries) / sizeof(as_exp_entry));
 			}
@@ -621,7 +641,9 @@ as_status add_pred_macros(AerospikeClient * self, as_static_pool * static_pool, 
 			printf("in get_by_val\n");
 			{
 				as_exp_entry tmp_expr;
-				get_exp_val_from_pyval(self, static_pool, serializer_type, &tmp_expr, PyDict_GetItemString(pred->pyval1, AS_PY_VAL_KEY), err);
+				if (get_exp_val_from_pyval(self, static_pool, serializer_type, &tmp_expr, PyDict_GetItemString(pred->pyval1, AS_PY_VAL_KEY), err) != AEROSPIKE_OK) {
+					return err->code;
+				}
 				get_int64_t(err, AS_PY_LIST_RETURN_KEY, pred->pyval1, &lval1);
 				as_exp_entry new_entries[] = {AS_EXP_LIST_GET_BY_VALUE(
 					pred->ctx,
@@ -777,7 +799,9 @@ as_status convert_exp_list(AerospikeClient * self, PyObject* py_exp_list, as_exp
 
 	for ( int i = 0; i < size; ++i ) {
 		pred_op * pred = (pred_op *) as_vector_get(&pred_queue, (uint32_t)i);
-		add_pred_macros(self, &static_pool, SERIALIZER_PYTHON, &c_pred_entries, pred, err);
+		if (add_pred_macros(self, &static_pool, SERIALIZER_PYTHON, &c_pred_entries, pred, err) != AEROSPIKE_OK) {
+			return err->code;
+		}
 	}
 
 	*exp_list = as_exp_build(c_pred_entries, bottom + 1);
