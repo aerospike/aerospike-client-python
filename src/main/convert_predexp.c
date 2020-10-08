@@ -22,6 +22,8 @@
 #include <aerospike/as_exp.h>
 #include <aerospike/as_vector.h>
 #include <aerospike/as_geojson.h>
+#include <aerospike/as_msgpack.h>
+#include <aerospike/as_msgpack_ext.h>
 
 #include "client.h"
 #include "conversions.h"
@@ -30,6 +32,7 @@
 #include "policy.h"
 #include "cdt_operation_utils.h"
 #include "geo.h"
+#include "cdt_types.h"
 
 /**********
 * TODO
@@ -84,7 +87,7 @@
 #define END_VA_ARGS 128
 
 // UTILITY CONSTANTS
-#define MAX_ELEMENTS 10 //TODO find largest macro and adjust this val
+#define MAX_ELEMENTS 11 //TODO find largest macro and adjust this val
 #define FIXED_ACTIVE 1
 #define fixed_num_ACTIVE 2
 
@@ -111,40 +114,14 @@ typedef struct {
 	//as_policy_write * policy;// todo add a member for an as_val
 } pred_op;
 
-int bottom = -1;
-
-
-#define CONVERT_VAL_TO_AS_VAL()\
-	if (pyobject_to_astype_write(self, err, py_value, &put_val,\
-		static_pool, SERIALIZER_PYTHON) != AEROSPIKE_OK) {\
-		return err->code;\
-	}
-
-#define CONVERT_KEY_TO_AS_VAL()\
-	if (pyobject_to_astype_write(self, err, py_key, &put_key,\
-			static_pool, SERIALIZER_PYTHON) != AEROSPIKE_OK) {\
-		return err->code;\
-	}
-
-#define CONVERT_PY_CTX_TO_AS_CTX()\
-	if (get_cdt_ctx(self, err, &ctx, py_val, &ctx_in_use,\
-			static_pool, SERIALIZER_PYTHON) != AEROSPIKE_OK) {\
-		return err->code;\
-	}
-
-#define CONVERT_RANGE_TO_AS_VAL()\
-	if (pyobject_to_astype_write(self, err, py_range, &put_range,\
-			static_pool, SERIALIZER_PYTHON) != AEROSPIKE_OK) {\
-		return err->code;\
-	}
+int bottom = 0;
 
 
 // IMP do error checking for memcpy below
 
 #define append_array(ar_size) {\
-	for (int i = 0; i < ar_size; ++i) {\
-		memcpy(&((*expressions)[++bottom]), &new_entries[i], sizeof(as_exp_entry));\
-	}\
+	memcpy(&((*expressions)[bottom]), &new_entries, sizeof(as_exp_entry) * ar_size);\
+	bottom += ar_size;\
 }
 
 #define get_from_py_tuple_at(var, pos) {\
@@ -378,10 +355,16 @@ as_status get_exp_val_from_pyval(AerospikeClient * self, as_static_pool * static
 			as_exp_entry tmp_entry = AS_EXP_NIL();
 			*new_entry = tmp_entry;
 		}
-	// } else if (AS_Matches_Classname(py_obj, AS_CDT_WILDCARD_NAME)) { // NA?
-	// 	*val = (as_val *) as_val_reserve(&as_cmp_wildcard);
-	// } else if (AS_Matches_Classname(py_obj, AS_CDT_INFINITE_NAME)) { // NA?
-	// 	*val = (as_val *) as_val_reserve(&as_cmp_inf);
+	} else if (AS_Matches_Classname(py_obj, AS_CDT_WILDCARD_NAME)) {
+		{
+			as_exp_entry tmp_entry = AS_EXP_VAL((as_val *) as_val_reserve(&as_cmp_wildcard));
+			*new_entry = tmp_entry;
+		}
+	} else if (AS_Matches_Classname(py_obj, AS_CDT_INFINITE_NAME)) {
+		{
+			as_exp_entry tmp_entry = AS_EXP_VAL((as_val *) as_val_reserve(&as_cmp_inf));
+			*new_entry = tmp_entry;
+		}
 	} else {
 		if (PyFloat_Check(py_obj)) {
 			double d = PyFloat_AsDouble(py_obj);
@@ -612,9 +595,18 @@ as_status add_pred_macros(AerospikeClient * self, as_static_pool * static_pool, 
 		case OP_LIST_EXP_GET_BY_INDEX:;
 			printf("in get_by_index\n");
 			{
-				get_int64_t(err, AS_PY_BIN_TYPE, pred->pyval1, &lval1);
-				get_int64_t(err, AS_PY_LIST_RETURN_KEY, pred->pyval1, &lval2);
-				get_int64_t(err, AS_PY_INDEX_KEY, pred->pyval1, &lval3);
+				if (get_int64_t(err, AS_PY_BIN_TYPE, pred->pyval1, &lval1) != AEROSPIKE_OK) {
+					return err->code;
+				}
+
+				if (get_int64_t(err, AS_PY_LIST_RETURN_KEY, pred->pyval1, &lval2) != AEROSPIKE_OK) {
+					return err->code;
+				}
+
+				if (get_int64_t(err, AS_PY_INDEX_KEY, pred->pyval1, &lval3) != AEROSPIKE_OK) {
+					return err->code;
+				}
+
 				as_exp_entry new_entries[] = {AS_EXP_LIST_GET_BY_INDEX(
 					lval1,
 					pred->ctx,
@@ -644,7 +636,11 @@ as_status add_pred_macros(AerospikeClient * self, as_static_pool * static_pool, 
 				if (get_exp_val_from_pyval(self, static_pool, serializer_type, &tmp_expr, PyDict_GetItemString(pred->pyval1, AS_PY_VAL_KEY), err) != AEROSPIKE_OK) {
 					return err->code;
 				}
-				get_int64_t(err, AS_PY_LIST_RETURN_KEY, pred->pyval1, &lval1);
+
+				if (get_int64_t(err, AS_PY_LIST_RETURN_KEY, pred->pyval1, &lval1) != AEROSPIKE_OK) {
+					return err->code;
+				}
+
 				as_exp_entry new_entries[] = {AS_EXP_LIST_GET_BY_VALUE(
 					pred->ctx,
 					lval1,
@@ -654,6 +650,7 @@ as_status add_pred_macros(AerospikeClient * self, as_static_pool * static_pool, 
 				printf("size is: %d\n", sizeof(new_entries) / sizeof(as_exp_entry));
 				append_array(sizeof(new_entries) / sizeof(as_exp_entry));
 			}
+			break;
 		case OP_LIST_EXP_GET_BY_VALUE_RANGE:;
 			printf("in get_by_val_range\n");
 			{
@@ -661,11 +658,16 @@ as_status add_pred_macros(AerospikeClient * self, as_static_pool * static_pool, 
 				if (get_exp_val_from_pyval(self, static_pool, serializer_type, &tmp_expr_b, PyDict_GetItemString(pred->pyval1, AS_PY_VAL_BEGIN_KEY), err) != AEROSPIKE_OK) {
 					return err->code;
 				}
+
 				as_exp_entry tmp_expr_e;
 				if (get_exp_val_from_pyval(self, static_pool, serializer_type, &tmp_expr_e, PyDict_GetItemString(pred->pyval1, AS_PY_VAL_END_KEY), err) != AEROSPIKE_OK) {
 					return err->code;
 				}
-				get_int64_t(err, AS_PY_LIST_RETURN_KEY, pred->pyval1, &lval1);
+
+				if (get_int64_t(err, AS_PY_LIST_RETURN_KEY, pred->pyval1, &lval1) != AEROSPIKE_OK) {
+					return err->code;
+				}
+
 				as_exp_entry new_entries[] = {AS_EXP_LIST_GET_BY_VALUE_RANGE(
 					pred->ctx,
 					lval1,
@@ -676,6 +678,29 @@ as_status add_pred_macros(AerospikeClient * self, as_static_pool * static_pool, 
 				printf("size is: %d\n", sizeof(new_entries) / sizeof(as_exp_entry));
 				append_array(sizeof(new_entries) / sizeof(as_exp_entry));
 			}
+			break;
+		case OP_LIST_EXP_GET_BY_VALUE_LIST:;
+			printf("in get_by_val_list\n");
+			{
+				as_list * tmp_list_p;
+				if (get_val_list(self, err, AS_PY_VAL_KEY, pred->pyval1, &tmp_list_p, static_pool, serializer_type) != AEROSPIKE_OK) {
+					return err->code;
+				}
+
+				if (get_int64_t(err, AS_PY_LIST_RETURN_KEY, pred->pyval1, &lval1) != AEROSPIKE_OK) {
+					return err->code;
+				}
+
+				as_exp_entry new_entries[] = {AS_EXP_LIST_GET_BY_VALUE_LIST(
+					pred->ctx,
+					lval1,
+					AS_EXP_VAL(tmp_list_p),
+					AS_EXP_BIN_LIST(py_fixed_str)
+					)};
+				printf("size is: %d\n", sizeof(new_entries) / sizeof(as_exp_entry));
+				append_array(sizeof(new_entries) / sizeof(as_exp_entry));
+			}
+			break;
 		// case OP_LIST_EXP_APPEND:;
 		// 	{
 		// 		as_exp_entry new_entries[] = {AS_EXP_LIST_APPEND(pred->fixed)};
@@ -688,6 +713,7 @@ as_status add_pred_macros(AerospikeClient * self, as_static_pool * static_pool, 
 }
 
 as_status convert_exp_list(AerospikeClient * self, PyObject* py_exp_list, as_exp** exp_list, as_error* err) {
+	bottom = 0;
 	Py_ssize_t size = PyList_Size(py_exp_list);
 	if (size <= 0) {
 		return AEROSPIKE_OK;
@@ -826,7 +852,7 @@ as_status convert_exp_list(AerospikeClient * self, PyObject* py_exp_list, as_exp
 		}
 	}
 
-	*exp_list = as_exp_build(c_pred_entries, bottom + 1);
+	*exp_list = as_exp_build(c_pred_entries, bottom);
 
 
 CLEANUP:
@@ -854,12 +880,11 @@ CLEANUP:
 	POOL_DESTROY(&static_pool);
 	as_vector_clear(&pred_queue);
 	free(c_pred_entries);
-	bottom = -1;
 
 	// Py_DECREF(fixed); //this needs more decrefs for each fixed
 	// fixed = NULL;
 	// Py_DECREF(py_pred_tuple);
 	// py_pred_tuple = NULL;
 
-	return AEROSPIKE_OK;
+	return AEROSPIKE_OK; //TODO change this to err->code and redirect other error returns to CLEANUP
 }

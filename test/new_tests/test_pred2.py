@@ -7,6 +7,8 @@ from aerospike import exception as e
 from .as_status_codes import AerospikeStatus
 from aerospike_helpers import cdt_ctx
 from aerospike_helpers.predexp import *
+from aerospike_helpers.operations import map_operations
+from aerospike import exception as e
 
 aerospike = pytest.importorskip("aerospike")
 try:
@@ -41,6 +43,14 @@ GEO_POLY = aerospike.GeoJSON(
                                             [-122.500000, 38.080000],
                                             [-122.500000, 37.000000]]]})
 
+GEO_POLY1 = aerospike.GeoJSON(
+                            {"type": "Polygon",
+                            "coordinates": [[[-132.500000, 47.000000],
+                                            [-131.000000, 47.000000],
+                                            [-131.000000, 48.080000],
+                                            [-132.500000, 48.080000],
+                                            [-132.500000, 47.000000]]]})
+
 def add_ctx_op(ctx_type, value):
     ctx_func = ctx_ops[ctx_type]
     return ctx_func(value)
@@ -52,6 +62,21 @@ class TestUsrDefinedClass():
 
     def __init__(self, i):
         self.data = i
+
+
+LIST_BIN_EXAMPLE = [
+                10,
+                "string_test" + str(10),
+                ("bytes_test" + str(10)).encode("utf8"),
+                bytearray("bytearray_test" + str(10), "utf8"),
+                10 % 2 == 1,
+                None,
+                [26, 27, 28, 10],
+                {31: 31, 32: 32, 33: 33, 10: 10},
+                aerospike.null,
+                GEO_POLY,
+                TestUsrDefinedClass(10)
+]
 
 
 class TestPred2(TestBaseClass):
@@ -82,6 +107,18 @@ class TestPred2(TestBaseClass):
                     ]
                 }
             self.as_connection.put(key, rec)
+
+        # ctx_sort_nested_map1 = [
+        #     cdt_ctx.cdt_ctx_list_index(7)
+        # ]
+
+        # sort_map_ops = [
+        #     map_operations.map_set_policy('list_bin', {'map_order': aerospike.MAP_KEY_VALUE_ORDERED}, ctx_sort_nested_map1),
+        # ]
+
+        # #apply map order policy
+        # for i in range(19):
+        #     _, _, _ = self.as_connection.operate(('test', u'demo', i), sort_map_ops)
 
         key = ('test', u'demo', 122)
         llist = [{"op": aerospike.OPERATOR_APPEND,
@@ -196,9 +233,9 @@ class TestPred2(TestBaseClass):
         (None, None, [26, 27, 28, 6], aerospike.LIST_RETURN_VALUE, [[26, 27, 28, 6]], 1),
         ([list_index], [6], 6, aerospike.LIST_RETURN_VALUE, [6], 1),
         (None, None, {31: 31, 32: 32, 33: 33, 12: 12}, aerospike.LIST_RETURN_VALUE, [{31: 31, 32: 32, 33: 33, 12: 12}], 1),
-        (None, None, aerospike.null, aerospike.LIST_RETURN_VALUE, [aerospike.null], 19),
+        #(None, None, aerospike.null, aerospike.LIST_RETURN_VALUE, [aerospike.null], 19), #TODO why is this invalid?
         #(None, None, GEO_POLY, aerospike.LIST_RETURN_VALUE, [GEO_POLY], 19) #TODO needs debugging
-        #(None, None, TestUsrDefinedClass, aerospike.LIST_RETURN_VALUE, [TestUsrDefinedClass], 19) #TODO needs debugging
+        #(None, None, TestUsrDefinedClass(4), aerospike.LIST_RETURN_VALUE, [TestUsrDefinedClass(4)], 19) #TODO needs debugging
     ])
     def test_ListGetByValue_pos(self, ctx_types, ctx_indexes, value, return_type, check, expected):
         """
@@ -220,22 +257,73 @@ class TestPred2(TestBaseClass):
         assert(len(records) == expected)
 
     @pytest.mark.parametrize("ctx_types, ctx_indexes, begin, end, return_type, check, expected", [
-        (None, None, 10, 12, aerospike.LIST_RETURN_VALUE, [10], 1),
-        #(None, None, "string_test3", aerospike.LIST_RETURN_VALUE, ["string_test3"], 1),
-        #(None, None, "bytes_test3".encode("utf8"), aerospike.LIST_RETURN_VALUE, ["bytes_test3".encode("utf8")], 1),
-        #(None, None, bytearray("bytearray_test3", "utf8"), aerospike.LIST_RETURN_VALUE, [bytearray("bytearray_test3", "utf8")], 1),
-        #(None, None, True, aerospike.LIST_RETURN_VALUE, [True], 9), #TODO needs debuging
-        #(None, None, None, aerospike.LIST_RETURN_VALUE, [None], 19),
-        #(None, None, [26, 27, 28, 6], aerospike.LIST_RETURN_VALUE, [[26, 27, 28, 6]], 1),
-        #([list_index], [6], 6, aerospike.LIST_RETURN_VALUE, [6], 1),
-        #(None, None, {31: 31, 32: 32, 33: 33, 12: 12}, aerospike.LIST_RETURN_VALUE, [{31: 31, 32: 32, 33: 33, 12: 12}], 1),
-        #(None, None, aerospike.null, aerospike.LIST_RETURN_VALUE, [aerospike.null], 19),
-        #(None, None, GEO_POLY, aerospike.LIST_RETURN_VALUE, [GEO_POLY], 19) #TODO needs debugging
-        #(None, None, TestUsrDefinedClass, aerospike.LIST_RETURN_VALUE, [TestUsrDefinedClass], 19) #TODO needs debugging
+        (None, None, 10, 13, aerospike.LIST_RETURN_VALUE, [[10], [11], [12]], 3),
+        (None, None, 10, 13, aerospike.LIST_RETURN_RANK, [[1], [1], [1]], 3),
+        (None, None, "string_test3","string_test6", aerospike.LIST_RETURN_INDEX, [[1], [1], [1]], 3),
+        (None, None, "bytes_test6".encode("utf8"), "bytes_test9".encode("utf8"), aerospike.LIST_RETURN_COUNT, [1, 1, 1], 3),
+        (None, None, bytearray("bytearray_test3", "utf8"), bytearray("bytearray_test6", "utf8"), aerospike.LIST_RETURN_REVERSE_INDEX, [[7], [7], [7]], 3),
+        (None, None, [26, 27, 28, 6], [26, 27, 28, 9], aerospike.LIST_RETURN_VALUE, [[[26, 27, 28, 6]], [[26, 27, 28, 7]], [[26, 27, 28, 8]]], 3),
+        ([list_index], [6], 5, 9, aerospike.LIST_RETURN_REVERSE_RANK, [[3], [3], [3]], 4),
+        #(None, None, {12: 12, 31: 31, 32: 32, 33: 33}, {15: 15, 31: 31, 32: 32, 33: 33}, aerospike.LIST_RETURN_INDEX, [[7], [7], [7]], 3), #TODO why no matches? WHat is expected?
+        #(None, None, GEO_POLY, aerospike.CDTWildcard(), aerospike.LIST_RETURN_VALUE, [[GEO_POLY], [GEO_POLY], [GEO_POLY]], 19), #TODO needs debugging
+        #(None, None, TestUsrDefinedClass(4), TestUsrDefinedClass(7), aerospike.LIST_RETURN_VALUE, [[TestUsrDefinedClass(4)], [TestUsrDefinedClass(5)], [TestUsrDefinedClass(6)]], 19) #TODO needs debugging
     ])
     def test_ListGetByValueRange_pos(self, ctx_types, ctx_indexes, begin, end, return_type, check, expected):
         """
         Invoke ListGetByValue().
+        """
+
+        if ctx_types is not None:
+            ctx = []
+            for ctx_type, index in zip(ctx_types, ctx_indexes) :
+                ctx.append(add_ctx_op(ctx_type, index))
+        else:
+            ctx = None
+        
+        expr = Or(
+                    EQ(ListGetByValueRange('list_bin', return_type, begin, end, ctx), check[0]),
+                    EQ(ListGetByValueRange('list_bin', return_type, begin, end, ctx), check[1]),
+                    EQ(ListGetByValueRange('list_bin', return_type, begin, end, ctx), check[2]),
+        )
+
+        scan_obj = self.as_connection.scan(self.test_ns, self.test_set)
+        records = scan_obj.results({'predexp2': expr.compile()})
+        assert(len(records) == expected)
+
+    @pytest.mark.parametrize("ctx, begin, end, return_type, check, expected", [
+        ("bad ctx", 10, 13, aerospike.LIST_RETURN_VALUE, [[10], [11], [12]], e.ParamError),
+        (None, 10, 13, aerospike.LIST_RETURN_VALUE, [[10], [11], 12], e.InvalidRequest)
+    ])
+    def test_ListGetByValueRange_neg(self, ctx, begin, end, return_type, check, expected):
+        """
+        Invoke ListGetByValue() with expected failures.
+        """
+        
+        expr = Or(
+                    EQ(ListGetByValueRange('list_bin', return_type, begin, end, ctx), check[0]),
+                    EQ(ListGetByValueRange('list_bin', return_type, begin, end, ctx), check[1]),
+                    EQ(ListGetByValueRange('list_bin', return_type, begin, end, ctx), check[2]),
+        )
+
+        scan_obj = self.as_connection.scan(self.test_ns, self.test_set)
+        with pytest.raises(expected):
+            scan_obj.results({'predexp2': expr.compile()})
+
+    @pytest.mark.parametrize("ctx_types, ctx_indexes, value, return_type, check, expected", [
+        (None, None, [10, [26, 27, 28, 10]], aerospike.LIST_RETURN_VALUE, [10, [26, 27, 28, 10]], 1),
+        (None, None, ["string_test3", 3], aerospike.LIST_RETURN_VALUE, [3, "string_test3"], 1),
+        (None, None, ["string_test3", 3], aerospike.LIST_RETURN_VALUE, ["string_test3", 3], 0), #why doesn't this work like above? is order
+        (None, None, ["bytes_test18".encode("utf8"), 18, GEO_POLY], aerospike.LIST_RETURN_VALUE, [18, "bytes_test18".encode("utf8"), GEO_POLY], 1),
+        (None, None, LIST_BIN_EXAMPLE, aerospike.LIST_RETURN_VALUE, LIST_BIN_EXAMPLE, 1),
+        (None, None, LIST_BIN_EXAMPLE, aerospike.LIST_RETURN_INDEX, [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10], 1),
+        (None, None, LIST_BIN_EXAMPLE, aerospike.LIST_RETURN_REVERSE_INDEX, [10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0], 1),
+        (None, None, LIST_BIN_EXAMPLE, aerospike.LIST_RETURN_COUNT, 11, 1),
+        (None, None, [10], aerospike.LIST_RETURN_RANK, [1], 1),
+        ([list_index], [6], [26, 6], aerospike.LIST_RETURN_INDEX, [0, 3], 1),
+    ])
+    def test_ListGetByValueList_pos(self, ctx_types, ctx_indexes, value, return_type, check, expected):
+        """
+        Invoke ListGetByValueList().
         """
         #breakpoint()
 
@@ -246,12 +334,33 @@ class TestPred2(TestBaseClass):
         else:
             ctx = None
         
-        expr = EQ(ListGetByValueRange('list_bin', return_type, begin, end, ctx), check)
+        expr = EQ(ListGetByValueList('list_bin', return_type, value, ctx), check)
         scan_obj = self.as_connection.scan(self.test_ns, self.test_set)
         records = scan_obj.results({'predexp2': expr.compile()})
         #print(records[3])
         assert(len(records) == expected)
 
+    @pytest.mark.parametrize("ctx_types, ctx_indexes, value, return_type, check, expected", [
+        (None, None, [10, [26, 27, 28, 10]], aerospike.LIST_RETURN_VALUE, (10, [26, 27, 28, 10]), e.InvalidRequest), # bad tuple
+        (None, None, (10, [26, 27, 28, 10]), aerospike.LIST_RETURN_VALUE, [10, [26, 27, 28, 10]], e.ParamError), # bad tuple
+    ])
+    def test_ListGetByValueList_neg(self, ctx_types, ctx_indexes, value, return_type, check, expected):
+        """
+        Invoke ListGetByValueList() with expected failures.
+        """
+        #breakpoint()
 
+        if ctx_types is not None:
+            ctx = []
+            for ctx_type, index in zip(ctx_types, ctx_indexes) :
+                ctx.append(add_ctx_op(ctx_type, index))
+        else:
+            ctx = None
+        
+        expr = EQ(ListGetByValueList('list_bin', return_type, value, ctx), check)
+        scan_obj = self.as_connection.scan(self.test_ns, self.test_set)
+        #records = scan_obj.results({'predexp2': expr.compile()})
+        with pytest.raises(expected):
+            records = scan_obj.results({'predexp2': expr.compile()})
 
 

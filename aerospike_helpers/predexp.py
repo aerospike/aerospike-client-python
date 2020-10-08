@@ -281,7 +281,24 @@ class ListGetByValueRange(BaseExpr):
             self.fixed[1][CTX_KEY] = ctx
 
 
+class ListGetByValueList(BaseExpr):
+    op = aerospike.OP_LIST_EXP_GET_BY_VALUE_LIST
+    
+    def __init__(self, bin_name: str,  return_type: int, value: list, ctx=None):
+        self.fixed = (bin_name, {VALUE_KEY: value, RETURN_TYPE_KEY: return_type})
 
+        if ctx is not None:
+            self.fixed[1][CTX_KEY] = ctx
+
+
+class ListGetByValueRelRankRangeToEnd(BaseExpr):
+    op = aerospike.OP_LIST_EXP_GET_BY_VALUE_RANK_RANGE_REL
+    
+    def __init__(self, bin_name: str,  return_type: int, value: list, ctx=None):
+        self.fixed = (bin_name, {VALUE_KEY: value, RETURN_TYPE_KEY: return_type})
+
+        if ctx is not None:
+            self.fixed[1][CTX_KEY] = ctx
 
 
 
