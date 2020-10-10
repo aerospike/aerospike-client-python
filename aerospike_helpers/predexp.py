@@ -1,10 +1,12 @@
 from itertools import chain
-from typing import List, Optional, Tuple, Union
+from typing import List, Optional, Tuple, Union, Dict, Any
 import aerospike
 from aerospike_helpers.operations import list_operations as lop
+from aerospike_helpers import cdt_ctx
 
 
 BIN_TYPE_KEY = "bin_type"
+BIN_KEY = "bin"
 INDEX_KEY = "index"
 RETURN_TYPE_KEY = "return_type"
 CTX_KEY = "ctx"
@@ -13,7 +15,7 @@ VALUE_BEGIN_KEY = "value_begin"
 VALUE_END_KEY = "value_end"
 
 
-class ExprOp():
+class ExprOp:
     EQ = 1
     NE = 2
     GT = 3
@@ -42,6 +44,19 @@ class ExprOp():
 
     CALL = 127
 
+    VAL = 128
+    PK = 129
+    INT = 130
+    UINT = 131
+    FLOAT = 132
+    BOOL = 133
+    STR = 134
+    BYTES = 135
+    RAWSTR = 136
+    RTYPE = 137
+
+    NIL = 138
+
     # LIST_SORT = 128
     # LIST_APPEND = 129
     # LIST_APPEND_ITEMS = 130
@@ -54,8 +69,7 @@ class ExprOp():
     # LIST_SORT = 137
 
 
-
-class ResultType():
+class ResultType:
     BOOLEAN = 1
     INTEGER = 2
     STRING = 3
@@ -67,7 +81,7 @@ class ResultType():
     HLL = 9
 
 
-class CallType():
+class CallType:
     CDT = 0
     BIT = 1
     HLL = 2
@@ -75,7 +89,7 @@ class CallType():
     MODIFY = 0x40
 
 
-class AtomExpr():
+class AtomExpr:
     def _op(self):
         raise NotImplementedError
 
@@ -85,7 +99,7 @@ class AtomExpr():
 
 TypeResultType = Optional[int]
 TypeFixedEle = Union[int, float, str, bytes, dict]
-TypeFixed = Optional[Tuple[TypeFixedEle, ...]]
+TypeFixed = Optional[Dict[str, TypeFixedEle]]
 TypeCompiledOp = Tuple[int, TypeResultType, TypeFixed, int]
 TypeExpression = List[TypeCompiledOp]
 
@@ -104,7 +118,14 @@ class BaseExpr(AtomExpr):
         return (self.op, self.rt, self.fixed, len(self.children))
 
     def _vop(self, v) -> TypeCompiledOp:
-        return (0, None, (v,), 0)
+        op_type = 0
+
+        return (
+            0,
+            None,
+            {VALUE_KEY: v},
+            0,
+        )
 
     def compile(self) -> TypeExpression:
         expression: TypeExpression = [self._op()]
@@ -124,6 +145,11 @@ class BaseExpr(AtomExpr):
                 expression.append(self._vop(item))
 
         return expression
+
+
+TypeBinName = Union[BaseExpr, str]
+TypeListValue = Union[Any]
+TypeIndex = Union[BaseExpr, int, aerospike.CDTInfinite]
 
 
 class And(BaseExpr):
@@ -189,12 +215,51 @@ class LE(BaseExpr):
         self.children = (expr0, expr1)
 
 
-class IntBin(BaseExpr):
+class _Bin(BaseExpr):
     op = ExprOp.BIN
+
+    def __init__(self, bin_name: TypeBinName):
+        self.fixed = {BIN_KEY: bin_name}
+
+
+class IntBin(_Bin):
     rt = ResultType.INTEGER
 
-    def __init__(self, name: str):
-        self.fixed = (name,)
+
+class FloatBin(_Bin):
+    rt = ResultType.FLOAT
+
+
+class BlobBin(_Bin):
+    rt = ResultType.BLOB
+
+
+class GeoBin(_Bin):
+    rt = ResultType.GEOJSON
+
+
+class HLLBin(_Bin):
+    rt = ResultType.HLL
+
+
+class MapBin(_Bin):
+    rt = ResultType.MAP
+
+
+class ListBin(_Bin):
+    rt = ResultType.LIST
+
+
+class HLLBin(_Bin):
+    rt = ResultType.HLL
+
+
+class TypeBin(BaseExpr):  # TODO implement
+    op = ExprOp.BIN_TYPE
+    rt = ResultType.INTEGER
+
+    def __init__(self, bin_name: TypeBinName):
+        self.fixed = {BIN_KEY: bin_name}
 
 
 class MetaDigestMod(BaseExpr):
@@ -202,7 +267,7 @@ class MetaDigestMod(BaseExpr):
     rt = ResultType.INTEGER
 
     def __init__(self, mod: int):
-        self.fixed = (mod,)
+        self.fixed = {VALUE_KEY: mod}
 
 
 class MetaDeviceSize(BaseExpr):
@@ -235,47 +300,88 @@ class MetaKeyExists(BaseExpr):
     rt = ResultType.BOOLEAN
 
 
-class ListGetByIndex(BaseExpr): #TODO change return type order
+class MetaKeyStr(BaseExpr):
+    op = ExprOp.REC_KEY
+    rt = ResultType.STRING
+
+
+class MetaKeyInt(BaseExpr):
+    op = ExprOp.REC_KEY
+    rt = ResultType.INTEGER
+
+
+class MetaKeyBlobe(BaseExpr):
+    op = ExprOp.REC_KEY
+    rt = ResultType.BLOB
+
+
+class ListGetByIndex(BaseExpr):
     op = aerospike.OP_LIST_EXP_GET_BY_INDEX
-    
-    def __init__(self, bin_name: str, bin_type: int, index: int, return_type: int, ctx=None):
-        self.fixed = (bin_name, {BIN_TYPE_KEY: bin_type, INDEX_KEY: index, RETURN_TYPE_KEY: return_type})
+
+    def __init__(
+        self,
+        bin_type: int,
+        ctx: cdt_ctx._cdt_ctx,
+        return_type: int,
+        index: TypeIndex,
+        bin_name: TypeBinName,
+    ):
+        self.children = (
+            bin_name
+            if isinstance(bin_name, BaseExpr)
+            else ListBin(bin_name),  # TODO should this be implemented in other places?
+            index,
+        )
+        self.fixed = {BIN_TYPE_KEY: bin_type, RETURN_TYPE_KEY: return_type}
 
         if ctx is not None:
             self.fixed[1][CTX_KEY] = ctx
 
 
-class ListSize(BaseExpr):
+class ListSize(BaseExpr): #TODO do tests
     op = aerospike.OP_LIST_EXP_SIZE
-    
-    def __init__(self, bin_name: str, ctx=None):
-        self.fixed = (bin_name, {})
+
+    def __init__(self, ctx: cdt_ctx._cdt_ctx, bin_name: TypeBinName):
+        self.children = (
+            bin_name if isinstance(bin_name, BaseExpr) else ListBin(bin_name),
+        )
+        self.fixed = {}
 
         if ctx is not None:
             self.fixed[1][CTX_KEY] = ctx
 
 
-class ListGetByValue(BaseExpr): #TODO change return type order
+class ListGetByValue(BaseExpr):
     op = aerospike.OP_LIST_EXP_GET_BY_VALUE
-    
-    def __init__(self, bin_name: str, value, return_type: int, ctx=None):
-        self.fixed = (bin_name, {VALUE_KEY: value, RETURN_TYPE_KEY: return_type})
+
+    def __init__(self, ctx: cdt_ctx._cdt_ctx, value: TypeListValue, return_type: int, bin_name: TypeBinName):
+        self.chidren = (
+            bin_name if isinstance(bin_name, BaseExpr) else ListBin(bin_name),
+            value,
+        )
+        self.fixed = {RETURN_TYPE_KEY: return_type}
 
         if ctx is not None:
             self.fixed[1][CTX_KEY] = ctx
 
 
-class ListGetByValueRange(BaseExpr):
+class ListGetByValueRange(BaseExpr):  # TODO how to mark if bin name is not expression?
     op = aerospike.OP_LIST_EXP_GET_BY_VALUE_RANGE
-    
-    def __init__(self, bin_name: str, return_type: int, value_begin=None, value_end=None, ctx=None):
-        self.fixed = (bin_name, {RETURN_TYPE_KEY: return_type})
 
-        if value_begin is not None:
-            self.fixed[1][VALUE_BEGIN_KEY] = value_begin
-
-        if value_end is not None:
-            self.fixed[1][VALUE_END_KEY] = value_end
+    def __init__(
+        self,
+        ctx: cdt_ctx._cdt_ctx,
+        return_type: int,
+        value_begin: TypeListValue,
+        value_end: TypeListValue,
+        bin_name: TypeBinName
+    ):
+        self.children = (
+            bin_name if isinstance(bin_name, BaseExpr) else ListBin(bin_name),
+            value_begin,
+            value_end,
+        )
+        self.fixed = {RETURN_TYPE_KEY: return_type}
 
         if ctx is not None:
             self.fixed[1][CTX_KEY] = ctx
@@ -283,23 +389,30 @@ class ListGetByValueRange(BaseExpr):
 
 class ListGetByValueList(BaseExpr):
     op = aerospike.OP_LIST_EXP_GET_BY_VALUE_LIST
-    
-    def __init__(self, bin_name: str,  return_type: int, value: list, ctx=None):
-        self.fixed = (bin_name, {VALUE_KEY: value, RETURN_TYPE_KEY: return_type})
+
+    def __init__(self, ctx: cdt_ctx._cdt_ctx, return_type: int, value: Union[BaseExpr, list], bin_name: TypeBinName):
+        self.children = (
+            bin_name if isinstance(bin_name, BaseExpr) else ListBin(bin_name),
+            value,
+        )
+        self.fixed = {RETURN_TYPE_KEY: return_type}
 
         if ctx is not None:
             self.fixed[1][CTX_KEY] = ctx
 
 
 class ListGetByValueRelRankRangeToEnd(BaseExpr):
-    op = aerospike.OP_LIST_EXP_GET_BY_VALUE_RANK_RANGE_REL
-    
-    def __init__(self, bin_name: str,  return_type: int, value: list, ctx=None):
-        self.fixed = (bin_name, {VALUE_KEY: value, RETURN_TYPE_KEY: return_type})
+    op = aerospike.OP_LIST_EXP_GET_BY_VALUE_RANK_RANGE_REL_TO_END
+
+    def __init__(self, ctx: cdt_ctx._cdt_ctx, return_type: int, value: Union[BaseExpr, list], bin_name: TypeBinName):
+        self.children = (
+            bin_name if isinstance(bin_name, BaseExpr) else ListBin(bin_name),
+            value,
+        )
+        self.fixed = {RETURN_TYPE_KEY: return_type}
 
         if ctx is not None:
             self.fixed[1][CTX_KEY] = ctx
-
 
 
 # def example():

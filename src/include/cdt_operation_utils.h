@@ -31,7 +31,7 @@
 #define AS_PY_INDEX_KEY "index"
 #define AS_PY_COUNT_KEY "count"
 #define AS_PY_RANK_KEY "rank"
-#define AS_PY_BIN_TYPE "bin_type"
+#define AS_PY_BIN_TYPE_KEY "bin_type"
 #define AS_PY_LIST_RETURN_KEY "return_type"
 #define AS_PY_LIST_ORDER "list_order"
 #define AS_PY_LIST_SORT_FLAGS "sort_flags"

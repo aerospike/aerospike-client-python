@@ -1963,7 +1963,7 @@ as_status get_cdt_ctx(AerospikeClient* self, as_error* err, as_cdt_ctx* cdt_ctx,
     PyObject* op_dict, bool* ctx_in_use, as_static_pool* static_pool, int serializer_type)
 {
     PyObject* py_ctx = PyDict_GetItemString(op_dict, CTX_KEY);
-    int int_val = 0;
+    long int_val = 0;
     as_val* val = NULL;
 
     if (!py_ctx) {
@@ -1980,19 +1980,19 @@ as_status get_cdt_ctx(AerospikeClient* self, as_error* err, as_cdt_ctx* cdt_ctx,
             PyObject* id_temp = PyObject_GetAttrString(py_val, "id");
             if (PyErr_Occurred()) {
 				as_cdt_ctx_destroy(cdt_ctx);
-                return as_error_update(err, AEROSPIKE_ERR_PARAM, "Failed to convert %s", CTX_KEY);
+                return as_error_update(err, AEROSPIKE_ERR_PARAM, "Failed to convert %s, id", CTX_KEY);
             }
 
             PyObject* value_temp = PyObject_GetAttrString(py_val, "value");
             if (PyErr_Occurred()) {
 				as_cdt_ctx_destroy(cdt_ctx);
-                return as_error_update(err, AEROSPIKE_ERR_PARAM, "Failed to convert %s", CTX_KEY);
+                return as_error_update(err, AEROSPIKE_ERR_PARAM, "Failed to convert %s, value", CTX_KEY);
             }
 
             uint64_t item_type = PyLong_AsUnsignedLong(id_temp);
             if (PyErr_Occurred()) {
 				as_cdt_ctx_destroy(cdt_ctx);
-                return as_error_update(err, AEROSPIKE_ERR_PARAM, "Failed to convert %s", CTX_KEY);
+                return as_error_update(err, AEROSPIKE_ERR_PARAM, "Failed to convert %s, id to uint64_t", CTX_KEY);
             }
 
             // add an as_cdt_ctx with value to cdt_ctx
@@ -2000,7 +2000,7 @@ as_status get_cdt_ctx(AerospikeClient* self, as_error* err, as_cdt_ctx* cdt_ctx,
                 int_val = PyLong_AsLong(value_temp);
                 if (PyErr_Occurred()) {
 					as_cdt_ctx_destroy(cdt_ctx);
-                    return as_error_update(err, AEROSPIKE_ERR_PARAM, "Failed to convert %s", CTX_KEY);
+                    return as_error_update(err, AEROSPIKE_ERR_PARAM, "Failed to convert %s, value to long", CTX_KEY);
                 }
                 switch(item_type) {
                     case AS_CDT_CTX_LIST_INDEX:
@@ -2021,7 +2021,7 @@ as_status get_cdt_ctx(AerospikeClient* self, as_error* err, as_cdt_ctx* cdt_ctx,
                 }
             } else {
                 if (pyobject_to_val(self, err, value_temp, &val, static_pool, serializer_type) != AEROSPIKE_OK) {
-                    return as_error_update(err, AEROSPIKE_ERR_PARAM, "Failed to convert %s", CTX_KEY);
+                    return as_error_update(err, AEROSPIKE_ERR_PARAM, "Failed to convert %s, value to as_val", CTX_KEY);
                 }
                 switch(item_type) {
                     case AS_CDT_CTX_LIST_VALUE:
