@@ -119,6 +119,9 @@ PyObject * AerospikeScan_Foreach(AerospikeScan * self, PyObject * args, PyObject
 	as_exp exp_list;
 	as_exp* exp_list_p = NULL;
 
+	as_static_pool static_pool;
+	memset(&static_pool, 0, sizeof(static_pool));
+
 	// Python Function Keyword Arguments
 	static char * kwlist[] = {"callback", "policy", "options", "nodename", NULL};
 
@@ -150,7 +153,7 @@ PyObject * AerospikeScan_Foreach(AerospikeScan * self, PyObject * args, PyObject
 	}
 
 	// Convert python policy object to as_policy_exists
-	pyobject_to_policy_scan(self->client, &err, py_policy, &scan_policy, &scan_policy_p,
+	pyobject_to_policy_scan(self->client, &static_pool, &err, py_policy, &scan_policy, &scan_policy_p,
 			&self->client->as->config.policies.scan, &exp_list, &exp_list_p);
 	if (err.code != AEROSPIKE_OK) {
 		goto CLEANUP;

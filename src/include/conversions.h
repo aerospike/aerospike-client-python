@@ -108,4 +108,4 @@ as_status
 get_cdt_ctx(AerospikeClient* self, as_error* err, as_cdt_ctx* cdt_ctx, PyObject* op_dict, bool* ctx_in_use, as_static_pool* static_pool, int serializer_type);
 
 as_status 
-convert_exp_list(AerospikeClient * self, PyObject* py_exp_list, as_exp** exp_list, as_error* err);
+convert_exp_list(AerospikeClient * self, as_static_pool * static_pool, PyObject* py_exp_list, as_exp** exp_list, as_error* err);

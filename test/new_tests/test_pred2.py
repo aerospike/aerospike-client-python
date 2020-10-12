@@ -228,18 +228,18 @@ class TestPred2(TestBaseClass):
 # Oct 06 2020 12:08:36 GMT: WARNING (scan): (scan.c:752) basic scan job failed predexp processing
 
     @pytest.mark.parametrize("ctx_types, ctx_indexes, value, return_type, check, expected", [
-        (None, None, 10, aerospike.LIST_RETURN_VALUE, [10], 1),
-        (None, None, "string_test3", aerospike.LIST_RETURN_VALUE, ["string_test3"], 1),
-        (None, None, "bytes_test3".encode("utf8"), aerospike.LIST_RETURN_VALUE, ["bytes_test3".encode("utf8")], 1),
-        (None, None, bytearray("bytearray_test3", "utf8"), aerospike.LIST_RETURN_VALUE, [bytearray("bytearray_test3", "utf8")], 1),
-        (None, None, True, aerospike.LIST_RETURN_VALUE, [True], 9),
-        (None, None, None, aerospike.LIST_RETURN_VALUE, [None], 19),
-        (None, None, [26, 27, 28, 6], aerospike.LIST_RETURN_VALUE, [[26, 27, 28, 6]], 1),
+        # (None, None, 10, aerospike.LIST_RETURN_VALUE, [10], 1),
+        # (None, None, "string_test3", aerospike.LIST_RETURN_VALUE, ["string_test3"], 1),
+        # (None, None, "bytes_test3".encode("utf8"), aerospike.LIST_RETURN_VALUE, ["bytes_test3".encode("utf8")], 1),
+        # (None, None, bytearray("bytearray_test3", "utf8"), aerospike.LIST_RETURN_VALUE, [bytearray("bytearray_test3", "utf8")], 1),
+        # (None, None, True, aerospike.LIST_RETURN_VALUE, [True], 9),
+        # (None, None, None, aerospike.LIST_RETURN_VALUE, [None], 19),
+        # (None, None, [26, 27, 28, 6], aerospike.LIST_RETURN_VALUE, [[26, 27, 28, 6]], 1),
         ([list_index], [3], 6, aerospike.LIST_RETURN_VALUE, [6], 1),
-        (None, None, {31: 31, 32: 32, 33: 33, 12: 12}, aerospike.LIST_RETURN_VALUE, [{31: 31, 32: 32, 33: 33, 12: 12}], 1),
-        (None, None, aerospike.null, aerospike.LIST_RETURN_VALUE, [aerospike.null], 19),
-        (None, None, GEO_POLY, aerospike.LIST_RETURN_VALUE, [GEO_POLY], 19),
-        (None, None, TestUsrDefinedClass(4), aerospike.LIST_RETURN_VALUE, [TestUsrDefinedClass(4)], 1)
+        # (None, None, {31: 31, 32: 32, 33: 33, 12: 12}, aerospike.LIST_RETURN_VALUE, [{31: 31, 32: 32, 33: 33, 12: 12}], 1),
+        # (None, None, aerospike.null, aerospike.LIST_RETURN_VALUE, [aerospike.null], 19),
+        # (None, None, GEO_POLY, aerospike.LIST_RETURN_VALUE, [GEO_POLY], 19),
+        # (None, None, TestUsrDefinedClass(4), aerospike.LIST_RETURN_VALUE, [TestUsrDefinedClass(4)], 1)
     ])
     def test_ListGetByValue_pos(self, ctx_types, ctx_indexes, value, return_type, check, expected):
         """
@@ -256,6 +256,7 @@ class TestPred2(TestBaseClass):
         
         expr = EQ(ListGetByValue(ctx, value, return_type, 'list_bin'), check)
         scan_obj = self.as_connection.scan(self.test_ns, self.test_set)
+        print('\nhi*************************', expr.compile(), '\n')
         records = scan_obj.results({'predexp2': expr.compile()})
         #print(records[3])
         assert(len(records) == expected)
@@ -336,13 +337,13 @@ class TestPred2(TestBaseClass):
 
         if ctx_types is not None:
             ctx = []
-            for ctx_type, index in zip(ctx_types, ctx_indexes) :
+            for ctx_type, index in zip(ctx_types, ctx_indexes):
                 ctx.append(add_ctx_op(ctx_type, index))
         else:
             ctx = None
         
         expr = EQ(ListGetByValueList(ctx, return_type, value, 'list_bin'), check)
-        print('hi', expr.compile())
+        print('\nhi*************************', expr.compile(), '\n')
         scan_obj = self.as_connection.scan(self.test_ns, self.test_set)
         records = scan_obj.results({'predexp2': expr.compile()})
         #print(records[3])

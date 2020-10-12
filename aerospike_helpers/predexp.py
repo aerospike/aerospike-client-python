@@ -327,15 +327,13 @@ class ListGetByIndex(BaseExpr):
         bin_name: TypeBinName,
     ):
         self.children = (
-            bin_name
-            if isinstance(bin_name, BaseExpr)
-            else ListBin(bin_name),  # TODO should this be implemented in other places?
             index,
+            bin_name if isinstance(bin_name, BaseExpr) else ListBin(bin_name)  # TODO should this be implemented in other places?
         )
         self.fixed = {BIN_TYPE_KEY: bin_type, RETURN_TYPE_KEY: return_type}
 
         if ctx is not None:
-            self.fixed[1][CTX_KEY] = ctx
+            self.fixed[CTX_KEY] = ctx
 
 
 class ListSize(BaseExpr): #TODO do tests
@@ -348,21 +346,21 @@ class ListSize(BaseExpr): #TODO do tests
         self.fixed = {}
 
         if ctx is not None:
-            self.fixed[1][CTX_KEY] = ctx
+            self.fixed[CTX_KEY] = ctx
 
 
 class ListGetByValue(BaseExpr):
     op = aerospike.OP_LIST_EXP_GET_BY_VALUE
 
     def __init__(self, ctx: cdt_ctx._cdt_ctx, value: TypeListValue, return_type: int, bin_name: TypeBinName):
-        self.chidren = (
-            bin_name if isinstance(bin_name, BaseExpr) else ListBin(bin_name),
+        self.children = (
             value,
+            bin_name if isinstance(bin_name, BaseExpr) else ListBin(bin_name)
         )
         self.fixed = {RETURN_TYPE_KEY: return_type}
 
         if ctx is not None:
-            self.fixed[1][CTX_KEY] = ctx
+            self.fixed[CTX_KEY] = ctx
 
 
 class ListGetByValueRange(BaseExpr):  # TODO how to mark if bin name is not expression?
@@ -377,14 +375,14 @@ class ListGetByValueRange(BaseExpr):  # TODO how to mark if bin name is not expr
         bin_name: TypeBinName
     ):
         self.children = (
-            bin_name if isinstance(bin_name, BaseExpr) else ListBin(bin_name),
             value_begin,
             value_end,
+            bin_name if isinstance(bin_name, BaseExpr) else ListBin(bin_name)
         )
         self.fixed = {RETURN_TYPE_KEY: return_type}
 
         if ctx is not None:
-            self.fixed[1][CTX_KEY] = ctx
+            self.fixed[CTX_KEY] = ctx
 
 
 class ListGetByValueList(BaseExpr):
@@ -392,13 +390,13 @@ class ListGetByValueList(BaseExpr):
 
     def __init__(self, ctx: cdt_ctx._cdt_ctx, return_type: int, value: Union[BaseExpr, list], bin_name: TypeBinName):
         self.children = (
-            bin_name if isinstance(bin_name, BaseExpr) else ListBin(bin_name),
             value,
+            bin_name if isinstance(bin_name, BaseExpr) else ListBin(bin_name)
         )
         self.fixed = {RETURN_TYPE_KEY: return_type}
 
         if ctx is not None:
-            self.fixed[1][CTX_KEY] = ctx
+            self.fixed[CTX_KEY] = ctx
 
 
 class ListGetByValueRelRankRangeToEnd(BaseExpr):
@@ -406,13 +404,13 @@ class ListGetByValueRelRankRangeToEnd(BaseExpr):
 
     def __init__(self, ctx: cdt_ctx._cdt_ctx, return_type: int, value: Union[BaseExpr, list], bin_name: TypeBinName):
         self.children = (
-            bin_name if isinstance(bin_name, BaseExpr) else ListBin(bin_name),
             value,
+            bin_name if isinstance(bin_name, BaseExpr) else ListBin(bin_name)
         )
         self.fixed = {RETURN_TYPE_KEY: return_type}
 
         if ctx is not None:
-            self.fixed[1][CTX_KEY] = ctx
+            self.fixed[CTX_KEY] = ctx
 
 
 # def example():

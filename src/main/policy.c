@@ -76,7 +76,7 @@ __policy##_init(policy);\
 	if (exp_list) {\
 		PyObject* py_exp_list = PyDict_GetItemString(py_policy, "predexp2");\
 		if (py_exp_list) {\
-			if (convert_exp_list(self, py_exp_list, &exp_list, err) == AEROSPIKE_OK) {\
+			if (convert_exp_list(self, static_pool, py_exp_list, &exp_list, err) == AEROSPIKE_OK) {\
 				policy->base.filter_exp = exp_list;\
 				*exp_list_p = exp_list;\
 			}\
@@ -590,6 +590,7 @@ as_status pyobject_to_policy_apply(AerospikeClient * self, as_error * err, PyObj
 	POLICY_SET_FIELD(durable_delete, bool);
 
 	// C client 4.6.7 new policy
+	as_static_pool * static_pool = NULL; //HACK add as param
 	POLICY_SET_PREDEXP_BASE_FIELD();
 
 	// Update the policy
@@ -659,6 +660,7 @@ as_status pyobject_to_policy_query(AerospikeClient * self, as_error * err, PyObj
 	POLICY_SET_FIELD(fail_on_cluster_change, bool);
 
 	// C client 4.6.7 new policy
+	as_static_pool * static_pool = NULL; //HACK add as param
 	POLICY_SET_PREDEXP_BASE_FIELD();
 
 	// Update the policy
@@ -704,6 +706,7 @@ as_status pyobject_to_policy_read(AerospikeClient * self, as_error * err, PyObje
 	POLICY_SET_FIELD(read_mode_sc, as_policy_read_mode_sc);
 
 	// C client 4.6.7 new policy
+	as_static_pool * static_pool = NULL; //HACK add as param
 	POLICY_SET_PREDEXP_BASE_FIELD();
 
 	// Update the policy
@@ -749,6 +752,7 @@ as_status pyobject_to_policy_remove(AerospikeClient * self, as_error * err, PyOb
 	POLICY_SET_FIELD(durable_delete, bool);
 
 	// C client 4.6.7 new policy
+	as_static_pool * static_pool = NULL; //HACK add as param
 	POLICY_SET_PREDEXP_BASE_FIELD();
 
 	// Update the policy
@@ -763,7 +767,7 @@ as_status pyobject_to_policy_remove(AerospikeClient * self, as_error * err, PyOb
  * We assume that the error object and the policy object are already allocated
  * and initialized (although, we do reset the error object here).
  */
-as_status pyobject_to_policy_scan(AerospikeClient * self, as_error * err, PyObject * py_policy,
+as_status pyobject_to_policy_scan(AerospikeClient * self, as_static_pool * static_pool, as_error * err, PyObject * py_policy,
 		as_policy_scan * policy,
 		as_policy_scan ** policy_p,
 		as_policy_scan * config_scan_policy,
@@ -837,6 +841,7 @@ as_status pyobject_to_policy_write(AerospikeClient * self, as_error * err, PyObj
 	POLICY_SET_FIELD(compression_threshold, uint32_t);
 
 	// C client 4.6.7 new policy
+	as_static_pool * static_pool = NULL; //HACK add as param
 	POLICY_SET_PREDEXP_BASE_FIELD();
 
 	// Update the policy
@@ -886,6 +891,7 @@ as_status pyobject_to_policy_operate(AerospikeClient * self, as_error * err, PyO
 	POLICY_SET_FIELD(read_mode_sc, as_policy_read_mode_sc);
 
 	// C client 4.6.7 new policy
+	as_static_pool * static_pool = NULL; //HACK add as param
 	POLICY_SET_PREDEXP_BASE_FIELD();
 
 	// Update the policy
@@ -933,6 +939,7 @@ as_status pyobject_to_policy_batch(AerospikeClient * self, as_error * err, PyObj
 	POLICY_SET_FIELD(read_mode_sc, as_policy_read_mode_sc);
 
 	// C client 4.6.7 new policy
+	as_static_pool * static_pool = NULL; //HACK add as param
 	POLICY_SET_PREDEXP_BASE_FIELD();
 
 	// Update the policy
