@@ -301,9 +301,8 @@ as_status add_pred_macros(AerospikeClient * self, as_static_pool * static_pool, 
 	// char* bin_name = NULL;
 	int64_t lval1 = 0;
 	int64_t lval2 = 0;
-	int64_t lval3 = 0;
-	int64_t lval4 = 0;
-	bool ctx_in_use = false; //TODO fix cdt scope or heap allocate
+	//int64_t lval3 = 0;
+	//int64_t lval4 = 0;
 	char * bin_name = NULL;
 
 
@@ -328,7 +327,6 @@ as_status add_pred_macros(AerospikeClient * self, as_static_pool * static_pool, 
 		case VAL:;
 			{
 				as_exp_entry tmp_expr;
-				as_val * tmp_val;
 				if (get_exp_val_from_pyval(self, static_pool, serializer_type, &tmp_expr, PyDict_GetItemString(pred->pydict, AS_PY_VAL_KEY), err) != AEROSPIKE_OK) {
 					return err->code;
 				}
@@ -504,7 +502,7 @@ as_status add_pred_macros(AerospikeClient * self, as_static_pool * static_pool, 
 					AS_EXP_INT(lval2)
 				};
 
-				printf("size is: %d\n", sizeof(new_entries) / sizeof(as_exp_entry));
+				printf("size is: %lud\n", sizeof(new_entries) / sizeof(as_exp_entry));
 				append_array(sizeof(new_entries) / sizeof(as_exp_entry));
 			}
 			break;
@@ -516,7 +514,7 @@ as_status add_pred_macros(AerospikeClient * self, as_static_pool * static_pool, 
 					_AS_EXP_LIST_START(pred->ctx, AS_CDT_OP_LIST_SIZE, 0),
 				};
 
-				printf("size is: %d\n", sizeof(new_entries) / sizeof(as_exp_entry));
+				printf("size is: %lud\n", sizeof(new_entries) / sizeof(as_exp_entry));
 				append_array(sizeof(new_entries) / sizeof(as_exp_entry));
 			}
 			break;
@@ -533,7 +531,7 @@ as_status add_pred_macros(AerospikeClient * self, as_static_pool * static_pool, 
 					AS_EXP_INT(lval1),
 				};
 
-				printf("size is: %d\n", sizeof(new_entries) / sizeof(as_exp_entry));
+				printf("size is: %lud\n", sizeof(new_entries) / sizeof(as_exp_entry));
 				append_array(sizeof(new_entries) / sizeof(as_exp_entry));
 			}
 			break;
@@ -550,7 +548,7 @@ as_status add_pred_macros(AerospikeClient * self, as_static_pool * static_pool, 
 					AS_EXP_INT(lval1)
 				};
 
-				printf("size is: %d\n", sizeof(new_entries) / sizeof(as_exp_entry));
+				printf("size is: %lud\n", sizeof(new_entries) / sizeof(as_exp_entry));
 				append_array(sizeof(new_entries) / sizeof(as_exp_entry));
 			}
 			break;
@@ -566,44 +564,126 @@ as_status add_pred_macros(AerospikeClient * self, as_static_pool * static_pool, 
 					_AS_EXP_LIST_START(pred->ctx, AS_CDT_OP_LIST_GET_BY_VALUE_LIST, 2),
 					AS_EXP_INT(lval1)
 				};
-				printf("size is: %d\n", sizeof(new_entries) / sizeof(as_exp_entry));
+				printf("size is: %lud\n", sizeof(new_entries) / sizeof(as_exp_entry));
 				append_array(sizeof(new_entries) / sizeof(as_exp_entry));
 			}
 			break;
-		// case OP_LIST_EXP_GET_BY_VALUE_RANK_RANGE_REL_TO_END:;
-		// 	printf("in get_by_val_range\n");
-		// 	{
-		// 		as_exp_entry tmp_expr_b;
-		// 		if (get_exp_val_from_pyval(self, static_pool, serializer_type, &tmp_expr_b, PyDict_GetItemString(pred->pyval1, AS_PY_VAL_BEGIN_KEY), err) != AEROSPIKE_OK) {
-		// 			return err->code;
-		// 		}
+		case OP_LIST_EXP_GET_BY_VALUE_RANK_RANGE_REL_TO_END:;
+			printf("in get_by_val_rank_range_rel_to_end\n");
+			{
+				if (get_int64_t(err, AS_PY_LIST_RETURN_KEY, pred->pydict, &lval1) != AEROSPIKE_OK) {
+					return err->code;
+				}
 
-		// 		as_exp_entry tmp_expr_e;
-		// 		if (get_exp_val_from_pyval(self, static_pool, serializer_type, &tmp_expr_e, PyDict_GetItemString(pred->pyval1, AS_PY_VAL_END_KEY), err) != AEROSPIKE_OK) {
-		// 			return err->code;
-		// 		}
+				as_exp_entry new_entries[] = {
+					_AS_EXP_CDT_LIST_READ(AS_EXP_TYPE_AUTO, lval1, true),
+					_AS_EXP_LIST_START(pred->ctx, AS_CDT_OP_LIST_GET_BY_VALUE_REL_RANK_RANGE, 3),
+					AS_EXP_INT(lval1)
+				};
+				printf("size is: %lud\n", sizeof(new_entries) / sizeof(as_exp_entry));
+				append_array(sizeof(new_entries) / sizeof(as_exp_entry));
+			}
+			break;
+		case OP_LIST_EXP_GET_BY_VALUE_RANK_RANGE_REL:;
+			printf("in get_by_val_rank_range_rel\n");
+			{
+				if (get_int64_t(err, AS_PY_LIST_RETURN_KEY, pred->pydict, &lval1) != AEROSPIKE_OK) {
+					return err->code;
+				}
 
-		// 		if (get_int64_t(err, AS_PY_LIST_RETURN_KEY, pred->pyval1, &lval1) != AEROSPIKE_OK) {
-		// 			return err->code;
-		// 		}
+				as_exp_entry new_entries[] = {
+					_AS_EXP_CDT_LIST_READ(AS_EXP_TYPE_AUTO, lval1, true),
+					_AS_EXP_LIST_START(pred->ctx, AS_CDT_OP_LIST_GET_BY_VALUE_REL_RANK_RANGE, 4),
+					AS_EXP_INT(lval1)
+				};
+				printf("size is: %lud\n", sizeof(new_entries) / sizeof(as_exp_entry));
+				append_array(sizeof(new_entries) / sizeof(as_exp_entry));
+			}
+			break;
+		case OP_LIST_EXP_GET_BY_INDEX_RANGE_TO_END:;
+			printf("in get_by_index_range_to_end\n");
+			{
+				if (get_int64_t(err, AS_PY_LIST_RETURN_KEY, pred->pydict, &lval1) != AEROSPIKE_OK) {
+					return err->code;
+				}
 
-		// 		as_exp_entry new_entries[] = {AS_EXP_LIST_GET_BY_VALUE_RANGE(
-		// 			pred->ctx,
-		// 			lval1,
-		// 			tmp_expr_b,
-		// 			tmp_expr_e,
-		// 			AS_EXP_BIN_LIST(py_fixed_str)
-		// 			)};
-		// 		printf("size is: %d\n", sizeof(new_entries) / sizeof(as_exp_entry));
-		// 		append_array(sizeof(new_entries) / sizeof(as_exp_entry));
-		// 	}
-		// 	break;
-		// case OP_LIST_EXP_APPEND:;
-		// 	{
-		// 		as_exp_entry new_entries[] = {AS_EXP_LIST_APPEND(pred->fixed)};
-		// 		append_array(2);
-		// 	}
-		// 	break;
+				as_exp_entry new_entries[] = {
+					_AS_EXP_CDT_LIST_READ(AS_EXP_TYPE_AUTO, lval1, true),
+					_AS_EXP_LIST_START(pred->ctx, AS_CDT_OP_LIST_GET_BY_INDEX_RANGE, 2),
+					AS_EXP_INT(lval1),
+				};
+				printf("size is: %lud\n", sizeof(new_entries) / sizeof(as_exp_entry));
+				append_array(sizeof(new_entries) / sizeof(as_exp_entry));
+			}
+			break;
+		case OP_LIST_EXP_GET_BY_INDEX_RANGE:;
+			printf("in get_by_index_range\n");
+			{
+				if (get_int64_t(err, AS_PY_LIST_RETURN_KEY, pred->pydict, &lval1) != AEROSPIKE_OK) {
+					return err->code;
+				}
+
+				as_exp_entry new_entries[] = {
+					_AS_EXP_CDT_LIST_READ(AS_EXP_TYPE_AUTO, lval1, true),
+					_AS_EXP_LIST_START(pred->ctx, AS_CDT_OP_LIST_GET_BY_INDEX_RANGE, 3),
+					AS_EXP_INT(lval1),
+				};
+				printf("size is: %lud\n", sizeof(new_entries) / sizeof(as_exp_entry));
+				append_array(sizeof(new_entries) / sizeof(as_exp_entry));
+			}
+			break;
+		case OP_LIST_EXP_GET_BY_RANK:;
+			printf("in get_by_rank\n");
+			{
+				if (get_int64_t(err, AS_PY_LIST_RETURN_KEY, pred->pydict, &lval1) != AEROSPIKE_OK) {
+					return err->code;
+				}
+
+				if (get_int64_t(err, AS_PY_BIN_TYPE_KEY, pred->pydict, &lval2) != AEROSPIKE_OK) {
+					return err->code;
+				}
+
+				as_exp_entry new_entries[] = {
+					_AS_EXP_CDT_LIST_READ(lval2, lval1, true),
+					_AS_EXP_LIST_START(pred->ctx, AS_CDT_OP_LIST_GET_BY_RANK, 2),
+					AS_EXP_INT(lval1),
+				};
+				printf("size is: %lud\n", sizeof(new_entries) / sizeof(as_exp_entry));
+				append_array(sizeof(new_entries) / sizeof(as_exp_entry));
+			}
+			break;
+		case OP_LIST_EXP_GET_BY_RANK_RANGE_TO_END:;
+			printf("in get_by_rank_range_to_end\n");
+			{
+				if (get_int64_t(err, AS_PY_LIST_RETURN_KEY, pred->pydict, &lval1) != AEROSPIKE_OK) {
+					return err->code;
+				}
+
+				as_exp_entry new_entries[] = {
+					_AS_EXP_CDT_LIST_READ(AS_EXP_TYPE_AUTO, lval1, true),
+					_AS_EXP_LIST_START(pred->ctx, AS_CDT_OP_LIST_GET_BY_RANK_RANGE, 2),
+					AS_EXP_INT(lval1),
+				};
+				printf("size is: %lud\n", sizeof(new_entries) / sizeof(as_exp_entry));
+				append_array(sizeof(new_entries) / sizeof(as_exp_entry));
+			}
+			break;
+		case OP_LIST_EXP_GET_BY_RANK_RANGE:;
+			printf("in get_by_rank_range\n");
+			{
+				if (get_int64_t(err, AS_PY_LIST_RETURN_KEY, pred->pydict, &lval1) != AEROSPIKE_OK) {
+					return err->code;
+				}
+
+				as_exp_entry new_entries[] = {
+					_AS_EXP_CDT_LIST_READ(AS_EXP_TYPE_AUTO, lval1, true),
+					_AS_EXP_LIST_START(pred->ctx, AS_CDT_OP_LIST_GET_BY_RANK_RANGE, 3),
+					AS_EXP_INT(lval1),
+				};
+				printf("size is: %lud\n", sizeof(new_entries) / sizeof(as_exp_entry));
+				append_array(sizeof(new_entries) / sizeof(as_exp_entry));
+			}
+			break;
 	}		
 
 	return AEROSPIKE_OK;
@@ -654,7 +734,7 @@ as_status convert_exp_list(AerospikeClient * self, as_static_pool * static_pool,
 		pred.pytuple = py_pred_tuple;
 		//Py_INCREF(pred.pytuple);
         op = PyInt_AsLong(PyTuple_GetItem(py_pred_tuple, 0));
-		printf("processed pred op: %d\n", op);
+		printf("processed pred op: %ld\n", op);
 
         result_type = PyInt_AsLong(PyTuple_GetItem(py_pred_tuple, 1));
 		if (result_type == -1 && PyErr_Occurred()) {

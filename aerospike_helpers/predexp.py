@@ -14,6 +14,8 @@ VALUE_KEY = "val"
 VALUE_BEGIN_KEY = "value_begin"
 VALUE_END_KEY = "value_end"
 
+# TODO change list ops to send call op type and their vtype,
+# that way the switch statement in convert_predexp.c can be reduced to 1 template
 
 class ExprOp:
     EQ = 1
@@ -151,6 +153,8 @@ TypeBinName = Union[BaseExpr, str]
 TypeListValue = Union[Any]
 TypeIndex = Union[BaseExpr, int, aerospike.CDTInfinite]
 TypeCDT = Union[None, List[cdt_ctx._cdt_ctx]]
+TypeRank = Union[BaseExpr, int, aerospike.CDTInfinite]
+TypeCount = Union[BaseExpr, int, aerospike.CDTInfinite]
 
 
 class And(BaseExpr):
@@ -316,27 +320,6 @@ class MetaKeyBlobe(BaseExpr):
     rt = ResultType.BLOB
 
 
-class ListGetByIndex(BaseExpr):
-    op = aerospike.OP_LIST_EXP_GET_BY_INDEX
-
-    def __init__(
-        self,
-        bin_type: int,
-        ctx: TypeCDT,
-        return_type: int,
-        index: TypeIndex,
-        bin_name: TypeBinName,
-    ):
-        self.children = (
-            index,
-            bin_name if isinstance(bin_name, BaseExpr) else ListBin(bin_name)  # TODO should this be implemented in other places?
-        )
-        self.fixed = {BIN_TYPE_KEY: bin_type, RETURN_TYPE_KEY: return_type}
-
-        if ctx is not None:
-            self.fixed[CTX_KEY] = ctx
-
-
 class ListSize(BaseExpr): #TODO do tests
     op = aerospike.OP_LIST_EXP_SIZE
 
@@ -403,9 +386,125 @@ class ListGetByValueList(BaseExpr):
 class ListGetByValueRelRankRangeToEnd(BaseExpr):
     op = aerospike.OP_LIST_EXP_GET_BY_VALUE_RANK_RANGE_REL_TO_END
 
-    def __init__(self, ctx: TypeCDT, return_type: int, value: Union[BaseExpr, list], bin_name: TypeBinName):
+    def __init__(self, ctx: TypeCDT, return_type: int, value: Union[BaseExpr, list], rank: TypeRank, bin_name: TypeBinName):
         self.children = (
             value,
+            rank,
+            bin_name if isinstance(bin_name, BaseExpr) else ListBin(bin_name)
+        )
+        self.fixed = {RETURN_TYPE_KEY: return_type}
+
+        if ctx is not None:
+            self.fixed[CTX_KEY] = ctx
+
+
+class ListGetByValueRelRankRange(BaseExpr):
+    op = aerospike.OP_LIST_EXP_GET_BY_VALUE_RANK_RANGE_REL
+
+    def __init__(self, ctx: TypeCDT, return_type: int, value: Union[BaseExpr, list], rank: TypeRank, count: TypeCount, bin_name: TypeBinName):
+        self.children = (
+            value,
+            rank,
+            count,
+            bin_name if isinstance(bin_name, BaseExpr) else ListBin(bin_name)
+        )
+        self.fixed = {RETURN_TYPE_KEY: return_type}
+
+        if ctx is not None:
+            self.fixed[CTX_KEY] = ctx
+
+
+class ListGetByIndex(BaseExpr):
+    op = aerospike.OP_LIST_EXP_GET_BY_INDEX
+
+    def __init__(
+        self,
+        val_type: int,
+        ctx: TypeCDT,
+        return_type: int,
+        index: TypeIndex,
+        bin_name: TypeBinName,
+    ):
+        self.children = (
+            index,
+            bin_name if isinstance(bin_name, BaseExpr) else ListBin(bin_name)  # TODO should this be implemented in other places?
+        )
+        self.fixed = {BIN_TYPE_KEY: val_type, RETURN_TYPE_KEY: return_type}
+
+        if ctx is not None:
+            self.fixed[CTX_KEY] = ctx
+
+
+class ListGetByIndexRelRankRangeToEnd(BaseExpr):
+    op = aerospike.OP_LIST_EXP_GET_BY_INDEX_RANGE_TO_END
+
+    def __init__(self, ctx: TypeCDT, return_type: int, index: TypeIndex, bin_name: TypeBinName):
+        self.children = (
+            index,
+            bin_name if isinstance(bin_name, BaseExpr) else ListBin(bin_name)
+        )
+        self.fixed = {RETURN_TYPE_KEY: return_type}
+
+        if ctx is not None:
+            self.fixed[CTX_KEY] = ctx
+
+
+class ListGetByIndexRelRankRange(BaseExpr):
+    op = aerospike.OP_LIST_EXP_GET_BY_INDEX_RANGE
+
+    def __init__(self, ctx: TypeCDT, return_type: int, index: TypeIndex, count: TypeCount, bin_name: TypeBinName):
+        self.children = (
+            index,
+            bin_name if isinstance(bin_name, BaseExpr) else ListBin(bin_name)
+        )
+        self.fixed = {RETURN_TYPE_KEY: return_type}
+
+        if ctx is not None:
+            self.fixed[CTX_KEY] = ctx
+
+
+class ListGetByRank(BaseExpr):
+    op = aerospike.OP_LIST_EXP_GET_BY_RANK
+
+    def __init__(
+        self,
+        ctx: TypeCDT,
+        return_type: int,
+        val_type: int,
+        rank: TypeRank,
+        bin_name: TypeBinName,
+    ):
+        self.children = (
+            rank,
+            bin_name if isinstance(bin_name, BaseExpr) else ListBin(bin_name)
+        )
+        self.fixed = {BIN_TYPE_KEY: val_type, RETURN_TYPE_KEY: return_type}
+
+        if ctx is not None:
+            self.fixed[CTX_KEY] = ctx
+
+
+class ListGetByRankRangeToEnd(BaseExpr):
+    op = aerospike.OP_LIST_EXP_GET_BY_RANK_RANGE_TO_END
+
+    def __init__(self, ctx: TypeCDT, return_type: int, rank: TypeRank, bin_name: TypeBinName):
+        self.children = (
+            rank,
+            bin_name if isinstance(bin_name, BaseExpr) else ListBin(bin_name)
+        )
+        self.fixed = {RETURN_TYPE_KEY: return_type}
+
+        if ctx is not None:
+            self.fixed[CTX_KEY] = ctx
+
+
+class ListGetByRankRange(BaseExpr):
+    op = aerospike.OP_LIST_EXP_GET_BY_RANK_RANGE
+
+    def __init__(self, ctx: TypeCDT, return_type: int, rank: TypeRank, count: TypeCount, bin_name: TypeBinName):
+        self.children = (
+            rank,
+            count,
             bin_name if isinstance(bin_name, BaseExpr) else ListBin(bin_name)
         )
         self.fixed = {RETURN_TYPE_KEY: return_type}

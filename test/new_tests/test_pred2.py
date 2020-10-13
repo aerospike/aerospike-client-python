@@ -64,18 +64,19 @@ class TestUsrDefinedClass():
     def __init__(self, i):
         self.data = i
 
-
+# arranged by order
 LIST_BIN_EXAMPLE = [
                 None,
+                aerospike.null,
+                10 % 2 == 1,
                 10,
                 "string_test" + str(10),
                 [26, 27, 28, 10],
                 {32: 32, 33: 33, 10: 10, 31: 31},
                 bytearray("bytearray_test" + str(10), "utf8"),
                 ("bytes_test" + str(10)).encode("utf8"),
-                10 % 2 == 1,
-                aerospike.null,
                 TestUsrDefinedClass(10),
+                float(10),
                 GEO_POLY
 ]
 
@@ -93,7 +94,7 @@ class TestPred2(TestBaseClass):
                     'age': i,
                     'balance': i * 10,
                     'key': i, 'alt_name': 'name%s' % (str(i)),
-                    'list_bin' : [
+                    'list_bin': [
                         None,
                         i,
                         "string_test" + str(i),
@@ -104,7 +105,54 @@ class TestPred2(TestBaseClass):
                         i % 2 == 1,
                         aerospike.null,
                         TestUsrDefinedClass(i),
+                        float(i),
                         GEO_POLY
+                    ],
+                    'ilist_bin': [
+                        1,
+                        2,
+                        6,
+                    ],
+                    'slist_bin': [
+                        'b',
+                        'd',
+                        'f',
+                        'h'
+                    ],
+                    'llist_bin': [
+                        [1, 2],
+                        [1, 3]
+                    ],
+                    'mlist_bin': [
+                        {1: 1, 2: 2},
+                        {1: 1, 3: 3}
+                    ],
+                    'bylist_bin': [
+                        'b'.encode("utf8"),
+                        'd'.encode("utf8"),
+                        'f'.encode("utf8"),
+                        'h'.encode("utf8")
+                    ],
+                    'bolist_bin': [
+                        True,
+                        False
+                    ],
+                    'nlist_bin': [
+                        None,
+                        aerospike.null
+                    ],
+                    'bllist_bin': [
+                        TestUsrDefinedClass(1),
+                        TestUsrDefinedClass(3)
+                    ],
+                    'flist_bin': [
+                        1.0,
+                        2.0,
+                        6.0
+                    ],
+                    'glist_bin': [
+                        GEO_POLY,
+                        GEO_POLY1
                     ]
                 }
             self.as_connection.put(key, rec)
@@ -331,7 +379,6 @@ class TestPred2(TestBaseClass):
             ctx = None
         
         expr = EQ(ListGetByValueList(ctx, return_type, value, 'list_bin'), check)
-        print('\nhi*************************', expr.compile(), '\n')
         scan_obj = self.as_connection.scan(self.test_ns, self.test_set)
         records = scan_obj.results({'predexp2': expr.compile()})
         #print(records[3])
@@ -360,32 +407,118 @@ class TestPred2(TestBaseClass):
         with pytest.raises(expected):
             records = scan_obj.results({'predexp2': expr.compile()})
 
-    # @pytest.mark.parametrize("ctx_types, ctx_indexes, value, return_type, check, expected", [
-    #     (None, None, [10, [26, 27, 28, 10]], aerospike.LIST_RETURN_VALUE, [10, [26, 27, 28, 10]], 1),
-    #     (None, None, ["string_test3", 3], aerospike.LIST_RETURN_VALUE, [3, "string_test3"], 1),
-    #     (None, None, ["string_test3", 3], aerospike.LIST_RETURN_VALUE, ["string_test3", 3], 0), #why doesn't this work like above? is order
-    #     (None, None, ["bytes_test18".encode("utf8"), 18, GEO_POLY], aerospike.LIST_RETURN_VALUE, [18, "bytes_test18".encode("utf8"), GEO_POLY], 1),
-    #     (None, None, LIST_BIN_EXAMPLE, aerospike.LIST_RETURN_VALUE, LIST_BIN_EXAMPLE, 1),
-    #     (None, None, LIST_BIN_EXAMPLE, aerospike.LIST_RETURN_INDEX, [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10], 1),
-    #     (None, None, LIST_BIN_EXAMPLE, aerospike.LIST_RETURN_REVERSE_INDEX, [10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0], 1),
-    #     (None, None, LIST_BIN_EXAMPLE, aerospike.LIST_RETURN_COUNT, 11, 1),
-    #     (None, None, [10], aerospike.LIST_RETURN_RANK, [1], 1),
-    #     ([list_index], [6], [26, 6], aerospike.LIST_RETURN_INDEX, [0, 3], 1),
-    # ])
-    # def test_ListGetByValueRelRankRangeToEnd_pos(self, ctx_types, ctx_indexes, value, return_type, check, expected):
-    #     """
-    #     Invoke ListGetByValueRelRankRangeToEnd().
-    #     """
+    @pytest.mark.parametrize("ctx_types, ctx_indexes, value, rank, return_type, check, expected", [ #TODO more tests
+        ([list_index], [3], 26, 0, aerospike.LIST_RETURN_COUNT, 3, 19),
+        ([list_index], [3], 10, 1, aerospike.LIST_RETURN_COUNT, 3, 9),
+        ([list_index], [3], 10, 2, aerospike.LIST_RETURN_VALUE, [27, 28], 9),
+        (None, None, "string_test10", 0,  aerospike.LIST_RETURN_COUNT, 9, 1),
+        # (None, None, ["bytes_test18".encode("utf8"), 18, GEO_POLY], aerospike.LIST_RETURN_VALUE, [18, "bytes_test18".encode("utf8"), GEO_POLY], 1),
+        # (None, None, LIST_BIN_EXAMPLE, aerospike.LIST_RETURN_VALUE, LIST_BIN_EXAMPLE, 1),
+        # (None, None, LIST_BIN_EXAMPLE, aerospike.LIST_RETURN_INDEX, [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10], 1),
+        # (None, None, LIST_BIN_EXAMPLE, aerospike.LIST_RETURN_REVERSE_INDEX, [10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0], 1),
+        # (None, None, LIST_BIN_EXAMPLE, aerospike.LIST_RETURN_COUNT, 11, 1),
+        # (None, None, [10], aerospike.LIST_RETURN_RANK, [1], 1),
+        # ([list_index], [6], [26, 6], aerospike.LIST_RETURN_INDEX, [0, 3], 1),
+    ])
+    def test_ListGetByValueRelRankRangeToEnd_pos(self, ctx_types, ctx_indexes, value, rank, return_type, check, expected):
+        """
+        Invoke ListGetByValueRelRankRangeToEnd().
+        """
 
-    #     if ctx_types is not None:
-    #         ctx = []
-    #         for ctx_type, index in zip(ctx_types, ctx_indexes) :
-    #             ctx.append(add_ctx_op(ctx_type, index))
-    #     else:
-    #         ctx = None
+        if ctx_types is not None:
+            ctx = []
+            for ctx_type, index in zip(ctx_types, ctx_indexes) :
+                ctx.append(add_ctx_op(ctx_type, index))
+        else:
+            ctx = None
         
-    #     expr = EQ(ListGetByValueList('list_bin', return_type, value, ctx), check)
-    #     scan_obj = self.as_connection.scan(self.test_ns, self.test_set)
-    #     records = scan_obj.results({'predexp2': expr.compile()})
-    #     #print(records[3])
-    #     assert(len(records) == expected)
+        expr = EQ(ListGetByValueRelRankRangeToEnd(ctx, return_type, value, rank, 'list_bin'), check)
+        scan_obj = self.as_connection.scan(self.test_ns, self.test_set)
+        records = scan_obj.results({'predexp2': expr.compile()})
+        #print(records)
+        for record in records:
+            print(record[2])
+        assert(len(records) == expected)
+
+    @pytest.mark.parametrize("ctx_types, ctx_indexes, value, rank, return_type, expected", [
+        ([list_index], [3], 26, "bad_rank", "bad_return_type", e.ParamError)
+    ])
+    def test_ListGetByValueRelRankRangeToEnd_neg(self, ctx_types, ctx_indexes, value, rank, return_type, expected):
+        """
+        Invoke ListGetByValueRelRankRangeToEnd() with expected failures.
+        """
+        #breakpoint()
+
+        if ctx_types is not None:
+            ctx = []
+            for ctx_type, index in zip(ctx_types, ctx_indexes) :
+                ctx.append(add_ctx_op(ctx_type, index))
+        else:
+            ctx = None
+        
+        expr = ListGetByValueRelRankRangeToEnd(ctx, return_type, value, rank, 'list_bin')
+        scan_obj = self.as_connection.scan(self.test_ns, self.test_set)
+        with pytest.raises(expected):
+            records = scan_obj.results({'predexp2': expr.compile()})
+
+
+    @pytest.mark.parametrize("ctx_types, ctx_indexes, value, rank, count, return_type, check, expected", [ #TODO more tests
+        ([list_index], [3], 26, 0, 3, aerospike.LIST_RETURN_COUNT, 3, 19),
+        ([list_index], [3], 26, 0, 2, aerospike.LIST_RETURN_VALUE, [26, 27], 19),
+        (None, None, "string_test10", 0, 1, aerospike.LIST_RETURN_INDEX, [3], 1),
+        # (None, None, ["bytes_test18".encode("utf8"), 18, GEO_POLY], aerospike.LIST_RETURN_VALUE, [18, "bytes_test18".encode("utf8"), GEO_POLY], 1),
+        # (None, None, LIST_BIN_EXAMPLE, aerospike.LIST_RETURN_VALUE, LIST_BIN_EXAMPLE, 1),
+        # (None, None, LIST_BIN_EXAMPLE, aerospike.LIST_RETURN_INDEX, [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10], 1),
+        # (None, None, LIST_BIN_EXAMPLE, aerospike.LIST_RETURN_REVERSE_INDEX, [10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0], 1),
+        # (None, None, LIST_BIN_EXAMPLE, aerospike.LIST_RETURN_COUNT, 11, 1),
+        # (None, None, [10], aerospike.LIST_RETURN_RANK, [1], 1),
+        # ([list_index], [6], [26, 6], aerospike.LIST_RETURN_INDEX, [0, 3], 1),
+    ])
+    def test_ListGetByValueRelRankRange_pos(self, ctx_types, ctx_indexes, value, rank, count, return_type, check, expected):
+        """
+        Invoke ListGetByValueRelRankRange().
+        """
+
+        if ctx_types is not None:
+            ctx = []
+            for ctx_type, index in zip(ctx_types, ctx_indexes) :
+                ctx.append(add_ctx_op(ctx_type, index))
+        else:
+            ctx = None
+        
+        expr = EQ(ListGetByValueRelRankRange(ctx, return_type, value, rank, count, 'list_bin'), check)
+        scan_obj = self.as_connection.scan(self.test_ns, self.test_set)
+        records = scan_obj.results({'predexp2': expr.compile()})
+        assert(len(records) == expected)
+
+    @pytest.mark.parametrize("bin, expected", [
+        ([list_index], [3], 26, 0, 3, aerospike.LIST_RETURN_COUNT, 3, 19),
+        ([list_index], [3], 26, 0, 2, aerospike.LIST_RETURN_VALUE, [26, 27], 19),
+        (None, None, "string_test10", 0, 1, aerospike.LIST_RETURN_INDEX, [3], 1),
+        # (None, None, ["bytes_test18".encode("utf8"), 18, GEO_POLY], aerospike.LIST_RETURN_VALUE, [18, "bytes_test18".encode("utf8"), GEO_POLY], 1),
+        # (None, None, LIST_BIN_EXAMPLE, aerospike.LIST_RETURN_VALUE, LIST_BIN_EXAMPLE, 1),
+        # (None, None, LIST_BIN_EXAMPLE, aerospike.LIST_RETURN_INDEX, [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10], 1),
+        # (None, None, LIST_BIN_EXAMPLE, aerospike.LIST_RETURN_REVERSE_INDEX, [10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0], 1),
+        # (None, None, LIST_BIN_EXAMPLE, aerospike.LIST_RETURN_COUNT, 11, 1),
+        # (None, None, [10], aerospike.LIST_RETURN_RANK, [1], 1),
+        # ([list_index], [6], [26, 6], aerospike.LIST_RETURN_INDEX, [0, 3], 1),
+    ])
+    def test_ListReadOps_pos(self, bin, expected):
+        """
+        Invoke various list read expressions with many value types.
+        """
+        
+        expr = And(
+            EQ(
+                ListGetByValueRelRankRange(None, aerospike.LIST_RETURN_COUNT, 
+                    ListGetByIndex(ResultType.INTEGER, None, aerospike.LIST_RETURN_VALUE, 1, "ilist_bin"), 1, aerospike.CDTInfinite, "ilist_bin"),
+                2)
+        )
+        
+        
+        scan_obj = self.as_connection.scan(self.test_ns, self.test_set)
+        records = scan_obj.results({'predexp2': expr.compile()})
+        #print(records)
+        for record in records:
+            print(record[2])
+        assert(len(records) == expected)
