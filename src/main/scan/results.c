@@ -151,6 +151,8 @@ CLEANUP:
 		as_exp_destroy(exp_list_p);
 	}
 
+	POOL_DESTROY(&static_pool);
+
 	Py_XDECREF(py_ustr);
 
 	if (err.code != AEROSPIKE_OK) {

@@ -150,6 +150,7 @@ class BaseExpr(AtomExpr):
 TypeBinName = Union[BaseExpr, str]
 TypeListValue = Union[Any]
 TypeIndex = Union[BaseExpr, int, aerospike.CDTInfinite]
+TypeCDT = Union[None, List[cdt_ctx._cdt_ctx]]
 
 
 class And(BaseExpr):
@@ -321,7 +322,7 @@ class ListGetByIndex(BaseExpr):
     def __init__(
         self,
         bin_type: int,
-        ctx: cdt_ctx._cdt_ctx,
+        ctx: TypeCDT,
         return_type: int,
         index: TypeIndex,
         bin_name: TypeBinName,
@@ -339,7 +340,7 @@ class ListGetByIndex(BaseExpr):
 class ListSize(BaseExpr): #TODO do tests
     op = aerospike.OP_LIST_EXP_SIZE
 
-    def __init__(self, ctx: cdt_ctx._cdt_ctx, bin_name: TypeBinName):
+    def __init__(self, ctx: TypeCDT, bin_name: TypeBinName):
         self.children = (
             bin_name if isinstance(bin_name, BaseExpr) else ListBin(bin_name),
         )
@@ -352,7 +353,7 @@ class ListSize(BaseExpr): #TODO do tests
 class ListGetByValue(BaseExpr):
     op = aerospike.OP_LIST_EXP_GET_BY_VALUE
 
-    def __init__(self, ctx: cdt_ctx._cdt_ctx, value: TypeListValue, return_type: int, bin_name: TypeBinName):
+    def __init__(self, ctx: TypeCDT, value: TypeListValue, return_type: int, bin_name: TypeBinName):
         self.children = (
             value,
             bin_name if isinstance(bin_name, BaseExpr) else ListBin(bin_name)
@@ -368,7 +369,7 @@ class ListGetByValueRange(BaseExpr):  # TODO how to mark if bin name is not expr
 
     def __init__(
         self,
-        ctx: cdt_ctx._cdt_ctx,
+        ctx: TypeCDT,
         return_type: int,
         value_begin: TypeListValue,
         value_end: TypeListValue,
@@ -388,7 +389,7 @@ class ListGetByValueRange(BaseExpr):  # TODO how to mark if bin name is not expr
 class ListGetByValueList(BaseExpr):
     op = aerospike.OP_LIST_EXP_GET_BY_VALUE_LIST
 
-    def __init__(self, ctx: cdt_ctx._cdt_ctx, return_type: int, value: Union[BaseExpr, list], bin_name: TypeBinName):
+    def __init__(self, ctx: TypeCDT, return_type: int, value: Union[BaseExpr, list], bin_name: TypeBinName):
         self.children = (
             value,
             bin_name if isinstance(bin_name, BaseExpr) else ListBin(bin_name)
@@ -402,7 +403,7 @@ class ListGetByValueList(BaseExpr):
 class ListGetByValueRelRankRangeToEnd(BaseExpr):
     op = aerospike.OP_LIST_EXP_GET_BY_VALUE_RANK_RANGE_REL_TO_END
 
-    def __init__(self, ctx: cdt_ctx._cdt_ctx, return_type: int, value: Union[BaseExpr, list], bin_name: TypeBinName):
+    def __init__(self, ctx: TypeCDT, return_type: int, value: Union[BaseExpr, list], bin_name: TypeBinName):
         self.children = (
             value,
             bin_name if isinstance(bin_name, BaseExpr) else ListBin(bin_name)

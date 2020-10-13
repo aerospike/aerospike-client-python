@@ -109,38 +109,26 @@ class TestPred2(TestBaseClass):
                 }
             self.as_connection.put(key, rec)
 
-        ctx_sort_nested_map1 = [
-            cdt_ctx.cdt_ctx_list_index(4)
-        ]
+        # ctx_sort_nested_map1 = [
+        #     cdt_ctx.cdt_ctx_list_index(4)
+        # ]
 
-        sort_ops = [
-            list_operations.list_set_order('list_bin', aerospike.LIST_ORDERED),
-            #map_operations.map_set_policy('list_bin', {'map_order': aerospike.MAP_KEY_ORDERED}, ctx_sort_nested_map1),
-        ]
+        # sort_ops = [
+        #     list_operations.list_set_order('list_bin', aerospike.LIST_ORDERED),
+        #     map_operations.map_set_policy('list_bin', {'map_order': aerospike.MAP_KEY_ORDERED}, ctx_sort_nested_map1),
+        # ]
 
-        #apply map order policy
-        for i in range(19):
-            _, _, _ = self.as_connection.operate(('test', u'demo', i), sort_ops)
+        # #apply map order policy
+        # for i in range(19):
+        #     _, _, _ = self.as_connection.operate(('test', u'demo', i), sort_ops)
         
         _, _, rec = self.as_connection.get(('test', u'demo', 10))
         print(rec)
-
-        key = ('test', u'demo', 122)
-        llist = [{"op": aerospike.OPERATOR_APPEND,
-                  "bin": bytearray("asd;adk\0kj", "utf-8"),
-                  "val": u"john"}]
-        # Creates a record with the key 122, with one bytearray key.
-        self.bytearray_bin = bytearray("asd;adk\0kj", "utf-8")
-        as_connection.operate(key, llist)
-        self.record_count = 20
 
         def teardown():
             for i in range(19):
                 key = ('test', u'demo', i)
                 as_connection.remove(key)
-
-            key = ('test', 'demo', 122)
-            as_connection.remove(key)
 
         request.addfinalizer(teardown)
 
@@ -170,8 +158,8 @@ class TestPred2(TestBaseClass):
             NE(MetaTTL(), 0),
             MetaKeyExists(), #needs debugging
             EQ(MetaSetName(), 'demo'),
-            EQ(ListGetByIndex('list_bin', ResultType.INTEGER, 0, aerospike.LIST_RETURN_VALUE), 5),
-            GE(ListSize('list_bin'), 2),
+            EQ(ListGetByIndex(ResultType.INTEGER, None, aerospike.LIST_RETURN_VALUE, 0, 'list_bin'), 5),
+            GE(ListSize(None, 'list_bin'), 2),
             
         )
 
@@ -192,15 +180,15 @@ class TestPred2(TestBaseClass):
         (None, None, ResultType.STRING, 2, aerospike.LIST_RETURN_VALUE, "string_test3", 1),
         (None, None, ResultType.BLOB, 6, aerospike.LIST_RETURN_VALUE, "bytes_test3".encode("utf8"), 1),
         (None, None, ResultType.BLOB, 5, aerospike.LIST_RETURN_VALUE, bytearray("bytearray_test3", "utf8"), 1),
-        #(None, None, ResultType.BLOB, 7, aerospike.LIST_RETURN_VALUE, True, 9), #TODO needs debuging
+        (None, None, ResultType.BLOB, 7, aerospike.LIST_RETURN_VALUE, True, 9), #TODO needs debuging
         #(None, None, ResultType.BLOB, 5, aerospike.LIST_RETURN_VALUE, None, 19), #TODO use this for negative testing as it used to cause a crash
-        #(None, None, 6, 5, aerospike.LIST_RETURN_VALUE, None, 19), #TODO needs investigating
+        #(None, None, 0, 5, aerospike.LIST_RETURN_VALUE, None, 19), #TODO needs investigating build_call - error 4 invalid result_type 0
         (None, None, ResultType.LIST, 3, aerospike.LIST_RETURN_VALUE, [26, 27, 28, 6], 1),
-        #([list_index], [6], ResultType.INTEGER, 6, aerospike.LIST_RETURN_VALUE, [6], 1),
-        #(None, None, ResultType.MAP, 7, aerospike.LIST_RETURN_VALUE, {31: 31, 32: 32, 33: 33, 12: 12}, 1),
-        #(None, None, ResultType.BLOB, 8, aerospike.LIST_RETURN_VALUE, aerospike.null, 19),
-        #(None, None, ResultType.BLOB, 9, aerospike.LIST_RETURN_VALUE, GEO_POLY, 19) #TODO needs debugging
-        #(None, None, ResultType.BLOB, 10, aerospike.LIST_RETURN_VALUE, TestUsrDefinedClass, 19) #TODO needs debugging
+        ([list_index], [3], ResultType.INTEGER, 3, aerospike.LIST_RETURN_VALUE, 6, 1), #TODO needs debugging
+        (None, None, ResultType.MAP, 4, aerospike.LIST_RETURN_VALUE, {31: 31, 32: 32, 33: 33, 12: 12}, 1),
+        #(None, None, 6, 8, aerospike.LIST_RETURN_VALUE, aerospike.null, 19),
+        #(None, None, 8, 9, aerospike.LIST_RETURN_VALUE, GEO_POLY, 19), #TODO needs debugging 'build_compare - error 4 cannot compare type 8'
+        (None, None, ResultType.BLOB, 0, aerospike.LIST_RETURN_VALUE, TestUsrDefinedClass(10), 1) #TODO needs debugging
     ])
     def test_ListGetByIndex_pos(self, ctx_types, ctx_indexes, bin_type, index, return_type, check, expected):
         """
@@ -209,15 +197,15 @@ class TestPred2(TestBaseClass):
 
         if ctx_types is not None:
             ctx = []
-            for ctx_type, index in zip(ctx_types, ctx_indexes) :
-                ctx.append(add_ctx_op(ctx_type, index))
+            for ctx_type, p in zip(ctx_types, ctx_indexes) :
+                ctx.append(add_ctx_op(ctx_type, p))
         else:
             ctx = None
         
+        #breakpoint()
         expr = EQ(ListGetByIndex(bin_type, ctx, return_type, index, 'list_bin'), check)
         scan_obj = self.as_connection.scan(self.test_ns, self.test_set)
         records = scan_obj.results({'predexp2': expr.compile()})
-        #print(records[3])
         assert(len(records) == expected)
 
 # Oct 06 2020 12:08:36 GMT: WARNING (particle): (msgpack_in.c:1099) msgpack_sz_internal: invalid at i 1 count 2
@@ -228,18 +216,18 @@ class TestPred2(TestBaseClass):
 # Oct 06 2020 12:08:36 GMT: WARNING (scan): (scan.c:752) basic scan job failed predexp processing
 
     @pytest.mark.parametrize("ctx_types, ctx_indexes, value, return_type, check, expected", [
-        # (None, None, 10, aerospike.LIST_RETURN_VALUE, [10], 1),
-        # (None, None, "string_test3", aerospike.LIST_RETURN_VALUE, ["string_test3"], 1),
-        # (None, None, "bytes_test3".encode("utf8"), aerospike.LIST_RETURN_VALUE, ["bytes_test3".encode("utf8")], 1),
-        # (None, None, bytearray("bytearray_test3", "utf8"), aerospike.LIST_RETURN_VALUE, [bytearray("bytearray_test3", "utf8")], 1),
-        # (None, None, True, aerospike.LIST_RETURN_VALUE, [True], 9),
-        # (None, None, None, aerospike.LIST_RETURN_VALUE, [None], 19),
-        # (None, None, [26, 27, 28, 6], aerospike.LIST_RETURN_VALUE, [[26, 27, 28, 6]], 1),
+        (None, None, 10, aerospike.LIST_RETURN_VALUE, [10], 1),
+        (None, None, "string_test3", aerospike.LIST_RETURN_VALUE, ["string_test3"], 1),
+        (None, None, "bytes_test3".encode("utf8"), aerospike.LIST_RETURN_VALUE, ["bytes_test3".encode("utf8")], 1),
+        (None, None, bytearray("bytearray_test3", "utf8"), aerospike.LIST_RETURN_VALUE, [bytearray("bytearray_test3", "utf8")], 1),
+        (None, None, True, aerospike.LIST_RETURN_VALUE, [True], 9),
+        (None, None, None, aerospike.LIST_RETURN_VALUE, [None], 19),
+        (None, None, [26, 27, 28, 6], aerospike.LIST_RETURN_VALUE, [[26, 27, 28, 6]], 1),
         ([list_index], [3], 6, aerospike.LIST_RETURN_VALUE, [6], 1),
-        # (None, None, {31: 31, 32: 32, 33: 33, 12: 12}, aerospike.LIST_RETURN_VALUE, [{31: 31, 32: 32, 33: 33, 12: 12}], 1),
-        # (None, None, aerospike.null, aerospike.LIST_RETURN_VALUE, [aerospike.null], 19),
-        # (None, None, GEO_POLY, aerospike.LIST_RETURN_VALUE, [GEO_POLY], 19),
-        # (None, None, TestUsrDefinedClass(4), aerospike.LIST_RETURN_VALUE, [TestUsrDefinedClass(4)], 1)
+        (None, None, {31: 31, 32: 32, 33: 33, 12: 12}, aerospike.LIST_RETURN_VALUE, [{31: 31, 32: 32, 33: 33, 12: 12}], 1),
+        (None, None, aerospike.null, aerospike.LIST_RETURN_VALUE, [aerospike.null], 19),
+        (None, None, GEO_POLY, aerospike.LIST_RETURN_VALUE, [GEO_POLY], 19),
+        (None, None, TestUsrDefinedClass(4), aerospike.LIST_RETURN_VALUE, [TestUsrDefinedClass(4)], 1)
     ])
     def test_ListGetByValue_pos(self, ctx_types, ctx_indexes, value, return_type, check, expected):
         """
@@ -270,7 +258,7 @@ class TestPred2(TestBaseClass):
         (None, None, bytearray("bytearray_test3", "utf8"), bytearray("bytearray_test6", "utf8"), aerospike.LIST_RETURN_REVERSE_INDEX, [[5], [5], [5]], 3),
         (None, None, [26, 27, 28, 6], [26, 27, 28, 9], aerospike.LIST_RETURN_VALUE, [[[26, 27, 28, 6]], [[26, 27, 28, 7]], [[26, 27, 28, 8]]], 3),
         ([list_index], [3], 5, 9, aerospike.LIST_RETURN_REVERSE_RANK, [[3], [3], [3]], 4),
-        #(None, None, {12: 12, 31: 31, 32: 32, 33: 33}, {15: 15, 31: 31, 32: 32, 33: 33}, aerospike.LIST_RETURN_INDEX, [[7], [7], [7]], 3), #TODO why 6 matches? WHat is expected?
+        #(None, None, {12: 12, 31: 31, 32: 32, 33: 33}, {15: 15, 31: 31, 32: 32, 33: 33}, aerospike.LIST_RETURN_INDEX, [[4], [4], [4]], 3), #TODO why 6 matches? WHat is expected?
         (None, None, GEO_POLY, aerospike.CDTInfinite(), aerospike.LIST_RETURN_VALUE, [[GEO_POLY], [GEO_POLY], [GEO_POLY]], 19), #why doesn't CDTWildCard() get same matches as inf?
         (None, None, TestUsrDefinedClass(4), TestUsrDefinedClass(7), aerospike.LIST_RETURN_VALUE, [[TestUsrDefinedClass(4)], [TestUsrDefinedClass(5)], [TestUsrDefinedClass(6)]], 3)
     ])
@@ -351,8 +339,7 @@ class TestPred2(TestBaseClass):
         assert(len(records) == expected)
 
     @pytest.mark.parametrize("ctx_types, ctx_indexes, value, return_type, check, expected", [
-        (None, None, [10, [26, 27, 28, 10]], aerospike.LIST_RETURN_VALUE, (10, [26, 27, 28, 10]), e.InvalidRequest), # bad tuple
-        (None, None, (10, [26, 27, 28, 10]), aerospike.LIST_RETURN_VALUE, [10, [26, 27, 28, 10]], e.ParamError), # bad tuple
+        (None, None, [10, [26, 27, 28, 10]], aerospike.LIST_RETURN_VALUE, (10, [26, 27, 28, 10]), e.InvalidRequest) # bad tuple
     ])
     def test_ListGetByValueList_neg(self, ctx_types, ctx_indexes, value, return_type, check, expected):
         """

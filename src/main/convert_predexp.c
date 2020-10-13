@@ -138,7 +138,7 @@ as_status get_exp_val_from_pyval(AerospikeClient * self, as_static_pool * static
 				return err->code;
 			}
 
-			as_exp_entry tmp_entry = AS_EXP_BYTES(bytes->value, bytes->size);
+			as_exp_entry tmp_entry = AS_EXP_VAL((as_val *) bytes);
 			*new_entry = tmp_entry;
 		}
 		// {
@@ -224,7 +224,7 @@ as_status get_exp_val_from_pyval(AerospikeClient * self, as_static_pool * static
 				return err->code;
 			}
 			{
-				as_exp_entry tmp_entry = AS_EXP_BYTES(bytes->value, bytes->size);
+				as_exp_entry tmp_entry = AS_EXP_VAL((as_val *) bytes);
 				*new_entry = tmp_entry;
 			}
 		}
@@ -233,7 +233,7 @@ as_status get_exp_val_from_pyval(AerospikeClient * self, as_static_pool * static
 		pyobject_to_list(self, err, py_obj, &list, static_pool, serializer_type);
 		if (err->code == AEROSPIKE_OK) {
 			{
-				as_exp_entry tmp_entry = AS_EXP_VAL((as_val *) list);
+				as_exp_entry tmp_entry = AS_EXP_VAL(list);
 				*new_entry = tmp_entry;
 			}
 		}
@@ -242,7 +242,7 @@ as_status get_exp_val_from_pyval(AerospikeClient * self, as_static_pool * static
 		pyobject_to_map(self, err, py_obj, &map, static_pool, serializer_type);
 		if (err->code == AEROSPIKE_OK) {
 			{
-				as_exp_entry tmp_entry = AS_EXP_VAL((as_val *) map);
+				as_exp_entry tmp_entry = AS_EXP_VAL(map);
 				*new_entry = tmp_entry;
 			}
 		}
@@ -284,12 +284,12 @@ as_status get_exp_val_from_pyval(AerospikeClient * self, as_static_pool * static
 				}
 
 				{
-					as_exp_entry tmp_entry = AS_EXP_BYTES(bytes->value, bytes->size);
+					as_exp_entry tmp_entry = AS_EXP_VAL((as_val *) bytes);
 					*new_entry = tmp_entry;
 				}
 			}
 		}
-	}
+	} //note
 
 	return err->code;
 }
@@ -427,43 +427,43 @@ as_status add_pred_macros(AerospikeClient * self, as_static_pool * static_pool, 
 					return err->code;
 				}
 
-				as_exp_entry new_entries[] = {AS_EXP_META_DIGEST_MOD(lval1)};
+				as_exp_entry new_entries[] = {AS_EXP_DIGEST_MODULO(lval1)};
 				append_array(2);
 			}
 			break;
 		case META_DEVICE_SIZE:;
 			{
-				as_exp_entry new_entries[] = {AS_EXP_META_DEVICE_SIZE()};
+				as_exp_entry new_entries[] = {AS_EXP_DEVICE_SIZE()};
 				append_array(1);
 			}
 			break;
 		case META_LAST_UPDATE_TIME:;
 			{
-				as_exp_entry new_entries[] = {AS_EXP_META_LAST_UPDATE()};
+				as_exp_entry new_entries[] = {AS_EXP_LAST_UPDATE()};
 				append_array(1);
 			}
 			break;
 		case META_VOID_TIME:;
 			{
-				as_exp_entry new_entries[] = {AS_EXP_META_VOID_TIME()};
+				as_exp_entry new_entries[] = {AS_EXP_VOID_TIME()};
 				append_array(1);
 			}
 			break;
 		case META_TTL:;
 			{
-				as_exp_entry new_entries[] = {AS_EXP_META_TTL()};
+				as_exp_entry new_entries[] = {AS_EXP_TTL()};
 				append_array(1);
 			}
 			break;
 		case META_SET_NAME:;
 			{
-				as_exp_entry new_entries[] = {AS_EXP_META_SET_NAME()};
+				as_exp_entry new_entries[] = {AS_EXP_SET_NAME()};
 				append_array(sizeof(new_entries) / sizeof(as_exp_entry));
 			}
 			break;
 		case META_KEY_EXISTS:;
 			{
-				as_exp_entry new_entries[] = {AS_EXP_META_KEY_EXIST()};
+				as_exp_entry new_entries[] = {AS_EXP_KEY_EXIST()};
 				append_array(sizeof(new_entries) / sizeof(as_exp_entry));
 			}
 			break;
@@ -652,7 +652,7 @@ as_status convert_exp_list(AerospikeClient * self, as_static_pool * static_pool,
 
         py_pred_tuple = PyList_GetItem(py_exp_list, (Py_ssize_t)i);
 		pred.pytuple = py_pred_tuple;
-		Py_INCREF(py_pred_tuple);
+		//Py_INCREF(pred.pytuple);
         op = PyInt_AsLong(PyTuple_GetItem(py_pred_tuple, 0));
 		printf("processed pred op: %d\n", op);
 
@@ -663,13 +663,14 @@ as_status convert_exp_list(AerospikeClient * self, as_static_pool * static_pool,
 
 
         pred.pydict = PyTuple_GetItem(py_pred_tuple, 2);
-		if (pred.pydict != NULL && pred.pydict != Py_None) {
-			Py_INCREF(pred.pydict);
-		}
+		// if (pred.pydict != NULL && pred.pydict != Py_None) {
+		// 	Py_INCREF(pred.pydict);
+		// }
 
 		if (get_cdt_ctx(self, err, &ctx, pred.pydict, &ctx_in_use, static_pool, SERIALIZER_PYTHON) != AEROSPIKE_OK) {
-			char * tmp_warn = err->message;
-			return as_error_update(err, AEROSPIKE_ERR_PARAM, "Failed to convert cdt_ctx: %s", tmp_warn);
+			return err->code;
+			//char * tmp_warn = err->message;
+			//return as_error_update(err, AEROSPIKE_ERR_PARAM, "Failed to convert cdt_ctx: %s", tmp_warn);
 		}
 		pred.ctx = ctx_in_use ? &ctx : NULL;
 
@@ -703,15 +704,19 @@ CLEANUP:
 	for (int i = 0; i < size; ++i) {
 		printf("here\n");
 		pred_op * pred = (pred_op *) as_vector_get(&pred_queue, (uint32_t)i);
-		Py_XDECREF(pred->pydict);
-		Py_XDECREF(pred->pytuple);
+		// Py_XDECREF(pred->pydict);
+		// Py_XDECREF(pred->pytuple);
+		// if(pred->ctx != NULL) {
+		// 	as_cdt_ctx_destroy(pred->ctx);
+		// }
 		pred->pydict = NULL;
 		pred->pytuple = NULL;
+		pred->ctx = NULL;
 	}
 
 	//POOL_DESTROY(&static_pool);
-	//as_vector_clear(&pred_queue);
-	//free(c_pred_entries);
+	as_vector_clear(&pred_queue);
+	free(c_pred_entries);
 
 	// Py_DECREF(fixed); //this needs more decrefs for each fixed
 	// fixed = NULL;
