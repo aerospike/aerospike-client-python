@@ -32,9 +32,6 @@
 #include "cdt_operation_utils.h"
 
 static as_status
-get_list_policy(as_error* err, PyObject* op_dict, as_list_policy* policy, bool* found);
-
-static as_status
 add_op_list_append(AerospikeClient* self, as_error* err, char* bin,
         PyObject* op_dict, as_operations* ops,
         as_static_pool* static_pool, int serializer_type);
@@ -1627,21 +1624,4 @@ add_add_op_list_get_by_value_rel_rank_range(AerospikeClient* self, as_error* err
     }
 
     return AEROSPIKE_OK;
-}
-
-static as_status
-get_list_policy(as_error* err, PyObject* op_dict, as_list_policy* policy, bool* found) {
-	*found = false;
-
-	PyObject* list_policy = PyDict_GetItemString(op_dict, AS_PY_LIST_POLICY);
-
-	if (list_policy) {
-		if (pyobject_to_list_policy(err, list_policy, policy) != AEROSPIKE_OK) {
-			return err->code;
-		}
-		/* We succesfully converted the policy*/
-		*found = true;
-	}
-
-	return AEROSPIKE_OK;
 }

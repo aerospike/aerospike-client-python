@@ -58,3 +58,6 @@ get_int(as_error * err, const char * key, PyObject * op_dict, int * int_pointer)
 
 as_status
 get_list_return_type(as_error* err, PyObject* op_dict, int* return_type);
+
+as_status
+get_list_policy(as_error* err, PyObject* op_dict, as_list_policy* policy, bool* found);

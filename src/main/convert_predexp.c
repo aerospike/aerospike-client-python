@@ -71,6 +71,7 @@
 #define BIN_EXISTS 83
 
 #define CALL 127
+#define LIST_MOD 139
 
 // RESULT TYPES
 #define BOOLEAN 1
@@ -90,6 +91,10 @@
 #define MAX_ELEMENTS 11 //TODO find largest macro and adjust this val
 #define FIXED_ACTIVE 1
 #define fixed_num_ACTIVE 2
+
+// Fixed dictionary keys
+#define OP_TYPE_KEY "ot_key"
+#define LIST_ORDER_KEY "list_order"
 
 typedef struct {
 	long op;
@@ -331,32 +336,10 @@ as_status add_pred_macros(AerospikeClient * self, as_static_pool * static_pool, 
 					return err->code;
 				}
 
-				// as_bytes *bytes;
-				// PyObject * py_obj = PyDict_GetItemString(pred->pydict, AS_PY_VAL_KEY);
-				// GET_BYTES_POOL(bytes, static_pool, err);
-				// if (err->code == AEROSPIKE_OK) {
-				// 	if (serialize_based_on_serializer_policy(self, serializer_type,
-				// 		&bytes, py_obj, err) != AEROSPIKE_OK) {
-				// 		return err->code;
-				// 	}
-
-				// 	{
-				// 		as_exp_entry tmp_entry = AS_EXP_BYTES(bytes->value, bytes->size);
-
-				// 		as_exp_entry new_entries[] = {tmp_entry};
-				// 		append_array(sizeof(new_entries) / sizeof(as_exp_entry));
-				// 	}
-				// }
-
 				{
 					as_exp_entry new_entries[] = {tmp_expr};
 					append_array(sizeof(new_entries) / sizeof(as_exp_entry));
 				}
-
-				// as_val * tmp_val;
-				// if (pyobject_to_val(self, err, PyTuple_GetItem(pred->pyfixed, 0), &tmp_val, static_pool, serializer_type) != AEROSPIKE_OK) {
-				// 	return err->code;
-				// }
 			}
 			break;
 		case EQ:;
@@ -462,7 +445,7 @@ as_status add_pred_macros(AerospikeClient * self, as_static_pool * static_pool, 
 		case META_KEY_EXISTS:;
 			{
 				as_exp_entry new_entries[] = {AS_EXP_KEY_EXIST()};
-				append_array(sizeof(new_entries) / sizeof(as_exp_entry));
+				append_array(sizeof(new_entries) / sizeof(as_exp_entry)); // TODO add size to append_array
 			}
 			break;
 		case REC_KEY:;
@@ -684,6 +667,138 @@ as_status add_pred_macros(AerospikeClient * self, as_static_pool * static_pool, 
 				append_array(sizeof(new_entries) / sizeof(as_exp_entry));
 			}
 			break;
+		case OP_LIST_EXP_APPEND:;
+			printf("in OP_LIST_EXP_APPEND\n");
+			{
+				as_list_policy list_policy; //this might have scope issues
+				as_list_policy * list_policy_p = NULL;
+				bool policy_in_use = false;
+				if (get_list_policy(err, pred->pydict, &list_policy, &policy_in_use) != AEROSPIKE_OK) {
+					return err->code;
+				}
+
+				list_policy_p = policy_in_use ? &list_policy : NULL;
+
+				as_exp_entry new_entries[] = {
+					_AS_EXP_LIST_MOD(pred->ctx, list_policy_p, AS_CDT_OP_LIST_APPEND_ITEMS, 1, 2),
+				};
+
+				printf("size is: %lud\n", sizeof(new_entries) / sizeof(as_exp_entry));
+				append_array(sizeof(new_entries) / sizeof(as_exp_entry));
+			}
+			break;
+		case OP_LIST_EXP_APPEND_ITEMS:;
+			printf("in OP_LIST_EXP_APPEND_ITEMS\n");
+			{
+				as_list_policy list_policy; //this might have scope issues
+				as_list_policy * list_policy_p = NULL;
+				bool policy_in_use = false;
+				if (get_list_policy(err, pred->pydict, &list_policy, &policy_in_use) != AEROSPIKE_OK) {
+					return err->code;
+				}
+
+				list_policy_p = policy_in_use ? &list_policy : NULL;
+
+				as_exp_entry new_entries[] = {
+					_AS_EXP_LIST_MOD(pred->ctx, list_policy_p, AS_CDT_OP_LIST_APPEND_ITEMS, 1, 2)
+				};
+
+				printf("size is: %lud\n", sizeof(new_entries) / sizeof(as_exp_entry));
+				append_array(sizeof(new_entries) / sizeof(as_exp_entry));
+			}
+			break;
+		case OP_LIST_EXP_INSERT:;
+			printf("in OP_LIST_EXP_INSERT\n");
+			{
+				as_list_policy list_policy; //this might have scope issues
+				as_list_policy * list_policy_p = NULL;
+				bool policy_in_use = false;
+				if (get_list_policy(err, pred->pydict, &list_policy, &policy_in_use) != AEROSPIKE_OK) {
+					return err->code;
+				}
+
+				list_policy_p = policy_in_use ? &list_policy : NULL;
+
+				as_exp_entry new_entries[] = {
+					_AS_EXP_LIST_MOD(pred->ctx, list_policy_p, AS_CDT_OP_LIST_INSERT, 2, 1)
+				};
+
+				printf("size is: %lud\n", sizeof(new_entries) / sizeof(as_exp_entry));
+				append_array(sizeof(new_entries) / sizeof(as_exp_entry));
+			}
+			break;
+		case OP_LIST_EXP_INSERT_ITEMS:;
+			printf("in OP_LIST_EXP_INSERT_ITEMS\n");
+			{
+				as_list_policy list_policy; //this might have scope issues
+				as_list_policy * list_policy_p = NULL;
+				bool policy_in_use = false;
+				if (get_list_policy(err, pred->pydict, &list_policy, &policy_in_use) != AEROSPIKE_OK) {
+					return err->code;
+				}
+
+				list_policy_p = policy_in_use ? &list_policy : NULL;
+
+				as_exp_entry new_entries[] = {
+					_AS_EXP_LIST_MOD(pred->ctx, list_policy_p, AS_CDT_OP_LIST_INSERT_ITEMS, 2, 1)
+				};
+
+				printf("size is: %lud\n", sizeof(new_entries) / sizeof(as_exp_entry));
+				append_array(sizeof(new_entries) / sizeof(as_exp_entry));
+			}
+			break;
+		case OP_LIST_EXP_INCREMENT:;
+			printf("in OP_LIST_EXP_LIST_INCREMENT\n");
+			{
+				as_list_policy list_policy; //this might have scope issues
+				as_list_policy * list_policy_p = NULL;
+				bool policy_in_use = false;
+				if (get_list_policy(err, pred->pydict, &list_policy, &policy_in_use) != AEROSPIKE_OK) {
+					return err->code;
+				}
+
+				list_policy_p = policy_in_use ? &list_policy : NULL;
+
+				as_exp_entry new_entries[] = {
+					_AS_EXP_LIST_MOD(pred->ctx, list_policy_p, AS_CDT_OP_LIST_INCREMENT, 2, 2)
+				};
+
+				printf("size is: %lud\n", sizeof(new_entries) / sizeof(as_exp_entry));
+				append_array(sizeof(new_entries) / sizeof(as_exp_entry));
+			}
+			break;
+		case OP_LIST_EXP_CLEAR:;
+			printf("in OP_LIST_EXP_LIST_CLEAR\n");
+			{
+				as_list_policy list_policy; //this might have scope issues
+				as_list_policy * list_policy_p = NULL;
+				bool policy_in_use = false;
+				if (get_list_policy(err, pred->pydict, &list_policy, &policy_in_use) != AEROSPIKE_OK) {
+					return err->code;
+				}
+
+				list_policy_p = policy_in_use ? &list_policy : NULL;
+
+				as_exp_entry new_entries[] = {AS_EXP_LIST_CLEAR(pred->ctx, {})};
+
+				printf("size is: %lud\n", sizeof(new_entries) / sizeof(as_exp_entry) - 1);
+				append_array(sizeof(new_entries) / sizeof(as_exp_entry) -1); // -1 for bin
+			}
+			break;
+		case OP_LIST_EXP_SORT:;
+			printf("in OP_LIST_EXP_LIST_SORT\n");
+			{
+				if (get_int64_t(err, LIST_ORDER_KEY, pred->pydict, &lval1) != AEROSPIKE_OK) {
+					return err->code;
+				}
+
+				as_exp_entry new_entries[] = {AS_EXP_LIST_SORT(pred->ctx, lval1, {})};
+
+				printf("size is: %lud\n", sizeof(new_entries) / sizeof(as_exp_entry) - 1);
+				append_array(sizeof(new_entries) / sizeof(as_exp_entry) -1); // -1 for bin
+			}
+			break;
+
 	}		
 
 	return AEROSPIKE_OK;

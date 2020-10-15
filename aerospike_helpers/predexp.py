@@ -13,6 +13,11 @@ CTX_KEY = "ctx"
 VALUE_KEY = "val"
 VALUE_BEGIN_KEY = "value_begin"
 VALUE_END_KEY = "value_end"
+OP_TYPE_KEY = "ot_key"
+LIST_POLICY_KEY = "list_policy"
+PARAM_COUNT_KEY = "param_count"
+EXTRA_PARAM_COUNT_KEY = "extra_param_count"
+LIST_ORDER_KEY = "list_order"
 
 # TODO change list ops to send call op type and their vtype,
 # that way the switch statement in convert_predexp.c can be reduced to 1 template
@@ -59,6 +64,29 @@ class ExprOp:
 
     NIL = 138
 
+    # virtual ops
+    LIST_MOD = 139
+    _AS_EXP_CODE_AS_VAL = 134
+    _AS_EXP_CODE_VAL_PK = 135
+    _AS_EXP_CODE_VAL_INT = 136
+    _AS_EXP_CODE_VAL_UINT = 137
+    _AS_EXP_CODE_VAL_FLOAT = 138
+    _AS_EXP_CODE_VAL_BOOL = 139
+    _AS_EXP_CODE_VAL_STR = 140
+    _AS_EXP_CODE_VAL_BYTES = 141
+    _AS_EXP_CODE_VAL_RAWSTR = 142
+    _AS_EXP_CODE_VAL_RTYPE = 143
+
+    _AS_EXP_CODE_CALL_VOP_START = 144
+    _AS_EXP_CODE_CDT_LIST_CRMOD = 145
+    _AS_EXP_CODE_CDT_LIST_MOD = 146
+    _AS_EXP_CODE_CDT_MAP_CRMOD = 147
+    _AS_EXP_CODE_CDT_MAP_CR = 148
+    _AS_EXP_CODE_CDT_MAP_MOD = 149
+
+    _AS_EXP_CODE_END_OF_VA_ARGS = 150
+
+
     # LIST_SORT = 128
     # LIST_APPEND = 129
     # LIST_APPEND_ITEMS = 130
@@ -89,6 +117,42 @@ class CallType:
     HLL = 2
 
     MODIFY = 0x40
+
+
+class ListOpType:
+	AS_CDT_OP_LIST_SET_TYPE = 0,
+	AS_CDT_OP_LIST_APPEND = 1,
+	AS_CDT_OP_LIST_APPEND_ITEMS = 2,
+	AS_CDT_OP_LIST_INSERT = 3,
+	AS_CDT_OP_LIST_INSERT_ITEMS = 4,
+	AS_CDT_OP_LIST_POP = 5,
+	AS_CDT_OP_LIST_POP_RANGE = 6,
+	AS_CDT_OP_LIST_REMOVE = 7,
+	AS_CDT_OP_LIST_REMOVE_RANGE = 8,
+	AS_CDT_OP_LIST_SET = 9,
+	AS_CDT_OP_LIST_TRIM = 10,
+	AS_CDT_OP_LIST_CLEAR = 11,
+	AS_CDT_OP_LIST_INCREMENT = 12,
+	AS_CDT_OP_LIST_SORT = 13,
+	AS_CDT_OP_LIST_SIZE = 16,
+	AS_CDT_OP_LIST_GET = 17,
+	AS_CDT_OP_LIST_GET_RANGE = 18,
+	AS_CDT_OP_LIST_GET_BY_INDEX = 19,
+	AS_CDT_OP_LIST_GET_BY_RANK = 21,
+	AS_CDT_OP_LIST_GET_ALL_BY_VALUE = 22,
+	AS_CDT_OP_LIST_GET_BY_VALUE_LIST = 23,
+	AS_CDT_OP_LIST_GET_BY_INDEX_RANGE = 24,
+	AS_CDT_OP_LIST_GET_BY_VALUE_INTERVAL = 25,
+	AS_CDT_OP_LIST_GET_BY_RANK_RANGE = 26,
+	AS_CDT_OP_LIST_GET_BY_VALUE_REL_RANK_RANGE = 27,
+	AS_CDT_OP_LIST_REMOVE_BY_INDEX = 32,
+	AS_CDT_OP_LIST_REMOVE_BY_RANK = 34,
+	AS_CDT_OP_LIST_REMOVE_ALL_BY_VALUE = 35,
+	AS_CDT_OP_LIST_REMOVE_BY_VALUE_LIST = 36,
+	AS_CDT_OP_LIST_REMOVE_BY_INDEX_RANGE = 37,
+	AS_CDT_OP_LIST_REMOVE_BY_VALUE_INTERVAL = 38,
+	AS_CDT_OP_LIST_REMOVE_BY_RANK_RANGE = 39,
+	AS_CDT_OP_LIST_REMOVE_BY_VALUE_REL_RANK_RANGE = 40,
 
 
 class AtomExpr:
@@ -149,12 +213,22 @@ class BaseExpr(AtomExpr):
         return expression
 
 
+class _GenericExpr(BaseExpr):
+    
+    def __init__(self, op: ExprOp, rt: TypeResultType, fixed: TypeFixed):
+        self.op = op
+        self.rt = rt
+        self.fixed = fixed
+
+
 TypeBinName = Union[BaseExpr, str]
 TypeListValue = Union[Any]
 TypeIndex = Union[BaseExpr, int, aerospike.CDTInfinite]
 TypeCDT = Union[None, List[cdt_ctx._cdt_ctx]]
 TypeRank = Union[BaseExpr, int, aerospike.CDTInfinite]
 TypeCount = Union[BaseExpr, int, aerospike.CDTInfinite]
+TypeValue = Any
+TypePolicy = Union[Dict[str, Any], None]
 
 
 class And(BaseExpr):
@@ -318,6 +392,177 @@ class MetaKeyInt(BaseExpr):
 class MetaKeyBlobe(BaseExpr):
     op = ExprOp.REC_KEY
     rt = ResultType.BLOB
+
+
+# LIST MOD EXPRESSIONS
+
+
+# class ListAppend(BaseExpr):
+#     op = aerospike.OP_LIST_EXP_SIZE
+
+#     def __init__(self, ctx: TypeCDT, policy: TypePolicy, value: TypeValue, bin_name: TypeBinName):
+#         self.children = (
+#             value,
+#             _GenericExpr(),
+#             bin_name if isinstance(bin_name, BaseExpr) else ListBin(bin_name),
+#         )
+#         self.fixed = {OP_TYPE_KEY: ListOpType.AS_CDT_OP_LIST_APPEND, PARAM_COUNT_KEY: 1, EXTRA_PARAM_COUNT_KEY: 2}
+
+#         if ctx is not None:
+#             self.fixed[CTX_KEY] = ctx
+
+#         if policy is not None:
+#             self.fixed[LIST_POLICY_KEY] = policy
+
+
+class ListAppend(BaseExpr):
+    op = aerospike.OP_LIST_EXP_APPEND
+
+    def __init__(self, ctx: TypeCDT, policy: TypePolicy, value: TypeValue, bin_name: TypeBinName):
+        self.children = (
+            value,
+            _GenericExpr(ExprOp._AS_EXP_CODE_CDT_LIST_CRMOD, 0, {LIST_POLICY_KEY: policy} if policy is not None else {}), #TODO implement these
+            bin_name if isinstance(bin_name, BaseExpr) else ListBin(bin_name),
+        )
+        self.fixed = {}
+
+        if ctx is not None:
+            self.fixed[CTX_KEY] = ctx
+
+        if policy is not None:
+            self.fixed[LIST_POLICY_KEY] = policy
+
+
+class ListAppendItems(BaseExpr):
+    op = aerospike.OP_LIST_EXP_APPEND_ITEMS
+
+    def __init__(self, ctx: TypeCDT, policy: TypePolicy, value: TypeValue, bin_name: TypeBinName):
+        self.children = (
+            value,
+            _GenericExpr(ExprOp._AS_EXP_CODE_CDT_LIST_CRMOD, 0, {LIST_POLICY_KEY: policy} if policy is not None else {}),
+            bin_name if isinstance(bin_name, BaseExpr) else ListBin(bin_name),
+        )
+        self.fixed = {}
+
+        if ctx is not None:
+            self.fixed[CTX_KEY] = ctx
+
+        if policy is not None:
+            self.fixed[LIST_POLICY_KEY] = policy
+
+
+class ListInsert(BaseExpr):
+    op = aerospike.OP_LIST_EXP_INSERT
+
+    def __init__(self, ctx: TypeCDT, policy: TypePolicy, index: TypeIndex, value: TypeValue, bin_name: TypeBinName):
+        self.children = (
+            index,
+            value,
+            _GenericExpr(ExprOp._AS_EXP_CODE_CDT_LIST_MOD, 0, {LIST_POLICY_KEY: policy} if policy is not None else {}),
+            bin_name if isinstance(bin_name, BaseExpr) else ListBin(bin_name),
+        )
+        self.fixed = {}
+
+        if ctx is not None:
+            self.fixed[CTX_KEY] = ctx
+
+        if policy is not None:
+            self.fixed[LIST_POLICY_KEY] = policy
+
+
+class ListInsertItems(BaseExpr):
+    op = aerospike.OP_LIST_EXP_INSERT_ITEMS
+
+    def __init__(self, ctx: TypeCDT, policy: TypePolicy, index: TypeIndex, value: TypeValue, bin_name: TypeBinName):
+        self.children = (
+            index,
+            value,
+            _GenericExpr(ExprOp._AS_EXP_CODE_CDT_LIST_MOD, 0, {LIST_POLICY_KEY: policy} if policy is not None else {}),
+            bin_name if isinstance(bin_name, BaseExpr) else ListBin(bin_name),
+        )
+        self.fixed = {}
+
+        if ctx is not None:
+            self.fixed[CTX_KEY] = ctx
+
+        if policy is not None:
+            self.fixed[LIST_POLICY_KEY] = policy
+
+
+class ListIncrement(BaseExpr):
+    op = aerospike.OP_LIST_EXP_INCREMENT
+
+    def __init__(self, ctx: TypeCDT, policy: TypePolicy, index: TypeIndex, value: TypeValue, bin_name: TypeBinName):
+        self.children = (
+            index,
+            value,
+            _GenericExpr(ExprOp._AS_EXP_CODE_CDT_LIST_CRMOD, 0, {LIST_POLICY_KEY: policy} if policy is not None else {}),
+            bin_name if isinstance(bin_name, BaseExpr) else ListBin(bin_name),
+        )
+        self.fixed = {}
+
+        if ctx is not None:
+            self.fixed[CTX_KEY] = ctx
+
+        if policy is not None:
+            self.fixed[LIST_POLICY_KEY] = policy
+
+
+class ListSet(BaseExpr):
+    op = aerospike.OP_LIST_EXP_SET
+
+    def __init__(self, ctx: TypeCDT, policy: TypePolicy, index: TypeIndex, value: TypeValue, bin_name: TypeBinName):
+        self.children = (
+            index,
+            value,
+            _GenericExpr(ExprOp._AS_EXP_CODE_CDT_LIST_MOD, 0, {LIST_POLICY_KEY: policy} if policy is not None else {}),
+            bin_name if isinstance(bin_name, BaseExpr) else ListBin(bin_name),
+        )
+        self.fixed = {}
+
+        if ctx is not None:
+            self.fixed[CTX_KEY] = ctx
+
+        if policy is not None:
+            self.fixed[LIST_POLICY_KEY] = policy
+
+
+class ListClear(BaseExpr):
+    op = aerospike.OP_LIST_EXP_CLEAR
+
+    def __init__(self, ctx: TypeCDT, bin_name: TypeBinName):
+        self.children = (
+            bin_name if isinstance(bin_name, BaseExpr) else ListBin(bin_name)
+        )
+        self.fixed = {}
+
+        if ctx is not None:
+            self.fixed[CTX_KEY] = ctx
+
+
+class ListSort(BaseExpr):
+    op = aerospike.OP_LIST_EXP_SORT
+
+    def __init__(self, ctx: TypeCDT, order: int, bin_name: TypeBinName):
+        self.children = (
+            bin_name if isinstance(bin_name, BaseExpr) else ListBin(bin_name)
+        )
+        self.fixed = {LIST_ORDER_KEY: order}
+
+        if ctx is not None:
+            self.fixed[CTX_KEY] = ctx
+
+
+# LIST READ EXPRESSIONS
+
+
+class _AS_EXP_CDT_LIST_READ(BaseExpr):
+    op = ExprOp.CALL
+
+    def __init__(self, __type, __rtype, __is_multi):
+        self.children = (
+            BaseExpr()
+        )
 
 
 class ListSize(BaseExpr): #TODO do tests
