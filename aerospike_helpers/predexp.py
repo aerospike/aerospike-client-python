@@ -222,12 +222,12 @@ class _GenericExpr(BaseExpr):
 
 
 TypeBinName = Union[BaseExpr, str]
-TypeListValue = Union[Any]
+TypeListValue = Union[BaseExpr, List[Any]]
 TypeIndex = Union[BaseExpr, int, aerospike.CDTInfinite]
 TypeCDT = Union[None, List[cdt_ctx._cdt_ctx]]
 TypeRank = Union[BaseExpr, int, aerospike.CDTInfinite]
 TypeCount = Union[BaseExpr, int, aerospike.CDTInfinite]
-TypeValue = Any
+TypeValue = Union[BaseExpr, Any]
 TypePolicy = Union[Dict[str, Any], None]
 
 
@@ -553,6 +553,179 @@ class ListSort(BaseExpr):
             self.fixed[CTX_KEY] = ctx
 
 
+class ListSort(BaseExpr):
+    op = aerospike.OP_LIST_EXP_SORT
+
+    def __init__(self, ctx: TypeCDT, order: int, bin_name: TypeBinName):
+        self.children = (
+            bin_name if isinstance(bin_name, BaseExpr) else ListBin(bin_name)
+        )
+        self.fixed = {LIST_ORDER_KEY: order}
+
+        if ctx is not None:
+            self.fixed[CTX_KEY] = ctx
+
+
+class ListRemoveByValue(BaseExpr):
+    op = aerospike.OP_LIST_EXP_REMOVE_BY_VALUE
+
+    def __init__(self, ctx: TypeCDT, value: TypeValue, bin_name: TypeBinName):
+        self.children = (
+            value,
+            bin_name if isinstance(bin_name, BaseExpr) else ListBin(bin_name)
+        )
+        self.fixed = {}
+
+        if ctx is not None:
+            self.fixed[CTX_KEY] = ctx
+
+
+class ListRemoveByValueList(BaseExpr):
+    op = aerospike.OP_LIST_EXP_REMOVE_BY_VALUE_LIST
+
+    def __init__(self, ctx: TypeCDT, values: TypeListValue, bin_name: TypeBinName):
+        self.children = (
+            values,
+            bin_name if isinstance(bin_name, BaseExpr) else ListBin(bin_name)
+        )
+        self.fixed = {}
+
+        if ctx is not None:
+            self.fixed[CTX_KEY] = ctx
+
+
+class ListRemoveByValueRange(BaseExpr):
+    op = aerospike.OP_LIST_EXP_REMOVE_BY_VALUE_RANGE
+
+    def __init__(self, ctx: TypeCDT, begin: TypeValue, end: TypeValue, bin_name: TypeBinName):
+        self.children = (
+            begin,
+            end,
+            bin_name if isinstance(bin_name, BaseExpr) else ListBin(bin_name)
+        )
+        self.fixed = {}
+
+        if ctx is not None:
+            self.fixed[CTX_KEY] = ctx
+
+
+class ListRemoveByValueRelRankToEnd(BaseExpr):
+    op = aerospike.OP_LIST_EXP_REMOVE_BY_REL_RANK_RANGE_TO_END
+
+    def __init__(self, ctx: TypeCDT, value: TypeValue, rank: TypeRank, bin_name: TypeBinName):
+        self.children = (
+            value,
+            rank,
+            bin_name if isinstance(bin_name, BaseExpr) else ListBin(bin_name)
+        )
+        self.fixed = {}
+
+        if ctx is not None:
+            self.fixed[CTX_KEY] = ctx
+
+
+class ListRemoveByValueRelRankRANGE(BaseExpr):
+    op = aerospike.OP_LIST_EXP_REMOVE_BY_REL_RANK_RANGE
+
+    def __init__(self, ctx: TypeCDT, value: TypeValue, rank: TypeRank, count: TypeCount, bin_name: TypeBinName):
+        self.children = (
+            value,
+            rank,
+            count,
+            bin_name if isinstance(bin_name, BaseExpr) else ListBin(bin_name)
+        )
+        self.fixed = {}
+
+        if ctx is not None:
+            self.fixed[CTX_KEY] = ctx
+
+
+class ListRemoveByIndex(BaseExpr):
+    op = aerospike.OP_LIST_EXP_REMOVE_BY_INDEX
+
+    def __init__(self, ctx: TypeCDT, index: TypeIndex, bin_name: TypeBinName):
+        self.children = (
+            index,
+            bin_name if isinstance(bin_name, BaseExpr) else ListBin(bin_name)
+        )
+        self.fixed = {}
+
+        if ctx is not None:
+            self.fixed[CTX_KEY] = ctx
+
+
+class ListRemoveByIndexRangeToEnd(BaseExpr):
+    op = aerospike.OP_LIST_EXP_REMOVE_BY_INDEX_RANGE_TO_END
+
+    def __init__(self, ctx: TypeCDT, index: TypeIndex, bin_name: TypeBinName):
+        self.children = (
+            index,
+            bin_name if isinstance(bin_name, BaseExpr) else ListBin(bin_name)
+        )
+        self.fixed = {}
+
+        if ctx is not None:
+            self.fixed[CTX_KEY] = ctx
+
+
+class ListRemoveByIndexRange(BaseExpr):
+    op = aerospike.OP_LIST_EXP_REMOVE_BY_INDEX_RANGE
+
+    def __init__(self, ctx: TypeCDT, index: TypeIndex, count: TypeCount, bin_name: TypeBinName):
+        self.children = (
+            index,
+            count,
+            bin_name if isinstance(bin_name, BaseExpr) else ListBin(bin_name)
+        )
+        self.fixed = {}
+
+        if ctx is not None:
+            self.fixed[CTX_KEY] = ctx
+
+
+class ListRemoveByRank(BaseExpr):
+    op = aerospike.OP_LIST_EXP_REMOVE_BY_RANK
+
+    def __init__(self, ctx: TypeCDT, rank: TypeRank, bin_name: TypeBinName):
+        self.children = (
+            rank,
+            bin_name if isinstance(bin_name, BaseExpr) else ListBin(bin_name)
+        )
+        self.fixed = {}
+
+        if ctx is not None:
+            self.fixed[CTX_KEY] = ctx
+
+
+class ListRemoveByRankRangeToEnd(BaseExpr):
+    op = aerospike.OP_LIST_EXP_REMOVE_BY_RANK_RANGE_TO_END
+
+    def __init__(self, ctx: TypeCDT, rank: TypeRank, bin_name: TypeBinName):
+        self.children = (
+            rank,
+            bin_name if isinstance(bin_name, BaseExpr) else ListBin(bin_name)
+        )
+        self.fixed = {}
+
+        if ctx is not None:
+            self.fixed[CTX_KEY] = ctx
+
+
+class ListRemoveByRankRange(BaseExpr):
+    op = aerospike.OP_LIST_EXP_REMOVE_BY_RANK_RANGE
+
+    def __init__(self, ctx: TypeCDT, rank: TypeRank, count: TypeCount, bin_name: TypeBinName):
+        self.children = (
+            rank,
+            count,
+            bin_name if isinstance(bin_name, BaseExpr) else ListBin(bin_name)
+        )
+        self.fixed = {}
+
+        if ctx is not None:
+            self.fixed[CTX_KEY] = ctx
+
+
 # LIST READ EXPRESSIONS
 
 
@@ -581,7 +754,7 @@ class ListSize(BaseExpr): #TODO do tests
 class ListGetByValue(BaseExpr):
     op = aerospike.OP_LIST_EXP_GET_BY_VALUE
 
-    def __init__(self, ctx: TypeCDT, value: TypeListValue, return_type: int, bin_name: TypeBinName):
+    def __init__(self, ctx: TypeCDT, value: TypeValue, return_type: int, bin_name: TypeBinName):
         self.children = (
             value,
             bin_name if isinstance(bin_name, BaseExpr) else ListBin(bin_name)
@@ -599,8 +772,8 @@ class ListGetByValueRange(BaseExpr):  # TODO how to mark if bin name is not expr
         self,
         ctx: TypeCDT,
         return_type: int,
-        value_begin: TypeListValue,
-        value_end: TypeListValue,
+        value_begin: TypeValue,
+        value_end: TypeValue,
         bin_name: TypeBinName
     ):
         self.children = (

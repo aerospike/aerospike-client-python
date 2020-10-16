@@ -748,7 +748,7 @@ as_status add_pred_macros(AerospikeClient * self, as_static_pool * static_pool, 
 			}
 			break;
 		case OP_LIST_EXP_INCREMENT:;
-			printf("in OP_LIST_EXP_LIST_INCREMENT\n");
+			printf("in OP_LIST_EXP_INCREMENT\n");
 			{
 				as_list_policy list_policy; //this might have scope issues
 				as_list_policy * list_policy_p = NULL;
@@ -768,15 +768,8 @@ as_status add_pred_macros(AerospikeClient * self, as_static_pool * static_pool, 
 			}
 			break;
 		case OP_LIST_EXP_CLEAR:;
-			printf("in OP_LIST_EXP_LIST_CLEAR\n");
+			printf("in OP_LIST_EXP_CLEAR\n");
 			{
-				as_list_policy list_policy; //this might have scope issues
-				as_list_policy * list_policy_p = NULL;
-				bool policy_in_use = false;
-				if (get_list_policy(err, pred->pydict, &list_policy, &policy_in_use) != AEROSPIKE_OK) {
-					return err->code;
-				}
-
 				list_policy_p = policy_in_use ? &list_policy : NULL;
 
 				as_exp_entry new_entries[] = {AS_EXP_LIST_CLEAR(pred->ctx, {})};
@@ -786,7 +779,7 @@ as_status add_pred_macros(AerospikeClient * self, as_static_pool * static_pool, 
 			}
 			break;
 		case OP_LIST_EXP_SORT:;
-			printf("in OP_LIST_EXP_LIST_SORT\n");
+			printf("in OP_LIST_EXP_SORT\n");
 			{
 				if (get_int64_t(err, LIST_ORDER_KEY, pred->pydict, &lval1) != AEROSPIKE_OK) {
 					return err->code;
@@ -796,6 +789,87 @@ as_status add_pred_macros(AerospikeClient * self, as_static_pool * static_pool, 
 
 				printf("size is: %lud\n", sizeof(new_entries) / sizeof(as_exp_entry) - 1);
 				append_array(sizeof(new_entries) / sizeof(as_exp_entry) -1); // -1 for bin
+			}
+			break;
+		case OP_LIST_EXP_REMOVE_BY_VALUE:;
+			printf("in OP_LIST_EXP_REMOVE_BY_VALUE\n");
+			{
+				as_exp_entry new_entries[] = {AS_EXP_LIST_REMOVE_BY_VALUE(pred->ctx, {}, {})};
+
+				printf("size is: %lud\n", sizeof(new_entries) / sizeof(as_exp_entry) - 1);
+				append_array(sizeof(new_entries) / sizeof(as_exp_entry) -2); // -1 for bin and val
+			}
+			break;
+		case OP_LIST_EXP_REMOVE_BY_VALUE_LIST:;
+			printf("in OP_LIST_EXP_REMOVE_BY_VALUE_LIST\n");
+			{
+				as_exp_entry new_entries[] = {AS_EXP_LIST_REMOVE_BY_VALUE_LIST(pred->ctx, {}, {})};
+
+				printf("size is: %lud\n", sizeof(new_entries) / sizeof(as_exp_entry) - 2);
+				append_array(sizeof(new_entries) / sizeof(as_exp_entry) -2); // -2 for bin and val
+			}
+			break;
+		case OP_LIST_EXP_REMOVE_BY_REL_RANK_RANGE_TO_END:;
+			printf("in OP_LIST_EXP_REMOVE_BY_REL_RANK_RANGE_TO_END\n");
+			{
+				as_exp_entry new_entries[] = {AS_EXP_LIST_REMOVE_BY_REL_RANK_RANGE_TO_END(pred->ctx, {}, {}, {})};
+
+				printf("size is: %lud\n", sizeof(new_entries) / sizeof(as_exp_entry));
+				append_array(sizeof(new_entries) / sizeof(as_exp_entry) - 3); // -3 for value, rank, bin
+			}
+			break;
+		case OP_LIST_EXP_REMOVE_BY_VALUE_REL_RANK_RANGE:;
+			printf("in OP_LIST_EXP_REMOVE_BY_REL_RANK_RANGE\n");
+			{
+				as_exp_entry new_entries[] = {AS_EXP_LIST_REMOVE_BY_REL_RANK_RANGE(pred->ctx, {}, {}, {}, {})};
+
+				printf("size is: %lud\n", sizeof(new_entries) / sizeof(as_exp_entry));
+				append_array(sizeof(new_entries) / sizeof(as_exp_entry) - 4); // -4 for value, rank, count, bin
+			}
+			break;
+		case OP_LIST_EXP_REMOVE_BY_INDEX:;
+			printf("in OP_LIST_EXP_REMOVE_BY_INDEX\n");
+			{
+				as_exp_entry new_entries[] = {AS_EXP_LIST_REMOVE_BY_INDEX(pred->ctx, {}, {})};
+
+				printf("size is: %lud\n", sizeof(new_entries) / sizeof(as_exp_entry));
+				append_array(sizeof(new_entries) / sizeof(as_exp_entry) - 2); // -2 for index, bin
+			}
+			break;
+		case OP_LIST_EXP_REMOVE_BY_INDEX_RANGE_TO_END:;
+			printf("in OP_LIST_EXP_REMOVE_BY_INDEX_RANGE_TO_END\n");
+			{
+				as_exp_entry new_entries[] = {AS_EXP_LIST_REMOVE_BY_INDEX_RANGE_TO_END(pred->ctx, {}, {})};
+
+				printf("size is: %lud\n", sizeof(new_entries) / sizeof(as_exp_entry));
+				append_array(sizeof(new_entries) / sizeof(as_exp_entry) - 2); // -2 for index, bin
+			}
+			break;
+		case OP_LIST_EXP_REMOVE_BY_INDEX_RANGE:;
+			printf("in OP_LIST_EXP_REMOVE_BY_INDEX_RANGE\n");
+			{
+				as_exp_entry new_entries[] = {AS_EXP_LIST_REMOVE_BY_INDEX_RANGE(pred->ctx, {}, {}, {})};
+
+				printf("size is: %lud\n", sizeof(new_entries) / sizeof(as_exp_entry));
+				append_array(sizeof(new_entries) / sizeof(as_exp_entry) - 3); // - 3 for index, count, bin
+			}
+			break;
+		case OP_LIST_EXP_REMOVE_BY_RANK:;
+			printf("in OP_LIST_EXP_REMOVE_BY_RANK\n");
+			{
+				as_exp_entry new_entries[] = {AS_EXP_LIST_REMOVE_BY_RANK(pred->ctx, {}, {})};
+
+				printf("size is: %lud\n", sizeof(new_entries) / sizeof(as_exp_entry));
+				append_array(sizeof(new_entries) / sizeof(as_exp_entry) - 2); // -2 for rank, bin
+			}
+			break;
+		case OP_LIST_EXP_REMOVE_BY_RANK_RANGE_TO_END:;
+			printf("in OP_LIST_EXP_REMOVE_BY_RANK_RANGE_TO_END\n");
+			{
+				as_exp_entry new_entries[] = {AS_EXP_LIST_REMOVE_BY_RANK_RANGE(pred->ctx, {}, {}, {})};
+
+				printf("size is: %lud\n", sizeof(new_entries) / sizeof(as_exp_entry));
+				append_array(sizeof(new_entries) / sizeof(as_exp_entry) - 3); // -3 for rank, count, bin
 			}
 			break;
 
