@@ -627,7 +627,7 @@ as_status add_pred_macros(AerospikeClient * self, as_static_pool * static_pool, 
 				}
 
 				as_exp_entry new_entries[] = {
-					_AS_EXP_CDT_LIST_READ(lval2, lval1, true),
+					_AS_EXP_CDT_LIST_READ(lval2, lval1, false),
 					_AS_EXP_LIST_START(pred->ctx, AS_CDT_OP_LIST_GET_BY_RANK, 2),
 					AS_EXP_INT(lval1),
 				};
@@ -770,8 +770,6 @@ as_status add_pred_macros(AerospikeClient * self, as_static_pool * static_pool, 
 		case OP_LIST_EXP_CLEAR:;
 			printf("in OP_LIST_EXP_CLEAR\n");
 			{
-				list_policy_p = policy_in_use ? &list_policy : NULL;
-
 				as_exp_entry new_entries[] = {AS_EXP_LIST_CLEAR(pred->ctx, {})};
 
 				printf("size is: %lud\n", sizeof(new_entries) / sizeof(as_exp_entry) - 1);
@@ -870,6 +868,114 @@ as_status add_pred_macros(AerospikeClient * self, as_static_pool * static_pool, 
 
 				printf("size is: %lud\n", sizeof(new_entries) / sizeof(as_exp_entry));
 				append_array(sizeof(new_entries) / sizeof(as_exp_entry) - 3); // -3 for rank, count, bin
+			}
+			break;
+		case OP_MAP_PUT:;
+			printf("in OP_MAP_PUT\n");
+			{
+				as_map_policy map_policy; //this might have scope issues
+				as_map_policy * map_policy_p = NULL;
+				Py_Object * py_map_policy = NULL;
+
+				py_map_policy = PyDict_GetItemString(pred->pydict, AS_PY_MAP_POLICY);
+
+				if (py_map_policy != NULL) {
+					if (pyobject_to_map_policy(err, py_map_policy, &map_policy) != AEROSPIKE_OK) {
+						return err->code;
+					}
+				}
+
+				map_policy_p = py_map_policy ? &map_policy : NULL;
+				as_exp_entry new_entries[] = {
+					_AS_EXP_MAP_MOD(pred-ctx, map_policy_p, AS_CDT_OP_MAP_PUT, 2, 2)
+				};
+
+				printf("size is: %lud\n", sizeof(new_entries) / sizeof(as_exp_entry));
+				append_array(sizeof(new_entries) / sizeof(as_exp_entry));
+			}
+			break;
+		case OP_MAP_PUT_ITEMS:;
+			printf("in OP_MAP_PUT_ITEMS\n");
+			{
+				as_map_policy map_policy; //this might have scope issues
+				as_map_policy * map_policy_p = NULL;
+				Py_Object * py_map_policy = NULL;
+
+				py_map_policy = PyDict_GetItemString(pred->pydict, AS_PY_MAP_POLICY);
+
+				if (py_map_policy != NULL) {
+					if (pyobject_to_map_policy(err, py_map_policy, &map_policy) != AEROSPIKE_OK) {
+						return err->code;
+					}
+				}
+
+				map_policy_p = py_map_policy ? &map_policy : NULL;
+				as_exp_entry new_entries[] = {
+					_AS_EXP_MAP_MOD(pred->ctx, map_policy_p, AS_CDT_OP_MAP_PUT_ITEMS, 1, 2)
+				};
+
+				printf("size is: %lud\n", sizeof(new_entries) / sizeof(as_exp_entry));
+				append_array(sizeof(new_entries) / sizeof(as_exp_entry));
+			}
+			break;
+		case OP_MAP_INCREMENT:;
+			printf("in OP_MAP_INCREMENT\n");
+			{
+				as_map_policy map_policy; //this might have scope issues
+				as_map_policy * map_policy_p = NULL;
+				Py_Object * py_map_policy = NULL;
+
+				py_map_policy = PyDict_GetItemString(pred->pydict, AS_PY_MAP_POLICY);
+
+				if (py_map_policy != NULL) {
+					if (pyobject_to_map_policy(err, py_map_policy, &map_policy) != AEROSPIKE_OK) {
+						return err->code;
+					}
+				}
+
+				map_policy_p = py_map_policy ? &map_policy : NULL;
+				as_exp_entry new_entries[] = {
+					_AS_EXP_MAP_MOD(pred-ctx, map_policy_p, AS_CDT_OP_MAP_INCREMENT, 2, 1)
+				};
+
+				printf("size is: %lud\n", sizeof(new_entries) / sizeof(as_exp_entry));
+				append_array(sizeof(new_entries) / sizeof(as_exp_entry));
+			}
+			break;
+		case OP_MAP_CLEAR:;
+			printf("in OP_MAP_CLEAR\n");
+			{
+				as_exp_entry new_entries[] = {AS_EXP_MAP_CLEAR(pred->ctx, {})};
+
+				printf("size is: %lud\n", sizeof(new_entries) / sizeof(as_exp_entry));
+				append_array(sizeof(new_entries) / sizeof(as_exp_entry) - 1); // - 1 for bin
+			}
+			break;
+		case OP_MAP_REMOVE_BY_KEY:;
+			printf("in OP_MAP_REMOVE_BY_KEY\n");
+			{
+				as_exp_entry new_entries[] = {AS_EXP_MAP_REMOVE_BY_KEY(pred->ctx, {}, {})};
+
+				printf("size is: %lud\n", sizeof(new_entries) / sizeof(as_exp_entry));
+				append_array(sizeof(new_entries) / sizeof(as_exp_entry) - 2); // - 2 for key, bin
+			}
+			break;
+		case OP_MAP_REMOVE_BY_KEY_LIST:;
+			printf("in OP_MAP_REMOVE_BY_KEY_LIST\n");
+			{
+				as_exp_entry new_entries[] = {AS_EXP_MAP_REMOVE_BY_KEY_LIST(pred->ctx, {}, {})};
+
+				printf("size is: %lud\n", sizeof(new_entries) / sizeof(as_exp_entry));
+				append_array(sizeof(new_entries) / sizeof(as_exp_entry) - 2); // - 2 for key, bin
+			}
+			break;
+		case OP_MAP_REMOVE_BY_KEY_RANGE:;
+			printf("in OP_MAP_REMOVE_BY_KEY_RANGE\n");
+			{
+				as_exp_entry new_entries[] = {AS_EXP_MAP_REMOVE_BY_KEY_RANGE(pred->ctx, {}, {}, {})};
+
+				printf("size is: %lud\n", sizeof(new_entries) / sizeof(as_exp_entry));
+				append_array(sizeof(new_entries) / sizeof(as_exp_entry) - 3); // - 3 for begin, end, bin
 			}
 			break;
 

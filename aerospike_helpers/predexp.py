@@ -15,6 +15,7 @@ VALUE_BEGIN_KEY = "value_begin"
 VALUE_END_KEY = "value_end"
 OP_TYPE_KEY = "ot_key"
 LIST_POLICY_KEY = "list_policy"
+MAP_POLICY_KEY = "map_policy"
 PARAM_COUNT_KEY = "param_count"
 EXTRA_PARAM_COUNT_KEY = "extra_param_count"
 LIST_ORDER_KEY = "list_order"
@@ -765,7 +766,7 @@ class ListGetByValue(BaseExpr):
             self.fixed[CTX_KEY] = ctx
 
 
-class ListGetByValueRange(BaseExpr):  # TODO how to mark if bin name is not expression?
+class ListGetByValueRange(BaseExpr):
     op = aerospike.OP_LIST_EXP_GET_BY_VALUE_RANGE
 
     def __init__(
@@ -873,6 +874,7 @@ class ListGetByIndexRelRankRange(BaseExpr):
     def __init__(self, ctx: TypeCDT, return_type: int, index: TypeIndex, count: TypeCount, bin_name: TypeBinName):
         self.children = (
             index,
+            count,
             bin_name if isinstance(bin_name, BaseExpr) else ListBin(bin_name)
         )
         self.fixed = {RETURN_TYPE_KEY: return_type}
@@ -930,6 +932,122 @@ class ListGetByRankRange(BaseExpr):
         if ctx is not None:
             self.fixed[CTX_KEY] = ctx
 
+
+# MAP MODIFIY EXPRESSIONS
+TypeKey = Union[BaseExpr, Any]
+TypeKeyList = Union[BaseExpr, List[TypeKey]]
+
+
+class MapPut(BaseExpr):
+    op = aerospike.OP_MAP_PUT
+
+    def __init__(self, ctx: TypeCDT, policy: TypePolicy, key: TypeKey, value: TypeValue, bin_name: TypeBinName):
+        self.children = (
+            key,
+            value,
+            _GenericExpr(ExprOp._AS_EXP_CODE_CDT_MAP_CRMOD, 0, {MAP_POLICY_KEY: policy} if policy is not None else {}),
+            bin_name if isinstance(bin_name, BaseExpr) else MapBin(bin_name),
+        )
+        self.fixed = {}
+
+        if ctx is not None:
+            self.fixed[CTX_KEY] = ctx
+
+        if policy is not None:
+            self.fixed[MAP_POLICY_KEY] = policy
+
+
+class MapPutItems(BaseExpr):
+    op = aerospike.OP_MAP_PUT_ITEMS
+
+    def __init__(self, ctx: TypeCDT, policy: TypePolicy, map: map, bin_name: TypeBinName):
+        self.children = (
+            map,
+            _GenericExpr(ExprOp._AS_EXP_CODE_CDT_MAP_CRMOD, 0, {MAP_POLICY_KEY: policy} if policy is not None else {}),
+            bin_name if isinstance(bin_name, BaseExpr) else MapBin(bin_name),
+        )
+        self.fixed = {}
+
+        if ctx is not None:
+            self.fixed[CTX_KEY] = ctx
+
+        if policy is not None:
+            self.fixed[MAP_POLICY_KEY] = policy
+
+
+class MapIncrement(BaseExpr):
+    op = aerospike.OP_MAP_INCREMENT
+
+    def __init__(self, ctx: TypeCDT, policy: TypePolicy, key: TypeKey, value: TypeValue, bin_name: TypeBinName):
+        self.children = (
+            key,
+            value,
+            _GenericExpr(ExprOp._AS_EXP_CODE_CDT_MAP_CRMOD, 0, {MAP_POLICY_KEY: policy} if policy is not None else {}),
+            bin_name if isinstance(bin_name, BaseExpr) else MapBin(bin_name),
+        )
+        self.fixed = {}
+
+        if ctx is not None:
+            self.fixed[CTX_KEY] = ctx
+
+        if policy is not None:
+            self.fixed[MAP_POLICY_KEY] = policy
+
+
+class MapClear(BaseExpr):
+    op = aerospike.OP_MAP_CLEAR
+
+    def __init__(self, ctx: TypeCDT, bin_name: TypeBinName):
+        self.children = (
+            bin_name if isinstance(bin_name, BaseExpr) else MapBin(bin_name),
+        )
+        self.fixed = {}
+
+        if ctx is not None:
+            self.fixed[CTX_KEY] = ctx
+
+
+class MapRemoveByKey(BaseExpr):
+    op = aerospike.OP_MAP_REMOVE_BY_KEY
+
+    def __init__(self, ctx: TypeCDT, key: TypeKey, bin_name: TypeBinName):
+        self.children = (
+            key,
+            bin_name if isinstance(bin_name, BaseExpr) else MapBin(bin_name),
+        )
+        self.fixed = {}
+
+        if ctx is not None:
+            self.fixed[CTX_KEY] = ctx
+
+
+class MapRemoveByKeyList(BaseExpr):
+    op = aerospike.OP_MAP_REMOVE_BY_KEY_LIST
+
+    def __init__(self, ctx: TypeCDT, keys: List[TypeKey], bin_name: TypeBinName):
+        self.children = (
+            keys,
+            bin_name if isinstance(bin_name, BaseExpr) else MapBin(bin_name),
+        )
+        self.fixed = {}
+
+        if ctx is not None:
+            self.fixed[CTX_KEY] = ctx
+
+
+class MapRemoveByKeyRange(BaseExpr):
+    op = aerospike.OP_MAP_REMOVE_BY_KEY_RANGE
+
+    def __init__(self, ctx: TypeCDT, begin: TypeValue, end: TypeValue, bin_name: TypeBinName):
+        self.children = (
+            begin,
+            end,
+            bin_name if isinstance(bin_name, BaseExpr) else MapBin(bin_name),
+        )
+        self.fixed = {}
+
+        if ctx is not None:
+            self.fixed[CTX_KEY] = ctx
 
 # def example():
 #     expr = And(EQ(IntBin("foo"), 5),

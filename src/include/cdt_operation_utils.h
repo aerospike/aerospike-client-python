@@ -36,6 +36,7 @@
 #define AS_PY_LIST_ORDER "list_order"
 #define AS_PY_LIST_SORT_FLAGS "sort_flags"
 #define AS_PY_LIST_POLICY "list_policy"
+#define AS_PY_MAP_POLICY "map_policy"
 
 as_status
 get_bin(as_error * err, PyObject * op_dict, as_vector * unicodeStrVector, char** binName);

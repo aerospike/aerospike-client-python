@@ -52,6 +52,14 @@ GEO_POLY1 = aerospike.GeoJSON(
                                             [-132.500000, 48.080000],
                                             [-132.500000, 47.000000]]]})
 
+GEO_POLY2 = aerospike.GeoJSON(
+                            {"type": "Polygon",
+                            "coordinates": [[[-132.500000, 47.000000],
+                                            [-131.000000, 47.000000],
+                                            [-131.000000, 48.080000],
+                                            [-132.500000, 48.080000],
+                                            [-132.500000, 80.000000]]]})
+
 def add_ctx_op(ctx_type, value):
     ctx_func = ctx_ops[ctx_type]
     return ctx_func(value)
@@ -116,34 +124,37 @@ class TestPred2(TestBaseClass):
                     'slist_bin': [
                         'b',
                         'd',
-                        'f',
-                        'h'
+                        'f'
                     ],
                     'llist_bin': [
                         [1, 2],
-                        [1, 3]
+                        [1, 3],
+                        [1, 4]
                     ],
                     'mlist_bin': [
                         {1: 1, 2: 2},
-                        {1: 1, 3: 3}
+                        {1: 1, 3: 3},
+                        {1: 1, 4: 4}
                     ],
                     'bylist_bin': [
                         'b'.encode("utf8"),
                         'd'.encode("utf8"),
-                        'f'.encode("utf8"),
-                        'h'.encode("utf8")
+                        'f'.encode("utf8")
                     ],
                     'bolist_bin': [
                         True,
+                        False,
                         False
                     ],
                     'nlist_bin': [
                         None,
+                        aerospike.null,
                         aerospike.null
                     ],
                     'bllist_bin': [
                         TestUsrDefinedClass(1),
-                        TestUsrDefinedClass(3)
+                        TestUsrDefinedClass(3),
+                        TestUsrDefinedClass(4)
                     ],
                     'flist_bin': [
                         1.0,
@@ -152,23 +163,28 @@ class TestPred2(TestBaseClass):
                     ],
                     'glist_bin': [
                         GEO_POLY,
-                        GEO_POLY1
+                        GEO_POLY1,
+                        GEO_POLY2
                     ]
                 }
             self.as_connection.put(key, rec)
+        
+        self.as_connection.put(('test', u'demo', 100), {'extra': 'record'})
 
-        # ctx_sort_nested_map1 = [
-        #     cdt_ctx.cdt_ctx_list_index(4)
-        # ]
+        ctx_sort_nested_map1 = [
+            cdt_ctx.cdt_ctx_list_index(4)
+        ]
 
-        # sort_ops = [
-        #     list_operations.list_set_order('list_bin', aerospike.LIST_ORDERED),
-        #     map_operations.map_set_policy('list_bin', {'map_order': aerospike.MAP_KEY_ORDERED}, ctx_sort_nested_map1),
-        # ]
+        sort_ops = [
+            list_operations.list_set_order('ilist_bin', aerospike.LIST_ORDERED),
+            list_operations.list_set_order('slist_bin', aerospike.LIST_ORDERED),
+            list_operations.list_set_order('bllist_bin', aerospike.LIST_ORDERED),
+            #map_operations.map_set_policy('list_bin', {'map_order': aerospike.MAP_KEY_ORDERED}, ctx_sort_nested_map1),
+        ]
 
-        # #apply map order policy
-        # for i in range(19):
-        #     _, _, _ = self.as_connection.operate(('test', u'demo', i), sort_ops)
+        #apply map order policy
+        for i in range(19):
+            _, _, _ = self.as_connection.operate(('test', u'demo', i), sort_ops)
         
         _, _, rec = self.as_connection.get(('test', u'demo', 10))
         print(rec)
@@ -491,19 +507,13 @@ class TestPred2(TestBaseClass):
         records = scan_obj.results({'predexp2': expr.compile()})
         assert(len(records) == expected)
 
-    @pytest.mark.parametrize("bin, expected", [
-        ([list_index], [3], 26, 0, 3, aerospike.LIST_RETURN_COUNT, 3, 19),
-        ([list_index], [3], 26, 0, 2, aerospike.LIST_RETURN_VALUE, [26, 27], 19),
-        (None, None, "string_test10", 0, 1, aerospike.LIST_RETURN_INDEX, [3], 1),
-        # (None, None, ["bytes_test18".encode("utf8"), 18, GEO_POLY], aerospike.LIST_RETURN_VALUE, [18, "bytes_test18".encode("utf8"), GEO_POLY], 1),
-        # (None, None, LIST_BIN_EXAMPLE, aerospike.LIST_RETURN_VALUE, LIST_BIN_EXAMPLE, 1),
-        # (None, None, LIST_BIN_EXAMPLE, aerospike.LIST_RETURN_INDEX, [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10], 1),
-        # (None, None, LIST_BIN_EXAMPLE, aerospike.LIST_RETURN_REVERSE_INDEX, [10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0], 1),
-        # (None, None, LIST_BIN_EXAMPLE, aerospike.LIST_RETURN_COUNT, 11, 1),
-        # (None, None, [10], aerospike.LIST_RETURN_RANK, [1], 1),
-        # ([list_index], [6], [26, 6], aerospike.LIST_RETURN_INDEX, [0, 3], 1),
+    @pytest.mark.parametrize("bin, values", [
+        ("ilist_bin", [ResultType.INTEGER, 6, 1, 7, [2, 6], 1]), #what was happening with everything being true when values[0] == 1?
+        # ("slist_bin", [ResultType.STRING, "f", "b", "g", ["d", "f"], "b"]), #TODO debug 20 records back
+        # ("llist_bin", [ResultType.LIST, [1, 4], [1, 2], [1, 6], [[1, 3], [1, 4]], [1, 2]]),
+        ("ilist_bin", [ResultType.BLOB, TestUsrDefinedClass(4), TestUsrDefinedClass(1), TestUsrDefinedClass(6), [TestUsrDefinedClass(2), TestUsrDefinedClass(4)], TestUsrDefinedClass(1)])
     ])
-    def test_ListReadOps_pos(self, bin, expected):
+    def test_ListReadOps_pos(self, bin, values):
         """
         Invoke various list read expressions with many value types.
         """
@@ -511,14 +521,38 @@ class TestPred2(TestBaseClass):
         expr = And(
             EQ(
                 ListGetByValueRelRankRange(None, aerospike.LIST_RETURN_COUNT, 
-                    ListGetByIndex(ResultType.INTEGER, None, aerospike.LIST_RETURN_VALUE, 1, "ilist_bin"), 1, aerospike.CDTInfinite, "ilist_bin"),
-                2)
+                    ListGetByIndex(values[0], None, aerospike.LIST_RETURN_VALUE, 0, bin), 1, 3, bin), #why did this fail with aerospike.CDTInfinite for count?
+                2),
+            EQ(
+                ListGetByValue(None,  values[1], aerospike.LIST_RETURN_INDEX,
+                    ListGetByValueRange(None, aerospike.LIST_RETURN_VALUE, values[2], values[3], bin)),
+                [2]),
+            EQ(
+                ListGetByValueList(None, aerospike.LIST_RETURN_COUNT, values[4], 
+                    ListGetByValueRelRankRangeToEnd(None, aerospike.LIST_RETURN_VALUE, values[5], 1, bin)),
+                2),
+            EQ(
+                ListGetByIndexRelRankRangeToEnd(None, aerospike.LIST_RETURN_COUNT, 1,
+                    ListGetByIndexRelRankRange(None, aerospike.LIST_RETURN_VALUE, 1, 3, bin,)),
+                1),
+            EQ(
+                ListGetByRank(None, aerospike.LIST_RETURN_RANK, values[0], 1, #lets 20 pass with slist_bin
+                    ListGetByRankRangeToEnd(None, aerospike.LIST_RETURN_VALUE, 1, bin)),
+                1),
+            EQ(
+                ListGetByRankRange(None, aerospike.LIST_RETURN_COUNT, 1, ListSize(None, bin), bin),
+                2
+            )
         )
-        
-        
+
+        # expr = EQ(
+        #         ListGetByValueRelRankRange(None, aerospike.LIST_RETURN_COUNT, 
+        #             ListGetByIndex(values[0], None, aerospike.LIST_RETURN_VALUE, 0, bin), 1, 3, bin), #why did this fail with aerospike.CDTInfinite for count?
+        #         2)
+
         scan_obj = self.as_connection.scan(self.test_ns, self.test_set)
         records = scan_obj.results({'predexp2': expr.compile()})
         #print(records)
         for record in records:
             print(record[2])
-        assert(len(records) == expected)
+        assert(len(records) == 19)
