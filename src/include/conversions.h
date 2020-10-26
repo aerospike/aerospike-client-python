@@ -30,6 +30,8 @@
 
 #include "types.h"
 
+#define CTX_KEY "ctx"
+
 as_status as_udf_file_to_pyobject(as_error *err, as_udf_file * entry, PyObject ** py_file);
 
 as_status as_udf_files_to_pyobject(as_error *err, as_udf_files *files, PyObject **py_files);

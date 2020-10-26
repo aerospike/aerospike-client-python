@@ -402,11 +402,6 @@ PyDoc_STRVAR(get_nodes_doc,
 \n\
 Return the list of hosts present in a connected cluster.");
 
-PyDoc_STRVAR(has_geo_doc,
-"has_geo() -> bool\n\
-\n\
-Check whether the connected cluster supports geospatial data and indexes.");
-
 PyDoc_STRVAR(udf_put_doc,
 "udf_put(filename[, udf_type[, policy]])\n\
 \n\
@@ -774,10 +769,6 @@ static PyMethodDef AerospikeClient_Type_Methods[] = {
 	{"get_nodes",
 		(PyCFunction) AerospikeClient_GetNodes, METH_VARARGS | METH_KEYWORDS,
 		get_nodes_doc},
-	{"has_geo",
-		(PyCFunction)AerospikeClient_HasGeo, METH_VARARGS | METH_KEYWORDS,
-		has_geo_doc},
-
 	// UDF OPERATIONS
 
 	{"udf_put",

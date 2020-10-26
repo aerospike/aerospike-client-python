@@ -142,9 +142,9 @@ class TestPred2(TestBaseClass):
                         'f'.encode("utf8")
                     ],
                     'bolist_bin': [
-                        True,
                         False,
-                        False
+                        False,
+                        True
                     ],
                     'nlist_bin': [
                         None,
@@ -176,9 +176,10 @@ class TestPred2(TestBaseClass):
         ]
 
         sort_ops = [
-            list_operations.list_set_order('ilist_bin', aerospike.LIST_ORDERED),
+            #list_operations.list_set_order('ilist_bin', aerospike.LIST_ORDERED),
             list_operations.list_set_order('slist_bin', aerospike.LIST_ORDERED),
             list_operations.list_set_order('bllist_bin', aerospike.LIST_ORDERED),
+            list_operations.list_set_order('bylist_bin', aerospike.LIST_ORDERED),
             #map_operations.map_set_policy('list_bin', {'map_order': aerospike.MAP_KEY_ORDERED}, ctx_sort_nested_map1),
         ]
 
@@ -509,9 +510,15 @@ class TestPred2(TestBaseClass):
 
     @pytest.mark.parametrize("bin, values", [
         ("ilist_bin", [ResultType.INTEGER, 6, 1, 7, [2, 6], 1]), #what was happening with everything being true when values[0] == 1?
-        # ("slist_bin", [ResultType.STRING, "f", "b", "g", ["d", "f"], "b"]), #TODO debug 20 records back
-        # ("llist_bin", [ResultType.LIST, [1, 4], [1, 2], [1, 6], [[1, 3], [1, 4]], [1, 2]]),
-        ("ilist_bin", [ResultType.BLOB, TestUsrDefinedClass(4), TestUsrDefinedClass(1), TestUsrDefinedClass(6), [TestUsrDefinedClass(2), TestUsrDefinedClass(4)], TestUsrDefinedClass(1)])
+        ("slist_bin", [ResultType.STRING, "f", "b", "g", ["d", "f"], "b"]),
+        ("llist_bin", [ResultType.LIST, [1, 4], [1, 2], [1, 6], [[1, 3], [1, 4]], [1, 2]]),
+        # ("bllist_bin", [ResultType.BLOB, TestUsrDefinedClass(4), TestUsrDefinedClass(1), TestUsrDefinedClass(6), [TestUsrDefinedClass(3), TestUsrDefinedClass(4)], TestUsrDefinedClass(1)]) comparison with anything other than AS_BYTES_BLOB is unsupported.
+        #("mlist_bin", [ResultType.MAP, {1: 1, 4: 4}, {1: 1, 2: 2}, {1: 1, 6: 6}, [{1: 1, 3: 3}, {1: 1, 4: 4}], {1: 1, 2: 2}]) # pending investigation
+        ("bylist_bin", [ResultType.BLOB, "f".encode("utf8"), "b".encode("utf8"), "g".encode("utf8"), ["d".encode("utf8"), "f".encode("utf8")], "b".encode("utf8")]),
+        #("bolist_bin", [ResultType.BLOB, True, False, True, [False, True], False]) comparison with anything other than AS_BYTES_BLOB is unsupported.
+        #TODO nlist_bin test
+        ("flist_bin", [ResultType.FLOAT, 6.0, 1.0, 7.0, [2.0, 6.0], 1.0]),
+        #("flist_bin", [ResultType.GEOJSON, GEO_POLY2, GEO_POLY, GEO_POLY2, [GEO_POLY1, GEO_POLY2], GEO_POLY]) ask about geojson support
     ])
     def test_ListReadOps_pos(self, bin, values):
         """
@@ -532,11 +539,11 @@ class TestPred2(TestBaseClass):
                     ListGetByValueRelRankRangeToEnd(None, aerospike.LIST_RETURN_VALUE, values[5], 1, bin)),
                 2),
             EQ(
-                ListGetByIndexRelRankRangeToEnd(None, aerospike.LIST_RETURN_COUNT, 1,
+                ListGetByIndexRangeToEnd(None, aerospike.LIST_RETURN_COUNT, 1,
                     ListGetByIndexRelRankRange(None, aerospike.LIST_RETURN_VALUE, 1, 3, bin,)),
                 1),
             EQ(
-                ListGetByRank(None, aerospike.LIST_RETURN_RANK, values[0], 1, #lets 20 pass with slist_bin
+                ListGetByRank(None, aerospike.LIST_RETURN_RANK, ResultType.INTEGER, 1, #lets 20 pass with slist_bin
                     ListGetByRankRangeToEnd(None, aerospike.LIST_RETURN_VALUE, 1, bin)),
                 1),
             EQ(
@@ -545,14 +552,122 @@ class TestPred2(TestBaseClass):
             )
         )
 
-        # expr = EQ(
+        # ops = [
+        #     list_operations.list_get_by_index(bin, 0, aerospike.LIST_RETURN_VALUE)
+        # ]
+
+        # _, _, res = self.as_connection.operate(('test', u'demo', 10), ops)
+        # # print("******* ", res[bin].data)
+        # x = res[bin]
+
+        # expr =             EQ(
         #         ListGetByValueRelRankRange(None, aerospike.LIST_RETURN_COUNT, 
-        #             ListGetByIndex(values[0], None, aerospike.LIST_RETURN_VALUE, 0, bin), 1, 3, bin), #why did this fail with aerospike.CDTInfinite for count?
+        #             x, 1, 3, 'bllist_bin'), #why did this fail with aerospike.CDTInfinite for count?
         #         2)
+        
+        # expr = EQ(
+        #     ListGetByIndex(ResultType.MAP, None, aerospike.LIST_RETURN_VALUE, 0, bin),
+        #     {1: 1, 2: 2}
+        # )
 
         scan_obj = self.as_connection.scan(self.test_ns, self.test_set)
         records = scan_obj.results({'predexp2': expr.compile()})
-        #print(records)
-        for record in records:
-            print(record[2])
+        #print(records) TestUsrDefinedClass(1)
+        # for record in records:
+        #     print(record[2])
+        assert(len(records) == 19)
+
+
+    @pytest.mark.parametrize("bin, ctx, policy, values, expected", [
+        (
+            "ilist_bin",
+            None,
+            {}, 
+            [
+                20,
+                [3, 9],
+                4,
+                [24, 25], #
+                10,
+                1, #
+                [2, 6],
+                1, #
+                2,
+                6,
+                2 #
+            ], 
+            [
+                [1, 2, 3, 4, 6, 9, 20],
+                [10, 24, 25, 2, 6],
+                [1]
+            ]
+        )
+    ])
+    def test_ListModOps_pos(self, bin, ctx, policy, values, expected):
+        """
+        Invoke various list modify expressions with many value types.
+        """
+        
+        expr = And(
+            EQ(
+                ListGetByIndexRangeToEnd(ctx, aerospike.LIST_RETURN_VALUE, 0,                 
+                    ListSort(ctx, aerospike.LIST_SORT_DEFAULT, #TODO can't compare with constant list (server issue)        
+                        ListAppend(ctx, policy, values[0],
+                            ListAppendItems(ctx, policy, values[1],
+                                ListInsert(ctx, policy, 1, values[2], bin))))),
+                expected[0]
+            ),
+            EQ(
+                ListGetByRankRangeToEnd(ctx, aerospike.LIST_RETURN_VALUE, 0,
+                    ListInsertItems(ctx, policy, 1, values[3],
+                        ListSet(ctx, policy, 0, values[4],
+                            ListClear(ctx, bin)))),
+                expected[1]
+            ),
+            EQ(
+                ListRemoveByValue(ctx, values[5],
+                    ListRemoveByValueList(ctx, values[6], bin)),
+                []
+            ),
+            EQ(
+                ListRemoveByValueRange(ctx, values[7], values[8],
+                    ListRemoveByValueRelRankToEnd(ctx, values[9], 2, bin)),
+                []
+            ),
+            EQ(
+                ListRemoveByValueRelRankRange(ctx, values[10], 0, 2,
+                    ListRemoveByIndex(ctx, 0, bin)),
+                []
+            ), 
+            EQ(
+                ListRemoveByIndexRangeToEnd(ctx, 1,
+                    ListRemoveByIndexRange(ctx, 0, 1, bin)),
+                []
+            ),
+            EQ(
+                ListRemoveByRank(ctx, 0, 
+                    ListRemoveByRankRangeToEnd(ctx, 1, bin)),
+                [] #empty
+            ),
+            EQ(
+                ListRemoveByRankRange(ctx, 1, 2, bin),
+                expected[2]
+            )
+        )
+
+        # ListIncrement(ctx, policy, 1, )) TODO needs it's own always int case
+
+        expr =  EQ(
+                ListGetByRankRangeToEnd(ctx, aerospike.LIST_RETURN_VALUE, 0,
+                    ListInsertItems(ctx, policy, 1, values[3],
+                        ListSet(ctx, policy, 0, values[4],
+                            ListClear(ctx, bin)))),
+                expected[1]
+            )
+
+        scan_obj = self.as_connection.scan(self.test_ns, self.test_set)
+        records = scan_obj.results({'predexp2': expr.compile()})
+        #print(records) TestUsrDefinedClass(1)
+        # for record in records:
+        #     print(record[2])
         assert(len(records) == 19)

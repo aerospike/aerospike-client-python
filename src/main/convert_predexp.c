@@ -107,6 +107,10 @@ typedef struct {
 	PyObject * pydict;
 	PyObject * pytuple;
 	as_cdt_ctx * ctx;
+
+	as_list_policy * list_policy;
+	as_map_policy * map_policy;
+
 	// PyObject * pyval2;
 	// PyObject * pyval3;
 	// PyObject * pyval4;
@@ -143,7 +147,7 @@ as_status get_exp_val_from_pyval(AerospikeClient * self, as_static_pool * static
 				return err->code;
 			}
 
-			as_exp_entry tmp_entry = AS_EXP_VAL((as_val *) bytes);
+			as_exp_entry tmp_entry = as_exp_val((as_val *) bytes);
 			*new_entry = tmp_entry;
 		}
 		// {
@@ -159,7 +163,7 @@ as_status get_exp_val_from_pyval(AerospikeClient * self, as_static_pool * static
 		}
 
 		{
-			as_exp_entry tmp_entry = AS_EXP_INT(i);
+			as_exp_entry tmp_entry = as_exp_int(i);
 			*new_entry = tmp_entry;
 		}
 	} else if (PyLong_Check(py_obj)) {
@@ -171,21 +175,21 @@ as_status get_exp_val_from_pyval(AerospikeClient * self, as_static_pool * static
 		}
 
 		{
-			as_exp_entry tmp_entry = AS_EXP_INT(l);
+			as_exp_entry tmp_entry = as_exp_int(l);
 			*new_entry = tmp_entry;
 		}
 	} else if (PyUnicode_Check(py_obj)) {
 		PyObject * py_ustr = PyUnicode_AsUTF8String(py_obj);
 		char * str = PyBytes_AsString(py_ustr);
 		{
-			as_exp_entry tmp_entry = AS_EXP_STR(strdup(str));
+			as_exp_entry tmp_entry = as_exp_str(strdup(str));
 			*new_entry = tmp_entry;
 		}
 		Py_DECREF(py_ustr);
 	} else if (PyString_Check(py_obj)) {
 		char * s = PyString_AsString(py_obj);
 		{
-			as_exp_entry tmp_entry = AS_EXP_STR(s);
+			as_exp_entry tmp_entry = as_exp_str(s);
 			*new_entry = tmp_entry;
 		}
 	 } else if (PyBytes_Check(py_obj)) { //TODO
@@ -193,7 +197,7 @@ as_status get_exp_val_from_pyval(AerospikeClient * self, as_static_pool * static
 	 	uint8_t * b = (uint8_t *) PyBytes_AsString(py_obj);
 	 	uint32_t b_len  = (uint32_t)  PyBytes_Size(py_obj);
 		{
-			as_exp_entry tmp_entry = AS_EXP_BYTES(b, b_len);
+			as_exp_entry tmp_entry = as_exp_bytes(b, b_len);
 			*new_entry = tmp_entry;
 		}
 	 	//*val = (as_val *) as_bytes_new_wrap(b, b_len, false);
@@ -202,23 +206,8 @@ as_status get_exp_val_from_pyval(AerospikeClient * self, as_static_pool * static
 		PyObject* py_data = PyObject_GenericGetAttr(py_obj, py_parameter);
 		Py_DECREF(py_parameter);
 		char *geo_value = PyString_AsString(AerospikeGeospatial_DoDumps(py_data, err));
-		if (aerospike_has_geo(self->as)) {
-			{
-				as_exp_entry tmp_entry = AS_EXP_GEO(geo_value);
-				*new_entry = tmp_entry;
-			}
-		} else { // TODO
-			return as_error_update(err, AEROSPIKE_ERR, "NOT YET IMPLEMENTED3\n");
-			// as_bytes *bytes;
-			// GET_BYTES_POOL(bytes, static_pool, err);
-			// if (err->code == AEROSPIKE_OK) {
-			// 	if (serialize_based_on_serializer_policy(self, serializer_type,
-			// 		&bytes, py_data, err) != AEROSPIKE_OK) {
-			// 		return err->code;
-			// 	}
-			// 	*val = (as_val *) bytes;
-			// }
-		}
+		as_exp_entry tmp_entry = as_exp_geo(geo_value);
+		*new_entry = tmp_entry;
 	} else if (PyByteArray_Check(py_obj)) { // TODO
 		//return as_error_update(err, AEROSPIKE_ERR, "NOT YET IMPLEMENTED4\n");
 		as_bytes *bytes;
@@ -229,7 +218,7 @@ as_status get_exp_val_from_pyval(AerospikeClient * self, as_static_pool * static
 				return err->code;
 			}
 			{
-				as_exp_entry tmp_entry = AS_EXP_VAL((as_val *) bytes);
+				as_exp_entry tmp_entry = as_exp_val((as_val *) bytes);
 				*new_entry = tmp_entry;
 			}
 		}
@@ -238,7 +227,7 @@ as_status get_exp_val_from_pyval(AerospikeClient * self, as_static_pool * static
 		pyobject_to_list(self, err, py_obj, &list, static_pool, serializer_type);
 		if (err->code == AEROSPIKE_OK) {
 			{
-				as_exp_entry tmp_entry = AS_EXP_VAL(list);
+				as_exp_entry tmp_entry = as_exp_val(list);
 				*new_entry = tmp_entry;
 			}
 		}
@@ -247,35 +236,35 @@ as_status get_exp_val_from_pyval(AerospikeClient * self, as_static_pool * static
 		pyobject_to_map(self, err, py_obj, &map, static_pool, serializer_type);
 		if (err->code == AEROSPIKE_OK) {
 			{
-				as_exp_entry tmp_entry = AS_EXP_VAL(map);
+				as_exp_entry tmp_entry = as_exp_val(map);
 				*new_entry = tmp_entry;
 			}
 		}
 	} else if (Py_None == py_obj) {
 		{
-			as_exp_entry tmp_entry = AS_EXP_NIL();
+			as_exp_entry tmp_entry = as_exp_nil();
 			*new_entry = tmp_entry;
 		}
 	} else if (!strcmp(py_obj->ob_type->tp_name, "aerospike.null")) {
 		{
-			as_exp_entry tmp_entry = AS_EXP_NIL();
+			as_exp_entry tmp_entry = as_exp_nil();
 			*new_entry = tmp_entry;
 		}
 	} else if (AS_Matches_Classname(py_obj, AS_CDT_WILDCARD_NAME)) {
 		{
-			as_exp_entry tmp_entry = AS_EXP_VAL((as_val *) as_val_reserve(&as_cmp_wildcard));
+			as_exp_entry tmp_entry = as_exp_val((as_val *) as_val_reserve(&as_cmp_wildcard));
 			*new_entry = tmp_entry;
 		}
 	} else if (AS_Matches_Classname(py_obj, AS_CDT_INFINITE_NAME)) {
 		{
-			as_exp_entry tmp_entry = AS_EXP_VAL((as_val *) as_val_reserve(&as_cmp_inf));
+			as_exp_entry tmp_entry = as_exp_val((as_val *) as_val_reserve(&as_cmp_inf));
 			*new_entry = tmp_entry;
 		}
 	} else {
 		if (PyFloat_Check(py_obj)) {
 			double d = PyFloat_AsDouble(py_obj);
 			{
-				as_exp_entry tmp_entry = AS_EXP_FLOAT(d);
+				as_exp_entry tmp_entry = as_exp_float(d);
 				*new_entry = tmp_entry;
 			}
 		} else { //TODO
@@ -289,12 +278,12 @@ as_status get_exp_val_from_pyval(AerospikeClient * self, as_static_pool * static
 				}
 
 				{
-					as_exp_entry tmp_entry = AS_EXP_VAL((as_val *) bytes);
+					as_exp_entry tmp_entry = as_exp_val((as_val *) bytes);
 					*new_entry = tmp_entry;
 				}
 			}
 		}
-	} //note
+	}
 
 	return err->code;
 }
@@ -323,7 +312,7 @@ as_status add_pred_macros(AerospikeClient * self, as_static_pool * static_pool, 
 
 				as_exp_entry new_entries[] = {
 					{.op=_AS_EXP_CODE_BIN, .count=3},
-					AS_EXP_INT(pred->result_type),
+					as_exp_int(pred->result_type),
 					_AS_EXP_VAL_RAWSTR(bin_name)
 				};
 				append_array(3);
@@ -344,55 +333,55 @@ as_status add_pred_macros(AerospikeClient * self, as_static_pool * static_pool, 
 			break;
 		case EQ:;
 			{
-				as_exp_entry new_entries[] = {AS_EXP_CMP_EQ({},{})};
+				as_exp_entry new_entries[] = {as_exp_cmp_eq({},{})};
 				append_array(1);
 			}
 			break;
 		case NE:;
 			{
-				as_exp_entry new_entries[] = {AS_EXP_CMP_NE({},{})};
+				as_exp_entry new_entries[] = {as_exp_cmp_ne({},{})};
 				append_array(1);
 			}
 			break;
 		case GT:;
 			{
-				as_exp_entry new_entries[] = {AS_EXP_CMP_GT({},{})};
+				as_exp_entry new_entries[] = {as_exp_cmp_gt({},{})};
 				append_array(1);
 			}
 			break;
 		case GE:;
 			{
-				as_exp_entry new_entries[] = {AS_EXP_CMP_GE({},{})};
+				as_exp_entry new_entries[] = {as_exp_cmp_ge({},{})};
 				append_array(1);
 			}
 			break;
 		case LT:;
 			{
-				as_exp_entry new_entries[] = {AS_EXP_CMP_LT({},{})};
+				as_exp_entry new_entries[] = {as_exp_cmp_lt({},{})};
 				append_array(1);
 			}
 			break;
 		case LE:;
 			{
-				as_exp_entry new_entries[] = {AS_EXP_CMP_LE({},{})};
+				as_exp_entry new_entries[] = {as_exp_cmp_le({},{})};
 				append_array(1);
 			}
 			break;
 		case AND:;
 			{
-				as_exp_entry new_entries[] = {AS_EXP_AND({})};
+				as_exp_entry new_entries[] = {as_exp_and({})};
 				append_array(1);
 			}
 			break;
 		case OR:;
 			{
-				as_exp_entry new_entries[] = {AS_EXP_OR({})};
+				as_exp_entry new_entries[] = {as_exp_or({})};
 				append_array(1);
 			}
 			break;
 		case NOT:;
 			{
-				as_exp_entry new_entries[] = {AS_EXP_NOT({})};
+				as_exp_entry new_entries[] = {as_exp_not({})};
 				append_array(1);
 			}
 			break;
@@ -408,43 +397,43 @@ as_status add_pred_macros(AerospikeClient * self, as_static_pool * static_pool, 
 					return err->code;
 				}
 
-				as_exp_entry new_entries[] = {AS_EXP_DIGEST_MODULO(lval1)};
+				as_exp_entry new_entries[] = {as_exp_digest_modulo(lval1)};
 				append_array(2);
 			}
 			break;
 		case META_DEVICE_SIZE:;
 			{
-				as_exp_entry new_entries[] = {AS_EXP_DEVICE_SIZE()};
+				as_exp_entry new_entries[] = {as_exp_device_size()};
 				append_array(1);
 			}
 			break;
 		case META_LAST_UPDATE_TIME:;
 			{
-				as_exp_entry new_entries[] = {AS_EXP_LAST_UPDATE()};
+				as_exp_entry new_entries[] = {as_exp_last_update()};
 				append_array(1);
 			}
 			break;
 		case META_VOID_TIME:;
 			{
-				as_exp_entry new_entries[] = {AS_EXP_VOID_TIME()};
+				as_exp_entry new_entries[] = {as_exp_void_time()};
 				append_array(1);
 			}
 			break;
 		case META_TTL:;
 			{
-				as_exp_entry new_entries[] = {AS_EXP_TTL()};
+				as_exp_entry new_entries[] = {as_exp_ttl()};
 				append_array(1);
 			}
 			break;
 		case META_SET_NAME:;
 			{
-				as_exp_entry new_entries[] = {AS_EXP_SET_NAME()};
+				as_exp_entry new_entries[] = {as_exp_set_name()};
 				append_array(sizeof(new_entries) / sizeof(as_exp_entry));
 			}
 			break;
 		case META_KEY_EXISTS:;
 			{
-				as_exp_entry new_entries[] = {AS_EXP_KEY_EXIST()};
+				as_exp_entry new_entries[] = {as_exp_key_exist()};
 				append_array(sizeof(new_entries) / sizeof(as_exp_entry)); // TODO add size to append_array
 			}
 			break;
@@ -452,7 +441,7 @@ as_status add_pred_macros(AerospikeClient * self, as_static_pool * static_pool, 
 			{
 				as_exp_entry new_entries[] = {
 					{.op=_AS_EXP_CODE_KEY, .count=2},
-					AS_EXP_INT(pred->result_type)
+					as_exp_int(pred->result_type)
 				};
 				append_array(sizeof(new_entries) / sizeof(as_exp_entry));
 			}
@@ -462,31 +451,26 @@ as_status add_pred_macros(AerospikeClient * self, as_static_pool * static_pool, 
 				return err->code;
 			}
 
-
 			{
-				as_exp_entry new_entries[] = {AS_EXP_BIN_TYPE(bin_name)};
+				as_exp_entry new_entries[] = {as_exp_bin_type(bin_name)};
 				append_array(2);
 			}
 			break;
 		case OP_LIST_EXP_GET_BY_INDEX:;
 			printf("in get_by_index\n");
 			{
-				if (get_int64_t(err, AS_PY_BIN_TYPE_KEY, pred->pydict, &lval1) != AEROSPIKE_OK) {
+				if (get_int64_t(err, AS_PY_BIN_TYPE_KEY, pred->pydict, &lval2) != AEROSPIKE_OK) {
 					return err->code;
 				}
 
-				if (get_int64_t(err, AS_PY_LIST_RETURN_KEY, pred->pydict, &lval2) != AEROSPIKE_OK) {
+				if (get_int64_t(err, AS_PY_LIST_RETURN_KEY, pred->pydict, &lval1) != AEROSPIKE_OK) {
 					return err->code;
 				}
 
-				as_exp_entry new_entries[] = {
-					_AS_EXP_CDT_LIST_READ(lval1, lval2, false),
-					_AS_EXP_LIST_START(pred->ctx, AS_CDT_OP_LIST_GET_BY_INDEX, 2),
-					AS_EXP_INT(lval2)
-				};
+				as_exp_entry new_entries[] = {as_exp_list_get_by_index(pred->ctx, lval1, lval2, {}, {})};
 
 				printf("size is: %lud\n", sizeof(new_entries) / sizeof(as_exp_entry));
-				append_array(sizeof(new_entries) / sizeof(as_exp_entry));
+				append_array(sizeof(new_entries) / sizeof(as_exp_entry) - 2); // - 2 for index, bin
 			}
 			break;
 		case OP_LIST_EXP_SIZE:;
@@ -508,14 +492,10 @@ as_status add_pred_macros(AerospikeClient * self, as_static_pool * static_pool, 
 					return err->code;
 				}
 
-				as_exp_entry new_entries[] = {
-					_AS_EXP_CDT_LIST_READ(AS_EXP_TYPE_AUTO, lval1, true),
-					_AS_EXP_LIST_START(pred->ctx, AS_CDT_OP_LIST_GET_ALL_BY_VALUE, 2),
-					AS_EXP_INT(lval1),
-				};
+				as_exp_entry new_entries[] = {as_exp_list_get_by_value(pred->ctx, lval1, {}, {})};
 
 				printf("size is: %lud\n", sizeof(new_entries) / sizeof(as_exp_entry));
-				append_array(sizeof(new_entries) / sizeof(as_exp_entry));
+				append_array(sizeof(new_entries) / sizeof(as_exp_entry) - 2); // - 2 for value, bin
 			}
 			break;
 		case OP_LIST_EXP_GET_BY_VALUE_RANGE:;
@@ -525,14 +505,10 @@ as_status add_pred_macros(AerospikeClient * self, as_static_pool * static_pool, 
 					return err->code;
 				}
 
-				as_exp_entry new_entries[] = {
-					_AS_EXP_CDT_LIST_READ(AS_EXP_TYPE_AUTO, lval1, true),
-					_AS_EXP_LIST_START(pred->ctx, AS_CDT_OP_LIST_GET_BY_VALUE_INTERVAL, 3),
-					AS_EXP_INT(lval1)
-				};
+				as_exp_entry new_entries[] = {as_exp_list_get_by_value_range(pred->ctx, lval1, {}, {}, {})};
 
 				printf("size is: %lud\n", sizeof(new_entries) / sizeof(as_exp_entry));
-				append_array(sizeof(new_entries) / sizeof(as_exp_entry));
+				append_array(sizeof(new_entries) / sizeof(as_exp_entry) - 3); // - 3 for begin, end, bin
 			}
 			break;
 		case OP_LIST_EXP_GET_BY_VALUE_LIST:;
@@ -542,13 +518,9 @@ as_status add_pred_macros(AerospikeClient * self, as_static_pool * static_pool, 
 					return err->code;
 				}
 
-				as_exp_entry new_entries[] = {
-					_AS_EXP_CDT_LIST_READ(AS_EXP_TYPE_AUTO, lval1, true),
-					_AS_EXP_LIST_START(pred->ctx, AS_CDT_OP_LIST_GET_BY_VALUE_LIST, 2),
-					AS_EXP_INT(lval1)
-				};
+				as_exp_entry new_entries[] = {as_exp_list_get_by_value_list(pred->ctx, lval1, {}, {})};
 				printf("size is: %lud\n", sizeof(new_entries) / sizeof(as_exp_entry));
-				append_array(sizeof(new_entries) / sizeof(as_exp_entry));
+				append_array(sizeof(new_entries) / sizeof(as_exp_entry) - 2); // - 2 for value, bin
 			}
 			break;
 		case OP_LIST_EXP_GET_BY_VALUE_RANK_RANGE_REL_TO_END:;
@@ -558,13 +530,9 @@ as_status add_pred_macros(AerospikeClient * self, as_static_pool * static_pool, 
 					return err->code;
 				}
 
-				as_exp_entry new_entries[] = {
-					_AS_EXP_CDT_LIST_READ(AS_EXP_TYPE_AUTO, lval1, true),
-					_AS_EXP_LIST_START(pred->ctx, AS_CDT_OP_LIST_GET_BY_VALUE_REL_RANK_RANGE, 3),
-					AS_EXP_INT(lval1)
-				};
+				as_exp_entry new_entries[] = {as_exp_list_get_by_rel_rank_range_to_end(pred->ctx, lval1, {}, {}, {})};
 				printf("size is: %lud\n", sizeof(new_entries) / sizeof(as_exp_entry));
-				append_array(sizeof(new_entries) / sizeof(as_exp_entry));
+				append_array(sizeof(new_entries) / sizeof(as_exp_entry) -3 ); // - 3 for value, rank, bin
 			}
 			break;
 		case OP_LIST_EXP_GET_BY_VALUE_RANK_RANGE_REL:;
@@ -574,13 +542,9 @@ as_status add_pred_macros(AerospikeClient * self, as_static_pool * static_pool, 
 					return err->code;
 				}
 
-				as_exp_entry new_entries[] = {
-					_AS_EXP_CDT_LIST_READ(AS_EXP_TYPE_AUTO, lval1, true),
-					_AS_EXP_LIST_START(pred->ctx, AS_CDT_OP_LIST_GET_BY_VALUE_REL_RANK_RANGE, 4),
-					AS_EXP_INT(lval1)
-				};
+				as_exp_entry new_entries[] = {as_exp_list_get_by_rel_rank_range(pred->ctx, lval1, {}, {}, {}, {})};
 				printf("size is: %lud\n", sizeof(new_entries) / sizeof(as_exp_entry));
-				append_array(sizeof(new_entries) / sizeof(as_exp_entry));
+				append_array(sizeof(new_entries) / sizeof(as_exp_entry) - 4); // - 4 for value, rank, count, bin
 			}
 			break;
 		case OP_LIST_EXP_GET_BY_INDEX_RANGE_TO_END:;
@@ -590,13 +554,9 @@ as_status add_pred_macros(AerospikeClient * self, as_static_pool * static_pool, 
 					return err->code;
 				}
 
-				as_exp_entry new_entries[] = {
-					_AS_EXP_CDT_LIST_READ(AS_EXP_TYPE_AUTO, lval1, true),
-					_AS_EXP_LIST_START(pred->ctx, AS_CDT_OP_LIST_GET_BY_INDEX_RANGE, 2),
-					AS_EXP_INT(lval1),
-				};
+				as_exp_entry new_entries[] = {as_exp_list_get_by_index_range_to_end(pred->ctx, lval1, {}, {})};
 				printf("size is: %lud\n", sizeof(new_entries) / sizeof(as_exp_entry));
-				append_array(sizeof(new_entries) / sizeof(as_exp_entry));
+				append_array(sizeof(new_entries) / sizeof(as_exp_entry) - 2); // - 2 for index, bin
 			}
 			break;
 		case OP_LIST_EXP_GET_BY_INDEX_RANGE:;
@@ -606,13 +566,9 @@ as_status add_pred_macros(AerospikeClient * self, as_static_pool * static_pool, 
 					return err->code;
 				}
 
-				as_exp_entry new_entries[] = {
-					_AS_EXP_CDT_LIST_READ(AS_EXP_TYPE_AUTO, lval1, true),
-					_AS_EXP_LIST_START(pred->ctx, AS_CDT_OP_LIST_GET_BY_INDEX_RANGE, 3),
-					AS_EXP_INT(lval1),
-				};
+				as_exp_entry new_entries[] = {as_exp_list_get_by_index_range(pred->ctx, lval1, {}, {}, {})};
 				printf("size is: %lud\n", sizeof(new_entries) / sizeof(as_exp_entry));
-				append_array(sizeof(new_entries) / sizeof(as_exp_entry));
+				append_array(sizeof(new_entries) / sizeof(as_exp_entry) - 3); // - 3 for index, count, bin
 			}
 			break;
 		case OP_LIST_EXP_GET_BY_RANK:;
@@ -626,13 +582,9 @@ as_status add_pred_macros(AerospikeClient * self, as_static_pool * static_pool, 
 					return err->code;
 				}
 
-				as_exp_entry new_entries[] = {
-					_AS_EXP_CDT_LIST_READ(lval2, lval1, false),
-					_AS_EXP_LIST_START(pred->ctx, AS_CDT_OP_LIST_GET_BY_RANK, 2),
-					AS_EXP_INT(lval1),
-				};
+				as_exp_entry new_entries[] = {as_exp_list_get_by_rank(pred->ctx, lval1, lval2, {}, {})};
 				printf("size is: %lud\n", sizeof(new_entries) / sizeof(as_exp_entry));
-				append_array(sizeof(new_entries) / sizeof(as_exp_entry));
+				append_array(sizeof(new_entries) / sizeof(as_exp_entry) - 2); // - 2 for rank, bin
 			}
 			break;
 		case OP_LIST_EXP_GET_BY_RANK_RANGE_TO_END:;
@@ -642,13 +594,9 @@ as_status add_pred_macros(AerospikeClient * self, as_static_pool * static_pool, 
 					return err->code;
 				}
 
-				as_exp_entry new_entries[] = {
-					_AS_EXP_CDT_LIST_READ(AS_EXP_TYPE_AUTO, lval1, true),
-					_AS_EXP_LIST_START(pred->ctx, AS_CDT_OP_LIST_GET_BY_RANK_RANGE, 2),
-					AS_EXP_INT(lval1),
-				};
+				as_exp_entry new_entries[] = {as_exp_list_get_by_rank_range_to_end(pred->ctx, lval1, {}, {})};
 				printf("size is: %lud\n", sizeof(new_entries) / sizeof(as_exp_entry));
-				append_array(sizeof(new_entries) / sizeof(as_exp_entry));
+				append_array(sizeof(new_entries) / sizeof(as_exp_entry) - 2); // - 2 for rank, bin
 			}
 			break;
 		case OP_LIST_EXP_GET_BY_RANK_RANGE:;
@@ -658,29 +606,16 @@ as_status add_pred_macros(AerospikeClient * self, as_static_pool * static_pool, 
 					return err->code;
 				}
 
-				as_exp_entry new_entries[] = {
-					_AS_EXP_CDT_LIST_READ(AS_EXP_TYPE_AUTO, lval1, true),
-					_AS_EXP_LIST_START(pred->ctx, AS_CDT_OP_LIST_GET_BY_RANK_RANGE, 3),
-					AS_EXP_INT(lval1),
-				};
+				as_exp_entry new_entries[] = {as_exp_list_get_by_rank_range(pred->ctx, lval1, {}, {}, {})};
 				printf("size is: %lud\n", sizeof(new_entries) / sizeof(as_exp_entry));
-				append_array(sizeof(new_entries) / sizeof(as_exp_entry));
+				append_array(sizeof(new_entries) / sizeof(as_exp_entry) - 3); // - 3 for rank, count, bin
 			}
 			break;
 		case OP_LIST_EXP_APPEND:;
 			printf("in OP_LIST_EXP_APPEND\n");
 			{
-				as_list_policy list_policy; //this might have scope issues
-				as_list_policy * list_policy_p = NULL;
-				bool policy_in_use = false;
-				if (get_list_policy(err, pred->pydict, &list_policy, &policy_in_use) != AEROSPIKE_OK) {
-					return err->code;
-				}
-
-				list_policy_p = policy_in_use ? &list_policy : NULL;
-
 				as_exp_entry new_entries[] = {
-					_AS_EXP_LIST_MOD(pred->ctx, list_policy_p, AS_CDT_OP_LIST_APPEND_ITEMS, 1, 2),
+					_AS_EXP_LIST_MOD(pred->ctx, pred->list_policy, AS_CDT_OP_LIST_APPEND, 1, 2),
 				};
 
 				printf("size is: %lud\n", sizeof(new_entries) / sizeof(as_exp_entry));
@@ -690,17 +625,8 @@ as_status add_pred_macros(AerospikeClient * self, as_static_pool * static_pool, 
 		case OP_LIST_EXP_APPEND_ITEMS:;
 			printf("in OP_LIST_EXP_APPEND_ITEMS\n");
 			{
-				as_list_policy list_policy; //this might have scope issues
-				as_list_policy * list_policy_p = NULL;
-				bool policy_in_use = false;
-				if (get_list_policy(err, pred->pydict, &list_policy, &policy_in_use) != AEROSPIKE_OK) {
-					return err->code;
-				}
-
-				list_policy_p = policy_in_use ? &list_policy : NULL;
-
 				as_exp_entry new_entries[] = {
-					_AS_EXP_LIST_MOD(pred->ctx, list_policy_p, AS_CDT_OP_LIST_APPEND_ITEMS, 1, 2)
+					_AS_EXP_LIST_MOD(pred->ctx, pred->list_policy, AS_CDT_OP_LIST_APPEND_ITEMS, 1, 2)
 				};
 
 				printf("size is: %lud\n", sizeof(new_entries) / sizeof(as_exp_entry));
@@ -710,17 +636,8 @@ as_status add_pred_macros(AerospikeClient * self, as_static_pool * static_pool, 
 		case OP_LIST_EXP_INSERT:;
 			printf("in OP_LIST_EXP_INSERT\n");
 			{
-				as_list_policy list_policy; //this might have scope issues
-				as_list_policy * list_policy_p = NULL;
-				bool policy_in_use = false;
-				if (get_list_policy(err, pred->pydict, &list_policy, &policy_in_use) != AEROSPIKE_OK) {
-					return err->code;
-				}
-
-				list_policy_p = policy_in_use ? &list_policy : NULL;
-
 				as_exp_entry new_entries[] = {
-					_AS_EXP_LIST_MOD(pred->ctx, list_policy_p, AS_CDT_OP_LIST_INSERT, 2, 1)
+					_AS_EXP_LIST_MOD(pred->ctx, pred->list_policy, AS_CDT_OP_LIST_INSERT, 2, 1)
 				};
 
 				printf("size is: %lud\n", sizeof(new_entries) / sizeof(as_exp_entry));
@@ -730,17 +647,8 @@ as_status add_pred_macros(AerospikeClient * self, as_static_pool * static_pool, 
 		case OP_LIST_EXP_INSERT_ITEMS:;
 			printf("in OP_LIST_EXP_INSERT_ITEMS\n");
 			{
-				as_list_policy list_policy; //this might have scope issues
-				as_list_policy * list_policy_p = NULL;
-				bool policy_in_use = false;
-				if (get_list_policy(err, pred->pydict, &list_policy, &policy_in_use) != AEROSPIKE_OK) {
-					return err->code;
-				}
-
-				list_policy_p = policy_in_use ? &list_policy : NULL;
-
 				as_exp_entry new_entries[] = {
-					_AS_EXP_LIST_MOD(pred->ctx, list_policy_p, AS_CDT_OP_LIST_INSERT_ITEMS, 2, 1)
+					_AS_EXP_LIST_MOD(pred->ctx, pred->list_policy, AS_CDT_OP_LIST_INSERT_ITEMS, 2, 1)
 				};
 
 				printf("size is: %lud\n", sizeof(new_entries) / sizeof(as_exp_entry));
@@ -750,17 +658,19 @@ as_status add_pred_macros(AerospikeClient * self, as_static_pool * static_pool, 
 		case OP_LIST_EXP_INCREMENT:;
 			printf("in OP_LIST_EXP_INCREMENT\n");
 			{
-				as_list_policy list_policy; //this might have scope issues
-				as_list_policy * list_policy_p = NULL;
-				bool policy_in_use = false;
-				if (get_list_policy(err, pred->pydict, &list_policy, &policy_in_use) != AEROSPIKE_OK) {
-					return err->code;
-				}
-
-				list_policy_p = policy_in_use ? &list_policy : NULL;
-
 				as_exp_entry new_entries[] = {
-					_AS_EXP_LIST_MOD(pred->ctx, list_policy_p, AS_CDT_OP_LIST_INCREMENT, 2, 2)
+					_AS_EXP_LIST_MOD(pred->ctx, pred->list_policy, AS_CDT_OP_LIST_INCREMENT, 2, 2)
+				};
+
+				printf("size is: %lud\n", sizeof(new_entries) / sizeof(as_exp_entry));
+				append_array(sizeof(new_entries) / sizeof(as_exp_entry));
+			}
+			break;
+		case OP_LIST_EXP_SET:;
+			printf("in OP_LIST_EXP_SET\n");
+			{
+				as_exp_entry new_entries[] = {
+					_AS_EXP_LIST_MOD(pred->ctx, pred->list_policy, AS_CDT_OP_LIST_SET, 2, 1)
 				};
 
 				printf("size is: %lud\n", sizeof(new_entries) / sizeof(as_exp_entry));
@@ -770,7 +680,7 @@ as_status add_pred_macros(AerospikeClient * self, as_static_pool * static_pool, 
 		case OP_LIST_EXP_CLEAR:;
 			printf("in OP_LIST_EXP_CLEAR\n");
 			{
-				as_exp_entry new_entries[] = {AS_EXP_LIST_CLEAR(pred->ctx, {})};
+				as_exp_entry new_entries[] = {as_exp_list_clear(pred->ctx, {})};
 
 				printf("size is: %lud\n", sizeof(new_entries) / sizeof(as_exp_entry) - 1);
 				append_array(sizeof(new_entries) / sizeof(as_exp_entry) -1); // -1 for bin
@@ -783,7 +693,7 @@ as_status add_pred_macros(AerospikeClient * self, as_static_pool * static_pool, 
 					return err->code;
 				}
 
-				as_exp_entry new_entries[] = {AS_EXP_LIST_SORT(pred->ctx, lval1, {})};
+				as_exp_entry new_entries[] = {as_exp_list_sort(pred->ctx, lval1, {})};
 
 				printf("size is: %lud\n", sizeof(new_entries) / sizeof(as_exp_entry) - 1);
 				append_array(sizeof(new_entries) / sizeof(as_exp_entry) -1); // -1 for bin
@@ -792,7 +702,7 @@ as_status add_pred_macros(AerospikeClient * self, as_static_pool * static_pool, 
 		case OP_LIST_EXP_REMOVE_BY_VALUE:;
 			printf("in OP_LIST_EXP_REMOVE_BY_VALUE\n");
 			{
-				as_exp_entry new_entries[] = {AS_EXP_LIST_REMOVE_BY_VALUE(pred->ctx, {}, {})};
+				as_exp_entry new_entries[] = {as_exp_list_remove_by_value(pred->ctx, {}, {})};
 
 				printf("size is: %lud\n", sizeof(new_entries) / sizeof(as_exp_entry) - 1);
 				append_array(sizeof(new_entries) / sizeof(as_exp_entry) -2); // -1 for bin and val
@@ -801,7 +711,7 @@ as_status add_pred_macros(AerospikeClient * self, as_static_pool * static_pool, 
 		case OP_LIST_EXP_REMOVE_BY_VALUE_LIST:;
 			printf("in OP_LIST_EXP_REMOVE_BY_VALUE_LIST\n");
 			{
-				as_exp_entry new_entries[] = {AS_EXP_LIST_REMOVE_BY_VALUE_LIST(pred->ctx, {}, {})};
+				as_exp_entry new_entries[] = {as_exp_list_remove_by_value_list(pred->ctx, {}, {})};
 
 				printf("size is: %lud\n", sizeof(new_entries) / sizeof(as_exp_entry) - 2);
 				append_array(sizeof(new_entries) / sizeof(as_exp_entry) -2); // -2 for bin and val
@@ -810,7 +720,7 @@ as_status add_pred_macros(AerospikeClient * self, as_static_pool * static_pool, 
 		case OP_LIST_EXP_REMOVE_BY_REL_RANK_RANGE_TO_END:;
 			printf("in OP_LIST_EXP_REMOVE_BY_REL_RANK_RANGE_TO_END\n");
 			{
-				as_exp_entry new_entries[] = {AS_EXP_LIST_REMOVE_BY_REL_RANK_RANGE_TO_END(pred->ctx, {}, {}, {})};
+				as_exp_entry new_entries[] = {as_exp_list_remove_by_rel_rank_range_to_end(pred->ctx, {}, {}, {})};
 
 				printf("size is: %lud\n", sizeof(new_entries) / sizeof(as_exp_entry));
 				append_array(sizeof(new_entries) / sizeof(as_exp_entry) - 3); // -3 for value, rank, bin
@@ -819,7 +729,7 @@ as_status add_pred_macros(AerospikeClient * self, as_static_pool * static_pool, 
 		case OP_LIST_EXP_REMOVE_BY_VALUE_REL_RANK_RANGE:;
 			printf("in OP_LIST_EXP_REMOVE_BY_REL_RANK_RANGE\n");
 			{
-				as_exp_entry new_entries[] = {AS_EXP_LIST_REMOVE_BY_REL_RANK_RANGE(pred->ctx, {}, {}, {}, {})};
+				as_exp_entry new_entries[] = {as_exp_list_remove_by_rel_rank_range(pred->ctx, {}, {}, {}, {})};
 
 				printf("size is: %lud\n", sizeof(new_entries) / sizeof(as_exp_entry));
 				append_array(sizeof(new_entries) / sizeof(as_exp_entry) - 4); // -4 for value, rank, count, bin
@@ -828,7 +738,7 @@ as_status add_pred_macros(AerospikeClient * self, as_static_pool * static_pool, 
 		case OP_LIST_EXP_REMOVE_BY_INDEX:;
 			printf("in OP_LIST_EXP_REMOVE_BY_INDEX\n");
 			{
-				as_exp_entry new_entries[] = {AS_EXP_LIST_REMOVE_BY_INDEX(pred->ctx, {}, {})};
+				as_exp_entry new_entries[] = {as_exp_list_remove_by_index(pred->ctx, {}, {})};
 
 				printf("size is: %lud\n", sizeof(new_entries) / sizeof(as_exp_entry));
 				append_array(sizeof(new_entries) / sizeof(as_exp_entry) - 2); // -2 for index, bin
@@ -837,7 +747,7 @@ as_status add_pred_macros(AerospikeClient * self, as_static_pool * static_pool, 
 		case OP_LIST_EXP_REMOVE_BY_INDEX_RANGE_TO_END:;
 			printf("in OP_LIST_EXP_REMOVE_BY_INDEX_RANGE_TO_END\n");
 			{
-				as_exp_entry new_entries[] = {AS_EXP_LIST_REMOVE_BY_INDEX_RANGE_TO_END(pred->ctx, {}, {})};
+				as_exp_entry new_entries[] = {as_exp_list_remove_by_index_range_to_end(pred->ctx, {}, {})};
 
 				printf("size is: %lud\n", sizeof(new_entries) / sizeof(as_exp_entry));
 				append_array(sizeof(new_entries) / sizeof(as_exp_entry) - 2); // -2 for index, bin
@@ -846,7 +756,7 @@ as_status add_pred_macros(AerospikeClient * self, as_static_pool * static_pool, 
 		case OP_LIST_EXP_REMOVE_BY_INDEX_RANGE:;
 			printf("in OP_LIST_EXP_REMOVE_BY_INDEX_RANGE\n");
 			{
-				as_exp_entry new_entries[] = {AS_EXP_LIST_REMOVE_BY_INDEX_RANGE(pred->ctx, {}, {}, {})};
+				as_exp_entry new_entries[] = {as_exp_list_remove_by_index_range(pred->ctx, {}, {}, {})};
 
 				printf("size is: %lud\n", sizeof(new_entries) / sizeof(as_exp_entry));
 				append_array(sizeof(new_entries) / sizeof(as_exp_entry) - 3); // - 3 for index, count, bin
@@ -855,7 +765,7 @@ as_status add_pred_macros(AerospikeClient * self, as_static_pool * static_pool, 
 		case OP_LIST_EXP_REMOVE_BY_RANK:;
 			printf("in OP_LIST_EXP_REMOVE_BY_RANK\n");
 			{
-				as_exp_entry new_entries[] = {AS_EXP_LIST_REMOVE_BY_RANK(pred->ctx, {}, {})};
+				as_exp_entry new_entries[] = {as_exp_list_remove_by_rank(pred->ctx, {}, {})};
 
 				printf("size is: %lud\n", sizeof(new_entries) / sizeof(as_exp_entry));
 				append_array(sizeof(new_entries) / sizeof(as_exp_entry) - 2); // -2 for rank, bin
@@ -864,7 +774,7 @@ as_status add_pred_macros(AerospikeClient * self, as_static_pool * static_pool, 
 		case OP_LIST_EXP_REMOVE_BY_RANK_RANGE_TO_END:;
 			printf("in OP_LIST_EXP_REMOVE_BY_RANK_RANGE_TO_END\n");
 			{
-				as_exp_entry new_entries[] = {AS_EXP_LIST_REMOVE_BY_RANK_RANGE(pred->ctx, {}, {}, {})};
+				as_exp_entry new_entries[] = {as_exp_list_remove_by_rank_range(pred->ctx, {}, {}, {})};
 
 				printf("size is: %lud\n", sizeof(new_entries) / sizeof(as_exp_entry));
 				append_array(sizeof(new_entries) / sizeof(as_exp_entry) - 3); // -3 for rank, count, bin
@@ -873,21 +783,8 @@ as_status add_pred_macros(AerospikeClient * self, as_static_pool * static_pool, 
 		case OP_MAP_PUT:;
 			printf("in OP_MAP_PUT\n");
 			{
-				as_map_policy map_policy; //this might have scope issues
-				as_map_policy * map_policy_p = NULL;
-				Py_Object * py_map_policy = NULL;
-
-				py_map_policy = PyDict_GetItemString(pred->pydict, AS_PY_MAP_POLICY);
-
-				if (py_map_policy != NULL) {
-					if (pyobject_to_map_policy(err, py_map_policy, &map_policy) != AEROSPIKE_OK) {
-						return err->code;
-					}
-				}
-
-				map_policy_p = py_map_policy ? &map_policy : NULL;
 				as_exp_entry new_entries[] = {
-					_AS_EXP_MAP_MOD(pred-ctx, map_policy_p, AS_CDT_OP_MAP_PUT, 2, 2)
+					_AS_EXP_MAP_MOD(pred->ctx, pred->map_policy, AS_CDT_OP_MAP_PUT, 2, 2)
 				};
 
 				printf("size is: %lud\n", sizeof(new_entries) / sizeof(as_exp_entry));
@@ -897,21 +794,8 @@ as_status add_pred_macros(AerospikeClient * self, as_static_pool * static_pool, 
 		case OP_MAP_PUT_ITEMS:;
 			printf("in OP_MAP_PUT_ITEMS\n");
 			{
-				as_map_policy map_policy; //this might have scope issues
-				as_map_policy * map_policy_p = NULL;
-				Py_Object * py_map_policy = NULL;
-
-				py_map_policy = PyDict_GetItemString(pred->pydict, AS_PY_MAP_POLICY);
-
-				if (py_map_policy != NULL) {
-					if (pyobject_to_map_policy(err, py_map_policy, &map_policy) != AEROSPIKE_OK) {
-						return err->code;
-					}
-				}
-
-				map_policy_p = py_map_policy ? &map_policy : NULL;
 				as_exp_entry new_entries[] = {
-					_AS_EXP_MAP_MOD(pred->ctx, map_policy_p, AS_CDT_OP_MAP_PUT_ITEMS, 1, 2)
+					_AS_EXP_MAP_MOD(pred->ctx, pred->map_policy, AS_CDT_OP_MAP_PUT_ITEMS, 1, 2)
 				};
 
 				printf("size is: %lud\n", sizeof(new_entries) / sizeof(as_exp_entry));
@@ -921,21 +805,8 @@ as_status add_pred_macros(AerospikeClient * self, as_static_pool * static_pool, 
 		case OP_MAP_INCREMENT:;
 			printf("in OP_MAP_INCREMENT\n");
 			{
-				as_map_policy map_policy; //this might have scope issues
-				as_map_policy * map_policy_p = NULL;
-				Py_Object * py_map_policy = NULL;
-
-				py_map_policy = PyDict_GetItemString(pred->pydict, AS_PY_MAP_POLICY);
-
-				if (py_map_policy != NULL) {
-					if (pyobject_to_map_policy(err, py_map_policy, &map_policy) != AEROSPIKE_OK) {
-						return err->code;
-					}
-				}
-
-				map_policy_p = py_map_policy ? &map_policy : NULL;
 				as_exp_entry new_entries[] = {
-					_AS_EXP_MAP_MOD(pred-ctx, map_policy_p, AS_CDT_OP_MAP_INCREMENT, 2, 1)
+					_AS_EXP_MAP_MOD(pred->ctx, pred->map_policy, AS_CDT_OP_MAP_INCREMENT, 2, 1)
 				};
 
 				printf("size is: %lud\n", sizeof(new_entries) / sizeof(as_exp_entry));
@@ -945,7 +816,7 @@ as_status add_pred_macros(AerospikeClient * self, as_static_pool * static_pool, 
 		case OP_MAP_CLEAR:;
 			printf("in OP_MAP_CLEAR\n");
 			{
-				as_exp_entry new_entries[] = {AS_EXP_MAP_CLEAR(pred->ctx, {})};
+				as_exp_entry new_entries[] = {as_exp_map_clear(pred->ctx, {})};
 
 				printf("size is: %lud\n", sizeof(new_entries) / sizeof(as_exp_entry));
 				append_array(sizeof(new_entries) / sizeof(as_exp_entry) - 1); // - 1 for bin
@@ -954,7 +825,7 @@ as_status add_pred_macros(AerospikeClient * self, as_static_pool * static_pool, 
 		case OP_MAP_REMOVE_BY_KEY:;
 			printf("in OP_MAP_REMOVE_BY_KEY\n");
 			{
-				as_exp_entry new_entries[] = {AS_EXP_MAP_REMOVE_BY_KEY(pred->ctx, {}, {})};
+				as_exp_entry new_entries[] = {as_exp_map_remove_by_key(pred->ctx, {}, {})};
 
 				printf("size is: %lud\n", sizeof(new_entries) / sizeof(as_exp_entry));
 				append_array(sizeof(new_entries) / sizeof(as_exp_entry) - 2); // - 2 for key, bin
@@ -963,7 +834,7 @@ as_status add_pred_macros(AerospikeClient * self, as_static_pool * static_pool, 
 		case OP_MAP_REMOVE_BY_KEY_LIST:;
 			printf("in OP_MAP_REMOVE_BY_KEY_LIST\n");
 			{
-				as_exp_entry new_entries[] = {AS_EXP_MAP_REMOVE_BY_KEY_LIST(pred->ctx, {}, {})};
+				as_exp_entry new_entries[] = {as_exp_map_remove_by_key_list(pred->ctx, {}, {})};
 
 				printf("size is: %lud\n", sizeof(new_entries) / sizeof(as_exp_entry));
 				append_array(sizeof(new_entries) / sizeof(as_exp_entry) - 2); // - 2 for key, bin
@@ -972,10 +843,339 @@ as_status add_pred_macros(AerospikeClient * self, as_static_pool * static_pool, 
 		case OP_MAP_REMOVE_BY_KEY_RANGE:;
 			printf("in OP_MAP_REMOVE_BY_KEY_RANGE\n");
 			{
-				as_exp_entry new_entries[] = {AS_EXP_MAP_REMOVE_BY_KEY_RANGE(pred->ctx, {}, {}, {})};
+				as_exp_entry new_entries[] = {as_exp_map_remove_by_key_range(pred->ctx, {}, {}, {})};
 
 				printf("size is: %lud\n", sizeof(new_entries) / sizeof(as_exp_entry));
 				append_array(sizeof(new_entries) / sizeof(as_exp_entry) - 3); // - 3 for begin, end, bin
+			}
+			break;
+		case OP_MAP_REMOVE_BY_KEY_REL_INDEX_RANGE_TO_END:;
+			printf("in OP_MAP_REMOVE_BY_KEY_REL_INDEX_RANGE_TO_END\n");
+			{
+				as_exp_entry new_entries[] = {as_exp_map_remove_by_key_rel_index_range_to_end(pred->ctx, {}, {}, {})};
+
+				printf("size is: %lud\n", sizeof(new_entries) / sizeof(as_exp_entry));
+				append_array(sizeof(new_entries) / sizeof(as_exp_entry) - 3); // - 3 for key, index, bin
+			}
+			break;
+		case OP_MAP_REMOVE_BY_KEY_REL_INDEX_RANGE:;
+			printf("in OP_MAP_REMOVE_BY_KEY_REL_INDEX_RANGE\n");
+			{
+				as_exp_entry new_entries[] = {as_exp_map_remove_by_key_rel_index_range(pred->ctx, {}, {}, {}, {})};
+
+				printf("size is: %lud\n", sizeof(new_entries) / sizeof(as_exp_entry));
+				append_array(sizeof(new_entries) / sizeof(as_exp_entry) - 4); // - 4 for key, index, count, bin
+			}
+			break;
+		case OP_MAP_REMOVE_BY_VALUE:;
+			printf("in OP_MAP_REMOVE_BY_VALUE\n");
+			{
+				as_exp_entry new_entries[] = {as_exp_map_remove_by_value(pred->ctx, {}, {})};
+
+				printf("size is: %lud\n", sizeof(new_entries) / sizeof(as_exp_entry));
+				append_array(sizeof(new_entries) / sizeof(as_exp_entry) - 2); // - 2 for val, bin
+			}
+			break;
+		case OP_MAP_REMOVE_BY_VALUE_LIST:;
+			printf("in OP_MAP_REMOVE_BY_VALUE\n");
+			{
+				as_exp_entry new_entries[] = {as_exp_map_remove_by_value(pred->ctx, {}, {})};
+
+				printf("size is: %lud\n", sizeof(new_entries) / sizeof(as_exp_entry));
+				append_array(sizeof(new_entries) / sizeof(as_exp_entry) - 2); // - 2 for values, bin
+			}
+			break;
+		case OP_MAP_REMOVE_BY_VALUE_RANGE:;
+			printf("in OP_MAP_REMOVE_BY_VALUE_RANGE\n");
+			{
+				as_exp_entry new_entries[] = {as_exp_map_remove_by_value_range(pred->ctx, {}, {}, {})};
+
+				printf("size is: %lud\n", sizeof(new_entries) / sizeof(as_exp_entry));
+				append_array(sizeof(new_entries) / sizeof(as_exp_entry) - 3); // - 3 for begin, end, bin
+			}
+			break;
+		case OP_MAP_REMOVE_BY_VALUE_REL_RANK_RANGE_TO_END:;
+			printf("in OP_MAP_REMOVE_BY_VALUE_REL_RANK_RANGE_TO_END\n");
+			{
+				as_exp_entry new_entries[] = {as_exp_map_remove_by_value_rel_rank_range_to_end(pred->ctx, {}, {}, {})};
+
+				printf("size is: %lud\n", sizeof(new_entries) / sizeof(as_exp_entry));
+				append_array(sizeof(new_entries) / sizeof(as_exp_entry) - 3); // - 3 for val, rank, bin
+			}
+			break;
+		case OP_MAP_REMOVE_BY_VALUE_REL_RANK_RANGE:;
+			printf("in OP_MAP_REMOVE_BY_VALUE_REL_RANK_RANGE\n");
+			{
+				as_exp_entry new_entries[] = {as_exp_map_remove_by_value_rel_rank_range(pred->ctx, {}, {}, {}, {})};
+
+				printf("size is: %lud\n", sizeof(new_entries) / sizeof(as_exp_entry));
+				append_array(sizeof(new_entries) / sizeof(as_exp_entry) - 4); // - 4 for val, rank, count, bin
+			}
+			break;
+		case OP_MAP_REMOVE_BY_INDEX:;
+			printf("in OP_MAP_REMOVE_BY_INDEX\n");
+			{
+				as_exp_entry new_entries[] = {as_exp_map_remove_by_index(pred->ctx, {}, {})};
+
+				printf("size is: %lud\n", sizeof(new_entries) / sizeof(as_exp_entry));
+				append_array(sizeof(new_entries) / sizeof(as_exp_entry) - 2); // - 2 for index, bin
+			}
+			break;
+		case OP_MAP_REMOVE_BY_INDEX_RANGE_TO_END:;
+			printf("in OP_MAP_REMOVE_BY_INDEX_RANGE_TO_END\n");
+			{
+				as_exp_entry new_entries[] = {as_exp_map_remove_by_index_range_to_end(pred->ctx, {}, {})};
+
+				printf("size is: %lud\n", sizeof(new_entries) / sizeof(as_exp_entry));
+				append_array(sizeof(new_entries) / sizeof(as_exp_entry) - 2); // - 2 for index, bin
+			}
+			break;
+		case OP_MAP_REMOVE_BY_INDEX_RANGE:;
+			printf("in OP_MAP_REMOVE_BY_INDEX_RANGE\n");
+			{
+				as_exp_entry new_entries[] = {as_exp_map_remove_by_index_range(pred->ctx, {}, {}, {})};
+
+				printf("size is: %lud\n", sizeof(new_entries) / sizeof(as_exp_entry));
+				append_array(sizeof(new_entries) / sizeof(as_exp_entry) - 3); // - 3 for index, count, bin
+			}
+			break;
+		case OP_MAP_REMOVE_BY_RANK:;
+			printf("in OP_MAP_REMOVE_BY_RANK\n");
+			{
+				as_exp_entry new_entries[] = {as_exp_map_remove_by_rank(pred->ctx, {}, {})};
+
+				printf("size is: %lud\n", sizeof(new_entries) / sizeof(as_exp_entry));
+				append_array(sizeof(new_entries) / sizeof(as_exp_entry) - 2); // - 2 for rank, bin
+			}
+			break;
+		case OP_MAP_REMOVE_BY_RANK_RANGE_TO_END:;
+			printf("in OP_MAP_REMOVE_BY_RANK_RANGE_TO_END\n");
+			{
+				as_exp_entry new_entries[] = {as_exp_map_remove_by_rank_range_to_end(pred->ctx, {}, {})};
+
+				printf("size is: %lud\n", sizeof(new_entries) / sizeof(as_exp_entry));
+				append_array(sizeof(new_entries) / sizeof(as_exp_entry) - 2); // - 2 for rank, bin
+			}
+			break;
+		case OP_MAP_REMOVE_BY_RANK_RANGE:;
+			printf("in OP_MAP_REMOVE_BY_RANK_RANGE\n");
+			{
+				as_exp_entry new_entries[] = {as_exp_map_remove_by_rank_range(pred->ctx, {}, {}, {})};
+
+				printf("size is: %lud\n", sizeof(new_entries) / sizeof(as_exp_entry));
+				append_array(sizeof(new_entries) / sizeof(as_exp_entry) - 3); // - 3 for rank, count, bin
+			}
+			break;
+		case OP_MAP_EXP_GET_BY_KEY:;
+			printf("in OP_MAP_EXP_GET_BY_KEY\n");
+			{
+				if (get_int64_t(err, AS_PY_BIN_TYPE_KEY, pred->pydict, &lval1) != AEROSPIKE_OK) {
+					return err->code;
+				}
+
+				if (get_int64_t(err, AS_PY_MAP_RETURN_KEY, pred->pydict, &lval2) != AEROSPIKE_OK) {
+					return err->code;
+				}
+
+				as_exp_entry new_entries[] = {as_exp_map_get_by_key(pred->ctx, lval1, lval2, {}, {})};
+
+				printf("size is: %lud\n", sizeof(new_entries) / sizeof(as_exp_entry));
+				append_array(sizeof(new_entries) / sizeof(as_exp_entry) - 2); // - 2 for key, bin
+			}
+			break;
+		case OP_MAP_EXP_GET_BY_KEY_RANGE:;
+			printf("in OP_MAP_EXP_GET_BY_KEY_RANGE\n");
+			{
+				if (get_int64_t(err, AS_PY_MAP_RETURN_KEY, pred->pydict, &lval1) != AEROSPIKE_OK) {
+					return err->code;
+				}
+
+				as_exp_entry new_entries[] = {as_exp_map_get_by_key_range(pred->ctx, lval1, {}, {}, {})};
+
+				printf("size is: %lud\n", sizeof(new_entries) / sizeof(as_exp_entry));
+				append_array(sizeof(new_entries) / sizeof(as_exp_entry) - 3); // - 3 for begin, end, bin
+			}
+			break;
+		case OP_MAP_EXP_GET_BY_KEY_LIST:;
+			printf("in OP_MAP_EXP_GET_BY_KEY_LIST\n");
+			{
+				if (get_int64_t(err, AS_PY_MAP_RETURN_KEY, pred->pydict, &lval1) != AEROSPIKE_OK) {
+					return err->code;
+				}
+
+				as_exp_entry new_entries[] = {as_exp_map_get_by_key_list(pred->ctx, lval1, {}, {})};
+
+				printf("size is: %lud\n", sizeof(new_entries) / sizeof(as_exp_entry));
+				append_array(sizeof(new_entries) / sizeof(as_exp_entry) - 2); // - 2 for keys, bin
+			}
+			break;
+		case OP_MAP_GET_BY_KEY_REL_INDEX_RANGE_TO_END:;
+			printf("in OP_MAP_GET_BY_KEY_REL_INDEX_RANGE_TO_END\n");
+			{
+				if (get_int64_t(err, AS_PY_MAP_RETURN_KEY, pred->pydict, &lval1) != AEROSPIKE_OK) {
+					return err->code;
+				}
+
+				as_exp_entry new_entries[] = {as_exp_map_get_by_key_rel_index_range_to_end(pred->ctx, lval1, {}, {}, {})};
+
+				printf("size is: %lud\n", sizeof(new_entries) / sizeof(as_exp_entry));
+				append_array(sizeof(new_entries) / sizeof(as_exp_entry) - 3); // - 3 for key, index, bin
+			}
+			break;
+		case OP_MAP_GET_BY_KEY_REL_INDEX_RANGE:;
+			printf("in OP_MAP_GET_BY_KEY_REL_INDEX_RANGE\n");
+			{
+				if (get_int64_t(err, AS_PY_MAP_RETURN_KEY, pred->pydict, &lval1) != AEROSPIKE_OK) {
+					return err->code;
+				}
+
+				as_exp_entry new_entries[] = {as_exp_map_get_by_key_rel_index_range(pred->ctx, lval1, {}, {}, {}, {})};
+
+				printf("size is: %lud\n", sizeof(new_entries) / sizeof(as_exp_entry));
+				append_array(sizeof(new_entries) / sizeof(as_exp_entry) - 4); // - 4 for key, index, count, bin
+			}
+			break;
+		case OP_MAP_EXP_GET_BY_VALUE:;
+			printf("in get_by_val\n");
+			{	
+				if (get_int64_t(err, AS_PY_MAP_RETURN_KEY, pred->pydict, &lval1) != AEROSPIKE_OK) {
+					return err->code;
+				}
+
+				as_exp_entry new_entries[] = {as_exp_map_get_by_value(pred->ctx, lval1, {}, {})};
+
+				printf("size is: %lud\n", sizeof(new_entries) / sizeof(as_exp_entry));
+				append_array(sizeof(new_entries) / sizeof(as_exp_entry) - 2); // - 2 for value, bin
+			}
+			break;
+		case OP_MAP_EXP_GET_BY_VALUE_RANGE:;
+			printf("in get_by_val_range\n");
+			{
+				if (get_int64_t(err, AS_PY_MAP_RETURN_KEY, pred->pydict, &lval1) != AEROSPIKE_OK) {
+					return err->code;
+				}
+
+				as_exp_entry new_entries[] = {as_exp_map_get_by_value_range(pred->ctx, lval1, {}, {}, {})};
+
+				printf("size is: %lud\n", sizeof(new_entries) / sizeof(as_exp_entry));
+				append_array(sizeof(new_entries) / sizeof(as_exp_entry) - 3); // - 3 for begin, end, bin
+			}
+			break;
+		case OP_MAP_GET_BY_VALUE_LIST:;
+			printf("in get_by_val_list\n");
+			{
+				if (get_int64_t(err, AS_PY_MAP_RETURN_KEY, pred->pydict, &lval1) != AEROSPIKE_OK) {
+					return err->code;
+				}
+
+				as_exp_entry new_entries[] = {as_exp_map_get_by_value_list(pred->ctx, lval1, {}, {})};
+				printf("size is: %lud\n", sizeof(new_entries) / sizeof(as_exp_entry));
+				append_array(sizeof(new_entries) / sizeof(as_exp_entry) - 2); // - 2 for value, bin
+			}
+			break;
+		case OP_MAP_GET_BY_VALUE_RANK_RANGE_REL_TO_END:;
+			printf("in OP_MAP_GET_BY_VALUE_RANK_RANGE_REL_TO_END\n");
+			{
+				if (get_int64_t(err, AS_PY_MAP_RETURN_KEY, pred->pydict, &lval1) != AEROSPIKE_OK) {
+					return err->code;
+				}
+
+				as_exp_entry new_entries[] = {as_exp_map_get_by_value_rel_rank_range_to_end(pred->ctx, lval1, {}, {}, {})};
+				printf("size is: %lud\n", sizeof(new_entries) / sizeof(as_exp_entry));
+				append_array(sizeof(new_entries) / sizeof(as_exp_entry) -3 ); // - 3 for value, rank, bin
+			}
+			break;
+		case OP_MAP_GET_BY_VALUE_RANK_RANGE_REL:;
+			printf("in OP_MAP_GET_BY_VALUE_RANK_RANGE_REL\n");
+			{
+				if (get_int64_t(err, AS_PY_MAP_RETURN_KEY, pred->pydict, &lval1) != AEROSPIKE_OK) {
+					return err->code;
+				}
+
+				as_exp_entry new_entries[] = {as_exp_map_get_by_value_rel_rank_range(pred->ctx, lval1, {}, {}, {}, {})};
+				printf("size is: %lud\n", sizeof(new_entries) / sizeof(as_exp_entry));
+				append_array(sizeof(new_entries) / sizeof(as_exp_entry) - 4); // - 4 for value, rank, count, bin
+			}
+			break;
+	case OP_MAP_GET_BY_INDEX:;
+			printf("in OP_MAP_GET_BY_INDEX\n");
+			{
+				if (get_int64_t(err, AS_PY_BIN_TYPE_KEY, pred->pydict, &lval2) != AEROSPIKE_OK) {
+					return err->code;
+				}
+
+				if (get_int64_t(err, AS_PY_MAP_RETURN_KEY, pred->pydict, &lval1) != AEROSPIKE_OK) {
+					return err->code;
+				}
+
+				as_exp_entry new_entries[] = {as_exp_map_get_by_index(pred->ctx, lval1, lval2, {}, {})};
+
+				printf("size is: %lud\n", sizeof(new_entries) / sizeof(as_exp_entry));
+				append_array(sizeof(new_entries) / sizeof(as_exp_entry) - 2); // - 2 for index, bin
+			}
+			break;
+		case OP_MAP_GET_BY_INDEX_RANGE_TO_END:;
+			printf("in OP_MAP_GET_BY_INDEX_RANGE_TO_END\n");
+			{
+				if (get_int64_t(err, AS_PY_MAP_RETURN_KEY, pred->pydict, &lval1) != AEROSPIKE_OK) {
+					return err->code;
+				}
+
+				as_exp_entry new_entries[] = {as_exp_map_get_by_index_range_to_end(pred->ctx, lval1, {}, {})};
+				printf("size is: %lud\n", sizeof(new_entries) / sizeof(as_exp_entry));
+				append_array(sizeof(new_entries) / sizeof(as_exp_entry) - 2); // - 2 for index, bin
+			}
+			break;
+		case OP_MAP_GET_BY_INDEX_RANGE:;
+			printf("in OP_MAP_GET_BY_INDEX_RANGE\n");
+			{
+				if (get_int64_t(err, AS_PY_MAP_RETURN_KEY, pred->pydict, &lval1) != AEROSPIKE_OK) {
+					return err->code;
+				}
+
+				as_exp_entry new_entries[] = {as_exp_map_get_by_index_range(pred->ctx, lval1, {}, {}, {})};
+				printf("size is: %lud\n", sizeof(new_entries) / sizeof(as_exp_entry));
+				append_array(sizeof(new_entries) / sizeof(as_exp_entry) - 3); // - 3 for index, count, bin
+			}
+			break;
+		case OP_MAP_GET_BY_RANK:;
+			printf("in OP_MAP_GET_BY_RANK\n");
+			{
+				if (get_int64_t(err, AS_PY_MAP_RETURN_KEY, pred->pydict, &lval1) != AEROSPIKE_OK) {
+					return err->code;
+				}
+
+				if (get_int64_t(err, AS_PY_BIN_TYPE_KEY, pred->pydict, &lval2) != AEROSPIKE_OK) {
+					return err->code;
+				}
+
+				as_exp_entry new_entries[] = {as_exp_map_get_by_rank(pred->ctx, lval1, lval2, {}, {})};
+				printf("size is: %lud\n", sizeof(new_entries) / sizeof(as_exp_entry));
+				append_array(sizeof(new_entries) / sizeof(as_exp_entry) - 2); // - 2 for rank, bin
+			}
+			break;
+		case OP_MAP_GET_BY_RANK_RANGE_TO_END:;
+			printf("in OP_MAP_GET_BY_RANK_RANGE_TO_END\n");
+			{
+				if (get_int64_t(err, AS_PY_MAP_RETURN_KEY, pred->pydict, &lval1) != AEROSPIKE_OK) {
+					return err->code;
+				}
+
+				as_exp_entry new_entries[] = {as_exp_map_get_by_rank_range_to_end(pred->ctx, lval1, {}, {})};
+				printf("size is: %lud\n", sizeof(new_entries) / sizeof(as_exp_entry));
+				append_array(sizeof(new_entries) / sizeof(as_exp_entry) - 2); // - 2 for rank, bin
+			}
+			break;
+		case OP_MAP_GET_BY_RANK_RANGE:;
+			printf("in OP_MAP_GET_BY_RANK_RANGE\n");
+			{
+				if (get_int64_t(err, AS_PY_MAP_RETURN_KEY, pred->pydict, &lval1) != AEROSPIKE_OK) {
+					return err->code;
+				}
+
+				as_exp_entry new_entries[] = {as_exp_map_get_by_rank_range(pred->ctx, lval1, {}, {}, {})};
+				printf("size is: %lud\n", sizeof(new_entries) / sizeof(as_exp_entry));
+				append_array(sizeof(new_entries) / sizeof(as_exp_entry) - 3); // - 3 for rank, count, bin
 			}
 			break;
 
@@ -996,9 +1196,11 @@ as_status convert_exp_list(AerospikeClient * self, as_static_pool * static_pool,
 	long num_children = 0;
 	int child_count = 1;
 	uint8_t va_flag = 0;
-	as_cdt_ctx ctx;
 	bool ctx_in_use = false;
 	PyObject * py_pred_tuple = NULL;
+	PyObject * py_list_policy_p = NULL;
+	PyObject * py_map_policy_p = NULL;
+	PyObject * py_ctx_list_p = NULL;
 	as_vector pred_queue;
 	pred_op pred;
 	as_exp_entry * c_pred_entries = NULL;
@@ -1009,13 +1211,14 @@ as_status convert_exp_list(AerospikeClient * self, as_static_pool * static_pool,
 
 	c_pred_entries = (as_exp_entry*) calloc((size * MAX_ELEMENTS), sizeof(as_exp_entry)); // iter and count elem?
 	if (c_pred_entries == NULL) {
-		printf("in no ctx\n");
 		as_error_update(err, AEROSPIKE_ERR, "could not calloc mem for c_pred_entries");
 	}
 
     for ( int i = 0; i < size; ++i ) {
 		pred.ctx = NULL;
 		pred.pydict = NULL;
+		pred.list_policy = NULL;
+		pred.map_policy = NULL;
 		ctx_in_use = false;
 
 		if (child_count == 0 && va_flag >= 1) { //this handles AND, OR
@@ -1042,12 +1245,58 @@ as_status convert_exp_list(AerospikeClient * self, as_static_pool * static_pool,
 		// 	Py_INCREF(pred.pydict);
 		// }
 
-		if (get_cdt_ctx(self, err, &ctx, pred.pydict, &ctx_in_use, static_pool, SERIALIZER_PYTHON) != AEROSPIKE_OK) {
-			return err->code;
-			//char * tmp_warn = err->message;
-			//return as_error_update(err, AEROSPIKE_ERR_PARAM, "Failed to convert cdt_ctx: %s", tmp_warn);
+		py_ctx_list_p = PyDict_GetItemString(pred.pydict, CTX_KEY);
+		if (py_ctx_list_p != NULL) {
+			pred.ctx = malloc(sizeof(as_cdt_ctx));
+			if (pred.ctx == NULL) {
+				as_error_update(err, AEROSPIKE_ERR, "could not malloc mem for pred.ctx");
+			}
+
+			if (get_cdt_ctx(self, err, pred.ctx, pred.pydict, &ctx_in_use, static_pool, SERIALIZER_PYTHON) != AEROSPIKE_OK) { // does this have persistence issues?
+				pred.ctx = NULL;
+				return err->code;
+				//char * tmp_warn = err->message;
+				//return as_error_update(err, AEROSPIKE_ERR_PARAM, "Failed to convert cdt_ctx: %s", tmp_warn);
+			}
 		}
-		pred.ctx = ctx_in_use ? &ctx : NULL;
+
+		py_list_policy_p = PyDict_GetItemString(pred.pydict, AS_PY_LIST_POLICY);
+		if (py_list_policy_p != NULL) {
+			if (PyDict_Check(py_list_policy_p) && PyDict_Size(py_list_policy_p) > 0) {
+				pred.list_policy = malloc(sizeof(as_list_policy));
+				if (pred.list_policy == NULL) {
+					as_error_update(err, AEROSPIKE_ERR, "could not malloc mem for pred.list_policy");
+				}
+
+				bool policy_in_use = false;
+				if (get_list_policy(err, pred.pydict, pred.list_policy, &policy_in_use) != AEROSPIKE_OK) {
+					pred.list_policy = NULL;
+					return err->code;
+				}
+			}
+			else {
+				pred.list_policy = NULL;
+			}
+		}
+
+		py_map_policy_p = PyDict_GetItemString(pred.pydict, AS_PY_MAP_POLICY);
+		if (py_map_policy_p != NULL) {
+			if (PyDict_Check(py_map_policy_p) && PyDict_Size(py_map_policy_p) > 0) {
+				pred.map_policy = malloc(sizeof(as_map_policy));
+				if (pred.map_policy == NULL) {
+					as_error_update(err, AEROSPIKE_ERR, "could not malloc mem for pred.map_policy");
+				}
+
+				if (pyobject_to_map_policy(err, py_map_policy_p, pred.map_policy) != AEROSPIKE_OK) {
+					pred.map_policy = NULL;
+					return err->code;
+				}
+			}
+			else {
+				pred.map_policy = NULL;
+			}
+		}
+
 
 		if (op == AND || op == OR) {
 			++va_flag;
@@ -1071,7 +1320,7 @@ as_status convert_exp_list(AerospikeClient * self, as_static_pool * static_pool,
 		}
 	}
 
-	*exp_list = as_exp_build(c_pred_entries, bottom);
+	*exp_list = as_exp_compile(c_pred_entries, bottom);
 
 
 CLEANUP:

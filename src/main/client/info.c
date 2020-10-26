@@ -394,43 +394,6 @@ CLEANUP:
 	return info_callback_udata.udata_p;
 }
 
-PyObject * AerospikeClient_HasGeo(AerospikeClient * self, PyObject * args, PyObject * kwds)
-{
-	// Initialize error
-	as_error err;
-	as_error_init(&err);
-
-	if (!self || !self->as) {
-		as_error_update(&err, AEROSPIKE_ERR_PARAM, "Invalid aerospike object");
-		goto CLEANUP;
-	}
-
-	if (!self->is_conn_16) {
-		as_error_update(&err, AEROSPIKE_ERR_CLUSTER, "No connection to aerospike cluster");
-		goto CLEANUP;
-	}
-
-	if (aerospike_has_geo(self->as)) {
-		Py_INCREF(Py_True);
-		return Py_True;
-	}
-
-	Py_INCREF(Py_False);
-	return Py_False;
-
-CLEANUP:
-
-	if (err.code != AEROSPIKE_OK) {
-		PyObject * py_err = NULL;
-		error_to_pyobject(&err, &py_err);
-		PyObject *exception_type = raise_exception(&err);
-		PyErr_SetObject(exception_type, py_err);
-		Py_DECREF(py_err);
-		return NULL;
-	}
-	return NULL;
-}
-
 /**
  *******************************************************************************************************
  * Sends an info request to all the nodes in a cluster.
