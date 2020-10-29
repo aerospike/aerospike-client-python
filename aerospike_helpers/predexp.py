@@ -16,6 +16,7 @@ VALUE_END_KEY = "value_end"
 OP_TYPE_KEY = "ot_key"
 LIST_POLICY_KEY = "list_policy"
 MAP_POLICY_KEY = "map_policy"
+BIT_POLICY_KEY = "bit_policy"
 BIT_FLAGS_KEY = "policy"
 RESIZE_FLAGS_KEY = "resize_flags"
 PARAM_COUNT_KEY = "param_count"
@@ -401,6 +402,7 @@ class MetaKeyBlobe(BaseExpr):
 
 
 class ListAppend(BaseExpr):
+    
     op = aerospike.OP_LIST_EXP_APPEND
 
     def __init__(self, ctx: TypeCDT, policy: TypePolicy, value: TypeValue, bin_name: TypeBinName):
@@ -458,11 +460,11 @@ class ListInsert(BaseExpr):
 class ListInsertItems(BaseExpr):
     op = aerospike.OP_LIST_EXP_INSERT_ITEMS
 
-    def __init__(self, ctx: TypeCDT, policy: TypePolicy, index: TypeIndex, value: TypeValue, bin_name: TypeBinName):
+    def __init__(self, ctx: TypeCDT, policy: TypePolicy, index: TypeIndex, values: TypeListValue, bin_name: TypeBinName):
         self.children = (
             index,
-            value,
-            _GenericExpr(ExprOp._AS_EXP_CODE_CDT_LIST_MOD, 0, {LIST_POLICY_KEY: policy} if policy is not None else {}),
+            values,
+            _GenericExpr(ExprOp._AS_EXP_CODE_CDT_LIST_MOD, 0, {LIST_POLICY_KEY: policy} if policy is not None else {}), #TODO implement these MOD expressions in C.
             bin_name if isinstance(bin_name, BaseExpr) else ListBin(bin_name)
         )
         self.fixed = {}
@@ -1473,18 +1475,188 @@ class MapGetByRankRange(BaseExpr):
 # BIT MODIFY EXPRESSIONS
 
 
+TypeBitValue = Union[bytes, bytearray]
+
+
 class BitResize(BaseExpr):
     op = aerospike.OP_BIT_RESIZE
 
-    def __init__(self, policy: TypePolicy, byte_size: int, flags: str, bin: TypeBinName):
+    def __init__(self, policy: TypePolicy, byte_size: int, flags: int, bin: TypeBinName):
         self.children = (
             byte_size,
+            _GenericExpr(150, 0, {VALUE_KEY: policy['flags']} if policy is not None and 'flags' in policy else {VALUE_KEY: 0}), #TODO: decide if this is best
+            _GenericExpr(150, 0, {VALUE_KEY: flags} if flags is not None else {VALUE_KEY: 0}),
             bin if isinstance(bin, BaseExpr) else BlobBin(bin)
         )
-        self.fixed = {RESIZE_FLAGS_KEY: flags}
 
-        if policy is not None:
-            self.fixed[BIT_POLICY_KEY] = policy
+
+class BitInsert(BaseExpr):
+    op = aerospike.OP_BIT_INSERT
+
+    def __init__(self, policy: TypePolicy, byte_offset: int, value: TypeBitValue, bin: TypeBinName):
+        self.children = (
+            byte_offset,
+            value,
+            _GenericExpr(150, 0, {VALUE_KEY: policy['flags']} if policy is not None and 'flags' in policy else {VALUE_KEY: 0}), #TODO: decide if this is best
+            bin if isinstance(bin, BaseExpr) else BlobBin(bin)
+        )
+
+
+class BitRemove(BaseExpr):
+    op = aerospike.OP_BIT_REMOVE
+
+    def __init__(self, policy: TypePolicy, byte_offset: int, byte_size: int, bin: TypeBinName):
+        self.children = (
+            byte_offset,
+            byte_size,
+            _GenericExpr(150, 0, {VALUE_KEY: policy['flags']} if policy is not None and 'flags' in policy else {VALUE_KEY: 0}), #TODO: decide if this is best
+            bin if isinstance(bin, BaseExpr) else BlobBin(bin)
+        )
+
+
+class BitSet(BaseExpr):
+    op = aerospike.OP_BIT_SET
+
+    def __init__(self, policy: TypePolicy, bit_offset: int, bit_size: int, value: TypeBitValue, bin: TypeBinName):
+        self.children = (
+            bit_offset,
+            bit_size,
+            value,
+            _GenericExpr(150, 0, {VALUE_KEY: policy['flags']} if policy is not None and 'flags' in policy else {VALUE_KEY: 0}), #TODO: decide if this is best
+            bin if isinstance(bin, BaseExpr) else BlobBin(bin)
+        )
+
+
+class BitOr(BaseExpr):
+    op = aerospike.OP_BIT_OR
+
+    def __init__(self, policy: TypePolicy, bit_offset: int, bit_size: int, value: TypeBitValue, bin: TypeBinName):
+        self.children = (
+            bit_offset,
+            bit_size,
+            value,
+            _GenericExpr(150, 0, {VALUE_KEY: policy['flags']} if policy is not None and 'flags' in policy else {VALUE_KEY: 0}), #TODO: decide if this is best
+            bin if isinstance(bin, BaseExpr) else BlobBin(bin)
+        )
+
+
+class BitXor(BaseExpr):
+    op = aerospike.OP_BIT_XOR
+
+    def __init__(self, policy: TypePolicy, bit_offset: int, bit_size: int, value: TypeBitValue, bin: TypeBinName):
+        self.children = (
+            bit_offset,
+            bit_size,
+            value,
+            _GenericExpr(150, 0, {VALUE_KEY: policy['flags']} if policy is not None and 'flags' in policy else {VALUE_KEY: 0}), #TODO: decide if this is best
+            bin if isinstance(bin, BaseExpr) else BlobBin(bin)
+        )
+
+
+class BitAnd(BaseExpr):
+    op = aerospike.OP_BIT_AND
+
+    def __init__(self, policy: TypePolicy, bit_offset: int, bit_size: int, value: TypeBitValue, bin: TypeBinName):
+        self.children = (
+            bit_offset,
+            bit_size,
+            value,
+            _GenericExpr(150, 0, {VALUE_KEY: policy['flags']} if policy is not None and 'flags' in policy else {VALUE_KEY: 0}), #TODO: decide if this is best
+            bin if isinstance(bin, BaseExpr) else BlobBin(bin)
+        )
+
+
+class BitNot(BaseExpr):
+    op = aerospike.OP_BIT_NOT
+
+    def __init__(self, policy: TypePolicy, bit_offset: int, bit_size: int, bin: TypeBinName):
+        self.children = (
+            bit_offset,
+            bit_size,
+            _GenericExpr(150, 0, {VALUE_KEY: policy['flags']} if policy is not None and 'flags' in policy else {VALUE_KEY: 0}), #TODO: decide if this is best
+            bin if isinstance(bin, BaseExpr) else BlobBin(bin)
+        )
+
+
+class BitLeftShift(BaseExpr):
+    op = aerospike.OP_BIT_LSHIFT
+
+    def __init__(self, policy: TypePolicy, bit_offset: int, bit_size: int, shift: int, bin: TypeBinName):
+        self.children = (
+            bit_offset,
+            bit_size,
+            shift,
+            _GenericExpr(150, 0, {VALUE_KEY: policy['flags']} if policy is not None and 'flags' in policy else {VALUE_KEY: 0}), #TODO: decide if this is best
+            bin if isinstance(bin, BaseExpr) else BlobBin(bin)
+        )
+
+
+class BitRightShift(BaseExpr):
+    op = aerospike.OP_BIT_RSHIFT
+
+    def __init__(self, policy: TypePolicy, bit_offset: int, bit_size: int, shift: int, bin: TypeBinName):
+        self.children = (
+            bit_offset,
+            bit_size,
+            shift,
+            _GenericExpr(150, 0, {VALUE_KEY: policy['flags']} if policy is not None and 'flags' in policy else {VALUE_KEY: 0}), #TODO: decide if this is best
+            bin if isinstance(bin, BaseExpr) else BlobBin(bin)
+        )
+
+
+class BitAdd(BaseExpr):
+    op = aerospike.OP_BIT_ADD
+
+    def __init__(self, policy: TypePolicy, bit_offset: int, bit_size: int, value: int, action: intant, bin: TypeBinName):
+        self.children = (
+            bit_offset,
+            bit_size,
+            value,
+            _GenericExpr(150, 0, {VALUE_KEY: policy['flags']} if policy is not None and 'flags' in policy else {VALUE_KEY: 0}), #TODO: decide if this is best
+            _GenericExpr(150, 0, {VALUE_KEY: action} if action is not None else {VALUE_KEY: 0}),
+            bin if isinstance(bin, BaseExpr) else BlobBin(bin)
+        )
+
+
+class BitSubtract(BaseExpr):
+    op = aerospike.OP_BIT_SUBTRACT
+
+    def __init__(self, policy: TypePolicy, bit_offset: int, bit_size: int, value: int, action: intant, bin: TypeBinName):
+        self.children = (
+            bit_offset,
+            bit_size,
+            value,
+            _GenericExpr(150, 0, {VALUE_KEY: policy['flags']} if policy is not None and 'flags' in policy else {VALUE_KEY: 0}), #TODO: decide if this is best
+            _GenericExpr(150, 0, {VALUE_KEY: action} if action is not None else {VALUE_KEY: 0}),
+            bin if isinstance(bin, BaseExpr) else BlobBin(bin)
+        )
+
+
+class BitSetInt(BaseExpr):
+    op = aerospike.OP_BIT_SET_INT
+
+    def __init__(self, policy: TypePolicy, bit_offset: int, bit_size: int, value: int, bin: TypeBinName):
+        self.children = (
+            bit_offset,
+            bit_size,
+            value,
+            _GenericExpr(150, 0, {VALUE_KEY: policy['flags']} if policy is not None and 'flags' in policy else {VALUE_KEY: 0}), #TODO: decide if this is best
+            bin if isinstance(bin, BaseExpr) else BlobBin(bin)
+        )
+
+
+# BIT READ EXPRESSIONS
+
+
+class BitGet(BaseExpr):
+    op = aerospike.OP_BIT_GET
+
+    def __init__(self, bit_offset: int, bit_size: int, bin: TypeBinName):
+        self.children = (
+            bit_offset,
+            bit_size,
+            bin if isinstance(bin, BaseExpr) else BlobBin(bin)
+        )
 
 
 # def example():

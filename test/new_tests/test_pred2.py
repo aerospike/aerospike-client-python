@@ -165,7 +165,8 @@ class TestPred2(TestBaseClass):
                         GEO_POLY,
                         GEO_POLY1,
                         GEO_POLY2
-                    ]
+                    ],
+                    '1bits_bin': bytearray([1] * 8)
                 }
             self.as_connection.put(key, rec)
         
@@ -659,11 +660,34 @@ class TestPred2(TestBaseClass):
 
         expr =  EQ(
                 ListGetByRankRangeToEnd(ctx, aerospike.LIST_RETURN_VALUE, 0,
-                    ListInsertItems(ctx, policy, 1, values[3],
-                        ListSet(ctx, policy, 0, values[4],
-                            ListClear(ctx, bin)))),
-                expected[1]
+                    # ListSort(ctx, aerospike.LIST_SORT_DEFAULT,
+                        ListInsertItems(ctx, policy, 1, values[3],
+                            #ListSet(ctx, policy, 0, values[4],
+                                ListClear(ctx, bin))),
+                [24, 25]
             )
+
+        scan_obj = self.as_connection.scan(self.test_ns, self.test_set)
+        records = scan_obj.results({'predexp2': expr.compile()})
+        #print(records) TestUsrDefinedClass(1)
+        # for record in records:
+        #     print(record[2])
+        assert(len(records) == 19)
+    
+
+    @pytest.mark.parametrize("policy, bytes_size, flags, bin, expected", [
+        (None, 10, None, '1bits_bin', bytearray([0] * 1))
+    ])
+    def test_BitModOps_pos(self, policy, bytes_size, flags, bin, expected):
+        """
+        Test various bit expressions.
+        """
+
+        expr = EQ(
+                    BitGet(9, 2, 
+                        BitResize(policy, bytes_size, flags, bin)),
+                    bytearray([0] * 1)
+                )
 
         scan_obj = self.as_connection.scan(self.test_ns, self.test_set)
         records = scan_obj.results({'predexp2': expr.compile()})

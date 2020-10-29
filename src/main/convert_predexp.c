@@ -87,10 +87,20 @@
 // VIRTUAL OPS
 #define END_VA_ARGS 128
 
+#define _AS_EXP_CODE_CALL_VOP_START 144
+#define _AS_EXP_CODE_CDT_LIST_CRMOD 145
+#define _AS_EXP_CODE_CDT_LIST_MOD 146
+#define _AS_EXP_CODE_CDT_MAP_CRMOD 147
+#define _AS_EXP_CODE_CDT_MAP_CR 148
+#define _AS_EXP_CODE_CDT_MAP_MOD 149
+
+#define _AS_EXP_BIT_FLAGS 150
+
 // UTILITY CONSTANTS
 #define MAX_ELEMENTS 11 //TODO find largest macro and adjust this val
 #define FIXED_ACTIVE 1
 #define fixed_num_ACTIVE 2
+#define NO_BIT_FLAGS 0
 
 // Fixed dictionary keys
 #define OP_TYPE_KEY "ot_key"
@@ -302,6 +312,26 @@ as_status add_pred_macros(AerospikeClient * self, as_static_pool * static_pool, 
 
 	//pred->ctx = ctx_in_use ? &ctx : NULL;
 	
+	if (pred->op >= _AS_EXP_CODE_CDT_LIST_CRMOD && pred->op <= _AS_EXP_CODE_CDT_MAP_MOD) {
+		printf("in mod case\n");
+
+		if (pred->op == _AS_EXP_CODE_CDT_LIST_CRMOD || pred->op == _AS_EXP_CODE_CDT_LIST_MOD) {
+			if (pred->list_policy != NULL) {
+				as_exp_entry new_entries[] = {{.op=pred->op, .v.list_pol = pred->list_policy}};
+				append_array(sizeof(new_entries) / sizeof(as_exp_entry));
+			} else {
+				return as_error_update(err, AEROSPIKE_ERR_PARAM, "pred list_policy is NULL");
+			}
+		} else if (pred->op >= _AS_EXP_CODE_CDT_MAP_CRMOD || pred->op <= _AS_EXP_CODE_CDT_MAP_MOD) {
+			if (pred->map_policy != NULL) {
+				as_exp_entry new_entries[] = {{.op=pred->op, .v.map_pol = pred->map_policy}};
+				append_array(sizeof(new_entries) / sizeof(as_exp_entry));
+			} else {
+				return as_error_update(err, AEROSPIKE_ERR_PARAM, "pred map_policy is NULL");
+			}
+		}
+	}
+
 	switch (pred->op) {
 		case BIN:
 			printf("in bin case######\n");
@@ -1176,6 +1206,130 @@ as_status add_pred_macros(AerospikeClient * self, as_static_pool * static_pool, 
 				as_exp_entry new_entries[] = {as_exp_map_get_by_rank_range(pred->ctx, lval1, {}, {}, {})};
 				printf("size is: %lud\n", sizeof(new_entries) / sizeof(as_exp_entry));
 				append_array(sizeof(new_entries) / sizeof(as_exp_entry) - 3); // - 3 for rank, count, bin
+			}
+			break;
+		case _AS_EXP_BIT_FLAGS:;
+			printf("in OP_BIT_RESIZE\n");
+			{
+				if (get_int64_t(err, AS_PY_VAL_KEY, pred->pydict, &lval1) != AEROSPIKE_OK) {
+					return err->code;
+				}
+
+				as_exp_entry new_entries[] = {as_exp_uint((uint64_t)lval1)};
+				printf("size is: %lud\n", sizeof(new_entries) / sizeof(as_exp_entry));
+				append_array(sizeof(new_entries) / sizeof(as_exp_entry));
+			}
+			break;
+		case OP_BIT_RESIZE:;
+			printf("in OP_BIT_RESIZE\n");
+			{
+				as_exp_entry new_entries[] = {as_exp_bit_resize(NULL, {}, NO_BIT_FLAGS, {})};
+				printf("size is: %lud\n", sizeof(new_entries) / sizeof(as_exp_entry));
+				append_array(sizeof(new_entries) / sizeof(as_exp_entry) - 4); // - 4 for byte_size, policy, flags, bin
+			}
+			break;
+		case OP_BIT_INSERT:;
+			printf("in OP_BIT_INSERT\n");
+			{
+				as_exp_entry new_entries[] = {as_exp_bit_insert(NULL, {}, {}, {})};
+				printf("size is: %lud\n", sizeof(new_entries) / sizeof(as_exp_entry));
+				append_array(sizeof(new_entries) / sizeof(as_exp_entry) - 4);
+			}
+			break;
+		case OP_BIT_REMOVE:;
+			printf("in OP_BIT_REMOVE\n");
+			{
+				as_exp_entry new_entries[] = {as_exp_bit_remove(NULL, {}, {}, {})};
+				printf("size is: %lud\n", sizeof(new_entries) / sizeof(as_exp_entry));
+				append_array(sizeof(new_entries) / sizeof(as_exp_entry) - 4);
+			}
+			break;
+		case OP_BIT_SET:;
+			printf("in OP_BIT_SET\n");
+			{
+				as_exp_entry new_entries[] = {as_exp_bit_set(NULL, {}, {}, {}, {})};
+				printf("size is: %lud\n", sizeof(new_entries) / sizeof(as_exp_entry));
+				append_array(sizeof(new_entries) / sizeof(as_exp_entry) - 5);
+			}
+			break;
+		case OP_BIT_OR:;
+			printf("in OP_BIT_OR\n");
+			{
+				as_exp_entry new_entries[] = {as_exp_bit_or(NULL, {}, {}, {}, {})};
+				printf("size is: %lud\n", sizeof(new_entries) / sizeof(as_exp_entry));
+				append_array(sizeof(new_entries) / sizeof(as_exp_entry) - 5);
+			}
+			break;
+		case OP_BIT_XOR:;
+			printf("in OP_BIT_XOR\n");
+			{
+				as_exp_entry new_entries[] = {as_exp_bit_xor(NULL, {}, {}, {}, {})};
+				printf("size is: %lud\n", sizeof(new_entries) / sizeof(as_exp_entry));
+				append_array(sizeof(new_entries) / sizeof(as_exp_entry) - 5);
+			}
+			break;
+		case OP_BIT_AND:;
+			printf("in OP_BIT_AND\n");
+			{
+				as_exp_entry new_entries[] = {as_exp_bit_and(NULL, {}, {}, {}, {})};
+				printf("size is: %lud\n", sizeof(new_entries) / sizeof(as_exp_entry));
+				append_array(sizeof(new_entries) / sizeof(as_exp_entry) - 5);
+			}
+			break;
+		case OP_BIT_NOT:;
+			printf("in OP_BIT_NOT\n");
+			{
+				as_exp_entry new_entries[] = {as_exp_bit_not(NULL, {}, {}, {})};
+				printf("size is: %lud\n", sizeof(new_entries) / sizeof(as_exp_entry));
+				append_array(sizeof(new_entries) / sizeof(as_exp_entry) - 4);
+			}
+			break;
+		case OP_BIT_LSHIFT:;
+			printf("in OP_BIT_LSHIFT\n");
+			{
+				as_exp_entry new_entries[] = {as_exp_bit_lshift(NULL, {}, {}, {}, {})};
+				printf("size is: %lud\n", sizeof(new_entries) / sizeof(as_exp_entry));
+				append_array(sizeof(new_entries) / sizeof(as_exp_entry) - 5);
+			}
+			break;
+		case OP_BIT_RSHIFT:;
+			printf("in OP_BIT_RSHIFT\n");
+			{
+				as_exp_entry new_entries[] = {as_exp_bit_rshift(NULL, {}, {}, {}, {})};
+				printf("size is: %lud\n", sizeof(new_entries) / sizeof(as_exp_entry));
+				append_array(sizeof(new_entries) / sizeof(as_exp_entry) - 5);
+			}
+			break;
+		case OP_BIT_ADD:;
+			printf("in OP_BIT_ADD\n");
+			{
+				as_exp_entry new_entries[] = {as_exp_bit_add(NULL, {}, {}, {}, NO_BIT_FLAGS, {})};
+				printf("size is: %lud\n", sizeof(new_entries) / sizeof(as_exp_entry));
+				append_array(sizeof(new_entries) / sizeof(as_exp_entry) - 6);
+			}
+			break;
+		case OP_BIT_SUBTRACT:;
+			printf("in OP_BIT_SUBTRACT\n");
+			{
+				as_exp_entry new_entries[] = {as_exp_bit_subtract(NULL, {}, {}, {}, NO_BIT_FLAGS, {})};
+				printf("size is: %lud\n", sizeof(new_entries) / sizeof(as_exp_entry));
+				append_array(sizeof(new_entries) / sizeof(as_exp_entry) - 6);
+			}
+			break;
+		case OP_BIT_SET_INT:;
+			printf("in OP_BIT_SET_INT\n");
+			{
+				as_exp_entry new_entries[] = {as_exp_bit_set_int(NULL, {}, {}, {}, {})};
+				printf("size is: %lud\n", sizeof(new_entries) / sizeof(as_exp_entry));
+				append_array(sizeof(new_entries) / sizeof(as_exp_entry) - 5);
+			}
+			break;
+		case OP_BIT_GET:;
+			printf("in OP_BIT_GET\n");
+			{
+				as_exp_entry new_entries[] = {as_exp_bit_get({}, {}, {})};
+				printf("size is: %lud\n", sizeof(new_entries) / sizeof(as_exp_entry));
+				append_array(sizeof(new_entries) / sizeof(as_exp_entry) - 3); // - 3 for bit_offset, bit_size, bin
 			}
 			break;
 
