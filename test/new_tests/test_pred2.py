@@ -9,6 +9,7 @@ from aerospike_helpers import cdt_ctx
 from aerospike_helpers.predexp import *
 from aerospike_helpers.operations import map_operations
 from aerospike_helpers.operations import list_operations
+from aerospike_helpers.operations import hll_operations
 from aerospike import exception as e
 
 aerospike = pytest.importorskip("aerospike")
@@ -166,7 +167,7 @@ class TestPred2(TestBaseClass):
                         GEO_POLY1,
                         GEO_POLY2
                     ],
-                    '1bits_bin': bytearray([1] * 8)
+                    '1bits_bin': bytearray([1] * 8),
                 }
             self.as_connection.put(key, rec)
         
@@ -182,6 +183,7 @@ class TestPred2(TestBaseClass):
             list_operations.list_set_order('bllist_bin', aerospike.LIST_ORDERED),
             list_operations.list_set_order('bylist_bin', aerospike.LIST_ORDERED),
             #map_operations.map_set_policy('list_bin', {'map_order': aerospike.MAP_KEY_ORDERED}, ctx_sort_nested_map1),
+            hll_operations.hll_add('hll_bin', ['key%s' % str(i) for i in range(1000)], 10)
         ]
 
         #apply map order policy
@@ -609,52 +611,52 @@ class TestPred2(TestBaseClass):
         Invoke various list modify expressions with many value types.
         """
         
-        expr = And(
-            EQ(
-                ListGetByIndexRangeToEnd(ctx, aerospike.LIST_RETURN_VALUE, 0,                 
-                    ListSort(ctx, aerospike.LIST_SORT_DEFAULT, #TODO can't compare with constant list (server issue)        
-                        ListAppend(ctx, policy, values[0],
-                            ListAppendItems(ctx, policy, values[1],
-                                ListInsert(ctx, policy, 1, values[2], bin))))),
-                expected[0]
-            ),
-            EQ(
-                ListGetByRankRangeToEnd(ctx, aerospike.LIST_RETURN_VALUE, 0,
-                    ListInsertItems(ctx, policy, 1, values[3],
-                        ListSet(ctx, policy, 0, values[4],
-                            ListClear(ctx, bin)))),
-                expected[1]
-            ),
-            EQ(
-                ListRemoveByValue(ctx, values[5],
-                    ListRemoveByValueList(ctx, values[6], bin)),
-                []
-            ),
-            EQ(
-                ListRemoveByValueRange(ctx, values[7], values[8],
-                    ListRemoveByValueRelRankToEnd(ctx, values[9], 2, bin)),
-                []
-            ),
-            EQ(
-                ListRemoveByValueRelRankRange(ctx, values[10], 0, 2,
-                    ListRemoveByIndex(ctx, 0, bin)),
-                []
-            ), 
-            EQ(
-                ListRemoveByIndexRangeToEnd(ctx, 1,
-                    ListRemoveByIndexRange(ctx, 0, 1, bin)),
-                []
-            ),
-            EQ(
-                ListRemoveByRank(ctx, 0, 
-                    ListRemoveByRankRangeToEnd(ctx, 1, bin)),
-                [] #empty
-            ),
-            EQ(
-                ListRemoveByRankRange(ctx, 1, 2, bin),
-                expected[2]
-            )
-        )
+        # expr = And(
+        #     EQ(
+        #         ListGetByIndexRangeToEnd(ctx, aerospike.LIST_RETURN_VALUE, 0,                 
+        #             ListSort(ctx, aerospike.LIST_SORT_DEFAULT, #TODO can't compare with constant list (server issue)        
+        #                 ListAppend(ctx, policy, values[0],
+        #                     ListAppendItems(ctx, policy, values[1],
+        #                         ListInsert(ctx, policy, 1, values[2], bin))))),
+        #         expected[0]
+        #     ),
+        #     EQ(
+        #         ListGetByRankRangeToEnd(ctx, aerospike.LIST_RETURN_VALUE, 0,
+        #             ListInsertItems(ctx, policy, 1, values[3],
+        #                 ListSet(ctx, policy, 0, values[4],
+        #                     ListClear(ctx, bin)))),
+        #         expected[1]
+        #     ),
+        #     EQ(
+        #         ListRemoveByValue(ctx, values[5],
+        #             ListRemoveByValueList(ctx, values[6], bin)),
+        #         []
+        #     ),
+        #     EQ(
+        #         ListRemoveByValueRange(ctx, values[7], values[8],
+        #             ListRemoveByValueRelRankToEnd(ctx, values[9], 2, bin)),
+        #         []
+        #     ),
+        #     EQ(
+        #         ListRemoveByValueRelRankRange(ctx, values[10], 0, 2,
+        #             ListRemoveByIndex(ctx, 0, bin)),
+        #         []
+        #     ), 
+        #     EQ(
+        #         ListRemoveByIndexRangeToEnd(ctx, 1,
+        #             ListRemoveByIndexRange(ctx, 0, 1, bin)),
+        #         []
+        #     ),
+        #     EQ(
+        #         ListRemoveByRank(ctx, 0, 
+        #             ListRemoveByRankRangeToEnd(ctx, 1, bin)),
+        #         [] #empty
+        #     ),
+        #     EQ(
+        #         ListRemoveByRankRange(ctx, 1, 2, bin),
+        #         expected[2]
+        #     )
+        # )
 
         # ListIncrement(ctx, policy, 1, )) TODO needs it's own always int case
 
@@ -687,6 +689,28 @@ class TestPred2(TestBaseClass):
                     BitGet(9, 2, 
                         BitResize(policy, bytes_size, flags, bin)),
                     bytearray([0] * 1)
+                )
+
+        scan_obj = self.as_connection.scan(self.test_ns, self.test_set)
+        records = scan_obj.results({'predexp2': expr.compile()})
+        #print(records) TestUsrDefinedClass(1)
+        # for record in records:
+        #     print(record[2])
+        assert(len(records) == 19)
+
+
+    @pytest.mark.parametrize("policy, listp, bin, expected", [
+        (None, ['key%s' % str(i) for i in range(1000, 1050)], 'hll_bin', 1050)
+    ])
+    def test_HLLModOps_pos(self, policy, listp, bin, expected):
+        """
+        Test various HLL expressions.
+        """
+
+        expr = GE(
+                    HLLGetCount(
+                        HLLAdd(policy, listp, 10, bin)),
+                    1020 #TODO calculate this with error
                 )
 
         scan_obj = self.as_connection.scan(self.test_ns, self.test_set)

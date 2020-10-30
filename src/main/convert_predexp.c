@@ -316,19 +316,11 @@ as_status add_pred_macros(AerospikeClient * self, as_static_pool * static_pool, 
 		printf("in mod case\n");
 
 		if (pred->op == _AS_EXP_CODE_CDT_LIST_CRMOD || pred->op == _AS_EXP_CODE_CDT_LIST_MOD) {
-			if (pred->list_policy != NULL) {
-				as_exp_entry new_entries[] = {{.op=pred->op, .v.list_pol = pred->list_policy}};
-				append_array(sizeof(new_entries) / sizeof(as_exp_entry));
-			} else {
-				return as_error_update(err, AEROSPIKE_ERR_PARAM, "pred list_policy is NULL");
-			}
+			as_exp_entry new_entries[] = {{.op=pred->op, .v.list_pol = NULL}};
+			append_array(sizeof(new_entries) / sizeof(as_exp_entry));
 		} else if (pred->op >= _AS_EXP_CODE_CDT_MAP_CRMOD || pred->op <= _AS_EXP_CODE_CDT_MAP_MOD) {
-			if (pred->map_policy != NULL) {
-				as_exp_entry new_entries[] = {{.op=pred->op, .v.map_pol = pred->map_policy}};
-				append_array(sizeof(new_entries) / sizeof(as_exp_entry));
-			} else {
-				return as_error_update(err, AEROSPIKE_ERR_PARAM, "pred map_policy is NULL");
-			}
+			as_exp_entry new_entries[] = {{.op=pred->op, .v.map_pol = pred->map_policy}};
+			append_array(sizeof(new_entries) / sizeof(as_exp_entry));
 		}
 	}
 
@@ -1330,6 +1322,54 @@ as_status add_pred_macros(AerospikeClient * self, as_static_pool * static_pool, 
 				as_exp_entry new_entries[] = {as_exp_bit_get({}, {}, {})};
 				printf("size is: %lud\n", sizeof(new_entries) / sizeof(as_exp_entry));
 				append_array(sizeof(new_entries) / sizeof(as_exp_entry) - 3); // - 3 for bit_offset, bit_size, bin
+			}
+			break;
+		case OP_BIT_COUNT:;
+			printf("in OP_BIT_COUNT\n");
+			{
+				as_exp_entry new_entries[] = {as_exp_bit_count({}, {}, {})};
+				printf("size is: %lud\n", sizeof(new_entries) / sizeof(as_exp_entry));
+				append_array(sizeof(new_entries) / sizeof(as_exp_entry) - 3); // - 3 for bit_offset, bit_size, bin
+			}
+			break;
+		case OP_BIT_LSCAN:;
+			printf("in OP_BIT_LSCAN\n");
+			{
+				as_exp_entry new_entries[] = {as_exp_bit_lscan({}, {}, {}, {})};
+				printf("size is: %lud\n", sizeof(new_entries) / sizeof(as_exp_entry));
+				append_array(sizeof(new_entries) / sizeof(as_exp_entry) - 4);
+			}
+			break;
+		case OP_BIT_RSCAN:;
+			printf("in OP_BIT_RSCAN\n");
+			{
+				as_exp_entry new_entries[] = {as_exp_bit_rscan({}, {}, {}, {})};
+				printf("size is: %lud\n", sizeof(new_entries) / sizeof(as_exp_entry));
+				append_array(sizeof(new_entries) / sizeof(as_exp_entry) - 4);
+			}
+			break;
+		case OP_BIT_GET_INT:;
+			printf("in OP_BIT_GET_INT\n");
+			{
+				as_exp_entry new_entries[] = {as_exp_bit_get_int({}, {}, 0, {})};
+				printf("size is: %lud\n", sizeof(new_entries) / sizeof(as_exp_entry));
+				append_array(sizeof(new_entries) / sizeof(as_exp_entry) - 4);
+			}
+			break;
+		case OP_HLL_ADD:; // NOTE: this case covers HLLAddMH, HLLAdd, and HLLUpdate
+			printf("in OP_HLL_ADD_MH\n");
+			{
+				as_exp_entry new_entries[] = {as_exp_hll_add_mh(NULL, {}, 0, 0, {})};
+				printf("size is: %lud\n", sizeof(new_entries) / sizeof(as_exp_entry));
+				append_array(sizeof(new_entries) / sizeof(as_exp_entry) - 5); // - 5 for list, index_bit_count, -1, policy, bin
+			}
+			break;
+		case OP_HLL_GET_COUNT:;
+			printf("in OP_HLL_GET_COUNT\n");
+			{
+				as_exp_entry new_entries[] = {as_exp_hll_get_count({})};
+				printf("size is: %lud\n", sizeof(new_entries) / sizeof(as_exp_entry));
+				append_array(sizeof(new_entries) / sizeof(as_exp_entry) - 1); // - 1 for bin
 			}
 			break;
 

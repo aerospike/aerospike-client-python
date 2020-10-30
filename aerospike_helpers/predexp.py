@@ -333,10 +333,6 @@ class ListBin(_Bin):
     rt = ResultType.LIST
 
 
-class HLLBin(_Bin):
-    rt = ResultType.HLL
-
-
 class TypeBin(BaseExpr):  # TODO implement
     op = ExprOp.BIN_TYPE
     rt = ResultType.INTEGER
@@ -1607,7 +1603,7 @@ class BitRightShift(BaseExpr):
 class BitAdd(BaseExpr):
     op = aerospike.OP_BIT_ADD
 
-    def __init__(self, policy: TypePolicy, bit_offset: int, bit_size: int, value: int, action: intant, bin: TypeBinName):
+    def __init__(self, policy: TypePolicy, bit_offset: int, bit_size: int, value: int, action: int, bin: TypeBinName):
         self.children = (
             bit_offset,
             bit_size,
@@ -1621,7 +1617,7 @@ class BitAdd(BaseExpr):
 class BitSubtract(BaseExpr):
     op = aerospike.OP_BIT_SUBTRACT
 
-    def __init__(self, policy: TypePolicy, bit_offset: int, bit_size: int, value: int, action: intant, bin: TypeBinName):
+    def __init__(self, policy: TypePolicy, bit_offset: int, bit_size: int, value: int, action: int, bin: TypeBinName):
         self.children = (
             bit_offset,
             bit_size,
@@ -1657,6 +1653,167 @@ class BitGet(BaseExpr):
             bit_size,
             bin if isinstance(bin, BaseExpr) else BlobBin(bin)
         )
+
+
+class BitCount(BaseExpr):
+    op = aerospike.OP_BIT_COUNT
+
+    def __init__(self, bit_offset: int, bit_size: int, bin: TypeBinName):
+        self.children = (
+            bit_offset,
+            bit_size,
+            bin if isinstance(bin, BaseExpr) else BlobBin(bin)
+        )
+
+
+class BitLeftScan(BaseExpr):
+    op = aerospike.OP_BIT_LSCAN
+
+    def __init__(self, bit_offset: int, bit_size: int, value: bool, bin: TypeBinName):
+        self.children = (
+            bit_offset,
+            bit_size,
+            value,
+            bin if isinstance(bin, BaseExpr) else BlobBin(bin)
+        )
+
+
+class BitRightScan(BaseExpr):
+    op = aerospike.OP_BIT_RSCAN
+
+    def __init__(self, bit_offset: int, bit_size: int, value: bool, bin: TypeBinName):
+        self.children = (
+            bit_offset,
+            bit_size,
+            value,
+            bin if isinstance(bin, BaseExpr) else BlobBin(bin)
+        )
+
+
+class BitGetInt(BaseExpr):
+    op = aerospike.OP_BIT_GET_INT
+
+    def __init__(self, bit_offset: int, bit_size: int, sign: bool, bin: TypeBinName):
+        self.children = (
+            bit_offset,
+            bit_size,
+            sign,
+            bin if isinstance(bin, BaseExpr) else BlobBin(bin)
+        )
+
+
+# HLL modify expressions
+
+
+class HLLAddMH(BaseExpr):
+    op = aerospike.OP_HLL_ADD
+
+    def __init__(self, policy: TypePolicy, list: TypeListValue, index_bit_count: int, mh_bit_count: int, bin: TypeBinName):
+        self.children = (
+            list,
+            index_bit_count,
+            mh_bit_count,
+            _GenericExpr(150, 0, {VALUE_KEY: policy['flags']} if policy is not None and 'flags' in policy else {VALUE_KEY: 0}), #TODO: decide if this is best
+            bin if isinstance(bin, BaseExpr) else BlobBin(bin)
+        )
+
+
+class HLLAdd(BaseExpr):
+    op = aerospike.OP_HLL_ADD
+
+    def __init__(self, policy: TypePolicy, list: TypeListValue, index_bit_count: int, bin: TypeBinName):
+        self.children = (
+            list,
+            index_bit_count,
+            -1,
+            policy['flags'] if policy is not None and 'flags' in policy else 0, #TODO: decide if this is best
+            bin if isinstance(bin, BaseExpr) else HLLBin(bin)
+        )
+
+
+class HLLUpdate(BaseExpr):
+    op = aerospike.OP_HLL_ADD
+
+    def __init__(self, policy: TypePolicy, list: TypeListValue, bin: TypeBinName):
+        self.children = (
+            list,
+            -1,
+            -1,
+            policy['flags'] if policy is not None and 'flags' in policy else 0, #TODO: decide if this is best
+            bin if isinstance(bin, BaseExpr) else HLLBin(bin)
+        )
+
+
+# HLL read expressions
+
+
+class HLLGetCount(BaseExpr):
+    op = aerospike.OP_HLL_GET_COUNT
+
+    def __init__(self, bin: TypeBinName):
+        self.children = (
+            bin if isinstance(bin, BaseExpr) else HLLBin(bin),
+        )
+
+
+class HLLGetUnion(BaseExpr):
+    op = aerospike.OP_HLL_GET_UNION
+
+    def __init__(self, bin: TypeBinName, values: TypeListValue):
+        self.children = (
+            values,
+            bin if isinstance(bin, BaseExpr) else HLLBin(bin),
+        )
+
+
+class HLLGetUnionUnionCount(BaseExpr):
+    op = aerospike.OP_HLL_GET_UNION_COUNT
+
+    def __init__(self, bin: TypeBinName, values: TypeListValue):
+        self.children = (
+            values,
+            bin if isinstance(bin, BaseExpr) else HLLBin(bin),
+        )
+
+
+class HLLGetIntersectCount(BaseExpr):
+    op = aerospike.OP_HLL_GET_INTERSECT_COUNT
+
+    def __init__(self, bin: TypeBinName, values: TypeListValue):
+        self.children = (
+            values,
+            bin if isinstance(bin, BaseExpr) else HLLBin(bin),
+        )
+
+
+class HLLGetSimilarity(BaseExpr):
+    op = aerospike.OP_HLL_GET_SIMILARITY
+
+    def __init__(self, bin: TypeBinName, values: TypeListValue):
+        self.children = (
+            values,
+            bin if isinstance(bin, BaseExpr) else HLLBin(bin),
+        )
+
+
+class HLLDescribe(BaseExpr):
+    op = aerospike.OP_HLL_DESCRIBE
+
+    def __init__(self, bin: TypeBinName):
+        self.children = (
+            bin if isinstance(bin, BaseExpr) else HLLBin(bin),
+        )
+
+
+class HLLMayContain(BaseExpr):
+    op = aerospike.OP_HLL_GET_SIMILARITY
+
+    def __init__(self, bin: TypeBinName, values: TypeListValue):
+        self.children = (
+            values,
+            bin if isinstance(bin, BaseExpr) else HLLBin(bin),
+        )
+
 
 
 # def example():

@@ -154,7 +154,7 @@ enum aerospike_hll_operations {
 	OP_HLL_GET_UNION_COUNT,
 	OP_HLL_INIT,
 	OP_HLL_REFRESH_COUNT,
-	OP_HLL_SET_UNION,
+	OP_HLL_SET_UNION
 };
 
 enum Aerospike_list_exp_operations {
