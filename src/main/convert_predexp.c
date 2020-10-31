@@ -87,12 +87,12 @@
 // VIRTUAL OPS
 #define END_VA_ARGS 128
 
-#define _AS_EXP_CODE_CALL_VOP_START 144
-#define _AS_EXP_CODE_CDT_LIST_CRMOD 145
-#define _AS_EXP_CODE_CDT_LIST_MOD 146
-#define _AS_EXP_CODE_CDT_MAP_CRMOD 147
-#define _AS_EXP_CODE_CDT_MAP_CR 148
-#define _AS_EXP_CODE_CDT_MAP_MOD 149
+// #define _AS_EXP_CODE_CALL_VOP_START 144
+// #define _AS_EXP_CODE_CDT_LIST_CRMOD 145
+// #define _AS_EXP_CODE_CDT_LIST_MOD 146
+// #define _AS_EXP_CODE_CDT_MAP_CRMOD 147
+// #define _AS_EXP_CODE_CDT_MAP_CR 148
+// #define _AS_EXP_CODE_CDT_MAP_MOD 149
 
 #define _AS_EXP_BIT_FLAGS 150
 
@@ -316,9 +316,9 @@ as_status add_pred_macros(AerospikeClient * self, as_static_pool * static_pool, 
 		printf("in mod case\n");
 
 		if (pred->op == _AS_EXP_CODE_CDT_LIST_CRMOD || pred->op == _AS_EXP_CODE_CDT_LIST_MOD) {
-			as_exp_entry new_entries[] = {{.op=pred->op, .v.list_pol = NULL}};
+			as_exp_entry new_entries[] = {{.op=pred->op, .v.list_pol = pred->list_policy}};
 			append_array(sizeof(new_entries) / sizeof(as_exp_entry));
-		} else if (pred->op >= _AS_EXP_CODE_CDT_MAP_CRMOD || pred->op <= _AS_EXP_CODE_CDT_MAP_MOD) {
+		} else if (pred->op >= _AS_EXP_CODE_CDT_MAP_CRMOD && pred->op <= _AS_EXP_CODE_CDT_MAP_MOD) {
 			as_exp_entry new_entries[] = {{.op=pred->op, .v.map_pol = pred->map_policy}};
 			append_array(sizeof(new_entries) / sizeof(as_exp_entry));
 		}
@@ -739,6 +739,15 @@ as_status add_pred_macros(AerospikeClient * self, as_static_pool * static_pool, 
 				append_array(sizeof(new_entries) / sizeof(as_exp_entry) -2); // -2 for bin and val
 			}
 			break;
+		case OP_LIST_EXP_REMOVE_BY_VALUE_RANGE:;
+			printf("in OP_LIST_EXP_REMOVE_BY_VALUE_RANGE\n");
+			{
+				as_exp_entry new_entries[] = {as_exp_list_remove_by_value_range(pred->ctx, {}, {}, {})};
+
+				printf("size is: %lud\n", sizeof(new_entries) / sizeof(as_exp_entry));
+				append_array(sizeof(new_entries) / sizeof(as_exp_entry) - 3); // - 3 for begin, end, val
+			}
+			break;
 		case OP_LIST_EXP_REMOVE_BY_REL_RANK_RANGE_TO_END:;
 			printf("in OP_LIST_EXP_REMOVE_BY_REL_RANK_RANGE_TO_END\n");
 			{
@@ -748,7 +757,7 @@ as_status add_pred_macros(AerospikeClient * self, as_static_pool * static_pool, 
 				append_array(sizeof(new_entries) / sizeof(as_exp_entry) - 3); // -3 for value, rank, bin
 			}
 			break;
-		case OP_LIST_EXP_REMOVE_BY_VALUE_REL_RANK_RANGE:;
+		case OP_LIST_EXP_REMOVE_BY_REL_RANK_RANGE:;
 			printf("in OP_LIST_EXP_REMOVE_BY_REL_RANK_RANGE\n");
 			{
 				as_exp_entry new_entries[] = {as_exp_list_remove_by_rel_rank_range(pred->ctx, {}, {}, {}, {})};
@@ -796,10 +805,19 @@ as_status add_pred_macros(AerospikeClient * self, as_static_pool * static_pool, 
 		case OP_LIST_EXP_REMOVE_BY_RANK_RANGE_TO_END:;
 			printf("in OP_LIST_EXP_REMOVE_BY_RANK_RANGE_TO_END\n");
 			{
+				as_exp_entry new_entries[] = {as_exp_list_remove_by_rank_range_to_end(pred->ctx, {}, {})};
+
+				printf("size is: %lud\n", sizeof(new_entries) / sizeof(as_exp_entry));
+				append_array(sizeof(new_entries) / sizeof(as_exp_entry) - 2); // - 2 for rank, bin
+			}
+			break;
+		case OP_LIST_EXP_REMOVE_BY_RANK_RANGE:;
+			printf("in OP_LIST_EXP_REMOVE_BY_RANK_RANGE\n");
+			{
 				as_exp_entry new_entries[] = {as_exp_list_remove_by_rank_range(pred->ctx, {}, {}, {})};
 
 				printf("size is: %lud\n", sizeof(new_entries) / sizeof(as_exp_entry));
-				append_array(sizeof(new_entries) / sizeof(as_exp_entry) - 3); // -3 for rank, count, bin
+				append_array(sizeof(new_entries) / sizeof(as_exp_entry) - 3); // - 3 for rank, count, bin
 			}
 			break;
 		case OP_MAP_PUT:;

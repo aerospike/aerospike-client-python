@@ -543,7 +543,7 @@ class TestPred2(TestBaseClass):
                 2),
             EQ(
                 ListGetByIndexRangeToEnd(None, aerospike.LIST_RETURN_COUNT, 1,
-                    ListGetByIndexRelRankRange(None, aerospike.LIST_RETURN_VALUE, 1, 3, bin,)),
+                    ListGetByIndexRange(None, aerospike.LIST_RETURN_VALUE, 1, 3, bin,)),
                 1),
             EQ(
                 ListGetByRank(None, aerospike.LIST_RETURN_RANK, ResultType.INTEGER, 1, #lets 20 pass with slist_bin
@@ -595,12 +595,35 @@ class TestPred2(TestBaseClass):
                 1, #
                 [2, 6],
                 1, #
-                2,
+                3,
                 6,
                 2 #
             ], 
             [
                 [1, 2, 3, 4, 6, 9, 20],
+                [10, 24, 25, 2, 6],
+                [1]
+            ]
+        ),
+        (
+            "slist_bin",
+            None,
+            {}, 
+            [
+                'h',
+                ['e', 'g'],
+                'c',
+                [24, 25], #
+                10,
+                'b', #
+                ['d', 'f'],
+                'b', #
+                'e',
+                'f',
+                'd' #
+            ], 
+            [
+                ['b', 'd', 3, 4, 'f', 9, 20],
                 [10, 24, 25, 2, 6],
                 [1]
             ]
@@ -611,63 +634,72 @@ class TestPred2(TestBaseClass):
         Invoke various list modify expressions with many value types.
         """
         
-        # expr = And(
-        #     EQ(
+        expr = And(
+            EQ(
+                ListGetByIndexRangeToEnd(ctx, aerospike.LIST_RETURN_VALUE, 0,                 
+                    ListSort(ctx, aerospike.LIST_SORT_DEFAULT, #TODO can't compare with constant list (server issue)        
+                        ListAppend(ctx, policy, values[0],
+                            ListAppendItems(ctx, policy, values[1],
+                                ListInsert(ctx, policy, 1, values[2], bin))))),
+                expected[0]
+            ),
+            # EQ(
+            #     ListGetByRankRangeToEnd(ctx, aerospike.LIST_RETURN_VALUE, 0,
+            #         ListInsertItems(ctx, policy, 1, values[3], # this is having issues with returning lists len > 1
+            #             ListSet(ctx, policy, 0, values[4],
+            #                 ListClear(ctx, bin)))),
+            #     expected[1]
+            # ),
+            EQ(
+                ListRemoveByValue(ctx, values[5],
+                    ListRemoveByValueList(ctx, values[6], bin)),
+                []
+            ),
+            EQ(
+                ListRemoveByValueRange(ctx, values[7], values[8],
+                    ListRemoveByValueRelRankToEnd(ctx, values[9], 0, bin)),
+                []
+            ),
+            EQ(
+                ListRemoveByValueRelRankRange(ctx, values[10], 0, 2,
+                    ListRemoveByIndex(ctx, 0, bin)),
+                []
+            ), 
+            EQ(
+                ListRemoveByIndexRange(ctx, 0, 1,
+                    ListRemoveByIndexRangeToEnd(ctx, 1, bin)),
+                []
+            ),
+            EQ(
+                ListRemoveByRank(ctx, 0, 
+                    ListRemoveByRankRangeToEnd(ctx, 1, bin)),
+                []
+            ),
+            EQ(
+                ListRemoveByRankRange(ctx, 1, 2, bin),
+                expected[2]
+            )
+        )
+
+        # ListIncrement(ctx, policy, 1, )) TODO needs it's own always int case
+
+        # expr =  EQ(
+        #         ListGetByRankRangeToEnd(ctx, aerospike.LIST_RETURN_COUNT, 0, bin),
+        #             ListSort(ctx, aerospike.LIST_SORT_DEFAULT,
+        #                  ListInsertItems(ctx, None, 0, [values[4], 11],
+        #                      ListSet(ctx, policy, 0, values[4],
+        #                         ListClear(ctx, bin))),
+        #         3
+        #     )
+
+        # expr =  EQ(
         #         ListGetByIndexRangeToEnd(ctx, aerospike.LIST_RETURN_VALUE, 0,                 
         #             ListSort(ctx, aerospike.LIST_SORT_DEFAULT, #TODO can't compare with constant list (server issue)        
         #                 ListAppend(ctx, policy, values[0],
         #                     ListAppendItems(ctx, policy, values[1],
         #                         ListInsert(ctx, policy, 1, values[2], bin))))),
         #         expected[0]
-        #     ),
-        #     EQ(
-        #         ListGetByRankRangeToEnd(ctx, aerospike.LIST_RETURN_VALUE, 0,
-        #             ListInsertItems(ctx, policy, 1, values[3],
-        #                 ListSet(ctx, policy, 0, values[4],
-        #                     ListClear(ctx, bin)))),
-        #         expected[1]
-        #     ),
-        #     EQ(
-        #         ListRemoveByValue(ctx, values[5],
-        #             ListRemoveByValueList(ctx, values[6], bin)),
-        #         []
-        #     ),
-        #     EQ(
-        #         ListRemoveByValueRange(ctx, values[7], values[8],
-        #             ListRemoveByValueRelRankToEnd(ctx, values[9], 2, bin)),
-        #         []
-        #     ),
-        #     EQ(
-        #         ListRemoveByValueRelRankRange(ctx, values[10], 0, 2,
-        #             ListRemoveByIndex(ctx, 0, bin)),
-        #         []
-        #     ), 
-        #     EQ(
-        #         ListRemoveByIndexRangeToEnd(ctx, 1,
-        #             ListRemoveByIndexRange(ctx, 0, 1, bin)),
-        #         []
-        #     ),
-        #     EQ(
-        #         ListRemoveByRank(ctx, 0, 
-        #             ListRemoveByRankRangeToEnd(ctx, 1, bin)),
-        #         [] #empty
-        #     ),
-        #     EQ(
-        #         ListRemoveByRankRange(ctx, 1, 2, bin),
-        #         expected[2]
         #     )
-        # )
-
-        # ListIncrement(ctx, policy, 1, )) TODO needs it's own always int case
-
-        expr =  EQ(
-                ListGetByRankRangeToEnd(ctx, aerospike.LIST_RETURN_VALUE, 0,
-                    # ListSort(ctx, aerospike.LIST_SORT_DEFAULT,
-                        ListInsertItems(ctx, policy, 1, values[3],
-                            #ListSet(ctx, policy, 0, values[4],
-                                ListClear(ctx, bin))),
-                [24, 25]
-            )
 
         scan_obj = self.as_connection.scan(self.test_ns, self.test_set)
         records = scan_obj.results({'predexp2': expr.compile()})
