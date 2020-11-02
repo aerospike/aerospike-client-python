@@ -133,9 +133,9 @@ class TestPred2(TestBaseClass):
                         [1, 4]
                     ],
                     'mlist_bin': [
-                        {1: 1, 2: 2},
-                        {1: 1, 3: 3},
-                        {1: 1, 4: 4}
+                        {1: 2},
+                        {1: 3},
+                        {1: 4}
                     ],
                     'bylist_bin': [
                         'b'.encode("utf8"),
@@ -157,16 +157,61 @@ class TestPred2(TestBaseClass):
                         TestUsrDefinedClass(3),
                         TestUsrDefinedClass(4)
                     ],
-                    'flist_bin': [
+                    'flist_bin': {
                         1.0,
                         2.0,
                         6.0
-                    ],
-                    'glist_bin': [
-                        GEO_POLY,
-                        GEO_POLY1,
-                        GEO_POLY2
-                    ],
+                    },
+                    'imap_bin': {
+                        1: 1,
+                        2: 2,
+                        3: 6,
+                    },
+                    'smap_bin': {
+                        'b': 'b',
+                        'd': 'd',
+                        'f': 'f'
+                    },
+                    'lmap_bin': {
+                        1: [1, 2],
+                        2: [1, 3],
+                        3: [1, 4]
+                    },
+                    'mmap_bin': {
+                        1: {1: 2},
+                        2: {1: 3},
+                        3: {1: 4}
+                    },
+                    'bymap_bin': {
+                        1: 'b'.encode("utf8"),
+                        2: 'd'.encode("utf8"),
+                        3: 'f'.encode("utf8")
+                    },
+                    'bomap_bin': {
+                        1: False,
+                        2: False,
+                        3: True
+                    },
+                    'nmap_bin': {
+                        1: None,
+                        2: aerospike.null,
+                        3: aerospike.null
+                    },
+                    'blmap_bin': {
+                        1: TestUsrDefinedClass(1),
+                        2: TestUsrDefinedClass(3),
+                        3: TestUsrDefinedClass(4)
+                    },
+                    'fmap_bin': {
+                        1.0: 1.0,
+                        2.0: 2.0,
+                        6.0: 6.0
+                    },
+                    'gmap_bin': {
+                        1: GEO_POLY,
+                        2: GEO_POLY1,
+                        3: GEO_POLY2
+                    },
                     '1bits_bin': bytearray([1] * 8),
                 }
             self.as_connection.put(key, rec)
@@ -179,9 +224,9 @@ class TestPred2(TestBaseClass):
 
         sort_ops = [
             #list_operations.list_set_order('ilist_bin', aerospike.LIST_ORDERED),
-            list_operations.list_set_order('slist_bin', aerospike.LIST_ORDERED),
-            list_operations.list_set_order('bllist_bin', aerospike.LIST_ORDERED),
-            list_operations.list_set_order('bylist_bin', aerospike.LIST_ORDERED),
+            # list_operations.list_set_order('slist_bin', aerospike.LIST_ORDERED),
+            # list_operations.list_set_order('bllist_bin', aerospike.LIST_ORDERED),
+            # list_operations.list_set_order('bylist_bin', aerospike.LIST_ORDERED),
             #map_operations.map_set_policy('list_bin', {'map_order': aerospike.MAP_KEY_ORDERED}, ctx_sort_nested_map1),
             hll_operations.hll_add('hll_bin', ['key%s' % str(i) for i in range(1000)], 10)
         ]
@@ -623,11 +668,103 @@ class TestPred2(TestBaseClass):
                 'd' #
             ], 
             [
-                ['b', 'd', 3, 4, 'f', 9, 20],
+                ['b', 'c', 'd', 'e', 'f', 'g', 'h'],
                 [10, 24, 25, 2, 6],
-                [1]
+                ['b']
             ]
-        )
+        ),
+        (
+            "llist_bin",
+            None,
+            {}, 
+            [
+                [1, 20],
+                [[1, 6], [1, 9]],
+                [1, 5],
+                [[1, 24], [1, 25]], #
+                [1, 10],
+                [1, 2], #
+                [[1, 3], [1, 4]],
+                [1, 2], #
+                [1, 4],
+                [1, 4],
+                [1, 3] #
+            ], 
+            [
+                [[1, 2], [1, 3], [1, 4], [1, 5], [1, 6], [1,9], [1, 20]],
+                [10, 24, 25, 2, 6],
+                [[1, 2]]
+            ]
+        ),
+        (
+            "mlist_bin",
+            None,
+            {}, 
+            [
+                {1: 20},
+                [{1: 6}, {1: 9}],
+                {1: 5},
+                [{1: 24}, {1: 25}], #
+                {1: 10},
+                {1: 2}, #
+                [{1: 3}, {1: 4}],
+                {1: 2}, #
+                {1: 4},
+                {1: 4},
+                {1: 3} #
+            ], 
+            [
+                [{1: 2}, {1: 3}, {1: 4}, {1: 5}, {1: 6}, {1: 9}, {1: 20}],
+                [10, 24, 25, 2, 6],
+                [{1: 2}]
+            ]
+        ),
+        (
+            "bylist_bin",
+            None,
+            {}, 
+            [
+                b'h',
+                [b'e', b'g'],
+                b'c',
+                [24, 25], #
+                10,
+                b'b', #
+                [b'd', b'f'],
+                b'b', #
+                b'e',
+                b'f',
+                b'd' #
+            ], 
+            [
+                [b'b', b'c', b'd', b'e', b'f', b'g', b'h'],
+                [10, 24, 25, 2, 6],
+                [b'b']
+            ]
+        ),
+        (
+            "flist_bin",
+            None,
+            {}, 
+            [
+                20.0,
+                [3.0, 9.0],
+                4.0,
+                [24.0, 25.0], #
+                10.0,
+                1.0, #
+                [2.0, 6.0],
+                1.0, #
+                3.0,
+                6.0,
+                2.0 #
+            ], 
+            [
+                [1.0, 2.0, 3.0, 4.0, 6.0, 9.0, 20.0],
+                [10.0, 24.0, 25.0, 2.0, 6.0],
+                [1.0]
+            ]
+        ),
     ])
     def test_ListModOps_pos(self, bin, ctx, policy, values, expected):
         """
@@ -640,7 +777,7 @@ class TestPred2(TestBaseClass):
                     ListSort(ctx, aerospike.LIST_SORT_DEFAULT, #TODO can't compare with constant list (server issue)        
                         ListAppend(ctx, policy, values[0],
                             ListAppendItems(ctx, policy, values[1],
-                                ListInsert(ctx, policy, 1, values[2], bin))))),
+                                ListInsert(ctx, policy, 1, values[2], bin))))), #NOTE: invalid on ordered lists
                 expected[0]
             ),
             # EQ(
@@ -701,6 +838,15 @@ class TestPred2(TestBaseClass):
         #         expected[0]
         #     )
 
+        # expr =  EQ( works
+        #         ListGetByIndexRangeToEnd(ctx, aerospike.LIST_RETURN_VALUE, 0,                 
+        #             ListSort(ctx, aerospike.LIST_SORT_DEFAULT, #TODO can't compare with constant list (server issue)        
+        #                 ListAppend(ctx, policy, values[0],
+        #                     ListAppendItems(ctx, policy, values[1],
+        #                         ListInsert(ctx, policy, 1, values[2], bin))))),
+        #         ['b', 'c', 'd', 'e', 'f', 'g', 'h']
+        #     )
+
         scan_obj = self.as_connection.scan(self.test_ns, self.test_set)
         records = scan_obj.results({'predexp2': expr.compile()})
         #print(records) TestUsrDefinedClass(1)
@@ -708,6 +854,85 @@ class TestPred2(TestBaseClass):
         #     print(record[2])
         assert(len(records) == 19)
     
+
+    @pytest.mark.parametrize("bin, values, keys", [
+        ("imap_bin", [ResultType.INTEGER, 6, 1, 7, [2, 6], 1], [3, 2, 4]), #what was happening with everything being true when values[0] == 1?
+        ##("smap_bin", [ResultType.STRING, "f", "b", "g", ["d", "f"], "b"]),
+        ##("lmap_bin", [ResultType.LIST, [1, 4], [1, 2], [1, 6], [[1, 3], [1, 4]], [1, 2]]),
+        # ("blmap_bin", [ResultType.BLOB, TestUsrDefinedClass(4), TestUsrDefinedClass(1), TestUsrDefinedClass(6), [TestUsrDefinedClass(3), TestUsrDefinedClass(4)], TestUsrDefinedClass(1)]) comparison with anything other than AS_BYTES_BLOB is unsupported.
+        #("mmap_bin", [ResultType.MAP, {1: 1, 4: 4}, {1: 1, 2: 2}, {1: 1, 6: 6}, [{1: 1, 3: 3}, {1: 1, 4: 4}], {1: 1, 2: 2}]) # pending investigation
+        ##("bymap_bin", [ResultType.BLOB, "f".encode("utf8"), "b".encode("utf8"), "g".encode("utf8"), ["d".encode("utf8"), "f".encode("utf8")], "b".encode("utf8")]),
+        #("bomap_bin", [ResultType.BLOB, True, False, True, [False, True], False]) comparison with anything other than AS_BYTES_BLOB is unsupported.
+        #TODO nmap_bin test
+        ##("fmap_bin", [ResultType.FLOAT, 6.0, 1.0, 7.0, [2.0, 6.0], 1.0]),
+        #("fmap_bin", [ResultType.GEOJSON, GEO_POLY2, GEO_POLY, GEO_POLY2, [GEO_POLY1, GEO_POLY2], GEO_POLY]) ask about geojson support
+    ])
+    def test_MapReadOps_pos(self, bin, values, keys):
+        """
+        Invoke various map read expressions with many value types.
+        """
+        #TODO MapGetByKey(None, values[0], aerospike.MAP_RETURN_VALUE, keys[0], bin)
+        expr = And(
+            EQ(
+                MapGetByKey(None, aerospike.MAP_RETURN_RANK, values[0], keys[0], bin), # keys[0] == 0 keys[1] == 1 keys[2] == 3
+                2
+            ),
+            EQ(
+                MapGetByKey(None, aerospike.MAP_RETURN_RANK, values[0], keys[0], bin), # keys[0] == 0 keys[1] == 1 keys[2] == 3
+                2
+            ),
+            EQ(
+                MapGetByKey(None, aerospike.MAP_RETURN_RANK, values[0], keys[0], #this should get the 2nd, (last) elem with rank 1
+                    MapGetByKeyRange(None, aerospike.MAP_RETURN_VALUE, keys[1], keys[2], bin)), # keys[0] == 0 keys[1] == 1 keys[2] == 3 NOTE: this returns a LIST
+                2
+            ),
+            # EQ(
+            #     ListGetByValue(None,  values[1], aerospike.MAP_RETURN_INDEX,
+            #         ListGetByValueRange(None, aerospike.MAP_RETURN_VALUE, values[2], values[3], bin)),
+            #     [2]),
+            # EQ(
+            #     ListGetByValueList(None, aerospike.MAP_RETURN_COUNT, values[4], 
+            #         ListGetByValueRelRankRangeToEnd(None, aerospike.MAP_RETURN_VALUE, values[5], 1, bin)),
+            #     2),
+            # EQ(
+            #     ListGetByIndexRangeToEnd(None, aerospike.MAP_RETURN_COUNT, 1,
+            #         ListGetByIndexRange(None, aerospike.MAP_RETURN_VALUE, 1, 3, bin,)),
+            #     1),
+            # EQ(
+            #     ListGetByRank(None, aerospike.MAP_RETURN_RANK, ResultType.INTEGER, 1,
+            #         ListGetByRankRangeToEnd(None, aerospike.MAP_RETURN_VALUE, 1, bin)),
+            #     1),
+            # EQ(
+            #     ListGetByRankRange(None, aerospike.MAP_RETURN_COUNT, 1, ListSize(None, bin), bin),
+            #     2
+            # )
+        )
+
+        # ops = [
+        #     list_operations.list_get_by_index(bin, 0, aerospike.LIST_RETURN_VALUE)
+        # ]
+
+        # _, _, res = self.as_connection.operate(('test', u'demo', 10), ops)
+        # # print("******* ", res[bin].data)
+        # x = res[bin]
+
+        # expr =             EQ(
+        #         ListGetByValueRelRankRange(None, aerospike.LIST_RETURN_COUNT, 
+        #             x, 1, 3, 'bllist_bin'), #why did this fail with aerospike.CDTInfinite for count?
+        #         2)
+        
+        # expr = EQ(
+        #     ListGetByIndex(ResultType.MAP, None, aerospike.LIST_RETURN_VALUE, 0, bin),
+        #     {1: 1, 2: 2}
+        # )
+        print(expr.compile())
+        scan_obj = self.as_connection.scan(self.test_ns, self.test_set)
+        records = scan_obj.results({'predexp2': expr.compile()})
+        #print(records) TestUsrDefinedClass(1)
+        # for record in records:
+        #     print(record[2])
+        assert(len(records) == 19)
+
 
     @pytest.mark.parametrize("policy, bytes_size, flags, bin, expected", [
         (None, 10, None, '1bits_bin', bytearray([0] * 1))

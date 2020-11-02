@@ -342,6 +342,7 @@ as_status add_pred_macros(AerospikeClient * self, as_static_pool * static_pool, 
 			break;
 		case VAL:;
 			{
+				printf("IN VAL\n");
 				as_exp_entry tmp_expr;
 				if (get_exp_val_from_pyval(self, static_pool, serializer_type, &tmp_expr, PyDict_GetItemString(pred->pydict, AS_PY_VAL_KEY), err) != AEROSPIKE_OK) {
 					return err->code;
@@ -1006,14 +1007,14 @@ as_status add_pred_macros(AerospikeClient * self, as_static_pool * static_pool, 
 				append_array(sizeof(new_entries) / sizeof(as_exp_entry) - 3); // - 3 for rank, count, bin
 			}
 			break;
-		case OP_MAP_EXP_GET_BY_KEY:;
-			printf("in OP_MAP_EXP_GET_BY_KEY\n");
+		case OP_MAP_GET_BY_KEY:;
+			printf("in OP_MAP_GET_BY_KEY\n");
 			{
-				if (get_int64_t(err, AS_PY_BIN_TYPE_KEY, pred->pydict, &lval1) != AEROSPIKE_OK) {
+				if (get_int64_t(err, AS_PY_MAP_RETURN_KEY, pred->pydict, &lval1) != AEROSPIKE_OK) {
 					return err->code;
 				}
 
-				if (get_int64_t(err, AS_PY_MAP_RETURN_KEY, pred->pydict, &lval2) != AEROSPIKE_OK) {
+				if (get_int64_t(err, AS_PY_BIN_TYPE_KEY, pred->pydict, &lval2) != AEROSPIKE_OK) {
 					return err->code;
 				}
 
@@ -1023,8 +1024,8 @@ as_status add_pred_macros(AerospikeClient * self, as_static_pool * static_pool, 
 				append_array(sizeof(new_entries) / sizeof(as_exp_entry) - 2); // - 2 for key, bin
 			}
 			break;
-		case OP_MAP_EXP_GET_BY_KEY_RANGE:;
-			printf("in OP_MAP_EXP_GET_BY_KEY_RANGE\n");
+		case OP_MAP_GET_BY_KEY_RANGE:;
+			printf("in OP_MAP_GET_BY_KEY_RANGE\n");
 			{
 				if (get_int64_t(err, AS_PY_MAP_RETURN_KEY, pred->pydict, &lval1) != AEROSPIKE_OK) {
 					return err->code;
@@ -1036,8 +1037,8 @@ as_status add_pred_macros(AerospikeClient * self, as_static_pool * static_pool, 
 				append_array(sizeof(new_entries) / sizeof(as_exp_entry) - 3); // - 3 for begin, end, bin
 			}
 			break;
-		case OP_MAP_EXP_GET_BY_KEY_LIST:;
-			printf("in OP_MAP_EXP_GET_BY_KEY_LIST\n");
+		case OP_MAP_GET_BY_KEY_LIST:;
+			printf("in OP_MAP_GET_BY_KEY_LIST\n");
 			{
 				if (get_int64_t(err, AS_PY_MAP_RETURN_KEY, pred->pydict, &lval1) != AEROSPIKE_OK) {
 					return err->code;
@@ -1140,11 +1141,11 @@ as_status add_pred_macros(AerospikeClient * self, as_static_pool * static_pool, 
 	case OP_MAP_GET_BY_INDEX:;
 			printf("in OP_MAP_GET_BY_INDEX\n");
 			{
-				if (get_int64_t(err, AS_PY_BIN_TYPE_KEY, pred->pydict, &lval2) != AEROSPIKE_OK) {
+				if (get_int64_t(err, AS_PY_MAP_RETURN_KEY, pred->pydict, &lval1) != AEROSPIKE_OK) {
 					return err->code;
 				}
 
-				if (get_int64_t(err, AS_PY_MAP_RETURN_KEY, pred->pydict, &lval1) != AEROSPIKE_OK) {
+				if (get_int64_t(err, AS_PY_BIN_TYPE_KEY, pred->pydict, &lval2) != AEROSPIKE_OK) {
 					return err->code;
 				}
 
@@ -1545,13 +1546,26 @@ CLEANUP:
 		// if(pred->ctx != NULL) {
 		// 	as_cdt_ctx_destroy(pred->ctx);
 		// }
+
+		if (pred->list_policy != NULL) {
+			free(pred->list_policy);
+		}
+
+		if (pred->map_policy != NULL) {
+			free(pred->map_policy);
+		}
+
+		if (pred->ctx != NULL) {
+			as_cdt_ctx_destroy(pred->ctx);
+		}
+
 		pred->pydict = NULL;
 		pred->pytuple = NULL;
 		pred->ctx = NULL;
 	}
 
 	//POOL_DESTROY(&static_pool);
-	as_vector_clear(&pred_queue);
+	as_vector_destroy(&pred_queue);
 	free(c_pred_entries);
 
 	// Py_DECREF(fixed); //this needs more decrefs for each fixed
