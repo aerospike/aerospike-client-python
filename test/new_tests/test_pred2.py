@@ -855,19 +855,11 @@ class TestPred2(TestBaseClass):
         assert(len(records) == 19)
     
 
-    @pytest.mark.parametrize("bin, values, keys", [
-        ("imap_bin", [ResultType.INTEGER, 6, 1, 7, [2, 6], 1], [3, 2, 4]), #what was happening with everything being true when values[0] == 1?
-        ##("smap_bin", [ResultType.STRING, "f", "b", "g", ["d", "f"], "b"]),
-        ##("lmap_bin", [ResultType.LIST, [1, 4], [1, 2], [1, 6], [[1, 3], [1, 4]], [1, 2]]),
-        # ("blmap_bin", [ResultType.BLOB, TestUsrDefinedClass(4), TestUsrDefinedClass(1), TestUsrDefinedClass(6), [TestUsrDefinedClass(3), TestUsrDefinedClass(4)], TestUsrDefinedClass(1)]) comparison with anything other than AS_BYTES_BLOB is unsupported.
-        #("mmap_bin", [ResultType.MAP, {1: 1, 4: 4}, {1: 1, 2: 2}, {1: 1, 6: 6}, [{1: 1, 3: 3}, {1: 1, 4: 4}], {1: 1, 2: 2}]) # pending investigation
-        ##("bymap_bin", [ResultType.BLOB, "f".encode("utf8"), "b".encode("utf8"), "g".encode("utf8"), ["d".encode("utf8"), "f".encode("utf8")], "b".encode("utf8")]),
-        #("bomap_bin", [ResultType.BLOB, True, False, True, [False, True], False]) comparison with anything other than AS_BYTES_BLOB is unsupported.
-        #TODO nmap_bin test
-        ##("fmap_bin", [ResultType.FLOAT, 6.0, 1.0, 7.0, [2.0, 6.0], 1.0]),
-        #("fmap_bin", [ResultType.GEOJSON, GEO_POLY2, GEO_POLY, GEO_POLY2, [GEO_POLY1, GEO_POLY2], GEO_POLY]) ask about geojson support
+    @pytest.mark.parametrize("bin, values, keys, expected", [
+        ("imap_bin", [ResultType.INTEGER, 6, 2, 7, [2, 6], 1], [3, 2, 4, [2, 3], 2], [[2, 6], [2, 6]]), #what was happening with everything being true when values[0] == 1?
+        # TODO test other types ("smap_bin", [ResultType.INTEGER, 6, 2, 7, [2, 6], 1], [3, 2, 4, [2, 3], 2], [[2, 6], [2, 6]])
     ])
-    def test_MapReadOps_pos(self, bin, values, keys):
+    def test_MapReadOps_pos(self, bin, values, keys, expected):
         """
         Invoke various map read expressions with many value types.
         """
@@ -878,53 +870,91 @@ class TestPred2(TestBaseClass):
                 2
             ),
             EQ(
-                MapGetByKey(None, aerospike.MAP_RETURN_RANK, values[0], keys[0], bin), # keys[0] == 0 keys[1] == 1 keys[2] == 3
+                MapGetByValue(None, aerospike.MAP_RETURN_RANK, values[1], bin), # keys[0] == 0 keys[1] == 1 keys[2] == 3
+                [2] #why does this yield a list but get_by_key does not? Should document what type each expression yield.
+            ),
+            EQ(
+                MapGetByIndex(None, aerospike.MAP_RETURN_RANK, values[0], 1, bin),
+                1
+            ),
+            EQ(
+                MapGetByRank(None, aerospike.MAP_RETURN_VALUE, values[0], 1, bin),
                 2
             ),
             EQ(
-                MapGetByKey(None, aerospike.MAP_RETURN_RANK, values[0], keys[0], #this should get the 2nd, (last) elem with rank 1
-                    MapGetByKeyRange(None, aerospike.MAP_RETURN_VALUE, keys[1], keys[2], bin)), # keys[0] == 0 keys[1] == 1 keys[2] == 3 NOTE: this returns a LIST
+                ListGetByIndexRangeToEnd(None, aerospike.LIST_RETURN_VALUE, 0,
+                    ListSort(None, aerospike.LIST_SORT_DEFAULT,
+                        MapGetByKeyRange(None, aerospike.MAP_RETURN_VALUE, keys[1], keys[2], bin))), # keys[0] == 0 keys[1] == 1 keys[2] == 3 NOTE: this returns a LIST
+                expected[0]
+            ),
+            EQ(
+                ListGetByIndexRangeToEnd(None, aerospike.LIST_RETURN_VALUE, 0,
+                    ListSort(None, aerospike.LIST_SORT_DEFAULT,
+                        MapGetByKeyList(None, aerospike.MAP_RETURN_INDEX, keys[3], bin))), #TODO why is MAP_RETURN_RANK is invalid for this expr
+                [1, 2]
+            ),
+            EQ(
+                ListGetByIndexRangeToEnd(None, aerospike.LIST_RETURN_COUNT, 0,
+                    ListSort(None, aerospike.LIST_SORT_DEFAULT,
+                        MapGetByKeyRelIndexRangeToEnd(None, aerospike.MAP_RETURN_VALUE, keys[4], 1, bin))),
+                1
+            ),
+            EQ(
+                ListGetByIndexRangeToEnd(None, aerospike.LIST_RETURN_COUNT, 0,
+                    ListSort(None, aerospike.LIST_SORT_DEFAULT,
+                        MapGetByKeyRelIndexRange(None, aerospike.MAP_RETURN_VALUE, keys[4], 0, 2, bin))),
                 2
             ),
-            # EQ(
-            #     ListGetByValue(None,  values[1], aerospike.MAP_RETURN_INDEX,
-            #         ListGetByValueRange(None, aerospike.MAP_RETURN_VALUE, values[2], values[3], bin)),
-            #     [2]),
-            # EQ(
-            #     ListGetByValueList(None, aerospike.MAP_RETURN_COUNT, values[4], 
-            #         ListGetByValueRelRankRangeToEnd(None, aerospike.MAP_RETURN_VALUE, values[5], 1, bin)),
-            #     2),
-            # EQ(
-            #     ListGetByIndexRangeToEnd(None, aerospike.MAP_RETURN_COUNT, 1,
-            #         ListGetByIndexRange(None, aerospike.MAP_RETURN_VALUE, 1, 3, bin,)),
-            #     1),
-            # EQ(
-            #     ListGetByRank(None, aerospike.MAP_RETURN_RANK, ResultType.INTEGER, 1,
-            #         ListGetByRankRangeToEnd(None, aerospike.MAP_RETURN_VALUE, 1, bin)),
-            #     1),
-            # EQ(
-            #     ListGetByRankRange(None, aerospike.MAP_RETURN_COUNT, 1, ListSize(None, bin), bin),
-            #     2
-            # )
+            EQ(
+                ListGetByIndexRangeToEnd(None, aerospike.LIST_RETURN_VALUE, 0,
+                    ListSort(None, aerospike.LIST_SORT_DEFAULT,
+                        MapGetByValueRange(None, aerospike.MAP_RETURN_VALUE, values[2], values[3], bin))),
+                expected[1]
+            ),
+            EQ(
+                ListGetByIndexRangeToEnd(None, aerospike.LIST_RETURN_VALUE, 0,
+                    ListSort(None, aerospike.LIST_SORT_DEFAULT,
+                        MapGetByValueList(None, aerospike.MAP_RETURN_INDEX, values[4], bin))),
+                [1, 2]
+            ),
+            EQ(
+                ListGetByIndexRangeToEnd(None, aerospike.LIST_RETURN_COUNT, 0,
+                    ListSort(None, aerospike.LIST_SORT_DEFAULT,
+                        MapGetByValueRelRankRangeToEnd(None, aerospike.MAP_RETURN_VALUE, values[5], 1, bin))),
+                2
+            ),
+            EQ(
+                ListGetByIndexRangeToEnd(None, aerospike.LIST_RETURN_COUNT, 0,
+                    ListSort(None, aerospike.LIST_SORT_DEFAULT,
+                        MapGetByValueRelRankRange(None, aerospike.MAP_RETURN_VALUE, values[5], 0, 2, bin))),
+                2
+            ),
+            EQ(
+                ListGetByIndexRangeToEnd(None, aerospike.LIST_RETURN_COUNT, 0,
+                    ListSort(None, aerospike.LIST_SORT_DEFAULT,
+                        MapGetByIndexRangeToEnd(None, aerospike.MAP_RETURN_VALUE, 1, bin))),
+                2
+            ),
+            EQ(
+                ListGetByIndexRangeToEnd(None, aerospike.LIST_RETURN_VALUE, 0,
+                    ListSort(None, aerospike.LIST_SORT_DEFAULT,
+                        MapGetByIndexRange(None, aerospike.MAP_RETURN_VALUE, 1, 2, bin))),
+                expected[1]
+            ),
+            EQ(
+                ListGetByIndexRangeToEnd(None, aerospike.LIST_RETURN_COUNT, 0,
+                    ListSort(None, aerospike.LIST_SORT_DEFAULT,
+                        MapGetByRankRangeToEnd(None, aerospike.MAP_RETURN_VALUE, 1, bin))),
+                2
+            ),
+            EQ(
+                ListGetByIndexRangeToEnd(None, aerospike.LIST_RETURN_VALUE, 0,
+                    ListSort(None, aerospike.LIST_SORT_DEFAULT,
+                        MapGetByRankRange(None, aerospike.MAP_RETURN_VALUE, 1, 2, bin))),
+                expected[1]
+            ),
         )
 
-        # ops = [
-        #     list_operations.list_get_by_index(bin, 0, aerospike.LIST_RETURN_VALUE)
-        # ]
-
-        # _, _, res = self.as_connection.operate(('test', u'demo', 10), ops)
-        # # print("******* ", res[bin].data)
-        # x = res[bin]
-
-        # expr =             EQ(
-        #         ListGetByValueRelRankRange(None, aerospike.LIST_RETURN_COUNT, 
-        #             x, 1, 3, 'bllist_bin'), #why did this fail with aerospike.CDTInfinite for count?
-        #         2)
-        
-        # expr = EQ(
-        #     ListGetByIndex(ResultType.MAP, None, aerospike.LIST_RETURN_VALUE, 0, bin),
-        #     {1: 1, 2: 2}
-        # )
         print(expr.compile())
         scan_obj = self.as_connection.scan(self.test_ns, self.test_set)
         records = scan_obj.results({'predexp2': expr.compile()})

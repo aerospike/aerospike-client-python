@@ -1076,7 +1076,7 @@ as_status add_pred_macros(AerospikeClient * self, as_static_pool * static_pool, 
 				append_array(sizeof(new_entries) / sizeof(as_exp_entry) - 4); // - 4 for key, index, count, bin
 			}
 			break;
-		case OP_MAP_EXP_GET_BY_VALUE:;
+		case OP_MAP_GET_BY_VALUE:;
 			printf("in get_by_val\n");
 			{	
 				if (get_int64_t(err, AS_PY_MAP_RETURN_KEY, pred->pydict, &lval1) != AEROSPIKE_OK) {
@@ -1089,7 +1089,7 @@ as_status add_pred_macros(AerospikeClient * self, as_static_pool * static_pool, 
 				append_array(sizeof(new_entries) / sizeof(as_exp_entry) - 2); // - 2 for value, bin
 			}
 			break;
-		case OP_MAP_EXP_GET_BY_VALUE_RANGE:;
+		case OP_MAP_GET_BY_VALUE_RANGE:;
 			printf("in get_by_val_range\n");
 			{
 				if (get_int64_t(err, AS_PY_MAP_RETURN_KEY, pred->pydict, &lval1) != AEROSPIKE_OK) {
@@ -1391,6 +1391,9 @@ as_status add_pred_macros(AerospikeClient * self, as_static_pool * static_pool, 
 				append_array(sizeof(new_entries) / sizeof(as_exp_entry) - 1); // - 1 for bin
 			}
 			break;
+		default:
+			return as_error_update(err, AEROSPIKE_ERR, "Unrecognised expression op type.");
+		break;
 
 	}		
 
@@ -1403,7 +1406,7 @@ as_status convert_exp_list(AerospikeClient * self, as_static_pool * static_pool,
 	if (size <= 0) {
 		return AEROSPIKE_OK;
 	}
-	printf("OP_LIST_EXP_GET_BY_INDEX is: %d\n", OP_LIST_EXP_GET_BY_INDEX);
+
 	long op = 0;
 	long result_type = 0;
 	long num_children = 0;

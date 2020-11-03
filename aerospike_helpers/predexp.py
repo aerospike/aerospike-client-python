@@ -1290,7 +1290,7 @@ class MapGetByKeyRelIndexRange(BaseExpr):
 class MapGetByValue(BaseExpr):
     op = aerospike.OP_MAP_GET_BY_VALUE
 
-    def __init__(self, ctx: TypeCDT, value: TypeValue, return_type: int, bin_name: TypeBinName):
+    def __init__(self, ctx: TypeCDT, return_type: int, value: TypeValue, bin_name: TypeBinName):
         self.children = (
             value,
             bin_name if isinstance(bin_name, BaseExpr) else MapBin(bin_name)
@@ -1373,9 +1373,9 @@ class MapGetByIndex(BaseExpr):
 
     def __init__(
         self,
-        value_type: int,
         ctx: TypeCDT,
         return_type: int,
+        value_type: int,
         index: TypeIndex,
         bin_name: TypeBinName,
     ):
