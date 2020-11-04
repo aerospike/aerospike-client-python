@@ -130,7 +130,7 @@ PyObject * AerospikeClient_ScanApply_Invoke(
 	is_scan_init = true;
 
 	if (py_policy) {
-		pyobject_to_policy_scan(self, &static_pool, &err, py_policy, &scan_policy, &scan_policy_p,
+		pyobject_to_policy_scan(self, &err, py_policy, &scan_policy, &scan_policy_p,
 				&self->as->config.policies.scan, &exp_list, &exp_list_p);
 
 		if (err.code != AEROSPIKE_OK) {
@@ -207,7 +207,7 @@ PyObject * AerospikeClient_ScanApply_Invoke(
 
 CLEANUP:
 	if (exp_list_p) {
-		as_exp_destroy(&exp_list);
+		as_exp_destroy(exp_list_p);;
 	}
 
 	if (py_ustr1) {

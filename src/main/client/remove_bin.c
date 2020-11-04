@@ -160,7 +160,7 @@ CLEANUP:
 	as_record_destroy(&rec);
 
 	if (exp_list_p) {
-		as_exp_destroy(&exp_list);
+		as_exp_destroy(exp_list_p);;
 	}
 
 	if (key_initialized) {

@@ -115,7 +115,7 @@ CLEANUP:
 	POOL_DESTROY(&static_pool);
 
 	if (exp_list_p) {
-		as_exp_destroy(&exp_list);
+		as_exp_destroy(exp_list_p);;
 	}
 
 	if (key_initialised == true) {

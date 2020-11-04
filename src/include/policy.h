@@ -285,7 +285,7 @@ as_status pyobject_to_policy_remove(AerospikeClient * self, as_error * err, PyOb
 									as_exp * exp_list,
 									as_exp ** exp_list_p);
 
-as_status pyobject_to_policy_scan(AerospikeClient * self, as_static_pool * static_pool, as_error * err, PyObject * py_policy,
+as_status pyobject_to_policy_scan(AerospikeClient * self, as_error * err, PyObject * py_policy,
 									as_policy_scan * policy,
 									as_policy_scan ** policy_p,
 									as_policy_scan * config_scan_policy,

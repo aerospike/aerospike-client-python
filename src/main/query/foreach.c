@@ -174,7 +174,7 @@ PyObject * AerospikeQuery_Foreach(AerospikeQuery * self, PyObject * args, PyObje
 
 CLEANUP:
 	if (exp_list_p) {
-		as_exp_destroy(&exp_list);
+		as_exp_destroy(exp_list_p);;
 	}
 
 	if (self->query.apply.arglist) {

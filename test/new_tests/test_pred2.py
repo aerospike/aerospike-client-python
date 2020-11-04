@@ -10,7 +10,7 @@ from aerospike_helpers.predexp import *
 from aerospike_helpers.operations import map_operations
 from aerospike_helpers.operations import list_operations
 from aerospike_helpers.operations import hll_operations
-from aerospike import exception as e
+from aerospike_helpers.operations import operations
 
 aerospike = pytest.importorskip("aerospike")
 try:
@@ -64,6 +64,59 @@ GEO_POLY2 = aerospike.GeoJSON(
 def add_ctx_op(ctx_type, value):
     ctx_func = ctx_ops[ctx_type]
     return ctx_func(value)
+
+
+def verify_all_expression_avenues(client, test_ns, test_set, expr, op_bin, expected):
+    keys = [(test_ns, test_set, i) for i in range(20)]
+
+    # operate
+    ops = [
+        operations.read(op_bin)
+    ]
+    res = []
+    for key in keys:
+        try:
+            res.append(client.operate(key, ops, policy={'expressions': expr})[2])
+        except e.FilteredOut:
+            pass
+
+    assert len(res) == expected
+
+    # operate ordered
+    ops = [
+        operations.read(op_bin)
+    ]
+    res = []
+    for key in keys:
+        try:
+            res.append(client.operate_ordered(key, ops, policy={'expressions': expr})[2])
+        except e.FilteredOut:
+            pass
+    
+    # batch get
+    res = [rec for rec in client.get_many(keys, policy={'expressions': expr}) if rec[2]]
+
+    assert len(res) == expected
+
+    # scan results
+    scan_obj = client.scan(test_ns, test_set)
+    records = scan_obj.results({'expressions': expr})
+    assert len(records) == expected
+
+    # TODO other scan methods
+
+    # query results
+    query_obj = client.query(test_ns, test_set)
+    records = query_obj.results({'expressions': expr})
+    assert len(records) == expected
+
+    # TODO other query methods
+
+    # TODO client.remove
+
+
+
+
 
 
 class TestUsrDefinedClass():
@@ -157,11 +210,11 @@ class TestPred2(TestBaseClass):
                         TestUsrDefinedClass(3),
                         TestUsrDefinedClass(4)
                     ],
-                    'flist_bin': {
+                    'flist_bin': [
                         1.0,
                         2.0,
                         6.0
-                    },
+                    ],
                     'imap_bin': {
                         1: 1,
                         2: 2,
@@ -216,7 +269,7 @@ class TestPred2(TestBaseClass):
                 }
             self.as_connection.put(key, rec)
         
-        self.as_connection.put(('test', u'demo', 100), {'extra': 'record'})
+        self.as_connection.put(('test', u'demo', 19), {'extra': 'record'})
 
         ctx_sort_nested_map1 = [
             cdt_ctx.cdt_ctx_list_index(4)
@@ -251,8 +304,8 @@ class TestPred2(TestBaseClass):
         st = 'demo'
 
         expr = And(
-            EQ(IntBin("age"), 10),
-            EQ(IntBin("age"), IntBin("key")),
+            Eq(IntBin("age"), 10),
+            Eq(IntBin("age"), IntBin("key")),
             NE(23, IntBin("balance")),
             GT(IntBin("balance"), 99),
             GE(IntBin("balance"), 100),
@@ -261,22 +314,22 @@ class TestPred2(TestBaseClass):
             Or(
                 LE(IntBin("balance"), 100),
                 Not(
-                    EQ(IntBin("age"), IntBin("balance"))
+                    Eq(IntBin("age"), IntBin("balance"))
                 )
             ),
-            EQ(MetaDigestMod(2), 0),
+            Eq(MetaDigestMod(2), 0),
             GE(MetaDeviceSize(), 1),
             NE(MetaLastUpdateTime(), 0),
             NE(MetaVoidTime(), 0),
             NE(MetaTTL(), 0),
             MetaKeyExists(), #needs debugging
-            EQ(MetaSetName(), 'demo'),
-            EQ(ListGetByIndex(ResultType.INTEGER, None, aerospike.LIST_RETURN_VALUE, 0, 'list_bin'), 5),
+            Eq(MetaSetName(), 'demo'),
+            Eq(ListGetByIndex(ResultType.INTEGER, None, aerospike.LIST_RETURN_VALUE, 0, 'list_bin'), 5),
             GE(ListSize(None, 'list_bin'), 2),
             
         )
 
-        #expr = EQ(MetaSetName(), 'demo')
+        #expr = Eq(MetaSetName(), 'demo')
 
         print(MetaKeyExists().compile())
 
@@ -284,7 +337,7 @@ class TestPred2(TestBaseClass):
 
         scan_obj = self.as_connection.scan(ns, st)
 
-        records = scan_obj.results({'predexp2': expr.compile()})
+        records = scan_obj.results({'expressions': expr.compile()})
         #print(records)
         assert(1 == len(records))
     
@@ -316,10 +369,8 @@ class TestPred2(TestBaseClass):
             ctx = None
         
         #breakpoint()
-        expr = EQ(ListGetByIndex(bin_type, ctx, return_type, index, 'list_bin'), check)
-        scan_obj = self.as_connection.scan(self.test_ns, self.test_set)
-        records = scan_obj.results({'predexp2': expr.compile()})
-        assert(len(records) == expected)
+        expr = Eq(ListGetByIndex(bin_type, ctx, return_type, index, 'list_bin'), check)
+        verify_all_expression_avenues(self.as_connection, self.test_ns, self.test_set, expr.compile(), 'list_bin', expected)
 
 # Oct 06 2020 12:08:36 GMT: WARNING (particle): (msgpack_in.c:1099) msgpack_sz_internal: invalid at i 1 count 2
 # Oct 06 2020 12:08:36 GMT: WARNING (exp): (exp.c:755) invalid instruction at offset 60
@@ -355,12 +406,8 @@ class TestPred2(TestBaseClass):
         else:
             ctx = None
         
-        expr = EQ(ListGetByValue(ctx, value, return_type, 'list_bin'), check)
-        scan_obj = self.as_connection.scan(self.test_ns, self.test_set)
-        print('\nhi*************************', expr.compile(), '\n')
-        records = scan_obj.results({'predexp2': expr.compile()})
-        #print(records[3])
-        assert(len(records) == expected)
+        expr = Eq(ListGetByValue(ctx, value, return_type, 'list_bin'), check)
+        verify_all_expression_avenues(self.as_connection, self.test_ns, self.test_set, expr.compile(), 'list_bin', expected)
 
     @pytest.mark.parametrize("ctx_types, ctx_indexes, begin, end, return_type, check, expected", [
         (None, None, 10, 13, aerospike.LIST_RETURN_VALUE, [[10], [11], [12]], 3),
@@ -388,16 +435,12 @@ class TestPred2(TestBaseClass):
             ctx = None
         
         expr = Or(
-                    EQ(ListGetByValueRange(ctx, return_type, begin, end, 'list_bin'), check[0]),
-                    EQ(ListGetByValueRange(ctx, return_type, begin, end, 'list_bin'), check[1]),
-                    EQ(ListGetByValueRange(ctx, return_type, begin, end, 'list_bin'), check[2]),
+                    Eq(ListGetByValueRange(ctx, return_type, begin, end, 'list_bin'), check[0]),
+                    Eq(ListGetByValueRange(ctx, return_type, begin, end, 'list_bin'), check[1]),
+                    Eq(ListGetByValueRange(ctx, return_type, begin, end, 'list_bin'), check[2]),
         )
 
-        scan_obj = self.as_connection.scan(self.test_ns, self.test_set)
-        records = scan_obj.results({'predexp2': expr.compile()})
-        for record in records:
-            print(record[2]['list_bin'][7])
-        assert(len(records) == expected)
+        verify_all_expression_avenues(self.as_connection, self.test_ns, self.test_set, expr.compile(), 'list_bin', expected)
 
     @pytest.mark.parametrize("ctx, begin, end, return_type, check, expected", [
         ("bad ctx", 10, 13, aerospike.LIST_RETURN_VALUE, [[10], [11], [12]], e.ParamError),
@@ -409,14 +452,13 @@ class TestPred2(TestBaseClass):
         """
         
         expr = Or(
-                    EQ(ListGetByValueRange(ctx, return_type, begin, end, 'list_bin'), check[0]),
-                    EQ(ListGetByValueRange(ctx, return_type, begin, end, 'list_bin'), check[1]),
-                    EQ(ListGetByValueRange(ctx, return_type, begin, end, 'list_bin'), check[2]),
+                    Eq(ListGetByValueRange(ctx, return_type, begin, end, 'list_bin'), check[0]),
+                    Eq(ListGetByValueRange(ctx, return_type, begin, end, 'list_bin'), check[1]),
+                    Eq(ListGetByValueRange(ctx, return_type, begin, end, 'list_bin'), check[2]),
         )
 
-        scan_obj = self.as_connection.scan(self.test_ns, self.test_set)
         with pytest.raises(expected):
-            scan_obj.results({'predexp2': expr.compile()})
+            verify_all_expression_avenues(self.as_connection, self.test_ns, self.test_set, expr.compile(), 'list_bin', expected)
 
     @pytest.mark.parametrize("ctx_types, ctx_indexes, value, return_type, check, expected", [
         (None, None, [10, [26, 27, 28, 10]], aerospike.LIST_RETURN_VALUE, [10, [26, 27, 28, 10]], 1),
@@ -443,12 +485,8 @@ class TestPred2(TestBaseClass):
         else:
             ctx = None
         
-        expr = EQ(ListGetByValueList(ctx, return_type, value, 'list_bin'), check)
-        scan_obj = self.as_connection.scan(self.test_ns, self.test_set)
-        records = scan_obj.results({'predexp2': expr.compile()})
-        #print(records[3])
-        #print(LIST_BIN_EXAMPLE == LIST_BIN_EXAMPLE)
-        assert(len(records) == expected)
+        expr = Eq(ListGetByValueList(ctx, return_type, value, 'list_bin'), check)
+        verify_all_expression_avenues(self.as_connection, self.test_ns, self.test_set, expr.compile(), 'list_bin', expected)
 
     @pytest.mark.parametrize("ctx_types, ctx_indexes, value, return_type, check, expected", [
         (None, None, [10, [26, 27, 28, 10]], aerospike.LIST_RETURN_VALUE, (10, [26, 27, 28, 10]), e.InvalidRequest) # bad tuple
@@ -457,7 +495,6 @@ class TestPred2(TestBaseClass):
         """
         Invoke ListGetByValueList() with expected failures.
         """
-        #breakpoint()
 
         if ctx_types is not None:
             ctx = []
@@ -466,11 +503,9 @@ class TestPred2(TestBaseClass):
         else:
             ctx = None
         
-        expr = EQ(ListGetByValueList(ctx, return_type, value, 'list_bin'), check)
-        scan_obj = self.as_connection.scan(self.test_ns, self.test_set)
-        #records = scan_obj.results({'predexp2': expr.compile()})
+        expr = Eq(ListGetByValueList(ctx, return_type, value, 'list_bin'), check)
         with pytest.raises(expected):
-            records = scan_obj.results({'predexp2': expr.compile()})
+            verify_all_expression_avenues(self.as_connection, self.test_ns, self.test_set, expr.compile(), 'list_bin', expected)
 
     @pytest.mark.parametrize("ctx_types, ctx_indexes, value, rank, return_type, check, expected", [ #TODO more tests
         ([list_index], [3], 26, 0, aerospike.LIST_RETURN_COUNT, 3, 19),
@@ -497,13 +532,8 @@ class TestPred2(TestBaseClass):
         else:
             ctx = None
         
-        expr = EQ(ListGetByValueRelRankRangeToEnd(ctx, return_type, value, rank, 'list_bin'), check)
-        scan_obj = self.as_connection.scan(self.test_ns, self.test_set)
-        records = scan_obj.results({'predexp2': expr.compile()})
-        #print(records)
-        for record in records:
-            print(record[2])
-        assert(len(records) == expected)
+        expr = Eq(ListGetByValueRelRankRangeToEnd(ctx, return_type, value, rank, 'list_bin'), check)
+        verify_all_expression_avenues(self.as_connection, self.test_ns, self.test_set, expr.compile(), 'list_bin', expected)
 
     @pytest.mark.parametrize("ctx_types, ctx_indexes, value, rank, return_type, expected", [
         ([list_index], [3], 26, "bad_rank", "bad_return_type", e.ParamError)
@@ -522,9 +552,8 @@ class TestPred2(TestBaseClass):
             ctx = None
         
         expr = ListGetByValueRelRankRangeToEnd(ctx, return_type, value, rank, 'list_bin')
-        scan_obj = self.as_connection.scan(self.test_ns, self.test_set)
         with pytest.raises(expected):
-            records = scan_obj.results({'predexp2': expr.compile()})
+            verify_all_expression_avenues(self.as_connection, self.test_ns, self.test_set, expr.compile(), 'list_bin', expected)
 
 
     @pytest.mark.parametrize("ctx_types, ctx_indexes, value, rank, count, return_type, check, expected", [ #TODO more tests
@@ -551,10 +580,8 @@ class TestPred2(TestBaseClass):
         else:
             ctx = None
         
-        expr = EQ(ListGetByValueRelRankRange(ctx, return_type, value, rank, count, 'list_bin'), check)
-        scan_obj = self.as_connection.scan(self.test_ns, self.test_set)
-        records = scan_obj.results({'predexp2': expr.compile()})
-        assert(len(records) == expected)
+        expr = Eq(ListGetByValueRelRankRange(ctx, return_type, value, rank, count, 'list_bin'), check)
+        verify_all_expression_avenues(self.as_connection, self.test_ns, self.test_set, expr.compile(), 'list_bin', expected)
 
     @pytest.mark.parametrize("bin, values", [
         ("ilist_bin", [ResultType.INTEGER, 6, 1, 7, [2, 6], 1]), #what was happening with everything being true when values[0] == 1?
@@ -574,27 +601,27 @@ class TestPred2(TestBaseClass):
         """
         
         expr = And(
-            EQ(
+            Eq(
                 ListGetByValueRelRankRange(None, aerospike.LIST_RETURN_COUNT, 
                     ListGetByIndex(values[0], None, aerospike.LIST_RETURN_VALUE, 0, bin), 1, 3, bin), #why did this fail with aerospike.CDTInfinite for count?
                 2),
-            EQ(
+            Eq(
                 ListGetByValue(None,  values[1], aerospike.LIST_RETURN_INDEX,
                     ListGetByValueRange(None, aerospike.LIST_RETURN_VALUE, values[2], values[3], bin)),
                 [2]),
-            EQ(
+            Eq(
                 ListGetByValueList(None, aerospike.LIST_RETURN_COUNT, values[4], 
                     ListGetByValueRelRankRangeToEnd(None, aerospike.LIST_RETURN_VALUE, values[5], 1, bin)),
                 2),
-            EQ(
+            Eq(
                 ListGetByIndexRangeToEnd(None, aerospike.LIST_RETURN_COUNT, 1,
                     ListGetByIndexRange(None, aerospike.LIST_RETURN_VALUE, 1, 3, bin,)),
                 1),
-            EQ(
+            Eq(
                 ListGetByRank(None, aerospike.LIST_RETURN_RANK, ResultType.INTEGER, 1, #lets 20 pass with slist_bin
                     ListGetByRankRangeToEnd(None, aerospike.LIST_RETURN_VALUE, 1, bin)),
                 1),
-            EQ(
+            Eq(
                 ListGetByRankRange(None, aerospike.LIST_RETURN_COUNT, 1, ListSize(None, bin), bin),
                 2
             )
@@ -608,23 +635,17 @@ class TestPred2(TestBaseClass):
         # # print("******* ", res[bin].data)
         # x = res[bin]
 
-        # expr =             EQ(
+        # expr =             Eq(
         #         ListGetByValueRelRankRange(None, aerospike.LIST_RETURN_COUNT, 
         #             x, 1, 3, 'bllist_bin'), #why did this fail with aerospike.CDTInfinite for count?
         #         2)
         
-        # expr = EQ(
+        # expr = Eq(
         #     ListGetByIndex(ResultType.MAP, None, aerospike.LIST_RETURN_VALUE, 0, bin),
         #     {1: 1, 2: 2}
         # )
 
-        scan_obj = self.as_connection.scan(self.test_ns, self.test_set)
-        records = scan_obj.results({'predexp2': expr.compile()})
-        #print(records) TestUsrDefinedClass(1)
-        # for record in records:
-        #     print(record[2])
-        assert(len(records) == 19)
-
+        verify_all_expression_avenues(self.as_connection, self.test_ns, self.test_set, expr.compile(), bin, 19)
 
     @pytest.mark.parametrize("bin, ctx, policy, values, expected", [
         (
@@ -772,7 +793,7 @@ class TestPred2(TestBaseClass):
         """
         
         expr = And(
-            EQ(
+            Eq(
                 ListGetByIndexRangeToEnd(ctx, aerospike.LIST_RETURN_VALUE, 0,                 
                     ListSort(ctx, aerospike.LIST_SORT_DEFAULT, #TODO can't compare with constant list (server issue)        
                         ListAppend(ctx, policy, values[0],
@@ -780,39 +801,39 @@ class TestPred2(TestBaseClass):
                                 ListInsert(ctx, policy, 1, values[2], bin))))), #NOTE: invalid on ordered lists
                 expected[0]
             ),
-            # EQ(
+            # Eq(
             #     ListGetByRankRangeToEnd(ctx, aerospike.LIST_RETURN_VALUE, 0,
             #         ListInsertItems(ctx, policy, 1, values[3], # this is having issues with returning lists len > 1
             #             ListSet(ctx, policy, 0, values[4],
             #                 ListClear(ctx, bin)))),
             #     expected[1]
             # ),
-            EQ(
+            Eq(
                 ListRemoveByValue(ctx, values[5],
                     ListRemoveByValueList(ctx, values[6], bin)),
                 []
             ),
-            EQ(
+            Eq(
                 ListRemoveByValueRange(ctx, values[7], values[8],
                     ListRemoveByValueRelRankToEnd(ctx, values[9], 0, bin)),
                 []
             ),
-            EQ(
+            Eq(
                 ListRemoveByValueRelRankRange(ctx, values[10], 0, 2,
                     ListRemoveByIndex(ctx, 0, bin)),
                 []
             ), 
-            EQ(
+            Eq(
                 ListRemoveByIndexRange(ctx, 0, 1,
                     ListRemoveByIndexRangeToEnd(ctx, 1, bin)),
                 []
             ),
-            EQ(
+            Eq(
                 ListRemoveByRank(ctx, 0, 
                     ListRemoveByRankRangeToEnd(ctx, 1, bin)),
                 []
             ),
-            EQ(
+            Eq(
                 ListRemoveByRankRange(ctx, 1, 2, bin),
                 expected[2]
             )
@@ -820,7 +841,7 @@ class TestPred2(TestBaseClass):
 
         # ListIncrement(ctx, policy, 1, )) TODO needs it's own always int case
 
-        # expr =  EQ(
+        # expr =  Eq(
         #         ListGetByRankRangeToEnd(ctx, aerospike.LIST_RETURN_COUNT, 0, bin),
         #             ListSort(ctx, aerospike.LIST_SORT_DEFAULT,
         #                  ListInsertItems(ctx, None, 0, [values[4], 11],
@@ -829,7 +850,7 @@ class TestPred2(TestBaseClass):
         #         3
         #     )
 
-        # expr =  EQ(
+        # expr =  Eq(
         #         ListGetByIndexRangeToEnd(ctx, aerospike.LIST_RETURN_VALUE, 0,                 
         #             ListSort(ctx, aerospike.LIST_SORT_DEFAULT, #TODO can't compare with constant list (server issue)        
         #                 ListAppend(ctx, policy, values[0],
@@ -838,7 +859,7 @@ class TestPred2(TestBaseClass):
         #         expected[0]
         #     )
 
-        # expr =  EQ( works
+        # expr =  Eq( works
         #         ListGetByIndexRangeToEnd(ctx, aerospike.LIST_RETURN_VALUE, 0,                 
         #             ListSort(ctx, aerospike.LIST_SORT_DEFAULT, #TODO can't compare with constant list (server issue)        
         #                 ListAppend(ctx, policy, values[0],
@@ -847,12 +868,29 @@ class TestPred2(TestBaseClass):
         #         ['b', 'c', 'd', 'e', 'f', 'g', 'h']
         #     )
 
-        scan_obj = self.as_connection.scan(self.test_ns, self.test_set)
-        records = scan_obj.results({'predexp2': expr.compile()})
-        #print(records) TestUsrDefinedClass(1)
-        # for record in records:
-        #     print(record[2])
-        assert(len(records) == 19)
+        # expr =  Eq(
+        #         ListGetByIndexRangeToEnd(ctx, aerospike.LIST_RETURN_COUNT, 0,                
+        #             ListSort(ctx, aerospike.LIST_SORT_DEFAULT, 'flist_bin')), #TODO can't compare with constant list (server issue)        
+        #                 # ListAppend(ctx, policy, values[0],
+        #                 #     ListAppendItems(ctx, policy, values[1],
+        #                         #ListInsert(ctx, policy, 0, 4.0, bin)), #NOTE: invalid on ordered lists
+        #         3
+        #     )
+
+
+        # _, _, res = self.as_connection.get(('test', u'demo', 1))
+        # print("*********** ", res['flist_bin'])
+
+        # expr =  Eq(
+        #         ListGetByIndex(ResultType.FLOAT, ctx, aerospike.LIST_RETURN_VALUE, 0,              
+        #             ListSort(ctx, aerospike.LIST_SORT_DEFAULT, 'flist_bin')), #TODO can't compare with constant list (server issue)        
+        #                 # ListAppend(ctx, policy, values[0],
+        #                 #     ListAppendItems(ctx, policy, values[1],
+        #                         #ListInsert(ctx, policy, 0, 4.0, bin)), #NOTE: invalid on ordered lists
+        #         1.0
+        #     )
+
+        verify_all_expression_avenues(self.as_connection, self.test_ns, self.test_set, expr.compile(), bin, 19)
     
 
     @pytest.mark.parametrize("bin, values, keys, expected", [
@@ -865,89 +903,89 @@ class TestPred2(TestBaseClass):
         """
         #TODO MapGetByKey(None, values[0], aerospike.MAP_RETURN_VALUE, keys[0], bin)
         expr = And(
-            EQ(
+            Eq(
                 MapGetByKey(None, aerospike.MAP_RETURN_RANK, values[0], keys[0], bin), # keys[0] == 0 keys[1] == 1 keys[2] == 3
                 2
             ),
-            EQ(
+            Eq(
                 MapGetByValue(None, aerospike.MAP_RETURN_RANK, values[1], bin), # keys[0] == 0 keys[1] == 1 keys[2] == 3
                 [2] #why does this yield a list but get_by_key does not? Should document what type each expression yield.
             ),
-            EQ(
+            Eq(
                 MapGetByIndex(None, aerospike.MAP_RETURN_RANK, values[0], 1, bin),
                 1
             ),
-            EQ(
+            Eq(
                 MapGetByRank(None, aerospike.MAP_RETURN_VALUE, values[0], 1, bin),
                 2
             ),
-            EQ(
+            Eq(
                 ListGetByIndexRangeToEnd(None, aerospike.LIST_RETURN_VALUE, 0,
                     ListSort(None, aerospike.LIST_SORT_DEFAULT,
                         MapGetByKeyRange(None, aerospike.MAP_RETURN_VALUE, keys[1], keys[2], bin))), # keys[0] == 0 keys[1] == 1 keys[2] == 3 NOTE: this returns a LIST
                 expected[0]
             ),
-            EQ(
+            Eq(
                 ListGetByIndexRangeToEnd(None, aerospike.LIST_RETURN_VALUE, 0,
                     ListSort(None, aerospike.LIST_SORT_DEFAULT,
                         MapGetByKeyList(None, aerospike.MAP_RETURN_INDEX, keys[3], bin))), #TODO why is MAP_RETURN_RANK is invalid for this expr
                 [1, 2]
             ),
-            EQ(
+            Eq(
                 ListGetByIndexRangeToEnd(None, aerospike.LIST_RETURN_COUNT, 0,
                     ListSort(None, aerospike.LIST_SORT_DEFAULT,
                         MapGetByKeyRelIndexRangeToEnd(None, aerospike.MAP_RETURN_VALUE, keys[4], 1, bin))),
                 1
             ),
-            EQ(
+            Eq(
                 ListGetByIndexRangeToEnd(None, aerospike.LIST_RETURN_COUNT, 0,
                     ListSort(None, aerospike.LIST_SORT_DEFAULT,
                         MapGetByKeyRelIndexRange(None, aerospike.MAP_RETURN_VALUE, keys[4], 0, 2, bin))),
                 2
             ),
-            EQ(
+            Eq(
                 ListGetByIndexRangeToEnd(None, aerospike.LIST_RETURN_VALUE, 0,
                     ListSort(None, aerospike.LIST_SORT_DEFAULT,
                         MapGetByValueRange(None, aerospike.MAP_RETURN_VALUE, values[2], values[3], bin))),
                 expected[1]
             ),
-            EQ(
+            Eq(
                 ListGetByIndexRangeToEnd(None, aerospike.LIST_RETURN_VALUE, 0,
                     ListSort(None, aerospike.LIST_SORT_DEFAULT,
                         MapGetByValueList(None, aerospike.MAP_RETURN_INDEX, values[4], bin))),
                 [1, 2]
             ),
-            EQ(
+            Eq(
                 ListGetByIndexRangeToEnd(None, aerospike.LIST_RETURN_COUNT, 0,
                     ListSort(None, aerospike.LIST_SORT_DEFAULT,
                         MapGetByValueRelRankRangeToEnd(None, aerospike.MAP_RETURN_VALUE, values[5], 1, bin))),
                 2
             ),
-            EQ(
+            Eq(
                 ListGetByIndexRangeToEnd(None, aerospike.LIST_RETURN_COUNT, 0,
                     ListSort(None, aerospike.LIST_SORT_DEFAULT,
                         MapGetByValueRelRankRange(None, aerospike.MAP_RETURN_VALUE, values[5], 0, 2, bin))),
                 2
             ),
-            EQ(
+            Eq(
                 ListGetByIndexRangeToEnd(None, aerospike.LIST_RETURN_COUNT, 0,
                     ListSort(None, aerospike.LIST_SORT_DEFAULT,
                         MapGetByIndexRangeToEnd(None, aerospike.MAP_RETURN_VALUE, 1, bin))),
                 2
             ),
-            EQ(
+            Eq(
                 ListGetByIndexRangeToEnd(None, aerospike.LIST_RETURN_VALUE, 0,
                     ListSort(None, aerospike.LIST_SORT_DEFAULT,
                         MapGetByIndexRange(None, aerospike.MAP_RETURN_VALUE, 1, 2, bin))),
                 expected[1]
             ),
-            EQ(
+            Eq(
                 ListGetByIndexRangeToEnd(None, aerospike.LIST_RETURN_COUNT, 0,
                     ListSort(None, aerospike.LIST_SORT_DEFAULT,
                         MapGetByRankRangeToEnd(None, aerospike.MAP_RETURN_VALUE, 1, bin))),
                 2
             ),
-            EQ(
+            Eq(
                 ListGetByIndexRangeToEnd(None, aerospike.LIST_RETURN_VALUE, 0,
                     ListSort(None, aerospike.LIST_SORT_DEFAULT,
                         MapGetByRankRange(None, aerospike.MAP_RETURN_VALUE, 1, 2, bin))),
@@ -955,13 +993,7 @@ class TestPred2(TestBaseClass):
             ),
         )
 
-        print(expr.compile())
-        scan_obj = self.as_connection.scan(self.test_ns, self.test_set)
-        records = scan_obj.results({'predexp2': expr.compile()})
-        #print(records) TestUsrDefinedClass(1)
-        # for record in records:
-        #     print(record[2])
-        assert(len(records) == 19)
+        verify_all_expression_avenues(self.as_connection, self.test_ns, self.test_set, expr.compile(), bin, 19)
 
 
     @pytest.mark.parametrize("policy, bytes_size, flags, bin, expected", [
@@ -972,18 +1004,13 @@ class TestPred2(TestBaseClass):
         Test various bit expressions.
         """
 
-        expr = EQ(
+        expr = Eq(
                     BitGet(9, 2, 
                         BitResize(policy, bytes_size, flags, bin)),
                     bytearray([0] * 1)
                 )
 
-        scan_obj = self.as_connection.scan(self.test_ns, self.test_set)
-        records = scan_obj.results({'predexp2': expr.compile()})
-        #print(records) TestUsrDefinedClass(1)
-        # for record in records:
-        #     print(record[2])
-        assert(len(records) == 19)
+        verify_all_expression_avenues(self.as_connection, self.test_ns, self.test_set, expr.compile(), bin, 19)
 
 
     @pytest.mark.parametrize("policy, listp, bin, expected", [
@@ -1000,9 +1027,4 @@ class TestPred2(TestBaseClass):
                     1020 #TODO calculate this with error
                 )
 
-        scan_obj = self.as_connection.scan(self.test_ns, self.test_set)
-        records = scan_obj.results({'predexp2': expr.compile()})
-        #print(records) TestUsrDefinedClass(1)
-        # for record in records:
-        #     print(record[2])
-        assert(len(records) == 19)
+        verify_all_expression_avenues(self.as_connection, self.test_ns, self.test_set, expr.compile(), bin, 19)

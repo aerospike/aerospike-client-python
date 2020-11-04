@@ -260,7 +260,7 @@ CLEANUP:
 	}
 
 	if (exp_list_p) {
-		as_exp_destroy(&exp_list);
+		as_exp_destroy(exp_list_p);;
 	}
 
 	// DECREFed all the unicode objects stored in Pool

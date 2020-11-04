@@ -256,7 +256,7 @@ class Not(BaseExpr):
         self.children = exprs
 
 
-class EQ(BaseExpr):
+class Eq(BaseExpr):
     op = ExprOp.EQ
 
     def __init__(self, expr0, expr1):
@@ -298,6 +298,33 @@ class LE(BaseExpr):
         self.children = (expr0, expr1)
 
 
+# Record Key Expressions TODO tests
+
+
+class _Key(BaseExpr):
+    op = ExprOp.REC_KEY
+
+
+class KeyInt(_Key):
+    rt = ResultType.INTEGER
+
+
+class KeyStr(_Key):
+    rt = ResultType.INTEGER
+
+
+class KeyBlob(_Key):
+    rt = ResultType.INTEGER
+
+
+class KeyExists(BaseExpr):
+    op = ExprOp.META_KEY_EXISTS
+    rt = ResultType.INTEGER
+
+
+# Bin Expressions
+
+
 class _Bin(BaseExpr):
     op = ExprOp.BIN
 
@@ -307,6 +334,10 @@ class _Bin(BaseExpr):
 
 class IntBin(_Bin):
     rt = ResultType.INTEGER
+
+
+class StrBin(_Bin):
+    rt = ResultType.STRING
 
 
 class FloatBin(_Bin):
@@ -372,26 +403,6 @@ class MetaTTL(BaseExpr):
 class MetaSetName(BaseExpr):
     op = ExprOp.META_SET_NAME
     rt = ResultType.STRING
-
-
-class MetaKeyExists(BaseExpr):
-    op = ExprOp.META_KEY_EXISTS
-    rt = ResultType.BOOLEAN
-
-
-class MetaKeyStr(BaseExpr):
-    op = ExprOp.REC_KEY
-    rt = ResultType.STRING
-
-
-class MetaKeyInt(BaseExpr):
-    op = ExprOp.REC_KEY
-    rt = ResultType.INTEGER
-
-
-class MetaKeyBlobe(BaseExpr):
-    op = ExprOp.REC_KEY
-    rt = ResultType.BLOB
 
 
 # LIST MOD EXPRESSIONS

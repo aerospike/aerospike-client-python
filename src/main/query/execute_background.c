@@ -72,7 +72,7 @@ PyObject * AerospikeQuery_ExecuteBackground(AerospikeQuery * self, PyObject * ar
 CLEANUP:
 
 	if (exp_list_p) {
-		as_exp_destroy(&exp_list);
+		as_exp_destroy(exp_list_p);;
 	}
 
 	if (err.code != AEROSPIKE_OK) {

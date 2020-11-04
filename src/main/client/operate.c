@@ -815,7 +815,7 @@ CLEANUP:
 	}
 
 	if (exp_list_p) {
-		as_exp_destroy(&exp_list);
+		as_exp_destroy(exp_list_p);
 	}
 	
 	as_vector_destroy(unicodeStrVector);
@@ -1027,7 +1027,7 @@ CLEANUP:
 	as_vector_destroy(unicodeStrVector);
 
 	if (exp_list_p) {
-		as_exp_destroy(&exp_list);
+		as_exp_destroy(exp_list_p);;
 	}
 
 	if (rec && operation_succeeded) {

@@ -316,12 +316,16 @@ as_status add_pred_macros(AerospikeClient * self, as_static_pool * static_pool, 
 		printf("in mod case\n");
 
 		if (pred->op == _AS_EXP_CODE_CDT_LIST_CRMOD || pred->op == _AS_EXP_CODE_CDT_LIST_MOD) {
+			printf("in mod case list\n");
 			as_exp_entry new_entries[] = {{.op=pred->op, .v.list_pol = pred->list_policy}};
 			append_array(sizeof(new_entries) / sizeof(as_exp_entry));
 		} else if (pred->op >= _AS_EXP_CODE_CDT_MAP_CRMOD && pred->op <= _AS_EXP_CODE_CDT_MAP_MOD) {
+			printf("in mod case map\n");
 			as_exp_entry new_entries[] = {{.op=pred->op, .v.map_pol = pred->map_policy}};
 			append_array(sizeof(new_entries) / sizeof(as_exp_entry));
 		}
+
+		return AEROSPIKE_OK;
 	}
 
 	switch (pred->op) {
@@ -1392,15 +1396,15 @@ as_status add_pred_macros(AerospikeClient * self, as_static_pool * static_pool, 
 			}
 			break;
 		default:
-			return as_error_update(err, AEROSPIKE_ERR, "Unrecognised expression op type.");
-		break;
+			return as_error_update(err, AEROSPIKE_ERR_PARAM, "Unrecognised expression op type.");
+			break;
 
 	}		
 
 	return AEROSPIKE_OK;
 }
 
-as_status convert_exp_list(AerospikeClient * self, as_static_pool * static_pool, PyObject* py_exp_list, as_exp** exp_list, as_error* err) {
+as_status convert_exp_list(AerospikeClient * self, PyObject* py_exp_list, as_exp** exp_list, as_error* err) {
 	bottom = 0;
 	Py_ssize_t size = PyList_Size(py_exp_list);
 	if (size <= 0) {
@@ -1422,8 +1426,10 @@ as_status convert_exp_list(AerospikeClient * self, as_static_pool * static_pool,
 	as_exp_entry * c_pred_entries = NULL;
 
 	as_vector * unicodeStrVector = as_vector_create(sizeof(char *), 128);
-
 	as_vector_inita(&pred_queue, sizeof(pred_op), size);
+
+	as_static_pool static_pool;
+	memset(&static_pool, 0, sizeof(static_pool));
 
 	c_pred_entries = (as_exp_entry*) calloc((size * MAX_ELEMENTS), sizeof(as_exp_entry)); // iter and count elem?
 	if (c_pred_entries == NULL) {
@@ -1468,7 +1474,7 @@ as_status convert_exp_list(AerospikeClient * self, as_static_pool * static_pool,
 				as_error_update(err, AEROSPIKE_ERR, "could not malloc mem for pred.ctx");
 			}
 
-			if (get_cdt_ctx(self, err, pred.ctx, pred.pydict, &ctx_in_use, static_pool, SERIALIZER_PYTHON) != AEROSPIKE_OK) { // does this have persistence issues?
+			if (get_cdt_ctx(self, err, pred.ctx, pred.pydict, &ctx_in_use, &static_pool, SERIALIZER_PYTHON) != AEROSPIKE_OK) { // does this have persistence issues?
 				pred.ctx = NULL;
 				return err->code;
 				//char * tmp_warn = err->message;
@@ -1531,7 +1537,7 @@ as_status convert_exp_list(AerospikeClient * self, as_static_pool * static_pool,
 
 	for ( int i = 0; i < size; ++i ) {
 		pred_op * pred = (pred_op *) as_vector_get(&pred_queue, (uint32_t)i);
-		if (add_pred_macros(self, static_pool, SERIALIZER_PYTHON, unicodeStrVector, &c_pred_entries, pred, err) != AEROSPIKE_OK) {
+		if (add_pred_macros(self, &static_pool, SERIALIZER_PYTHON, unicodeStrVector, &c_pred_entries, pred, err) != AEROSPIKE_OK) {
 			return err->code;
 		}
 	}
@@ -1568,8 +1574,9 @@ CLEANUP:
 	}
 
 	//POOL_DESTROY(&static_pool);
-	as_vector_destroy(&pred_queue);
+	as_vector_clear(&pred_queue);
 	free(c_pred_entries);
+	POOL_DESTROY(&static_pool);
 
 	// Py_DECREF(fixed); //this needs more decrefs for each fixed
 	// fixed = NULL;
