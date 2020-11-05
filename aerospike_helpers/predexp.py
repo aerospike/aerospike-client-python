@@ -22,6 +22,7 @@ RESIZE_FLAGS_KEY = "resize_flags"
 PARAM_COUNT_KEY = "param_count"
 EXTRA_PARAM_COUNT_KEY = "extra_param_count"
 LIST_ORDER_KEY = "list_order"
+REGEX_OPTIONS_KEY = "regex_options"
 
 # TODO change list ops to send call op type and their vtype,
 # that way the switch statement in convert_predexp.c can be reduced to 1 template
@@ -298,6 +299,22 @@ class LE(BaseExpr):
         self.children = (expr0, expr1)
 
 
+class CmpRegex(BaseExpr): #TODO needs testing and regex string get in C
+    op = ExprOp.CMP_REGEX
+
+    def __init__(self, options, regex_str, cmp_str):
+        self.children = (regex_str, cmp_str)
+
+        self.fixed = {REGEX_OPTIONS_KEY: options, VALUE_KEY: regex_str}
+
+
+class CmpGeo(BaseExpr): #TODO needs testing
+    op = ExprOp.CMP_GEO
+
+    def __init__(self, expr0, expr1):
+        self.children = (expr0, expr1)
+
+
 # Record Key Expressions TODO tests
 
 
@@ -372,7 +389,7 @@ class TypeBin(BaseExpr):  # TODO implement
         self.fixed = {BIN_KEY: bin_name}
 
 
-class MetaDigestMod(BaseExpr):
+class DigestMod(BaseExpr):
     op = ExprOp.META_DIGEST_MOD
     rt = ResultType.INTEGER
 
@@ -380,27 +397,27 @@ class MetaDigestMod(BaseExpr):
         self.fixed = {VALUE_KEY: mod}
 
 
-class MetaDeviceSize(BaseExpr):
+class DeviceSize(BaseExpr):
     op = ExprOp.META_DEVICE_SIZE
     rt = ResultType.INTEGER
 
 
-class MetaLastUpdateTime(BaseExpr):
+class LastUpdateTime(BaseExpr):
     op = ExprOp.META_LAST_UPDATE_TIME
     rt = ResultType.INTEGER
 
 
-class MetaVoidTime(BaseExpr):
+class VoidTime(BaseExpr):
     op = ExprOp.META_VOID_TIME
     rt = ResultType.INTEGER
 
 
-class MetaTTL(BaseExpr):
+class TTL(BaseExpr):
     op = ExprOp.META_TTL
     rt = ResultType.INTEGER
 
 
-class MetaSetName(BaseExpr):
+class SetName(BaseExpr):
     op = ExprOp.META_SET_NAME
     rt = ResultType.STRING
 
@@ -735,7 +752,7 @@ class ListSize(BaseExpr): #TODO do tests
 class ListGetByValue(BaseExpr):
     op = aerospike.OP_LIST_EXP_GET_BY_VALUE
 
-    def __init__(self, ctx: TypeCDT, value: TypeValue, return_type: int, bin_name: TypeBinName):
+    def __init__(self, ctx: TypeCDT, return_type: int, value: TypeValue, bin_name: TypeBinName):
         self.children = (
             value,
             bin_name if isinstance(bin_name, BaseExpr) else ListBin(bin_name)
@@ -818,9 +835,9 @@ class ListGetByIndex(BaseExpr):
 
     def __init__(
         self,
-        value_type: int,
         ctx: TypeCDT,
         return_type: int,
+        value_type: int,
         index: TypeIndex,
         bin_name: TypeBinName,
     ):

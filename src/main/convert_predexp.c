@@ -105,6 +105,7 @@
 // Fixed dictionary keys
 #define OP_TYPE_KEY "ot_key"
 #define LIST_ORDER_KEY "list_order"
+#define REGEX_OPTIONS_KEY "regex_options"
 
 typedef struct {
 	long op;
@@ -203,7 +204,6 @@ as_status get_exp_val_from_pyval(AerospikeClient * self, as_static_pool * static
 			*new_entry = tmp_entry;
 		}
 	 } else if (PyBytes_Check(py_obj)) { //TODO
-	 	//return as_error_update(err, AEROSPIKE_ERR, "NOT YET IMPLEMENTED2\n");
 	 	uint8_t * b = (uint8_t *) PyBytes_AsString(py_obj);
 	 	uint32_t b_len  = (uint32_t)  PyBytes_Size(py_obj);
 		{
@@ -391,6 +391,24 @@ as_status add_pred_macros(AerospikeClient * self, as_static_pool * static_pool, 
 		case LE:;
 			{
 				as_exp_entry new_entries[] = {as_exp_cmp_le({},{})};
+				append_array(1);
+			}
+			break;
+		// case CMP_REGEX:;
+		// 	{
+		// 		if (get_int64_t(err, REGEX_OPTIONS_KEY, pred->pydict, &lval1) != AEROSPIKE_OK) {
+		// 			return err->code;
+		// 		}
+
+		// 		//TODO get regex string
+
+		// 		as_exp_entry new_entries[] = {as_exp_cmp_regex({},{})};
+		// 		append_array(1);
+		// 	}
+		// 	break;
+		case CMP_GEO:;
+			{
+				as_exp_entry new_entries[] = {as_exp_cmp_geo({},{})};
 				append_array(1);
 			}
 			break;

@@ -102,7 +102,7 @@ class TestPredEveryWhere(object):
             [
                 operations.increment("account_id", 1)
             ],
-            exp.Eq('user3', exp.StrBin('user-name')),
+            exp.Eq('user3', exp.StrBin('user_name')),
             {
                 'account_id': 4,
                 'user_name': 'user3',
@@ -150,123 +150,98 @@ class TestPredEveryWhere(object):
             {'meta': 2},
             2
         ),
-        # (# test integer greater
-        #     [
-        #         map_operations.map_clear('meta')
-        #     ],
-        #     exp.G
-        #     [
-        #         exp.integer_bin('account_id'),
-        #         exp.integer_value(2),
-        #         exp.integer_greater()
-        #     ],
-        #     {
-        #         'account_id': 3,
-        #         'user_name': 'user3',
-        #         'acct_balance': 30,
-        #         'charges': [8, 13],
-        #         'meta': {}
-        #     },
-        #     {'meta': None},
-        #     3
-        # ),
-        # (# test integer greatereq
-        #     [
-        #         map_operations.map_clear('meta')
-        #     ],
-        #     [
-        #         exp.integer_bin('account_id'),
-        #         exp.integer_value(2),
-        #         exp.integer_greatereq()
-        #     ],
-        #     {
-        #         'account_id': 3,
-        #         'user_name': 'user3',
-        #         'acct_balance': 30,
-        #         'charges': [8, 13],
-        #         'meta': {}
-        #     },
-        #     {'meta': None},
-        #     3
-        # ),
-        # (# test integer less
-        #     [
-        #         list_operations.list_clear('charges')
-        #     ],
-        #     [
-        #         exp.integer_bin('account_id'),
-        #         exp.integer_value(5),
-        #         exp.integer_less()
-        #     ],
-        #     {
-        #         'account_id': 4,
-        #         'user_name': 'user4',
-        #         'acct_balance': 40,
-        #         'charges': [],
-        #         'meta': {'date': '11/4/2019'}
-        #     },
-        #     {},
-        #     4
-        # ),
-        # (# test integer lesseq
-        #     [
-        #         list_operations.list_clear('charges')
-        #     ],
-        #     [
-        #         exp.integer_bin('account_id'),
-        #         exp.integer_value(4),
-        #         exp.integer_lesseq()
-        #     ],
-        #     {
-        #         'account_id': 4,
-        #         'user_name': 'user4',
-        #         'acct_balance': 40,
-        #         'charges': [],
-        #         'meta': {'date': '11/4/2019'}
-        #     },
-        #     {},
-        #     4
-        # ),
-        # (# test string unequal
-        #     [
-        #         list_operations.list_append('charges', 2)
-        #     ],
-        #     [
-        #         exp.string_bin('user_name'),
-        #         exp.string_value('user2'),
-        #         exp.string_unequal()
-        #     ],
-        #     {
-        #         'account_id': 4,
-        #         'user_name': 'user4',
-        #         'acct_balance': 40,
-        #         'charges': [9, 14, 2],
-        #         'meta': {'date': '11/4/2019'}
-        #     },
-        #     {'charges': 3},
-        #     4
-        # ),
-        # (# test not
-        #     [
-        #         list_operations.list_append('charges', 2)
-        #     ],
-        #     [
-        #         exp.string_bin('user_name'),
-        #         exp.string_value('user4'),
-        #         exp.string_unequal(),
-        #         exp.predexp_not()
-        #     ],
-        #     {
-        #         'account_id': 4,
-        #         'user_name': 'user4',
-        #         'acct_balance': 40,
-        #         'charges': [9, 14, 2],
-        #         'meta': {'date': '11/4/2019'}
-        #     },
-        #     {'charges': 3},
-        #     4
-        # ),
-        # (# test string regex
+        (# test integer greater
+            [
+                map_operations.map_clear('meta')
+            ],
+            exp.GT(exp.IntBin('account_id'), 2),
+            {
+                'account_id': 3,
+                'user_name': 'user3',
+                'acct_balance': 30,
+                'charges': [8, 13],
+                'meta': {}
+            },
+            {'meta': None},
+            3
+        ),
+        (# test integer greatereq
+            [
+                map_operations.map_clear('meta')
+            ],
+            exp.GE(exp.IntBin('account_id'), 2),
+            {
+                'account_id': 3,
+                'user_name': 'user3',
+                'acct_balance': 30,
+                'charges': [8, 13],
+                'meta': {}
+            },
+            {'meta': None},
+            3
+        ),
+        (# test integer less
+            [
+                list_operations.list_clear('charges')
+            ],
+            exp.LT(exp.IntBin('account_id'), 5),
+            {
+                'account_id': 4,
+                'user_name': 'user4',
+                'acct_balance': 40,
+                'charges': [],
+                'meta': {'date': '11/4/2019'}
+            },
+            {},
+            4
+        ),
+        (# test integer lesseq
+            [
+                list_operations.list_clear('charges')
+            ],
+            exp.LE(exp.IntBin('account_id'), 4),
+            {
+                'account_id': 4,
+                'user_name': 'user4',
+                'acct_balance': 40,
+                'charges': [],
+                'meta': {'date': '11/4/2019'}
+            },
+            {},
+            4
+        ),
+        (# test string unequal
+            [
+                list_operations.list_append('charges', 2)
+            ],
+            exp.NE(exp.StrBin('user_name'), 'user2'),
+            {
+                'account_id': 4,
+                'user_name': 'user4',
+                'acct_balance': 40,
+                'charges': [9, 14, 2],
+                'meta': {'date': '11/4/2019'}
+            },
+            {'charges': 3},
+            4
+        ),
+        (# test not
+            [
+                list_operations.list_append('charges', 2)
+            ],
+            exp.Not(
+                exp.NE(exp.StrBin('user_name'), 'user4')),
+            {
+                'account_id': 4,
+                'user_name': 'user4',
+                'acct_balance': 40,
+                'charges': [9, 14, 2],
+                'meta': {'date': '11/4/2019'}
+            },
+            {'charges': 3},
+            4
+        ),
+        # (# TODO test string regex
         #     [
         #         list_operations.list_append('charges', 2)
         #     ],
@@ -285,69 +260,64 @@ class TestPredEveryWhere(object):
         #     {'charges': 3},
         #     4
         # ),
-        # (# test list or int
-        #     [
-        #         list_operations.list_append('charges', 2)
-        #     ],
-        #     [
-        #         exp.integer_var('list_val'),
-        #         exp.integer_value(14),
-        #         exp.integer_equal(),
-        #         exp.list_bin('charges'),
-        #         exp.list_iterate_or('list_val')
-        #     ],
-        #     {
-        #         'account_id': 4,
-        #         'user_name': 'user4',
-        #         'acct_balance': 40,
-        #         'charges': [9, 14, 2],
-        #         'meta': {'date': '11/4/2019'}
-        #     },
-        #     {'charges': 3},
-        #     4
-        # ),
-        # (# test list and int
-        #     [
-        #         list_operations.list_append('charges', 2)
-        #     ],
-        #     [
-        #         exp.integer_var('list_val'),
-        #         exp.integer_value(120),
-        #         exp.integer_less(),
-        #         exp.list_bin('charges'),
-        #         exp.list_iterate_or('list_val')
-        #     ],
-        #     {
-        #         'account_id': 4,
-        #         'user_name': 'user4',
-        #         'acct_balance': 40,
-        #         'charges': [9, 14, 2],
-        #         'meta': {'date': '11/4/2019'}
-        #     },
-        #     {'charges': 3},
-        #     4
-        # ),
-        # (# test list or str
-        #     [
-        #         list_operations.list_append('string_list', 's5')
-        #     ],
-        #     [
-        #         exp.string_var('list_val'),
-        #         exp.string_value('s2'),
-        #         exp.string_equal(),
-        #         exp.list_bin('string_list'),
-        #         exp.list_iterate_or('list_val')
-        #     ],
-        #     {
-        #         'string_list': ['s1', 's2', 's3', 's4', 's5']
-        #     },
-        #     {'string_list': 5},
-        #     5
-        # ),
-        # (# test list and str
+        (# test list or int
+            [
+                list_operations.list_append('charges', 2)
+            ],
+            exp.Eq(
+                exp.ListGetByValue(None, aerospike.LIST_RETURN_COUNT, 14, 'charges'),
+                1
+            ),
+            {
+                'account_id': 4,
+                'user_name': 'user4',
+                'acct_balance': 40,
+                'charges': [9, 14, 2],
+                'meta': {'date': '11/4/2019'}
+            },
+            {'charges': 3},
+            4
+        ),
+        (# test list and int
+            [
+                list_operations.list_append('charges', 2)
+            ],
+            exp.LT(
+                exp.ListGetByRank(None, aerospike.LIST_RETURN_VALUE, exp.ResultType.INTEGER, -1, 'charges'),
+                120
+            ),
+            {
+                'account_id': 4,
+                'user_name': 'user4',
+                'acct_balance': 40,
+                'charges': [9, 14, 2],
+                'meta': {'date': '11/4/2019'}
+            },
+            {'charges': 3},
+            4
+        ),
+        (# test list or str
+            [
+                list_operations.list_append('string_list', 's5')
+            ],
+            exp.Eq(
+                exp.ListGetByValue(None, aerospike.LIST_RETURN_COUNT, 's2', 'string_list'),
+                1
+            ),
+            {
+                'string_list': ['s1', 's2', 's3', 's4', 's5']
+            },
+            {'string_list': 5},
+            5
+        ),
+        # (# test list and str TODO needs regex cmp
         #     [
         #         list_operations.list_remove_by_index_range('string_list', 0, aerospike.LIST_RETURN_VALUE, 2)
         #     ],
+        #     exp.LT(
+        #         exp.ListGetByRank(None, aerospike.LIST_RETURN_VALUE, exp.ResultType.INTEGER, -1, 'charges'),
+        #         120
+        #     ),
         #     [
         #         exp.string_var('list_val'),
         #         exp.string_value('.*s.*'),
@@ -361,91 +331,62 @@ class TestPredEveryWhere(object):
         #     {'string_list': ['s1', 's2']},
         #     5
         # ),
-        # (# test map_key_iterate_or
-        #     [
-        #         map_operations.map_put('map_bin', 'k5', 5)
-        #     ],
-        #     [
-        #         exp.string_var('map_key'),
-        #         exp.string_value('k3'),
-        #         exp.string_equal(),
-        #         exp.map_bin('map_bin'),
-        #         exp.mapkey_iterate_or('map_key')
-        #     ],
-        #     {
-        #         'map_bin': {'k1': 1, 'k2': 2, 'k3': 3, 'k4': 4, 'k5': 5}
-        #     },
-        #     {'map_bin': 5},
-        #     6
-        # ),
-        # (# test map_key_iterate_and
-        #     [
-        #         map_operations.map_put('map_bin', 'k5', 5)
-        #     ],
-        #     [
-        #         exp.string_var('map_key'),
-        #         exp.string_value('k7'),
-        #         exp.string_unequal(),
-        #         exp.map_bin('map_bin'),
-        #         exp.mapkey_iterate_and('map_key')
-        #     ],
-        #     {
-        #         'map_bin': {'k1': 1, 'k2': 2, 'k3': 3, 'k4': 4, 'k5': 5}
-        #     },
-        #     {'map_bin': 5},
-        #     6
-        # ),
-        # (# test mapkey_iterate_and
-        #     [
-        #         map_operations.map_put('map_bin', 'k5', 5)
-        #     ],
-        #     [
-        #         exp.string_var('map_key'),
-        #         exp.string_value('k7'),
-        #         exp.string_unequal(),
-        #         exp.map_bin('map_bin'),
-        #         exp.mapkey_iterate_and('map_key')
-        #     ],
-        #     {
-        #         'map_bin': {'k1': 1, 'k2': 2, 'k3': 3, 'k4': 4, 'k5': 5}
-        #     },
-        #     {'map_bin': 5},
-        #     6
-        # ),
-        # (# test mapval_iterate_and
-        #     [
-        #         map_operations.map_put('map_bin', 'k5', 5)
-        #     ],
-        #     [
-        #         exp.integer_var('map_val'),
-        #         exp.integer_value(7),
-        #         exp.integer_unequal(),
-        #         exp.map_bin('map_bin'),
-        #         exp.mapval_iterate_and('map_val')
-        #     ],
-        #     {
-        #         'map_bin': {'k1': 1, 'k2': 2, 'k3': 3, 'k4': 4, 'k5': 5}
-        #     },
-        #     {'map_bin': 5},
-        #     6
-        # ),
-        # (# test mapval_iterate_or
-        #     [
-        #         map_operations.map_get_by_key('map_bin', 'k1', aerospike.MAP_RETURN_VALUE)
-        #     ],
-        #     [
-        #         exp.integer_var('map_val'),
-        #         exp.integer_value(3),
-        #         exp.integer_less(),
-        #         exp.map_bin('map_bin'),
-        #         exp.mapval_iterate_or('map_val')
-        #     ],
-        #     {
-        #         'map_bin': {'k1': 1, 'k2': 2, 'k3': 3, 'k4': 4}
-        #     },
-        #     {'map_bin': 1},
-        #     6
-        # )
+        (# test map_key_iterate_or
+            [
+                map_operations.map_put('map_bin', 'k5', 5)
+            ],
+            exp.Eq(
+                exp.MapGetByKey(None, aerospike.MAP_RETURN_COUNT, exp.ResultType.INTEGER, 'k3', 'map_bin'),
+                1
+            ),
+            {
+                'map_bin': {'k1': 1, 'k2': 2, 'k3': 3, 'k4': 4, 'k5': 5}
+            },
+            {'map_bin': 5},
+            6
+        ),
+        (# test map_key_iterate_and
+            [
+                map_operations.map_put('map_bin', 'k5', 5)
+            ],
+            exp.Eq(
+                exp.MapGetByKey(None, aerospike.MAP_RETURN_COUNT, exp.ResultType.INTEGER, 'k7', 'map_bin'),
+                0
+            ),
+            {
+                'map_bin': {'k1': 1, 'k2': 2, 'k3': 3, 'k4': 4, 'k5': 5}
+            },
+            {'map_bin': 5},
+            6
+        ),
+        (# test mapval_iterate_and
+            [
+                map_operations.map_put('map_bin', 'k5', 5)
+            ],
+            exp.Eq(
+                exp.MapGetByValue(None, aerospike.MAP_RETURN_COUNT, 7, 'map_bin'),
+                0
+            ),
+            {
+                'map_bin': {'k1': 1, 'k2': 2, 'k3': 3, 'k4': 4, 'k5': 5}
+            },
+            {'map_bin': 5},
+            6
+        ),
+        (# test mapval_iterate_or
+            [
+                map_operations.map_get_by_key('map_bin', 'k1', aerospike.MAP_RETURN_VALUE)
+            ],
+            exp.Eq(
+                exp.MapGetByValue(None, aerospike.MAP_RETURN_COUNT, 3, 'map_bin'),
+                1
+            ),
+            {
+                'map_bin': {'k1': 1, 'k2': 2, 'k3': 3, 'k4': 4}
+            },
+            {'map_bin': 1},
+            6
+        )
     ])
     def test_predexp_key_operate(self, ops, predexp, expected_bins, expected_res, key_num):
         """
@@ -453,308 +394,278 @@ class TestPredEveryWhere(object):
         """
         key = ('test', 'pred_evry', key_num)
 
-        _, _, res = self.as_connection.operate(key, ops, policy={'expresions': predexp.compile()})
+        _, _, res = self.as_connection.operate(key, ops, policy={'expressions': predexp.compile()})
         assert res  == expected_res
 
         _, _, bins = self.as_connection.get(key)
         assert bins == expected_bins
 
-    # @pytest.mark.parametrize("ops, predexp, expected_bins, expected_res, key_num", [
-    # (# test mapval_iterate_or
-    #     [
-    #         map_operations.map_put_items('map_bin', {'k5': 5, 'k6': 6}),
-    #         map_operations.map_get_by_key('map_bin', 'k1', aerospike.MAP_RETURN_VALUE)
-    #     ],
-    #     [
-    #         exp.integer_var('map_val'),
-    #         exp.integer_value(3),
-    #         exp.integer_less(),
-    #         exp.map_bin('map_bin'),
-    #         exp.mapval_iterate_or('map_val')
-    #     ],
-    #     {
-    #         'map_bin': {'k1': 1, 'k2': 2, 'k3': 3, 'k4': 4, 'k5': 5, 'k6': 6}
-    #     },
-    #     [('map_bin', 6), ('map_bin', 1)],
-    #     6
-    # )])
-    # def test_predexp_key_operate_ordered(self, ops, predexp, expected_bins, expected_res, key_num):
-    #     """
-    #     Invoke the C client aerospike_key_operate with predexp using operate_ordered.
-    #     """
-    #     key = ('test', 'pred_evry', key_num)
+    @pytest.mark.parametrize("ops, predexp, expected_bins, expected_res, key_num", [
+    (# test mapval_iterate_or
+        [
+            map_operations.map_put_items('map_bin', {'k5': 5, 'k6': 6}),
+            map_operations.map_get_by_key('map_bin', 'k1', aerospike.MAP_RETURN_VALUE)
+        ],
+        exp.LT(
+            exp.MapGetByRank(None, aerospike.MAP_RETURN_VALUE, exp.ResultType.INTEGER, 0, 'map_bin'),
+            3
+        ),
+        {
+            'map_bin': {'k1': 1, 'k2': 2, 'k3': 3, 'k4': 4, 'k5': 5, 'k6': 6}
+        },
+        [('map_bin', 6), ('map_bin', 1)],
+        6
+    )])
+    def test_predexp_key_operate_ordered(self, ops, predexp, expected_bins, expected_res, key_num):
+        """
+        Invoke the C client aerospike_key_operate with predexp using operate_ordered.
+        """
+        key = ('test', 'pred_evry', key_num)
 
-    #     _, _, res = self.as_connection.operate_ordered(key, ops, policy={'predexp': predexp})
-    #     assert res  == expected_res
+        _, _, res = self.as_connection.operate_ordered(key, ops, policy={'expressions': predexp.compile()})
+        assert res  == expected_res
 
-    #     _, _, bins = self.as_connection.get(key)
-    #     assert bins == expected_bins
+        _, _, bins = self.as_connection.get(key)
+        assert bins == expected_bins
 
 
-    # @pytest.mark.parametrize("ops, predexp, expected, key_num", [
-    # (# test mapval_iterate_or
-    #     [
-    #         map_operations.map_get_by_key('map_bin', 'k1', aerospike.MAP_RETURN_VALUE)
-    #     ],
-    #     [
-    #         exp.integer_var('map_val'),
-    #         exp.integer_value(3),
-    #         exp.integer_less(),
-    #         exp.map_bin('map_bin'),
-    #         exp.mapval_iterate_or('map_val'),
-    #         exp.predexp_not()
-    #     ],
-    #     e.FilteredOut,
-    #     6
-    # )])
-    # def test_predexp_key_operate_ordered_negative(self, ops, predexp, expected, key_num):
-    #     """
-    #     Invoke the C client aerospike_key_operate with predexp using operate_ordered with expected failures.
-    #     """
-    #     key = ('test', 'pred_evry', key_num)
+    @pytest.mark.parametrize("ops, predexp, expected, key_num", [
+    (# test mapval_iterate_or
+        [
+            map_operations.map_get_by_key('map_bin', 'k1', aerospike.MAP_RETURN_VALUE)
+        ],
+        exp.Not(
+            exp.Eq(
+                exp.MapGetByRank(None, aerospike.MAP_RETURN_VALUE, exp.ResultType.INTEGER, 0, 'map_bin'),
+                1
+            )),
+        e.FilteredOut,
+        6
+    )])
+    def test_predexp_key_operate_ordered_negative(self, ops, predexp, expected, key_num):
+        """
+        Invoke the C client aerospike_key_operate with predexp using operate_ordered with expected failures.
+        """
+        key = ('test', 'pred_evry', key_num)
 
-    #     with pytest.raises(expected):
-    #         _, _, res = self.as_connection.operate_ordered(key, ops, policy={'predexp': predexp})
+        with pytest.raises(expected):
+            _, _, res = self.as_connection.operate_ordered(key, ops, policy={'expressions': predexp.compile()})
 
 
-    # @pytest.mark.parametrize("ops, predexp, key_num, bin", [
-    #     (# test geojson_within
-    #         [
-    #             operations.increment('id', 1)
-    #         ],
-    #         [
-    #             exp.geojson_bin('point'),
-    #             exp.geojson_value(geo_circle.dumps()),
-    #             exp.geojson_within()
-    #         ],
-    #         7,
-    #         'point'
-    #     ),
-    #     (# test geojson_contains
-    #         [
-    #             operations.increment('id', 1)
-    #         ],
-    #         [
-    #             exp.geojson_bin('region'),
-    #             exp.geojson_value(geo_point.dumps()),
-    #             exp.geojson_contains()
-    #         ],
-    #         7,
-    #         'point'
-    #     ),
-    # ])
-    # def test_predexp_key_operate_geojson(self, ops, predexp, key_num, bin):
-    #     """
-    #     Invoke the C client aerospike_key_operate with predexp.
-    #     """
-    #     key = ('test', 'pred_evry', key_num)
+    @pytest.mark.parametrize("ops, predexp, key_num, bin", [
+        (# test geojson_within
+            [
+                operations.increment('id', 1)
+            ],
+            exp.CmpGeo(exp.GeoBin('point'), geo_circle),
+            7,
+            'point'
+        ),
+        (# test geojson_contains
+            [
+                operations.increment('id', 1)
+            ],
+            exp.CmpGeo(exp.GeoBin('region'), geo_point),
+            7,
+            'point'
+        ),
+    ])
+    def test_predexp_key_operate_geojson(self, ops, predexp, key_num, bin):
+        """
+        Invoke the C client aerospike_key_operate with predexp.
+        """
+        key = ('test', 'pred_evry', key_num)
 
-    #     _, _, _ = self.as_connection.operate(key, ops, policy={'predexp': predexp})
+        _, _, _ = self.as_connection.operate(key, ops, policy={'expressions': predexp.compile()})
 
-    #     _, _, bins = self.as_connection.get(key)
-    #     assert bins['id'] == 2
+        _, _, bins = self.as_connection.get(key)
+        assert bins['id'] == 2
 
-    # # NOTE: may fail due to clock skew
-    # def test_predexp_key_operate_record_last_updated(self):
-    #     """
-    #     Invoke the C client aerospike_key_operate with a record_last_updated predexp.
-    #     """
+    # NOTE: may fail due to clock skew
+    def test_predexp_key_operate_record_last_updated(self):
+        """
+        Invoke the C client aerospike_key_operate with a record_last_updated predexp.
+        """
 
-    #     for i in range(5):
-    #         key = 'test', 'pred_lut', i
-    #         self.as_connection.put(key, {'time': 'earlier'})
+        for i in range(5):
+            key = 'test', 'pred_lut', i
+            self.as_connection.put(key, {'time': 'earlier'})
         
-    #     cutoff_nanos = (10 ** 9) * int(time.time() + 2)
-    #     time.sleep(5)
+        cutoff_nanos = (10 ** 9) * int(time.time() + 2)
+        time.sleep(5)
 
-    #     for i in range(5, 10):
-    #         key = 'test', 'pred_lut', i
-    #         self.as_connection.put(key, {'time': 'later'})
+        for i in range(5, 10):
+            key = 'test', 'pred_lut', i
+            self.as_connection.put(key, {'time': 'later'})
         
-    #     results = []
+        results = []
 
-    #     predexp = [
-    #         exp.rec_last_update(),
-    #         exp.integer_value(cutoff_nanos),
-    #         exp.integer_less()
-    #     ]
+        expr = exp.LT(exp.LastUpdateTime(), cutoff_nanos)
+        ops = [
+            operations.read('time')
+        ]
 
-    #     ops = [
-    #         operations.read('time')
-    #     ]
+        for i in range(10):
+            try:
+                key = 'test', 'pred_lut', i
+                _, _, res = self.as_connection.operate(key, ops, policy={'expressions': expr.compile()})
+                results.append(res)
+            except:
+                pass
+            self.as_connection.remove(key)
 
-    #     for i in range(10):
-    #         try:
-    #             key = 'test', 'pred_lut', i
-    #             _, _, res = self.as_connection.operate(key, ops, policy={'predexp': predexp})
-    #             results.append(res)
-    #         except:
-    #             pass
-    #         self.as_connection.remove(key)
+        assert len(results) == 5
+        for res in results:
+            assert res['time'] == 'earlier'
 
-    #     assert len(results) == 5
-    #     for res in results:
-    #         assert res['time'] == 'earlier'
+    # NOTE: may fail due to clock skew
+    def test_predexp_key_operate_record_void_time(self):
+        """
+        Invoke the C client aerospike_key_operate with a rec_void_time predexp.
+        """
 
-    # # NOTE: may fail due to clock skew
-    # def test_predexp_key_operate_record_void_time(self):
-    #     """
-    #     Invoke the C client aerospike_key_operate with a rec_void_time predexp.
-    #     """
-
-    #     for i in range(5):
-    #         key = 'test', 'pred_ttl', i
-    #         self.as_connection.put(key, {'time': 'earlier'}, meta={'ttl': 100})
+        for i in range(5):
+            key = 'test', 'pred_ttl', i
+            self.as_connection.put(key, {'time': 'earlier'}, meta={'ttl': 100})
         
 
-    #     # 150 second range for record TTLs should be enough, we are storing with
-    #     # Current time + 100s and current time +5000s, so only one of the group should be found
-    #     void_time_range_start = (10 ** 9) * int(time.time() + 50)
-    #     void_time_range_end = (10 ** 9) * int(time.time() + 150)
+        # 150 second range for record TTLs should be enough, we are storing with
+        # Current time + 100s and current time +5000s, so only one of the group should be found
+        void_time_range_start = (10 ** 9) * int(time.time() + 50)
+        void_time_range_end = (10 ** 9) * int(time.time() + 150)
 
-    #     for i in range(5, 10):
-    #         key = 'test', 'pred_ttl', i
-    #         self.as_connection.put(key, {'time': 'later'}, meta={'ttl': 1000})
+        for i in range(5, 10):
+            key = 'test', 'pred_ttl', i
+            self.as_connection.put(key, {'time': 'later'}, meta={'ttl': 1000})
         
-    #     results = []
+        results = []
 
-    #     predexp = [
-    #         exp.rec_void_time(),
-    #         exp.integer_value(void_time_range_start),
-    #         exp.integer_greater(),
+        expr = exp.And(
+            exp.GT(exp.VoidTime(), void_time_range_start),
+            exp.LT(exp.VoidTime(), void_time_range_end)
+        )
 
-    #         exp.rec_void_time(),
-    #         exp.integer_value(void_time_range_end),
-    #         exp.integer_less(),
+        ops = [
+            operations.read('time')
+        ]
 
-    #         exp.predexp_and(2)
-    #     ]
+        for i in range(10):
+            try:
+                key = 'test', 'pred_ttl', i
+                _, _, res = self.as_connection.operate(key, ops, policy={'expressions': expr.compile()})
+                results.append(res)
+            except:
+                pass
+            self.as_connection.remove(key)
 
-    #     ops = [
-    #         operations.read('time')
-    #     ]
+        assert len(results) == 5
+        for res in results:
+            assert res['time'] == 'earlier'
 
-    #     for i in range(10):
-    #         try:
-    #             key = 'test', 'pred_ttl', i
-    #             _, _, res = self.as_connection.operate(key, ops, policy={'predexp': predexp})
-    #             results.append(res)
-    #         except:
-    #             pass
-    #         self.as_connection.remove(key)
+    def test_predexp_key_operate_record_digest_modulo(self):
+        """
+        Invoke the C client aerospike_key_operate with a rec_digest_modulo predexp.
+        """
 
-    #     assert len(results) == 5
-    #     for res in results:
-    #         assert res['time'] == 'earlier'
-
-    # def test_predexp_key_operate_record_digest_modulo(self):
-    #     """
-    #     Invoke the C client aerospike_key_operate with a rec_digest_modulo predexp.
-    #     """
-
-    #     less_than_128 = 0
-    #     for i in range(100):
-    #         key = 'test', 'demo', i
-    #         if aerospike.calc_digest(*key)[-1] < 128:
-    #             less_than_128 += 1
-    #         self.as_connection.put(key, {'dig_id': i})
+        less_than_128 = 0
+        for i in range(100):
+            key = 'test', 'demo', i
+            if aerospike.calc_digest(*key)[-1] < 128:
+                less_than_128 += 1
+            self.as_connection.put(key, {'dig_id': i})
 
         
-    #     results = []
+        results = []
 
-    #     predexp = [
-    #         exp.rec_digest_modulo(256),
-    #         exp.integer_value(128),
-    #         exp.integer_less()
-    #     ]
+        expr =  exp.LT(exp.DigestMod(256), 128)
 
-    #     ops = [
-    #         operations.read('dig_id')
-    #     ]
+        ops = [
+            operations.read('dig_id')
+        ]
 
-    #     for i in range(100):
-    #         try:
-    #             key = 'test', 'demo', i
-    #             _, _, res = self.as_connection.operate(key, ops, policy={'predexp': predexp})
-    #             results.append(res)
-    #         except:
-    #             pass
-    #         self.as_connection.remove(key)
+        for i in range(100):
+            try:
+                key = 'test', 'demo', i
+                _, _, res = self.as_connection.operate(key, ops, policy={'expressions': expr.compile()})
+                results.append(res)
+            except:
+                pass
+            self.as_connection.remove(key)
 
-    #     assert len(results) == less_than_128
+        assert len(results) == less_than_128
 
-    # @pytest.mark.parametrize("ops, predexp, expected, key_num", [
-    #     (# filtered out
-    #         [
-    #             operations.increment("account_id", 1)
-    #         ],
-    #         [
-    #             exp.integer_bin('account_id'),
-    #             exp.integer_value(5),
-    #             exp.integer_equal()
-    #         ],
-    #         e.FilteredOut,
-    #         3
-    #     ),
-    #     (# incorrect bin type
-    #         [
-    #             list_operations.list_remove_by_index_range('charges', 0, 3, aerospike.LIST_RETURN_COUNT),
-    #             operations.increment("acct_balance", -23)
-    #         ],
-    #         [
-    #             exp.integer_bin('acct_balance'),
-    #             exp.string_value(10), #incorrect bin type
-    #             exp.integer_greatereq(),
-    #             exp.integer_bin('acct_balance'),
-    #             exp.integer_value(50),
-    #             exp.integer_lesseq(),
-    #             exp.predexp_and(2)
-    #         ],
-    #         e.ParamError,
-    #         4
-    #     ),
-    #     (# filtered out
-    #         [
-    #             map_operations.map_put('meta', 'lupdated', 'now')
-    #         ],
-    #         [
-    #             exp.string_bin('user_name'),
-    #             exp.string_value('user2'),
-    #             exp.string_equal(),
-    #             exp.integer_bin('acct_balance'),
-    #             exp.integer_value(50),
-    #             exp.integer_greatereq(),
-    #             exp.predexp_or(2),
-    #             exp.predexp_not()
-    #         ],
-    #         e.FilteredOut,
-    #         2
-    #     ),
-    #     (# empty predexp list
-    #         [
-    #             map_operations.map_put('meta', 'lupdated', 'now')
-    #         ],
-    #         [],
-    #         e.InvalidRequest,
-    #         2
-    #     ),
-    #     (# predexp not in list
-    #         [
-    #             map_operations.map_put('meta', 'lupdated', 'now')
-    #         ],
-    #         'bad predexp',
-    #         e.ParamError,
-    #         2
-    #     ),
-    # ])
-    # def test_predexp_key_operate_negative(self, ops, predexp, expected, key_num):
-    #     """
-    #     Invoke the C client aerospike_key_operate with predexp. Expecting failures.
-    #     """
-    #     key = ('test', 'pred_evry', key_num)
+    @pytest.mark.parametrize("ops, predexp, expected, key_num", [
+        (# filtered out
+            [
+                operations.increment("account_id", 1)
+            ],
+            [
+                exp.integer_bin('account_id'),
+                exp.integer_value(5),
+                exp.integer_equal()
+            ],
+            e.FilteredOut,
+            3
+        ),
+        (# incorrect bin type
+            [
+                list_operations.list_remove_by_index_range('charges', 0, 3, aerospike.LIST_RETURN_COUNT),
+                operations.increment("acct_balance", -23)
+            ],
+            [
+                exp.integer_bin('acct_balance'),
+                exp.string_value(10), #incorrect bin type
+                exp.integer_greatereq(),
+                exp.integer_bin('acct_balance'),
+                exp.integer_value(50),
+                exp.integer_lesseq(),
+                exp.predexp_and(2)
+            ],
+            e.ParamError,
+            4
+        ),
+        (# filtered out
+            [
+                map_operations.map_put('meta', 'lupdated', 'now')
+            ],
+            [
+                exp.string_bin('user_name'),
+                exp.string_value('user2'),
+                exp.string_equal(),
+                exp.integer_bin('acct_balance'),
+                exp.integer_value(50),
+                exp.integer_greatereq(),
+                exp.predexp_or(2),
+                exp.predexp_not()
+            ],
+            e.FilteredOut,
+            2
+        ),
+        (# empty predexp list
+            [
+                map_operations.map_put('meta', 'lupdated', 'now')
+            ],
+            [],
+            e.InvalidRequest,
+            2
+        ),
+        (# predexp not in list
+            [
+                map_operations.map_put('meta', 'lupdated', 'now')
+            ],
+            'bad predexp',
+            e.ParamError,
+            2
+        ),
+    ])
+    def test_predexp_key_operate_negative(self, ops, predexp, expected, key_num):
+        """
+        Invoke the C client aerospike_key_operate with predexp. Expecting failures.
+        """
+        key = ('test', 'pred_evry', key_num)
 
-    #     with pytest.raises(expected):
-    #         self.as_connection.operate(key, ops, policy={'predexp': predexp})
+        with pytest.raises(expected):
+            self.as_connection.operate(key, ops, policy={'expressions': predexp})
 
     # @pytest.mark.parametrize("predexp, rec_place, rec_bin, expected", [
     #     (
@@ -796,7 +707,7 @@ class TestPredEveryWhere(object):
     #     '''
     #     Proper call to get_many with predexp in policy
     #     '''
-    #     records = self.as_connection.get_many(self.keys, {'predexp': predexp})
+    #     records = self.as_connection.get_many(self.keys, {'expressions': predexp})
 
     #     #assert isinstance(records, list)
     #     # assert records[2][2]['age'] == 2
@@ -822,7 +733,7 @@ class TestPredEveryWhere(object):
     #     ]
 
     #     matched_recs = []
-    #     records = self.as_connection.get_many(self.keys, {'predexp': predexp})
+    #     records = self.as_connection.get_many(self.keys, {'expressions': predexp})
     #     for rec in records:
     #         if rec[2] is not None:
     #             matched_recs.append(rec[2])
@@ -851,7 +762,7 @@ class TestPredEveryWhere(object):
     #     ]
 
     #     matched_recs = []
-    #     records = self.as_connection.select_many(self.keys, ['account_id'], {'predexp': predexp})
+    #     records = self.as_connection.select_many(self.keys, ['account_id'], {'expressions': predexp})
     #     for rec in records:
     #         if rec[2] is not None:
     #             matched_recs.append(rec[2])
@@ -884,7 +795,7 @@ class TestPredEveryWhere(object):
     #         exp.integer_equal()
     #     ]
     #     with pytest.raises(e.FilteredOut):
-    #         self.as_connection.remove(self.keys[0], policy={'predexp': predexp})
+    #         self.as_connection.remove(self.keys[0], policy={'expressions': predexp})
 
     # def test_remove_bin_with_predexp(self):
     #     '''
@@ -895,7 +806,7 @@ class TestPredEveryWhere(object):
     #         exp.integer_value(1),
     #         exp.integer_equal()
     #     ]
-    #     self.as_connection.remove_bin(self.keys[0], ['account_id', 'user_name'], policy={'predexp': predexp})
+    #     self.as_connection.remove_bin(self.keys[0], ['account_id', 'user_name'], policy={'expressions': predexp})
 
     #     rec = self.as_connection.get(self.keys[0])
     #     assert rec[2].get('account_id') is None and rec[2].get('user_name') is None
@@ -910,7 +821,7 @@ class TestPredEveryWhere(object):
     #         exp.integer_equal()
     #     ]
     #     with pytest.raises(e.FilteredOut):
-    #         self.as_connection.remove_bin(self.keys[0], ['account_id', 'user_name'], policy={'predexp': predexp})
+    #         self.as_connection.remove_bin(self.keys[0], ['account_id', 'user_name'], policy={'expressions': predexp})
 
     # def test_put_with_predexp(self):
     #     '''
@@ -921,7 +832,7 @@ class TestPredEveryWhere(object):
     #         exp.integer_value(1),
     #         exp.integer_equal()
     #     ]
-    #     self.as_connection.put(self.keys[0], {'newkey': 'newval'}, policy={'predexp': predexp})
+    #     self.as_connection.put(self.keys[0], {'newkey': 'newval'}, policy={'expressions': predexp})
 
     #     rec = self.as_connection.get(self.keys[0])
     #     assert rec[2]['newkey'] == 'newval'
@@ -936,7 +847,7 @@ class TestPredEveryWhere(object):
     #         exp.integer_equal()
     #     ]
     #     key = ("test", "demo", 10)
-    #     self.as_connection.put(key, {'newkey': 'newval'}, policy={'predexp': predexp})
+    #     self.as_connection.put(key, {'newkey': 'newval'}, policy={'expressions': predexp})
 
     #     rec = self.as_connection.get(key)
     #     self.as_connection.remove(key)
@@ -952,7 +863,7 @@ class TestPredEveryWhere(object):
     #         exp.integer_equal()
     #     ]
     #     with pytest.raises(e.FilteredOut):
-    #         self.as_connection.put(self.keys[0], {'newkey': 'newval'}, policy={'predexp': predexp})
+    #         self.as_connection.put(self.keys[0], {'newkey': 'newval'}, policy={'expressions': predexp})
 
     # def test_get_with_predexp(self):
     #     '''
@@ -963,7 +874,7 @@ class TestPredEveryWhere(object):
     #         exp.integer_value(1),
     #         exp.integer_equal()
     #     ]
-    #     record = self.as_connection.get(self.keys[0], {'predexp': predexp})
+    #     record = self.as_connection.get(self.keys[0], {'expressions': predexp})
 
     #     assert record[2]['account_id'] == 1
 
@@ -977,7 +888,7 @@ class TestPredEveryWhere(object):
     #         exp.integer_equal()
     #     ]
     #     with pytest.raises(e.FilteredOut):
-    #         self.as_connection.get(self.keys[0], {'predexp': predexp})
+    #         self.as_connection.get(self.keys[0], {'expressions': predexp})
 
     # def test_select_with_predexp(self):
     #     '''
@@ -995,7 +906,7 @@ class TestPredEveryWhere(object):
     #         exp.predexp_and(2)
     #     ]
 
-    #     result = self.as_connection.select(self.keys[1], ['account_id', 'acct_balance'], {'predexp': predexp})
+    #     result = self.as_connection.select(self.keys[1], ['account_id', 'acct_balance'], {'expressions': predexp})
     #     assert result[2]['account_id'] == 2 and result[2]['acct_balance'] == 20
 
     # def test_select_with_predexp_filtered_out(self):
@@ -1015,7 +926,7 @@ class TestPredEveryWhere(object):
     #     ]
 
     #     with pytest.raises(e.FilteredOut):
-    #         self.as_connection.select(self.keys[1], ['account_id', 'acct_balance'], {'predexp': predexp})
+    #         self.as_connection.select(self.keys[1], ['account_id', 'acct_balance'], {'expressions': predexp})
 
     # def test_exists_many_with_large_predexp(self):
     #     '''
@@ -1037,7 +948,7 @@ class TestPredEveryWhere(object):
     #     ]
 
     #     matched_recs = []
-    #     records = self.as_connection.exists_many(self.keys, {'predexp': predexp})
+    #     records = self.as_connection.exists_many(self.keys, {'expressions': predexp})
     #     for rec in records:
     #         if rec[1] is not None:
     #             matched_recs.append(rec[1])

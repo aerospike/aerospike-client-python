@@ -317,21 +317,21 @@ class TestPred2(TestBaseClass):
                     Eq(IntBin("age"), IntBin("balance"))
                 )
             ),
-            Eq(MetaDigestMod(2), 0),
-            GE(MetaDeviceSize(), 1),
-            NE(MetaLastUpdateTime(), 0),
-            NE(MetaVoidTime(), 0),
-            NE(MetaTTL(), 0),
-            MetaKeyExists(), #needs debugging
-            Eq(MetaSetName(), 'demo'),
-            Eq(ListGetByIndex(ResultType.INTEGER, None, aerospike.LIST_RETURN_VALUE, 0, 'list_bin'), 5),
+            Eq(DigestMod(2), 0),
+            GE(DeviceSize(), 1),
+            NE(LastUpdateTime(), 0),
+            NE(VoidTime(), 0),
+            NE(TTL(), 0),
+            KeyExists(), #needs debugging
+            Eq(SetName(), 'demo'),
+            Eq(ListGetByIndex(None, ResultType.INTEGER, aerospike.LIST_RETURN_VALUE, 0, 'list_bin'), 5),
             GE(ListSize(None, 'list_bin'), 2),
             
         )
 
-        #expr = Eq(MetaSetName(), 'demo')
+        #expr = Eq(SetName(), 'demo')
 
-        print(MetaKeyExists().compile())
+        print(KeyExists().compile())
 
         #print(expr.compile())
 
@@ -369,7 +369,7 @@ class TestPred2(TestBaseClass):
             ctx = None
         
         #breakpoint()
-        expr = Eq(ListGetByIndex(bin_type, ctx, return_type, index, 'list_bin'), check)
+        expr = Eq(ListGetByIndex(ctx, return_type, bin_type, index, 'list_bin'), check)
         verify_all_expression_avenues(self.as_connection, self.test_ns, self.test_set, expr.compile(), 'list_bin', expected)
 
 # Oct 06 2020 12:08:36 GMT: WARNING (particle): (msgpack_in.c:1099) msgpack_sz_internal: invalid at i 1 count 2
@@ -406,7 +406,7 @@ class TestPred2(TestBaseClass):
         else:
             ctx = None
         
-        expr = Eq(ListGetByValue(ctx, value, return_type, 'list_bin'), check)
+        expr = Eq(ListGetByValue(ctx, return_type, value, 'list_bin'), check)
         verify_all_expression_avenues(self.as_connection, self.test_ns, self.test_set, expr.compile(), 'list_bin', expected)
 
     @pytest.mark.parametrize("ctx_types, ctx_indexes, begin, end, return_type, check, expected", [
@@ -424,7 +424,7 @@ class TestPred2(TestBaseClass):
     ])
     def test_ListGetByValueRange_pos(self, ctx_types, ctx_indexes, begin, end, return_type, check, expected):
         """
-        Invoke ListGetByValue().
+        Invoke ListGetByValueRange().
         """
 
         if ctx_types is not None:
@@ -603,10 +603,10 @@ class TestPred2(TestBaseClass):
         expr = And(
             Eq(
                 ListGetByValueRelRankRange(None, aerospike.LIST_RETURN_COUNT, 
-                    ListGetByIndex(values[0], None, aerospike.LIST_RETURN_VALUE, 0, bin), 1, 3, bin), #why did this fail with aerospike.CDTInfinite for count?
+                    ListGetByIndex(None, aerospike.LIST_RETURN_VALUE, values[0], 0, bin), 1, 3, bin), #why did this fail with aerospike.CDTInfinite for count?
                 2),
             Eq(
-                ListGetByValue(None,  values[1], aerospike.LIST_RETURN_INDEX,
+                ListGetByValue(None, aerospike.LIST_RETURN_INDEX, values[1],
                     ListGetByValueRange(None, aerospike.LIST_RETURN_VALUE, values[2], values[3], bin)),
                 [2]),
             Eq(
