@@ -9,7 +9,7 @@ import pytest
 
 from aerospike import exception as e
 #from aerospike import predexp as as_predexp
-from aerospike_helpers import predexp as exp
+from aerospike_helpers import expressions as exp
 from aerospike_helpers import cdt_ctx
 from aerospike_helpers.operations import list_operations
 from aerospike_helpers.operations import map_operations
@@ -82,7 +82,7 @@ class TestPredEveryWhere(object):
             except e.AerospikeError:
                 pass
 
-    @pytest.mark.parametrize("ops, predexp, expected_bins, expected_res, key_num", [
+    @pytest.mark.parametrize("ops, expressions, expected_bins, expected_res, key_num", [
         (# test integer equal
             [
                 operations.increment("account_id", 1)
@@ -241,25 +241,21 @@ class TestPredEveryWhere(object):
             {'charges': 3},
             4
         ),
-        # (# TODO test string regex
-        #     [
-        #         list_operations.list_append('charges', 2)
-        #     ],
-        #     [
-        #         exp.string_bin('user_name'),
-        #         exp.string_value('.*4.*'),
-        #         exp.string_regex(aerospike.REGEX_ICASE)
-        #     ],
-        #     {
-        #         'account_id': 4,
-        #         'user_name': 'user4',
-        #         'acct_balance': 40,
-        #         'charges': [9, 14, 2],
-        #         'meta': {'date': '11/4/2019'}
-        #     },
-        #     {'charges': 3},
-        #     4
-        # ),
+        (# test string regex
+            [
+                list_operations.list_append('charges', 2)
+            ],
+            exp.CmpRegex(aerospike.REGEX_ICASE, '.*4.*', exp.StrBin('user_name')),
+            {
+                'account_id': 4,
+                'user_name': 'user4',
+                'acct_balance': 40,
+                'charges': [9, 14, 2],
+                'meta': {'date': '11/4/2019'}
+            },
+            {'charges': 3},
+            4
+        ),
         (# test list or int
             [
                 list_operations.list_append('charges', 2)
@@ -310,7 +306,7 @@ class TestPredEveryWhere(object):
             {'string_list': 5},
             5
         ),
-        # (# test list and str TODO needs regex cmp
+        # (# test list and str TODO convert
         #     [
         #         list_operations.list_remove_by_index_range('string_list', 0, aerospike.LIST_RETURN_VALUE, 2)
         #     ],
@@ -318,6 +314,7 @@ class TestPredEveryWhere(object):
         #         exp.ListGetByRank(None, aerospike.LIST_RETURN_VALUE, exp.ResultType.INTEGER, -1, 'charges'),
         #         120
         #     ),
+        #     exp.CmpRegex(aerospike.REGEX_ICASE, '.*s.*', exp.StrBin('user_name')),
         #     [
         #         exp.string_var('list_val'),
         #         exp.string_value('.*s.*'),
@@ -388,19 +385,19 @@ class TestPredEveryWhere(object):
             6
         )
     ])
-    def test_predexp_key_operate(self, ops, predexp, expected_bins, expected_res, key_num):
+    def test_expressions_key_operate(self, ops, expressions, expected_bins, expected_res, key_num):
         """
-        Invoke the C client aerospike_key_operate with predexp.
+        Invoke the C client aerospike_key_operate with expressions.
         """
         key = ('test', 'pred_evry', key_num)
 
-        _, _, res = self.as_connection.operate(key, ops, policy={'expressions': predexp.compile()})
+        _, _, res = self.as_connection.operate(key, ops, policy={'expressions': expressions.compile()})
         assert res  == expected_res
 
         _, _, bins = self.as_connection.get(key)
         assert bins == expected_bins
 
-    @pytest.mark.parametrize("ops, predexp, expected_bins, expected_res, key_num", [
+    @pytest.mark.parametrize("ops, expressions, expected_bins, expected_res, key_num", [
     (# test mapval_iterate_or
         [
             map_operations.map_put_items('map_bin', {'k5': 5, 'k6': 6}),
@@ -416,20 +413,20 @@ class TestPredEveryWhere(object):
         [('map_bin', 6), ('map_bin', 1)],
         6
     )])
-    def test_predexp_key_operate_ordered(self, ops, predexp, expected_bins, expected_res, key_num):
+    def test_expressions_key_operate_ordered(self, ops, expressions, expected_bins, expected_res, key_num):
         """
-        Invoke the C client aerospike_key_operate with predexp using operate_ordered.
+        Invoke the C client aerospike_key_operate with expressions using operate_ordered.
         """
         key = ('test', 'pred_evry', key_num)
 
-        _, _, res = self.as_connection.operate_ordered(key, ops, policy={'expressions': predexp.compile()})
+        _, _, res = self.as_connection.operate_ordered(key, ops, policy={'expressions': expressions.compile()})
         assert res  == expected_res
 
         _, _, bins = self.as_connection.get(key)
         assert bins == expected_bins
 
 
-    @pytest.mark.parametrize("ops, predexp, expected, key_num", [
+    @pytest.mark.parametrize("ops, expressions, expected, key_num", [
     (# test mapval_iterate_or
         [
             map_operations.map_get_by_key('map_bin', 'k1', aerospike.MAP_RETURN_VALUE)
@@ -442,17 +439,17 @@ class TestPredEveryWhere(object):
         e.FilteredOut,
         6
     )])
-    def test_predexp_key_operate_ordered_negative(self, ops, predexp, expected, key_num):
+    def test_expressions_key_operate_ordered_negative(self, ops, expressions, expected, key_num):
         """
-        Invoke the C client aerospike_key_operate with predexp using operate_ordered with expected failures.
+        Invoke the C client aerospike_key_operate with expressions using operate_ordered with expected failures.
         """
         key = ('test', 'pred_evry', key_num)
 
         with pytest.raises(expected):
-            _, _, res = self.as_connection.operate_ordered(key, ops, policy={'expressions': predexp.compile()})
+            _, _, res = self.as_connection.operate_ordered(key, ops, policy={'expressions': expressions.compile()})
 
 
-    @pytest.mark.parametrize("ops, predexp, key_num, bin", [
+    @pytest.mark.parametrize("ops, expressions, key_num, bin", [
         (# test geojson_within
             [
                 operations.increment('id', 1)
@@ -470,21 +467,21 @@ class TestPredEveryWhere(object):
             'point'
         ),
     ])
-    def test_predexp_key_operate_geojson(self, ops, predexp, key_num, bin):
+    def test_expressions_key_operate_geojson(self, ops, expressions, key_num, bin):
         """
-        Invoke the C client aerospike_key_operate with predexp.
+        Invoke the C client aerospike_key_operate with expressions.
         """
         key = ('test', 'pred_evry', key_num)
 
-        _, _, _ = self.as_connection.operate(key, ops, policy={'expressions': predexp.compile()})
+        _, _, _ = self.as_connection.operate(key, ops, policy={'expressions': expressions.compile()})
 
         _, _, bins = self.as_connection.get(key)
         assert bins['id'] == 2
 
     # NOTE: may fail due to clock skew
-    def test_predexp_key_operate_record_last_updated(self):
+    def test_expressions_key_operate_record_last_updated(self):
         """
-        Invoke the C client aerospike_key_operate with a record_last_updated predexp.
+        Invoke the C client aerospike_key_operate with a record_last_updated expressions.
         """
 
         for i in range(5):
@@ -519,9 +516,9 @@ class TestPredEveryWhere(object):
             assert res['time'] == 'earlier'
 
     # NOTE: may fail due to clock skew
-    def test_predexp_key_operate_record_void_time(self):
+    def test_expressions_key_operate_record_void_time(self):
         """
-        Invoke the C client aerospike_key_operate with a rec_void_time predexp.
+        Invoke the C client aerospike_key_operate with a rec_void_time expressions.
         """
 
         for i in range(5):
@@ -562,9 +559,9 @@ class TestPredEveryWhere(object):
         for res in results:
             assert res['time'] == 'earlier'
 
-    def test_predexp_key_operate_record_digest_modulo(self):
+    def test_expressions_key_operate_record_digest_modulo(self): #TODO investigate segfault caused by this
         """
-        Invoke the C client aerospike_key_operate with a rec_digest_modulo predexp.
+        Invoke the C client aerospike_key_operate with a rec_digest_modulo expressions.
         """
 
         less_than_128 = 0
@@ -594,16 +591,12 @@ class TestPredEveryWhere(object):
 
         assert len(results) == less_than_128
 
-    @pytest.mark.parametrize("ops, predexp, expected, key_num", [
+    @pytest.mark.parametrize("ops, expressions, expected, key_num", [
         (# filtered out
             [
                 operations.increment("account_id", 1)
             ],
-            [
-                exp.integer_bin('account_id'),
-                exp.integer_value(5),
-                exp.integer_equal()
-            ],
+            exp.Eq(exp.IntBin('account_id'), 5).compile(),
             e.FilteredOut,
             3
         ),
@@ -612,345 +605,248 @@ class TestPredEveryWhere(object):
                 list_operations.list_remove_by_index_range('charges', 0, 3, aerospike.LIST_RETURN_COUNT),
                 operations.increment("acct_balance", -23)
             ],
-            [
-                exp.integer_bin('acct_balance'),
-                exp.string_value(10), #incorrect bin type
-                exp.integer_greatereq(),
-                exp.integer_bin('acct_balance'),
-                exp.integer_value(50),
-                exp.integer_lesseq(),
-                exp.predexp_and(2)
-            ],
-            e.ParamError,
+            exp.And(
+                exp.GE(exp.StrBin('acct_balance'), 10),
+                exp.LE(exp.IntBin('acct_balance'), 50)
+            ).compile(),
+            e.InvalidRequest,
             4
         ),
         (# filtered out
             [
                 map_operations.map_put('meta', 'lupdated', 'now')
             ],
-            [
-                exp.string_bin('user_name'),
-                exp.string_value('user2'),
-                exp.string_equal(),
-                exp.integer_bin('acct_balance'),
-                exp.integer_value(50),
-                exp.integer_greatereq(),
-                exp.predexp_or(2),
-                exp.predexp_not()
-            ],
+            exp.Not(
+                exp.Or(
+                    exp.Eq(exp.StrBin('user_name'), 'user2'),
+                    exp.GE(exp.IntBin('acct_balance'), 50)
+                )
+            ).compile(),
             e.FilteredOut,
             2
         ),
-        (# empty predexp list
+        (# empty expressions list
             [
                 map_operations.map_put('meta', 'lupdated', 'now')
             ],
             [],
-            e.InvalidRequest,
+            e.ParamError,
             2
         ),
-        (# predexp not in list
+        (# expressions not in list
             [
                 map_operations.map_put('meta', 'lupdated', 'now')
             ],
-            'bad predexp',
+            ('bad expressions',),
             e.ParamError,
             2
         ),
     ])
-    def test_predexp_key_operate_negative(self, ops, predexp, expected, key_num):
+    def test_expressions_key_operate_negative(self, ops, expressions, expected, key_num):
         """
-        Invoke the C client aerospike_key_operate with predexp. Expecting failures.
+        Invoke the C client aerospike_key_operate with expressions. Expecting failures.
         """
         key = ('test', 'pred_evry', key_num)
 
         with pytest.raises(expected):
-            self.as_connection.operate(key, ops, policy={'expressions': predexp})
+            self.as_connection.operate(key, ops, policy={'expressions': expressions})
 
-    # @pytest.mark.parametrize("predexp, rec_place, rec_bin, expected", [
-    #     (
-    #         [
-    #             exp.integer_bin('account_id'),
-    #             exp.integer_value(2),
-    #             exp.integer_equal()
-    #         ],
-    #         1,
-    #         'account_id',
-    #         2
-    #     ),
-    #     (
-    #         [
-    #             exp.string_bin('user_name'),
-    #             exp.string_value('user2'),
-    #             exp.string_equal(),
-    #         ],
-    #         1,
-    #         'account_id',
-    #         2
-    #     ),
-    #     (
-    #         [
-    #             exp.string_bin('user_name'),
-    #             exp.string_value('user2'),
-    #             exp.string_equal(),
-    #             exp.integer_bin('acct_balance'),
-    #             exp.integer_value(30),
-    #             exp.integer_greatereq(),
-    #             exp.predexp_or(2)
-    #         ],
-    #         2,
-    #         'account_id',
-    #         3
-    #     )
-    # ])
-    # def test_pos_get_many_with_predexp(self, predexp, rec_place, rec_bin, expected):
-    #     '''
-    #     Proper call to get_many with predexp in policy
-    #     '''
-    #     records = self.as_connection.get_many(self.keys, {'expressions': predexp})
+    @pytest.mark.parametrize("expressions, rec_place, rec_bin, expected", [
+        (
+            exp.Eq(exp.IntBin('account_id'), 2),
+            1,
+            'account_id',
+            2
+        ),
+        (
+            exp.Eq(exp.StrBin('user_name'), 'user2'),
+            1,
+            'account_id',
+            2
+        ),
+        (
+            exp.Or(
+                exp.Eq(exp.StrBin('user_name'), 'user2'),
+                exp.GE(exp.IntBin('acct_balance'), 30)
+            ),
+            2,
+            'account_id',
+            3
+        )
+    ])
+    def test_pos_get_many_with_expressions(self, expressions, rec_place, rec_bin, expected):
+        '''
+        Proper call to get_many with expressions in policy
+        '''
+        records = self.as_connection.get_many(self.keys, {'expressions': expressions.compile()})
 
-    #     #assert isinstance(records, list)
-    #     # assert records[2][2]['age'] == 2
-    #     assert records[rec_place][2][rec_bin] == expected
+        #assert isinstance(records, list)
+        # assert records[2][2]['age'] == 2
+        assert records[rec_place][2][rec_bin] == expected
 
-    # def test_pos_get_many_with_large_predexp(self):
-    #     '''
-    #     Proper call to get_many with predexp in policy.
-    #     '''
-    #     predexp = [
-    #         exp.integer_bin('account_id'),
-    #         exp.integer_value(4),
-    #         exp.integer_equal(),
-    #         exp.string_bin('user_name'),
-    #         exp.string_value('user3'),
-    #         exp.string_equal(),
-    #         exp.integer_var('list_val'),
-    #         exp.integer_value(12),
-    #         exp.integer_less(),
-    #         exp.list_bin('charges'),
-    #         exp.list_iterate_and('list_val'),
-    #         exp.predexp_or(3)
-    #     ]
+    def test_pos_get_many_with_large_expressions(self):
+        '''
+        Proper call to get_many with expressions in policy.
+        '''
+        expr = exp.Or(
+            exp.Eq(exp.IntBin('account_id'), 4),
+            exp.Eq(exp.StrBin('user_name'), 'user3'),
+            exp.LT(exp.ListGetByRank(None, aerospike.LIST_RETURN_VALUE, exp.ResultType.INTEGER, -1, 'charges'), 12)
+        )
 
-    #     matched_recs = []
-    #     records = self.as_connection.get_many(self.keys, {'expressions': predexp})
-    #     for rec in records:
-    #         if rec[2] is not None:
-    #             matched_recs.append(rec[2])
+        matched_recs = []
+        records = self.as_connection.get_many(self.keys, {'expressions': expr.compile()})
+        for rec in records:
+            if rec[2] is not None:
+                matched_recs.append(rec[2])
         
-    #     assert len(matched_recs) == 3
-    #     for rec in matched_recs:
-    #         assert rec['account_id'] == 1 or rec['account_id'] == 3 or rec['account_id'] == 4
+        assert len(matched_recs) == 3
+        for rec in matched_recs:
+            assert rec['account_id'] == 1 or rec['account_id'] == 3 or rec['account_id'] == 4
 
-    # def test_pos_select_many_with_large_predexp(self):
-    #     '''
-    #     Proper call to select_many with predexp in policy.
-    #     '''
-    #     predexp = [
-    #         exp.integer_bin('account_id'),
-    #         exp.integer_value(4),
-    #         exp.integer_equal(),
-    #         exp.string_bin('user_name'),
-    #         exp.string_value('user3'),
-    #         exp.string_equal(),
-    #         exp.integer_var('list_val'),
-    #         exp.integer_value(12),
-    #         exp.integer_less(),
-    #         exp.list_bin('charges'),
-    #         exp.list_iterate_and('list_val'),
-    #         exp.predexp_or(3)
-    #     ]
+    def test_pos_select_many_with_large_expressions(self):
+        '''
+        Proper call to select_many with expressions in policy.
+        '''
+        expr = exp.Or(
+            exp.Eq(exp.IntBin('account_id'), 4),
+            exp.Eq(exp.StrBin('user_name'), 'user3'),
+            exp.LT(exp.ListGetByRank(None, aerospike.LIST_RETURN_VALUE, exp.ResultType.INTEGER, -1, 'charges'), 12)
+        )
 
-    #     matched_recs = []
-    #     records = self.as_connection.select_many(self.keys, ['account_id'], {'expressions': predexp})
-    #     for rec in records:
-    #         if rec[2] is not None:
-    #             matched_recs.append(rec[2])
+        matched_recs = []
+        records = self.as_connection.select_many(self.keys, ['account_id'], {'expressions': expr.compile()})
+        for rec in records:
+            if rec[2] is not None:
+                matched_recs.append(rec[2])
         
-    #     assert len(matched_recs) == 3
-    #     for rec in matched_recs:
-    #         assert rec['account_id'] == 1 or rec['account_id'] == 3 or rec['account_id'] == 4
+        assert len(matched_recs) == 3
+        for rec in matched_recs:
+            assert rec['account_id'] == 1 or rec['account_id'] == 3 or rec['account_id'] == 4
 
-    # def test_pos_remove_with_predexp(self):
-    #     '''
-    #     Call remove with predexp in policy.
-    #     '''
-    #     predexp = [
-    #         exp.integer_bin('account_id'),
-    #         exp.integer_value(1),
-    #         exp.integer_equal()
-    #     ]
-    #     records = self.as_connection.remove(self.keys[0])
+    def test_pos_remove_with_expressions(self):
+        '''
+        Call remove with expressions in policy.
+        '''
+        expr = exp.Eq(exp.IntBin('account_id'), 1)
+        records = self.as_connection.remove(self.keys[0], {'expressions': expr.compile()})
 
-    #     rec = self.as_connection.exists(self.keys[0])
-    #     assert rec[1] is None
+        rec = self.as_connection.exists(self.keys[0])
+        assert rec[1] is None
 
-    # def test_remove_with_predexp_filtered_out(self):
-    #     '''
-    #     Call remove with predexp in policy with expected failure.
-    #     '''
-    #     predexp = [
-    #         exp.integer_bin('account_id'),
-    #         exp.integer_value(3),
-    #         exp.integer_equal()
-    #     ]
-    #     with pytest.raises(e.FilteredOut):
-    #         self.as_connection.remove(self.keys[0], policy={'expressions': predexp})
+    def test_remove_with_expressions_filtered_out(self):
+        '''
+        Call remove with expressions in policy with expected failure.
+        '''
+        expr = exp.Eq(exp.IntBin('account_id'), 3)
+        with pytest.raises(e.FilteredOut):
+            self.as_connection.remove(self.keys[0], policy={'expressions': expr.compile()})
 
-    # def test_remove_bin_with_predexp(self):
-    #     '''
-    #     Call remove_bin with predexp in policy.
-    #     '''
-    #     predexp = [
-    #         exp.integer_bin('account_id'),
-    #         exp.integer_value(1),
-    #         exp.integer_equal()
-    #     ]
-    #     self.as_connection.remove_bin(self.keys[0], ['account_id', 'user_name'], policy={'expressions': predexp})
+    def test_remove_bin_with_expressions(self):
+        '''
+        Call remove_bin with expressions in policy.
+        '''
+        expr = exp.Eq(exp.IntBin('account_id'), 1)
+        self.as_connection.remove_bin(self.keys[0], ['account_id', 'user_name'], policy={'expressions': expr.compile()})
 
-    #     rec = self.as_connection.get(self.keys[0])
-    #     assert rec[2].get('account_id') is None and rec[2].get('user_name') is None
+        rec = self.as_connection.get(self.keys[0])
+        assert rec[2].get('account_id') is None and rec[2].get('user_name') is None
 
-    # def test_remove_bin_with_predexp_filtered_out(self):
-    #     '''
-    #     Call remove_bin with predexp in policy with expected failure.
-    #     '''
-    #     predexp = [
-    #         exp.integer_bin('account_id'),
-    #         exp.integer_value(4),
-    #         exp.integer_equal()
-    #     ]
-    #     with pytest.raises(e.FilteredOut):
-    #         self.as_connection.remove_bin(self.keys[0], ['account_id', 'user_name'], policy={'expressions': predexp})
+    def test_remove_bin_with_expressions_filtered_out(self):
+        '''
+        Call remove_bin with expressions in policy with expected failure.
+        '''
+        expr = exp.Eq(exp.IntBin('account_id'), 4)
+        with pytest.raises(e.FilteredOut):
+            self.as_connection.remove_bin(self.keys[0], ['account_id', 'user_name'], policy={'expressions': expr.compile()})
 
-    # def test_put_with_predexp(self):
-    #     '''
-    #     Call put with predexp in policy.
-    #     '''
-    #     predexp = [
-    #         exp.integer_bin('account_id'),
-    #         exp.integer_value(1),
-    #         exp.integer_equal()
-    #     ]
-    #     self.as_connection.put(self.keys[0], {'newkey': 'newval'}, policy={'expressions': predexp})
+    def test_put_with_expressions(self):
+        '''
+        Call put with expressions in policy.
+        '''
+        expr = exp.Eq(exp.IntBin('account_id'), 1)
+        self.as_connection.put(self.keys[0], {'newkey': 'newval'}, policy={'expressions': expr.compile()})
 
-    #     rec = self.as_connection.get(self.keys[0])
-    #     assert rec[2]['newkey'] == 'newval'
+        rec = self.as_connection.get(self.keys[0])
+        assert rec[2]['newkey'] == 'newval'
 
-    # def test_put_new_record_with_predexp(self): # should this fail?
-    #     '''
-    #     Call put a new record with predexp in policy.
-    #     '''
-    #     predexp = [
-    #         exp.integer_bin('account_id'),
-    #         exp.integer_value(1),
-    #         exp.integer_equal()
-    #     ]
-    #     key = ("test", "demo", 10)
-    #     self.as_connection.put(key, {'newkey': 'newval'}, policy={'expressions': predexp})
+    def test_put_new_record_with_expressions(self): # should this fail?
+        '''
+        Call put a new record with expressions in policy.
+        '''
+        expr = exp.Eq(exp.IntBin('account_id'), 1)
+        key = ("test", "demo", 10)
+        self.as_connection.put(key, {'newkey': 'newval'}, policy={'expressions': expr.compile()})
 
-    #     rec = self.as_connection.get(key)
-    #     self.as_connection.remove(key)
-    #     assert rec[2]['newkey'] == 'newval'
+        rec = self.as_connection.get(key)
+        self.as_connection.remove(key)
+        assert rec[2]['newkey'] == 'newval'
 
-    # def test_put_with_predexp_filtered_out(self):
-    #     '''
-    #     Call put with predexp in policy with expected failure.
-    #     '''
-    #     predexp = [
-    #         exp.integer_bin('account_id'),
-    #         exp.integer_value(4),
-    #         exp.integer_equal()
-    #     ]
-    #     with pytest.raises(e.FilteredOut):
-    #         self.as_connection.put(self.keys[0], {'newkey': 'newval'}, policy={'expressions': predexp})
+    def test_put_with_expressions_filtered_out(self):
+        '''
+        Call put with expressions in policy with expected failure.
+        '''
+        expr = exp.Eq(exp.IntBin('account_id'), 4)
+        with pytest.raises(e.FilteredOut):
+            self.as_connection.put(self.keys[0], {'newkey': 'newval'}, policy={'expressions': expr.compile()})
 
-    # def test_get_with_predexp(self):
-    #     '''
-    #     Call to get with predexp in policy.
-    #     '''
-    #     predexp = [
-    #         exp.integer_bin('account_id'),
-    #         exp.integer_value(1),
-    #         exp.integer_equal()
-    #     ]
-    #     record = self.as_connection.get(self.keys[0], {'expressions': predexp})
+    def test_get_with_expressions(self):
+        '''
+        Call to get with expressions in policy.
+        '''
+        expr = exp.Eq(exp.IntBin('account_id'), 1)
+        record = self.as_connection.get(self.keys[0], {'expressions': expr.compile()})
 
-    #     assert record[2]['account_id'] == 1
+        assert record[2]['account_id'] == 1
 
-    # def test_get_with_predexp_filtered_out(self):
-    #     '''
-    #     Call to get with predexp in policy with expected failures.
-    #     '''
-    #     predexp = [
-    #         exp.integer_bin('account_id'),
-    #         exp.integer_value(3),
-    #         exp.integer_equal()
-    #     ]
-    #     with pytest.raises(e.FilteredOut):
-    #         self.as_connection.get(self.keys[0], {'expressions': predexp})
+    def test_get_with_expressions_filtered_out(self):
+        '''
+        Call to get with expressions in policy with expected failures.
+        '''
+        expr = exp.Eq(exp.IntBin('account_id'), 3)
+        with pytest.raises(e.FilteredOut):
+            self.as_connection.get(self.keys[0], {'expressions': expr.compile()})
 
-    # def test_select_with_predexp(self):
-    #     '''
-    #     Call to select with predexp in policy.
-    #     '''
-    #     predexp = [
-    #         exp.integer_bin('acct_balance'),
-    #         exp.integer_value(20),
-    #         exp.integer_equal(),
-    #         exp.integer_var('charge'),
-    #         exp.integer_value(20),
-    #         exp.integer_less(),
-    #         exp.list_bin('charges'),
-    #         exp.list_iterate_and('charge'),
-    #         exp.predexp_and(2)
-    #     ]
+    def test_select_with_expressions(self):
+        '''
+        Call to select with expressions in policy.
+        '''
 
-    #     result = self.as_connection.select(self.keys[1], ['account_id', 'acct_balance'], {'expressions': predexp})
-    #     assert result[2]['account_id'] == 2 and result[2]['acct_balance'] == 20
+        expr = exp.And(
+            exp.Eq(exp.IntBin('acct_balance'), 20),
+            exp.LT(exp.ListGetByRank(None, aerospike.LIST_RETURN_VALUE, exp.ResultType.INTEGER, -1, 'charges'), 20)
+        )
 
-    # def test_select_with_predexp_filtered_out(self):
-    #     '''
-    #     Call to select with predexp in policy with expected failures.
-    #     '''
-    #     predexp = [
-    #         exp.integer_bin('acct_balance'),
-    #         exp.integer_value(20),
-    #         exp.integer_equal(),
-    #         exp.integer_var('charge'),
-    #         exp.integer_value(10), # charge should trigger a filtered_out
-    #         exp.integer_less(),
-    #         exp.list_bin('charges'),
-    #         exp.list_iterate_and('charge'),
-    #         exp.predexp_and(2)
-    #     ]
+        result = self.as_connection.select(self.keys[1], ['account_id', 'acct_balance'], {'expressions': expr.compile()})
+        assert result[2]['account_id'] == 2 and result[2]['acct_balance'] == 20
 
-    #     with pytest.raises(e.FilteredOut):
-    #         self.as_connection.select(self.keys[1], ['account_id', 'acct_balance'], {'expressions': predexp})
+    def test_select_with_expressions_filtered_out(self):
+        '''
+        Call to select with expressions in policy with expected failures.
+        '''
+        expr = exp.And(
+            exp.Eq(exp.IntBin('acct_balance'), 20),
+            exp.LT(exp.ListGetByRank(None, aerospike.LIST_RETURN_VALUE, exp.ResultType.INTEGER, -1, 'charges'), 10)
+        )
 
-    # def test_exists_many_with_large_predexp(self):
-    #     '''
-    #     Proper call to exists_many with predexp in policy.
-    #     '''
-    #     predexp = [
-    #         exp.integer_bin('account_id'),
-    #         exp.integer_value(4),
-    #         exp.integer_equal(),
-    #         exp.string_bin('user_name'),
-    #         exp.string_value('user3'),
-    #         exp.string_equal(),
-    #         exp.integer_var('list_val'),
-    #         exp.integer_value(12),
-    #         exp.integer_less(),
-    #         exp.list_bin('charges'),
-    #         exp.list_iterate_and('list_val'),
-    #         exp.predexp_or(3)
-    #     ]
+        with pytest.raises(e.FilteredOut):
+            self.as_connection.select(self.keys[1], ['account_id', 'acct_balance'], {'expressions': expr.compile()})
 
-    #     matched_recs = []
-    #     records = self.as_connection.exists_many(self.keys, {'expressions': predexp})
-    #     for rec in records:
-    #         if rec[1] is not None:
-    #             matched_recs.append(rec[1])
+    def test_exists_many_with_large_expressions(self):
+        '''
+        Proper call to exists_many with expressions in policy.
+        '''
+
+        expr = exp.Or(
+            exp.Eq(exp.IntBin('account_id'), 4),
+            exp.Eq(exp.StrBin('user_name'), 'user3'),
+            exp.LT(exp.ListGetByRank(None, aerospike.LIST_RETURN_VALUE, exp.ResultType.INTEGER, -1, 'charges'), 12)
+        )
+
+        matched_recs = []
+        records = self.as_connection.exists_many(self.keys, {'expressions': expr.compile()})
+        for rec in records:
+            if rec[1] is not None:
+                matched_recs.append(rec[1])
         
-    #     assert len(matched_recs) == 3
+        assert len(matched_recs) == 3

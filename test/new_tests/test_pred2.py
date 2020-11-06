@@ -6,7 +6,7 @@ from .test_base_class import TestBaseClass
 from aerospike import exception as e
 from .as_status_codes import AerospikeStatus
 from aerospike_helpers import cdt_ctx
-from aerospike_helpers.predexp import *
+from aerospike_helpers.expressions import *
 from aerospike_helpers.operations import map_operations
 from aerospike_helpers.operations import list_operations
 from aerospike_helpers.operations import hll_operations
@@ -298,7 +298,7 @@ class TestPred2(TestBaseClass):
 
         request.addfinalizer(teardown)
 
-    def test_scan_with_results_method_and_predexp(self):
+    def test_scan_with_results_method_and_expressions(self):
 
         ns = 'test'
         st = 'demo'
@@ -374,10 +374,10 @@ class TestPred2(TestBaseClass):
 
 # Oct 06 2020 12:08:36 GMT: WARNING (particle): (msgpack_in.c:1099) msgpack_sz_internal: invalid at i 1 count 2
 # Oct 06 2020 12:08:36 GMT: WARNING (exp): (exp.c:755) invalid instruction at offset 60
-# Oct 06 2020 12:08:36 GMT: WARNING (scan): (scan.c:752) basic scan job failed predexp processing
+# Oct 06 2020 12:08:36 GMT: WARNING (scan): (scan.c:752) basic scan job failed expressions processing
 # Oct 06 2020 12:08:36 GMT: WARNING (particle): (msgpack_in.c:1099) msgpack_sz_internal: invalid at i 1 count 2
 # Oct 06 2020 12:08:36 GMT: WARNING (exp): (exp.c:755) invalid instruction at offset 86
-# Oct 06 2020 12:08:36 GMT: WARNING (scan): (scan.c:752) basic scan job failed predexp processing
+# Oct 06 2020 12:08:36 GMT: WARNING (scan): (scan.c:752) basic scan job failed expressions processing
 
     @pytest.mark.parametrize("ctx_types, ctx_indexes, value, return_type, check, expected", [
         (None, None, 10, aerospike.LIST_RETURN_VALUE, [10], 1),

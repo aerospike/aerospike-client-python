@@ -114,3 +114,8 @@ PyObject * AerospikeQuery_ExecuteBackground(AerospikeQuery * self, PyObject * ar
 PyObject * StoreUnicodePyObject(AerospikeQuery * self, PyObject * obj);
 
 int64_t pyobject_to_int64(PyObject * py_obj);
+
+/* Initialize the predexp module */
+// PyObject * AerospikePredExp_New(void);
+
+as_status RegisterPredExpConstants(PyObject* module);

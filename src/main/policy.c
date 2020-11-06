@@ -904,7 +904,17 @@ as_status pyobject_to_policy_operate(AerospikeClient * self, as_error * err, PyO
 	POLICY_SET_FIELD(read_mode_sc, as_policy_read_mode_sc);
 
 	// C client 4.6.7 new policy
-	POLICY_SET_PREDEXP_BASE_FIELD();
+	//POLICY_SET_PREDEXP_BASE_FIELD();
+
+	if (exp_list) {
+		PyObject* py_exp_list = PyDict_GetItemString(py_policy, "expressions");
+		if (py_exp_list) {
+			if (convert_exp_list(self, py_exp_list, &exp_list, err) == AEROSPIKE_OK) {
+				policy->base.filter_exp = exp_list;
+				*exp_list_p = exp_list;
+			}
+		}
+	}
 
 	// Update the policy
 	POLICY_UPDATE();

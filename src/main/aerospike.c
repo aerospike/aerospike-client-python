@@ -134,6 +134,7 @@ MOD_INIT(aerospike)
 				operator_constants[i].constantno);
 	}
 	declare_policy_constants(aerospike);
+	RegisterPredExpConstants(aerospike);
 	declare_log_constants(aerospike);
 
 	PyObject * predicates = AerospikePredicates_New();
