@@ -8,7 +8,6 @@ import time
 import pytest
 
 from aerospike import exception as e
-#from aerospike import predexp as as_predexp
 from aerospike_helpers import expressions as exp
 from aerospike_helpers import cdt_ctx
 from aerospike_helpers.operations import list_operations
