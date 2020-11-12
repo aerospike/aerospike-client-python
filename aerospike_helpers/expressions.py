@@ -1241,6 +1241,19 @@ class MapRemoveByRankRange(BaseExpr):
 # MAP READ EXPRESSIONS
 
 
+class MapSize(BaseExpr): #TODO do tests
+    op = aerospike.OP_MAP_SIZE
+
+    def __init__(self, ctx: TypeCDT, bin_name: TypeBinName):
+        self.children = (
+            bin_name if isinstance(bin_name, BaseExpr) else MapBin(bin_name),
+        )
+        self.fixed = {}
+
+        if ctx is not None:
+            self.fixed[CTX_KEY] = ctx
+
+
 class MapGetByKey(BaseExpr):
     op = aerospike.OP_MAP_GET_BY_KEY
 

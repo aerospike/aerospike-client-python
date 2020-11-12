@@ -934,6 +934,13 @@ as_status add_pred_macros(AerospikeClient * self, as_static_pool * static_pool, 
 				append_array(sizeof(new_entries) / sizeof(as_exp_entry) - 3); // - 3 for rank, count, bin
 			}
 			break;
+		case OP_MAP_SIZE:;
+			{
+				as_exp_entry new_entries[] = {as_exp_map_size(pred->ctx, {})};
+
+				append_array(sizeof(new_entries) / sizeof(as_exp_entry) - 1); // - 1 for bin
+			}
+			break;
 		case OP_MAP_GET_BY_KEY:;
 			{
 				if (get_int64_t(err, AS_PY_MAP_RETURN_KEY, pred->pydict, &lval1) != AEROSPIKE_OK) {
@@ -1415,6 +1422,23 @@ as_status convert_exp_list(AerospikeClient * self, PyObject* py_exp_list, as_exp
 			goto CLEANUP;
 		}
 	}
+
+	//debug
+	// as_integer mkey1;
+	// as_integer mkey2;
+	// as_integer mkey3;
+	// as_integer_init(&mkey1, 1);
+	// as_integer_init(&mkey2, 2);
+	// as_integer_init(&mkey3, 3);
+	// as_hashmap * map1 = (as_hashmap*)c_pred_entries[1].v.val;
+	// printf("got: %s\n", as_val_val_tostring(as_hashmap_get(map1, (as_val*)&mkey1)));
+	// printf("got: %s\n", as_val_val_tostring(as_hashmap_get(map1, (as_val*)&mkey2)));
+	// printf("got: %s\n", as_val_val_tostring(as_hashmap_get(map1, (as_val*)&mkey3)));
+
+	// as_hashmap * map2 = (as_hashmap*)c_pred_entries[2].v.val;
+	// printf("got: %s\n", as_val_val_tostring(as_hashmap_get(map2, (as_val*)&mkey1)));
+	// printf("got: %s\n", as_val_val_tostring(as_hashmap_get(map2, (as_val*)&mkey2)));
+	// printf("got: %s\n", as_val_val_tostring(as_hashmap_get(map2, (as_val*)&mkey3)));
 
 	*exp_list = as_exp_compile(c_pred_entries, bottom);
 
