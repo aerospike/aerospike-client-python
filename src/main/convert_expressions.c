@@ -22,7 +22,6 @@
 #include <aerospike/as_exp.h>
 #include <aerospike/as_vector.h>
 #include <aerospike/as_geojson.h>
-#include <aerospike/as_msgpack.h>
 #include <aerospike/as_msgpack_ext.h>
 
 #include "client.h"
@@ -33,14 +32,6 @@
 #include "cdt_operation_utils.h"
 #include "geo.h"
 #include "cdt_types.h"
-
-/**********
-* TODO
-* Implement list and map ops.
-* Improve Error checking.
-* Improve memory handling.
-* Add getfromtuple macros for int,str,list,policy
-***********/
 
  // EXPR OPS
 #define VAL 0
@@ -111,10 +102,11 @@ typedef struct {
 	long op;
 	long result_type;
 	// union {
-	// 	char * fixed;
-	// 	int64_t fixed_num;
-	// };
-	//PyObject * fixed;
+	// 	as_val * val_list_p;
+	// 	as_val * val_map_p;
+	// 	as_val * val_string_p;
+	// } val;
+	// uint8_t val_flag;
 	PyObject * pydict;
 	PyObject * pytuple;
 	as_cdt_ctx * ctx;
@@ -143,13 +135,11 @@ int bottom = 0;
 static
 as_status get_exp_val_from_pyval(AerospikeClient * self, as_static_pool * static_pool, int serializer_type, as_exp_entry * new_entry, PyObject * py_obj, as_error * err) {
 	//as_exp_entry new_entries[] = {AS_EXP_VAL_INT(pred->fixed_num)};
-	//TODO why not pass in the array and do the copy in here
 	as_error_reset(err);
 
 	if (!py_obj) {
 		return as_error_update(err, AEROSPIKE_ERR_CLIENT, "value is null");
-	} else if (PyBool_Check(py_obj)) { //TODO
-		//return as_error_update(err, AEROSPIKE_ERR, "NOT YET IMPLEMENTED1\n");
+	} else if (PyBool_Check(py_obj)) {
 		as_bytes *bytes;
 		GET_BYTES_POOL(bytes, static_pool, err);
 		if (err->code == AEROSPIKE_OK) {
@@ -161,10 +151,6 @@ as_status get_exp_val_from_pyval(AerospikeClient * self, as_static_pool * static
 			as_exp_entry tmp_entry = as_exp_val((as_val *) bytes);
 			*new_entry = tmp_entry;
 		}
-		// {
-		// 	as_exp_entry tmp_entry = AS_EXP_BOOL(PyObject_IsTrue(py_obj));
-		// 	*new_entry = tmp_entry;
-		// }
 	} else if (PyInt_Check(py_obj)) {
 		int64_t i = (int64_t) PyInt_AsLong(py_obj);
 		if (i == -1 && PyErr_Occurred()) {
@@ -1305,6 +1291,7 @@ as_status convert_exp_list(AerospikeClient * self, PyObject* py_exp_list, as_exp
 		if (child_count == 0 && va_flag >= 1) { //this handles AND, OR
 			pred.op=END_VA_ARGS;
 			as_vector_append(&pred_queue, (void*) &pred);
+			processed_exp_count++;
 			--va_flag;
 			continue;
 		}
@@ -1475,11 +1462,13 @@ CLEANUP:
 	}
 
 	//POOL_DESTROY(&static_pool);
-	as_vector_clear(&pred_queue);
+	as_vector_destroy(&pred_queue);
 	if (c_pred_entries != NULL) {
 		free(c_pred_entries);
 	}
+
 	POOL_DESTROY(&static_pool);
+	as_vector_destroy(unicodeStrVector);
 
 	// Py_DECREF(fixed); //this needs more decrefs for each fixed
 	// fixed = NULL;

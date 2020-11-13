@@ -120,7 +120,7 @@ def resolve_c_client():
 
 include_dirs = ['src/include'] + [x for x in os.getenv('CPATH', '').split(':') if len(x) > 0]
 extra_compile_args = [
-    '-std=gnu99', '-g', '-Wall', '-fPIC', '-Og',
+    '-std=gnu99', '-g', '-Wall', '-fPIC', '-O1',
     '-fno-common', '-fno-strict-aliasing', '-Wno-strict-prototypes',
     '-march=nocona',
     '-D_FILE_OFFSET_BITS=64', '-D_REENTRANT', '-D_GNU_SOURCE'
@@ -163,6 +163,7 @@ elif LINUX:
     libraries = libraries + ['rt']
     if AEROSPIKE_C_HOME:
         PREFIX = AEROSPIKE_C_HOME + '/target/Linux-x86_64'
+
 else:
     print("error: OS not supported:", PLATFORM, file=sys.stderr)
     sys.exit(8)
@@ -271,7 +272,7 @@ setup(
                 'src/main/client/get_key_digest.c',
                 'src/main/query/type.c',
                 'src/main/query/apply.c',
-		        'src/main/query/add_ops.c',
+                'src/main/query/add_ops.c',
                 'src/main/query/foreach.c',
                 'src/main/query/predexp.c',
                 'src/main/query/results.c',
@@ -290,17 +291,17 @@ setup(
                 'src/main/geospatial/unwrap.c',
                 'src/main/geospatial/loads.c',
                 'src/main/geospatial/dumps.c',
+                'src/main/policy.c',
                 'src/main/conversions.c',
                 'src/main/convert_predexp.c',
                 'src/main/convert_expressions.c',
-                'src/main/policy.c',
                 'src/main/policy_config.c',
                 'src/main/calc_digest.c',
                 'src/main/predicates.c',
                 'src/main/tls_config.c',
                 'src/main/global_hosts/type.c',
                 'src/main/nullobject/type.c',
-                'src/main/cdt_types/type.c',
+                'src/main/cdt_types/type.c'
             ],
 
             # Compile

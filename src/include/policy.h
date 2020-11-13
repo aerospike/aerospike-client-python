@@ -14,16 +14,18 @@
  * limitations under the License.
  ******************************************************************************/
 
+#pragma once
+
 #include <Python.h>
+
 #include <aerospike/as_error.h>
 #include <aerospike/as_query.h>
-#include <aerospike/as_policy.h>
+#include <aerospike/as_exp.h>
 #include <aerospike/as_policy.h>
 #include <aerospike/as_map_operations.h>
 #include <aerospike/as_list_operations.h>
 #include <aerospike/as_bit_operations.h>
 #include <aerospike/as_hll_operations.h>
-#include <aerospike/as_exp.h>
 
 #define MAX_CONSTANT_STR_SIZE 512
 

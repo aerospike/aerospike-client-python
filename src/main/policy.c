@@ -18,13 +18,13 @@
 #include <stdbool.h>
 
 #include <aerospike/as_error.h>
+#include <aerospike/as_exp.h>
 #include <aerospike/as_policy.h>
 #include <aerospike/as_record.h>
 #include <aerospike/as_status.h>
 #include <aerospike/as_admin.h>
 #include <aerospike/as_operations.h>
 #include <aerospike/aerospike_index.h>
-#include <aerospike/as_exp.h>
 #include "aerospike/as_scan.h"
 #include "aerospike/as_job.h"
 
