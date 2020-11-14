@@ -107,8 +107,7 @@ class TestScan(TestBaseClass):
         scan_obj = self.as_connection.scan(self.test_ns, self.test_set)
 
         scan_obj.foreach(callback, {'timeout': 2000, 'expressions': expr.compile()})
-
-        assert len(records) == self.record_count - 1
+        assert len(records) == self.record_count - 2 #2 because the last record has no "name" bin and won't be included in the result
 
     def test_scan_with_expressions_policy_no_set(self):
 
@@ -127,7 +126,7 @@ class TestScan(TestBaseClass):
 
         scan_obj.foreach(callback, {'timeout': 2000, 'expressions': expr.compile()})
 
-        assert len(records) == self.record_count - 1
+        assert len(records) == self.record_count - 2 #2 because the last record has no "name" bin and won't be included in the result
 
     def test_scan_with_socket_timeout_policy(self):
 

@@ -366,7 +366,7 @@ class TestPred2(TestBaseClass):
         #(None, None, 0, 5, aerospike.LIST_RETURN_VALUE, None, 19), #TODO needs investigating build_call - error 4 invalid result_type 0
         (None, None, ResultType.LIST, 3, aerospike.LIST_RETURN_VALUE, [26, 27, 28, 6], 1),
         ([list_index], [3], ResultType.INTEGER, 3, aerospike.LIST_RETURN_VALUE, 6, 1), #TODO needs debugging
-        #(None, None, ResultType.MAP, 4, aerospike.LIST_RETURN_VALUE, {31: 31, 32: 32, 33: 33, 12: 12}, 1), TODO debug map values in EQ
+        #(None, None, ResultType.MAP, 4, aerospike.LIST_RETURN_VALUE, {31: 31, 32: 32, 33: 33, 12: 12}, 1), TODO debug map values in EQ (server issue)
         #(None, None, 6, 8, aerospike.LIST_RETURN_VALUE, aerospike.null, 19),
         #(None, None, 8, 9, aerospike.LIST_RETURN_VALUE, GEO_POLY, 19), #TODO needs debugging 'build_compare - error 4 cannot compare type 8'
         #(None, None, ResultType.BLOB, 0, aerospike.LIST_RETURN_VALUE, TestUsrDefinedClass(10), 1) #NOTE Cannot compare literal python object (as_py_bytes) to as_bytes.
