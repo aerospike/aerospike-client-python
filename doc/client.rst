@@ -3406,7 +3406,7 @@ HyperLogLog Policies
     .. code-block:: python
 
         HLL_policy = {
-            'hll_write_flags': aerospike.HLL_WRITE_UPDATE_ONLY
+            'flags': aerospike.HLL_WRITE_UPDATE_ONLY
         }
 
 
