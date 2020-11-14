@@ -124,7 +124,7 @@ def readWork(nReads, thrName):
     t0 = float(time.time())
 
     for x in range(0, nReads):
-        kstr = 'k' + str(random.randint(0, numKeys))
+        kstr = 'k' + str(random.randrange(0, numKeys))
         key = (namespace, testSet, kstr)
         try:
             (key, _, _) = client.get(key)
