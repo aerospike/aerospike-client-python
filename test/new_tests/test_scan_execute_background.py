@@ -5,7 +5,7 @@ import time
 import aerospike
 from aerospike import exception, predicates
 from aerospike_helpers.operations import operations, map_operations
-from aerospike import predexp as as_predexp
+from aerospike_helpers import expressions as exp
 
 TEST_NS = 'test'
 TEST_SET = 'background_scan1'
@@ -99,25 +99,20 @@ class TestScanApply(object):
             _, _, bins = self.as_connection.get(key)
             assert bins['number'] == i + 1
 
-    def test_background_execute_predexp_everywhere(self):
+    def test_background_execute_expressions_everywhere(self):
         """
-        Ensure that Scan.execute_background() gets applied to records that match the predexp.
+        Ensure that Scan.execute_background() gets applied to records that match the expressions.
         """
         test_bin = 'number'
         keys = [(TEST_NS, TEST_SET, i) for i in range(50)]
 
-        predexp = [
-            as_predexp.integer_bin('number'),
-            as_predexp.integer_value(2),
-            as_predexp.integer_equal(),
-            as_predexp.integer_bin('number'),
-            as_predexp.integer_value(3),
-            as_predexp.integer_equal(),
-            as_predexp.predexp_or(2)
-        ]
+        expr = exp.Or(
+            exp.Eq(exp.IntBin('number'), 2),
+            exp.Eq(exp.IntBin('number'), 3)
+        )
 
         policy = {
-            'predexp': predexp
+            'expressions': expr.compile()
         }
 
         scan = self.as_connection.scan(TEST_NS, TEST_SET)
@@ -133,29 +128,24 @@ class TestScanApply(object):
                 assert(bins.get(test_bin) == i)
 
     @pytest.mark.xfail(reason="scan does not implement .where()")
-    def test_background_execute_predexp_and_predicate(self):
+    def test_background_execute_expressions_and_predicate(self):
         """
         Ensure that Scan.execute_background() gets applied to records that match the predicate.
-        NOTE: the predicate overrides the predexp
+        NOTE: the predicate overrides the expressions
         """
         test_bin = 'Stpredold'
         keys = [(TEST_NS, TEST_SET, i) for i in range(50)]
 
-        predexp = [
-            as_predexp.integer_bin('number'),
-            as_predexp.integer_value(2),
-            as_predexp.integer_equal(),
-            as_predexp.integer_bin('number'),
-            as_predexp.integer_value(3),
-            as_predexp.integer_equal(),
-            as_predexp.predexp_or(2)
-        ]
-
-        number_predicate = predicates.equals('number', 4)
+        expr = exp.Or(
+            exp.Eq(exp.IntBin('number'), 2),
+            exp.Eq(exp.IntBin('number'), 3)
+        )
 
         policy = {
-            'predexp': predexp
+            'expressions': expr.compile()
         }
+
+        number_predicate = predicates.equals('number', 4)
 
         scan = self.as_connection.scan(TEST_NS, TEST_SET)
         scan.where(number_predicate)
@@ -170,9 +160,9 @@ class TestScanApply(object):
             else:
                 assert(bins.get(test_bin) is None)
 
-    def test_background_execute_with_ops_and_predexp(self):
+    def test_background_execute_with_ops_and_expressions(self):
         """
-        Ensure that Scan.execute_background() applies ops to records that match the predexp.
+        Ensure that Scan.execute_background() applies ops to records that match the expressions.
         """
         test_bin = 'Stops_preds'
         keys = [(TEST_NS, TEST_SET, i) for i in range(50)]
@@ -184,18 +174,13 @@ class TestScanApply(object):
             operations.write(test_bin, 'new_val')
         ]
 
-        predexp = [
-            as_predexp.integer_bin('number'),
-            as_predexp.integer_value(2),
-            as_predexp.integer_equal(),
-            as_predexp.integer_bin('number'),
-            as_predexp.integer_value(3),
-            as_predexp.integer_equal(),
-            as_predexp.predexp_or(2)
-        ]
+        expr = exp.Or(
+            exp.Eq(exp.IntBin('number'), 2),
+            exp.Eq(exp.IntBin('number'), 3)
+        )
 
         policy = {
-            'predexp': predexp
+            'expressions': expr.compile()
         }
 
         scan.add_ops(ops)
@@ -209,9 +194,9 @@ class TestScanApply(object):
             else:
                 assert(bins.get(test_bin) is None)
 
-    def test_background_execute_with_ops_and_predexp_None_set(self):
+    def test_background_execute_with_ops_and_expressions_None_set(self):
         """
-        Ensure that Scan.execute_background() applies ops to all records in the NS that match the predexp.
+        Ensure that Scan.execute_background() applies ops to all records in the NS that match the expressions.
         """
         test_bin = 'Stops_noset'
         keys = [(TEST_NS, TEST_SET, i) for i in range(50)]
@@ -223,18 +208,13 @@ class TestScanApply(object):
             operations.write(test_bin, 'new_val')
         ]
 
-        predexp = [
-            as_predexp.integer_bin('number'),
-            as_predexp.integer_value(2),
-            as_predexp.integer_equal(),
-            as_predexp.integer_bin('number'),
-            as_predexp.integer_value(3),
-            as_predexp.integer_equal(),
-            as_predexp.predexp_or(2)
-        ]
+        expr = exp.Or(
+            exp.Eq(exp.IntBin('number'), 2),
+            exp.Eq(exp.IntBin('number'), 3)
+        )
 
         policy = {
-            'predexp': predexp
+            'expressions': expr.compile()
         }
 
         scan.add_ops(ops)

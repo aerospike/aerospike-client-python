@@ -18,13 +18,13 @@
 #include <stdbool.h>
 
 #include <aerospike/as_error.h>
+#include <aerospike/as_exp.h>
 #include <aerospike/as_policy.h>
 #include <aerospike/as_record.h>
 #include <aerospike/as_status.h>
 #include <aerospike/as_admin.h>
 #include <aerospike/as_operations.h>
 #include <aerospike/aerospike_index.h>
-#include <aerospike/as_predexp.h>
 #include "aerospike/as_scan.h"
 #include "aerospike/as_job.h"
 
@@ -73,14 +73,13 @@ __policy##_init(policy);\
 }
 
 #define POLICY_SET_PREDEXP_BASE_FIELD() {\
-	if (predexp_list) {\
-		PyObject* py_predexp_list = PyDict_GetItemString(py_policy, "predexp");\
-		if (py_predexp_list) {\
-			long number_predexp = PyList_Size(py_predexp_list);\
-			as_predexp_list_init(predexp_list, number_predexp);\
-			convert_predexp_list(py_predexp_list, predexp_list, err);\
-			policy->base.predexp = predexp_list;\
-			*predexp_list_p = predexp_list;\
+	if (exp_list) {\
+		PyObject* py_exp_list = PyDict_GetItemString(py_policy, "expressions");\
+		if (py_exp_list) {\
+			if (convert_exp_list(self, py_exp_list, &exp_list, err) == AEROSPIKE_OK) {\
+				policy->base.filter_exp = exp_list;\
+				*exp_list_p = exp_list;\
+			}\
 		}\
 	}\
 }
@@ -359,6 +358,59 @@ AerospikeConstants aerospike_constants[] = {
 	{ AS_HLL_WRITE_NO_FAIL, "HLL_WRITE_NO_FAIL"},
 	{ AS_HLL_WRITE_ALLOW_FOLD, "HLL_WRITE_ALLOW_FOLD"},
 
+	{ OP_LIST_EXP_APPEND, "OP_LIST_EXP_APPEND"},
+	{ OP_LIST_EXP_APPEND_ITEMS, "OP_LIST_EXP_APPEND_ITEMS"},
+	{ OP_LIST_EXP_INSERT, "OP_LIST_EXP_INSERT"},
+	{ OP_LIST_EXP_INSERT_ITEMS, "OP_LIST_EXP_INSERT_ITEMS"},
+	{ OP_LIST_EXP_POP, "OP_LIST_EXP_POP"},
+	{ OP_LIST_EXP_POP_RANGE, "OP_LIST_EXP_POP_RANGE"},
+	{ OP_LIST_EXP_REMOVE, "OP_LIST_EXP_REMOVE"},
+	{ OP_LIST_EXP_REMOVE_RANGE, "OP_LIST_EXP_REMOVE_RANGE"},
+	{ OP_LIST_EXP_CLEAR, "OP_LIST_EXP_CLEAR"},
+	{ OP_LIST_EXP_SET, "OP_LIST_EXP_SET"},
+	{ OP_LIST_EXP_GET, "OP_LIST_EXP_GET"},
+	{ OP_LIST_EXP_GET_RANGE, "OP_LIST_EXP_GET_RANGE"},
+	{ OP_LIST_EXP_TRIM, "OP_LIST_EXP_TRIM"},
+	{ OP_LIST_EXP_SIZE, "OP_LIST_EXP_SIZE"},
+	{ OP_LIST_EXP_INCREMENT, "OP_LIST_EXP_INCREMENT"},
+	{ OP_LIST_EXP_GET_BY_INDEX, "OP_LIST_EXP_GET_BY_INDEX"},
+	{ OP_LIST_EXP_GET_BY_INDEX_RANGE, "OP_LIST_EXP_GET_BY_INDEX_RANGE"},
+	{ OP_LIST_EXP_GET_BY_RANK, "OP_LIST_EXP_GET_BY_RANK"},
+	{ OP_LIST_EXP_GET_BY_RANK_RANGE, "OP_LIST_EXP_GET_BY_RANK_RANGE"},
+	{ OP_LIST_EXP_GET_BY_VALUE, "OP_LIST_EXP_GET_BY_VALUE"},
+	{ OP_LIST_EXP_GET_BY_VALUE_LIST, "OP_LIST_EXP_GET_BY_VALUE_LIST"},
+	{ OP_LIST_EXP_GET_BY_VALUE_RANGE, "OP_LIST_EXP_GET_BY_VALUE_RANGE"},
+	{ OP_LIST_EXP_REMOVE_BY_INDEX, "OP_LIST_EXP_REMOVE_BY_INDEX"},
+	{ OP_LIST_EXP_REMOVE_BY_INDEX_RANGE, "OP_LIST_EXP_REMOVE_BY_INDEX_RANGE"},
+	{ OP_LIST_EXP_REMOVE_BY_RANK, "OP_LIST_EXP_REMOVE_BY_RANK"},
+	{ OP_LIST_EXP_REMOVE_BY_RANK_RANGE, "OP_LIST_EXP_REMOVE_BY_RANK_RANGE"},
+	{ OP_LIST_EXP_REMOVE_BY_VALUE, "OP_LIST_EXP_REMOVE_BY_VALUE"},
+	{ OP_LIST_EXP_REMOVE_BY_VALUE_LIST, "OP_LIST_EXP_REMOVE_BY_VALUE_LIST"},
+	{ OP_LIST_EXP_REMOVE_BY_VALUE_RANGE, "OP_LIST_EXP_REMOVE_BY_VALUE_RANGE"},
+	{ OP_LIST_EXP_SET_ORDER, "OP_LIST_EXP_SET_ORDER"},
+	{ OP_LIST_EXP_SORT, "OP_LIST_EXP_SORT"},
+	{ OP_LIST_EXP_REMOVE_BY_VALUE_RANK_RANGE_REL, "OP_LIST_EXP_REMOVE_BY_VALUE_RANK_RANGE_REL"},
+	{ OP_LIST_EXP_GET_BY_VALUE_RANK_RANGE_REL, "OP_LIST_EXP_GET_BY_VALUE_RANK_RANGE_REL"},
+	{ OP_LIST_EXP_GET_BY_VALUE_RANK_RANGE_REL_TO_END, "OP_LIST_EXP_GET_BY_VALUE_RANK_RANGE_REL_TO_END"},
+	{ OP_LIST_EXP_GET_BY_INDEX_RANGE_TO_END, "OP_LIST_EXP_GET_BY_INDEX_RANGE_TO_END"},
+	{ OP_LIST_EXP_GET_BY_RANK_RANGE_TO_END, "OP_LIST_EXP_GET_BY_RANK_RANGE_TO_END"},
+	{ OP_LIST_EXP_REMOVE_BY_REL_RANK_RANGE_TO_END, "OP_LIST_EXP_REMOVE_BY_REL_RANK_RANGE_TO_END"},
+	{ OP_LIST_EXP_REMOVE_BY_INDEX_RANGE_TO_END, "OP_LIST_EXP_REMOVE_BY_INDEX_RANGE_TO_END"},
+	{ OP_LIST_EXP_REMOVE_BY_RANK_RANGE_TO_END, "OP_LIST_EXP_REMOVE_BY_RANK_RANGE_TO_END"},
+	{ OP_LIST_EXP_REMOVE_BY_VALUE_REL_RANK_RANGE, "OP_LIST_EXP_REMOVE_BY_VALUE_REL_RANK_RANGE"},
+	{ OP_LIST_EXP_REMOVE_BY_REL_RANK_RANGE, "OP_LIST_EXP_REMOVE_BY_REL_RANK_RANGE"},
+	{ OP_MAP_REMOVE_BY_KEY_REL_INDEX_RANGE_TO_END, "OP_MAP_REMOVE_BY_KEY_REL_INDEX_RANGE_TO_END"},
+	{ OP_MAP_REMOVE_BY_VALUE_REL_RANK_RANGE_TO_END, "OP_MAP_REMOVE_BY_VALUE_REL_RANK_RANGE_TO_END"},
+	{ OP_MAP_REMOVE_BY_INDEX_RANGE_TO_END, "OP_MAP_REMOVE_BY_INDEX_RANGE_TO_END"},
+	{ OP_MAP_REMOVE_BY_RANK_RANGE_TO_END, "OP_MAP_REMOVE_BY_RANK_RANGE_TO_END"},
+	{ OP_MAP_GET_BY_KEY_REL_INDEX_RANGE_TO_END, "OP_MAP_GET_BY_KEY_REL_INDEX_RANGE_TO_END"},
+	{ OP_MAP_REMOVE_BY_KEY_REL_INDEX_RANGE, "OP_MAP_REMOVE_BY_KEY_REL_INDEX_RANGE"},
+	{ OP_MAP_REMOVE_BY_VALUE_REL_INDEX_RANGE, "OP_MAP_REMOVE_BY_VALUE_REL_INDEX_RANGE"},
+	{ OP_MAP_REMOVE_BY_VALUE_REL_RANK_RANGE, "OP_MAP_REMOVE_BY_VALUE_REL_RANK_RANGE"},
+	{ OP_MAP_GET_BY_KEY_REL_INDEX_RANGE, "OP_MAP_GET_BY_KEY_REL_INDEX_RANGE"},
+	{ OP_MAP_GET_BY_VALUE_RANK_RANGE_REL_TO_END, "OP_MAP_GET_BY_VALUE_RANK_RANGE_REL_TO_END"},
+	{ OP_MAP_GET_BY_INDEX_RANGE_TO_END, "OP_MAP_GET_BY_INDEX_RANGE_TO_END"},
+	{ OP_MAP_GET_BY_RANK_RANGE_TO_END, "OP_MAP_GET_BY_RANK_RANGE_TO_END"}
 };
 
 static
@@ -500,7 +552,7 @@ exit:
  * We assume that the error object and the policy object are already allocated
  * and initialized (although, we do reset the error object here).
  */
-as_status pyobject_to_policy_admin(as_error * err, PyObject * py_policy,
+as_status pyobject_to_policy_admin(AerospikeClient * self, as_error * err, PyObject * py_policy, // remove self
 		as_policy_admin * policy,
 		as_policy_admin ** policy_p,
 		as_policy_admin * config_admin_policy)
@@ -527,12 +579,12 @@ as_status pyobject_to_policy_admin(as_error * err, PyObject * py_policy,
  * We assume that the error object and the policy object are already allocated
  * and initialized (although, we do reset the error object here).
  */
-as_status pyobject_to_policy_apply(as_error * err, PyObject * py_policy,
+as_status pyobject_to_policy_apply(AerospikeClient * self, as_error * err, PyObject * py_policy,
 		as_policy_apply * policy,
 		as_policy_apply ** policy_p,
 		as_policy_apply * config_apply_policy,
-		as_predexp_list * predexp_list,
-		as_predexp_list ** predexp_list_p)
+		as_exp * exp_list,
+		as_exp ** exp_list_p)
 {
 	// Initialize Policy
 	POLICY_INIT(as_policy_apply);
@@ -551,7 +603,7 @@ as_status pyobject_to_policy_apply(as_error * err, PyObject * py_policy,
 
 	POLICY_SET_FIELD(key, as_policy_key);
 	POLICY_SET_FIELD(replica, as_policy_replica);
-	POLICY_SET_FIELD(gen, as_policy_gen);
+	//POLICY_SET_FIELD(gen, as_policy_gen); removed
 	POLICY_SET_FIELD(commit_level, as_policy_commit_level);
 	POLICY_SET_FIELD(durable_delete, bool);
 
@@ -597,14 +649,14 @@ as_status pyobject_to_policy_info(as_error * err, PyObject * py_policy,
  * Returns AEROSPIKE_OK on success. On error, the err argument is populated.
  * We assume that the error object and the policy object are already allocated
  * and initialized (although, we do reset the error object here).
- * predexp_list is initialized by this function, caller must free.
+ * exp_list is initialized by this function, caller must free.
  */
-as_status pyobject_to_policy_query(as_error * err, PyObject * py_policy,
+as_status pyobject_to_policy_query(AerospikeClient * self, as_error * err, PyObject * py_policy,
 		as_policy_query * policy,
 		as_policy_query ** policy_p,
 		as_policy_query * config_query_policy,
-		as_predexp_list * predexp_list,
-		as_predexp_list ** predexp_list_p)
+		as_exp * exp_list,
+		as_exp ** exp_list_p)
 {
 	// Initialize Policy
 	POLICY_INIT(as_policy_query);
@@ -639,12 +691,12 @@ as_status pyobject_to_policy_query(as_error * err, PyObject * py_policy,
  * We assume that the error object and the policy object are already allocated
  * and initialized (although, we do reset the error object here).
  */
-as_status pyobject_to_policy_read(as_error * err, PyObject * py_policy,
+as_status pyobject_to_policy_read(AerospikeClient * self, as_error * err, PyObject * py_policy,
 		as_policy_read * policy,
 		as_policy_read ** policy_p,
 		as_policy_read * config_read_policy,
-		as_predexp_list * predexp_list,
-		as_predexp_list ** predexp_list_p)
+		as_exp * exp_list,
+		as_exp ** exp_list_p)
 {
 	// Initialize Policy
 	POLICY_INIT(as_policy_read);
@@ -684,12 +736,12 @@ as_status pyobject_to_policy_read(as_error * err, PyObject * py_policy,
  * We assume that the error object and the policy object are already allocated
  * and initialized (although, we do reset the error object here).
  */
-as_status pyobject_to_policy_remove(as_error * err, PyObject * py_policy,
+as_status pyobject_to_policy_remove(AerospikeClient * self, as_error * err, PyObject * py_policy,
 		as_policy_remove * policy,
 		as_policy_remove ** policy_p,
 		as_policy_remove * config_remove_policy,
-		as_predexp_list * predexp_list,
-		as_predexp_list ** predexp_list_p)
+		as_exp * exp_list,
+		as_exp ** exp_list_p)
 {
 	// Initialize Policy
 	POLICY_INIT(as_policy_remove);
@@ -729,12 +781,12 @@ as_status pyobject_to_policy_remove(as_error * err, PyObject * py_policy,
  * We assume that the error object and the policy object are already allocated
  * and initialized (although, we do reset the error object here).
  */
-as_status pyobject_to_policy_scan(as_error * err, PyObject * py_policy,
+as_status pyobject_to_policy_scan(AerospikeClient * self, as_error * err, PyObject * py_policy,
 		as_policy_scan * policy,
 		as_policy_scan ** policy_p,
 		as_policy_scan * config_scan_policy,
-		as_predexp_list * predexp_list,
-		as_predexp_list ** predexp_list_p)
+		as_exp * exp_list,
+		as_exp ** exp_list_p)
 {
 	// Initialize Policy
 	POLICY_INIT(as_policy_scan);
@@ -771,12 +823,12 @@ as_status pyobject_to_policy_scan(as_error * err, PyObject * py_policy,
  * We assume that the error object and the policy object are already allocated
  * and initialized (although, we do reset the error object here).
  */
-as_status pyobject_to_policy_write(as_error * err, PyObject * py_policy,
+as_status pyobject_to_policy_write(AerospikeClient * self, as_error * err, PyObject * py_policy,
 		as_policy_write * policy,
 		as_policy_write ** policy_p,
 		as_policy_write * config_write_policy,
-		as_predexp_list * predexp_list,
-		as_predexp_list ** predexp_list_p)
+		as_exp * exp_list,
+		as_exp ** exp_list_p)
 {
 	// Initialize Policy
 	POLICY_INIT(as_policy_write);
@@ -817,12 +869,12 @@ as_status pyobject_to_policy_write(as_error * err, PyObject * py_policy,
  * We assume that the error object and the policy object are already allocated
  * and initialized (although, we do reset the error object here).
  */
-as_status pyobject_to_policy_operate(as_error * err, PyObject * py_policy,
+as_status pyobject_to_policy_operate(AerospikeClient * self, as_error * err, PyObject * py_policy,
 		as_policy_operate * policy,
 		as_policy_operate ** policy_p,
 		as_policy_operate * config_operate_policy,
-		as_predexp_list * predexp_list,
-		as_predexp_list ** predexp_list_p)
+		as_exp * exp_list,
+		as_exp ** exp_list_p)
 {
 	// Initialize Policy
 	POLICY_INIT(as_policy_operate);
@@ -852,7 +904,17 @@ as_status pyobject_to_policy_operate(as_error * err, PyObject * py_policy,
 	POLICY_SET_FIELD(read_mode_sc, as_policy_read_mode_sc);
 
 	// C client 4.6.7 new policy
-	POLICY_SET_PREDEXP_BASE_FIELD();
+	//POLICY_SET_PREDEXP_BASE_FIELD();
+
+	if (exp_list) {
+		PyObject* py_exp_list = PyDict_GetItemString(py_policy, "expressions");
+		if (py_exp_list) {
+			if (convert_exp_list(self, py_exp_list, &exp_list, err) == AEROSPIKE_OK) {
+				policy->base.filter_exp = exp_list;
+				*exp_list_p = exp_list;
+			}
+		}
+	}
 
 	// Update the policy
 	POLICY_UPDATE();
@@ -866,12 +928,12 @@ as_status pyobject_to_policy_operate(as_error * err, PyObject * py_policy,
  * We assume that the error object and the policy object are already allocated
  * and initialized (although, we do reset the error object here).
  */
-as_status pyobject_to_policy_batch(as_error * err, PyObject * py_policy,
+as_status pyobject_to_policy_batch(AerospikeClient * self, as_error * err, PyObject * py_policy,
 		as_policy_batch * policy,
 		as_policy_batch ** policy_p,
 		as_policy_batch * config_batch_policy,
-		as_predexp_list * predexp_list,
-		as_predexp_list ** predexp_list_p)
+		as_exp * exp_list,
+		as_exp ** exp_list_p)
 {
 	// Initialize Policy
 	POLICY_INIT(as_policy_batch);

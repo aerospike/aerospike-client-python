@@ -163,14 +163,6 @@ static int AerospikeQuery_Where_Add(AerospikeQuery * self, as_predicate_type pre
 				// NOT IMPLEMENTED
 			} else if (in_datatype == AS_INDEX_GEO2DSPHERE) {
 
-				if (!aerospike_has_geo(self->client->as)) {
-					as_error_update(&err, AEROSPIKE_ERR_CLUSTER, "Server does not support geospatial queries");
-					PyObject * py_err = NULL;
-					error_to_pyobject(&err, &py_err);
-					PyErr_SetObject(PyExc_Exception, py_err);
-					return 1;
-				}
-
 				if (PyUnicode_Check(py_bin)) {
 					py_ubin = PyUnicode_AsUTF8String(py_bin);
 					bin = PyBytes_AsString(py_ubin);

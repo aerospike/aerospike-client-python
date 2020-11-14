@@ -241,8 +241,8 @@ PyObject * AerospikeClient_QueryApply_Invoke(
 	PyObject *py_ustr3 = NULL;
 
 	// For converting predexp.
-	as_predexp_list predexp_list;
-	as_predexp_list* predexp_list_p = NULL;
+	as_exp exp_list;
+	as_exp* exp_list_p = NULL;
 
 	as_static_pool static_pool;
 	memset(&static_pool, 0, sizeof(static_pool));
@@ -288,8 +288,8 @@ PyObject * AerospikeClient_QueryApply_Invoke(
 	is_query_init = true;
 
 	if (py_policy) {
-		pyobject_to_policy_write(&err, py_policy, &write_policy, &write_policy_p,
-				&self->as->config.policies.write, &predexp_list, &predexp_list_p);
+		pyobject_to_policy_write(self, &err, py_policy, &write_policy, &write_policy_p,
+				&self->as->config.policies.write, &exp_list, &exp_list_p);
 
 		if (err.code != AEROSPIKE_OK) {
 			goto CLEANUP;
@@ -397,8 +397,8 @@ PyObject * AerospikeClient_QueryApply_Invoke(
 	}
 
 CLEANUP:
-	if (predexp_list_p) {
-		as_predexp_list_destroy(&predexp_list);
+	if (exp_list_p) {
+		as_exp_destroy(exp_list_p);;
 	}
 
 	if (py_ustr1) {

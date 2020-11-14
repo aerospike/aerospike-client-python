@@ -3,7 +3,7 @@ import pytest
 import time
 import sys
 from .as_status_codes import AerospikeStatus
-from aerospike import predexp as as_predexp
+from aerospike_helpers import expressions as exp
 from aerospike import exception as e
 
 aerospike = pytest.importorskip("aerospike")
@@ -85,22 +85,17 @@ class TestScanApply(object):
             _, _, bins = self.as_connection.get(key)
             assert bins['age'] == i + 2
 
-    def test_scan_apply_with_correct_policy_and_predexp(self):
+    def test_scan_apply_with_correct_policy_and_expressions(self):
         """
         Invoke scan_apply() with correct policy.
-        It should invoke the function on all records in the set that match the predexp.
+        It should invoke the function on all records in the set that match the expressions.
         """
-        predexp = [
-            as_predexp.string_bin('name'),
-            as_predexp.string_value('name4'),
-            as_predexp.string_equal(),
-            as_predexp.integer_bin('age'),
-            as_predexp.integer_value(3),
-            as_predexp.integer_unequal(),
-            as_predexp.predexp_and(2)
-        ]
+        expr = exp.And(
+            exp.Eq(exp.StrBin('name'), 'name4'),
+            exp.NE(exp.IntBin('age'), 3),
+        )
 
-        policy = {'timeout': 1000, 'predexp': predexp}
+        policy = {'timeout': 1000, 'expressions': expr.compile()}
         scan_id = self.as_connection.scan_apply("test", None, "bin_lua",
                                                 "mytransform", ['age', 2],
                                                 policy)
@@ -115,18 +110,14 @@ class TestScanApply(object):
             else :
                 assert bins['age'] == i
 
-    def test_scan_apply_with_correct_policy_and_invalid_predexp(self):
+    def test_scan_apply_with_correct_policy_and_invalid_expressions(self):
         """
-        Invoke scan_apply() with invalid predexp.
+        Invoke scan_apply() with invalid expressions.
         """
-        predexp = [
-            as_predexp.string_bin('name'),
-            as_predexp.string_value(4),
-            as_predexp.string_equal(),
-        ]
+        expr = exp.Eq(exp.StrBin('name'), 4)
 
-        policy = {'timeout': 1000, 'predexp': predexp}
-        with pytest.raises(e.ParamError):
+        policy = {'timeout': 1000, 'expressions': expr.compile()}
+        with pytest.raises(e.InvalidRequest):
             scan_id = self.as_connection.scan_apply("test", None, "bin_lua",
                                                     "mytransform", ['age', 2],
                                                     policy)
@@ -151,22 +142,17 @@ class TestScanApply(object):
         _, _, rec = self.as_connection.get(('test', None, 'no_set'))
         assert rec['age'] == 12
 
-    def test_scan_apply_with_none_set_and_predexp(self):
+    def test_scan_apply_with_none_set_and_expressions(self):
         """
         Invoke scan_apply() with set argument as None
-        It should invoke the function on all records in NS that match the predexp
+        It should invoke the function on all records in NS that match the expressions
         """
-        predexp = [
-            as_predexp.string_bin('name'),
-            as_predexp.string_value('name2'),
-            as_predexp.string_equal(),
-            as_predexp.integer_bin('age'),
-            as_predexp.integer_value(3),
-            as_predexp.integer_unequal(),
-            as_predexp.predexp_and(2)
-        ]
+        expr = exp.And(
+            exp.Eq(exp.StrBin('name'), 'name2'),
+            exp.NE(exp.IntBin('age'), 3)
+        )
 
-        policy = {'timeout': 1000, 'predexp': predexp}
+        policy = {'timeout': 1000, 'expressions': expr.compile()}
         scan_id = self.as_connection.scan_apply("test", None, "bin_lua",
                                                 "mytransform", ['age', 2],
                                                 policy)

@@ -6,7 +6,7 @@ from .test_base_class import TestBaseClass
 from .as_status_codes import AerospikeStatus
 from aerospike import exception as e
 from aerospike import predicates as p
-from aerospike import predexp as as_predexp
+from aerospike_helpers import expressions as exp
 from threading import Lock
 
 aerospike = pytest.importorskip("aerospike")
@@ -479,18 +479,14 @@ class TestQuery(TestBaseClass):
         records = query.results()
         assert len(records) == 1
 
-    def test_query_with_results_method_and_predexp(self):
+    def test_query_with_results_method_and_expressions(self):
         """
             Invoke query() with correct arguments
         """
-        predexp = [
-            as_predexp.integer_bin('test_age'),
-            as_predexp.integer_value(1),
-            as_predexp.integer_equal()
-        ]
+        expr = exp.Eq(exp.IntBin('test_age'), 1)
 
         policy = {
-            'predexp': predexp
+            'expressions': expr.compile()
         }
 
         query = self.as_connection.query('test', 'demo')
@@ -503,20 +499,16 @@ class TestQuery(TestBaseClass):
         """
             Invoke query() with correct arguments
         """
-        predexp = [
-            as_predexp.integer_bin('test_age'),
-            as_predexp.integer_value('1'),
-            as_predexp.integer_equal()
-        ]
+        expr = exp.Eq(exp.IntBin('test_age'), 'bad_arg')
 
         policy = {
-            'predexp': predexp
+            'expressions': expr.compile()
         }
 
         query = self.as_connection.query('test', 'demo')
         query.select('name', 'test_age')
 
-        with pytest.raises(e.ParamError):
+        with pytest.raises(e.InvalidRequest):
             query.results(policy)
 
     def test_query_with_results_nobins_options(self):
@@ -636,11 +628,7 @@ class TestQuery(TestBaseClass):
             Invoke query() with correct arguments and using predexp
         """
 
-        predexp = [
-            as_predexp.integer_bin('test_age'),
-            as_predexp.integer_value(4),
-            as_predexp.integer_equal(),
-        ]
+        expr = exp.Eq(exp.IntBin('test_age'), 4)
 
         query = self.as_connection.query('test', 'demo')
         query.select('name', 'test_age')
@@ -652,7 +640,7 @@ class TestQuery(TestBaseClass):
             _, _, record = input_tuple
             records.append(record)
 
-        query.foreach(callback, {'predexp': predexp})
+        query.foreach(callback, {'expressions': expr.compile()})
         assert len(records) == 1
         assert records[0]['test_age'] == 4
 

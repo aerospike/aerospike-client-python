@@ -87,8 +87,8 @@ PyObject * AerospikeQuery_Results(AerospikeQuery * self, PyObject * args, PyObje
 	as_policy_query * query_policy_p = NULL;
 
 	// For converting predexp.
-	as_predexp_list predexp_list;
-	as_predexp_list* predexp_list_p = NULL;
+	as_exp exp_list;
+	as_exp* exp_list_p = NULL;
 
 	if (!self || !self->client->as) {
 		as_error_update(&err, AEROSPIKE_ERR_PARAM, "Invalid aerospike object");
@@ -101,8 +101,8 @@ PyObject * AerospikeQuery_Results(AerospikeQuery * self, PyObject * args, PyObje
 	}
 
 	// Convert python policy object to as_policy_query
-	pyobject_to_policy_query(&err, py_policy, &query_policy, &query_policy_p,
-			&self->client->as->config.policies.query, &predexp_list, &predexp_list_p);
+	pyobject_to_policy_query(self->client, &err, py_policy, &query_policy, &query_policy_p,
+			&self->client->as->config.policies.query, &exp_list, &exp_list_p);
 	if (err.code != AEROSPIKE_OK) {
 		goto CLEANUP;
 	}
@@ -121,8 +121,8 @@ PyObject * AerospikeQuery_Results(AerospikeQuery * self, PyObject * args, PyObje
 	PyEval_RestoreThread(_save);
 
 CLEANUP:/*??trace()*/
-	if (predexp_list_p) {
-		as_predexp_list_destroy(&predexp_list);
+	if (exp_list_p) {
+		as_exp_destroy(exp_list_p);;
 	}
 
 	if (err.code != AEROSPIKE_OK) {

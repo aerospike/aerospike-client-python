@@ -3,7 +3,7 @@ import pytest
 import sys
 import time
 
-from aerospike import predexp as predexp
+from aerospike_helpers import expressions as exp
 from aerospike import exception as e
 
 aerospike = pytest.importorskip('aerospike')
@@ -115,7 +115,7 @@ def clean_test_demo_namespace(as_connection):
 
 
 @pytest.mark.usefixtures('clean_test_demo_namespace')
-class TestQueryPredexp(object):
+class TestQueryExpressions(object):
 
     @pytest.fixture(autouse=True)
     def setup(self, request, as_connection):
@@ -123,57 +123,32 @@ class TestQueryPredexp(object):
         self.query = as_connection.query('test', 'demo')
 
     def test_integer_equals(self):
-        predexps = [
-            predexp.integer_bin('positive_i'),
-            predexp.integer_value(5),
-            predexp.integer_equal()
-        ]
-        self.query.predexp(predexps)
-        results = self.query.results()
+        expr = exp.Eq(exp.IntBin('positive_i'), 5)
+        results = self.query.results(policy={'expressions': expr.compile()})
         assert len(results) == 1
         assert_each_record_bins(results, lambda b: b['positive_i'] == 5)
 
     def test_integer_greater(self):
-        predexps = [
-            predexp.integer_bin('positive_i'),
-            predexp.integer_value(49),
-            predexp.integer_greater()
-        ]
-        self.query.predexp(predexps)
-        results = self.query.results()
+        expr = exp.GT(exp.IntBin('positive_i'), 49)
+        results = self.query.results(policy={'expressions': expr.compile()})
         assert len(results) == 50
         assert_each_record_bins(results, lambda b: b['positive_i'] > 49)
 
     def test_integer_greatereq(self):
-        predexps = [
-            predexp.integer_bin('positive_i'),
-            predexp.integer_value(49),
-            predexp.integer_greatereq()
-        ]
-        self.query.predexp(predexps)
-        results = self.query.results()
+        expr = exp.GE(exp.IntBin('positive_i'), 49)
+        results = self.query.results(policy={'expressions': expr.compile()})
         assert len(results) == 51
         assert_each_record_bins(results, lambda b: b['positive_i'] >= 49)
 
     def test_integer_less(self):
-        predexps = [
-            predexp.integer_bin('positive_i'),
-            predexp.integer_value(10),
-            predexp.integer_less()
-        ]
-        self.query.predexp(predexps)
-        results = self.query.results()
+        expr = exp.LT(exp.IntBin('positive_i'), 10)
+        results = self.query.results(policy={'expressions': expr.compile()})
         assert len(results) == 10
         assert_each_record_bins(results, lambda b: b['positive_i'] < 10)
 
     def test_integer_lesseq(self):
-        predexps = [
-            predexp.integer_bin('positive_i'),
-            predexp.integer_value(10),
-            predexp.integer_lesseq()
-        ]
-        self.query.predexp(predexps)
-        results = self.query.results()
+        expr = exp.LE(exp.IntBin('positive_i'), 10)
+        results = self.query.results(policy={'expressions': expr.compile()})
         assert len(results) == 11
         assert_each_record_bins(results, lambda b: b['positive_i'] <= 10)
 
@@ -189,37 +164,22 @@ class TestQueryPredexp(object):
                 expected_ids.add(i)
                 less_than_128 += 1
 
-        predexps = [
-            predexp.rec_digest_modulo(256),
-            predexp.integer_value(128),
-            predexp.integer_less()
-        ]
+        expr = exp.LT(exp.DigestMod(256), 128)
 
-        self.query.predexp(predexps)
-        results = self.query.results()
+        results = self.query.results(policy={'expressions': expr.compile()})
         assert len(results) == less_than_128
 
     def test_string_equal(self):
-        predexps = [
-            predexp.string_bin('name'),
-            predexp.string_value('Alice'),
-            predexp.string_equal()
-        ]
-        self.query.predexp(predexps)
-        results = self.query.results()
+        expr = exp.Eq(exp.StrBin('name'), 'Alice')
+        results = self.query.results(policy={'expressions': expr.compile()})
         assert len(results) == 25
         assert_each_record_bins(
             results,
             lambda b: b['name'] == 'Alice')
 
     def test_string_unequal(self):
-        predexps = [
-            predexp.string_bin('name'),
-            predexp.string_value('Alice'),
-            predexp.string_unequal()
-        ]
-        self.query.predexp(predexps)
-        results = self.query.results()
+        expr = exp.NE(exp.StrBin('name'), 'Alice')
+        results = self.query.results(policy={'expressions': expr.compile()})
         assert len(results) == 75
         assert_each_record_bins(
             results,
@@ -228,116 +188,60 @@ class TestQueryPredexp(object):
     # TODO GEO BIN WITHIN CONTAINS
 
     def test_geo_within(self):
-        predexps = [
-            predexp.geojson_bin('point'),
-            predexp.geojson_value(geo_object1.dumps()),
-            predexp.geojson_within()
-        ]
+        expr = exp.CmpGeo(exp.GeoBin('point'), geo_object1)
 
         query = self.as_connection.query('test', 'geo')
-        query.predexp(predexps)
-        results = query.results()
+        results = query.results(policy={'expressions': expr.compile()})
         assert len(results) == 1
         assert results[0][2]['id'] == 1
 
     def test_geo_contains(self):
-        predexps = [
-            predexp.geojson_bin('region'),
-            predexp.geojson_value(geo_point2.dumps()),
-            predexp.geojson_contains()
-        ]
+        expr = exp.CmpGeo(geo_point2, exp.GeoBin('region'))
 
         query = self.as_connection.query('test', 'geo')
-        query.predexp(predexps)
-        results = query.results()
+        results = query.results(policy={'expressions': expr.compile()})
         assert len(results) == 1
         assert results[0][2]['id'] == 2
 
-    @pytest.mark.xfail(reason="Server does not support this")
     def test_geo_contains2(self):
-        predexps = [
-            predexp.geojson_bin('region'),
-            predexp.geojson_bin('point'),
-            predexp.geojson_contains()
-        ]
+        expr = exp.CmpGeo(exp.GeoBin('point'), exp.GeoBin('region'))
 
         query = self.as_connection.query('test', 'geo')
-        query.predexp(predexps)
-        results = query.results()
+        results = query.results(policy={'expressions': expr.compile()})
         assert len(results) == 2
 
-    @pytest.mark.xfail(reason="Server does not support this")
-    def test_geo_variable1(self):
-
-        predexps = [
-            predexp.geojson_var('list_entry'),
-            predexp.geojson_value(geo_object1.dumps()),
-            predexp.geojson_within(),
-            predexp.list_bin('geolist'),
-            predexp.list_iterate_or('list_entry')
-        ]
-
-        query = self.as_connection.query('test', 'geo')
-        query.predexp(predexps)
-        results = query.results()
-        assert len(results) == 1
-        assert results[0][2]['id'] == 1
-
     def test_not(self):
-        predexps = [
-            predexp.integer_bin('positive_i'),
-            predexp.integer_value(5),
-            predexp.integer_equal(),
-            predexp.predexp_not()
-        ]
-        self.query.predexp(predexps)
-        results = self.query.results()
+        expr = exp.Not(exp.Eq(exp.IntBin('positive_i'), 5))
+        results = self.query.results(policy={'expressions': expr.compile()})
 
         assert len(results) == 99
         assert_each_record_bins(results, lambda b: b['positive_i'] != 5)
 
     def test_or(self):
-        predexps = [
-            predexp.integer_bin('positive_i'),
-            predexp.integer_value(5),
-            predexp.integer_equal(),
-            predexp.integer_bin('positive_i'),
-            predexp.integer_value(10),
-            predexp.integer_equal(),
-            predexp.predexp_or(2)
-        ]
-        self.query.predexp(predexps)
-        results = self.query.results()
+        expr = exp.Or(
+            exp.Eq(exp.IntBin('positive_i'), 5),
+            exp.Eq(exp.IntBin('positive_i'), 10)
+        )
+        results = self.query.results(policy={'expressions': expr.compile()})
         assert len(results) == 2
         assert_each_record_bins(
             results,
             lambda b: b['positive_i'] in (5, 10))
 
     def test_and(self):
-        predexps = [
-            predexp.integer_bin('positive_i'),
-            predexp.integer_value(10),
-            predexp.integer_greater(),
-            predexp.integer_bin('positive_i'),
-            predexp.integer_value(20),
-            predexp.integer_less(),
-            predexp.predexp_and(2)
-        ]
-        self.query.predexp(predexps)
-        results = self.query.results()
+        expr = exp.And(
+            exp.GT(exp.IntBin('positive_i'), 10),
+            exp.LT(exp.IntBin('positive_i'), 20)
+        )
+        results = self.query.results(policy={'expressions': expr.compile()})
         assert len(results) == 9
         assert_each_record_bins(
             results,
             lambda b: b['positive_i'] > 10 and b['positive_i'] < 20)
 
     def test_string_regex(self):
-        predexps = [
-            predexp.string_bin('name'),
-            predexp.string_value('.*O.*'),
-            predexp.string_regex(aerospike.REGEX_ICASE)
-        ]
-        self.query.predexp(predexps)
-        results = self.query.results()
+        expr = exp.CmpRegex(aerospike.REGEX_ICASE, '.*O.*', exp.StrBin('name'))
+        results = self.query.results(policy={'expressions': expr.compile()})
         assert len(results) == 50
         assert_each_record_bins(
             results,
@@ -345,64 +249,47 @@ class TestQueryPredexp(object):
 
     # List Tests
     def test_list_or_int(self):
-        predexps = [
-            predexp.integer_var('list_val'),
-            predexp.integer_value(10),
-            predexp.integer_greater(),
-            predexp.list_bin('plus_five_l'),
-            predexp.list_iterate_or('list_val')
-        ]
-        self.query.predexp(predexps)
-        results = self.query.results()
+        expr = exp.GT(
+            exp.ListGetByRank(None, aerospike.LIST_RETURN_VALUE, exp.ResultType.INTEGER, -1, 'plus_five_l'),
+            10
+        )
+        results = self.query.results(policy={'expressions': expr.compile()})
         assert len(results) == 94  # This isn't true for 0,1,2,3,4,5 so 100 - 6
         assert_each_record_bins(
             results,
             lambda b: b['plus_five_l'][-1] > 10)
 
     def test_list_and_int(self):
-        predexps = [
-            predexp.integer_var('list_val'),
-            predexp.integer_value(10),
-            predexp.integer_greater(),
-            predexp.list_bin('plus_five_l'),
-            predexp.list_iterate_and('list_val')
-        ]
-        self.query.predexp(predexps)
-        results = self.query.results()
+        expr = exp.GT(
+            exp.ListGetByRank(None, aerospike.LIST_RETURN_VALUE, exp.ResultType.INTEGER, 0, 'plus_five_l'),
+            10
+        )
+        results = self.query.results(policy={'expressions': expr.compile()})
         assert len(results) == 89  # This isn't true for the first 11
         assert_each_record_bins(
             results,
             lambda b: b['plus_five_l'][-1] > 10)
 
     def test_list_or_str(self):
-        predexps = [
-            predexp.string_var('list_val'),
-            predexp.string_value('Bob'),
-            predexp.string_equal(),
-            predexp.list_bin('slist'),
-            predexp.list_iterate_or('list_val')
-        ]
+        expr = exp.GE(
+            exp.ListGetByValue(None, aerospike.LIST_RETURN_COUNT, 'Bob', 'slist'),
+            1
+        )
         query = self.as_connection.query('test', 'demo2')
-        query.predexp(predexps)
-        results = query.results()
+        results = query.results(policy={'expressions': expr.compile()})
         assert len(results) == 2
         assert_each_record_bins(
             results,
             lambda b: any([name == 'Bob' for name in b['slist']]))
 
     def test_list_and_str(self):
-
-        predexps = [
-            predexp.string_var('list_val'),
-            predexp.string_value('Bob'),
-            predexp.string_unequal(),
-            predexp.list_bin('slist'),
-            predexp.list_iterate_and('list_val')
-        ]
+        expr = exp.Eq(
+            exp.ListGetByValue(None, aerospike.LIST_RETURN_COUNT, 'Bob', 'slist'),
+            0
+        )
         # Only one friend list without Bob
         query = self.as_connection.query('test', 'demo2')
-        query.predexp(predexps)
-        results = query.results()
+        results = query.results(policy={'expressions': expr.compile()})
         assert len(results) == 1
         assert_each_record_bins(
             results,
@@ -410,33 +297,24 @@ class TestQueryPredexp(object):
 
     # Mapkey Tests
     def test_mapkey_iterate_or(self):
-
-        predexps = [
-            predexp.string_var('map_key'),
-            predexp.string_value('Bob'),
-            predexp.string_equal(),
-            predexp.map_bin('map'),
-            predexp.mapkey_iterate_or('map_key')
-        ]
+        expr = exp.GE(
+            exp.MapGetByKey(None, aerospike.LIST_RETURN_COUNT, exp.ResultType.INTEGER, 'Bob', 'map'),
+            1
+        )
         query = self.as_connection.query('test', 'demo3')
-        query.predexp(predexps)
-        results = query.results()
+        results = query.results(policy={'expressions': expr.compile()})
         assert len(results) == 2
         assert_each_record_bins(
             results,
             lambda b: any([key == 'Bob' for key in b['map']]))
 
     def test_mapkey_iterate_and(self):
-        predexps = [
-            predexp.string_var('map_key'),
-            predexp.string_value('Bob'),
-            predexp.string_unequal(),
-            predexp.map_bin('map'),
-            predexp.mapkey_iterate_and('map_key')
-        ]
+        expr = exp.Eq(
+            exp.MapGetByKey(None, aerospike.LIST_RETURN_COUNT, exp.ResultType.INTEGER, 'Bob', 'map'),
+            0
+        )
         query = self.as_connection.query('test', 'demo3')
-        query.predexp(predexps)
-        results = query.results()
+        results = query.results(policy={'expressions': expr.compile()})
         assert len(results) == 1
         assert_each_record_bins(
             results,
@@ -444,39 +322,30 @@ class TestQueryPredexp(object):
 
     # MapValueTest
     def test_mapvalue_iterate_or(self):
-
-        predexps = [
-            predexp.integer_var('map_value'),
-            predexp.integer_value(3),
-            predexp.integer_equal(),
-            predexp.map_bin('map'),
-            predexp.mapval_iterate_or('map_value')
-        ]
+        expr = exp.GE(
+            exp.MapGetByValue(None, aerospike.LIST_RETURN_COUNT, 3, 'map'),
+            1
+        )
         query = self.as_connection.query('test', 'demo3')
-        query.predexp(predexps)
-        results = query.results()
+        results = query.results(policy={'expressions': expr.compile()})
         assert len(results) == 2
         assert_each_record_bins(
             results,
             lambda b: any([b['map'][key] == 3 for key in b['map']]))
 
     def test_mapvalue_iterate_and(self):
-        predexps = [
-            predexp.integer_var('map_value'),
-            predexp.integer_value(3),
-            predexp.integer_unequal(),
-            predexp.map_bin('map'),
-            predexp.mapval_iterate_and('map_value')
-        ]
+        expr = exp.Eq(
+            exp.MapGetByValue(None, aerospike.LIST_RETURN_COUNT, 3, 'map'),
+            0
+        )
         query = self.as_connection.query('test', 'demo3')
-        query.predexp(predexps)
-        results = query.results()
+        results = query.results(policy={'expressions': expr.compile()})
         assert len(results) == 1
         assert_each_record_bins(
             results,
             lambda b: all([b['map'][key] != 3 for key in b['map']]))
 
-    @pytest.mark.xfail(reason="This only works when not running data in memory")
+    @pytest.mark.xfail(reason="This only works when not running data in memory") #TODO test this on device config
     def test_rec_device_size(self):
         long_str_len = 65 * 1024
         long_str = long_str_len * 'a'  # A 65K string
@@ -492,13 +361,11 @@ class TestQueryPredexp(object):
             self.as_connection.put(key, {'string': "short"})
 
         query = self.as_connection.query('test', 'dev_size')
-        predexps = [
-            predexp.rec_device_size(),
-            predexp.integer_value(64 * 1024),
-            predexp.integer_greater()
-        ]
-        query.predexp(predexps)
-        results = query.results()
+        expr = exp.GT(
+            exp.DeviceSize(),
+            64 * 1024
+        )
+        results = query.results(policy={'expressions': expr.compile()})
         assert len(results) == 5
         assert_each_record_bins(
             results,
@@ -522,13 +389,9 @@ class TestQueryPredexp(object):
             self.as_connection.put(key, {'time': 'later'})
 
         query = self.as_connection.query('test', 'lut')
-        predexps = [
-            predexp.rec_last_update(),
-            predexp.integer_value(cutoff_nanos),
-            predexp.integer_less()
-        ]
-        query.predexp(predexps)
-        results = query.results()
+
+        expr = exp.LT(exp.LastUpdateTime(), cutoff_nanos)
+        results = query.results(policy={'expressions': expr.compile()})
         assert len(results) == 7
         assert_each_record_bins(
             results,
@@ -553,120 +416,92 @@ class TestQueryPredexp(object):
             self.as_connection.put(key, {'time': 'later'}, meta={'ttl': 1000})
 
         query = self.as_connection.query('test', 'ttl')
-        predexps = [
-            predexp.rec_void_time(),
-            predexp.integer_value(void_time_range_start),
-            predexp.integer_greater(),
 
-            predexp.rec_void_time(),
-            predexp.integer_value(void_time_range_end),
-            predexp.integer_less(),
-
-            predexp.predexp_and(2)
-        ]
-        query.predexp(predexps)
-        results = query.results()
+        expr = exp.And(
+            exp.GT(exp.VoidTime(), void_time_range_start),
+            exp.LT(exp.VoidTime(), void_time_range_end)
+        )
+        results = query.results(policy={'expressions': expr.compile()})
         assert len(results) == 7
         assert_each_record_bins(
             results,
             lambda b: b['time'] == 'earlier')
 
-    def test_with_or_nexpr_too_big(self):
-        predexps = [predexp.predexp_or(1 << 65)] # This needs to be over 2 ^ 63 - 1
+    def test_with_eq_expr_too_big(self):
+        expr = exp.Eq(1, 1 << 64) # This needs to be over 2 ^ 63 - 1
         query = self.as_connection.query('test', 'or')
         with pytest.raises(e.ParamError):
-            query.predexp(predexps)
-
-    def test_with_and_nexpr_too_big(self):
-        predexps = [predexp.predexp_and(1 << 65)] # This needs to be over 2 ^ 63 - 1
-        query = self.as_connection.query('test', 'or')
-        with pytest.raises(e.ParamError):
-            query.predexp(predexps)
+            query.results(policy={'expressions': expr.compile()})
 
     def test_with_invalid_predicate(self):
         '''
         This passes something which isn't a predicate
         '''
-        predexps = [
-            predexp.integer_var('map_value'),
-            predexp.integer_value(3),
-            predexp.integer_equal(),
-            5
-        ]
-        with pytest.raises(e.ParamError):
-            self.query.predexp(predexps)
+        expr = exp.Or(
+            exp.Eq(1, 1),
+            'bad_expression'
+        )
+        with pytest.raises(e.InvalidRequest):
+            self.query.results(policy={'expressions': expr.compile()})
+
+    # @pytest.mark.parametrize(
+    #     "func",
+    #     [
+    #         predexp.integer_value,
+    #         predexp.predexp_and,
+    #         predexp.predexp_or,
+    #         predexp.rec_digest_modulo,
+    #     ])
+    # def test_with_wrong_predicate_argument_type_expecting_int(self, func):
+    #     '''
+    #     These functions all expect an integer argument, call with a string
+    #     '''
+    #     predexps = [
+    #         func("five")
+    #     ]
+    #     with pytest.raises(e.ParamError):
+    #         self.query.predexp(predexps)
 
     @pytest.mark.parametrize(
         "func",
         [
-            predexp.integer_value,
-            predexp.predexp_and,
-            predexp.predexp_or,
-            predexp.rec_digest_modulo,
-        ])
-    def test_with_wrong_predicate_argument_type_expecting_int(self, func):
-        '''
-        These functions all expect an integer argument, call with a string
-        '''
-        predexps = [
-            func("five")
-        ]
-        with pytest.raises(e.ParamError):
-            self.query.predexp(predexps)
-
-    @pytest.mark.parametrize(
-        "func",
-        [
-            predexp.integer_bin,
-            predexp.string_bin,
-            predexp.geojson_bin,
-            predexp.map_bin,
-            predexp.list_bin,
-            predexp.string_value,
-            predexp.geojson_value,
-            predexp.integer_var,
-            predexp.string_var,
-            predexp.geojson_var,
-            predexp.list_iterate_or,
-            predexp.list_iterate_and,
-            predexp.mapkey_iterate_or,
-            predexp.mapkey_iterate_and,
-            predexp.mapval_iterate_and,
-            predexp.mapval_iterate_or
+            exp.IntBin,
+            exp.StrBin,
+            exp.GeoBin,
+            exp.MapBin,
+            exp.ListBin,
+            # exp.string_value,
+            # predexp.geojson_value,
+            # predexp.integer_var,
+            # predexp.string_var,
+            # predexp.geojson_var,
+            # predexp.list_iterate_or,
+            # predexp.list_iterate_and,
+            # predexp.mapkey_iterate_or,
+            # predexp.mapkey_iterate_and,
+            # predexp.mapval_iterate_and,
+            # predexp.mapval_iterate_or
         ])
     def test_with_wrong_predicate_argument_type_expecting_str(self, func):
         '''
         These functions all expect an integer argument, call with a string
         '''
-        predexps = [
-            func(5)
-        ]
+        expr = func(5)
         with pytest.raises(e.ParamError):
-            self.query.predexp(predexps)
+            self.query.results(policy={'expressions': expr.compile()})
 
     def test_with_invalid_predicate_tuple(self):
         '''
         This passes something which isn't a predicate
         '''
-        predexps = [
-            (1234, "not real")
-        ]
+        expr = (1234, "not real")
         with pytest.raises(e.ParamError):
-            self.query.predexp(predexps)
+            self.query.results(policy={'expressions': expr})
 
-    def test_with_empty_predexp_list(self):
+    def test_with_empty_exp_list(self):
         '''
         Pass an empty list of predicates
         '''
-        predexps = []
+        expr = []
         with pytest.raises(e.ParamError):
-            self.query.predexp(predexps)
-
-
-    def test_with_non_list_predicate(self):
-        '''
-        This passes something which isn't a list
-        '''
-        predexps = "integer_bin(a) ,5, integer_equal"
-        with pytest.raises(e.ParamError):
-            self.query.predexp(predexps)
+            self.query.results(policy={'expressions': expr})

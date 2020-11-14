@@ -55,8 +55,6 @@
 #define PY_EXCEPTION_LINE 3
 #define AS_PY_EXCEPTION_IN_DOUBT 4
 
-#define CTX_KEY "ctx"
-
 bool requires_int(uint64_t op);
 
 as_status as_udf_file_to_pyobject( as_error *err, as_udf_file * entry, PyObject ** py_file )
@@ -446,19 +444,7 @@ as_status pyobject_to_val(AerospikeClient * self, as_error * err, PyObject * py_
 		PyObject* py_data = PyObject_GenericGetAttr(py_obj, py_parameter);
 		Py_DECREF(py_parameter);
 		char *geo_value = PyString_AsString(AerospikeGeospatial_DoDumps(py_data, err));
-		if (aerospike_has_geo(self->as)) {
-			*val = (as_val *) as_geojson_new(geo_value, false);
-		} else {
-			as_bytes *bytes;
-			GET_BYTES_POOL(bytes, static_pool, err);
-			if (err->code == AEROSPIKE_OK) {
-				if (serialize_based_on_serializer_policy(self, serializer_type,
-					&bytes, py_data, err) != AEROSPIKE_OK) {
-					return err->code;
-				}
-				*val = (as_val *) bytes;
-			}
-		}
+		*val = (as_val *) as_geojson_new(geo_value, false);
 	} else if (PyByteArray_Check(py_obj)) {
 		as_bytes *bytes;
 		GET_BYTES_POOL(bytes, static_pool, err);
@@ -601,19 +587,7 @@ as_status pyobject_to_record(AerospikeClient * self, as_error * err, PyObject * 
 					geo_value = PyString_AsString(py_dumps);
 				}
 
-				if (aerospike_has_geo(self->as)) {
-					ret_val = as_record_set_geojson_strp(rec, name, strdup(geo_value), true);
-				} else {
-					as_bytes *bytes;
-					GET_BYTES_POOL(bytes, static_pool, err);
-					if (err->code == AEROSPIKE_OK) {
-						if (serialize_based_on_serializer_policy(self, serializer_type,
-							&bytes, py_data, err) != AEROSPIKE_OK) {
-							return err->code;
-						}
-						ret_val = as_record_set_bytes(rec, name, bytes);
-					}
-				}
+				ret_val = as_record_set_geojson_strp(rec, name, strdup(geo_value), true);
 				if (py_ustr != NULL) {
 					Py_DECREF(py_ustr);
 				}
@@ -785,19 +759,7 @@ as_status pyobject_to_astype_write(AerospikeClient * self, as_error * err, PyObj
 		PyObject* py_data = PyObject_GenericGetAttr(py_value, py_parameter);
 		Py_DECREF(py_parameter);
 		char *geo_value = PyString_AsString(AerospikeGeospatial_DoDumps(py_data, err));
-		if (aerospike_has_geo(self->as)) {
-			*val = (as_val *) as_geojson_new(geo_value, false);
-		} else {
-			as_bytes *bytes;
-			GET_BYTES_POOL(bytes, static_pool, err);
-			if (err->code == AEROSPIKE_OK) {
-				if (serialize_based_on_serializer_policy(self, serializer_type,
-					&bytes, py_data, err) != AEROSPIKE_OK) {
-					return err->code;
-				}
-				*val = (as_val *) bytes;
-			}
-		}
+		*val = (as_val *) as_geojson_new(geo_value, false);
 	} else if (PyByteArray_Check(py_value)) {
 		uint8_t * b = (uint8_t *) PyByteArray_AsString(py_value);
 		uint32_t z = (uint32_t) PyByteArray_Size(py_value);
@@ -1687,17 +1649,8 @@ void initialize_bin_for_strictypes(AerospikeClient *self, as_error *err, PyObjec
 	} else if (!strcmp(py_value->ob_type->tp_name, "aerospike.Geospatial")) {
 		PyObject* py_data = PyObject_GenericGetAttr(py_value, PyString_FromString("geo_data"));
 		char *geo_value = PyString_AsString(AerospikeGeospatial_DoDumps(py_data, err));
-		if (aerospike_has_geo(self->as)) {
-			as_geojson_init((as_geojson *) &binop_bin->value, geo_value, false);
-			binop_bin->valuep = &binop_bin->value;
-		} else {
-			as_bytes *bytes;
-			GET_BYTES_POOL(bytes, static_pool, err);
-			serialize_based_on_serializer_policy(self, SERIALIZER_PYTHON,
-					&bytes, py_data, err);
-			((as_val *) &binop_bin->value)->type = AS_UNKNOWN;
-			binop_bin->valuep = (as_bin_value *) bytes;
-		}
+		as_geojson_init((as_geojson *) &binop_bin->value, geo_value, false);
+		binop_bin->valuep = &binop_bin->value;
 	} else if (!strcmp(py_value->ob_type->tp_name, "aerospike.null")) {
 		((as_val *) &binop_bin->value)->type = AS_UNKNOWN;
 		binop_bin->valuep = (as_bin_value *) &as_nil;
@@ -1963,7 +1916,7 @@ as_status get_cdt_ctx(AerospikeClient* self, as_error* err, as_cdt_ctx* cdt_ctx,
     PyObject* op_dict, bool* ctx_in_use, as_static_pool* static_pool, int serializer_type)
 {
     PyObject* py_ctx = PyDict_GetItemString(op_dict, CTX_KEY);
-    int int_val = 0;
+    long int_val = 0;
     as_val* val = NULL;
 
     if (!py_ctx) {
@@ -1980,19 +1933,19 @@ as_status get_cdt_ctx(AerospikeClient* self, as_error* err, as_cdt_ctx* cdt_ctx,
             PyObject* id_temp = PyObject_GetAttrString(py_val, "id");
             if (PyErr_Occurred()) {
 				as_cdt_ctx_destroy(cdt_ctx);
-                return as_error_update(err, AEROSPIKE_ERR_PARAM, "Failed to convert %s", CTX_KEY);
+                return as_error_update(err, AEROSPIKE_ERR_PARAM, "Failed to convert %s, id", CTX_KEY);
             }
 
             PyObject* value_temp = PyObject_GetAttrString(py_val, "value");
             if (PyErr_Occurred()) {
 				as_cdt_ctx_destroy(cdt_ctx);
-                return as_error_update(err, AEROSPIKE_ERR_PARAM, "Failed to convert %s", CTX_KEY);
+                return as_error_update(err, AEROSPIKE_ERR_PARAM, "Failed to convert %s, value", CTX_KEY);
             }
 
             uint64_t item_type = PyLong_AsUnsignedLong(id_temp);
             if (PyErr_Occurred()) {
 				as_cdt_ctx_destroy(cdt_ctx);
-                return as_error_update(err, AEROSPIKE_ERR_PARAM, "Failed to convert %s", CTX_KEY);
+                return as_error_update(err, AEROSPIKE_ERR_PARAM, "Failed to convert %s, id to uint64_t", CTX_KEY);
             }
 
             // add an as_cdt_ctx with value to cdt_ctx
@@ -2000,7 +1953,7 @@ as_status get_cdt_ctx(AerospikeClient* self, as_error* err, as_cdt_ctx* cdt_ctx,
                 int_val = PyLong_AsLong(value_temp);
                 if (PyErr_Occurred()) {
 					as_cdt_ctx_destroy(cdt_ctx);
-                    return as_error_update(err, AEROSPIKE_ERR_PARAM, "Failed to convert %s", CTX_KEY);
+                    return as_error_update(err, AEROSPIKE_ERR_PARAM, "Failed to convert %s, value to long", CTX_KEY);
                 }
                 switch(item_type) {
                     case AS_CDT_CTX_LIST_INDEX:
@@ -2021,7 +1974,7 @@ as_status get_cdt_ctx(AerospikeClient* self, as_error* err, as_cdt_ctx* cdt_ctx,
                 }
             } else {
                 if (pyobject_to_val(self, err, value_temp, &val, static_pool, serializer_type) != AEROSPIKE_OK) {
-                    return as_error_update(err, AEROSPIKE_ERR_PARAM, "Failed to convert %s", CTX_KEY);
+                    return as_error_update(err, AEROSPIKE_ERR_PARAM, "Failed to convert %s, value to as_val", CTX_KEY);
                 }
                 switch(item_type) {
                     case AS_CDT_CTX_LIST_VALUE:
