@@ -405,7 +405,7 @@ Scan Policies
             |
             | Default: ``False``
         * **fail_on_cluster_change** :class:`bool`
-            | Abort the scan if the cluster is not in a stable state. 
+            | Abort the scan if the cluster is not in a stable state. Only used for server versions < 4.9. 
             | 
             | Default: ``False``
         * **durable_delete** :class:`bool` 
