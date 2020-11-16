@@ -148,3 +148,11 @@ class TestQueryApply(object):
             query_id = self.as_connection.query_apply(
                 "test", "demo", self.age_range_pred, "query_apply",
                 "mark_as_applied", ['name', 2], policy)
+
+    def _wait_for_query_complete(self, query_id):
+        while True:
+            response = self.as_connection.job_info(
+                query_id, aerospike.JOB_QUERY)
+            if response['status'] != aerospike.JOB_STATUS_INPROGRESS:
+                return
+            time.sleep(0.1)
