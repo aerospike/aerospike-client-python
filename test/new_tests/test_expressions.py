@@ -158,7 +158,7 @@ LIST_BIN_EXAMPLE = [
 ]
 
 
-class TestPred2(TestBaseClass):
+class TestExpressions(TestBaseClass):
 
     @pytest.fixture(autouse=True)
     def setup(self, request, as_connection):
@@ -383,14 +383,7 @@ class TestPred2(TestBaseClass):
         else:
             ctx = None
         
-        expr = Eq(ListGetByIndex(ctx, return_type, bin_type, index, 'list_bin'), check)
-        # expr = Eq({1: 1, 2: 2, 3: 6}, {1: 1, 2: 2, 3: 6})
-        # expr = Eq(
-        #             MapSize(None, 
-        #                 MapPutItems(None, None, {4: 4}, "imap_bin")),
-        #             4    
-        # )
-                    
+        expr = Eq(ListGetByIndex(ctx, return_type, bin_type, index, 'list_bin'), check)         
         verify_all_expression_avenues(self.as_connection, self.test_ns, self.test_set, expr.compile(), 'list_bin', expected)
 
 # Oct 06 2020 12:08:36 GMT: WARNING (particle): (msgpack_in.c:1099) msgpack_sz_internal: invalid at i 1 count 2

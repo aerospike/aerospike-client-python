@@ -52,9 +52,13 @@ extern PyObject * AerospikeClient_Exists_Invoke(
 	as_key key;
 	as_record * rec = NULL;
 
-	// For converting predexp.
+	// For converting expressions.
 	as_exp exp_list;
 	as_exp* exp_list_p = NULL;
+
+	// For converting predexp.
+	as_predexp_list predexp_list;
+	as_predexp_list* predexp_list_p = NULL;
 
 	// Initialisation flags
 	bool key_initialised = false;
@@ -82,7 +86,7 @@ extern PyObject * AerospikeClient_Exists_Invoke(
 
 	// Convert python policy object to as_policy_exists
 	pyobject_to_policy_read(self, &err, py_policy, &read_policy, &read_policy_p,
-			&self->as->config.policies.read, &exp_list, &exp_list_p);
+			&self->as->config.policies.read, &predexp_list, &predexp_list_p, &exp_list, &exp_list_p);
 	if (err.code != AEROSPIKE_OK) {
 		goto CLEANUP;
 	}
@@ -124,6 +128,10 @@ CLEANUP:
 
 	if (exp_list_p) {
 		as_exp_destroy(exp_list_p);;
+	}
+
+	if (predexp_list_p) {
+		as_predexp_list_destroy(&predexp_list);
 	}
 
 	if (key_initialised == true) {

@@ -253,9 +253,13 @@ PyObject * AerospikeClient_Exists_Many_Invoke(
 	as_policy_batch policy;
 	as_policy_batch * batch_policy_p = NULL;
 
-	// For converting predexp.
+	// For converting expressions.
 	as_exp exp_list;
 	as_exp* exp_list_p = NULL;
+
+	// For converting predexp.
+	as_predexp_list predexp_list;
+	as_predexp_list* predexp_list_p = NULL;
 
 	// Initialize error
 	as_error_init(&err);
@@ -272,7 +276,7 @@ PyObject * AerospikeClient_Exists_Many_Invoke(
 
 	// Convert python policy object to as_policy_batch
 	pyobject_to_policy_batch(self, &err, py_policy, &policy, &batch_policy_p,
-			&self->as->config.policies.batch, &exp_list, &exp_list_p);
+			&self->as->config.policies.batch, &predexp_list, &predexp_list_p, &exp_list, &exp_list_p);
 	if (err.code != AEROSPIKE_OK) {
 		goto CLEANUP;
 	}
@@ -285,6 +289,10 @@ CLEANUP:
 
 	if (exp_list_p) {
 		as_exp_destroy(exp_list_p);;
+	}
+
+	if (predexp_list_p) {
+		as_predexp_list_destroy(&predexp_list);
 	}
 
 	if (err.code != AEROSPIKE_OK) {

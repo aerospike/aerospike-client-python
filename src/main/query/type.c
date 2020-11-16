@@ -99,6 +99,9 @@ static PyMethodDef AerospikeQuery_Type_Methods[] = {
 	{"where",	(PyCFunction) AerospikeQuery_Where,		METH_VARARGS,
 				where_doc},
 
+	{"predexp", (PyCFunction) AerospikeQuery_Predexp,   METH_VARARGS,
+				predexp_doc},
+
     {"execute_background", (PyCFunction) AerospikeQuery_ExecuteBackground, METH_VARARGS | METH_KEYWORDS,
                 execute_background_doc},
 

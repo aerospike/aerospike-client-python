@@ -109,8 +109,8 @@ string_and_pyuni_from_pystring(PyObject* py_string, PyObject** pyuni_r, char** c
 as_status
 get_cdt_ctx(AerospikeClient* self, as_error* err, as_cdt_ctx* cdt_ctx, PyObject* op_dict, bool* ctx_in_use, as_static_pool* static_pool, int serializer_type);
 
-// as_status 
-// convert_predexp_list(PyObject* py_predexp_list, as_predexp_list* predexp_list, as_error* err);
+as_status 
+convert_predexp_list(PyObject* py_predexp_list, as_predexp_list* predexp_list, as_error* err);
 
 as_status 
 convert_exp_list(AerospikeClient * self, PyObject* py_exp_list, as_exp** exp_list, as_error* err);

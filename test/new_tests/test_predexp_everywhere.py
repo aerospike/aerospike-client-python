@@ -1,851 +1,452 @@
 # -*- coding: utf-8 -*-
-import sys
-import random
-import unittest
-from datetime import datetime
-import time
 
 import pytest
+import sys
 
+from .test_base_class import TestBaseClass
+from .as_status_codes import AerospikeStatus
 from aerospike import exception as e
-from aerospike_helpers import expressions as exp
-from aerospike_helpers import cdt_ctx
-from aerospike_helpers.operations import list_operations
-from aerospike_helpers.operations import map_operations
-from aerospike_helpers.operations import operations
-
-
 aerospike = pytest.importorskip("aerospike")
 try:
     import aerospike
+    from aerospike import predexp as as_predexp
 except:
     print("Please install aerospike python client.")
     sys.exit(1)
 
-geo_circle = aerospike.GeoJSON(
-    {"type": "AeroCircle", "coordinates": [[-132.0, 37.5], 1000]}
-)
 
-geo_point = aerospike.GeoJSON(
-    {"type": "Point", "coordinates": [-132.0, 37.5]}
-)
+'''
+Summary of functions:
+Sample:
+list_append(binname, val): appends an item to the end of a list
+list_append_extra(binname, val, extra_arg): same as above, extra arg is unused
 
-geo_point2 = aerospike.GeoJSON(
-    {"type": "Point", "coordinates": [-60.5, 20]}
-)
+TestRecord:
+bin_udf_operation_integer(record, bin_name, x, y):
+    adds x + y to record[bin_name]
+bin_udf_operation_string(record, bin_name, str):
+    concatenates str to record[bin_name]
+bin_udf_operation_bool(record, bin_name): returns record[bin_name]
+list_iterate(record, bin, index_of_ele): equivalent to:
+    record[bin].append(58)
+    record[bin][index_of_ele] = 222
+list_iterate_returns_list(record, bin, index_of_ele):
+    Same as previous but returns the modified list
 
-class TestPredEveryWhere(object):
+map_iterate(record, bin, set_value): Changes every value
+    in the map map[bin] to be equal to set_value
+
+map_iterate_returns_map(record, bin, set_value):
+    Same as above but returns the map
+function udf_returns_record(rec):
+    Return a map representation of a record
+udf_without_arg_and_return(record):
+    does nothing and returns nothing
+function udf_put_bytes(record, bin):
+    creates an array of bytes and inserts it in record[bin]
+
+BasicOps:
+
+create_record(rec, value)
+    creates a new record with the data
+        record['bin'] = value
+'''
+
+
+def add_indexes_and_udfs(client):
+    '''
+    Load the UDFs used in the tests and setup indexes
+    '''
+    policy = {}
+    try:
+        client.index_integer_create(
+            'test', 'demo', 'age', 'age_index', policy)
+    except e.IndexFoundError:
+        pass
+    try:
+        client.index_integer_create(
+            'test', 'demo', 'age1', 'age_index1', policy)
+    except e.IndexFoundError:
+        pass
+
+    udf_type = 0
+    udf_files = ("sample.lua", "test_record_udf.lua", "udf_basic_ops.lua")
+
+    for module in udf_files:
+        client.udf_put(module, udf_type, policy)
+
+
+def remove_indexes_and_udfs(client):
+    '''
+    Remove all of the UDFS and indexes created for these tests
+    '''
+    policy = {}
+
+    try:
+        client.index_remove('test', 'age_index', policy)
+    except e.IndexNotFound:
+        pass
+
+    try:
+        client.index_remove('test', 'age_index1', policy)
+    except e.IndexNotFound:
+        pass
+
+    udf_files = ("sample.lua", "test_record_udf.lua", "udf_basic_ops.lua")
+
+    for module in udf_files:
+        client.udf_remove(module, policy)
+
+
+class TestApply(TestBaseClass):
+
+    def setup_class(cls):
+        # Register setup and teardown functions
+        cls.connection_setup_functions = [add_indexes_and_udfs]
+        cls.connection_teardown_functions = [remove_indexes_and_udfs]
 
     @pytest.fixture(autouse=True)
-    def setup(self, request, as_connection):
-        """
-        Setup Method
-        """
-        self.keys = []
-        self.test_data = [ 
-            {
-                'account_id': j,
-                'user_name': 'user' + str(j),
-                'acct_balance': j * 10,
-                'charges': [j + 5, j + 10],
-                'meta': {'date': '11/4/2019'}
-            } for j in range(1,5)
-        ]
-        self.test_data.append({'string_list': ['s1', 's2', 's3', 's4']})
-        self.test_data.append({'map_bin': {'k1': 1, 'k2': 2, 'k3': 3, 'k4': 4}})
-
-        georec = {
-            'id': 1,
-            'point': geo_point,
-            'region': geo_circle,
-            'geolist': [geo_point]
-        }
-
-        self.test_data.append(georec)
-        self.test_data_bin = 'test_data'
-        self.keys = [('test', 'pred_evry', i+1) for i, _ in enumerate(self.test_data)]
-        # print('self keys is: ', self.keys)
-
-        for key, data in zip(self.keys, self.test_data):
-            self.as_connection.put(
-                key,
-                data
-            )
-
-        # cleanup
-        yield
-
-        for key in self.keys:
-            try:
-                self.as_connection.remove(key)
-            except e.AerospikeError:
-                pass
-
-    @pytest.mark.parametrize("ops, expressions, expected_bins, expected_res, key_num", [
-        (# test integer equal
-            [
-                operations.increment("account_id", 1)
-            ],
-            exp.Eq(3, exp.IntBin('account_id')),
-            {
-                'account_id': 4,
-                'user_name': 'user3',
-                'acct_balance': 30,
-                'charges': [8, 13],
-                'meta': {'date': '11/4/2019'}
-            },
-            {},
-            3
-        ),
-        (# test string equal
-            [
-                operations.increment("account_id", 1)
-            ],
-            exp.Eq('user3', exp.StrBin('user_name')),
-            {
-                'account_id': 4,
-                'user_name': 'user3',
-                'acct_balance': 30,
-                'charges': [8, 13],
-                'meta': {'date': '11/4/2019'}
-            },
-            {},
-            3
-        ),
-        (# test and
-            [
-                list_operations.list_remove_by_index_range('charges', 0, 3, aerospike.LIST_RETURN_COUNT),
-                operations.increment("acct_balance", -23)
-            ],
-            exp.And(
-                exp.GE(exp.IntBin('acct_balance'), 10),
-                exp.LE(exp.IntBin('acct_balance'), 50)
-            ),
-            {
-                'account_id': 4,
-                'user_name': 'user4',
-                'acct_balance': 17,
-                'charges': [],
-                'meta': {'date': '11/4/2019'}
-            },
-            {'charges': [0, 1]},
-            4
-        ),
-        (# test or
-            [
-                map_operations.map_put('meta', 'lupdated', 'now')
-            ],
-            exp.Or(
-                exp.Eq(exp.StrBin('user_name'), 'user2'),
-                exp.GE(exp.IntBin('acct_balance'), 50)
-            ),
-            {
-                'account_id': 2,
-                'user_name': 'user2',
-                'acct_balance': 20,
-                'charges': [7, 12],
-                'meta': {'date': '11/4/2019', 'lupdated': 'now'}
-            },
-            {'meta': 2},
-            2
-        ),
-        (# test integer greater
-            [
-                map_operations.map_clear('meta')
-            ],
-            exp.GT(exp.IntBin('account_id'), 2),
-            {
-                'account_id': 3,
-                'user_name': 'user3',
-                'acct_balance': 30,
-                'charges': [8, 13],
-                'meta': {}
-            },
-            {'meta': None},
-            3
-        ),
-        (# test integer greatereq
-            [
-                map_operations.map_clear('meta')
-            ],
-            exp.GE(exp.IntBin('account_id'), 2),
-            {
-                'account_id': 3,
-                'user_name': 'user3',
-                'acct_balance': 30,
-                'charges': [8, 13],
-                'meta': {}
-            },
-            {'meta': None},
-            3
-        ),
-        (# test integer less
-            [
-                list_operations.list_clear('charges')
-            ],
-            exp.LT(exp.IntBin('account_id'), 5),
-            {
-                'account_id': 4,
-                'user_name': 'user4',
-                'acct_balance': 40,
-                'charges': [],
-                'meta': {'date': '11/4/2019'}
-            },
-            {},
-            4
-        ),
-        (# test integer lesseq
-            [
-                list_operations.list_clear('charges')
-            ],
-            exp.LE(exp.IntBin('account_id'), 4),
-            {
-                'account_id': 4,
-                'user_name': 'user4',
-                'acct_balance': 40,
-                'charges': [],
-                'meta': {'date': '11/4/2019'}
-            },
-            {},
-            4
-        ),
-        (# test string unequal
-            [
-                list_operations.list_append('charges', 2)
-            ],
-            exp.NE(exp.StrBin('user_name'), 'user2'),
-            {
-                'account_id': 4,
-                'user_name': 'user4',
-                'acct_balance': 40,
-                'charges': [9, 14, 2],
-                'meta': {'date': '11/4/2019'}
-            },
-            {'charges': 3},
-            4
-        ),
-        (# test not
-            [
-                list_operations.list_append('charges', 2)
-            ],
-            exp.Not(
-                exp.NE(exp.StrBin('user_name'), 'user4')),
-            {
-                'account_id': 4,
-                'user_name': 'user4',
-                'acct_balance': 40,
-                'charges': [9, 14, 2],
-                'meta': {'date': '11/4/2019'}
-            },
-            {'charges': 3},
-            4
-        ),
-        (# test string regex
-            [
-                list_operations.list_append('charges', 2)
-            ],
-            exp.CmpRegex(aerospike.REGEX_ICASE, '.*4.*', exp.StrBin('user_name')),
-            {
-                'account_id': 4,
-                'user_name': 'user4',
-                'acct_balance': 40,
-                'charges': [9, 14, 2],
-                'meta': {'date': '11/4/2019'}
-            },
-            {'charges': 3},
-            4
-        ),
-        (# test list or int
-            [
-                list_operations.list_append('charges', 2)
-            ],
-            exp.Eq(
-                exp.ListGetByValue(None, aerospike.LIST_RETURN_COUNT, 14, 'charges'),
-                1
-            ),
-            {
-                'account_id': 4,
-                'user_name': 'user4',
-                'acct_balance': 40,
-                'charges': [9, 14, 2],
-                'meta': {'date': '11/4/2019'}
-            },
-            {'charges': 3},
-            4
-        ),
-        (# test list and int
-            [
-                list_operations.list_append('charges', 2)
-            ],
-            exp.LT(
-                exp.ListGetByRank(None, aerospike.LIST_RETURN_VALUE, exp.ResultType.INTEGER, -1, 'charges'),
-                120
-            ),
-            {
-                'account_id': 4,
-                'user_name': 'user4',
-                'acct_balance': 40,
-                'charges': [9, 14, 2],
-                'meta': {'date': '11/4/2019'}
-            },
-            {'charges': 3},
-            4
-        ),
-        (# test list or str
-            [
-                list_operations.list_append('string_list', 's5')
-            ],
-            exp.Eq(
-                exp.ListGetByValue(None, aerospike.LIST_RETURN_COUNT, 's2', 'string_list'),
-                1
-            ),
-            {
-                'string_list': ['s1', 's2', 's3', 's4', 's5']
-            },
-            {'string_list': 5},
-            5
-        ),
-        # (# test list and str TODO convert
-        #     [
-        #         list_operations.list_remove_by_index_range('string_list', 0, aerospike.LIST_RETURN_VALUE, 2)
-        #     ],
-        #     exp.LT(
-        #         exp.ListGetByRank(None, aerospike.LIST_RETURN_VALUE, exp.ResultType.INTEGER, -1, 'charges'),
-        #         120
-        #     ),
-        #     exp.CmpRegex(aerospike.REGEX_ICASE, '.*s.*', exp.StrBin('user_name')),
-        #     [
-        #         exp.string_var('list_val'),
-        #         exp.string_value('.*s.*'),
-        #         exp.string_regex(aerospike.REGEX_ICASE),
-        #         exp.list_bin('string_list'),
-        #         exp.list_iterate_and('list_val')
-        #     ],
-        #     {
-        #         'string_list': ['s3', 's4']
-        #     },
-        #     {'string_list': ['s1', 's2']},
-        #     5
-        # ),
-        (# test map_key_iterate_or
-            [
-                map_operations.map_put('map_bin', 'k5', 5)
-            ],
-            exp.Eq(
-                exp.MapGetByKey(None, aerospike.MAP_RETURN_COUNT, exp.ResultType.INTEGER, 'k3', 'map_bin'),
-                1
-            ),
-            {
-                'map_bin': {'k1': 1, 'k2': 2, 'k3': 3, 'k4': 4, 'k5': 5}
-            },
-            {'map_bin': 5},
-            6
-        ),
-        (# test map_key_iterate_and
-            [
-                map_operations.map_put('map_bin', 'k5', 5)
-            ],
-            exp.Eq(
-                exp.MapGetByKey(None, aerospike.MAP_RETURN_COUNT, exp.ResultType.INTEGER, 'k7', 'map_bin'),
-                0
-            ),
-            {
-                'map_bin': {'k1': 1, 'k2': 2, 'k3': 3, 'k4': 4, 'k5': 5}
-            },
-            {'map_bin': 5},
-            6
-        ),
-        (# test mapval_iterate_and
-            [
-                map_operations.map_put('map_bin', 'k5', 5)
-            ],
-            exp.Eq(
-                exp.MapGetByValue(None, aerospike.MAP_RETURN_COUNT, 7, 'map_bin'),
-                0
-            ),
-            {
-                'map_bin': {'k1': 1, 'k2': 2, 'k3': 3, 'k4': 4, 'k5': 5}
-            },
-            {'map_bin': 5},
-            6
-        ),
-        (# test mapval_iterate_or
-            [
-                map_operations.map_get_by_key('map_bin', 'k1', aerospike.MAP_RETURN_VALUE)
-            ],
-            exp.Eq(
-                exp.MapGetByValue(None, aerospike.MAP_RETURN_COUNT, 3, 'map_bin'),
-                1
-            ),
-            {
-                'map_bin': {'k1': 1, 'k2': 2, 'k3': 3, 'k4': 4}
-            },
-            {'map_bin': 1},
-            6
-        )
-    ])
-    def test_expressions_key_operate(self, ops, expressions, expected_bins, expected_res, key_num):
-        """
-        Invoke the C client aerospike_key_operate with expressions.
-        """
-        key = ('test', 'pred_evry', key_num)
-
-        _, _, res = self.as_connection.operate(key, ops, policy={'expressions': expressions.compile()})
-        assert res  == expected_res
-
-        _, _, bins = self.as_connection.get(key)
-        assert bins == expected_bins
-
-    @pytest.mark.parametrize("ops, expressions, expected_bins, expected_res, key_num", [
-    (# test mapval_iterate_or
-        [
-            map_operations.map_put_items('map_bin', {'k5': 5, 'k6': 6}),
-            map_operations.map_get_by_key('map_bin', 'k1', aerospike.MAP_RETURN_VALUE)
-        ],
-        exp.LT(
-            exp.MapGetByRank(None, aerospike.MAP_RETURN_VALUE, exp.ResultType.INTEGER, 0, 'map_bin'),
-            3
-        ),
-        {
-            'map_bin': {'k1': 1, 'k2': 2, 'k3': 3, 'k4': 4, 'k5': 5, 'k6': 6}
-        },
-        [('map_bin', 6), ('map_bin', 1)],
-        6
-    )])
-    def test_expressions_key_operate_ordered(self, ops, expressions, expected_bins, expected_res, key_num):
-        """
-        Invoke the C client aerospike_key_operate with expressions using operate_ordered.
-        """
-        key = ('test', 'pred_evry', key_num)
-
-        _, _, res = self.as_connection.operate_ordered(key, ops, policy={'expressions': expressions.compile()})
-        assert res  == expected_res
-
-        _, _, bins = self.as_connection.get(key)
-        assert bins == expected_bins
-
-
-    @pytest.mark.parametrize("ops, expressions, expected, key_num", [
-    (# test mapval_iterate_or
-        [
-            map_operations.map_get_by_key('map_bin', 'k1', aerospike.MAP_RETURN_VALUE)
-        ],
-        exp.Not(
-            exp.Eq(
-                exp.MapGetByRank(None, aerospike.MAP_RETURN_VALUE, exp.ResultType.INTEGER, 0, 'map_bin'),
-                1
-            )),
-        e.FilteredOut,
-        6
-    )])
-    def test_expressions_key_operate_ordered_negative(self, ops, expressions, expected, key_num):
-        """
-        Invoke the C client aerospike_key_operate with expressions using operate_ordered with expected failures.
-        """
-        key = ('test', 'pred_evry', key_num)
-
-        with pytest.raises(expected):
-            _, _, res = self.as_connection.operate_ordered(key, ops, policy={'expressions': expressions.compile()})
-
-
-    @pytest.mark.parametrize("ops, expressions, key_num, bin", [
-        (# test geojson_within
-            [
-                operations.increment('id', 1)
-            ],
-            exp.CmpGeo(exp.GeoBin('point'), geo_circle),
-            7,
-            'point'
-        ),
-        (# test geojson_contains
-            [
-                operations.increment('id', 1)
-            ],
-            exp.CmpGeo(exp.GeoBin('region'), geo_point),
-            7,
-            'point'
-        ),
-    ])
-    def test_expressions_key_operate_geojson(self, ops, expressions, key_num, bin):
-        """
-        Invoke the C client aerospike_key_operate with expressions.
-        """
-        key = ('test', 'pred_evry', key_num)
-
-        _, _, _ = self.as_connection.operate(key, ops, policy={'expressions': expressions.compile()})
-
-        _, _, bins = self.as_connection.get(key)
-        assert bins['id'] == 2
-
-    # NOTE: may fail due to clock skew
-    def test_expressions_key_operate_record_last_updated(self):
-        """
-        Invoke the C client aerospike_key_operate with a record_last_updated expressions.
-        """
+    def setup(self, request, connection_with_config_funcs):
+        as_connection = connection_with_config_funcs
 
         for i in range(5):
-            key = 'test', 'pred_lut', i
-            self.as_connection.put(key, {'time': 'earlier'})
-        
-        cutoff_nanos = (10 ** 9) * int(time.time() + 2)
-        time.sleep(5)
+            key = ('test', 'demo', i)
+            rec = {
+                'name': ['name%s' % (str(i))],
+                'addr': 'name%s' % (str(i)),
+                'age': i,
+                'no': i,
+                'basic_map': {"k30": 6,
+                              "k20": 5,
+                              "k10": 1}
+            }
+            as_connection.put(key, rec)
 
-        for i in range(5, 10):
-            key = 'test', 'pred_lut', i
-            self.as_connection.put(key, {'time': 'later'})
-        
-        results = []
+        def teardown():
+            for i in range(5):
+                key = ('test', 'demo', i)
+                as_connection.remove(key)
 
-        expr = exp.LT(exp.LastUpdateTime(), cutoff_nanos)
-        ops = [
-            operations.read('time')
+        request.addfinalizer(teardown)
+
+    @pytest.mark.parametrize(
+        "func_args, test_bin, expected",
+        (
+            (['name', 'car'], 'name', ['name1', 'car']),
+            (['name', None], 'name', ['name1', None]),
+            (['name', 1], 'name', ['name1', 1]),
+            (['name', [1, 2]], 'name', ['name1', [1, 2]]),
+            (['name', {'a': 'b'}], 'name', ['name1', {'a': 'b'}]),
+        ), ids=[
+            "string",
+            "None",
+            "Integer",
+            "list",
+            "dict"
         ]
 
-        for i in range(10):
-            try:
-                key = 'test', 'pred_lut', i
-                _, _, res = self.as_connection.operate(key, ops, policy={'expressions': expr.compile()})
-                results.append(res)
-            except:
-                pass
-            self.as_connection.remove(key)
+    )
+    def test_apply_causing_list_append_with_correct_params(
+            self, func_args, test_bin, expected):
 
-        assert len(results) == 5
-        for res in results:
-            assert res['time'] == 'earlier'
+        key = ('test', 'demo', 1)
+        retval = self.as_connection.apply(
+            key, 'sample', 'list_append', func_args)
 
-    # NOTE: may fail due to clock skew
-    def test_expressions_key_operate_record_void_time(self):
-        """
-        Invoke the C client aerospike_key_operate with a rec_void_time expressions.
-        """
+        _, _, bins = self.as_connection.get(key)
 
-        for i in range(5):
-            key = 'test', 'pred_ttl', i
-            self.as_connection.put(key, {'time': 'earlier'}, meta={'ttl': 100})
-        
+        assert bins[test_bin] == expected
+        assert retval == 0  # the list_append UDF returns 0
 
-        # 150 second range for record TTLs should be enough, we are storing with
-        # Current time + 100s and current time +5000s, so only one of the group should be found
-        void_time_range_start = (10 ** 9) * int(time.time() + 50)
-        void_time_range_end = (10 ** 9) * int(time.time() + 150)
-
-        for i in range(5, 10):
-            key = 'test', 'pred_ttl', i
-            self.as_connection.put(key, {'time': 'later'}, meta={'ttl': 1000})
-        
-        results = []
-
-        expr = exp.And(
-            exp.GT(exp.VoidTime(), void_time_range_start),
-            exp.LT(exp.VoidTime(), void_time_range_end)
-        )
-
-        ops = [
-            operations.read('time')
-        ]
-
-        for i in range(10):
-            try:
-                key = 'test', 'pred_ttl', i
-                _, _, res = self.as_connection.operate(key, ops, policy={'expressions': expr.compile()})
-                results.append(res)
-            except:
-                pass
-            self.as_connection.remove(key)
-
-        assert len(results) == 5
-        for res in results:
-            assert res['time'] == 'earlier'
-
-    def test_expressions_key_operate_record_digest_modulo(self): #TODO investigate segfault caused by this
-        """
-        Invoke the C client aerospike_key_operate with a rec_digest_modulo expressions.
-        """
-
-        less_than_128 = 0
-        for i in range(100):
-            key = 'test', 'demo', i
-            if aerospike.calc_digest(*key)[-1] < 128:
-                less_than_128 += 1
-            self.as_connection.put(key, {'dig_id': i})
-
-        
-        results = []
-
-        expr =  exp.LT(exp.DigestMod(256), 128)
-
-        ops = [
-            operations.read('dig_id')
-        ]
-
-        for i in range(100):
-            try:
-                key = 'test', 'demo', i
-                _, _, res = self.as_connection.operate(key, ops, policy={'expressions': expr.compile()})
-                results.append(res)
-            except:
-                pass
-            self.as_connection.remove(key)
-
-        assert len(results) == less_than_128
-
-    @pytest.mark.parametrize("ops, expressions, expected, key_num", [
-        (# filtered out
-            [
-                operations.increment("account_id", 1)
-            ],
-            exp.Eq(exp.IntBin('account_id'), 5).compile(),
-            e.FilteredOut,
-            3
-        ),
-        (# incorrect bin type
-            [
-                list_operations.list_remove_by_index_range('charges', 0, 3, aerospike.LIST_RETURN_COUNT),
-                operations.increment("acct_balance", -23)
-            ],
-            exp.And(
-                exp.GE(exp.StrBin('acct_balance'), 10),
-                exp.LE(exp.IntBin('acct_balance'), 50)
-            ).compile(),
-            e.InvalidRequest,
-            4
-        ),
-        (# filtered out
-            [
-                map_operations.map_put('meta', 'lupdated', 'now')
-            ],
-            exp.Not(
-                exp.Or(
-                    exp.Eq(exp.StrBin('user_name'), 'user2'),
-                    exp.GE(exp.IntBin('acct_balance'), 50)
-                )
-            ).compile(),
-            e.FilteredOut,
-            2
-        ),
-        (# empty expressions list
-            [
-                map_operations.map_put('meta', 'lupdated', 'now')
-            ],
-            [],
-            e.ParamError,
-            2
-        ),
-        (# expressions not in list
-            [
-                map_operations.map_put('meta', 'lupdated', 'now')
-            ],
-            ('bad expressions',),
-            e.ParamError,
-            2
-        ),
-    ])
-    def test_expressions_key_operate_negative(self, ops, expressions, expected, key_num):
-        """
-        Invoke the C client aerospike_key_operate with expressions. Expecting failures.
-        """
-        key = ('test', 'pred_evry', key_num)
-
-        with pytest.raises(expected):
-            self.as_connection.operate(key, ops, policy={'expressions': expressions})
-
-    @pytest.mark.parametrize("expressions, rec_place, rec_bin, expected", [
+    @pytest.mark.parametrize(
+        "func_args, test_bin, predexp, expected",
         (
-            exp.Eq(exp.IntBin('account_id'), 2),
-            1,
-            'account_id',
-            2
-        ),
-        (
-            exp.Eq(exp.StrBin('user_name'), 'user2'),
-            1,
-            'account_id',
-            2
-        ),
-        (
-            exp.Or(
-                exp.Eq(exp.StrBin('user_name'), 'user2'),
-                exp.GE(exp.IntBin('acct_balance'), 30)
+            (
+                ['name', 1],
+                'name',
+                [
+                as_predexp.integer_bin('age'),
+                as_predexp.integer_value(1),
+                as_predexp.integer_equal()
+                ],
+                ['name1', 1]
             ),
-            2,
-            'account_id',
-            3
-        )
-    ])
-    def test_pos_get_many_with_expressions(self, expressions, rec_place, rec_bin, expected):
-        '''
-        Proper call to get_many with expressions in policy
-        '''
-        records = self.as_connection.get_many(self.keys, {'expressions': expressions.compile()})
+        ), ids=[
+            "Integer",
+        ]
+    )
+    def test_apply_causing_list_append_with_correct_params_with_predexp(
+            self, func_args, test_bin, predexp, expected):
 
-        #assert isinstance(records, list)
-        # assert records[2][2]['age'] == 2
-        assert records[rec_place][2][rec_bin] == expected
+        key = ('test', 'demo', 1)
+        retval = self.as_connection.apply(
+            key, 'sample', 'list_append', func_args, policy={'predexp': predexp})
 
-    def test_pos_get_many_with_large_expressions(self):
-        '''
-        Proper call to get_many with expressions in policy.
-        '''
-        expr = exp.Or(
-            exp.Eq(exp.IntBin('account_id'), 4),
-            exp.Eq(exp.StrBin('user_name'), 'user3'),
-            exp.LT(exp.ListGetByRank(None, aerospike.LIST_RETURN_VALUE, exp.ResultType.INTEGER, -1, 'charges'), 12)
-        )
+        _, _, bins = self.as_connection.get(key)
 
-        matched_recs = []
-        records = self.as_connection.get_many(self.keys, {'expressions': expr.compile()})
-        for rec in records:
-            if rec[2] is not None:
-                matched_recs.append(rec[2])
-        
-        assert len(matched_recs) == 3
-        for rec in matched_recs:
-            assert rec['account_id'] == 1 or rec['account_id'] == 3 or rec['account_id'] == 4
+        print(expected)
+        print(bins[test_bin])
+        assert bins[test_bin] == expected
+        assert retval == 0  # the list_append UDF returns 0
 
-    def test_pos_select_many_with_large_expressions(self):
-        '''
-        Proper call to select_many with expressions in policy.
-        '''
-        expr = exp.Or(
-            exp.Eq(exp.IntBin('account_id'), 4),
-            exp.Eq(exp.StrBin('user_name'), 'user3'),
-            exp.LT(exp.ListGetByRank(None, aerospike.LIST_RETURN_VALUE, exp.ResultType.INTEGER, -1, 'charges'), 12)
-        )
+    def test_apply_operations_on_map(self):
+        """
+            Invoke apply() with map
+        """
+        key = ('test', 'demo', 1)
+        retval = self.as_connection.apply(key, 'test_record_udf',
+                                          'map_iterate', ['basic_map', 555])
+        assert retval is None
+        # Since this udf changes all of the record values to be 555,
+        # all of the values in the 'basic_map' should be 555
+        (key, _, bins) = self.as_connection.get(key)
+        assert bins['basic_map'] == {"k30": 555, "k20": 555, "k10": 555}
 
-        matched_recs = []
-        records = self.as_connection.select_many(self.keys, ['account_id'], {'expressions': expr.compile()})
-        for rec in records:
-            if rec[2] is not None:
-                matched_recs.append(rec[2])
-        
-        assert len(matched_recs) == 3
-        for rec in matched_recs:
-            assert rec['account_id'] == 1 or rec['account_id'] == 3 or rec['account_id'] == 4
+    def test_apply_with_correct_parameters_float_argument(self):
+        """
+            Invoke apply() with correct arguments with a floating value in the
+            list of arguments
+        """
+        if self.skip_old_server is True:
+            pytest.skip(
+                "Server does not support apply on float type as lua argument")
+        key = ('test', 'demo', 1)
+        retval = self.as_connection.apply(
+            key, 'sample', 'list_append', ['name', 5.434])
+        _, _, bins = self.as_connection.get(key)
 
-    def test_pos_remove_with_expressions(self):
-        '''
-        Call remove with expressions in policy.
-        '''
-        expr = exp.Eq(exp.IntBin('account_id'), 1)
-        records = self.as_connection.remove(self.keys[0], {'expressions': expr.compile()})
+        assert bins['name'] == ['name1', 5.434]
+        assert retval == 0
 
-        rec = self.as_connection.exists(self.keys[0])
-        assert rec[1] is None
+    def test_apply_with_policy(self):
+        """
+            Invoke apply() with policy
+        """
+        policy = {'total_timeout': 1000}
+        key = ('test', 'demo', 1)
+        retval = self.as_connection.apply(
+            key, 'sample', 'list_append', ['name', 'car'], policy)
+        (key, _, bins) = self.as_connection.get(key)
+        assert retval == 0
+        assert bins['name'] == ['name1', 'car']
 
-    def test_remove_with_expressions_filtered_out(self):
-        '''
-        Call remove with expressions in policy with expected failure.
-        '''
-        expr = exp.Eq(exp.IntBin('account_id'), 3)
-        with pytest.raises(e.FilteredOut):
-            self.as_connection.remove(self.keys[0], policy={'expressions': expr.compile()})
+    def test_apply_with_integer(self):
+        """
+            Invoke apply() with integer
+        """
+        key = ('test', 'demo', 1)
+        retval = self.as_connection.apply(key, 'test_record_udf',
+                                          'bin_udf_operation_integer',
+                                          ['age', 2, 20])
 
-    def test_remove_bin_with_expressions(self):
-        '''
-        Call remove_bin with expressions in policy.
-        '''
-        expr = exp.Eq(exp.IntBin('account_id'), 1)
-        self.as_connection.remove_bin(self.keys[0], ['account_id', 'user_name'], policy={'expressions': expr.compile()})
+        assert retval == 23
+        (key, _, bins) = self.as_connection.get(key)
+        assert bins['age'] == 23
 
-        rec = self.as_connection.get(self.keys[0])
-        assert rec[2].get('account_id') is None and rec[2].get('user_name') is None
+    def test_apply_with_operation_on_string(self):
+        """
+            Invoke apply() with string
+        """
+        key = ('test', 'demo', 1)
+        retval = self.as_connection.apply(key, 'test_record_udf',
+                                          'bin_udf_operation_string',
+                                          ['addr', " world"])
 
-    def test_remove_bin_with_expressions_filtered_out(self):
-        '''
-        Call remove_bin with expressions in policy with expected failure.
-        '''
-        expr = exp.Eq(exp.IntBin('account_id'), 4)
-        with pytest.raises(e.FilteredOut):
-            self.as_connection.remove_bin(self.keys[0], ['account_id', 'user_name'], policy={'expressions': expr.compile()})
+        assert retval == "name1 world"
+        (key, _, bins) = self.as_connection.get(key)
+        assert bins['addr'] == "name1 world"
 
-    def test_put_with_expressions(self):
-        '''
-        Call put with expressions in policy.
-        '''
-        expr = exp.Eq(exp.IntBin('account_id'), 1)
-        self.as_connection.put(self.keys[0], {'newkey': 'newval'}, policy={'expressions': expr.compile()})
+    def test_apply_with_function_returning_record(self):
+        """
+            Invoke apply() with record
+        """
+        key = ('test', 'demo', 1)
+        retval = self.as_connection.apply(key, 'test_record_udf',
+                                          'udf_returns_record', [])
 
-        rec = self.as_connection.get(self.keys[0])
-        assert rec[2]['newkey'] == 'newval'
+        # This function returns a record which gets mapped to a python dict
+        assert retval is not None
+        assert isinstance(retval, dict)
 
-    def test_put_new_record_with_expressions(self): # should this fail?
-        '''
-        Call put a new record with expressions in policy.
-        '''
-        expr = exp.Eq(exp.IntBin('account_id'), 1)
-        key = ("test", "demo", 10)
-        self.as_connection.put(key, {'newkey': 'newval'}, policy={'expressions': expr.compile()})
+    def test_apply_using_bytearray(self):
+        """
+            Invoke apply() with a bytearray as a argument
+        """
+        key = ('test', 'demo', 'apply_insert')
+        self.as_connection.apply(key, 'udf_basic_ops',
+                                 'create_record',
+                                 [bytearray("asd;as[d'as;d",
+                                            "utf-8")])
+        (key, _, bins) = self.as_connection.get(key)
 
-        rec = self.as_connection.get(key)
+        assert bins == {'bin': bytearray(b"asd;as[d\'as;d")}
+
         self.as_connection.remove(key)
-        assert rec[2]['newkey'] == 'newval'
 
-    def test_put_with_expressions_filtered_out(self):
-        '''
-        Call put with expressions in policy with expected failure.
-        '''
-        expr = exp.Eq(exp.IntBin('account_id'), 4)
-        with pytest.raises(e.FilteredOut):
-            self.as_connection.put(self.keys[0], {'newkey': 'newval'}, policy={'expressions': expr.compile()})
+    def test_apply_with_extra_argument_to_lua_function(self):
+        """
+            Invoke apply() with extra argument to lua
+            Should not raise an error
+        """
+        key = ('test', 'demo', 1)
+        retval = self.as_connection.apply(key, 'sample', 'list_append',
+                                          ['name', 'car', 1])
+        assert retval == 0
+        (key, _, bins) = self.as_connection.get(key)
+        assert bins['name'] == ['name1', 'car']
 
-    def test_get_with_expressions(self):
-        '''
-        Call to get with expressions in policy.
-        '''
-        expr = exp.Eq(exp.IntBin('account_id'), 1)
-        record = self.as_connection.get(self.keys[0], {'expressions': expr.compile()})
+    def test_apply_with_missing_argument_to_lua(self):
+        """
+            Invoke apply() passing less than the ex arguments
+            to a lua function. Should not raise an error
+        """
+        key = ('test', 'demo', 1)
+        retval = self.as_connection.apply(key, 'sample', 'list_append_extra',
+                                          ['name', 'car'])
+        assert retval == 0
+        (key, _, bins) = self.as_connection.get(key)
+        assert bins['name'] == ['name1', 'car']
 
-        assert record[2]['account_id'] == 1
+    def test_apply_with_unicode_module_and_function(self):
+        """
+            Invoke apply() with unicode module and function
+        """
+        key = ('test', 'demo', 1)
+        retval = self.as_connection.apply(key, u'sample', u'list_append',
+                                          ['name', 'car'])
+        (key, _, bins) = self.as_connection.get(key)
 
-    def test_get_with_expressions_filtered_out(self):
-        '''
-        Call to get with expressions in policy with expected failures.
-        '''
-        expr = exp.Eq(exp.IntBin('account_id'), 3)
-        with pytest.raises(e.FilteredOut):
-            self.as_connection.get(self.keys[0], {'expressions': expr.compile()})
+        assert bins['name'] == ['name1', 'car']
+        assert retval == 0
 
-    def test_select_with_expressions(self):
-        '''
-        Call to select with expressions in policy.
-        '''
+    def test_apply_with_correct_parameters_without_connection(self):
+        """
+            Invoke apply() with correct arguments without connection
+        """
+        key = ('test', 'demo', 1)
+        config = {'hosts': [('127.0.0.1', 3000)]}
+        client1 = aerospike.client(config)
 
-        expr = exp.And(
-            exp.Eq(exp.IntBin('acct_balance'), 20),
-            exp.LT(exp.ListGetByRank(None, aerospike.LIST_RETURN_VALUE, exp.ResultType.INTEGER, -1, 'charges'), 20)
-        )
+        with pytest.raises(e.ClusterError) as err_info:
+            client1.apply(key, 'sample', 'list_append', ['name', 'car'])
 
-        result = self.as_connection.select(self.keys[1], ['account_id', 'acct_balance'], {'expressions': expr.compile()})
-        assert result[2]['account_id'] == 2 and result[2]['acct_balance'] == 20
+        err_code = err_info.value.code
 
-    def test_select_with_expressions_filtered_out(self):
-        '''
-        Call to select with expressions in policy with expected failures.
-        '''
-        expr = exp.And(
-            exp.Eq(exp.IntBin('acct_balance'), 20),
-            exp.LT(exp.ListGetByRank(None, aerospike.LIST_RETURN_VALUE, exp.ResultType.INTEGER, -1, 'charges'), 10)
-        )
+        assert err_code == AerospikeStatus.AEROSPIKE_CLUSTER_ERROR
 
-        with pytest.raises(e.FilteredOut):
-            self.as_connection.select(self.keys[1], ['account_id', 'acct_balance'], {'expressions': expr.compile()})
+    def test_apply_with_arg_causing_error(self):
+        """
+            Invoke apply() with ia string argument when integer is required
+        """
+        key = ('test', 'demo', 1)
 
-    def test_exists_many_with_large_expressions(self):
-        '''
-        Proper call to exists_many with expressions in policy.
-        '''
+        with pytest.raises(e.UDFError) as err_info:
+            self.as_connection.apply(key, 'test_record_udf',
+                                     'bin_udf_operation_integer',
+                                     ['age', "not an", "integer"])
 
-        expr = exp.Or(
-            exp.Eq(exp.IntBin('account_id'), 4),
-            exp.Eq(exp.StrBin('user_name'), 'user3'),
-            exp.LT(exp.ListGetByRank(None, aerospike.LIST_RETURN_VALUE, exp.ResultType.INTEGER, -1, 'charges'), 12)
-        )
+        err_code = err_info.value.code
+        assert err_code == AerospikeStatus.AEROSPIKE_ERR_UDF
 
-        matched_recs = []
-        records = self.as_connection.exists_many(self.keys, {'expressions': expr.compile()})
-        for rec in records:
-            if rec[1] is not None:
-                matched_recs.append(rec[1])
-        
-        assert len(matched_recs) == 3
+    def test_apply_with_no_parameters(self):
+        """
+            Invoke apply() without any mandatory parameters.
+            This should raise an error
+        """
+        with pytest.raises(TypeError) as typeError:
+            self.as_connection.apply()
+
+        assert "argument 'key' (pos 1)" in str(
+            typeError.value)
+
+    def test_apply_with_no_argument_in_lua(self):
+        """
+            Call apply without the args parameter
+        """
+        key = ('test', 'demo', 1)
+        with pytest.raises(TypeError) as typeError:
+            self.as_connection.apply(key, 'sample', 'list_append_extra')
+        assert "argument 'args' (pos 4)" in str(
+            typeError.value)
+
+    def test_apply_with_incorrect_policy(self):
+        """
+            Invoke apply() with incorrect policy
+        """
+        policy = {'total_timeout': 0.1}
+        key = ('test', 'demo', 1)
+        with pytest.raises(e.ParamError) as err_info:
+            self.as_connection.apply(key, 'sample', 'list_append',
+                                     ['name', 'car'], policy)
+
+        err_code = err_info.value.code
+        assert err_code == AerospikeStatus.AEROSPIKE_ERR_PARAM
+
+    def test_apply_with_extra_argument(self):
+        """
+            Invoke apply() with extra argument.
+        """
+        policy = {'total_timeout': 1000}
+        key = ('test', 'demo', 1)
+        with pytest.raises(TypeError) as typeError:
+            self.as_connection.apply(key, 'sample', 'list_append',
+                                     ['name', 'car'], policy, "")
+
+        assert "apply() takes at most 5 arguments (6 given)" in str(
+            typeError.value)
+
+    @pytest.mark.parametrize(
+        "module, function, arguments",
+        (
+            ('sample', 'list_append', ['addr', 'car']),
+            ('', '', ['name', 'car']),
+            ('wrong_module_name', 'list_append', ['name', 'car']),
+            ('sample', 'list_prepend', ['name', 'car'])
+        ),
+        ids=[
+            'incorrect argument type',
+            'empty module and function',
+            'non existent module',
+            'non existent function'
+        ]
+    )
+    def test_udf_error_causing_args(self, module, function, arguments):
+        key = ('test', 'demo', 1)
+
+        with pytest.raises(e.UDFError) as err_info:
+            self.as_connection.apply(key, module, function, arguments)
+
+        err_code = err_info.value.code
+        assert err_code == AerospikeStatus.AEROSPIKE_ERR_UDF
+
+    def test_apply_with_key_as_string(self):
+        """
+            Invoke apply() with key as string
+        """
+        with pytest.raises(e.ParamError) as err_info:
+            self.as_connection.apply(
+                "", 'sample', 'list_append', ['name', 'car'])
+
+        err_code = err_info.value.code
+        assert err_code == AerospikeStatus.AEROSPIKE_ERR_PARAM
+
+    def test_apply_with_key_as_none(self):
+        """
+            Invoke apply() with key as none
+        """
+        with pytest.raises(e.ParamError) as err_info:
+            self.as_connection.apply(
+                None, 'sample', 'list_append', ['name', 'car'])
+
+        err_code = err_info.value.code
+        assert err_code == AerospikeStatus.AEROSPIKE_ERR_PARAM
+
+    def test_apply_with_incorrect_ns_set(self):
+        """
+            Invoke apply() with incorrect ns and set
+        """
+
+        with pytest.raises(e.ClientError) as err_info:
+            key = ('test1', 'demo', 1)
+            self.as_connection.apply(key, 'sample', 'list_prepend',
+                                     ['name', 'car'])
