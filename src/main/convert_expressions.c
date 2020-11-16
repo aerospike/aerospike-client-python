@@ -185,15 +185,7 @@ as_status get_exp_val_from_pyval(AerospikeClient * self, as_static_pool * static
 			*new_entry = tmp_entry;
 		}
 		Py_DECREF(py_ustr);
-	} else if (PyString_Check(py_obj)) {
-		char * s = PyString_AsString(py_obj);
-		pred->val.val_string_p = strdup(s);
-		pred->val_flag = 2;
-		{
-			as_exp_entry tmp_entry = as_exp_str(s);
-			*new_entry = tmp_entry;
-		}
-	 } else if (PyBytes_Check(py_obj)) { //TODO
+	 } else if (PyBytes_Check(py_obj)) {
 	 	uint8_t * b = (uint8_t *) PyBytes_AsString(py_obj);
 	 	uint32_t b_len  = (uint32_t)  PyBytes_Size(py_obj);
 		{
@@ -1311,7 +1303,6 @@ as_status convert_exp_list(AerospikeClient * self, PyObject* py_exp_list, as_exp
 		}
 
 		pred.pytuple = py_pred_tuple;
-		//Py_INCREF(pred.pytuple);
         op = PyInt_AsLong(PyTuple_GetItem(py_pred_tuple, 0));
 		if (result_type == -1 && PyErr_Occurred()) {
 			as_error_update(err, AEROSPIKE_ERR_PARAM, "Failed to get op from expression tuple, op must be an int.");
@@ -1344,7 +1335,7 @@ as_status convert_exp_list(AerospikeClient * self, PyObject* py_exp_list, as_exp
 				goto CLEANUP;
 			}
 
-			if (get_cdt_ctx(self, err, pred.ctx, pred.pydict, &ctx_in_use, &static_pool, SERIALIZER_PYTHON) != AEROSPIKE_OK) { // does this have persistence issues?
+			if (get_cdt_ctx(self, err, pred.ctx, pred.pydict, &ctx_in_use, &static_pool, SERIALIZER_PYTHON) != AEROSPIKE_OK) {
 				pred.ctx = NULL;
 				goto CLEANUP;
 			}
@@ -1365,9 +1356,6 @@ as_status convert_exp_list(AerospikeClient * self, PyObject* py_exp_list, as_exp
 					goto CLEANUP;
 				}
 			}
-			else {
-				pred.list_policy = NULL;
-			}
 		}
 
 		py_map_policy_p = PyDict_GetItemString(pred.pydict, AS_PY_MAP_POLICY);
@@ -1383,9 +1371,6 @@ as_status convert_exp_list(AerospikeClient * self, PyObject* py_exp_list, as_exp
 					pred.map_policy = NULL;
 					goto CLEANUP;
 				}
-			}
-			else {
-				pred.map_policy = NULL;
 			}
 		}
 
@@ -1413,40 +1398,15 @@ as_status convert_exp_list(AerospikeClient * self, PyObject* py_exp_list, as_exp
 
 	for ( int i = 0; i < size; ++i ) {
 		pred_op * pred = (pred_op *) as_vector_get(&pred_queue, (uint32_t)i);
-		if (add_pred_macros(self, &static_pool, SERIALIZER_PYTHON, unicodeStrVector, &c_pred_entries, pred, err) != AEROSPIKE_OK) {
+		if (add_pred_macros(self, &static_pool, SERIALIZER_PYTHON, unicodeStrVector, &c_pred_entries, pred, err) != AEROSPIKE_OK) { //TODO add user defined serializer support
 			goto CLEANUP;
 		}
 	}
 
-	//debug
-	// as_integer mkey1;
-	// as_integer mkey2;
-	// as_integer mkey3;
-	// as_integer_init(&mkey1, 1);
-	// as_integer_init(&mkey2, 2);
-	// as_integer_init(&mkey3, 3);
-	// as_hashmap * map1 = (as_hashmap*)c_pred_entries[1].v.val;
-	// printf("got: %s\n", as_val_val_tostring(as_hashmap_get(map1, (as_val*)&mkey1)));
-	// printf("got: %s\n", as_val_val_tostring(as_hashmap_get(map1, (as_val*)&mkey2)));
-	// printf("got: %s\n", as_val_val_tostring(as_hashmap_get(map1, (as_val*)&mkey3)));
-
-	// as_hashmap * map2 = (as_hashmap*)c_pred_entries[2].v.val;
-	// printf("got: %s\n", as_val_val_tostring(as_hashmap_get(map2, (as_val*)&mkey1)));
-	// printf("got: %s\n", as_val_val_tostring(as_hashmap_get(map2, (as_val*)&mkey2)));
-	// printf("got: %s\n", as_val_val_tostring(as_hashmap_get(map2, (as_val*)&mkey3)));
-
 	*exp_list = as_exp_compile(c_pred_entries, bottom);
-
-
 CLEANUP:
-
 	for (int i = 0; i < processed_exp_count; ++i) {
 		pred_op * pred = (pred_op *) as_vector_get(&pred_queue, (uint32_t)i);
-		// Py_XDECREF(pred->pydict);
-		// Py_XDECREF(pred->pytuple);
-		// if(pred->ctx != NULL) {
-		// 	as_cdt_ctx_destroy(pred->ctx);
-		// }
 
 		if (pred == NULL) {
 			continue;

@@ -19,6 +19,7 @@
 
 #include <aerospike/as_error.h>
 #include <aerospike/as_exp.h>
+#include <aerospike/as_predexp.h>
 #include <aerospike/as_policy.h>
 #include <aerospike/as_record.h>
 #include <aerospike/as_status.h>
@@ -72,7 +73,7 @@ __policy##_init(policy);\
 	}\
 }
 
-#define POLICY_SET_PREDEXP_BASE_FIELD() {\
+#define POLICY_SET_EXPRESSIONS_BASE_FIELD() {\
 	if (exp_list) {\
 		PyObject* py_exp_list = PyDict_GetItemString(py_policy, "expressions");\
 		if (py_exp_list) {\
@@ -80,6 +81,19 @@ __policy##_init(policy);\
 				policy->base.filter_exp = exp_list;\
 				*exp_list_p = exp_list;\
 			}\
+		}\
+	}\
+}
+
+#define POLICY_SET_PREDEXP_BASE_FIELD() {\
+	if (predexp_list) {\
+		PyObject* py_predexp_list = PyDict_GetItemString(py_policy, "predexp");\
+		if (py_predexp_list) {\
+			long number_predexp = PyList_Size(py_predexp_list);\
+			as_predexp_list_init(predexp_list, number_predexp);\
+			convert_predexp_list(py_predexp_list, predexp_list, err);\
+			policy->base.predexp = predexp_list;\
+			*predexp_list_p = predexp_list;\
 		}\
 	}\
 }
@@ -583,6 +597,8 @@ as_status pyobject_to_policy_apply(AerospikeClient * self, as_error * err, PyObj
 		as_policy_apply * policy,
 		as_policy_apply ** policy_p,
 		as_policy_apply * config_apply_policy,
+		as_predexp_list * predexp_list,
+		as_predexp_list ** predexp_list_p,
 		as_exp * exp_list,
 		as_exp ** exp_list_p)
 {
@@ -609,6 +625,9 @@ as_status pyobject_to_policy_apply(AerospikeClient * self, as_error * err, PyObj
 
 	// C client 4.6.7 new policy
 	POLICY_SET_PREDEXP_BASE_FIELD();
+
+	// C client 5.0 new expressions
+	POLICY_SET_EXPRESSIONS_BASE_FIELD();
 
 	// Update the policy
 	POLICY_UPDATE();
@@ -649,12 +668,14 @@ as_status pyobject_to_policy_info(as_error * err, PyObject * py_policy,
  * Returns AEROSPIKE_OK on success. On error, the err argument is populated.
  * We assume that the error object and the policy object are already allocated
  * and initialized (although, we do reset the error object here).
- * exp_list is initialized by this function, caller must free.
+ * exp_list, predexp_list are initialized by this function, caller must free.
  */
 as_status pyobject_to_policy_query(AerospikeClient * self, as_error * err, PyObject * py_policy,
 		as_policy_query * policy,
 		as_policy_query ** policy_p,
 		as_policy_query * config_query_policy,
+		as_predexp_list * predexp_list,
+		as_predexp_list ** predexp_list_p,
 		as_exp * exp_list,
 		as_exp ** exp_list_p)
 {
@@ -679,6 +700,9 @@ as_status pyobject_to_policy_query(AerospikeClient * self, as_error * err, PyObj
 	// C client 4.6.7 new policy
 	POLICY_SET_PREDEXP_BASE_FIELD();
 
+	// C client 5.0 new expressions
+	POLICY_SET_EXPRESSIONS_BASE_FIELD();
+
 	// Update the policy
 	POLICY_UPDATE();
 
@@ -695,6 +719,8 @@ as_status pyobject_to_policy_read(AerospikeClient * self, as_error * err, PyObje
 		as_policy_read * policy,
 		as_policy_read ** policy_p,
 		as_policy_read * config_read_policy,
+		as_predexp_list * predexp_list,
+		as_predexp_list ** predexp_list_p,
 		as_exp * exp_list,
 		as_exp ** exp_list_p)
 {
@@ -724,6 +750,9 @@ as_status pyobject_to_policy_read(AerospikeClient * self, as_error * err, PyObje
 	// C client 4.6.7 new policy
 	POLICY_SET_PREDEXP_BASE_FIELD();
 
+	// C client 5.0 new expressions
+	POLICY_SET_EXPRESSIONS_BASE_FIELD();
+
 	// Update the policy
 	POLICY_UPDATE();
 
@@ -740,6 +769,8 @@ as_status pyobject_to_policy_remove(AerospikeClient * self, as_error * err, PyOb
 		as_policy_remove * policy,
 		as_policy_remove ** policy_p,
 		as_policy_remove * config_remove_policy,
+		as_predexp_list * predexp_list,
+		as_predexp_list ** predexp_list_p,
 		as_exp * exp_list,
 		as_exp ** exp_list_p)
 {
@@ -769,6 +800,9 @@ as_status pyobject_to_policy_remove(AerospikeClient * self, as_error * err, PyOb
 	// C client 4.6.7 new policy
 	POLICY_SET_PREDEXP_BASE_FIELD();
 
+	// C client 5.0 new expressions
+	POLICY_SET_EXPRESSIONS_BASE_FIELD();
+
 	// Update the policy
 	POLICY_UPDATE();
 
@@ -785,6 +819,8 @@ as_status pyobject_to_policy_scan(AerospikeClient * self, as_error * err, PyObje
 		as_policy_scan * policy,
 		as_policy_scan ** policy_p,
 		as_policy_scan * config_scan_policy,
+		as_predexp_list * predexp_list,
+		as_predexp_list ** predexp_list_p,
 		as_exp * exp_list,
 		as_exp ** exp_list_p)
 {
@@ -811,6 +847,9 @@ as_status pyobject_to_policy_scan(AerospikeClient * self, as_error * err, PyObje
 	// C client 4.6.7 new policy
 	POLICY_SET_PREDEXP_BASE_FIELD();
 
+	// C client 5.0 new expressions
+	POLICY_SET_EXPRESSIONS_BASE_FIELD();
+
 	// Update the policy
 	POLICY_UPDATE();
 
@@ -827,6 +866,8 @@ as_status pyobject_to_policy_write(AerospikeClient * self, as_error * err, PyObj
 		as_policy_write * policy,
 		as_policy_write ** policy_p,
 		as_policy_write * config_write_policy,
+		as_predexp_list * predexp_list,
+		as_predexp_list ** predexp_list_p,
 		as_exp * exp_list,
 		as_exp ** exp_list_p)
 {
@@ -857,6 +898,9 @@ as_status pyobject_to_policy_write(AerospikeClient * self, as_error * err, PyObj
 	// C client 4.6.7 new policy
 	POLICY_SET_PREDEXP_BASE_FIELD();
 
+	// C client 5.0 new expressions
+	POLICY_SET_EXPRESSIONS_BASE_FIELD();
+
 	// Update the policy
 	POLICY_UPDATE();
 
@@ -873,6 +917,8 @@ as_status pyobject_to_policy_operate(AerospikeClient * self, as_error * err, PyO
 		as_policy_operate * policy,
 		as_policy_operate ** policy_p,
 		as_policy_operate * config_operate_policy,
+		as_predexp_list * predexp_list,
+		as_predexp_list ** predexp_list_p,
 		as_exp * exp_list,
 		as_exp ** exp_list_p)
 {
@@ -904,17 +950,10 @@ as_status pyobject_to_policy_operate(AerospikeClient * self, as_error * err, PyO
 	POLICY_SET_FIELD(read_mode_sc, as_policy_read_mode_sc);
 
 	// C client 4.6.7 new policy
-	//POLICY_SET_PREDEXP_BASE_FIELD();
+	POLICY_SET_PREDEXP_BASE_FIELD();
 
-	if (exp_list) {
-		PyObject* py_exp_list = PyDict_GetItemString(py_policy, "expressions");
-		if (py_exp_list) {
-			if (convert_exp_list(self, py_exp_list, &exp_list, err) == AEROSPIKE_OK) {
-				policy->base.filter_exp = exp_list;
-				*exp_list_p = exp_list;
-			}
-		}
-	}
+	// C client 5.0 new expressions
+	POLICY_SET_EXPRESSIONS_BASE_FIELD();
 
 	// Update the policy
 	POLICY_UPDATE();
@@ -932,6 +971,8 @@ as_status pyobject_to_policy_batch(AerospikeClient * self, as_error * err, PyObj
 		as_policy_batch * policy,
 		as_policy_batch ** policy_p,
 		as_policy_batch * config_batch_policy,
+		as_predexp_list * predexp_list,
+		as_predexp_list ** predexp_list_p,
 		as_exp * exp_list,
 		as_exp ** exp_list_p)
 {
@@ -962,6 +1003,9 @@ as_status pyobject_to_policy_batch(AerospikeClient * self, as_error * err, PyObj
 
 	// C client 4.6.7 new policy
 	POLICY_SET_PREDEXP_BASE_FIELD();
+
+	// C client 5.0 new expressions
+	POLICY_SET_EXPRESSIONS_BASE_FIELD();
 
 	// Update the policy
 	POLICY_UPDATE();
