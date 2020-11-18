@@ -1847,7 +1847,7 @@ class HLLDescribe(BaseExpr):
 
 
 class HLLMayContain(BaseExpr):
-    op = aerospike.OP_HLL_GET_SIMILARITY
+    op = aerospike.OP_HLL_MAY_CONTAIN
 
     def __init__(self, bin: TypeBinName, values: TypeListValue):
         self.children = (

@@ -33,7 +33,7 @@
 #include "geo.h"
 #include "cdt_types.h"
 
- // EXPR OPS
+// EXPR OPS
 #define VAL 0
 #define EQ 1
 #define NE 2
@@ -77,14 +77,6 @@
 
 // VIRTUAL OPS
 #define END_VA_ARGS 128
-
-// #define _AS_EXP_CODE_CALL_VOP_START 144
-// #define _AS_EXP_CODE_CDT_LIST_CRMOD 145
-// #define _AS_EXP_CODE_CDT_LIST_MOD 146
-// #define _AS_EXP_CODE_CDT_MAP_CRMOD 147
-// #define _AS_EXP_CODE_CDT_MAP_CR 148
-// #define _AS_EXP_CODE_CDT_MAP_MOD 149
-
 #define _AS_EXP_BIT_FLAGS 150
 
 // UTILITY CONSTANTS
@@ -114,27 +106,152 @@ typedef struct {
 	as_list_policy * list_policy;
 	as_map_policy * map_policy;
 
-	// PyObject * pyval2;
-	// PyObject * pyval3;
-	// PyObject * pyval4;
-
 	long num_children;
-	// uint8_t fixed_active;
-	//as_policy_write * policy;// todo add a member for an as_val
 } pred_op;
 
-int bottom = 0;
-
-
-// TODO IMP do error checking for memcpy below
 #define append_array(ar_size) {\
-	memcpy(&((*expressions)[bottom]), &new_entries, sizeof(as_exp_entry) * ar_size);\
-	bottom += ar_size;\
+	memcpy(&((*expressions)[*bottom]), &new_entries, sizeof(as_exp_entry) * ar_size);\
+	*bottom += ar_size;\
+}
+
+#define EXP_SZ(_expr) sizeof((as_exp_entry[]){ _expr })
+
+static
+as_status get_expr_size(int * size, pred_op * preds, as_error * err);
+
+static
+as_status get_exp_val_from_pyval(AerospikeClient * self, as_static_pool * static_pool, int serializer_type, as_exp_entry * new_entry, PyObject * py_obj, pred_op * pred, as_error * err);
+
+static
+as_status add_pred_macros(AerospikeClient * self, as_static_pool * static_pool, int serializer_type, as_vector * unicodeStrVector, as_exp_entry ** expressions, pred_op * pred, int * bottom, as_error * err);
+
+static
+as_status get_expr_size(int * size, pred_op * preds, as_error * err) {
+	//TODO check if op is in valid range+
+
+	static const int expr_sizes[] = {
+		[BIN] = EXP_SZ(as_exp_bin_int(0)),
+		//[VAL] = EXP_SZ(as_exp_val(NULL)), NOTE if I don't count vals I don't need to subtract fro other ops
+		[EQ] = EXP_SZ(as_exp_cmp_eq({},{})),
+		[NE] = EXP_SZ(as_exp_cmp_ne({},{})),
+		[GT] = EXP_SZ(as_exp_cmp_gt({},{})),
+		[GE] = EXP_SZ(as_exp_cmp_ge({},{})),
+		[LT] = EXP_SZ(as_exp_cmp_lt({},{})),
+		[LE] = EXP_SZ(as_exp_cmp_le({},{})),
+		[CMP_REGEX] = EXP_SZ(as_exp_cmp_regex(NULL, NULL, {})),// - 1, // -1 for __cmp_str
+		[CMP_GEO] = EXP_SZ(as_exp_cmp_geo({},{})),// - 2,
+		[AND] = EXP_SZ(as_exp_and({})),// - 1,
+		[OR] = EXP_SZ(as_exp_or({})),// - 1,
+		[NOT] = EXP_SZ(as_exp_or({})),// - 1,
+		[END_VA_ARGS] = EXP_SZ({.op=_AS_EXP_CODE_END_OF_VA_ARGS}),
+		[META_DIGEST_MOD] = EXP_SZ(as_exp_digest_modulo(0)),
+		[META_DEVICE_SIZE] = EXP_SZ(as_exp_device_size()),
+		[META_LAST_UPDATE_TIME] = EXP_SZ(as_exp_last_update()),
+		[META_VOID_TIME] = EXP_SZ(as_exp_void_time()),
+		[META_TTL] = EXP_SZ(as_exp_ttl()),
+		[META_SET_NAME] = EXP_SZ(as_exp_set_name()),
+		[META_KEY_EXISTS] = EXP_SZ(as_exp_key_exist()),
+		[REC_KEY] = EXP_SZ(as_exp_key_int()), // this covers as_exp_key_int() -> as_exp_key_blob
+		[BIN_TYPE] = EXP_SZ(as_exp_bin_type("")),
+		[OP_LIST_EXP_GET_BY_INDEX] = EXP_SZ(as_exp_list_get_by_index(NULL, 0, 0, {}, {})),
+		[OP_LIST_EXP_SIZE] = EXP_SZ(as_exp_list_size(NULL, {})),
+		[OP_LIST_EXP_GET_BY_VALUE] = EXP_SZ(as_exp_list_get_by_value(NULL, 0, {}, {})),
+		[OP_LIST_EXP_GET_BY_VALUE_RANGE] = EXP_SZ(as_exp_list_get_by_value_range(NULL, 0, {}, {}, {})),
+		[OP_LIST_EXP_GET_BY_VALUE_LIST] = EXP_SZ(as_exp_list_get_by_value_list(NULL, 0, {}, {})),
+		[OP_LIST_EXP_GET_BY_VALUE_RANK_RANGE_REL_TO_END] = EXP_SZ(as_exp_list_get_by_rel_rank_range_to_end(NULL, 0, {}, {}, {})),
+		[OP_LIST_EXP_GET_BY_VALUE_RANK_RANGE_REL] = EXP_SZ(as_exp_list_get_by_rel_rank_range(NULL, 0, {}, {}, {}, {})),
+		[OP_LIST_EXP_GET_BY_INDEX_RANGE_TO_END] = EXP_SZ(as_exp_list_get_by_index_range_to_end(NULL, 0, {}, {})),
+		[OP_LIST_EXP_GET_BY_INDEX_RANGE] = EXP_SZ(as_exp_list_get_by_index_range(NULL, 0, {}, {}, {})),
+		[OP_LIST_EXP_GET_BY_RANK] = EXP_SZ(as_exp_list_get_by_rank(NULL, 0, 0, {}, {})),
+		[OP_LIST_EXP_GET_BY_RANK_RANGE_TO_END] = EXP_SZ(as_exp_list_get_by_rank_range_to_end(NULL, 0, {}, {})),
+		[OP_LIST_EXP_APPEND] = EXP_SZ(as_exp_list_append(NULL, NULL, {}, {})),
+		[OP_LIST_EXP_APPEND_ITEMS] = EXP_SZ(as_exp_list_append_items(NULL, NULL, {}, {})),
+		[OP_LIST_EXP_INSERT] = EXP_SZ(as_exp_list_insert(NULL, NULL, {}, {}, {})),
+		[OP_LIST_EXP_INSERT_ITEMS] = EXP_SZ(as_exp_list_insert_items(NULL, NULL, {}, {}, {})),
+		[OP_LIST_EXP_INCREMENT] = EXP_SZ(as_exp_list_increment(NULL, NULL, {}, {}, {})),
+		[OP_LIST_EXP_SET] = EXP_SZ(as_exp_list_set(NULL, NULL, {}, {}, {})),
+		[OP_LIST_EXP_CLEAR] = EXP_SZ(as_exp_list_clear(NULL, {})),
+		[OP_LIST_EXP_SORT] = EXP_SZ(as_exp_list_sort(NULL, 0, {})),
+		[OP_LIST_EXP_REMOVE_BY_VALUE] = EXP_SZ(as_exp_list_remove_by_value(NULL, {}, {})),
+		[OP_LIST_EXP_REMOVE_BY_VALUE_LIST] = EXP_SZ(as_exp_list_remove_by_value_list(NULL, {}, {})),
+		[OP_LIST_EXP_REMOVE_BY_VALUE_RANGE] = EXP_SZ(as_exp_list_remove_by_value_range(NULL, {}, {}, {})),
+		[OP_LIST_EXP_REMOVE_BY_REL_RANK_RANGE_TO_END] = EXP_SZ(as_exp_list_remove_by_rel_rank_range_to_end(NULL, {}, {}, {})),
+		[OP_LIST_EXP_REMOVE_BY_REL_RANK_RANGE] = EXP_SZ(as_exp_list_remove_by_rel_rank_range(NULL, {}, {}, {}, {})),
+		[OP_LIST_EXP_REMOVE_BY_INDEX] = EXP_SZ(as_exp_list_remove_by_index(NULL, {}, {})),
+		[OP_LIST_EXP_REMOVE_BY_INDEX_RANGE_TO_END] = EXP_SZ(as_exp_list_remove_by_index_range_to_end(NULL, {}, {})),
+		[OP_LIST_EXP_REMOVE_BY_INDEX_RANGE] = EXP_SZ(as_exp_list_remove_by_index_range(NULL, {}, {}, {})),
+		[OP_LIST_EXP_REMOVE_BY_RANK] = EXP_SZ(as_exp_list_remove_by_rank(NULL, {}, {})),
+		[OP_LIST_EXP_REMOVE_BY_RANK_RANGE_TO_END] = EXP_SZ(as_exp_list_remove_by_rank_range_to_end(NULL, {}, {})),
+		[OP_LIST_EXP_REMOVE_BY_RANK_RANGE] = EXP_SZ(as_exp_list_remove_by_rank_range(NULL, {}, {}, {})),
+		[OP_MAP_PUT] = EXP_SZ(as_exp_map_put(NULL, NULL, {}, {}, {})),
+		[OP_MAP_PUT_ITEMS] = EXP_SZ(as_exp_map_put_items(NULL, NULL, {}, {})),
+		[OP_MAP_INCREMENT] = EXP_SZ(as_exp_map_increment(NULL, NULL, {}, {}, {})),
+		[OP_MAP_CLEAR] = EXP_SZ(as_exp_map_clear(NULL, {})),
+		[OP_MAP_REMOVE_BY_KEY] = EXP_SZ(as_exp_map_remove_by_key(NULL, {}, {})),
+		[OP_MAP_REMOVE_BY_KEY_LIST] = EXP_SZ(as_exp_map_remove_by_key_list(NULL, {}, {})),
+		[OP_MAP_REMOVE_BY_KEY_RANGE] = EXP_SZ(as_exp_map_remove_by_key_range(NULL, {}, {}, {})),
+		[OP_MAP_REMOVE_BY_KEY_REL_INDEX_RANGE_TO_END] = EXP_SZ(as_exp_map_remove_by_key_rel_index_range_to_end(NULL, {}, {}, {})),
+		[OP_MAP_REMOVE_BY_KEY_REL_INDEX_RANGE] = EXP_SZ(as_exp_map_remove_by_key_rel_index_range(NULL, {}, {}, {}, {})),
+		[OP_MAP_REMOVE_BY_VALUE] = EXP_SZ(as_exp_map_remove_by_value(NULL, {}, {})),
+		[OP_MAP_REMOVE_BY_VALUE_LIST] = EXP_SZ(as_exp_map_remove_by_value_list(NULL, {}, {})),
+		[OP_MAP_REMOVE_BY_VALUE_RANGE] = EXP_SZ(as_exp_map_remove_by_value_range(NULL, {}, {}, {})),
+		[OP_MAP_REMOVE_BY_VALUE_REL_RANK_RANGE_TO_END] = EXP_SZ(as_exp_map_remove_by_value_rel_rank_range_to_end(NULL, {}, {}, {})),
+		[OP_MAP_REMOVE_BY_VALUE_REL_RANK_RANGE] = EXP_SZ(as_exp_map_remove_by_value_rel_rank_range(NULL, {}, {}, {}, {})),
+		[OP_MAP_REMOVE_BY_INDEX] = EXP_SZ(as_exp_map_remove_by_index(NULL, {}, {})),
+		[OP_MAP_REMOVE_BY_INDEX_RANGE_TO_END] = EXP_SZ(as_exp_map_remove_by_index_range_to_end(NULL, {}, {})),
+		[OP_MAP_REMOVE_BY_INDEX_RANGE] = EXP_SZ(as_exp_map_remove_by_index_range(NULL, {}, {}, {})),
+		[OP_MAP_REMOVE_BY_RANK] = EXP_SZ(as_exp_map_remove_by_rank(NULL, {}, {})),
+		[OP_MAP_REMOVE_BY_RANK_RANGE_TO_END] = EXP_SZ(as_exp_map_remove_by_rank_range_to_end(NULL, {}, {})),
+		[OP_MAP_REMOVE_BY_RANK_RANGE] = EXP_SZ(as_exp_map_remove_by_rank_range(NULL, {}, {}, {})),
+		[OP_MAP_SIZE] = EXP_SZ(as_exp_map_size(NULL, {})),
+		[OP_MAP_GET_BY_KEY] = EXP_SZ(as_exp_map_get_by_key(NULL, 0, 0, {}, {})),
+		[OP_MAP_GET_BY_KEY_RANGE] = EXP_SZ(as_exp_map_get_by_key_range(NULL, 0, {}, {}, {})),
+		[OP_MAP_GET_BY_KEY_LIST] = EXP_SZ(as_exp_map_get_by_key_list(NULL, 0, {}, {})),
+		[OP_MAP_GET_BY_KEY_REL_INDEX_RANGE_TO_END] = EXP_SZ(as_exp_map_get_by_key_rel_index_range_to_end(NULL, 0, {}, {}, {})),
+		[OP_MAP_GET_BY_KEY_REL_INDEX_RANGE] = EXP_SZ(as_exp_map_get_by_key_rel_index_range(NULL, 0, {}, {}, {}, {})),
+		[OP_MAP_GET_BY_VALUE] = EXP_SZ(as_exp_map_get_by_value(NULL, 0, {}, {})),
+		[OP_MAP_GET_BY_VALUE_RANGE] = EXP_SZ(as_exp_map_get_by_value_range(NULL, 0, {}, {}, {})),
+		[OP_MAP_GET_BY_VALUE_LIST] = EXP_SZ(as_exp_map_get_by_value_list(NULL, 0, {}, {})),
+		[OP_MAP_GET_BY_VALUE_RANK_RANGE_REL_TO_END] = EXP_SZ(as_exp_map_get_by_value_rel_rank_range_to_end(NULL, 0, {}, {}, {})),
+		[OP_MAP_GET_BY_VALUE_RANK_RANGE_REL] = EXP_SZ(as_exp_map_get_by_value_rel_rank_range(NULL, 0, {}, {}, {}, {})),
+		[OP_MAP_GET_BY_INDEX] = EXP_SZ(as_exp_map_get_by_index(NULL, 0, 0, {}, {})),
+		[OP_MAP_GET_BY_INDEX_RANGE_TO_END] = EXP_SZ(as_exp_map_get_by_index_range_to_end(NULL, 0, {}, {})),
+		[OP_MAP_GET_BY_INDEX_RANGE] = EXP_SZ(as_exp_map_get_by_index_range(NULL, 0, {}, {}, {})),
+		[OP_MAP_GET_BY_RANK] = EXP_SZ(as_exp_map_get_by_rank(NULL, 0, 0, {}, {})),
+		[OP_MAP_GET_BY_RANK_RANGE_TO_END] = EXP_SZ(as_exp_map_get_by_rank_range_to_end(NULL, 0, {}, {})),
+		[OP_MAP_GET_BY_RANK_RANGE] = EXP_SZ(as_exp_map_get_by_rank_range(NULL, 0, {}, {}, {})),
+		[_AS_EXP_BIT_FLAGS] = EXP_SZ(as_exp_uint(0)),
+		[OP_BIT_RESIZE] = EXP_SZ(as_exp_bit_resize(NULL, {}, 0, {})),
+		[OP_BIT_INSERT] = EXP_SZ(as_exp_bit_insert(NULL, {}, {}, {})),
+		[OP_BIT_REMOVE] = EXP_SZ(as_exp_bit_remove(NULL, {}, {}, {})),
+		[OP_BIT_SET] = EXP_SZ(as_exp_bit_set(NULL, {}, {}, {}, {})),
+		[OP_BIT_OR] = EXP_SZ(as_exp_bit_or(NULL, {}, {}, {}, {})),
+		[OP_BIT_XOR] = EXP_SZ(as_exp_bit_xor(NULL, {}, {}, {}, {})),
+		[OP_BIT_AND] = EXP_SZ(as_exp_bit_and(NULL, {}, {}, {}, {})),
+		[OP_BIT_NOT] = EXP_SZ(as_exp_bit_not(NULL, {}, {}, {})),
+		[OP_BIT_LSHIFT] = EXP_SZ(as_exp_bit_lshift(NULL, {}, {}, {}, {})),
+		[OP_BIT_RSHIFT] = EXP_SZ(as_exp_bit_rshift(NULL, {}, {}, {}, {})),
+		[OP_BIT_ADD] = EXP_SZ(as_exp_bit_add(NULL, {}, {}, {}, 0, {})),
+		[OP_BIT_SUBTRACT] = EXP_SZ(as_exp_bit_subtract(NULL, {}, {}, {}, 0, {})),
+		[OP_BIT_SET_INT] = EXP_SZ(as_exp_bit_set_int(NULL, {}, {}, {}, {})),
+		[OP_BIT_GET] = EXP_SZ(as_exp_bit_get({}, {}, {})),
+		[OP_BIT_COUNT] = EXP_SZ(as_exp_bit_count({}, {}, {})),
+		[OP_BIT_LSCAN] = EXP_SZ(as_exp_bit_lscan({}, {}, {}, {})),
+		[OP_BIT_RSCAN] = EXP_SZ(as_exp_bit_rscan({}, {}, {}, {})),
+		[OP_BIT_GET_INT] = EXP_SZ(as_exp_bit_get_int({}, {}, 0, {})),
+		[OP_HLL_ADD] = EXP_SZ(as_exp_hll_add(NULL, {}, 0, {})),
+		[OP_HLL_GET_COUNT] = EXP_SZ(as_exp_hll_update(NULL, {}, {})),
+		[OP_HLL_GET_UNION] = EXP_SZ(as_exp_hll_get_union({}, {})),
+		[OP_HLL_GET_UNION_COUNT] = EXP_SZ(as_exp_hll_get_union_count({}, {})),
+		[OP_HLL_GET_INTERSECT_COUNT] = EXP_SZ(as_exp_hll_get_intersect_count({}, {})),
+		[OP_HLL_GET_SIMILARITY] = EXP_SZ(as_exp_hll_get_similarity({}, {})),
+		[OP_HLL_DESCRIBE] = EXP_SZ(as_exp_hll_describe({})),
+		[OP_HLL_MAY_CONTAIN] = EXP_SZ(as_exp_hll_may_contain({}, {}))
+	};
 }
 
 static
 as_status get_exp_val_from_pyval(AerospikeClient * self, as_static_pool * static_pool, int serializer_type, as_exp_entry * new_entry, PyObject * py_obj, pred_op * pred, as_error * err) {
-	//as_exp_entry new_entries[] = {AS_EXP_VAL_INT(pred->fixed_num)};
 	as_error_reset(err);
 
 	if (!py_obj) {
@@ -151,18 +268,7 @@ as_status get_exp_val_from_pyval(AerospikeClient * self, as_static_pool * static
 			as_exp_entry tmp_entry = as_exp_val((as_val *) bytes);
 			*new_entry = tmp_entry;
 		}
-	} else if (PyInt_Check(py_obj)) {
-		int64_t i = (int64_t) PyInt_AsLong(py_obj);
-		if (i == -1 && PyErr_Occurred()) {
-			if (PyErr_ExceptionMatches(PyExc_OverflowError)) {
-				return as_error_update(err, AEROSPIKE_ERR_PARAM, "integer value exceeds sys.maxsize");
-			}
-		}
 
-		{
-			as_exp_entry tmp_entry = as_exp_int(i);
-			*new_entry = tmp_entry;
-		}
 	} else if (PyLong_Check(py_obj)) {
 		int64_t l = (int64_t) PyLong_AsLongLong(py_obj);
 		if (l == -1 && PyErr_Occurred()) {
@@ -171,10 +277,8 @@ as_status get_exp_val_from_pyval(AerospikeClient * self, as_static_pool * static
 			}
 		}
 
-		{
-			as_exp_entry tmp_entry = as_exp_int(l);
-			*new_entry = tmp_entry;
-		}
+		as_exp_entry tmp_entry = as_exp_int(l);
+		*new_entry = tmp_entry;
 	} else if (PyUnicode_Check(py_obj)) {
 		PyObject * py_ustr = PyUnicode_AsUTF8String(py_obj);
 		char * str = PyBytes_AsString(py_ustr);
@@ -283,8 +387,8 @@ as_status get_exp_val_from_pyval(AerospikeClient * self, as_static_pool * static
 	return err->code;
 }
 
-
-as_status add_pred_macros(AerospikeClient * self, as_static_pool * static_pool, int serializer_type, as_vector * unicodeStrVector, as_exp_entry ** expressions, pred_op * pred, as_error * err) {
+static
+as_status add_pred_macros(AerospikeClient * self, as_static_pool * static_pool, int serializer_type, as_vector * unicodeStrVector, as_exp_entry ** expressions, pred_op * pred, int * bottom, as_error * err) {
 	// PyObject * tuple_py_val = NULL;
 	// PyObject * utf8_temp = NULL;
 	// char* bin_name = NULL;
@@ -1037,7 +1141,7 @@ as_status add_pred_macros(AerospikeClient * self, as_static_pool * static_pool, 
 				append_array(sizeof(new_entries) / sizeof(as_exp_entry) - 4); // - 4 for value, rank, count, bin
 			}
 			break;
-	case OP_MAP_GET_BY_INDEX:;
+		case OP_MAP_GET_BY_INDEX:;
 			{
 				if (get_int64_t(err, AS_PY_MAP_RETURN_KEY, pred->pydict, &lval1) != AEROSPIKE_OK) {
 					return err->code;
@@ -1236,17 +1340,52 @@ as_status add_pred_macros(AerospikeClient * self, as_static_pool * static_pool, 
 				append_array(sizeof(new_entries) / sizeof(as_exp_entry) - 1); // - 1 for bin
 			}
 			break;
+		case OP_HLL_GET_UNION:;
+			{
+				as_exp_entry new_entries[] = {as_exp_hll_get_union({}, {})};
+				append_array(sizeof(new_entries) / sizeof(as_exp_entry) - 2); // - 2 for list, bin
+			}
+			break;
+		case OP_HLL_GET_UNION_COUNT:;
+			{
+				as_exp_entry new_entries[] = {as_exp_hll_get_union_count({}, {})};
+				append_array(sizeof(new_entries) / sizeof(as_exp_entry) - 2); // - 2 for list, bin
+			}
+			break;
+		case OP_HLL_GET_INTERSECT_COUNT:;
+			{
+				as_exp_entry new_entries[] = {as_exp_hll_get_intersect_count({}, {})};
+				append_array(sizeof(new_entries) / sizeof(as_exp_entry) - 2); // - 2 for list, bin
+			}
+			break;
+		case OP_HLL_GET_SIMILARITY:;
+			{
+				as_exp_entry new_entries[] = {as_exp_hll_get_similarity({}, {})};
+				append_array(sizeof(new_entries) / sizeof(as_exp_entry) - 2); // - 2 for list, bin
+			}
+			break;
+		case OP_HLL_DESCRIBE:;
+			{
+				as_exp_entry new_entries[] = {as_exp_hll_describe({})};
+				append_array(sizeof(new_entries) / sizeof(as_exp_entry) - 1); // - 1 for bin
+			}
+			break;
+		case OP_HLL_MAY_CONTAIN:;
+			{
+				as_exp_entry new_entries[] = {as_exp_hll_may_contain({}, {})};
+				append_array(sizeof(new_entries) / sizeof(as_exp_entry) - 2); // - 2 for list, bin
+			}
+			break;
 		default:
 			return as_error_update(err, AEROSPIKE_ERR_PARAM, "Unrecognised expression op type.");
 			break;
-
 	}		
 
 	return err->code;
 }
 
 as_status convert_exp_list(AerospikeClient * self, PyObject* py_exp_list, as_exp** exp_list, as_error* err) {
-	bottom = 0;
+	int bottom = 0;
 	Py_ssize_t size = PyList_Size(py_exp_list);
 	if (size <= 0) {
 		as_error_update(err, AEROSPIKE_ERR_PARAM, "Expressions must be a non empty list of 4 element tuples, generated by a compiled aerospike expression");
@@ -1274,7 +1413,7 @@ as_status convert_exp_list(AerospikeClient * self, PyObject* py_exp_list, as_exp
 	as_static_pool static_pool;
 	memset(&static_pool, 0, sizeof(static_pool));
 
-	c_pred_entries = (as_exp_entry*) calloc((size * MAX_ELEMENTS), sizeof(as_exp_entry)); // iter and count elem?
+	c_pred_entries = (as_exp_entry*) malloc((size * MAX_ELEMENTS) * sizeof(as_exp_entry)); // iter and count elem?
 	if (c_pred_entries == NULL) {
 		as_error_update(err, AEROSPIKE_ERR, "could not calloc mem for c_pred_entries");
 		goto CLEANUP;
@@ -1398,7 +1537,7 @@ as_status convert_exp_list(AerospikeClient * self, PyObject* py_exp_list, as_exp
 
 	for ( int i = 0; i < size; ++i ) {
 		pred_op * pred = (pred_op *) as_vector_get(&pred_queue, (uint32_t)i);
-		if (add_pred_macros(self, &static_pool, SERIALIZER_PYTHON, unicodeStrVector, &c_pred_entries, pred, err) != AEROSPIKE_OK) { //TODO add user defined serializer support
+		if (add_pred_macros(self, &static_pool, SERIALIZER_PYTHON, unicodeStrVector, &c_pred_entries, pred, &bottom, err) != AEROSPIKE_OK) { //TODO add user defined serializer support
 			goto CLEANUP;
 		}
 	}
