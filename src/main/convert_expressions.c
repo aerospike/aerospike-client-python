@@ -55,6 +55,8 @@
 #define META_TTL 68
 #define META_SET_NAME 69
 #define META_KEY_EXISTS 70
+#define META_SINCE_UPDATE_TIME 71
+#define META_IS_TOMBSTONE 72
 
 #define REC_KEY 80
 #define BIN 81
@@ -522,6 +524,12 @@ as_status add_pred_macros(AerospikeClient * self, as_static_pool * static_pool, 
 				break;
 			case META_LAST_UPDATE_TIME:
 				append_array(0, as_exp_last_update());
+				break;
+			case META_SINCE_UPDATE_TIME:
+				append_array(0, as_exp_since_update());
+				break;
+			case META_IS_TOMBSTONE:
+				append_array(0, as_exp_is_tombstone());
 				break;
 			case META_VOID_TIME:
 				append_array(0, as_exp_void_time());
