@@ -26,6 +26,7 @@ REGEX_OPTIONS_KEY = "regex_options"
 
 # TODO change list ops to send call op type and their vtype,
 # that way the switch statement in convert_predexp.c can be reduced to 1 template
+# Document the bin type constants so error codes can be easily ddecoded.
 
 class ExprOp:
     EQ = 1
@@ -49,6 +50,7 @@ class ExprOp:
     META_SET_NAME = 69
     META_KEY_EXISTS = 70
     META_SINCE_UPDATE_TIME = 71
+    META_IS_TOMBSTONE = 72
 
     REC_KEY = 80
     BIN = 81
@@ -962,7 +964,7 @@ class ListInsert(BaseExpr):
     op = aerospike.OP_LIST_EXP_INSERT
 
     def __init__(self, ctx: TypeCDT, policy: TypePolicy, index: TypeIndex, value: TypeValue, bin: TypeBinName):
-        """Create expression that inserts value to specified index of list.
+        """Create an expression that inserts value to specified index of list.
 
             Args:
                 ctx (TypeCDT): Optional context path for nested CDT.
@@ -998,7 +1000,7 @@ class ListInsertItems(BaseExpr):
     op = aerospike.OP_LIST_EXP_INSERT_ITEMS
 
     def __init__(self, ctx: TypeCDT, policy: TypePolicy, index: TypeIndex, values: TypeListValue, bin: TypeBinName):
-        """Create expression that inserts each input list item starting at specified index of list.
+        """Create an expression that inserts each input list item starting at specified index of list.
 
             Args:
                 ctx (TypeCDT): Optional context path for nested CDT.
@@ -1034,7 +1036,7 @@ class ListIncrement(BaseExpr):
     op = aerospike.OP_LIST_EXP_INCREMENT
 
     def __init__(self, ctx: TypeCDT, policy: TypePolicy, index: TypeIndex, value: TypeValue, bin: TypeBinName):
-        """Create expression that increments list[index] by value.
+        """Create anexpression that increments list[index] by value.
 
             Args:
                 ctx (TypeCDT): Optional context path for nested CDT.
@@ -1073,7 +1075,7 @@ class ListSet(BaseExpr):
     op = aerospike.OP_LIST_EXP_SET
 
     def __init__(self, ctx: TypeCDT, policy: TypePolicy, index: TypeIndex, value: TypeValue, bin: TypeBinName):
-        """Create expression that sets item value at specified index in list.
+        """Create an expression that sets item value at specified index in list.
 
             Args:
                 ctx (TypeCDT): Optional context path for nested CDT.
@@ -1108,7 +1110,7 @@ class ListClear(BaseExpr):
     op = aerospike.OP_LIST_EXP_CLEAR
 
     def __init__(self, ctx: TypeCDT, bin: TypeBinName):
-        """Create expression that removes all items in a list.
+        """Create an expression that removes all items in a list.
 
             Args:
                 ctx (TypeCDT): Optional context path for nested CDT.
@@ -1134,7 +1136,7 @@ class ListSort(BaseExpr):
     op = aerospike.OP_LIST_EXP_SORT
 
     def __init__(self, ctx: TypeCDT, order: int, bin: TypeBinName):
-        """Create expression that sorts a list.
+        """Create an expression that sorts a list.
 
             Args:
                 ctx (TypeCDT): Optional context path for nested CDT.
@@ -1160,18 +1162,18 @@ class ListRemoveByValue(BaseExpr):
     op = aerospike.OP_LIST_EXP_REMOVE_BY_VALUE
 
     def __init__(self, ctx: TypeCDT, value: TypeValue, bin: TypeBinName):
-        """[summary]
+        """Create an expression that removes list items identified by value.
 
             Args:
-                ctx (TypeCDT): [description].
-                value (TypeValue): [description].
-                bin (TypeBinName): [description].
+                ctx (TypeCDT): Optional context path for nested CDT.
+                value (TypeValue): Value or value expression to remove.
+                bin (TypeBinName): bin name or bin expression.
 
-            :return: [returnPlaceholder].
+            :return: List value expression.
         
             Example::
-                #.
-                expr = .compile()
+                # See if list bin "a", with `3` removed, is equal to list bin "b".
+                expr = Eq(ListRemoveByValue(None, 3, ListBin("a")), ListBin("b")).compile()
         """        
         self.children = (
             value,
@@ -1187,6 +1189,19 @@ class ListRemoveByValueList(BaseExpr):
     op = aerospike.OP_LIST_EXP_REMOVE_BY_VALUE_LIST
 
     def __init__(self, ctx: TypeCDT, values: TypeListValue, bin: TypeBinName):
+        """Create an expression that removes list items identified by values.
+
+            Args:
+                ctx (TypeCDT): Optional context path for nested CDT.
+                values (TypeListValue): List of values or list value expression.
+                bin (TypeBinName): List bin name or list value expression.
+
+            :return: List value expression.
+        
+            Example::
+                # Remove elements with values [1, 2, 3] from list bin "a".
+                expr = .compile(ListRemoveByValueList(None, [1, 2, 3], ListBin("a")))
+        """        
         self.children = (
             values,
             bin if isinstance(bin, BaseExpr) else ListBin(bin)
@@ -1197,10 +1212,26 @@ class ListRemoveByValueList(BaseExpr):
             self.fixed[CTX_KEY] = ctx
 
 
-class ListRemoveByValueRange(BaseExpr):
+class ListRemoveByValueRange(BaseExpr): #TODO test this with begin or end as None
     op = aerospike.OP_LIST_EXP_REMOVE_BY_VALUE_RANGE
 
     def __init__(self, ctx: TypeCDT, begin: TypeValue, end: TypeValue, bin: TypeBinName):
+        """ Create an expression that removes list items identified by value range
+            (begin inclusive, end exclusive). If begin is None, the range is less than end.
+            If end is None, the range is greater than or equal to begin.
+
+            Args:
+                ctx (TypeCDT): Optional context path for nested CDT.
+                begin (TypeValue): Begin value or value expression for range.
+                end (TypeValue): End value or value expression for range.
+                bin (TypeBinName): List bin name or list value expression.
+
+            :return: List value expression.
+        
+            Example::
+                # Remove list of items with values >= 3 and < 7 from list bin "a".
+                expr = ListRemoveByValueRange(None, 3, 7, ListBin("a")).compile()
+        """        
         self.children = (
             begin,
             end,
@@ -1216,6 +1247,20 @@ class ListRemoveByValueRelRankToEnd(BaseExpr):
     op = aerospike.OP_LIST_EXP_REMOVE_BY_REL_RANK_RANGE_TO_END
 
     def __init__(self, ctx: TypeCDT, value: TypeValue, rank: TypeRank, bin: TypeBinName):
+        """Create an expression that removes list items nearest to value and greater by relative rank.
+
+            Args:
+                ctx (TypeCDT): Optional context path for nested CDT.
+                value (TypeValue): Start value or value expression.
+                rank (TypeRank): Rank integer or integer expression.
+                bin (TypeBinName): List bin name or list value expression.
+
+            :return: List value expression.
+        
+            Example::
+                # Remove elements larger than 4 by relative rank in list bin "a".
+                expr = ListRemoveByValueRelRankToEnd(None, 4, 1, ListBin("a")).compile()
+        """        
         self.children = (
             value,
             rank,
@@ -1231,6 +1276,25 @@ class ListRemoveByValueRelRankRange(BaseExpr):
     op = aerospike.OP_LIST_EXP_REMOVE_BY_REL_RANK_RANGE
 
     def __init__(self, ctx: TypeCDT, value: TypeValue, rank: TypeRank, count: TypeCount, bin: TypeBinName):
+        """ Create expression that removes list items nearest to value and greater by relative rank with a
+            count limit.
+
+            Args:
+                ctx (TypeCDT): Optional context path for nested CDT.
+                value (TypeValue): Start value or value expression.
+                rank (TypeRank): Rank integer or integer expression.
+                count (TypeCount): How many elements to remove.
+                bin (TypeBinName): List bin name or list value expression.
+
+            :return: List value expression.
+        
+            Example::
+                # After removing the 3 elements larger than 4 by relative rank, does list bin "a" include 9?.
+                expr = GT(
+                        ListGetByValue(None, aerospike.LIST_RETURN_COUNT, 9,
+                            ListRemoveByValueRelRankRange(None, 4, 1, 0, ListBin("a"))),
+                        0).compile()
+        """        
         self.children = (
             value,
             rank,
@@ -1247,6 +1311,19 @@ class ListRemoveByIndex(BaseExpr):
     op = aerospike.OP_LIST_EXP_REMOVE_BY_INDEX
 
     def __init__(self, ctx: TypeCDT, index: TypeIndex, bin: TypeBinName):
+        """Create an expression that removes "count" list items starting at specified index.
+
+            Args:
+                ctx (TypeCDT): Optional context path for nested CDT.
+                index (TypeIndex): Index integer or integer expression of element to remove.
+                bin (TypeBinName): List bin name or list value expression.
+
+            :return: List value expression.
+        
+            Example::
+                # Get size of list bin "a" after index 3 has been removed.
+                expr = ListSize(None, ListRemoveByIndex(None, 3, ListBin("a"))).compile()
+        """        
         self.children = (
             index,
             bin if isinstance(bin, BaseExpr) else ListBin(bin)
@@ -1261,6 +1338,19 @@ class ListRemoveByIndexRangeToEnd(BaseExpr):
     op = aerospike.OP_LIST_EXP_REMOVE_BY_INDEX_RANGE_TO_END
 
     def __init__(self, ctx: TypeCDT, index: TypeIndex, bin: TypeBinName):
+        """Create an expression that removes list items starting at specified index to the end of list.
+
+            Args:
+                ctx (TypeCDT): Optional context path for nested CDT.
+                index (TypeIndex): Starting index integer or integer expression of elements to remove.
+                bin (TypeBinName): List bin name or list value expression.
+
+            :return: List value expression.
+        
+            Example::
+                # Remove all elements starting from list bin "a" at index 3 and beyond.
+                expr = ListRemoveByIndexRangeToEnd(None, 3, ListBin("a")).compile()
+        """        
         self.children = (
             index,
             bin if isinstance(bin, BaseExpr) else ListBin(bin)
@@ -1275,6 +1365,20 @@ class ListRemoveByIndexRange(BaseExpr):
     op = aerospike.OP_LIST_EXP_REMOVE_BY_INDEX_RANGE
 
     def __init__(self, ctx: TypeCDT, index: TypeIndex, count: TypeCount, bin: TypeBinName):
+        """Create an expression that removes "count" list items starting at specified index.
+
+            Args:
+                ctx (TypeCDT): Optional context path for nested CDT.
+                index (TypeIndex): Starting index integer or integer expression of elements to remove.
+                count (TypeCount): Integer or integer expression, how many elements to remove.
+                bin (TypeBinName): List bin name or list value expression.
+
+            :return: List value expression.
+        
+            Example::
+                # Get size of list bin "a" after index 3, 4, and 5 have been removed.
+                expr = ListSize(None, ListRemoveByIndex(None, 3, 3, ListBin("a"))).compile()
+        """        
         self.children = (
             index,
             count,
@@ -1290,6 +1394,19 @@ class ListRemoveByRank(BaseExpr):
     op = aerospike.OP_LIST_EXP_REMOVE_BY_RANK
 
     def __init__(self, ctx: TypeCDT, rank: TypeRank, bin: TypeBinName):
+        """Create an expression that removes list item identified by rank.
+
+            Args:
+                ctx (TypeCDT): Optional context path for nested CDT.
+                rank (TypeRank): Rank integer or integer expression of element to remove.
+                bin (TypeBinName): List bin name or list value expression.
+
+            :return: List value expression.
+        
+            Example::
+                # Remove smallest value in list bin "a".
+                expr = ListRemoveByRank(None, 0, ListBin("a")).compile()
+        """        
         self.children = (
             rank,
             bin if isinstance(bin, BaseExpr) else ListBin(bin)
@@ -1304,6 +1421,19 @@ class ListRemoveByRankRangeToEnd(BaseExpr):
     op = aerospike.OP_LIST_EXP_REMOVE_BY_RANK_RANGE_TO_END
 
     def __init__(self, ctx: TypeCDT, rank: TypeRank, bin: TypeBinName):
+        """Create an expression that removes list items starting at specified rank to the last ranked item.
+
+            Args:
+                ctx (TypeCDT): Optional context path for nested CDT.
+                rank (TypeRank): Rank integer or integer expression of element to start removing at.
+                bin (TypeBinName): List bin name or list value expression.
+
+            :return: List value expression.
+        
+            Example::
+                # Remove the 2 largest elements from List bin "a".
+                expr = ListRemoveByRankRangeToEnd(None, -2, ListBin("a")).compile()
+        """        
         self.children = (
             rank,
             bin if isinstance(bin, BaseExpr) else ListBin(bin)
@@ -1318,6 +1448,20 @@ class ListRemoveByRankRange(BaseExpr):
     op = aerospike.OP_LIST_EXP_REMOVE_BY_RANK_RANGE
 
     def __init__(self, ctx: TypeCDT, rank: TypeRank, count: TypeCount, bin: TypeBinName):
+        """Create an expression that removes "count" list items starting at specified rank.
+
+            Args:
+                ctx (TypeCDT): Optional context path for nested CDT.
+                rank (TypeRank): Rank integer or integer expression of element to start removing at.
+                count (TypeCount): Count integer or integer expression of elements to remove.
+                bin (TypeBinName): List bin name or list value expression.
+
+            :return: List value expression.
+        
+            Example::
+                # Remove the 3 smallest items from list bin "a".
+                expr = ListRemoveByRankRange(None, 0, 3, ListBin("a")).compile()
+        """        
         self.children = (
             rank,
             count,
@@ -1345,6 +1489,18 @@ class ListSize(BaseExpr): #TODO do tests
     op = aerospike.OP_LIST_EXP_SIZE
 
     def __init__(self, ctx: TypeCDT, bin: TypeBinName):
+        """Create an expression that returns list size.
+
+            Args:
+                ctx (TypeCDT): Optional context path for nested CDT.
+                bin (TypeBinName): [description].
+
+            :return: Integer expression.
+        
+            Example::
+                #Take the size of list bin "a".
+                expr = ListSize(None, ListBin("a")).compile()
+        """        
         self.children = (
             bin if isinstance(bin, BaseExpr) else ListBin(bin),
         )
@@ -1358,6 +1514,21 @@ class ListGetByValue(BaseExpr):
     op = aerospike.OP_LIST_EXP_GET_BY_VALUE
 
     def __init__(self, ctx: TypeCDT, return_type: int, value: TypeValue, bin: TypeBinName):
+        """ Create expression that selects list items identified by value and returns selected
+            data specified by rtype.
+
+            Args:
+                ctx (TypeCDT): Optional context path for nested CDT.
+                return_type (int): One of the aerospike list return types.
+                value (TypeValue): Value or value expression of element to get.
+                bin (TypeBinName): List bin name or list value expression.
+
+            :return: Expression.
+        
+            Example::
+                # Get the index of the element with value, 3, in list bin "a".
+                expr = ListGetByValue(None, aerospike.LIST_RETURN_INDEX, 3, ListBin("a")).compile()
+        """        
         self.children = (
             value,
             bin if isinstance(bin, BaseExpr) else ListBin(bin)
@@ -1379,6 +1550,22 @@ class ListGetByValueRange(BaseExpr):
         value_end: TypeValue,
         bin: TypeBinName
     ):
+        """ Create expression that selects list items identified by value range and returns selected
+            data specified by rtype.
+
+            Args:
+                ctx (TypeCDT): Optional context path for nested CDT.
+                return_type (int): One of the aerospike list return types.
+                value_begin (TypeValue): Value or value expression of first element to get.
+                value_end (TypeValue): Value or value expression of ending element.
+                bin (TypeBinName): List bin name or list value expression.
+
+            :return: Expression.
+        
+            Example::
+                # Get rank of values between 3 (inclusive) and 7 (exclusive) in list bin "a".
+                expr = ListGetByValueRange(None, aerospike.LIST_RETURN_RANK, 3, 7, ListBin("a")).compile()
+        """        
         self.children = (
             value_begin,
             value_end,
@@ -1393,7 +1580,22 @@ class ListGetByValueRange(BaseExpr):
 class ListGetByValueList(BaseExpr):
     op = aerospike.OP_LIST_EXP_GET_BY_VALUE_LIST
 
-    def __init__(self, ctx: TypeCDT, return_type: int, value: Union[BaseExpr, list], bin: TypeBinName):
+    def __init__(self, ctx: TypeCDT, return_type: int, value: TypeListValue, bin: TypeBinName):
+        """ Create expression that selects list items identified by values and returns selected
+            data specified by rtype.
+
+            Args:
+                ctx (TypeCDT): Optional context path for nested CDT.
+                return_type (int): One of the aerospike list return types.
+                value (TypeListValue): List or list expression of values of elements to get.
+                bin (TypeBinName): List bin name or list value expression.
+
+            :return: Expression.
+        
+            Example::
+                #Get the indexes of the the elements in list bin "a" with values [3, 6, 12].
+                expr = ListGetByValueList(None, aerospike.LIST_RETURN_INDEX, [3, 6, 12], ListBin("a")).compile()
+        """        
         self.children = (
             value,
             bin if isinstance(bin, BaseExpr) else ListBin(bin)
@@ -1407,7 +1609,23 @@ class ListGetByValueList(BaseExpr):
 class ListGetByValueRelRankRangeToEnd(BaseExpr):
     op = aerospike.OP_LIST_EXP_GET_BY_VALUE_RANK_RANGE_REL_TO_END
 
-    def __init__(self, ctx: TypeCDT, return_type: int, value: Union[BaseExpr, list], rank: TypeRank, bin: TypeBinName):
+    def __init__(self, ctx: TypeCDT, return_type: int, value: TypeValue, rank: TypeRank, bin: TypeBinName):
+        """ Create an expression that selects list items nearest to value and greater by relative rank
+            and returns selected data specified by rtype.
+
+            Args:
+                ctx (TypeCDT): Optional context path for nested CDT.
+                return_type (int): One of the aerospike list return types.
+                value (TypeValue): Value or vaule expression to get items relative to.
+                rank (TypeRank): Rank intger expression. rank relative to "value" to start getting elements.
+                bin (TypeBinName): List bin name or list value expression.
+
+            :return: Expression.
+        
+            Example::
+                # Get the values of all elements in list bin "a" larger than 3.
+                expr = ListGetByValueRelRankRangeToEnd(None, aerospike.LIST_RETURN_VALUE, 3, 1, ListBin("a")).compile()
+        """        
         self.children = (
             value,
             rank,
@@ -1422,7 +1640,24 @@ class ListGetByValueRelRankRangeToEnd(BaseExpr):
 class ListGetByValueRelRankRange(BaseExpr):
     op = aerospike.OP_LIST_EXP_GET_BY_VALUE_RANK_RANGE_REL
 
-    def __init__(self, ctx: TypeCDT, return_type: int, value: Union[BaseExpr, list], rank: TypeRank, count: TypeCount, bin: TypeBinName):
+    def __init__(self, ctx: TypeCDT, return_type: int, value: TypeValue, rank: TypeRank, count: TypeCount, bin: TypeBinName):
+        """ Create expression that selects list items nearest to value and greater by relative rank with a
+            count limit and returns selected data specified by rtype.
+
+            Args:
+                ctx (TypeCDT): Optional context path for nested CDT.
+                return_type (int): One of the aerospike list return types.
+                value (TypeValue): Value or vaule expression to get items relative to.
+                rank (TypeRank): Rank intger expression. rank relative to "value" to start getting elements.
+                count (TypeCount): How many elements to get.
+                bin (TypeBinName): List bin name or list value expression.
+
+            :return: Expression.
+        
+            Example::
+                # Get the next 2 values in list bin "a" larger than 3.
+                expr = ListGetByValueRelRankRange(None, aerospike.LIST_RETURN_VALUE, 3, 1, 2, ListBin("a")).compile()
+        """        
         self.children = (
             value,
             rank,
@@ -1446,9 +1681,25 @@ class ListGetByIndex(BaseExpr):
         index: TypeIndex,
         bin: TypeBinName,
     ):
+        """ Create an expression that selects list item identified by index
+            and returns selected data specified by rtype.
+
+            Args:
+                ctx (TypeCDT): Optional context path for nested CDT.
+                return_type (int): One of the aerospike list return types.
+                value_type (int): The value type that will be returned by this expression (ResultType).
+                index (TypeIndex): Integer or integer expression of index to get element at.
+                bin (TypeBinName): List bin name or list value expression.
+
+            :return: Expression.
+        
+            Example::
+                # Get the value at index 0 in list bin "a". (assume this value is an integer)
+                expr = ListGetByIndex(None, aerospike.LIST_RETURN_VALUE, ResultType.INTEGER, 0, ListBin("a")).compile()
+        """    
         self.children = (
             index,
-            bin if isinstance(bin, BaseExpr) else ListBin(bin)  # TODO should this be implemented in other places?
+            bin if isinstance(bin, BaseExpr) else ListBin(bin)
         )
         self.fixed = {BIN_TYPE_KEY: value_type, RETURN_TYPE_KEY: return_type}
 
@@ -1460,6 +1711,21 @@ class ListGetByIndexRangeToEnd(BaseExpr):
     op = aerospike.OP_LIST_EXP_GET_BY_INDEX_RANGE_TO_END
 
     def __init__(self, ctx: TypeCDT, return_type: int, index: TypeIndex, bin: TypeBinName):
+        """ Create an expression that selects list items starting at specified index to the end of list
+            and returns selected data specified by rtype.
+
+            Args:
+                ctx (TypeCDT): Optional context path for nested CDT.
+                return_type (int): One of the aerospike list return types.
+                index (TypeIndex): Integer or integer expression of index to start getting elements at.
+                bin (TypeBinName): List bin name or list value expression.
+
+            :return: Expression.
+        
+            Example::
+                # Get element 5 and onwards from list bin "a".
+                expr = ListGetByIndexRangeToEnd(None, aerospike.LIST_RETURN_VALUE, 5, ListBin("a")).compile()
+        """        
         self.children = (
             index,
             bin if isinstance(bin, BaseExpr) else ListBin(bin)
@@ -1474,6 +1740,22 @@ class ListGetByIndexRange(BaseExpr):
     op = aerospike.OP_LIST_EXP_GET_BY_INDEX_RANGE
 
     def __init__(self, ctx: TypeCDT, return_type: int, index: TypeIndex, count: TypeCount, bin: TypeBinName):
+        """ Create expression that selects "count" list items starting at specified index
+            and returns selected data specified by rtype.
+
+            Args:
+                ctx (TypeCDT): Optional context path for nested CDT.
+                return_type (int): One of the aerospike list return types.
+                index (TypeIndex): Integer or integer expression of index to start getting elements at.
+                count (TypeCount): Integer or integer expression for count of elements to get.
+                bin (TypeBinName): List bin name or list value expression.
+
+            :return: Expression.
+        
+            Example::
+                # Get elements at indexes 3, 4, 5, 6 in list bin "a".
+                expr = ListGetByIndexRange(None, aerospike.LIST_RETURN_VALUE, 3, 4, ListBin("a")).compile()
+        """        
         self.children = (
             index,
             count,
@@ -1492,15 +1774,31 @@ class ListGetByRank(BaseExpr):
         self,
         ctx: TypeCDT,
         return_type: int,
-        val_type: int,
+        value_type: int,
         rank: TypeRank,
         bin: TypeBinName,
     ):
+        """ Create an expression that selects list item identified by rank
+            and returns selected data specified by rtype.
+
+            Args:
+                ctx (TypeCDT): Optional context path for nested CDT.
+                return_type (int): One of the aerospike list return types.
+                value_type (int): The value type that will be returned by this expression (ResultType).
+                rank (TypeRank): Rank integer or integer expression of element to get.
+                bin (TypeBinName): List bin name or list value expression.
+
+            :return: Expression.
+        
+            Example::
+                # Get the smallest element in list bin "a".
+                expr = ListGetByRank(None, aerospike.LIST_RETURN_VALUE, aerospike.ResultType.INTEGER, 0, ListBin("a")).compile()
+        """        
         self.children = (
             rank,
             bin if isinstance(bin, BaseExpr) else ListBin(bin)
         )
-        self.fixed = {BIN_TYPE_KEY: val_type, RETURN_TYPE_KEY: return_type}
+        self.fixed = {BIN_TYPE_KEY: value_type, RETURN_TYPE_KEY: return_type}
 
         if ctx is not None:
             self.fixed[CTX_KEY] = ctx
@@ -1510,6 +1808,21 @@ class ListGetByRankRangeToEnd(BaseExpr):
     op = aerospike.OP_LIST_EXP_GET_BY_RANK_RANGE_TO_END
 
     def __init__(self, ctx: TypeCDT, return_type: int, rank: TypeRank, bin: TypeBinName):
+        """ Create expression that selects list items starting at specified rank to the last ranked item
+            and returns selected data specified by rtype.
+
+            Args:
+                ctx (TypeCDT): Optional context path for nested CDT.
+                return_type (int): One of the aerospike list return types.
+                rank (TypeRank): Rank integer or integer expression of first element to get.
+                bin (TypeBinName): List bin name or list value expression.
+
+            :return: Expression.
+        
+            Example::
+                # Get the three largest elements in list bin "a".
+                expr = ListGetByRankRangeToEnd(None, aerospike.LIST_RETURN_VALUE, -3, ListBin("a")).compile()
+        """        
         self.children = (
             rank,
             bin if isinstance(bin, BaseExpr) else ListBin(bin)
@@ -1524,6 +1837,22 @@ class ListGetByRankRange(BaseExpr):
     op = aerospike.OP_LIST_EXP_GET_BY_RANK_RANGE
 
     def __init__(self, ctx: TypeCDT, return_type: int, rank: TypeRank, count: TypeCount, bin: TypeBinName):
+        """ Create expression that selects "count" list items starting at specified rank
+            and returns selected data specified by rtype.
+
+            Args:
+                ctx (TypeCDT): Optional context path for nested CDT.
+                return_type (int): One of the aerospike list return types.
+                rank (TypeRank): Rank integer or integer expression of first element to get.
+                count (TypeCount): Count integer or integer expression for how many elements to get.
+                bin (TypeBinName): List bin name or list value expression.
+
+            :return: Expression.
+        
+            Example::
+                # Get the 3 smallest elements in list bin "a".
+                expr = ListGetByRankRange(None, aerospike.LIST_RETURN_VALUE, 0, 3, ListBin("a")).compile()
+        """        
         self.children = (
             rank,
             count,
@@ -2071,7 +2400,7 @@ class MapGetByRank(BaseExpr):
         self,
         ctx: TypeCDT,
         return_type: int,
-        val_type: int,
+        value_type: int,
         rank: TypeRank,
         bin: TypeBinName,
     ):
@@ -2079,7 +2408,7 @@ class MapGetByRank(BaseExpr):
             rank,
             bin if isinstance(bin, BaseExpr) else MapBin(bin)
         )
-        self.fixed = {BIN_TYPE_KEY: val_type, RETURN_TYPE_KEY: return_type}
+        self.fixed = {BIN_TYPE_KEY: value_type, RETURN_TYPE_KEY: return_type}
 
         if ctx is not None:
             self.fixed[CTX_KEY] = ctx
