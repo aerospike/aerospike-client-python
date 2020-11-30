@@ -1200,7 +1200,7 @@ class ListRemoveByValueList(BaseExpr):
         
             Example::
                 # Remove elements with values [1, 2, 3] from list bin "a".
-                expr = .compile(ListRemoveByValueList(None, [1, 2, 3], ListBin("a")))
+                expr = ListRemoveByValueList(None, [1, 2, 3], ListBin("a")).compile()
         """        
         self.children = (
             values,
@@ -1348,7 +1348,7 @@ class ListRemoveByIndexRangeToEnd(BaseExpr):
             :return: List value expression.
         
             Example::
-                # Remove all elements starting from list bin "a" at index 3 and beyond.
+                # Remove all elements starting from index 3 in list bin "a".
                 expr = ListRemoveByIndexRangeToEnd(None, 3, ListBin("a")).compile()
         """        
         self.children = (
@@ -1873,6 +1873,21 @@ class MapPut(BaseExpr):
     op = aerospike.OP_MAP_PUT
 
     def __init__(self, ctx: TypeCDT, policy: TypePolicy, key: TypeKey, value: TypeValue, bin: TypeBinName):
+        """Create expression that writes key/val item to map bin.
+
+            Args:
+                ctx (TypeCDT): Optional context path for nested CDT.
+                policy (TypePolicy): Optional map write policy.
+                key (TypeKey): Key value or value expression to put into map.
+                value (TypeValue): Value expression to put into map.
+                bin (TypeBinName): Map bin or map value expression.
+
+            :return: Map expression.
+        
+            Example::
+                # Put {27: 'key27'} into map bin "b".
+                expr = MapPut(None, None, 27, 'key27', MapBin("b")).compile()
+        """        
         self.children = (
             key,
             value,
@@ -1892,6 +1907,20 @@ class MapPutItems(BaseExpr):
     op = aerospike.OP_MAP_PUT_ITEMS
 
     def __init__(self, ctx: TypeCDT, policy: TypePolicy, map: map, bin: TypeBinName):
+        """Create expression that writes each map item to map bin.
+
+            Args:
+                ctx (TypeCDT): Optional context path for nested CDT.
+                policy (TypePolicy): Optional map write policy.
+                map (map): Map or map value expression of items to put into target map.
+                bin (TypeBinName): Map bin or map value expression.
+
+            :return: Map expression.
+        
+            Example::
+                # Put {27: 'key27', 28: 'key28'} into map bin "b".
+                expr = MapPut(None, None, {27: 'key27', 28: 'key28'}, MapBin("b")).compile()
+        """        
         self.children = (
             map,
             _GenericExpr(ExprOp._AS_EXP_CODE_CDT_MAP_CRMOD, 0, {MAP_POLICY_KEY: policy} if policy is not None else {}),
@@ -1910,6 +1939,22 @@ class MapIncrement(BaseExpr):
     op = aerospike.OP_MAP_INCREMENT
 
     def __init__(self, ctx: TypeCDT, policy: TypePolicy, key: TypeKey, value: TypeValue, bin: TypeBinName):
+        """ Create expression that increments values by incr for all items identified by key.
+            Valid only for numbers.
+
+            Args:
+                ctx (TypeCDT): Optional context path for nested CDT.
+                policy (TypePolicy): Optional map write policy.
+                key (TypeKey): Key value or value expression element to increment.
+                value (TypeValue): Increment element by value expression.
+                bin (TypeBinName): Map bin or map value expression.
+
+            :return: Map expression.
+        
+            Example::
+                # Increment element at 'vageta' in list bin "b" by 9000.
+                expr = MapIncrement(None, None, 'vageta', 9000, MapBin("b")).compile()
+        """        
         self.children = (
             key,
             value,
@@ -1929,6 +1974,18 @@ class MapClear(BaseExpr):
     op = aerospike.OP_MAP_CLEAR
 
     def __init__(self, ctx: TypeCDT, bin: TypeBinName):
+        """Create expression that removes all items in map.
+
+            Args:
+                ctx (TypeCDT): Optional context path for nested CDT.
+                bin (TypeBinName): Map bin or map value expression.
+
+            :return: Map expression.
+        
+            Example::
+                # Clear map bin "b".
+                expr = MapClear(None, MapBin("b")).compile()
+        """        
         self.children = (
             bin if isinstance(bin, BaseExpr) else MapBin(bin),
         )
@@ -1942,6 +1999,19 @@ class MapRemoveByKey(BaseExpr):
     op = aerospike.OP_MAP_REMOVE_BY_KEY
 
     def __init__(self, ctx: TypeCDT, key: TypeKey, bin: TypeBinName):
+        """Create expression that removes map item identified by key.
+
+            Args:
+                ctx (TypeCDT): Optional context path for nested CDT.
+                key (TypeKey): Key value or value expression of key to element to remove.
+                bin (TypeBinName): Map bin or map value expression.
+
+            :return: Map expression.
+        
+            Example::
+                # Remove element at key 1 in map bin "b".
+                expr = MapRemoveByKey(None, 1, MapBin("b")).compile()
+        """        
         self.children = (
             key,
             bin if isinstance(bin, BaseExpr) else MapBin(bin),
@@ -1956,6 +2026,19 @@ class MapRemoveByKeyList(BaseExpr):
     op = aerospike.OP_MAP_REMOVE_BY_KEY_LIST
 
     def __init__(self, ctx: TypeCDT, keys: List[TypeKey], bin: TypeBinName):
+        """Create expression that removes map items identified by keys.
+
+            Args:
+                ctx (TypeCDT): Optional context path for nested CDT.
+                key (List[TypeKey]): List of key values or a list value expression of keys to elements to remove.
+                bin (TypeBinName): Map bin or map value expression.
+
+            :return: Map expression.
+        
+            Example::
+                # Remove elements at keys [1, 2] in map bin "b".
+                expr = MapRemoveByKey(None, [1, 2], MapBin("b")).compile()
+        """        
         self.children = (
             keys,
             bin if isinstance(bin, BaseExpr) else MapBin(bin),
@@ -1969,7 +2052,23 @@ class MapRemoveByKeyList(BaseExpr):
 class MapRemoveByKeyRange(BaseExpr):
     op = aerospike.OP_MAP_REMOVE_BY_KEY_RANGE
 
-    def __init__(self, ctx: TypeCDT, begin: TypeValue, end: TypeValue, bin: TypeBinName):
+    def __init__(self, ctx: TypeCDT, begin: TypeValue, end: TypeValue, bin: TypeBinName): # TODO test this with None as begin and end
+        """ Create expression that removes map items identified by key range 
+            (begin inclusive, end exclusive). If begin is None, the range is less than end.
+            If end is None, the range is greater than equal to begin.
+
+            Args:
+                ctx (TypeCDT): Optional context path for nested CDT.
+                begin (TypeValue): Begin value expression.
+                end (TypeValue): End value expression.
+                bin (TypeBinName): Map bin or map value expression.
+
+            :return: Map expression.
+        
+            Example::
+                # Remove elements at keys between 1 and 10 in map bin "b".
+                expr = MapRemoveByKey(None, 1, 10 MapBin("b")).compile()
+        """        
         self.children = (
             begin,
             end,
@@ -1985,6 +2084,20 @@ class MapRemoveByKeyRelIndexRangeToEnd(BaseExpr):
     op = aerospike.OP_MAP_REMOVE_BY_KEY_REL_INDEX_RANGE_TO_END
 
     def __init__(self, ctx: TypeCDT, key: TypeKey, index: TypeIndex, bin: TypeBinName):
+        """Create expression that removes map items nearest to key and greater by index.
+
+            Args:
+                ctx (TypeCDT): Optional context path for nested CDT.
+                key (TypeKey): Key value or expression for key to start removing from.
+                index (TypeIndex): Index integer or integer expression.
+                bin (TypeBinName): Map bin or map value expression.
+
+            :return: Map expression.
+        
+            Example::
+                # Map bin "b" has {"key1": 1, "key2": 2, "key3": 3}.
+                expr = .compile() #TODO complete this example.
+        """        
         self.children = (
             key,
             index,
@@ -2000,6 +2113,21 @@ class MapRemoveByKeyRelIndexRange(BaseExpr):
     op = aerospike.OP_MAP_REMOVE_BY_KEY_REL_INDEX_RANGE
 
     def __init__(self, ctx: TypeCDT, key: TypeKey, index: TypeIndex, count: TypeCount, bin: TypeBinName):
+        """Create expression that removes map items nearest to key and greater by index with a count limit.
+
+            Args:
+                ctx (TypeCDT): Optional context path for nested CDT.
+                key (TypeKey): Key value or expression for key to start removing from.
+                index (TypeIndex): Index integer or integer expression.
+                count (TypeCount): Integer expression for how many elements to remove.
+                bin (TypeBinName): Map bin or map value expression.
+
+            :return: [Map expression.
+        
+            Example::
+                # Remove 3 elements with keys greater than "key1" from map bin "b".
+                expr = MapRemoveByKeyRelIndexRange(None, "key1", 1, 3, MapBin("b")).compile()
+        """        
         self.children = (
             key,
             index,
@@ -2016,6 +2144,19 @@ class MapRemoveByValue(BaseExpr):
     op = aerospike.OP_MAP_REMOVE_BY_VALUE
 
     def __init__(self, ctx: TypeCDT, value: TypeValue, bin: TypeBinName):
+        """Create expression that removes map items identified by value.
+
+            Args:
+                ctx (TypeCDT): Optional context path for nested CDT.
+                value (TypeValue): Value or value expression to remove.
+                bin (TypeBinName): Bin name or bin expression.
+
+            :return: Map expression.
+        
+            Example::
+                # Remove {"key1": 1} from map bin "b".
+                expr = MapRemoveByValue(None, 1, MapBin("b")).compile()
+        """        
         self.children = (
             value,
             bin if isinstance(bin, BaseExpr) else MapBin(bin),
@@ -2030,6 +2171,19 @@ class MapRemoveByValueList(BaseExpr):
     op = aerospike.OP_MAP_REMOVE_BY_VALUE_LIST
 
     def __init__(self, ctx: TypeCDT, values: TypeListValue, bin: TypeBinName):
+        """Create expression that removes map items identified by values.
+
+            Args:
+                ctx (TypeCDT): Optional context path for nested CDT.
+                values (TypeListValue): List of values or list value expression.
+                bin (TypeBinName): Bin name or map value expression.
+
+            :return: Map expression.
+        
+            Example::
+                # Remove elements with values 1, 2, 3 from map bin "b".
+                expr = MapRemoveByValueList(None, [1, 2, 3], MapBin("b")).compile()
+        """        
         self.children = (
             values,
             bin if isinstance(bin, BaseExpr) else MapBin(bin),
@@ -2044,6 +2198,22 @@ class MapRemoveByValueRange(BaseExpr):
     op = aerospike.OP_MAP_REMOVE_BY_VALUE_RANGE
 
     def __init__(self, ctx: TypeCDT, begin: TypeValue, end: TypeValue, bin: TypeBinName):
+        """ Create expression that removes map items identified by value range
+            (begin inclusive, end exclusive). If begin is nil, the range is less than end.
+            If end is nil, the range is greater than equal to begin.
+
+            Args:
+                ctx (TypeCDT): Optional context path for nested CDT.
+                begin (TypeValue): Begin value or value expression for range.
+                end (TypeValue): End value or value expression for range.
+                bin (TypeBinName): Bin name or map value expression.
+
+            :return: Map expression.
+        
+            Example::
+                # Remove list of items with values >= 3 and < 7 from map bin "b".
+                expr = MapRemoveByValueRange(None, 3, 7, MapBin("b")).compile()
+        """        
         self.children = (
             begin,
             end,
@@ -2059,6 +2229,20 @@ class MapRemoveByValueRelRankRangeToEnd(BaseExpr):
     op = aerospike.OP_MAP_REMOVE_BY_VALUE_REL_RANK_RANGE_TO_END
 
     def __init__(self, ctx: TypeCDT, value: TypeValue, rank: TypeRank, bin: TypeBinName):
+        """Create expression that removes map items nearest to value and greater by relative rank.
+
+            Args:
+                ctx (TypeCDT): Optional context path for nested CDT.
+                value (TypeValue): Value or value expression to start removing from.
+                rank (TypeRank): Integer or integer expression of rank.
+                bin (TypeBinName): Bin name or map value expression.
+
+            :return: Map expression.
+        
+            Example::
+                # Remove all elements with values larger than 3 from map bin "b".
+                expr = MapRemoveByValueRelRankRangeToEnd(None, 3, 1, MapBin("b")).compile()
+        """        
         self.children = (
             value,
             rank,
@@ -2074,6 +2258,22 @@ class MapRemoveByValueRelRankRange(BaseExpr):
     op = aerospike.OP_MAP_REMOVE_BY_VALUE_REL_RANK_RANGE
 
     def __init__(self, ctx: TypeCDT, value: TypeValue, rank: TypeRank, count: TypeCount, bin: TypeBinName):
+        """ Create expression that removes map items nearest to value and greater by relative rank with a
+            count limit.
+
+            Args:
+                ctx (TypeCDT): Optional context path for nested CDT.
+                value (TypeValue): Value or value expression to start removing from.
+                rank (TypeRank): Integer or integer expression of rank.
+                count (TypeCount): Integer count or integer expression for how many elements to remove.
+                bin (TypeBinName): Bin name or map value expression.
+
+            :return: Map expression.
+        
+            Example::
+                # Remove the next 4 elements larger than 3 from map bin "b".
+                expr = MapRemoveByValueRelRankRangeToEnd(None, 3, 1, 4, MapBin("b")).compile()
+        """        
         self.children = (
             value,
             rank,
@@ -2090,6 +2290,19 @@ class MapRemoveByIndex(BaseExpr):
     op = aerospike.OP_MAP_REMOVE_BY_INDEX
 
     def __init__(self, ctx: TypeCDT, index: TypeIndex, bin: TypeBinName):
+        """Create expression that removes map item identified by index.
+
+            Args:
+                ctx (TypeCDT): Optional context path for nested CDT.
+                index (TypeIndex): Index integer or integer expression of element to remove.
+                bin (TypeBinName): Bin name or map value expression.
+
+            :return: Map expression.
+        
+            Example::
+                # Remove element with smallest key from map bin "b".
+                expr = MapRemoveByIndex(None, 0, MapBin("b")).compile()
+        """        
         self.children = (
             index,
             bin if isinstance(bin, BaseExpr) else MapBin(bin),
@@ -2104,6 +2317,19 @@ class MapRemoveByIndexRangeToEnd(BaseExpr):
     op = aerospike.OP_MAP_REMOVE_BY_INDEX_RANGE_TO_END
 
     def __init__(self, ctx: TypeCDT, index: TypeIndex, bin: TypeBinName):
+        """Create expression that removes map items starting at specified index to the end of map.
+
+            Args:
+                ctx (TypeCDT): Optional context path for nested CDT.
+                index (TypeIndex): Starting index integer or integer expression of elements to remove.
+                bin (TypeBinName): Map bin name or map value expression.
+
+            :return: Map expression.
+        
+            Example::
+                # Remove all elements starting from index 3 in map bin "b".
+                expr = MapRemoveByIndexRangeToEnd(None, 3, MapBin("b")).compile()
+        """        
         self.children = (
             index,
             bin if isinstance(bin, BaseExpr) else MapBin(bin),
@@ -2118,6 +2344,20 @@ class MapRemoveByIndexRange(BaseExpr):
     op = aerospike.OP_MAP_REMOVE_BY_INDEX_RANGE
 
     def __init__(self, ctx: TypeCDT, index: TypeIndex, count: TypeCount, bin: TypeBinName):
+        """Create expression that removes map items starting at specified index to the end of map.
+
+            Args:
+                ctx (TypeCDT): Optional context path for nested CDT.
+                index (TypeIndex): Starting index integer or integer expression of elements to remove.
+                count (TypeCount): Integer or integer expression, how many elements to remove.
+                bin (TypeBinName): Map bin name or map value expression.
+
+            :return: Map expression.
+        
+            Example::
+                # Get size of map bin "b" after index 3, 4, and 5 have been removed.
+                expr = MapSize(None, MapRemoveByIndex(None, 3, 3, MapBin("b"))).compile()
+        """        
         self.children = (
             index,
             count,
@@ -2133,6 +2373,19 @@ class MapRemoveByRank(BaseExpr):
     op = aerospike.OP_MAP_REMOVE_BY_RANK
 
     def __init__(self, ctx: TypeCDT, rank: TypeRank, bin: TypeBinName):
+        """Create an expression that removes map item identified by rank.
+
+            Args:
+                ctx (TypeCDT): Optional context path for nested CDT.
+                rank (TypeRank): Rank integer or integer expression of element to remove.
+                bin (TypeBinName): Map bin name or map value expression.
+
+            :return: Map expression.
+        
+            Example::
+                # Remove smallest value in map bin "b".
+                expr = MapRemoveByRank(None, 0, MapBin("b")).compile()
+        """        
         self.children = (
             rank,
             bin if isinstance(bin, BaseExpr) else MapBin(bin),
@@ -2147,6 +2400,19 @@ class MapRemoveByRankRangeToEnd(BaseExpr):
     op = aerospike.OP_MAP_REMOVE_BY_RANK_RANGE_TO_END
 
     def __init__(self, ctx: TypeCDT, rank: TypeRank, bin: TypeBinName):
+        """Create expression that removes map items starting at specified rank to the last ranked item.
+
+            Args:
+                ctx (TypeCDT): Optional context path for nested CDT.
+                rank (TypeRank): Rank integer or integer expression of element to start removing at.
+                bin (TypeBinName): Map bin name or map value expression.
+
+            :return: Map expression.
+        
+            Example::
+                # Remove the 2 largest elements from Map bin "b".
+                expr = MapRemoveByRankRangeToEnd(None, -2, MapBin("b")).compile()
+        """        
         self.children = (
             rank,
             bin if isinstance(bin, BaseExpr) else MapBin(bin),
@@ -2161,6 +2427,20 @@ class MapRemoveByRankRange(BaseExpr):
     op = aerospike.OP_MAP_REMOVE_BY_RANK_RANGE
 
     def __init__(self, ctx: TypeCDT, rank: TypeRank, count: TypeCount, bin: TypeBinName):
+        """Create expression that removes "count" map items starting at specified rank.
+
+            Args:
+                ctx (TypeCDT): Optional context path for nested CDT.
+                rank (TypeRank): Rank integer or integer expression of element to start removing at.
+                count (TypeCount): Count integer or integer expression of elements to remove.
+                bin (TypeBinName): Map bin name or map value expression.
+
+            :return: Map expression.
+        
+            Example::
+                # Remove the 3 smallest items from map bin "b".
+                expr = MapRemoveByRankRange(None, 0, 3, MapBin("b")).compile()
+        """        
         self.children = (
             rank,
             count,
