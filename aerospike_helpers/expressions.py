@@ -1493,7 +1493,7 @@ class ListSize(BaseExpr): #TODO do tests
 
             Args:
                 ctx (TypeCDT): Optional context path for nested CDT.
-                bin (TypeBinName): [description].
+                bin (TypeBinName): List bin name or list value expression.
 
             :return: Integer expression.
         
@@ -1649,7 +1649,7 @@ class ListGetByValueRelRankRange(BaseExpr):
                 return_type (int): One of the aerospike list return types.
                 value (TypeValue): Value or vaule expression to get items relative to.
                 rank (TypeRank): Rank intger expression. rank relative to "value" to start getting elements.
-                count (TypeCount): How many elements to get.
+                count (TypeCount): Integer value or integer value expression, how many elements to get.
                 bin (TypeBinName): List bin name or list value expression.
 
             :return: Expression.
@@ -2459,6 +2459,18 @@ class MapSize(BaseExpr): #TODO do tests
     op = aerospike.OP_MAP_SIZE
 
     def __init__(self, ctx: TypeCDT, bin: TypeBinName):
+        """Create an expression that returns map size.
+
+            Args:
+                ctx (TypeCDT): Optional context path for nested CDT.
+                bin (TypeBinName): Map bin name or map value expression.
+
+            :return: Integer expression.
+        
+            Example::
+                #Take the size of map bin "b".
+                expr = MapSize(None, MapBin("b")).compile()
+        """        
         self.children = (
             bin if isinstance(bin, BaseExpr) else MapBin(bin),
         )
@@ -2472,6 +2484,22 @@ class MapGetByKey(BaseExpr):
     op = aerospike.OP_MAP_GET_BY_KEY
 
     def __init__(self, ctx: TypeCDT, return_type: int, value_type: int, key: TypeKey, bin: TypeBinName):
+        """ Create expression that selects map item identified by key
+            and returns selected data specified by rtype.
+
+            Args:
+                ctx (TypeCDT): Optional context path for nested CDT.
+                return_type (int): One of the aerospike map return types.
+                value_type (int): The value type that will be returned by this expression (ResultType).
+                key (TypeKey): Key value or value expression of element to get.
+                bin (TypeBinName): Map bin name or map value expression.
+
+            :return: Expression.
+        
+            Example::
+                # Get the value at key "key0" in map bin "b". (assume the value at key0 is an integer)
+                expr = MapGetByIndex(None, aerospike.MAP_RETURN_VALUE, ResultType.INTEGER, "key0", MapBin("b")).compile()
+        """        
         self.children = (
             key,
             bin if isinstance(bin, BaseExpr) else MapBin(bin),
@@ -2486,6 +2514,24 @@ class MapGetByKeyRange(BaseExpr):
     op = aerospike.OP_MAP_GET_BY_KEY_RANGE
 
     def __init__(self, ctx: TypeCDT, return_type: int, begin: TypeKey, end: TypeKey, bin: TypeBinName):
+        """ Create expression that selects map items identified by key range
+            (begin inclusive, end exclusive). If begin is nil, the range is less than end.
+            If end is nil, the range is greater than equal to begin.
+            Expression returns selected data specified by rtype.
+
+            Args:
+                ctx (TypeCDT): Optional context path for nested CDT.
+                return_type (int): One of the aerospike map return types.
+                begin (TypeKey): Key value or expression.
+                end (TypeKey): Key value or expression.
+                bin (TypeBinName): Map bin name or map value expression.
+
+            :return: Expression.
+        
+            Example::
+                # Get elements at keys "key3", "key4", "key5", "key6" in map bin "b".
+                expr = MapGetByIndexRange(None, aerospike.MAP_RETURN_VALUE, "key3", "key7", MapBin("b")).compile()
+        """        
         self.children = (
             begin,
             end,
@@ -2501,6 +2547,21 @@ class MapGetByKeyList(BaseExpr):
     op = aerospike.OP_MAP_GET_BY_KEY_LIST
 
     def __init__(self, ctx: TypeCDT, return_type: int, keys: TypeKeyList, bin: TypeBinName):
+        """ Create expression that selects map items identified by keys
+            and returns selected data specified by rtype.
+
+            Args:
+                ctx (TypeCDT): Optional context path for nested CDT.
+                return_type (int): One of the aerospike map return types.
+                keys (TypeKeyList): List of key values or list value expression.
+                bin (TypeBinName): Map bin name or map value expression.
+
+            :return: Expression.
+        
+            Example::
+                # Get elements at keys "key3", "key4", "key5" in map bin "b".
+                expr = MapGetByIndexRange(None, aerospike.MAP_RETURN_VALUE, ["key3", "key4", "key5"], MapBin("b")).compile()
+        """        
         self.children = (
             keys,
             bin if isinstance(bin, BaseExpr) else MapBin(bin),
@@ -2515,6 +2576,22 @@ class MapGetByKeyRelIndexRangeToEnd(BaseExpr):
     op = aerospike.OP_MAP_GET_BY_KEY_REL_INDEX_RANGE_TO_END
 
     def __init__(self, ctx: TypeCDT, return_type: int, key: TypeKey, index: TypeIndex, bin: TypeBinName):
+        """ Create expression that selects map items nearest to key and greater by index with a count limit.
+            Expression returns selected data specified by rtype.
+
+            Args:
+                ctx (TypeCDT): Optional context path for nested CDT.
+                return_type (int): One of the aerospike map return types.
+                key (TypeKey): Key value or value expression.
+                index (TypeIndex): Index integer or integer value expression.
+                bin (TypeBinName): Map bin name or map value expression.
+
+            :return: Expression.
+        
+            Example::
+                # Get elements with keys larger than "key2" from map bin "b".
+                expr = MapGetByKeyRelIndexRangeToEnd(None, aerospike.MAP_RETURN_VALUE, "key2", 1, MapBin("b")).compile()
+        """        
         self.children = (
             key,
             index,
@@ -2530,6 +2607,23 @@ class MapGetByKeyRelIndexRange(BaseExpr):
     op = aerospike.OP_MAP_GET_BY_KEY_REL_INDEX_RANGE
 
     def __init__(self, ctx: TypeCDT, return_type: int, key: TypeKey, index: TypeIndex, count: TypeCount, bin: TypeBinName):
+        """ Create expression that selects map items nearest to key and greater by index with a count limit.
+            Expression returns selected data specified by rtype.
+
+            Args:
+                ctx (TypeCDT): Optional context path for nested CDT.
+                return_type (int): One of the aerospike map return types.
+                key (TypeKey): Key value or value expression.
+                index (TypeIndex): Index integer or integer value expression.
+                count (TypeCount): Integer count or integer value expression.
+                bin (TypeBinName): Map bin name or map value expression.
+
+            :return: Expression.
+        
+            Example::
+                # Get the next 2 elements with keys larger than "key3" from map bin "b".
+                expr = MapGetByKeyRelIndexRange(None, aerospike.MAP_RETURN_VALUE, "key3", 1, 2, MapBin("b")).compile()
+        """        
         self.children = (
             key,
             index,
@@ -2546,6 +2640,21 @@ class MapGetByValue(BaseExpr):
     op = aerospike.OP_MAP_GET_BY_VALUE
 
     def __init__(self, ctx: TypeCDT, return_type: int, value: TypeValue, bin: TypeBinName):
+        """ Create expression that selects map items identified by value
+            and returns selected data specified by rtype.
+
+            Args:
+                ctx (TypeCDT): Optional context path for nested CDT.
+                return_type (int): One of the aerospike map return types.
+                value (TypeValue): Value or value expression of element to get.
+                bin (TypeBinName): Map bin name or Map value expression.
+
+            :return: Expression.
+        
+            Example::
+                # Get the rank of the element with value, 3, in map bin "b".
+                expr = MapGetByValue(None, aerospike.MAP_RETURN_RANK, 3, MapBin("b")).compile()
+        """        
         self.children = (
             value,
             bin if isinstance(bin, BaseExpr) else MapBin(bin)
@@ -2567,6 +2676,24 @@ class MapGetByValueRange(BaseExpr):
         value_end: TypeValue,
         bin: TypeBinName
     ):
+        """ Create expression that selects map items identified by value range
+            (begin inclusive, end exclusive). If begin is nil, the range is less than end.
+            If end is nil, the range is greater than equal to begin.
+            Expression returns selected data specified by rtype.
+
+            Args:
+               ctx (TypeCDT): Optional context path for nested CDT.
+                return_type (int): One of the aerospike map return types.
+                value_begin (TypeValue): Value or value expression of first element to get.
+                value_end (TypeValue): Value or value expression of ending element.
+                bin (TypeBinName): Map bin name or map value expression.
+
+            :return: Expression.
+        
+            Example::
+                # Get elements with values between 3 and 7 from map bin "b".
+                expr = MapGetByValueRange(None, aerospike.MAP_RETURN_VALUE, 3, 7, MapBin("b")).compile()
+        """        
         self.children = (
             value_begin,
             value_end,
@@ -2581,7 +2708,22 @@ class MapGetByValueRange(BaseExpr):
 class MapGetByValueList(BaseExpr):
     op = aerospike.OP_MAP_GET_BY_VALUE_LIST
 
-    def __init__(self, ctx: TypeCDT, return_type: int, value: Union[BaseExpr, list], bin: TypeBinName):
+    def __init__(self, ctx: TypeCDT, return_type: int, value: TypeListValue, bin: TypeBinName):
+        """ Create expression that selects map items identified by values
+            and returns selected data specified by rtype.
+
+            Args:
+                ctx (TypeCDT): Optional context path for nested CDT.
+                return_type (int): One of the aerospike map return types.
+                value (TypeListValue): List or list expression of values of elements to get.
+                bin (TypeBinName): Map bin name or map value expression.
+
+            :return: Expression.
+        
+            Example::
+                #Get the indexes of the the elements in mpa bin "b" with values [3, 6, 12].
+                expr = MapGetByValueList(None, aerospike.MAP_RETURN_INDEX, [3, 6, 12], MapBin("b")).compile()
+        """        
         self.children = (
             value,
             bin if isinstance(bin, BaseExpr) else MapBin(bin)
@@ -2595,7 +2737,23 @@ class MapGetByValueList(BaseExpr):
 class MapGetByValueRelRankRangeToEnd(BaseExpr):
     op = aerospike.OP_MAP_GET_BY_VALUE_RANK_RANGE_REL_TO_END
 
-    def __init__(self, ctx: TypeCDT, return_type: int, value: Union[BaseExpr, list], rank: TypeRank, bin: TypeBinName):
+    def __init__(self, ctx: TypeCDT, return_type: int, value: TypeValue, rank: TypeRank, bin: TypeBinName):
+        """ Create expression that selects map items nearest to value and greater by relative rank.
+            Expression returns selected data specified by rtype.
+
+            Args:
+                ctx (TypeCDT): Optional context path for nested CDT.
+                return_type (int): One of the aerospike map return types.
+                value (TypeValue): Value or vaule expression to get items relative to.
+                rank (TypeRank): Rank intger expression. rank relative to "value" to start getting elements.
+                bin (TypeBinName): Map bin name or Map value expression.
+
+            :return: Expression.
+        
+            Example::
+                # Get the values of all elements in map bin "b" larger than 3.
+                expr = MapGetByValueRelRankRangeToEnd(None, aerospike.MAP_RETURN_VALUE, 3, 1, MapBin("b")).compile()
+        """        
         self.children = (
             value,
             rank,
@@ -2610,7 +2768,24 @@ class MapGetByValueRelRankRangeToEnd(BaseExpr):
 class MapGetByValueRelRankRange(BaseExpr):
     op = aerospike.OP_MAP_GET_BY_VALUE_RANK_RANGE_REL
 
-    def __init__(self, ctx: TypeCDT, return_type: int, value: Union[BaseExpr, list], rank: TypeRank, count: TypeCount, bin: TypeBinName):
+    def __init__(self, ctx: TypeCDT, return_type: int, value: TypeValue, rank: TypeRank, count: TypeCount, bin: TypeBinName):
+        """ Create expression that selects map items nearest to value and greater by relative rank with a
+            count limit. Expression returns selected data specified by rtype.
+
+            Args:
+                ctx (TypeCDT): Optional context path for nested CDT.
+                return_type (int): One of the aerospike list return types.
+                value (TypeValue): Value or vaule expression to get items relative to.
+                rank (TypeRank): Rank intger expression. rank relative to "value" to start getting elements.
+                count (TypeCount): Integer value or integer value expression, how many elements to get.
+                bin (TypeBinName): List bin name or list value expression.
+
+            :return: Expression.
+        
+            Example::
+                # Get the next 2 values in map bin "b" larger than 3.
+                expr = MapGetByValueRelRankRange(None, aerospike.MAP_RETURN_VALUE, 3, 1, 2, MapBin("b")).compile()
+        """        
         self.children = (
             value,
             rank,
@@ -2634,6 +2809,22 @@ class MapGetByIndex(BaseExpr):
         index: TypeIndex,
         bin: TypeBinName,
     ):
+        """ Create expression that selects map item identified by index
+            and returns selected data specified by rtype.
+
+            Args:
+                ctx (TypeCDT): Optional context path for nested CDT.
+                return_type (int): One of the aerospike map return types.
+                value_type (int): The value type that will be returned by this expression (ResultType).
+                index (TypeIndex): Integer or integer expression of index to get element at.
+                bin (TypeBinName): Map bin name or map value expression.
+
+            :return: Expression.
+        
+            Example::
+                # Get the value at index 0 in map bin "b". (assume this value is an integer)
+                expr = MapGetByIndex(None, aerospike.MAP_RETURN_VALUE, ResultType.INTEGER, 0, MapBin("b")).compile()
+        """        
         self.children = (
             index,
             bin if isinstance(bin, BaseExpr) else MapBin(bin)  # TODO should this be implemented in other places?
@@ -2648,6 +2839,21 @@ class MapGetByIndexRangeToEnd(BaseExpr):
     op = aerospike.OP_MAP_GET_BY_INDEX_RANGE_TO_END
 
     def __init__(self, ctx: TypeCDT, return_type: int, index: TypeIndex, bin: TypeBinName):
+        """ Create expression that selects map items starting at specified index to the end of map
+            and returns selected data specified by rtype.
+
+            Args:
+                ctx (TypeCDT): Optional context path for nested CDT.
+                return_type (int): One of the aerospike map return types.
+                index (TypeIndex): Integer or integer expression of index to start getting elements at.
+                bin (TypeBinName): Map bin name or map value expression.
+
+            :return: Expression.
+        
+            Example::
+                # Get element 5 and onwards from map bin "b".
+                expr = MapGetByIndexRangeToEnd(None, aerospike.MAP_RETURN_VALUE, 5, MapBin("b")).compile()
+        """        
         self.children = (
             index,
             bin if isinstance(bin, BaseExpr) else MapBin(bin)
@@ -2662,6 +2868,22 @@ class MapGetByIndexRange(BaseExpr):
     op = aerospike.OP_MAP_GET_BY_INDEX_RANGE
 
     def __init__(self, ctx: TypeCDT, return_type: int, index: TypeIndex, count: TypeCount, bin: TypeBinName):
+        """ Create expression that selects "count" map items starting at specified index
+            and returns selected data specified by rtype.
+
+            Args:
+                ctx (TypeCDT): Optional context path for nested CDT.
+                return_type (int): One of the aerospike map return types.
+                index (TypeIndex): Integer or integer expression of index to start getting elements at.
+                count (TypeCount): Integer or integer expression for count of elements to get.
+                bin (TypeBinName): Map bin name or map value expression.
+
+            :return: Expression.
+        
+            Example::
+                # Get elements at indexes 3, 4, 5, 6 in map bin "b".
+                expr = MapGetByIndexRange(None, aerospike.MAP_RETURN_VALUE, 3, 4, MapBin("b")).compile()
+        """        
         self.children = (
             index,
             count,
@@ -2684,6 +2906,22 @@ class MapGetByRank(BaseExpr):
         rank: TypeRank,
         bin: TypeBinName,
     ):
+        """ Create an expression that selects map items identified by rank
+            and returns selected data specified by rtype.
+
+            Args:
+                ctx (TypeCDT): Optional context path for nested CDT.
+                return_type (int): One of the aerospike map return types.
+                value_type (int): The value type that will be returned by this expression (ResultType).
+                rank (TypeRank): Rank integer or integer expression of element to get.
+                bin (TypeBinName): Map bin name or map value expression.
+
+            :return: Expression.
+        
+            Example::
+                # Get the smallest element in map bin "b".
+                expr = MapGetByRank(None, aerospike.MAP_RETURN_VALUE, aerospike.ResultType.INTEGER, 0, MapBin("b")).compile()
+        """    
         self.children = (
             rank,
             bin if isinstance(bin, BaseExpr) else MapBin(bin)
@@ -2698,6 +2936,21 @@ class MapGetByRankRangeToEnd(BaseExpr):
     op = aerospike.OP_MAP_GET_BY_RANK_RANGE_TO_END
 
     def __init__(self, ctx: TypeCDT, return_type: int, rank: TypeRank, bin: TypeBinName):
+        """ Create expression that selects map items starting at specified rank to the last ranked item
+            and returns selected data specified by rtype.
+
+            Args:
+                ctx (TypeCDT): Optional context path for nested CDT.
+                return_type (int): One of the aerospike map return types.
+                rank (TypeRank): Rank integer or integer expression of first element to get.
+                bin (TypeBinName): Map bin name or map value expression.
+
+            :return: Expression.
+        
+            Example::
+                # Get the three largest elements in map bin "b".
+                expr = MapGetByRankRangeToEnd(None, aerospike.MAP_RETURN_VALUE, -3, MapBin("b")).compile()
+        """        
         self.children = (
             rank,
             bin if isinstance(bin, BaseExpr) else MapBin(bin)
@@ -2712,6 +2965,22 @@ class MapGetByRankRange(BaseExpr):
     op = aerospike.OP_MAP_GET_BY_RANK_RANGE
 
     def __init__(self, ctx: TypeCDT, return_type: int, rank: TypeRank, count: TypeCount, bin: TypeBinName):
+        """ Create expression that selects "count" map items starting at specified rank
+            and returns selected data specified by rtype.
+
+            Args:
+                ctx (TypeCDT): Optional context path for nested CDT.
+                return_type (int): One of the aerospike map return types.
+                rank (TypeRank): Rank integer or integer expression of first element to get.
+                count (TypeCount): Count integer or integer expression for how many elements to get.
+                bin (TypeBinName): Map bin name or map value expression.
+
+            :return: Expression.
+        
+            Example::
+                # Get the 3 smallest elements in map bin "b".
+                expr = MapGetByRankRange(None, aerospike.MAP_RETURN_VALUE, 0, 3, MapBin("b")).compile()
+        """        
         self.children = (
             rank,
             count,
@@ -2723,7 +2992,7 @@ class MapGetByRankRange(BaseExpr):
             self.fixed[CTX_KEY] = ctx
 
 
-# BIT MODIFY EXPRESSIONS
+# BIT MODIFY EXPRESSIONS #TODO tests
 
 
 TypeBitValue = Union[bytes, bytearray]
@@ -2733,6 +3002,21 @@ class BitResize(BaseExpr):
     op = aerospike.OP_BIT_RESIZE
 
     def __init__(self, policy: TypePolicy, byte_size: int, flags: int, bin: TypeBinName):
+        """ Create an expression that performs an as_operations_bit_resize operation.
+
+            Args:
+                policy (TypePolicy): An optional aerospike bit policy.
+                byte_size (int): Number of bytes the resulting blob should occupy.
+                flags (int): One or a combination of bit resize flags.
+                bin (TypeBinName): Blob bin name or blob value expression.
+
+            :return: Blob value expression of resized blob bin.
+        
+            Example::
+                # Blob bin "c" == bytearray([1] * 5).
+                # Resize blob bin "c" from the front so that the returned value is bytearray([0] * 5 + [1] * 5)
+                expr = BitResize(None, 10, aerospike.BIT_RESIZE_FROM_FRONT, BlobBin("c")).compile()
+        """        
         self.children = (
             byte_size,
             _GenericExpr(150, 0, {VALUE_KEY: policy['flags']} if policy is not None and 'flags' in policy else {VALUE_KEY: 0}), #TODO: decide if this is best
@@ -2745,6 +3029,21 @@ class BitInsert(BaseExpr):
     op = aerospike.OP_BIT_INSERT
 
     def __init__(self, policy: TypePolicy, byte_offset: int, value: TypeBitValue, bin: TypeBinName):
+        """ Create an expression that performs an as_operations_bit_insert operation.
+
+            Args:
+                policy (TypePolicy): An optional aerospike bit policy.
+                byte_offset (int): Integer byte index of where to insert the value.
+                value (TypeBitValue): A bytes value or blob value expression to insert.
+                bin (TypeBinName): Blob bin name or blob value expression.
+
+            :return: Resulting blob containing the inserted bytes.
+        
+            Example::
+                # Let blob bin "c" == bytearray([1] * 5).
+                # Insert 3 so that returned value is bytearray([1] * 5)
+                expr = .compile()
+        """        
         self.children = (
             byte_offset,
             value,
@@ -2757,6 +3056,21 @@ class BitRemove(BaseExpr):
     op = aerospike.OP_BIT_REMOVE
 
     def __init__(self, policy: TypePolicy, byte_offset: int, byte_size: int, bin: TypeBinName):
+        """ Create an expression that performs an as_operations_bit_remove operation.
+
+            Args:
+                policy (TypePolicy): An optional aerospike bit policy.
+                byte_offset (int): Index of value to remove.
+                byte_size (int): Number of bytes to remove.
+                bin (TypeBinName): Blob bin name or blob value expression.
+
+            :return: Resulting blob containing the inserted bytes.
+        
+            Example::
+                # Let blob bin "c" == bytearray([1] * 5).
+                # Remove 1 element so that the retuyrned value is bytearray([1] * 4)
+                expr = OP_BIT_REMOVE(None, 1, 1, BlobBin("c")).compile()
+        """        
         self.children = (
             byte_offset,
             byte_size,
