@@ -24,9 +24,11 @@ EXTRA_PARAM_COUNT_KEY = "extra_param_count"
 LIST_ORDER_KEY = "list_order"
 REGEX_OPTIONS_KEY = "regex_options"
 
-# TODO change list ops to send call op type and their vtype,
-# that way the switch statement in convert_predexp.c can be reduced to 1 template
-# Document the bin type constants so error codes can be easily ddecoded.
+# TODO change list expressions to use list operation codes
+# finish HLL docstring examples
+# Review docstrings
+# Write module docstring and example
+# Finish bit andf HLL expression tests
 
 class ExprOp:
     EQ = 1
@@ -73,17 +75,6 @@ class ExprOp:
     NIL = 138
 
     # virtual ops
-    #LIST_MOD = 139
-    # _AS_EXP_CODE_AS_VAL = 134
-    # _AS_EXP_CODE_VAL_PK = 135
-    # _AS_EXP_CODE_VAL_INT = 136
-    # _AS_EXP_CODE_VAL_UINT = 137
-    # _AS_EXP_CODE_VAL_FLOAT = 138
-    # _AS_EXP_CODE_VAL_BOOL = 139
-    # _AS_EXP_CODE_VAL_STR = 140
-    # _AS_EXP_CODE_VAL_BYTES = 141
-    # _AS_EXP_CODE_VAL_RAWSTR = 142
-    # _AS_EXP_CODE_VAL_RTYPE = 143
 
     _AS_EXP_CODE_CALL_VOP_START = 139
     _AS_EXP_CODE_CDT_LIST_CRMOD = 140
@@ -93,18 +84,6 @@ class ExprOp:
     _AS_EXP_CODE_CDT_MAP_MOD = 144
 
     _AS_EXP_CODE_END_OF_VA_ARGS = 150
-
-
-    # LIST_SORT = 128
-    # LIST_APPEND = 129
-    # LIST_APPEND_ITEMS = 130
-    # LIST_INSERT = 131
-    # LIST_INSERT_ITEMS = 132
-    # LIST_INCREMENT = 133
-    # LIST_SET = 134
-    # LIST_REMOVE_BY_VALUE = 135
-    # LIST_ = 136
-    # LIST_SORT = 137
 
 
 class ResultType:
@@ -125,42 +104,6 @@ class CallType:
     HLL = 2
 
     MODIFY = 0x40
-
-
-class ListOpType:
-	AS_CDT_OP_LIST_SET_TYPE = 0,
-	AS_CDT_OP_LIST_APPEND = 1,
-	AS_CDT_OP_LIST_APPEND_ITEMS = 2,
-	AS_CDT_OP_LIST_INSERT = 3,
-	AS_CDT_OP_LIST_INSERT_ITEMS = 4,
-	AS_CDT_OP_LIST_POP = 5,
-	AS_CDT_OP_LIST_POP_RANGE = 6,
-	AS_CDT_OP_LIST_REMOVE = 7,
-	AS_CDT_OP_LIST_REMOVE_RANGE = 8,
-	AS_CDT_OP_LIST_SET = 9,
-	AS_CDT_OP_LIST_TRIM = 10,
-	AS_CDT_OP_LIST_CLEAR = 11,
-	AS_CDT_OP_LIST_INCREMENT = 12,
-	AS_CDT_OP_LIST_SORT = 13,
-	AS_CDT_OP_LIST_SIZE = 16,
-	AS_CDT_OP_LIST_GET = 17,
-	AS_CDT_OP_LIST_GET_RANGE = 18,
-	AS_CDT_OP_LIST_GET_BY_INDEX = 19,
-	AS_CDT_OP_LIST_GET_BY_RANK = 21,
-	AS_CDT_OP_LIST_GET_ALL_BY_VALUE = 22,
-	AS_CDT_OP_LIST_GET_BY_VALUE_LIST = 23,
-	AS_CDT_OP_LIST_GET_BY_INDEX_RANGE = 24,
-	AS_CDT_OP_LIST_GET_BY_VALUE_INTERVAL = 25,
-	AS_CDT_OP_LIST_GET_BY_RANK_RANGE = 26,
-	AS_CDT_OP_LIST_GET_BY_VALUE_REL_RANK_RANGE = 27,
-	AS_CDT_OP_LIST_REMOVE_BY_INDEX = 32,
-	AS_CDT_OP_LIST_REMOVE_BY_RANK = 34,
-	AS_CDT_OP_LIST_REMOVE_ALL_BY_VALUE = 35,
-	AS_CDT_OP_LIST_REMOVE_BY_VALUE_LIST = 36,
-	AS_CDT_OP_LIST_REMOVE_BY_INDEX_RANGE = 37,
-	AS_CDT_OP_LIST_REMOVE_BY_VALUE_INTERVAL = 38,
-	AS_CDT_OP_LIST_REMOVE_BY_RANK_RANGE = 39,
-	AS_CDT_OP_LIST_REMOVE_BY_VALUE_REL_RANK_RANGE = 40,
 
 
 class AtomExpr:
@@ -3014,7 +2957,7 @@ class BitResize(BaseExpr):
         
             Example::
                 # Blob bin "c" == bytearray([1] * 5).
-                # Resize blob bin "c" from the front so that the returned value is bytearray([0] * 5 + [1] * 5)
+                # Resize blob bin "c" from the front so that the returned value is bytearray([0] * 5 + [1] * 5).
                 expr = BitResize(None, 10, aerospike.BIT_RESIZE_FROM_FRONT, BlobBin("c")).compile()
         """        
         self.children = (
@@ -3041,8 +2984,8 @@ class BitInsert(BaseExpr):
         
             Example::
                 # Let blob bin "c" == bytearray([1] * 5).
-                # Insert 3 so that returned value is bytearray([1] * 5)
-                expr = .compile()
+                # Insert 3 so that returned value is bytearray([1, 3, 1, 1, 1]).
+                expr = BitInsert(None, 1, bytearray([3])).compile()
         """        
         self.children = (
             byte_offset,
@@ -3068,7 +3011,7 @@ class BitRemove(BaseExpr):
         
             Example::
                 # Let blob bin "c" == bytearray([1] * 5).
-                # Remove 1 element so that the retuyrned value is bytearray([1] * 4)
+                # Remove 1 element so that the returned value is bytearray([1] * 4).
                 expr = OP_BIT_REMOVE(None, 1, 1, BlobBin("c")).compile()
         """        
         self.children = (
@@ -3083,6 +3026,22 @@ class BitSet(BaseExpr):
     op = aerospike.OP_BIT_SET
 
     def __init__(self, policy: TypePolicy, bit_offset: int, bit_size: int, value: TypeBitValue, bin: TypeBinName):
+        """ Create an expression that performs an as_operations_bit_set operation.
+
+            Args:
+                policy (TypePolicy): An optional aerospike bit policy.
+                bit_offset (int): Bit index of where to start writing.
+                bit_size (int): Number of bytes to overwrite.
+                value (TypeBitValue): Bytes value or blob expression containing bytes to write.
+                bin (TypeBinName): Blob bin name or blob expression.
+
+            :return: Resulting blob expression with the bytes overwritten.
+        
+            Example::
+                # Let blob bin "c" == bytearray([0] * 5).
+                # Set bit at offset 7 with size 1 bytes to 1 to make the returned value bytearray([1] * 1 + [0] * 4).
+                expr = BitSet(None, 7, 1, bytearray([1]), BlobBin("c")).compile()
+        """        
         self.children = (
             bit_offset,
             bit_size,
@@ -3096,6 +3055,22 @@ class BitOr(BaseExpr):
     op = aerospike.OP_BIT_OR
 
     def __init__(self, policy: TypePolicy, bit_offset: int, bit_size: int, value: TypeBitValue, bin: TypeBinName):
+        """ Create an expression that performs an as_operations_bit_or operation.
+
+            Args:
+                policy (TypePolicy): An optional aerospike bit policy.
+                bit_offset (int): Bit index of where to start operation.
+                bit_size (int): Number of bytes to be operated on.
+                value (TypeBitValue): Bytes value or blob expression containing bytes to use in operation.
+                bin (TypeBinName): Blob bin name or blob expression.
+
+            :return: Resulting blob with the bytes operated on.
+        
+            Example::
+                # Let blob bin "c" == bytearray([1] * 5).
+                # bitwise Or `8` with the first byte of blob bin c so that the returned value is bytearray([9] * 1 + [1] * 4).
+                expr = BitOr(None, 0, 8, bytearray[8], BlobBin("c")).compile()
+        """        
         self.children = (
             bit_offset,
             bit_size,
@@ -3109,6 +3084,22 @@ class BitXor(BaseExpr):
     op = aerospike.OP_BIT_XOR
 
     def __init__(self, policy: TypePolicy, bit_offset: int, bit_size: int, value: TypeBitValue, bin: TypeBinName):
+        """ Create an expression that performs an as_operations_bit_xor operation.
+
+            Args:
+                policy (TypePolicy): An optional aerospike bit policy.
+                bit_offset (int): Bit index of where to start operation.
+                bit_size (int): Number of bytes to be operated on.
+                value (TypeBitValue): Bytes value or blob expression containing bytes to use in operation.
+                bin (TypeBinName): Blob bin name or blob expression.
+
+            :return: Resulting blob with the bytes operated on.
+        
+            Example::
+                # Let blob bin "c" == bytearray([1] * 5).
+                # bitwise Or `8` with the first byte of blob bin c so that the returned value is bytearray([0] * 1 + [1] * 4).
+                expr = BitXor(None, 0, 8, bytearray[1], BlobBin("c")).compile()
+        """        
         self.children = (
             bit_offset,
             bit_size,
@@ -3122,6 +3113,22 @@ class BitAnd(BaseExpr):
     op = aerospike.OP_BIT_AND
 
     def __init__(self, policy: TypePolicy, bit_offset: int, bit_size: int, value: TypeBitValue, bin: TypeBinName):
+        """ Create an expression that performs an as_operations_bit_and operation.
+
+            Args:
+                policy (TypePolicy): An optional aerospike bit policy.
+                bit_offset (int): Bit index of where to start operation.
+                bit_size (int): Number of bytes to be operated on.
+                value (TypeBitValue): Bytes value or blob expression containing bytes to use in operation.
+                bin (TypeBinName): Blob bin name or blob expression.
+
+            :return: Resulting blob with the bytes operated on.
+        
+            Example::
+                # Let blob bin "c" == bytearray([1] * 5).
+                # bitwise and `0` with the first byte of blob bin c so that the returned value is bytearray([0] * 1 + [1] * 4).
+                expr = BitAnd(None, 0, 8, bytearray[0], BlobBin("c")).compile()
+        """        
         self.children = (
             bit_offset,
             bit_size,
@@ -3135,6 +3142,21 @@ class BitNot(BaseExpr):
     op = aerospike.OP_BIT_NOT
 
     def __init__(self, policy: TypePolicy, bit_offset: int, bit_size: int, bin: TypeBinName):
+        """ Create an expression that performs an as_operations_bit_not operation.
+
+            Args:
+                policy (TypePolicy): An optional aerospike bit policy.
+                bit_offset (int): Bit index of where to start operation.
+                bit_size (int): Number of bytes to be operated on.
+                bin (TypeBinName): Blob bin name or blob expression.
+
+            :return: Resulting blob with the bytes operated on.
+        
+            Example::
+                # Let blob bin "c" == bytearray([255] * 5).
+                # bitwise not all of "c" to get bytearray([0] * 5).
+                expr = BitNot(None, 0, 40, BlobBin("c")).compile()
+        """        
         self.children = (
             bit_offset,
             bit_size,
@@ -3147,6 +3169,22 @@ class BitLeftShift(BaseExpr):
     op = aerospike.OP_BIT_LSHIFT
 
     def __init__(self, policy: TypePolicy, bit_offset: int, bit_size: int, shift: int, bin: TypeBinName):
+        """Create an expression that performs an as_operations_bit_lshift operation.
+
+            Args:
+                policy (TypePolicy): An optional aerospike bit policy.
+                bit_offset (int): Bit index of where to start operation.
+                bit_size (int): Number of bytes to be operated on.
+                shift (int): Number of bits to shift by.
+                bin (TypeBinName): Blob bin name or blob expression.
+
+            :return: Resulting blob with the bytes operated on.
+        
+            Example::
+                # Let blob bin "c" == bytearray([1] * 5).
+                # Bit left shift the first byte of bin "c" to get bytearray([8, 1, 1, 1, 1]).
+                expr = BitLeftShift(None, 0, 8, 3, BlobBin("c")).compile()
+        """        
         self.children = (
             bit_offset,
             bit_size,
@@ -3160,6 +3198,22 @@ class BitRightShift(BaseExpr):
     op = aerospike.OP_BIT_RSHIFT
 
     def __init__(self, policy: TypePolicy, bit_offset: int, bit_size: int, shift: int, bin: TypeBinName):
+        """ Create an expression that performs an as_operations_bit_rshift operation.
+
+            Args:
+                policy (TypePolicy): An optional aerospike bit policy.
+                bit_offset (int): Bit index of where to start operation.
+                bit_size (int): Number of bytes to be operated on.
+                shift (int): Number of bits to shift by.
+                bin (TypeBinName): Blob bin name or blob expression.
+
+            :return: Resulting blob with the bytes operated on.
+        
+            Example::
+                # Let blob bin "c" == bytearray([8] * 5).
+                # Bit left shift the first byte of bin "c" to get bytearray([4, 8, 8, 8, 8]).
+                expr = BitRightShift(None, 0, 8, 1, BlobBin("c")).compile()
+        """        
         self.children = (
             bit_offset,
             bit_size,
@@ -3173,6 +3227,24 @@ class BitAdd(BaseExpr):
     op = aerospike.OP_BIT_ADD
 
     def __init__(self, policy: TypePolicy, bit_offset: int, bit_size: int, value: int, action: int, bin: TypeBinName):
+        """ Create an expression that performs an as_operations_bit_add operation.
+            Note: integers are stored big-endian.
+
+            Args:
+                policy (TypePolicy): An optional aerospike bit policy.
+                bit_offset (int): Bit index of where to start operation.
+                bit_size (int): Number of bytes to be operated on.
+                value (int): Integer value or expression for value to add.
+                action (int): An aerospike bit overflow action.
+                bin (TypeBinName): Blob bin name or blob expression.
+
+            :return: resulting blob with the bytes operated on.
+        
+            Example::
+                # Let blob bin "c" == bytearray([1] * 5).
+                # Bit add the second byte of bin "c" to get bytearray([1, 2, 1, 1, 1])
+                expr = BitAdd(None, 8, 8, 1, aerospike.BIT_OVERFLOW_FAIL).compile() #TODO test this
+        """        
         self.children = (
             bit_offset,
             bit_size,
@@ -3187,6 +3259,24 @@ class BitSubtract(BaseExpr):
     op = aerospike.OP_BIT_SUBTRACT
 
     def __init__(self, policy: TypePolicy, bit_offset: int, bit_size: int, value: int, action: int, bin: TypeBinName):
+        """ Create an expression that performs an as_operations_bit_subtract operation.
+            Note: integers are stored big-endian.
+
+            Args:
+                policy (TypePolicy): An optional aerospike bit policy.
+                bit_offset (int): Bit index of where to start operation.
+                bit_size (int): Number of bytes to be operated on.
+                value (int): Integer value or expression for value to add.
+                action (int): An aerospike bit overflow action.
+                bin (TypeBinName): Blob bin name or blob expression.
+
+            :return: resulting blob with the bytes operated on.
+        
+            Example::
+                # Let blob bin "c" == bytearray([1] * 5).
+                # Bit subtract the second byte of bin "c" to get bytearray([1, 0, 1, 1, 1])
+                expr = BitSubtract(None, 8, 8, 1, aerospike.BIT_OVERFLOW_FAIL).compile() #TODO test this
+        """        
         self.children = (
             bit_offset,
             bit_size,
@@ -3201,6 +3291,23 @@ class BitSetInt(BaseExpr):
     op = aerospike.OP_BIT_SET_INT
 
     def __init__(self, policy: TypePolicy, bit_offset: int, bit_size: int, value: int, bin: TypeBinName):
+        """ Create an expression that performs an as_operations_bit_set_int operation.
+            Note: integers are stored big-endian.
+
+            Args:
+                policy (TypePolicy): An optional aerospike bit policy.
+                bit_offset (int): Bit index of where to start writing.
+                bit_size (int): Number of bytes to overwrite.
+                value (int): Integer value or integer expression containing value to write.
+                bin (TypeBinName): Blob bin name or blob expression.
+
+            :return: Resulting blob expression with the bytes overwritten.
+        
+            Example::
+                # Let blob bin "c" == bytearray([0] * 5).
+                # Set bit at offset 7 with size 1 bytes to 1 to make the returned value bytearray([1, 0, 0, 0, 0]).
+                expr = BitSetInt(None, 7, 1, 1, BlobBin("c")).compile()
+        """        
         self.children = (
             bit_offset,
             bit_size,
@@ -3217,6 +3324,20 @@ class BitGet(BaseExpr):
     op = aerospike.OP_BIT_GET
 
     def __init__(self, bit_offset: int, bit_size: int, bin: TypeBinName):
+        """ Create an expression that performs an as_operations_bit_get operation.
+
+            Args:
+                bit_offset (int): Bit index of where to start reading.
+                bit_size (int): Number of bits to get.
+                bin (TypeBinName): Blob bin name or blob expression.
+
+            :return: Blob, bit_size bits rounded up to the nearest byte size.
+        
+            Example::
+                # Let blob bin "c" == bytearray([1, 2, 3, 4, 5).
+                # Get 2 from bin "c".
+                expr = BitGet(8, 8, BlobBin("c")).compile() #TODO test this
+        """        
         self.children = (
             bit_offset,
             bit_size,
@@ -3228,6 +3349,20 @@ class BitCount(BaseExpr):
     op = aerospike.OP_BIT_COUNT
 
     def __init__(self, bit_offset: int, bit_size: int, bin: TypeBinName):
+        """ Create an expression that performs an as_operations_bit_count operation.
+
+            Args:
+                bit_offset (int): Bit index of where to start reading.
+                bit_size (int): Number of bits to count.
+                bin (TypeBinName): Blob bin name or blob expression.
+
+            :return: Blob, bit_size bits rounded up to the nearest byte size.
+        
+            Example::
+                # Let blob bin "c" == bytearray([3] * 5).
+                # Count set bits starting at 3rd byte in bin "c" to get count of 6.
+                expr = BitCount(16, 8 * 3, BlobBin("c")).compile() #TODO test this
+        """        
         self.children = (
             bit_offset,
             bit_size,
@@ -3239,6 +3374,21 @@ class BitLeftScan(BaseExpr):
     op = aerospike.OP_BIT_LSCAN
 
     def __init__(self, bit_offset: int, bit_size: int, value: bool, bin: TypeBinName):
+        """ Create an expression that performs an as_operations_bit_lscan operation.
+
+            Args:
+                bit_offset (int): Bit index of where to start reading.
+                bit_size (int): Number of bits to read.
+                value (bool): Boolean, value to check for.
+                bin (TypeBinName): Blob bin name or blob expression.
+
+            :return: Index of the left most bit starting from bit_offset set to value. Returns -1 if not found.
+        
+            Example::
+                # Let blob bin "c" == bytearray([3] * 5).
+                # Scan the first byte of bin "c" for the first bit set to 1. (should get 6)
+                expr = BitLeftScan(0, 8, True, BlobBin("c")).compile() #TODO test
+        """        
         self.children = (
             bit_offset,
             bit_size,
@@ -3251,6 +3401,21 @@ class BitRightScan(BaseExpr):
     op = aerospike.OP_BIT_RSCAN
 
     def __init__(self, bit_offset: int, bit_size: int, value: bool, bin: TypeBinName):
+        """ Create an expression that performs an as_operations_bit_rscan operation.
+
+            Args:
+                bit_offset (int): Bit index of where to start reading.
+                bit_size (int): Number of bits to read.
+                value (bool): Boolean, value to check for.
+                bin (TypeBinName): Blob bin name or blob expression.
+
+            :return: Index of the right most bit starting from bit_offset set to value. Returns -1 if not found.
+        
+            Example::
+                # Let blob bin "c" == bytearray([3] * 5).
+                # Scan the first byte of bin "c" for the right most bit set to 1. (should get 7)
+                expr = BitRightScan(0, 8, True, BlobBin("c")).compile() #TODO test
+        """        
         self.children = (
             bit_offset,
             bit_size,
@@ -3263,6 +3428,21 @@ class BitGetInt(BaseExpr):
     op = aerospike.OP_BIT_GET_INT
 
     def __init__(self, bit_offset: int, bit_size: int, sign: bool, bin: TypeBinName):
+        """ Create an expression that performs an as_operations_bit_get_int operation.
+
+            Args:
+                bit_offset (int): Bit index of where to start reading.
+                bit_size (int): Number of bits to get.
+                sign (bool): Boolean value, true for signed, false for unsigned.
+                bin (TypeBinName): Blob bin name or blob expression.
+
+            :return: Integer expression.
+        
+            Example::
+                # Let blob bin "c" == bytearray([1, 2, 3, 4, 5).
+                # Get 2 as an integer from bin "c".
+                expr = BitGetInt(8, 8, BlobBin("c")).compile() #TODO test this
+        """        
         self.children = (
             bit_offset,
             bit_size,
@@ -3274,41 +3454,31 @@ class BitGetInt(BaseExpr):
 # HLL modify expressions
 
 
-class HLLAddMH(BaseExpr):
-    op = aerospike.OP_HLL_ADD
-
-    def __init__(self, policy: TypePolicy, list: TypeListValue, index_bit_count: int, mh_bit_count: int, bin: TypeBinName):
-        self.children = (
-            list,
-            index_bit_count,
-            mh_bit_count,
-            _GenericExpr(150, 0, {VALUE_KEY: policy['flags']} if policy is not None and 'flags' in policy else {VALUE_KEY: 0}), #TODO: decide if this is best
-            bin if isinstance(bin, BaseExpr) else BlobBin(bin)
-        )
-
-
 class HLLAdd(BaseExpr):
     op = aerospike.OP_HLL_ADD
 
-    def __init__(self, policy: TypePolicy, list: TypeListValue, index_bit_count: int, bin: TypeBinName):
+    def __init__(self, policy: TypePolicy, list: TypeListValue, index_bit_count: Union[int, None], mh_bit_count: Union[int, None], bin: TypeBinName): #TODO test
+        """[summary]
+
+            Args:
+                policy (TypePolicy): An optional aerospike HLL policy.
+                list (TypeListValue): A list or list expression of elements to add to the HLL.
+                index_bit_count (int): Number of index bits. Must be between 4 and 16 inclusive.
+                mh_bit_count (int): Number of min hash bits. Must be between 4 and 51 inclusive.
+                bin (TypeBinName): A hll bin name or bin expression to apply this function to.
+
+            :return: Returns the resulting hll bin after adding elements from list.
+        
+            Example::
+                # Let HLL bin "d" have the following elements, ['key1', 'key2', 'key3'], index_bits 8, mh_bits 8.
+                # Add ['key4', 'key5', 'key6'] so that the returned value is ['key1', 'key2', 'key3', 'key4', 'key5', 'key6']
+                expr = HLLAdd(None, ['key4', 'key5', 'key6'], 8, 8, HLLBin("d")).compile()
+        """        
         self.children = (
             list,
             index_bit_count,
             -1,
-            policy['flags'] if policy is not None and 'flags' in policy else 0, #TODO: decide if this is best
-            bin if isinstance(bin, BaseExpr) else HLLBin(bin)
-        )
-
-
-class HLLUpdate(BaseExpr):
-    op = aerospike.OP_HLL_ADD
-
-    def __init__(self, policy: TypePolicy, list: TypeListValue, bin: TypeBinName):
-        self.children = (
-            list,
-            -1,
-            -1,
-            policy['flags'] if policy is not None and 'flags' in policy else 0, #TODO: decide if this is best
+            policy['flags'] if policy is not None and 'flags' in policy else 0,
             bin if isinstance(bin, BaseExpr) else HLLBin(bin)
         )
 
@@ -3320,6 +3490,17 @@ class HLLGetCount(BaseExpr):
     op = aerospike.OP_HLL_GET_COUNT
 
     def __init__(self, bin: TypeBinName):
+        """ Create an expression that performs an as_operations_hll_get_count.
+
+            Args:
+                bin (TypeBinName): A hll bin name or bin expression to read from.
+
+            :return: Integer bin, the estimated number of unique elements in an HLL.
+        
+            Example::
+                # Get count from HLL bin "d".
+                expr = HLLGetCount(HLLBin("d")).compile()
+        """        
         self.children = (
             bin if isinstance(bin, BaseExpr) else HLLBin(bin),
         )
@@ -3328,9 +3509,21 @@ class HLLGetCount(BaseExpr):
 class HLLGetUnion(BaseExpr):
     op = aerospike.OP_HLL_GET_UNION
 
-    def __init__(self, bin: TypeBinName, values: TypeListValue):
+    def __init__(self, list: TypeListValue, bin: TypeBinName,):
+        """ Create an expression that performs an as_operations_hll_get_union.
+
+            Args:
+                list (TypeListValue): A list expression of HLLs to union with.
+                bin (TypeBinName): A hll bin name or bin expression to read from.
+
+            :return: HLL bin representing the set union.
+        
+            Example:: #TODO how can this be done without an hll get operation, will it work with [HLLBin(),...]
+                # .
+                expr = .compile()
+        """        
         self.children = (
-            values,
+            list,
             bin if isinstance(bin, BaseExpr) else HLLBin(bin),
         )
 
@@ -3338,9 +3531,21 @@ class HLLGetUnion(BaseExpr):
 class HLLGetUnionUnionCount(BaseExpr):
     op = aerospike.OP_HLL_GET_UNION_COUNT
 
-    def __init__(self, bin: TypeBinName, values: TypeListValue):
+    def __init__(self, list: TypeListValue, bin: TypeBinName,):
+        """ Create an expression that performs an as_operations_hll_get_union_count.
+
+            Args:
+                list (TypeListValue): A list expression of HLLs to union with.
+                bin (TypeBinName): A hll bin name or bin expression to read from.
+
+            :return: Integer bin, estimated number of elements in the set union.
+        
+            Example:: #TODO how can this be done without an hll get operation
+                # .
+                expr = .compile()
+        """        
         self.children = (
-            values,
+            list,
             bin if isinstance(bin, BaseExpr) else HLLBin(bin),
         )
 
@@ -3348,9 +3553,21 @@ class HLLGetUnionUnionCount(BaseExpr):
 class HLLGetIntersectCount(BaseExpr):
     op = aerospike.OP_HLL_GET_INTERSECT_COUNT
 
-    def __init__(self, bin: TypeBinName, values: TypeListValue):
+    def __init__(self, list: TypeListValue, bin: TypeBinName, ):
+        """ Create an expression that performs an as_operations_hll_get_inersect_count.
+
+            Args:
+                list (TypeListValue): A list expression of HLLs to intersect with.
+                bin (TypeBinName): A hll bin name or bin expression to read from.
+
+            :return: Integer bin, estimated number of elements in the set intersection.
+        
+            Example::
+                #.
+                expr = .compile()
+        """        
         self.children = (
-            values,
+            list,
             bin if isinstance(bin, BaseExpr) else HLLBin(bin),
         )
 
@@ -3358,9 +3575,21 @@ class HLLGetIntersectCount(BaseExpr):
 class HLLGetSimilarity(BaseExpr):
     op = aerospike.OP_HLL_GET_SIMILARITY
 
-    def __init__(self, bin: TypeBinName, values: TypeListValue):
+    def __init__(self, list: TypeListValue, bin: TypeBinName, ):
+        """ Create an expression that performs an as_operations_hll_get_similarity.
+
+            Args:
+                list (TypeListValue): A list expression of HLLs to calculate similarity with.
+                bin (TypeBinName): A hll bin name or bin expression to read from.
+
+            :return: Float bin, stimated similarity between 0.0 and 1.0.
+        
+            Example::
+                #.
+                expr = .compile()
+        """        
         self.children = (
-            values,
+            list,
             bin if isinstance(bin, BaseExpr) else HLLBin(bin),
         )
 
@@ -3369,6 +3598,17 @@ class HLLDescribe(BaseExpr):
     op = aerospike.OP_HLL_DESCRIBE
 
     def __init__(self, bin: TypeBinName):
+        """ Create an expression that performs an as_operations_hll_describe.
+
+            Args:
+                bin (TypeBinName): A hll bin name or bin expression to read from.
+
+            :return: List bin, a list containing the index_bit_count and minhash_bit_count.
+        
+            Example::
+                # Get description of HLL bin "d".
+                expr = HLLDescribe(HLLBin("d")).compile()
+        """        
         self.children = (
             bin if isinstance(bin, BaseExpr) else HLLBin(bin),
         )
@@ -3377,7 +3617,20 @@ class HLLDescribe(BaseExpr):
 class HLLMayContain(BaseExpr):
     op = aerospike.OP_HLL_MAY_CONTAIN
 
-    def __init__(self, bin: TypeBinName, values: TypeListValue):
+    def __init__(self, list: TypeListValue, bin: TypeBinName, ):
+        """ Create an expression that checks if the HLL bin contains any keys in
+            list.
+
+            Args:
+                list (TypeListValue): A list expression of keys to check if the HLL may contain them.
+                bin (TypeBinName): Integer bin, a hll bin name or bin expression to read from.
+
+            :return: 1 bin contains any of list, 0 otherwise.
+        
+            Example::
+                #.
+                expr = .compile()
+        """        
         self.children = (
             values,
             bin if isinstance(bin, BaseExpr) else HLLBin(bin),
