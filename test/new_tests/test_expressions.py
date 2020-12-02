@@ -651,7 +651,8 @@ class TestExpressions(TestBaseClass):
             Eq(
                 ListGetByRankRange(None, aerospike.LIST_RETURN_COUNT, 1, ListSize(None, bin), bin),
                 2
-            )
+            ),
+            KeyExists()
         )
 
         # ops = [
@@ -1050,7 +1051,7 @@ class TestExpressions(TestBaseClass):
 
         expr = GE(
                     HLLGetCount(
-                        HLLAdd(policy, listp, 10, bin)),
+                        HLLAdd(policy, listp, 10, None, bin)),
                     1020 #TODO calculate this with error
                 )
 
