@@ -33,7 +33,7 @@
 #include "geo.h"
 #include "cdt_types.h"
 
- // EXPR OPS
+// EXPR OPS
 #define VAL 0
 #define EQ 1
 #define NE 2
@@ -55,6 +55,8 @@
 #define META_TTL 68
 #define META_SET_NAME 69
 #define META_KEY_EXISTS 70
+#define META_SINCE_UPDATE_TIME 71
+#define META_IS_TOMBSTONE 72
 
 #define REC_KEY 80
 #define BIN 81
@@ -77,14 +79,6 @@
 
 // VIRTUAL OPS
 #define END_VA_ARGS 128
-
-// #define _AS_EXP_CODE_CALL_VOP_START 144
-// #define _AS_EXP_CODE_CDT_LIST_CRMOD 145
-// #define _AS_EXP_CODE_CDT_LIST_MOD 146
-// #define _AS_EXP_CODE_CDT_MAP_CRMOD 147
-// #define _AS_EXP_CODE_CDT_MAP_CR 148
-// #define _AS_EXP_CODE_CDT_MAP_MOD 149
-
 #define _AS_EXP_BIT_FLAGS 150
 
 // UTILITY CONSTANTS
@@ -98,6 +92,25 @@
 #define LIST_ORDER_KEY "list_order"
 #define REGEX_OPTIONS_KEY "regex_options"
 
+// utility macros
+#define EXP_SZ(_expr) sizeof((as_exp_entry[]){ _expr })
+
+#define append_array(_sub_values, ...) {\
+	{\
+		as_exp_entry tmp_expr_array[] = {__VA_ARGS__};\
+		int expr_array_size = sizeof(tmp_expr_array) / sizeof(as_exp_entry) - _sub_values;\
+		memcpy(&((*expressions)[(*bottom)]), &tmp_expr_array, (expr_array_size * sizeof(as_exp_entry)));\
+		(*bottom) += expr_array_size;\
+	}\
+}
+
+#define bin_expr()\
+	{.op=_AS_EXP_CODE_BIN, .count=3}, as_exp_int(pred->result_type), _AS_EXP_VAL_RAWSTR(bin_name)
+
+#define key_expr()\
+	{.op=_AS_EXP_CODE_KEY, .count=2}, as_exp_int(pred->result_type)
+
+// struct defs
 typedef struct {
 	long op;
 	long result_type;
@@ -114,27 +127,164 @@ typedef struct {
 	as_list_policy * list_policy;
 	as_map_policy * map_policy;
 
-	// PyObject * pyval2;
-	// PyObject * pyval3;
-	// PyObject * pyval4;
-
 	long num_children;
-	// uint8_t fixed_active;
-	//as_policy_write * policy;// todo add a member for an as_val
 } pred_op;
 
-int bottom = 0;
+// function definitions
+static
+as_status get_expr_size(int * size_to_alloc, int * preds_size, as_vector * preds, as_error * err);
+
+static
+as_status get_exp_val_from_pyval(AerospikeClient * self, as_static_pool * static_pool, int serializer_type, as_exp_entry * new_entry, PyObject * py_obj, pred_op * pred, as_error * err);
+
+static
+as_status add_pred_macros(AerospikeClient * self, as_static_pool * static_pool, int serializer_type, as_vector * unicodeStrVector, as_vector * pred_op_vector, as_exp_entry ** expressions, int * bottom, int * size, as_error * err);
+
+static
+as_status get_expr_size(int * size_to_alloc, int * preds_size, as_vector * preds, as_error * err) {
+
+	static const int EXPR_SIZES[] = {
+		[BIN]                                            = EXP_SZ(as_exp_bin_int(0)),
+		[VAL]                                            = 0, //EXP_SZ(as_exp_val(NULL)), // NOTE if I don't count vals I don't need to subtract fro other ops
+		[EQ]                                             = EXP_SZ(as_exp_cmp_eq({},{})),
+		[NE]                                             = EXP_SZ(as_exp_cmp_ne({},{})),
+		[GT]                                             = EXP_SZ(as_exp_cmp_gt({},{})),
+		[GE]                                             = EXP_SZ(as_exp_cmp_ge({},{})),
+		[LT]                                             = EXP_SZ(as_exp_cmp_lt({},{})),
+		[LE]                                             = EXP_SZ(as_exp_cmp_le({},{})),
+		[CMP_REGEX]                                      = EXP_SZ(as_exp_cmp_regex(0, "", {})),
+		[CMP_GEO]                                        = EXP_SZ(as_exp_cmp_geo({},{})),
+		[AND]                                            = EXP_SZ(as_exp_and({})),
+		[OR]                                             = EXP_SZ(as_exp_or({})),
+		[NOT]                                            = EXP_SZ(as_exp_not({})),
+		[END_VA_ARGS]                                    = EXP_SZ({.op = _AS_EXP_CODE_END_OF_VA_ARGS}),
+		[META_DIGEST_MOD]                                = EXP_SZ(as_exp_digest_modulo(0)),
+		[META_DEVICE_SIZE]                               = EXP_SZ(as_exp_device_size()),
+		[META_LAST_UPDATE_TIME]                          = EXP_SZ(as_exp_last_update()),
+		[META_VOID_TIME]                                 = EXP_SZ(as_exp_void_time()),
+		[META_TTL]                                       = EXP_SZ(as_exp_ttl()),
+		[META_SET_NAME]                                  = EXP_SZ(as_exp_set_name()),
+		[META_KEY_EXISTS]                                = EXP_SZ(as_exp_key_exist()),
+		[REC_KEY]                                        = EXP_SZ(as_exp_key_int()), // this covers as_exp_key_int() -> as_exp_key_blob
+		[BIN_TYPE]                                       = EXP_SZ(as_exp_bin_type("")),
+		[BIN_EXISTS]                                     = EXP_SZ(as_exp_bin_exists("")),
+		[OP_LIST_EXP_GET_BY_INDEX]                       = EXP_SZ(as_exp_list_get_by_index(NULL, 0, 0, {}, {})),
+		[OP_LIST_EXP_SIZE]                               = EXP_SZ(as_exp_list_size(NULL, {})),
+		[OP_LIST_EXP_GET_BY_VALUE]                       = EXP_SZ(as_exp_list_get_by_value(NULL, 0, {}, {})),
+		[OP_LIST_EXP_GET_BY_VALUE_RANGE]                 = EXP_SZ(as_exp_list_get_by_value_range(NULL, 0, {}, {}, {})),
+		[OP_LIST_EXP_GET_BY_VALUE_LIST]                  = EXP_SZ(as_exp_list_get_by_value_list(NULL, 0, {}, {})),
+		[OP_LIST_EXP_GET_BY_VALUE_RANK_RANGE_REL_TO_END] = EXP_SZ(as_exp_list_get_by_rel_rank_range_to_end(NULL, 0, {}, {}, {})),
+		[OP_LIST_EXP_GET_BY_VALUE_RANK_RANGE_REL]        = EXP_SZ(as_exp_list_get_by_rel_rank_range(NULL, 0, {}, {}, {}, {})),
+		[OP_LIST_EXP_GET_BY_INDEX_RANGE_TO_END]          = EXP_SZ(as_exp_list_get_by_index_range_to_end(NULL, 0, {}, {})),
+		[OP_LIST_EXP_GET_BY_INDEX_RANGE]                 = EXP_SZ(as_exp_list_get_by_index_range(NULL, 0, {}, {}, {})),
+		[OP_LIST_EXP_GET_BY_RANK]                        = EXP_SZ(as_exp_list_get_by_rank(NULL, 0, 0, {}, {})),
+		[OP_LIST_EXP_GET_BY_RANK_RANGE_TO_END]           = EXP_SZ(as_exp_list_get_by_rank_range_to_end(NULL, 0, {}, {})),
+		[OP_LIST_EXP_GET_BY_RANK_RANGE]                  = EXP_SZ(as_exp_list_get_by_rank_range(NULL, 0, {}, {}, {})),
+		[OP_LIST_EXP_APPEND]                             = EXP_SZ(as_exp_list_append(NULL, NULL, {}, {})),
+		[OP_LIST_EXP_APPEND_ITEMS]                       = EXP_SZ(as_exp_list_append_items(NULL, NULL, {}, {})),
+		[OP_LIST_EXP_INSERT]                             = EXP_SZ(as_exp_list_insert(NULL, NULL, {}, {}, {})),
+		[OP_LIST_EXP_INSERT_ITEMS]                       = EXP_SZ(as_exp_list_insert_items(NULL, NULL, {}, {}, {})),
+		[OP_LIST_EXP_INCREMENT]                          = EXP_SZ(as_exp_list_increment(NULL, NULL, {}, {}, {})),
+		[OP_LIST_EXP_SET]                                = EXP_SZ(as_exp_list_set(NULL, NULL, {}, {}, {})),
+		[OP_LIST_EXP_CLEAR]                              = EXP_SZ(as_exp_list_clear(NULL, {})),
+		[OP_LIST_EXP_SORT]                               = EXP_SZ(as_exp_list_sort(NULL, 0, {})),
+		[OP_LIST_EXP_REMOVE_BY_VALUE]                    = EXP_SZ(as_exp_list_remove_by_value(NULL, {}, {})),
+		[OP_LIST_EXP_REMOVE_BY_VALUE_LIST]               = EXP_SZ(as_exp_list_remove_by_value_list(NULL, {}, {})),
+		[OP_LIST_EXP_REMOVE_BY_VALUE_RANGE]              = EXP_SZ(as_exp_list_remove_by_value_range(NULL, {}, {}, {})),
+		[OP_LIST_EXP_REMOVE_BY_REL_RANK_RANGE_TO_END]    = EXP_SZ(as_exp_list_remove_by_rel_rank_range_to_end(NULL, {}, {}, {})),
+		[OP_LIST_EXP_REMOVE_BY_REL_RANK_RANGE]           = EXP_SZ(as_exp_list_remove_by_rel_rank_range(NULL, {}, {}, {}, {})),
+		[OP_LIST_EXP_REMOVE_BY_INDEX]                    = EXP_SZ(as_exp_list_remove_by_index(NULL, {}, {})),
+		[OP_LIST_EXP_REMOVE_BY_INDEX_RANGE_TO_END]       = EXP_SZ(as_exp_list_remove_by_index_range_to_end(NULL, {}, {})),
+		[OP_LIST_EXP_REMOVE_BY_INDEX_RANGE]              = EXP_SZ(as_exp_list_remove_by_index_range(NULL, {}, {}, {})),
+		[OP_LIST_EXP_REMOVE_BY_RANK]                     = EXP_SZ(as_exp_list_remove_by_rank(NULL, {}, {})),
+		[OP_LIST_EXP_REMOVE_BY_RANK_RANGE_TO_END]        = EXP_SZ(as_exp_list_remove_by_rank_range_to_end(NULL, {}, {})),
+		[OP_LIST_EXP_REMOVE_BY_RANK_RANGE]               = EXP_SZ(as_exp_list_remove_by_rank_range(NULL, {}, {}, {})),
+		[OP_MAP_PUT]                                     = EXP_SZ(as_exp_map_put(NULL, NULL, {}, {}, {})),
+		[OP_MAP_PUT_ITEMS]                               = EXP_SZ(as_exp_map_put_items(NULL, NULL, {}, {})),
+		[OP_MAP_INCREMENT]                               = EXP_SZ(as_exp_map_increment(NULL, NULL, {}, {}, {})),
+		[OP_MAP_CLEAR]                                   = EXP_SZ(as_exp_map_clear(NULL, {})),
+		[OP_MAP_REMOVE_BY_KEY]                           = EXP_SZ(as_exp_map_remove_by_key(NULL, {}, {})),
+		[OP_MAP_REMOVE_BY_KEY_LIST]                      = EXP_SZ(as_exp_map_remove_by_key_list(NULL, {}, {})),
+		[OP_MAP_REMOVE_BY_KEY_RANGE]                     = EXP_SZ(as_exp_map_remove_by_key_range(NULL, {}, {}, {})),
+		[OP_MAP_REMOVE_BY_KEY_REL_INDEX_RANGE_TO_END]    = EXP_SZ(as_exp_map_remove_by_key_rel_index_range_to_end(NULL, {}, {}, {})),
+		[OP_MAP_REMOVE_BY_KEY_REL_INDEX_RANGE]           = EXP_SZ(as_exp_map_remove_by_key_rel_index_range(NULL, {}, {}, {}, {})),
+		[OP_MAP_REMOVE_BY_VALUE]                         = EXP_SZ(as_exp_map_remove_by_value(NULL, {}, {})),
+		[OP_MAP_REMOVE_BY_VALUE_LIST]                    = EXP_SZ(as_exp_map_remove_by_value_list(NULL, {}, {})),
+		[OP_MAP_REMOVE_BY_VALUE_RANGE]                   = EXP_SZ(as_exp_map_remove_by_value_range(NULL, {}, {}, {})),
+		[OP_MAP_REMOVE_BY_VALUE_REL_RANK_RANGE_TO_END]   = EXP_SZ(as_exp_map_remove_by_value_rel_rank_range_to_end(NULL, {}, {}, {})),
+		[OP_MAP_REMOVE_BY_VALUE_REL_RANK_RANGE]          = EXP_SZ(as_exp_map_remove_by_value_rel_rank_range(NULL, {}, {}, {}, {})),
+		[OP_MAP_REMOVE_BY_INDEX]                         = EXP_SZ(as_exp_map_remove_by_index(NULL, {}, {})),
+		[OP_MAP_REMOVE_BY_INDEX_RANGE_TO_END]            = EXP_SZ(as_exp_map_remove_by_index_range_to_end(NULL, {}, {})),
+		[OP_MAP_REMOVE_BY_INDEX_RANGE]                   = EXP_SZ(as_exp_map_remove_by_index_range(NULL, {}, {}, {})),
+		[OP_MAP_REMOVE_BY_RANK]                          = EXP_SZ(as_exp_map_remove_by_rank(NULL, {}, {})),
+		[OP_MAP_REMOVE_BY_RANK_RANGE_TO_END]             = EXP_SZ(as_exp_map_remove_by_rank_range_to_end(NULL, {}, {})),
+		[OP_MAP_REMOVE_BY_RANK_RANGE]                    = EXP_SZ(as_exp_map_remove_by_rank_range(NULL, {}, {}, {})),
+		[OP_MAP_SIZE]                                    = EXP_SZ(as_exp_map_size(NULL, {})),
+		[OP_MAP_GET_BY_KEY]                              = EXP_SZ(as_exp_map_get_by_key(NULL, 0, 0, {}, {})),
+		[OP_MAP_GET_BY_KEY_RANGE]                        = EXP_SZ(as_exp_map_get_by_key_range(NULL, 0, {}, {}, {})),
+		[OP_MAP_GET_BY_KEY_LIST]                         = EXP_SZ(as_exp_map_get_by_key_list(NULL, 0, {}, {})),
+		[OP_MAP_GET_BY_KEY_REL_INDEX_RANGE_TO_END]       = EXP_SZ(as_exp_map_get_by_key_rel_index_range_to_end(NULL, 0, {}, {}, {})),
+		[OP_MAP_GET_BY_KEY_REL_INDEX_RANGE]              = EXP_SZ(as_exp_map_get_by_key_rel_index_range(NULL, 0, {}, {}, {}, {})),
+		[OP_MAP_GET_BY_VALUE]                            = EXP_SZ(as_exp_map_get_by_value(NULL, 0, {}, {})),
+		[OP_MAP_GET_BY_VALUE_RANGE]                      = EXP_SZ(as_exp_map_get_by_value_range(NULL, 0, {}, {}, {})),
+		[OP_MAP_GET_BY_VALUE_LIST]                       = EXP_SZ(as_exp_map_get_by_value_list(NULL, 0, {}, {})),
+		[OP_MAP_GET_BY_VALUE_RANK_RANGE_REL_TO_END]      = EXP_SZ(as_exp_map_get_by_value_rel_rank_range_to_end(NULL, 0, {}, {}, {})),
+		[OP_MAP_GET_BY_VALUE_RANK_RANGE_REL]             = EXP_SZ(as_exp_map_get_by_value_rel_rank_range(NULL, 0, {}, {}, {}, {})),
+		[OP_MAP_GET_BY_INDEX]                            = EXP_SZ(as_exp_map_get_by_index(NULL, 0, 0, {}, {})),
+		[OP_MAP_GET_BY_INDEX_RANGE_TO_END]               = EXP_SZ(as_exp_map_get_by_index_range_to_end(NULL, 0, {}, {})),
+		[OP_MAP_GET_BY_INDEX_RANGE]                      = EXP_SZ(as_exp_map_get_by_index_range(NULL, 0, {}, {}, {})),
+		[OP_MAP_GET_BY_RANK]                             = EXP_SZ(as_exp_map_get_by_rank(NULL, 0, 0, {}, {})),
+		[OP_MAP_GET_BY_RANK_RANGE_TO_END]                = EXP_SZ(as_exp_map_get_by_rank_range_to_end(NULL, 0, {}, {})),
+		[OP_MAP_GET_BY_RANK_RANGE]                       = EXP_SZ(as_exp_map_get_by_rank_range(NULL, 0, {}, {}, {})),
+		[_AS_EXP_BIT_FLAGS]                              = 0, //EXP_SZ(as_exp_uint(0)),
+		[OP_BIT_RESIZE]                                  = EXP_SZ(as_exp_bit_resize(NULL, {}, 0, {})),
+		[OP_BIT_INSERT]                                  = EXP_SZ(as_exp_bit_insert(NULL, {}, {}, {})),
+		[OP_BIT_REMOVE]                                  = EXP_SZ(as_exp_bit_remove(NULL, {}, {}, {})),
+		[OP_BIT_SET]                                     = EXP_SZ(as_exp_bit_set(NULL, {}, {}, {}, {})),
+		[OP_BIT_OR]                                      = EXP_SZ(as_exp_bit_or(NULL, {}, {}, {}, {})),
+		[OP_BIT_XOR]                                     = EXP_SZ(as_exp_bit_xor(NULL, {}, {}, {}, {})),
+		[OP_BIT_AND]                                     = EXP_SZ(as_exp_bit_and(NULL, {}, {}, {}, {})),
+		[OP_BIT_NOT]                                     = EXP_SZ(as_exp_bit_not(NULL, {}, {}, {})),
+		[OP_BIT_LSHIFT]                                  = EXP_SZ(as_exp_bit_lshift(NULL, {}, {}, {}, {})),
+		[OP_BIT_RSHIFT]                                  = EXP_SZ(as_exp_bit_rshift(NULL, {}, {}, {}, {})),
+		[OP_BIT_ADD]                                     = EXP_SZ(as_exp_bit_add(NULL, {}, {}, {}, 0, {})),
+		[OP_BIT_SUBTRACT]                                = EXP_SZ(as_exp_bit_subtract(NULL, {}, {}, {}, 0, {})),
+		[OP_BIT_SET_INT]                                 = EXP_SZ(as_exp_bit_set_int(NULL, {}, {}, {}, {})),
+		[OP_BIT_GET]                                     = EXP_SZ(as_exp_bit_get({}, {}, {})),
+		[OP_BIT_COUNT]                                   = EXP_SZ(as_exp_bit_count({}, {}, {})),
+		[OP_BIT_LSCAN]                                   = EXP_SZ(as_exp_bit_lscan({}, {}, {}, {})),
+		[OP_BIT_RSCAN]                                   = EXP_SZ(as_exp_bit_rscan({}, {}, {}, {})),
+		[OP_BIT_GET_INT]                                 = EXP_SZ(as_exp_bit_get_int({}, {}, 0, {})),
+		[OP_HLL_ADD]                                     = EXP_SZ(as_exp_hll_add(NULL, {}, 0, {})),
+		[OP_HLL_GET_COUNT]                               = EXP_SZ(as_exp_hll_update(NULL, {}, {})),
+		[OP_HLL_GET_UNION]                               = EXP_SZ(as_exp_hll_get_union({}, {})),
+		[OP_HLL_GET_UNION_COUNT]                         = EXP_SZ(as_exp_hll_get_union_count({}, {})),
+		[OP_HLL_GET_INTERSECT_COUNT]                     = EXP_SZ(as_exp_hll_get_intersect_count({}, {})),
+		[OP_HLL_GET_SIMILARITY]                          = EXP_SZ(as_exp_hll_get_similarity({}, {})),
+		[OP_HLL_DESCRIBE]                                = EXP_SZ(as_exp_hll_describe({})),
+		[OP_HLL_MAY_CONTAIN]                             = EXP_SZ(as_exp_hll_may_contain({}, {})),
+		[_AS_EXP_CODE_CDT_LIST_CRMOD]                    = 0, //EXP_SZ(as_exp_val(NULL)),
+		[_AS_EXP_CODE_CDT_LIST_MOD]                      = 0, //EXP_SZ(as_exp_val(NULL)),
+		[_AS_EXP_CODE_CDT_MAP_CRMOD]                     = 0, //EXP_SZ(as_exp_val(NULL)),
+		[_AS_EXP_CODE_CDT_MAP_CR]                        = 0, //EXP_SZ(as_exp_val(NULL)),
+		[_AS_EXP_CODE_CDT_MAP_MOD]                       = 0 //EXP_SZ(as_exp_val(NULL))
+	};
 
 
-// TODO IMP do error checking for memcpy below
-#define append_array(ar_size) {\
-	memcpy(&((*expressions)[bottom]), &new_entries, sizeof(as_exp_entry) * ar_size);\
-	bottom += ar_size;\
+	for (int i = 0; i < *preds_size; ++i) { //TODO check if op is in valid range (aka in table)
+		pred_op * pred = (pred_op *) as_vector_get(preds, (uint32_t)i);
+		(*size_to_alloc) += EXPR_SIZES[pred->op];
+	}
+
+	if(size_to_alloc <= 0) {
+		return as_error_update(err, AEROSPIKE_ERR_PARAM, "Invalid expression");
+	}
+
+	return AEROSPIKE_OK;
 }
 
 static
 as_status get_exp_val_from_pyval(AerospikeClient * self, as_static_pool * static_pool, int serializer_type, as_exp_entry * new_entry, PyObject * py_obj, pred_op * pred, as_error * err) {
-	//as_exp_entry new_entries[] = {AS_EXP_VAL_INT(pred->fixed_num)};
 	as_error_reset(err);
 
 	if (!py_obj) {
@@ -151,18 +301,7 @@ as_status get_exp_val_from_pyval(AerospikeClient * self, as_static_pool * static
 			as_exp_entry tmp_entry = as_exp_val((as_val *) bytes);
 			*new_entry = tmp_entry;
 		}
-	} else if (PyInt_Check(py_obj)) {
-		int64_t i = (int64_t) PyInt_AsLong(py_obj);
-		if (i == -1 && PyErr_Occurred()) {
-			if (PyErr_ExceptionMatches(PyExc_OverflowError)) {
-				return as_error_update(err, AEROSPIKE_ERR_PARAM, "integer value exceeds sys.maxsize");
-			}
-		}
 
-		{
-			as_exp_entry tmp_entry = as_exp_int(i);
-			*new_entry = tmp_entry;
-		}
 	} else if (PyLong_Check(py_obj)) {
 		int64_t l = (int64_t) PyLong_AsLongLong(py_obj);
 		if (l == -1 && PyErr_Occurred()) {
@@ -171,10 +310,8 @@ as_status get_exp_val_from_pyval(AerospikeClient * self, as_static_pool * static
 			}
 		}
 
-		{
-			as_exp_entry tmp_entry = as_exp_int(l);
-			*new_entry = tmp_entry;
-		}
+		as_exp_entry tmp_entry = as_exp_int(l);
+		*new_entry = tmp_entry;
 	} else if (PyUnicode_Check(py_obj)) {
 		PyObject * py_ustr = PyUnicode_AsUTF8String(py_obj);
 		char * str = PyBytes_AsString(py_ustr);
@@ -283,99 +420,66 @@ as_status get_exp_val_from_pyval(AerospikeClient * self, as_static_pool * static
 	return err->code;
 }
 
-
-as_status add_pred_macros(AerospikeClient * self, as_static_pool * static_pool, int serializer_type, as_vector * unicodeStrVector, as_exp_entry ** expressions, pred_op * pred, as_error * err) {
-	// PyObject * tuple_py_val = NULL;
-	// PyObject * utf8_temp = NULL;
-	// char* bin_name = NULL;
-	int64_t lval1 = 0;
-	int64_t lval2 = 0;
-	//int64_t lval3 = 0;
-	//int64_t lval4 = 0;
-	char * bin_name = NULL;
-
-
-	//pred->ctx = ctx_in_use ? &ctx : NULL;
+#define list_mod()\
+	{.op=pred->op, .v.list_pol = pred->list_policy}
 	
-	if (pred->op >= _AS_EXP_CODE_CDT_LIST_CRMOD && pred->op <= _AS_EXP_CODE_CDT_MAP_MOD) {
 
-		if (pred->op == _AS_EXP_CODE_CDT_LIST_CRMOD || pred->op == _AS_EXP_CODE_CDT_LIST_MOD) {
-			as_exp_entry new_entries[] = {{.op=pred->op, .v.list_pol = pred->list_policy}};
-			append_array(sizeof(new_entries) / sizeof(as_exp_entry));
-		} else if (pred->op >= _AS_EXP_CODE_CDT_MAP_CRMOD && pred->op <= _AS_EXP_CODE_CDT_MAP_MOD) {
-			as_exp_entry new_entries[] = {{.op=pred->op, .v.map_pol = pred->map_policy}};
-			append_array(sizeof(new_entries) / sizeof(as_exp_entry));
+static
+as_status add_pred_macros(AerospikeClient * self, as_static_pool * static_pool, int serializer_type, as_vector * unicodeStrVector, as_vector * pred_op_vector, as_exp_entry ** expressions, int * bottom, int * size, as_error * err) {
+
+	for ( int i = 0; i < *size; ++i ) {
+		pred_op * pred = (pred_op *) as_vector_get(pred_op_vector, (uint32_t)i);
+
+		int64_t lval1 = 0;
+		int64_t lval2 = 0;
+		char * bin_name = NULL;
+		
+		if (pred->op >= _AS_EXP_CODE_CDT_LIST_CRMOD && pred->op <= _AS_EXP_CODE_CDT_MAP_MOD) {
+
+			if (pred->op == _AS_EXP_CODE_CDT_LIST_CRMOD || pred->op == _AS_EXP_CODE_CDT_LIST_MOD) {
+				append_array(0, list_mod());
+			} else if (pred->op >= _AS_EXP_CODE_CDT_MAP_CRMOD && pred->op <= _AS_EXP_CODE_CDT_MAP_MOD) {
+				append_array(0, {.op=pred->op, .v.map_pol = pred->map_policy});
+			}
+
+			continue;
 		}
 
-		return err->code;
-	}
-
-	switch (pred->op) {
-		case BIN:
-			{
+		switch (pred->op) {
+			case BIN:
 				if (get_bin(err, pred->pydict, unicodeStrVector, &bin_name) != AEROSPIKE_OK) {
 					return err->code;
 				}
 
-				as_exp_entry new_entries[] = {
-					{.op=_AS_EXP_CODE_BIN, .count=3},
-					as_exp_int(pred->result_type),
-					_AS_EXP_VAL_RAWSTR(bin_name)
-				};
-				append_array(3);
-			}
-			break;
-		case VAL:;
-			{
+				append_array(0, bin_expr());
+				break;
+			case VAL:;
 				as_exp_entry tmp_expr;
 				if (get_exp_val_from_pyval(self, static_pool, serializer_type, &tmp_expr, PyDict_GetItemString(pred->pydict, AS_PY_VAL_KEY), pred, err) != AEROSPIKE_OK) {
 					return err->code;
 				}
 
-				{
-					as_exp_entry new_entries[] = {tmp_expr};
-					append_array(sizeof(new_entries) / sizeof(as_exp_entry));
-				}
-			}
-			break;
-		case EQ:;
-			{
-				as_exp_entry new_entries[] = {as_exp_cmp_eq({},{})};
-				append_array(1);
-			}
-			break;
-		case NE:;
-			{
-				as_exp_entry new_entries[] = {as_exp_cmp_ne({},{})};
-				append_array(1);
-			}
-			break;
-		case GT:;
-			{
-				as_exp_entry new_entries[] = {as_exp_cmp_gt({},{})};
-				append_array(1);
-			}
-			break;
-		case GE:;
-			{
-				as_exp_entry new_entries[] = {as_exp_cmp_ge({},{})};
-				append_array(1);
-			}
-			break;
-		case LT:;
-			{
-				as_exp_entry new_entries[] = {as_exp_cmp_lt({},{})};
-				append_array(1);
-			}
-			break;
-		case LE:;
-			{
-				as_exp_entry new_entries[] = {as_exp_cmp_le({},{})};
-				append_array(1);
-			}
-			break;
-		case CMP_REGEX:;
-			{
+				append_array(0, tmp_expr);
+				break;
+			case EQ:
+				append_array(2, as_exp_cmp_eq({},{}));
+				break;
+			case NE:
+				append_array(2, as_exp_cmp_ne({},{}));
+				break;
+			case GT:
+				append_array(2, as_exp_cmp_gt({},{}));
+				break;
+			case GE:
+				append_array(2, as_exp_cmp_ge({},{}));
+				break;
+			case LT:
+				append_array(2, as_exp_cmp_lt({},{}));
+				break;
+			case LE:
+				append_array(2, as_exp_cmp_le({},{}));
+				break;
+			case CMP_REGEX:
 				if (get_int64_t(err, REGEX_OPTIONS_KEY, pred->pydict, &lval1) != AEROSPIKE_OK) {
 					return err->code;
 				}
@@ -384,117 +488,79 @@ as_status add_pred_macros(AerospikeClient * self, as_static_pool * static_pool, 
 				char * regex_str = NULL;
 				if (PyUnicode_Check(py_obj)) {
 					PyObject * py_ustr = PyUnicode_AsUTF8String(py_obj);
-					regex_str = PyBytes_AsString(py_ustr);
+					regex_str = strdup(PyBytes_AsString(py_ustr));
+					pred->val.val_string_p = regex_str;
 					Py_DECREF(py_ustr);
-				} else if (PyString_Check(py_obj)) {
-					regex_str = PyString_AsString(py_obj);
 				} else {
 					return as_error_update(err, AEROSPIKE_ERR_PARAM, "regex_str must be a string.");
 				}
-
-				//TODO make sure regex_str memory is handled correctly
-
-				as_exp_entry new_entries[] = {as_exp_cmp_regex(lval1, regex_str, {})};
-				append_array(sizeof(new_entries) / sizeof(as_exp_entry) - 1); // - 1 for cmp_str
-			}
-			break;
-		case CMP_GEO:;
-			{
-				as_exp_entry new_entries[] = {as_exp_cmp_geo({},{})};
-				append_array(1);
-			}
-			break;
-		case AND:;
-			{
-				as_exp_entry new_entries[] = {as_exp_and({})};
-				append_array(1);
-			}
-			break;
-		case OR:;
-			{
-				as_exp_entry new_entries[] = {as_exp_or({})};
-				append_array(1);
-			}
-			break;
-		case NOT:;
-			{
-				as_exp_entry new_entries[] = {as_exp_not({})};
-				append_array(1);
-			}
-			break;
-		case END_VA_ARGS:;
-			{
-				as_exp_entry new_entries[] = {{.op=_AS_EXP_CODE_END_OF_VA_ARGS}};
-				append_array(1);
-			}
-			break;
-		case META_DIGEST_MOD:;
-			{
+				
+				append_array(1, as_exp_cmp_regex(lval1, regex_str, {})); // - 1 for cmp_str
+				break;
+			case CMP_GEO:
+				append_array(2, as_exp_cmp_geo({},{}));
+				break;
+			case AND:
+				append_array(2, as_exp_and({}));
+				break;
+			case OR:
+				append_array(2, as_exp_or({}));
+				break;
+			case NOT:
+				append_array(1, as_exp_not({}));
+				break;
+			case END_VA_ARGS:
+				append_array(0, {.op=_AS_EXP_CODE_END_OF_VA_ARGS}); //NOTE: this case handles the end of arguments to an AND/OR expression.
+				break;
+			case META_DIGEST_MOD:
 				if (get_int64_t(err, AS_PY_VAL_KEY, pred->pydict, &lval1) != AEROSPIKE_OK) {
 					return err->code;
 				}
 
-				as_exp_entry new_entries[] = {as_exp_digest_modulo(lval1)};
-				append_array(2);
-			}
-			break;
-		case META_DEVICE_SIZE:;
-			{
-				as_exp_entry new_entries[] = {as_exp_device_size()};
-				append_array(1);
-			}
-			break;
-		case META_LAST_UPDATE_TIME:;
-			{
-				as_exp_entry new_entries[] = {as_exp_last_update()};
-				append_array(1);
-			}
-			break;
-		case META_VOID_TIME:;
-			{
-				as_exp_entry new_entries[] = {as_exp_void_time()};
-				append_array(1);
-			}
-			break;
-		case META_TTL:;
-			{
-				as_exp_entry new_entries[] = {as_exp_ttl()};
-				append_array(1);
-			}
-			break;
-		case META_SET_NAME:;
-			{
-				as_exp_entry new_entries[] = {as_exp_set_name()};
-				append_array(sizeof(new_entries) / sizeof(as_exp_entry));
-			}
-			break;
-		case META_KEY_EXISTS:;
-			{
-				as_exp_entry new_entries[] = {as_exp_key_exist()};
-				append_array(sizeof(new_entries) / sizeof(as_exp_entry)); // TODO add size to append_array
-			}
-			break;
-		case REC_KEY:;
-			{
-				as_exp_entry new_entries[] = {
-					{.op=_AS_EXP_CODE_KEY, .count=2},
-					as_exp_int(pred->result_type)
-				};
-				append_array(sizeof(new_entries) / sizeof(as_exp_entry));
-			}
-			break;
-		case BIN_TYPE:;
-			if (get_bin(err, pred->pydict, unicodeStrVector, &bin_name) != AEROSPIKE_OK) {
-				return err->code;
-			}
+				append_array(0, as_exp_digest_modulo(lval1));
+				break;
+			case META_DEVICE_SIZE:
+					append_array(0, as_exp_device_size());
+				break;
+			case META_LAST_UPDATE_TIME:
+				append_array(0, as_exp_last_update());
+				break;
+			case META_SINCE_UPDATE_TIME:
+				append_array(0, as_exp_since_update());
+				break;
+			case META_IS_TOMBSTONE:
+				append_array(0, as_exp_is_tombstone());
+				break;
+			case META_VOID_TIME:
+				append_array(0, as_exp_void_time());
+				break;
+			case META_TTL:
+				append_array(0, as_exp_ttl());
+				break;
+			case META_SET_NAME:
+				append_array(0, as_exp_set_name());
+				break;
+			case META_KEY_EXISTS:
+				append_array(0, as_exp_key_exist());
+				break;
+			case REC_KEY:
+				append_array(0, key_expr());
+				break;
+			case BIN_TYPE:
+				if (get_bin(err, pred->pydict, unicodeStrVector, &bin_name) != AEROSPIKE_OK) {
+					return err->code;
+				}
 
-			{
-				as_exp_entry new_entries[] = {as_exp_bin_type(bin_name)};
-				append_array(2);
-			}
-			break;
-		case OP_LIST_EXP_GET_BY_INDEX:;
-			{
+				append_array(0, as_exp_bin_type(bin_name));
+				break;
+			case BIN_EXISTS:
+				if (get_bin(err, pred->pydict, unicodeStrVector, &bin_name) != AEROSPIKE_OK) {
+					return err->code;
+				}
+
+				append_array(0, as_exp_bin_exists(bin_name));
+				break;
+			case OP_LIST_EXP_GET_BY_INDEX:
 				if (get_int64_t(err, AS_PY_BIN_TYPE_KEY, pred->pydict, &lval2) != AEROSPIKE_OK) {
 					return err->code;
 				}
@@ -503,95 +569,63 @@ as_status add_pred_macros(AerospikeClient * self, as_static_pool * static_pool, 
 					return err->code;
 				}
 
-				as_exp_entry new_entries[] = {as_exp_list_get_by_index(pred->ctx, lval1, lval2, {}, {})};
+				append_array(2, as_exp_list_get_by_index(pred->ctx, lval1, lval2, {}, {})); // - 2 for index, bin
+				break;
+			case OP_LIST_EXP_SIZE:
+				append_array(1, as_exp_list_size(pred->ctx, {}));
+				break;
+			case OP_LIST_EXP_GET_BY_VALUE:
+				{	
+					if (get_int64_t(err, AS_PY_LIST_RETURN_KEY, pred->pydict, &lval1) != AEROSPIKE_OK) {
+						return err->code;
+					}
 
-				append_array(sizeof(new_entries) / sizeof(as_exp_entry) - 2); // - 2 for index, bin
-			}
-			break;
-		case OP_LIST_EXP_SIZE:;
-			{
-				as_exp_entry new_entries[] = {
-					_AS_EXP_CDT_LIST_READ(AS_EXP_TYPE_AUTO, AS_LIST_RETURN_COUNT, false),
-					_AS_EXP_LIST_START(pred->ctx, AS_CDT_OP_LIST_SIZE, 0),
-				};
-
-				append_array(sizeof(new_entries) / sizeof(as_exp_entry));
-			}
-			break;
-		case OP_LIST_EXP_GET_BY_VALUE:;
-			{	
+					append_array(2, as_exp_list_get_by_value(pred->ctx, lval1, {}, {})); // - 2 for value, bin
+				}
+				break;
+			case OP_LIST_EXP_GET_BY_VALUE_RANGE:
 				if (get_int64_t(err, AS_PY_LIST_RETURN_KEY, pred->pydict, &lval1) != AEROSPIKE_OK) {
 					return err->code;
 				}
 
-				as_exp_entry new_entries[] = {as_exp_list_get_by_value(pred->ctx, lval1, {}, {})};
-
-				append_array(sizeof(new_entries) / sizeof(as_exp_entry) - 2); // - 2 for value, bin
-			}
-			break;
-		case OP_LIST_EXP_GET_BY_VALUE_RANGE:;
-			{
+				append_array(3, as_exp_list_get_by_value_range(pred->ctx, lval1, {}, {}, {})); // - 3 for begin, end, bin
+				break;
+			case OP_LIST_EXP_GET_BY_VALUE_LIST:
 				if (get_int64_t(err, AS_PY_LIST_RETURN_KEY, pred->pydict, &lval1) != AEROSPIKE_OK) {
 					return err->code;
 				}
 
-				as_exp_entry new_entries[] = {as_exp_list_get_by_value_range(pred->ctx, lval1, {}, {}, {})};
-
-				append_array(sizeof(new_entries) / sizeof(as_exp_entry) - 3); // - 3 for begin, end, bin
-			}
-			break;
-		case OP_LIST_EXP_GET_BY_VALUE_LIST:;
-			{
+				append_array(2, as_exp_list_get_by_value_list(pred->ctx, lval1, {}, {})); // - 2 for value, bin
+				break;
+			case OP_LIST_EXP_GET_BY_VALUE_RANK_RANGE_REL_TO_END:
 				if (get_int64_t(err, AS_PY_LIST_RETURN_KEY, pred->pydict, &lval1) != AEROSPIKE_OK) {
 					return err->code;
 				}
 
-				as_exp_entry new_entries[] = {as_exp_list_get_by_value_list(pred->ctx, lval1, {}, {})};
-				append_array(sizeof(new_entries) / sizeof(as_exp_entry) - 2); // - 2 for value, bin
-			}
-			break;
-		case OP_LIST_EXP_GET_BY_VALUE_RANK_RANGE_REL_TO_END:;
-			{
+				append_array(3, as_exp_list_get_by_rel_rank_range_to_end(pred->ctx, lval1, {}, {}, {})); // - 3 for value, rank, bin
+				break;
+			case OP_LIST_EXP_GET_BY_VALUE_RANK_RANGE_REL:
 				if (get_int64_t(err, AS_PY_LIST_RETURN_KEY, pred->pydict, &lval1) != AEROSPIKE_OK) {
 					return err->code;
 				}
 
-				as_exp_entry new_entries[] = {as_exp_list_get_by_rel_rank_range_to_end(pred->ctx, lval1, {}, {}, {})};
-				append_array(sizeof(new_entries) / sizeof(as_exp_entry) -3 ); // - 3 for value, rank, bin
-			}
-			break;
-		case OP_LIST_EXP_GET_BY_VALUE_RANK_RANGE_REL:;
-			{
+				append_array(4, as_exp_list_get_by_rel_rank_range(pred->ctx, lval1, {}, {}, {}, {})); // - 4 for value, rank, count, bin
+				break;
+			case OP_LIST_EXP_GET_BY_INDEX_RANGE_TO_END:
+				if (get_int64_t(err, AS_PY_LIST_RETURN_KEY, pred->pydict, &lval1) != AEROSPIKE_OK) {
+					return err->code;
+				}
+				
+				append_array(2, as_exp_list_get_by_index_range_to_end(pred->ctx, lval1, {}, {})); // - 2 for index, bin
+				break;
+			case OP_LIST_EXP_GET_BY_INDEX_RANGE:
 				if (get_int64_t(err, AS_PY_LIST_RETURN_KEY, pred->pydict, &lval1) != AEROSPIKE_OK) {
 					return err->code;
 				}
 
-				as_exp_entry new_entries[] = {as_exp_list_get_by_rel_rank_range(pred->ctx, lval1, {}, {}, {}, {})};
-				append_array(sizeof(new_entries) / sizeof(as_exp_entry) - 4); // - 4 for value, rank, count, bin
-			}
-			break;
-		case OP_LIST_EXP_GET_BY_INDEX_RANGE_TO_END:;
-			{
-				if (get_int64_t(err, AS_PY_LIST_RETURN_KEY, pred->pydict, &lval1) != AEROSPIKE_OK) {
-					return err->code;
-				}
-
-				as_exp_entry new_entries[] = {as_exp_list_get_by_index_range_to_end(pred->ctx, lval1, {}, {})};
-				append_array(sizeof(new_entries) / sizeof(as_exp_entry) - 2); // - 2 for index, bin
-			}
-			break;
-		case OP_LIST_EXP_GET_BY_INDEX_RANGE:;
-			{
-				if (get_int64_t(err, AS_PY_LIST_RETURN_KEY, pred->pydict, &lval1) != AEROSPIKE_OK) {
-					return err->code;
-				}
-
-				as_exp_entry new_entries[] = {as_exp_list_get_by_index_range(pred->ctx, lval1, {}, {}, {})};
-				append_array(sizeof(new_entries) / sizeof(as_exp_entry) - 3); // - 3 for index, count, bin
-			}
-			break;
-		case OP_LIST_EXP_GET_BY_RANK:;
-			{
+				append_array(3, as_exp_list_get_by_index_range(pred->ctx, lval1, {}, {}, {})); // - 3 for index, count, bin
+				break;
+			case OP_LIST_EXP_GET_BY_RANK:
 				if (get_int64_t(err, AS_PY_LIST_RETURN_KEY, pred->pydict, &lval1) != AEROSPIKE_OK) {
 					return err->code;
 				}
@@ -600,334 +634,147 @@ as_status add_pred_macros(AerospikeClient * self, as_static_pool * static_pool, 
 					return err->code;
 				}
 
-				as_exp_entry new_entries[] = {as_exp_list_get_by_rank(pred->ctx, lval1, lval2, {}, {})};
-				append_array(sizeof(new_entries) / sizeof(as_exp_entry) - 2); // - 2 for rank, bin
-			}
-			break;
-		case OP_LIST_EXP_GET_BY_RANK_RANGE_TO_END:;
-			{
+				append_array(2, as_exp_list_get_by_rank(pred->ctx, lval1, lval2, {}, {})); // - 2 for rank, bin
+				break;
+			case OP_LIST_EXP_GET_BY_RANK_RANGE_TO_END:
 				if (get_int64_t(err, AS_PY_LIST_RETURN_KEY, pred->pydict, &lval1) != AEROSPIKE_OK) {
 					return err->code;
 				}
 
-				as_exp_entry new_entries[] = {as_exp_list_get_by_rank_range_to_end(pred->ctx, lval1, {}, {})};
-				append_array(sizeof(new_entries) / sizeof(as_exp_entry) - 2); // - 2 for rank, bin
-			}
-			break;
-		case OP_LIST_EXP_GET_BY_RANK_RANGE:;
-			{
+				append_array(2, as_exp_list_get_by_rank_range_to_end(pred->ctx, lval1, {}, {})); // - 2 for rank, bin
+				break;
+			case OP_LIST_EXP_GET_BY_RANK_RANGE:
 				if (get_int64_t(err, AS_PY_LIST_RETURN_KEY, pred->pydict, &lval1) != AEROSPIKE_OK) {
 					return err->code;
 				}
 
-				as_exp_entry new_entries[] = {as_exp_list_get_by_rank_range(pred->ctx, lval1, {}, {}, {})};
-				append_array(sizeof(new_entries) / sizeof(as_exp_entry) - 3); // - 3 for rank, count, bin
-			}
-			break;
-		case OP_LIST_EXP_APPEND:;
-			{
-				as_exp_entry new_entries[] = {
-					_AS_EXP_LIST_MOD(pred->ctx, pred->list_policy, AS_CDT_OP_LIST_APPEND, 1, 2),
-				};
-
-				append_array(sizeof(new_entries) / sizeof(as_exp_entry));
-			}
-			break;
-		case OP_LIST_EXP_APPEND_ITEMS:;
-			{
-				as_exp_entry new_entries[] = {
-					_AS_EXP_LIST_MOD(pred->ctx, pred->list_policy, AS_CDT_OP_LIST_APPEND_ITEMS, 1, 2)
-				};
-
-				append_array(sizeof(new_entries) / sizeof(as_exp_entry));
-			}
-			break;
-		case OP_LIST_EXP_INSERT:;
-			{
-				as_exp_entry new_entries[] = {
-					_AS_EXP_LIST_MOD(pred->ctx, pred->list_policy, AS_CDT_OP_LIST_INSERT, 2, 1)
-				};
-
-				append_array(sizeof(new_entries) / sizeof(as_exp_entry));
-			}
-			break;
-		case OP_LIST_EXP_INSERT_ITEMS:;
-			{
-				as_exp_entry new_entries[] = {
-					_AS_EXP_LIST_MOD(pred->ctx, pred->list_policy, AS_CDT_OP_LIST_INSERT_ITEMS, 2, 1)
-				};
-
-				append_array(sizeof(new_entries) / sizeof(as_exp_entry));
-			}
-			break;
-		case OP_LIST_EXP_INCREMENT:;
-			{
-				as_exp_entry new_entries[] = {
-					_AS_EXP_LIST_MOD(pred->ctx, pred->list_policy, AS_CDT_OP_LIST_INCREMENT, 2, 2)
-				};
-
-				append_array(sizeof(new_entries) / sizeof(as_exp_entry));
-			}
-			break;
-		case OP_LIST_EXP_SET:;
-			{
-				as_exp_entry new_entries[] = {
-					_AS_EXP_LIST_MOD(pred->ctx, pred->list_policy, AS_CDT_OP_LIST_SET, 2, 1)
-				};
-
-				append_array(sizeof(new_entries) / sizeof(as_exp_entry));
-			}
-			break;
-		case OP_LIST_EXP_CLEAR:;
-			{
-				as_exp_entry new_entries[] = {as_exp_list_clear(pred->ctx, {})};
-
-				append_array(sizeof(new_entries) / sizeof(as_exp_entry) -1); // -1 for bin
-			}
-			break;
-		case OP_LIST_EXP_SORT:;
-			{
+				append_array(3, as_exp_list_get_by_rank_range(pred->ctx, lval1, {}, {}, {})); // - 3 for rank, count, bin
+				break;
+			case OP_LIST_EXP_APPEND:
+				append_array(3, as_exp_list_append(pred->ctx, pred->list_policy, {}, {}));
+				break;
+			case OP_LIST_EXP_APPEND_ITEMS:
+				append_array(3, as_exp_list_append_items(pred->ctx, pred->list_policy, {}, {}));
+				break;
+			case OP_LIST_EXP_INSERT:
+				append_array(4, as_exp_list_insert(pred->ctx, pred->list_policy, {}, {}, {}));
+				break;
+			case OP_LIST_EXP_INSERT_ITEMS:
+				append_array(4, as_exp_list_insert_items(pred->ctx, pred->list_policy, {}, {}, {}));
+				break;
+			case OP_LIST_EXP_INCREMENT:
+				append_array(4, as_exp_list_increment(pred->ctx, pred->list_policy, {}, {}, {}));
+				break;
+			case OP_LIST_EXP_SET:
+				append_array(4, as_exp_list_set(pred->ctx, pred->list_policy, {}, {}, {}));
+				break;
+			case OP_LIST_EXP_CLEAR:
+				append_array(1, as_exp_list_clear(pred->ctx, {})); // -1 for bin
+				break;
+			case OP_LIST_EXP_SORT:
 				if (get_int64_t(err, LIST_ORDER_KEY, pred->pydict, &lval1) != AEROSPIKE_OK) {
 					return err->code;
 				}
 
-				as_exp_entry new_entries[] = {as_exp_list_sort(pred->ctx, lval1, {})};
-
-				append_array(sizeof(new_entries) / sizeof(as_exp_entry) -1); // -1 for bin
-			}
-			break;
-		case OP_LIST_EXP_REMOVE_BY_VALUE:;
-			{
-				as_exp_entry new_entries[] = {as_exp_list_remove_by_value(pred->ctx, {}, {})};
-
-				append_array(sizeof(new_entries) / sizeof(as_exp_entry) -2); // -1 for bin and val
-			}
-			break;
-		case OP_LIST_EXP_REMOVE_BY_VALUE_LIST:;
-			{
-				as_exp_entry new_entries[] = {as_exp_list_remove_by_value_list(pred->ctx, {}, {})};
-
-				append_array(sizeof(new_entries) / sizeof(as_exp_entry) -2); // -2 for bin and val
-			}
-			break;
-		case OP_LIST_EXP_REMOVE_BY_VALUE_RANGE:;
-			{
-				as_exp_entry new_entries[] = {as_exp_list_remove_by_value_range(pred->ctx, {}, {}, {})};
-
-				append_array(sizeof(new_entries) / sizeof(as_exp_entry) - 3); // - 3 for begin, end, val
-			}
-			break;
-		case OP_LIST_EXP_REMOVE_BY_REL_RANK_RANGE_TO_END:;
-			{
-				as_exp_entry new_entries[] = {as_exp_list_remove_by_rel_rank_range_to_end(pred->ctx, {}, {}, {})};
-
-				append_array(sizeof(new_entries) / sizeof(as_exp_entry) - 3); // -3 for value, rank, bin
-			}
-			break;
-		case OP_LIST_EXP_REMOVE_BY_REL_RANK_RANGE:;
-			{
-				as_exp_entry new_entries[] = {as_exp_list_remove_by_rel_rank_range(pred->ctx, {}, {}, {}, {})};
-
-				append_array(sizeof(new_entries) / sizeof(as_exp_entry) - 4); // -4 for value, rank, count, bin
-			}
-			break;
-		case OP_LIST_EXP_REMOVE_BY_INDEX:;
-			{
-				as_exp_entry new_entries[] = {as_exp_list_remove_by_index(pred->ctx, {}, {})};
-
-				append_array(sizeof(new_entries) / sizeof(as_exp_entry) - 2); // -2 for index, bin
-			}
-			break;
-		case OP_LIST_EXP_REMOVE_BY_INDEX_RANGE_TO_END:;
-			{
-				as_exp_entry new_entries[] = {as_exp_list_remove_by_index_range_to_end(pred->ctx, {}, {})};
-
-				append_array(sizeof(new_entries) / sizeof(as_exp_entry) - 2); // -2 for index, bin
-			}
-			break;
-		case OP_LIST_EXP_REMOVE_BY_INDEX_RANGE:;
-			{
-				as_exp_entry new_entries[] = {as_exp_list_remove_by_index_range(pred->ctx, {}, {}, {})};
-
-				append_array(sizeof(new_entries) / sizeof(as_exp_entry) - 3); // - 3 for index, count, bin
-			}
-			break;
-		case OP_LIST_EXP_REMOVE_BY_RANK:;
-			{
-				as_exp_entry new_entries[] = {as_exp_list_remove_by_rank(pred->ctx, {}, {})};
-
-				append_array(sizeof(new_entries) / sizeof(as_exp_entry) - 2); // -2 for rank, bin
-			}
-			break;
-		case OP_LIST_EXP_REMOVE_BY_RANK_RANGE_TO_END:;
-			{
-				as_exp_entry new_entries[] = {as_exp_list_remove_by_rank_range_to_end(pred->ctx, {}, {})};
-
-				append_array(sizeof(new_entries) / sizeof(as_exp_entry) - 2); // - 2 for rank, bin
-			}
-			break;
-		case OP_LIST_EXP_REMOVE_BY_RANK_RANGE:;
-			{
-				as_exp_entry new_entries[] = {as_exp_list_remove_by_rank_range(pred->ctx, {}, {}, {})};
-
-				append_array(sizeof(new_entries) / sizeof(as_exp_entry) - 3); // - 3 for rank, count, bin
-			}
-			break;
-		case OP_MAP_PUT:;
-			{
-				as_exp_entry new_entries[] = {
-					_AS_EXP_MAP_MOD(pred->ctx, pred->map_policy, AS_CDT_OP_MAP_PUT, 2, 2)
-				};
-
-				append_array(sizeof(new_entries) / sizeof(as_exp_entry));
-			}
-			break;
-		case OP_MAP_PUT_ITEMS:;
-			{
-				as_exp_entry new_entries[] = {
-					_AS_EXP_MAP_MOD(pred->ctx, pred->map_policy, AS_CDT_OP_MAP_PUT_ITEMS, 1, 2)
-				};
-
-				append_array(sizeof(new_entries) / sizeof(as_exp_entry));
-			}
-			break;
-		case OP_MAP_INCREMENT:;
-			{
-				as_exp_entry new_entries[] = {
-					_AS_EXP_MAP_MOD(pred->ctx, pred->map_policy, AS_CDT_OP_MAP_INCREMENT, 2, 1)
-				};
-
-				append_array(sizeof(new_entries) / sizeof(as_exp_entry));
-			}
-			break;
-		case OP_MAP_CLEAR:;
-			{
-				as_exp_entry new_entries[] = {as_exp_map_clear(pred->ctx, {})};
-
-				append_array(sizeof(new_entries) / sizeof(as_exp_entry) - 1); // - 1 for bin
-			}
-			break;
-		case OP_MAP_REMOVE_BY_KEY:;
-			{
-				as_exp_entry new_entries[] = {as_exp_map_remove_by_key(pred->ctx, {}, {})};
-
-				append_array(sizeof(new_entries) / sizeof(as_exp_entry) - 2); // - 2 for key, bin
-			}
-			break;
-		case OP_MAP_REMOVE_BY_KEY_LIST:;
-			{
-				as_exp_entry new_entries[] = {as_exp_map_remove_by_key_list(pred->ctx, {}, {})};
-
-				append_array(sizeof(new_entries) / sizeof(as_exp_entry) - 2); // - 2 for key, bin
-			}
-			break;
-		case OP_MAP_REMOVE_BY_KEY_RANGE:;
-			{
-				as_exp_entry new_entries[] = {as_exp_map_remove_by_key_range(pred->ctx, {}, {}, {})};
-
-				append_array(sizeof(new_entries) / sizeof(as_exp_entry) - 3); // - 3 for begin, end, bin
-			}
-			break;
-		case OP_MAP_REMOVE_BY_KEY_REL_INDEX_RANGE_TO_END:;
-			{
-				as_exp_entry new_entries[] = {as_exp_map_remove_by_key_rel_index_range_to_end(pred->ctx, {}, {}, {})};
-
-				append_array(sizeof(new_entries) / sizeof(as_exp_entry) - 3); // - 3 for key, index, bin
-			}
-			break;
-		case OP_MAP_REMOVE_BY_KEY_REL_INDEX_RANGE:;
-			{
-				as_exp_entry new_entries[] = {as_exp_map_remove_by_key_rel_index_range(pred->ctx, {}, {}, {}, {})};
-
-				append_array(sizeof(new_entries) / sizeof(as_exp_entry) - 4); // - 4 for key, index, count, bin
-			}
-			break;
-		case OP_MAP_REMOVE_BY_VALUE:;
-			{
-				as_exp_entry new_entries[] = {as_exp_map_remove_by_value(pred->ctx, {}, {})};
-
-				append_array(sizeof(new_entries) / sizeof(as_exp_entry) - 2); // - 2 for val, bin
-			}
-			break;
-		case OP_MAP_REMOVE_BY_VALUE_LIST:;
-			{
-				as_exp_entry new_entries[] = {as_exp_map_remove_by_value(pred->ctx, {}, {})};
-
-				append_array(sizeof(new_entries) / sizeof(as_exp_entry) - 2); // - 2 for values, bin
-			}
-			break;
-		case OP_MAP_REMOVE_BY_VALUE_RANGE:;
-			{
-				as_exp_entry new_entries[] = {as_exp_map_remove_by_value_range(pred->ctx, {}, {}, {})};
-
-				append_array(sizeof(new_entries) / sizeof(as_exp_entry) - 3); // - 3 for begin, end, bin
-			}
-			break;
-		case OP_MAP_REMOVE_BY_VALUE_REL_RANK_RANGE_TO_END:;
-			{
-				as_exp_entry new_entries[] = {as_exp_map_remove_by_value_rel_rank_range_to_end(pred->ctx, {}, {}, {})};
-
-				append_array(sizeof(new_entries) / sizeof(as_exp_entry) - 3); // - 3 for val, rank, bin
-			}
-			break;
-		case OP_MAP_REMOVE_BY_VALUE_REL_RANK_RANGE:;
-			{
-				as_exp_entry new_entries[] = {as_exp_map_remove_by_value_rel_rank_range(pred->ctx, {}, {}, {}, {})};
-
-				append_array(sizeof(new_entries) / sizeof(as_exp_entry) - 4); // - 4 for val, rank, count, bin
-			}
-			break;
-		case OP_MAP_REMOVE_BY_INDEX:;
-			{
-				as_exp_entry new_entries[] = {as_exp_map_remove_by_index(pred->ctx, {}, {})};
-
-				append_array(sizeof(new_entries) / sizeof(as_exp_entry) - 2); // - 2 for index, bin
-			}
-			break;
-		case OP_MAP_REMOVE_BY_INDEX_RANGE_TO_END:;
-			{
-				as_exp_entry new_entries[] = {as_exp_map_remove_by_index_range_to_end(pred->ctx, {}, {})};
-
-				append_array(sizeof(new_entries) / sizeof(as_exp_entry) - 2); // - 2 for index, bin
-			}
-			break;
-		case OP_MAP_REMOVE_BY_INDEX_RANGE:;
-			{
-				as_exp_entry new_entries[] = {as_exp_map_remove_by_index_range(pred->ctx, {}, {}, {})};
-
-				append_array(sizeof(new_entries) / sizeof(as_exp_entry) - 3); // - 3 for index, count, bin
-			}
-			break;
-		case OP_MAP_REMOVE_BY_RANK:;
-			{
-				as_exp_entry new_entries[] = {as_exp_map_remove_by_rank(pred->ctx, {}, {})};
-
-				append_array(sizeof(new_entries) / sizeof(as_exp_entry) - 2); // - 2 for rank, bin
-			}
-			break;
-		case OP_MAP_REMOVE_BY_RANK_RANGE_TO_END:;
-			{
-				as_exp_entry new_entries[] = {as_exp_map_remove_by_rank_range_to_end(pred->ctx, {}, {})};
-
-				append_array(sizeof(new_entries) / sizeof(as_exp_entry) - 2); // - 2 for rank, bin
-			}
-			break;
-		case OP_MAP_REMOVE_BY_RANK_RANGE:;
-			{
-				as_exp_entry new_entries[] = {as_exp_map_remove_by_rank_range(pred->ctx, {}, {}, {})};
-
-				append_array(sizeof(new_entries) / sizeof(as_exp_entry) - 3); // - 3 for rank, count, bin
-			}
-			break;
-		case OP_MAP_SIZE:;
-			{
-				as_exp_entry new_entries[] = {as_exp_map_size(pred->ctx, {})};
-
-				append_array(sizeof(new_entries) / sizeof(as_exp_entry) - 1); // - 1 for bin
-			}
-			break;
-		case OP_MAP_GET_BY_KEY:;
-			{
+				append_array(1, as_exp_list_sort(pred->ctx, lval1, {})); // -1 for bin
+				break;
+			case OP_LIST_EXP_REMOVE_BY_VALUE:
+				append_array(2, as_exp_list_remove_by_value(pred->ctx, {}, {})); // -2 for bin and val
+				break;
+			case OP_LIST_EXP_REMOVE_BY_VALUE_LIST:
+				append_array(2, as_exp_list_remove_by_value_list(pred->ctx, {}, {})); // -2 for bin and val
+				break;
+			case OP_LIST_EXP_REMOVE_BY_VALUE_RANGE:
+				append_array(3, as_exp_list_remove_by_value_range(pred->ctx, {}, {}, {})); // - 3 for begin, end, val
+				break;
+			case OP_LIST_EXP_REMOVE_BY_REL_RANK_RANGE_TO_END:
+				append_array(3, as_exp_list_remove_by_rel_rank_range_to_end(pred->ctx, {}, {}, {})); // -3 for value, rank, bin
+				break;
+			case OP_LIST_EXP_REMOVE_BY_REL_RANK_RANGE:
+				append_array(4, as_exp_list_remove_by_rel_rank_range(pred->ctx, {}, {}, {}, {})); // -4 for value, rank, count, bin
+				break;
+			case OP_LIST_EXP_REMOVE_BY_INDEX:
+				append_array(2, as_exp_list_remove_by_index(pred->ctx, {}, {})); // -2 for index, bin
+				break;
+			case OP_LIST_EXP_REMOVE_BY_INDEX_RANGE_TO_END:
+				append_array(2, as_exp_list_remove_by_index_range_to_end(pred->ctx, {}, {})); // -2 for index, bin
+				break;
+			case OP_LIST_EXP_REMOVE_BY_INDEX_RANGE:
+				append_array(3, as_exp_list_remove_by_index_range(pred->ctx, {}, {}, {})); // - 3 for index, count, bin
+				break;
+			case OP_LIST_EXP_REMOVE_BY_RANK:
+				append_array(2, as_exp_list_remove_by_rank(pred->ctx, {}, {})); // -2 for rank, bin
+				break;
+			case OP_LIST_EXP_REMOVE_BY_RANK_RANGE_TO_END:
+				append_array(2, as_exp_list_remove_by_rank_range_to_end(pred->ctx, {}, {})); // - 2 for rank, bin
+				break;
+			case OP_LIST_EXP_REMOVE_BY_RANK_RANGE:
+				append_array(3, as_exp_list_remove_by_rank_range(pred->ctx, {}, {}, {})); // - 3 for rank, count, bin
+				break;
+			case OP_MAP_PUT:
+				append_array(4, as_exp_map_put(pred->ctx, pred->map_policy, {}, {}, {}));
+				break;
+			case OP_MAP_PUT_ITEMS:
+				append_array(3, as_exp_map_put_items(pred->ctx, pred->map_policy, {}, {}));
+				break;
+			case OP_MAP_INCREMENT:
+				append_array(4, as_exp_map_increment(pred->ctx, pred->map_policy, {}, {}, {}));
+				break;
+			case OP_MAP_CLEAR:
+				append_array(1, as_exp_map_clear(pred->ctx, {})); // - 1 for bin
+				break;
+			case OP_MAP_REMOVE_BY_KEY:
+				append_array(2, as_exp_map_remove_by_key(pred->ctx, {}, {})); // - 2 for key, bin
+				break;
+			case OP_MAP_REMOVE_BY_KEY_LIST:
+				append_array(2, as_exp_map_remove_by_key_list(pred->ctx, {}, {})); // - 2 for key, bin
+				break;
+			case OP_MAP_REMOVE_BY_KEY_RANGE:
+				append_array(3, as_exp_map_remove_by_key_range(pred->ctx, {}, {}, {})); // - 3 for begin, end, bin
+				break;
+			case OP_MAP_REMOVE_BY_KEY_REL_INDEX_RANGE_TO_END:
+				append_array(3, as_exp_map_remove_by_key_rel_index_range_to_end(pred->ctx, {}, {}, {})); // - 3 for key, index, bin
+				break;
+			case OP_MAP_REMOVE_BY_KEY_REL_INDEX_RANGE:
+				append_array(4, as_exp_map_remove_by_key_rel_index_range(pred->ctx, {}, {}, {}, {})); // - 4 for key, index, count, bin
+				break;
+			case OP_MAP_REMOVE_BY_VALUE:
+				append_array(2, as_exp_map_remove_by_value(pred->ctx, {}, {})); // - 2 for val, bin
+				break;
+			case OP_MAP_REMOVE_BY_VALUE_LIST:
+				append_array(2, as_exp_map_remove_by_value(pred->ctx, {}, {})); // - 2 for values, bin
+				break;
+			case OP_MAP_REMOVE_BY_VALUE_RANGE:
+				append_array(3, as_exp_map_remove_by_value_range(pred->ctx, {}, {}, {})); // - 3 for begin, end, bin
+				break;
+			case OP_MAP_REMOVE_BY_VALUE_REL_RANK_RANGE_TO_END:
+				append_array(3, as_exp_map_remove_by_value_rel_rank_range_to_end(pred->ctx, {}, {}, {})); // - 3 for val, rank, bin
+				break;
+			case OP_MAP_REMOVE_BY_VALUE_REL_RANK_RANGE:
+				append_array(4, as_exp_map_remove_by_value_rel_rank_range(pred->ctx, {}, {}, {}, {})); // - 4 for val, rank, count, bin
+				break;
+			case OP_MAP_REMOVE_BY_INDEX:
+				append_array(2, as_exp_map_remove_by_index(pred->ctx, {}, {})); // - 2 for index, bin
+				break;
+			case OP_MAP_REMOVE_BY_INDEX_RANGE_TO_END:
+				append_array(2, as_exp_map_remove_by_index_range_to_end(pred->ctx, {}, {})); // - 2 for index, bin
+				break;
+			case OP_MAP_REMOVE_BY_INDEX_RANGE:
+				append_array(3, as_exp_map_remove_by_index_range(pred->ctx, {}, {}, {})); // - 3 for index, count, bin
+				break;
+			case OP_MAP_REMOVE_BY_RANK:
+				append_array(2, as_exp_map_remove_by_rank(pred->ctx, {}, {})); // - 2 for rank, bin
+				break;
+			case OP_MAP_REMOVE_BY_RANK_RANGE_TO_END:
+				append_array(2, as_exp_map_remove_by_rank_range_to_end(pred->ctx, {}, {})); // - 2 for rank, bin
+				break;
+			case OP_MAP_REMOVE_BY_RANK_RANGE:
+				append_array(3, as_exp_map_remove_by_rank_range(pred->ctx, {}, {}, {})); // - 3 for rank, count, bin
+				break;
+			case OP_MAP_SIZE:
+				append_array(1, as_exp_map_size(pred->ctx, {})); // - 1 for bin
+				break;
+			case OP_MAP_GET_BY_KEY:
 				if (get_int64_t(err, AS_PY_MAP_RETURN_KEY, pred->pydict, &lval1) != AEROSPIKE_OK) {
 					return err->code;
 				}
@@ -936,109 +783,72 @@ as_status add_pred_macros(AerospikeClient * self, as_static_pool * static_pool, 
 					return err->code;
 				}
 
-				as_exp_entry new_entries[] = {as_exp_map_get_by_key(pred->ctx, lval1, lval2, {}, {})};
-
-				append_array(sizeof(new_entries) / sizeof(as_exp_entry) - 2); // - 2 for key, bin
-			}
-			break;
-		case OP_MAP_GET_BY_KEY_RANGE:;
-			{
+				append_array(2, as_exp_map_get_by_key(pred->ctx, lval1, lval2, {}, {})); // - 2 for key, bin
+				break;
+			case OP_MAP_GET_BY_KEY_RANGE:
 				if (get_int64_t(err, AS_PY_MAP_RETURN_KEY, pred->pydict, &lval1) != AEROSPIKE_OK) {
 					return err->code;
 				}
 
-				as_exp_entry new_entries[] = {as_exp_map_get_by_key_range(pred->ctx, lval1, {}, {}, {})};
-
-				append_array(sizeof(new_entries) / sizeof(as_exp_entry) - 3); // - 3 for begin, end, bin
-			}
-			break;
-		case OP_MAP_GET_BY_KEY_LIST:;
-			{
+				append_array(3, as_exp_map_get_by_key_range(pred->ctx, lval1, {}, {}, {})); // - 3 for begin, end, bin
+				break;
+			case OP_MAP_GET_BY_KEY_LIST:
 				if (get_int64_t(err, AS_PY_MAP_RETURN_KEY, pred->pydict, &lval1) != AEROSPIKE_OK) {
 					return err->code;
 				}
 
-				as_exp_entry new_entries[] = {as_exp_map_get_by_key_list(pred->ctx, lval1, {}, {})};
-
-				append_array(sizeof(new_entries) / sizeof(as_exp_entry) - 2); // - 2 for keys, bin
-			}
-			break;
-		case OP_MAP_GET_BY_KEY_REL_INDEX_RANGE_TO_END:;
-			{
+				append_array(2, as_exp_map_get_by_key_list(pred->ctx, lval1, {}, {})); // - 2 for keys, bin
+				break;
+			case OP_MAP_GET_BY_KEY_REL_INDEX_RANGE_TO_END:
 				if (get_int64_t(err, AS_PY_MAP_RETURN_KEY, pred->pydict, &lval1) != AEROSPIKE_OK) {
 					return err->code;
 				}
 
-				as_exp_entry new_entries[] = {as_exp_map_get_by_key_rel_index_range_to_end(pred->ctx, lval1, {}, {}, {})};
-
-				append_array(sizeof(new_entries) / sizeof(as_exp_entry) - 3); // - 3 for key, index, bin
-			}
-			break;
-		case OP_MAP_GET_BY_KEY_REL_INDEX_RANGE:;
-			{
+				append_array(3, as_exp_map_get_by_key_rel_index_range_to_end(pred->ctx, lval1, {}, {}, {})); // - 3 for key, index, bin
+				break;
+			case OP_MAP_GET_BY_KEY_REL_INDEX_RANGE:
 				if (get_int64_t(err, AS_PY_MAP_RETURN_KEY, pred->pydict, &lval1) != AEROSPIKE_OK) {
 					return err->code;
 				}
 
-				as_exp_entry new_entries[] = {as_exp_map_get_by_key_rel_index_range(pred->ctx, lval1, {}, {}, {}, {})};
-
-				append_array(sizeof(new_entries) / sizeof(as_exp_entry) - 4); // - 4 for key, index, count, bin
-			}
-			break;
-		case OP_MAP_GET_BY_VALUE:;
-			{	
+				append_array(4, as_exp_map_get_by_key_rel_index_range(pred->ctx, lval1, {}, {}, {}, {})); // - 4 for key, index, count, bin
+				break;
+			case OP_MAP_GET_BY_VALUE:
 				if (get_int64_t(err, AS_PY_MAP_RETURN_KEY, pred->pydict, &lval1) != AEROSPIKE_OK) {
 					return err->code;
 				}
 
-				as_exp_entry new_entries[] = {as_exp_map_get_by_value(pred->ctx, lval1, {}, {})};
-
-				append_array(sizeof(new_entries) / sizeof(as_exp_entry) - 2); // - 2 for value, bin
-			}
-			break;
-		case OP_MAP_GET_BY_VALUE_RANGE:;
-			{
+				append_array(2, as_exp_map_get_by_value(pred->ctx, lval1, {}, {})); // - 2 for value, bin
+				break;
+			case OP_MAP_GET_BY_VALUE_RANGE:
 				if (get_int64_t(err, AS_PY_MAP_RETURN_KEY, pred->pydict, &lval1) != AEROSPIKE_OK) {
 					return err->code;
 				}
 
-				as_exp_entry new_entries[] = {as_exp_map_get_by_value_range(pred->ctx, lval1, {}, {}, {})};
-
-				append_array(sizeof(new_entries) / sizeof(as_exp_entry) - 3); // - 3 for begin, end, bin
-			}
-			break;
-		case OP_MAP_GET_BY_VALUE_LIST:;
-			{
+				append_array(3, as_exp_map_get_by_value_range(pred->ctx, lval1, {}, {}, {})); // - 3 for begin, end, bin
+				break;
+			case OP_MAP_GET_BY_VALUE_LIST:
 				if (get_int64_t(err, AS_PY_MAP_RETURN_KEY, pred->pydict, &lval1) != AEROSPIKE_OK) {
 					return err->code;
 				}
 
-				as_exp_entry new_entries[] = {as_exp_map_get_by_value_list(pred->ctx, lval1, {}, {})};
-				append_array(sizeof(new_entries) / sizeof(as_exp_entry) - 2); // - 2 for value, bin
-			}
-			break;
-		case OP_MAP_GET_BY_VALUE_RANK_RANGE_REL_TO_END:;
-			{
+				append_array(2, as_exp_map_get_by_value_list(pred->ctx, lval1, {}, {})); // - 2 for value, bin
+				break;
+			case OP_MAP_GET_BY_VALUE_RANK_RANGE_REL_TO_END:
 				if (get_int64_t(err, AS_PY_MAP_RETURN_KEY, pred->pydict, &lval1) != AEROSPIKE_OK) {
 					return err->code;
 				}
 
-				as_exp_entry new_entries[] = {as_exp_map_get_by_value_rel_rank_range_to_end(pred->ctx, lval1, {}, {}, {})};
-				append_array(sizeof(new_entries) / sizeof(as_exp_entry) -3 ); // - 3 for value, rank, bin
-			}
-			break;
-		case OP_MAP_GET_BY_VALUE_RANK_RANGE_REL:;
-			{
+				append_array(3, as_exp_map_get_by_value_rel_rank_range_to_end(pred->ctx, lval1, {}, {}, {})); // - 3 for value, rank, bin
+				break;
+			case OP_MAP_GET_BY_VALUE_RANK_RANGE_REL:
 				if (get_int64_t(err, AS_PY_MAP_RETURN_KEY, pred->pydict, &lval1) != AEROSPIKE_OK) {
 					return err->code;
 				}
 
-				as_exp_entry new_entries[] = {as_exp_map_get_by_value_rel_rank_range(pred->ctx, lval1, {}, {}, {}, {})};
-				append_array(sizeof(new_entries) / sizeof(as_exp_entry) - 4); // - 4 for value, rank, count, bin
-			}
-			break;
-	case OP_MAP_GET_BY_INDEX:;
-			{
+				append_array(4, as_exp_map_get_by_value_rel_rank_range(pred->ctx, lval1, {}, {}, {}, {})); // - 4 for value, rank, count, bin
+				break;
+			case OP_MAP_GET_BY_INDEX:
 				if (get_int64_t(err, AS_PY_MAP_RETURN_KEY, pred->pydict, &lval1) != AEROSPIKE_OK) {
 					return err->code;
 				}
@@ -1047,33 +857,23 @@ as_status add_pred_macros(AerospikeClient * self, as_static_pool * static_pool, 
 					return err->code;
 				}
 
-				as_exp_entry new_entries[] = {as_exp_map_get_by_index(pred->ctx, lval1, lval2, {}, {})};
-
-				append_array(sizeof(new_entries) / sizeof(as_exp_entry) - 2); // - 2 for index, bin
-			}
-			break;
-		case OP_MAP_GET_BY_INDEX_RANGE_TO_END:;
-			{
+				append_array(2, as_exp_map_get_by_index(pred->ctx, lval1, lval2, {}, {})); // - 2 for index, bin
+				break;
+			case OP_MAP_GET_BY_INDEX_RANGE_TO_END:
 				if (get_int64_t(err, AS_PY_MAP_RETURN_KEY, pred->pydict, &lval1) != AEROSPIKE_OK) {
 					return err->code;
 				}
 
-				as_exp_entry new_entries[] = {as_exp_map_get_by_index_range_to_end(pred->ctx, lval1, {}, {})};
-				append_array(sizeof(new_entries) / sizeof(as_exp_entry) - 2); // - 2 for index, bin
-			}
-			break;
-		case OP_MAP_GET_BY_INDEX_RANGE:;
-			{
+				append_array(2, as_exp_map_get_by_index_range_to_end(pred->ctx, lval1, {}, {})); // - 2 for index, bin
+				break;
+			case OP_MAP_GET_BY_INDEX_RANGE:
 				if (get_int64_t(err, AS_PY_MAP_RETURN_KEY, pred->pydict, &lval1) != AEROSPIKE_OK) {
 					return err->code;
 				}
 
-				as_exp_entry new_entries[] = {as_exp_map_get_by_index_range(pred->ctx, lval1, {}, {}, {})};
-				append_array(sizeof(new_entries) / sizeof(as_exp_entry) - 3); // - 3 for index, count, bin
-			}
-			break;
-		case OP_MAP_GET_BY_RANK:;
-			{
+				append_array(3, as_exp_map_get_by_index_range(pred->ctx, lval1, {}, {}, {})); // - 3 for index, count, bin
+				break;
+			case OP_MAP_GET_BY_RANK:
 				if (get_int64_t(err, AS_PY_MAP_RETURN_KEY, pred->pydict, &lval1) != AEROSPIKE_OK) {
 					return err->code;
 				}
@@ -1082,171 +882,118 @@ as_status add_pred_macros(AerospikeClient * self, as_static_pool * static_pool, 
 					return err->code;
 				}
 
-				as_exp_entry new_entries[] = {as_exp_map_get_by_rank(pred->ctx, lval1, lval2, {}, {})};
-				append_array(sizeof(new_entries) / sizeof(as_exp_entry) - 2); // - 2 for rank, bin
-			}
-			break;
-		case OP_MAP_GET_BY_RANK_RANGE_TO_END:;
-			{
+				append_array(2, as_exp_map_get_by_rank(pred->ctx, lval1, lval2, {}, {})); // - 2 for rank, bin
+				break;
+			case OP_MAP_GET_BY_RANK_RANGE_TO_END:
 				if (get_int64_t(err, AS_PY_MAP_RETURN_KEY, pred->pydict, &lval1) != AEROSPIKE_OK) {
 					return err->code;
 				}
 
-				as_exp_entry new_entries[] = {as_exp_map_get_by_rank_range_to_end(pred->ctx, lval1, {}, {})};
-				append_array(sizeof(new_entries) / sizeof(as_exp_entry) - 2); // - 2 for rank, bin
-			}
-			break;
-		case OP_MAP_GET_BY_RANK_RANGE:;
-			{
+				append_array(2, as_exp_map_get_by_rank_range_to_end(pred->ctx, lval1, {}, {})); // - 2 for rank, bin
+				break;
+			case OP_MAP_GET_BY_RANK_RANGE:
 				if (get_int64_t(err, AS_PY_MAP_RETURN_KEY, pred->pydict, &lval1) != AEROSPIKE_OK) {
 					return err->code;
 				}
 
-				as_exp_entry new_entries[] = {as_exp_map_get_by_rank_range(pred->ctx, lval1, {}, {}, {})};
-				append_array(sizeof(new_entries) / sizeof(as_exp_entry) - 3); // - 3 for rank, count, bin
-			}
-			break;
-		case _AS_EXP_BIT_FLAGS:;
-			{
+				append_array(3, as_exp_map_get_by_rank_range(pred->ctx, lval1, {}, {}, {})); // - 3 for rank, count, bin
+				break;
+			case _AS_EXP_BIT_FLAGS:
 				if (get_int64_t(err, AS_PY_VAL_KEY, pred->pydict, &lval1) != AEROSPIKE_OK) {
 					return err->code;
 				}
 
-				as_exp_entry new_entries[] = {as_exp_uint((uint64_t)lval1)};
-				append_array(sizeof(new_entries) / sizeof(as_exp_entry));
-			}
-			break;
-		case OP_BIT_RESIZE:;
-			{
-				as_exp_entry new_entries[] = {as_exp_bit_resize(NULL, {}, NO_BIT_FLAGS, {})};
-				append_array(sizeof(new_entries) / sizeof(as_exp_entry) - 4); // - 4 for byte_size, policy, flags, bin
-			}
-			break;
-		case OP_BIT_INSERT:;
-			{
-				as_exp_entry new_entries[] = {as_exp_bit_insert(NULL, {}, {}, {})};
-				append_array(sizeof(new_entries) / sizeof(as_exp_entry) - 4);
-			}
-			break;
-		case OP_BIT_REMOVE:;
-			{
-				as_exp_entry new_entries[] = {as_exp_bit_remove(NULL, {}, {}, {})};
-				append_array(sizeof(new_entries) / sizeof(as_exp_entry) - 4);
-			}
-			break;
-		case OP_BIT_SET:;
-			{
-				as_exp_entry new_entries[] = {as_exp_bit_set(NULL, {}, {}, {}, {})};
-				append_array(sizeof(new_entries) / sizeof(as_exp_entry) - 5);
-			}
-			break;
-		case OP_BIT_OR:;
-			{
-				as_exp_entry new_entries[] = {as_exp_bit_or(NULL, {}, {}, {}, {})};
-				append_array(sizeof(new_entries) / sizeof(as_exp_entry) - 5);
-			}
-			break;
-		case OP_BIT_XOR:;
-			{
-				as_exp_entry new_entries[] = {as_exp_bit_xor(NULL, {}, {}, {}, {})};
-				append_array(sizeof(new_entries) / sizeof(as_exp_entry) - 5);
-			}
-			break;
-		case OP_BIT_AND:;
-			{
-				as_exp_entry new_entries[] = {as_exp_bit_and(NULL, {}, {}, {}, {})};
-				append_array(sizeof(new_entries) / sizeof(as_exp_entry) - 5);
-			}
-			break;
-		case OP_BIT_NOT:;
-			{
-				as_exp_entry new_entries[] = {as_exp_bit_not(NULL, {}, {}, {})};
-				append_array(sizeof(new_entries) / sizeof(as_exp_entry) - 4);
-			}
-			break;
-		case OP_BIT_LSHIFT:;
-			{
-				as_exp_entry new_entries[] = {as_exp_bit_lshift(NULL, {}, {}, {}, {})};
-				append_array(sizeof(new_entries) / sizeof(as_exp_entry) - 5);
-			}
-			break;
-		case OP_BIT_RSHIFT:;
-			{
-				as_exp_entry new_entries[] = {as_exp_bit_rshift(NULL, {}, {}, {}, {})};
-				append_array(sizeof(new_entries) / sizeof(as_exp_entry) - 5);
-			}
-			break;
-		case OP_BIT_ADD:;
-			{
-				as_exp_entry new_entries[] = {as_exp_bit_add(NULL, {}, {}, {}, NO_BIT_FLAGS, {})};
-				append_array(sizeof(new_entries) / sizeof(as_exp_entry) - 6);
-			}
-			break;
-		case OP_BIT_SUBTRACT:;
-			{
-				as_exp_entry new_entries[] = {as_exp_bit_subtract(NULL, {}, {}, {}, NO_BIT_FLAGS, {})};
-				append_array(sizeof(new_entries) / sizeof(as_exp_entry) - 6);
-			}
-			break;
-		case OP_BIT_SET_INT:;
-			{
-				as_exp_entry new_entries[] = {as_exp_bit_set_int(NULL, {}, {}, {}, {})};
-				append_array(sizeof(new_entries) / sizeof(as_exp_entry) - 5);
-			}
-			break;
-		case OP_BIT_GET:;
-			{
-				as_exp_entry new_entries[] = {as_exp_bit_get({}, {}, {})};
-				append_array(sizeof(new_entries) / sizeof(as_exp_entry) - 3); // - 3 for bit_offset, bit_size, bin
-			}
-			break;
-		case OP_BIT_COUNT:;
-			{
-				as_exp_entry new_entries[] = {as_exp_bit_count({}, {}, {})};
-				append_array(sizeof(new_entries) / sizeof(as_exp_entry) - 3); // - 3 for bit_offset, bit_size, bin
-			}
-			break;
-		case OP_BIT_LSCAN:;
-			{
-				as_exp_entry new_entries[] = {as_exp_bit_lscan({}, {}, {}, {})};
-				append_array(sizeof(new_entries) / sizeof(as_exp_entry) - 4);
-			}
-			break;
-		case OP_BIT_RSCAN:;
-			{
-				as_exp_entry new_entries[] = {as_exp_bit_rscan({}, {}, {}, {})};
-				append_array(sizeof(new_entries) / sizeof(as_exp_entry) - 4);
-			}
-			break;
-		case OP_BIT_GET_INT:;
-			{
-				as_exp_entry new_entries[] = {as_exp_bit_get_int({}, {}, 0, {})};
-				append_array(sizeof(new_entries) / sizeof(as_exp_entry) - 4);
-			}
-			break;
-		case OP_HLL_ADD:; // NOTE: this case covers HLLAddMH, HLLAdd, and HLLUpdate
-			{
-				as_exp_entry new_entries[] = {as_exp_hll_add_mh(NULL, {}, 0, 0, {})};
-				append_array(sizeof(new_entries) / sizeof(as_exp_entry) - 5); // - 5 for list, index_bit_count, -1, policy, bin
-			}
-			break;
-		case OP_HLL_GET_COUNT:;
-			{
-				as_exp_entry new_entries[] = {as_exp_hll_get_count({})};
-				append_array(sizeof(new_entries) / sizeof(as_exp_entry) - 1); // - 1 for bin
-			}
-			break;
-		default:
-			return as_error_update(err, AEROSPIKE_ERR_PARAM, "Unrecognised expression op type.");
-			break;
-
-	}		
+				append_array(0, as_exp_uint((uint64_t)lval1));
+				break;
+			case OP_BIT_RESIZE:
+				append_array(4, as_exp_bit_resize(NULL, {}, NO_BIT_FLAGS, {})); // - 4 for byte_size, policy, flags, bin
+				break;
+			case OP_BIT_INSERT:
+				append_array(4, as_exp_bit_insert(NULL, {}, {}, {}));
+				break;
+			case OP_BIT_REMOVE:
+				append_array(4, as_exp_bit_remove(NULL, {}, {}, {}));
+				break;
+			case OP_BIT_SET:
+				append_array(5, as_exp_bit_set(NULL, {}, {}, {}, {}));
+				break;
+			case OP_BIT_OR:
+				append_array(5, as_exp_bit_or(NULL, {}, {}, {}, {}));
+				break;
+			case OP_BIT_XOR:
+				append_array(5, as_exp_bit_xor(NULL, {}, {}, {}, {}));
+				break;
+			case OP_BIT_AND:
+				append_array(5, as_exp_bit_and(NULL, {}, {}, {}, {}));
+				break;
+			case OP_BIT_NOT:
+				append_array(4, as_exp_bit_not(NULL, {}, {}, {}));
+				break;
+			case OP_BIT_LSHIFT:
+				append_array(5, as_exp_bit_lshift(NULL, {}, {}, {}, {}));
+				break;
+			case OP_BIT_RSHIFT:
+				append_array(5, as_exp_bit_rshift(NULL, {}, {}, {}, {}));
+				break;
+			case OP_BIT_ADD:
+				append_array(6, as_exp_bit_add(NULL, {}, {}, {}, NO_BIT_FLAGS, {}));
+				break;
+			case OP_BIT_SUBTRACT:
+				append_array(6, as_exp_bit_subtract(NULL, {}, {}, {}, NO_BIT_FLAGS, {}));
+				break;
+			case OP_BIT_SET_INT:
+				append_array(5, as_exp_bit_set_int(NULL, {}, {}, {}, {}));
+				break;
+			case OP_BIT_GET:
+				append_array(3, as_exp_bit_get({}, {}, {})); // - 3 for bit_offset, bit_size, bin
+				break;
+			case OP_BIT_COUNT:
+				append_array(3, as_exp_bit_count({}, {}, {})); // - 3 for bit_offset, bit_size, bin
+				break;
+			case OP_BIT_LSCAN:
+				append_array(4, as_exp_bit_lscan({}, {}, {}, {}));
+				break;
+			case OP_BIT_RSCAN:
+				append_array(4, as_exp_bit_rscan({}, {}, {}, {}));
+				break;
+			case OP_BIT_GET_INT:
+				append_array(4, as_exp_bit_get_int({}, {}, 0, {}));
+				break;
+			case OP_HLL_ADD: // NOTE: this case covers HLLAddMH, HLLAdd, and HLLUpdate
+				append_array(5, as_exp_hll_add_mh(NULL, {}, 0, 0, {})); // - 5 for list, index_bit_count, -1, policy, bin
+				break;
+			case OP_HLL_GET_COUNT:
+				append_array(1, as_exp_hll_get_count({})); // - 1 for bin
+				break;
+			case OP_HLL_GET_UNION:
+				append_array(2, as_exp_hll_get_union({}, {})); // - 2 for list, bin
+				break;
+			case OP_HLL_GET_UNION_COUNT:
+				append_array(2, as_exp_hll_get_union_count({}, {})); // - 2 for list, bin
+				break;
+			case OP_HLL_GET_INTERSECT_COUNT:
+				append_array(2, as_exp_hll_get_intersect_count({}, {})); // - 2 for list, bin
+				break;
+			case OP_HLL_GET_SIMILARITY:
+				append_array(2, as_exp_hll_get_similarity({}, {})); // - 2 for list, bin
+				break;
+			case OP_HLL_DESCRIBE:
+				append_array(1, as_exp_hll_describe({})); // - 1 for bin
+				break;
+			case OP_HLL_MAY_CONTAIN:
+				append_array(2, as_exp_hll_may_contain({}, {})); // - 2 for list, bin
+				break;
+			default:
+				return as_error_update(err, AEROSPIKE_ERR_PARAM, "Unrecognised expression op type.");
+				break;
+		}
+	}
 
 	return err->code;
 }
 
 as_status convert_exp_list(AerospikeClient * self, PyObject* py_exp_list, as_exp** exp_list, as_error* err) {
-	bottom = 0;
+	int bottom = 0;
 	Py_ssize_t size = PyList_Size(py_exp_list);
 	if (size <= 0) {
 		as_error_update(err, AEROSPIKE_ERR_PARAM, "Expressions must be a non empty list of 4 element tuples, generated by a compiled aerospike expression");
@@ -1258,6 +1005,7 @@ as_status convert_exp_list(AerospikeClient * self, PyObject* py_exp_list, as_exp
 	long num_children = 0;
 	int child_count = 1;
 	int processed_exp_count = 0;
+	int size_to_alloc = 0;
 	uint8_t va_flag = 0;
 	bool ctx_in_use = false;
 	PyObject * py_pred_tuple = NULL;
@@ -1274,7 +1022,7 @@ as_status convert_exp_list(AerospikeClient * self, PyObject* py_exp_list, as_exp
 	as_static_pool static_pool;
 	memset(&static_pool, 0, sizeof(static_pool));
 
-	c_pred_entries = (as_exp_entry*) calloc((size * MAX_ELEMENTS), sizeof(as_exp_entry)); // iter and count elem?
+	c_pred_entries = (as_exp_entry*) malloc((size * MAX_ELEMENTS) * sizeof(as_exp_entry)); // iter and count elem?
 	if (c_pred_entries == NULL) {
 		as_error_update(err, AEROSPIKE_ERR, "could not calloc mem for c_pred_entries");
 		goto CLEANUP;
@@ -1396,11 +1144,18 @@ as_status convert_exp_list(AerospikeClient * self, PyObject* py_exp_list, as_exp
 		}
     }
 
-	for ( int i = 0; i < size; ++i ) {
-		pred_op * pred = (pred_op *) as_vector_get(&pred_queue, (uint32_t)i);
-		if (add_pred_macros(self, &static_pool, SERIALIZER_PYTHON, unicodeStrVector, &c_pred_entries, pred, err) != AEROSPIKE_OK) { //TODO add user defined serializer support
-			goto CLEANUP;
-		}
+	if (get_expr_size(&size_to_alloc, (int*) &size, &pred_queue, err) != AEROSPIKE_OK) {
+		goto CLEANUP;
+	}
+
+	c_pred_entries = (as_exp_entry*) calloc(1, size_to_alloc);
+	if (c_pred_entries == NULL) {
+		as_error_update(err, AEROSPIKE_ERR, "Could not malloc mem for c_pred_entries.");
+		goto CLEANUP;
+	}
+
+	if (add_pred_macros(self, &static_pool, SERIALIZER_PYTHON, unicodeStrVector, &pred_queue, &c_pred_entries, &bottom, (int*)&size, err) != AEROSPIKE_OK) { //TODO add user defined serializer support
+		goto CLEANUP;
 	}
 
 	*exp_list = as_exp_compile(c_pred_entries, bottom);
@@ -1449,12 +1204,5 @@ CLEANUP:
 
 	POOL_DESTROY(&static_pool);
 	as_vector_destroy(unicodeStrVector);
-
-	// Py_DECREF(fixed); //this needs more decrefs for each fixed
-	// fixed = NULL;
-	// Py_DECREF(py_pred_tuple);
-	// py_pred_tuple = NULL;
-	//TODO free ctx
-
 	return err->code;
 }

@@ -1050,7 +1050,7 @@ class TestExpressions(TestBaseClass):
 
         expr = GE(
                     HLLGetCount(
-                        HLLAdd(policy, listp, 10, bin)),
+                        HLLAdd(policy, listp, 10, None, bin)),
                     1020 #TODO calculate this with error
                 )
 

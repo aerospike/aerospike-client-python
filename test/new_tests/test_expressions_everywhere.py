@@ -539,7 +539,7 @@ class TestPredEveryWhere(object):
         expr = exp.And(
             exp.GT(exp.VoidTime(), void_time_range_start),
             exp.LT(exp.VoidTime(), void_time_range_end)
-        )
+        ).compile()
 
         ops = [
             operations.read('time')
@@ -548,7 +548,7 @@ class TestPredEveryWhere(object):
         for i in range(10):
             try:
                 key = 'test', 'pred_ttl', i
-                _, _, res = self.as_connection.operate(key, ops, policy={'expressions': expr.compile()})
+                _, _, res = self.as_connection.operate(key, ops, policy={'expressions': expr})
                 results.append(res)
             except:
                 pass
@@ -573,7 +573,7 @@ class TestPredEveryWhere(object):
         
         results = []
 
-        expr =  exp.LT(exp.DigestMod(256), 128)
+        expr =  exp.LT(exp.DigestMod(256), 128).compile()
 
         ops = [
             operations.read('dig_id')
@@ -582,7 +582,7 @@ class TestPredEveryWhere(object):
         for i in range(100):
             try:
                 key = 'test', 'demo', i
-                _, _, res = self.as_connection.operate(key, ops, policy={'expressions': expr.compile()})
+                _, _, res = self.as_connection.operate(key, ops, policy={'expressions': expr})
                 results.append(res)
             except:
                 pass
