@@ -651,8 +651,7 @@ class TestExpressions(TestBaseClass):
             Eq(
                 ListGetByRankRange(None, aerospike.LIST_RETURN_COUNT, 1, ListSize(None, bin), bin),
                 2
-            ),
-            KeyExists()
+            )
         )
 
         # ops = [
