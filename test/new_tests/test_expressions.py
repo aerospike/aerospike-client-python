@@ -65,7 +65,6 @@ def add_ctx_op(ctx_type, value):
     ctx_func = ctx_ops[ctx_type]
     return ctx_func(value)
 
-
 def verify_all_expression_avenues(client, test_ns, test_set, expr, op_bin, expected):
     keys = [(test_ns, test_set, i) for i in range(20)]
 
@@ -115,10 +114,6 @@ def verify_all_expression_avenues(client, test_ns, test_set, expr, op_bin, expec
     # TODO client.remove
 
 
-
-
-
-
 class TestUsrDefinedClass():
 
     __test__ = False
@@ -126,21 +121,6 @@ class TestUsrDefinedClass():
     def __init__(self, i):
         self.data = i
 
-# # arranged by order
-# LIST_BIN_EXAMPLE = [
-#                 None,
-#                 aerospike.null,
-#                 10 % 2 == 1,
-#                 10,
-#                 "string_test" + str(10),
-#                 [26, 27, 28, 10],
-#                 {10: 10, 31: 31, 32: 32, 33: 33},
-#                 bytearray("bytearray_test" + str(10), "utf8"),
-#                 ("bytes_test" + str(10)).encode("utf8"),
-#                 TestUsrDefinedClass(10),
-#                 float(10),
-#                 GEO_POLY
-# ]
 
 LIST_BIN_EXAMPLE = [
                 None,
@@ -355,7 +335,20 @@ class TestExpressions(TestBaseClass):
     #     records = scan_obj.results({'expressions': expr.compile()})
     #     #print(records)
     #     assert(1 == len(records))
-    
+
+    @pytest.mark.parametrize("bin, expected_bin_type", [
+        ("ilist_bin", aerospike.AS_BYTES_LIST),
+        ("age", aerospike.AS_BYTES_INTEGER),
+        ("imap_bin", aerospike.AS_BYTES_MAP)
+    ])
+    def test_BinType_pos(self, bin, expected_bin_type):
+        """
+        Invoke BinType() on various kinds of bins.
+        """
+        expr = Eq(BinType(bin), expected_bin_type).compile()
+        verify_all_expression_avenues(self.as_connection, self.test_ns, self.test_set, expr, bin, 19)
+
+
     @pytest.mark.parametrize("ctx_types, ctx_indexes, bin_type, index, return_type, check, expected", [
         (None, None, ResultType.INTEGER, 1, aerospike.LIST_RETURN_VALUE, 10, 1),
         (None, None, ResultType.STRING, 2, aerospike.LIST_RETURN_VALUE, "string_test3", 1),

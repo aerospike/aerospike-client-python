@@ -1018,6 +1018,8 @@ def list_get_by_value_rank_range_relative(bin_name, value, offset, return_type, 
         bin_name (str): The name of the bin containing the list.
         value (str): The value of the item in the list for which to search
         offset (int): Begin returning items with rank == rank(found_item) + offset
+        return_type (int): Value specifying what should be returned from the operation.
+            This should be one of the :ref:`list_return_types` values 
         count (int): If specified, the number of items to return. If None,
             all items until end of list are returned.
         inverted (bool): If True, the operation is inverted, and items outside

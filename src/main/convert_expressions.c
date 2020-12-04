@@ -168,37 +168,37 @@ as_status get_expr_size(int * size_to_alloc, int * preds_size, as_vector * preds
 		[REC_KEY]                                        = EXP_SZ(as_exp_key_int()), // this covers as_exp_key_int() -> as_exp_key_blob
 		[BIN_TYPE]                                       = EXP_SZ(as_exp_bin_type("")),
 		[BIN_EXISTS]                                     = EXP_SZ(as_exp_bin_exists("")),
-		[OP_LIST_EXP_GET_BY_INDEX]                       = EXP_SZ(as_exp_list_get_by_index(NULL, 0, 0, {}, {})),
-		[OP_LIST_EXP_SIZE]                               = EXP_SZ(as_exp_list_size(NULL, {})),
-		[OP_LIST_EXP_GET_BY_VALUE]                       = EXP_SZ(as_exp_list_get_by_value(NULL, 0, {}, {})),
-		[OP_LIST_EXP_GET_BY_VALUE_RANGE]                 = EXP_SZ(as_exp_list_get_by_value_range(NULL, 0, {}, {}, {})),
-		[OP_LIST_EXP_GET_BY_VALUE_LIST]                  = EXP_SZ(as_exp_list_get_by_value_list(NULL, 0, {}, {})),
-		[OP_LIST_EXP_GET_BY_VALUE_RANK_RANGE_REL_TO_END] = EXP_SZ(as_exp_list_get_by_rel_rank_range_to_end(NULL, 0, {}, {}, {})),
-		[OP_LIST_EXP_GET_BY_VALUE_RANK_RANGE_REL]        = EXP_SZ(as_exp_list_get_by_rel_rank_range(NULL, 0, {}, {}, {}, {})),
-		[OP_LIST_EXP_GET_BY_INDEX_RANGE_TO_END]          = EXP_SZ(as_exp_list_get_by_index_range_to_end(NULL, 0, {}, {})),
-		[OP_LIST_EXP_GET_BY_INDEX_RANGE]                 = EXP_SZ(as_exp_list_get_by_index_range(NULL, 0, {}, {}, {})),
-		[OP_LIST_EXP_GET_BY_RANK]                        = EXP_SZ(as_exp_list_get_by_rank(NULL, 0, 0, {}, {})),
-		[OP_LIST_EXP_GET_BY_RANK_RANGE_TO_END]           = EXP_SZ(as_exp_list_get_by_rank_range_to_end(NULL, 0, {}, {})),
-		[OP_LIST_EXP_GET_BY_RANK_RANGE]                  = EXP_SZ(as_exp_list_get_by_rank_range(NULL, 0, {}, {}, {})),
-		[OP_LIST_EXP_APPEND]                             = EXP_SZ(as_exp_list_append(NULL, NULL, {}, {})),
-		[OP_LIST_EXP_APPEND_ITEMS]                       = EXP_SZ(as_exp_list_append_items(NULL, NULL, {}, {})),
-		[OP_LIST_EXP_INSERT]                             = EXP_SZ(as_exp_list_insert(NULL, NULL, {}, {}, {})),
-		[OP_LIST_EXP_INSERT_ITEMS]                       = EXP_SZ(as_exp_list_insert_items(NULL, NULL, {}, {}, {})),
-		[OP_LIST_EXP_INCREMENT]                          = EXP_SZ(as_exp_list_increment(NULL, NULL, {}, {}, {})),
-		[OP_LIST_EXP_SET]                                = EXP_SZ(as_exp_list_set(NULL, NULL, {}, {}, {})),
-		[OP_LIST_EXP_CLEAR]                              = EXP_SZ(as_exp_list_clear(NULL, {})),
-		[OP_LIST_EXP_SORT]                               = EXP_SZ(as_exp_list_sort(NULL, 0, {})),
-		[OP_LIST_EXP_REMOVE_BY_VALUE]                    = EXP_SZ(as_exp_list_remove_by_value(NULL, {}, {})),
-		[OP_LIST_EXP_REMOVE_BY_VALUE_LIST]               = EXP_SZ(as_exp_list_remove_by_value_list(NULL, {}, {})),
-		[OP_LIST_EXP_REMOVE_BY_VALUE_RANGE]              = EXP_SZ(as_exp_list_remove_by_value_range(NULL, {}, {}, {})),
-		[OP_LIST_EXP_REMOVE_BY_REL_RANK_RANGE_TO_END]    = EXP_SZ(as_exp_list_remove_by_rel_rank_range_to_end(NULL, {}, {}, {})),
-		[OP_LIST_EXP_REMOVE_BY_REL_RANK_RANGE]           = EXP_SZ(as_exp_list_remove_by_rel_rank_range(NULL, {}, {}, {}, {})),
-		[OP_LIST_EXP_REMOVE_BY_INDEX]                    = EXP_SZ(as_exp_list_remove_by_index(NULL, {}, {})),
-		[OP_LIST_EXP_REMOVE_BY_INDEX_RANGE_TO_END]       = EXP_SZ(as_exp_list_remove_by_index_range_to_end(NULL, {}, {})),
-		[OP_LIST_EXP_REMOVE_BY_INDEX_RANGE]              = EXP_SZ(as_exp_list_remove_by_index_range(NULL, {}, {}, {})),
-		[OP_LIST_EXP_REMOVE_BY_RANK]                     = EXP_SZ(as_exp_list_remove_by_rank(NULL, {}, {})),
-		[OP_LIST_EXP_REMOVE_BY_RANK_RANGE_TO_END]        = EXP_SZ(as_exp_list_remove_by_rank_range_to_end(NULL, {}, {})),
-		[OP_LIST_EXP_REMOVE_BY_RANK_RANGE]               = EXP_SZ(as_exp_list_remove_by_rank_range(NULL, {}, {}, {})),
+		[OP_LIST_GET_BY_INDEX]                       = EXP_SZ(as_exp_list_get_by_index(NULL, 0, 0, {}, {})),
+		[OP_LIST_SIZE]                               = EXP_SZ(as_exp_list_size(NULL, {})),
+		[OP_LIST_GET_BY_VALUE]                       = EXP_SZ(as_exp_list_get_by_value(NULL, 0, {}, {})),
+		[OP_LIST_GET_BY_VALUE_RANGE]                 = EXP_SZ(as_exp_list_get_by_value_range(NULL, 0, {}, {}, {})),
+		[OP_LIST_GET_BY_VALUE_LIST]                  = EXP_SZ(as_exp_list_get_by_value_list(NULL, 0, {}, {})),
+		[OP_LIST_GET_BY_VALUE_RANK_RANGE_REL_TO_END] = EXP_SZ(as_exp_list_get_by_rel_rank_range_to_end(NULL, 0, {}, {}, {})),
+		[OP_LIST_GET_BY_VALUE_RANK_RANGE_REL]        = EXP_SZ(as_exp_list_get_by_rel_rank_range(NULL, 0, {}, {}, {}, {})),
+		[OP_LIST_GET_BY_INDEX_RANGE_TO_END]          = EXP_SZ(as_exp_list_get_by_index_range_to_end(NULL, 0, {}, {})),
+		[OP_LIST_GET_BY_INDEX_RANGE]                 = EXP_SZ(as_exp_list_get_by_index_range(NULL, 0, {}, {}, {})),
+		[OP_LIST_GET_BY_RANK]                        = EXP_SZ(as_exp_list_get_by_rank(NULL, 0, 0, {}, {})),
+		[OP_LIST_GET_BY_RANK_RANGE_TO_END]           = EXP_SZ(as_exp_list_get_by_rank_range_to_end(NULL, 0, {}, {})),
+		[OP_LIST_GET_BY_RANK_RANGE]                  = EXP_SZ(as_exp_list_get_by_rank_range(NULL, 0, {}, {}, {})),
+		[OP_LIST_APPEND]                             = EXP_SZ(as_exp_list_append(NULL, NULL, {}, {})),
+		[OP_LIST_APPEND_ITEMS]                       = EXP_SZ(as_exp_list_append_items(NULL, NULL, {}, {})),
+		[OP_LIST_INSERT]                             = EXP_SZ(as_exp_list_insert(NULL, NULL, {}, {}, {})),
+		[OP_LIST_INSERT_ITEMS]                       = EXP_SZ(as_exp_list_insert_items(NULL, NULL, {}, {}, {})),
+		[OP_LIST_INCREMENT]                          = EXP_SZ(as_exp_list_increment(NULL, NULL, {}, {}, {})),
+		[OP_LIST_SET]                                = EXP_SZ(as_exp_list_set(NULL, NULL, {}, {}, {})),
+		[OP_LIST_CLEAR]                              = EXP_SZ(as_exp_list_clear(NULL, {})),
+		[OP_LIST_SORT]                               = EXP_SZ(as_exp_list_sort(NULL, 0, {})),
+		[OP_LIST_REMOVE_BY_VALUE]                    = EXP_SZ(as_exp_list_remove_by_value(NULL, {}, {})),
+		[OP_LIST_REMOVE_BY_VALUE_LIST]               = EXP_SZ(as_exp_list_remove_by_value_list(NULL, {}, {})),
+		[OP_LIST_REMOVE_BY_VALUE_RANGE]              = EXP_SZ(as_exp_list_remove_by_value_range(NULL, {}, {}, {})),
+		[OP_LIST_REMOVE_BY_REL_RANK_RANGE_TO_END]    = EXP_SZ(as_exp_list_remove_by_rel_rank_range_to_end(NULL, {}, {}, {})),
+		[OP_LIST_REMOVE_BY_REL_RANK_RANGE]           = EXP_SZ(as_exp_list_remove_by_rel_rank_range(NULL, {}, {}, {}, {})),
+		[OP_LIST_REMOVE_BY_INDEX]                    = EXP_SZ(as_exp_list_remove_by_index(NULL, {}, {})),
+		[OP_LIST_REMOVE_BY_INDEX_RANGE_TO_END]       = EXP_SZ(as_exp_list_remove_by_index_range_to_end(NULL, {}, {})),
+		[OP_LIST_REMOVE_BY_INDEX_RANGE]              = EXP_SZ(as_exp_list_remove_by_index_range(NULL, {}, {}, {})),
+		[OP_LIST_REMOVE_BY_RANK]                     = EXP_SZ(as_exp_list_remove_by_rank(NULL, {}, {})),
+		[OP_LIST_REMOVE_BY_RANK_RANGE_TO_END]        = EXP_SZ(as_exp_list_remove_by_rank_range_to_end(NULL, {}, {})),
+		[OP_LIST_REMOVE_BY_RANK_RANGE]               = EXP_SZ(as_exp_list_remove_by_rank_range(NULL, {}, {}, {})),
 		[OP_MAP_PUT]                                     = EXP_SZ(as_exp_map_put(NULL, NULL, {}, {}, {})),
 		[OP_MAP_PUT_ITEMS]                               = EXP_SZ(as_exp_map_put_items(NULL, NULL, {}, {})),
 		[OP_MAP_INCREMENT]                               = EXP_SZ(as_exp_map_increment(NULL, NULL, {}, {}, {})),
@@ -560,7 +560,7 @@ as_status add_pred_macros(AerospikeClient * self, as_static_pool * static_pool, 
 
 				append_array(0, as_exp_bin_exists(bin_name));
 				break;
-			case OP_LIST_EXP_GET_BY_INDEX:
+			case OP_LIST_GET_BY_INDEX:
 				if (get_int64_t(err, AS_PY_BIN_TYPE_KEY, pred->pydict, &lval2) != AEROSPIKE_OK) {
 					return err->code;
 				}
@@ -571,10 +571,10 @@ as_status add_pred_macros(AerospikeClient * self, as_static_pool * static_pool, 
 
 				append_array(2, as_exp_list_get_by_index(pred->ctx, lval1, lval2, {}, {})); // - 2 for index, bin
 				break;
-			case OP_LIST_EXP_SIZE:
+			case OP_LIST_SIZE:
 				append_array(1, as_exp_list_size(pred->ctx, {}));
 				break;
-			case OP_LIST_EXP_GET_BY_VALUE:
+			case OP_LIST_GET_BY_VALUE:
 				{	
 					if (get_int64_t(err, AS_PY_LIST_RETURN_KEY, pred->pydict, &lval1) != AEROSPIKE_OK) {
 						return err->code;
@@ -583,49 +583,49 @@ as_status add_pred_macros(AerospikeClient * self, as_static_pool * static_pool, 
 					append_array(2, as_exp_list_get_by_value(pred->ctx, lval1, {}, {})); // - 2 for value, bin
 				}
 				break;
-			case OP_LIST_EXP_GET_BY_VALUE_RANGE:
+			case OP_LIST_GET_BY_VALUE_RANGE:
 				if (get_int64_t(err, AS_PY_LIST_RETURN_KEY, pred->pydict, &lval1) != AEROSPIKE_OK) {
 					return err->code;
 				}
 
 				append_array(3, as_exp_list_get_by_value_range(pred->ctx, lval1, {}, {}, {})); // - 3 for begin, end, bin
 				break;
-			case OP_LIST_EXP_GET_BY_VALUE_LIST:
+			case OP_LIST_GET_BY_VALUE_LIST:
 				if (get_int64_t(err, AS_PY_LIST_RETURN_KEY, pred->pydict, &lval1) != AEROSPIKE_OK) {
 					return err->code;
 				}
 
 				append_array(2, as_exp_list_get_by_value_list(pred->ctx, lval1, {}, {})); // - 2 for value, bin
 				break;
-			case OP_LIST_EXP_GET_BY_VALUE_RANK_RANGE_REL_TO_END:
+			case OP_LIST_GET_BY_VALUE_RANK_RANGE_REL_TO_END:
 				if (get_int64_t(err, AS_PY_LIST_RETURN_KEY, pred->pydict, &lval1) != AEROSPIKE_OK) {
 					return err->code;
 				}
 
 				append_array(3, as_exp_list_get_by_rel_rank_range_to_end(pred->ctx, lval1, {}, {}, {})); // - 3 for value, rank, bin
 				break;
-			case OP_LIST_EXP_GET_BY_VALUE_RANK_RANGE_REL:
+			case OP_LIST_GET_BY_VALUE_RANK_RANGE_REL:
 				if (get_int64_t(err, AS_PY_LIST_RETURN_KEY, pred->pydict, &lval1) != AEROSPIKE_OK) {
 					return err->code;
 				}
 
 				append_array(4, as_exp_list_get_by_rel_rank_range(pred->ctx, lval1, {}, {}, {}, {})); // - 4 for value, rank, count, bin
 				break;
-			case OP_LIST_EXP_GET_BY_INDEX_RANGE_TO_END:
+			case OP_LIST_GET_BY_INDEX_RANGE_TO_END:
 				if (get_int64_t(err, AS_PY_LIST_RETURN_KEY, pred->pydict, &lval1) != AEROSPIKE_OK) {
 					return err->code;
 				}
 				
 				append_array(2, as_exp_list_get_by_index_range_to_end(pred->ctx, lval1, {}, {})); // - 2 for index, bin
 				break;
-			case OP_LIST_EXP_GET_BY_INDEX_RANGE:
+			case OP_LIST_GET_BY_INDEX_RANGE:
 				if (get_int64_t(err, AS_PY_LIST_RETURN_KEY, pred->pydict, &lval1) != AEROSPIKE_OK) {
 					return err->code;
 				}
 
 				append_array(3, as_exp_list_get_by_index_range(pred->ctx, lval1, {}, {}, {})); // - 3 for index, count, bin
 				break;
-			case OP_LIST_EXP_GET_BY_RANK:
+			case OP_LIST_GET_BY_RANK:
 				if (get_int64_t(err, AS_PY_LIST_RETURN_KEY, pred->pydict, &lval1) != AEROSPIKE_OK) {
 					return err->code;
 				}
@@ -636,79 +636,79 @@ as_status add_pred_macros(AerospikeClient * self, as_static_pool * static_pool, 
 
 				append_array(2, as_exp_list_get_by_rank(pred->ctx, lval1, lval2, {}, {})); // - 2 for rank, bin
 				break;
-			case OP_LIST_EXP_GET_BY_RANK_RANGE_TO_END:
+			case OP_LIST_GET_BY_RANK_RANGE_TO_END:
 				if (get_int64_t(err, AS_PY_LIST_RETURN_KEY, pred->pydict, &lval1) != AEROSPIKE_OK) {
 					return err->code;
 				}
 
 				append_array(2, as_exp_list_get_by_rank_range_to_end(pred->ctx, lval1, {}, {})); // - 2 for rank, bin
 				break;
-			case OP_LIST_EXP_GET_BY_RANK_RANGE:
+			case OP_LIST_GET_BY_RANK_RANGE:
 				if (get_int64_t(err, AS_PY_LIST_RETURN_KEY, pred->pydict, &lval1) != AEROSPIKE_OK) {
 					return err->code;
 				}
 
 				append_array(3, as_exp_list_get_by_rank_range(pred->ctx, lval1, {}, {}, {})); // - 3 for rank, count, bin
 				break;
-			case OP_LIST_EXP_APPEND:
+			case OP_LIST_APPEND:
 				append_array(3, as_exp_list_append(pred->ctx, pred->list_policy, {}, {}));
 				break;
-			case OP_LIST_EXP_APPEND_ITEMS:
+			case OP_LIST_APPEND_ITEMS:
 				append_array(3, as_exp_list_append_items(pred->ctx, pred->list_policy, {}, {}));
 				break;
-			case OP_LIST_EXP_INSERT:
+			case OP_LIST_INSERT:
 				append_array(4, as_exp_list_insert(pred->ctx, pred->list_policy, {}, {}, {}));
 				break;
-			case OP_LIST_EXP_INSERT_ITEMS:
+			case OP_LIST_INSERT_ITEMS:
 				append_array(4, as_exp_list_insert_items(pred->ctx, pred->list_policy, {}, {}, {}));
 				break;
-			case OP_LIST_EXP_INCREMENT:
+			case OP_LIST_INCREMENT:
 				append_array(4, as_exp_list_increment(pred->ctx, pred->list_policy, {}, {}, {}));
 				break;
-			case OP_LIST_EXP_SET:
+			case OP_LIST_SET:
 				append_array(4, as_exp_list_set(pred->ctx, pred->list_policy, {}, {}, {}));
 				break;
-			case OP_LIST_EXP_CLEAR:
+			case OP_LIST_CLEAR:
 				append_array(1, as_exp_list_clear(pred->ctx, {})); // -1 for bin
 				break;
-			case OP_LIST_EXP_SORT:
+			case OP_LIST_SORT:
 				if (get_int64_t(err, LIST_ORDER_KEY, pred->pydict, &lval1) != AEROSPIKE_OK) {
 					return err->code;
 				}
 
 				append_array(1, as_exp_list_sort(pred->ctx, lval1, {})); // -1 for bin
 				break;
-			case OP_LIST_EXP_REMOVE_BY_VALUE:
+			case OP_LIST_REMOVE_BY_VALUE:
 				append_array(2, as_exp_list_remove_by_value(pred->ctx, {}, {})); // -2 for bin and val
 				break;
-			case OP_LIST_EXP_REMOVE_BY_VALUE_LIST:
+			case OP_LIST_REMOVE_BY_VALUE_LIST:
 				append_array(2, as_exp_list_remove_by_value_list(pred->ctx, {}, {})); // -2 for bin and val
 				break;
-			case OP_LIST_EXP_REMOVE_BY_VALUE_RANGE:
+			case OP_LIST_REMOVE_BY_VALUE_RANGE:
 				append_array(3, as_exp_list_remove_by_value_range(pred->ctx, {}, {}, {})); // - 3 for begin, end, val
 				break;
-			case OP_LIST_EXP_REMOVE_BY_REL_RANK_RANGE_TO_END:
+			case OP_LIST_REMOVE_BY_REL_RANK_RANGE_TO_END:
 				append_array(3, as_exp_list_remove_by_rel_rank_range_to_end(pred->ctx, {}, {}, {})); // -3 for value, rank, bin
 				break;
-			case OP_LIST_EXP_REMOVE_BY_REL_RANK_RANGE:
+			case OP_LIST_REMOVE_BY_REL_RANK_RANGE:
 				append_array(4, as_exp_list_remove_by_rel_rank_range(pred->ctx, {}, {}, {}, {})); // -4 for value, rank, count, bin
 				break;
-			case OP_LIST_EXP_REMOVE_BY_INDEX:
+			case OP_LIST_REMOVE_BY_INDEX:
 				append_array(2, as_exp_list_remove_by_index(pred->ctx, {}, {})); // -2 for index, bin
 				break;
-			case OP_LIST_EXP_REMOVE_BY_INDEX_RANGE_TO_END:
+			case OP_LIST_REMOVE_BY_INDEX_RANGE_TO_END:
 				append_array(2, as_exp_list_remove_by_index_range_to_end(pred->ctx, {}, {})); // -2 for index, bin
 				break;
-			case OP_LIST_EXP_REMOVE_BY_INDEX_RANGE:
+			case OP_LIST_REMOVE_BY_INDEX_RANGE:
 				append_array(3, as_exp_list_remove_by_index_range(pred->ctx, {}, {}, {})); // - 3 for index, count, bin
 				break;
-			case OP_LIST_EXP_REMOVE_BY_RANK:
+			case OP_LIST_REMOVE_BY_RANK:
 				append_array(2, as_exp_list_remove_by_rank(pred->ctx, {}, {})); // -2 for rank, bin
 				break;
-			case OP_LIST_EXP_REMOVE_BY_RANK_RANGE_TO_END:
+			case OP_LIST_REMOVE_BY_RANK_RANGE_TO_END:
 				append_array(2, as_exp_list_remove_by_rank_range_to_end(pred->ctx, {}, {})); // - 2 for rank, bin
 				break;
-			case OP_LIST_EXP_REMOVE_BY_RANK_RANGE:
+			case OP_LIST_REMOVE_BY_RANK_RANGE:
 				append_array(3, as_exp_list_remove_by_rank_range(pred->ctx, {}, {}, {})); // - 3 for rank, count, bin
 				break;
 			case OP_MAP_PUT:
