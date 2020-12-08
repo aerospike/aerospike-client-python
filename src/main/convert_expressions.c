@@ -742,7 +742,7 @@ as_status add_pred_macros(AerospikeClient * self, as_static_pool * static_pool, 
 				append_array(2, as_exp_map_remove_by_value(pred->ctx, {}, {})); // - 2 for val, bin
 				break;
 			case OP_MAP_REMOVE_BY_VALUE_LIST:
-				append_array(2, as_exp_map_remove_by_value(pred->ctx, {}, {})); // - 2 for values, bin
+				append_array(2, as_exp_map_remove_by_value_list(pred->ctx, {}, {})); // - 2 for values, bin
 				break;
 			case OP_MAP_REMOVE_BY_VALUE_RANGE:
 				append_array(3, as_exp_map_remove_by_value_range(pred->ctx, {}, {}, {})); // - 3 for begin, end, bin

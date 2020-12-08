@@ -821,7 +821,7 @@ class TestExpressions(TestBaseClass):
                                 ListInsert(ctx, policy, 1, values[2], bin))))), #NOTE: invalid on ordered lists
                 expected[0]
             ),
-            # Eq(
+            # Eq( #TODO needs debugging
             #     ListGetByRankRangeToEnd(ctx, aerospike.LIST_RETURN_VALUE, 0,
             #         ListInsertItems(ctx, policy, 1, values[3], # this is having issues with returning lists len > 1
             #             ListSet(ctx, policy, 0, values[4],
@@ -858,57 +858,6 @@ class TestExpressions(TestBaseClass):
                 expected[2]
             )
         )
-
-        # ListIncrement(ctx, policy, 1, )) TODO needs it's own always int case
-
-        # expr =  Eq(
-        #         ListGetByRankRangeToEnd(ctx, aerospike.LIST_RETURN_COUNT, 0, bin),
-        #             ListSort(ctx, aerospike.LIST_SORT_DEFAULT,
-        #                  ListInsertItems(ctx, None, 0, [values[4], 11],
-        #                      ListSet(ctx, policy, 0, values[4],
-        #                         ListClear(ctx, bin))),
-        #         3
-        #     )
-
-        # expr =  Eq(
-        #         ListGetByIndexRangeToEnd(ctx, aerospike.LIST_RETURN_VALUE, 0,                 
-        #             ListSort(ctx, aerospike.LIST_SORT_DEFAULT, #TODO can't compare with constant list (server issue)        
-        #                 ListAppend(ctx, policy, values[0],
-        #                     ListAppendItems(ctx, policy, values[1],
-        #                         ListInsert(ctx, policy, 1, values[2], bin))))),
-        #         expected[0]
-        #     )
-
-        # expr =  Eq( works
-        #         ListGetByIndexRangeToEnd(ctx, aerospike.LIST_RETURN_VALUE, 0,                 
-        #             ListSort(ctx, aerospike.LIST_SORT_DEFAULT, #TODO can't compare with constant list (server issue)        
-        #                 ListAppend(ctx, policy, values[0],
-        #                     ListAppendItems(ctx, policy, values[1],
-        #                         ListInsert(ctx, policy, 1, values[2], bin))))),
-        #         ['b', 'c', 'd', 'e', 'f', 'g', 'h']
-        #     )
-
-        # expr =  Eq(
-        #         ListGetByIndexRangeToEnd(ctx, aerospike.LIST_RETURN_COUNT, 0,                
-        #             ListSort(ctx, aerospike.LIST_SORT_DEFAULT, 'flist_bin')), #TODO can't compare with constant list (server issue)        
-        #                 # ListAppend(ctx, policy, values[0],
-        #                 #     ListAppendItems(ctx, policy, values[1],
-        #                         #ListInsert(ctx, policy, 0, 4.0, bin)), #NOTE: invalid on ordered lists
-        #         3
-        #     )
-
-
-        # _, _, res = self.as_connection.get(('test', u'demo', 1))
-        # print("*********** ", res['flist_bin'])
-
-        # expr =  Eq(
-        #         ListGetByIndex(ResultType.FLOAT, ctx, aerospike.LIST_RETURN_VALUE, 0,              
-        #             ListSort(ctx, aerospike.LIST_SORT_DEFAULT, 'flist_bin')), #TODO can't compare with constant list (server issue)        
-        #                 # ListAppend(ctx, policy, values[0],
-        #                 #     ListAppendItems(ctx, policy, values[1],
-        #                         #ListInsert(ctx, policy, 0, 4.0, bin)), #NOTE: invalid on ordered lists
-        #         1.0
-        #     )
 
         verify_all_expression_avenues(self.as_connection, self.test_ns, self.test_set, expr.compile(), bin, 19)
     
@@ -1015,13 +964,163 @@ class TestExpressions(TestBaseClass):
 
         verify_all_expression_avenues(self.as_connection, self.test_ns, self.test_set, expr.compile(), bin, 19)
 
+    @pytest.mark.parametrize("bin, ctx, policy, key, value, expected", [
+        ("imap_bin", None, None, 3, 6, [12]),
+        ("fmap_bin", None, None, 6.0, 6.0, [12.0]),
+        #("mlist_bin", [cdt_ctx.cdt_ctx_list_index(0)], None, 1, 4, [6]), TODO why is this failing?
+    ])
+    def test_MapIncrement_pos(self, bin, ctx, policy, key, value, expected):
+        """
+        Invoke MapIncrement() on various integer and float bins.
+        """
+        expr = Eq(
+                    MapGetByValue(ctx, aerospike.MAP_RETURN_VALUE, expected[0], 
+                        MapIncrement(ctx, policy, key, value, bin)), 
+                    expected).compile()
+        verify_all_expression_avenues(self.as_connection, self.test_ns, self.test_set, expr, bin, 19)
+
+    @pytest.mark.parametrize("bin, ctx, policy, values", [
+        (
+            "imap_bin",
+            None,
+            {}, 
+            [4, 10, 1, 1, 3, 6],
+        ),
+        (
+            "smap_bin",
+            None,
+            {}, 
+            ['j', 'j', 'b', 'b', 'f', 'f'],
+        ),
+        (
+            "lmap_bin",
+            None,
+            {}, 
+            [7, [1, 8], 1, [1, 2], 3, [1, 4]],
+        ),
+        (
+            "mmap_bin",
+            None,
+            {}, 
+            [7, {1: 8}, 1, {1: 2}, 3, {1: 4}],
+        ),
+        (
+            "bymap_bin",
+            None,
+            {}, 
+            [7, 'j'.encode("utf8"), 1, 'b'.encode("utf8"), 3, 'f'.encode("utf8")],
+        ),
+        (
+            "fmap_bin",
+            None,
+            {}, 
+            [8.0, 10.0, 1.0, 1.0, 6.0, 6.0],
+        )
+    ])
+    def test_MapModOps_pos(self, bin, ctx, policy, values):
+        """
+        Invoke various map modify expressions with many value types.
+        """
+
+        expr =  And(
+            Eq(MapGetByValue(ctx, aerospike.MAP_RETURN_KEY, values[1], 
+                    MapPut(ctx, policy, values[0], values[1], bin)),
+                [values[0]]
+            ),
+            Eq(MapGetByValue(ctx, aerospike.MAP_RETURN_KEY, values[1], 
+                    MapPutItems(ctx, policy, {values[0]: values[1]}, bin)),
+                [values[0]]
+            ),
+            # Eq(MapClear(ctx, bin), NOTE: not valid, const map comparison
+            #     {1:1}
+            # )
+            Eq(
+                MapSize(None,
+                    MapClear(ctx, bin)),
+                0
+            ),
+            Eq(MapGetByValue(ctx, aerospike.MAP_RETURN_COUNT, values[3], 
+                    MapRemoveByKey(ctx, values[2], bin)),
+                0
+            ),
+            Eq(MapGetByValue(ctx, aerospike.MAP_RETURN_COUNT, values[3], 
+                    MapRemoveByKeyList(ctx, [values[2]], bin)),
+                0
+            ),
+            Eq(MapGetByKeyRange(ctx, aerospike.MAP_RETURN_VALUE, values[2], values[0], #TODO debug why None doesnt work for end
+                    MapRemoveByKeyRange(ctx, values[2], values[4], bin)),
+                [values[5]]
+            ),
+            Eq(MapGetByKeyRange(ctx, aerospike.MAP_RETURN_VALUE, values[2], values[0], #TODO debug why None doesnt work for end
+                    MapRemoveByKeyRelIndexRangeToEnd(ctx, values[2], 1, bin)),
+                [values[3]]
+            ),
+            Eq(MapGetByKeyRange(ctx, aerospike.MAP_RETURN_VALUE, values[2], values[0], #TODO debug why None doesnt work for end
+                    MapRemoveByKeyRelIndexRange(ctx, values[2], 1, 3, bin)),
+                [values[3]]
+            ),
+            #
+            Eq(MapGetByValue(ctx, aerospike.MAP_RETURN_COUNT, values[3], 
+                    MapRemoveByValue(ctx, values[3], bin)),
+                0
+            ),
+            Eq(MapGetByValue(ctx, aerospike.MAP_RETURN_COUNT, values[3], 
+                    MapRemoveByValueList(ctx, [values[3]], bin)),
+                0
+            ),
+            Eq(MapGetByKeyRange(ctx, aerospike.MAP_RETURN_VALUE, values[2], values[0], #TODO debug why None doesnt work for end
+                    MapRemoveByValueRange(ctx, values[3], values[5], bin)),
+                [values[5]]
+            ),
+            Eq(MapGetByKeyRange(ctx, aerospike.MAP_RETURN_VALUE, values[2], values[0], #TODO debug why None doesnt work for end
+                    MapRemoveByValueRelRankRangeToEnd(ctx, values[3], 1, bin)),
+                [values[3]]
+            ),
+            Eq(MapGetByKeyRange(ctx, aerospike.MAP_RETURN_VALUE, values[2], values[0], #TODO debug why None doesnt work for end
+                    MapRemoveByValueRelRankRange(ctx, values[3], 1, 3, bin)),
+                [values[3]]
+            ),
+            #
+            Eq(MapGetByValue(ctx, aerospike.MAP_RETURN_VALUE, values[3], 
+                    MapRemoveByIndex(ctx, 0, bin)),
+                []
+            ),
+            Eq(MapGetByKeyRange(ctx, aerospike.MAP_RETURN_VALUE, values[2], values[0], #TODO debug why None doesnt work for end
+                    MapRemoveByIndexRange(ctx, 1, 3, bin)),
+                [values[3]]
+            ),
+            Eq(MapGetByKeyRange(ctx, aerospike.MAP_RETURN_VALUE, values[2], values[0], #TODO debug why None doesnt work for end
+                    MapRemoveByIndexRangeToEnd(ctx, 1, bin)),
+                [values[3]]
+            ),
+            #
+            Eq(MapGetByValue(ctx, aerospike.MAP_RETURN_VALUE, values[3], 
+                    MapRemoveByRank(ctx, 0, bin)),
+                []
+            ),
+            Eq(MapGetByKeyRange(ctx, aerospike.MAP_RETURN_VALUE, values[2], values[0], #TODO debug why None doesnt work for end
+                    MapRemoveByRankRange(ctx, 1, 3, bin)),
+                [values[3]]
+            ),
+            Eq(MapGetByKeyRange(ctx, aerospike.MAP_RETURN_VALUE, values[2], values[0], #TODO debug why None doesnt work for end
+                    MapRemoveByRankRangeToEnd(ctx, 1, bin)),
+                [values[3]]
+            ),
+        )
+
+        # expr = And( NOTE: this will not work, comparing const map
+        #     Eq(MapPut(None, None, key, 10, "imap_bin"),
+        #         {1: 1, 2: 2, 3: 6, 4: 10}
+        #     )
+
+        verify_all_expression_avenues(self.as_connection, self.test_ns, self.test_set, expr.compile(), bin, 19)
 
     @pytest.mark.parametrize("policy, bytes_size, flags, bin, expected", [
         (None, 10, None, '1bits_bin', bytearray([0] * 1))
     ])
-    def test_BitModOps_pos(self, policy, bytes_size, flags, bin, expected):
+    def test_BitResize_pos(self, policy, bytes_size, flags, bin, expected):
         """
-        Test various bit expressions.
+        Test BitResize expression.
         """
 
         expr = Eq(
@@ -1032,6 +1131,159 @@ class TestExpressions(TestBaseClass):
 
         verify_all_expression_avenues(self.as_connection, self.test_ns, self.test_set, expr.compile(), bin, 19)
 
+    @pytest.mark.parametrize("policy, byte_offset, byte_size, bin, expected", [
+        (None, 0, 1, '1bits_bin', bytearray([0] * 1))
+    ])
+    def test_BitRemoveOps_pos(self, policy, byte_offset, byte_size, bin, expected):
+        """
+        Test BitRemove expression.
+        """
+
+        expr = Eq(
+                    BitRemove(policy, byte_offset, byte_size, bin),
+                    bytearray([1] * 7)
+                )
+
+        verify_all_expression_avenues(self.as_connection, self.test_ns, self.test_set, expr.compile(), bin, 19)
+
+    def test_BitInsert_pos(self):
+        """
+        Test BitInsert expression.
+        """
+
+        expr = Eq(
+                    BitInsert(None, 1, bytearray([3]), '1bits_bin'),
+                    bytearray([1, 3, 1, 1, 1, 1, 1, 1, 1])
+                )
+
+        verify_all_expression_avenues(self.as_connection, self.test_ns, self.test_set, expr.compile(), '1bits_bin', 19)
+
+    def test_BitSet_pos(self):
+        """
+        Test BitSet expression.
+        """
+
+        expr = Eq(
+                    BitSet(None, 7, 1, bytearray([0]), '1bits_bin'),
+                    bytearray([0] + [1] * 7)
+                )
+
+        verify_all_expression_avenues(self.as_connection, self.test_ns, self.test_set, expr.compile(), '1bits_bin', 19)
+
+    def test_BitOr_pos(self):
+        """
+        Test BitOr expression.
+        """
+
+        expr = Eq(
+                    BitOr(None, 0, 8, bytearray([8]), '1bits_bin'),
+                    bytearray([9] + [1] * 7)
+                )
+
+        verify_all_expression_avenues(self.as_connection, self.test_ns, self.test_set, expr.compile(), '1bits_bin', 19)
+
+    def test_BitXor_pos(self):
+        """
+        Test BitXor expression.
+        """
+
+        expr = Eq(
+                    BitXor(None, 0, 8, bytearray([1]), '1bits_bin'),
+                    bytearray([0] + [1] * 7)
+                )
+
+        verify_all_expression_avenues(self.as_connection, self.test_ns, self.test_set, expr.compile(), '1bits_bin', 19)
+
+    def test_BitAnd_pos(self):
+        """
+        Test BitAnd expression.
+        """
+
+        expr = Eq(
+                    BitAnd(None, 0, 8, bytearray([0]), '1bits_bin'),
+                    bytearray([0] + [1] * 7)
+                )
+
+        verify_all_expression_avenues(self.as_connection, self.test_ns, self.test_set, expr.compile(), '1bits_bin', 19)
+
+    def test_BitNot_pos(self):
+        """
+        Test BitNot expression.
+        """
+
+        expr = Eq(
+                    BitNot(None, 0, 64, '1bits_bin'),
+                    bytearray([254] * 8)
+                )
+
+        verify_all_expression_avenues(self.as_connection, self.test_ns, self.test_set, expr.compile(), '1bits_bin', 19)
+
+    def test_BitLeftShift_pos(self):
+        """
+        Test BitLeftShift expression.
+        """
+
+        expr = Eq(
+                    BitLeftShift(None, 0, 8, 3, '1bits_bin'),
+                    bytearray([8] + [1] * 7)
+                )
+
+        verify_all_expression_avenues(self.as_connection, self.test_ns, self.test_set, expr.compile(), '1bits_bin', 19)
+
+    def test_BitRightShift_pos(self):
+        """
+        Test BitRightShift expression.
+        """
+
+        expr = Eq(
+                    BitRightShift(None, 0, 8, 1, 
+                        BitLeftShift(None, 0, 8, 3, '1bits_bin')),
+                    bytearray([4] + [1] * 7)
+                )
+
+        verify_all_expression_avenues(self.as_connection, self.test_ns, self.test_set, expr.compile(), '1bits_bin', 19)
+
+    @pytest.mark.parametrize("policy, bit_offset, bit_size, value, action, bin, expected", [
+        (None, 8, 8, 1, aerospike.BIT_OVERFLOW_FAIL, '1bits_bin', bytearray([1] + [2] + [1] * 6))
+    ])
+    def test_BitAdd_pos(self, policy, bit_offset, bit_size, value, action, bin, expected):
+        """
+        Test BitAdd expression.
+        """
+
+        expr = Eq(
+                    BitAdd(policy, bit_offset, bit_size, value, action, bin),
+                    expected
+                )
+
+        verify_all_expression_avenues(self.as_connection, self.test_ns, self.test_set, expr.compile(), bin, 19)
+
+    @pytest.mark.parametrize("policy, bit_offset, bit_size, value, action, bin, expected", [
+        (None, 8, 8, 1, aerospike.BIT_OVERFLOW_FAIL, '1bits_bin', bytearray([1] + [0] + [1] * 6))
+    ])
+    def test_BitSubtract_pos(self, policy, bit_offset, bit_size, value, action, bin, expected):
+        """
+        Test BitSubtract expression.
+        """
+
+        expr = Eq(
+                    BitSubtract(policy, bit_offset, bit_size, value, action, bin),
+                    expected
+                )
+
+        verify_all_expression_avenues(self.as_connection, self.test_ns, self.test_set, expr.compile(), bin, 19)
+
+    def test_BitSetInt_pos(self):
+        """
+        Test BitSetInt expression.
+        """
+
+        expr = Eq(
+                    BitSetInt(None, 7, 1, 0, '1bits_bin'),
+                    bytearray([0] + [1] * 7)
+                )
+
+        verify_all_expression_avenues(self.as_connection, self.test_ns, self.test_set, expr.compile(), '1bits_bin', 19)
 
     @pytest.mark.parametrize("policy, listp, bin, expected", [
         (None, ['key%s' % str(i) for i in range(1000, 1050)], 'hll_bin', 1050)

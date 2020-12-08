@@ -8,8 +8,8 @@ records in transactions by manipulating and comparing bins and record metadata.
 Expressions can be used everywhere that predicate expressions have been used and
 allow for expanded functionality and customizability.
 
-In the Python client, Aerospike expressions are represented by a series of classes that represent
-comparrison and logical operators, aswell as bin, metadata, and bin operations.
+In the Python client, Aerospike expressions are built using a series of classes that represent
+comparrison and logical operators, bins, metadata operations, and bin operations.
 Expressions are constructed using a Lisp like syntax by instantiating an expression that yields a boolean, such as Eq() or And(), 
 while passing them other expressions and constants as arguments, and finally calling the compile() method. See the example below.
 
@@ -105,6 +105,29 @@ Example::
     # EXPECTED OUTPUT:
     # {'user': 'Arbiter', 'team': 'blue', 'scores': [5, 10, 5, 8], 'kd': 1.0, 'status': 'MasterGold'}
 
+    By nesting expressions, complicated filters can be created. See the example below.
+
+    Example::
+        from aerospike_helpers import expressions as exp
+        expr = Eq(
+            exp.ListGetByIndexRangeToEnd(ctx, aerospike.LIST_RETURN_VALUE, 0,                 
+                exp.ListSort(ctx, aerospike.LIST_SORT_DEFAULT,      
+                    exp.ListAppend(ctx, policy, value_x,
+                        exp.ListAppendItems(ctx, policy, value_y,
+                            exp.ListInsert(ctx, policy, 1, value_z, bin_name))))),
+            expected_answer
+        ),
+    
+    Note::
+        Note that Aerospike expressions are evaluated server side, and do not return any values to the client themselves.
+        When the following documentation says an expression returns a "list expression", it means that the expression returns a
+        list during evalution on the server side. When these docs say that a parameter requires an "integer or integer expression"
+        It means it will accept a literal integer, or an expression that will return an integer during evaluation. When the docs say
+        an expression returns a "expression" this means that the data type returned may vary, usually depending on the `return_type` parameter.
+
+    Current Limitations:: #TODO expand this
+        Currently, Aerospike expressions for the python client do not support comparing constant as_python_bytes to blob expressions.
+        Comparrisions between constant map values and map expressions are  also unsupported.
 '''
 
 
@@ -3127,8 +3150,8 @@ class BitInsert(BaseExpr):
         
             Example::
                 # Let blob bin "c" == bytearray([1] * 5).
-                # Insert 3 so that returned value is bytearray([1, 3, 1, 1, 1]).
-                expr = BitInsert(None, 1, bytearray([3])).compile()
+                # Insert 3 so that returned value is bytearray([1, 3, 1, 1, 1, 1]).
+                expr = BitInsert(None, 1, bytearray([3]), BlobBin("c")).compile()
         """        
         self.children = (
             byte_offset,
@@ -3150,7 +3173,7 @@ class BitRemove(BaseExpr):
                 byte_size (int): Number of bytes to remove.
                 bin (TypeBinName): Blob bin name or blob value expression.
 
-            :return: Resulting blob containing the inserted bytes.
+            :return: Resulting blob containing the remaining bytes.
         
             Example::
                 # Let blob bin "c" == bytearray([1] * 5).
@@ -3212,7 +3235,7 @@ class BitOr(BaseExpr):
             Example::
                 # Let blob bin "c" == bytearray([1] * 5).
                 # bitwise Or `8` with the first byte of blob bin c so that the returned value is bytearray([9, 1, 1, 1, 1]).
-                expr = BitOr(None, 0, 8, bytearray[8], BlobBin("c")).compile()
+                expr = BitOr(None, 0, 8, bytearray([8]), BlobBin("c")).compile()
         """        
         self.children = (
             bit_offset,
@@ -3240,8 +3263,8 @@ class BitXor(BaseExpr):
         
             Example::
                 # Let blob bin "c" == bytearray([1] * 5).
-                # bitwise Or `8` with the first byte of blob bin c so that the returned value is bytearray([0, 1, 1, 1, 1]).
-                expr = BitXor(None, 0, 8, bytearray[1], BlobBin("c")).compile()
+                # bitwise Xor `1` with the first byte of blob bin c so that the returned value is bytearray([0, 1, 1, 1, 1]).
+                expr = BitXor(None, 0, 8, bytearray([1]), BlobBin("c")).compile()
         """        
         self.children = (
             bit_offset,
@@ -3269,8 +3292,8 @@ class BitAnd(BaseExpr):
         
             Example::
                 # Let blob bin "c" == bytearray([1] * 5).
-                # bitwise and `0` with the first byte of blob bin c so that the returned value is bytearray([0, 4, 4, 4, 4]).
-                expr = BitAnd(None, 0, 8, bytearray[0], BlobBin("c")).compile()
+                # bitwise and `0` with the first byte of blob bin c so that the returned value is bytearray([0, 5, 5, 5, 5]).
+                expr = BitAnd(None, 0, 8, bytearray([0]), BlobBin("c")).compile()
         """        
         self.children = (
             bit_offset,
