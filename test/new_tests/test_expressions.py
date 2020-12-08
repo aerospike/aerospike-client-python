@@ -1285,6 +1285,81 @@ class TestExpressions(TestBaseClass):
 
         verify_all_expression_avenues(self.as_connection, self.test_ns, self.test_set, expr.compile(), '1bits_bin', 19)
 
+    @pytest.mark.parametrize("bit_offset, bit_size, bin, expected", [
+        (8, 8, '1bits_bin', bytearray([1]))
+    ])
+    def test_BitGet_pos(self, bit_offset, bit_size, bin, expected):
+        """
+        Test BitGet expression.
+        """
+
+        expr = Eq(
+                    BitGet(bit_offset, bit_size, bin),
+                    expected
+                )
+
+        verify_all_expression_avenues(self.as_connection, self.test_ns, self.test_set, expr.compile(), bin, 19)
+
+    @pytest.mark.parametrize("bit_offset, bit_size, bin, expected", [
+        (16, 8 * 3, '1bits_bin', 3)
+    ])
+    def test_BitCount_pos(self, bit_offset, bit_size, bin, expected):
+        """
+        Test BitCount expression.
+        """
+
+        expr = Eq(
+                    BitCount(bit_offset, bit_size, bin),
+                    expected
+                )
+
+        verify_all_expression_avenues(self.as_connection, self.test_ns, self.test_set, expr.compile(), bin, 19)
+
+    @pytest.mark.parametrize("bit_offset, bit_size, value, bin, expected", [
+        (0, 8, True, '1bits_bin', 7)
+    ])
+    def test_BitLeftScan_pos(self, bit_offset, bit_size, value, bin, expected):
+        """
+        Test BitLeftScan expression.
+        """
+
+        expr = Eq(
+                    BitLeftScan(bit_offset, bit_size, value, bin),
+                    expected
+                )
+
+        verify_all_expression_avenues(self.as_connection, self.test_ns, self.test_set, expr.compile(), bin, 19)
+
+    @pytest.mark.parametrize("bit_offset, bit_size, value, bin, expected", [
+        (0, 8, True, '1bits_bin', 7) #TODO do I need the value expressions to be able to sub values for bins? (I think yes)
+    ])
+    def test_BitRightScan_pos(self, bit_offset, bit_size, value, bin, expected):
+        """
+        Test BitRightScan expression.
+        """
+
+        expr = Eq(
+                    BitRightScan(bit_offset, bit_size, value, bin),
+                    expected
+                )
+
+        verify_all_expression_avenues(self.as_connection, self.test_ns, self.test_set, expr.compile(), bin, 19)
+
+    @pytest.mark.parametrize("bit_offset, bit_size, bin, expected", [
+        (0, 8, '1bits_bin', 1)
+    ])
+    def test_BitGetInt_pos(self, bit_offset, bit_size, bin, expected):
+        """
+        Test BitGetInt expression.
+        """
+
+        expr = Eq(
+                    BitGetInt(bit_offset, bit_size, True, bin),
+                    expected
+                )
+
+        verify_all_expression_avenues(self.as_connection, self.test_ns, self.test_set, expr.compile(), bin, 19)
+
     @pytest.mark.parametrize("policy, listp, bin, expected", [
         (None, ['key%s' % str(i) for i in range(1000, 1050)], 'hll_bin', 1050)
     ])

@@ -3320,7 +3320,7 @@ class BitNot(BaseExpr):
         
             Example::
                 # Let blob bin "c" == bytearray([255] * 5).
-                # bitwise not all of "c" to get bytearray([0] * 5).
+                # bitwise, not, all of "c" to get bytearray([254] * 5).
                 expr = BitNot(None, 0, 40, BlobBin("c")).compile()
         """        
         self.children = (
@@ -3504,7 +3504,7 @@ class BitGet(BaseExpr):
             Example::
                 # Let blob bin "c" == bytearray([1, 2, 3, 4, 5).
                 # Get 2 from bin "c".
-                expr = BitGet(8, 8, BlobBin("c")).compile() #TODO test this
+                expr = BitGet(8, 8, BlobBin("c")).compile()
         """        
         self.children = (
             bit_offset,
@@ -3541,7 +3541,7 @@ class BitCount(BaseExpr):
 class BitLeftScan(BaseExpr):
     op = aerospike.OP_BIT_LSCAN
 
-    def __init__(self, bit_offset: int, bit_size: int, value: bool, bin: TypeBinName):
+    def __init__(self, bit_offset: int, bit_size: int, value: bool, bin: TypeBinName): #TODO this can't use Python boolean because it is sent as python_bytes
         """ Create an expression that performs a bit_lscan operation.
 
             Args:
@@ -3555,12 +3555,12 @@ class BitLeftScan(BaseExpr):
             Example::
                 # Let blob bin "c" == bytearray([3] * 5).
                 # Scan the first byte of bin "c" for the first bit set to 1. (should get 6)
-                expr = BitLeftScan(0, 8, True, BlobBin("c")).compile() #TODO test
+                expr = BitLeftScan(0, 8, True, BlobBin("c")).compile()
         """        
         self.children = (
             bit_offset,
             bit_size,
-            value,
+            _GenericExpr(ExprOp.BOOL, 0, {VALUE_KEY: value}),
             bin if isinstance(bin, BaseExpr) else BlobBin(bin)
         )
 
@@ -3582,12 +3582,12 @@ class BitRightScan(BaseExpr):
             Example::
                 # Let blob bin "c" == bytearray([3] * 5).
                 # Scan the first byte of bin "c" for the right most bit set to 1. (should get 7)
-                expr = BitRightScan(0, 8, True, BlobBin("c")).compile() #TODO test
+                expr = BitRightScan(0, 8, True, BlobBin("c")).compile()
         """        
         self.children = (
             bit_offset,
             bit_size,
-            value,
+            _GenericExpr(ExprOp.BOOL, 0, {VALUE_KEY: value}),
             bin if isinstance(bin, BaseExpr) else BlobBin(bin)
         )
 
@@ -3601,7 +3601,7 @@ class BitGetInt(BaseExpr):
             Args:
                 bit_offset (int): Bit index of where to start reading.
                 bit_size (int): Number of bits to get.
-                sign (bool): Boolean value, true for signed, false for unsigned.
+                sign (bool): Boolean value, True for signed, False for unsigned.
                 bin (TypeBinName): Blob bin name or blob expression.
 
             :return: Integer expression.
@@ -3609,12 +3609,12 @@ class BitGetInt(BaseExpr):
             Example::
                 # Let blob bin "c" == bytearray([1, 2, 3, 4, 5).
                 # Get 2 as an integer from bin "c".
-                expr = BitGetInt(8, 8, BlobBin("c")).compile() #TODO test this
+                expr = BitGetInt(8, 8, True, BlobBin("c")).compile() #TODO test this
         """        
         self.children = (
             bit_offset,
             bit_size,
-            sign,
+            1 if sign else 0,
             bin if isinstance(bin, BaseExpr) else BlobBin(bin)
         )
 

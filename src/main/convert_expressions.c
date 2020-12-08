@@ -64,6 +64,7 @@
 #define BIN_EXISTS 83
 
 #define CALL 127
+#define BOOL 133
 #define LIST_MOD 139
 
 // RESULT TYPES
@@ -267,7 +268,8 @@ as_status get_expr_size(int * size_to_alloc, int * preds_size, as_vector * preds
 		[_AS_EXP_CODE_CDT_LIST_MOD]                      = 0, //EXP_SZ(as_exp_val(NULL)),
 		[_AS_EXP_CODE_CDT_MAP_CRMOD]                     = 0, //EXP_SZ(as_exp_val(NULL)),
 		[_AS_EXP_CODE_CDT_MAP_CR]                        = 0, //EXP_SZ(as_exp_val(NULL)),
-		[_AS_EXP_CODE_CDT_MAP_MOD]                       = 0 //EXP_SZ(as_exp_val(NULL))
+		[_AS_EXP_CODE_CDT_MAP_MOD]                       = 0, //EXP_SZ(as_exp_val(NULL))
+		[BOOL]                                           = 0
 	};
 
 
@@ -982,6 +984,11 @@ as_status add_pred_macros(AerospikeClient * self, as_static_pool * static_pool, 
 				break;
 			case OP_HLL_MAY_CONTAIN:
 				append_array(2, as_exp_hll_may_contain({}, {})); // - 2 for list, bin
+				break;
+			case BOOL:; // This handles Python to as_exp_bool translation for expressions like OP_BIT_LSCAN
+				PyObject * py_bool = NULL;
+				py_bool = PyDict_GetItemString(pred->pydict, AS_PY_VAL_KEY);
+				append_array(0, as_exp_bool(PyObject_IsTrue(py_bool)));
 				break;
 			default:
 				return as_error_update(err, AEROSPIKE_ERR_PARAM, "Unrecognised expression op type.");
