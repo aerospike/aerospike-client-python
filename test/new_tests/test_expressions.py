@@ -11,6 +11,7 @@ from aerospike_helpers.operations import map_operations
 from aerospike_helpers.operations import list_operations
 from aerospike_helpers.operations import hll_operations
 from aerospike_helpers.operations import operations
+from math import sqrt, ceil, floor
 
 aerospike = pytest.importorskip("aerospike")
 try:
@@ -276,7 +277,9 @@ class TestExpressions(TestBaseClass):
             # list_operations.list_set_order('bllist_bin', aerospike.LIST_ORDERED),
             # list_operations.list_set_order('bylist_bin', aerospike.LIST_ORDERED),
             #map_operations.map_set_policy('list_bin', {'map_order': aerospike.MAP_KEY_ORDERED}, ctx_sort_nested_map1),
-            hll_operations.hll_add('hll_bin', ['key%s' % str(i) for i in range(1000)], 10)
+            hll_operations.hll_add('hll_bin', ['key%s' % str(i) for i in range(10000)], 10),
+            hll_operations.hll_add('hll_bin2', ['key%s' % str(i) for i in range(5000, 15000)], 10),
+            hll_operations.hll_add('hll_bin3', ['key%s' % str(i) for i in range(20000, 30000)], 10)
         ]
 
         #apply map order policy
@@ -1360,18 +1363,47 @@ class TestExpressions(TestBaseClass):
 
         verify_all_expression_avenues(self.as_connection, self.test_ns, self.test_set, expr.compile(), bin, 19)
 
-    @pytest.mark.parametrize("policy, listp, bin, expected", [
-        (None, ['key%s' % str(i) for i in range(1000, 1050)], 'hll_bin', 1050)
+    @pytest.mark.parametrize("policy, listp, index_bc, mh_bc, bin, expected", [ #TODO 
+        (None, ['key%s' % str(i) for i in range(1000, 6000)], 10, None, 'hll_bin', 5000),
+        (None, ['key%s' % str(i) for i in range(1000, 6000)], None, None, 'hll_bin', 5000), #update
+        (None, ['key%s' % str(i) for i in range(1000, 6000)], 10, 164, 'hll_bin', 5000)
     ])
-    def test_HLLModOps_pos(self, policy, listp, bin, expected):
+    def test_HLLModOps_pos(self, policy, listp, index_bc, mh_bc, bin, expected):
         """
         Test various HLL expressions.
         """
 
         expr = GE(
                     HLLGetCount(
-                        HLLAdd(policy, listp, 10, None, bin)),
+                        HLLAdd(policy, listp, index_bc, mh_bc, bin)),
                     1020 #TODO calculate this with error
                 )
+
+        verify_all_expression_avenues(self.as_connection, self.test_ns, self.test_set, expr.compile(), bin, 19)
+
+    @pytest.mark.parametrize("bin, expected", [
+        ('hll_bin', 25000)
+    ])
+    def test_HLLGetUnion_pos(self, bin, expected):
+        """
+        Test the HLLGetUnion expression. #TODO just get the records from a bin and make a list
+        """
+
+        upper_lim = ceil(expected + (expected * (1.04 / sqrt(2 ** 10))))
+        lower_lim = floor(expected - (expected * (1.04 / sqrt(2 ** 10))))
+        record = self.as_connection.get(('test', u'demo', 0))
+        records = [record[2]['hll_bin'], record[2]['hll_bin2'], record[2]['hll_bin3']]
+        expr = And(
+                    GT(
+                        HLLGetCount(
+                            HLLGetUnion(records, bin)),
+                        lower_lim
+                    ),
+                    LE(
+                        HLLGetCount(
+                            HLLGetUnion(records, bin)),
+                        upper_lim
+                    ),
+        )
 
         verify_all_expression_avenues(self.as_connection, self.test_ns, self.test_set, expr.compile(), bin, 19)

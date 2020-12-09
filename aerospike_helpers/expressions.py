@@ -3646,8 +3646,8 @@ class HLLAdd(BaseExpr):
         """        
         self.children = (
             list,
-            index_bit_count,
-            -1,
+            -1 if index_bit_count is None else index_bit_count,
+            -1 if mh_bit_count is None else mh_bit_count,
             policy['flags'] if policy is not None and 'flags' in policy else 0,
             bin if isinstance(bin, BaseExpr) else HLLBin(bin)
         )
@@ -3685,7 +3685,7 @@ class HLLGetUnion(BaseExpr):
         """ Create an expression that performs an hll_get_union.
 
             Args:
-                list (TypeListValue): A list expression of HLLs to union with.
+                list (TypeListValue): A list or list expression of HLLs to union with.
                 bin (TypeBinName): A hll bin name or bin expression to read from.
 
             :return: HLL bin representing the set union.

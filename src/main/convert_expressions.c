@@ -256,7 +256,7 @@ as_status get_expr_size(int * size_to_alloc, int * preds_size, as_vector * preds
 		[OP_BIT_LSCAN]                                   = EXP_SZ(as_exp_bit_lscan({}, {}, {}, {})),
 		[OP_BIT_RSCAN]                                   = EXP_SZ(as_exp_bit_rscan({}, {}, {}, {})),
 		[OP_BIT_GET_INT]                                 = EXP_SZ(as_exp_bit_get_int({}, {}, 0, {})),
-		[OP_HLL_ADD]                                     = EXP_SZ(as_exp_hll_add(NULL, {}, 0, {})),
+		[OP_HLL_ADD]                                     = EXP_SZ(as_exp_hll_add_mh(NULL, {}, 0, 0, {})),
 		[OP_HLL_GET_COUNT]                               = EXP_SZ(as_exp_hll_update(NULL, {}, {})),
 		[OP_HLL_GET_UNION]                               = EXP_SZ(as_exp_hll_get_union({}, {})),
 		[OP_HLL_GET_UNION_COUNT]                         = EXP_SZ(as_exp_hll_get_union_count({}, {})),
