@@ -265,7 +265,9 @@ class TestExpressions(TestBaseClass):
                 }
             self.as_connection.put(key, rec)
         
-        self.as_connection.put(('test', u'demo', 19), {'extra': 'record'})
+        self.as_connection.put(('test', u'demo', 19), {'extra': 'record'}, policy={'key': aerospike.POLICY_KEY_SEND})
+        self.as_connection.put(('test', u'demo', 'k_string'), {'test': 'data'}, policy={'key': aerospike.POLICY_KEY_SEND})
+        self.as_connection.put(('test', u'demo', b'b_string'), {'test': 'b_data'}, policy={'key': aerospike.POLICY_KEY_SEND})
 
         ctx_sort_nested_map1 = [
             cdt_ctx.cdt_ctx_list_index(4)
@@ -277,9 +279,9 @@ class TestExpressions(TestBaseClass):
             # list_operations.list_set_order('bllist_bin', aerospike.LIST_ORDERED),
             # list_operations.list_set_order('bylist_bin', aerospike.LIST_ORDERED),
             #map_operations.map_set_policy('list_bin', {'map_order': aerospike.MAP_KEY_ORDERED}, ctx_sort_nested_map1),
-            hll_operations.hll_add('hll_bin', ['key%s' % str(i) for i in range(10000)], 10),
-            hll_operations.hll_add('hll_bin2', ['key%s' % str(i) for i in range(5000, 15000)], 10),
-            hll_operations.hll_add('hll_bin3', ['key%s' % str(i) for i in range(20000, 30000)], 10)
+            hll_operations.hll_add('hll_bin', ['key%s' % str(i) for i in range(10000)], 15, 49),
+            hll_operations.hll_add('hll_bin2', ['key%s' % str(i) for i in range(5000, 15000)], 15, 49),
+            hll_operations.hll_add('hll_bin3', ['key%s' % str(i) for i in range(20000, 30000)], 15, 49)
         ]
 
         #apply map order policy
@@ -287,57 +289,67 @@ class TestExpressions(TestBaseClass):
             _, _, _ = self.as_connection.operate(('test', u'demo', i), sort_ops)
         
         _, _, rec = self.as_connection.get(('test', u'demo', 10))
-        print(rec)
 
         def teardown():
             for i in range(19):
                 key = ('test', u'demo', i)
                 as_connection.remove(key)
+        
+            as_connection.remove(('test', u'demo', 19))
+            as_connection.remove(('test', u'demo', 'k_string'))
+            as_connection.remove(('test', u'demo', b'b_string'))
 
         request.addfinalizer(teardown)
 
-    # def test_scan_with_results_method_and_expressions(self): #TODO add new exprs, change old expr names
+    def relative_count_error(self, n_index_bits, expected):
+        return (expected * (1.04 / sqrt(2 ** n_index_bits)) * 8)
 
-    #     ns = 'test'
-    #     st = 'demo'
+    def relative_intersect_error(self, n_index_bits, bin_counts, bin_intersect_count):
+        sigma = (1.04 / sqrt(2 ** n_index_bits))
+        rel_err_sum  = 0
+        for count in bin_counts:
+            rel_err_sum += ((sigma * count) ** 2)
+        rel_err_sum += (sigma * (bin_intersect_count ** 2))
 
-    #     expr = And(
-    #         Eq(IntBin("age"), 10),
-    #         Eq(IntBin("age"), IntBin("key")),
-    #         NE(23, IntBin("balance")),
-    #         GT(IntBin("balance"), 99),
-    #         GE(IntBin("balance"), 100),
-    #         LT(IntBin("balance"), 101),
-    #         LE(IntBin("balance"), 100),
-    #         Or(
-    #             LE(IntBin("balance"), 100),
-    #             Not(
-    #                 Eq(IntBin("age"), IntBin("balance"))
-    #             )
-    #         ),
-    #         Eq(DigestMod(2), 0),
-    #         GE(DeviceSize(), 1),
-    #         NE(LastUpdateTime(), 0),
-    #         NE(VoidTime(), 0),
-    #         NE(TTL(), 0),
-    #         KeyExists(), #needs debugging
-    #         Eq(SetName(), 'demo'),
-    #         Eq(ListGetByIndex(None, ResultType.INTEGER, aerospike.LIST_RETURN_VALUE, 0, 'list_bin'), 5),
-    #         GE(ListSize(None, 'list_bin'), 2),
-            
-    #     )
+        return sqrt(rel_err_sum)
 
-    #     #expr = Eq(SetName(), 'demo')
+    def test_scan_with_results_method_and_expressions(self): #TODO add new exprs, change old expr names
 
-    #     print(KeyExists().compile())
+        ns = 'test'
+        st = 'demo'
 
-    #     #print(expr.compile())
+        expr =  Eq(KeyInt(), 19)
+        record = self.as_connection.get(('test', u'demo', 19), policy={'expressions': expr.compile()})
+        assert(record[2]['extra'] == 'record')
 
-    #     scan_obj = self.as_connection.scan(ns, st)
 
-    #     records = scan_obj.results({'expressions': expr.compile()})
-    #     #print(records)
-    #     assert(1 == len(records))
+        expr =  Eq(KeyStr(), 'k_string')
+        record = self.as_connection.get(('test', u'demo', 'k_string'), policy={'expressions': expr.compile()})
+        assert(record[2]['test'] == 'data')
+
+        expr =  Eq(KeyBlob(), b'b_string')
+        record = self.as_connection.get(('test', u'demo', b'b_string'), policy={'expressions': expr.compile()})
+        assert(record[2]['test'] == 'b_data')
+
+        expr =  Eq(KeyExists(), False) #TODO Can I use this since the python bool will be serialized?
+        record = self.as_connection.get(('test', u'demo', b'b_string'), policy={'expressions': expr.compile()})
+        assert(record[2]['test'] == 'b_data')
+
+        expr = And(
+            Eq(BinExists("age"), True),
+            Eq(SetName(), 'demo'),
+            Eq(DeviceSize(), 0), #TODO move this to its own test with an xfail since it will fail on systems without storage-engine: memory.
+            NE(LastUpdateTime(), 0),
+            NE(VoidTime(), 0), #TODO this could fail on a system with no ttl.
+            NE(SinceUpdateTime(), 0),
+            TTL(SinceUpdateTime(), 0), #TODO this could fail on a system with no ttl.
+            Eq(IsTombstone(), False),
+            Eq(DigestMod(2), 0)
+        )
+
+        scan_obj = self.as_connection.scan(ns, st)
+        records = scan_obj.results({'expressions': expr.compile()})
+        assert(19 == len(records))
 
     @pytest.mark.parametrize("bin, expected_bin_type", [
         ("ilist_bin", aerospike.AS_BYTES_LIST),
@@ -486,20 +498,6 @@ class TestExpressions(TestBaseClass):
         """
         Invoke ListGetByValueList().
         """
-        #breakpoint()
-
-        # ctx_sort_nested_map1 = [
-        #     cdt_ctx.cdt_ctx_list_index(4)
-        # ]
-
-        # sort_ops = [
-        #     list_operations.list_set_order('list_bin', aerospike.LIST_ORDERED),
-        #     map_operations.map_set_policy('list_bin', {'map_order': aerospike.MAP_KEY_ORDERED}, ctx_sort_nested_map1),
-        # ]
-
-        # #apply map order policy
-        # for i in range(19):
-        #     _, _, _ = self.as_connection.operate(('test', u'demo', i), sort_ops)
 
         if ctx_types is not None:
             ctx = []
@@ -565,7 +563,6 @@ class TestExpressions(TestBaseClass):
         """
         Invoke ListGetByValueRelRankRangeToEnd() with expected failures.
         """
-        #breakpoint()
 
         if ctx_types is not None:
             ctx = []
@@ -683,7 +680,7 @@ class TestExpressions(TestBaseClass):
                 10,
                 1, #
                 [2, 6],
-                1, #
+                None, #
                 3,
                 6,
                 2 #
@@ -691,7 +688,8 @@ class TestExpressions(TestBaseClass):
             [
                 [1, 2, 3, 4, 6, 9, 20],
                 [10, 24, 25, 2, 6],
-                [1]
+                [1],
+                []
             ]
         ),
         (
@@ -707,14 +705,15 @@ class TestExpressions(TestBaseClass):
                 'b', #
                 ['d', 'f'],
                 'b', #
-                'e',
+                None,
                 'f',
                 'd' #
             ], 
             [
                 ['b', 'c', 'd', 'e', 'f', 'g', 'h'],
                 [10, 24, 25, 2, 6],
-                ['b']
+                ['b'],
+                ['b', 'd']
             ]
         ),
         (
@@ -737,7 +736,8 @@ class TestExpressions(TestBaseClass):
             [
                 [[1, 2], [1, 3], [1, 4], [1, 5], [1, 6], [1,9], [1, 20]],
                 [10, 24, 25, 2, 6],
-                [[1, 2]]
+                [[1, 2]],
+                []
             ]
         ),
         (
@@ -760,7 +760,8 @@ class TestExpressions(TestBaseClass):
             [
                 [{1: 2}, {1: 3}, {1: 4}, {1: 5}, {1: 6}, {1: 9}, {1: 20}],
                 [10, 24, 25, 2, 6],
-                [{1: 2}]
+                [{1: 2}],
+                []
             ]
         ),
         (
@@ -783,7 +784,8 @@ class TestExpressions(TestBaseClass):
             [
                 [b'b', b'c', b'd', b'e', b'f', b'g', b'h'],
                 [10, 24, 25, 2, 6],
-                [b'b']
+                [b'b'],
+                []
             ]
         ),
         (
@@ -806,7 +808,8 @@ class TestExpressions(TestBaseClass):
             [
                 [1.0, 2.0, 3.0, 4.0, 6.0, 9.0, 20.0],
                 [10.0, 24.0, 25.0, 2.0, 6.0],
-                [1.0]
+                [1.0],
+                []
             ]
         ),
     ])
@@ -839,7 +842,7 @@ class TestExpressions(TestBaseClass):
             Eq(
                 ListRemoveByValueRange(ctx, values[7], values[8],
                     ListRemoveByValueRelRankToEnd(ctx, values[9], 0, bin)),
-                []
+                expected[3]
             ),
             Eq(
                 ListRemoveByValueRelRankRange(ctx, values[10], 0, 2,
@@ -1363,21 +1366,30 @@ class TestExpressions(TestBaseClass):
 
         verify_all_expression_avenues(self.as_connection, self.test_ns, self.test_set, expr.compile(), bin, 19)
 
-    @pytest.mark.parametrize("policy, listp, index_bc, mh_bc, bin, expected", [ #TODO 
+    @pytest.mark.parametrize("policy, listp, index_bc, mh_bc, bin, expected", [ 
         (None, ['key%s' % str(i) for i in range(1000, 6000)], 10, None, 'hll_bin', 5000),
         (None, ['key%s' % str(i) for i in range(1000, 6000)], None, None, 'hll_bin', 5000), #update
         (None, ['key%s' % str(i) for i in range(1000, 6000)], 10, 164, 'hll_bin', 5000)
     ])
-    def test_HLLModOps_pos(self, policy, listp, index_bc, mh_bc, bin, expected):
+    def test_HLLAdd_pos(self, policy, listp, index_bc, mh_bc, bin, expected):
         """
-        Test various HLL expressions.
+        Test the HLLAdd expression.
         """
 
-        expr = GE(
+        upper_lim = ceil(expected + self.relative_count_error(10, expected))
+        lower_lim = floor(expected - self.relative_count_error(10, expected))
+        expr = And(
+                GE(
                     HLLGetCount(
                         HLLAdd(policy, listp, index_bc, mh_bc, bin)),
-                    1020 #TODO calculate this with error
-                )
+                    lower_lim
+                ),
+                LE(
+                    HLLGetCount(
+                        HLLAdd(policy, listp, index_bc, mh_bc, bin)),
+                    upper_lim
+                ),
+        )
 
         verify_all_expression_avenues(self.as_connection, self.test_ns, self.test_set, expr.compile(), bin, 19)
 
@@ -1386,15 +1398,15 @@ class TestExpressions(TestBaseClass):
     ])
     def test_HLLGetUnion_pos(self, bin, expected):
         """
-        Test the HLLGetUnion expression. #TODO just get the records from a bin and make a list
+        Test the HLLGetUnion expression.
         """
 
-        upper_lim = ceil(expected + (expected * (1.04 / sqrt(2 ** 10))))
-        lower_lim = floor(expected - (expected * (1.04 / sqrt(2 ** 10))))
+        upper_lim = ceil(expected + self.relative_count_error(10, expected))
+        lower_lim = floor(expected - self.relative_count_error(10, expected))
         record = self.as_connection.get(('test', u'demo', 0))
         records = [record[2]['hll_bin'], record[2]['hll_bin2'], record[2]['hll_bin3']]
         expr = And(
-                    GT(
+                    GE(
                         HLLGetCount(
                             HLLGetUnion(records, bin)),
                         lower_lim
@@ -1406,4 +1418,99 @@ class TestExpressions(TestBaseClass):
                     ),
         )
 
+        verify_all_expression_avenues(self.as_connection, self.test_ns, self.test_set, expr.compile(), bin, 19)
+
+    @pytest.mark.parametrize("bin, expected", [
+        ('hll_bin', 25000)
+    ])
+    def test_HLLGetUnionCount_pos(self, bin, expected):
+        """
+        Test the HLLGetUnionCount expression.
+        """
+
+        upper_lim = ceil(expected + self.relative_count_error(10, expected))
+        lower_lim = floor(expected - self.relative_count_error(10, expected))
+        record = self.as_connection.get(('test', u'demo', 0))
+        records = [record[2]['hll_bin'], record[2]['hll_bin2'], record[2]['hll_bin3']]
+        expr = And(
+                    GT(
+                        HLLGetUnionCount(records, bin),
+                        lower_lim
+                    ),
+                    LE(
+                        HLLGetUnionCount(records, bin),
+                        upper_lim
+                    ),
+        )
+
+        verify_all_expression_avenues(self.as_connection, self.test_ns, self.test_set, expr.compile(), bin, 19)
+
+    @pytest.mark.parametrize("bin, expected", [
+        ('hll_bin', 5000)
+    ])
+    def test_HLLGetIntersectCount_pos(self, bin, expected):
+        """
+        Test the HLLGetIntersectCount expression.
+        """
+
+        upper_lim = ceil(expected + self.relative_intersect_error(10, [10000, 10000], 5000))
+        lower_lim = floor(expected - self.relative_intersect_error(10, [10000, 10000], 5000))
+        record = self.as_connection.get(('test', u'demo', 0))
+        records = [record[2]['hll_bin2']]
+        expr = And(
+                    GE(
+                        HLLGetIntersectCount(records, bin),
+                        lower_lim
+                    ),
+                    LE(
+                        HLLGetIntersectCount(records, bin),
+                        upper_lim
+                    ),
+        )
+
+        verify_all_expression_avenues(self.as_connection, self.test_ns, self.test_set, expr.compile(), bin, 19)
+
+    @pytest.mark.parametrize("bin, expected", [
+        ('hll_bin', 0.33)
+    ])
+    def test_HLLGetSimilarity_pos(self, bin, expected):
+        """
+        Test the HLLGetSimilarity expression.
+        """
+
+        record = self.as_connection.get(('test', u'demo', 0))
+        records = [record[2]['hll_bin2']]
+        expr = And(
+                    GE(
+                        HLLGetSimilarity(records, bin),
+                        expected - 0.03 #TODO calculate the error
+                    ),
+                    LE(
+                        HLLGetSimilarity(records, bin),
+                        expected + 0.03
+                    ),
+        )
+
+        verify_all_expression_avenues(self.as_connection, self.test_ns, self.test_set, expr.compile(), bin, 19)
+
+    @pytest.mark.parametrize("bin, expected", [
+        ('hll_bin', [15, 49])
+    ])
+    def test_HLLDescribe_pos(self, bin, expected):
+        """
+        Test the HLLDescribe expression.
+        """
+
+        expr = Eq(HLLDescribe(bin), expected)
+        verify_all_expression_avenues(self.as_connection, self.test_ns, self.test_set, expr.compile(), bin, 19)
+
+    @pytest.mark.parametrize("bin", [
+        ('hll_bin')
+    ])
+    def test_HLLMayContain_pos(self, bin):
+        """
+        Test the HLLMayContain expression.
+        """
+
+        expr = Eq(HLLMayContain(["key1", "key2", "key3"], HLLBin(bin)), 1)
         verify_all_expression_avenues(self.as_connection, self.test_ns, self.test_set, expr.compile(), bin, 19)

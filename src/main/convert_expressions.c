@@ -23,6 +23,7 @@
 #include <aerospike/as_vector.h>
 #include <aerospike/as_geojson.h>
 #include <aerospike/as_msgpack_ext.h>
+#include <aerospike/as_arraylist.h> //TODO remove this line
 
 #include "client.h"
 #include "conversions.h"
@@ -331,7 +332,6 @@ as_status get_exp_val_from_pyval(AerospikeClient * self, as_static_pool * static
 			as_exp_entry tmp_entry = as_exp_bytes(b, b_len);
 			*new_entry = tmp_entry;
 		}
-	 	//*val = (as_val *) as_bytes_new_wrap(b, b_len, false);
 	} else if (!strcmp(py_obj->ob_type->tp_name, "aerospike.Geospatial")) {
 		PyObject *py_parameter = PyString_FromString("geo_data");
 		PyObject* py_data = PyObject_GenericGetAttr(py_obj, py_parameter);
@@ -339,8 +339,7 @@ as_status get_exp_val_from_pyval(AerospikeClient * self, as_static_pool * static
 		char *geo_value = PyString_AsString(AerospikeGeospatial_DoDumps(py_data, err));
 		as_exp_entry tmp_entry = as_exp_geo(geo_value);
 		*new_entry = tmp_entry;
-	} else if (PyByteArray_Check(py_obj)) { // TODO
-		//return as_error_update(err, AEROSPIKE_ERR, "NOT YET IMPLEMENTED4\n");
+	} else if (PyByteArray_Check(py_obj)) {
 		as_bytes *bytes;
 		GET_BYTES_POOL(bytes, static_pool, err);
 		if (err->code == AEROSPIKE_OK) {
@@ -577,13 +576,11 @@ as_status add_pred_macros(AerospikeClient * self, as_static_pool * static_pool, 
 				append_array(1, as_exp_list_size(pred->ctx, {}));
 				break;
 			case OP_LIST_GET_BY_VALUE:
-				{	
-					if (get_int64_t(err, AS_PY_LIST_RETURN_KEY, pred->pydict, &lval1) != AEROSPIKE_OK) {
-						return err->code;
-					}
-
-					append_array(2, as_exp_list_get_by_value(pred->ctx, lval1, {}, {})); // - 2 for value, bin
+				if (get_int64_t(err, AS_PY_LIST_RETURN_KEY, pred->pydict, &lval1) != AEROSPIKE_OK) {
+					return err->code;
 				}
+
+				append_array(2, as_exp_list_get_by_value(pred->ctx, lval1, {}, {})); // - 2 for value, bin
 				break;
 			case OP_LIST_GET_BY_VALUE_RANGE:
 				if (get_int64_t(err, AS_PY_LIST_RETURN_KEY, pred->pydict, &lval1) != AEROSPIKE_OK) {

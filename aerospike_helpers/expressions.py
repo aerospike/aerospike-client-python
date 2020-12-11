@@ -159,10 +159,7 @@ LIST_ORDER_KEY = "list_order"
 REGEX_OPTIONS_KEY = "regex_options"
 
 # TODO
-# finish HLL docstring examples
-# Review docstrings
 # Write module docstring and example
-# Finish bit andf HLL expression tests
 
 class ExprOp:
     EQ = 1
@@ -1608,7 +1605,7 @@ class ListGetByValue(BaseExpr):
         """        
         self.children = (
             value,
-            bin if isinstance(bin, BaseExpr) else ListBin(bin)
+            bin if isinstance(bin, BaseExpr) else ListBin(bin) #TODO have this check for is_instance list and let that go
         )
         self.fixed = {RETURN_TYPE_KEY: return_type}
 
@@ -2546,7 +2543,7 @@ class MapRemoveByRankRange(BaseExpr):
 ######################
 
 
-class MapSize(BaseExpr): #TODO do tests
+class MapSize(BaseExpr):
     op = aerospike.OP_MAP_SIZE
 
     def __init__(self, ctx: TypeCDT, bin: TypeBinName):
@@ -3100,7 +3097,7 @@ class MapGetByRankRange(BaseExpr):
 
 
 ########################
-# Bit Modify Expressions #TODO tests
+# Bit Modify Expressions
 ########################
 
 
@@ -3409,7 +3406,7 @@ class BitAdd(BaseExpr):
             Example::
                 # Let blob bin "c" == bytearray([1] * 5).
                 # Bit add the second byte of bin "c" to get bytearray([1, 2, 1, 1, 1])
-                expr = BitAdd(None, 8, 8, 1, aerospike.BIT_OVERFLOW_FAIL).compile() #TODO test this
+                expr = BitAdd(None, 8, 8, 1, aerospike.BIT_OVERFLOW_FAIL).compile()
         """        
         self.children = (
             bit_offset,
@@ -3441,13 +3438,13 @@ class BitSubtract(BaseExpr):
             Example::
                 # Let blob bin "c" == bytearray([1] * 5).
                 # Bit subtract the second byte of bin "c" to get bytearray([1, 0, 1, 1, 1])
-                expr = BitSubtract(None, 8, 8, 1, aerospike.BIT_OVERFLOW_FAIL).compile() #TODO test this
+                expr = BitSubtract(None, 8, 8, 1, aerospike.BIT_OVERFLOW_FAIL).compile()
         """        
         self.children = (
             bit_offset,
             bit_size,
             value,
-            _GenericExpr(150, 0, {VALUE_KEY: policy['flags']} if policy is not None and 'flags' in policy else {VALUE_KEY: 0}), #TODO: decide if this is best
+            _GenericExpr(150, 0, {VALUE_KEY: policy['flags']} if policy is not None and 'flags' in policy else {VALUE_KEY: 0}),
             _GenericExpr(150, 0, {VALUE_KEY: action} if action is not None else {VALUE_KEY: 0}),
             bin if isinstance(bin, BaseExpr) else BlobBin(bin)
         )
@@ -3529,7 +3526,7 @@ class BitCount(BaseExpr):
             Example::
                 # Let blob bin "c" == bytearray([3] * 5).
                 # Count set bits starting at 3rd byte in bin "c" to get count of 6.
-                expr = BitCount(16, 8 * 3, BlobBin("c")).compile() #TODO test this
+                expr = BitCount(16, 8 * 3, BlobBin("c")).compile()
         """        
         self.children = (
             bit_offset,
@@ -3609,7 +3606,7 @@ class BitGetInt(BaseExpr):
             Example::
                 # Let blob bin "c" == bytearray([1, 2, 3, 4, 5).
                 # Get 2 as an integer from bin "c".
-                expr = BitGetInt(8, 8, True, BlobBin("c")).compile() #TODO test this
+                expr = BitGetInt(8, 8, True, BlobBin("c")).compile()
         """        
         self.children = (
             bit_offset,
@@ -3627,7 +3624,7 @@ class BitGetInt(BaseExpr):
 class HLLAdd(BaseExpr):
     op = aerospike.OP_HLL_ADD
 
-    def __init__(self, policy: TypePolicy, list: TypeListValue, index_bit_count: Union[int, None], mh_bit_count: Union[int, None], bin: TypeBinName): #TODO test
+    def __init__(self, policy: TypePolicy, list: TypeListValue, index_bit_count: Union[int, None], mh_bit_count: Union[int, None], bin: TypeBinName):
         """ Create an expression that performs an hll_add.
 
             Args:
@@ -3690,9 +3687,11 @@ class HLLGetUnion(BaseExpr):
 
             :return: HLL bin representing the set union.
         
-            Example:: #TODO how can this be done without an hll get operation, will it work with [HLLBin(),...]
-                # .
-                expr = .compile()
+            Example::
+                # Let HLLBin "d" contain keys ['key%s' % str(i) for i in range(10000)].
+                # Let list be a list containing HLL objects retrieved from the aerospike database.
+                # Find the union of HLL bin "d" and all HLLs in list.
+                expr = HLLGetUnion(list, HLLBin("d")).compile()
         """        
         self.children = (
             list,
@@ -3700,7 +3699,7 @@ class HLLGetUnion(BaseExpr):
         )
 
 
-class HLLGetUnionUnionCount(BaseExpr):
+class HLLGetUnionCount(BaseExpr):
     op = aerospike.OP_HLL_GET_UNION_COUNT
 
     def __init__(self, list: TypeListValue, bin: TypeBinName):
@@ -3712,9 +3711,11 @@ class HLLGetUnionUnionCount(BaseExpr):
 
             :return: Integer bin, estimated number of elements in the set union.
         
-            Example:: #TODO how can this be done without an hll get operation
-                # .
-                expr = .compile()
+            Example::
+                # Let HLLBin "d" contain keys ['key%s' % str(i) for i in range(10000)].
+                # Let list be a list containing one HLL object with keys ['key%s' % str(i) for i in range(5000, 15000)].
+                # Find the count of keys in the union of HLL bin "d" and all HLLs in list. (Should be around 15000)
+                expr = HLLGetUnionCount(list, HLLBin("d")).compile()
         """        
         self.children = (
             list,
@@ -3735,8 +3736,10 @@ class HLLGetIntersectCount(BaseExpr):
             :return: Integer bin, estimated number of elements in the set intersection.
         
             Example::
-                #.
-                expr = .compile()
+                # Let HLLBin "d" contain keys ['key%s' % str(i) for i in range(10000)].
+                # Let list be a list containing one HLL object with keys ['key%s' % str(i) for i in range(5000, 15000)].
+                # Find the count of keys in the intersection of HLL bin "d" and all HLLs in list. (Should be around 5000)
+                expr = HLLGetIntersectCount(list, HLLBin("d")).compile()
         """        
         self.children = (
             list,
@@ -3757,8 +3760,11 @@ class HLLGetSimilarity(BaseExpr):
             :return: Float bin, stimated similarity between 0.0 and 1.0.
         
             Example::
-                #.
-                expr = .compile()
+                # Let HLLBin "d" contain keys ['key%s' % str(i) for i in range(10000)].
+                # Let list be a list containing one HLL object with keys ['key%s' % str(i) for i in range(5000, 15000)].
+                # Find the similarity the HLL in list to HLL bin "d". (Should be around 0.33)
+                # Note that similarity is defined as intersect(A, B, ...) / union(A, B, ...).
+                expr = HLLGetSimilarity(list, HLLBin("d")).compile()
         """        
         self.children = (
             list,
@@ -3797,13 +3803,13 @@ class HLLMayContain(BaseExpr):
                 list (TypeListValue): A list expression of keys to check if the HLL may contain them.
                 bin (TypeBinName): Integer bin, a hll bin name or bin expression to read from.
 
-            :return: 1 bin contains any of list, 0 otherwise.
+            :return: 1 if bin contains any key in list, 0 otherwise.
         
             Example::
                 # Check if HLL bin "d" contains any of the keys in `list`.
                 expr = HLLMayContain(["key1", "key2", "key3"], HLLBin("d")).compile()
         """        
         self.children = (
-            values,
+            list,
             bin if isinstance(bin, BaseExpr) else HLLBin(bin),
         )
