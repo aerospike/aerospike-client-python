@@ -66,7 +66,7 @@ def add_ctx_op(ctx_type, value):
     ctx_func = ctx_ops[ctx_type]
     return ctx_func(value)
 
-def verify_all_expression_avenues(client, test_ns, test_set, expr, op_bin, expected):
+def verify_multiple_expression_avenues(client, test_ns, test_set, expr, op_bin, expected):
     keys = [(test_ns, test_set, i) for i in range(20)]
 
     # operate
@@ -103,16 +103,19 @@ def verify_all_expression_avenues(client, test_ns, test_set, expr, op_bin, expec
     records = scan_obj.results({'expressions': expr})
     assert len(records) == expected
 
-    # TODO other scan methods
+
+    # other scan methods
+    # execute_background tested test_scan_execute_background.py 
+    # foreach tested test_scan.py
 
     # query results
     query_obj = client.query(test_ns, test_set)
     records = query_obj.results({'expressions': expr})
     assert len(records) == expected
 
-    # TODO other query methods
-
-    # TODO client.remove
+    # other query methods
+    # execute background tested in test_query_execute_background.py 
+    # foreach tested in test_query.py
 
 
 class TestUsrDefinedClass():
@@ -267,18 +270,13 @@ class TestExpressions(TestBaseClass):
         
         self.as_connection.put(('test', u'demo', 19), {'extra': 'record'}, policy={'key': aerospike.POLICY_KEY_SEND})
         self.as_connection.put(('test', u'demo', 'k_string'), {'test': 'data'}, policy={'key': aerospike.POLICY_KEY_SEND})
-        self.as_connection.put(('test', u'demo', b'b_string'), {'test': 'b_data'}, policy={'key': aerospike.POLICY_KEY_SEND})
+        self.as_connection.put(('test', u'demo', bytearray('b_string', 'utf-8')), {'test': 'b_data'}, policy={'key': aerospike.POLICY_KEY_SEND})
 
         ctx_sort_nested_map1 = [
             cdt_ctx.cdt_ctx_list_index(4)
         ]
 
-        sort_ops = [
-            #list_operations.list_set_order('ilist_bin', aerospike.LIST_ORDERED),
-            # list_operations.list_set_order('slist_bin', aerospike.LIST_ORDERED),
-            # list_operations.list_set_order('bllist_bin', aerospike.LIST_ORDERED),
-            # list_operations.list_set_order('bylist_bin', aerospike.LIST_ORDERED),
-            #map_operations.map_set_policy('list_bin', {'map_order': aerospike.MAP_KEY_ORDERED}, ctx_sort_nested_map1),
+        HLL_ops = [
             hll_operations.hll_add('hll_bin', ['key%s' % str(i) for i in range(10000)], 15, 49),
             hll_operations.hll_add('hll_bin2', ['key%s' % str(i) for i in range(5000, 15000)], 15, 49),
             hll_operations.hll_add('hll_bin3', ['key%s' % str(i) for i in range(20000, 30000)], 15, 49)
@@ -286,9 +284,7 @@ class TestExpressions(TestBaseClass):
 
         #apply map order policy
         for i in range(19):
-            _, _, _ = self.as_connection.operate(('test', u'demo', i), sort_ops)
-        
-        _, _, rec = self.as_connection.get(('test', u'demo', 10))
+            _, _, _ = self.as_connection.operate(('test', u'demo', i), HLL_ops)
 
         def teardown():
             for i in range(19):
@@ -297,7 +293,7 @@ class TestExpressions(TestBaseClass):
         
             as_connection.remove(('test', u'demo', 19))
             as_connection.remove(('test', u'demo', 'k_string'))
-            as_connection.remove(('test', u'demo', b'b_string'))
+            as_connection.remove(('test', u'demo', bytearray('b_string', 'utf-8')))
 
         request.addfinalizer(teardown)
 
@@ -313,8 +309,29 @@ class TestExpressions(TestBaseClass):
 
         return sqrt(rel_err_sum)
 
-    def test_scan_with_results_method_and_expressions(self): #TODO add new exprs, change old expr names
+    def test_DeviceSize_pos(self):
+        expr = Eq(DeviceSize(), 0)
+        record = self.as_connection.get(('test', u'demo', 19), policy={'expressions': expr.compile()})
+        assert(record[2]['extra'] == 'record')
 
+    def test_TTL_pos(self):
+        expr = NE(TTL(), 0)
+        record = self.as_connection.get(('test', u'demo', 19), policy={'expressions': expr.compile()})
+        assert(record[2]['extra'] == 'record')
+
+    def test_VoidTime_pos(self):
+        expr = NE(VoidTime(), 0)
+        record = self.as_connection.get(('test', u'demo', 19), policy={'expressions': expr.compile()})
+        assert(record[2]['extra'] == 'record')
+
+    def test_remove_with_expressions_neg(self):
+        self.as_connection.put(('test', u'demo', 25), {'test': 'test_data'})
+
+        expr = Eq(KeyInt(), 26)
+        with pytest.raises(e.FilteredOut):
+            record = self.as_connection.remove(('test', u'demo', 25), policy={'expressions': expr.compile()})
+
+    def test_scan_with_results_method_and_expressions(self):
         ns = 'test'
         st = 'demo'
 
@@ -327,29 +344,26 @@ class TestExpressions(TestBaseClass):
         record = self.as_connection.get(('test', u'demo', 'k_string'), policy={'expressions': expr.compile()})
         assert(record[2]['test'] == 'data')
 
-        expr =  Eq(KeyBlob(), b'b_string')
-        record = self.as_connection.get(('test', u'demo', b'b_string'), policy={'expressions': expr.compile()})
+        expr =  Eq(KeyBlob(), bytearray('b_string', 'utf-8'))
+        record = self.as_connection.get(('test', u'demo', bytearray('b_string', 'utf-8')), policy={'expressions': expr.compile()})
         assert(record[2]['test'] == 'b_data')
 
-        expr =  Eq(KeyExists(), False) #TODO Can I use this since the python bool will be serialized?
-        record = self.as_connection.get(('test', u'demo', b'b_string'), policy={'expressions': expr.compile()})
+        expr =  KeyExists()
+        record = self.as_connection.get(('test', u'demo', bytearray('b_string', 'utf-8')), policy={'expressions': expr.compile()})
         assert(record[2]['test'] == 'b_data')
 
         expr = And(
-            Eq(BinExists("age"), True),
+            BinExists("age"),
             Eq(SetName(), 'demo'),
-            Eq(DeviceSize(), 0), #TODO move this to its own test with an xfail since it will fail on systems without storage-engine: memory.
             NE(LastUpdateTime(), 0),
-            NE(VoidTime(), 0), #TODO this could fail on a system with no ttl.
             NE(SinceUpdateTime(), 0),
-            TTL(SinceUpdateTime(), 0), #TODO this could fail on a system with no ttl.
-            Eq(IsTombstone(), False),
+            Not(IsTombstone()),
             Eq(DigestMod(2), 0)
         )
 
         scan_obj = self.as_connection.scan(ns, st)
         records = scan_obj.results({'expressions': expr.compile()})
-        assert(19 == len(records))
+        assert(10 == len(records))
 
     @pytest.mark.parametrize("bin, expected_bin_type", [
         ("ilist_bin", aerospike.AS_BYTES_LIST),
@@ -361,23 +375,15 @@ class TestExpressions(TestBaseClass):
         Invoke BinType() on various kinds of bins.
         """
         expr = Eq(BinType(bin), expected_bin_type).compile()
-        verify_all_expression_avenues(self.as_connection, self.test_ns, self.test_set, expr, bin, 19)
-
+        verify_multiple_expression_avenues(self.as_connection, self.test_ns, self.test_set, expr, bin, 19)
 
     @pytest.mark.parametrize("ctx_types, ctx_indexes, bin_type, index, return_type, check, expected", [
         (None, None, ResultType.INTEGER, 1, aerospike.LIST_RETURN_VALUE, 10, 1),
         (None, None, ResultType.STRING, 2, aerospike.LIST_RETURN_VALUE, "string_test3", 1),
         (None, None, ResultType.BLOB, 6, aerospike.LIST_RETURN_VALUE, "bytes_test3".encode("utf8"), 1),
         (None, None, ResultType.BLOB, 5, aerospike.LIST_RETURN_VALUE, bytearray("bytearray_test3", "utf8"), 1),
-        #(None, None, ResultType.BLOB, 7, aerospike.LIST_RETURN_VALUE, True, 9), #TODO needs debuging
-        #(None, None, ResultType.BLOB, 5, aerospike.LIST_RETURN_VALUE, None, 19), #TODO use this for negative testing as it used to cause a crash
-        #(None, None, 0, 5, aerospike.LIST_RETURN_VALUE, None, 19), #TODO needs investigating build_call - error 4 invalid result_type 0
         (None, None, ResultType.LIST, 3, aerospike.LIST_RETURN_VALUE, [26, 27, 28, 6], 1),
-        ([list_index], [3], ResultType.INTEGER, 3, aerospike.LIST_RETURN_VALUE, 6, 1), #TODO needs debugging
-        #(None, None, ResultType.MAP, 4, aerospike.LIST_RETURN_VALUE, {31: 31, 32: 32, 33: 33, 12: 12}, 1), TODO debug map values in EQ (server issue)
-        #(None, None, 6, 8, aerospike.LIST_RETURN_VALUE, aerospike.null, 19),
-        #(None, None, 8, 9, aerospike.LIST_RETURN_VALUE, GEO_POLY, 19), #TODO needs debugging 'build_compare - error 4 cannot compare type 8'
-        #(None, None, ResultType.BLOB, 0, aerospike.LIST_RETURN_VALUE, TestUsrDefinedClass(10), 1) #NOTE Cannot compare literal python object (as_py_bytes) to as_bytes.
+        ([list_index], [3], ResultType.INTEGER, 3, aerospike.LIST_RETURN_VALUE, 6, 1),
     ])
     def test_ListGetByIndex_pos(self, ctx_types, ctx_indexes, bin_type, index, return_type, check, expected):
         """
@@ -392,14 +398,7 @@ class TestExpressions(TestBaseClass):
             ctx = None
         
         expr = Eq(ListGetByIndex(ctx, return_type, bin_type, index, 'list_bin'), check)         
-        verify_all_expression_avenues(self.as_connection, self.test_ns, self.test_set, expr.compile(), 'list_bin', expected)
-
-# Oct 06 2020 12:08:36 GMT: WARNING (particle): (msgpack_in.c:1099) msgpack_sz_internal: invalid at i 1 count 2
-# Oct 06 2020 12:08:36 GMT: WARNING (exp): (exp.c:755) invalid instruction at offset 60
-# Oct 06 2020 12:08:36 GMT: WARNING (scan): (scan.c:752) basic scan job failed expressions processing
-# Oct 06 2020 12:08:36 GMT: WARNING (particle): (msgpack_in.c:1099) msgpack_sz_internal: invalid at i 1 count 2
-# Oct 06 2020 12:08:36 GMT: WARNING (exp): (exp.c:755) invalid instruction at offset 86
-# Oct 06 2020 12:08:36 GMT: WARNING (scan): (scan.c:752) basic scan job failed expressions processing
+        verify_multiple_expression_avenues(self.as_connection, self.test_ns, self.test_set, expr.compile(), 'list_bin', expected)
 
     @pytest.mark.parametrize("ctx_types, ctx_indexes, value, return_type, check, expected", [
         (None, None, 10, aerospike.LIST_RETURN_VALUE, [10], 1),
@@ -429,7 +428,7 @@ class TestExpressions(TestBaseClass):
             ctx = None
         
         expr = Eq(ListGetByValue(ctx, return_type, value, 'list_bin'), check)
-        verify_all_expression_avenues(self.as_connection, self.test_ns, self.test_set, expr.compile(), 'list_bin', expected)
+        verify_multiple_expression_avenues(self.as_connection, self.test_ns, self.test_set, expr.compile(), 'list_bin', expected)
 
     @pytest.mark.parametrize("ctx_types, ctx_indexes, begin, end, return_type, check, expected", [
         (None, None, 10, 13, aerospike.LIST_RETURN_VALUE, [[10], [11], [12]], 3),
@@ -440,8 +439,7 @@ class TestExpressions(TestBaseClass):
         (None, None, bytearray("bytearray_test3", "utf8"), bytearray("bytearray_test6", "utf8"), aerospike.LIST_RETURN_REVERSE_INDEX, [[6], [6], [6]], 3),
         (None, None, [26, 27, 28, 6], [26, 27, 28, 9], aerospike.LIST_RETURN_VALUE, [[[26, 27, 28, 6]], [[26, 27, 28, 7]], [[26, 27, 28, 8]]], 3),
         ([list_index], [3], 5, 9, aerospike.LIST_RETURN_REVERSE_RANK, [[3], [3], [3]], 4),
-        #(None, None, {12: 12, 31: 31, 32: 32, 33: 33}, {15: 15, 31: 31, 32: 32, 33: 33}, aerospike.LIST_RETURN_INDEX, [[4], [4], [4]], 3), #TODO why 6 matches? WHat is expected?
-        (None, None, GEO_POLY, aerospike.CDTInfinite(), aerospike.LIST_RETURN_VALUE, [[GEO_POLY], [GEO_POLY], [GEO_POLY]], 19), #why doesn't CDTWildCard() get same matches as inf?
+        (None, None, GEO_POLY, aerospike.CDTInfinite(), aerospike.LIST_RETURN_VALUE, [[GEO_POLY], [GEO_POLY], [GEO_POLY]], 19),
         (None, None, TestUsrDefinedClass(4), TestUsrDefinedClass(7), aerospike.LIST_RETURN_VALUE, [[TestUsrDefinedClass(4)], [TestUsrDefinedClass(5)], [TestUsrDefinedClass(6)]], 3) #NOTE py_bytes cannot be compard directly server side
     ])
     def test_ListGetByValueRange_pos(self, ctx_types, ctx_indexes, begin, end, return_type, check, expected):
@@ -462,7 +460,7 @@ class TestExpressions(TestBaseClass):
                     Eq(ListGetByValueRange(ctx, return_type, begin, end, 'list_bin'), check[2]),
         )
 
-        verify_all_expression_avenues(self.as_connection, self.test_ns, self.test_set, expr.compile(), 'list_bin', expected)
+        verify_multiple_expression_avenues(self.as_connection, self.test_ns, self.test_set, expr.compile(), 'list_bin', expected)
 
     @pytest.mark.parametrize("ctx, begin, end, return_type, check, expected", [
         ("bad ctx", 10, 13, aerospike.LIST_RETURN_VALUE, [[10], [11], [12]], e.ParamError),
@@ -480,12 +478,12 @@ class TestExpressions(TestBaseClass):
         )
 
         with pytest.raises(expected):
-            verify_all_expression_avenues(self.as_connection, self.test_ns, self.test_set, expr.compile(), 'list_bin', expected)
+            verify_multiple_expression_avenues(self.as_connection, self.test_ns, self.test_set, expr.compile(), 'list_bin', expected)
 
     @pytest.mark.parametrize("ctx_types, ctx_indexes, value, return_type, check, expected", [
         (None, None, [10, [26, 27, 28, 10]], aerospike.LIST_RETURN_VALUE, [10, [26, 27, 28, 10]], 1),
         (None, None, ["string_test3", 3], aerospike.LIST_RETURN_VALUE, [3, "string_test3"], 1),
-        (None, None, ["string_test3", 3], aerospike.LIST_RETURN_VALUE, ["string_test3", 3], 0), #why doesn't this work like above? is order
+        (None, None, ["string_test3", 3], aerospike.LIST_RETURN_VALUE, ["string_test3", 3], 0),
         (None, None, ["bytes_test18".encode("utf8"), 18, GEO_POLY], aerospike.LIST_RETURN_VALUE, [18, "bytes_test18".encode("utf8"), GEO_POLY], 1),
         (None, None, LIST_BIN_EXAMPLE, aerospike.LIST_RETURN_VALUE, LIST_BIN_EXAMPLE, 1),
         (None, None, LIST_BIN_EXAMPLE, aerospike.LIST_RETURN_INDEX, [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11], 1),
@@ -507,10 +505,10 @@ class TestExpressions(TestBaseClass):
             ctx = None
         
         expr = Eq(ListGetByValueList(ctx, return_type, value, 'list_bin'), check)
-        verify_all_expression_avenues(self.as_connection, self.test_ns, self.test_set, expr.compile(), 'list_bin', expected)
+        verify_multiple_expression_avenues(self.as_connection, self.test_ns, self.test_set, expr.compile(), 'list_bin', expected)
 
     @pytest.mark.parametrize("ctx_types, ctx_indexes, value, return_type, check, expected", [
-        (None, None, [10, [26, 27, 28, 10]], aerospike.LIST_RETURN_VALUE, (10, [26, 27, 28, 10]), e.InvalidRequest) # bad tuple
+        (None, None, [10, [26, 27, 28, 10]], aerospike.LIST_RETURN_VALUE, (10, [26, 27, 28, 10]), e.InvalidRequest)
     ])
     def test_ListGetByValueList_neg(self, ctx_types, ctx_indexes, value, return_type, check, expected):
         """
@@ -526,20 +524,13 @@ class TestExpressions(TestBaseClass):
         
         expr = Eq(ListGetByValueList(ctx, return_type, value, 'list_bin'), check)
         with pytest.raises(expected):
-            verify_all_expression_avenues(self.as_connection, self.test_ns, self.test_set, expr.compile(), 'list_bin', expected)
+            verify_multiple_expression_avenues(self.as_connection, self.test_ns, self.test_set, expr.compile(), 'list_bin', expected)
 
-    @pytest.mark.parametrize("ctx_types, ctx_indexes, value, rank, return_type, check, expected", [ #TODO more tests
+    @pytest.mark.parametrize("ctx_types, ctx_indexes, value, rank, return_type, check, expected", [
         ([list_index], [3], 26, 0, aerospike.LIST_RETURN_COUNT, 3, 19),
         ([list_index], [3], 10, 1, aerospike.LIST_RETURN_COUNT, 3, 9),
         ([list_index], [3], 10, 2, aerospike.LIST_RETURN_VALUE, [27, 28], 9),
         (None, None, "string_test10", 0,  aerospike.LIST_RETURN_COUNT, 10, 17),
-        # (None, None, ["bytes_test18".encode("utf8"), 18, GEO_POLY], aerospike.LIST_RETURN_VALUE, [18, "bytes_test18".encode("utf8"), GEO_POLY], 1),
-        # (None, None, LIST_BIN_EXAMPLE, aerospike.LIST_RETURN_VALUE, LIST_BIN_EXAMPLE, 1),
-        # (None, None, LIST_BIN_EXAMPLE, aerospike.LIST_RETURN_INDEX, [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10], 1),
-        # (None, None, LIST_BIN_EXAMPLE, aerospike.LIST_RETURN_REVERSE_INDEX, [10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0], 1),
-        # (None, None, LIST_BIN_EXAMPLE, aerospike.LIST_RETURN_COUNT, 11, 1),
-        # (None, None, [10], aerospike.LIST_RETURN_RANK, [1], 1),
-        # ([list_index], [6], [26, 6], aerospike.LIST_RETURN_INDEX, [0, 3], 1),
     ])
     def test_ListGetByValueRelRankRangeToEnd_pos(self, ctx_types, ctx_indexes, value, rank, return_type, check, expected):
         """
@@ -554,7 +545,7 @@ class TestExpressions(TestBaseClass):
             ctx = None
         
         expr = Eq(ListGetByValueRelRankRangeToEnd(ctx, return_type, value, rank, 'list_bin'), check)
-        verify_all_expression_avenues(self.as_connection, self.test_ns, self.test_set, expr.compile(), 'list_bin', expected)
+        verify_multiple_expression_avenues(self.as_connection, self.test_ns, self.test_set, expr.compile(), 'list_bin', expected)
 
     @pytest.mark.parametrize("ctx_types, ctx_indexes, value, rank, return_type, expected", [
         ([list_index], [3], 26, "bad_rank", "bad_return_type", e.ParamError)
@@ -573,20 +564,13 @@ class TestExpressions(TestBaseClass):
         
         expr = ListGetByValueRelRankRangeToEnd(ctx, return_type, value, rank, 'list_bin')
         with pytest.raises(expected):
-            verify_all_expression_avenues(self.as_connection, self.test_ns, self.test_set, expr.compile(), 'list_bin', expected)
+            verify_multiple_expression_avenues(self.as_connection, self.test_ns, self.test_set, expr.compile(), 'list_bin', expected)
 
 
-    @pytest.mark.parametrize("ctx_types, ctx_indexes, value, rank, count, return_type, check, expected", [ #TODO more tests
+    @pytest.mark.parametrize("ctx_types, ctx_indexes, value, rank, count, return_type, check, expected", [
         ([list_index], [3], 26, 0, 3, aerospike.LIST_RETURN_COUNT, 3, 19),
-        ([list_index], [3], 26, 0, 2, aerospike.LIST_RETURN_VALUE, [27, 26], 19), #This might need the returned list to be sorted
+        ([list_index], [3], 26, 0, 2, aerospike.LIST_RETURN_VALUE, [27, 26], 19),
         (None, None, "string_test10", 0, 1, aerospike.LIST_RETURN_INDEX, [3], 2),
-        # (None, None, ["bytes_test18".encode("utf8"), 18, GEO_POLY], aerospike.LIST_RETURN_VALUE, [18, "bytes_test18".encode("utf8"), GEO_POLY], 1),
-        # (None, None, LIST_BIN_EXAMPLE, aerospike.LIST_RETURN_VALUE, LIST_BIN_EXAMPLE, 1),
-        # (None, None, LIST_BIN_EXAMPLE, aerospike.LIST_RETURN_INDEX, [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10], 1),
-        # (None, None, LIST_BIN_EXAMPLE, aerospike.LIST_RETURN_REVERSE_INDEX, [10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0], 1),
-        # (None, None, LIST_BIN_EXAMPLE, aerospike.LIST_RETURN_COUNT, 11, 1),
-        # (None, None, [10], aerospike.LIST_RETURN_RANK, [1], 1),
-        # ([list_index], [6], [26, 6], aerospike.LIST_RETURN_INDEX, [0, 3], 1),
     ])
     def test_ListGetByValueRelRankRange_pos(self, ctx_types, ctx_indexes, value, rank, count, return_type, check, expected):
         """
@@ -601,19 +585,14 @@ class TestExpressions(TestBaseClass):
             ctx = None
         
         expr = Eq(ListGetByValueRelRankRange(ctx, return_type, value, rank, count, 'list_bin'), check)
-        verify_all_expression_avenues(self.as_connection, self.test_ns, self.test_set, expr.compile(), 'list_bin', expected)
+        verify_multiple_expression_avenues(self.as_connection, self.test_ns, self.test_set, expr.compile(), 'list_bin', expected)
 
     @pytest.mark.parametrize("bin, values", [
-        ("ilist_bin", [ResultType.INTEGER, 6, 1, 7, [2, 6], 1]), #what was happening with everything being true when values[0] == 1?
+        ("ilist_bin", [ResultType.INTEGER, 6, 1, 7, [2, 6], 1]),
         ("slist_bin", [ResultType.STRING, "f", "b", "g", ["d", "f"], "b"]),
         ("llist_bin", [ResultType.LIST, [1, 4], [1, 2], [1, 6], [[1, 3], [1, 4]], [1, 2]]),
-        # ("bllist_bin", [ResultType.BLOB, TestUsrDefinedClass(4), TestUsrDefinedClass(1), TestUsrDefinedClass(6), [TestUsrDefinedClass(3), TestUsrDefinedClass(4)], TestUsrDefinedClass(1)]) comparison with anything other than AS_BYTES_BLOB is unsupported.
-        #("mlist_bin", [ResultType.MAP, {1: 1, 4: 4}, {1: 1, 2: 2}, {1: 1, 6: 6}, [{1: 1, 3: 3}, {1: 1, 4: 4}], {1: 1, 2: 2}]) # pending investigation
         ("bylist_bin", [ResultType.BLOB, "f".encode("utf8"), "b".encode("utf8"), "g".encode("utf8"), ["d".encode("utf8"), "f".encode("utf8")], "b".encode("utf8")]),
-        #("bolist_bin", [ResultType.BLOB, True, False, True, [False, True], False]) comparison with anything other than AS_BYTES_BLOB is unsupported.
-        #TODO nlist_bin test
         ("flist_bin", [ResultType.FLOAT, 6.0, 1.0, 7.0, [2.0, 6.0], 1.0]),
-        #("flist_bin", [ResultType.GEOJSON, GEO_POLY2, GEO_POLY, GEO_POLY2, [GEO_POLY1, GEO_POLY2], GEO_POLY]) ask about geojson support
     ])
     def test_ListReadOps_pos(self, bin, values):
         """
@@ -647,31 +626,13 @@ class TestExpressions(TestBaseClass):
             )
         )
 
-        # ops = [
-        #     list_operations.list_get_by_index(bin, 0, aerospike.LIST_RETURN_VALUE)
-        # ]
-
-        # _, _, res = self.as_connection.operate(('test', u'demo', 10), ops)
-        # # print("******* ", res[bin].data)
-        # x = res[bin]
-
-        # expr =             Eq(
-        #         ListGetByValueRelRankRange(None, aerospike.LIST_RETURN_COUNT, 
-        #             x, 1, 3, 'bllist_bin'), #why did this fail with aerospike.CDTInfinite for count?
-        #         2)
-        
-        # expr = Eq(
-        #     ListGetByIndex(ResultType.MAP, None, aerospike.LIST_RETURN_VALUE, 0, bin),
-        #     {1: 1, 2: 2}
-        # )
-
-        verify_all_expression_avenues(self.as_connection, self.test_ns, self.test_set, expr.compile(), bin, 19)
+        verify_multiple_expression_avenues(self.as_connection, self.test_ns, self.test_set, expr.compile(), bin, 19)
 
     @pytest.mark.parametrize("bin, ctx, policy, values, expected", [
         (
             "ilist_bin",
             None,
-            {}, 
+            {'write_flags': aerospike.LIST_WRITE_ADD_UNIQUE}, 
             [
                 20,
                 [3, 9],
@@ -687,7 +648,7 @@ class TestExpressions(TestBaseClass):
             ], 
             [
                 [1, 2, 3, 4, 6, 9, 20],
-                [10, 24, 25, 2, 6],
+                [10, 24, 25],
                 [1],
                 []
             ]
@@ -700,8 +661,8 @@ class TestExpressions(TestBaseClass):
                 'h',
                 ['e', 'g'],
                 'c',
-                [24, 25], #
-                10,
+                ['x', 'y'], #
+                'b',
                 'b', #
                 ['d', 'f'],
                 'b', #
@@ -711,7 +672,7 @@ class TestExpressions(TestBaseClass):
             ], 
             [
                 ['b', 'c', 'd', 'e', 'f', 'g', 'h'],
-                [10, 24, 25, 2, 6],
+                ['b', 'x', 'y',],
                 ['b'],
                 ['b', 'd']
             ]
@@ -735,7 +696,7 @@ class TestExpressions(TestBaseClass):
             ], 
             [
                 [[1, 2], [1, 3], [1, 4], [1, 5], [1, 6], [1,9], [1, 20]],
-                [10, 24, 25, 2, 6],
+                [[1, 10], [1, 24], [1, 25]],
                 [[1, 2]],
                 []
             ]
@@ -759,7 +720,7 @@ class TestExpressions(TestBaseClass):
             ], 
             [
                 [{1: 2}, {1: 3}, {1: 4}, {1: 5}, {1: 6}, {1: 9}, {1: 20}],
-                [10, 24, 25, 2, 6],
+                [{1: 10}, {1: 24}, {1: 25}],
                 [{1: 2}],
                 []
             ]
@@ -772,8 +733,8 @@ class TestExpressions(TestBaseClass):
                 b'h',
                 [b'e', b'g'],
                 b'c',
-                [24, 25], #
-                10,
+                [b'x', b'y'], #
+                b'b',
                 b'b', #
                 [b'd', b'f'],
                 b'b', #
@@ -783,7 +744,7 @@ class TestExpressions(TestBaseClass):
             ], 
             [
                 [b'b', b'c', b'd', b'e', b'f', b'g', b'h'],
-                [10, 24, 25, 2, 6],
+                [b'b', b'x', b'y'],
                 [b'b'],
                 []
             ]
@@ -807,7 +768,7 @@ class TestExpressions(TestBaseClass):
             ], 
             [
                 [1.0, 2.0, 3.0, 4.0, 6.0, 9.0, 20.0],
-                [10.0, 24.0, 25.0, 2.0, 6.0],
+                [10.0, 24.0, 25.0],
                 [1.0],
                 []
             ]
@@ -821,19 +782,20 @@ class TestExpressions(TestBaseClass):
         expr = And(
             Eq(
                 ListGetByIndexRangeToEnd(ctx, aerospike.LIST_RETURN_VALUE, 0,                 
-                    ListSort(ctx, aerospike.LIST_SORT_DEFAULT, #TODO can't compare with constant list (server issue)        
+                    ListSort(ctx, aerospike.LIST_SORT_DEFAULT,      
                         ListAppend(ctx, policy, values[0],
                             ListAppendItems(ctx, policy, values[1],
                                 ListInsert(ctx, policy, 1, values[2], bin))))), #NOTE: invalid on ordered lists
                 expected[0]
             ),
-            # Eq( #TODO needs debugging
-            #     ListGetByRankRangeToEnd(ctx, aerospike.LIST_RETURN_VALUE, 0,
-            #         ListInsertItems(ctx, policy, 1, values[3], # this is having issues with returning lists len > 1
-            #             ListSet(ctx, policy, 0, values[4],
-            #                 ListClear(ctx, bin)))),
-            #     expected[1]
-            # ),
+            Eq( 
+                ListSort(ctx, aerospike.LIST_SORT_DEFAULT,
+                    ListGetByRankRangeToEnd(ctx, aerospike.LIST_RETURN_VALUE, 0,
+                        ListInsertItems(ctx, policy, 0, values[3],
+                            ListSet(ctx, policy, 0, values[4],
+                                ListClear(ctx, bin))))),
+                expected[1]
+            ),
             Eq(
                 ListRemoveByValue(ctx, values[5],
                     ListRemoveByValueList(ctx, values[6], bin)),
@@ -865,45 +827,46 @@ class TestExpressions(TestBaseClass):
             )
         )
 
-        verify_all_expression_avenues(self.as_connection, self.test_ns, self.test_set, expr.compile(), bin, 19)
+        verify_multiple_expression_avenues(self.as_connection, self.test_ns, self.test_set, expr.compile(), bin, 19)
     
 
     @pytest.mark.parametrize("bin, values, keys, expected", [
-        ("imap_bin", [ResultType.INTEGER, 6, 2, 7, [2, 6], 1], [3, 2, 4, [2, 3], 2], [[2, 6], [2, 6]]), #what was happening with everything being true when values[0] == 1?
-        # TODO test other types ("smap_bin", [ResultType.INTEGER, 6, 2, 7, [2, 6], 1], [3, 2, 4, [2, 3], 2], [[2, 6], [2, 6]])
+        ("imap_bin", [ResultType.INTEGER, 6, 2, 7, [2, 6], 1, ResultType.INTEGER], [3, 2, 4, [2, 3], 2], [2, [2, 6], [2, 6]]),
+        ("smap_bin", [ResultType.INTEGER, 'f', 'd', 'g', ['d', 'f'], 'b', ResultType.STRING], ['f', 'd', 'g', ['d', 'f'], 'd'], ['d', ['d', 'f'], ['d', 'f']]),
+        ("lmap_bin", [ResultType.INTEGER, [1, 4], [1, 3], [1, 5], [[1, 3], [1, 4]], [1, 2], ResultType.LIST], [3, 2, 4, [2, 3], 2], [[1, 3], [[1, 3], [1, 4]], [[1, 3], [1, 4]]]),
     ])
     def test_MapReadOps_pos(self, bin, values, keys, expected):
         """
         Invoke various map read expressions with many value types.
         """
-        #TODO MapGetByKey(None, values[0], aerospike.MAP_RETURN_VALUE, keys[0], bin)
+
         expr = And(
             Eq(
-                MapGetByKey(None, aerospike.MAP_RETURN_RANK, values[0], keys[0], bin), # keys[0] == 0 keys[1] == 1 keys[2] == 3
+                MapGetByKey(None, aerospike.MAP_RETURN_RANK, values[0], keys[0], bin),
                 2
             ),
             Eq(
-                MapGetByValue(None, aerospike.MAP_RETURN_RANK, values[1], bin), # keys[0] == 0 keys[1] == 1 keys[2] == 3
-                [2] #why does this yield a list but get_by_key does not? Should document what type each expression yield.
+                MapGetByValue(None, aerospike.MAP_RETURN_RANK, values[1], bin),
+                [2]
             ),
             Eq(
                 MapGetByIndex(None, aerospike.MAP_RETURN_RANK, values[0], 1, bin),
                 1
             ),
             Eq(
-                MapGetByRank(None, aerospike.MAP_RETURN_VALUE, values[0], 1, bin),
-                2
-            ),
-            Eq(
-                ListGetByIndexRangeToEnd(None, aerospike.LIST_RETURN_VALUE, 0,
-                    ListSort(None, aerospike.LIST_SORT_DEFAULT,
-                        MapGetByKeyRange(None, aerospike.MAP_RETURN_VALUE, keys[1], keys[2], bin))), # keys[0] == 0 keys[1] == 1 keys[2] == 3 NOTE: this returns a LIST
+                MapGetByRank(None, aerospike.MAP_RETURN_VALUE, values[6], 1, bin),
                 expected[0]
             ),
             Eq(
                 ListGetByIndexRangeToEnd(None, aerospike.LIST_RETURN_VALUE, 0,
                     ListSort(None, aerospike.LIST_SORT_DEFAULT,
-                        MapGetByKeyList(None, aerospike.MAP_RETURN_INDEX, keys[3], bin))), #TODO why is MAP_RETURN_RANK is invalid for this expr
+                        MapGetByKeyRange(None, aerospike.MAP_RETURN_VALUE, keys[1], keys[2], bin))),
+                expected[1]
+            ),
+            Eq(
+                ListGetByIndexRangeToEnd(None, aerospike.LIST_RETURN_VALUE, 0,
+                    ListSort(None, aerospike.LIST_SORT_DEFAULT,
+                        MapGetByKeyList(None, aerospike.MAP_RETURN_INDEX, keys[3], bin))),
                 [1, 2]
             ),
             Eq(
@@ -922,7 +885,7 @@ class TestExpressions(TestBaseClass):
                 ListGetByIndexRangeToEnd(None, aerospike.LIST_RETURN_VALUE, 0,
                     ListSort(None, aerospike.LIST_SORT_DEFAULT,
                         MapGetByValueRange(None, aerospike.MAP_RETURN_VALUE, values[2], values[3], bin))),
-                expected[1]
+                expected[2]
             ),
             Eq(
                 ListGetByIndexRangeToEnd(None, aerospike.LIST_RETURN_VALUE, 0,
@@ -952,7 +915,7 @@ class TestExpressions(TestBaseClass):
                 ListGetByIndexRangeToEnd(None, aerospike.LIST_RETURN_VALUE, 0,
                     ListSort(None, aerospike.LIST_SORT_DEFAULT,
                         MapGetByIndexRange(None, aerospike.MAP_RETURN_VALUE, 1, 2, bin))),
-                expected[1]
+                expected[2]
             ),
             Eq(
                 ListGetByIndexRangeToEnd(None, aerospike.LIST_RETURN_COUNT, 0,
@@ -964,16 +927,16 @@ class TestExpressions(TestBaseClass):
                 ListGetByIndexRangeToEnd(None, aerospike.LIST_RETURN_VALUE, 0,
                     ListSort(None, aerospike.LIST_SORT_DEFAULT,
                         MapGetByRankRange(None, aerospike.MAP_RETURN_VALUE, 1, 2, bin))),
-                expected[1]
+                expected[2]
             ),
         )
 
-        verify_all_expression_avenues(self.as_connection, self.test_ns, self.test_set, expr.compile(), bin, 19)
+        verify_multiple_expression_avenues(self.as_connection, self.test_ns, self.test_set, expr.compile(), bin, 19)
 
     @pytest.mark.parametrize("bin, ctx, policy, key, value, expected", [
         ("imap_bin", None, None, 3, 6, [12]),
         ("fmap_bin", None, None, 6.0, 6.0, [12.0]),
-        #("mlist_bin", [cdt_ctx.cdt_ctx_list_index(0)], None, 1, 4, [6]), TODO why is this failing?
+        ("mlist_bin", [cdt_ctx.cdt_ctx_list_index(0)], None, 1, 4, [6])
     ])
     def test_MapIncrement_pos(self, bin, ctx, policy, key, value, expected):
         """
@@ -983,13 +946,13 @@ class TestExpressions(TestBaseClass):
                     MapGetByValue(ctx, aerospike.MAP_RETURN_VALUE, expected[0], 
                         MapIncrement(ctx, policy, key, value, bin)), 
                     expected).compile()
-        verify_all_expression_avenues(self.as_connection, self.test_ns, self.test_set, expr, bin, 19)
+        verify_multiple_expression_avenues(self.as_connection, self.test_ns, self.test_set, expr, bin, 19)
 
     @pytest.mark.parametrize("bin, ctx, policy, values", [
         (
             "imap_bin",
             None,
-            {}, 
+            {'map_write_flags': aerospike.MAP_WRITE_FLAGS_NO_FAIL}, 
             [4, 10, 1, 1, 3, 6],
         ),
         (
@@ -1053,15 +1016,15 @@ class TestExpressions(TestBaseClass):
                     MapRemoveByKeyList(ctx, [values[2]], bin)),
                 0
             ),
-            Eq(MapGetByKeyRange(ctx, aerospike.MAP_RETURN_VALUE, values[2], values[0], #TODO debug why None doesnt work for end
+            Eq(MapGetByKeyRange(ctx, aerospike.MAP_RETURN_VALUE, values[2], values[0],
                     MapRemoveByKeyRange(ctx, values[2], values[4], bin)),
                 [values[5]]
             ),
-            Eq(MapGetByKeyRange(ctx, aerospike.MAP_RETURN_VALUE, values[2], values[0], #TODO debug why None doesnt work for end
+            Eq(MapGetByKeyRange(ctx, aerospike.MAP_RETURN_VALUE, values[2], values[0],
                     MapRemoveByKeyRelIndexRangeToEnd(ctx, values[2], 1, bin)),
                 [values[3]]
             ),
-            Eq(MapGetByKeyRange(ctx, aerospike.MAP_RETURN_VALUE, values[2], values[0], #TODO debug why None doesnt work for end
+            Eq(MapGetByKeyRange(ctx, aerospike.MAP_RETURN_VALUE, values[2], values[0],
                     MapRemoveByKeyRelIndexRange(ctx, values[2], 1, 3, bin)),
                 [values[3]]
             ),
@@ -1074,15 +1037,15 @@ class TestExpressions(TestBaseClass):
                     MapRemoveByValueList(ctx, [values[3]], bin)),
                 0
             ),
-            Eq(MapGetByKeyRange(ctx, aerospike.MAP_RETURN_VALUE, values[2], values[0], #TODO debug why None doesnt work for end
+            Eq(MapGetByKeyRange(ctx, aerospike.MAP_RETURN_VALUE, values[2], values[0],
                     MapRemoveByValueRange(ctx, values[3], values[5], bin)),
                 [values[5]]
             ),
-            Eq(MapGetByKeyRange(ctx, aerospike.MAP_RETURN_VALUE, values[2], values[0], #TODO debug why None doesnt work for end
+            Eq(MapGetByKeyRange(ctx, aerospike.MAP_RETURN_VALUE, values[2], values[0],
                     MapRemoveByValueRelRankRangeToEnd(ctx, values[3], 1, bin)),
                 [values[3]]
             ),
-            Eq(MapGetByKeyRange(ctx, aerospike.MAP_RETURN_VALUE, values[2], values[0], #TODO debug why None doesnt work for end
+            Eq(MapGetByKeyRange(ctx, aerospike.MAP_RETURN_VALUE, values[2], values[0],
                     MapRemoveByValueRelRankRange(ctx, values[3], 1, 3, bin)),
                 [values[3]]
             ),
@@ -1091,11 +1054,11 @@ class TestExpressions(TestBaseClass):
                     MapRemoveByIndex(ctx, 0, bin)),
                 []
             ),
-            Eq(MapGetByKeyRange(ctx, aerospike.MAP_RETURN_VALUE, values[2], values[0], #TODO debug why None doesnt work for end
+            Eq(MapGetByKeyRange(ctx, aerospike.MAP_RETURN_VALUE, values[2], values[0],
                     MapRemoveByIndexRange(ctx, 1, 3, bin)),
                 [values[3]]
             ),
-            Eq(MapGetByKeyRange(ctx, aerospike.MAP_RETURN_VALUE, values[2], values[0], #TODO debug why None doesnt work for end
+            Eq(MapGetByKeyRange(ctx, aerospike.MAP_RETURN_VALUE, values[2], values[0],
                     MapRemoveByIndexRangeToEnd(ctx, 1, bin)),
                 [values[3]]
             ),
@@ -1104,25 +1067,22 @@ class TestExpressions(TestBaseClass):
                     MapRemoveByRank(ctx, 0, bin)),
                 []
             ),
-            Eq(MapGetByKeyRange(ctx, aerospike.MAP_RETURN_VALUE, values[2], values[0], #TODO debug why None doesnt work for end
+            Eq(MapGetByKeyRange(ctx, aerospike.MAP_RETURN_VALUE, values[2], values[0],
                     MapRemoveByRankRange(ctx, 1, 3, bin)),
                 [values[3]]
             ),
-            Eq(MapGetByKeyRange(ctx, aerospike.MAP_RETURN_VALUE, values[2], values[0], #TODO debug why None doesnt work for end
+            Eq(MapGetByKeyRange(ctx, aerospike.MAP_RETURN_VALUE, values[2], values[0],
                     MapRemoveByRankRangeToEnd(ctx, 1, bin)),
                 [values[3]]
             ),
         )
 
-        # expr = And( NOTE: this will not work, comparing const map
-        #     Eq(MapPut(None, None, key, 10, "imap_bin"),
-        #         {1: 1, 2: 2, 3: 6, 4: 10}
-        #     )
-
-        verify_all_expression_avenues(self.as_connection, self.test_ns, self.test_set, expr.compile(), bin, 19)
+        verify_multiple_expression_avenues(self.as_connection, self.test_ns, self.test_set, expr.compile(), bin, 19)
 
     @pytest.mark.parametrize("policy, bytes_size, flags, bin, expected", [
-        (None, 10, None, '1bits_bin', bytearray([0] * 1))
+        (None, 10, None, '1bits_bin', bytearray([1])),
+        ({'bit_write_flags': aerospike.BIT_WRITE_UPDATE_ONLY}, 10, None, '1bits_bin', bytearray([1])),
+        (None, 10, aerospike.BIT_RESIZE_FROM_FRONT, '1bits_bin', bytearray([0]))
     ])
     def test_BitResize_pos(self, policy, bytes_size, flags, bin, expected):
         """
@@ -1130,15 +1090,16 @@ class TestExpressions(TestBaseClass):
         """
 
         expr = Eq(
-                    BitGet(9, 2, 
+                    BitGet(8, 8, 
                         BitResize(policy, bytes_size, flags, bin)),
-                    bytearray([0] * 1)
+                    expected
                 )
 
-        verify_all_expression_avenues(self.as_connection, self.test_ns, self.test_set, expr.compile(), bin, 19)
+        verify_multiple_expression_avenues(self.as_connection, self.test_ns, self.test_set, expr.compile(), bin, 19)
 
     @pytest.mark.parametrize("policy, byte_offset, byte_size, bin, expected", [
-        (None, 0, 1, '1bits_bin', bytearray([0] * 1))
+        (None, 0, 1, '1bits_bin', bytearray([0] * 1)),
+        ({'bit_write_flags': aerospike.BIT_WRITE_UPDATE_ONLY}, 0, 1, '1bits_bin', bytearray([0] * 1))
     ])
     def test_BitRemoveOps_pos(self, policy, byte_offset, byte_size, bin, expected):
         """
@@ -1150,107 +1111,140 @@ class TestExpressions(TestBaseClass):
                     bytearray([1] * 7)
                 )
 
-        verify_all_expression_avenues(self.as_connection, self.test_ns, self.test_set, expr.compile(), bin, 19)
+        verify_multiple_expression_avenues(self.as_connection, self.test_ns, self.test_set, expr.compile(), bin, 19)
 
-    def test_BitInsert_pos(self):
+    @pytest.mark.parametrize("policy", [
+        (None),
+        ({'bit_write_flags': aerospike.BIT_WRITE_UPDATE_ONLY})
+    ])
+    def test_BitInsert_pos(self, policy):
         """
         Test BitInsert expression.
         """
 
         expr = Eq(
-                    BitInsert(None, 1, bytearray([3]), '1bits_bin'),
+                    BitInsert(policy, 1, bytearray([3]), '1bits_bin'),
                     bytearray([1, 3, 1, 1, 1, 1, 1, 1, 1])
                 )
 
-        verify_all_expression_avenues(self.as_connection, self.test_ns, self.test_set, expr.compile(), '1bits_bin', 19)
+        verify_multiple_expression_avenues(self.as_connection, self.test_ns, self.test_set, expr.compile(), '1bits_bin', 19)
 
-    def test_BitSet_pos(self):
+    @pytest.mark.parametrize("policy", [
+        (None),
+        ({'bit_write_flags': aerospike.BIT_WRITE_UPDATE_ONLY})
+    ])
+    def test_BitSet_pos(self, policy):
         """
         Test BitSet expression.
         """
 
         expr = Eq(
-                    BitSet(None, 7, 1, bytearray([0]), '1bits_bin'),
+                    BitSet(policy, 7, 1, bytearray([0]), '1bits_bin'),
                     bytearray([0] + [1] * 7)
                 )
 
-        verify_all_expression_avenues(self.as_connection, self.test_ns, self.test_set, expr.compile(), '1bits_bin', 19)
+        verify_multiple_expression_avenues(self.as_connection, self.test_ns, self.test_set, expr.compile(), '1bits_bin', 19)
 
-    def test_BitOr_pos(self):
+    @pytest.mark.parametrize("policy", [
+        (None),
+        ({'bit_write_flags': aerospike.BIT_WRITE_UPDATE_ONLY})
+    ])
+    def test_BitOr_pos(self, policy):
         """
         Test BitOr expression.
         """
 
         expr = Eq(
-                    BitOr(None, 0, 8, bytearray([8]), '1bits_bin'),
+                    BitOr(policy, 0, 8, bytearray([8]), '1bits_bin'),
                     bytearray([9] + [1] * 7)
                 )
 
-        verify_all_expression_avenues(self.as_connection, self.test_ns, self.test_set, expr.compile(), '1bits_bin', 19)
+        verify_multiple_expression_avenues(self.as_connection, self.test_ns, self.test_set, expr.compile(), '1bits_bin', 19)
 
-    def test_BitXor_pos(self):
+    @pytest.mark.parametrize("policy", [
+        (None),
+        ({'bit_write_flags': aerospike.BIT_WRITE_UPDATE_ONLY})
+    ])
+    def test_BitXor_pos(self, policy):
         """
         Test BitXor expression.
         """
 
         expr = Eq(
-                    BitXor(None, 0, 8, bytearray([1]), '1bits_bin'),
+                    BitXor(policy, 0, 8, bytearray([1]), '1bits_bin'),
                     bytearray([0] + [1] * 7)
                 )
 
-        verify_all_expression_avenues(self.as_connection, self.test_ns, self.test_set, expr.compile(), '1bits_bin', 19)
+        verify_multiple_expression_avenues(self.as_connection, self.test_ns, self.test_set, expr.compile(), '1bits_bin', 19)
 
-    def test_BitAnd_pos(self):
+    @pytest.mark.parametrize("policy", [
+        (None),
+        ({'bit_write_flags': aerospike.BIT_WRITE_UPDATE_ONLY})
+    ])
+    def test_BitAnd_pos(self, policy):
         """
         Test BitAnd expression.
         """
 
         expr = Eq(
-                    BitAnd(None, 0, 8, bytearray([0]), '1bits_bin'),
+                    BitAnd(policy, 0, 8, bytearray([0]), '1bits_bin'),
                     bytearray([0] + [1] * 7)
                 )
 
-        verify_all_expression_avenues(self.as_connection, self.test_ns, self.test_set, expr.compile(), '1bits_bin', 19)
+        verify_multiple_expression_avenues(self.as_connection, self.test_ns, self.test_set, expr.compile(), '1bits_bin', 19)
 
-    def test_BitNot_pos(self):
+    @pytest.mark.parametrize("policy", [
+        (None),
+        ({'bit_write_flags': aerospike.BIT_WRITE_UPDATE_ONLY})
+    ])
+    def test_BitNot_pos(self, policy):
         """
         Test BitNot expression.
         """
 
         expr = Eq(
-                    BitNot(None, 0, 64, '1bits_bin'),
+                    BitNot(policy, 0, 64, '1bits_bin'),
                     bytearray([254] * 8)
                 )
 
-        verify_all_expression_avenues(self.as_connection, self.test_ns, self.test_set, expr.compile(), '1bits_bin', 19)
+        verify_multiple_expression_avenues(self.as_connection, self.test_ns, self.test_set, expr.compile(), '1bits_bin', 19)
 
-    def test_BitLeftShift_pos(self):
+    @pytest.mark.parametrize("policy", [
+        (None),
+        ({'bit_write_flags': aerospike.BIT_WRITE_UPDATE_ONLY})
+    ])
+    def test_BitLeftShift_pos(self, policy):
         """
         Test BitLeftShift expression.
         """
 
         expr = Eq(
-                    BitLeftShift(None, 0, 8, 3, '1bits_bin'),
+                    BitLeftShift(policy, 0, 8, 3, '1bits_bin'),
                     bytearray([8] + [1] * 7)
                 )
 
-        verify_all_expression_avenues(self.as_connection, self.test_ns, self.test_set, expr.compile(), '1bits_bin', 19)
+        verify_multiple_expression_avenues(self.as_connection, self.test_ns, self.test_set, expr.compile(), '1bits_bin', 19)
 
-    def test_BitRightShift_pos(self):
+    @pytest.mark.parametrize("policy", [
+        (None),
+        ({'bit_write_flags': aerospike.BIT_WRITE_UPDATE_ONLY})
+    ])
+    def test_BitRightShift_pos(self, policy):
         """
         Test BitRightShift expression.
         """
 
         expr = Eq(
-                    BitRightShift(None, 0, 8, 1, 
+                    BitRightShift(policy, 0, 8, 1, 
                         BitLeftShift(None, 0, 8, 3, '1bits_bin')),
                     bytearray([4] + [1] * 7)
                 )
 
-        verify_all_expression_avenues(self.as_connection, self.test_ns, self.test_set, expr.compile(), '1bits_bin', 19)
+        verify_multiple_expression_avenues(self.as_connection, self.test_ns, self.test_set, expr.compile(), '1bits_bin', 19)
 
     @pytest.mark.parametrize("policy, bit_offset, bit_size, value, action, bin, expected", [
-        (None, 8, 8, 1, aerospike.BIT_OVERFLOW_FAIL, '1bits_bin', bytearray([1] + [2] + [1] * 6))
+        (None, 8, 8, 1, aerospike.BIT_OVERFLOW_FAIL, '1bits_bin', bytearray([1] + [2] + [1] * 6)),
+        ({'bit_write_flags': aerospike.BIT_WRITE_UPDATE_ONLY}, 8, 8, 1, aerospike.BIT_OVERFLOW_FAIL, '1bits_bin', bytearray([1] + [2] + [1] * 6))
     ])
     def test_BitAdd_pos(self, policy, bit_offset, bit_size, value, action, bin, expected):
         """
@@ -1262,10 +1256,11 @@ class TestExpressions(TestBaseClass):
                     expected
                 )
 
-        verify_all_expression_avenues(self.as_connection, self.test_ns, self.test_set, expr.compile(), bin, 19)
+        verify_multiple_expression_avenues(self.as_connection, self.test_ns, self.test_set, expr.compile(), bin, 19)
 
     @pytest.mark.parametrize("policy, bit_offset, bit_size, value, action, bin, expected", [
-        (None, 8, 8, 1, aerospike.BIT_OVERFLOW_FAIL, '1bits_bin', bytearray([1] + [0] + [1] * 6))
+        (None, 8, 8, 1, aerospike.BIT_OVERFLOW_FAIL, '1bits_bin', bytearray([1] + [0] + [1] * 6)),
+        ({'bit_write_flags': aerospike.BIT_WRITE_UPDATE_ONLY}, 8, 8, 1, aerospike.BIT_OVERFLOW_FAIL, '1bits_bin', bytearray([1] + [0] + [1] * 6))
     ])
     def test_BitSubtract_pos(self, policy, bit_offset, bit_size, value, action, bin, expected):
         """
@@ -1277,19 +1272,23 @@ class TestExpressions(TestBaseClass):
                     expected
                 )
 
-        verify_all_expression_avenues(self.as_connection, self.test_ns, self.test_set, expr.compile(), bin, 19)
+        verify_multiple_expression_avenues(self.as_connection, self.test_ns, self.test_set, expr.compile(), bin, 19)
 
-    def test_BitSetInt_pos(self):
+    @pytest.mark.parametrize("policy", [
+        (None),
+        ({'bit_write_flags': aerospike.BIT_WRITE_UPDATE_ONLY})
+    ])
+    def test_BitSetInt_pos(self, policy):
         """
         Test BitSetInt expression.
         """
 
         expr = Eq(
-                    BitSetInt(None, 7, 1, 0, '1bits_bin'),
+                    BitSetInt(policy, 7, 1, 0, '1bits_bin'),
                     bytearray([0] + [1] * 7)
                 )
 
-        verify_all_expression_avenues(self.as_connection, self.test_ns, self.test_set, expr.compile(), '1bits_bin', 19)
+        verify_multiple_expression_avenues(self.as_connection, self.test_ns, self.test_set, expr.compile(), '1bits_bin', 19)
 
     @pytest.mark.parametrize("bit_offset, bit_size, bin, expected", [
         (8, 8, '1bits_bin', bytearray([1]))
@@ -1304,7 +1303,7 @@ class TestExpressions(TestBaseClass):
                     expected
                 )
 
-        verify_all_expression_avenues(self.as_connection, self.test_ns, self.test_set, expr.compile(), bin, 19)
+        verify_multiple_expression_avenues(self.as_connection, self.test_ns, self.test_set, expr.compile(), bin, 19)
 
     @pytest.mark.parametrize("bit_offset, bit_size, bin, expected", [
         (16, 8 * 3, '1bits_bin', 3)
@@ -1319,10 +1318,10 @@ class TestExpressions(TestBaseClass):
                     expected
                 )
 
-        verify_all_expression_avenues(self.as_connection, self.test_ns, self.test_set, expr.compile(), bin, 19)
+        verify_multiple_expression_avenues(self.as_connection, self.test_ns, self.test_set, expr.compile(), bin, 19)
 
     @pytest.mark.parametrize("bit_offset, bit_size, value, bin, expected", [
-        (0, 8, True, '1bits_bin', 7)
+        (0, 8, ExpTrue(), '1bits_bin', 7)
     ])
     def test_BitLeftScan_pos(self, bit_offset, bit_size, value, bin, expected):
         """
@@ -1334,10 +1333,10 @@ class TestExpressions(TestBaseClass):
                     expected
                 )
 
-        verify_all_expression_avenues(self.as_connection, self.test_ns, self.test_set, expr.compile(), bin, 19)
+        verify_multiple_expression_avenues(self.as_connection, self.test_ns, self.test_set, expr.compile(), bin, 19)
 
     @pytest.mark.parametrize("bit_offset, bit_size, value, bin, expected", [
-        (0, 8, True, '1bits_bin', 7) #TODO do I need the value expressions to be able to sub values for bins? (I think yes)
+        (0, 8, ExpTrue(), '1bits_bin', 7)
     ])
     def test_BitRightScan_pos(self, bit_offset, bit_size, value, bin, expected):
         """
@@ -1349,7 +1348,7 @@ class TestExpressions(TestBaseClass):
                     expected
                 )
 
-        verify_all_expression_avenues(self.as_connection, self.test_ns, self.test_set, expr.compile(), bin, 19)
+        verify_multiple_expression_avenues(self.as_connection, self.test_ns, self.test_set, expr.compile(), bin, 19)
 
     @pytest.mark.parametrize("bit_offset, bit_size, bin, expected", [
         (0, 8, '1bits_bin', 1)
@@ -1360,24 +1359,25 @@ class TestExpressions(TestBaseClass):
         """
 
         expr = Eq(
-                    BitGetInt(bit_offset, bit_size, True, bin),
+                    BitGetInt(bit_offset, bit_size, ExpTrue(), bin),
                     expected
                 )
 
-        verify_all_expression_avenues(self.as_connection, self.test_ns, self.test_set, expr.compile(), bin, 19)
+        verify_multiple_expression_avenues(self.as_connection, self.test_ns, self.test_set, expr.compile(), bin, 19)
 
     @pytest.mark.parametrize("policy, listp, index_bc, mh_bc, bin, expected", [ 
-        (None, ['key%s' % str(i) for i in range(1000, 6000)], 10, None, 'hll_bin', 5000),
-        (None, ['key%s' % str(i) for i in range(1000, 6000)], None, None, 'hll_bin', 5000), #update
-        (None, ['key%s' % str(i) for i in range(1000, 6000)], 10, 164, 'hll_bin', 5000)
+        (None, ['key%s' % str(i) for i in range(11000, 16000)], 15, None, 'hll_bin', 15000),
+        (None, ['key%s' % str(i) for i in range(11000, 16000)], None, None, 'hll_bin', 15000),
+        (None, ['key%s' % str(i) for i in range(11000, 16000)], 15, 49, 'hll_bin', 15000),
+        ({'flags': aerospike.HLL_WRITE_NO_FAIL}, ['key%s' % str(i) for i in range(11000, 16000)], None, None, 'hll_bin', 15000)
     ])
     def test_HLLAdd_pos(self, policy, listp, index_bc, mh_bc, bin, expected):
         """
         Test the HLLAdd expression.
         """
 
-        upper_lim = ceil(expected + self.relative_count_error(10, expected))
-        lower_lim = floor(expected - self.relative_count_error(10, expected))
+        upper_lim = ceil(expected + self.relative_count_error(15, expected))
+        lower_lim = floor(expected - self.relative_count_error(15, expected))
         expr = And(
                 GE(
                     HLLGetCount(
@@ -1391,7 +1391,7 @@ class TestExpressions(TestBaseClass):
                 ),
         )
 
-        verify_all_expression_avenues(self.as_connection, self.test_ns, self.test_set, expr.compile(), bin, 19)
+        verify_multiple_expression_avenues(self.as_connection, self.test_ns, self.test_set, expr.compile(), bin, 19)
 
     @pytest.mark.parametrize("bin, expected", [
         ('hll_bin', 25000)
@@ -1418,7 +1418,7 @@ class TestExpressions(TestBaseClass):
                     ),
         )
 
-        verify_all_expression_avenues(self.as_connection, self.test_ns, self.test_set, expr.compile(), bin, 19)
+        verify_multiple_expression_avenues(self.as_connection, self.test_ns, self.test_set, expr.compile(), bin, 19)
 
     @pytest.mark.parametrize("bin, expected", [
         ('hll_bin', 25000)
@@ -1443,7 +1443,7 @@ class TestExpressions(TestBaseClass):
                     ),
         )
 
-        verify_all_expression_avenues(self.as_connection, self.test_ns, self.test_set, expr.compile(), bin, 19)
+        verify_multiple_expression_avenues(self.as_connection, self.test_ns, self.test_set, expr.compile(), bin, 19)
 
     @pytest.mark.parametrize("bin, expected", [
         ('hll_bin', 5000)
@@ -1468,7 +1468,7 @@ class TestExpressions(TestBaseClass):
                     ),
         )
 
-        verify_all_expression_avenues(self.as_connection, self.test_ns, self.test_set, expr.compile(), bin, 19)
+        verify_multiple_expression_avenues(self.as_connection, self.test_ns, self.test_set, expr.compile(), bin, 19)
 
     @pytest.mark.parametrize("bin, expected", [
         ('hll_bin', 0.33)
@@ -1483,7 +1483,7 @@ class TestExpressions(TestBaseClass):
         expr = And(
                     GE(
                         HLLGetSimilarity(records, bin),
-                        expected - 0.03 #TODO calculate the error
+                        expected - 0.03
                     ),
                     LE(
                         HLLGetSimilarity(records, bin),
@@ -1491,7 +1491,7 @@ class TestExpressions(TestBaseClass):
                     ),
         )
 
-        verify_all_expression_avenues(self.as_connection, self.test_ns, self.test_set, expr.compile(), bin, 19)
+        verify_multiple_expression_avenues(self.as_connection, self.test_ns, self.test_set, expr.compile(), bin, 19)
 
     @pytest.mark.parametrize("bin, expected", [
         ('hll_bin', [15, 49])
@@ -1502,7 +1502,7 @@ class TestExpressions(TestBaseClass):
         """
 
         expr = Eq(HLLDescribe(bin), expected)
-        verify_all_expression_avenues(self.as_connection, self.test_ns, self.test_set, expr.compile(), bin, 19)
+        verify_multiple_expression_avenues(self.as_connection, self.test_ns, self.test_set, expr.compile(), bin, 19)
 
     @pytest.mark.parametrize("bin", [
         ('hll_bin')
@@ -1513,4 +1513,4 @@ class TestExpressions(TestBaseClass):
         """
 
         expr = Eq(HLLMayContain(["key1", "key2", "key3"], HLLBin(bin)), 1)
-        verify_all_expression_avenues(self.as_connection, self.test_ns, self.test_set, expr.compile(), bin, 19)
+        verify_multiple_expression_avenues(self.as_connection, self.test_ns, self.test_set, expr.compile(), bin, 19)

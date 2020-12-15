@@ -216,6 +216,9 @@ class ExprOp:
 
     _AS_EXP_CODE_END_OF_VA_ARGS = 150
 
+    _TRUE = 151
+    _FALSE = 152
+
 
 class ResultType:
     BOOLEAN = 1
@@ -259,7 +262,6 @@ class BaseExpr(AtomExpr):
     op: int = 0
     rt: TypeResultType = None
     fixed: TypeFixed = None
-    # HACK: Couldn't specify BaseExpr, had so I created AtomExpr as a hack.
     children: TypeChildren = ()
 
     def _op(self) -> TypeCompiledOp:
@@ -303,7 +305,22 @@ class _GenericExpr(BaseExpr):
         self.fixed = fixed
 
 
-# Record Key Expressions TODO tests
+###################
+# Value Expressions
+###################
+
+
+class ExpTrue(BaseExpr):
+    op = ExprOp._TRUE
+
+
+class ExpFalse(BaseExpr):
+    op = ExprOp._FALSE
+
+
+########################
+# Record Key Expressions
+########################
 
 
 class _Key(BaseExpr):
@@ -367,7 +384,7 @@ class KeyExists(BaseExpr):
             data as a boolean expression. This would occur on record write, when write policies set the `key` field to
             aerospike.POLICY_KEY_SEND.
         
-            :return (boolean value): True if the record has a stored key, false otherwise.
+            :return (boolean value): True if the record has a stored key, false otherwise. #NOTE why can't we compare these with an as_exp_bool()?
 
             Example::
                 # Key exists in record meta data.
@@ -541,7 +558,7 @@ class HLLBin(BaseExpr):
         self.fixed = {BIN_KEY: bin}
 
 
-class BinExists(BaseExpr):  # TODO test
+class BinExists(BaseExpr):
     op = ExprOp.BIN_EXISTS
     rt = ResultType.BOOLEAN
 
@@ -3125,7 +3142,7 @@ class BitResize(BaseExpr):
         """        
         self.children = (
             byte_size,
-            _GenericExpr(150, 0, {VALUE_KEY: policy['flags']} if policy is not None and 'flags' in policy else {VALUE_KEY: 0}),
+            _GenericExpr(150, 0, {VALUE_KEY: policy['bit_write_flags']} if policy is not None and 'bit_write_flags' in policy else {VALUE_KEY: 0}),
             _GenericExpr(150, 0, {VALUE_KEY: flags} if flags is not None else {VALUE_KEY: 0}),
             bin if isinstance(bin, BaseExpr) else BlobBin(bin)
         )
@@ -3153,7 +3170,7 @@ class BitInsert(BaseExpr):
         self.children = (
             byte_offset,
             value,
-            _GenericExpr(150, 0, {VALUE_KEY: policy['flags']} if policy is not None and 'flags' in policy else {VALUE_KEY: 0}),
+            _GenericExpr(150, 0, {VALUE_KEY: policy['bit_write_flags']} if policy is not None and 'bit_write_flags' in policy else {VALUE_KEY: 0}),
             bin if isinstance(bin, BaseExpr) else BlobBin(bin)
         )
 
@@ -3180,7 +3197,7 @@ class BitRemove(BaseExpr):
         self.children = (
             byte_offset,
             byte_size,
-            _GenericExpr(150, 0, {VALUE_KEY: policy['flags']} if policy is not None and 'flags' in policy else {VALUE_KEY: 0}),
+            _GenericExpr(150, 0, {VALUE_KEY: policy['bit_write_flags']} if policy is not None and 'bit_write_flags' in policy else {VALUE_KEY: 0}),
             bin if isinstance(bin, BaseExpr) else BlobBin(bin)
         )
 
@@ -3209,7 +3226,7 @@ class BitSet(BaseExpr):
             bit_offset,
             bit_size,
             value,
-            _GenericExpr(150, 0, {VALUE_KEY: policy['flags']} if policy is not None and 'flags' in policy else {VALUE_KEY: 0}),
+            _GenericExpr(150, 0, {VALUE_KEY: policy['bit_write_flags']} if policy is not None and 'bit_write_flags' in policy else {VALUE_KEY: 0}),
             bin if isinstance(bin, BaseExpr) else BlobBin(bin)
         )
 
@@ -3238,7 +3255,7 @@ class BitOr(BaseExpr):
             bit_offset,
             bit_size,
             value,
-            _GenericExpr(150, 0, {VALUE_KEY: policy['flags']} if policy is not None and 'flags' in policy else {VALUE_KEY: 0}),
+            _GenericExpr(150, 0, {VALUE_KEY: policy['bit_write_flags']} if policy is not None and 'bit_write_flags' in policy else {VALUE_KEY: 0}),
             bin if isinstance(bin, BaseExpr) else BlobBin(bin)
         )
 
@@ -3267,7 +3284,7 @@ class BitXor(BaseExpr):
             bit_offset,
             bit_size,
             value,
-            _GenericExpr(150, 0, {VALUE_KEY: policy['flags']} if policy is not None and 'flags' in policy else {VALUE_KEY: 0}),
+            _GenericExpr(150, 0, {VALUE_KEY: policy['bit_write_flags']} if policy is not None and 'bit_write_flags' in policy else {VALUE_KEY: 0}),
             bin if isinstance(bin, BaseExpr) else BlobBin(bin)
         )
 
@@ -3296,7 +3313,7 @@ class BitAnd(BaseExpr):
             bit_offset,
             bit_size,
             value,
-            _GenericExpr(150, 0, {VALUE_KEY: policy['flags']} if policy is not None and 'flags' in policy else {VALUE_KEY: 0}),
+            _GenericExpr(150, 0, {VALUE_KEY: policy['bit_write_flags']} if policy is not None and 'bit_write_flags' in policy else {VALUE_KEY: 0}),
             bin if isinstance(bin, BaseExpr) else BlobBin(bin)
         )
 
@@ -3323,7 +3340,7 @@ class BitNot(BaseExpr):
         self.children = (
             bit_offset,
             bit_size,
-            _GenericExpr(150, 0, {VALUE_KEY: policy['flags']} if policy is not None and 'flags' in policy else {VALUE_KEY: 0}),
+            _GenericExpr(150, 0, {VALUE_KEY: policy['bit_write_flags']} if policy is not None and 'bit_write_flags' in policy else {VALUE_KEY: 0}),
             bin if isinstance(bin, BaseExpr) else BlobBin(bin)
         )
 
@@ -3352,7 +3369,7 @@ class BitLeftShift(BaseExpr):
             bit_offset,
             bit_size,
             shift,
-            _GenericExpr(150, 0, {VALUE_KEY: policy['flags']} if policy is not None and 'flags' in policy else {VALUE_KEY: 0}), #TODO: decide if this is best
+            _GenericExpr(150, 0, {VALUE_KEY: policy['bit_write_flags']} if policy is not None and 'bit_write_flags' in policy else {VALUE_KEY: 0}),
             bin if isinstance(bin, BaseExpr) else BlobBin(bin)
         )
 
@@ -3381,7 +3398,7 @@ class BitRightShift(BaseExpr):
             bit_offset,
             bit_size,
             shift,
-            _GenericExpr(150, 0, {VALUE_KEY: policy['flags']} if policy is not None and 'flags' in policy else {VALUE_KEY: 0}), #TODO: decide if this is best
+            _GenericExpr(150, 0, {VALUE_KEY: policy['bit_write_flags']} if policy is not None and 'bit_write_flags' in policy else {VALUE_KEY: 0}),
             bin if isinstance(bin, BaseExpr) else BlobBin(bin)
         )
 
@@ -3412,7 +3429,7 @@ class BitAdd(BaseExpr):
             bit_offset,
             bit_size,
             value,
-            _GenericExpr(150, 0, {VALUE_KEY: policy['flags']} if policy is not None and 'flags' in policy else {VALUE_KEY: 0}), #TODO: decide if this is best
+            _GenericExpr(150, 0, {VALUE_KEY: policy['bit_write_flags']} if policy is not None and 'bit_write_flags' in policy else {VALUE_KEY: 0}),
             _GenericExpr(150, 0, {VALUE_KEY: action} if action is not None else {VALUE_KEY: 0}),
             bin if isinstance(bin, BaseExpr) else BlobBin(bin)
         )
@@ -3444,7 +3461,7 @@ class BitSubtract(BaseExpr):
             bit_offset,
             bit_size,
             value,
-            _GenericExpr(150, 0, {VALUE_KEY: policy['flags']} if policy is not None and 'flags' in policy else {VALUE_KEY: 0}),
+            _GenericExpr(150, 0, {VALUE_KEY: policy['bit_write_flags']} if policy is not None and 'bit_write_flags' in policy else {VALUE_KEY: 0}),
             _GenericExpr(150, 0, {VALUE_KEY: action} if action is not None else {VALUE_KEY: 0}),
             bin if isinstance(bin, BaseExpr) else BlobBin(bin)
         )
@@ -3475,7 +3492,7 @@ class BitSetInt(BaseExpr): #TODO merge this into bit set
             bit_offset,
             bit_size,
             value,
-            _GenericExpr(150, 0, {VALUE_KEY: policy['flags']} if policy is not None and 'flags' in policy else {VALUE_KEY: 0}), #TODO: decide if this is best
+            _GenericExpr(150, 0, {VALUE_KEY: policy['bit_write_flags']} if policy is not None and 'bit_write_flags' in policy else {VALUE_KEY: 0}),
             bin if isinstance(bin, BaseExpr) else BlobBin(bin)
         )
 
@@ -3538,13 +3555,13 @@ class BitCount(BaseExpr):
 class BitLeftScan(BaseExpr):
     op = aerospike.OP_BIT_LSCAN
 
-    def __init__(self, bit_offset: int, bit_size: int, value: bool, bin: TypeBinName): #TODO this can't use Python boolean because it is sent as python_bytes
+    def __init__(self, bit_offset: int, bit_size: int, value: Union[ExpTrue, ExpFalse], bin: TypeBinName):
         """ Create an expression that performs a bit_lscan operation.
 
             Args:
                 bit_offset (int): Bit index of where to start reading.
                 bit_size (int): Number of bits to read.
-                value (bool): Boolean, value to check for.
+                value Union[ExpTrue, ExpFalse]: Bit value to check for, ExpTrue for 1 or ExpFalse for 0.
                 bin (TypeBinName): Blob bin name or blob expression.
 
             :return: Index of the left most bit starting from bit_offset set to value. Returns -1 if not found.
@@ -3557,7 +3574,7 @@ class BitLeftScan(BaseExpr):
         self.children = (
             bit_offset,
             bit_size,
-            _GenericExpr(ExprOp.BOOL, 0, {VALUE_KEY: value}),
+            value,
             bin if isinstance(bin, BaseExpr) else BlobBin(bin)
         )
 
@@ -3565,13 +3582,13 @@ class BitLeftScan(BaseExpr):
 class BitRightScan(BaseExpr):
     op = aerospike.OP_BIT_RSCAN
 
-    def __init__(self, bit_offset: int, bit_size: int, value: bool, bin: TypeBinName):
+    def __init__(self, bit_offset: int, bit_size: int, value: Union[ExpTrue, ExpFalse], bin: TypeBinName):
         """ Create an expression that performs a bit_rscan operation.
 
             Args:
                 bit_offset (int): Bit index of where to start reading.
                 bit_size (int): Number of bits to read.
-                value (bool): Boolean, value to check for.
+                value Union[ExpTrue, ExpFalse]: Bit value to check for, ExpTrue for 1 or ExpFalse for 0.
                 bin (TypeBinName): Blob bin name or blob expression.
 
             :return: Index of the right most bit starting from bit_offset set to value. Returns -1 if not found.
@@ -3584,7 +3601,7 @@ class BitRightScan(BaseExpr):
         self.children = (
             bit_offset,
             bit_size,
-            _GenericExpr(ExprOp.BOOL, 0, {VALUE_KEY: value}),
+            value,
             bin if isinstance(bin, BaseExpr) else BlobBin(bin)
         )
 
@@ -3592,13 +3609,13 @@ class BitRightScan(BaseExpr):
 class BitGetInt(BaseExpr):
     op = aerospike.OP_BIT_GET_INT
 
-    def __init__(self, bit_offset: int, bit_size: int, sign: bool, bin: TypeBinName):
+    def __init__(self, bit_offset: int, bit_size: int, sign: Union[ExpTrue, ExpFalse], bin: TypeBinName):
         """ Create an expression that performs a bit_get_int operation.
 
             Args:
                 bit_offset (int): Bit index of where to start reading.
                 bit_size (int): Number of bits to get.
-                sign (bool): Boolean value, True for signed, False for unsigned.
+                sign Union[ExpTrue, ExpFalse]: ExpTrue for signed, ExpFalse for unsigned.
                 bin (TypeBinName): Blob bin name or blob expression.
 
             :return: Integer expression.
@@ -3611,7 +3628,7 @@ class BitGetInt(BaseExpr):
         self.children = (
             bit_offset,
             bit_size,
-            1 if sign else 0,
+            0 if not sign or isinstance(sign, ExpFalse) else 1,
             bin if isinstance(bin, BaseExpr) else BlobBin(bin)
         )
 
@@ -3645,7 +3662,7 @@ class HLLAdd(BaseExpr):
             list,
             -1 if index_bit_count is None else index_bit_count,
             -1 if mh_bit_count is None else mh_bit_count,
-            policy['flags'] if policy is not None and 'flags' in policy else 0,
+            policy['flags'] if policy is not None and 'flags' in policy else aerospike.HLL_WRITE_DEFAULT,
             bin if isinstance(bin, BaseExpr) else HLLBin(bin)
         )
 

@@ -82,6 +82,8 @@
 // VIRTUAL OPS
 #define END_VA_ARGS 128
 #define _AS_EXP_BIT_FLAGS 150
+#define _TRUE 151
+#define _FALSE 152
 
 // UTILITY CONSTANTS
 #define MAX_ELEMENTS 11 //TODO find largest macro and adjust this val
@@ -270,7 +272,9 @@ as_status get_expr_size(int * size_to_alloc, int * preds_size, as_vector * preds
 		[_AS_EXP_CODE_CDT_MAP_CRMOD]                     = 0, //EXP_SZ(as_exp_val(NULL)),
 		[_AS_EXP_CODE_CDT_MAP_CR]                        = 0, //EXP_SZ(as_exp_val(NULL)),
 		[_AS_EXP_CODE_CDT_MAP_MOD]                       = 0, //EXP_SZ(as_exp_val(NULL))
-		[BOOL]                                           = 0
+		[BOOL]                                           = 0,
+		[_TRUE]                                          = 0,
+		[_FALSE]                                         = 0
 	};
 
 
@@ -982,10 +986,11 @@ as_status add_pred_macros(AerospikeClient * self, as_static_pool * static_pool, 
 			case OP_HLL_MAY_CONTAIN:
 				append_array(2, as_exp_hll_may_contain({}, {})); // - 2 for list, bin
 				break;
-			case BOOL:; // This handles Python to as_exp_bool translation for expressions like OP_BIT_LSCAN
-				PyObject * py_bool = NULL;
-				py_bool = PyDict_GetItemString(pred->pydict, AS_PY_VAL_KEY);
-				append_array(0, as_exp_bool(PyObject_IsTrue(py_bool)));
+			case _TRUE: // This handles Python to as_exp_bool translation for expressions like OP_BIT_LSCAN
+				append_array(0, as_exp_bool(1));
+				break;
+			case _FALSE:
+				append_array(0, as_exp_bool(0));
 				break;
 			default:
 				return as_error_update(err, AEROSPIKE_ERR_PARAM, "Unrecognised expression op type.");
