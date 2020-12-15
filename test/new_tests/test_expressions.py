@@ -933,12 +933,12 @@ class TestExpressions(TestBaseClass):
 
         verify_multiple_expression_avenues(self.as_connection, self.test_ns, self.test_set, expr.compile(), bin, 19)
 
-    @pytest.mark.parametrize("bin, ctx, policy, key, value, expected", [
-        ("imap_bin", None, None, 3, 6, [12]),
-        ("fmap_bin", None, None, 6.0, 6.0, [12.0]),
-        ("mlist_bin", [cdt_ctx.cdt_ctx_list_index(0)], None, 1, 4, [6])
+    @pytest.mark.parametrize("bin, bin_name, ctx, policy, key, value, expected", [
+        ("imap_bin", "imap_bin", None, None, 3, 6, [12]),
+        ("fmap_bin", "fmap_bin", None, None, 6.0, 6.0, [12.0]),
+        (ListBin("mlist_bin"), "mlist_bin", [cdt_ctx.cdt_ctx_list_index(0)], None, 1, 4, [6])
     ])
-    def test_MapIncrement_pos(self, bin, ctx, policy, key, value, expected):
+    def test_MapIncrement_pos(self, bin, bin_name, ctx, policy, key, value, expected):
         """
         Invoke MapIncrement() on various integer and float bins.
         """
@@ -946,7 +946,7 @@ class TestExpressions(TestBaseClass):
                     MapGetByValue(ctx, aerospike.MAP_RETURN_VALUE, expected[0], 
                         MapIncrement(ctx, policy, key, value, bin)), 
                     expected).compile()
-        verify_multiple_expression_avenues(self.as_connection, self.test_ns, self.test_set, expr, bin, 19)
+        verify_multiple_expression_avenues(self.as_connection, self.test_ns, self.test_set, expr, bin_name, 19)
 
     @pytest.mark.parametrize("bin, ctx, policy, values", [
         (
