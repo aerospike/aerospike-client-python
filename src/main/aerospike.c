@@ -141,8 +141,8 @@ MOD_INIT(aerospike)
 	Py_INCREF(predicates);
 	PyModule_AddObject(aerospike, "predicates", predicates);
 
-	PyObject* predexps = AerospikePredExp_New();	
-	Py_INCREF(predexps);	
+	PyObject* predexps = AerospikePredExp_New();
+	Py_INCREF(predexps);
 	PyModule_AddObject(aerospike, "predexp", predexps);
 
 	PyTypeObject * geospatial = AerospikeGeospatial_Ready();

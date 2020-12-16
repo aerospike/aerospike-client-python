@@ -70,12 +70,12 @@ AerospikeQuery * AerospikeQuery_Add_Ops(AerospikeQuery * self, PyObject * args, 
  */
 AerospikeQuery * AerospikeQuery_Where(AerospikeQuery * self, PyObject * args);
 
-/**	
- * Apply a list of predicates to the query.	
- *	
- *		query.predexp(predexps)	
- *	
- */	
+/**
+ * Apply a list of predicates to the query.
+ *
+ *		query.predexp(predexps)
+ *
+ */
 AerospikeQuery * AerospikeQuery_Predexp(AerospikeQuery * self, PyObject * args);
 
 /**
