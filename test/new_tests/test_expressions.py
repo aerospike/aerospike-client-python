@@ -953,7 +953,7 @@ class TestExpressions(TestBaseClass):
             "imap_bin",
             None,
             {'map_write_flags': aerospike.MAP_WRITE_FLAGS_NO_FAIL}, 
-            [4, 10, 1, 1, 3, 6],
+            [aerospike.CDTInfinite, 10, 1, 1, 3, 6],
         ),
         (
             "smap_bin",
