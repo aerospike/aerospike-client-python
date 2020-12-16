@@ -2079,6 +2079,76 @@ HyperLogLog Write Flags
 
 .. versionadded:: 3.11.0
 
+.. _aerospike_bin_types:
+
+Bin Types
+---------
+
+.. data:: AS_BYTES_UNDEF
+
+    (int): 0
+
+.. data:: AS_BYTES_INTEGER
+
+    (int): 1
+
+.. data:: AS_BYTES_DOUBLE
+
+    (int): 2
+
+.. data:: AS_BYTES_STRING
+
+    (int): 3
+
+.. data:: AS_BYTES_BLOB
+
+    (int): 4
+
+.. data:: AS_BYTES_JAVA
+
+    (int): 7
+
+.. data:: AS_BYTES_CSHARP
+
+    (int): 8
+
+.. data:: AS_BYTES_PYTHON
+
+    (int): 9
+
+.. data:: AS_BYTES_RUBY
+
+    (int): 10
+
+.. data:: AS_BYTES_PHP
+
+    (int): 11
+
+.. data:: AS_BYTES_ERLANG
+
+    (int): 12
+
+.. data:: AS_BYTES_HLL
+
+    (int): 18
+
+.. data:: AS_BYTES_MAP
+
+    (int): 19
+
+.. data:: AS_BYTES_LIST
+
+    (int): 20
+
+.. data:: AS_BYTES_GEOJSON
+
+    (int): 23
+
+.. data:: AS_BYTES_TYPE_MAX
+
+    (int): 24
+
+
 .. _aerospike_misc_constants:
 
 Miscellaneous

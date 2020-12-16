@@ -149,7 +149,7 @@ The expressions module uses typehints, here are a table of custom typehints mapp
     * - TypeExpression
       - List[TypeCompiledOp]
     * - TypeChild
-      - Union[int, float, str, bytes, AtomExpr]
+      - Union[int, float, str, bytes, _AtomExpr]
     * - TypeChildren
       - Tuple[TypeChild, ...]
     * - TypeBinName
@@ -182,7 +182,6 @@ The expressions module uses typehints, here are a table of custom typehints mapp
 '''
 
 
-
 from itertools import chain
 from typing import List, Optional, Tuple, Union, Dict, Any
 import aerospike
@@ -201,11 +200,6 @@ VALUE_END_KEY = "value_end"
 OP_TYPE_KEY = "ot_key"
 LIST_POLICY_KEY = "list_policy"
 MAP_POLICY_KEY = "map_policy"
-BIT_POLICY_KEY = "bit_policy"
-BIT_FLAGS_KEY = "policy"
-RESIZE_FLAGS_KEY = "resize_flags"
-PARAM_COUNT_KEY = "param_count"
-EXTRA_PARAM_COUNT_KEY = "extra_param_count"
 LIST_ORDER_KEY = "list_order"
 REGEX_OPTIONS_KEY = "regex_options"
 
@@ -281,15 +275,7 @@ class ResultType:
     HLL = 9
 
 
-class CallType:
-    CDT = 0
-    BIT = 1
-    HLL = 2
-
-    MODIFY = 0x40
-
-
-class AtomExpr:
+class _AtomExpr:
     def _op(self):
         raise NotImplementedError
 
@@ -303,11 +289,11 @@ TypeFixed = Optional[Dict[str, TypeFixedEle]]
 TypeCompiledOp = Tuple[int, TypeResultType, TypeFixed, int]
 TypeExpression = List[TypeCompiledOp]
 
-TypeChild = Union[int, float, str, bytes, AtomExpr]
+TypeChild = Union[int, float, str, bytes, _AtomExpr]
 TypeChildren = Tuple[TypeChild, ...]
 
 
-class BaseExpr(AtomExpr):
+class BaseExpr(_AtomExpr):
     op: int = 0
     rt: TypeResultType = None
     fixed: TypeFixed = None
@@ -654,7 +640,7 @@ class BinType(BaseExpr):
 
     def __init__(self, bin: str):
         """ Create an expression that returns the type of a bin
-            as one of the aerospike constants aerospike.AS_BYTES*. #TODO document these new constants
+            as one of the aerospike :ref:`bin types <aerospike_bin_types>`.
 
             Args:
                 bin (str): bin name.
@@ -838,7 +824,7 @@ class DigestMod(BaseExpr):
 
 
 ########################
-# Comparison expressions
+# Comparison Expressions
 ########################
 
 
@@ -1018,7 +1004,7 @@ class CmpGeo(BaseExpr):
 
 
 #####################
-# Logical expressions
+# Logical Expressions
 #####################
 
 
@@ -1088,7 +1074,7 @@ class Or(BaseExpr):
 
 
 ######################
-# LIST MOD EXPRESSIONS
+# List Mod Expressions
 ######################
 
 
@@ -1696,7 +1682,7 @@ class ListRemoveByRankRange(BaseExpr):
 
 
 #######################
-# LIST READ EXPRESSIONS
+# List Read Expressions
 #######################
 
 
@@ -3849,7 +3835,7 @@ class BitGetInt(BaseExpr):
 
 
 ########################
-# HLL modify expressions
+# HLL Modify Expressions
 ########################
 
 
@@ -3884,7 +3870,7 @@ class HLLAdd(BaseExpr):
 
 
 ######################
-# HLL read expressions
+# HLL Read Expressions
 ######################
 
 

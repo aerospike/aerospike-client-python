@@ -135,7 +135,7 @@ class TestQueryApply(object):
             else:
                 assert(bins.get(test_bin) is None)
 
-    @pytest.mark.xfail(reason="predicate and predexp used at same time") #TODO add predicates back
+    @pytest.mark.xfail(reason="predicate and predexp used at same time")
     def test_background_execute_predexp_and_predicate(self, clean_test_background):
         """
         Ensure that Query.execute_background() gets applied to records that match the predicate
@@ -229,7 +229,7 @@ class TestQueryApply(object):
             lambda rec: rec[test_bin] == 'new_val'
         )
 
-    def test_background_execute_with_ops_and_preds(self, clean_test_background): #TODO add predicates back
+    def test_background_execute_with_ops_and_preds(self, clean_test_background):
         """
         Ensure that Query.execute_background() applies ops to records that match the predicate
         """
@@ -271,7 +271,7 @@ class TestQueryApply(object):
             lambda rec: rec[test_bin] == 'aerospike'
         )
 
-    def test_background_execute_sindex_predicate(self, clean_test_background): #TODO add predicates back
+    def test_background_execute_sindex_predicate(self, clean_test_background):
         """
         Ensure that Query.execute_background() only applies to records matched by
         the specified predicate
@@ -310,7 +310,6 @@ class TestQueryApply(object):
         }
 
         query = self.as_connection.query(TEST_NS, TEST_SET)
-        #query.predexp(expr.compile()) TODO .predexp needs to be reintroduced
         query.apply(TEST_UDF_MODULE, TEST_UDF_FUNCTION, [test_bin])
         query.execute_background(policy=policy)
         # Give time for the query to finish
