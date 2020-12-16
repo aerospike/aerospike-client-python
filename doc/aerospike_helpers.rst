@@ -18,6 +18,7 @@ Subpackages
 
     aerospike_helpers.operations
     aerospike_helpers.cdt_ctx
+    aerospike_helpers.expressions
 
 
 

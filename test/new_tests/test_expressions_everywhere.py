@@ -305,7 +305,7 @@ class TestPredEveryWhere(object):
             {'string_list': 5},
             5
         ),
-        # (# test list and str TODO convert
+        # (# test list and str TODO Not sure how to write this in expressions
         #     [
         #         list_operations.list_remove_by_index_range('string_list', 0, aerospike.LIST_RETURN_VALUE, 2)
         #     ],
@@ -558,7 +558,7 @@ class TestPredEveryWhere(object):
         for res in results:
             assert res['time'] == 'earlier'
 
-    def test_expressions_key_operate_record_digest_modulo(self): #TODO investigate segfault caused by this
+    def test_expressions_key_operate_record_digest_modulo(self):
         """
         Invoke the C client aerospike_key_operate with a rec_digest_modulo expressions.
         """
