@@ -3063,3 +3063,34 @@ class TestCTXOperations(object):
         for i in range(10):
             with pytest.raises(e.ParamError):
                 self.as_connection.operate(self.test_key, ops)
+
+    def test_cdt_ctx_map_key_create_pos(self):
+        """
+        Test the map_key_create cdt_ctx type.
+        """
+        ctx = [cdt_ctx.cdt_ctx_map_key_create('new_key', aerospike.MAP_KEY_ORDERED)]
+
+        ops = [
+            map_operations.map_put(self.nested_map_bin, 'key1', 'val1', None, ctx),
+            map_operations.map_get_by_key(self.nested_map_bin, 'new_key', aerospike.MAP_RETURN_VALUE)
+        ]
+
+        _, _, res = self.as_connection.operate(self.test_key, ops)
+        print(res)
+        assert(res[self.nested_map_bin] == {'key1': 'val1'})
+
+    # def test_cdt_ctx_list_index_create_pos(self):
+    #     """
+    #     Test the list_index_create cdt_ctx type.
+    #     """
+    #     ctx = [cdt_ctx.cdt_ctx_list_index_create(1, aerospike.LIST_ORDERED, True)] #TODO debug this
+
+    #     ops = [
+    #         list_operations.list_append(self.nested_list_bin, 'val1', None, ctx),
+    #         # list_operations.list_get_by_index(self.nested_list_bin, 9, aerospike.MAP_RETURN_VALUE),
+    #         # list_operations.list_get_by_index(self.nested_list_bin, 10, aerospike.MAP_RETURN_VALUE)
+    #     ]
+
+    #     _, _, res = self.as_connection.operate(self.test_key, ops)
+    #     print(res)
+    #     assert(res[self.nested_list_bin] == {'key1': 'val1'})

@@ -144,6 +144,11 @@ enum aerospike_hll_operations {
 	OP_HLL_SET_UNION,
 };
 
+enum aerospike_cdt_ctx_identifiers {
+	CDT_CTX_LIST_INDEX_CREATE = 0x14,
+	CDT_CTX_MAP_KEY_CREATE = 0x24
+};
+
 typedef struct Aerospike_Constants {
     long    constantno;
     char    constant_str[MAX_CONSTANT_STR_SIZE];

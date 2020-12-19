@@ -80,13 +80,17 @@ Example::
 import aerospike
 
 
+CDT_CTX_ORDER_KEY = "order_key"
+CDT_CTX_PAD_KEY = "pad_key"
+
 class _cdt_ctx:
     """
     Class used to represent a single ctx_operation.
     """
-    def __init__(self, id=None, value=None):
+    def __init__(self, id=None, value=None, extra_args=None):
         self.id = id
         self.value = value
+        self.extra_args = extra_args
 
 
 def cdt_ctx_list_index(index):
@@ -132,6 +136,21 @@ def cdt_ctx_list_value(value):
         A cdt_ctx object, a list of these is usable with list and map operations.
     """
     return _cdt_ctx(aerospike.CDT_CTX_LIST_VALUE, value)
+
+
+def cdt_ctx_list_index_create(index: int, order: int, pad: bool): #TODO what is pad?
+    """Creates a nested cdt_ctx object for use with list or map operations.
+    
+    Create a list with the given sort order at the given index.
+
+    Args:
+        key (object): The key to look for in the map.
+        order (int): The sort order to create the map with. One of aerospike_map_sort_order #TODO replace with link
+    
+    Returns:
+        A cdt_ctx object, a list of these is usable with list and map operations.
+    """
+    return _cdt_ctx(aerospike.CDT_CTX_LIST_INDEX_CREATE, index, {CDT_CTX_ORDER_KEY: order, CDT_CTX_PAD_KEY: pad})
 
 
 def cdt_ctx_map_index(index):
@@ -191,3 +210,18 @@ def cdt_ctx_map_value(value):
         A cdt_ctx object, a list of these is usable with list and map operations.
     """
     return _cdt_ctx(aerospike.CDT_CTX_MAP_VALUE, value)
+
+
+def cdt_ctx_map_key_create(key: any, order: int):
+    """Creates a nested cdt_ctx object for use with list or map operations.
+    
+    Create a map with the given sort order at the given key.
+
+    Args:
+        key (object): The key to look for in the map.
+        order (int): The sort order to create the map with. One of the aerospike :ref:`map sort orders <_aerospike_map_write_flag>`
+    
+    Returns:
+        A cdt_ctx object, a list of these is usable with list and map operations.
+    """
+    return _cdt_ctx(aerospike.CDT_CTX_MAP_KEY_CREATE, key, {CDT_CTX_ORDER_KEY: order})
