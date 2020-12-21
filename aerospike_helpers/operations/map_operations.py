@@ -283,7 +283,7 @@ def map_remove_by_key_range(bin_name, key_range_start,
     """Creates a map_remove_by_key_range operation to be used with operate or operate_ordered
 
     The operation removes items, with keys between key_range_start(inclusive) and
-    key_range_end(exclusive) from the map
+    key_range_end(exclusive) from the map. 
 
     Args:
         bin_name (str): The name of the bin containing the map.

@@ -57,6 +57,8 @@
 #define AS_PY_EXCEPTION_IN_DOUBT 4
 
 #define CTX_KEY "ctx"
+#define CDT_CTX_ORDER_KEY "order_key"
+#define CDT_CTX_PAD_KEY "pad_key"
 
 bool requires_int(uint64_t op);
 
@@ -2025,8 +2027,8 @@ as_status get_cdt_ctx(AerospikeClient* self, as_error* err, as_cdt_ctx* cdt_ctx,
 					case CDT_CTX_LIST_INDEX_CREATE:;
 						int list_order = 0;
 						int pad = 0;
-						get_int(err, "order_key", extra_args_temp, &list_order);
-						get_int(err, "pad_key", extra_args_temp, &pad);
+						get_int(err, CDT_CTX_ORDER_KEY, extra_args_temp, &list_order);
+						get_int(err, CDT_CTX_PAD_KEY, extra_args_temp, &pad);
                         as_cdt_ctx_add_list_index_create(cdt_ctx, int_val, list_order, pad);
                         break;
                     default:
@@ -2049,7 +2051,7 @@ as_status get_cdt_ctx(AerospikeClient* self, as_error* err, as_cdt_ctx* cdt_ctx,
                         break;
                     case CDT_CTX_MAP_KEY_CREATE:;
 						int map_order = 0;
-						get_int(err, "order_key", extra_args_temp, &map_order);
+						get_int(err, CDT_CTX_ORDER_KEY, extra_args_temp, &map_order);
                         as_cdt_ctx_add_map_key_create(cdt_ctx, val, map_order);
                         break;
                     default:
@@ -2077,6 +2079,6 @@ requires_int(uint64_t op) {
         op == AS_CDT_CTX_LIST_RANK  ||
         op == AS_CDT_CTX_MAP_INDEX  ||
         op == AS_CDT_CTX_MAP_RANK   ||
-		CDT_CTX_LIST_INDEX_CREATE
+		op == CDT_CTX_LIST_INDEX_CREATE
     );
 }

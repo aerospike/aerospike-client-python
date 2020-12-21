@@ -3064,33 +3064,76 @@ class TestCTXOperations(object):
             with pytest.raises(e.ParamError):
                 self.as_connection.operate(self.test_key, ops)
 
-    def test_cdt_ctx_map_key_create_pos(self):
+    @pytest.mark.parametrize("key, val", [
+        ('new_key', 'val1'),
+        (230, 'val1')
+    ])
+    def test_cdt_ctx_map_key_create_pos(self, key, val):
         """
         Test the map_key_create cdt_ctx type.
         """
-        ctx = [cdt_ctx.cdt_ctx_map_key_create('new_key', aerospike.MAP_KEY_ORDERED)]
+        ctx = [cdt_ctx.cdt_ctx_map_key_create(key, aerospike.MAP_KEY_ORDERED)]
 
         ops = [
-            map_operations.map_put(self.nested_map_bin, 'key1', 'val1', None, ctx),
-            map_operations.map_get_by_key(self.nested_map_bin, 'new_key', aerospike.MAP_RETURN_VALUE)
+            map_operations.map_put(self.nested_map_bin, 'key1', val, None, ctx),
+            map_operations.map_get_by_key(self.nested_map_bin, key, aerospike.MAP_RETURN_VALUE)
         ]
 
         _, _, res = self.as_connection.operate(self.test_key, ops)
-        print(res)
-        assert(res[self.nested_map_bin] == {'key1': 'val1'})
+        assert(res[self.nested_map_bin] == {'key1': val})
 
-    # def test_cdt_ctx_list_index_create_pos(self):
-    #     """
-    #     Test the list_index_create cdt_ctx type.
-    #     """
-    #     ctx = [cdt_ctx.cdt_ctx_list_index_create(1, aerospike.LIST_ORDERED, True)] #TODO debug this
+    @pytest.mark.parametrize("index, val, pad", [
+        #(10, 'val1', True), why doesn't this work? #TODO figure out if pad works correctly for C client.
+        (2, 'val1', False)
+    ])
+    def test_cdt_ctx_list_index_create_pos(self, index, val, pad):
+        """
+        Test the list_index_create cdt_ctx type.
+        """
+        ctx = [cdt_ctx.cdt_ctx_list_index_create(index, aerospike.LIST_ORDERED, pad)] #TODO figure out if pad works correctly for C client.
 
-    #     ops = [
-    #         list_operations.list_append(self.nested_list_bin, 'val1', None, ctx),
-    #         # list_operations.list_get_by_index(self.nested_list_bin, 9, aerospike.MAP_RETURN_VALUE),
-    #         # list_operations.list_get_by_index(self.nested_list_bin, 10, aerospike.MAP_RETURN_VALUE)
-    #     ]
+        ops = [
+            list_operations.list_append(self.nested_list_bin, 'val1', None, ctx),
+            list_operations.list_get_by_index(self.nested_list_bin, index, aerospike.LIST_RETURN_VALUE)
+        ]
 
-    #     _, _, res = self.as_connection.operate(self.test_key, ops)
-    #     print(res)
-    #     assert(res[self.nested_list_bin] == {'key1': 'val1'})
+        _, _, res = self.as_connection.operate(self.test_key, ops)
+        assert(res[self.nested_list_bin] == ['val1'])
+
+    @pytest.mark.parametrize("key, val, flags, expected", [
+        ('new_key', 'val1', ['bad_order'], e.ParamError),
+        ('new_key', 'val1', None, e.ParamError)
+    ])
+    def test_cdt_ctx_map_key_create_neg(self, key, val, flags, expected):
+        """
+        Test the map_key_create cdt_ctx type.
+        """
+        ctx = [cdt_ctx.cdt_ctx_map_key_create(key, flags)]
+
+        ops = [
+            map_operations.map_put(self.nested_map_bin, 'key1', val, None, ctx),
+            map_operations.map_get_by_key(self.nested_map_bin, key, aerospike.MAP_RETURN_VALUE)
+        ]
+
+        with pytest.raises(expected):
+            self.as_connection.operate(self.test_key, ops)
+
+    @pytest.mark.parametrize("index, val, pad, flags, expected", [
+        (10, 'val1', False, aerospike.LIST_ORDERED, e.OpNotApplicable),
+        (None, 'val1', False, aerospike.LIST_ORDERED, e.ParamError),
+        (2, 'val1', "bad_pad", aerospike.LIST_ORDERED, e.ParamError),
+        (2, 'val1', "bad_pad", ["bad_flags"], e.ParamError)
+    ])
+    def test_cdt_ctx_list_index_create_neg(self, index, val, pad, flags, expected):
+        """
+        Test the list_index_create cdt_ctx type.
+        """
+        ctx = [cdt_ctx.cdt_ctx_list_index_create(index, aerospike.LIST_ORDERED, pad)]
+
+        ops = [
+            list_operations.list_append(self.nested_list_bin, 'val1', None, ctx),
+            list_operations.list_get_by_index(self.nested_list_bin, index, aerospike.LIST_RETURN_VALUE)
+        ]
+
+        with pytest.raises(expected):
+            self.as_connection.operate(self.test_key, ops)

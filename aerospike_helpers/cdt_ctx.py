@@ -138,14 +138,16 @@ def cdt_ctx_list_value(value):
     return _cdt_ctx(aerospike.CDT_CTX_LIST_VALUE, value)
 
 
-def cdt_ctx_list_index_create(index: int, order: int, pad: bool): #TODO what is pad?
+def cdt_ctx_list_index_create(index: int, order: int = 0, pad: bool = False) -> _cdt_ctx:
     """Creates a nested cdt_ctx object for use with list or map operations.
     
     Create a list with the given sort order at the given index.
 
     Args:
-        key (object): The key to look for in the map.
-        order (int): The sort order to create the map with. One of aerospike_map_sort_order #TODO replace with link
+        key (object): The index to create the list at.
+        order (int): The sort order to create the list with. One of :ref:`list sort orders <aerospike_list_order>`.
+            Default == aerospike.LIST_UNORDERED
+        pad (Bool): If index is out of bounds and pad is True, the list will be created at index and empty list elements inserted behind it.
     
     Returns:
         A cdt_ctx object, a list of these is usable with list and map operations.
@@ -212,14 +214,15 @@ def cdt_ctx_map_value(value):
     return _cdt_ctx(aerospike.CDT_CTX_MAP_VALUE, value)
 
 
-def cdt_ctx_map_key_create(key: any, order: int):
+def cdt_ctx_map_key_create(key: any, order: int = 0) -> _cdt_ctx:
     """Creates a nested cdt_ctx object for use with list or map operations.
     
     Create a map with the given sort order at the given key.
 
     Args:
-        key (object): The key to look for in the map.
-        order (int): The sort order to create the map with. One of the aerospike :ref:`map sort orders <_aerospike_map_write_flag>`
+        key (object): The key to create the map at.
+        order (int): The sort order to create the map with. One of the aerospike :ref:`map sort orders <aerospike_map_order>`.
+            Default == aerospike.MAP_UNORDERED
     
     Returns:
         A cdt_ctx object, a list of these is usable with list and map operations.

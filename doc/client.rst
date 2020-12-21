@@ -3333,9 +3333,9 @@ Map Policies
 		
         * **map_order**  
             | Ordering to maintain for the map entries. 
-            | One of :ref:`aerospike_map_order`, such as :data:`aerospike.KEY_ORDERED` 
+            | One of :ref:`aerospike_map_order`, such as :data:`aerospike.MAP_KEY_ORDERED` 
             |
-            | Default: :data:`aerospike.UNORDERED`
+            | Default: :data:`aerospike.MAP_UNORDERED`
             
     Example:
 

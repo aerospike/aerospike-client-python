@@ -659,7 +659,9 @@ def list_get_by_value_range(bin_name, return_type, value_begin, value_end, inver
     """Create a list get by value list operation.
 
     Server selects list items with a value greater than or equal to `value_begin`
-    and less than `value_end`. Server returns selected data specified by `return_type`.
+    and less than `value_end`. If `value_begin` is `None`, range is greater than or equal
+    to the first element of the list. If `value_end` is `None` range extends to the end of the list.
+    Server returns selected data specified by `return_type`.
 
     Args:
         bin_name (str): The name of the bin containing the list to fetch items from.
@@ -728,7 +730,7 @@ def list_remove_by_index_range(bin_name, index, return_type, count=None, inverte
     """Create a list remove by index range operation.
 
     The list remove by index range operation removes `count` starting at `index` and returns a value
-    specified by `return_type`
+    specified by `return_type`.
 
     Args:
         bin_name (str): The name of the bin containing the list to remove items from.
@@ -901,7 +903,10 @@ def list_remove_by_value_range(bin_name, return_type, value_begin=None,
     """Create a list remove by value range operation.
 
     Server removes list items with a value greater than or equal to `value_begin`
-    and less than `value_end`. Server returns selected data specified by `return_type`.
+    and less than `value_end`.
+    If `value_begin` is `None`, range is greater than or equal to the first element of the list.
+    If `value_end` is `None` range extends to the end of the list.
+    Server returns selected data specified by `return_type`.
 
     Args:
         bin_name (str): The name of the bin containing the list to fetch items from.
