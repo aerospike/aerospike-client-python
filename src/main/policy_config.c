@@ -208,11 +208,6 @@ as_status set_apply_policy(as_policy_apply* apply_policy, PyObject* py_policy) {
 		return status;
 	}
 
-	// status = set_optional_gen(&apply_policy->gen, py_policy, "gen"); removed
-	// if (status != AEROSPIKE_OK) {
-	// 	return status;
-	// }
-
 	status = set_optional_commit_level(&apply_policy->commit_level, py_policy, "commit_level");
 	if (status != AEROSPIKE_OK) {
 		return status;

@@ -444,24 +444,6 @@ class TestQueryExpressions(object):
         with pytest.raises(e.InvalidRequest):
             self.query.results(policy={'expressions': expr.compile()})
 
-    # @pytest.mark.parametrize(
-    #     "func",
-    #     [
-    #         predexp.integer_value,
-    #         predexp.predexp_and,
-    #         predexp.predexp_or,
-    #         predexp.rec_digest_modulo,
-    #     ])
-    # def test_with_wrong_predicate_argument_type_expecting_int(self, func):
-    #     '''
-    #     These functions all expect an integer argument, call with a string
-    #     '''
-    #     predexps = [
-    #         func("five")
-    #     ]
-    #     with pytest.raises(e.ParamError):
-    #         self.query.predexp(predexps)
-
     @pytest.mark.parametrize(
         "func",
         [

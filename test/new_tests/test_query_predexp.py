@@ -282,3 +282,27 @@ class TestQuery(TestBaseClass):
         query.foreach(callback, {'predexp': predexp})
         assert len(records) == 1
         assert records[0]['test_age'] == 4
+
+    @pytest.mark.parametrize(
+        "func",
+        [
+            as_predexp.integer_value,
+            as_predexp.predexp_and,
+            as_predexp.predexp_or,
+            as_predexp.rec_digest_modulo,
+        ])
+    def test_with_wrong_predicate_argument_type_expecting_int(self, func):
+        '''
+        These functions all expect an integer argument, call with a string
+        '''
+        predexps = [
+            func("five")
+        ]
+
+        def callback(input_tuple):
+            _, _, record = input_tuple
+            records.append(record)
+
+        query = self.as_connection.query('test', 'demo')
+        with pytest.raises(e.ParamError):
+            query.foreach(callback, {'predexp': predexps})
