@@ -286,10 +286,10 @@ class TestQuery(TestBaseClass):
     @pytest.mark.parametrize(
         "func",
         [
-            predexp.integer_value,
-            predexp.predexp_and,
-            predexp.predexp_or,
-            predexp.rec_digest_modulo,
+            as_predexp.integer_value,
+            as_predexp.predexp_and,
+            as_predexp.predexp_or,
+            as_predexp.rec_digest_modulo,
         ])
     def test_with_wrong_predicate_argument_type_expecting_int(self, func):
         '''
@@ -298,5 +298,11 @@ class TestQuery(TestBaseClass):
         predexps = [
             func("five")
         ]
+
+        def callback(input_tuple):
+            _, _, record = input_tuple
+            records.append(record)
+
+        query = self.as_connection.query('test', 'demo')
         with pytest.raises(e.ParamError):
-            self.query.predexp(predexps)
+            query.foreach(callback, {'predexp': predexps})
