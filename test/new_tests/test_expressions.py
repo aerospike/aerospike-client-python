@@ -309,6 +309,7 @@ class TestExpressions(TestBaseClass):
 
         return sqrt(rel_err_sum)
 
+    @pytest.mark.xfail(reason="Will fail on storage engine device.")
     def test_DeviceSize_pos(self):
         expr = Eq(DeviceSize(), 0)
         record = self.as_connection.get(('test', u'demo', 19), policy={'expressions': expr.compile()})
@@ -602,7 +603,7 @@ class TestExpressions(TestBaseClass):
         expr = And(
             Eq(
                 ListGetByValueRelRankRange(None, aerospike.LIST_RETURN_COUNT, 
-                    ListGetByIndex(None, aerospike.LIST_RETURN_VALUE, values[0], 0, bin), 1, 3, bin), #why did this fail with aerospike.CDTInfinite for count?
+                    ListGetByIndex(None, aerospike.LIST_RETURN_VALUE, values[0], 0, bin), 1, 3, bin),
                 2),
             Eq(
                 ListGetByValue(None, aerospike.LIST_RETURN_INDEX, values[1],

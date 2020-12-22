@@ -369,7 +369,9 @@ class _Key(BaseExpr):
 
 
 class KeyInt(_Key):
-    """Create an expression that returns the key as an integer. Returns 'unknown' if"""
+    """ Create an expression that returns the key as an integer. Returns 'unknown' if
+        the key is not an integer.
+    """
     rt = ResultType.INTEGER
 
     def __init__(self):
@@ -382,11 +384,13 @@ class KeyInt(_Key):
                 # Integer record key >= 10000.
                 expr = GE(KeyInt(), 10000).compile()
         """
-        super(KeyInt, self).__init__()
+        super().__init__()
 
 
 class KeyStr(_Key):
-    """Create an expression that returns the key as a string. Returns 'unknown' if"""
+    """ Create an expression that returns the key as a string. Returns 'unknown' if
+        the key is not a string.
+    """
     rt = ResultType.STRING
 
     def __init__(self):
@@ -399,11 +403,13 @@ class KeyStr(_Key):
                 # string record key == "aaa".
                 expr = Eq(KeyStr(), "aaa").compile()
         """ 
-        super(KeyStr, self).__init__()
+        super().__init__()
 
 
 class KeyBlob(_Key):
-    """Create an expression that returns the key as a blob. Returns 'unknown' if"""
+    """ Create an expression that returns the key as a blob. Returns 'unknown' if
+        the key is not a blob.
+    """
     rt = ResultType.BLOB
 
     def __init__(self):
@@ -416,11 +422,14 @@ class KeyBlob(_Key):
                 # blob record key <= bytearray([0x65, 0x65]).
                 expr = GE(KeyBlob(), bytearray([0x65, 0x65])).compile()
         """ 
-        super(KeyBlob, self).__init__()
+        super().__init__()
 
 
 class KeyExists(BaseExpr):
-    """Create an expression that returns if the primary key is stored in the record meta"""
+    """ Create an expression that returns if the primary key is stored in the record meta
+        data as a boolean expression. This would occur on record write, when write policies set the `key` field to
+        aerospike.POLICY_KEY_SEND.
+    """
     op = ExprOp.META_KEY_EXISTS
     rt = ResultType.BOOLEAN
 
@@ -435,14 +444,16 @@ class KeyExists(BaseExpr):
                 # Key exists in record meta data.
                 expr = KeyExists().compile()
         """ 
-        super(KeyExists, self).__init__()
+        super().__init__()
 
 
 # Bin Expressions
 
 
 class IntBin(BaseExpr):
-    """Create an expression that returns a bin as an integer. Returns 'unkown'"""
+    """Create an expression that returns a bin as an integer. Returns 'unkown'
+        if the bin is not an integer.
+    """
     op = ExprOp.BIN
     rt = ResultType.INTEGER
 
@@ -463,7 +474,9 @@ class IntBin(BaseExpr):
 
 
 class StrBin(BaseExpr):
-    """Create an expression that returns a bin as a string. Returns 'unkown'"""
+    """Create an expression that returns a bin as a string. Returns 'unkown'
+        if the bin is not a string.
+    """
     op = ExprOp.BIN
     rt = ResultType.STRING
 
@@ -484,7 +497,9 @@ class StrBin(BaseExpr):
 
 
 class FloatBin(BaseExpr):
-    """Create an expression that returns a bin as a float. Returns 'unkown'"""
+    """Create an expression that returns a bin as a float. Returns 'unkown'
+        if the bin is not a float.
+    """
     op = ExprOp.BIN
     rt = ResultType.FLOAT
 
@@ -505,7 +520,9 @@ class FloatBin(BaseExpr):
 
 
 class BlobBin(BaseExpr):
-    """Create an expression that returns a bin as a blob. Returns 'unkown'"""
+    """Create an expression that returns a bin as a blob. Returns 'unkown'
+        if the bin is not a blob.
+    """
     op = ExprOp.BIN
     rt = ResultType.BLOB
 
@@ -526,7 +543,9 @@ class BlobBin(BaseExpr):
 
 
 class GeoBin(BaseExpr):
-    """Create an expression that returns a bin as a geojson. Returns 'unkown'"""
+    """ Create an expression that returns a bin as a geojson. Returns 'unkown'
+        if the bin is not a geojson.
+    """
     op = ExprOp.BIN
     rt = ResultType.GEOJSON
 
@@ -547,7 +566,9 @@ class GeoBin(BaseExpr):
 
 
 class ListBin(BaseExpr):
-    """Create an expression that returns a bin as a list. Returns 'unkown'"""
+    """ Create an expression that returns a bin as a list. Returns 'unkown'
+        if the bin is not a list.
+    """
     op = ExprOp.BIN
     rt = ResultType.LIST
 
@@ -570,7 +591,9 @@ class ListBin(BaseExpr):
 
 
 class MapBin(BaseExpr):
-    """Create an expression that returns a bin as a map. Returns 'unkown'"""
+    """ Create an expression that returns a bin as a map. Returns 'unkown'
+        if the bin is not a map.
+    """
     op = ExprOp.BIN
     rt = ResultType.MAP
 
@@ -591,7 +614,9 @@ class MapBin(BaseExpr):
 
 
 class HLLBin(BaseExpr):
-    """Create an expression that returns a bin as a HyperLogLog. Returns 'unkown'"""
+    """ Create an expression that returns a bin as a HyperLogLog. Returns 'unkown'
+        if the bin is not a HyperLogLog.
+    """
     op = ExprOp.BIN
     rt = ResultType.HLL
 
@@ -633,7 +658,7 @@ class BinExists(BaseExpr):
 
 class BinType(BaseExpr):
     """ Create an expression that returns the type of a bin
-        as one of the aerospike constants aerospike.AS_BYTES*.
+        as one of the aerospike :ref:`bin types <aerospike_bin_types>`
     """
     op = ExprOp.BIN_TYPE
     rt = ResultType.INTEGER
@@ -673,7 +698,7 @@ class SetName(BaseExpr):
                 # Record set name == "myset".
                 expr = Eq(SetName(), "myset").compile()
         """        
-        super(SetName, self).__init__()
+        super().__init__()
 
 
 class DeviceSize(BaseExpr):
@@ -695,7 +720,7 @@ class DeviceSize(BaseExpr):
                 # Record device size >= 100 KB.
                 expr = GE(DeviceSize(), 100 * 1024).compile()
         """        
-        super(DeviceSize, self).__init__()
+        super().__init__()
 
 
 class LastUpdateTime(BaseExpr):
@@ -715,7 +740,7 @@ class LastUpdateTime(BaseExpr):
                 # Record last update time >= 2020-01-15.
                 expr = GE(LastUpdateTime(), 1577836800).compile()
         """        
-        super(LastUpdateTime, self).__init__()
+        super().__init__()
 
 
 class SinceUpdateTime(BaseExpr):
@@ -735,7 +760,7 @@ class SinceUpdateTime(BaseExpr):
                 # Record last updated more than 2 hours ago.
                 expr = GT(SinceUpdateTime(), 2 * 60 * 1000).compile()
         """        
-        super(SinceUpdateTime, self).__init__()    
+        super().__init__()    
 
 
 class VoidTime(BaseExpr):
@@ -757,7 +782,7 @@ class VoidTime(BaseExpr):
                         GE(VoidTime(), 1609459200),
                         LT(VoidTime(), 1609545600)).compile()
         """        
-        super(VoidTime, self).__init__()  
+        super().__init__()  
 
 
 class TTL(BaseExpr):
@@ -778,7 +803,7 @@ class TTL(BaseExpr):
                 # Record expires in less than 1 hour.
                 expr = LT(TTL(), 60 * 60).compile()
         """
-        super(TTL, self).__init__()  
+        super().__init__()  
 
 
 class IsTombstone(BaseExpr):
@@ -800,11 +825,11 @@ class IsTombstone(BaseExpr):
                 # Detect deleted records that are in tombstone state.
                 expr = IsTombstone().compile()
         """
-        super(IsTombstone, self).__init__() 
+        super().__init__() 
 
 
 class DigestMod(BaseExpr):
-    """ Create an expression that returns record digest modulo as integer."""
+    """Create an expression that returns record digest modulo as integer."""
     op = ExprOp.META_DIGEST_MOD
     rt = ResultType.INTEGER
 
@@ -1474,7 +1499,9 @@ class ListRemoveByValueRelRankToEnd(BaseExpr):
 
 
 class ListRemoveByValueRelRankRange(BaseExpr):
-    """Create an expression that removes list items nearest to value and greater by relative rank with a"""
+    """ Create an expression that removes list items nearest to value and greater by relative rank with a
+        count limit.
+    """
     op = aerospike.OP_LIST_REMOVE_BY_REL_RANK_RANGE
 
     def __init__(self, ctx: TypeCDT, value: TypeValue, rank: TypeRank, count: TypeCount, bin: TypeBinName):
@@ -1713,7 +1740,9 @@ class ListSize(BaseExpr):
 
 
 class ListGetByValue(BaseExpr):
-    """Create an expression that selects list items identified by value and returns selected"""
+    """ Create an expression that selects list items identified by value and returns selected
+        data specified by return_type.
+    """
     op = aerospike.OP_LIST_GET_BY_VALUE
 
     def __init__(self, ctx: TypeCDT, return_type: int, value: TypeValue, bin: TypeBinName):
@@ -1786,7 +1815,9 @@ class ListGetByValueRange(BaseExpr):
 
 
 class ListGetByValueList(BaseExpr):
-    """Create an expression that selects list items identified by values and returns selected"""
+    """ Create an expression that selects list items identified by values and returns selected
+        data specified by return_type.
+    """
     op = aerospike.OP_LIST_GET_BY_VALUE_LIST
 
     def __init__(self, ctx: TypeCDT, return_type: int, value: TypeListValue, bin: TypeBinName):
@@ -1851,7 +1882,9 @@ class ListGetByValueRelRankRangeToEnd(BaseExpr):
 
 
 class ListGetByValueRelRankRange(BaseExpr):
-    """Create an expression that selects list items nearest to value and greater by relative rank with a"""
+    """ Create an expression that selects list items nearest to value and greater by relative rank with a
+        count limit and returns selected data specified by return_type.
+    """
     op = aerospike.OP_LIST_GET_BY_VALUE_RANK_RANGE_REL
 
     def __init__(self, ctx: TypeCDT, return_type: int, value: TypeValue, rank: TypeRank, count: TypeCount, bin: TypeBinName):
@@ -1927,7 +1960,9 @@ class ListGetByIndex(BaseExpr):
 
 
 class ListGetByIndexRangeToEnd(BaseExpr):
-    """Create an expression that selects list items starting at specified index to the end of list"""
+    """ Create an expression that selects list items starting at specified index to the end of list
+        and returns selected data specified by return_type.
+    """
     op = aerospike.OP_LIST_GET_BY_INDEX_RANGE_TO_END
 
     def __init__(self, ctx: TypeCDT, return_type: int, index: TypeIndex, bin: TypeBinName):
@@ -1958,7 +1993,9 @@ class ListGetByIndexRangeToEnd(BaseExpr):
 
 
 class ListGetByIndexRange(BaseExpr):
-    """Create an expression that selects "count" list items starting at specified index"""
+    """ Create an expression that selects "count" list items starting at specified index
+        and returns selected data specified by return_type.
+    """
     op = aerospike.OP_LIST_GET_BY_INDEX_RANGE
 
     def __init__(self, ctx: TypeCDT, return_type: int, index: TypeIndex, count: TypeCount, bin: TypeBinName):
@@ -2032,7 +2069,9 @@ class ListGetByRank(BaseExpr):
 
 
 class ListGetByRankRangeToEnd(BaseExpr):
-    """Create an expression that selects list items starting at specified rank to the last ranked item"""
+    """ Create an expression that selects list items starting at specified rank to the last ranked item
+        and returns selected data specified by return_type.
+    """
     op = aerospike.OP_LIST_GET_BY_RANK_RANGE_TO_END
 
     def __init__(self, ctx: TypeCDT, return_type: int, rank: TypeRank, bin: TypeBinName):
@@ -2063,7 +2102,9 @@ class ListGetByRankRangeToEnd(BaseExpr):
 
 
 class ListGetByRankRange(BaseExpr):
-    """Create an expression that selects "count" list items starting at specified rank"""
+    """ Create an expression that selects "count" list items starting at specified rank
+        and returns selected data specified by return_type.
+    """
     op = aerospike.OP_LIST_GET_BY_RANK_RANGE
 
     def __init__(self, ctx: TypeCDT, return_type: int, rank: TypeRank, count: TypeCount, bin: TypeBinName):
@@ -2173,7 +2214,9 @@ class MapPutItems(BaseExpr):
 
 
 class MapIncrement(BaseExpr):
-    """Create an expression that increments a map value, by value, for all items identified by key."""
+    """ Create an expression that increments a map value, by value, for all items identified by key.
+        Valid only for numbers.
+    """
     op = aerospike.OP_MAP_INCREMENT
 
     def __init__(self, ctx: TypeCDT, policy: TypePolicy, key: TypeKey, value: TypeValue, bin: TypeBinName):
@@ -2445,7 +2488,10 @@ class MapRemoveByValueList(BaseExpr):
 
 
 class MapRemoveByValueRange(BaseExpr):
-    """Create an expression that removes map items identified by value range"""
+    """ Create an expression that removes map items identified by value range
+        (begin inclusive, end exclusive). If begin is nil, the range is less than end.
+        If end is aerospike.CDTInfinite(), the range is greater than equal to begin.
+    """
     op = aerospike.OP_MAP_REMOVE_BY_VALUE_RANGE
 
     def __init__(self, ctx: TypeCDT, begin: TypeValue, end: TypeValue, bin: TypeBinName):
@@ -2507,7 +2553,9 @@ class MapRemoveByValueRelRankRangeToEnd(BaseExpr):
 
 
 class MapRemoveByValueRelRankRange(BaseExpr):
-    """Create an expression that removes map items nearest to value and greater by relative rank with a"""
+    """ Create an expression that removes map items nearest to value and greater by relative rank with a
+        count limit.
+    """
     op = aerospike.OP_MAP_REMOVE_BY_VALUE_REL_RANK_RANGE
 
     def __init__(self, ctx: TypeCDT, value: TypeValue, rank: TypeRank, count: TypeCount, bin: TypeBinName):
@@ -2743,7 +2791,9 @@ class MapSize(BaseExpr):
 
 
 class MapGetByKey(BaseExpr):
-    """Create an expression that selects map item identified by key"""
+    """ Create an expression that selects map item identified by key
+        and returns selected data specified by return_type.
+    """
     op = aerospike.OP_MAP_GET_BY_KEY
 
     def __init__(self, ctx: TypeCDT, return_type: int, value_type: int, key: TypeKey, bin: TypeBinName):
@@ -2775,7 +2825,7 @@ class MapGetByKey(BaseExpr):
 
 
 class MapGetByKeyRange(BaseExpr):
-    """Create an expression that selects map items identified by key range"""
+    """Create an expression that selects map items identified by key range."""
     op = aerospike.OP_MAP_GET_BY_KEY_RANGE
 
     def __init__(self, ctx: TypeCDT, return_type: int, begin: TypeKey, end: TypeKey, bin: TypeBinName):
@@ -2810,7 +2860,9 @@ class MapGetByKeyRange(BaseExpr):
 
 
 class MapGetByKeyList(BaseExpr):
-    """Create an expression that selects map items identified by keys"""
+    """ Create an expression that selects map items identified by keys
+        and returns selected data specified by return_type.
+    """
     op = aerospike.OP_MAP_GET_BY_KEY_LIST
 
     def __init__(self, ctx: TypeCDT, return_type: int, keys: TypeKeyList, bin: TypeBinName):
@@ -2909,7 +2961,7 @@ class MapGetByKeyRelIndexRange(BaseExpr):
 
 
 class MapGetByValue(BaseExpr):
-    """Create an expression that selects map items identified by value"""
+    """Create an expression that selects map items identified by value."""
     op = aerospike.OP_MAP_GET_BY_VALUE
 
     def __init__(self, ctx: TypeCDT, return_type: int, value: TypeValue, bin: TypeBinName):
@@ -2940,11 +2992,7 @@ class MapGetByValue(BaseExpr):
 
 
 class MapGetByValueRange(BaseExpr):
-    """ Create an expression that selects map items identified by value range
-        (begin inclusive, end exclusive). If begin is None, the range is less than end.
-        If end is None, the range is greater than equal to begin.
-        Expression returns selected data specified by return_type.
-    """
+    """ Create an expression that selects map items identified by value range."""
     op = aerospike.OP_MAP_GET_BY_VALUE_RANGE
 
     def __init__(
@@ -2986,7 +3034,7 @@ class MapGetByValueRange(BaseExpr):
 
 
 class MapGetByValueList(BaseExpr):
-    """Create an expression that selects map items identified by values"""
+    """Create an expression that selects map items identified by values."""
     op = aerospike.OP_MAP_GET_BY_VALUE_LIST
 
     def __init__(self, ctx: TypeCDT, return_type: int, value: TypeListValue, bin: TypeBinName):
@@ -3050,7 +3098,9 @@ class MapGetByValueRelRankRangeToEnd(BaseExpr):
 
 
 class MapGetByValueRelRankRange(BaseExpr):
-    """Create an expression that selects map items nearest to value and greater by relative rank with a"""
+    """ Create an expression that selects map items nearest to value and greater by relative rank with a
+        count limit. Expression returns selected data specified by return_type.
+    """
     op = aerospike.OP_MAP_GET_BY_VALUE_RANK_RANGE_REL
 
     def __init__(self, ctx: TypeCDT, return_type: int, value: TypeValue, rank: TypeRank, count: TypeCount, bin: TypeBinName):
@@ -3126,7 +3176,7 @@ class MapGetByIndex(BaseExpr):
 
 
 class MapGetByIndexRangeToEnd(BaseExpr):
-    """Create an expression that selects map items starting at specified index to the end of map"""
+    """Create an expression that selects map items starting at specified index to the end of map."""
     op = aerospike.OP_MAP_GET_BY_INDEX_RANGE_TO_END
 
     def __init__(self, ctx: TypeCDT, return_type: int, index: TypeIndex, bin: TypeBinName):
@@ -3157,7 +3207,7 @@ class MapGetByIndexRangeToEnd(BaseExpr):
 
 
 class MapGetByIndexRange(BaseExpr):
-    """Create an expression that selects "count" map items starting at specified index"""
+    """Create an expression that selects "count" map items starting at specified index."""
     op = aerospike.OP_MAP_GET_BY_INDEX_RANGE
 
     def __init__(self, ctx: TypeCDT, return_type: int, index: TypeIndex, count: TypeCount, bin: TypeBinName):
@@ -3231,7 +3281,7 @@ class MapGetByRank(BaseExpr):
 
 
 class MapGetByRankRangeToEnd(BaseExpr):
-    """Create an expression that selects map items starting at specified rank to the last ranked item"""
+    """Create an expression that selects map items starting at specified rank to the last ranked item."""
     op = aerospike.OP_MAP_GET_BY_RANK_RANGE_TO_END
 
     def __init__(self, ctx: TypeCDT, return_type: int, rank: TypeRank, bin: TypeBinName):
@@ -3262,7 +3312,7 @@ class MapGetByRankRangeToEnd(BaseExpr):
 
 
 class MapGetByRankRange(BaseExpr):
-    """Create an expression that selects "count" map items starting at specified rank"""
+    """Create an expression that selects "count" map items starting at specified rank."""
     op = aerospike.OP_MAP_GET_BY_RANK_RANGE
 
     def __init__(self, ctx: TypeCDT, return_type: int, rank: TypeRank, count: TypeCount, bin: TypeBinName):
@@ -3628,7 +3678,9 @@ class BitAdd(BaseExpr):
 
 
 class BitSubtract(BaseExpr):
-    """Create an expression that performs a bit_subtract operation."""
+    """ Create an expression that performs a bit_subtract operation.
+        Note: integers are stored big-endian.
+    """
     op = aerospike.OP_BIT_SUBTRACT
 
     def __init__(self, policy: TypePolicy, bit_offset: int, bit_size: int, value: int, action: int, bin: TypeBinName):
@@ -4018,7 +4070,9 @@ class HLLDescribe(BaseExpr):
 
 
 class HLLMayContain(BaseExpr):
-    """Create an expression that checks if the HLL bin contains any keys in"""
+    """ Create an expression that checks if the HLL bin contains any keys in
+        list.
+    """
     op = aerospike.OP_HLL_MAY_CONTAIN
 
     def __init__(self, list: TypeListValue, bin: TypeBinName, ):
