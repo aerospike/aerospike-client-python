@@ -426,7 +426,7 @@ class KeyBlob(_Key):
 
 
 class KeyExists(BaseExpr):
-    """ Create an expression that returns if the primary key is stored in the record meta
+    """ Create an expression that returns if the primary key is stored in the record storage
         data as a boolean expression. This would occur on record write, when write policies set the `key` field to
         aerospike.POLICY_KEY_SEND.
     """
@@ -434,11 +434,11 @@ class KeyExists(BaseExpr):
     rt = ResultType.BOOLEAN
 
     def __init__(self):
-        """ Create an expression that returns if the primary key is stored in the record meta
+        """ Create an expression that returns if the primary key is stored in the record storage
             data as a boolean expression. This would occur on record write, when write policies set the `key` field to
             aerospike.POLICY_KEY_SEND.
         
-            :return (boolean value): True if the record has a stored key, false otherwise. #NOTE why can't we compare these with an as_exp_bool()?
+            :return (boolean value): True if the record has a stored key, false otherwise.
 
             Example::
                 # Key exists in record meta data.
@@ -447,18 +447,20 @@ class KeyExists(BaseExpr):
         super().__init__()
 
 
+#################
 # Bin Expressions
+#################
 
 
 class IntBin(BaseExpr):
-    """Create an expression that returns a bin as an integer. Returns 'unkown'
+    """ Create an expression that returns a bin as an integer. Returns 'unknown'
         if the bin is not an integer.
     """
     op = ExprOp.BIN
     rt = ResultType.INTEGER
 
     def __init__(self, bin: str):
-        """ Create an expression that returns a bin as an integer. Returns 'unkown'
+        """ Create an expression that returns a bin as an integer. Returns 'unknown'
             if the bin is not an integer.
 
             Args:
@@ -474,14 +476,14 @@ class IntBin(BaseExpr):
 
 
 class StrBin(BaseExpr):
-    """Create an expression that returns a bin as a string. Returns 'unkown'
+    """ Create an expression that returns a bin as a string. Returns 'unknown'
         if the bin is not a string.
     """
     op = ExprOp.BIN
     rt = ResultType.STRING
 
     def __init__(self, bin: str):
-        """ Create an expression that returns a bin as a string. Returns 'unkown'
+        """ Create an expression that returns a bin as a string. Returns 'unknown'
             if the bin is not a string.
 
             Args:
@@ -497,14 +499,14 @@ class StrBin(BaseExpr):
 
 
 class FloatBin(BaseExpr):
-    """Create an expression that returns a bin as a float. Returns 'unkown'
+    """ Create an expression that returns a bin as a float. Returns 'unknown'
         if the bin is not a float.
     """
     op = ExprOp.BIN
     rt = ResultType.FLOAT
 
     def __init__(self, bin: str):
-        """ Create an expression that returns a bin as a float. Returns 'unkown'
+        """ Create an expression that returns a bin as a float. Returns 'unknown'
             if the bin is not a float.
 
             Args:
@@ -520,14 +522,14 @@ class FloatBin(BaseExpr):
 
 
 class BlobBin(BaseExpr):
-    """Create an expression that returns a bin as a blob. Returns 'unkown'
+    """ Create an expression that returns a bin as a blob. Returns 'unknown'
         if the bin is not a blob.
     """
     op = ExprOp.BIN
     rt = ResultType.BLOB
 
     def __init__(self, bin: str):
-        """ Create an expression that returns a bin as a blob. Returns 'unkown'
+        """ Create an expression that returns a bin as a blob. Returns 'unknown'
             if the bin is not a blob.
 
             Args:
@@ -543,14 +545,14 @@ class BlobBin(BaseExpr):
 
 
 class GeoBin(BaseExpr):
-    """ Create an expression that returns a bin as a geojson. Returns 'unkown'
+    """ Create an expression that returns a bin as a geojson. Returns 'unknown'
         if the bin is not a geojson.
     """
     op = ExprOp.BIN
     rt = ResultType.GEOJSON
 
     def __init__(self, bin: str):
-        """ Create an expression that returns a bin as a geojson. Returns 'unkown'
+        """ Create an expression that returns a bin as a geojson. Returns 'unknown'
             if the bin is not a geojson.
 
             Args:
@@ -566,14 +568,14 @@ class GeoBin(BaseExpr):
 
 
 class ListBin(BaseExpr):
-    """ Create an expression that returns a bin as a list. Returns 'unkown'
+    """ Create an expression that returns a bin as a list. Returns 'unknown'
         if the bin is not a list.
     """
     op = ExprOp.BIN
     rt = ResultType.LIST
 
     def __init__(self, bin: str):
-        """ Create an expression that returns a bin as a list. Returns 'unkown'
+        """ Create an expression that returns a bin as a list. Returns 'unknown'
             if the bin is not a list.
 
             Args:
@@ -591,14 +593,14 @@ class ListBin(BaseExpr):
 
 
 class MapBin(BaseExpr):
-    """ Create an expression that returns a bin as a map. Returns 'unkown'
+    """ Create an expression that returns a bin as a map. Returns 'unknown'
         if the bin is not a map.
     """
     op = ExprOp.BIN
     rt = ResultType.MAP
 
     def __init__(self, bin: str):
-        """ Create an expression that returns a bin as a map. Returns 'unkown'
+        """ Create an expression that returns a bin as a map. Returns 'unknown'
             if the bin is not a map.
 
             Args:
@@ -614,14 +616,14 @@ class MapBin(BaseExpr):
 
 
 class HLLBin(BaseExpr):
-    """ Create an expression that returns a bin as a HyperLogLog. Returns 'unkown'
+    """ Create an expression that returns a bin as a HyperLogLog. Returns 'unknown'
         if the bin is not a HyperLogLog.
     """
     op = ExprOp.BIN
     rt = ResultType.HLL
 
     def __init__(self, bin: str):
-        """ Create an expression that returns a bin as a HyperLogLog. Returns 'unkown'
+        """ Create an expression that returns a bin as a HyperLogLog. Returns 'unknown'
             if the bin is not a HyperLogLog.
 
             Args:
@@ -677,6 +679,11 @@ class BinType(BaseExpr):
                 expr = Eq(BinType("a"), aerospike.AS_BYTES_STRING).compile()
         """        
         self.fixed = {BIN_KEY: bin}
+
+
+####################
+# Record Expressions
+####################
 
 
 class SetName(BaseExpr):
@@ -809,7 +816,7 @@ class TTL(BaseExpr):
 class IsTombstone(BaseExpr):
     """ Create an expression that returns if record has been deleted and is still in
         tombstone state. This expression usually evaluates quickly because record
-        meta data is cached in memory.
+        meta data is cached in memory. NOTE: this is only applicable for XDR filter expressions.
     """
     op = ExprOp.META_IS_TOMBSTONE
     rt = ResultType.BOOLEAN
@@ -817,7 +824,7 @@ class IsTombstone(BaseExpr):
     def __init__(self):
         """ Create an expression that returns if record has been deleted and is still in
             tombstone state. This expression usually evaluates quickly because record
-            meta data is cached in memory.
+            meta data is cached in memory. NOTE: this is only applicable for XDR filter expressions.
 
             :return (boolean value): True if the record is a tombstone, false otherwise.
         
