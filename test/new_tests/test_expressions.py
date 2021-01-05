@@ -1140,8 +1140,9 @@ class TestExpressions(TestBaseClass):
         """
 
         expr = Eq(
-                    BitSet(policy, 7, 1, bytearray([0]), '1bits_bin'),
-                    bytearray([0] + [1] * 7)
+                    BitSet(policy, 7, 1, bytearray([255]),
+                        BitSet(policy, 0, 8 * 8, bytearray([0] * 8), '1bits_bin')),
+                    bytearray([1] + [0] * 7)
                 )
 
         verify_multiple_expression_avenues(self.as_connection, self.test_ns, self.test_set, expr.compile(), '1bits_bin', 19)
@@ -1394,10 +1395,11 @@ class TestExpressions(TestBaseClass):
 
         verify_multiple_expression_avenues(self.as_connection, self.test_ns, self.test_set, expr.compile(), bin, 19)
 
-    @pytest.mark.parametrize("bin, expected", [
-        ('hll_bin', 25000)
+    @pytest.mark.parametrize("bin, expected, hll_bins", [
+        ('hll_bin', 25000, ['hll_bin', 'hll_bin2', 'hll_bin3']),
+        ('hll_bin', 20000, ['hll_bin3']),
     ])
-    def test_HLLGetUnion_pos(self, bin, expected):
+    def test_HLLGetUnion_pos(self, bin, expected, hll_bins):
         """
         Test the HLLGetUnion expression.
         """
@@ -1405,7 +1407,7 @@ class TestExpressions(TestBaseClass):
         upper_lim = ceil(expected + self.relative_count_error(10, expected))
         lower_lim = floor(expected - self.relative_count_error(10, expected))
         record = self.as_connection.get(('test', u'demo', 0))
-        records = [record[2]['hll_bin'], record[2]['hll_bin2'], record[2]['hll_bin3']]
+        records = [record[2][hll_bin] for hll_bin in hll_bins] if len(hll_bins) > 1 else record[2][hll_bins[0]]
         expr = And(
                     GE(
                         HLLGetCount(
@@ -1515,3 +1517,11 @@ class TestExpressions(TestBaseClass):
 
         expr = Eq(HLLMayContain(["key1", "key2", "key3"], HLLBin(bin)), 1)
         verify_multiple_expression_avenues(self.as_connection, self.test_ns, self.test_set, expr.compile(), bin, 19)
+
+
+    def test_predexp_and_expressions(self):
+        self.as_connection.put(('test', u'demo', 25), {'test': 'test_data'})
+
+        expr = Eq(KeyInt(), 25)
+        with pytest.raises(e.ParamError):
+            record = self.as_connection.remove(('test', u'demo', 25), policy={'expressions': expr.compile(), 'predexp': expr})

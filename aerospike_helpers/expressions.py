@@ -3424,7 +3424,7 @@ class BitRemove(BaseExpr):
 
             Args:
                 policy (TypePolicy): An optional aerospike bit policy.
-                byte_offset (int): Index of value to remove.
+                byte_offset (int): Byte index of where to start removing from.
                 byte_size (int): Number of bytes to remove.
                 bin (TypeBinName): Blob bin name or blob value expression.
 
@@ -3452,17 +3452,17 @@ class BitSet(BaseExpr):
 
             Args:
                 policy (TypePolicy): An optional aerospike bit policy.
-                bit_offset (int): Bit index of where to start writing.
-                bit_size (int): Number of bytes to overwrite.
+                bit_offset (int): Bit index of where to start overwriting.
+                bit_size (int): Number of bits to overwrite.
                 value (TypeBitValue): Bytes value or blob expression containing bytes to write.
                 bin (TypeBinName): Blob bin name or blob expression.
 
-            :return: Resulting blob expression with the bytes overwritten.
+            :return: Resulting blob expression with the bits overwritten.
         
             Example::
                 # Let blob bin "c" == bytearray([0] * 5).
-                # Set bit at offset 7 with size 1 bytes to 1 to make the returned value bytearray([1, 0, 0, 0, 0]).
-                expr = BitSet(None, 7, 1, bytearray([1]), BlobBin("c")).compile()
+                # Set bit at offset 7 with size 1 bits to 1 to make the returned value bytearray([1, 0, 0, 0, 0]).
+                expr = BitSet(None, 7, 1, bytearray([255]), BlobBin("c")).compile()
         """        
         self.children = (
             bit_offset,
@@ -3483,11 +3483,11 @@ class BitOr(BaseExpr):
             Args:
                 policy (TypePolicy): An optional aerospike bit policy.
                 bit_offset (int): Bit index of where to start operation.
-                bit_size (int): Number of bytes to be operated on.
+                bit_size (int): Number of bits to be operated on.
                 value (TypeBitValue): Bytes value or blob expression containing bytes to use in operation.
                 bin (TypeBinName): Blob bin name or blob expression.
 
-            :return: Resulting blob with the bytes operated on.
+            :return: Resulting blob with the bits operated on.
         
             Example::
                 # Let blob bin "c" == bytearray([1] * 5).
@@ -3513,11 +3513,11 @@ class BitXor(BaseExpr):
             Args:
                 policy (TypePolicy): An optional aerospike bit policy.
                 bit_offset (int): Bit index of where to start operation.
-                bit_size (int): Number of bytes to be operated on.
+                bit_size (int): Number of bits to be operated on.
                 value (TypeBitValue): Bytes value or blob expression containing bytes to use in operation.
                 bin (TypeBinName): Blob bin name or blob expression.
 
-            :return: Resulting blob with the bytes operated on.
+            :return: Resulting blob with the bits operated on.
         
             Example::
                 # Let blob bin "c" == bytearray([1] * 5).
@@ -3543,11 +3543,11 @@ class BitAnd(BaseExpr):
             Args:
                 policy (TypePolicy): An optional aerospike bit policy.
                 bit_offset (int): Bit index of where to start operation.
-                bit_size (int): Number of bytes to be operated on.
+                bit_size (int): Number of bits to be operated on.
                 value (TypeBitValue): Bytes value or blob expression containing bytes to use in operation.
                 bin (TypeBinName): Blob bin name or blob expression.
 
-            :return: Resulting blob with the bytes operated on.
+            :return: Resulting blob with the bits operated on.
         
             Example::
                 # Let blob bin "c" == bytearray([1] * 5).
@@ -3573,10 +3573,10 @@ class BitNot(BaseExpr):
             Args:
                 policy (TypePolicy): An optional aerospike bit policy.
                 bit_offset (int): Bit index of where to start operation.
-                bit_size (int): Number of bytes to be operated on.
+                bit_size (int): Number of bits to be operated on.
                 bin (TypeBinName): Blob bin name or blob expression.
 
-            :return: Resulting blob with the bytes operated on.
+            :return: Resulting blob with the bits operated on.
         
             Example::
                 # Let blob bin "c" == bytearray([255] * 5).
@@ -3601,11 +3601,11 @@ class BitLeftShift(BaseExpr):
             Args:
                 policy (TypePolicy): An optional aerospike bit policy.
                 bit_offset (int): Bit index of where to start operation.
-                bit_size (int): Number of bytes to be operated on.
+                bit_size (int): Number of bits to be operated on.
                 shift (int): Number of bits to shift by.
                 bin (TypeBinName): Blob bin name or blob expression.
 
-            :return: Resulting blob with the bytes operated on.
+            :return: Resulting blob with the bits operated on.
         
             Example::
                 # Let blob bin "c" == bytearray([1] * 5).
@@ -3631,11 +3631,11 @@ class BitRightShift(BaseExpr):
             Args:
                 policy (TypePolicy): An optional aerospike bit policy.
                 bit_offset (int): Bit index of where to start operation.
-                bit_size (int): Number of bytes to be operated on.
+                bit_size (int): Number of bits to be operated on.
                 shift (int): Number of bits to shift by.
                 bin (TypeBinName): Blob bin name or blob expression.
 
-            :return: Resulting blob with the bytes operated on.
+            :return: Resulting blob with the bits operated on.
         
             Example::
                 # Let blob bin "c" == bytearray([8] * 5).
@@ -3662,12 +3662,12 @@ class BitAdd(BaseExpr):
             Args:
                 policy (TypePolicy): An optional aerospike bit policy.
                 bit_offset (int): Bit index of where to start operation.
-                bit_size (int): Number of bytes to be operated on.
+                bit_size (int): Number of bits to be operated on.
                 value (int): Integer value or expression for value to add.
                 action (int): An aerospike bit overflow action.
                 bin (TypeBinName): Blob bin name or blob expression.
 
-            :return: resulting blob with the bytes operated on.
+            :return: resulting blob with the bits operated on.
         
             Example::
                 # Let blob bin "c" == bytearray([1] * 5).
@@ -3697,12 +3697,12 @@ class BitSubtract(BaseExpr):
             Args:
                 policy (TypePolicy): An optional aerospike bit policy.
                 bit_offset (int): Bit index of where to start operation.
-                bit_size (int): Number of bytes to be operated on.
+                bit_size (int): Number of bits to be operated on.
                 value (int): Integer value or expression for value to add.
                 action (int): An aerospike bit overflow action.
                 bin (TypeBinName): Blob bin name or blob expression.
 
-            :return: resulting blob with the bytes operated on.
+            :return: resulting blob with the bits operated on.
         
             Example::
                 # Let blob bin "c" == bytearray([1] * 5).
@@ -3732,11 +3732,11 @@ class BitSetInt(BaseExpr):
             Args:
                 policy (TypePolicy): An optional aerospike bit policy.
                 bit_offset (int): Bit index of where to start writing.
-                bit_size (int): Number of bytes to overwrite.
+                bit_size (int): Number of bits to overwrite.
                 value (int): Integer value or integer expression containing value to write.
                 bin (TypeBinName): Blob bin name or blob expression.
 
-            :return: Resulting blob expression with the bytes overwritten.
+            :return: Resulting blob expression with the bits overwritten.
         
             Example::
                 # Let blob bin "c" == bytearray([0] * 5).
@@ -3958,23 +3958,23 @@ class HLLGetUnion(BaseExpr):
     """Create an expression that performs an hll_get_union."""
     op = aerospike.OP_HLL_GET_UNION
 
-    def __init__(self, list: TypeListValue, bin: TypeBinName):
+    def __init__(self, values: TypeValue, bin: TypeBinName):
         """ Create an expression that performs an hll_get_union.
 
             Args:
-                list (TypeListValue): A list or list expression of HLLs to union with.
+                values (TypeValue): A single HLL or list of HLLs, values or expressions, to union with bin.
                 bin (TypeBinName): A hll bin name or bin expression to read from.
 
             :return: HLL bin representing the set union.
         
             Example::
                 # Let HLLBin "d" contain keys ['key%s' % str(i) for i in range(10000)].
-                # Let list be a list containing HLL objects retrieved from the aerospike database.
-                # Find the union of HLL bin "d" and all HLLs in list.
-                expr = HLLGetUnion(list, HLLBin("d")).compile()
+                # Let values be a list containing HLL objects retrieved from the aerospike database.
+                # Find the union of HLL bin "d" and all HLLs in values.
+                expr = HLLGetUnion(values, HLLBin("d")).compile()
         """        
         self.children = (
-            list,
+            values,
             bin if isinstance(bin, BaseExpr) else HLLBin(bin),
         )
 
@@ -3983,23 +3983,23 @@ class HLLGetUnionCount(BaseExpr):
     """Create an expression that performs an as_operations_hll_get_union_count."""
     op = aerospike.OP_HLL_GET_UNION_COUNT
 
-    def __init__(self, list: TypeListValue, bin: TypeBinName):
+    def __init__(self, values: TypeValue, bin: TypeBinName):
         """ Create an expression that performs an as_operations_hll_get_union_count.
 
             Args:
-                list (TypeListValue): A list expression of HLLs to union with.
+                values (TypeValue): A single HLL or list of HLLs, values or expressions, to union with bin.
                 bin (TypeBinName): A hll bin name or bin expression to read from.
 
             :return: Integer bin, estimated number of elements in the set union.
         
             Example::
                 # Let HLLBin "d" contain keys ['key%s' % str(i) for i in range(10000)].
-                # Let list be a list containing one HLL object with keys ['key%s' % str(i) for i in range(5000, 15000)].
-                # Find the count of keys in the union of HLL bin "d" and all HLLs in list. (Should be around 15000)
-                expr = HLLGetUnionCount(list, HLLBin("d")).compile()
+                # Let values be a list containing one HLL object with keys ['key%s' % str(i) for i in range(5000, 15000)].
+                # Find the count of keys in the union of HLL bin "d" and all HLLs in values. (Should be around 15000)
+                expr = HLLGetUnionCount(values, HLLBin("d")).compile()
         """        
         self.children = (
-            list,
+            values,
             bin if isinstance(bin, BaseExpr) else HLLBin(bin),
         )
 
@@ -4008,20 +4008,20 @@ class HLLGetIntersectCount(BaseExpr):
     """Create an expression that performs an as_operations_hll_get_inersect_count."""
     op = aerospike.OP_HLL_GET_INTERSECT_COUNT
 
-    def __init__(self, list: TypeListValue, bin: TypeBinName):
+    def __init__(self, values: TypeValue, bin: TypeBinName):
         """ Create an expression that performs an as_operations_hll_get_inersect_count.
 
             Args:
-                list (TypeListValue): A list expression of HLLs to intersect with.
+                values (TypeValue): A single HLL or list of HLLs, values or expressions, to intersect with bin.
                 bin (TypeBinName): A hll bin name or bin expression to read from.
 
             :return: Integer bin, estimated number of elements in the set intersection.
         
             Example::
                 # Let HLLBin "d" contain keys ['key%s' % str(i) for i in range(10000)].
-                # Let list be a list containing one HLL object with keys ['key%s' % str(i) for i in range(5000, 15000)].
-                # Find the count of keys in the intersection of HLL bin "d" and all HLLs in list. (Should be around 5000)
-                expr = HLLGetIntersectCount(list, HLLBin("d")).compile()
+                # Let values be a list containing one HLL object with keys ['key%s' % str(i) for i in range(5000, 15000)].
+                # Find the count of keys in the intersection of HLL bin "d" and all HLLs in values. (Should be around 5000)
+                expr = HLLGetIntersectCount(values, HLLBin("d")).compile()
         """        
         self.children = (
             list,
@@ -4033,21 +4033,21 @@ class HLLGetSimilarity(BaseExpr):
     """Create an expression that performs an as_operations_hll_get_similarity."""
     op = aerospike.OP_HLL_GET_SIMILARITY
 
-    def __init__(self, list: TypeListValue, bin: TypeBinName):
+    def __init__(self, values: TypeValue, bin: TypeBinName):
         """ Create an expression that performs an as_operations_hll_get_similarity.
 
             Args:
-                list (TypeListValue): A list expression of HLLs to calculate similarity with.
+                values (TypeValue): A single HLL or list of HLLs, values or expressions, to calculate similarity with.
                 bin (TypeBinName): A hll bin name or bin expression to read from.
 
             :return: Float bin, stimated similarity between 0.0 and 1.0.
         
             Example::
                 # Let HLLBin "d" contain keys ['key%s' % str(i) for i in range(10000)].
-                # Let list be a list containing one HLL object with keys ['key%s' % str(i) for i in range(5000, 15000)].
-                # Find the similarity the HLL in list to HLL bin "d". (Should be around 0.33)
+                # Let values be a list containing one HLL object with keys ['key%s' % str(i) for i in range(5000, 15000)].
+                # Find the similarity the HLL in values to HLL bin "d". (Should be around 0.33)
                 # Note that similarity is defined as intersect(A, B, ...) / union(A, B, ...).
-                expr = HLLGetSimilarity(list, HLLBin("d")).compile()
+                expr = HLLGetSimilarity(values, HLLBin("d")).compile()
         """        
         self.children = (
             list,

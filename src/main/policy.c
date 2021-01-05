@@ -89,6 +89,9 @@ __policy##_init(policy);\
 	if (predexp_list) {\
 		PyObject* py_predexp_list = PyDict_GetItemString(py_policy, "predexp");\
 		if (py_predexp_list) {\
+			if (PyDict_GetItemString(py_policy, "expressions")) {\
+				return as_error_update(err, AEROSPIKE_ERR_PARAM, "Got both predexp and expressions, can only handle one or the other.");\
+			}\
 			long number_predexp = PyList_Size(py_predexp_list);\
 			as_predexp_list_init(predexp_list, number_predexp);\
 			convert_predexp_list(py_predexp_list, predexp_list, err);\
