@@ -4024,7 +4024,7 @@ class HLLGetIntersectCount(BaseExpr):
                 expr = HLLGetIntersectCount(values, HLLBin("d")).compile()
         """        
         self.children = (
-            list,
+            values,
             bin if isinstance(bin, BaseExpr) else HLLBin(bin),
         )
 
@@ -4050,7 +4050,7 @@ class HLLGetSimilarity(BaseExpr):
                 expr = HLLGetSimilarity(values, HLLBin("d")).compile()
         """        
         self.children = (
-            list,
+            values,
             bin if isinstance(bin, BaseExpr) else HLLBin(bin),
         )
 
