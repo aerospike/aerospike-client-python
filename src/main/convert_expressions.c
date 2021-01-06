@@ -34,58 +34,66 @@
 #include "cdt_types.h"
 
 // EXPR OPS
-#define VAL 0
-#define EQ 1
-#define NE 2
-#define GT 3
-#define GE 4
-#define LT 5
-#define LE 6
-#define CMP_REGEX 7
-#define CMP_GEO 8
+enum expr_ops {
+	VAL = 0,
+	EQ = 1,
+	NE = 2,
+	GT = 3,
+	GE = 4,
+	LT = 5,
+	LE = 6,
+	CMP_REGEX = 7,
+	CMP_GEO = 8,
 
-#define AND 16
-#define OR 17
-#define NOT 18
+	AND = 16,
+	OR = 17,
+	NOT = 18,
 
-#define META_DIGEST_MOD 64
-#define META_DEVICE_SIZE 65
-#define META_LAST_UPDATE_TIME 66
-#define META_VOID_TIME 67
-#define META_TTL 68
-#define META_SET_NAME 69
-#define META_KEY_EXISTS 70
-#define META_SINCE_UPDATE_TIME 71
-#define META_IS_TOMBSTONE 72
+	META_DIGEST_MOD = 64,
+	META_DEVICE_SIZE = 65,
+	META_LAST_UPDATE_TIME = 66,
+	META_VOID_TIME = 67,
+	META_TTL = 68,
+	META_SET_NAME = 69,
+	META_KEY_EXISTS = 70,
+	META_SINCE_UPDATE_TIME = 71,
+	META_IS_TOMBSTONE = 72,
 
-#define REC_KEY 80
-#define BIN 81
-#define BIN_TYPE 82
-#define BIN_EXISTS 83
+	REC_KEY = 80,
+	BIN = 81,
+	BIN_TYPE = 82,
+	BIN_EXISTS = 83,
 
-#define CALL 127
-#define BOOL 133
-#define LIST_MOD 139
+	CALL = 127,
+	BOOL = 133,
+	LIST_MOD = 139
+};
 
 // RESULT TYPES
-#define BOOLEAN 1
-#define INTEGER 2
-#define STRING 3
-#define LIST 4
-#define MAP 5
-#define BLOB 6
-#define FLOAT 7
-#define GEOJSON 8
-#define HLL 9
+enum result_types {
+	BOOLEAN = 1,
+	INTEGER = 2,
+	STRING = 3,
+	LIST = 4,
+	MAP = 5,
+	BLOB = 6,
+	FLOAT = 7,
+	GEOJSON = 8,
+	HLL = 9
+};
 
 // VIRTUAL OPS
-#define END_VA_ARGS 128
-#define _AS_EXP_BIT_FLAGS 150
-#define _TRUE 151
-#define _FALSE 152
+enum virtual_ops {
+	END_VA_ARGS = 128,
+	_AS_EXP_BIT_FLAGS = 150,
+	_TRUE = 151,
+	_FALSE = 152
+};
 
 // UTILITY CONSTANTS
-#define NO_BIT_FLAGS 0
+enum utiity_constants {
+	NO_BIT_FLAGS = 0
+};
 
 // FIXED DICTIONARY KEYS
 #define OP_TYPE_KEY "ot_key"
@@ -283,7 +291,6 @@ as_status get_expr_size(int * size_to_alloc, int * preds_size, as_vector * preds
 		[_FALSE]                                         = 0
 	};
 
-
 	for (int i = 0; i < *preds_size; ++i) {
 		pred_op * pred = (pred_op *) as_vector_get(preds, (uint32_t)i);
 		(*size_to_alloc) += EXPR_SIZES[pred->op];
@@ -332,20 +339,16 @@ as_status get_exp_val_from_pyval(AerospikeClient * self, as_static_pool * static
 	} else if (PyUnicode_Check(py_obj)) {
 		PyObject * py_ustr = PyUnicode_AsUTF8String(py_obj);
 		char * str = PyBytes_AsString(py_ustr);
-		{
 			pred->val.val_string_p = strdup(str);
 			pred->val_flag = 1;
 			as_exp_entry tmp_entry = as_exp_str(pred->val.val_string_p);
 			*new_entry = tmp_entry;
-		}
 		Py_DECREF(py_ustr);
 	 } else if (PyBytes_Check(py_obj)) {
 	 	uint8_t * b = (uint8_t *) PyBytes_AsString(py_obj);
 	 	uint32_t b_len  = (uint32_t)  PyBytes_Size(py_obj);
-		{
 			as_exp_entry tmp_entry = as_exp_bytes(b, b_len);
 			*new_entry = tmp_entry;
-		}
 	} else if (!strcmp(py_obj->ob_type->tp_name, "aerospike.Geospatial")) {
 		PyObject *py_parameter = PyString_FromString("geo_data");
 		PyObject* py_data = PyObject_GenericGetAttr(py_obj, py_parameter);
@@ -361,10 +364,8 @@ as_status get_exp_val_from_pyval(AerospikeClient * self, as_static_pool * static
 					&bytes, py_obj, err) != AEROSPIKE_OK) {
 				return err->code;
 			}
-			{
-				as_exp_entry tmp_entry = as_exp_val((as_val *) bytes);
-				*new_entry = tmp_entry;
-			}
+			as_exp_entry tmp_entry = as_exp_val((as_val *) bytes);
+			*new_entry = tmp_entry;
 		}
 	} else if (PyList_Check(py_obj)) {
 		as_list * list = NULL;
@@ -372,48 +373,34 @@ as_status get_exp_val_from_pyval(AerospikeClient * self, as_static_pool * static
 		if (err->code == AEROSPIKE_OK) {
 			pred->val.val_list_p = list;
 			pred->val_flag = 3;
-			{
-				as_exp_entry tmp_entry = as_exp_val(list);
-				*new_entry = tmp_entry;
-			}
+			as_exp_entry tmp_entry = as_exp_val(list);
+			*new_entry = tmp_entry;
 		}
 	} else if (PyDict_Check(py_obj)) {
 		as_map * map = NULL;
 		pyobject_to_map(self, err, py_obj, &map, static_pool, serializer_type);
 		if (err->code == AEROSPIKE_OK) {
 			pred->val.val_map_p = map;
-			{
-				as_exp_entry tmp_entry = as_exp_val(map);
-				*new_entry = tmp_entry;
-			}
+			as_exp_entry tmp_entry = as_exp_val(map);
+			*new_entry = tmp_entry;
 		}
 	} else if (Py_None == py_obj) {
-		{
-			as_exp_entry tmp_entry = as_exp_nil();
-			*new_entry = tmp_entry;
-		}
+		as_exp_entry tmp_entry = as_exp_nil();
+		*new_entry = tmp_entry;
 	} else if (!strcmp(py_obj->ob_type->tp_name, "aerospike.null")) {
-		{
-			as_exp_entry tmp_entry = as_exp_nil();
-			*new_entry = tmp_entry;
-		}
+		as_exp_entry tmp_entry = as_exp_nil();
+		*new_entry = tmp_entry;
 	} else if (AS_Matches_Classname(py_obj, AS_CDT_WILDCARD_NAME)) {
-		{
-			as_exp_entry tmp_entry = as_exp_val((as_val *) as_val_reserve(&as_cmp_wildcard));
-			*new_entry = tmp_entry;
-		}
+		as_exp_entry tmp_entry = as_exp_val((as_val *) as_val_reserve(&as_cmp_wildcard));
+		*new_entry = tmp_entry;
 	} else if (AS_Matches_Classname(py_obj, AS_CDT_INFINITE_NAME)) {
-		{
-			as_exp_entry tmp_entry = as_exp_val((as_val *) as_val_reserve(&as_cmp_inf));
-			*new_entry = tmp_entry;
-		}
+		as_exp_entry tmp_entry = as_exp_val((as_val *) as_val_reserve(&as_cmp_inf));
+		*new_entry = tmp_entry;
 	} else {
 		if (PyFloat_Check(py_obj)) {
 			double d = PyFloat_AsDouble(py_obj);
-			{
-				as_exp_entry tmp_entry = as_exp_float(d);
-				*new_entry = tmp_entry;
-			}
+			as_exp_entry tmp_entry = as_exp_float(d);
+			*new_entry = tmp_entry;
 		} else {
 			as_bytes *bytes;
 			GET_BYTES_POOL(bytes, static_pool, err);
@@ -423,10 +410,8 @@ as_status get_exp_val_from_pyval(AerospikeClient * self, as_static_pool * static
 					return err->code;
 				}
 
-				{
-					as_exp_entry tmp_entry = as_exp_val((as_val *) bytes);
-					*new_entry = tmp_entry;
-				}
+				as_exp_entry tmp_entry = as_exp_val((as_val *) bytes);
+				*new_entry = tmp_entry;
 			}
 		}
 	}
