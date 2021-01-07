@@ -444,6 +444,7 @@ as_status pyobject_to_val(AerospikeClient * self, as_error * err, PyObject * py_
 		PyObject* py_data = PyObject_GenericGetAttr(py_obj, py_parameter);
 		Py_DECREF(py_parameter);
 		char *geo_value = PyString_AsString(AerospikeGeospatial_DoDumps(py_data, err));
+		Py_DECREF(py_data);
 		*val = (as_val *) as_geojson_new(geo_value, false);
 	} else if (PyByteArray_Check(py_obj)) {
 		as_bytes *bytes;
