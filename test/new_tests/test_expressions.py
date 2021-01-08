@@ -310,7 +310,7 @@ class TestExpressions(TestBaseClass):
         return sqrt(rel_err_sum)
 
     @pytest.mark.xfail(reason="Will fail on storage engine device.")
-    def test_DeviceSize_pos(self):
+    def test_device_size_pos(self):
         expr = Eq(DeviceSize(), 0)
         record = self.as_connection.get(('test', u'demo', 19), policy={'expressions': expr.compile()})
         assert(record[2]['extra'] == 'record')
@@ -320,7 +320,7 @@ class TestExpressions(TestBaseClass):
         record = self.as_connection.get(('test', u'demo', 19), policy={'expressions': expr.compile()})
         assert(record[2]['extra'] == 'record')
 
-    def test_VoidTime_pos(self):
+    def test_void_time_pos(self):
         expr = NE(VoidTime(), 0)
         record = self.as_connection.get(('test', u'demo', 19), policy={'expressions': expr.compile()})
         assert(record[2]['extra'] == 'record')
@@ -371,7 +371,7 @@ class TestExpressions(TestBaseClass):
         ("age", aerospike.AS_BYTES_INTEGER),
         ("imap_bin", aerospike.AS_BYTES_MAP)
     ])
-    def test_BinType_pos(self, bin, expected_bin_type):
+    def test_bin_type_pos(self, bin, expected_bin_type):
         """
         Invoke BinType() on various kinds of bins.
         """
@@ -386,7 +386,7 @@ class TestExpressions(TestBaseClass):
         (None, None, ResultType.LIST, 3, aerospike.LIST_RETURN_VALUE, [26, 27, 28, 6], 1),
         ([list_index], [3], ResultType.INTEGER, 3, aerospike.LIST_RETURN_VALUE, 6, 1),
     ])
-    def test_ListGetByIndex_pos(self, ctx_types, ctx_indexes, bin_type, index, return_type, check, expected):
+    def test_list_get_by_index_pos(self, ctx_types, ctx_indexes, bin_type, index, return_type, check, expected):
         """
         Invoke ListGetByIndex().
         """
@@ -415,11 +415,10 @@ class TestExpressions(TestBaseClass):
         (None, None, GEO_POLY, aerospike.LIST_RETURN_VALUE, [GEO_POLY], 19),
         (None, None, TestUsrDefinedClass(4), aerospike.LIST_RETURN_VALUE, [TestUsrDefinedClass(4)], 1)
     ])
-    def test_ListGetByValue_pos(self, ctx_types, ctx_indexes, value, return_type, check, expected):
+    def test_list_get_by_value_pos(self, ctx_types, ctx_indexes, value, return_type, check, expected):
         """
         Invoke ListGetByValue().
         """
-        #breakpoint()
 
         if ctx_types is not None:
             ctx = []
@@ -443,7 +442,7 @@ class TestExpressions(TestBaseClass):
         (None, None, GEO_POLY, aerospike.CDTInfinite(), aerospike.LIST_RETURN_VALUE, [[GEO_POLY], [GEO_POLY], [GEO_POLY]], 19),
         (None, None, TestUsrDefinedClass(4), TestUsrDefinedClass(7), aerospike.LIST_RETURN_VALUE, [[TestUsrDefinedClass(4)], [TestUsrDefinedClass(5)], [TestUsrDefinedClass(6)]], 3) #NOTE py_bytes cannot be compard directly server side
     ])
-    def test_ListGetByValueRange_pos(self, ctx_types, ctx_indexes, begin, end, return_type, check, expected):
+    def test_list_get_by_value_range_pos(self, ctx_types, ctx_indexes, begin, end, return_type, check, expected):
         """
         Invoke ListGetByValueRange().
         """
@@ -467,7 +466,7 @@ class TestExpressions(TestBaseClass):
         ("bad ctx", 10, 13, aerospike.LIST_RETURN_VALUE, [[10], [11], [12]], e.ParamError),
         (None, 10, 13, aerospike.LIST_RETURN_VALUE, [[10], [11], 12], e.InvalidRequest)
     ])
-    def test_ListGetByValueRange_neg(self, ctx, begin, end, return_type, check, expected):
+    def test_list_get_by_value_range_neg(self, ctx, begin, end, return_type, check, expected):
         """
         Invoke ListGetByValue() with expected failures.
         """
@@ -493,7 +492,7 @@ class TestExpressions(TestBaseClass):
         (None, None, [10], aerospike.LIST_RETURN_RANK, [1], 1),
         ([list_index], [3], [26, 6], aerospike.LIST_RETURN_INDEX, [0, 3], 1),
     ])
-    def test_ListGetByValueList_pos(self, ctx_types, ctx_indexes, value, return_type, check, expected):
+    def test_list_get_by_value_list_pos(self, ctx_types, ctx_indexes, value, return_type, check, expected):
         """
         Invoke ListGetByValueList().
         """
@@ -511,7 +510,7 @@ class TestExpressions(TestBaseClass):
     @pytest.mark.parametrize("ctx_types, ctx_indexes, value, return_type, check, expected", [
         (None, None, [10, [26, 27, 28, 10]], aerospike.LIST_RETURN_VALUE, (10, [26, 27, 28, 10]), e.InvalidRequest)
     ])
-    def test_ListGetByValueList_neg(self, ctx_types, ctx_indexes, value, return_type, check, expected):
+    def test_list_get_by_value_list_neg(self, ctx_types, ctx_indexes, value, return_type, check, expected):
         """
         Invoke ListGetByValueList() with expected failures.
         """
@@ -533,7 +532,7 @@ class TestExpressions(TestBaseClass):
         ([list_index], [3], 10, 2, aerospike.LIST_RETURN_VALUE, [27, 28], 9),
         (None, None, "string_test10", 0,  aerospike.LIST_RETURN_COUNT, 10, 17),
     ])
-    def test_ListGetByValueRelRankRangeToEnd_pos(self, ctx_types, ctx_indexes, value, rank, return_type, check, expected):
+    def test_list_get_by_value_rel_rank_range_to_end_pos(self, ctx_types, ctx_indexes, value, rank, return_type, check, expected):
         """
         Invoke ListGetByValueRelRankRangeToEnd().
         """
@@ -551,7 +550,7 @@ class TestExpressions(TestBaseClass):
     @pytest.mark.parametrize("ctx_types, ctx_indexes, value, rank, return_type, expected", [
         ([list_index], [3], 26, "bad_rank", "bad_return_type", e.ParamError)
     ])
-    def test_ListGetByValueRelRankRangeToEnd_neg(self, ctx_types, ctx_indexes, value, rank, return_type, expected):
+    def test_list_get_by_value_rel_rank_range_to_end_neg(self, ctx_types, ctx_indexes, value, rank, return_type, expected):
         """
         Invoke ListGetByValueRelRankRangeToEnd() with expected failures.
         """
@@ -573,7 +572,7 @@ class TestExpressions(TestBaseClass):
         ([list_index], [3], 26, 0, 2, aerospike.LIST_RETURN_VALUE, [27, 26], 19),
         (None, None, "string_test10", 0, 1, aerospike.LIST_RETURN_INDEX, [3], 2),
     ])
-    def test_ListGetByValueRelRankRange_pos(self, ctx_types, ctx_indexes, value, rank, count, return_type, check, expected):
+    def test_list_get_by_value_rel_rank_range_pos(self, ctx_types, ctx_indexes, value, rank, count, return_type, check, expected):
         """
         Invoke ListGetByValueRelRankRange().
         """
@@ -595,7 +594,7 @@ class TestExpressions(TestBaseClass):
         ("bylist_bin", [ResultType.BLOB, "f".encode("utf8"), "b".encode("utf8"), "g".encode("utf8"), ["d".encode("utf8"), "f".encode("utf8")], "b".encode("utf8")]),
         ("flist_bin", [ResultType.FLOAT, 6.0, 1.0, 7.0, [2.0, 6.0], 1.0]),
     ])
-    def test_ListReadOps_pos(self, bin, values):
+    def test_list_read_ops_pos(self, bin, values):
         """
         Invoke various list read expressions with many value types.
         """
@@ -775,7 +774,7 @@ class TestExpressions(TestBaseClass):
             ]
         ),
     ])
-    def test_ListModOps_pos(self, bin, ctx, policy, values, expected):
+    def test_list_mod_ops_pos(self, bin, ctx, policy, values, expected):
         """
         Invoke various list modify expressions with many value types.
         """
@@ -836,7 +835,7 @@ class TestExpressions(TestBaseClass):
         ("smap_bin", [ResultType.INTEGER, 'f', 'd', 'g', ['d', 'f'], 'b', ResultType.STRING], ['f', 'd', 'g', ['d', 'f'], 'd'], ['d', ['d', 'f'], ['d', 'f']]),
         ("lmap_bin", [ResultType.INTEGER, [1, 4], [1, 3], [1, 5], [[1, 3], [1, 4]], [1, 2], ResultType.LIST], [3, 2, 4, [2, 3], 2], [[1, 3], [[1, 3], [1, 4]], [[1, 3], [1, 4]]]),
     ])
-    def test_MapReadOps_pos(self, bin, values, keys, expected):
+    def test_map_read_ops_pos(self, bin, values, keys, expected):
         """
         Invoke various map read expressions with many value types.
         """
@@ -939,7 +938,7 @@ class TestExpressions(TestBaseClass):
         ("fmap_bin", "fmap_bin", None, None, 6.0, 6.0, [12.0]),
         (ListBin("mlist_bin"), "mlist_bin", [cdt_ctx.cdt_ctx_list_index(0)], None, 1, 4, [6])
     ])
-    def test_MapIncrement_pos(self, bin, bin_name, ctx, policy, key, value, expected):
+    def test_map_increment_pos(self, bin, bin_name, ctx, policy, key, value, expected):
         """
         Invoke MapIncrement() on various integer and float bins.
         """
@@ -987,7 +986,7 @@ class TestExpressions(TestBaseClass):
             [8.0, 10.0, 1.0, 1.0, 6.0, 6.0],
         )
     ])
-    def test_MapModOps_pos(self, bin, ctx, policy, values):
+    def test_map_mod_ops_pos(self, bin, ctx, policy, values):
         """
         Invoke various map modify expressions with many value types.
         """
@@ -1085,7 +1084,7 @@ class TestExpressions(TestBaseClass):
         ({'bit_write_flags': aerospike.BIT_WRITE_UPDATE_ONLY}, 10, None, '1bits_bin', bytearray([1])),
         (None, 10, aerospike.BIT_RESIZE_FROM_FRONT, '1bits_bin', bytearray([0]))
     ])
-    def test_BitResize_pos(self, policy, bytes_size, flags, bin, expected):
+    def test_bit_resize_pos(self, policy, bytes_size, flags, bin, expected):
         """
         Test BitResize expression.
         """
@@ -1102,7 +1101,7 @@ class TestExpressions(TestBaseClass):
         (None, 0, 1, '1bits_bin', bytearray([0] * 1)),
         ({'bit_write_flags': aerospike.BIT_WRITE_UPDATE_ONLY}, 0, 1, '1bits_bin', bytearray([0] * 1))
     ])
-    def test_BitRemoveOps_pos(self, policy, byte_offset, byte_size, bin, expected):
+    def test_bit_remove_ops_pos(self, policy, byte_offset, byte_size, bin, expected):
         """
         Test BitRemove expression.
         """
@@ -1134,7 +1133,7 @@ class TestExpressions(TestBaseClass):
         (None),
         ({'bit_write_flags': aerospike.BIT_WRITE_UPDATE_ONLY})
     ])
-    def test_BitSet_pos(self, policy):
+    def test_bit_set_pos(self, policy):
         """
         Test BitSet expression.
         """
@@ -1183,7 +1182,7 @@ class TestExpressions(TestBaseClass):
         (None),
         ({'bit_write_flags': aerospike.BIT_WRITE_UPDATE_ONLY})
     ])
-    def test_BitAnd_pos(self, policy):
+    def test_bit_and_pos(self, policy):
         """
         Test BitAnd expression.
         """
@@ -1199,7 +1198,7 @@ class TestExpressions(TestBaseClass):
         (None),
         ({'bit_write_flags': aerospike.BIT_WRITE_UPDATE_ONLY})
     ])
-    def test_BitNot_pos(self, policy):
+    def test_bit_not_pos(self, policy):
         """
         Test BitNot expression.
         """
@@ -1215,7 +1214,7 @@ class TestExpressions(TestBaseClass):
         (None),
         ({'bit_write_flags': aerospike.BIT_WRITE_UPDATE_ONLY})
     ])
-    def test_BitLeftShift_pos(self, policy):
+    def test_bit_left_shift_pos(self, policy):
         """
         Test BitLeftShift expression.
         """
@@ -1231,7 +1230,7 @@ class TestExpressions(TestBaseClass):
         (None),
         ({'bit_write_flags': aerospike.BIT_WRITE_UPDATE_ONLY})
     ])
-    def test_BitRightShift_pos(self, policy):
+    def test_bit_right_shift_pos(self, policy):
         """
         Test BitRightShift expression.
         """
@@ -1248,7 +1247,7 @@ class TestExpressions(TestBaseClass):
         (None, 8, 8, 1, aerospike.BIT_OVERFLOW_FAIL, '1bits_bin', bytearray([1] + [2] + [1] * 6)),
         ({'bit_write_flags': aerospike.BIT_WRITE_UPDATE_ONLY}, 8, 8, 1, aerospike.BIT_OVERFLOW_FAIL, '1bits_bin', bytearray([1] + [2] + [1] * 6))
     ])
-    def test_BitAdd_pos(self, policy, bit_offset, bit_size, value, action, bin, expected):
+    def test_bit_add_pos(self, policy, bit_offset, bit_size, value, action, bin, expected):
         """
         Test BitAdd expression.
         """
@@ -1264,7 +1263,7 @@ class TestExpressions(TestBaseClass):
         (None, 8, 8, 1, aerospike.BIT_OVERFLOW_FAIL, '1bits_bin', bytearray([1] + [0] + [1] * 6)),
         ({'bit_write_flags': aerospike.BIT_WRITE_UPDATE_ONLY}, 8, 8, 1, aerospike.BIT_OVERFLOW_FAIL, '1bits_bin', bytearray([1] + [0] + [1] * 6))
     ])
-    def test_BitSubtract_pos(self, policy, bit_offset, bit_size, value, action, bin, expected):
+    def test_bit_subtract_pos(self, policy, bit_offset, bit_size, value, action, bin, expected):
         """
         Test BitSubtract expression.
         """
@@ -1280,7 +1279,7 @@ class TestExpressions(TestBaseClass):
         (None),
         ({'bit_write_flags': aerospike.BIT_WRITE_UPDATE_ONLY})
     ])
-    def test_BitSetInt_pos(self, policy):
+    def test_bit_set_int_pos(self, policy):
         """
         Test BitSetInt expression.
         """
@@ -1295,7 +1294,7 @@ class TestExpressions(TestBaseClass):
     @pytest.mark.parametrize("bit_offset, bit_size, bin, expected", [
         (8, 8, '1bits_bin', bytearray([1]))
     ])
-    def test_BitGet_pos(self, bit_offset, bit_size, bin, expected):
+    def test_bit_get_pos(self, bit_offset, bit_size, bin, expected):
         """
         Test BitGet expression.
         """
@@ -1310,7 +1309,7 @@ class TestExpressions(TestBaseClass):
     @pytest.mark.parametrize("bit_offset, bit_size, bin, expected", [
         (16, 8 * 3, '1bits_bin', 3)
     ])
-    def test_BitCount_pos(self, bit_offset, bit_size, bin, expected):
+    def test_bit_count_pos(self, bit_offset, bit_size, bin, expected):
         """
         Test BitCount expression.
         """
@@ -1325,7 +1324,7 @@ class TestExpressions(TestBaseClass):
     @pytest.mark.parametrize("bit_offset, bit_size, value, bin, expected", [
         (0, 8, ExpTrue(), '1bits_bin', 7)
     ])
-    def test_BitLeftScan_pos(self, bit_offset, bit_size, value, bin, expected):
+    def test_bit_left_scan_pos(self, bit_offset, bit_size, value, bin, expected):
         """
         Test BitLeftScan expression.
         """
@@ -1340,7 +1339,7 @@ class TestExpressions(TestBaseClass):
     @pytest.mark.parametrize("bit_offset, bit_size, value, bin, expected", [
         (0, 8, ExpTrue(), '1bits_bin', 7)
     ])
-    def test_BitRightScan_pos(self, bit_offset, bit_size, value, bin, expected):
+    def test_bit_right_scan_pos(self, bit_offset, bit_size, value, bin, expected):
         """
         Test BitRightScan expression.
         """
@@ -1355,7 +1354,7 @@ class TestExpressions(TestBaseClass):
     @pytest.mark.parametrize("bit_offset, bit_size, bin, expected", [
         (0, 8, '1bits_bin', 1)
     ])
-    def test_BitGetInt_pos(self, bit_offset, bit_size, bin, expected):
+    def test_bit_get_int_pos(self, bit_offset, bit_size, bin, expected):
         """
         Test BitGetInt expression.
         """
@@ -1373,7 +1372,7 @@ class TestExpressions(TestBaseClass):
         (None, ['key%s' % str(i) for i in range(11000, 16000)], 15, 49, 'hll_bin', 15000),
         ({'flags': aerospike.HLL_WRITE_NO_FAIL}, ['key%s' % str(i) for i in range(11000, 16000)], None, None, 'hll_bin', 15000)
     ])
-    def test_HLLAdd_pos(self, policy, listp, index_bc, mh_bc, bin, expected):
+    def test_hll_add_pos(self, policy, listp, index_bc, mh_bc, bin, expected):
         """
         Test the HLLAdd expression.
         """
@@ -1399,7 +1398,7 @@ class TestExpressions(TestBaseClass):
         ('hll_bin', 25000, ['hll_bin', 'hll_bin2', 'hll_bin3']),
         ('hll_bin', 20000, ['hll_bin3']),
     ])
-    def test_HLLGetUnion_pos(self, bin, expected, hll_bins):
+    def test_hll_get_union_pos(self, bin, expected, hll_bins):
         """
         Test the HLLGetUnion expression.
         """
@@ -1426,7 +1425,7 @@ class TestExpressions(TestBaseClass):
     @pytest.mark.parametrize("bin, expected", [
         ('hll_bin', 25000)
     ])
-    def test_HLLGetUnionCount_pos(self, bin, expected):
+    def test_hll_get_union_count_pos(self, bin, expected):
         """
         Test the HLLGetUnionCount expression.
         """
@@ -1451,7 +1450,7 @@ class TestExpressions(TestBaseClass):
     @pytest.mark.parametrize("bin, expected", [
         ('hll_bin', 5000)
     ])
-    def test_HLLGetIntersectCount_pos(self, bin, expected):
+    def test_hll_get_intersect_count_pos(self, bin, expected):
         """
         Test the HLLGetIntersectCount expression.
         """
@@ -1476,7 +1475,7 @@ class TestExpressions(TestBaseClass):
     @pytest.mark.parametrize("bin, expected", [
         ('hll_bin', 0.33)
     ])
-    def test_HLLGetSimilarity_pos(self, bin, expected):
+    def test_hll_get_similarity_pos(self, bin, expected):
         """
         Test the HLLGetSimilarity expression.
         """
@@ -1499,7 +1498,7 @@ class TestExpressions(TestBaseClass):
     @pytest.mark.parametrize("bin, expected", [
         ('hll_bin', [15, 49])
     ])
-    def test_HLLDescribe_pos(self, bin, expected):
+    def test_hll_describe_pos(self, bin, expected):
         """
         Test the HLLDescribe expression.
         """
@@ -1510,7 +1509,7 @@ class TestExpressions(TestBaseClass):
     @pytest.mark.parametrize("bin", [
         ('hll_bin')
     ])
-    def test_HLLMayContain_pos(self, bin):
+    def test_hll_may_contain_pos(self, bin):
         """
         Test the HLLMayContain expression.
         """
@@ -1520,6 +1519,8 @@ class TestExpressions(TestBaseClass):
 
 
     def test_predexp_and_expressions(self):
+        print(MAP_POLICY_KEY)
+
         self.as_connection.put(('test', u'demo', 25), {'test': 'test_data'})
 
         expr = Eq(KeyInt(), 25)
