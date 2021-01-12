@@ -202,6 +202,78 @@ CLEANUP:
 }
 
 /**
+ *******************************************************************************************************
+ * Sends an info request to all the nodes in a cluster.
+ *
+ * @param self                  AerospikeClient object
+ * @param args                  The args is a tuple object containing an argument
+ *                              list passed from Python to a C function
+ * @param kwds                  Dictionary of keywords
+ *
+ * Returns a server response for the particular request string.
+ * In case of error,appropriate exceptions will be raised.
+ * py_hosts should be null at this point
+ *******************************************************************************************************
+ */
+PyObject * AerospikeClient_SetXDRFilter(AerospikeClient * self, PyObject * args, PyObject * kwds)
+{
+	PyObject * py_data_center = NULL;
+	PyObject * py_namespace = NULL;
+	PyObject * py_expression_filter = NULL;
+	PyObject * py_policy = NULL;
+	PyObject * py_fmt = NULL;
+	PyObject * py_tuple = NULL;
+	PyObject * py_base64_filter = NULL;
+	char * base64_filter = NULL;
+	const char * fmt_str = "xdr-set-filter:dc=%s;namespace=%s;exp=%s";
+
+	// For converting expressions.
+	as_exp * exp_list_p = NULL;
+
+	static char * kwlist[] = {"data_center", "namespace", "expression_filter", "policy", NULL};
+
+	if (PyArg_ParseTupleAndKeywords(args, kwds, "OOO|O:info_all", kwlist, &py_data_center, &py_namespace, &py_expression_filter, &py_policy) == false) {
+		return NULL;
+	}
+
+	//convert filter to base64
+	as_error err;
+	as_error_init(&err);
+	if (convert_exp_list(self, py_expression_filter, &exp_list_p, &err) != AEROSPIKE_OK) {
+		PyObject * py_err = NULL;
+		error_to_pyobject(&err, &py_err);
+		PyObject *exception_type = raise_exception(&err);
+		PyErr_SetObject(exception_type, py_err);
+		Py_DECREF(py_err);
+		return NULL;
+	}
+
+	base64_filter = as_exp_compile_b64(exp_list_p);
+	py_base64_filter = PyUnicode_DecodeASCII(base64_filter, strlen(base64_filter) + 1, NULL);
+
+	py_tuple = PyTuple_Pack(3, py_data_center, py_namespace, py_base64_filter);
+	py_fmt = PyUnicode_DecodeASCII(fmt_str, strlen(fmt_str) + 1, NULL);
+	PyObject * py_req = PyUnicode_Format(py_fmt, py_tuple);
+	Py_DECREF(py_fmt);
+	Py_DECREF(py_base64_filter);
+	Py_DECREF(py_tuple);
+
+	
+	//TODO remove debugging
+	PyObject * py_temp = PyUnicode_AsASCIIString(py_req);
+	printf("py_req is: %s\n", PyBytes_AsString(py_temp));
+
+	as_node * node = as_node_get_random(self->as->cluster);
+	const char * hostname = (char*)as_node_get_address_string(node);
+	as_node_release(node);
+
+	PyObject * py_host_addr = PyUnicode_DecodeASCII(hostname, strlen(hostname) + 1, NULL);
+	printf("hostname is: %s\n", hostname);
+	//TODO hostanem needs to be split into pytupler like (ip, port, tls_name). (tls name optionla)
+	return AerospikeClient_InfoNode_Invoke(&err, self, py_req, py_host_addr, py_policy);
+}//TODO set null filter to remove a filter
+
+/**
  ******************************************************************************************************
  * Returns data about a particular node in the database depending upon the request string.
  *

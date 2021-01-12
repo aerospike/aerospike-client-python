@@ -386,6 +386,11 @@ PyDoc_STRVAR(info_doc,
 \n\
 Send an info command to multiple nodes specified in a hosts list.");
 
+PyDoc_STRVAR(set_xdr_filter_doc,
+"set_xdr_filter(data_center, namespace, expression_filter[, policy]) -> {}\n\
+\n\
+Set cluster xdr expression filters.");
+
 PyDoc_STRVAR(info_all_doc,
 "info_all(command[, policy]]) -> {}\n\
 \n\
@@ -760,6 +765,9 @@ static PyMethodDef AerospikeClient_Type_Methods[] = {
 	{"info",
 		(PyCFunction) AerospikeClient_Info, METH_VARARGS | METH_KEYWORDS,
 		info_doc},
+	{"set_xdr_filter",
+		(PyCFunction) AerospikeClient_SetXDRFilter, METH_VARARGS | METH_KEYWORDS,
+		set_xdr_filter_doc},
 	{"info_all",
 		(PyCFunction) AerospikeClient_InfoAll, METH_VARARGS | METH_KEYWORDS,
 		info_all_doc},

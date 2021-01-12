@@ -1007,7 +1007,7 @@ as_status add_expr_macros(AerospikeClient * self, as_static_pool * static_pool, 
 * Initiates the conversion from intermediate_expr structs to expressions.
 * builds the expressions.
 */
-as_status convert_exp_list(AerospikeClient * self, PyObject* py_exp_list, as_exp** exp_list, as_error* err) {
+as_status convert_exp_list(AerospikeClient * self, PyObject * py_exp_list, as_exp ** exp_list, as_error * err) {
 	int bottom = 0;
 	Py_ssize_t size = PyList_Size(py_exp_list);
 	if (size <= 0) {
@@ -1015,9 +1015,6 @@ as_status convert_exp_list(AerospikeClient * self, PyObject* py_exp_list, as_exp
 		return err->code;
 	}
 
-	long op = 0;
-	long result_type = 0;
-	long num_children = 0;
 	int child_count = 1;
 	int processed_exp_count = 0;
 	int size_to_alloc = 0;
@@ -1038,6 +1035,9 @@ as_status convert_exp_list(AerospikeClient * self, PyObject* py_exp_list, as_exp
 	memset(&static_pool, 0, sizeof(static_pool));
 
 	for ( int i = 0; i < size; ++i ) {
+		temp_expr.op = -1;
+		temp_expr.result_type = -1;
+		temp_expr.num_children = -1;
 		temp_expr.ctx = NULL;
 		temp_expr.pydict = NULL;
 		temp_expr.list_policy = NULL;
@@ -1060,16 +1060,16 @@ as_status convert_exp_list(AerospikeClient * self, PyObject* py_exp_list, as_exp
 		}
 
 		temp_expr.pytuple = py_expr_tuple;
-		op = PyInt_AsLong(PyTuple_GetItem(py_expr_tuple, 0));
-		if (result_type == -1 && PyErr_Occurred()) {
+		temp_expr.op = PyInt_AsLong(PyTuple_GetItem(py_expr_tuple, 0));
+		if (temp_expr.op == -1 && PyErr_Occurred()) {
 			as_error_update(err, AEROSPIKE_ERR_PARAM, "Failed to get op from expression tuple, op must be an int.");
 			goto CLEANUP;
 		}
 
 		PyObject * rt_tmp = PyTuple_GetItem(py_expr_tuple, 1);
 		if (rt_tmp != Py_None) {
-			result_type = PyInt_AsLong(rt_tmp);
-			if (result_type == -1 && PyErr_Occurred()) {
+			temp_expr.result_type = PyInt_AsLong(rt_tmp);
+			if (temp_expr.result_type == -1 && PyErr_Occurred()) {
 				as_error_update(err, AEROSPIKE_ERR_PARAM, "Failed to get result_type from expression tuple, rt must be an int.");
 				goto CLEANUP;
 			}
@@ -1131,25 +1131,21 @@ as_status convert_exp_list(AerospikeClient * self, PyObject* py_exp_list, as_exp
 			}
 		}
 
-
-		if (op == AND || op == OR) {
+		if (temp_expr.op == AND || temp_expr.op == OR) {
 			++va_flag;
 			++size;
 		}
 
-		num_children = PyInt_AsLong(PyTuple_GetItem(py_expr_tuple, 3));
-		if (num_children == -1 && PyErr_Occurred()) {
+		temp_expr.num_children = PyInt_AsLong(PyTuple_GetItem(py_expr_tuple, 3));
+		if (temp_expr.num_children == -1 && PyErr_Occurred()) {
 			as_error_update(err, AEROSPIKE_ERR_PARAM, "Failed to get num_children from expression tuple, num_children must be an int.");
 			goto CLEANUP;
 		}
 
-		temp_expr.op = op;
-		temp_expr.result_type = result_type;
-		temp_expr.num_children = num_children;
 		as_vector_append(&intermediate_expr_queue, (void*) &temp_expr);
 		processed_exp_count++;
 		if (va_flag) {
-			child_count += num_children - 1;
+			child_count += temp_expr.num_children - 1;
 		}
 	}
 
