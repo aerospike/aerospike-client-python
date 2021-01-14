@@ -389,7 +389,7 @@ Send an info command to multiple nodes specified in a hosts list.");
 PyDoc_STRVAR(set_xdr_filter_doc,
 "set_xdr_filter(data_center, namespace, expression_filter[, policy]) -> {}\n\
 \n\
-Set cluster xdr expression filters.");
+Set cluster xdr filter.");
 
 PyDoc_STRVAR(info_all_doc,
 "info_all(command[, policy]]) -> {}\n\
