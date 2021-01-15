@@ -10,4 +10,4 @@ PWD=`pwd`
 echo "Running test cases from ${PWD},"
 
 # Run test suite
-python -m pytest new_tests/test_set_xdr_filter.py -s
+python -m pytest new_tests/
