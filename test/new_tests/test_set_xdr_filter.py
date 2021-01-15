@@ -22,18 +22,20 @@ class TestSetXDRFilter(object):
     @pytest.fixture(autouse=True)
     def setup_method(self, request, as_connection):
         dc_request = "get-config:context=xdr"
-        ns_request = "get-config:context=xdr;dc=DC1"
         hosts = [host for host in self.connection_config['hosts']]
+        
         try:
             dc_response = self.as_connection.info_node(dc_request, hosts[0])
-            self.dc = dc_response.split(",")[0].split("=")[2]
-            ns_response = self.as_connection.info_node(ns_request, hosts[0])
-            self.ns = ns_response.split("namespaces=")[1].split(";")[0]
         except e.ServerError as exc:
             if ("XDR-not-configured" in exc.message):
                 pytest.skip("Skipping set_xdr_flags because xdr is not configured.")
             else:
                 raise(exc)
+        
+        self.dc = dc_response.split(",")[0].split("=")[2]
+        ns_request = "get-config:context=xdr;dc=%s" % self.dc
+        ns_response = self.as_connection.info_node(ns_request, hosts[0])
+        self.ns = ns_response.split("namespaces=")[1].split(";")[0]
 
     def test_set_xdr_filter_pos(self):
         response = self.as_connection.set_xdr_filter(self.dc, self.ns, (Eq(IntBin("bin1"), 6).compile()))
