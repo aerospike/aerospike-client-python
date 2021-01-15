@@ -27,7 +27,7 @@ class TestSetXDRFilter(object):
         try:
             dc_response = self.as_connection.info_node(dc_request, hosts[0])
         except e.ServerError as exc:
-            if ("XDR-not-configured" in exc.message):
+            if ("XDR-not-configured" in exc.msg):
                 pytest.skip("Skipping set_xdr_flags because xdr is not configured.")
             else:
                 raise(exc)
