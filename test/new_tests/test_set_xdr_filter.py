@@ -26,19 +26,15 @@ class TestSetXDRFilter(object):
         
         try:
             dc_response = self.as_connection.info_node(dc_request, hosts[0])
-        except e.ServerError as exc:
+            self.dc = dc_response.split(",")[0].split("=")[2]
+            ns_request = "get-config:context=xdr;dc=%s" % self.dc
+            ns_response = self.as_connection.info_node(ns_request, hosts[0])
+            self.ns = ns_response.split("namespaces=")[1].split(";")[0]
+        except Exception as exc:
             if ("XDR-not-configured" in exc.msg):
                 pytest.skip("Skipping set_xdr_flags because xdr is not configured.")
             else:
-                raise(exc)
-        
-        print(dc_response)
-        self.dc = dc_response.split(",")[0].split("=")[2]
-        ns_request = "get-config:context=xdr;dc=%s" % self.dc
-        print(ns_request)
-        ns_response = self.as_connection.info_node(ns_request, hosts[0])
-        print(ns_response)
-        self.ns = ns_response.split("namespaces=")[1].split(";")[0]
+                pytest.skip("Could not parse a data center or namespace, skipping set_xdr_flags.")
 
     def test_set_xdr_filter_pos(self):
         response = self.as_connection.set_xdr_filter(self.dc, self.ns, (Eq(IntBin("bin1"), 6).compile()))
