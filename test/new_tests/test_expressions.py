@@ -1526,3 +1526,14 @@ class TestExpressions(TestBaseClass):
         expr = Eq(KeyInt(), 25)
         with pytest.raises(e.ParamError):
             record = self.as_connection.remove(('test', u'demo', 25), policy={'expressions': expr.compile(), 'predexp': expr})
+
+    def test_nested_logic_pos(self):
+        """
+        Test nested logical operators expression.
+        """
+
+        expr = Or(
+                Or(Eq(ListBin("ilist_bin"), [1, 2, 7]), Eq(ListBin("ilist_bin"), [1, 2, 6])),
+                And(LT(IntBin("age"), 22), GT(IntBin("age"), -1))    
+            ).compile()
+        verify_multiple_expression_avenues(self.as_connection, self.test_ns, self.test_set, expr, "ilist_bin", 19)
