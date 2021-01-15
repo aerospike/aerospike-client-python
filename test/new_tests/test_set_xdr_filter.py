@@ -32,9 +32,12 @@ class TestSetXDRFilter(object):
             else:
                 raise(exc)
         
+        print(dc_response)
         self.dc = dc_response.split(",")[0].split("=")[2]
         ns_request = "get-config:context=xdr;dc=%s" % self.dc
+        print(ns_request)
         ns_response = self.as_connection.info_node(ns_request, hosts[0])
+        print(ns_response)
         self.ns = ns_response.split("namespaces=")[1].split(";")[0]
 
     def test_set_xdr_filter_pos(self):

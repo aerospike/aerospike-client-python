@@ -1534,6 +1534,10 @@ class TestExpressions(TestBaseClass):
 
         expr = Or(
                 Or(Eq(ListBin("ilist_bin"), [1, 2, 7]), Eq(ListBin("ilist_bin"), [1, 2, 6])),
-                And(LT(IntBin("age"), 22), GT(IntBin("age"), -1))    
+                And(LT(IntBin("age"), 22), GT(IntBin("age"), -1)),
+                And(
+                    Or(Eq(ListBin("ilist_bin"), [1, 2, 7]), Eq(ListBin("ilist_bin"), [1, 2, 6])),
+                    And(LT(IntBin("age"), 22), GT(IntBin("age"), -1)),
+                )
             ).compile()
         verify_multiple_expression_avenues(self.as_connection, self.test_ns, self.test_set, expr, "ilist_bin", 19)
