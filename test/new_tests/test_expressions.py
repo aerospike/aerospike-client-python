@@ -1519,8 +1519,6 @@ class TestExpressions(TestBaseClass):
 
 
     def test_predexp_and_expressions(self):
-        print(MAP_POLICY_KEY)
-
         self.as_connection.put(('test', u'demo', 25), {'test': 'test_data'})
 
         expr = Eq(KeyInt(), 25)

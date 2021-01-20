@@ -189,7 +189,7 @@ from aerospike_helpers.operations import list_operations as lop
 from aerospike_helpers import cdt_ctx
 
 
-BIN_TYPE_KEY = "bin_type"
+VALUE_TYPE_KEY = "value_type"
 BIN_KEY = "bin"
 INDEX_KEY = "index"
 RETURN_TYPE_KEY = "return_type"
@@ -1963,7 +1963,7 @@ class ListGetByIndex(BaseExpr):
             index,
             bin if isinstance(bin, BaseExpr) else ListBin(bin)
         )
-        self.fixed = {BIN_TYPE_KEY: value_type, RETURN_TYPE_KEY: return_type}
+        self.fixed = {VALUE_TYPE_KEY: value_type, RETURN_TYPE_KEY: return_type}
 
         if ctx is not None:
             self.fixed[CTX_KEY] = ctx
@@ -2072,7 +2072,7 @@ class ListGetByRank(BaseExpr):
             rank,
             bin if isinstance(bin, BaseExpr) else ListBin(bin)
         )
-        self.fixed = {BIN_TYPE_KEY: value_type, RETURN_TYPE_KEY: return_type}
+        self.fixed = {VALUE_TYPE_KEY: value_type, RETURN_TYPE_KEY: return_type}
 
         if ctx is not None:
             self.fixed[CTX_KEY] = ctx
@@ -2828,7 +2828,7 @@ class MapGetByKey(BaseExpr):
             key,
             bin if isinstance(bin, BaseExpr) else MapBin(bin),
         )
-        self.fixed = {BIN_TYPE_KEY: value_type, RETURN_TYPE_KEY: return_type}
+        self.fixed = {VALUE_TYPE_KEY: value_type, RETURN_TYPE_KEY: return_type}
 
         if ctx is not None:
             self.fixed[CTX_KEY] = ctx
@@ -3179,7 +3179,7 @@ class MapGetByIndex(BaseExpr):
             index,
             bin if isinstance(bin, BaseExpr) else MapBin(bin)
         )
-        self.fixed = {BIN_TYPE_KEY: value_type, RETURN_TYPE_KEY: return_type}
+        self.fixed = {VALUE_TYPE_KEY: value_type, RETURN_TYPE_KEY: return_type}
 
         if ctx is not None:
             self.fixed[CTX_KEY] = ctx
@@ -3284,7 +3284,7 @@ class MapGetByRank(BaseExpr):
             rank,
             bin if isinstance(bin, BaseExpr) else MapBin(bin)
         )
-        self.fixed = {BIN_TYPE_KEY: value_type, RETURN_TYPE_KEY: return_type}
+        self.fixed = {VALUE_TYPE_KEY: value_type, RETURN_TYPE_KEY: return_type}
 
         if ctx is not None:
             self.fixed[CTX_KEY] = ctx
