@@ -43,6 +43,7 @@ struct exceptions {
 	PyObject *InvalidGeoJSON;
 	PyObject *OpNotApplicable; //26
 	PyObject *FilteredOut; //27
+	PyObject *LostConflict; //28
 	PyObject *ScanAbortedError; //15
 	PyObject *ElementNotFoundError; //23
 	PyObject *ElementExistsError; //24
