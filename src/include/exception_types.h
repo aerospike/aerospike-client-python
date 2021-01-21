@@ -20,7 +20,7 @@
 
 // These sizes correspond to the structs in exception.c.
 #define RECORD_EXCEPTION_COUNT 10
-#define SERVER_EXCEPTION_COUNT 12
+#define SERVER_EXCEPTION_COUNT 13
 #define INDEX_EXCEPTION_COUNT 6
 #define ADMIN_EXCEPTION_COUNT 17
 
