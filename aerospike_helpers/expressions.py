@@ -383,6 +383,7 @@ class KeyInt(_Key):
             :return (integer value): Integer value of the key if the key is an integer.
 
             Example::
+
                 # Integer record key >= 10000.
                 expr = GE(KeyInt(), 10000).compile()
         """
@@ -402,6 +403,7 @@ class KeyStr(_Key):
             :return (string value): string value of the key if the key is an string.
 
             Example::
+
                 # string record key == "aaa".
                 expr = Eq(KeyStr(), "aaa").compile()
         """ 
@@ -421,6 +423,7 @@ class KeyBlob(_Key):
             :return (blob value): Blob value of the key if the key is a blob.
 
             Example::
+
                 # blob record key <= bytearray([0x65, 0x65]).
                 expr = GE(KeyBlob(), bytearray([0x65, 0x65])).compile()
         """ 
@@ -443,6 +446,7 @@ class KeyExists(BaseExpr):
             :return (boolean value): True if the record has a stored key, false otherwise.
 
             Example::
+
                 # Key exists in record meta data.
                 expr = KeyExists().compile()
         """ 
@@ -471,6 +475,7 @@ class IntBin(BaseExpr):
             :return: (integer bin)
         
             Example::
+
                 # Integer bin "a" == 200.
                 expr = Eq(IntBin("a"), 200).compile()
         """        
@@ -494,6 +499,7 @@ class StrBin(BaseExpr):
             :return: (string bin)
         
             Example::
+
                 # String bin "a" == "xyz".
                 expr = Eq(StrBin("a"), "xyz").compile()
         """        
@@ -517,6 +523,7 @@ class FloatBin(BaseExpr):
             :return: (float bin)
         
             Example::
+
                 # Float bin "a" > 2.71.
                 expr = GT(FloatBin("a"), 2.71).compile()
         """        
@@ -540,6 +547,7 @@ class BlobBin(BaseExpr):
             :return (blob bin)
         
             Example::
+
                 #. Blob bin "a" == bytearray([0x65, 0x65])
                 expr = Eq(BlobBin("a"), bytearray([0x65, 0x65])).compile()
         """        
@@ -563,6 +571,7 @@ class GeoBin(BaseExpr):
             :return (geojson bin)
         
             Example::
+
                 #GeoJSON bin "a" contained by GeoJSON bin "b".
                 expr = CmpGeo(GeoBin("a"), GeoBin("b")).compile()
         """        
@@ -586,6 +595,7 @@ class ListBin(BaseExpr):
             :return (list bin)
         
             Example::
+
                 # List bin "a" contains at least one item with value "abc".
                 expr = GT(ListGetByValue(None, aerospike.LIST_RETURN_COUNT, 
                             ResultType.INTEGER, "abc", ListBin("a")), 
@@ -611,6 +621,7 @@ class MapBin(BaseExpr):
             :return (map bin)
         
             Example::
+
                 # Map bin "a" size > 7.
                 expr = GT(MapSize(None, MapBin("a")), 7).compile()
         """        
@@ -634,6 +645,7 @@ class HLLBin(BaseExpr):
             :return (HyperLogLog bin)
         
             Example::
+
                 # Does HLL bin "a" have a hll_count > 1000000.
                 expr = GT(HllGetCount(HllBin("a"), 1000000)).compile()
         """        
@@ -654,6 +666,7 @@ class BinExists(BaseExpr):
             :return (boolean value): True if bin exists, False otherwise.
         
             Example::
+
                 #Bin "a" exists in record.
                 expr = BinExists("a").compile()
         """        
@@ -677,6 +690,7 @@ class BinType(BaseExpr):
             :return (integer value): returns the bin type.
         
             Example::
+
                 # bin "a" == type string.
                 expr = Eq(BinType("a"), aerospike.AS_BYTES_STRING).compile()
         """        
@@ -704,6 +718,7 @@ class SetName(BaseExpr):
             :return (string value): Name of the set this record belongs to.
         
             Example::
+
                 # Record set name == "myset".
                 expr = Eq(SetName(), "myset").compile()
         """        
@@ -726,6 +741,7 @@ class DeviceSize(BaseExpr):
             :return (integer value): Uncompressed storage size of the record.
         
             Example::
+
                 # Record device size >= 100 KB.
                 expr = GE(DeviceSize(), 100 * 1024).compile()
         """        
@@ -746,6 +762,7 @@ class LastUpdateTime(BaseExpr):
             :return (integer value): When the record was last updated.
         
             Example::
+
                 # Record last update time >= 2020-01-15.
                 expr = GE(LastUpdateTime(), 1577836800).compile()
         """        
@@ -766,6 +783,7 @@ class SinceUpdateTime(BaseExpr):
             :return (integer value): Number of milliseconds since last updated.
         
             Example::
+
                 # Record last updated more than 2 hours ago.
                 expr = GT(SinceUpdateTime(), 2 * 60 * 1000).compile()
         """        
@@ -786,6 +804,7 @@ class VoidTime(BaseExpr):
             :return (integer value): Expiration time in nanoseconds since 1970-01-01.
         
             Example::
+
                 # Record expires on 2021-01-01.
                 expr = And(
                         GE(VoidTime(), 1609459200),
@@ -809,6 +828,7 @@ class TTL(BaseExpr):
                                     returns -1 if the record never expires.
         
             Example::
+
                 # Record expires in less than 1 hour.
                 expr = LT(TTL(), 60 * 60).compile()
         """
@@ -831,6 +851,7 @@ class IsTombstone(BaseExpr):
             :return (boolean value): True if the record is a tombstone, false otherwise.
         
             Example::
+
                 # Detect deleted records that are in tombstone state.
                 expr = IsTombstone().compile()
         """
@@ -851,6 +872,7 @@ class DigestMod(BaseExpr):
             :return (integer value): Value in range 0 and mod (exclusive).
         
             Example::
+
                 # Records that have digest(key) % 3 == 1.
                 expr = Eq(DigestMod(3), 1).compile()
         """        
@@ -888,6 +910,7 @@ class Eq(BaseExpr):
         :return: (boolean value)
 
         Example::
+
             # Integer bin "a" == 11
             expr = Eq(IntBin("a"), 11).compile()
         """        
@@ -908,6 +931,7 @@ class NE(BaseExpr):
             :return: (boolean value)
 
             Example::
+
                 # Integer bin "a" not == 13.
                 expr = NE(IntBin("a"), 13).compile()
         """                 
@@ -928,6 +952,7 @@ class GT(BaseExpr):
             :return: (boolean value)
 
             Example::
+
                 # Integer bin "a" > 8.
                 expr = GT(IntBin("a"), 8).compile()
         """
@@ -948,6 +973,7 @@ class GE(BaseExpr):
             :return: (boolean value)
 
             Example::
+
                 # Integer bin "a" >= 88.
                 expr = GE(IntBin("a"), 88).compile()
         """
@@ -968,6 +994,7 @@ class LT(BaseExpr):
             :return: (boolean value)
 
             Example::
+
                 # Integer bin "a" < 1000.
                 expr = LT(IntBin("a"), 1000).compile()
         """
@@ -988,6 +1015,7 @@ class LE(BaseExpr):
             :return: (boolean value)
 
             Example::
+
                 # Integer bin "a" <= 1.
                 expr = LE(IntBin("a"), 1).compile()
         """
@@ -1009,6 +1037,7 @@ class CmpRegex(BaseExpr):
             :return: (boolean value)
 
             Example::
+
                 # Select string bin "a" that starts with "prefix" and ends with "suffix".
                 # Ignore case and do not match newline.
                 expr = CmpRegex(aerospike.REGEX_ICASE | aerospike.REGEX_NEWLINE, "prefix.*suffix", BinStr("a")).compile()
@@ -1031,6 +1060,7 @@ class CmpGeo(BaseExpr):
             :return: (boolean value)
 
             Example::
+
                 # Geo bin "point" is within geo bin "region".
                 expr = CmpGeo(GeoBin("point"), GeoBin("region")).compile()
         """        
@@ -1055,6 +1085,7 @@ class Not(BaseExpr):
             :return: (boolean value)
 
             Example::
+
                 # not (a == 0 or a == 10)
                 expr = Not(Or(
                             Eq(IntBin("a"), 0),
@@ -1076,6 +1107,7 @@ class And(BaseExpr):
         :return: (boolean value)
 
         Example::
+
             # (a > 5 || a == 0) && b < 3
             expr = And(
                 Or(
@@ -1100,6 +1132,7 @@ class Or(BaseExpr):
         :return: (boolean value)
 
         Example::
+
             # (a == 0 || b == 0)
             expr = Or(
                     Eq(IntBin("a"), 0),
@@ -1129,6 +1162,7 @@ class ListAppend(BaseExpr):
             :return: List expression.
         
             Example::
+
                 # Check if length of list bin "a" is > 5 after appending 1 item.
                 expr = GT(
                         ListSize(None, ListAppend(None, None, 3, ListBin("a"))),
@@ -1164,6 +1198,7 @@ class ListAppendItems(BaseExpr):
             :return: List expression.
         
             Example::
+
                 # Check if length of list bin "a" is > 5 after appending multiple items.
                 expr = GT(
                         ListSize(None, ListAppendItems(None, None, [3, 2], ListBin("a"))),
@@ -1200,6 +1235,7 @@ class ListInsert(BaseExpr):
             :return: List expression.
         
             Example::
+
                 # Check if list bin "a" has length > 5 after insert.
                 expr = GT(
                         ListSize(None, ListInsert(None, None, 0, 3, ListBin("a"))),
@@ -1237,6 +1273,7 @@ class ListInsertItems(BaseExpr):
             :return: List expression.
         
             Example::
+
                 # Check if list bin "a" has length > 5 after inserting items.
                 expr = GT(
                         ListSize(None, ListInsertItems(None, None, 0, [4, 7], ListBin("a"))),
@@ -1274,6 +1311,7 @@ class ListIncrement(BaseExpr):
             :return: List expression.
         
             Example::
+
                 # Check if incremented value in list bin "a" is the largest in the list.
                 expr = Eq(
                         ListGetByRank(None, aerospike.LIST_RETURN_VALUE, ResultType.INTEGER, -1, #rank of -1 == largest element.
@@ -1314,6 +1352,7 @@ class ListSet(BaseExpr):
             :return: List expression.
         
             Example::
+
                 # Get smallest element in list bin "a" after setting index 1 to 10.
                 expr = ListGetByRank(None, aerospike.LIST_RETURN_VALUE, ResultType.INTEGER, 0,
                                 ListSet(None, None, 1, 10, ListBin("a"))).compile()
@@ -1347,6 +1386,7 @@ class ListClear(BaseExpr):
             :return: List expression.
         
             Example::
+
                 # Clear list value of list nested in list bin "a" index 1.
                 from aerospike_helpers import cdt_ctx
                 expr = ListClear([cdt_ctx.cdt_ctx_list_index(1)], "a").compile()
@@ -1375,6 +1415,7 @@ class ListSort(BaseExpr):
             :return: list expression.
         
             Example::
+
                 # Get value of sorted list bin "a".
                 expr = ListSort(None, aerospike.LIST_SORT_DEFAULT, "a").compile()
         """        
@@ -1402,6 +1443,7 @@ class ListRemoveByValue(BaseExpr):
             :return: list expression.
         
             Example::
+
                 # See if list bin "a", with `3` removed, is equal to list bin "b".
                 expr = Eq(ListRemoveByValue(None, 3, ListBin("a")), ListBin("b")).compile()
         """        
@@ -1430,6 +1472,7 @@ class ListRemoveByValueList(BaseExpr):
             :return: list expression.
         
             Example::
+
                 # Remove elements with values [1, 2, 3] from list bin "a".
                 expr = ListRemoveByValueList(None, [1, 2, 3], ListBin("a")).compile()
         """        
@@ -1464,6 +1507,7 @@ class ListRemoveByValueRange(BaseExpr):
             :return: list expression.
         
             Example::
+
                 # Remove list of items with values >= 3 and < 7 from list bin "a".
                 expr = ListRemoveByValueRange(None, 3, 7, ListBin("a")).compile()
         """        
@@ -1494,6 +1538,7 @@ class ListRemoveByValueRelRankToEnd(BaseExpr):
             :return: list expression.
         
             Example::
+
                 # Remove elements larger than 4 by relative rank in list bin "a".
                 expr = ListRemoveByValueRelRankToEnd(None, 4, 1, ListBin("a")).compile()
         """        
@@ -1528,6 +1573,7 @@ class ListRemoveByValueRelRankRange(BaseExpr):
             :return: list expression.
         
             Example::
+
                 # After removing the 3 elements larger than 4 by relative rank, does list bin "a" include 9?.
                 expr = GT(
                         ListGetByValue(None, aerospike.LIST_RETURN_COUNT, 9,
@@ -1561,6 +1607,7 @@ class ListRemoveByIndex(BaseExpr):
             :return: list expression.
         
             Example::
+
                 # Get size of list bin "a" after index 3 has been removed.
                 expr = ListSize(None, ListRemoveByIndex(None, 3, ListBin("a"))).compile()
         """        
@@ -1589,6 +1636,7 @@ class ListRemoveByIndexRangeToEnd(BaseExpr):
             :return: list expression.
         
             Example::
+
                 # Remove all elements starting from index 3 in list bin "a".
                 expr = ListRemoveByIndexRangeToEnd(None, 3, ListBin("a")).compile()
         """        
@@ -1618,6 +1666,7 @@ class ListRemoveByIndexRange(BaseExpr):
             :return: list expression.
         
             Example::
+
                 # Get size of list bin "a" after index 3, 4, and 5 have been removed.
                 expr = ListSize(None, ListRemoveByIndexRange(None, 3, 3, ListBin("a"))).compile()
         """        
@@ -1647,6 +1696,7 @@ class ListRemoveByRank(BaseExpr):
             :return: list expression.
         
             Example::
+
                 # Remove smallest value in list bin "a".
                 expr = ListRemoveByRank(None, 0, ListBin("a")).compile()
         """        
@@ -1675,6 +1725,7 @@ class ListRemoveByRankRangeToEnd(BaseExpr):
             :return: list expression.
         
             Example::
+
                 # Remove the 2 largest elements from List bin "a".
                 expr = ListRemoveByRankRangeToEnd(None, -2, ListBin("a")).compile()
         """        
@@ -1704,6 +1755,7 @@ class ListRemoveByRankRange(BaseExpr):
             :return: list expression.
         
             Example::
+
                 # Remove the 3 smallest items from list bin "a".
                 expr = ListRemoveByRankRange(None, 0, 3, ListBin("a")).compile()
         """        
@@ -1737,6 +1789,7 @@ class ListSize(BaseExpr):
             :return: Integer expression.
         
             Example::
+
                 #Take the size of list bin "a".
                 expr = ListSize(None, ListBin("a")).compile()
         """        
@@ -1769,6 +1822,7 @@ class ListGetByValue(BaseExpr):
             :return: Expression.
         
             Example::
+
                 # Get the index of the element with value, 3, in list bin "a".
                 expr = ListGetByValue(None, aerospike.LIST_RETURN_INDEX, 3, ListBin("a")).compile()
         """        
@@ -1810,6 +1864,7 @@ class ListGetByValueRange(BaseExpr):
             :return: Expression.
         
             Example::
+
                 # Get rank of values between 3 (inclusive) and 7 (exclusive) in list bin "a".
                 expr = ListGetByValueRange(None, aerospike.LIST_RETURN_RANK, 3, 7, ListBin("a")).compile()
         """        
@@ -1845,6 +1900,7 @@ class ListGetByValueList(BaseExpr):
             :return: Expression.
         
             Example::
+
                 #Get the indexes of the the elements in list bin "a" with values [3, 6, 12].
                 expr = ListGetByValueList(None, aerospike.LIST_RETURN_INDEX, [3, 6, 12], ListBin("a")).compile()
         """        
@@ -1877,6 +1933,7 @@ class ListGetByValueRelRankRangeToEnd(BaseExpr):
             :return: Expression.
         
             Example::
+
                 # Get the values of all elements in list bin "a" larger than 3.
                 expr = ListGetByValueRelRankRangeToEnd(None, aerospike.LIST_RETURN_VALUE, 3, 1, ListBin("a")).compile()
         """        
@@ -1913,6 +1970,7 @@ class ListGetByValueRelRankRange(BaseExpr):
             :return: Expression.
         
             Example::
+
                 # Get the next 2 values in list bin "a" larger than 3.
                 expr = ListGetByValueRelRankRange(None, aerospike.LIST_RETURN_VALUE, 3, 1, 2, ListBin("a")).compile()
         """        
@@ -1956,6 +2014,7 @@ class ListGetByIndex(BaseExpr):
             :return: Expression.
         
             Example::
+
                 # Get the value at index 0 in list bin "a". (assume this value is an integer)
                 expr = ListGetByIndex(None, aerospike.LIST_RETURN_VALUE, ResultType.INTEGER, 0, ListBin("a")).compile()
         """    
@@ -1989,6 +2048,7 @@ class ListGetByIndexRangeToEnd(BaseExpr):
             :return: Expression.
         
             Example::
+
                 # Get element 5 to end from list bin "a".
                 expr = ListGetByIndexRangeToEnd(None, aerospike.LIST_RETURN_VALUE, 5, ListBin("a")).compile()
         """        
@@ -2023,6 +2083,7 @@ class ListGetByIndexRange(BaseExpr):
             :return: Expression.
         
             Example::
+
                 # Get elements at indexes 3, 4, 5, 6 in list bin "a".
                 expr = ListGetByIndexRange(None, aerospike.LIST_RETURN_VALUE, 3, 4, ListBin("a")).compile()
         """        
@@ -2065,6 +2126,7 @@ class ListGetByRank(BaseExpr):
             :return: Expression.
         
             Example::
+
                 # Get the smallest element in list bin "a".
                 expr = ListGetByRank(None, aerospike.LIST_RETURN_VALUE, aerospike.ResultType.INTEGER, 0, ListBin("a")).compile()
         """        
@@ -2098,6 +2160,7 @@ class ListGetByRankRangeToEnd(BaseExpr):
             :return: Expression.
         
             Example::
+
                 # Get the three largest elements in list bin "a".
                 expr = ListGetByRankRangeToEnd(None, aerospike.LIST_RETURN_VALUE, -3, ListBin("a")).compile()
         """        
@@ -2132,6 +2195,7 @@ class ListGetByRankRange(BaseExpr):
             :return: Expression.
         
             Example::
+
                 # Get the 3 smallest elements in list bin "a".
                 expr = ListGetByRankRange(None, aerospike.LIST_RETURN_VALUE, 0, 3, ListBin("a")).compile()
         """        
@@ -2172,6 +2236,7 @@ class MapPut(BaseExpr):
             :return: Map expression.
         
             Example::
+
                 # Put {27: 'key27'} into map bin "b".
                 expr = MapPut(None, None, 27, 'key27', MapBin("b")).compile()
         """        
@@ -2206,6 +2271,7 @@ class MapPutItems(BaseExpr):
             :return: Map expression.
         
             Example::
+
                 # Put {27: 'key27', 28: 'key28'} into map bin "b".
                 expr = MapPut(None, None, {27: 'key27', 28: 'key28'}, MapBin("b")).compile()
         """        
@@ -2243,6 +2309,7 @@ class MapIncrement(BaseExpr):
             :return: Map expression.
         
             Example::
+
                 # Increment element at 'vageta' in map bin "b" by 9000.
                 expr = MapIncrement(None, None, 'vageta', 9000, MapBin("b")).compile()
         """        
@@ -2275,6 +2342,7 @@ class MapClear(BaseExpr):
             :return: Map expression.
         
             Example::
+
                 # Clear map bin "b".
                 expr = MapClear(None, MapBin("b")).compile()
         """        
@@ -2302,6 +2370,7 @@ class MapRemoveByKey(BaseExpr):
             :return: Map expression.
         
             Example::
+
                 # Remove element at key 1 in map bin "b".
                 expr = MapRemoveByKey(None, 1, MapBin("b")).compile()
         """        
@@ -2330,6 +2399,7 @@ class MapRemoveByKeyList(BaseExpr):
             :return: Map expression.
         
             Example::
+
                 # Remove elements at keys [1, 2] in map bin "b".
                 expr = MapRemoveByKeyList(None, [1, 2], MapBin("b")).compile()
         """        
@@ -2364,6 +2434,7 @@ class MapRemoveByKeyRange(BaseExpr):
             :return: Map expression.
         
             Example::
+
                 # Remove elements at keys between 1 and 10 in map bin "b".
                 expr = MapRemoveByKeyRange(None, 1, 10 MapBin("b")).compile()
         """        
@@ -2394,6 +2465,7 @@ class MapRemoveByKeyRelIndexRangeToEnd(BaseExpr):
             :return: Map expression.
         
             Example::
+
                 # Map bin "b" has {"key1": 1, "key2": 2, "key3": 3, "key4": 4}.
                 # Remove each element where the key has greater index than "key1".
                 expr = MapRemoveByKeyRelIndexRangeToEnd(None, "key1", 1, MapBin("b")).compile()
@@ -2426,6 +2498,7 @@ class MapRemoveByKeyRelIndexRange(BaseExpr):
             :return: [Map expression.
         
             Example::
+
                 # Remove 3 elements with keys greater than "key1" from map bin "b".
                 expr = MapRemoveByKeyRelIndexRange(None, "key1", 1, 3, MapBin("b")).compile()
         """        
@@ -2456,6 +2529,7 @@ class MapRemoveByValue(BaseExpr):
             :return: Map expression.
         
             Example::
+
                 # Remove {"key1": 1} from map bin "b".
                 expr = MapRemoveByValue(None, 1, MapBin("b")).compile()
         """        
@@ -2484,6 +2558,7 @@ class MapRemoveByValueList(BaseExpr):
             :return: Map expression.
         
             Example::
+
                 # Remove elements with values 1, 2, 3 from map bin "b".
                 expr = MapRemoveByValueList(None, [1, 2, 3], MapBin("b")).compile()
         """        
@@ -2518,6 +2593,7 @@ class MapRemoveByValueRange(BaseExpr):
             :return: Map expression.
         
             Example::
+
                 # Remove list of items with values >= 3 and < 7 from map bin "b".
                 expr = MapRemoveByValueRange(None, 3, 7, MapBin("b")).compile()
         """        
@@ -2548,6 +2624,7 @@ class MapRemoveByValueRelRankRangeToEnd(BaseExpr):
             :return: Map expression.
         
             Example::
+
                 # Remove all elements with values larger than 3 from map bin "b".
                 expr = MapRemoveByValueRelRankRangeToEnd(None, 3, 1, MapBin("b")).compile()
         """        
@@ -2582,6 +2659,7 @@ class MapRemoveByValueRelRankRange(BaseExpr):
             :return: Map expression.
         
             Example::
+
                 # Remove the next 4 elements larger than 3 from map bin "b".
                 expr = MapRemoveByValueRelRankRangeToEnd(None, 3, 1, 4, MapBin("b")).compile()
         """        
@@ -2612,6 +2690,7 @@ class MapRemoveByIndex(BaseExpr):
             :return: Map expression.
         
             Example::
+
                 # Remove element with smallest key from map bin "b".
                 expr = MapRemoveByIndex(None, 0, MapBin("b")).compile()
         """        
@@ -2640,6 +2719,7 @@ class MapRemoveByIndexRangeToEnd(BaseExpr):
             :return: Map expression.
         
             Example::
+
                 # Remove all elements starting from index 3 in map bin "b".
                 expr = MapRemoveByIndexRangeToEnd(None, 3, MapBin("b")).compile()
         """        
@@ -2669,6 +2749,7 @@ class MapRemoveByIndexRange(BaseExpr):
             :return: Map expression.
         
             Example::
+
                 # Get size of map bin "b" after index 3, 4, and 5 have been removed.
                 expr = MapSize(None, MapRemoveByIndexRange(None, 3, 3, MapBin("b"))).compile()
         """        
@@ -2698,6 +2779,7 @@ class MapRemoveByRank(BaseExpr):
             :return: Map expression.
         
             Example::
+
                 # Remove smallest value in map bin "b".
                 expr = MapRemoveByRank(None, 0, MapBin("b")).compile()
         """        
@@ -2726,6 +2808,7 @@ class MapRemoveByRankRangeToEnd(BaseExpr):
             :return: Map expression.
         
             Example::
+
                 # Remove the 2 largest elements from map bin "b".
                 expr = MapRemoveByRankRangeToEnd(None, -2, MapBin("b")).compile()
         """        
@@ -2755,6 +2838,7 @@ class MapRemoveByRankRange(BaseExpr):
             :return: Map expression.
         
             Example::
+
                 # Remove the 3 smallest items from map bin "b".
                 expr = MapRemoveByRankRange(None, 0, 3, MapBin("b")).compile()
         """        
@@ -2788,6 +2872,7 @@ class MapSize(BaseExpr):
             :return: Integer expression.
         
             Example::
+
                 #Take the size of map bin "b".
                 expr = MapSize(None, MapBin("b")).compile()
         """        
@@ -2821,6 +2906,7 @@ class MapGetByKey(BaseExpr):
             :return: Expression.
         
             Example::
+
                 # Get the value at key "key0" in map bin "b". (assume the value at key0 is an integer)
                 expr = MapGetByKey(None, aerospike.MAP_RETURN_VALUE, ResultType.INTEGER, "key0", MapBin("b")).compile()
         """        
@@ -2855,6 +2941,7 @@ class MapGetByKeyRange(BaseExpr):
             :return: Expression.
         
             Example::
+
                 # Get elements at keys "key3", "key4", "key5", "key6" in map bin "b".
                 expr = MapGetByKeyRange(None, aerospike.MAP_RETURN_VALUE, "key3", "key7", MapBin("b")).compile()
         """        
@@ -2889,6 +2976,7 @@ class MapGetByKeyList(BaseExpr):
             :return: Expression.
         
             Example::
+
                 # Get elements at keys "key3", "key4", "key5" in map bin "b".
                 expr = MapGetByKeyList(None, aerospike.MAP_RETURN_VALUE, ["key3", "key4", "key5"], MapBin("b")).compile()
         """        
@@ -2921,6 +3009,7 @@ class MapGetByKeyRelIndexRangeToEnd(BaseExpr):
             :return: Expression.
         
             Example::
+
                 # Get elements with keys larger than "key2" from map bin "b".
                 expr = MapGetByKeyRelIndexRangeToEnd(None, aerospike.MAP_RETURN_VALUE, "key2", 1, MapBin("b")).compile()
         """        
@@ -2955,6 +3044,7 @@ class MapGetByKeyRelIndexRange(BaseExpr):
             :return: Expression.
         
             Example::
+
                 # Get the next 2 elements with keys larger than "key3" from map bin "b".
                 expr = MapGetByKeyRelIndexRange(None, aerospike.MAP_RETURN_VALUE, "key3", 1, 2, MapBin("b")).compile()
         """        
@@ -2988,6 +3078,7 @@ class MapGetByValue(BaseExpr):
             :return: Expression.
         
             Example::
+
                 # Get the rank of the element with value, 3, in map bin "b".
                 expr = MapGetByValue(None, aerospike.MAP_RETURN_RANK, 3, MapBin("b")).compile()
         """        
@@ -3029,6 +3120,7 @@ class MapGetByValueRange(BaseExpr):
             :return: Expression.
         
             Example::
+
                 # Get elements with values between 3 and 7 from map bin "b".
                 expr = MapGetByValueRange(None, aerospike.MAP_RETURN_VALUE, 3, 7, MapBin("b")).compile()
         """        
@@ -3061,6 +3153,7 @@ class MapGetByValueList(BaseExpr):
             :return: Expression.
         
             Example::
+
                 # Get the indexes of the the elements in map bin "b" with values [3, 6, 12].
                 expr = MapGetByValueList(None, aerospike.MAP_RETURN_INDEX, [3, 6, 12], MapBin("b")).compile()
         """        
@@ -3093,6 +3186,7 @@ class MapGetByValueRelRankRangeToEnd(BaseExpr):
             :return: Expression.
         
             Example::
+
                 # Get the values of all elements in map bin "b" larger than 3.
                 expr = MapGetByValueRelRankRangeToEnd(None, aerospike.MAP_RETURN_VALUE, 3, 1, MapBin("b")).compile()
         """        
@@ -3129,6 +3223,7 @@ class MapGetByValueRelRankRange(BaseExpr):
             :return: Expression.
         
             Example::
+
                 # Get the next 2 values in map bin "b" larger than 3.
                 expr = MapGetByValueRelRankRange(None, aerospike.MAP_RETURN_VALUE, 3, 1, 2, MapBin("b")).compile()
         """        
@@ -3172,6 +3267,7 @@ class MapGetByIndex(BaseExpr):
             :return: Expression.
         
             Example::
+
                 # Get the value at index 0 in map bin "b". (assume this value is an integer)
                 expr = MapGetByIndex(None, aerospike.MAP_RETURN_VALUE, ResultType.INTEGER, 0, MapBin("b")).compile()
         """        
@@ -3203,6 +3299,7 @@ class MapGetByIndexRangeToEnd(BaseExpr):
             :return: Expression.
         
             Example::
+
                 # Get element at index 5 to end from map bin "b".
                 expr = MapGetByIndexRangeToEnd(None, aerospike.MAP_RETURN_VALUE, 5, MapBin("b")).compile()
         """        
@@ -3235,6 +3332,7 @@ class MapGetByIndexRange(BaseExpr):
             :return: Expression.
         
             Example::
+
                 # Get elements at indexes 3, 4, 5, 6 in map bin "b".
                 expr = MapGetByIndexRange(None, aerospike.MAP_RETURN_VALUE, 3, 4, MapBin("b")).compile()
         """        
@@ -3277,6 +3375,7 @@ class MapGetByRank(BaseExpr):
             :return: Expression.
         
             Example::
+
                 # Get the smallest element in map bin "b".
                 expr = MapGetByRank(None, aerospike.MAP_RETURN_VALUE, aerospike.ResultType.INTEGER, 0, MapBin("b")).compile()
         """    
@@ -3308,6 +3407,7 @@ class MapGetByRankRangeToEnd(BaseExpr):
             :return: Expression.
         
             Example::
+
                 # Get the three largest elements in map bin "b".
                 expr = MapGetByRankRangeToEnd(None, aerospike.MAP_RETURN_VALUE, -3, MapBin("b")).compile()
         """        
@@ -3340,6 +3440,7 @@ class MapGetByRankRange(BaseExpr):
             :return: Expression.
         
             Example::
+
                 # Get the 3 smallest elements in map bin "b".
                 expr = MapGetByRankRange(None, aerospike.MAP_RETURN_VALUE, 0, 3, MapBin("b")).compile()
         """        
@@ -3378,6 +3479,7 @@ class BitResize(BaseExpr):
             :return: Blob value expression of resized blob bin.
         
             Example::
+
                 # Blob bin "c" == bytearray([1] * 5).
                 # Resize blob bin "c" from the front so that the returned value is bytearray([0] * 5 + [1] * 5).
                 expr = BitResize(None, 10, aerospike.BIT_RESIZE_FROM_FRONT, BlobBin("c")).compile()
@@ -3406,6 +3508,7 @@ class BitInsert(BaseExpr):
             :return: Resulting blob containing the inserted bytes.
         
             Example::
+
                 # Let blob bin "c" == bytearray([1] * 5).
                 # Insert 3 so that returned value is bytearray([1, 3, 1, 1, 1, 1]).
                 expr = BitInsert(None, 1, bytearray([3]), BlobBin("c")).compile()
@@ -3434,6 +3537,7 @@ class BitRemove(BaseExpr):
             :return: Resulting blob containing the remaining bytes.
         
             Example::
+
                 # Let blob bin "c" == bytearray([1] * 5).
                 # Remove 1 element so that the returned value is bytearray([1] * 4).
                 expr = BitRemove(None, 1, 1, BlobBin("c")).compile()
@@ -3463,6 +3567,7 @@ class BitSet(BaseExpr):
             :return: Resulting blob expression with the bits overwritten.
         
             Example::
+
                 # Let blob bin "c" == bytearray([0] * 5).
                 # Set bit at offset 7 with size 1 bits to 1 to make the returned value bytearray([1, 0, 0, 0, 0]).
                 expr = BitSet(None, 7, 1, bytearray([255]), BlobBin("c")).compile()
@@ -3493,6 +3598,7 @@ class BitOr(BaseExpr):
             :return: Resulting blob with the bits operated on.
         
             Example::
+
                 # Let blob bin "c" == bytearray([1] * 5).
                 # bitwise Or `8` with the first byte of blob bin c so that the returned value is bytearray([9, 1, 1, 1, 1]).
                 expr = BitOr(None, 0, 8, bytearray([8]), BlobBin("c")).compile()
@@ -3523,6 +3629,7 @@ class BitXor(BaseExpr):
             :return: Resulting blob with the bits operated on.
         
             Example::
+
                 # Let blob bin "c" == bytearray([1] * 5).
                 # bitwise Xor `1` with the first byte of blob bin c so that the returned value is bytearray([0, 1, 1, 1, 1]).
                 expr = BitXor(None, 0, 8, bytearray([1]), BlobBin("c")).compile()
@@ -3553,6 +3660,7 @@ class BitAnd(BaseExpr):
             :return: Resulting blob with the bits operated on.
         
             Example::
+
                 # Let blob bin "c" == bytearray([1] * 5).
                 # bitwise and `0` with the first byte of blob bin c so that the returned value is bytearray([0, 5, 5, 5, 5]).
                 expr = BitAnd(None, 0, 8, bytearray([0]), BlobBin("c")).compile()
@@ -3582,6 +3690,7 @@ class BitNot(BaseExpr):
             :return: Resulting blob with the bits operated on.
         
             Example::
+
                 # Let blob bin "c" == bytearray([255] * 5).
                 # bitwise, not, all of "c" to get bytearray([254] * 5).
                 expr = BitNot(None, 0, 40, BlobBin("c")).compile()
@@ -3611,6 +3720,7 @@ class BitLeftShift(BaseExpr):
             :return: Resulting blob with the bits operated on.
         
             Example::
+
                 # Let blob bin "c" == bytearray([1] * 5).
                 # Bit left shift the first byte of bin "c" to get bytearray([8, 1, 1, 1, 1]).
                 expr = BitLeftShift(None, 0, 8, 3, BlobBin("c")).compile()
@@ -3641,6 +3751,7 @@ class BitRightShift(BaseExpr):
             :return: Resulting blob with the bits operated on.
         
             Example::
+
                 # Let blob bin "c" == bytearray([8] * 5).
                 # Bit left shift the first byte of bin "c" to get bytearray([4, 8, 8, 8, 8]).
                 expr = BitRightShift(None, 0, 8, 1, BlobBin("c")).compile()
@@ -3673,6 +3784,7 @@ class BitAdd(BaseExpr):
             :return: resulting blob with the bits operated on.
         
             Example::
+
                 # Let blob bin "c" == bytearray([1] * 5).
                 # Bit add the second byte of bin "c" to get bytearray([1, 2, 1, 1, 1])
                 expr = BitAdd(None, 8, 8, 1, aerospike.BIT_OVERFLOW_FAIL).compile()
@@ -3708,6 +3820,7 @@ class BitSubtract(BaseExpr):
             :return: resulting blob with the bits operated on.
         
             Example::
+
                 # Let blob bin "c" == bytearray([1] * 5).
                 # Bit subtract the second byte of bin "c" to get bytearray([1, 0, 1, 1, 1])
                 expr = BitSubtract(None, 8, 8, 1, aerospike.BIT_OVERFLOW_FAIL).compile()
@@ -3742,6 +3855,7 @@ class BitSetInt(BaseExpr):
             :return: Resulting blob expression with the bits overwritten.
         
             Example::
+
                 # Let blob bin "c" == bytearray([0] * 5).
                 # Set bit at offset 7 with size 1 bytes to 1 to make the returned value bytearray([1, 0, 0, 0, 0]).
                 expr = BitSetInt(None, 7, 1, 1, BlobBin("c")).compile()
@@ -3775,6 +3889,7 @@ class BitGet(BaseExpr):
             :return: Blob, bit_size bits rounded up to the nearest byte size.
         
             Example::
+
                 # Let blob bin "c" == bytearray([1, 2, 3, 4, 5).
                 # Get 2 from bin "c".
                 expr = BitGet(8, 8, BlobBin("c")).compile()
@@ -3801,6 +3916,7 @@ class BitCount(BaseExpr):
             :return: Blob, bit_size bits rounded up to the nearest byte size.
         
             Example::
+
                 # Let blob bin "c" == bytearray([3] * 5).
                 # Count set bits starting at 3rd byte in bin "c" to get count of 6.
                 expr = BitCount(16, 8 * 3, BlobBin("c")).compile()
@@ -3828,6 +3944,7 @@ class BitLeftScan(BaseExpr):
             :return: Index of the left most bit starting from bit_offset set to value. Returns -1 if not found.
         
             Example::
+
                 # Let blob bin "c" == bytearray([3] * 5).
                 # Scan the first byte of bin "c" for the first bit set to 1. (should get 6)
                 expr = BitLeftScan(0, 8, True, BlobBin("c")).compile()
@@ -3856,6 +3973,7 @@ class BitRightScan(BaseExpr):
             :return: Index of the right most bit starting from bit_offset set to value. Returns -1 if not found.
         
             Example::
+
                 # Let blob bin "c" == bytearray([3] * 5).
                 # Scan the first byte of bin "c" for the right most bit set to 1. (should get 7)
                 expr = BitRightScan(0, 8, True, BlobBin("c")).compile()
@@ -3884,6 +4002,7 @@ class BitGetInt(BaseExpr):
             :return: Integer expression.
         
             Example::
+
                 # Let blob bin "c" == bytearray([1, 2, 3, 4, 5).
                 # Get 2 as an integer from bin "c".
                 expr = BitGetInt(8, 8, True, BlobBin("c")).compile()
@@ -3918,6 +4037,7 @@ class HLLAdd(BaseExpr):
             :return: Returns the resulting hll bin after adding elements from list.
         
             Example::
+
                 # Let HLL bin "d" have the following elements, ['key1', 'key2', 'key3'], index_bits 8, mh_bits 8.
                 # Add ['key4', 'key5', 'key6'] so that the returned value is ['key1', 'key2', 'key3', 'key4', 'key5', 'key6']
                 expr = HLLAdd(None, ['key4', 'key5', 'key6'], 8, 8, HLLBin("d")).compile()
@@ -3949,6 +4069,7 @@ class HLLGetCount(BaseExpr):
             :return: Integer bin, the estimated number of unique elements in an HLL.
         
             Example::
+
                 # Get count from HLL bin "d".
                 expr = HLLGetCount(HLLBin("d")).compile()
         """        
@@ -3971,6 +4092,7 @@ class HLLGetUnion(BaseExpr):
             :return: HLL bin representing the set union.
         
             Example::
+
                 # Let HLLBin "d" contain keys ['key%s' % str(i) for i in range(10000)].
                 # Let values be a list containing HLL objects retrieved from the aerospike database.
                 # Find the union of HLL bin "d" and all HLLs in values.
@@ -3996,6 +4118,7 @@ class HLLGetUnionCount(BaseExpr):
             :return: Integer bin, estimated number of elements in the set union.
         
             Example::
+
                 # Let HLLBin "d" contain keys ['key%s' % str(i) for i in range(10000)].
                 # Let values be a list containing one HLL object with keys ['key%s' % str(i) for i in range(5000, 15000)].
                 # Find the count of keys in the union of HLL bin "d" and all HLLs in values. (Should be around 15000)
@@ -4021,6 +4144,7 @@ class HLLGetIntersectCount(BaseExpr):
             :return: Integer bin, estimated number of elements in the set intersection.
         
             Example::
+
                 # Let HLLBin "d" contain keys ['key%s' % str(i) for i in range(10000)].
                 # Let values be a list containing one HLL object with keys ['key%s' % str(i) for i in range(5000, 15000)].
                 # Find the count of keys in the intersection of HLL bin "d" and all HLLs in values. (Should be around 5000)
@@ -4046,6 +4170,7 @@ class HLLGetSimilarity(BaseExpr):
             :return: Float bin, stimated similarity between 0.0 and 1.0.
         
             Example::
+
                 # Let HLLBin "d" contain keys ['key%s' % str(i) for i in range(10000)].
                 # Let values be a list containing one HLL object with keys ['key%s' % str(i) for i in range(5000, 15000)].
                 # Find the similarity the HLL in values to HLL bin "d". (Should be around 0.33)
@@ -4071,6 +4196,7 @@ class HLLDescribe(BaseExpr):
             :return: List bin, a list containing the index_bit_count and minhash_bit_count.
         
             Example::
+
                 # Get description of HLL bin "d".
                 expr = HLLDescribe(HLLBin("d")).compile()
         """        
@@ -4096,6 +4222,7 @@ class HLLMayContain(BaseExpr):
             :return: 1 if bin contains any key in list, 0 otherwise.
         
             Example::
+
                 # Check if HLL bin "d" contains any of the keys in `list`.
                 expr = HLLMayContain(["key1", "key2", "key3"], HLLBin("d")).compile()
         """        
