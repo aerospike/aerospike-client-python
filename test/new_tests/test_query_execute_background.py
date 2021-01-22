@@ -194,7 +194,7 @@ class TestQueryApply(object):
     #     }
 
     #     query.add_ops(ops)
-    #     query.execute_background() #TODO debug invalid read (not expressions related)
+    #     query.execute_background(policy=policy) #TODO debug invalid read (not expressions related)
     #     # Give time for the query to finish
     #     time.sleep(5)
 
