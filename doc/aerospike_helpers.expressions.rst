@@ -1,10 +1,221 @@
 .. _aerospike_operation_helpers.expressions:
 
-aerospike\_helpers\.expressions module
-------------------------------------------------------
+aerospike\_helpers\.expressions package
+=======================================
+
+Classes for the creation and use of aerospike expressions. See:: `Aerospike Expressions <https://www.aerospike.com/docs/guide/expressions/>`_.
+
+Aerospike Expressions are a small domain specific language that allow for filtering
+records in transactions by manipulating and comparing bins and record metadata. 
+Expressions can be used everywhere that predicate expressions have been used and
+allow for expanded functionality and customizability.
+
+In the Python client, Aerospike expressions are built using a series of classes that represent
+comparrison and logical operators, bins, metadata operations, and bin operations.
+Expressions are constructed using a Lisp like syntax by instantiating an expression that yields a boolean, such as Eq() or And(), 
+while passing them other expressions and constants as arguments, and finally calling the compile() method. See the example below.
+
+Example::
+
+    # See if integer bin "bin_name" contains a value equal to 10.
+    from aerospike_helpers import expressions as exp
+    expr = exp.Eq(exp.IntBin("bin_name"), 10).compile()
+
+By passing these compiled expressions to transactions via the "expressions" policy field,
+the expressions will filter the results. See the example below.
+
+Example::
+
+    from __future__ import print_function
+    import aerospike
+    from aerospike_helpers import expressions as exp
+    from aerospike import exception as ex
+    import sys
+
+    TEST_NS = "test"
+    TEST_SET = "demo"
+    FIRST_RECORD_INDEX = 0
+    SECOND_RECORD_INDEX = 1
+    BIN_INDEX = 2
+
+    # Configure the client.
+    config = {"hosts": [("127.0.0.1", 3000)]}
+
+    # Create a client and connect it to the cluster.
+    try:
+        client = aerospike.client(config).connect()
+    except ex.ClientError as e:
+        print("Error: {0} [{1}]".format(e.msg, e.code))
+        sys.exit(1)
+
+    # Write records
+    keys = [(TEST_NS, TEST_SET, i) for i in range(1, 5)]
+    records = [
+                {'user': "Chief"     , 'team': "blue", 'scores': [6, 12, 4, 21], 'kd': 1.0,  'status': "MasterPlatinum" },
+                {'user': "Arbiter"   , 'team': "blue", 'scores': [5, 10, 5, 8] , 'kd': 1.0,  'status': "MasterGold"     },
+                {'user': "Johnson"   , 'team': "blue", 'scores': [8, 17, 20, 5], 'kd': 0.99, 'status': "SergeantGold"   },
+                {'user': "Regret"    , 'team': "red" , 'scores': [4, 2, 3, 5]  , 'kd': 0.33, 'status': "ProphetSilver"  }
+            ]
+
+    try:
+        for key, record in zip(keys, records):
+            client.put(key, record)
+    except ex.RecordError as e:
+        print("Error: {0} [{1}]".format(e.msg, e.code))
+
+
+    # EXAMPLE 1: Get records for users who's top scores are above 20 using a scan.
+    try:
+        expr = exp.GT(exp.ListGetByRank(None, aerospike.LIST_RETURN_VALUE, exp.ResultType.INTEGER, -1, exp.ListBin("scores")), # rank -1 == largest value
+                        20).compile()
+
+        scan = client.scan(TEST_NS, TEST_SET)
+        policy = {
+            'expressions': expr
+        }
+
+        records = scan.results(policy)
+        # This scan will only return the record for "Chief" since it is the only account with a score over 20 using batch get.
+        print(records[FIRST_RECORD_INDEX][BIN_INDEX])
+    except ex.AerospikeError as e:
+        print("Error: {0} [{1}]".format(e.msg, e.code))
+        sys.exit(1)
+
+    # EXPECTED OUTPUT:
+    # {'user': 'Chief', 'team': 'blue', 'scores': [6, 12, 4, 21], 'kd': 1.0, 'status': 'MasterPlatinum'}
+
+
+    # EXAMPLE 2: Get player's records with a kd >= 1.0 with a status including "Gold".
+    try:
+        expr = exp.And(
+            exp.CmpRegex(aerospike.REGEX_ICASE, '.*Gold', exp.StrBin('status')),
+            exp.GE(exp.FloatBin("kd"), 1.0)).compile()
+
+        policy = {
+            'expressions': expr
+        }
+
+        records = client.get_many(keys, policy)
+        # This get_many will only return the record for "Arbiter" since it is the only account with a kd >= 1.0 and Gold status.
+        print(records[SECOND_RECORD_INDEX][BIN_INDEX])
+    except ex.AerospikeError as e:
+        print("Error: {0} [{1}]".format(e.msg, e.code))
+        sys.exit(1)
+    finally:
+        client.close()
+
+    # EXPECTED OUTPUT:
+    # {'user': 'Arbiter', 'team': 'blue', 'scores': [5, 10, 5, 8], 'kd': 1.0, 'status': 'MasterGold'}
+
+By nesting expressions, complicated filters can be created. See the example below.
+
+Example::
+
+    from aerospike_helpers import expressions as exp
+    expr = Eq(
+        exp.ListGetByIndexRangeToEnd(ctx, aerospike.LIST_RETURN_VALUE, 0,                 
+            exp.ListSort(ctx, aerospike.LIST_SORT_DEFAULT,      
+                exp.ListAppend(ctx, policy, value_x,
+                    exp.ListAppendItems(ctx, policy, value_y,
+                        exp.ListInsert(ctx, policy, 1, value_z, bin_name))))),
+        expected_answer
+    ),
+    
+Note::
+
+    Aerospike expressions are evaluated server side, and do not return any values to the client themselves.
+    When the following documentation says an expression returns a "list expression", it means that the expression returns a
+    list during evalution on the server side. When these docs say that a parameter requires an "integer or integer expression"
+    It means it will accept a literal integer, or an expression that will return an integer during evaluation. When the docs say
+    an expression returns a "expression" this means that the data type returned may vary, usually depending on the `return_type` parameter.
+
+Current Limitations::
+
+    Currently, Aerospike expressions for the python client do not support comparing as_python_bytes blobs.
+    Comparrisions between constant map values and map expressions are  also unsupported.
+
+The expressions module uses typehints, here are a table of custom typehints mapped to standard types.
+
+.. list-table:: Title
+    :widths: 25 75
+    :header-rows: 1
+
+    * - Type Name
+      - Type Description
+    * - TypeResultType
+      - Optional[int]
+    * - TypeFixedEle
+      - Union[int, float, str, bytes, dict]
+    * - TypeFixed
+      - Optional[Dict[str, TypeFixedEle]]
+    * - TypeCompiledOp
+      - Tuple[int, TypeResultType, TypeFixed, int]
+    * - TypeExpression
+      - List[TypeCompiledOp]
+    * - TypeChild
+      - Union[int, float, str, bytes, _AtomExpr]
+    * - TypeChildren
+      - Tuple[TypeChild, ...]
+    * - TypeBinName
+      - Union[BaseExpr, str]
+    * - TypeListValue
+      - Union[BaseExpr, List[Any]]
+    * - TypeIndex
+      - Union[BaseExpr, int, aerospike.CDTInfinite]
+    * - TypeCDT
+      - Union[None, List[cdt_ctx._cdt_ctx]]
+    * - TypeRank
+      - Union[BaseExpr, int, aerospike.CDTInfinite]
+    * - TypeCount
+      - Union[BaseExpr, int, aerospike.CDTInfinite]
+    * - TypeValue
+      - Union[BaseExpr, Any]
+    * - TypePolicy
+      - Union[Dict[str, Any], None]
+    * - TypeComparisonArg
+      - Union[BaseExpr, int, str, list, dict, aerospike.CDTInfinite]
+    * - TypeGeo
+      - Union[BaseExpr, aerospike.GeoJSON]
+    * - TypeKey
+      - Union[BaseExpr, Any]
+    * - TypeKeyList
+      - Union[BaseExpr, List[Any]]
+    * - TypeBitValue
+      - Union[bytes, bytearray]
 
 .. note:: Requires server version >= 5.2.0
 
-.. automodule:: aerospike_helpers.expressions
+aerospike\_helpers\.expressions\.base\ module
+---------------------------------------------
+
+.. automodule:: aerospike_helpers.expressions.base
+    :members:
+    :special-members:
+
+aerospike\_helpers\.expressions\.list module
+--------------------------------------------
+
+.. automodule:: aerospike_helpers.expressions.list
+    :members:
+    :special-members:
+
+aerospike\_helpers\.expressions\.map module
+-------------------------------------------
+
+.. automodule:: aerospike_helpers.expressions.map
+    :members:
+    :special-members:
+
+aerospike\_helpers\.expressions\.bit module
+-------------------------------------------
+
+.. automodule:: aerospike_helpers.expressions.bitwise
+    :members:
+    :special-members:
+
+aerospike\_helpers\.expressions\.hll\ module
+--------------------------------------------
+
+.. automodule:: aerospike_helpers.expressions.hll
     :members:
     :special-members:
