@@ -3101,7 +3101,7 @@ class TestCTXOperations(object):
             self.as_connection.operate(self.test_key, ops)
 
     @pytest.mark.parametrize("index, val, pad", [
-        (10, 'val1', True), #Todo should this work with aerospike.LIST_ORDERED?
+        (10, 'val1', True),
         (2, 'val1', False)
     ])
     def test_cdt_ctx_list_index_create_pos(self, index, val, pad):
