@@ -60,7 +60,7 @@
 #define CDT_CTX_ORDER_KEY "order_key"
 #define CDT_CTX_PAD_KEY "pad_key"
 
-bool requires_int(uint64_t op);
+static bool requires_int(uint64_t op);
 
 as_status as_udf_file_to_pyobject( as_error *err, as_udf_file * entry, PyObject ** py_file )
 {
@@ -2028,13 +2028,12 @@ as_status get_cdt_ctx(AerospikeClient* self, as_error* err, as_cdt_ctx* cdt_ctx,
 	return AEROSPIKE_OK;
 }
 
-bool
-requires_int(uint64_t op) {
-    return(
-        op == AS_CDT_CTX_LIST_INDEX ||
-        op == AS_CDT_CTX_LIST_RANK  ||
-        op == AS_CDT_CTX_MAP_INDEX  ||
-        op == AS_CDT_CTX_MAP_RANK   ||
+static bool requires_int(uint64_t op) {
+	return(
+		op == AS_CDT_CTX_LIST_INDEX ||
+		op == AS_CDT_CTX_LIST_RANK  ||
+		op == AS_CDT_CTX_MAP_INDEX  ||
+		op == AS_CDT_CTX_MAP_RANK   ||
 		op == CDT_CTX_LIST_INDEX_CREATE
-    );
+	);
 }
