@@ -2351,12 +2351,22 @@ Info Operations
 
         .. warning:: for client versions < 3.0.0 ``info_node`` will not work when using TLS
 
-    .. method:: has_geo()  ->  bool
+    .. method:: set_xdr_filter(data_center, namespace, expression_filter[, policy]) -> str
 
-        Check whether the connected cluster supports geospatial data and indexes.
+        Set the cluster's xdr filter using an Aerospike expression.
+        The cluster's current filter can be removed by setting expression_filter to None.
 
-        :rtype: :class:`bool`
+        :param str data_center: The data center to apply the filter to.
+        :param str namespace: The namespace to apply the filter to.
+        :param expression expression_filter: The filter to set. See :py:mod:`aerospike_helpers.expressions`.
+        :param dict policy: optional :ref:`aerospike_info_policies`.
         :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
+
+        .. seealso:: `xdr-set-filter Info Command Reference <http://www.aerospike.com/docs/reference/info/#xdr-set-filter>`_.
+
+        .. versionchanged:: 5.0.0
+
+        .. warning:: for client versions < 3.0.0 ``set_xdr_filter`` will not work when using TLS.
 
     .. method:: shm_key()  ->  int
 

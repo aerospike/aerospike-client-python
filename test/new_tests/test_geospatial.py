@@ -219,10 +219,6 @@ def remove_geo_data(connection):
 
 class TestGeospatial(object):
 
-    pytestmark = pytest.mark.skipif(
-        not TestBaseClass.has_geo_support(),
-        reason="Server does not support geospatial data.")
-
     def setup_class(cls):
         """
         Setup method.
@@ -241,9 +237,6 @@ class TestGeospatial(object):
     def setup(self, request, connection_with_config_funcs):
         as_connection = connection_with_config_funcs
         self.keys = []
-        if not as_connection.has_geo():
-            pytest.skip(
-                reason="Server does not support geospatial data")
         if not self.skip_old_server:
             key = ('test', 'demo', 'circle')
             geo_circle = aerospike.GeoJSON(

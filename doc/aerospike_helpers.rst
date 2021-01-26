@@ -17,6 +17,7 @@ Subpackages
 .. toctree::
 
     aerospike_helpers.operations
+    aerospike_helpers.expressions
     aerospike_helpers.cdt_ctx
 
 

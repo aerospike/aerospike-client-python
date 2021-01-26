@@ -26,8 +26,11 @@
 #include <aerospike/as_udf.h>
 #include <aerospike/as_operations.h>
 #include <aerospike/aerospike_batch.h>
+#include <aerospike/as_exp.h>
 
 #include "types.h"
+
+#define CTX_KEY "ctx"
 
 as_status as_udf_file_to_pyobject(as_error *err, as_udf_file * entry, PyObject ** py_file);
 
@@ -108,3 +111,6 @@ get_cdt_ctx(AerospikeClient* self, as_error* err, as_cdt_ctx* cdt_ctx, PyObject*
 
 as_status 
 convert_predexp_list(PyObject* py_predexp_list, as_predexp_list* predexp_list, as_error* err);
+
+as_status 
+convert_exp_list(AerospikeClient * self, PyObject* py_exp_list, as_exp** exp_list, as_error* err);

@@ -31,6 +31,13 @@
 #define AS_PY_INDEX_KEY "index"
 #define AS_PY_COUNT_KEY "count"
 #define AS_PY_RANK_KEY "rank"
+#define AS_PY_VALUE_TYPE_KEY "value_type"
+#define AS_PY_LIST_RETURN_KEY "return_type"
+#define AS_PY_MAP_RETURN_KEY "return_type"
+#define AS_PY_LIST_ORDER "list_order"
+#define AS_PY_LIST_SORT_FLAGS "sort_flags"
+#define AS_PY_LIST_POLICY "list_policy"
+#define AS_PY_MAP_POLICY "map_policy"
 
 as_status
 get_bin(as_error * err, PyObject * op_dict, as_vector * unicodeStrVector, char** binName);
@@ -50,3 +57,9 @@ get_optional_int64_t(as_error * err, const char * key,  PyObject * op_dict, int6
 
 as_status
 get_int(as_error * err, const char * key, PyObject * op_dict, int * int_pointer);
+
+as_status
+get_list_return_type(as_error* err, PyObject* op_dict, int* return_type);
+
+as_status
+get_list_policy(as_error* err, PyObject* op_dict, as_list_policy* policy, bool* found);

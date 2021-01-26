@@ -6,7 +6,7 @@ import pickle
 from .as_status_codes import AerospikeStatus
 from aerospike import exception as e
 from aerospike import predicates as p
-from aerospike import predexp as as_predexp
+from aerospike_helpers import expressions as exp
 
 aerospike = pytest.importorskip("aerospike")
 try:
@@ -127,22 +127,17 @@ class TestQueryApply(object):
         self._wait_for_query_complete(query_id)
         self._correct_items_have_been_applied()
 
-    def test_query_apply_with_new_predexp(self):
+    def test_query_apply_with_new_expressions(self):
         """
-        Invoke query_apply() with correct policy and predexp
+        Invoke query_apply() with correct policy and expressions
         """
 
-        predexp = [
-            as_predexp.integer_bin('age'),
-            as_predexp.integer_value(2),
-            as_predexp.integer_equal(),
-            as_predexp.integer_bin('val'),
-            as_predexp.integer_value(3),
-            as_predexp.integer_equal(),
-            as_predexp.predexp_or(2)
-        ]
+        expr = exp.Or(
+            exp.Eq(exp.IntBin('age'), 2),
+            exp.Eq(exp.IntBin('val'), 3)
+        )
 
-        policy = {'total_timeout': 0, 'predexp': predexp}
+        policy = {'total_timeout': 0, 'expressions': expr.compile()}
         query_id = self.as_connection.query_apply(
             "test", "demo", self.age_range_pred, "query_apply",
             "mark_as_applied", ['name', 2], policy)
@@ -161,22 +156,17 @@ class TestQueryApply(object):
         for rec in recs:
             assert rec['age'] == 2 or rec['val'] == 3
 
-    def test_query_apply_with_bad_new_predexp(self):
+    def test_query_apply_with_bad_new_expressions(self):
         """
-        Invoke query_apply() with correct policy and predexp
+        Invoke query_apply() with incorrect policy and expressions
         """
 
-        predexp = [
-            as_predexp.integer_bin('age'),
-            as_predexp.string_value(2),
-            as_predexp.integer_equal(),
-            as_predexp.integer_bin('val'),
-            as_predexp.integer_value(3),
-            as_predexp.integer_equal(),
-            as_predexp.predexp_or(2)
-        ]
+        expr = exp.Or(
+            exp.Eq(exp.IntBin(5), 2),
+            exp.Eq(exp.IntBin('val'), 3)
+        )
 
-        policy = {'total_timeout': 0, 'predexp': predexp}
+        policy = {'total_timeout': 0, 'expressions': expr}
         with pytest.raises(e.ParamError):
             query_id = self.as_connection.query_apply(
                 "test", "demo", self.age_range_pred, "query_apply",

@@ -139,3 +139,46 @@ get_int(as_error* err, const char* key, PyObject* op_dict, int* int_pointer) {
     *int_pointer = int64_return_type;
     return AEROSPIKE_OK;
 }
+
+as_status
+get_list_return_type(as_error* err, PyObject* op_dict, int* return_type)
+{
+    int64_t int64_return_type;
+    int py_bool_val = -1;
+
+    if (get_int64_t(err, AS_PY_LIST_RETURN_KEY, op_dict, &int64_return_type) != AEROSPIKE_OK) {
+        return err->code;
+    }
+    *return_type = int64_return_type;
+    PyObject* py_inverted = PyDict_GetItemString(op_dict, "inverted"); //NOT A MAGIC STRING
+
+    if (py_inverted) {
+        py_bool_val = PyObject_IsTrue(py_inverted);
+        /* Essentially bool(py_bool_val) failed, so we raise an exception*/
+        if (py_bool_val == -1) {
+            return as_error_update(err, AEROSPIKE_ERR_PARAM, "Invalid inverted option");
+        }
+        if (py_bool_val == 1) {
+            *return_type |= AS_LIST_RETURN_INVERTED;
+        }
+    }
+
+    return AEROSPIKE_OK;
+}
+
+as_status
+get_list_policy(as_error* err, PyObject* op_dict, as_list_policy* policy, bool* found) {
+	*found = false;
+
+	PyObject* list_policy = PyDict_GetItemString(op_dict, AS_PY_LIST_POLICY);
+
+	if (list_policy) {
+		if (pyobject_to_list_policy(err, list_policy, policy) != AEROSPIKE_OK) {
+			return err->code;
+		}
+		/* We succesfully converted the policy*/
+		*found = true;
+	}
+
+	return AEROSPIKE_OK;
+}
