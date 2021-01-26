@@ -54,8 +54,8 @@
 
 #define POLICY_KEY_META_BIN()\
 	if (py_policy) {\
-		if (pyobject_to_policy_operate(&err, py_policy, &operate_policy, &operate_policy_p,\
-				&self->as->config.policies.operate, NULL, NULL) != AEROSPIKE_OK) {\
+		if (pyobject_to_policy_operate(self, &err, py_policy, &operate_policy, &operate_policy_p,\
+				&self->as->config.policies.operate, NULL, NULL, NULL, NULL) != AEROSPIKE_OK) {\
 			goto CLEANUP;\
 		}\
 	}\

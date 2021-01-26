@@ -116,7 +116,7 @@ PyObject * AerospikeClient_Admin_Create_User(AerospikeClient * self, PyObject *a
 	password = PyString_AsString(py_password);
 
 	// Convert python object to policy_admin
-	pyobject_to_policy_admin( &err, py_policy, &admin_policy, &admin_policy_p,
+	pyobject_to_policy_admin(self, &err, py_policy, &admin_policy, &admin_policy_p,
 			&self->as->config.policies.admin);
 	if (err.code != AEROSPIKE_OK) {
 		goto CLEANUP;
@@ -198,7 +198,7 @@ PyObject * AerospikeClient_Admin_Drop_User( AerospikeClient *self, PyObject *arg
 	char *user = NULL;
 
 	// Convert python object to policy_admin
-	pyobject_to_policy_admin(&err, py_policy, &admin_policy, &admin_policy_p,
+	pyobject_to_policy_admin(self, &err, py_policy, &admin_policy, &admin_policy_p,
 			&self->as->config.policies.admin);
 	if (err.code != AEROSPIKE_OK) {
 		goto CLEANUP;
@@ -298,7 +298,7 @@ PyObject * AerospikeClient_Admin_Set_Password( AerospikeClient *self, PyObject *
 	char *user = NULL, *password = NULL;
 
 	// Convert python object to policy_admin
-	pyobject_to_policy_admin(&err, py_policy, &admin_policy, &admin_policy_p,
+	pyobject_to_policy_admin(self, &err, py_policy, &admin_policy, &admin_policy_p,
 			&self->as->config.policies.admin);
 	if (err.code != AEROSPIKE_OK) {
 		goto CLEANUP;
@@ -392,7 +392,7 @@ PyObject * AerospikeClient_Admin_Change_Password( AerospikeClient *self, PyObjec
 	char *user = NULL, *password = NULL;
 
 	// Convert python object to policy_admin
-	pyobject_to_policy_admin(&err, py_policy, &admin_policy, &admin_policy_p,
+	pyobject_to_policy_admin(self, &err, py_policy, &admin_policy, &admin_policy_p,
 			&self->as->config.policies.admin);
 	if (err.code != AEROSPIKE_OK) {
 		goto CLEANUP;
@@ -524,7 +524,7 @@ PyObject * AerospikeClient_Admin_Grant_Roles( AerospikeClient *self, PyObject *a
 	user = PyString_AsString(py_user);
 
 	// Convert python object to policy_admin
-	pyobject_to_policy_admin(&err, py_policy, &admin_policy, &admin_policy_p,
+	pyobject_to_policy_admin(self, &err, py_policy, &admin_policy, &admin_policy_p,
 			&self->as->config.policies.admin);
 	if (err.code != AEROSPIKE_OK) {
 		goto CLEANUP;
@@ -636,7 +636,7 @@ PyObject * AerospikeClient_Admin_Revoke_Roles( AerospikeClient *self, PyObject *
 	user = PyString_AsString(py_user);
 
 	// Convert python object to policy_admin
-	pyobject_to_policy_admin(&err, py_policy, &admin_policy, &admin_policy_p,
+	pyobject_to_policy_admin(self, &err, py_policy, &admin_policy, &admin_policy_p,
 			&self->as->config.policies.admin);
 	if (err.code != AEROSPIKE_OK) {
 		goto CLEANUP;
@@ -721,7 +721,7 @@ PyObject * AerospikeClient_Admin_Query_User( AerospikeClient * self, PyObject * 
 	}
 
 	// Convert python object to policy_admin
-	pyobject_to_policy_admin(&err, py_policy, &admin_policy, &admin_policy_p,
+	pyobject_to_policy_admin(self, &err, py_policy, &admin_policy, &admin_policy_p,
 			&self->as->config.policies.admin);
 	if (err.code != AEROSPIKE_OK) {
 		goto CLEANUP;
@@ -819,7 +819,7 @@ PyObject * AerospikeClient_Admin_Query_Users( AerospikeClient * self, PyObject *
 	}
 
 	// Convert python object to policy_admin
-	pyobject_to_policy_admin(&err, py_policy, &admin_policy, &admin_policy_p,
+	pyobject_to_policy_admin(self, &err, py_policy, &admin_policy, &admin_policy_p,
 			&self->as->config.policies.admin);
 	if (err.code != AEROSPIKE_OK) {
 		goto CLEANUP;
@@ -918,7 +918,7 @@ PyObject * AerospikeClient_Admin_Create_Role(AerospikeClient * self, PyObject *a
 
 	pyobject_to_as_privileges(&err, py_privileges, privileges, privileges_size);
 
-	pyobject_to_policy_admin( &err, py_policy, &admin_policy, &admin_policy_p,
+	pyobject_to_policy_admin(self,  &err, py_policy, &admin_policy, &admin_policy_p,
 			&self->as->config.policies.admin);
 	if (err.code != AEROSPIKE_OK) {
 		goto CLEANUP;
@@ -1001,7 +1001,7 @@ PyObject * AerospikeClient_Admin_Drop_Role(AerospikeClient * self, PyObject *arg
 		goto CLEANUP;
 	}
 
-	pyobject_to_policy_admin( &err, py_policy, &admin_policy, &admin_policy_p,
+	pyobject_to_policy_admin(self,  &err, py_policy, &admin_policy, &admin_policy_p,
 			&self->as->config.policies.admin);
 	if (err.code != AEROSPIKE_OK) {
 		goto CLEANUP;
@@ -1094,7 +1094,7 @@ PyObject * AerospikeClient_Admin_Grant_Privileges(AerospikeClient * self, PyObje
 
 	pyobject_to_as_privileges(&err, py_privileges, privileges, privileges_size);
 
-	pyobject_to_policy_admin( &err, py_policy, &admin_policy, &admin_policy_p,
+	pyobject_to_policy_admin(self,  &err, py_policy, &admin_policy, &admin_policy_p,
 			&self->as->config.policies.admin);
 	if (err.code != AEROSPIKE_OK) {
 		goto CLEANUP;
@@ -1194,7 +1194,7 @@ PyObject * AerospikeClient_Admin_Revoke_Privileges(AerospikeClient * self, PyObj
 
 	pyobject_to_as_privileges(&err, py_privileges, privileges, privileges_size);
 
-	pyobject_to_policy_admin( &err, py_policy, &admin_policy, &admin_policy_p,
+	pyobject_to_policy_admin(self,  &err, py_policy, &admin_policy, &admin_policy_p,
 			&self->as->config.policies.admin);
 	if (err.code != AEROSPIKE_OK) {
 		goto CLEANUP;
@@ -1281,7 +1281,7 @@ PyObject * AerospikeClient_Admin_Query_Role(AerospikeClient * self, PyObject *ar
 		goto CLEANUP;
 	}
 
-	pyobject_to_policy_admin( &err, py_policy, &admin_policy, &admin_policy_p,
+	pyobject_to_policy_admin(self,  &err, py_policy, &admin_policy, &admin_policy_p,
 			&self->as->config.policies.admin);
 	if (err.code != AEROSPIKE_OK) {
 		goto CLEANUP;
@@ -1370,7 +1370,7 @@ PyObject * AerospikeClient_Admin_Query_Roles(AerospikeClient * self, PyObject *a
 		goto CLEANUP;
 	}
 
-	pyobject_to_policy_admin( &err, py_policy, &admin_policy, &admin_policy_p,
+	pyobject_to_policy_admin(self,  &err, py_policy, &admin_policy, &admin_policy_p,
 			&self->as->config.policies.admin);
 	if (err.code != AEROSPIKE_OK) {
 		goto CLEANUP;

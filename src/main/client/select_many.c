@@ -184,6 +184,10 @@ PyObject * AerospikeClient_Select_Many_Invoke(
 	char **filter_bins = NULL;
 
 	// For converting predexp.
+	as_exp exp_list;
+	as_exp* exp_list_p = NULL;
+
+	// For converting predexp.
 	as_predexp_list predexp_list;
 	as_predexp_list* predexp_list_p = NULL;
 
@@ -245,8 +249,8 @@ PyObject * AerospikeClient_Select_Many_Invoke(
 }
 
 	// Convert python policy object to as_policy_batch
-	pyobject_to_policy_batch(&err, py_policy, &policy, &batch_policy_p,
-			&self->as->config.policies.batch, &predexp_list, &predexp_list_p);
+	pyobject_to_policy_batch(self, &err, py_policy, &policy, &batch_policy_p,
+			&self->as->config.policies.batch, &predexp_list, &predexp_list_p, &exp_list, &exp_list_p);
 	if (err.code != AEROSPIKE_OK) {
 		goto CLEANUP;
 	}
@@ -257,6 +261,10 @@ CLEANUP:
 
 	if (filter_bins) {
 		free(filter_bins);
+	}
+
+	if (exp_list_p) {
+		as_exp_destroy(exp_list_p);;
 	}
 
 	if (predexp_list_p) {

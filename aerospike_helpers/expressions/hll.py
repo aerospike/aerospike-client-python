@@ -1,0 +1,232 @@
+'''
+Hyper Log Log expressions contain hll read and modify expressions.
+
+Example::
+
+    import aerospike_helpers.expressions as exp
+    # Get count from HLL bin "d".
+    expr = exp.HLLGetCount(exp.HLLBin("d")).compile()
+'''
+
+from itertools import chain
+from typing import List, Optional, Tuple, Union, Dict, Any
+import aerospike
+from aerospike_helpers import cdt_ctx
+from aerospike_helpers.expressions.base import *
+from aerospike_helpers.expressions.base import _GenericExpr
+
+########################
+# HLL Modify Expressions
+########################
+
+
+class HLLAdd(BaseExpr):
+    """Create an expression that performs an hll_add."""
+    op = aerospike.OP_HLL_ADD
+
+    def __init__(self, policy: TypePolicy, list: TypeListValue, index_bit_count: Union[int, None], mh_bit_count: Union[int, None], bin: TypeBinName):
+        """ Create an expression that performs an hll_add.
+
+            Args:
+                policy (TypePolicy): An optional aerospike HLL policy.
+                list (TypeListValue): A list or list expression of elements to add to the HLL.
+                index_bit_count (int): Number of index bits. Must be between 4 and 16 inclusive.
+                mh_bit_count (int): Number of min hash bits. Must be between 4 and 51 inclusive.
+                bin (TypeBinName): A hll bin name or bin expression to apply this function to.
+
+            :return: Returns the resulting hll bin after adding elements from list.
+        
+            Example::
+
+                # Let HLL bin "d" have the following elements, ['key1', 'key2', 'key3'], index_bits 8, mh_bits 8.
+                # Add ['key4', 'key5', 'key6'] so that the returned value is ['key1', 'key2', 'key3', 'key4', 'key5', 'key6']
+                expr = HLLAdd(None, ['key4', 'key5', 'key6'], 8, 8, HLLBin("d")).compile()
+        """        
+        self.children = (
+            list,
+            -1 if index_bit_count is None else index_bit_count,
+            -1 if mh_bit_count is None else mh_bit_count,
+            policy['flags'] if policy is not None and 'flags' in policy else aerospike.HLL_WRITE_DEFAULT,
+            bin if isinstance(bin, BaseExpr) else HLLBin(bin)
+        )
+
+
+######################
+# HLL Read Expressions
+######################
+
+
+class HLLGetCount(BaseExpr):
+    """Create an expression that performs an as_operations_hll_get_count."""
+    op = aerospike.OP_HLL_GET_COUNT
+
+    def __init__(self, bin: TypeBinName):
+        """ Create an expression that performs an as_operations_hll_get_count.
+
+            Args:
+                bin (TypeBinName): A hll bin name or bin expression to read from.
+
+            :return: Integer bin, the estimated number of unique elements in an HLL.
+        
+            Example::
+
+                # Get count from HLL bin "d".
+                expr = HLLGetCount(HLLBin("d")).compile()
+        """        
+        self.children = (
+            bin if isinstance(bin, BaseExpr) else HLLBin(bin),
+        )
+
+
+class HLLGetUnion(BaseExpr):
+    """Create an expression that performs an hll_get_union."""
+    op = aerospike.OP_HLL_GET_UNION
+
+    def __init__(self, values: TypeValue, bin: TypeBinName):
+        """ Create an expression that performs an hll_get_union.
+
+            Args:
+                values (TypeValue): A single HLL or list of HLLs, values or expressions, to union with bin.
+                bin (TypeBinName): A hll bin name or bin expression to read from.
+
+            :return: HLL bin representing the set union.
+        
+            Example::
+
+                # Let HLLBin "d" contain keys ['key%s' % str(i) for i in range(10000)].
+                # Let values be a list containing HLL objects retrieved from the aerospike database.
+                # Find the union of HLL bin "d" and all HLLs in values.
+                expr = HLLGetUnion(values, HLLBin("d")).compile()
+        """        
+        self.children = (
+            values,
+            bin if isinstance(bin, BaseExpr) else HLLBin(bin),
+        )
+
+
+class HLLGetUnionCount(BaseExpr):
+    """Create an expression that performs an as_operations_hll_get_union_count."""
+    op = aerospike.OP_HLL_GET_UNION_COUNT
+
+    def __init__(self, values: TypeValue, bin: TypeBinName):
+        """ Create an expression that performs an as_operations_hll_get_union_count.
+
+            Args:
+                values (TypeValue): A single HLL or list of HLLs, values or expressions, to union with bin.
+                bin (TypeBinName): A hll bin name or bin expression to read from.
+
+            :return: Integer bin, estimated number of elements in the set union.
+        
+            Example::
+
+                # Let HLLBin "d" contain keys ['key%s' % str(i) for i in range(10000)].
+                # Let values be a list containing one HLL object with keys ['key%s' % str(i) for i in range(5000, 15000)].
+                # Find the count of keys in the union of HLL bin "d" and all HLLs in values. (Should be around 15000)
+                expr = HLLGetUnionCount(values, HLLBin("d")).compile()
+        """        
+        self.children = (
+            values,
+            bin if isinstance(bin, BaseExpr) else HLLBin(bin),
+        )
+
+
+class HLLGetIntersectCount(BaseExpr):
+    """Create an expression that performs an as_operations_hll_get_inersect_count."""
+    op = aerospike.OP_HLL_GET_INTERSECT_COUNT
+
+    def __init__(self, values: TypeValue, bin: TypeBinName):
+        """ Create an expression that performs an as_operations_hll_get_inersect_count.
+
+            Args:
+                values (TypeValue): A single HLL or list of HLLs, values or expressions, to intersect with bin.
+                bin (TypeBinName): A hll bin name or bin expression to read from.
+
+            :return: Integer bin, estimated number of elements in the set intersection.
+        
+            Example::
+
+                # Let HLLBin "d" contain keys ['key%s' % str(i) for i in range(10000)].
+                # Let values be a list containing one HLL object with keys ['key%s' % str(i) for i in range(5000, 15000)].
+                # Find the count of keys in the intersection of HLL bin "d" and all HLLs in values. (Should be around 5000)
+                expr = HLLGetIntersectCount(values, HLLBin("d")).compile()
+        """        
+        self.children = (
+            values,
+            bin if isinstance(bin, BaseExpr) else HLLBin(bin),
+        )
+
+
+class HLLGetSimilarity(BaseExpr):
+    """Create an expression that performs an as_operations_hll_get_similarity."""
+    op = aerospike.OP_HLL_GET_SIMILARITY
+
+    def __init__(self, values: TypeValue, bin: TypeBinName):
+        """ Create an expression that performs an as_operations_hll_get_similarity.
+
+            Args:
+                values (TypeValue): A single HLL or list of HLLs, values or expressions, to calculate similarity with.
+                bin (TypeBinName): A hll bin name or bin expression to read from.
+
+            :return: Float bin, stimated similarity between 0.0 and 1.0.
+        
+            Example::
+
+                # Let HLLBin "d" contain keys ['key%s' % str(i) for i in range(10000)].
+                # Let values be a list containing one HLL object with keys ['key%s' % str(i) for i in range(5000, 15000)].
+                # Find the similarity the HLL in values to HLL bin "d". (Should be around 0.33)
+                # Note that similarity is defined as intersect(A, B, ...) / union(A, B, ...).
+                expr = HLLGetSimilarity(values, HLLBin("d")).compile()
+        """        
+        self.children = (
+            values,
+            bin if isinstance(bin, BaseExpr) else HLLBin(bin),
+        )
+
+
+class HLLDescribe(BaseExpr):
+    """Create an expression that performs an as_operations_hll_describe."""
+    op = aerospike.OP_HLL_DESCRIBE
+
+    def __init__(self, bin: TypeBinName):
+        """ Create an expression that performs an as_operations_hll_describe.
+
+            Args:
+                bin (TypeBinName): A hll bin name or bin expression to read from.
+
+            :return: List bin, a list containing the index_bit_count and minhash_bit_count.
+        
+            Example::
+
+                # Get description of HLL bin "d".
+                expr = HLLDescribe(HLLBin("d")).compile()
+        """        
+        self.children = (
+            bin if isinstance(bin, BaseExpr) else HLLBin(bin),
+        )
+
+
+class HLLMayContain(BaseExpr):
+    """ Create an expression that checks if the HLL bin contains any keys in
+        list.
+    """
+    op = aerospike.OP_HLL_MAY_CONTAIN
+
+    def __init__(self, list: TypeListValue, bin: TypeBinName, ):
+        """ Create an expression that checks if the HLL bin contains any keys in
+            list.
+
+            Args:
+                list (TypeListValue): A list expression of keys to check if the HLL may contain them.
+                bin (TypeBinName): Integer bin, a hll bin name or bin expression to read from.
+
+            :return: 1 if bin contains any key in list, 0 otherwise.
+        
+            Example::
+
+                # Check if HLL bin "d" contains any of the keys in `list`.
+                expr = HLLMayContain(["key1", "key2", "key3"], HLLBin("d")).compile()
+        """        
+        self.children = (
+            list,
+            bin if isinstance(bin, BaseExpr) else HLLBin(bin),
+        )

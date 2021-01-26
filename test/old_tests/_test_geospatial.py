@@ -17,10 +17,6 @@ except:
 
 class TestGeospatial(TestBaseClass):
 
-    pytestmark = pytest.mark.skipif(
-        TestBaseClass.has_geo_support() == False,
-        reason="Server does not support geospatial data.")
-
     def setup_class(cls):
         """
         Setup method.

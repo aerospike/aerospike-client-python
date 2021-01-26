@@ -5,11 +5,11 @@ import sys
 
 from .test_base_class import TestBaseClass
 from .as_status_codes import AerospikeStatus
-from aerospike import exception as e
 aerospike = pytest.importorskip("aerospike")
 try:
     import aerospike
-    from aerospike import predexp as as_predexp
+    from aerospike_helpers import expressions as exp
+    from aerospike import exception as e
 except:
     print("Please install aerospike python client.")
     sys.exit(1)
@@ -159,28 +159,24 @@ class TestApply(TestBaseClass):
         assert retval == 0  # the list_append UDF returns 0
 
     @pytest.mark.parametrize(
-        "func_args, test_bin, predexp, expected",
+        "func_args, test_bin, expressions, expected",
         (
             (
                 ['name', 1],
                 'name',
-                [
-                as_predexp.integer_bin('age'),
-                as_predexp.integer_value(1),
-                as_predexp.integer_equal()
-                ],
+                exp.Eq(exp.IntBin('age'), 1),
                 ['name1', 1]
             ),
         ), ids=[
             "Integer",
         ]
     )
-    def test_apply_causing_list_append_with_correct_params_with_predexp(
-            self, func_args, test_bin, predexp, expected):
+    def test_apply_causing_list_append_with_correct_params_with_expressions(
+            self, func_args, test_bin, expressions, expected):
 
         key = ('test', 'demo', 1)
         retval = self.as_connection.apply(
-            key, 'sample', 'list_append', func_args, policy={'predexp': predexp})
+            key, 'sample', 'list_append', func_args, policy={'expressions': expressions.compile()})
 
         _, _, bins = self.as_connection.get(key)
 

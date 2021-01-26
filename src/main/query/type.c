@@ -100,7 +100,7 @@ static PyMethodDef AerospikeQuery_Type_Methods[] = {
 				where_doc},
 
 	{"predexp", (PyCFunction) AerospikeQuery_Predexp,   METH_VARARGS,
-			   predexp_doc},
+				predexp_doc},
 
     {"execute_background", (PyCFunction) AerospikeQuery_ExecuteBackground, METH_VARARGS | METH_KEYWORDS,
                 execute_background_doc},
@@ -168,6 +168,8 @@ static int AerospikeQuery_Type_Init(AerospikeQuery * self, PyObject * args, PyOb
 		}
 	}
 
+	self->unicodeStrVector = NULL;
+	self->static_pool = NULL;
 	as_query_init(&self->query, namespace, set);
 
 CLEANUP:
@@ -204,7 +206,19 @@ static void AerospikeQuery_Type_Dealloc(AerospikeQuery * self)
 	}
 
 	as_query_destroy(&self->query);
-	self->query.ops = NULL;
+
+	if (self->unicodeStrVector != NULL) {
+		for (unsigned int i = 0; i < self->unicodeStrVector->size ; ++i) {
+			free(as_vector_get_ptr(self->unicodeStrVector, i));
+		}
+
+		as_vector_destroy(self->unicodeStrVector);
+	}
+
+	// if (self->static_pool != NULL) {
+	// 	POOL_DESTROY(self->static_pool);
+	// }
+
     Py_CLEAR(self->client);
 	Py_TYPE(self)->tp_free((PyObject *) self);
 }
