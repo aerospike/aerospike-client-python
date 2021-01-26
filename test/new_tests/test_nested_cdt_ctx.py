@@ -3082,24 +3082,6 @@ class TestCTXOperations(object):
         _, _, res = self.as_connection.operate(self.test_key, ops)
         assert(res[self.nested_map_bin] == {'key1': val})
 
-    @pytest.mark.parametrize("index, val, pad", [
-        #(10, 'val1', True), why doesn't this work? #TODO figure out if pad works correctly for C client.
-        (2, 'val1', False)
-    ])
-    def test_cdt_ctx_list_index_create_pos(self, index, val, pad):
-        """
-        Test the list_index_create cdt_ctx type.
-        """
-        ctx = [cdt_ctx.cdt_ctx_list_index_create(index, aerospike.LIST_ORDERED, pad)] #TODO figure out if pad works correctly for C client.
-
-        ops = [
-            list_operations.list_append(self.nested_list_bin, 'val1', None, ctx),
-            list_operations.list_get_by_index(self.nested_list_bin, index, aerospike.LIST_RETURN_VALUE)
-        ]
-
-        _, _, res = self.as_connection.operate(self.test_key, ops)
-        assert(res[self.nested_list_bin] == ['val1'])
-
     @pytest.mark.parametrize("key, val, flags, expected", [
         ('new_key', 'val1', ['bad_order'], e.ParamError),
         ('new_key', 'val1', None, e.ParamError)
@@ -3117,6 +3099,24 @@ class TestCTXOperations(object):
 
         with pytest.raises(expected):
             self.as_connection.operate(self.test_key, ops)
+
+    @pytest.mark.parametrize("index, val, pad", [
+        (10, 'val1', True), #Todo should this work with aerospike.LIST_ORDERED?
+        (2, 'val1', False)
+    ])
+    def test_cdt_ctx_list_index_create_pos(self, index, val, pad):
+        """
+        Test the list_index_create cdt_ctx type.
+        """
+        ctx = [cdt_ctx.cdt_ctx_list_index_create(index, aerospike.LIST_UNORDERED, pad)]
+
+        ops = [
+            list_operations.list_append(self.nested_list_bin, 'val1', None, ctx),
+            list_operations.list_get_by_index(self.nested_list_bin, index, aerospike.LIST_RETURN_VALUE)
+        ]
+
+        _, _, res = self.as_connection.operate(self.test_key, ops)
+        assert(res[self.nested_list_bin] == ['val1'])
 
     @pytest.mark.parametrize("index, val, pad, flags, expected", [
         (10, 'val1', False, aerospike.LIST_ORDERED, e.OpNotApplicable),
