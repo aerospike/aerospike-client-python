@@ -1322,7 +1322,7 @@ class TestExpressions(TestBaseClass):
         verify_multiple_expression_avenues(self.as_connection, self.test_ns, self.test_set, expr.compile(), bin, 19)
 
     @pytest.mark.parametrize("bit_offset, bit_size, value, bin, expected", [
-        (0, 8, ExpTrue(), '1bits_bin', 7)
+        (0, 8, True, '1bits_bin', 7)
     ])
     def test_bit_left_scan_pos(self, bit_offset, bit_size, value, bin, expected):
         """
@@ -1337,7 +1337,7 @@ class TestExpressions(TestBaseClass):
         verify_multiple_expression_avenues(self.as_connection, self.test_ns, self.test_set, expr.compile(), bin, 19)
 
     @pytest.mark.parametrize("bit_offset, bit_size, value, bin, expected", [
-        (0, 8, ExpTrue(), '1bits_bin', 7)
+        (0, 8, True, '1bits_bin', 7)
     ])
     def test_bit_right_scan_pos(self, bit_offset, bit_size, value, bin, expected):
         """
@@ -1360,7 +1360,7 @@ class TestExpressions(TestBaseClass):
         """
 
         expr = Eq(
-                    BitGetInt(bit_offset, bit_size, ExpTrue(), bin),
+                    BitGetInt(bit_offset, bit_size, True, bin),
                     expected
                 )
 

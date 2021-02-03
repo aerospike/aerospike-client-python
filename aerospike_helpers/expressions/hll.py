@@ -12,17 +12,25 @@ from itertools import chain
 from typing import List, Optional, Tuple, Union, Dict, Any
 import aerospike
 from aerospike_helpers import cdt_ctx
-from aerospike_helpers.expressions.base import *
-from aerospike_helpers.expressions.base import _GenericExpr
+from aerospike_helpers.expressions.resources import _GenericExpr
+from aerospike_helpers.expressions.resources import _BaseExpr
+from aerospike_helpers.expressions.resources import ResultType
+from aerospike_helpers.expressions.resources import _Keys
+from aerospike_helpers.expressions.base import HLLBin
 
 ########################
 # HLL Modify Expressions
 ########################
 
+TypeBinName = Union[_BaseExpr, str]
+TypeListValue = Union[_BaseExpr, List[Any]]
+TypeValue = Union[_BaseExpr, Any]
+TypePolicy = Union[Dict[str, Any], None]
 
-class HLLAdd(BaseExpr):
+
+class HLLAdd(_BaseExpr):
     """Create an expression that performs an hll_add."""
-    op = aerospike.OP_HLL_ADD
+    _op = aerospike.OP_HLL_ADD
 
     def __init__(self, policy: TypePolicy, list: TypeListValue, index_bit_count: Union[int, None], mh_bit_count: Union[int, None], bin: TypeBinName):
         """ Create an expression that performs an hll_add.
@@ -42,12 +50,12 @@ class HLLAdd(BaseExpr):
                 # Add ['key4', 'key5', 'key6'] so that the returned value is ['key1', 'key2', 'key3', 'key4', 'key5', 'key6']
                 expr = HLLAdd(None, ['key4', 'key5', 'key6'], 8, 8, HLLBin("d")).compile()
         """        
-        self.children = (
+        self._children = (
             list,
             -1 if index_bit_count is None else index_bit_count,
             -1 if mh_bit_count is None else mh_bit_count,
             policy['flags'] if policy is not None and 'flags' in policy else aerospike.HLL_WRITE_DEFAULT,
-            bin if isinstance(bin, BaseExpr) else HLLBin(bin)
+            bin if isinstance(bin, _BaseExpr) else HLLBin(bin)
         )
 
 
@@ -56,9 +64,9 @@ class HLLAdd(BaseExpr):
 ######################
 
 
-class HLLGetCount(BaseExpr):
+class HLLGetCount(_BaseExpr):
     """Create an expression that performs an as_operations_hll_get_count."""
-    op = aerospike.OP_HLL_GET_COUNT
+    _op = aerospike.OP_HLL_GET_COUNT
 
     def __init__(self, bin: TypeBinName):
         """ Create an expression that performs an as_operations_hll_get_count.
@@ -73,14 +81,14 @@ class HLLGetCount(BaseExpr):
                 # Get count from HLL bin "d".
                 expr = HLLGetCount(HLLBin("d")).compile()
         """        
-        self.children = (
-            bin if isinstance(bin, BaseExpr) else HLLBin(bin),
+        self._children = (
+            bin if isinstance(bin, _BaseExpr) else HLLBin(bin),
         )
 
 
-class HLLGetUnion(BaseExpr):
+class HLLGetUnion(_BaseExpr):
     """Create an expression that performs an hll_get_union."""
-    op = aerospike.OP_HLL_GET_UNION
+    _op = aerospike.OP_HLL_GET_UNION
 
     def __init__(self, values: TypeValue, bin: TypeBinName):
         """ Create an expression that performs an hll_get_union.
@@ -98,15 +106,15 @@ class HLLGetUnion(BaseExpr):
                 # Find the union of HLL bin "d" and all HLLs in values.
                 expr = HLLGetUnion(values, HLLBin("d")).compile()
         """        
-        self.children = (
+        self._children = (
             values,
-            bin if isinstance(bin, BaseExpr) else HLLBin(bin),
+            bin if isinstance(bin, _BaseExpr) else HLLBin(bin),
         )
 
 
-class HLLGetUnionCount(BaseExpr):
+class HLLGetUnionCount(_BaseExpr):
     """Create an expression that performs an as_operations_hll_get_union_count."""
-    op = aerospike.OP_HLL_GET_UNION_COUNT
+    _op = aerospike.OP_HLL_GET_UNION_COUNT
 
     def __init__(self, values: TypeValue, bin: TypeBinName):
         """ Create an expression that performs an as_operations_hll_get_union_count.
@@ -124,15 +132,15 @@ class HLLGetUnionCount(BaseExpr):
                 # Find the count of keys in the union of HLL bin "d" and all HLLs in values. (Should be around 15000)
                 expr = HLLGetUnionCount(values, HLLBin("d")).compile()
         """        
-        self.children = (
+        self._children = (
             values,
-            bin if isinstance(bin, BaseExpr) else HLLBin(bin),
+            bin if isinstance(bin, _BaseExpr) else HLLBin(bin),
         )
 
 
-class HLLGetIntersectCount(BaseExpr):
+class HLLGetIntersectCount(_BaseExpr):
     """Create an expression that performs an as_operations_hll_get_inersect_count."""
-    op = aerospike.OP_HLL_GET_INTERSECT_COUNT
+    _op = aerospike.OP_HLL_GET_INTERSECT_COUNT
 
     def __init__(self, values: TypeValue, bin: TypeBinName):
         """ Create an expression that performs an as_operations_hll_get_inersect_count.
@@ -150,15 +158,15 @@ class HLLGetIntersectCount(BaseExpr):
                 # Find the count of keys in the intersection of HLL bin "d" and all HLLs in values. (Should be around 5000)
                 expr = HLLGetIntersectCount(values, HLLBin("d")).compile()
         """        
-        self.children = (
+        self._children = (
             values,
-            bin if isinstance(bin, BaseExpr) else HLLBin(bin),
+            bin if isinstance(bin, _BaseExpr) else HLLBin(bin),
         )
 
 
-class HLLGetSimilarity(BaseExpr):
+class HLLGetSimilarity(_BaseExpr):
     """Create an expression that performs an as_operations_hll_get_similarity."""
-    op = aerospike.OP_HLL_GET_SIMILARITY
+    _op = aerospike.OP_HLL_GET_SIMILARITY
 
     def __init__(self, values: TypeValue, bin: TypeBinName):
         """ Create an expression that performs an as_operations_hll_get_similarity.
@@ -177,15 +185,15 @@ class HLLGetSimilarity(BaseExpr):
                 # Note that similarity is defined as intersect(A, B, ...) / union(A, B, ...).
                 expr = HLLGetSimilarity(values, HLLBin("d")).compile()
         """        
-        self.children = (
+        self._children = (
             values,
-            bin if isinstance(bin, BaseExpr) else HLLBin(bin),
+            bin if isinstance(bin, _BaseExpr) else HLLBin(bin),
         )
 
 
-class HLLDescribe(BaseExpr):
+class HLLDescribe(_BaseExpr):
     """Create an expression that performs an as_operations_hll_describe."""
-    op = aerospike.OP_HLL_DESCRIBE
+    _op = aerospike.OP_HLL_DESCRIBE
 
     def __init__(self, bin: TypeBinName):
         """ Create an expression that performs an as_operations_hll_describe.
@@ -200,16 +208,16 @@ class HLLDescribe(BaseExpr):
                 # Get description of HLL bin "d".
                 expr = HLLDescribe(HLLBin("d")).compile()
         """        
-        self.children = (
-            bin if isinstance(bin, BaseExpr) else HLLBin(bin),
+        self._children = (
+            bin if isinstance(bin, _BaseExpr) else HLLBin(bin),
         )
 
 
-class HLLMayContain(BaseExpr):
+class HLLMayContain(_BaseExpr):
     """ Create an expression that checks if the HLL bin contains any keys in
         list.
     """
-    op = aerospike.OP_HLL_MAY_CONTAIN
+    _op = aerospike.OP_HLL_MAY_CONTAIN
 
     def __init__(self, list: TypeListValue, bin: TypeBinName, ):
         """ Create an expression that checks if the HLL bin contains any keys in
@@ -226,7 +234,7 @@ class HLLMayContain(BaseExpr):
                 # Check if HLL bin "d" contains any of the keys in `list`.
                 expr = HLLMayContain(["key1", "key2", "key3"], HLLBin("d")).compile()
         """        
-        self.children = (
+        self._children = (
             list,
-            bin if isinstance(bin, BaseExpr) else HLLBin(bin),
+            bin if isinstance(bin, _BaseExpr) else HLLBin(bin),
         )

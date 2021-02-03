@@ -157,29 +157,29 @@ The expressions module uses typehints, here are a table of custom typehints mapp
     * - TypeChildren
       - Tuple[TypeChild, ...]
     * - TypeBinName
-      - Union[BaseExpr, str]
+      - Union[_BaseExpr, str]
     * - TypeListValue
-      - Union[BaseExpr, List[Any]]
+      - Union[_BaseExpr, List[Any]]
     * - TypeIndex
-      - Union[BaseExpr, int, aerospike.CDTInfinite]
+      - Union[_BaseExpr, int, aerospike.CDTInfinite]
     * - TypeCDT
       - Union[None, List[cdt_ctx._cdt_ctx]]
     * - TypeRank
-      - Union[BaseExpr, int, aerospike.CDTInfinite]
+      - Union[_BaseExpr, int, aerospike.CDTInfinite]
     * - TypeCount
-      - Union[BaseExpr, int, aerospike.CDTInfinite]
+      - Union[_BaseExpr, int, aerospike.CDTInfinite]
     * - TypeValue
-      - Union[BaseExpr, Any]
+      - Union[_BaseExpr, Any]
     * - TypePolicy
       - Union[Dict[str, Any], None]
     * - TypeComparisonArg
-      - Union[BaseExpr, int, str, list, dict, aerospike.CDTInfinite]
+      - Union[_BaseExpr, int, str, list, dict, aerospike.CDTInfinite]
     * - TypeGeo
-      - Union[BaseExpr, aerospike.GeoJSON]
+      - Union[_BaseExpr, aerospike.GeoJSON]
     * - TypeKey
-      - Union[BaseExpr, Any]
+      - Union[_BaseExpr, Any]
     * - TypeKeyList
-      - Union[BaseExpr, List[Any]]
+      - Union[_BaseExpr, List[Any]]
     * - TypeBitValue
       - Union[bytes, bytearray]
 
@@ -219,3 +219,13 @@ aerospike\_helpers\.expressions\.hll\ module
 .. automodule:: aerospike_helpers.expressions.hll
     :members:
     :special-members:
+
+aerospike\_helpers\.expressions\.resources\ module
+--------------------------------------------------
+
+.. automodule:: aerospike_helpers.expressions.resources
+
+    .. autoclass:: ResultType
+      :members:
+      :undoc-members:
+      :member-order: bysource
