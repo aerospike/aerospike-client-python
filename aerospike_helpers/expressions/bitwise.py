@@ -576,6 +576,6 @@ class BitGetInt(_BaseExpr):
         self._children= (
             bit_offset,
             bit_size,
-            0 if not sign or isinstance(sign, ExpFalse) else 1,
+            1 if sign else 0,
             bin if isinstance(bin, _BaseExpr) else BlobBin(bin)
         )
