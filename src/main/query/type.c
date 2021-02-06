@@ -215,10 +215,6 @@ static void AerospikeQuery_Type_Dealloc(AerospikeQuery * self)
 		as_vector_destroy(self->unicodeStrVector);
 	}
 
-	// if (self->static_pool != NULL) {
-	// 	POOL_DESTROY(self->static_pool);
-	// }
-
     Py_CLEAR(self->client);
 	Py_TYPE(self)->tp_free((PyObject *) self);
 }

@@ -152,7 +152,7 @@ static void AerospikeScan_Type_Dealloc(AerospikeScan * self)
 		as_vector_destroy(self->unicodeStrVector);
 	}
 
-    Py_CLEAR(self->client);
+	Py_CLEAR(self->client);
 	Py_TYPE(self)->tp_free((PyObject *) self);
 }
 

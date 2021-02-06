@@ -65,7 +65,6 @@ enum expr_ops {
 	BIN_EXISTS = 83,
 
 	CALL = 127,
-	BOOL = 133,
 	LIST_MOD = 139
 };
 
@@ -99,7 +98,6 @@ enum utiity_constants {
 };
 
 // FIXED DICTIONARY KEYS
-#define OP_TYPE_KEY "ot_key"
 #define LIST_ORDER_KEY "list_order"
 #define REGEX_OPTIONS_KEY "regex_options"
 
@@ -288,10 +286,7 @@ as_status get_expr_size(int * size_to_alloc, int * intermediate_exprs_size, as_v
 		[_AS_EXP_CODE_CDT_LIST_MOD]                      = 0, //EXP_SZ(as_exp_val(NULL)),
 		[_AS_EXP_CODE_CDT_MAP_CRMOD]                     = 0, //EXP_SZ(as_exp_val(NULL)),
 		[_AS_EXP_CODE_CDT_MAP_CR]                        = 0, //EXP_SZ(as_exp_val(NULL)),
-		[_AS_EXP_CODE_CDT_MAP_MOD]                       = 0, //EXP_SZ(as_exp_val(NULL))
-		[BOOL]                                           = 0,
-		[_TRUE]                                          = 0,
-		[_FALSE]                                         = 0
+		[_AS_EXP_CODE_CDT_MAP_MOD]                       = 0  //EXP_SZ(as_exp_val(NULL))
 	};
 
 	for (int i = 0; i < *intermediate_exprs_size; ++i) {
@@ -317,18 +312,8 @@ as_status get_exp_val_from_pyval(AerospikeClient * self, as_static_pool * static
 	if (!py_obj) {
 		return as_error_update(err, AEROSPIKE_ERR_CLIENT, "py_obj value is null");
 	} else if (PyBool_Check(py_obj)) {
-		as_bytes *bytes;
-		GET_BYTES_POOL(bytes, static_pool, err);
-		if (err->code == AEROSPIKE_OK) {
-			if (serialize_based_on_serializer_policy(self, serializer_type,
-				&bytes, py_obj, err) != AEROSPIKE_OK) {
-				return err->code;
-			}
-
-			as_exp_entry tmp_entry = as_exp_val((as_val *) bytes);
-			*new_entry = tmp_entry; //TODO use as_exp_val((as_val *) bytes); here, might need a cast, not blocker
-		}
-
+		as_exp_entry tmp_entry = as_exp_bool(PyObject_IsTrue(py_obj));
+		*new_entry = tmp_entry; //TODO use as_exp_val((as_val *) bytes); here, might need a cast, not blocker
 	} else if (PyLong_Check(py_obj)) {
 		int64_t l = (int64_t) PyLong_AsLongLong(py_obj);
 		if (l == -1 && PyErr_Occurred()) {
@@ -988,12 +973,6 @@ as_status add_expr_macros(AerospikeClient * self, as_static_pool * static_pool, 
 				break;
 			case OP_HLL_MAY_CONTAIN:
 				APPEND_ARRAY(2, as_exp_hll_may_contain({}, {})); // - 2 for list, bin
-				break;
-			case _TRUE: // This handles Python to as_exp_bool translation for expressions like OP_BIT_LSCAN
-				APPEND_ARRAY(0, as_exp_bool(1));
-				break;
-			case _FALSE:
-				APPEND_ARRAY(0, as_exp_bool(0));
 				break;
 			default:
 				return as_error_update(err, AEROSPIKE_ERR_PARAM, "Unrecognised expression op type.");

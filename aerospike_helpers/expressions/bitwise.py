@@ -28,19 +28,25 @@ from itertools import chain
 from typing import List, Optional, Tuple, Union, Dict, Any
 import aerospike
 from aerospike_helpers import cdt_ctx
-from aerospike_helpers.expressions.base import *
-from aerospike_helpers.expressions.base import _GenericExpr
+from aerospike_helpers.expressions.resources import _GenericExpr
+from aerospike_helpers.expressions.resources import _BaseExpr
+from aerospike_helpers.expressions.resources import _ExprOp
+from aerospike_helpers.expressions.resources import ResultType
+from aerospike_helpers.expressions.resources import _Keys
+from aerospike_helpers.expressions.base import BlobBin
 
 ########################
 # Bit Modify Expressions
 ########################
 
 TypeBitValue = Union[bytes, bytearray]
+TypeBinName = Union[_BaseExpr, str]
+TypePolicy = Union[Dict[str, Any], None]
 
 
-class BitResize(BaseExpr):
+class BitResize(_BaseExpr):
     """Create an expression that performs a bit_resize operation."""
-    op = aerospike.OP_BIT_RESIZE
+    _op = aerospike.OP_BIT_RESIZE
 
     def __init__(self, policy: TypePolicy, byte_size: int, flags: int, bin: TypeBinName):
         """ Create an expression that performs a bit_resize operation.
@@ -59,17 +65,17 @@ class BitResize(BaseExpr):
                 # Resize blob bin "c" from the front so that the returned value is bytearray([0] * 5 + [1] * 5).
                 expr = BitResize(None, 10, aerospike.BIT_RESIZE_FROM_FRONT, BlobBin("c")).compile()
         """        
-        self.children = (
+        self._children= (
             byte_size,
-            _GenericExpr(ExprOp._AS_EXP_BIT_FLAGS, 0, {VALUE_KEY: policy['bit_write_flags']} if policy is not None and 'bit_write_flags' in policy else {VALUE_KEY: 0}),
-            _GenericExpr(ExprOp._AS_EXP_BIT_FLAGS, 0, {VALUE_KEY: flags} if flags is not None else {VALUE_KEY: 0}),
-            bin if isinstance(bin, BaseExpr) else BlobBin(bin)
+            _GenericExpr(_ExprOp._AS_EXP_BIT_FLAGS, 0, {_Keys.VALUE_KEY: policy['bit_write_flags']} if policy is not None and 'bit_write_flags' in policy else {_Keys.VALUE_KEY: 0}),
+            _GenericExpr(_ExprOp._AS_EXP_BIT_FLAGS, 0, {_Keys.VALUE_KEY: flags} if flags is not None else {_Keys.VALUE_KEY: 0}),
+            bin if isinstance(bin, _BaseExpr) else BlobBin(bin)
         )
 
 
-class BitInsert(BaseExpr):
+class BitInsert(_BaseExpr):
     """Create an expression that performs a bit_insert operation."""
-    op = aerospike.OP_BIT_INSERT
+    _op = aerospike.OP_BIT_INSERT
 
     def __init__(self, policy: TypePolicy, byte_offset: int, value: TypeBitValue, bin: TypeBinName):
         """ Create an expression that performs a bit_insert operation.
@@ -88,17 +94,17 @@ class BitInsert(BaseExpr):
                 # Insert 3 so that returned value is bytearray([1, 3, 1, 1, 1, 1]).
                 expr = BitInsert(None, 1, bytearray([3]), BlobBin("c")).compile()
         """        
-        self.children = (
+        self._children= (
             byte_offset,
             value,
-            _GenericExpr(ExprOp._AS_EXP_BIT_FLAGS, 0, {VALUE_KEY: policy['bit_write_flags']} if policy is not None and 'bit_write_flags' in policy else {VALUE_KEY: 0}),
-            bin if isinstance(bin, BaseExpr) else BlobBin(bin)
+            _GenericExpr(_ExprOp._AS_EXP_BIT_FLAGS, 0, {_Keys.VALUE_KEY: policy['bit_write_flags']} if policy is not None and 'bit_write_flags' in policy else {_Keys.VALUE_KEY: 0}),
+            bin if isinstance(bin, _BaseExpr) else BlobBin(bin)
         )
 
 
-class BitRemove(BaseExpr):
+class BitRemove(_BaseExpr):
     """Create an expression that performs a bit_remove operation."""
-    op = aerospike.OP_BIT_REMOVE
+    _op = aerospike.OP_BIT_REMOVE
 
     def __init__(self, policy: TypePolicy, byte_offset: int, byte_size: int, bin: TypeBinName):
         """ Create an expression that performs a bit_remove operation.
@@ -117,17 +123,17 @@ class BitRemove(BaseExpr):
                 # Remove 1 element so that the returned value is bytearray([1] * 4).
                 expr = BitRemove(None, 1, 1, BlobBin("c")).compile()
         """        
-        self.children = (
+        self._children= (
             byte_offset,
             byte_size,
-            _GenericExpr(ExprOp._AS_EXP_BIT_FLAGS, 0, {VALUE_KEY: policy['bit_write_flags']} if policy is not None and 'bit_write_flags' in policy else {VALUE_KEY: 0}),
-            bin if isinstance(bin, BaseExpr) else BlobBin(bin)
+            _GenericExpr(_ExprOp._AS_EXP_BIT_FLAGS, 0, {_Keys.VALUE_KEY: policy['bit_write_flags']} if policy is not None and 'bit_write_flags' in policy else {_Keys.VALUE_KEY: 0}),
+            bin if isinstance(bin, _BaseExpr) else BlobBin(bin)
         )
 
 
-class BitSet(BaseExpr):
+class BitSet(_BaseExpr):
     """Create an expression that performs a bit_set operation."""
-    op = aerospike.OP_BIT_SET
+    _op = aerospike.OP_BIT_SET
 
     def __init__(self, policy: TypePolicy, bit_offset: int, bit_size: int, value: TypeBitValue, bin: TypeBinName):
         """ Create an expression that performs a bit_set operation.
@@ -147,18 +153,18 @@ class BitSet(BaseExpr):
                 # Set bit at offset 7 with size 1 bits to 1 to make the returned value bytearray([1, 0, 0, 0, 0]).
                 expr = BitSet(None, 7, 1, bytearray([255]), BlobBin("c")).compile()
         """        
-        self.children = (
+        self._children= (
             bit_offset,
             bit_size,
             value,
-            _GenericExpr(ExprOp._AS_EXP_BIT_FLAGS, 0, {VALUE_KEY: policy['bit_write_flags']} if policy is not None and 'bit_write_flags' in policy else {VALUE_KEY: 0}),
-            bin if isinstance(bin, BaseExpr) else BlobBin(bin)
+            _GenericExpr(_ExprOp._AS_EXP_BIT_FLAGS, 0, {_Keys.VALUE_KEY: policy['bit_write_flags']} if policy is not None and 'bit_write_flags' in policy else {_Keys.VALUE_KEY: 0}),
+            bin if isinstance(bin, _BaseExpr) else BlobBin(bin)
         )
 
 
-class BitOr(BaseExpr):
+class BitOr(_BaseExpr):
     """Create an expression that performs a bit_or operation."""
-    op = aerospike.OP_BIT_OR
+    _op = aerospike.OP_BIT_OR
 
     def __init__(self, policy: TypePolicy, bit_offset: int, bit_size: int, value: TypeBitValue, bin: TypeBinName):
         """ Create an expression that performs a bit_or operation.
@@ -178,18 +184,18 @@ class BitOr(BaseExpr):
                 # bitwise Or `8` with the first byte of blob bin c so that the returned value is bytearray([9, 1, 1, 1, 1]).
                 expr = BitOr(None, 0, 8, bytearray([8]), BlobBin("c")).compile()
         """        
-        self.children = (
+        self._children= (
             bit_offset,
             bit_size,
             value,
-            _GenericExpr(ExprOp._AS_EXP_BIT_FLAGS, 0, {VALUE_KEY: policy['bit_write_flags']} if policy is not None and 'bit_write_flags' in policy else {VALUE_KEY: 0}),
-            bin if isinstance(bin, BaseExpr) else BlobBin(bin)
+            _GenericExpr(_ExprOp._AS_EXP_BIT_FLAGS, 0, {_Keys.VALUE_KEY: policy['bit_write_flags']} if policy is not None and 'bit_write_flags' in policy else {_Keys.VALUE_KEY: 0}),
+            bin if isinstance(bin, _BaseExpr) else BlobBin(bin)
         )
 
 
-class BitXor(BaseExpr):
+class BitXor(_BaseExpr):
     """Create an expression that performs a bit_xor operation."""
-    op = aerospike.OP_BIT_XOR
+    _op = aerospike.OP_BIT_XOR
 
     def __init__(self, policy: TypePolicy, bit_offset: int, bit_size: int, value: TypeBitValue, bin: TypeBinName):
         """ Create an expression that performs a bit_xor operation.
@@ -209,18 +215,18 @@ class BitXor(BaseExpr):
                 # bitwise Xor `1` with the first byte of blob bin c so that the returned value is bytearray([0, 1, 1, 1, 1]).
                 expr = BitXor(None, 0, 8, bytearray([1]), BlobBin("c")).compile()
         """        
-        self.children = (
+        self._children= (
             bit_offset,
             bit_size,
             value,
-            _GenericExpr(ExprOp._AS_EXP_BIT_FLAGS, 0, {VALUE_KEY: policy['bit_write_flags']} if policy is not None and 'bit_write_flags' in policy else {VALUE_KEY: 0}),
-            bin if isinstance(bin, BaseExpr) else BlobBin(bin)
+            _GenericExpr(_ExprOp._AS_EXP_BIT_FLAGS, 0, {_Keys.VALUE_KEY: policy['bit_write_flags']} if policy is not None and 'bit_write_flags' in policy else {_Keys.VALUE_KEY: 0}),
+            bin if isinstance(bin, _BaseExpr) else BlobBin(bin)
         )
 
 
-class BitAnd(BaseExpr):
+class BitAnd(_BaseExpr):
     """Create an expression that performs a bit_and operation."""
-    op = aerospike.OP_BIT_AND
+    _op = aerospike.OP_BIT_AND
 
     def __init__(self, policy: TypePolicy, bit_offset: int, bit_size: int, value: TypeBitValue, bin: TypeBinName):
         """ Create an expression that performs a bit_and operation.
@@ -240,18 +246,18 @@ class BitAnd(BaseExpr):
                 # bitwise and `0` with the first byte of blob bin c so that the returned value is bytearray([0, 5, 5, 5, 5]).
                 expr = BitAnd(None, 0, 8, bytearray([0]), BlobBin("c")).compile()
         """        
-        self.children = (
+        self._children= (
             bit_offset,
             bit_size,
             value,
-            _GenericExpr(ExprOp._AS_EXP_BIT_FLAGS, 0, {VALUE_KEY: policy['bit_write_flags']} if policy is not None and 'bit_write_flags' in policy else {VALUE_KEY: 0}),
-            bin if isinstance(bin, BaseExpr) else BlobBin(bin)
+            _GenericExpr(_ExprOp._AS_EXP_BIT_FLAGS, 0, {_Keys.VALUE_KEY: policy['bit_write_flags']} if policy is not None and 'bit_write_flags' in policy else {_Keys.VALUE_KEY: 0}),
+            bin if isinstance(bin, _BaseExpr) else BlobBin(bin)
         )
 
 
-class BitNot(BaseExpr):
+class BitNot(_BaseExpr):
     """Create an expression that performs a bit_not operation."""
-    op = aerospike.OP_BIT_NOT
+    _op = aerospike.OP_BIT_NOT
 
     def __init__(self, policy: TypePolicy, bit_offset: int, bit_size: int, bin: TypeBinName):
         """ Create an expression that performs a bit_not operation.
@@ -270,17 +276,17 @@ class BitNot(BaseExpr):
                 # bitwise, not, all of "c" to get bytearray([254] * 5).
                 expr = BitNot(None, 0, 40, BlobBin("c")).compile()
         """        
-        self.children = (
+        self._children= (
             bit_offset,
             bit_size,
-            _GenericExpr(ExprOp._AS_EXP_BIT_FLAGS, 0, {VALUE_KEY: policy['bit_write_flags']} if policy is not None and 'bit_write_flags' in policy else {VALUE_KEY: 0}),
-            bin if isinstance(bin, BaseExpr) else BlobBin(bin)
+            _GenericExpr(_ExprOp._AS_EXP_BIT_FLAGS, 0, {_Keys.VALUE_KEY: policy['bit_write_flags']} if policy is not None and 'bit_write_flags' in policy else {_Keys.VALUE_KEY: 0}),
+            bin if isinstance(bin, _BaseExpr) else BlobBin(bin)
         )
 
 
-class BitLeftShift(BaseExpr):
+class BitLeftShift(_BaseExpr):
     """Create an expression that performs a bit_lshift operation."""
-    op = aerospike.OP_BIT_LSHIFT
+    _op = aerospike.OP_BIT_LSHIFT
 
     def __init__(self, policy: TypePolicy, bit_offset: int, bit_size: int, shift: int, bin: TypeBinName):
         """ Create an expression that performs a bit_lshift operation.
@@ -300,18 +306,18 @@ class BitLeftShift(BaseExpr):
                 # Bit left shift the first byte of bin "c" to get bytearray([8, 1, 1, 1, 1]).
                 expr = BitLeftShift(None, 0, 8, 3, BlobBin("c")).compile()
         """        
-        self.children = (
+        self._children= (
             bit_offset,
             bit_size,
             shift,
-            _GenericExpr(ExprOp._AS_EXP_BIT_FLAGS, 0, {VALUE_KEY: policy['bit_write_flags']} if policy is not None and 'bit_write_flags' in policy else {VALUE_KEY: 0}),
-            bin if isinstance(bin, BaseExpr) else BlobBin(bin)
+            _GenericExpr(_ExprOp._AS_EXP_BIT_FLAGS, 0, {_Keys.VALUE_KEY: policy['bit_write_flags']} if policy is not None and 'bit_write_flags' in policy else {_Keys.VALUE_KEY: 0}),
+            bin if isinstance(bin, _BaseExpr) else BlobBin(bin)
         )
 
 
-class BitRightShift(BaseExpr):
+class BitRightShift(_BaseExpr):
     """Create an expression that performs a bit_rshift operation."""
-    op = aerospike.OP_BIT_RSHIFT
+    _op = aerospike.OP_BIT_RSHIFT
 
     def __init__(self, policy: TypePolicy, bit_offset: int, bit_size: int, shift: int, bin: TypeBinName):
         """ Create an expression that performs a bit_rshift operation.
@@ -331,18 +337,18 @@ class BitRightShift(BaseExpr):
                 # Bit left shift the first byte of bin "c" to get bytearray([4, 8, 8, 8, 8]).
                 expr = BitRightShift(None, 0, 8, 1, BlobBin("c")).compile()
         """        
-        self.children = (
+        self._children= (
             bit_offset,
             bit_size,
             shift,
-            _GenericExpr(ExprOp._AS_EXP_BIT_FLAGS, 0, {VALUE_KEY: policy['bit_write_flags']} if policy is not None and 'bit_write_flags' in policy else {VALUE_KEY: 0}),
-            bin if isinstance(bin, BaseExpr) else BlobBin(bin)
+            _GenericExpr(_ExprOp._AS_EXP_BIT_FLAGS, 0, {_Keys.VALUE_KEY: policy['bit_write_flags']} if policy is not None and 'bit_write_flags' in policy else {_Keys.VALUE_KEY: 0}),
+            bin if isinstance(bin, _BaseExpr) else BlobBin(bin)
         )
 
 
-class BitAdd(BaseExpr):
+class BitAdd(_BaseExpr):
     """Create an expression that performs a bit_add operation."""
-    op = aerospike.OP_BIT_ADD
+    _op = aerospike.OP_BIT_ADD
 
     def __init__(self, policy: TypePolicy, bit_offset: int, bit_size: int, value: int, action: int, bin: TypeBinName):
         """ Create an expression that performs a bit_add operation.
@@ -364,21 +370,21 @@ class BitAdd(BaseExpr):
                 # Bit add the second byte of bin "c" to get bytearray([1, 2, 1, 1, 1])
                 expr = BitAdd(None, 8, 8, 1, aerospike.BIT_OVERFLOW_FAIL).compile()
         """        
-        self.children = (
+        self._children= (
             bit_offset,
             bit_size,
             value,
-            _GenericExpr(ExprOp._AS_EXP_BIT_FLAGS, 0, {VALUE_KEY: policy['bit_write_flags']} if policy is not None and 'bit_write_flags' in policy else {VALUE_KEY: 0}),
-            _GenericExpr(ExprOp._AS_EXP_BIT_FLAGS, 0, {VALUE_KEY: action} if action is not None else {VALUE_KEY: 0}),
-            bin if isinstance(bin, BaseExpr) else BlobBin(bin)
+            _GenericExpr(_ExprOp._AS_EXP_BIT_FLAGS, 0, {_Keys.VALUE_KEY: policy['bit_write_flags']} if policy is not None and 'bit_write_flags' in policy else {_Keys.VALUE_KEY: 0}),
+            _GenericExpr(_ExprOp._AS_EXP_BIT_FLAGS, 0, {_Keys.VALUE_KEY: action} if action is not None else {_Keys.VALUE_KEY: 0}),
+            bin if isinstance(bin, _BaseExpr) else BlobBin(bin)
         )
 
 
-class BitSubtract(BaseExpr):
+class BitSubtract(_BaseExpr):
     """ Create an expression that performs a bit_subtract operation.
         Note: integers are stored big-endian.
     """
-    op = aerospike.OP_BIT_SUBTRACT
+    _op = aerospike.OP_BIT_SUBTRACT
 
     def __init__(self, policy: TypePolicy, bit_offset: int, bit_size: int, value: int, action: int, bin: TypeBinName):
         """ Create an expression that performs a bit_subtract operation.
@@ -400,21 +406,21 @@ class BitSubtract(BaseExpr):
                 # Bit subtract the second byte of bin "c" to get bytearray([1, 0, 1, 1, 1])
                 expr = BitSubtract(None, 8, 8, 1, aerospike.BIT_OVERFLOW_FAIL).compile()
         """        
-        self.children = (
+        self._children= (
             bit_offset,
             bit_size,
             value,
-            _GenericExpr(ExprOp._AS_EXP_BIT_FLAGS, 0, {VALUE_KEY: policy['bit_write_flags']} if policy is not None and 'bit_write_flags' in policy else {VALUE_KEY: 0}),
-            _GenericExpr(ExprOp._AS_EXP_BIT_FLAGS, 0, {VALUE_KEY: action} if action is not None else {VALUE_KEY: 0}),
-            bin if isinstance(bin, BaseExpr) else BlobBin(bin)
+            _GenericExpr(_ExprOp._AS_EXP_BIT_FLAGS, 0, {_Keys.VALUE_KEY: policy['bit_write_flags']} if policy is not None and 'bit_write_flags' in policy else {_Keys.VALUE_KEY: 0}),
+            _GenericExpr(_ExprOp._AS_EXP_BIT_FLAGS, 0, {_Keys.VALUE_KEY: action} if action is not None else {_Keys.VALUE_KEY: 0}),
+            bin if isinstance(bin, _BaseExpr) else BlobBin(bin)
         )
 
 
-class BitSetInt(BaseExpr):
+class BitSetInt(_BaseExpr):
     """ Create an expression that performs a bit_set_int operation.
         Note: integers are stored big-endian.
     """
-    op = aerospike.OP_BIT_SET_INT
+    _op = aerospike.OP_BIT_SET_INT
 
     def __init__(self, policy: TypePolicy, bit_offset: int, bit_size: int, value: int, bin: TypeBinName):
         """ Create an expression that performs a bit_set_int operation.
@@ -435,12 +441,12 @@ class BitSetInt(BaseExpr):
                 # Set bit at offset 7 with size 1 bytes to 1 to make the returned value bytearray([1, 0, 0, 0, 0]).
                 expr = BitSetInt(None, 7, 1, 1, BlobBin("c")).compile()
         """        
-        self.children = (
+        self._children= (
             bit_offset,
             bit_size,
             value,
-            _GenericExpr(ExprOp._AS_EXP_BIT_FLAGS, 0, {VALUE_KEY: policy['bit_write_flags']} if policy is not None and 'bit_write_flags' in policy else {VALUE_KEY: 0}),
-            bin if isinstance(bin, BaseExpr) else BlobBin(bin)
+            _GenericExpr(_ExprOp._AS_EXP_BIT_FLAGS, 0, {_Keys.VALUE_KEY: policy['bit_write_flags']} if policy is not None and 'bit_write_flags' in policy else {_Keys.VALUE_KEY: 0}),
+            bin if isinstance(bin, _BaseExpr) else BlobBin(bin)
         )
 
 
@@ -449,9 +455,9 @@ class BitSetInt(BaseExpr):
 ######################
 
 
-class BitGet(BaseExpr):
+class BitGet(_BaseExpr):
     """Create an expression that performs a bit_get operation."""
-    op = aerospike.OP_BIT_GET
+    _op = aerospike.OP_BIT_GET
 
     def __init__(self, bit_offset: int, bit_size: int, bin: TypeBinName):
         """ Create an expression that performs a bit_get operation.
@@ -469,16 +475,16 @@ class BitGet(BaseExpr):
                 # Get 2 from bin "c".
                 expr = BitGet(8, 8, BlobBin("c")).compile()
         """        
-        self.children = (
+        self._children= (
             bit_offset,
             bit_size,
-            bin if isinstance(bin, BaseExpr) else BlobBin(bin)
+            bin if isinstance(bin, _BaseExpr) else BlobBin(bin)
         )
 
 
-class BitCount(BaseExpr):
+class BitCount(_BaseExpr):
     """Create an expression that performs a bit_count operation."""
-    op = aerospike.OP_BIT_COUNT
+    _op = aerospike.OP_BIT_COUNT
 
     def __init__(self, bit_offset: int, bit_size: int, bin: TypeBinName):
         """ Create an expression that performs a bit_count operation.
@@ -496,24 +502,24 @@ class BitCount(BaseExpr):
                 # Count set bits starting at 3rd byte in bin "c" to get count of 6.
                 expr = BitCount(16, 8 * 3, BlobBin("c")).compile()
         """        
-        self.children = (
+        self._children= (
             bit_offset,
             bit_size,
-            bin if isinstance(bin, BaseExpr) else BlobBin(bin)
+            bin if isinstance(bin, _BaseExpr) else BlobBin(bin)
         )
 
 
-class BitLeftScan(BaseExpr):
+class BitLeftScan(_BaseExpr):
     """Create an expression that performs a bit_lscan operation."""
-    op = aerospike.OP_BIT_LSCAN
+    _op = aerospike.OP_BIT_LSCAN
 
-    def __init__(self, bit_offset: int, bit_size: int, value: Union[ExpTrue, ExpFalse], bin: TypeBinName):
+    def __init__(self, bit_offset: int, bit_size: int, value: bool, bin: TypeBinName):
         """ Create an expression that performs a bit_lscan operation.
 
             Args:
                 bit_offset (int): Bit index of where to start reading.
                 bit_size (int): Number of bits to read.
-                value Union[ExpTrue, ExpFalse]: Bit value to check for, ExpTrue for 1 or ExpFalse for 0.
+                value bool: Bit value to check for.
                 bin (TypeBinName): Blob bin name or blob expression.
 
             :return: Index of the left most bit starting from bit_offset set to value. Returns -1 if not found.
@@ -524,25 +530,25 @@ class BitLeftScan(BaseExpr):
                 # Scan the first byte of bin "c" for the first bit set to 1. (should get 6)
                 expr = BitLeftScan(0, 8, True, BlobBin("c")).compile()
         """        
-        self.children = (
+        self._children= (
             bit_offset,
             bit_size,
             value,
-            bin if isinstance(bin, BaseExpr) else BlobBin(bin)
+            bin if isinstance(bin, _BaseExpr) else BlobBin(bin)
         )
 
 
-class BitRightScan(BaseExpr):
+class BitRightScan(_BaseExpr):
     """Create an expression that performs a bit_rscan operation."""
-    op = aerospike.OP_BIT_RSCAN
+    _op = aerospike.OP_BIT_RSCAN
 
-    def __init__(self, bit_offset: int, bit_size: int, value: Union[ExpTrue, ExpFalse], bin: TypeBinName):
+    def __init__(self, bit_offset: int, bit_size: int, value: bool, bin: TypeBinName):
         """ Create an expression that performs a bit_rscan operation.
 
             Args:
                 bit_offset (int): Bit index of where to start reading.
                 bit_size (int): Number of bits to read.
-                value Union[ExpTrue, ExpFalse]: Bit value to check for, ExpTrue for 1 or ExpFalse for 0.
+                value bool: Bit value to check for.
                 bin (TypeBinName): Blob bin name or blob expression.
 
             :return: Index of the right most bit starting from bit_offset set to value. Returns -1 if not found.
@@ -553,25 +559,25 @@ class BitRightScan(BaseExpr):
                 # Scan the first byte of bin "c" for the right most bit set to 1. (should get 7)
                 expr = BitRightScan(0, 8, True, BlobBin("c")).compile()
         """        
-        self.children = (
+        self._children= (
             bit_offset,
             bit_size,
             value,
-            bin if isinstance(bin, BaseExpr) else BlobBin(bin)
+            bin if isinstance(bin, _BaseExpr) else BlobBin(bin)
         )
 
 
-class BitGetInt(BaseExpr):
+class BitGetInt(_BaseExpr):
     """Create an expression that performs a bit_get_int operation."""
-    op = aerospike.OP_BIT_GET_INT
+    _op = aerospike.OP_BIT_GET_INT
 
-    def __init__(self, bit_offset: int, bit_size: int, sign: Union[ExpTrue, ExpFalse], bin: TypeBinName):
+    def __init__(self, bit_offset: int, bit_size: int, sign: bool, bin: TypeBinName):
         """ Create an expression that performs a bit_get_int operation.
 
             Args:
                 bit_offset (int): Bit index of where to start reading.
                 bit_size (int): Number of bits to get.
-                sign Union[ExpTrue, ExpFalse]: ExpTrue for signed, ExpFalse for unsigned.
+                sign bool: True for signed, False for unsigned.
                 bin (TypeBinName): Blob bin name or blob expression.
 
             :return: Integer expression.
@@ -582,9 +588,9 @@ class BitGetInt(BaseExpr):
                 # Get 2 as an integer from bin "c".
                 expr = BitGetInt(8, 8, True, BlobBin("c")).compile()
         """        
-        self.children = (
+        self._children= (
             bit_offset,
             bit_size,
-            0 if not sign or isinstance(sign, ExpFalse) else 1,
-            bin if isinstance(bin, BaseExpr) else BlobBin(bin)
+            1 if sign else 0,
+            bin if isinstance(bin, _BaseExpr) else BlobBin(bin)
         )

@@ -406,7 +406,7 @@ class TestExpressions(TestBaseClass):
         (None, None, "string_test3", aerospike.LIST_RETURN_VALUE, ["string_test3"], 1),
         (None, None, "bytes_test3".encode("utf8"), aerospike.LIST_RETURN_VALUE, ["bytes_test3".encode("utf8")], 1),
         (None, None, bytearray("bytearray_test3", "utf8"), aerospike.LIST_RETURN_VALUE, [bytearray("bytearray_test3", "utf8")], 1),
-        (None, None, True, aerospike.LIST_RETURN_VALUE, [True], 9),
+        #(None, None, True, aerospike.LIST_RETURN_VALUE, [True], 9), NOTE: this won't work because booleans are not serialized by default in expressions.
         (None, None, None, aerospike.LIST_RETURN_VALUE, [None], 19),
         (None, None, [26, 27, 28, 6], aerospike.LIST_RETURN_VALUE, [[26, 27, 28, 6]], 1),
         ([list_index], [3], 6, aerospike.LIST_RETURN_VALUE, [6], 1),
@@ -1322,7 +1322,7 @@ class TestExpressions(TestBaseClass):
         verify_multiple_expression_avenues(self.as_connection, self.test_ns, self.test_set, expr.compile(), bin, 19)
 
     @pytest.mark.parametrize("bit_offset, bit_size, value, bin, expected", [
-        (0, 8, ExpTrue(), '1bits_bin', 7)
+        (0, 8, True, '1bits_bin', 7)
     ])
     def test_bit_left_scan_pos(self, bit_offset, bit_size, value, bin, expected):
         """
@@ -1337,7 +1337,7 @@ class TestExpressions(TestBaseClass):
         verify_multiple_expression_avenues(self.as_connection, self.test_ns, self.test_set, expr.compile(), bin, 19)
 
     @pytest.mark.parametrize("bit_offset, bit_size, value, bin, expected", [
-        (0, 8, ExpTrue(), '1bits_bin', 7)
+        (0, 8, True, '1bits_bin', 7)
     ])
     def test_bit_right_scan_pos(self, bit_offset, bit_size, value, bin, expected):
         """
@@ -1360,7 +1360,7 @@ class TestExpressions(TestBaseClass):
         """
 
         expr = Eq(
-                    BitGetInt(bit_offset, bit_size, ExpTrue(), bin),
+                    BitGetInt(bit_offset, bit_size, True, bin),
                     expected
                 )
 

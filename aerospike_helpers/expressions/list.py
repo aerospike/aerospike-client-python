@@ -27,17 +27,30 @@ from itertools import chain
 from typing import List, Optional, Tuple, Union, Dict, Any
 import aerospike
 from aerospike_helpers import cdt_ctx
-from aerospike_helpers.expressions.base import *
-from aerospike_helpers.expressions.base import _GenericExpr
+from aerospike_helpers.expressions.resources import _GenericExpr
+from aerospike_helpers.expressions.resources import _BaseExpr
+from aerospike_helpers.expressions.resources import _ExprOp
+from aerospike_helpers.expressions.resources import ResultType
+from aerospike_helpers.expressions.resources import _Keys
+from aerospike_helpers.expressions.base import ListBin
 
 ######################
 # List Mod Expressions
 ######################
 
+TypeBinName = Union[_BaseExpr, str]
+TypeListValue = Union[_BaseExpr, List[Any]]
+TypeIndex = Union[_BaseExpr, int, aerospike.CDTInfinite]
+TypeCDT = Union[None, List[cdt_ctx._cdt_ctx]]
+TypeRank = Union[_BaseExpr, int, aerospike.CDTInfinite]
+TypeCount = Union[_BaseExpr, int, aerospike.CDTInfinite]
+TypeValue = Union[_BaseExpr, Any]
+TypePolicy = Union[Dict[str, Any], None]
 
-class ListAppend(BaseExpr):
+
+class ListAppend(_BaseExpr):
     """Create an expression that appends value to end of list."""
-    op = aerospike.OP_LIST_APPEND
+    _op = aerospike.OP_LIST_APPEND
 
     def __init__(self, ctx: TypeCDT, policy: TypePolicy, value: TypeValue, bin: TypeBinName):
         """ Create an expression that appends value to end of list.
@@ -57,23 +70,23 @@ class ListAppend(BaseExpr):
                         ListSize(None, ListAppend(None, None, 3, ListBin("a"))),
                         5).compile()
         """        
-        self.children = (
+        self._children = (
             value,
-            _GenericExpr(ExprOp._AS_EXP_CODE_CDT_LIST_CRMOD, 0, {LIST_POLICY_KEY: policy} if policy is not None else {}),
-            bin if isinstance(bin, BaseExpr) else ListBin(bin)
+            _GenericExpr(_ExprOp._AS_EXP_CODE_CDT_LIST_CRMOD, 0, {_Keys.LIST_POLICY_KEY: policy} if policy is not None else {}),
+            bin if isinstance(bin, _BaseExpr) else ListBin(bin)
         )
-        self.fixed = {}
+        self._fixed = {}
 
         if ctx is not None:
-            self.fixed[CTX_KEY] = ctx
+            self._fixed[_Keys.CTX_KEY] = ctx
 
         if policy is not None:
-            self.fixed[LIST_POLICY_KEY] = policy
+            self._fixed[_Keys.LIST_POLICY_KEY] = policy
 
 
-class ListAppendItems(BaseExpr):
+class ListAppendItems(_BaseExpr):
     """Create an expression that appends a list of items to the end of a list."""
-    op = aerospike.OP_LIST_APPEND_ITEMS
+    _op = aerospike.OP_LIST_APPEND_ITEMS
 
     def __init__(self, ctx: TypeCDT, policy: TypePolicy, value: TypeValue, bin: TypeBinName):
         """ Create an expression that appends a list of items to the end of a list.
@@ -93,23 +106,23 @@ class ListAppendItems(BaseExpr):
                         ListSize(None, ListAppendItems(None, None, [3, 2], ListBin("a"))),
                         5).compile()
         """        
-        self.children = (
+        self._children = (
             value,
-            _GenericExpr(ExprOp._AS_EXP_CODE_CDT_LIST_CRMOD, 0, {LIST_POLICY_KEY: policy} if policy is not None else {}),
-            bin if isinstance(bin, BaseExpr) else ListBin(bin)
+            _GenericExpr(_ExprOp._AS_EXP_CODE_CDT_LIST_CRMOD, 0, {_Keys.LIST_POLICY_KEY: policy} if policy is not None else {}),
+            bin if isinstance(bin, _BaseExpr) else ListBin(bin)
         )
-        self.fixed = {}
+        self._fixed = {}
 
         if ctx is not None:
-            self.fixed[CTX_KEY] = ctx
+            self._fixed[_Keys.CTX_KEY] = ctx
 
         if policy is not None:
-            self.fixed[LIST_POLICY_KEY] = policy
+            self._fixed[_Keys.LIST_POLICY_KEY] = policy
 
 
-class ListInsert(BaseExpr):
+class ListInsert(_BaseExpr):
     """Create an expression that inserts value to specified index of list."""
-    op = aerospike.OP_LIST_INSERT
+    _op = aerospike.OP_LIST_INSERT
 
     def __init__(self, ctx: TypeCDT, policy: TypePolicy, index: TypeIndex, value: TypeValue, bin: TypeBinName):
         """ Create an expression that inserts value to specified index of list.
@@ -130,24 +143,24 @@ class ListInsert(BaseExpr):
                         ListSize(None, ListInsert(None, None, 0, 3, ListBin("a"))),
                         5).compile()
         """        
-        self.children = (
+        self._children = (
             index,
             value,
-            _GenericExpr(ExprOp._AS_EXP_CODE_CDT_LIST_MOD, 0, {LIST_POLICY_KEY: policy} if policy is not None else {}),
-            bin if isinstance(bin, BaseExpr) else ListBin(bin)
+            _GenericExpr(_ExprOp._AS_EXP_CODE_CDT_LIST_MOD, 0, {_Keys.LIST_POLICY_KEY: policy} if policy is not None else {}),
+            bin if isinstance(bin, _BaseExpr) else ListBin(bin)
         )
-        self.fixed = {}
+        self._fixed = {}
 
         if ctx is not None:
-            self.fixed[CTX_KEY] = ctx
+            self._fixed[_Keys.CTX_KEY] = ctx
 
         if policy is not None:
-            self.fixed[LIST_POLICY_KEY] = policy
+            self._fixed[_Keys.LIST_POLICY_KEY] = policy
 
 
-class ListInsertItems(BaseExpr):
+class ListInsertItems(_BaseExpr):
     """Create an expression that inserts each input list item starting at specified index of list."""
-    op = aerospike.OP_LIST_INSERT_ITEMS
+    _op = aerospike.OP_LIST_INSERT_ITEMS
 
     def __init__(self, ctx: TypeCDT, policy: TypePolicy, index: TypeIndex, values: TypeListValue, bin: TypeBinName):
         """ Create an expression that inserts each input list item starting at specified index of list.
@@ -168,24 +181,24 @@ class ListInsertItems(BaseExpr):
                         ListSize(None, ListInsertItems(None, None, 0, [4, 7], ListBin("a"))),
                         5).compile()
         """        
-        self.children = (
+        self._children = (
             index,
             values,
-            _GenericExpr(ExprOp._AS_EXP_CODE_CDT_LIST_MOD, 0, {LIST_POLICY_KEY: policy} if policy is not None else {}),
-            bin if isinstance(bin, BaseExpr) else ListBin(bin)
+            _GenericExpr(_ExprOp._AS_EXP_CODE_CDT_LIST_MOD, 0, {_Keys.LIST_POLICY_KEY: policy} if policy is not None else {}),
+            bin if isinstance(bin, _BaseExpr) else ListBin(bin)
         )
-        self.fixed = {}
+        self._fixed = {}
 
         if ctx is not None:
-            self.fixed[CTX_KEY] = ctx
+            self._fixed[_Keys.CTX_KEY] = ctx
 
         if policy is not None:
-            self.fixed[LIST_POLICY_KEY] = policy
+            self._fixed[_Keys.LIST_POLICY_KEY] = policy
 
 
-class ListIncrement(BaseExpr):
+class ListIncrement(_BaseExpr):
     """Create an expression that increments list[index] by value."""
-    op = aerospike.OP_LIST_INCREMENT
+    _op = aerospike.OP_LIST_INCREMENT
 
     def __init__(self, ctx: TypeCDT, policy: TypePolicy, index: TypeIndex, value: TypeValue, bin: TypeBinName):
         """ Create an expression that increments list[index] by value.
@@ -209,24 +222,24 @@ class ListIncrement(BaseExpr):
                             ListIncrement(None, None, 1, 5, ListBin("a")))
                 ).compile()
         """        
-        self.children = (
+        self._children = (
             index,
             value,
-            _GenericExpr(ExprOp._AS_EXP_CODE_CDT_LIST_CRMOD, 0, {LIST_POLICY_KEY: policy} if policy is not None else {}),
-            bin if isinstance(bin, BaseExpr) else ListBin(bin)
+            _GenericExpr(_ExprOp._AS_EXP_CODE_CDT_LIST_CRMOD, 0, {_Keys.LIST_POLICY_KEY: policy} if policy is not None else {}),
+            bin if isinstance(bin, _BaseExpr) else ListBin(bin)
         )
-        self.fixed = {}
+        self._fixed = {}
 
         if ctx is not None:
-            self.fixed[CTX_KEY] = ctx
+            self._fixed[_Keys.CTX_KEY] = ctx
 
         if policy is not None:
-            self.fixed[LIST_POLICY_KEY] = policy
+            self._fixed[_Keys.LIST_POLICY_KEY] = policy
 
 
-class ListSet(BaseExpr):
+class ListSet(_BaseExpr):
     """Create an expression that sets item value at specified index in list."""
-    op = aerospike.OP_LIST_SET
+    _op = aerospike.OP_LIST_SET
 
     def __init__(self, ctx: TypeCDT, policy: TypePolicy, index: TypeIndex, value: TypeValue, bin: TypeBinName):
         """ Create an expression that sets item value at specified index in list.
@@ -246,24 +259,24 @@ class ListSet(BaseExpr):
                 expr = ListGetByRank(None, aerospike.LIST_RETURN_VALUE, ResultType.INTEGER, 0,
                                 ListSet(None, None, 1, 10, ListBin("a"))).compile()
         """        
-        self.children = (
+        self._children = (
             index,
             value,
-            _GenericExpr(ExprOp._AS_EXP_CODE_CDT_LIST_MOD, 0, {LIST_POLICY_KEY: policy} if policy is not None else {}),
-            bin if isinstance(bin, BaseExpr) else ListBin(bin)
+            _GenericExpr(_ExprOp._AS_EXP_CODE_CDT_LIST_MOD, 0, {_Keys.LIST_POLICY_KEY: policy} if policy is not None else {}),
+            bin if isinstance(bin, _BaseExpr) else ListBin(bin)
         )
-        self.fixed = {}
+        self._fixed = {}
 
         if ctx is not None:
-            self.fixed[CTX_KEY] = ctx
+            self._fixed[_Keys.CTX_KEY] = ctx
 
         if policy is not None:
-            self.fixed[LIST_POLICY_KEY] = policy
+            self._fixed[_Keys.LIST_POLICY_KEY] = policy
 
 
-class ListClear(BaseExpr):
+class ListClear(_BaseExpr):
     """Create an expression that removes all items in a list."""
-    op = aerospike.OP_LIST_CLEAR
+    _op = aerospike.OP_LIST_CLEAR
 
     def __init__(self, ctx: TypeCDT, bin: TypeBinName):
         """ Create an expression that removes all items in a list.
@@ -280,18 +293,18 @@ class ListClear(BaseExpr):
                 from aerospike_helpers import cdt_ctx
                 expr = ListClear([cdt_ctx.cdt_ctx_list_index(1)], "a").compile()
         """        
-        self.children = (
-            bin if isinstance(bin, BaseExpr) else ListBin(bin),
+        self._children = (
+            bin if isinstance(bin, _BaseExpr) else ListBin(bin),
         )
-        self.fixed = {}
+        self._fixed = {}
 
         if ctx is not None:
-            self.fixed[CTX_KEY] = ctx
+            self._fixed[_Keys.CTX_KEY] = ctx
 
 
-class ListSort(BaseExpr):
+class ListSort(_BaseExpr):
     """Create an expression that sorts a list."""
-    op = aerospike.OP_LIST_SORT
+    _op = aerospike.OP_LIST_SORT
 
     def __init__(self, ctx: TypeCDT, order: int, bin: TypeBinName):
         """ Create an expression that sorts a list.
@@ -308,18 +321,18 @@ class ListSort(BaseExpr):
                 # Get value of sorted list bin "a".
                 expr = ListSort(None, aerospike.LIST_SORT_DEFAULT, "a").compile()
         """        
-        self.children = (
-            bin if isinstance(bin, BaseExpr) else ListBin(bin),
+        self._children = (
+            bin if isinstance(bin, _BaseExpr) else ListBin(bin),
         )
-        self.fixed = {LIST_ORDER_KEY: order}
+        self._fixed = {_Keys.LIST_ORDER_KEY: order}
 
         if ctx is not None:
-            self.fixed[CTX_KEY] = ctx
+            self._fixed[_Keys.CTX_KEY] = ctx
 
 
-class ListRemoveByValue(BaseExpr):
+class ListRemoveByValue(_BaseExpr):
     """Create an expression that removes list items identified by value."""
-    op = aerospike.OP_LIST_REMOVE_BY_VALUE
+    _op = aerospike.OP_LIST_REMOVE_BY_VALUE
 
     def __init__(self, ctx: TypeCDT, value: TypeValue, bin: TypeBinName):
         """ Create an expression that removes list items identified by value.
@@ -336,19 +349,19 @@ class ListRemoveByValue(BaseExpr):
                 # See if list bin "a", with `3` removed, is equal to list bin "b".
                 expr = Eq(ListRemoveByValue(None, 3, ListBin("a")), ListBin("b")).compile()
         """        
-        self.children = (
+        self._children = (
             value,
-            bin if isinstance(bin, BaseExpr) else ListBin(bin)
+            bin if isinstance(bin, _BaseExpr) else ListBin(bin)
         )
-        self.fixed = {}
+        self._fixed = {}
 
         if ctx is not None:
-            self.fixed[CTX_KEY] = ctx
+            self._fixed[_Keys.CTX_KEY] = ctx
 
 
-class ListRemoveByValueList(BaseExpr):
+class ListRemoveByValueList(_BaseExpr):
     """Create an expression that removes list items identified by values."""
-    op = aerospike.OP_LIST_REMOVE_BY_VALUE_LIST
+    _op = aerospike.OP_LIST_REMOVE_BY_VALUE_LIST
 
     def __init__(self, ctx: TypeCDT, values: TypeListValue, bin: TypeBinName):
         """ Create an expression that removes list items identified by values.
@@ -365,22 +378,22 @@ class ListRemoveByValueList(BaseExpr):
                 # Remove elements with values [1, 2, 3] from list bin "a".
                 expr = ListRemoveByValueList(None, [1, 2, 3], ListBin("a")).compile()
         """        
-        self.children = (
+        self._children = (
             values,
-            bin if isinstance(bin, BaseExpr) else ListBin(bin)
+            bin if isinstance(bin, _BaseExpr) else ListBin(bin)
         )
-        self.fixed = {}
+        self._fixed = {}
 
         if ctx is not None:
-            self.fixed[CTX_KEY] = ctx
+            self._fixed[_Keys.CTX_KEY] = ctx
 
 
-class ListRemoveByValueRange(BaseExpr):
+class ListRemoveByValueRange(_BaseExpr):
     """ Create an expression that removes list items identified by value range
         (begin inclusive, end exclusive). If begin is None, the range is less than end.
         If end is None, the range is greater than or equal to begin.
     """
-    op = aerospike.OP_LIST_REMOVE_BY_VALUE_RANGE
+    _op = aerospike.OP_LIST_REMOVE_BY_VALUE_RANGE
 
     def __init__(self, ctx: TypeCDT, begin: TypeValue, end: TypeValue, bin: TypeBinName):
         """ Create an expression that removes list items identified by value range
@@ -400,20 +413,20 @@ class ListRemoveByValueRange(BaseExpr):
                 # Remove list of items with values >= 3 and < 7 from list bin "a".
                 expr = ListRemoveByValueRange(None, 3, 7, ListBin("a")).compile()
         """        
-        self.children = (
+        self._children = (
             begin,
             end,
-            bin if isinstance(bin, BaseExpr) else ListBin(bin)
+            bin if isinstance(bin, _BaseExpr) else ListBin(bin)
         )
-        self.fixed = {}
+        self._fixed = {}
 
         if ctx is not None:
-            self.fixed[CTX_KEY] = ctx
+            self._fixed[_Keys.CTX_KEY] = ctx
 
 
-class ListRemoveByValueRelRankToEnd(BaseExpr):
+class ListRemoveByValueRelRankToEnd(_BaseExpr):
     """Create an expression that removes list items nearest to value and greater by relative rank."""
-    op = aerospike.OP_LIST_REMOVE_BY_REL_RANK_RANGE_TO_END
+    _op = aerospike.OP_LIST_REMOVE_BY_REL_RANK_RANGE_TO_END
 
     def __init__(self, ctx: TypeCDT, value: TypeValue, rank: TypeRank, bin: TypeBinName):
         """ Create an expression that removes list items nearest to value and greater by relative rank.
@@ -431,22 +444,22 @@ class ListRemoveByValueRelRankToEnd(BaseExpr):
                 # Remove elements larger than 4 by relative rank in list bin "a".
                 expr = ListRemoveByValueRelRankToEnd(None, 4, 1, ListBin("a")).compile()
         """        
-        self.children = (
+        self._children = (
             value,
             rank,
-            bin if isinstance(bin, BaseExpr) else ListBin(bin)
+            bin if isinstance(bin, _BaseExpr) else ListBin(bin)
         )
-        self.fixed = {}
+        self._fixed = {}
 
         if ctx is not None:
-            self.fixed[CTX_KEY] = ctx
+            self._fixed[_Keys.CTX_KEY] = ctx
 
 
-class ListRemoveByValueRelRankRange(BaseExpr):
+class ListRemoveByValueRelRankRange(_BaseExpr):
     """ Create an expression that removes list items nearest to value and greater by relative rank with a
         count limit.
     """
-    op = aerospike.OP_LIST_REMOVE_BY_REL_RANK_RANGE
+    _op = aerospike.OP_LIST_REMOVE_BY_REL_RANK_RANGE
 
     def __init__(self, ctx: TypeCDT, value: TypeValue, rank: TypeRank, count: TypeCount, bin: TypeBinName):
         """ Create an expression that removes list items nearest to value and greater by relative rank with a
@@ -469,21 +482,21 @@ class ListRemoveByValueRelRankRange(BaseExpr):
                             ListRemoveByValueRelRankRange(None, 4, 1, 0, ListBin("a"))),
                         0).compile()
         """        
-        self.children = (
+        self._children = (
             value,
             rank,
             count,
-            bin if isinstance(bin, BaseExpr) else ListBin(bin)
+            bin if isinstance(bin, _BaseExpr) else ListBin(bin)
         )
-        self.fixed = {}
+        self._fixed = {}
 
         if ctx is not None:
-            self.fixed[CTX_KEY] = ctx
+            self._fixed[_Keys.CTX_KEY] = ctx
 
 
-class ListRemoveByIndex(BaseExpr):
+class ListRemoveByIndex(_BaseExpr):
     """Create an expression that removes "count" list items starting at specified index."""
-    op = aerospike.OP_LIST_REMOVE_BY_INDEX
+    _op = aerospike.OP_LIST_REMOVE_BY_INDEX
 
     def __init__(self, ctx: TypeCDT, index: TypeIndex, bin: TypeBinName):
         """ Create an expression that removes "count" list items starting at specified index.
@@ -500,19 +513,19 @@ class ListRemoveByIndex(BaseExpr):
                 # Get size of list bin "a" after index 3 has been removed.
                 expr = ListSize(None, ListRemoveByIndex(None, 3, ListBin("a"))).compile()
         """        
-        self.children = (
+        self._children = (
             index,
-            bin if isinstance(bin, BaseExpr) else ListBin(bin)
+            bin if isinstance(bin, _BaseExpr) else ListBin(bin)
         )
-        self.fixed = {}
+        self._fixed = {}
 
         if ctx is not None:
-            self.fixed[CTX_KEY] = ctx
+            self._fixed[_Keys.CTX_KEY] = ctx
 
 
-class ListRemoveByIndexRangeToEnd(BaseExpr):
+class ListRemoveByIndexRangeToEnd(_BaseExpr):
     """Create an expression that removes list items starting at specified index to the end of list."""
-    op = aerospike.OP_LIST_REMOVE_BY_INDEX_RANGE_TO_END
+    _op = aerospike.OP_LIST_REMOVE_BY_INDEX_RANGE_TO_END
 
     def __init__(self, ctx: TypeCDT, index: TypeIndex, bin: TypeBinName):
         """ Create an expression that removes list items starting at specified index to the end of list.
@@ -529,19 +542,19 @@ class ListRemoveByIndexRangeToEnd(BaseExpr):
                 # Remove all elements starting from index 3 in list bin "a".
                 expr = ListRemoveByIndexRangeToEnd(None, 3, ListBin("a")).compile()
         """        
-        self.children = (
+        self._children = (
             index,
-            bin if isinstance(bin, BaseExpr) else ListBin(bin)
+            bin if isinstance(bin, _BaseExpr) else ListBin(bin)
         )
-        self.fixed = {}
+        self._fixed = {}
 
         if ctx is not None:
-            self.fixed[CTX_KEY] = ctx
+            self._fixed[_Keys.CTX_KEY] = ctx
 
 
-class ListRemoveByIndexRange(BaseExpr):
+class ListRemoveByIndexRange(_BaseExpr):
     """Create an expression that removes "count" list items starting at specified index."""
-    op = aerospike.OP_LIST_REMOVE_BY_INDEX_RANGE
+    _op = aerospike.OP_LIST_REMOVE_BY_INDEX_RANGE
 
     def __init__(self, ctx: TypeCDT, index: TypeIndex, count: TypeCount, bin: TypeBinName):
         """ Create an expression that removes "count" list items starting at specified index.
@@ -559,20 +572,20 @@ class ListRemoveByIndexRange(BaseExpr):
                 # Get size of list bin "a" after index 3, 4, and 5 have been removed.
                 expr = ListSize(None, ListRemoveByIndexRange(None, 3, 3, ListBin("a"))).compile()
         """        
-        self.children = (
+        self._children = (
             index,
             count,
-            bin if isinstance(bin, BaseExpr) else ListBin(bin)
+            bin if isinstance(bin, _BaseExpr) else ListBin(bin)
         )
-        self.fixed = {}
+        self._fixed = {}
 
         if ctx is not None:
-            self.fixed[CTX_KEY] = ctx
+            self._fixed[_Keys.CTX_KEY] = ctx
 
 
-class ListRemoveByRank(BaseExpr):
+class ListRemoveByRank(_BaseExpr):
     """Create an expression that removes list item identified by rank."""
-    op = aerospike.OP_LIST_REMOVE_BY_RANK
+    _op = aerospike.OP_LIST_REMOVE_BY_RANK
 
     def __init__(self, ctx: TypeCDT, rank: TypeRank, bin: TypeBinName):
         """ Create an expression that removes list item identified by rank.
@@ -589,19 +602,19 @@ class ListRemoveByRank(BaseExpr):
                 # Remove smallest value in list bin "a".
                 expr = ListRemoveByRank(None, 0, ListBin("a")).compile()
         """        
-        self.children = (
+        self._children = (
             rank,
-            bin if isinstance(bin, BaseExpr) else ListBin(bin)
+            bin if isinstance(bin, _BaseExpr) else ListBin(bin)
         )
-        self.fixed = {}
+        self._fixed = {}
 
         if ctx is not None:
-            self.fixed[CTX_KEY] = ctx
+            self._fixed[_Keys.CTX_KEY] = ctx
 
 
-class ListRemoveByRankRangeToEnd(BaseExpr):
+class ListRemoveByRankRangeToEnd(_BaseExpr):
     """Create an expression that removes list items starting at specified rank to the last ranked item."""
-    op = aerospike.OP_LIST_REMOVE_BY_RANK_RANGE_TO_END
+    _op = aerospike.OP_LIST_REMOVE_BY_RANK_RANGE_TO_END
 
     def __init__(self, ctx: TypeCDT, rank: TypeRank, bin: TypeBinName):
         """ Create an expression that removes list items starting at specified rank to the last ranked item.
@@ -618,19 +631,19 @@ class ListRemoveByRankRangeToEnd(BaseExpr):
                 # Remove the 2 largest elements from List bin "a".
                 expr = ListRemoveByRankRangeToEnd(None, -2, ListBin("a")).compile()
         """        
-        self.children = (
+        self._children = (
             rank,
-            bin if isinstance(bin, BaseExpr) else ListBin(bin)
+            bin if isinstance(bin, _BaseExpr) else ListBin(bin)
         )
-        self.fixed = {}
+        self._fixed = {}
 
         if ctx is not None:
-            self.fixed[CTX_KEY] = ctx
+            self._fixed[_Keys.CTX_KEY] = ctx
 
 
-class ListRemoveByRankRange(BaseExpr):
+class ListRemoveByRankRange(_BaseExpr):
     """Create an expression that removes "count" list items starting at specified rank."""
-    op = aerospike.OP_LIST_REMOVE_BY_RANK_RANGE
+    _op = aerospike.OP_LIST_REMOVE_BY_RANK_RANGE
 
     def __init__(self, ctx: TypeCDT, rank: TypeRank, count: TypeCount, bin: TypeBinName):
         """ Create an expression that removes "count" list items starting at specified rank.
@@ -648,15 +661,15 @@ class ListRemoveByRankRange(BaseExpr):
                 # Remove the 3 smallest items from list bin "a".
                 expr = ListRemoveByRankRange(None, 0, 3, ListBin("a")).compile()
         """        
-        self.children = (
+        self._children = (
             rank,
             count,
-            bin if isinstance(bin, BaseExpr) else ListBin(bin)
+            bin if isinstance(bin, _BaseExpr) else ListBin(bin)
         )
-        self.fixed = {}
+        self._fixed = {}
 
         if ctx is not None:
-            self.fixed[CTX_KEY] = ctx
+            self._fixed[_Keys.CTX_KEY] = ctx
 
 
 #######################
@@ -664,9 +677,9 @@ class ListRemoveByRankRange(BaseExpr):
 #######################
 
 
-class ListSize(BaseExpr):
+class ListSize(_BaseExpr):
     """Create an expression that returns list size."""
-    op = aerospike.OP_LIST_SIZE
+    _op = aerospike.OP_LIST_SIZE
 
     def __init__(self, ctx: TypeCDT, bin: TypeBinName):
         """ Create an expression that returns list size.
@@ -682,20 +695,20 @@ class ListSize(BaseExpr):
                 #Take the size of list bin "a".
                 expr = ListSize(None, ListBin("a")).compile()
         """        
-        self.children = (
-            bin if isinstance(bin, BaseExpr) else ListBin(bin),
+        self._children = (
+            bin if isinstance(bin, _BaseExpr) else ListBin(bin),
         )
-        self.fixed = {}
+        self._fixed = {}
 
         if ctx is not None:
-            self.fixed[CTX_KEY] = ctx
+            self._fixed[_Keys.CTX_KEY] = ctx
 
 
-class ListGetByValue(BaseExpr):
+class ListGetByValue(_BaseExpr):
     """ Create an expression that selects list items identified by value and returns selected
         data specified by return_type.
     """
-    op = aerospike.OP_LIST_GET_BY_VALUE
+    _op = aerospike.OP_LIST_GET_BY_VALUE
 
     def __init__(self, ctx: TypeCDT, return_type: int, value: TypeValue, bin: TypeBinName):
         """ Create an expression that selects list items identified by value and returns selected
@@ -715,21 +728,21 @@ class ListGetByValue(BaseExpr):
                 # Get the index of the element with value, 3, in list bin "a".
                 expr = ListGetByValue(None, aerospike.LIST_RETURN_INDEX, 3, ListBin("a")).compile()
         """        
-        self.children = (
+        self._children = (
             value,
-            bin if isinstance(bin, BaseExpr) else ListBin(bin)
+            bin if isinstance(bin, _BaseExpr) else ListBin(bin)
         )
-        self.fixed = {RETURN_TYPE_KEY: return_type}
+        self._fixed = {_Keys.RETURN_TYPE_KEY: return_type}
 
         if ctx is not None:
-            self.fixed[CTX_KEY] = ctx
+            self._fixed[_Keys.CTX_KEY] = ctx
 
 
-class ListGetByValueRange(BaseExpr):
+class ListGetByValueRange(_BaseExpr):
     """ Create an expression that selects list items identified by value range and returns selected
         data specified by return_type.
     """
-    op = aerospike.OP_LIST_GET_BY_VALUE_RANGE
+    _op = aerospike.OP_LIST_GET_BY_VALUE_RANGE
 
     def __init__(
         self,
@@ -757,22 +770,22 @@ class ListGetByValueRange(BaseExpr):
                 # Get rank of values between 3 (inclusive) and 7 (exclusive) in list bin "a".
                 expr = ListGetByValueRange(None, aerospike.LIST_RETURN_RANK, 3, 7, ListBin("a")).compile()
         """        
-        self.children = (
+        self._children = (
             value_begin,
             value_end,
-            bin if isinstance(bin, BaseExpr) else ListBin(bin)
+            bin if isinstance(bin, _BaseExpr) else ListBin(bin)
         )
-        self.fixed = {RETURN_TYPE_KEY: return_type}
+        self._fixed = {_Keys.RETURN_TYPE_KEY: return_type}
 
         if ctx is not None:
-            self.fixed[CTX_KEY] = ctx
+            self._fixed[_Keys.CTX_KEY] = ctx
 
 
-class ListGetByValueList(BaseExpr):
+class ListGetByValueList(_BaseExpr):
     """ Create an expression that selects list items identified by values and returns selected
         data specified by return_type.
     """
-    op = aerospike.OP_LIST_GET_BY_VALUE_LIST
+    _op = aerospike.OP_LIST_GET_BY_VALUE_LIST
 
     def __init__(self, ctx: TypeCDT, return_type: int, value: TypeListValue, bin: TypeBinName):
         """ Create an expression that selects list items identified by values and returns selected
@@ -793,19 +806,19 @@ class ListGetByValueList(BaseExpr):
                 #Get the indexes of the the elements in list bin "a" with values [3, 6, 12].
                 expr = ListGetByValueList(None, aerospike.LIST_RETURN_INDEX, [3, 6, 12], ListBin("a")).compile()
         """        
-        self.children = (
+        self._children = (
             value,
-            bin if isinstance(bin, BaseExpr) else ListBin(bin)
+            bin if isinstance(bin, _BaseExpr) else ListBin(bin)
         )
-        self.fixed = {RETURN_TYPE_KEY: return_type}
+        self._fixed = {_Keys.RETURN_TYPE_KEY: return_type}
 
         if ctx is not None:
-            self.fixed[CTX_KEY] = ctx
+            self._fixed[_Keys.CTX_KEY] = ctx
 
 
-class ListGetByValueRelRankRangeToEnd(BaseExpr):
+class ListGetByValueRelRankRangeToEnd(_BaseExpr):
     """Create an expression that selects list items nearest to value and greater by relative rank"""
-    op = aerospike.OP_LIST_GET_BY_VALUE_RANK_RANGE_REL_TO_END
+    _op = aerospike.OP_LIST_GET_BY_VALUE_RANK_RANGE_REL_TO_END
 
     def __init__(self, ctx: TypeCDT, return_type: int, value: TypeValue, rank: TypeRank, bin: TypeBinName):
         """ Create an expression that selects list items nearest to value and greater by relative rank
@@ -826,22 +839,22 @@ class ListGetByValueRelRankRangeToEnd(BaseExpr):
                 # Get the values of all elements in list bin "a" larger than 3.
                 expr = ListGetByValueRelRankRangeToEnd(None, aerospike.LIST_RETURN_VALUE, 3, 1, ListBin("a")).compile()
         """        
-        self.children = (
+        self._children = (
             value,
             rank,
-            bin if isinstance(bin, BaseExpr) else ListBin(bin)
+            bin if isinstance(bin, _BaseExpr) else ListBin(bin)
         )
-        self.fixed = {RETURN_TYPE_KEY: return_type}
+        self._fixed = {_Keys.RETURN_TYPE_KEY: return_type}
 
         if ctx is not None:
-            self.fixed[CTX_KEY] = ctx
+            self._fixed[_Keys.CTX_KEY] = ctx
 
 
-class ListGetByValueRelRankRange(BaseExpr):
+class ListGetByValueRelRankRange(_BaseExpr):
     """ Create an expression that selects list items nearest to value and greater by relative rank with a
         count limit and returns selected data specified by return_type.
     """
-    op = aerospike.OP_LIST_GET_BY_VALUE_RANK_RANGE_REL
+    _op = aerospike.OP_LIST_GET_BY_VALUE_RANK_RANGE_REL
 
     def __init__(self, ctx: TypeCDT, return_type: int, value: TypeValue, rank: TypeRank, count: TypeCount, bin: TypeBinName):
         """ Create an expression that selects list items nearest to value and greater by relative rank with a
@@ -863,23 +876,23 @@ class ListGetByValueRelRankRange(BaseExpr):
                 # Get the next 2 values in list bin "a" larger than 3.
                 expr = ListGetByValueRelRankRange(None, aerospike.LIST_RETURN_VALUE, 3, 1, 2, ListBin("a")).compile()
         """        
-        self.children = (
+        self._children = (
             value,
             rank,
             count,
-            bin if isinstance(bin, BaseExpr) else ListBin(bin)
+            bin if isinstance(bin, _BaseExpr) else ListBin(bin)
         )
-        self.fixed = {RETURN_TYPE_KEY: return_type}
+        self._fixed = {_Keys.RETURN_TYPE_KEY: return_type}
 
         if ctx is not None:
-            self.fixed[CTX_KEY] = ctx
+            self._fixed[_Keys.CTX_KEY] = ctx
 
 
-class ListGetByIndex(BaseExpr):
+class ListGetByIndex(_BaseExpr):
     """ Create an expression that selects list item identified by index
         and returns selected data specified by return_type.
     """
-    op = aerospike.OP_LIST_GET_BY_INDEX
+    _op = aerospike.OP_LIST_GET_BY_INDEX
 
     def __init__(
         self,
@@ -907,21 +920,21 @@ class ListGetByIndex(BaseExpr):
                 # Get the value at index 0 in list bin "a". (assume this value is an integer)
                 expr = ListGetByIndex(None, aerospike.LIST_RETURN_VALUE, ResultType.INTEGER, 0, ListBin("a")).compile()
         """    
-        self.children = (
+        self._children = (
             index,
-            bin if isinstance(bin, BaseExpr) else ListBin(bin)
+            bin if isinstance(bin, _BaseExpr) else ListBin(bin)
         )
-        self.fixed = {VALUE_TYPE_KEY: value_type, RETURN_TYPE_KEY: return_type}
+        self._fixed = {_Keys.VALUE_TYPE_KEY: value_type, _Keys.RETURN_TYPE_KEY: return_type}
 
         if ctx is not None:
-            self.fixed[CTX_KEY] = ctx
+            self._fixed[_Keys.CTX_KEY] = ctx
 
 
-class ListGetByIndexRangeToEnd(BaseExpr):
+class ListGetByIndexRangeToEnd(_BaseExpr):
     """ Create an expression that selects list items starting at specified index to the end of list
         and returns selected data specified by return_type.
     """
-    op = aerospike.OP_LIST_GET_BY_INDEX_RANGE_TO_END
+    _op = aerospike.OP_LIST_GET_BY_INDEX_RANGE_TO_END
 
     def __init__(self, ctx: TypeCDT, return_type: int, index: TypeIndex, bin: TypeBinName):
         """ Create an expression that selects list items starting at specified index to the end of list
@@ -941,21 +954,21 @@ class ListGetByIndexRangeToEnd(BaseExpr):
                 # Get element 5 to end from list bin "a".
                 expr = ListGetByIndexRangeToEnd(None, aerospike.LIST_RETURN_VALUE, 5, ListBin("a")).compile()
         """        
-        self.children = (
+        self._children = (
             index,
-            bin if isinstance(bin, BaseExpr) else ListBin(bin)
+            bin if isinstance(bin, _BaseExpr) else ListBin(bin)
         )
-        self.fixed = {RETURN_TYPE_KEY: return_type}
+        self._fixed = {_Keys.RETURN_TYPE_KEY: return_type}
 
         if ctx is not None:
-            self.fixed[CTX_KEY] = ctx
+            self._fixed[_Keys.CTX_KEY] = ctx
 
 
-class ListGetByIndexRange(BaseExpr):
+class ListGetByIndexRange(_BaseExpr):
     """ Create an expression that selects "count" list items starting at specified index
         and returns selected data specified by return_type.
     """
-    op = aerospike.OP_LIST_GET_BY_INDEX_RANGE
+    _op = aerospike.OP_LIST_GET_BY_INDEX_RANGE
 
     def __init__(self, ctx: TypeCDT, return_type: int, index: TypeIndex, count: TypeCount, bin: TypeBinName):
         """ Create an expression that selects "count" list items starting at specified index
@@ -976,22 +989,22 @@ class ListGetByIndexRange(BaseExpr):
                 # Get elements at indexes 3, 4, 5, 6 in list bin "a".
                 expr = ListGetByIndexRange(None, aerospike.LIST_RETURN_VALUE, 3, 4, ListBin("a")).compile()
         """        
-        self.children = (
+        self._children = (
             index,
             count,
-            bin if isinstance(bin, BaseExpr) else ListBin(bin)
+            bin if isinstance(bin, _BaseExpr) else ListBin(bin)
         )
-        self.fixed = {RETURN_TYPE_KEY: return_type}
+        self._fixed = {_Keys.RETURN_TYPE_KEY: return_type}
 
         if ctx is not None:
-            self.fixed[CTX_KEY] = ctx
+            self._fixed[_Keys.CTX_KEY] = ctx
 
 
-class ListGetByRank(BaseExpr):
+class ListGetByRank(_BaseExpr):
     """ Create an expression that selects list item identified by rank
         and returns selected data specified by return_type.
     """
-    op = aerospike.OP_LIST_GET_BY_RANK
+    _op = aerospike.OP_LIST_GET_BY_RANK
 
     def __init__(
         self,
@@ -1019,21 +1032,21 @@ class ListGetByRank(BaseExpr):
                 # Get the smallest element in list bin "a".
                 expr = ListGetByRank(None, aerospike.LIST_RETURN_VALUE, aerospike.ResultType.INTEGER, 0, ListBin("a")).compile()
         """        
-        self.children = (
+        self._children = (
             rank,
-            bin if isinstance(bin, BaseExpr) else ListBin(bin)
+            bin if isinstance(bin, _BaseExpr) else ListBin(bin)
         )
-        self.fixed = {VALUE_TYPE_KEY: value_type, RETURN_TYPE_KEY: return_type}
+        self._fixed = {_Keys.VALUE_TYPE_KEY: value_type, _Keys.RETURN_TYPE_KEY: return_type}
 
         if ctx is not None:
-            self.fixed[CTX_KEY] = ctx
+            self._fixed[_Keys.CTX_KEY] = ctx
 
 
-class ListGetByRankRangeToEnd(BaseExpr):
+class ListGetByRankRangeToEnd(_BaseExpr):
     """ Create an expression that selects list items starting at specified rank to the last ranked item
         and returns selected data specified by return_type.
     """
-    op = aerospike.OP_LIST_GET_BY_RANK_RANGE_TO_END
+    _op = aerospike.OP_LIST_GET_BY_RANK_RANGE_TO_END
 
     def __init__(self, ctx: TypeCDT, return_type: int, rank: TypeRank, bin: TypeBinName):
         """ Create an expression that selects list items starting at specified rank to the last ranked item
@@ -1053,21 +1066,21 @@ class ListGetByRankRangeToEnd(BaseExpr):
                 # Get the three largest elements in list bin "a".
                 expr = ListGetByRankRangeToEnd(None, aerospike.LIST_RETURN_VALUE, -3, ListBin("a")).compile()
         """        
-        self.children = (
+        self._children = (
             rank,
-            bin if isinstance(bin, BaseExpr) else ListBin(bin)
+            bin if isinstance(bin, _BaseExpr) else ListBin(bin)
         )
-        self.fixed = {RETURN_TYPE_KEY: return_type}
+        self._fixed = {_Keys.RETURN_TYPE_KEY: return_type}
 
         if ctx is not None:
-            self.fixed[CTX_KEY] = ctx
+            self._fixed[_Keys.CTX_KEY] = ctx
 
 
-class ListGetByRankRange(BaseExpr):
+class ListGetByRankRange(_BaseExpr):
     """ Create an expression that selects "count" list items starting at specified rank
         and returns selected data specified by return_type.
     """
-    op = aerospike.OP_LIST_GET_BY_RANK_RANGE
+    _op = aerospike.OP_LIST_GET_BY_RANK_RANGE
 
     def __init__(self, ctx: TypeCDT, return_type: int, rank: TypeRank, count: TypeCount, bin: TypeBinName):
         """ Create an expression that selects "count" list items starting at specified rank
@@ -1088,12 +1101,12 @@ class ListGetByRankRange(BaseExpr):
                 # Get the 3 smallest elements in list bin "a".
                 expr = ListGetByRankRange(None, aerospike.LIST_RETURN_VALUE, 0, 3, ListBin("a")).compile()
         """        
-        self.children = (
+        self._children = (
             rank,
             count,
-            bin if isinstance(bin, BaseExpr) else ListBin(bin)
+            bin if isinstance(bin, _BaseExpr) else ListBin(bin)
         )
-        self.fixed = {RETURN_TYPE_KEY: return_type}
+        self._fixed = {_Keys.RETURN_TYPE_KEY: return_type}
 
         if ctx is not None:
-            self.fixed[CTX_KEY] = ctx
+            self._fixed[_Keys.CTX_KEY] = ctx

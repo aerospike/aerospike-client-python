@@ -27,178 +27,14 @@ from itertools import chain
 from typing import List, Optional, Tuple, Union, Dict, Any
 import aerospike
 from aerospike_helpers import cdt_ctx
+from aerospike_helpers.expressions.resources import _GenericExpr
+from aerospike_helpers.expressions.resources import _BaseExpr
+from aerospike_helpers.expressions.resources import _ExprOp
+from aerospike_helpers.expressions.resources import ResultType
+from aerospike_helpers.expressions.resources import _Keys
 
-
-VALUE_TYPE_KEY = "value_type"
-BIN_KEY = "bin"
-INDEX_KEY = "index"
-RETURN_TYPE_KEY = "return_type"
-CTX_KEY = "ctx"
-VALUE_KEY = "val"
-VALUE_BEGIN_KEY = "value_begin"
-VALUE_END_KEY = "value_end"
-OP_TYPE_KEY = "ot_key"
-LIST_POLICY_KEY = "list_policy"
-MAP_POLICY_KEY = "map_policy"
-LIST_ORDER_KEY = "list_order"
-REGEX_OPTIONS_KEY = "regex_options"
-
-
-class ExprOp:
-    EQ = 1
-    NE = 2
-    GT = 3
-    GE = 4
-    LT = 5
-    LE = 6
-    CMP_REGEX = 7
-    CMP_GEO = 8
-
-    AND = 16
-    OR = 17
-    NOT = 18
-
-    META_DIGEST_MOD = 64
-    META_DEVICE_SIZE = 65
-    META_LAST_UPDATE_TIME = 66
-    META_VOID_TIME = 67
-    META_TTL = 68
-    META_SET_NAME = 69
-    META_KEY_EXISTS = 70
-    META_SINCE_UPDATE_TIME = 71
-    META_IS_TOMBSTONE = 72
-
-    REC_KEY = 80
-    BIN = 81
-    BIN_TYPE = 82
-    BIN_EXISTS = 83
-
-    CALL = 127
-
-    VAL = 128
-    PK = 129
-    INT = 130
-    UINT = 131
-    FLOAT = 132
-    BOOL = 133
-    STR = 134
-    BYTES = 135
-    RAWSTR = 136
-    RTYPE = 137
-
-    NIL = 138
-
-    # virtual ops
-
-    _AS_EXP_CODE_CALL_VOP_START = 139
-    _AS_EXP_CODE_CDT_LIST_CRMOD = 140
-    _AS_EXP_CODE_CDT_LIST_MOD = 141
-    _AS_EXP_CODE_CDT_MAP_CRMOD = 142
-    _AS_EXP_CODE_CDT_MAP_CR = 143
-    _AS_EXP_CODE_CDT_MAP_MOD = 144
-
-    _AS_EXP_CODE_END_OF_VA_ARGS = 150
-
-    _TRUE = 151
-    _FALSE = 152
-
-    _AS_EXP_BIT_FLAGS = 153
-
-
-class ResultType:
-    BOOLEAN = 1
-    INTEGER = 2
-    STRING = 3
-    LIST = 4
-    MAP = 5
-    BLOB = 6
-    FLOAT = 7
-    GEOJSON = 8
-    HLL = 9
-
-
-class _AtomExpr:
-    def _op(self):
-        raise NotImplementedError
-
-    def compile(self):
-        raise NotImplementedError
-
-
-TypeResultType = Optional[int]
-TypeFixedEle = Union[int, float, str, bytes, dict]
-TypeFixed = Optional[Dict[str, TypeFixedEle]]
-TypeCompiledOp = Tuple[int, TypeResultType, TypeFixed, int]
-TypeExpression = List[TypeCompiledOp]
-
-TypeChild = Union[int, float, str, bytes, _AtomExpr]
-TypeChildren = Tuple[TypeChild, ...]
-
-
-class BaseExpr(_AtomExpr):
-    op: int = 0
-    rt: TypeResultType = None
-    fixed: TypeFixed = None
-    children: TypeChildren = ()
-
-    def _op(self) -> TypeCompiledOp:
-        return (self.op, self.rt, self.fixed, len(self.children))
-
-    def _vop(self, v) -> TypeCompiledOp:
-        op_type = 0
-
-        return (
-            0,
-            None,
-            {VALUE_KEY: v},
-            0,
-        )
-
-    def compile(self) -> TypeExpression:
-        expression: TypeExpression = [self._op()]
-        work = chain(self.children)
-
-        while True:
-            try:
-                item = next(work)
-            except StopIteration:
-                break
-
-            if isinstance(item, BaseExpr):
-                expression.append(item._op())
-                work = chain(item.children, work)
-            else:
-                # Should be a str, bin, int, float, etc.
-                expression.append(self._vop(item))
-
-        return expression
-
-
-class _GenericExpr(BaseExpr):
-    
-    def __init__(self, op: ExprOp, rt: TypeResultType, fixed: TypeFixed):
-        self.op = op
-        self.rt = rt
-        self.fixed = fixed
-
-
-###################
-# Value Expressions
-###################
-
-
-class ExpTrue(BaseExpr):
-    """
-    Boolean True for use in aerospike expressions.
-    """
-    op = ExprOp._TRUE
-
-
-class ExpFalse(BaseExpr):
-    """
-    Boolean False for use in aerospike expressions.
-    """
-    op = ExprOp._FALSE
+TypeComparisonArg = Union[_BaseExpr, Any]
+TypeGeo = Union[_BaseExpr, aerospike.GeoJSON]
 
 
 ########################
@@ -206,15 +42,15 @@ class ExpFalse(BaseExpr):
 ########################
 
 
-class _Key(BaseExpr):
-    op = ExprOp.REC_KEY
+class _Key(_BaseExpr):
+    _op = _ExprOp.REC_KEY
 
 
 class KeyInt(_Key):
     """ Create an expression that returns the key as an integer. Returns 'unknown' if
         the key is not an integer.
     """
-    rt = ResultType.INTEGER
+    _rt = ResultType.INTEGER
 
     def __init__(self):
         """ Create an expression that returns the key as an integer. Returns 'unknown' if
@@ -234,7 +70,7 @@ class KeyStr(_Key):
     """ Create an expression that returns the key as a string. Returns 'unknown' if
         the key is not a string.
     """
-    rt = ResultType.STRING
+    _rt = ResultType.STRING
 
     def __init__(self):
         """ Create an expression that returns the key as a string. Returns 'unknown' if
@@ -254,7 +90,7 @@ class KeyBlob(_Key):
     """ Create an expression that returns the key as a blob. Returns 'unknown' if
         the key is not a blob.
     """
-    rt = ResultType.BLOB
+    _rt = ResultType.BLOB
 
     def __init__(self):
         """ Create an expression that returns the key as a blob. Returns 'unknown' if
@@ -270,13 +106,13 @@ class KeyBlob(_Key):
         super().__init__()
 
 
-class KeyExists(BaseExpr):
+class KeyExists(_BaseExpr):
     """ Create an expression that returns if the primary key is stored in the record storage
         data as a boolean expression. This would occur on record write, when write policies set the `key` field to
         aerospike.POLICY_KEY_SEND.
     """
-    op = ExprOp.META_KEY_EXISTS
-    rt = ResultType.BOOLEAN
+    _op = _ExprOp.META_KEY_EXISTS
+    _rt = ResultType.BOOLEAN
 
     def __init__(self):
         """ Create an expression that returns if the primary key is stored in the record storage
@@ -298,12 +134,12 @@ class KeyExists(BaseExpr):
 #################
 
 
-class IntBin(BaseExpr):
+class IntBin(_BaseExpr):
     """ Create an expression that returns a bin as an integer. Returns 'unknown'
         if the bin is not an integer.
     """
-    op = ExprOp.BIN
-    rt = ResultType.INTEGER
+    _op = _ExprOp.BIN
+    _rt = ResultType.INTEGER
 
     def __init__(self, bin: str):
         """ Create an expression that returns a bin as an integer. Returns 'unknown'
@@ -319,15 +155,15 @@ class IntBin(BaseExpr):
                 # Integer bin "a" == 200.
                 expr = Eq(IntBin("a"), 200).compile()
         """        
-        self.fixed = {BIN_KEY: bin}
+        self._fixed = {_Keys.BIN_KEY: bin}
 
 
-class StrBin(BaseExpr):
+class StrBin(_BaseExpr):
     """ Create an expression that returns a bin as a string. Returns 'unknown'
         if the bin is not a string.
     """
-    op = ExprOp.BIN
-    rt = ResultType.STRING
+    _op = _ExprOp.BIN
+    _rt = ResultType.STRING
 
     def __init__(self, bin: str):
         """ Create an expression that returns a bin as a string. Returns 'unknown'
@@ -343,15 +179,15 @@ class StrBin(BaseExpr):
                 # String bin "a" == "xyz".
                 expr = Eq(StrBin("a"), "xyz").compile()
         """        
-        self.fixed = {BIN_KEY: bin}
+        self._fixed = {_Keys.BIN_KEY: bin}
 
 
-class FloatBin(BaseExpr):
+class FloatBin(_BaseExpr):
     """ Create an expression that returns a bin as a float. Returns 'unknown'
         if the bin is not a float.
     """
-    op = ExprOp.BIN
-    rt = ResultType.FLOAT
+    _op = _ExprOp.BIN
+    _rt = ResultType.FLOAT
 
     def __init__(self, bin: str):
         """ Create an expression that returns a bin as a float. Returns 'unknown'
@@ -367,15 +203,15 @@ class FloatBin(BaseExpr):
                 # Float bin "a" > 2.71.
                 expr = GT(FloatBin("a"), 2.71).compile()
         """        
-        self.fixed = {BIN_KEY: bin}
+        self._fixed = {_Keys.BIN_KEY: bin}
 
 
-class BlobBin(BaseExpr):
+class BlobBin(_BaseExpr):
     """ Create an expression that returns a bin as a blob. Returns 'unknown'
         if the bin is not a blob.
     """
-    op = ExprOp.BIN
-    rt = ResultType.BLOB
+    _op = _ExprOp.BIN
+    _rt = ResultType.BLOB
 
     def __init__(self, bin: str):
         """ Create an expression that returns a bin as a blob. Returns 'unknown'
@@ -391,15 +227,15 @@ class BlobBin(BaseExpr):
                 #. Blob bin "a" == bytearray([0x65, 0x65])
                 expr = Eq(BlobBin("a"), bytearray([0x65, 0x65])).compile()
         """        
-        self.fixed = {BIN_KEY: bin}
+        self._fixed = {_Keys.BIN_KEY: bin}
 
 
-class GeoBin(BaseExpr):
+class GeoBin(_BaseExpr):
     """ Create an expression that returns a bin as a geojson. Returns 'unknown'
         if the bin is not a geojson.
     """
-    op = ExprOp.BIN
-    rt = ResultType.GEOJSON
+    _op = _ExprOp.BIN
+    _rt = ResultType.GEOJSON
 
     def __init__(self, bin: str):
         """ Create an expression that returns a bin as a geojson. Returns 'unknown'
@@ -415,15 +251,15 @@ class GeoBin(BaseExpr):
                 #GeoJSON bin "a" contained by GeoJSON bin "b".
                 expr = CmpGeo(GeoBin("a"), GeoBin("b")).compile()
         """        
-        self.fixed = {BIN_KEY: bin}
+        self._fixed = {_Keys.BIN_KEY: bin}
 
 
-class ListBin(BaseExpr):
+class ListBin(_BaseExpr):
     """ Create an expression that returns a bin as a list. Returns 'unknown'
         if the bin is not a list.
     """
-    op = ExprOp.BIN
-    rt = ResultType.LIST
+    _op = _ExprOp.BIN
+    _rt = ResultType.LIST
 
     def __init__(self, bin: str):
         """ Create an expression that returns a bin as a list. Returns 'unknown'
@@ -441,15 +277,15 @@ class ListBin(BaseExpr):
                             ResultType.INTEGER, "abc", ListBin("a")), 
                         0).compile()
         """        
-        self.fixed = {BIN_KEY: bin}
+        self._fixed = {_Keys.BIN_KEY: bin}
 
 
-class MapBin(BaseExpr):
+class MapBin(_BaseExpr):
     """ Create an expression that returns a bin as a map. Returns 'unknown'
         if the bin is not a map.
     """
-    op = ExprOp.BIN
-    rt = ResultType.MAP
+    _op = _ExprOp.BIN
+    _rt = ResultType.MAP
 
     def __init__(self, bin: str):
         """ Create an expression that returns a bin as a map. Returns 'unknown'
@@ -465,15 +301,15 @@ class MapBin(BaseExpr):
                 # Map bin "a" size > 7.
                 expr = GT(MapSize(None, MapBin("a")), 7).compile()
         """        
-        self.fixed = {BIN_KEY: bin}
+        self._fixed = {_Keys.BIN_KEY: bin}
 
 
-class HLLBin(BaseExpr):
+class HLLBin(_BaseExpr):
     """ Create an expression that returns a bin as a HyperLogLog. Returns 'unknown'
         if the bin is not a HyperLogLog.
     """
-    op = ExprOp.BIN
-    rt = ResultType.HLL
+    _op = _ExprOp.BIN
+    _rt = ResultType.HLL
 
     def __init__(self, bin: str):
         """ Create an expression that returns a bin as a HyperLogLog. Returns 'unknown'
@@ -489,13 +325,13 @@ class HLLBin(BaseExpr):
                 # Does HLL bin "a" have a hll_count > 1000000.
                 expr = GT(HllGetCount(HllBin("a"), 1000000)).compile()
         """        
-        self.fixed = {BIN_KEY: bin}
+        self._fixed = {_Keys.BIN_KEY: bin}
 
 
-class BinExists(BaseExpr):
+class BinExists(_BaseExpr):
     """Create an expression that returns True if bin exists."""
-    op = ExprOp.BIN_EXISTS
-    rt = ResultType.BOOLEAN
+    _op = _ExprOp.BIN_EXISTS
+    _rt = ResultType.BOOLEAN
 
     def __init__(self, bin: str):
         """ Create an expression that returns True if bin exists.
@@ -510,15 +346,15 @@ class BinExists(BaseExpr):
                 #Bin "a" exists in record.
                 expr = BinExists("a").compile()
         """        
-        self.fixed = {BIN_KEY: bin}
+        self._fixed = {_Keys.BIN_KEY: bin}
 
 
-class BinType(BaseExpr):
+class BinType(_BaseExpr):
     """ Create an expression that returns the type of a bin
         as one of the aerospike :ref:`bin types <aerospike_bin_types>`
     """
-    op = ExprOp.BIN_TYPE
-    rt = ResultType.INTEGER
+    _op = _ExprOp.BIN_TYPE
+    _rt = ResultType.INTEGER
 
     def __init__(self, bin: str):
         """ Create an expression that returns the type of a bin
@@ -534,7 +370,7 @@ class BinType(BaseExpr):
                 # bin "a" == type string.
                 expr = Eq(BinType("a"), aerospike.AS_BYTES_STRING).compile()
         """        
-        self.fixed = {BIN_KEY: bin}
+        self._fixed = {_Keys.BIN_KEY: bin}
 
 
 ####################
@@ -542,13 +378,13 @@ class BinType(BaseExpr):
 ####################
 
 
-class SetName(BaseExpr):
+class SetName(_BaseExpr):
     """ Create an expression that returns record set name string.
         This expression usually evaluates quickly because record
         meta data is cached in memory.
     """
-    op = ExprOp.META_SET_NAME
-    rt = ResultType.STRING
+    _op = _ExprOp.META_SET_NAME
+    _rt = ResultType.STRING
 
     def __init__(self):
         """ Create an expression that returns record set name string.
@@ -565,13 +401,13 @@ class SetName(BaseExpr):
         super().__init__()
 
 
-class DeviceSize(BaseExpr):
+class DeviceSize(_BaseExpr):
     """ Create an expression that returns record size on disk. If server storage-engine is
         memory, then zero is returned. This expression usually evaluates quickly
         because record meta data is cached in memory.
     """
-    op = ExprOp.META_DEVICE_SIZE
-    rt = ResultType.INTEGER
+    _op = _ExprOp.META_DEVICE_SIZE
+    _rt = ResultType.INTEGER
 
     def __init__(self):
         """ Create an expression that returns record size on disk. If server storage-engine is
@@ -588,12 +424,12 @@ class DeviceSize(BaseExpr):
         super().__init__()
 
 
-class LastUpdateTime(BaseExpr):
+class LastUpdateTime(_BaseExpr):
     """ Create an expression that the returns record last update time expressed as 64 bit
         integer nanoseconds since 1970-01-01 epoch.
     """
-    op = ExprOp.META_LAST_UPDATE_TIME
-    rt = ResultType.INTEGER
+    _op = _ExprOp.META_LAST_UPDATE_TIME
+    _rt = ResultType.INTEGER
 
     def __init__(self):
         """ Create an expression that the returns record last update time expressed as 64 bit
@@ -609,12 +445,12 @@ class LastUpdateTime(BaseExpr):
         super().__init__()
 
 
-class SinceUpdateTime(BaseExpr):
+class SinceUpdateTime(_BaseExpr):
     """ Create an expression that returns milliseconds since the record was last updated.
         This expression usually evaluates quickly because record meta data is cached in memory.
     """
-    op = ExprOp.META_SINCE_UPDATE_TIME
-    rt = ResultType.INTEGER
+    _op = _ExprOp.META_SINCE_UPDATE_TIME
+    _rt = ResultType.INTEGER
 
     def __init__(self):
         """ Create an expression that returns milliseconds since the record was last updated.
@@ -630,12 +466,12 @@ class SinceUpdateTime(BaseExpr):
         super().__init__()    
 
 
-class VoidTime(BaseExpr):
+class VoidTime(_BaseExpr):
     """ Create an expression that returns record expiration time expressed as 64 bit
         integer nanoseconds since 1970-01-01 epoch.
     """
-    op = ExprOp.META_VOID_TIME
-    rt = ResultType.INTEGER
+    _op = _ExprOp.META_VOID_TIME
+    _rt = ResultType.INTEGER
 
     def __init__(self):
         """ Create an expression that returns record expiration time expressed as 64 bit
@@ -653,12 +489,12 @@ class VoidTime(BaseExpr):
         super().__init__()  
 
 
-class TTL(BaseExpr):
+class TTL(_BaseExpr):
     """ Create an expression that returns record expiration time (time to live) in integer
         seconds.
     """
-    op = ExprOp.META_TTL
-    rt = ResultType.INTEGER
+    _op = _ExprOp.META_TTL
+    _rt = ResultType.INTEGER
 
     def __init__(self):
         """ Create an expression that returns record expiration time (time to live) in integer
@@ -675,13 +511,13 @@ class TTL(BaseExpr):
         super().__init__()  
 
 
-class IsTombstone(BaseExpr):
+class IsTombstone(_BaseExpr):
     """ Create an expression that returns if record has been deleted and is still in
         tombstone state. This expression usually evaluates quickly because record
         meta data is cached in memory. NOTE: this is only applicable for XDR filter expressions.
     """
-    op = ExprOp.META_IS_TOMBSTONE
-    rt = ResultType.BOOLEAN
+    _op = _ExprOp.META_IS_TOMBSTONE
+    _rt = ResultType.BOOLEAN
 
     def __init__(self):
         """ Create an expression that returns if record has been deleted and is still in
@@ -698,10 +534,10 @@ class IsTombstone(BaseExpr):
         super().__init__() 
 
 
-class DigestMod(BaseExpr):
+class DigestMod(_BaseExpr):
     """Create an expression that returns record digest modulo as integer."""
-    op = ExprOp.META_DIGEST_MOD
-    rt = ResultType.INTEGER
+    _op = _ExprOp.META_DIGEST_MOD
+    _rt = ResultType.INTEGER
 
     def __init__(self, mod: int):
         """ Create an expression that returns record digest modulo as integer.
@@ -716,7 +552,7 @@ class DigestMod(BaseExpr):
                 # Records that have digest(key) % 3 == 1.
                 expr = Eq(DigestMod(3), 1).compile()
         """        
-        self.fixed = {VALUE_KEY: mod}
+        self._fixed = {_Keys.VALUE_KEY: mod}
 
 
 ########################
@@ -724,21 +560,9 @@ class DigestMod(BaseExpr):
 ########################
 
 
-TypeBinName = Union[BaseExpr, str]
-TypeListValue = Union[BaseExpr, List[Any]]
-TypeIndex = Union[BaseExpr, int, aerospike.CDTInfinite]
-TypeCDT = Union[None, List[cdt_ctx._cdt_ctx]]
-TypeRank = Union[BaseExpr, int, aerospike.CDTInfinite]
-TypeCount = Union[BaseExpr, int, aerospike.CDTInfinite]
-TypeValue = Union[BaseExpr, Any]
-TypePolicy = Union[Dict[str, Any], None]
-TypeComparisonArg = Union[BaseExpr, Any]
-TypeGeo = Union[BaseExpr, aerospike.GeoJSON]
-
-
-class Eq(BaseExpr):
+class Eq(_BaseExpr):
     """Create an equals, (==) expression."""
-    op = ExprOp.EQ
+    _op = _ExprOp.EQ
 
     def __init__(self, expr0: TypeComparisonArg, expr1: TypeComparisonArg):
         """ Create an equals, (==) expression.
@@ -754,12 +578,12 @@ class Eq(BaseExpr):
             # Integer bin "a" == 11
             expr = Eq(IntBin("a"), 11).compile()
         """        
-        self.children = (expr0, expr1)
+        self._children = (expr0, expr1)
 
 
-class NE(BaseExpr):
+class NE(_BaseExpr):
     """Create a not equals (not ==) expressions."""
-    op = ExprOp.NE
+    _op = _ExprOp.NE
 
     def __init__(self, expr0: TypeComparisonArg, expr1: TypeComparisonArg):
         """ Create a not equals (not ==) expressions.
@@ -775,12 +599,12 @@ class NE(BaseExpr):
                 # Integer bin "a" not == 13.
                 expr = NE(IntBin("a"), 13).compile()
         """                 
-        self.children = (expr0, expr1)
+        self._children = (expr0, expr1)
 
 
-class GT(BaseExpr):
+class GT(_BaseExpr):
     """Create a greater than (>) expression."""
-    op = ExprOp.GT
+    _op = _ExprOp.GT
 
     def __init__(self, expr0: TypeComparisonArg, expr1: TypeComparisonArg):
         """ Create a greater than (>) expression.
@@ -796,12 +620,12 @@ class GT(BaseExpr):
                 # Integer bin "a" > 8.
                 expr = GT(IntBin("a"), 8).compile()
         """
-        self.children = (expr0, expr1)
+        self._children = (expr0, expr1)
 
 
-class GE(BaseExpr):
+class GE(_BaseExpr):
     """Create a greater than or equal to (>=) expression."""
-    op = ExprOp.GE
+    _op = _ExprOp.GE
 
     def __init__(self, expr0: TypeComparisonArg, expr1: TypeComparisonArg):
         """ Create a greater than or equal to (>=) expression.
@@ -817,12 +641,12 @@ class GE(BaseExpr):
                 # Integer bin "a" >= 88.
                 expr = GE(IntBin("a"), 88).compile()
         """
-        self.children = (expr0, expr1)
+        self._children = (expr0, expr1)
 
 
-class LT(BaseExpr):
+class LT(_BaseExpr):
     """Create a less than (<) expression."""
-    op = ExprOp.LT
+    _op = _ExprOp.LT
 
     def __init__(self, expr0: TypeComparisonArg, expr1: TypeComparisonArg):
         """ Create a less than (<) expression.
@@ -838,12 +662,12 @@ class LT(BaseExpr):
                 # Integer bin "a" < 1000.
                 expr = LT(IntBin("a"), 1000).compile()
         """
-        self.children = (expr0, expr1)
+        self._children = (expr0, expr1)
 
 
-class LE(BaseExpr):
+class LE(_BaseExpr):
     """Create a less than or equal to (<=) expression."""
-    op = ExprOp.LE
+    _op = _ExprOp.LE
 
     def __init__(self, expr0: TypeComparisonArg, expr1: TypeComparisonArg):
         """ Create a less than or equal to (<=) expression.
@@ -859,20 +683,20 @@ class LE(BaseExpr):
                 # Integer bin "a" <= 1.
                 expr = LE(IntBin("a"), 1).compile()
         """
-        self.children = (expr0, expr1)
+        self._children = (expr0, expr1)
 
 
-class CmpRegex(BaseExpr):
+class CmpRegex(_BaseExpr):
     """ Create an expression that performs a regex match on a string bin or value expression."""
-    op = ExprOp.CMP_REGEX
+    _op = _ExprOp.CMP_REGEX
 
-    def __init__(self, options: int, regex_str: str, cmp_str: Union[BaseExpr, str]):
+    def __init__(self, options: int, regex_str: str, cmp_str: Union[_BaseExpr, str]):
         """ Create an expression that performs a regex match on a string bin or value expression.
 
             Args:
                 options (int) :ref:`regex_constants`: One of the aerospike regex constants, :ref:`regex_constants`.
                 regex_str (str): POSIX regex string.
-                cmp_str (Union[BaseExpr, str]): String expression to compare against.
+                cmp_str (Union[_BaseExpr, str]): String expression to compare against.
         
             :return: (boolean value)
 
@@ -882,13 +706,13 @@ class CmpRegex(BaseExpr):
                 # Ignore case and do not match newline.
                 expr = CmpRegex(aerospike.REGEX_ICASE | aerospike.REGEX_NEWLINE, "prefix.*suffix", BinStr("a")).compile()
         """        
-        self.children = (cmp_str,)
-        self.fixed = {REGEX_OPTIONS_KEY: options, VALUE_KEY: regex_str}
+        self._children = (cmp_str,)
+        self._fixed = {_Keys.REGEX_OPTIONS_KEY: options, _Keys.VALUE_KEY: regex_str}
 
 
-class CmpGeo(BaseExpr):
+class CmpGeo(_BaseExpr):
     """Create a point within region or region contains point expression."""
-    op = ExprOp.CMP_GEO
+    _op = _ExprOp.CMP_GEO
 
     def __init__(self, expr0: TypeGeo, expr1: TypeGeo):
         """ Create a point within region or region contains point expression.
@@ -904,7 +728,7 @@ class CmpGeo(BaseExpr):
                 # Geo bin "point" is within geo bin "region".
                 expr = CmpGeo(GeoBin("point"), GeoBin("region")).compile()
         """        
-        self.children = (expr0, expr1)
+        self._children = (expr0, expr1)
 
 
 #####################
@@ -912,15 +736,15 @@ class CmpGeo(BaseExpr):
 #####################
 
 
-class Not(BaseExpr):
+class Not(_BaseExpr):
     """Create a "not" (not) operator expression."""
-    op = ExprOp.NOT
+    _op = _ExprOp.NOT
 
     def __init__(self, *exprs):
         """ Create a "not" (not) operator expression.
 
             Args:
-                `*exprs` (BaseExpr): Variable amount of expressions to be negated.
+                `*exprs` (_BaseExpr): Variable amount of expressions to be negated.
         
             :return: (boolean value)
 
@@ -931,18 +755,18 @@ class Not(BaseExpr):
                             Eq(IntBin("a"), 0),
                             Eq(IntBin("a"), 10))).compile()
         """        
-        self.children = exprs
+        self._children = exprs
 
 
-class And(BaseExpr):
+class And(_BaseExpr):
     """Create an "and" operator that applies to a variable amount of expressions."""
-    op = ExprOp.AND
+    _op = _ExprOp.AND
 
-    def __init__(self, *exprs: BaseExpr):
+    def __init__(self, *exprs: _BaseExpr):
         """ Create an "and" operator that applies to a variable amount of expressions.
 
         Args:
-            `*exprs` (BaseExpr): Variable amount of expressions to be ANDed together.
+            `*exprs` (_BaseExpr): Variable amount of expressions to be ANDed together.
 
         :return: (boolean value)
 
@@ -955,19 +779,19 @@ class And(BaseExpr):
                     Eq(IntBin("a"), 0)),
                 LT(IntBin("b"), 3)).compile()
         """
-        self.children = exprs
-        self.children = exprs + (_GenericExpr(ExprOp._AS_EXP_CODE_END_OF_VA_ARGS, 0, {}),)
+        self._children = exprs
+        self._children = exprs + (_GenericExpr(_ExprOp._AS_EXP_CODE_END_OF_VA_ARGS, 0, {}),)
 
 
-class Or(BaseExpr):
+class Or(_BaseExpr):
     """Create an "or" operator that applies to a variable amount of expressions."""
-    op = ExprOp.OR
+    _op = _ExprOp.OR
 
     def __init__(self, *exprs):
         """ Create an "or" operator that applies to a variable amount of expressions.
 
         Args:
-            `*exprs` (BaseExpr): Variable amount of expressions to be ORed together.
+            `*exprs` (_BaseExpr): Variable amount of expressions to be ORed together.
 
         :return: (boolean value)
 
@@ -978,4 +802,4 @@ class Or(BaseExpr):
                     Eq(IntBin("a"), 0),
                     Eq(IntBin("b"), 0)).compile()
         """ 
-        self.children = exprs + (_GenericExpr(ExprOp._AS_EXP_CODE_END_OF_VA_ARGS, 0, {}),)
+        self._children = exprs + (_GenericExpr(_ExprOp._AS_EXP_CODE_END_OF_VA_ARGS, 0, {}),)
