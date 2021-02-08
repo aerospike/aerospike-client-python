@@ -102,7 +102,7 @@ class _cdt_ctx:
     """
     Class used to represent a single ctx_operation.
     """
-    def __init__(self, id=None, value=None, extra_args=None):
+    def __init__(self, *, id=None, value=None, extra_args=None):
         self.id = id
         self.value = value
         self.extra_args = extra_args
@@ -121,7 +121,7 @@ def cdt_ctx_list_index(index):
     Returns:
         A cdt_ctx object, a list of these is usable with list and map operations.
     """
-    return _cdt_ctx(aerospike.CDT_CTX_LIST_INDEX, index)
+    return _cdt_ctx(id=aerospike.CDT_CTX_LIST_INDEX, value=index)
 
 
 def cdt_ctx_list_rank(rank):
@@ -136,7 +136,7 @@ def cdt_ctx_list_rank(rank):
     Returns:
         A cdt_ctx object, a list of these is usable with list and map operations.
     """
-    return _cdt_ctx(aerospike.CDT_CTX_LIST_RANK, rank)
+    return _cdt_ctx(id=aerospike.CDT_CTX_LIST_RANK, value=rank)
 
 
 def cdt_ctx_list_value(value):
@@ -150,7 +150,7 @@ def cdt_ctx_list_value(value):
     Returns:
         A cdt_ctx object, a list of these is usable with list and map operations.
     """
-    return _cdt_ctx(aerospike.CDT_CTX_LIST_VALUE, value)
+    return _cdt_ctx(id=aerospike.CDT_CTX_LIST_VALUE, value=value)
 
 
 def cdt_ctx_list_index_create(index: int, order: int = aerospike.LIST_UNORDERED, pad: bool = False) -> _cdt_ctx:
@@ -168,7 +168,7 @@ def cdt_ctx_list_index_create(index: int, order: int = aerospike.LIST_UNORDERED,
     Returns:
         A cdt_ctx object, a list of these is usable with list and map operations.
     """
-    return _cdt_ctx(aerospike.CDT_CTX_LIST_INDEX_CREATE, index, {CDT_CTX_ORDER_KEY: order, CDT_CTX_PAD_KEY: pad})
+    return _cdt_ctx(id=aerospike.CDT_CTX_LIST_INDEX_CREATE, value=index, extra_args={CDT_CTX_ORDER_KEY: order, CDT_CTX_PAD_KEY: pad})
 
 
 def cdt_ctx_map_index(index):
@@ -184,7 +184,7 @@ def cdt_ctx_map_index(index):
     Returns:
         A cdt_ctx object, a list of these is usable with list and map operations.
     """
-    return _cdt_ctx(aerospike.CDT_CTX_MAP_INDEX, index)
+    return _cdt_ctx(id=aerospike.CDT_CTX_MAP_INDEX, value=index)
 
 
 def cdt_ctx_map_rank(rank):
@@ -199,7 +199,7 @@ def cdt_ctx_map_rank(rank):
     Returns:
         A cdt_ctx object, a list of these is usable with list and map operations.
     """
-    return _cdt_ctx(aerospike.CDT_CTX_MAP_RANK, rank)
+    return _cdt_ctx(id=aerospike.CDT_CTX_MAP_RANK, value=rank)
 
 
 def cdt_ctx_map_key(key):
@@ -213,7 +213,7 @@ def cdt_ctx_map_key(key):
     Returns:
         A cdt_ctx object, a list of these is usable with list and map operations.
     """
-    return _cdt_ctx(aerospike.CDT_CTX_MAP_KEY, key)
+    return _cdt_ctx(id=aerospike.CDT_CTX_MAP_KEY, value=key)
 
 
 def cdt_ctx_map_value(value):
@@ -227,7 +227,7 @@ def cdt_ctx_map_value(value):
     Returns:
         A cdt_ctx object, a list of these is usable with list and map operations.
     """
-    return _cdt_ctx(aerospike.CDT_CTX_MAP_VALUE, value)
+    return _cdt_ctx(id=aerospike.CDT_CTX_MAP_VALUE, value=value)
 
 
 def cdt_ctx_map_key_create(key: any, order: int = aerospike.MAP_UNORDERED) -> _cdt_ctx:
@@ -243,4 +243,4 @@ def cdt_ctx_map_key_create(key: any, order: int = aerospike.MAP_UNORDERED) -> _c
     Returns:
         A cdt_ctx object, a list of these is usable with list and map operations.
     """
-    return _cdt_ctx(aerospike.CDT_CTX_MAP_KEY_CREATE, key, {CDT_CTX_ORDER_KEY: order})
+    return _cdt_ctx(id=aerospike.CDT_CTX_MAP_KEY_CREATE, value=key, extra_args={CDT_CTX_ORDER_KEY: order})
