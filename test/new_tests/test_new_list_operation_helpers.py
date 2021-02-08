@@ -273,6 +273,15 @@ class TestNewListOperationsHelpers(object):
             self.as_connection, self.test_key, operation, self.test_bin)
         assert len(result) == 3 and set(result) == set([0, 1, 2])
 
+    def test_get_by_value_range_none(self):
+        operation = list_operations.list_get_by_value_range(
+            self.test_bin, aerospike.LIST_RETURN_INDEX, 7, None
+        )
+
+        result = get_list_result_from_operation(
+            self.as_connection, self.test_key, operation, self.test_bin)
+        assert len(result) == 4 and set(result) == set([0, 3, 4, 5])
+
     def test_get_by_value_range_inverted(self):
         operation = list_operations.list_get_by_value_range(
             self.test_bin, aerospike.LIST_RETURN_VALUE,

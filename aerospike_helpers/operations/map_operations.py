@@ -1,3 +1,18 @@
+##########################################################################
+# Copyright 2013-2021 Aerospike, Inc.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+##########################################################################
 '''
 Helper functions to create map operation dictionaries arguments for.
 the :mod:`aerospike.Client.operate` and :mod:`aerospike.Client.operate_ordered` methods of the aerospike client.
@@ -283,7 +298,7 @@ def map_remove_by_key_range(bin_name, key_range_start,
     """Creates a map_remove_by_key_range operation to be used with operate or operate_ordered
 
     The operation removes items, with keys between key_range_start(inclusive) and
-    key_range_end(exclusive) from the map
+    key_range_end(exclusive) from the map. 
 
     Args:
         bin_name (str): The name of the bin containing the map.

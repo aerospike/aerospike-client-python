@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright 2013-2019 Aerospike, Inc.
+ * Copyright 2013-2021 Aerospike, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -361,10 +361,12 @@ AerospikeConstants aerospike_constants[] = {
 	{ AS_CDT_CTX_LIST_INDEX, "CDT_CTX_LIST_INDEX"},
 	{ AS_CDT_CTX_LIST_RANK, "CDT_CTX_LIST_RANK"},
 	{ AS_CDT_CTX_LIST_VALUE, "CDT_CTX_LIST_VALUE"},
+	{ CDT_CTX_LIST_INDEX_CREATE, "CDT_CTX_LIST_INDEX_CREATE"},
 	{ AS_CDT_CTX_MAP_INDEX, "CDT_CTX_MAP_INDEX"},
 	{ AS_CDT_CTX_MAP_RANK, "CDT_CTX_MAP_RANK"},
 	{ AS_CDT_CTX_MAP_KEY, "CDT_CTX_MAP_KEY"},
 	{ AS_CDT_CTX_MAP_VALUE, "CDT_CTX_MAP_VALUE"},
+	{ CDT_CTX_MAP_KEY_CREATE, "CDT_CTX_MAP_KEY_CREATE"},
 
 	/* HLL constants 3.11.0 */
 	{ OP_HLL_ADD, "OP_HLL_ADD"},

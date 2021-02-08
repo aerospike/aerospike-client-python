@@ -178,7 +178,7 @@ int check_type(AerospikeClient * self, PyObject * py_value, int op, as_error *er
 				strcmp(py_value->ob_type->tp_name, "aerospike.null")) && op == AS_OPERATOR_INCR) {
 		as_error_update(err, AEROSPIKE_ERR_PARAM, "Unsupported operand type(s) for +: only 'int' allowed");
 		return 1;
-	} else if ((!PyString_Check(py_value) && !PyUnicode_Check(py_value) && !PyByteArray_Check(py_value) &&
+	} else if ((!PyString_Check(py_value) && !PyUnicode_Check(py_value) && !PyByteArray_Check(py_value) && !PyBytes_Check(py_value) &&
 				strcmp(py_value->ob_type->tp_name, "aerospike.null")) && (op == AS_OPERATOR_APPEND || op == AS_OPERATOR_PREPEND)) {
 		as_error_update(err, AEROSPIKE_ERR_PARAM, "Cannot concatenate 'str' and 'non-str' objects");
 		return 1;
@@ -483,10 +483,7 @@ as_status add_op(AerospikeClient * self, as_error * err, PyObject * py_val, as_v
 				as_operations_add_append_str(ops, bin, val);
 				as_vector_append(unicodeStrVector, &val);
 				Py_DECREF(py_ustr1);
-			} else if (PyString_Check(py_value)) {
-				val = PyString_AsString(py_value);
-				as_operations_add_append_str(ops, bin, val);
-			} else if (PyByteArray_Check(py_value)) {
+			} else if (PyByteArray_Check(py_value) || PyBytes_Check(py_value)) {
 				as_bytes *bytes;
 				GET_BYTES_POOL(bytes, static_pool, err);
 				if (err->code == AEROSPIKE_OK) {
@@ -512,10 +509,7 @@ as_status add_op(AerospikeClient * self, as_error * err, PyObject * py_val, as_v
 				as_operations_add_prepend_str(ops, bin, val);
 				as_vector_append(unicodeStrVector, &val);
 				Py_DECREF(py_ustr1);
-			} else if (PyString_Check(py_value)) {
-				val = PyString_AsString(py_value);
-				as_operations_add_prepend_str(ops, bin, val);
-			} else if (PyByteArray_Check(py_value)) {
+			} else if (PyByteArray_Check(py_value) || PyBytes_Check(py_value)) {
 				as_bytes *bytes;
 				GET_BYTES_POOL(bytes, static_pool, err);
 				if (err->code == AEROSPIKE_OK) {

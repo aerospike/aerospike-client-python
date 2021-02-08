@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright 2013-2017 Aerospike, Inc.
+ * Copyright 2013-2021 Aerospike, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -167,6 +167,11 @@ enum aerospike_hll_operations {
 	OP_HLL_REFRESH_COUNT,
 	OP_HLL_SET_UNION,
 	OP_HLL_MAY_CONTAIN
+};
+
+enum aerospike_cdt_ctx_identifiers {
+	CDT_CTX_LIST_INDEX_CREATE = 0x14,
+	CDT_CTX_MAP_KEY_CREATE = 0x24
 };
 
 typedef struct Aerospike_Constants {

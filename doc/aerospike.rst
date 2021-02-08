@@ -1922,11 +1922,11 @@ Map Order
 -----------------
 Flags used by map order.
 
-.. data:: UNORDERED
+.. data:: MAP_UNORDERED
 
     Map is not ordered. This is the default.
 
-.. data:: KEY_ORDERED
+.. data:: MAP_KEY_ORDERED
 
     Order map by key.
 
