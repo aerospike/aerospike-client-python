@@ -115,10 +115,14 @@ TypeChildren = Tuple[TypeChild, ...]
 
 
 class _BaseExpr(_AtomExpr):
-    _op: int = 0
-    _rt: TypeResultType = None
-    _fixed: TypeFixed = None
-    _children: TypeChildren = ()
+    _op = 0
+    # type: int
+    _rt = None
+    # type: TypeResultType
+    _fixed = None
+    # type: TypeFixed
+    _children = ()
+    # type: TypeChildren
 
     def _get_op(self) -> TypeCompiledOp:
         return (self._op, self._rt, self._fixed, len(self._children))
@@ -132,7 +136,8 @@ class _BaseExpr(_AtomExpr):
         )
 
     def compile(self) -> TypeExpression:
-        expression: TypeExpression = [self._get_op()]
+        expression = [self._get_op()]
+        # type: TypeExpression
         work = chain(self._children)
 
         while True:
