@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright 2013-2017 Aerospike, Inc.
+ * Copyright 2013-2021 Aerospike, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -199,6 +199,135 @@ CLEANUP:
 		return NULL;
 	}
 	return py_response;
+}
+
+/**
+ *******************************************************************************************************
+ * Set the cluster's xdr filter using an Aerospike expression.
+ *
+ * @param self                  AerospikeClient object
+ * @param args                  The args is a tuple object containing an argument
+ *                              list passed from Python to a C function
+ * @param kwds                  Dictionary of keywords
+ *
+ * Returns a server response for the particular request string.
+ * In case of error,appropriate exceptions will be raised.
+ *******************************************************************************************************
+ */
+PyObject * AerospikeClient_SetXDRFilter(AerospikeClient * self, PyObject * args, PyObject * kwds)
+{
+	// function args
+	PyObject * py_data_center = NULL;
+	PyObject * py_namespace = NULL;
+	PyObject * py_expression_filter = NULL;
+	PyObject * py_policy = NULL;
+
+	// utility variables
+	PyObject * py_request_fmt_str = NULL;
+	PyObject * py_request_fmt_tuple = NULL;
+	PyObject * py_base64_filter = NULL;
+	PyObject * py_req = NULL;
+	PyObject * py_host_tuple = NULL;
+	const char * fmt_str = "xdr-set-filter:dc=%s;namespace=%s;exp=%s";
+	as_error err;
+	as_error_init(&err);
+
+	static char * kwlist[] = {"data_center", "namespace", "expression_filter", "policy", NULL};
+	if (PyArg_ParseTupleAndKeywords(args, kwds, "OOO|O:info_all", kwlist, &py_data_center, &py_namespace, &py_expression_filter, &py_policy) == false) {
+		return NULL;
+	}
+
+	//convert filter to base64
+	if (py_expression_filter == Py_None) {
+		char * DELETE_CURRENT_XDR_FILTER = "null";
+		py_base64_filter = PyUnicode_DecodeASCII(DELETE_CURRENT_XDR_FILTER, (Py_ssize_t) strlen(DELETE_CURRENT_XDR_FILTER), NULL);
+	}
+	else {
+		as_exp * exp_list_p = NULL;
+		if (convert_exp_list(self, py_expression_filter, &exp_list_p, &err) != AEROSPIKE_OK) {
+			PyObject * py_err = NULL;
+			error_to_pyobject(&err, &py_err);
+			PyObject *exception_type = raise_exception(&err);
+			PyErr_SetObject(exception_type, py_err);
+			Py_DECREF(py_err);
+			return NULL;
+		}
+
+		char * base64_filter = as_exp_compile_b64(exp_list_p);
+		as_exp_destroy(exp_list_p);
+		py_base64_filter = PyUnicode_DecodeASCII(base64_filter, (Py_ssize_t) strlen(base64_filter), NULL);
+		free(base64_filter);
+	}
+
+	py_request_fmt_tuple = PyTuple_Pack(3, py_data_center, py_namespace, py_base64_filter);
+	py_request_fmt_str = PyUnicode_DecodeASCII(fmt_str, (Py_ssize_t) strlen(fmt_str), NULL);
+	py_req = PyUnicode_Format(py_request_fmt_str, py_request_fmt_tuple);
+	Py_DECREF(py_request_fmt_str);
+	Py_DECREF(py_base64_filter);
+	Py_DECREF(py_request_fmt_tuple);
+
+	// A single node will send the command to the rest of the cluster.
+	as_node * node = as_node_get_random(self->as->cluster);
+	char * hostname = (char*)as_node_get_address_string(node);
+	as_node_release(node);
+
+	// AerospikeClient_InfoNode_Invoke requires a python tuple with host info so it
+	// is constructed here.
+	char * token = strtok(hostname, ":");
+	PyObject * token_temp[3] = {NULL, NULL, NULL};
+	int tok_count = 0;
+	while (token != NULL) {
+		token_temp[tok_count++] = PyUnicode_DecodeASCII(token, (Py_ssize_t) strlen(token), NULL);
+		token = strtok(NULL, ":");
+	}
+
+	// TLS name may not be present so this checks for it.
+	if (token_temp[2] != NULL) {
+		py_host_tuple = PyTuple_Pack(tok_count, token_temp[0], token_temp[1], token_temp[2]);
+		if (py_host_tuple == NULL) {
+			as_error_update(&err, AEROSPIKE_ERR_CLIENT, "Failed to construct node host tuple");
+			PyObject * py_err = NULL;
+			error_to_pyobject(&err, &py_err);
+			PyObject *exception_type = raise_exception(&err);
+			PyErr_SetObject(exception_type, py_err);
+			Py_DECREF(py_err);
+			for (int i = 0; i < 3; ++i) {
+				if (token_temp[i] != NULL) {
+					Py_DECREF(token_temp[i]);
+				}
+			}
+			Py_DECREF(py_req);
+			return NULL;
+		}
+	} 
+	else {
+		py_host_tuple = PyTuple_Pack(tok_count, token_temp[0], token_temp[1]);
+		if (py_host_tuple == NULL) {
+			as_error_update(&err, AEROSPIKE_ERR_CLIENT, "Failed to construct node host tuple");
+			PyObject * py_err = NULL;
+			error_to_pyobject(&err, &py_err);
+			PyObject *exception_type = raise_exception(&err);
+			PyErr_SetObject(exception_type, py_err);
+			Py_DECREF(py_err);
+			for (int i = 0; i < 3; ++i) {
+				if (token_temp[i] != NULL) {
+					Py_DECREF(token_temp[i]);
+				}
+			}
+			Py_DECREF(py_req);
+			return NULL;
+		}
+	}
+
+	PyObject * tmp_result = AerospikeClient_InfoNode_Invoke(&err, self, py_req, py_host_tuple, py_policy);
+	Py_DECREF(py_req);
+	Py_DECREF(py_host_tuple);
+	for (int i = 0; i < 3; ++i) {
+		if (token_temp[i] != NULL) {
+			Py_DECREF(token_temp[i]);
+		}
+	}
+	return tmp_result;
 }
 
 /**

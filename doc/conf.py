@@ -54,7 +54,7 @@ master_doc = 'index'
 
 # General information about the project.
 project = u'Aerospike'
-copyright = u'2014-2019, Aerospike'
+copyright = u'2014-2021, Aerospike'
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
@@ -102,6 +102,13 @@ pygments_style = 'sphinx'
 # A list of ignored prefixes for module index sorting.
 #modindex_common_prefix = []
 
+# Alias/type hint configuration.
+autodoc_typehints = 'none'
+# autodoc_type_aliases = {
+#     'TypeCDT': 'types.TypeCDT',
+#     'TypeRank': 'types.TypeRank',
+#     'TypeBinName': 'types.TypeBinName'
+# }
 
 # -- Options for HTML output ---------------------------------------------------
 

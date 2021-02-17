@@ -103,6 +103,12 @@ class TestOperate(object):
 
         keys.append(key)
 
+        key = ('test', 'demo', 'bytes_key')
+        rec = {"bytes_bin": b''}
+        as_connection.put(key, rec)
+
+        keys.append(key)
+
         key = ('test', 'demo', 'list_key')
         rec = {"int_bin": [1, 2, 3, 4], "string_bin": ['a', 'b', 'c', 'd']}
         as_connection.put(key, rec)
@@ -186,6 +192,20 @@ class TestOperate(object):
             ],
             {'bytearray_bin': bytearray("asd;as[d'as;d", "utf-8")}),
         (
+            ('test', 'demo', 'bytes_key'),                  # with_operator append_val bytes
+            [
+                operations.append("bytes_bin", b"abc"),
+                operations.read("bytes_bin")
+            ],
+            {'bytes_bin': b'abc'}),
+        (
+            ('test', 'demo', 'bytes_new'),                   # with_operator append_val bytes_newrecord
+            [
+                operations.append("bytes_bin",  b"asd;as[d'as;d"),
+                operations.read("bytes_bin")
+            ],
+            {'bytes_bin': b"asd;as[d'as;d"}),
+        (
             ('test', 'demo', 'bytearray_key'),  # with_operatorprepend_valbytearray
             [
                 operations.prepend("bytearray_bin", bytearray("abc", "utf-8")),
@@ -199,6 +219,20 @@ class TestOperate(object):
                 operations.read("bytearray_bin")
             ],
             {'bytearray_bin': bytearray("asd;as[d'as;d", "utf-8")}),
+        (
+            ('test', 'demo', 'bytes_key'),                  # with_operator prepend_val bytes
+            [
+                operations.prepend("bytes_bin", b"abc"),
+                operations.read("bytes_bin")
+            ],
+            {'bytes_bin': b'abc'}),
+        (
+            ('test', 'demo', 'bytes_new'),                   # with_operator prepend_val bytes_newrecord
+            [
+                operations.prepend("bytes_bin",  b"asd;as[d'as;d"),
+                operations.read("bytes_bin")
+            ],
+            {'bytes_bin': b"asd;as[d'as;d"})
     ])
     def test_pos_operate_with_correct_paramters(self, key, llist, expected):
         """

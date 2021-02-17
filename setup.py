@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 ################################################################################
-# Copyright 2013-2019 Aerospike, Inc.
+# Copyright 2013-2021 Aerospike, Inc.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -30,7 +30,7 @@ os.putenv('ARCHFLAGS', '-arch x86_64')
 os.environ['ARCHFLAGS'] = '-arch x86_64'
 AEROSPIKE_C_VERSION = os.getenv('AEROSPIKE_C_VERSION')
 if not AEROSPIKE_C_VERSION:
-    AEROSPIKE_C_VERSION = '4.6.18'
+    AEROSPIKE_C_VERSION = '5.0.3'
 DOWNLOAD_C_CLIENT = os.getenv('DOWNLOAD_C_CLIENT')
 AEROSPIKE_C_HOME = os.getenv('AEROSPIKE_C_HOME')
 PREFIX = None
@@ -163,6 +163,7 @@ elif LINUX:
     libraries = libraries + ['rt']
     if AEROSPIKE_C_HOME:
         PREFIX = AEROSPIKE_C_HOME + '/target/Linux-x86_64'
+
 else:
     print("error: OS not supported:", PLATFORM, file=sys.stderr)
     sys.exit(8)
@@ -213,7 +214,6 @@ setup(
         'License :: OSI Approved :: Apache Software License',
         'Operating System :: POSIX :: Linux',
         'Operating System :: MacOS :: MacOS X',
-        'Programming Language :: Python :: 2.7',
         'Programming Language :: Python :: 3.5',
         'Programming Language :: Python :: 3.6',
         'Programming Language :: Python :: 3.7',
@@ -271,7 +271,7 @@ setup(
                 'src/main/client/get_key_digest.c',
                 'src/main/query/type.c',
                 'src/main/query/apply.c',
-		'src/main/query/add_ops.c',
+                'src/main/query/add_ops.c',
                 'src/main/query/foreach.c',
                 'src/main/query/predexp.c',
                 'src/main/query/results.c',
@@ -290,16 +290,17 @@ setup(
                 'src/main/geospatial/unwrap.c',
                 'src/main/geospatial/loads.c',
                 'src/main/geospatial/dumps.c',
-                'src/main/conversions.c',
-		'src/main/convert_predexp.c',
                 'src/main/policy.c',
+                'src/main/conversions.c',
+                'src/main/convert_predexp.c',
+                'src/main/convert_expressions.c',
                 'src/main/policy_config.c',
                 'src/main/calc_digest.c',
                 'src/main/predicates.c',
                 'src/main/tls_config.c',
                 'src/main/global_hosts/type.c',
                 'src/main/nullobject/type.c',
-                'src/main/cdt_types/type.c',
+                'src/main/cdt_types/type.c'
             ],
 
             # Compile
@@ -313,6 +314,6 @@ setup(
             extra_link_args=extra_link_args,
         )
     ],
-    packages=['aerospike_helpers', 'aerospike_helpers.operations']
+    packages=['aerospike_helpers', 'aerospike_helpers.operations', 'aerospike_helpers.expressions']
 
 )

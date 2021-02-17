@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright 2013-2017 Aerospike, Inc.
+ * Copyright 2013-2021 Aerospike, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -71,6 +71,9 @@ PyObject * AerospikeScan_Results(AerospikeScan * self, PyObject * args, PyObject
 	PyObject * py_nodename = NULL;
 	PyObject* py_ustr = NULL;
 
+	as_static_pool static_pool;
+	memset(&static_pool, 0, sizeof(static_pool));
+
 	as_policy_scan scan_policy;
 	as_policy_scan * scan_policy_p = NULL;
 
@@ -78,6 +81,10 @@ PyObject * AerospikeScan_Results(AerospikeScan * self, PyObject * args, PyObject
 	LocalData data;
 	data.client = self->client;
 	static char * kwlist[] = {"policy", "nodename", NULL};
+
+	// For converting expressions.
+	as_exp exp_list;
+	as_exp* exp_list_p = NULL;
 
 	// For converting predexp.
 	as_predexp_list predexp_list;
@@ -100,8 +107,8 @@ PyObject * AerospikeScan_Results(AerospikeScan * self, PyObject * args, PyObject
 	}
 
 	// Convert python policy object to as_policy_scan
-	pyobject_to_policy_scan(&err, py_policy, &scan_policy, &scan_policy_p,
-			&self->client->as->config.policies.scan, &predexp_list, &predexp_list_p);
+	pyobject_to_policy_scan(self->client, &err, py_policy, &scan_policy, &scan_policy_p,
+			&self->client->as->config.policies.scan, &predexp_list, &predexp_list_p, &exp_list, &exp_list_p);
 	if (err.code != AEROSPIKE_OK) {
 		as_error_update(&err, err.code, NULL);
 		goto CLEANUP;
@@ -144,6 +151,10 @@ PyObject * AerospikeScan_Results(AerospikeScan * self, PyObject * args, PyObject
 
 
 CLEANUP:
+	if (exp_list_p) {
+		as_exp_destroy(exp_list_p);
+	}
+
 	if (predexp_list_p) {
 		as_predexp_list_destroy(&predexp_list);
 	}

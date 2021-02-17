@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright 2013-2017 Aerospike, Inc.
+ * Copyright 2013-2021 Aerospike, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -65,8 +65,8 @@
 
 #define POLICY_KEY_META_BIN()\
 	if (py_policy) {\
-		if (pyobject_to_policy_operate(&err, py_policy, &operate_policy, &operate_policy_p,\
-				&self->as->config.policies.operate, NULL, NULL) != AEROSPIKE_OK) {\
+		if (pyobject_to_policy_operate(self, &err, py_policy, &operate_policy, &operate_policy_p,\
+				&self->as->config.policies.operate, NULL, NULL, NULL, NULL) != AEROSPIKE_OK) {\
 			goto CLEANUP;\
 		}\
 	}\

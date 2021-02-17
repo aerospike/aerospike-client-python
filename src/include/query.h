@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright 2013-2017 Aerospike, Inc.
+ * Copyright 2013-2021 Aerospike, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -121,9 +121,9 @@ PyObject * AerospikeQuery_ExecuteBackground(AerospikeQuery * self, PyObject * ar
  */
 PyObject * StoreUnicodePyObject(AerospikeQuery * self, PyObject * obj);
 
+int64_t pyobject_to_int64(PyObject * py_obj);
+
 /* Initialize the predexp module */
 PyObject * AerospikePredExp_New(void);
 
 as_status RegisterPredExpConstants(PyObject* module);
-
-int64_t pyobject_to_int64(PyObject * py_obj);

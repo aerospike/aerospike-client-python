@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright 2013-2019 Aerospike, Inc.
+ * Copyright 2013-2021 Aerospike, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -31,21 +31,24 @@
 AerospikeQuery* AerospikeQuery_Add_Ops(AerospikeQuery * self, PyObject * args, PyObject * kwds)
 {
 	// Python function arguments.
-    PyObject* py_ops = NULL;
+	PyObject* py_ops = NULL;
 	// Python function keyword arguments.
-    static char* kwlist[] = {"ops", NULL};
+	static char* kwlist[] = {"ops", NULL};
 
 	if (! PyArg_ParseTupleAndKeywords(args, kwds, "O:ops", kwlist, &py_ops)) {
 		return NULL;
 	}
 
+	Py_INCREF(py_ops);
+
 	// Aerospike API arguments.
-    long return_type = -1;
-    long operation;
-    as_vector * unicodeStrVector = as_vector_create(sizeof(char *), 128);
+	long return_type = -1;
+	long operation;
+	self->unicodeStrVector = as_vector_create(sizeof(char *), 128);
 
 	as_static_pool static_pool;
 	memset(&static_pool, 0, sizeof(static_pool));
+	self->static_pool = &static_pool;
 
 	as_error err;
 	as_error_init(&err);
@@ -60,36 +63,35 @@ AerospikeQuery* AerospikeQuery_Add_Ops(AerospikeQuery * self, PyObject * args, P
 		goto CLEANUP;
 	}
 
-    if (PyList_Check(py_ops)) {
-        Py_ssize_t size = PyList_Size(py_ops);
-        as_operations_inita(&(self->ops), size);
+	if (PyList_Check(py_ops)) {
+		Py_ssize_t size = PyList_Size(py_ops);
+		self->query.ops = as_operations_new((uint16_t)size);
+		if (self->query.ops == NULL) {
+			as_error_update(&err, AEROSPIKE_ERR_PARAM, "Failed to create new as_operations.");
+			goto CLEANUP;
+		}
 
-        for (int i = 0; i < size; i++) {
-            PyObject * py_val = PyList_GetItem(py_ops, (Py_ssize_t)i);
-            
-            if (PyDict_Check(py_val)) {
-                if (add_op(self->client, &err, py_val, unicodeStrVector, &static_pool, &(self->ops), &operation, &return_type) != AEROSPIKE_OK) {
-                    as_error_update(&err, AEROSPIKE_ERR_PARAM, "Failed to convert ops.");
-                    goto CLEANUP;
-                }
-            }
-            else {
-                as_error_update(&err, AEROSPIKE_ERR_PARAM, "Failed to convert ops.");
-                goto CLEANUP;
-            }
-        }
-    }
-    else {
-        as_error_update(&err, AEROSPIKE_ERR_CLIENT, "Ops must be list.");
+		for (int i = 0; i < size; i++) {
+			PyObject * py_val = PyList_GetItem(py_ops, (Py_ssize_t)i);
+			if (PyDict_Check(py_val)) {
+				if (add_op(self->client, &err, py_val, self->unicodeStrVector, self->static_pool, self->query.ops, &operation, &return_type) != AEROSPIKE_OK) { //something wrong with ops bin name and value
+					as_error_update(&err, AEROSPIKE_ERR_PARAM, "Failed to convert ops.");
+					goto CLEANUP;
+				}
+			}
+			else {
+				as_error_update(&err, AEROSPIKE_ERR_PARAM, "Failed to convert ops.");
+				goto CLEANUP;
+			}
+		}
+	}
+	else {
+		as_error_update(&err, AEROSPIKE_ERR_CLIENT, "Ops must be list.");
 		goto CLEANUP;
-    }
-
-	self->query.ops = &(self->ops);
+	}
 
 CLEANUP:
 
-	as_vector_destroy(unicodeStrVector);
-	POOL_DESTROY(&static_pool);
 	if ( err.code != AEROSPIKE_OK ) {
 		PyObject * py_err = NULL;
 		error_to_pyobject(&err, &py_err);

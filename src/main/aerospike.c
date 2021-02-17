@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright 2013-2017 Aerospike, Inc.
+ * Copyright 2013-2021 Aerospike, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -95,7 +95,7 @@ AerospikeConstants operator_constants[] = {
 MOD_INIT(aerospike)
 {
 
-	const char version[8] = "4.0.0";
+	const char version[8] = "5.0.0";
 	// Makes things "thread-safe"
 	PyEval_InitThreads();
 	int i = 0;

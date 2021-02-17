@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright 2013-2017 Aerospike, Inc.
+ * Copyright 2013-2021 Aerospike, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -115,6 +115,10 @@ PyObject * AerospikeScan_Foreach(AerospikeScan * self, PyObject * args, PyObject
 	as_policy_scan scan_policy;
 	as_policy_scan * scan_policy_p = NULL;
 
+	// For converting expressions.
+	as_exp exp_list;
+	as_exp* exp_list_p = NULL;
+
 	// For converting predexp.
 	as_predexp_list predexp_list;
 	as_predexp_list* predexp_list_p = NULL;
@@ -150,8 +154,8 @@ PyObject * AerospikeScan_Foreach(AerospikeScan * self, PyObject * args, PyObject
 	}
 
 	// Convert python policy object to as_policy_exists
-	pyobject_to_policy_scan(&err, py_policy, &scan_policy, &scan_policy_p,
-			&self->client->as->config.policies.scan, &predexp_list, &predexp_list_p);
+	pyobject_to_policy_scan(self->client, &err, py_policy, &scan_policy, &scan_policy_p,
+			&self->client->as->config.policies.scan, &predexp_list, &predexp_list_p, &exp_list, &exp_list_p);
 	if (err.code != AEROSPIKE_OK) {
 		goto CLEANUP;
 	}
@@ -196,6 +200,10 @@ PyObject * AerospikeScan_Foreach(AerospikeScan * self, PyObject * args, PyObject
 	}
 
 CLEANUP:
+	if (exp_list_p) {
+		as_exp_destroy(exp_list_p);;
+	}
+
 	if (predexp_list_p) {
 		as_predexp_list_destroy(&predexp_list);
 	}

@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright 2013-2017 Aerospike, Inc.
+ * Copyright 2013-2021 Aerospike, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -130,6 +130,8 @@ static int AerospikeScan_Type_Init(AerospikeScan * self, PyObject * args, PyObje
 		}
 	}
 
+	self->unicodeStrVector = NULL;
+	self->static_pool = NULL;
 	as_scan_init(&self->scan, namespace, set);
 
 	if (py_ustr) {
@@ -138,11 +140,19 @@ static int AerospikeScan_Type_Init(AerospikeScan * self, PyObject * args, PyObje
 	return 0;
 }
 
-static void AerospikeScan_Type_Dealloc(PyObject * self)
+static void AerospikeScan_Type_Dealloc(AerospikeScan * self)
 {
-	as_scan_destroy(&((AerospikeScan *)self)->scan);
-	((AerospikeScan *)self)->scan.ops = NULL;
-    Py_CLEAR(((AerospikeScan *)self)->client);
+	as_scan_destroy(&self->scan);
+
+	if (self->unicodeStrVector != NULL) {
+		for (unsigned int i = 0; i < self->unicodeStrVector->size ; ++i) {
+			free(as_vector_get_ptr(self->unicodeStrVector, i));
+		}
+
+		as_vector_destroy(self->unicodeStrVector);
+	}
+
+	Py_CLEAR(self->client);
 	Py_TYPE(self)->tp_free((PyObject *) self);
 }
 

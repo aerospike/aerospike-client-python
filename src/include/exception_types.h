@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright 2013-2019 Aerospike, Inc.
+ * Copyright 2013-2021 Aerospike, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,7 +20,7 @@
 
 // These sizes correspond to the structs in exception.c.
 #define RECORD_EXCEPTION_COUNT 10
-#define SERVER_EXCEPTION_COUNT 12
+#define SERVER_EXCEPTION_COUNT 13
 #define INDEX_EXCEPTION_COUNT 6
 #define ADMIN_EXCEPTION_COUNT 17
 
@@ -43,6 +43,7 @@ struct exceptions {
 	PyObject *InvalidGeoJSON;
 	PyObject *OpNotApplicable; //26
 	PyObject *FilteredOut; //27
+	PyObject *LostConflict; //28
 	PyObject *ScanAbortedError; //15
 	PyObject *ElementNotFoundError; //23
 	PyObject *ElementExistsError; //24

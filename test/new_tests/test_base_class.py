@@ -11,7 +11,6 @@ class TestBaseClass(object):
     hostlist = []
     user = None
     password = None
-    has_geo = None
     using_tls = False
     using_auth = False
     should_xfail = False
@@ -138,16 +137,6 @@ class TestBaseClass(object):
                     host.append(tls_name)
                 hosts.append(tuple(host))
         return hosts
-
-    @staticmethod
-    def has_geo_support():
-        if TestBaseClass.has_geo is not None:
-            return TestBaseClass.has_geo
-
-        client = TestBaseClass.get_new_connection()
-        TestBaseClass.has_geo = client.has_geo()
-        client.close()
-        return TestBaseClass.has_geo
 
     @staticmethod
     def get_new_connection(add_config=None):

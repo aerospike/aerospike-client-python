@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright 2017 Aerospike, Inc.
+ * Copyright 2017-2021 Aerospike, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -204,11 +204,6 @@ as_status set_apply_policy(as_policy_apply* apply_policy, PyObject* py_policy) {
 	}
 
 	status = set_optional_replica(&apply_policy->replica, py_policy, "replica");
-	if (status != AEROSPIKE_OK) {
-		return status;
-	}
-
-	status = set_optional_gen(&apply_policy->gen, py_policy, "gen");
 	if (status != AEROSPIKE_OK) {
 		return status;
 	}

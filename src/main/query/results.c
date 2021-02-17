@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright 2013-2017 Aerospike, Inc.
+ * Copyright 2013-2021 Aerospike, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -86,6 +86,10 @@ PyObject * AerospikeQuery_Results(AerospikeQuery * self, PyObject * args, PyObje
 	as_policy_query query_policy;
 	as_policy_query * query_policy_p = NULL;
 
+	// For converting expressions.
+	as_exp exp_list;
+	as_exp* exp_list_p = NULL;
+
 	// For converting predexp.
 	as_predexp_list predexp_list;
 	as_predexp_list* predexp_list_p = NULL;
@@ -101,8 +105,8 @@ PyObject * AerospikeQuery_Results(AerospikeQuery * self, PyObject * args, PyObje
 	}
 
 	// Convert python policy object to as_policy_query
-	pyobject_to_policy_query(&err, py_policy, &query_policy, &query_policy_p,
-			&self->client->as->config.policies.query, &predexp_list, &predexp_list_p);
+	pyobject_to_policy_query(self->client, &err, py_policy, &query_policy, &query_policy_p,
+			&self->client->as->config.policies.query, &predexp_list, &predexp_list_p, &exp_list, &exp_list_p);
 	if (err.code != AEROSPIKE_OK) {
 		goto CLEANUP;
 	}
@@ -121,6 +125,10 @@ PyObject * AerospikeQuery_Results(AerospikeQuery * self, PyObject * args, PyObje
 	PyEval_RestoreThread(_save);
 
 CLEANUP:/*??trace()*/
+	if (exp_list_p) {
+		as_exp_destroy(exp_list_p);;
+	}
+
 	if (predexp_list_p) {
 		as_predexp_list_destroy(&predexp_list);
 	}

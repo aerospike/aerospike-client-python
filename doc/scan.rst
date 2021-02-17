@@ -13,11 +13,6 @@ Scan Class --- :class:`Scan`
     can be ommitted or :py:obj:`None`). A Scan with a :py:obj:`None` set returns all the \
     records in the namespace.
 
-    The scan can (optionally) be assigned one of the following \
-
-    * One of the :mod:`~aerospike.predicates` (:meth:`~aerospike.predicates.between` or :meth:`~aerospike.predicates.equals`) using :meth:`~aerospike.Scan.where`. \
-    * A list of :mod:`~aerospike.predexp` using :meth:`~aerospike.Scan.predexp` \
-
     The scan is invoked using :meth:`foreach`, :meth:`results`, or :meth:`execute_background`. The \
     bins returned can be filtered using :meth:`select`.
 
@@ -418,6 +413,12 @@ Scan Policies
             | Requires server version >= 4.7.0.
             |
             | Default: ``0`` (no limit).
+        * **predexp** :class:`list`
+            | List of :mod:`~aerospike.predexp` used to filter scan results.
+            | Can be used with the :func:`~aerospike.Scan.results`, :func:`~aerospike.Scan.foreach`, and :func:`~aerospike.Scan.execute_background` methods.
+            | Requires server version >= 4.7.0 and Client version >= 3.10.0.
+            |
+            | Default: ``[]`` (no filter).
             
 
 .. _aerospike_scan_options:

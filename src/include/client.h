@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright 2013-2017 Aerospike, Inc.
+ * Copyright 2013-2021 Aerospike, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -561,17 +561,27 @@ PyObject * AerospikeClient_Select_Many(AerospikeClient * self, PyObject *args, P
  *
  */
 PyObject * AerospikeClient_Exists_Many(AerospikeClient * self, PyObject *args, PyObject * kwds);
+
+/**
+* Perform xdr-set-filter info operation on the database.
+*
+* client.set_xdr_filter(data_center, namespace, expression_filter, policy)
+*
+*/
+PyObject * AerospikeClient_SetXDRFilter(AerospikeClient * self, PyObject *args, PyObject * kwds);
+
+/**
+ * Send an info request to the entire cluster
+ * client.info_all("statistics", {}")
+*/
+PyObject * AerospikeClient_InfoAll(AerospikeClient * self, PyObject * args, PyObject * kwds);
+
 /**
 * Perform info operation on the database.
 *
 * client.info((x,y,z))
 *
 */
-/**
- * Send an info request to the entire cluster
- * client.info_all("statistics", {}")
-*/
-PyObject * AerospikeClient_InfoAll(AerospikeClient * self, PyObject * args, PyObject * kwds);
 PyObject * AerospikeClient_Info(AerospikeClient * self, PyObject * args, PyObject * kwds);
 
 /**
@@ -581,13 +591,6 @@ PyObject * AerospikeClient_Info(AerospikeClient * self, PyObject * args, PyObjec
 *
 */
 PyObject * AerospikeClient_GetNodes(AerospikeClient * self, PyObject * args, PyObject * kwds);
-/**
-* Reflect if the server supports the geospatial feature.
-*
-* client.has_geo()
-*
-*/
-PyObject * AerospikeClient_HasGeo(AerospikeClient * self, PyObject * args, PyObject * kwds);
 /**
 * Perforrm get key digest operation on the database.
 *

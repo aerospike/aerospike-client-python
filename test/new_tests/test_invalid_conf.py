@@ -203,7 +203,7 @@ class TestInvalidClientConfig(object):
 
     @pytest.mark.parametrize("key, value",
                              [
-                                ("gen", "should be a constant integer"),  # should be int
+                                #("gen", "should be a constant integer"),  # gen removed from apply policies by C client 5.0
                                 ("replica", "maybe?"),  # should be int
                                 ("commit_level", "committed"),  # should be int
                                 ("key", "send"),  # should be an int eg. aerospike.POLICY_KEY_SEND

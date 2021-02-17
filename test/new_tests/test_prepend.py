@@ -30,6 +30,9 @@ class TestPrepend():
                 "bytearray_bin": bytearray(
                     "asd;as[d'as;d", "utf-8")})
 
+        key = ("test", "demo", "bytes_key")
+        as_connection.put(key, {"bytes_bin": b"x"})
+
         def teardown():
             """
             Teardown Method
@@ -39,6 +42,9 @@ class TestPrepend():
                 as_connection.remove(key)
 
             key = ('test', 'demo', 'bytearray_key')
+            as_connection.remove(key)
+
+            key = ('test', 'demo', 'bytes_key')
             as_connection.remove(key)
 
         request.addfinalizer(teardown)
@@ -257,6 +263,32 @@ class TestPrepend():
         (key, _, bins) = self.as_connection.get(key)
 
         assert bins == {'bytearray_bin': bytearray("asd;as[d'as;d", "utf-8")}
+
+        self.as_connection.remove(key)
+
+    def test_pos_prepend_with_bytes(self):
+        """
+        Invoke prepend() with bytes value
+        """
+        key = ('test', 'demo', 'bytes_key')
+        self.as_connection.prepend(key, "bytes_bin", b'a')
+
+        (key, _, bins) = self.as_connection.get(key)
+
+        assert bins == {
+            'bytes_bin': b'ax'}
+
+    def test_pos_prepend_with_bytes_new_key(self):
+        """
+        Invoke prepend() with bytes value with a new record(non-existing)
+        """
+        key = ('test', 'demo', 'bytes_new')
+        self.as_connection.prepend(
+            key, "bytes_bin", b'a')
+
+        (key, _, bins) = self.as_connection.get(key)
+
+        assert bins == {'bytes_bin': b'a'}
 
         self.as_connection.remove(key)
 

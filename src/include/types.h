@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright 2013-2017 Aerospike, Inc.
+ * Copyright 2013-2021 Aerospike, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -80,14 +80,16 @@ typedef struct {
 	AerospikeClient * client;
 	as_query query;
 	UnicodePyObjects u_objs;
-	as_operations ops;
+	as_vector * unicodeStrVector;
+	as_static_pool * static_pool;
 } AerospikeQuery;
 
 typedef struct {
 	PyObject_HEAD
 	AerospikeClient * client;
 	as_scan scan;
-	as_operations ops;
+	as_vector * unicodeStrVector;
+	as_static_pool * static_pool;
 } AerospikeScan;
 
 typedef struct {

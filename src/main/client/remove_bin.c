@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright 2013-2017 Aerospike, Inc.
+ * Copyright 2013-2021 Aerospike, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -57,6 +57,10 @@ PyObject * AerospikeClient_RemoveBin_Invoke(
 	int count = 0;
 	PyObject * py_ustr = NULL;
 
+	// For converting expressions.
+	as_exp exp_list;
+	as_exp* exp_list_p = NULL;
+
 	// For converting predexp.
 	as_predexp_list predexp_list;
 	as_predexp_list* predexp_list_p = NULL;
@@ -74,8 +78,8 @@ PyObject * AerospikeClient_RemoveBin_Invoke(
 	key_initialized = true;
 
 	// Convert python policy object to as_policy_write
-	pyobject_to_policy_write(err, py_policy, &write_policy, &write_policy_p,
-			&self->as->config.policies.write, &predexp_list, &predexp_list_p);
+	pyobject_to_policy_write(self, err, py_policy, &write_policy, &write_policy_p,
+			&self->as->config.policies.write, &predexp_list, &predexp_list_p, &exp_list, &exp_list_p);
 	if (err->code != AEROSPIKE_OK) {
 		as_error_update(err, AEROSPIKE_ERR_CLIENT, "Incorrect policy");
 		goto CLEANUP;
@@ -158,6 +162,10 @@ PyObject * AerospikeClient_RemoveBin_Invoke(
 CLEANUP:
 
 	as_record_destroy(&rec);
+
+	if (exp_list_p) {
+		as_exp_destroy(exp_list_p);;
+	}
 
 	if (predexp_list_p) {
 		as_predexp_list_destroy(&predexp_list);

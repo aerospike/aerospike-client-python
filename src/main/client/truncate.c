@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright 2013-2017 Aerospike, Inc.
+ * Copyright 2013-2021 Aerospike, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -130,7 +130,7 @@ AerospikeClient_Truncate(AerospikeClient * self, PyObject * args, PyObject * kwd
 	}
 
 	// Start conversion of the nanosecond parameter
-	if PyLong_Check(py_nanos) {
+	if (PyLong_Check(py_nanos)) {
 
 		temp_long = PyLong_AsLongLong(py_nanos);
 		// There was a negative number outside of the range of - 2 ^ 63
@@ -147,7 +147,7 @@ AerospikeClient_Truncate(AerospikeClient * self, PyObject * args, PyObject * kwd
 			goto CLEANUP;
 		}
 
-	} else if PyInt_Check(py_nanos) {
+	} else if (PyInt_Check(py_nanos)) {
 		long tempInt;
 		tempInt = PyInt_AsLong(py_nanos);
 

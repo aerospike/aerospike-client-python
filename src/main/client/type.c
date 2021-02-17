@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright 2013-2017 Aerospike, Inc.
+ * Copyright 2013-2021 Aerospike, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -386,6 +386,11 @@ PyDoc_STRVAR(info_doc,
 \n\
 Send an info command to multiple nodes specified in a hosts list.");
 
+PyDoc_STRVAR(set_xdr_filter_doc,
+"set_xdr_filter(data_center, namespace, expression_filter[, policy]) -> {}\n\
+\n\
+Set cluster xdr filter.");
+
 PyDoc_STRVAR(info_all_doc,
 "info_all(command[, policy]]) -> {}\n\
 \n\
@@ -401,11 +406,6 @@ PyDoc_STRVAR(get_nodes_doc,
 "get_nodes() -> []\n\
 \n\
 Return the list of hosts present in a connected cluster.");
-
-PyDoc_STRVAR(has_geo_doc,
-"has_geo() -> bool\n\
-\n\
-Check whether the connected cluster supports geospatial data and indexes.");
 
 PyDoc_STRVAR(udf_put_doc,
 "udf_put(filename[, udf_type[, policy]])\n\
@@ -765,6 +765,9 @@ static PyMethodDef AerospikeClient_Type_Methods[] = {
 	{"info",
 		(PyCFunction) AerospikeClient_Info, METH_VARARGS | METH_KEYWORDS,
 		info_doc},
+	{"set_xdr_filter",
+		(PyCFunction) AerospikeClient_SetXDRFilter, METH_VARARGS | METH_KEYWORDS,
+		set_xdr_filter_doc},
 	{"info_all",
 		(PyCFunction) AerospikeClient_InfoAll, METH_VARARGS | METH_KEYWORDS,
 		info_all_doc},
@@ -774,10 +777,6 @@ static PyMethodDef AerospikeClient_Type_Methods[] = {
 	{"get_nodes",
 		(PyCFunction) AerospikeClient_GetNodes, METH_VARARGS | METH_KEYWORDS,
 		get_nodes_doc},
-	{"has_geo",
-		(PyCFunction)AerospikeClient_HasGeo, METH_VARARGS | METH_KEYWORDS,
-		has_geo_doc},
-
 	// UDF OPERATIONS
 
 	{"udf_put",
