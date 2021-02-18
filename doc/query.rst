@@ -559,7 +559,7 @@ Query Policies
             |
             | Default ``False``
 
-            .. note:: Requires Enterprise server version >= 5.0
+            .. note:: Requires Aerospike server version >= 5.2.
         * **expressions** :class:`list`
             | Compiled aerospike expressions :mod:`aerospike_helpers` used for filtering records within a transaction.
             |

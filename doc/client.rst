@@ -2370,7 +2370,7 @@ Info Operations
 
         .. versionchanged:: 5.0.0
 
-        .. warning:: for client versions < 3.0.0 ``set_xdr_filter`` will not work when using TLS.
+        .. warning:: Requires Aerospike server version >= 5.3.
 
     .. method:: shm_key()  ->  int
 
@@ -2821,7 +2821,7 @@ Write Policies
             |
             | Default: ``False``
 
-            .. note:: Requires Enterprise server version >= 5.0
+            .. note:: Requires Aerospike server version >= 5.2.
         * **expressions** :class:`list`
             | Compiled aerospike expressions :mod:`aerospike_helpers` used for filtering records within a transaction.
             |
@@ -2901,7 +2901,7 @@ Read Policies
             |
             | Default: ``aerospike.POLICY_REPLICA_SEQUENCE``
 
-            .. note:: Requires Enterprise server version >= 5.0
+            .. note:: Requires Aerospike server version >= 5.2.
         * **expressions** :class:`list`
             | Compiled aerospike expressions :mod:`aerospike_helpers` used for filtering records within a transaction.
             |
@@ -2996,7 +2996,7 @@ Operate Policies
             |
             | Default: ``False``
 
-            .. note:: Requires Enterprise server version >= 5.0
+            .. note:: Requires Aerospike server version >= 5.2.
         * **expressions** :class:`list`
             | Compiled aerospike expressions :mod:`aerospike_helpers` used for filtering records within a transaction.
             |
@@ -3073,7 +3073,7 @@ Apply Policies
             |
             | Default: ``False``
 
-            .. note:: Requires Enterprise server version >= 5.0
+            .. note:: Requires Aerospike server version >= 5.2.
         * **expressions** :class:`list`
             | Compiled aerospike expressions :mod:`aerospike_helpers` used for filtering records within a transaction.
             |
@@ -3153,7 +3153,7 @@ Remove Policies
             | 
             | Default: ``aerospike.POLICY_REPLICA_SEQUENCE``
 
-            .. note:: Requires Enterprise server version >= 5.0
+            .. note:: Requires Aerospike server version >= 5.2.
         * **expressions** :class:`list`
             | Compiled aerospike expressions :mod:`aerospike_helpers` used for filtering records within a transaction.
             |
