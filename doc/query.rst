@@ -559,6 +559,12 @@ Query Policies
             |
             | Default ``False``
 
+            .. note:: Requires Enterprise server version >= 5.0
+        * **expressions** :class:`list`
+            | Compiled aerospike expressions :mod:`aerospike_helpers` used for filtering records within a transaction.
+            |
+            | Default: None
+
 .. _aerospike_query_options:
 
 Query Options

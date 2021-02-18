@@ -413,12 +413,12 @@ Scan Policies
             | Requires server version >= 4.7.0.
             |
             | Default: ``0`` (no limit).
-        * **predexp** :class:`list`
-            | List of :mod:`~aerospike.predexp` used to filter scan results.
-            | Can be used with the :func:`~aerospike.Scan.results`, :func:`~aerospike.Scan.foreach`, and :func:`~aerospike.Scan.execute_background` methods.
-            | Requires server version >= 4.7.0 and Client version >= 3.10.0.
+
+            .. note:: Requires Enterprise server version >= 5.0
+        * **expressions** :class:`list`
+            | Compiled aerospike expressions :mod:`aerospike_helpers` used for filtering records within a transaction.
             |
-            | Default: ``[]`` (no filter).
+            | Default: ``None``
             
 
 .. _aerospike_scan_options:
