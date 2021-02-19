@@ -413,12 +413,12 @@ Scan Policies
             | Requires server version >= 4.7.0.
             |
             | Default: ``0`` (no limit).
-
-            .. note:: Requires Aerospike server version >= 5.2.
         * **expressions** :class:`list`
             | Compiled aerospike expressions :mod:`aerospike_helpers` used for filtering records within a transaction.
             |
             | Default: ``None``
+
+            .. note:: Requires Aerospike server version >= 5.2.
             
 
 .. _aerospike_scan_options:
