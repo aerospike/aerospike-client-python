@@ -18,7 +18,7 @@ Base expressions include operators, bin, and meta data related expressions.
 
 Example::
 
-    import aerospike_helpers.expressions as exp
+    import aerospike_helpers.expressions.base as exp
     # See if integer bin "bin_name" contains a value equal to 10.
     expr = exp.Eq(exp.IntBin("bin_name"), 10).compile()
 '''

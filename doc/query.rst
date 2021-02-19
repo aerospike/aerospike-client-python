@@ -558,6 +558,12 @@ Query Policies
             | Terminate query if cluster is in migration state. 
             |
             | Default ``False``
+        * **expressions** :class:`list`
+            | Compiled aerospike expressions :mod:`aerospike_helpers` used for filtering records within a transaction.
+            |
+            | Default: None
+
+            .. note:: Requires Aerospike server version >= 5.2.
 
 .. _aerospike_query_options:
 
