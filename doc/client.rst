@@ -2370,7 +2370,7 @@ Info Operations
 
         .. versionchanged:: 5.0.0
 
-        .. warning:: for client versions < 3.0.0 ``set_xdr_filter`` will not work when using TLS.
+        .. warning:: Requires Aerospike server version >= 5.3.
 
     .. method:: shm_key()  ->  int
 
@@ -2820,12 +2820,12 @@ Write Policies
             | Perform durable delete
             |
             | Default: ``False``
-
-            .. note:: Requires Enterprise server version >= 5.0
         * **expressions** :class:`list`
             | Compiled aerospike expressions :mod:`aerospike_helpers` used for filtering records within a transaction.
             |
             | Default: None
+
+            .. note:: Requires Aerospike server version >= 5.2.
             
 
 .. _aerospike_read_policies:
@@ -2900,12 +2900,12 @@ Read Policies
             | One of the :ref:`POLICY_REPLICA` values such as :data:`aerospike.POLICY_REPLICA_MASTER`
             |
             | Default: ``aerospike.POLICY_REPLICA_SEQUENCE``
-
-            .. note:: Requires Enterprise server version >= 5.0
         * **expressions** :class:`list`
             | Compiled aerospike expressions :mod:`aerospike_helpers` used for filtering records within a transaction.
             |
             | Default: None
+
+            .. note:: Requires Aerospike server version >= 5.2.
 
 .. _aerospike_operate_policies:
 
@@ -2995,12 +2995,12 @@ Operate Policies
             | Perform durable delete
             |
             | Default: ``False``
-
-            .. note:: Requires Enterprise server version >= 5.0
         * **expressions** :class:`list`
             | Compiled aerospike expressions :mod:`aerospike_helpers` used for filtering records within a transaction.
             |
             | Default: None
+
+            .. note:: Requires Aerospike server version >= 5.2.
 
 .. _aerospike_apply_policies:
 
@@ -3072,12 +3072,12 @@ Apply Policies
             | Perform durable delete
             |
             | Default: ``False``
-
-            .. note:: Requires Enterprise server version >= 5.0
         * **expressions** :class:`list`
             | Compiled aerospike expressions :mod:`aerospike_helpers` used for filtering records within a transaction.
             |
             | Default: None
+            
+            .. note:: Requires Aerospike server version >= 5.2.
 
 
 .. _aerospike_remove_policies:
@@ -3153,11 +3153,12 @@ Remove Policies
             | 
             | Default: ``aerospike.POLICY_REPLICA_SEQUENCE``
 
-            .. note:: Requires Enterprise server version >= 5.0
         * **expressions** :class:`list`
             | Compiled aerospike expressions :mod:`aerospike_helpers` used for filtering records within a transaction.
             |
             | Default: None
+
+            .. note:: Requires Aerospike server version >= 5.2.
 
 .. _aerospike_batch_policies:
 
