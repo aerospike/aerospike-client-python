@@ -32,6 +32,7 @@
 			#define PyString_AsString           PyUnicode_AsUTF8
 	#else
 			#define PyString_AsString           (char*)PyUnicode_AsUTF8
+			#define PyEval_InitThreads          Py_Initialize
 	#endif
 
 	#define PyString_Size               PyUnicode_GET_SIZE

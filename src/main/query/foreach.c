@@ -74,7 +74,7 @@ static bool each_result(const as_val * val, void * udata)
 	PyTuple_SetItem(py_arglist, 0, py_result);
 
 	// Invoke Python Callback
-	py_return = PyEval_CallObject(py_callback, py_arglist);
+	py_return = PyObject_Call(py_callback, py_arglist, NULL);
 
 	// Release Python Function Arguments
 	Py_DECREF(py_arglist);

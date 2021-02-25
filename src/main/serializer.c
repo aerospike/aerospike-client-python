@@ -242,7 +242,7 @@ void execute_user_callback(user_serializer_callback *user_callback_info,
 	}
 
 	Py_INCREF(user_callback_info -> callback);
-	py_return = PyEval_CallObject(user_callback_info->callback, py_arglist);
+	py_return = PyObject_Call(user_callback_info->callback, py_arglist, NULL);
 	Py_DECREF(user_callback_info -> callback);
 	Py_DECREF(py_arglist);
 
