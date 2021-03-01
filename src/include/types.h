@@ -96,3 +96,7 @@ typedef struct {
 	PyObject_HEAD
 	PyObject *geo_data;
 } AerospikeGeospatial;
+
+typedef struct {
+	PyDictObject dict;
+} AerospikeKeyOrderedDict;

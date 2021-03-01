@@ -23,6 +23,7 @@
 #include "query.h"
 #include "geo.h"
 #include "scan.h"
+#include "key_ordered_dict.h"
 #include "predicates.h"
 #include "exceptions.h"
 #include "policy.h"
@@ -124,6 +125,10 @@ MOD_INIT(aerospike)
 	PyTypeObject * scan = AerospikeScan_Ready();
 	Py_INCREF(scan);
 	PyModule_AddObject(aerospike, "Scan", (PyObject *) scan);
+
+	PyTypeObject * kdict = AerospikeKeyOrderedDict_Ready();
+	Py_INCREF(kdict);
+	PyModule_AddObject(aerospike, "KeyOrderedDict", (PyObject *) kdict);
 
 	/*
 	 * Add constants to module.
