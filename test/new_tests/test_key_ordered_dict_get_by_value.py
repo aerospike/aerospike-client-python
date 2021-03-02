@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 import pytest
 import sys
-from collections import OrderedDict
 from aerospike import exception as e
 from aerospike_helpers.operations import map_operations as mop
 from aerospike_helpers.operations import list_operations as lop

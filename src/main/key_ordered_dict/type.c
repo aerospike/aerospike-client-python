@@ -33,11 +33,11 @@ static PyMethodDef AerospikeKeyOrderedDict_Type_Methods[] = {
 
 static int AerospikeKeyOrderedDict_Type_Init(AerospikeQuery * self, PyObject * args, PyObject * kwds)
 {
-    if (PyDict_Type.tp_init((PyObject *) self, args, kwds) < 0) {
+	if (PyDict_Type.tp_init((PyObject *) self, args, kwds) < 0) {
 		return -1;
 	}
 
-    return 0;
+	return 0;
 }
 
 /*******************************************************************************
