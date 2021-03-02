@@ -44,6 +44,7 @@
 #include "exceptions.h"
 #include "cdt_types.h"
 #include "cdt_operation_utils.h"
+#include "key_ordered_dict.h"
 
 #define PY_KEYT_NAMESPACE 0
 #define PY_KEYT_SET 1
@@ -471,8 +472,8 @@ as_status pyobject_to_val(AerospikeClient * self, as_error * err, PyObject * py_
 		as_map * map = NULL;
 		pyobject_to_map(self, err, py_obj, &map, static_pool, serializer_type);
 		if (err->code == AEROSPIKE_OK) {
-			// Special case for ordered dict, useful to just in time sort maps for by value operations.
-			if ( !strcmp(py_obj->ob_type->tp_name, "collections.OrderedDict")) {
+			if (PyObject_IsInstance(py_obj, AerospikeKeyOrderedDict_Get_Type())) {
+				// Special case for aerospike.KeyOrderedDict, useful to just in time sort maps for by value operations.
 				map->flags |= AS_MAP_KEY_ORDERED;
 			}
 

@@ -25,3 +25,5 @@
  ******************************************************************************/
 
 PyTypeObject * AerospikeKeyOrderedDict_Ready(void);
+
+PyObject * AerospikeKeyOrderedDict_Get_Type(void);
