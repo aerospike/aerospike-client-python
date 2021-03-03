@@ -38,6 +38,8 @@ PLATFORM = platform.platform(1)
 LINUX = 'Linux' in PLATFORM
 DARWIN = 'Darwin' in PLATFORM or 'macOS' in PLATFORM
 CWD = os.path.abspath(os.path.dirname(__file__))
+STATIC_SSL = os.getenv('STATIC_SSL')
+SSL_LIB_PATH = os.getenv('SSL_LIB_PATH')
 
 ################################################################################
 # HELPER FUNCTION FOR RESOLVING THE C CLIENT DEPENDENCY
@@ -135,6 +137,16 @@ libraries = [
   'm',
   'z'
   ]
+
+################################################################################
+# STATIC SSL LINKING BUILD SETTINGS
+################################################################################
+
+if STATIC_SSL:
+    extra_objects.extend([SSL_LIB_PATH + 'libssl.a', SSL_LIB_PATH + 'libcrypto.a'])
+    libraries.remove('ssl')
+    libraries.remove('crypto')
+    library_dirs.remove('/usr/local/opt/openssl/lib')
 
 ################################################################################
 # PLATFORM SPECIFIC BUILD SETTINGS
