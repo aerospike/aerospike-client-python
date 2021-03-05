@@ -32,6 +32,7 @@
 #include <aerospike/as_nil.h>
 #include <aerospike/as_policy.h>
 #include <aerospike/as_operations.h>
+#include <aerospike/as_boolean.h>
 #include <aerospike/as_bytes.h>
 #include <aerospike/as_double.h>
 #include <aerospike/as_record_iterator.h>
@@ -406,7 +407,7 @@ as_status pyobject_to_val(AerospikeClient * self, as_error * err, PyObject * py_
 	if (!py_obj) {
 		// this should never happen, but if it did...
 		return as_error_update(err, AEROSPIKE_ERR_CLIENT, "value is null");
-	} else if (PyBool_Check(py_obj)) {
+	} else if (PyBool_Check(py_obj)) { //TODO Change to true bool support when C client supports writing bools.
 		as_bytes *bytes;
 		GET_BYTES_POOL(bytes, static_pool, err);
 		if (err->code == AEROSPIKE_OK) {
@@ -416,6 +417,8 @@ as_status pyobject_to_val(AerospikeClient * self, as_error * err, PyObject * py_
 			}
 			*val = (as_val *) bytes;
 		}
+		// bool v = PyObject_IsTrue(py_obj);
+		// *val = (as_val *) as_boolean_new(v);
 	} else if (PyInt_Check(py_obj)) {
 		int64_t i = (int64_t) PyInt_AsLong(py_obj);
 		if (i == -1 && PyErr_Occurred()) {
@@ -549,7 +552,7 @@ as_status pyobject_to_record(AerospikeClient * self, as_error * err, PyObject * 
 			if (!value) {
 				// this should never happen, but if it did...
 				return as_error_update(err, AEROSPIKE_ERR_CLIENT, "record is null");
-			} else if (PyBool_Check(value)) {
+			} else if (PyBool_Check(value)) { //TODO Change to true bool support when C client supports writing bools.
 				as_bytes *bytes;
 				GET_BYTES_POOL(bytes, static_pool, err);
 				if (err->code == AEROSPIKE_OK) {
@@ -736,7 +739,7 @@ as_status pyobject_to_astype_write(AerospikeClient * self, as_error * err, PyObj
 {
 	as_error_reset(err);
 
-	if (PyBool_Check(py_value)) {
+	if (PyBool_Check(py_value)) { //TODO Change to true bool support when C client supports writing bools.
 		as_bytes *bytes;
 		GET_BYTES_POOL(bytes, static_pool, err);
 		if (err->code == AEROSPIKE_OK) {
@@ -746,6 +749,8 @@ as_status pyobject_to_astype_write(AerospikeClient * self, as_error * err, PyObj
 			}
 			*val = (as_val *) bytes;
 		}
+		// bool v = PyObject_IsTrue(py_value);
+		// *val = (as_val *) as_boolean_new(v);
 	} else if (PyInt_Check(py_value)) {
 		int64_t i = (int64_t) PyInt_AsLong(py_value);
 		*val = (as_val *) as_integer_new(i);
@@ -1007,6 +1012,11 @@ as_status do_val_to_pyobject(AerospikeClient * self, as_error * err, const as_va
 					Py_INCREF(Py_None);
 					*py_val = Py_None;
 				}
+				break;
+			}
+		case AS_BOOLEAN: {
+				as_boolean * b = as_boolean_fromval(val);
+				*py_val = PyBool_FromLong((long) as_boolean_get(b));
 				break;
 			}
 		case AS_BYTES: {
