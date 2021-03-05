@@ -34,6 +34,8 @@ class _ExprOp:
     OR = 17
     NOT = 18
 
+    BIT_NOT = 32
+
     META_DIGEST_MOD = 64
     META_DEVICE_SIZE = 65
     META_LAST_UPDATE_TIME = 66
