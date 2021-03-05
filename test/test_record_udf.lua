@@ -114,3 +114,8 @@ function udf_put_bytes(record, bin)
         aerospike:create(record)
     end
 end
+
+--[[UDF which will check for record's existence and return bool.--]]
+function bool_check(rec)
+    return aerospike:exists(rec)
+end
