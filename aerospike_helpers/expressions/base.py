@@ -779,7 +779,6 @@ class And(_BaseExpr):
                     Eq(IntBin("a"), 0)),
                 LT(IntBin("b"), 3)).compile()
         """
-        self._children = exprs
         self._children = exprs + (_GenericExpr(_ExprOp._AS_EXP_CODE_END_OF_VA_ARGS, 0, {}),)
 
 

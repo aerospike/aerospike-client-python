@@ -20,7 +20,7 @@ class _Keys:
     REGEX_OPTIONS_KEY = "regex_options"
 
 
-class _ExprOp:
+class _ExprOp: # TODO replace this with an enum
     EQ = 1
     NE = 2
     GT = 3
@@ -33,6 +33,17 @@ class _ExprOp:
     AND = 16
     OR = 17
     NOT = 18
+
+    ADD = 20
+    SUB = 21
+    MUL = 22
+    DIV = 23
+    POW = 24
+    LOG = 25
+    MOD = 26
+    ABS = 27
+    FLOOR = 28
+    CEIL = 29
 
     BIT_NOT = 32
 
