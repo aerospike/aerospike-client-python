@@ -35,6 +35,7 @@
 
 // EXPR OPS
 enum expr_ops {
+	UNKNOWN = -1
 	VAL = 0,
 	EQ = 1,
 	NE = 2,
@@ -48,6 +49,35 @@ enum expr_ops {
 	AND = 16,
 	OR = 17,
 	NOT = 18,
+    EXCLUSIVE = 19,
+
+    ADD = 20,
+    SUB = 21,
+    MUL = 22,
+    DIV = 23,
+    POW = 24,
+    LOG = 25,
+    MOD = 26,
+    ABS = 27,
+    FLOOR = 28,
+    CEIL = 29,
+
+    TO_INT = 30,
+    TO_FLOAT = 31,
+
+    INT_AND = 32,
+    INT_OR = 33,
+    INT_XOR = 34,
+    INT_NOT = 35,
+    INT_LSHIFT = 36,
+    INT_RSHIFT = 37,
+    INT_ARSHIFT = 38,
+    INT_COUNT = 39,
+    INT_LSCAN = 40,
+    INT_RSCAN = 41,
+
+    MIN = 50,
+    MAX = 51,
 
 	META_DIGEST_MOD = 64,
 	META_DEVICE_SIZE = 65,
@@ -63,6 +93,11 @@ enum expr_ops {
 	BIN = 81,
 	BIN_TYPE = 82,
 	BIN_EXISTS = 83,
+
+    COND = 123,
+    VAR = 124,
+    LET = 125,
+    DEF = 126,
 
 	CALL = 127,
 	LIST_MOD = 139
@@ -286,7 +321,37 @@ as_status get_expr_size(int * size_to_alloc, int * intermediate_exprs_size, as_v
 		[_AS_EXP_CODE_CDT_LIST_MOD]                      = 0, //EXP_SZ(as_exp_val(NULL)),
 		[_AS_EXP_CODE_CDT_MAP_CRMOD]                     = 0, //EXP_SZ(as_exp_val(NULL)),
 		[_AS_EXP_CODE_CDT_MAP_CR]                        = 0, //EXP_SZ(as_exp_val(NULL)),
-		[_AS_EXP_CODE_CDT_MAP_MOD]                       = 0  //EXP_SZ(as_exp_val(NULL))
+		[_AS_EXP_CODE_CDT_MAP_MOD]                       = 0,  //EXP_SZ(as_exp_val(NULL)),
+		[EXCLUSIVE]                                      = EXP_SZ(as_exp_exclusive({})),
+		[ADD]                                            = EXP_SZ(as_exp_add({})),
+		[SUB]                                            = EXP_SZ(as_exp_sub({})),
+		[MUL]                                            = EXP_SZ(as_exp_mul({})),
+		[DIV]                                            = EXP_SZ(as_exp_div({})),
+		[POW]                                            = EXP_SZ(as_exp_pow({}, {})),
+		[LOG]                                            = EXP_SZ(as_exp_log({}, {})),
+		[MOD]                                            = EXP_SZ(as_exp_mod({}, {})),
+		[ABS]                                            = EXP_SZ(as_exp_abs({})),
+		[FLOOR]                                          = EXP_SZ(as_exp_floor({})),
+		[CEIL]                                           = EXP_SZ(as_exp_ceil({})),
+		[TO_INT]                                         = EXP_SZ(as_exp_to_int({})),
+		[TO_FLOAT]                                       = EXP_SZ(as_exp_to_float({})),
+		[INT_AND]                                        = EXP_SZ(as_exp_int_and({})),
+		[INT_OR]                                         = EXP_SZ(as_exp_int_or({})),
+		[INT_XOR]                                        = EXP_SZ(as_exp_int_xor({})),
+		[INT_NOT]                                        = EXP_SZ(as_exp_int_not({})),
+		[INT_LSHIFT]                                     = EXP_SZ(as_exp_int_lshit({}, {})),
+		[INT_RSHIFT]                                     = EXP_SZ(as_exp_int_rshift({}, {})),
+		[INT_ARSHIFT]                                    = EXP_SZ(as_exp_int_arshift({}, {})),
+		[INT_COUNT]                                      = EXP_SZ(as_exp_int_count({})),
+		[INT_LSCAN]                                      = EXP_SZ(as_exp_int_lscan({}, {})),
+		[INT_RSCAN]                                      = EXP_SZ(as_exp_int_rscan({}, {})),
+		[MIN]                                            = EXP_SZ(as_exp_min({})),
+		[MAX]                                            = EXP_SZ(as_exp_max({})),
+		[COND]                                           = EXP_SZ(as_exp_cond({})),
+		[LET]                                            = EXP_SZ(as_exp_let({})),
+		[DEF]                                            = EXP_SZ(as_exp_def("", {})),
+		[VAR]                                            = EXP_SZ(as_exp_var("")),
+		[UNKNOWN]                                        = EXP_SZ(as_exp_unknown())
 	};
 
 	for (int i = 0; i < *intermediate_exprs_size; ++i) {
@@ -973,6 +1038,99 @@ as_status add_expr_macros(AerospikeClient * self, as_static_pool * static_pool, 
 				break;
 			case OP_HLL_MAY_CONTAIN:
 				APPEND_ARRAY(2, as_exp_hll_may_contain({}, {})); // - 2 for list, bin
+				break;
+			case EXCLUSIVE:
+				APPEND_ARRAY(2, as_exp_exclusive({})); // - 2 for va_args, AS_EXP_CODE_END_OF_VA_ARGS
+				break;
+			case ADD:
+				APPEND_ARRAY(2, as_exp_add({})); // - 2 for va_args, AS_EXP_CODE_END_OF_VA_ARGS
+				break;
+			case SUB:
+				APPEND_ARRAY(2, as_exp_sub({})); // - 2 for va_args, AS_EXP_CODE_END_OF_VA_ARGS
+				break;
+			case MUL:
+				APPEND_ARRAY(2, as_exp_mul({})); // - 2 for va_args, AS_EXP_CODE_END_OF_VA_ARGS
+				break;
+			case DIV:
+				APPEND_ARRAY(2, as_exp_div({})); // - 2 for va_args, AS_EXP_CODE_END_OF_VA_ARGS
+				break;
+			case POW:
+				APPEND_ARRAY(2, as_exp_pow({}, {})); // - 2 for __base, __exponent
+				break;
+			case LOG:
+				APPEND_ARRAY(2, as_exp_log({}, {})); // - 2 for __base, __base
+				break;
+			case MOD:
+				APPEND_ARRAY(2, as_exp_mod({}, {})); // - 2 for __numerator, __denominator
+				break;
+			case ABS:
+				APPEND_ARRAY(1, as_exp_abs({})); // - 1 for __value
+				break;
+			case FLOOR:
+				APPEND_ARRAY(1, as_exp_floor({})); // - 1 for __num
+				break;
+			case CEIL:
+				APPEND_ARRAY(1, as_exp_ceil({})); // - 1 for __num
+				break;
+			case TO_INT:
+				APPEND_ARRAY(1, as_exp_to_int({})); // - 1 for __num
+				break;
+			case TO_FLOAT:
+				APPEND_ARRAY(1, as_exp_to_float({})); // - 1 for __num
+				break;
+			case INT_AND:
+				APPEND_ARRAY(2, as_exp_int_and({})); // - 2 for va_args, AS_EXP_CODE_END_OF_VA_ARGS
+				break;
+			case INT_OR:
+				APPEND_ARRAY(2, as_exp_int_or({})); // - 2 for va_args, AS_EXP_CODE_END_OF_VA_ARGS
+				break;
+			case INT_XOR:
+				APPEND_ARRAY(2, as_exp_int_xor({})); // - 2 for va_args, AS_EXP_CODE_END_OF_VA_ARGS
+				break;
+			case INT_NOT:
+				APPEND_ARRAY(1, as_exp_to_int_not({})); // - 1 for __expr
+				break;
+			case INT_LSHIFT:
+				APPEND_ARRAY(2, as_exp_to_int_lshift({}, {})); // - 2 for __value, __shift
+				break;
+			case INT_RSHIFT:
+				APPEND_ARRAY(2, as_exp_to_int_rshift({}, {})); // - 2 for __value, __shift
+				break;
+			case INT_ARSHIFT:
+				APPEND_ARRAY(2, as_exp_to_int_arshift({}, {})); // - 2 for __value, __shift
+				break;
+			case INT_COUNT:
+				APPEND_ARRAY(1, as_exp_to_int_count({})); // - 1 for __expr
+				break;
+			case INT_LSCAN:
+				APPEND_ARRAY(2, as_exp_to_int_lscan({}, {})); // - 2 for __value, __search
+				break;
+			case INT_RSCAN:
+				APPEND_ARRAY(2, as_exp_to_int_rscan({}, {})); // - 2 for __value, __search
+				break;
+			case INT_NOT:
+				APPEND_ARRAY(1, as_exp_to_int_not({})); // - 1 for __expr
+				break;
+			case MIN:
+				APPEND_ARRAY(2, as_exp_to_min({})); // - 2 for va_args, AS_EXP_CODE_END_OF_VA_ARGS
+				break;
+			case MAX:
+				APPEND_ARRAY(2, as_exp_to_max({})); // - 2 for va_args, AS_EXP_CODE_END_OF_VA_ARGS
+				break;
+			case COND:
+				APPEND_ARRAY(2, as_exp_to_cond({})); // - 2 for va_args, AS_EXP_CODE_END_OF_VA_ARGS
+				break;
+			case LET:
+				APPEND_ARRAY(2, as_exp_to_let({})); // - 2 for va_args, AS_EXP_CODE_END_OF_VA_ARGS
+				break;
+			case DEF: //TODO this might need special handling for var name
+				APPEND_ARRAY(2, as_exp_to_def({}, {})); // - 2 for __var_name, __expr
+				break;
+			case VAR:
+				APPEND_ARRAY(1, as_exp_to_var({})); // - 1 for __var_name
+				break;
+			case UNKNOWN:
+				APPEND_ARRAY(0, as_exp_to_unknown());
 				break;
 			default:
 				return as_error_update(err, AEROSPIKE_ERR_PARAM, "Unrecognised expression op type.");

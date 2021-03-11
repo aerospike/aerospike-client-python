@@ -45,6 +45,7 @@ TypePolicy = Union[Dict[str, Any], None]
 TypeNumber = Union[_BaseExpr, int, float]
 TypeFloat = Union[_BaseExpr, float]
 TypeInteger = Union[_BaseExpr, int]
+TypeBool = Union[_BaseExpr, bool]
 
 class IntAnd(_BaseExpr):
     """Create integer "and" (&) operator expression that is applied to two or more integers."""
@@ -121,7 +122,7 @@ class IntNot(_BaseExpr):
             Requires server version 5.6.0+.
 
             Args:
-                `expr` (_BaseExpr): An integer value or expression to be logically negated.
+                `expr` (TypeInteger): An integer value or expression to be logically negated.
         
             :return: (integer value)
 
@@ -142,8 +143,8 @@ class IntLeftShift(_BaseExpr):
             Requires server version 5.6.0+.
 
             Args:
-                `value` (_BaseExpr): An integer value or expression to be left shifted.
-                `shift` (_BaseExpr): An integer value or expression for number of bits to left shift `value` by.
+                `value` (TypeInteger): An integer value or expression to be left shifted.
+                `shift` (TypeInteger): An integer value or expression for number of bits to left shift `value` by.
         
             :return: (integer value)
 
@@ -164,8 +165,8 @@ class IntRightShift(_BaseExpr):
             Requires server version 5.6.0+.
 
             Args:
-                `value` (_BaseExpr): An integer value or expression to be right shifted.
-                `shift` (_BaseExpr): An integer value or expression for number of bits to right shift `value` by.
+                `value` (TypeInteger): An integer value or expression to be right shifted.
+                `shift` (TypeInteger): An integer value or expression for number of bits to right shift `value` by.
         
             :return: (integer value)
 
@@ -186,8 +187,8 @@ class IntArithmeticRightShift(_BaseExpr):
             Requires server version 5.6.0+.
 
             Args:
-                `value` (_BaseExpr): An integer value or expression to be right shifted.
-                `shift` (_BaseExpr): An integer value or expression for number of bits to right shift `value` by.
+                `value` (TypeInteger): An integer value or expression to be right shifted.
+                `shift` (TypeInteger): An integer value or expression for number of bits to right shift `value` by.
         
             :return: (integer value)
 
@@ -208,7 +209,7 @@ class IntCount(_BaseExpr):
             Requires server version 5.6.0+.
 
             Args:
-                `value` (_BaseExpr): An integer value or expression to have bits counted.
+                `value` (TypeInteger): An integer value or expression to have bits counted.
         
             :return: (integer value)
 
@@ -224,7 +225,7 @@ class IntLeftScan(_BaseExpr):
     """Create expression that scans integer bits from left (most significant bit)."""
     _op = _ExprOp.INT_LSCAN
 
-    def __init__(self, value: TypeInteger, search: bool):
+    def __init__(self, value: TypeInteger, search: TypeBool):
         """ Create expression that scans integer bits from left (most significant bit) to
             right (least significant bit), looking for a search bit value. When the
             search value is found, the index of that bit (where the most significant bit is
@@ -233,8 +234,8 @@ class IntLeftScan(_BaseExpr):
             Requires server version 5.6.0+.
 
             Args:
-                `value` (_BaseExpr): An integer value or expression to be scanned.
-                `search` (_BaseExpr): An integer expression or value to scan for.
+                `value` (TypeInteger): An integer value or expression to be scanned.
+                `search` (TypeBool): A bool expression or value to scan for.
         
             :return: (integer value)
 
@@ -250,7 +251,7 @@ class IntRightScan(_BaseExpr):
     """Create expression that scans integer bits from right (least significant bit)."""
     _op = _ExprOp.INT_RSCAN
 
-    def __init__(self, value: TypeInteger, search: bool):
+    def __init__(self, value: TypeInteger, search: TypeBool):
         """ Create expression that scans integer bits from right (least significant bit) to
             left (most significant bit), looking for a search bit value. When the
             search value is found, the index of that bit (where the most significant bit is
@@ -259,8 +260,8 @@ class IntRightScan(_BaseExpr):
             Requires server version 5.6.0+.
 
             Args:
-                `value` (_BaseExpr): An integer value or expression to be scanned.
-                `search` (_BaseExpr): An integer expression or value to scan for.
+                `value` (TypeInteger): An integer value or expression to be scanned.
+                `search` (TypeBool): A bool expression or value to scan for.
         
             :return: (integer value)
 
