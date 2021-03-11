@@ -21,6 +21,8 @@ class _Keys:
 
 
 class _ExprOp: # TODO replace this with an enum
+    UNKNOWN = 0 #TODO this or generic will need to be changed to something else (not 0)
+
     EQ = 1
     NE = 2
     GT = 3
@@ -33,6 +35,7 @@ class _ExprOp: # TODO replace this with an enum
     AND = 16
     OR = 17
     NOT = 18
+    EXCLUSIVE = 19
 
     ADD = 20
     SUB = 21
@@ -45,7 +48,22 @@ class _ExprOp: # TODO replace this with an enum
     FLOOR = 28
     CEIL = 29
 
-    BIT_NOT = 32
+    TO_INT = 30
+    TO_FLOAT = 31
+
+    INT_AND = 32
+    INT_OR = 33
+    INT_XOR = 34
+    INT_NOT = 35
+    INT_LSHIFT = 36
+    INT_RSHIFT = 37
+    INT_ARSHIFT = 38
+    INT_COUNT = 39
+    INT_LSCAN = 40
+    INT_RSCAN = 41
+
+    MIN = 50
+    MAX = 51
 
     META_DIGEST_MOD = 64
     META_DEVICE_SIZE = 65
@@ -61,6 +79,11 @@ class _ExprOp: # TODO replace this with an enum
     BIN = 81
     BIN_TYPE = 82
     BIN_EXISTS = 83
+
+    COND = 123
+    VAR = 124
+    LET = 125
+    DEF = 126
 
     CALL = 127
 

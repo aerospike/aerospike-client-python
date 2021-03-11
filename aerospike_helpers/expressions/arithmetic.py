@@ -149,8 +149,8 @@ class Pow(_BaseExpr):
             Requires server version 5.6.0+.
 
         Args:
-            base (TypeFloat): Base value.
-            exponent (TypeFloat): Exponent value.
+            base (TypeFloat): Float expression or value base.
+            exponent (TypeFloat): Float expression or value exponent.
 
         :return: (float value)
 
@@ -172,8 +172,8 @@ class Log(_BaseExpr):
             Requires server version 5.6.0+.
 
         Args:
-            num (TypeFloat): Number value.
-            base (TypeFloat): Base value.
+            num (TypeFloat): Float expression or value number.
+            base (TypeFloat): Float expression or value base.
 
         :return: (float value)
 
@@ -195,8 +195,8 @@ class Mod(_BaseExpr):
             Requires server version 5.6.0+.
 
         Args:
-            numerator (TypeInteger): Numerator value.
-            denominator (TypeInteger): Denominator value.
+            numerator (TypeInteger): Integer expression or value numerator.
+            denominator (TypeInteger): Integer expression or value denominator.
 
         :return: (integer value)
 
@@ -218,7 +218,7 @@ class Abs(_BaseExpr):
             Requires server version 5.6.0+.
 
         Args:
-            value (TypeNumber): Number to take absolute value of.
+            value (TypeNumber): Float expression or value to take absolute value of.
 
         :return: (number value)
 
@@ -235,12 +235,12 @@ class Floor(_BaseExpr):
     _op = _ExprOp.FLOOR
 
     def __init__(self, value: TypeFloat):
-        """ Create expression that rounds a floating point number down
+        """ Create floor expression that rounds a floating point number down
             to the closest integer value.
             Requires server version 5.6.0+.
 
         Args:
-            value (TypeFloat): Number to take floor of.
+            value (TypeFloat): Float expression or value to take floor of.
 
         :return: (integer value)
 
@@ -257,12 +257,12 @@ class Ceil(_BaseExpr):
     _op = _ExprOp.CEIL
 
     def __init__(self, value: TypeFloat):
-        """ Create expression that rounds a floating point number up
+        """ Create ceil expression that rounds a floating point number up
             to the closest integer value.
             Requires server version 5.6.0+.
 
         Args:
-            value (TypeFloat): Number to take ceiling of.
+            value (TypeFloat): Float expression or value to take ceiling of.
 
         :return: (integer value)
 
@@ -272,3 +272,89 @@ class Ceil(_BaseExpr):
             expr = Eq(Ceil(2.25), 3).compile()
         """        
         self._children = (value,)
+
+
+class ToInt(_BaseExpr):
+    """Create expression that converts a float to an integer."""
+    _op = _ExprOp.TO_INT
+
+    def __init__(self, value: TypeFloat):
+        """ Create expression that converts a float to an integer.
+            Requires server version 5.6.0+.
+
+        Args:
+            value (TypeFloat): Float expression or value to convert to int.
+
+        :return: (integer value)
+
+        Example::
+
+            #For float bin "a", int(FloatBin("a")) == 2
+            expr = Eq(ToInt(FloatBin("a")), 2).compile()
+        """        
+        self._children = (value,)
+
+
+class ToFloat(_BaseExpr):
+    """Create expression that converts an integer to a float."""
+    _op = _ExprOp.TO_FLOAT
+
+    def __init__(self, value: TypeInteger):
+        """ Create expression that converts an integer to a float.
+            Requires server version 5.6.0+.
+
+        Args:
+            value (TypeInteger): Integer expression or value to convert to float.
+
+        :return: (float value)
+
+        Example::
+
+            #For int bin "a", float(IntBin("a")) == 2
+            expr = Eq(ToFloat(IntBin("a")), 2).compile()
+        """        
+        self._children = (value,)
+
+
+class Min(_BaseExpr):
+    """Create expression that returns the minimum value in a variable number of expressions."""
+    _op = _ExprOp.MIN
+
+    def __init__(self, *args: TypeNumber):
+        """ Create expression that returns the minimum value in a variable number of expressions.
+            All arguments must be the same type (integer or float).
+            Requires server version 5.6.0+.
+
+        Args:
+            `*args` (TypeNumber): Variable amount of float or integer expressions or values from which to find the minimum value.
+
+        :return: (integer or float value).
+
+        Example::
+
+            # for integer bins a, b, c, min(a, b, c) > 0
+            expr = GT(Min(IntBin("a"), IntBin("b"), IntBin("c")), 0).compile()
+        """        
+        args + (_GenericExpr(_ExprOp._AS_EXP_CODE_END_OF_VA_ARGS, 0, {}),)
+
+
+class Max(_BaseExpr):
+    """Create expression that returns the maximum value in a variable number of expressions."""
+    _op = _ExprOp.MAX
+
+    def __init__(self, *args: TypeNumber):
+        """ Create expression that returns the maximum value in a variable number of expressions.
+            All arguments must be the same type (integer or float).
+            Requires server version 5.6.0+.
+
+        Args:
+            `*args` (TypeNumber): Variable amount of float or integer expressions or values from which to find the maximum value.
+
+        :return: (integer or float value).
+
+        Example::
+
+            # for integer bins a, b, c, max(a, b, c) > 100
+            expr = GT(Max(IntBin("a"), IntBin("b"), IntBin("c")), 100).compile()
+        """        
+        args + (_GenericExpr(_ExprOp._AS_EXP_CODE_END_OF_VA_ARGS, 0, {}),)

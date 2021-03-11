@@ -37,6 +37,31 @@ TypeComparisonArg = Union[_BaseExpr, Any]
 TypeGeo = Union[_BaseExpr, aerospike.GeoJSON]
 
 
+###################
+# Value Expressions
+###################
+
+
+class Unknown(_BaseExpr):
+    """ Create an 'unknown' value. Used to intentionally fail an expression.
+    """
+    _op = _ExprOp.UNKNOWN
+
+    def __init__(self):
+        """ Create an 'unknown' value. Used to intentionally fail an expression.
+            The failure can be ignored with AS_EXP_WRITE_EVAL_NO_FAIL or TODO fill in AS_EXP_WRITE_EVAL_NO_FAIL and AS_EXP_READ_NO_FAIL
+            AS_EXP_READ_NO_FAIL.
+        
+            :return (unkown value)
+
+            Example::
+
+                # Integer record key >= 10000.
+                expr = GE(KeyInt(), 10000).compile() TODO update example
+        """
+        super().__init__()
+
+
 ########################
 # Record Key Expressions
 ########################
@@ -802,3 +827,134 @@ class Or(_BaseExpr):
                     Eq(IntBin("b"), 0)).compile()
         """ 
         self._children = exprs + (_GenericExpr(_ExprOp._AS_EXP_CODE_END_OF_VA_ARGS, 0, {}),)
+
+
+class Exclusive(_BaseExpr):
+    """Create an expression that returns True if only one of the expressions are True."""
+    _op = _ExprOp.EXCLUSIVE
+
+    def __init__(self, *exprs: _BaseExpr):
+        """ Create an expression that returns True if only one of the expressions are True.
+
+        Args:
+            `*exprs` (_BaseExpr): Variable amount of expressions to be checked.
+
+        :return: (boolean value)
+
+        Example::
+
+            # exclusive(a == 0, b == 0)
+            expr = exclusive(
+                            Eq(IntBin("a"), 0),
+                            Eq(IntBin("b"), 0)).compile()
+        """
+        self._children = exprs + (_GenericExpr(_ExprOp._AS_EXP_CODE_END_OF_VA_ARGS, 0, {}),)
+
+
+#######################################
+# Flow Control and Variable Expressions
+#######################################
+
+
+class Cond(_BaseExpr):
+    """ Conditionally select an expression from a variable number of expression pairs
+        followed by default expression action.
+    """
+    _op = _ExprOp.COND
+
+    def __init__(self, *exprs: _BaseExpr):
+        """ Conditionally select an expression from a variable number of expression pairs
+            followed by default expression action. Requires server version 5.6.0+.
+
+        Args:
+            `*exprs` (_BaseExpr): bool exp1, action exp1, bool exp2, action exp2, ..., action-default
+
+        :return: (boolean value)
+
+        Example::
+
+            # Apply operator based on type and test if greater than 100.
+            expr = GT(
+                    Cond(
+                        Eq(IntBin("type"), 0),
+                            Add(IntBin("val1"), IntBin("val2")),
+                        Eq(IntBin("type"), 1),
+                            Sub(IntBin("val1"), IntBin("val2")),
+                        Eq(IntBin("type"), 2),
+                            Mul(IntBin("val1"), IntBin("val2")))
+                    100).compile()
+        """
+        self._children = exprs + (_GenericExpr(_ExprOp._AS_EXP_CODE_END_OF_VA_ARGS, 0, {}),)
+
+
+class Let(_BaseExpr):
+    """ Define variables and expressions in scope."""
+    _op = _ExprOp.LET
+
+    def __init__(self, *exprs: _BaseExpr):
+        """ Define variables and expressions in scope.
+            Requires server version 5.6.0+.
+
+        Args:
+            `*exprs` (_BaseExpr): Variable number of Def expressions followed by a scoped expression.
+
+        :return: (result of scoped expression)
+
+        Example::
+
+            # for int bin "a", 5 < a < 10
+            expr = Let(Def("x", IntBin("a")),
+                    And(
+                        LT(5, Var("x")),
+                        LT(Var("x"), 10))).compile()
+        """
+        self._children = exprs + (_GenericExpr(_ExprOp._AS_EXP_CODE_END_OF_VA_ARGS, 0, {}),)
+
+
+class Def(_BaseExpr):
+    """ Assign variable to an expression that can be accessed later."""
+    _op = _ExprOp.DEF
+
+    def __init__(self, var_name: str, expr: _BaseExpr):
+        """ Assign variable to an expression that can be accessed later.
+            Requires server version 5.6.0+.
+
+        Args:
+            `var_name` (str): Variable name.
+            `expr` (_BaseExpr): Variable is set to result of this expression.
+
+        :return: (a variabe name expression pair)
+
+        Example::
+
+            # for int bin "a", 5 < a < 10
+            expr = Let(Def("x", IntBin("a")),
+                    And(
+                        LT(5, Var("x")),
+                        LT(Var("x"), 10))).compile()
+        """
+        self._children = (var_name, expr)
+
+
+class Var(_BaseExpr):
+    """ Retrieve expression value from a variable."""
+    _op = _ExprOp.VAR
+
+    def __init__(self, var_name: str):
+        """ Retrieve expression value from a variable.
+            Requires server version 5.6.0+.
+
+        Args:
+            `var_name` (str): Variable name.
+
+        :return: (value stored in variable)
+
+        Example::
+
+            # for int bin "a", 5 < a < 10
+            expr = Let(Def("x", IntBin("a")),
+                    And(
+                        LT(5, Var("x")),
+                        LT(Var("x"), 10))).compile()
+        """
+        self._children = (var_name,)
