@@ -933,7 +933,8 @@ class Def(_BaseExpr):
                         LT(5, Var("x")),
                         LT(Var("x"), 10))).compile()
         """
-        self._children = (var_name, expr)
+        self._fixed = {_Keys.VALUE_KEY: var_name}
+        self._children = (expr,)
 
 
 class Var(_BaseExpr):
@@ -957,4 +958,4 @@ class Var(_BaseExpr):
                         LT(5, Var("x")),
                         LT(Var("x"), 10))).compile()
         """
-        self._children = (var_name,)
+        self._fixed = {_Keys.VALUE_KEY: var_name}

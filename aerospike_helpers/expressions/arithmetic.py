@@ -23,19 +23,13 @@ Example::
     expr = exp.Eq(exp.IntBin("bin_name"), 10).compile()
 '''
 
-from itertools import chain
-from typing import List, Optional, Tuple, Union, Dict, Any
+from typing import Union
+
 import aerospike
-from aerospike_helpers import cdt_ctx
 from aerospike_helpers.expressions.resources import _GenericExpr
 from aerospike_helpers.expressions.resources import _BaseExpr
 from aerospike_helpers.expressions.resources import _ExprOp
-from aerospike_helpers.expressions.resources import ResultType
-from aerospike_helpers.expressions.resources import _Keys
 
-
-TypeComparisonArg = Union[_BaseExpr, Any]
-TypeGeo = Union[_BaseExpr, aerospike.GeoJSON]
 TypeNumber = Union[_BaseExpr, int, float]
 TypeFloat = Union[_BaseExpr, float]
 TypeInteger = Union[_BaseExpr, int]
@@ -65,7 +59,7 @@ class Add(_BaseExpr):
             # Integer bin "a" + "b" == 11
             expr = Eq(Add(IntBin("a"), IntBin("b")), 11).compile()
         """        
-        args + (_GenericExpr(_ExprOp._AS_EXP_CODE_END_OF_VA_ARGS, 0, {}),)
+        self._children = args + (_GenericExpr(_ExprOp._AS_EXP_CODE_END_OF_VA_ARGS, 0, {}),)
 
 
 class Sub(_BaseExpr):
@@ -89,7 +83,7 @@ class Sub(_BaseExpr):
             # Integer bin "a" - "b" == 11
             expr = Eq(Sub(IntBin("a"), IntBin("b")), 11).compile()
         """        
-        args + (_GenericExpr(_ExprOp._AS_EXP_CODE_END_OF_VA_ARGS, 0, {}),)
+        self._children = args + (_GenericExpr(_ExprOp._AS_EXP_CODE_END_OF_VA_ARGS, 0, {}),)
 
 
 class Mul(_BaseExpr):
@@ -112,7 +106,7 @@ class Mul(_BaseExpr):
             # Integer bin "a" * "b" >= 11
             expr = GE(Mul(IntBin("a"), IntBin("b")), 11).compile()
         """        
-        args + (_GenericExpr(_ExprOp._AS_EXP_CODE_END_OF_VA_ARGS, 0, {}),)
+        self._children = args + (_GenericExpr(_ExprOp._AS_EXP_CODE_END_OF_VA_ARGS, 0, {}),)
 
 
 class Div(_BaseExpr):
@@ -136,7 +130,7 @@ class Div(_BaseExpr):
             # Integer bin "a" / "b" / "c" >= 11
             expr = GE(Mul(IntBin("a"), IntBin("b"), IntBin("b")), 11).compile()
         """        
-        args + (_GenericExpr(_ExprOp._AS_EXP_CODE_END_OF_VA_ARGS, 0, {}),)
+        self._children = args + (_GenericExpr(_ExprOp._AS_EXP_CODE_END_OF_VA_ARGS, 0, {}),)
 
 
 class Pow(_BaseExpr):
@@ -335,7 +329,7 @@ class Min(_BaseExpr):
             # for integer bins a, b, c, min(a, b, c) > 0
             expr = GT(Min(IntBin("a"), IntBin("b"), IntBin("c")), 0).compile()
         """        
-        args + (_GenericExpr(_ExprOp._AS_EXP_CODE_END_OF_VA_ARGS, 0, {}),)
+        self._children = args + (_GenericExpr(_ExprOp._AS_EXP_CODE_END_OF_VA_ARGS, 0, {}),)
 
 
 class Max(_BaseExpr):
@@ -357,4 +351,4 @@ class Max(_BaseExpr):
             # for integer bins a, b, c, max(a, b, c) > 100
             expr = GT(Max(IntBin("a"), IntBin("b"), IntBin("c")), 100).compile()
         """        
-        args + (_GenericExpr(_ExprOp._AS_EXP_CODE_END_OF_VA_ARGS, 0, {}),)
+        self._children = args + (_GenericExpr(_ExprOp._AS_EXP_CODE_END_OF_VA_ARGS, 0, {}),)

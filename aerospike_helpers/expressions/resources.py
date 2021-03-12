@@ -21,7 +21,7 @@ class _Keys:
 
 
 class _ExprOp: # TODO replace this with an enum
-    UNKNOWN = 0 #TODO this or generic will need to be changed to something else (not 0)
+    UNKNOWN = 1000 #TODO this or generic will need to be changed to something else (not 0)
 
     EQ = 1
     NE = 2

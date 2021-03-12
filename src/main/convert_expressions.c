@@ -35,7 +35,7 @@
 
 // EXPR OPS
 enum expr_ops {
-	UNKNOWN = -1
+	UNKNOWN = 1000,
 	VAL = 0,
 	EQ = 1,
 	NE = 2,
@@ -199,7 +199,7 @@ as_status get_expr_size(int * size_to_alloc, int * intermediate_exprs_size, as_v
 
 	static const int EXPR_SIZES[] = {
 		[BIN]                                            = EXP_SZ(as_exp_bin_int(0)),
-		[VAL]                                            = 0, //EXP_SZ(as_exp_val(NULL)), // NOTE if I don't count vals I don't need to subtract from other ops
+		[VAL]                                            = EXP_SZ(as_exp_val(NULL)), // NOTE if I don't count vals I don't need to subtract from other ops // MUST count these for expressions with var args.
 		[EQ]                                             = EXP_SZ(as_exp_cmp_eq({},{})),
 		[NE]                                             = EXP_SZ(as_exp_cmp_ne({},{})),
 		[GT]                                             = EXP_SZ(as_exp_cmp_gt({},{})),
@@ -339,7 +339,7 @@ as_status get_expr_size(int * size_to_alloc, int * intermediate_exprs_size, as_v
 		[INT_OR]                                         = EXP_SZ(as_exp_int_or({})),
 		[INT_XOR]                                        = EXP_SZ(as_exp_int_xor({})),
 		[INT_NOT]                                        = EXP_SZ(as_exp_int_not({})),
-		[INT_LSHIFT]                                     = EXP_SZ(as_exp_int_lshit({}, {})),
+		[INT_LSHIFT]                                     = EXP_SZ(as_exp_int_lshift({}, {})),
 		[INT_RSHIFT]                                     = EXP_SZ(as_exp_int_rshift({}, {})),
 		[INT_ARSHIFT]                                    = EXP_SZ(as_exp_int_arshift({}, {})),
 		[INT_COUNT]                                      = EXP_SZ(as_exp_int_count({})),
@@ -491,6 +491,7 @@ as_status add_expr_macros(AerospikeClient * self, as_static_pool * static_pool, 
 		int64_t lval1 = 0;
 		int64_t lval2 = 0;
 		char * bin_name = NULL;
+		PyObject * py_val_from_dict = NULL;
 		
 		if (temp_expr->op >= _AS_EXP_CODE_CDT_LIST_CRMOD && temp_expr->op <= _AS_EXP_CODE_CDT_MAP_MOD) {
 
@@ -542,10 +543,10 @@ as_status add_expr_macros(AerospikeClient * self, as_static_pool * static_pool, 
 					return err->code;
 				}
 
-				PyObject * py_obj = PyDict_GetItemString(temp_expr->pydict, AS_PY_VAL_KEY);
+				py_val_from_dict = PyDict_GetItemString(temp_expr->pydict, AS_PY_VAL_KEY);
 				char * regex_str = NULL;
-				if (PyUnicode_Check(py_obj)) {
-					PyObject * py_ustr = PyUnicode_AsUTF8String(py_obj);
+				if (PyUnicode_Check(py_val_from_dict)) {
+					PyObject * py_ustr = PyUnicode_AsUTF8String(py_val_from_dict);
 					regex_str = strdup(PyBytes_AsString(py_ustr));
 					temp_expr->val.val_string_p = regex_str;
 					Py_DECREF(py_ustr);
@@ -1088,49 +1089,62 @@ as_status add_expr_macros(AerospikeClient * self, as_static_pool * static_pool, 
 				APPEND_ARRAY(2, as_exp_int_xor({})); // - 2 for va_args, AS_EXP_CODE_END_OF_VA_ARGS
 				break;
 			case INT_NOT:
-				APPEND_ARRAY(1, as_exp_to_int_not({})); // - 1 for __expr
+				APPEND_ARRAY(1, as_exp_int_not({})); // - 1 for __expr
 				break;
 			case INT_LSHIFT:
-				APPEND_ARRAY(2, as_exp_to_int_lshift({}, {})); // - 2 for __value, __shift
+				APPEND_ARRAY(2, as_exp_int_lshift({}, {})); // - 2 for __value, __shift
 				break;
 			case INT_RSHIFT:
-				APPEND_ARRAY(2, as_exp_to_int_rshift({}, {})); // - 2 for __value, __shift
+				APPEND_ARRAY(2, as_exp_int_rshift({}, {})); // - 2 for __value, __shift
 				break;
 			case INT_ARSHIFT:
-				APPEND_ARRAY(2, as_exp_to_int_arshift({}, {})); // - 2 for __value, __shift
+				APPEND_ARRAY(2, as_exp_int_arshift({}, {})); // - 2 for __value, __shift
 				break;
 			case INT_COUNT:
-				APPEND_ARRAY(1, as_exp_to_int_count({})); // - 1 for __expr
+				APPEND_ARRAY(1, as_exp_int_count({})); // - 1 for __expr
 				break;
 			case INT_LSCAN:
-				APPEND_ARRAY(2, as_exp_to_int_lscan({}, {})); // - 2 for __value, __search
+				APPEND_ARRAY(2, as_exp_int_lscan({}, {})); // - 2 for __value, __search
 				break;
 			case INT_RSCAN:
-				APPEND_ARRAY(2, as_exp_to_int_rscan({}, {})); // - 2 for __value, __search
-				break;
-			case INT_NOT:
-				APPEND_ARRAY(1, as_exp_to_int_not({})); // - 1 for __expr
+				APPEND_ARRAY(2, as_exp_int_rscan({}, {})); // - 2 for __value, __search
 				break;
 			case MIN:
-				APPEND_ARRAY(2, as_exp_to_min({})); // - 2 for va_args, AS_EXP_CODE_END_OF_VA_ARGS
+				APPEND_ARRAY(2, as_exp_min({})); // - 2 for va_args, AS_EXP_CODE_END_OF_VA_ARGS
 				break;
 			case MAX:
-				APPEND_ARRAY(2, as_exp_to_max({})); // - 2 for va_args, AS_EXP_CODE_END_OF_VA_ARGS
+				APPEND_ARRAY(2, as_exp_max({})); // - 2 for va_args, AS_EXP_CODE_END_OF_VA_ARGS
 				break;
 			case COND:
-				APPEND_ARRAY(2, as_exp_to_cond({})); // - 2 for va_args, AS_EXP_CODE_END_OF_VA_ARGS
+				APPEND_ARRAY(2, as_exp_cond({})); // - 2 for va_args, AS_EXP_CODE_END_OF_VA_ARGS
 				break;
 			case LET:
-				APPEND_ARRAY(2, as_exp_to_let({})); // - 2 for va_args, AS_EXP_CODE_END_OF_VA_ARGS
+				APPEND_ARRAY(2, as_exp_let({})); // - 2 for va_args, AS_EXP_CODE_END_OF_VA_ARGS
 				break;
-			case DEF: //TODO this might need special handling for var name
-				APPEND_ARRAY(2, as_exp_to_def({}, {})); // - 2 for __var_name, __expr
+			case DEF:;
+				py_val_from_dict = PyDict_GetItemString(temp_expr->pydict, AS_PY_VAL_KEY);
+				const char * def_var_name = NULL;
+				if (PyUnicode_Check(py_val_from_dict)) {
+					def_var_name = PyUnicode_AsUTF8(py_val_from_dict);
+				} else {
+					return as_error_update(err, AEROSPIKE_ERR_PARAM, "regex_str must be a string.");
+				}
+
+				APPEND_ARRAY(1, as_exp_def(def_var_name, {})); // - 1 for __expr
 				break;
-			case VAR:
-				APPEND_ARRAY(1, as_exp_to_var({})); // - 1 for __var_name
+			case VAR:;
+				py_val_from_dict = PyDict_GetItemString(temp_expr->pydict, AS_PY_VAL_KEY);
+				const char * var_name = NULL;
+				if (PyUnicode_Check(py_val_from_dict)) {
+					var_name = PyUnicode_AsUTF8(py_val_from_dict);
+				} else {
+					return as_error_update(err, AEROSPIKE_ERR_PARAM, "regex_str must be a string.");
+				}
+
+				APPEND_ARRAY(0, as_exp_var(var_name));
 				break;
 			case UNKNOWN:
-				APPEND_ARRAY(0, as_exp_to_unknown());
+				APPEND_ARRAY(0, as_exp_unknown());
 				break;
 			default:
 				return as_error_update(err, AEROSPIKE_ERR_PARAM, "Unrecognised expression op type.");

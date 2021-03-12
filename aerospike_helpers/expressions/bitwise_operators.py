@@ -24,24 +24,17 @@ Example::
     expr = exp.BitCount(16, 8 * 3, exp.BlobBin("c")).compile()
 '''
 
-from itertools import chain
-from typing import List, Optional, Tuple, Union, Dict, Any
+from typing import Union
+
 import aerospike
-from aerospike_helpers import cdt_ctx
 from aerospike_helpers.expressions.resources import _GenericExpr
 from aerospike_helpers.expressions.resources import _BaseExpr
 from aerospike_helpers.expressions.resources import _ExprOp
-from aerospike_helpers.expressions.resources import ResultType
-from aerospike_helpers.expressions.resources import _Keys
-from aerospike_helpers.expressions.base import BlobBin
 
 ##############################
 # Bitwise Operator Expressions
 ##############################
 
-TypeBitValue = Union[bytes, bytearray]
-TypeBinName = Union[_BaseExpr, str]
-TypePolicy = Union[Dict[str, Any], None]
 TypeNumber = Union[_BaseExpr, int, float]
 TypeFloat = Union[_BaseExpr, float]
 TypeInteger = Union[_BaseExpr, int]
@@ -115,7 +108,7 @@ class IntXOr(_BaseExpr):
 
 class IntNot(_BaseExpr):
     """Create integer "not" (~) operator."""
-    _op = _ExprOp.Int_NOT
+    _op = _ExprOp.INT_NOT
 
     def __init__(self, expr: TypeInteger):
         """ Create integer "not" (~) operator.
