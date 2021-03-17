@@ -20,7 +20,7 @@ except:
     sys.exit(1)
 
 
-class TestExpressions(TestBaseClass):
+class TestExpressionsArithmetic(TestBaseClass):
 
     @pytest.fixture(autouse=True)
     def setup(self, request, as_connection):

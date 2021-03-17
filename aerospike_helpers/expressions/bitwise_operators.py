@@ -86,7 +86,7 @@ class IntOr(_BaseExpr):
 
 class IntXOr(_BaseExpr):
     """Create integer "xor" (^) operator that is applied to two or more integers."""
-    _op = _ExprOp.INT_AND
+    _op = _ExprOp.INT_XOR
 
     def __init__(self, *exprs: TypeInteger):
         """ Create integer "xor" (^) operator that is applied to two or more integers.
@@ -101,7 +101,7 @@ class IntXOr(_BaseExpr):
             Example::
 
                 # for int bin "a", "b", a ^ b == 16
-                expr = Eq(IntXOr(IntBin("a"), IntBin("b")), 0).compile()
+                expr = Eq(IntXOr(IntBin("a"), IntBin("b")), 16).compile()
         """        
         self._children = exprs + (_GenericExpr(_ExprOp._AS_EXP_CODE_END_OF_VA_ARGS, 0, {}),)
 
