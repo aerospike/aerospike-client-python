@@ -32,7 +32,7 @@ EXPR_KEY = "expr"
 EXPR_FLAGS_KEY = "expr_flags"
 
 
-def expression_read(expression: resources._BaseExpr, expression_read_flags: int = None): #TODO create typehint type for flags
+def expression_read(expression: resources._BaseExpr, expression_read_flags: int = aerospike.EXP_READ_DEFAULT): #TODO create typehint type for flags
     """Create an expression read operation dictionary.
 
     Reads and returns the value produced by the evaluated expression.
@@ -55,7 +55,7 @@ def expression_read(expression: resources._BaseExpr, expression_read_flags: int 
     return op_dict
 
 
-def expression_write(bin_name: str, expression: resources._BaseExpr, expression_write_flags: int = None): #TODO create typehint type for flags
+def expression_write(bin_name: str, expression: resources._BaseExpr, expression_write_flags: int = aerospike.EXP_WRITE_DEFAULT): #TODO create typehint type for flags
     """Create an expression write operation dictionary.
 
     Writes the value produced by the evaluated expression to the supplied bin.
