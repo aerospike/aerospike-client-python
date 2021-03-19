@@ -309,6 +309,7 @@ as_status get_expr_size(int * size_to_alloc, int * intermediate_exprs_size, as_v
 		[OP_BIT_LSCAN]                                   = EXP_SZ(as_exp_bit_lscan({}, {}, {}, {})),
 		[OP_BIT_RSCAN]                                   = EXP_SZ(as_exp_bit_rscan({}, {}, {}, {})),
 		[OP_BIT_GET_INT]                                 = EXP_SZ(as_exp_bit_get_int({}, {}, 0, {})),
+		[OP_HLL_INIT]                                    = EXP_SZ(as_exp_hll_init_mh(NULL, 0, 0, {})),
 		[OP_HLL_ADD]                                     = EXP_SZ(as_exp_hll_add_mh(NULL, {}, 0, 0, {})),
 		[OP_HLL_GET_COUNT]                               = EXP_SZ(as_exp_hll_update(NULL, {}, {})),
 		[OP_HLL_GET_UNION]                               = EXP_SZ(as_exp_hll_get_union({}, {})),
@@ -1015,6 +1016,9 @@ as_status add_expr_macros(AerospikeClient * self, as_static_pool * static_pool, 
 				break;
 			case OP_BIT_GET_INT:
 				APPEND_ARRAY(4, as_exp_bit_get_int({}, {}, 0, {}));
+				break;
+			case OP_HLL_INIT: // NOTE: this case covers HLLAddMH, HLLAdd, and HLLUpdate
+				APPEND_ARRAY(4, as_exp_hll_init_mh(NULL, 0, 0, {})); // - 4 for index_bit_count, mh_bit_count, policy, bin
 				break;
 			case OP_HLL_ADD: // NOTE: this case covers HLLAddMH, HLLAdd, and HLLUpdate
 				APPEND_ARRAY(5, as_exp_hll_add_mh(NULL, {}, 0, 0, {})); // - 5 for list, index_bit_count, -1, policy, bin

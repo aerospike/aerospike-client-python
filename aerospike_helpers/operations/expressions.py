@@ -46,11 +46,9 @@ def expression_read(expression: resources._BaseExpr, expression_read_flags: int 
 
     op_dict = {
         OP_KEY: aerospike.OP_EXPR_READ,
-        EXPR_KEY: expression
+        EXPR_KEY: expression,
+        EXPR_FLAGS_KEY: expression_read_flags
     }
-
-    if expression_read_flags:
-        op_dict[EXPR_FLAGS_KEY] = expression_read_flags
 
     return op_dict
 
@@ -71,10 +69,8 @@ def expression_write(bin_name: str, expression: resources._BaseExpr, expression_
     op_dict = {
         OP_KEY: aerospike.OP_EXPR_WRITE,
         BIN_KEY: bin_name,
-        EXPR_KEY: expression
+        EXPR_KEY: expression,
+        EXPR_FLAGS_KEY: expression_write_flags
     }
-
-    if expression_write_flags:
-        op_dict[EXPR_FLAGS_KEY] = expression_write_flags
 
     return op_dict

@@ -25,6 +25,7 @@
 #include <aerospike/as_status.h>
 #include <aerospike/as_admin.h>
 #include <aerospike/as_operations.h>
+#include <aerospike/as_exp_operations.h>
 #include <aerospike/aerospike_index.h>
 #include "aerospike/as_scan.h"
 #include "aerospike/as_job.h"
