@@ -10,6 +10,7 @@ from aerospike_helpers.expressions import *
 from aerospike_helpers.operations import map_operations
 from aerospike_helpers.operations import list_operations
 from aerospike_helpers.operations import hll_operations
+from aerospike_helpers.operations import expression_operations as expressions
 from aerospike_helpers.operations import operations
 from math import sqrt, ceil, floor
 
@@ -86,7 +87,7 @@ class TestExpressions(TestBaseClass):
 
         for i in range(_NUM_RECORDS):
             key = ('test', u'demo', i)
-            rec = {'name': 'name%s' % (str(i)), 't': True,
+            rec = {'name': 'name%s' % (str(i)), 't': True, 'f': False,
                     'age': i,
                     'balance': i * 10,
                     'key': i, 'alt_name': 'name%s' % (str(i)),
@@ -219,3 +220,72 @@ class TestExpressions(TestBaseClass):
                 )
             ).compile()
         verify_multiple_expression_avenues(self.as_connection, self.test_ns, self.test_set, expr, "ilist_bin", _NUM_RECORDS)
+
+    def test_bool_bin_true(self):
+        expr = BoolBin("t")
+        ops = [
+            expressions.expression_read(expr.compile())
+        ]
+        _, _, res = self.as_connection.operate(('test', u'demo', _NUM_RECORDS - 1), ops)
+        assert res['']
+
+    def test_bool_bin_false(self):
+        expr = Not(BoolBin("t"))
+        ops = [
+            expressions.expression_read(expr.compile())
+        ]
+        _, _, res = self.as_connection.operate(('test', u'demo', _NUM_RECORDS - 1), ops)
+        assert not res['']
+
+    def test_exclusive_pos(self):
+        expr = Exclusive(
+                GT(IntBin("age"), _NUM_RECORDS // 2),
+                GT(IntBin("age"), _NUM_RECORDS - 1))
+        record = self.as_connection.get(('test', u'demo', _NUM_RECORDS - 2), policy={'expressions': expr.compile()})
+        assert(record[2]['age'] == _NUM_RECORDS - 2)
+
+    def test_exclusive_neg(self):
+        expr = Exclusive(
+                GT(IntBin("age"), _NUM_RECORDS // 2),
+                GT(IntBin("age"), _NUM_RECORDS // 2))
+        with pytest.raises(e.FilteredOut):
+            self.as_connection.get(('test', u'demo', _NUM_RECORDS - 2), policy={'expressions': expr.compile()})
+
+    def test_let_def_var_pos(self):
+        expr = Let(Def("a", IntBin("age")),
+                Cond(
+                    LT(Var("a"), 50),
+                        True,
+                    Unknown()))
+        record = self.as_connection.get(('test', u'demo', _NUM_RECORDS - 1), policy={'expressions': expr.compile()})
+        assert(record[2]['age'] == _NUM_RECORDS - 1)
+
+    def test_let_def_var_neg(self):
+        expr = Let(Def("a", IntBin("age")),
+                Cond(
+                    LT(Var("a"), 0),
+                        True,
+                    Unknown()))
+        with pytest.raises(e.FilteredOut):
+            self.as_connection.get(('test', u'demo', _NUM_RECORDS - 1), policy={'expressions': expr.compile()})
+
+    def test_cond_pos(self):
+        expr = Cond(
+                    GE(IntBin("age"), 2),
+                        True,
+                    Unknown())
+        record = self.as_connection.get(('test', u'demo', _NUM_RECORDS - 1), policy={'expressions': expr.compile()})
+        assert(record[2]['age'] == _NUM_RECORDS - 1)
+
+    def test_cond_neg(self):
+        expr = Cond(
+                    GT(IntBin("age"), _NUM_RECORDS),
+                        True,
+                    Unknown())
+        with pytest.raises(e.FilteredOut):
+            record = self.as_connection.get(('test', u'demo', _NUM_RECORDS - 1), policy={'expressions': expr.compile()})
+
+    # def test_cond_neg(self):
+    #     expr = NE(VoidTime(), 0)
+    #     record = self.as_connection.get(('test', u'demo', _NUM_RECORDS), policy={'expressions': expr.compile()})
+    #     assert(record[2]['extra'] == 'record')

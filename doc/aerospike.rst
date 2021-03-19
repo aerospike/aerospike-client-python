@@ -2079,6 +2079,57 @@ HyperLogLog Write Flags
 
 .. versionadded:: 3.11.0
 
+.. _aerospike_expression_write_flags:
+
+expression Write Flags
+----------------------
+Flags used by expression_write.
+
+.. data:: EXP_WRITE_DEFAULT
+
+    Default. Allow create or update.
+
+.. data:: EXP_WRITE_CREATE_ONLY
+
+    If bin does not exist, a new bin will be created.
+    If bin exists, the operation will be denied.
+    If bin exists, fail with BinExistsError
+    when EXP_WRITE_POLICY_NO_FAIL is not set.
+
+.. data:: EXP_WRITE_UPDATE_ONLY
+
+	If bin exists, the bin will be overwritten.
+	If bin does not exist, the operation will be denied.
+	If bin does not exist, fail with BinNotFound
+	when EXP_WRITE_POLICY_NO_FAIL is not set.
+
+.. data:: EXP_WRITE_ALLOW_DELETE
+
+	If expression results in nil value, then delete the bin. Otherwise, return
+	AEROSPIKE_ERR_OP_NOT_APPLICABLE when OpNotApplicable is not set.
+
+.. data:: EXP_WRITE_POLICY_NO_FAIL
+
+    Do not raise error if operation is denied.
+
+.. data:: EXP_WRITE_EVAL_NO_FAIL
+
+    Ignore failures caused by the expression resolving to unknown or a non-bin type.
+
+.. _aerospike_expression_read_flags:
+
+expression Read Flags
+----------------------
+Flags used by expression_read
+
+.. data:: EXP_READ_DEFAULT
+
+    Default.
+
+.. data:: EXP_READ_EVAL_NO_FAIL
+
+    Ignore failures caused by the expression resolving to unknown or a non-bin type.
+
 .. _aerospike_bin_types:
 
 Bin Types

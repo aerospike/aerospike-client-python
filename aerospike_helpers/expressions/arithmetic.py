@@ -14,13 +14,13 @@
 # limitations under the License.
 ##########################################################################
 '''
-Base expressions include operators, bin, and meta data related expressions.
+Arithmetic expressions provide arithmetic operator support for Aerospike expressions.
 
 Example::
 
-    import aerospike_helpers.expressions.base as exp
-    # See if integer bin "bin_name" contains a value equal to 10.
-    expr = exp.Eq(exp.IntBin("bin_name"), 10).compile()
+    import aerospike_helpers.expressions as exp
+    # Add integer bin "a" to integer bin "b" and see if the result is > 20.
+    expr = exp.GT(exp.Add(IntBin("a"), IntBin("b")), 20).compile()
 '''
 
 from typing import Union

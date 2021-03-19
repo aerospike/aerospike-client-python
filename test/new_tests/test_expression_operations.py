@@ -8,7 +8,7 @@ from .as_status_codes import AerospikeStatus
 from aerospike_helpers import cdt_ctx
 from aerospike_helpers.expressions import *
 from aerospike_helpers.operations import operations
-from aerospike_helpers.operations import expressions
+from aerospike_helpers.operations import expression_operations as expressions
 from math import sqrt, ceil, floor
 from aerospike import exception as e
 

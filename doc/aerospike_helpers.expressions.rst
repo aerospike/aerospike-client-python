@@ -220,6 +220,27 @@ aerospike\_helpers\.expressions\.hll\ module
     :members:
     :special-members:
 
+aerospike\_helpers\.expressions\.arithmetic\ module
+---------------------------------------------------
+
+.. automodule:: aerospike_helpers.expressions.arithmetic
+
+    .. autoclass:: ResultType
+      :members:
+      :undoc-members:
+      :member-order: bysource
+
+aerospike\_helpers\.expressions\.bitwise_operators\ module
+----------------------------------------------------------
+
+.. automodule:: aerospike_helpers.expressions.bitwise_operators
+
+    .. autoclass:: ResultType
+      :members:
+      :undoc-members:
+      :member-order: bysource
+
+
 aerospike\_helpers\.expressions\.resources\ module
 --------------------------------------------------
 

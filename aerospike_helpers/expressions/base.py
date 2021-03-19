@@ -159,6 +159,30 @@ class KeyExists(_BaseExpr):
 #################
 
 
+class BoolBin(_BaseExpr):
+    """ Create an expression that returns a bin as a boolean. Returns 'unknown'
+        if the bin is not a boolean.
+    """
+    _op = _ExprOp.BIN
+    _rt = ResultType.BOOLEAN
+
+    def __init__(self, bin: str):
+        """ Create an expression that returns a bin as a boolean. Returns 'unknown'
+            if the bin is not a boolean.
+
+            Args:
+                bin (str): Bin name.
+
+            :return: (boolean bin)
+        
+            Example::
+
+                # Boolean bin "a" is True.
+                expr = BoolBin("a").compile()
+        """        
+        self._fixed = {_Keys.BIN_KEY: bin}
+
+
 class IntBin(_BaseExpr):
     """ Create an expression that returns a bin as an integer. Returns 'unknown'
         if the bin is not an integer.

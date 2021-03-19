@@ -17,7 +17,7 @@
 This module provides helper functions to produce dictionaries to be used with the
 :mod:`aerospike.Client.operate` and :mod:`aerospike.Client.operate_ordered` methods of the aerospike module.
 
-Expression operations support reading writing the result of Aerospike expressions.
+Expression operations support reading and writing the result of Aerospike expressions.
 
 .. note:: Requires server version >= 5.6.0
 
@@ -32,14 +32,14 @@ EXPR_KEY = "expr"
 EXPR_FLAGS_KEY = "expr_flags"
 
 
-def expression_read(expression: resources._BaseExpr, expression_read_flags: int = aerospike.EXP_READ_DEFAULT): #TODO create typehint type for flags
+def expression_read(expression: resources._BaseExpr, expression_read_flags: int = aerospike.EXP_READ_DEFAULT):
     """Create an expression read operation dictionary.
 
     Reads and returns the value produced by the evaluated expression.
 
     Args:
         expression: A compiled Aerospike expression, see expressions at :mod:`aerospike_helpers`.
-        expression_read_flags: Optional, one or more Aerospike expression read flags. TODO add a link to flags.
+        expression_read_flags: Optional, one or more Aerospike expression read flags, :ref:`aerospike_list_read_flag`.
     Returns:
         A dictionary to be passed to operate or operate_ordered.
     """
@@ -53,7 +53,7 @@ def expression_read(expression: resources._BaseExpr, expression_read_flags: int 
     return op_dict
 
 
-def expression_write(bin_name: str, expression: resources._BaseExpr, expression_write_flags: int = aerospike.EXP_WRITE_DEFAULT): #TODO create typehint type for flags
+def expression_write(bin_name: str, expression: resources._BaseExpr, expression_write_flags: int = aerospike.EXP_WRITE_DEFAULT):
     """Create an expression write operation dictionary.
 
     Writes the value produced by the evaluated expression to the supplied bin.
@@ -61,7 +61,7 @@ def expression_write(bin_name: str, expression: resources._BaseExpr, expression_
     Args:
         bin_name: The name of the bin to write to.
         expression: A compiled Aerospike expression, see expressions at :mod:`aerospike_helpers`.
-        expression_write_flags: Optional, one or more Aerospike expression write flags. TODO add a link to flags.
+        expression_write_flags: Optional, one or more Aerospike expression write flags, :ref:`aerospike_list_write_flag`.
     Returns:
         A dictionary to be passed to operate or operate_ordered.
     """

@@ -14,14 +14,14 @@
 # limitations under the License.
 ##########################################################################
 '''
-Bitwise expressions contain bit read and modify expressions.
+Bitwise operator expressions provide support for bitwise operators like `&` and `>>` in Aerospike expressions.
 
 Example::
 
     import aerospike_helpers.expressions as exp
-    # Let blob bin "c" == bytearray([3] * 5).
-    # Count set bits starting at 3rd byte in bin "c" to get count of 6.
-    expr = exp.BitCount(16, 8 * 3, exp.BlobBin("c")).compile()
+    # Let int bin "a" == 0xAAAA.
+    # Use bitwise and to apply a mask 0xFF00 to 0xAAAA and check for 0xAA00.
+    expr = exp.Eq(exp.IntAnd(IntBin("a"), 0xFF00), 0xAA00).compile()
 '''
 
 from typing import Union

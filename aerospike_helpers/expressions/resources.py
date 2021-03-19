@@ -149,7 +149,6 @@ TypeExpression = List[TypeCompiledOp]
 TypeChild = Union[int, float, str, bytes, _AtomExpr]
 TypeChildren = Tuple[TypeChild, ...]
 
-
 class _BaseExpr(_AtomExpr):
     _op = 0
     # type: int

@@ -10,7 +10,7 @@ from aerospike_helpers.expressions import *
 from aerospike_helpers.operations import map_operations
 from aerospike_helpers.operations import list_operations
 from aerospike_helpers.operations import hll_operations
-from aerospike_helpers.operations import expressions
+from aerospike_helpers.operations import expression_operations as expressions
 from aerospike_helpers.operations import operations
 from math import sqrt, ceil, floor
 
