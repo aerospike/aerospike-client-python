@@ -27,7 +27,6 @@ from itertools import chain
 from typing import List, Optional, Tuple, Union, Dict, Any
 import aerospike
 from aerospike_helpers import cdt_ctx
-from aerospike_helpers.expressions.resources import _GenericExpr
 from aerospike_helpers.expressions.resources import _BaseExpr
 from aerospike_helpers.expressions.resources import ResultType
 from aerospike_helpers.expressions.resources import _Keys

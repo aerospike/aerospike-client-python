@@ -35,8 +35,7 @@
 
 // EXPR OPS
 enum expr_ops {
-	UNKNOWN = 1000,
-	VAL = 0,
+	UNKNOWN = 0,
 	EQ = 1,
 	NE = 2,
 	GT = 3,
@@ -49,35 +48,35 @@ enum expr_ops {
 	AND = 16,
 	OR = 17,
 	NOT = 18,
-    EXCLUSIVE = 19,
+	EXCLUSIVE = 19,
 
-    ADD = 20,
-    SUB = 21,
-    MUL = 22,
-    DIV = 23,
-    POW = 24,
-    LOG = 25,
-    MOD = 26,
-    ABS = 27,
-    FLOOR = 28,
-    CEIL = 29,
+	ADD = 20,
+	SUB = 21,
+	MUL = 22,
+	DIV = 23,
+	POW = 24,
+	LOG = 25,
+	MOD = 26,
+	ABS = 27,
+	FLOOR = 28,
+	CEIL = 29,
 
-    TO_INT = 30,
-    TO_FLOAT = 31,
+	TO_INT = 30,
+	TO_FLOAT = 31,
 
-    INT_AND = 32,
-    INT_OR = 33,
-    INT_XOR = 34,
-    INT_NOT = 35,
-    INT_LSHIFT = 36,
-    INT_RSHIFT = 37,
-    INT_ARSHIFT = 38,
-    INT_COUNT = 39,
-    INT_LSCAN = 40,
-    INT_RSCAN = 41,
+	INT_AND = 32,
+	INT_OR = 33,
+	INT_XOR = 34,
+	INT_NOT = 35,
+	INT_LSHIFT = 36,
+	INT_RSHIFT = 37,
+	INT_ARSHIFT = 38,
+	INT_COUNT = 39,
+	INT_LSCAN = 40,
+	INT_RSCAN = 41,
 
-    MIN = 50,
-    MAX = 51,
+	MIN = 50,
+	MAX = 51,
 
 	META_DIGEST_MOD = 64,
 	META_DEVICE_SIZE = 65,
@@ -94,13 +93,14 @@ enum expr_ops {
 	BIN_TYPE = 82,
 	BIN_EXISTS = 83,
 
-    COND = 123,
-    VAR = 124,
-    LET = 125,
-    DEF = 126,
+	COND = 123,
+	VAR = 124,
+	LET = 125,
+	DEF = 126,
 
 	CALL = 127,
-	LIST_MOD = 139
+	LIST_MOD = 139,
+	VAL = 200
 };
 
 // RESULT TYPES

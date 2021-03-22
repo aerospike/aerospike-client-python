@@ -21,7 +21,7 @@ class _Keys:
 
 
 class _ExprOp: # TODO replace this with an enum
-    UNKNOWN = 1000 #TODO this or generic will need to be changed to something else (not 0)
+    UNKNOWN = 0
 
     EQ = 1
     NE = 2
@@ -85,21 +85,6 @@ class _ExprOp: # TODO replace this with an enum
     LET = 125
     DEF = 126
 
-    CALL = 127
-
-    VAL = 128
-    PK = 129
-    INT = 130
-    UINT = 131
-    FLOAT = 132
-    BOOL = 133
-    STR = 134
-    BYTES = 135
-    RAWSTR = 136
-    RTYPE = 137
-
-    NIL = 138
-
     # virtual ops
 
     _AS_EXP_CODE_CALL_VOP_START = 139
@@ -115,6 +100,8 @@ class _ExprOp: # TODO replace this with an enum
     _FALSE = 152
 
     _AS_EXP_BIT_FLAGS = 153
+
+    VAL = 200
 
 
 class ResultType:
@@ -164,7 +151,7 @@ class _BaseExpr(_AtomExpr):
 
     def _vop(self, v) -> TypeCompiledOp:
         return (
-            0,
+            _ExprOp.VAL,
             None,
             {_Keys.VALUE_KEY: v},
             0,
