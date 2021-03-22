@@ -976,6 +976,7 @@ as_status do_val_to_pyobject(AerospikeClient * self, as_error * err, const as_va
 {
 	as_error_reset(err);
 	switch( as_val_type(val) ) {
+		case AS_BOOLEAN:
 		case AS_INTEGER: {
 				as_integer * i = as_integer_fromval(val);
 				*py_val = PyInt_FromLong((long) as_integer_get(i));
@@ -1012,11 +1013,6 @@ as_status do_val_to_pyobject(AerospikeClient * self, as_error * err, const as_va
 					Py_INCREF(Py_None);
 					*py_val = Py_None;
 				}
-				break;
-			}
-		case AS_BOOLEAN: {
-				as_boolean * b = as_boolean_fromval(val);
-				*py_val = PyBool_FromLong((long) as_boolean_get(b));
 				break;
 			}
 		case AS_BYTES: {

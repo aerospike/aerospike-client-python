@@ -3,7 +3,7 @@ name: aerospike-client-python
 dependency:
   - url: git@github.com:citrusleaf/aerospike-client-c
     dir: client-c
-    ref: bool
+    ref: master
   - url: git@github.com:citrusleaf/aerospike-lua-core
     dir: lua
     ref: master

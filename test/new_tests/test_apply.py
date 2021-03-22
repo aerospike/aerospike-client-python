@@ -192,8 +192,8 @@ class TestApply(TestBaseClass):
         key = ('test', 'demo', 1)
         retval = self.as_connection.apply(key, 'test_record_udf',
                                           'bool_check', [])
-        assert isinstance(retval, bool)
-        assert retval is True
+        assert isinstance(retval, int)
+        assert retval == 1
 
     def test_apply_return_bool_false(self):
         """
@@ -202,8 +202,8 @@ class TestApply(TestBaseClass):
         key = ('test', 'demo', 'non_existent_record')
         retval = self.as_connection.apply(key, 'test_record_udf',
                                           'bool_check', [])
-        assert isinstance(retval, bool)
-        assert retval is False
+        assert isinstance(retval, int)
+        assert retval == 0
 
     def test_apply_operations_on_map(self):
         """
