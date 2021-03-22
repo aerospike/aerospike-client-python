@@ -450,7 +450,7 @@ Scan Options
             |
             | Default ``False``.
         * **percent** :class:`int` 
-            | Deprecated in 5.1.0. No longer available with server 5.6+.
+            | Deprecated. No longer available with server 5.6+.
             | Use scan policy max_records instead.
             | Percentage of records to return from the scan. 
             |
