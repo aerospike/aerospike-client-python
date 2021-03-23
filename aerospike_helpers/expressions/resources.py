@@ -177,6 +177,48 @@ class _BaseExpr(_AtomExpr):
 
         return expression
 
+    def __add__(self, right):
+        add_expr = _BaseExpr()
+        expr_end = _BaseExpr()
+
+        add_expr._op = _ExprOp.ADD
+        expr_end._op = _ExprOp._AS_EXP_CODE_END_OF_VA_ARGS
+
+        if self._op == _ExprOp.ADD:
+            l = self._children[:-1] # Last element of Add children will always be _AS_EXP_CODE_END_OF_VA_ARGS
+        else:
+            l = (self,)
+        
+        if isinstance(right, _BaseExpr) and right._op == _ExprOp.ADD:
+            r = right._children[:-1]
+        else:
+            r = (right,)
+
+        add_expr._children = (*l, *r, expr_end)
+
+        return add_expr
+
+    def __sub__(self, right):
+        sub_expr = _BaseExpr()
+        expr_end = _BaseExpr()
+
+        sub_expr._op = _ExprOp.SUB
+        expr_end._op = _ExprOp._AS_EXP_CODE_END_OF_VA_ARGS
+
+        if self._op == _ExprOp.SUB:
+            l = self._children[:-1] # Last element of SUB children will always be _AS_EXP_CODE_END_OF_VA_ARGS
+        else:
+            l = (self,)
+        
+        if isinstance(right, _BaseExpr) and right._op == _ExprOp.SUB:
+            r = right._children[:-1]
+        else:
+            r = (right,)
+
+        sub_expr._children = (*l, *r, expr_end)
+
+        return sub_expr
+
 
 class _GenericExpr(_BaseExpr):
     

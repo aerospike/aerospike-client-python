@@ -77,6 +77,62 @@ class TestExpressionsArithmetic(TestBaseClass):
         
         self.verify_expression_neg(expr, expected)
 
+    @pytest.mark.parametrize("expression", [
+        Eq(IntBin("ibin") + Add(IntBin("ibin"), IntBin("ibin")) + 5, 20),
+        # (IntBin("ibin"), [5], 10),
+        # (IntBin("ibin"), [5, 100], 110),
+        # (FloatBin("fbin"), [3.0], 8.0)
+    ])
+    def test_add_overloaded_pos(self, expression):
+        """
+        Test arithemtic Add expression with correct parameters.
+        """
+        print(expression.compile())
+        self.verify_expression(expression.compile(), self.rec)
+
+    # @pytest.mark.parametrize("bin, val, check, expected", [
+    #     (IntBin("ibin"), [5], 25, e.FilteredOut),
+    #     (IntBin("ibin"), [5.0], 10, e.InvalidRequest),
+    #     (FloatBin("fbin"), [3], 8.0, e.InvalidRequest),
+    #     (FloatBin("fbin"), ["bad_arg"], 8.0, e.InvalidRequest)
+    # ])
+    # def test_add_overloaded_neg(self, bin, val, check, expected):
+    #     """
+    #     Test arithemtic Add expression expecting failure.
+    #     """
+    #     expr = Eq(arithmetic.Add(bin, *val),
+    #                 check).compile()
+        
+    #     self.verify_expression_neg(expr, expected)
+
+    @pytest.mark.parametrize("expression", [
+        Eq(IntBin("ibin") - Sub(IntBin("ibin"), IntBin("ibin")) - 5, -10),
+        # (IntBin("ibin"), [5], 10),
+        # (IntBin("ibin"), [5, 100], 110),
+        # (FloatBin("fbin"), [3.0], 8.0)
+    ])
+    def test_sub_overloaded_pos(self, expression):
+        """
+        Test arithemtic Add expression with correct parameters.
+        """
+        print(expression.compile())
+        self.verify_expression(expression.compile(), self.rec)
+
+    # @pytest.mark.parametrize("bin, val, check, expected", [
+    #     (IntBin("ibin"), [5], 25, e.FilteredOut),
+    #     (IntBin("ibin"), [5.0], 10, e.InvalidRequest),
+    #     (FloatBin("fbin"), [3], 8.0, e.InvalidRequest),
+    #     (FloatBin("fbin"), ["bad_arg"], 8.0, e.InvalidRequest)
+    # ])
+    # def test_sub_overloaded_neg(self, bin, val, check, expected):
+    #     """
+    #     Test arithemtic Add expression expecting failure.
+    #     """
+    #     expr = Eq(arithmetic.Add(bin, *val),
+    #                 check).compile()
+        
+    #     self.verify_expression_neg(expr, expected)
+
     @pytest.mark.parametrize("bin, val, check", [
         (IntBin("ibin"), [5], 0),
         (IntBin("ibin"), [5, 5], -5),
