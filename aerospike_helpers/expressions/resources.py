@@ -177,48 +177,91 @@ class _BaseExpr(_AtomExpr):
 
         return expression
 
-    def __add__(self, right):
-        add_expr = _BaseExpr()
-        expr_end = _BaseExpr()
+    def _overload_op_unary(self, op_type):
+        if self._op == op_type:
+            l = self._children
+        else:
+            l = (self,)
+        
+        r = [] # No right operand
 
-        add_expr._op = _ExprOp.ADD
+        return _create_operator_expression(l, r)
+
+    def _overload_op(self, right, op_type):
+        if self._op == op_type:
+            l = self._children
+        else:
+            l = (self,)
+        
+        if isinstance(right, _BaseExpr) and right._op == op_type:
+            r = right._children
+        else:
+            r = (right,)
+
+        return _create_operator_expression(l, r)
+
+    def _overload_op_va_args(self, right, op_type):
+        expr_end = _BaseExpr()
         expr_end._op = _ExprOp._AS_EXP_CODE_END_OF_VA_ARGS
 
-        if self._op == _ExprOp.ADD:
+        if self._op == op_type:
             l = self._children[:-1] # Last element of Add children will always be _AS_EXP_CODE_END_OF_VA_ARGS
         else:
             l = (self,)
         
-        if isinstance(right, _BaseExpr) and right._op == _ExprOp.ADD:
+        if isinstance(right, _BaseExpr) and right._op == op_type:
             r = right._children[:-1]
         else:
             r = (right,)
 
-        add_expr._children = (*l, *r, expr_end)
+        return _create_operator_expression(l, r + expr_end)
+    
+    # unary operators
 
-        return add_expr
+    # def __neg__(self): # Need to add a unary overload op
+    #     return self._overload_op_unary(_ExprOp.SUB)
+
+    def __abs__(self):
+        return self._overload_op_unary(_ExprOp.ABS)
+
+    def __floor__(self):
+        return self._overload_op_unary(_ExprOp.FLOOR)
+
+    def __ceil__(self):
+        return self._overload_op_unary(_ExprOp.CEIL)
+
+    # operators
+
+    def __add__(self, right):
+        return self._overload_op_va_args(right, _ExprOp.ADD)
 
     def __sub__(self, right):
-        sub_expr = _BaseExpr()
-        expr_end = _BaseExpr()
+        return self._overload_op_va_args(right, _ExprOp.SUB)
 
-        sub_expr._op = _ExprOp.SUB
-        expr_end._op = _ExprOp._AS_EXP_CODE_END_OF_VA_ARGS
+    def __mul__(self, right):
+        return self._overload_op_va_args(right, _ExprOp.MUL)
 
-        if self._op == _ExprOp.SUB:
-            l = self._children[:-1] # Last element of SUB children will always be _AS_EXP_CODE_END_OF_VA_ARGS
-        else:
-            l = (self,)
-        
-        if isinstance(right, _BaseExpr) and right._op == _ExprOp.SUB:
-            r = right._children[:-1]
-        else:
-            r = (right,)
+    def __truediv__(self, right):
+        return self._overload_op_va_args(right, _ExprOp.DIV)
 
-        sub_expr._children = (*l, *r, expr_end)
+    def __floordiv__(self, right):
+        div_expr = self.__truediv__(right)
+        floor_expr = _BaseExpr()
+        floor_expr._op = _ExprOp.FLOOR
+        floor_expr._children = (div_expr,)
+        return floor_expr
 
-        return sub_expr
+    def __pow__(self, right):
+        return self._overload_op(right, _ExprOp.POW)
 
+    def __mod__(self, right):
+        return self._overload_op(right, _ExprOp.MOD)
+
+def _create_operator_expression(left_children: tuple, right_children: tuple):
+    new_expr = _BaseExpr()
+    new_expr._op = op_type
+    new_expr._children = (*left_children, *right_children)
+    return new_expr
 
 class _GenericExpr(_BaseExpr):
     
