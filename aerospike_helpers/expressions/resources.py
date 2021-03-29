@@ -185,7 +185,7 @@ class _BaseExpr(_AtomExpr):
         
         r = [] # No right operand
 
-        return _create_operator_expression(l, r)
+        return _create_operator_expression(l, r, op_type)
 
     def _overload_op(self, right, op_type):
         if self._op == op_type:
@@ -198,7 +198,7 @@ class _BaseExpr(_AtomExpr):
         else:
             r = (right,)
 
-        return _create_operator_expression(l, r)
+        return _create_operator_expression(l, r, op_type)
 
     def _overload_op_va_args(self, right, op_type):
         expr_end = _BaseExpr()
@@ -214,12 +214,9 @@ class _BaseExpr(_AtomExpr):
         else:
             r = (right,)
 
-        return _create_operator_expression(l, r + expr_end)
+        return _create_operator_expression(l, r + (expr_end,), op_type)
     
     # unary operators
-
-    # def __neg__(self): # Need to add a unary overload op
-    #     return self._overload_op_unary(_ExprOp.SUB)
 
     def __abs__(self):
         return self._overload_op_unary(_ExprOp.ABS)
@@ -246,10 +243,7 @@ class _BaseExpr(_AtomExpr):
 
     def __floordiv__(self, right):
         div_expr = self.__truediv__(right)
-        floor_expr = _BaseExpr()
-        floor_expr._op = _ExprOp.FLOOR
-        floor_expr._children = (div_expr,)
-        return floor_expr
+        return div_expr.__floor__()
 
     def __pow__(self, right):
         return self._overload_op(right, _ExprOp.POW)
@@ -257,7 +251,7 @@ class _BaseExpr(_AtomExpr):
     def __mod__(self, right):
         return self._overload_op(right, _ExprOp.MOD)
 
-def _create_operator_expression(left_children: tuple, right_children: tuple):
+def _create_operator_expression(left_children: tuple, right_children: tuple, op_type: int):
     new_expr = _BaseExpr()
     new_expr._op = op_type
     new_expr._children = (*left_children, *right_children)

@@ -49,6 +49,9 @@ class Add(_BaseExpr):
             All arguments must be the same type (integer or float).
             Requires server version 5.6.0+.
 
+            Add is also available via operator overloading using `+`
+            and any subclass of _BaseExpr. See the second example.
+
         Args:
             `*args` (TypeNumber): Variable amount of float or integer expressions or values to be added together.
 
@@ -58,6 +61,10 @@ class Add(_BaseExpr):
 
             # Integer bin "a" + "b" == 11
             expr = Eq(Add(IntBin("a"), IntBin("b")), 11).compile()
+
+            # Using operator overloading.
+            expr = Eq(IntBin("a") + IntBin("b"), 11).compile()
+
         """        
         self._children = args + (_GenericExpr(_ExprOp._AS_EXP_CODE_END_OF_VA_ARGS, 0, {}),)
 
@@ -73,6 +80,9 @@ class Sub(_BaseExpr):
             argument. All arguments must resolve to the same type (integer or float).
             Requires server version 5.6.0+.
 
+            Sub is also available via operator overloading using `-`
+            and any subclass of _BaseExpr. See the second example.
+
         Args:
             `*args` (TypeNumber): Variable amount of float or integer expressions or values to be subtracted.
 
@@ -82,6 +92,9 @@ class Sub(_BaseExpr):
 
             # Integer bin "a" - "b" == 11
             expr = Eq(Sub(IntBin("a"), IntBin("b")), 11).compile()
+
+            # Using operator overloading.
+            expr = Eq(IntBin("a") - IntBin("b"), 11).compile()
         """        
         self._children = args + (_GenericExpr(_ExprOp._AS_EXP_CODE_END_OF_VA_ARGS, 0, {}),)
 
@@ -96,6 +109,9 @@ class Mul(_BaseExpr):
             that argument. All arguments must resolve to the same type (integer or float).
             Requires server version 5.6.0+.
 
+            Mul is also available via operator overloading using `*`
+            and any subclass of _BaseExpr. See the second example.
+
         Args:
             `*args` (TypeNumber): Variable amount of float or integer expressions or values to be multiplied.
 
@@ -105,6 +121,9 @@ class Mul(_BaseExpr):
 
             # Integer bin "a" * "b" >= 11
             expr = GE(Mul(IntBin("a"), IntBin("b")), 11).compile()
+
+            # Using operator overloading.
+            expr = GE(IntBin("a") * IntBin("b"), 11).compile()
         """        
         self._children = args + (_GenericExpr(_ExprOp._AS_EXP_CODE_END_OF_VA_ARGS, 0, {}),)
 
@@ -120,6 +139,11 @@ class Div(_BaseExpr):
             All arguments must resolve to the same type (integer or float).
             Requires server version 5.6.0+.
 
+            Div is also available via operator overloading using `/`
+            and any subclass of _BaseExpr. See the second example.
+
+            Floor div is also avaliable via `//` but must be used with floats.
+
         Args:
             `*args` (TypeNumber): Variable amount of float or integer expressions or values to be divided.
 
@@ -128,7 +152,13 @@ class Div(_BaseExpr):
         Example::
 
             # Integer bin "a" / "b" / "c" >= 11
-            expr = GE(Mul(IntBin("a"), IntBin("b"), IntBin("b")), 11).compile()
+            expr = GE(Div(IntBin("a"), IntBin("b"), IntBin("b")), 11).compile()
+
+            # Using operator overloading.
+            expr = GE(IntBin("a") / IntBin("b") / IntBin("b"), 11).compile()
+
+            # Float bin "a" // "b" // "c" >= 11.0
+            expr = GE(FloatBin("a") // FloatBin("b") // FloatBin("b"), 11.0).compile()
         """        
         self._children = args + (_GenericExpr(_ExprOp._AS_EXP_CODE_END_OF_VA_ARGS, 0, {}),)
 
@@ -142,6 +172,9 @@ class Pow(_BaseExpr):
             All arguments must resolve to floats.
             Requires server version 5.6.0+.
 
+            Pow is also available via operator overloading using `**`
+            and any subclass of _BaseExpr. See the second example.
+
         Args:
             base (TypeFloat): Float expression or value base.
             exponent (TypeFloat): Float expression or value exponent.
@@ -150,8 +183,11 @@ class Pow(_BaseExpr):
 
         Example::
 
-            # 2.0 ** Float bin "a" == 16.0
-            expr = Eq(Pow(2, FloatBin("a")), 16.0).compile()
+            # Float bin "a" ** 2.0 == 16.0
+            expr = Eq(Pow(FloatBin("a"), 2.0), 16.0).compile()
+
+            # Using operator overloading.
+            expr = Eq(FloatBin("a") ** 2.0, 16.0).compile()
         """        
         self._children = (base, exponent)
 
@@ -174,7 +210,7 @@ class Log(_BaseExpr):
         Example::
 
             # For float bin "a", log("a", 2.0) == 16.0
-            expr = Eq(Log(FloatBin("a"), 2), 16.0).compile()
+            expr = Eq(Log(FloatBin("a"), 2.0), 16.0).compile()
         """        
         self._children = (num, base)
 
@@ -188,6 +224,9 @@ class Mod(_BaseExpr):
             divided by "denominator". All arguments must resolve to integers.
             Requires server version 5.6.0+.
 
+            Mod is also available via operator overloading using `%`
+            and any subclass of _BaseExpr. See the second example.
+
         Args:
             numerator (TypeInteger): Integer expression or value numerator.
             denominator (TypeInteger): Integer expression or value denominator.
@@ -196,8 +235,11 @@ class Mod(_BaseExpr):
 
         Example::
 
-            # For int bin "a", mod("a", 10) == 0
-            expr = Eq(Log(IntBin("a"), 10), 0).compile()
+            # For int bin "a" % 10 == 0
+            expr = Eq(Mod("a", 10), 0).compile()
+
+            # Using operator overloading.
+            expr = Eq("a" % 10, 0).compile()
         """        
         self._children = (numerator, denominator)
 
@@ -211,6 +253,9 @@ class Abs(_BaseExpr):
             All arguments must resolve to integer or float.
             Requires server version 5.6.0+.
 
+            Abs is also available via operator overloading using the bultin
+            abs() function and any subclass of _BaseExpr. See the second example.
+
         Args:
             value (TypeNumber): Float expression or value to take absolute value of.
 
@@ -220,6 +265,9 @@ class Abs(_BaseExpr):
 
             # For int bin "a", abs("a") == 1
             expr = Eq(Abs(IntBin("a")), 1).compile()
+
+            # Using operator overloading
+            expr = Eq(abs(IntBin("a")), 1).compile()
         """        
         self._children = (value,)
 
@@ -233,15 +281,21 @@ class Floor(_BaseExpr):
             to the closest integer value.
             Requires server version 5.6.0+.
 
+            Floor is also available via operator overloading using the math.floor()
+            function and any subclass of _BaseExpr. See the second example.
+
         Args:
             value (TypeFloat): Float expression or value to take floor of.
 
-        :return: (integer value)
+        :return: (float value)
 
         Example::
 
-            # Floor(2.25) == 2
-            expr = Eq(Floor(2.25), 3).compile()
+            # Floor(2.25) == 2.0
+            expr = Eq(Floor(2.25), 2.0).compile()
+
+            # Using operator overloading
+            expr = Eq(math.floor(2.25), 2.0).compile()
         """        
         self._children = (value,)
 
@@ -255,15 +309,21 @@ class Ceil(_BaseExpr):
             to the closest integer value.
             Requires server version 5.6.0+.
 
+            Ceil is also available via operator overloading using the math.ceil()
+            function and any subclass of _BaseExpr. See the second example.
+
         Args:
             value (TypeFloat): Float expression or value to take ceiling of.
 
-        :return: (integer value)
+        :return: (float value)
 
         Example::
 
-            # Ceil(2.25) == 3
-            expr = Eq(Ceil(2.25), 3).compile()
+            # Ceil(2.25) == 3.0
+            expr = Eq(Ceil(2.25), 3.0).compile()
+
+            # Using operator overloading
+            expr = Eq(math.ceil(2.25), 3.0).compile()
         """        
         self._children = (value,)
 
