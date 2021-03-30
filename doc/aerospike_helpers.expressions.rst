@@ -123,7 +123,8 @@ Example::
     
 Note::
 
-    Aerospike expressions are evaluated server side, and do not return any values to the client themselves.
+    Aerospike expressions are evaluated server side, and do not return any values to the client, or write any values to the server,
+    unless an expression operation is used, like expression_read() or expression_write().
     When the following documentation says an expression returns a "list expression", it means that the expression returns a
     list during evalution on the server side. When these docs say that a parameter requires an "integer or integer expression"
     It means it will accept a literal integer, or an expression that will return an integer during evaluation. When the docs say
@@ -182,6 +183,14 @@ The expressions module uses typehints, here are a table of custom typehints mapp
       - Union[_BaseExpr, List[Any]]
     * - TypeBitValue
       - Union[bytes, bytearray]
+    * - TypeNumber
+      - Union[_BaseExpr, int, float]
+    * - TypeFloat
+      - Union[_BaseExpr, float]
+    * - TypeInteger
+      - Union[_BaseExpr, int]
+    * - TypeBool
+      - Union[_BaseExpr, bool]
 
 .. note:: Requires server version >= 5.2.0
 

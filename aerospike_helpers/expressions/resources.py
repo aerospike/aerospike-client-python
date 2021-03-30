@@ -136,6 +136,8 @@ TypeExpression = List[TypeCompiledOp]
 TypeChild = Union[int, float, str, bytes, _AtomExpr]
 TypeChildren = Tuple[TypeChild, ...]
 
+TypeAny = Union[_AtomExpr, Any]
+
 class _BaseExpr(_AtomExpr):
     _op = 0
     # type: int
@@ -177,17 +179,16 @@ class _BaseExpr(_AtomExpr):
 
         return expression
 
-    def _overload_op_unary(self, op_type):
+    def _overload_op_unary(self, op_type: int):
         if self._op == op_type:
             l = self._children
         else:
             l = (self,)
         
-        r = [] # No right operand
-
+        r = [] # No right operand.
         return _create_operator_expression(l, r, op_type)
 
-    def _overload_op(self, right, op_type):
+    def _overload_op(self, right: TypeAny, op_type: int):
         if self._op == op_type:
             l = self._children
         else:
@@ -200,12 +201,14 @@ class _BaseExpr(_AtomExpr):
 
         return _create_operator_expression(l, r, op_type)
 
-    def _overload_op_va_args(self, right, op_type):
+    def _overload_op_va_args(self, right: TypeAny, op_type: int):
         expr_end = _BaseExpr()
         expr_end._op = _ExprOp._AS_EXP_CODE_END_OF_VA_ARGS
 
         if self._op == op_type:
-            l = self._children[:-1] # Last element of Add children will always be _AS_EXP_CODE_END_OF_VA_ARGS
+            # Last element of an expression with var args'
+            # children will always be _AS_EXP_CODE_END_OF_VA_ARGS.
+            l = self._children[:-1]
         else:
             l = (self,)
         
@@ -232,26 +235,26 @@ class _BaseExpr(_AtomExpr):
     def __add__(self, right):
         return self._overload_op_va_args(right, _ExprOp.ADD)
 
-    def __sub__(self, right):
+    def __sub__(self, right: TypeAny):
         return self._overload_op_va_args(right, _ExprOp.SUB)
 
-    def __mul__(self, right):
+    def __mul__(self, right: TypeAny):
         return self._overload_op_va_args(right, _ExprOp.MUL)
 
-    def __truediv__(self, right):
+    def __truediv__(self, right: TypeAny):
         return self._overload_op_va_args(right, _ExprOp.DIV)
 
-    def __floordiv__(self, right):
+    def __floordiv__(self, right: TypeAny):
         div_expr = self.__truediv__(right)
         return div_expr.__floor__()
 
-    def __pow__(self, right):
+    def __pow__(self, right: TypeAny):
         return self._overload_op(right, _ExprOp.POW)
 
-    def __mod__(self, right):
+    def __mod__(self, right: TypeAny):
         return self._overload_op(right, _ExprOp.MOD)
 
-def _create_operator_expression(left_children: tuple, right_children: tuple, op_type: int):
+def _create_operator_expression(left_children: TypeChildren, right_children: TypeChildren, op_type: int):
     new_expr = _BaseExpr()
     new_expr._op = op_type
     new_expr._children = (*left_children, *right_children)

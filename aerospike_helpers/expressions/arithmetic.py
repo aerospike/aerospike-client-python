@@ -20,7 +20,7 @@ Example::
 
     import aerospike_helpers.expressions as exp
     # Add integer bin "a" to integer bin "b" and see if the result is > 20.
-    expr = exp.GT(exp.Add(IntBin("a"), IntBin("b")), 20).compile()
+    expr = exp.GT(exp.Add(exp.IntBin("a"), exp.IntBin("b")), 20).compile()
 '''
 
 from typing import Union
@@ -36,7 +36,7 @@ TypeInteger = Union[_BaseExpr, int]
 
 
 ########################
-# Arithemtic Expressions
+# Arithmetic Expressions
 ########################
 
 
@@ -152,13 +152,13 @@ class Div(_BaseExpr):
         Example::
 
             # Integer bin "a" / "b" / "c" >= 11
-            expr = GE(Div(IntBin("a"), IntBin("b"), IntBin("b")), 11).compile()
+            expr = GE(Div(IntBin("a"), IntBin("b"), IntBin("c")), 11).compile()
 
             # Using operator overloading.
-            expr = GE(IntBin("a") / IntBin("b") / IntBin("b"), 11).compile()
+            expr = GE(IntBin("a") / IntBin("b") / IntBin("c"), 11).compile()
 
             # Float bin "a" // "b" // "c" >= 11.0
-            expr = GE(FloatBin("a") // FloatBin("b") // FloatBin("b"), 11.0).compile()
+            expr = GE(FloatBin("a") // FloatBin("b") // FloatBin("c"), 11.0).compile()
         """        
         self._children = args + (_GenericExpr(_ExprOp._AS_EXP_CODE_END_OF_VA_ARGS, 0, {}),)
 
@@ -236,10 +236,10 @@ class Mod(_BaseExpr):
         Example::
 
             # For int bin "a" % 10 == 0
-            expr = Eq(Mod("a", 10), 0).compile()
+            expr = Eq(Mod(IntBin("a"), 10), 0).compile()
 
             # Using operator overloading.
-            expr = Eq("a" % 10, 0).compile()
+            expr = Eq(IntBin("a") % 10, 0).compile()
         """        
         self._children = (numerator, denominator)
 
@@ -257,7 +257,7 @@ class Abs(_BaseExpr):
             abs() function and any subclass of _BaseExpr. See the second example.
 
         Args:
-            value (TypeNumber): Float expression or value to take absolute value of.
+            value (TypeNumber): Float or integer expression or value to take absolute value of.
 
         :return: (number value)
 

@@ -36,7 +36,6 @@ from aerospike_helpers.expressions.resources import _ExprOp
 ##############################
 
 TypeNumber = Union[_BaseExpr, int, float]
-TypeFloat = Union[_BaseExpr, float]
 TypeInteger = Union[_BaseExpr, int]
 TypeBool = Union[_BaseExpr, bool]
 
@@ -115,7 +114,7 @@ class IntNot(_BaseExpr):
             Requires server version 5.6.0+.
 
             Args:
-                `expr` (TypeInteger): An integer value or expression to be logically negated.
+                `expr` (TypeInteger): An integer value or expression to be bitwise negated.
         
             :return: (integer value)
 

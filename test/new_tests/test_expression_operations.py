@@ -52,13 +52,14 @@ class TestExpressionsOperations(TestBaseClass):
 
         request.addfinalizer(teardown)
 
-    @pytest.mark.parametrize("expr, flags, expected", [
+    @pytest.mark.parametrize("expr, flags, name, expected", [
         (
             Let(Def("bal", IntBin("balance")),
                 Var("bal")
             ),
             aerospike.EXP_READ_DEFAULT,
-            {"": 100}
+            "test_name",
+            {"test_name": 100}
         ),
         (
             Let(Def("bal", IntBin("balance")),
@@ -68,21 +69,22 @@ class TestExpressionsOperations(TestBaseClass):
                     Unknown())
             ),
             aerospike.EXP_READ_DEFAULT,
-            {"": 150}
+            "test_name2",
+            {"test_name2": 150}
         ),
     ])
-    def test_read_pos(self, expr, flags, expected):
+    def test_read_pos(self, expr, flags, name, expected):
         """
         Test expression read operation with correct parameters.
         """
         
         ops = [
-            expressions.expression_read(expr.compile(), flags)
+            expressions.expression_read(name, expr.compile(), flags)
         ]
         _, _, res = self.as_connection.operate(self.key, ops)
         assert res == expected
 
-    @pytest.mark.parametrize("expr, flags, expected", [
+    @pytest.mark.parametrize("expr, flags, name, expected", [
         (
             Let(Def("bal", IntBin("balance")),
                 Cond(
@@ -96,6 +98,7 @@ class TestExpressionsOperations(TestBaseClass):
         (
             "bad_expr",
             aerospike.EXP_READ_DEFAULT,
+            "test_name3",
             e.ParamError
         ),
         (
@@ -106,17 +109,18 @@ class TestExpressionsOperations(TestBaseClass):
                     Unknown())
             ).compile(),
             "bad_flags",
+            "test_name3",
             e.ParamError
         ),
     ])
-    def test_read_neg(self, expr, flags, expected):
+    def test_read_neg(self, expr, flags, name, expected):
         """
         Test expression read operation expecting failure.
         """
         
         with pytest.raises(expected):
             ops = [
-                expressions.expression_read(expr, flags)
+                expressions.expression_read(name, expr, flags)
             ]
             _, _, res = self.as_connection.operate(self.key, ops)
 

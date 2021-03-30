@@ -2106,7 +2106,7 @@ Flags used by expression_write.
 .. data:: EXP_WRITE_ALLOW_DELETE
 
 	If expression results in nil value, then delete the bin. Otherwise, return
-	AEROSPIKE_ERR_OP_NOT_APPLICABLE when OpNotApplicable is not set.
+	OpNotApplicable when EXP_WRITE_POLICY_NO_FAIL is not set.
 
 .. data:: EXP_WRITE_POLICY_NO_FAIL
 

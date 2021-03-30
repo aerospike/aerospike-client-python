@@ -57,7 +57,7 @@ class TestExpressionsArithmetic(TestBaseClass):
     ])
     def test_add_pos(self, bin, val, check):
         """
-        Test arithemtic Add expression with correct parameters.
+        Test arithmetic Add expression with correct parameters.
         """
         expr = Eq(arithmetic.Add(bin, *val),
                     check).compile()
@@ -72,7 +72,7 @@ class TestExpressionsArithmetic(TestBaseClass):
     ])
     def test_add_neg(self, bin, val, check, expected):
         """
-        Test arithemtic Add expression expecting failure.
+        Test arithmetic Add expression expecting failure.
         """
         expr = Eq(arithmetic.Add(bin, *val),
                     check).compile()
@@ -85,7 +85,7 @@ class TestExpressionsArithmetic(TestBaseClass):
     ])
     def test_add_overloaded_pos(self, expression):
         """
-        Test arithemtic Add expression with correct parameters.
+        Test arithmetic Add expression with correct parameters.
         """
         print(expression.compile())
         self.verify_expression(expression.compile(), self.rec)
@@ -96,7 +96,7 @@ class TestExpressionsArithmetic(TestBaseClass):
     ])
     def test_add_overloaded_neg(self, expression, expected):
         """
-        Test arithemtic Add expression with incorrect parameters.
+        Test arithmetic Add expression with incorrect parameters.
         """
         print(expression.compile())
         self.verify_expression_neg(expression.compile(), expected)
@@ -109,7 +109,7 @@ class TestExpressionsArithmetic(TestBaseClass):
     ])
     def test_sub_pos(self, bin, val, check):
         """
-        Test arithemtic Sub expression with correct parameters.
+        Test arithmetic Sub expression with correct parameters.
         """
         expr = Eq(arithmetic.Sub(bin, *val),
                     check).compile()
@@ -124,7 +124,7 @@ class TestExpressionsArithmetic(TestBaseClass):
     ])
     def test_sub_neg(self, bin, val, check, expected):
         """
-        Test arithemtic Sub expression expecting failure.
+        Test arithmetic Sub expression expecting failure.
         """
         expr = Eq(arithmetic.Sub(bin, *val),
                     check).compile()
@@ -137,7 +137,7 @@ class TestExpressionsArithmetic(TestBaseClass):
     ])
     def test_sub_overloaded_pos(self, expression):
         """
-        Test arithemtic Sub expression with correct parameters.
+        Test arithmetic Sub expression with correct parameters.
         """
         print(expression.compile())
         self.verify_expression(expression.compile(), self.rec)
@@ -148,7 +148,7 @@ class TestExpressionsArithmetic(TestBaseClass):
     ])
     def test_sub_overloaded_neg(self, expression, expected):
         """
-        Test arithemtic Sub expression with incorrect parameters.
+        Test arithmetic Sub expression with incorrect parameters.
         """
         print(expression.compile())
         self.verify_expression_neg(expression.compile(), expected)
@@ -161,7 +161,7 @@ class TestExpressionsArithmetic(TestBaseClass):
     ])
     def test_mul_pos(self, bin, val, check):
         """
-        Test arithemtic Mul expression with correct parameters.
+        Test arithmetic Mul expression with correct parameters.
         """
         expr = Eq(arithmetic.Mul(bin, *val),
                     check).compile()
@@ -176,7 +176,7 @@ class TestExpressionsArithmetic(TestBaseClass):
     ])
     def test_mul_neg(self, bin, val, check, expected):
         """
-        Test arithemtic Mul expression expecting failure.
+        Test arithmetic Mul expression expecting failure.
         """
         expr = Eq(arithmetic.Mul(bin, *val),
                     check).compile()
@@ -189,7 +189,7 @@ class TestExpressionsArithmetic(TestBaseClass):
     ])
     def test_mul_overloaded_pos(self, expression):
         """
-        Test arithemtic Mul expression with correct parameters.
+        Test arithmetic Mul expression with correct parameters.
         """
         print(expression.compile())
         self.verify_expression(expression.compile(), self.rec)
@@ -200,7 +200,7 @@ class TestExpressionsArithmetic(TestBaseClass):
     ])
     def test_mul_overloaded_neg(self, expression, expected):
         """
-        Test arithemtic Mul expression with incorrect parameters.
+        Test arithmetic Mul expression with incorrect parameters.
         """
         print(expression.compile())
         self.verify_expression_neg(expression.compile(), expected)
@@ -213,7 +213,7 @@ class TestExpressionsArithmetic(TestBaseClass):
     ])
     def test_div_pos(self, bin, val, check):
         """
-        Test arithemtic Div expression with correct parameters.
+        Test arithmetic Div expression with correct parameters.
         """
         expr = Eq(arithmetic.Div(bin, *val),
                     check).compile()
@@ -228,7 +228,7 @@ class TestExpressionsArithmetic(TestBaseClass):
     ])
     def test_div_neg(self, bin, val, check, expected):
         """
-        Test arithemtic Div expression expecting failure.
+        Test arithmetic Div expression expecting failure.
         """
         expr = Eq(arithmetic.Div(bin, *val),
                     check).compile()
@@ -241,7 +241,7 @@ class TestExpressionsArithmetic(TestBaseClass):
     ])
     def test_div_overloaded_pos(self, expression):
         """
-        Test arithemtic Div expression with correct parameters.
+        Test arithmetic Div expression with correct parameters.
         """
         print(expression.compile())
         self.verify_expression(expression.compile(), self.rec)
@@ -252,7 +252,7 @@ class TestExpressionsArithmetic(TestBaseClass):
     ])
     def test_div_overloaded_neg(self, expression, expected):
         """
-        Test arithemtic Div expression with incorrect parameters.
+        Test arithmetic Div expression with incorrect parameters.
         """
         print(expression.compile())
         self.verify_expression_neg(expression.compile(), expected)
@@ -263,7 +263,7 @@ class TestExpressionsArithmetic(TestBaseClass):
     ])
     def test_floor_div_overloaded_pos(self, expression):
         """
-        Test arithemtic // expression with correct parameters.
+        Test arithmetic // expression with correct parameters.
         """
         print(expression.compile())
         self.verify_expression(expression.compile(), self.rec)
@@ -275,7 +275,7 @@ class TestExpressionsArithmetic(TestBaseClass):
     ])
     def test_floor_div_overloaded_neg(self, expression, expected):
         """
-        Test arithemtic // expression with incorrect parameters.
+        Test arithmetic // expression with incorrect parameters.
         """
         print(expression.compile())
         self.verify_expression_neg(expression.compile(), expected)
@@ -286,7 +286,7 @@ class TestExpressionsArithmetic(TestBaseClass):
     ])
     def test_pow_pos(self, bin, val, check):
         """
-        Test arithemtic Pow expression with correct parameters.
+        Test arithmetic Pow expression with correct parameters.
         """
         expr = Eq(arithmetic.Pow(bin, *val),
                     check).compile()
@@ -303,7 +303,7 @@ class TestExpressionsArithmetic(TestBaseClass):
     ])
     def test_pow_neg(self, bin, val, check, expected):
         """
-        Test arithemtic Pow expression expecting failure.
+        Test arithmetic Pow expression expecting failure.
         """
         expr = Eq(arithmetic.Pow(bin, *val),
                     check).compile()
@@ -316,7 +316,7 @@ class TestExpressionsArithmetic(TestBaseClass):
     ])
     def test_pow_overloaded_pos(self, expression):
         """
-        Test arithemtic Pow expression with correct parameters.
+        Test arithmetic Pow expression with correct parameters.
         """
         print(expression.compile())
         self.verify_expression(expression.compile(), self.rec)
@@ -328,7 +328,7 @@ class TestExpressionsArithmetic(TestBaseClass):
     ])
     def test_pow_overloaded_neg(self, expression, expected):
         """
-        Test arithemtic Pow expression with incorrect parameters.
+        Test arithmetic Pow expression with incorrect parameters.
         """
         print(expression.compile())
         self.verify_expression_neg(expression.compile(), expected)
@@ -339,7 +339,7 @@ class TestExpressionsArithmetic(TestBaseClass):
     ])
     def test_log_pos(self, bin, val, check):
         """
-        Test arithemtic Log expression with correct parameters.
+        Test arithmetic Log expression with correct parameters.
         """
         expr = Eq(arithmetic.Log(bin, *val),
                     check).compile()
@@ -356,7 +356,7 @@ class TestExpressionsArithmetic(TestBaseClass):
     ])
     def test_log_neg(self, bin, val, check, expected):
         """
-        Test arithemtic Log expression expecting failure.
+        Test arithmetic Log expression expecting failure.
         """
         expr = Eq(arithmetic.Log(bin, *val),
                     check).compile()
@@ -369,7 +369,7 @@ class TestExpressionsArithmetic(TestBaseClass):
     ])
     def test_mod_pos(self, bin, val, check):
         """
-        Test arithemtic Mod expression with correct parameters.
+        Test arithmetic Mod expression with correct parameters.
         """
         expr = Eq(arithmetic.Mod(bin, *val),
                     check).compile()
@@ -386,7 +386,7 @@ class TestExpressionsArithmetic(TestBaseClass):
     ])
     def test_mod_neg(self, bin, val, check, expected):
         """
-        Test arithemtic Mod expression expecting failure.
+        Test arithmetic Mod expression expecting failure.
         """
         expr = Eq(arithmetic.Mod(bin, *val),
                     check).compile()
@@ -399,7 +399,7 @@ class TestExpressionsArithmetic(TestBaseClass):
     ])
     def test_mod_overloaded_pos(self, expression):
         """
-        Test arithemtic Mod expression with correct parameters.
+        Test arithmetic Mod expression with correct parameters.
         """
         print(expression.compile())
         self.verify_expression(expression.compile(), self.rec)
@@ -411,7 +411,7 @@ class TestExpressionsArithmetic(TestBaseClass):
     ])
     def test_mod_overloaded_neg(self, expression, expected):
         """
-        Test arithemtic Mod expression with incorrect parameters.
+        Test arithmetic Mod expression with incorrect parameters.
         """
         print(expression.compile())
         self.verify_expression_neg(expression.compile(), expected)
@@ -433,7 +433,7 @@ class TestExpressionsArithmetic(TestBaseClass):
     ])
     def test_abs_pos(self, expression):
         """
-        Test arithemtic Abs expression with correct parameters.
+        Test arithmetic Abs expression with correct parameters.
         """
         print(expression.compile())
         self.verify_expression(expression.compile(), self.rec)
@@ -447,7 +447,7 @@ class TestExpressionsArithmetic(TestBaseClass):
     ])
     def test_abs_neg(self, expression, expected):
         """
-        Test arithemtic Abs expression with incorrect parameters.
+        Test arithmetic Abs expression with incorrect parameters.
         """
         print(expression.compile())
         self.verify_expression_neg(expression.compile(), expected)
@@ -458,7 +458,7 @@ class TestExpressionsArithmetic(TestBaseClass):
     ])
     def test_floor_pos(self, val, check):
         """
-        Test arithemtic Floor expression with correct parameters.
+        Test arithmetic Floor expression with correct parameters.
         """
         expr = Eq(arithmetic.Floor(val),
                     check).compile()
@@ -473,7 +473,7 @@ class TestExpressionsArithmetic(TestBaseClass):
     ])
     def test_floor_neg(self, val, check, expected):
         """
-        Test arithemtic Floor expression expecting failure.
+        Test arithmetic Floor expression expecting failure.
         """
         expr = Eq(arithmetic.Floor(val),
                     check).compile()
@@ -485,7 +485,7 @@ class TestExpressionsArithmetic(TestBaseClass):
     ])
     def test_floor_overloaded_pos(self, expression):
         """
-        Test arithemtic Floor expression with correct parameters.
+        Test arithmetic Floor expression with correct parameters.
         """
         print(expression.compile())
         self.verify_expression(expression.compile(), self.rec)
@@ -496,7 +496,7 @@ class TestExpressionsArithmetic(TestBaseClass):
     ])
     def test_floor_overloaded_neg(self, expression, expected):
         """
-        Test arithemtic Floor expression with incorrect parameters.
+        Test arithmetic Floor expression with incorrect parameters.
         """
         print(expression.compile())
         self.verify_expression_neg(expression.compile(), expected)
@@ -507,7 +507,7 @@ class TestExpressionsArithmetic(TestBaseClass):
     ])
     def test_ceil_pos(self, val, check):
         """
-        Test arithemtic Ceil expression with correct parameters.
+        Test arithmetic Ceil expression with correct parameters.
         """
         expr = Eq(arithmetic.Ceil(val),
                     check).compile()
@@ -522,7 +522,7 @@ class TestExpressionsArithmetic(TestBaseClass):
     ])
     def test_ceil_neg(self, val, check, expected):
         """
-        Test arithemtic Ceil expression expecting failure.
+        Test arithmetic Ceil expression expecting failure.
         """
         expr = Eq(arithmetic.Ceil(val),
                     check).compile()
@@ -534,7 +534,7 @@ class TestExpressionsArithmetic(TestBaseClass):
     ])
     def test_ceil_overloaded_pos(self, expression):
         """
-        Test arithemtic Ceil expression with correct parameters.
+        Test arithmetic Ceil expression with correct parameters.
         """
         print(expression.compile())
         self.verify_expression(expression.compile(), self.rec)
@@ -545,7 +545,7 @@ class TestExpressionsArithmetic(TestBaseClass):
     ])
     def test_ceil_overloaded_neg(self, expression, expected):
         """
-        Test arithemtic Ceil expression with incorrect parameters.
+        Test arithmetic Ceil expression with incorrect parameters.
         """
         print(expression.compile())
         self.verify_expression_neg(expression.compile(), expected)
@@ -556,7 +556,7 @@ class TestExpressionsArithmetic(TestBaseClass):
     ])
     def test_toint_pos(self, val, check):
         """
-        Test arithemtic ToInt expression with correct parameters.
+        Test arithmetic ToInt expression with correct parameters.
         """
         expr = Eq(arithmetic.ToInt(val),
                     check).compile()
@@ -571,7 +571,7 @@ class TestExpressionsArithmetic(TestBaseClass):
     ])
     def test_toint_neg(self, val, check, expected):
         """
-        Test arithemtic ToInt expression expecting failure.
+        Test arithmetic ToInt expression expecting failure.
         """
         expr = Eq(arithmetic.ToInt(val),
                     check).compile()
@@ -584,7 +584,7 @@ class TestExpressionsArithmetic(TestBaseClass):
     ])
     def test_tofloat_pos(self, val, check):
         """
-        Test arithemtic ToFloat expression with correct parameters.
+        Test arithmetic ToFloat expression with correct parameters.
         """
         expr = Eq(arithmetic.ToFloat(val),
                     check).compile()
@@ -599,7 +599,7 @@ class TestExpressionsArithmetic(TestBaseClass):
     ])
     def test_tofloat_neg(self, val, check, expected):
         """
-        Test arithemtic ToFloat expression expecting failure.
+        Test arithmetic ToFloat expression expecting failure.
         """
         expr = Eq(arithmetic.ToFloat(val),
                     check).compile()
@@ -614,7 +614,7 @@ class TestExpressionsArithmetic(TestBaseClass):
     ])
     def test_min_pos(self, bin, val, check):
         """
-        Test arithemtic Min expression with correct parameters.
+        Test arithmetic Min expression with correct parameters.
         """
         expr = Eq(arithmetic.Min(bin, *val),
                     check).compile()
@@ -629,7 +629,7 @@ class TestExpressionsArithmetic(TestBaseClass):
     ])
     def test_min_neg(self, bin, val, check, expected):
         """
-        Test arithemtic Min expression expecting failure.
+        Test arithmetic Min expression expecting failure.
         """
         expr = Eq(arithmetic.Min(bin, *val),
                     check).compile()
@@ -644,7 +644,7 @@ class TestExpressionsArithmetic(TestBaseClass):
     ])
     def test_max_pos(self, bin, val, check):
         """
-        Test arithemtic Max expression with correct parameters.
+        Test arithmetic Max expression with correct parameters.
         """
         expr = Eq(arithmetic.Max(bin, *val),
                     check).compile()
@@ -659,7 +659,7 @@ class TestExpressionsArithmetic(TestBaseClass):
     ])
     def test_max_neg(self, bin, val, check, expected):
         """
-        Test arithemtic Max expression expecting failure.
+        Test arithmetic Max expression expecting failure.
         """
         expr = Eq(arithmetic.Max(bin, *val),
                     check).compile()
