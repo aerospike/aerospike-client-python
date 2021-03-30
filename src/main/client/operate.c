@@ -368,7 +368,7 @@ as_status add_op(AerospikeClient * self, as_error * err, PyObject * py_val, as_v
 	}
 
 	if (isExprOp(operation)) {
-		return add_new_expr_op(self, err, py_val, unicodeStrVector, static_pool,
+		return add_new_expr_op(self, err, py_val, unicodeStrVector,
 			ops, operation, SERIALIZER_PYTHON);
 	}
 

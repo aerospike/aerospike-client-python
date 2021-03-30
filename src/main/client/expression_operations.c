@@ -37,12 +37,12 @@ add_op_expr_read(AerospikeClient*self, as_error* err,
 static as_status
 add_op_expr_write(AerospikeClient*self, as_error* err,
 		PyObject* op_dict, as_vector* unicodeStrVector,
-		as_operations* ops, as_static_pool* static_pool, int serializer_type);
+		as_operations* ops, int serializer_type);
 
 /* End forwards*/
 as_status
 add_new_expr_op(AerospikeClient* self, as_error* err, PyObject* op_dict, as_vector* unicodeStrVector,
-		as_static_pool* static_pool, as_operations* ops, long operation_code, int serializer_type)
+		as_operations* ops, long operation_code, int serializer_type)
 
 {
 	switch(operation_code) {
@@ -52,12 +52,12 @@ add_new_expr_op(AerospikeClient* self, as_error* err, PyObject* op_dict, as_vect
 		}
 
 		case OP_EXPR_WRITE: {
-			return add_op_expr_write(self, err, op_dict, unicodeStrVector, ops, static_pool, serializer_type);
+			return add_op_expr_write(self, err, op_dict, unicodeStrVector, ops, serializer_type);
 		}
 
 		default:
 			// This should never be possible since we only get here if we know that the operation is valid.
-			return as_error_update(err, AEROSPIKE_ERR_PARAM, "Unknown operation");
+			return as_error_update(err, AEROSPIKE_ERR_PARAM, "Unknown expression operation");
 	}
 
 	return err->code;
@@ -66,7 +66,7 @@ add_new_expr_op(AerospikeClient* self, as_error* err, PyObject* op_dict, as_vect
 static as_status
 add_op_expr_write(AerospikeClient*self, as_error* err,
 		PyObject* op_dict, as_vector* unicodeStrVector,
-		as_operations* ops, as_static_pool* static_pool, int serializer_type)
+		as_operations* ops, int serializer_type)
 {
 	as_exp* exp_list_p = NULL;
 	PyObject* py_exp_list = NULL;

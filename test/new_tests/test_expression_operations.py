@@ -1,16 +1,8 @@
 # -*- coding: utf-8 -*-
 
-import pytest
 import sys
-from .test_base_class import TestBaseClass
-from aerospike import exception as e
-from .as_status_codes import AerospikeStatus
-from aerospike_helpers import cdt_ctx
-from aerospike_helpers.expressions import *
-from aerospike_helpers.operations import operations
-from aerospike_helpers.operations import expression_operations as expressions
-from math import sqrt, ceil, floor
-from aerospike import exception as e
+
+import pytest
 
 aerospike = pytest.importorskip("aerospike")
 try:
@@ -18,6 +10,11 @@ try:
 except:
     print("Please install aerospike python client.")
     sys.exit(1)
+
+from aerospike_helpers.expressions import *
+from aerospike_helpers.operations import expression_operations as expressions
+from aerospike import exception as e
+from .test_base_class import TestBaseClass
 
 
 class TestExpressionsOperations(TestBaseClass):
@@ -53,6 +50,14 @@ class TestExpressionsOperations(TestBaseClass):
         request.addfinalizer(teardown)
 
     @pytest.mark.parametrize("expr, flags, name, expected", [
+        (
+            Let(Def("bal", IntBin("balance")),
+                Var("bal")
+            ),
+            aerospike.EXP_READ_EVAL_NO_FAIL,
+            "test_name",
+            {"test_name": 100}
+        ),
         (
             Let(Def("bal", IntBin("balance")),
                 Var("bal")
@@ -93,6 +98,7 @@ class TestExpressionsOperations(TestBaseClass):
                     Unknown())
             ).compile(),
             aerospike.EXP_READ_DEFAULT,
+			"test_name3",
             e.OpNotApplicable # Because Unknown will be returned.
         ),
         (
@@ -130,6 +136,17 @@ class TestExpressionsOperations(TestBaseClass):
                 Var("bal")
             ),
             aerospike.EXP_WRITE_DEFAULT,
+            "balance",
+            100
+        ),
+        (
+            Let(Def("bal", IntBin("balance")),
+                Cond(
+                    GE(Var("bal"), 50),
+                        Add(Var("bal"), 50),
+                    Unknown())
+            ),
+            aerospike.EXP_WRITE_CREATE_ONLY | aerospike.EXP_WRITE_POLICY_NO_FAIL,
             "balance",
             100
         ),
@@ -183,7 +200,18 @@ class TestExpressionsOperations(TestBaseClass):
                         Add(Var("bal"), 50),
                     Unknown())
             ).compile(),
-            aerospike.EXP_READ_DEFAULT,
+            aerospike.EXP_WRITE_CREATE_ONLY,
+            "balance",
+            e.BinExistsError
+        ),
+        (
+            Let(Def("bal", IntBin("balance")),
+                Cond(
+                    LT(Var("bal"), 50),
+                        Add(Var("bal"), 50),
+                    Unknown())
+            ).compile(),
+            aerospike.EXP_WRITE_DEFAULT,
             "balance",
             e.OpNotApplicable
         ),

@@ -1,18 +1,9 @@
 # -*- coding: utf-8 -*-
 
-import pytest
 import sys
 import math
 
-from .test_base_class import TestBaseClass
-from aerospike import exception as e
-from .as_status_codes import AerospikeStatus
-from aerospike_helpers import cdt_ctx
-from aerospike_helpers.expressions import *
-from aerospike_helpers.operations import operations
-from math import sqrt, ceil, floor
-from aerospike_helpers.expressions import arithmetic
-from aerospike import exception as e
+import pytest
 
 aerospike = pytest.importorskip("aerospike")
 try:
@@ -21,6 +12,11 @@ except:
     print("Please install aerospike python client.")
     sys.exit(1)
 
+from aerospike_helpers.expressions import *
+from aerospike_helpers.operations import operations
+from aerospike_helpers.expressions import arithmetic
+from aerospike import exception as e
+from .test_base_class import TestBaseClass
 
 class TestExpressionsArithmetic(TestBaseClass):
 
@@ -59,7 +55,7 @@ class TestExpressionsArithmetic(TestBaseClass):
         """
         Test arithmetic Add expression with correct parameters.
         """
-        expr = Eq(arithmetic.Add(bin, *val),
+        expr = Eq(Add(bin, *val),
                     check).compile()
         
         self.verify_expression(expr, self.rec)
@@ -74,7 +70,7 @@ class TestExpressionsArithmetic(TestBaseClass):
         """
         Test arithmetic Add expression expecting failure.
         """
-        expr = Eq(arithmetic.Add(bin, *val),
+        expr = Eq(Add(bin, *val),
                     check).compile()
         
         self.verify_expression_neg(expr, expected)
@@ -111,7 +107,7 @@ class TestExpressionsArithmetic(TestBaseClass):
         """
         Test arithmetic Sub expression with correct parameters.
         """
-        expr = Eq(arithmetic.Sub(bin, *val),
+        expr = Eq(Sub(bin, *val),
                     check).compile()
         
         self.verify_expression(expr, self.rec)
@@ -126,7 +122,7 @@ class TestExpressionsArithmetic(TestBaseClass):
         """
         Test arithmetic Sub expression expecting failure.
         """
-        expr = Eq(arithmetic.Sub(bin, *val),
+        expr = Eq(Sub(bin, *val),
                     check).compile()
         
         self.verify_expression_neg(expr, expected)
@@ -163,7 +159,7 @@ class TestExpressionsArithmetic(TestBaseClass):
         """
         Test arithmetic Mul expression with correct parameters.
         """
-        expr = Eq(arithmetic.Mul(bin, *val),
+        expr = Eq(Mul(bin, *val),
                     check).compile()
         
         self.verify_expression(expr, self.rec)
@@ -178,7 +174,7 @@ class TestExpressionsArithmetic(TestBaseClass):
         """
         Test arithmetic Mul expression expecting failure.
         """
-        expr = Eq(arithmetic.Mul(bin, *val),
+        expr = Eq(Mul(bin, *val),
                     check).compile()
         
         self.verify_expression_neg(expr, expected)
@@ -215,7 +211,7 @@ class TestExpressionsArithmetic(TestBaseClass):
         """
         Test arithmetic Div expression with correct parameters.
         """
-        expr = Eq(arithmetic.Div(bin, *val),
+        expr = Eq(Div(bin, *val),
                     check).compile()
         
         self.verify_expression(expr, self.rec)
@@ -230,7 +226,7 @@ class TestExpressionsArithmetic(TestBaseClass):
         """
         Test arithmetic Div expression expecting failure.
         """
-        expr = Eq(arithmetic.Div(bin, *val),
+        expr = Eq(Div(bin, *val),
                     check).compile()
         
         self.verify_expression_neg(expr, expected)
@@ -288,7 +284,7 @@ class TestExpressionsArithmetic(TestBaseClass):
         """
         Test arithmetic Pow expression with correct parameters.
         """
-        expr = Eq(arithmetic.Pow(bin, *val),
+        expr = Eq(Pow(bin, *val),
                     check).compile()
         
         self.verify_expression(expr, self.rec)
@@ -305,7 +301,7 @@ class TestExpressionsArithmetic(TestBaseClass):
         """
         Test arithmetic Pow expression expecting failure.
         """
-        expr = Eq(arithmetic.Pow(bin, *val),
+        expr = Eq(Pow(bin, *val),
                     check).compile()
         
         self.verify_expression_neg(expr, expected)
@@ -334,14 +330,14 @@ class TestExpressionsArithmetic(TestBaseClass):
         self.verify_expression_neg(expression.compile(), expected)
 
     @pytest.mark.parametrize("bin, val, check", [
-        (arithmetic.Pow(FloatBin("fbin"), 4.0), [5.0], 4.0),
-        (arithmetic.Pow(FloatBin("fbin"), 10.0), [FloatBin("fbin")], 10.0)
+        (Pow(FloatBin("fbin"), 4.0), [5.0], 4.0),
+        (Pow(FloatBin("fbin"), 10.0), [FloatBin("fbin")], 10.0)
     ])
     def test_log_pos(self, bin, val, check):
         """
         Test arithmetic Log expression with correct parameters.
         """
-        expr = Eq(arithmetic.Log(bin, *val),
+        expr = Eq(Log(bin, *val),
                     check).compile()
         
         self.verify_expression(expr, self.rec)
@@ -358,7 +354,7 @@ class TestExpressionsArithmetic(TestBaseClass):
         """
         Test arithmetic Log expression expecting failure.
         """
-        expr = Eq(arithmetic.Log(bin, *val),
+        expr = Eq(Log(bin, *val),
                     check).compile()
         
         self.verify_expression_neg(expr, expected)
@@ -371,7 +367,7 @@ class TestExpressionsArithmetic(TestBaseClass):
         """
         Test arithmetic Mod expression with correct parameters.
         """
-        expr = Eq(arithmetic.Mod(bin, *val),
+        expr = Eq(Mod(bin, *val),
                     check).compile()
         
         self.verify_expression(expr, self.rec)
@@ -388,7 +384,7 @@ class TestExpressionsArithmetic(TestBaseClass):
         """
         Test arithmetic Mod expression expecting failure.
         """
-        expr = Eq(arithmetic.Mod(bin, *val),
+        expr = Eq(Mod(bin, *val),
                     check).compile()
         
         self.verify_expression_neg(expr, expected)
@@ -454,13 +450,13 @@ class TestExpressionsArithmetic(TestBaseClass):
 
     @pytest.mark.parametrize("val, check", [
         (8.953, 8.0),
-        (arithmetic.Add(FloatBin("fbin"), 4.5), 9.0)
+        (Add(FloatBin("fbin"), 4.5), 9.0)
     ])
     def test_floor_pos(self, val, check):
         """
         Test arithmetic Floor expression with correct parameters.
         """
-        expr = Eq(arithmetic.Floor(val),
+        expr = Eq(Floor(val),
                     check).compile()
         
         self.verify_expression(expr, self.rec)
@@ -475,7 +471,7 @@ class TestExpressionsArithmetic(TestBaseClass):
         """
         Test arithmetic Floor expression expecting failure.
         """
-        expr = Eq(arithmetic.Floor(val),
+        expr = Eq(Floor(val),
                     check).compile()
         
         self.verify_expression_neg(expr, expected)
@@ -503,13 +499,13 @@ class TestExpressionsArithmetic(TestBaseClass):
 
     @pytest.mark.parametrize("val, check", [
         (8.953, 9.0),
-        (arithmetic.Add(FloatBin("fbin"), 4.5), 10.0)
+        (Add(FloatBin("fbin"), 4.5), 10.0)
     ])
     def test_ceil_pos(self, val, check):
         """
         Test arithmetic Ceil expression with correct parameters.
         """
-        expr = Eq(arithmetic.Ceil(val),
+        expr = Eq(Ceil(val),
                     check).compile()
         
         self.verify_expression(expr, self.rec)
@@ -524,7 +520,7 @@ class TestExpressionsArithmetic(TestBaseClass):
         """
         Test arithmetic Ceil expression expecting failure.
         """
-        expr = Eq(arithmetic.Ceil(val),
+        expr = Eq(Ceil(val),
                     check).compile()
         
         self.verify_expression_neg(expr, expected)
@@ -558,7 +554,7 @@ class TestExpressionsArithmetic(TestBaseClass):
         """
         Test arithmetic ToInt expression with correct parameters.
         """
-        expr = Eq(arithmetic.ToInt(val),
+        expr = Eq(ToInt(val),
                     check).compile()
         
         self.verify_expression(expr, self.rec)
@@ -573,7 +569,7 @@ class TestExpressionsArithmetic(TestBaseClass):
         """
         Test arithmetic ToInt expression expecting failure.
         """
-        expr = Eq(arithmetic.ToInt(val),
+        expr = Eq(ToInt(val),
                     check).compile()
         
         self.verify_expression_neg(expr, expected)
@@ -586,7 +582,7 @@ class TestExpressionsArithmetic(TestBaseClass):
         """
         Test arithmetic ToFloat expression with correct parameters.
         """
-        expr = Eq(arithmetic.ToFloat(val),
+        expr = Eq(ToFloat(val),
                     check).compile()
         
         self.verify_expression(expr, self.rec)
@@ -601,14 +597,14 @@ class TestExpressionsArithmetic(TestBaseClass):
         """
         Test arithmetic ToFloat expression expecting failure.
         """
-        expr = Eq(arithmetic.ToFloat(val),
+        expr = Eq(ToFloat(val),
                     check).compile()
         
         self.verify_expression_neg(expr, expected)
 
     @pytest.mark.parametrize("bin, val, check", [
         (IntBin("ibin"), [5, 25, 4, 35, 64, 1, 23, 2, 2, 2], 1),
-        (IntBin("ibin"), [arithmetic.Add(IntBin("ibin"), 5)], 5),
+        (IntBin("ibin"), [Add(IntBin("ibin"), 5)], 5),
         (IntBin("ibin"), [IntBin("ibin")], 5),
         (FloatBin("fbin"), [6.0, 20.0], 5.0)
     ])
@@ -616,7 +612,7 @@ class TestExpressionsArithmetic(TestBaseClass):
         """
         Test arithmetic Min expression with correct parameters.
         """
-        expr = Eq(arithmetic.Min(bin, *val),
+        expr = Eq(Min(bin, *val),
                     check).compile()
         
         self.verify_expression(expr, self.rec)
@@ -631,14 +627,14 @@ class TestExpressionsArithmetic(TestBaseClass):
         """
         Test arithmetic Min expression expecting failure.
         """
-        expr = Eq(arithmetic.Min(bin, *val),
+        expr = Eq(Min(bin, *val),
                     check).compile()
         
         self.verify_expression_neg(expr, expected)
 
     @pytest.mark.parametrize("bin, val, check", [
         (IntBin("ibin"), [5, 25, 4, 35, 64, 1, 23, 2, 2, 2], 64),
-        (IntBin("ibin"), [arithmetic.Add(IntBin("ibin"), 5)], 10),
+        (IntBin("ibin"), [Add(IntBin("ibin"), 5)], 10),
         (IntBin("ibin"), [IntBin("ibin")], 5),
         (FloatBin("fbin"), [6.0, 20.0], 20.0)
     ])
@@ -646,7 +642,7 @@ class TestExpressionsArithmetic(TestBaseClass):
         """
         Test arithmetic Max expression with correct parameters.
         """
-        expr = Eq(arithmetic.Max(bin, *val),
+        expr = Eq(Max(bin, *val),
                     check).compile()
         
         self.verify_expression(expr, self.rec)
@@ -661,7 +657,7 @@ class TestExpressionsArithmetic(TestBaseClass):
         """
         Test arithmetic Max expression expecting failure.
         """
-        expr = Eq(arithmetic.Max(bin, *val),
+        expr = Eq(Max(bin, *val),
                     check).compile()
         
         self.verify_expression_neg(expr, expected)

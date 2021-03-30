@@ -1,15 +1,8 @@
 # -*- coding: utf-8 -*-
 
-import pytest
 import sys
-from .test_base_class import TestBaseClass
-from aerospike import exception as e
-from .as_status_codes import AerospikeStatus
-from aerospike_helpers import cdt_ctx
-from aerospike_helpers.expressions import *
-from aerospike_helpers.operations import operations
-from math import sqrt, ceil, floor
-from aerospike import exception as e
+
+import pytest
 
 aerospike = pytest.importorskip("aerospike")
 try:
@@ -17,6 +10,10 @@ try:
 except:
     print("Please install aerospike python client.")
     sys.exit(1)
+
+from aerospike_helpers.expressions import *
+from aerospike import exception as e
+from .test_base_class import TestBaseClass
 
 
 class TestExpressionsBitOps(TestBaseClass):
@@ -67,7 +64,7 @@ class TestExpressionsBitOps(TestBaseClass):
     ])
     def test_int_and_neg(self, bin, val, expected, check):
         """
-        Test IntAnd expression with correct parameters.
+        Test IntAnd expression with incorrect parameters.
         """
         expr = Eq(IntAnd(bin, *val),
                     check).compile()
@@ -94,7 +91,7 @@ class TestExpressionsBitOps(TestBaseClass):
     ])
     def test_int_or_neg(self, bin, val, expected, check):
         """
-        Test IntOr expression with correct parameters.
+        Test IntOr expression with incorrect parameters.
         """
         expr = Eq(IntOr(bin, *val),
                     check).compile()
@@ -121,7 +118,7 @@ class TestExpressionsBitOps(TestBaseClass):
     ])
     def test_int_xor_neg(self, bin, val, expected, check):
         """
-        Test IntXOr expression with correct parameters.
+        Test IntXOr expression with incorrect parameters.
         """
         expr = Eq(IntXOr(bin, *val),
                     check).compile()
@@ -148,7 +145,7 @@ class TestExpressionsBitOps(TestBaseClass):
     ])
     def test_int_not_neg(self, bin, expected, check):
         """
-        Test IntNot expression with correct parameters.
+        Test IntNot expression with incorrect parameters.
         """
         expr = Eq(IntNot(bin),
                     check).compile()
@@ -170,12 +167,13 @@ class TestExpressionsBitOps(TestBaseClass):
         self.verify_expression(expr, self.rec)
 
     @pytest.mark.parametrize("bin, val, check, expected", [
-        (IntBin("10bin"), [2], 0xAAF0, e.FilteredOut),
-        (IntBin("1bin"), ["bad_arg"], 0x0000, e.FilteredOut) # FilteredOut instead of InvalidRequest because shift is not type checked (expression).
+        # (IntBin("10bin"), [2], 0xAAF0, e.FilteredOut),
+		# FilteredOut instead of InvalidRequest because shift is not type checked (expression).
+        (IntBin("1bin"), ["bad_arg"], 0x0000, e.FilteredOut)
     ])
     def test_int_left_shift_neg(self, bin, val, expected, check):
         """
-        Test IntLeftShift expression with correct parameters.
+        Test IntLeftShift expression with incorrect parameters.
         """
         expr = Eq(IntLeftShift(bin, *val),
                     check).compile()
@@ -199,7 +197,8 @@ class TestExpressionsBitOps(TestBaseClass):
 
     @pytest.mark.parametrize("bin, val, check, expected", [
         (IntBin("10bin"), [2], 0xAAF0, e.FilteredOut),
-        (IntBin("1bin"), ["bad_arg"], 0xFFFF, e.FilteredOut) # FilteredOut instead of InvalidRequest because shift is not type checked (expression).
+		# NOTE FilteredOut instead of InvalidRequest because shift is not type checked (expression).
+        (IntBin("1bin"), ["bad_arg"], 0xFFFF, e.FilteredOut)
     ])
     def test_int_right_shift_neg(self, bin, val, expected, check):
         """
@@ -227,7 +226,7 @@ class TestExpressionsBitOps(TestBaseClass):
 
     @pytest.mark.parametrize("bin, val, check, expected", [
         (IntBin("10bin"), [2], 0xAAF0, e.FilteredOut),
-        (IntBin("1bin"), ["bad_arg"], 0xFFFF, e.FilteredOut) # FilteredOut instead of InvalidRequest because shift is not type checked (expression).
+        (IntBin("1bin"), ["bad_arg"], 0xFFFF, e.FilteredOut)
     ])
     def test_int_right_arithmetic_shift_neg(self, bin, val, expected, check):
         """

@@ -284,8 +284,3 @@ class TestExpressions(TestBaseClass):
                     Unknown())
         with pytest.raises(e.FilteredOut):
             record = self.as_connection.get(('test', u'demo', _NUM_RECORDS - 1), policy={'expressions': expr.compile()})
-
-    # def test_cond_neg(self):
-    #     expr = NE(VoidTime(), 0)
-    #     record = self.as_connection.get(('test', u'demo', _NUM_RECORDS), policy={'expressions': expr.compile()})
-    #     assert(record[2]['extra'] == 'record')
