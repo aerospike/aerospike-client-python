@@ -200,7 +200,7 @@ as_status get_expr_size(int * size_to_alloc, int * intermediate_exprs_size, as_v
 	static const int EXPR_SIZES[] = {
 		[BIN]                                            = EXP_SZ(as_exp_bin_int(0)),
 		[VAL]                                            = EXP_SZ(as_exp_val(NULL)), // NOTE if I don't count vals I don't need to subtract from other ops // MUST count these for expressions with var args.
-		[EQ]                                             = EXP_SZ(as_exp_cmp_eq({},{})),
+		[EQ]                                             = EXP_SZ(as_exp_cmp_eq({},{})), // ^ TODO implement a less wastefull solution.
 		[NE]                                             = EXP_SZ(as_exp_cmp_ne({},{})),
 		[GT]                                             = EXP_SZ(as_exp_cmp_gt({},{})),
 		[GE]                                             = EXP_SZ(as_exp_cmp_ge({},{})),

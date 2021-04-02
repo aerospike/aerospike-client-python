@@ -109,13 +109,12 @@ class TestExpressions(TestBaseClass):
         (None, 12, None, 'hll_bin', {"": [12, 49]}),
         (None, None, None, 'hll_bin', {"": [15, 49]}),
         (None, 8, 20, 'hll_bin', {"": [8, 20]}),
-        ({'flags': aerospike.HLL_WRITE_NO_FAIL}, 15, 52, 'hll_bin', {"": [15, 49]}) #TODO shouldn't this pass because of NOFAIL?
+        ({'flags': aerospike.HLL_WRITE_CREATE_ONLY | aerospike.HLL_WRITE_NO_FAIL}, 15, 49, 'hll_bin', {"": [15, 49]})
     ])
     def test_hll_init_pos(self, policy, index_bc, mh_bc, bin, expected):
         """
         Test the HLLInit expression.
         """
-
         expr = HLLDescribe(HLLInit(policy, index_bc, mh_bc, bin))
 
         ops = [
@@ -124,6 +123,24 @@ class TestExpressions(TestBaseClass):
 
         _, _, res = self.as_connection.operate((self.test_ns, self.test_set, 0), ops)
         assert res == expected
+
+    @pytest.mark.parametrize("policy, index_bc, mh_bc, bin, expected", [
+        # OpNotApplicable because read tries to read failed expression
+        ({'flags': aerospike.HLL_WRITE_CREATE_ONLY}, 8, 20, 'hll_bin', e.OpNotApplicable)
+    ])
+    def test_hll_init_neg(self, policy, index_bc, mh_bc, bin, expected):
+        """
+        Test the HLLInit expression expecting failure.
+        """
+
+        expr = HLLDescribe(HLLInit(policy, index_bc, mh_bc, bin))
+
+        ops = [
+            expressions.expression_read(bin, expr.compile())
+        ]
+
+        with pytest.raises(expected):
+            self.as_connection.operate((self.test_ns, self.test_set, 0), ops)
 
     @pytest.mark.parametrize("bin, expected, hll_bins", [
         ('hll_bin', 25000, ['hll_bin', 'hll_bin2', 'hll_bin3']),
