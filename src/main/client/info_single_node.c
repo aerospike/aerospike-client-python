@@ -66,12 +66,12 @@ static PyObject * AerospikeClient_InfoSingleNode_Invoke(
 	if (py_host) {
 		if (PyString_Check(py_host)) {
 			node_name = PyUnicode_AsUTF8(py_host);
-			target_node = as_node_get_by_name(self->as->cluster, node_name); //TODO check for null target_node and error out
+			target_node = as_node_get_by_name(self->as->cluster, node_name);
 			if ( !target_node) {
 				as_error_update(err, AEROSPIKE_ERR_PARAM, "Could not get node with name %s.", node_name);
 				goto CLEANUP;
 			}
-			as_nodes_release(target_node);
+			as_node_release(target_node);
 		} else {
 			as_error_update(err, AEROSPIKE_ERR_PARAM, "Host must be a string.");
 			goto CLEANUP;
