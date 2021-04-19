@@ -553,16 +553,19 @@ static PyMethodDef AerospikeClient_Type_Methods[] = {
 		"Drop a new role."},
 	{"admin_grant_privileges",
 		(PyCFunction) AerospikeClient_Admin_Grant_Privileges, METH_VARARGS | METH_KEYWORDS,
-	"Grant privileges to a user defined role"},
+	"Grant privileges to a user defined role."},
 	{"admin_revoke_privileges",
 		(PyCFunction) AerospikeClient_Admin_Revoke_Privileges, METH_VARARGS | METH_KEYWORDS,
-		"Revoke privileges from a user defined role"},
+		"Revoke privileges from a user defined role."},
 	{"admin_query_role",
 		(PyCFunction) AerospikeClient_Admin_Query_Role, METH_VARARGS | METH_KEYWORDS,
-		"Query a user defined role"},
+		"Query a user defined role."},
 	{"admin_query_roles",
 		(PyCFunction) AerospikeClient_Admin_Query_Roles, METH_VARARGS | METH_KEYWORDS,
-		"Querys all user defined roles"},
+		"Querys all user defined roles."},
+	{"admin_set_quotas",
+		(PyCFunction) AerospikeClient_Admin_Set_Quotas, METH_VARARGS | METH_KEYWORDS,
+		"Set read and write quotas for a user defined role."},
 
 	// KVS OPERATIONS
 

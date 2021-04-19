@@ -133,3 +133,10 @@ PyObject * AerospikeClient_Admin_Query_Role(AerospikeClient * self, PyObject *ar
  *
  */
 PyObject * AerospikeClient_Admin_Query_Roles(AerospikeClient * self, PyObject *args, PyObject *kwds);
+/**
+ * Set read and write quotas for a user defined role in the database.
+ *
+ *		client.admin_set_quotas(role, read_quota, write_quota, policy)
+ *
+ */
+PyObject * AerospikeClient_Admin_Set_Quotas(AerospikeClient * self, PyObject *args, PyObject *kwds);

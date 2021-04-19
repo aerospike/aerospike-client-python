@@ -18,6 +18,7 @@
 #include <stdbool.h>
 
 #include <aerospike/aerospike.h>
+#include <aerospike/as_address.h>
 #include <aerospike/as_admin.h>
 #include <aerospike/as_config.h>
 #include <aerospike/as_error.h>
@@ -857,6 +858,7 @@ CLEANUP:
 
 	return py_users;
 }
+
 /**
  *******************************************************************************************************
  * Create a role in the Aerospike DB.
@@ -876,27 +878,6 @@ PyObject * AerospikeClient_Admin_Create_Role(AerospikeClient * self, PyObject *a
 	as_error err;
 	as_error_init(&err);
 
-	// Python Function Arguments
-	PyObject * py_policy = NULL;
-	PyObject * py_role = NULL;
-	PyObject * py_privileges = NULL;
-
-	as_policy_admin admin_policy;
-	as_policy_admin *admin_policy_p = NULL;
-
-	// Python Function Keyword Arguments
-	static char * kwlist[] = {"role", "privileges", "policy", NULL};
-
-	// Python Function Argument Parsing
-	if (PyArg_ParseTupleAndKeywords(args, kwds, "OO|O:admin_create_role", kwlist,
-				&py_role, &py_privileges, &py_policy) == false) {
-		return NULL;
-	}
-
-	// Aerospike Operation Arguments
-	int privileges_size = 0;
-	as_privilege **privileges = NULL;
-
 	if (!self || !self->as) {
 		as_error_update(&err, AEROSPIKE_ERR_PARAM, "Invalid aerospike object");
 		goto CLEANUP;
@@ -907,6 +888,33 @@ PyObject * AerospikeClient_Admin_Create_Role(AerospikeClient * self, PyObject *a
 		goto CLEANUP;
 	}
 
+	// Python Function Arguments
+	const char * role = NULL;
+	int read_quota = 0;
+	int write_quota = 0;
+
+	PyObject * py_privileges = NULL;
+	PyObject * py_policy = NULL;
+	PyObject * py_whitelist = NULL;
+
+	as_policy_admin admin_policy;
+	as_policy_admin *admin_policy_p = NULL;
+
+	// Python Function Keyword Arguments
+	static char * kwlist[] = {"role", "privileges", "policy", "whitelist", "read_quota", "write_quota", NULL};
+
+	// Python Function Argument Parsing
+	if (PyArg_ParseTupleAndKeywords(args, kwds, "sO|OOii:admin_create_role", kwlist, // TODO change/handle defaults
+				&role, &py_privileges, &py_policy, &py_whitelist, &read_quota, &write_quota) == false) {
+		return NULL;
+	}
+
+	// Aerospike Operation Arguments
+	int privileges_size = 0;
+	as_privilege **privileges = NULL;
+	int whitelist_size = 0;
+	char **whitelist = NULL;
+
 	// Convert python object to an array of privileges
 	if (!PyList_Check(py_privileges)) {
 		as_error_update(&err, AEROSPIKE_ERR_PARAM, "Privileges should be a list");
@@ -914,27 +922,35 @@ PyObject * AerospikeClient_Admin_Create_Role(AerospikeClient * self, PyObject *a
 	}
 
 	privileges_size = PyList_Size(py_privileges);
-	privileges = (as_privilege **)alloca(sizeof(as_privilege *) * privileges_size);
+	privileges = (as_privilege **)cf_malloc(sizeof(as_privilege *) * privileges_size);
+	for (int i = 0; i < privileges_size; ++i) {
+		privileges[i] = (as_privilege *)cf_malloc(sizeof(as_privilege));
+	}
 
-	pyobject_to_as_privileges(&err, py_privileges, privileges, privileges_size);
-
-	pyobject_to_policy_admin(self,  &err, py_policy, &admin_policy, &admin_policy_p,
-			&self->as->config.policies.admin);
-	if (err.code != AEROSPIKE_OK) {
+	if (pyobject_to_as_privileges(&err, py_privileges, privileges, privileges_size) != AEROSPIKE_OK) {
 		goto CLEANUP;
 	}
 
-	char *role = NULL;
-	if (PyString_Check(py_role)) {
-		role = PyString_AsString(py_role);
-	} else {
-		as_error_update(&err, AEROSPIKE_ERR_PARAM, "Role name should be a string");
+	// Convert python object to an admin policy 
+	if (pyobject_to_policy_admin(self,  &err, py_policy, &admin_policy, &admin_policy_p,
+			&self->as->config.policies.admin) != AEROSPIKE_OK) {
 		goto CLEANUP;
 	}
 
-	// Invoke operation
+	if (py_whitelist != NULL) {
+		whitelist_size = PyList_Size(py_whitelist);
+		whitelist = (char **)cf_malloc(sizeof(char *) * whitelist_size);
+		for (int i = 0; i < whitelist_size; i++) {
+			whitelist[i] = cf_malloc(sizeof(char) * AS_IP_ADDRESS_SIZE);
+		}
+
+		if (pyobject_to_strArray(&err, py_whitelist, whitelist, AS_IP_ADDRESS_SIZE) != AEROSPIKE_OK) {
+			goto CLEANUP;
+		}
+	}
+
 	Py_BEGIN_ALLOW_THREADS
-	aerospike_create_role(self->as, &err, admin_policy_p, role, privileges, privileges_size);
+	aerospike_create_role_quotas(self->as, &err, admin_policy_p, role, privileges, privileges_size, (const char**)whitelist, whitelist_size, read_quota, write_quota);
 	Py_END_ALLOW_THREADS
 
 CLEANUP:
@@ -943,6 +959,17 @@ CLEANUP:
 			if (privileges[i])
 				cf_free(privileges[i]);
 		}
+
+		cf_free(privileges);
+	}
+
+	if (whitelist) {
+		for (int i = 0; i < whitelist_size; i++) {
+			if (whitelist[i])
+				cf_free(whitelist[i]);
+		}
+
+		cf_free(whitelist);
 	}
 
 	if (err.code != AEROSPIKE_OK) {
@@ -956,6 +983,79 @@ CLEANUP:
 
 	return PyLong_FromLong(0);
 }
+
+/**
+ *******************************************************************************************************
+ * Add quotas to a role in the Aerospike DB.
+ *
+ * @param self                  AerospikeClient object
+ * @param args                  The args is a tuple object containing an argument
+ *                              list passed from Python to a C function
+ * @param kwds                  Dictionary of keywords
+ *
+ * Returns an integer status. 0(Zero) is success value.
+ * In case of error,appropriate exceptions will be raised.
+ *******************************************************************************************************
+ */
+PyObject * AerospikeClient_Admin_Set_Quotas(AerospikeClient * self, PyObject *args, PyObject * kwds)
+{
+	// Initialize error
+	as_error err;
+	as_error_init(&err);
+
+	if (!self || !self->as) {
+		as_error_update(&err, AEROSPIKE_ERR_PARAM, "Invalid aerospike object");
+		goto CLEANUP;
+	}
+
+	if (!self->is_conn_16) {
+		as_error_update(&err, AEROSPIKE_ERR_CLUSTER, "No connection to aerospike cluster");
+		goto CLEANUP;
+	}
+
+	// Python Function Arguments
+	PyObject * py_policy = NULL;
+
+	// C API args
+	const char * role = NULL;
+	int read_quota = 0;
+	int write_quota = 0;
+	as_policy_admin admin_policy;
+	as_policy_admin *admin_policy_p = NULL;
+
+	// Python Function Keyword Arguments
+	static char * kwlist[] = {"role", "read_quota", "write_quota", "policy", NULL};
+
+	// Python Function Argument Parsing
+	if (PyArg_ParseTupleAndKeywords(args, kwds, "s|iiO:admin_set_quotas", kwlist,
+				&role, &read_quota, &write_quota, &py_policy) == false) {
+		return NULL;
+	}
+
+	pyobject_to_policy_admin(self,  &err, py_policy, &admin_policy, &admin_policy_p,
+			&self->as->config.policies.admin);
+	if (err.code != AEROSPIKE_OK) {
+		goto CLEANUP;
+	}
+
+	// Invoke operation
+	Py_BEGIN_ALLOW_THREADS
+	aerospike_set_quotas(self->as, &err, admin_policy_p, role, read_quota, write_quota);
+	Py_END_ALLOW_THREADS
+
+CLEANUP:
+	if (err.code != AEROSPIKE_OK) {
+		PyObject * py_err = NULL;
+		error_to_pyobject(&err, &py_err);
+		PyObject *exception_type = raise_exception(&err);
+		PyErr_SetObject(exception_type, py_err);
+		Py_DECREF(py_err);
+		return NULL;
+	}
+
+	return PyLong_FromLong(0);
+}
+
 /**
  *******************************************************************************************************
  * Drop a role in the Aerospike DB.
@@ -1090,9 +1190,10 @@ PyObject * AerospikeClient_Admin_Grant_Privileges(AerospikeClient * self, PyObje
 	}
 
 	privileges_size = PyList_Size(py_privileges);
-	privileges = (as_privilege **)alloca(sizeof(as_privilege *) * privileges_size);
-
-	pyobject_to_as_privileges(&err, py_privileges, privileges, privileges_size);
+	privileges = (as_privilege **)cf_malloc(sizeof(as_privilege *) * privileges_size);
+	for (int i = 0; i < privileges_size; ++i) {
+		privileges[i] = (as_privilege *)cf_malloc(sizeof(as_privilege));
+	}
 
 	pyobject_to_policy_admin(self,  &err, py_policy, &admin_policy, &admin_policy_p,
 			&self->as->config.policies.admin);
@@ -1119,6 +1220,8 @@ CLEANUP:
 			if (privileges[i])
 				cf_free(privileges[i]);
 		}
+
+		cf_free(privileges);
 	}
 
 	if (err.code != AEROSPIKE_OK) {
@@ -1190,9 +1293,10 @@ PyObject * AerospikeClient_Admin_Revoke_Privileges(AerospikeClient * self, PyObj
 	}
 
 	privileges_size = PyList_Size(py_privileges);
-	privileges = (as_privilege **)alloca(sizeof(as_privilege *) * privileges_size);
-
-	pyobject_to_as_privileges(&err, py_privileges, privileges, privileges_size);
+	privileges = (as_privilege **)cf_malloc(sizeof(as_privilege *) * privileges_size);
+	for (int i = 0; i < privileges_size; ++i) {
+		privileges[i] = (as_privilege *)cf_malloc(sizeof(as_privilege));
+	}
 
 	pyobject_to_policy_admin(self,  &err, py_policy, &admin_policy, &admin_policy_p,
 			&self->as->config.policies.admin);
@@ -1219,6 +1323,8 @@ CLEANUP:
 			if (privileges[i])
 				cf_free(privileges[i]);
 		}
+
+		cf_free(privileges);
 	}
 
 	if (err.code != AEROSPIKE_OK) {

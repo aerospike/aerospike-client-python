@@ -145,6 +145,34 @@ class TestCreateRole(object):
 
         status = self.client.admin_drop_role("usr-sys-admin-test")
 
+    def test_create_role_whitelist_positive(self):
+        """
+            Create role positive
+        """
+        try:
+            self.client.admin_query_role("usr-sys-admin-test")
+            # role exists, clear it out.
+            self.client.admin_drop_role("usr-sys-admin-test")
+            # Give some time for the role removal to take place
+            time.sleep(2)
+        except e.InvalidRole:
+            pass  # we are good, no such role exists
+
+        self.client.admin_create_role("usr-sys-admin-test",
+                                      [{"code": aerospike.PRIV_USER_ADMIN},
+                                       {"code": aerospike.PRIV_SYS_ADMIN}],
+                                       whitelist=["127.0.0.1"])
+        time.sleep(1)
+        self.client.admin_set_quotas("usr-sys-admin-test", 20, 30) # TODO remove
+        time.sleep(1)
+        roles = self.client.admin_query_role("usr-sys-admin-test")
+        print(roles)
+
+        assert roles == [
+            {"code": 0, 'ns': '', 'set': ''}, {"code": 1, 'ns': '', 'set': ''}]
+
+        status = self.client.admin_drop_role("usr-sys-admin-test")
+
     def test_create_role_incorrect_role_type(self):
         """
             role name not string

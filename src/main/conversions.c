@@ -18,6 +18,7 @@
 #include <Python.h>
 #include <stdbool.h>
 
+#include <aerospike/as_address.h>
 #include <aerospike/as_admin.h>
 #include <aerospike/as_error.h>
 #include <aerospike/as_key.h>
@@ -109,20 +110,42 @@ END:
 	return err->code;
 }
 
-
-as_status strArray_to_pyobject( as_error * err, char str_array_ptr[][AS_ROLE_SIZE], PyObject **py_list, int roles_size )
+as_status char_double_ptr_to_pyobject( as_error * err, int num_elements, int element_size, char ** str_array_ptr, PyObject **py_list)
 {
 	as_error_reset(err);
-	int i;
-	char *role;
+	
+	char *str;
 
-	*py_list = PyList_New(0);
+	for (int i = 0; i < num_elements; i++) {
+		str = str_array_ptr[i];
+		PyObject *py_str = Py_BuildValue("s", str);
+		if (py_str == NULL) {
+			as_error_update(err, AEROSPIKE_ERR_CLIENT, "Unable to build string value from %s.", str);
+			break;
+		}
 
-	for (i = 0; i < roles_size; i++) {
-		role = str_array_ptr[i];
-		PyObject *py_str = Py_BuildValue("s", role);
 		PyList_Append(*py_list, py_str);
+		Py_DECREF(py_str);
+	}
 
+	return err->code;
+}
+
+as_status strArray_to_pyobject( as_error * err, int num_elements, int element_size, char str_array_ptr[][element_size], PyObject **py_list)
+{
+	as_error_reset(err);
+	
+	char *str;
+
+	for (int i = 0; i < num_elements; i++) {
+		str = str_array_ptr[i];
+		PyObject *py_str = Py_BuildValue("s", str);
+		if (py_str == NULL) {
+			as_error_update(err, AEROSPIKE_ERR_CLIENT, "Unable to build string value from %s.", str);
+			break;
+		}
+
+		PyList_Append(*py_list, py_str);
 		Py_DECREF(py_str);
 	}
 
@@ -138,8 +161,8 @@ as_status as_user_array_to_pyobject( as_error *err, as_user **users, PyObject **
 	for (i = 0; i < users_size; i++) {
 
 		PyObject * py_user = PyString_FromString(users[i]->name);
-		PyObject * py_roles;
-		strArray_to_pyobject(err, users[i]->roles, &py_roles, users[i]->roles_size);
+		PyObject * py_roles = PyList_New(0);
+		strArray_to_pyobject(err, users[i]->roles_size, AS_ROLE_SIZE, users[i]->roles, &py_roles);
 		if (err->code != AEROSPIKE_OK) {
 			break;
 		}
@@ -155,12 +178,25 @@ as_status as_user_array_to_pyobject( as_error *err, as_user **users, PyObject **
 	return err->code;
 }
 
+/**
+ *******************************************************************************************************
+ * Convert a PyObject list of privilege dicts to an array of as_privilege.
+ *
+ * @param err                   (as_error) Updated to indicate result status, is AERROSPIKE_OK on success.
+ * @param py_privileges         (PyObject*) Pointer to list of privilege dicts.
+ * @param privileges         	(as_privilege**) Array of pointers to as_privilege structs.
+ * @param privileges_size       (int) Number of privilege dicts in py_privileges.
+ *
+ * Returns an as_status. AERROSPIKE_OK(0) is success value.
+ * In case of error, appropriate as_status will be returned.
+ *******************************************************************************************************
+ */
 as_status pyobject_to_as_privileges(as_error *err, PyObject *py_privileges, as_privilege** privileges, int privileges_size) {
 	as_error_reset(err);
 	for (int i = 0; i < privileges_size; i++) {
 		PyObject * py_val = PyList_GetItem(py_privileges, i);
 		if (PyDict_Check(py_val)) {
-			privileges[i] = (as_privilege *)cf_malloc(sizeof(as_privilege));
+			//privileges[i] = (as_privilege *)cf_malloc(sizeof(as_privilege)); //does part of the allocation
 			PyObject *py_dict_key = PyString_FromString("code");
 			if (PyDict_Contains(py_val, py_dict_key)) {
 				PyObject *py_code = NULL;
@@ -223,9 +259,9 @@ as_status as_user_to_pyobject( as_error * err, as_user * user, PyObject ** py_as
 {
 	as_error_reset(err);
 
-	PyObject * py_roles;
+	PyObject * py_roles = PyList_New(0);
 
-	strArray_to_pyobject(err, user->roles, &py_roles, user->roles_size);
+	strArray_to_pyobject(err, user->roles_size, AS_ROLE_SIZE, user->roles, &py_roles);
 	if (err->code != AEROSPIKE_OK) {
 		goto END;
 	}
@@ -240,14 +276,32 @@ as_status as_role_to_pyobject( as_error * err, as_role * role, PyObject ** py_as
 {
 	as_error_reset(err);
 
-	PyObject * py_privileges = PyList_New(0);
+	const char * privelege_key = "priveleges";
+	const char * whitelist_key = "whitelist";
+	const char * read_quota_key = "read_quota";
+	const char * write_quota_key = "write_quota";
+
+	PyObject * py_role_dict = PyDict_New();
+	PyObject * py_privileges = PyList_New(0); //This needs to be rename and probably changed to a dict
+	PyObject * py_whitelist = PyList_New(0);
 
 	as_privilege_to_pyobject(err, role->privileges, &py_privileges, role->privileges_size);
 	if (err->code != AEROSPIKE_OK) {
 		goto END;
 	}
 
-	*py_as_role = py_privileges;
+	PyDict_SetItemString(py_role_dict, privelege_key, py_privileges);
+
+	char_double_ptr_to_pyobject(err, role->whitelist_size, AS_IP_ADDRESS_SIZE, role->whitelist, &py_whitelist);
+	// Might need to check for whitelist incase it's a role from an old server that doesn't have it. ^
+	PyDict_SetItemString(py_role_dict, whitelist_key, py_whitelist);
+
+	PyObject *py_read_quota = Py_BuildValue("i", role->read_quota);
+	PyObject *py_write_quota = Py_BuildValue("i", role->write_quota);
+	PyDict_SetItemString(py_role_dict, read_quota_key, py_read_quota);
+	PyDict_SetItemString(py_role_dict, write_quota_key, py_write_quota);
+
+	*py_as_role = py_role_dict;
 
 END:
 	return err->code;
@@ -260,7 +314,7 @@ as_status as_privilege_to_pyobject( as_error * err, as_privilege privileges[], P
 	PyObject * py_ns = NULL;
 	PyObject * py_set = NULL;
 	PyObject * py_code = NULL;
-	for (int i=0; i<privilege_size; i++) {
+	for (int i = 0; i < privilege_size; i++) {
 		py_ns = PyString_FromString(privileges[i].ns);
 		py_set = PyString_FromString(privileges[i].set);
 		py_code = PyInt_FromLong(privileges[i].code);
