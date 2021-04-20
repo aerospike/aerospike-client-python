@@ -63,7 +63,7 @@ class TestGetRoles(TestBaseClass):
 
         assert roles[
             'usr-sys-admin-test'] == {
-                'priveleges': [
+                'privileges': [
                     {'ns': '', 'set': '', 'code': 0},
                     {'ns': '', 'set': '', 'code': 1}
                 ],
@@ -80,7 +80,7 @@ class TestGetRoles(TestBaseClass):
 
         assert roles[
             'usr-sys-admin-test'] == {
-                'priveleges': [
+                'privileges': [
                     {'ns': '', 'set': '', 'code': 0},
                     {'ns': '', 'set': '', 'code': 1}
                 ],

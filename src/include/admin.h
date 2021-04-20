@@ -154,3 +154,10 @@ PyObject * AerospikeClient_Admin_Get_Roles(AerospikeClient * self, PyObject *arg
  *
  */
 PyObject * AerospikeClient_Admin_Set_Quotas(AerospikeClient * self, PyObject *args, PyObject *kwds);
+/**
+ * Set IP whitelist for a user defined role in the database.
+ *
+ *		client.admin_set_quotas(role, whitelist, policy)
+ *
+ */
+PyObject * AerospikeClient_Admin_Set_Whitelist(AerospikeClient * self, PyObject *args, PyObject *kwds);

@@ -950,6 +950,11 @@ PyObject * AerospikeClient_Admin_Create_Role(AerospikeClient * self, PyObject *a
 	}
 
 	if (py_whitelist != NULL) {
+		if ( !PyList_Check(py_whitelist)) {
+			as_error_update(&err, AEROSPIKE_ERR_PARAM, "Whitelist must be a list of IP strings.");
+			goto CLEANUP;
+		}
+
 		whitelist_size = PyList_Size(py_whitelist);
 		whitelist = (char **)cf_malloc(sizeof(char *) * whitelist_size);
 		for (int i = 0; i < whitelist_size; i++) {
@@ -984,6 +989,100 @@ CLEANUP:
 		cf_free(whitelist);
 	}
 
+	if (err.code != AEROSPIKE_OK) {
+		PyObject * py_err = NULL;
+		error_to_pyobject(&err, &py_err);
+		PyObject *exception_type = raise_exception(&err);
+		PyErr_SetObject(exception_type, py_err);
+		Py_DECREF(py_err);
+		return NULL;
+	}
+
+	return PyLong_FromLong(0);
+}
+
+/**
+ *******************************************************************************************************
+ * Add whitelist to a role in the Aerospike DB.
+ *
+ * @param self                  AerospikeClient object
+ * @param args                  The args is a tuple object containing an argument
+ *                              list passed from Python to a C function
+ * @param kwds                  Dictionary of keywords
+ *
+ * Returns an integer status. 0(Zero) is success value.
+ * In case of error,appropriate exceptions will be raised.
+ *******************************************************************************************************
+ */
+PyObject * AerospikeClient_Admin_Set_Whitelist(AerospikeClient * self, PyObject *args, PyObject * kwds)
+{
+	// Initialize error.
+	as_error err;
+	as_error_init(&err);
+
+	// Python Function Arguments.
+	PyObject * py_policy = NULL;
+	PyObject * py_whitelist = NULL;
+
+	// C API args.
+	int whitelist_size = 0;
+	const char * role = NULL;
+	char ** whitelist = NULL;
+	as_policy_admin admin_policy;
+	as_policy_admin *admin_policy_p = NULL;
+
+
+	// Sanity connection checks.
+	if (!self || !self->as) {
+		as_error_update(&err, AEROSPIKE_ERR_PARAM, "Invalid aerospike object.");
+		goto CLEANUP;
+	}
+
+	if (!self->is_conn_16) {
+		as_error_update(&err, AEROSPIKE_ERR_CLUSTER, "No connection to aerospike cluster.");
+		goto CLEANUP;
+	}
+
+	// Python Function Keyword Arguments.
+	static char * kwlist[] = {"role", "whitelist", "policy", NULL};
+
+	// Python Function Argument Parsing.
+	if (PyArg_ParseTupleAndKeywords(args, kwds, "s|OO:admin_set_whitelist", kwlist,
+				&role, &py_whitelist, &py_policy) == false) {
+
+		capture_python_exception(&err, AEROSPIKE_ERR_PARAM);
+		goto CLEANUP;
+	}
+
+	if (py_whitelist != NULL) {
+		if ( !PyList_Check(py_whitelist)) {
+			as_error_update(&err, AEROSPIKE_ERR_PARAM, "Whitelist must be a list of IP strings.");
+			goto CLEANUP;
+		}
+
+		whitelist_size = PyList_Size(py_whitelist);
+		whitelist = (char **)cf_malloc(sizeof(char *) * whitelist_size);
+		for (int i = 0; i < whitelist_size; i++) {
+			whitelist[i] = cf_malloc(sizeof(char) * AS_IP_ADDRESS_SIZE);
+		}
+
+		if (pyobject_to_strArray(&err, py_whitelist, whitelist, AS_IP_ADDRESS_SIZE) != AEROSPIKE_OK) {
+			goto CLEANUP;
+		}
+	}
+
+	pyobject_to_policy_admin(self,  &err, py_policy, &admin_policy, &admin_policy_p,
+			&self->as->config.policies.admin);
+	if (err.code != AEROSPIKE_OK) {
+		goto CLEANUP;
+	}
+
+	// Invoke operation.
+	Py_BEGIN_ALLOW_THREADS
+	aerospike_set_whitelist(self->as, &err, admin_policy_p, role, (const char**)whitelist, whitelist_size);
+	Py_END_ALLOW_THREADS
+
+CLEANUP:
 	if (err.code != AEROSPIKE_OK) {
 		PyObject * py_err = NULL;
 		error_to_pyobject(&err, &py_err);
@@ -1210,6 +1309,8 @@ PyObject * AerospikeClient_Admin_Grant_Privileges(AerospikeClient * self, PyObje
 		privileges[i] = (as_privilege *)cf_malloc(sizeof(as_privilege));
 	}
 
+	pyobject_to_as_privileges(&err, py_privileges, privileges, privileges_size);
+
 	pyobject_to_policy_admin(self,  &err, py_policy, &admin_policy, &admin_policy_p,
 			&self->as->config.policies.admin);
 	if (err.code != AEROSPIKE_OK) {
@@ -1312,6 +1413,8 @@ PyObject * AerospikeClient_Admin_Revoke_Privileges(AerospikeClient * self, PyObj
 	for (int i = 0; i < privileges_size; ++i) {
 		privileges[i] = (as_privilege *)cf_malloc(sizeof(as_privilege));
 	}
+
+	pyobject_to_as_privileges(&err, py_privileges, privileges, privileges_size);
 
 	pyobject_to_policy_admin(self,  &err, py_policy, &admin_policy, &admin_policy_p,
 			&self->as->config.policies.admin);

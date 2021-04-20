@@ -69,7 +69,7 @@ class TestGetRole(TestBaseClass):
         """
         roles = self.client.admin_get_role("usr-sys-admin-test")
         assert roles == {
-                'priveleges': [
+                'privileges': [
                     {'ns': '', 'set': '', 'code': 0},
                     {'ns': '', 'set': '', 'code': 1}
                 ],
@@ -85,7 +85,7 @@ class TestGetRole(TestBaseClass):
         roles = self.client.admin_get_role(
             "usr-sys-admin-test", {'timeout': 1000})
         assert roles == {
-                'priveleges': [
+                'privileges': [
                     {'ns': '', 'set': '', 'code': 0},
                     {'ns': '', 'set': '', 'code': 1}
                 ],

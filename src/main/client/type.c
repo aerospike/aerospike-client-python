@@ -572,6 +572,9 @@ static PyMethodDef AerospikeClient_Type_Methods[] = {
 	{"admin_set_quotas",
 		(PyCFunction) AerospikeClient_Admin_Set_Quotas, METH_VARARGS | METH_KEYWORDS,
 		"Set read and write quotas for a user defined role."},
+	{"admin_set_whitelist",
+		(PyCFunction) AerospikeClient_Admin_Set_Whitelist, METH_VARARGS | METH_KEYWORDS,
+		"Set IP whitelist for a user defined role."},
 
 	// KVS OPERATIONS
 

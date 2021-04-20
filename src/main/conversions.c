@@ -196,7 +196,6 @@ as_status pyobject_to_as_privileges(as_error *err, PyObject *py_privileges, as_p
 	for (int i = 0; i < privileges_size; i++) {
 		PyObject * py_val = PyList_GetItem(py_privileges, i);
 		if (PyDict_Check(py_val)) {
-			//privileges[i] = (as_privilege *)cf_malloc(sizeof(as_privilege)); //does part of the allocation
 			PyObject *py_dict_key = PyString_FromString("code");
 			if (PyDict_Contains(py_val, py_dict_key)) {
 				PyObject *py_code = NULL;
