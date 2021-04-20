@@ -2619,12 +2619,25 @@ Admin Operations
         .. seealso:: `Security features article <https://www.aerospike.com/docs/guide/security/index.html>`_.
 
 
-    .. method:: admin_create_role(role, privileges[, policy])
+    .. method:: admin_create_role(role, privileges[, policy[, whitelist[, read_quota[, write_quota]]]])
 
-        Create a custom, named *role* containing a :class:`list` of *privileges*.
+        Create a custom, named *role* containing a :class:`list` of *privileges*, optional whitelist, and quotas.
 
         :param str role: the name of the role.
-        :param list privileges: a list of :ref:`aerospike_privilege_dict`.
+        :param list privileges: A list of :ref:`aerospike_privilege_dict`.
+        :param dict policy: Optional :ref:`aerospike_admin_policies`.
+        :param list whitelist: A list of whitelist IP addresses that can contain wildcards, for example 10.1.2.0/24.
+        :param int read_quota: Maximum reads per second limit, pass in zero for no limit.
+        :param int write_quota: Maximum write per second limit, pass in zero for no limit.
+        :raises: One of the :exc:`~aerospike.exception.AdminError` subclasses.
+
+    .. method:: admin_set_quotas(role[, read_quota[, write_quota[, policy]]])
+
+        Add *quotas* to a *role*.
+
+        :param str role: the name of the role.
+        :param int read_quota: Maximum reads per second limit, pass in zero for no limit.
+        :param int write_quota: Maximum write per second limit, pass in zero for no limit.
         :param dict policy: optional :ref:`aerospike_admin_policies`.
         :raises: one of the :exc:`~aerospike.exception.AdminError` subclasses.
 
@@ -2652,6 +2665,23 @@ Admin Operations
         :param str role: the name of the role.
         :param list privileges: a list of :ref:`aerospike_privilege_dict`.
         :param dict policy: optional :ref:`aerospike_admin_policies`.
+        :raises: one of the :exc:`~aerospike.exception.AdminError` subclasses.
+
+    .. method:: admin_get_role(role[, policy]) -> []
+
+        Get the :class:`dict` of privileges, whitelist, and quotas associated with a *role*.
+
+        :param str role: the name of the role.
+        :param dict policy: optional :ref:`aerospike_admin_policies`.
+        :return: a :class:`dict` of role attributes.
+        :raises: one of the :exc:`~aerospike.exception.AdminError` subclasses.
+
+    .. method:: admin_get_roles([policy]) -> {}
+
+        Get all named roles and their attributes.
+
+        :param dict policy: optional :ref:`aerospike_admin_policies`.
+        :return: a :class:`dict` of :ref:`aerospike_privilege_dict` keyed by role name.
         :raises: one of the :exc:`~aerospike.exception.AdminError` subclasses.
 
     .. method:: admin_query_role(role[, policy]) -> []
@@ -3432,6 +3462,27 @@ HyperLogLog Policies
 
 Misc
 ====
+
+.. _aerospike_role_dict:
+
+Role Objects
+------------
+
+.. object:: Role Dictionary
+
+    A :class:`dict` describing attributes associated with a specific role.
+
+    .. hlist::
+        :columns: 1
+
+        * **privileges** A list of :ref:`aerospike_privilege_dict`.
+        * **whitelist** A :class:`list` of IP address strings.
+        * **read_quota** A :class:`int` representing the allowed read transactions per second.
+        * **write_quota** A :class:`int` representing the allowed write transactions per second.
+
+    Example:
+
+    ``{'code': aerospike.PRIV_READ, 'ns': 'test', 'set': 'demo'}``
 
 .. _aerospike_privilege_dict:
 

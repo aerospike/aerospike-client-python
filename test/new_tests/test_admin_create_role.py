@@ -53,7 +53,7 @@ class TestCreateRole(object):
 
     def test_create_role_without_any_parameters(self):
 
-        with pytest.raises(TypeError) as typeError:
+        with pytest.raises(e.ParamError) as typeError:
             self.client.admin_create_role()
 
         assert "argument 'role' (pos 1)" in str(
@@ -64,7 +64,7 @@ class TestCreateRole(object):
             Create role positive
         """
         try:
-            self.client.admin_query_role("usr-sys-admin-test")
+            self.client.admin_get_role("usr-sys-admin-test")
             # role exists, clear it out.
             self.client.admin_drop_role("usr-sys-admin-test")
             time.sleep(2)
@@ -76,8 +76,13 @@ class TestCreateRole(object):
                                           "ns": "test", "set": "demo"}],
                                       {'timeout': 1000})
         time.sleep(1)
-        roles = self.client.admin_query_role("usr-sys-admin-test")
-        assert roles == [{'code': 10, 'ns': 'test', 'set': 'demo'}]
+        roles = self.client.admin_get_role("usr-sys-admin-test")
+        assert roles == {
+                            'privileges': [{'code': 10, 'ns': 'test', 'set': 'demo'}],
+                            'whitelist': [],
+                            'read_quota': 0,
+                            'write_quota': 0
+                        }
 
         status = self.client.admin_create_user(
             "testcreaterole", "createrole", ["usr-sys-admin-test"])
@@ -95,7 +100,7 @@ class TestCreateRole(object):
             Create role with write privilege positive
         """
         try:
-            self.client.admin_query_role("usr-sys-admin-test")
+            self.client.admin_get_role("usr-sys-admin-test")
             # role exists, clear it out.
             self.client.admin_drop_role("usr-sys-admin-test")
             time.sleep(2)
@@ -107,8 +112,13 @@ class TestCreateRole(object):
                                           "ns": "test", "set": "demo"}],
                                       {'timeout': 1000})
         time.sleep(1)
-        roles = self.client.admin_query_role("usr-sys-admin-test")
-        assert roles == [{'code': 13, 'ns': 'test', 'set': 'demo'}]
+        roles = self.client.admin_get_role("usr-sys-admin-test")
+        assert roles == {
+                            'privileges': [{'code': 13, 'ns': 'test', 'set': 'demo'}],
+                            'whitelist': [],
+                            'read_quota': 0,
+                            'write_quota': 0
+                        }
 
         status = self.client.admin_create_user(
             "testcreaterole", "createrole", ["usr-sys-admin-test"])
@@ -126,7 +136,7 @@ class TestCreateRole(object):
             Create role positive
         """
         try:
-            self.client.admin_query_role("usr-sys-admin-test")
+            self.client.admin_get_role("usr-sys-admin-test")
             # role exists, clear it out.
             self.client.admin_drop_role("usr-sys-admin-test")
             # Give some time for the role removal to take place
@@ -138,19 +148,26 @@ class TestCreateRole(object):
                                       [{"code": aerospike.PRIV_USER_ADMIN},
                                        {"code": aerospike.PRIV_SYS_ADMIN}])
         time.sleep(1)
-        roles = self.client.admin_query_role("usr-sys-admin-test")
+        roles = self.client.admin_get_role("usr-sys-admin-test")
 
-        assert roles == [
-            {"code": 0, 'ns': '', 'set': ''}, {"code": 1, 'ns': '', 'set': ''}]
+        assert roles == {
+                            'privileges': [
+                                            {'code': 0, 'ns': '', 'set': ''},
+                                            {'code': 1, 'ns': '', 'set': ''}
+                                        ],
+                            'whitelist': [],
+                            'read_quota': 0,
+                            'write_quota': 0
+                        }
 
         status = self.client.admin_drop_role("usr-sys-admin-test")
 
-    def test_create_role_whitelist_positive(self):
+    def test_create_role_whitelist_quota_positive(self):
         """
             Create role positive
         """
         try:
-            self.client.admin_query_role("usr-sys-admin-test")
+            self.client.admin_get_role("usr-sys-admin-test")
             # role exists, clear it out.
             self.client.admin_drop_role("usr-sys-admin-test")
             # Give some time for the role removal to take place
@@ -161,15 +178,21 @@ class TestCreateRole(object):
         self.client.admin_create_role("usr-sys-admin-test",
                                       [{"code": aerospike.PRIV_USER_ADMIN},
                                        {"code": aerospike.PRIV_SYS_ADMIN}],
-                                       whitelist=["127.0.0.1"])
+                                       whitelist=["127.0.0.1", "10.1.2.0/24"],
+                                       read_quota=20,
+                                       write_quota=30)
         time.sleep(1)
-        self.client.admin_set_quotas("usr-sys-admin-test", 20, 30) # TODO remove
-        time.sleep(1)
-        roles = self.client.admin_query_role("usr-sys-admin-test")
-        print(roles)
+        roles = self.client.admin_get_role("usr-sys-admin-test")
 
-        assert roles == [
-            {"code": 0, 'ns': '', 'set': ''}, {"code": 1, 'ns': '', 'set': ''}]
+        assert roles == {
+            'privileges': [
+                {'code': aerospike.PRIV_USER_ADMIN, 'ns': '', 'set': ''},
+                {'code': aerospike.PRIV_SYS_ADMIN, 'ns': '', 'set': ''}
+            ],
+            'whitelist': ["127.0.0.1", "10.1.2.0/24"],
+            'read_quota': 20,
+            'write_quota': 30
+        }
 
         status = self.client.admin_drop_role("usr-sys-admin-test")
 
@@ -182,14 +205,14 @@ class TestCreateRole(object):
                 1, [{"code": aerospike.PRIV_USER_ADMIN}])
         except e.ParamError as exception:
             assert exception.code == -2
-            assert exception.msg == "Role name should be a string"
+            assert "Role name should be a string" in exception.msg
 
     def test_create_role_unknown_privilege_type(self):
         """
             privilege type unknown
         """
         try:
-            self.client.admin_query_role("usr-sys-admin-test")
+            self.client.admin_get_role("usr-sys-admin-test")
             # role exists, clear it out.
             self.client.admin_drop_role("usr-sys-admin-test")
             time.sleep(2)
@@ -217,7 +240,7 @@ class TestCreateRole(object):
             create an already existing role
         """
         try:
-            self.client.admin_query_role("usr-sys-admin-test")
+            self.client.admin_get_role("usr-sys-admin-test")
             # role exists, clear it out.
             self.client.admin_drop_role("usr-sys-admin-test")
             time.sleep(2)
@@ -258,10 +281,16 @@ class TestCreateRole(object):
 
         assert status == 0
         time.sleep(1)
-        roles = self.client.admin_query_role(role_name)
+        roles = self.client.admin_get_role(role_name)
 
-        assert roles == [
-            {"code": aerospike.PRIV_READ, "ns": "test", "set": "demo"}]
+        assert roles == {
+                            'privileges': [
+                                            {'code': aerospike.PRIV_READ, 'ns': 'test', 'set': 'demo'},
+                                        ],
+                            'whitelist': [],
+                            'read_quota': 0,
+                            'write_quota': 0
+                        }
 
         status = self.client.admin_create_user(
             "testcreaterole", "createrole", [role_name])

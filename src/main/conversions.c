@@ -228,7 +228,7 @@ as_status pyobject_to_as_privileges(as_error *err, PyObject *py_privileges, as_p
 	return err->code;
 }
 
-as_status as_role_array_to_pyobject( as_error *err, as_role **roles, PyObject **py_as_roles, int roles_size )
+as_status as_role_array_to_pyobject_old( as_error *err, as_role **roles, PyObject **py_as_roles, int roles_size )
 {
 	as_error_reset(err);
 	int i;
@@ -241,6 +241,8 @@ as_status as_role_array_to_pyobject( as_error *err, as_role **roles, PyObject **
 
 		as_privilege_to_pyobject(err, roles[i]->privileges, &py_privileges, roles[i]->privileges_size);
 		if (err->code != AEROSPIKE_OK) {
+			Py_DECREF(py_role);
+			Py_DECREF(py_privileges);
 			break;
 		}
 
@@ -248,6 +250,32 @@ as_status as_role_array_to_pyobject( as_error *err, as_role **roles, PyObject **
 
 		Py_DECREF(py_role);
 		Py_DECREF(py_privileges);
+
+	}
+	*py_as_roles = py_roles;
+
+	return err->code;
+}
+
+as_status as_role_array_to_pyobject( as_error *err, as_role **roles, PyObject **py_as_roles, int roles_size )
+{
+	as_error_reset(err);
+	int i;
+
+	PyObject * py_roles = PyDict_New();
+	for (i = 0; i < roles_size; i++) {
+
+		const char * py_role_name = roles[i]->name;
+		PyObject * py_role = NULL;
+
+		as_role_to_pyobject(err, roles[i], &py_role);
+		if (err->code != AEROSPIKE_OK) {
+			break;
+		}
+
+		PyDict_SetItemString(py_roles, py_role_name, py_role);
+
+		Py_DECREF(py_role);
 
 	}
 	*py_as_roles = py_roles;
@@ -272,11 +300,28 @@ END:
 	return err->code;
 }
 
+as_status as_role_to_pyobject_old( as_error * err, as_role * role, PyObject ** py_as_role )
+{
+	as_error_reset(err);
+
+	PyObject * py_privileges = PyList_New(0);
+
+	as_privilege_to_pyobject(err, role->privileges, &py_privileges, role->privileges_size);
+	if (err->code != AEROSPIKE_OK) {
+		goto END;
+	}
+
+	*py_as_role = py_privileges;
+
+END:
+	return err->code;
+}
+
 as_status as_role_to_pyobject( as_error * err, as_role * role, PyObject ** py_as_role )
 {
 	as_error_reset(err);
 
-	const char * privelege_key = "priveleges";
+	const char * privelege_key = "privileges";
 	const char * whitelist_key = "whitelist";
 	const char * read_quota_key = "read_quota";
 	const char * write_quota_key = "write_quota";
@@ -293,7 +338,6 @@ as_status as_role_to_pyobject( as_error * err, as_role * role, PyObject ** py_as
 	PyDict_SetItemString(py_role_dict, privelege_key, py_privileges);
 
 	char_double_ptr_to_pyobject(err, role->whitelist_size, AS_IP_ADDRESS_SIZE, role->whitelist, &py_whitelist);
-	// Might need to check for whitelist incase it's a role from an old server that doesn't have it. ^
 	PyDict_SetItemString(py_role_dict, whitelist_key, py_whitelist);
 
 	PyObject *py_read_quota = Py_BuildValue("i", role->read_quota);

@@ -88,7 +88,11 @@ as_status pyobject_to_astype_write(AerospikeClient * self, as_error * err, PyObj
 
 as_status as_privilege_to_pyobject( as_error * err, as_privilege privileges[], PyObject ** py_as_privilege, int privilege_size);
 
+as_status as_role_to_pyobject_old( as_error * err, as_role * role, PyObject ** py_as_role );
+
 as_status as_role_to_pyobject( as_error * err, as_role * role, PyObject ** py_as_role );
+
+as_status as_role_array_to_pyobject_old( as_error *err, as_role **roles, PyObject **py_as_roles, int roles_size );
 
 as_status as_role_array_to_pyobject( as_error *err, as_role **roles, PyObject **py_as_roles, int roles_size );
 

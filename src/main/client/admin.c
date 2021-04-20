@@ -24,9 +24,10 @@
 #include <aerospike/as_error.h>
 #include <aerospike/as_policy.h>
 
-#include "client.h"
 #include "admin.h"
+#include "client.h"
 #include "conversions.h"
+#include "error_extension.h"
 #include "exceptions.h"
 #include "policy.h"
 #include "global_hosts.h"
@@ -874,10 +875,29 @@ CLEANUP:
  */
 PyObject * AerospikeClient_Admin_Create_Role(AerospikeClient * self, PyObject *args, PyObject * kwds)
 {
-	// Initialize error
+	// Initialize error.
 	as_error err;
 	as_error_init(&err);
 
+	// Python Function Arguments.
+	int read_quota = 0;
+	int write_quota = 0;
+
+	PyObject * py_role = NULL;
+	PyObject * py_privileges = NULL;
+	PyObject * py_policy = NULL;
+	PyObject * py_whitelist = NULL;
+
+	as_policy_admin admin_policy;
+	as_policy_admin *admin_policy_p = NULL;
+
+	// Aerospike Operation Arguments.
+	int privileges_size = 0;
+	int whitelist_size = 0;
+	as_privilege ** privileges = NULL;
+	char ** whitelist = NULL;
+
+	// sanity connection checks.
 	if (!self || !self->as) {
 		as_error_update(&err, AEROSPIKE_ERR_PARAM, "Invalid aerospike object");
 		goto CLEANUP;
@@ -888,34 +908,26 @@ PyObject * AerospikeClient_Admin_Create_Role(AerospikeClient * self, PyObject *a
 		goto CLEANUP;
 	}
 
-	// Python Function Arguments
-	const char * role = NULL;
-	int read_quota = 0;
-	int write_quota = 0;
-
-	PyObject * py_privileges = NULL;
-	PyObject * py_policy = NULL;
-	PyObject * py_whitelist = NULL;
-
-	as_policy_admin admin_policy;
-	as_policy_admin *admin_policy_p = NULL;
-
-	// Python Function Keyword Arguments
+	// Python Function Keyword Arguments.
 	static char * kwlist[] = {"role", "privileges", "policy", "whitelist", "read_quota", "write_quota", NULL};
 
-	// Python Function Argument Parsing
-	if (PyArg_ParseTupleAndKeywords(args, kwds, "sO|OOii:admin_create_role", kwlist, // TODO change/handle defaults
-				&role, &py_privileges, &py_policy, &py_whitelist, &read_quota, &write_quota) == false) {
-		return NULL;
+	// Python Function Argument Parsing.
+	if (PyArg_ParseTupleAndKeywords(args, kwds, "OO|OOii:admin_create_role", kwlist,
+				&py_role, &py_privileges, &py_policy, &py_whitelist, &read_quota, &write_quota) == false) {
+
+		capture_python_exception(&err, AEROSPIKE_ERR_PARAM);
+		goto CLEANUP;
 	}
 
-	// Aerospike Operation Arguments
-	int privileges_size = 0;
-	as_privilege **privileges = NULL;
-	int whitelist_size = 0;
-	char **whitelist = NULL;
+	const char * role = NULL;
+	if (PyString_Check(py_role)) {
+		role = PyString_AsString(py_role);
+	} else {
+		as_error_update(&err, AEROSPIKE_ERR_PARAM, "Role name should be a string");
+		goto CLEANUP;
+	}
 
-	// Convert python object to an array of privileges
+	// Convert python object to an array of privileges.
 	if (!PyList_Check(py_privileges)) {
 		as_error_update(&err, AEROSPIKE_ERR_PARAM, "Privileges should be a list");
 		goto CLEANUP;
@@ -931,7 +943,7 @@ PyObject * AerospikeClient_Admin_Create_Role(AerospikeClient * self, PyObject *a
 		goto CLEANUP;
 	}
 
-	// Convert python object to an admin policy 
+	// Convert python object to an admin policy .
 	if (pyobject_to_policy_admin(self,  &err, py_policy, &admin_policy, &admin_policy_p,
 			&self->as->config.policies.admin) != AEROSPIKE_OK) {
 		goto CLEANUP;
@@ -999,37 +1011,40 @@ CLEANUP:
  */
 PyObject * AerospikeClient_Admin_Set_Quotas(AerospikeClient * self, PyObject *args, PyObject * kwds)
 {
-	// Initialize error
+	// Initialize error.
 	as_error err;
 	as_error_init(&err);
 
+	// Python Function Arguments.
+	PyObject * py_policy = NULL;
+
+	// C API args.
+	const char * role = NULL;
+	int read_quota = -1;
+	int write_quota = -1;
+	as_policy_admin admin_policy;
+	as_policy_admin *admin_policy_p = NULL;
+
+	// Sanity connection checks.
 	if (!self || !self->as) {
-		as_error_update(&err, AEROSPIKE_ERR_PARAM, "Invalid aerospike object");
+		as_error_update(&err, AEROSPIKE_ERR_PARAM, "Invalid aerospike object.");
 		goto CLEANUP;
 	}
 
 	if (!self->is_conn_16) {
-		as_error_update(&err, AEROSPIKE_ERR_CLUSTER, "No connection to aerospike cluster");
+		as_error_update(&err, AEROSPIKE_ERR_CLUSTER, "No connection to aerospike cluster.");
 		goto CLEANUP;
 	}
 
-	// Python Function Arguments
-	PyObject * py_policy = NULL;
-
-	// C API args
-	const char * role = NULL;
-	int read_quota = 0;
-	int write_quota = 0;
-	as_policy_admin admin_policy;
-	as_policy_admin *admin_policy_p = NULL;
-
-	// Python Function Keyword Arguments
+	// Python Function Keyword Arguments.
 	static char * kwlist[] = {"role", "read_quota", "write_quota", "policy", NULL};
 
-	// Python Function Argument Parsing
+	// Python Function Argument Parsing.
 	if (PyArg_ParseTupleAndKeywords(args, kwds, "s|iiO:admin_set_quotas", kwlist,
 				&role, &read_quota, &write_quota, &py_policy) == false) {
-		return NULL;
+
+		capture_python_exception(&err, AEROSPIKE_ERR_PARAM);
+		goto CLEANUP;
 	}
 
 	pyobject_to_policy_admin(self,  &err, py_policy, &admin_policy, &admin_policy_p,
@@ -1038,7 +1053,7 @@ PyObject * AerospikeClient_Admin_Set_Quotas(AerospikeClient * self, PyObject *ar
 		goto CLEANUP;
 	}
 
-	// Invoke operation
+	// Invoke operation.
 	Py_BEGIN_ALLOW_THREADS
 	aerospike_set_quotas(self->as, &err, admin_policy_p, role, read_quota, write_quota);
 	Py_END_ALLOW_THREADS
@@ -1409,7 +1424,7 @@ PyObject * AerospikeClient_Admin_Query_Role(AerospikeClient * self, PyObject *ar
 		goto CLEANUP;
 	}
 
-	as_role_to_pyobject(&err, ret_role, &py_ret_role);
+	as_role_to_pyobject_old(&err, ret_role, &py_ret_role);
 
 CLEANUP:
 
@@ -1428,6 +1443,7 @@ CLEANUP:
 
 	return py_ret_role;
 }
+
 /**
  *******************************************************************************************************
  * Query all roles in the Aerospike DB.
@@ -1462,6 +1478,178 @@ PyObject * AerospikeClient_Admin_Query_Roles(AerospikeClient * self, PyObject *a
 
 	// Python Function Argument Parsing
 	if (PyArg_ParseTupleAndKeywords(args, kwds, "|O:admin_query_roles", kwlist,
+				&py_policy) == false) {
+		return NULL;
+	}
+
+	if (!self || !self->as) {
+		as_error_update(&err, AEROSPIKE_ERR_PARAM, "Invalid aerospike object");
+		goto CLEANUP;
+	}
+
+	if (!self->is_conn_16) {
+		as_error_update(&err, AEROSPIKE_ERR_CLUSTER, "No connection to aerospike cluster");
+		goto CLEANUP;
+	}
+
+	pyobject_to_policy_admin(self,  &err, py_policy, &admin_policy, &admin_policy_p,
+			&self->as->config.policies.admin);
+	if (err.code != AEROSPIKE_OK) {
+		goto CLEANUP;
+	}
+
+	// Invoke operation
+	Py_BEGIN_ALLOW_THREADS
+	aerospike_query_roles(self->as, &err, admin_policy_p, &ret_role, &ret_role_size);
+	Py_END_ALLOW_THREADS
+	if (err.code != AEROSPIKE_OK) {
+		goto CLEANUP;
+	}
+
+	as_role_array_to_pyobject_old(&err, ret_role, &py_ret_role, ret_role_size);
+
+CLEANUP:
+
+	if (ret_role) {
+		as_roles_destroy(ret_role, ret_role_size);
+	}
+
+	if (err.code != AEROSPIKE_OK) {
+		PyObject * py_err = NULL;
+		error_to_pyobject(&err, &py_err);
+		PyObject *exception_type = raise_exception(&err);
+		PyErr_SetObject(exception_type, py_err);
+		Py_DECREF(py_err);
+		return NULL;
+	}
+
+	return py_ret_role;
+}
+
+/**
+ *******************************************************************************************************
+ * Query a role in the Aerospike DB.
+ *
+ * @param self                  AerospikeClient object
+ * @param args                  The args is a tuple object containing an argument
+ *                              list passed from Python to a C function
+ * @param kwds                  Dictionary of keywords
+ *
+ * Returns data of a particular role on success.
+ * In case of error,appropriate exceptions will be raised.
+ *******************************************************************************************************
+ */
+PyObject * AerospikeClient_Admin_Get_Role(AerospikeClient * self, PyObject *args, PyObject * kwds)
+{
+	// Initialize error
+	as_error err;
+	as_error_init(&err);
+
+	// Python Function Arguments
+	PyObject * py_policy = NULL;
+	PyObject * py_role = NULL;
+	PyObject * py_ret_role = NULL;
+
+	as_policy_admin admin_policy;
+	as_policy_admin * admin_policy_p = NULL;
+
+	as_role * ret_role = NULL;
+
+	// Python Function Keyword Arguments
+	static char * kwlist[] = {"role", "policy", NULL};
+
+	// Python Function Argument Parsing
+	if (PyArg_ParseTupleAndKeywords(args, kwds, "O|O:admin_get_role", kwlist,
+				&py_role, &py_policy) == false) {
+		return NULL;
+	}
+
+	if (!self || !self->as) {
+		as_error_update(&err, AEROSPIKE_ERR_PARAM, "Invalid aerospike object");
+		goto CLEANUP;
+	}
+
+	if (!self->is_conn_16) {
+		as_error_update(&err, AEROSPIKE_ERR_CLUSTER, "No connection to aerospike cluster");
+		goto CLEANUP;
+	}
+
+	pyobject_to_policy_admin(self,  &err, py_policy, &admin_policy, &admin_policy_p,
+			&self->as->config.policies.admin);
+	if (err.code != AEROSPIKE_OK) {
+		goto CLEANUP;
+	}
+
+	char *role = NULL;
+	if (PyString_Check(py_role)) {
+		role = PyString_AsString(py_role);
+	} else {
+		as_error_update(&err, AEROSPIKE_ERR_PARAM, "Role name should be a string");
+		goto CLEANUP;
+	}
+
+	// Invoke operation
+	Py_BEGIN_ALLOW_THREADS
+	aerospike_query_role(self->as, &err, admin_policy_p, role, &ret_role);
+	Py_END_ALLOW_THREADS
+	if (err.code != AEROSPIKE_OK) {
+		goto CLEANUP;
+	}
+
+	as_role_to_pyobject(&err, ret_role, &py_ret_role);
+
+CLEANUP:
+
+	if (ret_role) {
+		as_role_destroy(ret_role);
+	}
+
+	if (err.code != AEROSPIKE_OK) {
+		PyObject * py_err = NULL;
+		error_to_pyobject(&err, &py_err);
+		PyObject *exception_type = raise_exception(&err);
+		PyErr_SetObject(exception_type, py_err);
+		Py_DECREF(py_err);
+		return NULL;
+	}
+
+	return py_ret_role;
+}
+
+/**
+ *******************************************************************************************************
+ * Query all roles in the Aerospike DB.
+ *
+ * @param self                  AerospikeClient object
+ * @param args                  The args is a tuple object containing an argument
+ *                              list passed from Python to a C function
+ * @param kwds                  Dictionary of keywords
+ *
+ * Returns data of all roles on success.
+ * In case of error,appropriate exceptions will be raised.
+ *******************************************************************************************************
+ */
+PyObject * AerospikeClient_Admin_Get_Roles(AerospikeClient * self, PyObject *args, PyObject * kwds)
+{
+	// Initialize error
+	as_error err;
+	as_error_init(&err);
+
+	// Python Function Arguments
+	PyObject * py_policy = NULL;
+	PyObject * py_ret_role = NULL;
+
+	as_policy_admin admin_policy;
+	as_policy_admin *admin_policy_p = NULL;
+
+	as_role **ret_role = NULL;
+	int ret_role_size = 0;
+
+	// Python Function Keyword Arguments
+	static char * kwlist[] = {"policy", NULL};
+
+	// Python Function Argument Parsing
+	if (PyArg_ParseTupleAndKeywords(args, kwds, "|O:admin_get_roles", kwlist,
 				&py_policy) == false) {
 		return NULL;
 	}
