@@ -780,7 +780,7 @@ static PyMethodDef AerospikeClient_Type_Methods[] = {
 	{"info_single_node",
 		(PyCFunction) AerospikeClient_InfoSingleNode, METH_VARARGS | METH_KEYWORDS,
 		info_single_node_doc},
-	{"info_node",
+	{"info_node", // DEPRECATED
 		(PyCFunction) AerospikeClient_InfoNode, METH_VARARGS | METH_KEYWORDS,
 		info_node_doc},
 	{"get_nodes",

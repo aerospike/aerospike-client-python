@@ -2341,6 +2341,9 @@ Info Operations
 
     .. method:: info_node(command, host[, policy]) -> str
 
+        .. deprecated:: 6.0.0
+            Use :meth:`info_single_node` to send a request to a single node, or :meth:`info_all` to send a request to the entire cluster.
+
         Send an info *command* to a single node specified by *host*.
 
         :param str command: the info command.
@@ -3255,7 +3258,7 @@ Info Policies
 
 .. object:: policy
     
-    A :class:`dict` of optional info policies, which are applicable to :meth:`~aerospike.Client.info`, :meth:`~aerospike.Client.info_node` and index operations.
+    A :class:`dict` of optional info policies, which are applicable to :meth:`~aerospike.Client.info_all`, :meth:`~aerospike.Client.info_single_node` and index operations.
 
     .. hlist::
         :columns: 1
