@@ -381,11 +381,6 @@ PyDoc_STRVAR(scan_info_doc,
 \n\
 Return the status of a scan running in the background.");
 
-PyDoc_STRVAR(info_doc,
-"info(command[, hosts[, policy]]) -> {}\n\
-\n\
-Send an info command to multiple nodes specified in a hosts list.");
-
 PyDoc_STRVAR(set_xdr_filter_doc,
 "set_xdr_filter(data_center, namespace, expression_filter[, policy]) -> {}\n\
 \n\
@@ -768,9 +763,6 @@ static PyMethodDef AerospikeClient_Type_Methods[] = {
 
 	// INFO OPERATIONS
 
-	{"info",
-		(PyCFunction) AerospikeClient_Info, METH_VARARGS | METH_KEYWORDS,
-		info_doc},
 	{"set_xdr_filter",
 		(PyCFunction) AerospikeClient_SetXDRFilter, METH_VARARGS | METH_KEYWORDS,
 		set_xdr_filter_doc},
