@@ -41,6 +41,9 @@ static PyObject * AerospikeClient_InfoSingleNode_Invoke(
 	as_error * err, AerospikeClient * self,
 	PyObject * py_request_str, PyObject * py_host, PyObject * py_policy) {
 
+	//vars used in cleanup
+	as_node * target_node = NULL;
+	char* response_p = NULL;
 
 	if ( !self || !self->as) {
 		as_error_update(err, AEROSPIKE_ERR_PARAM, "Invalid aerospike object.");
@@ -62,7 +65,6 @@ static PyObject * AerospikeClient_InfoSingleNode_Invoke(
 	}
 
 	const char* node_name = NULL;
-	as_node * target_node = NULL;
 	if (py_host) {
 		if (PyString_Check(py_host)) {
 			node_name = PyUnicode_AsUTF8(py_host);
@@ -71,7 +73,6 @@ static PyObject * AerospikeClient_InfoSingleNode_Invoke(
 				as_error_update(err, AEROSPIKE_ERR_PARAM, "Could not get node with name %s.", node_name);
 				goto CLEANUP;
 			}
-			as_node_release(target_node);
 		} else {
 			as_error_update(err, AEROSPIKE_ERR_PARAM, "Host must be a string.");
 			goto CLEANUP;
@@ -90,17 +91,15 @@ static PyObject * AerospikeClient_InfoSingleNode_Invoke(
 	}
 
 	as_status status = AEROSPIKE_OK;
-	char* response_p = NULL;
 	Py_BEGIN_ALLOW_THREADS
 	status = aerospike_info_node(self->as, err, info_policy_p, target_node, request_str_p, &response_p);
 	Py_END_ALLOW_THREADS
 
 	PyObject * py_response = NULL;
 	if (err->code == AEROSPIKE_OK) {
-		if (response_p && status == AEROSPIKE_OK) {
+		if (response_p != NULL && status == AEROSPIKE_OK) {
 			py_response = PyString_FromString(response_p);
-			free(response_p);
-		} else if ( !response_p) {
+		} else if (response_p == NULL) {
 			as_error_update(err, AEROSPIKE_ERR_CLIENT, "Invalid info operation.");
 			goto CLEANUP;
 		} else if (status != AEROSPIKE_OK) {
@@ -112,6 +111,14 @@ static PyObject * AerospikeClient_InfoSingleNode_Invoke(
 	}
 
 CLEANUP:
+
+	if (target_node != NULL) {
+		as_node_release(target_node);
+	}
+
+	if (response_p != NULL) {
+		cf_free(response_p);
+	}
 
 	if (err->code != AEROSPIKE_OK) {
 		PyObject * py_err = NULL;
@@ -153,5 +160,4 @@ PyObject * AerospikeClient_InfoSingleNode(AerospikeClient * self, PyObject * arg
 	}
 
 	return AerospikeClient_InfoSingleNode_Invoke(&err, self, py_request, py_host, py_policy);
-
 }
