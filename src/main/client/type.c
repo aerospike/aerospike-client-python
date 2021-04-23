@@ -393,9 +393,14 @@ Send an info *command* to all nodes in the cluster to which the client is connec
 If any of the individual requests fail, this will raise an exception.");
 
 PyDoc_STRVAR(info_single_node_doc,
-"info_node(command, host[, policy]) -> str\n\
+"info_single_node(command, host[, policy]) -> str\n\
 \n\
 Send an info command to a single node specified by host.");
+
+PyDoc_STRVAR(info_random_node_doc,
+"info_node(command, [policy]) -> str\n\
+\n\
+Send an info command to a single random node.");
 
 PyDoc_STRVAR(info_node_doc,
 "info_node(command, host[, policy]) -> str\n\
@@ -772,6 +777,9 @@ static PyMethodDef AerospikeClient_Type_Methods[] = {
 	{"info_single_node",
 		(PyCFunction) AerospikeClient_InfoSingleNode, METH_VARARGS | METH_KEYWORDS,
 		info_single_node_doc},
+	{"info_random_node",
+		(PyCFunction) AerospikeClient_InfoRandomNode, METH_VARARGS | METH_KEYWORDS,
+		info_random_node_doc},
 	{"info_node", // DEPRECATED
 		(PyCFunction) AerospikeClient_InfoNode, METH_VARARGS | METH_KEYWORDS,
 		info_node_doc},

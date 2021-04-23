@@ -252,6 +252,7 @@ setup(
                 'src/main/client/get_many.c',
                 'src/main/client/select_many.c',
                 'src/main/client/info_single_node.c',
+                'src/main/client/info_random_node.c',
                 'src/main/client/info_node.c',
                 'src/main/client/info.c',
                 'src/main/client/put.c',
