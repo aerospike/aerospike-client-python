@@ -42,7 +42,7 @@ static char* get_unbracketed_ip_and_length(char* ip_start, char* split_point, in
 #define HOST_DELIMITER ";"
 #define IP_PORT_DELIMITER ":"
 
-/**
+/** DEPRECATED SINCE SERVER 5.6
  ******************************************************************************************************
  * Returns data for a particular request string to AerospikeClient_InfoNode
  *
@@ -330,7 +330,7 @@ PyObject * AerospikeClient_SetXDRFilter(AerospikeClient * self, PyObject * args,
 	return tmp_result;
 }
 
-/**
+/** DEPRECATED SINCE SERVER 5.6
  ******************************************************************************************************
  * Returns data about a particular node in the database depending upon the request string.
  *

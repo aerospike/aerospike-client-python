@@ -2341,6 +2341,9 @@ Info Operations
 
     .. method:: info_node(command, host[, policy]) -> str
 
+        .. deprecated:: 6.0.0
+            Use :meth:`info_single_node` to send a request to a single node, or :meth:`info_all` to send a request to the entire cluster.
+
         Send an info *command* to a single node specified by *host*.
 
         :param str command: the info command.
@@ -2354,6 +2357,29 @@ Info Operations
         .. versionchanged:: 3.0.0
 
         .. warning:: for client versions < 3.0.0 ``info_node`` will not work when using TLS
+
+    .. method:: info_single_node(command, host[, policy]) -> str
+
+        Send an info *command* to a single node specified by *host name*.
+
+        :param str command: the info command.
+        :param tuple host: a :class:`str` containing a node name. Example: 'BC3581F41290C00'
+        :param dict policy: optional :ref:`aerospike_info_policies`.
+        :rtype: :class:`str`
+        :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
+
+        .. seealso:: `Info Command Reference <http://www.aerospike.com/docs/reference/info/>`_.
+
+    .. method:: info_random_node(command, [policy]) -> str
+
+        Send an info *command* to a single random node.
+
+        :param str command: the info command.
+        :param dict policy: optional :ref:`aerospike_info_policies`.
+        :rtype: :class:`str`
+        :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
+
+        .. seealso:: `Info Command Reference <http://www.aerospike.com/docs/reference/info/>`_.
 
     .. method:: set_xdr_filter(data_center, namespace, expression_filter[, policy]) -> str
 
@@ -3255,7 +3281,7 @@ Info Policies
 
 .. object:: policy
     
-    A :class:`dict` of optional info policies, which are applicable to :meth:`~aerospike.Client.info`, :meth:`~aerospike.Client.info_node` and index operations.
+    A :class:`dict` of optional info policies, which are applicable to :meth:`~aerospike.Client.info_all`, :meth:`~aerospike.Client.info_single_node`, :meth:`~aerospike.Client.info_random_node` and index operations.
 
     .. hlist::
         :columns: 1
