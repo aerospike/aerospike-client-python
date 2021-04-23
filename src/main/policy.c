@@ -837,6 +837,7 @@ as_status pyobject_to_policy_scan(AerospikeClient * self, as_error * err, PyObje
 	POLICY_SET_FIELD(fail_on_cluster_change, bool);
 	POLICY_SET_FIELD(durable_delete, bool);
 	POLICY_SET_FIELD(records_per_second, uint32_t);
+	POLICY_SET_FIELD(max_records, uint64_t);
 
 	// C client 4.6.7 new policy
 	POLICY_SET_PREDEXP_BASE_FIELD();
