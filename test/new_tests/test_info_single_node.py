@@ -33,7 +33,7 @@ class TestInfoSingleNode(object):
     def setup(self, request, as_connection, connection_config):
         key = ('test', 'demo', 'list_key')
         rec = {'names': ['John', 'Marlen', 'Steve']}
-        self.host_name = list(self.as_connection.info("node").keys())[0]
+        self.host_name = list(self.as_connection.info_all("node").keys())[0]
         self.as_connection.put(key, rec)
 
         yield
