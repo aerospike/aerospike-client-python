@@ -58,7 +58,7 @@ class TestSetWhitelist(TestBaseClass):
         """
         Set whitelist with no parameters.
         """
-        with pytest.raises(e.ParamError):
+        with pytest.raises(TypeError):
             self.client.admin_set_whitelist()
 
     def test_admin_set_whitelist_no_whitelist_positive(self):
@@ -162,7 +162,7 @@ class TestSetWhitelist(TestBaseClass):
 
         except e.ParamError as exception:
             assert exception.code == -2
-            assert exception.msg == "admin_set_whitelist() argument 1 must be str, not None"
+            assert exception.msg == "Role name should be a string."
 
     def test_admin_set_whitelist_incorrect_whitelist(self):
         """

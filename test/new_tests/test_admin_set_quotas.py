@@ -55,7 +55,7 @@ class TestSetQuotas(TestBaseClass):
         """
         Set quotas with no parameters.
         """
-        with pytest.raises(e.ParamError):
+        with pytest.raises(TypeError):
             self.client.admin_set_quotas()
 
     def test_admin_set_quota_no_quotas_positive(self):
@@ -172,7 +172,7 @@ class TestSetQuotas(TestBaseClass):
 
         except e.ParamError as exception:
             assert exception.code == -2
-            assert exception.msg == "admin_set_quotas() argument 1 must be str, not None"
+            assert exception.msg == "Role name should be a string"
 
     def test_admin_set_quota_incorrect_quota(self):
         """
@@ -200,4 +200,4 @@ class TestSetQuotas(TestBaseClass):
 
         except e.ParamError as exception:
             assert exception.code == -2
-            assert exception.msg == "an integer is required (got type NoneType)"
+            assert exception.msg == "Read_quota must be an integer."

@@ -53,7 +53,7 @@ class TestCreateRole(object):
 
     def test_create_role_without_any_parameters(self):
 
-        with pytest.raises(e.ParamError) as typeError:
+        with pytest.raises(TypeError) as typeError:
             self.client.admin_create_role()
 
         assert "argument 'role' (pos 1)" in str(
