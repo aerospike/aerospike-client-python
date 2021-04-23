@@ -143,6 +143,110 @@ CLEANUP:
  *
  * Returns a server response for the particular request string.
  * In case of error,appropriate exceptions will be raised.
+ *******************************************************************************************************
+ */
+PyObject * AerospikeClient_Info(AerospikeClient * self, PyObject * args, PyObject * kwds)
+{
+	PyObject * py_req = NULL;
+	PyObject * py_policy = NULL;
+	PyObject * py_hosts = NULL;
+	PyObject * py_nodes = NULL;
+	PyObject * py_ustr = NULL;
+	foreach_callback_info_udata info_callback_udata;
+
+	static char * kwlist[] = {"command", "hosts", "policy", NULL};
+
+	if (PyArg_ParseTupleAndKeywords(args, kwds, "O|OO:info", kwlist, &py_req, &py_hosts, &py_policy) == false) {
+		return NULL;
+	}
+
+	as_error err;
+	as_error_init(&err);
+
+	as_policy_info info_policy;
+	as_policy_info* info_policy_p = NULL;
+	py_nodes = PyDict_New();
+	info_callback_udata.udata_p = py_nodes;
+	info_callback_udata.host_lookup_p = py_hosts;
+	as_error_init(&info_callback_udata.error);
+
+	if (!self || !self->as) {
+		as_error_update(&err, AEROSPIKE_ERR_PARAM, "Invalid aerospike object");
+		goto CLEANUP;
+	}
+	if (!self->is_conn_16) {
+		as_error_update(&err, AEROSPIKE_ERR_CLUSTER, "No connection to aerospike cluster");
+		goto CLEANUP;
+	}
+
+	// Convert python policy object to as_policy_info
+	pyobject_to_policy_info(&err, py_policy, &info_policy, &info_policy_p,
+					&self->as->config.policies.info);
+	if (err.code != AEROSPIKE_OK) {
+		goto CLEANUP;
+	}
+	char * req = NULL;
+	if (PyUnicode_Check(py_req)) {
+		py_ustr = PyUnicode_AsUTF8String(py_req);
+		req = PyBytes_AsString(py_ustr);
+	} else if (PyString_Check(py_req)) {
+		req = PyString_AsString(py_req);
+	} else {
+		as_error_update(&err, AEROSPIKE_ERR_PARAM, "Request must be a string");
+		goto CLEANUP;
+	}
+
+	Py_BEGIN_ALLOW_THREADS
+	aerospike_info_foreach(self->as, &err, info_policy_p, req,
+					(aerospike_info_foreach_callback)AerospikeClient_Info_each,
+					&info_callback_udata);
+	Py_END_ALLOW_THREADS
+
+	if (&info_callback_udata.error.code != AEROSPIKE_OK) {
+		as_error_update(&err, err.code, NULL);
+		goto CLEANUP;
+	}
+CLEANUP:
+	if (py_ustr) {
+		Py_DECREF(py_ustr);
+	}
+	if (info_callback_udata.error.code != AEROSPIKE_OK) {
+		PyObject * py_err = NULL;
+		error_to_pyobject(&info_callback_udata.error, &py_err);
+		PyObject *exception_type = raise_exception(&info_callback_udata.error);
+		PyErr_SetObject(exception_type, py_err);
+		Py_DECREF(py_err);
+		if (py_nodes) {
+			Py_DECREF(py_nodes);
+		}
+		return NULL;
+	}
+	if (err.code != AEROSPIKE_OK) {
+		PyObject * py_err = NULL;
+		error_to_pyobject(&err, &py_err);
+		PyObject *exception_type = raise_exception(&err);
+		PyErr_SetObject(exception_type, py_err);
+		Py_DECREF(py_err);
+		if (py_nodes) {
+			Py_DECREF(py_nodes);
+		}
+		return NULL;
+	}
+
+	return info_callback_udata.udata_p;
+}
+
+/**
+ *******************************************************************************************************
+ * Sends an info request to all the nodes in a cluster.
+ *
+ * @param self                  AerospikeClient object
+ * @param args                  The args is a tuple object containing an argument
+ *                              list passed from Python to a C function
+ * @param kwds                  Dictionary of keywords
+ *
+ * Returns a server response for the particular request string.
+ * In case of error,appropriate exceptions will be raised.
  * py_hosts should be null at this point
  *******************************************************************************************************
  */

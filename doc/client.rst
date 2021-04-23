@@ -2260,6 +2260,54 @@ Info Operations
 
         .. warning:: In versions < 3.0.0 ``get_nodes`` will not work when using TLS
 
+    .. method:: info(command[, hosts[, policy]]) -> {}
+
+        .. deprecated:: 3.0.0
+            Use :meth:`info_node` to send a request to a single node, or :meth:`info_all` to send a request to the entire cluster. Sending requests to specific nodes can be better handled with a simple Python function such as:
+
+            .. code-block:: python
+
+                def info_to_host_list(client, request, hosts, policy=None):
+                    output = {}
+                    for host in hosts:
+                        try:
+                            response = client.info_node(request, host, policy)
+                            output[host] = response
+                        except Exception as e:
+                            #  Handle the error gracefully here
+                            output[host] = e
+                    return output
+
+        Send an info *command* to all nodes in the cluster and filter responses to only include nodes specified in a *hosts* list.
+
+        :param str command: the info command.
+        :param list hosts: a :class:`list` containing an *address*, *port* :py:func:`tuple`. Example: ``[('127.0.0.1', 3000)]``
+        :param dict policy: optional :ref:`aerospike_info_policies`.
+        :rtype: :class:`dict`
+        :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
+
+        .. seealso:: `Info Command Reference <http://www.aerospike.com/docs/reference/info/>`_.
+
+        .. code-block:: python
+
+            import aerospike
+
+            config = {'hosts': [('127.0.0.1', 3000)] }
+            client = aerospike.client(config).connect()
+
+            response = client.info(command)
+            client.close()
+
+        .. note::
+
+            We expect to see something like:
+
+            .. code-block:: python
+
+                {'BB9581F41290C00': (None, '127.0.0.1:3000\n'), 'BC3581F41290C00': (None, '127.0.0.1:3010\n')}
+
+        .. versionchanged:: 3.0.0
+
     .. method:: info_all(command[, policy]]) -> {}
 
         Send an info *command* to all nodes in the cluster to which the client is connected. If any of the individual requests fail, this will raise an exception.
