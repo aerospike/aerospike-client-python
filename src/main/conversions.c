@@ -407,18 +407,9 @@ as_status pyobject_to_val(AerospikeClient * self, as_error * err, PyObject * py_
 	if (!py_obj) {
 		// this should never happen, but if it did...
 		return as_error_update(err, AEROSPIKE_ERR_CLIENT, "value is null");
-	} else if (PyBool_Check(py_obj)) { //TODO Change to true bool support when C client supports writing bools.
-		as_bytes *bytes;
-		GET_BYTES_POOL(bytes, static_pool, err);
-		if (err->code == AEROSPIKE_OK) {
-			if (serialize_based_on_serializer_policy(self, serializer_type,
-				&bytes, py_obj, err) != AEROSPIKE_OK) {
-				return err->code;
-			}
-			*val = (as_val *) bytes;
-		}
-		// bool v = PyObject_IsTrue(py_obj);
-		// *val = (as_val *) as_boolean_new(v);
+	} else if (PyBool_Check(py_obj)) { //TODO Change to true bool support post jump version.
+		int64_t i = (int64_t) PyObject_IsTrue(py_obj);
+		*val = (as_val *) as_integer_new(i);
 	} else if (PyInt_Check(py_obj)) {
 		int64_t i = (int64_t) PyInt_AsLong(py_obj);
 		if (i == -1 && PyErr_Occurred()) {
@@ -552,16 +543,9 @@ as_status pyobject_to_record(AerospikeClient * self, as_error * err, PyObject * 
 			if (!value) {
 				// this should never happen, but if it did...
 				return as_error_update(err, AEROSPIKE_ERR_CLIENT, "record is null");
-			} else if (PyBool_Check(value)) { //TODO Change to true bool support when C client supports writing bools.
-				as_bytes *bytes;
-				GET_BYTES_POOL(bytes, static_pool, err);
-				if (err->code == AEROSPIKE_OK) {
-					if (serialize_based_on_serializer_policy(self, serializer_type,
-							&bytes, value, err) != AEROSPIKE_OK) {
-						return err->code;
-					}
-					ret_val = as_record_set_bytes(rec, name, bytes);
-				}
+			} else if (PyBool_Check(value)) { //TODO Change to true bool support post jump version.
+				int64_t val = (int64_t) PyObject_IsTrue(value);
+				ret_val = as_record_set_int64(rec, name, val);
 			} else if (PyInt_Check(value)) {
 				int64_t val = (int64_t) PyInt_AsLong(value);
 				if (val == -1 && PyErr_Occurred()) {
@@ -739,18 +723,9 @@ as_status pyobject_to_astype_write(AerospikeClient * self, as_error * err, PyObj
 {
 	as_error_reset(err);
 
-	if (PyBool_Check(py_value)) { //TODO Change to true bool support when C client supports writing bools.
-		as_bytes *bytes;
-		GET_BYTES_POOL(bytes, static_pool, err);
-		if (err->code == AEROSPIKE_OK) {
-			if (serialize_based_on_serializer_policy(self, serializer_type,
-					&bytes, py_value, err)  != AEROSPIKE_OK) {
-				return err->code;
-			}
-			*val = (as_val *) bytes;
-		}
-		// bool v = PyObject_IsTrue(py_value);
-		// *val = (as_val *) as_boolean_new(v);
+	if (PyBool_Check(py_value)) { //TODO Change to true bool support post jump version.
+		int64_t i = (int64_t) PyObject_IsTrue(py_value);
+		*val = (as_val *) as_integer_new(i);
 	} else if (PyInt_Check(py_value)) {
 		int64_t i = (int64_t) PyInt_AsLong(py_value);
 		*val = (as_val *) as_integer_new(i);

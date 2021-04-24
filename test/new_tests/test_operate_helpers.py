@@ -232,7 +232,21 @@ class TestOperate(object):
                 operations.prepend("bytes_bin",  b"asd;as[d'as;d"),
                 operations.read("bytes_bin")
             ],
-            {'bytes_bin': b"asd;as[d'as;d"})
+            {'bytes_bin': b"asd;as[d'as;d"}),
+        (
+            ('test', 'demo', 1),                               # write_bool_positive
+            [
+                operations.write("write_bin", True),
+                operations.read("write_bin")
+            ],
+            {'write_bin': 1}),
+        (
+            ('test', 'demo', 1),                               # write_bool_positive
+            [
+                operations.write("write_bin", False),
+                operations.read("write_bin")
+            ],
+            {'write_bin': 0}),
     ])
     def test_pos_operate_with_correct_paramters(self, key, llist, expected):
         """
