@@ -2230,6 +2230,34 @@ Info Operations
 
 .. class:: Client
 
+    .. method:: get_node_names() -> []
+
+        Return the list of hosts present in a connected cluster including node names.
+
+        :return: a :class:`list` of node info dictionaries.
+        :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
+
+        .. code-block:: python
+
+            import aerospike
+
+            config = {'hosts': [('127.0.0.1', 3000)] }
+            client = aerospike.client(config).connect()
+
+            nodes = client.get_node_names()
+            print(nodes)
+            client.close()
+
+        .. note::
+
+            We expect to see something like:
+
+            .. code-block:: python
+
+                [{'address': '1.1.1.1', 'port': 3000, 'node_name': 'BCER199932C'}, {'address': '1.1.1.1', 'port': 3010, 'node_name': 'ADFFE7782CD'}]
+
+        .. versionchanged:: 6.0.0
+
     .. method:: get_nodes() -> []
 
         Return the list of hosts present in a connected cluster.

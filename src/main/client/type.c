@@ -418,6 +418,11 @@ PyDoc_STRVAR(get_nodes_doc,
 \n\
 Return the list of hosts present in a connected cluster.");
 
+PyDoc_STRVAR(get_node_names_doc,
+"get_node_names() -> []\n\
+\n\
+Return the list of hosts, including node names, present in a connected cluster.");
+
 PyDoc_STRVAR(udf_put_doc,
 "udf_put(filename[, udf_type[, policy]])\n\
 \n\
@@ -794,6 +799,9 @@ static PyMethodDef AerospikeClient_Type_Methods[] = {
 	{"get_nodes",
 		(PyCFunction) AerospikeClient_GetNodes, METH_VARARGS | METH_KEYWORDS,
 		get_nodes_doc},
+	{"get_node_names",
+		(PyCFunction) AerospikeClient_GetNodeNames, METH_VARARGS | METH_KEYWORDS,
+		get_node_names_doc},
 	// UDF OPERATIONS
 
 	{"udf_put",

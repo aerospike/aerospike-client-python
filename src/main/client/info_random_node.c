@@ -78,7 +78,7 @@ static PyObject * AerospikeClient_InfoRandomNode_Invoke(
 	PyObject * py_response = NULL;
 	if (err->code == AEROSPIKE_OK) {
 		if (response_p != NULL && status == AEROSPIKE_OK) {
-			py_response = PyString_FromString(response_p);
+			py_response = PyUnicode_FromString(response_p);
 		} else if (response_p == NULL) {
 			as_error_update(err, AEROSPIKE_ERR_CLIENT, "Invalid info operation.");
 			goto CLEANUP;

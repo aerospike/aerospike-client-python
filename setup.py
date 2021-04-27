@@ -314,7 +314,9 @@ setup(
                 'src/main/tls_config.c',
                 'src/main/global_hosts/type.c',
                 'src/main/nullobject/type.c',
-                'src/main/cdt_types/type.c'
+                'src/main/cdt_types/type.c',
+                'src/main/client/set_xdr_filter.c',
+                'src/main/client/get_nodes.c'
             ],
 
             # Compile

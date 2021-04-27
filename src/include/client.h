@@ -618,6 +618,13 @@ PyObject * AerospikeClient_Info(AerospikeClient * self, PyObject * args, PyObjec
 */
 PyObject * AerospikeClient_GetNodes(AerospikeClient * self, PyObject * args, PyObject * kwds);
 /**
+* Perform get node name operation on the database.
+*
+* client.get_node_names((x,y,z))
+*
+*/
+PyObject * AerospikeClient_GetNodeNames(AerospikeClient * self, PyObject * args, PyObject * kwds);
+/**
 * Perforrm get key digest operation on the database.
 *
 * client.get_key_digest((x,y,z))

@@ -110,6 +110,7 @@ class TestScan(TestBaseClass):
         assert len(records) == self.record_count - 2 #2 because the last record has no "name" bin and won't be included in the result
 
     # NOTE: This could fail if node record counts are small and unbalanced across nodes.
+    @pytest.mark.xfail(reason="Might fail depending on record count and distribution.")
     def test_scan_with_max_records_policy(self):
 
         ns = 'test'
