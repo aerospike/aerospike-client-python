@@ -138,7 +138,7 @@ class TestInfoSingleNode(object):
 @pytest.mark.usefixtures("as_connection", "connection_config")
 class TestInfoSingleNodeIncorrectUsage(object):
     """
-    Tests for invalid usage of the the info_node method.
+    Tests for invalid usage of the the info_single_node method.
     """
     def test_info_single_node_no_parameters(self):
         """

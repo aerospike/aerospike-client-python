@@ -127,9 +127,9 @@ class TestInfoSingleNode(object):
 # Tests for incorrect usage
 @pytest.mark.xfail(TestBaseClass.temporary_xfail(), reason="xfail variable set")
 @pytest.mark.usefixtures("as_connection", "connection_config")
-class TestInfoSingleNodeIncorrectUsage(object):
+class TestInfoRandomNodeIncorrectUsage(object):
     """
-    Tests for invalid usage of the the info_node method.
+    Tests for invalid usage of the the info_random_node method.
     """
     def test_info_random_node_no_parameters(self):
         """
