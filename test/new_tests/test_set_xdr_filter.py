@@ -33,8 +33,7 @@ class TestSetXDRFilter(object):
             ns_response = self.as_connection.info_single_node(ns_request, node_name)
             self.ns = ns_response.split("namespaces=")[1].split(";")[0]
         except Exception as exc:
-            raise(exc)
-            #pytest.skip("Could not parse a data center or namespace, xdr may be disabled, skipping set_xdr_flags.")
+            pytest.skip("Could not parse a data center or namespace, xdr may be disabled, skipping set_xdr_flags.")
 
     def test_set_xdr_filter_pos(self):
         response = self.as_connection.set_xdr_filter(self.dc, self.ns, (Eq(IntBin("bin1"), 6).compile()))
