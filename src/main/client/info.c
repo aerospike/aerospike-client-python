@@ -54,7 +54,6 @@ static PyObject* get_formatted_info_response(const char* response);
 // Add 2 to the length to facilitate [] around the edges
 #define IP_PORT_MAX_LEN INET6_ADDRSTRLEN + INET_PORT + IP_PORT_SEPARATOR_LEN + 2
 
-
 /**
  *******************************************************************************************************
  * Callback for as_info_foreach().
@@ -210,7 +209,6 @@ CLEANUP:
 	PyGILState_Release(gil_state);
 	return true;
 }
-
 
 /**
  *******************************************************************************************************

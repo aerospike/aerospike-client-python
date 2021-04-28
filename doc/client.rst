@@ -2230,6 +2230,34 @@ Info Operations
 
 .. class:: Client
 
+    .. method:: get_node_names() -> []
+
+        Return the list of hosts present in a connected cluster including node names.
+
+        :return: a :class:`list` of node info dictionaries.
+        :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
+
+        .. code-block:: python
+
+            import aerospike
+
+            config = {'hosts': [('127.0.0.1', 3000)] }
+            client = aerospike.client(config).connect()
+
+            nodes = client.get_node_names()
+            print(nodes)
+            client.close()
+
+        .. note::
+
+            We expect to see something like:
+
+            .. code-block:: python
+
+                [{'address': '1.1.1.1', 'port': 3000, 'node_name': 'BCER199932C'}, {'address': '1.1.1.1', 'port': 3010, 'node_name': 'ADFFE7782CD'}]
+
+        .. versionchanged:: 6.0.0
+
     .. method:: get_nodes() -> []
 
         Return the list of hosts present in a connected cluster.
@@ -2341,6 +2369,9 @@ Info Operations
 
     .. method:: info_node(command, host[, policy]) -> str
 
+        .. deprecated:: 6.0.0
+            Use :meth:`info_single_node` to send a request to a single node, or :meth:`info_all` to send a request to the entire cluster.
+
         Send an info *command* to a single node specified by *host*.
 
         :param str command: the info command.
@@ -2354,6 +2385,31 @@ Info Operations
         .. versionchanged:: 3.0.0
 
         .. warning:: for client versions < 3.0.0 ``info_node`` will not work when using TLS
+
+    .. method:: info_single_node(command, host[, policy]) -> str
+
+        Send an info *command* to a single node specified by *host name*.
+
+        :param str command: the info command.
+        :param tuple host: a :class:`str` containing a node name. Example: 'BC3581F41290C00'
+        :param dict policy: optional :ref:`aerospike_info_policies`.
+        :rtype: :class:`str`
+        :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
+
+        .. seealso:: `Info Command Reference <http://www.aerospike.com/docs/reference/info/>`_.
+
+    .. method:: info_random_node(command, [policy]) -> str
+
+        Send an info *command* to a single random node.
+
+        :param str command: the info command.
+        :param dict policy: optional :ref:`aerospike_info_policies`.
+        :rtype: :class:`str`
+        :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
+
+        .. seealso:: `Info Command Reference <http://www.aerospike.com/docs/reference/info/>`_.
+
+        .. versionchanged:: 6.0.0
 
     .. method:: set_xdr_filter(data_center, namespace, expression_filter[, policy]) -> str
 
@@ -3255,7 +3311,7 @@ Info Policies
 
 .. object:: policy
     
-    A :class:`dict` of optional info policies, which are applicable to :meth:`~aerospike.Client.info`, :meth:`~aerospike.Client.info_node` and index operations.
+    A :class:`dict` of optional info policies, which are applicable to :meth:`~aerospike.Client.info_all`, :meth:`~aerospike.Client.info_single_node`, :meth:`~aerospike.Client.info_random_node` and index operations.
 
     .. hlist::
         :columns: 1

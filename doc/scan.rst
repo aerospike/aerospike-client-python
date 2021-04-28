@@ -419,6 +419,12 @@ Scan Policies
             | Default: ``None``
 
             .. note:: Requires Aerospike server version >= 5.2.
+        * **max_records** :class:`int`
+            | Approximate number of records to return to client.
+            | This number is divided by the number of nodes involved in the scan.
+            | The actual number of records returned may be less than max_records if node record counts are small and unbalanced across nodes.
+            |
+            | Default: ``0`` (No Limit).
             
 
 .. _aerospike_scan_options:
@@ -444,6 +450,8 @@ Scan Options
             |
             | Default ``False``.
         * **percent** :class:`int` 
+            | Deprecated. No longer available with server 5.6+.
+            | Use scan policy max_records instead.
             | Percentage of records to return from the scan. 
             |
             | Default ``100``.

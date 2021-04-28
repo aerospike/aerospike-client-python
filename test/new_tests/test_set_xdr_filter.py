@@ -5,7 +5,7 @@ import sys
 
 from aerospike import exception as e
 from .test_base_class import TestBaseClass
-from aerospike_helpers.expressions.base import *
+from aerospike_helpers.expressions import *
 
 aerospike = pytest.importorskip("aerospike")
 try:
@@ -21,14 +21,16 @@ class TestSetXDRFilter(object):
 
     @pytest.fixture(autouse=True)
     def setup_method(self, request, as_connection):
-        dc_request = "get-config:context=xdr"
-        hosts = [host for host in self.connection_config['hosts']]
-        
         try:
-            dc_response = self.as_connection.info_node(dc_request, hosts[0])
+            dc_request = "get-config:context=xdr"
+            addr_name_dict = {}
+            nodes = self.as_connection.get_node_names()
+            node_name = nodes[0]["node_name"]
+
+            dc_response = self.as_connection.info_single_node(dc_request, node_name)
             self.dc = dc_response.split(",")[0].split("=")[2]
             ns_request = "get-config:context=xdr;dc=%s" % self.dc
-            ns_response = self.as_connection.info_node(ns_request, hosts[0])
+            ns_response = self.as_connection.info_single_node(ns_request, node_name)
             self.ns = ns_response.split("namespaces=")[1].split(";")[0]
         except Exception as exc:
             pytest.skip("Could not parse a data center or namespace, xdr may be disabled, skipping set_xdr_flags.")
