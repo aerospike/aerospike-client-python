@@ -312,6 +312,11 @@ as_status set_scan_policy(as_policy_scan* scan_policy, PyObject* py_policy) {
 		return status;
 	}
 
+	status = set_optional_bool_property(&scan_policy->fail_on_cluster_change, py_policy, "fail_on_cluster_change");
+	if (status != AEROSPIKE_OK) {
+		return status;
+	}
+
 	return AEROSPIKE_OK;
 }
 
