@@ -32,27 +32,33 @@
 
 The following table shows which Python types map directly to Aerospike server types.
 
-+--------------------------+--------------+
-| Python Type              | Server type  |
-+==========================+==============+
-|int                       |integer       |
-+--------------------------+--------------+
-|long                      |integer       |
-+--------------------------+--------------+
-|str                       |string        |
-+--------------------------+--------------+
-|unicode                   |string        |
-+--------------------------+--------------+
-|float                     |double        |
-+--------------------------+--------------+
-|dict                      |map           |
-+--------------------------+--------------+
-|list                      |list          |
-+--------------------------+--------------+
-|bytearray                 |blob          |
-+--------------------------+--------------+
-|aerospike.GeoJSON         |GeoJSON       |
-+--------------------------+--------------+
+.. note::
+
+    :class:`aerospike.KeyOrderedDict` is a special case. Like dict, KeyOrderedDict maps to the aerospike map data type. However, the map will be sorted in key order before being sent to the server, see :ref:`aerospike_map_order`.
+
++--------------------------+---------------+
+| Python Type              | Server type   |
++==========================+===============+
+|int                       |integer        |
++--------------------------+---------------+
+|long                      |integer        |
++--------------------------+---------------+
+|str                       |string         |
++--------------------------+---------------+
+|unicode                   |string         |
++--------------------------+---------------+
+|float                     |double         |
++--------------------------+---------------+
+|dict                      |map            |
++--------------------------+---------------+
+|aerospike.KeyOrderedDict  |key ordered map|
++--------------------------+---------------+
+|list                      |list           |
++--------------------------+---------------+
+|bytearray                 |blob           |
++--------------------------+---------------+
+|aerospike.GeoJSON         |GeoJSON        |
++--------------------------+---------------+
 
 It is possible to nest these datatypes. For example a list may contain a dictionary, or a dictionary may contain a list as a value.
 
