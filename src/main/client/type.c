@@ -403,7 +403,7 @@ PyDoc_STRVAR(info_single_node_doc,
 Send an info command to a single node specified by host.");
 
 PyDoc_STRVAR(info_random_node_doc,
-"info_node(command, [policy]) -> str\n\
+"info_random_node(command, [policy]) -> str\n\
 \n\
 Send an info command to a single random node.");
 

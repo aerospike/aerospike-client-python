@@ -2409,6 +2409,8 @@ Info Operations
 
         .. seealso:: `Info Command Reference <http://www.aerospike.com/docs/reference/info/>`_.
 
+        .. versionchanged:: 6.0.0
+
     .. method:: set_xdr_filter(data_center, namespace, expression_filter[, policy]) -> str
 
         Set the cluster's xdr filter using an Aerospike expression.

@@ -43,7 +43,7 @@ static PyObject * AerospikeClient_InfoSingleNode_Invoke(
 
 	//vars used in cleanup
 	as_node * target_node = NULL;
-	char* response_p = NULL;
+	char * response_p = NULL;
 
 	if ( !self || !self->as) {
 		as_error_update(err, AEROSPIKE_ERR_PARAM, "Invalid aerospike object.");
@@ -56,7 +56,7 @@ static PyObject * AerospikeClient_InfoSingleNode_Invoke(
 	}
 
 	as_policy_info info_policy;
-	as_policy_info* info_policy_p = NULL;
+	as_policy_info * info_policy_p = NULL;
 	if (py_policy) {
 		if (pyobject_to_policy_info(err, py_policy, &info_policy, &info_policy_p,
 				&self->as->config.policies.info) != AEROSPIKE_OK) {
@@ -64,9 +64,9 @@ static PyObject * AerospikeClient_InfoSingleNode_Invoke(
 		}
 	}
 
-	const char* node_name = NULL;
+	const char * node_name = NULL;
 	if (py_host) {
-		if (PyString_Check(py_host)) {
+		if (PyUnicode_Check(py_host)) {
 			node_name = PyUnicode_AsUTF8(py_host);
 			target_node = as_node_get_by_name(self->as->cluster, node_name);
 			if ( !target_node) {
@@ -77,13 +77,10 @@ static PyObject * AerospikeClient_InfoSingleNode_Invoke(
 			as_error_update(err, AEROSPIKE_ERR_PARAM, "Host must be a string.");
 			goto CLEANUP;
 		}
-	} else {
-		as_error_update(err, AEROSPIKE_ERR_PARAM, "Host is NULL.");
-		goto CLEANUP;
 	}
 
 	const char * request_str_p = NULL;
-	if (PyString_Check(py_request_str)) {
+	if (PyUnicode_Check(py_request_str)) {
 		request_str_p = PyUnicode_AsUTF8(py_request_str);
 	} else {
 		as_error_update(err, AEROSPIKE_ERR_PARAM, "Request should be a string.");
@@ -98,7 +95,7 @@ static PyObject * AerospikeClient_InfoSingleNode_Invoke(
 	PyObject * py_response = NULL;
 	if (err->code == AEROSPIKE_OK) {
 		if (response_p != NULL && status == AEROSPIKE_OK) {
-			py_response = PyString_FromString(response_p);
+			py_response = PyUnicode_FromString(response_p);
 		} else if (response_p == NULL) {
 			as_error_update(err, AEROSPIKE_ERR_CLIENT, "Invalid info operation.");
 			goto CLEANUP;
@@ -147,7 +144,7 @@ PyObject * AerospikeClient_InfoSingleNode(AerospikeClient * self, PyObject * arg
 {
 	PyObject * py_host = NULL;
 	PyObject * py_policy = NULL;
-	PyObject * py_request = NULL;
+	PyObject * py_command = NULL;
 
 	as_error err;
 	as_error_init(&err);
@@ -155,9 +152,9 @@ PyObject * AerospikeClient_InfoSingleNode(AerospikeClient * self, PyObject * arg
 	static char * kwlist[] = {"command", "host", "policy", NULL};
 
 	if (PyArg_ParseTupleAndKeywords(args, kwds, "OO|O:info_single_node", kwlist,
-				&py_request, &py_host, &py_policy) == false) {
+				&py_command, &py_host, &py_policy) == false) {
 		return NULL;
 	}
 
-	return AerospikeClient_InfoSingleNode_Invoke(&err, self, py_request, py_host, py_policy);
+	return AerospikeClient_InfoSingleNode_Invoke(&err, self, py_command, py_host, py_policy);
 }

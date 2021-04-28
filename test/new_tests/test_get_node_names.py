@@ -39,7 +39,7 @@ class TestGetNodeNames(object):
         Test that a call to aerospike.Client.get_node_names with
         a string parameter does not raise an error
         """
-        response = self.as_connection.get_node_names("parameter")
+        response = self.as_connection.get_node_names("parameter") #TODO why no error
         assert response is not None
 
     # Tests for behaviors that raise errors

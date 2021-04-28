@@ -428,7 +428,7 @@ PyObject * AerospikeClient_InfoSingleNode(AerospikeClient * self, PyObject * arg
  * None. If the request was successful, then the Response will contain the
  * string response from the node, otherwise it is None.
  *
- *		client.info_single_node('statistics')
+ *		client.info_random_node('statistics')
  *
  */
 PyObject * AerospikeClient_InfoRandomNode(AerospikeClient * self, PyObject * args, PyObject * kwds);

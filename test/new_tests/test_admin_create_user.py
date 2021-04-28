@@ -316,11 +316,12 @@ class TestCreateUser(object):
 
         try:
             self.client.admin_drop_user(user, policy)
-            time.sleep()
+            time.sleep(2)
         except:
             pass
 
         status = self.client.admin_create_user(user, password, roles, policy)
+        time.sleep(2)
 
         assert status == 0
 

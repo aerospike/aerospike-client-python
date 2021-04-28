@@ -15,15 +15,6 @@ except:
     print("Please install aerospike python client.")
     sys.exit(1)
 
-
-def as_unicode(string):
-    try:
-        string = unicode(string)
-    except:
-        pass
-    return string
-
-
 @pytest.mark.xfail(TestBaseClass.temporary_xfail(), reason="xfail variable set")
 @pytest.mark.usefixtures("as_connection", "connection_config")
 class TestInfoSingleNode(object):

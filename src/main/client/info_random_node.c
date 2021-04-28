@@ -28,13 +28,13 @@
 
 /**
  ******************************************************************************************************
- * Returns data for a particular request string to AerospikeClient_InfoSingleNode.
+ * Returns data for a particular request string to AerospikeClient_InfoRandomNode.
  *
  * @param self                  AerospikeClient object.
  * @param request_str_p         Request string sent from the Python client.
  * @param py_policy             The policy sent from the Python client.
  *
- * Returns information about a host.
+ * Returns information about a random host.
  ********************************************************************************************************/
 static PyObject * AerospikeClient_InfoRandomNode_Invoke(
 	as_error * err, AerospikeClient * self,
@@ -63,7 +63,7 @@ static PyObject * AerospikeClient_InfoRandomNode_Invoke(
 	}
 
 	const char * request_str_p = NULL;
-	if (PyString_Check(py_request_str)) {
+	if (PyUnicode_Check(py_request_str)) {
 		request_str_p = PyUnicode_AsUTF8(py_request_str);
 	} else {
 		as_error_update(err, AEROSPIKE_ERR_PARAM, "Request should be a string.");
@@ -117,12 +117,12 @@ CLEANUP:
  *                              list passed from Python to a C function.
  * @param kwds                  Dictionary of keywords.
  *
- * Returns information about a host.
+ * Returns information about a random host.
  ********************************************************************************************************/
 PyObject * AerospikeClient_InfoRandomNode(AerospikeClient * self, PyObject * args, PyObject * kwds)
 {
 	PyObject * py_policy = NULL;
-	PyObject * py_request = NULL;
+	PyObject * py_command = NULL;
 
 	as_error err;
 	as_error_init(&err);
@@ -130,9 +130,9 @@ PyObject * AerospikeClient_InfoRandomNode(AerospikeClient * self, PyObject * arg
 	static char * kwlist[] = {"command", "policy", NULL};
 
 	if (PyArg_ParseTupleAndKeywords(args, kwds, "O|O:info_random_node", kwlist,
-				&py_request, &py_policy) == false) {
+				&py_command, &py_policy) == false) {
 		return NULL;
 	}
 
-	return AerospikeClient_InfoRandomNode_Invoke(&err, self, py_request, py_policy);
+	return AerospikeClient_InfoRandomNode_Invoke(&err, self, py_command, py_policy);
 }

@@ -36,7 +36,7 @@ static char* get_unbracketed_ip_and_length(char* ip_start, char* split_point, in
 	*
 	* @param self                  AerospikeClient object
 	*
-	* Returns a list containing the details of the nodes.
+	* Returns a list containing the IP and port tuple of each node.
 	********************************************************************************************************/
 static PyObject * AerospikeClient_GetNodes_Invoke(
 	AerospikeClient * self) {
@@ -148,7 +148,7 @@ CLEANUP:
  *                              list passed from Python to a C function
  * @param kwds                  Dictionary of keywords
  *
- * Returns a list containing the details of the nodes.
+ * Returns a list containing the IP and port tuple of each node.
  ********************************************************************************************************/
 PyObject * AerospikeClient_GetNodes(AerospikeClient * self, PyObject * args, PyObject * kwds)
 {
@@ -161,7 +161,7 @@ PyObject * AerospikeClient_GetNodes(AerospikeClient * self, PyObject * args, PyO
 	*
 	* @param self                  AerospikeClient object
 	*
-	* Returns a list containing the details of the nodes.
+	* Returns a list containing the IP, port, name dict of each node.
 	********************************************************************************************************/
 static PyObject * AerospikeClient_GetNodeNames_Invoke(
 	AerospikeClient * self) {
@@ -169,6 +169,7 @@ static PyObject * AerospikeClient_GetNodeNames_Invoke(
 	PyObject* py_node_name = NULL;
 	PyObject* py_hostname = NULL;
 	PyObject* py_port = NULL;
+	PyObject* py_return_dict = NULL;
 	PyObject* return_value = PyList_New(0);
 
 	as_nodes* nodes = NULL;
@@ -219,7 +220,7 @@ static PyObject * AerospikeClient_GetNodeNames_Invoke(
 			*/
 		real_hostname_start = get_unbracketed_ip_and_length(hostname, split_point, &real_length);
 		Py_ssize_t py_host_length = (Py_ssize_t)real_length;
-		py_hostname = PyString_FromStringAndSize(real_hostname_start, py_host_length);
+		py_hostname = PyUnicode_FromStringAndSize(real_hostname_start, py_host_length);
 
 		if (!py_hostname) {
 			as_error_update(&err, AEROSPIKE_ERR_CLIENT, "Failed to create python hostname.");
@@ -227,18 +228,14 @@ static PyObject * AerospikeClient_GetNodeNames_Invoke(
 		}
 
 		// convert "3000" -> 3000, using base 10 | use long since it works in 2 & 3
-		py_port = PyLong_FromString(split_point + 1, NULL, 10);
+		py_port = PyLong_FromString(split_point + 1, NULL, 10); 
 		if (!py_port || PyErr_Occurred()) {
-			// py_port exists
-			Py_XDECREF(py_hostname);
 			as_error_update(&err, AEROSPIKE_ERR_CLIENT, "Non numeric port found.");
 			goto CLEANUP;
 		}
 
 		py_node_name = PyUnicode_FromString(node->name);
 		if (py_node_name == NULL) {
-			Py_XDECREF(py_port);
-			Py_XDECREF(py_hostname);
 			as_error_update(&err, AEROSPIKE_ERR_CLIENT, "Failed to get node name.");
 			goto CLEANUP;
 		}
@@ -246,28 +243,34 @@ static PyObject * AerospikeClient_GetNodeNames_Invoke(
 		const char* hostname_key = "address";
 		const char* port_key = "port";
 		const char* node_name_key = "node_name";
-		PyObject* py_return_dict = PyDict_New();
-
-		PyDict_SetItemString(py_return_dict, hostname_key, py_hostname);
-		PyDict_SetItemString(py_return_dict, port_key, py_port);
-		PyDict_SetItemString(py_return_dict, node_name_key, py_node_name);
-
-		Py_XDECREF(py_port);
-		Py_XDECREF(py_hostname);
-		Py_XDECREF(py_node_name);
-
+		py_return_dict = PyDict_New();
 		if(!py_return_dict) {
 			as_error_update(&err, AEROSPIKE_ERR_CLIENT, "Failed to build node info dictionary.");
 			goto CLEANUP;
 		}
 
-		PyList_Append(return_value, py_return_dict);
-		Py_DECREF(py_return_dict);
+		if (PyDict_SetItemString(py_return_dict, hostname_key, py_hostname) == -1 ||
+				PyDict_SetItemString(py_return_dict, port_key, py_port) == -1 ||
+				PyDict_SetItemString(py_return_dict, node_name_key, py_node_name) == -1) {
+			as_error_update(&err, AEROSPIKE_ERR_CLIENT, "Failed to add dictionary item.");
+			goto CLEANUP;
+		}
+
+		if (PyList_Append(return_value, py_return_dict) == -1) {
+			as_error_update(&err, AEROSPIKE_ERR_CLIENT, "Failed to append py_return_dict to return_value.");
+			goto CLEANUP;
+		}
 	}
 CLEANUP:
 	if(nodes) {
 		as_nodes_release(nodes);
 	}
+
+	Py_XDECREF(py_port);
+	Py_XDECREF(py_hostname);
+	Py_XDECREF(py_node_name);
+	Py_XDECREF(py_return_dict);
+
 	if (err.code != AEROSPIKE_OK) {
 		// Clear the return value if it exists
 		Py_XDECREF(return_value);
@@ -291,7 +294,7 @@ CLEANUP:
  *                              list passed from Python to a C function
  * @param kwds                  Dictionary of keywords
  *
- * Returns a list containing the details of the nodes.
+ * Returns a list containing the IP, port, name dict of each node.
  ********************************************************************************************************/
 PyObject * AerospikeClient_GetNodeNames(AerospikeClient * self, PyObject * args, PyObject * kwds)
 {

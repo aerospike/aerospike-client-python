@@ -36,7 +36,7 @@
  * @param kwds                  Dictionary of keywords
  *
  * Returns a server response for the particular request string.
- * In case of error,appropriate exceptions will be raised.
+ * In case of error, appropriate exceptions will be raised.
  *******************************************************************************************************
  */
 PyObject * AerospikeClient_SetXDRFilter(AerospikeClient * self, PyObject * args, PyObject * kwds)
@@ -54,11 +54,9 @@ PyObject * AerospikeClient_SetXDRFilter(AerospikeClient * self, PyObject * args,
     char * base64_filter_to_free = NULL;
 	as_exp * exp_list_p = NULL;
     char * request_str_p = NULL;
+	char* response_p = NULL;
 
     PyObject * py_response = NULL;
-
-	// vars used in cleanup
-	char* response_p = NULL;
 
     as_error err;
 	as_error_init(&err);
@@ -69,7 +67,7 @@ PyObject * AerospikeClient_SetXDRFilter(AerospikeClient * self, PyObject * args,
 	}
 
 	const char * data_center_str_p = NULL;
-	if (PyString_Check(py_data_center)) {
+	if (PyUnicode_Check(py_data_center)) {
 		data_center_str_p = PyUnicode_AsUTF8(py_data_center);
 	} else {
 		as_error_update(&err, AEROSPIKE_ERR_PARAM, "Data_center should be a string.");
@@ -77,7 +75,7 @@ PyObject * AerospikeClient_SetXDRFilter(AerospikeClient * self, PyObject * args,
 	}
 
 	const char * namespace_str_p = NULL;
-	if (PyString_Check(py_namespace)) {
+	if (PyUnicode_Check(py_namespace)) {
 		namespace_str_p = PyUnicode_AsUTF8(py_namespace);
 	} else {
 		as_error_update(&err, AEROSPIKE_ERR_PARAM, "Namespace should be a string.");
@@ -106,7 +104,8 @@ PyObject * AerospikeClient_SetXDRFilter(AerospikeClient * self, PyObject * args,
 		}
 	}
 
-    uint request_length = strlen(fmt_str) + strlen(data_center_str_p) + strlen(namespace_str_p) + strlen(base64_filter) + 1;
+	// - 6 for format char
+    uint request_length = strlen(fmt_str) + strlen(data_center_str_p) + strlen(namespace_str_p) + strlen(base64_filter) + 1 - 6;
     request_str_p = cf_malloc(request_length * sizeof(char));
     if (request_str_p == NULL) {
         as_error_update(&err, AEROSPIKE_ERR_CLIENT, "Failed to allocate memory for request.");
