@@ -231,8 +231,7 @@ Scan Methods
             scan = client.scan('test', 'test')
             scan_opts = {
               'concurrent': True,
-              'nobins': True,
-              'priority': aerospike.SCAN_PRIORITY_MEDIUM
+              'nobins': True
             }
             scan.foreach(show_key, options=scan_opts)
             client.close()
@@ -400,6 +399,7 @@ Scan Policies
             |
             | Default: ``False``
         * **fail_on_cluster_change** :class:`bool`
+            | Deprecated in 6.0.0, will be removed in a coming release.
             | Abort the scan if the cluster is not in a stable state. Only used for server versions < 4.9. 
             | 
             | Default: ``False``
@@ -439,7 +439,8 @@ Scan Options
     .. hlist::
         :columns: 1
 
-        * **priority** 
+        * **priority**
+            | Deprecated in 6.0.0. Scan priority will be removed in a coming release.
             | Scan priority has been replaced by the records_per_second policy see :ref:`aerospike_scan_policies`.
         * **nobins** :class:`bool` 
             | Whether to return the *bins* portion of the :ref:`aerospike_record_tuple`. 
@@ -450,7 +451,8 @@ Scan Options
             |
             | Default ``False``.
         * **percent** :class:`int` 
-            | Deprecated. No longer available with server 5.6+.
+            | Deprecated in version 6.0.0, will be removed in a coming release.
+            | No longer available with server 5.6+.
             | Use scan policy max_records instead.
             | Percentage of records to return from the scan. 
             |

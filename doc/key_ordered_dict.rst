@@ -61,4 +61,4 @@ KeyOrderedDict Class --- :class:`KeyOrderedDict`
         # {'map_list': 1}
 
     KeyOrderedDict inherits from :class:`dict` and has no extra functionality.
-    The only difference is it's mapping to a key ordered map.
+    The only difference is its mapping to a key ordered map.
