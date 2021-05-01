@@ -888,6 +888,7 @@ static int AerospikeClient_Type_Init(AerospikeClient * self, PyObject * args, Py
 	self->has_connected = false;
 	self->use_shared_connection = false;
 	self->as=NULL;
+	self->send_bool_as = SEND_BOOL_AS_PY_BYTES;
 
 	if (PyArg_ParseTupleAndKeywords(args, kwds, "O:client", kwlist, &py_config) == false) {
 		error_code = INIT_NO_CONFIG_ERR;
@@ -1261,6 +1262,15 @@ static int AerospikeClient_Type_Init(AerospikeClient * self, PyObject * args, Py
 	PyObject * py_share_connect = PyDict_GetItemString(py_config, "use_shared_connection");
 	if (py_share_connect) {
 		self->use_shared_connection = PyObject_IsTrue(py_share_connect);
+	}
+
+	PyObject * py_send_bool_as = PyDict_GetItemString(py_config, "send_bool_as");
+	if (py_send_bool_as != NULL && PyLong_Check(py_send_bool_as)) {
+		int send_bool_as_temp = PyLong_AsLong(py_send_bool_as);
+		if (send_bool_as_temp >= SEND_BOOL_AS_PY_BYTES ||
+			send_bool_as_temp <= SEND_BOOL_AS_AS_BOOL) {
+				self->send_bool_as = send_bool_as_temp;
+		}
 	}
 
 	//compression_threshold
