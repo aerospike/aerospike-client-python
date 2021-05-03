@@ -12,9 +12,8 @@ addons:
   apt:
     packages:
       - libssl-dev
-      update: true
       - python3-dev
-      update: true
+    update: true
 install:
 - wget -O aerospike-server.tgz https://aerospike.com/download/server/latest/artifact/tgz
 - tar xvzf aerospike-server.tgz
