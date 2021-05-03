@@ -264,9 +264,7 @@ class TestScan(TestBaseClass):
         records = []
 
         options = {
-            "percent": 100,
-            "concurrent": True,
-            "priority": aerospike.SCAN_PRIORITY_HIGH
+            "concurrent": True
         }
 
         def callback(input_tuple):
@@ -293,9 +291,7 @@ class TestScan(TestBaseClass):
         st = 'demo'
         records = []
         options = {
-            "percent": 80,
-            "concurrent": True,
-            "priority": aerospike.SCAN_PRIORITY_HIGH
+            "concurrent": True
         }
         scan_obj = self.client.scan(ns, st)
         scan_obj.foreach(callback, {}, options)
@@ -310,7 +306,7 @@ class TestScan(TestBaseClass):
 
         records = []
 
-        options = {"priority": aerospike.SCAN_PRIORITY_HIGH, "nobins": True}
+        options = {"nobins": True}
 
         def callback(input_tuple):
             _, _, bins = input_tuple
@@ -331,7 +327,7 @@ class TestScan(TestBaseClass):
 
         records = []
 
-        options = {"priority": aerospike.SCAN_PRIORITY_HIGH, "nobins": "true"}
+        options = {"nobins": "true"}
 
         def callback(input_tuple):
             _, _, bins = input_tuple
@@ -358,9 +354,7 @@ class TestScan(TestBaseClass):
         records = []
 
         options = {
-            "percent": 100,
-            "concurrent": True,
-            "priority": aerospike.SCAN_PRIORITY_HIGH,
+            "concurrent": True
             "include_ldt": True
         }
 
@@ -391,9 +385,7 @@ class TestScan(TestBaseClass):
         records = []
 
         options = {
-            "percent": 100,
-            "concurrent": True,
-            "priority": aerospike.SCAN_PRIORITY_HIGH,
+            "concurrent": True
             "include_ldt": False
         }
 

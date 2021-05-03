@@ -221,9 +221,7 @@ class TestScanApply(object):
         """
         policy = {'timeout': 1000}
         options = {
-            "percent": "80",
-            "concurrent": False,
-            "priority": aerospike.SCAN_PRIORITY_HIGH
+            "concurrent": False
         }
         try:
             self.client.scan_apply("test", "demo", "bin_lua",
@@ -240,9 +238,7 @@ class TestScanApply(object):
         """
         policy = {'timeout': 1000}
         options = {
-            "percent": 80,
-            "concurrent": False,
-            "priority": "aerospike.SCAN_PRIORITY_HIGH"
+            "concurrent": False
         }
         try:
             self.client.scan_apply("test", "demo", "bin_lua",
@@ -259,9 +255,7 @@ class TestScanApply(object):
         """
         policy = {'timeout': 1000}
         options = {
-            "percent": 80,
-            "concurrent": 5,
-            "priority": aerospike.SCAN_PRIORITY_HIGH
+            "concurrent": 5
         }
         try:
             self.client.scan_apply("test", "demo", "bin_lua",
@@ -278,9 +272,7 @@ class TestScanApply(object):
         """
         policy = {'timeout': 1000}
         options = {
-            "percent": 80,
-            "concurrent": False,
-            "priority": aerospike.SCAN_PRIORITY_HIGH
+            "concurrent": False
         }
         with pytest.raises(TypeError) as typeError:
             self.client.scan_apply("test", "demo", "bin_lua",
@@ -392,9 +384,7 @@ class TestScanApply(object):
         """
         policy = {'timeout': 1000}
         options = {
-            "percent": 100,
-            "concurrent": False,
-            "priority": aerospike.SCAN_PRIORITY_HIGH
+            "concurrent": False
         }
         scan_id = self.client.scan_apply("test", "demo", "bin_lua",
                                          "mytransform", ['age',

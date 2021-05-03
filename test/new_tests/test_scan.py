@@ -266,9 +266,7 @@ class TestScan(TestBaseClass):
         records = []
 
         options = {
-            "percent": 100,
-            "concurrent": True,
-            "priority": aerospike.SCAN_PRIORITY_HIGH
+            "concurrent": True
         }
 
         def callback(input_tuple):
@@ -294,9 +292,7 @@ class TestScan(TestBaseClass):
         st = 'demo'
         records = []
         options = {
-            "percent": 80,
-            "concurrent": True,
-            "priority": aerospike.SCAN_PRIORITY_HIGH
+            "concurrent": True
         }
         scan_obj = self.as_connection.scan(ns, st)
         scan_obj.foreach(callback, {}, options)
