@@ -7,7 +7,7 @@ python:
 sudo: false
 os:
 - linux
-dist: xenial
+dist: focal
 addons:
   apt:
     packages:
