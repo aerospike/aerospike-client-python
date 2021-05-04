@@ -7,11 +7,11 @@ python:
 sudo: false
 os:
 - linux
-dist: focal
+dist: bionic
 addons:
   apt:
     packages:
-      - libssl1.0-dev
+      - libssl-dev
       - python3-dev
     update: true
 install:
