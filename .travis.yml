@@ -11,7 +11,7 @@ dist: focal
 addons:
   apt:
     packages:
-      - libssl-dev
+      - libssl1.0-dev
       - python3-dev
     update: true
 install:
