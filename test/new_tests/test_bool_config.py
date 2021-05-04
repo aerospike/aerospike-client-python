@@ -47,7 +47,10 @@ class TestBitwiseOperations(object):
     @pytest.mark.parametrize("send_bool_as, expected_true, expected_false", [
         (aerospike.PY_BYTES, True, False),
         (aerospike.INTEGER, 1, 0),
-        (aerospike.AS_BOOL, True, False)
+        (aerospike.AS_BOOL, True, False),
+        (100, True, False),
+        (0, True, False),
+        (-1, True, False)
     ])
     def test_bool_read_write_pos(self, send_bool_as, expected_true, expected_false):
         """
@@ -69,3 +72,5 @@ class TestBitwiseOperations(object):
         #  We should not have changed the zeroes bin
         assert bins["cfg_true"] is expected_true
         assert bins["cfg_false"] is expected_false
+        assert bins[self.true_bin] is True
+        assert bins[self.false_bin] is False

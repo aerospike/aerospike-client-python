@@ -1267,7 +1267,7 @@ static int AerospikeClient_Type_Init(AerospikeClient * self, PyObject * args, Py
 	PyObject * py_send_bool_as = PyDict_GetItemString(py_config, "send_bool_as");
 	if (py_send_bool_as != NULL && PyLong_Check(py_send_bool_as)) {
 		int send_bool_as_temp = PyLong_AsLong(py_send_bool_as);
-		if (send_bool_as_temp >= SEND_BOOL_AS_PY_BYTES ||
+		if (send_bool_as_temp >= SEND_BOOL_AS_PY_BYTES &&
 			send_bool_as_temp <= SEND_BOOL_AS_AS_BOOL) {
 				self->send_bool_as = send_bool_as_temp;
 		}
