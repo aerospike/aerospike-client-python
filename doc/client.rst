@@ -907,226 +907,8 @@ List Operations
 .. class:: Client
 
     .. note:: Please see :mod:`aerospike_helpers.operations.list_operations` for the new way to use list operations.
-
-    .. note:: List operations require server version >= 3.7.0
-
-        List operations support negative indexing. If the index is negative,
-        the resolved index starts backwards from end of list.
-
-        Index examples:
-         * 0: first element in the list
-         * 4: fifth element in the list
-         * -1: last element in the list
-        Index range examples:
-         * 1, count 2: second and third elements in the list
-         * -3, count 3: last three elements in the list
-
-        If an index is out of bounds, a parameter error will be returned.
-        If a range is partially out of bounds, the valid part of the range will be returned.
-
-        Comparisons:
-         * A wildcard function is available :meth:`aerospike.CDTWildcard`.
-         * An infinite function is available :meth:`aerospike.CDTInfinite`.
-        
-        Those values are for comparison only and will not be saved in the database.
-
-
-    .. seealso:: `Lists (Data Types) <https://www.aerospike.com/docs/guide/cdt-list.html>`_.
-
-
-    .. method:: list_append(key, bin, val[, meta[, policy]])
-
-        Append a single element to a list value in *bin*.
-
-        :param tuple key: a :ref:`aerospike_key_tuple` tuple associated with the record.
-        :param str bin: the name of the bin.
-        :param val: :py:class:`int`, :py:class:`str`, \
-                   :py:class:`float`, :py:class:`bytearray`, :py:class:`list`, \
-                   :py:class:`dict`. An unsupported type will be serialized.
-        :param dict meta: optional record metadata to be set, with field
-            ``'ttl'`` set to :class:`int` number of seconds or one of the :ref:`TTL_CONSTANTS`, \
-            and ``'gen'`` set to :class:`int` generation number to compare.
-        :param dict policy: optional :ref:`aerospike_operate_policies`.
-        :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
-
-    .. method:: list_extend(key, bin, items[, meta[, policy]])
-
-        Extend the list value in *bin* with the given *items*.
-
-        :param tuple key: a :ref:`aerospike_key_tuple` tuple associated with the record.
-        :param str bin: the name of the bin.
-        :param list items: the items to append the list in *bin*.
-        :param dict meta: optional record metadata to be set, with field
-            ``'ttl'`` set to :class:`int` number of seconds or one of the :ref:`TTL_CONSTANTS`, \
-            and ``'gen'`` set to :class:`int` generation number to compare.
-        :param dict policy: optional :ref:`aerospike_operate_policies`.
-        :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
-
-    .. method:: list_insert(key, bin, index, val[, meta[, policy]])
-
-        Insert an element at the specified *index* of a list value in *bin*.
-
-        :param tuple key: a :ref:`aerospike_key_tuple` tuple associated with the record.
-        :param str bin: the name of the bin.
-        :param int index: the position in the index where the value should be inserted.
-        :param val: :py:class:`int`, :py:class:`str`, \
-                   :py:class:`float`, :py:class:`bytearray`, :py:class:`list`, \
-                   :py:class:`dict`. An unsupported type will be serialized.
-        :param dict meta: optional record metadata to be set, with field
-            ``'ttl'`` set to :class:`int` number of seconds or one of the :ref:`TTL_CONSTANTS`, \
-            and ``'gen'`` set to :class:`int` generation number to compare.
-        :param dict policy: optional :ref:`aerospike_operate_policies`.
-        :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
-
-    .. method:: list_insert_items(key, bin, index, items[, meta[, policy]])
-
-        Insert the *items* at the specified *index* of a list value in *bin*.
-
-        :param tuple key: a :ref:`aerospike_key_tuple` tuple associated with the record.
-        :param str bin: the name of the bin.
-        :param int index: the position in the index where the items should be inserted.
-        :param list items: the items to insert into the list in *bin*.
-        :param dict meta: optional record metadata to be set, with field
-            ``'ttl'`` set to :class:`int` number of seconds or one of the :ref:`TTL_CONSTANTS`, \
-            and ``'gen'`` set to :class:`int` generation number to compare.
-        :param dict policy: optional :ref:`aerospike_operate_policies`.
-        :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
-
-    .. method:: list_pop(key, bin, index[, meta[, policy]]) -> val
-
-        Remove and get back a list element at a given *index* of a list value in *bin*.
-
-        :param tuple key: a :ref:`aerospike_key_tuple` tuple associated with the record.
-        :param str bin: the name of the bin.
-        :param int index: the index position in the list element which should be removed and returned.
-        :param dict meta: optional record metadata to be set, with field
-            ``'ttl'`` set to :class:`int` number of seconds or one of the :ref:`TTL_CONSTANTS`, \
-            and ``'gen'`` set to :class:`int` generation number to compare.
-        :param dict policy: optional :ref:`aerospike_operate_policies`.
-        :return: a single list element.
-        :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
-
-    .. method:: list_pop_range(key, bin, index, count[, meta[, policy]]) -> val
-
-        Remove and get back list elements at a given *index* of a list value in *bin*.
-
-        :param tuple key: a :ref:`aerospike_key_tuple` tuple associated with the record.
-        :param str bin: the name of the bin.
-        :param int index: the index of first element in a range which should be removed and returned.
-        :param int count: the number of elements in the range.
-        :param dict meta: optional record metadata to be set, with field
-            ``'ttl'`` set to :class:`int` number of seconds or one of the :ref:`TTL_CONSTANTS`, \
-            and ``'gen'`` set to :class:`int` generation number to compare.
-        :param dict policy: optional :ref:`aerospike_operate_policies`.
-        :return: a :class:`list` of elements.
-        :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
-
-    .. method:: list_remove(key, bin, index[, meta[, policy]])
-
-        Remove a list element at a given *index* of a list value in *bin*.
-
-        :param tuple key: a :ref:`aerospike_key_tuple` tuple associated with the record.
-        :param str bin: the name of the bin.
-        :param int index: the index position in the list element which should be removed.
-        :param dict meta: optional record metadata to be set, with field
-            ``'ttl'`` set to :class:`int` number of seconds or one of the :ref:`TTL_CONSTANTS`, \
-            and ``'gen'`` set to :class:`int` generation number to compare.
-        :param dict policy: optional :ref:`aerospike_operate_policies`.
-        :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
-
-    .. method:: list_remove_range(key, bin, index, count[, meta[, policy]])
-
-        Remove list elements at a given *index* of a list value in *bin*.
-
-        :param tuple key: a :ref:`aerospike_key_tuple` tuple associated with the record.
-        :param str bin: the name of the bin.
-        :param int index: the index of first element in a range which should be removed.
-        :param int count: the number of elements in the range.
-        :param dict meta: optional record metadata to be set, with field
-            ``'ttl'`` set to :class:`int` number of seconds or one of the :ref:`TTL_CONSTANTS`, \
-            and ``'gen'`` set to :class:`int` generation number to compare.
-        :param dict policy: optional :ref:`aerospike_operate_policies`.
-        :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
-
-    .. method:: list_clear(key, bin[, meta[, policy]])
-
-        Remove all the elements from a list value in *bin*.
-
-        :param tuple key: a :ref:`aerospike_key_tuple` tuple associated with the record.
-        :param str bin: the name of the bin.
-        :param dict meta: optional record metadata to be set, with field
-            ``'ttl'`` set to :class:`int` number of seconds or one of the :ref:`TTL_CONSTANTS`, \
-            and ``'gen'`` set to :class:`int` generation number to compare.
-        :param dict policy: optional :ref:`aerospike_operate_policies`.
-        :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
-
-    .. method:: list_set(key, bin, index, val[, meta[, policy]])
-
-        Set list element *val* at the specified *index* of a list value in *bin*.
-
-        :param tuple key: a :ref:`aerospike_key_tuple` tuple associated with the record.
-        :param str bin: the name of the bin.
-        :param int index: the position in the index where the value should be set.
-        :param val: :py:class:`int`, :py:class:`str`, \
-                   :py:class:`float`, :py:class:`bytearray`, :py:class:`list`, \
-                   :py:class:`dict`. An unsupported type will be serialized.
-        :param dict meta: optional record metadata to be set, with field
-            ``'ttl'`` set to :class:`int` number of seconds or one of the :ref:`TTL_CONSTANTS`, \
-            and ``'gen'`` set to :class:`int` generation number to compare.
-        :param dict policy: optional :ref:`aerospike_operate_policies`.
-        :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
-
-    .. method:: list_get(key, bin, index[, meta[, policy]]) -> val
-
-        Get the list element at the specified *index* of a list value in *bin*.
-
-        :param tuple key: a :ref:`aerospike_key_tuple` tuple associated with the record.
-        :param str bin: the name of the bin.
-        :param int index: the position in the index where the value should be set.
-        :param dict meta: unused for this operation
-        :param dict policy: optional :ref:`aerospike_operate_policies`.
-        :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
-        :return: the list elements at the given index.
-
-    .. method:: list_get_range(key, bin, index, count[, meta[, policy]]) -> val
-
-        Get the list of *count* elements starting at a specified *index* of a list value in *bin*.
-
-        :param tuple key: a :ref:`aerospike_key_tuple` tuple associated with the record.
-        :param str bin: the name of the bin.
-        :param int index: the position in the index where the value should be set.
-        :param dict meta: unused for this operation
-        :param dict policy: optional :ref:`aerospike_operate_policies`.
-        :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
-        :return: a :class:`list` of elements.
-
-    .. method:: list_trim(key, bin, index, count[, meta[, policy]]) -> val
-
-        Remove elements from the list which are not within the range starting at the given *index* plus *count*.
-
-        :param tuple key: a :ref:`aerospike_key_tuple` tuple associated with the record.
-        :param str bin: the name of the bin.
-        :param int index: the position in the index marking the start of the range.
-        :param int index: the index position of the first element in a range which should not be removed.
-        :param int count: the number of elements in the range.
-        :param dict meta: optional record metadata to be set, with field
-            ``'ttl'`` set to :class:`int` number of seconds or one of the :ref:`TTL_CONSTANTS`, \
-            and ``'gen'`` set to :class:`int` generation number to compare.
-        :param dict policy: optional :ref:`aerospike_operate_policies`.
-        :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
-        :return: a :class:`list` of elements.
-
-    .. method:: list_size(key, bin[, meta[, policy]]) -> count
-
-        Count the number of elements in the list value in *bin*.
-
-        :param tuple key: a :ref:`aerospike_key_tuple` tuple associated with the record.
-        :param str bin: the name of the bin.
-        :param dict meta: unused for this operation
-        :param dict policy: optional :ref:`aerospike_operate_policies`.
-        :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
-        :return: a :class:`int`.
-
+                Old style list operations are deprecated. The docs for old style list operations were removed in client 6.0.0.
+                The code supporting these methods will be removed in a coming release.
 
     .. index::
         single: Map Operations
@@ -1137,506 +919,8 @@ Map Operations
 .. class:: Client
 
     .. note:: Please see :mod:`aerospike_helpers.operations.map_operations` for the new way to use map operations.
-
-    .. note:: Map operations require server version >= 3.8.4
-
-        All maps maintain an index and a rank.  Map supports negative indexing for index and rank.
-
-        An index in the context of the map API is the order of a particular key in a map. The key with the lowest key value has index 0.
-
-        A rank is the order of a particular value in a map. If multiple copies of a value exist, the ranks of those copies are based on their key ordering.
-
-        Index examples:
-         * 0: lowest key in the map
-         * 4: fifth key in the map
-         * -1: highest key in the map
-        Index range examples:
-         * 1, count 2: second and third keys in the map
-         * -3, count 3: highest three keys in the map
-        Rank examples:
-         * 0: element with the lowest value rank in the map
-         * -1: element with the highest ranked value in the map
-        Rank range examples:
-         * 1, count 2: second and third lowest ranked elements in the map
-         * -3, count 3: top three ranked elements in the map.
-
-        The default map order is ``aerospike.MAP_UNORDERED``.
-
-        Comparisons:
-         * A wildcard function is available :meth:`aerospike.CDTWildcard`.
-         * An infinite function is available :meth:`aerospike.CDTInfinite`.
-
-        Those values are for comparison only and will not be saved in the database.
-
-        .. code-block:: python
-
-            from __future__ import print_function
-            import aerospike
-            from aerospike import exception as e
-
-            config = {'hosts': [('127.0.0.1', 3000)]}
-            try:
-                client = aerospike.client(config).connect()
-            except e.ClientError as e:
-                print("Error: {0} [{1}]".format(e.msg, e.code))
-                sys.exit(2)
-
-            key = ('test', 'demo', 'map-example')
-            abc = {}
-            for i in xrange(1, 10, 1):
-                abc[chr(64 + i)] = i
-            for i in xrange(11, 26, 1):
-                abc[chr(64 + i)] = i
-
-            try:
-                if client.exists(key):
-                    client.remove(key)
-                map_policy = {
-                    'map_write_mode': aerospike.MAP_UPDATE,
-                    'map_order': aerospike.MAP_KEY_VALUE_ORDERED
-                }
-                client.map_put_items(key, 'abc', abc, map_policy)
-                client.map_put(key, 'abc', 'J', 10, map_policy)
-                print(client.map_get_by_key_range(key, 'abc', 'A', 'D', aerospike.MAP_RETURN_KEY_VALUE))
-                client.map_put(key, 'abc', 'Z', 26, map_policy)
-                print(client.map_get_by_index_range(key, 'abc', -3, 3, aerospike.MAP_RETURN_VALUE))
-                print(client.map_get_by_rank_range(key, 'abc', 0, 10, aerospike.MAP_RETURN_KEY))
-
-                print("\nRound 2")
-                more = {'AA': 100, 'BB': 200, 'ZZ': 2600}
-                client.map_put_items(key, 'abc', more, map_policy)
-                print(client.map_get_by_key_range(key, 'abc', 'A', 'D', aerospike.MAP_RETURN_KEY_VALUE))
-                print(client.map_get_by_index_range(key, 'abc', -3, 3, aerospike.MAP_RETURN_VALUE))
-                print(client.map_get_by_rank_range(key, 'abc', 0, 10, aerospike.MAP_RETURN_KEY))
-            except e.AerospikeError as e:
-                print("Error: {0} [{1}]".format(e.msg, e.code))
-
-            client.close()
-
-        .. note::
-
-            We expect to see
-
-            .. code-block:: python
-
-                [('A', 1), ('B', 2), ('C', 3)]
-                [24, 25, 26]
-                ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J']
-
-                Round 2
-                [('A', 1), ('AA', 100), ('B', 2), ('BB', 200), ('C', 3)]
-                [25, 26, 2600]
-                ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J']
-
-    .. seealso:: `Maps (Data Types) <https://www.aerospike.com/docs/guide/cdt-map.html>`_.
-
-
-    .. method:: map_set_policy(key, bin, map_policy)
-
-        Set the map policy for the given *bin*.
-
-        :param tuple key: a :ref:`aerospike_key_tuple` tuple associated with the record.
-        :param str bin: the name of the bin.
-        :param dict map_policy: :ref:`aerospike_map_policies`.
-        :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
-
-    .. method:: map_put(key, bin, map_key, val[, map_policy, [, meta[, policy]]])
-
-        Add the given *map_key*/*val* pair to the map at *key* and *bin*.
-
-        :param tuple key: a :ref:`aerospike_key_tuple` tuple associated with the record.
-        :param str bin: the name of the bin.
-        :param map_key: :py:class:`int`, :py:class:`str`, \
-           :py:class:`float`, :py:class:`bytearray`. An unsupported type will be serialized.
-        :param val: :py:class:`int`, :py:class:`str`, \
-           :py:class:`float`, :py:class:`bytearray`, :py:class:`list`, \
-           :py:class:`dict`. An unsupported type will be serialized.
-        :param dict map_policy: optional :ref:`aerospike_map_policies`.
-        :param dict meta: optional record metadata to be set, with field
-            ``'ttl'`` set to :class:`int` number of seconds or one of the :ref:`TTL_CONSTANTS`, \
-            and ``'gen'`` set to :class:`int` generation number to compare.
-        :param dict policy: optional :ref:`aerospike_operate_policies`.
-        :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
-
-    .. method:: map_put_items(key, bin, items[, map_policy, [, meta[, policy]]])
-
-        Add the given *items* dict of key/value pairs to the map at *key* and *bin*.
-
-        :param tuple key: a :ref:`aerospike_key_tuple` tuple associated with the record.
-        :param str bin: the name of the bin.
-        :param dict items: key/value pairs.
-        :param dict map_policy: optional :ref:`aerospike_map_policies`.
-        :param dict meta: optional record metadata to be set, with field
-            ``'ttl'`` set to :class:`int` number of seconds or one of the :ref:`TTL_CONSTANTS`, \
-            and ``'gen'`` set to :class:`int` generation number to compare.
-        :param dict policy: optional :ref:`aerospike_operate_policies`.
-        :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
-
-    .. method:: map_increment(key, bin, map_key, incr[, map_policy, [, meta[, policy]]])
- 
-        Increment the value of a numeric map element by *incr*. Element is specified by *key*, *bin* and *map_key*.
-
-        :param tuple key: a :ref:`aerospike_key_tuple` tuple associated with the record.
-        :param str bin: the name of the bin.
-        :param map_key: :py:class:`int`, :py:class:`str`, \
-           :py:class:`float`, :py:class:`bytearray`. An unsupported type will be serialized.
-        :param incr: :py:class:`int` or :py:class:`float`
-        :param dict map_policy: optional :ref:`aerospike_map_policies`.
-        :param dict meta: optional record metadata to be set, with field
-            ``'ttl'`` set to :class:`int` number of seconds or one of the :ref:`TTL_CONSTANTS`, \
-            and ``'gen'`` set to :class:`int` generation number to compare.
-        :param dict policy: optional :ref:`aerospike_operate_policies`.
-        :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
-
-    .. method:: map_decrement(key, bin, map_key, decr[, map_policy, [, meta[, policy]]])
-
-        Decrement the value of a numeric map element by *decr*. Element is specified by *key*, *bin* and *map_key*.
-
-        :param tuple key: a :ref:`aerospike_key_tuple` tuple associated with the record.
-        :param str bin: the name of the bin.
-        :param map_key: :py:class:`int`, :py:class:`str`, \
-           :py:class:`float`, :py:class:`bytearray`. An unsupported type will be serialized.
-        :param decr: :py:class:`int` or :py:class:`float`
-        :param dict map_policy: optional :ref:`aerospike_map_policies`.
-        :param dict meta: optional record metadata to be set, with field
-            ``'ttl'`` set to :class:`int` number of seconds or one of the :ref:`TTL_CONSTANTS`, \
-            and ``'gen'`` set to :class:`int` generation number to compare.
-        :param dict policy: optional :ref:`aerospike_operate_policies`.
-        :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
-
-    .. method:: map_size(key, bin[, meta[, policy]]) -> count
-
-        Return the size of the map at *key* and *bin*.
-
-        :param tuple key: a :ref:`aerospike_key_tuple` tuple associated with the record.
-        :param str bin: the name of the bin.
-        :param dict meta: unused for this operation
-        :param dict policy: optional :ref:`aerospike_operate_policies`.
-        :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
-        :return: a :class:`int`.
-
-    .. method:: map_clear(key, bin[, meta[, policy]])
-
-        Remove all elements from the map at *key* and *bin*.
-
-        :param tuple key: a :ref:`aerospike_key_tuple` tuple associated with the record.
-        :param str bin: the name of the bin.
-        :param dict meta: optional record metadata to be set, with field
-            ``'ttl'`` set to :class:`int` number of seconds or one of the :ref:`TTL_CONSTANTS`, \
-            and ``'gen'`` set to :class:`int` generation number to compare.
-        :param dict policy: optional :ref:`aerospike_operate_policies`.
-        :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
-
-    .. method:: map_remove_by_key(key, bin, map_key, return_type[, meta[, policy]])
-
-        Remove and return a map element specified by *key*, *bin* and *map_key*.
-
-        :param tuple key: a :ref:`aerospike_key_tuple` tuple associated with the record.
-        :param str bin: the name of the bin.
-        :param map_key: :py:class:`int`, :py:class:`str`, \
-           :py:class:`float`, :py:class:`bytearray`. An unsupported type will be serialized.
-        :param return_type: :py:class:`int` :ref:`map_return_types`
-        :param dict meta: optional record metadata to be set, with field
-            ``'ttl'`` set to :class:`int` number of seconds or one of the :ref:`TTL_CONSTANTS`, \
-            and ``'gen'`` set to :class:`int` generation number to compare.
-        :param dict policy: optional :ref:`aerospike_operate_policies`.
-        :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
-        :return: depends on return_type parameter
-
-    .. method:: map_remove_by_key_list(key, bin, list, return_type[, meta[, policy]][, meta[, policy]])
-
-        Remove and return map elements specified by *key*, *bin* and *list* of keys.
-
-        :param tuple key: a :ref:`aerospike_key_tuple` tuple associated with the record.
-        :param str bin: the name of the bin.
-        :param list: :py:class:`list` the list of keys to match
-        :param return_type: :py:class:`int` :ref:`map_return_types`
-        :param dict meta: optional record metadata to be set, with field
-            ``'ttl'`` set to :class:`int` number of seconds or one of the :ref:`TTL_CONSTANTS`, \
-            and ``'gen'`` set to :class:`int` generation number to compare.
-        :param dict policy: optional :ref:`aerospike_operate_policies`.
-        :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
-        :return: depends on return_type parameter
-
-    .. method:: map_remove_by_key_range(key, bin, map_key, range, return_type[, meta[, policy]])
-
-        Remove and return map elements specified by *key*, *bin* and identified by a key range [*map_key* inclusive, *range* exclusive).
-
-        :param tuple key: a :ref:`aerospike_key_tuple` tuple associated with the record.
-        :param str bin: the name of the bin.
-        :param map_key: :py:class:`int`, :py:class:`str`, \
-           :py:class:`float`, :py:class:`bytearray`. An unsupported type will be serialized.
-        :param range: :py:class:`int`, :py:class:`str`, \
-           :py:class:`float`, :py:class:`bytearray`. An unsupported type will be serialized.
-        :param return_type: :py:class:`int` :ref:`map_return_types`
-        :param dict meta: optional record metadata to be set, with field
-            ``'ttl'`` set to :class:`int` number of seconds or one of the :ref:`TTL_CONSTANTS`, \
-            and ``'gen'`` set to :class:`int` generation number to compare.
-        :param dict policy: optional :ref:`aerospike_operate_policies`.
-        :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
-        :return: depends on return_type parameter
-
-    .. method:: map_remove_by_value(key, bin, val, return_type[, meta[, policy]])
-
-        Remove and return map elements specified by *key*, *bin* and *val*.
-
-        :param tuple key: a :ref:`aerospike_key_tuple` tuple associated with the record.
-        :param str bin: the name of the bin.
-        :param val: :py:class:`int`, :py:class:`str`, \
-           :py:class:`float`, :py:class:`bytearray`. An unsupported type will be serialized.
-        :param return_type: :py:class:`int` :ref:`map_return_types`
-        :param dict meta: optional record metadata to be set, with field
-            ``'ttl'`` set to :class:`int` number of seconds or one of the :ref:`TTL_CONSTANTS`, \
-            and ``'gen'`` set to :class:`int` generation number to compare.
-        :param dict policy: optional :ref:`aerospike_operate_policies`.
-        :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
-        :return: depends on return_type parameter
-
-    .. method:: map_remove_by_value_list(key, bin, list, return_type[, meta[, policy]])
-
-        Remove and return map elements specified by *key*, *bin* and *list* of values.
-
-        :param tuple key: a :ref:`aerospike_key_tuple` tuple associated with the record.
-        :param str bin: the name of the bin.
-        :param list: :py:class:`list` the list of values to match
-        :param return_type: :py:class:`int` :ref:`map_return_types`
-        :param dict meta: optional record metadata to be set, with field
-            ``'ttl'`` set to :class:`int` number of seconds or one of the :ref:`TTL_CONSTANTS`, \
-            and ``'gen'`` set to :class:`int` generation number to compare.
-        :param dict policy: optional :ref:`aerospike_operate_policies`.
-        :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
-        :return: depends on return_type parameter
-
-    .. method:: map_remove_by_value_range(key, bin, val, range, return_type[, meta[, policy]])
-
-        Remove and return map elements specified by *key*, *bin* and value range [*val* inclusive, *range* exclusive).
-
-        :param tuple key: a :ref:`aerospike_key_tuple` tuple associated with the record.
-        :param str bin: the name of the bin.
-        :param val: :py:class:`int`, :py:class:`str`, \
-           :py:class:`float`, :py:class:`bytearray`. An unsupported type will be serialized.
-        :param range: :py:class:`int`, :py:class:`str`, \
-           :py:class:`float`, :py:class:`bytearray`. An unsupported type will be serialized.
-        :param return_type: :py:class:`int` :ref:`map_return_types`
-        :param dict meta: optional record metadata to be set, with field
-            ``'ttl'`` set to :class:`int` number of seconds or one of the :ref:`TTL_CONSTANTS`, \
-            and ``'gen'`` set to :class:`int` generation number to compare.
-        :param dict policy: optional :ref:`aerospike_operate_policies`.
-        :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
-        :return: depends on return_type parameter
-
-    .. method:: map_remove_by_index(key, bin, index, return_type[, meta[, policy]])
-
-        Remove and return map elements specified by *key*, *bin* and *index*.
-
-        :param tuple key: a :ref:`aerospike_key_tuple` tuple associated with the record.
-        :param str bin: the name of the bin.
-        :param index: :py:class:`int` the index position of the map element
-        :param return_type: :py:class:`int` :ref:`map_return_types`
-        :param dict meta: optional record metadata to be set, with field
-            ``'ttl'`` set to :class:`int` number of seconds or one of the :ref:`TTL_CONSTANTS`, \
-            and ``'gen'`` set to :class:`int` generation number to compare.
-        :param dict policy: optional :ref:`aerospike_operate_policies`.
-        :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
-        :return: depends on return_type parameter
-
-    .. method:: map_remove_by_index_range(key, bin, index, range, return_type[, meta[, policy]])
-
-        Remove and return map elements specified by *key*, *bin* starting at *index* position and removing *range* number of elements.
-
-        :param tuple key: a :ref:`aerospike_key_tuple` tuple associated with the record.
-        :param str bin: the name of the bin.
-        :param index: :py:class:`int` the index position of the first map element to remove
-        :param range: :py:class:`int` the number of items to remove from the map 
-        :param return_type: :py:class:`int` :ref:`map_return_types`
-        :param dict meta: optional record metadata to be set, with field
-            ``'ttl'`` set to :class:`int` number of seconds or one of the :ref:`TTL_CONSTANTS`, \
-            and ``'gen'`` set to :class:`int` generation number to compare.
-        :param dict policy: optional :ref:`aerospike_operate_policies`.
-        :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
-        :return: depends on return_type parameter
-
-    .. method:: map_remove_by_rank(key, bin, rank, return_type[, meta[, policy]])
-
-        Remove and return map elements specified by *key*, *bin* and *rank*.
-
-        :param tuple key: a :ref:`aerospike_key_tuple` tuple associated with the record.
-        :param str bin: the name of the bin.
-        :param rank: :py:class:`int` the rank of the value of the element in the map
-        :param return_type: :py:class:`int` :ref:`map_return_types`
-        :param dict meta: optional record metadata to be set, with field
-            ``'ttl'`` set to :class:`int` number of seconds or one of the :ref:`TTL_CONSTANTS`, \
-            and ``'gen'`` set to :class:`int` generation number to compare.
-        :param dict policy: optional :ref:`aerospike_operate_policies`.
-        :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
-        :return: depends on return_type parameter
-
-    .. method:: map_remove_by_rank_range(key, bin, rank, range, return_type[, meta[, policy]])
-
-        Remove and return map elements specified by *key*, *bin* with starting *rank* and removing *range* number of elements.
-
-        :param tuple key: a :ref:`aerospike_key_tuple` tuple associated with the record.
-        :param str bin: the name of the bin.
-        :param rank: :py:class:`int` the rank of the value of the first map element to remove
-        :param range: :py:class:`int` the number of items to remove from the map 
-        :param return_type: :py:class:`int` :ref:`map_return_types`
-        :param dict meta: optional record metadata to be set, with field
-            ``'ttl'`` set to :class:`int` number of seconds or one of the :ref:`TTL_CONSTANTS`, \
-            and ``'gen'`` set to :class:`int` generation number to compare.
-        :param dict policy: optional :ref:`aerospike_operate_policies`.
-        :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
-        :return: depends on return_type parameter
-
-    .. method:: map_get_by_key(key, bin, map_key, return_type[, meta[, policy]])
-
-        Return map element specified by *key*, *bin* and *map_key*.
-
-        :param tuple key: a :ref:`aerospike_key_tuple` tuple associated with the record.
-        :param str bin: the name of the bin.
-        :param map_key:  :py:class:`int`, :py:class:`str`, \
-           :py:class:`float`, :py:class:`bytearray`. An unsupported type will be serialized.
-        :param return_type: :py:class:`int` :ref:`map_return_types`
-        :param dict meta: unused for this operation
-        :param dict policy: optional :ref:`aerospike_operate_policies`.
-        :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
-        :return: depends on return_type parameter
-
-    .. method:: map_get_by_key_range(key, bin, map_key, range, return_type[, meta[, policy]])
-
-        Return map elements specified by *key*, *bin* and key range [*map_key* inclusive, *range* exclusive).
-
-        :param tuple key: a :ref:`aerospike_key_tuple` tuple associated with the record.
-        :param str bin: the name of the bin.
-        :param map_key: :py:class:`int`, :py:class:`str`, \
-           :py:class:`float`, :py:class:`bytearray`. An unsupported type will be serialized.
-        :param range: :py:class:`int`, :py:class:`str`, \
-           :py:class:`float`, :py:class:`bytearray`. An unsupported type will be serialized.
-        :param return_type: :py:class:`int` :ref:`map_return_types`
-        :param dict meta: unused for this operation
-        :param dict policy: optional :ref:`aerospike_operate_policies`.
-        :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
-        :return: depends on return_type parameter
-
-    .. method:: map_get_by_key_list(key, bin, key_list, return_type[, meta[, policy]])
-
-        Return map elements specified by *key*, *bin* and *key_list*.
-
-        :param tuple key: a :ref:`aerospike_key_tuple` tuple associated with the record.
-        :param str bin: the name of the bin.
-        :param key_list: :py:class:`list` A list of map keys to fetch entries for
-        :param return_type: :py:class:`int` :ref:`map_return_types`
-        :param dict meta: unused for this operation
-        :param dict policy: optional :ref:`aerospike_operate_policies`.
-        :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
-        :return: depends on return_type parameter
-
-        .. note:: Requires server version >= 3.16.0.1
-
-        .. versionadded:: 3.2.0
-
-
-    .. method:: map_get_by_value(key, bin, val, return_type[, meta[, policy]])
-
-        Return map elements specified by *key*, *bin* and *val*.
-
-        :param tuple key: a :ref:`aerospike_key_tuple` tuple associated with the record.
-        :param str bin: the name of the bin.
-        :param val: :py:class:`int`, :py:class:`str`, \
-           :py:class:`float`, :py:class:`bytearray`. An unsupported type will be serialized.
-        :param return_type: :py:class:`int` :ref:`map_return_types`
-        :param dict meta: unused for this operation
-        :param dict policy: optional :ref:`aerospike_operate_policies`.
-        :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
-        :return: depends on return_type parameter
-
-    .. method:: map_get_by_value_range(key, bin, val, range, return_type[, meta[, policy]])
-
-        Return map elements specified by *key*, *bin* and value range [*val* inclusive, *range* exclusive).
-
-        :param tuple key: a :ref:`aerospike_key_tuple` tuple associated with the record.
-        :param str bin: the name of the bin.
-        :param val: :py:class:`int`, :py:class:`str`, \
-           :py:class:`float`, :py:class:`bytearray`. An unsupported type will be serialized.
-        :param range: :py:class:`int`, :py:class:`str`, \
-           :py:class:`float`, :py:class:`bytearray`. An unsupported type will be serialized.
-        :param return_type: :py:class:`int` :ref:`map_return_types`
-        :param dict meta: unused for this operation
-        :param dict policy: optional :ref:`aerospike_operate_policies`.
-        :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
-        :return: depends on return_type parameter
-
-    .. method:: map_get_by_value_list(key, bin, value_list, return_type[, meta[, policy]])
-
-        Return map elements specified by *key*, *bin* and *value_list*.
-
-        :param tuple key: a :ref:`aerospike_key_tuple` tuple associated with the record.
-        :param str bin: the name of the bin.
-        :param value_list: :py:class:`list` A list of map values specifying the entries to be retrieved.
-        :param return_type: :py:class:`int` :ref:`map_return_types`
-        :param dict meta: unused for this operation
-        :param dict policy: optional :ref:`aerospike_operate_policies`.
-        :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
-        :return: depends on return_type parameter
-
-        .. note:: Requires server version >= 3.16.0.1
-
-        .. versionadded:: 3.2.0
-
-    .. method:: map_get_by_index(key, bin, index, return_type[, meta[, policy]])
-
-        Return the map element specified by *key*, *bin* and *index* position.
-
-        :param tuple key: a :ref:`aerospike_key_tuple` tuple associated with the record.
-        :param str bin: the name of the bin.
-        :param index: :py:class:`int` the index position of the map element
-        :param return_type: :py:class:`int` :ref:`map_return_types`
-        :param dict meta: unused for this operation
-        :param dict policy: optional :ref:`aerospike_operate_policies`.
-        :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
-        :return: depends on return_type parameter
-
- 
-    .. method:: map_get_by_index_range(key, bin, index, range, return_type[, meta[, policy]])
-
-        Return a *range* number of elements from the map at *key* and *bin*, starting at the given *index*.
-
-        :param tuple key: a :ref:`aerospike_key_tuple` tuple associated with the record.
-        :param str bin: the name of the bin.
-        :param index: :py:class:`int` the starting index for the range
-        :param range: :py:class:`int` number of elements in the range
-        :param return_type: :py:class:`int` :ref:`map_return_types`
-        :param dict meta: unused for this operation
-        :param dict policy: optional :ref:`aerospike_operate_policies`.
-        :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
-        :return: depends on return_type parameter
-
-    .. method:: map_get_by_rank(key, bin, rank, return_type[, meta[, policy]])
-
-        Return the map element specified by *key*, *bin* and *rank*.
-
-        :param tuple key: a :ref:`aerospike_key_tuple` tuple associated with the record.
-        :param str bin: the name of the bin.
-        :param rank: :py:class:`int` the rank of the value of the element in the map
-        :param return_type: :py:class:`int` :ref:`map_return_types`
-        :param dict meta: unused for this operation
-        :param dict policy: optional :ref:`aerospike_operate_policies`.
-        :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
-        :return: depends on return_type parameter
-
-    .. method:: map_get_by_rank_range(key, bin, rank, range, return_type[, meta[, policy]])
-
-        Return map elements specified by *key*, *bin* with starting *rank* and *range* number of elements.
-
-        :param tuple key: a :ref:`aerospike_key_tuple` tuple associated with the record.
-        :param str bin: the name of the bin.
-        :param rank: :py:class:`int` the rank of the value of the first map element to remove
-        :param range: :py:class:`int` the number of items to remove from the map 
-        :param return_type: :py:class:`int` :ref:`map_return_types`
-        :param dict meta: unused for this operation
-        :param dict policy: optional :ref:`aerospike_operate_policies`.
-        :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
-        :return: depends on return_type parameter
-
+                Old style map operations are deprecated. The docs for old style map operations were removed in client 6.0.0.
+                The code supporting these methods will be removed in a coming release.
 
     .. index::
         single: Multi-Ops
@@ -2230,6 +1514,34 @@ Info Operations
 
 .. class:: Client
 
+    .. method:: get_node_names() -> []
+
+        Return the list of hosts present in a connected cluster including node names.
+
+        :return: a :class:`list` of node info dictionaries.
+        :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
+
+        .. code-block:: python
+
+            import aerospike
+
+            config = {'hosts': [('127.0.0.1', 3000)] }
+            client = aerospike.client(config).connect()
+
+            nodes = client.get_node_names()
+            print(nodes)
+            client.close()
+
+        .. note::
+
+            We expect to see something like:
+
+            .. code-block:: python
+
+                [{'address': '1.1.1.1', 'port': 3000, 'node_name': 'BCER199932C'}, {'address': '1.1.1.1', 'port': 3010, 'node_name': 'ADFFE7782CD'}]
+
+        .. versionchanged:: 6.0.0
+
     .. method:: get_nodes() -> []
 
         Return the list of hosts present in a connected cluster.
@@ -2263,7 +1575,7 @@ Info Operations
     .. method:: info(command[, hosts[, policy]]) -> {}
 
         .. deprecated:: 3.0.0
-            Use :meth:`info_node` to send a request to a single node, or :meth:`info_all` to send a request to the entire cluster. Sending requests to specific nodes can be better handled with a simple Python function such as:
+            Use :meth:`info_single_node` to send a request to a single node, or :meth:`info_all` to send a request to the entire cluster. Sending requests to specific nodes can be better handled with a simple Python function such as:
 
             .. code-block:: python
 
@@ -2341,6 +1653,9 @@ Info Operations
 
     .. method:: info_node(command, host[, policy]) -> str
 
+        .. deprecated:: 6.0.0
+            Use :meth:`info_single_node` to send a request to a single node, or :meth:`info_all` to send a request to the entire cluster.
+
         Send an info *command* to a single node specified by *host*.
 
         :param str command: the info command.
@@ -2354,6 +1669,33 @@ Info Operations
         .. versionchanged:: 3.0.0
 
         .. warning:: for client versions < 3.0.0 ``info_node`` will not work when using TLS
+
+    .. method:: info_single_node(command, host[, policy]) -> str
+
+        Send an info *command* to a single node specified by *host name*.
+
+        :param str command: the info command.
+        :param tuple host: a :class:`str` containing a node name. Example: 'BCER199932C'
+        :param dict policy: optional :ref:`aerospike_info_policies`.
+        :rtype: :class:`str`
+        :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
+
+        .. note:: Use :meth:`get_node_names` as an easy way to get host IP to node name mappings.
+
+        .. seealso:: `Info Command Reference <http://www.aerospike.com/docs/reference/info/>`_.
+
+    .. method:: info_random_node(command, [policy]) -> str
+
+        Send an info *command* to a single random node.
+
+        :param str command: the info command.
+        :param dict policy: optional :ref:`aerospike_info_policies`.
+        :rtype: :class:`str`
+        :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
+
+        .. seealso:: `Info Command Reference <http://www.aerospike.com/docs/reference/info/>`_.
+
+        .. versionchanged:: 6.0.0
 
     .. method:: set_xdr_filter(data_center, namespace, expression_filter[, policy]) -> str
 
@@ -3295,7 +2637,7 @@ Info Policies
 
 .. object:: policy
     
-    A :class:`dict` of optional info policies, which are applicable to :meth:`~aerospike.Client.info`, :meth:`~aerospike.Client.info_node` and index operations.
+    A :class:`dict` of optional info policies, which are applicable to :meth:`~aerospike.Client.info_all`, :meth:`~aerospike.Client.info_single_node`, :meth:`~aerospike.Client.info_random_node` and index operations.
 
     .. hlist::
         :columns: 1

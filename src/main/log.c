@@ -147,7 +147,7 @@ static bool log_cb(as_log_level level, const char * func,
 	PyTuple_SetItem(py_arglist, 4, message);
 
 	// Invoke user callback, passing in argument's list
-	PyEval_CallObject(py_callback, py_arglist);
+	PyObject_Call(py_callback, py_arglist, NULL);
 
 	Py_DECREF(py_arglist);
 

@@ -12,6 +12,7 @@ aerospike = pytest.importorskip("aerospike")
 try:
     import aerospike
     from aerospike import exception as e
+    from aerospike_helpers.operations import operations
 except:
     print("Please install aerospike python client.")
     sys.exit(1)
@@ -132,15 +133,11 @@ class TestCompress():
         """
             Invoke execute_background() for a scan with compression enabled.
         """
-        ns = 'test'
-        st = 'demo'
 
-        records = []
-
-        def callback(input_tuple):
-            _, _, bins = input_tuple
-            records.append(bins)
+        ops = [
+            operations.touch()
+        ]
 
         scan_obj = self.as_connection.scan('test', 'demo')
-
+        scan_obj.add_ops(ops)
         scan_obj.execute_background({'compress': True})

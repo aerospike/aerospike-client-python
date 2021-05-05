@@ -44,6 +44,7 @@ Content
     aerospike_helpers
     geojson
     data_mapping
+    key_ordered_dict
 
 Indices and tables
 ##################

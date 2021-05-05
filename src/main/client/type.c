@@ -397,15 +397,31 @@ PyDoc_STRVAR(info_all_doc,
 Send an info *command* to all nodes in the cluster to which the client is connected.\n\
 If any of the individual requests fail, this will raise an exception.");
 
+PyDoc_STRVAR(info_single_node_doc,
+"info_single_node(command, host[, policy]) -> str\n\
+\n\
+Send an info command to a single node specified by host.");
+
+PyDoc_STRVAR(info_random_node_doc,
+"info_random_node(command, [policy]) -> str\n\
+\n\
+Send an info command to a single random node.");
+
 PyDoc_STRVAR(info_node_doc,
 "info_node(command, host[, policy]) -> str\n\
 \n\
+DEPRECATED: Please user info_single_node() instead.\n\
 Send an info command to a single node specified by host.");
 
 PyDoc_STRVAR(get_nodes_doc,
 "get_nodes() -> []\n\
 \n\
 Return the list of hosts present in a connected cluster.");
+
+PyDoc_STRVAR(get_node_names_doc,
+"get_node_names() -> []\n\
+\n\
+Return the list of hosts, including node names, present in a connected cluster.");
 
 PyDoc_STRVAR(udf_put_doc,
 "udf_put(filename[, udf_type[, policy]])\n\
@@ -783,12 +799,21 @@ static PyMethodDef AerospikeClient_Type_Methods[] = {
 	{"info_all",
 		(PyCFunction) AerospikeClient_InfoAll, METH_VARARGS | METH_KEYWORDS,
 		info_all_doc},
-	{"info_node",
+	{"info_single_node",
+		(PyCFunction) AerospikeClient_InfoSingleNode, METH_VARARGS | METH_KEYWORDS,
+		info_single_node_doc},
+	{"info_random_node",
+		(PyCFunction) AerospikeClient_InfoRandomNode, METH_VARARGS | METH_KEYWORDS,
+		info_random_node_doc},
+	{"info_node", // DEPRECATED
 		(PyCFunction) AerospikeClient_InfoNode, METH_VARARGS | METH_KEYWORDS,
 		info_node_doc},
 	{"get_nodes",
 		(PyCFunction) AerospikeClient_GetNodes, METH_VARARGS | METH_KEYWORDS,
 		get_nodes_doc},
+	{"get_node_names",
+		(PyCFunction) AerospikeClient_GetNodeNames, METH_VARARGS | METH_KEYWORDS,
+		get_node_names_doc},
 	// UDF OPERATIONS
 
 	{"udf_put",
