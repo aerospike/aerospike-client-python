@@ -214,7 +214,9 @@ class IntCount(_BaseExpr):
 
 
 class IntLeftScan(_BaseExpr):
-    """Create expression that scans integer bits from left (most significant bit)."""
+    """ Create expression that scans integer bits from left (most significant bit) to
+        right (least significant bit).
+    """
     _op = _ExprOp.INT_LSCAN
 
     def __init__(self, value: TypeInteger, search: TypeBool):
@@ -240,7 +242,9 @@ class IntLeftScan(_BaseExpr):
 
 
 class IntRightScan(_BaseExpr):
-    """Create expression that scans integer bits from right (least significant bit)."""
+    """ Create expression that scans integer bits from right (least significant bit)
+        to left (most significant bit).
+    """
     _op = _ExprOp.INT_RSCAN
 
     def __init__(self, value: TypeInteger, search: TypeBool):

@@ -123,12 +123,14 @@ Example::
     
 Note::
 
-    Aerospike expressions are evaluated server side, and do not return any values to the client, or write any values to the server,
-    unless an expression operation is used, like expression_read() or expression_write().
+    Aerospike expressions are evaluated server side, expressions used for filtering are called filter-expressions
+    and do not return any values to the client or write any values to the server. 
     When the following documentation says an expression returns a "list expression", it means that the expression returns a
-    list during evalution on the server side. When these docs say that a parameter requires an "integer or integer expression"
+    list during evalution on the server side. Expressions used with expression_read() or expression_write() do send their 
+    return values to the client or write them to the server. These expressions are called operation-expressions.
+    When these docs say that an expression parameter requires an "integer or integer expression".
     It means it will accept a literal integer, or an expression that will return an integer during evaluation. When the docs say
-    an expression returns a "expression" this means that the data type returned may vary, usually depending on the `return_type` parameter.
+    an expression returns an "expression" this means that the data type returned may vary, usually depending on the `return_type` parameter.
 
 Current Limitations::
 
@@ -233,21 +235,15 @@ aerospike\_helpers\.expressions\.arithmetic\ module
 ---------------------------------------------------
 
 .. automodule:: aerospike_helpers.expressions.arithmetic
-
-    .. autoclass:: ResultType
-      :members:
-      :undoc-members:
-      :member-order: bysource
+    :members:
+    :special-members:
 
 aerospike\_helpers\.expressions\.bitwise_operators\ module
 ----------------------------------------------------------
 
 .. automodule:: aerospike_helpers.expressions.bitwise_operators
-
-    .. autoclass:: ResultType
-      :members:
-      :undoc-members:
-      :member-order: bysource
+    :members:
+    :special-members:
 
 
 aerospike\_helpers\.expressions\.resources\ module

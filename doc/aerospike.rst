@@ -2081,7 +2081,7 @@ HyperLogLog Write Flags
 
 .. _aerospike_expression_write_flags:
 
-expression Write Flags
+Expression Write Flags
 ----------------------
 Flags used by expression_write.
 
@@ -2118,8 +2118,8 @@ Flags used by expression_write.
 
 .. _aerospike_expression_read_flags:
 
-expression Read Flags
-----------------------
+Expression Read Flags
+---------------------
 Flags used by expression_read
 
 .. data:: EXP_READ_DEFAULT

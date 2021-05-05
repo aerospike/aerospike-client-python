@@ -70,7 +70,7 @@ class Add(_BaseExpr):
 
 
 class Sub(_BaseExpr):
-    """Create an sub, (-) expression."""
+    """Create a subtraction, (-) expression."""
     _op = _ExprOp.SUB
 
     def __init__(self, *args: TypeNumber):
@@ -216,7 +216,7 @@ class Log(_BaseExpr):
 
 
 class Mod(_BaseExpr):
-    """Create a mod, (%) expression."""
+    """Create a modulo, (%) expression."""
     _op = _ExprOp.MOD
 
     def __init__(self, numerator: TypeInteger, denominator: TypeInteger):

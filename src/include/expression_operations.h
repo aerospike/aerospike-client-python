@@ -21,7 +21,6 @@
 #include <aerospike/as_vector.h>
 #include "types.h"
 
-/* End forwards*/
 as_status
 add_new_expr_op(AerospikeClient* self, as_error* err, PyObject* op_dict, as_vector* unicodeStrVector,
 		as_operations* ops, long operation_code, int serializer_type);

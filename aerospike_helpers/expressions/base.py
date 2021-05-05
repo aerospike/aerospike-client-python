@@ -43,21 +43,25 @@ TypeGeo = Union[_BaseExpr, aerospike.GeoJSON]
 
 
 class Unknown(_BaseExpr):
-    """ Create an 'Unknown' value. Used to intentionally fail an expression.
+    """ Create an 'Unknown' expression. Used to intentionally fail an expression operation
+        such as expression_read or expression_write with error code 26, OpNotApplicable.
+        When evaluated, the Unkown expression return the unknown-value returned by other failed expressions.
+        These failures can be ignored with the expression flag aerospike.EXP_READ_EVAL_NO_FAIL.
+        This expression is most useful as a case in a conditional expression used in an expression operation.
     """
     _op = _ExprOp.UNKNOWN
 
     def __init__(self):
-        """ Create an 'Unknown' value. Used to intentionally fail an expression.
+        """ Create an 'Unknown' expression. Used to intentionally fail an expression.
             The failure can be ignored with EXP_WRITE_EVAL_NO_FAIL or
-            EXP_READ_NO_FAIL see :ref:`_aerospike_expression_write_flags`.
+            EXP_READ_NO_FAIL see :ref:`aerospike_expression_write_flags`.
         
-            :return (unkown value)
+            :return (unknown value)
 
             Example::
 
                 # If IntBin("balance") >= 50, get "balance" + 50.
-                # Otherwise, fail the expression via Unkown().
+                # Otherwise, fail the expression via Unknown().
                 # This sort of expression is useful with expression operations
                 # expression_read() and expression_write().
                 Let(Def("bal", IntBin("balance")),
@@ -80,13 +84,13 @@ class _Key(_BaseExpr):
 
 
 class KeyInt(_Key):
-    """ Create an expression that returns the key as an integer. Returns 'Unknown' if
+    """ Create an expression that returns the key as an integer. Returns the unknown-value if
         the key is not an integer.
     """
     _rt = ResultType.INTEGER
 
     def __init__(self):
-        """ Create an expression that returns the key as an integer. Returns 'Unknown' if
+        """ Create an expression that returns the key as an integer. Returns the unknown-value if
             the key is not an integer.
         
             :return (integer value): Integer value of the key if the key is an integer.
@@ -100,13 +104,13 @@ class KeyInt(_Key):
 
 
 class KeyStr(_Key):
-    """ Create an expression that returns the key as a string. Returns 'Unknown' if
+    """ Create an expression that returns the key as a string. Returns the unknown-value if
         the key is not a string.
     """
     _rt = ResultType.STRING
 
     def __init__(self):
-        """ Create an expression that returns the key as a string. Returns 'Unknown' if
+        """ Create an expression that returns the key as a string. Returns the unknown-value if
             the key is not a string.
         
             :return (string value): string value of the key if the key is an string.
@@ -120,13 +124,13 @@ class KeyStr(_Key):
 
 
 class KeyBlob(_Key):
-    """ Create an expression that returns the key as a blob. Returns 'Unknown' if
+    """ Create an expression that returns the key as a blob. Returns the unknown-value if
         the key is not a blob.
     """
     _rt = ResultType.BLOB
 
     def __init__(self):
-        """ Create an expression that returns the key as a blob. Returns 'Unknown' if
+        """ Create an expression that returns the key as a blob. Returns the unknown-value if
             the key is not a blob.
         
             :return (blob value): Blob value of the key if the key is a blob.
@@ -168,14 +172,14 @@ class KeyExists(_BaseExpr):
 
 
 class BoolBin(_BaseExpr):
-    """ Create an expression that returns a bin as a boolean. Returns 'Unknown'
+    """ Create an expression that returns a bin as a boolean. Returns the unknown-value
         if the bin is not a boolean.
     """
     _op = _ExprOp.BIN
     _rt = ResultType.BOOLEAN
 
     def __init__(self, bin: str):
-        """ Create an expression that returns a bin as a boolean. Returns 'Unknown'
+        """ Create an expression that returns a bin as a boolean. Returns the unknown-value
             if the bin is not a boolean.
 
             Args:
@@ -192,14 +196,14 @@ class BoolBin(_BaseExpr):
 
 
 class IntBin(_BaseExpr):
-    """ Create an expression that returns a bin as an integer. Returns 'Unknown'
+    """ Create an expression that returns a bin as an integer. Returns the unknown-value
         if the bin is not an integer.
     """
     _op = _ExprOp.BIN
     _rt = ResultType.INTEGER
 
     def __init__(self, bin: str):
-        """ Create an expression that returns a bin as an integer. Returns 'Unknown'
+        """ Create an expression that returns a bin as an integer. Returns the unknown-value
             if the bin is not an integer.
 
             Args:
@@ -216,14 +220,14 @@ class IntBin(_BaseExpr):
 
 
 class StrBin(_BaseExpr):
-    """ Create an expression that returns a bin as a string. Returns 'Unknown'
+    """ Create an expression that returns a bin as a string. Returns the unknown-value
         if the bin is not a string.
     """
     _op = _ExprOp.BIN
     _rt = ResultType.STRING
 
     def __init__(self, bin: str):
-        """ Create an expression that returns a bin as a string. Returns 'Unknown'
+        """ Create an expression that returns a bin as a string. Returns the unknown-value
             if the bin is not a string.
 
             Args:
@@ -240,14 +244,14 @@ class StrBin(_BaseExpr):
 
 
 class FloatBin(_BaseExpr):
-    """ Create an expression that returns a bin as a float. Returns 'Unknown'
+    """ Create an expression that returns a bin as a float. Returns the unknown-value
         if the bin is not a float.
     """
     _op = _ExprOp.BIN
     _rt = ResultType.FLOAT
 
     def __init__(self, bin: str):
-        """ Create an expression that returns a bin as a float. Returns 'Unknown'
+        """ Create an expression that returns a bin as a float. Returns the unknown-value
             if the bin is not a float.
 
             Args:
@@ -264,14 +268,14 @@ class FloatBin(_BaseExpr):
 
 
 class BlobBin(_BaseExpr):
-    """ Create an expression that returns a bin as a blob. Returns 'Unknown'
+    """ Create an expression that returns a bin as a blob. Returns the unknown-value
         if the bin is not a blob.
     """
     _op = _ExprOp.BIN
     _rt = ResultType.BLOB
 
     def __init__(self, bin: str):
-        """ Create an expression that returns a bin as a blob. Returns 'Unknown'
+        """ Create an expression that returns a bin as a blob. Returns the unknown-value
             if the bin is not a blob.
 
             Args:
@@ -288,14 +292,14 @@ class BlobBin(_BaseExpr):
 
 
 class GeoBin(_BaseExpr):
-    """ Create an expression that returns a bin as a geojson. Returns 'Unknown'
+    """ Create an expression that returns a bin as a geojson. Returns the unknown-value
         if the bin is not a geojson.
     """
     _op = _ExprOp.BIN
     _rt = ResultType.GEOJSON
 
     def __init__(self, bin: str):
-        """ Create an expression that returns a bin as a geojson. Returns 'Unknown'
+        """ Create an expression that returns a bin as a geojson. Returns the unknown-value
             if the bin is not a geojson.
 
             Args:
@@ -312,14 +316,14 @@ class GeoBin(_BaseExpr):
 
 
 class ListBin(_BaseExpr):
-    """ Create an expression that returns a bin as a list. Returns 'Unknown'
+    """ Create an expression that returns a bin as a list. Returns the unknown-value
         if the bin is not a list.
     """
     _op = _ExprOp.BIN
     _rt = ResultType.LIST
 
     def __init__(self, bin: str):
-        """ Create an expression that returns a bin as a list. Returns 'Unknown'
+        """ Create an expression that returns a bin as a list. Returns the unknown-value
             if the bin is not a list.
 
             Args:
@@ -338,14 +342,14 @@ class ListBin(_BaseExpr):
 
 
 class MapBin(_BaseExpr):
-    """ Create an expression that returns a bin as a map. Returns 'Unknown'
+    """ Create an expression that returns a bin as a map. Returns the unknown-value
         if the bin is not a map.
     """
     _op = _ExprOp.BIN
     _rt = ResultType.MAP
 
     def __init__(self, bin: str):
-        """ Create an expression that returns a bin as a map. Returns 'Unknown'
+        """ Create an expression that returns a bin as a map. Returns the unknown-value
             if the bin is not a map.
 
             Args:
@@ -362,14 +366,14 @@ class MapBin(_BaseExpr):
 
 
 class HLLBin(_BaseExpr):
-    """ Create an expression that returns a bin as a HyperLogLog. Returns 'Unknown'
+    """ Create an expression that returns a bin as a HyperLogLog. Returns the unknown-value
         if the bin is not a HyperLogLog.
     """
     _op = _ExprOp.BIN
     _rt = ResultType.HLL
 
     def __init__(self, bin: str):
-        """ Create an expression that returns a bin as a HyperLogLog. Returns 'Unknown'
+        """ Create an expression that returns a bin as a HyperLogLog. Returns the unknown-value
             if the bin is not a HyperLogLog.
 
             Args:
@@ -890,13 +894,28 @@ class Exclusive(_BaseExpr):
 
 class Cond(_BaseExpr):
     """ Conditionally select an expression from a variable number of expression pairs
-        followed by default expression action.
+        followed by default expression action. Takes a set of test-expression/action-expression pairs. It evaluates
+        each test one at a time. If a test returns True, 'cond'
+        evaluates and returns the value of the corresponding expression and
+        doesn't evaluate any of the other tests or expressions. The final
+        expression is the default expression and is evaluated if all tests
+        evaluate to False
+        All actions-expressions must evaluate to the same type or be the
+        Unknown expression.
     """
     _op = _ExprOp.COND
 
     def __init__(self, *exprs: _BaseExpr):
         """ Conditionally select an expression from a variable number of expression pairs
-            followed by default expression action. Requires server version 5.6.0+.
+            followed by default expression action. Takes a set of test-expression/action-expression pairs. It evaluates
+            each test one at a time. If a test returns True, 'cond'
+            evaluates and returns the value of the corresponding expression and
+            doesn't evaluate any of the other tests or expressions. The final
+            expression is the default expression and is evaluated if all tests
+            evaluate to False
+            All actions-expressions must evaluate to the same type or be the
+            Unknown expression.
+            Requires server version 5.6.0+.
 
         Args:
             `*exprs` (_BaseExpr): bool exp1, action exp1, bool exp2, action exp2, ..., action-default
@@ -920,11 +939,19 @@ class Cond(_BaseExpr):
 
 
 class Let(_BaseExpr):
-    """ Define variables and expressions in scope."""
+    """ Defines variables to be used within the <code>let</code> expression's scope. The last
+        argument can be any expression and should make use of the defined
+        variables. The <code>let</code> expression returns the evaluated result of the last
+        argument. This expression is useful if you need to reuse the result of a
+        complicated or expensive expression.
+    """
     _op = _ExprOp.LET
 
     def __init__(self, *exprs: _BaseExpr):
-        """ Define variables and expressions in scope.
+        """ Defines variables to be used within the <code>let</code> expression's scope. The last
+            argument can be any expression and should make use of the defined
+            variables. The <code>let</code> expression returns the evaluated result of the last
+            argument. This expression is useful if
             Requires server version 5.6.0+.
 
         Args:
