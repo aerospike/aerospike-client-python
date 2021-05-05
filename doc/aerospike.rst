@@ -156,6 +156,11 @@ Methods
                 * **for_login_only** (:class:`bool`)
                     | Log session information for each connection. Use TLS connections only for login authentication. All other communication with the server will be done with non-TLS connections.
                     | Default: ``False`` (Use TLS connections for all communication with server.)
+            * **send_bool_as** an optional :class:`int` that configures the client to write Python booleans as PY_BYTES_BLOB, integer, or the new server boolean type.
+                | One of the :ref:`send_bool_as_constants` constant values.
+                | Example: :code:`{"send_bool_as", aerospike.aerospike.PY_BYTES}`
+                | See :mod:`Data_Mapping` for more information.
+                | Default: aerospike.PY_BYTES
             * **serialization** an optional instance-level :py:func:`tuple` of (serializer, deserializer). 
                 | Takes precedence over a class serializer registered with :func:`~aerospike.set_serializer`.
             * **thread_pool_size** (:class:`int`) 
@@ -864,6 +869,25 @@ Serialization Constants
     Do not serialize bins whose data type is unsupported
 
 .. versionadded:: 1.0.47
+
+.. _send_bool_as_constants:
+
+Send Bool Constants
+-------------------
+
+Specifies how the Python client will write Python booleans.
+
+.. data:: PY_BYTES
+    
+    Write Python Booleans as PY_BYTES_BLOBs.
+    
+.. data:: INTEGER
+    
+    Write Python Booleans as integers.
+    
+.. data:: AS_BOOL
+    
+    Write Python Booleans as as_bools.
 
 .. _aerospike_list_write_flag:
 

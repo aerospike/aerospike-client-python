@@ -65,6 +65,10 @@
 
 static bool requires_int(uint64_t op);
 
+static as_status py_bool_to_py_bytes_blob(AerospikeClient * self, as_error * err, as_static_pool *static_pool, PyObject * py_bool, as_bytes ** target, int serializer_type);
+static as_status py_bool_to_as_integer(as_error * err, PyObject * py_bool, as_integer ** target);
+static as_status py_bool_to_as_bool(as_error * err, PyObject * py_bool, as_boolean ** target);
+
 as_status as_udf_file_to_pyobject( as_error *err, as_udf_file * entry, PyObject ** py_file )
 {
 	as_error_reset(err);
@@ -531,7 +535,7 @@ as_status pyobject_to_map(AerospikeClient * self, as_error * err, PyObject * py_
 	return err->code;
 }
 
-as_status pyobject_to_val(AerospikeClient * self, as_error * err, PyObject * py_obj, as_val ** val, as_static_pool *static_pool, int serializer_type)
+as_status pyobject_to_val(AerospikeClient * self, as_error * err, PyObject * py_obj, as_val ** val, as_static_pool * static_pool, int serializer_type)
 {
 	as_error_reset(err);
 
@@ -539,8 +543,32 @@ as_status pyobject_to_val(AerospikeClient * self, as_error * err, PyObject * py_
 		// this should never happen, but if it did...
 		return as_error_update(err, AEROSPIKE_ERR_CLIENT, "value is null");
 	} else if (PyBool_Check(py_obj)) { //TODO Change to true bool support post jump version.
-		int64_t i = (int64_t) PyObject_IsTrue(py_obj);
-		*val = (as_val *) as_integer_new(i);
+		switch (self->send_bool_as)
+			{
+			case SEND_BOOL_AS_PY_BYTES:;
+				as_bytes * bool_bytes = NULL;
+				if (py_bool_to_py_bytes_blob(self, err, static_pool, py_obj, &bool_bytes, serializer_type) != AEROSPIKE_OK) {
+					return err->code;
+				}
+				*val = (as_val*) bool_bytes;
+				break;
+			case SEND_BOOL_AS_AS_BOOL:;
+				as_boolean * converted_bool = NULL;
+				if (py_bool_to_as_bool(err, py_obj, &converted_bool) != AEROSPIKE_OK) {
+					return err->code;
+				}
+				*val = (as_val*) converted_bool;
+				break;
+			case SEND_BOOL_AS_INTEGER:;
+				as_integer * converted_integer = NULL;
+				if (py_bool_to_as_integer(err, py_obj, &converted_integer) != AEROSPIKE_OK) {
+					return err->code;
+				}
+				*val = (as_val*) converted_integer;
+				break;
+			default:
+				return as_error_update(err, AEROSPIKE_ERR_CLIENT, "Unknown value for send_bool_as.");
+			}
 	} else if (PyInt_Check(py_obj)) {
 		int64_t i = (int64_t) PyInt_AsLong(py_obj);
 		if (i == -1 && PyErr_Occurred()) {
@@ -680,8 +708,32 @@ as_status pyobject_to_record(AerospikeClient * self, as_error * err, PyObject * 
 				// this should never happen, but if it did...
 				return as_error_update(err, AEROSPIKE_ERR_CLIENT, "record is null");
 			} else if (PyBool_Check(value)) { //TODO Change to true bool support post jump version.
-				int64_t val = (int64_t) PyObject_IsTrue(value);
-				ret_val = as_record_set_int64(rec, name, val);
+				switch (self->send_bool_as)
+					{
+					case SEND_BOOL_AS_PY_BYTES:;
+						as_bytes * bool_bytes = NULL;
+						if (py_bool_to_py_bytes_blob(self, err, static_pool, value, &bool_bytes, serializer_type) != AEROSPIKE_OK) {
+							return err->code;
+						}
+						ret_val = as_record_set_bytes(rec, name, bool_bytes);
+						break;
+					case SEND_BOOL_AS_AS_BOOL:;
+						as_boolean * converted_bool = NULL;
+						if (py_bool_to_as_bool(err, value, &converted_bool) != AEROSPIKE_OK) {
+							return err->code;
+						}
+						ret_val = as_record_set_bool(rec, name, as_boolean_get(converted_bool));
+						break;
+					case SEND_BOOL_AS_INTEGER:;
+						as_integer * converted_integer = NULL;
+						if (py_bool_to_as_integer(err, value, &converted_integer) != AEROSPIKE_OK) {
+							return err->code;
+						}
+						ret_val = as_record_set_integer(rec, name, converted_integer);
+						break;
+					default:
+						return as_error_update(err, AEROSPIKE_ERR_CLIENT, "Unknown value for send_bool_as.");
+					}
 			} else if (PyInt_Check(value)) {
 				int64_t val = (int64_t) PyInt_AsLong(value);
 				if (val == -1 && PyErr_Occurred()) {
@@ -1050,6 +1102,11 @@ as_status do_val_to_pyobject(AerospikeClient * self, as_error * err, const as_va
 					Py_INCREF(Py_None);
 					*py_val = Py_None;
 				}
+				break;
+			}
+		case AS_BOOLEAN: {
+				as_boolean * b = as_boolean_fromval(val);
+				*py_val = PyBool_FromLong((long) as_boolean_get(b));
 				break;
 			}
 		case AS_BYTES: {
@@ -2078,6 +2135,65 @@ static bool requires_int(uint64_t op) {
 		op == AS_CDT_CTX_MAP_INDEX  ||
 		op == AS_CDT_CTX_MAP_RANK   ||
 		op == CDT_CTX_LIST_INDEX_CREATE;
+}
+
+/*
+ * py_bool_to_py_bytes_blob serializes py_bool.
+ * Target should be a NULL pointer to an as_integer. py_bool_to_py_bytes_blob will get memory for target
+ * from the static pool, static_pool. The pool should be destroyed after use, by the caller.
+ */
+static as_status py_bool_to_py_bytes_blob(AerospikeClient * self, as_error * err, as_static_pool *static_pool, PyObject * py_bool, as_bytes ** target, int serializer_type) {
+	GET_BYTES_POOL(*target, static_pool, err);
+	if (err->code != AEROSPIKE_OK) {
+		return err->code;
+	}
+
+	if (serialize_based_on_serializer_policy(self, serializer_type,
+			target, py_bool, err) != AEROSPIKE_OK) {
+		return err->code;
+	}
+
+	return AEROSPIKE_OK;
+}
+
+/*
+ * py_bool_to_as_integer converts a python object to an as_integer based on its truth value.
+ * Target should be a NULL pointer to an as_integer. py_bool_to_as_integer will allocate a new
+ * as_integer on the heap and set target to point to it.
+ * The caller is responsible for freeing target.
+ */
+static as_status py_bool_to_as_integer(as_error * err, PyObject * py_bool, as_integer ** target) {
+	int py_bool_as_num = PyObject_IsTrue(py_bool);
+	if (py_bool_as_num == -1) {
+		return as_error_update(err, AEROSPIKE_ERR_CLIENT, "Failed to get truth value of py_bool.");
+	}
+
+	*target = as_integer_new((int64_t)py_bool_as_num);
+	if (*target == NULL) {
+		return as_error_update(err, AEROSPIKE_ERR_CLIENT, "Failed to create new as_integer from py_bool_as_num.");
+	}
+
+	return AEROSPIKE_OK;
+}
+
+/*
+ * py_bool_to_as_bool converts a python object to an as_boolean based on its truth value.
+ * Target should be a NULL pointer to an as_boolean. py_bool_to_as_bool will allocate a new
+ * as_boolean on the heap and set target to point to it.
+ * The caller is responsible for freeing target.
+ */
+static as_status py_bool_to_as_bool(as_error * err, PyObject * py_bool, as_boolean ** target) {
+	int py_bool_as_num = PyObject_IsTrue(py_bool);
+	if (py_bool_as_num == -1) {
+		return as_error_update(err, AEROSPIKE_ERR_CLIENT, "Failed to get truth value of py_bool.");
+	}
+
+	*target = as_boolean_new((bool)py_bool_as_num);
+	if (*target == NULL) {
+		return as_error_update(err, AEROSPIKE_ERR_CLIENT, "Failed to create new as_boolean from py_bool_as_num.");
+	}
+
+	return AEROSPIKE_OK;
 }
 
 /*
