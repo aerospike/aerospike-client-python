@@ -255,6 +255,7 @@ setup(
                 'src/main/client/cdt_list_operate.c',
                 'src/main/client/cdt_map_operate.c',
                 'src/main/client/hll_operate.c',
+                'src/main/client/expression_operations.c',
                 'src/main/client/cdt_operation_utils.c',
                 'src/main/client/close.c',
                 'src/main/client/connect.c',

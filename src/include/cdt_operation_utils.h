@@ -38,6 +38,8 @@
 #define AS_PY_LIST_SORT_FLAGS "sort_flags"
 #define AS_PY_LIST_POLICY "list_policy"
 #define AS_PY_MAP_POLICY "map_policy"
+#define AS_EXPR_KEY "expr"
+#define AS_EXPR_FLAGS_KEY "expr_flags"
 
 as_status
 get_bin(as_error * err, PyObject * op_dict, as_vector * unicodeStrVector, char** binName);

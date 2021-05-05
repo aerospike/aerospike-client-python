@@ -35,7 +35,7 @@
 
 // EXPR OPS
 enum expr_ops {
-	VAL = 0,
+	UNKNOWN = 0,
 	EQ = 1,
 	NE = 2,
 	GT = 3,
@@ -48,6 +48,35 @@ enum expr_ops {
 	AND = 16,
 	OR = 17,
 	NOT = 18,
+	EXCLUSIVE = 19,
+
+	ADD = 20,
+	SUB = 21,
+	MUL = 22,
+	DIV = 23,
+	POW = 24,
+	LOG = 25,
+	MOD = 26,
+	ABS = 27,
+	FLOOR = 28,
+	CEIL = 29,
+
+	TO_INT = 30,
+	TO_FLOAT = 31,
+
+	INT_AND = 32,
+	INT_OR = 33,
+	INT_XOR = 34,
+	INT_NOT = 35,
+	INT_LSHIFT = 36,
+	INT_RSHIFT = 37,
+	INT_ARSHIFT = 38,
+	INT_COUNT = 39,
+	INT_LSCAN = 40,
+	INT_RSCAN = 41,
+
+	MIN = 50,
+	MAX = 51,
 
 	META_DIGEST_MOD = 64,
 	META_DEVICE_SIZE = 65,
@@ -64,8 +93,14 @@ enum expr_ops {
 	BIN_TYPE = 82,
 	BIN_EXISTS = 83,
 
+	COND = 123,
+	VAR = 124,
+	LET = 125,
+	DEF = 126,
+
 	CALL = 127,
-	LIST_MOD = 139
+	LIST_MOD = 139,
+	VAL = 200
 };
 
 // RESULT TYPES
@@ -164,8 +199,8 @@ as_status get_expr_size(int * size_to_alloc, int * intermediate_exprs_size, as_v
 
 	static const int EXPR_SIZES[] = {
 		[BIN]                                            = EXP_SZ(as_exp_bin_int(0)),
-		[VAL]                                            = 0, //EXP_SZ(as_exp_val(NULL)), // NOTE if I don't count vals I don't need to subtract from other ops
-		[EQ]                                             = EXP_SZ(as_exp_cmp_eq({},{})),
+		[VAL]                                            = EXP_SZ(as_exp_val(NULL)), // NOTE if I don't count vals I don't need to subtract from other ops // MUST count these for expressions with var args.
+		[EQ]                                             = EXP_SZ(as_exp_cmp_eq({},{})), // ^ TODO implement a less wastefull solution.
 		[NE]                                             = EXP_SZ(as_exp_cmp_ne({},{})),
 		[GT]                                             = EXP_SZ(as_exp_cmp_gt({},{})),
 		[GE]                                             = EXP_SZ(as_exp_cmp_ge({},{})),
@@ -274,6 +309,7 @@ as_status get_expr_size(int * size_to_alloc, int * intermediate_exprs_size, as_v
 		[OP_BIT_LSCAN]                                   = EXP_SZ(as_exp_bit_lscan({}, {}, {}, {})),
 		[OP_BIT_RSCAN]                                   = EXP_SZ(as_exp_bit_rscan({}, {}, {}, {})),
 		[OP_BIT_GET_INT]                                 = EXP_SZ(as_exp_bit_get_int({}, {}, 0, {})),
+		[OP_HLL_INIT]                                    = EXP_SZ(as_exp_hll_init_mh(NULL, 0, 0, {})),
 		[OP_HLL_ADD]                                     = EXP_SZ(as_exp_hll_add_mh(NULL, {}, 0, 0, {})),
 		[OP_HLL_GET_COUNT]                               = EXP_SZ(as_exp_hll_update(NULL, {}, {})),
 		[OP_HLL_GET_UNION]                               = EXP_SZ(as_exp_hll_get_union({}, {})),
@@ -286,7 +322,37 @@ as_status get_expr_size(int * size_to_alloc, int * intermediate_exprs_size, as_v
 		[_AS_EXP_CODE_CDT_LIST_MOD]                      = 0, //EXP_SZ(as_exp_val(NULL)),
 		[_AS_EXP_CODE_CDT_MAP_CRMOD]                     = 0, //EXP_SZ(as_exp_val(NULL)),
 		[_AS_EXP_CODE_CDT_MAP_CR]                        = 0, //EXP_SZ(as_exp_val(NULL)),
-		[_AS_EXP_CODE_CDT_MAP_MOD]                       = 0  //EXP_SZ(as_exp_val(NULL))
+		[_AS_EXP_CODE_CDT_MAP_MOD]                       = 0,  //EXP_SZ(as_exp_val(NULL)),
+		[EXCLUSIVE]                                      = EXP_SZ(as_exp_exclusive({})),
+		[ADD]                                            = EXP_SZ(as_exp_add({})),
+		[SUB]                                            = EXP_SZ(as_exp_sub({})),
+		[MUL]                                            = EXP_SZ(as_exp_mul({})),
+		[DIV]                                            = EXP_SZ(as_exp_div({})),
+		[POW]                                            = EXP_SZ(as_exp_pow({}, {})),
+		[LOG]                                            = EXP_SZ(as_exp_log({}, {})),
+		[MOD]                                            = EXP_SZ(as_exp_mod({}, {})),
+		[ABS]                                            = EXP_SZ(as_exp_abs({})),
+		[FLOOR]                                          = EXP_SZ(as_exp_floor({})),
+		[CEIL]                                           = EXP_SZ(as_exp_ceil({})),
+		[TO_INT]                                         = EXP_SZ(as_exp_to_int({})),
+		[TO_FLOAT]                                       = EXP_SZ(as_exp_to_float({})),
+		[INT_AND]                                        = EXP_SZ(as_exp_int_and({})),
+		[INT_OR]                                         = EXP_SZ(as_exp_int_or({})),
+		[INT_XOR]                                        = EXP_SZ(as_exp_int_xor({})),
+		[INT_NOT]                                        = EXP_SZ(as_exp_int_not({})),
+		[INT_LSHIFT]                                     = EXP_SZ(as_exp_int_lshift({}, {})),
+		[INT_RSHIFT]                                     = EXP_SZ(as_exp_int_rshift({}, {})),
+		[INT_ARSHIFT]                                    = EXP_SZ(as_exp_int_arshift({}, {})),
+		[INT_COUNT]                                      = EXP_SZ(as_exp_int_count({})),
+		[INT_LSCAN]                                      = EXP_SZ(as_exp_int_lscan({}, {})),
+		[INT_RSCAN]                                      = EXP_SZ(as_exp_int_rscan({}, {})),
+		[MIN]                                            = EXP_SZ(as_exp_min({})),
+		[MAX]                                            = EXP_SZ(as_exp_max({})),
+		[COND]                                           = EXP_SZ(as_exp_cond({})),
+		[LET]                                            = EXP_SZ(as_exp_let({})),
+		[DEF]                                            = EXP_SZ(as_exp_def("", {})),
+		[VAR]                                            = EXP_SZ(as_exp_var("")),
+		[UNKNOWN]                                        = EXP_SZ(as_exp_unknown())
 	};
 
 	for (int i = 0; i < *intermediate_exprs_size; ++i) {
@@ -411,7 +477,7 @@ as_status get_exp_val_from_pyval(AerospikeClient * self, as_static_pool * static
 
 /*
 * add_expr_macros
-* Converts each intermediate_expr struct in intermediate_expr_vector to as_exp_entryies and copies them to expressions.
+* Converts each intermediate_expr struct in intermediate_expr_vector to as_exp_entries and copies them to expressions.
 * Note that a count of as_exp_entries to leave out of the copy is passed to the `APPEND_ARRAY` macro.
 * Since this function uses the C expressions macros directly, we don't want to copy the useless junk generated by the 
 * empty arguments used. Each expression child/value has a intermediate_expr struct in intermediate_expr_vector so the missing values will be copied later.
@@ -426,6 +492,7 @@ as_status add_expr_macros(AerospikeClient * self, as_static_pool * static_pool, 
 		int64_t lval1 = 0;
 		int64_t lval2 = 0;
 		char * bin_name = NULL;
+		PyObject * py_val_from_dict = NULL;
 		
 		if (temp_expr->op >= _AS_EXP_CODE_CDT_LIST_CRMOD && temp_expr->op <= _AS_EXP_CODE_CDT_MAP_MOD) {
 
@@ -477,10 +544,10 @@ as_status add_expr_macros(AerospikeClient * self, as_static_pool * static_pool, 
 					return err->code;
 				}
 
-				PyObject * py_obj = PyDict_GetItemString(temp_expr->pydict, AS_PY_VAL_KEY);
+				py_val_from_dict = PyDict_GetItemString(temp_expr->pydict, AS_PY_VAL_KEY);
 				char * regex_str = NULL;
-				if (PyUnicode_Check(py_obj)) {
-					PyObject * py_ustr = PyUnicode_AsUTF8String(py_obj);
+				if (PyUnicode_Check(py_val_from_dict)) {
+					PyObject * py_ustr = PyUnicode_AsUTF8String(py_val_from_dict);
 					regex_str = strdup(PyBytes_AsString(py_ustr));
 					temp_expr->val.val_string_p = regex_str;
 					Py_DECREF(py_ustr);
@@ -950,6 +1017,9 @@ as_status add_expr_macros(AerospikeClient * self, as_static_pool * static_pool, 
 			case OP_BIT_GET_INT:
 				APPEND_ARRAY(4, as_exp_bit_get_int({}, {}, 0, {}));
 				break;
+			case OP_HLL_INIT: // NOTE: this case covers HLLInit and HLLInitMH.
+				APPEND_ARRAY(4, as_exp_hll_init_mh(NULL, 0, 0, {})); // - 4 for index_bit_count, mh_bit_count, policy, bin
+				break;
 			case OP_HLL_ADD: // NOTE: this case covers HLLAddMH, HLLAdd, and HLLUpdate
 				APPEND_ARRAY(5, as_exp_hll_add_mh(NULL, {}, 0, 0, {})); // - 5 for list, index_bit_count, -1, policy, bin
 				break;
@@ -973,6 +1043,112 @@ as_status add_expr_macros(AerospikeClient * self, as_static_pool * static_pool, 
 				break;
 			case OP_HLL_MAY_CONTAIN:
 				APPEND_ARRAY(2, as_exp_hll_may_contain({}, {})); // - 2 for list, bin
+				break;
+			case EXCLUSIVE:
+				APPEND_ARRAY(2, as_exp_exclusive({})); // - 2 for va_args, AS_EXP_CODE_END_OF_VA_ARGS
+				break;
+			case ADD:
+				APPEND_ARRAY(2, as_exp_add({})); // - 2 for va_args, AS_EXP_CODE_END_OF_VA_ARGS
+				break;
+			case SUB:
+				APPEND_ARRAY(2, as_exp_sub({})); // - 2 for va_args, AS_EXP_CODE_END_OF_VA_ARGS
+				break;
+			case MUL:
+				APPEND_ARRAY(2, as_exp_mul({})); // - 2 for va_args, AS_EXP_CODE_END_OF_VA_ARGS
+				break;
+			case DIV:
+				APPEND_ARRAY(2, as_exp_div({})); // - 2 for va_args, AS_EXP_CODE_END_OF_VA_ARGS
+				break;
+			case POW:
+				APPEND_ARRAY(2, as_exp_pow({}, {})); // - 2 for __base, __exponent
+				break;
+			case LOG:
+				APPEND_ARRAY(2, as_exp_log({}, {})); // - 2 for __base, __base
+				break;
+			case MOD:
+				APPEND_ARRAY(2, as_exp_mod({}, {})); // - 2 for __numerator, __denominator
+				break;
+			case ABS:
+				APPEND_ARRAY(1, as_exp_abs({})); // - 1 for __value
+				break;
+			case FLOOR:
+				APPEND_ARRAY(1, as_exp_floor({})); // - 1 for __num
+				break;
+			case CEIL:
+				APPEND_ARRAY(1, as_exp_ceil({})); // - 1 for __num
+				break;
+			case TO_INT:
+				APPEND_ARRAY(1, as_exp_to_int({})); // - 1 for __num
+				break;
+			case TO_FLOAT:
+				APPEND_ARRAY(1, as_exp_to_float({})); // - 1 for __num
+				break;
+			case INT_AND:
+				APPEND_ARRAY(2, as_exp_int_and({})); // - 2 for va_args, AS_EXP_CODE_END_OF_VA_ARGS
+				break;
+			case INT_OR:
+				APPEND_ARRAY(2, as_exp_int_or({})); // - 2 for va_args, AS_EXP_CODE_END_OF_VA_ARGS
+				break;
+			case INT_XOR:
+				APPEND_ARRAY(2, as_exp_int_xor({})); // - 2 for va_args, AS_EXP_CODE_END_OF_VA_ARGS
+				break;
+			case INT_NOT:
+				APPEND_ARRAY(1, as_exp_int_not({})); // - 1 for __expr
+				break;
+			case INT_LSHIFT:
+				APPEND_ARRAY(2, as_exp_int_lshift({}, {})); // - 2 for __value, __shift
+				break;
+			case INT_RSHIFT:
+				APPEND_ARRAY(2, as_exp_int_rshift({}, {})); // - 2 for __value, __shift
+				break;
+			case INT_ARSHIFT:
+				APPEND_ARRAY(2, as_exp_int_arshift({}, {})); // - 2 for __value, __shift
+				break;
+			case INT_COUNT:
+				APPEND_ARRAY(1, as_exp_int_count({})); // - 1 for __expr
+				break;
+			case INT_LSCAN:
+				APPEND_ARRAY(2, as_exp_int_lscan({}, {})); // - 2 for __value, __search
+				break;
+			case INT_RSCAN:
+				APPEND_ARRAY(2, as_exp_int_rscan({}, {})); // - 2 for __value, __search
+				break;
+			case MIN:
+				APPEND_ARRAY(2, as_exp_min({})); // - 2 for va_args, AS_EXP_CODE_END_OF_VA_ARGS
+				break;
+			case MAX:
+				APPEND_ARRAY(2, as_exp_max({})); // - 2 for va_args, AS_EXP_CODE_END_OF_VA_ARGS
+				break;
+			case COND:
+				APPEND_ARRAY(2, as_exp_cond({})); // - 2 for va_args, AS_EXP_CODE_END_OF_VA_ARGS
+				break;
+			case LET:
+				APPEND_ARRAY(2, as_exp_let({})); // - 2 for va_args, AS_EXP_CODE_END_OF_VA_ARGS
+				break;
+			case DEF:;
+				py_val_from_dict = PyDict_GetItemString(temp_expr->pydict, AS_PY_VAL_KEY);
+				const char * def_var_name = NULL;
+				if (PyUnicode_Check(py_val_from_dict)) {
+					def_var_name = PyUnicode_AsUTF8(py_val_from_dict);
+				} else {
+					return as_error_update(err, AEROSPIKE_ERR_PARAM, "regex_str must be a string.");
+				}
+
+				APPEND_ARRAY(1, as_exp_def(def_var_name, {})); // - 1 for __expr
+				break;
+			case VAR:;
+				py_val_from_dict = PyDict_GetItemString(temp_expr->pydict, AS_PY_VAL_KEY);
+				const char * var_name = NULL;
+				if (PyUnicode_Check(py_val_from_dict)) {
+					var_name = PyUnicode_AsUTF8(py_val_from_dict);
+				} else {
+					return as_error_update(err, AEROSPIKE_ERR_PARAM, "regex_str must be a string.");
+				}
+
+				APPEND_ARRAY(0, as_exp_var(var_name));
+				break;
+			case UNKNOWN:
+				APPEND_ARRAY(0, as_exp_unknown());
 				break;
 			default:
 				return as_error_update(err, AEROSPIKE_ERR_PARAM, "Unrecognised expression op type.");

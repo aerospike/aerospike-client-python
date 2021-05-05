@@ -25,6 +25,7 @@
 #include <aerospike/as_status.h>
 #include <aerospike/as_admin.h>
 #include <aerospike/as_operations.h>
+#include <aerospike/as_exp_operations.h>
 #include <aerospike/aerospike_index.h>
 #include "aerospike/as_scan.h"
 #include "aerospike/as_job.h"
@@ -400,6 +401,18 @@ AerospikeConstants aerospike_constants[] = {
 	{ OP_MAP_GET_BY_VALUE_RANK_RANGE_REL_TO_END, "OP_MAP_GET_BY_VALUE_RANK_RANGE_REL_TO_END"},
 	{ OP_MAP_GET_BY_INDEX_RANGE_TO_END, "OP_MAP_GET_BY_INDEX_RANGE_TO_END"},
 	{ OP_MAP_GET_BY_RANK_RANGE_TO_END, "OP_MAP_GET_BY_RANK_RANGE_TO_END"},
+
+	/* Expression operation constants 5.1.0 */
+	{ OP_EXPR_READ, "OP_EXPR_READ"},
+	{ OP_EXPR_WRITE, "OP_EXPR_WRITE"},
+	{ AS_EXP_WRITE_DEFAULT, "EXP_WRITE_DEFAULT"},
+	{ AS_EXP_WRITE_CREATE_ONLY, "EXP_WRITE_CREATE_ONLY"},
+	{ AS_EXP_WRITE_UPDATE_ONLY, "EXP_WRITE_UPDATE_ONLY"},
+	{ AS_EXP_WRITE_ALLOW_DELETE, "EXP_WRITE_ALLOW_DELETE"},
+	{ AS_EXP_WRITE_POLICY_NO_FAIL, "EXP_WRITE_POLICY_NO_FAIL"},
+	{ AS_EXP_WRITE_EVAL_NO_FAIL, "EXP_WRITE_EVAL_NO_FAIL"},
+	{ AS_EXP_READ_DEFAULT, "EXP_READ_DEFAULT"},
+	{ AS_EXP_READ_EVAL_NO_FAIL, "EXP_READ_EVAL_NO_FAIL"},
 
 	/* For BinType expression, as_bytes_type */
 	{ AS_BYTES_UNDEF, "AS_BYTES_UNDEF"},

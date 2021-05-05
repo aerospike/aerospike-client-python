@@ -35,6 +35,7 @@
 #include "cdt_map_operations.h"
 #include "bit_operations.h"
 #include "hll_operations.h"
+#include "expression_operations.h"
 
 #include <aerospike/as_double.h>
 #include <aerospike/as_integer.h>
@@ -50,6 +51,7 @@ static inline bool isListOp(int op);
 static inline bool isNewMapOp(int op);
 static inline bool isBitOp(int op);
 static inline bool isHllOp(int op);
+static inline bool isExprOp(int op);
 
 
 #define PY_OPERATION_KEY "op"
@@ -247,6 +249,12 @@ static inline bool isHllOp(int op) {
 	return (op >= hll_start && op <= hll_end);
 }
 
+static inline bool isExprOp(int op) {
+	int expr_start = OP_EXPR_READ;
+	int expr_end = OP_EXPR_WRITE;
+	return (op >= expr_start && op <= expr_end);
+}
+
 bool opRequiresIndex(int op) {
 	return (op == OP_LIST_INSERT               || op == OP_LIST_INSERT_ITEMS  ||
 			op == OP_LIST_POP                  || op == OP_LIST_POP_RANGE     ||
@@ -357,6 +365,11 @@ as_status add_op(AerospikeClient * self, as_error * err, PyObject * py_val, as_v
 	if (isHllOp(operation)) {
 		return add_new_hll_op(self, err, py_val, unicodeStrVector, static_pool,
 			ops, operation, ret_type, SERIALIZER_PYTHON);
+	}
+
+	if (isExprOp(operation)) {
+		return add_new_expr_op(self, err, py_val, unicodeStrVector,
+			ops, operation, SERIALIZER_PYTHON);
 	}
 
 	while (PyDict_Next(py_val, &pos, &key_op, &value)) {
