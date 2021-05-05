@@ -58,7 +58,7 @@ as_status
 get_optional_int64_t(as_error * err, const char * key,  PyObject * op_dict, int64_t * i64_valptr, bool * found);
 
 as_status
-get_int(as_error * err, const char * key, PyObject * op_dict, int * int_pointer);
+get_int_from_py_dict(as_error * err, const char * key, PyObject * op_dict, int * int_pointer);
 
 as_status
 get_list_return_type(as_error* err, PyObject* op_dict, int* return_type);

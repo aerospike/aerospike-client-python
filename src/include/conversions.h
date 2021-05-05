@@ -36,7 +36,9 @@ as_status as_udf_file_to_pyobject(as_error *err, as_udf_file * entry, PyObject *
 
 as_status as_udf_files_to_pyobject(as_error *err, as_udf_files *files, PyObject **py_files);
 
-as_status strArray_to_pyobject(as_error * err, char str_array_ptr[][AS_ROLE_SIZE], PyObject **py_list, int roles_size);
+as_status strArray_to_py_list(as_error *err, int num_elements, int element_size, char str_array_ptr[][element_size], PyObject *py_list);
+
+as_status char_double_ptr_to_py_list(as_error *err, int num_elements, int element_size, char **str_array_ptr, PyObject *py_list);
 
 as_status as_user_to_pyobject(as_error *err, as_user *user, PyObject **py_as_user);
 
@@ -84,9 +86,13 @@ bool error_to_pyobject(const as_error * err, PyObject ** obj);
 as_status pyobject_to_astype_write(AerospikeClient * self, as_error * err, PyObject * py_value, as_val **val,
 	as_static_pool *static_pool, int serializer_type);
 
-as_status as_privilege_to_pyobject( as_error * err, as_privilege privileges[], PyObject ** py_as_privilege, int privilege_size);
+as_status as_privilege_to_pyobject( as_error * err, as_privilege privileges[], PyObject * py_as_privilege, int privilege_size);
 
-as_status as_role_to_pyobject( as_error * err, as_role * role, PyObject ** py_as_role );
+as_status as_role_to_pyobject_old( as_error * err, as_role * role, PyObject ** py_as_role );
+
+as_status as_role_to_pyobject( as_error * err, as_role * role, PyObject * py_as_role );
+
+as_status as_role_array_to_pyobject_old( as_error *err, as_role **roles, PyObject **py_as_roles, int roles_size );
 
 as_status as_role_array_to_pyobject( as_error *err, as_role **roles, PyObject **py_as_roles, int roles_size );
 
@@ -114,3 +120,6 @@ convert_predexp_list(PyObject* py_predexp_list, as_predexp_list* predexp_list, a
 
 as_status 
 convert_exp_list(AerospikeClient * self, PyObject* py_exp_list, as_exp** exp_list, as_error* err);
+
+as_status 
+get_int_from_py_int(as_error* err, PyObject* py_long, int* int_pointer, const char* py_object_name);

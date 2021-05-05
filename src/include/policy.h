@@ -42,6 +42,12 @@ enum Aerospike_serializer_values {
 	SERIALIZER_USER,
 };
 
+enum Aerospike_send_bool_as_values {
+	SEND_BOOL_AS_PY_BYTES, /* default for writing Python bools */
+	SEND_BOOL_AS_INTEGER,
+	SEND_BOOL_AS_AS_BOOL,
+};
+
 enum Aerospike_list_operations {
 	OP_LIST_APPEND = 1001,
 	OP_LIST_APPEND_ITEMS,

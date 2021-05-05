@@ -30,7 +30,7 @@ os.putenv('ARCHFLAGS', '-arch x86_64')
 os.environ['ARCHFLAGS'] = '-arch x86_64'
 AEROSPIKE_C_VERSION = os.getenv('AEROSPIKE_C_VERSION')
 if not AEROSPIKE_C_VERSION:
-    AEROSPIKE_C_VERSION = '5.0.3'
+    AEROSPIKE_C_VERSION = '5.2.0'
 DOWNLOAD_C_CLIENT = os.getenv('DOWNLOAD_C_CLIENT')
 AEROSPIKE_C_HOME = os.getenv('AEROSPIKE_C_HOME')
 PREFIX = None
@@ -38,6 +38,8 @@ PLATFORM = platform.platform(1)
 LINUX = 'Linux' in PLATFORM
 DARWIN = 'Darwin' in PLATFORM or 'macOS' in PLATFORM
 CWD = os.path.abspath(os.path.dirname(__file__))
+STATIC_SSL = os.getenv('STATIC_SSL')
+SSL_LIB_PATH = os.getenv('SSL_LIB_PATH')
 
 ################################################################################
 # HELPER FUNCTION FOR RESOLVING THE C CLIENT DEPENDENCY
@@ -135,6 +137,16 @@ libraries = [
   'm',
   'z'
   ]
+
+################################################################################
+# STATIC SSL LINKING BUILD SETTINGS
+################################################################################
+
+if STATIC_SSL:
+    extra_objects.extend([SSL_LIB_PATH + 'libssl.a', SSL_LIB_PATH + 'libcrypto.a'])
+    libraries.remove('ssl')
+    libraries.remove('crypto')
+    library_dirs.remove('/usr/local/opt/openssl/lib')
 
 ################################################################################
 # PLATFORM SPECIFIC BUILD SETTINGS
@@ -252,6 +264,8 @@ setup(
                 'src/main/client/get.c',
                 'src/main/client/get_many.c',
                 'src/main/client/select_many.c',
+                'src/main/client/info_single_node.c',
+                'src/main/client/info_random_node.c',
                 'src/main/client/info_node.c',
                 'src/main/client/info.c',
                 'src/main/client/put.c',
@@ -301,7 +315,10 @@ setup(
                 'src/main/tls_config.c',
                 'src/main/global_hosts/type.c',
                 'src/main/nullobject/type.c',
-                'src/main/cdt_types/type.c'
+                'src/main/cdt_types/type.c',
+                'src/main/key_ordered_dict/type.c',
+                'src/main/client/set_xdr_filter.c',
+                'src/main/client/get_nodes.c'
             ],
 
             # Compile

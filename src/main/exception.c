@@ -75,16 +75,21 @@ PyObject * AerospikeException_New(void)
 			&exceptions_array.InvalidUser, &exceptions_array.UserExistsError, &exceptions_array.InvalidPassword, 
 			&exceptions_array.ExpiredPassword, &exceptions_array.ForbiddenPassword, &exceptions_array.InvalidCredential, 
 			&exceptions_array.InvalidRole, &exceptions_array.RoleExistsError, &exceptions_array.RoleViolation, 
-			&exceptions_array.InvalidPrivilege, &exceptions_array.NotAuthenticated},
+			&exceptions_array.InvalidPrivilege, &exceptions_array.NotAuthenticated, &exceptions_array.InvalidWhitelist,
+			&exceptions_array.NotWhitelisted, &exceptions_array.QuotasNotEnabled, &exceptions_array.InvalidQuota,
+			&exceptions_array.QuotaExceeded},
 		{"SecurityNotSupported", "SecurityNotEnabled", "SecuritySchemeNotSupported", "InvalidCommand", "InvalidField", 
 			"IllegalState", "InvalidUser", "UserExistsError", "InvalidPassword", "ExpiredPassword", "ForbiddenPassword", 
-			"InvalidCredential", "InvalidRole", "RoleExistsError", "RoleViolation", "InvalidPrivilege", "NotAuthenticated"},
+			"InvalidCredential", "InvalidRole", "RoleExistsError", "RoleViolation", "InvalidPrivilege", "NotAuthenticated",
+			"InvalidWhitelist", "NotWhitelisted", "QuotasNotEnabled", "InvalidQuota", "QuotaExceeded"},
 		{AEROSPIKE_SECURITY_NOT_SUPPORTED, AEROSPIKE_SECURITY_NOT_ENABLED, AEROSPIKE_SECURITY_SCHEME_NOT_SUPPORTED, 
 			AEROSPIKE_INVALID_COMMAND, AEROSPIKE_INVALID_FIELD, AEROSPIKE_ILLEGAL_STATE, 
 			AEROSPIKE_INVALID_USER, AEROSPIKE_USER_ALREADY_EXISTS, AEROSPIKE_INVALID_PASSWORD, 
 			AEROSPIKE_EXPIRED_PASSWORD, AEROSPIKE_FORBIDDEN_PASSWORD, AEROSPIKE_INVALID_CREDENTIAL, 
 			AEROSPIKE_INVALID_ROLE, AEROSPIKE_ROLE_ALREADY_EXISTS, AEROSPIKE_ROLE_VIOLATION,  
-			AEROSPIKE_INVALID_PRIVILEGE, AEROSPIKE_NOT_AUTHENTICATED}
+			AEROSPIKE_INVALID_PRIVILEGE, AEROSPIKE_NOT_AUTHENTICATED, AEROSPIKE_INVALID_WHITELIST,
+			AEROSPIKE_NOT_WHITELISTED, AEROSPIKE_QUOTAS_NOT_ENABLED, AEROSPIKE_INVALID_QUOTA,
+			AEROSPIKE_QUOTA_EXCEEDED}
 	};
 
 

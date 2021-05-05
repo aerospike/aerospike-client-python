@@ -172,7 +172,6 @@ class TestInvalidClientConfig(object):
 
     @pytest.mark.parametrize("key, value",
                              [
-                                ("fail_on_cluster_change", "False"),  # should be a bool
                                 ("durable_delete", "durable")  # should be bool
 
                              ])

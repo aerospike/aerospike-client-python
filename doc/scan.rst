@@ -231,8 +231,7 @@ Scan Methods
             scan = client.scan('test', 'test')
             scan_opts = {
               'concurrent': True,
-              'nobins': True,
-              'priority': aerospike.SCAN_PRIORITY_MEDIUM
+              'nobins': True
             }
             scan.foreach(show_key, options=scan_opts)
             client.close()
@@ -400,6 +399,7 @@ Scan Policies
             |
             | Default: ``False``
         * **fail_on_cluster_change** :class:`bool`
+            | Deprecated in 6.0.0. No longer has any effect..
             | Abort the scan if the cluster is not in a stable state. Only used for server versions < 4.9. 
             | 
             | Default: ``False``
@@ -419,6 +419,12 @@ Scan Policies
             | Default: ``None``
 
             .. note:: Requires Aerospike server version >= 5.2.
+        * **max_records** :class:`int`
+            | Approximate number of records to return to client.
+            | This number is divided by the number of nodes involved in the scan.
+            | The actual number of records returned may be less than max_records if node record counts are small and unbalanced across nodes.
+            |
+            | Default: ``0`` (No Limit).
             
 
 .. _aerospike_scan_options:
@@ -433,7 +439,8 @@ Scan Options
     .. hlist::
         :columns: 1
 
-        * **priority** 
+        * **priority**
+            | Deprecated in 6.0.0. Scan priority will be removed in a coming release.
             | Scan priority has been replaced by the records_per_second policy see :ref:`aerospike_scan_policies`.
         * **nobins** :class:`bool` 
             | Whether to return the *bins* portion of the :ref:`aerospike_record_tuple`. 
@@ -444,6 +451,9 @@ Scan Options
             |
             | Default ``False``.
         * **percent** :class:`int` 
+            | Deprecated in version 6.0.0, will be removed in a coming release.
+            | No longer available with server 5.6+.
+            | Use scan policy max_records instead.
             | Percentage of records to return from the scan. 
             |
             | Default ``100``.

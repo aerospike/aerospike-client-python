@@ -167,7 +167,7 @@ PyObject * AerospikeClient_ListAppend(AerospikeClient * self, PyObject * args, P
 	POLICY_KEY_META_BIN();
 
 	as_val* put_val = NULL;
-	if (pyobject_to_astype_write(self, &err, py_append_val, &put_val,
+	if (pyobject_to_val(self, &err, py_append_val, &put_val,
 			&static_pool, SERIALIZER_PYTHON) != AEROSPIKE_OK) {
 		goto CLEANUP;
 	}
@@ -223,7 +223,7 @@ PyObject * AerospikeClient_ListExtend(AerospikeClient * self, PyObject * args, P
 	POLICY_KEY_META_BIN();
 
 	as_val* put_val = NULL;
-	pyobject_to_astype_write(self, &err, py_append_val, &put_val,
+	pyobject_to_val(self, &err, py_append_val, &put_val,
 			&static_pool, SERIALIZER_PYTHON);
 	if (err.code != AEROSPIKE_OK) {
 		goto CLEANUP;
@@ -275,7 +275,7 @@ PyObject * AerospikeClient_ListInsert(AerospikeClient * self, PyObject * args, P
 	POLICY_KEY_META_BIN();
 
 	as_val* put_val = NULL;
-	pyobject_to_astype_write(self, &err, py_insert_val, &put_val,
+	pyobject_to_val(self, &err, py_insert_val, &put_val,
 			&static_pool, SERIALIZER_PYTHON);
 	if (err.code != AEROSPIKE_OK) {
 		goto CLEANUP;
@@ -333,7 +333,7 @@ PyObject * AerospikeClient_ListInsertItems(AerospikeClient * self, PyObject * ar
 	POLICY_KEY_META_BIN();
 
 	as_val* put_val = NULL;
-	pyobject_to_astype_write(self, &err, py_insert_val, &put_val,
+	pyobject_to_val(self, &err, py_insert_val, &put_val,
 			&static_pool, SERIALIZER_PYTHON);
 	if (err.code != AEROSPIKE_OK) {
 		goto CLEANUP;
@@ -691,7 +691,7 @@ PyObject * AerospikeClient_ListSet(AerospikeClient * self, PyObject * args, PyOb
 	POLICY_KEY_META_BIN();
 
 	as_val* put_val = NULL;
-	pyobject_to_astype_write(self, &err, py_val, &put_val,
+	pyobject_to_val(self, &err, py_val, &put_val,
 			&static_pool, SERIALIZER_PYTHON);
 	if (err.code != AEROSPIKE_OK) {
 		goto CLEANUP;

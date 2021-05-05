@@ -397,15 +397,31 @@ PyDoc_STRVAR(info_all_doc,
 Send an info *command* to all nodes in the cluster to which the client is connected.\n\
 If any of the individual requests fail, this will raise an exception.");
 
+PyDoc_STRVAR(info_single_node_doc,
+"info_single_node(command, host[, policy]) -> str\n\
+\n\
+Send an info command to a single node specified by host.");
+
+PyDoc_STRVAR(info_random_node_doc,
+"info_random_node(command, [policy]) -> str\n\
+\n\
+Send an info command to a single random node.");
+
 PyDoc_STRVAR(info_node_doc,
 "info_node(command, host[, policy]) -> str\n\
 \n\
+DEPRECATED: Please user info_single_node() instead.\n\
 Send an info command to a single node specified by host.");
 
 PyDoc_STRVAR(get_nodes_doc,
 "get_nodes() -> []\n\
 \n\
 Return the list of hosts present in a connected cluster.");
+
+PyDoc_STRVAR(get_node_names_doc,
+"get_node_names() -> []\n\
+\n\
+Return the list of hosts, including node names, present in a connected cluster.");
 
 PyDoc_STRVAR(udf_put_doc,
 "udf_put(filename[, udf_type[, policy]])\n\
@@ -553,16 +569,28 @@ static PyMethodDef AerospikeClient_Type_Methods[] = {
 		"Drop a new role."},
 	{"admin_grant_privileges",
 		(PyCFunction) AerospikeClient_Admin_Grant_Privileges, METH_VARARGS | METH_KEYWORDS,
-	"Grant privileges to a user defined role"},
+		"Grant privileges to a user defined role."},
 	{"admin_revoke_privileges",
 		(PyCFunction) AerospikeClient_Admin_Revoke_Privileges, METH_VARARGS | METH_KEYWORDS,
-		"Revoke privileges from a user defined role"},
+		"Revoke privileges from a user defined role."},
 	{"admin_query_role",
 		(PyCFunction) AerospikeClient_Admin_Query_Role, METH_VARARGS | METH_KEYWORDS,
-		"Query a user defined role"},
+		"DEPRECATED Query a user defined role."},
 	{"admin_query_roles",
 		(PyCFunction) AerospikeClient_Admin_Query_Roles, METH_VARARGS | METH_KEYWORDS,
-		"Querys all user defined roles"},
+		"DEPRECATED Query all user defined roles."},
+	{"admin_get_role",
+		(PyCFunction) AerospikeClient_Admin_Get_Role, METH_VARARGS | METH_KEYWORDS,
+		"Get a user defined role."},
+	{"admin_get_roles",
+		(PyCFunction) AerospikeClient_Admin_Get_Roles, METH_VARARGS | METH_KEYWORDS,
+		"Get all user defined roles."},
+	{"admin_set_quotas",
+		(PyCFunction) AerospikeClient_Admin_Set_Quotas, METH_VARARGS | METH_KEYWORDS,
+		"Set read and write quotas for a user defined role."},
+	{"admin_set_whitelist",
+		(PyCFunction) AerospikeClient_Admin_Set_Whitelist, METH_VARARGS | METH_KEYWORDS,
+		"Set IP whitelist for a user defined role."},
 
 	// KVS OPERATIONS
 
@@ -771,12 +799,21 @@ static PyMethodDef AerospikeClient_Type_Methods[] = {
 	{"info_all",
 		(PyCFunction) AerospikeClient_InfoAll, METH_VARARGS | METH_KEYWORDS,
 		info_all_doc},
-	{"info_node",
+	{"info_single_node",
+		(PyCFunction) AerospikeClient_InfoSingleNode, METH_VARARGS | METH_KEYWORDS,
+		info_single_node_doc},
+	{"info_random_node",
+		(PyCFunction) AerospikeClient_InfoRandomNode, METH_VARARGS | METH_KEYWORDS,
+		info_random_node_doc},
+	{"info_node", // DEPRECATED
 		(PyCFunction) AerospikeClient_InfoNode, METH_VARARGS | METH_KEYWORDS,
 		info_node_doc},
 	{"get_nodes",
 		(PyCFunction) AerospikeClient_GetNodes, METH_VARARGS | METH_KEYWORDS,
 		get_nodes_doc},
+	{"get_node_names",
+		(PyCFunction) AerospikeClient_GetNodeNames, METH_VARARGS | METH_KEYWORDS,
+		get_node_names_doc},
 	// UDF OPERATIONS
 
 	{"udf_put",
@@ -863,6 +900,7 @@ static int AerospikeClient_Type_Init(AerospikeClient * self, PyObject * args, Py
 	self->has_connected = false;
 	self->use_shared_connection = false;
 	self->as=NULL;
+	self->send_bool_as = SEND_BOOL_AS_PY_BYTES;
 
 	if (PyArg_ParseTupleAndKeywords(args, kwds, "O:client", kwlist, &py_config) == false) {
 		error_code = INIT_NO_CONFIG_ERR;
@@ -1236,6 +1274,15 @@ static int AerospikeClient_Type_Init(AerospikeClient * self, PyObject * args, Py
 	PyObject * py_share_connect = PyDict_GetItemString(py_config, "use_shared_connection");
 	if (py_share_connect) {
 		self->use_shared_connection = PyObject_IsTrue(py_share_connect);
+	}
+
+	PyObject * py_send_bool_as = PyDict_GetItemString(py_config, "send_bool_as");
+	if (py_send_bool_as != NULL && PyLong_Check(py_send_bool_as)) {
+		int send_bool_as_temp = PyLong_AsLong(py_send_bool_as);
+		if (send_bool_as_temp >= SEND_BOOL_AS_PY_BYTES &&
+			send_bool_as_temp <= SEND_BOOL_AS_AS_BOOL) {
+				self->send_bool_as = send_bool_as_temp;
+		}
 	}
 
 	//compression_threshold

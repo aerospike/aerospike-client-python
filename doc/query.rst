@@ -555,6 +555,7 @@ Query Policies
             |
             | Default: ``True``
         * **fail_on_cluster_change** :class:`bool`
+            | Deprecated in 6.0.0. No longer has any effect..
             | Terminate query if cluster is in migration state. 
             |
             | Default ``False``
