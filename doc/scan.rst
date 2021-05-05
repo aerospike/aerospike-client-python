@@ -399,7 +399,7 @@ Scan Policies
             |
             | Default: ``False``
         * **fail_on_cluster_change** :class:`bool`
-            | Deprecated in 6.0.0, will be removed in a coming release.
+            | Deprecated in 6.0.0. No longer has any effect..
             | Abort the scan if the cluster is not in a stable state. Only used for server versions < 4.9. 
             | 
             | Default: ``False``
