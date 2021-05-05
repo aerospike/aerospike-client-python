@@ -896,7 +896,7 @@ PyObject * AerospikeClient_Admin_Create_Role(AerospikeClient * self, PyObject *a
 	static char * kwlist[] = {"role", "privileges", "policy", "whitelist", "read_quota", "write_quota", NULL};
 
 	// Python Function Argument Parsing.
-	if (PyArg_ParseTupleAndKeywords(args, kwds, "OO|OOOO:admin_create_role", kwlist,
+	if (PyArg_ParseTupleAndKeywords(args, kwds, "O|OOOOO:admin_create_role", kwlist,
 				&py_role, &py_privileges, &py_policy, &py_whitelist, &py_read_quota, &py_write_quota) == false) {
 		return NULL;
 	}
@@ -913,27 +913,29 @@ PyObject * AerospikeClient_Admin_Create_Role(AerospikeClient * self, PyObject *a
 	}
 
 	const char * role = NULL;
-	if (PyString_Check(py_role)) {
-		role = PyString_AsString(py_role);
+	if (PyUnicode_Check(py_role)) {
+		role = PyUnicode_AsUTF8(py_role);
 	} else {
 		as_error_update(&err, AEROSPIKE_ERR_PARAM, "Role name should be a string");
 		goto CLEANUP;
 	}
 
 	// Convert python object to an array of privileges.
-	if (!PyList_Check(py_privileges)) {
-		as_error_update(&err, AEROSPIKE_ERR_PARAM, "Privileges should be a list");
-		goto CLEANUP;
-	}
+	if (py_privileges != NULL) {
+		if (!PyList_Check(py_privileges)) {
+			as_error_update(&err, AEROSPIKE_ERR_PARAM, "Privileges should be a list");
+			goto CLEANUP;
+		}
 
-	privileges_size = PyList_Size(py_privileges);
-	privileges = (as_privilege **)cf_malloc(sizeof(as_privilege *) * privileges_size);
-	for (int i = 0; i < privileges_size; ++i) {
-		privileges[i] = (as_privilege *)cf_malloc(sizeof(as_privilege));
-	}
+		privileges_size = PyList_Size(py_privileges);
+		privileges = (as_privilege **)cf_malloc(sizeof(as_privilege *) * privileges_size);
+		for (int i = 0; i < privileges_size; ++i) {
+			privileges[i] = (as_privilege *)cf_malloc(sizeof(as_privilege));
+		}
 
-	if (pyobject_to_as_privileges(&err, py_privileges, privileges, privileges_size) != AEROSPIKE_OK) {
-		goto CLEANUP;
+		if (pyobject_to_as_privileges(&err, py_privileges, privileges, privileges_size) != AEROSPIKE_OK) {
+			goto CLEANUP;
+		}
 	}
 
 	// Convert python object to an admin policy.
@@ -963,58 +965,17 @@ PyObject * AerospikeClient_Admin_Create_Role(AerospikeClient * self, PyObject *a
 
 	int read_quota = 0;
 	if (py_read_quota != NULL) {
-		if ( !PyLong_Check(py_read_quota)) {
-			as_error_update(&err, AEROSPIKE_ERR_PARAM, "Read_quota must be an integer.");
-			goto CLEANUP;
-		}
-
-		int64_t temp_read_quota = PyLong_AsLong(py_read_quota);
-		if (PyErr_Occurred()) {
-			if(PyErr_ExceptionMatches(PyExc_OverflowError)) {
-				as_error_update(&err, AEROSPIKE_ERR_PARAM, "Read_quota too large.");
-				goto CLEANUP;
-			}
-
-			as_error_update(&err, AEROSPIKE_ERR_PARAM, "Failed to convert read_quota.");
-			goto CLEANUP;
-		}
-
-		if (temp_read_quota > INT_MAX || temp_read_quota < INT_MIN) {
-			as_error_update(&err, AEROSPIKE_ERR_PARAM, "Read_quota too large for C int.");
-			goto CLEANUP;
-		}
-
-		read_quota = temp_read_quota;
+		get_int_from_py_int(&err, py_read_quota, &read_quota, "py_read_quota");
 	}
 
 	int write_quota = 0;
 	if (py_write_quota != NULL) {
-		if ( !PyLong_Check(py_write_quota)) {
-			as_error_update(&err, AEROSPIKE_ERR_PARAM, "Write_quota must be an integer.");
-			goto CLEANUP;
-		}
-
-		int64_t temp_write_quota = PyLong_AsLong(py_write_quota);
-		if (PyErr_Occurred()) {
-			if(PyErr_ExceptionMatches(PyExc_OverflowError)) {
-				as_error_update(&err, AEROSPIKE_ERR_PARAM, "Write_quota too large.");
-				goto CLEANUP;
-			}
-
-			as_error_update(&err, AEROSPIKE_ERR_PARAM, "Failed to convert write_quota.");
-			goto CLEANUP;
-		}
-
-		if (temp_write_quota > INT_MAX || temp_write_quota < INT_MIN) {
-			as_error_update(&err, AEROSPIKE_ERR_PARAM, "Write_quota too large for C int.");
-			goto CLEANUP;
-		}
-
-		write_quota = temp_write_quota;
+		get_int_from_py_int(&err, py_write_quota, &write_quota, "py_write_quota");
 	}
 
 	Py_BEGIN_ALLOW_THREADS
-	aerospike_create_role_quotas(self->as, &err, admin_policy_p, role, privileges, privileges_size, (const char**)whitelist, whitelist_size, read_quota, write_quota);
+	aerospike_create_role_quotas(self->as, &err, admin_policy_p, role, privileges, privileges_size, 
+									(const char**)whitelist, whitelist_size, read_quota, write_quota);
 	Py_END_ALLOW_THREADS
 
 CLEANUP:
@@ -1091,27 +1052,23 @@ PyObject * AerospikeClient_Admin_Set_Whitelist(AerospikeClient * self, PyObject 
 	static char * kwlist[] = {"role", "whitelist", "policy", NULL};
 
 	// Python Function Argument Parsing.
-	if (PyArg_ParseTupleAndKeywords(args, kwds, "O|OO:admin_set_whitelist", kwlist,
+	if (PyArg_ParseTupleAndKeywords(args, kwds, "OO|O:admin_set_whitelist", kwlist,
 				&py_role, &py_whitelist, &py_policy) == false) {
 		return NULL;
 	}
 
 	const char * role = NULL;
-	if (PyString_Check(py_role)) {
-		role = PyString_AsString(py_role);
+	if (PyUnicode_Check(py_role)) {
+		role = PyUnicode_AsUTF8(py_role);
 	} else {
 		as_error_update(&err, AEROSPIKE_ERR_PARAM, "Role name should be a string.");
 		goto CLEANUP;
 	}
 
 	int whitelist_size = 0;
-	if (py_whitelist != NULL) {
-		if ( !PyList_Check(py_whitelist)) {
-			as_error_update(&err, AEROSPIKE_ERR_PARAM, "Whitelist must be a list of IP strings.");
-			goto CLEANUP;
-		}
-
+	if (PyList_Check(py_whitelist)) {
 		whitelist_size = PyList_Size(py_whitelist);
+
 		whitelist = (char **)cf_malloc(sizeof(char *) * whitelist_size);
 		for (int i = 0; i < whitelist_size; i++) {
 			whitelist[i] = cf_malloc(sizeof(char) * AS_IP_ADDRESS_SIZE);
@@ -1120,6 +1077,11 @@ PyObject * AerospikeClient_Admin_Set_Whitelist(AerospikeClient * self, PyObject 
 		if (pyobject_to_strArray(&err, py_whitelist, whitelist, AS_IP_ADDRESS_SIZE) != AEROSPIKE_OK) {
 			goto CLEANUP;
 		}
+	} else if(py_whitelist == Py_None) {
+		whitelist_size = 0;
+	} else {
+		as_error_update(&err, AEROSPIKE_ERR_PARAM, "Whitelist must be a list of IP strings, or None.");
+		goto CLEANUP;
 	}
 
 	as_policy_admin admin_policy;
@@ -1136,7 +1098,7 @@ PyObject * AerospikeClient_Admin_Set_Whitelist(AerospikeClient * self, PyObject 
 	Py_END_ALLOW_THREADS
 
 CLEANUP:
-	if (whitelist) {
+	if (whitelist != NULL) {
 		for (int i = 0; i < whitelist_size; i++) {
 			if (whitelist[i])
 				cf_free(whitelist[i]);
@@ -1212,54 +1174,12 @@ PyObject * AerospikeClient_Admin_Set_Quotas(AerospikeClient * self, PyObject *ar
 
 	int read_quota = -1;
 	if (py_read_quota != NULL) {
-		if ( !PyLong_Check(py_read_quota)) {
-			as_error_update(&err, AEROSPIKE_ERR_PARAM, "Read_quota must be an integer.");
-			goto CLEANUP;
-		}
-
-		int64_t temp_read_quota = PyLong_AsLong(py_read_quota);
-		if (PyErr_Occurred()) {
-			if(PyErr_ExceptionMatches(PyExc_OverflowError)) {
-				as_error_update(&err, AEROSPIKE_ERR_PARAM, "Read_quota too large.");
-				goto CLEANUP;
-			}
-
-			as_error_update(&err, AEROSPIKE_ERR_PARAM, "Failed to convert read_quota.");
-			goto CLEANUP;
-		}
-
-		if (temp_read_quota > INT_MAX || temp_read_quota < INT_MIN) {
-			as_error_update(&err, AEROSPIKE_ERR_PARAM, "Read_quota too large for C int.");
-			goto CLEANUP;
-		}
-
-		read_quota = temp_read_quota;
+		get_int_from_py_int(&err, py_read_quota, &read_quota, "py_read_quota");
 	}
 
 	int write_quota = -1;
 	if (py_write_quota != NULL) {
-		if ( !PyLong_Check(py_write_quota)) {
-			as_error_update(&err, AEROSPIKE_ERR_PARAM, "Write_quota must be an integer.");
-			goto CLEANUP;
-		}
-
-		int64_t temp_write_quota = PyLong_AsLong(py_write_quota);
-		if (PyErr_Occurred()) {
-			if(PyErr_ExceptionMatches(PyExc_OverflowError)) {
-				as_error_update(&err, AEROSPIKE_ERR_PARAM, "Write_quota too large.");
-				goto CLEANUP;
-			}
-
-			as_error_update(&err, AEROSPIKE_ERR_PARAM, "Failed to convert write_quota.");
-			goto CLEANUP;
-		}
-
-		if (temp_write_quota > INT_MAX || temp_write_quota < INT_MIN) {
-			as_error_update(&err, AEROSPIKE_ERR_PARAM, "Write_quota too large for C int.");
-			goto CLEANUP;
-		}
-
-		write_quota = temp_write_quota;
+		get_int_from_py_int(&err, py_write_quota, &write_quota, "py_write_quota");
 	}
 
 	as_policy_admin admin_policy;
@@ -1449,7 +1369,7 @@ PyObject * AerospikeClient_Admin_Grant_Privileges(AerospikeClient * self, PyObje
 	Py_END_ALLOW_THREADS
 
 CLEANUP:
-	if (privileges) {
+	if (privileges != NULL) {
 		for (int i = 0; i < privileges_size; i++) {
 			if (privileges[i])
 				cf_free(privileges[i]);
@@ -1554,7 +1474,7 @@ PyObject * AerospikeClient_Admin_Revoke_Privileges(AerospikeClient * self, PyObj
 	Py_END_ALLOW_THREADS
 
 CLEANUP:
-	if (privileges) {
+	if (privileges != NULL) {
 		for (int i = 0; i < privileges_size; i++) {
 			if (privileges[i])
 				cf_free(privileges[i]);
@@ -1649,7 +1569,7 @@ PyObject * AerospikeClient_Admin_Query_Role(AerospikeClient * self, PyObject *ar
 
 CLEANUP:
 
-	if (ret_role) {
+	if (ret_role != NULL) {
 		as_role_destroy(ret_role);
 	}
 
@@ -1817,7 +1737,13 @@ PyObject * AerospikeClient_Admin_Get_Role(AerospikeClient * self, PyObject *args
 		goto CLEANUP;
 	}
 
-	as_role_to_pyobject(&err, ret_role, &py_ret_role);
+	py_ret_role = PyDict_New();
+	if (py_ret_role == NULL) {
+		as_error_update(&err, AEROSPIKE_ERR_CLIENT, "Failed to create py_ret_role.");
+		goto CLEANUP;
+	}
+
+	as_role_to_pyobject(&err, ret_role, py_ret_role);
 
 CLEANUP:
 

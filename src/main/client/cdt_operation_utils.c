@@ -131,7 +131,7 @@ get_optional_int64_t(as_error * err, const char* key,  PyObject * op_dict, int64
 }
 
 as_status 
-get_int(as_error* err, const char* key, PyObject* op_dict, int* int_pointer) {
+get_int_from_py_dict(as_error* err, const char* key, PyObject* op_dict, int* int_pointer) {
     int64_t int64_to_return = -1;
 
     if (get_int64_t(err, key, op_dict, &int64_to_return) != AEROSPIKE_OK) {
@@ -142,6 +142,7 @@ get_int(as_error* err, const char* key, PyObject* op_dict, int* int_pointer) {
         return as_error_update(err, AEROSPIKE_ERR_PARAM, "%s too large for C int.", key);
     }
     *int_pointer = int64_to_return;
+
     return AEROSPIKE_OK;
 }
 

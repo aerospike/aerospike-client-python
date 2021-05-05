@@ -61,11 +61,28 @@ class TestSetWhitelist(TestBaseClass):
         with pytest.raises(TypeError):
             self.client.admin_set_whitelist()
 
-    def test_admin_set_whitelist_no_whitelist_positive(self):
+    def test_admin_set_whitelist_empty_whitelist_positive(self):
         """
         Set whitelist with no whitelist. (will reset whitelist on a role with existing whitelist)
         """
-        self.client.admin_set_whitelist(role="usr-sys-admin-test",)
+        self.client.admin_set_whitelist(role="usr-sys-admin-test", whitelist=[])
+        time.sleep(1)
+        roles = self.client.admin_get_role("usr-sys-admin-test")
+        assert roles == {
+                'privileges': [
+                    {'ns': '', 'set': '', 'code': 0},
+                    {'ns': '', 'set': '', 'code': 1}
+                ],
+                'whitelist': [],
+                'read_quota': 0,
+                'write_quota': 0
+            }
+
+    def test_admin_set_whitelist_none_whitelist_positive(self):
+        """
+        Set whitelist with no whitelist. (will reset whitelist on a role with existing whitelist)
+        """
+        self.client.admin_set_whitelist(role="usr-sys-admin-test", whitelist=None)
         time.sleep(1)
         roles = self.client.admin_get_role("usr-sys-admin-test")
         assert roles == {

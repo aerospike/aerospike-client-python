@@ -2631,12 +2631,13 @@ Admin Operations
         :param int write_quota: Maximum write per second limit, pass in zero for no limit.
         :raises: One of the :exc:`~aerospike.exception.AdminError` subclasses.
 
-    .. method:: admin_set_whitelist(role[, whitelist[, policy]])
+    .. method:: admin_set_whitelist(role, whitelist[, policy])
 
         Add *whitelist* to a *role*.
 
         :param str role: The name of the role.
         :param list whitelist: List of IP strings the role is allowed to connect to.
+            Setting whitlist to None will clear the whitelist for that role.
         :param dict policy: Optional :ref:`aerospike_admin_policies`.
         :raises: One of the :exc:`~aerospike.exception.AdminError` subclasses.
 

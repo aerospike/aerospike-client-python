@@ -19,14 +19,12 @@ class TestSetQuotas(TestBaseClass):
     pytestmark = pytest.mark.skipif(
         not TestBaseClass.auth_in_use(),
         reason="No user specified, may be not secured cluster.")
+    client = TestBaseClass.get_new_connection()
 
     def setup_method(self, method):
         """
         Setup method
         """
-        hostlist, user, password = TestBaseClass().get_hosts()
-        config = TestBaseClass.get_connection_config()
-        self.client = aerospike.client(config).connect(user, password)
         usr_sys_admin_privs = [
             {"code": aerospike.PRIV_USER_ADMIN},
             {"code": aerospike.PRIV_SYS_ADMIN}]
@@ -35,10 +33,15 @@ class TestSetQuotas(TestBaseClass):
             time.sleep(2)
         except:
             pass
-        self.client.admin_create_role(
-            "usr-sys-admin-test", usr_sys_admin_privs, write_quota=4500)
 
-        self.delete_users = []
+        try:
+            self.client.admin_create_role(
+                "usr-sys-admin-test", usr_sys_admin_privs, write_quota=4500)
+        except e.QuotasNotEnabled:
+            pytest.mark.skip(reason="Got QuotasNotEnabled, skipping quota test.")
+            pytest.skip()
+
+
         time.sleep(1)
 
     def teardown_method(self, method):
@@ -49,7 +52,6 @@ class TestSetQuotas(TestBaseClass):
             self.client.admin_drop_role("usr-sys-admin-test")
         except:
             pass
-        self.client.close()
 
     def test_admin_set_quota_no_parameters(self):
         """
@@ -169,10 +171,9 @@ class TestSetQuotas(TestBaseClass):
 											read_quota=250,
 											write_quota=300,
 											policy={'timeout': 1000})
-
         except e.ParamError as exception:
             assert exception.code == -2
-            assert exception.msg == "Role name should be a string"
+            assert exception.msg == "Role name should be a string."
 
     def test_admin_set_quota_incorrect_quota(self):
         """

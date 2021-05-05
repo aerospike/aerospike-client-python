@@ -84,8 +84,12 @@ class TestCreateRole(object):
                             'write_quota': 0
                         }
 
-        status = self.client.admin_create_user(
-            "testcreaterole", "createrole", ["usr-sys-admin-test"])
+        try:
+            status = self.client.admin_create_user(
+                "testcreaterole", "createrole", ["usr-sys-admin-test"])
+        except e.QuotasNotEnabled:
+            pytest.mark.skip(reason="Got QuotasNotEnabled, skipping quota test.")
+            pytest.skip()
 
         assert status == 0
         time.sleep(1)
@@ -120,8 +124,12 @@ class TestCreateRole(object):
                             'write_quota': 0
                         }
 
-        status = self.client.admin_create_user(
-            "testcreaterole", "createrole", ["usr-sys-admin-test"])
+        try:
+            status = self.client.admin_create_user(
+                "testcreaterole", "createrole", ["usr-sys-admin-test"])
+        except e.QuotasNotEnabled:
+            pytest.mark.skip(reason="Got QuotasNotEnabled, skipping quota test.")
+            pytest.skip()
 
         assert status == 0
         time.sleep(1)
@@ -175,12 +183,18 @@ class TestCreateRole(object):
         except e.InvalidRole:
             pass  # we are good, no such role exists
 
-        self.client.admin_create_role("usr-sys-admin-test",
-                                      [{"code": aerospike.PRIV_USER_ADMIN},
-                                       {"code": aerospike.PRIV_SYS_ADMIN}],
-                                       whitelist=["127.0.0.1", "10.1.2.0/24"],
-                                       read_quota=20,
-                                       write_quota=30)
+
+        try:
+            self.client.admin_create_role("usr-sys-admin-test",
+                                        [{"code": aerospike.PRIV_USER_ADMIN},
+                                        {"code": aerospike.PRIV_SYS_ADMIN}],
+                                        whitelist=["127.0.0.1", "10.1.2.0/24"],
+                                        read_quota=20,
+                                        write_quota=30)
+        except e.QuotasNotEnabled:
+            pytest.mark.skip(reason="Got QuotasNotEnabled, skipping quota test.")
+            pytest.skip()
+
         time.sleep(1)
         roles = self.client.admin_get_role("usr-sys-admin-test")
 

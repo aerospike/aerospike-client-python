@@ -136,14 +136,14 @@ PyObject * AerospikeClient_Admin_Query_Roles(AerospikeClient * self, PyObject *a
 /**
  * Get a user defined role in the database.
  *
- *		client.admin_query_role(role, policy)
+ *		client.admin_get_role(role, policy)
  *
  */
 PyObject * AerospikeClient_Admin_Get_Role(AerospikeClient * self, PyObject *args, PyObject *kwds);
 /**
  * Get all user defined roles in the database.
  *
- *		client.admin_query_roles(policy)
+ *		client.admin_get_roles(policy)
  *
  */
 PyObject * AerospikeClient_Admin_Get_Roles(AerospikeClient * self, PyObject *args, PyObject *kwds);
@@ -157,7 +157,7 @@ PyObject * AerospikeClient_Admin_Set_Quotas(AerospikeClient * self, PyObject *ar
 /**
  * Set IP whitelist for a user defined role in the database.
  *
- *		client.admin_set_quotas(role, whitelist, policy)
+ *		client.admin_set_whitelist(role, whitelist, policy)
  *
  */
 PyObject * AerospikeClient_Admin_Set_Whitelist(AerospikeClient * self, PyObject *args, PyObject *kwds);

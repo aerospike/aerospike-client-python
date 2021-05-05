@@ -553,7 +553,7 @@ static PyMethodDef AerospikeClient_Type_Methods[] = {
 		"Drop a new role."},
 	{"admin_grant_privileges",
 		(PyCFunction) AerospikeClient_Admin_Grant_Privileges, METH_VARARGS | METH_KEYWORDS,
-	"Grant privileges to a user defined role."},
+		"Grant privileges to a user defined role."},
 	{"admin_revoke_privileges",
 		(PyCFunction) AerospikeClient_Admin_Revoke_Privileges, METH_VARARGS | METH_KEYWORDS,
 		"Revoke privileges from a user defined role."},
