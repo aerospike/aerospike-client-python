@@ -18,6 +18,7 @@
 #include <Python.h>
 #include <stdbool.h>
 
+#include <aerospike/as_address.h>
 #include <aerospike/as_admin.h>
 #include <aerospike/as_error.h>
 #include <aerospike/as_key.h>
@@ -111,20 +112,42 @@ END:
 	return err->code;
 }
 
-
-as_status strArray_to_pyobject( as_error * err, char str_array_ptr[][AS_ROLE_SIZE], PyObject **py_list, int roles_size )
+as_status char_double_ptr_to_py_list( as_error * err, int num_elements, int element_size, char ** str_array_ptr, PyObject *py_list)
 {
 	as_error_reset(err);
-	int i;
-	char *role;
+	
+	char *str;
 
-	*py_list = PyList_New(0);
+	for (int i = 0; i < num_elements; i++) {
+		str = str_array_ptr[i];
+		PyObject *py_str = Py_BuildValue("s", str);
+		if (py_str == NULL) {
+			as_error_update(err, AEROSPIKE_ERR_CLIENT, "Unable to build string value from %s.", str);
+			break;
+		}
 
-	for (i = 0; i < roles_size; i++) {
-		role = str_array_ptr[i];
-		PyObject *py_str = Py_BuildValue("s", role);
-		PyList_Append(*py_list, py_str);
+		PyList_Append(py_list, py_str);
+		Py_DECREF(py_str);
+	}
 
+	return err->code;
+}
+
+as_status strArray_to_py_list( as_error * err, int num_elements, int element_size, char str_array_ptr[][element_size], PyObject *py_list)
+{
+	as_error_reset(err);
+	
+	char *str;
+
+	for (int i = 0; i < num_elements; i++) {
+		str = str_array_ptr[i];
+		PyObject *py_str = Py_BuildValue("s", str);
+		if (py_str == NULL) {
+			as_error_update(err, AEROSPIKE_ERR_CLIENT, "Unable to build string value from %s.", str);
+			break;
+		}
+
+		PyList_Append(py_list, py_str);
 		Py_DECREF(py_str);
 	}
 
@@ -140,8 +163,8 @@ as_status as_user_array_to_pyobject( as_error *err, as_user **users, PyObject **
 	for (i = 0; i < users_size; i++) {
 
 		PyObject * py_user = PyString_FromString(users[i]->name);
-		PyObject * py_roles;
-		strArray_to_pyobject(err, users[i]->roles, &py_roles, users[i]->roles_size);
+		PyObject * py_roles = PyList_New(0);
+		strArray_to_py_list(err, users[i]->roles_size, AS_ROLE_SIZE, users[i]->roles, py_roles);
 		if (err->code != AEROSPIKE_OK) {
 			break;
 		}
@@ -157,12 +180,24 @@ as_status as_user_array_to_pyobject( as_error *err, as_user **users, PyObject **
 	return err->code;
 }
 
+/**
+ *******************************************************************************************************
+ * Convert a PyObject list of privilege dicts to an array of as_privilege.
+ *
+ * @param err                   (as_error) Updated to indicate result status, is AERROSPIKE_OK on success.
+ * @param py_privileges         (PyObject*) Pointer to list of privilege dicts.
+ * @param privileges         	(as_privilege**) Array of pointers to as_privilege structs.
+ * @param privileges_size       (int) Number of privilege dicts in py_privileges.
+ *
+ * Returns an as_status. AERROSPIKE_OK(0) is success value.
+ * In case of error, appropriate as_status will be returned.
+ *******************************************************************************************************
+ */
 as_status pyobject_to_as_privileges(as_error *err, PyObject *py_privileges, as_privilege** privileges, int privileges_size) {
 	as_error_reset(err);
 	for (int i = 0; i < privileges_size; i++) {
 		PyObject * py_val = PyList_GetItem(py_privileges, i);
 		if (PyDict_Check(py_val)) {
-			privileges[i] = (as_privilege *)cf_malloc(sizeof(as_privilege));
 			PyObject *py_dict_key = PyString_FromString("code");
 			if (PyDict_Contains(py_val, py_dict_key)) {
 				PyObject *py_code = NULL;
@@ -194,7 +229,7 @@ as_status pyobject_to_as_privileges(as_error *err, PyObject *py_privileges, as_p
 	return err->code;
 }
 
-as_status as_role_array_to_pyobject( as_error *err, as_role **roles, PyObject **py_as_roles, int roles_size )
+as_status as_role_array_to_pyobject_old( as_error *err, as_role **roles, PyObject **py_as_roles, int roles_size )
 {
 	as_error_reset(err);
 	int i;
@@ -205,8 +240,10 @@ as_status as_role_array_to_pyobject( as_error *err, as_role **roles, PyObject **
 		PyObject * py_role = PyString_FromString(roles[i]->name);
 		PyObject * py_privileges = PyList_New(0);
 
-		as_privilege_to_pyobject(err, roles[i]->privileges, &py_privileges, roles[i]->privileges_size);
+		as_privilege_to_pyobject(err, roles[i]->privileges, py_privileges, roles[i]->privileges_size);
 		if (err->code != AEROSPIKE_OK) {
+			Py_DECREF(py_role);
+			Py_DECREF(py_privileges);
 			break;
 		}
 
@@ -221,13 +258,39 @@ as_status as_role_array_to_pyobject( as_error *err, as_role **roles, PyObject **
 	return err->code;
 }
 
+as_status as_role_array_to_pyobject( as_error *err, as_role **roles, PyObject **py_as_roles, int roles_size )
+{
+	as_error_reset(err);
+	int i;
+
+	PyObject * py_roles = PyDict_New();
+	for (i = 0; i < roles_size; i++) {
+
+		const char * py_role_name = roles[i]->name;
+		PyObject * py_role = PyDict_New();
+
+		as_role_to_pyobject(err, roles[i], py_role);
+		if (err->code != AEROSPIKE_OK) {
+			break;
+		}
+
+		PyDict_SetItemString(py_roles, py_role_name, py_role);
+
+		Py_DECREF(py_role);
+
+	}
+	*py_as_roles = py_roles;
+
+	return err->code;
+}
+
 as_status as_user_to_pyobject( as_error * err, as_user * user, PyObject ** py_as_user )
 {
 	as_error_reset(err);
 
-	PyObject * py_roles;
+	PyObject * py_roles = PyList_New(0);
 
-	strArray_to_pyobject(err, user->roles, &py_roles, user->roles_size);
+	strArray_to_py_list(err, user->roles_size, AS_ROLE_SIZE, user->roles, py_roles);
 	if (err->code != AEROSPIKE_OK) {
 		goto END;
 	}
@@ -238,13 +301,13 @@ END:
 	return err->code;
 }
 
-as_status as_role_to_pyobject( as_error * err, as_role * role, PyObject ** py_as_role )
+as_status as_role_to_pyobject_old( as_error * err, as_role * role, PyObject ** py_as_role )
 {
 	as_error_reset(err);
 
 	PyObject * py_privileges = PyList_New(0);
 
-	as_privilege_to_pyobject(err, role->privileges, &py_privileges, role->privileges_size);
+	as_privilege_to_pyobject(err, role->privileges, py_privileges, role->privileges_size);
 	if (err->code != AEROSPIKE_OK) {
 		goto END;
 	}
@@ -255,14 +318,81 @@ END:
 	return err->code;
 }
 
-as_status as_privilege_to_pyobject( as_error * err, as_privilege privileges[], PyObject ** py_as_privilege, int privilege_size)
+/*
+ * as_role_to_pyobject assumes py_as_role_dict is a python list.
+ */
+as_status as_role_to_pyobject( as_error * err, as_role * role, PyObject * py_as_role_dict )
+{
+	as_error_reset(err);
+
+	const char * privelege_key = "privileges";
+	const char * whitelist_key = "whitelist";
+	const char * read_quota_key = "read_quota";
+	const char * write_quota_key = "write_quota";
+
+	PyObject * py_read_quota = NULL;
+	PyObject * py_write_quota = NULL;
+
+	PyObject * py_privileges = PyList_New(0);
+	PyObject * py_whitelist = PyList_New(0);
+
+	if (py_privileges == NULL || py_whitelist == NULL) {
+		as_error_update(err, AEROSPIKE_ERR_CLIENT, "Failed to create py_as_role_dict, py_privileges, or py_whitelist.");
+		goto END;
+	}
+
+	as_privilege_to_pyobject(err, role->privileges, py_privileges, role->privileges_size);
+	if (err->code != AEROSPIKE_OK) {
+		goto END;
+	}
+
+	if (PyDict_SetItemString(py_as_role_dict, privelege_key, py_privileges) == -1) {
+		as_error_update(err, AEROSPIKE_ERR_CLIENT, "Failed to set %s in py_as_role_dict.", privelege_key);
+		goto END;
+	}
+
+	if (char_double_ptr_to_py_list(err, role->whitelist_size, AS_IP_ADDRESS_SIZE, role->whitelist, py_whitelist) != AEROSPIKE_OK) {
+		goto END;
+	}
+
+	if (PyDict_SetItemString(py_as_role_dict, whitelist_key, py_whitelist) == -1) {
+		as_error_update(err, AEROSPIKE_ERR_CLIENT, "Failed to set %s in py_as_role_dict.", whitelist_key);
+		goto END;
+	}
+
+	py_read_quota = Py_BuildValue("i", role->read_quota);
+	py_write_quota = Py_BuildValue("i", role->write_quota);
+	if (py_read_quota == NULL || py_write_quota == NULL) {
+		as_error_update(err, AEROSPIKE_ERR_CLIENT, "Failed to create py_read_quota or py_write_quota.");
+		goto END;
+	}
+
+	if (PyDict_SetItemString(py_as_role_dict, read_quota_key, py_read_quota) == -1) {
+		as_error_update(err, AEROSPIKE_ERR_CLIENT, "Failed to set %s in py_as_role_dict.", read_quota_key);
+		goto END;
+	}
+
+	if (PyDict_SetItemString(py_as_role_dict, write_quota_key, py_write_quota) == -1) {
+		as_error_update(err, AEROSPIKE_ERR_CLIENT, "Failed to set %s in py_as_role_dict.", write_quota_key);
+		goto END;
+	}
+
+END:
+	Py_XDECREF(py_privileges);
+	Py_XDECREF(py_whitelist);
+	Py_XDECREF(py_read_quota);
+	Py_XDECREF(py_write_quota);
+	return err->code;
+}
+
+as_status as_privilege_to_pyobject( as_error * err, as_privilege privileges[], PyObject * py_as_privilege, int privilege_size)
 {
 	as_error_reset(err);
 
 	PyObject * py_ns = NULL;
 	PyObject * py_set = NULL;
 	PyObject * py_code = NULL;
-	for (int i=0; i<privilege_size; i++) {
+	for (int i = 0; i < privilege_size; i++) {
 		py_ns = PyString_FromString(privileges[i].ns);
 		py_set = PyString_FromString(privileges[i].set);
 		py_code = PyInt_FromLong(privileges[i].code);
@@ -276,7 +406,7 @@ as_status as_privilege_to_pyobject( as_error * err, as_privilege privileges[], P
 		Py_DECREF(py_set);
 		Py_DECREF(py_code);
 
-		PyList_Append(*py_as_privilege, py_privilege);
+		PyList_Append(py_as_privilege, py_privilege);
 
 		Py_DECREF(py_privilege);
 	}
@@ -1896,8 +2026,8 @@ as_status get_cdt_ctx(AerospikeClient* self, as_error* err, as_cdt_ctx* cdt_ctx,
 				case CDT_CTX_LIST_INDEX_CREATE:;
 					int list_order = 0;
 					int pad = 0;
-					get_int(err, CDT_CTX_ORDER_KEY, extra_args_temp, &list_order);
-					get_int(err, CDT_CTX_PAD_KEY, extra_args_temp, &pad);
+					get_int_from_py_dict(err, CDT_CTX_ORDER_KEY, extra_args_temp, &list_order);
+					get_int_from_py_dict(err, CDT_CTX_PAD_KEY, extra_args_temp, &pad);
 					as_cdt_ctx_add_list_index_create(cdt_ctx, int_val, list_order, pad);
 					break;
 				default:
@@ -1920,7 +2050,7 @@ as_status get_cdt_ctx(AerospikeClient* self, as_error* err, as_cdt_ctx* cdt_ctx,
 						break;
 					case CDT_CTX_MAP_KEY_CREATE:;
 						int map_order = 0;
-						get_int(err, CDT_CTX_ORDER_KEY, extra_args_temp, &map_order);
+						get_int_from_py_dict(err, CDT_CTX_ORDER_KEY, extra_args_temp, &map_order);
 						as_cdt_ctx_add_map_key_create(cdt_ctx, val, map_order);
 						break;
 					default:
@@ -1948,4 +2078,31 @@ static bool requires_int(uint64_t op) {
 		op == AS_CDT_CTX_MAP_INDEX  ||
 		op == AS_CDT_CTX_MAP_RANK   ||
 		op == CDT_CTX_LIST_INDEX_CREATE;
+}
+
+/*
+ * get_int_from_py_int assumes py_long is not NULL
+ */
+as_status 
+get_int_from_py_int(as_error* err, PyObject* py_long, int* int_pointer, const char* py_object_name) {
+	if ( !PyLong_Check(py_long)) {
+		return as_error_update(err, AEROSPIKE_ERR_PARAM, "%s must be an integer.", py_object_name);
+	}
+
+	int64_t int64_to_return = PyLong_AsLong(py_long);
+	if (PyErr_Occurred()) {
+		if(PyErr_ExceptionMatches(PyExc_OverflowError)) {
+			return as_error_update(err, AEROSPIKE_ERR_PARAM, "%s too large for C long.", py_object_name);
+		}
+
+		return as_error_update(err, AEROSPIKE_ERR_PARAM, "Failed to convert %s.", py_object_name);
+	}
+
+	if (int64_to_return > INT_MAX || int64_to_return < INT_MIN) {
+		return as_error_update(err, AEROSPIKE_ERR_PARAM, "%s too large for C int.", py_object_name);
+	}
+
+	*int_pointer = int64_to_return;
+
+    return AEROSPIKE_OK;
 }

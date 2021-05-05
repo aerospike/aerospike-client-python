@@ -22,7 +22,7 @@
 #define RECORD_EXCEPTION_COUNT 10
 #define SERVER_EXCEPTION_COUNT 13
 #define INDEX_EXCEPTION_COUNT 6
-#define ADMIN_EXCEPTION_COUNT 17
+#define ADMIN_EXCEPTION_COUNT 22
 
 struct exceptions {
 	PyObject *AerospikeError;
@@ -104,6 +104,11 @@ struct exceptions {
 	PyObject *RoleViolation;
 	PyObject *InvalidPrivilege;
 	PyObject *NotAuthenticated;
+	PyObject *InvalidWhitelist;
+	PyObject *NotWhitelisted;
+	PyObject *QuotasNotEnabled;
+	PyObject *InvalidQuota;
+	PyObject *QuotaExceeded;
 
 	//UDF exceptions
 	PyObject *UDFError;
