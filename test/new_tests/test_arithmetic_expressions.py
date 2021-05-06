@@ -22,6 +22,10 @@ class TestExpressionsArithmetic(TestBaseClass):
 
     @pytest.fixture(autouse=True)
     def setup(self, request, as_connection):
+        if self.server_version < [5, 6, 0]:
+            pytest.mark.xfail(reason="Servers older than 5.6 do not support arithmetic expressions.")
+            pytest.xfail()
+        
         self.test_ns = 'test'
         self.test_set = 'demo'
 

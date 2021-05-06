@@ -65,7 +65,14 @@ class TestBitwiseOperations(object):
             operation.write("cfg_true", True),
             operation.write("cfg_false", False),
         ]
-        test_client.operate(self.test_key, ops)
+
+        try:
+            test_client.operate(self.test_key, ops)
+        except e.InvalidRequest:
+            if self.server_version < [5, 6, 0] and send_bool_as == aerospike.AS_BOOL:
+                pytest.mark.xfail(reason="Servers older than 5.6 do not support as_bool")
+                pytest.xfail()
+
 
         _, _, bins = self.as_connection.get(self.test_key)
         test_client.close()

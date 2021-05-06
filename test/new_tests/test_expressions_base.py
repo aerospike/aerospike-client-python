@@ -222,6 +222,10 @@ class TestExpressions(TestBaseClass):
         verify_multiple_expression_avenues(self.as_connection, self.test_ns, self.test_set, expr, "ilist_bin", _NUM_RECORDS)
 
     def test_bool_bin_true(self):
+        if self.server_version < [5, 6, 0]:
+            pytest.mark.xfail(reason="Servers older than 5.6 do not support 6.0.0 expressions")
+            pytest.xfail()
+
         expr = BoolBin("t")
         ops = [
             expressions.expression_read(expr.compile())
@@ -230,6 +234,10 @@ class TestExpressions(TestBaseClass):
         assert res['']
 
     def test_bool_bin_false(self):
+        if self.server_version < [5, 6, 0]:
+            pytest.mark.xfail(reason="Servers older than 5.6 do not support 6.0.0 expressions")
+            pytest.xfail()
+
         expr = Not(BoolBin("t"))
         ops = [
             expressions.expression_read(expr.compile())
@@ -238,6 +246,10 @@ class TestExpressions(TestBaseClass):
         assert not res['']
 
     def test_exclusive_pos(self):
+        if self.server_version < [5, 6, 0]:
+            pytest.mark.xfail(reason="Servers older than 5.6 do not support 6.0.0 expressions")
+            pytest.xfail()
+
         expr = Exclusive(
                 GT(IntBin("age"), _NUM_RECORDS // 2),
                 GT(IntBin("age"), _NUM_RECORDS - 1))
@@ -245,6 +257,10 @@ class TestExpressions(TestBaseClass):
         assert(record[2]['age'] == _NUM_RECORDS - 2)
 
     def test_exclusive_neg(self):
+        if self.server_version < [5, 6, 0]:
+            pytest.mark.xfail(reason="Servers older than 5.6 do not support 6.0.0 expressions")
+            pytest.xfail()
+
         expr = Exclusive(
                 GT(IntBin("age"), _NUM_RECORDS // 2),
                 GT(IntBin("age"), _NUM_RECORDS // 2))
@@ -252,6 +268,10 @@ class TestExpressions(TestBaseClass):
             self.as_connection.get(('test', u'demo', _NUM_RECORDS - 2), policy={'expressions': expr.compile()})
 
     def test_let_def_var_pos(self):
+        if self.server_version < [5, 6, 0]:
+            pytest.mark.xfail(reason="Servers older than 5.6 do not support 6.0.0 expressions")
+            pytest.xfail()
+
         expr = Let(Def("a", IntBin("age")),
                 Cond(
                     LT(Var("a"), 50),
@@ -261,6 +281,10 @@ class TestExpressions(TestBaseClass):
         assert(record[2]['age'] == _NUM_RECORDS - 1)
 
     def test_let_def_var_neg(self):
+        if self.server_version < [5, 6, 0]:
+            pytest.mark.xfail(reason="Servers older than 5.6 do not support 6.0.0 expressions")
+            pytest.xfail()
+
         expr = Let(Def("a", IntBin("age")),
                 Cond(
                     LT(Var("a"), 0),
@@ -270,6 +294,10 @@ class TestExpressions(TestBaseClass):
             self.as_connection.get(('test', u'demo', _NUM_RECORDS - 1), policy={'expressions': expr.compile()})
 
     def test_cond_pos(self):
+        if self.server_version < [5, 6, 0]:
+            pytest.mark.xfail(reason="Servers older than 5.6 do not support 6.0.0 expressions")
+            pytest.xfail()
+
         expr = Cond(
                     GE(IntBin("age"), 2),
                         True,
@@ -278,6 +306,10 @@ class TestExpressions(TestBaseClass):
         assert(record[2]['age'] == _NUM_RECORDS - 1)
 
     def test_cond_neg(self):
+        if self.server_version < [5, 6, 0]:
+            pytest.mark.xfail(reason="Servers older than 5.6 do not support 6.0.0 expressions")
+            pytest.xfail()
+
         expr = Cond(
                     GT(IntBin("age"), _NUM_RECORDS),
                         True,

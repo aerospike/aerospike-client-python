@@ -115,6 +115,11 @@ class TestExpressions(TestBaseClass):
         """
         Test the HLLInit expression.
         """
+
+        if self.server_version < [5, 6, 0]:
+            pytest.mark.xfail(reason="Servers older than 5.6 do not support 6.0.0 expressions")
+            pytest.xfail()
+
         expr = HLLDescribe(HLLInit(policy, index_bc, mh_bc, bin))
 
         ops = [
@@ -132,6 +137,10 @@ class TestExpressions(TestBaseClass):
         """
         Test the HLLInit expression expecting failure.
         """
+
+        if self.server_version < [5, 6, 0]:
+            pytest.mark.xfail(reason="Servers older than 5.6 do not support 6.0.0 expressions")
+            pytest.xfail()
 
         expr = HLLDescribe(HLLInit(policy, index_bc, mh_bc, bin))
 

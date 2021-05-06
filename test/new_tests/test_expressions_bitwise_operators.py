@@ -20,6 +20,10 @@ class TestExpressionsBitOps(TestBaseClass):
 
     @pytest.fixture(autouse=True)
     def setup(self, request, as_connection):
+        if self.server_version < [5, 6, 0]:
+            pytest.mark.xfail(reason="Servers older than 5.6 do not support bitwise operator expressions.")
+            pytest.xfail()
+        
         self.test_ns = 'test'
         self.test_set = 'demo'
 
