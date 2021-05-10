@@ -34,14 +34,6 @@ class TestGetNodeNames(object):
         assert isinstance(response[0]["node_name"], str)
         assert len(response[0]) == 3
 
-    def test_get_node_names_with_parameter(self):
-        """
-        Test that a call to aerospike.Client.get_node_names with
-        a string parameter does not raise an error
-        """
-        response = self.as_connection.get_node_names("parameter") #TODO why no error
-        assert response is not None
-
     # Tests for behaviors that raise errors
     def test_pos_get_node_names_without_connection(self):
         """
