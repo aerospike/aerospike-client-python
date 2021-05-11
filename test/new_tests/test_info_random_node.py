@@ -37,7 +37,6 @@ class TestInfoSingleNode(object):
         if self.pytest_skip:
             pytest.xfail()
         response = self.as_connection.info_random_node('bins')
-        print(response)
 
         assert 'names' in response
 

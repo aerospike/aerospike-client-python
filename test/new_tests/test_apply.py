@@ -180,8 +180,6 @@ class TestApply(TestBaseClass):
 
         _, _, bins = self.as_connection.get(key)
 
-        print(expected)
-        print(bins[test_bin])
         assert bins[test_bin] == expected
         assert retval == 0  # the list_append UDF returns 0
 

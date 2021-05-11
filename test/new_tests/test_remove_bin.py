@@ -293,7 +293,6 @@ class TestRemovebin(object):
         """
         with pytest.raises(TypeError) as typeError:
             self.as_connection.remove_bin()
-        print("hi", str(typeError.value))
         assert "argument 'key' (pos 1)" in str(
             typeError.value)
 

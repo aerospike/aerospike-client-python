@@ -22,7 +22,7 @@ class TestExpressionsArithmetic(TestBaseClass):
 
     @pytest.fixture(autouse=True)
     def setup(self, request, as_connection):
-        if self.server_version < [5, 6, 0]:
+        if self.server_version < [5, 6]:
             pytest.mark.xfail(reason="Servers older than 5.6 do not support arithmetic expressions.")
             pytest.xfail()
         
@@ -87,7 +87,6 @@ class TestExpressionsArithmetic(TestBaseClass):
         """
         Test arithmetic Add expression with correct parameters.
         """
-        print(expression.compile())
         self.verify_expression(expression.compile(), self.rec)
 
     @pytest.mark.parametrize("expression, expected", [
@@ -98,7 +97,6 @@ class TestExpressionsArithmetic(TestBaseClass):
         """
         Test arithmetic Add expression with incorrect parameters.
         """
-        print(expression.compile())
         self.verify_expression_neg(expression.compile(), expected)
 
     @pytest.mark.parametrize("bin, val, check", [
@@ -139,7 +137,6 @@ class TestExpressionsArithmetic(TestBaseClass):
         """
         Test arithmetic Sub expression with correct parameters.
         """
-        print(expression.compile())
         self.verify_expression(expression.compile(), self.rec)
 
     @pytest.mark.parametrize("expression, expected", [
@@ -150,7 +147,6 @@ class TestExpressionsArithmetic(TestBaseClass):
         """
         Test arithmetic Sub expression with incorrect parameters.
         """
-        print(expression.compile())
         self.verify_expression_neg(expression.compile(), expected)
 
     @pytest.mark.parametrize("bin, val, check", [
@@ -191,7 +187,6 @@ class TestExpressionsArithmetic(TestBaseClass):
         """
         Test arithmetic Mul expression with correct parameters.
         """
-        print(expression.compile())
         self.verify_expression(expression.compile(), self.rec)
 
     @pytest.mark.parametrize("expression, expected", [
@@ -202,7 +197,6 @@ class TestExpressionsArithmetic(TestBaseClass):
         """
         Test arithmetic Mul expression with incorrect parameters.
         """
-        print(expression.compile())
         self.verify_expression_neg(expression.compile(), expected)
 
     @pytest.mark.parametrize("bin, val, check", [
@@ -243,7 +237,6 @@ class TestExpressionsArithmetic(TestBaseClass):
         """
         Test arithmetic Div expression with correct parameters.
         """
-        print(expression.compile())
         self.verify_expression(expression.compile(), self.rec)
 
     @pytest.mark.parametrize("expression, expected", [ # Note that the parens in Div() do not overload precedence with /.
@@ -254,7 +247,6 @@ class TestExpressionsArithmetic(TestBaseClass):
         """
         Test arithmetic Div expression with incorrect parameters.
         """
-        print(expression.compile())
         self.verify_expression_neg(expression.compile(), expected)
 
     @pytest.mark.parametrize("expression", [
@@ -265,7 +257,6 @@ class TestExpressionsArithmetic(TestBaseClass):
         """
         Test arithmetic // expression with correct parameters.
         """
-        print(expression.compile())
         self.verify_expression(expression.compile(), self.rec)
 
     @pytest.mark.parametrize("expression, expected", [
@@ -277,7 +268,6 @@ class TestExpressionsArithmetic(TestBaseClass):
         """
         Test arithmetic // expression with incorrect parameters.
         """
-        print(expression.compile())
         self.verify_expression_neg(expression.compile(), expected)
 
     @pytest.mark.parametrize("bin, val, check", [
@@ -318,7 +308,6 @@ class TestExpressionsArithmetic(TestBaseClass):
         """
         Test arithmetic Pow expression with correct parameters.
         """
-        print(expression.compile())
         self.verify_expression(expression.compile(), self.rec)
 
     @pytest.mark.parametrize("expression, expected", [
@@ -330,7 +319,6 @@ class TestExpressionsArithmetic(TestBaseClass):
         """
         Test arithmetic Pow expression with incorrect parameters.
         """
-        print(expression.compile())
         self.verify_expression_neg(expression.compile(), expected)
 
     @pytest.mark.parametrize("bin, val, check", [
@@ -401,7 +389,6 @@ class TestExpressionsArithmetic(TestBaseClass):
         """
         Test arithmetic Mod expression with correct parameters.
         """
-        print(expression.compile())
         self.verify_expression(expression.compile(), self.rec)
 
     @pytest.mark.parametrize("expression, expected", [
@@ -413,7 +400,6 @@ class TestExpressionsArithmetic(TestBaseClass):
         """
         Test arithmetic Mod expression with incorrect parameters.
         """
-        print(expression.compile())
         self.verify_expression_neg(expression.compile(), expected)
 
     @pytest.mark.parametrize("expression", [
@@ -435,7 +421,6 @@ class TestExpressionsArithmetic(TestBaseClass):
         """
         Test arithmetic Abs expression with correct parameters.
         """
-        print(expression.compile())
         self.verify_expression(expression.compile(), self.rec)
 
     @pytest.mark.parametrize("expression, expected", [
@@ -449,7 +434,6 @@ class TestExpressionsArithmetic(TestBaseClass):
         """
         Test arithmetic Abs expression with incorrect parameters.
         """
-        print(expression.compile())
         self.verify_expression_neg(expression.compile(), expected)
 
     @pytest.mark.parametrize("val, check", [
@@ -487,7 +471,6 @@ class TestExpressionsArithmetic(TestBaseClass):
         """
         Test arithmetic Floor expression with correct parameters.
         """
-        print(expression.compile())
         self.verify_expression(expression.compile(), self.rec)
 
     @pytest.mark.parametrize("expression, expected", [
@@ -498,7 +481,6 @@ class TestExpressionsArithmetic(TestBaseClass):
         """
         Test arithmetic Floor expression with incorrect parameters.
         """
-        print(expression.compile())
         self.verify_expression_neg(expression.compile(), expected)
 
     @pytest.mark.parametrize("val, check", [
@@ -536,7 +518,6 @@ class TestExpressionsArithmetic(TestBaseClass):
         """
         Test arithmetic Ceil expression with correct parameters.
         """
-        print(expression.compile())
         self.verify_expression(expression.compile(), self.rec)
 
     @pytest.mark.parametrize("expression, expected", [
@@ -547,7 +528,6 @@ class TestExpressionsArithmetic(TestBaseClass):
         """
         Test arithmetic Ceil expression with incorrect parameters.
         """
-        print(expression.compile())
         self.verify_expression_neg(expression.compile(), expected)
 
     @pytest.mark.parametrize("val, check", [
