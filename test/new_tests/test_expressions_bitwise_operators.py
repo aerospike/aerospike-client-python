@@ -171,9 +171,9 @@ class TestExpressionsBitOps(TestBaseClass):
         self.verify_expression(expr, self.rec)
 
     @pytest.mark.parametrize("bin, val, check, expected", [
-        # (IntBin("10bin"), [2], 0xAAF0, e.FilteredOut),
-		# FilteredOut instead of InvalidRequest because shift is not type checked (expression).
-        (IntBin("1bin"), ["bad_arg"], 0x0000, e.FilteredOut)
+        (IntBin("10bin"), [2], 0xAAF0, e.FilteredOut),
+		# InvalidRequest because shift is not type checked (expression).
+        (IntBin("1bin"), ["bad_arg"], 0x0000, e.InvalidRequest)
     ])
     def test_int_left_shift_neg(self, bin, val, expected, check):
         """
@@ -201,8 +201,8 @@ class TestExpressionsBitOps(TestBaseClass):
 
     @pytest.mark.parametrize("bin, val, check, expected", [
         (IntBin("10bin"), [2], 0xAAF0, e.FilteredOut),
-		# NOTE FilteredOut instead of InvalidRequest because shift is not type checked (expression).
-        (IntBin("1bin"), ["bad_arg"], 0xFFFF, e.FilteredOut)
+		# InvalidRequest because shift is not type checked (expression).
+        (IntBin("1bin"), ["bad_arg"], 0xFFFF, e.InvalidRequest)
     ])
     def test_int_right_shift_neg(self, bin, val, expected, check):
         """
@@ -230,7 +230,8 @@ class TestExpressionsBitOps(TestBaseClass):
 
     @pytest.mark.parametrize("bin, val, check, expected", [
         (IntBin("10bin"), [2], 0xAAF0, e.FilteredOut),
-        (IntBin("1bin"), ["bad_arg"], 0xFFFF, e.FilteredOut)
+        # InvalidRequest because shift is not type checked (expression).
+        (IntBin("1bin"), ["bad_arg"], 0xFFFF, e.InvalidRequest)
     ])
     def test_int_right_arithmetic_shift_neg(self, bin, val, expected, check):
         """

@@ -226,24 +226,40 @@ class TestExpressions(TestBaseClass):
             pytest.mark.xfail(reason="Servers older than 5.6 do not support 6.0.0 expressions")
             pytest.xfail()
 
+        hostlist, user, password = TestBaseClass().get_hosts()
+        tls_info = TestBaseClass().get_tls_info()
+        config = TestBaseClass.get_connection_config()
+        config["send_bool_as"] = aerospike.AS_BOOL
+        test_client = aerospike.client(config).connect(user, password)
+
         expr = BoolBin("t")
         ops = [
-            expressions.expression_read(expr.compile())
+            operations.write("t", True),
+            expressions.expression_read("", expr.compile())
         ]
-        _, _, res = self.as_connection.operate(('test', u'demo', _NUM_RECORDS - 1), ops)
-        assert res['']
+        _, _, res = test_client.operate(('test', u'demo', _NUM_RECORDS - 1), ops)
+        test_client.close()
+        assert res[""]
 
     def test_bool_bin_false(self):
         if self.server_version < [5, 6]:
             pytest.mark.xfail(reason="Servers older than 5.6 do not support 6.0.0 expressions")
             pytest.xfail()
 
+        hostlist, user, password = TestBaseClass().get_hosts()
+        tls_info = TestBaseClass().get_tls_info()
+        config = TestBaseClass.get_connection_config()
+        config["send_bool_as"] = aerospike.AS_BOOL
+        test_client = aerospike.client(config).connect(user, password)
+
         expr = Not(BoolBin("t"))
         ops = [
-            expressions.expression_read(expr.compile())
+            operations.write("t", True),
+            expressions.expression_read("", expr.compile())
         ]
-        _, _, res = self.as_connection.operate(('test', u'demo', _NUM_RECORDS - 1), ops)
-        assert not res['']
+        _, _, res = test_client.operate(('test', u'demo', _NUM_RECORDS - 1), ops)
+        test_client.close()
+        assert not res[""]
 
     def test_exclusive_pos(self):
         if self.server_version < [5, 6]:
