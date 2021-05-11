@@ -62,7 +62,9 @@ class TestNewListOperationsHelpers(object):
             "b" : 4,
             "c" : 3,
             "d" : 2,
-            "e" : 1
+            "e" : 1,
+            "f" : True,
+            "g" : False
         }
 
         self.test_key = 'test', 'demo', 'new_map_op'
@@ -101,6 +103,8 @@ class TestNewListOperationsHelpers(object):
             "c" : 3,
             "d" : 2,
             "e" : 1,
+            "f" : True,
+            "g" : False,
             "new": 1,
             "new2": 3
         }

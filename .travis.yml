@@ -3,15 +3,17 @@ python:
 - 3.6
 - 3.7
 - 3.8
+- 3.9
 sudo: false
 os:
 - linux
-dist: xenial
+dist: bionic
 addons:
   apt:
     packages:
       - libssl-dev
-      - python-dev
+      - python3-dev
+    update: true
 install:
 - wget -O aerospike-server.tgz https://aerospike.com/download/server/latest/artifact/tgz
 - tar xvzf aerospike-server.tgz

@@ -23,6 +23,7 @@
 #include "query.h"
 #include "geo.h"
 #include "scan.h"
+#include "key_ordered_dict.h"
 #include "predicates.h"
 #include "exceptions.h"
 #include "policy.h"
@@ -95,7 +96,7 @@ AerospikeConstants operator_constants[] = {
 MOD_INIT(aerospike)
 {
 
-	const char version[8] = "5.0.0";
+	const char version[8] = "6.0.0";
 	// Makes things "thread-safe"
 	PyEval_InitThreads();
 	int i = 0;
@@ -124,6 +125,10 @@ MOD_INIT(aerospike)
 	PyTypeObject * scan = AerospikeScan_Ready();
 	Py_INCREF(scan);
 	PyModule_AddObject(aerospike, "Scan", (PyObject *) scan);
+
+	PyTypeObject * kdict = AerospikeKeyOrderedDict_Ready();
+	Py_INCREF(kdict);
+	PyModule_AddObject(aerospike, "KeyOrderedDict", (PyObject *) kdict);
 
 	/*
 	 * Add constants to module.

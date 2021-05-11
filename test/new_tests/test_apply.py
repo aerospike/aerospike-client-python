@@ -185,6 +185,24 @@ class TestApply(TestBaseClass):
         assert bins[test_bin] == expected
         assert retval == 0  # the list_append UDF returns 0
 
+    def test_apply_return_bool_true(self):
+        """
+            Invoke apply() with UDF that will return booleans.
+        """
+        key = ('test', 'demo', 1)
+        retval = self.as_connection.apply(key, 'test_record_udf',
+                                          'bool_check', [])
+        assert retval == True
+
+    def test_apply_return_bool_false(self):
+        """
+            Invoke apply() with UDF that will return booleans.
+        """
+        key = ('test', 'demo', 'non_existent_record')
+        retval = self.as_connection.apply(key, 'test_record_udf',
+                                          'bool_check', [])
+        assert retval == False
+
     def test_apply_operations_on_map(self):
         """
             Invoke apply() with map

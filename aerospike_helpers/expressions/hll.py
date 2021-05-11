@@ -27,7 +27,6 @@ from itertools import chain
 from typing import List, Optional, Tuple, Union, Dict, Any
 import aerospike
 from aerospike_helpers import cdt_ctx
-from aerospike_helpers.expressions.resources import _GenericExpr
 from aerospike_helpers.expressions.resources import _BaseExpr
 from aerospike_helpers.expressions.resources import ResultType
 from aerospike_helpers.expressions.resources import _Keys
@@ -41,6 +40,38 @@ TypeBinName = Union[_BaseExpr, str]
 TypeListValue = Union[_BaseExpr, List[Any]]
 TypeValue = Union[_BaseExpr, Any]
 TypePolicy = Union[Dict[str, Any], None]
+
+
+class HLLInit(_BaseExpr):
+    """Create an expression that performs an hll_init."""
+    _op = aerospike.OP_HLL_INIT
+
+    def __init__(self, policy: TypePolicy, index_bit_count: Union[int, None], mh_bit_count: Union[int, None], bin: TypeBinName):
+        """ Creates a new HLL or resets an existing HLL.
+            If index_bit_count and mh_bit_count are None, an existing HLL bin will be reset but retain its configuration.
+            If 1 of index_bit_count or mh_bit_count are set,
+            an existing HLL bin will set that config and retain its current value for the unset config.
+            If the HLL bin does not exist, index_bit_count is required to create it, mh_bit_count is optional.
+
+            Args:
+                policy (TypePolicy): An optional dictionary of :ref:`hll policy options <aerospike_hll_policies>`.
+                index_bit_count (int): Number of index bits. Must be between 4 and 16 inclusive.
+                mh_bit_count (int): Number of min hash bits. Must be between 4 and 51 inclusive.
+                bin (TypeBinName): A hll bin name or bin expression to apply this function to.
+
+            :return: Returns the resulting hll.
+        
+            Example::
+
+                # Create an HLL with 12 index bits and 24 min hash bits.
+                expr = HLLInit(None, 12, 24, HLLBin("my_hll"))
+        """        
+        self._children = (
+            -1 if index_bit_count is None else index_bit_count,
+            -1 if mh_bit_count is None else mh_bit_count,
+            policy['flags'] if policy is not None and 'flags' in policy else aerospike.HLL_WRITE_DEFAULT,
+            bin if isinstance(bin, _BaseExpr) else HLLBin(bin)
+        )
 
 
 class HLLAdd(_BaseExpr):

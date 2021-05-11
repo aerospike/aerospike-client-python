@@ -25,6 +25,7 @@
 #include <aerospike/as_status.h>
 #include <aerospike/as_admin.h>
 #include <aerospike/as_operations.h>
+#include <aerospike/as_exp_operations.h>
 #include <aerospike/aerospike_index.h>
 #include "aerospike/as_scan.h"
 #include "aerospike/as_job.h"
@@ -146,10 +147,6 @@ AerospikeConstants aerospike_constants[] = {
 	{ AS_POLICY_GEN_IGNORE                  ,   "POLICY_GEN_IGNORE" },
 	{ AS_POLICY_GEN_EQ                      ,   "POLICY_GEN_EQ" },
 	{ AS_POLICY_GEN_GT                      ,   "POLICY_GEN_GT" },
-	{ AS_SCAN_PRIORITY_AUTO                 ,   "SCAN_PRIORITY_AUTO" },
-	{ AS_SCAN_PRIORITY_LOW                  ,   "SCAN_PRIORITY_LOW" },
-	{ AS_SCAN_PRIORITY_MEDIUM               ,   "SCAN_PRIORITY_MEDIUM" },
-	{ AS_SCAN_PRIORITY_HIGH                 ,   "SCAN_PRIORITY_HIGH" },
 	{ AS_SCAN_STATUS_COMPLETED              ,   "SCAN_STATUS_COMPLETED" },
 	{ AS_SCAN_STATUS_ABORTED                ,   "SCAN_STATUS_ABORTED" },
 	{ AS_SCAN_STATUS_UNDEF                  ,   "SCAN_STATUS_UNDEF" },
@@ -167,6 +164,9 @@ AerospikeConstants aerospike_constants[] = {
 	{ SERIALIZER_USER                       ,   "SERIALIZER_USER" },
 	{ SERIALIZER_JSON                       ,   "SERIALIZER_JSON" },
 	{ SERIALIZER_NONE                       ,   "SERIALIZER_NONE" },
+	{ SEND_BOOL_AS_PY_BYTES                 ,   "PY_BYTES" },
+	{ SEND_BOOL_AS_INTEGER                  ,   "INTEGER" },
+	{ SEND_BOOL_AS_AS_BOOL                  ,   "AS_BOOL" },
 	{ AS_INDEX_STRING                       ,   "INDEX_STRING" },
 	{ AS_INDEX_NUMERIC                      ,   "INDEX_NUMERIC" },
 	{ AS_INDEX_GEO2DSPHERE                  ,   "INDEX_GEO2DSPHERE" },
@@ -402,6 +402,18 @@ AerospikeConstants aerospike_constants[] = {
 	{ OP_MAP_GET_BY_INDEX_RANGE_TO_END, "OP_MAP_GET_BY_INDEX_RANGE_TO_END"},
 	{ OP_MAP_GET_BY_RANK_RANGE_TO_END, "OP_MAP_GET_BY_RANK_RANGE_TO_END"},
 
+	/* Expression operation constants 5.1.0 */
+	{ OP_EXPR_READ, "OP_EXPR_READ"},
+	{ OP_EXPR_WRITE, "OP_EXPR_WRITE"},
+	{ AS_EXP_WRITE_DEFAULT, "EXP_WRITE_DEFAULT"},
+	{ AS_EXP_WRITE_CREATE_ONLY, "EXP_WRITE_CREATE_ONLY"},
+	{ AS_EXP_WRITE_UPDATE_ONLY, "EXP_WRITE_UPDATE_ONLY"},
+	{ AS_EXP_WRITE_ALLOW_DELETE, "EXP_WRITE_ALLOW_DELETE"},
+	{ AS_EXP_WRITE_POLICY_NO_FAIL, "EXP_WRITE_POLICY_NO_FAIL"},
+	{ AS_EXP_WRITE_EVAL_NO_FAIL, "EXP_WRITE_EVAL_NO_FAIL"},
+	{ AS_EXP_READ_DEFAULT, "EXP_READ_DEFAULT"},
+	{ AS_EXP_READ_EVAL_NO_FAIL, "EXP_READ_EVAL_NO_FAIL"},
+
 	/* For BinType expression, as_bytes_type */
 	{ AS_BYTES_UNDEF, "AS_BYTES_UNDEF"},
 	{ AS_BYTES_INTEGER, "AS_BYTES_INTEGER"},
@@ -453,31 +465,7 @@ void set_scan_options(as_error *err, as_scan* scan_p, PyObject * py_options)
 				break;
 			}
 
-			if (strcmp("priority", key_name) == 0) {
-				if (!PyInt_Check(value)) {
-					as_error_update(err, AEROSPIKE_ERR_PARAM, "Invalid value(type) for priority");
-					break;
-				}
-				val = (int64_t) PyInt_AsLong(value);
-				if (!as_scan_set_priority(scan_p, val)) {
-					as_error_update(err, AEROSPIKE_ERR_PARAM, "Unable to set scan priority");
-					break;
-				}
-			} else if (strcmp("percent", key_name) == 0) {
-				if (!PyInt_Check(value)) {
-					as_error_update(err, AEROSPIKE_ERR_PARAM, "Invalid value(type) for percent");
-					break;
-				}
-				val = (int64_t) PyInt_AsLong(value);
-				if (val<0 || val>100) {
-					as_error_update(err, AEROSPIKE_ERR_PARAM, "Invalid value for scan percentage");
-					break;
-				}
-				else if (!as_scan_set_percent(scan_p, val)) {
-					as_error_update(err, AEROSPIKE_ERR_PARAM, "Unable to set scan percentage");
-					break;
-				}
-			} else if (strcmp("concurrent", key_name) == 0) {
+			if (strcmp("concurrent", key_name) == 0) {
 				if (!PyBool_Check(value)) {
 					as_error_update(err, AEROSPIKE_ERR_PARAM, "Invalid value(type) for concurrent");
 					break;
@@ -689,7 +677,6 @@ as_status pyobject_to_policy_query(AerospikeClient * self, as_error * err, PyObj
 
 
 	POLICY_SET_FIELD(deserialize, bool);
-	POLICY_SET_FIELD(fail_on_cluster_change, bool);
 
 	// C client 4.6.7 new policy
 	POLICY_SET_PREDEXP_BASE_FIELD();
@@ -834,9 +821,9 @@ as_status pyobject_to_policy_scan(AerospikeClient * self, as_error * err, PyObje
 	POLICY_SET_BASE_FIELD(sleep_between_retries, uint32_t);
 	POLICY_SET_BASE_FIELD(compress, bool);
 
-	POLICY_SET_FIELD(fail_on_cluster_change, bool);
 	POLICY_SET_FIELD(durable_delete, bool);
 	POLICY_SET_FIELD(records_per_second, uint32_t);
+	POLICY_SET_FIELD(max_records, uint64_t);
 
 	// C client 4.6.7 new policy
 	POLICY_SET_PREDEXP_BASE_FIELD();

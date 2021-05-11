@@ -109,6 +109,26 @@ class TestScan(TestBaseClass):
         scan_obj.foreach(callback, {'timeout': 2000, 'expressions': expr.compile()})
         assert len(records) == self.record_count - 2 #2 because the last record has no "name" bin and won't be included in the result
 
+    # NOTE: This could fail if node record counts are small and unbalanced across nodes.
+    @pytest.mark.xfail(reason="Might fail depending on record count and distribution.")
+    def test_scan_with_max_records_policy(self):
+
+        ns = 'test'
+        st = 'demo'
+
+        records = []
+
+        max_records = self.record_count // 2
+
+        def callback(input_tuple):
+            _, _, bins = input_tuple
+            records.append(bins)
+
+        scan_obj = self.as_connection.scan(self.test_ns, self.test_set)
+
+        scan_obj.foreach(callback, {'max_records': max_records})
+        assert len(records) == self.record_count // 2
+
     def test_scan_with_expressions_policy_no_set(self):
 
         ns = 'test'
@@ -124,7 +144,7 @@ class TestScan(TestBaseClass):
 
         scan_obj = self.as_connection.scan(self.test_ns, self.test_set)
 
-        scan_obj.foreach(callback, {'timeout': 2000, 'expressions': expr.compile()})
+        scan_obj.foreach(callback, {'expressions': expr.compile()})
 
         assert len(records) == self.record_count - 2 #2 because the last record has no "name" bin and won't be included in the result
 
@@ -246,9 +266,7 @@ class TestScan(TestBaseClass):
         records = []
 
         options = {
-            "percent": 100,
-            "concurrent": True,
-            "priority": aerospike.SCAN_PRIORITY_HIGH
+            "concurrent": True
         }
 
         def callback(input_tuple):
@@ -274,9 +292,7 @@ class TestScan(TestBaseClass):
         st = 'demo'
         records = []
         options = {
-            "percent": 80,
-            "concurrent": True,
-            "priority": aerospike.SCAN_PRIORITY_HIGH
+            "concurrent": True
         }
         scan_obj = self.as_connection.scan(ns, st)
         scan_obj.foreach(callback, {}, options)

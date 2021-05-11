@@ -1,3 +1,5 @@
+#include <Python.h>
+
 #include "cdt_operation_utils.h"
 #include "client.h"
 #include "conversions.h"
@@ -129,14 +131,18 @@ get_optional_int64_t(as_error * err, const char* key,  PyObject * op_dict, int64
 }
 
 as_status 
-get_int(as_error* err, const char* key, PyObject* op_dict, int* int_pointer) {
-    int64_t int64_return_type = -1;
+get_int_from_py_dict(as_error* err, const char* key, PyObject* op_dict, int* int_pointer) {
+    int64_t int64_to_return = -1;
 
-    if (get_int64_t(err, key, op_dict, &int64_return_type) != AEROSPIKE_OK) {
+    if (get_int64_t(err, key, op_dict, &int64_to_return) != AEROSPIKE_OK) {
         return err->code;
     }
 
-    *int_pointer = int64_return_type;
+    if (int64_to_return > INT_MAX || int64_to_return < INT_MIN) {
+        return as_error_update(err, AEROSPIKE_ERR_PARAM, "%s too large for C int.", key);
+    }
+    *int_pointer = int64_to_return;
+
     return AEROSPIKE_OK;
 }
 

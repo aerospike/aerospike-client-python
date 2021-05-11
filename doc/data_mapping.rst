@@ -9,7 +9,7 @@
 .. note::
 
     By default, the :py:class:`aerospike.Client` maps the supported types \
-    :py:class:`int`, :py:class:`str`, :py:class:`float`, :py:class:`bytearray`, \
+    :py:class:`int`, :py:class:`bool`, :py:class:`str`, :py:class:`float`, :py:class:`bytearray`, \
     :py:class:`list`, :py:class:`dict` to matching aerospike server \
     `types <http://www.aerospike.com/docs/guide/data-types.html>`_ \
     (int, string, double, blob, list, map). When an unsupported type is \
@@ -30,29 +30,45 @@
 
     Unless a user specified serializer has been provided, all other types will be stored as Python specific bytes. Python specific bytes may not be readable by Aerospike Clients for other languages.
 
+.. warning::
+
+    Aerospike is introducing a new boolean data type in server version 5.6.
+    In order to support cross client compatibility and rolling upgrades, Python client version 6.x comes with a new client config, send_bool_as.
+    Send_bool_as configures how the client writes Python booleans and allows for opting into using the new boolean type.
+    It is important to consider how other clients connected to the Aerospike database write booleans in order to maintain cross client compatibility.
+    If a client reads and writes booleans as integers then the Python client should too, if they work with the same data.
+    Send_bool_as can be set so the client writes Python booleans as AS_BYTES_PYTHON, integer, or the new server boolean type.
+    All versions before 6.x wrote Python booleans as AS_BYTES_PYTHON.
+
 The following table shows which Python types map directly to Aerospike server types.
 
-+--------------------------+--------------+
-| Python Type              | Server type  |
-+==========================+==============+
-|int                       |integer       |
-+--------------------------+--------------+
-|long                      |integer       |
-+--------------------------+--------------+
-|str                       |string        |
-+--------------------------+--------------+
-|unicode                   |string        |
-+--------------------------+--------------+
-|float                     |double        |
-+--------------------------+--------------+
-|dict                      |map           |
-+--------------------------+--------------+
-|list                      |list          |
-+--------------------------+--------------+
-|bytearray                 |blob          |
-+--------------------------+--------------+
-|aerospike.GeoJSON         |GeoJSON       |
-+--------------------------+--------------+
+.. note::
+
+    :class:`aerospike.KeyOrderedDict` is a special case. Like dict, KeyOrderedDict maps to the aerospike map data type. However, the map will be sorted in key order before being sent to the server, see :ref:`aerospike_map_order`.
+
++--------------------------+------------------------+
+| Python Type              | Server type            |
++==========================+========================+
+|int                       |integer                 |
++--------------------------+------------------------+
+|bool                      |depends on send_bool_as |
++--------------------------+------------------------+
+|str                       |string                  |
++--------------------------+------------------------+
+|unicode                   |string                  |
++--------------------------+------------------------+
+|float                     |double                  |
++--------------------------+------------------------+
+|dict                      |map                     |
++--------------------------+------------------------+
+|aerospike.KeyOrderedDict  |key ordered map         |
++--------------------------+------------------------+
+|list                      |list                    |
++--------------------------+------------------------+
+|bytearray                 |blob                    |
++--------------------------+------------------------+
+|aerospike.GeoJSON         |GeoJSON                 |
++--------------------------+------------------------+
 
 It is possible to nest these datatypes. For example a list may contain a dictionary, or a dictionary may contain a list as a value.
 

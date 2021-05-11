@@ -122,7 +122,6 @@ class TestListInsertItems(object):
         (_, _, b2) = self.as_connection.get(key2)
         assert b1['age'] == [1, False, 2]
         assert b2['age'] == [2, False, True, 3]
-        assert isinstance(b1['age'][1], type(False))
 
     def test_pos_list_insert_items_with_nonexistent_key(self):
         """

@@ -73,6 +73,7 @@ typedef struct {
 	uint8_t strict_types;
 	bool has_connected;
 	bool use_shared_connection;
+	uint8_t send_bool_as;
 } AerospikeClient;
 
 typedef struct {
@@ -96,3 +97,7 @@ typedef struct {
 	PyObject_HEAD
 	PyObject *geo_data;
 } AerospikeGeospatial;
+
+typedef struct {
+	PyDictObject dict;
+} AerospikeKeyOrderedDict;

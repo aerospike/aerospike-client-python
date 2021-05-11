@@ -43,5 +43,10 @@ aerospike\_helpers\.operations\.hll\_operations module
     :undoc-members:
     :show-inheritance:
 
+aerospike\_helpers\.operations\.expression\_operations module
+-------------------------------------------------------------
 
-
+.. automodule:: aerospike_helpers.operations.expression_operations
+    :members:
+    :undoc-members:
+    :show-inheritance:

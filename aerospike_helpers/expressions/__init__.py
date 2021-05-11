@@ -19,3 +19,5 @@ from aerospike_helpers.expressions.bitwise import *
 from aerospike_helpers.expressions.hll import *
 from aerospike_helpers.expressions.list import *
 from aerospike_helpers.expressions.map import *
+from aerospike_helpers.expressions.arithmetic import *
+from aerospike_helpers.expressions.bitwise_operators import *

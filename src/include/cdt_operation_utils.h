@@ -38,6 +38,8 @@
 #define AS_PY_LIST_SORT_FLAGS "sort_flags"
 #define AS_PY_LIST_POLICY "list_policy"
 #define AS_PY_MAP_POLICY "map_policy"
+#define AS_EXPR_KEY "expr"
+#define AS_EXPR_FLAGS_KEY "expr_flags"
 
 as_status
 get_bin(as_error * err, PyObject * op_dict, as_vector * unicodeStrVector, char** binName);
@@ -56,7 +58,7 @@ as_status
 get_optional_int64_t(as_error * err, const char * key,  PyObject * op_dict, int64_t * i64_valptr, bool * found);
 
 as_status
-get_int(as_error * err, const char * key, PyObject * op_dict, int * int_pointer);
+get_int_from_py_dict(as_error * err, const char * key, PyObject * op_dict, int * int_pointer);
 
 as_status
 get_list_return_type(as_error* err, PyObject* op_dict, int* return_type);
