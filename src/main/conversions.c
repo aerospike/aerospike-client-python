@@ -184,6 +184,29 @@ as_status as_user_array_to_pyobject( as_error *err, as_user **users, PyObject **
 	return err->code;
 }
 
+as_status as_user_info_array_to_pyobject( as_error *err, as_user **users, PyObject **py_as_users, int users_size )
+{
+	as_error_reset(err);
+	int i;
+
+	PyObject * py_users = PyDict_New();
+	for (i = 0; i < users_size; i++) {
+		
+		PyObject * py_as_user = NULL;
+		
+		as_user_info_to_pyobject(err, users[i], &py_as_user);
+		if (err->code != AEROSPIKE_OK) {
+			break;
+		}
+		PyDict_SetItemString(py_users, users[i]->name, py_as_user);
+		Py_DECREF(py_as_user);
+	}
+
+	*py_as_users = py_users;
+
+	return err->code;
+}
+
 /**
  *******************************************************************************************************
  * Convert a PyObject list of privilege dicts to an array of as_privilege.
@@ -293,13 +316,60 @@ as_status as_user_to_pyobject( as_error * err, as_user * user, PyObject ** py_as
 	as_error_reset(err);
 
 	PyObject * py_roles = PyList_New(0);
-
+	
 	strArray_to_py_list(err, user->roles_size, AS_ROLE_SIZE, user->roles, py_roles);
 	if (err->code != AEROSPIKE_OK) {
 		goto END;
 	}
 
 	*py_as_user = py_roles;
+
+END:
+	return err->code;
+}
+
+as_status as_user_info_to_pyobject( as_error * err, as_user * user, PyObject ** py_as_user )
+{
+	as_error_reset(err);
+
+	PyObject * py_info = PyDict_New();
+	PyObject * py_roles = PyList_New(0);
+
+	strArray_to_py_list(err, user->roles_size, AS_ROLE_SIZE, user->roles, py_roles);
+	if (err->code != AEROSPIKE_OK) {
+		Py_DECREF(py_roles);
+		Py_DECREF(py_info);
+		goto END;
+	}
+
+	if (PyDict_SetItemString(py_info, "read_info", Py_BuildValue("s#", user->read_info, user->read_info_size)) == -1){
+		as_error_update(err, AEROSPIKE_ERR_CLIENT, "Failed to set %s in py_info.", "read_info");
+		Py_DECREF(py_roles);
+		Py_DECREF(py_info);
+		goto END;
+	}
+	if (PyDict_SetItemString(py_info, "write_info", Py_BuildValue("s#", user->write_info, user->write_info_size)) == -1){
+		as_error_update(err, AEROSPIKE_ERR_CLIENT, "Failed to set %s in py_info.", "write_info");
+		Py_DECREF(py_roles);
+		Py_DECREF(py_info);
+		goto END;
+	}
+	if (PyDict_SetItemString(py_info, "conns_in_use", Py_BuildValue("i", user->conns_in_use)) == -1){
+		as_error_update(err, AEROSPIKE_ERR_CLIENT, "Failed to set %s in py_info.", "conns_in_use");
+		Py_DECREF(py_roles);
+		Py_DECREF(py_info);
+		goto END;
+	}
+	if (PyDict_SetItemString(py_info, "roles", py_roles) == -1){
+		as_error_update(err, AEROSPIKE_ERR_CLIENT, "Failed to set %s in py_info.", "roles");
+		Py_DECREF(py_roles);
+		Py_DECREF(py_info);
+		goto END;
+	}
+
+	Py_DECREF(py_roles);
+
+	*py_as_user = py_info;
 
 END:
 	return err->code;

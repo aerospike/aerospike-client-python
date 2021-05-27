@@ -42,7 +42,11 @@ as_status char_double_ptr_to_py_list(as_error *err, int num_elements, int elemen
 
 as_status as_user_to_pyobject(as_error *err, as_user *user, PyObject **py_as_user);
 
+as_status as_user_info_to_pyobject(as_error *err, as_user *user, PyObject **py_as_user);
+
 as_status as_user_array_to_pyobject(as_error *err, as_user **users, PyObject **py_as_users, int users_size);
+
+as_status as_user_info_array_to_pyobject(as_error *err, as_user **users, PyObject **py_as_users, int users_size);
 
 as_status pyobject_to_strArray(as_error * err, PyObject * py_list,  char **arr, uint32_t max_len);
 
