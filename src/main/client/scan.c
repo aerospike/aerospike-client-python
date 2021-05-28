@@ -90,6 +90,9 @@ PyObject * AerospikeClient_ScanApply_Invoke(
 	as_predexp_list predexp_list;
 	as_predexp_list* predexp_list_p = NULL;
 
+	as_partition_filter partition_filter;
+	as_partition_filter * partition_filter_p = NULL;
+
 	as_static_pool static_pool;
 	memset(&static_pool, 0, sizeof(static_pool));
 
@@ -135,7 +138,8 @@ PyObject * AerospikeClient_ScanApply_Invoke(
 
 	if (py_policy) {
 		pyobject_to_policy_scan(self, &err, py_policy, &scan_policy, &scan_policy_p,
-				&self->as->config.policies.scan,  &predexp_list, &predexp_list_p, &exp_list, &exp_list_p);
+				&self->as->config.policies.scan,  &predexp_list, &predexp_list_p, &exp_list, &exp_list_p,
+			&partition_filter, &partition_filter_p);
 
 		if (err.code != AEROSPIKE_OK) {
 			goto CLEANUP;

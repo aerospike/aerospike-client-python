@@ -86,6 +86,18 @@ __policy##_init(policy);\
 	}\
 }
 
+#define POLICY_SET_PARTITION_FILTER() {\
+	if (exp_list) {\
+		PyObject* py_partition_filter = PyDict_GetItemString(py_policy, "partition_filter");\
+		if (py_partition_filter) {\
+			if (convert_partition_filter(self, py_partition_filter, &partition_filter, err) == AEROSPIKE_OK) {\
+				policy->partition_filter = partition_filter;\
+				*partition_filter_p = partition_filter;\
+			}\
+		}\
+	}\
+}
+
 #define POLICY_SET_PREDEXP_BASE_FIELD() {\
 	if (predexp_list) {\
 		PyObject* py_predexp_list = PyDict_GetItemString(py_policy, "predexp");\
@@ -803,7 +815,9 @@ as_status pyobject_to_policy_scan(AerospikeClient * self, as_error * err, PyObje
 		as_predexp_list * predexp_list,
 		as_predexp_list ** predexp_list_p,
 		as_exp * exp_list,
-		as_exp ** exp_list_p)
+		as_exp ** exp_list_p, 
+		as_partition_filter * partition_filter,
+		as_partition_filter ** partition_filter_p)
 {
 	// Initialize Policy
 	POLICY_INIT(as_policy_scan);
@@ -830,6 +844,9 @@ as_status pyobject_to_policy_scan(AerospikeClient * self, as_error * err, PyObje
 
 	// C client 5.0 new expressions
 	POLICY_SET_EXPRESSIONS_BASE_FIELD();
+
+	// C client 5.0 new expressions
+	POLICY_SET_PARTITION_FILTER();
 
 	// Update the policy
 	POLICY_UPDATE();
