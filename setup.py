@@ -318,8 +318,7 @@ setup(
                 'src/main/cdt_types/type.c',
                 'src/main/key_ordered_dict/type.c',
                 'src/main/client/set_xdr_filter.c',
-                'src/main/client/get_nodes.c',
-                'src/main/convert_partition_filter.c'
+                'src/main/client/get_nodes.c'
             ],
 
             # Compile

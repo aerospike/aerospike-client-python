@@ -86,9 +86,6 @@ PyObject * AerospikeScan_Results(AerospikeScan * self, PyObject * args, PyObject
 	as_exp exp_list;
 	as_exp* exp_list_p = NULL;
 
-	as_partition_filter partition_filter;
-	as_partition_filter * partition_filter_p = NULL;
-
 	// For converting predexp.
 	as_predexp_list predexp_list;
 	as_predexp_list* predexp_list_p = NULL;
@@ -111,8 +108,7 @@ PyObject * AerospikeScan_Results(AerospikeScan * self, PyObject * args, PyObject
 
 	// Convert python policy object to as_policy_scan
 	pyobject_to_policy_scan(self->client, &err, py_policy, &scan_policy, &scan_policy_p,
-			&self->client->as->config.policies.scan, &predexp_list, &predexp_list_p, &exp_list, &exp_list_p,
-			&partition_filter, &partition_filter_p);
+			&self->client->as->config.policies.scan, &predexp_list, &predexp_list_p, &exp_list, &exp_list_p);
 	if (err.code != AEROSPIKE_OK) {
 		as_error_update(&err, err.code, NULL);
 		goto CLEANUP;
@@ -144,13 +140,12 @@ PyObject * AerospikeScan_Results(AerospikeScan * self, PyObject * args, PyObject
 
 	Py_BEGIN_ALLOW_THREADS
 
-	if (partition_filter_p) {
-		aerospike_scan_partitions(self->client->as, &err, scan_policy_p, &self->scan, scan_policy_p->partition_filter, each_result, &data);
-	} else if (nodename) {
+	if (nodename) {
 		aerospike_scan_node(self->client->as, &err, scan_policy_p, &self->scan, nodename, each_result, &data);
 	} else {
 		aerospike_scan_foreach(self->client->as, &err, scan_policy_p, &self->scan, each_result, &data);
 	}
+
 
 	Py_END_ALLOW_THREADS
 
