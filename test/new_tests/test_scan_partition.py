@@ -23,9 +23,9 @@ class TestScanPartition(TestBaseClass):
         self.test_set = 'demo'
 
         self.partition_1000_count = 0
-        self.partition_2000_count = 0
-        self.partition_3000_count = 0
-        self.partition_4000_count = 0
+        self.partition_1001_count = 0
+        self.partition_1002_count = 0
+        self.partition_1003_count = 0
         
         as_connection.truncate(self.test_ns, None, 0)
 
@@ -37,14 +37,14 @@ class TestScanPartition(TestBaseClass):
             if rec_partition == 1000:
                 self.partition_1000_count += 1
                 put = 1 
-            if rec_partition == 2000:
-                self.partition_2000_count += 1
+            if rec_partition == 1001:
+                self.partition_1001_count += 1
                 put = 1 
-            if rec_partition == 3000:
-                self.partition_3000_count += 1
+            if rec_partition == 1002:
+                self.partition_1002_count += 1
                 put = 1 
-            if rec_partition == 4000:
-                self.partition_4000_count += 1
+            if rec_partition == 1003:
+                self.partition_1003_count += 1
                 put = 1 
             if put:
                 rec = {
@@ -55,9 +55,9 @@ class TestScanPartition(TestBaseClass):
                 }
                 as_connection.put(key, rec)
         print(f"{self.partition_1000_count} records are put in partition 1000, \
-                {self.partition_2000_count} records are put in partition 2000, \
-                {self.partition_3000_count} records are put in partition 3000, \
-                {self.partition_4000_count} records are put in partition 4000")
+                {self.partition_1001_count} records are put in partition 1001, \
+                {self.partition_1002_count} records are put in partition 1002, \
+                {self.partition_1003_count} records are put in partition 1003")
 
         def teardown():
             for i in range(1, 100000):
@@ -68,14 +68,14 @@ class TestScanPartition(TestBaseClass):
                 if rec_partition == 1000:
                     self.partition_1000_count += 1
                     put = 1 
-                if rec_partition == 2000:
-                    self.partition_2000_count += 1
+                if rec_partition == 1001:
+                    self.partition_1001_count += 1
                     put = 1 
-                if rec_partition == 3000:
-                    self.partition_3000_count += 1
+                if rec_partition == 1002:
+                    self.partition_1002_count += 1
                     put = 1 
-                if rec_partition == 4000:
-                    self.partition_4000_count += 1
+                if rec_partition == 1003:
+                    self.partition_1003_count += 1
                     put = 1 
                 if put:
                    as_connection.remove(key)
@@ -124,7 +124,7 @@ class TestScanPartition(TestBaseClass):
 
         scan_obj = self.as_connection.scan(self.test_ns, self.test_set)
 
-        scan_obj.foreach(callback, {'timeout': 2000, 'partition_filter': {'begin': 1000, 'count': 1}})
+        scan_obj.foreach(callback, {'timeout': 1001, 'partition_filter': {'begin': 1000, 'count': 1}})
 
         assert len(records) == self.partition_1000_count
 
@@ -147,6 +147,27 @@ class TestScanPartition(TestBaseClass):
 
         scan_obj.foreach(callback, {'max_records': max_records, 'partition_filter': {'begin': 1000, 'count': 1}})
         assert len(records) == self.partition_1000_count // 2
+
+    def test_scan_partition_with_all_records_policy(self):
+    
+        ns = 'test'
+        st = 'demo'
+
+        records = []
+
+        max_records = self.partition_1000_count + \
+                        self.partition_1001_count + \
+                        self.partition_1002_count + \
+                        self.partition_1003_count
+
+        def callback(input_tuple):
+            _, _, record = input_tuple
+            records.append(record)
+
+        scan_obj = self.as_connection.scan(self.test_ns, self.test_set)
+
+        scan_obj.foreach(callback, {'max_records': max_records, 'partition_filter': {'begin': 1000, 'count': 4}})
+        assert len(records) == max_records
 
     def test_scan_partition_with_socket_timeout_policy(self):
 
@@ -206,8 +227,8 @@ class TestScanPartition(TestBaseClass):
 
         scan_obj = self.as_connection.scan(ns, st)
 
-        records = scan_obj.results({'partition_filter': {'begin': 2000, 'count': 1}})
-        assert len(records) == self.partition_2000_count
+        records = scan_obj.results({'partition_filter': {'begin': 1001, 'count': 1}})
+        assert len(records) == self.partition_1001_count
 
     def test_scan_partition_with_multiple_foreach_on_same_scan_object(self):
         """
@@ -221,25 +242,25 @@ class TestScanPartition(TestBaseClass):
 
         scan_obj = self.as_connection.scan(self.test_ns, self.test_set)
 
-        scan_obj.foreach(callback, {'partition_filter': {'begin': 2000, 'count': 1}})
+        scan_obj.foreach(callback, {'partition_filter': {'begin': 1001, 'count': 1}})
 
-        assert len(records) == self.partition_2000_count
+        assert len(records) == self.partition_1001_count
 
         records = []
-        scan_obj.foreach(callback, {'partition_filter': {'begin': 2000, 'count': 1}})
+        scan_obj.foreach(callback, {'partition_filter': {'begin': 1001, 'count': 1}})
 
-        assert len(records) == self.partition_2000_count
+        assert len(records) == self.partition_1001_count
 
     def test_scan_partition_with_multiple_results_call_on_same_scan_object(self):
 
         scan_obj = self.as_connection.scan(self.test_ns, self.test_set)
 
-        records = scan_obj.results({'partition_filter': {'begin': 3000, 'count': 1}})
-        assert len(records) == self.partition_3000_count
+        records = scan_obj.results({'partition_filter': {'begin': 1002, 'count': 1}})
+        assert len(records) == self.partition_1002_count
 
         records = []
-        records = scan_obj.results({'partition_filter': {'begin': 3000, 'count': 1}})
-        assert len(records) == self.partition_3000_count
+        records = scan_obj.results({'partition_filter': {'begin': 1002, 'count': 1}})
+        assert len(records) == self.partition_1002_count
 
     def test_scan_partition_without_any_parameter(self):
 
@@ -260,7 +281,7 @@ class TestScanPartition(TestBaseClass):
             records.append(record)
 
         with pytest.raises(e.ClientError) as err_info:
-            scan_obj.foreach(callback, {'partition_filter': {'begin': 2000, 'count': 1}})
+            scan_obj.foreach(callback, {'partition_filter': {'begin': 1001, 'count': 1}})
         err_code = err_info.value.code
         assert err_code == AerospikeStatus.AEROSPIKE_ERR_CLIENT
 
@@ -275,7 +296,7 @@ class TestScanPartition(TestBaseClass):
         scan_obj = self.as_connection.scan(self.test_ns, self.test_set)
 
         with pytest.raises(e.ClientError) as err_info:
-            scan_obj.foreach(callback, {'timeout': 1000, 'partition_filter': {'begin': 2000, 'count': 1}})
+            scan_obj.foreach(callback, {'timeout': 1000, 'partition_filter': {'begin': 1001, 'count': 1}})
 
         err_code = err_info.value.code
         assert err_code == AerospikeStatus.AEROSPIKE_ERR_CLIENT
@@ -286,7 +307,7 @@ class TestScanPartition(TestBaseClass):
         scan_obj = self.as_connection.scan(self.test_ns, self.test_set)
 
         with pytest.raises(e.ClientError) as err_info:
-            scan_obj.foreach(5, {'partition_filter': {'begin': 2000, 'count': 1}})
+            scan_obj.foreach(5, {'partition_filter': {'begin': 1001, 'count': 1}})
 
         err_code = err_info.value.code
         assert err_code == AerospikeStatus.AEROSPIKE_ERR_CLIENT
@@ -299,7 +320,7 @@ class TestScanPartition(TestBaseClass):
         scan_obj = self.as_connection.scan(self.test_ns, self.test_set)
 
         with pytest.raises(e.ClientError) as err_info:
-            scan_obj.foreach(callback, {'partition_filter': {'begin': 2000, 'count': 1}})
+            scan_obj.foreach(callback, {'partition_filter': {'begin': 1001, 'count': 1}})
 
         err_code = err_info.value.code
         assert err_code == AerospikeStatus.AEROSPIKE_ERR_CLIENT
