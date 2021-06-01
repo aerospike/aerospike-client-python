@@ -128,28 +128,27 @@ try:
             print(f"{existing_count} records are exist already in partition:{options.partition}.")
 
         count = 0
-        for i in range(1, 100000):
+        for i in range(1, 80000):
             rec_partition = client.get_key_partition_id('test', 'demo', str(i))
             #print(f'rec_partition_id: {rec_partition}')
 
             if rec_partition == options.partition: # and not client.exists(('test', 'demo', str(i))):
-                rec = {
-                    'i': i,
-                    's': 'xyz',
-                    'l': [2, 4, 8, 16, 32, None, 128, 256],
-                    'm': {'partition': rec_partition, 'b': 4, 'c': 8, 'd': 16}
-                }
                 #print(rec)
                 count = count + 1
-                client.put(('test', 'demo', str(i)), rec)
+            rec = {
+                'i': i,
+                's': 'xyz',
+                'l': [2, 4, 8, 16, 32, None, 128, 256],
+                'm': {'partition': rec_partition, 'b': 4, 'c': 8, 'd': 16}
+            }
+            client.put(('test', 'demo', str(i)), rec)
         
-        if count > 0:
-            records.clear()
-            # invoke the operations, and for each record invoke the callback
-            #s.foreach(callback, partition_policy)
-            pp = pprint.PrettyPrinter(indent=2)
-            records = s.results(partition_policy)
-            pp.pprint(records)
+        records.clear()
+        # invoke the operations, and for each record invoke the callback
+        s.foreach(callback, partition_policy)
+        #pp = pprint.PrettyPrinter(indent=2)
+        #records = s.results(partition_policy)
+        #pp.pprint(records)
 
         print("---")
         print(f"{count} records are put into partition:{options.partition}.")

@@ -190,7 +190,9 @@ PyObject * AerospikeScan_Foreach(AerospikeScan * self, PyObject * args, PyObject
 	// We are spawning multiple threads
 	Py_BEGIN_ALLOW_THREADS
 	// Invoke operation
-	if (nodename) {
+	if (partition_filter_p) {
+		aerospike_scan_partitions(self->client->as, &err, scan_policy_p, &self->scan, scan_policy_p->partition_filter, each_result, &data);
+	} else if (nodename) {
 		aerospike_scan_node(self->client->as, &err, scan_policy_p, &self->scan, nodename, each_result, &data);
 	} else {
 		aerospike_scan_foreach(self->client->as, &err, scan_policy_p, &self->scan, each_result, &data);
