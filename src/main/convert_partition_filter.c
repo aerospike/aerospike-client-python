@@ -39,16 +39,13 @@
 * Initiates the conversion from intermediate_partition_filter structs to partition_filter.
 * builds the partition filter.
 */
-as_status convert_partition_filter(AerospikeClient * self, PyObject * py_partition_filter, as_partition_filter ** partition_filter, as_error * err) {
+as_status convert_partition_filter(AerospikeClient * self, PyObject * py_partition_filter, as_partition_filter * filter, as_error * err) {
 	
 	PyObject * begin = PyDict_GetItemString(py_partition_filter, "begin");
 	PyObject * count = PyDict_GetItemString(py_partition_filter, "count");
 	PyObject * digest = PyDict_GetItemString(py_partition_filter, "digest");
 
-	*partition_filter = NULL;
-
 	if (begin && PyInt_Check(begin)) {
-		as_partition_filter* filter = cf_malloc(sizeof(as_partition_filter));
 		filter->begin = 0;
 		filter->count = 0;
 		filter->digest.init = 0;
@@ -69,8 +66,8 @@ as_status convert_partition_filter(AerospikeClient * self, PyObject * py_partiti
 				strncpy((char*)filter->digest.value, PyString_AsString(value), AS_DIGEST_VALUE_SIZE);
 			}
 		}
-
-		*partition_filter = filter;
+	} else {
+		as_error_update(err, AEROSPIKE_ERR_PARAM, "Invalid scan partition policy");
 	}
 
 	return err->code;

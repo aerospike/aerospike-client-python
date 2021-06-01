@@ -123,7 +123,7 @@ PyObject * AerospikeScan_Foreach(AerospikeScan * self, PyObject * args, PyObject
 	as_predexp_list predexp_list;
 	as_predexp_list* predexp_list_p = NULL;
 
-	as_partition_filter partition_filter;
+	as_partition_filter partition_filter = {0};
 	as_partition_filter * partition_filter_p = NULL;
 
 	// Python Function Keyword Arguments
@@ -140,9 +140,7 @@ PyObject * AerospikeScan_Foreach(AerospikeScan * self, PyObject * args, PyObject
 	data.client = self->client;
 	as_error_init(&data.error);
 
-	// Aerospike Client Arguments
 	as_error err;
-
 	// Initialize error
 	as_error_init(&err);
 
@@ -158,11 +156,21 @@ PyObject * AerospikeScan_Foreach(AerospikeScan * self, PyObject * args, PyObject
 
 	// Convert python policy object to as_policy_exists
 	pyobject_to_policy_scan(self->client, &err, py_policy, &scan_policy, &scan_policy_p,
-			&self->client->as->config.policies.scan, &predexp_list, &predexp_list_p, &exp_list, &exp_list_p,
-			&partition_filter, &partition_filter_p);
+			&self->client->as->config.policies.scan, &predexp_list, &predexp_list_p, &exp_list, &exp_list_p);
 	if (err.code != AEROSPIKE_OK) {
 		goto CLEANUP;
 	}
+
+	if (py_policy) {
+		PyObject* py_partition_filter = PyDict_GetItemString(py_policy, "partition_filter");
+		if (py_partition_filter) {
+			if( convert_partition_filter(self->client, py_partition_filter, &partition_filter, &err) == AEROSPIKE_OK) {
+				partition_filter_p = &partition_filter;
+			}
+		}
+	}
+	as_error_init(&err);
+
 	if (py_options && PyDict_Check(py_options)) {
 		set_scan_options(&err, &self->scan, py_options);
 		if (err.code != AEROSPIKE_OK) {
@@ -191,7 +199,7 @@ PyObject * AerospikeScan_Foreach(AerospikeScan * self, PyObject * args, PyObject
 	Py_BEGIN_ALLOW_THREADS
 	// Invoke operation
 	if (partition_filter_p) {
-		aerospike_scan_partitions(self->client->as, &err, scan_policy_p, &self->scan, scan_policy_p->partition_filter, each_result, &data);
+		aerospike_scan_partitions(self->client->as, &err, scan_policy_p, &self->scan, partition_filter_p, each_result, &data);
 	} else if (nodename) {
 		aerospike_scan_node(self->client->as, &err, scan_policy_p, &self->scan, nodename, each_result, &data);
 	} else {
@@ -206,11 +214,7 @@ PyObject * AerospikeScan_Foreach(AerospikeScan * self, PyObject * args, PyObject
 	}
 
 CLEANUP:
-
-	if(partition_filter_p) {
-		as_partition_filter_destroy(partition_filter_p);
-	}
-
+	
 	if (exp_list_p) {
 		as_exp_destroy(exp_list_p);;
 	}
