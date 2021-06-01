@@ -34,42 +34,44 @@
 #include "cdt_types.h"
 
 /*
-* convert_partition_info
-* Converts partition info from python into partition_info structs.
-* Initiates the conversion from intermediate_partition_info structs to partition_info.
-* builds the partition info.
+* convert_partition_filter
+* Converts partition filter from python object into partition_filter struct.
+* Initiates the conversion from intermediate_partition_filter structs to partition_filter.
+* builds the partition filter.
 */
 as_status convert_partition_filter(AerospikeClient * self, PyObject * py_partition_filter, as_partition_filter ** partition_filter, as_error * err) {
-	as_partition_filter* filter = cf_malloc(sizeof(as_partition_filter));
-
+	
 	PyObject * begin = PyDict_GetItemString(py_partition_filter, "begin");
 	PyObject * count = PyDict_GetItemString(py_partition_filter, "count");
 	PyObject * digest = PyDict_GetItemString(py_partition_filter, "digest");
 
-	filter->begin = 0;
-	filter->count = 0;
-	filter->digest.init = 0;
+	*partition_filter = NULL;
 
 	if (begin && PyInt_Check(begin)) {
+		as_partition_filter* filter = cf_malloc(sizeof(as_partition_filter));
+		filter->begin = 0;
+		filter->count = 0;
+		filter->digest.init = 0;
+	
 		filter->begin = PyInt_AsLong(begin);
-	}
 
-	if (count && PyInt_Check(count)) {
-		filter->count = PyInt_AsLong(count);
-	}
-
-	if (digest && PyDict_Check(digest)) {
-		PyObject * init = PyDict_GetItemString(digest, "init");
-		if (init && PyInt_Check(init)) {
-			filter->digest.init = PyInt_AsLong(init);
+		if (count && PyInt_Check(count)) {
+			filter->count = PyInt_AsLong(count);
 		}
-		PyObject * value = PyDict_GetItemString(digest, "value");
-		if (value && PyString_Check(value)) {
-			strncpy((char*)filter->digest.value, PyString_AsString(value), AS_DIGEST_VALUE_SIZE);
-		}
-	}
 
-	*partition_filter = filter;
+		if (digest && PyDict_Check(digest)) {
+			PyObject * init = PyDict_GetItemString(digest, "init");
+			if (init && PyInt_Check(init)) {
+				filter->digest.init = PyInt_AsLong(init);
+			}
+			PyObject * value = PyDict_GetItemString(digest, "value");
+			if (value && PyString_Check(value)) {
+				strncpy((char*)filter->digest.value, PyString_AsString(value), AS_DIGEST_VALUE_SIZE);
+			}
+		}
+
+		*partition_filter = filter;
+	}
 
 	return err->code;
 }
