@@ -79,6 +79,10 @@ PyObject * AerospikeScan_ExecuteBackground(AerospikeScan * self, PyObject * args
 
 CLEANUP:
 
+	if(partition_filter_p) {
+		as_partition_filter_destroy(partition_filter_p);
+	}
+
 	if (exp_list_p) {
 		as_exp_destroy(exp_list_p);;
 	}
