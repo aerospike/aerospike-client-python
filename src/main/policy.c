@@ -845,7 +845,7 @@ as_status pyobject_to_policy_scan(AerospikeClient * self, as_error * err, PyObje
 	// C client 5.0 new expressions
 	POLICY_SET_EXPRESSIONS_BASE_FIELD();
 
-	// C client 5.0 new expressions
+	// C client >5.0 new partition based scanning
 	POLICY_SET_PARTITION_FILTER();
 
 	// Update the policy
