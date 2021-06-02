@@ -99,3 +99,19 @@ AerospikeScan * AerospikeScan_Apply(AerospikeScan * self, PyObject * args, PyObj
  *
  */
 AerospikeScan * AerospikeScan_Add_Ops(AerospikeScan * self, PyObject * args, PyObject * kwds);
+
+/**
+ * Set pagination filter to receive records in bunch (max_records or page_size).
+ *
+ *    scan.paginate()
+ *
+ */
+PyObject * AerospikeScan_Paginate(AerospikeScan * self, PyObject * args, PyObject * kwds);
+
+/**
+ * Gets the status of scan.
+ *
+ *    scan.is_done()
+ *
+ */
+PyObject * AerospikeScan_Is_Done(AerospikeScan * self, PyObject * args, PyObject * kwds);

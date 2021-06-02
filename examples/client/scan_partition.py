@@ -135,20 +135,20 @@ try:
             if rec_partition == options.partition: # and not client.exists(('test', 'demo', str(i))):
                 #print(rec)
                 count = count + 1
-            rec = {
-                'i': i,
-                's': 'xyz',
-                'l': [2, 4, 8, 16, 32, None, 128, 256],
-                'm': {'partition': rec_partition, 'b': 4, 'c': 8, 'd': 16}
-            }
-            client.put(('test', 'demo', str(i)), rec)
+                rec = {
+                    'i': i,
+                    's': 'xyz',
+                    'l': [2, 4, 8, 16, 32, None, 128, 256],
+                    'm': {'partition': rec_partition, 'b': 4, 'c': 8, 'd': 16}
+                }
+                client.put(('test', 'demo', str(i)), rec)
         
         records.clear()
         # invoke the operations, and for each record invoke the callback
-        s.foreach(callback, partition_policy)
-        #pp = pprint.PrettyPrinter(indent=2)
-        #records = s.results(partition_policy)
-        #pp.pprint(records)
+        #s.foreach(callback, partition_policy)
+        pp = pprint.PrettyPrinter(indent=2)
+        records = s.results(partition_policy)
+        pp.pprint(records)
 
         print("---")
         print(f"{count} records are put into partition:{options.partition}.")
