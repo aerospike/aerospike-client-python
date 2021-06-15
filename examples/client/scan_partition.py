@@ -133,6 +133,7 @@ try:
             #print(f'rec_partition_id: {rec_partition}')
 
             if rec_partition == options.partition: # and not client.exists(('test', 'demo', str(i))):
+                
                 #print(rec)
                 count = count + 1
                 rec = {

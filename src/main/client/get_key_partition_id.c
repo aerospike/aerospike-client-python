@@ -43,21 +43,21 @@ PyObject * AerospikeClient_Get_Key_PartitionID_Invoke(
 
 	// Initialised flags
 	bool key_initialised = false;
-
-	if (!PyString_Check(py_ns)) {
-		PyErr_SetString(PyExc_TypeError, "Namespace should be a string");
-		return NULL;
-	}
-	if (!PyString_Check(py_set)  && !PyUnicode_Check(py_set)) {
-		PyErr_SetString(PyExc_TypeError, "Set should be a string or unicode");
-		return NULL;
-	}
-	if (!PyString_Check(py_key)  && !PyUnicode_Check(py_key) && !PyInt_Check(py_key) && !PyLong_Check(py_key) && !PyByteArray_Check(py_key)) {
-		PyErr_SetString(PyExc_TypeError, "Key is invalid");
-		return NULL;
-	}
 	// Initialize error
 	as_error_init(&err);
+
+	if (!PyUnicode_Check(py_ns)) {
+		as_error_update(&err, AEROSPIKE_ERR_PARAM, "Namespace should be a string.");
+		goto CLEANUP;
+	}
+	if (!PyUnicode_Check(py_set)) {
+		as_error_update(&err, AEROSPIKE_ERR_PARAM, "Set should be a string or unicode.");
+		goto CLEANUP;
+	}
+	if (!PyUnicode_Check(py_key) && !PyLong_Check(py_key) && !PyByteArray_Check(py_key)) {
+		as_error_update(&err, AEROSPIKE_ERR_PARAM, "Key is invalid.");
+		goto CLEANUP;
+	}
 
 	if (!self || !self->as) {
 		as_error_update(&err, AEROSPIKE_ERR_PARAM, "Invalid aerospike object");
@@ -70,9 +70,18 @@ PyObject * AerospikeClient_Get_Key_PartitionID_Invoke(
 	}
 
 	py_keydict = PyDict_New();
-	PyDict_SetItemString(py_keydict, "ns", py_ns);
-	PyDict_SetItemString(py_keydict, "set", py_set);
-	PyDict_SetItemString(py_keydict, "key", py_key);
+	if( PyDict_SetItemString(py_keydict, "ns", py_ns) == -1) {
+		as_error_update(&err, AEROSPIKE_ERR_CLIENT, "Failed to add dictionary item ns.");
+		goto CLEANUP;
+	}
+	if( PyDict_SetItemString(py_keydict, "set", py_set) == -1) {
+		as_error_update(&err, AEROSPIKE_ERR_CLIENT, "Failed to add dictionary item set.");
+		goto CLEANUP;
+	}
+	if( PyDict_SetItemString(py_keydict, "key", py_key) == -1) {
+		as_error_update(&err, AEROSPIKE_ERR_CLIENT, "Failed to add dictionary item key.");
+		goto CLEANUP;
+	}
 
 	// Convert python key object to as_key
 	pyobject_to_key(&err, py_keydict, &key);
@@ -130,7 +139,7 @@ PyObject * AerospikeClient_Get_Key_PartitionID(AerospikeClient * self, PyObject 
 	static char * kwlist[] = {"ns", "set", "key", NULL};
 
 	// Python Function Argument Parsing
-	if (PyArg_ParseTupleAndKeywords(args, kwds, "OOO:get_key_digest", kwlist,
+	if (PyArg_ParseTupleAndKeywords(args, kwds, "OOO:get_key_partition_id", kwlist,
 			&py_ns, &py_set, &py_key) == false) {
 		return NULL;
 	}
