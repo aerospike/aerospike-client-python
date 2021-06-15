@@ -20,18 +20,9 @@
 #include <aerospike/aerospike_key.h>
 #include <aerospike/as_error.h>
 #include <aerospike/as_exp.h>
-#include <aerospike/as_vector.h>
-#include <aerospike/as_geojson.h>
-#include <aerospike/as_msgpack_ext.h>
 
 #include "client.h"
 #include "conversions.h"
-#include "serializer.h"
-#include "exceptions.h"
-#include "policy.h"
-#include "cdt_operation_utils.h"
-#include "geo.h"
-#include "cdt_types.h"
 
 /*
 * convert_partition_filter
@@ -45,20 +36,20 @@ as_status convert_partition_filter(AerospikeClient * self, PyObject * py_partiti
 	PyObject * count = PyDict_GetItemString(py_partition_filter, "count");
 	PyObject * digest = PyDict_GetItemString(py_partition_filter, "digest");
 
-	if (begin && PyInt_Check(begin)) {
+	if (begin && PyLong_Check(begin)) {
 		filter->begin = 0;
 		filter->count = 0;
 		filter->digest.init = 0;
 	
 		filter->begin = PyInt_AsLong(begin);
 
-		if (count && PyInt_Check(count)) {
+		if (count && PyLong_Check(count)) {
 			filter->count = PyInt_AsLong(count);
 		}
 
 		if (digest && PyDict_Check(digest)) {
 			PyObject * init = PyDict_GetItemString(digest, "init");
-			if (init && PyInt_Check(init)) {
+			if (init && PyLong_Check(init)) {
 				filter->digest.init = PyInt_AsLong(init);
 			}
 			PyObject * value = PyDict_GetItemString(digest, "value");

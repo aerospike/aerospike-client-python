@@ -632,7 +632,7 @@ PyObject * AerospikeClient_GetNodeNames(AerospikeClient * self, PyObject * args,
 */
 PyObject * AerospikeClient_Get_Key_Digest(AerospikeClient * self, PyObject * args, PyObject * kwds);
 /**
-* Perforrm get key's partition id from cluster.
+* Perform get key's partition id from cluster.
 *
 * client.get_key_partition_id((x,y,z))
 *
