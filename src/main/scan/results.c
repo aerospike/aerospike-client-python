@@ -125,7 +125,7 @@ PyObject * AerospikeScan_Results(AerospikeScan * self, PyObject * args, PyObject
 			}
 		}
 	}
-	as_error_init(&err);
+	as_error_reset(&err);
 
 	/*
 	 * If the user specified a nodename, validate and convert it to a char*
