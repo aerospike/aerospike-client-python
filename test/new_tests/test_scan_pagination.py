@@ -90,28 +90,28 @@ class TestScanPagination(TestBaseClass):
     def test_scan_pagination_with_existent_ns_and_set(self):
 
         records = []
-        scan_page_size = 12
-        scan_pages = 5
+        scan_page_size = [12]
+        scan_count = [0]
+        scan_pages = [5]
         max_records = self.partition_1000_count + \
             self.partition_1001_count + \
             self.partition_1002_count + \
             self.partition_1003_count
         partition_filter = {'begin': 1000, 'count': 4}
         #partition_filter['digest'] = {'init': 0, 'value': ''}
-        policy = {'max_records': scan_page_size,
+        policy = {'max_records': scan_page_size[0],
                   'partition_filter': partition_filter}
-        scan_count = 0
+
         def callback(input_tuple):
-            #global scan_count, scan_page_size, scan_pending_records, partition_filter
             if(input_tuple == None):
                 return True #scan complete
             (_, _, record) = input_tuple
             records.append(record)
             #print(record)
-            #scan_count = scan_count + 1
-            # if (scan_page_size == scan_count):
+            scan_count[0] = scan_count[0] + 1
+            #if (scan_page_size[0] == scan_count[0]):
             #     partition_filter.update['digest'] = {'init': 1, 'value': record[0][3]}
-            #     scan_pending_records -= scan_page_size
+            #     scan_pending_records -= scan_page_size[0]
             #     #return False
             return True
 
@@ -119,17 +119,18 @@ class TestScanPagination(TestBaseClass):
         scan_obj.paginate()
 
         i = 0
-        for i in range(scan_pages):
+        for i in range(scan_pages[0]):
         #while True:
             #i = i + 1
+            #with pytest.raises(e.ClientError):
+            scan_obj.foreach(callback, policy)
+            #assert scan_page_size[0] == scan_count[0]
+            scan_count[0] = 0
             if scan_obj.is_done() == True: 
                 print(f"scan completed iter:{i}")
                 break
-            scan_count = 0
-            #with pytest.raises(e.ClientError):
-            scan_obj.foreach(callback, policy)
 
-        assert len(records) == ((scan_page_size * scan_pages) if (scan_page_size * scan_pages) < max_records else max_records)
+        assert len(records) == ((scan_page_size[0] * scan_pages[0]) if (scan_page_size[0] * scan_pages[0]) < max_records else max_records)
 
     def test_scan_pagination_with_existent_ns_and_none_set(self):
 
@@ -175,7 +176,7 @@ class TestScanPagination(TestBaseClass):
 
         records = []
 
-        max_records = self.partition_1000_count // 2
+        max_records = self.partition_1000_count
 
         def callback(input_tuple):
             _, _, record = input_tuple
@@ -186,7 +187,7 @@ class TestScanPagination(TestBaseClass):
 
         scan_obj.foreach(callback, {'max_records': max_records, 'partition_filter': {
                          'begin': 1000, 'count': 1}})
-        assert len(records) == self.partition_1000_count // 2
+        assert len(records) == self.partition_1000_count
 
     def test_scan_pagination_with_all_records_policy(self):
 
@@ -301,7 +302,7 @@ class TestScanPagination(TestBaseClass):
         scan_obj.foreach(callback, {'partition_filter': {
                          'begin': 1001, 'count': 1}})
 
-        assert len(records) == self.partition_1001_count
+        assert len(records) == 0
 
     def test_scan_pagination_with_multiple_results_call_on_same_scan_object(self):
 
