@@ -12,7 +12,6 @@ from psutil import Process
 from collections import namedtuple
 from itertools import groupby
 import tracemalloc
-import gc
 
 from . import invalid_data
 from .test_base_class import TestBaseClass
@@ -79,17 +78,11 @@ def pytest_runtest_setup(item):
 
 
 def pytest_runtest_teardown(item):
-    gc.collect()
     log_entry = ConsumedRamLogEntry(item.nodeid, END, get_consumed_ram())
     consumed_ram_log.append(log_entry)
 
     tmlog_entry = ConsumedTracemallocLogEntry(item.nodeid, END, tracemalloc.take_snapshot())
     consumed_tracemalloc_log.append(tmlog_entry)
-    # print "\nGARBAGE OBJECTS:"
-    # for x in gc.garbage:
-    #     s = str(x)
-    #     if len(s) > 80: s = s[:80]
-    #     print type(x),"\n  ", s
  
 
 def compare_server_versions(version1, version2):

@@ -146,7 +146,6 @@ try:
         
         records.clear()
         # invoke the operations, and for each record invoke the callback
-        #s.foreach(callback, partition_policy)
         pp = pprint.PrettyPrinter(indent=2)
         records = s.results(partition_policy)
         pp.pprint(records)

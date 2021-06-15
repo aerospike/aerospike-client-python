@@ -98,7 +98,6 @@ class TestScanPagination(TestBaseClass):
             self.partition_1002_count + \
             self.partition_1003_count
         partition_filter = {'begin': 1000, 'count': 4}
-        #partition_filter['digest'] = {'init': 0, 'value': ''}
         policy = {'max_records': scan_page_size[0],
                   'partition_filter': partition_filter}
 
