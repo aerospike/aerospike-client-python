@@ -169,7 +169,7 @@ PyObject * AerospikeScan_Foreach(AerospikeScan * self, PyObject * args, PyObject
 			}
 		}
 	}
-	as_error_init(&err);
+	as_error_reset(&err);
 
 	if (py_options && PyDict_Check(py_options)) {
 		set_scan_options(&err, &self->scan, py_options);
