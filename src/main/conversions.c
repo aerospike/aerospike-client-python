@@ -198,8 +198,17 @@ as_status as_user_info_array_to_pyobject( as_error *err, as_user **users, PyObje
 		if (err->code != AEROSPIKE_OK) {
 			break;
 		}
-		PyDict_SetItemString(py_users, users[i]->name, py_as_user);
+		if (PyDict_SetItemString(py_users, users[i]->name, py_as_user) == -1) {
+			Py_DECREF(py_as_user);
+			as_error_update(err, AEROSPIKE_ERR_CLIENT, "Failed to set user info in users.");
+			break;
+		}
 		Py_DECREF(py_as_user);
+	}
+
+	if (err.code != AEROSPIKE_OK) {
+		Py_DECREF(py_users);
+		py_users = NULL;
 	}
 
 	*py_as_users = py_users;
