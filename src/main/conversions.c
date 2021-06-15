@@ -206,7 +206,7 @@ as_status as_user_info_array_to_pyobject( as_error *err, as_user **users, PyObje
 		Py_DECREF(py_as_user);
 	}
 
-	if (err.code != AEROSPIKE_OK) {
+	if (err->code != AEROSPIKE_OK) {
 		Py_DECREF(py_users);
 		py_users = NULL;
 	}
