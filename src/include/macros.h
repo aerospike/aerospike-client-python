@@ -59,3 +59,4 @@
 // pyval is a PyObject* classname is a string
 #define AS_Matches_Classname(pyval, classname)                                 \
 	(strcmp((pyval)->ob_type->tp_name, (classname)) == 0)
+
