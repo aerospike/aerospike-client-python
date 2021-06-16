@@ -39,27 +39,32 @@
  * In case of error,appropriate exceptions will be raised.
  *******************************************************************************************************
  */
-PyObject * AerospikeClient_Connect(AerospikeClient * self, PyObject * args, PyObject * kwds)
+PyObject *AerospikeClient_Connect(AerospikeClient *self, PyObject *args,
+								  PyObject *kwds)
 {
 	as_error err;
 	as_error_init(&err);
 	char *alias_to_search = NULL;
 	bool free_alias_to_search = false;
-	PyObject * py_username = NULL;
-	PyObject * py_password = NULL;
+	PyObject *py_username = NULL;
+	PyObject *py_password = NULL;
 
-	if (PyArg_ParseTuple(args, "|OO:connect", &py_username, &py_password) == false) {
+	if (PyArg_ParseTuple(args, "|OO:connect", &py_username, &py_password) ==
+		false) {
 		return NULL;
 	}
 
-	if (py_username && PyString_Check(py_username) && py_password && PyString_Check(py_password)) {
-		char * username = PyString_AsString(py_username);
-		char * password = PyString_AsString(py_password);
+	if (py_username && PyString_Check(py_username) && py_password &&
+		PyString_Check(py_password)) {
+		char *username = PyString_AsString(py_username);
+		char *password = PyString_AsString(py_password);
 		as_config_set_user(&self->as->config, username, password);
 	}
 
-	if (!self || !self->as || !self->as->config.hosts || !self->as->config.hosts->size) {
-		as_error_update(&err, AEROSPIKE_ERR_PARAM, "Invalid aerospike object or hosts not configured");
+	if (!self || !self->as || !self->as->config.hosts ||
+		!self->as->config.hosts->size) {
+		as_error_update(&err, AEROSPIKE_ERR_PARAM,
+						"Invalid aerospike object or hosts not configured");
 		goto CLEANUP;
 	}
 
@@ -67,9 +72,10 @@ PyObject * AerospikeClient_Connect(AerospikeClient * self, PyObject * args, PyOb
 	free_alias_to_search = true;
 
 	if (self->use_shared_connection) {
-		PyObject * py_persistent_item = PyDict_GetItemString(py_global_hosts, alias_to_search);
+		PyObject *py_persistent_item =
+			PyDict_GetItemString(py_global_hosts, alias_to_search);
 		if (py_persistent_item) {
-			aerospike *as = ((AerospikeGlobalHosts*)py_persistent_item)->as;
+			aerospike *as = ((AerospikeGlobalHosts *)py_persistent_item)->as;
 			//Destroy the initial aerospike object as it has to point to the one in
 			//the persistent list now
 			if (as != self->as) {
@@ -80,16 +86,18 @@ PyObject * AerospikeClient_Connect(AerospikeClient * self, PyObject * args, PyOb
 					aerospike_destroy(self->as);
 				}
 				self->as = as;
-				self->as->config.shm_key = ((AerospikeGlobalHosts*)py_persistent_item)->shm_key;
+				self->as->config.shm_key =
+					((AerospikeGlobalHosts *)py_persistent_item)->shm_key;
 
 				//Increase ref count of global host entry
-				((AerospikeGlobalHosts*)py_persistent_item)->ref_cnt++;
-			} else {
+				((AerospikeGlobalHosts *)py_persistent_item)->ref_cnt++;
+			}
+			else {
 				// If there is a matching global host entry,
 				// and this client was disconnected, increment the ref_cnt of the global.
 				// If the client is already connected, do nothing.
-				if(!self->is_conn_16) {
-					((AerospikeGlobalHosts*)py_persistent_item)->ref_cnt++;
+				if (!self->is_conn_16) {
+					((AerospikeGlobalHosts *)py_persistent_item)->ref_cnt++;
 				}
 			}
 			goto CLEANUP;
@@ -104,14 +112,16 @@ PyObject * AerospikeClient_Connect(AerospikeClient * self, PyObject * args, PyOb
 		if (user_shm_key) {
 			shm_key = self->as->config.shm_key;
 			user_shm_key = false;
-		} else {
+		}
+		else {
 			shm_key = counter;
 		}
 		while (1) {
 			flag = 0;
 			while (PyDict_Next(py_global_hosts, &pos, &py_key, &py_value)) {
-				if (((AerospikeGlobalHosts*)py_value)->as->config.use_shm) {
-					if (((AerospikeGlobalHosts*)py_value)->shm_key == shm_key) {
+				if (((AerospikeGlobalHosts *)py_value)->as->config.use_shm) {
+					if (((AerospikeGlobalHosts *)py_value)->shm_key ==
+						shm_key) {
 						flag = 1;
 						break;
 					}
@@ -131,11 +141,9 @@ PyObject * AerospikeClient_Connect(AerospikeClient * self, PyObject * args, PyOb
 		goto CLEANUP;
 	}
 	if (self->use_shared_connection) {
-		PyObject * py_newobject = (PyObject *)AerospikeGobalHosts_New(self->as);
+		PyObject *py_newobject = (PyObject *)AerospikeGobalHosts_New(self->as);
 		PyDict_SetItemString(py_global_hosts, alias_to_search, py_newobject);
 	}
-
-
 
 CLEANUP:
 	if (free_alias_to_search && alias_to_search) {
@@ -144,7 +152,7 @@ CLEANUP:
 	}
 
 	if (err.code != AEROSPIKE_OK) {
-		PyObject * py_err = NULL;
+		PyObject *py_err = NULL;
 		error_to_pyobject(&err, &py_err);
 		PyObject *exception_type = raise_exception(&err);
 		PyErr_SetObject(exception_type, py_err);
@@ -154,7 +162,7 @@ CLEANUP:
 	self->is_conn_16 = true;
 	self->has_connected = true;
 	Py_INCREF(self);
-	return (PyObject *) self;
+	return (PyObject *)self;
 }
 
 /**
@@ -169,7 +177,8 @@ CLEANUP:
  * Returns true or false.
  *******************************************************************************************************
  */
-PyObject * AerospikeClient_is_connected(AerospikeClient * self, PyObject * args, PyObject * kwds)
+PyObject *AerospikeClient_is_connected(AerospikeClient *self, PyObject *args,
+									   PyObject *kwds)
 {
 	if (!self || !self->is_conn_16) {
 		Py_INCREF(Py_False);
@@ -197,7 +206,8 @@ PyObject * AerospikeClient_is_connected(AerospikeClient * self, PyObject * args,
  * Returns true or false.
  *******************************************************************************************************
  */
-PyObject * AerospikeClient_shm_key(AerospikeClient * self, PyObject * args, PyObject * kwds)
+PyObject *AerospikeClient_shm_key(AerospikeClient *self, PyObject *args,
+								  PyObject *kwds)
 {
 	as_error err;
 	as_error_init(&err);
@@ -208,18 +218,18 @@ PyObject * AerospikeClient_shm_key(AerospikeClient * self, PyObject * args, PyOb
 	}
 
 	if (!self->is_conn_16) {
-		as_error_update(&err, AEROSPIKE_ERR_CLUSTER, "No connection to aerospike cluster");
+		as_error_update(&err, AEROSPIKE_ERR_CLUSTER,
+						"No connection to aerospike cluster");
 		goto CLEANUP;
 	}
 
 	if (self->as->config.use_shm && self->as->config.shm_key) {
-		return PyLong_FromUnsignedLong((unsigned int) self->as->config.shm_key);
+		return PyLong_FromUnsignedLong((unsigned int)self->as->config.shm_key);
 	}
-
 
 CLEANUP:
 	if (err.code != AEROSPIKE_OK) {
-		PyObject * py_err = NULL;
+		PyObject *py_err = NULL;
 		error_to_pyobject(&err, &py_err);
 		PyObject *exception_type = raise_exception(&err);
 		PyErr_SetObject(exception_type, py_err);

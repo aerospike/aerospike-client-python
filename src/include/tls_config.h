@@ -22,4 +22,4 @@
 
 #include "macros.h"
 
-void setup_tls_config(as_config* config, PyObject* tls_config);
+void setup_tls_config(as_config *config, PyObject *tls_config);

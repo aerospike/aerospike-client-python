@@ -47,16 +47,15 @@ typedef struct {
 } AerospikeCDTInfObject;
 
 typedef struct {
-	PyObject_HEAD
-	aerospike * as;
+	PyObject_HEAD aerospike *as;
 	int shm_key;
 	int ref_cnt;
 } AerospikeGlobalHosts;
 
 typedef struct {
 	as_error error;
-	PyObject * callback;
-}user_serializer_callback;
+	PyObject *callback;
+} user_serializer_callback;
 
 typedef struct {
 	PyObject *ob[MAX_UNICODE_OBJECTS];
@@ -64,8 +63,7 @@ typedef struct {
 } UnicodePyObjects;
 
 typedef struct {
-	PyObject_HEAD
-	aerospike * as;
+	PyObject_HEAD aerospike *as;
 	int is_conn_16;
 	user_serializer_callback user_serializer_call_info;
 	user_serializer_callback user_deserializer_call_info;
@@ -77,25 +75,22 @@ typedef struct {
 } AerospikeClient;
 
 typedef struct {
-	PyObject_HEAD
-	AerospikeClient * client;
+	PyObject_HEAD AerospikeClient *client;
 	as_query query;
 	UnicodePyObjects u_objs;
-	as_vector * unicodeStrVector;
-	as_static_pool * static_pool;
+	as_vector *unicodeStrVector;
+	as_static_pool *static_pool;
 } AerospikeQuery;
 
 typedef struct {
-	PyObject_HEAD
-	AerospikeClient * client;
+	PyObject_HEAD AerospikeClient *client;
 	as_scan scan;
-	as_vector * unicodeStrVector;
-	as_static_pool * static_pool;
+	as_vector *unicodeStrVector;
+	as_static_pool *static_pool;
 } AerospikeScan;
 
 typedef struct {
-	PyObject_HEAD
-	PyObject *geo_data;
+	PyObject_HEAD PyObject *geo_data;
 } AerospikeGeospatial;
 
 typedef struct {

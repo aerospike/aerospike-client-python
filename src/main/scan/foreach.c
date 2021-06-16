@@ -30,12 +30,11 @@
 // Struct for Python User-Data for the Callback
 typedef struct {
 	as_error error;
-	PyObject * callback;
-	AerospikeClient * client;
+	PyObject *callback;
+	AerospikeClient *client;
 } LocalData;
 
-
-static bool each_result(const as_val * val, void * udata)
+static bool each_result(const as_val *val, void *udata)
 {
 	bool rval = true;
 
@@ -44,14 +43,14 @@ static bool each_result(const as_val * val, void * udata)
 	}
 
 	// Extract callback user-data
-	LocalData * data = (LocalData *) udata;
-	as_error * err = &data->error;
-	PyObject * py_callback = data->callback;
+	LocalData *data = (LocalData *)udata;
+	as_error *err = &data->error;
+	PyObject *py_callback = data->callback;
 
 	// Python Function Arguments and Result Value
-	PyObject * py_arglist = NULL;
-	PyObject * py_result = NULL;
-	PyObject * py_return = NULL;
+	PyObject *py_arglist = NULL;
+	PyObject *py_result = NULL;
+	PyObject *py_return = NULL;
 
 	// Lock Python State
 	PyGILState_STATE gstate;
@@ -78,7 +77,8 @@ static bool each_result(const as_val * val, void * udata)
 	if (!py_return) {
 		// an exception was raised, handle it (someday)
 		// for now, we bail from the loop
-		as_error_update(err, AEROSPIKE_ERR_CLIENT, "Callback function raised an exception");
+		as_error_update(err, AEROSPIKE_ERR_CLIENT,
+						"Callback function raised an exception");
 		rval = false;
 	}
 	else if (PyBool_Check(py_return)) {
@@ -101,36 +101,39 @@ static bool each_result(const as_val * val, void * udata)
 	return rval;
 }
 
-PyObject * AerospikeScan_Foreach(AerospikeScan * self, PyObject * args, PyObject * kwds)
+PyObject *AerospikeScan_Foreach(AerospikeScan *self, PyObject *args,
+								PyObject *kwds)
 {
 	// Python Function Arguments
-	PyObject * py_callback = NULL;
-	PyObject * py_policy = NULL;
-	PyObject * py_options = NULL;
-	PyObject * py_nodename = NULL;
-	PyObject* py_ustr = NULL;
+	PyObject *py_callback = NULL;
+	PyObject *py_policy = NULL;
+	PyObject *py_options = NULL;
+	PyObject *py_nodename = NULL;
+	PyObject *py_ustr = NULL;
 
-	char* nodename = NULL;
+	char *nodename = NULL;
 
 	as_policy_scan scan_policy;
-	as_policy_scan * scan_policy_p = NULL;
+	as_policy_scan *scan_policy_p = NULL;
 
 	// For converting expressions.
 	as_exp exp_list;
-	as_exp* exp_list_p = NULL;
+	as_exp *exp_list_p = NULL;
 
 	// For converting predexp.
 	as_predexp_list predexp_list;
-	as_predexp_list* predexp_list_p = NULL;
+	as_predexp_list *predexp_list_p = NULL;
 
 	as_partition_filter partition_filter = {0};
-	as_partition_filter * partition_filter_p = NULL;
+	as_partition_filter *partition_filter_p = NULL;
 
 	// Python Function Keyword Arguments
-	static char * kwlist[] = {"callback", "policy", "options", "nodename", NULL};
+	static char *kwlist[] = {"callback", "policy", "options", "nodename", NULL};
 
 	// Python Function Argument Parsing
-	if (PyArg_ParseTupleAndKeywords(args, kwds, "O|OOO:foreach", kwlist, &py_callback, &py_policy, &py_options, &py_nodename) == false) {
+	if (PyArg_ParseTupleAndKeywords(args, kwds, "O|OOO:foreach", kwlist,
+									&py_callback, &py_policy, &py_options,
+									&py_nodename) == false) {
 		return NULL;
 	}
 
@@ -150,21 +153,27 @@ PyObject * AerospikeScan_Foreach(AerospikeScan * self, PyObject * args, PyObject
 	}
 
 	if (!self->client->is_conn_16) {
-		as_error_update(&err, AEROSPIKE_ERR_CLUSTER, "No connection to aerospike cluster");
+		as_error_update(&err, AEROSPIKE_ERR_CLUSTER,
+						"No connection to aerospike cluster");
 		goto CLEANUP;
 	}
 
 	// Convert python policy object to as_policy_exists
-	pyobject_to_policy_scan(self->client, &err, py_policy, &scan_policy, &scan_policy_p,
-			&self->client->as->config.policies.scan, &predexp_list, &predexp_list_p, &exp_list, &exp_list_p);
+	pyobject_to_policy_scan(
+		self->client, &err, py_policy, &scan_policy, &scan_policy_p,
+		&self->client->as->config.policies.scan, &predexp_list, &predexp_list_p,
+		&exp_list, &exp_list_p);
 	if (err.code != AEROSPIKE_OK) {
 		goto CLEANUP;
 	}
 
 	if (py_policy) {
-		PyObject* py_partition_filter = PyDict_GetItemString(py_policy, "partition_filter");
+		PyObject *py_partition_filter =
+			PyDict_GetItemString(py_policy, "partition_filter");
 		if (py_partition_filter) {
-			if( convert_partition_filter(self->client, py_partition_filter, &partition_filter, &err) == AEROSPIKE_OK) {
+			if (convert_partition_filter(self->client, py_partition_filter,
+										 &partition_filter,
+										 &err) == AEROSPIKE_OK) {
 				partition_filter_p = &partition_filter;
 			}
 		}
@@ -181,16 +190,19 @@ PyObject * AerospikeScan_Foreach(AerospikeScan * self, PyObject * args, PyObject
 	if (py_nodename) {
 		if (PyString_Check(py_nodename)) {
 			nodename = PyString_AsString(py_nodename);
-		} else if (PyUnicode_Check(py_nodename)) {
+		}
+		else if (PyUnicode_Check(py_nodename)) {
 			py_ustr = PyUnicode_AsUTF8String(py_nodename);
 			if (!py_ustr) {
-				as_error_update(&err, AEROSPIKE_ERR_PARAM, "Invalid unicode nodename");
+				as_error_update(&err, AEROSPIKE_ERR_PARAM,
+								"Invalid unicode nodename");
 				goto CLEANUP;
 			}
 			nodename = PyBytes_AsString(py_ustr);
 		}
 		else {
-			as_error_update(&err, AEROSPIKE_ERR_PARAM, "nodename must be a string");
+			as_error_update(&err, AEROSPIKE_ERR_PARAM,
+							"nodename must be a string");
 			goto CLEANUP;
 		}
 	}
@@ -199,11 +211,17 @@ PyObject * AerospikeScan_Foreach(AerospikeScan * self, PyObject * args, PyObject
 	Py_BEGIN_ALLOW_THREADS
 	// Invoke operation
 	if (partition_filter_p) {
-		aerospike_scan_partitions(self->client->as, &err, scan_policy_p, &self->scan, partition_filter_p, each_result, &data);
-	} else if (nodename) {
-		aerospike_scan_node(self->client->as, &err, scan_policy_p, &self->scan, nodename, each_result, &data);
-	} else {
-		aerospike_scan_foreach(self->client->as, &err, scan_policy_p, &self->scan, each_result, &data);
+		aerospike_scan_partitions(self->client->as, &err, scan_policy_p,
+								  &self->scan, partition_filter_p, each_result,
+								  &data);
+	}
+	else if (nodename) {
+		aerospike_scan_node(self->client->as, &err, scan_policy_p, &self->scan,
+							nodename, each_result, &data);
+	}
+	else {
+		aerospike_scan_foreach(self->client->as, &err, scan_policy_p,
+							   &self->scan, each_result, &data);
 	}
 	// We are done using multiple threads
 	Py_END_ALLOW_THREADS
@@ -214,9 +232,10 @@ PyObject * AerospikeScan_Foreach(AerospikeScan * self, PyObject * args, PyObject
 	}
 
 CLEANUP:
-	
+
 	if (exp_list_p) {
-		as_exp_destroy(exp_list_p);;
+		as_exp_destroy(exp_list_p);
+		;
 	}
 
 	if (predexp_list_p) {
@@ -226,12 +245,12 @@ CLEANUP:
 	Py_XDECREF(py_ustr);
 
 	if (err.code != AEROSPIKE_OK || data.error.code != AEROSPIKE_OK) {
-		PyObject * py_err = NULL, *exception_type = NULL;
-		if (err.code != AEROSPIKE_OK){
+		PyObject *py_err = NULL, *exception_type = NULL;
+		if (err.code != AEROSPIKE_OK) {
 			error_to_pyobject(&err, &py_err);
 			exception_type = raise_exception(&err);
 		}
-		if (data.error.code != AEROSPIKE_OK){
+		if (data.error.code != AEROSPIKE_OK) {
 			error_to_pyobject(&data.error, &py_err);
 			exception_type = raise_exception(&data.error);
 		}
@@ -239,7 +258,7 @@ CLEANUP:
 		Py_DECREF(py_err);
 		return NULL;
 	}
-	
+
 	Py_INCREF(Py_None);
 	return Py_None;
 }

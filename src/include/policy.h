@@ -141,24 +141,24 @@ enum Aerospike_map_operations {
 };
 
 enum aerospike_bitwise_operations {
-    OP_BIT_RESIZE = 2000,
-    OP_BIT_INSERT,
-    OP_BIT_REMOVE,
-    OP_BIT_SET,
-    OP_BIT_OR,
-    OP_BIT_XOR,
-    OP_BIT_AND,
-    OP_BIT_NOT,
-    OP_BIT_LSHIFT,
-    OP_BIT_RSHIFT,
-    OP_BIT_ADD,
-    OP_BIT_SUBTRACT,
-    OP_BIT_GET_INT,
-    OP_BIT_SET_INT,
-    OP_BIT_GET,
-    OP_BIT_COUNT,
-    OP_BIT_LSCAN,
-    OP_BIT_RSCAN
+	OP_BIT_RESIZE = 2000,
+	OP_BIT_INSERT,
+	OP_BIT_REMOVE,
+	OP_BIT_SET,
+	OP_BIT_OR,
+	OP_BIT_XOR,
+	OP_BIT_AND,
+	OP_BIT_NOT,
+	OP_BIT_LSHIFT,
+	OP_BIT_RSHIFT,
+	OP_BIT_ADD,
+	OP_BIT_SUBTRACT,
+	OP_BIT_GET_INT,
+	OP_BIT_SET_INT,
+	OP_BIT_GET,
+	OP_BIT_COUNT,
+	OP_BIT_LSCAN,
+	OP_BIT_RSCAN
 };
 
 enum aerospike_hll_operations {
@@ -176,10 +176,7 @@ enum aerospike_hll_operations {
 	OP_HLL_MAY_CONTAIN
 };
 
-enum aerospike_expression_operations {
-	OP_EXPR_READ = 2200,
-	OP_EXPR_WRITE
-};
+enum aerospike_expression_operations { OP_EXPR_READ = 2200, OP_EXPR_WRITE };
 
 enum aerospike_cdt_ctx_identifiers {
 	CDT_CTX_LIST_INDEX_CREATE = 0x14,
@@ -187,111 +184,104 @@ enum aerospike_cdt_ctx_identifiers {
 };
 
 typedef struct Aerospike_Constants {
-    long    constantno;
-    char    constant_str[MAX_CONSTANT_STR_SIZE];
-}AerospikeConstants;
+	long constantno;
+	char constant_str[MAX_CONSTANT_STR_SIZE];
+} AerospikeConstants;
 
 typedef struct Aerospike_JobConstants {
-    char job_str[MAX_CONSTANT_STR_SIZE];
-    char exposed_job_str[MAX_CONSTANT_STR_SIZE];
-}AerospikeJobConstants;
-#define AEROSPIKE_CONSTANTS_ARR_SIZE (sizeof(aerospike_constants)/sizeof(AerospikeConstants))
-#define AEROSPIKE_JOB_CONSTANTS_ARR_SIZE (sizeof(aerospike_job_constants)/sizeof(AerospikeJobConstants))
+	char job_str[MAX_CONSTANT_STR_SIZE];
+	char exposed_job_str[MAX_CONSTANT_STR_SIZE];
+} AerospikeJobConstants;
+#define AEROSPIKE_CONSTANTS_ARR_SIZE                                           \
+	(sizeof(aerospike_constants) / sizeof(AerospikeConstants))
+#define AEROSPIKE_JOB_CONSTANTS_ARR_SIZE                                       \
+	(sizeof(aerospike_job_constants) / sizeof(AerospikeJobConstants))
 
-as_status pyobject_to_policy_admin(AerospikeClient * self, as_error * err, PyObject * py_policy,
-									as_policy_admin * policy,
-									as_policy_admin ** policy_p,
-									as_policy_admin * config_admin_policy);
+as_status pyobject_to_policy_admin(AerospikeClient *self, as_error *err,
+								   PyObject *py_policy, as_policy_admin *policy,
+								   as_policy_admin **policy_p,
+								   as_policy_admin *config_admin_policy);
 
-as_status pyobject_to_policy_apply(AerospikeClient * self, as_error * err, PyObject * py_policy,
-									as_policy_apply * policy,
-									as_policy_apply ** policy_p,
-									as_policy_apply * config_apply_policy,
-									as_predexp_list * predexp_list,
-									as_predexp_list ** predexp_list_p,
-									as_exp * exp_list,
-									as_exp ** exp_list_p);
+as_status pyobject_to_policy_apply(AerospikeClient *self, as_error *err,
+								   PyObject *py_policy, as_policy_apply *policy,
+								   as_policy_apply **policy_p,
+								   as_policy_apply *config_apply_policy,
+								   as_predexp_list *predexp_list,
+								   as_predexp_list **predexp_list_p,
+								   as_exp *exp_list, as_exp **exp_list_p);
 
-as_status pyobject_to_policy_info(as_error * err, PyObject * py_policy,
-									as_policy_info * policy,
-									as_policy_info ** policy_p,
-									as_policy_info * config_info_policy);
+as_status pyobject_to_policy_info(as_error *err, PyObject *py_policy,
+								  as_policy_info *policy,
+								  as_policy_info **policy_p,
+								  as_policy_info *config_info_policy);
 
-as_status pyobject_to_policy_query(AerospikeClient * self, as_error * err, PyObject * py_policy,
-									as_policy_query * policy,
-									as_policy_query ** policy_p,
-									as_policy_query * config_query_policy,
-									as_predexp_list * predexp_list,
-									as_predexp_list ** predexp_list_p,
-									as_exp * exp_list,
-									as_exp ** exp_list_p);
+as_status pyobject_to_policy_query(AerospikeClient *self, as_error *err,
+								   PyObject *py_policy, as_policy_query *policy,
+								   as_policy_query **policy_p,
+								   as_policy_query *config_query_policy,
+								   as_predexp_list *predexp_list,
+								   as_predexp_list **predexp_list_p,
+								   as_exp *exp_list, as_exp **exp_list_p);
 
-as_status pyobject_to_policy_read(AerospikeClient * self, as_error * err, PyObject * py_policy,
-									as_policy_read * policy,
-									as_policy_read ** policy_p,
-									as_policy_read * config_read_policy,
-									as_predexp_list * predexp_list,
-									as_predexp_list ** predexp_list_p,
-									as_exp * exp_list,
-									as_exp ** exp_list_p);
+as_status pyobject_to_policy_read(AerospikeClient *self, as_error *err,
+								  PyObject *py_policy, as_policy_read *policy,
+								  as_policy_read **policy_p,
+								  as_policy_read *config_read_policy,
+								  as_predexp_list *predexp_list,
+								  as_predexp_list **predexp_list_p,
+								  as_exp *exp_list, as_exp **exp_list_p);
 
-as_status pyobject_to_policy_remove(AerospikeClient * self, as_error * err, PyObject * py_policy,
-									as_policy_remove * policy,
-									as_policy_remove ** policy_p,
-									as_policy_remove * config_remove_policy,
-									as_predexp_list * predexp_list,
-									as_predexp_list ** predexp_list_p,
-									as_exp * exp_list,
-									as_exp ** exp_list_p);
+as_status pyobject_to_policy_remove(
+	AerospikeClient *self, as_error *err, PyObject *py_policy,
+	as_policy_remove *policy, as_policy_remove **policy_p,
+	as_policy_remove *config_remove_policy, as_predexp_list *predexp_list,
+	as_predexp_list **predexp_list_p, as_exp *exp_list, as_exp **exp_list_p);
 
-as_status pyobject_to_policy_scan(AerospikeClient * self, as_error * err, PyObject * py_policy,
-									as_policy_scan * policy,
-									as_policy_scan ** policy_p,
-									as_policy_scan * config_scan_policy,
-									as_predexp_list * predexp_list,
-									as_predexp_list ** predexp_list_p,
-									as_exp * exp_list,
-									as_exp ** exp_list_p);
+as_status pyobject_to_policy_scan(AerospikeClient *self, as_error *err,
+								  PyObject *py_policy, as_policy_scan *policy,
+								  as_policy_scan **policy_p,
+								  as_policy_scan *config_scan_policy,
+								  as_predexp_list *predexp_list,
+								  as_predexp_list **predexp_list_p,
+								  as_exp *exp_list, as_exp **exp_list_p);
 
-as_status pyobject_to_policy_write(AerospikeClient * self, as_error * err, PyObject * py_policy,
-									as_policy_write * policy,
-									as_policy_write ** policy_p,
-									as_policy_write * config_write_policy,
-									as_predexp_list * predexp_list,
-									as_predexp_list ** predexp_list_p,
-									as_exp * exp_list,
-									as_exp ** exp_list_p);
+as_status pyobject_to_policy_write(AerospikeClient *self, as_error *err,
+								   PyObject *py_policy, as_policy_write *policy,
+								   as_policy_write **policy_p,
+								   as_policy_write *config_write_policy,
+								   as_predexp_list *predexp_list,
+								   as_predexp_list **predexp_list_p,
+								   as_exp *exp_list, as_exp **exp_list_p);
 
-as_status pyobject_to_policy_operate(AerospikeClient * self, as_error * err, PyObject * py_policy,
-                                    as_policy_operate * policy,
-                                    as_policy_operate ** policy_p,
-									as_policy_operate * config_operate_policy,
-									as_predexp_list * predexp_list,
-									as_predexp_list ** predexp_list_p,
-									as_exp * exp_list,
-									as_exp ** exp_list_p);
+as_status pyobject_to_policy_operate(
+	AerospikeClient *self, as_error *err, PyObject *py_policy,
+	as_policy_operate *policy, as_policy_operate **policy_p,
+	as_policy_operate *config_operate_policy, as_predexp_list *predexp_list,
+	as_predexp_list **predexp_list_p, as_exp *exp_list, as_exp **exp_list_p);
 
-as_status pyobject_to_policy_batch(AerospikeClient * self, as_error * err, PyObject * py_policy,
-									as_policy_batch * policy,
-									as_policy_batch ** policy_p,
-									as_policy_batch * config_batch_policy,
-									as_predexp_list * predexp_list,
-									as_predexp_list ** predexp_list_p,
-									as_exp * exp_list,
-									as_exp ** exp_list_p);
+as_status pyobject_to_policy_batch(AerospikeClient *self, as_error *err,
+								   PyObject *py_policy, as_policy_batch *policy,
+								   as_policy_batch **policy_p,
+								   as_policy_batch *config_batch_policy,
+								   as_predexp_list *predexp_list,
+								   as_predexp_list **predexp_list_p,
+								   as_exp *exp_list, as_exp **exp_list_p);
 
-as_status pyobject_to_map_policy(as_error * err, PyObject * py_policy,
-									as_map_policy * policy);
+as_status pyobject_to_map_policy(as_error *err, PyObject *py_policy,
+								 as_map_policy *policy);
 
 as_status declare_policy_constants(PyObject *aerospike);
 
-void set_scan_options(as_error *err, as_scan* scan_p, PyObject * py_options);
+void set_scan_options(as_error *err, as_scan *scan_p, PyObject *py_options);
 
-as_status set_query_options(as_error* err, PyObject* query_options, as_query* query);
+as_status set_query_options(as_error *err, PyObject *query_options,
+							as_query *query);
 
-as_status pyobject_to_list_policy(as_error * err, PyObject * py_policy,
-									as_list_policy * policy);
+as_status pyobject_to_list_policy(as_error *err, PyObject *py_policy,
+								  as_list_policy *policy);
 
-as_status pyobject_to_bit_policy(as_error* err, PyObject* py_policy, as_bit_policy* policy);
+as_status pyobject_to_bit_policy(as_error *err, PyObject *py_policy,
+								 as_bit_policy *policy);
 
-as_status pyobject_to_hll_policy(as_error* err, PyObject* py_policy, as_hll_policy* hll_policy);
+as_status pyobject_to_hll_policy(as_error *err, PyObject *py_policy,
+								 as_hll_policy *hll_policy);

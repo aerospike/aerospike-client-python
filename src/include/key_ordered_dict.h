@@ -24,6 +24,6 @@
  * FUNCTIONS
  ******************************************************************************/
 
-PyTypeObject * AerospikeKeyOrderedDict_Ready(void);
+PyTypeObject *AerospikeKeyOrderedDict_Ready(void);
 
-PyObject * AerospikeKeyOrderedDict_Get_Type(void);
+PyObject *AerospikeKeyOrderedDict_Get_Type(void);
