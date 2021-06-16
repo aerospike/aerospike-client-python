@@ -21,7 +21,6 @@ import aerospike
 import sys
 
 from optparse import OptionParser
-import pprint
 
 ##########################################################################
 # Options Parsing
@@ -130,11 +129,9 @@ try:
         count = 0
         for i in range(1, 80000):
             rec_partition = client.get_key_partition_id('test', 'demo', str(i))
-            #print(f'rec_partition_id: {rec_partition}')
 
             if rec_partition == options.partition: # and not client.exists(('test', 'demo', str(i))):
                 
-                #print(rec)
                 count = count + 1
                 rec = {
                     'i': i,
@@ -146,9 +143,7 @@ try:
         
         records.clear()
         # invoke the operations, and for each record invoke the callback
-        pp = pprint.PrettyPrinter(indent=2)
-        records = s.results(partition_policy)
-        pp.pprint(records)
+        s.foreach(callback, partition_policy)
 
         print("---")
         print(f"{count} records are put into partition:{options.partition}.")
