@@ -505,6 +505,11 @@ PyDoc_STRVAR(get_key_digest_doc,
 \n\
 Calculate the digest of a particular key. See: Key Tuple.");
 
+PyDoc_STRVAR(get_key_partition_id_doc,
+"get_key_partition_id(ns, set, key) -> int\n\
+\n\
+Gets the partition ID of given key. See: Key Tuple.");
+
 PyDoc_STRVAR(truncate_doc,
 "truncate(namespace, set, nanos[, policy])\n\
 \n\
@@ -611,6 +616,9 @@ static PyMethodDef AerospikeClient_Type_Methods[] = {
 	{"put",
 		(PyCFunction) AerospikeClient_Put, METH_VARARGS | METH_KEYWORDS,
 		put_doc},
+	{"get_key_partition_id",
+		(PyCFunction) AerospikeClient_Get_Key_PartitionID, METH_VARARGS | METH_KEYWORDS,
+		get_key_partition_id_doc},
 	{"remove",
 		(PyCFunction) AerospikeClient_Remove, METH_VARARGS | METH_KEYWORDS,
 		remove_doc},
