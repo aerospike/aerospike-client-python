@@ -300,6 +300,7 @@ setup(
                 'src/main/scan/execute_background.c',
                 'src/main/scan/apply.c',
                 'src/main/scan/add_ops.c',
+                'src/main/scan/paginate.c',
                 'src/main/geospatial/type.c',
                 'src/main/geospatial/wrap.c',
                 'src/main/geospatial/unwrap.c',

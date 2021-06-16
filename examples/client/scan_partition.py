@@ -133,13 +133,13 @@ try:
             if rec_partition == options.partition: # and not client.exists(('test', 'demo', str(i))):
                 
                 count = count + 1
-            rec = {
-                'i': i,
-                's': 'xyz',
-                'l': [2, 4, 8, 16, 32, None, 128, 256],
-                'm': {'partition': rec_partition, 'b': 4, 'c': 8, 'd': 16}
-            }
-            client.put(('test', 'demo', str(i)), rec)
+                rec = {
+                    'i': i,
+                    's': 'xyz',
+                    'l': [2, 4, 8, 16, 32, None, 128, 256],
+                    'm': {'partition': rec_partition, 'b': 4, 'c': 8, 'd': 16}
+                }
+                client.put(('test', 'demo', str(i)), rec)
         
         records.clear()
         # invoke the operations, and for each record invoke the callback
