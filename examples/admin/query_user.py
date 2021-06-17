@@ -67,7 +67,7 @@ if options.username == None or options.password == None:
 ################################################################################
 
 config = {
-    'hosts': [ (options.host, options.port) ]
+    'hosts': [(options.host, options.port)]
 }
 
 ################################################################################
@@ -82,28 +82,28 @@ try:
     # Connect to Cluster
     # ----------------------------------------------------------------------------
 
-    client = aerospike.client(config).connect(options.username, options.password)
+    client = aerospike.client(config).connect(
+        options.username, options.password)
 
     # ----------------------------------------------------------------------------
     # Perform Operation
     # ----------------------------------------------------------------------------
-     
+
     try:
 
         policy = {}
-        user = "foo-example"
-    	
-        roles = client.admin_query_user(user, policy)
-        
+
+        roles = client.admin_query_user(options.username, policy)
+
         print(roles)
         print("---")
-    	print("OK, Roles retrieved for 1 user")
+        print("OK, Roles retrieved for 1 user")
 
     except Exception as e:
         print("error: {0}".format(e), file=sys.stderr)
         print("In case of invalid user first create user by running create_user.py")
         exitCode = 2
-    
+
     # ----------------------------------------------------------------------------
     # Close Connection to Cluster
     # ----------------------------------------------------------------------------
