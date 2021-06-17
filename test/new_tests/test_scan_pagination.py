@@ -99,31 +99,23 @@ class TestScanPagination(TestBaseClass):
             self.partition_1003_count
         partition_filter = {'begin': 1000, 'count': 4}
         policy = {'max_records': scan_page_size[0],
-                  'partition_filter': partition_filter}
+                'partition_filter': partition_filter,
+                'records_per_second': 4000}
 
         def callback(input_tuple):
             if(input_tuple == None):
                 return True #scan complete
             (_, _, record) = input_tuple
             records.append(record)
-            #print(record)
             scan_count[0] = scan_count[0] + 1
-            #if (scan_page_size[0] == scan_count[0]):
-            #     partition_filter.update['digest'] = {'init': 1, 'value': record[0][3]}
-            #     scan_pending_records -= scan_page_size[0]
-            #     #return False
-            return True
 
         scan_obj = self.as_connection.scan(self.test_ns, self.test_set)
         scan_obj.paginate()
 
         i = 0
         for i in range(scan_pages[0]):
-        #while True:
-            #i = i + 1
-            #with pytest.raises(e.ClientError):
             scan_obj.foreach(callback, policy)
-            #assert scan_page_size[0] == scan_count[0]
+            assert scan_page_size[0] == scan_count[0]
             scan_count[0] = 0
             if scan_obj.is_done() == True: 
                 print(f"scan completed iter:{i}")
