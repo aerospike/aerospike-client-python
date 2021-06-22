@@ -18,6 +18,7 @@
 import asyncio
 import sys
 import aerospike
+import array
 
 from optparse import OptionParser
 
@@ -107,26 +108,15 @@ try:
     try:
         get_results = {}
         count = 0
-        test_count = 1
+        test_count = 128
+        result_array = array.array('i',(0 for i in range(0,test_count)))
+
         namespace = options.namespace if options.namespace and options.namespace != 'None' else None
         set = options.set if options.set and options.set != 'None' else None
         policy = {
             'total_timeout': options.read_timeout
         }
 
-        def get_async_callback(input_tuple):
-            global count
-            (key, _, record) = input_tuple
-            print(record)
-            count += 1
-
-        async def get_async(namespace, set, key, policy):
-            client.get_async(get_async_callback, key, policy)
-            while count != test_count:
-                print(count)
-                await asyncio.sleep(1)
-                print(count)
- 
         def sample_puts(namespace, set, test_count):
             for i in range(0, test_count):
                 key = {'ns': namespace, \
@@ -148,16 +138,34 @@ try:
                 policy = None
                 client.put(key, record)
 
-        async def many_gets():        
+        def get_async_callback(input_tuple):
+            global count, result_array
+            (key, _, record) = input_tuple
+            print(key)
+            print(record)
+            count += 1
+            # print("cb " + result_array[int(key['key'])])
+            # result_array[int(key['key'])] = 1
+            # print("cb done " + result_array[int(key['key'])])
+
+        async def get_async(namespace, set, key, policy):
+            client.get_async(get_async_callback, key, policy)
+ 
+        async def many_gets(namespace, set, test_count):        
             for i in range(0, test_count):
                 key = {'ns': namespace, \
                         'set':set, \
                         'key': str(i), \
                         'digest': client.get_key_digest(namespace, set, str(i))}
-                await get_async(namespace, set, key, policy)
+                client.get_async(get_async_callback, key, policy)
+                #await get_async(namespace, set, key, policy)
+            while count != test_count:
+                print(count)
+                await asyncio.sleep(1)
+                print(count)
 
         sample_puts(namespace, set, test_count)
-        asyncio.run(many_gets())
+        asyncio.run(many_gets(namespace, set, test_count))
     
     except Exception as e:
         print("error: {0}".format(e), file=sys.stderr)
