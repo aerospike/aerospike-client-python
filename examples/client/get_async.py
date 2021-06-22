@@ -19,6 +19,7 @@ import asyncio
 import sys
 import aerospike
 import array
+#import pdb; pdb.set_trace()
 
 from optparse import OptionParser
 
@@ -26,15 +27,15 @@ from optparse import OptionParser
 # Options Parsing
 ##########################################################################
 
-breakpoint()
+#breakpoint()
 
 usage = "usage: %prog [options]"
 
 optparser = OptionParser(usage=usage, add_help_option=False)
 
-# optparser.add_option(
-#     "--help", dest="help", action="store_true",
-#     help="Displays this message.")
+optparser.add_option(
+    "--help", dest="help", action="store_true",
+    help="Displays this message.")
 
 optparser.add_option(
     "-U", "--username", dest="username", type="string",  default="ram", metavar="<USERNAME>",
@@ -68,12 +69,16 @@ optparser.add_option(
     "-s", "--set", dest="set", type="string", default="demo", metavar="<SET>",
     help="Port of the Aerospike server.")
 
+optparser.add_option(
+    "-c", "--test_count", dest="test_count", type="int", default=128, metavar="<TEST_COUNT>",
+    help="Port of the Aerospike server.")
+
 (options, args) = optparser.parse_args()
 
-# if options.help:
-#     optparser.print_help()
-#     print()
-#     #sys.exit(1)
+if options.help:
+    optparser.print_help()
+    print()
+    sys.exit(1)
 
 ##########################################################################
 # Client Configuration
@@ -108,7 +113,7 @@ try:
     try:
         get_results = {}
         count = 0
-        test_count = 128
+        test_count = options.test_count
         result_array = array.array('i',(0 for i in range(0,test_count)))
 
         namespace = options.namespace if options.namespace and options.namespace != 'None' else None
