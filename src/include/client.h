@@ -112,6 +112,15 @@ PyObject *AerospikeClient_Get_Invoke(AerospikeClient *self, PyObject *py_key,
 									 PyObject *py_policy);
 
 /**
+ * Async Read a record from the database.
+ *
+ *		client.get((x,y,z))
+ *
+ */
+PyObject *AerospikeClient_Get_Async(AerospikeClient *self, PyObject *args,
+							  PyObject *kwds);
+
+/**
  * Project specific bins of a record from the database.
  *
  *		client.select((x,y,z), (bin1, bin2, bin3))
