@@ -106,53 +106,58 @@ try:
 
     try:
         get_results = {}
+        count = 0
+        test_count = 1
         namespace = options.namespace if options.namespace and options.namespace != 'None' else None
         set = options.set if options.set and options.set != 'None' else None
-        key = {'ns': namespace, \
-                        'set': set, \
-                        'key': str(111), \
-                        'digest': client.get_key_digest(namespace, set, str(111))}
         policy = {
             'total_timeout': options.read_timeout
         }
 
         def get_async_callback(input_tuple):
+            global count
             (key, _, record) = input_tuple
-            get_results.update({key.digest: record}) 
             print(record)
+            count += 1
 
         async def get_async(namespace, set, key, policy):
             client.get_async(get_async_callback, key, policy)
-            await asyncio.wait_for(get_results.get(key.digest))
-
-        def sample_puts(namespace, set, key):
-            record = {
-                'i': 123,
-                'f': 3.1415,
-                's': 'abc',
-                'u': '안녕하세요',
-                #  'b': bytearray(['d','e','f']),
-                #  'l': [123, 'abc', bytearray(['d','e','f']), ['x', 'y', 'z'], {'x': 1, 'y': 2, 'z': 3}],
-                #  'm': {'i': 123, 's': 'abc', 'u': '안녕하세요', 'b': bytearray(['d','e','f']), 'l': ['x', 'y', 'z'], 'd': {'x': 1, 'y': 2, 'z': 3}},
-                'l': [123, 'abc', '안녕하세요', ['x', 'y', 'z'], {'x': 1, 'y': 2, 'z': 3}],
-                'm': {'i': 123, 's': 'abc', 'u': '안녕하세요', 'l': ['x', 'y', 'z'], 'd': {'x': 1, 'y': 2, 'z': 3}}
-            }
-
-            meta = None
-            policy = None
-            # invoke operation
-            print(key)
-            client.put(key, record)
+            while count != test_count:
+                print(count)
+                await asyncio.sleep(1)
+                print(count)
+ 
+        def sample_puts(namespace, set, test_count):
+            for i in range(0, test_count):
+                key = {'ns': namespace, \
+                        'set':set, \
+                        'key': str(i), \
+                        'digest': client.get_key_digest(namespace, set, str(i))}
+                record = {
+                    'i': i,
+                    'f': 3.1415,
+                    's': 'abc',
+                    'u': '안녕하세요',
+                    #  'b': bytearray(['d','e','f']),
+                    #  'l': [i, 'abc', bytearray(['d','e','f']), ['x', 'y', 'z'], {'x': 1, 'y': 2, 'z': 3}],
+                    #  'm': {'i': i, 's': 'abc', 'u': '안녕하세요', 'b': bytearray(['d','e','f']), 'l': ['x', 'y', 'z'], 'd': {'x': 1, 'y': 2, 'z': 3}},
+                    'l': [i, 'abc', 'வணக்கம்', ['x', 'y', 'z'], {'x': 1, 'y': 2, 'z': 3}],
+                    'm': {'i': i, 's': 'abc', 'u': 'ஊத்தாப்பம்', 'l': ['x', 'y', 'z'], 'd': {'x': 1, 'y': 2, 'z': 3}}
+                }
+                meta = None
+                policy = None
+                client.put(key, record)
 
         async def many_gets():        
-            sample_puts(namespace, set, key)
+            for i in range(0, test_count):
+                key = {'ns': namespace, \
+                        'set':set, \
+                        'key': str(i), \
+                        'digest': client.get_key_digest(namespace, set, str(i))}
+                await get_async(namespace, set, key, policy)
 
-            await get_async(namespace, set, key, policy)
-            
-            await asyncio.wait_for(get_results.get(key.digest))
-
+        sample_puts(namespace, set, test_count)
         asyncio.run(many_gets())
-        #many_gets()
     
     except Exception as e:
         print("error: {0}".format(e), file=sys.stderr)
