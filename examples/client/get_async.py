@@ -71,7 +71,11 @@ optparser.add_option(
 
 optparser.add_option(
     "-c", "--test_count", dest="test_count", type="int", default=128, metavar="<TEST_COUNT>",
-    help="Port of the Aerospike server.")
+    help="Number of test cases to run.")
+
+optparser.add_option(
+    "-q", "--qd", dest="qd", type="int", default=128, metavar="<QUEUE_DEPTH>",
+    help="Async IO queue depth.")
 
 (options, args) = optparser.parse_args()
 
@@ -114,6 +118,8 @@ try:
         get_results = {}
         count = 0
         test_count = options.test_count
+        qd = options.qd
+        current_qd = 0
         result_array = array.array('i',(0 for i in range(0,test_count)))
 
         namespace = options.namespace if options.namespace and options.namespace != 'None' else None
@@ -144,11 +150,12 @@ try:
                 client.put(key, record)
 
         def get_async_callback(input_tuple):
-            global count, result_array
+            global count, current_qd, result_array
             (key, _, record) = input_tuple
             print(key)
             print(record)
             count += 1
+            current_qd -= 1
             # print("cb " + result_array[int(key['key'])])
             # result_array[int(key['key'])] = 1
             # print("cb done " + result_array[int(key['key'])])
@@ -156,7 +163,8 @@ try:
         async def get_async(namespace, set, key, policy):
             client.get_async(get_async_callback, key, policy)
  
-        async def many_gets(namespace, set, test_count):        
+        async def many_gets(namespace, set, test_count):
+            global current_qd        
             for i in range(0, test_count):
                 key = {'ns': namespace, \
                         'set':set, \
@@ -164,6 +172,11 @@ try:
                         'digest': client.get_key_digest(namespace, set, str(i))}
                 client.get_async(get_async_callback, key, policy)
                 #await get_async(namespace, set, key, policy)
+                current_qd += 1
+                while current_qd > qd:
+                    print(current_qd)
+                    await asyncio.sleep(1)
+                    print(current_qd)
             while count != test_count:
                 print(count)
                 await asyncio.sleep(1)

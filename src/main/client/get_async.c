@@ -164,11 +164,11 @@ PyObject *AerospikeClient_Get_Async(AerospikeClient *self, PyObject *args,
 	// Lock Python State
 	PyGILState_STATE gstate;
 	gstate = PyGILState_Ensure();
+
 	// Python Function Argument Parsing
 	if (PyArg_ParseTupleAndKeywords(args, kwds, "OO|O:get_async", kwlist, 
 									&py_callback, &py_key,
 									&py_policy) == false) {
-		PyGILState_Release(gstate);
 		return NULL;
 	}
 
@@ -218,12 +218,10 @@ PyObject *AerospikeClient_Get_Async(AerospikeClient *self, PyObject *args,
 	// Key is successfully initialised.
 	key_initialised = true;
 
-	gstate = PyGILState_Ensure();
 	// Convert python policy object to as_policy_exists
 	pyobject_to_policy_read(self, &err, py_policy, &uData->read_policy, &uData->read_policy_p,
 							&self->as->config.policies.read, &predexp_list,
 							&predexp_list_p, &exp_list, &exp_list_p);
-	PyGILState_Release(gstate);
 	if (err.code != AEROSPIKE_OK) {
 		goto CLEANUP;
 	}
@@ -249,7 +247,6 @@ CLEANUP:
 
 	if (status != AEROSPIKE_OK || err.code != AEROSPIKE_OK) {
 		PyObject *py_err = NULL;
-		gstate = PyGILState_Ensure();
 		error_to_pyobject(&err, &py_err);
 		PyObject *exception_type = raise_exception(&err);
 		if (PyObject_HasAttrString(exception_type, "key")) {
@@ -260,7 +257,6 @@ CLEANUP:
 		}
 		PyErr_SetObject(exception_type, py_err);
 		Py_DECREF(py_err);
-		PyGILState_Release(gstate);
 
 		if (key_initialised == true) {
 			// Destroy key only if it is initialised.
@@ -272,6 +268,8 @@ CLEANUP:
 		}
 		return NULL;
 	}
+
+	PyGILState_Release(gstate);
 
 	Py_INCREF(Py_None);
 	return Py_None;
