@@ -263,6 +263,7 @@ setup(
                 'src/main/client/exists_many.c',
                 'src/main/client/get.c',
                 'src/main/client/get_async.c',
+                'src/main/client/put_async.c',
                 'src/main/client/get_many.c',
                 'src/main/client/select_many.c',
                 'src/main/client/info_single_node.c',

@@ -142,6 +142,16 @@ PyObject *AerospikeClient_Put_Invoke(AerospikeClient *self, PyObject *py_key,
 									 PyObject *py_bins, PyObject *py_meta,
 									 PyObject *py_policy,
 									 long serializer_option);
+
+/**
+ * Write a record async in the database.
+ *
+ *		client.put((x,y,z), ...)
+ *
+ */
+PyObject *AerospikeClient_Put_Async(AerospikeClient *self, PyObject *args,
+							  PyObject *kwds);
+
 /**
  * Remove a record from the database.
  *

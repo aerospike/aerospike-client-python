@@ -83,6 +83,10 @@ PyDoc_STRVAR(put_doc, "put(key, bins[, meta[, policy[, serializer]]])\n\
 \n\
 Write a record with a given key to the cluster.");
 
+PyDoc_STRVAR(put_async_doc, "put(key, bins[, meta[, policy[, serializer]]])\n\
+\n\
+Write a record asynchronously with a given key to the cluster.");
+
 PyDoc_STRVAR(remove_doc, "remove(key[, policy])\n\
 \n\
 Remove a record matching the key from the cluster.");
@@ -603,6 +607,8 @@ static PyMethodDef AerospikeClient_Type_Methods[] = {
 	 METH_VARARGS | METH_KEYWORDS, select_doc},
 	{"put", (PyCFunction)AerospikeClient_Put, METH_VARARGS | METH_KEYWORDS,
 	 put_doc},
+	{"put_async", (PyCFunction)AerospikeClient_Put_Async, METH_VARARGS | METH_KEYWORDS,
+	 put_async_doc},
 	{"get_key_partition_id", (PyCFunction)AerospikeClient_Get_Key_PartitionID,
 	 METH_VARARGS | METH_KEYWORDS, get_key_partition_id_doc},
 	{"remove", (PyCFunction)AerospikeClient_Remove,
