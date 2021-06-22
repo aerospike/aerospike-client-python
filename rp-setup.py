@@ -126,7 +126,7 @@ def resolve_c_client():
 
 include_dirs = ['src/include'] + [x for x in os.getenv('CPATH', '').split(':') if len(x) > 0]
 extra_compile_args = [
-    '-std=gnu99', '-g', '-Wall', '-fPIC', '-O1', '-DDEBUG',
+    '-std=gnu99', '-g', '-Wall', '-fPIC', '-O1', '-DDEBUG', '-DAS_EVENT_LIB_DEFINED',
     '-fno-common', '-fno-strict-aliasing', '-Wno-strict-prototypes',
     '-march=nocona',
     '-D_FILE_OFFSET_BITS=64', '-D_REENTRANT',
@@ -135,13 +135,15 @@ extra_compile_args = [
     ]
 extra_objects = []
 extra_link_args = []
-library_dirs = ['/usr/local/opt/openssl/lib']
+library_dirs = ['/usr/local/opt/openssl/lib', '/usr/local/opt/libevent/lib']
 libraries = [
   'ssl',
   'crypto',
   'pthread',
   'm',
-  'z'
+  'z',
+  'event_core',
+  'event_pthreads'
   ]
 
 ################################################################################
@@ -268,6 +270,7 @@ setup(
                 'src/main/client/exists.c',
                 'src/main/client/exists_many.c',
                 'src/main/client/get.c',
+                'src/main/client/get_async.c',
                 'src/main/client/get_many.c',
                 'src/main/client/select_many.c',
                 'src/main/client/info_single_node.c',
