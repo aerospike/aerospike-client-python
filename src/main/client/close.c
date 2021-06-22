@@ -79,6 +79,9 @@ PyObject *AerospikeClient_Close(AerospikeClient *self, PyObject *args,
 		alias_to_search = NULL;
 	}
 	else {
+#if AS_EVENT_LIB_DEFINED
+		as_event_close_loops();
+#endif
 		aerospike_close(self->as, &err);
 	}
 	self->is_conn_16 = false;
