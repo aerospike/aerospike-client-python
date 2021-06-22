@@ -84,7 +84,7 @@ read_async_callback(as_error* error, as_record* record, void* udata, as_event_lo
 	}
 	else {
 		PyObject *py_err = NULL, *py_key = NULL;
-		error_to_pyobject(err, &py_err);
+		error_to_pyobject(error, &py_err);
 		PyObject *exception_type = raise_exception(err);
 		// Convert as_key to python key object
 		key_to_pyobject(err, &data->key, &py_key);
@@ -269,8 +269,9 @@ CLEANUP:
 		return NULL;
 	}
 
+	Py_INCREF(Py_None);
+
 	PyGILState_Release(gstate);
 
-	Py_INCREF(Py_None);
 	return Py_None;
 }
