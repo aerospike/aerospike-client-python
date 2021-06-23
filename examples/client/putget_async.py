@@ -73,6 +73,10 @@ optparser.add_option(
     "-q", "--qd", dest="qd", type="int", default=128, metavar="<QUEUE_DEPTH>",
     help="Async IO queue depth.")
 
+optparser.add_option(
+    "-o", "--op", dest="test_op", type="int", default=3, metavar="<PUT_GET_BOTH>",
+    help="Async IO op to test \"0 - test put_async, 1 - test get_async, 3 - test both\".")
+
 (options, args) = optparser.parse_args()
 
 if options.help:
@@ -117,7 +121,7 @@ try:
         qd = options.qd
         cqd = 0
         result_array = array.array('i',(0 for i in range(0,test_count)))
-
+        test_op = options.test_op
         namespace = options.namespace if options.namespace and options.namespace != 'None' else None
         set = options.set if options.set and options.set != 'None' else None
         policy = {
@@ -145,23 +149,25 @@ try:
                 policy = None
                 if op == 0:
                     client.put(key, record)
+                    print(f"sync_put {key}")
                 if op == 1:
-                    client.get(namespace, set, key, policy)
+                    (key, meta, record) = client.get(key, policy)
+                    print(f"sync_get {record}")
                 if op == 2:
                     client.remove(key)
 
         def put_async_callback(input_tuple):
             global count, cqd
             (key) = input_tuple
-            print(key)
+            print(f"put_cb {key}")
             count += 1
             cqd -= 1
 
         def get_async_callback(input_tuple):
             global count, cqd, result_array
             (key, _, record) = input_tuple
-            print(key)
-            print(record)
+            print(f"get_cb {key}")
+            print(f"get_cb {record}")
             count += 1
             cqd -= 1
             # print("cb " + result_array[int(key['key'])])
@@ -207,9 +213,14 @@ try:
                 await asyncio.sleep(1)
                 print(count)
 
-        #samples(namespace, set, test_count, 0)
-        asyncio.run(async_io(namespace, set, test_count, 0))
-        asyncio.run(async_io(namespace, set, test_count, 1))
+        if test_op == 1:
+            samples(namespace, set, test_count, 0)
+        if test_op == 3 or test_op == 0:
+            asyncio.run(async_io(namespace, set, test_count, 0))
+        if test_op == 3 or test_op == 1:
+            asyncio.run(async_io(namespace, set, test_count, 1))
+        if test_op == 0:
+            samples(namespace, set, test_count, 1)
         samples(namespace, set, test_count, 2)
     
     except Exception as e:
