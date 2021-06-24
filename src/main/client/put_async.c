@@ -46,7 +46,7 @@ void put_async_cb_destroy(LocalData *uData)
 }
 
 void 
-write_async_callback(as_error* error, void* udata, as_event_loop* event_loop)
+write_async_callback_helper(as_error* error, void* udata, as_event_loop* event_loop, int cb)
 {
 	PyObject *py_key = NULL;
 	PyObject *py_return = NULL;
@@ -65,10 +65,10 @@ write_async_callback(as_error* error, void* udata, as_event_loop* event_loop)
 	key_to_pyobject(err, &data->key, &py_key);
 
 	if (error) {
-
+		//todo does need exception incase of cb?
 		PyObject *py_err = NULL;
 		error_to_pyobject(error, &py_err);
-		PyObject *exception_type = raise_exception(err);
+		PyObject *exception_type = raise_exception(error);
 		if (PyObject_HasAttrString(exception_type, "key")) {
 			PyObject_SetAttrString(exception_type, "key", py_key);
 		}
@@ -77,32 +77,30 @@ write_async_callback(as_error* error, void* udata, as_event_loop* event_loop)
 		}
 		PyErr_SetObject(exception_type, py_err);
 		Py_DECREF(py_err);
-		goto CLEANUP;
 	}
 
-	// Build Python Function Arguments
-	py_arglist = PyTuple_New(1);
-	PyTuple_SetItem(py_arglist, 0, py_key);
+	if (cb) {
+		// Build Python Function Arguments
+		py_arglist = PyTuple_New(1);
+		PyTuple_SetItem(py_arglist, 0, py_key);
 
-	// Invoke Python Callback
-	py_return = PyObject_Call(py_callback, py_arglist, NULL);
+		// Invoke Python Callback
+		py_return = PyObject_Call(py_callback, py_arglist, NULL);
 
-	// Release Python Function Arguments
-	Py_DECREF(py_arglist);
+		// Release Python Function Arguments
+		Py_DECREF(py_arglist);
 
-	// handle return value
-	if (!py_return) {
-		// an exception was raised, handle it (someday)
-		// for now, we bail from the loop
-		as_error_update(err, AEROSPIKE_ERR_CLIENT,
-						"read_async_callback function raised an exception");
+		// handle return value
+		if (!py_return) {
+			// an exception was raised, handle it (someday)
+			// for now, we bail from the loop
+			as_error_update(err, AEROSPIKE_ERR_CLIENT,
+							"read_async_callback function raised an exception");
+		}
+		else {
+			Py_DECREF(py_return);
+		}
 	}
-	else {
-		Py_DECREF(py_return);
-	}
-
-
-CLEANUP:
 
 	if (udata) {
 		as_key_destroy(&data->key);
@@ -113,6 +111,12 @@ CLEANUP:
 	PyGILState_Release(gstate);
 
 	return;
+}
+
+void 
+write_async_callback(as_error* error, void* udata, as_event_loop* event_loop)
+{
+	write_async_callback_helper(error, udata, event_loop, 1);
 }
 
 /**
@@ -146,7 +150,6 @@ PyObject *AerospikeClient_Put_Async(AerospikeClient *self, PyObject *args,
 	as_predexp_list *predexp_list_p = NULL;
 
 	// Initialisation flags
-	bool key_initialised = false;
 	bool record_initialised = false;
 
 	// Initialize record
@@ -184,6 +187,8 @@ PyObject *AerospikeClient_Put_Async(AerospikeClient *self, PyObject *args,
 	LocalData *uData = put_async_cb_create();
 	uData->callback = py_callback;
 	uData->client = self;
+	memset(&uData->key, 0, sizeof(uData->key));
+
 	as_error_init(&uData->error);
 
 	as_status status = AEROSPIKE_OK;
@@ -221,8 +226,6 @@ PyObject *AerospikeClient_Put_Async(AerospikeClient *self, PyObject *args,
 	if (err.code != AEROSPIKE_OK) {
 		goto CLEANUP;
 	}
-	// Key is initialised successfully.
-	key_initialised = true;
 
 	// Convert python bins and metadata objects to as_record
 	pyobject_to_record(self, &err, py_bins, py_meta, &rec, serializer_option,
@@ -268,25 +271,7 @@ CLEANUP:
 
 	// If an error occurred, tell Python.
 	if (err.code != AEROSPIKE_OK) {
-		PyObject *py_err = NULL;
-		error_to_pyobject(&err, &py_err);
-		PyObject *exception_type = raise_exception(&err);
-		if (PyObject_HasAttrString(exception_type, "key")) {
-			PyObject_SetAttrString(exception_type, "key", py_key);
-		}
-		if (PyObject_HasAttrString(exception_type, "bin")) {
-			PyObject_SetAttrString(exception_type, "bin", py_bins);
-		}
-		PyErr_SetObject(exception_type, py_err);
-		Py_DECREF(py_err);
-
-		if (key_initialised == true) {
-			// Destroy the key if it is initialised.
-			as_key_destroy(&uData->key);
-		}
-		if (uData) {
-			put_async_cb_destroy(uData);
-		}
+		write_async_callback_helper(&err, uData, NULL, 1);
 		return NULL;
 	}
 

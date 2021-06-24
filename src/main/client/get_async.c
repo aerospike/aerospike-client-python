@@ -48,7 +48,7 @@ void async_cb_destroy(LocalData *uData)
 }
 
 void
-read_async_callback(as_error* error, as_record* record, void* udata, as_event_loop* event_loop)
+read_async_callback_helper(as_error* error, as_record* record, void* udata, as_event_loop* event_loop, int cb)
 {
 	PyObject *py_rec = NULL;
 	PyObject *py_return = NULL;
@@ -67,11 +67,10 @@ read_async_callback(as_error* error, as_record* record, void* udata, as_event_lo
 
 		if (record_to_pyobject(data->client, err, record, &data->key, &py_rec) !=
 			AEROSPIKE_OK) {
-			goto CLEANUP;
 		}
 
-		if (!data->read_policy_p ||
-			(data->read_policy_p && data->read_policy_p->key == AS_POLICY_KEY_DIGEST)) {
+		if ( py_rec && (!data->read_policy_p ||
+			(data->read_policy_p && data->read_policy_p->key == AS_POLICY_KEY_DIGEST))) {
 			// This is a special case.
 			// C-client returns NULL key, so to the user
 			// response will be (<ns>, <set>, None, <digest>)
@@ -85,7 +84,8 @@ read_async_callback(as_error* error, as_record* record, void* udata, as_event_lo
 	else {
 		PyObject *py_err = NULL, *py_key = NULL;
 		error_to_pyobject(error, &py_err);
-		PyObject *exception_type = raise_exception(err);
+		//todo need exception incase of cb? does exception go through during async cb?
+		PyObject *exception_type = raise_exception(error);
 		// Convert as_key to python key object
 		key_to_pyobject(err, &data->key, &py_key);
 		if (PyObject_HasAttrString(exception_type, "key")) {
@@ -96,32 +96,31 @@ read_async_callback(as_error* error, as_record* record, void* udata, as_event_lo
 		}
 		PyErr_SetObject(exception_type, py_err);
 		Py_DECREF(py_err);
-		goto CLEANUP;
 	}
 
-	// Build Python Function Arguments
-	py_arglist = PyTuple_New(1);
-	PyTuple_SetItem(py_arglist, 0, py_rec);
+	if (cb) {
+		// Build Python Function Arguments
+		py_arglist = PyTuple_New(1);
+		PyTuple_SetItem(py_arglist, 0, py_rec);
 
-	// Invoke Python Callback
-	py_return = PyObject_Call(py_callback, py_arglist, NULL);
+		// Invoke Python Callback
+		py_return = PyObject_Call(py_callback, py_arglist, NULL);
 
-	// Release Python Function Arguments
-	Py_DECREF(py_arglist);
+		// Release Python Function Arguments
+		Py_DECREF(py_arglist);
 
-	// handle return value
-	if (!py_return) {
-		// an exception was raised, handle it (someday)
-		// for now, we bail from the loop
-		as_error_update(err, AEROSPIKE_ERR_CLIENT,
-						"read_async_callback function raised an exception");
+		// handle return value
+		if (!py_return) {
+			// an exception was raised, handle it (someday)
+			// for now, we bail from the loop
+			as_error_update(err, AEROSPIKE_ERR_CLIENT,
+							"read_async_callback function raised an exception");
+		}
+		else {
+			Py_DECREF(py_return);
+		}
 	}
-	else {
-		Py_DECREF(py_return);
-	}
 
-
-CLEANUP:
 	if (record) {
 		as_record_destroy(record);
 	}
@@ -135,6 +134,12 @@ CLEANUP:
 	PyGILState_Release(gstate);
 
 	return;
+}
+
+void
+read_async_callback(as_error* error, as_record* record, void* udata, as_event_loop* event_loop)
+{
+	read_async_callback_helper(error, record, udata, event_loop, 1);
 }
 
 /**
@@ -162,8 +167,8 @@ PyObject *AerospikeClient_Get_Async(AerospikeClient *self, PyObject *args,
 	static char *kwlist[] = {"get_callback", "key", "policy", NULL};
 
 	// Lock Python State
-	PyGILState_STATE gstate;
-	gstate = PyGILState_Ensure();
+	//PyGILState_STATE gstate;
+	//gstate = PyGILState_Ensure();
 
 	// Python Function Argument Parsing
 	if (PyArg_ParseTupleAndKeywords(args, kwds, "OO|O:get_async", kwlist, 
@@ -177,6 +182,7 @@ PyObject *AerospikeClient_Get_Async(AerospikeClient *self, PyObject *args,
 	uData->callback = py_callback;
 	uData->client = self;
 	uData->read_policy_p = NULL;
+	memset(&uData->key, 0, sizeof(uData->key));
 	as_error_init(&uData->error);
 
 	// Aerospike Client Arguments
@@ -189,9 +195,6 @@ PyObject *AerospikeClient_Get_Async(AerospikeClient *self, PyObject *args,
 	// For converting predexp.
 	as_predexp_list predexp_list;
 	as_predexp_list *predexp_list_p = NULL;
-
-	// Initialised flags
-	bool key_initialised = false;
 
 	as_status status = AEROSPIKE_OK;
 
@@ -215,8 +218,6 @@ PyObject *AerospikeClient_Get_Async(AerospikeClient *self, PyObject *args,
 	if (err.code != AEROSPIKE_OK) {
 		goto CLEANUP;
 	}
-	// Key is successfully initialised.
-	key_initialised = true;
 
 	// Convert python policy object to as_policy_exists
 	pyobject_to_policy_read(self, &err, py_policy, &uData->read_policy, &uData->read_policy_p,
@@ -246,32 +247,14 @@ CLEANUP:
 	}
 
 	if (status != AEROSPIKE_OK || err.code != AEROSPIKE_OK) {
-		PyObject *py_err = NULL;
-		error_to_pyobject(&err, &py_err);
-		PyObject *exception_type = raise_exception(&err);
-		if (PyObject_HasAttrString(exception_type, "key")) {
-			PyObject_SetAttrString(exception_type, "key", py_key);
-		}
-		if (PyObject_HasAttrString(exception_type, "bin")) {
-			PyObject_SetAttrString(exception_type, "bin", Py_None);
-		}
-		PyErr_SetObject(exception_type, py_err);
-		Py_DECREF(py_err);
-
-		if (key_initialised == true) {
-			// Destroy key only if it is initialised.
-			as_key_destroy(&uData->key);
-		}
-
-		if (uData) {
-			async_cb_destroy(uData);
-		}
+		//todo does raising exception alone or need cab to python?
+		read_async_callback_helper(&err, NULL, uData, NULL, 1);
 		return NULL;
 	}
 
 	Py_INCREF(Py_None);
 
-	PyGILState_Release(gstate);
+	//PyGILState_Release(gstate);
 
 	return Py_None;
 }
