@@ -47,8 +47,8 @@ void async_cb_destroy(LocalData *uData)
 	cf_free(uData);
 }
 
-void
-read_async_callback_helper(as_error* error, as_record* record, void* udata, as_event_loop* event_loop, int cb)
+void read_async_callback_helper(as_error *error, as_record *record, void *udata,
+								as_event_loop *event_loop, int cb)
 {
 	PyObject *py_rec = NULL;
 	PyObject *py_return = NULL;
@@ -65,12 +65,13 @@ read_async_callback_helper(as_error* error, as_record* record, void* udata, as_e
 
 	if (!error || error->code == AEROSPIKE_OK) {
 
-		if (record_to_pyobject(data->client, err, record, &data->key, &py_rec) !=
-			AEROSPIKE_OK) {
+		if (record_to_pyobject(data->client, err, record, &data->key,
+							   &py_rec) != AEROSPIKE_OK) {
 		}
 
-		if ( py_rec && (!data->read_policy_p ||
-			(data->read_policy_p && data->read_policy_p->key == AS_POLICY_KEY_DIGEST))) {
+		if (py_rec && (!data->read_policy_p ||
+					   (data->read_policy_p &&
+						data->read_policy_p->key == AS_POLICY_KEY_DIGEST))) {
 			// This is a special case.
 			// C-client returns NULL key, so to the user
 			// response will be (<ns>, <set>, None, <digest>)
@@ -136,8 +137,8 @@ read_async_callback_helper(as_error* error, as_record* record, void* udata, as_e
 	return;
 }
 
-void
-read_async_callback(as_error* error, as_record* record, void* udata, as_event_loop* event_loop)
+void read_async_callback(as_error *error, as_record *record, void *udata,
+						 as_event_loop *event_loop)
 {
 	read_async_callback_helper(error, record, udata, event_loop, 1);
 }
@@ -156,7 +157,7 @@ read_async_callback(as_error* error, as_record* record, void* udata, as_event_lo
  *******************************************************************************************************
  */
 PyObject *AerospikeClient_Get_Async(AerospikeClient *self, PyObject *args,
-							  PyObject *kwds)
+									PyObject *kwds)
 {
 	// Python Function Arguments
 	PyObject *py_callback = NULL;
@@ -171,7 +172,7 @@ PyObject *AerospikeClient_Get_Async(AerospikeClient *self, PyObject *args,
 	//gstate = PyGILState_Ensure();
 
 	// Python Function Argument Parsing
-	if (PyArg_ParseTupleAndKeywords(args, kwds, "OO|O:get_async", kwlist, 
+	if (PyArg_ParseTupleAndKeywords(args, kwds, "OO|O:get_async", kwlist,
 									&py_callback, &py_key,
 									&py_policy) == false) {
 		return NULL;
@@ -201,7 +202,6 @@ PyObject *AerospikeClient_Get_Async(AerospikeClient *self, PyObject *args,
 	// Initialize error
 	as_error_init(&err);
 
-
 	if (!self || !self->as) {
 		as_error_update(&err, AEROSPIKE_ERR_PARAM, "Invalid aerospike object");
 		goto CLEANUP;
@@ -220,7 +220,8 @@ PyObject *AerospikeClient_Get_Async(AerospikeClient *self, PyObject *args,
 	}
 
 	// Convert python policy object to as_policy_exists
-	pyobject_to_policy_read(self, &err, py_policy, &uData->read_policy, &uData->read_policy_p,
+	pyobject_to_policy_read(self, &err, py_policy, &uData->read_policy,
+							&uData->read_policy_p,
 							&self->as->config.policies.read, &predexp_list,
 							&predexp_list_p, &exp_list, &exp_list_p);
 	if (err.code != AEROSPIKE_OK) {
@@ -229,8 +230,9 @@ PyObject *AerospikeClient_Get_Async(AerospikeClient *self, PyObject *args,
 
 	// Invoke operation
 	Py_BEGIN_ALLOW_THREADS
-	status = aerospike_key_get_async(uData->client->as, &uData->error, 
-									uData->read_policy_p, &uData->key, read_async_callback, uData, NULL, NULL);
+	status = aerospike_key_get_async(uData->client->as, &uData->error,
+									 uData->read_policy_p, &uData->key,
+									 read_async_callback, uData, NULL, NULL);
 	Py_END_ALLOW_THREADS
 	if (status != AEROSPIKE_OK || err.code != AEROSPIKE_OK) {
 		goto CLEANUP;

@@ -140,7 +140,6 @@ PyObject *AerospikeClient_Connect(AerospikeClient *self, PyObject *args,
 	if (!as_event_create_loops(1)) {
 		as_error_update(&err, AEROSPIKE_ERR,
 						"Unable to initialize async event loop.");
-
 	}
 #endif
 

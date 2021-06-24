@@ -118,7 +118,7 @@ PyObject *AerospikeClient_Get_Invoke(AerospikeClient *self, PyObject *py_key,
  *
  */
 PyObject *AerospikeClient_Get_Async(AerospikeClient *self, PyObject *args,
-							  PyObject *kwds);
+									PyObject *kwds);
 
 /**
  * Project specific bins of a record from the database.
@@ -150,7 +150,7 @@ PyObject *AerospikeClient_Put_Invoke(AerospikeClient *self, PyObject *py_key,
  *
  */
 PyObject *AerospikeClient_Put_Async(AerospikeClient *self, PyObject *args,
-							  PyObject *kwds);
+									PyObject *kwds);
 
 /**
  * Remove a record from the database.

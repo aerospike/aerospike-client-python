@@ -68,7 +68,8 @@ PyDoc_STRVAR(get_doc, "get(key[, policy]) -> (key, meta, bins)\n\
 \n\
 Read a record with a given key, and return the record as a tuple() consisting of key, meta and bins.");
 
-PyDoc_STRVAR(get_async_doc, "get_async(get_callback, key[, policy]) -> (key, meta, bins)\n\
+PyDoc_STRVAR(get_async_doc,
+			 "get_async(get_callback, key[, policy]) -> (key, meta, bins)\n\
 \n\
 Read a record asynchronously with a given key, and return the record as a tuple() consisting of key, meta and bins.");
 
@@ -601,14 +602,14 @@ static PyMethodDef AerospikeClient_Type_Methods[] = {
 	 METH_VARARGS | METH_KEYWORDS, exists_doc},
 	{"get", (PyCFunction)AerospikeClient_Get, METH_VARARGS | METH_KEYWORDS,
 	 get_doc},
-	{"get_async", (PyCFunction)AerospikeClient_Get_Async, METH_VARARGS | METH_KEYWORDS,
-	 get_async_doc},
+	{"get_async", (PyCFunction)AerospikeClient_Get_Async,
+	 METH_VARARGS | METH_KEYWORDS, get_async_doc},
 	{"select", (PyCFunction)AerospikeClient_Select,
 	 METH_VARARGS | METH_KEYWORDS, select_doc},
 	{"put", (PyCFunction)AerospikeClient_Put, METH_VARARGS | METH_KEYWORDS,
 	 put_doc},
-	{"put_async", (PyCFunction)AerospikeClient_Put_Async, METH_VARARGS | METH_KEYWORDS,
-	 put_async_doc},
+	{"put_async", (PyCFunction)AerospikeClient_Put_Async,
+	 METH_VARARGS | METH_KEYWORDS, put_async_doc},
 	{"get_key_partition_id", (PyCFunction)AerospikeClient_Get_Key_PartitionID,
 	 METH_VARARGS | METH_KEYWORDS, get_key_partition_id_doc},
 	{"remove", (PyCFunction)AerospikeClient_Remove,

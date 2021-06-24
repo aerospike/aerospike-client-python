@@ -45,8 +45,8 @@ void put_async_cb_destroy(LocalData *uData)
 	cf_free(uData);
 }
 
-void 
-write_async_callback_helper(as_error* error, void* udata, as_event_loop* event_loop, int cb)
+void write_async_callback_helper(as_error *error, void *udata,
+								 as_event_loop *event_loop, int cb)
 {
 	PyObject *py_key = NULL;
 	PyObject *py_return = NULL;
@@ -113,8 +113,8 @@ write_async_callback_helper(as_error* error, void* udata, as_event_loop* event_l
 	return;
 }
 
-void 
-write_async_callback(as_error* error, void* udata, as_event_loop* event_loop)
+void write_async_callback(as_error *error, void *udata,
+						  as_event_loop *event_loop)
 {
 	write_async_callback_helper(error, udata, event_loop, 1);
 }
@@ -133,9 +133,9 @@ write_async_callback(as_error* error, void* udata, as_event_loop* event_loop)
  *******************************************************************************************************
  */
 PyObject *AerospikeClient_Put_Async(AerospikeClient *self, PyObject *args,
-							  PyObject *kwds)
+									PyObject *kwds)
 {
-		// Aerospike Client Arguments
+	// Aerospike Client Arguments
 	as_error err;
 	as_policy_write write_policy;
 	as_policy_write *write_policy_p = NULL;
@@ -169,17 +169,16 @@ PyObject *AerospikeClient_Put_Async(AerospikeClient *self, PyObject *args,
 	long serializer_option = SERIALIZER_PYTHON;
 
 	// Python Function Keyword Arguments
-	static char *kwlist[] = {"put_callback", "key",	   "bins",		 "meta",
-							 "policy", "serializer", NULL};
+	static char *kwlist[] = {"put_callback", "key",		   "bins", "meta",
+							 "policy",		 "serializer", NULL};
 	// Lock Python State
 	// PyGILState_STATE gstate;
 	// gstate = PyGILState_Ensure();
 
 	// Python Function Argument Parsing
-	if (PyArg_ParseTupleAndKeywords(args, kwds, "OOO|OOO:put_async", kwlist, 
-									&py_callback, &py_key,
-									&py_bins, &py_meta, &py_policy,
-									&py_serializer_option) == false) {
+	if (PyArg_ParseTupleAndKeywords(
+			args, kwds, "OOO|OOO:put_async", kwlist, &py_callback, &py_key,
+			&py_bins, &py_meta, &py_policy, &py_serializer_option) == false) {
 		return NULL;
 	}
 
@@ -244,9 +243,9 @@ PyObject *AerospikeClient_Put_Async(AerospikeClient *self, PyObject *args,
 
 	// Invoke operation
 	Py_BEGIN_ALLOW_THREADS
-	status = aerospike_key_put_async(self->as, &uData->error, write_policy_p, 
-									&uData->key, &rec, write_async_callback, 
-									uData, NULL, NULL);
+	status = aerospike_key_put_async(self->as, &uData->error, write_policy_p,
+									 &uData->key, &rec, write_async_callback,
+									 uData, NULL, NULL);
 	Py_END_ALLOW_THREADS
 	if (status != AEROSPIKE_OK || err.code != AEROSPIKE_OK) {
 		goto CLEANUP;
