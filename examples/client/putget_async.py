@@ -19,7 +19,6 @@ import asyncio
 import sys
 import aerospike
 import array
-#import pdb; pdb.set_trace()
 
 from optparse import OptionParser
 
@@ -59,11 +58,11 @@ optparser.add_option(
 
 optparser.add_option(
     "-n", "--namespace", dest="namespace", type="string", default="test", metavar="<NS>",
-    help="Port of the Aerospike server.")
+    help="Namespace of database.")
 
 optparser.add_option(
     "-s", "--set", dest="set", type="string", default="demo", metavar="<SET>",
-    help="Port of the Aerospike server.")
+    help="Set to use within namespace of database.")
 
 optparser.add_option(
     "-c", "--test_count", dest="test_count", type="int", default=128, metavar="<TEST_COUNT>",

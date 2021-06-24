@@ -197,8 +197,7 @@ PyObject *AerospikeClient_Put_Async(AerospikeClient *self, PyObject *args,
 	as_error_init(&err);
 
 	if (py_serializer_option) {
-		if (PyInt_Check(py_serializer_option) ||
-			PyLong_Check(py_serializer_option)) {
+		if (PyLong_Check(py_serializer_option)) {
 			self->is_client_put_serializer = true;
 			serializer_option = PyLong_AsLong(py_serializer_option);
 		}
