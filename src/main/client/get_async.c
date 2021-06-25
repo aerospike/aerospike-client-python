@@ -47,25 +47,36 @@ void async_cb_destroy(LocalData *uData)
 	cf_free(uData);
 }
 
-void read_async_callback_helper(as_error *error, as_record *record, void *udata,
+void read_async_callback_helper(as_error *cmd_error, as_record *record, void *udata,
 								as_event_loop *event_loop, int cb)
 {
 	PyObject *py_rec = NULL;
 	PyObject *py_return = NULL;
 	PyObject *py_arglist = NULL;
+	PyObject *py_err = NULL;
+	as_error *error = NULL;
+	PyObject *py_key = NULL;
 
 	// Extract callback user-data
 	LocalData *data = (LocalData *)udata;
-	as_error *err = &data->error;
 	PyObject *py_callback = data->callback;
+
+	error = &data->error;
+	if (cmd_error) {
+		error = cmd_error;
+	}
 
 	// Lock Python State
 	PyGILState_STATE gstate;
 	gstate = PyGILState_Ensure();
 
-	if (!error || error->code == AEROSPIKE_OK) {
+	error_to_pyobject(error, &py_err);
+	// Convert as_key to python key object
+	key_to_pyobject(error, &data->key, &py_key);
 
-		if (record_to_pyobject(data->client, err, record, &data->key,
+	if (error->code == AEROSPIKE_OK) {
+
+		if (record_to_pyobject(data->client, error, record, &data->key,
 							   &py_rec) != AEROSPIKE_OK) {
 		}
 
@@ -83,27 +94,30 @@ void read_async_callback_helper(as_error *error, as_record *record, void *udata,
 		}
 	}
 	else {
-		PyObject *py_err = NULL, *py_key = NULL;
-		error_to_pyobject(error, &py_err);
-		//todo need exception incase of cb? does exception go through during async cb?
-		PyObject *exception_type = raise_exception(error);
-		// Convert as_key to python key object
-		key_to_pyobject(err, &data->key, &py_key);
-		if (PyObject_HasAttrString(exception_type, "key")) {
-			PyObject_SetAttrString(exception_type, "key", py_key);
+		if (!cb) {
+			//todo need exception incase of cb? does exception go through during async cb?
+			PyObject *exception_type = raise_exception(error);
+			if (PyObject_HasAttrString(exception_type, "key")) {
+				PyObject_SetAttrString(exception_type, "key", py_key);
+			}
+			if (PyObject_HasAttrString(exception_type, "bin")) {
+				PyObject_SetAttrString(exception_type, "bin", Py_None);
+			}
+			PyErr_SetObject(exception_type, py_err);
+			Py_DECREF(py_err);
 		}
-		if (PyObject_HasAttrString(exception_type, "bin")) {
-			PyObject_SetAttrString(exception_type, "bin", Py_None);
-		}
-		PyErr_SetObject(exception_type, py_err);
-		Py_DECREF(py_err);
 	}
 
 	if (cb) {
 		// Build Python Function Arguments
-		py_arglist = PyTuple_New(1);
-		PyTuple_SetItem(py_arglist, 0, py_rec);
-
+		py_arglist = PyTuple_New(3);
+		if (!py_rec) {
+			Py_INCREF(Py_None);
+			py_rec = Py_None;
+		}
+		PyTuple_SetItem(py_arglist, 0, py_key); //0-key, 1-meta, 2-bins
+		PyTuple_SetItem(py_arglist, 1, py_rec); //0-key, 1-meta, 2-bins
+		PyTuple_SetItem(py_arglist, 2, py_err);
 		// Invoke Python Callback
 		py_return = PyObject_Call(py_callback, py_arglist, NULL);
 
@@ -114,7 +128,7 @@ void read_async_callback_helper(as_error *error, as_record *record, void *udata,
 		if (!py_return) {
 			// an exception was raised, handle it (someday)
 			// for now, we bail from the loop
-			as_error_update(err, AEROSPIKE_ERR_CLIENT,
+			as_error_update(error, AEROSPIKE_ERR_CLIENT,
 							"read_async_callback function raised an exception");
 		}
 		else {

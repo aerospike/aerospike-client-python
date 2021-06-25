@@ -26,8 +26,6 @@ from optparse import OptionParser
 # Options Parsing
 ##########################################################################
 
-#breakpoint()
-
 usage = "usage: %prog [options]"
 
 optparser = OptionParser(usage=usage, add_help_option=False)
@@ -119,7 +117,6 @@ try:
         test_count = options.test_count
         qd = options.qd
         cqd = 0
-        result_array = array.array('i',(0 for i in range(0,test_count)))
         test_op = options.test_op
         namespace = options.namespace if options.namespace and options.namespace != 'None' else None
         set = options.set if options.set and options.set != 'None' else None
@@ -155,23 +152,21 @@ try:
                 if op == 2:
                     client.remove(key)
 
-        def put_async_callback(input_tuple):
+        def put_async_callback(key_tuple, err):
             global count, cqd
-            (key) = input_tuple
-            print(f"put_cb {key}")
+            (key) = key_tuple
+            print(f"put_cb {key}, err: {err}")
             count += 1
             cqd -= 1
 
-        def get_async_callback(input_tuple):
+        def get_async_callback(key_tuple, record_tuple, err):
             global count, cqd, result_array
-            (key, _, record) = input_tuple
-            print(f"get_cb {key}")
-            print(f"get_cb {record}")
+            (key) = key_tuple
+            (_, _, bins) = record_tuple
+            print(f"get_cb {key}, err: {err}")
+            print(f"get_cb {bins}")
             count += 1
             cqd -= 1
-            # print("cb " + result_array[int(key['key'])])
-            # result_array[int(key['key'])] = 1
-            # print("cb done " + result_array[int(key['key'])])
 
         async def get_async(namespace, set, key, policy):
             client.get_async(get_async_callback, key, policy)
