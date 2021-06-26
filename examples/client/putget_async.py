@@ -74,6 +74,10 @@ optparser.add_option(
     "-o", "--op", dest="test_op", type="int", default=3, metavar="<PUT_GET_BOTH>",
     help="Async IO op to test \"0 - test put_async, 1 - test get_async, 3 - test both\".")
 
+optparser.add_option(
+    "-v", "--verify", dest="test_verify", type="int", default=1, metavar="<PUT_GET_BOTH>",
+    help="Verify async test with GET\".")
+
 (options, args) = optparser.parse_args()
 
 if options.help:
@@ -118,6 +122,7 @@ try:
         qd = options.qd
         cqd = 0
         test_op = options.test_op
+        test_verify = options.test_verify
         namespace = options.namespace if options.namespace and options.namespace != 'None' else None
         set = options.set if options.set and options.set != 'None' else None
         policy = {
@@ -173,7 +178,7 @@ try:
  
         async def async_io(namespace, set, test_count, op):
             global cqd, count
-            cqd = 0
+            assert (cqd == 0)
             count = 0        
             for i in range(0, test_count):
                 key = {'ns': namespace, \
@@ -198,24 +203,26 @@ try:
                     
                 #await get_async(namespace, set, key, policy)
                 cqd += 1
+                # maintain and/or dont overload IO queue
                 while cqd > qd:
-                    print(cqd)
+                    print(f"waiting for cqd {cqd} to drop before issuing more IO")
                     await asyncio.sleep(1)
-                    print(cqd)
-            while count != test_count:
-                print(count)
+            print (f"Issued {test_count} Op {op} CQD {cqd}")
+            # make sure all IO drained before verifying data with next OP
+            while cqd:
+                print(f"wait for cqd {cqd} to drain")
                 await asyncio.sleep(1)
-                print(count)
+            print(f"all IO got processed, test_count {test_count} cqd {cqd}")
 
         if test_op == 1:
             samples(namespace, set, test_count, 0)
         if test_op == 3 or test_op == 0:
             asyncio.run(async_io(namespace, set, test_count, 0))
-        if test_op == 3 or test_op == 1:
+        if test_op == 3 or test_op == 1 and test_verify == 1:
             asyncio.run(async_io(namespace, set, test_count, 1))
-        if test_op == 0:
+        if test_op == 0 and test_verify == 1:
             samples(namespace, set, test_count, 1)
-        samples(namespace, set, test_count, 2)
+        #samples(namespace, set, test_count, 2)
     
     except Exception as e:
         print("error: {0}".format(e), file=sys.stderr)
