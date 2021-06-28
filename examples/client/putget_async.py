@@ -117,6 +117,7 @@ try:
 
     try:
         get_results = {}
+        put_results = {}
         count = 0
         test_count = options.test_count
         qd = options.qd
@@ -129,7 +130,7 @@ try:
             'total_timeout': options.timeout
         }
         meta = None
-
+        print(f"IO test count:{test_count} IO-QueueDepth {qd} test_case {test_op}=>(0 - test put_async, 1 - test get_async, 3 - test both)")
         def samples(namespace, set, test_count, op):
             for i in range(0, test_count):
                 key = {'ns': namespace, \
@@ -160,18 +161,21 @@ try:
         def put_async_callback(key_tuple, err):
             global count, cqd
             (key) = key_tuple
-            print(f"put_cb {key}, err: {err}")
             count += 1
             cqd -= 1
+            put_results[key[2]]['state'] = 1
+            put_results[key[2]]['err'] = err
 
         def get_async_callback(key_tuple, record_tuple, err):
-            global count, cqd, result_array
+            global count, cqd
             (key) = key_tuple
             (_, _, bins) = record_tuple
-            print(f"get_cb {key}, err: {err}")
-            print(f"get_cb {bins}")
             count += 1
             cqd -= 1
+            get_results[key[2]]['state'] = 1
+            get_results[key[2]]['bins'] = bins
+            get_results[key[2]]['err'] = err
+            
 
         async def get_async(namespace, set, key, policy):
             client.get_async(get_async_callback, key, policy)
@@ -197,29 +201,38 @@ try:
                         'l': [i, 'abc', 'வணக்கம்', ['x', 'y', 'z'], {'x': 1, 'y': 2, 'z': 3}],
                         'm': {'i': i, 's': 'abc', 'u': 'ஊத்தாப்பம்', 'l': ['x', 'y', 'z'], 'd': {'x': 1, 'y': 2, 'z': 3}}
                         }
+                    context = {'state': 0} # 0->i/o_issued, 1->i/o_success, 2->i/o failure
+                    put_results[key["key"]] = context
                     client.put_async(put_async_callback, key, record, meta, policy)
                 if op == 1:
+                    context = {'state': 0, 'bins': {}} # 0->i/o_issued, 1->i/o_success, 2->i/o failure
+                    get_results[key["key"]] = context
                     client.get_async(get_async_callback, key, policy)
                     
                 #await get_async(namespace, set, key, policy)
                 cqd += 1
                 # maintain and/or dont overload IO queue
                 while cqd > qd:
-                    print(f"waiting for cqd {cqd} to drop before issuing more IO")
+                    print(f"{test_count} I/O ops:{op} are issued so far")
+                    print(f"Outstanding I/Os ({cqd}) are greater than QD {qd}, wait for it to drop before issuing additional I/Os")
                     await asyncio.sleep(1)
-            print (f"Issued {test_count} Op {op} CQD {cqd}")
+                    print(f"cqd dropped to {cqd}")
             # make sure all IO drained before verifying data with next OP
             while cqd:
-                print(f"wait for cqd {cqd} to drain")
+                print(f"{test_count} I/O ops:{op} are issued, waiting for callback")
                 await asyncio.sleep(1)
-            print(f"all IO got processed, test_count {test_count} cqd {cqd}")
+            print(f"{test_count} I/O ops:{op} are completed successfully")
 
         if test_op == 1:
             samples(namespace, set, test_count, 0)
         if test_op == 3 or test_op == 0:
             asyncio.run(async_io(namespace, set, test_count, 0))
+            print(f"put_async completed with returning {len(put_results)} records")
+            #print(put_results)
         if test_op == 3 or test_op == 1 and test_verify == 1:
             asyncio.run(async_io(namespace, set, test_count, 1))
+            print(f"get_async completed with returning {len(put_results)} records")
+            #print(get_results)
         if test_op == 0 and test_verify == 1:
             samples(namespace, set, test_count, 1)
         #samples(namespace, set, test_count, 2)
