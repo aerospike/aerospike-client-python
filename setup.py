@@ -16,11 +16,16 @@
 ################################################################################
 
 from __future__ import print_function
-from subprocess import Popen
 import os
 import platform
 import sys
+from subprocess import Popen
+from subprocess import call
 from setuptools import setup, Extension
+from distutils.command.build import build
+from distutils.command.clean import clean
+from multiprocessing import cpu_count
+import time
 
 ################################################################################
 # ENVIRONMENT VARIABLES
@@ -29,11 +34,10 @@ from setuptools import setup, Extension
 os.putenv('ARCHFLAGS', '-arch x86_64')
 os.environ['ARCHFLAGS'] = '-arch x86_64'
 AEROSPIKE_C_VERSION = os.getenv('AEROSPIKE_C_VERSION')
-if not AEROSPIKE_C_VERSION:
-    AEROSPIKE_C_VERSION = '5.2.0'
-DOWNLOAD_C_CLIENT = os.getenv('DOWNLOAD_C_CLIENT')
-AEROSPIKE_C_HOME = os.getenv('AEROSPIKE_C_HOME')
-PREFIX = None
+BASEPATH = os.path.dirname(os.path.abspath(__file__))
+AEROSPIKE_C_HOME = os.path.join(BASEPATH, 'aerospike-client-c')
+
+AEROSPIKE_C_TARGET = None
 PLATFORM = platform.platform(1)
 LINUX = 'Linux' in PLATFORM
 DARWIN = 'Darwin' in PLATFORM or 'macOS' in PLATFORM
@@ -42,108 +46,41 @@ STATIC_SSL = os.getenv('STATIC_SSL')
 SSL_LIB_PATH = os.getenv('SSL_LIB_PATH')
 
 ################################################################################
-# HELPER FUNCTION FOR RESOLVING THE C CLIENT DEPENDENCY
-################################################################################
-
-
-def resolve_c_client():
-    global PREFIX, AEROSPIKE_C_VERSION, DOWNLOAD_C_CLIENT
-    global extra_objects, include_dirs
-
-    if PREFIX:
-        os.putenv('PREFIX', PREFIX)
-        os.environ['PREFIX'] = PREFIX
-    if AEROSPIKE_C_VERSION:
-        os.putenv('AEROSPIKE_C_VERSION', AEROSPIKE_C_VERSION)
-        os.environ['AEROSPIKE_C_VERSION'] = AEROSPIKE_C_VERSION
-    if DOWNLOAD_C_CLIENT:
-        os.putenv('DOWNLOAD_C_CLIENT', DOWNLOAD_C_CLIENT)
-        os.environ['DOWNLOAD_C_CLIENT'] = DOWNLOAD_C_CLIENT
-
-    print('info: Executing', './scripts/aerospike-client-c.sh', file=sys.stdout)
-    os.chmod('./scripts/aerospike-client-c.sh', 0o0755)
-    os.chmod('./scripts/os_version', 0o0755)
-    p = Popen(['./scripts/aerospike-client-c.sh'], env=os.environ)
-    rc = p.wait()
-
-    if rc != 0:
-        print("error: scripts/aerospike-client-c.sh", rc, file=sys.stderr)
-        sys.exit(1)
-
-    # Prefix for Aerospike C client libraries and headers
-    aerospike_c_prefix = './aerospike-client-c'
-    if not os.path.isdir(aerospike_c_prefix):
-        print("error: Directory not found:", aerospike_c_prefix, file=sys.stderr)
-        sys.exit(2)
-
-    # -------------------------------------------------------------------------------
-    # Check for aerospike.h
-    # -------------------------------------------------------------------------------
-    aerospike_h = aerospike_c_prefix + '/include/aerospike/aerospike.h'
-    if not os.path.isfile(aerospike_h):
-        print("error: aerospike.h not found:", aerospike_h, file=sys.stderr)
-        sys.exit(3)
-    print("info: aerospike.h found:", aerospike_h, file=sys.stdout)
-    include_dirs = include_dirs + [
-        '/usr/local/opt/openssl/include',
-        aerospike_c_prefix + '/include',
-        aerospike_c_prefix + '/include/ck'
-        ]
-
-    # -------------------------------------------------------------------------------
-    # Check for libaerospike.a
-    # -------------------------------------------------------------------------------
-    aerospike_a = aerospike_c_prefix + '/lib/libaerospike.a'
-    if not os.path.isfile(aerospike_a):
-        print("error: libaerospike.a not found:", aerospike_a, file=sys.stderr)
-        sys.exit(4)
-    print("info: libaerospike.a found:", aerospike_a, file=sys.stdout)
-    extra_objects = extra_objects + [
-        aerospike_a
-        ]
-
-    # ---------------------------------------------------------------------------
-    # Environment Variables
-    # ---------------------------------------------------------------------------
-    os.putenv('CPATH', ':'.join(include_dirs))
-    os.environ['CPATH'] = ':'.join(include_dirs)
-    os.putenv('LD_LIBRARY_PATH', ':'.join(library_dirs))
-    os.environ['LD_LIBRARY_PATH'] = ':'.join(library_dirs)
-    os.putenv('DYLD_LIBRARY_PATH', ':'.join(library_dirs))
-    os.environ['DYLD_LIBRARY_PATH'] = ':'.join(library_dirs)
-
-    # ---------------------------------------------------------------------------
-    # Deploying the system lua files
-    # ---------------------------------------------------------------------------
-
-################################################################################
 # GENERIC BUILD SETTINGS
 ################################################################################
 
-include_dirs = ['src/include'] + [x for x in os.getenv('CPATH', '').split(':') if len(x) > 0]
+
+include_dirs = ['src/include'] + \
+    [x for x in os.getenv('CPATH', '').split(':') if len(x) > 0] + \
+    ['/usr/local/opt/openssl/include']
 extra_compile_args = [
-    '-std=gnu99', '-g', '-Wall', '-fPIC', '-O1',
+    '-std=gnu99', '-g', '-Wall', '-fPIC', '-O1', '-DDEBUG', '-DAS_EVENT_LIB_DEFINED',
     '-fno-common', '-fno-strict-aliasing', '-Wno-strict-prototypes',
     '-march=nocona',
-    '-D_FILE_OFFSET_BITS=64', '-D_REENTRANT', '-D_GNU_SOURCE'
-    ]
+    '-D_FILE_OFFSET_BITS=64', '-D_REENTRANT',
+    '-DMARCH_x86_64',
+    '-Wno-implicit-function-declaration'
+]
 extra_objects = []
 extra_link_args = []
-library_dirs = ['/usr/local/opt/openssl/lib']
+library_dirs = ['/usr/local/opt/openssl/lib', '/usr/local/opt/libevent/lib']
 libraries = [
-  'ssl',
-  'crypto',
-  'pthread',
-  'm',
-  'z'
-  ]
+    'ssl',
+    'crypto',
+    'pthread',
+    'm',
+    'z',
+    'event_core',
+    'event_pthreads'
+]
 
 ################################################################################
 # STATIC SSL LINKING BUILD SETTINGS
 ################################################################################
 
 if STATIC_SSL:
-    extra_objects.extend([SSL_LIB_PATH + 'libssl.a', SSL_LIB_PATH + 'libcrypto.a'])
+    extra_objects.extend(
+        [SSL_LIB_PATH + 'libssl.a', SSL_LIB_PATH + 'libcrypto.a'])
     libraries.remove('ssl')
     libraries.remove('crypto')
     library_dirs.remove('/usr/local/opt/openssl/lib')
@@ -159,10 +96,10 @@ if DARWIN:
     extra_compile_args = extra_compile_args + [
         '-D_DARWIN_UNLIMITED_SELECT',
         '-DMARCH_x86_64'
-        ]
+    ]
 
     if AEROSPIKE_C_HOME:
-        PREFIX = AEROSPIKE_C_HOME + '/target/Darwin-x86_64'
+        AEROSPIKE_C_TARGET = AEROSPIKE_C_HOME + '/target/Darwin-x86_64'
 
 elif LINUX:
     # ---------------------------------------------------------------------------
@@ -171,34 +108,29 @@ elif LINUX:
     extra_compile_args = extra_compile_args + [
         '-rdynamic', '-finline-functions',
         '-DMARCH_x86_64'
-        ]
+    ]
     libraries = libraries + ['rt']
     if AEROSPIKE_C_HOME:
-        PREFIX = AEROSPIKE_C_HOME + '/target/Linux-x86_64'
+        AEROSPIKE_C_TARGET = AEROSPIKE_C_HOME + '/target/Linux-x86_64'
 
 else:
     print("error: OS not supported:", PLATFORM, file=sys.stderr)
     sys.exit(8)
 
-################################################################################
-# RESOLVE C CLIENT DEPENDENCY
-################################################################################
+include_dirs = include_dirs + [
+    '/usr/local/opt/openssl/include',
+    AEROSPIKE_C_TARGET + '/include'
+    ]
+extra_objects = extra_objects + [
+    AEROSPIKE_C_TARGET + '/lib/libaerospike.a'
+]
 
-
-
-# If the C client is packaged elsewhere, assume the libraries are available
-
-if os.environ.get('NO_RESOLVE_C_CLIENT_DEP', None):
-    has_c_client = True
-    libraries = libraries + ['aerospike']
-else:
-    has_c_client = False
-
-
-if not has_c_client:
-    if (('build' in sys.argv or 'build_ext' in sys.argv or
-         'install' in sys.argv or 'bdist_wheel' in sys.argv)):
-        resolve_c_client()
+os.putenv('CPATH', ':'.join(include_dirs))
+os.environ['CPATH'] = ':'.join(include_dirs)
+os.putenv('LD_LIBRARY_PATH', ':'.join(library_dirs))
+os.environ['LD_LIBRARY_PATH'] = ':'.join(library_dirs)
+os.putenv('DYLD_LIBRARY_PATH', ':'.join(library_dirs))
+os.environ['DYLD_LIBRARY_PATH'] = ':'.join(library_dirs)
 
 ################################################################################
 # SETUP
@@ -211,6 +143,65 @@ with open(os.path.join(CWD, 'README.rst')) as f:
 # Get the version from the relevant file
 with open(os.path.join(CWD, 'VERSION')) as f:
     version = f.read()
+
+BASEPATH = os.path.dirname(os.path.abspath(__file__))
+CCLIENT_PATH = os.path.join(BASEPATH, 'aerospike-client-c')
+
+
+class CClientBuild(build):
+
+    def run(self):
+        if self.force == 1:
+            # run original c-extension clean task
+            # clean.run(self)
+            cmd = [
+                'make',
+                'clean'
+            ]
+            def clean():
+                call(cmd, cwd=CCLIENT_PATH)
+            self.execute(clean, [], 'Clean core aerospike-client-c previous builds')
+
+        # build core client
+        cmd = [
+            'make',
+            'EVENT_LIB=libevent',
+            'V=' + str(self.verbose),
+        ]
+
+        # try:
+        #     cmd.append('-j%d' % cpu_count())
+        # except NotImplementedError:
+        #     print('Unable to determine number of CPUs. Using single threaded make.')
+
+        # options = [
+        #     'DEBUG=n',
+        # ]
+        # cmd.extend(options)
+
+        def compile():
+            call(cmd, cwd=CCLIENT_PATH)
+
+        self.execute(compile, [], 'Compiling core aerospike-client-c')
+        # run original c-extension build code
+        build.run(self)
+
+
+class CClientClean(clean):
+
+    def run(self):
+        # run original c-extension clean task
+        # clean.run(self)
+        cmd = [
+            'make',
+            'clean'
+        ]
+
+        def clean():
+            call(cmd, cwd=CCLIENT_PATH)
+
+        self.execute(clean, [], 'Clean core aerospike-client-c')
+
 
 setup(
     name='aerospike',
@@ -262,6 +253,8 @@ setup(
                 'src/main/client/exists.c',
                 'src/main/client/exists_many.c',
                 'src/main/client/get.c',
+                'src/main/client/get_async.c',
+                'src/main/client/put_async.c',
                 'src/main/client/get_many.c',
                 'src/main/client/select_many.c',
                 'src/main/client/info_single_node.c',
@@ -335,6 +328,11 @@ setup(
             extra_link_args=extra_link_args,
         )
     ],
-    packages=['aerospike_helpers', 'aerospike_helpers.operations', 'aerospike_helpers.expressions']
+    packages=['aerospike_helpers', 'aerospike_helpers.operations',
+              'aerospike_helpers.expressions'],
 
+    cmdclass={
+        'build': CClientBuild,
+        'clean': CClientClean
+    }
 )
