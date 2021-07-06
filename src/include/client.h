@@ -719,7 +719,8 @@ PyObject *AerospikeClient_Get_Key_Digest(AerospikeClient *self, PyObject *args,
 * client.get_key_partition_id((x,y,z))
 *
 */
-PyObject * AerospikeClient_Get_Key_PartitionID(AerospikeClient * self, PyObject * args, PyObject * kwds);
+PyObject *AerospikeClient_Get_Key_PartitionID(AerospikeClient *self,
+											  PyObject *args, PyObject *kwds);
 /**
  * Return search string for host port combination
  */

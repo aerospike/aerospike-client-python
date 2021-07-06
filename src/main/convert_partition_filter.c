@@ -30,17 +30,20 @@
 * Initiates the conversion from intermediate_partition_filter structs to partition_filter.
 * builds the partition filter.
 */
-as_status convert_partition_filter(AerospikeClient * self, PyObject * py_partition_filter, as_partition_filter * filter, as_error * err) {
-	
-	PyObject * begin = PyDict_GetItemString(py_partition_filter, "begin");
-	PyObject * count = PyDict_GetItemString(py_partition_filter, "count");
-	PyObject * digest = PyDict_GetItemString(py_partition_filter, "digest");
+as_status convert_partition_filter(AerospikeClient *self,
+								   PyObject *py_partition_filter,
+								   as_partition_filter *filter, as_error *err)
+{
+
+	PyObject *begin = PyDict_GetItemString(py_partition_filter, "begin");
+	PyObject *count = PyDict_GetItemString(py_partition_filter, "count");
+	PyObject *digest = PyDict_GetItemString(py_partition_filter, "digest");
 
 	if (begin && PyLong_Check(begin)) {
 		filter->begin = 0;
 		filter->count = 0;
 		filter->digest.init = 0;
-	
+
 		filter->begin = PyInt_AsLong(begin);
 
 		if (count && PyLong_Check(count)) {
@@ -48,17 +51,20 @@ as_status convert_partition_filter(AerospikeClient * self, PyObject * py_partiti
 		}
 
 		if (digest && PyDict_Check(digest)) {
-			PyObject * init = PyDict_GetItemString(digest, "init");
+			PyObject *init = PyDict_GetItemString(digest, "init");
 			if (init && PyLong_Check(init)) {
 				filter->digest.init = PyInt_AsLong(init);
 			}
-			PyObject * value = PyDict_GetItemString(digest, "value");
+			PyObject *value = PyDict_GetItemString(digest, "value");
 			if (value && PyString_Check(value)) {
-				strncpy((char*)filter->digest.value, PyString_AsString(value), AS_DIGEST_VALUE_SIZE);
+				strncpy((char *)filter->digest.value, PyString_AsString(value),
+						AS_DIGEST_VALUE_SIZE);
 			}
 		}
-	} else {
-		as_error_update(err, AEROSPIKE_ERR_PARAM, "Invalid scan partition policy");
+	}
+	else {
+		as_error_update(err, AEROSPIKE_ERR_PARAM,
+						"Invalid scan partition policy");
 	}
 
 	return err->code;

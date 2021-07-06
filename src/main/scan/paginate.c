@@ -27,29 +27,31 @@
 #include "scan.h"
 #include "policy.h"
 
-PyObject * AerospikeScan_Paginate(AerospikeScan * self, PyObject * args, PyObject * kwds)
+PyObject *AerospikeScan_Paginate(AerospikeScan *self, PyObject *args,
+								 PyObject *kwds)
 {
-	PyObject * py_value = NULL;
+	PyObject *py_value = NULL;
 	as_error err;
 	as_error_init(&err);
 
-	if (! self || !self->client->as){
+	if (!self || !self->client->as) {
 		as_error_update(&err, AEROSPIKE_ERR_PARAM, "Invalid scan object.");
 		goto CLEANUP;
 	}
 
-	if (! self->client->is_conn_16) {
-		as_error_update(&err, AEROSPIKE_ERR_CLUSTER, "No connection to aerospike cluster.");
+	if (!self->client->is_conn_16) {
+		as_error_update(&err, AEROSPIKE_ERR_CLUSTER,
+						"No connection to aerospike cluster.");
 		goto CLEANUP;
 	}
-	 
+
 	as_scan_set_paginate(&self->scan, true);
-	
+
 	py_value = PyBool_FromLong(true);
 
 CLEANUP:
 	if (err.code != AEROSPIKE_OK) {
-		PyObject * py_err = NULL;
+		PyObject *py_err = NULL;
 		error_to_pyobject(&err, &py_err);
 		PyObject *exception_type = raise_exception(&err);
 		PyErr_SetObject(exception_type, py_err);
@@ -60,20 +62,22 @@ CLEANUP:
 	return py_value;
 }
 
-PyObject * AerospikeScan_Is_Done(AerospikeScan * self, PyObject * args, PyObject * kwds)
+PyObject *AerospikeScan_Is_Done(AerospikeScan *self, PyObject *args,
+								PyObject *kwds)
 {
-	PyObject * py_value = NULL;
+	PyObject *py_value = NULL;
 	as_error err;
 	as_error_init(&err);
 	bool scan_done = 0;
 
-	if (! self || !self->client->as){
+	if (!self || !self->client->as) {
 		as_error_update(&err, AEROSPIKE_ERR_PARAM, "Invalid scan object.");
 		goto CLEANUP;
 	}
 
-	if (! self->client->is_conn_16) {
-		as_error_update(&err, AEROSPIKE_ERR_CLUSTER, "No connection to aerospike cluster.");
+	if (!self->client->is_conn_16) {
+		as_error_update(&err, AEROSPIKE_ERR_CLUSTER,
+						"No connection to aerospike cluster.");
 		goto CLEANUP;
 	}
 
@@ -82,7 +86,7 @@ PyObject * AerospikeScan_Is_Done(AerospikeScan * self, PyObject * args, PyObject
 
 CLEANUP:
 	if (err.code != AEROSPIKE_OK) {
-		PyObject * py_err = NULL;
+		PyObject *py_err = NULL;
 		error_to_pyobject(&err, &py_err);
 		PyObject *exception_type = raise_exception(&err);
 		PyErr_SetObject(exception_type, py_err);

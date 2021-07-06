@@ -504,12 +504,11 @@ PyDoc_STRVAR(get_key_digest_doc, "get_key_digest(ns, set, key) -> bytearray\n\
 Calculate the digest of a particular key. See: Key Tuple.");
 
 PyDoc_STRVAR(get_key_partition_id_doc,
-"get_key_partition_id(ns, set, key) -> int\n\
+			 "get_key_partition_id(ns, set, key) -> int\n\
 \n\
 Gets the partition ID of given key. See: Key Tuple.");
 
-PyDoc_STRVAR(truncate_doc,
-"truncate(namespace, set, nanos[, policy])\n\
+PyDoc_STRVAR(truncate_doc, "truncate(namespace, set, nanos[, policy])\n\
 \n\
 Remove records in specified namespace/set efficiently. \
 This method is many orders of magnitude faster than deleting records one at a time. \
@@ -590,48 +589,34 @@ static PyMethodDef AerospikeClient_Type_Methods[] = {
 
 	// KVS OPERATIONS
 
-	{"exists",
-		(PyCFunction) AerospikeClient_Exists, METH_VARARGS | METH_KEYWORDS,
-		exists_doc},
-	{"get",
-		(PyCFunction) AerospikeClient_Get, METH_VARARGS | METH_KEYWORDS,
-		get_doc},
-	{"select",
-		(PyCFunction) AerospikeClient_Select, METH_VARARGS | METH_KEYWORDS,
-		select_doc},
-	{"put",
-		(PyCFunction) AerospikeClient_Put, METH_VARARGS | METH_KEYWORDS,
-		put_doc},
-	{"get_key_partition_id",
-		(PyCFunction) AerospikeClient_Get_Key_PartitionID, METH_VARARGS | METH_KEYWORDS,
-		get_key_partition_id_doc},
-	{"remove",
-		(PyCFunction) AerospikeClient_Remove, METH_VARARGS | METH_KEYWORDS,
-		remove_doc},
-	{"apply",
-		(PyCFunction) AerospikeClient_Apply, METH_VARARGS | METH_KEYWORDS,
-		apply_doc},
-	{"remove_bin",
-		(PyCFunction) AerospikeClient_RemoveBin, METH_VARARGS | METH_KEYWORDS,
-		remove_bin_doc},
-	{"append",
-		(PyCFunction) AerospikeClient_Append, METH_VARARGS | METH_KEYWORDS,
-		append_doc},
-	{"prepend",
-		(PyCFunction) AerospikeClient_Prepend, METH_VARARGS | METH_KEYWORDS,
-		prepend_doc},
-	{"touch",
-		(PyCFunction) AerospikeClient_Touch, METH_VARARGS | METH_KEYWORDS,
-		touch_doc},
-	{"increment",
-		(PyCFunction) AerospikeClient_Increment, METH_VARARGS | METH_KEYWORDS,
-		increment_doc},
-	{"operate",
-		(PyCFunction) AerospikeClient_Operate, METH_VARARGS | METH_KEYWORDS,
-		operate_doc},
-	{"operate_ordered",
-		(PyCFunction) AerospikeClient_OperateOrdered, METH_VARARGS | METH_KEYWORDS,
-		operate_ordered_doc},
+	{"exists", (PyCFunction)AerospikeClient_Exists,
+	 METH_VARARGS | METH_KEYWORDS, exists_doc},
+	{"get", (PyCFunction)AerospikeClient_Get, METH_VARARGS | METH_KEYWORDS,
+	 get_doc},
+	{"select", (PyCFunction)AerospikeClient_Select,
+	 METH_VARARGS | METH_KEYWORDS, select_doc},
+	{"put", (PyCFunction)AerospikeClient_Put, METH_VARARGS | METH_KEYWORDS,
+	 put_doc},
+	{"get_key_partition_id", (PyCFunction)AerospikeClient_Get_Key_PartitionID,
+	 METH_VARARGS | METH_KEYWORDS, get_key_partition_id_doc},
+	{"remove", (PyCFunction)AerospikeClient_Remove,
+	 METH_VARARGS | METH_KEYWORDS, remove_doc},
+	{"apply", (PyCFunction)AerospikeClient_Apply, METH_VARARGS | METH_KEYWORDS,
+	 apply_doc},
+	{"remove_bin", (PyCFunction)AerospikeClient_RemoveBin,
+	 METH_VARARGS | METH_KEYWORDS, remove_bin_doc},
+	{"append", (PyCFunction)AerospikeClient_Append,
+	 METH_VARARGS | METH_KEYWORDS, append_doc},
+	{"prepend", (PyCFunction)AerospikeClient_Prepend,
+	 METH_VARARGS | METH_KEYWORDS, prepend_doc},
+	{"touch", (PyCFunction)AerospikeClient_Touch, METH_VARARGS | METH_KEYWORDS,
+	 touch_doc},
+	{"increment", (PyCFunction)AerospikeClient_Increment,
+	 METH_VARARGS | METH_KEYWORDS, increment_doc},
+	{"operate", (PyCFunction)AerospikeClient_Operate,
+	 METH_VARARGS | METH_KEYWORDS, operate_doc},
+	{"operate_ordered", (PyCFunction)AerospikeClient_OperateOrdered,
+	 METH_VARARGS | METH_KEYWORDS, operate_ordered_doc},
 
 	// LIST OPERATIONS
 
