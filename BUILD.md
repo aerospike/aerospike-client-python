@@ -58,8 +58,9 @@ The dependencies can be installed through the OS X package manager [Homebrew](ht
 ## Build
 
 To build the library:
+
     if repo is not cloned with "git clone --recurse-submodules --remote-submodules ...", run the following command to initialize necessary sub-modules:
-    	git submodule update --init --remote --checkout --recursive
+        git submodule update --init --remote --checkout --recursive
     python setup.py build --force
 
 ### Troubleshooting OS X builds
@@ -75,36 +76,6 @@ If an error similar to `ld: targeted OS version does not support use of thread l
 ```sh
 MACOSX_DEPLOYMENT_TARGET=10.12 python setup.py build --force
 MACOSX_DEPLOYMENT_TARGET=10.12 python setup.py install --force
-```
-
-### Building on an Unsupported Linux Distro
-
-If you are installing the Python client on an unsupported OS, such as CentOS 5,
-you will need to first build the C client manually.
-
-1. Clone the [aerospike/aerospike-client-c](https://github.com/aerospike/aerospike-client-c) repo from GitHub.
-2. Install the dependencies. See the [README](https://github.com/aerospike/aerospike-client-c/blob/master/README.md).
-3. Change directory to the C client, and build it.
-
-```sh
-git submodule update --init
-make
-```
-
-4. Clone the [aerospike/aerospike-lua-core](https://github.com/aerospike/aerospike-lua-core) repo from GitHub.
-5. Change directory to the Python client and build it.
-
-```sh
-export DOWNLOAD_C_CLIENT=0
-export AEROSPIKE_C_HOME=/path/to/aerospike-c-client
-export AEROSPIKE_LUA_PATH=/path/to/aerospike-lua-core/src
-python setup.py build --force
-```
-
-If using sudo, you may need to set the values inline with the command:
-
-```bash
-sudo DOWNLOAD_C_CLIENT=0 AEROSPIKE_C_HOME=/path/to/aerospike-c-client AEROSPIKE_LUA_PATH=/path/to/aerospike-lua-core/src python setup.py build --force
 ```
 
 ## Install
