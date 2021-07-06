@@ -41,34 +41,35 @@
  * Returns the result of UDF function.
  *******************************************************************************************************
  */
-PyObject * AerospikeClient_Apply_Invoke(
-		AerospikeClient * self,
-		PyObject * py_key, PyObject * py_module, PyObject * py_function,
-		PyObject * py_arglist, PyObject * py_policy)
+PyObject *AerospikeClient_Apply_Invoke(AerospikeClient *self, PyObject *py_key,
+									   PyObject *py_module,
+									   PyObject *py_function,
+									   PyObject *py_arglist,
+									   PyObject *py_policy)
 {
 	// Python Return Value
-	PyObject * py_result = NULL;
+	PyObject *py_result = NULL;
 
 	// Aerospike Client Arguments
 	as_error err;
 	as_policy_apply apply_policy;
-	as_policy_apply * apply_policy_p = NULL;
+	as_policy_apply *apply_policy_p = NULL;
 	as_key key;
-	char * module = NULL;
-	char * function = NULL;
-	as_list * arglist = NULL;
-	as_val * result = NULL;
+	char *module = NULL;
+	char *function = NULL;
+	as_list *arglist = NULL;
+	as_val *result = NULL;
 
-	PyObject * py_umodule   = NULL;
-	PyObject * py_ufunction = NULL;
+	PyObject *py_umodule = NULL;
+	PyObject *py_ufunction = NULL;
 
 	// For converting expressions.
 	as_exp exp_list;
-	as_exp* exp_list_p = NULL;
+	as_exp *exp_list_p = NULL;
 
 	// For converting predexp.
 	as_predexp_list predexp_list;
-	as_predexp_list* predexp_list_p = NULL;
+	as_predexp_list *predexp_list_p = NULL;
 
 	as_static_pool static_pool;
 	memset(&static_pool, 0, sizeof(static_pool));
@@ -79,7 +80,8 @@ PyObject * AerospikeClient_Apply_Invoke(
 	as_error_init(&err);
 
 	if (!PyList_Check(py_arglist)) {
-		PyErr_SetString(PyExc_TypeError, "expected UDF method arguments in a 'list'");
+		PyErr_SetString(PyExc_TypeError,
+						"expected UDF method arguments in a 'list'");
 		return NULL;
 	}
 
@@ -89,7 +91,8 @@ PyObject * AerospikeClient_Apply_Invoke(
 	}
 
 	if (!self->is_conn_16) {
-		as_error_update(&err, AEROSPIKE_ERR_CLUSTER, "No connection to aerospike cluster");
+		as_error_update(&err, AEROSPIKE_ERR_CLUSTER,
+						"No connection to aerospike cluster");
 		goto CLEANUP;
 	}
 
@@ -103,14 +106,17 @@ PyObject * AerospikeClient_Apply_Invoke(
 	key_initialised = true;
 
 	// Convert python list to as_list
-	pyobject_to_list(self, &err, py_arglist, &arglist, &static_pool, SERIALIZER_PYTHON);
+	pyobject_to_list(self, &err, py_arglist, &arglist, &static_pool,
+					 SERIALIZER_PYTHON);
 	if (err.code != AEROSPIKE_OK) {
 		goto CLEANUP;
 	}
 
 	// Convert python policy object to as_policy_apply
-	pyobject_to_policy_apply(self, &err, py_policy, &apply_policy, &apply_policy_p,
-			&self->as->config.policies.apply, &predexp_list, &predexp_list_p, &exp_list, &exp_list_p);
+	pyobject_to_policy_apply(self, &err, py_policy, &apply_policy,
+							 &apply_policy_p, &self->as->config.policies.apply,
+							 &predexp_list, &predexp_list_p, &exp_list,
+							 &exp_list_p);
 	if (err.code != AEROSPIKE_OK) {
 		goto CLEANUP;
 	}
@@ -123,7 +129,9 @@ PyObject * AerospikeClient_Apply_Invoke(
 		module = PyString_AsString(py_module);
 	}
 	else {
-		as_error_update(&err, AEROSPIKE_ERR_CLIENT, "udf module argument must be a string or unicode string");
+		as_error_update(
+			&err, AEROSPIKE_ERR_CLIENT,
+			"udf module argument must be a string or unicode string");
 		goto CLEANUP;
 	}
 
@@ -135,18 +143,21 @@ PyObject * AerospikeClient_Apply_Invoke(
 		function = PyString_AsString(py_function);
 	}
 	else {
-		as_error_update(&err, AEROSPIKE_ERR_CLIENT, "function name must be a string or unicode string");
+		as_error_update(&err, AEROSPIKE_ERR_CLIENT,
+						"function name must be a string or unicode string");
 		goto CLEANUP;
 	}
 
 	// Invoke operation
 	Py_BEGIN_ALLOW_THREADS
-	aerospike_key_apply(self->as, &err, apply_policy_p, &key, module, function, arglist, &result);
+	aerospike_key_apply(self->as, &err, apply_policy_p, &key, module, function,
+						arglist, &result);
 	Py_END_ALLOW_THREADS
 
 	if (err.code == AEROSPIKE_OK) {
 		val_to_pyobject(self, &err, result, &py_result);
-	} else {
+	}
+	else {
 		as_error_update(&err, err.code, NULL);
 	}
 
@@ -175,19 +186,19 @@ CLEANUP:
 	as_val_destroy(result);
 
 	if (err.code != AEROSPIKE_OK) {
-		PyObject * py_err = NULL;
+		PyObject *py_err = NULL;
 		error_to_pyobject(&err, &py_err);
 		PyObject *exception_type = raise_exception(&err);
-		if(PyObject_HasAttrString(exception_type, "key")) {
+		if (PyObject_HasAttrString(exception_type, "key")) {
 			PyObject_SetAttrString(exception_type, "key", py_key);
-		} 
-		if(PyObject_HasAttrString(exception_type, "bin")) {
+		}
+		if (PyObject_HasAttrString(exception_type, "bin")) {
 			PyObject_SetAttrString(exception_type, "bin", Py_None);
 		}
-		if(PyObject_HasAttrString(exception_type, "module")) {
+		if (PyObject_HasAttrString(exception_type, "module")) {
 			PyObject_SetAttrString(exception_type, "module", py_module);
-		} 
-		if(PyObject_HasAttrString(exception_type, "func")) {
+		}
+		if (PyObject_HasAttrString(exception_type, "func")) {
 			PyObject_SetAttrString(exception_type, "func", py_function);
 		}
 		PyErr_SetObject(exception_type, py_err);
@@ -211,25 +222,28 @@ CLEANUP:
  * In case of error,appropriate exceptions will be raised.
  *******************************************************************************************************
  */
-PyObject * AerospikeClient_Apply(AerospikeClient * self, PyObject * args, PyObject * kwds)
+PyObject *AerospikeClient_Apply(AerospikeClient *self, PyObject *args,
+								PyObject *kwds)
 {
 	// Python Function Arguments
-	PyObject * py_key = NULL;
-	PyObject * py_module = NULL;
-	PyObject * py_function = NULL;
-	PyObject * py_arglist = NULL;
-	PyObject * py_policy = NULL;
+	PyObject *py_key = NULL;
+	PyObject *py_module = NULL;
+	PyObject *py_function = NULL;
+	PyObject *py_arglist = NULL;
+	PyObject *py_policy = NULL;
 
 	// Python Function Keyword Arguments
-	static char * kwlist[] = {"key", "module", "function", "args", "policy", NULL};
+	static char *kwlist[] = {"key",	 "module", "function",
+							 "args", "policy", NULL};
 
 	// Python Function Argument Parsing
-	if (PyArg_ParseTupleAndKeywords(args, kwds, "OOOO|O:apply", kwlist,
-			&py_key, &py_module, &py_function, &py_arglist, &py_policy) == false) {
+	if (PyArg_ParseTupleAndKeywords(args, kwds, "OOOO|O:apply", kwlist, &py_key,
+									&py_module, &py_function, &py_arglist,
+									&py_policy) == false) {
 		return NULL;
 	}
 
 	// Invoke Operation
 	return AerospikeClient_Apply_Invoke(self, py_key, py_module, py_function,
-		py_arglist, py_policy);
+										py_arglist, py_policy);
 }

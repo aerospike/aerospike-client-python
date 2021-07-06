@@ -19,5 +19,5 @@
 #include <Python.h>
 #include <stdbool.h>
 #include "types.h"
-AerospikeGlobalHosts * AerospikeGobalHosts_New(aerospike* as);
+AerospikeGlobalHosts *AerospikeGobalHosts_New(aerospike *as);
 void AerospikeGlobalHosts_Del(PyObject *self);

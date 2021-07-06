@@ -18,5 +18,5 @@
 
 #include <Python.h>
 
-PyObject * AerospikeException_New(void);
-PyObject* raise_exception(as_error * err);
+PyObject *AerospikeException_New(void);
+PyObject *raise_exception(as_error *err);

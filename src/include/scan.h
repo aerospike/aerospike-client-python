@@ -28,9 +28,10 @@
  * FUNCTIONS
  ******************************************************************************/
 
-PyTypeObject * AerospikeScan_Ready(void);
+PyTypeObject *AerospikeScan_Ready(void);
 
-AerospikeScan * AerospikeScan_New(AerospikeClient * client, PyObject * args, PyObject * kwds);
+AerospikeScan *AerospikeScan_New(AerospikeClient *client, PyObject *args,
+								 PyObject *kwds);
 
 /*******************************************************************************
  * OPERATIONS
@@ -48,7 +49,8 @@ AerospikeScan * AerospikeScan_New(AerospikeClient * client, PyObject * args, PyO
  *    scan.select(bin, bin, bin)
  *
  */
-AerospikeScan * AerospikeScan_Select(AerospikeScan * self, PyObject * args, PyObject * kwds);
+AerospikeScan *AerospikeScan_Select(AerospikeScan *self, PyObject *args,
+									PyObject *kwds);
 
 /**
  * Apply the specified udf on the records scanned.
@@ -67,7 +69,8 @@ AerospikeScan * AerospikeScan_Select(AerospikeScan * self, PyObject * args, PyOb
  *    scan.foreach(each_result)
  *
  */
-PyObject * AerospikeScan_Foreach(AerospikeScan * self, PyObject * args, PyObject * kwds);
+PyObject *AerospikeScan_Foreach(AerospikeScan *self, PyObject *args,
+								PyObject *kwds);
 
 /**
  * Execute the scan and return a generator.
@@ -76,7 +79,8 @@ PyObject * AerospikeScan_Foreach(AerospikeScan * self, PyObject * args, PyObject
  *      print result
  *
  */
-PyObject * AerospikeScan_Results(AerospikeScan * self, PyObject * args, PyObject * kwds);
+PyObject *AerospikeScan_Results(AerospikeScan *self, PyObject *args,
+								PyObject *kwds);
 
 /**
  * Execute the scan in the background.
@@ -84,7 +88,8 @@ PyObject * AerospikeScan_Results(AerospikeScan * self, PyObject * args, PyObject
  *    job_id = scan.execute_background()
  *
  */
-PyObject * AerospikeScan_ExecuteBackground(AerospikeScan * self, PyObject * args, PyObject * kwds);
+PyObject *AerospikeScan_ExecuteBackground(AerospikeScan *self, PyObject *args,
+										  PyObject *kwds);
 
 /**
  * Apply the specified udf on the results of the scan.
@@ -92,10 +97,12 @@ PyObject * AerospikeScan_ExecuteBackground(AerospikeScan * self, PyObject * args
  *    scan.apply(module, function, arglist)
  *
  */
-AerospikeScan * AerospikeScan_Apply(AerospikeScan * self, PyObject * args, PyObject * kwds);
+AerospikeScan *AerospikeScan_Apply(AerospikeScan *self, PyObject *args,
+								   PyObject *kwds);
 
 /**
  * Add an ops list to the scan.
  *
  */
-AerospikeScan * AerospikeScan_Add_Ops(AerospikeScan * self, PyObject * args, PyObject * kwds);
+AerospikeScan *AerospikeScan_Add_Ops(AerospikeScan *self, PyObject *args,
+									 PyObject *kwds);

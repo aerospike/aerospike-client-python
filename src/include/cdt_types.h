@@ -19,5 +19,5 @@
 #define AS_CDT_INFINITE_NAME "aerospike.CDTInfinite"
 #include <Python.h>
 
-PyTypeObject * AerospikeWildcardObject_Ready();
-PyTypeObject * AerospikeInfiniteObject_Ready();
+PyTypeObject *AerospikeWildcardObject_Ready();
+PyTypeObject *AerospikeInfiniteObject_Ready();

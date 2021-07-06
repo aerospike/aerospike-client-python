@@ -42,25 +42,25 @@
  * In case of error,appropriate exceptions will be raised.
  *******************************************************************************************************
  */
-PyObject * AerospikeClient_Put_Invoke(
-		AerospikeClient * self,
-		PyObject * py_key, PyObject * py_bins, PyObject * py_meta, PyObject * py_policy,
-		long serializer_option)
+PyObject *AerospikeClient_Put_Invoke(AerospikeClient *self, PyObject *py_key,
+									 PyObject *py_bins, PyObject *py_meta,
+									 PyObject *py_policy,
+									 long serializer_option)
 {
 	// Aerospike Client Arguments
 	as_error err;
 	as_policy_write write_policy;
-	as_policy_write * write_policy_p = NULL;
+	as_policy_write *write_policy_p = NULL;
 	as_key key;
 	as_record rec;
 
 	// For converting predexp.
 	as_exp exp_list;
-	as_exp* exp_list_p = NULL;
+	as_exp *exp_list_p = NULL;
 
 	// For converting predexp.
 	as_predexp_list predexp_list;
-	as_predexp_list* predexp_list_p = NULL;
+	as_predexp_list *predexp_list_p = NULL;
 
 	// Initialisation flags
 	bool key_initialised = false;
@@ -82,7 +82,8 @@ PyObject * AerospikeClient_Put_Invoke(
 	}
 
 	if (!self->is_conn_16) {
-		as_error_update(&err, AEROSPIKE_ERR_CLUSTER, "No connection to aerospike cluster");
+		as_error_update(&err, AEROSPIKE_ERR_CLUSTER,
+						"No connection to aerospike cluster");
 		goto CLEANUP;
 	}
 
@@ -95,14 +96,17 @@ PyObject * AerospikeClient_Put_Invoke(
 	key_initialised = true;
 
 	// Convert python bins and metadata objects to as_record
-	pyobject_to_record(self, &err, py_bins, py_meta, &rec, serializer_option, &static_pool);
+	pyobject_to_record(self, &err, py_bins, py_meta, &rec, serializer_option,
+					   &static_pool);
 	if (err.code != AEROSPIKE_OK) {
 		goto CLEANUP;
 	}
 
 	// Convert python policy object to as_policy_write
-	pyobject_to_policy_write(self, &err, py_policy, &write_policy, &write_policy_p,
-			&self->as->config.policies.write, &predexp_list, &predexp_list_p, &exp_list, &exp_list_p);
+	pyobject_to_policy_write(self, &err, py_policy, &write_policy,
+							 &write_policy_p, &self->as->config.policies.write,
+							 &predexp_list, &predexp_list_p, &exp_list,
+							 &exp_list_p);
 	if (err.code != AEROSPIKE_OK) {
 		goto CLEANUP;
 	}
@@ -119,7 +123,8 @@ CLEANUP:
 	POOL_DESTROY(&static_pool);
 
 	if (exp_list_p) {
-		as_exp_destroy(exp_list_p);;
+		as_exp_destroy(exp_list_p);
+		;
 	}
 
 	if (predexp_list_p) {
@@ -137,12 +142,12 @@ CLEANUP:
 
 	// If an error occurred, tell Python.
 	if (err.code != AEROSPIKE_OK) {
-		PyObject * py_err = NULL;
+		PyObject *py_err = NULL;
 		error_to_pyobject(&err, &py_err);
 		PyObject *exception_type = raise_exception(&err);
 		if (PyObject_HasAttrString(exception_type, "key")) {
 			PyObject_SetAttrString(exception_type, "key", py_key);
-		} 
+		}
 		if (PyObject_HasAttrString(exception_type, "bin")) {
 			PyObject_SetAttrString(exception_type, "bin", py_bins);
 		}
@@ -167,34 +172,39 @@ CLEANUP:
  * In case of error,appropriate exceptions will be raised.
  *******************************************************************************************************
  */
-PyObject * AerospikeClient_Put(AerospikeClient * self, PyObject * args, PyObject * kwds)
+PyObject *AerospikeClient_Put(AerospikeClient *self, PyObject *args,
+							  PyObject *kwds)
 {
 	// Python Function Arguments
-	PyObject * py_key = NULL;
-	PyObject * py_bins = NULL;
-	PyObject * py_meta = NULL;
-	PyObject * py_policy = NULL;
-	PyObject * py_serializer_option = NULL;
+	PyObject *py_key = NULL;
+	PyObject *py_bins = NULL;
+	PyObject *py_meta = NULL;
+	PyObject *py_policy = NULL;
+	PyObject *py_serializer_option = NULL;
 	long serializer_option = SERIALIZER_PYTHON;
 
 	// Python Function Keyword Arguments
-	static char * kwlist[] = {"key", "bins", "meta", "policy", "serializer", NULL};
+	static char *kwlist[] = {"key",	   "bins",		 "meta",
+							 "policy", "serializer", NULL};
 
 	// Python Function Argument Parsing
-	if (PyArg_ParseTupleAndKeywords(args, kwds, "OO|OOO:put", kwlist,
-			&py_key, &py_bins, &py_meta, &py_policy, &py_serializer_option) == false) {
+	if (PyArg_ParseTupleAndKeywords(args, kwds, "OO|OOO:put", kwlist, &py_key,
+									&py_bins, &py_meta, &py_policy,
+									&py_serializer_option) == false) {
 		return NULL;
 	}
 
 	if (py_serializer_option) {
-		if (PyInt_Check(py_serializer_option) || PyLong_Check(py_serializer_option)) {
+		if (PyInt_Check(py_serializer_option) ||
+			PyLong_Check(py_serializer_option)) {
 			self->is_client_put_serializer = true;
 			serializer_option = PyLong_AsLong(py_serializer_option);
 		}
-	} else {
-			self->is_client_put_serializer = false;
+	}
+	else {
+		self->is_client_put_serializer = false;
 	}
 	// Invoke Operation
-	return AerospikeClient_Put_Invoke(self,
-		py_key, py_bins, py_meta, py_policy, serializer_option);
+	return AerospikeClient_Put_Invoke(self, py_key, py_bins, py_meta, py_policy,
+									  serializer_option);
 }

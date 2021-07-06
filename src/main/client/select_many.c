@@ -39,7 +39,8 @@
  * 
  *************************************************************************
  **/
-PyObject * store_unicode_bins(UnicodePyObjects *u_obj, PyObject * py_uobj) {
+PyObject *store_unicode_bins(UnicodePyObjects *u_obj, PyObject *py_uobj)
+{
 	if (u_obj->size < MAX_UNICODE_OBJECTS) {
 		u_obj->ob[u_obj->size++] = py_uobj;
 	}
@@ -58,13 +59,15 @@ PyObject * store_unicode_bins(UnicodePyObjects *u_obj, PyObject * py_uobj) {
  * Returns the record if key exists otherwise NULL.
  *******************************************************************************************************
  */
-static PyObject * batch_select_aerospike_batch_read(as_error *err, AerospikeClient * self, PyObject *py_keys, as_policy_batch * batch_policy_p, char** filter_bins, Py_ssize_t bins_size)
+static PyObject *batch_select_aerospike_batch_read(
+	as_error *err, AerospikeClient *self, PyObject *py_keys,
+	as_policy_batch *batch_policy_p, char **filter_bins, Py_ssize_t bins_size)
 {
-	PyObject * py_recs = NULL;
+	PyObject *py_recs = NULL;
 
 	as_batch_read_records records;
 
-	as_batch_read_record* record = NULL;
+	as_batch_read_record *record = NULL;
 	bool batch_initialised = false;
 
 	// Convert python keys list to as_key ** and add it to as_batch.keys
@@ -78,10 +81,11 @@ static PyObject * batch_select_aerospike_batch_read(as_error *err, AerospikeClie
 		batch_initialised = true;
 
 		for (int i = 0; i < size; i++) {
-			PyObject * py_key = PyList_GetItem(py_keys, i);
+			PyObject *py_key = PyList_GetItem(py_keys, i);
 
 			if (!PyTuple_Check(py_key)) {
-				as_error_update(err, AEROSPIKE_ERR_PARAM, "Key should be a tuple.");
+				as_error_update(err, AEROSPIKE_ERR_PARAM,
+								"Key should be a tuple.");
 				goto CLEANUP;
 			}
 
@@ -91,7 +95,8 @@ static PyObject * batch_select_aerospike_batch_read(as_error *err, AerospikeClie
 			if (bins_size) {
 				record->bin_names = filter_bins;
 				record->n_bin_names = bins_size;
-			} else {
+			}
+			else {
 				record->read_all_bins = true;
 			}
 
@@ -108,10 +113,11 @@ static PyObject * batch_select_aerospike_batch_read(as_error *err, AerospikeClie
 		batch_initialised = true;
 
 		for (int i = 0; i < size; i++) {
-			PyObject * py_key = PyTuple_GetItem(py_keys, i);
+			PyObject *py_key = PyTuple_GetItem(py_keys, i);
 
 			if (!PyTuple_Check(py_key)) {
-				as_error_update(err, AEROSPIKE_ERR_PARAM, "Key should be a tuple.");
+				as_error_update(err, AEROSPIKE_ERR_PARAM,
+								"Key should be a tuple.");
 				goto CLEANUP;
 			}
 
@@ -121,7 +127,8 @@ static PyObject * batch_select_aerospike_batch_read(as_error *err, AerospikeClie
 			if (bins_size) {
 				record->bin_names = filter_bins;
 				record->n_bin_names = bins_size;
-			} else {
+			}
+			else {
 				record->read_all_bins = true;
 			}
 
@@ -131,7 +138,8 @@ static PyObject * batch_select_aerospike_batch_read(as_error *err, AerospikeClie
 		}
 	}
 	else {
-		as_error_update(err, AEROSPIKE_ERR_PARAM, "Keys should be specified as a list or tuple.");
+		as_error_update(err, AEROSPIKE_ERR_PARAM,
+						"Keys should be specified as a list or tuple.");
 		goto CLEANUP;
 	}
 
@@ -139,8 +147,7 @@ static PyObject * batch_select_aerospike_batch_read(as_error *err, AerospikeClie
 	Py_BEGIN_ALLOW_THREADS
 	aerospike_batch_read(self->as, err, batch_policy_p, &records);
 	Py_END_ALLOW_THREADS
-	if (err->code != AEROSPIKE_OK)
-	{
+	if (err->code != AEROSPIKE_OK) {
 		goto CLEANUP;
 	}
 	batch_read_records_to_pyobject(self, err, &records, &py_recs);
@@ -168,28 +175,28 @@ CLEANUP:
  *
  *********************************************************************
  **/
-static
-PyObject * AerospikeClient_Select_Many_Invoke(
-		AerospikeClient * self,
-		PyObject * py_keys, PyObject * py_bins, PyObject * py_policy)
+static PyObject *AerospikeClient_Select_Many_Invoke(AerospikeClient *self,
+													PyObject *py_keys,
+													PyObject *py_bins,
+													PyObject *py_policy)
 {
 	// Python Return Value
-	PyObject * py_recs = NULL;
+	PyObject *py_recs = NULL;
 
 	// Aerospike Client Arguments
 	as_error err;
 	as_policy_batch policy;
-	as_policy_batch * batch_policy_p = NULL;
+	as_policy_batch *batch_policy_p = NULL;
 	Py_ssize_t bins_size = 0;
 	char **filter_bins = NULL;
 
 	// For converting predexp.
 	as_exp exp_list;
-	as_exp* exp_list_p = NULL;
+	as_exp *exp_list_p = NULL;
 
 	// For converting predexp.
 	as_predexp_list predexp_list;
-	as_predexp_list* predexp_list_p = NULL;
+	as_predexp_list *predexp_list_p = NULL;
 
 	// Unicode object's pool
 	UnicodePyObjects u_objs;
@@ -205,7 +212,8 @@ PyObject * AerospikeClient_Select_Many_Invoke(
 	}
 
 	if (!self->is_conn_16) {
-		as_error_update(&err, AEROSPIKE_ERR_CLUSTER, "No connection to aerospike cluster");
+		as_error_update(&err, AEROSPIKE_ERR_CLUSTER,
+						"No connection to aerospike cluster");
 		goto CLEANUP;
 	}
 
@@ -218,11 +226,12 @@ PyObject * AerospikeClient_Select_Many_Invoke(
 		bins_size = PyTuple_Size(py_bins);
 	}
 	else {
-		as_error_update(&err, AEROSPIKE_ERR_PARAM, "Filter bins should be specified as a list or tuple.");
+		as_error_update(&err, AEROSPIKE_ERR_PARAM,
+						"Filter bins should be specified as a list or tuple.");
 		goto CLEANUP;
 	}
 
-	filter_bins = (char **)malloc(sizeof(char*) * bins_size);
+	filter_bins = (char **)malloc(sizeof(char *) * bins_size);
 
 	for (i = 0; i < bins_size; i++) {
 		PyObject *py_bin = NULL;
@@ -237,25 +246,28 @@ PyObject * AerospikeClient_Select_Many_Invoke(
 			// It is DECREFed at later stages
 			// So, no need of DECREF here.
 			filter_bins[i] = PyBytes_AsString(
-					store_unicode_bins(&u_objs, PyUnicode_AsUTF8String(py_bin)));
+				store_unicode_bins(&u_objs, PyUnicode_AsUTF8String(py_bin)));
 		}
 		else if (PyString_Check(py_bin)) {
 			filter_bins[i] = PyString_AsString(py_bin);
 		}
-		else{
-			as_error_update(&err, AEROSPIKE_ERR_PARAM, "Bin name should be a string or unicode string.");
+		else {
+			as_error_update(&err, AEROSPIKE_ERR_PARAM,
+							"Bin name should be a string or unicode string.");
 			goto CLEANUP;
 		}
-}
+	}
 
 	// Convert python policy object to as_policy_batch
 	pyobject_to_policy_batch(self, &err, py_policy, &policy, &batch_policy_p,
-			&self->as->config.policies.batch, &predexp_list, &predexp_list_p, &exp_list, &exp_list_p);
+							 &self->as->config.policies.batch, &predexp_list,
+							 &predexp_list_p, &exp_list, &exp_list_p);
 	if (err.code != AEROSPIKE_OK) {
 		goto CLEANUP;
 	}
 
-	py_recs = batch_select_aerospike_batch_read(&err, self, py_keys, batch_policy_p, filter_bins, bins_size);
+	py_recs = batch_select_aerospike_batch_read(
+		&err, self, py_keys, batch_policy_p, filter_bins, bins_size);
 
 CLEANUP:
 
@@ -264,7 +276,8 @@ CLEANUP:
 	}
 
 	if (exp_list_p) {
-		as_exp_destroy(exp_list_p);;
+		as_exp_destroy(exp_list_p);
+		;
 	}
 
 	if (predexp_list_p) {
@@ -272,17 +285,17 @@ CLEANUP:
 	}
 
 	// DECREFed all the unicode objects stored in Pool
-	for (i = 0; i< u_objs.size; i++) {
+	for (i = 0; i < u_objs.size; i++) {
 		Py_DECREF(u_objs.ob[i]);
 	}
 
 	if (err.code != AEROSPIKE_OK) {
-		PyObject * py_err = NULL;
+		PyObject *py_err = NULL;
 		error_to_pyobject(&err, &py_err);
 		PyObject *exception_type = raise_exception(&err);
 		if (PyObject_HasAttrString(exception_type, "key")) {
 			PyObject_SetAttrString(exception_type, "key", py_keys);
-		} 
+		}
 		if (PyObject_HasAttrString(exception_type, "bin")) {
 			PyObject_SetAttrString(exception_type, "bin", Py_None);
 		}
@@ -293,22 +306,24 @@ CLEANUP:
 	return py_recs;
 }
 
-PyObject * AerospikeClient_Select_Many(AerospikeClient * self, PyObject * args, PyObject * kwds)
+PyObject *AerospikeClient_Select_Many(AerospikeClient *self, PyObject *args,
+									  PyObject *kwds)
 {
 	// Python Function Arguments
-	PyObject * py_keys = NULL;
-	PyObject * py_bins = NULL;
-	PyObject * py_policy = NULL;
+	PyObject *py_keys = NULL;
+	PyObject *py_bins = NULL;
+	PyObject *py_policy = NULL;
 
 	// Python Function Keyword Arguments
-	static char * kwlist[] = {"keys", "bins", "policy", NULL};
+	static char *kwlist[] = {"keys", "bins", "policy", NULL};
 
 	// Python Function Argument Parsing
 	if (PyArg_ParseTupleAndKeywords(args, kwds, "OO|O:select_many", kwlist,
-				&py_keys, &py_bins, &py_policy) == false) {
+									&py_keys, &py_bins, &py_policy) == false) {
 		return NULL;
 	}
 
 	// Invoke Operation
-	return AerospikeClient_Select_Many_Invoke(self, py_keys, py_bins, py_policy);
+	return AerospikeClient_Select_Many_Invoke(self, py_keys, py_bins,
+											  py_policy);
 }

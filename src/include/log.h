@@ -24,12 +24,12 @@
  */
 typedef enum Aerospike_log_level_e {
 
-    LOG_LEVEL_OFF = -1,
-    LOG_LEVEL_ERROR,
-    LOG_LEVEL_WARN,
-    LOG_LEVEL_INFO,
-    LOG_LEVEL_DEBUG,
-    LOG_LEVEL_TRACE
+	LOG_LEVEL_OFF = -1,
+	LOG_LEVEL_ERROR,
+	LOG_LEVEL_WARN,
+	LOG_LEVEL_INFO,
+	LOG_LEVEL_DEBUG,
+	LOG_LEVEL_TRACE
 
 } aerospike_log_level;
 
@@ -37,7 +37,7 @@ typedef enum Aerospike_log_level_e {
  * Structure to hold user's log_callback object
  */
 typedef struct Aerospike_log_callback {
-    PyObject *callback;
+	PyObject *callback;
 } AerospikeLogCallback;
 
 /**
@@ -50,7 +50,8 @@ as_status declare_log_constants(PyObject *aerospike);
  * Set log level for C-SDK
  *          aerospike.set_log_level( aerospike.LOG_LEVEL_WARN )
  */
-PyObject * Aerospike_Set_Log_Level(PyObject *parent, PyObject *args, PyObject * kwds);
+PyObject *Aerospike_Set_Log_Level(PyObject *parent, PyObject *args,
+								  PyObject *kwds);
 
 /**
  * Set log handler / callback to be invoked during logging
@@ -59,4 +60,5 @@ PyObject * Aerospike_Set_Log_Level(PyObject *parent, PyObject *args, PyObject * 
  *              print "Hello"
  *          aerospike.set_log_handler( log_callback )
  */
-PyObject * Aerospike_Set_Log_Handler(PyObject *parent, PyObject *args, PyObject * kwds);
+PyObject *Aerospike_Set_Log_Handler(PyObject *parent, PyObject *args,
+									PyObject *kwds);

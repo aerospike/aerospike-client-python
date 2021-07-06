@@ -26,12 +26,13 @@
 #include "geo.h"
 #include "policy.h"
 
-PyObject * AerospikeGeospatial_Unwrap(AerospikeGeospatial * self, PyObject * args, PyObject * kwds)
+PyObject *AerospikeGeospatial_Unwrap(AerospikeGeospatial *self, PyObject *args,
+									 PyObject *kwds)
 {
 
 	// Python function arguments
 	// Python function keyword arguments
-	static char * kwlist[] = {NULL};
+	static char *kwlist[] = {NULL};
 
 	if (PyArg_ParseTupleAndKeywords(args, kwds, ":unwrap", kwlist) == false) {
 		return NULL;
@@ -51,7 +52,7 @@ CLEANUP:
 
 	// If an error occurred, tell Python.
 	if (err.code != AEROSPIKE_OK) {
-		PyObject * py_err = NULL;
+		PyObject *py_err = NULL;
 		error_to_pyobject(&err, &py_err);
 		PyObject *exception_type = raise_exception(&err);
 		PyErr_SetObject(exception_type, py_err);
