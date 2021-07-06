@@ -58,8 +58,8 @@ The dependencies can be installed through the OS X package manager [Homebrew](ht
 ## Build
 
 To build the library:
-
-    git submodule update --init
+    if repo is not cloned with "git clone --recurse-submodules --remote-submodules ...", run the following command to initialize necessary sub-modules:
+    	git submodule update --init --remote --checkout --recursive
     python setup.py build --force
 
 The helper `scripts/aerospike-client-c.sh` is triggered by `setup.py` to
