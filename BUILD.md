@@ -62,11 +62,6 @@ To build the library:
     	git submodule update --init --remote --checkout --recursive
     python setup.py build --force
 
-The helper `scripts/aerospike-client-c.sh` is triggered by `setup.py` to
-download the appropriate C client. However, if one is present this will not
-happen, and a build may fail against an old client. At that point you should
-remove the directory `aerospike-client-c` and run the build command again.
-
 ### Troubleshooting OS X builds
 
 Building on OS X versions >= 10.11 , may cause a few additional errors to be generated. If the build command fails with an
