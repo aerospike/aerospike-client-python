@@ -27,6 +27,7 @@
 #include <aerospike/as_operations.h>
 #include <aerospike/aerospike_batch.h>
 #include <aerospike/as_exp.h>
+#include <aerospike/as_partition_filter.h>
 
 #include "types.h"
 
@@ -185,3 +186,8 @@ as_status convert_exp_list(AerospikeClient *self, PyObject *py_exp_list,
 
 as_status get_int_from_py_int(as_error *err, PyObject *py_long,
 							  int *int_pointer, const char *py_object_name);
+as_status 
+convert_partition_filter(AerospikeClient * self, PyObject* py_partition_filter, as_partition_filter* partition_filter, as_error* err);
+
+as_status 
+get_int_from_py_int(as_error* err, PyObject* py_long, int* int_pointer, const char* py_object_name);
