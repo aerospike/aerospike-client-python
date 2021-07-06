@@ -67,7 +67,7 @@ if options.username == None or options.password == None:
 ################################################################################
 
 config = {
-    'hosts': [ (options.host, options.port) ]
+    'hosts': [(options.host, options.port)]
 }
 
 ################################################################################
@@ -82,25 +82,27 @@ try:
     # Connect to Cluster
     # ----------------------------------------------------------------------------
 
-    client = aerospike.client(config).connect(options.username, options.password)
+    client = aerospike.client(config).connect(
+        options.username, options.password)
 
     # ----------------------------------------------------------------------------
     # Perform Operation
     # ----------------------------------------------------------------------------
-     
+
     try:
 
         policy = {}
-    	
-        roles = client.admin_query_roles(policy)
-        print(roles)
-        print("---") 
-    	print("OK, All roles retrieved")
+
+        user_roles = client.admin_query_users_info(policy)
+
+        print(user_roles)
+        print("---")
+        print("OK, All users retrieved")
 
     except Exception as e:
         print("error: {0}".format(e), file=sys.stderr)
         exitCode = 2
-    
+
     # ----------------------------------------------------------------------------
     # Close Connection to Cluster
     # ----------------------------------------------------------------------------
