@@ -16,24 +16,20 @@
 
 #include "tls_config.h"
 
-static void
-_set_config_str_if_present(as_config* config, PyObject* tls_config,
-						   const char* key);
+static void _set_config_str_if_present(as_config *config, PyObject *tls_config,
+									   const char *key);
 
-static char*
-get_string_from_string_like(PyObject* string_like);
-
+static char *get_string_from_string_like(PyObject *string_like);
 
 /***
  *	Param: tls_conf PyDict.
  *	Fill in the appropriate TLS values of config based on the contents of
  *	tls_config
 ***/
-void
-setup_tls_config(as_config* config, PyObject* tls_config)
+void setup_tls_config(as_config *config, PyObject *tls_config)
 {
 
-	PyObject* config_value = NULL;
+	PyObject *config_value = NULL;
 	int truth_value = -1;
 
 	// Setup string values in the tls config struct
@@ -50,7 +46,7 @@ setup_tls_config(as_config* config, PyObject* tls_config)
 	config_value = PyDict_GetItemString(tls_config, "enable");
 	if (config_value) {
 		truth_value = PyObject_IsTrue(config_value);
-		if(truth_value != -1) {
+		if (truth_value != -1) {
 			config->tls.enable = (bool)truth_value;
 			truth_value = -1;
 		}
@@ -59,7 +55,7 @@ setup_tls_config(as_config* config, PyObject* tls_config)
 	config_value = PyDict_GetItemString(tls_config, "crl_check");
 	if (config_value) {
 		truth_value = PyObject_IsTrue(config_value);
-		if(truth_value != -1) {
+		if (truth_value != -1) {
 			config->tls.crl_check = (bool)truth_value;
 			truth_value = -1;
 		}
@@ -68,7 +64,7 @@ setup_tls_config(as_config* config, PyObject* tls_config)
 	config_value = PyDict_GetItemString(tls_config, "crl_check_all");
 	if (config_value) {
 		truth_value = PyObject_IsTrue(config_value);
-		if(truth_value != -1) {
+		if (truth_value != -1) {
 			config->tls.crl_check_all = (bool)truth_value;
 			truth_value = -1;
 		}
@@ -77,7 +73,7 @@ setup_tls_config(as_config* config, PyObject* tls_config)
 	config_value = PyDict_GetItemString(tls_config, "log_session_info");
 	if (config_value) {
 		truth_value = PyObject_IsTrue(config_value);
-		if(truth_value != -1) {
+		if (truth_value != -1) {
 			config->tls.log_session_info = (bool)truth_value;
 			truth_value = -1;
 		}
@@ -86,12 +82,11 @@ setup_tls_config(as_config* config, PyObject* tls_config)
 	config_value = PyDict_GetItemString(tls_config, "for_login_only");
 	if (config_value) {
 		truth_value = PyObject_IsTrue(config_value);
-		if(truth_value != -1) {
+		if (truth_value != -1) {
 			config->tls.for_login_only = (bool)truth_value;
 			truth_value = -1;
 		}
 	}
-
 }
 
 /***
@@ -102,12 +97,11 @@ setup_tls_config(as_config* config, PyObject* tls_config)
  * the appropriate field is set
 
 ***/
-static void
-_set_config_str_if_present(as_config* config, PyObject* tls_config,
-						   const char* key)
+static void _set_config_str_if_present(as_config *config, PyObject *tls_config,
+									   const char *key)
 {
-	PyObject* config_value = NULL;
-	char* config_value_str = NULL;
+	PyObject *config_value = NULL;
+	char *config_value_str = NULL;
 
 	config_value = PyDict_GetItemString(tls_config, key);
 	if (config_value) {
@@ -117,40 +111,35 @@ _set_config_str_if_present(as_config* config, PyObject* tls_config,
 		if (config_value_str) {
 			if (strcmp("cafile", key) == 0) {
 				as_config_tls_set_cafile(config,
-										 (const char*)config_value_str);
-
+										 (const char *)config_value_str);
 			}
 			else if (strcmp("capath", key) == 0) {
 				as_config_tls_set_capath(config,
-										 (const char*)config_value_str);
-
+										 (const char *)config_value_str);
 			}
 			else if (strcmp("protocols", key) == 0) {
 				as_config_tls_set_protocols(config,
-										    (const char*)config_value_str);
-
+											(const char *)config_value_str);
 			}
 			else if (strcmp("cipher_suite", key) == 0) {
 				as_config_tls_set_cipher_suite(config,
-											   (const char*)config_value_str);
-
+											   (const char *)config_value_str);
 			}
 			else if (strcmp("cert_blacklist", key) == 0) {
-				as_config_tls_set_cert_blacklist(config,
-												 (const char*)config_value_str);
-
+				as_config_tls_set_cert_blacklist(
+					config, (const char *)config_value_str);
 			}
 			else if (strcmp("keyfile", key) == 0) {
 				as_config_tls_set_keyfile(config,
-										  (const char*)config_value_str);
-
+										  (const char *)config_value_str);
 			}
 			else if (strcmp("certfile", key) == 0) {
 				as_config_tls_set_certfile(config,
-										   (const char*)config_value_str);
+										   (const char *)config_value_str);
 			}
 			else if (strcmp("keyfile_pw", key) == 0) {
-				as_config_tls_set_keyfile_pw(config, (const char*) config_value_str);
+				as_config_tls_set_keyfile_pw(config,
+											 (const char *)config_value_str);
 			}
 		}
 	}
@@ -163,11 +152,10 @@ _set_config_str_if_present(as_config* config, PyObject* tls_config,
  *	the char* representation of it's string value is returned,
  *	else null is returned
 ***/
-static char*
-get_string_from_string_like(PyObject* string_like)
+static char *get_string_from_string_like(PyObject *string_like)
 {
-	char* ret_str = NULL;
-	PyObject* ustr = NULL;
+	char *ret_str = NULL;
+	PyObject *ustr = NULL;
 	if (PyString_Check(string_like)) {
 		ret_str = PyString_AsString(string_like);
 	}

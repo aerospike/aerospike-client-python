@@ -24,4 +24,4 @@
  *		aerospike.calc_digest()
  *
  */
-PyObject * Aerospike_Calc_Digest(PyObject * self, PyObject * args, PyObject * kwds);
+PyObject *Aerospike_Calc_Digest(PyObject *self, PyObject *args, PyObject *kwds);

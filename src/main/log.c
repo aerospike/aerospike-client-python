@@ -30,65 +30,62 @@ static AerospikeLogCallback user_callback;
 /*
  * Declare's log level constants.
  */
-as_status declare_log_constants(PyObject *aerospike){
+as_status declare_log_constants(PyObject *aerospike)
+{
 
 	// Status to be returned.
 	as_status status = AEROSPIKE_OK;
 
 	// Check if aerospike object is present or no.
-	if (!aerospike){
+	if (!aerospike) {
 		status = AEROSPIKE_ERR;
 		goto exit;
 	}
 
 	// Add incidividual constants to aerospike module.
-	PyModule_AddIntConstant( aerospike,
-			"LOG_LEVEL_OFF", LOG_LEVEL_OFF);
-	PyModule_AddIntConstant( aerospike,
-			"LOG_LEVEL_ERROR", LOG_LEVEL_ERROR);
-	PyModule_AddIntConstant( aerospike,
-			"LOG_LEVEL_WARN", LOG_LEVEL_WARN);
-	PyModule_AddIntConstant( aerospike,
-			"LOG_LEVEL_INFO", LOG_LEVEL_INFO);
-	PyModule_AddIntConstant( aerospike,
-			"LOG_LEVEL_DEBUG", LOG_LEVEL_DEBUG);
-	PyModule_AddIntConstant( aerospike,
-			"LOG_LEVEL_TRACE", LOG_LEVEL_TRACE);
+	PyModule_AddIntConstant(aerospike, "LOG_LEVEL_OFF", LOG_LEVEL_OFF);
+	PyModule_AddIntConstant(aerospike, "LOG_LEVEL_ERROR", LOG_LEVEL_ERROR);
+	PyModule_AddIntConstant(aerospike, "LOG_LEVEL_WARN", LOG_LEVEL_WARN);
+	PyModule_AddIntConstant(aerospike, "LOG_LEVEL_INFO", LOG_LEVEL_INFO);
+	PyModule_AddIntConstant(aerospike, "LOG_LEVEL_DEBUG", LOG_LEVEL_DEBUG);
+	PyModule_AddIntConstant(aerospike, "LOG_LEVEL_TRACE", LOG_LEVEL_TRACE);
 exit:
 	return status;
 }
 
-
-PyObject * Aerospike_Set_Log_Level(PyObject *parent, PyObject *args, PyObject * kwds)
+PyObject *Aerospike_Set_Log_Level(PyObject *parent, PyObject *args,
+								  PyObject *kwds)
 {
 	// Aerospike vaiables
 	as_error err;
 	as_status status = AEROSPIKE_OK;
 
 	// Python Function Arguments
-	PyObject * py_log_level = NULL;
+	PyObject *py_log_level = NULL;
 
 	// Initialise error object.
 	as_error_init(&err);
 
 	// Python Function Keyword Arguments
-	static char * kwlist[] = {"loglevel", NULL};
+	static char *kwlist[] = {"loglevel", NULL};
 
 	// Python Function Argument Parsing
-	if (PyArg_ParseTupleAndKeywords(args, kwds, "O|:setLogLevel", kwlist, &py_log_level) == false) {
+	if (PyArg_ParseTupleAndKeywords(args, kwds, "O|:setLogLevel", kwlist,
+									&py_log_level) == false) {
 		return NULL;
 	}
 
 	// Type check for incoming parameters
 	if (!PyInt_Check(py_log_level)) {
-		as_error_update(&err, AEROSPIKE_ERR_PARAM, "Invalid log level" );
+		as_error_update(&err, AEROSPIKE_ERR_PARAM, "Invalid log level");
 		goto CLEANUP;
 	}
 
 	long lLogLevel = PyInt_AsLong(py_log_level);
 	if (lLogLevel == (uint32_t)-1 && PyErr_Occurred()) {
 		if (PyErr_ExceptionMatches(PyExc_OverflowError)) {
-			as_error_update(&err, AEROSPIKE_ERR_PARAM, "integer value exceeds sys.maxsize");
+			as_error_update(&err, AEROSPIKE_ERR_PARAM,
+							"integer value exceeds sys.maxsize");
 			goto CLEANUP;
 		}
 	}
@@ -100,7 +97,7 @@ CLEANUP:
 
 	// Check error object and act accordingly
 	if (err.code != AEROSPIKE_OK) {
-		PyObject * py_err = NULL;
+		PyObject *py_err = NULL;
 		error_to_pyobject(&err, &py_err);
 		PyObject *exception_type = raise_exception(&err);
 		PyErr_SetObject(exception_type, py_err);
@@ -111,8 +108,9 @@ CLEANUP:
 	return PyLong_FromLong(status);
 }
 
-static bool log_cb(as_log_level level, const char * func,
-		const char * file, uint32_t line, const char * fmt, ...){
+static bool log_cb(as_log_level level, const char *func, const char *file,
+				   uint32_t line, const char *fmt, ...)
+{
 
 	char msg[1024];
 	va_list ap;
@@ -136,8 +134,8 @@ static bool log_cb(as_log_level level, const char * func,
 	PyObject *log_level = PyInt_FromLong((long)level);
 	PyObject *func_name = PyString_FromString(func);
 	PyObject *file_name = PyString_FromString(file);
-	PyObject *line_no   = PyInt_FromLong((long)line);
-	PyObject *message   = PyString_FromString(msg);
+	PyObject *line_no = PyInt_FromLong((long)line);
+	PyObject *message = PyString_FromString(msg);
 
 	// Set argument list
 	PyTuple_SetItem(py_arglist, 0, log_level);
@@ -157,21 +155,24 @@ static bool log_cb(as_log_level level, const char * func,
 	return true;
 }
 
-PyObject * Aerospike_Set_Log_Handler(PyObject *parent, PyObject *args, PyObject * kwds)
+PyObject *Aerospike_Set_Log_Handler(PyObject *parent, PyObject *args,
+									PyObject *kwds)
 {
 	// Python variables
 	PyObject *py_callback = NULL;
 	as_error err;
 	as_error_init(&err);
 	// Python function keyword arguments
-	static char * kwlist[] = {"log_handler", NULL};
+	static char *kwlist[] = {"log_handler", NULL};
 
 	// Python function arguments parsing
-	if (PyArg_ParseTupleAndKeywords(args, kwds, "O|:setLogHandler", kwlist, &py_callback) == false){
+	if (PyArg_ParseTupleAndKeywords(args, kwds, "O|:setLogHandler", kwlist,
+									&py_callback) == false) {
 		return NULL;
 	}
 	if (!PyCallable_Check(py_callback)) {
-		as_error_update(&err, AEROSPIKE_ERR_PARAM, "Log handler must be callable");
+		as_error_update(&err, AEROSPIKE_ERR_PARAM,
+						"Log handler must be callable");
 		goto CLEANUP;
 	}
 	// Store user callback
@@ -179,12 +180,11 @@ PyObject * Aerospike_Set_Log_Handler(PyObject *parent, PyObject *args, PyObject 
 	user_callback.callback = py_callback;
 
 	// Register callback to C-SDK
-	as_log_set_callback((as_log_callback) log_cb);
-
+	as_log_set_callback((as_log_callback)log_cb);
 
 CLEANUP:
 	if (err.code != AEROSPIKE_OK) {
-		PyObject * py_err = NULL;
+		PyObject *py_err = NULL;
 		error_to_pyobject(&err, &py_err);
 		PyObject *exception_type = raise_exception(&err);
 		PyErr_SetObject(exception_type, py_err);

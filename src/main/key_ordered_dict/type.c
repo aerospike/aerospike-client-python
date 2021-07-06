@@ -23,17 +23,16 @@
  * PYTHON TYPE METHODS
  ******************************************************************************/
 
-static PyMethodDef AerospikeKeyOrderedDict_Type_Methods[] = {
-	{NULL}
-};
+static PyMethodDef AerospikeKeyOrderedDict_Type_Methods[] = {{NULL}};
 
 /*******************************************************************************
  * PYTHON TYPE HOOKS
  ******************************************************************************/
 
-static int AerospikeKeyOrderedDict_Type_Init(AerospikeQuery * self, PyObject * args, PyObject * kwds)
+static int AerospikeKeyOrderedDict_Type_Init(AerospikeQuery *self,
+											 PyObject *args, PyObject *kwds)
 {
-	return PyDict_Type.tp_init((PyObject *) self, args, kwds);
+	return PyDict_Type.tp_init((PyObject *)self, args, kwds);
 }
 
 /*******************************************************************************
@@ -41,25 +40,25 @@ static int AerospikeKeyOrderedDict_Type_Init(AerospikeQuery * self, PyObject * a
  ******************************************************************************/
 
 static PyTypeObject AerospikeKeyOrderedDict_Type = {
-	PyVarObject_HEAD_INIT(NULL, 0)
-	.tp_name = "aerospike.KeyOrderedDict",
+	PyVarObject_HEAD_INIT(NULL, 0).tp_name = "aerospike.KeyOrderedDict",
 	.tp_basicsize = sizeof(AerospikeKeyOrderedDict),
 	.tp_flags = Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE,
 	.tp_doc = "The KeyOrderedDict class is a dictionary that directly maps\n"
-	"to a key ordered map on the Aerospike server.\n"
-	"This assists in matching key ordered maps\n"
-	"through various read operations.\n",
+			  "to a key ordered map on the Aerospike server.\n"
+			  "This assists in matching key ordered maps\n"
+			  "through various read operations.\n",
 	.tp_methods = AerospikeKeyOrderedDict_Type_Methods,
-	.tp_init = (initproc) AerospikeKeyOrderedDict_Type_Init
-};
+	.tp_init = (initproc)AerospikeKeyOrderedDict_Type_Init};
 
-PyTypeObject * AerospikeKeyOrderedDict_Ready()
+PyTypeObject *AerospikeKeyOrderedDict_Ready()
 {
 	AerospikeKeyOrderedDict_Type.tp_base = &PyDict_Type;
-	return PyType_Ready(&AerospikeKeyOrderedDict_Type) == 0 ? &AerospikeKeyOrderedDict_Type : NULL;
+	return PyType_Ready(&AerospikeKeyOrderedDict_Type) == 0
+			   ? &AerospikeKeyOrderedDict_Type
+			   : NULL;
 }
 
-PyObject * AerospikeKeyOrderedDict_Get_Type()
+PyObject *AerospikeKeyOrderedDict_Get_Type()
 {
 	return (PyObject *)&AerospikeKeyOrderedDict_Type;
 }

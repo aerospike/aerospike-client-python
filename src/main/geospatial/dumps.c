@@ -26,24 +26,28 @@
 #include "geo.h"
 #include "policy.h"
 
-PyObject * AerospikeGeospatial_DoDumps(PyObject *geo_data, as_error *err)
+PyObject *AerospikeGeospatial_DoDumps(PyObject *geo_data, as_error *err)
 {
 	PyObject *initresult = NULL;
 
-	PyObject* sysmodules = PyImport_GetModuleDict();
-	PyObject* json_module = NULL;
+	PyObject *sysmodules = PyImport_GetModuleDict();
+	PyObject *json_module = NULL;
 	if (PyMapping_HasKeyString(sysmodules, "json")) {
 		json_module = PyMapping_GetItemString(sysmodules, "json");
-	} else {
+	}
+	else {
 		json_module = PyImport_ImportModule("json");
 	}
 
 	if (!json_module) {
 		/* insert error handling here! and exit this function */
-		as_error_update(err, AEROSPIKE_ERR_CLIENT, "Unable to load json module");
-	} else {
+		as_error_update(err, AEROSPIKE_ERR_CLIENT,
+						"Unable to load json module");
+	}
+	else {
 		PyObject *py_funcname = PyString_FromString("dumps");
-		initresult = PyObject_CallMethodObjArgs(json_module, py_funcname, geo_data, NULL);
+		initresult = PyObject_CallMethodObjArgs(json_module, py_funcname,
+												geo_data, NULL);
 		Py_DECREF(json_module);
 		Py_DECREF(py_funcname);
 	}
@@ -51,7 +55,8 @@ PyObject * AerospikeGeospatial_DoDumps(PyObject *geo_data, as_error *err)
 	return initresult;
 }
 
-PyObject * AerospikeGeospatial_Dumps(AerospikeGeospatial * self, PyObject * args, PyObject * kwds)
+PyObject *AerospikeGeospatial_Dumps(AerospikeGeospatial *self, PyObject *args,
+									PyObject *kwds)
 {
 
 	PyObject *initresult = NULL;
@@ -67,7 +72,8 @@ PyObject * AerospikeGeospatial_Dumps(AerospikeGeospatial * self, PyObject * args
 
 	initresult = AerospikeGeospatial_DoDumps(self->geo_data, &err);
 	if (!initresult) {
-		as_error_update(&err, AEROSPIKE_ERR_CLIENT, "Unable to call dumps function");
+		as_error_update(&err, AEROSPIKE_ERR_CLIENT,
+						"Unable to call dumps function");
 		goto CLEANUP;
 	}
 
@@ -75,7 +81,7 @@ CLEANUP:
 
 	// If an error occurred, tell Python.
 	if (err.code != AEROSPIKE_OK) {
-		PyObject * py_err = NULL;
+		PyObject *py_err = NULL;
 		error_to_pyobject(&err, &py_err);
 		PyObject *exception_type = raise_exception(&err);
 		PyErr_SetObject(exception_type, py_err);
@@ -85,4 +91,3 @@ CLEANUP:
 
 	return initresult;
 }
-
