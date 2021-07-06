@@ -18,7 +18,8 @@
 import asyncio
 import sys
 import aerospike
-import array
+import time
+from aerospike_helpers.awaitable import io
 
 from optparse import OptionParser
 
@@ -64,11 +65,11 @@ optparser.add_option(
 
 optparser.add_option(
     "-c", "--test_count", dest="test_count", type="int", default=128, metavar="<TEST_COUNT>",
-    help="Number of test cases to run.")
+    help="Number of async IO to spawn.")
 
-optparser.add_option(
-    "-q", "--qd", dest="qd", type="int", default=128, metavar="<QUEUE_DEPTH>",
-    help="Async IO queue depth.")
+# optparser.add_option(
+#     "-q", "--qd", dest="qd", type="int", default=128, metavar="<QUEUE_DEPTH>",
+#     help="Async IO queue depth.")
 
 (options, args) = optparser.parse_args()
 
@@ -99,7 +100,7 @@ try:
     # ----------------------------------------------------------------------------
     # Connect to Cluster
     # ----------------------------------------------------------------------------
-
+    print(f"Connecting to {options.host}:{options.port} with {options.username}:{options.password}")
     client = aerospike.client(config).connect(
         options.username, options.password)
 
@@ -108,69 +109,54 @@ try:
     # ----------------------------------------------------------------------------
 
     try:
-        put_results = {}
-        count = 0
-        test_count = options.test_count
-        qd = options.qd
         cqd = 0
+        io_results = {}
+        test_count = options.test_count
         namespace = options.namespace if options.namespace and options.namespace != 'None' else None
         set = options.set if options.set and options.set != 'None' else None
         policy = {
             'total_timeout': options.timeout
         }
         meta = None
-        print(f"IO test count:{test_count} IO-QueueDepth {qd}")
 
-        def put_async_callback(key_tuple, err):
-            global count, cqd
-            (key) = key_tuple
-            count += 1
+        print(f"IO async test count:{test_count}")
+        
+        async def async_io(namespace, set, i):
+            global cqd
+            futures = []        
+            key = {'ns': namespace, \
+                    'set':set, \
+                    'key': str(i), \
+                    'digest': client.get_key_digest(namespace, set, str(i))}
+            record = {
+                'i': i,
+                'f': 3.1415,
+                's': 'abc',
+                'u': '안녕하세요',
+                #  'b': bytearray(['d','e','f']),
+                #  'l': [i, 'abc', bytearray(['d','e','f']), ['x', 'y', 'z'], {'x': 1, 'y': 2, 'z': 3}],
+                #  'm': {'i': i, 's': 'abc', 'u': '안녕하세요', 'b': bytearray(['d','e','f']), 'l': ['x', 'y', 'z'], 'd': {'x': 1, 'y': 2, 'z': 3}},
+                'l': [i, 'abc', 'வணக்கம்', ['x', 'y', 'z'], {'x': 1, 'y': 2, 'z': 3}],
+                'm': {'i': i, 's': 'abc', 'u': 'ஊத்தாப்பம்', 'l': ['x', 'y', 'z'], 'd': {'x': 1, 'y': 2, 'z': 3}}
+                }
+            context = {'state': 0, 'result': {}}
+            io_results[key["key"]] = context
+            cqd += 1
+            print(f"cqd: {cqd}")
+            result = await io.put(client, namespace, set, key, record, meta, policy)
             cqd -= 1
-            put_results[key[2]]['state'] = 1
-            put_results[key[2]]['err'] = err
-
-        async def async_io(namespace, set, test_count, op):
-            global cqd, count
-            assert (cqd == 0)
-            count = 0        
-            for i in range(0, test_count):
-                key = {'ns': namespace, \
-                        'set':set, \
-                        'key': str(i), \
-                        'digest': client.get_key_digest(namespace, set, str(i))}
-                record = {
-                    'i': i,
-                    'f': 3.1415,
-                    's': 'abc',
-                    'u': '안녕하세요',
-                    #  'b': bytearray(['d','e','f']),
-                    #  'l': [i, 'abc', bytearray(['d','e','f']), ['x', 'y', 'z'], {'x': 1, 'y': 2, 'z': 3}],
-                    #  'm': {'i': i, 's': 'abc', 'u': '안녕하세요', 'b': bytearray(['d','e','f']), 'l': ['x', 'y', 'z'], 'd': {'x': 1, 'y': 2, 'z': 3}},
-                    'l': [i, 'abc', 'வணக்கம்', ['x', 'y', 'z'], {'x': 1, 'y': 2, 'z': 3}],
-                    'm': {'i': i, 's': 'abc', 'u': 'ஊத்தாப்பம்', 'l': ['x', 'y', 'z'], 'd': {'x': 1, 'y': 2, 'z': 3}}
-                    }
-                context = {'state': 0} # 0->i/o_issued, 1->i/o_success, 2->i/o failure
-                put_results[key["key"]] = context
-                client.put_async(put_async_callback, key, record, meta, policy)
-                    
-                #await get_async(namespace, set, key, policy)
-                cqd += 1
-                # maintain and/or dont overload IO queue
-                while cqd > qd:
-                    print(f"{test_count} I/O ops:{op} are issued so far")
-                    print(f"Outstanding I/Os ({cqd}) are greater than QD {qd}, wait for it to drop before issuing additional I/Os")
-                    await asyncio.sleep(1)
-                    print(f"cqd dropped to {cqd}")
-            # make sure all IO drained before verifying data with next OP
-            while cqd:
-                print(f"{test_count} I/O ops:{op} are issued, waiting for callback")
-                await asyncio.sleep(1)
-            print(f"{test_count} I/O ops:{op} are completed successfully")
-
-        asyncio.run(async_io(namespace, set, test_count, 0))
-        print(f"put_async completed with returning {len(put_results)} records")
-        #print(put_results)
-
+            print(result)
+            io_results[key["key"]]['result'] = result
+        async def main():
+            global cqd
+            cqd = 0
+            func_list = []
+            for i in range(test_count):
+                func_list.append(async_io(namespace, set, i))
+            await asyncio.gather(*func_list)
+        asyncio.get_event_loop().run_until_complete(main())
+        print(f"get_async completed with returning {len(io_results)} records")
+        #print(io_results)
     except Exception as e:
         print("error: {0}".format(e), file=sys.stderr)
         rc = 1

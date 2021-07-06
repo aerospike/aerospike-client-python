@@ -329,7 +329,7 @@ setup(
         )
     ],
     packages=['aerospike_helpers', 'aerospike_helpers.operations',
-              'aerospike_helpers.expressions'],
+              'aerospike_helpers.expressions', 'aerospike_helpers.awaitable'],
 
     cmdclass={
         'build': CClientBuild,
