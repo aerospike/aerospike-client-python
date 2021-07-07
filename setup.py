@@ -95,8 +95,7 @@ if DARWIN:
         '-D_DARWIN_UNLIMITED_SELECT'
     ]
 
-    if AEROSPIKE_C_HOME:
-        AEROSPIKE_C_TARGET = AEROSPIKE_C_HOME + '/target/Darwin-x86_64'
+    AEROSPIKE_C_TARGET = AEROSPIKE_C_HOME + '/target/Darwin-x86_64'
 
 elif LINUX:
     # ---------------------------------------------------------------------------
@@ -106,9 +105,7 @@ elif LINUX:
         '-rdynamic', '-finline-functions'
     ]
     libraries = libraries + ['rt']
-    if AEROSPIKE_C_HOME:
-        AEROSPIKE_C_TARGET = AEROSPIKE_C_HOME + '/target/Linux-x86_64'
-
+    AEROSPIKE_C_TARGET = AEROSPIKE_C_HOME + '/target/Linux-x86_64'
 else:
     print("error: OS not supported:", PLATFORM, file=sys.stderr)
     sys.exit(8)
