@@ -18,25 +18,25 @@ from .test_base_class import TestBaseClass
 aerospike = pytest.importorskip("aerospike")
 
 
-_proc = Process(os.getpid())
+# _proc = Process(os.getpid())
 
-from itertools import groupby
+# from itertools import groupby
 
-LEAK_LIMIT = 0
+# LEAK_LIMIT = 0
 
-def get_consumed_ram():
-    return _proc.memory_info().rss
+# def get_consumed_ram():
+#     return _proc.memory_info().rss
 
-START = 'START'
-END = 'END'
-ConsumedRamLogEntry = namedtuple('ConsumedRamLogEntry', ('nodeid', 'on', 'consumed_ram'))
-consumed_ram_log = []
-ConsumedTracemallocLogEntry = namedtuple('ConsumedTracemallocLogEntry', ('nodeid', 'on', 'consumed_tracemalloc'))
-consumed_tracemalloc_log = []
+# START = 'START'
+# END = 'END'
+# ConsumedRamLogEntry = namedtuple('ConsumedRamLogEntry', ('nodeid', 'on', 'consumed_ram'))
+# consumed_ram_log = []
+# ConsumedTracemallocLogEntry = namedtuple('ConsumedTracemallocLogEntry', ('nodeid', 'on', 'consumed_tracemalloc'))
+# consumed_tracemalloc_log = []
 
-tracemalloc.start(10)
-snapshot1 = []
-snapshot2 = []
+# tracemalloc.start(10)
+# snapshot1 = []
+# snapshot2 = []
 
 # @pytest.hookimpl(hookwrapper=True)
 # def pytest_terminal_summary(terminalreporter):  # type: (TerminalReporter) -> generator

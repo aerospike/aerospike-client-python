@@ -63,16 +63,17 @@ extra_compile_args = [
 ]
 extra_objects = []
 extra_link_args = []
-library_dirs = ['/usr/local/opt/openssl/lib', '/usr/local/opt/libevent/lib']
+library_dirs = ['/usr/local/opt/openssl/lib']
 libraries = [
     'ssl',
     'crypto',
     'pthread',
     'm',
-    'z',
-    'event_core',
-    'event_pthreads'
+    'z'
 ]
+
+library_dirs = library_dirs + ['/usr/local/opt/libevent/lib']
+libraries = libraries + ['event_core', 'event_pthreads']
 
 ################################################################################
 # STATIC SSL LINKING BUILD SETTINGS
@@ -94,8 +95,7 @@ if DARWIN:
     # Mac Specific Compiler and Linker Settings
     # ---------------------------------------------------------------------------
     extra_compile_args = extra_compile_args + [
-        '-D_DARWIN_UNLIMITED_SELECT',
-        '-DMARCH_x86_64'
+        '-D_DARWIN_UNLIMITED_SELECT'
     ]
 
     if AEROSPIKE_C_HOME:
@@ -106,8 +106,7 @@ elif LINUX:
     # Linux Specific Compiler and Linker Settings
     # ---------------------------------------------------------------------------
     extra_compile_args = extra_compile_args + [
-        '-rdynamic', '-finline-functions',
-        '-DMARCH_x86_64'
+        '-rdynamic', '-finline-functions'
     ]
     libraries = libraries + ['rt']
     if AEROSPIKE_C_HOME:
@@ -168,16 +167,6 @@ class CClientBuild(build):
             'EVENT_LIB=libevent',
             'V=' + str(self.verbose),
         ]
-
-        # try:
-        #     cmd.append('-j%d' % cpu_count())
-        # except NotImplementedError:
-        #     print('Unable to determine number of CPUs. Using single threaded make.')
-
-        # options = [
-        #     'DEBUG=n',
-        # ]
-        # cmd.extend(options)
 
         def compile():
             call(cmd, cwd=CCLIENT_PATH)
