@@ -87,6 +87,7 @@ class TestScanPagination(TestBaseClass):
 
         request.addfinalizer(teardown)
 
+    @pytest.mark.xfail(reason="Might fail, server may return less than what asked for.")
     def test_scan_pagination_with_existent_ns_and_set(self):
 
         records = []
@@ -188,6 +189,7 @@ class TestScanPagination(TestBaseClass):
                          'begin': 1000, 'count': 1}})
         assert len(records) == self.partition_1000_count
 
+    @pytest.mark.xfail(reason="Might fail, server may return less than what asked for.")
     def test_scan_pagination_with_all_records_policy(self):
 
         ns = 'test'
