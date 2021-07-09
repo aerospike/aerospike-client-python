@@ -7,7 +7,6 @@ container:
 build:
   - name: build
     script:
-      - make -C aerospike-client-c
       - scripts/manylinuxbuild.sh
     artifact:
       - /work/wheels/*.whl
