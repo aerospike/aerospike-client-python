@@ -123,19 +123,23 @@ try:
         
         async def async_io(namespace, set, i):
             global cqd
-            futures = []        
-            key = {'ns': namespace, \
-                    'set':set, \
-                    'key': str(i), \
-                    'digest': client.get_key_digest(namespace, set, str(i))}
+            key = (namespace, \
+                    set, \
+                    str(i), \
+                    client.get_key_digest(namespace, set, str(i)))
             context = {'state': 0, 'result': {}}
-            io_results[key["key"]] = context
+            io_results[key[2]] = context
             cqd += 1
             print(f"cqd: {cqd}")
-            result = await io.get(client, namespace, set, key, policy)
+            result = None
+            try:
+                result = await io.get(client, key, policy)
+            except Exception as eargs:
+                print("error: {0}".format(eargs))
+                pass
             cqd -= 1
             print(result)
-            io_results[key["key"]]['result'] = result
+            io_results[key[2]]['result'] = result
         async def main():
             global cqd
             cqd = 0

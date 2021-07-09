@@ -35,15 +35,9 @@ typedef struct {
 	AerospikeClient *client;
 } LocalData;
 
-LocalData* put_async_cb_create(void)
-{
-	return cf_malloc(sizeof(LocalData));
-}
+LocalData *put_async_cb_create(void) { return cf_malloc(sizeof(LocalData)); }
 
-void put_async_cb_destroy(LocalData *uData)
-{
-	cf_free(uData);
-}
+void put_async_cb_destroy(LocalData *uData) { cf_free(uData); }
 
 void write_async_callback_helper(as_error *cmd_error, void *udata,
 								 as_event_loop *event_loop, int cb)
@@ -53,6 +47,8 @@ void write_async_callback_helper(as_error *cmd_error, void *udata,
 	PyObject *py_arglist = NULL;
 	PyObject *py_err = NULL;
 	as_error *error = NULL;
+	as_error temp_error;
+	PyObject *py_exception = NULL;
 
 	// Extract callback user-data
 	LocalData *data = (LocalData *)udata;
@@ -64,32 +60,40 @@ void write_async_callback_helper(as_error *cmd_error, void *udata,
 	}
 	// Lock Python State
 	PyGILState_STATE gstate;
-	gstate = PyGILState_Ensure();
+	if (cb) {
+		gstate = PyGILState_Ensure();
+	}
 
-	// Convert as_key to python key object
-	key_to_pyobject(error, &data->key, &py_key);
 	error_to_pyobject(error, &py_err);
+	// Convert as_key to python key object
+	key_to_pyobject(&temp_error, &data->key, &py_key);
 
 	if (error->code != AEROSPIKE_OK) {
-		//todo does need exception incase of cb?
+		py_exception = raise_exception(error);
+		if (PyObject_HasAttrString(py_exception, "key")) {
+			PyObject_SetAttrString(py_exception, "key", py_key);
+		}
+		if (PyObject_HasAttrString(py_exception, "bin")) {
+			PyObject_SetAttrString(py_exception, "bin", Py_None);
+		}
 		if (!cb) {
-			PyObject *exception_type = raise_exception(error);
-			if (PyObject_HasAttrString(exception_type, "key")) {
-				PyObject_SetAttrString(exception_type, "key", py_key);
-			}
-			if (PyObject_HasAttrString(exception_type, "bin")) {
-				PyObject_SetAttrString(exception_type, "bin", Py_None);
-			}
-			PyErr_SetObject(exception_type, py_err);
+			PyErr_SetObject(py_exception, py_err);
 			Py_DECREF(py_err);
 		}
 	}
 
 	if (cb) {
 		// Build Python Function Arguments
-		py_arglist = PyTuple_New(2);
+		py_arglist = PyTuple_New(3);
+
+		if (!py_exception) {
+			Py_INCREF(Py_None);
+			py_exception = Py_None;
+		}
+
 		PyTuple_SetItem(py_arglist, 0, py_key);
 		PyTuple_SetItem(py_arglist, 1, py_err);
+		PyTuple_SetItem(py_arglist, 2, py_exception);
 
 		// Invoke Python Callback
 		py_return = PyObject_Call(py_callback, py_arglist, NULL);
@@ -115,7 +119,9 @@ void write_async_callback_helper(as_error *cmd_error, void *udata,
 		put_async_cb_destroy(udata);
 	}
 
-	PyGILState_Release(gstate);
+	if (cb) {
+		PyGILState_Release(gstate);
+	}
 
 	return;
 }
@@ -178,9 +184,6 @@ PyObject *AerospikeClient_Put_Async(AerospikeClient *self, PyObject *args,
 	// Python Function Keyword Arguments
 	static char *kwlist[] = {"put_callback", "key",		   "bins", "meta",
 							 "policy",		 "serializer", NULL};
-	// Lock Python State
-	// PyGILState_STATE gstate;
-	// gstate = PyGILState_Ensure();
 
 	// Python Function Argument Parsing
 	if (PyArg_ParseTupleAndKeywords(
@@ -279,8 +282,6 @@ CLEANUP:
 		write_async_callback_helper(&err, uData, NULL, 0);
 		return NULL;
 	}
-
-	// PyGILState_Release(gstate);
 
 	Py_INCREF(Py_None);
 	return Py_None;

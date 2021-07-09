@@ -20,80 +20,106 @@ the :mod:`aerospike.Client.awaitable` methods for the aerospike.client class.
 import warnings
 import asyncio
 import aerospike
+from aerospike import exception as e
 
 get_results = {}
 get_cqd = 0
 put_results = {}
 put_cqd = 0
 
-async def get(client, namespace, set, key, policy):
-    global get_cqd
+async def _io_get_put(client, op=0, key=None, record=None, meta=None, policy=None, serialize=None):
+    global get_cqd, put_cqd
+    index = None
 
-    def get_async_callback(key_tuple, record_tuple, err):
-        global get_cqd
-        (key) = key_tuple
+    if key is not None:
+        if len(key) >= 3:
+            index = key[2]
+        if index is None:
+            if len(key) >= 4:
+                index = key[3]
 
-        get_cqd -= 1
-        result = [key_tuple, record_tuple, err]
-        #print(result)
-        loop = get_results[key[2]]['loop']
-        fut = get_results[key[2]]['fut']
-        
-        loop.call_soon_threadsafe(fut.set_result, result)
-        
-        del get_results[key[2]]
+    if index is not None and isinstance(index, bytearray):
+        index = bytes(index)
 
-    context = {'loop': None, 'fut': None}
-    get_results[key["key"]] = context
-    
-    loop = asyncio.get_event_loop()
-    get_results[key["key"]]['loop'] = loop
-    
-    future = loop.create_future()
-    get_results[key["key"]]['fut'] = future
-    
-    get_cqd += 1
-    
-    client.get_async(get_async_callback, key, policy)
-    
-    print(f"get_cqd: {get_cqd}")
-    
-    await future
-    return future.result()
-    #return future
+    print(f"io:_io_get_put op:{op} key:{key} index:{index}")
 
-async def put(client, namespace, set, key, record, meta, policy):
-    global put_cqd
-
-    def put_async_callback(key_tuple, err):
+    def put_async_callback(key_tuple, err, exce):
         global put_cqd
-        (key) = key_tuple
 
         put_cqd -= 1
-        result = [key_tuple, err]
-        #print(result)
-        loop = put_results[key[2]]['loop']
-        fut = put_results[key[2]]['fut']
-        
-        loop.call_soon_threadsafe(fut.set_result, result)
-        
-        del put_results[key[2]]
 
-    context = {'loop': None, 'fut': None}
-    put_results[key["key"]] = context
-    
+        result = [key_tuple, err, exce]
+        put_results[index]['result'] = result
+
+        print(f"io:put_cb {put_results[index]}")
+
+        loop = put_results[index]['loop']
+        fut = put_results[index]['fut']
+
+        loop.call_soon_threadsafe(fut.set_result, result[1][0])
+
+    def get_async_callback(key_tuple, record_tuple, err, exce):
+        global get_cqd
+
+        get_cqd -= 1
+
+        result = [key_tuple, record_tuple, err, exce]
+        get_results[index]['result'] = result
+
+        print(f"io:get_cb {get_results[index]}")
+
+        loop = get_results[index]['loop']
+        fut = get_results[index]['fut']
+
+        loop.call_soon_threadsafe(fut.set_result, result[1])
+
     loop = asyncio.get_event_loop()
-    put_results[key["key"]]['loop'] = loop
-    
     future = loop.create_future()
-    put_results[key["key"]]['fut'] = future
     
-    put_cqd += 1
-    
-    client.put_async(put_async_callback, key, record, meta, policy)
+    context = {'loop': None, 'fut': None, 'result': None}
 
-    print(f"put_cqd: {put_cqd}")
+    if index is not None:
+        if op == 0:
+            put_results[index] = context
+            put_results[index]['loop'] = loop
+            put_results[index]['fut'] = future
+            put_cqd += 1
+        elif op == 1:
+            get_results[index] = context
+            get_results[index]['loop'] = loop
+            get_results[index]['fut'] = future
+            get_cqd += 1
+
+    try:
+        if op == 0:
+            client.put_async(put_async_callback, key, record, meta, policy, serialize)
+        if op == 1:
+            client.get_async(get_async_callback, key, policy)
+    except Exception as e:
+        print(f"io:post_get key:{key} except:{e}")
+        # if index or isinstance(index, int):
+        #     if op == 0:
+        #         print(f"io:post_put put_cqd:{put_cqd}")
+        #     if op == 1:
+        #         print(f"io:post_get get_cqd:{get_cqd}")
+        raise e
 
     await future
     
-    return future.result()
+    if op == 0:
+        _,err,exec = put_results[index]['result']
+        del put_results[index]
+    if op == 1:
+        _,_,err,exec = get_results[index]['result']
+        del get_results[index]
+    
+    if err[0] != 0:
+        raise exec
+    else:
+        return future.result()
+
+async def get(client, key=None, policy=None):
+    return await _io_get_put(client, 1, key, None, None, policy)
+
+async def put(client, key=None, record=None, meta=None, policy=None, serialize=None):
+    return await _io_get_put(client, 0, key, record, meta, policy, serialize)

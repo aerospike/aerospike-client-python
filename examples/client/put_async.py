@@ -124,10 +124,10 @@ try:
         async def async_io(namespace, set, i):
             global cqd
             futures = []        
-            key = {'ns': namespace, \
-                    'set':set, \
-                    'key': str(i), \
-                    'digest': client.get_key_digest(namespace, set, str(i))}
+            key = (namespace, \
+                    set, \
+                    str(i), \
+                    client.get_key_digest(namespace, set, str(i)))
             record = {
                 'i': i,
                 'f': 3.1415,
@@ -140,13 +140,18 @@ try:
                 'm': {'i': i, 's': 'abc', 'u': 'ஊத்தாப்பம்', 'l': ['x', 'y', 'z'], 'd': {'x': 1, 'y': 2, 'z': 3}}
                 }
             context = {'state': 0, 'result': {}}
-            io_results[key["key"]] = context
+            io_results[key[2]] = context
             cqd += 1
             print(f"cqd: {cqd}")
-            result = await io.put(client, namespace, set, key, record, meta, policy)
+            result = None
+            try:
+                result = await io.put(client, key, record, meta, policy)
+            except Exception as eargs:
+                print("error: {0}".format(eargs))
+                pass
             cqd -= 1
             print(result)
-            io_results[key["key"]]['result'] = result
+            io_results[key[2]]['result'] = result
         async def main():
             global cqd
             cqd = 0
@@ -155,7 +160,7 @@ try:
                 func_list.append(async_io(namespace, set, i))
             await asyncio.gather(*func_list)
         asyncio.get_event_loop().run_until_complete(main())
-        print(f"get_async completed with returning {len(io_results)} records")
+        print(f"put_async completed with returning {len(io_results)} records")
         #print(io_results)
     except Exception as e:
         print("error: {0}".format(e), file=sys.stderr)

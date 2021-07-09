@@ -37,25 +37,21 @@ typedef struct {
 	as_policy_read *read_policy_p;
 } LocalData;
 
-LocalData* async_cb_create(void)
-{
-	return cf_malloc(sizeof(LocalData));
-}
+LocalData *async_cb_create(void) { return cf_malloc(sizeof(LocalData)); }
 
-void async_cb_destroy(LocalData *uData)
-{
-	cf_free(uData);
-}
+void async_cb_destroy(LocalData *uData) { cf_free(uData); }
 
-void read_async_callback_helper(as_error *cmd_error, as_record *record, void *udata,
-								as_event_loop *event_loop, int cb)
+void read_async_callback_helper(as_error *cmd_error, as_record *record,
+								void *udata, as_event_loop *event_loop, int cb)
 {
 	PyObject *py_rec = NULL;
 	PyObject *py_return = NULL;
 	PyObject *py_arglist = NULL;
 	PyObject *py_err = NULL;
 	as_error *error = NULL;
+	as_error temp_error;
 	PyObject *py_key = NULL;
+	PyObject *py_exception = NULL;
 
 	// Extract callback user-data
 	LocalData *data = (LocalData *)udata;
@@ -68,18 +64,22 @@ void read_async_callback_helper(as_error *cmd_error, as_record *record, void *ud
 
 	// Lock Python State
 	PyGILState_STATE gstate;
-	gstate = PyGILState_Ensure();
-
+	if (cb) {
+		gstate = PyGILState_Ensure();
+	}
 	error_to_pyobject(error, &py_err);
 	// Convert as_key to python key object
-	key_to_pyobject(error, &data->key, &py_key);
+	key_to_pyobject(&temp_error, &data->key, &py_key);
 
 	if (error->code == AEROSPIKE_OK) {
 
-		if (record_to_pyobject(data->client, error, record, &data->key,
+		if (record_to_pyobject(data->client, &temp_error, record, &data->key,
 							   &py_rec) != AEROSPIKE_OK) {
+			as_error_copy(error, &temp_error);
 		}
+	}
 
+	if (error->code == AEROSPIKE_OK) {
 		if (py_rec && (!data->read_policy_p ||
 					   (data->read_policy_p &&
 						data->read_policy_p->key == AS_POLICY_KEY_DIGEST))) {
@@ -93,31 +93,40 @@ void read_async_callback_helper(as_error *cmd_error, as_record *record, void *ud
 			PyTuple_SetItem(p_key, 2, Py_None);
 		}
 	}
-	else {
+
+	if (error->code != AEROSPIKE_OK) {
+		py_exception = raise_exception(error);
+		if (PyObject_HasAttrString(py_exception, "key")) {
+			PyObject_SetAttrString(py_exception, "key", py_key);
+		}
+		if (PyObject_HasAttrString(py_exception, "bin")) {
+			PyObject_SetAttrString(py_exception, "bin", Py_None);
+		}
 		if (!cb) {
-			//todo need exception incase of cb? does exception go through during async cb?
-			PyObject *exception_type = raise_exception(error);
-			if (PyObject_HasAttrString(exception_type, "key")) {
-				PyObject_SetAttrString(exception_type, "key", py_key);
-			}
-			if (PyObject_HasAttrString(exception_type, "bin")) {
-				PyObject_SetAttrString(exception_type, "bin", Py_None);
-			}
-			PyErr_SetObject(exception_type, py_err);
+			PyErr_SetObject(py_exception, py_err);
 			Py_DECREF(py_err);
 		}
 	}
 
 	if (cb) {
 		// Build Python Function Arguments
-		py_arglist = PyTuple_New(3);
+		py_arglist = PyTuple_New(4);
+
 		if (!py_rec) {
 			Py_INCREF(Py_None);
 			py_rec = Py_None;
 		}
-		PyTuple_SetItem(py_arglist, 0, py_key); //0-key, 1-meta, 2-bins
-		PyTuple_SetItem(py_arglist, 1, py_rec); //0-key, 1-meta, 2-bins
-		PyTuple_SetItem(py_arglist, 2, py_err);
+
+		if (!py_exception) {
+			Py_INCREF(Py_None);
+			py_exception = Py_None;
+		}
+
+		PyTuple_SetItem(py_arglist, 0, py_key); //0-key tuple (ns, set, key, hash)
+		PyTuple_SetItem(py_arglist, 1, py_rec); //1-record tuple (key-tuple, meta, bin)
+		PyTuple_SetItem(py_arglist, 2, py_err); //2-error tuple
+		PyTuple_SetItem(py_arglist, 3, py_exception); //3-exception
+		
 		// Invoke Python Callback
 		py_return = PyObject_Call(py_callback, py_arglist, NULL);
 
@@ -146,7 +155,9 @@ void read_async_callback_helper(as_error *cmd_error, as_record *record, void *ud
 		async_cb_destroy(udata);
 	}
 
-	PyGILState_Release(gstate);
+	if (cb) {
+		PyGILState_Release(gstate);
+	}
 
 	return;
 }
@@ -180,10 +191,6 @@ PyObject *AerospikeClient_Get_Async(AerospikeClient *self, PyObject *args,
 
 	// Python Function Keyword Arguments
 	static char *kwlist[] = {"get_callback", "key", "policy", NULL};
-
-	// Lock Python State
-	//PyGILState_STATE gstate;
-	//gstate = PyGILState_Ensure();
 
 	// Python Function Argument Parsing
 	if (PyArg_ParseTupleAndKeywords(args, kwds, "OO|O:get_async", kwlist,
@@ -264,13 +271,11 @@ CLEANUP:
 
 	if (status != AEROSPIKE_OK || err.code != AEROSPIKE_OK) {
 		//todo does raising exception alone or need cab to python?
-		read_async_callback_helper(&err, NULL, uData, NULL, 1);
+		read_async_callback_helper(&err, NULL, uData, NULL, 0);
 		return NULL;
 	}
 
 	Py_INCREF(Py_None);
-
-	//PyGILState_Release(gstate);
 
 	return Py_None;
 }
