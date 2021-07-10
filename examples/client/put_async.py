@@ -67,10 +67,6 @@ optparser.add_option(
     "-c", "--test_count", dest="test_count", type="int", default=128, metavar="<TEST_COUNT>",
     help="Number of async IO to spawn.")
 
-# optparser.add_option(
-#     "-q", "--qd", dest="qd", type="int", default=128, metavar="<QUEUE_DEPTH>",
-#     help="Async IO queue depth.")
-
 (options, args) = optparser.parse_args()
 
 if options.help:
@@ -109,7 +105,6 @@ try:
     # ----------------------------------------------------------------------------
 
     try:
-        cqd = 0
         io_results = {}
         test_count = options.test_count
         namespace = options.namespace if options.namespace and options.namespace != 'None' else None
@@ -122,7 +117,6 @@ try:
         print(f"IO async test count:{test_count}")
         
         async def async_io(namespace, set, i):
-            global cqd
             futures = []        
             key = (namespace, \
                     set, \
@@ -133,28 +127,20 @@ try:
                 'f': 3.1415,
                 's': 'abc',
                 'u': '안녕하세요',
-                #  'b': bytearray(['d','e','f']),
-                #  'l': [i, 'abc', bytearray(['d','e','f']), ['x', 'y', 'z'], {'x': 1, 'y': 2, 'z': 3}],
-                #  'm': {'i': i, 's': 'abc', 'u': '안녕하세요', 'b': bytearray(['d','e','f']), 'l': ['x', 'y', 'z'], 'd': {'x': 1, 'y': 2, 'z': 3}},
+                #'b': bytearray(['d','e','f']),
                 'l': [i, 'abc', 'வணக்கம்', ['x', 'y', 'z'], {'x': 1, 'y': 2, 'z': 3}],
                 'm': {'i': i, 's': 'abc', 'u': 'ஊத்தாப்பம்', 'l': ['x', 'y', 'z'], 'd': {'x': 1, 'y': 2, 'z': 3}}
                 }
             context = {'state': 0, 'result': {}}
             io_results[key[2]] = context
-            cqd += 1
-            print(f"cqd: {cqd}")
             result = None
             try:
                 result = await io.put(client, key, record, meta, policy)
             except Exception as eargs:
-                print("error: {0}".format(eargs))
+                print(f"error: {eargs.code}, {eargs.msg}, {eargs.file}")
                 pass
-            cqd -= 1
-            print(result)
             io_results[key[2]]['result'] = result
         async def main():
-            global cqd
-            cqd = 0
             func_list = []
             for i in range(test_count):
                 func_list.append(async_io(namespace, set, i))

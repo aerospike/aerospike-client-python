@@ -212,24 +212,24 @@ class TestGet():
                 await io.get(self.as_connection, key_input)
         await asyncio.gather(async_io(key))
 
-    # @pytest.mark.asyncio
-    # @pytest.mark.parametrize("_input, _expected", [
-    #     (('test', 'demo', 1), {'name': 'john', 'age': 1}),
-    # ])
-    # async def test_neg_get_remove_key_and_check_get(
-    #         self, _input, _expected, put_data):
-    #     """
-    #         Invoke get() for a record having string data.
-    #     """
-    #     put_data(self.as_connection, _input, _expected)
-    #     self.as_connection.remove(_input)
-    #     async def async_io(key_input=None, policy_input=None):
-    #         try:
-    #             rec = await io.get(self.as_connection, key_input)
-    #             assert rec is None
-    #         except e.RecordNotFound as exception:
-    #             assert exception.code == 2
-    #     await asyncio.gather(async_io(_input))
+    @pytest.mark.asyncio
+    @pytest.mark.parametrize("_input, _expected", [
+        (('test', 'demo', 1), {'name': 'john', 'age': 1}),
+    ])
+    async def test_neg_get_remove_key_and_check_get(
+            self, _input, _expected, put_data):
+        """
+            Invoke get() for a record having string data.
+        """
+        put_data(self.as_connection, _input, _expected)
+        self.as_connection.remove(_input)
+        async def async_io(key_input=None, policy_input=None):
+            try:
+                rec = await io.get(self.as_connection, key_input)
+                assert rec is None
+            except e.RecordNotFound as exception:
+                assert exception.code == 2
+        await asyncio.gather(async_io(_input))
 
     @pytest.mark.asyncio
     async def test_neg_get_with_only_key_no_connection(self):

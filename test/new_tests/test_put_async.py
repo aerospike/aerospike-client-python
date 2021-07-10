@@ -566,42 +566,40 @@ class TestPut():
                 assert exception.msg == 'AEROSPIKE_ERR_RECORD_NOT_FOUND'
         await asyncio.gather(async_io(key, rec, meta, policy))
 
-    # @pytest.mark.asyncio
-    # async def test_neg_put_with_policy_gen_GT_lesser(self):
-    #     """
-    #         Invoke put() for a record with generation as GT lesser
-    #     """
-    #     key = ('test', 'demo', 1)
+    @pytest.mark.asyncio
+    async def test_neg_put_with_policy_gen_GT_lesser(self):
+        """
+            Invoke put() for a record with generation as GT lesser
+        """
+        key = ('test', 'demo', 1)
 
-    #     rec = {"name": "John"}
-    #     meta = {'gen': 2, 'ttl': 25000}
-    #     policy = {'timeout': 1000}
+        rec = {"name": "John"}
+        meta = {'gen': 2, 'ttl': 25000}
+        policy = {'timeout': 1000}
 
-    #     assert 0 == self.as_connection.put(key, rec, meta, policy)
+        async def async_io(key=None, rec=None, meta=None, policy=None, serialize=None):
+            assert 0 == await io.put(self.as_connection, key, rec, meta, policy, serialize)
+        await asyncio.gather(async_io(key, rec, meta, policy))
 
-    #     # async def async_io(key=None, rec=None, meta=None, policy=None, serialize=None):
-    #     #     assert 0 == await io.put(self.as_connection, key, rec, meta, policy, serialize)
-    #     # await asyncio.gather(async_io(key, rec, meta, policy))
+        (key, meta, bins) = self.as_connection.get(key)
 
-    #     (key, meta, bins) = self.as_connection.get(key)
+        assert {"name": "John"} == bins
+        gen = meta['gen']
+        rec = {"name": "Smith"}
+        policy = {'timeout': 1000, 'gen': aerospike.POLICY_GEN_GT}
+        meta = {'gen': gen}
 
-    #     assert {"name": "John"} == bins
-    #     gen = meta['gen']
-    #     rec = {"name": "Smith"}
-    #     policy = {'timeout': 1000, 'gen': aerospike.POLICY_GEN_GT}
-    #     meta = {'gen': gen}
+        async def async_io(key=None, rec=None, meta=None, policy=None, serialize=None):
+            try:
+                assert 0 == await io.put(self.as_connection, key, rec, meta, policy, serialize)
+            except e.RecordGenerationError as exception:
+                assert exception.code == 3
+                assert exception.msg == 'AEROSPIKE_ERR_RECORD_GENERATION'
+        await asyncio.gather(async_io(key, rec, meta, policy))
 
-    #     async def async_io(key=None, rec=None, meta=None, policy=None, serialize=None):
-    #         try:
-    #             assert 0 == await io.put(self.as_connection, key, rec, meta, policy, serialize)
-    #         except e.RecordGenerationError as exception:
-    #             assert exception.code == 3
-    #             assert exception.msg == 'AEROSPIKE_ERR_RECORD_GENERATION'
-    #     await asyncio.gather(async_io(key, rec, meta, policy))
-
-    #     (key, meta, bins) = self.as_connection.get(key)
-    #     assert {"name": "John"} == bins
-    #     self.as_connection.remove(key)
+        (key, meta, bins) = self.as_connection.get(key)
+        assert {"name": "John"} == bins
+        self.as_connection.remove(key)
 
     @pytest.mark.asyncio
     async def test_neg_put_with_string_record_without_connection(self):

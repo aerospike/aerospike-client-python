@@ -44,11 +44,14 @@ DARWIN = 'Darwin' in PLATFORM or 'macOS' in PLATFORM
 CWD = os.path.abspath(os.path.dirname(__file__))
 STATIC_SSL = os.getenv('STATIC_SSL')
 SSL_LIB_PATH = os.getenv('SSL_LIB_PATH')
+EVENT_LIB = os.getenv('EVENT_LIB')
 
 ################################################################################
 # GENERIC BUILD SETTINGS
 ################################################################################
 
+if not EVENT_LIB:
+    EVENT_LIB = "libevent"
 
 include_dirs = ['src/include'] + \
     [x for x in os.getenv('CPATH', '').split(':') if len(x) > 0] + \
@@ -72,8 +75,12 @@ libraries = [
     'z'
 ]
 
-library_dirs = library_dirs + ['/usr/local/opt/libevent/lib']
-libraries = libraries + ['event_core', 'event_pthreads']
+if EVENT_LIB == "libevent":
+    library_dirs = library_dirs + ['/usr/local/opt/libevent/lib']
+    libraries = libraries + ['event_core', 'event_pthreads']
+else:
+    print("Include one of async event mechanism for asynchronos get/put support.")
+    exit()
 
 ################################################################################
 # STATIC SSL LINKING BUILD SETTINGS
@@ -161,7 +168,7 @@ class CClientBuild(build):
         # build core client
         cmd = [
             'make',
-            'EVENT_LIB=libevent',
+            'EVENT_LIB='+EVENT_LIB,
             'V=' + str(self.verbose),
         ]
 

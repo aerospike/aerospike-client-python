@@ -67,10 +67,6 @@ optparser.add_option(
     "-c", "--test_count", dest="test_count", type="int", default=128, metavar="<TEST_COUNT>",
     help="Number of async IO to spawn.")
 
-# optparser.add_option(
-#     "-q", "--qd", dest="qd", type="int", default=128, metavar="<QUEUE_DEPTH>",
-#     help="Async IO queue depth.")
-
 (options, args) = optparser.parse_args()
 
 if options.help:
@@ -109,7 +105,6 @@ try:
     # ----------------------------------------------------------------------------
 
     try:
-        cqd = 0
         io_results = {}
         test_count = options.test_count
         namespace = options.namespace if options.namespace and options.namespace != 'None' else None
@@ -122,36 +117,29 @@ try:
         print(f"IO async test count:{test_count}")
         
         async def async_io(namespace, set, i):
-            global cqd
             key = (namespace, \
                     set, \
                     str(i), \
                     client.get_key_digest(namespace, set, str(i)))
-            context = {'state': 0, 'result': {}}
+            context = {'result': {}}
             io_results[key[2]] = context
-            cqd += 1
-            print(f"cqd: {cqd}")
             result = None
             try:
                 result = await io.get(client, key, policy)
             except Exception as eargs:
-                print("error: {0}".format(eargs))
-                pass
-            cqd -= 1
+                print(f"error: {eargs.code}, {eargs.msg}, {eargs.file}")
             print(result)
             io_results[key[2]]['result'] = result
         async def main():
-            global cqd
-            cqd = 0
             func_list = []
             for i in range(test_count):
                 func_list.append(async_io(namespace, set, i))
             await asyncio.gather(*func_list)
         asyncio.get_event_loop().run_until_complete(main())
+        print(io_results)
         print(f"get_async completed with returning {len(io_results)} records")
-        #print(io_results)
     except Exception as e:
-        print("error: {0}".format(e), file=sys.stderr)
+        print(f"error: {0} ".format(e), file=sys.stderr)
         rc = 1
 
     # ----------------------------------------------------------------------------
