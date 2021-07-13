@@ -4,8 +4,13 @@ echo $PYTHONS
 IFS=',' read -ra ADDR <<< "$PYTHONS"
 
 for i in "${ADDR[@]}"; do
-    echo "compiling  $i "${i}/pip" wheel ./ -w /work/tempwheels ..."
+    echo "compiling  "${i}/pip wheel ./ -w /work/tempwheels" ..."
     "${i}/pip" wheel ./ -w /work/tempwheels
+done
+
+# Bundle external shared libraries into the wheels
+for whl in /work/tempwheels/*.whl; do
+    auditwheel repair "$whl" --plat manylinux2014_x86_64 -w /work/wheels/
 done
 
 for i in "${ADDR[@]}"; do
