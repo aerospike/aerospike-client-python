@@ -383,24 +383,24 @@ class TestPut():
                 await io.put(self.as_connection, key, rec, meta, policy, serialize)
         await asyncio.gather(async_io(key, record))
 
-    # @pytest.mark.asyncio
-    # @pytest.mark.parametrize("key, record, exception_code", [
-    #     # Non-existing NS & Set
-    #     (('demo', 'test', 1), {
-    #      'a': ['!@#!#$%#', bytearray('ASD@#$AR#$@#ERQ#', 'utf-8')]}, 20),
-    #     # Non-existing Namespace
-    #     (('test1', 'demo', 1), {'i': 'asdadasd'}, 20),
+    @pytest.mark.asyncio
+    @pytest.mark.parametrize("key, record, exception_code", [
+        # Non-existing NS & Set
+        (('demo', 'test', 1), {
+         'a': ['!@#!#$%#', bytearray('ASD@#$AR#$@#ERQ#', 'utf-8')]}, 20),
+        # Non-existing Namespace
+        (('test1', 'demo', 1), {'i': 'asdadasd'}, 20),
 
-    #     ])
-    # async def test_neg_put_with_wrong_ns_and_set(self, key, record, exception_code):
-    #     """
-    #         Invoke put() with non-existent data
-    #     """
+        ])
+    async def test_neg_put_with_wrong_ns_and_set(self, key, record, exception_code):
+        """
+            Invoke put() with non-existent data
+        """
 
-    #     async def async_io(key=None, rec=None, meta=None, policy=None, serialize=None):
-    #         with pytest.raises(e.ClientError) as clientError:
-    #             await io.put(self.as_connection, key, rec, meta, policy, serialize)
-    #     await asyncio.gather(async_io(key, record))
+        async def async_io(key=None, rec=None, meta=None, policy=None, serialize=None):
+            with pytest.raises(e.ClientError) as clientError:
+                await io.put(self.as_connection, key, rec, meta, policy, serialize)
+        await asyncio.gather(async_io(key, record))
 
     @pytest.mark.asyncio
     async def test_neg_put_with_policy_gen_EQ_less(self):
@@ -620,37 +620,37 @@ class TestPut():
                 assert exception.code == 11
         await asyncio.gather(async_io(key, bins))
 
-    # @pytest.mark.parametrize("key, record, meta, policy, ex_code, ex_msg", [
-    #     (('test', 'demo', 1), {'name': 'john'},
-    #         {'gen': "wrong", 'ttl': 25000}, {'total_timeout': 1000},  # Gen as string
-    #         -2, "Generation should be an int or long"),
-    #     (('test', 'demo', 1), {'name': 'john'},
-    #         {'gen': 3, 'ttl': "25000"}, {'total_timeout': 1000},      # ttl as string
-    #         -2, "TTL should be an int or long"),
-    #     (('test', 'demo', 1), {'name': 'john'},
-    #         {'gen': 3, 'ttl': 25000}, {'total_timeout': "1000"},      # Timeout as string
-    #         -2, "timeout is invalid"),
-    #     (('test', 'demo', 1), {'name': 'john'},  # Policy as string
-    #         {'gen': 3, 'ttl': 25000}, "Policy",
-    #         -2, "policy must be a dict"),
-    #     (('test', 'demo', 1), {'i': 13},  # Meta as string
-    #         "OK", {'total_timeout': 1000},
-    #         -2, "meta must be a dict"),
-    #     (('test', 'demo', 1), {'i': 13},  # Meta as string
-    #         1234, {'total_timeout': 1000},
-    #         -2, "meta must be a dict"),
-    # ])
-    # def test_neg_put_with_invalid_metadata(
-    #         self, key, record, meta, policy, ex_code, ex_msg, put_data):
-    #     """
-    #         Invoke put() for a record with generation as string
-    #     """
-    #     with pytest.raises(e.ParamError):
-    #         put_data(self.as_connection, key, record, meta, policy)
-    #     #     # self.as_connection.remove(key)
-    #     # except e.ParamError as exception:
-    #     #     assert exception.code == ex_code
-    #     #     assert exception.msg == ex_msg
+    @pytest.mark.parametrize("key, record, meta, policy, ex_code, ex_msg", [
+        (('test', 'demo', 1), {'name': 'john'},
+            {'gen': "wrong", 'ttl': 25000}, {'total_timeout': 1000},  # Gen as string
+            -2, "Generation should be an int or long"),
+        (('test', 'demo', 1), {'name': 'john'},
+            {'gen': 3, 'ttl': "25000"}, {'total_timeout': 1000},      # ttl as string
+            -2, "TTL should be an int or long"),
+        (('test', 'demo', 1), {'name': 'john'},
+            {'gen': 3, 'ttl': 25000}, {'total_timeout': "1000"},      # Timeout as string
+            -2, "timeout is invalid"),
+        (('test', 'demo', 1), {'name': 'john'},  # Policy as string
+            {'gen': 3, 'ttl': 25000}, "Policy",
+            -2, "policy must be a dict"),
+        (('test', 'demo', 1), {'i': 13},  # Meta as string
+            "OK", {'total_timeout': 1000},
+            -2, "meta must be a dict"),
+        (('test', 'demo', 1), {'i': 13},  # Meta as string
+            1234, {'total_timeout': 1000},
+            -2, "meta must be a dict"),
+    ])
+    def test_neg_put_with_invalid_metadata(
+            self, key, record, meta, policy, ex_code, ex_msg, put_data):
+        """
+            Invoke put() for a record with generation as string
+        """
+        with pytest.raises(e.ParamError):
+            put_data(self.as_connection, key, record, meta, policy)
+        #     # self.as_connection.remove(key)
+        # except e.ParamError as exception:
+        #     assert exception.code == ex_code
+        #     assert exception.msg == ex_msg
 
     # put edge cases
     @pytest.mark.asyncio

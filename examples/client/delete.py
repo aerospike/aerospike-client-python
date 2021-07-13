@@ -118,18 +118,9 @@ try:
                         'set':set, \
                         'key': str(i), \
                         'digest': client.get_key_digest(namespace, set, str(i))}
-                record = {
-                    'i': i,
-                    'f': 3.1415,
-                    's': 'abc',
-                    'u': '안녕하세요',
-                    #  'b': bytearray(['d','e','f']),
-                    #  'l': [i, 'abc', bytearray(['d','e','f']), ['x', 'y', 'z'], {'x': 1, 'y': 2, 'z': 3}],
-                    #  'm': {'i': i, 's': 'abc', 'u': '안녕하세요', 'b': bytearray(['d','e','f']), 'l': ['x', 'y', 'z'], 'd': {'x': 1, 'y': 2, 'z': 3}},
-                    'l': [i, 'abc', 'வணக்கம்', ['x', 'y', 'z'], {'x': 1, 'y': 2, 'z': 3}],
-                    'm': {'i': i, 's': 'abc', 'u': 'ஊத்தாப்பம்', 'l': ['x', 'y', 'z'], 'd': {'x': 1, 'y': 2, 'z': 3}}
-                }
+                
                 policy = None
+                
                 client.remove(key)
 
 

@@ -108,12 +108,11 @@ async def _io_get_put(client, op=0, key=None, record=None, meta=None, policy=Non
 
     await future
     
-    if op == 0:
-        _,err,exec = _put_results[index]['result']
-        del _put_results[index]
-    if op == 1:
-        _,_,err,exec = _get_results[index]['result']
-        del _get_results[index]
+    if index is not None:
+        if op == 0:
+            del _put_results[index]
+        if op == 1:
+            del _get_results[index]
     
     return future.result()
 

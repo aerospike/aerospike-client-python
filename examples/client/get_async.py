@@ -127,7 +127,7 @@ try:
             try:
                 result = await io.get(client, key, policy)
             except Exception as eargs:
-                print(f"error: {eargs.code}, {eargs.msg}, {eargs.file}")
+                print(f"error: {eargs.code}, {eargs.msg}, {eargs.file}, {eargs.line}")
             print(result)
             io_results[key[2]]['result'] = result
         async def main():

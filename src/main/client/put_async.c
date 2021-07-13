@@ -149,7 +149,6 @@ PyObject *AerospikeClient_Put_Async(AerospikeClient *self, PyObject *args,
 									PyObject *kwds)
 {
 	// Aerospike Client Arguments
-	as_error err;
 	as_policy_write write_policy;
 	as_policy_write *write_policy_p = NULL;
 	as_record rec;
@@ -202,9 +201,6 @@ PyObject *AerospikeClient_Put_Async(AerospikeClient *self, PyObject *args,
 
 	as_status status = AEROSPIKE_OK;
 
-	// Initialize error
-	as_error_init(&err);
-
 	if (py_serializer_option) {
 		if (PyLong_Check(py_serializer_option)) {
 			self->is_client_put_serializer = true;
@@ -215,39 +211,36 @@ PyObject *AerospikeClient_Put_Async(AerospikeClient *self, PyObject *args,
 		self->is_client_put_serializer = false;
 	}
 
-	// Initialize error
-	as_error_init(&err);
-
 	if (!self || !self->as) {
-		as_error_update(&err, AEROSPIKE_ERR_PARAM, "Invalid aerospike object");
+		as_error_update(&uData->error, AEROSPIKE_ERR_PARAM, "Invalid aerospike object");
 		goto CLEANUP;
 	}
 
 	if (!self->is_conn_16) {
-		as_error_update(&err, AEROSPIKE_ERR_CLUSTER,
+		as_error_update(&uData->error, AEROSPIKE_ERR_CLUSTER,
 						"No connection to aerospike cluster");
 		goto CLEANUP;
 	}
 
 	// Convert python key object to as_key
-	pyobject_to_key(&err, py_key, &uData->key);
-	if (err.code != AEROSPIKE_OK) {
+	pyobject_to_key(&uData->error, py_key, &uData->key);
+	if (uData->error.code != AEROSPIKE_OK) {
 		goto CLEANUP;
 	}
 
 	// Convert python bins and metadata objects to as_record
-	pyobject_to_record(self, &err, py_bins, py_meta, &rec, serializer_option,
+	pyobject_to_record(self, &uData->error, py_bins, py_meta, &rec, serializer_option,
 					   &static_pool);
-	if (err.code != AEROSPIKE_OK) {
+	if (uData->error.code != AEROSPIKE_OK) {
 		goto CLEANUP;
 	}
 
 	// Convert python policy object to as_policy_write
-	pyobject_to_policy_write(self, &err, py_policy, &write_policy,
+	pyobject_to_policy_write(self, &uData->error, py_policy, &write_policy,
 							 &write_policy_p, &self->as->config.policies.write,
 							 &predexp_list, &predexp_list_p, &exp_list,
 							 &exp_list_p);
-	if (err.code != AEROSPIKE_OK) {
+	if (uData->error.code != AEROSPIKE_OK) {
 		goto CLEANUP;
 	}
 
@@ -257,7 +250,7 @@ PyObject *AerospikeClient_Put_Async(AerospikeClient *self, PyObject *args,
 									 &uData->key, &rec, write_async_callback,
 									 uData, NULL, NULL);
 	Py_END_ALLOW_THREADS
-	if (status != AEROSPIKE_OK || err.code != AEROSPIKE_OK) {
+	if (status != AEROSPIKE_OK || uData->error.code != AEROSPIKE_OK) {
 		goto CLEANUP;
 	}
 
@@ -278,8 +271,8 @@ CLEANUP:
 	}
 
 	// If an error occurred, tell Python.
-	if (err.code != AEROSPIKE_OK) {
-		write_async_callback_helper(&err, uData, NULL, 0);
+	if (uData->error.code != AEROSPIKE_OK) {
+		write_async_callback_helper(&uData->error, uData, NULL, 0);
 		return NULL;
 	}
 

@@ -137,7 +137,7 @@ try:
             try:
                 result = await io.put(client, key, record, meta, policy)
             except Exception as eargs:
-                print(f"error: {eargs.code}, {eargs.msg}, {eargs.file}")
+                print(f"error: {eargs.code}, {eargs.msg}, {eargs.file}, {eargs.line}")
                 pass
             io_results[key[2]]['result'] = result
         async def main():

@@ -207,9 +207,6 @@ PyObject *AerospikeClient_Get_Async(AerospikeClient *self, PyObject *args,
 	memset(&uData->key, 0, sizeof(uData->key));
 	as_error_init(&uData->error);
 
-	// Aerospike Client Arguments
-	as_error err;
-
 	// For converting expressions.
 	as_exp exp_list;
 	as_exp *exp_list_p = NULL;
@@ -220,32 +217,29 @@ PyObject *AerospikeClient_Get_Async(AerospikeClient *self, PyObject *args,
 
 	as_status status = AEROSPIKE_OK;
 
-	// Initialize error
-	as_error_init(&err);
-
 	if (!self || !self->as) {
-		as_error_update(&err, AEROSPIKE_ERR_PARAM, "Invalid aerospike object");
+		as_error_update(&uData->error, AEROSPIKE_ERR_PARAM, "Invalid aerospike object");
 		goto CLEANUP;
 	}
 
 	if (!self->is_conn_16) {
-		as_error_update(&err, AEROSPIKE_ERR_CLUSTER,
+		as_error_update(&uData->error, AEROSPIKE_ERR_CLUSTER,
 						"No connection to aerospike cluster");
 		goto CLEANUP;
 	}
 
 	// Convert python key object to as_key
-	pyobject_to_key(&err, py_key, &uData->key);
-	if (err.code != AEROSPIKE_OK) {
+	pyobject_to_key(&uData->error, py_key, &uData->key);
+	if (uData->error.code != AEROSPIKE_OK) {
 		goto CLEANUP;
 	}
 
 	// Convert python policy object to as_policy_exists
-	pyobject_to_policy_read(self, &err, py_policy, &uData->read_policy,
+	pyobject_to_policy_read(self, &uData->error, py_policy, &uData->read_policy,
 							&uData->read_policy_p,
 							&self->as->config.policies.read, &predexp_list,
 							&predexp_list_p, &exp_list, &exp_list_p);
-	if (err.code != AEROSPIKE_OK) {
+	if (uData->error.code != AEROSPIKE_OK) {
 		goto CLEANUP;
 	}
 
@@ -255,7 +249,7 @@ PyObject *AerospikeClient_Get_Async(AerospikeClient *self, PyObject *args,
 									 uData->read_policy_p, &uData->key,
 									 read_async_callback, uData, NULL, NULL);
 	Py_END_ALLOW_THREADS
-	if (status != AEROSPIKE_OK || err.code != AEROSPIKE_OK) {
+	if (status != AEROSPIKE_OK || uData->error.code != AEROSPIKE_OK) {
 		goto CLEANUP;
 	}
 
@@ -269,9 +263,9 @@ CLEANUP:
 		as_predexp_list_destroy(&predexp_list);
 	}
 
-	if (status != AEROSPIKE_OK || err.code != AEROSPIKE_OK) {
+	if (status != AEROSPIKE_OK || uData->error.code != AEROSPIKE_OK) {
 		//todo does raising exception alone or need cab to python?
-		read_async_callback_helper(&err, NULL, uData, NULL, 0);
+		read_async_callback_helper(&uData->error, NULL, uData, NULL, 0);
 		return NULL;
 	}
 
