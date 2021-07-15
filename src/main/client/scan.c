@@ -227,7 +227,6 @@ static PyObject *AerospikeClient_ScanApply_Invoke(
 	}
 
 CLEANUP:
-
 	if (exp_list_p) {
 		as_exp_destroy(exp_list_p);
 		;

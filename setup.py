@@ -273,7 +273,6 @@ setup(
                 'src/main/scan/execute_background.c',
                 'src/main/scan/apply.c',
                 'src/main/scan/add_ops.c',
-                'src/main/scan/paginate.c',
                 'src/main/geospatial/type.c',
                 'src/main/geospatial/wrap.c',
                 'src/main/geospatial/unwrap.c',
@@ -292,9 +291,7 @@ setup(
                 'src/main/cdt_types/type.c',
                 'src/main/key_ordered_dict/type.c',
                 'src/main/client/set_xdr_filter.c',
-                'src/main/client/get_nodes.c',
-                'src/main/convert_partition_filter.c',
-                'src/main/client/get_key_partition_id.c'
+                'src/main/client/get_nodes.c'
             ],
 
             # Compile

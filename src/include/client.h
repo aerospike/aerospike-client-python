@@ -714,14 +714,6 @@ PyObject *AerospikeClient_GetNodeNames(AerospikeClient *self, PyObject *args,
 PyObject *AerospikeClient_Get_Key_Digest(AerospikeClient *self, PyObject *args,
 										 PyObject *kwds);
 /**
-* Perform get key's partition id from cluster.
-*
-* client.get_key_partition_id((x,y,z))
-*
-*/
-PyObject *AerospikeClient_Get_Key_PartitionID(AerospikeClient *self,
-											  PyObject *args, PyObject *kwds);
-/**
  * Return search string for host port combination
  */
 char *return_search_string(aerospike *as);
