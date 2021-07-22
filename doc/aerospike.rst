@@ -503,27 +503,17 @@ Methods
 
 .. rubric:: Logging
 
-.. py:function:: set_log_handler(callback)
+.. py:function:: enable_log_handler()
 
-    Set a user-defined function as the log handler for all aerospike objects.
-    The *callback* is invoked whenever a log event passing the logging level
-    threshold is encountered.
+    Enables aerospike log handler
 
-    :param callable callback: the function used as the logging handler.
+    .. code-block:: python
 
-    .. note:: The callback function must have the five parameters (level, func, path, line, msg)
+        from __future__ import print_function
+        import aerospike
 
-        .. code-block:: python
-
-            from __future__ import print_function
-            import aerospike
-
-            def as_logger(level, func, path, line, msg):
-            def as_logger(level, func, myfile, line, msg):
-                print("**", myfile, line, func, ':: ', msg, "**")
-
-            aerospike.set_log_level(aerospike.LOG_LEVEL_DEBUG)
-            aerospike.set_log_handler(as_logger)
+        aerospike.set_log_level(aerospike.LOG_LEVEL_DEBUG)
+        aerospike.enable_log_handler()
 
 
 .. py:function:: set_log_level(log_level)

@@ -12,15 +12,6 @@ except:
     print("Please install aerospike python client.")
     sys.exit(1)
 
-
-def handler(level, func, path, line, msg):
-    assert 1 == 1
-
-
-def extrahandler(level, func, myfile, line):
-    print ("Level is: %d" % level)
-
-
 class TestLog(object):
 
     def test_set_log_level_correct(self):
@@ -38,7 +29,7 @@ class TestLog(object):
         """
 
         response = aerospike.set_log_level(aerospike.LOG_LEVEL_DEBUG)
-        aerospike.set_log_handler(handler)
+        aerospike.enable_log_handler()
 
         hostlist, user, password = TestBaseClass.get_hosts()
         config = {
@@ -79,7 +70,7 @@ class TestLog(object):
         aerospike.set_log_level(aerospike.LOG_LEVEL_DEBUG)
 
         with pytest.raises(TypeError) as typeError:
-            aerospike.set_log_handler(handler, extrahandler)
+            aerospike.enable_log_handler()
 
         assert "setLogHandler() takes at most 1 argument (2 given)" in str(
             typeError.value)

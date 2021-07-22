@@ -118,78 +118,16 @@ static bool log_cb(as_log_level level, const char *func, const char *file,
 	vsnprintf(msg, 1024, fmt, ap);
 	va_end(ap);
 
-	// Extract pyhton user callback
-	PyObject *py_callback = user_callback.callback;
-	// User callback's argument list
-	PyObject *py_arglist = NULL;
-
-	// Lock python state
-	PyGILState_STATE gstate;
-	gstate = PyGILState_Ensure();
-
-	// Create a tuple of argument list
-	py_arglist = PyTuple_New(5);
-
-	// Initialise argument variables
-	PyObject *log_level = PyInt_FromLong((long)level);
-	PyObject *func_name = PyString_FromString(func);
-	PyObject *file_name = PyString_FromString(file);
-	PyObject *line_no = PyInt_FromLong((long)line);
-	PyObject *message = PyString_FromString(msg);
-
-	// Set argument list
-	PyTuple_SetItem(py_arglist, 0, log_level);
-	PyTuple_SetItem(py_arglist, 1, func_name);
-	PyTuple_SetItem(py_arglist, 2, file_name);
-	PyTuple_SetItem(py_arglist, 3, line_no);
-	PyTuple_SetItem(py_arglist, 4, message);
-
-	// Invoke user callback, passing in argument's list
-	PyObject_Call(py_callback, py_arglist, NULL);
-
-	Py_DECREF(py_arglist);
-
-	// Release python state
-	PyGILState_Release(gstate);
+	printf("%s\n", msg);
 
 	return true;
 }
 
-PyObject *Aerospike_Set_Log_Handler(PyObject *parent, PyObject *args,
+PyObject *Aerospike_Enable_Log_Handler(PyObject *parent, PyObject *args,
 									PyObject *kwds)
 {
-	// Python variables
-	PyObject *py_callback = NULL;
-	as_error err;
-	as_error_init(&err);
-	// Python function keyword arguments
-	static char *kwlist[] = {"log_handler", NULL};
-
-	// Python function arguments parsing
-	if (PyArg_ParseTupleAndKeywords(args, kwds, "O|:setLogHandler", kwlist,
-									&py_callback) == false) {
-		return NULL;
-	}
-	if (!PyCallable_Check(py_callback)) {
-		as_error_update(&err, AEROSPIKE_ERR_PARAM,
-						"Log handler must be callable");
-		goto CLEANUP;
-	}
-	// Store user callback
-	Py_INCREF(py_callback);
-	user_callback.callback = py_callback;
-
 	// Register callback to C-SDK
 	as_log_set_callback((as_log_callback)log_cb);
 
-CLEANUP:
-	if (err.code != AEROSPIKE_OK) {
-		PyObject *py_err = NULL;
-		error_to_pyobject(&err, &py_err);
-		PyObject *exception_type = raise_exception(&err);
-		PyErr_SetObject(exception_type, py_err);
-		Py_DECREF(py_err);
-		return NULL;
-	}
 	return PyLong_FromLong(0);
 }

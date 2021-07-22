@@ -276,3 +276,6 @@ def connection_config(request):
 @pytest.fixture(params=invalid_data.INVALID_KEYS)
 def invalid_key(request):
     yield request.param
+
+aerospike.set_log_level(aerospike.LOG_LEVEL_ERROR)
+aerospike.enable_log_handler()

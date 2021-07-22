@@ -12,34 +12,13 @@ except:
     print("Please install aerospike python client.")
     sys.exit(1)
 
-
-def handler(level, func, path, line, msg):
-    assert 1 == 1
-
-
-def valid_handler(level, func, path, line, msg):
-    pass
-
-
-def error_raising_handler(level, func, path, line, msg):
-    raise Exception("Handler raised an error")
-
-
-def wrong_args_handler():
-    pass
-
-
-def extrahandler(level, func, myfile, line):
-    print ("Level is: %d" % level)
-
-
 class TestLog(object):
 
     def teardown_class(cls):
         '''
         Set the class level logger to a no-op to ensure no problems later
         '''
-        aerospike.set_log_handler(valid_handler)
+        aerospike.enable_log_handler()
 
     def test_set_log_level_correct(self):
         """
@@ -56,7 +35,7 @@ class TestLog(object):
         """
 
         response = aerospike.set_log_level(aerospike.LOG_LEVEL_DEBUG)
-        aerospike.set_log_handler(handler)
+        aerospike.enable_log_handler()
 
         # Forces an event to be logged
         client = TestBaseClass.get_new_connection()
@@ -72,7 +51,7 @@ class TestLog(object):
         logging
         """
         aerospike.set_log_level(aerospike.LOG_LEVEL_DEBUG)
-        aerospike.set_log_handler(wrong_args_handler)
+        aerospike.enable_log_handler()
 
         with pytest.raises(SystemError):
             hostlist, user, password = TestBaseClass.get_hosts()
@@ -95,7 +74,7 @@ class TestLog(object):
         Test for handling of a log handler which raises an error
         '''
         aerospike.set_log_level(aerospike.LOG_LEVEL_DEBUG)
-        aerospike.set_log_handler(error_raising_handler)
+        aerospike.enable_log_handler()
         with pytest.raises(SystemError):
             hostlist, user, password = TestBaseClass.get_hosts()
             config = {
@@ -111,15 +90,13 @@ class TestLog(object):
         except:
             pass
 
-    @pytest.mark.parametrize("callback",
-                             [1, 'a', False, None])
     def test_set_log_handler_with_non_callables(self, callback):
         '''
         Test whether a non callable may be set as the log function
         '''
         aerospike.set_log_level(aerospike.LOG_LEVEL_DEBUG)
         with pytest.raises(e.ParamError):
-            aerospike.set_log_handler(callback)
+            aerospike.enable_log_handler()
 
     @pytest.mark.parametrize("level",
                              [None, [], {}, 1.5, 'serious'])
@@ -159,7 +136,7 @@ class TestLog(object):
         aerospike.set_log_level(aerospike.LOG_LEVEL_DEBUG)
 
         with pytest.raises(TypeError) as typeError:
-            aerospike.set_log_handler(handler, extrahandler)
+            aerospike.enable_log_handler()
 
         assert "setLogHandler() takes at most 1 argument (2 given)" in str(
             typeError.value)
