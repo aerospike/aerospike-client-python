@@ -25,8 +25,6 @@
 #include "exceptions.h"
 #include "log.h"
 
-static AerospikeLogCallback user_callback;
-
 /*
  * Declare's log level constants.
  */
