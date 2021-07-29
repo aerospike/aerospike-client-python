@@ -136,13 +136,6 @@ PyObject *AerospikeClient_Connect(AerospikeClient *self, PyObject *args,
 		self->as->config.shm_key = shm_key;
 	}
 
-#if AS_EVENT_LIB_DEFINED
-	if (!as_event_create_loops(1)) {
-		as_error_update(&err, AEROSPIKE_ERR,
-						"Unable to initialize async event loop.");
-	}
-#endif
-
 	aerospike_connect(self->as, &err);
 	if (err.code != AEROSPIKE_OK) {
 		goto CLEANUP;
@@ -165,9 +158,6 @@ CLEANUP:
 		PyErr_SetObject(exception_type, py_err);
 		Py_DECREF(py_err);
 
-#if AS_EVENT_LIB_DEFINED
-		as_event_close_loops();
-#endif
 		return NULL;
 	}
 	self->is_conn_16 = true;

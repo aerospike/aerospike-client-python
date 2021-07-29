@@ -88,6 +88,45 @@ static AerospikeConstants operator_constants[] = {
 
 #define OPERATOR_CONSTANTS_ARR_SIZE                                            \
 	(sizeof(operator_constants) / sizeof(AerospikeConstants))
+
+struct Aerospike_State{
+	PyObject			*exception;
+	PyTypeObject 		*client;
+	PyTypeObject		*query;
+	PyTypeObject		*scan;
+	PyTypeObject		*kdict;
+	PyObject			*predicates;
+	PyObject			*predexps;
+	PyTypeObject		*geospatial;
+	PyTypeObject		*null_object;
+	PyTypeObject		*wildcard_object;
+	PyTypeObject		*infinite_object;
+};
+
+#define Aerospike_State(o) ((struct Aerospike_State*)PyModule_GetState(o))
+
+static int Aerospike_Clear(PyObject *aerospike)
+{
+
+#if AS_EVENT_LIB_DEFINED
+	as_event_close_loops();
+#endif
+
+	Py_CLEAR(Aerospike_State(aerospike)->exception);
+	Py_CLEAR(Aerospike_State(aerospike)->client);
+	Py_CLEAR(Aerospike_State(aerospike)->query);
+	Py_CLEAR(Aerospike_State(aerospike)->scan);
+	Py_CLEAR(Aerospike_State(aerospike)->kdict);
+	Py_CLEAR(Aerospike_State(aerospike)->predicates);
+	Py_CLEAR(Aerospike_State(aerospike)->predexps);
+	Py_CLEAR(Aerospike_State(aerospike)->geospatial);
+	Py_CLEAR(Aerospike_State(aerospike)->null_object);
+	Py_CLEAR(Aerospike_State(aerospike)->wildcard_object);
+	Py_CLEAR(Aerospike_State(aerospike)->infinite_object);
+
+	return 0;
+}
+
 MOD_INIT(aerospike)
 {
 
@@ -100,7 +139,7 @@ MOD_INIT(aerospike)
 	PyObject *aerospike;
 
 	MOD_DEF(aerospike, "aerospike", "Aerospike Python Client",
-			Aerospike_Methods)
+			sizeof(struct Aerospike_State), Aerospike_Methods, Aerospike_Clear)
 
 	py_global_hosts = PyDict_New();
 
@@ -109,22 +148,27 @@ MOD_INIT(aerospike)
 	PyObject *exception = AerospikeException_New();
 	Py_INCREF(exception);
 	PyModule_AddObject(aerospike, "exception", exception);
+	Aerospike_State(aerospike)->exception = exception;
 
 	PyTypeObject *client = AerospikeClient_Ready();
 	Py_INCREF(client);
 	PyModule_AddObject(aerospike, "Client", (PyObject *)client);
+	Aerospike_State(aerospike)->client = client;
 
 	PyTypeObject *query = AerospikeQuery_Ready();
 	Py_INCREF(query);
 	PyModule_AddObject(aerospike, "Query", (PyObject *)query);
+	Aerospike_State(aerospike)->query = query;
 
 	PyTypeObject *scan = AerospikeScan_Ready();
 	Py_INCREF(scan);
 	PyModule_AddObject(aerospike, "Scan", (PyObject *)scan);
+	Aerospike_State(aerospike)->scan = scan;
 
 	PyTypeObject *kdict = AerospikeKeyOrderedDict_Ready();
 	Py_INCREF(kdict);
 	PyModule_AddObject(aerospike, "KeyOrderedDict", (PyObject *)kdict);
+	Aerospike_State(aerospike)->kdict = kdict;
 
 	/*
 	 * Add constants to module.
@@ -140,26 +184,36 @@ MOD_INIT(aerospike)
 	PyObject *predicates = AerospikePredicates_New();
 	Py_INCREF(predicates);
 	PyModule_AddObject(aerospike, "predicates", predicates);
+	Aerospike_State(aerospike)->predicates = predicates;
 
 	PyObject *predexps = AerospikePredExp_New();
 	Py_INCREF(predexps);
 	PyModule_AddObject(aerospike, "predexp", predexps);
+	Aerospike_State(aerospike)->predexps = predexps;
 
 	PyTypeObject *geospatial = AerospikeGeospatial_Ready();
 	Py_INCREF(geospatial);
 	PyModule_AddObject(aerospike, "GeoJSON", (PyObject *)geospatial);
+	Aerospike_State(aerospike)->geospatial = geospatial;
 
 	PyTypeObject *null_object = AerospikeNullObject_Ready();
 	Py_INCREF(null_object);
 	PyModule_AddObject(aerospike, "null", (PyObject *)null_object);
+	Aerospike_State(aerospike)->null_object = null_object;
 
 	PyTypeObject *wildcard_object = AerospikeWildcardObject_Ready();
 	Py_INCREF(wildcard_object);
 	PyModule_AddObject(aerospike, "CDTWildcard", (PyObject *)wildcard_object);
+	Aerospike_State(aerospike)->wildcard_object = wildcard_object;
 
 	PyTypeObject *infinite_object = AerospikeInfiniteObject_Ready();
 	Py_INCREF(infinite_object);
 	PyModule_AddObject(aerospike, "CDTInfinite", (PyObject *)infinite_object);
+	Aerospike_State(aerospike)->infinite_object = infinite_object;
+
+#if AS_EVENT_LIB_DEFINED
+	as_event_create_loops(1);
+#endif
 
 	return MOD_SUCCESS_VAL(aerospike);
 }

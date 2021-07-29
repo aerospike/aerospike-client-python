@@ -391,7 +391,7 @@ PyObject *AerospikePredicates_New(void)
 {
 	PyObject *module;
 	MOD_DEF(module, "aerospike.predicates", "Query Predicates",
-			AerospikePredicates_Methods);
+			-1, AerospikePredicates_Methods, NULL);
 
 	return module;
 }
