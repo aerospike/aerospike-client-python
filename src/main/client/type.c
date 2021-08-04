@@ -960,6 +960,19 @@ static int AerospikeClient_Type_Init(AerospikeClient *self, PyObject *args,
 		goto CONSTRUCTOR_ERROR;
 	}
 
+	PyObject *py_auth_mode = PyDict_GetItemString(py_config, "auth_mode");
+	if (py_auth_mode) {
+		if(PyInt_Check(py_auth_mode)) {
+			long auth_mode = PyInt_AsLong(py_auth_mode);
+			if ((long)AS_AUTH_INTERNAL == auth_mode ||
+				(long)AS_AUTH_EXTERNAL == auth_mode ||
+				(long)AS_AUTH_EXTERNAL_INSECURE == auth_mode ||
+				(long)AS_AUTH_PKI == auth_mode ) {
+				config.auth_mode = auth_mode;
+			}
+		}
+	}
+	
 	PyObject *py_shm = PyDict_GetItemString(py_config, "shm");
 	if (py_shm && PyDict_Check(py_shm)) {
 

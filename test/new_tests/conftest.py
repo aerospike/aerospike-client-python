@@ -143,11 +143,12 @@ def wait_for_port(address, port, interval=0.1, timeout=60):
 
 @pytest.fixture(scope="class")
 def as_connection(request):
-    hostlist, user, password = TestBaseClass.get_hosts()
+    hostlist, user, password, auth_mode = TestBaseClass.get_hosts()
     tls_info = TestBaseClass.get_tls_info()
     lua_user_path = os.path.join(sys.exec_prefix, "aerospike", "usr-lua")
     lua_info = {'user_path': lua_user_path}
-    config = {'hosts': hostlist, 'tls': tls_info, 'lua': lua_info}
+    config = {'hosts': hostlist, 'tls': tls_info, 'lua': lua_info, 'auth_mode': int(auth_mode)}
+    print(config)
     as_client = None
     if len(hostlist) == 2:
         for (a, p) in hostlist:
@@ -268,8 +269,9 @@ def connection_config(request):
     Sets the class attribute to be the config object passed in
      to create the as_connection
     """
-    hostlist, _, _ = TestBaseClass.get_hosts()
-    config = {'hosts': hostlist, 'tls': TestBaseClass.get_tls_info()}
+    hostlist, _, _, auth_mode = TestBaseClass.get_hosts()
+    config = {'hosts': hostlist, 'tls': TestBaseClass.get_tls_info(), 'auth_mode': int(auth_mode)}
+    print("Config:" + config)
     request.cls.connection_config = config
 
 
@@ -277,5 +279,5 @@ def connection_config(request):
 def invalid_key(request):
     yield request.param
 
-aerospike.set_log_level(aerospike.LOG_LEVEL_ERROR)
+aerospike.set_log_level(aerospike.LOG_LEVEL_DEBUG)
 aerospike.enable_log_handler()
