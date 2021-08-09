@@ -190,7 +190,6 @@ class TestGetMany():
         This sets use batch_direct to true in the constructor
         and sets it to false in the policy argument to the function
         '''
-        hostlist, user, password = TestBaseClass.get_hosts()
         config = {'policies': {'use_batch_direct': True}}
         client_batch_direct = TestBaseClass.get_new_connection(add_config=config)
 

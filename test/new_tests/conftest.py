@@ -5,10 +5,85 @@ import sys
 from distutils.version import LooseVersion
 
 import pytest
+from _pytest.runner import TestReport
+from _pytest.terminal import TerminalReporter
+import os
+from psutil import Process
+from collections import namedtuple
+from itertools import groupby
+import tracemalloc
+
 from . import invalid_data
 from .test_base_class import TestBaseClass
 aerospike = pytest.importorskip("aerospike")
 
+
+# _proc = Process(os.getpid())
+
+# from itertools import groupby
+
+# LEAK_LIMIT = 0
+
+# def get_consumed_ram():
+#     return _proc.memory_info().rss
+
+# START = 'START'
+# END = 'END'
+# ConsumedRamLogEntry = namedtuple('ConsumedRamLogEntry', ('nodeid', 'on', 'consumed_ram'))
+# consumed_ram_log = []
+# ConsumedTracemallocLogEntry = namedtuple('ConsumedTracemallocLogEntry', ('nodeid', 'on', 'consumed_tracemalloc'))
+# consumed_tracemalloc_log = []
+
+# tracemalloc.start(10)
+# snapshot1 = []
+# snapshot2 = []
+
+# @pytest.hookimpl(hookwrapper=True)
+# def pytest_terminal_summary(terminalreporter):  # type: (TerminalReporter) -> generator
+#     yield
+#     # you can do here anything - I just print report info
+#     print('*' * 8 + 'HERE CUSTOM LOGIC' + '*' * 8)
+
+#     for failed in terminalreporter.stats.get('failed', []):  # type: TestReport
+#         print('failed! node_id:%s, duration: %s' % (failed.nodeid,
+#                                                                  failed.duration))
+
+#     for passed in terminalreporter.stats.get('passed', []):  # type: TestReport
+#         print('passed! node_id:%s, duration: %s, details: %s' % (passed.nodeid,
+#                                                                  passed.duration,
+#                                                                  str(passed.longrepr)))
+
+#     grouped = groupby(consumed_ram_log, lambda entry: entry.nodeid)
+#     for nodeid, (start_entry, end_entry) in grouped:
+#         leaked = end_entry.consumed_ram - start_entry.consumed_ram
+#         if leaked > LEAK_LIMIT:
+#             terminalreporter.write('LEAKED {}KB in {}\n'.format(
+#                 leaked / 1024, nodeid))
+
+#     tmgrouped = groupby(consumed_tracemalloc_log, lambda entry: entry.nodeid)
+#     for nodeid, (start_entry, end_entry) in tmgrouped:
+#         stats = end_entry.consumed_tracemalloc.compare_to(start_entry.consumed_tracemalloc, 'lineno')
+#         print(f"{nodeid}:");
+#         for stat in stats[:3]:
+#             print(stat);
+#             #terminalreporter.write(stats)
+
+# def pytest_runtest_setup(item):
+#     log_entry = ConsumedRamLogEntry(item.nodeid, START, get_consumed_ram())
+#     consumed_ram_log.append(log_entry)
+
+#     tmlog_entry = ConsumedTracemallocLogEntry(item.nodeid, START, tracemalloc.take_snapshot())
+#     consumed_tracemalloc_log.append(tmlog_entry)
+
+
+
+# def pytest_runtest_teardown(item):
+#     log_entry = ConsumedRamLogEntry(item.nodeid, END, get_consumed_ram())
+#     consumed_ram_log.append(log_entry)
+
+#     tmlog_entry = ConsumedTracemallocLogEntry(item.nodeid, END, tracemalloc.take_snapshot())
+#     consumed_tracemalloc_log.append(tmlog_entry)
+ 
 
 def compare_server_versions(version1, version2):
     '''
@@ -68,11 +143,12 @@ def wait_for_port(address, port, interval=0.1, timeout=60):
 
 @pytest.fixture(scope="class")
 def as_connection(request):
-    hostlist, user, password = TestBaseClass.get_hosts()
+    hostlist, user, password, auth_mode = TestBaseClass.get_hosts()
     tls_info = TestBaseClass.get_tls_info()
     lua_user_path = os.path.join(sys.exec_prefix, "aerospike", "usr-lua")
     lua_info = {'user_path': lua_user_path}
-    config = {'hosts': hostlist, 'tls': tls_info, 'lua': lua_info}
+    config = {'hosts': hostlist, 'tls': tls_info, 'lua': lua_info, 'auth_mode': int(auth_mode)}
+    print(config)
     as_client = None
     if len(hostlist) == 2:
         for (a, p) in hostlist:
@@ -193,11 +269,15 @@ def connection_config(request):
     Sets the class attribute to be the config object passed in
      to create the as_connection
     """
-    hostlist, _, _ = TestBaseClass.get_hosts()
-    config = {'hosts': hostlist, 'tls': TestBaseClass.get_tls_info()}
+    hostlist, _, _, auth_mode = TestBaseClass.get_hosts()
+    config = {'hosts': hostlist, 'tls': TestBaseClass.get_tls_info(), 'auth_mode': int(auth_mode)}
+    print(config)
     request.cls.connection_config = config
 
 
 @pytest.fixture(params=invalid_data.INVALID_KEYS)
 def invalid_key(request):
     yield request.param
+
+aerospike.set_log_level(aerospike.LOG_LEVEL_DEBUG)
+aerospike.enable_log_handler()

@@ -87,6 +87,9 @@ PyObject *AerospikeScan_Results(AerospikeScan *self, PyObject *args,
 	as_exp exp_list;
 	as_exp *exp_list_p = NULL;
 
+	as_partition_filter partition_filter = {0};
+	as_partition_filter *partition_filter_p = NULL;
+
 	// For converting predexp.
 	as_predexp_list predexp_list;
 	as_predexp_list *predexp_list_p = NULL;
@@ -119,6 +122,19 @@ PyObject *AerospikeScan_Results(AerospikeScan *self, PyObject *args,
 		goto CLEANUP;
 	}
 
+	if (py_policy) {
+		PyObject *py_partition_filter =
+			PyDict_GetItemString(py_policy, "partition_filter");
+		if (py_partition_filter) {
+			if (convert_partition_filter(self->client, py_partition_filter,
+										 &partition_filter,
+										 &err) == AEROSPIKE_OK) {
+				partition_filter_p = &partition_filter;
+			}
+		}
+	}
+	as_error_reset(&err);
+
 	/*
 	 * If the user specified a nodename, validate and convert it to a char*
 	 */
@@ -148,7 +164,12 @@ PyObject *AerospikeScan_Results(AerospikeScan *self, PyObject *args,
 
 	Py_BEGIN_ALLOW_THREADS
 
-	if (nodename) {
+	if (partition_filter_p) {
+		aerospike_scan_partitions(self->client->as, &err, scan_policy_p,
+								  &self->scan, partition_filter_p, each_result,
+								  &data);
+	}
+	else if (nodename) {
 		aerospike_scan_node(self->client->as, &err, scan_policy_p, &self->scan,
 							nodename, each_result, &data);
 	}
@@ -160,6 +181,7 @@ PyObject *AerospikeScan_Results(AerospikeScan *self, PyObject *args,
 	Py_END_ALLOW_THREADS
 
 CLEANUP:
+
 	if (exp_list_p) {
 		as_exp_destroy(exp_list_p);
 	}

@@ -68,6 +68,11 @@ PyDoc_STRVAR(get_doc, "get(key[, policy]) -> (key, meta, bins)\n\
 \n\
 Read a record with a given key, and return the record as a tuple() consisting of key, meta and bins.");
 
+PyDoc_STRVAR(get_async_doc,
+			 "get_async(get_callback, key[, policy]) -> (key, meta, bins)\n\
+\n\
+Read a record asynchronously with a given key, and return the record as a tuple() consisting of key, meta and bins.");
+
 PyDoc_STRVAR(select_doc, "select(key, bins[, policy]) -> (key, meta, bins)\n\
 \n\
 Read a record with a given key, and return the record as a tuple() consisting of key, meta and bins, \
@@ -78,6 +83,10 @@ Starting with 3.6.0, if a bin does not exist it will not be present in the retur
 PyDoc_STRVAR(put_doc, "put(key, bins[, meta[, policy[, serializer]]])\n\
 \n\
 Write a record with a given key to the cluster.");
+
+PyDoc_STRVAR(put_async_doc, "put(key, bins[, meta[, policy[, serializer]]])\n\
+\n\
+Write a record asynchronously with a given key to the cluster.");
 
 PyDoc_STRVAR(remove_doc, "remove(key[, policy])\n\
 \n\
@@ -503,6 +512,11 @@ PyDoc_STRVAR(get_key_digest_doc, "get_key_digest(ns, set, key) -> bytearray\n\
 \n\
 Calculate the digest of a particular key. See: Key Tuple.");
 
+PyDoc_STRVAR(get_key_partition_id_doc,
+			 "get_key_partition_id(ns, set, key) -> int\n\
+\n\
+Gets the partition ID of given key. See: Key Tuple.");
+
 PyDoc_STRVAR(truncate_doc, "truncate(namespace, set, nanos[, policy])\n\
 \n\
 Remove records in specified namespace/set efficiently. \
@@ -588,10 +602,16 @@ static PyMethodDef AerospikeClient_Type_Methods[] = {
 	 METH_VARARGS | METH_KEYWORDS, exists_doc},
 	{"get", (PyCFunction)AerospikeClient_Get, METH_VARARGS | METH_KEYWORDS,
 	 get_doc},
+	{"get_async", (PyCFunction)AerospikeClient_Get_Async,
+	 METH_VARARGS | METH_KEYWORDS, get_async_doc},
 	{"select", (PyCFunction)AerospikeClient_Select,
 	 METH_VARARGS | METH_KEYWORDS, select_doc},
 	{"put", (PyCFunction)AerospikeClient_Put, METH_VARARGS | METH_KEYWORDS,
 	 put_doc},
+	{"put_async", (PyCFunction)AerospikeClient_Put_Async,
+	 METH_VARARGS | METH_KEYWORDS, put_async_doc},
+	{"get_key_partition_id", (PyCFunction)AerospikeClient_Get_Key_PartitionID,
+	 METH_VARARGS | METH_KEYWORDS, get_key_partition_id_doc},
 	{"remove", (PyCFunction)AerospikeClient_Remove,
 	 METH_VARARGS | METH_KEYWORDS, remove_doc},
 	{"apply", (PyCFunction)AerospikeClient_Apply, METH_VARARGS | METH_KEYWORDS,
@@ -940,6 +960,19 @@ static int AerospikeClient_Type_Init(AerospikeClient *self, PyObject *args,
 		goto CONSTRUCTOR_ERROR;
 	}
 
+	PyObject *py_auth_mode = PyDict_GetItemString(py_config, "auth_mode");
+	if (py_auth_mode) {
+		if(PyInt_Check(py_auth_mode)) {
+			long auth_mode = PyInt_AsLong(py_auth_mode);
+			if ((long)AS_AUTH_INTERNAL == auth_mode ||
+				(long)AS_AUTH_EXTERNAL == auth_mode ||
+				(long)AS_AUTH_EXTERNAL_INSECURE == auth_mode ||
+				(long)AS_AUTH_PKI == auth_mode ) {
+				config.auth_mode = auth_mode;
+			}
+		}
+	}
+	
 	PyObject *py_shm = PyDict_GetItemString(py_config, "shm");
 	if (py_shm && PyDict_Check(py_shm)) {
 

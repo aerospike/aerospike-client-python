@@ -383,7 +383,7 @@ as_status as_user_info_to_pyobject(as_error *err, as_user *user,
 
 	if (PyDict_SetItemString(
 			py_info, "read_info",
-			Py_BuildValue("s#", user->read_info, user->read_info_size)) == -1) {
+			Py_BuildValue("i", *user->read_info, user->read_info_size)) == -1) {
 		as_error_update(err, AEROSPIKE_ERR_CLIENT,
 						"Failed to set %s in py_info.", "read_info");
 		Py_DECREF(py_roles);
@@ -391,7 +391,7 @@ as_status as_user_info_to_pyobject(as_error *err, as_user *user,
 		goto END;
 	}
 	if (PyDict_SetItemString(py_info, "write_info",
-							 Py_BuildValue("s#", user->write_info,
+							 Py_BuildValue("i", *user->write_info,
 										   user->write_info_size)) == -1) {
 		as_error_update(err, AEROSPIKE_ERR_CLIENT,
 						"Failed to set %s in py_info.", "write_info");

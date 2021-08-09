@@ -54,11 +54,7 @@ PyObject *Aerospike_Set_Log_Level(PyObject *parent, PyObject *args,
 								  PyObject *kwds);
 
 /**
- * Set log handler / callback to be invoked during logging
- *          def log_callback( log_level, func_name, file_name, line_no):
- *              # Do something
- *              print "Hello"
- *          aerospike.set_log_handler( log_callback )
+ * Enable aerospike log handler
  */
-PyObject *Aerospike_Set_Log_Handler(PyObject *parent, PyObject *args,
+PyObject *Aerospike_Enable_Log_Handler(PyObject *parent, PyObject *args,
 									PyObject *kwds);

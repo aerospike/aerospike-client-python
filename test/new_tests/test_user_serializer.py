@@ -280,10 +280,11 @@ class TestUserSerializer(object):
         #    Invoke put() for mixed data with class and instance serialziers
         #    with a specification in put. Client one is called
 
-        hostlist, user, password = TestBaseClass.get_hosts()
+        hostlist, user, password, auth_mode = TestBaseClass.get_hosts()
         method_config = {'hosts': hostlist,
                          'serialization': (client_serialize_function,
-                                           client_deserialize_function)}
+                                           client_deserialize_function),
+                         'auth_mode': auth_mode}
         if user is None and password is None:
             client = aerospike.client(method_config).connect()
         else:
@@ -340,10 +341,11 @@ class TestUserSerializer(object):
 
         #    Invoke put() for mixed data with class and instance serialziers
         #    with no specification in put
-        hostlist, user, password = TestBaseClass.get_hosts()
+        hostlist, user, password, auth_mode = TestBaseClass.get_hosts()
         method_config = {'hosts': hostlist,
                          'serialization': (client_serialize_function,
-                                           client_deserialize_function)}
+                                           client_deserialize_function),
+                         'auth_mode': auth_mode}
         if user is None and password is None:
             client = aerospike.client(method_config).connect()
         else:

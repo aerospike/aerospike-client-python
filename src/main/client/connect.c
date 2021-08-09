@@ -157,6 +157,7 @@ CLEANUP:
 		PyObject *exception_type = raise_exception(&err);
 		PyErr_SetObject(exception_type, py_err);
 		Py_DECREF(py_err);
+
 		return NULL;
 	}
 	self->is_conn_16 = true;

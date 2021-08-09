@@ -44,17 +44,20 @@ DARWIN = 'Darwin' in PLATFORM or 'macOS' in PLATFORM
 CWD = os.path.abspath(os.path.dirname(__file__))
 STATIC_SSL = os.getenv('STATIC_SSL')
 SSL_LIB_PATH = os.getenv('SSL_LIB_PATH')
+EVENT_LIB = os.getenv('EVENT_LIB')
 
 ################################################################################
 # GENERIC BUILD SETTINGS
 ################################################################################
 
+if not EVENT_LIB:
+    EVENT_LIB = "libevent"
 
 include_dirs = ['src/include'] + \
     [x for x in os.getenv('CPATH', '').split(':') if len(x) > 0] + \
     ['/usr/local/opt/openssl/include']
 extra_compile_args = [
-    '-std=gnu99', '-g', '-Wall', '-fPIC', '-O1',
+    '-std=gnu99', '-g', '-Wall', '-fPIC', '-O1', '-DDEBUG', '-DAS_EVENT_LIB_DEFINED',
     '-fno-common', '-fno-strict-aliasing', '-Wno-strict-prototypes',
     '-march=nocona',
     '-D_FILE_OFFSET_BITS=64', '-D_REENTRANT',
@@ -71,6 +74,13 @@ libraries = [
     'm',
     'z'
 ]
+
+if EVENT_LIB == "libevent":
+    library_dirs = library_dirs + ['/usr/local/opt/libevent/lib']
+    libraries = libraries + ['event_core', 'event_pthreads']
+else:
+    print("Include one of async event mechanism for asynchronos get/put support.")
+    exit()
 
 ################################################################################
 # STATIC SSL LINKING BUILD SETTINGS
@@ -158,6 +168,7 @@ class CClientBuild(build):
         # build core client
         cmd = [
             'make',
+            'EVENT_LIB='+EVENT_LIB,
             'V=' + str(self.verbose),
         ]
 
@@ -235,6 +246,8 @@ setup(
                 'src/main/client/exists.c',
                 'src/main/client/exists_many.c',
                 'src/main/client/get.c',
+                'src/main/client/get_async.c',
+                'src/main/client/put_async.c',
                 'src/main/client/get_many.c',
                 'src/main/client/select_many.c',
                 'src/main/client/info_single_node.c',
@@ -273,6 +286,7 @@ setup(
                 'src/main/scan/execute_background.c',
                 'src/main/scan/apply.c',
                 'src/main/scan/add_ops.c',
+                'src/main/scan/paginate.c',
                 'src/main/geospatial/type.c',
                 'src/main/geospatial/wrap.c',
                 'src/main/geospatial/unwrap.c',
@@ -291,7 +305,9 @@ setup(
                 'src/main/cdt_types/type.c',
                 'src/main/key_ordered_dict/type.c',
                 'src/main/client/set_xdr_filter.c',
-                'src/main/client/get_nodes.c'
+                'src/main/client/get_nodes.c',
+                'src/main/convert_partition_filter.c',
+                'src/main/client/get_key_partition_id.c'
             ],
 
             # Compile
@@ -305,8 +321,8 @@ setup(
             extra_link_args=extra_link_args,
         )
     ],
-
-    packages=['aerospike_helpers', 'aerospike_helpers.operations', 'aerospike_helpers.expressions'],
+    packages=['aerospike_helpers', 'aerospike_helpers.operations',
+              'aerospike_helpers.expressions', 'aerospike_helpers.awaitable'],
 
     cmdclass={
         'build': CClientBuild,

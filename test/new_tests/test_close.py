@@ -16,7 +16,7 @@ except:
 class TestClose():
 
     def setup_class(cls):
-        TestClose.hostlist, TestClose.user, TestClose.password = TestBaseClass.get_hosts()
+        TestClose.hostlist, TestClose.user, TestClose.password, TestClose.auth_mode = TestBaseClass.get_hosts()
 
     def test_pos_close(self):
         """

@@ -50,6 +50,14 @@ PyDoc_STRVAR(results_doc,
 Buffer the records resulting from the scan, and return them as a list of records.If provided \
 nodename should be the Node ID of a node to limit the scan to.");
 
+PyDoc_STRVAR(paginate_doc, "paginate()\n\
+\n\
+Set pagination filter to receive records in bunch (max_records or page_size).");
+
+PyDoc_STRVAR(is_done_doc, "is_done() -> bool\n\
+\n\
+Gets the status of scan");
+
 /*******************************************************************************
  * PYTHON TYPE METHODS
  ******************************************************************************/
@@ -74,6 +82,11 @@ static PyMethodDef AerospikeScan_Type_Methods[] = {
 	{"add_ops", (PyCFunction)AerospikeScan_Add_Ops,
 	 METH_VARARGS | METH_KEYWORDS, results_doc},
 
+	{"paginate", (PyCFunction)AerospikeScan_Paginate,
+	 METH_VARARGS | METH_KEYWORDS, paginate_doc},
+
+	{"is_done", (PyCFunction)AerospikeScan_Is_Done,
+	 METH_VARARGS | METH_KEYWORDS, is_done_doc},
 	{NULL}};
 
 /*******************************************************************************

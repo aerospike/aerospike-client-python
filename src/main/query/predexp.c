@@ -1119,6 +1119,6 @@ PyObject *AerospikePredExp_New(void)
 {
 	PyObject *module;
 	MOD_DEF(module, "aerospike.predexp", "Query Predexp",
-			AerospikePredExp_Methods);
+			-1, AerospikePredExp_Methods, NULL);
 	return module;
 }

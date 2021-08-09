@@ -191,7 +191,6 @@ class TestSelectMany(object):
 
     def test_with_use_batch_direct_true_in_constructor_false_argument(self):
 
-        hostlist, user, password = TestBaseClass.get_hosts()
         config = {'policies': {'use_batch_direct': False}}
         client_batch_direct = TestBaseClass.get_new_connection(add_config=config)
 
@@ -204,7 +203,6 @@ class TestSelectMany(object):
 
     def test_with_use_batch_direct_true_in_constructor(self):
 
-        hostlist, user, password = TestBaseClass.get_hosts()
         config = {'policies': {'use_batch_direct': True}}
         client_batch_direct = TestBaseClass.get_new_connection(add_config=config)
 

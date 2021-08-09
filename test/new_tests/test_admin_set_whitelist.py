@@ -24,7 +24,7 @@ class TestSetWhitelist(TestBaseClass):
         """
         Setup method
         """
-        hostlist, user, password = TestBaseClass().get_hosts()
+        _, user, password, _ = TestBaseClass().get_hosts()
         config = TestBaseClass.get_connection_config()
         self.client = aerospike.client(config).connect(user, password)
         usr_sys_admin_privs = [
@@ -216,7 +216,7 @@ class TestSetWhitelist(TestBaseClass):
 
         self.client.admin_create_user("test_whitelist_user", "123", ["usr-sys-admin-test"])
 
-        hostlist, user, password = TestBaseClass().get_hosts()
+        _, user, password, _ = TestBaseClass().get_hosts()
         config = TestBaseClass.get_connection_config()
         new_client = aerospike.client(config).connect(user, password)
         try:

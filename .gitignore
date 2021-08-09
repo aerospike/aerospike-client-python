@@ -7,7 +7,6 @@ dist/
 /.cproject
 /.project
 /.pydevproject
-aerospike-client-c/
 aerospike.egg-info/
 *.log
 tmp

@@ -56,7 +56,7 @@ class TestBitwiseOperations(object):
         """
         Write Python bools with different client configurations.
         """
-        hostlist, user, password = TestBaseClass().get_hosts()
+        _, user, password, _ = TestBaseClass().get_hosts()
         tls_info = TestBaseClass().get_tls_info()
         config = TestBaseClass.get_connection_config()
         config["send_bool_as"] = send_bool_as

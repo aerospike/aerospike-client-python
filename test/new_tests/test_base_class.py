@@ -15,6 +15,7 @@ class TestBaseClass(object):
     using_auth = False
     should_xfail = False
     using_enterprise = False
+    auth_mode = 0
 
     @staticmethod
     def get_hosts():
@@ -42,7 +43,13 @@ class TestBaseClass(object):
         else:
             TestBaseClass.hostlist = TestBaseClass.parse_hosts(
                 config.get('community-edition', 'hosts'))
-        return TestBaseClass.hostlist, TestBaseClass.user, TestBaseClass.password
+
+        if config.has_option('enterprise-edition', 'auth_mode'):
+            auth_mode = config.get('enterprise-edition', 'auth_mode')
+            if auth_mode != 'None':
+                TestBaseClass.auth_mode = auth_mode
+         
+        return TestBaseClass.hostlist, TestBaseClass.user, TestBaseClass.password, TestBaseClass.auth_mode
 
     @staticmethod
     def temporary_xfail():
@@ -145,8 +152,11 @@ class TestBaseClass(object):
         and return a newly connected client
         '''
         add_config = add_config if add_config else {}
-        hostlist, username, password = TestBaseClass.get_hosts()
+        hostlist, username, password, auth_mode = TestBaseClass.get_hosts()
+        
         config = {'hosts': hostlist}
+        config['auth_mode'] = auth_mode
+ 
         tls_dict = {}
         tls_dict = TestBaseClass.get_tls_info()
 
@@ -189,8 +199,10 @@ class TestBaseClass(object):
     @staticmethod
     def get_connection_config():
         config = {}
-        hosts, _, _ = TestBaseClass.get_hosts()
+        hosts, _, _, auth_mode = TestBaseClass.get_hosts()
         tls_conf = TestBaseClass.get_tls_info()
         config['hosts'] = hosts
         config['tls'] = tls_conf
+        config['auth_mode'] = auth_mode
+
         return config

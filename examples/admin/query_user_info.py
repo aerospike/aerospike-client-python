@@ -92,9 +92,8 @@ try:
     try:
 
         policy = {}
-        user = "foo-example"
-
-        roles = client.admin_query_user_info(user, policy)
+ 
+        roles = client.admin_query_user_info(options.username, policy)
 
         print(roles)
         print("---")
