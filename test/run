@@ -10,4 +10,4 @@ PWD=`pwd`
 echo "Running test cases from ${PWD},"
 
 # Run test suite
-python -m pytest new_tests/
+python3 -m pytest new_tests/
