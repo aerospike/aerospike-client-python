@@ -180,6 +180,9 @@ PyObject *AerospikeClient_Put_Async(AerospikeClient *self, PyObject *args,
 	PyObject *py_serializer_option = NULL;
 	long serializer_option = SERIALIZER_PYTHON;
 
+	if (!async_support)
+		return NULL;
+
 	// Python Function Keyword Arguments
 	static char *kwlist[] = {"put_callback", "key",		   "bins", "meta",
 							 "policy",		 "serializer", NULL};

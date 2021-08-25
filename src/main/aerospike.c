@@ -37,6 +37,7 @@
 PyObject *py_global_hosts;
 int counter = 0xA8000000;
 bool user_shm_key = false;
+bool async_support = false;
 
 PyDoc_STRVAR(client_doc, "client(config) -> client object\n\
 \n\
@@ -130,7 +131,7 @@ static int Aerospike_Clear(PyObject *aerospike)
 MOD_INIT(aerospike)
 {
 
-	const char version[8] = "6.0.1";
+	const char version[8] = "7.0.0";
 	// Makes things "thread-safe"
 	PyEval_InitThreads();
 	int i = 0;
@@ -213,6 +214,7 @@ MOD_INIT(aerospike)
 
 #if AS_EVENT_LIB_DEFINED
 	as_event_create_loops(1);
+	async_support = true;
 #endif
 
 	return MOD_SUCCESS_VAL(aerospike);

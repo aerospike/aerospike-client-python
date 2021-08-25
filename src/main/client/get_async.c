@@ -189,6 +189,9 @@ PyObject *AerospikeClient_Get_Async(AerospikeClient *self, PyObject *args,
 	PyObject *py_key = NULL;
 	PyObject *py_policy = NULL;
 
+	if (!async_support)
+		return NULL;
+
 	// Python Function Keyword Arguments
 	static char *kwlist[] = {"get_callback", "key", "policy", NULL};
 
