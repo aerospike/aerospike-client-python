@@ -496,6 +496,11 @@ PyDoc_STRVAR(get_many_doc, "get_many(keys[, policy]) -> [ (key, meta, bins)]\n\
 Batch-read multiple records, and return them as a list. \
 Any record that does not exist will have a None value for metadata and bins in the record tuple.");
 
+PyDoc_STRVAR(batch_get_ops_doc, "batch_get_ops(keys[, policy]) -> [ (key, meta, bins)]\n\
+\n\
+Batch-read multiple records, and return them as a list. \
+Any record that does not exist will have a None value for metadata and bins in the record tuple.");
+
 PyDoc_STRVAR(select_many_doc,
 			 "select_many(keys, bins[, policy]) -> [(key, meta, bins)]\n\
 \n\
@@ -797,6 +802,8 @@ static PyMethodDef AerospikeClient_Type_Methods[] = {
 
 	{"get_many", (PyCFunction)AerospikeClient_Get_Many,
 	 METH_VARARGS | METH_KEYWORDS, get_many_doc},
+	{"batch_get_ops", (PyCFunction)AerospikeClient_Batch_GetOps,
+	 METH_VARARGS | METH_KEYWORDS, batch_get_ops_doc},
 	{"select_many", (PyCFunction)AerospikeClient_Select_Many,
 	 METH_VARARGS | METH_KEYWORDS, select_many_doc},
 	{"exists_many", (PyCFunction)AerospikeClient_Exists_Many,

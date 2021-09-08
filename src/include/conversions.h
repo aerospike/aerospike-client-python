@@ -105,6 +105,11 @@ as_status as_list_of_map_to_py_tuple_list(AerospikeClient *self, as_error *err,
 as_status record_to_pyobject(AerospikeClient *self, as_error *err,
 							 const as_record *rec, const as_key *key,
 							 PyObject **obj);
+							 
+as_status record_to_resultpyobject(AerospikeClient *self, 
+								as_error *err,
+								const as_record *rec,
+								PyObject **obj);
 
 as_status operate_bins_to_pyobject(AerospikeClient *self, as_error *err,
 								   const as_record *rec, PyObject **py_bins);
