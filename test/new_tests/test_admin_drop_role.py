@@ -24,9 +24,8 @@ class TestDropRole(object):
         """
         Setup method
         """
-        _, user, password, _ = TestBaseClass().get_hosts()
         config = TestBaseClass.get_connection_config()
-        self.client = aerospike.client(config).connect(user, password)
+        self.client = aerospike.client(config).connect(config['user'], config['password'])
 
         self.delete_users = []
 

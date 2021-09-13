@@ -280,15 +280,13 @@ class TestUserSerializer(object):
         #    Invoke put() for mixed data with class and instance serialziers
         #    with a specification in put. Client one is called
 
-        hostlist, user, password, auth_mode = TestBaseClass.get_hosts()
-        method_config = {'hosts': hostlist,
-                         'serialization': (client_serialize_function,
-                                           client_deserialize_function),
-                         'auth_mode': auth_mode}
-        if user is None and password is None:
-            client = aerospike.client(method_config).connect()
+        method_config = TestBaseClass.get_connection_config()
+        method_config['serialization'] = (client_serialize_function,
+                                           client_deserialize_function)
+        if method_config['user'] is None and method_config['password'] is None:
+            as_client = aerospike.client(method_config).connect()
         else:
-            client = aerospike.client(method_config).connect(user, password)
+            as_client = aerospike.client(method_config).connect(method_config['user'], method_config['password'])
         aerospike.set_serializer(serialize_function)
         aerospike.set_deserializer(deserialize_function)
         key = ('test', 'demo', 1)
@@ -341,15 +339,13 @@ class TestUserSerializer(object):
 
         #    Invoke put() for mixed data with class and instance serialziers
         #    with no specification in put
-        hostlist, user, password, auth_mode = TestBaseClass.get_hosts()
-        method_config = {'hosts': hostlist,
-                         'serialization': (client_serialize_function,
-                                           client_deserialize_function),
-                         'auth_mode': auth_mode}
-        if user is None and password is None:
-            client = aerospike.client(method_config).connect()
+        method_config = TestBaseClass.get_connection_config()
+        method_config['serialization'] = (client_serialize_function,
+                                           client_deserialize_function)
+        if method_config['user'] is None and method_config['password'] is None:
+            as_client = aerospike.client(method_config).connect()
         else:
-            client = aerospike.client(method_config).connect(user, password)
+            as_client = aerospike.client(method_config).connect(method_config['user'], method_config['password'])
 
         aerospike.set_serializer(serialize_function)
         aerospike.set_deserializer(deserialize_function)

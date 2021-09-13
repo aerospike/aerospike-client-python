@@ -16,7 +16,11 @@ except:
 class TestClose():
 
     def setup_class(cls):
-        TestClose.hostlist, TestClose.user, TestClose.password, TestClose.auth_mode = TestBaseClass.get_hosts()
+        config = TestBaseClass.get_connection_config()
+        TestClose.hostlist = config['hosts']
+        TestClose.user = config['user']
+        TestClose.password = config['password']
+        TestClose.auth_mode = config['policies']['auth_mode']
 
     def test_pos_close(self):
         """

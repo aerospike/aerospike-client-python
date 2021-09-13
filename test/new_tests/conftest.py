@@ -143,22 +143,21 @@ def wait_for_port(address, port, interval=0.1, timeout=60):
 
 @pytest.fixture(scope="class")
 def as_connection(request):
-    hostlist, user, password, auth_mode = TestBaseClass.get_hosts()
-    tls_info = TestBaseClass.get_tls_info()
+    config = TestBaseClass.get_connection_config()
     lua_user_path = os.path.join(sys.exec_prefix, "aerospike", "usr-lua")
     lua_info = {'user_path': lua_user_path}
-    config = {'hosts': hostlist, 'tls': tls_info, 'lua': lua_info, 'auth_mode': int(auth_mode)}
+    config['lua'] = lua_info
     print(config)
     as_client = None
-    if len(hostlist) == 2:
-        for (a, p) in hostlist:
+    if len(config['hosts']) == 2:
+        for (a, p) in config['hosts']:
             wait_for_port(a, p)
     # We are using tls otherwise, so rely on the server being ready
 
-    if user is None and password is None:
+    if config['user'] is None and config['password'] is None:
         as_client = aerospike.client(config).connect()
     else:
-        as_client = aerospike.client(config).connect(user, password)
+        as_client = aerospike.client(config).connect(config['user'], config['password'])
 
     request.cls.skip_old_server = True
     request.cls.server_version = []
@@ -269,8 +268,7 @@ def connection_config(request):
     Sets the class attribute to be the config object passed in
      to create the as_connection
     """
-    hostlist, _, _, auth_mode = TestBaseClass.get_hosts()
-    config = {'hosts': hostlist, 'tls': TestBaseClass.get_tls_info(), 'auth_mode': int(auth_mode)}
+    config = TestBaseClass.get_connection_config()
     print(config)
     request.cls.connection_config = config
 

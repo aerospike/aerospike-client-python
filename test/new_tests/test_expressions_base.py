@@ -226,11 +226,9 @@ class TestExpressions(TestBaseClass):
             pytest.mark.xfail(reason="Servers older than 5.6 do not support 6.0.0 expressions")
             pytest.xfail()
 
-        _, user, password, _ = TestBaseClass().get_hosts()
-        tls_info = TestBaseClass().get_tls_info()
         config = TestBaseClass.get_connection_config()
         config["send_bool_as"] = aerospike.AS_BOOL
-        test_client = aerospike.client(config).connect(user, password)
+        test_client = aerospike.client(config).connect(config['user'], config['password'])
 
         expr = BoolBin("t")
         ops = [
@@ -246,11 +244,9 @@ class TestExpressions(TestBaseClass):
             pytest.mark.xfail(reason="Servers older than 5.6 do not support 6.0.0 expressions")
             pytest.xfail()
 
-        _, user, password, _ = TestBaseClass().get_hosts()
-        tls_info = TestBaseClass().get_tls_info()
         config = TestBaseClass.get_connection_config()
         config["send_bool_as"] = aerospike.AS_BOOL
-        test_client = aerospike.client(config).connect(user, password)
+        test_client = aerospike.client(config).connect(config['user'], config['password'])
 
         expr = Not(BoolBin("t"))
         ops = [
