@@ -121,7 +121,8 @@ class TestBaseClass(object):
 
         if config.has_option('policies', 'auth_mode'):
             auth_mode = config.get('policies', 'auth_mode')
-            if auth_mode != 'None':
+            policies_dict['auth_mode'] = int(0)
+            if auth_mode != 'None' and auth_mode.isdigit():
                 policies_dict['auth_mode'] = int(auth_mode)
 
         return policies_dict
@@ -203,6 +204,5 @@ class TestBaseClass(object):
         config['policies'] = policies_conf
         config['user'] = TestBaseClass.user
         config['password'] = TestBaseClass.password
-
-
+        print(config)
         return config

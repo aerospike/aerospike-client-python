@@ -269,7 +269,6 @@ def connection_config(request):
      to create the as_connection
     """
     config = TestBaseClass.get_connection_config()
-    print(config)
     request.cls.connection_config = config
 
 

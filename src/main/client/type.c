@@ -1217,8 +1217,9 @@ static int AerospikeClient_Type_Init(AerospikeClient *self, PyObject *args,
 					goto CONSTRUCTOR_ERROR;
 				}
 			} else {
-				error_code = INIT_INVALID_AUTHMODE_ERR;
-				goto CONSTRUCTOR_ERROR;
+				//it may come like auth_mode = None, for those non-integer cases, treat them as non-set
+				//error_code = INIT_INVALID_AUTHMODE_ERR;
+				//goto CONSTRUCTOR_ERROR;
 			}
 		}
 	}
