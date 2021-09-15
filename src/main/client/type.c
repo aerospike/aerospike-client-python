@@ -47,7 +47,8 @@ enum {
 	INIT_SERIALIZE_ERR,
 	INIT_DESERIALIZE_ERR,
 	INIT_COMPRESSION_ERR,
-	INIT_POLICY_PARAM_ERR
+	INIT_POLICY_PARAM_ERR,
+	INIT_INVALID_AUTHMODE_ERR
 };
 
 /*******************************************************************************
@@ -967,19 +968,6 @@ static int AerospikeClient_Type_Init(AerospikeClient *self, PyObject *args,
 		goto CONSTRUCTOR_ERROR;
 	}
 
-	PyObject *py_auth_mode = PyDict_GetItemString(py_config, "auth_mode");
-	if (py_auth_mode) {
-		if(PyInt_Check(py_auth_mode)) {
-			long auth_mode = PyInt_AsLong(py_auth_mode);
-			if ((long)AS_AUTH_INTERNAL == auth_mode ||
-				(long)AS_AUTH_EXTERNAL == auth_mode ||
-				(long)AS_AUTH_EXTERNAL_INSECURE == auth_mode ||
-				(long)AS_AUTH_PKI == auth_mode ) {
-				config.auth_mode = auth_mode;
-			}
-		}
-	}
-	
 	PyObject *py_shm = PyDict_GetItemString(py_config, "shm");
 	if (py_shm && PyDict_Check(py_shm)) {
 
@@ -1223,12 +1211,22 @@ static int AerospikeClient_Type_Init(AerospikeClient *self, PyObject *args,
 		}
 
 		PyObject *py_auth_mode = PyDict_GetItemString(py_policies, "auth_mode");
-		if (py_auth_mode && PyInt_Check(py_auth_mode)) {
-			long auth_mode = PyInt_AsLong(py_auth_mode);
-			if ((long)AS_AUTH_INTERNAL == auth_mode ||
-				(long)AS_AUTH_EXTERNAL == auth_mode ||
-				(long)AS_AUTH_EXTERNAL_INSECURE == auth_mode) {
-				config.auth_mode = auth_mode;
+		if (py_auth_mode) {
+			if (PyInt_Check(py_auth_mode)) {
+				long auth_mode = PyInt_AsLong(py_auth_mode);
+				if ((long)AS_AUTH_INTERNAL == auth_mode ||
+					(long)AS_AUTH_EXTERNAL == auth_mode ||
+					(long)AS_AUTH_EXTERNAL_INSECURE == auth_mode ||
+					(long)AS_AUTH_PKI == auth_mode ) {
+					config.auth_mode = auth_mode;
+				} else {
+					error_code = INIT_INVALID_AUTHMODE_ERR;
+					goto CONSTRUCTOR_ERROR;
+				}
+			} else {
+				//it may come like auth_mode = None, for those non-integer cases, treat them as non-set
+				//error_code = INIT_INVALID_AUTHMODE_ERR;
+				//goto CONSTRUCTOR_ERROR;
 			}
 		}
 	}
@@ -1394,6 +1392,11 @@ CONSTRUCTOR_ERROR:
 	case INIT_POLICY_PARAM_ERR: {
 		as_error_update(&constructor_err, AEROSPIKE_ERR_PARAM,
 						"Invalid Policy setting value");
+		break;
+	}
+	case INIT_INVALID_AUTHMODE_ERR: {
+		as_error_update(&constructor_err, AEROSPIKE_ERR_PARAM,
+						"Specify valid auth_mode");
 		break;
 	}
 	default:

@@ -90,6 +90,15 @@ static AerospikeConstants operator_constants[] = {
 #define OPERATOR_CONSTANTS_ARR_SIZE                                            \
 	(sizeof(operator_constants) / sizeof(AerospikeConstants))
 
+static AerospikeConstants auth_mode_constants[] = {
+	{AS_AUTH_INTERNAL, "AUTH_INTERNAL"},
+	{AS_AUTH_EXTERNAL, "AUTH_EXTERNAL"},
+	{AS_AUTH_EXTERNAL_INSECURE, "AUTH_EXTERNAL_INSECURE"},
+	{AS_AUTH_PKI, "AUTH_PKI"}};
+
+#define AUTH_MODE_CONSTANTS_ARR_SIZE                                            \
+	(sizeof(auth_mode_constants) / sizeof(AerospikeConstants))
+
 struct Aerospike_State{
 	PyObject			*exception;
 	PyTypeObject 		*client;
@@ -178,6 +187,12 @@ MOD_INIT(aerospike)
 		PyModule_AddIntConstant(aerospike, operator_constants[i].constant_str,
 								operator_constants[i].constantno);
 	}
+
+	for (i = 0; i < (int)AUTH_MODE_CONSTANTS_ARR_SIZE; i++) {
+		PyModule_AddIntConstant(aerospike, auth_mode_constants[i].constant_str,
+								auth_mode_constants[i].constantno);
+	}
+
 	declare_policy_constants(aerospike);
 	RegisterPredExpConstants(aerospike);
 	declare_log_constants(aerospike);

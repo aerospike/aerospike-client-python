@@ -56,11 +56,9 @@ class TestBitwiseOperations(object):
         """
         Write Python bools with different client configurations.
         """
-        _, user, password, _ = TestBaseClass().get_hosts()
-        tls_info = TestBaseClass().get_tls_info()
         config = TestBaseClass.get_connection_config()
         config["send_bool_as"] = send_bool_as
-        test_client = aerospike.client(config).connect(user, password)
+        test_client = aerospike.client(config).connect(config['user'], config['password'])
         ops = [
             operation.write("cfg_true", True),
             operation.write("cfg_false", False),

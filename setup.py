@@ -136,32 +136,11 @@ CCLIENT_PATH = os.path.join(BASEPATH, 'aerospike-client-c')
 
 
 class CClientBuild(build):
-    global library_dirs, libraries
-    
-    user_options = build.user_options + [
-        ('eventlib=', None, 'Koiyala the one of event library for async support (--eventlib libuv/libevent).')
-    ]
 
     def initialize_options(self):
         build.initialize_options(self)
-        self.eventlib = None
-
-    # def finalize_options(self):
-    #     assert self.eventlib in (None, 'libuv', 'libevent'), 'Invalid eventlib, it should be one of libuv/libevent!'
-    #     pass
 
     def run(self):
-        global library_dirs, libraries, extra_compile_args
-        if self.eventlib is not None:
-            if self.eventlib == "libuv":
-                library_dirs = library_dirs + ['/usr/local/lib/']
-                libraries = libraries + ['uv']
-            elif self.eventlib == "libevent":
-                library_dirs = library_dirs + ['/usr/local/opt/libevent/lib']
-                libraries = libraries + ['event_core', 'event_pthreads']
-        else:
-            print('Specify the one of event library for async support (--eventlib libuv/libevent).'),
-
         if self.force == 1:
             # run original c-extension clean task
             # clean.run(self)
@@ -182,12 +161,6 @@ class CClientBuild(build):
             'make',
             'V=' + str(self.verbose),
         ]
-        if self.eventlib is not None:
-            cmd = [
-                'make',
-                'V=' + str(self.verbose),
-                'EVENT_LIB='+self.eventlib] 
-            extra_compile_args = extra_compile_args + ['-DAS_EVENT_LIB_DEFINED']
 
         def compile():
             print(cmd)
