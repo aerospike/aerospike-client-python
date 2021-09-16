@@ -104,7 +104,7 @@ class TestBatchExpressionsOperations(TestBaseClass):
         #print(self.keys)
         res = self.as_connection.batch_get_ops(self.keys, ops, meta, policy)
         """
-        res are itn th format of (status-tuple, ((meta-dict, result-dict), status-tuple, exception), ...)
+        res are in the format of (status-tuple, ((meta-dict, result-dict), status-tuple, exception), ...)
         """
         status = res[0]
         recs = res[1:]
