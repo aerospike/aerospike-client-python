@@ -103,10 +103,15 @@ class TestBatchExpressionsOperations(TestBaseClass):
         policy = {'timeout': 1001}
         #print(self.keys)
         res = self.as_connection.batch_get_ops(self.keys, ops, meta, policy)
+        """
+        res are itn th format of (status-tuple, ((meta-dict, result-dict), status-tuple, exception), ...)
+        """
         status = res[0]
-        recs = res[1]
-        print("\ntest_read_pos->", "status: ", status, "results: ", recs)
-        assert recs[0][1] == expected
+        recs = res[1:]
+        print("\ntest_read_pos status:", status)
+        for i in range(self.batch_size):
+            print("results: ", recs[i])
+            assert recs[i][0][1] == expected
 
     @pytest.mark.parametrize("expr, flags, name, expected", [
         (
