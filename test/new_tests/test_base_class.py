@@ -119,9 +119,9 @@ class TestBaseClass(object):
         config = configparser.ConfigParser()
         config.read("config.conf")
 
+        policies_dict['auth_mode'] = int(0)
         if config.has_option('policies', 'auth_mode'):
             auth_mode = config.get('policies', 'auth_mode')
-            policies_dict['auth_mode'] = int(0)
             if auth_mode != 'None' and auth_mode.isdigit():
                 policies_dict['auth_mode'] = int(auth_mode)
 
