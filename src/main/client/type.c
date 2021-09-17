@@ -494,10 +494,10 @@ Create a geospatial 2D spherical index with index_name on the bin in the specifi
 
 PyDoc_STRVAR(get_many_doc, "get_many(keys[, policy]) -> [ (key, meta, bins)]\n\
 \n\
-Batch-read multiple records, and return them as a list. \
-Any record that does not exist will have a None value for metadata and bins in the record tuple.");
+Batch-read multiple records with applying list of opearagtions and returns them as a list. \
+Any record that does not exist will have a None value for metadata and status in the record tuple.");
 
-PyDoc_STRVAR(batch_get_ops_doc, "batch_get_ops((list_of_keys, list_of_ops, meta, policy)) -> [ ((callback, list_of_keys, list_of_ops, meta, policy))]\n\
+PyDoc_STRVAR(batch_get_ops_doc, "batch_get_ops((list_of_keys, list_of_ops, meta, policy)) -> [ ((, list_of_keys, list_of_ops, meta, policy))]\n\
 \n\
 Batch-read multiple records, and return them as a list. \
 Any record that does not exist will have a None value for metadata and bins in the record tuple.");
