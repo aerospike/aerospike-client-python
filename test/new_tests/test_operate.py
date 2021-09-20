@@ -285,8 +285,11 @@ class TestOperate(object):
               "val": "aa"},
              {"op": aerospike.OPERATOR_INCR,
               "bin": "age",
-              "val": 3}, {"op": aerospike.OPERATOR_READ,
-                          "bin": "name"}]),
+              "val": 3}, 
+             {"op": aerospike.OPERATOR_READ,
+              "bin": "name"}
+            ]
+        ),
     ])
     def test_pos_operate_with_policy_gen_ignore(
             self, key, policy, meta, llist):

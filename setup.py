@@ -53,7 +53,7 @@ include_dirs = ['src/include'] + \
     [x for x in os.getenv('CPATH', '').split(':') if len(x) > 0] + \
     ['/usr/local/opt/openssl/include']
 extra_compile_args = [
-    '-std=gnu99', '-g', '-Wall', '-fPIC', '-O1', '-DDEBUG',
+    '-std=gnu99', '-g', '-Wall', '-fPIC', '-O0', '-DDEBUG',
     '-fno-common', '-fno-strict-aliasing', '-Wno-strict-prototypes',
     '-march=nocona',
     '-D_FILE_OFFSET_BITS=64', '-D_REENTRANT',
@@ -241,6 +241,7 @@ setup(
                 'src/main/client/get_async.c',
                 'src/main/client/put_async.c',
                 'src/main/client/get_many.c',
+                'src/main/client/batch_get_ops.c',
                 'src/main/client/select_many.c',
                 'src/main/client/info_single_node.c',
                 'src/main/client/info_random_node.c',

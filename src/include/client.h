@@ -666,6 +666,15 @@ PyObject *AerospikeClient_Get_Many(AerospikeClient *self, PyObject *args,
 								   PyObject *kwds);
 
 /**
+ * Get records in a batch
+ *
+ *		client.batch_get_ops([keys], policies)
+ *
+ */
+PyObject *AerospikeClient_Batch_GetOps(AerospikeClient *self, PyObject *args,
+								   		PyObject *kwds);
+
+/**
  * Filter bins from records in a batch
  *
  *		client.select_many([keys], [bins], policies)

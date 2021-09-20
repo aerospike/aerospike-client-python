@@ -1601,8 +1601,6 @@ static bool map_to_pyobject_each(const as_val *key, const as_val *val,
 	 * due to an unhashable keytype
 	 */
 	if (PyDict_SetItem(py_dict, py_key, py_val) == -1) {
-		Py_CLEAR(py_key);
-		Py_CLEAR(py_val);
 		if (PyErr_Occurred() && PyErr_ExceptionMatches(PyExc_TypeError)) {
 			as_error_update(
 				err, AEROSPIKE_ERR_CLIENT,
@@ -1612,6 +1610,8 @@ static bool map_to_pyobject_each(const as_val *key, const as_val *val,
 			as_error_update(err, AEROSPIKE_ERR_CLIENT,
 							"Unable to add dictionary item");
 		}
+		Py_CLEAR(py_key);
+		Py_CLEAR(py_val);
 		return false;
 	}
 
@@ -1697,6 +1697,50 @@ as_status do_record_to_pyobject(AerospikeClient *self, as_error *err,
 	PyTuple_SetItem(py_rec, 0, py_rec_key);
 	PyTuple_SetItem(py_rec, 1, py_rec_meta);
 	PyTuple_SetItem(py_rec, 2, py_rec_bins);
+
+	*obj = py_rec;
+	return err->code;
+}
+
+as_status record_to_resultpyobject(AerospikeClient *self, 
+								as_error *err,
+								const as_record *rec,
+								PyObject **obj)
+{
+	as_error_reset(err);
+	*obj = NULL;
+
+	if (!rec) {
+		return as_error_update(err, AEROSPIKE_ERR_CLIENT, "record is null");
+	}
+
+	PyObject *py_rec = NULL;
+	PyObject *py_rec_meta = NULL;
+	PyObject *py_rec_bins = NULL;
+
+	if (metadata_to_pyobject(err, rec, &py_rec_meta) != AEROSPIKE_OK) {
+		return err->code;
+	}
+
+	if (bins_to_pyobject(self, err, rec, &py_rec_bins, false) !=
+		AEROSPIKE_OK) {
+		Py_CLEAR(py_rec_meta);
+		return err->code;
+	}
+
+	if (!py_rec_meta) {
+		Py_INCREF(Py_None);
+		py_rec_meta = Py_None;
+	}
+
+	if (!py_rec_bins) {
+		Py_INCREF(Py_None);
+		py_rec_bins = Py_None;
+	}
+
+	py_rec = PyTuple_New(2);
+	PyTuple_SetItem(py_rec, 0, py_rec_meta);
+	PyTuple_SetItem(py_rec, 1, py_rec_bins);
 
 	*obj = py_rec;
 	return err->code;
