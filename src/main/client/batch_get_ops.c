@@ -42,7 +42,7 @@ extern as_status add_op(AerospikeClient *self, as_error *err, PyObject *py_val,
 // Struct for Python User-Data for the Callback
 typedef struct {
 	as_error error;
-	PyObject *callback;
+	PyObject *py_results;
 	AerospikeClient *client;
 } LocalData;
 
@@ -52,12 +52,8 @@ batch_read_operate_cb(const as_batch_read* results, uint32_t n, void* udata)
 	// Extract callback user-data
 	LocalData *data = (LocalData *)udata;
 	as_error *error = &data->error;
-	PyObject *py_callback = data->callback;
 	PyObject *py_err = NULL;
 	PyObject *py_arglist = NULL;
-	PyObject *py_argslist = NULL;
-	PyObject *py_cb_arg = NULL;
-	PyObject *py_return = NULL;
 	as_batch_read* r = NULL;
 	PyObject *py_rec;
 	PyObject *py_exception;
@@ -68,9 +64,7 @@ batch_read_operate_cb(const as_batch_read* results, uint32_t n, void* udata)
 
 	error_to_pyobject(error, &py_err);
 
-	// Build Python Function Arguments
-	py_argslist = PyTuple_New(n+1);
-	PyTuple_SetItem(py_argslist, 0, py_err);
+	PyList_Append(data->py_results, py_err);
 
 	for (uint32_t i = 0; i < n; i++) {
 		r = (as_batch_read*) &results[i];
@@ -97,29 +91,7 @@ batch_read_operate_cb(const as_batch_read* results, uint32_t n, void* udata)
 		PyTuple_SetItem(py_arglist, 0, py_rec); //1-record tuple (key-tuple, meta, bin)
 		PyTuple_SetItem(py_arglist, 1, py_err); //2-error tuple
 		PyTuple_SetItem(py_arglist, 2, py_exception); //3-exception
-
-		PyTuple_SetItem(py_argslist, i+1, py_arglist);
-	}
-
-	if (py_callback != Py_None) {
-		py_cb_arg = PyTuple_New(1);
-		PyTuple_SetItem(py_cb_arg, 0, py_argslist);
-		// Invoke Python Callback
-		py_return = PyObject_Call(py_callback, py_cb_arg, NULL);
-		// Release Python Function Arguments
-		Py_DECREF(py_cb_arg);
-
-		// handle return value
-		if (!py_return) {
-			// an exception was raised, handle it (someday)
-			// for now, we bail from the loop
-			as_error_update(error, AEROSPIKE_ERR_CLIENT,
-							"batch_readq_operate_cb function raised an exception");
-		}
-		Py_DECREF(py_return);
-	} else {
-		// Release Python Function Arguments
-		Py_DECREF(py_argslist);
+		PyList_Append(data->py_results, py_arglist);
 	}
 
 	PyGILState_Release(gstate);
@@ -142,16 +114,16 @@ batch_read_operate_cb(const as_batch_read* results, uint32_t n, void* udata)
  */
 static PyObject *AerospikeClient_Batch_GetOps_Invoke(AerospikeClient *self,
 												as_error *err, 
-												PyObject *py_callback,
-												 PyObject *py_keys,
+												PyObject *py_keys,
 												PyObject *py_ops,
 												PyObject *py_meta,
-												 PyObject *py_policy)
+												PyObject *py_policy)
 {
 	long operation;
 	long return_type = -1;
 	as_policy_batch policy;
 	as_policy_batch *batch_policy_p = NULL;
+	PyObject *py_results = NULL;
 	as_batch batch;
 	
 	as_batch_init(&batch, 0);
@@ -222,12 +194,16 @@ static PyObject *AerospikeClient_Batch_GetOps_Invoke(AerospikeClient *self,
 
 	// Create and initialize callback user-data
 	LocalData data;
-	data.callback = py_callback;
 	data.client = self;
+	py_results = PyList_New(0);
+	data.py_results = py_results;
+
 	as_error_init(&data.error);
 
 	Py_BEGIN_ALLOW_THREADS
-	aerospike_batch_get_ops(self->as, &data.error, batch_policy_p, &batch, &ops, 																		batch_read_operate_cb, &data);
+	aerospike_batch_get_ops(self->as, &data.error, 
+							batch_policy_p, &batch, &ops,
+							batch_read_operate_cb, &data);
 	Py_END_ALLOW_THREADS
 
 	as_error_copy(err, &data.error);
@@ -261,10 +237,14 @@ CLEANUP:
 		PyObject *exception_type = raise_exception(err);
 		PyErr_SetObject(exception_type, py_err);
 		Py_DECREF(py_err);
+
+		if (py_results) {
+			Py_DECREF(py_results);
+		}
 		return NULL;
 	}
 
-	return PyLong_FromLong(0);
+	return py_results;
 }
 
 /**
@@ -286,16 +266,16 @@ PyObject *AerospikeClient_Batch_GetOps(AerospikeClient *self, PyObject *args,
 	as_error err;
 	PyObject *py_policy = NULL;
 	PyObject *py_meta = NULL;
-	PyObject *py_callback = NULL;
 	PyObject *py_keys = NULL;
 	PyObject *py_ops = NULL;
+	PyObject *py_results = NULL;
 
 	as_error_init(&err);
 
 	// Python Function Keyword Arguments
-	static char *kwlist[] = {"callback", "keys", "list", "meta", "policy", NULL};
-	if (PyArg_ParseTupleAndKeywords(args, kwds, "OOO|OO:batch_getops", kwlist,
-									&py_callback, &py_keys, 
+	static char *kwlist[] = {"keys", "list", "meta", "policy", NULL};
+	if (PyArg_ParseTupleAndKeywords(args, kwds, "OO|OO:batch_getops", kwlist,
+									&py_keys, 
 									&py_ops, &py_meta,
 									&py_policy) == false) {
 		return NULL;
@@ -307,9 +287,9 @@ PyObject *AerospikeClient_Batch_GetOps(AerospikeClient *self, PyObject *args,
 						"batch_getops keys/ops should be of type list");
 	}
 	
-	AerospikeClient_Batch_GetOps_Invoke(self, &err, 
-										py_callback, py_keys, 
-										py_ops, py_meta, py_policy);
+	py_results = AerospikeClient_Batch_GetOps_Invoke(self, &err, 
+											py_keys, py_ops, 
+											py_meta, py_policy);
 
 	if (err.code != AEROSPIKE_OK) {
 		PyObject *py_err = NULL;
@@ -320,7 +300,5 @@ PyObject *AerospikeClient_Batch_GetOps(AerospikeClient *self, PyObject *args,
 		return NULL;
 	}
 
-	Py_INCREF(Py_None);
-
-	return Py_None;
+	return py_results;
 }

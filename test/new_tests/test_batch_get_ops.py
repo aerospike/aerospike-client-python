@@ -25,12 +25,13 @@ class TestBatchExpressionsOperations(TestBaseClass):
             pytest.mark.xfail(reason="Servers older than 5.6 do not support arithmetic expressions.")
             pytest.xfail()
         
-        self.test_ns = 'bar'
+        self.test_ns = 'test'
         self.test_set = 'demo'
         self.keys = []
+        self.batch_size = 5
 
-        for i in range(5):
-            key = ('bar', u'demo', i)
+        for i in range(self.batch_size):
+            key = ('test', u'demo', i)
             rec = {
                 'name': 'name10',
                 't': True,
@@ -52,8 +53,8 @@ class TestBatchExpressionsOperations(TestBaseClass):
             self.keys.append(key)
 
         def teardown():
-            for i in range(5):
-                key = ('bar', u'demo', i)
+            for i in range(self.batch_size):
+                key = ('test', u'demo', i)
                 as_connection.remove(key)
 
         request.addfinalizer(teardown)
@@ -88,26 +89,29 @@ class TestBatchExpressionsOperations(TestBaseClass):
             ),
             aerospike.EXP_READ_DEFAULT,
             "test_mul1",
-            {"test_mul1": 150}
+            {"test_mul1": 1000}
         ),
     ])
     def test_read_pos(self, expr, flags, name, expected):
         """
         Test expression read operation with correct parameters.
         """
-        
-        def callback(cb_result):
-            print("cb_result", cb_result)
-            return False
-
         ops = [
             expressions.expression_read(name, expr.compile(), flags)
         ]
         meta = {'gen': 1}
         policy = {'timeout': 1001}
         #print(self.keys)
-        res = self.as_connection.batch_get_ops(callback, self.keys, ops, meta, policy)
-        #assert res == expected
+        res = self.as_connection.batch_get_ops(self.keys, ops, meta, policy)
+        """
+        res are in the format of (status-tuple, ((meta-dict, result-dict), status-tuple, exception), ...)
+        """
+        status = res[0]
+        recs = res[1:]
+        print("\ntest_read_pos status:", status)
+        for i in range(self.batch_size):
+            print("results: ", recs[i])
+            assert recs[i][0][1] == expected
 
     @pytest.mark.parametrize("expr, flags, name, expected", [
         (
@@ -143,13 +147,9 @@ class TestBatchExpressionsOperations(TestBaseClass):
         """
         Test expression read operation expecting failure.
         """
-        
-        def callback(input_tuple):
-            #print("input_tuple", input_tuple)
-            return True
-        
         with pytest.raises(expected):
             ops = [
                 expressions.expression_read(name, expr, flags)
             ]
-            res = self.as_connection.batch_get_ops(None, self.keys, ops)
+            res = self.as_connection.batch_get_ops(self.keys, ops)
+            print("test_read_neg: ", res)
