@@ -87,7 +87,7 @@ class TestScanPagination(TestBaseClass):
 
         request.addfinalizer(teardown)
 
-    @pytest.mark.xfail(reason="Might fail, server may return less than what asked for.")
+    #@pytest.mark.xfail(reason="Might fail, server may return less than what asked for.")
     def test_scan_pagination_with_existent_ns_and_set(self):
 
         records = []
@@ -98,12 +98,21 @@ class TestScanPagination(TestBaseClass):
             self.partition_1001_count + \
             self.partition_1002_count + \
             self.partition_1003_count
-        partition_filter = {'begin': 1000, 'count': 4}
+        # partition_status = [{id:(id, init, done, digest)},(),...]
+        def init(id):
+            return 0;
+        def done(id):
+            return 0;
+        def digest(id):
+            return 0;
+        partition_status = {id:(id, init(id), done(id), digest(id)) for id in range (1000, 1004)}
+        partition_filter = {'begin': 1000, 'count': 4, 'partition_status': partition_status}
+        print(partition_filter)
         policy = {'max_records': scan_page_size[0],
                 'partition_filter': partition_filter,
                 'records_per_second': 4000}
 
-        def callback(input_tuple):
+        def callback(part_id, input_tuple):
             if(input_tuple == None):
                 return True #scan complete
             (_, _, record) = input_tuple

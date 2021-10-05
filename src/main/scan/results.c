@@ -36,7 +36,7 @@ typedef struct {
 	AerospikeClient *client;
 } LocalData;
 
-static bool each_result(const as_val *val, void *udata)
+static bool each_result(uint32_t part_id, const as_val *val, void *udata)
 {
 	if (!val) {
 		return false;
@@ -89,6 +89,7 @@ PyObject *AerospikeScan_Results(AerospikeScan *self, PyObject *args,
 
 	as_partition_filter partition_filter = {0};
 	as_partition_filter *partition_filter_p = NULL;
+	as_partitions_status *ps = NULL;
 
 	// For converting predexp.
 	as_predexp_list predexp_list;
@@ -126,8 +127,9 @@ PyObject *AerospikeScan_Results(AerospikeScan *self, PyObject *args,
 		PyObject *py_partition_filter =
 			PyDict_GetItemString(py_policy, "partition_filter");
 		if (py_partition_filter) {
-			if (convert_partition_filter(self->client, py_partition_filter,
+			if (convert_partition_filter(self->client->as, py_partition_filter,
 										 &partition_filter,
+										 &ps,
 										 &err) == AEROSPIKE_OK) {
 				partition_filter_p = &partition_filter;
 			}
@@ -165,9 +167,15 @@ PyObject *AerospikeScan_Results(AerospikeScan *self, PyObject *args,
 	Py_BEGIN_ALLOW_THREADS
 
 	if (partition_filter_p) {
+		if	(ps) {
+			as_partition_filter_set_partitions(partition_filter_p, ps);
+		}
 		aerospike_scan_partitions(self->client->as, &err, scan_policy_p,
 								  &self->scan, partition_filter_p, each_result,
 								  &data);
+		if	(ps) {
+			as_partitions_status_release(ps);
+		}
 	}
 	else if (nodename) {
 		aerospike_scan_node(self->client->as, &err, scan_policy_p, &self->scan,
