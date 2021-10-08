@@ -44,6 +44,7 @@ DARWIN = 'Darwin' in PLATFORM or 'macOS' in PLATFORM
 CWD = os.path.abspath(os.path.dirname(__file__))
 STATIC_SSL = os.getenv('STATIC_SSL')
 SSL_LIB_PATH = os.getenv('SSL_LIB_PATH')
+EVENT_LIB = os.getenv('EVENT_LIB')
 
 ################################################################################
 # GENERIC BUILD SETTINGS
@@ -53,7 +54,7 @@ include_dirs = ['src/include'] + \
     [x for x in os.getenv('CPATH', '').split(':') if len(x) > 0] + \
     ['/usr/local/opt/openssl/include']
 extra_compile_args = [
-    '-std=gnu99', '-g', '-Wall', '-fPIC', '-O0', '-DDEBUG',
+    '-std=gnu99', '-g', '-Wall', '-fPIC', '-O3', '-DDEBUG',
     '-fno-common', '-fno-strict-aliasing', '-Wno-strict-prototypes',
     '-march=nocona',
     '-D_FILE_OFFSET_BITS=64', '-D_REENTRANT',
@@ -62,7 +63,7 @@ extra_compile_args = [
 ]
 extra_objects = []
 extra_link_args = []
-library_dirs = ['/usr/local/opt/openssl/lib']
+library_dirs = ['/usr/local/opt/openssl/lib', '/usr/local/lib']
 libraries = [
     'ssl',
     'crypto',
@@ -134,15 +135,20 @@ with open(os.path.join(CWD, 'VERSION')) as f:
 BASEPATH = os.path.dirname(os.path.abspath(__file__))
 CCLIENT_PATH = os.path.join(BASEPATH, 'aerospike-client-c')
 
+if EVENT_LIB is not None:
+    extra_compile_args = extra_compile_args + ['-DAS_EVENT_LIB_DEFINED']
+    if EVENT_LIB == "libuv":
+        library_dirs = library_dirs + ['/usr/local/lib/']
+        libraries = libraries + ['uv']
+    elif EVENT_LIB == "libevent":
+        library_dirs = library_dirs + ['/usr/local/lib/']
+        libraries = libraries + ['event_core', 'event_pthreads']
+    else:
+        print('Specify the one of event library for async support (--eventlib libuv/libevent).'),
 
 class CClientBuild(build):
 
-    def initialize_options(self):
-        build.initialize_options(self)
-
     def run(self):
-        global library_dirs, libraries, extra_compile_args
-
         if self.force == 1:
             # run original c-extension clean task
             # clean.run(self)
@@ -163,10 +169,14 @@ class CClientBuild(build):
             'make',
             'V=' + str(self.verbose),
         ]
+        if EVENT_LIB is not None:
+            cmd = [
+                'make',
+                'V=' + str(self.verbose),
+                'EVENT_LIB='+EVENT_LIB] 
 
         def compile():
-            print(cmd)
-            print(library_dirs, libraries)
+            print(cmd, library_dirs, libraries)
             call(cmd, cwd=CCLIENT_PATH)
 
         self.execute(compile, [], 'Compiling core aerospike-client-c')

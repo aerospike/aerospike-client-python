@@ -87,7 +87,7 @@ class TestScanPagination(TestBaseClass):
 
         request.addfinalizer(teardown)
 
-    #@pytest.mark.xfail(reason="Might fail, server may return less than what asked for.")
+    @pytest.mark.xfail(reason="Might fail, server may return less than what asked for.")
     def test_scan_pagination_with_existent_ns_and_set(self):
 
         records = []
@@ -98,21 +98,12 @@ class TestScanPagination(TestBaseClass):
             self.partition_1001_count + \
             self.partition_1002_count + \
             self.partition_1003_count
-        # partition_status = [{id:(id, init, done, digest)},(),...]
-        def init(id):
-            return 0;
-        def done(id):
-            return 0;
-        def digest(id):
-            return 0;
-        partition_status = {id:(id, init(id), done(id), digest(id)) for id in range (1000, 1004)}
-        partition_filter = {'begin': 1000, 'count': 4, 'partition_status': partition_status}
-        print(partition_filter)
+        partition_filter = {'begin': 1000, 'count': 4}
         policy = {'max_records': scan_page_size[0],
                 'partition_filter': partition_filter,
                 'records_per_second': 4000}
 
-        def callback(part_id, input_tuple):
+        def callback(part_id,input_tuple):
             if(input_tuple == None):
                 return True #scan complete
             (_, _, record) = input_tuple
@@ -137,7 +128,7 @@ class TestScanPagination(TestBaseClass):
 
         records = []
 
-        def callback(input_tuple):
+        def callback(part_id,input_tuple):
             _, _, record = input_tuple
             records.append(record)
 
@@ -156,7 +147,7 @@ class TestScanPagination(TestBaseClass):
 
         records = []
 
-        def callback(input_tuple):
+        def callback(part_id,input_tuple):
             _, _, record = input_tuple
             records.append(record)
 
@@ -179,7 +170,7 @@ class TestScanPagination(TestBaseClass):
 
         max_records = self.partition_1000_count
 
-        def callback(input_tuple):
+        def callback(part_id,input_tuple):
             _, _, record = input_tuple
             records.append(record)
 
@@ -203,7 +194,7 @@ class TestScanPagination(TestBaseClass):
             self.partition_1002_count + \
             self.partition_1003_count
 
-        def callback(input_tuple):
+        def callback(part_id,input_tuple):
             _, _, record = input_tuple
             records.append(record)
 
@@ -221,7 +212,7 @@ class TestScanPagination(TestBaseClass):
 
         records = []
 
-        def callback(input_tuple):
+        def callback(part_id,input_tuple):
             _, _, record = input_tuple
             records.append(record)
 
@@ -240,7 +231,7 @@ class TestScanPagination(TestBaseClass):
 
         records = []
 
-        def callback(input_tuple):
+        def callback(part_id,input_tuple):
             _, _, record = input_tuple
             records.append(record)
 
@@ -258,7 +249,7 @@ class TestScanPagination(TestBaseClass):
 
         records = []
 
-        def callback(input_tuple):
+        def callback(part_id,input_tuple):
             _, _, record = input_tuple
             if len(records) == 10:
                 return False
@@ -288,7 +279,7 @@ class TestScanPagination(TestBaseClass):
         """
         records = []
 
-        def callback(input_tuple):
+        def callback(part_id,input_tuple):
             _, _, record = input_tuple
             records.append(record)
 
@@ -334,7 +325,7 @@ class TestScanPagination(TestBaseClass):
         scan_obj = self.as_connection.scan(ns, st)
         scan_obj.paginate()
 
-        def callback(input_tuple):
+        def callback(part_id,input_tuple):
             _, _, record = input_tuple
             records.append(record)
 
@@ -347,7 +338,7 @@ class TestScanPagination(TestBaseClass):
     def test_scan_pagination_with_callback_contains_error(self):
         records = []
 
-        def callback(input_tuple):
+        def callback(part_id,input_tuple):
             _, _, record = input_tuple
             raise Exception("callback error")
             records.append(record)

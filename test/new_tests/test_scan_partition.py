@@ -86,7 +86,7 @@ class TestScanPartition(TestBaseClass):
 
         records = []
 
-        def callback(input_tuple):
+        def callback(part_id,input_tuple):
             (_, _, record) = input_tuple
             records.append(record)
             print(record)
@@ -101,7 +101,7 @@ class TestScanPartition(TestBaseClass):
 
         records = []
 
-        def callback(input_tuple):
+        def callback(part_id,input_tuple):
             _, _, record = input_tuple
             records.append(record)
 
@@ -118,7 +118,7 @@ class TestScanPartition(TestBaseClass):
 
         records = []
 
-        def callback(input_tuple):
+        def callback(part_id,input_tuple):
             _, _, record = input_tuple
             records.append(record)
 
@@ -139,7 +139,7 @@ class TestScanPartition(TestBaseClass):
 
         max_records = self.partition_1000_count // 2
 
-        def callback(input_tuple):
+        def callback(part_id,input_tuple):
             _, _, record = input_tuple
             records.append(record)
 
@@ -161,7 +161,7 @@ class TestScanPartition(TestBaseClass):
                         self.partition_1002_count + \
                         self.partition_1003_count
 
-        def callback(input_tuple):
+        def callback(part_id,input_tuple):
             _, _, record = input_tuple
             records.append(record)
 
@@ -177,7 +177,7 @@ class TestScanPartition(TestBaseClass):
 
         records = []
 
-        def callback(input_tuple):
+        def callback(part_id,input_tuple):
             _, _, record = input_tuple
             records.append(record)
 
@@ -194,7 +194,7 @@ class TestScanPartition(TestBaseClass):
 
         records = []
 
-        def callback(input_tuple):
+        def callback(part_id,input_tuple):
             _, _, record = input_tuple
             records.append(record)
 
@@ -210,7 +210,7 @@ class TestScanPartition(TestBaseClass):
 
         records = []
 
-        def callback(input_tuple):
+        def callback(part_id,input_tuple):
             _, _, record = input_tuple
             if len(records) == 10:
                 return False
@@ -237,7 +237,7 @@ class TestScanPartition(TestBaseClass):
         """
         records = []
 
-        def callback(input_tuple):
+        def callback(part_id,input_tuple):
             _, _, record = input_tuple
             records.append(record)
 
@@ -277,7 +277,7 @@ class TestScanPartition(TestBaseClass):
         records = []
         scan_obj = self.as_connection.scan(ns, st)
 
-        def callback(input_tuple):
+        def callback(part_id,input_tuple):
             _, _, record = input_tuple
             records.append(record)
 
@@ -289,7 +289,7 @@ class TestScanPartition(TestBaseClass):
     def test_scan_partition_with_callback_contains_error(self):
         records = []
 
-        def callback(input_tuple):
+        def callback(part_id,input_tuple):
             _, _, record = input_tuple
             raise Exception("callback error")
             records.append(record)
@@ -325,3 +325,79 @@ class TestScanPartition(TestBaseClass):
 
         err_code = err_info.value.code
         assert err_code == AerospikeStatus.AEROSPIKE_ERR_CLIENT
+
+    #@pytest.mark.xfail(reason="Might fail, server may return less than what asked for.")
+    def test_scan_partition_status_with_existent_ns_and_set(self):
+
+        records = []
+        scan_page_size = [5]
+        scan_count = [0]
+        scan_pages = [5]
+        max_records = self.partition_1000_count + \
+            self.partition_1001_count + \
+            self.partition_1002_count + \
+            self.partition_1003_count
+        break_count = [5]
+        # partition_status = [{id:(id, init, done, digest)},(),...]
+        def init(id):
+            return 0;
+        def done(id):
+            return 0;
+        def digest(id):
+            return bytearray([0]*20);
+        partition_status = {id:(id, init(id), done(id), digest(id)) for id in range (0, 4096)}
+        partition_filter = {'begin': 0, 'count': 4096, 'partition_status': partition_status}
+        #print(partition_filter)
+        policy = {'max_records': scan_page_size[0],
+                'partition_filter': partition_filter,
+                'records_per_second': 4000}
+        def callback(part_id, input_tuple):
+            if(input_tuple == None):
+                print("callback: NO record")
+                return True #scan complete
+            (key, _, record) = input_tuple
+            partition_status.update({part_id:(part_id, 1, 0, key[3])})
+            print("callback:", part_id, input_tuple, key[3], partition_status.get(part_id));
+            records.append(record)
+            scan_count[0] = scan_count[0] + 1
+            break_count[0] = break_count[0] - 1
+            if(break_count[0] == 0):
+                return False 
+
+        scan_obj = self.as_connection.scan(self.test_ns, self.test_set)
+
+        i = 0
+        for i in range(scan_pages[0]):
+            print("calling scan_obj.foreach")
+            scan_obj.foreach(callback, policy)
+            if scan_obj.is_done() == True: 
+                print(f"scan completed iter:{i}")
+                break
+            print("bc:", break_count[0])
+            if(break_count[0] == 0):
+                break
+
+        assert len(records) == scan_count[0]
+
+        scan_page_size = [1000]
+        scan_count[0] = 0
+        break_count[0] = 1000
+        partition_filter = {'begin': 0, 'count': 4096, 'partition_status': partition_status}
+        #print(partition_filter)
+        policy = {'max_records': scan_page_size[0],
+                'partition_filter': partition_filter,
+                'records_per_second': 4000}
+
+        new_scan_obj = self.as_connection.scan(self.test_ns, self.test_set)
+        i = 0
+        for i in range(scan_pages[0]):
+            print("calling new_scan_obj.foreach")
+            new_scan_obj.foreach(callback, policy)
+            #assert scan_page_size[0] == scan_count[0]
+            if new_scan_obj.is_done() == True: 
+                print(f"scan completed iter:{i}")
+                break
+            if(break_count[0] == 0):
+                break
+
+        assert len(records) == max_records

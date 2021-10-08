@@ -20,7 +20,7 @@
 #include <aerospike/aerospike_key.h>
 #include <aerospike/as_error.h>
 #include <aerospike/as_exp.h>
-
+ 
 #include "client.h"
 #include "conversions.h"
 
@@ -36,7 +36,7 @@ parts_create(uint16_t part_begin, uint16_t part_count, const as_digest* digest);
 as_status convert_partition_filter(AerospikeClient *self,
 								   PyObject *py_partition_filter,
 								   as_partition_filter *filter, 
-								   as_partitions_status **ps,
+								   as_partitions_status **pss,
 								   as_error *err)
 {
 
@@ -46,6 +46,8 @@ as_status convert_partition_filter(AerospikeClient *self,
 	PyObject *parts_stat = PyDict_GetItemString(py_partition_filter, "partition_status");
 	int parts_valid = 0;
 	as_partitions_status *part_all = NULL;
+	as_partition_status *ps = NULL;
+	uint16_t i = 0;
 
 	if (parts_stat && PyDict_Check(parts_stat)) {
 		parts_valid = 1;
@@ -79,8 +81,8 @@ as_status convert_partition_filter(AerospikeClient *self,
 		part_all->part_begin = filter->begin;
 		part_all->part_count = filter->count;
 
-		for (uint16_t i = 0; i < part_all->part_count; i++) {
-			as_partition_status* ps = &part_all->parts[i];
+		for (i = 0; i < part_all->part_count; i++) {
+			ps = &part_all->parts[i];
 			ps->part_id = filter->begin + i;
 			ps->done = false;
 			ps->digest.init = false;
@@ -90,20 +92,30 @@ as_status convert_partition_filter(AerospikeClient *self,
 			PyObject *key = PyLong_FromLong(ps->part_id);
 			PyObject *id = PyDict_GetItem(parts_stat, key);
 
-			if (!id || !PyTuple_Check(id)) continue;
+			if (!id || !PyTuple_Check(id)) {
+				printf("invalid id for part_id: %d\n", ps->part_id);
+				continue;
+			}
 
 			PyObject *init = PyTuple_GetItem(id, 1);
 			if (init && PyLong_Check(init)) {
 				ps->digest.init = PyInt_AsLong(init);
+			} else {
+				printf("invalid init for part_id: %d\n", ps->part_id);
 			}
 			PyObject *done = PyTuple_GetItem(id, 2);
 			if (done && PyLong_Check(done)) {
 				ps->done = (bool) PyInt_AsLong(done);
+			} else {
+				printf("invalid done for part_id: %d\n", ps->part_id);
 			}
 			PyObject *value = PyTuple_GetItem(id, 3);
-			if (value && PyString_Check(value)) {
-				strncpy((char *)ps->digest.value, PyString_AsString(value),
-						AS_DIGEST_VALUE_SIZE);
+			if (PyByteArray_Check(value)) {
+				uint8_t *bytes_array = (uint8_t *)PyByteArray_AsString(value);
+				//uint32_t bytes_array_len = (uint32_t)PyByteArray_Size(value);
+				memcpy(ps->digest.value, bytes_array, AS_DIGEST_VALUE_SIZE);
+			} else {
+				printf("invalid value for part_id: %d\n", ps->part_id);
 			}
 		}
 	}
@@ -113,7 +125,7 @@ as_status convert_partition_filter(AerospikeClient *self,
 	}
 
 	if (part_all)
-		*ps = part_all;
+		*pss = part_all;
 
 	return err->code;
 }
