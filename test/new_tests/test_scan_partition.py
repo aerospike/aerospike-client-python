@@ -85,7 +85,11 @@ class TestScanPartition(TestBaseClass):
     def test_scan_partition_with_existent_ns_and_set(self):
 
         records = []
-
+        partition_filter = {'begin': 1000, 'count': 1}
+        policy = {'max_retries': 100,
+                        'max_records': 1000,
+                        'partition_filter': partition_filter,
+                        'records_per_second': 4000}
         def callback(part_id,input_tuple):
             (_, _, record) = input_tuple
             records.append(record)
@@ -93,7 +97,7 @@ class TestScanPartition(TestBaseClass):
 
         scan_obj = self.as_connection.scan(self.test_ns, self.test_set)
 
-        scan_obj.foreach(callback, {'partition_filter': {'begin': 1000, 'count': 1}})
+        scan_obj.foreach(callback, policy)
 
         assert len(records) == self.partition_1000_count
 

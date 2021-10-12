@@ -238,7 +238,7 @@ static as_status add_op_bit_resize(AerospikeClient *self, as_error *err,
 {
 	as_bit_policy bit_policy;
 	as_bit_resize_flags flags = AS_BIT_RESIZE_DEFAULT;
-	uint32_t new_size;
+	uint32_t new_size = 0;
 
 	if (get_bit_policy(err, op_dict, &bit_policy) != AEROSPIKE_OK) {
 		return err->code;
@@ -268,10 +268,10 @@ static as_status add_op_bit_set(AerospikeClient *self, as_error *err, char *bin,
 								int serializer_type)
 {
 	as_bit_policy bit_policy;
-	int64_t bit_offset;
-	uint32_t bit_size;
-	uint32_t value_byte_size;
-	uint8_t *value;
+	int64_t bit_offset = 0;
+	uint32_t bit_size = 0;
+	uint32_t value_byte_size = 0;
+	uint8_t *value = NULL;
 
 	if (get_bit_policy(err, op_dict, &bit_policy) != AEROSPIKE_OK) {
 		return err->code;
@@ -314,8 +314,8 @@ static as_status add_op_bit_remove(AerospikeClient *self, as_error *err,
 								   int serializer_type)
 {
 	as_bit_policy bit_policy;
-	int64_t byte_offset;
-	uint32_t byte_size;
+	int64_t byte_offset = 0;
+	uint32_t byte_size = 0;
 
 	if (get_bit_policy(err, op_dict, &bit_policy) != AEROSPIKE_OK) {
 		return err->code;
@@ -346,8 +346,8 @@ static as_status add_op_bit_count(AerospikeClient *self, as_error *err,
 								  as_static_pool *static_pool,
 								  int serializer_type)
 {
-	int64_t bit_offset;
-	uint32_t bit_size;
+	int64_t bit_offset = 0;
+	uint32_t bit_size = 0;
 
 	if (get_int64_t(err, BIT_OFFSET_KEY, op_dict, &bit_offset) !=
 		AEROSPIKE_OK) {
@@ -373,10 +373,10 @@ static as_status add_op_bit_add(AerospikeClient *self, as_error *err, char *bin,
 								int serializer_type)
 {
 	as_bit_policy bit_policy;
-	int64_t bit_offset;
-	uint32_t bit_size;
-	int64_t value;
-	bool sign;
+	int64_t bit_offset = 0;
+	uint32_t bit_size = 0;
+	int64_t value = 0;
+	bool sign = false;
 	as_bit_overflow_action action;
 
 	if (get_bit_policy(err, op_dict, &bit_policy) != AEROSPIKE_OK) {
@@ -421,10 +421,10 @@ static as_status add_op_bit_and(AerospikeClient *self, as_error *err, char *bin,
 								int serializer_type)
 {
 	as_bit_policy bit_policy;
-	int64_t bit_offset;
-	uint32_t bit_size;
-	uint32_t value_byte_size;
-	uint8_t *value;
+	int64_t bit_offset = 0;
+	uint32_t bit_size = 0;
+	uint32_t value_byte_size = 0;
+	uint8_t *value = NULL;
 
 	if (get_bit_policy(err, op_dict, &bit_policy) != AEROSPIKE_OK) {
 		return err->code;
@@ -465,8 +465,8 @@ static as_status add_op_bit_get(AerospikeClient *self, as_error *err, char *bin,
 								as_static_pool *static_pool,
 								int serializer_type)
 {
-	int64_t bit_offset;
-	uint32_t bit_size;
+	int64_t bit_offset = 0;
+	uint32_t bit_size = 0;
 
 	if (get_int64_t(err, BIT_OFFSET_KEY, op_dict, &bit_offset) !=
 		AEROSPIKE_OK) {
@@ -492,9 +492,9 @@ static as_status add_op_bit_get_int(AerospikeClient *self, as_error *err,
 									as_static_pool *static_pool,
 									int serializer_type)
 {
-	int64_t bit_offset;
-	uint32_t bit_size;
-	bool sign;
+	int64_t bit_offset = 0;
+	uint32_t bit_size = 0;
+	bool sign = false;
 
 	if (get_bool_from_pyargs(err, SIGN_KEY, op_dict, &sign) != AEROSPIKE_OK) {
 		return err->code;
@@ -526,9 +526,9 @@ static as_status add_op_bit_insert(AerospikeClient *self, as_error *err,
 								   int serializer_type)
 {
 	as_bit_policy bit_policy;
-	int64_t byte_offset;
-	uint32_t value_byte_size;
-	uint8_t *value;
+	int64_t byte_offset = 0;
+	uint32_t value_byte_size = 0;
+	uint8_t *value = NULL;
 
 	if (get_bit_policy(err, op_dict, &bit_policy) != AEROSPIKE_OK) {
 		return err->code;
@@ -565,9 +565,9 @@ static as_status add_op_bit_lscan(AerospikeClient *self, as_error *err,
 								  as_static_pool *static_pool,
 								  int serializer_type)
 {
-	int64_t bit_offset;
-	uint32_t bit_size;
-	bool value;
+	int64_t bit_offset = 0;
+	uint32_t bit_size = 0;
+	bool value = false;
 
 	if (get_bool_from_pyargs(err, VALUE_KEY, op_dict, &value) != AEROSPIKE_OK) {
 		return err->code;
@@ -598,9 +598,9 @@ static as_status add_op_bit_lshift(AerospikeClient *self, as_error *err,
 								   int serializer_type)
 {
 	as_bit_policy bit_policy;
-	int64_t bit_offset;
-	uint32_t bit_size;
-	uint32_t shift;
+	int64_t bit_offset = 0;
+	uint32_t bit_size = 0;
+	uint32_t shift = 0;
 
 	if (get_bit_policy(err, op_dict, &bit_policy) != AEROSPIKE_OK) {
 		return err->code;
@@ -636,8 +636,8 @@ static as_status add_op_bit_not(AerospikeClient *self, as_error *err, char *bin,
 								int serializer_type)
 {
 	as_bit_policy bit_policy;
-	int64_t bit_offset;
-	uint32_t bit_size;
+	int64_t bit_offset = 0;
+	uint32_t bit_size = 0;
 
 	if (get_bit_policy(err, op_dict, &bit_policy) != AEROSPIKE_OK) {
 		return err->code;
@@ -667,10 +667,10 @@ static as_status add_op_bit_or(AerospikeClient *self, as_error *err, char *bin,
 							   as_static_pool *static_pool, int serializer_type)
 {
 	as_bit_policy bit_policy;
-	int64_t bit_offset;
-	uint32_t bit_size;
-	uint32_t value_byte_size;
-	uint8_t *value;
+	int64_t bit_offset = 0;
+	uint32_t bit_size = 0;
+	uint32_t value_byte_size = 0;
+	uint8_t *value = NULL;
 
 	if (get_bit_policy(err, op_dict, &bit_policy) != AEROSPIKE_OK) {
 		return err->code;
@@ -712,9 +712,9 @@ static as_status add_op_bit_rscan(AerospikeClient *self, as_error *err,
 								  as_static_pool *static_pool,
 								  int serializer_type)
 {
-	int64_t bit_offset;
-	uint32_t bit_size;
-	bool value;
+	int64_t bit_offset = 0;
+	uint32_t bit_size = 0;
+	bool value = false;
 
 	if (get_bool_from_pyargs(err, VALUE_KEY, op_dict, &value) != AEROSPIKE_OK) {
 		return err->code;
@@ -745,9 +745,9 @@ static as_status add_op_bit_rshift(AerospikeClient *self, as_error *err,
 								   int serializer_type)
 {
 	as_bit_policy bit_policy;
-	int64_t bit_offset;
-	uint32_t bit_size;
-	uint32_t shift;
+	int64_t bit_offset = 0;
+	uint32_t bit_size = 0;
+	uint32_t shift = 0;
 
 	if (get_bit_policy(err, op_dict, &bit_policy) != AEROSPIKE_OK) {
 		return err->code;
@@ -784,10 +784,10 @@ static as_status add_op_bit_subtract(AerospikeClient *self, as_error *err,
 									 int serializer_type)
 {
 	as_bit_policy bit_policy;
-	int64_t bit_offset;
-	uint32_t bit_size;
-	int64_t value;
-	bool sign;
+	int64_t bit_offset = 0;
+	uint32_t bit_size = 0;
+	int64_t value = 0;
+	bool sign = 0;
 	as_bit_overflow_action action;
 
 	if (get_bit_policy(err, op_dict, &bit_policy) != AEROSPIKE_OK) {
@@ -832,10 +832,10 @@ static as_status add_op_bit_xor(AerospikeClient *self, as_error *err, char *bin,
 								int serializer_type)
 {
 	as_bit_policy bit_policy;
-	int64_t bit_offset;
-	uint32_t bit_size;
-	uint32_t value_byte_size;
-	uint8_t *value;
+	int64_t bit_offset = 0;
+	uint32_t bit_size = 0;
+	uint32_t value_byte_size = 0;
+	uint8_t *value = NULL;
 
 	if (get_bit_policy(err, op_dict, &bit_policy) != AEROSPIKE_OK) {
 		return err->code;
@@ -956,7 +956,7 @@ static as_status get_uint8t_from_pyargs(as_error *err, char *key,
 static as_status get_uint32t_from_pyargs(as_error *err, char *key,
 										 PyObject *op_dict, uint32_t *value)
 {
-	int64_t value64;
+	int64_t value64 = 0;
 
 	if (get_int64_t(err, key, op_dict, &value64) != AEROSPIKE_OK) {
 		return err->code;

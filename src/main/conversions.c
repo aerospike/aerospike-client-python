@@ -1776,11 +1776,11 @@ as_status key_to_pyobject(as_error *err, const as_key *key, PyObject **obj)
 	PyObject *py_key = NULL;
 	PyObject *py_digest = NULL;
 
-	if (key->ns && strlen(key->ns) > 0) {
+	if (strlen(key->ns) > 0) {
 		py_namespace = PyString_FromString(key->ns);
 	}
 
-	if (key->set && strlen(key->set) > 0) {
+	if (strlen(key->set) > 0) {
 		py_set = PyString_FromString(key->set);
 	}
 

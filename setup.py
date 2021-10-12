@@ -54,7 +54,7 @@ include_dirs = ['src/include'] + \
     [x for x in os.getenv('CPATH', '').split(':') if len(x) > 0] + \
     ['/usr/local/opt/openssl/include']
 extra_compile_args = [
-    '-std=gnu99', '-g', '-Wall', '-fPIC', '-O3', '-DDEBUG',
+    '-std=gnu99', '-g', '-Wall', '-fPIC', '-O1', '-DDEBUG',
     '-fno-common', '-fno-strict-aliasing', '-Wno-strict-prototypes',
     '-march=nocona',
     '-D_FILE_OFFSET_BITS=64', '-D_REENTRANT',
@@ -135,16 +135,20 @@ with open(os.path.join(CWD, 'VERSION')) as f:
 BASEPATH = os.path.dirname(os.path.abspath(__file__))
 CCLIENT_PATH = os.path.join(BASEPATH, 'aerospike-client-c')
 
+if EVENT_LIB is None or EVENT_LIB == "":
+    EVENT_LIB = "libuv"
+
 if EVENT_LIB is not None:
-    extra_compile_args = extra_compile_args + ['-DAS_EVENT_LIB_DEFINED']
     if EVENT_LIB == "libuv":
+        extra_compile_args = extra_compile_args + ['-DAS_EVENT_LIB_DEFINED']
         library_dirs = library_dirs + ['/usr/local/lib/']
         libraries = libraries + ['uv']
     elif EVENT_LIB == "libevent":
+        extra_compile_args = extra_compile_args + ['-DAS_EVENT_LIB_DEFINED']
         library_dirs = library_dirs + ['/usr/local/lib/']
         libraries = libraries + ['event_core', 'event_pthreads']
     else:
-        print('Specify the one of event library for async support (--eventlib libuv/libevent).'),
+        sys.exit('Specify the one of event library for async support (EVENT_LIB=libuv/libevent/libev).'),
 
 class CClientBuild(build):
 

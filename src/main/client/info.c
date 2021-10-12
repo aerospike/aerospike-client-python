@@ -380,7 +380,7 @@ PyObject *AerospikeClient_Info(AerospikeClient *self, PyObject *args,
 		&info_callback_udata);
 	Py_END_ALLOW_THREADS
 
-	if (&info_callback_udata.error.code != AEROSPIKE_OK) {
+	if (info_callback_udata.error.code != AEROSPIKE_OK) {
 		as_error_update(&err, err.code, NULL);
 		goto CLEANUP;
 	}
@@ -499,7 +499,7 @@ static PyObject *AerospikeClient_InfoAll_Invoke(AerospikeClient *self,
 		&info_callback_udata);
 	Py_END_ALLOW_THREADS
 
-	if (&info_callback_udata.error.code != AEROSPIKE_OK) {
+	if (info_callback_udata.error.code != AEROSPIKE_OK) {
 		as_error_update(&err, err.code, NULL);
 		goto CLEANUP;
 	}
