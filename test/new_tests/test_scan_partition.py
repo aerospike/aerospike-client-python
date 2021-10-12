@@ -252,19 +252,20 @@ class TestScanPartition(TestBaseClass):
         assert len(records) == self.partition_1001_count
 
         records = []
-        scan_obj.foreach(callback, {'partition_filter': {'begin': 1001, 'count': 1}})
+        scan_obj2 = self.as_connection.scan(self.test_ns, self.test_set)
+        scan_obj2.foreach(callback, {'partition_filter': {'begin': 1001, 'count': 1}})
 
         assert len(records) == self.partition_1001_count
 
     def test_scan_partition_with_multiple_results_call_on_same_scan_object(self):
 
         scan_obj = self.as_connection.scan(self.test_ns, self.test_set)
-
         records = scan_obj.results({'partition_filter': {'begin': 1002, 'count': 1}})
         assert len(records) == self.partition_1002_count
 
+        scan_obj2 = self.as_connection.scan(self.test_ns, self.test_set)
         records = []
-        records = scan_obj.results({'partition_filter': {'begin': 1002, 'count': 1}})
+        records = scan_obj2.results({'partition_filter': {'begin': 1002, 'count': 1}})
         assert len(records) == self.partition_1002_count
 
     def test_scan_partition_without_any_parameter(self):
