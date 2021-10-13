@@ -350,8 +350,8 @@ class TestScanPartition(TestBaseClass):
             return 0;
         def digest(id):
             return bytearray([0]*20);
-        partition_status = {id:(id, init(id), done(id), digest(id)) for id in range (0, 4096)}
-        partition_filter = {'begin': 0, 'count': 4096, 'partition_status': partition_status}
+        partition_status = {id:(id, init(id), done(id), digest(id)) for id in range (0, 4)}
+        partition_filter = {'begin': 1000, 'count': 4, 'partition_status': partition_status}
         #print(partition_filter)
         policy = {'max_records': scan_page_size[0],
                 'partition_filter': partition_filter,
@@ -387,7 +387,7 @@ class TestScanPartition(TestBaseClass):
         scan_page_size = [1000]
         scan_count[0] = 0
         break_count[0] = 1000
-        partition_filter = {'begin': 0, 'count': 4096, 'partition_status': partition_status}
+        partition_filter = {'begin': 1000, 'count': 4, 'partition_status': partition_status}
         #print(partition_filter)
         policy = {'max_records': scan_page_size[0],
                 'partition_filter': partition_filter,
