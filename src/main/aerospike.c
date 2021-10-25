@@ -99,6 +99,9 @@ static AerospikeConstants auth_mode_constants[] = {
 #define AUTH_MODE_CONSTANTS_ARR_SIZE                                            \
 	(sizeof(auth_mode_constants) / sizeof(AerospikeConstants))
 
+extern bool log_cb(as_log_level level, const char *func, const char *file,
+				   uint32_t line, const char *fmt, ...);
+
 struct Aerospike_State{
 	PyObject			*exception;
 	PyTypeObject 		*client;
@@ -231,6 +234,9 @@ MOD_INIT(aerospike)
 	as_event_create_loops(1);
 	async_support = true;
 #endif
+
+	// Register callback to C-SDK
+	as_log_set_callback((as_log_callback)log_cb);
 
 	return MOD_SUCCESS_VAL(aerospike);
 }
