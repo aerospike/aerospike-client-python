@@ -308,7 +308,7 @@ class TestScanPagination(TestBaseClass):
         records = []
         records = scan_obj.results(
             {'partition_filter': {'begin': 1002, 'count': 1}})
-        assert len(records) == self.partition_1002_count
+        assert len(records) == 0
 
     def test_scan_pagination_without_any_parameter(self):
 

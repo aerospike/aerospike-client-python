@@ -37,10 +37,10 @@ class TestKV(object):
 
         self.record_count = 0
 
-        def count_records(tuple):
+        def count_records(part_id, tuple):
             self.record_count += 1
 
-        def remove_record(input_tuple):
+        def remove_record(part_id, input_tuple):
             key, _, _ = input_tuple
             self.as_connection.remove(key)
 
@@ -121,13 +121,13 @@ class TestKV(object):
 
         self.record_count = 0
 
-        def count_records(tuple):
+        def count_records(part_id, tuple):
             self.record_count += 1
 
         key = ("test", "unittest", "1")
 
         # cleanup records
-        def each_record(input_tuple):
+        def each_record(part_id, input_tuple):
             key, _, _ = input_tuple
             self.as_connection.remove(key)
 

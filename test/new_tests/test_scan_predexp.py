@@ -60,7 +60,7 @@ class TestScan(TestBaseClass):
             as_predexp.predexp_not()
         ]
 
-        def callback(input_tuple):
+        def callback(part_id, input_tuple):
             _, _, bins = input_tuple
             records.append(bins)
 
@@ -84,7 +84,7 @@ class TestScan(TestBaseClass):
             as_predexp.predexp_not()
         ]
 
-        def callback(input_tuple):
+        def callback(part_id, input_tuple):
             _, _, bins = input_tuple
             records.append(bins)
 
@@ -129,7 +129,7 @@ class TestScan(TestBaseClass):
             as_predexp.predexp_not()
         ]
 
-        def callback(input_tuple):
+        def callback(part_id, input_tuple):
             _, _, bins = input_tuple
             records.append(bins)
 

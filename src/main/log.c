@@ -106,7 +106,7 @@ CLEANUP:
 	return PyLong_FromLong(status);
 }
 
-static bool log_cb(as_log_level level, const char *func, const char *file,
+bool log_cb(as_log_level level, const char *func, const char *file,
 				   uint32_t line, const char *fmt, ...)
 {
 
