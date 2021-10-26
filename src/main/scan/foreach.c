@@ -20,6 +20,7 @@
 #include <aerospike/aerospike_scan.h>
 #include <aerospike/as_error.h>
 #include <aerospike/as_scan.h>
+#include <aerospike/as_partition.h>
 
 #include "client.h"
 #include "conversions.h"
@@ -34,12 +35,20 @@ typedef struct {
 	AerospikeClient *client;
 } LocalData;
 
-static bool each_result(uint32_t part_id, const as_val *val, void *udata)
+static bool each_result(const as_val *val, void *udata)
 {
 	bool rval = true;
 
 	if (!val) {
 		return false;
+	}
+
+	uint32_t part_id;
+
+	as_record* rec = as_record_fromval(val);
+ 
+	if (rec->key.digest.init) {
+		part_id = as_partition_getid(rec->key.digest.value, CLUSTER_NPARTITIONS);
 	}
 
 	// Extract callback user-data
