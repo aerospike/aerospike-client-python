@@ -43,7 +43,7 @@ static bool each_result(const as_val *val, void *udata)
 		return false;
 	}
 
-	uint32_t part_id;
+	uint32_t part_id = 0;
 
 	as_record* rec = as_record_fromval(val);
  
