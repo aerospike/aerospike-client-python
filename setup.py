@@ -52,7 +52,8 @@ EVENT_LIB = os.getenv('EVENT_LIB')
 
 include_dirs = ['src/include'] + \
     [x for x in os.getenv('CPATH', '').split(':') if len(x) > 0] + \
-    ['/usr/local/opt/openssl/include']
+    ['/usr/local/opt/openssl/include'] + \
+    ['aerospike-client-c/modules/common/src/include']
 extra_compile_args = [
     '-std=gnu99', '-g', '-Wall', '-fPIC', '-O1', '-DDEBUG',
     '-fno-common', '-fno-strict-aliasing', '-Wno-strict-prototypes',
@@ -147,6 +148,10 @@ if EVENT_LIB is not None:
         extra_compile_args = extra_compile_args + ['-DAS_EVENT_LIB_DEFINED']
         library_dirs = library_dirs + ['/usr/local/lib/']
         libraries = libraries + ['event_core', 'event_pthreads']
+    elif EVENT_LIB == "libev":
+        extra_compile_args = extra_compile_args + ['-DAS_EVENT_LIB_DEFINED']
+        library_dirs = library_dirs + ['/usr/local/lib/']
+        libraries = libraries + ['ev']
     else:
         sys.exit('Specify the one of event library for async support (EVENT_LIB=libuv/libevent/libev).'),
 
