@@ -26,6 +26,7 @@ except:
 class SomeClass(object):
     pass
 
+aerospike.init_async()
 
 @pytest.mark.usefixtures("as_connection")
 class TestPut():

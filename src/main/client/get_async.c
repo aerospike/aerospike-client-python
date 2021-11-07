@@ -189,8 +189,17 @@ PyObject *AerospikeClient_Get_Async(AerospikeClient *self, PyObject *args,
 	PyObject *py_key = NULL;
 	PyObject *py_policy = NULL;
 
-	if (!async_support)
+	if (!async_support) {
+		as_error err;
+		as_error_init(&err);
+		as_error_update(&err, AEROSPIKE_ERR, "Support for async is disabled, build software with async option");
+		PyObject *py_err = NULL, *exception_type = NULL;
+		error_to_pyobject(&err, &py_err);
+		exception_type = raise_exception(&err);
+		PyErr_SetObject(exception_type, py_err);
+		Py_DECREF(py_err);
 		return NULL;
+	}
 
 	// Python Function Keyword Arguments
 	static char *kwlist[] = {"get_callback", "key", "policy", NULL};

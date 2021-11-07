@@ -50,6 +50,9 @@ config = {\n\
 }\n\
 client = aerospike.client(config)");
 
+PyDoc_STRVAR(init_async_doc, "init_async() -> initialize aerospike async eventloop library\n\
+aerospike.init_async()");
+
 static PyMethodDef Aerospike_Methods[] = {
 
 	//Serialization
@@ -60,6 +63,8 @@ static PyMethodDef Aerospike_Methods[] = {
 	{"unset_serializers", (PyCFunction)AerospikeClient_Unset_Serializers,
 	 METH_VARARGS | METH_KEYWORDS, "Unsets the serializer and deserializer"},
 
+	{"init_async", (PyCFunction)AerospikeInitAsync, METH_VARARGS | METH_KEYWORDS,
+	 init_async_doc},
 	{"client", (PyCFunction)AerospikeClient_New, METH_VARARGS | METH_KEYWORDS,
 	 client_doc},
 	{"set_log_level", (PyCFunction)Aerospike_Set_Log_Level,
@@ -230,13 +235,27 @@ MOD_INIT(aerospike)
 	PyModule_AddObject(aerospike, "CDTInfinite", (PyObject *)infinite_object);
 	Aerospike_State(aerospike)->infinite_object = infinite_object;
 
-#if AS_EVENT_LIB_DEFINED
-	as_event_create_loops(1);
-	async_support = true;
-#endif
-
 	// Register callback to C-SDK
 	as_log_set_callback((as_log_callback)log_cb);
 
 	return MOD_SUCCESS_VAL(aerospike);
+}
+
+PyObject *AerospikeInitAsync(PyObject *self, PyObject *args, PyObject *kwds)
+{
+#if AS_EVENT_LIB_DEFINED
+	as_event_create_loops(1);
+	async_support = true;
+#else
+	as_error err;
+	as_error_init(&err);
+	as_error_update(&err, AEROSPIKE_ERR, "Support for async is disabled, build software with async option");
+	PyObject *py_err = NULL, *exception_type = NULL;
+	error_to_pyobject(&err, &py_err);
+	exception_type = raise_exception(&err);
+	PyErr_SetObject(exception_type, py_err);
+	Py_DECREF(py_err);
+	return NULL;
+#endif
+	return PyLong_FromLong(0);
 }

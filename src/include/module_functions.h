@@ -25,3 +25,10 @@
  *
  */
 PyObject *Aerospike_Calc_Digest(PyObject *self, PyObject *args, PyObject *kwds);
+
+/*******************************************************************************
+ * Aerospike initialization
+ ******************************************************************************/
+
+PyObject *AerospikeInitAsync(PyObject *self, PyObject *args, PyObject *kwds);
+

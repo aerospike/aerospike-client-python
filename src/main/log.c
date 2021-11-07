@@ -106,17 +106,22 @@ CLEANUP:
 	return PyLong_FromLong(status);
 }
 
+volatile int log_counter = 0;
+
 bool log_cb(as_log_level level, const char *func, const char *file,
 				   uint32_t line, const char *fmt, ...)
 {
 
 	char msg[1024];
 	va_list ap;
+	
+	int counter = __sync_fetch_and_add(&log_counter, 1);
+
 	va_start(ap, fmt);
 	vsnprintf(msg, 1024, fmt, ap);
 	va_end(ap);
 
-	printf("%s\n", msg);
+	printf("%d:%d %s\n", getpid(), counter, msg);
 
 	return true;
 }
