@@ -43,14 +43,6 @@ static bool each_result(const as_val *val, void *udata)
 		return false;
 	}
 
-	uint32_t part_id;
-
-	as_record* rec = as_record_fromval(val);
- 
-	if (rec->key.digest.init) {
-		part_id = as_partition_getid(rec->key.digest.value, CLUSTER_NPARTITIONS);
-	}
-
 	PyObject *py_results = NULL;
 	LocalData *data = (LocalData *)udata;
 	py_results = data->py_results;

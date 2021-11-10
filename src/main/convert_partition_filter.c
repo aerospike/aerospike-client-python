@@ -24,8 +24,32 @@
 #include "client.h"
 #include "conversions.h"
 
-extern as_partitions_status*
-parts_create(uint16_t part_begin, uint16_t part_count, const as_digest* digest);
+as_partitions_status*
+parts_setup(uint16_t part_begin, uint16_t part_count, const as_digest* digest)
+{
+	as_partitions_status* parts_all = cf_malloc(sizeof(as_partitions_status) +
+											   (sizeof(as_partition_status) * part_count));
+
+	memset(parts_all, 0, 
+						sizeof(as_partitions_status) +
+						(sizeof(as_partition_status) * part_count));
+	parts_all->ref_count = 1;
+	parts_all->part_begin = part_begin;
+	parts_all->part_count = part_count;
+	parts_all->done = false;
+
+	for (uint16_t i = 0; i < part_count; i++) {
+		as_partition_status* ps = &parts_all->parts[i];
+		ps->part_id = part_begin + i;
+		ps->done = false;
+		ps->digest.init = false;
+	}
+
+	if (digest && digest->init) {
+		parts_all->parts[0].digest = *digest;
+	}
+	return parts_all;
+}
 
 /*
 * convert_partition_filter
@@ -75,7 +99,7 @@ as_status convert_partition_filter(AerospikeClient *self,
 						AS_DIGEST_VALUE_SIZE);
 			}
 		}
-		part_all = parts_create(
+		part_all = parts_setup(
 								filter->begin, filter->count, //cluster->n_partitions, 
 								&filter->digest);
 		part_all->part_begin = filter->begin;
