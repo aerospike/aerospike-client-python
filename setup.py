@@ -137,7 +137,7 @@ BASEPATH = os.path.dirname(os.path.abspath(__file__))
 CCLIENT_PATH = os.path.join(BASEPATH, 'aerospike-client-c')
 
 if EVENT_LIB is None or EVENT_LIB == "":
-    EVENT_LIB = "libuv"
+    EVENT_LIB = "libevent"
 
 if EVENT_LIB is not None:
     if EVENT_LIB == "libuv":
