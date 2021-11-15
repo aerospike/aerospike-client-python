@@ -173,6 +173,8 @@ def as_connection(request):
                         (int(versionlist[0]) > 3) or
                         (int(versionlist[0]) == 3 and int(versionlist[1]) >= 7)):
                     request.cls.skip_old_server = False
+                TestBaseClass.major_ver = int(versionlist[0])
+                TestBaseClass.minor_ver = int(versionlist[1])
 
     request.cls.as_connection = as_client
 

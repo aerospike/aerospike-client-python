@@ -106,6 +106,12 @@ class TestQueryApply(object):
         """
         Ensure that Query.execute_background() gets applied to records that match the predexp
         """
+        from .test_base_class import TestBaseClass
+        if TestBaseClass.major_ver >= 5 and TestBaseClass.minor_ver >=7:
+            print("TestBaseClass.major_ver:", TestBaseClass.major_ver, "TestBaseClass.minor_ver:", TestBaseClass.minor_ver)
+            pytest.skip(
+                'It deprecated and it only applies to < 5.7 earlier and enterprise edition')
+
         test_bin = 'tpred'
         keys = [(TEST_NS, TEST_SET, i) for i in range(500)]
 
@@ -173,6 +179,12 @@ class TestQueryApply(object):
         """
         Ensure that Query.execute_background() applies ops to records that match the expressions.
         """
+        from .test_base_class import TestBaseClass
+        if TestBaseClass.major_ver >= 5 and TestBaseClass.minor_ver >=7:
+            print("TestBaseClass.major_ver:", TestBaseClass.major_ver, "TestBaseClass.minor_ver:", TestBaseClass.minor_ver)
+            pytest.skip(
+                'It deprecated and it only applies to < 5.7 earlier and enterprise edition')
+
         test_bin = 'tops_preds'
         keys = [(TEST_NS, TEST_SET, i) for i in range(500)]
 
@@ -297,6 +309,12 @@ class TestQueryApply(object):
         Ensure that Query.execute_background() only applies to records matched by
         the specified predicate
         """
+        from .test_base_class import TestBaseClass
+        if TestBaseClass.major_ver >= 5 and TestBaseClass.minor_ver >=7:
+            print("TestBaseClass.major_ver:", TestBaseClass.major_ver, "TestBaseClass.minor_ver:", TestBaseClass.minor_ver)
+            pytest.skip(
+                'It deprecated and it only applies to < 5.7 earlier and enterprise edition')
+
         test_bin = 't4'
         keys = [(TEST_NS, TEST_SET, i) for i in range(500)]
 

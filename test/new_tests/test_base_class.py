@@ -15,6 +15,8 @@ class TestBaseClass(object):
     using_auth = False
     should_xfail = False
     using_enterprise = False
+    major_ver=0
+    minor_ver=0
 
     @staticmethod
     def get_hosts():
@@ -169,6 +171,19 @@ class TestBaseClass(object):
             client.connect()
         else:
             client.connect(config['user'], config['password'])
+
+        if client is not None:
+            build_info = client.info_all("build")
+            res = []
+            for _, (error, result) in list(build_info.items()):
+                res = None if error is not None else result.strip().strip(';').strip(':')
+                res = None if res is None or len(res) == 0 else res
+                if res is not None:
+                    break
+            res = res.split('.')
+            major_ver = res[0]
+            minor_ver = res[1]
+            print("major_ver:", major_ver, "minor_ver:", minor_ver)
 
         return client
 

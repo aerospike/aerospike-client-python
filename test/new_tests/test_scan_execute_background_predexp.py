@@ -77,6 +77,12 @@ class TestScanApply(object):
         """
         Ensure that Scan.execute_background() gets applied to records that match the predexp.
         """
+        from .test_base_class import TestBaseClass
+        if TestBaseClass.major_ver >= 5 and TestBaseClass.minor_ver >=7:
+            print("TestBaseClass.major_ver:", TestBaseClass.major_ver, "TestBaseClass.minor_ver:", TestBaseClass.minor_ver)
+            pytest.skip(
+                'It deprecated and it only applies to < 5.7 earlier and enterprise edition')
+
         test_bin = 'number'
         keys = [(TEST_NS, TEST_SET, i) for i in range(50)]
 
@@ -148,6 +154,12 @@ class TestScanApply(object):
         """
         Ensure that Scan.execute_background() applies ops to records that match the predexp.
         """
+        from .test_base_class import TestBaseClass
+        if TestBaseClass.major_ver >= 5 and TestBaseClass.minor_ver >=7:
+            print("TestBaseClass.major_ver:", TestBaseClass.major_ver, "TestBaseClass.minor_ver:", TestBaseClass.minor_ver)
+            pytest.skip(
+                'It deprecated and it only applies to < 5.7 earlier and enterprise edition')
+
         test_bin = 'Stops_preds'
         keys = [(TEST_NS, TEST_SET, i) for i in range(50)]
 
@@ -187,6 +199,12 @@ class TestScanApply(object):
         """
         Ensure that Scan.execute_background() applies ops to all records in the NS that match the predexp.
         """
+        from .test_base_class import TestBaseClass
+        if TestBaseClass.major_ver >= 5 and TestBaseClass.minor_ver >=7:
+            print("TestBaseClass.major_ver:", TestBaseClass.major_ver, "TestBaseClass.minor_ver:", TestBaseClass.minor_ver)
+            pytest.skip(
+                'It deprecated and it only applies to < 5.7 earlier and enterprise edition')
+
         test_bin = 'Stops_noset'
         keys = [(TEST_NS, TEST_SET, i) for i in range(50)]
         keys2 = [(TEST_NS, TEST_SET2, i) for i in range(10)]
