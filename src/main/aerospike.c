@@ -33,6 +33,7 @@
 #include "module_functions.h"
 #include "nullobject.h"
 #include "cdt_types.h"
+#include <aerospike/as_log_macros.h>
 
 PyObject *py_global_hosts;
 int counter = 0xA8000000;
@@ -81,6 +82,10 @@ static PyMethodDef Aerospike_Methods[] = {
 	//Calculate the digest of a key
 	{"calc_digest", (PyCFunction)Aerospike_Calc_Digest,
 	 METH_VARARGS | METH_KEYWORDS, "Calculate the digest of a key"},
+	
+	//Get partition ID for given digest
+	{"get_partition_id", (PyCFunction)Aerospike_Get_Partition_Id,
+	 METH_VARARGS, "Get partition ID for given digest"},
 	{NULL}};
 
 static AerospikeConstants operator_constants[] = {
@@ -244,6 +249,8 @@ MOD_INIT(aerospike)
 PyObject *AerospikeInitAsync(PyObject *self, PyObject *args, PyObject *kwds)
 {
 #if AS_EVENT_LIB_DEFINED
+	as_log_info("AerospikeInitAsync");
+	as_event_destroy_loops();
 	as_event_create_loops(1);
 	async_support = true;
 #else

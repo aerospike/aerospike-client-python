@@ -50,7 +50,7 @@ class TestScan(TestBaseClass):
 
         records = []
 
-        def callback(part_id, input_tuple):
+        def callback(input_tuple):
             _, _, bins = input_tuple
             records.append(bins)
 
@@ -64,7 +64,7 @@ class TestScan(TestBaseClass):
 
         records = []
 
-        def callback(part_id, input_tuple):
+        def callback(input_tuple):
             _, _, bins = input_tuple
             records.append(bins)
 
@@ -81,7 +81,7 @@ class TestScan(TestBaseClass):
 
         records = []
 
-        def callback(part_id, input_tuple):
+        def callback(input_tuple):
             _, _, bins = input_tuple
             records.append(bins)
 
@@ -100,7 +100,7 @@ class TestScan(TestBaseClass):
 
         expr = exp.Not(exp.Eq(exp.StrBin('name'), 'name4'))
 
-        def callback(part_id, input_tuple):
+        def callback(input_tuple):
             _, _, bins = input_tuple
             records.append(bins)
 
@@ -120,7 +120,7 @@ class TestScan(TestBaseClass):
 
         max_records = self.record_count // 2
 
-        def callback(part_id, input_tuple):
+        def callback(input_tuple):
             _, _, bins = input_tuple
             records.append(bins)
 
@@ -138,7 +138,7 @@ class TestScan(TestBaseClass):
 
         expr = exp.Not(exp.Eq(exp.StrBin('name'), 'name4'))
 
-        def callback(part_id, input_tuple):
+        def callback(input_tuple):
             _, _, bins = input_tuple
             records.append(bins)
 
@@ -155,7 +155,7 @@ class TestScan(TestBaseClass):
 
         records = []
 
-        def callback(part_id, input_tuple):
+        def callback(input_tuple):
             _, _, bins = input_tuple
             records.append(bins)
 
@@ -172,7 +172,7 @@ class TestScan(TestBaseClass):
 
         records = []
 
-        def callback(part_id, input_tuple):
+        def callback(input_tuple):
             _, _, bins = input_tuple
             records.append(bins)
 
@@ -188,7 +188,7 @@ class TestScan(TestBaseClass):
 
         records = []
 
-        def callback(part_id, input_tuple):
+        def callback(input_tuple):
             _, _, bins = input_tuple
             if len(records) == 10:
                 return False
@@ -203,7 +203,7 @@ class TestScan(TestBaseClass):
         records = []
         st = u'demo'
 
-        def callback(part_id, input_tuple):
+        def callback(input_tuple):
             _, _, bins = input_tuple
             records.append(bins)
 
@@ -216,7 +216,7 @@ class TestScan(TestBaseClass):
 
         records = []
 
-        def callback(part_id, input_tuple):
+        def callback(input_tuple):
             _, _, bins = input_tuple
             records.append(bins)
 
@@ -269,7 +269,7 @@ class TestScan(TestBaseClass):
             "concurrent": True
         }
 
-        def callback(part_id, input_tuple):
+        def callback(input_tuple):
             _, _, bins = input_tuple
             records.append(bins)
 
@@ -284,7 +284,7 @@ class TestScan(TestBaseClass):
         """
             Invoke scan() with options negative
         """
-        def callback(part_id, input_tuple):
+        def callback(input_tuple):
             key, _, _ = input_tuple
             records.append(key)
 
@@ -309,7 +309,7 @@ class TestScan(TestBaseClass):
 
         options = {"nobins": True}
 
-        def callback(part_id, input_tuple):
+        def callback(input_tuple):
             _, _, bins = input_tuple
             records.append(bins)
 
@@ -332,7 +332,7 @@ class TestScan(TestBaseClass):
 
         options = {"nobins": False}
 
-        def callback(part_id, input_tuple):
+        def callback(input_tuple):
             _, _, bins = input_tuple
             records.append(bins)
 
@@ -351,7 +351,7 @@ class TestScan(TestBaseClass):
         """
         records = []
 
-        def callback(part_id, input_tuple):
+        def callback(input_tuple):
             _, _, bins = input_tuple
             records.append(bins)
 
@@ -386,7 +386,7 @@ class TestScan(TestBaseClass):
 
         records = []
 
-        def callback(part_id, input_tuple):
+        def callback(input_tuple):
             _, _, bins = input_tuple
             records.append(bins)
 
@@ -412,7 +412,7 @@ class TestScan(TestBaseClass):
         records = []
         scan_obj = self.as_connection.scan(ns, st)
 
-        def callback(part_id, input_tuple):
+        def callback(input_tuple):
             _, _, bins = input_tuple
             records.append(bins)
 
@@ -447,7 +447,7 @@ class TestScan(TestBaseClass):
     def test_scan_with_callback_contains_error(self):
         records = []
 
-        def callback(part_id, input_tuple):
+        def callback(input_tuple):
             _, _, bins = input_tuple
             raise Exception("callback error")
             records.append(bins)
@@ -493,7 +493,7 @@ class TestScan(TestBaseClass):
 
         expr = exp.Not(exp.Eq(exp.StrBin('name'), 2))
 
-        def callback(part_id, input_tuple):
+        def callback(input_tuple):
             _, _, bins = input_tuple
             records.append(bins)
 

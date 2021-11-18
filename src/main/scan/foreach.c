@@ -33,6 +33,7 @@ typedef struct {
 	as_error error;
 	PyObject *callback;
 	AerospikeClient *client;
+	int partition_scan;
 } LocalData;
 
 static bool each_result(const as_val *val, void *udata)
@@ -72,11 +73,17 @@ static bool each_result(const as_val *val, void *udata)
 		PyGILState_Release(gstate);
 		return true;
 	}
-	// Build Python Function Arguments
-	py_arglist = PyTuple_New(2);
-	PyTuple_SetItem(py_arglist, 0, PyInt_FromLong(part_id));
-	PyTuple_SetItem(py_arglist, 1, py_result);
 
+	if (data->partition_scan) {
+		// Build Python Function Arguments
+		py_arglist = PyTuple_New(2);
+		PyTuple_SetItem(py_arglist, 0, PyInt_FromLong(part_id));
+		PyTuple_SetItem(py_arglist, 1, py_result);
+	} else {
+		// Build Python Function Arguments
+		py_arglist = PyTuple_New(1);
+		PyTuple_SetItem(py_arglist, 0, py_result);
+	}
 	// Invoke Python Callback
 	py_return = PyObject_Call(py_callback, py_arglist, NULL);
 
@@ -152,6 +159,8 @@ PyObject *AerospikeScan_Foreach(AerospikeScan *self, PyObject *args,
 	LocalData data;
 	data.callback = py_callback;
 	data.client = self->client;
+	data.partition_scan = 0;
+
 	as_error_init(&data.error);
 
 	if (!self || !self->client->as) {
@@ -184,6 +193,7 @@ PyObject *AerospikeScan_Foreach(AerospikeScan *self, PyObject *args,
 										 &data.error) == AEROSPIKE_OK) {
 				partition_filter_p = &partition_filter;
 			}
+			data.partition_scan = 1;
 		}
 	}
 	as_error_reset(&data.error);

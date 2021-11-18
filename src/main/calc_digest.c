@@ -25,6 +25,7 @@
 #include "conversions.h"
 #include "exceptions.h"
 #include "module_functions.h"
+#include <aerospike/as_partition.h>
 
 static PyObject *Aerospike_Calc_Digest_Invoke(PyObject *py_ns, PyObject *py_set,
 											  PyObject *py_key)
@@ -133,4 +134,23 @@ PyObject *Aerospike_Calc_Digest(PyObject *self, PyObject *args, PyObject *kwds)
 
 	// Invoke Operation
 	return Aerospike_Calc_Digest_Invoke(py_ns, py_set, py_key);
+}
+
+PyObject *Aerospike_Get_Partition_Id(PyObject *self, PyObject *args)
+{
+	// Python Function Arguments
+	PyObject *py_digest = NULL;
+	as_digest_value	digest;
+
+	// Python Function Argument Parsing
+	if (PyArg_Parse(args, "(s)", &digest) == false) {
+		return NULL;
+	}
+
+	uint32_t part_id = 0;
+	
+	part_id = as_partition_getid(digest, 4096);
+
+	// Invoke Operation
+	return PyLong_FromLong(part_id);
 }
