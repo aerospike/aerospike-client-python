@@ -136,8 +136,8 @@ with open(os.path.join(CWD, 'VERSION')) as f:
 BASEPATH = os.path.dirname(os.path.abspath(__file__))
 CCLIENT_PATH = os.path.join(BASEPATH, 'aerospike-client-c')
 
-if EVENT_LIB is None or EVENT_LIB == "":
-    EVENT_LIB = "libevent"
+# if EVENT_LIB is None or EVENT_LIB == "":
+#     EVENT_LIB = "libevent"
 
 if EVENT_LIB is not None:
     if EVENT_LIB == "libuv":
@@ -153,7 +153,7 @@ if EVENT_LIB is not None:
         library_dirs = library_dirs + ['/usr/local/lib/']
         libraries = libraries + ['ev']
     else:
-        sys.exit('Specify the one of event library for async support (EVENT_LIB=libuv/libevent/libev).'),
+        print("Building aerospike with no-async support\n")
 
 class CClientBuild(build):
 
