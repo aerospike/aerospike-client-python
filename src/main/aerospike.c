@@ -38,7 +38,7 @@
 PyObject *py_global_hosts;
 int counter = 0xA8000000;
 bool user_shm_key = false;
-bool async_support = false;
+uint32_t async_support = 0;
 
 PyDoc_STRVAR(client_doc, "client(config) -> client object\n\
 \n\
@@ -86,6 +86,11 @@ static PyMethodDef Aerospike_Methods[] = {
 	//Get partition ID for given digest
 	{"get_partition_id", (PyCFunction)Aerospike_Get_Partition_Id,
 	 METH_VARARGS, "Get partition ID for given digest"},
+
+	//Is async supported
+	{"is_async_supoorted", (PyCFunction)Aerospike_Is_AsyncSupported,
+	 METH_NOARGS, "check whether async supported or not"},
+
 	{NULL}};
 
 static AerospikeConstants operator_constants[] = {
@@ -163,6 +168,8 @@ MOD_INIT(aerospike)
 
 	MOD_DEF(aerospike, "aerospike", "Aerospike Python Client",
 			sizeof(struct Aerospike_State), Aerospike_Methods, Aerospike_Clear)
+
+	Aerospike_Enable_Default_Logging();
 
 	py_global_hosts = PyDict_New();
 

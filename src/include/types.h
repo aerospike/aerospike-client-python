@@ -33,7 +33,7 @@
 extern int counter;
 extern PyObject *py_global_hosts;
 extern bool user_shm_key;
-extern bool async_support;
+extern uint32_t async_support;
 
 typedef struct {
 	PyObject_HEAD

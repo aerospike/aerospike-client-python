@@ -154,3 +154,8 @@ PyObject *Aerospike_Get_Partition_Id(PyObject *self, PyObject *args)
 	// Invoke Operation
 	return PyLong_FromLong(part_id);
 }
+
+PyObject *Aerospike_Is_AsyncSupported(PyObject *self)
+{
+	return PyLong_FromLong(async_support);
+}
