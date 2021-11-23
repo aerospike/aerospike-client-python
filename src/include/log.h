@@ -58,3 +58,5 @@ PyObject *Aerospike_Set_Log_Level(PyObject *parent, PyObject *args,
  */
 PyObject *Aerospike_Enable_Log_Handler(PyObject *parent, PyObject *args,
 									PyObject *kwds);
+
+void Aerospike_Enable_Default_Logging();

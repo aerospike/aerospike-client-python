@@ -134,3 +134,13 @@ PyObject *Aerospike_Enable_Log_Handler(PyObject *parent, PyObject *args,
 
 	return PyLong_FromLong(0);
 }
+
+void Aerospike_Enable_Default_Logging()
+{
+	// Invoke C API to set log level
+	as_log_set_level((as_log_level)LOG_LEVEL_ERROR);
+	// Register callback to C-SDK
+	as_log_set_callback((as_log_callback)log_cb);
+
+	return;
+}
