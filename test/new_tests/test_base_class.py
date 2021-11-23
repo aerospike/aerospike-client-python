@@ -183,7 +183,7 @@ class TestBaseClass(object):
             res = res.split('.')
             major_ver = res[0]
             minor_ver = res[1]
-            print("major_ver:", major_ver, "minor_ver:", minor_ver)
+            # print("major_ver:", major_ver, "minor_ver:", minor_ver)
 
         return client
 
@@ -219,5 +219,5 @@ class TestBaseClass(object):
         config['policies'] = policies_conf
         config['user'] = TestBaseClass.user
         config['password'] = TestBaseClass.password
-        print(config)
+        # print(config)
         return config

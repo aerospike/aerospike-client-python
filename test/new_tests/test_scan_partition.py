@@ -54,10 +54,10 @@ class TestScanPartition(TestBaseClass):
                     'm': {'partition': rec_partition, 'b': 4, 'c': 8, 'd': 16}
                 }
                 as_connection.put(key, rec)
-        print(f"{self.partition_1000_count} records are put in partition 1000, \
-                {self.partition_1001_count} records are put in partition 1001, \
-                {self.partition_1002_count} records are put in partition 1002, \
-                {self.partition_1003_count} records are put in partition 1003")
+        # print(f"{self.partition_1000_count} records are put in partition 1000, \
+        #         {self.partition_1001_count} records are put in partition 1001, \
+        #         {self.partition_1002_count} records are put in partition 1002, \
+        #         {self.partition_1003_count} records are put in partition 1003")
 
         def teardown():
             for i in range(1, 100000):
@@ -93,7 +93,7 @@ class TestScanPartition(TestBaseClass):
         def callback(part_id,input_tuple):
             (_, _, record) = input_tuple
             records.append(record)
-            print(record)
+            # print(record)
 
         scan_obj = self.as_connection.scan(self.test_ns, self.test_set)
 
@@ -352,17 +352,17 @@ class TestScanPartition(TestBaseClass):
             return bytearray([0]*20);
         partition_status = {id:(id, init(id), done(id), digest(id)) for id in range (1000, 1004,1)}
         partition_filter = {'begin': 1000, 'count': 4, 'partition_status': partition_status}
-        print("scan_obj", partition_filter)
+        # print("scan_obj", partition_filter)
         policy = {'max_records': scan_page_size[0],
                 'partition_filter': partition_filter,
                 'records_per_second': 4000}
         def callback(part_id, input_tuple):
             if(input_tuple == None):
-                print("callback: NO record")
+                # print("callback: NO record")
                 return True #scan complete
             (key, _, record) = input_tuple
             partition_status.update({part_id:(part_id, 1, 0, key[3])})
-            print("callback:", part_id, input_tuple, key[3], partition_status.get(part_id));
+            # print("callback:", part_id, input_tuple, key[3], partition_status.get(part_id));
             records.append(record)
             scan_count[0] = scan_count[0] + 1
             break_count[0] = break_count[0] - 1
@@ -373,12 +373,12 @@ class TestScanPartition(TestBaseClass):
 
         i = 0
         for i in range(scan_pages[0]):
-            print("calling scan_obj.foreach")
+            # print("calling scan_obj.foreach")
             scan_obj.foreach(callback, policy)
             if scan_obj.is_done() == True: 
-                print(f"scan completed iter:{i}")
+                # print(f"scan completed iter:{i}")
                 break
-            print("bc:", break_count[0])
+            # print("bc:", break_count[0])
             if(break_count[0] == 0):
                 break
 
@@ -388,7 +388,7 @@ class TestScanPartition(TestBaseClass):
         scan_count[0] = 0
         break_count[0] = 1000
         partition_filter = {'begin': 1000, 'count': 4, 'partition_status': partition_status}
-        print("new_scan_obj", partition_filter)
+        # print("new_scan_obj", partition_filter)
         policy = {'max_records': scan_page_size[0],
                 'partition_filter': partition_filter,
                 'records_per_second': 4000}
@@ -396,11 +396,11 @@ class TestScanPartition(TestBaseClass):
         new_scan_obj = self.as_connection.scan(self.test_ns, self.test_set)
         i = 0
         for i in range(scan_pages[0]):
-            print("calling new_scan_obj.foreach")
+            # print("calling new_scan_obj.foreach")
             new_scan_obj.foreach(callback, policy)
             #assert scan_page_size[0] == scan_count[0]
             if new_scan_obj.is_done() == True: 
-                print(f"scan completed iter:{i}")
+                # print(f"scan completed iter:{i}")
                 break
             if(break_count[0] == 0):
                 break

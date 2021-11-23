@@ -58,10 +58,10 @@ class TestScanPagination(TestBaseClass):
                         'key': str(i), \
                         'digest': as_connection.get_key_digest(self.test_ns, self.test_set, str(i))}
                 as_connection.put(key, rec)
-        print(f"{self.partition_1000_count} records are put in partition 1000, \
-                {self.partition_1001_count} records are put in partition 1001, \
-                {self.partition_1002_count} records are put in partition 1002, \
-                {self.partition_1003_count} records are put in partition 1003")
+        # print(f"{self.partition_1000_count} records are put in partition 1000, \
+        #         {self.partition_1001_count} records are put in partition 1001, \
+        #         {self.partition_1002_count} records are put in partition 1002, \
+        #         {self.partition_1003_count} records are put in partition 1003")
 
         def teardown():
             for i in range(1, 100000):
@@ -119,7 +119,7 @@ class TestScanPagination(TestBaseClass):
             assert scan_page_size[0] == scan_count[0]
             scan_count[0] = 0
             if scan_obj.is_done() == True: 
-                print(f"scan completed iter:{i}")
+                # print(f"scan completed iter:{i}")
                 break
 
         assert len(records) == ((scan_page_size[0] * scan_pages[0]) if (scan_page_size[0] * scan_pages[0]) < max_records else max_records)

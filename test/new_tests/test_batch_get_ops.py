@@ -108,9 +108,9 @@ class TestBatchExpressionsOperations(TestBaseClass):
         """
         status = res[0]
         recs = res[1:]
-        print("\ntest_read_pos status:", status)
+        # print("\ntest_read_pos status:", status)
         for i in range(self.batch_size):
-            print("results: ", recs[i])
+            # print("results: ", recs[i])
             assert recs[i][0][1] == expected
 
     @pytest.mark.parametrize("expr, flags, name, expected", [
@@ -152,4 +152,4 @@ class TestBatchExpressionsOperations(TestBaseClass):
                 expressions.expression_read(name, expr, flags)
             ]
             res = self.as_connection.batch_get_ops(self.keys, ops)
-            print("test_read_neg: ", res)
+            # print("test_read_neg: ", res)

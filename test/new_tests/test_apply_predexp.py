@@ -149,7 +149,7 @@ class TestApply(TestBaseClass):
     def test_apply_causing_list_append_with_correct_params_with_predexp(
             self, func_args, test_bin, predexp, expected):
         if TestBaseClass.major_ver >= 5 and TestBaseClass.minor_ver >=7:
-            print("TestBaseClass.major_ver:", TestBaseClass.major_ver, "TestBaseClass.minor_ver:", TestBaseClass.minor_ver)
+            # print("TestBaseClass.major_ver:", TestBaseClass.major_ver, "TestBaseClass.minor_ver:", TestBaseClass.minor_ver)
             pytest.skip(
                 'It deprecated and it only applies to < 5.7 earlier and enterprise edition')
 

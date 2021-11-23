@@ -147,7 +147,7 @@ def as_connection(request):
     lua_user_path = os.path.join(sys.exec_prefix, "aerospike", "usr-lua")
     lua_info = {'user_path': lua_user_path}
     config['lua'] = lua_info
-    print(config)
+    # print(config)
     as_client = None
     if len(config['hosts']) == 2:
         for (a, p) in config['hosts']:
@@ -278,5 +278,5 @@ def connection_config(request):
 def invalid_key(request):
     yield request.param
 
-aerospike.set_log_level(aerospike.LOG_LEVEL_DEBUG)
-aerospike.enable_log_handler()
+# aerospike.set_log_level(aerospike.LOG_LEVEL_DEBUG)
+# aerospike.enable_log_handler()
