@@ -8,7 +8,7 @@
 
 .. note::
 
-    By default, the :py:class:`aerospike.Client` maps the supported types \
+    By default, the :py:class:`~aerospike.Client` maps the supported types \
     :py:class:`int`, :py:class:`bool`, :py:class:`str`, :py:class:`float`, :py:class:`bytearray`, \
     :py:class:`list`, :py:class:`dict` to matching aerospike server \
     `types <http://www.aerospike.com/docs/guide/data-types.html>`_ \
@@ -44,7 +44,7 @@ The following table shows which Python types map directly to Aerospike server ty
 
 .. note::
 
-    :class:`aerospike.KeyOrderedDict` is a special case. Like dict, KeyOrderedDict maps to the aerospike map data type. However, the map will be sorted in key order before being sent to the server, see :ref:`aerospike_map_order`.
+    :ref:`KeyOrderedDict <aerospike.KeyOrderedDict>` is a special case. Like dict, KeyOrderedDict maps to the aerospike map data type. However, the map will be sorted in key order before being sent to the server, see :ref:`aerospike_map_order`.
 
 +--------------------------+------------------------+
 | Python Type              | Server type            |

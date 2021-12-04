@@ -18,7 +18,6 @@ Helper functions to generate complex data type context (cdt_ctx) objects for use
 
 Example::
 
-    from __future__ import print_function
     import aerospike
     from aerospike import exception as ex
     from aerospike_helpers import cdt_ctx
@@ -153,16 +152,15 @@ def cdt_ctx_list_value(value):
     return _cdt_ctx(id=aerospike.CDT_CTX_LIST_VALUE, value=value)
 
 
-def cdt_ctx_list_index_create(index: int, order: int = aerospike.LIST_UNORDERED, pad: bool = False) -> _cdt_ctx:
+def cdt_ctx_list_index_create(index: int, order: int = 0, pad: bool = False) -> _cdt_ctx:
     """Creates a nested cdt_ctx object for use with list or map operations.
     
     Create a list with the given sort order at the given index.
 
     Args:
         key (object): The index to create the list at.
-        order (int): The sort order to create the list with. One of :ref:`list sort orders <aerospike_list_order>`.
-            Default == aerospike.LIST_UNORDERED
-        pad (Bool): If index is out of bounds and pad is True, the list will be created at index and empty list elements inserted behind it.
+        order (int): The :ref:`sort order <aerospike_list_order>` to create the List with (default ``aerospike.LIST_UNORDERED``)
+        pad (bool): If index is out of bounds and pad is True, the list will be created at index and empty list elements inserted behind it.
             Pad is only compatible with unordered lists.
     
     Returns:
@@ -230,15 +228,14 @@ def cdt_ctx_map_value(value):
     return _cdt_ctx(id=aerospike.CDT_CTX_MAP_VALUE, value=value)
 
 
-def cdt_ctx_map_key_create(key: any, order: int = aerospike.MAP_UNORDERED) -> _cdt_ctx:
+def cdt_ctx_map_key_create(key: any, order: int = 0) -> _cdt_ctx:
     """Creates a nested cdt_ctx object for use with list or map operations.
     
     Create a map with the given sort order at the given key.
 
     Args:
         key (object): The key to create the map at.
-        order (int): The sort order to create the map with. One of the aerospike :ref:`map sort orders <aerospike_map_order>`.
-            Default == aerospike.MAP_UNORDERED
+        order (int): The :ref:`sort order <aerospike_map_order>` to create the List with (default ``aerospike.MAP_UNORDERED``)
     
     Returns:
         A cdt_ctx object, a list of these is usable with list and map operations.

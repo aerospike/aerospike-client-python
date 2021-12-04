@@ -41,7 +41,7 @@ Scan Methods
         :param str function: the name of the Lua function within the *module*.
         :param list arguments: optional arguments to pass to the *function*. NOTE: these arguments must be types supported by Aerospike See: `supported data types <http://www.aerospike.com/docs/guide/data-types.html>`_.
             If you need to use an unsuported type, (e.g. set or tuple) you can use a serializer such as pickle first.
-        :return: one of the supported types, :class:`int`, :class:`str`, :class:`float` (double), :class:`list`, :class:`dict` (map), :class:`bytearray` (bytes).
+        :return: one of the supported types, :class:`int`, :class:`str`, :class:`float` (double), :class:`list`, :class:`dict` (map), :class:`bytearray` (bytes), :class:`bool`.
 
         .. seealso:: `Developing Record UDFs <http://www.aerospike.com/docs/udf/developing_record_udfs.html>`_
 
@@ -132,7 +132,6 @@ Scan Methods
 
             .. code-block:: python
 
-                from __future__ import print_function
                 import aerospike
                 from aerospike import predexp
                 from aerospike import exception as ex
@@ -249,7 +248,6 @@ Scan Methods
 
             .. code-block:: python
 
-                from __future__ import print_function
                 import aerospike
 
                 config = { 'hosts': [ ('127.0.0.1',3000)]}
@@ -279,14 +277,13 @@ Scan Methods
 
         :param dict policy: optional :ref:`aerospike_write_policies`.
 
-        :return: a job ID that can be used with :meth:`aerospike.Client.job_info` to track the status of the ``aerospike.JOB_SCAN``, as it runs in the background.
+        :return: a job ID that can be used with :meth:`aerospike.job_info` to track the status of the ``aerospike.JOB_SCAN``, as it runs in the background.
 
         .. note:: 
             Python client version 3.10.0 implemented scan execute_background.
             
             .. code-block:: python
 
-                from __future__ import print_function
                 import aerospike
                 from aerospike import exception as ex
                 import sys

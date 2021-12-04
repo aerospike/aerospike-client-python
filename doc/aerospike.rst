@@ -39,11 +39,11 @@ Methods
 .. py:function:: client(config)
 
     Creates a new instance of the Client class. This client can
-    :meth:`~aerospike.Client.connect` to the cluster and perform operations
-    against it, such as :meth:`~aerospike.Client.put` and
-    :meth:`~aerospike.Client.get` records.
+    :meth:`Client.connect` to the cluster and perform operations
+    against it, such as :meth:`Client.put` and
+    :meth:`Client.get` records.
 
-    This is a wrapper function which calls the constructor for the :class:`~aerospike.Client` class.
+    This is a wrapper function which calls the constructor for the :class:`Client` class.
     The client may also be constructed by calling the constructor directly.
 
     :param dict config: the client's configuration.
@@ -116,7 +116,7 @@ Methods
                 * **shm_key** 
                     | Explicitly set the shm key for this client.
                     | If **use_shared_connection** is not set, or set to ``False``, the user must provide a value for this field in order for shared memory to work correctly.
-                    | If , and only if, **use_shared_connection** is set to ``True``, the key will be implicitly evaluated per unique hostname, and can be inspected with :meth:`~aerospike.Client.shm_key` .
+                    | If , and only if, **use_shared_connection** is set to ``True``, the key will be implicitly evaluated per unique hostname, and can be inspected with :meth:`Client.shm_key` .
                     | It is still possible to specify a key when using **use_shared_connection** = `True`.
                     | default: ``0xA8000000``
             * **use_shared_connection** (:class:`bool`)
@@ -159,9 +159,9 @@ Methods
             * **send_bool_as** an optional :class:`int` that configures the client to write Python booleans as PY_BYTES_BLOB, integer, or the new server boolean type.
                 | One of the :ref:`send_bool_as_constants` constant values.
                 | Example: :code:`{"send_bool_as", aerospike.aerospike.PY_BYTES}`
-                | See :mod:`Data_Mapping` for more information.
+                | See :ref:`Data_Mapping` for more information.
                 | Default: aerospike.PY_BYTES
-            * **serialization** an optional instance-level :py:func:`tuple` of (serializer, deserializer). 
+            * **serialization** an optional instance-level `tuple` of (serializer, deserializer). 
                 | Takes precedence over a class serializer registered with :func:`~aerospike.set_serializer`.
             * **thread_pool_size** (:class:`int`) 
                 | Number of threads in the pool that is used in batch/scan/query commands. 
@@ -204,7 +204,7 @@ Methods
                 | Default: ``1000``.
 
 
-    :return: an instance of the :py:class:`aerospike.Client` class.
+    :return: an instance of the :class:`Client` class.
 
     .. seealso::
         `Shared Memory <https://www.aerospike.com/docs/client/c/usage/shm.html>`_ and `Per-Transaction Consistency Guarantees <http://www.aerospike.com/docs/architecture/consistency.html>`_.
@@ -348,7 +348,7 @@ Methods
 
 .. note::
 
-    By default, the :py:class:`aerospike.Client` maps the supported types \
+    By default, the :class:`Client` maps the supported types \
     :py:class:`int`, :py:class:`str`, :py:class:`float`, :py:class:`bytearray`, \
     :py:class:`list`, :py:class:`dict` to matching aerospike server \
     `types <http://www.aerospike.com/docs/guide/data-types.html>`_ \
@@ -369,12 +369,12 @@ Methods
 
 .. py:function:: set_serializer(callback)
 
-    Register a user-defined serializer available to all :class:`aerospike.Client`
+    Register a user-defined serializer available to all `Client`
     instances.
 
     :param callable callback: the function to invoke for serialization.
 
-    .. seealso:: To use this function with :meth:`~aerospike.Client.put` the \
+    .. seealso:: To use this function with :meth:`Client.put` the \
         argument to *serializer* should be :const:`aerospike.SERIALIZER_USER`.
 
     .. code-block:: python
@@ -391,9 +391,9 @@ Methods
 
 .. py:function:: set_deserializer(callback)
 
-    Register a user-defined deserializer available to all :class:`aerospike.Client`
+    Register a user-defined deserializer available to all :class:`Client`
     instances. Once registered, all read methods (such as \
-    :meth:`~aerospike.Client.get`) will run bins containing 'Generic' *as_bytes* \
+    :meth:`Client.get`) will run bins containing 'Generic' *as_bytes* \
     of type (`AS_BYTES_BLOB <http://www.aerospike.com/apidocs/c/d0/dd4/as__bytes_8h.html#a0cf2a6a1f39668f606b19711b3a98bf3>`_)
     through this deserializer.
 
@@ -401,7 +401,7 @@ Methods
 
 .. py:function:: unset_serializers()
 
-    Deregister the user-defined de/serializer available from :class:`aerospike.Client`
+    Deregister the user-defined de/serializer available from :class:`Client`
     instances.
 
     .. versionadded:: 1.0.53
@@ -413,7 +413,6 @@ Methods
 
     .. code-block:: python
 
-        from __future__ import print_function
         import aerospike
         import marshal
         import json
@@ -515,7 +514,6 @@ Methods
 
         .. code-block:: python
 
-            from __future__ import print_function
             import aerospike
 
             def as_logger(level, func, path, line, msg):
@@ -577,12 +575,12 @@ Methods
 Operators
 =========
 
-Operators for the multi-ops method :py:meth:`~aerospike.Client.operate`.
+Operators for the single-record, multi-operation transaction method :py:meth:`Client.operate`.
 
 .. note::
 
     Starting version 3.4.0, it is highly recommended to use the :ref:`aerospike_operation_helpers.operations` \
-    to create the arguments for :py:meth:`~aerospike.Client.operate` and :py:meth:`~aerospike.Client.operate_ordered`
+    to create the arguments for :py:meth:`Client.operate` and :py:meth:`Client.operate_ordered`
     Old style operatiors are deprecated. The docs for old style operators were removed in client 6.0.0.
 
 .. _aerospike_policies:
@@ -805,22 +803,22 @@ Scan Constants
 .. data:: SCAN_STATUS_ABORTED
 
     .. deprecated:: 1.0.50
-        used by :meth:`~aerospike.Client.scan_info`
+        used by :meth:`Client.scan_info`
 
 .. data:: SCAN_STATUS_COMPLETED
 
     .. deprecated:: 1.0.50
-        used by :meth:`~aerospike.Client.scan_info`
+        used by :meth:`Client.scan_info`
 
 .. data:: SCAN_STATUS_INPROGRESS
 
     .. deprecated:: 1.0.50
-        used by :meth:`~aerospike.Client.scan_info`
+        used by :meth:`Client.scan_info`
 
 .. data:: SCAN_STATUS_UNDEF
 
     .. deprecated:: 1.0.50
-        used by :meth:`~aerospike.Client.scan_info`
+        used by :meth:`Client.scan_info`
 
 .. versionadded:: 1.0.39
 
@@ -831,11 +829,11 @@ Job Constants
 
 .. data:: JOB_SCAN
 
-    Scan job type argument for the module parameter of :meth:`~aerospike.Client.job_info`
+    Scan job type argument for the module parameter of :meth:`Client.job_info`
 
 .. data:: JOB_QUERY
 
-    Query job type argument for the module parameter of :meth:`~aerospike.Client.job_info`
+    Query job type argument for the module parameter of :meth:`Client.job_info`
 
 .. _aerospike_job_constants_status:
 
@@ -1196,9 +1194,9 @@ HyperLogLog Write Flags
 
 .. _aerospike_expression_write_flags:
 
-Expression Write Flags
+Write Expression Flags
 ----------------------
-Flags used by expression_write.
+Flags used by :class:`~aerospike_helpers.operations.expression_operations.expression_write`.
 
 .. data:: EXP_WRITE_DEFAULT
 
@@ -1233,9 +1231,9 @@ Flags used by expression_write.
 
 .. _aerospike_expression_read_flags:
 
-Expression Read Flags
+Read Expression Flags
 ---------------------
-Flags used by expression_read
+Flags used by :class:`~aerospike_helpers.operations.expression_operations.expression_read`.
 
 .. data:: EXP_READ_DEFAULT
 
@@ -1325,13 +1323,6 @@ Miscellaneous
     A :class:`str` containing the module's version.
 
     .. versionadded:: 1.0.54
-
-.. data:: null
-
-    A value for distinguishing a server-side null from a Python :py:obj:`None`.
-
-    .. deprecated:: 2.0.1
-        use the function :func:`aerospike.null` instead.
 
 .. data:: UDF_TYPE_LUA
     

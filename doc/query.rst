@@ -9,7 +9,7 @@ Query Class --- :class:`Query`
 :class:`Query`
 ===============
 
-    The query object created by calling :meth:`aerospike.Client.query` is used \
+    The query object created by calling :meth:`aerospike.query` is used \
     for executing queries over a secondary index of a specified set (which \
     can be omitted or :py:obj:`None`). For queries, the :py:obj:`None` set contains those \
     records which are not part of any named set.
@@ -96,7 +96,6 @@ Query Methods
 
         .. code-block:: python
 
-            from __future__ import print_function
             import aerospike
             from aerospike import predexp
             from aerospike import exception as ex
@@ -206,7 +205,6 @@ Query Methods
 
             .. code-block:: python
 
-                from __future__ import print_function
                 import aerospike
                 from aerospike import predicates as p
 
@@ -242,14 +240,14 @@ Query Methods
         :param str function: the name of the Lua function within the *module*.
         :param list arguments: optional arguments to pass to the *function*. NOTE: these arguments must be types supported by Aerospike See: `supported data types <http://www.aerospike.com/docs/guide/data-types.html>`_.
             If you need to use an unsuported type, (e.g. set or tuple) you can use a serializer like pickle first.
-        :return: one of the supported types, :class:`int`, :class:`str`, :class:`float` (double), :class:`list`, :class:`dict` (map), :class:`bytearray` (bytes).
+        :return: one of the supported types, :class:`int`, :class:`str`, :class:`float` (double), :class:`list`, :class:`dict` (map), :class:`bytearray` (bytes), :class:`bool`.
 
         .. seealso:: `Developing Stream UDFs <http://www.aerospike.com/docs/udf/developing_stream_udfs.html>`_
 
         .. note::
 
             Assume we registered the following Lua module with the cluster as \
-            **stream_udf.lua** using :meth:`aerospike.Client.udf_put`.
+            **stream_udf.lua** using :meth:`aerospike.udf_put`.
 
             .. code-block:: lua
 
@@ -382,7 +380,7 @@ Query Methods
 
         :param dict policy: optional :ref:`aerospike_write_policies`.
 
-        :return: a job ID that can be used with :meth:`aerospike.Client.job_info` to track the status of the ``aerospike.JOB_QUERY`` , as it runs in the background.
+        :return: a job ID that can be used with :meth:`aerospike.job_info` to track the status of the ``aerospike.JOB_QUERY`` , as it runs in the background.
 
         .. code-block:: python
 
@@ -396,7 +394,6 @@ Query Methods
         .. code-block:: python
 
             # Using a list of write ops.
-            from __future__ import print_function
             import aerospike
             from aerospike import predicates
             from aerospike import exception as ex

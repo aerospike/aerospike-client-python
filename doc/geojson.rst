@@ -21,7 +21,7 @@ GeoJSON Class --- :class:`GeoJSON`
 
     On the client side, wrapping geospatial data in an instance of the
     :class:`aerospike.GeoJSON` class enables serialization of the data into the
-    correct type during write operation, such as :meth:`~aerospike.Client.put`.
+    correct type during write operation, such as :meth:`~aerospike.put`.
     On reading a record from the server, bins with geospatial data it will be
     deserialized into a :class:`~aerospike.GeoJSON` instance.
 
@@ -31,7 +31,6 @@ GeoJSON Class --- :class:`GeoJSON`
 
     .. code-block:: python
 
-        from __future__ import print_function
         import aerospike
         from aerospike import GeoJSON
 

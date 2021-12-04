@@ -2,6 +2,7 @@
 Resources used by all expressions.
 '''
 
+from __future__ import annotations
 from itertools import chain
 from typing import List, Optional, Tuple, Union, Dict, Any
 import aerospike
@@ -184,7 +185,7 @@ class _BaseExpr(_AtomExpr):
             l = self._children
         else:
             l = (self,)
-        
+
         r = [] # No right operand.
         return _create_operator_expression(l, r, op_type)
 
@@ -193,7 +194,7 @@ class _BaseExpr(_AtomExpr):
             l = self._children
         else:
             l = (self,)
-        
+
         if isinstance(right, _BaseExpr) and right._op == op_type:
             r = right._children
         else:
@@ -211,7 +212,7 @@ class _BaseExpr(_AtomExpr):
             l = self._children[:-1]
         else:
             l = (self,)
-        
+
         if isinstance(right, _BaseExpr) and right._op == op_type:
             r = right._children[:-1]
         else:

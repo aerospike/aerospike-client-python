@@ -3,15 +3,15 @@
 aerospike\_helpers\.expressions package
 =======================================
 
-Classes for the creation and use of aerospike expressions. See:: `Aerospike Expressions <https://www.aerospike.com/docs/guide/expressions/>`_.
+Classes for the creation and use of Aerospike Expressions. See:: `Aerospike Expressions <https://www.aerospike.com/docs/guide/expressions/>`_.
 
 Aerospike Expressions are a small domain specific language that allow for filtering
-records in transactions by manipulating and comparing bins and record metadata. 
+records in transactions by manipulating and comparing bins and record metadata.
 Expressions can be used everywhere that predicate expressions have been used and
 allow for expanded functionality and customizability.
 
 In the Python client, Aerospike expressions are built using a series of classes that represent
-comparrison and logical operators, bins, metadata operations, and bin operations.
+comparison and logical operators, bins, metadata operations, and bin operations.
 Expressions are constructed using a Lisp like syntax by instantiating an expression that yields a boolean, such as Eq() or And(), 
 while passing them other expressions and constants as arguments, and finally calling the compile() method. See the example below.
 
@@ -26,7 +26,6 @@ the expressions will filter the results. See the example below.
 
 Example::
 
-    from __future__ import print_function
     import aerospike
     from aerospike_helpers import expressions as exp
     from aerospike import exception as ex
@@ -113,31 +112,41 @@ Example::
 
     from aerospike_helpers import expressions as exp
     expr = Eq(
-        exp.ListGetByIndexRangeToEnd(ctx, aerospike.LIST_RETURN_VALUE, 0,                 
-            exp.ListSort(ctx, aerospike.LIST_SORT_DEFAULT,      
+        exp.ListGetByIndexRangeToEnd(ctx, aerospike.LIST_RETURN_VALUE, 0,
+            exp.ListSort(ctx, aerospike.LIST_SORT_DEFAULT,
                 exp.ListAppend(ctx, policy, value_x,
                     exp.ListAppendItems(ctx, policy, value_y,
                         exp.ListInsert(ctx, policy, 1, value_z, bin_name))))),
         expected_answer
     ),
-    
-Note::
+
+
+
+.. note::
 
     Aerospike expressions are evaluated server side, expressions used for filtering are called filter-expressions
-    and do not return any values to the client or write any values to the server. 
-    When the following documentation says an expression returns a "list expression", it means that the expression returns a
-    list during evalution on the server side. Expressions used with expression_read() or expression_write() do send their 
-    return values to the client or write them to the server. These expressions are called operation-expressions.
-    When these docs say that an expression parameter requires an "integer or integer expression".
-    It means it will accept a literal integer, or an expression that will return an integer during evaluation. When the docs say
-    an expression returns an "expression" this means that the data type returned may vary, usually depending on the `return_type` parameter.
+    and do not return any values to the client or write any values to the server.
 
-Current Limitations::
+    When the following documentation says an expression returns a "list expression", it means that the expression returns a
+    list during evalution on the server side.
+
+    Expressions used with expression_read() or expression_write() do send their return values to the client or write them to the server.
+    These expressions are called operation-expressions.
+
+    When these docs say that an expression parameter requires an "integer or integer expression".
+    It means it will accept a literal integer, or an expression that will return an integer during evaluation.
+
+    When the docs say an expression returns an "expression" this means that the data type returned may vary, usually depending on the `return_type` parameter.
+
+.. note::
 
     Currently, Aerospike expressions for the python client do not support comparing as_python_bytes blobs.
-    Comparrisions between constant map values and map expressions are  also unsupported.
+    Comparisons between constant map values and map expressions are  also unsupported.
 
-The expressions module uses typehints, here are a table of custom typehints mapped to standard types.
+Expression Type Aliases
+-----------------------
+The expressions module documentaiton uses type aliases.
+The following is a table of how the type aliases map to standard types.
 
 .. list-table:: Title
     :widths: 25 75
@@ -145,6 +154,8 @@ The expressions module uses typehints, here are a table of custom typehints mapp
 
     * - Type Name
       - Type Description
+    * - AerospikeExpression
+      - _BaseExpr
     * - TypeResultType
       - Optional[int]
     * - TypeFixedEle
@@ -165,7 +176,7 @@ The expressions module uses typehints, here are a table of custom typehints mapp
       - Union[_BaseExpr, List[Any]]
     * - TypeIndex
       - Union[_BaseExpr, int, aerospike.CDTInfinite]
-    * - TypeCDT
+    * - TypeCTX
       - Union[None, List[cdt_ctx._cdt_ctx]]
     * - TypeRank
       - Union[_BaseExpr, int, aerospike.CDTInfinite]

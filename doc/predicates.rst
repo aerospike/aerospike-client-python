@@ -16,11 +16,10 @@
     :param str bin: the bin name.
     :param int min: the minimum value to be matched with the between operator.
     :param int max: the maximum value to be matched with the between operator.
-    :return: :py:func:`tuple` to be used in :meth:`aerospike.Query.where`.
+    :return: `tuple` to be used in :meth:`aerospike.Query.where`.
 
     .. code-block:: python
 
-        from __future__ import print_function
         import aerospike
         from aerospike import predicates as p
 
@@ -40,11 +39,10 @@
     :param str bin: the bin name.
     :param val: the value to be matched with an equals operator.
     :type val: :py:class:`str` or :py:class:`int`
-    :return: :py:func:`tuple` to be used in :meth:`aerospike.Query.where`.
+    :return: `tuple` to be used in :meth:`aerospike.Query.where`.
 
     .. code-block:: python
 
-        from __future__ import print_function
         import aerospike
         from aerospike import predicates as p
 
@@ -60,19 +58,18 @@
 
     Predicate for finding any point in bin which is within the given shape.
     Requires a geo2dsphere index
-    (:meth:`~aerospike.Client.index_geo2dsphere_create`) over a *bin*
+    (:meth:`~aerospike.index_geo2dsphere_create`) over a *bin*
     containing :class:`~aerospike.GeoJSON` point data.
 
     :param str bin: the bin name.
     :param str shape: the shape formatted as a GeoJSON string.
     :param index_type: Optional. Possible ``aerospike.INDEX_TYPE_*`` values are detailed in :ref:`aerospike_misc_constants`.
-    :return: :py:func:`tuple` to be used in :meth:`aerospike.Query.where`.
+    :return: `tuple` to be used in :meth:`aerospike.Query.where`.
 
     .. note:: Requires server version >= 3.7.0
 
     .. code-block:: python
 
-        from __future__ import print_function
         import aerospike
         from aerospike import GeoJSON
         from aerospike import predicates as p
@@ -110,7 +107,7 @@
     Predicate helper builds an AeroCircle GeoJSON shape, and returns a
     'within GeoJSON region' predicate.
     Requires a geo2dsphere index
-    (:meth:`~aerospike.Client.index_geo2dsphere_create`) over a *bin*
+    (:meth:`~aerospike.index_geo2dsphere_create`) over a *bin*
     containing :class:`~aerospike.GeoJSON` point data.
 
     :param str bin: the bin name.
@@ -118,13 +115,12 @@
     :param float lat: the latitude of the center point of the AeroCircle.
     :param float radius_meters: the radius length in meters of the AeroCircle.
     :param index_type: Optional. Possible ``aerospike.INDEX_TYPE_*`` values are detailed in :ref:`aerospike_misc_constants`.
-    :return: :py:func:`tuple` to be used in :meth:`aerospike.Query.where`.
+    :return: `tuple` to be used in :meth:`aerospike.Query.where`.
 
     .. note:: Requires server version >= 3.8.1
 
     .. code-block:: python
 
-        from __future__ import print_function
         import aerospike
         from aerospike import GeoJSON
         from aerospike import predicates as p
@@ -150,19 +146,18 @@
 
     Predicate for finding any regions in the bin which contain the given point.
     Requires a geo2dsphere index
-    (:meth:`~aerospike.Client.index_geo2dsphere_create`) over a *bin*
+    (:meth:`~aerospike.index_geo2dsphere_create`) over a *bin*
     containing :class:`~aerospike.GeoJSON` point data.
 
     :param str bin: the bin name.
     :param str point: the point formatted as a GeoJSON string.
     :param index_type: Optional. Possible ``aerospike.INDEX_TYPE_*`` values are detailed in :ref:`aerospike_misc_constants`.
-    :return: :py:func:`tuple` to be used in :meth:`aerospike.Query.where`.
+    :return: `tuple` to be used in :meth:`aerospike.Query.where`.
 
     .. note:: Requires server version >= 3.7.0
 
     .. code-block:: python
 
-        from __future__ import print_function
         import aerospike
         from aerospike import GeoJSON
         from aerospike import predicates as p
@@ -197,20 +192,19 @@
     Predicate helper builds a GeoJSON point, and returns a
     'contains GeoJSON point' predicate.
     Requires a geo2dsphere index
-    (:meth:`~aerospike.Client.index_geo2dsphere_create`) over a *bin*
+    (:meth:`~aerospike.index_geo2dsphere_create`) over a *bin*
     containing :class:`~aerospike.GeoJSON` point data.
 
     :param str bin: the bin name.
     :param float long: the longitude of the point.
     :param float lat: the latitude of the point.
     :param index_type: Optional. Possible ``aerospike.INDEX_TYPE_*`` values are detailed in :ref:`aerospike_misc_constants`.
-    :return: :py:func:`tuple` to be used in :meth:`aerospike.Query.where`.
+    :return: `tuple` to be used in :meth:`aerospike.Query.where`.
 
     .. note:: Requires server version >= 3.7.0
 
     .. code-block:: python
 
-        from __future__ import print_function
         import aerospike
         from aerospike import GeoJSON
         from aerospike import predicates as p
@@ -247,13 +241,12 @@
     :param index_type: Possible ``aerospike.INDEX_TYPE_*`` values are detailed in :ref:`aerospike_misc_constants`.
     :param val: match records whose *bin* is an *index_type* (ex: list) containing *val*.
     :type val: :py:class:`str` or :py:class:`int`
-    :return: :py:func:`tuple` to be used in :meth:`aerospike.Query.where`.
+    :return: `tuple` to be used in :meth:`aerospike.Query.where`.
 
     .. note:: Requires server version >= 3.8.1
 
     .. code-block:: python
 
-        from __future__ import print_function
         import aerospike
         from aerospike import predicates as p
 
@@ -285,13 +278,12 @@
     :param index_type: Possible ``aerospike.INDEX_TYPE_*`` values are detailed in :ref:`aerospike_misc_constants`.
     :param int min: the minimum value to be used for matching with the range operator.
     :param int max: the maximum value to be used for matching with the range operator.
-    :return: :py:func:`tuple` to be used in :meth:`aerospike.Query.where`.
+    :return: `tuple` to be used in :meth:`aerospike.Query.where`.
 
     .. note:: Requires server version >= 3.8.1
 
     .. code-block:: python
 
-        from __future__ import print_function
         import aerospike
         from aerospike import predicates as p
 

@@ -25,7 +25,6 @@ a cluster-tending thread.
 
 Example::
 
-        from __future__ import print_function
         # import the module
         import aerospike
         from aerospike import exception as ex
@@ -68,10 +67,10 @@ Example::
         client.close()
 
 
-    .. index::
-        single: Connection
+.. index::
+    single: Connection
 
-    .. _aerospike_connection_operations:
+.. _aerospike_connection_operations:
 
 Connection
 ----------
@@ -99,7 +98,7 @@ Connection
 
         Tests the connections between the client and the nodes of the cluster.
         If the result is ``False``, the client will require another call to
-        :meth:`~aerospike.Client.connect`.
+        :meth:`~aerospike.connect`.
 
         :rtype: :class:`bool`
 
@@ -162,7 +161,7 @@ Record Tuple
 
 .. object:: record
 
-    The record tuple ``(key, meta, bins)`` which is returned by various read operations.
+    The record tuple ``(key, meta: dict, bins)`` which is returned by various read operations.
 
     .. hlist::
         :columns: 1
@@ -179,9 +178,8 @@ Operations
 Record Operations
 -----------------
 
-.. class:: Client
 
-    .. method:: put(key, bins[, meta[, policy[, serializer]]])
+    .. method:: put(key, bins: dict[, meta: dict[, policy: dict[, serializer]]])
 
         Write a record with a given *key* to the cluster.
 
@@ -199,7 +197,6 @@ Record Operations
 
         .. code-block:: python
 
-            from __future__ import print_function
             import aerospike
             from aerospike import exception as ex
 
@@ -236,7 +233,6 @@ Record Operations
 
             .. code-block:: python
 
-                from __future__ import print_function
                 import aerospike
                 from aerospike import predexp
                 from aerospike import exception as ex
@@ -286,7 +282,6 @@ Record Operations
 
             .. code-block:: python
 
-                from __future__ import print_function
                 import aerospike
                 from aerospike import exception as ex
                 import sys
@@ -309,20 +304,19 @@ Record Operations
                 client.close()
 
 
-    .. method:: exists(key[, policy]) -> (key, meta)
+    .. method:: exists(key[, policy: dict]) -> (key, meta)
 
         Check if a record with a given *key* exists in the cluster and return \
-        the record as a :py:func:`tuple` consisting of *key* and *meta*.  If \
+        the record as a `tuple` consisting of *key* and *meta*.  If \
         the record  does not exist the *meta* data will be :py:obj:`None`.
 
         :param tuple key: a :ref:`aerospike_key_tuple` associated with the record.
         :param dict policy: optional :ref:`aerospike_read_policies`.
-        :rtype: :py:func:`tuple` (key, meta)
+        :rtype: `tuple` (key, meta)
         :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
 
         .. code-block:: python
 
-            from __future__ import print_function
             import aerospike
             from aerospike import exception as ex
             import sys
@@ -347,10 +341,10 @@ Record Operations
 
         .. versionchanged:: 2.0.3
 
-    .. method:: get(key[, policy]) -> (key, meta, bins)
+    .. method:: get(key[, policy: dict]) -> (key, meta, bins)
 
         Read a record with a given *key*, and return the record as a \
-        :py:func:`tuple` consisting of *key*, *meta* and *bins*.
+        `tuple` consisting of *key*, *meta* and *bins*.
 
         :param tuple key: a :ref:`aerospike_key_tuple` associated with the record.
         :param dict policy: optional :ref:`aerospike_read_policies`.
@@ -359,7 +353,6 @@ Record Operations
 
         .. code-block:: python
 
-            from __future__ import print_function
             import aerospike
             from aerospike import exception as ex
             import sys
@@ -387,16 +380,16 @@ Record Operations
         .. warning::
 
             The client has been changed to raise a :py:exc:`~aerospike.exception.RecordNotFound` \
-            exception when :meth:`~aerospike.Client.get` does not find the \
+            exception when :meth:`~aerospike.get` does not find the \
             record. Code that used to check for ``meta != None`` should be \
             modified.
 
         .. versionchanged:: 2.0.0
 
-    .. method:: select(key, bins[, policy]) -> (key, meta, bins)
+    .. method:: select(key, bins: list[, policy: dict]) -> (key, meta, bins)
 
         Read a record with a given *key*, and return the record as a \
-        :py:func:`tuple` consisting of *key*, *meta* and *bins*, with the \
+        `tuple` consisting of *key*, *meta* and *bins*, with the \
         specified bins projected. Prior to Aerospike server 3.6.0, if a selected \
         bin does not exist its value will be :py:obj:`None`. Starting with 3.6.0, if
         a bin does not exist it will not be present in the returned \
@@ -410,7 +403,6 @@ Record Operations
 
         .. code-block:: python
 
-            from __future__ import print_function
             import aerospike
             from aerospike import exception as ex
             import sys
@@ -434,13 +426,13 @@ Record Operations
         .. warning::
 
             The client has been changed to raise a :py:exc:`~aerospike.exception.RecordNotFound` \
-            exception when :meth:`~aerospike.Client.select` does not find the \
+            exception when :meth:`~aerospike.select` does not find the \
             record. Code that used to check for ``meta != None`` should be \
             modified.
 
         .. versionchanged:: 2.0.0
 
-    .. method:: touch(key[, val=0[, meta[, policy]]])
+    .. method:: touch(key[, val=0[, meta: dict[, policy: dict]]])
 
         Touch the given record, setting its \
         `time-to-live <http://www.aerospike.com/docs/client/c/usage/kvs/write.html#change-record-time-to-live-ttl>`_ \
@@ -467,7 +459,7 @@ Record Operations
             client.close()
 
 
-    .. method:: remove(key[meta, policy])
+    .. method:: remove(key[meta: dict[, policy: dict]])
 
         Remove a record matching the *key* from the cluster.
 
@@ -521,10 +513,10 @@ Record Operations
 
     .. rubric:: Removing a Bin
 
-    .. method:: remove_bin(key, list[, meta[, policy]])
+    .. method:: remove_bin(key, list[, meta: dict[, policy: dict]])
 
         Remove a list of bins from a record with a given *key*. Equivalent to \
-        setting those bins to :meth:`aerospike.null` with a :meth:`~aerospike.Client.put`.
+        setting those bins to :meth:`aerospike.null` with a :meth:`~aerospike.put`.
 
         :param tuple key: a :ref:`aerospike_key_tuple` associated with the record.
         :param list list: the bins names to be removed from the record.
@@ -553,9 +545,7 @@ Record Operations
 Batch Operations
 ----------------
 
-.. class:: Client
-
-    .. method:: get_many(keys[, policy]) -> [ (key, meta, bins)]
+    .. method:: get_many(keys[, policy: dict]) -> [ (key, meta, bins)]
 
         Batch-read multiple records, and return them as a :class:`list`. Any \
         record that does not exist will have a :py:obj:`None` value for metadata \
@@ -572,7 +562,6 @@ Batch Operations
 
         .. code-block:: python
 
-            from __future__ import print_function
             import aerospike
             from aerospike import exception as ex
             import sys
@@ -615,7 +604,6 @@ Batch Operations
 
             .. code-block:: python
 
-                from __future__ import print_function
                 import aerospike
                 from aerospike import predexp
                 from aerospike import exception as ex
@@ -654,7 +642,7 @@ Batch Operations
 
             The return type changed to :class:`list` starting with version 1.0.50.
 
-    .. method:: exists_many(keys[, policy]) -> [ (key, meta)]
+    .. method:: exists_many(keys[, policy: dict]) -> [ (key, meta)]
 
         Batch-read metadata for multiple keys, and return it as a :class:`list`. \
         Any record that does not exist will have a :py:obj:`None` value for metadata in \
@@ -662,7 +650,7 @@ Batch Operations
 
         :param list keys: a list of :ref:`aerospike_key_tuple`.
         :param dict policy: optional :ref:`aerospike_batch_policies`.
-        :return: a :class:`list` of (key, metadata) :py:func:`tuple`.
+        :return: a :class:`list` of (key, metadata) `tuple`.
 
         .. seealso:: More information about the \
             `Batch Index <https://www.aerospike.com/docs/guide/batch.html>`_ \
@@ -670,7 +658,6 @@ Batch Operations
 
         .. code-block:: python
 
-            from __future__ import print_function
             import aerospike
             from aerospike import exception as ex
             import sys
@@ -711,7 +698,7 @@ Batch Operations
 
             The return type changed to :class:`list` starting with version 1.0.50.
 
-    .. method:: select_many(keys, bins[, policy]) -> [(key, meta, bins), ...]}
+    .. method:: select_many(keys, bins: list[, policy: dict]) -> [(key, meta, bins), ...]}
 
         Batch-read multiple records, and return them as a :class:`list`. Any \
         record that does not exist will have a :py:obj:`None` value for metadata \
@@ -728,7 +715,6 @@ Batch Operations
 
         .. code-block:: python
 
-            from __future__ import print_function
             import aerospike
             from aerospike import exception as ex
             import sys
@@ -776,11 +762,9 @@ Batch Operations
 String Operations
 -----------------
 
-.. class:: Client
-
     .. note:: Please see :mod:`aerospike_helpers.operations.operations` for the new way to use string operations.
 
-    .. method:: append(key, bin, val[, meta[, policy]])
+    .. method:: append(key, bin, val[, meta: dict[, policy: dict]])
 
         Append the string *val* to the string value in *bin*.
 
@@ -795,7 +779,6 @@ String Operations
 
         .. code-block:: python
 
-            from __future__ import print_function
             import aerospike
             from aerospike import exception as ex
             import sys
@@ -813,7 +796,7 @@ String Operations
                 client.close()
 
 
-    .. method:: prepend(key, bin, val[, meta[, policy]])
+    .. method:: prepend(key, bin, val[, meta: dict[, policy: dict]])
 
         Prepend the string value in *bin* with the string *val*.
 
@@ -828,7 +811,6 @@ String Operations
 
         .. code-block:: python
 
-            from __future__ import print_function
             import aerospike
             from aerospike import exception as ex
             import sys
@@ -852,11 +834,9 @@ String Operations
 Numeric Operations
 ------------------
 
-.. class:: Client
-
     .. note:: Please see :mod:`aerospike_helpers.operations.operations` for the new way to use numeric operations using the operate command.
 
-    .. method:: increment(key, bin, offset[, meta[, policy]])
+    .. method:: increment(key, bin, offset[, meta: dict[, policy: dict]])
 
         Increment the integer value in *bin* by the integer *val*.
 
@@ -872,7 +852,6 @@ Numeric Operations
 
         .. code-block:: python
 
-            from __future__ import print_function
             import aerospike
             from aerospike import exception as ex
             import sys
@@ -904,8 +883,6 @@ Numeric Operations
 List Operations
 ---------------
 
-.. class:: Client
-
     .. note:: Please see :mod:`aerospike_helpers.operations.list_operations` for the new way to use list operations.
                 Old style list operations are deprecated. The docs for old style list operations were removed in client 6.0.0.
                 The code supporting these methods will be removed in a coming release.
@@ -916,8 +893,6 @@ List Operations
 Map Operations
 --------------
 
-.. class:: Client
-
     .. note:: Please see :mod:`aerospike_helpers.operations.map_operations` for the new way to use map operations.
                 Old style map operations are deprecated. The docs for old style map operations were removed in client 6.0.0.
                 The code supporting these methods will be removed in a coming release.
@@ -925,22 +900,20 @@ Map Operations
     .. index::
         single: Multi-Ops
 
-Multi-Ops (Operate)
--------------------
+Single-Record Transactions
+--------------------------
 
-.. class:: Client
+    .. method:: operate(key, operations: list[, meta: dict[, policy: dict]]) -> (key, meta, bins)
 
-    .. method:: operate(key, list[, meta[, policy]]) -> (key, meta, bins)
-
-        Perform multiple bin operations on a record with a given *key*, \
-        In Aerospike server \
-        versions prior to 3.6.0, non-existent bins being read will have a \
-        :py:obj:`None` value. Starting with 3.6.0 non-existent bins will not be \
+        Performs an atomic transaction, with multiple bin operations, against a single record with a given *key*. \
+        Starting with Aerospike server version 3.6.0, non-existent bins are not \
         present in the returned :ref:`aerospike_record_tuple`. \
-        The returned record tuple will only contain one element per bin, even if multiple operations were performed on the bin.
+        The returned record tuple will only contain one element per bin, even if multiple operations were performed on the bin. \
+        (In Aerospike server versions prior to 3.6.0, non-existent bins being read will have a \
+        :py:obj:`None` value. )
 
         :param tuple key: a :ref:`aerospike_key_tuple` associated with the record.
-        :param list list: a :class:`list` of one or more bin operations, each \
+        :param list operations: a :class:`list` of one or more bin operations, each \
             structured as the :class:`dict` \
             ``{'bin': bin name, 'op': aerospike.OPERATOR_* [, 'val': value]}``. \
             See :ref:`aerospike_operation_helpers.operations`.
@@ -952,12 +925,11 @@ Multi-Ops (Operate)
         :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
 
         .. note::
-            Version >= 3.10.0 Supports predicate expressions for Multi-Ops see :mod:`~aerospike.predexp`.
+            Version >= 3.10.0 Supports predicate expressions for transactions, see :mod:`~aerospike.predexp`.
             Requires server version >= 4.7.0.
 
             .. code-block:: python
 
-                from __future__ import print_function
                 import aerospike
                 from aerospike import predexp
                 from aerospike_helpers.operations import list_operations, operations
@@ -1013,7 +985,7 @@ Multi-Ops (Operate)
                 # (('test', 'demo', None, bytearray(b'\xb7\xf4\xb88\x89\xe2\xdag\xdeh>\x1d\xf6\x91\x9a\x1e\xac\xc4F\xc8')), {'ttl': 2592000, 'gen': 24}, {'number': 1, 'name': 'John', 'charges': [10, 20, 14, 25]})
 
         .. note::
-            In version `2.1.3` the return format of certain bin entries for this method, **only in cases when a map operation specifying a `return_type` is used**, has changed. Bin entries for map operations using "return_type" of aerospike.MAP_RETURN_KEY_VALUE will now return \
+            In version `2.1.3` the return format of certain bin entries for this method, **only in cases when a map operation specifying a** `return_type` **is used**, has changed. Bin entries for map operations using "return_type" of aerospike.MAP_RETURN_KEY_VALUE will now return \
             a bin value of a list of keys and corresponding values, rather than a list of key/value tuples. See the following code block for details.
 
         .. code-block:: python
@@ -1031,7 +1003,6 @@ Multi-Ops (Operate)
 
         .. code-block:: python
 
-            from __future__ import print_function
             import aerospike
             from aerospike_helpers.operations import operations as op_helpers
             from aerospike import exception as ex
@@ -1078,7 +1049,6 @@ Multi-Ops (Operate)
 
         .. code-block:: python
 
-            from __future__ import print_function
             import aerospike
             from aerospike import exception as ex
             import sys
@@ -1107,15 +1077,15 @@ Multi-Ops (Operate)
 
         .. versionchanged:: 2.1.3
 
-    .. method:: operate_ordered(key, list[, meta[, policy]]) -> (key, meta, bins)
+    .. method:: operate_ordered(key, operations: list[, meta: dict[, policy: dict]]) -> (key, meta, bins)
 
-        Perform multiple bin operations on a record with the results being \
-        returned as a list of (bin-name, result) tuples. The order of the \
+        Performs an atomic transaction, with multiple bin operations, against a single record with a given *key*. \
+        The results will be returned as a list of (bin-name, result) tuples. The order of the \
         elements in the list will correspond to the order of the operations \
         from the input parameters.
 
         :param tuple key: a :ref:`aerospike_key_tuple` associated with the record.
-        :param list list: a :class:`list` of one or more bin operations, each \
+        :param list operations: a :class:`list` of one or more bin operations, each \
             structured as the :class:`dict` \
             ``{'bin': bin name, 'op': aerospike.OPERATOR_* [, 'val': value]}``. \
             See :ref:`aerospike_operation_helpers.operations`.
@@ -1127,7 +1097,7 @@ Multi-Ops (Operate)
         :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
 
         .. note::
-            In version `2.1.3` the return format of bin entries for this method, **only in cases when a map operation specifying a `return_type` is used**, has changed. Map operations using "return_type" of aerospike.MAP_RETURN_KEY_VALUE will now return \
+            In version `2.1.3` the return format of bin entries for this method, **only in cases when a map operation specifying a** `return_type` **is used**, has changed. Map operations using "return_type" of aerospike.MAP_RETURN_KEY_VALUE will now return \
             a bin value of a list of keys and corresponding values, rather than a list of key/value tuples. See the following code block for details. In addition, some operations which did not return a value in versions <= 2.1.2 will now return a response.
 
         .. code-block:: python
@@ -1140,7 +1110,6 @@ Multi-Ops (Operate)
 
         .. code-block:: python
 
-            from __future__ import print_function
             import aerospike
             from aerospike import exception as ex
             from aerospike_helpers.operations import operations as op_helpers
@@ -1182,8 +1151,6 @@ Multi-Ops (Operate)
 Scan and Query
 --------------
 
-.. class:: Client
-
     .. method:: scan(namespace[, set]) -> Scan
 
         Return a :class:`aerospike.Scan` object to be used for executing scans \
@@ -1220,9 +1187,7 @@ Scan and Query
 User Defined Functions
 ----------------------
 
-.. class:: Client
-
-    .. method:: udf_put(filename[, udf_type=aerospike.UDF_TYPE_LUA[, policy]])
+    .. method:: udf_put(filename[, udf_type=aerospike.UDF_TYPE_LUA[, policy: dict]])
 
         Register a UDF module with the cluster.
 
@@ -1246,7 +1211,7 @@ User Defined Functions
                 client.udf_put('/path/to/my_module.lua')
                 client.close()
 
-    .. method:: udf_remove(module[, policy])
+    .. method:: udf_remove(module[, policy: dict])
 
         Remove a  previously registered UDF module from the cluster.
 
@@ -1258,7 +1223,7 @@ User Defined Functions
 
             client.udf_remove('my_module.lua')
 
-    .. method:: udf_list([policy]) -> []
+    .. method:: udf_list([policy: dict]) -> []
 
         Return the list of UDF modules registered with the cluster.
 
@@ -1268,7 +1233,6 @@ User Defined Functions
 
         .. code-block:: python
 
-            from __future__ import print_function
             import aerospike
 
             config = {'hosts': [('127.0.0.1', 3000)] }
@@ -1299,7 +1263,7 @@ User Defined Functions
                   'name': 'module.lua',
                   'type': 0}]
 
-    .. method:: udf_get(module[, language=aerospike.UDF_TYPE_LUA[, policy]]) -> str
+    .. method:: udf_get(module[, language=aerospike.UDF_TYPE_LUA[, policy: dict]]) -> str
 
         Return the content of a UDF module which is registered with the cluster.
 
@@ -1309,7 +1273,7 @@ User Defined Functions
         :rtype: :class:`str`
         :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
 
-    .. method:: apply(key, module, function, args[, policy])
+    .. method:: apply(key, module, function, args[, policy: dict])
 
         Apply a registered (see :meth:`udf_put`) record UDF to a particular record.
 
@@ -1331,7 +1295,6 @@ User Defined Functions
 
         .. code-block:: python
 
-            from __future__ import print_function
             import aerospike
             from aerospike import predexp
             from aerospike import exception as ex
@@ -1394,7 +1357,7 @@ User Defined Functions
                 aerospike:update(rec)
             end
 
-    .. method:: scan_apply(ns, set, module, function[, args[, policy[, options]]]) -> int
+    .. method:: scan_apply(ns, set, module, function[, args[, policy: dict[, options]]]) -> int
 
         Initiate a scan and apply a record UDF to each record matched by the scan. This method blocks until the scan is complete.
 
@@ -1413,13 +1376,13 @@ User Defined Functions
           and `Developing Record UDFs <http://www.aerospike.com/docs/udf/developing_record_udfs.html>`_.
 
 
-    .. method:: query_apply(ns, set, predicate, module, function[, args[, policy]]) -> int
+    .. method:: query_apply(ns, set, predicate, module, function[, args[, policy: dict]]) -> int
 
         Initiate a query and apply a record UDF to each record matched by the query. This method blocks until the query is completed.
 
         :param str ns: the namespace in the aerospike cluster.
         :param str set: the set name. Should be :py:obj:`None` if you want to query records in the *ns* which are in no set.
-        :param tuple predicate: the :py:func:`tuple` produced by one of the :mod:`aerospike.predicates` methods.
+        :param tuple predicate: the `tuple` produced by one of the :mod:`aerospike.predicates` methods.
         :param str module: the name of the UDF module.
         :param str function: the name of the UDF to apply to the records matched by the query.
         :param list args: the arguments to the UDF.
@@ -1432,7 +1395,7 @@ User Defined Functions
           and `Developing Record UDFs <http://www.aerospike.com/docs/udf/developing_record_udfs.html>`_.
 
 
-    .. method:: job_info(job_id, module[, policy]) -> dict
+    .. method:: job_info(job_id, module[, policy: dict]) -> dict
 
         Return the status of a job running in the background.
 
@@ -1444,7 +1407,6 @@ User Defined Functions
 
         .. code-block:: python
 
-            from __future__ import print_function
             import aerospike
             from aerospike import exception as ex
             import time
@@ -1481,7 +1443,6 @@ User Defined Functions
 
         .. code-block:: python
 
-            from __future__ import print_function
             import aerospike
             from aerospike import exception as ex
 
@@ -1511,8 +1472,6 @@ User Defined Functions
 
 Info Operations
 ---------------
-
-.. class:: Client
 
     .. method:: get_node_names() -> []
 
@@ -1572,7 +1531,7 @@ Info Operations
 
         .. warning:: In versions < 3.0.0 ``get_nodes`` will not work when using TLS
 
-    .. method:: info(command[, hosts[, policy]]) -> {}
+    .. method:: info(command[, hosts[, policy: dict]]) -> {}
 
         .. deprecated:: 3.0.0
             Use :meth:`info_single_node` to send a request to a single node, or :meth:`info_all` to send a request to the entire cluster. Sending requests to specific nodes can be better handled with a simple Python function such as:
@@ -1593,7 +1552,7 @@ Info Operations
         Send an info *command* to all nodes in the cluster and filter responses to only include nodes specified in a *hosts* list.
 
         :param str command: the info command.
-        :param list hosts: a :class:`list` containing an *address*, *port* :py:func:`tuple`. Example: ``[('127.0.0.1', 3000)]``
+        :param list hosts: a :class:`list` containing an *address*, *port* `tuple`. Example: ``[('127.0.0.1', 3000)]``
         :param dict policy: optional :ref:`aerospike_info_policies`.
         :rtype: :class:`dict`
         :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
@@ -1620,7 +1579,7 @@ Info Operations
 
         .. versionchanged:: 3.0.0
 
-    .. method:: info_all(command[, policy]]) -> {}
+    .. method:: info_all(command[, policy: dict]]) -> {}
 
         Send an info *command* to all nodes in the cluster to which the client is connected. If any of the individual requests fail, this will raise an exception.
 
@@ -1651,7 +1610,7 @@ Info Operations
 
         .. versionadded:: 3.0.0
 
-    .. method:: info_node(command, host[, policy]) -> str
+    .. method:: info_node(command, host[, policy: dict]) -> str
 
         .. deprecated:: 6.0.0
             Use :meth:`info_single_node` to send a request to a single node, or :meth:`info_all` to send a request to the entire cluster.
@@ -1659,7 +1618,7 @@ Info Operations
         Send an info *command* to a single node specified by *host*.
 
         :param str command: the info command.
-        :param tuple host: a :py:func:`tuple` containing an *address*, *port* , optional *tls-name* . Example: ``('127.0.0.1', 3000)`` or when using TLS ``('127.0.0.1', 4333, 'server-tls-name')``. In order to send an info request when TLS is enabled, the *tls-name* must be present.
+        :param tuple host: a `tuple` containing an *address*, *port* , optional *tls-name* . Example: ``('127.0.0.1', 3000)`` or when using TLS ``('127.0.0.1', 4333, 'server-tls-name')``. In order to send an info request when TLS is enabled, the *tls-name* must be present.
         :param dict policy: optional :ref:`aerospike_info_policies`.
         :rtype: :class:`str`
         :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
@@ -1670,7 +1629,7 @@ Info Operations
 
         .. warning:: for client versions < 3.0.0 ``info_node`` will not work when using TLS
 
-    .. method:: info_single_node(command, host[, policy]) -> str
+    .. method:: info_single_node(command, host[, policy: dict]) -> str
 
         Send an info *command* to a single node specified by *host name*.
 
@@ -1684,7 +1643,7 @@ Info Operations
 
         .. seealso:: `Info Command Reference <http://www.aerospike.com/docs/reference/info/>`_.
 
-    .. method:: info_random_node(command, [policy]) -> str
+    .. method:: info_random_node(command, [policy: dict]) -> str
 
         Send an info *command* to a single random node.
 
@@ -1697,7 +1656,7 @@ Info Operations
 
         .. versionchanged:: 6.0.0
 
-    .. method:: set_xdr_filter(data_center, namespace, expression_filter[, policy]) -> str
+    .. method:: set_xdr_filter(data_center, namespace, expression_filter[, policy: dict]) -> str
 
         Set the cluster's xdr filter using an Aerospike expression.
         The cluster's current filter can be removed by setting expression_filter to None.
@@ -1720,7 +1679,7 @@ Info Operations
 
         :rtype: :class:`int` or :py:obj:`None`
 
-    .. method:: truncate(namespace, set, nanos[, policy])
+    .. method:: truncate(namespace, set, nanos[, policy: dict])
 
         Remove records in specified namespace/set efficiently. This method is many orders of magnitude faster than deleting records one at a time. 
         See `Truncate command reference <https://www.aerospike.com/docs/reference/info#truncate>`_.
@@ -1791,9 +1750,7 @@ Info Operations
 Index Operations
 ----------------
 
-.. class:: Client
-
-    .. method:: index_string_create(ns, set, bin, index_name[, policy])
+    .. method:: index_string_create(ns, set, bin, index_name[, policy: dict])
 
         Create a string index with *index_name* on the *bin* in the specified \
         *ns*, *set*.
@@ -1817,7 +1774,7 @@ Index Operations
         :param dict policy: optional :ref:`aerospike_info_policies`.
         :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
 
-    .. method:: index_list_create(ns, set, bin, index_datatype, index_name[, policy])
+    .. method:: index_list_create(ns, set, bin, index_datatype, index_name[, policy: dict])
 
         Create an index named *index_name* for numeric, string or GeoJSON values \
         (as defined by *index_datatype*) on records of the specified *ns*, *set* \
@@ -1833,7 +1790,7 @@ Index Operations
 
         .. note:: Requires server version >= 3.8.0
 
-    .. method:: index_map_keys_create(ns, set, bin, index_datatype, index_name[, policy])
+    .. method:: index_map_keys_create(ns, set, bin, index_datatype, index_name[, policy: dict])
 
         Create an index named *index_name* for numeric, string or GeoJSON values \
         (as defined by *index_datatype*) on records of the specified *ns*, *set* \
@@ -1849,7 +1806,7 @@ Index Operations
 
         .. note:: Requires server version >= 3.8.0
 
-    .. method:: index_map_values_create(ns, set, bin, index_datatype, index_name[, policy])
+    .. method:: index_map_values_create(ns, set, bin, index_datatype, index_name[, policy: dict])
 
         Create an index named *index_name* for numeric, string or GeoJSON values \
         (as defined by *index_datatype*) on records of the specified *ns*, *set* \
@@ -1879,7 +1836,7 @@ Index Operations
             client.index_map_values_create('test', 'demo', 'fav_movies', aerospike.INDEX_NUMERIC, 'demo_fav_movies_views_idx')
             client.close()
 
-    .. method:: index_geo2dsphere_create(ns, set, bin, index_name[, policy])
+    .. method:: index_geo2dsphere_create(ns, set, bin, index_name[, policy: dict])
 
         Create a geospatial 2D spherical index with *index_name* on the *bin* \
         in the specified *ns*, *set*.
@@ -1904,7 +1861,7 @@ Index Operations
             client.close()
 
 
-    .. method:: index_remove(ns, index_name[, policy])
+    .. method:: index_remove(ns, index_name[, policy: dict])
 
         Remove the index with *index_name* from the namespace.
 
@@ -1919,8 +1876,6 @@ Index Operations
 
 Admin Operations
 ----------------
-
-.. class:: Client
 
     .. note::
 
@@ -1961,7 +1916,7 @@ Admin Operations
         .. seealso:: `Security features article <https://www.aerospike.com/docs/guide/security/index.html>`_.
 
 
-    .. method:: admin_create_role(role, privileges[, policy[, whitelist[, read_quota[, write_quota]]]])
+    .. method:: admin_create_role(role, privileges[, policy: dict[, whitelist[, read_quota[, write_quota]]]])
 
         Create a custom, named *role* containing a :class:`list` of *privileges*, optional whitelist, and quotas.
 
@@ -1973,7 +1928,7 @@ Admin Operations
         :param int write_quota: Maximum write per second limit, pass in zero for no limit.
         :raises: One of the :exc:`~aerospike.exception.AdminError` subclasses.
 
-    .. method:: admin_set_whitelist(role, whitelist[, policy])
+    .. method:: admin_set_whitelist(role, whitelist[, policy: dict])
 
         Add *whitelist* to a *role*.
 
@@ -1983,7 +1938,7 @@ Admin Operations
         :param dict policy: Optional :ref:`aerospike_admin_policies`.
         :raises: One of the :exc:`~aerospike.exception.AdminError` subclasses.
 
-    .. method:: admin_set_quotas(role[, read_quota[, write_quota[, policy]]])
+    .. method:: admin_set_quotas(role[, read_quota[, write_quota[, policy: dict]]])
 
         Add *quotas* to a *role*.
 
@@ -1993,7 +1948,7 @@ Admin Operations
         :param dict policy: optional :ref:`aerospike_admin_policies`.
         :raises: one of the :exc:`~aerospike.exception.AdminError` subclasses.
 
-    .. method:: admin_drop_role(role[, policy])
+    .. method:: admin_drop_role(role[, policy: dict])
 
         Drop a custom *role*.
 
@@ -2001,7 +1956,7 @@ Admin Operations
         :param dict policy: optional :ref:`aerospike_admin_policies`.
         :raises: one of the :exc:`~aerospike.exception.AdminError` subclasses.
 
-    .. method:: admin_grant_privileges(role, privileges[, policy])
+    .. method:: admin_grant_privileges(role, privileges[, policy: dict])
 
         Add *privileges* to a *role*.
 
@@ -2010,7 +1965,7 @@ Admin Operations
         :param dict policy: optional :ref:`aerospike_admin_policies`.
         :raises: one of the :exc:`~aerospike.exception.AdminError` subclasses.
 
-    .. method:: admin_revoke_privileges(role, privileges[, policy])
+    .. method:: admin_revoke_privileges(role, privileges[, policy: dict])
 
         Remove *privileges* from a *role*.
 
@@ -2019,7 +1974,7 @@ Admin Operations
         :param dict policy: optional :ref:`aerospike_admin_policies`.
         :raises: one of the :exc:`~aerospike.exception.AdminError` subclasses.
 
-    .. method:: admin_get_role(role[, policy]) -> []
+    .. method:: admin_get_role(role[, policy: dict]) -> []
 
         Get the :class:`dict` of privileges, whitelist, and quotas associated with a *role*.
 
@@ -2028,7 +1983,7 @@ Admin Operations
         :return: a :ref:`aerospike_privilege_dict`.
         :raises: one of the :exc:`~aerospike.exception.AdminError` subclasses.
 
-    .. method:: admin_get_roles([policy]) -> {}
+    .. method:: admin_get_roles([policy: dict]) -> {}
 
         Get all named roles and their attributes.
 
@@ -2036,7 +1991,7 @@ Admin Operations
         :return: a :class:`dict` of :ref:`aerospike_privilege_dict` keyed by role name.
         :raises: one of the :exc:`~aerospike.exception.AdminError` subclasses.
 
-    .. method:: admin_query_role(role[, policy]) -> []
+    .. method:: admin_query_role(role[, policy: dict]) -> []
 
         Get the :class:`list` of privileges associated with a *role*.
 
@@ -2045,7 +2000,7 @@ Admin Operations
         :return: a :class:`list` of :ref:`aerospike_privilege_dict`.
         :raises: one of the :exc:`~aerospike.exception.AdminError` subclasses.
 
-    .. method:: admin_query_roles([policy]) -> {}
+    .. method:: admin_query_roles([policy: dict]) -> {}
 
         Get all named roles and their privileges.
 
@@ -2053,7 +2008,7 @@ Admin Operations
         :return: a :class:`dict` of :ref:`aerospike_privilege_dict` keyed by role name.
         :raises: one of the :exc:`~aerospike.exception.AdminError` subclasses.
 
-    .. method:: admin_create_user(username, password, roles[, policy])
+    .. method:: admin_create_user(username, password, roles[, policy: dict])
 
         Create a user with a specified *username* and grant it *roles*.
 
@@ -2063,7 +2018,7 @@ Admin Operations
         :param dict policy: optional :ref:`aerospike_admin_policies`.
         :raises: one of the :exc:`~aerospike.exception.AdminError` subclasses.
 
-    .. method:: admin_drop_user(username[, policy])
+    .. method:: admin_drop_user(username[, policy: dict])
 
         Drop the user with a specified *username* from the cluster.
 
@@ -2071,7 +2026,7 @@ Admin Operations
         :param dict policy: optional :ref:`aerospike_admin_policies`.
         :raises: one of the :exc:`~aerospike.exception.AdminError` subclasses.
 
-    .. method:: admin_change_password(username, password[, policy])
+    .. method:: admin_change_password(username, password[, policy: dict])
 
         Change the *password* of the user *username*. This operation can only \
         be performed by that same user.
@@ -2081,7 +2036,7 @@ Admin Operations
         :param dict policy: optional :ref:`aerospike_admin_policies`.
         :raises: one of the :exc:`~aerospike.exception.AdminError` subclasses.
 
-    .. method:: admin_set_password(username, password[, policy])
+    .. method:: admin_set_password(username, password[, policy: dict])
 
         Set the *password* of the user *username* by a user administrator.
 
@@ -2090,7 +2045,7 @@ Admin Operations
         :param dict policy: optional :ref:`aerospike_admin_policies`.
         :raises: one of the :exc:`~aerospike.exception.AdminError` subclasses.
 
-    .. method:: admin_grant_roles(username, roles[, policy])
+    .. method:: admin_grant_roles(username, roles[, policy: dict])
 
         Add *roles* to the user *username*.
 
@@ -2099,7 +2054,7 @@ Admin Operations
         :param dict policy: optional :ref:`aerospike_admin_policies`.
         :raises: one of the :exc:`~aerospike.exception.AdminError` subclasses.
 
-    .. method:: admin_revoke_roles(username, roles[, policy])
+    .. method:: admin_revoke_roles(username, roles[, policy: dict])
 
         Remove *roles* from the user *username*.
 
@@ -2108,7 +2063,7 @@ Admin Operations
         :param dict policy: optional :ref:`aerospike_admin_policies`.
         :raises: one of the :exc:`~aerospike.exception.AdminError` subclasses.
 
-    .. method:: admin_query_user (username[, policy]) -> []
+    .. method:: admin_query_user (username[, policy: dict]) -> []
 
         Return the list of roles granted to the specified user *username*.
 
@@ -2117,7 +2072,7 @@ Admin Operations
         :return: a :class:`list` of role names.
         :raises: one of the :exc:`~aerospike.exception.AdminError` subclasses.
 
-    .. method:: admin_query_users ([policy]) -> {}
+    .. method:: admin_query_users ([policy: dict]) -> {}
 
         Return the :class:`dict` of users, with their roles keyed by username.
 
@@ -2549,7 +2504,7 @@ Batch Policies
 
 .. object:: policy
 
-    A :class:`dict` of optional batch policies, which are applicable to :meth:`~aerospike.Client.get_many`, :meth:`~aerospike.Client.exists_many` and :meth:`~aerospike.Client.select_many`.
+    A :class:`dict` of optional batch policies, which are applicable to :meth:`~aerospike.get_many`, :meth:`~aerospike.exists_many` and :meth:`~aerospike.select_many`.
 
     .. hlist::
         :columns: 1
@@ -2637,7 +2592,7 @@ Info Policies
 
 .. object:: policy
     
-    A :class:`dict` of optional info policies, which are applicable to :meth:`~aerospike.Client.info_all`, :meth:`~aerospike.Client.info_single_node`, :meth:`~aerospike.Client.info_random_node` and index operations.
+    A :class:`dict` of optional info policies, which are applicable to :meth:`~aerospike.info_all`, :meth:`~aerospike.info_single_node`, :meth:`~aerospike.info_random_node` and index operations.
 
     .. hlist::
         :columns: 1
@@ -2761,7 +2716,7 @@ Bit Policies
 
 .. object:: policy
 
-    A :class:`dict` of optional bit policies, which are applicable to bit operations.
+    A :class:`dict` of optional bit policies, which are applicable to bitwise operations.
 
     .. note:: Requires server version >= 4.6.0
 
@@ -2861,16 +2816,16 @@ Privilege Objects
 Unicode Handling
 ----------------
 
-Both :class:`str` and :func:`unicode` values are converted by the
+Both :class:`str` and `unicode` values are converted by the
 client into UTF-8 encoded strings for storage on the aerospike server.
-Read methods such as :meth:`~aerospike.Client.get`,
-:meth:`~aerospike.Client.query`, :meth:`~aerospike.Client.scan` and
-:meth:`~aerospike.Client.operate` will return that data as UTF-8 encoded
-:class:`str` values. To get a :func:`unicode` you will need to manually decode.
+Read methods such as :meth:`~aerospike.get`,
+:meth:`~aerospike.query`, :meth:`~aerospike.scan` and
+:meth:`~aerospike.operate` will return that data as UTF-8 encoded
+:class:`str` values. To get a `unicode` you will need to manually decode.
 
 .. warning::
 
-    Prior to release 1.0.43 read operations always returned strings as :func:`unicode`.
+    Prior to release 1.0.43 read operations always returned strings as `unicode`.
 
 .. code-block:: python
 

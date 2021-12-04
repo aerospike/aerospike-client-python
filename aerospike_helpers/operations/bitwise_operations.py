@@ -15,7 +15,7 @@
 ##########################################################################
 '''
 Helper functions to create bit operation dictionary arguments for
-the :mod:`aerospike.Client.operate` and :mod:`aerospike.Client.operate_ordered` methods of the aerospike client.
+the :meth:`aerospike.operate` and :meth:`aerospike.operate_ordered` methods of the aerospike client.
 
     .. note:: Bitwise operations require server version >= 4.6.0
 
@@ -29,7 +29,6 @@ Offset examples:
 
 Example::
 
-    from __future__ import print_function
     import aerospike
     from aerospike import exception as ex
     from aerospike_helpers.operations import bitwise_operations
@@ -99,7 +98,6 @@ Example::
 
 Example::
 
-    from __future__ import print_function
     import aerospike
     from aerospike import exception as e
     from aerospike_helpers.operations import bitwise_operations
@@ -191,19 +189,16 @@ SIGN_KEY = "sign"
 ACTION_KEY = "action"
 
 
-def bit_resize(bin_name, byte_size, policy=None, resize_flags=aerospike.BIT_RESIZE_DEFAULT):
-    """Creates a bit_resize_operation to be used with operate or operate_ordered.
+def bit_resize(bin_name: str, byte_size, policy=None, resize_flags: int=0):
+    """Creates a bit_resize_operation to be used with :meth:`aerospike.operate` or :meth:`aerospike.operate_ordered`.
 
     Change the size of a bytes bin stored in a record on the Aerospike Server.
 
     Args:
         bin_name (str): The name of the bin containing the map.
         byte_size (int): The new size of the bytes.
-        policy (dict, optional): The :ref:`bit_policy policy <aerospike_bit_policies>` dictionary. default: None.
-        resize_flags (int, optional): Flags modifying the behavior of the resize.
-            This should be constructed by bitwise or'ing together any of the values: :ref:`aerospike_bitwise_resize_flag` . 
-            e.g. `aerospike.BIT_RESIZE_GROW_ONLY | aerospike.BIT_RESIZE_FROM_FRONT`
-            default: :data:`aerospike.BIT_RESIZE_DEFAULT`
+        policy (dict): The :ref:`bit_policy <aerospike_bit_policies>` dictionary. default: None.
+        resize_flags (int): :ref:`aerospike_bitwise_resize_flag` modifying the resize behavior (default ``aerospike.BIT_RESIZE_DEFAULT``), such as ``aerospike.BIT_RESIZE_GROW_ONLY | aerospike.BIT_RESIZE_FROM_FRONT``.
 
     Returns:
         A dictionary usable in operate or operate_ordered. The format of the dictionary
@@ -218,8 +213,8 @@ def bit_resize(bin_name, byte_size, policy=None, resize_flags=aerospike.BIT_RESI
     }
 
 
-def bit_remove(bin_name, byte_offset, byte_size, policy=None):
-    """Creates a bit_remove_operation to be used with operate or operate_ordered.
+def bit_remove(bin_name: str, byte_offset, byte_size, policy=None):
+    """Creates a bit_remove_operation to be used with :meth:`aerospike.operate` or :meth:`aerospike.operate_ordered`.
 
     Remove bytes from bitmap at byte_offset for byte_size.
 
@@ -227,7 +222,7 @@ def bit_remove(bin_name, byte_offset, byte_size, policy=None):
         bin_name (str): The name of the bin containing the map.
         byte_offset (int): Position of bytes to be removed.
         byte_size (int): How many bytes to remove.
-        policy (dict, optional): The :ref:`bit_policy policy <aerospike_bit_policies>` dictionary. default: None.
+        policy (dict): The :ref:`bit_policy <aerospike_bit_policies>` dictionary. default: None.
 
     Returns:
         A dictionary usable in operate or operate_ordered. The format of the dictionary
@@ -242,8 +237,8 @@ def bit_remove(bin_name, byte_offset, byte_size, policy=None):
     }
 
 
-def bit_set(bin_name, bit_offset, bit_size, value_byte_size, value, policy=None):
-    """Creates a bit_set_operation to be used with operate or operate_ordered.
+def bit_set(bin_name: str, bit_offset, bit_size, value_byte_size, value, policy=None):
+    """Creates a bit_set_operation to be used with :meth:`aerospike.operate` or :meth:`aerospike.operate_ordered`.
 
     Set the value on a bitmap at bit_offset for bit_size in a record on the Aerospike Server.
 
@@ -252,8 +247,8 @@ def bit_set(bin_name, bit_offset, bit_size, value_byte_size, value, policy=None)
         bit_offset (int): The offset where the bits will be set.
         bit_size (int): How many bits of value to write.
         value_byte_size (int): Size of value in bytes.
-        value (bytes/byte array): The value to be set.
-        policy (dict, optional): The :ref:`bit_policy policy <aerospike_bit_policies>` dictionary. default: None.
+        value (bytes, bytearray): The value to be set.
+        policy (dict): The :ref:`bit_policy <aerospike_bit_policies>` dictionary. default: None.
 
     Returns:
         A dictionary usable in operate or operate_ordered. The format of the dictionary
@@ -270,8 +265,8 @@ def bit_set(bin_name, bit_offset, bit_size, value_byte_size, value, policy=None)
     }
 
 
-def bit_count(bin_name, bit_offset, bit_size):
-    """Creates a bit_count_operation to be used with operate or operate_ordered.
+def bit_count(bin_name: str, bit_offset, bit_size):
+    """Creates a bit_count_operation to be used with :meth:`aerospike.operate` or :meth:`aerospike.operate_ordered`.
 
     Server returns an integer count of all set bits starting at bit_offset for bit_size bits.
 
@@ -292,8 +287,8 @@ def bit_count(bin_name, bit_offset, bit_size):
     }
 
 
-def bit_add(bin_name, bit_offset, bit_size, value, sign, action, policy=None):
-    """Creates a bit_add_operation to be used with operate or operate_ordered.
+def bit_add(bin_name: str, bit_offset, bit_size, value, sign, action, policy=None):
+    """Creates a bit_add_operation to be used with :meth:`aerospike.operate` or :meth:`aerospike.operate_ordered`.
 
     Creates a bit add operation. Server adds value to the bin at bit_offset for bit_size.
     bit_size must <= 64. If Sign is true value will be treated as a signed number.
@@ -306,7 +301,7 @@ def bit_add(bin_name, bit_offset, bit_size, value, sign, action, policy=None):
         value (int): The value to be added.
         sign (bool): True: treat value as signed, False: treat value as unsigned.
         action (aerospike.constant): Action taken if an overflow/underflow occurs.
-        policy (dict, optional): The :ref:`bit_policy policy <aerospike_bit_policies>` dictionary. default: None.
+        policy (dict): The :ref:`bit_policy <aerospike_bit_policies>` dictionary. default: None.
 
     Returns:
         A dictionary usable in operate or operate_ordered. The format of the dictionary
@@ -324,8 +319,8 @@ def bit_add(bin_name, bit_offset, bit_size, value, sign, action, policy=None):
     }
 
 
-def bit_and(bin_name, bit_offset, bit_size, value_byte_size, value, policy=None):
-    """Creates a bit_and_operation to be used with operate or operate_ordered.
+def bit_and(bin_name: str, bit_offset, bit_size, value_byte_size, value, policy=None):
+    """Creates a bit_and_operation to be used with :meth:`aerospike.operate` or :meth:`aerospike.operate_ordered`.
 
     Creates a bit and operation. Server performs an and op with value and bitmap in bin
     at bit_offset for bit_size. Server returns nothing.
@@ -335,8 +330,8 @@ def bit_and(bin_name, bit_offset, bit_size, value_byte_size, value, policy=None)
         bit_offset (int): The offset where the bits will be modified.
         bit_size (int): How many bits of value to and.
         value_byte_size (int): Length of value in bytes.
-        value (bytes/byte array): Bytes to be used in and operation.
-        policy (dict, optional): The :ref:`bit_policy policy <aerospike_bit_policies>` dictionary. default: None.
+        value (bytes, bytearray): Bytes to be used in and operation.
+        policy (dict): The :ref:`bit_policy <aerospike_bit_policies>` dictionary. default: None.
 
     Returns:
         A dictionary usable in operate or operate_ordered. The format of the dictionary
@@ -353,8 +348,8 @@ def bit_and(bin_name, bit_offset, bit_size, value_byte_size, value, policy=None)
     }
 
 
-def bit_get(bin_name, bit_offset, bit_size):
-    """Creates a bit_get_operation to be used with operate or operate_ordered.
+def bit_get(bin_name: str, bit_offset, bit_size):
+    """Creates a bit_get_operation to be used with :meth:`aerospike.operate` or :meth:`aerospike.operate_ordered`.
 
     Server returns bits from bitmap starting at bit_offset for bit_size.
 
@@ -375,8 +370,8 @@ def bit_get(bin_name, bit_offset, bit_size):
     }
 
 
-def bit_get_int(bin_name, bit_offset, bit_size, sign):
-    """Creates a bit_get_int_operation to be used with operate or operate_ordered.
+def bit_get_int(bin_name: str, bit_offset, bit_size, sign):
+    """Creates a bit_get_int_operation to be used with :meth:`aerospike.operate` or :meth:`aerospike.operate_ordered`.
 
     Server returns an integer formed from the bits read
     from bitmap starting at bit_offset for bit_size.
@@ -400,8 +395,8 @@ def bit_get_int(bin_name, bit_offset, bit_size, sign):
     }
 
 
-def bit_insert(bin_name, byte_offset, value_byte_size, value, policy=None):
-    """Creates a bit_insert_operation to be used with operate or operate_ordered.
+def bit_insert(bin_name: str, byte_offset, value_byte_size, value, policy=None):
+    """Creates a bit_insert_operation to be used with :meth:`aerospike.operate` or :meth:`aerospike.operate_ordered`.
 
     Server inserts the bytes from value into the bitmap at byte_offset.
     No value is returned.
@@ -410,8 +405,8 @@ def bit_insert(bin_name, byte_offset, value_byte_size, value, policy=None):
         bin_name (str): The name of the bin containing the map.
         byte_offset (int): The offset where the bytes will be inserted.
         value_byte_size (int): Size of value in bytes.
-        value (bytes/byte array) The value to be inserted.
-        policy (dict, optional): The :ref:`bit_policy policy <aerospike_bit_policies>` dictionary. default: None.
+        value (bytes, bytearray): The value to be inserted.
+        policy (dict): The :ref:`bit_policy <aerospike_bit_policies>` dictionary. default: None.
 
 
     Returns:
@@ -428,8 +423,8 @@ def bit_insert(bin_name, byte_offset, value_byte_size, value, policy=None):
     }
 
 
-def bit_lscan(bin_name, bit_offset, bit_size, value):
-    """Creates a bit_lscan_operation to be used with operate or operate_ordered.
+def bit_lscan(bin_name: str, bit_offset, bit_size, value):
+    """Creates a bit_lscan_operation to be used with :meth:`aerospike.operate` or :meth:`aerospike.operate_ordered`.
 
     Server returns an integer representing the bit offset of the first occurence
     of the specified value bit. Starts scanning at bit_offset for bit_size. Returns
@@ -454,8 +449,8 @@ def bit_lscan(bin_name, bit_offset, bit_size, value):
     }
 
 
-def bit_lshift(bin_name, bit_offset, bit_size, shift, policy=None):
-    """Creates a bit_lshift_operation to be used with operate or operate_ordered.
+def bit_lshift(bin_name: str, bit_offset, bit_size, shift, policy=None):
+    """Creates a bit_lshift_operation to be used with :meth:`aerospike.operate` or :meth:`aerospike.operate_ordered`.
 
     Server left shifts bitmap starting at bit_offset for bit_size by shift bits.
     No value is returned.
@@ -465,7 +460,7 @@ def bit_lshift(bin_name, bit_offset, bit_size, shift, policy=None):
         bit_offset (int): The offset where the bits will start being shifted.
         bit_size (int): The number of bits that will be shifted by shift places.
         shift (int): How many bits to shift by.
-        policy (dict, optional): The :ref:`bit_policy policy <aerospike_bit_policies>` dictionary. default: None.
+        policy (dict): The :ref:`bit_policy <aerospike_bit_policies>` dictionary. default: None.
 
     Returns:
         A dictionary usable in operate or operate_ordered. The format of the dictionary
@@ -481,8 +476,8 @@ def bit_lshift(bin_name, bit_offset, bit_size, shift, policy=None):
     }
 
 
-def bit_not(bin_name, bit_offset, bit_size, policy=None):
-    """Creates a bit_not_operation to be used with operate or operate_ordered.
+def bit_not(bin_name: str, bit_offset, bit_size, policy=None):
+    """Creates a bit_not_operation to be used with :meth:`aerospike.operate` or :meth:`aerospike.operate_ordered`.
 
     Server negates bitmap starting at bit_offset for bit_size.
     No value is returned.
@@ -491,7 +486,7 @@ def bit_not(bin_name, bit_offset, bit_size, policy=None):
         bin_name (str): The name of the bin containing the map.
         bit_offset (int): The offset where the bits will start being scanned.
         bit_size (int): How many bits to scan.
-        policy (dict, optional): The :ref:`bit_policy policy <aerospike_bit_policies>` dictionary. default: None.
+        policy (dict): The :ref:`bit_policy <aerospike_bit_policies>` dictionary. default: None.
 
     Returns:
         A dictionary usable in operate or operate_ordered. The format of the dictionary
@@ -506,8 +501,8 @@ def bit_not(bin_name, bit_offset, bit_size, policy=None):
     }
 
 
-def bit_or(bin_name, bit_offset, bit_size, value_byte_size, value, policy=None):
-    """Creates a bit_or_operation to be used with operate or operate_ordered.
+def bit_or(bin_name: str, bit_offset, bit_size, value_byte_size, value, policy=None):
+    """Creates a bit_or_operation to be used with :meth:`aerospike.operate` or :meth:`aerospike.operate_ordered`.
 
     Creates a bit or operation. Server performs bitwise or with value and bitmap in bin
     at bit_offset for bit_size. Server returns nothing.
@@ -518,7 +513,7 @@ def bit_or(bin_name, bit_offset, bit_size, value_byte_size, value, policy=None):
         bit_size (int): How many bits of value to or.
         value_byte_size (int): Length of value in bytes.
         value (bytes/byte array): Value to be used in or operation.
-        policy (dict, optional): The :ref:`bit_policy policy <aerospike_bit_policies>` dictionary. default: None.
+        policy (dict): The :ref:`bit_policy <aerospike_bit_policies>` dictionary. default: None.
 
     Returns:
         A dictionary usable in operate or operate_ordered. The format of the dictionary
@@ -535,8 +530,8 @@ def bit_or(bin_name, bit_offset, bit_size, value_byte_size, value, policy=None):
     }
 
 
-def bit_rscan(bin_name, bit_offset, bit_size, value):
-    """Creates a bit_rscan_operation to be used with operate or operate_ordered.
+def bit_rscan(bin_name: str, bit_offset, bit_size, value):
+    """Creates a bit_rscan_operation to be used with :meth:`aerospike.operate` or :meth:`aerospike.operate_ordered`.
 
     Server returns an integer representing the bit offset of the last occurence
     of the specified value bit. Starts scanning at bit_offset for bit_size. Returns
@@ -561,8 +556,8 @@ def bit_rscan(bin_name, bit_offset, bit_size, value):
     }
 
 
-def bit_rshift(bin_name, bit_offset, bit_size, shift, policy=None):
-    """Creates a bit_rshift_operation to be used with operate or operate_ordered.
+def bit_rshift(bin_name: str, bit_offset, bit_size, shift, policy=None):
+    """Creates a bit_rshift_operation to be used with :meth:`aerospike.operate` or :meth:`aerospike.operate_ordered`.
 
     Server right shifts bitmap starting at bit_offset for bit_size by shift bits.
     No value is returned.
@@ -572,7 +567,7 @@ def bit_rshift(bin_name, bit_offset, bit_size, shift, policy=None):
         bit_offset (int): The offset where the bits will start being shifted.
         bit_size (int): The number of bits that will be shifted by shift places.
         shift (int): How many bits to shift by.
-        policy (dict, optional): The :ref:`bit_policy policy <aerospike_bit_policies>` dictionary. default: None.
+        policy (dict): The :ref:`bit_policy <aerospike_bit_policies>` dictionary. default: None.
 
     Returns:
         A dictionary usable in operate or operate_ordered. The format of the dictionary
@@ -588,8 +583,8 @@ def bit_rshift(bin_name, bit_offset, bit_size, shift, policy=None):
     }
 
 
-def bit_subtract(bin_name, bit_offset, bit_size, value, sign, action, policy=None):
-    """Creates a bit_subtract_operation to be used with operate or operate_ordered.
+def bit_subtract(bin_name: str, bit_offset, bit_size, value, sign, action, policy=None):
+    """Creates a bit_subtract_operation to be used with :meth:`aerospike.operate` or :meth:`aerospike.operate_ordered`.
 
     Creates a bit add operation. Server subtracts value from the bits at bit_offset for bit_size.
     bit_size must <= 64. If sign is true value will be treated as a signed number.
@@ -602,7 +597,7 @@ def bit_subtract(bin_name, bit_offset, bit_size, value, sign, action, policy=Non
         value (int): The value to be subtracted.
         sign (bool): True: treat value as signed, False: treat value as unsigned.
         action (aerospike.constant): Action taken if an overflow/underflow occurs.
-        policy (dict, optional): The :ref:`bit_policy policy <aerospike_bit_policies>` dictionary. default: None.
+        policy (dict): The :ref:`bit_policy <aerospike_bit_policies>` dictionary. default: None.
 
     Returns:
         A dictionary usable in operate or operate_ordered. The format of the dictionary
@@ -620,8 +615,8 @@ def bit_subtract(bin_name, bit_offset, bit_size, value, sign, action, policy=Non
     }
 
 
-def bit_xor(bin_name, bit_offset, bit_size, value_byte_size, value, policy=None):
-    """Creates a bit_xor_operation to be used with operate or operate_ordered.
+def bit_xor(bin_name: str, bit_offset, bit_size, value_byte_size, value, policy=None):
+    """Creates a bit_xor_operation to be used with :meth:`aerospike.operate` or :meth:`aerospike.operate_ordered`.
 
     Creates a bit and operation. Server performs bitwise xor with value and bitmap in bin
     at bit_offset for bit_size. Server returns nothing.
@@ -632,7 +627,7 @@ def bit_xor(bin_name, bit_offset, bit_size, value_byte_size, value, policy=None)
         bit_size (int): How many bits of value to xor.
         value_byte_size (int): Length of value in bytes.
         value (bytes/byte array): Value to be used in xor operation.
-        policy (dict, optional): The :ref:`bit_policy policy <aerospike_bit_policies>` dictionary. default: None.
+        policy (dict): The :ref:`bit_policy <aerospike_bit_policies>` dictionary. default: None.
 
     Returns:
         A dictionary usable in operate or operate_ordered. The format of the dictionary
