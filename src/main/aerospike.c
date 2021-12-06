@@ -70,7 +70,7 @@ static PyMethodDef Aerospike_Methods[] = {
 	 client_doc},
 	{"set_log_level", (PyCFunction)Aerospike_Set_Log_Level,
 	 METH_VARARGS | METH_KEYWORDS, "Sets the log level"},
-	{"enable_log_handler", (PyCFunction)Aerospike_Enable_Log_Handler,
+	{"set_log_handler", (PyCFunction)Aerospike_Set_Log_Handler,
 	 METH_VARARGS | METH_KEYWORDS, "Enables the log handler"},
 	{"geodata", (PyCFunction)Aerospike_Set_Geo_Data,
 	 METH_VARARGS | METH_KEYWORDS,

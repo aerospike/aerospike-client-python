@@ -279,4 +279,4 @@ def invalid_key(request):
     yield request.param
 
 # aerospike.set_log_level(aerospike.LOG_LEVEL_DEBUG)
-# aerospike.enable_log_handler()
+# aerospike.set_log_handler(None)

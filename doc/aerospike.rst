@@ -503,7 +503,7 @@ Methods
 
 .. rubric:: Logging
 
-.. py:function:: enable_log_handler()
+.. py:function:: set_log_handler(callback)
 
     Enables aerospike log handler
 
@@ -513,7 +513,7 @@ Methods
         import aerospike
 
         aerospike.set_log_level(aerospike.LOG_LEVEL_DEBUG)
-        aerospike.enable_log_handler()
+        aerospike.set_log_handler(callback)
 
 
 .. py:function:: set_log_level(log_level)

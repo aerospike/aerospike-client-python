@@ -19,7 +19,7 @@ class TestLog(object):
         Set the class level logger to a no-op to ensure no problems later
         '''
         aerospike.set_log_level(aerospike.LOG_LEVEL_ERROR)
-        aerospike.enable_log_handler()
+        aerospike.set_log_handler(None)
 
     def test_set_log_level_correct(self):
         """
@@ -36,7 +36,7 @@ class TestLog(object):
         """
 
         response = aerospike.set_log_level(aerospike.LOG_LEVEL_DEBUG)
-        aerospike.enable_log_handler()
+        aerospike.set_log_handler(None)
 
         # Forces an event to be logged
         client = TestBaseClass.get_new_connection()

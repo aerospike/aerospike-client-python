@@ -10,8 +10,8 @@ Please refer manylinux compatibility chart for more info: https://github.com/pyp
 ubuntu18 may not be supported with manylinux2014 builds
 
 ### Log API
-Console logging supported by default within core client instead of call back. \
-Api aerospike.set_log_handler(...) changed to aerospike.enable_log_handler()
+Behavior of aerospike.set_log_handler(...) API is changed to do console logging within core client instead of callback. \
+By default, error level console logging is enabled. \
 
 ## Features:
 CLIENT-1193	Python: Support partition scans \
@@ -21,8 +21,9 @@ CLIENT-1541	Python: Support paging scans \
 CLIENT-1558	Python-client - "query user(s) info API
 
 ## Improvements:
-CLIENT-1555	Unify Python-Client build/setup along with C-Client build
+CLIENT-1555	Remove dependency on c-client binary from python client source install
 
 ## Fixes:
+CLIENT-1566 Python-Client hangs intermittently in automation cluster
 
 ## Updates:

@@ -10,5 +10,5 @@ Please refer manylinux compatibility chart for more info: https://github.com/pyp
 ubuntu18 may not be supported with manylinux2014 builds
 
 ### Log API
-Console logging supported by default within core client instead of call back. \
-Api aerospike.set_log_handler(...) changed to aerospike.enable_log_handler()
+Behavior of aerospike.set_log_handler(...) API is changed to do console logging within core client instead of callback. \
+By default, error level console logging is enabled. \

@@ -126,11 +126,10 @@ bool log_cb(as_log_level level, const char *func, const char *file,
 	return true;
 }
 
-PyObject *Aerospike_Enable_Log_Handler(PyObject *parent, PyObject *args,
-									PyObject *kwds)
+PyObject *Aerospike_Set_Log_Handler(PyObject *parent, PyObject *args, PyObject * kwds)
 {
 	// Register callback to C-SDK
-	as_log_set_callback((as_log_callback)log_cb);
+	as_log_set_callback((as_log_callback) log_cb);
 
 	return PyLong_FromLong(0);
 }
