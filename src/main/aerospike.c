@@ -114,9 +114,6 @@ static AerospikeConstants auth_mode_constants[] = {
 #define AUTH_MODE_CONSTANTS_ARR_SIZE                                            \
 	(sizeof(auth_mode_constants) / sizeof(AerospikeConstants))
 
-extern bool log_cb(as_log_level level, const char *func, const char *file,
-				   uint32_t line, const char *fmt, ...);
-
 struct Aerospike_State{
 	PyObject			*exception;
 	PyTypeObject 		*client;
@@ -158,7 +155,7 @@ static int Aerospike_Clear(PyObject *aerospike)
 MOD_INIT(aerospike)
 {
 
-	const char version[8] = "7.0.0";
+	const char version[8] = "6.1.0";
 	// Makes things "thread-safe"
 	PyEval_InitThreads();
 	int i = 0;
@@ -246,9 +243,6 @@ MOD_INIT(aerospike)
 	Py_INCREF(infinite_object);
 	PyModule_AddObject(aerospike, "CDTInfinite", (PyObject *)infinite_object);
 	Aerospike_State(aerospike)->infinite_object = infinite_object;
-
-	// Register callback to C-SDK
-	as_log_set_callback((as_log_callback)log_cb);
 
 	return MOD_SUCCESS_VAL(aerospike);
 }

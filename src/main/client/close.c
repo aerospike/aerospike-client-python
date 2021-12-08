@@ -79,7 +79,9 @@ PyObject *AerospikeClient_Close(AerospikeClient *self, PyObject *args,
 		alias_to_search = NULL;
 	}
 	else {
+		Py_BEGIN_ALLOW_THREADS
 		aerospike_close(self->as, &err);
+		Py_END_ALLOW_THREADS
 	}
 	self->is_conn_16 = false;
 
@@ -152,7 +154,9 @@ void close_aerospike_object(aerospike *as, as_error *err, char *alias_to_search,
 	if (((AerospikeGlobalHosts *)py_persistent_item)->ref_cnt == 1) {
 		PyDict_DelItemString(py_global_hosts, alias_to_search);
 		AerospikeGlobalHosts_Del(py_persistent_item);
+		Py_BEGIN_ALLOW_THREADS
 		aerospike_close(as, err);
+		Py_END_ALLOW_THREADS
 	}
 	else {
 		((AerospikeGlobalHosts *)py_persistent_item)->ref_cnt--;

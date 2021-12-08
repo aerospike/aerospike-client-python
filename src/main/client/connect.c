@@ -136,7 +136,9 @@ PyObject *AerospikeClient_Connect(AerospikeClient *self, PyObject *args,
 		self->as->config.shm_key = shm_key;
 	}
 
+	Py_BEGIN_ALLOW_THREADS
 	aerospike_connect(self->as, &err);
+	Py_END_ALLOW_THREADS
 	if (err.code != AEROSPIKE_OK) {
 		goto CLEANUP;
 	}
