@@ -184,9 +184,9 @@ PyObject * Aerospike_Set_Log_Handler(PyObject *parent, PyObject *args, PyObject 
 	static char * kwlist[] = {"log_handler", NULL};
 
 	// Python function arguments parsing
-	PyArg_ParseTupleAndKeywords(args, kwds, "O|:setLogHandler", kwlist, &py_callback);
+	PyArg_ParseTupleAndKeywords(args, kwds, "|O:setLogHandler", kwlist, &py_callback);
 
-	if (PyCallable_Check(py_callback)) {
+	if (py_callback && PyCallable_Check(py_callback)) {
 		// Store user callback
 		Py_INCREF(py_callback);
 		user_callback.callback = py_callback;
