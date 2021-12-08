@@ -1,4 +1,4 @@
-# Version 7.0.0
+# Version 6.1.0
 
 ## Breaking Changes:
 
