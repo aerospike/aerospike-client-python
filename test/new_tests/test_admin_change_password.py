@@ -24,10 +24,8 @@ class TestChangePassword(object):
         """
             Setup method
             """
-        hostlist, user, password = TestBaseClass().get_hosts()
-        tls_info = TestBaseClass().get_tls_info()
         config = TestBaseClass.get_connection_config()
-        self.client = aerospike.client(config).connect(user, password)
+        self.client = aerospike.client(config).connect(config['user'], config['password'])
 
         try:
             self.client.admin_create_user(
@@ -54,6 +52,8 @@ class TestChangePassword(object):
         with pytest.raises(TypeError):
             self.client.admin_change_password()
 
+    # NOTE: This will fail if auth_mode is PKI_AUTH (3).
+    @pytest.mark.xfail(reason="Might fail depending on auth_mode.")
     def test_change_password_with_proper_parameters(self):
 
         user = "testchangepassworduser"
@@ -99,6 +99,8 @@ class TestChangePassword(object):
             assert exception.code == -2
             assert exception.msg == "timeout is invalid"
 
+    # NOTE: This will fail if auth_mode is PKI_AUTH (3).
+    @pytest.mark.xfail(reason="Might fail depending on auth_mode.")
     def test_change_password_with_proper_timeout_policy_value(self):
 
         user = "testchangepassworduser"

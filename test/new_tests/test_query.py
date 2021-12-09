@@ -628,6 +628,12 @@ class TestQuery(TestBaseClass):
             Invoke query() with correct arguments and using predexp
         """
 
+        from .test_base_class import TestBaseClass
+        if TestBaseClass.major_ver >= 5 and TestBaseClass.minor_ver >=7:
+            # print("TestBaseClass.major_ver:", TestBaseClass.major_ver, "TestBaseClass.minor_ver:", TestBaseClass.minor_ver)
+            pytest.skip(
+                'It deprecated and it only applies to < 5.7 earlier and enterprise edition')
+
         expr = exp.Eq(exp.IntBin('test_age'), 4)
 
         query = self.as_connection.query('test', 'demo')

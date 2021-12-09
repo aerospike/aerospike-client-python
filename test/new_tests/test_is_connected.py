@@ -19,8 +19,7 @@ class TestIsConnected(object):
         """
         Setup the config which is used in the tests
         """
-        cls.hostlist, cls.user, cls.password = TestBaseClass.get_hosts()
-        cls.config = {'hosts': cls.hostlist}
+        cls.config = TestBaseClass.get_connection_config()
 
     def _connect(self):
         """

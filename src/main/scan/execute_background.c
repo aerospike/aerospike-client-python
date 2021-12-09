@@ -28,55 +28,61 @@
 #include "policy.h"
 #include "scan.h"
 
-
-PyObject * AerospikeScan_ExecuteBackground(AerospikeScan * self, PyObject * args, PyObject * kwds)
+PyObject *AerospikeScan_ExecuteBackground(AerospikeScan *self, PyObject *args,
+										  PyObject *kwds)
 {
-	PyObject * py_policy = NULL;
+	PyObject *py_policy = NULL;
 
 	as_policy_scan scan_policy;
-	as_policy_scan * scan_policy_p = NULL;
-    uint64_t scan_id = 0;
-	static char * kwlist[] = {"policy", NULL};
+	as_policy_scan *scan_policy_p = NULL;
+	uint64_t scan_id = 0;
+	static char *kwlist[] = {"policy", NULL};
 
 	// For converting expressions.
 	as_exp exp_list;
-	as_exp* exp_list_p = NULL;
+	as_exp *exp_list_p = NULL;
 
 	// For converting predexp.
 	as_predexp_list predexp_list;
-	as_predexp_list* predexp_list_p = NULL;
+	as_predexp_list *predexp_list_p = NULL;
 
-	if (PyArg_ParseTupleAndKeywords(args, kwds, "|O:execute_background", kwlist, &py_policy) == false) {
+	if (PyArg_ParseTupleAndKeywords(args, kwds, "|O:execute_background", kwlist,
+									&py_policy) == false) {
 		return NULL;
 	}
 
 	as_error err;
 	as_error_init(&err);
 
-	if (! self || !self->client->as) {
+	if (!self || !self->client->as) {
 		as_error_update(&err, AEROSPIKE_ERR_PARAM, "Invalid aerospike object.");
 		goto CLEANUP;
 	}
-	if (! self->client->is_conn_16) {
-		as_error_update(&err, AEROSPIKE_ERR_CLUSTER, "No connection to aerospike cluster.");
+	if (!self->client->is_conn_16) {
+		as_error_update(&err, AEROSPIKE_ERR_CLUSTER,
+						"No connection to aerospike cluster.");
 		goto CLEANUP;
 	}
 
-    if (py_policy) {
-        if (pyobject_to_policy_scan(self->client, &err, py_policy, &scan_policy, &scan_policy_p,
-            &self->client->as->config.policies.scan, &predexp_list, &predexp_list_p, &exp_list, &exp_list_p) != AEROSPIKE_OK) {
-                goto CLEANUP;
-            }
-    }
+	if (py_policy) {
+		if (pyobject_to_policy_scan(
+				self->client, &err, py_policy, &scan_policy, &scan_policy_p,
+				&self->client->as->config.policies.scan, &predexp_list,
+				&predexp_list_p, &exp_list, &exp_list_p) != AEROSPIKE_OK) {
+			goto CLEANUP;
+		}
+	}
 
-    Py_BEGIN_ALLOW_THREADS
-    aerospike_scan_background(self->client->as, &err, scan_policy_p, &self->scan, &scan_id);
-    Py_END_ALLOW_THREADS
+	Py_BEGIN_ALLOW_THREADS
+	aerospike_scan_background(self->client->as, &err, scan_policy_p,
+							  &self->scan, &scan_id);
+	Py_END_ALLOW_THREADS
 
 CLEANUP:
 
 	if (exp_list_p) {
-		as_exp_destroy(exp_list_p);;
+		as_exp_destroy(exp_list_p);
+		;
 	}
 
 	if (predexp_list_p) {
@@ -84,7 +90,7 @@ CLEANUP:
 	}
 
 	if (err.code != AEROSPIKE_OK) {
-		PyObject * py_err = NULL;
+		PyObject *py_err = NULL;
 		error_to_pyobject(&err, &py_err);
 		PyObject *exception_type = raise_exception(&err);
 		PyErr_SetObject(exception_type, py_err);

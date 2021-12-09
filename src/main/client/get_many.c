@@ -31,8 +31,6 @@
 
 #define MAX_STACK_ALLOCATION 4000
 
-
-
 /**
  *******************************************************************************************************
  * This function will get a batch of records from the Aerospike DB.
@@ -45,15 +43,18 @@
  * Returns the record if key exists otherwise NULL.
  *******************************************************************************************************
  */
-static PyObject * batch_get_aerospike_batch_read(as_error *err, AerospikeClient * self, PyObject *py_keys, as_policy_batch * batch_policy_p)
+static PyObject *batch_get_aerospike_batch_read(as_error *err,
+												AerospikeClient *self,
+												PyObject *py_keys,
+												as_policy_batch *batch_policy_p)
 {
-	PyObject * py_recs = NULL;
+	PyObject *py_recs = NULL;
 
 	as_batch_read_records records;
 
 	// Initialisation flags
 	bool batch_initialised = false;
-	as_batch_read_record* record = NULL;
+	as_batch_read_record *record = NULL;
 
 	// Convert python keys list to as_key ** and add it to as_batch.keys
 	// keys can be specified in PyList or PyTuple
@@ -62,19 +63,21 @@ static PyObject * batch_get_aerospike_batch_read(as_error *err, AerospikeClient 
 
 		if (size > MAX_STACK_ALLOCATION) {
 			as_batch_read_init(&records, size);
-		} else {
+		}
+		else {
 			as_batch_read_inita(&records, size);
 		}
 
 		// Batch object initialised
 		batch_initialised = true;
 
-		for ( int i = 0; i < size; i++ ) {
+		for (int i = 0; i < size; i++) {
 
-			PyObject * py_key = PyList_GetItem(py_keys, i);
+			PyObject *py_key = PyList_GetItem(py_keys, i);
 
 			if (!PyTuple_Check(py_key)) {
-				as_error_update(err, AEROSPIKE_ERR_PARAM, "Key should be a tuple.");
+				as_error_update(err, AEROSPIKE_ERR_PARAM,
+								"Key should be a tuple.");
 				goto CLEANUP;
 			}
 
@@ -93,17 +96,19 @@ static PyObject * batch_get_aerospike_batch_read(as_error *err, AerospikeClient 
 
 		if (size > MAX_STACK_ALLOCATION) {
 			as_batch_read_init(&records, size);
-		} else {
+		}
+		else {
 			as_batch_read_inita(&records, size);
 		}
 		// Batch object initialised
 		batch_initialised = true;
 
-		for ( int i = 0; i < size; i++ ) {
-			PyObject * py_key = PyTuple_GetItem(py_keys, i);
+		for (int i = 0; i < size; i++) {
+			PyObject *py_key = PyTuple_GetItem(py_keys, i);
 
 			if (!PyTuple_Check(py_key)) {
-				as_error_update(err, AEROSPIKE_ERR_PARAM, "Key should be a tuple.");
+				as_error_update(err, AEROSPIKE_ERR_PARAM,
+								"Key should be a tuple.");
 				goto CLEANUP;
 			}
 
@@ -118,7 +123,8 @@ static PyObject * batch_get_aerospike_batch_read(as_error *err, AerospikeClient 
 		}
 	}
 	else {
-		as_error_update(err, AEROSPIKE_ERR_PARAM, "Keys should be specified as a list or tuple.");
+		as_error_update(err, AEROSPIKE_ERR_PARAM,
+						"Keys should be specified as a list or tuple.");
 		goto CLEANUP;
 	}
 
@@ -126,8 +132,7 @@ static PyObject * batch_get_aerospike_batch_read(as_error *err, AerospikeClient 
 	Py_BEGIN_ALLOW_THREADS
 	aerospike_batch_read(self->as, err, batch_policy_p, &records);
 	Py_END_ALLOW_THREADS
-	if (err->code != AEROSPIKE_OK)
-	{
+	if (err->code != AEROSPIKE_OK) {
 		goto CLEANUP;
 	}
 	batch_read_records_to_pyobject(self, err, &records, &py_recs);
@@ -141,7 +146,7 @@ CLEANUP:
 	}
 
 	if (err->code != AEROSPIKE_OK) {
-		PyObject * py_err = NULL;
+		PyObject *py_err = NULL;
 		error_to_pyobject(err, &py_err);
 		PyObject *exception_type = raise_exception(err);
 		PyErr_SetObject(exception_type, py_err);
@@ -164,28 +169,27 @@ CLEANUP:
  * Returns the record if key exists otherwise NULL.
  *******************************************************************************************************
  */
-static
-PyObject * AerospikeClient_Get_Many_Invoke(
-	AerospikeClient * self,
-	PyObject * py_keys, PyObject * py_policy)
+static PyObject *AerospikeClient_Get_Many_Invoke(AerospikeClient *self,
+												 PyObject *py_keys,
+												 PyObject *py_policy)
 {
 	// Python Return Value
-	PyObject * py_recs = NULL;
+	PyObject *py_recs = NULL;
 
 	// Aerospike Client Arguments
 	as_error err;
 	as_policy_batch policy;
-	as_policy_batch * batch_policy_p = NULL;
+	as_policy_batch *batch_policy_p = NULL;
 	// Initialize error
 	as_error_init(&err);
 
 	// For converting expressions.
 	as_exp exp_list;
-	as_exp* exp_list_p = NULL;
+	as_exp *exp_list_p = NULL;
 
 	// For converting predexp.
 	as_predexp_list predexp_list;
-	as_predexp_list* predexp_list_p = NULL;
+	as_predexp_list *predexp_list_p = NULL;
 
 	if (!self || !self->as) {
 		as_error_update(&err, AEROSPIKE_ERR_PARAM, "Invalid aerospike object");
@@ -193,24 +197,27 @@ PyObject * AerospikeClient_Get_Many_Invoke(
 	}
 
 	if (!self->is_conn_16) {
-		as_error_update(&err, AEROSPIKE_ERR_CLUSTER, "No connection to aerospike cluster");
+		as_error_update(&err, AEROSPIKE_ERR_CLUSTER,
+						"No connection to aerospike cluster");
 		goto CLEANUP;
 	}
 
 	// Convert python policy object to as_policy_batch
 	pyobject_to_policy_batch(self, &err, py_policy, &policy, &batch_policy_p,
-			&self->as->config.policies.batch, &predexp_list, &predexp_list_p, &exp_list, &exp_list_p);
+							 &self->as->config.policies.batch, &predexp_list,
+							 &predexp_list_p, &exp_list, &exp_list_p);
 	if (err.code != AEROSPIKE_OK) {
 		goto CLEANUP;
 	}
 
-	py_recs = batch_get_aerospike_batch_read(&err, self, py_keys, batch_policy_p);
-
+	py_recs =
+		batch_get_aerospike_batch_read(&err, self, py_keys, batch_policy_p);
 
 CLEANUP:
 
 	if (exp_list_p) {
-		as_exp_destroy(exp_list_p);;
+		as_exp_destroy(exp_list_p);
+		;
 	}
 
 	if (predexp_list_p) {
@@ -218,12 +225,12 @@ CLEANUP:
 	}
 
 	if (err.code != AEROSPIKE_OK) {
-		PyObject * py_err = NULL;
+		PyObject *py_err = NULL;
 		error_to_pyobject(&err, &py_err);
 		PyObject *exception_type = raise_exception(&err);
 		if (PyObject_HasAttrString(exception_type, "key")) {
 			PyObject_SetAttrString(exception_type, "key", py_keys);
-		} 
+		}
 		if (PyObject_HasAttrString(exception_type, "bin")) {
 			PyObject_SetAttrString(exception_type, "bin", Py_None);
 		}
@@ -249,18 +256,19 @@ CLEANUP:
  * In case of error,appropriate exceptions will be raised.
  *******************************************************************************************************
  */
-PyObject * AerospikeClient_Get_Many(AerospikeClient * self, PyObject * args, PyObject * kwds)
+PyObject *AerospikeClient_Get_Many(AerospikeClient *self, PyObject *args,
+								   PyObject *kwds)
 {
 	// Python Function Arguments
-	PyObject * py_keys = NULL;
-	PyObject * py_policy = NULL;
+	PyObject *py_keys = NULL;
+	PyObject *py_policy = NULL;
 
 	// Python Function Keyword Arguments
-	static char * kwlist[] = {"keys", "policy", NULL};
+	static char *kwlist[] = {"keys", "policy", NULL};
 
 	// Python Function Argument Parsing
 	if (PyArg_ParseTupleAndKeywords(args, kwds, "O|O:get_many", kwlist,
-			&py_keys, &py_policy) == false) {
+									&py_keys, &py_policy) == false) {
 		return NULL;
 	}
 

@@ -24,7 +24,7 @@ class TestInfo(object):
         assert nodes_info is not None
 
         assert type(nodes_info) == dict
-
+        
     def test_info_all_with_None_policy(self):
         request = "statistics"
         nodes_info = self.as_connection.info_all(request, None)

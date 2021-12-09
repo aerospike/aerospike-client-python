@@ -15,6 +15,8 @@ class TestBaseClass(object):
     using_auth = False
     should_xfail = False
     using_enterprise = False
+    major_ver=0
+    minor_ver=0
 
     @staticmethod
     def get_hosts():
@@ -42,7 +44,8 @@ class TestBaseClass(object):
         else:
             TestBaseClass.hostlist = TestBaseClass.parse_hosts(
                 config.get('community-edition', 'hosts'))
-        return TestBaseClass.hostlist, TestBaseClass.user, TestBaseClass.password
+
+        return TestBaseClass.hostlist
 
     @staticmethod
     def temporary_xfail():
@@ -113,6 +116,20 @@ class TestBaseClass(object):
         return tls_dict
 
     @staticmethod
+    def get_policies_info():
+        policies_dict = {}
+        config = configparser.ConfigParser()
+        config.read("config.conf")
+
+        policies_dict['auth_mode'] = int(0)
+        if config.has_option('policies', 'auth_mode'):
+            auth_mode = config.get('policies', 'auth_mode')
+            if auth_mode != 'None' and auth_mode.isdigit():
+                policies_dict['auth_mode'] = int(auth_mode)
+
+        return policies_dict
+
+    @staticmethod
     def parse_hosts(host_str):
         hosts = []
         host_str = host_str.strip()
@@ -145,19 +162,28 @@ class TestBaseClass(object):
         and return a newly connected client
         '''
         add_config = add_config if add_config else {}
-        hostlist, username, password = TestBaseClass.get_hosts()
-        config = {'hosts': hostlist}
-        tls_dict = {}
-        tls_dict = TestBaseClass.get_tls_info()
-
-        config['tls'] = tls_dict
+        config = TestBaseClass.get_connection_config()
         for key in add_config:
             config[key] = add_config[key]
+
         client = aerospike.client(config)
-        if username and password:
-            client.connect(username, password)
-        else:
+        if config['user'] is None and config['password'] is None:
             client.connect()
+        else:
+            client.connect(config['user'], config['password'])
+
+        if client is not None:
+            build_info = client.info_all("build")
+            res = []
+            for _, (error, result) in list(build_info.items()):
+                res = None if error is not None else result.strip().strip(';').strip(':')
+                res = None if res is None or len(res) == 0 else res
+                if res is not None:
+                    break
+            res = res.split('.')
+            major_ver = res[0]
+            minor_ver = res[1]
+            # print("major_ver:", major_ver, "minor_ver:", minor_ver)
 
         return client
 
@@ -166,31 +192,32 @@ class TestBaseClass(object):
         if TestBaseClass.using_tls:
             return True
         else:
-            TestBaseClass.get_tls_info()
-
-        return TestBaseClass.using_tls
+            return True
 
     @staticmethod
     def auth_in_use():
         if TestBaseClass.using_auth:
             return True
         else:
-            TestBaseClass.get_hosts()
-        return TestBaseClass.using_auth
+            return False
 
     @staticmethod
     def enterprise_in_use():
         if TestBaseClass.using_enterprise:
             return True
         else:
-            TestBaseClass.get_hosts()
-        return TestBaseClass.using_enterprise
+            return False
 
     @staticmethod
     def get_connection_config():
         config = {}
-        hosts, _, _ = TestBaseClass.get_hosts()
+        hosts_conf = TestBaseClass.get_hosts()
         tls_conf = TestBaseClass.get_tls_info()
-        config['hosts'] = hosts
+        policies_conf = TestBaseClass.get_policies_info()
+        config['hosts'] = hosts_conf
         config['tls'] = tls_conf
+        config['policies'] = policies_conf
+        config['user'] = TestBaseClass.user
+        config['password'] = TestBaseClass.password
+        # print(config)
         return config

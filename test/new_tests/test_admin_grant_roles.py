@@ -24,10 +24,9 @@ class TestGrantRoles(TestBaseClass):
         """
         Setup method
         """
-        hostlist, user, password = TestBaseClass().get_hosts()
         config = TestBaseClass.get_connection_config()
         TestGrantRoles.Me = self
-        self.client = aerospike.client(config).connect(user, password)
+        self.client = aerospike.client(config).connect(config['user'], config['password'])
 
         try:
             self.client.admin_drop_user("example-test")

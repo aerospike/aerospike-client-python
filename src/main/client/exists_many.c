@@ -29,14 +29,12 @@
 #include "exceptions.h"
 #include "policy.h"
 
-
 typedef struct _exists_many_cb_data {
-	PyObject* py_recs;
-	as_error* cb_err;
-}exists_many_cb_data;
+	PyObject *py_recs;
+	as_error *cb_err;
+} exists_many_cb_data;
 
-static void
-make_batch_safe_to_free(as_batch* batch, int size);
+static void make_batch_safe_to_free(as_batch *batch, int size);
 /**
  *******************************************************************************************************
  * This callback will be called with the results with aerospike_batch_exists().
@@ -49,12 +47,12 @@ make_batch_safe_to_free(as_batch* batch, int size);
  * Returns boolean value(true or false).
  *******************************************************************************************************
  */
-static
-bool batch_exists_cb(const as_batch_read* results, uint32_t n, void* udata)
+static bool batch_exists_cb(const as_batch_read *results, uint32_t n,
+							void *udata)
 {
 	// Typecast udata back to PyObject
-	exists_many_cb_data* local_data = (exists_many_cb_data*)udata;
-	PyObject * py_recs = local_data->py_recs;
+	exists_many_cb_data *local_data = (exists_many_cb_data *)udata;
+	PyObject *py_recs = local_data->py_recs;
 	as_error local_err;
 	as_error_init(&local_err);
 
@@ -65,9 +63,9 @@ bool batch_exists_cb(const as_batch_read* results, uint32_t n, void* udata)
 	// Loop over results array
 	for (uint32_t i = 0; i < n; i++) {
 
-		PyObject * py_rec = NULL;
-		PyObject* py_meta = NULL;
-		PyObject* py_key = NULL;
+		PyObject *py_rec = NULL;
+		PyObject *py_meta = NULL;
+		PyObject *py_key = NULL;
 
 		if (results[i].result == AEROSPIKE_OK) {
 			key_to_pyobject(&local_err, results[i].key, &py_key);
@@ -85,31 +83,34 @@ bool batch_exists_cb(const as_batch_read* results, uint32_t n, void* udata)
 			Py_DECREF(py_key);
 			Py_DECREF(py_meta);
 			if (!py_rec) {
-				as_error_update(local_data->cb_err, AEROSPIKE_ERR_CLIENT, "Failed to create metadata tuple");
+				as_error_update(local_data->cb_err, AEROSPIKE_ERR_CLIENT,
+								"Failed to create metadata tuple");
 				PyGILState_Release(gstate);
 				return false;
 			}
-		} else {
+		}
+		else {
 			key_to_pyobject(&local_err, results[i].key, &py_key);
 			if (!py_key) {
-				py_key= Py_None;
+				py_key = Py_None;
 				Py_INCREF(py_key);
 			}
 			py_rec = Py_BuildValue("OO", py_key, Py_None);
 			Py_DECREF(py_key);
 			if (!py_rec) {
 				PyGILState_Release(gstate);
-				as_error_update(local_data->cb_err, AEROSPIKE_ERR_CLIENT, "Failed to create metadata tuple");
+				as_error_update(local_data->cb_err, AEROSPIKE_ERR_CLIENT,
+								"Failed to create metadata tuple");
 				return false;
 			}
 		}
 		if (PyList_SetItem(py_recs, i, py_rec) != 0) {
 			Py_XDECREF(py_rec);
 			PyGILState_Release(gstate);
-			as_error_update(local_data->cb_err, AEROSPIKE_ERR_CLIENT, "Failed to add record to metadata tuple");
+			as_error_update(local_data->cb_err, AEROSPIKE_ERR_CLIENT,
+							"Failed to add record to metadata tuple");
 			return false;
 		}
-
 	}
 	// Release Python State
 	PyGILState_Release(gstate);
@@ -128,7 +129,10 @@ bool batch_exists_cb(const as_batch_read* results, uint32_t n, void* udata)
  * Returns the record if key exists otherwise NULL.
  *******************************************************************************************************
  */
-static PyObject * batch_exists_aerospike_batch_exists(as_error *err, AerospikeClient * self, PyObject *py_keys, as_policy_batch * batch_policy_p)
+static PyObject *
+batch_exists_aerospike_batch_exists(as_error *err, AerospikeClient *self,
+									PyObject *py_keys,
+									as_policy_batch *batch_policy_p)
 {
 
 	as_batch batch;
@@ -149,7 +153,8 @@ static PyObject * batch_exists_aerospike_batch_exists(as_error *err, AerospikeCl
 
 		cb_data.py_recs = PyList_New(size);
 		if (!cb_data.py_recs) {
-			as_error_update(err, AEROSPIKE_ERR_PARAM, "Failed to allocate return record");
+			as_error_update(err, AEROSPIKE_ERR_PARAM,
+							"Failed to allocate return record");
 			goto CLEANUP;
 		}
 		// Batch object initialised
@@ -157,10 +162,11 @@ static PyObject * batch_exists_aerospike_batch_exists(as_error *err, AerospikeCl
 
 		for (int i = 0; i < size; i++) {
 
-			PyObject * py_key = PyList_GetItem(py_keys, i);
+			PyObject *py_key = PyList_GetItem(py_keys, i);
 
 			if (!PyTuple_Check(py_key)) {
-				as_error_update(err, AEROSPIKE_ERR_PARAM, "Key should be a tuple.");
+				as_error_update(err, AEROSPIKE_ERR_PARAM,
+								"Key should be a tuple.");
 				goto CLEANUP;
 			}
 
@@ -176,7 +182,8 @@ static PyObject * batch_exists_aerospike_batch_exists(as_error *err, AerospikeCl
 
 		cb_data.py_recs = PyList_New(size);
 		if (!cb_data.py_recs) {
-			as_error_update(err, AEROSPIKE_ERR_PARAM, "Failed to allocate return record");
+			as_error_update(err, AEROSPIKE_ERR_PARAM,
+							"Failed to allocate return record");
 			goto CLEANUP;
 		}
 
@@ -186,10 +193,11 @@ static PyObject * batch_exists_aerospike_batch_exists(as_error *err, AerospikeCl
 		make_batch_safe_to_free(&batch, size);
 
 		for (int i = 0; i < size; i++) {
-			PyObject * py_key = PyTuple_GetItem(py_keys, i);
+			PyObject *py_key = PyTuple_GetItem(py_keys, i);
 
 			if (!PyTuple_Check(py_key)) {
-				as_error_update(err, AEROSPIKE_ERR_PARAM, "Key should be a tuple.");
+				as_error_update(err, AEROSPIKE_ERR_PARAM,
+								"Key should be a tuple.");
 				goto CLEANUP;
 			}
 
@@ -201,14 +209,16 @@ static PyObject * batch_exists_aerospike_batch_exists(as_error *err, AerospikeCl
 		}
 	}
 	else {
-		as_error_update(err, AEROSPIKE_ERR_PARAM, "Keys should be specified as a list or tuple.");
+		as_error_update(err, AEROSPIKE_ERR_PARAM,
+						"Keys should be specified as a list or tuple.");
 		goto CLEANUP;
 	}
 
 	// Invoke C-client API
 	Py_BEGIN_ALLOW_THREADS
 	aerospike_batch_exists(self->as, err, batch_policy_p, &batch,
-			(aerospike_batch_read_callback) batch_exists_cb, &cb_data);
+						   (aerospike_batch_read_callback)batch_exists_cb,
+						   &cb_data);
 	Py_END_ALLOW_THREADS
 	if (err->code != AEROSPIKE_OK) {
 		as_error_update(err, err->code, NULL);
@@ -240,26 +250,25 @@ CLEANUP:
  * Returns the metadata of a record if key exists otherwise NULL.
  *******************************************************************************************************
  */
-static
-PyObject * AerospikeClient_Exists_Many_Invoke(
-	AerospikeClient * self,
-	PyObject * py_keys, PyObject * py_policy)
+static PyObject *AerospikeClient_Exists_Many_Invoke(AerospikeClient *self,
+													PyObject *py_keys,
+													PyObject *py_policy)
 {
 	// Python Return Value
-	PyObject * py_recs = NULL;
+	PyObject *py_recs = NULL;
 
 	// Aerospike Client Arguments
 	as_error err;
 	as_policy_batch policy;
-	as_policy_batch * batch_policy_p = NULL;
+	as_policy_batch *batch_policy_p = NULL;
 
 	// For converting expressions.
 	as_exp exp_list;
-	as_exp* exp_list_p = NULL;
+	as_exp *exp_list_p = NULL;
 
 	// For converting predexp.
 	as_predexp_list predexp_list;
-	as_predexp_list* predexp_list_p = NULL;
+	as_predexp_list *predexp_list_p = NULL;
 
 	// Initialize error
 	as_error_init(&err);
@@ -270,25 +279,27 @@ PyObject * AerospikeClient_Exists_Many_Invoke(
 	}
 
 	if (!self->is_conn_16) {
-		as_error_update(&err, AEROSPIKE_ERR_CLUSTER, "No connection to aerospike cluster");
+		as_error_update(&err, AEROSPIKE_ERR_CLUSTER,
+						"No connection to aerospike cluster");
 		goto CLEANUP;
 	}
 
 	// Convert python policy object to as_policy_batch
 	pyobject_to_policy_batch(self, &err, py_policy, &policy, &batch_policy_p,
-			&self->as->config.policies.batch, &predexp_list, &predexp_list_p, &exp_list, &exp_list_p);
+							 &self->as->config.policies.batch, &predexp_list,
+							 &predexp_list_p, &exp_list, &exp_list_p);
 	if (err.code != AEROSPIKE_OK) {
 		goto CLEANUP;
 	}
 
 	py_recs = batch_exists_aerospike_batch_exists(&err, self, py_keys,
-			batch_policy_p);
-
+												  batch_policy_p);
 
 CLEANUP:
 
 	if (exp_list_p) {
-		as_exp_destroy(exp_list_p);;
+		as_exp_destroy(exp_list_p);
+		;
 	}
 
 	if (predexp_list_p) {
@@ -296,12 +307,12 @@ CLEANUP:
 	}
 
 	if (err.code != AEROSPIKE_OK) {
-		PyObject * py_err = NULL;
+		PyObject *py_err = NULL;
 		error_to_pyobject(&err, &py_err);
 		PyObject *exception_type = raise_exception(&err);
 		if (PyObject_HasAttrString(exception_type, "key")) {
 			PyObject_SetAttrString(exception_type, "key", py_keys);
-		} 
+		}
 		if (PyObject_HasAttrString(exception_type, "bin")) {
 			PyObject_SetAttrString(exception_type, "bin", Py_None);
 		}
@@ -327,18 +338,19 @@ CLEANUP:
  * In case of error,appropriate exceptions will be raised.
  *******************************************************************************************************
  */
-PyObject * AerospikeClient_Exists_Many(AerospikeClient * self, PyObject * args, PyObject * kwds)
+PyObject *AerospikeClient_Exists_Many(AerospikeClient *self, PyObject *args,
+									  PyObject *kwds)
 {
 	// Python Function Arguments
-	PyObject * py_keys = NULL;
-	PyObject * py_policy = NULL;
+	PyObject *py_keys = NULL;
+	PyObject *py_policy = NULL;
 
 	// Python Function Keyword Arguments
-	static char * kwlist[] = {"keys", "policy", NULL};
+	static char *kwlist[] = {"keys", "policy", NULL};
 
 	// Python Function Argument Parsing
 	if (PyArg_ParseTupleAndKeywords(args, kwds, "O|O:exists_many", kwlist,
-			&py_keys, &py_policy) == false) {
+									&py_keys, &py_policy) == false) {
 		return NULL;
 	}
 
@@ -352,10 +364,10 @@ PyObject * AerospikeClient_Exists_Many(AerospikeClient * self, PyObject * args, 
  * This is needed so that as_batch_destroy does not try to free
  * any uninitialized data.
  */
-static void
-make_batch_safe_to_free(as_batch* batch, int size) {
+static void make_batch_safe_to_free(as_batch *batch, int size)
+{
 	for (int i = 0; i < size; i++) {
-		as_key* batch_key = as_batch_keyat(batch, i);
+		as_key *batch_key = as_batch_keyat(batch, i);
 		if (batch_key) {
 			batch_key->valuep = NULL;
 			batch_key->_free = false;

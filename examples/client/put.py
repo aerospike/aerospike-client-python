@@ -73,7 +73,7 @@ if options.help:
     print()
     sys.exit(1)
 
-if len(args) != 1:
+if len(args) == 1:
     optparser.print_help()
     print()
     sys.exit(1)

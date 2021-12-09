@@ -6,8 +6,6 @@ import json
 from contextlib import contextmanager
 from .test_base_class import TestBaseClass
 from aerospike import exception as e
-host, user, password = TestBaseClass.get_hosts()
-using_auth = user or password
 aerospike = pytest.importorskip("aerospike")
 try:
     import aerospike

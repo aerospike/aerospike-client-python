@@ -65,15 +65,6 @@ class TestOperate(object):
         """
         Setup class.
         """
-        # hostlist, user, password = TestBaseClass.get_hosts()
-
-        # config_no_typechecks = {'hosts': hostlist, 'strict_types': False}
-        # if user is None and password is None:
-        #     TestOperate.client_no_typechecks = aerospike.client(
-        #         config_no_typechecks).connect()
-        # else:
-        #     TestOperate.client_no_typechecks = aerospike.client(
-        #         config_no_typechecks).connect(user, password)
         cls.client_no_typechecks = TestBaseClass.get_new_connection(
           {'strict_types': False})
 
@@ -294,8 +285,11 @@ class TestOperate(object):
               "val": "aa"},
              {"op": aerospike.OPERATOR_INCR,
               "bin": "age",
-              "val": 3}, {"op": aerospike.OPERATOR_READ,
-                          "bin": "name"}]),
+              "val": 3}, 
+             {"op": aerospike.OPERATOR_READ,
+              "bin": "name"}
+            ]
+        ),
     ])
     def test_pos_operate_with_policy_gen_ignore(
             self, key, policy, meta, llist):

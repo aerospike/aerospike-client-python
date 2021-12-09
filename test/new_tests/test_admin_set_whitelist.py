@@ -24,9 +24,8 @@ class TestSetWhitelist(TestBaseClass):
         """
         Setup method
         """
-        hostlist, user, password = TestBaseClass().get_hosts()
         config = TestBaseClass.get_connection_config()
-        self.client = aerospike.client(config).connect(user, password)
+        self.client = aerospike.client(config).connect(config['user'], config['password'])
         usr_sys_admin_privs = [
             {"code": aerospike.PRIV_USER_ADMIN},
             {"code": aerospike.PRIV_SYS_ADMIN}]
@@ -216,9 +215,8 @@ class TestSetWhitelist(TestBaseClass):
 
         self.client.admin_create_user("test_whitelist_user", "123", ["usr-sys-admin-test"])
 
-        hostlist, user, password = TestBaseClass().get_hosts()
         config = TestBaseClass.get_connection_config()
-        new_client = aerospike.client(config).connect(user, password)
+        new_client = aerospike.client(config).connect(config['user'], config['password'])
         try:
             new_client.connect("test_whitelist_user", "123")
         except e.NotWhitelisted as exception:

@@ -38,27 +38,27 @@
  * Returns a tuple of record having key and meta sequentially.
  *******************************************************************************************************
  */
-extern PyObject * AerospikeClient_Exists_Invoke(
-		AerospikeClient * self,
-		PyObject * py_key, PyObject * py_policy)
+extern PyObject *AerospikeClient_Exists_Invoke(AerospikeClient *self,
+											   PyObject *py_key,
+											   PyObject *py_policy)
 {
 	// Python Return Value
-	PyObject * py_result = NULL;
+	PyObject *py_result = NULL;
 
 	// Aerospike Client Arguments
 	as_error err;
 	as_policy_read read_policy;
-	as_policy_read * read_policy_p = NULL;
+	as_policy_read *read_policy_p = NULL;
 	as_key key;
-	as_record * rec = NULL;
+	as_record *rec = NULL;
 
 	// For converting expressions.
 	as_exp exp_list;
-	as_exp* exp_list_p = NULL;
+	as_exp *exp_list_p = NULL;
 
 	// For converting predexp.
 	as_predexp_list predexp_list;
-	as_predexp_list* predexp_list_p = NULL;
+	as_predexp_list *predexp_list_p = NULL;
 
 	// Initialisation flags
 	bool key_initialised = false;
@@ -72,7 +72,8 @@ extern PyObject * AerospikeClient_Exists_Invoke(
 	}
 
 	if (!self->is_conn_16) {
-		as_error_update(&err, AEROSPIKE_ERR_CLUSTER, "No connection to aerospike cluster");
+		as_error_update(&err, AEROSPIKE_ERR_CLUSTER,
+						"No connection to aerospike cluster");
 		goto CLEANUP;
 	}
 
@@ -86,7 +87,8 @@ extern PyObject * AerospikeClient_Exists_Invoke(
 
 	// Convert python policy object to as_policy_exists
 	pyobject_to_policy_read(self, &err, py_policy, &read_policy, &read_policy_p,
-			&self->as->config.policies.read, &predexp_list, &predexp_list_p, &exp_list, &exp_list_p);
+							&self->as->config.policies.read, &predexp_list,
+							&predexp_list_p, &exp_list, &exp_list_p);
 	if (err.code != AEROSPIKE_OK) {
 		goto CLEANUP;
 	}
@@ -97,8 +99,8 @@ extern PyObject * AerospikeClient_Exists_Invoke(
 	Py_END_ALLOW_THREADS
 
 	if (err.code == AEROSPIKE_OK) {
-		PyObject * py_result_key = NULL;
-		PyObject * py_result_meta = NULL;
+		PyObject *py_result_key = NULL;
+		PyObject *py_result_meta = NULL;
 
 		key_to_pyobject(&err, &key, &py_result_key);
 		metadata_to_pyobject(&err, rec, &py_result_meta);
@@ -106,11 +108,12 @@ extern PyObject * AerospikeClient_Exists_Invoke(
 		py_result = PyTuple_New(2);
 		PyTuple_SetItem(py_result, 0, py_result_key);
 		PyTuple_SetItem(py_result, 1, py_result_meta);
-	} else if (err.code == AEROSPIKE_ERR_RECORD_NOT_FOUND) {
+	}
+	else if (err.code == AEROSPIKE_ERR_RECORD_NOT_FOUND) {
 		as_error_reset(&err);
 
-		PyObject * py_result_key = NULL;
-		PyObject * py_result_meta = Py_None;
+		PyObject *py_result_key = NULL;
+		PyObject *py_result_meta = Py_None;
 
 		key_to_pyobject(&err, &key, &py_result_key);
 
@@ -127,7 +130,8 @@ extern PyObject * AerospikeClient_Exists_Invoke(
 CLEANUP:
 
 	if (exp_list_p) {
-		as_exp_destroy(exp_list_p);;
+		as_exp_destroy(exp_list_p);
+		;
 	}
 
 	if (predexp_list_p) {
@@ -144,12 +148,12 @@ CLEANUP:
 	}
 
 	if (err.code != AEROSPIKE_OK) {
-		PyObject * py_err = NULL;
+		PyObject *py_err = NULL;
 		error_to_pyobject(&err, &py_err);
 		PyObject *exception_type = raise_exception(&err);
 		if (PyObject_HasAttrString(exception_type, "key")) {
 			PyObject_SetAttrString(exception_type, "key", py_key);
-		} 
+		}
 		if (PyObject_HasAttrString(exception_type, "bin")) {
 			PyObject_SetAttrString(exception_type, "bin", Py_None);
 		}
@@ -173,18 +177,19 @@ CLEANUP:
  * In case of error,appropriate exceptions will be raised.
  *******************************************************************************************************
  */
-PyObject * AerospikeClient_Exists(AerospikeClient * self, PyObject * args, PyObject * kwds)
+PyObject *AerospikeClient_Exists(AerospikeClient *self, PyObject *args,
+								 PyObject *kwds)
 {
 	// Python Function Arguments
-	PyObject * py_key = NULL;
-	PyObject * py_policy = NULL;
+	PyObject *py_key = NULL;
+	PyObject *py_policy = NULL;
 
 	// Python Function Keyword Arguments
-	static char * kwlist[] = {"key", "policy", NULL};
+	static char *kwlist[] = {"key", "policy", NULL};
 
 	// Python Function Argument Parsing
-	if (PyArg_ParseTupleAndKeywords(args, kwds, "O|O:exists", kwlist,
-			&py_key, &py_policy) == false) {
+	if (PyArg_ParseTupleAndKeywords(args, kwds, "O|O:exists", kwlist, &py_key,
+									&py_policy) == false) {
 		return NULL;
 	}
 

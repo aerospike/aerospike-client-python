@@ -28,9 +28,10 @@
  * FUNCTIONS
  ******************************************************************************/
 
-PyTypeObject * AerospikeQuery_Ready(void);
+PyTypeObject *AerospikeQuery_Ready(void);
 
-AerospikeQuery * AerospikeQuery_New(AerospikeClient * client, PyObject * args, PyObject * kwds);
+AerospikeQuery *AerospikeQuery_New(AerospikeClient *client, PyObject *args,
+								   PyObject *kwds);
 
 /*******************************************************************************
  * OPERATIONS
@@ -48,13 +49,15 @@ AerospikeQuery * AerospikeQuery_New(AerospikeClient * client, PyObject * args, P
  *		query.select(bin, bin, bin)
  *
  */
-AerospikeQuery * AerospikeQuery_Select(AerospikeQuery * self, PyObject * args, PyObject * kwds);
+AerospikeQuery *AerospikeQuery_Select(AerospikeQuery *self, PyObject *args,
+									  PyObject *kwds);
 
 /**
  * Add a list of write operations to the query.
  *
  */
-AerospikeQuery * AerospikeQuery_Add_Ops(AerospikeQuery * self, PyObject * args, PyObject * kwds);
+AerospikeQuery *AerospikeQuery_Add_Ops(AerospikeQuery *self, PyObject *args,
+									   PyObject *kwds);
 
 /**
  * Add a where predicate to the query.
@@ -68,7 +71,7 @@ AerospikeQuery * AerospikeQuery_Add_Ops(AerospikeQuery * self, PyObject * args, 
  *		query.select(bin, bin, bin)
  *
  */
-AerospikeQuery * AerospikeQuery_Where(AerospikeQuery * self, PyObject * args);
+AerospikeQuery *AerospikeQuery_Where(AerospikeQuery *self, PyObject *args);
 
 /**
  * Apply a list of predicates to the query.
@@ -76,7 +79,7 @@ AerospikeQuery * AerospikeQuery_Where(AerospikeQuery * self, PyObject * args);
  *		query.predexp(predexps)
  *
  */
-AerospikeQuery * AerospikeQuery_Predexp(AerospikeQuery * self, PyObject * args);
+AerospikeQuery *AerospikeQuery_Predexp(AerospikeQuery *self, PyObject *args);
 
 /**
  * Apply the specified udf on the results of the query.
@@ -84,7 +87,8 @@ AerospikeQuery * AerospikeQuery_Predexp(AerospikeQuery * self, PyObject * args);
  *		query.apply(module, function, arglist)
  *
  */
-AerospikeQuery * AerospikeQuery_Apply(AerospikeQuery * self, PyObject * args, PyObject * kwds);
+AerospikeQuery *AerospikeQuery_Apply(AerospikeQuery *self, PyObject *args,
+									 PyObject *kwds);
 
 /**
  * Execute the query and call the callback for each result returned.
@@ -95,7 +99,8 @@ AerospikeQuery * AerospikeQuery_Apply(AerospikeQuery * self, PyObject * args, Py
  *		query.foreach(each_result)
  *
  */
-PyObject * AerospikeQuery_Foreach(AerospikeQuery * self, PyObject * args, PyObject * kwds);
+PyObject *AerospikeQuery_Foreach(AerospikeQuery *self, PyObject *args,
+								 PyObject *kwds);
 
 /**
  * Execute the query and return a generator.
@@ -104,13 +109,15 @@ PyObject * AerospikeQuery_Foreach(AerospikeQuery * self, PyObject * args, PyObje
  *			print result
  *
  */
-PyObject * AerospikeQuery_Results(AerospikeQuery * self, PyObject * args, PyObject * kwds);
+PyObject *AerospikeQuery_Results(AerospikeQuery *self, PyObject *args,
+								 PyObject *kwds);
 
 /**
  * Execute a UDF in the background. Returns the query id to allow status of the query to be monitored.
  * */
 
-PyObject * AerospikeQuery_ExecuteBackground(AerospikeQuery * self, PyObject * args, PyObject * kwds);
+PyObject *AerospikeQuery_ExecuteBackground(AerospikeQuery *self, PyObject *args,
+										   PyObject *kwds);
 
 /**
  * Store the Unicode -> UTF8 string converted PyObject into 
@@ -119,11 +126,11 @@ PyObject * AerospikeQuery_ExecuteBackground(AerospikeQuery * self, PyObject * ar
  *		StoreUnicodePyObject(self, PyUnicode_AsUTF8String(py_bin));
  *
  */
-PyObject * StoreUnicodePyObject(AerospikeQuery * self, PyObject * obj);
+PyObject *StoreUnicodePyObject(AerospikeQuery *self, PyObject *obj);
 
-int64_t pyobject_to_int64(PyObject * py_obj);
+int64_t pyobject_to_int64(PyObject *py_obj);
 
 /* Initialize the predexp module */
-PyObject * AerospikePredExp_New(void);
+PyObject *AerospikePredExp_New(void);
 
-as_status RegisterPredExpConstants(PyObject* module);
+as_status RegisterPredExpConstants(PyObject *module);
