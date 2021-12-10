@@ -23,3 +23,4 @@ CLIENT-1555	Remove dependency on c-client binary from python client source insta
 CLIENT-1566 Python-Client hangs intermittently in automation cluster
 
 ## Updates:
+[Aerospike C Client 5.2.6.](/download/client/c/notes.html#5.2.6)
