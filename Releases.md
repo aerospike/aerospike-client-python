@@ -1,3 +1,9 @@
+# Version 6.1.1
+
+## Fixes:
+CLIENT-1639 python pip install now fails with 6.1.0
+
+
 # Version 6.1.0
 
 ## Breaking Changes:
