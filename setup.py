@@ -126,11 +126,11 @@ os.environ['CPATH'] = ':'.join(include_dirs)
 ################################################################################
 
 # Get the long description from the relevant file
-with open(os.path.join(CWD, 'README.rst')) as f:
+with open(os.path.join(CWD, 'README.rst'), "r", encoding='utf-8') as f:
     long_description = f.read()
 
 # Get the version from the relevant file
-with open(os.path.join(CWD, 'VERSION')) as f:
+with open(os.path.join(CWD, 'VERSION'), "r", encoding='utf-8') as f:
     version = f.read()
 
 BASEPATH = os.path.dirname(os.path.abspath(__file__))
