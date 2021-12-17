@@ -1,42 +1,47 @@
 # Manually Building the Python Client for Aerospike
 
+The Python client for Aerospike works with Python 3.6, 3.7, 3.8, 3.9 running on
+**64-bit** macOS 10.15+ and Linux.
+Python 3.6 hits [End of Life](https://endoflife.date/python) on December 23rd,
+2021, and is now deprecated.
+
 First clone this repository to get the necessary files.
 
-## Dependencies
+`git clone --recurse-submodules ...`
 
-The Python client for Aerospike works with Python 3.6, 3.7, 3.8, 3.9 running on
-**64-bit** OS X 10.9+ and Linux.
+or to initialize the submodules after cloning
+
+`git submodule update --init --checkout --recursive`
+
+## Dependencies
 
 The client depends on:
 
 - The Python devel package
-- OpenSSL
+- OpenSSL 1.1 >= 1.1.1
 - The Aerospike C client
 
-### RedHat 6+ and CentOS 6+
+### RedHat 7+ and CentOS 7+
 
 The following are dependencies for:
 
-- RedHat Enterprise (RHEL) 6 or newer
-- CentOS 6 or newer
+- RedHat Enterprise (RHEL) 7 or newer
+- CentOS 7 or newer
 - Related distributions which use the `yum` package manager
 
 ```sh
 sudo yum install openssl-devel
-sudo yum install python26-devel # on CentOS 6 and similar
 sudo yum install python-devel # on CentOS 7
 # Possibly needed
 sudo yum install python-setuptools
 ```
 
-To get `python26-devel` on older distros such as CentOS 5, see [Stack Overflow](http://stackoverflow.com/a/11684053/582436).
-
-### Debian 6+ and Ubuntu 14.04+
+### Debian 8+ and Ubuntu 18.04+
 
 The following are dependencies for:
 
-- Debian 6 or newer
-- Ubuntu 14.04 or newer
+- Debian 8 or newer
+- Ubuntu 18.04 or newer
 - Related distributions which use the `apt` package manager
 
 ```sh
@@ -44,28 +49,35 @@ sudo apt-get install libssl-dev
 sudo apt-get install build-essential python-dev
 ```
 
-### OS X
+### macOS
 
-By default OS X will be missing command line tools. On Mavericks (OS X 10.9)
-and higher those [can be installed without Xcode](http://osxdaily.com/2014/02/12/install-command-line-tools-mac-os-x/).
+By default macOS will be missing command line tools.
 
     xcode-select --install # install the command line tools, if missing
 
-The dependencies can be installed through the OS X package manager [Homebrew](http://brew.sh/).
+The dependencies can be installed through the macOS package manager [Homebrew](http://brew.sh/).
 
-    brew install openssl@1.1
+    brew install openssl@1
+    # brew uninstall openssl@3
 
 ## Build
 
-To build the library:
-
-    if repo is not cloned with "git clone --recurse-submodules ...", run the following command to initialize necessary sub-modules:
-        git submodule update --init --checkout --recursive
+    export DOWNLOAD_C_CLIENT=0
+    export AEROSPIKE_C_HOME=$(pwd)/aerospike-client-c
+    export STATIC_SSL=1
+    # substitute the paths to your OpenSSL 1.1 library
+    export SSL_LIB_PATH=/usr/local/Cellar/openssl@1.1/1.1.1l/lib/
+    export CPATH=/usr/local/Cellar/openssl@1.1/1.1.1l/include/
     python setup.py build --force
 
-### Troubleshooting OS X builds
+### Troubleshooting macOS
 
-Building on OS X versions >= 10.11 , may cause a few additional errors to be generated. If the build command fails with an
+In some versions of macOS, Python 2.7 is installed as ``python`` with
+``pip`` as its associated package manager, and Python 3 is installed as ``python3``
+with ``pip3`` as the associated package manager. Make sure to use the ones that
+map to Python 3, such as `python3 setup.py build --force`.
+
+Building on macOS versions >= 10.15 , may cause a few additional errors to be generated. If the build command fails with an
 error similar to: `error: could not create '/usr/local/aerospike/lua': Permission denied` there are a couple of options:
 
 - Rerun the build command with the additional command line flags `--user --prefix=` *Note that there are no charcters after the '='.* This will cause the library to only be installed for the current user, and store the library's data files in a user specific location.
@@ -80,14 +92,11 @@ MACOSX_DEPLOYMENT_TARGET=10.12 python setup.py install --force
 
 ## Install
 
-To install the library:
+Once the client is built:
 
     python setup.py install --force
 
-### Troubleshooting OS X Installation
-
-Installing on OS X versions >= 10.11 , may cause a few additional errors to be generated. If the install command fails with an
-error similar to: `error: could not create '/usr/local/aerospike/lua': Permission denied` there are a couple of options:
+### Troubleshooting macOS
 
 - Rerun the install command with the additional command line flags `--user --prefix=` *Note that there are no charcters after the '='.* This will cause the library to only be installed for the current user, and store the library's data files in a user specific location.
 - rerun the command with sudo.
