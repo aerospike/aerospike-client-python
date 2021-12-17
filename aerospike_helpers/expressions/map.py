@@ -24,7 +24,7 @@ Example::
     expr = exp.MapSize(None, exp.MapBin("b")).compile()
 '''
 
-from __future__ import annotations
+#from __future__ import annotations
 from itertools import chain
 from typing import List, Optional, Tuple, Union, Dict, Any
 import aerospike
@@ -56,7 +56,7 @@ class MapPut(_BaseExpr):
     """Create an expression that writes key/val to map bin."""
     _op = aerospike.OP_MAP_PUT
 
-    def __init__(self, ctx: TypeCTX, policy: TypePolicy, key: TypeKey, value: TypeValue, bin: TypeBinName):
+    def __init__(self, ctx: 'TypeCTX', policy: 'TypePolicy', key: 'TypeKey', value: 'TypeValue', bin: 'TypeBinName'):
         """ Args:
                 ctx (TypeCTX): An optional list of nested CDT :mod:`cdt_ctx <aerospike_helpers.cdt_ctx>` context operation objects.
                 policy (TypePolicy): Optional dictionary of :ref:`Map policies <aerospike_map_policies>`.
@@ -90,7 +90,7 @@ class MapPutItems(_BaseExpr):
     """Create an expression that writes each map item to map bin."""
     _op = aerospike.OP_MAP_PUT_ITEMS
 
-    def __init__(self, ctx: TypeCTX, policy: TypePolicy, map: map, bin: TypeBinName):
+    def __init__(self, ctx: 'TypeCTX', policy: 'TypePolicy', map: map, bin: 'TypeBinName'):
         """ Args:
                 ctx (TypeCTX): An optional list of nested CDT :mod:`cdt_ctx <aerospike_helpers.cdt_ctx>` context operation objects.
                 policy (TypePolicy): Optional dictionary of :ref:`Map policies <aerospike_map_policies>`.
@@ -124,7 +124,7 @@ class MapIncrement(_BaseExpr):
     """
     _op = aerospike.OP_MAP_INCREMENT
 
-    def __init__(self, ctx: TypeCTX, policy: TypePolicy, key: TypeKey, value: TypeValue, bin: TypeBinName):
+    def __init__(self, ctx: 'TypeCTX', policy: 'TypePolicy', key: 'TypeKey', value: 'TypeValue', bin: 'TypeBinName'):
         """ Args:
                 ctx (TypeCTX): An optional list of nested CDT :mod:`cdt_ctx <aerospike_helpers.cdt_ctx>` context operation objects.
                 policy (TypePolicy): Optional dictionary of :ref:`Map policies <aerospike_map_policies>`.
@@ -158,7 +158,7 @@ class MapClear(_BaseExpr):
     """Create an expression that removes all items in map."""
     _op = aerospike.OP_MAP_CLEAR
 
-    def __init__(self, ctx: TypeCTX, bin: TypeBinName):
+    def __init__(self, ctx: 'TypeCTX', bin: 'TypeBinName'):
         """ Args:
                 ctx (TypeCTX): An optional list of nested CDT :mod:`cdt_ctx <aerospike_helpers.cdt_ctx>` context operation objects.
                 bin (TypeBinName): bin expression, such as :class:`~aerospike_helpers.expressions.base.MapBin` or :class:`~aerospike_helpers.expressions.base.ListBin`.
@@ -183,7 +183,7 @@ class MapRemoveByKey(_BaseExpr):
     """Create an expression that removes a map item identified by key."""
     _op = aerospike.OP_MAP_REMOVE_BY_KEY
 
-    def __init__(self, ctx: TypeCTX, key: TypeKey, bin: TypeBinName):
+    def __init__(self, ctx: 'TypeCTX', key: 'TypeKey', bin: 'TypeBinName'):
         """ Args:
                 ctx (TypeCTX): An optional list of nested CDT :mod:`cdt_ctx <aerospike_helpers.cdt_ctx>` context operation objects.
                 key (TypeKey): Key value or value expression of key to element to remove.
@@ -210,7 +210,7 @@ class MapRemoveByKeyList(_BaseExpr):
     """Create an expression that removes map items identified by keys."""
     _op = aerospike.OP_MAP_REMOVE_BY_KEY_LIST
 
-    def __init__(self, ctx: TypeCTX, keys: List[TypeKey], bin: TypeBinName):
+    def __init__(self, ctx: 'TypeCTX', keys: List[TypeKey], bin: 'TypeBinName'):
         """ Args:
                 ctx (TypeCTX): An optional list of nested CDT :mod:`cdt_ctx <aerospike_helpers.cdt_ctx>` context operation objects.
                 key (List[TypeKey]): List of key values or a list expression of keys to elements to remove.
@@ -240,7 +240,7 @@ class MapRemoveByKeyRange(_BaseExpr):
     """
     _op = aerospike.OP_MAP_REMOVE_BY_KEY_RANGE
 
-    def __init__(self, ctx: TypeCTX, begin: TypeValue, end: TypeValue, bin: TypeBinName):
+    def __init__(self, ctx: 'TypeCTX', begin: 'TypeValue', end: 'TypeValue', bin: 'TypeBinName'):
         """ Args:
                 ctx (TypeCTX): An optional list of nested CDT :mod:`cdt_ctx <aerospike_helpers.cdt_ctx>` context operation objects.
                 begin (TypeValue): Begin value expression.
@@ -269,7 +269,7 @@ class MapRemoveByKeyRelIndexRangeToEnd(_BaseExpr):
     """Create an expression that removes map items nearest to key and greater by index."""
     _op = aerospike.OP_MAP_REMOVE_BY_KEY_REL_INDEX_RANGE_TO_END
 
-    def __init__(self, ctx: TypeCTX, key: TypeKey, index: TypeIndex, bin: TypeBinName):
+    def __init__(self, ctx: 'TypeCTX', key: 'TypeKey', index: 'TypeIndex', bin: 'TypeBinName'):
         """ Args:
                 ctx (TypeCTX): An optional list of nested CDT :mod:`cdt_ctx <aerospike_helpers.cdt_ctx>` context operation objects.
                 key (TypeKey): Key value or expression for key to start removing from.
@@ -299,7 +299,7 @@ class MapRemoveByKeyRelIndexRange(_BaseExpr):
     """Create an expression that removes map items nearest to key and greater by index with a count limit."""
     _op = aerospike.OP_MAP_REMOVE_BY_KEY_REL_INDEX_RANGE
 
-    def __init__(self, ctx: TypeCTX, key: TypeKey, index: TypeIndex, count: TypeCount, bin: TypeBinName):
+    def __init__(self, ctx: 'TypeCTX', key: 'TypeKey', index: 'TypeIndex', count: 'TypeCount', bin: 'TypeBinName'):
         """ Args:
                 ctx (TypeCTX): An optional list of nested CDT :mod:`cdt_ctx <aerospike_helpers.cdt_ctx>` context operation objects.
                 key (TypeKey): Key value or expression for key to start removing from.
@@ -330,7 +330,7 @@ class MapRemoveByValue(_BaseExpr):
     """Create an expression that removes map items identified by value."""
     _op = aerospike.OP_MAP_REMOVE_BY_VALUE
 
-    def __init__(self, ctx: TypeCTX, value: TypeValue, bin: TypeBinName):
+    def __init__(self, ctx: 'TypeCTX', value: 'TypeValue', bin: 'TypeBinName'):
         """ Args:
                 ctx (TypeCTX): An optional list of nested CDT :mod:`cdt_ctx <aerospike_helpers.cdt_ctx>` context operation objects.
                 value (TypeValue): Value or value expression to remove.
@@ -357,7 +357,7 @@ class MapRemoveByValueList(_BaseExpr):
     """Create an expression that removes map items identified by values."""
     _op = aerospike.OP_MAP_REMOVE_BY_VALUE_LIST
 
-    def __init__(self, ctx: TypeCTX, values: TypeListValue, bin: TypeBinName):
+    def __init__(self, ctx: 'TypeCTX', values: 'TypeListValue', bin: 'TypeBinName'):
         """ Args:
                 ctx (TypeCTX): An optional list of nested CDT :mod:`cdt_ctx <aerospike_helpers.cdt_ctx>` context operation objects.
                 values (TypeListValue): List of values or list expression.
@@ -387,7 +387,7 @@ class MapRemoveByValueRange(_BaseExpr):
     """
     _op = aerospike.OP_MAP_REMOVE_BY_VALUE_RANGE
 
-    def __init__(self, ctx: TypeCTX, begin: TypeValue, end: TypeValue, bin: TypeBinName):
+    def __init__(self, ctx: 'TypeCTX', begin: 'TypeValue', end: 'TypeValue', bin: 'TypeBinName'):
         """ Args:
                 ctx (TypeCTX): An optional list of nested CDT :mod:`cdt_ctx <aerospike_helpers.cdt_ctx>` context operation objects.
                 begin (TypeValue): Begin value or value expression for range.
@@ -416,7 +416,7 @@ class MapRemoveByValueRelRankRangeToEnd(_BaseExpr):
     """Create an expression that removes map items nearest to value and greater by relative rank."""
     _op = aerospike.OP_MAP_REMOVE_BY_VALUE_REL_RANK_RANGE_TO_END
 
-    def __init__(self, ctx: TypeCTX, value: TypeValue, rank: TypeRank, bin: TypeBinName):
+    def __init__(self, ctx: 'TypeCTX', value: 'TypeValue', rank: 'TypeRank', bin: 'TypeBinName'):
         """ Args:
                 ctx (TypeCTX): An optional list of nested CDT :mod:`cdt_ctx <aerospike_helpers.cdt_ctx>` context operation objects.
                 value (TypeValue): Value or value expression to start removing from.
@@ -447,7 +447,7 @@ class MapRemoveByValueRelRankRange(_BaseExpr):
     """
     _op = aerospike.OP_MAP_REMOVE_BY_VALUE_REL_RANK_RANGE
 
-    def __init__(self, ctx: TypeCTX, value: TypeValue, rank: TypeRank, count: TypeCount, bin: TypeBinName):
+    def __init__(self, ctx: 'TypeCTX', value: 'TypeValue', rank: 'TypeRank', count: 'TypeCount', bin: 'TypeBinName'):
         """ Args:
                 ctx (TypeCTX): An optional list of nested CDT :mod:`cdt_ctx <aerospike_helpers.cdt_ctx>` context operation objects.
                 value (TypeValue): Value or value expression to start removing from.
@@ -478,7 +478,7 @@ class MapRemoveByIndex(_BaseExpr):
     """Create an expression that removes map item identified by index."""
     _op = aerospike.OP_MAP_REMOVE_BY_INDEX
 
-    def __init__(self, ctx: TypeCTX, index: TypeIndex, bin: TypeBinName):
+    def __init__(self, ctx: 'TypeCTX', index: 'TypeIndex', bin: 'TypeBinName'):
         """ Args:
                 ctx (TypeCTX): An optional list of nested CDT :mod:`cdt_ctx <aerospike_helpers.cdt_ctx>` context operation objects.
                 index (TypeIndex): Index integer or integer expression of element to remove.
@@ -505,7 +505,7 @@ class MapRemoveByIndexRangeToEnd(_BaseExpr):
     """Create an expression that removes map items starting at specified index to the end of map."""
     _op = aerospike.OP_MAP_REMOVE_BY_INDEX_RANGE_TO_END
 
-    def __init__(self, ctx: TypeCTX, index: TypeIndex, bin: TypeBinName):
+    def __init__(self, ctx: 'TypeCTX', index: 'TypeIndex', bin: 'TypeBinName'):
         """ Args:
                 ctx (TypeCTX): An optional list of nested CDT :mod:`cdt_ctx <aerospike_helpers.cdt_ctx>` context operation objects.
                 index (TypeIndex): Starting index integer or integer expression of elements to remove.
@@ -532,7 +532,7 @@ class MapRemoveByIndexRange(_BaseExpr):
     """Create an expression that removes count map items starting at specified index."""
     _op = aerospike.OP_MAP_REMOVE_BY_INDEX_RANGE
 
-    def __init__(self, ctx: TypeCTX, index: TypeIndex, count: TypeCount, bin: TypeBinName):
+    def __init__(self, ctx: 'TypeCTX', index: 'TypeIndex', count: 'TypeCount', bin: 'TypeBinName'):
         """ Args:
                 ctx (TypeCTX): An optional list of nested CDT :mod:`cdt_ctx <aerospike_helpers.cdt_ctx>` context operation objects.
                 index (TypeIndex): Starting index integer or integer expression of elements to remove.
@@ -561,7 +561,7 @@ class MapRemoveByRank(_BaseExpr):
     """Create an expression that removes map item identified by rank."""
     _op = aerospike.OP_MAP_REMOVE_BY_RANK
 
-    def __init__(self, ctx: TypeCTX, rank: TypeRank, bin: TypeBinName):
+    def __init__(self, ctx: 'TypeCTX', rank: 'TypeRank', bin: 'TypeBinName'):
         """ Args:
                 ctx (TypeCTX): An optional list of nested CDT :mod:`cdt_ctx <aerospike_helpers.cdt_ctx>` context operation objects.
                 rank (TypeRank): Rank integer or integer expression of element to remove.
@@ -588,7 +588,7 @@ class MapRemoveByRankRangeToEnd(_BaseExpr):
     """Create an expression that removes map items starting at specified rank to the last ranked item."""
     _op = aerospike.OP_MAP_REMOVE_BY_RANK_RANGE_TO_END
 
-    def __init__(self, ctx: TypeCTX, rank: TypeRank, bin: TypeBinName):
+    def __init__(self, ctx: 'TypeCTX', rank: 'TypeRank', bin: 'TypeBinName'):
         """ Args:
                 ctx (TypeCTX): An optional list of nested CDT :mod:`cdt_ctx <aerospike_helpers.cdt_ctx>` context operation objects.
                 rank (TypeRank): Rank integer or integer expression of element to start removing at.
@@ -615,7 +615,7 @@ class MapRemoveByRankRange(_BaseExpr):
     """Create an expression that removes "count" map items starting at specified rank."""
     _op = aerospike.OP_MAP_REMOVE_BY_RANK_RANGE
 
-    def __init__(self, ctx: TypeCTX, rank: TypeRank, count: TypeCount, bin: TypeBinName):
+    def __init__(self, ctx: 'TypeCTX', rank: 'TypeRank', count: 'TypeCount', bin: 'TypeBinName'):
         """ Args:
                 ctx (TypeCTX): An optional list of nested CDT :mod:`cdt_ctx <aerospike_helpers.cdt_ctx>` context operation objects.
                 rank (TypeRank): Rank integer or integer expression of element to start removing at.
@@ -649,7 +649,7 @@ class MapSize(_BaseExpr):
     """Create an expression that returns map size."""
     _op = aerospike.OP_MAP_SIZE
 
-    def __init__(self, ctx: TypeCTX, bin: TypeBinName):
+    def __init__(self, ctx: 'TypeCTX', bin: 'TypeBinName'):
         """ Args:
                 ctx (TypeCTX): An optional list of nested CDT :mod:`cdt_ctx <aerospike_helpers.cdt_ctx>` context operation objects.
                 bin (TypeBinName): bin expression, such as :class:`~aerospike_helpers.expressions.base.MapBin` or :class:`~aerospike_helpers.expressions.base.ListBin`.
@@ -676,7 +676,7 @@ class MapGetByKey(_BaseExpr):
     """
     _op = aerospike.OP_MAP_GET_BY_KEY
 
-    def __init__(self, ctx: TypeCTX, return_type: int, value_type: int, key: TypeKey, bin: TypeBinName):
+    def __init__(self, ctx: 'TypeCTX', return_type: int, value_type: int, key: 'TypeKey', bin: 'TypeBinName'):
         """ Args:
                 ctx (TypeCTX): An optional list of nested CDT :mod:`cdt_ctx <aerospike_helpers.cdt_ctx>` context operation objects.
                 return_type (int): Value specifying what should be returned from the operation.
@@ -710,7 +710,7 @@ class MapGetByKeyRange(_BaseExpr):
     """
     _op = aerospike.OP_MAP_GET_BY_KEY_RANGE
 
-    def __init__(self, ctx: TypeCTX, return_type: int, begin: TypeKey, end: TypeKey, bin: TypeBinName):
+    def __init__(self, ctx: 'TypeCTX', return_type: int, begin: 'TypeKey', end: 'TypeKey', bin: 'TypeBinName'):
         """ Args:
                 ctx (TypeCTX): An optional list of nested CDT :mod:`cdt_ctx <aerospike_helpers.cdt_ctx>` context operation objects.
                 return_type (int): Value specifying what should be returned from the operation.
@@ -743,7 +743,7 @@ class MapGetByKeyList(_BaseExpr):
     """
     _op = aerospike.OP_MAP_GET_BY_KEY_LIST
 
-    def __init__(self, ctx: TypeCTX, return_type: int, keys: TypeKeyList, bin: TypeBinName):
+    def __init__(self, ctx: 'TypeCTX', return_type: int, keys: 'TypeKeyList', bin: 'TypeBinName'):
         """ Args:
                 ctx (TypeCTX): An optional list of nested CDT :mod:`cdt_ctx <aerospike_helpers.cdt_ctx>` context operation objects.
                 return_type (int): Value specifying what should be returned from the operation.
@@ -774,7 +774,7 @@ class MapGetByKeyRelIndexRangeToEnd(_BaseExpr):
     """
     _op = aerospike.OP_MAP_GET_BY_KEY_REL_INDEX_RANGE_TO_END
 
-    def __init__(self, ctx: TypeCTX, return_type: int, key: TypeKey, index: TypeIndex, bin: TypeBinName):
+    def __init__(self, ctx: 'TypeCTX', return_type: int, key: 'TypeKey', index: 'TypeIndex', bin: 'TypeBinName'):
         """ Args:
                 ctx (TypeCTX): An optional list of nested CDT :mod:`cdt_ctx <aerospike_helpers.cdt_ctx>` context operation objects.
                 return_type (int): Value specifying what should be returned from the operation.
@@ -807,7 +807,7 @@ class MapGetByKeyRelIndexRange(_BaseExpr):
     """
     _op = aerospike.OP_MAP_GET_BY_KEY_REL_INDEX_RANGE
 
-    def __init__(self, ctx: TypeCTX, return_type: int, key: TypeKey, index: TypeIndex, count: TypeCount, bin: TypeBinName):
+    def __init__(self, ctx: 'TypeCTX', return_type: int, key: 'TypeKey', index: 'TypeIndex', count: 'TypeCount', bin: 'TypeBinName'):
         """ Args:
                 ctx (TypeCTX): An optional list of nested CDT :mod:`cdt_ctx <aerospike_helpers.cdt_ctx>` context operation objects.
                 return_type (int): Value specifying what should be returned from the operation.
@@ -842,7 +842,7 @@ class MapGetByValue(_BaseExpr):
     """
     _op = aerospike.OP_MAP_GET_BY_VALUE
 
-    def __init__(self, ctx: TypeCTX, return_type: int, value: TypeValue, bin: TypeBinName):
+    def __init__(self, ctx: 'TypeCTX', return_type: int, value: 'TypeValue', bin: 'TypeBinName'):
         """ Args:
                 ctx (TypeCTX): An optional list of nested CDT :mod:`cdt_ctx <aerospike_helpers.cdt_ctx>` context operation objects.
                 return_type (int): Value specifying what should be returned from the operation.
@@ -877,11 +877,11 @@ class MapGetByValueRange(_BaseExpr):
 
     def __init__(
         self,
-        ctx: TypeCTX,
+        ctx: 'TypeCTX',
         return_type: int,
-        value_begin: TypeValue,
-        value_end: TypeValue,
-        bin: TypeBinName
+        value_begin: 'TypeValue',
+        value_end: 'TypeValue',
+        bin: 'TypeBinName'
     ):
         """ Args:
                 ctx (TypeCTX): An optional list of nested CDT :mod:`cdt_ctx <aerospike_helpers.cdt_ctx>` context operation objects.
@@ -915,7 +915,7 @@ class MapGetByValueList(_BaseExpr):
     """
     _op = aerospike.OP_MAP_GET_BY_VALUE_LIST
 
-    def __init__(self, ctx: TypeCTX, return_type: int, value: TypeListValue, bin: TypeBinName):
+    def __init__(self, ctx: 'TypeCTX', return_type: int, value: 'TypeListValue', bin: 'TypeBinName'):
         """ Args:
                 ctx (TypeCTX): An optional list of nested CDT :mod:`cdt_ctx <aerospike_helpers.cdt_ctx>` context operation objects.
                 return_type (int): Value specifying what should be returned from the operation.
@@ -946,7 +946,7 @@ class MapGetByValueRelRankRangeToEnd(_BaseExpr):
     """
     _op = aerospike.OP_MAP_GET_BY_VALUE_RANK_RANGE_REL_TO_END
 
-    def __init__(self, ctx: TypeCTX, return_type: int, value: TypeValue, rank: TypeRank, bin: TypeBinName):
+    def __init__(self, ctx: 'TypeCTX', return_type: int, value: 'TypeValue', rank: 'TypeRank', bin: 'TypeBinName'):
         """ Args:
                 ctx (TypeCTX): An optional list of nested CDT :mod:`cdt_ctx <aerospike_helpers.cdt_ctx>` context operation objects.
                 return_type (int): Value specifying what should be returned from the operation.
@@ -979,7 +979,7 @@ class MapGetByValueRelRankRange(_BaseExpr):
     """
     _op = aerospike.OP_MAP_GET_BY_VALUE_RANK_RANGE_REL
 
-    def __init__(self, ctx: TypeCTX, return_type: int, value: TypeValue, rank: TypeRank, count: TypeCount, bin: TypeBinName):
+    def __init__(self, ctx: 'TypeCTX', return_type: int, value: 'TypeValue', rank: 'TypeRank', count: 'TypeCount', bin: 'TypeBinName'):
         """ Args:
                 ctx (TypeCTX): An optional list of nested CDT :mod:`cdt_ctx <aerospike_helpers.cdt_ctx>` context operation objects.
                 return_type (int): Value specifying what should be returned from the operation.
@@ -1016,11 +1016,11 @@ class MapGetByIndex(_BaseExpr):
 
     def __init__(
         self,
-        ctx: TypeCTX,
+        ctx: 'TypeCTX',
         return_type: int,
         value_type: int,
-        index: TypeIndex,
-        bin: TypeBinName,
+        index: 'TypeIndex',
+        bin: 'TypeBinName',
     ):
         """ Args:
                 ctx (TypeCTX): An optional list of nested CDT :mod:`cdt_ctx <aerospike_helpers.cdt_ctx>` context operation objects.
@@ -1053,7 +1053,7 @@ class MapGetByIndexRangeToEnd(_BaseExpr):
     """
     _op = aerospike.OP_MAP_GET_BY_INDEX_RANGE_TO_END
 
-    def __init__(self, ctx: TypeCTX, return_type: int, index: TypeIndex, bin: TypeBinName):
+    def __init__(self, ctx: 'TypeCTX', return_type: int, index: 'TypeIndex', bin: 'TypeBinName'):
         """ Args:
                 ctx (TypeCTX): An optional list of nested CDT :mod:`cdt_ctx <aerospike_helpers.cdt_ctx>` context operation objects.
                 return_type (int): Value specifying what should be returned from the operation.
@@ -1084,7 +1084,7 @@ class MapGetByIndexRange(_BaseExpr):
     """
     _op = aerospike.OP_MAP_GET_BY_INDEX_RANGE
 
-    def __init__(self, ctx: TypeCTX, return_type: int, index: TypeIndex, count: TypeCount, bin: TypeBinName):
+    def __init__(self, ctx: 'TypeCTX', return_type: int, index: 'TypeIndex', count: 'TypeCount', bin: 'TypeBinName'):
         """ Args:
                 ctx (TypeCTX): An optional list of nested CDT :mod:`cdt_ctx <aerospike_helpers.cdt_ctx>` context operation objects.
                 return_type (int): Value specifying what should be returned from the operation.
@@ -1119,11 +1119,11 @@ class MapGetByRank(_BaseExpr):
 
     def __init__(
         self,
-        ctx: TypeCTX,
+        ctx: 'TypeCTX',
         return_type: int,
         value_type: int,
-        rank: TypeRank,
-        bin: TypeBinName,
+        rank: 'TypeRank',
+        bin: 'TypeBinName',
     ):
         """ Args:
                 ctx (TypeCTX): An optional list of nested CDT :mod:`cdt_ctx <aerospike_helpers.cdt_ctx>` context operation objects.
@@ -1156,7 +1156,7 @@ class MapGetByRankRangeToEnd(_BaseExpr):
     """
     _op = aerospike.OP_MAP_GET_BY_RANK_RANGE_TO_END
 
-    def __init__(self, ctx: TypeCTX, return_type: int, rank: TypeRank, bin: TypeBinName):
+    def __init__(self, ctx: 'TypeCTX', return_type: int, rank: 'TypeRank', bin: 'TypeBinName'):
         """ Args:
                 ctx (TypeCTX): An optional list of nested CDT :mod:`cdt_ctx <aerospike_helpers.cdt_ctx>` context operation objects.
                 return_type (int): Value specifying what should be returned from the operation.
@@ -1187,7 +1187,7 @@ class MapGetByRankRange(_BaseExpr):
     """
     _op = aerospike.OP_MAP_GET_BY_RANK_RANGE
 
-    def __init__(self, ctx: TypeCTX, return_type: int, rank: TypeRank, count: TypeCount, bin: TypeBinName):
+    def __init__(self, ctx: 'TypeCTX', return_type: int, rank: 'TypeRank', count: 'TypeCount', bin: 'TypeBinName'):
         """ Args:
                 ctx (TypeCTX): An optional list of nested CDT :mod:`cdt_ctx <aerospike_helpers.cdt_ctx>` context operation objects.
                 return_type (int): Value specifying what should be returned from the operation.

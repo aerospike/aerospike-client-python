@@ -24,7 +24,7 @@ Example::
     expr = exp.HLLGetCount(exp.HLLBin("d")).compile()
 '''
 
-from __future__ import annotations
+#from __future__ import annotations
 from itertools import chain
 from typing import List, Optional, Tuple, Union, Dict, Any
 import aerospike
@@ -54,7 +54,7 @@ class HLLInit(_BaseExpr):
     """
     _op = aerospike.OP_HLL_INIT
 
-    def __init__(self, policy: TypePolicy, index_bit_count: Union[int, None], mh_bit_count: Union[int, None], bin: TypeBinName):
+    def __init__(self, policy: 'TypePolicy', index_bit_count: Union[int, None], mh_bit_count: Union[int, None], bin: 'TypeBinName'):
         """ Args:
                 policy (TypePolicy): An optional dictionary of :ref:`HyperLogLog policies <aerospike_hll_policies>`.
                 index_bit_count (int): Number of index bits. Must be between 4 and 16 inclusive.
@@ -80,7 +80,7 @@ class HLLAdd(_BaseExpr):
     """Create an expression that performs an hll_add."""
     _op = aerospike.OP_HLL_ADD
 
-    def __init__(self, policy: TypePolicy, list: TypeListValue, index_bit_count: Union[int, None], mh_bit_count: Union[int, None], bin: TypeBinName):
+    def __init__(self, policy: 'TypePolicy', list: 'TypeListValue', index_bit_count: Union[int, None], mh_bit_count: Union[int, None], bin: 'TypeBinName'):
         """ Args:
                 policy (TypePolicy): An optional dictionary of :ref:`HyperLogLog policies <aerospike_hll_policies>`.
                 list (TypeListValue): A list or list expression of elements to add to the HLL.
@@ -114,7 +114,7 @@ class HLLGetCount(_BaseExpr):
     """Create an expression that performs an as_operations_hll_get_count."""
     _op = aerospike.OP_HLL_GET_COUNT
 
-    def __init__(self, bin: TypeBinName):
+    def __init__(self, bin: 'TypeBinName'):
         """ Args:
                bin (TypeBinName): An :class:`~aerospike_helpers.expressions.base.HLLBin` expression.
 
@@ -134,7 +134,7 @@ class HLLGetUnion(_BaseExpr):
     """Create an expression that performs an hll_get_union."""
     _op = aerospike.OP_HLL_GET_UNION
 
-    def __init__(self, values: TypeValue, bin: TypeBinName):
+    def __init__(self, values: 'TypeValue', bin: 'TypeBinName'):
         """ Args:
                 values (TypeValue): A single HLL or list of HLLs, values or expressions, to union with bin.
                 bin (TypeBinName): An :class:`~aerospike_helpers.expressions.base.HLLBin` expression.
@@ -158,7 +158,7 @@ class HLLGetUnionCount(_BaseExpr):
     """Create an expression that performs an as_operations_hll_get_union_count."""
     _op = aerospike.OP_HLL_GET_UNION_COUNT
 
-    def __init__(self, values: TypeValue, bin: TypeBinName):
+    def __init__(self, values: 'TypeValue', bin: 'TypeBinName'):
         """ Args:
                 values (TypeValue): A single HLL or list of HLLs, values or expressions, to union with bin.
                 bin (TypeBinName): An :class:`~aerospike_helpers.expressions.base.HLLBin` expression.
@@ -182,7 +182,7 @@ class HLLGetIntersectCount(_BaseExpr):
     """Create an expression that performs an as_operations_hll_get_inersect_count."""
     _op = aerospike.OP_HLL_GET_INTERSECT_COUNT
 
-    def __init__(self, values: TypeValue, bin: TypeBinName):
+    def __init__(self, values: 'TypeValue', bin: 'TypeBinName'):
         """ Args:
                 values (TypeValue): A single HLL or list of HLLs, values or expressions, to intersect with bin.
                 bin (TypeBinName): An :class:`~aerospike_helpers.expressions.base.HLLBin` expression.
@@ -206,7 +206,7 @@ class HLLGetSimilarity(_BaseExpr):
     """Create an expression that performs an as_operations_hll_get_similarity."""
     _op = aerospike.OP_HLL_GET_SIMILARITY
 
-    def __init__(self, values: TypeValue, bin: TypeBinName):
+    def __init__(self, values: 'TypeValue', bin: 'TypeBinName'):
         """ Args:
                 values (TypeValue): A single HLL or list of HLLs, values or expressions, to calculate similarity with.
                 bin (TypeBinName): An :class:`~aerospike_helpers.expressions.base.HLLBin` expression.
@@ -231,7 +231,7 @@ class HLLDescribe(_BaseExpr):
     """Create an expression that performs an as_operations_hll_describe."""
     _op = aerospike.OP_HLL_DESCRIBE
 
-    def __init__(self, bin: TypeBinName):
+    def __init__(self, bin: 'TypeBinName'):
         """ Args:
                 bin (TypeBinName): An :class:`~aerospike_helpers.expressions.base.HLLBin` expression.
 
@@ -253,7 +253,7 @@ class HLLMayContain(_BaseExpr):
     """
     _op = aerospike.OP_HLL_MAY_CONTAIN
 
-    def __init__(self, list: TypeListValue, bin: TypeBinName, ):
+    def __init__(self, list: 'TypeListValue', bin: 'TypeBinName', ):
         """ Args:
                 list (TypeListValue): A list expression of keys to check if the HLL may contain them.
                 bin (TypeBinName): An :class:`~aerospike_helpers.expressions.base.HLLBin` expression.

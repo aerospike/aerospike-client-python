@@ -24,7 +24,7 @@ Example::
     expr = exp.ListSize(None, exp.ListBin("a")).compile()
 '''
 
-from __future__ import annotations
+#from __future__ import annotations
 from itertools import chain
 from typing import List, Optional, Tuple, Union, Dict, Any
 import aerospike
@@ -54,7 +54,7 @@ class ListAppend(_BaseExpr):
     """Create an expression that appends value to end of list."""
     _op = aerospike.OP_LIST_APPEND
 
-    def __init__(self, ctx: TypeCTX, policy: TypePolicy, value: TypeValue, bin: TypeBinName):
+    def __init__(self, ctx: 'TypeCTX', policy: 'TypePolicy', value: 'TypeValue', bin: 'TypeBinName'):
         """ Args:
                 ctx (TypeCTX): An optional list of nested CDT :mod:`cdt_ctx <aerospike_helpers.cdt_ctx>` context operation objects.
                 policy (TypePolicy): Optional dictionary of :ref:`List policies <aerospike_list_policies>`.
@@ -88,7 +88,7 @@ class ListAppendItems(_BaseExpr):
     """Create an expression that appends a list of items to the end of a list."""
     _op = aerospike.OP_LIST_APPEND_ITEMS
 
-    def __init__(self, ctx: TypeCTX, policy: TypePolicy, value: TypeValue, bin: TypeBinName):
+    def __init__(self, ctx: 'TypeCTX', policy: 'TypePolicy', value: 'TypeValue', bin: 'TypeBinName'):
         """ Args:
                 ctx (TypeCTX): An optional list of nested CDT :mod:`cdt_ctx <aerospike_helpers.cdt_ctx>` context operation objects.
                 policy (TypePolicy): Optional dictionary of :ref:`List policies <aerospike_list_policies>`.
@@ -122,7 +122,7 @@ class ListInsert(_BaseExpr):
     """Create an expression that inserts value to specified index of list."""
     _op = aerospike.OP_LIST_INSERT
 
-    def __init__(self, ctx: TypeCTX, policy: TypePolicy, index: TypeIndex, value: TypeValue, bin: TypeBinName):
+    def __init__(self, ctx: 'TypeCTX', policy: 'TypePolicy', index: 'TypeIndex', value: 'TypeValue', bin: 'TypeBinName'):
         """ Args:
                 ctx (TypeCTX): An optional list of nested CDT :mod:`cdt_ctx <aerospike_helpers.cdt_ctx>` context operation objects.
                 policy (TypePolicy): Optional dictionary of :ref:`List policies <aerospike_list_policies>`.
@@ -158,7 +158,7 @@ class ListInsertItems(_BaseExpr):
     """Create an expression that inserts each input list item starting at specified index of list."""
     _op = aerospike.OP_LIST_INSERT_ITEMS
 
-    def __init__(self, ctx: TypeCTX, policy: TypePolicy, index: TypeIndex, values: TypeListValue, bin: TypeBinName):
+    def __init__(self, ctx: 'TypeCTX', policy: 'TypePolicy', index: 'TypeIndex', values: 'TypeListValue', bin: 'TypeBinName'):
         """ Args:
                 ctx (TypeCTX): An optional list of nested CDT :mod:`cdt_ctx <aerospike_helpers.cdt_ctx>` context operation objects.
                 policy (TypePolicy): Optional dictionary of :ref:`List policies <aerospike_list_policies>`.
@@ -194,7 +194,7 @@ class ListIncrement(_BaseExpr):
     """Create an expression that increments list[index] by value."""
     _op = aerospike.OP_LIST_INCREMENT
 
-    def __init__(self, ctx: TypeCTX, policy: TypePolicy, index: TypeIndex, value: TypeValue, bin: TypeBinName):
+    def __init__(self, ctx: 'TypeCTX', policy: 'TypePolicy', index: 'TypeIndex', value: 'TypeValue', bin: 'TypeBinName'):
         """ Args:
                 ctx (TypeCTX): An optional list of nested CDT :mod:`cdt_ctx <aerospike_helpers.cdt_ctx>` context operation objects.
                 policy (TypePolicy): Optional dictionary of :ref:`List policies <aerospike_list_policies>`.
@@ -233,7 +233,7 @@ class ListSet(_BaseExpr):
     """Create an expression that sets item value at specified index in list."""
     _op = aerospike.OP_LIST_SET
 
-    def __init__(self, ctx: TypeCTX, policy: TypePolicy, index: TypeIndex, value: TypeValue, bin: TypeBinName):
+    def __init__(self, ctx: 'TypeCTX', policy: 'TypePolicy', index: 'TypeIndex', value: 'TypeValue', bin: 'TypeBinName'):
         """ Args:
                 ctx (TypeCTX): An optional list of nested CDT :mod:`cdt_ctx <aerospike_helpers.cdt_ctx>` context operation objects.
                 policy (TypePolicy): Optional dictionary of :ref:`List policies <aerospike_list_policies>`.
@@ -268,7 +268,7 @@ class ListClear(_BaseExpr):
     """Create an expression that removes all items in a list."""
     _op = aerospike.OP_LIST_CLEAR
 
-    def __init__(self, ctx: TypeCTX, bin: TypeBinName):
+    def __init__(self, ctx: 'TypeCTX', bin: 'TypeBinName'):
         """ Args:
                 ctx (TypeCTX): An optional list of nested CDT :mod:`cdt_ctx <aerospike_helpers.cdt_ctx>` context operation objects.
                 bin (TypeBinName): bin expression, such as :class:`~aerospike_helpers.expressions.base.MapBin` or :class:`~aerospike_helpers.expressions.base.ListBin`.
@@ -294,7 +294,7 @@ class ListSort(_BaseExpr):
     """Create an expression that sorts a list."""
     _op = aerospike.OP_LIST_SORT
 
-    def __init__(self, ctx: TypeCTX, order: int, bin: TypeBinName):
+    def __init__(self, ctx: 'TypeCTX', order: int, bin: 'TypeBinName'):
         """ Args:
                 ctx (TypeCTX): An optional list of nested CDT :mod:`cdt_ctx <aerospike_helpers.cdt_ctx>` context operation objects.
                 order (int): Optional flags modifiying the behavior of list_sort. This should be constructed by bitwise or'ing together values from :ref:`aerospike_list_sort_flag`.
@@ -320,7 +320,7 @@ class ListRemoveByValue(_BaseExpr):
     """Create an expression that removes list items identified by value."""
     _op = aerospike.OP_LIST_REMOVE_BY_VALUE
 
-    def __init__(self, ctx: TypeCTX, value: TypeValue, bin: TypeBinName):
+    def __init__(self, ctx: 'TypeCTX', value: 'TypeValue', bin: 'TypeBinName'):
         """ Args:
                 ctx (TypeCTX): An optional list of nested CDT :mod:`cdt_ctx <aerospike_helpers.cdt_ctx>` context operation objects.
                 value (TypeValue): Value or value expression to remove.
@@ -347,7 +347,7 @@ class ListRemoveByValueList(_BaseExpr):
     """Create an expression that removes list items identified by values."""
     _op = aerospike.OP_LIST_REMOVE_BY_VALUE_LIST
 
-    def __init__(self, ctx: TypeCTX, values: TypeListValue, bin: TypeBinName):
+    def __init__(self, ctx: 'TypeCTX', values: 'TypeListValue', bin: 'TypeBinName'):
         """ Args:
                 ctx (TypeCTX): An optional list of nested CDT :mod:`cdt_ctx <aerospike_helpers.cdt_ctx>` context operation objects.
                 values (TypeListValue): List of values or list expression.
@@ -377,7 +377,7 @@ class ListRemoveByValueRange(_BaseExpr):
     """
     _op = aerospike.OP_LIST_REMOVE_BY_VALUE_RANGE
 
-    def __init__(self, ctx: TypeCTX, begin: TypeValue, end: TypeValue, bin: TypeBinName):
+    def __init__(self, ctx: 'TypeCTX', begin: 'TypeValue', end: 'TypeValue', bin: 'TypeBinName'):
         """ Args:
                 ctx (TypeCTX): An optional list of nested CDT :mod:`cdt_ctx <aerospike_helpers.cdt_ctx>` context operation objects.
                 begin (TypeValue): Begin value or value expression for range.
@@ -406,7 +406,7 @@ class ListRemoveByValueRelRankToEnd(_BaseExpr):
     """Create an expression that removes list items nearest to value and greater by relative rank."""
     _op = aerospike.OP_LIST_REMOVE_BY_REL_RANK_RANGE_TO_END
 
-    def __init__(self, ctx: TypeCTX, value: TypeValue, rank: TypeRank, bin: TypeBinName):
+    def __init__(self, ctx: 'TypeCTX', value: 'TypeValue', rank: 'TypeRank', bin: 'TypeBinName'):
         """ Args:
                 ctx (TypeCTX): An optional list of nested CDT :mod:`cdt_ctx <aerospike_helpers.cdt_ctx>` context operation objects.
                 value (TypeValue): Start value or value expression.
@@ -437,7 +437,7 @@ class ListRemoveByValueRelRankRange(_BaseExpr):
     """
     _op = aerospike.OP_LIST_REMOVE_BY_REL_RANK_RANGE
 
-    def __init__(self, ctx: TypeCTX, value: TypeValue, rank: TypeRank, count: TypeCount, bin: TypeBinName):
+    def __init__(self, ctx: 'TypeCTX', value: 'TypeValue', rank: 'TypeRank', count: 'TypeCount', bin: 'TypeBinName'):
         """ Args:
                 ctx (TypeCTX): An optional list of nested CDT :mod:`cdt_ctx <aerospike_helpers.cdt_ctx>` context operation objects.
                 value (TypeValue): Start value or value expression.
@@ -471,7 +471,7 @@ class ListRemoveByIndex(_BaseExpr):
     """Create an expression that removes "count" list items starting at specified index."""
     _op = aerospike.OP_LIST_REMOVE_BY_INDEX
 
-    def __init__(self, ctx: TypeCTX, index: TypeIndex, bin: TypeBinName):
+    def __init__(self, ctx: 'TypeCTX', index: 'TypeIndex', bin: 'TypeBinName'):
         """ Args:
                 ctx (TypeCTX): An optional list of nested CDT :mod:`cdt_ctx <aerospike_helpers.cdt_ctx>` context operation objects.
                 index (TypeIndex): Index integer or integer expression of element to remove.
@@ -498,7 +498,7 @@ class ListRemoveByIndexRangeToEnd(_BaseExpr):
     """Create an expression that removes list items starting at specified index to the end of list."""
     _op = aerospike.OP_LIST_REMOVE_BY_INDEX_RANGE_TO_END
 
-    def __init__(self, ctx: TypeCTX, index: TypeIndex, bin: TypeBinName):
+    def __init__(self, ctx: 'TypeCTX', index: 'TypeIndex', bin: 'TypeBinName'):
         """ Args:
                 ctx (TypeCTX): An optional list of nested CDT :mod:`cdt_ctx <aerospike_helpers.cdt_ctx>` context operation objects.
                 index (TypeIndex): Starting index integer or integer expression of elements to remove.
@@ -525,7 +525,7 @@ class ListRemoveByIndexRange(_BaseExpr):
     """Create an expression that removes "count" list items starting at specified index."""
     _op = aerospike.OP_LIST_REMOVE_BY_INDEX_RANGE
 
-    def __init__(self, ctx: TypeCTX, index: TypeIndex, count: TypeCount, bin: TypeBinName):
+    def __init__(self, ctx: 'TypeCTX', index: 'TypeIndex', count: 'TypeCount', bin: 'TypeBinName'):
         """ Args:
                 ctx (TypeCTX): An optional list of nested CDT :mod:`cdt_ctx <aerospike_helpers.cdt_ctx>` context operation objects.
                 index (TypeIndex): Starting index integer or integer expression of elements to remove.
@@ -554,7 +554,7 @@ class ListRemoveByRank(_BaseExpr):
     """Create an expression that removes list item identified by rank."""
     _op = aerospike.OP_LIST_REMOVE_BY_RANK
 
-    def __init__(self, ctx: TypeCTX, rank: TypeRank, bin: TypeBinName):
+    def __init__(self, ctx: 'TypeCTX', rank: 'TypeRank', bin: 'TypeBinName'):
         """ Args:
                 ctx (TypeCTX): An optional list of nested CDT :mod:`cdt_ctx <aerospike_helpers.cdt_ctx>` context operation objects.
                 rank (TypeRank): Rank integer or integer expression of element to remove.
@@ -581,7 +581,7 @@ class ListRemoveByRankRangeToEnd(_BaseExpr):
     """Create an expression that removes list items starting at specified rank to the last ranked item."""
     _op = aerospike.OP_LIST_REMOVE_BY_RANK_RANGE_TO_END
 
-    def __init__(self, ctx: TypeCTX, rank: TypeRank, bin: TypeBinName):
+    def __init__(self, ctx: 'TypeCTX', rank: 'TypeRank', bin: 'TypeBinName'):
         """ Args:
                 ctx (TypeCTX): An optional list of nested CDT :mod:`cdt_ctx <aerospike_helpers.cdt_ctx>` context operation objects.
                 rank (TypeRank): Rank integer or integer expression of element to start removing at.
@@ -608,7 +608,7 @@ class ListRemoveByRankRange(_BaseExpr):
     """Create an expression that removes "count" list items starting at specified rank."""
     _op = aerospike.OP_LIST_REMOVE_BY_RANK_RANGE
 
-    def __init__(self, ctx: TypeCTX, rank: TypeRank, count: TypeCount, bin: TypeBinName):
+    def __init__(self, ctx: 'TypeCTX', rank: 'TypeRank', count: 'TypeCount', bin: 'TypeBinName'):
         """ Args:
                 ctx (TypeCTX): An optional list of nested CDT :mod:`cdt_ctx <aerospike_helpers.cdt_ctx>` context operation objects.
                 rank (TypeRank): Rank integer or integer expression of element to start removing at.
@@ -642,7 +642,7 @@ class ListSize(_BaseExpr):
     """Create an expression that returns list size."""
     _op = aerospike.OP_LIST_SIZE
 
-    def __init__(self, ctx: TypeCTX, bin: TypeBinName):
+    def __init__(self, ctx: 'TypeCTX', bin: 'TypeBinName'):
         """ Args:
                 ctx (TypeCTX): An optional list of nested CDT :mod:`cdt_ctx <aerospike_helpers.cdt_ctx>` context operation objects.
                 bin (TypeBinName): bin expression, such as :class:`~aerospike_helpers.expressions.base.MapBin` or :class:`~aerospike_helpers.expressions.base.ListBin`.
@@ -669,7 +669,7 @@ class ListGetByValue(_BaseExpr):
     """
     _op = aerospike.OP_LIST_GET_BY_VALUE
 
-    def __init__(self, ctx: TypeCTX, return_type: int, value: TypeValue, bin: TypeBinName):
+    def __init__(self, ctx: 'TypeCTX', return_type: int, value: 'TypeValue', bin: 'TypeBinName'):
         """ Args:
                 ctx (TypeCTX): An optional list of nested CDT :mod:`cdt_ctx <aerospike_helpers.cdt_ctx>` context operation objects.
                 return_type (int): Value specifying what should be returned from the operation.
@@ -702,11 +702,11 @@ class ListGetByValueRange(_BaseExpr):
 
     def __init__(
         self,
-        ctx: TypeCTX,
+        ctx: 'TypeCTX',
         return_type: int,
-        value_begin: TypeValue,
-        value_end: TypeValue,
-        bin: TypeBinName
+        value_begin: 'TypeValue',
+        value_end: 'TypeValue',
+        bin: 'TypeBinName'
     ):
         """ Create an expression that selects list items identified by value range and returns selected
             data specified by return_type.
@@ -743,7 +743,7 @@ class ListGetByValueList(_BaseExpr):
     """
     _op = aerospike.OP_LIST_GET_BY_VALUE_LIST
 
-    def __init__(self, ctx: TypeCTX, return_type: int, value: TypeListValue, bin: TypeBinName):
+    def __init__(self, ctx: 'TypeCTX', return_type: int, value: 'TypeListValue', bin: 'TypeBinName'):
         """ Args:
                 ctx (TypeCTX): An optional list of nested CDT :mod:`cdt_ctx <aerospike_helpers.cdt_ctx>` context operation objects.
                 return_type (int): Value specifying what should be returned from the operation.
@@ -773,7 +773,7 @@ class ListGetByValueRelRankRangeToEnd(_BaseExpr):
     """Create an expression that selects list items nearest to value and greater by relative rank"""
     _op = aerospike.OP_LIST_GET_BY_VALUE_RANK_RANGE_REL_TO_END
 
-    def __init__(self, ctx: TypeCTX, return_type: int, value: TypeValue, rank: TypeRank, bin: TypeBinName):
+    def __init__(self, ctx: 'TypeCTX', return_type: int, value: 'TypeValue', rank: 'TypeRank', bin: 'TypeBinName'):
         """ Args:
                 ctx (TypeCTX): An optional list of nested CDT :mod:`cdt_ctx <aerospike_helpers.cdt_ctx>` context operation objects.
                 return_type (int): Value specifying what should be returned from the operation.
@@ -806,7 +806,7 @@ class ListGetByValueRelRankRange(_BaseExpr):
     """
     _op = aerospike.OP_LIST_GET_BY_VALUE_RANK_RANGE_REL
 
-    def __init__(self, ctx: TypeCTX, return_type: int, value: TypeValue, rank: TypeRank, count: TypeCount, bin: TypeBinName):
+    def __init__(self, ctx: 'TypeCTX', return_type: int, value: 'TypeValue', rank: 'TypeRank', count: 'TypeCount', bin: 'TypeBinName'):
         """ Args:
                 ctx (TypeCTX): An optional list of nested CDT :mod:`cdt_ctx <aerospike_helpers.cdt_ctx>` context operation objects.
                 return_type (int): Value specifying what should be returned from the operation.
@@ -843,11 +843,11 @@ class ListGetByIndex(_BaseExpr):
 
     def __init__(
         self,
-        ctx: TypeCTX,
+        ctx: 'TypeCTX',
         return_type: int,
         value_type: int,
-        index: TypeIndex,
-        bin: TypeBinName,
+        index: 'TypeIndex',
+        bin: 'TypeBinName',
     ):
         """ Args:
                 ctx (TypeCTX): An optional list of nested CDT :mod:`cdt_ctx <aerospike_helpers.cdt_ctx>` context operation objects.
@@ -880,7 +880,7 @@ class ListGetByIndexRangeToEnd(_BaseExpr):
     """
     _op = aerospike.OP_LIST_GET_BY_INDEX_RANGE_TO_END
 
-    def __init__(self, ctx: TypeCTX, return_type: int, index: TypeIndex, bin: TypeBinName):
+    def __init__(self, ctx: 'TypeCTX', return_type: int, index: 'TypeIndex', bin: 'TypeBinName'):
         """ Args:
                 ctx (TypeCTX): An optional list of nested CDT :mod:`cdt_ctx <aerospike_helpers.cdt_ctx>` context operation objects.
                 return_type (int): Value specifying what should be returned from the operation.
@@ -911,7 +911,7 @@ class ListGetByIndexRange(_BaseExpr):
     """
     _op = aerospike.OP_LIST_GET_BY_INDEX_RANGE
 
-    def __init__(self, ctx: TypeCTX, return_type: int, index: TypeIndex, count: TypeCount, bin: TypeBinName):
+    def __init__(self, ctx: 'TypeCTX', return_type: int, index: 'TypeIndex', count: 'TypeCount', bin: 'TypeBinName'):
         """ Args:
                 ctx (TypeCTX): An optional list of nested CDT :mod:`cdt_ctx <aerospike_helpers.cdt_ctx>` context operation objects.
                 return_type (int): Value specifying what should be returned from the operation.
@@ -946,11 +946,11 @@ class ListGetByRank(_BaseExpr):
 
     def __init__(
         self,
-        ctx: TypeCTX,
+        ctx: 'TypeCTX',
         return_type: int,
         value_type: int,
-        rank: TypeRank,
-        bin: TypeBinName,
+        rank: 'TypeRank',
+        bin: 'TypeBinName',
     ):
         """ Args:
                 ctx (TypeCTX): An optional list of nested CDT :mod:`cdt_ctx <aerospike_helpers.cdt_ctx>` context operation objects.
@@ -983,7 +983,7 @@ class ListGetByRankRangeToEnd(_BaseExpr):
     """
     _op = aerospike.OP_LIST_GET_BY_RANK_RANGE_TO_END
 
-    def __init__(self, ctx: TypeCTX, return_type: int, rank: TypeRank, bin: TypeBinName):
+    def __init__(self, ctx: 'TypeCTX', return_type: int, rank: 'TypeRank', bin: 'TypeBinName'):
         """ Args:
                 ctx (TypeCTX): An optional list of nested CDT :mod:`cdt_ctx <aerospike_helpers.cdt_ctx>` context operation objects.
                 return_type (int): Value specifying what should be returned from the operation.
@@ -1014,7 +1014,7 @@ class ListGetByRankRange(_BaseExpr):
     """
     _op = aerospike.OP_LIST_GET_BY_RANK_RANGE
 
-    def __init__(self, ctx: TypeCTX, return_type: int, rank: TypeRank, count: TypeCount, bin: TypeBinName):
+    def __init__(self, ctx: 'TypeCTX', return_type: int, rank: 'TypeRank', count: 'TypeCount', bin: 'TypeBinName'):
         """ Args:
                 ctx (TypeCTX): An optional list of nested CDT :mod:`cdt_ctx <aerospike_helpers.cdt_ctx>` context operation objects.
                 return_type (int): Value specifying what should be returned from the operation.

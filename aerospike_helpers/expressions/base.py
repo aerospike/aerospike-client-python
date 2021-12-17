@@ -29,7 +29,7 @@ Example::
     expr = exp.Eq(exp.IntBin("bin_name"), 10).compile()
 '''
 
-from __future__ import annotations
+#from __future__ import annotations
 from itertools import chain
 from typing import List, Optional, Tuple, Union, Dict, Any
 import aerospike
@@ -109,7 +109,7 @@ class KeyInt(_Key):
     _rt = ResultType.INTEGER
 
     def __init__(self):
-        """ :return (integer value): Integer value of the key if the key is an integer.
+        """ :return: (integer value): Integer value of the key if the key is an integer.
 
             Example::
 
@@ -126,7 +126,7 @@ class KeyStr(_Key):
     _rt = ResultType.STRING
 
     def __init__(self):
-        """ :return (string value): string value of the key if the key is an string.
+        """ :return: (string value): string value of the key if the key is an string.
 
             Example::
 
@@ -143,7 +143,7 @@ class KeyBlob(_Key):
     _rt = ResultType.BLOB
 
     def __init__(self):
-        """ :return (blob value): Blob value of the key if the key is a blob.
+        """ :return: (blob value): Blob value of the key if the key is a blob.
 
             Example::
 
@@ -162,7 +162,7 @@ class KeyExists(_BaseExpr):
     _rt = ResultType.BOOLEAN
 
     def __init__(self):
-        """ :return (boolean value): True if the record has a stored key, false otherwise.
+        """ :return: (boolean value): True if the record has a stored key, false otherwise.
 
             Example::
 
@@ -272,7 +272,7 @@ class BlobBin(_BaseExpr):
         """ Args:
                 bin (str): Bin name.
 
-            :return (blob bin)
+            :return: (blob bin)
 
             Example::
 
@@ -293,7 +293,7 @@ class GeoBin(_BaseExpr):
         """ Args:
                 bin (str): Bin name.
 
-            :return (geojson bin)
+            :return: (geojson bin)
 
             Example::
 
@@ -314,7 +314,7 @@ class ListBin(_BaseExpr):
         """ Args:
                 bin (str): Bin name.
 
-            :return (list bin)
+            :return: (list bin)
 
             Example::
 
@@ -337,7 +337,7 @@ class MapBin(_BaseExpr):
         """ Args:
                 bin (str): Bin name.
 
-            :return (map bin)
+            :return: (map bin)
 
             Example::
 
@@ -358,7 +358,7 @@ class HLLBin(_BaseExpr):
         """ Args:
                 bin (str): Bin name.
 
-            :return (HyperLogLog bin)
+            :return: (HyperLogLog bin)
 
             Example::
 
@@ -377,7 +377,7 @@ class BinExists(_BaseExpr):
         """ Args:
                 bin (str): bin name.
 
-            :return (boolean value): True if bin exists, False otherwise.
+            :return: (boolean value): True if bin exists, False otherwise.
 
             Example::
 
@@ -398,7 +398,7 @@ class BinType(_BaseExpr):
         """ Args:
                 bin (str): bin name.
 
-            :return (integer value): returns the bin type.
+            :return: (integer value): returns the bin type.
 
             Example::
 
@@ -422,7 +422,7 @@ class SetName(_BaseExpr):
     _rt = ResultType.STRING
 
     def __init__(self):
-        """ :return (string value): Name of the set this record belongs to.
+        """ :return: (string value): Name of the set this record belongs to.
 
             Example::
 
@@ -441,7 +441,7 @@ class DeviceSize(_BaseExpr):
     _rt = ResultType.INTEGER
 
     def __init__(self):
-        """ :return (integer value): Uncompressed storage size of the record.
+        """ :return: (integer value): Uncompressed storage size of the record.
 
             Example::
 
@@ -459,7 +459,7 @@ class LastUpdateTime(_BaseExpr):
     _rt = ResultType.INTEGER
 
     def __init__(self):
-        """ :return (integer value): When the record was last updated.
+        """ :return: (integer value): When the record was last updated.
 
             Example::
 
@@ -477,7 +477,7 @@ class SinceUpdateTime(_BaseExpr):
     _rt = ResultType.INTEGER
 
     def __init__(self):
-        """ :return (integer value): Number of milliseconds since last updated.
+        """ :return: (integer value): Number of milliseconds since last updated.
 
             Example::
 
@@ -495,7 +495,7 @@ class VoidTime(_BaseExpr):
     _rt = ResultType.INTEGER
 
     def __init__(self):
-        """ :return (integer value): Expiration time in nanoseconds since 1970-01-01.
+        """ :return: (integer value): Expiration time in nanoseconds since 1970-01-01.
 
             Example::
 
@@ -515,7 +515,7 @@ class TTL(_BaseExpr):
     _rt = ResultType.INTEGER
 
     def __init__(self):
-        """ :return (integer value): Number of seconds till the record will expire,
+        """ :return: (integer value): Number of seconds till the record will expire,
                                     returns -1 if the record never expires.
 
             Example::
@@ -535,7 +535,7 @@ class IsTombstone(_BaseExpr):
     _rt = ResultType.BOOLEAN
 
     def __init__(self):
-        """ :return (boolean value): True if the record is a tombstone, false otherwise.
+        """ :return: (boolean value): True if the record is a tombstone, false otherwise.
 
             Example::
 
@@ -554,7 +554,7 @@ class DigestMod(_BaseExpr):
         """ Args:
                 mod (int): Divisor used to divide the digest to get a remainder.
 
-            :return (integer value): Value in range 0 and mod (exclusive).
+            :return: (integer value): Value in range 0 and mod (exclusive).
 
             Example::
 
@@ -573,7 +573,7 @@ class Eq(_BaseExpr):
     """Create an equals, (==) expression."""
     _op = _ExprOp.EQ
 
-    def __init__(self, expr0: TypeComparisonArg, expr1: TypeComparisonArg):
+    def __init__(self, expr0: 'TypeComparisonArg', expr1: 'TypeComparisonArg'):
         """ Args:
             expr0 (TypeComparisonArg): Left argument to `==`.
             expr1 (TypeComparisonArg): Right argument to `==`.
@@ -592,7 +592,7 @@ class NE(_BaseExpr):
     """Create a not equals (not ==) expressions."""
     _op = _ExprOp.NE
 
-    def __init__(self, expr0: TypeComparisonArg, expr1: TypeComparisonArg):
+    def __init__(self, expr0: 'TypeComparisonArg', expr1: 'TypeComparisonArg'):
         """ Args:
                 expr0 (TypeComparisonArg): Left argument to `not ==`.
                 expr1 (TypeComparisonArg): Right argument to `not ==`.
@@ -611,7 +611,7 @@ class GT(_BaseExpr):
     """Create a greater than (>) expression."""
     _op = _ExprOp.GT
 
-    def __init__(self, expr0: TypeComparisonArg, expr1: TypeComparisonArg):
+    def __init__(self, expr0: 'TypeComparisonArg', expr1: 'TypeComparisonArg'):
         """ Args:
                 expr0 (TypeComparisonArg): Left argument to `>`.
                 expr1 (TypeComparisonArg): Right argument to `>`.
@@ -630,7 +630,7 @@ class GE(_BaseExpr):
     """Create a greater than or equal to (>=) expression."""
     _op = _ExprOp.GE
 
-    def __init__(self, expr0: TypeComparisonArg, expr1: TypeComparisonArg):
+    def __init__(self, expr0: 'TypeComparisonArg', expr1: 'TypeComparisonArg'):
         """ Args:
                 expr0 (TypeComparisonArg): Left argument to `>=`.
                 expr1 (TypeComparisonArg): Right argument to `>=`.
@@ -649,7 +649,7 @@ class LT(_BaseExpr):
     """Create a less than (<) expression."""
     _op = _ExprOp.LT
 
-    def __init__(self, expr0: TypeComparisonArg, expr1: TypeComparisonArg):
+    def __init__(self, expr0: 'TypeComparisonArg', expr1: 'TypeComparisonArg'):
         """ Args:
                 expr0 (TypeComparisonArg): Left argument to `<`.
                 expr1 (TypeComparisonArg): Right argument to `<`.
@@ -668,7 +668,7 @@ class LE(_BaseExpr):
     """Create a less than or equal to (<=) expression."""
     _op = _ExprOp.LE
 
-    def __init__(self, expr0: TypeComparisonArg, expr1: TypeComparisonArg):
+    def __init__(self, expr0: 'TypeComparisonArg', expr1: 'TypeComparisonArg'):
         """ Args:
                 expr0 (TypeComparisonArg): Left argument to `<=`.
                 expr1 (TypeComparisonArg): Right argument to `<=`.
@@ -709,7 +709,7 @@ class CmpGeo(_BaseExpr):
     """Create a point within region or region contains point expression."""
     _op = _ExprOp.CMP_GEO
 
-    def __init__(self, expr0: TypeGeo, expr1: TypeGeo):
+    def __init__(self, expr0: 'TypeGeo', expr1: 'TypeGeo'):
         """ Args:
                 expr0 (TypeGeo): Left expression in comparrison.
                 expr1 (TypeGeo): Right expression in comparrison.

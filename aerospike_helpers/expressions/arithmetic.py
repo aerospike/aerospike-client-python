@@ -23,7 +23,7 @@ Example::
     expr = exp.GT(exp.Add(exp.IntBin("a"), exp.IntBin("b")), 20).compile()
 '''
 
-from __future__ import annotations
+#from __future__ import annotations
 from typing import Union
 
 import aerospike
@@ -52,7 +52,7 @@ class Add(_BaseExpr):
     """
     _op = _ExprOp.ADD
 
-    def __init__(self, *args: TypeNumber):
+    def __init__(self, *args: 'TypeNumber'):
         """ Args:
             `*args` (TypeNumber): Variable amount of float or integer expressions or values to be added together.
 
@@ -84,7 +84,7 @@ class Sub(_BaseExpr):
     """
     _op = _ExprOp.SUB
 
-    def __init__(self, *args: TypeNumber):
+    def __init__(self, *args: 'TypeNumber'):
         """ Args:
             `*args` (TypeNumber): Variable amount of float or integer expressions or values to be subtracted.
 
@@ -114,7 +114,7 @@ class Mul(_BaseExpr):
     """
     _op = _ExprOp.MUL
 
-    def __init__(self, *args: TypeNumber):
+    def __init__(self, *args: 'TypeNumber'):
         """ Args:
             `*args` (TypeNumber): Variable amount of float or integer expressions or values to be multiplied.
 
@@ -147,7 +147,7 @@ class Div(_BaseExpr):
 
     _op = _ExprOp.DIV
 
-    def __init__(self, *args: TypeNumber):
+    def __init__(self, *args: 'TypeNumber'):
         """ Args:
             `*args` (TypeNumber): Variable amount of float or integer expressions or values to be divided.
 
@@ -179,7 +179,7 @@ class Pow(_BaseExpr):
     """
     _op = _ExprOp.POW
 
-    def __init__(self, base: TypeFloat, exponent: TypeFloat):
+    def __init__(self, base: 'TypeFloat', exponent: 'TypeFloat'):
         """ Args:
             base (TypeFloat): Float expression or value base.
             exponent (TypeFloat): Float expression or value exponent.
@@ -206,7 +206,7 @@ class Log(_BaseExpr):
     """
     _op = _ExprOp.LOG
 
-    def __init__(self, num: TypeFloat, base: TypeFloat):
+    def __init__(self, num: 'TypeFloat', base: 'TypeFloat'):
         """ Args:
             num (TypeFloat): Float expression or value number.
             base (TypeFloat): Float expression or value base.
@@ -233,7 +233,7 @@ class Mod(_BaseExpr):
     """
     _op = _ExprOp.MOD
 
-    def __init__(self, numerator: TypeInteger, denominator: TypeInteger):
+    def __init__(self, numerator: 'TypeInteger', denominator: 'TypeInteger'):
         """ Args:
             numerator (TypeInteger): Integer expression or value numerator.
             denominator (TypeInteger): Integer expression or value denominator.
@@ -263,7 +263,7 @@ class Abs(_BaseExpr):
     """
     _op = _ExprOp.ABS
 
-    def __init__(self, value: TypeNumber):
+    def __init__(self, value: 'TypeNumber'):
         """ Args:
             value (TypeNumber): Float or integer expression or value to take absolute value of.
 
@@ -292,7 +292,7 @@ class Floor(_BaseExpr):
     """
     _op = _ExprOp.FLOOR
 
-    def __init__(self, value: TypeFloat):
+    def __init__(self, value: 'TypeFloat'):
         """ Args:
             value (TypeFloat): Float expression or value to take floor of.
 
@@ -321,7 +321,7 @@ class Ceil(_BaseExpr):
     """
     _op = _ExprOp.CEIL
 
-    def __init__(self, value: TypeFloat):
+    def __init__(self, value: 'TypeFloat'):
         """ Args:
             value (TypeFloat): Float expression or value to take ceiling of.
 
@@ -345,7 +345,7 @@ class ToInt(_BaseExpr):
     """
     _op = _ExprOp.TO_INT
 
-    def __init__(self, value: TypeFloat):
+    def __init__(self, value: 'TypeFloat'):
         """ Args:
             value (TypeFloat): Float expression or value to convert to int.
 
@@ -366,7 +366,7 @@ class ToFloat(_BaseExpr):
     """
     _op = _ExprOp.TO_FLOAT
 
-    def __init__(self, value: TypeInteger):
+    def __init__(self, value: 'TypeInteger'):
         """ Args:
             value (TypeInteger): Integer expression or value to convert to float.
 
@@ -389,7 +389,7 @@ class Min(_BaseExpr):
     """
     _op = _ExprOp.MIN
 
-    def __init__(self, *args: TypeNumber):
+    def __init__(self, *args: 'TypeNumber'):
         """ Args:
             `*args` (TypeNumber): Variable amount of float or integer expressions or values from which to find the minimum value.
 
@@ -411,7 +411,7 @@ class Max(_BaseExpr):
     """
     _op = _ExprOp.MAX
 
-    def __init__(self, *args: TypeNumber):
+    def __init__(self, *args: 'TypeNumber'):
         """ Args:
             `*args` (TypeNumber): Variable amount of float or integer expressions or values from which to find the maximum value.
 

@@ -8,18 +8,24 @@ Aerospike Python Client
 .. |Downloads| image:: https://img.shields.io/pypi/dm/aerospike.svg
 .. |License| image:: https://img.shields.io/pypi/l/aerospike.svg
 
+Compatibility
+-------------
+
+The Python client for Aerospike works with Python 3.6, 3.7, 3.8, 3.9 running on
+**64-bit** OS X 10.9+ and Linux. 
+Python 3.6 hits `End of Life <https://endoflife.date/python>`__ on December 23rd,
+2021, and is now deprecated.
+
+NOTE: Aerospike Python client 5.0.0 and up MUST be used with Aerospike server 4.9 or later.
+If you see the error "-10, ‘Failed to connect’", please make sure you are using server 4.9 or later.
+
+
 Dependencies
 ------------
 
-The Python client for Aerospike works with Python 3.5, 3.6, 3.7, 3.8 running on
-**64-bit** OS X 10.9+ and Linux.
-
-NOTE: Python client 5.0.0 and up MUST be used with Aerospike server 4.9 or later.
-If you see the error "-10, ‘Failed to connect’", please make sure you are using server 4.9 or later.
-
-NOTE: The following dependencies only apply to installations that build from source
+The following dependencies only apply to installations that build from source
 on linux, or OS X installations.
-For client>=3.8.0 and pip>=19.0 on linux platforms, can skip to "Install" section. 
+For client>=3.8.0 and pip>=19.0 on linux platforms, can skip to "Install" section.
 
 The client depends on:
 

@@ -24,7 +24,7 @@ Example::
     expr = exp.Eq(exp.IntAnd(IntBin("a"), 0xFF00), 0xAA00).compile()
 '''
 
-from __future__ import annotations
+#from __future__ import annotations
 from typing import Union
 
 import aerospike
@@ -36,7 +36,6 @@ from aerospike_helpers.expressions.resources import _ExprOp
 # Bitwise Operator Expressions
 ##############################
 
-TypeNumber = Union[_BaseExpr, int, float]
 TypeInteger = Union[_BaseExpr, int]
 TypeBool = Union[_BaseExpr, bool]
 
@@ -48,7 +47,7 @@ class IntAnd(_BaseExpr):
     """
     _op = _ExprOp.INT_AND
 
-    def __init__(self, *exprs: TypeInteger):
+    def __init__(self, *exprs: 'TypeInteger'):
         """ Args:
                 `*exprs` (TypeInteger): A variable amount of integer expressions or values to be bitwise ANDed.
 
@@ -70,7 +69,7 @@ class IntOr(_BaseExpr):
     """
     _op = _ExprOp.INT_OR
 
-    def __init__(self, *exprs: TypeInteger):
+    def __init__(self, *exprs: 'TypeInteger'):
         """ Args:
                 `*exprs` (TypeInteger): A variable amount of integer expressions or values to be bitwise ORed.
 
@@ -92,7 +91,7 @@ class IntXOr(_BaseExpr):
     """
     _op = _ExprOp.INT_XOR
 
-    def __init__(self, *exprs: TypeInteger):
+    def __init__(self, *exprs: 'TypeInteger'):
         """ Args:
                 `*exprs` (TypeInteger): A variable amount of integer expressions or values to be bitwise XORed.
 
@@ -113,7 +112,7 @@ class IntNot(_BaseExpr):
     """
     _op = _ExprOp.INT_NOT
 
-    def __init__(self, expr: TypeInteger):
+    def __init__(self, expr: 'TypeInteger'):
         """ Args:
                 `expr` (TypeInteger): An integer value or expression to be bitwise negated.
 
@@ -134,7 +133,7 @@ class IntLeftShift(_BaseExpr):
     """
     _op = _ExprOp.INT_LSHIFT
 
-    def __init__(self, value: TypeInteger, shift: TypeInteger):
+    def __init__(self, value: 'TypeInteger', shift: 'TypeInteger'):
         """ Args:
                 `value` (TypeInteger): An integer value or expression to be left shifted.
                 `shift` (TypeInteger): An integer value or expression for number of bits to left shift `value` by.
@@ -156,7 +155,7 @@ class IntRightShift(_BaseExpr):
     """
     _op = _ExprOp.INT_RSHIFT
 
-    def __init__(self, value: TypeInteger, shift: TypeInteger):
+    def __init__(self, value: 'TypeInteger', shift: 'TypeInteger'):
         """ Args:
                 `value` (TypeInteger): An integer value or expression to be right shifted.
                 `shift` (TypeInteger): An integer value or expression for number of bits to right shift `value` by.
@@ -178,7 +177,7 @@ class IntArithmeticRightShift(_BaseExpr):
     """
     _op = _ExprOp.INT_ARSHIFT
 
-    def __init__(self, value: TypeInteger, shift: TypeInteger):
+    def __init__(self, value: 'TypeInteger', shift: 'TypeInteger'):
         """ Args:
                 `value` (TypeInteger): An integer value or expression to be right shifted.
                 `shift` (TypeInteger): An integer value or expression for number of bits to right shift `value` by.
@@ -200,7 +199,7 @@ class IntCount(_BaseExpr):
     """
     _op = _ExprOp.INT_COUNT
 
-    def __init__(self, value: TypeInteger):
+    def __init__(self, value: 'TypeInteger'):
         """ Args:
                 `value` (TypeInteger): An integer value or expression to have bits counted.
 
@@ -225,7 +224,7 @@ class IntLeftScan(_BaseExpr):
     """
     _op = _ExprOp.INT_LSCAN
 
-    def __init__(self, value: TypeInteger, search: TypeBool):
+    def __init__(self, value: 'TypeInteger', search: 'TypeBool'):
         """ Args:
                 `value` (TypeInteger): An integer value or expression to be scanned.
                 `search` (TypeBool): A bool expression or value to scan for.
@@ -252,7 +251,7 @@ class IntRightScan(_BaseExpr):
     """
     _op = _ExprOp.INT_RSCAN
 
-    def __init__(self, value: TypeInteger, search: TypeBool):
+    def __init__(self, value: 'TypeInteger', search: 'TypeBool'):
         """ Args:
                 `value` (TypeInteger): An integer value or expression to be scanned.
                 `search` (TypeBool): A bool expression or value to scan for.

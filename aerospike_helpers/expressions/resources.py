@@ -2,7 +2,7 @@
 Resources used by all expressions.
 '''
 
-from __future__ import annotations
+#from __future__ import annotations
 from itertools import chain
 from typing import List, Optional, Tuple, Union, Dict, Any
 import aerospike
@@ -143,11 +143,11 @@ class _BaseExpr(_AtomExpr):
     _op = 0
     # type: int
     _rt = None
-    # type: TypeResultType
+    # type: 'TypeResultType'
     _fixed = None
-    # type: TypeFixed
+    # type: 'TypeFixed'
     _children = ()
-    # type: TypeChildren
+    # type: 'TypeChildren'
 
     def _get_op(self) -> TypeCompiledOp:
         return (self._op, self._rt, self._fixed, len(self._children))
@@ -162,7 +162,7 @@ class _BaseExpr(_AtomExpr):
 
     def compile(self) -> TypeExpression:
         expression = [self._get_op()]
-        # type: TypeExpression
+        # type: 'TypeExpression'
         work = chain(self._children)
 
         while True:
@@ -189,7 +189,7 @@ class _BaseExpr(_AtomExpr):
         r = [] # No right operand.
         return _create_operator_expression(l, r, op_type)
 
-    def _overload_op(self, right: TypeAny, op_type: int):
+    def _overload_op(self, right: 'TypeAny', op_type: int):
         if self._op == op_type:
             l = self._children
         else:
@@ -202,7 +202,7 @@ class _BaseExpr(_AtomExpr):
 
         return _create_operator_expression(l, r, op_type)
 
-    def _overload_op_va_args(self, right: TypeAny, op_type: int):
+    def _overload_op_va_args(self, right: 'TypeAny', op_type: int):
         expr_end = _BaseExpr()
         expr_end._op = _ExprOp._AS_EXP_CODE_END_OF_VA_ARGS
 
@@ -236,26 +236,26 @@ class _BaseExpr(_AtomExpr):
     def __add__(self, right):
         return self._overload_op_va_args(right, _ExprOp.ADD)
 
-    def __sub__(self, right: TypeAny):
+    def __sub__(self, right: 'TypeAny'):
         return self._overload_op_va_args(right, _ExprOp.SUB)
 
-    def __mul__(self, right: TypeAny):
+    def __mul__(self, right: 'TypeAny'):
         return self._overload_op_va_args(right, _ExprOp.MUL)
 
-    def __truediv__(self, right: TypeAny):
+    def __truediv__(self, right: 'TypeAny'):
         return self._overload_op_va_args(right, _ExprOp.DIV)
 
-    def __floordiv__(self, right: TypeAny):
+    def __floordiv__(self, right: 'TypeAny'):
         div_expr = self.__truediv__(right)
         return div_expr.__floor__()
 
-    def __pow__(self, right: TypeAny):
+    def __pow__(self, right: 'TypeAny'):
         return self._overload_op(right, _ExprOp.POW)
 
-    def __mod__(self, right: TypeAny):
+    def __mod__(self, right: 'TypeAny'):
         return self._overload_op(right, _ExprOp.MOD)
 
-def _create_operator_expression(left_children: TypeChildren, right_children: TypeChildren, op_type: int):
+def _create_operator_expression(left_children: 'TypeChildren', right_children: 'TypeChildren', op_type: int):
     new_expr = _BaseExpr()
     new_expr._op = op_type
     new_expr._children = (*left_children, *right_children)
@@ -263,7 +263,7 @@ def _create_operator_expression(left_children: TypeChildren, right_children: Typ
 
 class _GenericExpr(_BaseExpr):
     
-    def __init__(self, op: _ExprOp, rt: TypeResultType, fixed: TypeFixed):
+    def __init__(self, op: _ExprOp, rt: 'TypeResultType', fixed: 'TypeFixed'):
         self._op = op
         self._rt = rt
         self._fixed = fixed
