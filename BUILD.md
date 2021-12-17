@@ -53,14 +53,14 @@ and higher those [can be installed without Xcode](http://osxdaily.com/2014/02/12
 
 The dependencies can be installed through the OS X package manager [Homebrew](http://brew.sh/).
 
-    brew install openssl
+    brew install openssl@1.1
 
 ## Build
 
 To build the library:
 
-    if repo is not cloned with "git clone --recurse-submodules --remote-submodules ...", run the following command to initialize necessary sub-modules:
-        git submodule update --init --remote --checkout --recursive
+    if repo is not cloned with "git clone --recurse-submodules ...", run the following command to initialize necessary sub-modules:
+        git submodule update --init --checkout --recursive
     python setup.py build --force
 
 ### Troubleshooting OS X builds
