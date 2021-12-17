@@ -1,10 +1,10 @@
-# Version 6.1.1
+# Version 6.1.2
 
-## Breaking Changes:
+## Breaking Changes
 
 # Version 6.1.0
 
-## Breaking Changes:
+## Breaking Changes
 
 ### Dropped support for Manylinux2010 wheels
 
