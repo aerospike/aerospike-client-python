@@ -8,7 +8,7 @@ import pytest
 from _pytest.runner import TestReport
 from _pytest.terminal import TerminalReporter
 import os
-from psutil import Process
+#from psutil import Process
 from collections import namedtuple
 from itertools import groupby
 import tracemalloc

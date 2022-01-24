@@ -16,6 +16,8 @@ except:
 
 class TestSetWhitelist(TestBaseClass):
 
+    config = TestBaseClass.get_connection_config()
+
     pytestmark = pytest.mark.skipif(
         not TestBaseClass.auth_in_use(),
         reason="No user specified, may be not secured cluster.")
@@ -24,7 +26,7 @@ class TestSetWhitelist(TestBaseClass):
         """
         Setup method
         """
-        config = TestBaseClass.get_connection_config()
+        config = self.config
         self.client = aerospike.client(config).connect(config['user'], config['password'])
         usr_sys_admin_privs = [
             {"code": aerospike.PRIV_USER_ADMIN},
