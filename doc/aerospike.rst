@@ -83,7 +83,7 @@ Methods
                 * **batch** (:class:`dict`) 
                     | A dictionary containing :ref:`aerospike_batch_policies`.
                 * **total_timeout** default connection timeout in milliseconds 
-                    | **Deprecated**: set this individually in the :ref:`aerospike_polices` dictionaries.
+                    | **Deprecated**: set this individually in the :ref:`aerospike_policies` dictionaries.
                 * **auth_mode** 
                     | A value of :ref:`auth_mode` defining how the authentication mode with the server, such as :data:`aerospike.AUTH_INTERNAL`.
                     | Default: :data:`aerospike.AUTH_INTERNAL`
@@ -91,11 +91,11 @@ Methods
                     | Representing the node login timeout in milliseconds. 
                     | Default: ``5000``.
                 * **key** default key policy
-                    | **Deprecated**: set this individually in the :ref:`aerospike_polices` dictionaries.
+                    | **Deprecated**: set this individually in the :ref:`aerospike_policies` dictionaries.
                 * **exists** default exists policy
                     | **Deprecated**: set in the :ref:`aerospike_write_policies` dictionary
                 * **max_retries** representing the number of times to retry a transaction 
-                    | **Deprecated**: set this individually in the :ref:`aerospike_polices` dictionaries.
+                    | **Deprecated**: set this individually in the :ref:`aerospike_policies` dictionaries.
                 * **replica** default replica policy
                     | **Deprecated**: set this in one or all of the other policies' :ref:`aerospike_read_policies`, :ref:`aerospike_write_policies`, :ref:`aerospike_apply_policies`, :ref:`aerospike_operate_policies`, :ref:`aerospike_remove_policies` dictionaries.
                 * **commit_level** default commit level policy
