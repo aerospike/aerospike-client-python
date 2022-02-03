@@ -408,6 +408,12 @@ PyDoc_STRVAR(
 \n\
 Set cluster xdr filter.");
 
+PyDoc_STRVAR(
+	get_expression_base64_doc,
+	"get_expression_base64(compiled_expression: list) -> str\n\
+\n\
+Get the base64 representation of a compiled aerospike expression.");
+
 PyDoc_STRVAR(info_all_doc, "info_all(command[, policy]]) -> {}\n\
 \n\
 Send an info *command* to all nodes in the cluster to which the client is connected.\n\
@@ -755,6 +761,8 @@ static PyMethodDef AerospikeClient_Type_Methods[] = {
 	 info_doc},
 	{"set_xdr_filter", (PyCFunction)AerospikeClient_SetXDRFilter,
 	 METH_VARARGS | METH_KEYWORDS, set_xdr_filter_doc},
+	{"get_expression_base64", (PyCFunction)AerospikeClient_GetExpressionBase64,
+	 METH_VARARGS | METH_KEYWORDS, get_expression_base64_doc},
 	{"info_all", (PyCFunction)AerospikeClient_InfoAll,
 	 METH_VARARGS | METH_KEYWORDS, info_all_doc},
 	{"info_single_node", (PyCFunction)AerospikeClient_InfoSingleNode,

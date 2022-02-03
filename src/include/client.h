@@ -702,6 +702,15 @@ PyObject *AerospikeClient_SetXDRFilter(AerospikeClient *self, PyObject *args,
 									   PyObject *kwds);
 
 /**
+* Get the base64 representation of an aerospike expression.
+*
+* b64_string = client.get_expression_base64(compiled_expression)
+*
+*/
+PyObject *AerospikeClient_GetExpressionBase64(AerospikeClient *self, PyObject *args,
+									   PyObject *kwds);
+
+/**
  * Send an info request to the entire cluster
  * client.info_all("statistics", {}")
 */

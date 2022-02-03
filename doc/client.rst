@@ -1663,7 +1663,7 @@ Info Operations
 
         :param str data_center: The data center to apply the filter to.
         :param str namespace: The namespace to apply the filter to.
-        :param expression expression_filter: The filter to set. See expressions at :py:mod:`aerospike_helpers`.
+        :param AerospikeExpression expression_filter: The filter to set. See expressions at :py:mod:`aerospike_helpers`.
         :param dict policy: optional :ref:`aerospike_info_policies`.
         :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
 
@@ -1672,6 +1672,32 @@ Info Operations
         .. versionchanged:: 5.0.0
 
         .. warning:: Requires Aerospike server version >= 5.3.
+
+    .. method:: get_expression_base64(expression) -> str
+
+        Get the base64 representation of a compiled aerospike expression.
+        See :ref:`aerospike_operation_helpers.expressions` for more details on expressions.
+
+        :param AerospikeExpression expression: The compiled expression whose base64 representation will be returned. See expressions at :ref:`aerospike_operation_helpers.expressions`.
+        :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
+
+        .. code-block:: python
+
+            # This is an example of getting the base64 representation of an aerospike expression.
+            import aerospike
+            from aerospike_helpers import expressions as exp
+
+
+            # Compile expression
+            expr = exp.Eq(exp.IntBin("bin1"), 6).compile()
+
+            # Get base64
+            b64 = client.get_expression_base64(expr)
+
+            # Expected output: "kwGTUQKkYmluMQY="
+            print(b64)
+
+        .. versionchanged:: 6.2.0
 
     .. method:: shm_key()  ->  int
 
