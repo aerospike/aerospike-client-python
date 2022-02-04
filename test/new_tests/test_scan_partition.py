@@ -272,7 +272,7 @@ class TestScanPartition(TestBaseClass):
 
         with pytest.raises(e.ParamError) as err:
             scan_obj = self.as_connection.scan()
-            assert True
+            assert True  
 
     def test_scan_partition_with_non_existent_ns_and_set(self):
 
@@ -406,3 +406,77 @@ class TestScanPartition(TestBaseClass):
                 break
 
         assert len(records) == max_records
+
+    def test_resume_part_scan(self):
+        """
+            Resume a scan using foreach.
+        """
+        records = 0
+        resumed_records = 0
+
+        def callback(part_id, input_tuple):
+            nonlocal records
+            if records == 5:
+                return False
+            records += 1
+
+        scan_obj = self.as_connection.scan(self.test_ns, self.test_set)
+
+        scan_obj.foreach(callback, {'partition_filter': {'begin': 1001, 'count': 1}})
+
+        assert records == 5
+
+        partition_status = scan_obj.get_partitions_status()
+
+        def resume_callback(part_id, input_tuple):
+            nonlocal resumed_records
+            resumed_records += 1
+
+        scan_obj2 = self.as_connection.scan(self.test_ns, self.test_set)
+
+        policy = {
+            'partition_filter': {
+                'begin': 1001,
+                'count': 1,
+                "partition_status": partition_status
+            },
+        }
+
+        scan_obj2.foreach(resume_callback, policy)
+
+        assert records + resumed_records == self.partition_1001_count
+
+    def test_resume_scan_results(self):
+
+        """
+            Resume a scan using results.
+        """
+        records = 0
+
+        def callback(part_id, input_tuple):
+            nonlocal records
+            if records == 5:
+                return False
+            records += 1
+
+        scan_obj = self.as_connection.scan(self.test_ns, self.test_set)
+
+        scan_obj.foreach(callback, {'partition_filter': {'begin': 1001, 'count': 1}})
+
+        assert records == 5
+
+        partition_status = scan_obj.get_partitions_status()
+
+        scan_obj2 = self.as_connection.scan(self.test_ns, self.test_set)
+
+        policy = {
+            'partition_filter': {
+                'begin': 1001,
+                'count': 1,
+                "partition_status": partition_status
+            },
+        }
+
+        results = scan_obj2.results(policy)
+
+        assert records + len(results) == self.partition_1001_count

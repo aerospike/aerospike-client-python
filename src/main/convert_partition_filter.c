@@ -20,6 +20,7 @@
 #include <aerospike/aerospike_key.h>
 #include <aerospike/as_error.h>
 #include <aerospike/as_exp.h>
+#include <aerospike/as_log_macros.h>
  
 #include "client.h"
 #include "conversions.h"
@@ -48,6 +49,7 @@ parts_setup(uint16_t part_begin, uint16_t part_count, const as_digest* digest)
 	if (digest && digest->init) {
 		parts_all->parts[0].digest = *digest;
 	}
+
 	return parts_all;
 }
 
@@ -63,61 +65,76 @@ as_status convert_partition_filter(AerospikeClient *self,
 								   as_partitions_status **pss,
 								   as_error *err)
 {
+	as_partitions_status *part_all = NULL;
+	as_partition_status *ps = NULL;
+
+	// TODO what if py_partition_filter is NULL?
+
+	if ( !PyDict_Check(py_partition_filter)) {
+		return as_error_update(err, AEROSPIKE_ERR_PARAM,
+						"invalid partition_filter policy, partition_filter must be a dict");
+	}
 
 	PyObject *begin = PyDict_GetItemString(py_partition_filter, "begin");
 	PyObject *count = PyDict_GetItemString(py_partition_filter, "count");
 	PyObject *digest = PyDict_GetItemString(py_partition_filter, "digest");
 	PyObject *parts_stat = PyDict_GetItemString(py_partition_filter, "partition_status");
-	int parts_valid = 0;
-	as_partitions_status *part_all = NULL;
-	as_partition_status *ps = NULL;
-	uint16_t i = 0;
 
-	if (parts_stat && PyDict_Check(parts_stat)) {
-		parts_valid = 1;
+	if ( parts_stat && !PyDict_Check(parts_stat)) {
+		return as_error_update(err, AEROSPIKE_ERR_PARAM,
+						"invalid partition_filter policy, partition_status must be a dict");
 	}
 
+	filter->begin = 0;
 	if (begin && PyLong_Check(begin)) {
-		filter->begin = 0;
-		filter->count = 0;
-		filter->digest.init = 0;
 
-		filter->begin = PyInt_AsLong(begin);
+		long tmp_begin = PyLong_AsLong(begin);
 
-		if (count && PyLong_Check(count)) {
-			filter->count = PyInt_AsLong(count);
+		if (tmp_begin < CLUSTER_NPARTITIONS) {
+			filter->begin = tmp_begin;
+		}
+	}
+
+	filter->count = CLUSTER_NPARTITIONS;
+	if (count && PyLong_Check(count)) {
+		
+		long tmp_count= PyLong_AsLong(count);
+
+		if (tmp_count <= CLUSTER_NPARTITIONS) {
+			filter->count = tmp_count;
+		}
+	}
+
+	filter->digest.init = 0;
+	if (digest && PyDict_Check(digest)) {
+
+		// TODO check these for overflow
+		PyObject *init = PyDict_GetItemString(digest, "init");
+		if (init && PyLong_Check(init)) {
+			filter->digest.init = PyInt_AsLong(init);
 		}
 
-		if (digest && PyDict_Check(digest)) {
-			PyObject *init = PyDict_GetItemString(digest, "init");
-			if (init && PyLong_Check(init)) {
-				filter->digest.init = PyInt_AsLong(init);
-			}
-			PyObject *value = PyDict_GetItemString(digest, "value");
-			if (value && PyString_Check(value)) {
-				strncpy((char *)filter->digest.value, PyString_AsString(value),
-						AS_DIGEST_VALUE_SIZE);
-			}
+		PyObject *value = PyDict_GetItemString(digest, "value");
+		if (value && PyString_Check(value)) {
+			strncpy((char *)filter->digest.value, PyString_AsString(value),
+					AS_DIGEST_VALUE_SIZE);
 		}
-		part_all = parts_setup(
-								filter->begin, filter->count, //cluster->n_partitions, 
-								&filter->digest);
-		part_all->part_begin = filter->begin;
-		part_all->part_count = filter->count;
+	}
 
-		for (i = 0; i < part_all->part_count; i++) {
+	part_all = parts_setup(
+							filter->begin, filter->count, //cluster->n_partitions, 
+							&filter->digest);
+
+
+	if (parts_stat && PyDict_Check(parts_stat)) {
+		for (uint16_t i = 0; i < part_all->part_count; i++) {
 			ps = &part_all->parts[i];
-			ps->part_id = filter->begin + i;
-			ps->done = false;
-			ps->digest.init = false;
-
-			if (!parts_valid) continue;
 
 			PyObject *key = PyLong_FromLong(ps->part_id);
 			PyObject *id = PyDict_GetItem(parts_stat, key);
 
 			if (!id || !PyTuple_Check(id)) {
-				printf("invalid id for part_id: %d\n", ps->part_id);
+				as_log_info("invalid id for part_id: %d\n", ps->part_id);
 				continue;
 			}
 
@@ -125,27 +142,25 @@ as_status convert_partition_filter(AerospikeClient *self,
 			if (init && PyLong_Check(init)) {
 				ps->digest.init = PyInt_AsLong(init);
 			} else {
-				printf("invalid init for part_id: %d\n", ps->part_id);
+				as_log_info("invalid init for part_id: %d\n", ps->part_id);
 			}
+
 			PyObject *done = PyTuple_GetItem(id, 2);
 			if (done && PyLong_Check(done)) {
 				ps->done = (bool) PyInt_AsLong(done);
 			} else {
-				printf("invalid done for part_id: %d\n", ps->part_id);
+				as_log_info("invalid done for part_id: %d\n", ps->part_id);
 			}
+			
 			PyObject *value = PyTuple_GetItem(id, 3);
 			if (PyByteArray_Check(value)) {
 				uint8_t *bytes_array = (uint8_t *)PyByteArray_AsString(value);
 				//uint32_t bytes_array_len = (uint32_t)PyByteArray_Size(value);
 				memcpy(ps->digest.value, bytes_array, AS_DIGEST_VALUE_SIZE);
 			} else {
-				printf("invalid value for part_id: %d\n", ps->part_id);
+				as_log_info("invalid value for part_id: %d\n", ps->part_id);
 			}
 		}
-	}
-	else {
-		as_error_update(err, AEROSPIKE_ERR_PARAM,
-						"Invalid scan partition policy");
 	}
 
 	if (part_all)

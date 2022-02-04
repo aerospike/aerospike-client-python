@@ -71,6 +71,20 @@ PyDoc_STRVAR(execute_background_doc,
 \n\
 Buffer the records resulting from the query, and return them as a list of records.");
 
+PyDoc_STRVAR(paginate_doc, "paginate()\n\
+\n\
+Set pagination filter to receive records in bunch (max_records or page_size).");
+
+PyDoc_STRVAR(is_done_doc, "is_done() -> bool\n\
+\n\
+If using query pagination, did the previous paginated query with this query instance \
+return all records?");
+
+PyDoc_STRVAR(get_parts_doc, "get_parts() -> {int: (int, bool, bool, bytearray[20]), ...}\n\
+\n\
+Gets the complete partition status of the query. \
+Returns a dictionary of the form {id:(id, init, done, digest), ...}.");
+
 /*******************************************************************************
  * PYTHON TYPE METHODS
  ******************************************************************************/
@@ -98,6 +112,15 @@ static PyMethodDef AerospikeQuery_Type_Methods[] = {
 
 	{"add_ops", (PyCFunction)AerospikeQuery_Add_Ops,
 	 METH_VARARGS | METH_KEYWORDS, add_ops_doc},
+
+	{"paginate", (PyCFunction)AerospikeQuery_Paginate,
+	 METH_NOARGS, paginate_doc},
+
+	{"is_done", (PyCFunction)AerospikeQuery_Is_Done,
+	 METH_NOARGS, is_done_doc},
+
+	{"get_partitions_status", (PyCFunction)AerospikeQuery_Get_Partitions_status,
+	 METH_NOARGS, get_parts_doc},
 
 	{NULL}};
 

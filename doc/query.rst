@@ -162,8 +162,31 @@ Query Methods
                 aerospike:update(rec)
             end
         
-        .. note::
-            For a similar example using .results() see :meth:`aerospike.Scan.results`.
+    .. note::
+        For a similar example using .results() see :meth:`aerospike.Scan.results`.
+
+    .. note:: As of client 6.2.0 and with server >= 6.0 results and the query policy
+        "partition_filter" see :ref:`aerospike_partition_objects` can be used to specify which partitions/records
+        results will query. See the example below.
+
+        .. code-block:: python
+        
+        # This is an example of querying partitions 1000 - 1003.
+        import aerospike
+
+
+        query = client.query("test", "demo")
+
+        policy = {
+            "partition_filter": {
+                "begin": 1000,
+                "count": 4
+            },
+        }
+
+        # NOTE that these will only be non 0 if there are records in partitions 1000 - 1003
+        # results will be the records in partitions 1000 - 1003
+        results = query.results(policy=policy)
 
 
     .. method:: foreach(callback[, policy [, options]])
@@ -175,7 +198,11 @@ Query Methods
         :param dict policy: optional :ref:`aerospike_query_policies`.
         :param dict options: optional :ref:`aerospike_query_options`.
 
-        .. note:: A :ref:`aerospike_record_tuple` is passed as the argument to the callback function.
+        .. note::
+            A :ref:`aerospike_record_tuple` is passed as the argument to the callback function.
+            If the query is using the "partition_filter" query policy the callback will recieve two arguments
+            The first is a :class:`int` representing partition id, the second is the same :ref:`aerospike_record_tuple`
+            as a normal callback.
 
         .. code-block:: python
 
@@ -228,6 +255,43 @@ Query Methods
                 query.foreach(limit(100, keys))
                 print(len(keys)) # this will be 100 if the number of matching records > 100
                 client.close()
+        
+        .. note:: As of client 6.2.0 and with server >= 6.0 foreach and the query policy
+         "partition_filter" see :ref:`aerospike_partition_objects` can be used to specify which partitions/records
+         foreach will query. See the example below.
+
+         .. code-block:: python
+
+            # This is an example of querying partitions 1000 - 1003.
+            import aerospike
+
+
+            partitions = []
+
+            def callback(part_id, input_tuple):
+                print(part_id)
+                partitions.append(part_id)
+
+            query = client.query("test", "demo")
+
+            policy = {
+                "partition_filter": {
+                    "begin": 1000,
+                    "count": 4
+                },
+            }
+
+            query.foreach(callback, policy)
+
+
+            # NOTE that these will only be non 0 if there are records in partitions 1000 - 1003
+            # should be 4
+            print(len(partitions))
+
+            # should be [1000, 1001, 1002, 1003]
+            print(partitions)
+
+
 
     .. method:: apply(module, function[, arguments])
 
@@ -491,6 +555,133 @@ Query Methods
             {'account_number': 4, 'members': [{'name': 'John', 'id': 100}, {'name': 'Bill', 'id': 200}, {'name': 'Cindy', 'id': 300}]}
             """
 
+    .. method:: paginate()
+
+        Makes a query instance a paginated query.
+        Call this if you are using the "max_records" query policy and you need to query data in pages.
+
+        .. note::
+            Calling .paginate() on a query instance causes it to save its partition state.
+            This can be retrieved later using .get_partitions_status().
+
+        .. code-block:: python
+
+            # Query 3 pages of 1000 records each.
+
+            import aerospike
+
+            pages = 3
+            page_size = 1000
+            policy = {"max_records": 1000}
+
+            query = client.query('test', 'demo')
+
+            query.paginate()
+
+            # NOTE: The number of pages queried and records returned per page can differ
+            # if record counts are small or unbalanced across nodes.
+            for page in range(pages):
+                records = query.results(policy=policy)
+
+                print("got page: " + str(page))
+
+                if query.is_done():
+                    print("all done")
+                    break
+
+            # This id can be used to paginate queries.
+
+    .. method:: is_done()
+
+        If using query pagination, did the previous paginated query using this query instance return all records?
+
+        :return: A :class:`bool` signifying whether this paginated query instance has returned all records.
+
+        .. code-block:: python
+
+            import aerospike
+
+            policy = {"max_records": 1000}
+
+            query = client.query('test', 'demo')
+
+            query.paginate()
+
+            records = query.results(policy=policy)
+
+            if query.is_done():
+                print("all done")
+
+            # This id can be used to monitor the progress of a paginated query.
+
+    .. method:: get_partitions_status()
+
+        Get this query instance's partition status. That is which partitions have been queried and which have not.
+        The returned value is a :class:`dict` with partition id, :class:`int`, as keys and :class:`tuple` as values.
+        If the query instance is not tracking its partitions, the returned :class:`dict` will be empty.
+
+        .. note::
+            A query instance must have had .paginate() called on it in order retrieve its
+            partition status. If .paginate() was not called, the query instance will not save partition status.
+
+        :return: a :class:`tuple` of form (id: :class:`int`, init: class`bool`, done: class`bool`, digest: :class:`bytearray`).
+            See :ref:`aerospike_partition_objects` for more information.
+
+        .. code-block:: python
+
+            # This is an example of resuming a query using partition status.
+            import aerospike
+
+
+            for i in range(15):
+                key = ("test", "demo", i)
+                bins = {"id": i}
+                client.put(key, bins)
+
+            records = []
+            resumed_records = []
+
+            def callback(input_tuple):
+                record, _, _ = input_tuple
+
+                if len(records) == 5:
+                    return False
+
+                records.append(record)
+
+            query = client.query("test", "demo")
+            query.paginate()
+
+            query.foreach(callback)
+
+            # The first query should stop after 5 records.
+            assert len(records) == 5
+
+            partition_status = query.get_partitions_status()
+
+            def resume_callback(part_id, input_tuple):
+                record, _, _ = input_tuple
+                resumed_records.append(record)
+
+            query_resume = client.query("test", "demo")
+
+            policy = {
+                "partition_filter": {
+                    "partition_status": partition_status
+                },
+            }
+
+            query_resume.foreach(resume_callback, policy)
+
+            # should be 15
+            total_records = len(records) + len(resumed_records)
+            print(total_records)
+
+            # cleanup
+            for i in range(15):
+                key = ("test", "demo", i)
+                client.remove(key)
+
 .. _aerospike_query_policies:
 
 Query Policies
@@ -562,6 +753,22 @@ Query Policies
             | Default: None
 
             .. note:: Requires Aerospike server version >= 5.2.
+        * **max_records** :class:`int`
+            | Approximate number of records to return to client.
+            | This number is divided by the number of nodes involved in the scan.
+            | The actual number of records returned may be less than max_records if node record counts are small and unbalanced across nodes.
+            |
+            | Default: ``0`` (No Limit).
+
+            .. note:: Requires Aerospike server version >= 6.0
+        * **partition_filter** :class:`dict`
+            | A dictionary of partition information used by the client
+            | to perform partiton queries. Useful for resuming terminated queries and
+            | querying particular partitons/records.
+            |
+            |   See :ref:`aerospike_partition_objects` for more information.
+            |
+            | Default: ``{}`` (All partitions will be queried).
 
 .. _aerospike_query_options:
 

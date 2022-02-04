@@ -120,6 +120,31 @@ PyObject *AerospikeQuery_ExecuteBackground(AerospikeQuery *self, PyObject *args,
 										   PyObject *kwds);
 
 /**
+ * Set pagination filter to receive records in bunch (max_records or page_size).
+ *
+ *    query.paginate()
+ *
+ */
+PyObject *AerospikeQuery_Paginate(AerospikeQuery *self);
+
+/**
+ * Gets the status of the query.
+ *
+ *    If using query pagination, did the previous paginated query with this query instance
+ *    return all records?
+ *
+ */
+PyObject *AerospikeQuery_Is_Done(AerospikeQuery *self);
+
+/**
+ * Gets the complete partition status of the query.
+ *
+ *    Returns a dictionary of the form {id:(id, init, done, digest), ...}.
+ *
+ */
+PyObject *AerospikeQuery_Get_Partitions_status(AerospikeQuery *self);
+
+/**
  * Store the Unicode -> UTF8 string converted PyObject into 
  * a pool of PyObjects. So that, they will be decref'ed at later stages
  * without leaving memory trails behind.
