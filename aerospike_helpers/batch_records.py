@@ -127,9 +127,11 @@ class BatchRecord:
 	        to the server.
         policy Operation policy, type depends on batch type, write, read, apply, etc. TODO is this correct?
     """
-    def __init__(self, key: str, ops: list) -> None:
+    def __init__(self, key: tuple, ops: list) -> None:
         self.key = key
         self.ops = ops
+        self.record = ()
+        self.result = 0 # TODO set this as the ok status code using the constant
     
     def add_op(self, op: dict) -> None:
         self.ops.append(op)
