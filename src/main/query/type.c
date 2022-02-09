@@ -125,6 +125,21 @@ static PyMethodDef AerospikeQuery_Type_Methods[] = {
 	{NULL}};
 
 /*******************************************************************************
+ * PYTHON CUSTOM MEMBERS
+ ******************************************************************************/
+
+static PyMemberDef AerospikeQuery_Type_custom_members[] = {
+    {"max_records", T_ULONG, offsetof(AerospikeQuery, query) + offsetof(as_query, max_records), 0,
+     "Approximate number of records to return to the client. \
+	 	This number is divided by the number of nodes invloved in the query. \
+		The actual number of records returned may be less than max_records if \
+		record counts are small and unbalanced across nodes."},
+    {"records_per_second", T_UINT, offsetof(AerospikeQuery, query) + offsetof(as_query, records_per_second), 0,
+     "Limit the query to process records at records_per_second."},
+    {NULL}  /* Sentinel */
+};
+
+/*******************************************************************************
  * PYTHON TYPE HOOKS
  ******************************************************************************/
 
@@ -270,27 +285,26 @@ static PyTypeObject AerospikeQuery_Type = {
 	"operation. To create a new instance of the Query class, call the\n"
 	"query() method on an instance of a Client class.\n",
 	// tp_doc
-	0,							 // tp_traverse
-	0,							 // tp_clear
-	0,							 // tp_richcompare
-	0,							 // tp_weaklistoffset
-	0,							 // tp_iter
-	0,							 // tp_iternext
-	AerospikeQuery_Type_Methods, // tp_methods
-	0,							 // tp_members
-	0,							 // tp_getset
-	0,							 // tp_base
-	0,							 // tp_dict
-	0,							 // tp_descr_get
-	0,							 // tp_descr_set
-	0,							 // tp_dictoffset
-	(initproc)AerospikeQuery_Type_Init,
-	// tp_init
-	0,						 // tp_alloc
-	AerospikeQuery_Type_New, // tp_new
-	0,						 // tp_free
-	0,						 // tp_is_gc
-	0						 // tp_bases
+	0,							 		// tp_traverse
+	0,							 		// tp_clear
+	0,							 		// tp_richcompare
+	0,							 		// tp_weaklistoffset
+	0,							 		// tp_iter
+	0,							 		// tp_iternext
+	AerospikeQuery_Type_Methods, 		// tp_methods
+	AerospikeQuery_Type_custom_members,	// tp_members
+	0,							 		// tp_getset
+	0,							 		// tp_base
+	0,							 		// tp_dict
+	0,							 		// tp_descr_get
+	0,							 		// tp_descr_set
+	0,							 		// tp_dictoffset
+	(initproc)AerospikeQuery_Type_Init,	// tp_init
+	0,						 			// tp_alloc
+	AerospikeQuery_Type_New, 			// tp_new
+	0,						 			// tp_free
+	0,						 			// tp_is_gc
+	0						 			// tp_bases
 };
 
 /*******************************************************************************

@@ -1406,15 +1406,15 @@ Permission codes define the type of permission granted for a user's role.
 
 .. data:: PRIV_TRUNCATE
 
-    User can truncate data only. Requires server 5.8+
+    User can truncate data only. Requires server 6.0+
 
 .. data:: PRIV_UDF_ADMIN
 
-    User can perform user defined function(UDF) administration actions. Examples include create/drop UDF. Global scope only. Global scope only. Requires server version 5.8+
+    User can perform user defined function(UDF) administration actions. Examples include create/drop UDF. Global scope only. Global scope only. Requires server version 6.0+
 
 .. data:: PRIV_SINDEX_ADMIN
 
-    User can perform secondary index administration actions. Examples include create/drop index. Global scope only. Requires server version 5.8+
+    User can perform secondary index administration actions. Examples include create/drop index. Global scope only. Requires server version 6.0+
 
 
 .. _regex_constants:

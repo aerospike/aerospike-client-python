@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 
+from time import time
 import pytest
 import sys
 from .test_base_class import TestBaseClass
@@ -88,15 +89,15 @@ class TestQueryPartition(TestBaseClass):
         records = []
         partition_filter = {'begin': 1000, 'count': 1}
         policy = {'max_retries': 100,
-                        'max_records': 1000,
-                        'partition_filter': partition_filter,
-                        'records_per_second': 4000}
+                        'partition_filter': partition_filter}
 
         def callback(part_id,input_tuple):
             _, _, record = input_tuple
             records.append(record)
 
         query_obj = self.as_connection.query(self.test_ns, self.test_set)
+        query_obj.max_records = 1000
+        query_obj.records_per_second = 4000
 
         query_obj.foreach(callback, policy)
 
@@ -111,16 +112,16 @@ class TestQueryPartition(TestBaseClass):
         expr = exp.Eq(exp.MapGetByKey(None, aerospike.MAP_RETURN_VALUE, exp.ResultType.INTEGER, "partition", exp.MapBin("m")), 1002)
 
         policy = {'max_retries': 100,
-                        'max_records': 1000,
                         'expressions': expr.compile(),
-                        'partition_filter': partition_filter,
-                        'records_per_second': 4000}
+                        'partition_filter': partition_filter}
 
         def callback(part_id,input_tuple):
             _, _, record = input_tuple
             records.append(record)
 
         query_obj = self.as_connection.query(self.test_ns, self.test_set)
+        query_obj.max_records = 1000
+        query_obj.records_per_second = 4000
 
         query_obj.foreach(callback, policy)
 
@@ -135,16 +136,16 @@ class TestQueryPartition(TestBaseClass):
         expr = exp.Eq(exp.MapGetByKey(None, aerospike.MAP_RETURN_VALUE, exp.ResultType.INTEGER, "partition", exp.MapBin("m")), 1002)
 
         policy = {'max_retries': 100,
-                        'max_records': 1000,
                         'expressions': expr.compile(),
-                        'partition_filter': partition_filter,
-                        'records_per_second': 4000}
+                        'partition_filter': partition_filter}
 
         def callback(part_id,input_tuple):
             _, _, record = input_tuple
             records.append(record)
 
         query_obj = self.as_connection.query(self.test_ns, self.test_set)
+        query_obj.max_records = 1000
+        query_obj.records_per_second = 4000
 
         query_obj.foreach(callback, policy)
 
@@ -166,9 +167,6 @@ class TestQueryPartition(TestBaseClass):
 
     def test_query_partition_with_timeout_policy(self):
 
-        ns = 'test'
-        st = 'demo'
-
         records = []
 
         def callback(part_id,input_tuple):
@@ -182,11 +180,8 @@ class TestQueryPartition(TestBaseClass):
         assert len(records) == self.partition_1000_count
 
     # NOTE: This could fail if node record counts are small and unbalanced across nodes.
-    @pytest.mark.xfail(reason="Might fail depending on record count and distribution.")
+    # @pytest.mark.xfail(reason="Might fail depending on record count and distribution.")
     def test_query_partition_with_max_records_policy(self):
-
-        ns = 'test'
-        st = 'demo'
 
         records = []
 
@@ -197,11 +192,13 @@ class TestQueryPartition(TestBaseClass):
             records.append(record)
 
         query_obj = self.as_connection.query(self.test_ns, self.test_set)
+        query_obj.max_records = max_records
 
-        query_obj.foreach(callback, {'max_records': max_records, 'partition_filter': {'begin': 1000, 'count': 1}})
-        assert len(records) == self.partition_1000_count // 2
+        query_obj.foreach(callback, {'partition_filter': {'begin': 1000, 'count': 1}})
+        assert len(records) <= self.partition_1000_count // 2
 
-    @pytest.mark.xfail(reason="Might fail depending on record count and distribution.")
+    # NOTE: This could fail if node record counts are small and unbalanced across nodes.
+    #@pytest.mark.xfail(reason="Might fail depending on record count and distribution.")
     def test_query_partition_with_all_records_policy(self):
     
         ns = 'test'
@@ -219,14 +216,12 @@ class TestQueryPartition(TestBaseClass):
             records.append(record)
 
         query_obj = self.as_connection.query(self.test_ns, self.test_set)
+        query_obj.max_records = max_records
 
-        query_obj.foreach(callback, {'max_records': max_records, 'partition_filter': {'begin': 1000, 'count': 4}})
-        assert len(records) == max_records
+        query_obj.foreach(callback, {'partition_filter': {'begin': 1000, 'count': 4}})
+        assert len(records) <= max_records
 
     def test_query_partition_with_socket_timeout_policy(self):
-
-        ns = 'test'
-        st = 'demo'
 
         records = []
 
@@ -422,9 +417,7 @@ class TestQueryPartition(TestBaseClass):
 
         partition_filter = {'begin': 1000, 'count': 4, 'partition_status': partition_status}
 
-        policy = {'max_records': query_page_size[0],
-                'partition_filter': partition_filter,
-                'records_per_second': 4000}
+        policy = {'partition_filter': partition_filter}
 
         def callback(part_id, input_tuple):
             if(input_tuple == None):
@@ -438,6 +431,8 @@ class TestQueryPartition(TestBaseClass):
                 return False 
 
         query_obj = self.as_connection.query(self.test_ns, self.test_set)
+        query_obj.max_records = query_page_size[0]
+        query_obj.records_per_second = 4000
 
         i = 0
         for i in range(query_pages[0]):
@@ -455,11 +450,12 @@ class TestQueryPartition(TestBaseClass):
 
         partition_filter = {'begin': 1000, 'count': 4, 'partition_status': partition_status}
 
-        policy = {'max_records': query_page_size[0],
-                'partition_filter': partition_filter,
-                'records_per_second': 4000}
+        policy = {'partition_filter': partition_filter}
 
         new_query_obj = self.as_connection.query(self.test_ns, self.test_set)
+        new_query_obj.max_records = query_page_size[0]
+        new_query_obj.records_per_second = 4000
+
         i = 0
         for i in range(query_pages[0]):
             new_query_obj.foreach(callback, policy)
