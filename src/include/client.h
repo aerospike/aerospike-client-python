@@ -675,6 +675,15 @@ PyObject *AerospikeClient_Batch_GetOps(AerospikeClient *self, PyObject *args,
 								   		PyObject *kwds);
 
 /**
+ * Execute operations by batch
+ *
+ *		client.batch_operate([batch_records], policy)
+ *
+ */
+PyObject *AerospikeClient_BatchOperate(AerospikeClient *self, PyObject *args,
+										 PyObject *kwds);
+
+/**
  * Filter bins from records in a batch
  *
  *		client.select_many([keys], [bins], policies)

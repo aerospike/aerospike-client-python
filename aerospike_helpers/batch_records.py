@@ -94,6 +94,7 @@ Example::
 from cmath import exp
 import aerospike
 from enum import Enum
+from typing import List
 
 
 class _Types(Enum):
@@ -102,16 +103,9 @@ class _Types(Enum):
     APPLY = 2
     REMOVE = 3
 
-
-class BatchRecords:
-    """ TODO refactor the description with Python types
-        BatchRecords contasins a list of batch request/response (as_batch_base_record) records. The record types can be
-        as_batch_read_record, as_batch_write_record, as_batch_apply_record or as_batch_remove_record.
-    """
-    def __init__(self, *, batch_records=None) -> None:
-        self.batch_records = batch_records
-
-
+    # defined so CPython sees these as integers
+    def __index__(self) -> int:
+        return self.value
 
 class BatchRecord:
     """ 
@@ -127,7 +121,7 @@ class BatchRecord:
 	        to the server.
         policy Operation policy, type depends on batch type, write, read, apply, etc. TODO is this correct?
     """
-    def __init__(self, key: tuple, ops: list) -> None:
+    def __init__(self, key: tuple, ops: List[dict]) -> None:
         self.key = key
         self.ops = ops
         self.record = ()
@@ -144,7 +138,7 @@ class BatchWrite(BatchRecord):
         retrieving batch write results.
     """
 
-    def __init__(self, key: str, ops: list, policy: dict = None) -> None:
+    def __init__(self, key: str, ops: list, policy: dict = {}) -> None:
         super().__init__(key, ops)
         self._type = _Types.WRITE
         self._has_write = True
@@ -161,3 +155,11 @@ class BatchWrite(BatchRecord):
 #     def __init__(self) -> None:
 #         self.expression = expression
 #         self.key_policy = key_policy
+
+class BatchRecords:
+    """ TODO refactor the description with Python types
+        BatchRecords contasins a list of batch request/response (as_batch_base_record) records. The record types can be
+        as_batch_read_record, as_batch_write_record, as_batch_apply_record or as_batch_remove_record.
+    """
+    def __init__(self, batch_records: List[BatchRecord]) -> None:
+        self.batch_records = batch_records

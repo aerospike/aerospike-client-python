@@ -524,6 +524,10 @@ PyDoc_STRVAR(get_key_digest_doc, "get_key_digest(ns, set, key) -> bytearray\n\
 \n\
 Calculate the digest of a particular key. See: Key Tuple.");
 
+PyDoc_STRVAR(batch_operate_doc, "batch_operate(batch_records, policy) -> None\n\
+\n\
+Execute operations by batch.");
+
 PyDoc_STRVAR(get_key_partition_id_doc,
 			 "get_key_partition_id(ns, set, key) -> int\n\
 \n\
@@ -819,6 +823,8 @@ static PyMethodDef AerospikeClient_Type_Methods[] = {
 	 METH_VARARGS | METH_KEYWORDS, exists_many_doc},
 	{"get_key_digest", (PyCFunction)AerospikeClient_Get_Key_Digest,
 	 METH_VARARGS | METH_KEYWORDS, get_key_digest_doc},
+	{"batch_operate", (PyCFunction)AerospikeClient_BatchOperate,
+	 METH_VARARGS | METH_KEYWORDS, batch_operate_doc},
 
 	// TRUNCATE OPERATIONS
 	{"truncate", (PyCFunction)AerospikeClient_Truncate,

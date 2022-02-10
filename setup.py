@@ -323,7 +323,8 @@ setup(
                 'src/main/client/get_expression_base64.c',
                 'src/main/client/get_nodes.c',
                 'src/main/convert_partition_filter.c',
-                'src/main/client/get_key_partition_id.c'
+                'src/main/client/get_key_partition_id.c',
+                'src/main/client/batch_operate.c'
             ],
 
             # Compile
