@@ -36,9 +36,29 @@ Query Class --- :class:`Query`
         `Managing Queries <http://www.aerospike.com/docs/operations/manage/queries/>`_.
 
 
-Query Methods
--------------
+Query Fields and Methods
+------------------------
 .. class:: Query
+
+    Fields
+
+    :fieldname max_records:
+            :class:`int`
+            Approximate number of records to return to client.
+            This number is divided by the number of nodes involved in the scan.
+            The actual number of records returned may be less than max_records if node record counts are small and unbalanced across nodes.
+            Requires server version >= 6.0.0
+
+            Default: ``0`` (No Limit).
+
+    :fieldname records_per_second:
+            :class:`int`
+            Limit the scan to process records at records_per_second.
+            Requires server version >= 6.0.0
+            
+            Default: ``0`` (no limit).
+
+    Methods
 
     .. method:: select(bin1[, bin2[, bin3..]])
 
@@ -171,18 +191,18 @@ Query Methods
 
         .. code-block:: python
         
-        # This is an example of querying partitions 1000 - 1003.
-        import aerospike
+            # This is an example of querying partitions 1000 - 1003.
+            import aerospike
 
 
-        query = client.query("test", "demo")
+            query = client.query("test", "demo")
 
-        policy = {
-            "partition_filter": {
-                "begin": 1000,
-                "count": 4
-            },
-        }
+            policy = {
+                "partition_filter": {
+                    "begin": 1000,
+                    "count": 4
+                },
+            }
 
         # NOTE that these will only be non 0 if there are records in partitions 1000 - 1003
         # results will be the records in partitions 1000 - 1003
@@ -558,7 +578,7 @@ Query Methods
     .. method:: paginate()
 
         Makes a query instance a paginated query.
-        Call this if you are using the "max_records" query policy and you need to query data in pages.
+        Call this if you are using the max_records and you need to query data in pages.
 
         .. note::
             Calling .paginate() on a query instance causes it to save its partition state.
@@ -572,16 +592,16 @@ Query Methods
 
             pages = 3
             page_size = 1000
-            policy = {"max_records": 1000}
 
             query = client.query('test', 'demo')
+            query.max_records = 1000
 
             query.paginate()
 
             # NOTE: The number of pages queried and records returned per page can differ
             # if record counts are small or unbalanced across nodes.
             for page in range(pages):
-                records = query.results(policy=policy)
+                records = query.results()
 
                 print("got page: " + str(page))
 
@@ -601,9 +621,8 @@ Query Methods
 
             import aerospike
 
-            policy = {"max_records": 1000}
-
             query = client.query('test', 'demo')
+            query.max_records = 1000
 
             query.paginate()
 
@@ -753,14 +772,7 @@ Query Policies
             | Default: None
 
             .. note:: Requires Aerospike server version >= 5.2.
-        * **max_records** :class:`int`
-            | Approximate number of records to return to client.
-            | This number is divided by the number of nodes involved in the scan.
-            | The actual number of records returned may be less than max_records if node record counts are small and unbalanced across nodes.
-            |
-            | Default: ``0`` (No Limit).
 
-            .. note:: Requires Aerospike server version >= 6.0
         * **partition_filter** :class:`dict`
             | A dictionary of partition information used by the client
             | to perform partiton queries. Useful for resuming terminated queries and
@@ -769,6 +781,8 @@ Query Policies
             |   See :ref:`aerospike_partition_objects` for more information.
             |
             | Default: ``{}`` (All partitions will be queried).
+
+            .. note:: Requires Aerospike server version >= 6.0
 
 .. _aerospike_query_options:
 
