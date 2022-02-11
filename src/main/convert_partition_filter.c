@@ -41,7 +41,7 @@ parts_setup(uint16_t part_begin, uint16_t part_count, const as_digest* digest)
 	for (uint16_t i = 0; i < part_count; i++) {
 		as_partition_status* ps = &parts_all->parts[i];
 		ps->part_id = part_begin + i;
-		ps->done = false;
+		ps->retry = false;
 		ps->digest.init = false;
 	}
 
@@ -108,7 +108,7 @@ as_status convert_partition_filter(AerospikeClient *self,
 		for (i = 0; i < part_all->part_count; i++) {
 			ps = &part_all->parts[i];
 			ps->part_id = filter->begin + i;
-			ps->done = false;
+			ps->retry = false;
 			ps->digest.init = false;
 
 			if (!parts_valid) continue;
@@ -129,7 +129,7 @@ as_status convert_partition_filter(AerospikeClient *self,
 			}
 			PyObject *done = PyTuple_GetItem(id, 2);
 			if (done && PyLong_Check(done)) {
-				ps->done = (bool) PyInt_AsLong(done);
+				ps->retry = (bool) PyInt_AsLong(done);
 			} else {
 				printf("invalid done for part_id: %d\n", ps->part_id);
 			}

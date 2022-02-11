@@ -93,6 +93,21 @@
 		}                                                                      \
 	}
 
+#define POLICY_SET_EXPRESSIONS_FIELD()                                         \
+	{                                                                          \
+		if (exp_list) {                                                        \
+			PyObject *py_exp_list =                                            \
+				PyDict_GetItemString(py_policy, "expressions");                \
+			if (py_exp_list) {                                                 \
+				if (convert_exp_list(self, py_exp_list, &exp_list, err) ==     \
+					AEROSPIKE_OK) {                                            \
+					policy->filter_exp = exp_list;                        \
+					*exp_list_p = exp_list;                                    \
+				}                                                              \
+			}                                                                  \
+		}                                                                      \
+	}
+
 #define POLICY_SET_PREDEXP_BASE_FIELD()                                        \
 	{                                                                          \
 		if (predexp_list) {                                                    \
@@ -1020,6 +1035,33 @@ as_status pyobject_to_policy_batch(AerospikeClient *self, as_error *err,
 
 	return err->code;
 }
+
+as_status pyobject_to_batch_write_policy(AerospikeClient *self,
+											as_error *err,
+											PyObject *py_policy,
+											as_policy_batch_write *policy,
+											as_policy_batch_write **policy_p,
+											as_exp *exp_list,
+											as_exp **exp_list_p)
+{
+	POLICY_INIT(as_policy_batch_write);
+
+	// Set policy fields
+	POLICY_SET_FIELD(key, as_policy_key);
+	POLICY_SET_FIELD(commit_level, as_policy_commit_level);
+	POLICY_SET_FIELD(gen, as_policy_gen);
+	POLICY_SET_FIELD(exists, as_policy_exists);
+	POLICY_SET_FIELD(durable_delete, bool);
+
+	// C client 5.0 new expressions
+	POLICY_SET_EXPRESSIONS_FIELD();
+
+	// Update the policy
+	POLICY_UPDATE();
+
+	return err->code;
+}
+
 as_status pyobject_to_bit_policy(as_error *err, PyObject *py_policy,
 								 as_bit_policy *policy)
 {

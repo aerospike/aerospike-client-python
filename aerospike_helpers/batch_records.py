@@ -91,21 +91,15 @@ Example::
     EXAMPLE 2, name is:  {'nested_list': 'Cindy'}
     """
 '''
-from cmath import exp
 import aerospike
-from enum import Enum
 from typing import List
 
 
-class _Types(Enum):
+class _Types():
     READ = 0
     WRITE = 1
     APPLY = 2
     REMOVE = 3
-
-    # defined so CPython sees these as integers
-    def __index__(self) -> int:
-        return self.value
 
 class BatchRecord:
     """ 
@@ -121,15 +115,10 @@ class BatchRecord:
 	        to the server.
         policy Operation policy, type depends on batch type, write, read, apply, etc. TODO is this correct?
     """
-    def __init__(self, key: tuple, ops: List[dict]) -> None:
+    def __init__(self, key: tuple) -> None:
         self.key = key
-        self.ops = ops
         self.record = ()
         self.result = 0 # TODO set this as the ok status code using the constant
-    
-    def add_op(self, op: dict) -> None:
-        self.ops.append(op)
-
 
 
 class BatchWrite(BatchRecord):
@@ -138,14 +127,67 @@ class BatchWrite(BatchRecord):
         retrieving batch write results.
     """
 
-    def __init__(self, key: str, ops: list, policy: dict = {}) -> None:
-        super().__init__(key, ops)
+    def __init__(self, key: str, ops: List[dict], policy: dict = {}) -> None:
+        super().__init__(key)
+        self.ops = ops
         self._type = _Types.WRITE
         self._has_write = True
         self.policy = policy
 
 
-# TODO policy support
+class BatchRead(BatchRecord):
+    """
+        BatchRead defines the object used for Batch read operations and
+        retrieving batch read results.
+    """
+
+    def __init__(self, key: str, ops: List[dict], policy: dict = {}) -> None:
+        super().__init__(key)
+        self.ops = ops
+        self._type = _Types.READ
+        self._has_write = False
+        self.policy = policy
+
+
+class BatchApply(BatchRecord):
+    """
+        BatchWrite defines the object used for Batch UDF apply operations and
+        retrieving batch apply results.
+    """
+
+    def __init__(self, key: str, policy: dict = {}) -> None:
+        super().__init__(key)
+        self._type = _Types.APPLY
+        self._has_write = True # TODO should this ba an arg set by user?
+        self.policy = policy
+
+
+class BatchRemove(BatchRecord):
+    """
+        BatchWrite defines the object used for Batch remove operations and
+        retrieving batch remove results.
+    """
+
+    def __init__(self, key: str, policy: dict = {}) -> None:
+        super().__init__(key)
+        self._type = _Types.REMOVE
+        self._has_write = True
+        self.policy = policy
+
+
+class BatchRecords:
+    """ TODO refactor the description with Python types
+        BatchRecords contains a list of batch request/response (as_batch_base_record) records. The record types can be
+        as_batch_read_record, as_batch_write_record, as_batch_apply_record or as_batch_remove_record.
+    """
+    def __init__(self, batch_records: List[BatchRecord]) -> None:
+        self.batch_records = batch_records
+
+
+
+
+
+# TODO policy support (probably in its own module)
 # class PolicyBatchWrite:
 #     """
 #         PolicyBatchWrite defines policy options for use with
@@ -155,11 +197,3 @@ class BatchWrite(BatchRecord):
 #     def __init__(self) -> None:
 #         self.expression = expression
 #         self.key_policy = key_policy
-
-class BatchRecords:
-    """ TODO refactor the description with Python types
-        BatchRecords contasins a list of batch request/response (as_batch_base_record) records. The record types can be
-        as_batch_read_record, as_batch_write_record, as_batch_apply_record or as_batch_remove_record.
-    """
-    def __init__(self, batch_records: List[BatchRecord]) -> None:
-        self.batch_records = batch_records

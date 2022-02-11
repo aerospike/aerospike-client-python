@@ -285,3 +285,11 @@ as_status pyobject_to_bit_policy(as_error *err, PyObject *py_policy,
 
 as_status pyobject_to_hll_policy(as_error *err, PyObject *py_policy,
 								 as_hll_policy *hll_policy);
+
+as_status pyobject_to_batch_write_policy(AerospikeClient *self,
+											as_error *err,
+											PyObject *py_policy,
+											as_policy_batch_write *policy,
+											as_policy_batch_write **policy_p,
+											as_exp *exp_list,
+											as_exp **exp_list_p);
