@@ -13,11 +13,13 @@ except:
 
 from aerospike_helpers.expressions import *
 from aerospike_helpers.operations import expression_operations as expressions
+from aerospike_helpers import batch_records as br
+from aerospike_helpers.operations import operations as op
 from aerospike import exception as e
 from .test_base_class import TestBaseClass
 
 
-class TestBatchExpressionsOperations(TestBaseClass):
+class TestBatchOperate(TestBaseClass):
 
     @pytest.fixture(autouse=True)
     def setup(self, request, as_connection):
@@ -59,37 +61,21 @@ class TestBatchExpressionsOperations(TestBaseClass):
 
         request.addfinalizer(teardown)
 
-    @pytest.mark.parametrize("expr, flags, name, expected", [
+    @pytest.mark.parametrize("name, batch_records, expected", [
         (
-            Let(Def("bal", IntBin("balance")),
-                Var("bal")
+            "test1",
+            br.BatchRecords(
+                [
+                    br.BatchWrite(
+                        ("test", "demo", 1),
+                        [
+                            op.write("new", 10)
+                        ],
+                        policy=[]
+                    )
+                ]
             ),
-            aerospike.EXP_READ_DEFAULT,
-            "test_name",
-            {"test_name": 100}
-        ),
-        (
-            Let(Def("bal", IntBin("balance")),
-                Cond(
-                    GE(Var("bal"), 50),
-                        Add(Var("bal"), 50),
-                    Unknown())
-            ),
-            aerospike.EXP_READ_DEFAULT,
-            "test_name2",
-            {"test_name2": 150}
-        ),
-        (
-            Let(Def("bal", IntBin("balance")),
-                Def("age", IntBin("age")),
-                Cond(
-                    GE(Var("bal"), 50),
-                        Mul(Var("bal"), Var("age")),
-                    Unknown())
-            ),
-            aerospike.EXP_READ_DEFAULT,
-            "test_mul1",
-            {"test_mul1": 1000}
+            # TODO expected
         ),
     ])
     def test_read_pos(self, expr, flags, name, expected):
@@ -112,44 +98,3 @@ class TestBatchExpressionsOperations(TestBaseClass):
         for i in range(self.batch_size):
             # print("results: ", recs[i])
             assert recs[i][0][1] == expected
-
-    @pytest.mark.parametrize("expr, flags, name, expected", [
-        (
-            Let(Def("bal", IntBin("balance")),
-                Cond(
-                    LT(Var("bal"), 50),
-                        Add(Var("bal"), 50),
-                    Unknown())
-            ).compile(),
-            aerospike.EXP_READ_DEFAULT,
-			"test_name3",
-            e.RecordNotFound # Because Unknown will be returned.
-        ),
-        (
-            "bad_expr",
-            aerospike.EXP_READ_DEFAULT,
-            "test_name3",
-            e.ParamError
-        ),
-        (
-            Let(Def("bal", IntBin("balance")),
-                Cond(
-                    LT(Var("bal"), 50),
-                        Add(Var("bal"), 50),
-                    Unknown())
-            ).compile(),
-            "bad_flags",
-            "test_name3",
-            e.ParamError
-        ),
-    ])
-    def test_read_neg(self, expr, flags, name, expected):
-        """
-        Test expression read operation expecting failure.
-        """
-        with pytest.raises(expected):
-            ops = [
-                expressions.expression_read(name, expr, flags)
-            ]
-            res = self.as_connection.batch_get_ops(self.keys, ops)
-            # print("test_read_neg: ", res)

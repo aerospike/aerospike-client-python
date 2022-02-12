@@ -95,15 +95,13 @@
 
 #define POLICY_SET_EXPRESSIONS_FIELD()                                         \
 	{                                                                          \
-		if (exp_list) {                                                        \
-			PyObject *py_exp_list =                                            \
-				PyDict_GetItemString(py_policy, "expressions");                \
-			if (py_exp_list) {                                                 \
-				if (convert_exp_list(self, py_exp_list, &exp_list, err) ==     \
-					AEROSPIKE_OK) {                                            \
-					policy->filter_exp = exp_list;                        \
-					*exp_list_p = exp_list;                                    \
-				}                                                              \
+		PyObject *py_exp_list =                                                \
+			PyDict_GetItemString(py_policy, "expressions");                    \
+		if (py_exp_list) {                                                     \
+			if (convert_exp_list(self, py_exp_list, &exp_list, err) ==         \
+				AEROSPIKE_OK) {                                                \
+				policy->filter_exp = exp_list;                                 \
+				*exp_list_p = exp_list;                                        \
 			}                                                                  \
 		}                                                                      \
 	}
@@ -1030,12 +1028,17 @@ as_status pyobject_to_policy_batch(AerospikeClient *self, as_error *err,
 	// C client 5.0 new expressions
 	POLICY_SET_EXPRESSIONS_BASE_FIELD();
 
+	// C client 5.3.0 (batch writes)
+	POLICY_SET_FIELD(allow_inline_ssd, bool);
+	POLICY_SET_FIELD(respond_all_keys, bool);
+
 	// Update the policy
 	POLICY_UPDATE();
 
 	return err->code;
 }
 
+// New with server 6.0, C client 5.2.0 (batch writes)
 as_status pyobject_to_batch_write_policy(AerospikeClient *self,
 											as_error *err,
 											PyObject *py_policy,
@@ -1051,6 +1054,82 @@ as_status pyobject_to_batch_write_policy(AerospikeClient *self,
 	POLICY_SET_FIELD(commit_level, as_policy_commit_level);
 	POLICY_SET_FIELD(gen, as_policy_gen);
 	POLICY_SET_FIELD(exists, as_policy_exists);
+	POLICY_SET_FIELD(durable_delete, bool);
+
+	// C client 5.0 new expressions
+	POLICY_SET_EXPRESSIONS_FIELD();
+
+	// Update the policy
+	POLICY_UPDATE();
+
+	return err->code;
+}
+
+// New with server 6.0, C client 5.2.0 (batch writes)
+as_status pyobject_to_batch_read_policy(AerospikeClient *self,
+											as_error *err,
+											PyObject *py_policy,
+											as_policy_batch_read *policy,
+											as_policy_batch_read **policy_p,
+											as_exp *exp_list,
+											as_exp **exp_list_p)
+{
+	POLICY_INIT(as_policy_batch_read);
+
+	// Set policy fields
+	POLICY_SET_FIELD(read_mode_ap, as_policy_read_mode_ap);
+	POLICY_SET_FIELD(read_mode_sc, as_policy_read_mode_sc);
+
+	// C client 5.0 new expressions
+	POLICY_SET_EXPRESSIONS_FIELD();
+
+	// Update the policy
+	POLICY_UPDATE();
+
+	return err->code;
+}
+
+// New with server 6.0, C client 5.2.0 (batch writes)
+as_status pyobject_to_batch_apply_policy(AerospikeClient *self,
+											as_error *err,
+											PyObject *py_policy,
+											as_policy_batch_apply *policy,
+											as_policy_batch_apply **policy_p,
+											as_exp *exp_list,
+											as_exp **exp_list_p)
+{
+	POLICY_INIT(as_policy_batch_apply);
+
+	// Set policy fields
+	POLICY_SET_FIELD(key, as_policy_key);
+	POLICY_SET_FIELD(commit_level, as_policy_commit_level);
+	POLICY_SET_FIELD(ttl, uint32_t);
+	POLICY_SET_FIELD(durable_delete, bool);
+
+	// C client 5.0 new expressions
+	POLICY_SET_EXPRESSIONS_FIELD();
+
+	// Update the policy
+	POLICY_UPDATE();
+
+	return err->code;
+}
+
+// New with server 6.0, C client 5.2.0 (batch writes)
+as_status pyobject_to_batch_remove_policy(AerospikeClient *self,
+											as_error *err,
+											PyObject *py_policy,
+											as_policy_batch_remove *policy,
+											as_policy_batch_remove **policy_p,
+											as_exp *exp_list,
+											as_exp **exp_list_p)
+{
+	POLICY_INIT(as_policy_batch_remove);
+
+	// Set policy fields
+	POLICY_SET_FIELD(key, as_policy_key);
+	POLICY_SET_FIELD(commit_level, as_policy_commit_level);
+	POLICY_SET_FIELD(gen, as_policy_gen);
 	POLICY_SET_FIELD(durable_delete, bool);
 
 	// C client 5.0 new expressions
