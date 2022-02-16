@@ -11,29 +11,64 @@ except:
     print("Please install aerospike python client.")
     sys.exit(1)
 
-from aerospike_helpers.expressions import *
-from aerospike_helpers.operations import expression_operations as expressions
+from aerospike_helpers import expressions as exp
+from aerospike_helpers import batch_records as br
+from aerospike_helpers.operations import operations as op
+from aerospike_helpers.operations import list_operations as lop
 from aerospike import exception as e
 from .test_base_class import TestBaseClass
+from .as_status_codes import AerospikeStatus
 
 
-class TestBatchExpressionsOperations(TestBaseClass):
+def add_udfs(client):
+    '''
+    Load the UDFs used in the tests
+    '''
+    policy = {}
+    print("running")
+    udf_type = 0
+    udf_files = ("sample.lua", "test_record_udf.lua", "udf_basic_ops.lua")
+
+    for module in udf_files:
+        client.udf_put(module, udf_type, policy)
+
+
+def remove_udfs(client):
+    '''
+    Remove all of the UDFS created for these tests
+    '''
+    policy = {}
+
+    udf_files = ("sample.lua", "test_record_udf.lua", "udf_basic_ops.lua")
+
+    for module in udf_files:
+        client.udf_remove(module, policy)
+
+
+class TestBatchOperate(TestBaseClass):
+
+    def setup_class(cls):
+        # Register setup and teardown functions
+        cls.connection_setup_functions = [add_udfs]
+        cls.connection_teardown_functions = [remove_udfs]
 
     @pytest.fixture(autouse=True)
-    def setup(self, request, as_connection):
-        # TODO this should be changed to 6.0 before release.
-        if self.server_version < [5, 7]:
-            pytest.mark.xfail(reason="Servers older than 5.7 do not support arithmetic expressions.")
+    def setup(self, request, connection_with_config_funcs):
+        as_connection = connection_with_config_funcs
+
+        if self.server_version < [5, 6]:
+            pytest.mark.xfail(reason="Servers older than 5.6 do not support arithmetic expressions.")
             pytest.xfail()
         
         self.test_ns = 'test'
         self.test_set = 'demo'
         self.keys = []
-        self.rec_count = 5
+        self.batch_size = 5
 
-        for i in range(self.rec_count):
-            key = ('test', u'demo', i)
+        for i in range(self.batch_size):
+            key = ('test', 'demo', i)
             rec = {
+                "count": i,
                 'name': 'name10',
                 't': True,
                 'age': 10,
@@ -54,103 +89,391 @@ class TestBatchExpressionsOperations(TestBaseClass):
             self.keys.append(key)
 
         def teardown():
-            for i in range(self.rec_count):
-                key = ('test', u'demo', i)
+            for i in range(self.batch_size):
+                key = ('test', 'demo', i)
                 as_connection.remove(key)
 
         request.addfinalizer(teardown)
 
-    @pytest.mark.parametrize("expr, flags, name, expected", [
+    @pytest.mark.parametrize("name, batch_records, policy, exp_res, exp_rec", [
         (
-            Let(Def("bal", IntBin("balance")),
-                Var("bal")
+            "simple-write",
+            br.BatchRecords(
+                [
+                    br.BatchWrite(
+                        ("test", "demo", 1),
+                        [
+                            op.write("new", 10),
+                            op.read("new"),
+                        ],
+                        policy={}
+                    )
+                ]
             ),
-            aerospike.EXP_READ_DEFAULT,
-            "test_name",
-            {"test_name": 100}
+            {},
+            [AerospikeStatus.AEROSPIKE_OK],
+            [{"new": 10}]
         ),
         (
-            Let(Def("bal", IntBin("balance")),
-                Cond(
-                    GE(Var("bal"), 50),
-                        Add(Var("bal"), 50),
-                    Unknown())
+            "write-with-batch-policy",
+            br.BatchRecords(
+                [
+                    br.BatchWrite(
+                        ("test", "demo", 1),
+                        [
+                            op.write("new", 10),
+                            op.read("new"),
+                        ],
+                        policy={}
+                    )
+                ]
             ),
-            aerospike.EXP_READ_DEFAULT,
-            "test_name2",
-            {"test_name2": 150}
+            {
+                "total_timeout": 2000,
+                "max_retries": 2,
+                "allow_inline_ssd": True,
+                "respond_all_keys": False
+            },
+            [AerospikeStatus.AEROSPIKE_OK],
+            [{"new": 10}]
         ),
         (
-            Let(Def("bal", IntBin("balance")),
-                Def("age", IntBin("age")),
-                Cond(
-                    GE(Var("bal"), 50),
-                        Mul(Var("bal"), Var("age")),
-                    Unknown())
+            "write-with-policy",
+            br.BatchRecords(
+                [
+                    br.BatchWrite(
+                        ("test", "demo", 1),
+                        [
+                            op.write("new", 10),
+                            op.read("new"),
+                        ],
+                        policy={
+                            "key": aerospike.POLICY_KEY_SEND,
+                            "commit_level": aerospike.POLICY_COMMIT_LEVEL_MASTER,
+                            "gen": aerospike.POLICY_GEN_IGNORE,
+                            "exists": aerospike.POLICY_EXISTS_UPDATE,
+                            "durable_delete": False,
+                            "expressions": exp.Eq(exp.IntBin("count"), 1).compile()
+                        }
+                    )
+                ]
             ),
-            aerospike.EXP_READ_DEFAULT,
-            "test_mul1",
-            {"test_mul1": 1000}
-        ),
-    ])
-    def test_read_pos(self, expr, flags, name, expected):
-        """
-        Test expression read operation with correct parameters.
-        """
-        ops = [
-            expressions.expression_read(name, expr.compile(), flags)
-        ]
-        meta = {'gen': 1}
-        policy = {'timeout': 1001}
-        #print(self.keys)
-        res = self.as_connection.batch_get_ops(self.keys, ops, meta, policy)
-        """
-        res are in the format of (status-tuple, ((meta-dict, result-dict), status-tuple, exception), ...)
-        """
-        status = res[0]
-        recs = res[1:]
-        # print("\ntest_read_pos status:", status)
-        for i in range(self.rec_count):
-            # print("results: ", recs[i])
-            assert recs[i][0][1] == expected
-
-    @pytest.mark.parametrize("expr, flags, name, expected", [
-        (
-            Let(Def("bal", IntBin("balance")),
-                Cond(
-                    LT(Var("bal"), 50),
-                        Add(Var("bal"), 50),
-                    Unknown())
-            ).compile(),
-            aerospike.EXP_READ_DEFAULT,
-			"test_name3",
-            e.RecordNotFound # Because Unknown will be returned.
+            {},
+            [AerospikeStatus.AEROSPIKE_OK],
+            [{"new": 10}]
         ),
         (
-            "bad_expr",
-            aerospike.EXP_READ_DEFAULT,
-            "test_name3",
-            e.ParamError
+            "simple-read",
+            br.BatchRecords(
+                [
+                    br.BatchRead(
+                        ("test", "demo", 1),
+                        [
+                            op.read("count"),
+                        ],
+                        policy={}
+                    )
+                ]
+            ),
+            {},
+            [AerospikeStatus.AEROSPIKE_OK],
+            [{"count": 1}]
         ),
         (
-            Let(Def("bal", IntBin("balance")),
-                Cond(
-                    LT(Var("bal"), 50),
-                        Add(Var("bal"), 50),
-                    Unknown())
-            ).compile(),
-            "bad_flags",
-            "test_name3",
-            e.ParamError
+            "read-with-policy",
+            br.BatchRecords(
+                [
+                    br.BatchWrite(
+                        ("test", "demo", 1),
+                        [
+                            op.write("new", 10),
+                            op.read("new"),
+                        ],
+                        policy={
+                            "read_mode_ap": aerospike.POLICY_READ_MODE_AP_ONE,
+                            "expressions": exp.Eq(exp.IntBin("count"), 1).compile()
+                        }
+                    )
+                ]
+            ),
+            {},
+            [AerospikeStatus.AEROSPIKE_OK],
+            [{"new": 10}]
         ),
-    ])
-    def test_read_neg(self, expr, flags, name, expected):
-        """
-        Test expression read operation expecting failure.
-        """
-        with pytest.raises(expected):
-            ops = [
-                expressions.expression_read(name, expr, flags)
+        (
+            "simple-remove",
+            br.BatchRecords(
+                [
+                    br.BatchRemove(
+                        ("test", "demo", 1),
+                        policy={}
+                    ),
+                    br.BatchWrite(
+                        ("test", "demo", 1),
+                        [
+                            op.write("new", 10),
+                            op.read("new"),
+                        ],
+                        policy={}
+                    )
+                ]
+            ),
+            {},
+            [
+                AerospikeStatus.AEROSPIKE_OK,
+                AerospikeStatus.AEROSPIKE_OK
+            ],
+            [
+                {},
+                {"new": 10}
             ]
-            res = self.as_connection.batch_get_ops(self.keys, ops)
-            # print("test_read_neg: ", res)
+        ),
+        (
+            "remove-with-policy",
+            br.BatchRecords(
+                [
+                    br.BatchRemove(
+                        ("test", "demo", 1),
+                        policy={
+                            "key": aerospike.POLICY_KEY_SEND,
+                            "commit_level": aerospike.POLICY_COMMIT_LEVEL_MASTER,
+                            "gen": aerospike.POLICY_GEN_IGNORE,
+                            "durable_delete": False,
+                            "expressions": exp.Eq(exp.IntBin("count"), 1).compile()
+                        }
+                    ),
+                    br.BatchWrite(
+                        ("test", "demo", 1),
+                        [
+                            op.write("new", 10),
+                            op.read("new"),
+                        ],
+                        policy={}
+                    )
+                ]
+            ),
+            {},
+            [
+                AerospikeStatus.AEROSPIKE_OK,
+                AerospikeStatus.AEROSPIKE_OK
+            ],
+            [
+                {},
+                {"new": 10}
+            ]
+        ),
+        (
+            "simple-apply",
+            br.BatchRecords(
+                [
+                    br.BatchApply(
+                        ("test", "demo", 1),
+                        "sample",
+                        "list_append",
+                        ["ilist_bin", 200],
+                        policy={}
+                    ),
+                    br.BatchRead(
+                        ("test", "demo", 1),
+                        [
+                            lop.list_get_by_rank("ilist_bin", -1, aerospike.LIST_RETURN_VALUE),
+                        ],
+                        policy={}
+                    )
+                ]
+            ),
+            {},
+            [
+                AerospikeStatus.AEROSPIKE_OK,
+                AerospikeStatus.AEROSPIKE_OK
+            ],
+            [
+                {'SUCCESS': 0},
+                {"ilist_bin": 200}
+            ]
+        ),
+        (
+            "apply-with-policy",
+            br.BatchRecords(
+                [
+                    br.BatchApply(
+                        ("test", "demo", 1),
+                        "sample",
+                        "list_append",
+                        ["ilist_bin", 200],
+                        policy={                            
+                            "key": aerospike.POLICY_KEY_DIGEST,
+                            "commit_level": aerospike.POLICY_COMMIT_LEVEL_MASTER,
+                            "ttl": aerospike.TTL_NEVER_EXPIRE,
+                            "durable_delete": False,
+                            "expressions": exp.Eq(exp.IntBin("count"), 1).compile()
+                        }
+                    ),
+                    br.BatchRead(
+                        ("test", "demo", 1),
+                        [
+                            lop.list_get_by_rank("ilist_bin", -1, aerospike.LIST_RETURN_VALUE),
+                        ],
+                        policy={
+                            "expressions": exp.Eq(exp.TTL(), -1).compile()
+                        }
+                    )
+                ]
+            ),
+            {},
+            [
+                AerospikeStatus.AEROSPIKE_OK,
+                AerospikeStatus.AEROSPIKE_OK
+            ],
+            [
+                {'SUCCESS': 0},
+                {"ilist_bin": 200}
+            ]
+        ),
+        (
+            "write-read",
+            br.BatchRecords(
+                [
+                    br.BatchWrite(
+                        ("test", "demo", 1),
+                        [
+                            op.write("new", 11),
+                            op.read("new")
+                        ],
+                        policy={}
+                    ),
+                    br.BatchRead(
+                        ("test", "demo", 1),
+                        [
+                            lop.list_get_by_rank("ilist_bin", -1, aerospike.LIST_RETURN_VALUE),
+                            op.read("balance")
+                        ],
+                        policy={}
+                    )
+                ]
+            ),
+            {},
+            [
+                AerospikeStatus.AEROSPIKE_OK,
+                AerospikeStatus.AEROSPIKE_OK
+            ],
+            [
+                {"new": 11},
+                {"ilist_bin": 6, "balance": 100}
+            ]
+        ),
+        (
+            "complex",
+            br.BatchRecords(
+                [
+                    br.BatchRemove(
+                        ("test", "demo", 1),
+                        policy={}
+                    ),
+                    br.BatchWrite(
+                        ("test", "demo", 1),
+                        [
+                            op.write("ilist_bin", [2, 6]),
+                            op.write("balance", 100),
+                            op.read("ilist_bin"),
+                            op.read("balance"),
+                        ],
+                        policy={}
+                    ),
+                    br.BatchRead(
+                        ("test", "demo", 1),
+                        [
+                            lop.list_get_by_rank("ilist_bin", -1, aerospike.LIST_RETURN_VALUE)
+                        ],
+                        policy={}
+                    ),
+                    br.BatchApply(
+                        ("test", "demo", 3),
+                        "sample",
+                        "list_append",
+                        ["ilist_bin", 200],
+                        policy={                            
+                            "expressions": exp.Eq(exp.IntBin("count"), 3).compile()
+                        }
+                    ),
+                    br.BatchRead(
+                        ("test", "demo", 3),
+                        [
+                            lop.list_get_by_rank("ilist_bin", -1, aerospike.LIST_RETURN_VALUE),
+                            op.read("balance")
+                        ],
+                        policy={}
+                    ),
+                ]
+            ),
+            {},
+            [
+                AerospikeStatus.AEROSPIKE_OK,
+                AerospikeStatus.AEROSPIKE_OK,
+                AerospikeStatus.AEROSPIKE_OK,
+                AerospikeStatus.AEROSPIKE_OK,
+                AerospikeStatus.AEROSPIKE_OK
+            ],
+            [
+                {},
+                {"balance": 100, "ilist_bin": [2, 6]},
+                {"ilist_bin": 6},
+                {'SUCCESS': 0},
+                {"balance": 100, "ilist_bin": 200}
+            ]
+        ),
+        (
+            "read-many",
+            br.BatchRecords(
+                [
+                    br.BatchRead(
+                        ("test", "demo", i),
+                        [
+                            op.read("count"),
+                        ],
+                        policy={}
+                    )
+                    for i in range(5)
+                ]
+            ),
+            {},
+            [
+                AerospikeStatus.AEROSPIKE_OK,
+                AerospikeStatus.AEROSPIKE_OK,
+                AerospikeStatus.AEROSPIKE_OK,
+                AerospikeStatus.AEROSPIKE_OK,
+                AerospikeStatus.AEROSPIKE_OK
+            ],
+            [
+                {"count": 0},
+                {"count": 1},
+                {"count": 2},
+                {"count": 3},
+                {"count": 4},
+            ]
+        ),
+    ])
+    def test_read_pos(self, name, batch_records, policy, exp_res, exp_rec):
+        """
+        Test batch_operate positive
+        """
+        res = self.as_connection.batch_operate(batch_records, policy)
+
+        for i, batch_rec in enumerate(res.batch_records):
+            assert batch_rec.result == exp_res[i]
+            assert batch_rec.record[2] == exp_rec[i]
+
+    @pytest.mark.parametrize("name, batch_records, policy, exp_res", [
+        (
+            "bad-batch-records",
+            [],
+            {},
+            e.ParamError
+        ),
+    ])
+    def test_read_neg(self, name, batch_records, policy, exp_res):
+        """
+        Test batch_operate positive
+        """
+        with pytest.raises(exp_res):
+            self.as_connection.batch_operate(batch_records, policy)

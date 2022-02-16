@@ -127,7 +127,7 @@ class BatchWrite(BatchRecord):
         retrieving batch write results.
     """
 
-    def __init__(self, key: str, ops: List[dict], policy: dict = {}) -> None:
+    def __init__(self, key: tuple, ops: List[dict], policy: dict = {}) -> None:
         super().__init__(key)
         self.ops = ops
         self._type = _Types.WRITE
@@ -141,7 +141,7 @@ class BatchRead(BatchRecord):
         retrieving batch read results.
     """
 
-    def __init__(self, key: str, ops: List[dict], policy: dict = {}) -> None:
+    def __init__(self, key: tuple, ops: List[dict], policy: dict = {}) -> None:
         super().__init__(key)
         self.ops = ops
         self._type = _Types.READ
@@ -155,14 +155,14 @@ class BatchApply(BatchRecord):
         retrieving batch apply results.
     """
 
-    def __init__(self, key: str, module: str, function: str, args: List[Any], policy: dict = {}) -> None:
+    def __init__(self, key: tuple, module: str, function: str, args: List[Any], policy: dict = {}) -> None:
         super().__init__(key)
         self._type = _Types.APPLY
         self._has_write = True # TODO should this ba an arg set by user?
-        self.policy = policy
         self.module = module
         self.function = function
         self.args = args
+        self.policy = policy
 
 
 class BatchRemove(BatchRecord):
@@ -171,7 +171,7 @@ class BatchRemove(BatchRecord):
         retrieving batch remove results.
     """
 
-    def __init__(self, key: str, policy: dict = {}) -> None:
+    def __init__(self, key: tuple, policy: dict = {}) -> None:
         super().__init__(key)
         self._type = _Types.REMOVE
         self._has_write = True

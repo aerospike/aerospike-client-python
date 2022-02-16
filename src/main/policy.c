@@ -1131,6 +1131,7 @@ as_status pyobject_to_batch_remove_policy(AerospikeClient *self,
 	POLICY_SET_FIELD(commit_level, as_policy_commit_level);
 	POLICY_SET_FIELD(gen, as_policy_gen);
 	POLICY_SET_FIELD(durable_delete, bool);
+	POLICY_SET_FIELD(generation, uint16_t);
 
 	// C client 5.0 new expressions
 	POLICY_SET_EXPRESSIONS_FIELD();
