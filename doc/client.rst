@@ -2867,7 +2867,7 @@ Partition Objects
             |       ``digest = {"init": True, "value": bytearray([0]*20)}``
 
             Default: {} (will start from first record in partition)
-        * **partition_status** Optional :class:`dict` containing partition_status dictionaries. These can be used to resume a query/scan. Default: {} (all partitions)
+        * **partition_status** Optional :class:`dict` containing partition_status tuples. These can be used to resume a query/scan. Default: {} (all partitions)
 
     Default: ``{}`` (All partitions will be queried/scanned).
 
@@ -2898,7 +2898,7 @@ Partition Objects
     to set the partition status of a query/scan during a partition query/scan.
     Useful for resuming partition query/scans.
 
-    partition_status is a dictionary of dictionaries. The top level key is a :class:`int`
+    partition_status is a dictionary of tuples. The top level key is a :class:`int`
     called "id" in this documentation. "id" corresponds to a partition id. "id"'s value is
     another dictionary containing status details about that partition. See those values below.
 
@@ -2908,7 +2908,8 @@ Partition Objects
         * **id** :class:`int` Represents the partition id number.
         * **init** :class:`bool` Represent whether the digest being queried was calculated.
         * **done** :class:`bool` Represents whether the partition was finished by the query.
-        * **digest** class`bytearray` Represents the digest of the record being queried. Should be 20 characters long.
+        * **digest** :class:`bytearray` Represents the digest of the record being queried. Should be 20 characters long.
+        * **bval** :class:`int` Used in conjunction with digest in order to determine the last record recieved by a partition query.
 
     .. code-block:: python
 
@@ -2919,7 +2920,7 @@ Partition Objects
        # and can be obtained by calling Query.get_partitions_status()
        # Here is the form of partition_status.
        # partition_status = {
-       #     0: {0, False, Flase, bytearray([0]*20)}...
+       #     0: (0, False, Flase, bytearray([0]*20), 0)...
        # }
        partition_status = query.get_partitions_status()
 
