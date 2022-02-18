@@ -346,6 +346,88 @@ as_status as_role_array_to_pyobject(as_error *err, as_role **roles,
 	return err->code;
 }
 
+// creates a python tuple from an as_partition_status
+// EX: (id, init, done, digest, bval)
+as_status as_partition_status_to_pyobject(as_error *err, const as_partition_status *part_status,
+										   PyObject **py_tuple)
+{
+	as_error_reset(err);
+
+	int PARTITION_TUPLE_STATUS_SIZE	= 5;
+	PyObject *new_tuple = PyTuple_New((Py_ssize_t)PARTITION_TUPLE_STATUS_SIZE);
+	if (new_tuple == NULL) {
+		as_error_update(err, AEROSPIKE_ERR_CLIENT, "failed to create py_tuple");
+		goto END;
+	}
+
+	PyObject *py_id = PyLong_FromUnsignedLong((unsigned long)part_status->part_id);
+	PyTuple_SetItem(new_tuple, 0, py_id);
+
+	PyObject *py_init = PyBool_FromLong((long)part_status->digest.init);
+	PyTuple_SetItem(new_tuple, 1, py_init);
+
+	PyObject *py_retry = PyBool_FromLong((long)part_status->retry);
+	PyTuple_SetItem(new_tuple, 2, py_retry);
+
+	PyObject *py_digest = PyByteArray_FromStringAndSize((const char*)&part_status->digest.value, (Py_ssize_t)AS_DIGEST_VALUE_SIZE);
+	PyTuple_SetItem(new_tuple, 3, py_digest);
+
+	PyObject *py_bval = PyLong_FromUnsignedLongLong((unsigned long long)part_status->bval);
+	PyTuple_SetItem(new_tuple, 4, py_bval);
+
+	*py_tuple = new_tuple;
+
+END:
+	return err->code;
+}
+
+// creates a python dict of tuples from an as_partitions_status
+// EX: {id:(id, init, done, digest, bval) for id in range (1000, 1004,1)}
+// returns and empty dict if parts_status == NULL
+as_status as_partitions_status_to_pyobject(as_error *err, const as_partitions_status *parts_status,
+										   PyObject **py_dict)
+{
+	as_error_reset(err);
+
+	PyObject *new_dict = PyDict_New();
+	if (new_dict == NULL) {
+		as_error_update(err, AEROSPIKE_ERR_CLIENT, "failed to create new_dict");
+		goto END;
+	}
+
+	if (parts_status == NULL) {
+		// If parts_status is NULL return an empty dict because
+		// the query/scan is not tracking its partitions.
+		*py_dict = new_dict;
+		goto END;
+	}
+
+	for (int i = 0; i < parts_status->part_count; ++i) {
+
+		const as_partition_status *part = &parts_status->parts[i];
+
+		PyObject *new_py_tuple = NULL;
+		if (as_partition_status_to_pyobject(err, part, &new_py_tuple) != AEROSPIKE_OK) {
+			Py_DECREF(new_dict);
+			goto END;
+		}
+
+		PyObject *py_id = PyLong_FromUnsignedLong((unsigned long)part->part_id);
+
+		if (PyDict_SetItem(new_dict, py_id, new_py_tuple) != 0) {
+			as_error_update(err, AEROSPIKE_ERR_CLIENT, "failed set item in new_dict");
+			Py_DECREF(new_dict);
+			Py_DECREF(new_py_tuple);
+			goto END;
+		}
+	}
+
+	*py_dict = new_dict;
+
+END:
+	return err->code;
+}
+
 as_status as_user_to_pyobject(as_error *err, as_user *user,
 							  PyObject **py_as_user)
 {

@@ -91,6 +91,10 @@ PyObject *AerospikeQuery_Results(AerospikeQuery *self, PyObject *args,
 	as_exp exp_list;
 	as_exp *exp_list_p = NULL;
 
+	as_partition_filter partition_filter = {0};
+	as_partition_filter *partition_filter_p = NULL;
+	as_partitions_status *ps = NULL;
+
 	// For converting predexp.
 	as_predexp_list predexp_list;
 	as_predexp_list *predexp_list_p = NULL;
@@ -119,20 +123,51 @@ PyObject *AerospikeQuery_Results(AerospikeQuery *self, PyObject *args,
 		goto CLEANUP;
 	}
 
+	if (py_policy) {
+		PyObject *py_partition_filter =
+			PyDict_GetItemString(py_policy, "partition_filter");
+		if (py_partition_filter) {
+			if (convert_partition_filter(self->client, py_partition_filter,
+										 &partition_filter,
+										 &ps,
+										 &err) == AEROSPIKE_OK) {
+				partition_filter_p = &partition_filter;
+			}
+			else {
+				goto CLEANUP;
+			}
+		}
+	}
+	as_error_reset(&err);
+
 	py_results = PyList_New(0);
 	data.py_results = py_results;
 
-	PyThreadState *_save = PyEval_SaveThread();
+	Py_BEGIN_ALLOW_THREADS
 
-	aerospike_query_foreach(self->client->as, &err, query_policy_p,
-							&self->query, each_result, &data);
+	if (partition_filter_p) {
+		if	(ps) {
+			as_partition_filter_set_partitions(partition_filter_p, ps);
+		}
 
-	PyEval_RestoreThread(_save);
+		aerospike_query_partitions(self->client->as, &err, query_policy_p,
+								  &self->query, partition_filter_p, each_result,
+								  &data);
+
+		if	(ps) {
+			as_partitions_status_release(ps);
+		}
+	}
+	else {
+		aerospike_query_foreach(self->client->as, &err, query_policy_p,
+								&self->query, each_result, &data);
+	}
+
+	Py_END_ALLOW_THREADS
 
 CLEANUP: /*??trace()*/
 	if (exp_list_p) {
 		as_exp_destroy(exp_list_p);
-		;
 	}
 
 	if (predexp_list_p) {

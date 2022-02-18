@@ -145,7 +145,7 @@ static PyObject *AerospikeClient_BatchOperateInvoke(AerospikeClient *self, as_er
 
     Py_ssize_t py_batch_records_size = 0;
     as_batch_records batch_records;
-    as_batch_records *batch_records_p;\
+    as_batch_records *batch_records_p = NULL;
 
     as_policy_batch batch_policy;
     as_policy_batch *batch_policy_p = NULL;
@@ -238,6 +238,8 @@ static PyObject *AerospikeClient_BatchOperateInvoke(AerospikeClient *self, as_er
             goto CLEANUP;
         }
 
+        printf("7.5\n");
+
         PyObject *py_batch_type = PyObject_GetAttrString(py_batch_record, FIELD_NAME_BATCH_TYPE);
         if (py_batch_type == NULL || !PyLong_Check(py_batch_type)) { // TODO figure away around this being an enum
             as_error_update(err, AEROSPIKE_ERR_PARAM,
@@ -245,6 +247,7 @@ static PyObject *AerospikeClient_BatchOperateInvoke(AerospikeClient *self, as_er
             goto CLEANUP;
         }
 
+        printf("7.6\n");
         // Not checking for overflow here because type is private in python
         // so we shouldn't get anything unexpected.
         uint8_t batch_type = 0;
@@ -507,20 +510,28 @@ static PyObject *AerospikeClient_BatchOperateInvoke(AerospikeClient *self, as_er
 CLEANUP:
     printf("in cleanup\n");
 
+    printf("freeing batch_records\n");
     for (int i = 0; i < py_batch_records_size; i++) {
         as_batch_base_record *br_to_free = (as_batch_base_record*) as_vector_get(&batch_records.list, i);
-        printf("freeing garb: %d, %d\n", i, br_to_free);
-        clear_batch_record(br_to_free, err);
+
+        if (br_to_free != NULL) {
+            printf("freeing garb: %d, %d\n", i, br_to_free);
+            clear_batch_record(br_to_free, err);
+        }
     }
 
+    printf("destroying batch_records_p\n");
     if (batch_records_p != NULL) {
         as_batch_records_destroy(&batch_records);
     }
 
+    printf("destroying static_pool\n");
 	POOL_DESTROY(&static_pool);
 
+    printf("destroying unicodeStrVector\n");
 	as_vector_destroy(unicodeStrVector);
 
+    printf("destroying exp_list_p\n");
     if (exp_list_p != NULL) {
         as_exp_destroy(exp_list_p);
     }

@@ -218,7 +218,7 @@ class TestQuery(TestBaseClass):
 
         request.addfinalizer(teardown)
 
-    def test_query_with_correct_parameters(self):
+    def test_query_with_correct_parameters_hi(self):
         """
             Invoke query() with correct arguments
         """
@@ -229,8 +229,11 @@ class TestQuery(TestBaseClass):
         records = []
 
         def callback(input_tuple):
-            key, _, _ = input_tuple
-            records.append(key)
+            try:
+                key, _, _ = input_tuple
+                records.append(key)
+            except Exception as ex:
+                print(ex)
 
         query.foreach(callback)
         assert records

@@ -453,7 +453,7 @@ class TestBatchOperate(TestBaseClass):
             ]
         ),
     ])
-    def test_read_pos(self, name, batch_records, policy, exp_res, exp_rec):
+    def test_batch_operate_pos(self, name, batch_records, policy, exp_res, exp_rec):
         """
         Test batch_operate positive
         """
@@ -466,14 +466,67 @@ class TestBatchOperate(TestBaseClass):
     @pytest.mark.parametrize("name, batch_records, policy, exp_res", [
         (
             "bad-batch-records",
-            [],
+            ["bad", "batch", "records"],
+            {},
+            e.ParamError
+        ),
+        (
+            "bad-batch-record",
+            br.BatchRecords(
+                [
+                    br.BatchRead(
+                        ("test", "demo", 1),
+                        [
+                            op.read("count"),
+                        ],
+                        policy={}
+                    ),
+                    "bad_batch_record"
+                ]
+            ),
+            {},
+            e.ParamError
+        ),
+        (
+            "bad-batch-record-key",
+            br.BatchRecords(
+                [
+                    br.BatchRead(
+                        "bad_key",
+                        [
+                            op.read("count"),
+                        ],
+                        policy={}
+                    )
+                ]
+            ),
+            {},
+            e.ParamError
+        ),
+        (
+            "bad-batch-record-ops",
+            br.BatchRecords(
+                [
+                    br.BatchRead(
+                        ("test", "demo", 1),
+                        {"bad": "ops"},
+                        policy={}
+                    )
+                ]
+            ),
             {},
             e.ParamError
         ),
     ])
-    def test_read_neg(self, name, batch_records, policy, exp_res):
+    def test_batch_operate_neg(self, name, batch_records, policy, exp_res):
         """
         Test batch_operate positive
         """
+
+        try:
+            self.as_connection.batch_operate(batch_records, policy)
+        except Exception as ex:
+            print(ex)
+
         with pytest.raises(exp_res):
             self.as_connection.batch_operate(batch_records, policy)
