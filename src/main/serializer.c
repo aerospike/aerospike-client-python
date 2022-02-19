@@ -533,7 +533,7 @@ extern as_status deserialize_based_on_as_bytes_type(AerospikeClient *self,
 								  retval, false, error_p);
 			if (AEROSPIKE_OK != (error_p->code)) {
 				uint32_t bval_size = as_bytes_size(bytes);
-				PyObject *py_val = PyByteArray_FromStringAndSize(
+				PyObject *py_val = PyBytes_FromStringAndSize(
 					(char *)as_bytes_get(bytes), bval_size);
 				if (!py_val) {
 					as_error_update(error_p, AEROSPIKE_ERR_CLIENT,
@@ -550,7 +550,7 @@ extern as_status deserialize_based_on_as_bytes_type(AerospikeClient *self,
 									  retval, false, error_p);
 				if (AEROSPIKE_OK != (error_p->code)) {
 					uint32_t bval_size = as_bytes_size(bytes);
-					PyObject *py_val = PyByteArray_FromStringAndSize(
+					PyObject *py_val = PyBytes_FromStringAndSize(
 						(char *)as_bytes_get(bytes), bval_size);
 					if (!py_val) {
 						as_error_update(error_p, AEROSPIKE_ERR_CLIENT,
@@ -563,7 +563,7 @@ extern as_status deserialize_based_on_as_bytes_type(AerospikeClient *self,
 			}
 			else {
 				uint32_t bval_size = as_bytes_size(bytes);
-				PyObject *py_val = PyByteArray_FromStringAndSize(
+				PyObject *py_val = PyBytes_FromStringAndSize(
 					(char *)as_bytes_get(bytes), bval_size);
 				if (!py_val) {
 					as_error_update(error_p, AEROSPIKE_ERR_CLIENT,
@@ -577,7 +577,7 @@ extern as_status deserialize_based_on_as_bytes_type(AerospikeClient *self,
 	default: {
 		// First try to return a raw byte array, if that fails raise an error
 		uint32_t bval_size = as_bytes_size(bytes);
-		PyObject *py_val = PyByteArray_FromStringAndSize(
+		PyObject *py_val = PyBytes_FromStringAndSize(
 			(char *)as_bytes_get(bytes), bval_size);
 		if (py_val) {
 			*retval = py_val;
