@@ -8,6 +8,8 @@ from .test_base_class import TestBaseClass
 from aerospike import exception as e
 from aerospike_helpers import expressions as exp
 from .as_status_codes import AerospikeStatus
+from aerospike import predicates as p
+
 
 aerospike = pytest.importorskip("aerospike")
 try:
@@ -17,10 +19,38 @@ except:
     sys.exit(1)
 
 
+def add_sindex(client):
+    '''
+    Load the sindex used in the tests
+    '''
+    try:
+        client.index_string_create('test', 'demo', 's',
+                                    'string')
+    except e.IndexFoundError:
+        pass
+
+
+def remove_sindex(client):
+    '''
+    Remove the sindex created for these tests
+    '''
+    try:
+        client.index_remove('test', 'string', {})
+    except e.IndexNotFound:
+        pass
+
+
 class TestQueryPartition(TestBaseClass):
 
+    def setup_class(cls):
+        # Register setup and teardown functions
+        cls.connection_setup_functions = [add_sindex]
+        cls.connection_teardown_functions = [remove_sindex]
+
     @pytest.fixture(autouse=True)
-    def setup(self, request, as_connection):
+    def setup(self, request, connection_with_config_funcs):
+        as_connection = connection_with_config_funcs
+
         self.test_ns = 'test'
         self.test_set = 'demo'
 
@@ -102,6 +132,31 @@ class TestQueryPartition(TestBaseClass):
         query_obj.foreach(callback, policy)
 
         assert len(records) == self.partition_1000_count
+
+    def test_query_partition_with_where(self):
+
+        records = []
+        partition_filter = {'begin': 1000, 'count': 1}
+        policy = {'max_retries': 100,
+                        'partition_filter': partition_filter}
+
+        def callback(part_id,input_tuple):
+            _, _, record = input_tuple
+            records.append(record)
+
+        query_obj = self.as_connection.query(self.test_ns, self.test_set)
+        query_obj.max_records = 1000
+        query_obj.records_per_second = 4000
+        query_obj.where(p.equals('s', "xyz"))
+
+        query_obj.foreach(callback, policy)
+
+        assert len(records) == self.partition_1000_count
+
+        part_stats = query_obj.get_partitions_status()
+
+        bval = part_stats[1000][4]
+        assert bval != 0
 
     def test_query_partition_with_filter(self):
 
