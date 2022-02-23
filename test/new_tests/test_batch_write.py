@@ -453,11 +453,11 @@ class TestBatchOperate(TestBaseClass):
             ]
         ),
     ])
-    def test_batch_operate_pos(self, name, batch_records, policy, exp_res, exp_rec):
+    def test_batch_write_pos(self, name, batch_records, policy, exp_res, exp_rec):
         """
-        Test batch_operate positive
+        Test batch_write positive
         """
-        res = self.as_connection.batch_operate(batch_records, policy)
+        res = self.as_connection.batch_write(batch_records, policy)
 
         for i, batch_rec in enumerate(res.batch_records):
             assert batch_rec.result == exp_res[i]
@@ -517,16 +517,43 @@ class TestBatchOperate(TestBaseClass):
             {},
             e.ParamError
         ),
+        (
+            "bad-batch-record-policy",
+            br.BatchRecords(
+                [
+                    br.BatchRead(
+                        ("test", "demo", 1),
+                        [
+                            op.read("count"),
+                        ],
+                        policy="bad policy"
+                    )
+                ]
+            ),
+            {},
+            e.ParamError
+        ),
+        (
+            "bad-batch-policy",
+            br.BatchRecords(
+                [
+                    br.BatchRead(
+                        ("test", "demo", 1),
+                        [
+                            op.read("count"),
+                        ],
+                        policy={}
+                    )
+                ]
+            ),
+            "bad policy",
+            e.ParamError
+        ),
     ])
-    def test_batch_operate_neg(self, name, batch_records, policy, exp_res):
+    def test_batch_write_neg(self, name, batch_records, policy, exp_res):
         """
-        Test batch_operate positive
+        Test batch_write positive
         """
-
-        try:
-            self.as_connection.batch_operate(batch_records, policy)
-        except Exception as ex:
-            print(ex)
 
         with pytest.raises(exp_res):
-            self.as_connection.batch_operate(batch_records, policy)
+            self.as_connection.batch_write(batch_records, policy)

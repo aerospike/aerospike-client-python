@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright 2013-2020 Aerospike, Inc.
+ * Copyright 2013-2021 Aerospike, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,572 +13,292 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  ******************************************************************************/
+
 #include <Python.h>
 #include <stdbool.h>
-
-#include <aerospike/aerospike_index.h>
+#include <stdlib.h>
+#include <string.h>
 #include <aerospike/aerospike_key.h>
-#include <aerospike/aerospike_batch.h>
+#include <aerospike/as_key.h>
 #include <aerospike/as_error.h>
-#include <aerospike/as_exp.h>
-#include <aerospike/as_vector.h>
-#include <aerospike/as_geojson.h>
-#include <aerospike/as_msgpack_ext.h>
-
+#include <aerospike/as_record.h>
+#include <aerospike/as_operations.h>
+#include <aerospike/as_map_operations.h>
+#include <aerospike/aerospike_info.h>
 #include "client.h"
 #include "conversions.h"
-#include "serializer.h"
 #include "exceptions.h"
 #include "policy.h"
-#include "cdt_operation_utils.h"
-#include "geo.h"
-#include "cdt_types.h"
 
-// TODO define these as exposed aerospike constants so C and Python can both use them
-#define FIELD_NAME_BATCH_RECORDS "batch_records"
-#define FIELD_NAME_BATCH_TYPE "_type"
-#define FIELD_NAME_BATCH_KEY "key"
-#define FIELD_NAME_BATCH_OPS "ops"
-#define FIELD_NAME_BATCH_RESULT "result"
-#define FIELD_NAME_BATCH_RECORD "record"
-#define FIELD_NAME_BATCH_POLICY "policy"
-#define FIELD_NAME_BATCH_MODULE "module"
-#define FIELD_NAME_BATCH_FUNCTION "function"
-#define FIELD_NAME_BATCH_ARGS "args"
+#include <aerospike/as_double.h>
+#include <aerospike/as_integer.h>
+#include <aerospike/as_geojson.h>
+#include <aerospike/as_nil.h>
 
-#define BATCH_TYPE_READ 0
-#define BATCH_TYPE_WRITE 1
-#define BATCH_TYPE_APPLY 2
-#define BATCH_TYPE_REMOVE 3
+extern as_status add_op(AerospikeClient *self, as_error *err, PyObject *py_val,
+				 as_vector *unicodeStrVector, as_static_pool *static_pool,
+				 as_operations *ops, long *op, long *ret_type);
 
-#define GET_BATCH_POLICY_FROM_PYOBJECT(__policy, __policy_type, __conversion_func, __batch_type)              \
-    {                                                                                                         \
-        PyObject *py___policy = PyObject_GetAttrString(py_batch_record, FIELD_NAME_BATCH_POLICY);             \
-        as_exp *expr = NULL;                                                                                  \
-        as_exp *expr_p = expr;                                                                                \
-        if (py___policy != NULL && PyDict_Check(py___policy)) {                                               \
-            __policy = (__policy_type *)malloc(sizeof(__policy_type));                                        \
-            __conversion_func(self, err, py___policy, __policy, &__policy, expr, &expr_p);                    \
-        }                                                                                                     \
-        else {                                                                                                \
-            as_error_update(err, AEROSPIKE_ERR_PARAM, "batch_type: %s, policy must be a dict", __batch_type); \
-            goto CLEANUP;                                                                                     \
-        }                                                                                                     \
-    }                                                                                                         \
+// Struct for Python User-Data for the Callback
+typedef struct {
+	as_error error;
+	PyObject *py_results;
+	AerospikeClient *client;
+} LocalData;
 
-#define DESTROY_OPS(batch_rec)                    \
-    as_operations *ops = batch_rec->ops;          \
-    if (ops != NULL) {                            \
-        as_operations_destroy(ops);               \
-    }                                             \
+static bool
+batch_read_operate_cb(const as_batch_read* results, uint32_t n, void* udata)
+{
+	// Extract callback user-data
+	LocalData *data = (LocalData *)udata;
+	as_error *error = &data->error;
+	PyObject *py_err = NULL;
+	PyObject *py_arglist = NULL;
+	as_batch_read* r = NULL;
+	PyObject *py_rec;
+	PyObject *py_exception;
 
-#define DESTROY_EXPRESSIONS(batch_rec)            \
-    as_exp *expr = batch_rec->policy->filter_exp; \
-    if (expr != NULL) {                           \
-        as_exp_destroy(expr);                     \
-    }                                             \
+	// Lock Python State
+	PyGILState_STATE gstate;
+	gstate = PyGILState_Ensure();
 
-#define FREE_POLICY(batch_rec)                    \
-    void *pol = (void*) batch_rec->policy;        \
-    if (pol != NULL) {                            \
-        free(pol);                                \
-    }                                             \
+	error_to_pyobject(error, &py_err);
 
-#define DESTROY_ARGS(batch_rec)                   \
-    as_list *args_l = batch_rec->arglist;         \
-    if (args_l != NULL) {                         \
-        as_list_destroy(args_l);                  \
-    }                                             \
+	PyList_Append(data->py_results, py_err);
 
-void clear_batch_record(as_batch_base_record *br, as_error *err) {
-    switch (br->type)
-    {
-    case BATCH_TYPE_READ:
-        {
-            as_batch_read_record *r_br = (as_batch_read_record*) br;
-            DESTROY_OPS(r_br)
-            DESTROY_EXPRESSIONS(r_br)
-            FREE_POLICY(r_br)
-        }
-        break;
-    
-    case BATCH_TYPE_WRITE:
-        {
-            as_batch_read_record *w_br = (as_batch_read_record*) br;
-            DESTROY_OPS(w_br)
-            DESTROY_EXPRESSIONS(w_br)
-            FREE_POLICY(w_br)
-        }
-        break;
+	for (uint32_t i = 0; i < n; i++) {
+		r = (as_batch_read*) &results[i];
 
-    case BATCH_TYPE_APPLY:
-        {
-            as_batch_read_record *a_br = (as_batch_read_record*) br;
-            DESTROY_EXPRESSIONS(a_br)
-            FREE_POLICY(a_br)
-        }
-        break;
+		error->code = r->result;
 
-    case BATCH_TYPE_REMOVE:
-        {
-            as_batch_read_record *re_br = (as_batch_read_record*) br;
-            DESTROY_EXPRESSIONS(re_br)
-            FREE_POLICY(re_br)
-        }
-        break;
+		if (error->code == AEROSPIKE_OK) {
+			record_to_resultpyobject(data->client, error, 
+									&r->record,
+									&py_rec);
+		}
 
-    default:
-		as_error_update(err, AEROSPIKE_ERR_PARAM,
-							   "clear_batch_record hit unknown batch type");
-        break;
-    }
+		error_to_pyobject(error, &py_err);
+
+		Py_INCREF(Py_None);
+		if (error->code == AEROSPIKE_OK) {
+			py_exception = Py_None;
+		} else {
+			py_rec = Py_None;
+			py_exception = raise_exception(error);
+		}
+
+		py_arglist = PyTuple_New(3);
+		PyTuple_SetItem(py_arglist, 0, py_rec); //1-record tuple (key-tuple, meta, bin)
+		PyTuple_SetItem(py_arglist, 1, py_err); //2-error tuple
+		PyTuple_SetItem(py_arglist, 2, py_exception); //3-exception
+		PyList_Append(data->py_results, py_arglist);
+	}
+
+	PyGILState_Release(gstate);
+
+	return true;
 }
 
-/*
-* AerospikeClient_BatchOperateInvoke
-* Converts Python BatchRecords objects into a C client as_batch_records struct.
-* Then calls aerospike_batch_records.
-*/
-static PyObject *AerospikeClient_BatchOperateInvoke(AerospikeClient *self, as_error *err, PyObject *py_policy, PyObject *py_obj)
+/**
+ *******************************************************************************************************
+ * This function invokes csdk's API's.
+ *
+ * @param self                  AerospikeClient object
+ * @param err                   The as_error to be populated by the function
+ *                              with the encountered error if any.
+ * @param py_keys                   The list containing keys.
+ * @param py_ops               The list containing op, bin and value.
+ * @param py_meta               The metadata for the operation.
+ * @param py_policy      		Python dict used to populate the operate_policy or map_policy.
+ *******************************************************************************************************
+ */
+static PyObject *AerospikeClient_Batch_Operate_Invoke(AerospikeClient *self,
+												as_error *err, 
+												PyObject *py_keys,
+												PyObject *py_ops,
+												PyObject *py_meta,
+												PyObject *py_policy)
 {
-    printf("1\n");
+	long operation;
+	long return_type = -1;
+	as_policy_batch policy;
+	as_policy_batch *batch_policy_p = NULL;
+	PyObject *py_results = NULL;
+	as_batch batch;
+	
+	as_batch_init(&batch, 0);
 
-    Py_ssize_t py_batch_records_size = 0;
-    as_batch_records batch_records;
-    as_batch_records *batch_records_p = NULL;
-
-    as_policy_batch batch_policy;
-    as_policy_batch *batch_policy_p = NULL;
+	// For expressions conversion.
 	as_exp exp_list;
 	as_exp *exp_list_p = NULL;
 
-    // setup for op conversion
-    as_vector *unicodeStrVector = as_vector_create(sizeof(char *), 128);
+	// For converting predexp.
+	as_predexp_list predexp_list;
+	as_predexp_list *predexp_list_p = NULL;
+
+	as_vector *unicodeStrVector = as_vector_create(sizeof(char *), 128);
+
+	as_operations ops;
+	Py_ssize_t ops_size = PyList_Size(py_ops);
+	as_operations_inita(&ops, ops_size);
+
+	if (py_policy) {
+		if (pyobject_to_policy_batch(self, err, py_policy, &policy, &batch_policy_p,
+								&self->as->config.policies.batch, &predexp_list,
+								&predexp_list_p, &exp_list, &exp_list_p) != AEROSPIKE_OK) {
+			goto CLEANUP;
+		}
+	}
+
 	as_static_pool static_pool;
 	memset(&static_pool, 0, sizeof(static_pool));
 
-	if (py_obj == NULL) {
-		as_error_update(err, AEROSPIKE_ERR_PARAM,
-							   "py_obj value is null");
-        goto CLEANUP;
+	if (py_meta) {
+		if (check_for_meta(py_meta, &ops, err) != AEROSPIKE_OK) {
+		goto CLEANUP;
+		}
 	}
-    printf("2\n");
 
-    if (PyErr_Occurred()) {
-        printf("err1\n");
-        PyErr_Print();
-    }
-
-    if (py_policy != NULL) {
-        if (pyobject_to_policy_batch(self, err, py_policy, &batch_policy, &batch_policy_p,
-        &self->as->config.policies.batch, NULL, NULL, &exp_list, &exp_list_p) != AEROSPIKE_OK) {
-            goto CLEANUP;
-        }
-    }
-
-    // TODO check that py_object is an instance of class
-
-    printf("3\n");
-
-    if (PyErr_Occurred()) {
-        printf("err2\n");
-        PyErr_Print();
-    }
-
-    PyObject *py_batch_records = PyObject_GetAttrString(py_obj, FIELD_NAME_BATCH_RECORDS);
-    if ( py_batch_records == NULL || !PyList_Check(py_batch_records)) {
-		as_error_update(err, AEROSPIKE_ERR_PARAM,
-							   "%s must be a list of BatchRecord", FIELD_NAME_BATCH_RECORDS);
-        goto CLEANUP;
-    }
-
-    printf("4\n");
-
-    if (PyErr_Occurred()) {
-        printf("err3\n");
-        PyErr_Print();
-    }
-
-    py_batch_records_size = PyList_Size(py_batch_records);
-    as_batch_records_inita(&batch_records, py_batch_records_size);
-    batch_records_p = &batch_records;
-
-    // NOTE this isn't used for anything but freeing the polices so using as_policy_batch_read for all should be fine.
-    printf("6\n");
-
-    if (PyErr_Occurred()) {
-        printf("err4\n");
-        PyErr_Print();
-    }
-
-
-    for (Py_ssize_t i = 0; i < py_batch_records_size; i++) {
-
-        PyObject *py_batch_record = PyList_GetItem(py_batch_records, i);
-        // TODO check that this is an instance/subclass on BatchRecord
-        if (py_batch_record == NULL) {
-            as_error_update(err, AEROSPIKE_ERR_PARAM,
-                               "py_batch_record is NULL, %s must be a list of BatchRecord", FIELD_NAME_BATCH_RECORDS);
-            goto CLEANUP;
-        }
-
-        printf("7\n");
-
-        if (PyErr_Occurred()) {
-            printf("err5\n");
-            PyErr_Print();
-        }
-
-        // extract as_batch_base_record fields
-        // all batch_records classes should have these
-        PyObject *py_key = PyObject_GetAttrString(py_batch_record, FIELD_NAME_BATCH_KEY);
-        if (py_key == NULL || !PyTuple_Check(py_key)) {
-            as_error_update(err, AEROSPIKE_ERR_PARAM,
-                               "py_key is NULL or not a tuple, %s must be a aerospike key tuple", FIELD_NAME_BATCH_KEY);
-            goto CLEANUP;
-        }
-
-        printf("7.5\n");
-
-        PyObject *py_batch_type = PyObject_GetAttrString(py_batch_record, FIELD_NAME_BATCH_TYPE);
-        if (py_batch_type == NULL || !PyLong_Check(py_batch_type)) { // TODO figure away around this being an enum
-            as_error_update(err, AEROSPIKE_ERR_PARAM,
-                               "py_batch_type is NULL or not an int, %s must be an int from batch_records._Types", FIELD_NAME_BATCH_TYPE);
-            goto CLEANUP;
-        }
-
-        printf("7.6\n");
-        // Not checking for overflow here because type is private in python
-        // so we shouldn't get anything unexpected.
-        uint8_t batch_type = 0;
-        batch_type = PyLong_AsLong(py_batch_type);
-        if (PyErr_Occurred() && PyErr_ExceptionMatches(PyExc_OverflowError)) {
-            as_error_update(err, AEROSPIKE_ERR_PARAM,
-                               "py_batch_type aka %s is too large for C long", FIELD_NAME_BATCH_TYPE);
-            goto CLEANUP;
-        }
-
-        printf("8\n");
-
-        if (PyErr_Occurred()) {
-            printf("err6\n");
-            PyErr_Print();
-        }
-
-        PyObject *py_ops_list = PyObject_GetAttrString(py_batch_record, FIELD_NAME_BATCH_OPS);
-        if (py_ops_list == NULL || !PyList_Check(py_ops_list)) {
-
-            if (batch_type == BATCH_TYPE_READ || batch_type == BATCH_TYPE_WRITE) {
-                as_error_update(err, AEROSPIKE_ERR_PARAM,
-                                "py_ops_list is NULL or not a list, %s must be a list of aerospike operation dicts", FIELD_NAME_BATCH_OPS);
-
-                goto CLEANUP;
-            }
-
-            // the batch record object had no ops attribute but some don't, so this is ok.
-            if (PyErr_Occurred() && PyErr_ExceptionMatches(PyExc_AttributeError)) {
-                PyErr_Clear();
-            }
-        }
-
-        printf("9\n");
-
-        if (PyErr_Occurred()) {
-            printf("err7\n");
-            PyErr_Print();
-        }
-
-        printf("10\n");
-        
-        Py_ssize_t py_ops_size = 0;
-        if (py_ops_list != NULL) {
-            py_ops_size = PyList_Size(py_ops_list);
-        }
-
-        if (PyErr_Occurred()) {
-            printf("err8\n");
-            PyErr_Print();
-        }
-
-        long operation = 0;
-        long return_type = -1;
-        // this probably wont work with more than 1?
-        as_operations *ops = as_operations_new(py_ops_size);
-        for (Py_ssize_t i = 0; i < py_ops_size; i++) {
-            printf("11\n");
-
-            PyObject *py_op = PyList_GetItem(py_ops_list, i);
-            if (py_op == NULL || !PyDict_Check(py_op)) {
-                as_error_update(err, AEROSPIKE_ERR_PARAM,
-                                "py_op is NULL or not a dict, %s must be a dict \
-                                 produced by an aerospike operation helper", FIELD_NAME_BATCH_OPS);
-                goto CLEANUP;
-            }
-            
-            printf("12 %d\n", py_op);
-
-            if (add_op(self, err, py_op, unicodeStrVector,
-                        &static_pool, ops, &operation,
-                        &return_type) != AEROSPIKE_OK) {
-                    goto CLEANUP;
-            }
-        }
-
-        if (PyErr_Occurred()) {
-            printf("err9\n");
-            PyErr_Print();
-        }
-
-        printf("13\n");
-        switch (batch_type)
-        {
-        case AS_BATCH_READ:;
-            printf("in AS_BATCH_READ\n");
-
-            as_policy_batch_read *r_policy = NULL;
-            GET_BATCH_POLICY_FROM_PYOBJECT(r_policy, as_policy_batch_read, pyobject_to_batch_read_policy, "BatchRead")
-
-            as_batch_read_record* rr;
-            rr = as_batch_read_reserve(&batch_records);
-
-            if (pyobject_to_key(err, py_key, &rr->key) != AEROSPIKE_OK) {
-                goto CLEANUP;
-            }
-
-            rr->ops = ops;
-            rr->policy = r_policy;
-            printf("breaking from AS_BATCH_READ\n");
-            break;
-        
-        case AS_BATCH_WRITE:;
-            printf("in AS_BATCH_WRITE\n");
-            
-            as_policy_batch_write *w_policy = NULL;
-            GET_BATCH_POLICY_FROM_PYOBJECT(w_policy, as_policy_batch_write, pyobject_to_batch_write_policy, "BatchWrite")
-
-            as_batch_write_record* wr;
-            wr = as_batch_write_reserve(&batch_records);
-
-            if (pyobject_to_key(err, py_key, &wr->key) != AEROSPIKE_OK) {
-                goto CLEANUP;
-            }
-
-            wr->ops = ops;
-            wr->policy = w_policy;
-            printf("breaking from AS_BATCH_WRITE\n");
-            break;
-        
-        case AS_BATCH_APPLY:;
-            printf("in AS_BATCH_APPLY\n");
-
-            as_policy_batch_apply *a_policy = NULL;
-            GET_BATCH_POLICY_FROM_PYOBJECT(a_policy, as_policy_batch_apply, pyobject_to_batch_apply_policy, "BatchApply")
-
-            PyObject *py_mod = PyObject_GetAttrString(py_batch_record, FIELD_NAME_BATCH_MODULE);
-            if (py_mod == NULL || !PyUnicode_Check(py_mod)) {
-                printf("%d\n", py_mod);
-                printf("%s\n", py_mod->ob_type->tp_name);
-                as_error_update(err, AEROSPIKE_ERR_PARAM, "%s must be a string", FIELD_NAME_BATCH_MODULE);
-                goto CLEANUP;
-            }
-
-            PyObject *py_func = PyObject_GetAttrString(py_batch_record, FIELD_NAME_BATCH_FUNCTION);
-            if (py_func == NULL || !PyUnicode_Check(py_func)) {
-                as_error_update(err, AEROSPIKE_ERR_PARAM, "%s must be a string", FIELD_NAME_BATCH_FUNCTION);
-                goto CLEANUP;
-            }
-
-            PyObject *py_args = PyObject_GetAttrString(py_batch_record, FIELD_NAME_BATCH_ARGS);
-            if (py_args == NULL || !PyList_Check(py_args)) {
-                as_error_update(err, AEROSPIKE_ERR_PARAM, "%s must be a list of arguments for the UDF", FIELD_NAME_BATCH_ARGS);
-                goto CLEANUP;
-            }
-
-            const char *mod = PyUnicode_AsUTF8(py_mod);
-            const char *func =  PyUnicode_AsUTF8(py_func);
-
-            // TODO free arglist
-            as_list *arglist = NULL;
-            pyobject_to_list(self, err, py_args, &arglist, &static_pool,
-                            SERIALIZER_PYTHON);
-            if (err->code != AEROSPIKE_OK) {
-                goto CLEANUP;
-            }
-
-            as_batch_apply_record* ar;
-            ar = as_batch_apply_reserve(&batch_records);
-
-            if (pyobject_to_key(err, py_key, &ar->key) != AEROSPIKE_OK) {
-                goto CLEANUP;
-            }
-
-            ar->module = mod;
-            ar->function = func;
-            ar->arglist = arglist;
-            ar->policy = a_policy;
-
-            printf("breaking from AS_BATCH_APPLY\n");
-            break;
-        
-        case AS_BATCH_REMOVE:;
-            printf("in AS_BATCH_REMOVE\n");
-
-            as_policy_batch_remove *re_policy = NULL;
-            GET_BATCH_POLICY_FROM_PYOBJECT(re_policy, as_policy_batch_remove, pyobject_to_batch_remove_policy, "BatchRemove")
-
-            as_batch_remove_record* rer;
-            rer = as_batch_remove_reserve(&batch_records);
-
-            if (pyobject_to_key(err, py_key, &rer->key) != AEROSPIKE_OK) {
-                goto CLEANUP;
-            }
-
-            rer->policy = re_policy;
-            printf("breaking from AS_BATCH_REMOVE\n");
-            break;
-        
-
-        default:
-            printf("hit default\n");
-            as_error_update(err, AEROSPIKE_ERR_PARAM,
-                            "batch_type unkown: %d", batch_type);
-            goto CLEANUP;
-            break;
-        }
-    }
-
-    if (PyErr_Occurred()) {
-        printf("err10\n");
-        PyErr_Print();
-    }
-
-    printf("14\n");
-
-    // TODO get result and populate batch record result
-    Py_BEGIN_ALLOW_THREADS
-
-    aerospike_batch_operate(self->as, err, batch_policy_p, &batch_records);
-
-    Py_END_ALLOW_THREADS
-
-    if (err->code != AEROSPIKE_OK) {
-        goto CLEANUP;
-    }
-
-    printf("15\n");
-
-    if (PyErr_Occurred()) {
-        printf("err11\n");
-        PyErr_Print();
-    }
-
-    // populate results
-    as_vector* res_list = &batch_records.list;
-    for (Py_ssize_t i = 0; i < py_batch_records_size; i++) {
-        printf("16\n");
-        PyObject *py_batch_record = PyList_GetItem(py_batch_records, i);
-
-        as_batch_record *batch_record = as_vector_get(res_list, i);
-        printf("17\n");
-
-        as_status *result_code = &(((as_batch_base_record*)batch_record)->result);
-        as_key *requested_key = &(((as_batch_base_record*)batch_record)->key);
-        as_record *result_rec = &(((as_batch_base_record*)batch_record)->record);
-        printf("18\n");
-
-        PyObject *py_res = PyLong_FromLong((long)*result_code);
-        PyObject_SetAttrString(py_batch_record, FIELD_NAME_BATCH_RESULT, py_res);
-        printf("19\n");
-
-        printf("res_code: %d\n", *result_code);
-
-        if (*result_code == AEROSPIKE_OK) {
-            printf("OK\n");
-            int py_record_tuple_size = 3; // TODO define this
-            PyObject *rec = PyTuple_New(py_record_tuple_size);
-            record_to_pyobject(self, err, result_rec, requested_key, &rec);
-            PyObject_SetAttrString(py_batch_record, FIELD_NAME_BATCH_RECORD, rec);
-            printf("20\n");
-        }
-    }
-
-    if (PyErr_Occurred()) {
-        printf("err12\n");
-        PyErr_Print();
-    }
+	for (int i = 0; i < ops_size; i++) {
+		PyObject *py_val = PyList_GetItem(py_ops, i);
+
+		if (PyDict_Check(py_val)) {
+			if (add_op(self, err, py_val, unicodeStrVector, &static_pool, &ops,
+					   &operation, &return_type) != AEROSPIKE_OK) {
+				goto CLEANUP;
+			}
+		}
+	}
+	if (err->code != AEROSPIKE_OK) {
+		as_error_update(err, err->code, NULL);
+		goto CLEANUP;
+	}
+
+	Py_ssize_t keys_size = PyList_Size(py_keys);
+	as_batch_init(&batch, keys_size);
+
+	for (int i = 0; i < keys_size; i++) {
+		PyObject *py_key = PyList_GetItem(py_keys, i);
+		if (!PyTuple_Check(py_key)) {
+			as_error_update(err, AEROSPIKE_ERR_PARAM,
+							"Key should be a tuple.");
+			goto CLEANUP;
+		}
+		pyobject_to_key(err, py_key, as_batch_keyat(&batch, i));
+		if (err->code != AEROSPIKE_OK) {
+			as_error_update(err, AEROSPIKE_ERR_PARAM,
+							"Key should be valid.");
+			goto CLEANUP;
+		}
+	}
+
+	// Create and initialize callback user-data
+	LocalData data;
+	data.client = self;
+	py_results = PyList_New(0);
+	data.py_results = py_results;
+
+	as_error_init(&data.error);
+
+	Py_BEGIN_ALLOW_THREADS
+	aerospike_batch_get_ops(self->as, &data.error, 
+							batch_policy_p, &batch, &ops,
+							batch_read_operate_cb, &data);
+	Py_END_ALLOW_THREADS
+
+	as_error_copy(err, &data.error);
+
+	if (err->code != AEROSPIKE_OK) {
+		goto CLEANUP;
+	}
 
 CLEANUP:
-    printf("in cleanup\n");
+	for (unsigned int i = 0; i < unicodeStrVector->size; i++) {
+		free(as_vector_get_ptr(unicodeStrVector, i));
+	}
 
-    printf("freeing batch_records\n");
-    for (int i = 0; i < py_batch_records_size; i++) {
-        as_batch_base_record *br_to_free = (as_batch_base_record*) as_vector_get(&batch_records.list, i);
+	if (exp_list_p) {
+		as_exp_destroy(exp_list_p);
+	}
 
-        if (br_to_free != NULL) {
-            printf("freeing garb: %d, %d\n", i, br_to_free);
-            clear_batch_record(br_to_free, err);
-        }
-    }
+	if (predexp_list_p) {
+		as_predexp_list_destroy(&predexp_list);
+	}
 
-    printf("destroying batch_records_p\n");
-    if (batch_records_p != NULL) {
-        as_batch_records_destroy(&batch_records);
-    }
-
-    printf("destroying static_pool\n");
-	POOL_DESTROY(&static_pool);
-
-    printf("destroying unicodeStrVector\n");
 	as_vector_destroy(unicodeStrVector);
 
-    printf("destroying exp_list_p\n");
-    if (exp_list_p != NULL) {
-        as_exp_destroy(exp_list_p);
-    }
+	as_operations_destroy(&ops);
 
-    // TODO cleanup
+	as_batch_destroy(&batch);
+
 	if (err->code != AEROSPIKE_OK) {
 		PyObject *py_err = NULL;
 		error_to_pyobject(err, &py_err);
 		PyObject *exception_type = raise_exception(err);
 		PyErr_SetObject(exception_type, py_err);
 		Py_DECREF(py_err);
+
+		if (py_results) {
+			Py_DECREF(py_results);
+		}
 		return NULL;
 	}
 
-    // TODO should trhis return anything? should it increase ref?
-    // It probably shouldn't return anything, just modify py_obj
-    Py_IncRef(py_obj);
-	return py_obj;
+	return py_results;
 }
 
 /**
- ******************************************************************************************************
- * Returns data about a particular node in the database depending upon the request string.
+ *******************************************************************************************************
+ * Multiple operations on a single record
  *
- * @param self                  AerospikeClient object.
+ * @param self                  AerospikeClient object
  * @param args                  The args is a tuple object containing an argument
- *                              list passed from Python to a C function.
- * @param kwds                  Dictionary of keywords.
+ *                              list passed from Python to a C function
+ * @param kwds                  Dictionary of keywords
  *
- * Returns information about a host.
- ********************************************************************************************************/
-PyObject *AerospikeClient_BatchOperate(AerospikeClient *self, PyObject *args,
-										 PyObject *kwds)
+ * Returns tuple of bins on success if read operation is given.
+ * Otherwise returns 0 on success for other operations.
+ *******************************************************************************************************
+ */
+PyObject *AerospikeClient_Batch_Operate(AerospikeClient *self, PyObject *args,
+								   PyObject *kwds)
 {
-	PyObject *py_policy = NULL;
-	PyObject *py_batch_recs = NULL;
-
 	as_error err;
+	PyObject *py_policy = NULL;
+	PyObject *py_meta = NULL;
+	PyObject *py_keys = NULL;
+	PyObject *py_ops = NULL;
+	PyObject *py_results = NULL;
+
 	as_error_init(&err);
 
-	static char *kwlist[] = {"batch_records", "policy", NULL};
-
-	if (PyArg_ParseTupleAndKeywords(args, kwds, "O|O:batch_operate", kwlist,
-									&py_batch_recs,
+	// Python Function Keyword Arguments
+	static char *kwlist[] = {"keys", "list", "meta", "policy", NULL};
+	if (PyArg_ParseTupleAndKeywords(args, kwds, "OO|OO:batch_Operate", kwlist,
+									&py_keys, 
+									&py_ops, &py_meta,
 									&py_policy) == false) {
 		return NULL;
 	}
 
-	return AerospikeClient_BatchOperateInvoke(self, &err, py_policy, py_batch_recs);
+	if (!py_keys || !PyList_Check(py_keys) ||
+		!py_ops || !PyList_Check(py_ops)) {
+		as_error_update(&err, AEROSPIKE_ERR_PARAM,
+						"batch_Operate keys/ops should be of type list");
+	}
+	
+	py_results = AerospikeClient_Batch_Operate_Invoke(self, &err, 
+											py_keys, py_ops, 
+											py_meta, py_policy);
+
+	if (err.code != AEROSPIKE_OK) {
+		PyObject *py_err = NULL;
+		error_to_pyobject(&err, &py_err);
+		PyObject *exception_type = raise_exception(&err);
+		PyErr_SetObject(exception_type, py_err);
+		Py_DECREF(py_err);
+		return NULL;
+	}
+
+	return py_results;
 }

@@ -327,7 +327,7 @@ setup(
                 'src/main/client/get_nodes.c',
                 'src/main/convert_partition_filter.c',
                 'src/main/client/get_key_partition_id.c',
-                'src/main/client/batch_operate.c'
+                'src/main/client/batch_write.c'
             ],
 
             # Compile
