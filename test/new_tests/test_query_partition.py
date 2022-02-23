@@ -333,7 +333,7 @@ class TestQueryPartition(TestBaseClass):
 
         query_obj = self.as_connection.query(self.test_ns, self.test_set)
 
-        query_obj.foreach(callback, {'partition_filter': {'begin': 1001, 'count': 1}})
+        query_obj.foreach(callback, {'partition_filter': {'begin': 1001, 'count': 2}})
 
         assert records == 5
 
@@ -348,14 +348,14 @@ class TestQueryPartition(TestBaseClass):
         policy = {
             'partition_filter': {
                 'begin': 1001,
-                'count': 1,
+                'count': 2,
                 "partition_status": partition_status
             },
         }
 
         query_obj2.foreach(resume_callback, policy)
 
-        assert records + resumed_records == self.partition_1001_count
+        assert records + resumed_records == self.partition_1001_count + self.partition_1002_count
 
     def test_resume_query_results(self):
 
@@ -520,3 +520,162 @@ class TestQueryPartition(TestBaseClass):
                 break
 
         assert len(records) == max_records
+
+    @pytest.mark.parametrize("begin", [
+        (-1),
+        (4096),
+    ])
+    def test_query_partition_with_bad_begin(self, begin):
+        records = []
+        policy = {
+            'timeout': 1000,
+            'partition_filter': {
+                'begin': begin,
+                'count': 1
+                }
+        }
+        query_obj = self.as_connection.query(self.test_ns, self.test_set)
+
+        def callback(part_id,input_tuple):
+            _, _, record = input_tuple
+            records.append(record)
+
+        with pytest.raises(e.ParamError) as err_info:
+            query_obj.foreach(callback, policy)
+        err_code = err_info.value.code
+        assert err_code == AerospikeStatus.AEROSPIKE_ERR_PARAM
+        assert "invalid partition_filter policy begin" in err_info.value.msg
+
+    @pytest.mark.parametrize("count", [
+        (-1),
+        (4097),
+    ])
+    def test_query_partition_with_bad_count(self, count):
+        records = []
+        policy = {
+            'timeout': 1000,
+            'partition_filter': {
+                'begin': 0,
+                'count': count
+                }
+        }
+        query_obj = self.as_connection.query(self.test_ns, self.test_set)
+
+        def callback(part_id,input_tuple):
+            _, _, record = input_tuple
+            records.append(record)
+
+        with pytest.raises(e.ParamError) as err_info:
+            query_obj.foreach(callback, policy)
+        err_code = err_info.value.code
+        assert err_code == AerospikeStatus.AEROSPIKE_ERR_PARAM
+        assert "invalid partition_filter policy count" in err_info.value.msg
+
+    @pytest.mark.parametrize("begin, count", [
+        (500, 4096),
+        (4095, 2),
+    ])
+    def test_query_partition_with_bad_range(self, begin, count):
+        records = []
+        policy = {
+            'timeout': 1000,
+            'partition_filter': {
+                'begin': begin,
+                'count': count
+                }
+        }
+        query_obj = self.as_connection.query(self.test_ns, self.test_set)
+
+        def callback(part_id,input_tuple):
+            _, _, record = input_tuple
+            records.append(record)
+
+        with pytest.raises(e.ParamError) as err_info:
+            query_obj.foreach(callback, policy)
+        err_code = err_info.value.code
+        assert err_code == AerospikeStatus.AEROSPIKE_ERR_PARAM
+        assert "invalid partition filter range" in err_info.value.msg
+
+
+    @pytest.mark.parametrize("p_stats, expected, msg", [
+        (
+            {
+                1001: (
+                    1001,
+                    True,
+                    False,
+                    bytearray(b'\xe9\xe31\x01sS\xedafw\x00W\xcdM\x80\xd0L\xee\\d'),
+                    0
+                ),
+                1002: (
+                    1002,
+                    "bad_init",
+                    False,
+                    bytearray(b'\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00'),
+                    0
+                )
+            },
+            e.ParamError,
+            "invalid init for part_id: 1002"
+        ),
+        (
+            {
+                1002: (
+                    1002,
+                    False,
+                    "bad_done",
+                    bytearray(b'\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00'),
+                    0
+                )
+            },
+            e.ParamError,
+            "invalid done for part_id: 1002"
+        ),
+        (
+            {
+                1003: (
+                    1003,
+                    False,
+                    False,
+                    "bad_digest",
+                    0
+                )
+            },
+            e.ParamError,
+            "invalid digest value for part_id: 1003"
+        ),
+        (
+            {
+                1004: (
+                    1004,
+                    False,
+                    False,
+                    bytearray(b'\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00'),
+                    "bad_bval"
+                )
+            },
+            e.ParamError,
+            "invalid bval for part_id: 1004"
+        ),
+    ])
+    def test_query_partition_with_bad_status(self, p_stats, expected, msg):
+        records = []
+        policy = {
+            'timeout': 1000,
+            'partition_filter': {
+                'begin': 1000,
+                'count': 5,
+                'partition_status': p_stats
+                }
+        }
+        query_obj = self.as_connection.query(self.test_ns, self.test_set)
+
+        def callback(part_id,input_tuple):
+            _, _, record = input_tuple
+            records.append(record)
+
+        #query_obj.foreach(callback, policy)
+        with pytest.raises(expected) as exc:
+            query_obj.foreach(callback, policy)
+
+        assert msg in exc.value.msg

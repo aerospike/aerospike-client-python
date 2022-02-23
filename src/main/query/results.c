@@ -133,6 +133,9 @@ PyObject *AerospikeQuery_Results(AerospikeQuery *self, PyObject *args,
 										 &err) == AEROSPIKE_OK) {
 				partition_filter_p = &partition_filter;
 			}
+			else {
+				goto CLEANUP;
+			}
 		}
 	}
 	as_error_reset(&err);

@@ -101,8 +101,7 @@ static bool each_result(const as_val *val, void *udata)
 		// for now, we bail from the loop
 		as_error_update(err, AEROSPIKE_ERR_CLIENT,
 						"Callback function contains an error");
-		PyErr_PrintEx(1);
-		rval = true;
+		rval = false;
 	}
 	else if (PyBool_Check(py_return)) {
 		if (Py_False == py_return) {
@@ -197,13 +196,15 @@ PyObject *AerospikeQuery_Foreach(AerospikeQuery *self, PyObject *args,
 			if (convert_partition_filter(self->client, py_partition_filter,
 										 &partition_filter,
 										 &ps,
-										 &data.error) == AEROSPIKE_OK) {
+										 &err) == AEROSPIKE_OK) {
 				partition_filter_p = &partition_filter;
+				data.partition_query = 1;
 			}
-			data.partition_query = 1;
+			else {
+				goto CLEANUP;
+			}
 		}
 	}
-	as_error_reset(&data.error);
 
 	if (set_query_options(&err, py_options, &self->query) != AEROSPIKE_OK) {
 		goto CLEANUP;
