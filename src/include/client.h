@@ -680,11 +680,22 @@ PyObject *AerospikeClient_Batch_GetOps(AerospikeClient *self, PyObject *args,
  * Read/Write multiple records for specified batch keys in one batch call.
  * This method allows different sub-commands for each key in the batch.
  * The returned records are located in the same list.
+ * Requires server version 6.0+
  *
  *		client.batch_write([batch_records], policy)
  *
  */
 PyObject *AerospikeClient_BatchWrite(AerospikeClient *self, PyObject *args,
+										 PyObject *kwds);
+
+/**
+ * Perform read/write operations on multiple keys.
+ * Requires server version 6.0+
+ *
+ *		client.batch_operate([keys], [ops], policy_batch, policy_batch_write)
+ *
+ */
+PyObject *AerospikeClient_Batch_Operate(AerospikeClient *self, PyObject *args,
 										 PyObject *kwds);
 
 /**

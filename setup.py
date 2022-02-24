@@ -327,7 +327,8 @@ setup(
                 'src/main/client/get_nodes.c',
                 'src/main/convert_partition_filter.c',
                 'src/main/client/get_key_partition_id.c',
-                'src/main/client/batch_write.c'
+                'src/main/client/batch_write.c',
+                'src/main/client/batch_operate.c'
             ],
 
             # Compile
@@ -341,7 +342,7 @@ setup(
             extra_link_args=extra_link_args,
         )
     ],
-    packages=['aerospike_helpers', 'aerospike_helpers.operations',
+    packages=['aerospike_helpers', 'aerospike_helpers.operations', 'aerospike_helpers.batch',
               'aerospike_helpers.expressions', 'aerospike_helpers.awaitable'],
 
     cmdclass={

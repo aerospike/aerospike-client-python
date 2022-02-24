@@ -530,6 +530,11 @@ Read/Write multiple records for specified batch keys in one batch call. \
 This method allows different sub-commands for each key in the batch. \
 The returned records are located in the same list.");
 
+PyDoc_STRVAR(batch_operate_doc, "batch_operate([keys], [ops], policy_batch, policy_batch_write) -> BatchRecords\n\
+\n\
+Perform read/write operations on multiple keys. \
+Requires server version 6.0+");
+
 PyDoc_STRVAR(get_key_partition_id_doc,
 			 "get_key_partition_id(ns, set, key) -> int\n\
 \n\
@@ -827,6 +832,8 @@ static PyMethodDef AerospikeClient_Type_Methods[] = {
 	 METH_VARARGS | METH_KEYWORDS, get_key_digest_doc},
 	{"batch_write", (PyCFunction)AerospikeClient_BatchWrite,
 	 METH_VARARGS | METH_KEYWORDS, batch_write_doc},
+	{"batch_operate", (PyCFunction)AerospikeClient_Batch_Operate,
+	 METH_VARARGS | METH_KEYWORDS, batch_operate_doc},
 
 	// TRUNCATE OPERATIONS
 	{"truncate", (PyCFunction)AerospikeClient_Truncate,

@@ -106,7 +106,7 @@ class BatchRecord:
         _BatchRecord provides the base fields for BtachRecord objects.
         key is the aerospike key to operate on.
         ops are the operations to use.
-        record, the record for the requested key. TODO add conditions where it is populated.
+        record, the record for the requested key.
         result is the status code of the operation.
         _type is the type of batch operation.
         _has_write does this batch subtransaction contain a write operation?
@@ -183,7 +183,7 @@ class BatchRecords:
         BatchRecords contains a list of batch request/response (as_batch_base_record) records. The record types can be
         as_batch_read_record, as_batch_write_record, as_batch_apply_record or as_batch_remove_record.
     """
-    def __init__(self, batch_records: List[BatchRecord]) -> None:
+    def __init__(self, batch_records: List[BatchRecord] = []) -> None:
         self.batch_records = batch_records
 
 

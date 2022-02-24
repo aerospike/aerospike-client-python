@@ -107,6 +107,7 @@ class TestBatchExpressionsOperations(TestBaseClass):
         """
         res are in the format of (status-tuple, ((meta-dict, result-dict), status-tuple, exception), ...)
         """
+        print(res)
         status = res[0]
         recs = res[1:]
         # print("\ntest_read_pos status:", status)

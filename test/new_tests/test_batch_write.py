@@ -12,7 +12,7 @@ except:
     sys.exit(1)
 
 from aerospike_helpers import expressions as exp
-from aerospike_helpers import batch_records as br
+from aerospike_helpers.batch import records as br
 from aerospike_helpers.operations import operations as op
 from aerospike_helpers.operations import list_operations as lop
 from aerospike import exception as e
@@ -45,7 +45,7 @@ def remove_udfs(client):
         client.udf_remove(module, policy)
 
 
-class TestBatchOperate(TestBaseClass):
+class TestBatchWrite(TestBaseClass):
 
     def setup_class(cls):
         # Register setup and teardown functions
