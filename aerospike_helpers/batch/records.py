@@ -13,85 +13,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 ##########################################################################
-'''
-Helper functions to generate complex data type context (cdt_ctx) objects for use with operations on nested CDTs (list, map, etc).
-
-Example::
-
-    import aerospike
-    from aerospike import exception as ex
-    from aerospike_helpers import cdt_ctx
-    from aerospike_helpers.operations import map_operations
-    from aerospike_helpers.operations import list_operations
-    import sys
-
-    # Configure the client.
-    config = {"hosts": [("127.0.0.1", 3000)]}
-
-    # Create a client and connect it to the cluster.
-    try:
-        client = aerospike.client(config).connect()
-    except ex.ClientError as e:
-        print("Error: {0} [{1}]".format(e.msg, e.code))
-        sys.exit(1)
-
-    key = ("test", "demo", "foo")
-    nested_list = [{"name": "John", "id": 100}, {"name": "Bill", "id": 200}]
-    nested_list_bin_name = "nested_list"
-
-    # Write the record.
-    try:
-        client.put(key, {nested_list_bin_name: nested_list})
-    except ex.RecordError as e:
-        print("Error: {0} [{1}]".format(e.msg, e.code))
-
-    # EXAMPLE 1: read a value from the map nested at list index 1.
-    try:
-        ctx = [cdt_ctx.cdt_ctx_list_index(1)]
-
-        ops = [
-            map_operations.map_get_by_key(
-                nested_list_bin_name, "id", aerospike.MAP_RETURN_VALUE, ctx
-            )
-        ]
-
-        _, _, result = client.operate(key, ops)
-        print("EXAMPLE 1, id is: ", result)
-    except ex.ClientError as e:
-        print("Error: {0} [{1}]".format(e.msg, e.code))
-        sys.exit(1)
-
-    # EXAMPLE 2: write a new nested map at list index 2 and get the value at its 'name' key.
-    # NOTE: The map is appened to the list, then the value is read using the ctx.
-    try:
-        new_map = {"name": "Cindy", "id": 300}
-
-        ctx = [cdt_ctx.cdt_ctx_list_index(2)]
-
-        ops = [
-            list_operations.list_append(nested_list_bin_name, new_map),
-            map_operations.map_get_by_key(
-                nested_list_bin_name, "name", aerospike.MAP_RETURN_VALUE, ctx
-            ),
-        ]
-
-        _, _, result = client.operate(key, ops)
-        print("EXAMPLE 2, name is: ", result)
-    except ex.ClientError as e:
-        print("Error: {0} [{1}]".format(e.msg, e.code))
-        sys.exit(1)
-
-    # Cleanup and close the connection to the Aerospike cluster.
-    client.remove(key)
-    client.close()
-
-    """
-    EXPECTED OUTPUT:
-    EXAMPLE 1, id is:  {'nested_list': 200}
-    EXAMPLE 2, name is:  {'nested_list': 'Cindy'}
-    """
-'''
-import aerospike
 from typing import Any, List
 
 
@@ -119,6 +40,7 @@ class BatchRecord:
         self.key = key
         self.record = ()
         self.result = 0 # TODO set this as the ok status code using the constant
+        self.in_doubt = False
 
 
 class BatchWrite(BatchRecord):

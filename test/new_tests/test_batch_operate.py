@@ -68,17 +68,17 @@ class TestBatchOperate(TestBaseClass):
 
     @pytest.mark.parametrize("name, keys, ops, policy_batch, policy_batch_write, exp_res, exp_rec", [
         (
-            "simple-read",
+            "simple-write",
             [
                 ("test", "demo", 1)
             ],
             [
-                op.read("count")
+                op.write("count", 2)
             ],
             {},
             {},
             [AerospikeStatus.AEROSPIKE_OK],
-            [{"count": 1}]
+            [{"count": 2}]
         ),
     ])
     def test_batch_operate_pos(self, name, keys, ops, policy_batch, policy_batch_write, exp_res, exp_rec):

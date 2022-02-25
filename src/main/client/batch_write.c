@@ -34,23 +34,6 @@
 #include "geo.h"
 #include "cdt_types.h"
 
-// TODO define these as exposed aerospike constants so C and Python can both use them
-#define FIELD_NAME_BATCH_RECORDS "batch_records"
-#define FIELD_NAME_BATCH_TYPE "_type"
-#define FIELD_NAME_BATCH_KEY "key"
-#define FIELD_NAME_BATCH_OPS "ops"
-#define FIELD_NAME_BATCH_RESULT "result"
-#define FIELD_NAME_BATCH_RECORD "record"
-#define FIELD_NAME_BATCH_POLICY "policy"
-#define FIELD_NAME_BATCH_MODULE "module"
-#define FIELD_NAME_BATCH_FUNCTION "function"
-#define FIELD_NAME_BATCH_ARGS "args"
-
-#define BATCH_TYPE_READ 0
-#define BATCH_TYPE_WRITE 1
-#define BATCH_TYPE_APPLY 2
-#define BATCH_TYPE_REMOVE 3
-
 #define GET_BATCH_POLICY_FROM_PYOBJECT(__policy, __policy_type, __conversion_func, __batch_type)                      \
     {                                                                                                                 \
         PyObject *py___policy = PyObject_GetAttrString(py_batch_record, FIELD_NAME_BATCH_POLICY);                     \
@@ -372,11 +355,11 @@ static PyObject *AerospikeClient_BatchWriteInvoke(AerospikeClient *self, as_erro
     for (Py_ssize_t i = 0; i < py_batch_records_size; i++) {
         PyObject *py_batch_record = PyList_GetItem(py_batch_records, i);
 
-        as_batch_record *batch_record = as_vector_get(res_list, i);
+        as_batch_base_record *batch_record = as_vector_get(res_list, i);
 
-        as_status *result_code = &(((as_batch_base_record*)batch_record)->result);
-        as_key *requested_key = &(((as_batch_base_record*)batch_record)->key);
-        as_record *result_rec = &(((as_batch_base_record*)batch_record)->record);
+        as_status *result_code = &(batch_record->result);
+        as_key *requested_key = &(batch_record->key);
+        as_record *result_rec = &(batch_record->record);
 
         PyObject *py_res = PyLong_FromLong((long)*result_code);
         PyObject_SetAttrString(py_batch_record, FIELD_NAME_BATCH_RESULT, py_res);
