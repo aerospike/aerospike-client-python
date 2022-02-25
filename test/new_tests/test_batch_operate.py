@@ -73,7 +73,8 @@ class TestBatchOperate(TestBaseClass):
                 ("test", "demo", 1)
             ],
             [
-                op.write("count", 2)
+                op.write("count", 2),
+                op.read("count")
             ],
             {},
             {},
@@ -85,10 +86,19 @@ class TestBatchOperate(TestBaseClass):
         """
         Test batch_operate positive
         """
-        print(modules)
-        res = self.as_connection.batch_operate(keys, ops, policy_batch, policy_batch_write)
-        print(res)
 
+        res = self.as_connection.batch_operate(keys, ops, policy_batch, policy_batch_write)
+        import pprint
+        p = pprint.PrettyPrinter()
+        print("HI")
+        p.pprint(res.batch_records)
+        
         for i, batch_rec in enumerate(res.batch_records):
+
+            print(batch_rec.key)
+            print(batch_rec.record)
+            print(batch_rec.result)
+            print(batch_rec.in_doubt)
+
             assert batch_rec.result == exp_res[i]
             assert batch_rec.record[2] == exp_rec[i]

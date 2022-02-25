@@ -41,17 +41,44 @@ as_status as_batch_result_to_BatchRecord(AerospikeClient *self, as_error *err, a
     as_record *result_rec = &(bres->record);
     bool in_doubt = bres->in_doubt;
 
+    if (PyErr_Occurred()) {
+        printf("conv 1\n");
+        PyErr_Print();
+    }
+
     PyObject *py_res = PyLong_FromLong((long)*result_code);
     PyObject_SetAttrString(py_batch_record, FIELD_NAME_BATCH_RESULT, py_res);
+
+    if (PyErr_Occurred()) {
+        printf("conv 2\n");
+        PyErr_Print();
+    }
 
     PyObject *py_in_doubt = PyBool_FromLong((long)in_doubt);
     PyObject_SetAttrString(py_batch_record, FIELD_NAME_BATCH_INDOUBT, py_in_doubt);
 
+    if (PyErr_Occurred()) {
+        printf("conv 3\n");
+        PyErr_Print();
+    }
+
     if (*result_code == AEROSPIKE_OK) {
         int py_record_tuple_size = 3; // TODO define this
         PyObject *rec = PyTuple_New(py_record_tuple_size);
-        record_to_pyobject(self, err, result_rec, requested_key, &rec);
+        record_to_pyobject(self, err, result_rec, NULL, &rec);
+
+        if (PyErr_Occurred()) {
+            printf("conv 4\n");
+            PyErr_Print();
+        }
+
         PyObject_SetAttrString(py_batch_record, FIELD_NAME_BATCH_RECORD, rec);
+
+        if (PyErr_Occurred()) {
+            printf("conv 5\n");
+            PyErr_Print();
+        }
+
     }
 
     return err->code;
@@ -81,11 +108,19 @@ batch_read_operate_cb(const as_batch_result* results, uint32_t n, void* udata)
 	PyGILState_STATE gstate;
 	gstate = PyGILState_Ensure();
 
+    if (PyErr_Occurred()) {
+        PyErr_Print();
+    }
+
     PyObject *py_funcname = PyUnicode_FromString("BatchRecord");
 
     printf("cb 5\n");
 	for (uint32_t i = 0; i < n; i++) {
         printf("cb 5.1\n");
+
+        if (PyErr_Occurred()) {
+            PyErr_Print();
+        }
 
         as_batch_read* res = NULL;
 		res = (as_batch_read*) &results[i];
@@ -99,12 +134,21 @@ batch_read_operate_cb(const as_batch_result* results, uint32_t n, void* udata)
             success = false;
         }
 
+        if (PyErr_Occurred()) {
+            PyErr_Print();
+        }
+
         py_batch_record = PyObject_CallMethodObjArgs(data->batch_records_module, py_funcname, py_key, NULL);
         if (py_batch_record == NULL) {
             as_error_update(err, AEROSPIKE_ERR_CLIENT,
                             "Unable to instance BatchRecord at results index: %d", i);
             success = false;
             break;
+        }
+        printf("cb 5.2\n");
+
+        if (PyErr_Occurred()) {
+            PyErr_Print();
         }
 
         as_batch_result_to_BatchRecord(data->client, err, res, py_batch_record);
@@ -114,6 +158,10 @@ batch_read_operate_cb(const as_batch_result* results, uint32_t n, void* udata)
         }
 
         printf("cb 5.6\n");
+
+        if (PyErr_Occurred()) {
+            PyErr_Print();
+        }
 
 		PyList_Append(data->py_results, py_batch_record);
 
