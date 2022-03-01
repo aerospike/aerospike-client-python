@@ -46,6 +46,7 @@ class TestBatchOperate(TestBaseClass):
                 'balance': 100,
                 'key': 10,
                 'ilist_bin': [
+                    i,
                     1,
                     2,
                     6,
@@ -70,7 +71,7 @@ class TestBatchOperate(TestBaseClass):
         (
             "simple-write",
             [
-                ("test", "demo", 1)
+                ("test", "demo", 0)
             ],
             [
                 op.write("count", 2),
@@ -81,6 +82,92 @@ class TestBatchOperate(TestBaseClass):
             [AerospikeStatus.AEROSPIKE_OK],
             [{"count": 2}]
         ),
+        (
+            "simple-write2",
+            [
+                ("test", "demo", 1)
+            ],
+            [
+                op.write("count", 3),
+                op.read("count")
+            ],
+            {},
+            {},
+            [AerospikeStatus.AEROSPIKE_OK],
+            [{"count": 3}]
+        ),
+        (
+            "write-read-many",
+            [
+                ("test", "demo", 0),
+                ("test", "demo", 1),
+                ("test", "demo", 2),
+                ("test", "demo", 3),
+                ("test", "demo", 4)
+            ],
+            [
+                op.write("count", 10),
+                op.read("count"),
+                op.read("t")
+            ],
+            {},
+            {},
+            [
+                AerospikeStatus.AEROSPIKE_OK,
+                AerospikeStatus.AEROSPIKE_OK,
+                AerospikeStatus.AEROSPIKE_OK,
+                AerospikeStatus.AEROSPIKE_OK,
+                AerospikeStatus.AEROSPIKE_OK,
+            ],
+            [
+                {"count": 10, "t": True},
+                {"count": 10, "t": True},
+                {"count": 10, "t": True},
+                {"count": 10, "t": True},
+                {"count": 10, "t": True}
+            ]
+        ),
+        (
+            "buisimple-write-policy-batch",
+            [
+                ("test", "demo", 0)
+            ],
+            [
+                op.write("count", 7),
+                op.read("count")
+            ],
+            {
+                "total_timeout": 2000,
+                "max_retries": 2,
+                "allow_inline_ssd": True,
+                "respond_all_keys": False,
+                "expressions": exp.Eq(exp.ListGetByRank(None, aerospike.LIST_RETURN_VALUE, exp.ResultType.INTEGER, 0, exp.ListBin("ilist_bin")), 0).compile()
+            },
+            {},
+            [AerospikeStatus.AEROSPIKE_OK],
+            [{"count": 7}]
+        ),
+        (
+            "buisimple-write-policy-batch-write",
+            [
+                ("test", "demo", 0)
+            ],
+            [
+                op.write("count", 7),
+                op.read("count")
+            ],
+            {},
+            {
+                "key": aerospike.POLICY_KEY_SEND,
+                "commit_level": aerospike.POLICY_COMMIT_LEVEL_MASTER,
+                "gen": aerospike.POLICY_GEN_IGNORE,
+                "exists": aerospike.POLICY_EXISTS_UPDATE,
+                "durable_delete": False,
+                "expressions": exp.Eq(exp.IntBin("count"), 1).compile()
+            },
+            [AerospikeStatus.AEROSPIKE_OK],
+            [{"count": 7}]
+        ),
     ])
     def test_batch_operate_pos(self, name, keys, ops, policy_batch, policy_batch_write, exp_res, exp_rec):
         """
@@ -88,10 +175,7 @@ class TestBatchOperate(TestBaseClass):
         """
 
         res = self.as_connection.batch_operate(keys, ops, policy_batch, policy_batch_write)
-        import pprint
-        p = pprint.PrettyPrinter()
-        print("HI")
-        p.pprint(res.batch_records)
+        print(res.batch_records)
         
         for i, batch_rec in enumerate(res.batch_records):
 
@@ -100,5 +184,7 @@ class TestBatchOperate(TestBaseClass):
             print(batch_rec.result)
             print(batch_rec.in_doubt)
 
+            #expected_key_tuple = keys[i] + (aerospike.calc_digest(*keys[i]),)
+            #assert batch_rec.key == expected_key_tuple
             assert batch_rec.result == exp_res[i]
             assert batch_rec.record[2] == exp_rec[i]

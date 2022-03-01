@@ -365,8 +365,8 @@ static PyObject *AerospikeClient_BatchWriteInvoke(AerospikeClient *self, as_erro
         PyObject_SetAttrString(py_batch_record, FIELD_NAME_BATCH_RESULT, py_res);
 
         if (*result_code == AEROSPIKE_OK) {
-            int py_record_tuple_size = 3; // TODO define this
-            PyObject *rec = PyTuple_New(py_record_tuple_size);
+            // int py_record_tuple_size = 3; // TODO define this CHANGE THSI IN BATCH OPERATE
+            PyObject *rec = NULL;
             record_to_pyobject(self, err, result_rec, NULL, &rec);
             PyObject_SetAttrString(py_batch_record, FIELD_NAME_BATCH_RECORD, rec);
         }

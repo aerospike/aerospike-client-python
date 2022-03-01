@@ -1743,21 +1743,15 @@ as_status do_record_to_pyobject(AerospikeClient *self, as_error *err,
 	PyObject *py_rec_meta = NULL;
 	PyObject *py_rec_bins = NULL;
 
-	printf("rec-conv 1\n");
-
 	if (key_to_pyobject(err, key ? key : &rec->key, &py_rec_key) !=
 		AEROSPIKE_OK) {
 		return err->code;
 	}
 
-	printf("rec-conv 2\n");
-
 	if (metadata_to_pyobject(err, rec, &py_rec_meta) != AEROSPIKE_OK) {
 		Py_CLEAR(py_rec_key);
 		return err->code;
 	}
-
-	printf("rec-conv 3\n");
 
 	if (bins_to_pyobject(self, err, rec, &py_rec_bins, cnvt_list_to_map) !=
 		AEROSPIKE_OK) {
@@ -1765,8 +1759,6 @@ as_status do_record_to_pyobject(AerospikeClient *self, as_error *err,
 		Py_CLEAR(py_rec_meta);
 		return err->code;
 	}
-
-	printf("rec-conv 4\n");
 
 	if (!py_rec_key) {
 		Py_INCREF(Py_None);

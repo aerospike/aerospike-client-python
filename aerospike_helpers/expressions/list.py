@@ -965,7 +965,7 @@ class ListGetByRank(_BaseExpr):
             Example::
 
                 # Get the smallest element in list bin "a".
-                expr = exp.ListGetByRank(None, aerospike.LIST_RETURN_VALUE, aerospike.ResultType.INTEGER, 0, exp.ListBin("a")).compile()
+                expr = exp.ListGetByRank(None, aerospike.LIST_RETURN_VALUE, ResultType.INTEGER, 0, exp.ListBin("a")).compile()
         """
         self._children = (
             rank,
