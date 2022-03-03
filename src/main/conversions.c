@@ -2738,3 +2738,26 @@ as_status get_int_from_py_int(as_error *err, PyObject *py_long,
 
 	return AEROSPIKE_OK;
 }
+
+as_status as_batch_result_to_BatchRecord(AerospikeClient *self, as_error *err, as_batch_result *bres, PyObject *py_batch_record) {
+    as_status *result_code = &(bres->result);
+    as_record *result_rec = &(bres->record);
+    bool in_doubt = bres->in_doubt;
+
+    PyObject *py_res = PyLong_FromLong((long)*result_code);
+    PyObject_SetAttrString(py_batch_record, FIELD_NAME_BATCH_RESULT, py_res);
+    Py_DECREF(py_res);
+
+    PyObject *py_in_doubt = PyBool_FromLong((long)in_doubt);
+    PyObject_SetAttrString(py_batch_record, FIELD_NAME_BATCH_INDOUBT, py_in_doubt);
+    Py_DECREF(py_in_doubt);
+
+    if (*result_code == AEROSPIKE_OK) {
+        PyObject *rec = NULL;
+        record_to_pyobject(self, err, result_rec, bres->key, &rec);
+        PyObject_SetAttrString(py_batch_record, FIELD_NAME_BATCH_RECORD, rec);
+        Py_DECREF(rec);
+    }
+
+    return err->code;
+}

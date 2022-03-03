@@ -175,6 +175,8 @@ class TestBatchOperate(TestBaseClass):
         for i, batch_rec in enumerate(res.batch_records):
             assert batch_rec.result == exp_res[i]
             assert batch_rec.record[2] == exp_rec[i]
+            assert batch_rec.key[:3] == keys[i] # checking key
+            assert batch_rec.record[0][:3] == keys[i] # checking key in record
 
     def test_batch_operate_many_pos(self):
         """
@@ -191,14 +193,6 @@ class TestBatchOperate(TestBaseClass):
         policy_batch = {}
         
         policy_batch_write = {}
-        
-        exp_res = [
-            AerospikeStatus.AEROSPIKE_OK for _ in range(100, 1000)
-        ]
-
-        exp_rec = [
-            {"count": 10} for _ in range(100, 1000)
-        ]
 
         try:
             for key in keys:
@@ -207,8 +201,10 @@ class TestBatchOperate(TestBaseClass):
             res = self.as_connection.batch_operate(keys, ops, policy_batch, policy_batch_write)
             
             for i, batch_rec in enumerate(res.batch_records):
-                assert batch_rec.result == exp_res[i]
-                assert batch_rec.record[2] == exp_rec[i]
+                assert batch_rec.result == AerospikeStatus.AEROSPIKE_OK
+                assert batch_rec.record[2] == {"count": 10}
+                assert batch_rec.key[:3] == keys[i] # checking key
+                assert batch_rec.record[0][:3] == keys[i] # checking key in record
         except Exception as ex:
             raise(ex)
         finally:

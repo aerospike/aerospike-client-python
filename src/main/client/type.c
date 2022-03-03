@@ -528,11 +528,22 @@ PyDoc_STRVAR(batch_write_doc, "batch_write(batch_records, policy) -> None\n\
 \n\
 Read/Write multiple records for specified batch keys in one batch call. \
 This method allows different sub-commands for each key in the batch. \
-The returned records are located in the same list.");
+The returned records are located in the same list. \
+Requires server version 6.0+");
 
 PyDoc_STRVAR(batch_operate_doc, "batch_operate([keys], [ops], policy_batch, policy_batch_write) -> BatchRecords\n\
 \n\
 Perform read/write operations on multiple keys. \
+Requires server version 6.0+");
+
+PyDoc_STRVAR(batch_remove_doc, "batch_remove([keys], policy_batch, policy_batch_remove) -> BatchRecords\n\
+\n\
+Remove multiple records by key. \
+Requires server version 6.0+");
+
+PyDoc_STRVAR(batch_apply_doc, "batch_apply([keys], module, function, [args], policy_batch, policy_batch_apply) -> BatchRecords\n\
+\n\
+Apply a user defined function (UDF) to multiple keys. \
 Requires server version 6.0+");
 
 PyDoc_STRVAR(get_key_partition_id_doc,
@@ -834,6 +845,10 @@ static PyMethodDef AerospikeClient_Type_Methods[] = {
 	 METH_VARARGS | METH_KEYWORDS, batch_write_doc},
 	{"batch_operate", (PyCFunction)AerospikeClient_Batch_Operate,
 	 METH_VARARGS | METH_KEYWORDS, batch_operate_doc},
+	{"batch_remove", (PyCFunction)AerospikeClient_Batch_Remove,
+	 METH_VARARGS | METH_KEYWORDS, batch_remove_doc},
+	{"batch_apply", (PyCFunction)AerospikeClient_Batch_Apply,
+	 METH_VARARGS | METH_KEYWORDS, batch_apply_doc},
 
 	// TRUNCATE OPERATIONS
 	{"truncate", (PyCFunction)AerospikeClient_Truncate,

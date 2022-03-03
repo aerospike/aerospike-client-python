@@ -292,7 +292,6 @@ static PyObject *AerospikeClient_BatchWriteInvoke(AerospikeClient *self, as_erro
             const char *mod = PyUnicode_AsUTF8(py_mod);
             const char *func =  PyUnicode_AsUTF8(py_func);
 
-            // TODO free arglist
             as_list *arglist = NULL;
             pyobject_to_list(self, err, py_args, &arglist, &static_pool,
                             SERIALIZER_PYTHON);
@@ -383,8 +382,6 @@ CLEANUP:
     if (batch_records_p != NULL) {
         as_batch_records_destroy(&batch_records);
     }
-
-	POOL_DESTROY(&static_pool);
 
 	as_vector_destroy(unicodeStrVector);
 

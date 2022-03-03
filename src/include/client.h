@@ -699,6 +699,26 @@ PyObject *AerospikeClient_Batch_Operate(AerospikeClient *self, PyObject *args,
 										 PyObject *kwds);
 
 /**
+ * Remove multiple records by key.
+ * Requires server version 6.0+
+ *
+ *		client.batch_remove([keys], policy_batch, policy_batch_remove)
+ *
+ */
+PyObject *AerospikeClient_Batch_Remove(AerospikeClient *self, PyObject *args,
+										 PyObject *kwds);
+
+/**
+ * Apply a user defined function (UDF) to multiple keys.
+ * Requires server version 6.0+
+ *
+ *		client.batch_apply([keys], module, function, [args], policy_batch, policy_batch_remove)
+ *
+ */
+PyObject *AerospikeClient_Batch_Apply(AerospikeClient *self, PyObject *args,
+										 PyObject *kwds);
+
+/**
  * Filter bins from records in a batch
  *
  *		client.select_many([keys], [bins], policies)

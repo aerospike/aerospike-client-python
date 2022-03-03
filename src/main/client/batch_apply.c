@@ -24,7 +24,6 @@
 #include <aerospike/as_key.h>
 #include <aerospike/as_error.h>
 #include <aerospike/as_record.h>
-#include <aerospike/as_operations.h>
 
 #include "client.h"
 #include "conversions.h"
@@ -41,7 +40,7 @@ typedef struct {
 } LocalData;
 
 static bool
-batch_operate_cb(const as_batch_result* results, uint32_t n, void* udata)
+batch_apply_cb(const as_batch_result* results, uint32_t n, void* udata)
 {
 	// Extract callback user-data
 	LocalData *data = (LocalData *)udata;
@@ -103,24 +102,23 @@ batch_operate_cb(const as_batch_result* results, uint32_t n, void* udata)
  * @param py_keys                   The list containing keys.
  * @param py_ops                    The list containing op dictionaries.
  * @param py_policy_batch      		Python dict used to populate policy_batch.
- * @param py_policy_batch_write     Python dict used to populate policy_batch_write.
+ * @param py_policy_batch_apply     Python dict used to populate policy_batch_apply. TODO update this
  *******************************************************************************************************
  */
-static PyObject *AerospikeClient_Batch_Operate_Invoke(AerospikeClient *self,
+static PyObject *AerospikeClient_Batch_Apply_Invoke(AerospikeClient *self,
 												as_error *err, 
 												PyObject *py_keys,
-												PyObject *py_ops,
+                                                PyObject *py_mod,
+                                                PyObject *py_func,
+                                                PyObject *py_args,
 												PyObject *py_policy_batch,
-                                                PyObject *py_policy_batch_write)
+                                                PyObject *py_policy_batch_apply)
 {
-	long operation;
-	long return_type = -1;
-
 	as_policy_batch policy_batch;
 	as_policy_batch *policy_batch_p = NULL;
 
-	as_policy_batch_write policy_batch_write;
-	as_policy_batch_write *policy_batch_write_p = NULL;
+	as_policy_batch_apply policy_batch_apply;
+	as_policy_batch_apply *policy_batch_apply_p = NULL;
 
 	as_batch batch;
 	as_batch_init(&batch, 0);
@@ -129,43 +127,21 @@ static PyObject *AerospikeClient_Batch_Operate_Invoke(AerospikeClient *self,
 	as_exp batch_exp_list;
 	as_exp *batch_exp_list_p = NULL;
 
-	as_exp batch_write_exp_list;
-	as_exp *batch_write_exp_list_p = NULL;
+	as_exp batch_apply_exp_list;
+	as_exp *batch_apply_exp_list_p = NULL;
 
-	as_vector *unicodeStrVector = as_vector_create(sizeof(char *), 128);
+    PyObject* br_instance = NULL;
 
 	as_static_pool static_pool;
 	memset(&static_pool, 0, sizeof(static_pool));
 
-    as_vector *tmp_keys_p = NULL;
-
-	as_operations ops;
-
-	Py_ssize_t ops_size = PyList_Size(py_ops);
-	as_operations_inita(&ops, ops_size);
-
-    PyObject* br_instance = NULL;
-
-	for (int i = 0; i < ops_size; i++) {
-		PyObject *py_val = PyList_GetItem(py_ops, i);
-
-        if ( !PyDict_Check(py_val)) {
-			as_error_update(err, AEROSPIKE_ERR_PARAM,
-							"op should be an aerospike operation dictionary");
-			goto CLEANUP;
-        }
-
-        if (add_op(self, err, py_val, unicodeStrVector, &static_pool, &ops,
-                    &operation, &return_type) != AEROSPIKE_OK) {
-            goto CLEANUP;
-        }
-	}
-
 	Py_ssize_t keys_size = PyList_Size(py_keys);
+
+    as_list *arglist = NULL;
 
     as_vector tmp_keys;
     as_vector_init(&tmp_keys, sizeof(as_key), keys_size);
-    tmp_keys_p = &tmp_keys;
+    as_vector *tmp_keys_p = &tmp_keys;
     uint64_t processed_key_count = 0;
 
 	for (int i = 0; i < keys_size; i++) {
@@ -199,12 +175,21 @@ static PyObject *AerospikeClient_Batch_Operate_Invoke(AerospikeClient *self,
 		}
 	}
 
-	if (py_policy_batch_write) {
-		if (pyobject_to_batch_write_policy(self, err, py_policy_batch_write, &policy_batch_write,
-                                &policy_batch_write_p, &batch_write_exp_list, &batch_write_exp_list_p) != AEROSPIKE_OK) {
+	if (py_policy_batch_apply) {
+		if (pyobject_to_batch_apply_policy(self, err, py_policy_batch_apply, &policy_batch_apply,
+                                &policy_batch_apply_p, &batch_apply_exp_list, &batch_apply_exp_list_p) != AEROSPIKE_OK) {
 			goto CLEANUP;
 		}
 	}
+
+    const char *mod = PyUnicode_AsUTF8(py_mod);
+    const char *func =  PyUnicode_AsUTF8(py_func);
+
+    pyobject_to_list(self, err, py_args, &arglist, &static_pool,
+                    SERIALIZER_PYTHON);
+    if (err->code != AEROSPIKE_OK) {
+        goto CLEANUP;
+    }
 
     // import batch_records helper
     PyObject *br_module = NULL;
@@ -250,10 +235,10 @@ static PyObject *AerospikeClient_Batch_Operate_Invoke(AerospikeClient *self,
 
 	Py_BEGIN_ALLOW_THREADS
 
-	aerospike_batch_operate(self->as, &data.error, 
-							policy_batch_p, policy_batch_write_p,
-                            &batch, &ops,
-							batch_operate_cb, &data);
+	aerospike_batch_apply(self->as, &data.error, 
+							policy_batch_p, policy_batch_apply_p,
+                            &batch, mod, func, arglist,
+                            batch_apply_cb, &data);
 
 	Py_END_ALLOW_THREADS
 
@@ -267,25 +252,22 @@ static PyObject *AerospikeClient_Batch_Operate_Invoke(AerospikeClient *self,
 	}
 
 CLEANUP:
-    // TODO don't need below loop?
-	for (unsigned int i = 0; i < unicodeStrVector->size; i++) {
-		free(as_vector_get_ptr(unicodeStrVector, i));
-	}
-
     if (tmp_keys_p) {
         as_vector_destroy(tmp_keys_p);
+    }
+
+    if (arglist) {
+        as_list_destroy(arglist);
     }
 
 	if (batch_exp_list_p) {
 		as_exp_destroy(batch_exp_list_p);
 	}
 
-	if (batch_write_exp_list_p) {
-		as_exp_destroy(batch_write_exp_list_p);
+	if (batch_apply_exp_list_p) {
+		as_exp_destroy(batch_apply_exp_list_p);
 	}
 
-	as_vector_destroy(unicodeStrVector);
-	as_operations_destroy(&ops);
 	as_batch_destroy(&batch);
 
 	if (err->code != AEROSPIKE_OK) {
@@ -303,7 +285,7 @@ CLEANUP:
 
 /**
  *******************************************************************************************************
- * Same operations on a multiple records
+ * Apply a UDF to multiple records.
  *
  * @param self                  AerospikeClient object
  * @param args                  The args is a tuple object containing an argument
@@ -314,46 +296,68 @@ CLEANUP:
  * Otherwise returns 0 on success for other operations.
  *******************************************************************************************************
  */
-PyObject *AerospikeClient_Batch_Operate(AerospikeClient *self, PyObject *args,
+PyObject *AerospikeClient_Batch_Apply(AerospikeClient *self, PyObject *args,
 								   PyObject *kwds)
 {
 	as_error err;
 	PyObject *py_policy_batch = NULL;
-	PyObject *py_policy_batch_write = NULL;
+	PyObject *py_policy_batch_apply = NULL;
 	PyObject *py_keys = NULL;
-	PyObject *py_ops = NULL;
+    PyObject *py_mod = NULL;
+    PyObject *py_func = NULL;
+    PyObject *py_args = NULL;
 	PyObject *py_results = NULL;
 
 	as_error_init(&err);
 
 	// Python Function Keyword Arguments
-	static char *kwlist[] = {"keys", "ops", "policy_batch", "policy_batch_write", NULL};
-	if (PyArg_ParseTupleAndKeywords(args, kwds, "OO|OO:batch_Operate", kwlist,
+	static char *kwlist[] = {"keys", "module", "function", "args",
+                                "policy_batch", "policy_batch_apply", NULL};
+
+	if (PyArg_ParseTupleAndKeywords(args, kwds, "OOOO|OO:batch_apply", kwlist,
 									&py_keys,
-                                    &py_ops,
+                                    &py_mod,
+                                    &py_func,
+                                    &py_args,
 									&py_policy_batch,
-                                    &py_policy_batch_write
+                                    &py_policy_batch_apply
                                     ) == false) {
 		return NULL;
 	}
 
     // required arg so don't need to check for NULL
-    if ( !PyList_Check(py_ops)) {
-			as_error_update(&err, AEROSPIKE_ERR_PARAM,
-							"ops should be a list of op dictionaries");
-			goto ERROR;
-    }
-
-    // required arg so don't need to check for NULL
     if ( !PyList_Check(py_keys)) {
-			as_error_update(&err, AEROSPIKE_ERR_PARAM,
-							"keys should be a list of aerospike key tuples");
-			goto ERROR;
+        as_error_update(&err, AEROSPIKE_ERR_PARAM,
+                        "keys should be a list of aerospike key tuples");
+        goto ERROR;
     }
 
-	py_results = AerospikeClient_Batch_Operate_Invoke(self, &err, 
-											py_keys, py_ops, py_policy_batch,
-                                            py_policy_batch_write);
+    if ( !PyUnicode_Check(py_mod)) {
+        as_error_update(&err, AEROSPIKE_ERR_PARAM,
+                        "module must be a string");
+        goto ERROR;
+    }
+
+    if ( !PyUnicode_Check(py_func)) {
+        as_error_update(&err, AEROSPIKE_ERR_PARAM,
+                        "function must be a string");
+        goto ERROR;
+    }
+
+    if ( !PyList_Check(py_args)) {
+        as_error_update(&err, AEROSPIKE_ERR_PARAM,
+                        "args must be a list of arguments for the UDF");
+        goto ERROR;
+    }
+
+	py_results = AerospikeClient_Batch_Apply_Invoke(self,
+                                                    &err, 
+											        py_keys,
+                                                    py_mod,
+                                                    py_func,
+                                                    py_args,
+                                                    py_policy_batch,
+                                                    py_policy_batch_apply);
 
     return py_results;
 
