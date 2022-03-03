@@ -183,7 +183,8 @@ class CClientBuild(build):
             cmd = [
                 'make',
                 'V=' + str(self.verbose),
-                'EVENT_LIB='+EVENT_LIB] 
+                'EVENT_LIB='+EVENT_LIB,
+            ] 
 
         def compile():
             print(cmd, library_dirs, libraries)

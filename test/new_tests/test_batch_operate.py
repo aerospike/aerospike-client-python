@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 
+from cgi import print_form
 import sys
 
 import pytest
@@ -18,7 +19,6 @@ from aerospike_helpers.operations import list_operations as lop
 from aerospike import exception as e
 from .test_base_class import TestBaseClass
 from .as_status_codes import AerospikeStatus
-modules = dir()
 
 
 class TestBatchOperate(TestBaseClass):
@@ -97,38 +97,7 @@ class TestBatchOperate(TestBaseClass):
             [{"count": 3}]
         ),
         (
-            "write-read-many",
-            [
-                ("test", "demo", 0),
-                ("test", "demo", 1),
-                ("test", "demo", 2),
-                ("test", "demo", 3),
-                ("test", "demo", 4)
-            ],
-            [
-                op.write("count", 10),
-                op.read("count"),
-                op.read("t")
-            ],
-            {},
-            {},
-            [
-                AerospikeStatus.AEROSPIKE_OK,
-                AerospikeStatus.AEROSPIKE_OK,
-                AerospikeStatus.AEROSPIKE_OK,
-                AerospikeStatus.AEROSPIKE_OK,
-                AerospikeStatus.AEROSPIKE_OK,
-            ],
-            [
-                {"count": 10, "t": True},
-                {"count": 10, "t": True},
-                {"count": 10, "t": True},
-                {"count": 10, "t": True},
-                {"count": 10, "t": True}
-            ]
-        ),
-        (
-            "buisimple-write-policy-batch",
+            "simple-write-policy-batch",
             [
                 ("test", "demo", 0)
             ],
@@ -148,7 +117,7 @@ class TestBatchOperate(TestBaseClass):
             [{"count": 7}]
         ),
         (
-            "buisimple-write-policy-batch-write",
+            "simple-write-policy-batch-write",
             [
                 ("test", "demo", 0)
             ],
@@ -168,23 +137,159 @@ class TestBatchOperate(TestBaseClass):
             [AerospikeStatus.AEROSPIKE_OK],
             [{"count": 7}]
         ),
+        (
+            "simple-write-policy-both",
+            [
+                ("test", "demo", 0)
+            ],
+            [
+                op.write("count", 7),
+                op.read("count")
+            ],
+            {
+                "total_timeout": 2000,
+                "max_retries": 2,
+                "allow_inline_ssd": True,
+                "respond_all_keys": False,
+                "expressions": exp.Eq(exp.ListGetByRank(None, aerospike.LIST_RETURN_VALUE, exp.ResultType.INTEGER, 0, exp.ListBin("ilist_bin")), 0).compile()
+            },
+            {
+                "key": aerospike.POLICY_KEY_SEND,
+                "commit_level": aerospike.POLICY_COMMIT_LEVEL_MASTER,
+                "gen": aerospike.POLICY_GEN_IGNORE,
+                "exists": aerospike.POLICY_EXISTS_UPDATE,
+                "durable_delete": False,
+                "expressions": exp.Eq(exp.IntBin("count"), 1).compile()
+            },
+            [AerospikeStatus.AEROSPIKE_OK],
+            [{"count": 7}]
+        ),
     ])
     def test_batch_operate_pos(self, name, keys, ops, policy_batch, policy_batch_write, exp_res, exp_rec):
         """
-        Test batch_operate positive
+        Test batch_operate positive.
         """
 
         res = self.as_connection.batch_operate(keys, ops, policy_batch, policy_batch_write)
-        print(res.batch_records)
         
         for i, batch_rec in enumerate(res.batch_records):
-
-            print(batch_rec.key)
-            print(batch_rec.record)
-            print(batch_rec.result)
-            print(batch_rec.in_doubt)
-
-            #expected_key_tuple = keys[i] + (aerospike.calc_digest(*keys[i]),)
-            #assert batch_rec.key == expected_key_tuple
             assert batch_rec.result == exp_res[i]
             assert batch_rec.record[2] == exp_rec[i]
+
+    def test_batch_operate_many_pos(self):
+        """
+        Test batch operate with many keys.
+        """
+
+        keys = [("test", "demo", i) for i in range(100, 1000)]
+
+        ops = [
+            op.write("count", 10),
+            op.read("count"),
+        ]
+
+        policy_batch = {}
+        
+        policy_batch_write = {}
+        
+        exp_res = [
+            AerospikeStatus.AEROSPIKE_OK for _ in range(100, 1000)
+        ]
+
+        exp_rec = [
+            {"count": 10} for _ in range(100, 1000)
+        ]
+
+        try:
+            for key in keys:
+                self.as_connection.put(key, {"count": 0})
+
+            res = self.as_connection.batch_operate(keys, ops, policy_batch, policy_batch_write)
+            
+            for i, batch_rec in enumerate(res.batch_records):
+                assert batch_rec.result == exp_res[i]
+                assert batch_rec.record[2] == exp_rec[i]
+        except Exception as ex:
+            raise(ex)
+        finally:
+            for key in keys:
+                self.as_connection.remove(key)
+
+    @pytest.mark.parametrize("name, keys, ops, policy_batch, policy_batch_write, exp_res", [
+        (
+            "bad-key",
+            [
+                ("bad-key", i) for i in range(1000) 
+            ],
+            [
+                op.write("count", 2),
+                op.read("count")
+            ],
+            {},
+            {},
+            e.ParamError
+        ),
+        (
+            "bad-ops",
+            [
+                ("test", "demo", 1)
+            ],
+            [
+                op.write("count", 2),
+                op.read("count"),
+                ["bad-op"]
+            ],
+            {
+                "respond_all_keys": False,
+            },
+            {},
+            e.ParamError
+        ),
+        (
+            "bad-ops2",
+            [
+                ("test", "demo", 1)
+            ],
+            {
+                "bad": "ops"
+            },
+            {
+                "respond_all_keys": False,
+            },
+            {},
+            e.ParamError
+        ),
+        (
+            "bad-batch-policy",
+            [
+                ("test", "demo", 1)
+            ],
+            [
+                op.write("count", 2),
+                op.read("count"),
+            ],
+            ["bad-batch-policy"],
+            {},
+            e.ParamError
+        ),
+        (
+            "bad-batch-write-policy",
+            [
+                ("test", "demo", 1)
+            ],
+            [
+                op.write("count", 2),
+                op.read("count"),
+            ],
+            {},
+            ["bad-batch-write-policy"],
+            e.ParamError
+        ),
+    ])
+    def test_batch_operate_neg(self, name, keys, ops, policy_batch, policy_batch_write, exp_res):
+        """
+        Test batch_operate negative.
+        """
+
+        with pytest.raises(exp_res):
+            self.as_connection.batch_operate(keys, ops, policy_batch, policy_batch_write)

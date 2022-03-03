@@ -41,49 +41,21 @@ as_status as_batch_result_to_BatchRecord(AerospikeClient *self, as_error *err, a
     as_record *result_rec = &(bres->record);
     bool in_doubt = bres->in_doubt;
 
-    if (PyErr_Occurred()) {
-        printf("conv 1\n");
-        PyErr_Print();
-    }
-
     PyObject *py_res = PyLong_FromLong((long)*result_code);
     PyObject_SetAttrString(py_batch_record, FIELD_NAME_BATCH_RESULT, py_res);
     Py_DECREF(py_res);
-
-    if (PyErr_Occurred()) {
-        printf("conv 2\n");
-        PyErr_Print();
-    }
 
     PyObject *py_in_doubt = PyBool_FromLong((long)in_doubt);
     PyObject_SetAttrString(py_batch_record, FIELD_NAME_BATCH_INDOUBT, py_in_doubt);
     Py_DECREF(py_in_doubt);
 
-    if (PyErr_Occurred()) {
-        printf("conv 3\n");
-        PyErr_Print();
-    }
-
     if (*result_code == AEROSPIKE_OK) {
         PyObject *rec = NULL;
         record_to_pyobject(self, err, result_rec, NULL, &rec);
-
-        if (PyErr_Occurred()) {
-            printf("conv 4\n");
-            PyErr_Print();
-        }
-
         PyObject_SetAttrString(py_batch_record, FIELD_NAME_BATCH_RECORD, rec);
         Py_DECREF(rec);
-
-        if (PyErr_Occurred()) {
-            printf("conv 5\n");
-            PyErr_Print();
-        }
-
     }
 
-    printf("br_instance.batch_records ref count in as_batch_result_to_BatchRecord: %d\n", py_batch_record->ob_refcnt);
     return err->code;
 }
 
@@ -100,44 +72,27 @@ static bool
 batch_operate_cb(const as_batch_result* results, uint32_t n, void* udata)
 {
 	// Extract callback user-data
-    printf("cb 1, n: %d\n", n);
 	LocalData *data = (LocalData *)udata;
 	as_error *err = &data->error;
     PyObject *py_key = NULL;
     PyObject *py_batch_record = NULL;
     bool success = true;
 
-    printf("cb 2\n");
 	// Lock Python State
 	PyGILState_STATE gstate;
 	gstate = PyGILState_Ensure();
 
-    if (PyErr_Occurred()) {
-        PyErr_Print();
-    }
-
-    printf("cb 5\n");
 	for (uint32_t i = 0; i < n; i++) {
-        printf("cb 5.1\n");
-
-        if (PyErr_Occurred()) {
-            PyErr_Print();
-        }
 
         as_batch_read* res = NULL;
 		res = (as_batch_read*) &results[i];
 
         // NOTE these conversions shouldn't go wrong but if they do, return
         if (key_to_pyobject(err, res->key, &py_key) != AEROSPIKE_OK) {
-            printf("cb key error\n");
             as_error_update(err, AEROSPIKE_ERR_CLIENT,
                             "unable to convert res->key at results index: %d", i);
             break;
             success = false;
-        }
-
-        if (PyErr_Occurred()) {
-            PyErr_Print();
         }
 
         py_batch_record = PyObject_CallMethodObjArgs(data->batch_records_module, data->func_name, py_key, NULL);
@@ -149,11 +104,6 @@ batch_operate_cb(const as_batch_result* results, uint32_t n, void* udata)
             break;
         }
         Py_DECREF(py_key);
-        printf("cb 5.2\n");
-
-        if (PyErr_Occurred()) {
-            PyErr_Print();
-        }
 
         as_batch_result_to_BatchRecord(data->client, err, res, py_batch_record);
         if (err->code != AEROSPIKE_OK) {
@@ -161,22 +111,13 @@ batch_operate_cb(const as_batch_result* results, uint32_t n, void* udata)
             break;
         }
 
-        printf("cb 5.6\n");
-
-        if (PyErr_Occurred()) {
-            PyErr_Print();
-        }
-
 		PyList_Append(data->py_results, py_batch_record);
 
-        printf("cb 5.7\n");
 	}
 
-    //printf("py_funcname ref count: %d\n", py_funcname->ob_refcnt);
     Py_XDECREF(py_batch_record);
 
 	PyGILState_Release(gstate);
-    printf("cb returning\n");
 	return success;
 }
 
@@ -203,8 +144,6 @@ static PyObject *AerospikeClient_Batch_Operate_Invoke(AerospikeClient *self,
 	long operation;
 	long return_type = -1;
 
-    printf("1\n");
-
 	as_policy_batch policy_batch;
 	as_policy_batch *policy_batch_p = NULL;
 
@@ -221,10 +160,6 @@ static PyObject *AerospikeClient_Batch_Operate_Invoke(AerospikeClient *self,
 	as_exp batch_write_exp_list;
 	as_exp *batch_write_exp_list_p = NULL;
 
-	// For converting predexp.
-	as_predexp_list predexp_list;
-	as_predexp_list *predexp_list_p = NULL;
-
 	as_vector *unicodeStrVector = as_vector_create(sizeof(char *), 128);
 
 	as_static_pool static_pool;
@@ -237,10 +172,7 @@ static PyObject *AerospikeClient_Batch_Operate_Invoke(AerospikeClient *self,
 
    PyObject* br_instance = NULL;
 
-    printf("2\n");
-
 	for (int i = 0; i < ops_size; i++) {
-        printf("2.5\n");
 		PyObject *py_val = PyList_GetItem(py_ops, i);
 
         if ( !PyDict_Check(py_val)) {
@@ -255,16 +187,15 @@ static PyObject *AerospikeClient_Batch_Operate_Invoke(AerospikeClient *self,
         }
 	}
 
-    printf("3\n");
-
 	Py_ssize_t keys_size = PyList_Size(py_keys);
-	as_batch_init(&batch, keys_size);
 
-    printf("4\n");
+    as_vector tmp_keys;
+    as_vector_init(&tmp_keys, sizeof(as_key), keys_size);
+    uint64_t processed_key_count = 0;
 
 	for (int i = 0; i < keys_size; i++) {
-        printf("4.5\n");
 		PyObject *py_key = PyList_GetItem(py_keys, i);
+        as_key *tmp_key = (as_key*) as_vector_get(&tmp_keys, i);
 
 		if ( !PyTuple_Check(py_key)) {
 			as_error_update(err, AEROSPIKE_ERR_PARAM,
@@ -272,63 +203,51 @@ static PyObject *AerospikeClient_Batch_Operate_Invoke(AerospikeClient *self,
 			goto CLEANUP;
 		}
 
-		pyobject_to_key(err, py_key, as_batch_keyat(&batch, i));
+		pyobject_to_key(err, py_key, tmp_key);
 		if (err->code != AEROSPIKE_OK) {
 			as_error_update(err, AEROSPIKE_ERR_PARAM,
 							"failed to convert key at index: %d", i);
 			goto CLEANUP;
 		}
+
+        processed_key_count++;
 	}
 
-    printf("5\n");
+	as_batch_init(&batch, processed_key_count);
+    memcpy(batch.keys.entries, tmp_keys.list, sizeof(as_key) * processed_key_count);
+    as_vector_destroy(&tmp_keys);
 
 	if (py_policy_batch) {
-        printf("5.5\n");
 		if (pyobject_to_policy_batch(self, err, py_policy_batch, &policy_batch, &policy_batch_p,
-								&self->as->config.policies.batch, &predexp_list,
-								&predexp_list_p, &batch_exp_list, &batch_exp_list) != AEROSPIKE_OK) {
+								&self->as->config.policies.batch, NULL,
+								NULL, &batch_exp_list, &batch_exp_list_p) != AEROSPIKE_OK) {
 			goto CLEANUP;
 		}
 	}
 
-    printf("6\n");
-
-    // TODO both can't use same expressions vars
-    // TODO check that the polices are dicts
 	if (py_policy_batch_write) {
-        printf("6.5\n");
 		if (pyobject_to_batch_write_policy(self, err, py_policy_batch_write, &policy_batch_write,
-                                &policy_batch_write_p, &batch_write_exp_list, &batch_write_exp_list) != AEROSPIKE_OK) {
+                                &policy_batch_write_p, &batch_write_exp_list, &batch_write_exp_list_p) != AEROSPIKE_OK) {
 			goto CLEANUP;
 		}
 	}
-
-    printf("7\n");
 
     // import batch_records helper
     PyObject *br_module = NULL;
     PyObject *sys_modules = PyImport_GetModuleDict();
 
-    printf("8\n");
     if (PyMapping_HasKeyString(sys_modules, "aerospike_helpers")) {
-        printf("8.2\n");
         br_module = PyMapping_GetItemString(sys_modules, "aerospike_helpers.batch.records");
     }
     else {
-        printf("8.3\n");
         br_module = PyImport_ImportModule("aerospike_helpers.batch.records");
     }
-
-    printf("9\n");
 
     if ( !br_module) {
         as_error_update(err, AEROSPIKE_ERR_CLIENT,
                         "Unable to load batch_records module");
         goto CLEANUP;
     }
-
-    printf("10\n");
-
 
     PyObject *obj_name = PyUnicode_FromString("BatchRecords");
     PyObject *res_list = PyList_New(0);
@@ -345,22 +264,15 @@ static PyObject *AerospikeClient_Batch_Operate_Invoke(AerospikeClient *self,
     Py_DECREF(obj_name);
     Py_DECREF(res_list);
 
-    printf("11\n");
 
 	// Create and initialize callback user-data
 	LocalData data;
 	data.client = self;
     data.func_name = PyUnicode_FromString("BatchRecord");
 	data.py_results = PyObject_GetAttrString(br_instance, "batch_records");
-    printf("br_instance.batch_records ref1 count: %d\n", data.py_results->ob_refcnt);
-    printf("br_instance.batch_records size: %d\n", PyList_Size(data.py_results));
     data.batch_records_module = br_module;
 
-    printf("12\n");
-
 	as_error_init(&data.error);
-
-    printf("13\n");
 
 	Py_BEGIN_ALLOW_THREADS
 
@@ -371,41 +283,20 @@ static PyObject *AerospikeClient_Batch_Operate_Invoke(AerospikeClient *self,
 
 	Py_END_ALLOW_THREADS
 
-    printf("14\n");
-    printf("py_funcname ref count: %d\n", data.func_name->ob_refcnt);
-    printf("br_module ref count: %d\n", br_module->ob_refcnt);
-    printf("obj_name ref count: %d\n", obj_name->ob_refcnt);
-    printf("sys_modules ref count: %d\n", sys_modules->ob_refcnt);
-    printf("res_list ref count: %d\n", res_list->ob_refcnt);
-
     Py_DECREF(data.py_results);
     Py_DECREF(data.func_name);
 
 	as_error_copy(err, &data.error);
-
-    printf("15\n");
 
 	if (err->code != AEROSPIKE_OK) {
 		goto CLEANUP;
 	}
 
 CLEANUP:
-    // don't need below loop?
-    printf("In CLEANUP\n");
-
-    if (PyErr_Occurred()) {
-        PyErr_Print();
-    }
-
-    // printf("br_instance ref count: %d\n", br_instance->ob_refcnt);
-    // printf("br_instance.batch_records ref3 count: %d\n", data.py_results->ob_refcnt);
-    // printf("br_instance.batch_records size: %d\n", PyList_Size(data.py_results));
-
+    // TODO don't need below loop?
 	for (unsigned int i = 0; i < unicodeStrVector->size; i++) {
 		free(as_vector_get_ptr(unicodeStrVector, i));
 	}
-
-    printf("16\n");
 
 	if (batch_exp_list_p) {
 		as_exp_destroy(batch_exp_list_p);
@@ -415,25 +306,9 @@ CLEANUP:
 		as_exp_destroy(batch_write_exp_list_p);
 	}
 
-    printf("17\n");
-
-	if (predexp_list_p) {
-		as_predexp_list_destroy(&predexp_list);
-	}
-
-    printf("18\n");
-
 	as_vector_destroy(unicodeStrVector);
-
-    printf("19\n");
-
 	as_operations_destroy(&ops);
-
-    printf("20\n");
-
 	as_batch_destroy(&batch);
-
-    printf("21\n");
 
 	if (err->code != AEROSPIKE_OK) {
 		PyObject *py_err = NULL;
@@ -444,8 +319,6 @@ CLEANUP:
 
 		return NULL;
 	}
-
-    printf("returning\n");
 
 	return br_instance;
 }
