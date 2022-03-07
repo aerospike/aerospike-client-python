@@ -49,7 +49,7 @@ class TestScan(TestBaseClass):
     def test_scan_with_predexp_policy(self):
 
         from .test_base_class import TestBaseClass
-        if TestBaseClass.major_ver >= 5 and TestBaseClass.minor_ver >=7:
+        if TestBaseClass.major_ver >= 6 or (TestBaseClass.major_ver >= 5 and TestBaseClass.minor_ver >= 7):
             # print("TestBaseClass.major_ver:", TestBaseClass.major_ver, "TestBaseClass.minor_ver:", TestBaseClass.minor_ver)
             pytest.skip(
                 'It deprecated and it only applies to < 5.7 earlier and enterprise edition')
@@ -79,7 +79,7 @@ class TestScan(TestBaseClass):
     def test_scan_with_predexp_policy_no_set(self):
 
         from .test_base_class import TestBaseClass
-        if TestBaseClass.major_ver >= 5 and TestBaseClass.minor_ver >=7:
+        if TestBaseClass.major_ver >= 6 or (TestBaseClass.major_ver >= 5 and TestBaseClass.minor_ver >= 7):
             # print("TestBaseClass.major_ver:", TestBaseClass.major_ver, "TestBaseClass.minor_ver:", TestBaseClass.minor_ver)
             pytest.skip(
                 'It deprecated and it only applies to < 5.7 earlier and enterprise edition')
@@ -109,7 +109,7 @@ class TestScan(TestBaseClass):
     def test_scan_with_results_method_and_predexp(self):
 
         from .test_base_class import TestBaseClass
-        if TestBaseClass.major_ver >= 5 and TestBaseClass.minor_ver >=7:
+        if TestBaseClass.major_ver >= 6 or (TestBaseClass.major_ver >= 5 and TestBaseClass.minor_ver >= 7):
             # print("TestBaseClass.major_ver:", TestBaseClass.major_ver, "TestBaseClass.minor_ver:", TestBaseClass.minor_ver)
             pytest.skip(
                 'It deprecated and it only applies to < 5.7 earlier and enterprise edition')
