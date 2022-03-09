@@ -13,8 +13,109 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 ##########################################################################
-from typing import Any, List
+'''
+records.py defines objects for use with aerospike client batch APIS. Currently batch_write, batch_operate,
+batch_remove, and batch_apply make use of objects in this file. Typically BatchReacords and underlying
+BatchRecord objects are used as input and output for the aformentioned client methods.
 
+    .. note:: APIs that utitlize these objects require server >= 6.0.0.
+
+Example::
+
+    import aerospike
+    from aerospike_helpers.batch import records as br
+    import aerospike_helpers.expressions as exp
+    from aerospike_helpers.operations import operations as op
+    from aerospike_helpers.operations import expression_operations as exop
+    import sys
+
+    # Configure the client.
+    config = {"hosts": [("127.0.0.1", 3000)]}
+
+    # Create a client and connect it to the cluster.
+    try:
+        client = aerospike.client(config).connect()
+    except ex.ClientError as e:
+        print("Error: {0} [{1}]".format(e.msg, e.code))
+        sys.exit(1)
+
+    # setup records
+    namespace = "test"
+    set = "demo"
+
+    keys = [(namespace, set, i) for i in range(1000)]
+    records = [{"id": i, "balance": i * 10} for i in range(1000)]
+    for key, rec in zip(keys, records):
+        client.put(key, rec)
+
+    # Write a new bin to the records using batch_operate
+    # The expression, "expr", means this bin will signify that the record
+    # has an odd user key.
+    expr = exp.Eq(exp.Mod(exp.KeyInt(), 2), 1).compile()
+    ops = [
+        exop.expression_write("odd", expr)
+    ]
+
+    client.batch_operate(keys, ops)
+
+
+    # Batch add 10 to balance and read it if it's over
+    # 1000 NOTE: batch_operate can't be used only reading
+    # get_batch_ops or get_many can be used for that.
+    expr = exp.GT(exp.IntBin("balance"), 1000).compile()
+    ops = [
+        op.increment("balance", 10),
+        op.read("balance")
+    ]
+    policy_batch = {"expressions": expr}
+    res = client.batch_operate(keys, ops, policy_batch)
+
+    # record 100 should be None
+    print(res.batch_records[100].record)
+    # record 101 should be populated
+    print(res.batch_records[101].record)
+
+
+    # Apply different operations to different keys
+    # using batch_write.
+    w_batch_record = br.BatchRecords(
+        [
+            br.BatchRemove(
+                key=(namespace, set, 1),
+                policy={}
+            ),
+            br.BatchWrite(
+                key=(namespace, set, 100),
+                ops=[
+                    op.write("id", 100),
+                    op.write("balance", 100),
+                    op.read("ilist_bin"),
+                    op.read("id"),
+                ],
+                policy={}
+            ),
+            br.BatchRead(
+                key=(namespace, set, 333),
+                ops=[
+                    op.read("id")
+                ],
+                policy={}
+            ),
+        ]
+    )
+
+    # batch_write modifies its BatchRecords argument.
+    # results for each BatchRecord will be set in their result,
+    # record, and in_doubt fields.
+    client.batch_write(w_batch_record)
+
+    # should be {'id': 333} 
+    print(w_batch_record.batch_records[2].record[2])
+
+.. seealso:: `Bits (Data Types) <https://www.aerospike.com/docs/guide/bitwise.html>`_.
+'''
+
+from typing import Any, List
 
 class _Types():
     READ = 0
@@ -38,7 +139,7 @@ class BatchRecord:
     """
     def __init__(self, key: tuple) -> None:
         self.key = key
-        self.record = ()
+        self.record = None
         self.result = 0 # TODO set this as the ok status code using the constant
         self.in_doubt = False
 
@@ -49,7 +150,7 @@ class BatchWrite(BatchRecord):
         retrieving batch write results.
     """
 
-    def __init__(self, key: tuple, ops: List[dict], policy: dict = {}) -> None:
+    def __init__(self, key: tuple, ops: List[dict], policy: dict = None) -> None:
         super().__init__(key)
         self.ops = ops
         self._type = _Types.WRITE
@@ -63,7 +164,7 @@ class BatchRead(BatchRecord):
         retrieving batch read results.
     """
 
-    def __init__(self, key: tuple, ops: List[dict], policy: dict = {}) -> None:
+    def __init__(self, key: tuple, ops: List[dict], policy: dict = None) -> None:
         super().__init__(key)
         self.ops = ops
         self._type = _Types.READ
@@ -77,7 +178,7 @@ class BatchApply(BatchRecord):
         retrieving batch apply results.
     """
 
-    def __init__(self, key: tuple, module: str, function: str, args: List[Any], policy: dict = {}) -> None:
+    def __init__(self, key: tuple, module: str, function: str, args: List[Any], policy: dict = None) -> None:
         super().__init__(key)
         self._type = _Types.APPLY
         self._has_write = True # TODO should this ba an arg set by user?
@@ -93,7 +194,7 @@ class BatchRemove(BatchRecord):
         retrieving batch remove results.
     """
 
-    def __init__(self, key: tuple, policy: dict = {}) -> None:
+    def __init__(self, key: tuple, policy: dict = None) -> None:
         super().__init__(key)
         self._type = _Types.REMOVE
         self._has_write = True
@@ -107,6 +208,7 @@ class BatchRecords:
     """
     def __init__(self, batch_records: List[BatchRecord] = []) -> None:
         self.batch_records = batch_records
+        self.result = 0
 
 
 

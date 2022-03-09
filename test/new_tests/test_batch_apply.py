@@ -297,18 +297,18 @@ class TestBatchApply(TestBaseClass):
             {},
             e.ParamError
         ),
-        (
-            "non-existent-module",
-            [
-                ("test", "demo", 1)
-            ],
-            "fake_mod",
-            "list_append",
-            ["name", 1],
-            {},
-            {},
-            e.AerospikeError
-        ),
+        # ( NOTE These aren't raised but should be reflected in BatchRecords.result
+        #     "non-existent-module",
+        #     [
+        #         ("test", "demo", 1)
+        #     ],
+        #     "fake_mod",
+        #     "list_append",
+        #     ["name", 1],
+        #     {},
+        #     {},
+        #     e.AerospikeError
+        # ),
         (
             "bad-func",
             [
@@ -321,18 +321,18 @@ class TestBatchApply(TestBaseClass):
             {},
             e.ParamError
         ),
-        (
-            "non-existent-func",
-            [
-                ("test", "demo", 1)
-            ],
-            "sample",
-            "fake-func",
-            ["name", 1],
-            {},
-            {},
-            e.AerospikeError
-        ),
+        # (
+        #     "non-existent-func",
+        #     [
+        #         ("test", "demo", 1)
+        #     ],
+        #     "sample",
+        #     "fake-func",
+        #     ["name", 1],
+        #     {},
+        #     {},
+        #     e.AerospikeError
+        # ),
         (
             "bad-args",
             [

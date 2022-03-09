@@ -229,9 +229,10 @@ static PyObject *AerospikeClient_Batch_Remove_Invoke(AerospikeClient *self,
 
 	as_error_copy(err, &data.error);
 
-	if (err->code != AEROSPIKE_OK) {
-		goto CLEANUP;
-	}
+    PyObject *py_bw_res = PyLong_FromLong((long)err->code);
+    PyObject_SetAttrString(br_instance, FIELD_NAME_BATCH_RESULT, py_bw_res);
+
+    as_error_reset(err);
 
 CLEANUP:
     if (tmp_keys_p) {
