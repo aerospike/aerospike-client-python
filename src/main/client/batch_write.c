@@ -34,25 +34,30 @@
 #include "geo.h"
 #include "cdt_types.h"
 
-#define GET_BATCH_POLICY_FROM_PYOBJECT(__policy, __policy_type, __conversion_func, __batch_type)                      \
-    {                                                                                                                 \
-        PyObject *py___policy = PyObject_GetAttrString(py_batch_record, FIELD_NAME_BATCH_POLICY);                     \
-        as_exp *expr = NULL;                                                                                          \
-        as_exp *expr_p = expr;                                                                                        \
-        if (py___policy != NULL && PyDict_Check(py___policy)) {                                                       \
-            __policy = (__policy_type *)malloc(sizeof(__policy_type));                                                \
-            if (__conversion_func(self, err, py___policy, __policy, &__policy, expr, &expr_p) != AEROSPIKE_OK) {      \
-                as_error_update(err, AEROSPIKE_ERR_CLIENT, "batch_type: %s, failed to convert policy", __batch_type); \
-                goto CLEANUP;                                                                                         \
-            }                                                                                                         \
-            garb->policy_to_free = __policy;                                                                          \
-            garb->expressions_to_free = expr_p;                                                                       \
-        }                                                                                                             \
-        else {                                                                                                        \
-            as_error_update(err, AEROSPIKE_ERR_PARAM, "batch_type: %s, policy must be a dict", __batch_type);         \
-            goto CLEANUP;                                                                                             \
-        }                                                                                                             \
-    }                                                                                                                 \
+#define GET_BATCH_POLICY_FROM_PYOBJECT(__policy, __policy_type, __conversion_func, __batch_type)                          \
+    {                                                                                                                     \
+        PyObject *py___policy = PyObject_GetAttrString(py_batch_record, FIELD_NAME_BATCH_POLICY);                         \
+        if (py___policy != Py_None) {                                                                                     \
+            as_exp *expr = NULL;                                                                                          \
+            as_exp *expr_p = expr;                                                                                        \
+            if (py___policy != NULL) {                                                                                    \
+                __policy = (__policy_type *)malloc(sizeof(__policy_type));                                                \
+                garb->policy_to_free = __policy;                                                                          \
+                if (__conversion_func(self, err, py___policy, __policy, &__policy, expr, &expr_p) != AEROSPIKE_OK) {      \
+                    as_error_update(err, AEROSPIKE_ERR_PARAM, "batch_type: %s, failed to convert policy", __batch_type); \
+                    Py_DECREF(py___policy);                                                                               \
+                    goto CLEANUP;                                                                                         \
+                }                                                                                                         \
+                garb->expressions_to_free = expr_p;                                                                       \
+            }                                                                                                             \
+            else {                                                                                                        \
+                as_error_update(err, AEROSPIKE_ERR_PARAM, "batch_type: %s, policy must be a dict", __batch_type);         \
+                Py_DECREF(py___policy);                                                                                   \
+                goto CLEANUP;                                                                                             \
+            }                                                                                                             \
+        }                                                                                                                 \
+        Py_DECREF(py___policy);                                                                                           \
+    }                                                                                                                     \
 
 // TODO replace this with type checking the batch_records 
 // and cleaning up at the end, no struct needed that way
@@ -190,7 +195,8 @@ static PyObject *AerospikeClient_BatchWriteInvoke(AerospikeClient *self, as_erro
         PyObject *py_ops_list = PyObject_GetAttrString(py_batch_record, FIELD_NAME_BATCH_OPS);
         if (py_ops_list == NULL || !PyList_Check(py_ops_list)) {
 
-            if (batch_type == BATCH_TYPE_READ || batch_type == BATCH_TYPE_WRITE) {
+            // BatchRead can have None ops if it is using read_all_bins
+            if ((batch_type == BATCH_TYPE_READ && py_ops_list != Py_None) || batch_type == BATCH_TYPE_WRITE) {
                 as_error_update(err, AEROSPIKE_ERR_PARAM,
                                 "py_ops_list is NULL or not a list, %s must be a list of aerospike operation dicts", FIELD_NAME_BATCH_OPS);
 
@@ -204,15 +210,19 @@ static PyObject *AerospikeClient_BatchWriteInvoke(AerospikeClient *self, as_erro
         }
         
         Py_ssize_t py_ops_size = 0;
-        if (py_ops_list != NULL) {
+        if (py_ops_list != NULL && py_ops_list != Py_None) {
             py_ops_size = PyList_Size(py_ops_list);
         }
 
         long operation = 0;
         long return_type = -1;
 
-        as_operations *ops = as_operations_new(py_ops_size);
-        garb->ops_to_free = ops;
+        as_operations *ops = NULL;
+        if (py_ops_size) {
+            ops = as_operations_new(py_ops_size);
+            garb->ops_to_free = ops;
+        }
+
         for (Py_ssize_t i = 0; i < py_ops_size; i++) {
 
             PyObject *py_op = PyList_GetItem(py_ops_list, i);
@@ -237,6 +247,11 @@ static PyObject *AerospikeClient_BatchWriteInvoke(AerospikeClient *self, as_erro
             as_policy_batch_read *r_policy = NULL;
             GET_BATCH_POLICY_FROM_PYOBJECT(r_policy, as_policy_batch_read, pyobject_to_batch_read_policy, "BatchRead")
 
+            PyObject *py_read_all_bins = PyObject_GetAttrString(py_batch_record, "read_all_bins");
+            // Not checking for NULL since BatchRead should always have read_all_bins
+            bool read_all_bins = PyObject_IsTrue(py_read_all_bins);
+            Py_DECREF(py_read_all_bins);
+
             as_batch_read_record* rr;
             rr = as_batch_read_reserve(&batch_records);
 
@@ -245,6 +260,7 @@ static PyObject *AerospikeClient_BatchWriteInvoke(AerospikeClient *self, as_erro
             }
 
             rr->ops = ops;
+            rr->read_all_bins = read_all_bins;
             rr->policy = r_policy;
 
             break;

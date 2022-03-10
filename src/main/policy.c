@@ -1052,15 +1052,15 @@ as_status pyobject_to_batch_write_policy(AerospikeClient *self,
 {
 	POLICY_INIT(as_policy_batch_write);
 
-	// // Set policy fields
+	// Set policy fields
 	POLICY_SET_FIELD(key, as_policy_key);
-	// POLICY_SET_FIELD(commit_level, as_policy_commit_level);
-	// POLICY_SET_FIELD(gen, as_policy_gen);
-	// POLICY_SET_FIELD(exists, as_policy_exists);
-	// POLICY_SET_FIELD(durable_delete, bool);
+	POLICY_SET_FIELD(commit_level, as_policy_commit_level);
+	POLICY_SET_FIELD(gen, as_policy_gen);
+	POLICY_SET_FIELD(exists, as_policy_exists);
+	POLICY_SET_FIELD(durable_delete, bool);
 
-	// // C client 5.0 new expressions
-	// POLICY_SET_EXPRESSIONS_FIELD();
+	// C client 5.0 new expressions
+	POLICY_SET_EXPRESSIONS_FIELD();
 
 	// Update the policy
 	POLICY_UPDATE();

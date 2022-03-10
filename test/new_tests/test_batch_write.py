@@ -25,7 +25,6 @@ def add_udfs(client):
     Load the UDFs used in the tests
     '''
     policy = {}
-    print("running")
     udf_type = 0
     udf_files = ("sample.lua", "test_record_udf.lua", "udf_basic_ops.lua")
 
@@ -104,9 +103,8 @@ class TestBatchWrite(TestBaseClass):
                         ("test", "demo", 1),
                         [
                             op.write("new", 10),
-                            op.read("new"),
-                        ],
-                        policy={}
+                            op.read("new")
+                        ]
                     )
                 ]
             ),
@@ -122,9 +120,8 @@ class TestBatchWrite(TestBaseClass):
                         ("test", "demo", 1),
                         [
                             op.write("new", 10),
-                            op.read("new"),
+                            op.read("new")
                         ],
-                        policy={}
                     )
                 ]
             ),
@@ -145,7 +142,7 @@ class TestBatchWrite(TestBaseClass):
                         ("test", "demo", 1),
                         [
                             op.write("new", 10),
-                            op.read("new"),
+                            op.read("new")
                         ],
                         policy={
                             "key": aerospike.POLICY_KEY_SEND,
@@ -169,15 +166,48 @@ class TestBatchWrite(TestBaseClass):
                     br.BatchRead(
                         ("test", "demo", 1),
                         [
-                            op.read("count"),
+                            op.read("count")
                         ],
-                        policy={}
                     )
                 ]
             ),
             {},
             [AerospikeStatus.AEROSPIKE_OK],
             [{"count": 1}]
+        ),
+        (
+            "read-all-bins",
+            br.BatchRecords(
+                [
+                    br.BatchRead(
+                        ("test", "demo", 1),
+                        ops = None,
+                        read_all_bins = True
+                    )
+                ]
+            ),
+            {},
+            [AerospikeStatus.AEROSPIKE_OK],
+            [
+                {
+                    "count": 1,
+                    'name': 'name10',
+                    't': True,
+                    'age': 10,
+                    'balance': 100,
+                    'key': 10,
+                    'ilist_bin': [
+                        1,
+                        2,
+                        6,
+                    ],
+                    'imap_bin': {
+                        1: 1,
+                        2: 2,
+                        3: 6,
+                    }
+                }
+            ]
         ),
         (
             "read-with-policy",
@@ -187,7 +217,7 @@ class TestBatchWrite(TestBaseClass):
                         ("test", "demo", 1),
                         [
                             op.write("new", 10),
-                            op.read("new"),
+                            op.read("new")
                         ],
                         policy={
                             "read_mode_ap": aerospike.POLICY_READ_MODE_AP_ONE,
@@ -205,16 +235,14 @@ class TestBatchWrite(TestBaseClass):
             br.BatchRecords(
                 [
                     br.BatchRemove(
-                        ("test", "demo", 1),
-                        policy={}
+                        ("test", "demo", 1)
                     ),
                     br.BatchWrite(
                         ("test", "demo", 1),
                         [
                             op.write("new", 10),
-                            op.read("new"),
+                            op.read("new")
                         ],
-                        policy={}
                     )
                 ]
             ),
@@ -246,9 +274,8 @@ class TestBatchWrite(TestBaseClass):
                         ("test", "demo", 1),
                         [
                             op.write("new", 10),
-                            op.read("new"),
-                        ],
-                        policy={}
+                            op.read("new")
+                        ]
                     )
                 ]
             ),
@@ -270,15 +297,13 @@ class TestBatchWrite(TestBaseClass):
                         ("test", "demo", 1),
                         "sample",
                         "list_append",
-                        ["ilist_bin", 200],
-                        policy={}
+                        ["ilist_bin", 200]
                     ),
                     br.BatchRead(
                         ("test", "demo", 1),
                         [
                             lop.list_get_by_rank("ilist_bin", -1, aerospike.LIST_RETURN_VALUE),
-                        ],
-                        policy={}
+                        ]
                     )
                 ]
             ),
@@ -339,16 +364,14 @@ class TestBatchWrite(TestBaseClass):
                         [
                             op.write("new", 11),
                             op.read("new")
-                        ],
-                        policy={}
+                        ]
                     ),
                     br.BatchRead(
                         ("test", "demo", 1),
                         [
                             lop.list_get_by_rank("ilist_bin", -1, aerospike.LIST_RETURN_VALUE),
                             op.read("balance")
-                        ],
-                        policy={}
+                        ]
                     )
                 ]
             ),
@@ -367,8 +390,7 @@ class TestBatchWrite(TestBaseClass):
             br.BatchRecords(
                 [
                     br.BatchRemove(
-                        ("test", "demo", 1),
-                        policy={}
+                        ("test", "demo", 1)
                     ),
                     br.BatchWrite(
                         ("test", "demo", 1),
@@ -377,15 +399,13 @@ class TestBatchWrite(TestBaseClass):
                             op.write("balance", 100),
                             op.read("ilist_bin"),
                             op.read("balance"),
-                        ],
-                        policy={}
+                        ]
                     ),
                     br.BatchRead(
                         ("test", "demo", 1),
                         [
                             lop.list_get_by_rank("ilist_bin", -1, aerospike.LIST_RETURN_VALUE)
-                        ],
-                        policy={}
+                        ]
                     ),
                     br.BatchApply(
                         ("test", "demo", 3),
@@ -401,8 +421,7 @@ class TestBatchWrite(TestBaseClass):
                         [
                             lop.list_get_by_rank("ilist_bin", -1, aerospike.LIST_RETURN_VALUE),
                             op.read("balance")
-                        ],
-                        policy={}
+                        ]
                     ),
                 ]
             ),
@@ -430,8 +449,7 @@ class TestBatchWrite(TestBaseClass):
                         ("test", "demo", i),
                         [
                             op.read("count"),
-                        ],
-                        policy={}
+                        ]
                     )
                     for i in range(5)
                 ]
@@ -478,8 +496,7 @@ class TestBatchWrite(TestBaseClass):
                         ("test", "demo", 1),
                         [
                             op.read("count"),
-                        ],
-                        policy={}
+                        ]
                     ),
                     "bad_batch_record"
                 ]
@@ -495,8 +512,7 @@ class TestBatchWrite(TestBaseClass):
                         "bad_key",
                         [
                             op.read("count"),
-                        ],
-                        policy={}
+                        ]
                     )
                 ]
             ),
@@ -509,8 +525,7 @@ class TestBatchWrite(TestBaseClass):
                 [
                     br.BatchRead(
                         ("test", "demo", 1),
-                        {"bad": "ops"},
-                        policy={}
+                        {"bad": "ops"}
                     )
                 ]
             ),
@@ -541,8 +556,7 @@ class TestBatchWrite(TestBaseClass):
                         ("test", "demo", 1),
                         [
                             op.read("count"),
-                        ],
-                        policy={}
+                        ]
                     )
                 ]
             ),

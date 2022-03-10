@@ -210,7 +210,7 @@ static PyObject *AerospikeClient_Batch_Remove_Invoke(AerospikeClient *self,
 	// Create and initialize callback user-data
 	LocalData data;
 	data.client = self;
-    data.func_name = PyUnicode_FromString("BatchRecord");
+    data.func_name = PyUnicode_FromString("_BatchRecord");
 	data.py_results = PyObject_GetAttrString(br_instance, "batch_records");
     data.batch_records_module = br_module;
 
