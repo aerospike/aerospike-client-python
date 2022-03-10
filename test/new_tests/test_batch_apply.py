@@ -123,8 +123,8 @@ class TestBatchApply(TestBaseClass):
             "sample",
             "list_append",
             ["name", 1],
-            {},
-            {},
+            None,
+            None,
             [
                 AerospikeStatus.AEROSPIKE_OK,
                 AerospikeStatus.AEROSPIKE_OK,

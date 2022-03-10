@@ -78,8 +78,8 @@ class TestBatchRemove(TestBaseClass):
             [
                 ("test", "demo", 0)
             ],
-            {},
-            {},
+            None,
+            None,
             [AerospikeStatus.AEROSPIKE_OK],
             [{}]
         ),

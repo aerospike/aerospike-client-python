@@ -77,8 +77,8 @@ class TestBatchOperate(TestBaseClass):
                 op.write("count", 2),
                 op.read("count")
             ],
-            {},
-            {},
+            None,
+            None,
             [AerospikeStatus.AEROSPIKE_OK],
             [{"count": 2}]
         ),
