@@ -339,7 +339,7 @@ PyObject *AerospikeClient_Batch_Operate(AerospikeClient *self, PyObject *args,
 	}
 
     // required arg so don't need to check for NULL
-    if ( !PyList_Check(py_ops)) {
+    if ( !PyList_Check(py_ops) || !PyList_Size(py_ops)) {
 			as_error_update(&err, AEROSPIKE_ERR_PARAM,
 							"ops should be a list of op dictionaries");
 			goto ERROR;

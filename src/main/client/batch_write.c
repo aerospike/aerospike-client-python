@@ -193,7 +193,7 @@ static PyObject *AerospikeClient_BatchWriteInvoke(AerospikeClient *self, as_erro
         }
 
         PyObject *py_ops_list = PyObject_GetAttrString(py_batch_record, FIELD_NAME_BATCH_OPS);
-        if (py_ops_list == NULL || !PyList_Check(py_ops_list)) {
+        if (py_ops_list == NULL || !PyList_Check(py_ops_list) || !PyList_Size(py_ops_list)) {
 
             // BatchRead can have None ops if it is using read_all_bins
             if ((batch_type == BATCH_TYPE_READ && py_ops_list != Py_None) || batch_type == BATCH_TYPE_WRITE) {
