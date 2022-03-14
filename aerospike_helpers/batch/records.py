@@ -14,7 +14,7 @@
 # limitations under the License.
 ##########################################################################
 '''
-records.py defines objects for use with aerospike client batch APIS. Currently batch_write, batch_operate,
+records.py defines objects for use with aerospike client batch APIs. Currently batch_write, batch_operate,
 batch_remove, and batch_apply make use of objects in this file. Typically BatchReacords and underlying
 BatchRecord objects are used as input and output for the aformentioned client methods.
 
@@ -87,7 +87,7 @@ Example::
     print("===== BATCH_WRITE EXAMPLE =====")
     # Apply different operations to different keys
     # using batch_write.
-    w_batch_record = br.BatchRecords(
+    batch_writes = br.BatchRecords(
         [
             br.BatchRemove(
                 key=(namespace, set, 1),
@@ -116,11 +116,11 @@ Example::
     # batch_write modifies its BatchRecords argument.
     # Results for each BatchRecord will be set in their result,
     # record, and in_doubt fields.
-    client.batch_write(w_batch_record)
-    print("w_batch_record result: {result}".format(result=w_batch_record.result))
+    client.batch_write(batch_writes)
+    print("batch_writes result: {result}".format(result=batch_writes.result))
 
     # should have bins {'id': 333}.
-    print("w_batch_record BatchWrite record: {result}".format(result=w_batch_record.batch_records[2].record))
+    print("batch_writes BatchWrite record: {result}".format(result=batch_writes.batch_records[2].record))
 
 
     print("===== BATCH_APPLY EXAMPLE =====")
@@ -146,7 +146,7 @@ Example::
 
 
     print("===== BATCH_REMOVE EXAMPLE =====")
-    # Delete the records using batch_remove
+    # Delete the records using batch_remove.
     res = client.batch_remove(keys)
     # Should be 0 signifying success.
     print("BatchRecords result: {result}".format(result=res.result))
@@ -171,34 +171,38 @@ class _Types():
     REMOVE = 3
 
 #### BatchRecord ####
-class _BatchRecord:
-    """ _BatchRecord provides the base fields for BtachRecord objects.
+class BatchRecord:
+    """ BatchRecord provides the base fields for BtachRecord objects.
 
-        Atrributes:
+        BatchRecord should usually be read from as a result and not created by the user. Its subclasses can be used as input to batch_write.
+        Client methods :meth:`~Client.batch_apply`, :meth:`~Client.batch_operate`, :meth:`~Client.batch_remove` return :class:`BatchRecords`
+        with batch_records field as a list of these BatchRecord objects containing the batch request results.
+
+        Attributes:
             key (:obj:`tuple`): The aerospike key to operate on.
             record (TypeRecord): The record corresponding to the requested key.
             result (int): The status code of the operation.
-            in_doubt (int): Is it possible that the write transaction completed even though an error was generated.
-                This may be the case when a client error occurs (like timeout) after the command was sent
-                to the server.
+            in_doubt (int): Is it possible that the write transaction completed even though an error was generated. \
+            This may be the case when a client error occurs (like timeout) after the command was sent \
+            to the server.
     """
-    def __init__(self, key: tuple) -> None: # TODO test that None default desn't bvreak this
+    def __init__(self, key: tuple) -> None:
         self.key = key
         self.record = None
         self.result = 0
         self.in_doubt = False
 
 
-class BatchWrite(_BatchRecord):
-    """ BatchWrite is used for Batch write operations and retrieving batch write results.
+class BatchWrite(BatchRecord):
+    """ BatchWrite is used for executing Batch write operations with batch_write and retrieving batch write results.
 
-        Atrributes:
+        Attributes:
             key (:obj:`tuple`): The aerospike key to operate on.
             record (:obj:`tuple`): The record corresponding to the requested key.
             result (int): The status code of the operation.
-            in_doubt (int): Is it possible that the write transaction completed even though an error was generated.
-                This may be the case when a client error occurs (like timeout) after the command was sent
-                to the server.
+            in_doubt (int): Is it possible that the write transaction completed even though an error was generated. \
+            This may be the case when a client error occurs (like timeout) after the command was sent \
+            to the server.
             ops (TypeOps): A list of aerospike operation dictionaries to perform on the record at key.
             policy (TypeBatchPolicyWrite, optional): An optional dictionary of batch write policy flags.
     """
@@ -232,18 +236,18 @@ class BatchWrite(_BatchRecord):
         self.policy = policy
 
 
-class BatchRead(_BatchRecord):
-    """ BatchRead is used for Batch read operations and retrieving batch read results.
+class BatchRead(BatchRecord):
+    """ BatchRead is used for executing Batch read operations with batch_write and retrieving results.
 
-        Atrributes:
+        Attributes:
             key (:obj:`tuple`): The aerospike key to operate on.
             record (:obj:`tuple`): The record corresponding to the requested key.
             result (int): The status code of the operation.
-            in_doubt (int): Is it possible that the write transaction completed even though an error was generated.
-                This may be the case when a client error occurs (like timeout) after the command was sent
-                to the server.
+            in_doubt (int): Is it possible that the write transaction completed even though an error was generated. \
+            This may be the case when a client error occurs (like timeout) after the command was sent \
+            to the server.
             ops (TypeOps): list of aerospike operation dictionaries to perform on the record at key.
-            read_all_bins (bool, optional): An optional bool mutually exclusive with ops, if True, read all bins in the record.
+            read_all_bins (bool, optional): An optional bool, if True, read all bins in the record.
             policy (TypeBatchPolicyRead, optional): An optional dictionary of batch read policy flags.
     """
 
@@ -266,7 +270,7 @@ class BatchRead(_BatchRecord):
                     op.read(bin_name)
                 ]
 
-                bw = BatchWrite(key, ops)
+                br = BatchWrite(key, ops)
         """
         super().__init__(key)
         self.ops = ops
@@ -276,19 +280,19 @@ class BatchRead(_BatchRecord):
         self.policy = policy
 
 
-class BatchApply(_BatchRecord):
-    """ BatchApply is used for Batch UDF apply operations and retrieving batch apply results.
+class BatchApply(BatchRecord):
+    """ BatchApply is used for executing Batch UDF (user defined function) apply operations with batch_write and retrieving results.
 
-        Atrributes:
+        Attributes:
             key (:obj:`tuple`): The aerospike key to operate on.
             module (str): Name of the lua module previously registerd with the server.
             function (str): Name of the UDF to invoke.
             args (TypeUDFArgs): List of arguments to pass to the UDF.
             record (:obj:`tuple`): The record corresponding to the requested key.
             result (int): The status code of the operation.
-            in_doubt (int): Is it possible that the write transaction completed even though an error was generated.
-                This may be the case when a client error occurs (like timeout) after the command was sent
-                to the server.
+            in_doubt (int): Is it possible that the write transaction completed even though an error was generated. \
+            This may be the case when a client error occurs (like timeout) after the command was sent \
+            to the server.
             ops (TypeOps): A list of aerospike operation dictionaries to perform on the record at key.
             policy (TypeBatchPolicyApply, optional): An optional dictionary of batch apply policy flags.
     """
@@ -316,7 +320,7 @@ class BatchApply(_BatchRecord):
                 user_key = 1
                 key = (namespace, set, user_key)
 
-                bw = BatchApply(key, module, function, args)
+                ba = BatchApply(key, module, function, args)
         """
         super().__init__(key)
         self._type = _Types.APPLY
@@ -327,16 +331,16 @@ class BatchApply(_BatchRecord):
         self.policy = policy
 
 
-class BatchRemove(_BatchRecord):
-    """ BatchRemove is used for Batch remove operations and retrieving batch remove results.
+class BatchRemove(BatchRecord):
+    """ BatchRemove is used for executing Batch remove operations with batch_write and retrieving results.
 
-        Atrributes:
+        Attributes:
             key (:obj:`tuple`): The aerospike key to operate on.
             record (:obj:`tuple`): The record corresponding to the requested key.
             result (int): The status code of the operation.
-            in_doubt (int): Is it possible that the write transaction completed even though an error was generated.
-                This may be the case when a client error occurs (like timeout) after the command was sent
-                to the server.
+            in_doubt (int): Is it possible that the write transaction completed even though an error was generated. \
+            This may be the case when a client error occurs (like timeout) after the command was sent \
+            to the server.
             ops (TypeOps): A list of aerospike operation dictionaries to perform on the record at key.
             policy (TypeBatchPolicyRemove, optional): An optional dictionary of batch remove policy flags.
     """
@@ -354,7 +358,7 @@ class BatchRemove(_BatchRecord):
                 user_key = 1
                 key = (namespace, set, user_key)
 
-                bw = BatchRemove(key, ops)
+                br = BatchRemove(key, ops)
         """
         super().__init__(key)
         self._type = _Types.REMOVE
@@ -363,18 +367,18 @@ class BatchRemove(_BatchRecord):
 
 
 #### BatchRecords ####
-TypeBatchRecordList = ty.List[_BatchRecord]
+TypeBatchRecordList = ty.List[BatchRecord]
 
 class BatchRecords:
-    """ BatchRecords is used as input and output for various batch APIs.
+    """ BatchRecords is used as input and output for multiple batch APIs.
 
-        Atrributes:
-            batch_records (TypeBatchRecordList): A list of BatchRecord subtype objects used to
-                define batch operations and hold results. BatchRecord Types can be BatchRemove, BatchWrite,
-                BatchRead, and BatchApply.
+        Attributes:
+            batch_records (TypeBatchRecordList): A list of BatchRecord subtype objects used to \
+            define batch operations and hold results. BatchRecord Types can be BatchRemove, BatchWrite, \
+            BatchRead, and BatchApply.
             result (int): The status code of the last batch call that used this BatchRecords.
-                0 if all batch subtransactions succeeded (or if the only failures were FILTERED_OUT or RECORD_NOT_FOUND)
-                non 0 if an error occured. The most common error being -16 (One or more batch sub transactions failed).
+            0 if all batch subtransactions succeeded (or if the only failures were FILTERED_OUT or RECORD_NOT_FOUND)
+            non 0 if an error occured. The most common error being -16 (One or more batch sub transactions failed).
     """
 
     def __init__(self, batch_records: TypeBatchRecordList = []) -> None:

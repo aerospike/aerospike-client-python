@@ -755,7 +755,7 @@ Batch Operations
 
             The return type changed to :class:`list` starting with version 1.0.50.
 
-    .. method:: batch_write(batch_records: BatchRecords, [, policy: dict]) -> BatchRecords
+    .. method:: batch_write(batch_records: BatchRecords, [policy: dict]) -> BatchRecords
 
         .. note:: Requires server version >= 6.0.0.
 
@@ -765,11 +765,13 @@ Batch Operations
 
         .. note:: batch_write modifies the batch_records parameter.
 
-        :param :class:`BatchRecord <aerospike_helpers.batch.records>` batch_records: A BatchRecords \
-            object used to specify the operations to carry out.
+        :param BatchRecords batch_records: A BatchRecords object used to specify the operations to carry out.
         :param dict policy: Optional aerospike batch policy :ref:`aerospike_batch_policies`.
-        :return: A reference to the batch_records argument of type :class:`BatchRecord <aerospike_helpers.batch.records>`.
+        :return: A reference to the batch_records argument of type :class:`BatchRecords <aerospike_helpers.batch.records>`.
         :raises: A subclass of :exc:`~aerospike.exception.AerospikeError`.
+
+        .. seealso:: More information about the \
+            batch helpers :ref:`aerospike_operation_helpers.batch`
 
         .. seealso:: More information about the \
             `Batch Index <https://www.aerospike.com/docs/guide/batch.html>`_ \
@@ -840,7 +842,7 @@ Batch Operations
         :param list ops: List of operations to apply.
         :param dict policy_batch: Optional aerospike batch policy :ref:`aerospike_batch_policies`.
         :param dict policy_batch_write: Optional aerospike batch write policy :ref:`aerospike_batch_write_policies`.
-        :return: An instance :class:`BatchRecord <aerospike_helpers.batch.records>`.
+        :return: an instance of :class:`BatchRecords <aerospike_helpers.batch.records>`.
         :raises: A subclass of :exc:`~aerospike.exception.AerospikeError`.
 
         .. seealso:: More information about the \
@@ -916,7 +918,7 @@ Batch Operations
         :param list args: the arguments to the UDF.
         :param dict policy_batch: Optional aerospike batch policy :ref:`aerospike_batch_policies`.
         :param dict policy_batch_apply: Optional aerospike batch apply policy :ref:`aerospike_batch_apply_policies`.
-        :return: An instance :class:`BatchRecord <aerospike_helpers.batch.records>`.
+        :return: an instance of :class:`BatchRecords <aerospike_helpers.batch.records>`.
         :raises: A subclass of :exc:`~aerospike.exception.AerospikeError`.
 
         .. seealso:: More information about the \
@@ -981,7 +983,7 @@ Batch Operations
         :param list keys: The keys to operate on.
         :param dict policy_batch: Optional aerospike batch policy :ref:`aerospike_batch_policies`.
         :param dict policy_batch_remove: Optional aerospike batch remove policy :ref:`aerospike_batch_remove_policies`.
-        :return: An instance :class:`BatchRecord <aerospike_helpers.batch.records>`.
+        :return: an instance of :class:`BatchRecords <aerospike_helpers.batch.records>`.
         :raises: A subclass of :exc:`~aerospike.exception.AerospikeError`.
 
         .. seealso:: More information about the \
@@ -2931,22 +2933,26 @@ Batch Apply Policies
         * **ttl** int
             | Time to live (expiration) of the record in seconds.
             |
-            |(*) 0 which means that the
-            |   record will adopt the default TTL value from the namespace.
-            |(*) 0xFFFFFFFF (also, -1 in a signed 32 bit int)
-            |   which means that the record
-            |   will get an internal "void_time" of zero, and thus will never expire.
-            |(*) 0xFFFFFFFE (also, -2 in a signed 32 bit int)
-            |   which means that the record
-            |   ttl will not change when the record is updated.
-            |   Note that the TTL value will be employed ONLY on write/update calls.
+            | 0 which means that the
+            | record will adopt the default TTL value from the namespace.
+            |
+            | 0xFFFFFFFF (also, -1 in a signed 32 bit int)
+            | which means that the record
+            | will get an internal "void_time" of zero, and thus will never expire.
+            |
+            | 0xFFFFFFFE (also, -2 in a signed 32 bit int)
+            | which means that the record
+            |
+            | ttl will not change when the record is updated.
+            | Note that the TTL value will be employed ONLY on write/update calls.
+            |
             | Default: 0
         * **expressions** :class:`list`
             | Compiled aerospike expressions :mod:`aerospike_helpers` used for filtering records within a transaction.
             |
             | Default: None
 
-.. _aerospike_batch_write_policies:
+.. _aerospike_batch_remove_policies:
 
 Batch Remove Policies
 ---------------------

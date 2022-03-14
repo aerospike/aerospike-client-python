@@ -444,7 +444,7 @@ PyObject *AerospikeClient_BatchWrite(AerospikeClient *self, PyObject *args,
 	as_error err;
 	as_error_init(&err);
 
-	static char *kwlist[] = {"batch_records", "policy", NULL};
+	static char *kwlist[] = {"batch_records", "policy_batch", NULL};
 
 	if (PyArg_ParseTupleAndKeywords(args, kwds, "O|O:batch_operate", kwlist,
 									&py_batch_recs,
