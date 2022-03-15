@@ -173,17 +173,12 @@ class TestQueryPartition(TestBaseClass):
             records.append(record)
 
         query_obj = self.as_connection.query(self.test_ns, self.test_set)
-        query_obj.max_records = 1000
+        query_obj.max_records = 100
         query_obj.where(p.equals('s', "xyz"))
 
         query_obj.foreach(callback, policy)
 
-        assert len(records) == self.partition_1000_count
-
-        part_stats = query_obj.get_partitions_status()
-
-        bval = part_stats[1000][4]
-        assert bval != 0
+        assert len(records) == self.partition_1000_count and len(records) <= 100
 
     def test_query_partition_with_filter(self):
 
