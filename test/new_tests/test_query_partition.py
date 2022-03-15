@@ -158,6 +158,33 @@ class TestQueryPartition(TestBaseClass):
         bval = part_stats[1000][4]
         assert bval != 0
 
+    def test_query_partition_with_short_query(self):
+
+        records = []
+        partition_filter = {'begin': 1000, 'count': 1}
+        policy = {
+            'max_retries': 100,
+            'partition_filter': partition_filter,
+            'short_query': True
+        }
+
+        def callback(part_id,input_tuple):
+            _, _, record = input_tuple
+            records.append(record)
+
+        query_obj = self.as_connection.query(self.test_ns, self.test_set)
+        query_obj.max_records = 1000
+        query_obj.where(p.equals('s', "xyz"))
+
+        query_obj.foreach(callback, policy)
+
+        assert len(records) == self.partition_1000_count
+
+        part_stats = query_obj.get_partitions_status()
+
+        bval = part_stats[1000][4]
+        assert bval != 0
+
     def test_query_partition_with_filter(self):
 
         records = []
@@ -629,7 +656,7 @@ class TestQueryPartition(TestBaseClass):
                 )
             },
             e.ParamError,
-            "invalid done for part_id: 1002"
+            "invalid retry for part_id: 1002"
         ),
         (
             {
