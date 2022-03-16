@@ -42,7 +42,7 @@ parts_setup(uint16_t part_begin, uint16_t part_count, const as_digest* digest)
 	for (uint16_t i = 0; i < part_count; i++) {
 		as_partition_status* ps = &parts_all->parts[i];
 		ps->part_id = part_begin + i;
-		ps->done = false;
+		ps->retry = false;
 		ps->digest.init = false;
 		ps->bval = 0;
 	}
@@ -186,11 +186,11 @@ as_status convert_partition_filter(AerospikeClient *self,
 				goto ERROR_CLEANUP;
 			}
 
-			PyObject *done = PyTuple_GetItem(status_dict, 2);
-			if (done && PyLong_Check(done)) {
-				ps->done = (bool) PyInt_AsLong(done);
-			} else if (done) {
-				as_error_update(err, AEROSPIKE_ERR_PARAM, "invalid done for part_id: %d\n", ps->part_id);
+			PyObject *retry = PyTuple_GetItem(status_dict, 2);
+			if (retry && PyLong_Check(retry)) {
+				ps->retry = (bool) PyInt_AsLong(retry);
+			} else if (retry) {
+				as_error_update(err, AEROSPIKE_ERR_PARAM, "invalid retry for part_id: %d\n", ps->part_id);
 				goto ERROR_CLEANUP;
 			}
 

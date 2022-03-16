@@ -766,6 +766,14 @@ Query Policies
             | Terminate query if cluster is in migration state. 
             |
             | Default ``False``
+        * **short_query** :class:`bool`
+            | Is query expected to return less than 100 records.
+            | If True, the server will optimize the query for a small record set.
+            | This field is ignored for aggregation queries, background queries
+            | and server versions less than 6.0.0.
+            |
+            | Mututally exclusive with records_per_second
+            | Default: ``False``
         * **expressions** :class:`list`
             | Compiled aerospike expressions :mod:`aerospike_helpers` used for filtering records within a transaction.
             |

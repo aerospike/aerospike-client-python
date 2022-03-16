@@ -2907,7 +2907,7 @@ Partition Objects
 
         * **id** :class:`int` Represents the partition id number.
         * **init** :class:`bool` Represent whether the digest being queried was calculated.
-        * **done** :class:`bool` Represents whether the partition was finished by the query.
+        * **retry** :class:`bool` Represents whether this partition should be retried.
         * **digest** :class:`bytearray` Represents the digest of the record being queried. Should be 20 characters long.
         * **bval** :class:`int` Used in conjunction with digest in order to determine the last record recieved by a partition query.
 

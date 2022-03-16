@@ -366,7 +366,7 @@ as_status as_partition_status_to_pyobject(as_error *err, const as_partition_stat
 	PyObject *py_init = PyBool_FromLong((long)part_status->digest.init);
 	PyTuple_SetItem(new_tuple, 1, py_init);
 
-	PyObject *py_done = PyBool_FromLong((long)part_status->done);
+	PyObject *py_done = PyBool_FromLong((long)part_status->retry);
 	PyTuple_SetItem(new_tuple, 2, py_done);
 
 	PyObject *py_digest = PyByteArray_FromStringAndSize((const char*)&part_status->digest.value, (Py_ssize_t)AS_DIGEST_VALUE_SIZE);
