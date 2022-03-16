@@ -100,7 +100,7 @@ class TestQueryApply(object):
         Invoke query_apply() with correct policy and predexp
         """
 
-        if TestBaseClass.major_ver >= 5 and TestBaseClass.minor_ver >=7:
+        if TestBaseClass.major_ver >= 6 or (TestBaseClass.major_ver >= 5 and TestBaseClass.minor_ver >= 7):
             # print("TestBaseClass.major_ver:", TestBaseClass.major_ver, "TestBaseClass.minor_ver:", TestBaseClass.minor_ver)
             pytest.skip(
                 'It deprecated and it only applies to < 5.7 earlier and enterprise edition')

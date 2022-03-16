@@ -210,7 +210,7 @@ class TestBatchApply(TestBaseClass):
                 "commit_level": aerospike.POLICY_COMMIT_LEVEL_MASTER,
                 "ttl": aerospike.TTL_DONT_UPDATE,
                 "durable_delete": False,
-                "expressions": exp.Eq(exp.IntBin("no"), 1).compile()
+                "expressions": exp.Eq(exp.IntBin("no"), 0).compile()
             },
             [AerospikeStatus.AEROSPIKE_OK],
             [{"SUCCESS": True}],

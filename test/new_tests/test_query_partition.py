@@ -8,6 +8,8 @@ from .test_base_class import TestBaseClass
 from aerospike import exception as e
 from aerospike_helpers import expressions as exp
 from .as_status_codes import AerospikeStatus
+from aerospike import predicates as p
+
 
 aerospike = pytest.importorskip("aerospike")
 try:
@@ -17,10 +19,38 @@ except:
     sys.exit(1)
 
 
+def add_sindex(client):
+    '''
+    Load the sindex used in the tests
+    '''
+    try:
+        client.index_string_create('test', 'demo', 's',
+                                    'string')
+    except e.IndexFoundError:
+        pass
+
+
+def remove_sindex(client):
+    '''
+    Remove the sindex created for these tests
+    '''
+    try:
+        client.index_remove('test', 'string', {})
+    except e.IndexNotFound:
+        pass
+
+
 class TestQueryPartition(TestBaseClass):
 
+    def setup_class(cls):
+        # Register setup and teardown functions
+        cls.connection_setup_functions = [add_sindex]
+        cls.connection_teardown_functions = [remove_sindex]
+
     @pytest.fixture(autouse=True)
-    def setup(self, request, as_connection):
+    def setup(self, request, connection_with_config_funcs):
+        as_connection = connection_with_config_funcs
+
         self.test_ns = 'test'
         self.test_set = 'demo'
 
@@ -102,6 +132,31 @@ class TestQueryPartition(TestBaseClass):
         query_obj.foreach(callback, policy)
 
         assert len(records) == self.partition_1000_count
+
+    def test_query_partition_with_where(self):
+
+        records = []
+        partition_filter = {'begin': 1000, 'count': 1}
+        policy = {'max_retries': 100,
+                        'partition_filter': partition_filter}
+
+        def callback(part_id,input_tuple):
+            _, _, record = input_tuple
+            records.append(record)
+
+        query_obj = self.as_connection.query(self.test_ns, self.test_set)
+        query_obj.max_records = 1000
+        query_obj.records_per_second = 4000
+        query_obj.where(p.equals('s', "xyz"))
+
+        query_obj.foreach(callback, policy)
+
+        assert len(records) == self.partition_1000_count
+
+        part_stats = query_obj.get_partitions_status()
+
+        bval = part_stats[1000][4]
+        assert bval != 0
 
     def test_query_partition_with_filter(self):
 
@@ -391,81 +446,6 @@ class TestQueryPartition(TestBaseClass):
         err_code = err_info.value.code
         assert err_code == AerospikeStatus.AEROSPIKE_ERR_CLIENT
 
-    #@pytest.mark.xfail(reason="Might fail, server may return less than what asked for.")
-    def test_query_partition_status_with_existent_ns_and_set(self):
-
-        records = []
-        query_page_size = [5]
-        query_count = [0]
-        query_pages = [5]
-
-        max_records = self.partition_1000_count + \
-            self.partition_1001_count + \
-            self.partition_1002_count + \
-            self.partition_1003_count
-        break_count = [5]
-
-        # partition_status = [{id:(id, init, done, digest)},(),...]
-        def init(id):
-            return 0;
-        def done(id):
-            return 0;
-        def digest(id):
-            return bytearray([0]*20);
-
-        partition_status = {id:(id, init(id), done(id), digest(id)) for id in range (1000, 1004,1)}
-
-        partition_filter = {'begin': 1000, 'count': 4, 'partition_status': partition_status}
-
-        policy = {'partition_filter': partition_filter}
-
-        def callback(part_id, input_tuple):
-            if(input_tuple == None):
-                return True #query complete
-            (key, _, record) = input_tuple
-            partition_status.update({part_id:(part_id, 1, 0, key[3])})
-            records.append(record)
-            query_count[0] = query_count[0] + 1
-            break_count[0] = break_count[0] - 1
-            if(break_count[0] == 0):
-                return False 
-
-        query_obj = self.as_connection.query(self.test_ns, self.test_set)
-        query_obj.max_records = query_page_size[0]
-        query_obj.records_per_second = 4000
-
-        i = 0
-        for i in range(query_pages[0]):
-            query_obj.foreach(callback, policy)
-            if query_obj.is_done() == True: 
-                break
-            if(break_count[0] == 0):
-                break
-
-        assert len(records) == query_count[0]
-
-        query_page_size = [1000]
-        query_count[0] = 0
-        break_count[0] = 1000
-
-        partition_filter = {'begin': 1000, 'count': 4, 'partition_status': partition_status}
-
-        policy = {'partition_filter': partition_filter}
-
-        new_query_obj = self.as_connection.query(self.test_ns, self.test_set)
-        new_query_obj.max_records = query_page_size[0]
-        new_query_obj.records_per_second = 4000
-
-        i = 0
-        for i in range(query_pages[0]):
-            new_query_obj.foreach(callback, policy)
-            if new_query_obj.is_done() == True: 
-                break
-            if(break_count[0] == 0):
-                break
-
-        assert len(records) == max_records
-
     @pytest.mark.parametrize("begin", [
         (-1),
         (4096),
@@ -574,7 +554,7 @@ class TestQueryPartition(TestBaseClass):
                 )
             },
             e.ParamError,
-            "invalid done for part_id: 1002"
+            "invalid retry for part_id: 1002"
         ),
         (
             {

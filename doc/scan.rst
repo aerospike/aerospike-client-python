@@ -473,8 +473,8 @@ Scan Methods
         If the scan instance is not tracking its partitions, the returned :class:`dict` will be empty.
 
         .. note::
-            A scan instance must have had .paginate() called on it, or been used with a partition filter, in order retrieve its
-            partition status. If .paginate() was not called, or partition_filter was not used, the scan instance will not save partition status.
+            A scan instance must have had .paginate() called on it in order retrieve its
+            partition status. If .paginate() was not called, the scan instance will not save partition status.
 
         :return: a :class:`tuple` of form (id: :class:`int`, init: class`bool`, done: class`bool`, digest: :class:`bytearray`).
             See :ref:`aerospike_partition_objects` for more information.

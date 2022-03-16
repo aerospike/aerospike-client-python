@@ -121,7 +121,7 @@ class TestBatchRemove(TestBaseClass):
                 "gen": aerospike.POLICY_GEN_IGNORE,
                 "exists": aerospike.POLICY_EXISTS_UPDATE,
                 "durable_delete": False,
-                "expressions": exp.Eq(exp.IntBin("count"), 1).compile()
+                "expressions": exp.Eq(exp.IntBin("count"), 0).compile()
             },
             [AerospikeStatus.AEROSPIKE_OK],
             [{}]
@@ -136,7 +136,7 @@ class TestBatchRemove(TestBaseClass):
                 "max_retries": 2,
                 "allow_inline_ssd": True,
                 "respond_all_keys": False,
-                "expressions": exp.Eq(exp.ListGetByRank(None, aerospike.LIST_RETURN_VALUE, exp.ResultType.INTEGER, 0, exp.ListBin("ilist_bin")), 0).compile()
+                "expressions": exp.Eq(exp.ListGetByRank(None, aerospike.LIST_RETURN_VALUE, exp.ResultType.INTEGER, 0, exp.ListBin("ilist_bin")), 1).compile()
             },
             {
                 "key": aerospike.POLICY_KEY_SEND,
@@ -144,7 +144,7 @@ class TestBatchRemove(TestBaseClass):
                 "gen": aerospike.POLICY_GEN_IGNORE,
                 "exists": aerospike.POLICY_EXISTS_UPDATE,
                 "durable_delete": False,
-                "expressions": exp.Eq(exp.IntBin("count"), 1).compile()
+                "expressions": exp.Eq(exp.IntBin("count"), 0).compile()# this expression takes precedence
             },
             [AerospikeStatus.AEROSPIKE_OK],
             [{}]
