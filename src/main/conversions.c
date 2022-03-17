@@ -402,6 +402,14 @@ as_status as_partitions_status_to_pyobject(as_error *err, const as_partitions_st
 		goto END;
 	}
 
+	PyObject *py_done = PyBool_FromLong(parts_status->done);
+	PyDict_SetItemString(new_dict, PARTITIONS_STATUS_KEY_DONE, py_done);
+	Py_DECREF(py_done);
+
+	PyObject *py_retry = PyBool_FromLong(parts_status->retry);
+	PyDict_SetItemString(new_dict, PARTITIONS_STATUS_KEY_RETRY, py_retry);
+	Py_DECREF(py_retry);
+
 	for (int i = 0; i < parts_status->part_count; ++i) {
 
 		const as_partition_status *part = &parts_status->parts[i];

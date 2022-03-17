@@ -51,6 +51,9 @@
 #define BATCH_TYPE_APPLY 2
 #define BATCH_TYPE_REMOVE 3
 
+#define PARTITIONS_STATUS_KEY_DONE "done"
+#define PARTITIONS_STATUS_KEY_RETRY "retry"
+
 as_status as_udf_file_to_pyobject(as_error *err, as_udf_file *entry,
 								  PyObject **py_file);
 

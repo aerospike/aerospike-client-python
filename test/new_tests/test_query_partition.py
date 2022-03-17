@@ -525,6 +525,8 @@ class TestQueryPartition(TestBaseClass):
     @pytest.mark.parametrize("p_stats, expected, msg", [
         (
             {
+                "done": False,
+                "retry": True,
                 1001: (
                     1001,
                     True,
@@ -545,6 +547,8 @@ class TestQueryPartition(TestBaseClass):
         ),
         (
             {
+                "done": False,
+                "retry": True,
                 1002: (
                     1002,
                     False,
@@ -558,6 +562,8 @@ class TestQueryPartition(TestBaseClass):
         ),
         (
             {
+                "done": False,
+                "retry": True,
                 1003: (
                     1003,
                     False,
@@ -571,6 +577,8 @@ class TestQueryPartition(TestBaseClass):
         ),
         (
             {
+                "done": False,
+                "retry": True,
                 1004: (
                     1004,
                     False,
@@ -581,6 +589,64 @@ class TestQueryPartition(TestBaseClass):
             },
             e.ParamError,
             "invalid bval for part_id: 1004"
+        ),
+        (
+            {
+                "done": "bad_done",
+                "retry": True,
+                1004: (
+                    1004,
+                    False,
+                    False,
+                    bytearray(b'\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00'),
+                    0
+                )
+            },
+            e.ParamError,
+            "partition_status dict key 'done' must be an int"
+        ),
+        (
+            {
+                "done": False,
+                "retry": "bad_retry",
+                1004: (
+                    1004,
+                    False,
+                    False,
+                    bytearray(b'\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00'),
+                    0
+                )
+            },
+            e.ParamError,
+            "partition_status dict key 'retry' must be an int"
+        ),
+        (
+            {
+                "retry": True,
+                1004: (
+                    1004,
+                    False,
+                    False,
+                    bytearray(b'\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00'),
+                    0
+                )
+            },
+            e.ParamError,
+            "partition_status dict missing key 'done'"
+        ),
+        (
+            {
+                "done": False,
+                1004: (
+                    1004,
+                    False,
+                    False,
+                    bytearray(b'\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00'),
+                    0
+                )
+            },
+            e.ParamError,
+            "partition_status dict missing key 'retry'"
         ),
     ])
     def test_query_partition_with_bad_status(self, p_stats, expected, msg):
