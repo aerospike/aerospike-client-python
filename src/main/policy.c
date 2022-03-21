@@ -737,6 +737,9 @@ as_status pyobject_to_policy_query(AerospikeClient *self, as_error *err,
 	// C client 5.0 new expressions
 	POLICY_SET_EXPRESSIONS_BASE_FIELD();
 
+	// C client 6.0.0
+	POLICY_SET_FIELD(short_query, bool);
+
 	// Update the policy
 	POLICY_UPDATE();
 
