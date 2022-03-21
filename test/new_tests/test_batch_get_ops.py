@@ -21,16 +21,17 @@ class TestBatchExpressionsOperations(TestBaseClass):
 
     @pytest.fixture(autouse=True)
     def setup(self, request, as_connection):
-        if self.server_version < [5, 6]:
-            pytest.mark.xfail(reason="Servers older than 5.6 do not support arithmetic expressions.")
+        # TODO this should be changed to 6.0 before release.
+        if self.server_version < [5, 7]:
+            pytest.mark.xfail(reason="Servers older than 5.7 do not support arithmetic expressions.")
             pytest.xfail()
         
         self.test_ns = 'test'
         self.test_set = 'demo'
         self.keys = []
-        self.batch_size = 5
+        self.rec_count = 5
 
-        for i in range(self.batch_size):
+        for i in range(self.rec_count):
             key = ('test', u'demo', i)
             rec = {
                 'name': 'name10',
@@ -53,7 +54,7 @@ class TestBatchExpressionsOperations(TestBaseClass):
             self.keys.append(key)
 
         def teardown():
-            for i in range(self.batch_size):
+            for i in range(self.rec_count):
                 key = ('test', u'demo', i)
                 as_connection.remove(key)
 
@@ -106,10 +107,11 @@ class TestBatchExpressionsOperations(TestBaseClass):
         """
         res are in the format of (status-tuple, ((meta-dict, result-dict), status-tuple, exception), ...)
         """
+        print(res)
         status = res[0]
         recs = res[1:]
         # print("\ntest_read_pos status:", status)
-        for i in range(self.batch_size):
+        for i in range(self.rec_count):
             # print("results: ", recs[i])
             assert recs[i][0][1] == expected
 

@@ -413,7 +413,8 @@ Scan Methods
 
         .. note::
             Calling .paginate() on a scan instance causes it to save its partition state.
-            This can be retrieved later using .get_partitions_status().
+            This can be retrieved later using .get_partitions_status(). This can also be done using the
+            partition_filter policy.
 
         .. code-block:: python
 
@@ -444,7 +445,7 @@ Scan Methods
 
     .. method:: is_done()
 
-        If using scan pagination, did the previous paginated scan using this scan instance return all records?
+        If using scan pagination, did the previous paginated or partition_filter scan using this scan instance return all records?
 
         :return: A :class:`bool` signifying whether this paginated scan instance has returned all records.
 

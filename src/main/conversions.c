@@ -366,8 +366,8 @@ as_status as_partition_status_to_pyobject(as_error *err, const as_partition_stat
 	PyObject *py_init = PyBool_FromLong((long)part_status->digest.init);
 	PyTuple_SetItem(new_tuple, 1, py_init);
 
-	PyObject *py_done = PyBool_FromLong((long)part_status->done);
-	PyTuple_SetItem(new_tuple, 2, py_done);
+	PyObject *py_retry = PyBool_FromLong((long)part_status->retry);
+	PyTuple_SetItem(new_tuple, 2, py_retry);
 
 	PyObject *py_digest = PyByteArray_FromStringAndSize((const char*)&part_status->digest.value, (Py_ssize_t)AS_DIGEST_VALUE_SIZE);
 	PyTuple_SetItem(new_tuple, 3, py_digest);
@@ -401,6 +401,14 @@ as_status as_partitions_status_to_pyobject(as_error *err, const as_partitions_st
 		*py_dict = new_dict;
 		goto END;
 	}
+
+	PyObject *py_done = PyBool_FromLong(parts_status->done);
+	PyDict_SetItemString(new_dict, PARTITIONS_STATUS_KEY_DONE, py_done);
+	Py_DECREF(py_done);
+
+	PyObject *py_retry = PyBool_FromLong(parts_status->retry);
+	PyDict_SetItemString(new_dict, PARTITIONS_STATUS_KEY_RETRY, py_retry);
+	Py_DECREF(py_retry);
 
 	for (int i = 0; i < parts_status->part_count; ++i) {
 
@@ -2737,4 +2745,27 @@ as_status get_int_from_py_int(as_error *err, PyObject *py_long,
 	*int_pointer = int64_to_return;
 
 	return AEROSPIKE_OK;
+}
+
+as_status as_batch_result_to_BatchRecord(AerospikeClient *self, as_error *err, as_batch_result *bres, PyObject *py_batch_record) {
+    as_status *result_code = &(bres->result);
+    as_record *result_rec = &(bres->record);
+    bool in_doubt = bres->in_doubt;
+
+    PyObject *py_res = PyLong_FromLong((long)*result_code);
+    PyObject_SetAttrString(py_batch_record, FIELD_NAME_BATCH_RESULT, py_res);
+    Py_DECREF(py_res);
+
+    PyObject *py_in_doubt = PyBool_FromLong((long)in_doubt);
+    PyObject_SetAttrString(py_batch_record, FIELD_NAME_BATCH_INDOUBT, py_in_doubt);
+    Py_DECREF(py_in_doubt);
+
+    if (*result_code == AEROSPIKE_OK) {
+        PyObject *rec = NULL;
+        record_to_pyobject(self, err, result_rec, bres->key, &rec);
+        PyObject_SetAttrString(py_batch_record, FIELD_NAME_BATCH_RECORD, rec);
+        Py_DECREF(rec);
+    }
+
+    return err->code;
 }

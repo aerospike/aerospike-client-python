@@ -33,6 +33,27 @@
 
 #define CTX_KEY "ctx"
 
+#define FIELD_NAME_BATCH_RECORDS "batch_records"
+#define FIELD_NAME_BATCH_TYPE "_type"
+#define FIELD_NAME_BATCH_HASWRITE "_has_write"
+#define FIELD_NAME_BATCH_KEY "key"
+#define FIELD_NAME_BATCH_OPS "ops"
+#define FIELD_NAME_BATCH_RESULT "result"
+#define FIELD_NAME_BATCH_RECORD "record"
+#define FIELD_NAME_BATCH_POLICY "policy"
+#define FIELD_NAME_BATCH_MODULE "module"
+#define FIELD_NAME_BATCH_FUNCTION "function"
+#define FIELD_NAME_BATCH_ARGS "args"
+#define FIELD_NAME_BATCH_INDOUBT "in_doubt"
+
+#define BATCH_TYPE_READ 0
+#define BATCH_TYPE_WRITE 1
+#define BATCH_TYPE_APPLY 2
+#define BATCH_TYPE_REMOVE 3
+
+#define PARTITIONS_STATUS_KEY_DONE "done"
+#define PARTITIONS_STATUS_KEY_RETRY "retry"
+
 as_status as_udf_file_to_pyobject(as_error *err, as_udf_file *entry,
 								  PyObject **py_file);
 
@@ -203,3 +224,6 @@ as_status as_partitions_status_to_pyobject(as_error *err, const as_partitions_st
 
 as_status as_partition_status_to_pyobject(as_error *err, const as_partition_status *part_status,
 										   PyObject **py_tuple);
+
+as_status as_batch_result_to_BatchRecord(AerospikeClient *self, as_error *err, as_batch_result *bres,
+											PyObject *py_batch_record);

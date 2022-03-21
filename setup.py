@@ -183,7 +183,8 @@ class CClientBuild(build):
             cmd = [
                 'make',
                 'V=' + str(self.verbose),
-                'EVENT_LIB='+EVENT_LIB] 
+                'EVENT_LIB='+EVENT_LIB,
+            ] 
 
         def compile():
             print(cmd, library_dirs, libraries)
@@ -326,7 +327,11 @@ setup(
                 'src/main/client/get_expression_base64.c',
                 'src/main/client/get_nodes.c',
                 'src/main/convert_partition_filter.c',
-                'src/main/client/get_key_partition_id.c'
+                'src/main/client/get_key_partition_id.c',
+                'src/main/client/batch_write.c',
+                'src/main/client/batch_operate.c',
+                'src/main/client/batch_remove.c',
+                'src/main/client/batch_apply.c'
             ],
 
             # Compile
@@ -340,7 +345,7 @@ setup(
             extra_link_args=extra_link_args,
         )
     ],
-    packages=['aerospike_helpers', 'aerospike_helpers.operations',
+    packages=['aerospike_helpers', 'aerospike_helpers.operations', 'aerospike_helpers.batch',
               'aerospike_helpers.expressions', 'aerospike_helpers.awaitable'],
 
     cmdclass={
