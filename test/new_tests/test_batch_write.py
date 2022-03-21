@@ -99,7 +99,7 @@ class TestBatchWrite(TestBaseClass):
             "simple-write",
             br.BatchRecords(
                 [
-                    br.BatchWrite(
+                    br.Write(
                         ("test", "demo", 1),
                         [
                             op.write("new", 10),
@@ -116,7 +116,7 @@ class TestBatchWrite(TestBaseClass):
             "write-with-batch-policy",
             br.BatchRecords(
                 [
-                    br.BatchWrite(
+                    br.Write(
                         ("test", "demo", 1),
                         [
                             op.write("new", 10),
@@ -138,7 +138,7 @@ class TestBatchWrite(TestBaseClass):
             "write-with-policy",
             br.BatchRecords(
                 [
-                    br.BatchWrite(
+                    br.Write(
                         ("test", "demo", 1),
                         [
                             op.write("new", 10),
@@ -163,7 +163,7 @@ class TestBatchWrite(TestBaseClass):
             "simple-read",
             br.BatchRecords(
                 [
-                    br.BatchRead(
+                    br.Read(
                         ("test", "demo", 1),
                         [
                             op.read("count")
@@ -179,7 +179,7 @@ class TestBatchWrite(TestBaseClass):
             "read-all-bins",
             br.BatchRecords(
                 [
-                    br.BatchRead(
+                    br.Read(
                         ("test", "demo", 1),
                         ops = None,
                         read_all_bins = True
@@ -213,7 +213,7 @@ class TestBatchWrite(TestBaseClass):
             "read-with-policy",
             br.BatchRecords(
                 [
-                    br.BatchWrite(
+                    br.Write(
                         ("test", "demo", 1),
                         [
                             op.write("new", 10),
@@ -234,10 +234,10 @@ class TestBatchWrite(TestBaseClass):
             "simple-remove",
             br.BatchRecords(
                 [
-                    br.BatchRemove(
+                    br.Remove(
                         ("test", "demo", 1)
                     ),
-                    br.BatchWrite(
+                    br.Write(
                         ("test", "demo", 1),
                         [
                             op.write("new", 10),
@@ -260,7 +260,7 @@ class TestBatchWrite(TestBaseClass):
             "remove-with-policy",
             br.BatchRecords(
                 [
-                    br.BatchRemove(
+                    br.Remove(
                         ("test", "demo", 1),
                         policy={
                             "key": aerospike.POLICY_KEY_SEND,
@@ -270,7 +270,7 @@ class TestBatchWrite(TestBaseClass):
                             "expressions": exp.Eq(exp.IntBin("count"), 1).compile()
                         }
                     ),
-                    br.BatchWrite(
+                    br.Write(
                         ("test", "demo", 1),
                         [
                             op.write("new", 10),
@@ -293,13 +293,13 @@ class TestBatchWrite(TestBaseClass):
             "simple-apply",
             br.BatchRecords(
                 [
-                    br.BatchApply(
+                    br.Apply(
                         ("test", "demo", 1),
                         "sample",
                         "list_append",
                         ["ilist_bin", 200]
                     ),
-                    br.BatchRead(
+                    br.Read(
                         ("test", "demo", 1),
                         [
                             lop.list_get_by_rank("ilist_bin", -1, aerospike.LIST_RETURN_VALUE),
@@ -321,7 +321,7 @@ class TestBatchWrite(TestBaseClass):
             "apply-with-policy",
             br.BatchRecords(
                 [
-                    br.BatchApply(
+                    br.Apply(
                         ("test", "demo", 1),
                         "sample",
                         "list_append",
@@ -334,7 +334,7 @@ class TestBatchWrite(TestBaseClass):
                             "expressions": exp.Eq(exp.IntBin("count"), 1).compile()
                         }
                     ),
-                    br.BatchRead(
+                    br.Read(
                         ("test", "demo", 1),
                         [
                             lop.list_get_by_rank("ilist_bin", -1, aerospike.LIST_RETURN_VALUE),
@@ -359,14 +359,14 @@ class TestBatchWrite(TestBaseClass):
             "write-read",
             br.BatchRecords(
                 [
-                    br.BatchWrite(
+                    br.Write(
                         ("test", "demo", 1),
                         [
                             op.write("new", 11),
                             op.read("new")
                         ]
                     ),
-                    br.BatchRead(
+                    br.Read(
                         ("test", "demo", 1),
                         [
                             lop.list_get_by_rank("ilist_bin", -1, aerospike.LIST_RETURN_VALUE),
@@ -389,10 +389,10 @@ class TestBatchWrite(TestBaseClass):
             "complex",
             br.BatchRecords(
                 [
-                    br.BatchRemove(
+                    br.Remove(
                         ("test", "demo", 1)
                     ),
-                    br.BatchWrite(
+                    br.Write(
                         ("test", "demo", 1),
                         [
                             op.write("ilist_bin", [2, 6]),
@@ -401,13 +401,13 @@ class TestBatchWrite(TestBaseClass):
                             op.read("balance"),
                         ]
                     ),
-                    br.BatchRead(
+                    br.Read(
                         ("test", "demo", 1),
                         [
                             lop.list_get_by_rank("ilist_bin", -1, aerospike.LIST_RETURN_VALUE)
                         ]
                     ),
-                    br.BatchApply(
+                    br.Apply(
                         ("test", "demo", 3),
                         "sample",
                         "list_append",
@@ -416,7 +416,7 @@ class TestBatchWrite(TestBaseClass):
                             "expressions": exp.Eq(exp.IntBin("count"), 3).compile()
                         }
                     ),
-                    br.BatchRead(
+                    br.Read(
                         ("test", "demo", 3),
                         [
                             lop.list_get_by_rank("ilist_bin", -1, aerospike.LIST_RETURN_VALUE),
@@ -445,7 +445,7 @@ class TestBatchWrite(TestBaseClass):
             "read-many",
             br.BatchRecords(
                 [
-                    br.BatchRead(
+                    br.Read(
                         ("test", "demo", i),
                         [
                             op.read("count"),
@@ -492,7 +492,7 @@ class TestBatchWrite(TestBaseClass):
             "bad-batch-record",
             br.BatchRecords(
                 [
-                    br.BatchRead(
+                    br.Read(
                         ("test", "demo", 1),
                         [
                             op.read("count"),
@@ -508,7 +508,7 @@ class TestBatchWrite(TestBaseClass):
             "bad-batch-record-key",
             br.BatchRecords(
                 [
-                    br.BatchRead(
+                    br.Read(
                         "bad_key",
                         [
                             op.read("count"),
@@ -523,7 +523,7 @@ class TestBatchWrite(TestBaseClass):
             "bad-batch-record-ops",
             br.BatchRecords(
                 [
-                    br.BatchRead(
+                    br.Read(
                         ("test", "demo", 1),
                         {"bad": "ops"}
                     )
@@ -536,7 +536,7 @@ class TestBatchWrite(TestBaseClass):
             "bad-batch-record-policy",
             br.BatchRecords(
                 [
-                    br.BatchRead(
+                    br.Read(
                         ("test", "demo", 1),
                         [
                             op.read("count"),
@@ -552,7 +552,7 @@ class TestBatchWrite(TestBaseClass):
             "bad-batch-policy",
             br.BatchRecords(
                 [
-                    br.BatchRead(
+                    br.Read(
                         ("test", "demo", 1),
                         [
                             op.read("count"),

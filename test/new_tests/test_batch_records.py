@@ -18,10 +18,10 @@ from .test_base_class import TestBaseClass
 class TestBatchRecords(TestBaseClass):
     def test_batch_read_all_bins_pos(self):
         """
-        Test that BatchReads will allow read_all_bins with no ops
+        Test that batch Reads will allow read_all_bins with no ops
         """
 
-        b = br.BatchRead(
+        b = br.Read(
             ("test", "demo", 1),
             ops = None,
             read_all_bins=True

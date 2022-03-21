@@ -792,11 +792,11 @@ Batch Operations
             # using batch_write.
             w_batch_record = br.BatchRecords(
                 [
-                    br.BatchRemove(
+                    br.Remove(
                         key=(namespace, set, 1),
                         policy={}
                     ),
-                    br.BatchWrite(
+                    br.Write(
                         key=(namespace, set, 100),
                         ops=[
                             op.write("id", 100),
@@ -806,7 +806,7 @@ Batch Operations
                         ],
                         policy={"expressions": exp.GT(exp.IntBin("balance"), 2000).compile()}
                     ),
-                    br.BatchRead(
+                    br.Read(
                         key=(namespace, set, 333),
                         ops=[
                             op.read("id")
@@ -891,13 +891,13 @@ Batch Operations
                 # BatchRecord 100 should have a result code of 27 meaning it was filtered out by an expression.
                 print("BatchRecord 100 result: {result}".format(result=res.batch_records[100].result))
 
-                # Record 100 should be None.
+                # BatchRecord 100 should, record be None.
                 print("BatchRecord 100 record: {record}".format(record=res.batch_records[100].record))
 
                 # BatchRecord 101 should have a result code of 0 meaning it succeeded.
                 print("BatchRecord 101 result: {result}".format(result=res.batch_records[101].result))
 
-                # Record 101 should be populated.
+                # BatchRecord 101, record should be populated.
                 print("BatchRecord 101 record: {record}".format(record=res.batch_records[101].record))
 
             else:
@@ -2880,7 +2880,7 @@ Batch Write Policies
 
 .. object:: policy
 
-    A :class:`dict` of optional batch write policies, which are applicable to :meth:`~aerospike.batch_write`, :meth:`~aerospike.batch_operate` and :class:`BatchWrite <aerospike_helpers.batch.records>`.
+    A :class:`dict` of optional batch write policies, which are applicable to :meth:`~aerospike.batch_write`, :meth:`~aerospike.batch_operate` and :class:`Write <aerospike_helpers.batch.records>`.
 
     .. hlist::
         :columns: 1
@@ -2917,7 +2917,7 @@ Batch Apply Policies
 
 .. object:: policy
 
-    A :class:`dict` of optional batch apply policies, which are applicable to :meth:`~aerospike.batch_apply`, and :class:`BatchApply <aerospike_helpers.batch.records>`.
+    A :class:`dict` of optional batch apply policies, which are applicable to :meth:`~aerospike.batch_apply`, and :class:`Apply <aerospike_helpers.batch.records>`.
 
     .. hlist::
         :columns: 1
@@ -2959,7 +2959,7 @@ Batch Remove Policies
 
 .. object:: policy
 
-    A :class:`dict` of optional batch remove policies, which are applicable to :meth:`~aerospike.batch_remove`, and :class:`BatchRemove <aerospike_helpers.batch.records>`.
+    A :class:`dict` of optional batch remove policies, which are applicable to :meth:`~aerospike.batch_remove`, and :class:`Remove <aerospike_helpers.batch.records>`.
 
     .. hlist::
         :columns: 1

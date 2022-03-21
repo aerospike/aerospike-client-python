@@ -73,11 +73,11 @@ Example::
     if res.result == 0:
         # BatchRecord 100 should have a result code of 27 meaning it was filtered out by an expression.
         print("BatchRecord 100 result: {result}".format(result=res.batch_records[100].result))
-        # Record 100 should be None.
+        # BatchRecord 100,record should be None.
         print("BatchRecord 100 record: {record}".format(record=res.batch_records[100].record))
         # BatchRecord 101 should have a result code of 0 meaning it succeeded.
         print("BatchRecord 101 result: {result}".format(result=res.batch_records[101].result))
-        # Record 101 should be populated.
+        # BatchRecord 101, record should be populated.
         print("BatchRecord 101 record: {record}".format(record=res.batch_records[101].record))
     else:
         # Some batch sub transaction failed.
@@ -89,11 +89,11 @@ Example::
     # using batch_write.
     batch_writes = br.BatchRecords(
         [
-            br.BatchRemove(
+            br.Remove(
                 key=(namespace, set, 1),
                 policy={}
             ),
-            br.BatchWrite(
+            br.Write(
                 key=(namespace, set, 100),
                 ops=[
                     op.write("id", 100),
@@ -103,7 +103,7 @@ Example::
                 ],
                 policy={"expressions": exp.GT(exp.IntBin("balance"), 2000).compile()}
             ),
-            br.BatchRead(
+            br.Read(
                 key=(namespace, set, 333),
                 ops=[
                     op.read("id")
@@ -114,13 +114,14 @@ Example::
     )
 
     # batch_write modifies its BatchRecords argument.
-    # Results for each BatchRecord will be set in their result,
+    # Results for each requested key will be set in
+    # their coresponding BatchRecord result,
     # record, and in_doubt fields.
     client.batch_write(batch_writes)
     print("batch_writes result: {result}".format(result=batch_writes.result))
 
     # should have bins {'id': 333}.
-    print("batch_writes BatchWrite record: {result}".format(result=batch_writes.batch_records[2].record))
+    print("batch_writes batch Write record: {result}".format(result=batch_writes.batch_records[2].record))
 
 
     print("===== BATCH_APPLY EXAMPLE =====")
@@ -172,10 +173,10 @@ class _Types():
 
 #### BatchRecord ####
 class BatchRecord:
-    """ BatchRecord provides the base fields for BtachRecord objects.
+    """ BatchRecord provides the base fields for BatchRecord objects.
 
         BatchRecord should usually be read from as a result and not created by the user. Its subclasses can be used as input to batch_write.
-        Client methods :meth:`~Client.batch_apply`, :meth:`~Client.batch_operate`, :meth:`~Client.batch_remove` return :class:`BatchRecords`
+        Client methods :meth:`~Client.batch_apply`, :meth:`~Client.batch_operate`, :meth:`~Client.batch_remove`
         with batch_records field as a list of these BatchRecord objects containing the batch request results.
 
         Attributes:
@@ -193,8 +194,8 @@ class BatchRecord:
         self.in_doubt = False
 
 
-class BatchWrite(BatchRecord):
-    """ BatchWrite is used for executing Batch write operations with batch_write and retrieving batch write results.
+class Write(BatchRecord):
+    """ Write is used for executing Batch write operations with batch_write and retrieving batch write results.
 
         Attributes:
             key (:obj:`tuple`): The aerospike key to operate on.
@@ -211,7 +212,7 @@ class BatchWrite(BatchRecord):
         """
             Example::
 
-                # Create a BatchWrite to increment bin "a" by 10 and read the result from the record.
+                # Create a batch Write to increment bin "a" by 10 and read the result from the record.
                 import aerospike_helpers.operations as op
 
 
@@ -227,7 +228,7 @@ class BatchWrite(BatchRecord):
                     op.read(bin_name)
                 ]
 
-                bw = BatchWrite(key, ops)
+                bw = Write(key, ops)
         """
         super().__init__(key)
         self.ops = ops
@@ -236,8 +237,8 @@ class BatchWrite(BatchRecord):
         self.policy = policy
 
 
-class BatchRead(BatchRecord):
-    """ BatchRead is used for executing Batch read operations with batch_write and retrieving results.
+class Read(BatchRecord):
+    """ Read is used for executing Batch read operations with batch_write and retrieving results.
 
         Attributes:
             key (:obj:`tuple`): The aerospike key to operate on.
@@ -255,7 +256,7 @@ class BatchRead(BatchRecord):
         """
             Example::
 
-                # Create a BatchRead to read bin "a" from the record.
+                # Create a batch Read to read bin "a" from the record.
                 import aerospike_helpers.operations as op
 
 
@@ -270,7 +271,7 @@ class BatchRead(BatchRecord):
                     op.read(bin_name)
                 ]
 
-                br = BatchWrite(key, ops)
+                br = Write(key, ops)
         """
         super().__init__(key)
         self.ops = ops
@@ -280,7 +281,7 @@ class BatchRead(BatchRecord):
         self.policy = policy
 
 
-class BatchApply(BatchRecord):
+class Apply(BatchRecord):
     """ BatchApply is used for executing Batch UDF (user defined function) apply operations with batch_write and retrieving results.
 
         Attributes:
@@ -301,7 +302,7 @@ class BatchApply(BatchRecord):
         """
             Example::
 
-                # Create a BatchApply to apply UDF "test_func" to bin "a" from the record.
+                # Create a batch Apply to apply UDF "test_func" to bin "a" from the record.
                 # Assume that "test_func" takes a bin name string as an argument.
                 # Assume the appropriate UDF module has already been registerd.
                 import aerospike_helpers.operations as op
@@ -320,7 +321,7 @@ class BatchApply(BatchRecord):
                 user_key = 1
                 key = (namespace, set, user_key)
 
-                ba = BatchApply(key, module, function, args)
+                ba = Apply(key, module, function, args)
         """
         super().__init__(key)
         self._type = _Types.APPLY
@@ -331,8 +332,8 @@ class BatchApply(BatchRecord):
         self.policy = policy
 
 
-class BatchRemove(BatchRecord):
-    """ BatchRemove is used for executing Batch remove operations with batch_write and retrieving results.
+class Remove(BatchRecord):
+    """ Remove is used for executing Batch remove operations with batch_write and retrieving results.
 
         Attributes:
             key (:obj:`tuple`): The aerospike key to operate on.
@@ -349,7 +350,7 @@ class BatchRemove(BatchRecord):
         """
             Example::
 
-                # Create a BatchRemove to remove the record.
+                # Create a batch Remove to remove the record.
                 import aerospike_helpers.operations as op
 
 
@@ -358,7 +359,7 @@ class BatchRemove(BatchRecord):
                 user_key = 1
                 key = (namespace, set, user_key)
 
-                br = BatchRemove(key, ops)
+                br = Remove(key, ops)
         """
         super().__init__(key)
         self._type = _Types.REMOVE
@@ -374,8 +375,8 @@ class BatchRecords:
 
         Attributes:
             batch_records (TypeBatchRecordList): A list of BatchRecord subtype objects used to \
-            define batch operations and hold results. BatchRecord Types can be BatchRemove, BatchWrite, \
-            BatchRead, and BatchApply.
+            define batch operations and hold results. BatchRecord Types can be Remove, Write, \
+            Read, and Apply.
             result (int): The status code of the last batch call that used this BatchRecords.
             0 if all batch subtransactions succeeded (or if the only failures were FILTERED_OUT or RECORD_NOT_FOUND)
             non 0 if an error occured. The most common error being -16 (One or more batch sub transactions failed).
@@ -401,10 +402,10 @@ class BatchRecords:
 
                 brs = BatchRecords(
                     [
-                        BatchRemove(
+                        Remove(
                             key=(namespace, set, 1),
                         ),
-                        BatchWrite(
+                        Write(
                             key=(namespace, set, 100),
                             ops=[
                                 op.write(bin_name, 100),

@@ -44,7 +44,7 @@
                 __policy = (__policy_type *)malloc(sizeof(__policy_type));                                                \
                 garb->policy_to_free = __policy;                                                                          \
                 if (__conversion_func(self, err, py___policy, __policy, &__policy, expr, &expr_p) != AEROSPIKE_OK) {      \
-                    as_error_update(err, AEROSPIKE_ERR_PARAM, "batch_type: %s, failed to convert policy", __batch_type); \
+                    as_error_update(err, AEROSPIKE_ERR_PARAM, "batch_type: %s, failed to convert policy", __batch_type);  \
                     Py_DECREF(py___policy);                                                                               \
                     goto CLEANUP;                                                                                         \
                 }                                                                                                         \
@@ -195,7 +195,7 @@ static PyObject *AerospikeClient_BatchWriteInvoke(AerospikeClient *self, as_erro
         PyObject *py_ops_list = PyObject_GetAttrString(py_batch_record, FIELD_NAME_BATCH_OPS);
         if (py_ops_list == NULL || !PyList_Check(py_ops_list) || !PyList_Size(py_ops_list)) {
 
-            // BatchRead can have None ops if it is using read_all_bins
+            // batch Read can have None ops if it is using read_all_bins
             if ((batch_type == BATCH_TYPE_READ && py_ops_list != Py_None) || batch_type == BATCH_TYPE_WRITE) {
                 as_error_update(err, AEROSPIKE_ERR_PARAM,
                                 "py_ops_list is NULL or not a list, %s must be a list of aerospike operation dicts", FIELD_NAME_BATCH_OPS);
@@ -245,10 +245,10 @@ static PyObject *AerospikeClient_BatchWriteInvoke(AerospikeClient *self, as_erro
         case AS_BATCH_READ:;
 
             as_policy_batch_read *r_policy = NULL;
-            GET_BATCH_POLICY_FROM_PYOBJECT(r_policy, as_policy_batch_read, pyobject_to_batch_read_policy, "BatchRead")
+            GET_BATCH_POLICY_FROM_PYOBJECT(r_policy, as_policy_batch_read, pyobject_to_batch_read_policy, "Read")
 
             PyObject *py_read_all_bins = PyObject_GetAttrString(py_batch_record, "read_all_bins");
-            // Not checking for NULL since BatchRead should always have read_all_bins
+            // Not checking for NULL since batch Read should always have read_all_bins
             bool read_all_bins = PyObject_IsTrue(py_read_all_bins);
             Py_DECREF(py_read_all_bins);
 
@@ -268,7 +268,7 @@ static PyObject *AerospikeClient_BatchWriteInvoke(AerospikeClient *self, as_erro
         case AS_BATCH_WRITE:;
             
             as_policy_batch_write *w_policy = NULL;
-            GET_BATCH_POLICY_FROM_PYOBJECT(w_policy, as_policy_batch_write, pyobject_to_batch_write_policy, "BatchWrite")
+            GET_BATCH_POLICY_FROM_PYOBJECT(w_policy, as_policy_batch_write, pyobject_to_batch_write_policy, "Write")
 
             as_batch_write_record* wr;
             wr = as_batch_write_reserve(&batch_records);
@@ -285,7 +285,7 @@ static PyObject *AerospikeClient_BatchWriteInvoke(AerospikeClient *self, as_erro
         case AS_BATCH_APPLY:;
 
             as_policy_batch_apply *a_policy = NULL;
-            GET_BATCH_POLICY_FROM_PYOBJECT(a_policy, as_policy_batch_apply, pyobject_to_batch_apply_policy, "BatchApply")
+            GET_BATCH_POLICY_FROM_PYOBJECT(a_policy, as_policy_batch_apply, pyobject_to_batch_apply_policy, "Apply")
 
             PyObject *py_mod = PyObject_GetAttrString(py_batch_record, FIELD_NAME_BATCH_MODULE);
             if (py_mod == NULL || !PyUnicode_Check(py_mod)) {
@@ -333,7 +333,7 @@ static PyObject *AerospikeClient_BatchWriteInvoke(AerospikeClient *self, as_erro
         case AS_BATCH_REMOVE:;
 
             as_policy_batch_remove *re_policy = NULL;
-            GET_BATCH_POLICY_FROM_PYOBJECT(re_policy, as_policy_batch_remove, pyobject_to_batch_remove_policy, "BatchRemove")
+            GET_BATCH_POLICY_FROM_PYOBJECT(re_policy, as_policy_batch_remove, pyobject_to_batch_remove_policy, "Remove")
 
             as_batch_remove_record* rer;
             rer = as_batch_remove_reserve(&batch_records);
