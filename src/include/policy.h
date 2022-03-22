@@ -178,6 +178,14 @@ enum aerospike_hll_operations {
 
 enum aerospike_expression_operations { OP_EXPR_READ = 2200, OP_EXPR_WRITE };
 
+enum aerospike_regex_constants {
+	REGEX_NONE = 0,
+	REGEX_EXTENDED,
+	REGEX_ICASE,
+	REGEX_NOSUB = 4,
+	REGEX_NEWLINE = 8,
+};
+
 enum aerospike_cdt_ctx_identifiers {
 	CDT_CTX_LIST_INDEX_CREATE = 0x14,
 	CDT_CTX_MAP_KEY_CREATE = 0x24

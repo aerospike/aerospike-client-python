@@ -456,7 +456,14 @@ static AerospikeConstants aerospike_constants[] = {
 	{AS_BYTES_MAP, "AS_BYTES_MAP"},
 	{AS_BYTES_LIST, "AS_BYTES_LIST"},
 	{AS_BYTES_GEOJSON, "AS_BYTES_GEOJSON"},
-	{AS_BYTES_TYPE_MAX, "AS_BYTES_TYPE_MAX"}};
+	{AS_BYTES_TYPE_MAX, "AS_BYTES_TYPE_MAX"},
+	
+	/* Regex constants from predexp, still used by expressions */
+	{REGEX_NONE, "REGEX_NONE"},
+	{REGEX_EXTENDED, "REGEX_EXTENDED"},
+	{REGEX_ICASE, "REGEX_ICASE"},
+	{REGEX_NOSUB, "REGEX_NOSUB"},
+	{REGEX_NEWLINE, "REGEX_NEWLINE"}};
 
 static AerospikeJobConstants aerospike_job_constants[] = {
 	{"scan", "JOB_SCAN"}, {"query", "JOB_QUERY"}};

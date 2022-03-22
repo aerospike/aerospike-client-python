@@ -90,7 +90,7 @@ Exception Types
 
 .. py:exception:: FilteredOut
 
-    The transaction was not performed because the predexp was false.
+    The transaction was not performed because the expression was false.
 
 .. py:exception:: ServerFull
 

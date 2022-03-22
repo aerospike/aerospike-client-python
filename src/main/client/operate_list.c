@@ -70,7 +70,7 @@
 	if (py_policy) {                                                           \
 		if (pyobject_to_policy_operate(                                        \
 				self, &err, py_policy, &operate_policy, &operate_policy_p,     \
-				&self->as->config.policies.operate, NULL, NULL, NULL,          \
+				&self->as->config.policies.operate, NULL,                      \
 				NULL) != AEROSPIKE_OK) {                                       \
 			goto CLEANUP;                                                      \
 		}                                                                      \
