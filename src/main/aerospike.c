@@ -121,7 +121,6 @@ struct Aerospike_State{
 	PyTypeObject		*scan;
 	PyTypeObject		*kdict;
 	PyObject			*predicates;
-	PyObject			*predexps;
 	PyTypeObject		*geospatial;
 	PyTypeObject		*null_object;
 	PyTypeObject		*wildcard_object;
@@ -143,7 +142,6 @@ static int Aerospike_Clear(PyObject *aerospike)
 	Py_CLEAR(Aerospike_State(aerospike)->scan);
 	Py_CLEAR(Aerospike_State(aerospike)->kdict);
 	Py_CLEAR(Aerospike_State(aerospike)->predicates);
-	Py_CLEAR(Aerospike_State(aerospike)->predexps);
 	Py_CLEAR(Aerospike_State(aerospike)->geospatial);
 	Py_CLEAR(Aerospike_State(aerospike)->null_object);
 	Py_CLEAR(Aerospike_State(aerospike)->wildcard_object);
@@ -211,18 +209,12 @@ MOD_INIT(aerospike)
 	}
 
 	declare_policy_constants(aerospike);
-	RegisterPredExpConstants(aerospike);
 	declare_log_constants(aerospike);
 
 	PyObject *predicates = AerospikePredicates_New();
 	Py_INCREF(predicates);
 	PyModule_AddObject(aerospike, "predicates", predicates);
 	Aerospike_State(aerospike)->predicates = predicates;
-
-	PyObject *predexps = AerospikePredExp_New();
-	Py_INCREF(predexps);
-	PyModule_AddObject(aerospike, "predexp", predexps);
-	Aerospike_State(aerospike)->predexps = predexps;
 
 	PyTypeObject *geospatial = AerospikeGeospatial_Ready();
 	Py_INCREF(geospatial);

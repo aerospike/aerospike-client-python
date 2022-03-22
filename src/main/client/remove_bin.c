@@ -61,10 +61,6 @@ AerospikeClient_RemoveBin_Invoke(AerospikeClient *self, PyObject *py_key,
 	as_exp exp_list;
 	as_exp *exp_list_p = NULL;
 
-	// For converting predexp.
-	as_predexp_list predexp_list;
-	as_predexp_list *predexp_list_p = NULL;
-
 	// Get the bin list size;
 	Py_ssize_t size = PyList_Size(py_binList);
 	// Initialize record
@@ -80,8 +76,7 @@ AerospikeClient_RemoveBin_Invoke(AerospikeClient *self, PyObject *py_key,
 	// Convert python policy object to as_policy_write
 	pyobject_to_policy_write(self, err, py_policy, &write_policy,
 							 &write_policy_p, &self->as->config.policies.write,
-							 &predexp_list, &predexp_list_p, &exp_list,
-							 &exp_list_p);
+							 &exp_list, &exp_list_p);
 	if (err->code != AEROSPIKE_OK) {
 		as_error_update(err, AEROSPIKE_ERR_CLIENT, "Incorrect policy");
 		goto CLEANUP;
@@ -171,11 +166,6 @@ CLEANUP:
 
 	if (exp_list_p) {
 		as_exp_destroy(exp_list_p);
-		;
-	}
-
-	if (predexp_list_p) {
-		as_predexp_list_destroy(&predexp_list);
 	}
 
 	if (key_initialized) {

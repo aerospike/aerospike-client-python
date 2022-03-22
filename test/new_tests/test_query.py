@@ -498,7 +498,7 @@ class TestQuery(TestBaseClass):
         records = query.results(policy)
         assert len(records) == 1
 
-    def test_query_with_results_method_and_invalid_predexp(self):
+    def test_query_with_results_method_and_invalid_exp(self):
         """
             Invoke query() with correct arguments
         """
@@ -626,9 +626,9 @@ class TestQuery(TestBaseClass):
         query.foreach(callback)
         assert len(records) == expected_length
 
-    def test_query_with_correct_parameters_predexp(self):
+    def test_query_with_correct_parameters_exp(self):
         """
-            Invoke query() with correct arguments and using predexp
+            Invoke query() with correct arguments and using expressions
         """
 
         from .test_base_class import TestBaseClass
