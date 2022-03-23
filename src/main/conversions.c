@@ -2112,7 +2112,7 @@ as_status metadata_to_pyobject(as_error *err, const as_record *rec,
 	return err->code;
 }
 
-bool error_to_pyobject(const as_error *err, PyObject **obj)
+void error_to_pyobject(const as_error *err, PyObject **obj)
 {
 	PyObject *py_file = NULL;
 	if (err->file) {
@@ -2144,7 +2144,6 @@ bool error_to_pyobject(const as_error *err, PyObject **obj)
 	PyTuple_SetItem(py_err, PY_EXCEPTION_LINE, py_line);
 	PyTuple_SetItem(py_err, AS_PY_EXCEPTION_IN_DOUBT, py_in_doubt);
 	*obj = py_err;
-	return true;
 }
 
 void initialize_bin_for_strictypes(AerospikeClient *self, as_error *err,
