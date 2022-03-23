@@ -223,10 +223,6 @@ PyObject *AerospikeClient_Get_Async(AerospikeClient *self, PyObject *args,
 	as_exp exp_list;
 	as_exp *exp_list_p = NULL;
 
-	// For converting predexp.
-	as_predexp_list predexp_list;
-	as_predexp_list *predexp_list_p = NULL;
-
 	as_status status = AEROSPIKE_OK;
 
 	if (!self || !self->as) {
@@ -249,8 +245,8 @@ PyObject *AerospikeClient_Get_Async(AerospikeClient *self, PyObject *args,
 	// Convert python policy object to as_policy_exists
 	pyobject_to_policy_read(self, &uData->error, py_policy, &uData->read_policy,
 							&uData->read_policy_p,
-							&self->as->config.policies.read, &predexp_list,
-							&predexp_list_p, &exp_list, &exp_list_p);
+							&self->as->config.policies.read,
+							&exp_list, &exp_list_p);
 	if (uData->error.code != AEROSPIKE_OK) {
 		goto CLEANUP;
 	}
@@ -269,10 +265,6 @@ CLEANUP:
 
 	if (exp_list_p) {
 		as_exp_destroy(exp_list_p);
-	}
-
-	if (predexp_list_p) {
-		as_predexp_list_destroy(&predexp_list);
 	}
 
 	if (status != AEROSPIKE_OK || uData->error.code != AEROSPIKE_OK) {

@@ -699,7 +699,7 @@ class CmpRegex(_BaseExpr):
 
                 # Select string bin "a" that starts with "prefix" and ends with "suffix".
                 # Ignore case and do not match newline.
-                expr = exp.CmpRegex(aerospike.REGEX_ICASE | aerospike.REGEX_NEWLINE, "prefix.*suffix", exp.BinStr("a")).compile()
+                expr = exp.CmpRegex(aerospike.REGEX_ICASE | aerospike.REGEX_NEWLINE, "prefix.*suffix", exp.StrBin("a")).compile()
         """
         self._children = (cmp_str,)
         self._fixed = {_Keys.REGEX_OPTIONS_KEY: options, _Keys.VALUE_KEY: regex_str}

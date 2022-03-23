@@ -125,7 +125,7 @@ class TestBatchExpressionsOperations(TestBaseClass):
             ).compile(),
             aerospike.EXP_READ_DEFAULT,
 			"test_name3",
-            e.RecordNotFound # Because Unknown will be returned.
+            e.BatchFailed # Because Unknown will be returned.
         ),
         (
             "bad_expr",

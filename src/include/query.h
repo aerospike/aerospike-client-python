@@ -74,14 +74,6 @@ AerospikeQuery *AerospikeQuery_Add_Ops(AerospikeQuery *self, PyObject *args,
 AerospikeQuery *AerospikeQuery_Where(AerospikeQuery *self, PyObject *args);
 
 /**
- * Apply a list of predicates to the query.
- *
- *		query.predexp(predexps)
- *
- */
-AerospikeQuery *AerospikeQuery_Predexp(AerospikeQuery *self, PyObject *args);
-
-/**
  * Apply the specified udf on the results of the query.
  *
  *		query.apply(module, function, arglist)
@@ -154,8 +146,3 @@ PyObject *AerospikeQuery_Get_Partitions_status(AerospikeQuery *self);
 PyObject *StoreUnicodePyObject(AerospikeQuery *self, PyObject *obj);
 
 int64_t pyobject_to_int64(PyObject *py_obj);
-
-/* Initialize the predexp module */
-PyObject *AerospikePredExp_New(void);
-
-as_status RegisterPredExpConstants(PyObject *module);

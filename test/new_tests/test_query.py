@@ -278,7 +278,7 @@ class TestQuery(TestBaseClass):
             Invoke query() with non-indexed bin
         """
         # with pytest.raises(Exception) as exception:
-        with pytest.raises(e.IndexNotFound) as err_info:
+        with pytest.raises(e.MaxRetriesExceeded) as err_info:
             query = self.as_connection.query('test', 'demo')
             query.select('name', 'no')
             query.where(p.equals('no', 1))
@@ -288,7 +288,9 @@ class TestQuery(TestBaseClass):
             query.foreach(callback)
 
         err_code = err_info.value.code
-        assert err_code == AerospikeStatus.AEROSPIKE_ERR_INDEX_NOT_FOUND
+        # Changed to AEROSPIKE_ERR_MAX_RETRIES_EXCEEDED because AEROSPIKE_ERR_INDEX_NOT_FOUND is now a retriable error.
+        assert err_code == AerospikeStatus.AEROSPIKE_ERR_MAX_RETRIES_EXCEEDED
+        assert "AEROSPIKE_ERR_INDEX_NOT_FOUND" in err_info.value.msg
 
     def test_query_with_where_incorrect(self):
         """
@@ -498,7 +500,7 @@ class TestQuery(TestBaseClass):
         records = query.results(policy)
         assert len(records) == 1
 
-    def test_query_with_results_method_and_invalid_predexp(self):
+    def test_query_with_results_method_and_invalid_exp(self):
         """
             Invoke query() with correct arguments
         """
@@ -626,9 +628,9 @@ class TestQuery(TestBaseClass):
         query.foreach(callback)
         assert len(records) == expected_length
 
-    def test_query_with_correct_parameters_predexp(self):
+    def test_query_with_correct_parameters_exp(self):
         """
-            Invoke query() with correct arguments and using predexp
+            Invoke query() with correct arguments and using expressions
         """
 
         from .test_base_class import TestBaseClass

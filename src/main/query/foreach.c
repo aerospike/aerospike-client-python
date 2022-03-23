@@ -158,10 +158,6 @@ PyObject *AerospikeQuery_Foreach(AerospikeQuery *self, PyObject *args,
 	as_exp exp_list;
 	as_exp *exp_list_p = NULL;
 
-	// For converting predexp.
-	as_predexp_list predexp_list;
-	as_predexp_list *predexp_list_p = NULL;
-
 	as_partition_filter partition_filter = {0};
 	as_partition_filter *partition_filter_p = NULL;
 	as_partitions_status *ps = NULL;
@@ -183,8 +179,8 @@ PyObject *AerospikeQuery_Foreach(AerospikeQuery *self, PyObject *args,
 	// Convert python policy object to as_policy_exists
 	pyobject_to_policy_query(
 		self->client, &err, py_policy, &query_policy, &query_policy_p,
-		&self->client->as->config.policies.query, &predexp_list,
-		&predexp_list_p, &exp_list, &exp_list_p);
+		&self->client->as->config.policies.query,
+		&exp_list, &exp_list_p);
 	if (err.code != AEROSPIKE_OK) {
 		goto CLEANUP;
 	}
@@ -241,10 +237,6 @@ PyObject *AerospikeQuery_Foreach(AerospikeQuery *self, PyObject *args,
 CLEANUP:
 	if (exp_list_p) {
 		as_exp_destroy(exp_list_p);
-	}
-
-	if (predexp_list_p) {
-		as_predexp_list_destroy(&predexp_list);
 	}
 
 	if (self->query.apply.arglist) {

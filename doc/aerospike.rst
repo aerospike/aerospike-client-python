@@ -1421,7 +1421,8 @@ Permission codes define the type of permission granted for a user's role.
 
 Regex Flag Values
 ------------------
-Flags used for the `predexp.string_regex` function.
+Flags used by the :class:`aerospike_operation_helpers.expressions.base.CmpRegex` Aerospike expression.
+See :ref:`aerospike_operation_helpers.expressions` for more information.
 
 .. data:: REGEX_NONE
 

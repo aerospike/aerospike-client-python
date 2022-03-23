@@ -9,7 +9,7 @@ Scan Class --- :class:`Scan`
 :class:`Scan`
 ===============
 
-    .. deprecated:: 6.2.0 :class:`aerospike.Query` should be used instead.
+    .. deprecated:: 7.0.0 :class:`aerospike.Query` should be used instead.
 
     The Scan object is used to return all the records in a specified set (which \
     can be ommitted or :py:obj:`None`). A Scan with a :py:obj:`None` set returns all the \
@@ -22,12 +22,76 @@ Scan Class --- :class:`Scan`
         `Scans <http://www.aerospike.com/docs/guide/scan.html>`_ and \
         `Managing Scans <http://www.aerospike.com/docs/operations/manage/scans/>`_.
 
+    .. note::
+        Python client versions >= 5.0.0 Supports Aerospike expressions for results, foreach, and execute_background see :ref:`aerospike_operation_helpers.expressions`.
+        Requires server version >= 5.2.0.
+
+        .. code-block:: python
+
+            import aerospike
+            from aerospike_helpers import expressions as exp
+            from aerospike import exception as ex
+            import sys
+            import time
+
+            config = { 'hosts': [('127.0.0.1', 3000)]}
+            client = aerospike.client(config).connect()
+
+            # register udf
+            try:
+                client.udf_put('/path/to/my_udf.lua')
+            except ex.AerospikeError as e:
+                print("Error: {0} [{1}]".format(e.msg, e.code))
+                client.close()
+                sys.exit(1)
+
+            # put records and run scan
+            try:
+                keys = [('test', 'demo', 1), ('test', 'demo', 2), ('test', 'demo', 3)]
+                records = [{'number': 1}, {'number': 2}, {'number': 3}]
+                for i in range(3):
+                    client.put(keys[i], records[i])
+
+                scan = client.scan('test', 'demo')
+
+                # check that the record has value < 2 or value == 3 in bin 'name'
+                expr = exp.Or(
+                    exp.LT(exp.IntBin("number"), 2),
+                    exp.Eq(exp.IntBin("number"), 3)
+                ).compile()
+
+                policy = {
+                    'expressions': expr
+                }
+
+                records = scan.results(policy)
+                print(records)
+            except ex.AerospikeError as e:
+                print("Error: {0} [{1}]".format(e.msg, e.code))
+                sys.exit(1)
+            finally:
+                client.close()
+            # the scan only returns records that match the expressions
+            # EXPECTED OUTPUT:
+            # [
+            #   (('test', 'demo', 1, bytearray(b'\xb7\xf4\xb88\x89\xe2\xdag\xdeh>\x1d\xf6\x91\x9a\x1e\xac\xc4F\xc8')), {'gen': 2, 'ttl': 2591999}, {'number': 1}),
+            #   (('test', 'demo', 3, bytearray(b'\xb1\xa5`g\xf6\xd4\xa8\xa4D9\xd3\xafb\xbf\xf8ha\x01\x94\xcd')), {'gen': 13, 'ttl': 2591999}, {'number': 3})
+            # ]
+        
+        .. code-block:: python
+
+            # contents of my_udf.lua
+            function my_udf(rec, bin, offset)
+                info("my transform: %s", tostring(record.digest(rec)))
+                rec[bin] = rec[bin] + offset
+                aerospike:update(rec)
+            end
 
 Scan Methods
 -------------
 .. class:: Scan
 
-    .. deprecated:: 6.2.0 :class:`aerospike.Query` should be used instead.
+    .. deprecated:: 7.0.0 :class:`aerospike.Query` should be used instead.
 
     .. method:: select(bin1[, bin2[, bin3..]])
 
@@ -129,77 +193,8 @@ Scan Methods
                       bytearray(b'\x1cJ\xce\xa7\xd4Vj\xef+\xdf@W\xa5\xd8o\x8d:\xc9\xf4\xde')),
                     { 'gen': 52, 'ttl': 2592000},
                     { 'a': 1, 'id': 1})]
-        
-        .. note::
-            Python client versions >= 3.10.0 Supports predicate expressions for results, foreach, and execute_background see :mod:`~aerospike.predexp`.
-            Requires server version >= 4.7.0.
 
-            .. code-block:: python
-
-                import aerospike
-                from aerospike import predexp
-                from aerospike import exception as ex
-                import sys
-                import time
-
-                config = { 'hosts': [('127.0.0.1', 3000)]}
-                client = aerospike.client(config).connect()
-
-                # register udf
-                try:
-                    client.udf_put('/path/to/my_udf.lua')
-                except ex.AerospikeError as e:
-                    print("Error: {0} [{1}]".format(e.msg, e.code))
-                    client.close()
-                    sys.exit(1)
-
-                # put records and run scan
-                try:
-                    keys = [('test', 'demo', 1), ('test', 'demo', 2), ('test', 'demo', 3)]
-                    records = [{'number': 1}, {'number': 2}, {'number': 3}]
-                    for i in range(3):
-                        client.put(keys[i], records[i])
-
-                    scan = client.scan('test', 'demo')
-
-                    preds = [ # check that the record has value < 2 or value == 3 in bin 'name'
-                        predexp.integer_bin('number'),
-                        predexp.integer_value(2),
-                        predexp.integer_less(),
-                        predexp.integer_bin('number'),
-                        predexp.integer_value(3),
-                        predexp.integer_equal(),
-                        predexp.predexp_or(2)
-                    ]
-
-                    policy = {
-                        'predexp': preds
-                    }
-
-                    records = scan.results(policy)
-                    print(records)
-                except ex.AerospikeError as e:
-                    print("Error: {0} [{1}]".format(e.msg, e.code))
-                    sys.exit(1)
-                finally:
-                    client.close()
-                # the scan only returns records that match the predexp
-                # EXPECTED OUTPUT:
-                # [
-                #   (('test', 'demo', 1, bytearray(b'\xb7\xf4\xb88\x89\xe2\xdag\xdeh>\x1d\xf6\x91\x9a\x1e\xac\xc4F\xc8')), {'gen': 2, 'ttl': 2591999}, {'number': 1}),
-                #   (('test', 'demo', 3, bytearray(b'\xb1\xa5`g\xf6\xd4\xa8\xa4D9\xd3\xafb\xbf\xf8ha\x01\x94\xcd')), {'gen': 13, 'ttl': 2591999}, {'number': 3})
-                # ]
-            
-            .. code-block:: python
-
-                # contents of my_udf.lua
-                function my_udf(rec, bin, offset)
-                    info("my transform: %s", tostring(record.digest(rec)))
-                    rec[bin] = rec[bin] + offset
-                    aerospike:update(rec)
-                end
-
-        .. note:: As of client 6.2.0 and with server >= 6.0 results and the scan policy
+        .. note:: As of client 7.0.0 and with server >= 6.0 results and the scan policy
          "partition_filter" see :ref:`aerospike_partition_objects` can be used to specify which partitions/records
          results will scan. See the example below.
 
@@ -301,7 +296,7 @@ Scan Methods
                 print(len(keys)) # this will be 100 if the number of matching records > 100
                 client.close()
 
-        .. note:: As of client 6.2.0 and with server >= 6.0 foreach and the scan policy
+        .. note:: As of client 7.0.0 and with server >= 6.0 foreach and the scan policy
          "partition_filter" see :ref:`aerospike_partition_objects` can be used to specify which partitions/records
          foreach will scan. See the example below.
 

@@ -153,13 +153,9 @@ PyObject *AerospikeClient_Put_Async(AerospikeClient *self, PyObject *args,
 	as_policy_write *write_policy_p = NULL;
 	as_record rec;
 
-	// For converting predexp.
+	// For converting expressions.
 	as_exp exp_list;
 	as_exp *exp_list_p = NULL;
-
-	// For converting predexp.
-	as_predexp_list predexp_list;
-	as_predexp_list *predexp_list_p = NULL;
 
 	// Initialisation flags
 	bool record_initialised = false;
@@ -249,8 +245,7 @@ PyObject *AerospikeClient_Put_Async(AerospikeClient *self, PyObject *args,
 	// Convert python policy object to as_policy_write
 	pyobject_to_policy_write(self, &uData->error, py_policy, &write_policy,
 							 &write_policy_p, &self->as->config.policies.write,
-							 &predexp_list, &predexp_list_p, &exp_list,
-							 &exp_list_p);
+							  &exp_list, &exp_list_p);
 	if (uData->error.code != AEROSPIKE_OK) {
 		goto CLEANUP;
 	}
@@ -270,10 +265,6 @@ CLEANUP:
 
 	if (exp_list_p) {
 		as_exp_destroy(exp_list_p);
-	}
-
-	if (predexp_list_p) {
-		as_predexp_list_destroy(&predexp_list);
 	}
 
 	if (record_initialised == true) {

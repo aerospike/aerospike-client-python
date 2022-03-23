@@ -14,11 +14,9 @@ the Aerospike C client.
 
 * :mod:`aerospike.predicates` is a submodule containing predicate helpers for use with the Query class.
 
-* :mod:`aerospike.predexp` is a submodule containing predicate expression helpers for use with the Query class.
-
 * :mod:`aerospike.exception` is a submodule containing the exception hierarchy for AerospikeError and its subclasses.
 
-* :mod:`aerospike_helpers` is a helper package for bin operations (list, map, bitwise, etc.) and aerospike expressions.
+* :mod:`aerospike_helpers` is a helper package for bin operations (list, map, bitwise, etc.), aerospike expressions, batch operations, and complex data type context.
 
 * :ref:`aerospike.geojson` is a class to handle GeoJSON type data.
 
@@ -39,7 +37,6 @@ Content
     scan
     query
     predicates
-    predexp
     exception
     aerospike_helpers
     geojson
