@@ -776,3 +776,17 @@ class TestGetPut():
 
         with pytest.raises(e.ParamError):
             assert 0 == self.as_connection.put(key, bins)
+
+    def test_unhashable_type_with_put_get(self):
+        """
+            Invoke put() for a record with integer greater than max size
+        """
+        key = ('test', 'demo', 123)
+        str = b'abc'
+        bins = {
+                'bin1': b'abc',
+                'bin2': {b'abc': 0}
+        }
+        print(hash(str))
+        assert 0 == self.as_connection.put(key, bins)
+        print(self.as_connection.get(key))
