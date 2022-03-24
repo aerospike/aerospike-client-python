@@ -324,7 +324,7 @@ Methods
     .. note:: This requires Aerospike Server 4.3.1.3 or greater
 
 
-.. py:function:: calc_digest(ns, set, key) -> bytes
+.. py:function:: calc_digest(ns, set, key) -> bytearray
 
     Calculate the digest of a particular key. See: :ref:`aerospike_key_tuple`.
 
@@ -333,7 +333,7 @@ Methods
     :param key: the primary key identifier of the record within the set.
     :type key: :class:`str`, :class:`int` or :class:`bytearray`
     :return: a RIPEMD-160 digest of the input tuple.
-    :rtype: :class:`bytes`
+    :rtype: :class:`bytearray`
 
     .. code-block:: python
 
