@@ -349,10 +349,10 @@ Methods
 .. note::
 
     By default, the :class:`Client` maps the supported types \
-    :py:class:`int`, :py:class:`str`, :py:class:`float`, :py:class:`bytearray`, \
+    :py:class:`int`, :py:class:`str`, :py:class:`float`, :py:class:`bytes`, \
     :py:class:`list`, :py:class:`dict` to matching aerospike server \
     `types <http://www.aerospike.com/docs/guide/data-types.html>`_ \
-    (int, string, double, bytes, list, map). When an unsupported type is \
+    (int, string, double, blob, list, map). When an unsupported type is \
     encountered, the module uses \
     `cPickle <https://docs.python.org/2/library/pickle.html?highlight=cpickle#module-cPickle>`_ \
     to serialize and deserialize the data, storing it into *as_bytes* of type \
