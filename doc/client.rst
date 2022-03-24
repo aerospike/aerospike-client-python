@@ -480,7 +480,7 @@ Record Operations
             client.close()
 
 
-    .. method:: get_key_digest(ns, set, key) -> bytearray
+    .. method:: get_key_digest(ns, set, key) -> bytes
 
         Calculate the digest of a particular key. See: :ref:`aerospike_key_tuple`.
 
@@ -489,7 +489,7 @@ Record Operations
         :param key: the primary key identifier of the record within the set.
         :type key: :py:class:`str` or :py:class:`int`
         :return: a RIPEMD-160 digest of the input tuple.
-        :rtype: :class:`bytearray`
+        :rtype: :class:`bytes`
 
         .. code-block:: python
 
