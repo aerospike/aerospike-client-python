@@ -2978,6 +2978,31 @@ Batch Remove Policies
             |
             | Default: None
 
+.. _aerospike_batch_read_policies:
+
+Batch Read Policies
+-------------------
+
+.. object:: policy
+
+    A :class:`dict` of optional batch read policies, which are applicable to :class:`Read <aerospike_helpers.batch.records>`.
+
+    .. hlist::
+        :columns: 1
+
+        * **read_mode_ap** 
+            | One of the :ref:`POLICY_READ_MODE_AP` values such as :data:`aerospike.AS_POLICY_READ_MODE_AP_ONE`
+            |
+            | Default: :data:`aerospike.AS_POLICY_READ_MODE_AP_ONE`
+        * **read_mode_sc** 
+            | One of the :ref:`POLICY_READ_MODE_SC` values such as :data:`aerospike.POLICY_READ_MODE_SC_SESSION`
+            |
+            | Default: :data:`aerospike.POLICY_READ_MODE_SC_SESSION`
+        * **expressions** :class:`list`
+            | Compiled aerospike expressions :mod:`aerospike_helpers` used for filtering records within a transaction.
+            |
+            | Default: None
+
 .. _aerospike_info_policies:
 
 Info Policies
