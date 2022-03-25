@@ -72,7 +72,7 @@ class TestBatchRemove(TestBaseClass):
 
         request.addfinalizer(teardown)
 
-    @pytest.mark.parametrize("name, keys, policy_batch, policy_batch_write, exp_res, exp_rec", [
+    @pytest.mark.parametrize("name, keys, policy_batch, policy_batch_remove, exp_res, exp_rec", [
         (
             "simple-write",
             [
@@ -110,7 +110,7 @@ class TestBatchRemove(TestBaseClass):
             [{}]
         ),
         (
-            "simple-write-policy-batch-write",
+            "simple-write-policy-batch-remove",
             [
                 ("test", "demo", 0)
             ],
@@ -119,8 +119,8 @@ class TestBatchRemove(TestBaseClass):
                 "key": aerospike.POLICY_KEY_SEND,
                 "commit_level": aerospike.POLICY_COMMIT_LEVEL_MASTER,
                 "gen": aerospike.POLICY_GEN_IGNORE,
-                "exists": aerospike.POLICY_EXISTS_UPDATE,
                 "durable_delete": False,
+                "generation": 2,
                 "expressions": exp.Eq(exp.IntBin("count"), 0).compile()
             },
             [AerospikeStatus.AEROSPIKE_OK],
@@ -142,20 +142,20 @@ class TestBatchRemove(TestBaseClass):
                 "key": aerospike.POLICY_KEY_SEND,
                 "commit_level": aerospike.POLICY_COMMIT_LEVEL_MASTER,
                 "gen": aerospike.POLICY_GEN_IGNORE,
-                "exists": aerospike.POLICY_EXISTS_UPDATE,
                 "durable_delete": False,
+                "generation": 2,
                 "expressions": exp.Eq(exp.IntBin("count"), 0).compile()# this expression takes precedence
             },
             [AerospikeStatus.AEROSPIKE_OK],
             [{}]
         ),
     ])
-    def test_batch_remove_pos(self, name, keys, policy_batch, policy_batch_write, exp_res, exp_rec):
+    def test_batch_remove_pos(self, name, keys, policy_batch, policy_batch_remove, exp_res, exp_rec):
         """
         Test batch_remove positive.
         """
 
-        res = self.as_connection.batch_remove(keys, policy_batch, policy_batch_write)
+        res = self.as_connection.batch_remove(keys, policy_batch, policy_batch_remove)
         
         for i, batch_rec in enumerate(res.batch_records):
             assert batch_rec.result == exp_res[i]
@@ -172,13 +172,13 @@ class TestBatchRemove(TestBaseClass):
 
         policy_batch = {}
         
-        policy_batch_write = {}
+        policy_batch_remove = {}
 
         try:
             for key in keys:
                 self.as_connection.put(key, {"count": 0})
 
-            res = self.as_connection.batch_remove(keys, policy_batch, policy_batch_write)
+            res = self.as_connection.batch_remove(keys, policy_batch, policy_batch_remove)
             
             for i, batch_rec in enumerate(res.batch_records):
                 assert batch_rec.result == AerospikeStatus.AEROSPIKE_OK
@@ -194,7 +194,7 @@ class TestBatchRemove(TestBaseClass):
                 except e.RecordNotFound:
                     continue
 
-    @pytest.mark.parametrize("name, keys, policy_batch, policy_batch_write, exp_res", [
+    @pytest.mark.parametrize("name, keys, policy_batch, policy_batch_remove, exp_res", [
         (
             "bad-key",
             [
@@ -223,10 +223,10 @@ class TestBatchRemove(TestBaseClass):
             e.ParamError
         ),
     ])
-    def test_batch_remove_neg(self, name, keys, policy_batch, policy_batch_write, exp_res):
+    def test_batch_remove_neg(self, name, keys, policy_batch, policy_batch_remove, exp_res):
         """
         Test batch_remove negative.
         """
 
         with pytest.raises(exp_res):
-            self.as_connection.batch_remove(keys, policy_batch, policy_batch_write)
+            self.as_connection.batch_remove(keys, policy_batch, policy_batch_remove)
