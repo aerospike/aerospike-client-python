@@ -970,7 +970,6 @@ as_status pyobject_to_policy_batch(AerospikeClient *self, as_error *err,
 
 	POLICY_SET_FIELD(concurrent, bool);
 	POLICY_SET_FIELD(allow_inline, bool);
-	POLICY_SET_FIELD(send_set_name, bool);
 	POLICY_SET_FIELD(deserialize, bool);
 	POLICY_SET_FIELD(replica, as_policy_replica);
 

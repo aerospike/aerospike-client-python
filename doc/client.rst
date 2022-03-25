@@ -2845,6 +2845,9 @@ Batch Policies
             | 
             | Default ``True``
         * **send_set_name** (:class:`bool`) 
+            |
+            |   .. deprecated:: in client version 7.0.0, the client ignores this policy and always sends set name to the server.
+            |
             | Send set name field to server for every key in the batch for batch index protocol. This is only necessary when authentication is enabled and security roles are defined on a per set basis. 
             | 
             | Default: ``False``
