@@ -980,7 +980,7 @@ as_status pyobject_to_policy_batch(AerospikeClient *self, as_error *err,
 	// C client 5.0 new expressions
 	POLICY_SET_EXPRESSIONS_BASE_FIELD();
 
-	// C client 5.3.0 (batch writes)
+	// C client 6.0.0 (batch writes)
 	POLICY_SET_FIELD(allow_inline_ssd, bool);
 	POLICY_SET_FIELD(respond_all_keys, bool);
 
