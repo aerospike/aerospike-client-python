@@ -230,3 +230,17 @@ class TestBatchRemove(TestBaseClass):
 
         with pytest.raises(exp_res):
             self.as_connection.batch_remove(keys, policy_batch, policy_batch_remove)
+
+    def test_batch_remove_neg_connection(self):
+        """
+        Test batch_remove negative with bad connection.
+        """
+
+        keys = []
+
+        exp_res = e.ClusterError
+
+        bad_client = aerospike.client({"hosts": [("bad_addr", 3000)]})
+
+        with pytest.raises(exp_res):
+            bad_client.batch_remove(keys)

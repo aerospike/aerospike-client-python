@@ -146,6 +146,17 @@ static PyObject *AerospikeClient_Batch_Operate_Invoke(AerospikeClient *self,
 
     PyObject* br_instance = NULL;
 
+	if (!self || !self->as) {
+		as_error_update(err, AEROSPIKE_ERR_PARAM, "Invalid aerospike object");
+		goto CLEANUP;
+	}
+
+	if (!self->is_conn_16) {
+		as_error_update(err, AEROSPIKE_ERR_CLUSTER,
+						"No connection to aerospike cluster");
+		goto CLEANUP;
+	}
+
 	for (int i = 0; i < ops_size; i++) {
 		PyObject *py_val = PyList_GetItem(py_ops, i);
 

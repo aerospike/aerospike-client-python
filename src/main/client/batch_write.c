@@ -123,6 +123,17 @@ static PyObject *AerospikeClient_BatchWriteInvoke(AerospikeClient *self, as_erro
     as_vector garbage_list;
     as_vector *garbage_list_p = NULL;
 
+	if (!self || !self->as) {
+		as_error_update(err, AEROSPIKE_ERR_PARAM, "Invalid aerospike object");
+		goto CLEANUP;
+	}
+
+	if (!self->is_conn_16) {
+		as_error_update(err, AEROSPIKE_ERR_CLUSTER,
+						"No connection to aerospike cluster");
+		goto CLEANUP;
+	}
+
 	if (py_obj == NULL) {
 		as_error_update(err, AEROSPIKE_ERR_PARAM,
 							   "py_obj value is null");

@@ -136,6 +136,17 @@ static PyObject *AerospikeClient_Batch_Remove_Invoke(AerospikeClient *self,
     as_vector *tmp_keys_p = &tmp_keys;
     uint64_t processed_key_count = 0;
 
+	if (!self || !self->as) {
+		as_error_update(err, AEROSPIKE_ERR_PARAM, "Invalid aerospike object");
+		goto CLEANUP;
+	}
+
+	if (!self->is_conn_16) {
+		as_error_update(err, AEROSPIKE_ERR_CLUSTER,
+						"No connection to aerospike cluster");
+		goto CLEANUP;
+	}
+
 	for (int i = 0; i < keys_size; i++) {
 		PyObject *py_key = PyList_GetItem(py_keys, i);
         as_key *tmp_key = (as_key*) as_vector_get(&tmp_keys, i);
