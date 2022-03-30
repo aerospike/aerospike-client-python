@@ -831,7 +831,7 @@ Batch Operations
 
         .. note:: Requires server version >= 6.0.0.
 
-        Perform read/write operations on multiple keys.
+        Perform the same read/write operations on multiple keys.
 
         :param list keys: The keys to operate on.
         :param list ops: List of operations to apply.
@@ -973,9 +973,9 @@ Batch Operations
 
         .. note:: Requires server version >= 6.0.0.
 
-        Apply UDF (user defined function) on multiple keys.
+        Remove multiple records by key.
 
-        :param list keys: The keys to operate on.
+        :param list keys: The keys to remove.
         :param dict policy_batch: Optional aerospike batch policy :ref:`aerospike_batch_policies`.
         :param dict policy_batch_remove: Optional aerospike batch remove policy :ref:`aerospike_batch_remove_policies`.
         :return: an instance of :class:`BatchRecords <aerospike_helpers.batch.records>`.
@@ -3237,8 +3237,6 @@ Partition Objects
 
 .. object:: partition_filter
 
-    .. note:: Requires Aerospike server version >= 6.0.
-
     A :class:`dict` of partition information used by the client
     to perform partiton queries/scans. Useful for resuming terminated queries and
     querying particular partitons/records.
@@ -3248,7 +3246,7 @@ Partition Objects
 
         * **begin** Optional :class:`int` signifying which partition to start at. Default: 0 (the first partition)
         * **count** Optional :class:`int` signifying how many partitions to process. Default: 4096 (all partitions)
-        * **digest** Optional class`dict` containing the keys "init" and "value" signifying whether the digest has been calculated, and the digest value.
+        * **digest** Optional :class:`dict` containing the keys "init" and "value" signifying whether the digest has been calculated, and the digest value.
             |   **init**: :class:`bool` Whether the digest has been calculated.
             |   **value**: :class:`bytearray` The bytearray value of the digest, should be 20 characters long.
             |       ``# Example digest dict.``
