@@ -3286,7 +3286,7 @@ Partition Objects
     to set the partition status of a query/scan during a partition query/scan.
     Useful for resuming partition query/scans.
 
-    partition_status is a dictionary keys "retry" `str`, "done" `str`, and a variable amount of id `int` keys.
+    partition_status is a dictionary with keys "retry" `str`, "done" `str`, and a variable amount of id `int` keys.
     "retry" corresponds to the overall partition query retry status and maps to a bool. i.e. Does this query/scan need to be retried?
     "done" represents whether all partitions were finished and maps to a bool.
     the id keys, called "id" in this documentation correspond to a partition id. "id"'s value is
@@ -3296,7 +3296,7 @@ Partition Objects
         :columns: 1
 
         * **id** :class:`int` Represents the partition id number.
-        * **init** :class:`bool` Represent whether the digest being queried was calculated.
+        * **init** :class:`bool` Represents whether the digest being queried was calculated.
         * **retry** :class:`bool` Represents whether this partition should be retried.
         * **digest** :class:`bytearray` Represents the digest of the record being queried. Should be 20 characters long.
         * **bval** :class:`int` Used in conjunction with digest in order to determine the last record recieved by a partition query.
