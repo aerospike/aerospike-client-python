@@ -157,10 +157,10 @@ static PyObject *AerospikeClient_BatchWriteInvoke(AerospikeClient *self, as_erro
     }
 
     py_batch_records_size = PyList_Size(py_batch_records);
-    as_batch_records_inita(&batch_records, py_batch_records_size);
+    as_batch_records_init(&batch_records, py_batch_records_size);
     batch_records_p = &batch_records;
 
-    as_vector_inita(&garbage_list, sizeof(garbage), py_batch_records_size);
+    as_vector_init(&garbage_list, sizeof(garbage), py_batch_records_size);
     for (Py_ssize_t i = 0; i < py_batch_records_size; i++) {
         garbage garb_to_free = {0};
         as_vector_set(&garbage_list, i, (void *)&garb_to_free);
@@ -410,6 +410,7 @@ CLEANUP:
             garbage *garb_to_free = as_vector_get(&garbage_list, i);
             garbage_destroy(garb_to_free);
         }
+        as_vector_destroy(garbage_list_p);
     }
 
     if (batch_records_p != NULL) {
