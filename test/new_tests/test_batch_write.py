@@ -389,9 +389,6 @@ class TestBatchWrite(TestBaseClass):
             "complex",
             br.BatchRecords(
                 [
-                    br.Remove(
-                        ("test", "demo", 1)
-                    ),
                     br.Write(
                         ("test", "demo", 1),
                         [
