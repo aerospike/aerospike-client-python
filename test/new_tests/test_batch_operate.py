@@ -27,8 +27,8 @@ class TestBatchOperate(TestBaseClass):
     def setup(self, request, connection_with_config_funcs):
         as_connection = connection_with_config_funcs
 
-        if self.server_version < [5, 6]:
-            pytest.mark.xfail(reason="Servers older than 5.6 do not support arithmetic expressions.")
+        if self.server_version < [6, 0]:
+            pytest.mark.xfail(reason="Servers older than 6.0 do not support batch operate.")
             pytest.xfail()
         
         self.test_ns = 'test'
