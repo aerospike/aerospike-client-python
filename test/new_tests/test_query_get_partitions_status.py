@@ -17,6 +17,10 @@ class TestQueryGetPartitionsStatus(TestBaseClass):
 
     @pytest.fixture(autouse=True)
     def setup(self, request, as_connection):
+        if self.server_version < [6, 0]:
+            pytest.mark.xfail(reason="Servers older than 6.0 do not support partition queries.")
+            pytest.xfail()
+
         self.test_ns = 'test'
         self.test_set = 'demo'
 

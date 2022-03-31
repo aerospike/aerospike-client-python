@@ -102,17 +102,15 @@ class TestBatchExpressionsOperations(TestBaseClass):
         ]
         meta = {'gen': 1}
         policy = {'timeout': 1001}
-        #print(self.keys)
+
         res = self.as_connection.batch_get_ops(self.keys, ops, meta, policy)
         """
         res are in the format of (status-tuple, ((meta-dict, result-dict), status-tuple, exception), ...)
         """
-        print(res)
+
         status = res[0]
         recs = res[1:]
-        # print("\ntest_read_pos status:", status)
         for i in range(self.rec_count):
-            # print("results: ", recs[i])
             assert recs[i][0][1] == expected
 
     @pytest.mark.parametrize("expr, flags, name, expected", [
@@ -124,13 +122,13 @@ class TestBatchExpressionsOperations(TestBaseClass):
                     Unknown())
             ).compile(),
             aerospike.EXP_READ_DEFAULT,
-			"test_name3",
+			"test_name1",
             e.BatchFailed # Because Unknown will be returned.
         ),
         (
             "bad_expr",
             aerospike.EXP_READ_DEFAULT,
-            "test_name3",
+            "test_name2",
             e.ParamError
         ),
         (
