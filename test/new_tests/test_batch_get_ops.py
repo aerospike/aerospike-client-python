@@ -22,8 +22,8 @@ class TestBatchExpressionsOperations(TestBaseClass):
     @pytest.fixture(autouse=True)
     def setup(self, request, as_connection):
         # TODO this should be changed to 6.0 before release.
-        if self.server_version < [5, 7]:
-            pytest.mark.xfail(reason="Servers older than 5.7 do not support arithmetic expressions.")
+        if self.server_version < [5, 6]:
+            pytest.mark.xfail(reason="Servers older than 5.6 do not support batch get ops.")
             pytest.xfail()
         
         self.test_ns = 'test'
@@ -114,17 +114,6 @@ class TestBatchExpressionsOperations(TestBaseClass):
             assert recs[i][0][1] == expected
 
     @pytest.mark.parametrize("expr, flags, name, expected", [
-        (
-            Let(Def("bal", IntBin("balance")),
-                Cond(
-                    LT(Var("bal"), 50),
-                        Add(Var("bal"), 50),
-                    Unknown())
-            ).compile(),
-            aerospike.EXP_READ_DEFAULT,
-			"test_name1",
-            e.BatchFailed # Because Unknown will be returned.
-        ),
         (
             "bad_expr",
             aerospike.EXP_READ_DEFAULT,

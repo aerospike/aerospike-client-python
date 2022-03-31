@@ -277,20 +277,27 @@ class TestQuery(TestBaseClass):
         """
             Invoke query() with non-indexed bin
         """
-        # with pytest.raises(Exception) as exception:
+
+        query = self.as_connection.query('test', 'demo')
+        query.select('name', 'no')
+        query.where(p.equals('no', 1))
+
+        def callback(input_tuple):
+            pass
+
         with pytest.raises(e.MaxRetriesExceeded) as err_info:
-            query = self.as_connection.query('test', 'demo')
-            query.select('name', 'no')
-            query.where(p.equals('no', 1))
 
-            def callback(input_tuple):
-                pass
-            query.foreach(callback)
+            try:
+                query.foreach(callback)
+            except e.IndexNotFound:
+                # before server version 6.0 IndexNotFound was not retryable
+                if self.server_version < [6, 0]:
+                    return
 
-        err_code = err_info.value.code
-        # Changed to AEROSPIKE_ERR_MAX_RETRIES_EXCEEDED because AEROSPIKE_ERR_INDEX_NOT_FOUND is now a retriable error.
-        assert err_code == AerospikeStatus.AEROSPIKE_ERR_MAX_RETRIES_EXCEEDED
-        assert "AEROSPIKE_ERR_INDEX_NOT_FOUND" in err_info.value.msg
+            err_code = err_info.value.code
+            # Changed to AEROSPIKE_ERR_MAX_RETRIES_EXCEEDED because AEROSPIKE_ERR_INDEX_NOT_FOUND is now a retriable error.
+            assert err_code == AerospikeStatus.AEROSPIKE_ERR_MAX_RETRIES_EXCEEDED
+            assert "AEROSPIKE_ERR_INDEX_NOT_FOUND" in err_info.value.msg
 
     def test_query_with_where_incorrect(self):
         """
