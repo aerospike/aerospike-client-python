@@ -342,8 +342,7 @@ static PyObject *AerospikeClient_QueryApply_Invoke(
 	if (py_policy) {
 		pyobject_to_policy_write(
 			self, &err, py_policy, &write_policy, &write_policy_p,
-			&self->as->config.policies.write,
-			&exp_list, &exp_list_p);
+			&self->as->config.policies.write, &exp_list, &exp_list_p);
 
 		if (err.code != AEROSPIKE_OK) {
 			goto CLEANUP;

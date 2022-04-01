@@ -109,8 +109,7 @@ PyObject *AerospikeQuery_Results(AerospikeQuery *self, PyObject *args,
 	// Convert python policy object to as_policy_query
 	pyobject_to_policy_query(
 		self->client, &err, py_policy, &query_policy, &query_policy_p,
-		&self->client->as->config.policies.query,
-		&exp_list, &exp_list_p);
+		&self->client->as->config.policies.query, &exp_list, &exp_list_p);
 	if (err.code != AEROSPIKE_OK) {
 		goto CLEANUP;
 	}
@@ -124,8 +123,7 @@ PyObject *AerospikeQuery_Results(AerospikeQuery *self, PyObject *args,
 			PyDict_GetItemString(py_policy, "partition_filter");
 		if (py_partition_filter) {
 			if (convert_partition_filter(self->client, py_partition_filter,
-										 &partition_filter,
-										 &ps,
+										 &partition_filter, &ps,
 										 &err) == AEROSPIKE_OK) {
 				partition_filter_p = &partition_filter;
 			}
@@ -142,15 +140,15 @@ PyObject *AerospikeQuery_Results(AerospikeQuery *self, PyObject *args,
 	Py_BEGIN_ALLOW_THREADS
 
 	if (partition_filter_p) {
-		if	(ps) {
+		if (ps) {
 			as_partition_filter_set_partitions(partition_filter_p, ps);
 		}
 
 		aerospike_query_partitions(self->client->as, &err, query_policy_p,
-								  &self->query, partition_filter_p, each_result,
-								  &data);
+								   &self->query, partition_filter_p,
+								   each_result, &data);
 
-		if	(ps) {
+		if (ps) {
 			as_partitions_status_release(ps);
 		}
 	}

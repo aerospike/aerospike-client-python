@@ -457,7 +457,7 @@ static AerospikeConstants aerospike_constants[] = {
 	{AS_BYTES_LIST, "AS_BYTES_LIST"},
 	{AS_BYTES_GEOJSON, "AS_BYTES_GEOJSON"},
 	{AS_BYTES_TYPE_MAX, "AS_BYTES_TYPE_MAX"},
-	
+
 	/* Regex constants from predexp, still used by expressions */
 	{REGEX_NONE, "REGEX_NONE"},
 	{REGEX_EXTENDED, "REGEX_EXTENDED"},
@@ -771,10 +771,12 @@ as_status pyobject_to_policy_read(AerospikeClient *self, as_error *err,
  * We assume that the error object and the policy object are already allocated
  * and initialized (although, we do reset the error object here).
  */
-as_status pyobject_to_policy_remove(
-	AerospikeClient *self, as_error *err, PyObject *py_policy,
-	as_policy_remove *policy, as_policy_remove **policy_p,
-	as_policy_remove *config_remove_policy, as_exp *exp_list, as_exp **exp_list_p)
+as_status pyobject_to_policy_remove(AerospikeClient *self, as_error *err,
+									PyObject *py_policy,
+									as_policy_remove *policy,
+									as_policy_remove **policy_p,
+									as_policy_remove *config_remove_policy,
+									as_exp *exp_list, as_exp **exp_list_p)
 {
 	// Initialize Policy
 	POLICY_INIT(as_policy_remove);
@@ -900,10 +902,12 @@ as_status pyobject_to_policy_write(AerospikeClient *self, as_error *err,
  * We assume that the error object and the policy object are already allocated
  * and initialized (although, we do reset the error object here).
  */
-as_status pyobject_to_policy_operate(
-	AerospikeClient *self, as_error *err, PyObject *py_policy,
-	as_policy_operate *policy, as_policy_operate **policy_p,
-	as_policy_operate *config_operate_policy, as_exp *exp_list, as_exp **exp_list_p)
+as_status pyobject_to_policy_operate(AerospikeClient *self, as_error *err,
+									 PyObject *py_policy,
+									 as_policy_operate *policy,
+									 as_policy_operate **policy_p,
+									 as_policy_operate *config_operate_policy,
+									 as_exp *exp_list, as_exp **exp_list_p)
 {
 	// Initialize Policy
 	POLICY_INIT(as_policy_operate);
@@ -991,13 +995,11 @@ as_status pyobject_to_policy_batch(AerospikeClient *self, as_error *err,
 }
 
 // New with server 6.0, C client 5.2.0 (batch writes)
-as_status pyobject_to_batch_write_policy(AerospikeClient *self,
-											as_error *err,
-											PyObject *py_policy,
-											as_policy_batch_write *policy,
-											as_policy_batch_write **policy_p,
-											as_exp *exp_list,
-											as_exp **exp_list_p)
+as_status pyobject_to_batch_write_policy(AerospikeClient *self, as_error *err,
+										 PyObject *py_policy,
+										 as_policy_batch_write *policy,
+										 as_policy_batch_write **policy_p,
+										 as_exp *exp_list, as_exp **exp_list_p)
 {
 	POLICY_INIT(as_policy_batch_write);
 
@@ -1018,13 +1020,11 @@ as_status pyobject_to_batch_write_policy(AerospikeClient *self,
 }
 
 // New with server 6.0, C client 5.2.0 (batch writes)
-as_status pyobject_to_batch_read_policy(AerospikeClient *self,
-											as_error *err,
-											PyObject *py_policy,
-											as_policy_batch_read *policy,
-											as_policy_batch_read **policy_p,
-											as_exp *exp_list,
-											as_exp **exp_list_p)
+as_status pyobject_to_batch_read_policy(AerospikeClient *self, as_error *err,
+										PyObject *py_policy,
+										as_policy_batch_read *policy,
+										as_policy_batch_read **policy_p,
+										as_exp *exp_list, as_exp **exp_list_p)
 {
 	POLICY_INIT(as_policy_batch_read);
 
@@ -1042,13 +1042,11 @@ as_status pyobject_to_batch_read_policy(AerospikeClient *self,
 }
 
 // New with server 6.0, C client 5.2.0 (batch writes)
-as_status pyobject_to_batch_apply_policy(AerospikeClient *self,
-											as_error *err,
-											PyObject *py_policy,
-											as_policy_batch_apply *policy,
-											as_policy_batch_apply **policy_p,
-											as_exp *exp_list,
-											as_exp **exp_list_p)
+as_status pyobject_to_batch_apply_policy(AerospikeClient *self, as_error *err,
+										 PyObject *py_policy,
+										 as_policy_batch_apply *policy,
+										 as_policy_batch_apply **policy_p,
+										 as_exp *exp_list, as_exp **exp_list_p)
 {
 	POLICY_INIT(as_policy_batch_apply);
 
@@ -1068,13 +1066,11 @@ as_status pyobject_to_batch_apply_policy(AerospikeClient *self,
 }
 
 // New with server 6.0, C client 5.2.0 (batch writes)
-as_status pyobject_to_batch_remove_policy(AerospikeClient *self,
-											as_error *err,
-											PyObject *py_policy,
-											as_policy_batch_remove *policy,
-											as_policy_batch_remove **policy_p,
-											as_exp *exp_list,
-											as_exp **exp_list_p)
+as_status pyobject_to_batch_remove_policy(AerospikeClient *self, as_error *err,
+										  PyObject *py_policy,
+										  as_policy_batch_remove *policy,
+										  as_policy_batch_remove **policy_p,
+										  as_exp *exp_list, as_exp **exp_list_p)
 {
 	POLICY_INIT(as_policy_batch_remove);
 

@@ -39,8 +39,8 @@
  * In case of error, appropriate exceptions will be raised.
  *******************************************************************************************************
  */
-PyObject *AerospikeClient_GetExpressionBase64(AerospikeClient *self, PyObject *args,
-									   PyObject *kwds)
+PyObject *AerospikeClient_GetExpressionBase64(AerospikeClient *self,
+											  PyObject *args, PyObject *kwds)
 {
 	// function args
 	PyObject *py_expression_filter = NULL;
@@ -55,8 +55,8 @@ PyObject *AerospikeClient_GetExpressionBase64(AerospikeClient *self, PyObject *a
 	as_error_init(&err);
 
 	static char *kwlist[] = {"expression", NULL};
-	if (PyArg_ParseTupleAndKeywords(
-			args, kwds, "O:get_expression_base64", kwlist, &py_expression_filter) == false) {
+	if (PyArg_ParseTupleAndKeywords(args, kwds, "O:get_expression_base64",
+									kwlist, &py_expression_filter) == false) {
 		return NULL;
 	}
 
@@ -75,7 +75,7 @@ PyObject *AerospikeClient_GetExpressionBase64(AerospikeClient *self, PyObject *a
 
 	base64_filter = as_exp_compile_b64(exp_list_p);
 
-	py_response = PyUnicode_FromString((const char*)base64_filter);
+	py_response = PyUnicode_FromString((const char *)base64_filter);
 
 CLEANUP:
 

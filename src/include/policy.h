@@ -233,10 +233,12 @@ as_status pyobject_to_policy_read(AerospikeClient *self, as_error *err,
 								  as_policy_read *config_read_policy,
 								  as_exp *exp_list, as_exp **exp_list_p);
 
-as_status pyobject_to_policy_remove(
-	AerospikeClient *self, as_error *err, PyObject *py_policy,
-	as_policy_remove *policy, as_policy_remove **policy_p,
-	as_policy_remove *config_remove_policy, as_exp *exp_list, as_exp **exp_list_p);
+as_status pyobject_to_policy_remove(AerospikeClient *self, as_error *err,
+									PyObject *py_policy,
+									as_policy_remove *policy,
+									as_policy_remove **policy_p,
+									as_policy_remove *config_remove_policy,
+									as_exp *exp_list, as_exp **exp_list_p);
 
 as_status pyobject_to_policy_scan(AerospikeClient *self, as_error *err,
 								  PyObject *py_policy, as_policy_scan *policy,
@@ -250,10 +252,12 @@ as_status pyobject_to_policy_write(AerospikeClient *self, as_error *err,
 								   as_policy_write *config_write_policy,
 								   as_exp *exp_list, as_exp **exp_list_p);
 
-as_status pyobject_to_policy_operate(
-	AerospikeClient *self, as_error *err, PyObject *py_policy,
-	as_policy_operate *policy, as_policy_operate **policy_p,
-	as_policy_operate *config_operate_policy, as_exp *exp_list, as_exp **exp_list_p);
+as_status pyobject_to_policy_operate(AerospikeClient *self, as_error *err,
+									 PyObject *py_policy,
+									 as_policy_operate *policy,
+									 as_policy_operate **policy_p,
+									 as_policy_operate *config_operate_policy,
+									 as_exp *exp_list, as_exp **exp_list_p);
 
 as_status pyobject_to_policy_batch(AerospikeClient *self, as_error *err,
 								   PyObject *py_policy, as_policy_batch *policy,
@@ -280,34 +284,27 @@ as_status pyobject_to_bit_policy(as_error *err, PyObject *py_policy,
 as_status pyobject_to_hll_policy(as_error *err, PyObject *py_policy,
 								 as_hll_policy *hll_policy);
 
-as_status pyobject_to_batch_write_policy(AerospikeClient *self,
-											as_error *err,
-											PyObject *py_policy,
-											as_policy_batch_write *policy,
-											as_policy_batch_write **policy_p,
-											as_exp *exp_list,
-											as_exp **exp_list_p);
+as_status pyobject_to_batch_write_policy(AerospikeClient *self, as_error *err,
+										 PyObject *py_policy,
+										 as_policy_batch_write *policy,
+										 as_policy_batch_write **policy_p,
+										 as_exp *exp_list, as_exp **exp_list_p);
 
-as_status pyobject_to_batch_read_policy(AerospikeClient *self,
-											as_error *err,
-											PyObject *py_policy,
-											as_policy_batch_read *policy,
-											as_policy_batch_read **policy_p,
-											as_exp *exp_list,
-											as_exp **exp_list_p);
+as_status pyobject_to_batch_read_policy(AerospikeClient *self, as_error *err,
+										PyObject *py_policy,
+										as_policy_batch_read *policy,
+										as_policy_batch_read **policy_p,
+										as_exp *exp_list, as_exp **exp_list_p);
 
-as_status pyobject_to_batch_apply_policy(AerospikeClient *self,
-											as_error *err,
-											PyObject *py_policy,
-											as_policy_batch_apply *policy,
-											as_policy_batch_apply **policy_p,
-											as_exp *exp_list,
-											as_exp **exp_list_p);
+as_status pyobject_to_batch_apply_policy(AerospikeClient *self, as_error *err,
+										 PyObject *py_policy,
+										 as_policy_batch_apply *policy,
+										 as_policy_batch_apply **policy_p,
+										 as_exp *exp_list, as_exp **exp_list_p);
 
-as_status pyobject_to_batch_remove_policy(AerospikeClient *self,
-											as_error *err,
-											PyObject *py_policy,
-											as_policy_batch_remove *policy,
-											as_policy_batch_remove **policy_p,
-											as_exp *exp_list,
-											as_exp **exp_list_p);
+as_status pyobject_to_batch_remove_policy(AerospikeClient *self, as_error *err,
+										  PyObject *py_policy,
+										  as_policy_batch_remove *policy,
+										  as_policy_batch_remove **policy_p,
+										  as_exp *exp_list,
+										  as_exp **exp_list_p);

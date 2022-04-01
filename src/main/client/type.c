@@ -408,9 +408,8 @@ PyDoc_STRVAR(
 \n\
 Set cluster xdr filter.");
 
-PyDoc_STRVAR(
-	get_expression_base64_doc,
-	"get_expression_base64(compiled_expression: list) -> str\n\
+PyDoc_STRVAR(get_expression_base64_doc,
+			 "get_expression_base64(compiled_expression: list) -> str\n\
 \n\
 Get the base64 representation of a compiled aerospike expression.");
 
@@ -503,7 +502,9 @@ PyDoc_STRVAR(get_many_doc, "get_many(keys[, policy]) -> [ (key, meta, bins)]\n\
 Batch-read multiple records with applying list of opearagtions and returns them as a list. \
 Any record that does not exist will have a None value for metadata and status in the record tuple.");
 
-PyDoc_STRVAR(batch_get_ops_doc, "batch_get_ops((list_of_keys, list_of_ops, meta, policy)) -> [ ((, list_of_keys, list_of_ops, meta, policy))]\n\
+PyDoc_STRVAR(
+	batch_get_ops_doc,
+	"batch_get_ops((list_of_keys, list_of_ops, meta, policy)) -> [ ((, list_of_keys, list_of_ops, meta, policy))]\n\
 \n\
 Batch-read multiple records, and return them as a list. \
 Any record that does not exist will have a None value for metadata and bins in the record tuple.");
@@ -531,17 +532,23 @@ This method allows different sub-commands for each key in the batch. \
 The returned records are located in the same list. \
 Requires server version 6.0+");
 
-PyDoc_STRVAR(batch_operate_doc, "batch_operate([keys], [ops], policy_batch, policy_batch_write) -> BatchRecords\n\
+PyDoc_STRVAR(
+	batch_operate_doc,
+	"batch_operate([keys], [ops], policy_batch, policy_batch_write) -> BatchRecords\n\
 \n\
 Perform read/write operations on multiple keys. \
 Requires server version 6.0+");
 
-PyDoc_STRVAR(batch_remove_doc, "batch_remove([keys], policy_batch, policy_batch_remove) -> BatchRecords\n\
+PyDoc_STRVAR(
+	batch_remove_doc,
+	"batch_remove([keys], policy_batch, policy_batch_remove) -> BatchRecords\n\
 \n\
 Remove multiple records by key. \
 Requires server version 6.0+");
 
-PyDoc_STRVAR(batch_apply_doc, "batch_apply([keys], module, function, [args], policy_batch, policy_batch_apply) -> BatchRecords\n\
+PyDoc_STRVAR(
+	batch_apply_doc,
+	"batch_apply([keys], module, function, [args], policy_batch, policy_batch_apply) -> BatchRecords\n\
 \n\
 Apply a user defined function (UDF) to multiple keys. \
 Requires server version 6.0+");
@@ -1255,13 +1262,15 @@ static int AerospikeClient_Type_Init(AerospikeClient *self, PyObject *args,
 				if ((long)AS_AUTH_INTERNAL == auth_mode ||
 					(long)AS_AUTH_EXTERNAL == auth_mode ||
 					(long)AS_AUTH_EXTERNAL_INSECURE == auth_mode ||
-					(long)AS_AUTH_PKI == auth_mode ) {
+					(long)AS_AUTH_PKI == auth_mode) {
 					config.auth_mode = auth_mode;
-				} else {
+				}
+				else {
 					error_code = INIT_INVALID_AUTHMODE_ERR;
 					goto CONSTRUCTOR_ERROR;
 				}
-			} else {
+			}
+			else {
 				//it may come like auth_mode = None, for those non-integer cases, treat them as non-set
 				//error_code = INIT_INVALID_AUTHMODE_ERR;
 				//goto CONSTRUCTOR_ERROR;

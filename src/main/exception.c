@@ -248,9 +248,11 @@ PyObject *AerospikeException_New(void)
 	exceptions_array.MaxRetriesExceeded = PyErr_NewException(
 		"exception.MaxRetriesExceeded", exceptions_array.ClientError, NULL);
 	Py_INCREF(exceptions_array.MaxRetriesExceeded);
-	PyModule_AddObject(module, "MaxRetriesExceeded", exceptions_array.MaxRetriesExceeded);
+	PyModule_AddObject(module, "MaxRetriesExceeded",
+					   exceptions_array.MaxRetriesExceeded);
 	py_code = PyInt_FromLong(AEROSPIKE_ERR_MAX_RETRIES_EXCEEDED);
-	PyObject_SetAttrString(exceptions_array.MaxRetriesExceeded, "code", py_code);
+	PyObject_SetAttrString(exceptions_array.MaxRetriesExceeded, "code",
+						   py_code);
 	Py_DECREF(py_code);
 
 	// InvalidNodeError, AEROSPIKE_ERR_INVALID_NODE, -8

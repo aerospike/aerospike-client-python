@@ -46,10 +46,11 @@ static bool each_result(const as_val *val, void *udata)
 
 	uint32_t part_id = 0;
 
-	as_record* rec = as_record_fromval(val);
- 
+	as_record *rec = as_record_fromval(val);
+
 	if (rec->key.digest.init) {
-		part_id = as_partition_getid(rec->key.digest.value, CLUSTER_NPARTITIONS);
+		part_id =
+			as_partition_getid(rec->key.digest.value, CLUSTER_NPARTITIONS);
 	}
 
 	// Extract callback user-data
@@ -79,7 +80,8 @@ static bool each_result(const as_val *val, void *udata)
 		py_arglist = PyTuple_New(2);
 		PyTuple_SetItem(py_arglist, 0, PyInt_FromLong(part_id));
 		PyTuple_SetItem(py_arglist, 1, py_result);
-	} else {
+	}
+	else {
 		// Build Python Function Arguments
 		py_arglist = PyTuple_New(1);
 		PyTuple_SetItem(py_arglist, 0, py_result);
@@ -160,7 +162,8 @@ PyObject *AerospikeScan_Foreach(AerospikeScan *self, PyObject *args,
 	as_error_init(&data.error);
 
 	if (!self || !self->client->as) {
-		as_error_update(&data.error, AEROSPIKE_ERR_PARAM, "Invalid aerospike object");
+		as_error_update(&data.error, AEROSPIKE_ERR_PARAM,
+						"Invalid aerospike object");
 		goto CLEANUP;
 	}
 
@@ -173,8 +176,7 @@ PyObject *AerospikeScan_Foreach(AerospikeScan *self, PyObject *args,
 	// Convert python policy object to as_policy_exists
 	pyobject_to_policy_scan(
 		self->client, &data.error, py_policy, &scan_policy, &scan_policy_p,
-		&self->client->as->config.policies.scan,
-		&exp_list, &exp_list_p);
+		&self->client->as->config.policies.scan, &exp_list, &exp_list_p);
 
 	if (data.error.code != AEROSPIKE_OK) {
 		goto CLEANUP;
@@ -185,8 +187,7 @@ PyObject *AerospikeScan_Foreach(AerospikeScan *self, PyObject *args,
 			PyDict_GetItemString(py_policy, "partition_filter");
 		if (py_partition_filter) {
 			if (convert_partition_filter(self->client, py_partition_filter,
-										 &partition_filter,
-										 &ps,
+										 &partition_filter, &ps,
 										 &data.error) == AEROSPIKE_OK) {
 				partition_filter_p = &partition_filter;
 			}
@@ -226,19 +227,19 @@ PyObject *AerospikeScan_Foreach(AerospikeScan *self, PyObject *args,
 	Py_BEGIN_ALLOW_THREADS
 	// Invoke operation
 	if (partition_filter_p) {
-		if	(ps) {
+		if (ps) {
 			as_partition_filter_set_partitions(partition_filter_p, ps);
 		}
 		aerospike_scan_partitions(self->client->as, &data.error, scan_policy_p,
 								  &self->scan, partition_filter_p, each_result,
 								  &data);
-		if	(ps) {
+		if (ps) {
 			as_partitions_status_release(ps);
 		}
 	}
 	else if (nodename) {
-		aerospike_scan_node(self->client->as, &data.error, scan_policy_p, &self->scan,
-							nodename, each_result, &data);
+		aerospike_scan_node(self->client->as, &data.error, scan_policy_p,
+							&self->scan, nodename, each_result, &data);
 	}
 	else {
 		aerospike_scan_foreach(self->client->as, &data.error, scan_policy_p,

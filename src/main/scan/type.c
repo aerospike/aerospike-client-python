@@ -58,7 +58,8 @@ PyDoc_STRVAR(is_done_doc, "is_done() -> bool\n\
 \n\
 Gets the status of scan");
 
-PyDoc_STRVAR(get_parts_doc, "get_parts() -> {int: (int, bool, bool, bytearray[20]), ...}\n\
+PyDoc_STRVAR(get_parts_doc,
+			 "get_parts() -> {int: (int, bool, bool, bytearray[20]), ...}\n\
 \n\
 Gets the complete partition status of the scan. \
 Returns a dictionary of the form {id:(id, init, done, digest), ...}.");

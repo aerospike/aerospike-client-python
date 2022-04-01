@@ -124,8 +124,7 @@ PyObject *AerospikeScan_Results(AerospikeScan *self, PyObject *args,
 			PyDict_GetItemString(py_policy, "partition_filter");
 		if (py_partition_filter) {
 			if (convert_partition_filter(self->client, py_partition_filter,
-										 &partition_filter,
-										 &ps,
+										 &partition_filter, &ps,
 										 &err) == AEROSPIKE_OK) {
 				partition_filter_p = &partition_filter;
 			}
@@ -163,13 +162,13 @@ PyObject *AerospikeScan_Results(AerospikeScan *self, PyObject *args,
 	Py_BEGIN_ALLOW_THREADS
 
 	if (partition_filter_p) {
-		if	(ps) {
+		if (ps) {
 			as_partition_filter_set_partitions(partition_filter_p, ps);
 		}
 		aerospike_scan_partitions(self->client->as, &err, scan_policy_p,
 								  &self->scan, partition_filter_p, each_result,
 								  &data);
-		if	(ps) {
+		if (ps) {
 			as_partitions_status_release(ps);
 		}
 	}

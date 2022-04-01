@@ -126,11 +126,9 @@ as_status as_list_of_map_to_py_tuple_list(AerospikeClient *self, as_error *err,
 as_status record_to_pyobject(AerospikeClient *self, as_error *err,
 							 const as_record *rec, const as_key *key,
 							 PyObject **obj);
-							 
-as_status record_to_resultpyobject(AerospikeClient *self, 
-								as_error *err,
-								const as_record *rec,
-								PyObject **obj);
+
+as_status record_to_resultpyobject(AerospikeClient *self, as_error *err,
+								   const as_record *rec, PyObject **obj);
 
 as_status operate_bins_to_pyobject(AerospikeClient *self, as_error *err,
 								   const as_record *rec, PyObject **py_bins);
@@ -210,17 +208,19 @@ as_status convert_exp_list(AerospikeClient *self, PyObject *py_exp_list,
 as_status convert_partition_filter(AerospikeClient *self,
 								   PyObject *py_partition_filter,
 								   as_partition_filter *partition_filter,
-								   as_partitions_status **ps,
-								   as_error *err);
+								   as_partitions_status **ps, as_error *err);
 
 as_status get_int_from_py_int(as_error *err, PyObject *py_long,
 							  int *int_pointer, const char *py_object_name);
 
-as_status as_partitions_status_to_pyobject(as_error *err, const as_partitions_status *parts_status,
-										   PyObject **py_dict);
+as_status
+as_partitions_status_to_pyobject(as_error *err,
+								 const as_partitions_status *parts_status,
+								 PyObject **py_dict);
 
-as_status as_partition_status_to_pyobject(as_error *err, const as_partition_status *part_status,
-										   PyObject **py_tuple);
+as_status as_partition_status_to_pyobject(
+	as_error *err, const as_partition_status *part_status, PyObject **py_tuple);
 
-as_status as_batch_result_to_BatchRecord(AerospikeClient *self, as_error *err, as_batch_result *bres,
-											PyObject *py_batch_record);
+as_status as_batch_result_to_BatchRecord(AerospikeClient *self, as_error *err,
+										 as_batch_result *bres,
+										 PyObject *py_batch_record);

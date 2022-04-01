@@ -431,7 +431,6 @@ class TestBatchWrite(TestBaseClass):
                 AerospikeStatus.AEROSPIKE_OK
             ],
             [
-                {},
                 {"balance": 100, "ilist_bin": [2, 6]},
                 {"ilist_bin": 6},
                 {'SUCCESS': 0},
