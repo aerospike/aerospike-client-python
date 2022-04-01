@@ -282,13 +282,8 @@ static PyObject *AerospikeClient_Batch_Operate_Invoke(
 	as_error_reset(err);
 
 CLEANUP:
-	// TODO don't need below loop?
 	for (unsigned int i = 0; i < unicodeStrVector->size; i++) {
 		free(as_vector_get_ptr(unicodeStrVector, i));
-	}
-
-	if (tmp_keys_p) {
-		as_vector_destroy(tmp_keys_p);
 	}
 
 	if (batch_exp_list_p) {
@@ -302,6 +297,10 @@ CLEANUP:
 	as_vector_destroy(unicodeStrVector);
 	as_operations_destroy(&ops);
 	as_batch_destroy(&batch);
+
+	if (tmp_keys_p) {
+		as_vector_destroy(tmp_keys_p);
+	}
 
 	if (err->code != AEROSPIKE_OK) {
 		PyObject *py_err = NULL;

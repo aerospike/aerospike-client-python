@@ -251,10 +251,6 @@ static PyObject *AerospikeClient_Batch_Remove_Invoke(
 	as_error_reset(err);
 
 CLEANUP:
-	if (tmp_keys_p) {
-		as_vector_destroy(tmp_keys_p);
-	}
-
 	if (batch_exp_list_p) {
 		as_exp_destroy(batch_exp_list_p);
 	}
@@ -264,6 +260,10 @@ CLEANUP:
 	}
 
 	as_batch_destroy(&batch);
+
+	if (tmp_keys_p) {
+		as_vector_destroy(tmp_keys_p);
+	}
 
 	if (err->code != AEROSPIKE_OK) {
 		PyObject *py_err = NULL;

@@ -469,6 +469,10 @@ CLEANUP:
 		as_batch_records_destroy(&batch_records);
 	}
 
+	for (unsigned int i = 0; i < unicodeStrVector->size; i++) {
+		free(as_vector_get_ptr(unicodeStrVector, i));
+	}
+
 	as_vector_destroy(unicodeStrVector);
 
 	if (exp_list_p != NULL) {
