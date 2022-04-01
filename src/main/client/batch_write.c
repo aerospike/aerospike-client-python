@@ -104,7 +104,7 @@ void garbage_destroy(garbage *garb)
 	}
 
 	as_list *args_l = garb->udf_args_to_free;
-	if (ops != NULL) {
+	if (args_l != NULL) {
 		as_list_destroy(args_l);
 	}
 }
