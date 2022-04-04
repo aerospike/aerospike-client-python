@@ -55,7 +55,7 @@ class TestBatchWrite(TestBaseClass):
     def setup(self, request, connection_with_config_funcs):
         as_connection = connection_with_config_funcs
 
-        if self.server_version < [6, 0]:
+        if self.server_version < [5, 0]:
             pytest.mark.xfail(reason="Servers older than 6.0 do not support batch writes.")
             pytest.xfail()
         
@@ -302,7 +302,7 @@ class TestBatchWrite(TestBaseClass):
                     br.Read(
                         ("test", "demo", 1),
                         [
-                            lop.list_get_by_rank("ilist_bin", -1, aerospike.LIST_RETURN_VALUE),
+                            lop.list_get_by_rank("ilist_bin", 0, aerospike.LIST_RETURN_VALUE),
                         ]
                     )
                 ]
@@ -314,7 +314,7 @@ class TestBatchWrite(TestBaseClass):
             ],
             [
                 {'SUCCESS': 0},
-                {"ilist_bin": 200}
+                {"ilist_bin": 1}
             ]
         ),
         (
@@ -337,11 +337,8 @@ class TestBatchWrite(TestBaseClass):
                     br.Read(
                         ("test", "demo", 1),
                         [
-                            lop.list_get_by_rank("ilist_bin", -1, aerospike.LIST_RETURN_VALUE),
-                        ],
-                        policy={
-                            "expressions": exp.Eq(exp.TTL(), -1).compile()
-                        }
+                            lop.list_get_by_rank("ilist_bin", 0, aerospike.LIST_RETURN_VALUE),
+                        ]
                     )
                 ]
             ),
@@ -352,7 +349,7 @@ class TestBatchWrite(TestBaseClass):
             ],
             [
                 {'SUCCESS': 0},
-                {"ilist_bin": 200}
+                {"ilist_bin": 1}
             ]
         ),
         (
@@ -416,7 +413,7 @@ class TestBatchWrite(TestBaseClass):
                     br.Read(
                         ("test", "demo", 3),
                         [
-                            lop.list_get_by_rank("ilist_bin", -1, aerospike.LIST_RETURN_VALUE),
+                            lop.list_get_by_rank("ilist_bin", 0, aerospike.LIST_RETURN_VALUE),
                             op.read("balance")
                         ]
                     ),
@@ -434,7 +431,7 @@ class TestBatchWrite(TestBaseClass):
                 {"balance": 100, "ilist_bin": [2, 6]},
                 {"ilist_bin": 6},
                 {'SUCCESS': 0},
-                {"balance": 100, "ilist_bin": 200}
+                {"balance": 100, "ilist_bin": 1}
             ]
         ),
         (
