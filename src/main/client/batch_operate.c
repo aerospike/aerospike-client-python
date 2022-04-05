@@ -25,6 +25,7 @@
 #include <aerospike/as_error.h>
 #include <aerospike/as_record.h>
 #include <aerospike/as_operations.h>
+#include <aerospike/as_log_macros.h>
 
 #include "client.h"
 #include "conversions.h"
@@ -33,7 +34,6 @@
 
 // Struct for Python User-Data for the Callback
 typedef struct {
-	as_error error;
 	PyObject *py_results;
 	PyObject *batch_records_module;
 	PyObject *func_name;
@@ -45,7 +45,8 @@ static bool batch_operate_cb(const as_batch_result *results, uint32_t n,
 {
 	// Extract callback user-data
 	LocalData *data = (LocalData *)udata;
-	as_error *err = &data->error;
+	as_error err;
+    as_error_init(&err);
 	PyObject *py_key = NULL;
 	PyObject *py_batch_record = NULL;
 	bool success = true;
@@ -60,28 +61,25 @@ static bool batch_operate_cb(const as_batch_result *results, uint32_t n,
 		res = (as_batch_read *)&results[i];
 
 		// NOTE these conversions shouldn't go wrong but if they do, return
-		if (key_to_pyobject(err, res->key, &py_key) != AEROSPIKE_OK) {
-			as_error_update(err, AEROSPIKE_ERR_CLIENT,
-							"unable to convert res->key at results index: %d",
-							i);
-			break;
+		if (key_to_pyobject(&err, res->key, &py_key) != AEROSPIKE_OK) {
+            as_log_error("unable to convert res->key at results index: %d", i);
 			success = false;
+            break;
 		}
 
 		py_batch_record = PyObject_CallMethodObjArgs(
 			data->batch_records_module, data->func_name, py_key, NULL);
 		if (py_batch_record == NULL) {
-			as_error_update(
-				err, AEROSPIKE_ERR_CLIENT,
-				"Unable to instance BatchRecord at results index: %d", i);
+            as_log_error("unable to instance BatchRecord at results index: %d", i);
 			success = false;
 			Py_DECREF(py_key);
 			break;
 		}
 		Py_DECREF(py_key);
 
-		as_batch_result_to_BatchRecord(data->client, err, res, py_batch_record);
-		if (err->code != AEROSPIKE_OK) {
+		as_batch_result_to_BatchRecord(data->client, &err, res, py_batch_record);
+		if (err.code != AEROSPIKE_OK) {
+            as_log_error("as_batch_result_to_BatchRecord failed at results index: %d", i);
 			success = false;
 			break;
 		}
@@ -261,11 +259,12 @@ static PyObject *AerospikeClient_Batch_Operate_Invoke(
 	data.py_results = PyObject_GetAttrString(br_instance, "batch_records");
 	data.batch_records_module = br_module;
 
-	as_error_init(&data.error);
+    as_error batch_apply_err;
+    as_error_init(&batch_apply_err);
 
 	Py_BEGIN_ALLOW_THREADS
 
-	aerospike_batch_operate(self->as, &data.error, policy_batch_p,
+	aerospike_batch_operate(self->as, &batch_apply_err, policy_batch_p,
 							policy_batch_write_p, &batch, &ops,
 							batch_operate_cb, &data);
 
@@ -274,9 +273,7 @@ static PyObject *AerospikeClient_Batch_Operate_Invoke(
 	Py_DECREF(data.py_results);
 	Py_DECREF(data.func_name);
 
-	as_error_copy(err, &data.error);
-
-	PyObject *py_bw_res = PyLong_FromLong((long)err->code);
+PyObject *py_bw_res = PyLong_FromLong((long)batch_apply_err.code);
 	PyObject_SetAttrString(br_instance, FIELD_NAME_BATCH_RESULT, py_bw_res);
 
 	as_error_reset(err);
