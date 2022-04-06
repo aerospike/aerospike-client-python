@@ -272,7 +272,7 @@ class TestScanPartition(TestBaseClass):
 
         with pytest.raises(e.ParamError) as err:
             scan_obj = self.as_connection.scan()
-            assert True
+            assert True  
 
     def test_scan_partition_with_non_existent_ns_and_set(self):
 
@@ -331,78 +331,76 @@ class TestScanPartition(TestBaseClass):
         err_code = err_info.value.code
         assert err_code == AerospikeStatus.AEROSPIKE_ERR_CLIENT
 
-    #@pytest.mark.xfail(reason="Might fail, server may return less than what asked for.")
-    def test_scan_partition_status_with_existent_ns_and_set(self):
+    def test_resume_part_scan(self):
+        """
+            Resume a scan using foreach.
+        """
+        records = 0
+        resumed_records = 0
 
-        records = []
-        scan_page_size = [5]
-        scan_count = [0]
-        scan_pages = [5]
-        max_records = self.partition_1000_count + \
-            self.partition_1001_count + \
-            self.partition_1002_count + \
-            self.partition_1003_count
-        break_count = [5]
-        # partition_status = [{id:(id, init, done, digest)},(),...]
-        def init(id):
-            return 0;
-        def done(id):
-            return 0;
-        def digest(id):
-            return bytearray([0]*20);
-        partition_status = {id:(id, init(id), done(id), digest(id)) for id in range (1000, 1004,1)}
-        partition_filter = {'begin': 1000, 'count': 4, 'partition_status': partition_status}
-        # print("scan_obj", partition_filter)
-        policy = {'max_records': scan_page_size[0],
-                'partition_filter': partition_filter,
-                'records_per_second': 4000}
         def callback(part_id, input_tuple):
-            if(input_tuple == None):
-                # print("callback: NO record")
-                return True #scan complete
-            (key, _, record) = input_tuple
-            partition_status.update({part_id:(part_id, 1, 0, key[3])})
-            # print("callback:", part_id, input_tuple, key[3], partition_status.get(part_id));
-            records.append(record)
-            scan_count[0] = scan_count[0] + 1
-            break_count[0] = break_count[0] - 1
-            if(break_count[0] == 0):
-                return False 
+            nonlocal records
+            if records == 5:
+                return False
+            records += 1
 
         scan_obj = self.as_connection.scan(self.test_ns, self.test_set)
 
-        i = 0
-        for i in range(scan_pages[0]):
-            # print("calling scan_obj.foreach")
-            scan_obj.foreach(callback, policy)
-            if scan_obj.is_done() == True: 
-                # print(f"scan completed iter:{i}")
-                break
-            # print("bc:", break_count[0])
-            if(break_count[0] == 0):
-                break
+        scan_obj.foreach(callback, {'partition_filter': {'begin': 1001, 'count': 1}})
 
-        assert len(records) == scan_count[0]
+        assert records == 5
 
-        scan_page_size = [1000]
-        scan_count[0] = 0
-        break_count[0] = 1000
-        partition_filter = {'begin': 1000, 'count': 4, 'partition_status': partition_status}
-        # print("new_scan_obj", partition_filter)
-        policy = {'max_records': scan_page_size[0],
-                'partition_filter': partition_filter,
-                'records_per_second': 4000}
+        partition_status = scan_obj.get_partitions_status()
 
-        new_scan_obj = self.as_connection.scan(self.test_ns, self.test_set)
-        i = 0
-        for i in range(scan_pages[0]):
-            # print("calling new_scan_obj.foreach")
-            new_scan_obj.foreach(callback, policy)
-            #assert scan_page_size[0] == scan_count[0]
-            if new_scan_obj.is_done() == True: 
-                # print(f"scan completed iter:{i}")
-                break
-            if(break_count[0] == 0):
-                break
+        def resume_callback(part_id, input_tuple):
+            nonlocal resumed_records
+            resumed_records += 1
 
-        assert len(records) == max_records
+        scan_obj2 = self.as_connection.scan(self.test_ns, self.test_set)
+
+        policy = {
+            'partition_filter': {
+                'begin': 1001,
+                'count': 1,
+                "partition_status": partition_status
+            },
+        }
+
+        scan_obj2.foreach(resume_callback, policy)
+
+        assert records + resumed_records == self.partition_1001_count
+
+    def test_resume_scan_results(self):
+
+        """
+            Resume a scan using results.
+        """
+        records = 0
+
+        def callback(part_id, input_tuple):
+            nonlocal records
+            if records == 5:
+                return False
+            records += 1
+
+        scan_obj = self.as_connection.scan(self.test_ns, self.test_set)
+
+        scan_obj.foreach(callback, {'partition_filter': {'begin': 1001, 'count': 1}})
+
+        assert records == 5
+
+        partition_status = scan_obj.get_partitions_status()
+
+        scan_obj2 = self.as_connection.scan(self.test_ns, self.test_set)
+
+        policy = {
+            'partition_filter': {
+                'begin': 1001,
+                'count': 1,
+                "partition_status": partition_status
+            },
+        }
+
+        results = scan_obj2.results(policy)
+
+        assert records + len(results) == self.partition_1001_count

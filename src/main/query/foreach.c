@@ -13,14 +13,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  ******************************************************************************/
-
 #include <Python.h>
 #include <stdbool.h>
 
-#include <aerospike/aerospike_query.h>
+#include <aerospike/aerospike_scan.h>
 #include <aerospike/as_error.h>
-#include <aerospike/as_policy.h>
 #include <aerospike/as_query.h>
+#include <aerospike/as_partition.h>
 #include <aerospike/as_arraylist.h>
 
 #include "client.h"
@@ -34,6 +33,7 @@ typedef struct {
 	as_error error;
 	PyObject *callback;
 	AerospikeClient *client;
+	int partition_query;
 } LocalData;
 
 static bool each_result(const as_val *val, void *udata)
@@ -68,9 +68,28 @@ static bool each_result(const as_val *val, void *udata)
 		PyGILState_Release(gstate);
 		return true;
 	}
+
 	// Build Python Function Arguments
-	py_arglist = PyTuple_New(1);
-	PyTuple_SetItem(py_arglist, 0, py_result);
+	if (data->partition_query) {
+
+		uint32_t part_id = 0;
+
+		as_record *rec = as_record_fromval(val);
+
+		if (rec->key.digest.init) {
+			part_id =
+				as_partition_getid(rec->key.digest.value, CLUSTER_NPARTITIONS);
+		}
+
+		py_arglist = PyTuple_New(2);
+
+		PyTuple_SetItem(py_arglist, 0, PyLong_FromLong(part_id));
+		PyTuple_SetItem(py_arglist, 1, py_result);
+	}
+	else {
+		py_arglist = PyTuple_New(1);
+		PyTuple_SetItem(py_arglist, 0, py_result);
+	}
 
 	// Invoke Python Callback
 	py_return = PyObject_Call(py_callback, py_arglist, NULL);
@@ -83,7 +102,7 @@ static bool each_result(const as_val *val, void *udata)
 		// for now, we bail from the loop
 		as_error_update(err, AEROSPIKE_ERR_CLIENT,
 						"Callback function contains an error");
-		rval = true;
+		rval = false;
 	}
 	else if (PyBool_Check(py_return)) {
 		if (Py_False == py_return) {
@@ -127,6 +146,8 @@ PyObject *AerospikeQuery_Foreach(AerospikeQuery *self, PyObject *args,
 	LocalData data;
 	data.callback = py_callback;
 	data.client = self->client;
+	data.partition_query = 0;
+
 	as_error_init(&data.error);
 
 	// Aerospike Client Arguments
@@ -138,9 +159,9 @@ PyObject *AerospikeQuery_Foreach(AerospikeQuery *self, PyObject *args,
 	as_exp exp_list;
 	as_exp *exp_list_p = NULL;
 
-	// For converting predexp.
-	as_predexp_list predexp_list;
-	as_predexp_list *predexp_list_p = NULL;
+	as_partition_filter partition_filter = {0};
+	as_partition_filter *partition_filter_p = NULL;
+	as_partitions_status *ps = NULL;
 
 	// Initialize error
 	as_error_init(&err);
@@ -159,25 +180,54 @@ PyObject *AerospikeQuery_Foreach(AerospikeQuery *self, PyObject *args,
 	// Convert python policy object to as_policy_exists
 	pyobject_to_policy_query(
 		self->client, &err, py_policy, &query_policy, &query_policy_p,
-		&self->client->as->config.policies.query, &predexp_list,
-		&predexp_list_p, &exp_list, &exp_list_p);
+		&self->client->as->config.policies.query, &exp_list, &exp_list_p);
 	if (err.code != AEROSPIKE_OK) {
 		goto CLEANUP;
+	}
+
+	if (py_policy) {
+		PyObject *py_partition_filter =
+			PyDict_GetItemString(py_policy, "partition_filter");
+		if (py_partition_filter) {
+			if (convert_partition_filter(self->client, py_partition_filter,
+										 &partition_filter, &ps,
+										 &err) == AEROSPIKE_OK) {
+				partition_filter_p = &partition_filter;
+				data.partition_query = 1;
+			}
+			else {
+				goto CLEANUP;
+			}
+		}
 	}
 
 	if (set_query_options(&err, py_options, &self->query) != AEROSPIKE_OK) {
 		goto CLEANUP;
 	}
 
-	// We are spawning multiple threads
-	PyThreadState *_save = PyEval_SaveThread();
+	Py_BEGIN_ALLOW_THREADS
 
 	// Invoke operation
-	aerospike_query_foreach(self->client->as, &err, query_policy_p,
-							&self->query, each_result, &data);
+	if (partition_filter_p) {
+		if (ps) {
+			as_partition_filter_set_partitions(partition_filter_p, ps);
+		}
 
-	// We are done using multiple threads
-	PyEval_RestoreThread(_save);
+		aerospike_query_partitions(self->client->as, &data.error,
+								   query_policy_p, &self->query,
+								   partition_filter_p, each_result, &data);
+
+		if (ps) {
+			as_partitions_status_release(ps);
+		}
+	}
+	else {
+		aerospike_query_foreach(self->client->as, &err, query_policy_p,
+								&self->query, each_result, &data);
+	}
+
+	Py_END_ALLOW_THREADS
+
 	if (data.error.code != AEROSPIKE_OK) {
 		as_error_update(&data.error, data.error.code, NULL);
 		goto CLEANUP;
@@ -186,11 +236,6 @@ PyObject *AerospikeQuery_Foreach(AerospikeQuery *self, PyObject *args,
 CLEANUP:
 	if (exp_list_p) {
 		as_exp_destroy(exp_list_p);
-		;
-	}
-
-	if (predexp_list_p) {
-		as_predexp_list_destroy(&predexp_list);
 	}
 
 	if (self->query.apply.arglist) {

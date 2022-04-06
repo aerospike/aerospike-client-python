@@ -17,7 +17,6 @@ Query Class --- :class:`Query`
     The query can (optionally) be assigned one of the following \
 
     * One of the :mod:`~aerospike.predicates` (:meth:`~aerospike.predicates.between` or :meth:`~aerospike.predicates.equals`) using :meth:`~aerospike.Query.where`. \
-    * A list of :mod:`~aerospike.predexp` using :meth:`~aerospike.Query.predexp` \
     
     A query without a predicate will match all the records in the given set, similar \
     to a :class:`~aerospike.Scan`.
@@ -36,9 +35,109 @@ Query Class --- :class:`Query`
         `Managing Queries <http://www.aerospike.com/docs/operations/manage/queries/>`_.
 
 
-Query Methods
--------------
+Query Fields and Methods
+------------------------
 .. class:: Query
+
+    Fields
+
+    :fieldname max_records:
+            :class:`int`
+            Approximate number of records to return to client.
+            This number is divided by the number of nodes involved in the scan.
+            The actual number of records returned may be less than max_records if node record counts are small and unbalanced across nodes.
+            Requires server version >= 6.0.0
+
+            Default: ``0`` (No Limit).
+
+    :fieldname records_per_second:
+            :class:`int`
+            Limit the scan to process records at records_per_second.
+            Requires server version >= 6.0.0
+            
+            Default: ``0`` (no limit).
+
+    .. note::
+        Version >= 5.0.0 Supports aerrospike expressions for results, foreach, and execute_background see :ref:`aerospike_operation_helpers.expressions`.
+        Requires server version >= 5.2.0.
+
+        .. code-block:: python
+
+            import aerospike
+            from aerospike_helpers import expressions as exp
+            from aerospike import exception as ex
+            import sys
+            import time
+
+            config = {"hosts": [("127.0.0.1", 3000)]}
+            client = aerospike.client(config).connect()
+
+            # register udf
+            try:
+                client.udf_put(
+                    "/path/to/my_udf.lua"
+                )
+            except ex.AerospikeError as e:
+                print("Error: {0} [{1}]".format(e.msg, e.code))
+                client.close()
+                sys.exit(1)
+
+            # put records and apply udf
+            try:
+                keys = [("test", "demo", 1), ("test", "demo", 2), ("test", "demo", 3)]
+                records = [{"number": 1}, {"number": 2}, {"number": 3}]
+                for i in range(3):
+                    client.put(keys[i], records[i])
+
+                try:
+                    client.index_integer_create("test", "demo", "number", "test_demo_number_idx")
+                except ex.IndexFoundError:
+                    pass
+
+                query = client.query("test", "demo")
+                query.apply("my_udf", "my_udf", ["number", 10])
+
+                # only affect records with "number" bin greater than 1
+                expr = exp.GT(exp.IntBin("number"), 1).compile()
+                policy = {"expressions": expr}
+
+                job_id = query.execute_background(policy)
+
+                # wait for job to finish
+                while True:
+                    response = client.job_info(job_id, aerospike.JOB_SCAN)
+                    print(response)
+                    if response["status"] != aerospike.JOB_STATUS_INPROGRESS:
+                        break
+                    time.sleep(0.25)
+
+                records = client.get_many(keys)
+                print(records)
+            except ex.AerospikeError as e:
+                print("Error: {0} [{1}]".format(e.msg, e.code))
+                sys.exit(1)
+            finally:
+                client.close()
+            # EXPECTED OUTPUT:
+            # [
+            #   (('test', 'demo', 1, bytearray(b'\xb7\xf4\xb88\x89\xe2\xdag\xdeh>\x1d\xf6\x91\x9a\x1e\xac\xc4F\xc8')), {'gen': 2, 'ttl': 2591999}, {'number': 1}),
+            #   (('test', 'demo', 2, bytearray(b'\xaejQ_7\xdeJ\xda\xccD\x96\xe2\xda\x1f\xea\x84\x8c:\x92p')), {'gen': 12, 'ttl': 2591999}, {'number': 12}),
+            #   (('test', 'demo', 3, bytearray(b'\xb1\xa5`g\xf6\xd4\xa8\xa4D9\xd3\xafb\xbf\xf8ha\x01\x94\xcd')), {'gen': 13, 'ttl': 2591999}, {'number': 13})
+            # ]
+        
+        .. code-block:: python
+
+            # contents of my_udf.lua
+            function my_udf(rec, bin, offset)
+                info("my transform: %s", tostring(record.digest(rec)))
+                rec[bin] = rec[bin] + offset
+                aerospike:update(rec)
+            end
+        
+    .. note::
+        For a similar example using .results() see :meth:`aerospike.Scan.results`.
+
+    Methods
 
     .. method:: select(bin1[, bin2[, bin3..]])
 
@@ -80,90 +179,37 @@ Query Methods
             pp = pprint.PrettyPrinter(indent=2)
             query = client.query('test', 'demo')
             query.select('name', 'age') # matched records return with the values of these bins
+
             # assuming there is a secondary index on the 'age' bin of test.demo
             query.where(p.equals('age', 40))
+
             records = query.results( {'total_timeout':2000})
+
             pp.pprint(records)
             client.close()
 
-        .. note::
+        .. note:: As of client 7.0.0 and with server >= 6.0 results and the query policy
+            "partition_filter" see :ref:`aerospike_partition_objects` can be used to specify which partitions/records
+            results will query. See the example below.
 
-            Queries require a secondary index to exist on the *bin* being queried.
-        
-    .. note::
-        Python client version >= 3.10.0 Supports predicate expressions for results, foreach, and execute_background see :mod:`~aerospike.predexp`.
-        Requires server versions >= 4.7.0.
+            .. code-block:: python
+            
+                # This is an example of querying partitions 1000 - 1003.
+                import aerospike
 
-        .. code-block:: python
-
-            import aerospike
-            from aerospike import predexp
-            from aerospike import exception as ex
-            import sys
-            import time
-
-            config = {"hosts": [("127.0.0.1", 3000)]}
-            client = aerospike.client(config).connect()
-
-            # register udf
-            try:
-                client.udf_put(
-                    "/path/to/my_udf.lua"
-                )
-            except ex.AerospikeError as e:
-                print("Error: {0} [{1}]".format(e.msg, e.code))
-                client.close()
-                sys.exit(1)
-
-            # put records and apply udf
-            try:
-                keys = [("test", "demo", 1), ("test", "demo", 2), ("test", "demo", 3)]
-                records = [{"number": 1}, {"number": 2}, {"number": 3}]
-                for i in range(3):
-                    client.put(keys[i], records[i])
-
-                try:
-                    client.index_integer_create("test", "demo", "number", "test_demo_number_idx")
-                except ex.IndexFoundError:
-                    pass
 
                 query = client.query("test", "demo")
-                query.apply("my_udf", "my_udf", ["number", 10])
-                job_id = query.execute_background()
 
-                # wait for job to finish
-                while True:
-                    response = client.job_info(job_id, aerospike.JOB_SCAN)
-                    print(response)
-                    if response["status"] != aerospike.JOB_STATUS_INPROGRESS:
-                        break
-                    time.sleep(0.25)
+                policy = {
+                    "partition_filter": {
+                        "begin": 1000,
+                        "count": 4
+                    },
+                }
 
-                records = client.get_many(keys)
-                print(records)
-            except ex.AerospikeError as e:
-                print("Error: {0} [{1}]".format(e.msg, e.code))
-                sys.exit(1)
-            finally:
-                client.close()
-            # EXPECTED OUTPUT:
-            # [
-            #   (('test', 'demo', 1, bytearray(b'\xb7\xf4\xb88\x89\xe2\xdag\xdeh>\x1d\xf6\x91\x9a\x1e\xac\xc4F\xc8')), {'gen': 2, 'ttl': 2591999}, {'number': 11}),
-            #   (('test', 'demo', 2, bytearray(b'\xaejQ_7\xdeJ\xda\xccD\x96\xe2\xda\x1f\xea\x84\x8c:\x92p')), {'gen': 12, 'ttl': 2591999}, {'number': 12}),
-            #   (('test', 'demo', 3, bytearray(b'\xb1\xa5`g\xf6\xd4\xa8\xa4D9\xd3\xafb\xbf\xf8ha\x01\x94\xcd')), {'gen': 13, 'ttl': 2591999}, {'number': 13})
-            # ]
-        
-        .. code-block:: python
-
-            # contents of my_udf.lua
-            function my_udf(rec, bin, offset)
-                info("my transform: %s", tostring(record.digest(rec)))
-                rec[bin] = rec[bin] + offset
-                aerospike:update(rec)
-            end
-        
-        .. note::
-            For a similar example using .results() see :meth:`aerospike.Scan.results`.
+            # NOTE that these will only be non 0 if there are records in partitions 1000 - 1003
+            # results will be the records in partitions 1000 - 1003
+            results = query.results(policy=policy)
 
 
     .. method:: foreach(callback[, policy [, options]])
@@ -175,7 +221,11 @@ Query Methods
         :param dict policy: optional :ref:`aerospike_query_policies`.
         :param dict options: optional :ref:`aerospike_query_options`.
 
-        .. note:: A :ref:`aerospike_record_tuple` is passed as the argument to the callback function.
+        .. note::
+            A :ref:`aerospike_record_tuple` is passed as the argument to the callback function.
+            If the query is using the "partition_filter" query policy the callback will recieve two arguments
+            The first is a :class:`int` representing partition id, the second is the same :ref:`aerospike_record_tuple`
+            as a normal callback.
 
         .. code-block:: python
 
@@ -228,6 +278,43 @@ Query Methods
                 query.foreach(limit(100, keys))
                 print(len(keys)) # this will be 100 if the number of matching records > 100
                 client.close()
+        
+        .. note:: As of client 7.0.0 and with server >= 6.0 foreach and the query policy
+         "partition_filter" see :ref:`aerospike_partition_objects` can be used to specify which partitions/records
+         foreach will query. See the example below.
+
+         .. code-block:: python
+
+            # This is an example of querying partitions 1000 - 1003.
+            import aerospike
+
+
+            partitions = []
+
+            def callback(part_id, input_tuple):
+                print(part_id)
+                partitions.append(part_id)
+
+            query = client.query("test", "demo")
+
+            policy = {
+                "partition_filter": {
+                    "begin": 1000,
+                    "count": 4
+                },
+            }
+
+            query.foreach(callback, policy)
+
+
+            # NOTE that these will only be non 0 if there are records in partitions 1000 - 1003
+            # should be 4
+            print(len(partitions))
+
+            # should be [1000, 1001, 1002, 1003]
+            print(partitions)
+
+
 
     .. method:: apply(module, function[, arguments])
 
@@ -351,28 +438,6 @@ Query Methods
 
         For a more comprehensive example, see using a list of write ops with :meth:`Query.execute_background` .
 
-    .. method:: predexp(predicates)
-
-        Set the predicate expression filters to be used by this query.
-
-        :param predicates: `list` A list of predicates generated by the :ref:`aerospike.predexp` functions
-
-        .. code-block:: python
-
-            import aerospike
-            from aerospike import predexp as predexp
-            query = client.query('test', 'demo')
-
-            predexps =  [
-                predexp.rec_device_size(),
-                predexp.integer_value(65 * 1024),
-                predexp.integer_greater()
-            ]
-            query.predexp(predexps)
-
-            big_records = query.results()
-            client.close()
-
     .. method:: execute_background([, policy])
 
         Execute a record UDF or write operations on records found by the query in the background. This method returns before the query has completed.
@@ -491,6 +556,133 @@ Query Methods
             {'account_number': 4, 'members': [{'name': 'John', 'id': 100}, {'name': 'Bill', 'id': 200}, {'name': 'Cindy', 'id': 300}]}
             """
 
+    .. method:: paginate()
+
+        Makes a query instance a paginated query.
+        Call this if you are using the max_records and you need to query data in pages.
+
+        .. note::
+            Calling .paginate() on a query instance causes it to save its partition state.
+            This can be retrieved later using .get_partitions_status(). This can also been done by
+            using the partition_filter policy.
+
+        .. code-block:: python
+
+            # Query 3 pages of 1000 records each.
+
+            import aerospike
+
+            pages = 3
+            page_size = 1000
+
+            query = client.query('test', 'demo')
+            query.max_records = 1000
+
+            query.paginate()
+
+            # NOTE: The number of pages queried and records returned per page can differ
+            # if record counts are small or unbalanced across nodes.
+            for page in range(pages):
+                records = query.results()
+
+                print("got page: " + str(page))
+
+                if query.is_done():
+                    print("all done")
+                    break
+
+            # This id can be used to paginate queries.
+
+    .. method:: is_done()
+
+        If using query pagination, did the previous paginated or partition_filter query using this query instance return all records?
+
+        :return: A :class:`bool` signifying whether this paginated query instance has returned all records.
+
+        .. code-block:: python
+
+            import aerospike
+
+            query = client.query('test', 'demo')
+            query.max_records = 1000
+
+            query.paginate()
+
+            records = query.results(policy=policy)
+
+            if query.is_done():
+                print("all done")
+
+            # This id can be used to monitor the progress of a paginated query.
+
+    .. method:: get_partitions_status()
+
+        Get this query instance's partition status. That is which partitions have been queried and which have not.
+        The returned value is a :class:`dict` with partition id, :class:`int`, as keys and :class:`tuple` as values.
+        If the query instance is not tracking its partitions, the returned :class:`dict` will be empty.
+
+        .. note::
+            A query instance must have had .paginate() called on it, or been used with a partition filter, in order retrieve its
+            partition status. If .paginate() was not called, or partition_filter was not used, the query instance will not save partition status.
+
+        :return: a :class:`tuple` of form (id: :class:`int`, init: class`bool`, done: class`bool`, digest: :class:`bytearray`).
+            See :ref:`aerospike_partition_objects` for more information.
+
+        .. code-block:: python
+
+            # This is an example of resuming a query using partition status.
+            import aerospike
+
+
+            for i in range(15):
+                key = ("test", "demo", i)
+                bins = {"id": i}
+                client.put(key, bins)
+
+            records = []
+            resumed_records = []
+
+            def callback(input_tuple):
+                record, _, _ = input_tuple
+
+                if len(records) == 5:
+                    return False
+
+                records.append(record)
+
+            query = client.query("test", "demo")
+            query.paginate()
+
+            query.foreach(callback)
+
+            # The first query should stop after 5 records.
+            assert len(records) == 5
+
+            partition_status = query.get_partitions_status()
+
+            def resume_callback(part_id, input_tuple):
+                record, _, _ = input_tuple
+                resumed_records.append(record)
+
+            query_resume = client.query("test", "demo")
+
+            policy = {
+                "partition_filter": {
+                    "partition_status": partition_status
+                },
+            }
+
+            query_resume.foreach(resume_callback, policy)
+
+            # should be 15
+            total_records = len(records) + len(resumed_records)
+            print(total_records)
+
+            # cleanup
+            for i in range(15):
+                key = ("test", "demo", i)
+                client.remove(key)
+
 .. _aerospike_query_policies:
 
 Query Policies
@@ -556,12 +748,31 @@ Query Policies
             | Terminate query if cluster is in migration state. 
             |
             | Default ``False``
+        * **short_query** :class:`bool`
+            | Is query expected to return less than 100 records.
+            | If True, the server will optimize the query for a small record set.
+            | This field is ignored for aggregation queries, background queries
+            | and server versions less than 6.0.0.
+            |
+            | Mututally exclusive with records_per_second
+            | Default: ``False``
         * **expressions** :class:`list`
             | Compiled aerospike expressions :mod:`aerospike_helpers` used for filtering records within a transaction.
             |
             | Default: None
 
             .. note:: Requires Aerospike server version >= 5.2.
+
+        * **partition_filter** :class:`dict`
+            | A dictionary of partition information used by the client
+            | to perform partiton queries. Useful for resuming terminated queries and
+            | querying particular partitons/records.
+            |
+            |   See :ref:`aerospike_partition_objects` for more information.
+            |
+            | Default: ``{}`` (All partitions will be queried).
+
+            .. note:: Requires Aerospike server version >= 6.0
 
 .. _aerospike_query_options:
 

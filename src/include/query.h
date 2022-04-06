@@ -74,14 +74,6 @@ AerospikeQuery *AerospikeQuery_Add_Ops(AerospikeQuery *self, PyObject *args,
 AerospikeQuery *AerospikeQuery_Where(AerospikeQuery *self, PyObject *args);
 
 /**
- * Apply a list of predicates to the query.
- *
- *		query.predexp(predexps)
- *
- */
-AerospikeQuery *AerospikeQuery_Predexp(AerospikeQuery *self, PyObject *args);
-
-/**
  * Apply the specified udf on the results of the query.
  *
  *		query.apply(module, function, arglist)
@@ -120,6 +112,31 @@ PyObject *AerospikeQuery_ExecuteBackground(AerospikeQuery *self, PyObject *args,
 										   PyObject *kwds);
 
 /**
+ * Set pagination filter to receive records in bunch (max_records or page_size).
+ *
+ *    query.paginate()
+ *
+ */
+PyObject *AerospikeQuery_Paginate(AerospikeQuery *self);
+
+/**
+ * Gets the status of the query.
+ *
+ *    If using query pagination, did the previous paginated query with this query instance
+ *    return all records?
+ *
+ */
+PyObject *AerospikeQuery_Is_Done(AerospikeQuery *self);
+
+/**
+ * Gets the complete partition status of the query.
+ *
+ *    Returns a dictionary of the form {id:(id, init, done, digest), ...}.
+ *
+ */
+PyObject *AerospikeQuery_Get_Partitions_status(AerospikeQuery *self);
+
+/**
  * Store the Unicode -> UTF8 string converted PyObject into 
  * a pool of PyObjects. So that, they will be decref'ed at later stages
  * without leaving memory trails behind.
@@ -129,8 +146,3 @@ PyObject *AerospikeQuery_ExecuteBackground(AerospikeQuery *self, PyObject *args,
 PyObject *StoreUnicodePyObject(AerospikeQuery *self, PyObject *obj);
 
 int64_t pyobject_to_int64(PyObject *py_obj);
-
-/* Initialize the predexp module */
-PyObject *AerospikePredExp_New(void);
-
-as_status RegisterPredExpConstants(PyObject *module);

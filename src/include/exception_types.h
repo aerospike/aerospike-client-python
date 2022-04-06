@@ -57,6 +57,9 @@ struct exceptions {
 	PyObject *InvalidHostError;
 	PyObject *NamespaceNotFound;
 	PyObject *ConnectionError;
+	PyObject *BatchFailed;			  //-16
+	PyObject *NoResponse;			  //-15
+	PyObject *MaxRetriesExceeded;	  //-12
 	PyObject *TLSError;				  //-9
 	PyObject *InvalidNodeError;		  //-8
 	PyObject *NoMoreConnectionsError; // -7

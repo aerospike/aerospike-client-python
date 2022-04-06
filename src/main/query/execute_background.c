@@ -44,10 +44,6 @@ PyObject *AerospikeQuery_ExecuteBackground(AerospikeQuery *self, PyObject *args,
 	as_exp exp_list;
 	as_exp *exp_list_p = NULL;
 
-	// For converting predexp.
-	as_predexp_list predexp_list;
-	as_predexp_list *predexp_list_p = NULL;
-
 	if (PyArg_ParseTupleAndKeywords(args, kwds, "|O:execute_background", kwlist,
 									&py_policy) == false) {
 		return NULL;
@@ -66,10 +62,10 @@ PyObject *AerospikeQuery_ExecuteBackground(AerospikeQuery *self, PyObject *args,
 		goto CLEANUP;
 	}
 
-	if (pyobject_to_policy_write(
-			self->client, &err, py_policy, &write_policy, &write_policy_p,
-			&self->client->as->config.policies.write, &predexp_list,
-			&predexp_list_p, &exp_list, &exp_list_p) != AEROSPIKE_OK) {
+	if (pyobject_to_policy_write(self->client, &err, py_policy, &write_policy,
+								 &write_policy_p,
+								 &self->client->as->config.policies.write,
+								 &exp_list, &exp_list_p) != AEROSPIKE_OK) {
 		goto CLEANUP;
 	}
 
@@ -83,10 +79,6 @@ CLEANUP:
 	if (exp_list_p) {
 		as_exp_destroy(exp_list_p);
 		;
-	}
-
-	if (predexp_list_p) {
-		as_predexp_list_destroy(&predexp_list);
 	}
 
 	if (err.code != AEROSPIKE_OK) {

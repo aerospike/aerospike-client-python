@@ -137,7 +137,8 @@ CLEANUP:
 	return 0;
 }
 
-PyObject *AerospikeGeospatial_Type_Repr(self) AerospikeGeospatial *self;
+PyObject *AerospikeGeospatial_Type_Repr(self)
+AerospikeGeospatial *self;
 {
 	PyObject *initresult = NULL, *py_return = NULL;
 	char *new_repr_str = NULL;
@@ -184,7 +185,8 @@ CLEANUP:
 	return py_return;
 }
 
-PyObject *AerospikeGeospatial_Type_Str(self) AerospikeGeospatial *self;
+PyObject *AerospikeGeospatial_Type_Str(self)
+AerospikeGeospatial *self;
 {
 	PyObject *initresult = NULL;
 	// Aerospike error object

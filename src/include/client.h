@@ -23,6 +23,8 @@
 
 #define TRACE() printf("%s:%d\n", __FILE__, __LINE__)
 
+#define CLUSTER_NPARTITIONS (4096)
+
 /*******************************************************************************
  * Macros for UDF operations.
  ******************************************************************************/
@@ -672,7 +674,49 @@ PyObject *AerospikeClient_Get_Many(AerospikeClient *self, PyObject *args,
  *
  */
 PyObject *AerospikeClient_Batch_GetOps(AerospikeClient *self, PyObject *args,
-								   		PyObject *kwds);
+									   PyObject *kwds);
+
+/**
+ * Read/Write multiple records for specified batch keys in one batch call.
+ * This method allows different sub-commands for each key in the batch.
+ * The returned records are located in the same list.
+ * Requires server version 6.0+
+ *
+ *		client.batch_write([batch_records], policy)
+ *
+ */
+PyObject *AerospikeClient_BatchWrite(AerospikeClient *self, PyObject *args,
+									 PyObject *kwds);
+
+/**
+ * Perform read/write operations on multiple keys.
+ * Requires server version 6.0+
+ *
+ *		client.batch_operate([keys], [ops], policy_batch, policy_batch_write)
+ *
+ */
+PyObject *AerospikeClient_Batch_Operate(AerospikeClient *self, PyObject *args,
+										PyObject *kwds);
+
+/**
+ * Remove multiple records by key.
+ * Requires server version 6.0+
+ *
+ *		client.batch_remove([keys], policy_batch, policy_batch_remove)
+ *
+ */
+PyObject *AerospikeClient_Batch_Remove(AerospikeClient *self, PyObject *args,
+									   PyObject *kwds);
+
+/**
+ * Apply a user defined function (UDF) to multiple keys.
+ * Requires server version 6.0+
+ *
+ *		client.batch_apply([keys], module, function, [args], policy_batch, policy_batch_remove)
+ *
+ */
+PyObject *AerospikeClient_Batch_Apply(AerospikeClient *self, PyObject *args,
+									  PyObject *kwds);
 
 /**
  * Filter bins from records in a batch
@@ -700,6 +744,15 @@ PyObject *AerospikeClient_Exists_Many(AerospikeClient *self, PyObject *args,
 */
 PyObject *AerospikeClient_SetXDRFilter(AerospikeClient *self, PyObject *args,
 									   PyObject *kwds);
+
+/**
+* Get the base64 representation of an aerospike expression.
+*
+* b64_string = client.get_expression_base64(compiled_expression)
+*
+*/
+PyObject *AerospikeClient_GetExpressionBase64(AerospikeClient *self,
+											  PyObject *args, PyObject *kwds);
 
 /**
  * Send an info request to the entire cluster

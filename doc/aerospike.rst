@@ -349,10 +349,10 @@ Methods
 .. note::
 
     By default, the :class:`Client` maps the supported types \
-    :py:class:`int`, :py:class:`str`, :py:class:`float`, :py:class:`bytearray`, \
+    :py:class:`int`, :py:class:`str`, :py:class:`float`, :py:class:`bytes`, \
     :py:class:`list`, :py:class:`dict` to matching aerospike server \
     `types <http://www.aerospike.com/docs/guide/data-types.html>`_ \
-    (int, string, double, bytes, list, map). When an unsupported type is \
+    (int, string, double, blob, list, map). When an unsupported type is \
     encountered, the module uses \
     `cPickle <https://docs.python.org/2/library/pickle.html?highlight=cpickle#module-cPickle>`_ \
     to serialize and deserialize the data, storing it into *as_bytes* of type \
@@ -1404,12 +1404,25 @@ Permission codes define the type of permission granted for a user's role.
 
     User can perform systems administration functions on a database that do not involve user administration. Examples include setting dynamic server configuration. Global scope only.
 
+.. data:: PRIV_TRUNCATE
+
+    User can truncate data only. Requires server 6.0+
+
+.. data:: PRIV_UDF_ADMIN
+
+    User can perform user defined function(UDF) administration actions. Examples include create/drop UDF. Global scope only. Global scope only. Requires server version 6.0+
+
+.. data:: PRIV_SINDEX_ADMIN
+
+    User can perform secondary index administration actions. Examples include create/drop index. Global scope only. Requires server version 6.0+
+
 
 .. _regex_constants:
 
 Regex Flag Values
 ------------------
-Flags used for the `predexp.string_regex` function.
+Flags used by the :class:`aerospike_operation_helpers.expressions.base.CmpRegex` Aerospike expression.
+See :ref:`aerospike_operation_helpers.expressions` for more information.
 
 .. data:: REGEX_NONE
 

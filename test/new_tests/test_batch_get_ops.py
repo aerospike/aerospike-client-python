@@ -21,16 +21,17 @@ class TestBatchExpressionsOperations(TestBaseClass):
 
     @pytest.fixture(autouse=True)
     def setup(self, request, as_connection):
+        # TODO this should be changed to 6.0 before release.
         if self.server_version < [5, 6]:
-            pytest.mark.xfail(reason="Servers older than 5.6 do not support arithmetic expressions.")
+            pytest.mark.xfail(reason="Servers older than 5.6 do not support batch get ops.")
             pytest.xfail()
         
         self.test_ns = 'test'
         self.test_set = 'demo'
         self.keys = []
-        self.batch_size = 5
+        self.rec_count = 5
 
-        for i in range(self.batch_size):
+        for i in range(self.rec_count):
             key = ('test', u'demo', i)
             rec = {
                 'name': 'name10',
@@ -53,7 +54,7 @@ class TestBatchExpressionsOperations(TestBaseClass):
             self.keys.append(key)
 
         def teardown():
-            for i in range(self.batch_size):
+            for i in range(self.rec_count):
                 key = ('test', u'demo', i)
                 as_connection.remove(key)
 
@@ -101,34 +102,22 @@ class TestBatchExpressionsOperations(TestBaseClass):
         ]
         meta = {'gen': 1}
         policy = {'timeout': 1001}
-        #print(self.keys)
+
         res = self.as_connection.batch_get_ops(self.keys, ops, meta, policy)
         """
         res are in the format of (status-tuple, ((meta-dict, result-dict), status-tuple, exception), ...)
         """
+
         status = res[0]
         recs = res[1:]
-        # print("\ntest_read_pos status:", status)
-        for i in range(self.batch_size):
-            # print("results: ", recs[i])
+        for i in range(self.rec_count):
             assert recs[i][0][1] == expected
 
     @pytest.mark.parametrize("expr, flags, name, expected", [
         (
-            Let(Def("bal", IntBin("balance")),
-                Cond(
-                    LT(Var("bal"), 50),
-                        Add(Var("bal"), 50),
-                    Unknown())
-            ).compile(),
-            aerospike.EXP_READ_DEFAULT,
-			"test_name3",
-            e.RecordNotFound # Because Unknown will be returned.
-        ),
-        (
             "bad_expr",
             aerospike.EXP_READ_DEFAULT,
-            "test_name3",
+            "test_name2",
             e.ParamError
         ),
         (

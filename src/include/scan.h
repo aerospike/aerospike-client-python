@@ -24,8 +24,6 @@
 #include "types.h"
 #include "client.h"
 
-#define CLUSTER_NPARTITIONS	(4096)
-
 /*******************************************************************************
  * FUNCTIONS
  ******************************************************************************/
@@ -126,3 +124,11 @@ PyObject *AerospikeScan_Paginate(AerospikeScan *self, PyObject *args,
  */
 PyObject *AerospikeScan_Is_Done(AerospikeScan *self, PyObject *args,
 								PyObject *kwds);
+
+/**
+ * Gets the complete partition status of the scan.
+ *
+ *    Returns a dictionary of the form {id:(id, init, done, digest), ...}.
+ *
+ */
+PyObject *AerospikeScan_Get_Partitions_status(AerospikeScan *self);

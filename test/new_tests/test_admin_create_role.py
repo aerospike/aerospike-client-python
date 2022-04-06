@@ -17,6 +17,8 @@ except:
 @pytest.mark.usefixtures("connection_config")
 class TestCreateRole(object):
 
+    config = TestBaseClass.get_connection_config()
+
     pytestmark = pytest.mark.skipif(
         not TestBaseClass.auth_in_use(),
         reason="No user specified, may be not secured cluster.")
@@ -25,7 +27,7 @@ class TestCreateRole(object):
         """
         Setup method
         """
-        config = TestBaseClass.get_connection_config()
+        config = self.config
         self.client = aerospike.client(config).connect(config['user'], config['password'])
         try:
             self.client.admin_drop_user("testcreaterole")
@@ -97,6 +99,62 @@ class TestCreateRole(object):
         assert roles == ["usr-sys-admin-test"]
 
         self.client.admin_drop_user("testcreaterole")
+
+    @pytest.mark.parametrize("priv_name, privs", [
+        ('PRIV_USER_ADMIN', [{"code": aerospike.PRIV_USER_ADMIN, "ns": "", "set": ""}]),
+        ('PRIV_SYS_ADMIN', [{"code": aerospike.PRIV_SYS_ADMIN, "ns": "", "set": ""}]),
+        ('PRIV_DATA_ADMIN', [{"code": aerospike.PRIV_DATA_ADMIN, "ns": "", "set": ""}]),
+        ('PRIV_READ', [{"code": aerospike.PRIV_READ, "ns": "test", "set": "demo"}]),
+        ('PRIV_WRITE', [{"code": aerospike.PRIV_WRITE, "ns": "test", "set": "demo"}]),
+        ('PRIV_READ_WRITE', [{"code": aerospike.PRIV_READ_WRITE, "ns": "test", "set": "demo"}]),
+        ('PRIV_READ_WRITE_UDF', [{"code": aerospike.PRIV_READ_WRITE_UDF, "ns": "test", "set": "demo"}]),
+        ('PRIV_TRUNCATE', [{"code": aerospike.PRIV_TRUNCATE, "ns": "test", "set": "demo"}]),
+        ('PRIV_UDF_ADMIN', [{"code": aerospike.PRIV_UDF_ADMIN, "ns": "", "set": ""}]),
+        ('PRIV_SINDEX_ADMIN', [{"code": aerospike.PRIV_SINDEX_ADMIN, "ns": "", "set": ""}]),
+    ])
+    def test_create_role_all_privs_positive(self, priv_name, privs):
+        """
+            Create role positive
+        """
+
+        role_name = "usr-sys-admin-test-" + priv_name
+
+        try:
+            self.client.admin_get_role(role_name)
+            # role exists, clear it out.
+            self.client.admin_drop_role(role_name)
+            time.sleep(2)
+        except e.InvalidRole:
+            pass  # we are good, no such role exists
+
+        self.client.admin_create_role(role_name,
+                                      privs,
+                                      {'timeout': 1000})
+        time.sleep(1)
+        roles = self.client.admin_get_role(role_name)
+        assert roles == {
+                            'privileges': privs,
+                            'whitelist': [],
+                            'read_quota': 0,
+                            'write_quota': 0
+                        }
+
+        try:
+            status = self.client.admin_create_user(
+                "testcreaterole", "createrole", [role_name])
+        except e.QuotasNotEnabled:
+            pytest.mark.skip(reason="Got QuotasNotEnabled, skipping quota test.")
+            pytest.skip()
+
+        assert status == 0
+        time.sleep(1)
+        roles = self.client.admin_query_user("testcreaterole")
+
+        assert roles == [role_name]
+
+        self.client.admin_drop_user("testcreaterole")
+
+        self.client.admin_drop_role(role_name)
 
     def test_create_role_positive_with_policy_write(self):
         """

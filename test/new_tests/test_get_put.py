@@ -776,3 +776,25 @@ class TestGetPut():
 
         with pytest.raises(e.ParamError):
             assert 0 == self.as_connection.put(key, bins)
+
+    def test_unhashable_type_with_put_get(self):
+        """
+            Invoke put() with bytes which used to be read as bytearray off server
+            causing an unhashable key error on read. Now server byte blobs are read as bytes.
+        """
+        key = ('test', 'demo', 123)
+
+        bins = {
+                'bin1': b'abc',
+                'bin2': {b'abc': 1}
+        }
+
+        try:
+            assert 0 == self.as_connection.put(key, bins)
+            res = self.as_connection.get(key)
+            bin2 = res[2]["bin2"]
+            assert bin2[b'abc']
+        except Exception as e:
+            raise(e)
+        finally:
+            self.as_connection.remove(key)

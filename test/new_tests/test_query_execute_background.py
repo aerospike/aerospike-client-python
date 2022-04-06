@@ -102,9 +102,9 @@ class TestQueryApply(object):
             lambda rec: rec[test_bin] == 'aerospike'
         )
 
-    def test_background_execute_predexp_everywhere(self, clean_test_background):
+    def test_background_execute_exp_everywhere(self, clean_test_background):
         """
-        Ensure that Query.execute_background() gets applied to records that match the predexp
+        Ensure that Query.execute_background() gets applied to records that match the exp
         """
         from .test_base_class import TestBaseClass
         if TestBaseClass.major_ver >= 6 or (TestBaseClass.major_ver >= 5 and TestBaseClass.minor_ver >= 7):
@@ -141,11 +141,11 @@ class TestQueryApply(object):
             else:
                 assert(bins.get(test_bin) is None)
 
-    @pytest.mark.xfail(reason="predicate and predexp used at same time")
-    def test_background_execute_predexp_and_predicate(self, clean_test_background):
+    @pytest.mark.xfail(reason="predicate and exp used at same time")
+    def test_background_execute_exp_and_predicate(self, clean_test_background):
         """
         Ensure that Query.execute_background() gets applied to records that match the predicate
-        NOTE: the predicate overrides the predexp
+        NOTE: the predicate overrides the exp
         """
         test_bin = 'tpredold'
         keys = [(TEST_NS, TEST_SET, i) for i in range(500)]
@@ -175,7 +175,7 @@ class TestQueryApply(object):
             else:
                 assert(bins.get(test_bin) is None)
 
-    def test_background_execute_with_ops_and_predexp(self, clean_test_background):
+    def test_background_execute_with_ops_and_exp(self, clean_test_background):
         """
         Ensure that Query.execute_background() applies ops to records that match the expressions.
         """
@@ -304,7 +304,7 @@ class TestQueryApply(object):
         _, _, num_5_record = self.as_connection.get((TEST_NS, TEST_SET, 5))
         assert num_5_record[test_bin] == 'aerospike'
 
-    def test_background_execute_sindex_predexp(self, clean_test_background):
+    def test_background_execute_sindex_exp(self, clean_test_background):
         """
         Ensure that Query.execute_background() only applies to records matched by
         the specified predicate
@@ -319,7 +319,6 @@ class TestQueryApply(object):
         keys = [(TEST_NS, TEST_SET, i) for i in range(500)]
 
         #  rec['number'] < 10
-        #predexps = [predexp.integer_bin('number'), predexp.integer_value(10), predexp.integer_less()]
         expr = exp.LT(exp.IntBin('number'), 10)
         policy = {
             'expressions': expr.compile()

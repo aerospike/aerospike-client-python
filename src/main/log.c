@@ -111,12 +111,12 @@ CLEANUP:
 volatile int log_counter = 0;
 
 bool console_log_cb(as_log_level level, const char *func, const char *file,
-				   uint32_t line, const char *fmt, ...)
+					uint32_t line, const char *fmt, ...)
 {
 
 	char msg[1024];
 	va_list ap;
-	
+
 	int counter = __sync_fetch_and_add(&log_counter, 1);
 
 	va_start(ap, fmt);
@@ -128,8 +128,9 @@ bool console_log_cb(as_log_level level, const char *func, const char *file,
 	return true;
 }
 
-static bool log_cb(as_log_level level, const char * func,
-		const char * file, uint32_t line, const char * fmt, ...){
+static bool log_cb(as_log_level level, const char *func, const char *file,
+				   uint32_t line, const char *fmt, ...)
+{
 
 	char msg[1024];
 	va_list ap;
@@ -153,8 +154,8 @@ static bool log_cb(as_log_level level, const char * func,
 	PyObject *log_level = PyInt_FromLong((long)level);
 	PyObject *func_name = PyString_FromString(func);
 	PyObject *file_name = PyString_FromString(file);
-	PyObject *line_no   = PyInt_FromLong((long)line);
-	PyObject *message   = PyString_FromString(msg);
+	PyObject *line_no = PyInt_FromLong((long)line);
+	PyObject *message = PyString_FromString(msg);
 
 	// Set argument list
 	PyTuple_SetItem(py_arglist, 0, log_level);
@@ -174,17 +175,19 @@ static bool log_cb(as_log_level level, const char * func,
 	return true;
 }
 
-PyObject * Aerospike_Set_Log_Handler(PyObject *parent, PyObject *args, PyObject * kwds)
+PyObject *Aerospike_Set_Log_Handler(PyObject *parent, PyObject *args,
+									PyObject *kwds)
 {
 	// Python variables
 	PyObject *py_callback = NULL;
 	as_error err;
 	as_error_init(&err);
 	// Python function keyword arguments
-	static char * kwlist[] = {"log_handler", NULL};
+	static char *kwlist[] = {"log_handler", NULL};
 
 	// Python function arguments parsing
-	PyArg_ParseTupleAndKeywords(args, kwds, "|O:setLogHandler", kwlist, &py_callback);
+	PyArg_ParseTupleAndKeywords(args, kwds, "|O:setLogHandler", kwlist,
+								&py_callback);
 
 	if (py_callback && PyCallable_Check(py_callback)) {
 		// Store user callback
@@ -192,10 +195,11 @@ PyObject * Aerospike_Set_Log_Handler(PyObject *parent, PyObject *args, PyObject 
 		user_callback.callback = py_callback;
 
 		// Register callback to C-SDK
-		as_log_set_callback((as_log_callback) log_cb);
-	} else {
+		as_log_set_callback((as_log_callback)log_cb);
+	}
+	else {
 		// Register callback to C-SDK
-		as_log_set_callback((as_log_callback) console_log_cb);
+		as_log_set_callback((as_log_callback)console_log_cb);
 	}
 
 	return PyLong_FromLong(0);

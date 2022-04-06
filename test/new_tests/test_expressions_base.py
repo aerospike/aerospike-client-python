@@ -199,13 +199,6 @@ class TestExpressions(TestBaseClass):
         expr = Eq(BinType(bin), expected_bin_type).compile()
         verify_multiple_expression_avenues(self.as_connection, self.test_ns, self.test_set, expr, bin, _NUM_RECORDS)
 
-    def test_predexp_and_expressions(self):
-        self.as_connection.put(('test', u'demo', 25), {'test': 'test_data'})
-
-        expr = Eq(KeyInt(), 25)
-        with pytest.raises(e.ParamError):
-            record = self.as_connection.remove(('test', u'demo', 25), policy={'expressions': expr.compile(), 'predexp': expr})
-
     def test_nested_logic_pos(self):
         """
         Test nested logical operators expression.

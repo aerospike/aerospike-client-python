@@ -228,13 +228,13 @@ Record Operations
                 client.close()
 
         .. note::
-            Version >= 3.10.0 Supports predicate expressions for record operations see :mod:`~aerospike.predexp`.
-            Requires server version >= 4.7.0.
+            Version >= 5.0.0 Supports aerrospike expressions for record operations see :ref:`aerospike_operation_helpers.expressions`.
+            Requires server version >= 5.2.0.
 
             .. code-block:: python
 
                 import aerospike
-                from aerospike import predexp
+                from aerospike_helpers import expressions as exp
                 from aerospike import exception as ex
                 import sys
 
@@ -247,16 +247,13 @@ Record Operations
                     for i in range(3):
                         client.put(keys[i], records[i])
 
-                    preds = [  # check that the record has a value < 2 bin 'name'
-                        predexp.integer_bin("number"),
-                        predexp.integer_value(2),
-                        predexp.integer_less(),
-                    ]
+                    # check that the record has a value < 2 bin 'name'
+                    expr = exp.LT(exp.IntBin("number"), 2).compile()
                     records = []
 
                     for i in range(3):
                         try:
-                            records.append(client.get(keys[i], policy={"predexp": preds}))
+                            records.append(client.get(keys[i], policy={"expressions": preds}))
                         except ex.FilteredOut as e:
                             print("Error: {0} [{1}]".format(e.msg, e.code))
 
@@ -599,13 +596,13 @@ Batch Operations
                 ]
 
         .. note::
-            Version >= 3.10.0 Supports predicate expressions for batch operations see :mod:`~aerospike.predexp`.
-            Requires server version >= 4.7.0
+            Version >= 5.0.0 Supports aerrospike expressions for batch operations see :ref:`aerospike_operation_helpers.expressions`.
+            Requires server version >= 5.2.0.
 
             .. code-block:: python
 
                 import aerospike
-                from aerospike import predexp
+                from aerospike_helpers import expressions as exp
                 from aerospike import exception as ex
                 import sys
 
@@ -618,12 +615,10 @@ Batch Operations
                     for i in range(3):
                         client.put(keys[i], records[i])
 
-                    preds = [  # check that the record has a value less than 2 in bin 'name'
-                        predexp.integer_bin("number"),
-                        predexp.integer_value(2),
-                        predexp.integer_less(),
-                    ]
-                    records = client.get_many(keys, policy={"predexp": preds})
+                    # check that the record has a value less than 2 in bin 'name'
+                    expr = exp.LT(exp.IntBin("number"), 2).compile()
+
+                    records = client.get_many(keys, policy={"expressions": expr})
                     print(records)
                 except ex.AerospikeError as e:
                     print("Error: {0} [{1}]".format(e.msg, e.code))
@@ -755,6 +750,263 @@ Batch Operations
 
             The return type changed to :class:`list` starting with version 1.0.50.
 
+    .. method:: batch_write(batch_records: BatchRecords, [policy: dict]) -> BatchRecords
+
+        .. note:: Requires server version >= 6.0.0.
+
+        Write/Read multiple records for specified batch keys in one batch call.
+        This method allows different sub-commands for each key in the batch.
+        The resulting records and status are set in batch_records record and result fields.
+
+        .. note:: batch_write modifies the batch_records parameter.
+
+        :param BatchRecords batch_records: A BatchRecords object used to specify the operations to carry out.
+        :param dict policy: Optional aerospike batch policy :ref:`aerospike_batch_policies`.
+        :return: A reference to the batch_records argument of type :class:`BatchRecords <aerospike_helpers.batch.records>`.
+        :raises: A subclass of :exc:`~aerospike.exception.AerospikeError`.
+
+        .. seealso:: More information about the \
+            batch helpers :ref:`aerospike_operation_helpers.batch`
+
+        .. seealso:: More information about the \
+            `Batch Index <https://www.aerospike.com/docs/guide/batch.html>`_ \
+
+        .. code-block:: python
+
+            import aerospike
+            from aerospike import exception as ex
+            from aerospike_helpers.batch import records as br
+            import aerospike_helpers.expressions as exp
+            from aerospike_helpers.operations import operations as op
+            import sys
+
+            config = { 'hosts': [('127.0.0.1', 3000)] }
+            client = aerospike.client(config).connect()
+
+            # Apply different operations to different keys
+            # using batch_write.
+            w_batch_record = br.BatchRecords(
+                [
+                    br.Remove(
+                        key=(namespace, set, 1),
+                        policy={}
+                    ),
+                    br.Write(
+                        key=(namespace, set, 100),
+                        ops=[
+                            op.write("id", 100),
+                            op.write("balance", 100),
+                            op.read("id"),
+                            op.read("id"),
+                        ],
+                        policy={"expressions": exp.GT(exp.IntBin("balance"), 2000).compile()}
+                    ),
+                    br.Read(
+                        key=(namespace, set, 333),
+                        ops=[
+                            op.read("id")
+                        ],
+                        policy=None
+                    ),
+                ]
+            )
+
+            try:
+                # batch_write modifies its BatchRecords argument.
+                # Results for each BatchRecord will be set in their result,
+                # record, and in_doubt fields.
+
+                client.batch_write(w_batch_record)
+
+                for batch_record in w_batch_record.batch_records:
+                    print(batch_record.result)
+                    print(batch_record.record)
+            except ex.AerospikeError as e:
+                print("Error: {0} [{1}]".format(e.msg, e.code))
+                sys.exit(1)
+            finally:
+                client.close()
+
+    .. method:: batch_operate(keys: list, ops: list, [policy_batch: dict], [policy_batch_write: dict]) -> BatchRecords
+
+        .. note:: Requires server version >= 6.0.0.
+
+        Perform the same read/write operations on multiple keys.
+
+        :param list keys: The keys to operate on.
+        :param list ops: List of operations to apply.
+        :param dict policy_batch: Optional aerospike batch policy :ref:`aerospike_batch_policies`.
+        :param dict policy_batch_write: Optional aerospike batch write policy :ref:`aerospike_batch_write_policies`.
+        :return: an instance of :class:`BatchRecords <aerospike_helpers.batch.records>`.
+        :raises: A subclass of :exc:`~aerospike.exception.AerospikeError`.
+
+        .. seealso:: More information about the \
+            `Batch Index <https://www.aerospike.com/docs/guide/batch.html>`_ \
+
+        .. code-block:: python
+
+            import aerospike
+            from aerospike import exception as ex
+            from aerospike_helpers.batch import records as br
+            import aerospike_helpers.expressions as exp
+            from aerospike_helpers.operations import operations as op
+            import sys
+
+            config = { 'hosts': [('127.0.0.1', 3000)] }
+            client = aerospike.client(config).connect()
+
+            # Batch add 10 to the bin "balance" and read it if it's over
+            # 1000 NOTE: batch_operate ops must include a write op
+            # get_batch_ops or get_many can be used for all read ops use cases.
+            expr = exp.GT(exp.IntBin("balance"), 1000).compile()
+            ops = [
+                op.increment("balance", 10),
+                op.read("balance")
+            ]
+            policy_batch = {"expressions": expr}
+
+            try:
+                res = client.batch_operate(keys, ops, policy_batch)
+            except ex.AerospikeError as e:
+                print("Error: {0} [{1}]".format(e.msg, e.code))
+                client.close()
+                sys.exit(1)
+
+            # res is an instance of BatchRecords
+            # the field, batch_records, contains a BatchRecord instance
+            # for each key used by the batch_operate call.
+            # the field, results, is 0 if all batch subtransactions completed succesfully
+            # or the only failures are FILTERED_OUT or RECORD_NOT_FOUND.
+            # Otherwise its value corresponds to an as_status error code and signifies that
+            # one or more of the batch subtransactions failed. Each BatchRecord instance
+            # also has a results field that signifies the status of that batch subtransaction.
+
+            if res.result == 0:
+
+                # BatchRecord 100 should have a result code of 27 meaning it was filtered out by an expression.
+                print("BatchRecord 100 result: {result}".format(result=res.batch_records[100].result))
+
+                # BatchRecord 100 should, record be None.
+                print("BatchRecord 100 record: {record}".format(record=res.batch_records[100].record))
+
+                # BatchRecord 101 should have a result code of 0 meaning it succeeded.
+                print("BatchRecord 101 result: {result}".format(result=res.batch_records[101].result))
+
+                # BatchRecord 101, record should be populated.
+                print("BatchRecord 101 record: {record}".format(record=res.batch_records[101].record))
+
+            else:
+                # Some batch sub transaction failed.
+                print("res result: {result}".format(result=res.result))
+
+            client.close()
+
+    .. method:: batch_apply(keys: list, module: str, function: str, args: list, [policy_batch: dict], [policy_batch_apply: dict]) -> BatchRecords
+
+        .. note:: Requires server version >= 6.0.0.
+
+        Apply UDF (user defined function) on multiple keys.
+
+        :param list keys: The keys to operate on.
+        :param str module: the name of the UDF module.
+        :param str function: the name of the UDF to apply to the record identified by *key*.
+        :param list args: the arguments to the UDF.
+        :param dict policy_batch: Optional aerospike batch policy :ref:`aerospike_batch_policies`.
+        :param dict policy_batch_apply: Optional aerospike batch apply policy :ref:`aerospike_batch_apply_policies`.
+        :return: an instance of :class:`BatchRecords <aerospike_helpers.batch.records>`.
+        :raises: A subclass of :exc:`~aerospike.exception.AerospikeError`.
+
+        .. seealso:: More information about the \
+            `Batch Index <https://www.aerospike.com/docs/guide/batch.html>`_ \
+
+        .. code-block:: python
+
+            import aerospike
+            from aerospike import exception as ex
+            import sys
+
+            config = { 'hosts': [('127.0.0.1', 3000)] }
+            client = aerospike.client(config).connect()
+
+            keys = [(namespace, set, i) for i in range(10)]
+
+            # Apply a user defined function (UDF) to a batch
+            # of records using batch_apply.
+            module = "test_record_udf"
+            path_to_module = "/path/to/test_record_udf.lua"
+            function = "bin_udf_operation_integer"
+            args = ["balance", 10, 5]
+
+            client.udf_put(path_to_module)
+
+            try:
+                # This should add 15 to each balance bin.
+                res = client.batch_apply(keys, module, function, args)
+            except ex.AerospikeError as e:
+                print("Error: {0} [{1}]".format(e.msg, e.code))
+                client.close()
+                sys.exit(1)
+
+            print("res result: {result}".format(result=res.result))
+            for batch_record in res.batch_records:
+                print(batch_record.result)
+                print(batch_record.record)
+
+
+            client.close()
+
+            # bin_udf_operation_integer lua
+            # --[[UDF which performs arithmetic operation on bin containing
+            #     integer value.
+            # --]]
+            # function bin_udf_operation_integer(record, bin_name, x, y)
+            #     record[bin_name] = (record[bin_name] + x) + y
+            #     if aerospike:exists(record) then
+            #         aerospike:update(record)
+            #     else
+            #         aerospike:create(record)
+            #     end
+            #     return record[bin_name]
+            # end
+
+    .. method:: batch_remove(keys: list, [policy_batch: dict], [policy_batch_remove: dict]) -> BatchRecords
+
+        .. note:: Requires server version >= 6.0.0.
+
+        Remove multiple records by key.
+
+        :param list keys: The keys to remove.
+        :param dict policy_batch: Optional aerospike batch policy :ref:`aerospike_batch_policies`.
+        :param dict policy_batch_remove: Optional aerospike batch remove policy :ref:`aerospike_batch_remove_policies`.
+        :return: an instance of :class:`BatchRecords <aerospike_helpers.batch.records>`.
+        :raises: A subclass of :exc:`~aerospike.exception.AerospikeError`.
+
+        .. seealso:: More information about the \
+            `Batch Index <https://www.aerospike.com/docs/guide/batch.html>`_ \
+
+        .. code-block:: python
+
+            import aerospike
+            from aerospike import exception as ex
+            import sys
+
+            config = { 'hosts': [('127.0.0.1', 3000)] }
+            client = aerospike.client(config).connect()
+
+            keys = [(namespace, set, i) for i in range(10)]
+
+            # Delete the records using batch_remove
+            try:
+                res = client.batch_remove(keys)
+            except ex.AerospikeError as e:
+                print("Error: {0} [{1}]".format(e.msg, e.code))
+                client.close()
+                sys.exit(1)
+            
+            # Should be 0 signifying success.
+            print("BatchRecords result: {result}".format(result=res.result))
+
+            client.close()
 
     .. index::
         single: String Operations
@@ -925,13 +1177,13 @@ Single-Record Transactions
         :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
 
         .. note::
-            Version >= 3.10.0 Supports predicate expressions for transactions, see :mod:`~aerospike.predexp`.
-            Requires server version >= 4.7.0.
+            Version >= 5.0.0 Supports aerrospike expressions for transactions see :ref:`aerospike_operation_helpers.expressions`.
+            Requires server version >= 5.2.0.
 
             .. code-block:: python
 
                 import aerospike
-                from aerospike import predexp
+                from aerospike_helpers import expressions as exp
                 from aerospike_helpers.operations import list_operations, operations
                 from aerospike import exception as ex
                 import sys
@@ -946,17 +1198,14 @@ Single-Record Transactions
 
                     ops = [list_operations.list_append("charges", 25)]
 
-                    preds = [  # check that the record has value 'Kim' in bin 'name'
-                        predexp.string_bin("name"),
-                        predexp.string_value("Kim"),
-                        predexp.string_equal(),
-                    ]
+                    # check that the record has value 'Kim' in bin 'name'
+                    expr = exp.Eq(exp.StrBin("name"), "Kim").compile()
 
                     # Because the record's name bin is 'John' and not 'Kim',
                     # client.operate() will fail with AEROSPIKE_FILTERED_OUT and the
                     # operations will not be applied.
                     try:
-                        client.operate(key, ops, policy={"predexp": preds})
+                        client.operate(key, ops, policy={"expressions": expr})
                     except ex.FilteredOut as e:
                         print("Error: {0} [{1}]".format(e.msg, e.code))
 
@@ -964,13 +1213,10 @@ Single-Record Transactions
                     print(record)
 
                     # This client.operate() will succeed because the name bin is 'John'.
-                    preds = [  # check that the record has value 'John' in bin 'name'
-                        predexp.string_bin("name"),
-                        predexp.string_value("John"),
-                        predexp.string_equal(),
-                    ]
+                    # check that the record has value 'John' in bin 'name'
+                    expr = exp.Eq(exp.StrBin("name"), "John").compile()
 
-                    client.operate(key, ops, policy={"predexp": preds})
+                    client.operate(key, ops, policy={"expressions": expr})
 
                     record = client.get(key)
                     print(record)
@@ -1153,6 +1399,8 @@ Scan and Query
 
     .. method:: scan(namespace[, set]) -> Scan
 
+        .. deprecated:: 7.0.0 :class:`aerospike.Query` should be used instead.
+
         Return a :class:`aerospike.Scan` object to be used for executing scans \
         over a specified *set* (which can be omitted or :py:obj:`None`) in a \
         *namespace*. A scan with a :py:obj:`None` set returns all the records in the \
@@ -1290,13 +1538,13 @@ User Defined Functions
           and `Developing Record UDFs <http://www.aerospike.com/docs/udf/developing_record_udfs.html>`_.
 
     .. note::
-        Version >= 3.10.0 Supports predicate expressions for apply, scan_apply, and query_apply see :mod:`~aerospike.predexp`.
-        Requires server version 4.7.0.
+        Version >= 5.0.0 Supports aerrospike expressions for apply, scan_apply, and query_apply see :ref:`aerospike_operation_helpers.expressions`.
+        Requires server version >= 5.2.0.
 
         .. code-block:: python
 
             import aerospike
-            from aerospike import predexp
+            from aerospike_helpers import expressions as exp
             from aerospike import exception as ex
             import sys
 
@@ -1319,17 +1567,13 @@ User Defined Functions
                 for i in range(3):
                     client.put(keys[i], records[i])
 
-                preds = [  # check that the record has value < 2 or == 3 in bin 'name'
-                    predexp.integer_bin("number"),
-                    predexp.integer_value(2),
-                    predexp.integer_less(),
-                    predexp.integer_bin("number"),
-                    predexp.integer_value(3),
-                    predexp.integer_equal(),
-                    predexp.predexp_or(2),
-                ]
+                # check that the record has value < 2 or == 3 in bin 'number'
+                expr = exp.Or(
+                    exp.LT(exp.IntBin("number"), 2),
+                    exp.Eq(exp.IntBin("number"), 3)
+                ).compile()
 
-                policy = {"predexp": preds}
+                policy = {"expressions": expr}
 
                 client.scan_apply("test", None, "my_udf", "my_udf", ["number", 10], policy)
                 records = client.get_many(keys)
@@ -1358,6 +1602,8 @@ User Defined Functions
             end
 
     .. method:: scan_apply(ns, set, module, function[, args[, policy: dict[, options]]]) -> int
+
+        .. deprecated:: 7.0.0 :class:`aerospike.Query` should be used instead.
 
         Initiate a scan and apply a record UDF to each record matched by the scan. This method blocks until the scan is complete.
 
@@ -1663,7 +1909,7 @@ Info Operations
 
         :param str data_center: The data center to apply the filter to.
         :param str namespace: The namespace to apply the filter to.
-        :param expression expression_filter: The filter to set. See expressions at :py:mod:`aerospike_helpers`.
+        :param AerospikeExpression expression_filter: The filter to set. See expressions at :py:mod:`aerospike_helpers`.
         :param dict policy: optional :ref:`aerospike_info_policies`.
         :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
 
@@ -1672,6 +1918,32 @@ Info Operations
         .. versionchanged:: 5.0.0
 
         .. warning:: Requires Aerospike server version >= 5.3.
+
+    .. method:: get_expression_base64(expression) -> str
+
+        Get the base64 representation of a compiled aerospike expression.
+        See :ref:`aerospike_operation_helpers.expressions` for more details on expressions.
+
+        :param AerospikeExpression expression: The compiled expression whose base64 representation will be returned. See expressions at :ref:`aerospike_operation_helpers.expressions`.
+        :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
+
+        .. code-block:: python
+
+            # This is an example of getting the base64 representation of an aerospike expression.
+            import aerospike
+            from aerospike_helpers import expressions as exp
+
+
+            # Compile expression
+            expr = exp.Eq(exp.IntBin("bin1"), 6).compile()
+
+            # Get base64
+            b64 = client.get_expression_base64(expr)
+
+            # Expected output: "kwGTUQKkYmluMQY="
+            print(b64)
+
+        .. versionchanged:: 7.0.0
 
     .. method:: shm_key()  ->  int
 
@@ -2573,6 +2845,9 @@ Batch Policies
             | 
             | Default ``True``
         * **send_set_name** (:class:`bool`) 
+            |
+            |   .. deprecated:: in client version 7.0.0, the client ignores this policy and always sends set name to the server.
+            |
             | Send set name field to server for every key in the batch for batch index protocol. This is only necessary when authentication is enabled and security roles are defined on a per set basis. 
             | 
             | Default: ``False``
@@ -2580,8 +2855,151 @@ Batch Policies
             | Should raw bytes be deserialized to as_list or as_map. Set to `False` for backup programs that just need access to raw bytes. 
             | 
             | Default: ``True``
-        * **predexp** :class:`list`
-            | A list of :mod:`aerospike.predexp` used as a predicate filter for record, bin, batch, and record UDF operations.
+        * **expressions** :class:`list`
+            | Compiled aerospike expressions :mod:`aerospike_helpers` used for filtering records within a transaction.
+            |
+            | Default: None
+
+            .. note:: Requires Aerospike server version >= 5.2.
+
+.. _aerospike_batch_write_policies:
+
+Batch Write Policies
+--------------------
+
+.. object:: policy
+
+    A :class:`dict` of optional batch write policies, which are applicable to :meth:`~aerospike.batch_write`, :meth:`~aerospike.batch_operate` and :class:`Write <aerospike_helpers.batch.records>`.
+
+    .. hlist::
+        :columns: 1
+
+        * **key** 
+            | One of the :ref:`POLICY_KEY` values such as :data:`aerospike.POLICY_KEY_DIGEST`
+            |
+            | Default: :data:`aerospike.POLICY_KEY_DIGEST`
+        * **commit_level** 
+            | One of the :ref:`POLICY_COMMIT_LEVEL` values such as :data:`aerospike.POLICY_COMMIT_LEVEL_ALL`
+            |
+            | Default: :data:`aerospike.POLICY_COMMIT_LEVEL_ALL`
+        * **gen** 
+            | One of the :ref:`POLICY_GEN` values such as :data:`aerospike.POLICY_GEN_IGNORE`
+            |
+            | Default: :data:`aerospike.POLICY_GEN_IGNORE`
+        * **exists** 
+            | One of the :ref:`POLICY_EXISTS` values such as :data:`aerospike.POLICY_EXISTS_CREATE`
+            |
+            | Default: :data:`aerospike.POLICY_EXISTS_IGNORE`
+        * **durable_delete** (:class:`bool`)
+            | Perform durable delete
+            |
+            | Default: ``False``
+        * **expressions** :class:`list`
+            | Compiled aerospike expressions :mod:`aerospike_helpers` used for filtering records within a transaction.
+            |
+            | Default: None
+
+.. _aerospike_batch_apply_policies:
+
+Batch Apply Policies
+--------------------
+
+.. object:: policy
+
+    A :class:`dict` of optional batch apply policies, which are applicable to :meth:`~aerospike.batch_apply`, and :class:`Apply <aerospike_helpers.batch.records>`.
+
+    .. hlist::
+        :columns: 1
+
+        * **key** 
+            | One of the :ref:`POLICY_KEY` values such as :data:`aerospike.POLICY_KEY_DIGEST`
+            |
+            | Default: :data:`aerospike.POLICY_KEY_DIGEST`
+        * **commit_level** 
+            | One of the :ref:`POLICY_COMMIT_LEVEL` values such as :data:`aerospike.POLICY_COMMIT_LEVEL_ALL`
+            |
+            | Default: :data:`aerospike.POLICY_COMMIT_LEVEL_ALL`
+        * **ttl** int
+            | Time to live (expiration) of the record in seconds.
+            |
+            | 0 which means that the
+            | record will adopt the default TTL value from the namespace.
+            |
+            | 0xFFFFFFFF (also, -1 in a signed 32 bit int)
+            | which means that the record
+            | will get an internal "void_time" of zero, and thus will never expire.
+            |
+            | 0xFFFFFFFE (also, -2 in a signed 32 bit int)
+            | which means that the record
+            |
+            | ttl will not change when the record is updated.
+            | Note that the TTL value will be employed ONLY on write/update calls.
+            |
+            | Default: 0
+        * **expressions** :class:`list`
+            | Compiled aerospike expressions :mod:`aerospike_helpers` used for filtering records within a transaction.
+            |
+            | Default: None
+
+.. _aerospike_batch_remove_policies:
+
+Batch Remove Policies
+---------------------
+
+.. object:: policy
+
+    A :class:`dict` of optional batch remove policies, which are applicable to :meth:`~aerospike.batch_remove`, and :class:`Remove <aerospike_helpers.batch.records>`.
+
+    .. hlist::
+        :columns: 1
+
+        * **key** 
+            | One of the :ref:`POLICY_KEY` values such as :data:`aerospike.POLICY_KEY_DIGEST`
+            |
+            | Default: :data:`aerospike.POLICY_KEY_DIGEST`
+        * **commit_level** 
+            | One of the :ref:`POLICY_COMMIT_LEVEL` values such as :data:`aerospike.POLICY_COMMIT_LEVEL_ALL`
+            |
+            | Default: :data:`aerospike.POLICY_COMMIT_LEVEL_ALL`
+        * **gen** 
+            | One of the :ref:`POLICY_GEN` values such as :data:`aerospike.POLICY_GEN_IGNORE`
+            |
+            | Default: :data:`aerospike.POLICY_GEN_IGNORE`
+        * **generation** int
+            | Generation of the record.
+            |
+            | Default: 0
+        * **durable_delete** (:class:`bool`)
+            | Perform durable delete
+            |
+            | Default: ``False``
+        * **expressions** :class:`list`
+            | Compiled aerospike expressions :mod:`aerospike_helpers` used for filtering records within a transaction.
+            |
+            | Default: None
+
+.. _aerospike_batch_read_policies:
+
+Batch Read Policies
+-------------------
+
+.. object:: policy
+
+    A :class:`dict` of optional batch read policies, which are applicable to :class:`Read <aerospike_helpers.batch.records>`.
+
+    .. hlist::
+        :columns: 1
+
+        * **read_mode_ap** 
+            | One of the :ref:`POLICY_READ_MODE_AP` values such as :data:`aerospike.AS_POLICY_READ_MODE_AP_ONE`
+            |
+            | Default: :data:`aerospike.AS_POLICY_READ_MODE_AP_ONE`
+        * **read_mode_sc** 
+            | One of the :ref:`POLICY_READ_MODE_SC` values such as :data:`aerospike.POLICY_READ_MODE_SC_SESSION`
+            |
+            | Default: :data:`aerospike.POLICY_READ_MODE_SC_SESSION`
+        * **expressions** :class:`list`
+            | Compiled aerospike expressions :mod:`aerospike_helpers` used for filtering records within a transaction.
             |
             | Default: None
 
@@ -2810,6 +3228,99 @@ Privilege Objects
     Example:
 
     ``{'code': aerospike.PRIV_READ, 'ns': 'test', 'set': 'demo'}``
+
+
+.. _aerospike_partition_objects:
+
+Partition Objects
+-----------------
+
+.. object:: partition_filter
+
+    A :class:`dict` of partition information used by the client
+    to perform partiton queries/scans. Useful for resuming terminated queries and
+    querying particular partitons/records.
+
+    .. hlist::
+        :columns: 1
+
+        * **begin** Optional :class:`int` signifying which partition to start at. Default: 0 (the first partition)
+        * **count** Optional :class:`int` signifying how many partitions to process. Default: 4096 (all partitions)
+        * **digest** Optional :class:`dict` containing the keys "init" and "value" signifying whether the digest has been calculated, and the digest value.
+            |   **init**: :class:`bool` Whether the digest has been calculated.
+            |   **value**: :class:`bytearray` The bytearray value of the digest, should be 20 characters long.
+            |       ``# Example digest dict.``
+            |       ``digest = {"init": True, "value": bytearray([0]*20)}``
+
+            Default: {} (will start from first record in partition)
+        * **partition_status** Optional :class:`dict` containing partition_status tuples. These can be used to resume a query/scan. Default: {} (all partitions)
+
+    Default: ``{}`` (All partitions will be queried/scanned).
+
+    .. code-block:: python
+
+        # Example of a query policy using partition_filter.
+        
+        # partition_status is most easily used to resume a query
+        # and can be obtained by calling Query.get_partitions_status()
+        partition_status = {
+            0: {0, False, Flase, bytearray([0]*20)}...
+        }
+
+        policy = {
+            "partition_filter": {
+                "partition_status": partition_status,
+                "begin": 0,
+                "count": 4096
+            },
+        }
+
+
+.. object:: partition_status
+
+    .. note:: Requires Aerospike server version >= 6.0.
+
+    A :class:`dict` of partition status information used by the client
+    to set the partition status of a query/scan during a partition query/scan.
+    Useful for resuming partition query/scans.
+
+    partition_status is a dictionary with keys "retry" `str`, "done" `str`, and a variable amount of id `int` keys.
+    "retry" corresponds to the overall partition query retry status and maps to a bool. i.e. Does this query/scan need to be retried?
+    "done" represents whether all partitions were finished and maps to a bool.
+    the id keys, called "id" in this documentation correspond to a partition id. "id"'s value is
+    another dictionary containing status details about that partition. See those values below.
+
+    .. hlist::
+        :columns: 1
+
+        * **id** :class:`int` Represents the partition id number.
+        * **init** :class:`bool` Represents whether the digest being queried was calculated.
+        * **retry** :class:`bool` Represents whether this partition should be retried.
+        * **digest** :class:`bytearray` Represents the digest of the record being queried. Should be 20 characters long.
+        * **bval** :class:`int` Used in conjunction with digest in order to determine the last record recieved by a partition query.
+
+    .. code-block:: python
+
+       # Example of a query policy using partition_status.
+       # Assume "query" is a valid aerospike Query instance.
+       
+       # partition_status is most easily used to resume a query
+       # and can be obtained by calling Query.get_partitions_status()
+       # Here is the form of partition_status.
+       # partition_status = {
+       #     0: (0, False, Flase, bytearray([0]*20), 0)...
+       # }
+       partition_status = query.get_partitions_status()
+
+       policy = {
+           "partition_filter": {
+               "partition_status": partition_status,
+               "begin": 0,
+               "count": 4096
+           },
+       }
+
+    Default: ``{}`` (All partitions will be queried).
 
 .. _unicode_handling:
 

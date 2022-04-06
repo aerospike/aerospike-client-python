@@ -122,11 +122,13 @@ void read_async_callback_helper(as_error *cmd_error, as_record *record,
 			py_exception = Py_None;
 		}
 
-		PyTuple_SetItem(py_arglist, 0, py_key); //0-key tuple (ns, set, key, hash)
-		PyTuple_SetItem(py_arglist, 1, py_rec); //1-record tuple (key-tuple, meta, bin)
-		PyTuple_SetItem(py_arglist, 2, py_err); //2-error tuple
+		PyTuple_SetItem(py_arglist, 0,
+						py_key); //0-key tuple (ns, set, key, hash)
+		PyTuple_SetItem(py_arglist, 1,
+						py_rec); //1-record tuple (key-tuple, meta, bin)
+		PyTuple_SetItem(py_arglist, 2, py_err);		  //2-error tuple
 		PyTuple_SetItem(py_arglist, 3, py_exception); //3-exception
-		
+
 		// Invoke Python Callback
 		py_return = PyObject_Call(py_callback, py_arglist, NULL);
 
@@ -192,7 +194,9 @@ PyObject *AerospikeClient_Get_Async(AerospikeClient *self, PyObject *args,
 	if (!async_support) {
 		as_error err;
 		as_error_init(&err);
-		as_error_update(&err, AEROSPIKE_ERR, "Support for async is disabled, build software with async option");
+		as_error_update(
+			&err, AEROSPIKE_ERR,
+			"Support for async is disabled, build software with async option");
 		PyObject *py_err = NULL, *exception_type = NULL;
 		error_to_pyobject(&err, &py_err);
 		exception_type = raise_exception(&err);
@@ -223,14 +227,11 @@ PyObject *AerospikeClient_Get_Async(AerospikeClient *self, PyObject *args,
 	as_exp exp_list;
 	as_exp *exp_list_p = NULL;
 
-	// For converting predexp.
-	as_predexp_list predexp_list;
-	as_predexp_list *predexp_list_p = NULL;
-
 	as_status status = AEROSPIKE_OK;
 
 	if (!self || !self->as) {
-		as_error_update(&uData->error, AEROSPIKE_ERR_PARAM, "Invalid aerospike object");
+		as_error_update(&uData->error, AEROSPIKE_ERR_PARAM,
+						"Invalid aerospike object");
 		goto CLEANUP;
 	}
 
@@ -249,8 +250,8 @@ PyObject *AerospikeClient_Get_Async(AerospikeClient *self, PyObject *args,
 	// Convert python policy object to as_policy_exists
 	pyobject_to_policy_read(self, &uData->error, py_policy, &uData->read_policy,
 							&uData->read_policy_p,
-							&self->as->config.policies.read, &predexp_list,
-							&predexp_list_p, &exp_list, &exp_list_p);
+							&self->as->config.policies.read, &exp_list,
+							&exp_list_p);
 	if (uData->error.code != AEROSPIKE_OK) {
 		goto CLEANUP;
 	}
@@ -269,10 +270,6 @@ CLEANUP:
 
 	if (exp_list_p) {
 		as_exp_destroy(exp_list_p);
-	}
-
-	if (predexp_list_p) {
-		as_predexp_list_destroy(&predexp_list);
 	}
 
 	if (status != AEROSPIKE_OK || uData->error.code != AEROSPIKE_OK) {

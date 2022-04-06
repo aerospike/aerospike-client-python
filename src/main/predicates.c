@@ -390,8 +390,8 @@ static PyMethodDef AerospikePredicates_Methods[] = {
 PyObject *AerospikePredicates_New(void)
 {
 	PyObject *module;
-	MOD_DEF(module, "aerospike.predicates", "Query Predicates",
-			-1, AerospikePredicates_Methods, NULL);
+	MOD_DEF(module, "aerospike.predicates", "Query Predicates", -1,
+			AerospikePredicates_Methods, NULL);
 
 	return module;
 }

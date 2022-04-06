@@ -54,10 +54,6 @@ PyObject *AerospikeClient_Remove_Invoke(AerospikeClient *self, PyObject *py_key,
 	as_exp exp_list;
 	as_exp *exp_list_p = NULL;
 
-	// For converting predexp.
-	as_predexp_list predexp_list;
-	as_predexp_list *predexp_list_p = NULL;
-
 	// Initialisation flags
 	bool key_initialised = false;
 
@@ -87,8 +83,7 @@ PyObject *AerospikeClient_Remove_Invoke(AerospikeClient *self, PyObject *py_key,
 	if (py_policy) {
 		pyobject_to_policy_remove(
 			self, &err, py_policy, &remove_policy, &remove_policy_p,
-			&self->as->config.policies.remove, &predexp_list, &predexp_list_p,
-			&exp_list, &exp_list_p);
+			&self->as->config.policies.remove, &exp_list, &exp_list_p);
 		if (err.code != AEROSPIKE_OK) {
 			goto CLEANUP;
 		}
@@ -133,11 +128,6 @@ CLEANUP:
 
 	if (exp_list_p) {
 		as_exp_destroy(exp_list_p);
-		;
-	}
-
-	if (predexp_list_p) {
-		as_predexp_list_destroy(&predexp_list);
 	}
 
 	if (key_initialised == true) {

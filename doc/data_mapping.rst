@@ -9,7 +9,7 @@
 .. note::
 
     By default, the :py:class:`~aerospike.Client` maps the supported types \
-    :py:class:`int`, :py:class:`bool`, :py:class:`str`, :py:class:`float`, :py:class:`bytearray`, \
+    :py:class:`int`, :py:class:`bool`, :py:class:`str`, :py:class:`float`, :py:class:`bytes`, \
     :py:class:`list`, :py:class:`dict` to matching aerospike server \
     `types <http://www.aerospike.com/docs/guide/data-types.html>`_ \
     (int, string, double, blob, list, map). When an unsupported type is \
@@ -65,7 +65,7 @@ The following table shows which Python types map directly to Aerospike server ty
 +--------------------------+------------------------+
 |list                      |list                    |
 +--------------------------+------------------------+
-|bytearray                 |blob                    |
+|bytes                     |blob                    |
 +--------------------------+------------------------+
 |aerospike.GeoJSON         |GeoJSON                 |
 +--------------------------+------------------------+

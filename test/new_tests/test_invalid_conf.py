@@ -157,7 +157,6 @@ class TestInvalidClientConfig(object):
                              [
                                 ("concurrent", "concurrent"),  # should be bool
                                 ("allow_inline", "False"),  # should be bool
-                                ("send_set_name", "False"),  # should be bool
                                 ("deserialize", "False"),  # should be bool
                              ])
     def test_invalid_batch_policy_types(self, key, value):

@@ -346,6 +346,102 @@ as_status as_role_array_to_pyobject(as_error *err, as_role **roles,
 	return err->code;
 }
 
+// creates a python tuple from an as_partition_status
+// EX: (id, init, done, digest, bval)
+as_status as_partition_status_to_pyobject(
+	as_error *err, const as_partition_status *part_status, PyObject **py_tuple)
+{
+	as_error_reset(err);
+
+	int PARTITION_TUPLE_STATUS_SIZE = 5;
+	PyObject *new_tuple = PyTuple_New((Py_ssize_t)PARTITION_TUPLE_STATUS_SIZE);
+	if (new_tuple == NULL) {
+		as_error_update(err, AEROSPIKE_ERR_CLIENT, "failed to create py_tuple");
+		goto END;
+	}
+
+	PyObject *py_id =
+		PyLong_FromUnsignedLong((unsigned long)part_status->part_id);
+	PyTuple_SetItem(new_tuple, 0, py_id);
+
+	PyObject *py_init = PyBool_FromLong((long)part_status->digest.init);
+	PyTuple_SetItem(new_tuple, 1, py_init);
+
+	PyObject *py_retry = PyBool_FromLong((long)part_status->retry);
+	PyTuple_SetItem(new_tuple, 2, py_retry);
+
+	PyObject *py_digest =
+		PyByteArray_FromStringAndSize((const char *)&part_status->digest.value,
+									  (Py_ssize_t)AS_DIGEST_VALUE_SIZE);
+	PyTuple_SetItem(new_tuple, 3, py_digest);
+
+	PyObject *py_bval =
+		PyLong_FromUnsignedLongLong((unsigned long long)part_status->bval);
+	PyTuple_SetItem(new_tuple, 4, py_bval);
+
+	*py_tuple = new_tuple;
+
+END:
+	return err->code;
+}
+
+// creates a python dict of tuples from an as_partitions_status
+// EX: {id:(id, init, done, digest, bval) for id in range (1000, 1004,1)}
+// returns and empty dict if parts_status == NULL
+as_status as_partitions_status_to_pyobject(
+	as_error *err, const as_partitions_status *parts_status, PyObject **py_dict)
+{
+	as_error_reset(err);
+
+	PyObject *new_dict = PyDict_New();
+	if (new_dict == NULL) {
+		as_error_update(err, AEROSPIKE_ERR_CLIENT, "failed to create new_dict");
+		goto END;
+	}
+
+	if (parts_status == NULL) {
+		// If parts_status is NULL return an empty dict because
+		// the query/scan is not tracking its partitions.
+		*py_dict = new_dict;
+		goto END;
+	}
+
+	PyObject *py_done = PyBool_FromLong(parts_status->done);
+	PyDict_SetItemString(new_dict, PARTITIONS_STATUS_KEY_DONE, py_done);
+	Py_DECREF(py_done);
+
+	PyObject *py_retry = PyBool_FromLong(parts_status->retry);
+	PyDict_SetItemString(new_dict, PARTITIONS_STATUS_KEY_RETRY, py_retry);
+	Py_DECREF(py_retry);
+
+	for (int i = 0; i < parts_status->part_count; ++i) {
+
+		const as_partition_status *part = &parts_status->parts[i];
+
+		PyObject *new_py_tuple = NULL;
+		if (as_partition_status_to_pyobject(err, part, &new_py_tuple) !=
+			AEROSPIKE_OK) {
+			Py_DECREF(new_dict);
+			goto END;
+		}
+
+		PyObject *py_id = PyLong_FromUnsignedLong((unsigned long)part->part_id);
+
+		if (PyDict_SetItem(new_dict, py_id, new_py_tuple) != 0) {
+			as_error_update(err, AEROSPIKE_ERR_CLIENT,
+							"failed set item in new_dict");
+			Py_DECREF(new_dict);
+			Py_DECREF(new_py_tuple);
+			goto END;
+		}
+	}
+
+	*py_dict = new_dict;
+
+END:
+	return err->code;
+}
+
 as_status as_user_to_pyobject(as_error *err, as_user *user,
 							  PyObject **py_as_user)
 {
@@ -383,15 +479,18 @@ as_status as_user_info_to_pyobject(as_error *err, as_user *user,
 
 	if (PyDict_SetItemString(
 			py_info, "read_info",
-			Py_BuildValue("i", (user->read_info ? *(user->read_info): 0))) == -1) {
+			Py_BuildValue("i", (user->read_info ? *(user->read_info) : 0))) ==
+		-1) {
 		as_error_update(err, AEROSPIKE_ERR_CLIENT,
 						"Failed to set %s in py_info.", "read_info");
 		Py_DECREF(py_roles);
 		Py_DECREF(py_info);
 		goto END;
 	}
-	if (PyDict_SetItemString(py_info, "write_info",
-							 Py_BuildValue("i", (user->write_info ? *(user->write_info): 0))) == -1) {
+	if (PyDict_SetItemString(
+			py_info, "write_info",
+			Py_BuildValue("i", (user->write_info ? *(user->write_info) : 0))) ==
+		-1) {
 		as_error_update(err, AEROSPIKE_ERR_CLIENT,
 						"Failed to set %s in py_info.", "write_info");
 		Py_DECREF(py_roles);
@@ -1702,10 +1801,8 @@ as_status do_record_to_pyobject(AerospikeClient *self, as_error *err,
 	return err->code;
 }
 
-as_status record_to_resultpyobject(AerospikeClient *self, 
-								as_error *err,
-								const as_record *rec,
-								PyObject **obj)
+as_status record_to_resultpyobject(AerospikeClient *self, as_error *err,
+								   const as_record *rec, PyObject **obj)
 {
 	as_error_reset(err);
 	*obj = NULL;
@@ -1722,8 +1819,7 @@ as_status record_to_resultpyobject(AerospikeClient *self,
 		return err->code;
 	}
 
-	if (bins_to_pyobject(self, err, rec, &py_rec_bins, false) !=
-		AEROSPIKE_OK) {
+	if (bins_to_pyobject(self, err, rec, &py_rec_bins, false) != AEROSPIKE_OK) {
 		Py_CLEAR(py_rec_meta);
 		return err->code;
 	}
@@ -2022,7 +2118,7 @@ as_status metadata_to_pyobject(as_error *err, const as_record *rec,
 	return err->code;
 }
 
-bool error_to_pyobject(const as_error *err, PyObject **obj)
+void error_to_pyobject(const as_error *err, PyObject **obj)
 {
 	PyObject *py_file = NULL;
 	if (err->file) {
@@ -2054,7 +2150,6 @@ bool error_to_pyobject(const as_error *err, PyObject **obj)
 	PyTuple_SetItem(py_err, PY_EXCEPTION_LINE, py_line);
 	PyTuple_SetItem(py_err, AS_PY_EXCEPTION_IN_DOUBT, py_in_doubt);
 	*obj = py_err;
-	return true;
 }
 
 void initialize_bin_for_strictypes(AerospikeClient *self, as_error *err,
@@ -2655,4 +2750,31 @@ as_status get_int_from_py_int(as_error *err, PyObject *py_long,
 	*int_pointer = int64_to_return;
 
 	return AEROSPIKE_OK;
+}
+
+as_status as_batch_result_to_BatchRecord(AerospikeClient *self, as_error *err,
+										 as_batch_result *bres,
+										 PyObject *py_batch_record)
+{
+	as_status *result_code = &(bres->result);
+	as_record *result_rec = &(bres->record);
+	bool in_doubt = bres->in_doubt;
+
+	PyObject *py_res = PyLong_FromLong((long)*result_code);
+	PyObject_SetAttrString(py_batch_record, FIELD_NAME_BATCH_RESULT, py_res);
+	Py_DECREF(py_res);
+
+	PyObject *py_in_doubt = PyBool_FromLong((long)in_doubt);
+	PyObject_SetAttrString(py_batch_record, FIELD_NAME_BATCH_INDOUBT,
+						   py_in_doubt);
+	Py_DECREF(py_in_doubt);
+
+	if (*result_code == AEROSPIKE_OK) {
+		PyObject *rec = NULL;
+		record_to_pyobject(self, err, result_rec, bres->key, &rec);
+		PyObject_SetAttrString(py_batch_record, FIELD_NAME_BATCH_RECORD, rec);
+		Py_DECREF(rec);
+	}
+
+	return err->code;
 }

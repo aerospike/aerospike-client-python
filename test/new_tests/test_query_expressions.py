@@ -452,17 +452,6 @@ class TestQueryExpressions(object):
             exp.GeoBin,
             exp.MapBin,
             exp.ListBin,
-            # exp.string_value,
-            # predexp.geojson_value,
-            # predexp.integer_var,
-            # predexp.string_var,
-            # predexp.geojson_var,
-            # predexp.list_iterate_or,
-            # predexp.list_iterate_and,
-            # predexp.mapkey_iterate_or,
-            # predexp.mapkey_iterate_and,
-            # predexp.mapval_iterate_and,
-            # predexp.mapval_iterate_or
         ])
     def test_with_wrong_predicate_argument_type_expecting_str(self, func):
         '''

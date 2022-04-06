@@ -408,6 +408,11 @@ PyDoc_STRVAR(
 \n\
 Set cluster xdr filter.");
 
+PyDoc_STRVAR(get_expression_base64_doc,
+			 "get_expression_base64(compiled_expression: list) -> str\n\
+\n\
+Get the base64 representation of a compiled aerospike expression.");
+
 PyDoc_STRVAR(info_all_doc, "info_all(command[, policy]]) -> {}\n\
 \n\
 Send an info *command* to all nodes in the cluster to which the client is connected.\n\
@@ -497,7 +502,9 @@ PyDoc_STRVAR(get_many_doc, "get_many(keys[, policy]) -> [ (key, meta, bins)]\n\
 Batch-read multiple records with applying list of opearagtions and returns them as a list. \
 Any record that does not exist will have a None value for metadata and status in the record tuple.");
 
-PyDoc_STRVAR(batch_get_ops_doc, "batch_get_ops((list_of_keys, list_of_ops, meta, policy)) -> [ ((, list_of_keys, list_of_ops, meta, policy))]\n\
+PyDoc_STRVAR(
+	batch_get_ops_doc,
+	"batch_get_ops((list_of_keys, list_of_ops, meta, policy)) -> [ ((, list_of_keys, list_of_ops, meta, policy))]\n\
 \n\
 Batch-read multiple records, and return them as a list. \
 Any record that does not exist will have a None value for metadata and bins in the record tuple.");
@@ -517,6 +524,34 @@ Any record that does not exist will have a None value for metadata in the result
 PyDoc_STRVAR(get_key_digest_doc, "get_key_digest(ns, set, key) -> bytearray\n\
 \n\
 Calculate the digest of a particular key. See: Key Tuple.");
+
+PyDoc_STRVAR(batch_write_doc, "batch_write(batch_records, policy) -> None\n\
+\n\
+Read/Write multiple records for specified batch keys in one batch call. \
+This method allows different sub-commands for each key in the batch. \
+The returned records are located in the same list. \
+Requires server version 6.0+");
+
+PyDoc_STRVAR(
+	batch_operate_doc,
+	"batch_operate([keys], [ops], policy_batch, policy_batch_write) -> BatchRecords\n\
+\n\
+Perform read/write operations on multiple keys. \
+Requires server version 6.0+");
+
+PyDoc_STRVAR(
+	batch_remove_doc,
+	"batch_remove([keys], policy_batch, policy_batch_remove) -> BatchRecords\n\
+\n\
+Remove multiple records by key. \
+Requires server version 6.0+");
+
+PyDoc_STRVAR(
+	batch_apply_doc,
+	"batch_apply([keys], module, function, [args], policy_batch, policy_batch_apply) -> BatchRecords\n\
+\n\
+Apply a user defined function (UDF) to multiple keys. \
+Requires server version 6.0+");
 
 PyDoc_STRVAR(get_key_partition_id_doc,
 			 "get_key_partition_id(ns, set, key) -> int\n\
@@ -755,6 +790,8 @@ static PyMethodDef AerospikeClient_Type_Methods[] = {
 	 info_doc},
 	{"set_xdr_filter", (PyCFunction)AerospikeClient_SetXDRFilter,
 	 METH_VARARGS | METH_KEYWORDS, set_xdr_filter_doc},
+	{"get_expression_base64", (PyCFunction)AerospikeClient_GetExpressionBase64,
+	 METH_VARARGS | METH_KEYWORDS, get_expression_base64_doc},
 	{"info_all", (PyCFunction)AerospikeClient_InfoAll,
 	 METH_VARARGS | METH_KEYWORDS, info_all_doc},
 	{"info_single_node", (PyCFunction)AerospikeClient_InfoSingleNode,
@@ -811,6 +848,14 @@ static PyMethodDef AerospikeClient_Type_Methods[] = {
 	 METH_VARARGS | METH_KEYWORDS, exists_many_doc},
 	{"get_key_digest", (PyCFunction)AerospikeClient_Get_Key_Digest,
 	 METH_VARARGS | METH_KEYWORDS, get_key_digest_doc},
+	{"batch_write", (PyCFunction)AerospikeClient_BatchWrite,
+	 METH_VARARGS | METH_KEYWORDS, batch_write_doc},
+	{"batch_operate", (PyCFunction)AerospikeClient_Batch_Operate,
+	 METH_VARARGS | METH_KEYWORDS, batch_operate_doc},
+	{"batch_remove", (PyCFunction)AerospikeClient_Batch_Remove,
+	 METH_VARARGS | METH_KEYWORDS, batch_remove_doc},
+	{"batch_apply", (PyCFunction)AerospikeClient_Batch_Apply,
+	 METH_VARARGS | METH_KEYWORDS, batch_apply_doc},
 
 	// TRUNCATE OPERATIONS
 	{"truncate", (PyCFunction)AerospikeClient_Truncate,
@@ -1217,13 +1262,15 @@ static int AerospikeClient_Type_Init(AerospikeClient *self, PyObject *args,
 				if ((long)AS_AUTH_INTERNAL == auth_mode ||
 					(long)AS_AUTH_EXTERNAL == auth_mode ||
 					(long)AS_AUTH_EXTERNAL_INSECURE == auth_mode ||
-					(long)AS_AUTH_PKI == auth_mode ) {
+					(long)AS_AUTH_PKI == auth_mode) {
 					config.auth_mode = auth_mode;
-				} else {
+				}
+				else {
 					error_code = INIT_INVALID_AUTHMODE_ERR;
 					goto CONSTRUCTOR_ERROR;
 				}
-			} else {
+			}
+			else {
 				//it may come like auth_mode = None, for those non-integer cases, treat them as non-set
 				//error_code = INIT_INVALID_AUTHMODE_ERR;
 				//goto CONSTRUCTOR_ERROR;

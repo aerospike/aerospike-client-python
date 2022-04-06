@@ -47,4 +47,3 @@ PyObject *Aerospike_Is_AsyncSupported(PyObject *self);
  ******************************************************************************/
 
 PyObject *AerospikeInitAsync(PyObject *self, PyObject *args, PyObject *kwds);
-
