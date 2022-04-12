@@ -8,6 +8,7 @@ from aerospike import exception as e
 from aerospike import predicates as p
 from aerospike_helpers import expressions as exp
 from threading import Lock
+import time
 
 aerospike = pytest.importorskip("aerospike")
 try:
@@ -281,6 +282,7 @@ class TestQuery(TestBaseClass):
         query = self.as_connection.query('test', 'demo')
         query.select('name', 'no')
         query.where(p.equals('no', 1))
+        time.sleep(1)
 
         def callback(input_tuple):
             pass

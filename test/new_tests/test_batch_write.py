@@ -90,7 +90,11 @@ class TestBatchWrite(TestBaseClass):
         def teardown():
             for i in range(self.batch_size):
                 key = ('test', 'demo', i)
-                as_connection.remove(key)
+                try:
+                    as_connection.remove(key)
+                except e.RecordNotFound:
+                    # records may have been removed by out of order remove batch ops
+                    pass
 
         request.addfinalizer(teardown)
 
