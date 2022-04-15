@@ -222,7 +222,7 @@ static PyObject *AerospikeClient_Batch_Operate_Invoke(
 	PyObject *br_module = NULL;
 	PyObject *sys_modules = PyImport_GetModuleDict();
 
-	if (PyMapping_HasKeyString(sys_modules, "aerospike_helpers")) {
+	if (PyMapping_HasKeyString(sys_modules, "aerospike_helpers.batch.records")) {
 		br_module = PyMapping_GetItemString(sys_modules,
 											"aerospike_helpers.batch.records");
 	}
