@@ -14,9 +14,6 @@ except:
     sys.exit(1)
 
 from aerospike_helpers import expressions as exp
-from aerospike_helpers.batch import records as br
-from aerospike_helpers.operations import operations as op
-from aerospike_helpers.operations import list_operations as lop
 from aerospike import exception as e
 from .test_base_class import TestBaseClass
 from .as_status_codes import AerospikeStatus
