@@ -855,6 +855,14 @@ Batch Operations
             config = { 'hosts': [('127.0.0.1', 3000)] }
             client = aerospike.client(config).connect()
 
+            namespace = "test"
+            set = "demo"
+
+            keys = [(namespace, set, i) for i in range(150)]
+            records = [{"id": i, "balance": i * 10} for i in range(150)]
+            for key, rec in zip(keys, records):
+                client.put(key, rec)
+
             # Batch add 10 to the bin "balance" and read it if it's over
             # 1000 NOTE: batch_operate ops must include a write op
             # get_batch_ops or get_many can be used for all read ops use cases.
@@ -898,6 +906,9 @@ Batch Operations
             else:
                 # Some batch sub transaction failed.
                 print("res result: {result}".format(result=res.result))
+
+            for key in keys:
+                client.remove(key)
 
             client.close()
 
