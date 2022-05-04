@@ -79,7 +79,7 @@ LIST_BIN_EXAMPLE = [
                 bytearray("bytearray_test" + str(8), "utf8"),
                 ("bytes_test" + str(8)).encode("utf8"),
                 8 % 2 == 1,
-                aerospike.null(),
+                aerospike.null,
                 TestUsrDefinedClass(8),
                 float(8),
                 GEO_POLY
@@ -108,7 +108,7 @@ class TestExpressions(TestBaseClass):
                         bytearray("bytearray_test" + str(i), "utf8"),
                         ("bytes_test" + str(i)).encode("utf8"),
                         i % 2 == 1,
-                        aerospike.null(),
+                        aerospike.null,
                         TestUsrDefinedClass(i),
                         float(i),
                         GEO_POLY
@@ -145,8 +145,8 @@ class TestExpressions(TestBaseClass):
                     ],
                     'nlist_bin': [
                         None,
-                        aerospike.null(),
-                        aerospike.null()
+                        aerospike.null,
+                        aerospike.null
                     ],
                     'bllist_bin': [
                         TestUsrDefinedClass(1),
@@ -201,7 +201,7 @@ class TestExpressions(TestBaseClass):
         (None, None, [26, 27, 28, 6], aerospike.LIST_RETURN_VALUE, [[26, 27, 28, 6]], 1),
         ([list_index], [3], 6, aerospike.LIST_RETURN_VALUE, [6], 1),
         (None, None, {31: 31, 32: 32, 33: 33, 8: 8}, aerospike.LIST_RETURN_VALUE, [{31: 31, 32: 32, 33: 33, 8: 8}], 1),
-        (None, None, aerospike.null(), aerospike.LIST_RETURN_VALUE, [aerospike.null()], _NUM_RECORDS),
+        (None, None, aerospike.null, aerospike.LIST_RETURN_VALUE, [aerospike.null], _NUM_RECORDS),
         (None, None, GEO_POLY, aerospike.LIST_RETURN_VALUE, [GEO_POLY], _NUM_RECORDS),
         (None, None, TestUsrDefinedClass(4), aerospike.LIST_RETURN_VALUE, [TestUsrDefinedClass(4)], 1)
     ])

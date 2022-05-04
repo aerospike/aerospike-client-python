@@ -798,25 +798,3 @@ class TestGetPut():
             raise(e)
         finally:
             self.as_connection.remove(key)
-
-    def test_null_bin_with_put_get(self):
-        """
-            Invoke put() with null bin and verify record is deleted.
-        """
-        key = ('test', 'demo', 123)
-
-        bin = {
-                'bin1': 'abc'
-        }
-        null_bin = {
-                'bin1': aerospike.null()
-        }
-
-        assert 0 == self.as_connection.put(key, bin)
-        res = self.as_connection.get(key)
-        bin1 = res[2]["bin1"]
-        assert bin1 == 'abc'
-
-        assert 0 == self.as_connection.put(key, null_bin)
-        with pytest.raises(e.RecordNotFound):
-            res = self.as_connection.get(key)

@@ -100,7 +100,7 @@ class TestExpressions(TestBaseClass):
                         bytearray("bytearray_test" + str(i), "utf8"),
                         ("bytes_test" + str(i)).encode("utf8"),
                         i % 2 == 1,
-                        aerospike.null(),
+                        aerospike.null,
                         float(i)
                     ],
                     'ilist_bin': [
