@@ -95,7 +95,7 @@ LIST_BIN_EXAMPLE = [
                 bytearray("bytearray_test" + str(8), "utf8"),
                 ("bytes_test" + str(8)).encode("utf8"),
                 8 % 2 == 1,
-                aerospike.null,
+                aerospike.null(),
                 TestUsrDefinedClass(8),
                 float(8),
                 GEO_POLY
@@ -124,7 +124,7 @@ class TestExpressions(TestBaseClass):
                         bytearray("bytearray_test" + str(i), "utf8"),
                         ("bytes_test" + str(i)).encode("utf8"),
                         i % 2 == 1,
-                        aerospike.null,
+                        aerospike.null(),
                         TestUsrDefinedClass(i),
                         float(i),
                         GEO_POLY
@@ -166,8 +166,8 @@ class TestExpressions(TestBaseClass):
                     },
                     'nmap_bin': {
                         1: None,
-                        2: aerospike.null,
-                        3: aerospike.null
+                        2: aerospike.null(),
+                        3: aerospike.null()
                     },
                     'blmap_bin': {
                         1: TestUsrDefinedClass(1),
