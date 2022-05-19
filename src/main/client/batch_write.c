@@ -412,6 +412,7 @@ static PyObject *AerospikeClient_BatchWriteInvoke(AerospikeClient *self,
 			goto CLEANUP;
 			break;
 		}
+		Py_DECREF(py_key);
 	}
 
 	Py_BEGIN_ALLOW_THREADS
@@ -421,7 +422,11 @@ static PyObject *AerospikeClient_BatchWriteInvoke(AerospikeClient *self,
 	Py_END_ALLOW_THREADS
 
 	PyObject *py_bw_res = PyLong_FromLong((long)err->code);
+	if (PyObject_HasAttrString(py_obj, FIELD_NAME_BATCH_RESULT)) {
+		PyObject_DelAttrString(py_obj, FIELD_NAME_BATCH_RESULT);
+	}
 	PyObject_SetAttrString(py_obj, FIELD_NAME_BATCH_RESULT, py_bw_res);
+	Py_DECREF(py_bw_res);
 
 	as_error_reset(err);
 
@@ -437,16 +442,25 @@ static PyObject *AerospikeClient_BatchWriteInvoke(AerospikeClient *self,
 		as_record *result_rec = &(batch_record->record);
 
 		PyObject *py_res = PyLong_FromLong((long)*result_code);
+		if (PyObject_HasAttrString(py_batch_record, FIELD_NAME_BATCH_RESULT)) {
+			PyObject_DelAttrString(py_batch_record, FIELD_NAME_BATCH_RESULT);
+		}
 		PyObject_SetAttrString(py_batch_record, FIELD_NAME_BATCH_RESULT,
 							   py_res);
+		Py_DECREF(py_res);
 
 		if (*result_code == AEROSPIKE_OK) {
 			PyObject *rec = NULL;
+
+			if (PyObject_HasAttrString(py_batch_record, FIELD_NAME_BATCH_RECORD)) {
+				PyObject_DelAttrString(py_batch_record, FIELD_NAME_BATCH_RECORD);
+			}
 
 			if (result_rec) {
 				record_to_pyobject(self, err, result_rec, requested_key, &rec);
 				PyObject_SetAttrString(py_batch_record, FIELD_NAME_BATCH_RECORD,
 									   rec);
+				Py_DECREF(rec);
 			}
 			else {
 				Py_INCREF(Py_None);
