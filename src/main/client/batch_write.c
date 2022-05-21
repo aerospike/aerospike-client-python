@@ -53,7 +53,7 @@
 						"batch_type: %s, failed to convert policy",            \
 						__batch_type);                                         \
 					Py_DECREF(py___policy);                                    \
-					goto CLEANUP0;                                              \
+					goto CLEANUP0;                                             \
 				}                                                              \
 				garb->expressions_to_free = expr_p;                            \
 			}                                                                  \
@@ -62,7 +62,7 @@
 								"batch_type: %s, policy must be a dict",       \
 								__batch_type);                                 \
 				Py_DECREF(py___policy);                                        \
-				goto CLEANUP0;                                                  \
+				goto CLEANUP0;                                                 \
 			}                                                                  \
 		}                                                                      \
 		Py_DECREF(py___policy);                                                \
@@ -174,7 +174,7 @@ static PyObject *AerospikeClient_BatchWriteInvoke(AerospikeClient *self,
 		as_error_update(err, AEROSPIKE_ERR_PARAM,
 						"%s must be a list of BatchRecord",
 						FIELD_NAME_BATCH_RECORDS);
-		goto CLEANUP3;
+		goto CLEANUP4;
 	}
 
 	py_batch_records_size = PyList_Size(py_batch_records);
@@ -209,7 +209,7 @@ static PyObject *AerospikeClient_BatchWriteInvoke(AerospikeClient *self,
 							"py_key is NULL or not a tuple, %s must be a "
 							"aerospike key tuple",
 							FIELD_NAME_BATCH_KEY);
-			goto CLEANUP2;
+			goto CLEANUP3;
 		}
 
 		py_batch_type =
@@ -221,7 +221,7 @@ static PyObject *AerospikeClient_BatchWriteInvoke(AerospikeClient *self,
 							"py_batch_type is NULL or not an int, %s must be "
 							"an int from batch_records._Types",
 							FIELD_NAME_BATCH_TYPE);
-			goto CLEANUP1;
+			goto CLEANUP2;
 		}
 
 		// Not checking for overflow here because type is private in python
@@ -232,7 +232,7 @@ static PyObject *AerospikeClient_BatchWriteInvoke(AerospikeClient *self,
 			as_error_update(err, AEROSPIKE_ERR_PARAM,
 							"py_batch_type aka %s is too large for C long",
 							FIELD_NAME_BATCH_TYPE);
-			goto CLEANUP0;
+			goto CLEANUP1;
 		}
 
 		py_ops_list =
@@ -248,7 +248,7 @@ static PyObject *AerospikeClient_BatchWriteInvoke(AerospikeClient *self,
 								"a list of aerospike operation dicts",
 								FIELD_NAME_BATCH_OPS);
 
-				goto CLEANUP0;
+				goto CLEANUP1;
 			}
 
 			// the batch record object had no ops attribute but some don't, so this is ok.
@@ -425,7 +425,7 @@ static PyObject *AerospikeClient_BatchWriteInvoke(AerospikeClient *self,
 		}
 		Py_DECREF(py_key);
 		Py_DECREF(py_batch_type);
-		Py_DECREF(py_ops_list);
+		Py_XDECREF(py_ops_list);
 	}
 
 	Py_BEGIN_ALLOW_THREADS
@@ -486,13 +486,13 @@ static PyObject *AerospikeClient_BatchWriteInvoke(AerospikeClient *self,
 	goto CLEANUP3;
 
 CLEANUP0:
-	Py_DECREF(py_ops_list);
+	Py_XDECREF(py_ops_list);
 CLEANUP1:
-	Py_DECREF(py_batch_type);
+	Py_XDECREF(py_batch_type);
 CLEANUP2:
-	Py_DECREF(py_key);
+	Py_XDECREF(py_key);
 CLEANUP3:
-	Py_DECREF(py_batch_records);
+	Py_XDECREF(py_batch_records);
 CLEANUP4:
 	if (garbage_list_p != NULL) {
 		for (int i = 0; i < py_batch_records_size; i++) {
