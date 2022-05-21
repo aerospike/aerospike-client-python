@@ -348,7 +348,7 @@ static PyObject *AerospikeClient_BatchWriteInvoke(AerospikeClient *self,
 			if (py_mod == NULL || !PyUnicode_Check(py_mod)) {
 				as_error_update(err, AEROSPIKE_ERR_PARAM, "%s must be a string",
 								FIELD_NAME_BATCH_MODULE);
-				Py_DECREF(py_mod);
+				Py_XDECREF(py_mod);
 				goto CLEANUP0;
 			}
 			Py_DECREF(py_mod);
@@ -359,7 +359,7 @@ static PyObject *AerospikeClient_BatchWriteInvoke(AerospikeClient *self,
 			if (py_func == NULL || !PyUnicode_Check(py_func)) {
 				as_error_update(err, AEROSPIKE_ERR_PARAM, "%s must be a string",
 								FIELD_NAME_BATCH_FUNCTION);
-				Py_DECREF(py_func);
+				Py_XDECREF(py_func);
 				goto CLEANUP0;
 			}
 			Py_DECREF(py_func);
@@ -371,7 +371,7 @@ static PyObject *AerospikeClient_BatchWriteInvoke(AerospikeClient *self,
 				as_error_update(err, AEROSPIKE_ERR_PARAM,
 								"%s must be a list of arguments for the UDF",
 								FIELD_NAME_BATCH_ARGS);
-				Py_DECREF(py_args);
+				Py_XDECREF(py_args);
 				goto CLEANUP0;
 			}
 
