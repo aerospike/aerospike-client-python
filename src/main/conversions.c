@@ -2629,6 +2629,7 @@ as_status get_cdt_ctx(AerospikeClient *self, as_error *err, as_cdt_ctx *cdt_ctx,
 
 			Py_DECREF(id_temp);
 			Py_DECREF(value_temp);
+			Py_XDECREF(extra_args_temp);
 		}
 	}
 	else {
