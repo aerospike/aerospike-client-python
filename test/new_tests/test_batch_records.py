@@ -28,3 +28,23 @@ class TestBatchRecords(TestBaseClass):
         )
 
         assert b.read_all_bins
+
+    def test_batch_default_arg_pos(self):
+        """
+        Test that batch Reads will always use a new batch_records list.
+        """
+
+        b = br.Read(
+            ("test", "demo", 1),
+            ops = None
+        )
+
+        bwr = br.BatchRecords()
+
+        bwr.batch_records.append(b)
+
+        assert len(bwr.batch_records) == 1
+
+        bwr = br.BatchRecords()
+
+        assert len(bwr.batch_records) == 0

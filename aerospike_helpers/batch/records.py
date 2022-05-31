@@ -382,7 +382,7 @@ class BatchRecords:
             non 0 if an error occured. The most common error being -16 (One or more batch sub transactions failed).
     """
 
-    def __init__(self, batch_records: TypeBatchRecordList = []) -> None:
+    def __init__(self, batch_records: TypeBatchRecordList = None) -> None:
         """
             Example::
 
@@ -424,5 +424,9 @@ class BatchRecords:
                 # Note this call will mutate brs and set results in it.
                 client.batch_write(brs)
         """
+
+        if batch_records is None:
+            batch_records = []
+
         self.batch_records = batch_records
         self.result = 0
