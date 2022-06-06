@@ -45,6 +45,7 @@ typedef struct {
 	as_error error;
 	PyObject *py_results;
 	AerospikeClient *client;
+	PyObject *py_keys;
 } LocalData;
 
 static bool batch_read_operate_cb(const as_batch_read *results, uint32_t n,
@@ -56,7 +57,7 @@ static bool batch_read_operate_cb(const as_batch_read *results, uint32_t n,
 	PyObject *py_err = NULL;
 	PyObject *py_arglist = NULL;
 	as_batch_read *r = NULL;
-	PyObject *py_rec;
+	PyObject *py_rec = NULL;
 	PyObject *py_exception;
 
 	// Lock Python State
@@ -72,18 +73,17 @@ static bool batch_read_operate_cb(const as_batch_read *results, uint32_t n,
 
 		error->code = r->result;
 
-		if (error->code == AEROSPIKE_OK) {
-			record_to_resultpyobject(data->client, error, &r->record, &py_rec);
-		}
+		PyObject *py_key = PyList_GetItem(data->py_keys, i);
+
+		record_to_resultpyobject(data->client, py_key, &r->record, &py_rec);
 
 		error_to_pyobject(error, &py_err);
 
-		Py_INCREF(Py_None);
 		if (error->code == AEROSPIKE_OK) {
+			Py_INCREF(Py_None);
 			py_exception = Py_None;
 		}
 		else {
-			py_rec = Py_None;
 			py_exception = raise_exception(error);
 		}
 
@@ -191,6 +191,7 @@ AerospikeClient_Batch_GetOps_Invoke(AerospikeClient *self, as_error *err,
 	data.client = self;
 	py_results = PyList_New(0);
 	data.py_results = py_results;
+	data.py_keys = py_keys;
 
 	as_error_init(&data.error);
 
@@ -219,19 +220,6 @@ CLEANUP:
 	as_operations_destroy(&ops);
 
 	as_batch_destroy(&batch);
-
-	if (err->code != AEROSPIKE_OK) {
-		PyObject *py_err = NULL;
-		error_to_pyobject(err, &py_err);
-		PyObject *exception_type = raise_exception(err);
-		PyErr_SetObject(exception_type, py_err);
-		Py_DECREF(py_err);
-
-		if (py_results) {
-			Py_DECREF(py_results);
-		}
-		return NULL;
-	}
 
 	return py_results;
 }
@@ -277,15 +265,6 @@ PyObject *AerospikeClient_Batch_GetOps(AerospikeClient *self, PyObject *args,
 
 	py_results = AerospikeClient_Batch_GetOps_Invoke(
 		self, &err, py_keys, py_ops, py_meta, py_policy);
-
-	if (err.code != AEROSPIKE_OK) {
-		PyObject *py_err = NULL;
-		error_to_pyobject(&err, &py_err);
-		PyObject *exception_type = raise_exception(&err);
-		PyErr_SetObject(exception_type, py_err);
-		Py_DECREF(py_err);
-		return NULL;
-	}
 
 	return py_results;
 }

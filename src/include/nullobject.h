@@ -19,5 +19,4 @@
 #include <Python.h>
 #include <stdbool.h>
 #include "types.h"
-PyObject *AerospikeNullObject_New();
 PyTypeObject *AerospikeNullObject_Ready();
