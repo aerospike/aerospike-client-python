@@ -88,12 +88,12 @@ class TestIndex(object):
             Invoke createindex() with non existent namespace
         """
         policy = {}
-        with pytest.raises(e.InvalidRequest) as err_info:
+        with pytest.raises(e.ClientError) as err_info:
             self.as_connection.index_integer_create('fake_namespace', 'demo',
                                                     'age', 'age_index', policy)
 
         err_code = err_info.value.code
-        assert err_code is AerospikeStatus.AEROSPIKE_ERR_REQUEST_INVALID
+        assert err_code is AerospikeStatus.AEROSPIKE_ERR_CLIENT
 
     def test_create_integer_index_with_incorrect_set(self):
         """
@@ -187,10 +187,9 @@ class TestIndex(object):
         retobj = self.as_connection.index_integer_create('test', 'demo', 'age',
                                                          'age_index', policy)
         assert retobj == AerospikeStatus.AEROSPIKE_OK
-        with pytest.raises(e.IndexFoundError):
-            retobj = self.as_connection.index_integer_create(
-                'test', 'demo', 'age', 'age_index', policy)
-            self.as_connection.index_remove('test', 'age_index', policy)
+        retobj = self.as_connection.index_integer_create(
+            'test', 'demo', 'age', 'age_index', policy)
+        self.as_connection.index_remove('test', 'age_index', policy)
 
         ensure_dropped_index(self.as_connection, 'test', 'age_index')
 
@@ -221,11 +220,9 @@ name
         retobj = self.as_connection.index_integer_create(
             'test', 'demo', 'age', 'age_index', policy)
         assert retobj == AerospikeStatus.AEROSPIKE_OK
-
-        with pytest.raises(e.IndexFoundError):
-            retobj = self.as_connection.index_integer_create(
-                'test', 'demo', 'age', 'age_index1', policy)
-            self.as_connection.index_remove('test', 'age_index1', policy)
+        retobj = self.as_connection.index_integer_create(
+            'test', 'demo', 'age', 'age_index1', policy)
+        self.as_connection.index_remove('test', 'age_index1', policy)
 
         ensure_dropped_index(self.as_connection, 'test', 'age_index')
 
@@ -282,12 +279,12 @@ name
         """
         policy = {}
 
-        with pytest.raises(e.InvalidRequest) as err_info:
+        with pytest.raises(e.ClientError) as err_info:
             self.as_connection.index_string_create(
                 'fake_namespace', 'demo', 'name', 'name_index', policy)
 
         err_code = err_info.value.code
-        assert err_code is AerospikeStatus.AEROSPIKE_ERR_REQUEST_INVALID
+        assert err_code is AerospikeStatus.AEROSPIKE_ERR_CLIENT
 
     def test_create_string_index_with_incorrect_set(self):
         """
@@ -367,12 +364,8 @@ name
         retobj = self.as_connection.index_string_create(
             'test', 'demo', 'name', 'name_index', policy)
         assert retobj == AerospikeStatus.AEROSPIKE_OK
-
-        with pytest.raises(e.IndexFoundError):
-            retobj = self.as_connection.index_string_create(
-                'test', 'demo', 'name', 'name_index', policy)
-            self.as_connection.index_remove('test', 'name_index', policy)
-            ensure_dropped_index(self.as_connection, 'test', 'name_index')
+        retobj = self.as_connection.index_string_create(
+            'test', 'demo', 'name', 'name_index', policy)
 
         self.as_connection.index_remove('test', 'name_index', policy)
         ensure_dropped_index(self.as_connection, 'test', 'name_index')
@@ -406,13 +399,9 @@ name
         retobj = self.as_connection.index_string_create('test', 'demo', 'name',
                                                         'name_index', policy)
         assert retobj == AerospikeStatus.AEROSPIKE_OK
-        with pytest.raises(e.IndexFoundError):
-            retobj = self.as_connection.index_string_create(
-                'test', 'demo', 'name', 'name_index1', policy)
-            self.as_connection.index_remove('test', 'name_index1', policy)
-            ensure_dropped_index(self.as_connection, 'test', 'name_index')
-
-        self.as_connection.index_remove('test', 'name_index', policy)
+        retobj = self.as_connection.index_string_create(
+            'test', 'demo', 'name', 'name_index1', policy)
+        self.as_connection.index_remove('test', 'name_index1', policy)
         ensure_dropped_index(self.as_connection, 'test', 'name_index')
 
     def test_create_string_index_with_policy(self):
@@ -432,9 +421,8 @@ name
             Invoke drop invalid index()
         """
         policy = {}
-        with pytest.raises(e.IndexNotFound):
-            retobj = self.as_connection.index_remove('test', 'notarealindex',
-                                                     policy)
+        retobj = self.as_connection.index_remove('test', 'notarealindex',
+                                                    policy)
 
     def test_drop_valid_index(self):
         """
