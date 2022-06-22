@@ -453,6 +453,7 @@ static PyObject *AerospikeClient_BatchWriteInvoke(AerospikeClient *self,
 		as_status *result_code = &(batch_record->result);
 		as_key *requested_key = &(batch_record->key);
 		as_record *result_rec = &(batch_record->record);
+		bool in_doubt = batch_record->in_doubt;
 
 		PyObject *py_res = PyLong_FromLong((long)*result_code);
 		if (PyObject_HasAttrString(py_batch_record, FIELD_NAME_BATCH_RESULT)) {
@@ -461,6 +462,11 @@ static PyObject *AerospikeClient_BatchWriteInvoke(AerospikeClient *self,
 		PyObject_SetAttrString(py_batch_record, FIELD_NAME_BATCH_RESULT,
 							   py_res);
 		Py_DECREF(py_res);
+
+		PyObject *py_in_doubt = PyBool_FromLong((long)in_doubt);
+		PyObject_SetAttrString(py_batch_record, FIELD_NAME_BATCH_INDOUBT,
+							py_in_doubt);
+		Py_DECREF(py_in_doubt);
 
 		if (*result_code == AEROSPIKE_OK) {
 			PyObject *rec = NULL;
