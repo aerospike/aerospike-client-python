@@ -7,8 +7,31 @@ from .as_status_codes import AerospikeStatus
 from aerospike import exception as e
 from aerospike import predicates as p
 from aerospike_helpers import expressions as exp
+from aerospike_helpers import cdt_ctx
 from threading import Lock
 import time
+
+list_index = "list_index"
+list_rank = "list_rank"
+list_value = "list_value"
+map_index = "map_index"
+map_key = "map_key"
+map_rank = "map_rank"
+map_value = "map_value"
+
+ctx_ops = {
+    list_index: cdt_ctx.cdt_ctx_list_index,
+    list_rank: cdt_ctx.cdt_ctx_list_rank,
+    list_value: cdt_ctx.cdt_ctx_list_value,
+    map_index: cdt_ctx.cdt_ctx_map_index,
+    map_key: cdt_ctx.cdt_ctx_map_key,
+    map_rank: cdt_ctx.cdt_ctx_map_rank,
+    map_value: cdt_ctx.cdt_ctx_map_value,
+}
+
+def add_ctx_op(ctx_type, value):
+    ctx_func = ctx_ops[ctx_type]
+    return ctx_func(value)
 
 aerospike = pytest.importorskip("aerospike")
 try:
@@ -1000,3 +1023,28 @@ class TestQuery(TestBaseClass):
         query.select('name', 'test_age')
         query.where('numeric_map', "range", aerospike.INDEX_TYPE_MAPVALUES,
                     aerospike.INDEX_NUMERIC, 1)
+
+    def test_query_with_cdt_ctx(self):
+        """
+            Invoke query() with cdt_ctx and correct arguments
+        """
+        ctx = []
+        ctx.append(add_ctx_op(list_rank, -1))
+
+        query = self.as_connection.query('test', 'demo')
+        query.select('name', 'test_age')
+
+        query.where_with_ctx(ctx, p.equals('test_age', 1))
+
+        records = []
+
+        def callback(input_tuple):
+            try:
+                key, _, _ = input_tuple
+                records.append(key)
+            except Exception as ex:
+                print(ex)
+
+        query.foreach(callback)
+        assert records
+        assert len(records) == 1
