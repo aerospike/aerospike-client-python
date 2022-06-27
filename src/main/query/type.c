@@ -243,6 +243,12 @@ static void AerospikeQuery_Type_Dealloc(AerospikeQuery *self)
 				free(p->value.string);
 			}
 		}
+		if(i == 0){
+			if(p->ctx){
+				as_cdt_ctx_destroy(p->ctx);
+				free(p->ctx);
+			}
+		}
 	}
 
 	as_query_destroy(&self->query);

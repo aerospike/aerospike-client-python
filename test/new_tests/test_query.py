@@ -119,6 +119,16 @@ class TestQuery(TestBaseClass):
         except e.IndexFoundError:
             pass
 
+        try:
+            ctx = []
+            ctx.append(add_ctx_op(list_rank, -1))
+            client.index_cdt_create('test', 'demo', 'numeric_list',
+                                     aerospike.INDEX_NUMERIC,
+                                     'numeric_list_cdt_index',
+                                     {'ctx': ctx})
+        except e.IndexFoundError:
+            pass
+
         client.close()
 
     def teardown_class(cls):
@@ -179,6 +189,11 @@ class TestQuery(TestBaseClass):
             client.index_remove('test', 'sal_index')
         except e.IndexNotFound:
             pass
+
+        client.index_remove('test', 'numeric_list_cdt_index', policy)
+        
+        client.index_remove('test', 'koiyals', policy)
+
         client.close()
 
     @pytest.fixture(autouse=True)
@@ -1032,19 +1047,23 @@ class TestQuery(TestBaseClass):
         ctx.append(add_ctx_op(list_rank, -1))
 
         query = self.as_connection.query('test', 'demo')
-        query.select('name', 'test_age')
+        query.select('name', 'test_age', 'numeric_list')
 
-        query.where_with_ctx(ctx, p.equals('test_age', 1))
+        query.where_with_ctx({'ctx':ctx}, p.range('numeric_list', aerospike.INDEX_TYPE_LIST, 2,4))
+        # query.where(p.range('numeric_list', aerospike.INDEX_TYPE_LIST, 2,4))
 
         records = []
 
         def callback(input_tuple):
             try:
-                key, _, _ = input_tuple
-                records.append(key)
+                # key, _, _ = input_tuple
+                records.append(input_tuple)
             except Exception as ex:
                 print(ex)
 
-        query.foreach(callback)
-        assert records
-        assert len(records) == 1
+        try:
+            query.foreach(callback)
+        except Exception as ex:
+            print(ex)
+            
+        print(records)

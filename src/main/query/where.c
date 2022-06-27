@@ -56,18 +56,20 @@ static int AerospikeQuery_Where_Add(AerospikeQuery *self,
 	PyObject *py_ubin = NULL;
 	as_cdt_ctx *pctx = NULL;
 	bool ctx_in_use = false;
-	as_cdt_ctx ctx;
 	int rc = 0;
 
 	if(py_ctx) {
 		as_static_pool static_pool;
 		memset(&static_pool, 0, sizeof(static_pool));
-		if (get_cdt_ctx(self->client, &err, &ctx, py_ctx, &ctx_in_use, &static_pool,
+		pctx = malloc(sizeof(as_cdt_ctx));
+		memset(pctx, 0, sizeof(as_cdt_ctx));
+		if (get_cdt_ctx(self->client, &err, pctx, py_ctx, &ctx_in_use, &static_pool,
 						SERIALIZER_PYTHON) != AEROSPIKE_OK) {
 			return err.code;
 		}
-		if(ctx_in_use) {
-			pctx = &ctx;
+		if(!ctx_in_use) {
+			free(pctx);
+			pctx = NULL;
 		}
 	}
 
@@ -281,10 +283,15 @@ static int AerospikeQuery_Where_Add(AerospikeQuery *self,
 	}
 	}
 
-	if (ctx_in_use) {
-		as_cdt_ctx_destroy(&ctx);
+	if(rc) {
+		assert(false);
+		if (ctx_in_use) {
+			as_cdt_ctx_destroy(pctx);
+		}
+		if(pctx) {
+			free(pctx);
+		}
 	}
-	
 	return rc;
 
 }
@@ -321,7 +328,7 @@ AerospikeQuery *AerospikeQuery_Where_Invoke(
 			as_index_datatype op_data =
 				(as_index_datatype)PyInt_AsLong(py_op_data);
 			rc = AerospikeQuery_Where_Add(
-				self, NULL, op, op_data,
+				self, py_arg1, op, op_data,
 				size > 2 ? PyTuple_GetItem(py_arg2, 2) : Py_None,
 				size > 3 ? PyTuple_GetItem(py_arg2, 3) : Py_None,
 				size > 4 ? PyTuple_GetItem(py_arg2, 4) : Py_None,
