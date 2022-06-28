@@ -124,14 +124,17 @@ class TestMapValuesIndex(object):
             Invoke createindex() with incorrect namespace
         """
         policy = {}
-        with pytest.raises(e.InvalidRequest) as err_info:
+        try:
             self.as_connection.index_map_values_create(
                 'test1', 'demo',
                 'numeric_map', aerospike.INDEX_NUMERIC,
                 'test_numeric_map_index', policy)
-
-        err_code = err_info.value.code
-        assert err_code == AerospikeStatus.AEROSPIKE_ERR_REQUEST_INVALID
+        except e.InvalidRequest:
+            assert self.server_version < [6, 0]
+        except e.IndexFoundError:
+            assert self.server_version >= [6, 0]
+        except e:
+            print(e)
 
     def test_mapvaluesindex_with_incorrect_set(self):
         """
@@ -223,13 +226,17 @@ class TestMapValuesIndex(object):
             'test_numeric_map_index', policy)
         assert retobj == AerospikeStatus.AEROSPIKE_OK
 
-        with pytest.raises(e.IndexFoundError):
+        try:
             retobj = self.as_connection.index_map_values_create(
                 'test', 'demo', 'numeric_map', aerospike.INDEX_NUMERIC,
                 'test_numeric_map_index', policy)
             self.as_connection.index_remove(
                 'test', 'test_numeric_map_index', policy)
             ensure_dropped_index(self.as_connection, 'test', 'test_numeric_map_index')
+        except e.IndexFoundError:
+            assert self.server_version < [6, 0]
+        except e:
+            print(e)
 
         self.as_connection.index_remove(
             'test', 'test_numeric_map_index', policy)
@@ -270,7 +277,7 @@ class TestMapValuesIndex(object):
             'test_string_map_index', policy)
 
         assert retobj == AerospikeStatus.AEROSPIKE_OK
-        with pytest.raises(e.IndexFoundError):
+        try:
             retobj = self.as_connection.index_map_values_create(
                 'test', 'demo', 'string_map', aerospike.INDEX_STRING,
                 'test_string_map_index1', policy)
@@ -280,6 +287,10 @@ class TestMapValuesIndex(object):
             self.as_connection.index_remove(
                 'test', 'test_string_map_index', policy)
             ensure_dropped_index(self.as_connection, 'test', 'test_string_map_index')
+        except e.IndexFoundError:
+            assert self.server_version < [6, 0]
+        except e:
+            print(e)
 
         self.as_connection.index_remove(
             'test', 'test_string_map_index', policy)

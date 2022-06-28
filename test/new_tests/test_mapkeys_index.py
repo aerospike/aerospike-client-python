@@ -282,12 +282,17 @@ class TestMapKeysIndex(object):
             'test_numeric_map_index', policy)
         assert response_code == AerospikeStatus.AEROSPIKE_OK
 
-        with pytest.raises(e.IndexFoundError):
+        try:
             response_code = self.as_connection.index_map_keys_create(
                 'test', 'demo', 'numeric_map', aerospike.INDEX_NUMERIC,
                 'test_numeric_map_index', policy)
             self.as_connection.index_remove('test', 'test_numeric_map_index',
                                             policy)
+        except e.IndexFoundError:
+            assert self.server_version < [6, 0]
+        except e:
+            print(e)
+
         self.as_connection.index_remove('test', 'test_numeric_map_index',
                                         policy)
         ensure_dropped_index(self.as_connection, 'test', 'test_numeric_map_index')
@@ -330,12 +335,16 @@ class TestMapKeysIndex(object):
             except:
                 pass
 
-        with pytest.raises(e.IndexFoundError):
+        try:
             for index_name in index_names:
                 response_code = self.as_connection.index_map_keys_create(
                     'test', 'demo', 'string_map', aerospike.INDEX_STRING,
                     index_name, policy)
                 assert response_code == AerospikeStatus.AEROSPIKE_OK
+        except e.IndexFoundError:
+            assert self.server_version < [6, 0]
+        except e:
+            print(e)
 
         for index_name in index_names:
             try:

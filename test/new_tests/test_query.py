@@ -193,8 +193,6 @@ class TestQuery(TestBaseClass):
 
         client.index_remove('test', 'numeric_list_cdt_index', policy)
         
-        client.index_remove('test', 'koiyals', policy)
-
         client.close()
 
     @pytest.fixture(autouse=True)
