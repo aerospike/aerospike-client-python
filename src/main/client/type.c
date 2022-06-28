@@ -468,7 +468,7 @@ PyDoc_STRVAR(index_string_create_doc,
 Create a string index with index_name on the bin in the specified ns, set.");
 
 PyDoc_STRVAR(index_cdt_create_doc,
-			 "index_cdt_create(ns, set, bin, index_datatype, index_name, ctx, [, policy])\n\
+			 "index_cdt_create(ns, set, bin,  index_type, index_datatype, index_name, ctx, [, policy])\n\
 \n\
 Create a cdt index with index_name on the bin in the specified ns, set.");
 

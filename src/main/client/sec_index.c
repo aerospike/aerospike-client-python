@@ -30,8 +30,8 @@
 #include "exceptions.h"
 #include "policy.h"
 
-static bool getDataTypeFromPyObject(PyObject *py_datatype,
-									as_index_datatype *idx_datatype,
+static bool getTypeFromPyObject(PyObject *py_datatype,
+									int *idx_datatype,
 									as_error *err);
 
 static PyObject *
@@ -156,21 +156,32 @@ PyObject *AerospikeClient_Index_Cdt_Create(AerospikeClient *self,
 	PyObject *py_ns = NULL;
 	PyObject *py_set = NULL;
 	PyObject *py_bin = NULL;
+	PyObject *py_indextype = NULL;
 	PyObject *py_datatype = NULL;
 	PyObject *py_name = NULL;
 	PyObject *py_ctx = NULL;
 	as_cdt_ctx ctx;
 	bool ctx_in_use = false;
 	PyObject *py_obj = NULL;
+	as_index_datatype data_type;
+	as_index_type index_type;
 
 	// Python Function Keyword Arguments
-	static char *kwlist[] = {"ns",	 "set",	   "bin", "index_datatype",
+	static char *kwlist[] = {"ns",	 "set",	   "bin", "index_type", "index_datatype",
 							 "name", "ctx", "policy", NULL};
 
 	// Python Function Argument Parsing
 	if (PyArg_ParseTupleAndKeywords(
-			args, kwds, "OOOOOO|O:index_list_create", kwlist, &py_ns, &py_set,
-			&py_bin, &py_datatype, &py_name, &py_ctx, &py_policy) == false) {
+			args, kwds, "OOOOOOO|O:index_list_create", kwlist, &py_ns, &py_set,
+			&py_bin, &py_indextype, &py_datatype, &py_name, &py_ctx, &py_policy) == false) {
+		return NULL;
+	}
+
+	if (!getTypeFromPyObject(py_indextype, (int*)&index_type, &err)) {
+		return NULL;
+	}
+
+	if (!getTypeFromPyObject(py_datatype, (int*)&data_type, &err)) {
 		return NULL;
 	}
 
@@ -185,10 +196,11 @@ PyObject *AerospikeClient_Index_Cdt_Create(AerospikeClient *self,
 		return NULL;
 	}
 
-	py_obj = createIndexWithCollectionType(self, py_policy, py_ns, py_set, py_bin,
-										 py_name, py_datatype,
-										 AS_INDEX_TYPE_LIST,
-										 &ctx);
+	py_obj = createIndexWithDataAndCollectionType(self, py_policy, 
+										py_ns, py_set, 
+										py_bin, py_name,
+										index_type,data_type,
+										&ctx);
 
 	as_cdt_ctx_destroy(&ctx);
 
@@ -432,8 +444,8 @@ PyObject *AerospikeClient_Index_2dsphere_Create(AerospikeClient *self,
 /*
  * Convert a PyObject into an as_index_datatype, return False if the conversion fails for any reason.
  */
-static bool getDataTypeFromPyObject(PyObject *py_datatype,
-									as_index_datatype *idx_datatype,
+static bool getTypeFromPyObject(PyObject *py_datatype,
+									int *idx_datatype,
 									as_error *err)
 {
 
@@ -487,7 +499,7 @@ createIndexWithCollectionType(AerospikeClient *self, PyObject *py_policy,
 	as_error err;
 	as_error_init(&err);
 
-	if (!getDataTypeFromPyObject(py_datatype, &data_type, &err)) {
+	if (!getTypeFromPyObject(py_datatype, (int*)&data_type, &err)) {
 		return NULL;
 	}
 

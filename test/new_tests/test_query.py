@@ -121,8 +121,9 @@ class TestQuery(TestBaseClass):
 
         try:
             ctx = []
-            ctx.append(add_ctx_op(list_rank, -1))
+            ctx.append(add_ctx_op(list_index, 0))
             client.index_cdt_create('test', 'demo', 'numeric_list',
+                                     aerospike.INDEX_TYPE_DEFAULT,
                                      aerospike.INDEX_NUMERIC,
                                      'numeric_list_cdt_index',
                                      {'ctx': ctx})
@@ -1044,26 +1045,22 @@ class TestQuery(TestBaseClass):
             Invoke query() with cdt_ctx and correct arguments
         """
         ctx = []
-        ctx.append(add_ctx_op(list_rank, -1))
+        ctx.append(add_ctx_op(list_index, 0))
 
         query = self.as_connection.query('test', 'demo')
-        query.select('name', 'test_age', 'numeric_list')
+        query.select('numeric_list')
 
-        query.where_with_ctx({'ctx':ctx}, p.range('numeric_list', aerospike.INDEX_TYPE_LIST, 2,4))
-        # query.where(p.range('numeric_list', aerospike.INDEX_TYPE_LIST, 2,4))
+        query.where_with_ctx({'ctx':ctx}, p.range('numeric_list', aerospike.INDEX_TYPE_DEFAULT, 2,4))
 
         records = []
 
         def callback(input_tuple):
             try:
-                # key, _, _ = input_tuple
                 records.append(input_tuple)
             except Exception as ex:
                 print(ex)
 
-        try:
-            query.foreach(callback)
-        except Exception as ex:
-            print(ex)
+        query.foreach(callback)
             
-        print(records)
+        assert records
+        assert len(records) == 3
