@@ -1045,6 +1045,11 @@ class TestQuery(TestBaseClass):
         """
             Invoke query() with cdt_ctx and correct arguments
         """
+        from .test_base_class import TestBaseClass
+        if (TestBaseClass.major_ver >= 6 and TestBaseClass.minor_ver >= 1):
+            pytest.skip(
+                'It only applies to >= 6.1 enterprise edition')
+
         ctx = []
         ctx.append(add_ctx_op(list_index, 0))
 

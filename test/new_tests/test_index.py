@@ -226,10 +226,10 @@ name
         try:
             retobj = self.as_connection.index_integer_create(
 		    'test', 'demo', 'age', 'age_index1', policy)
+            self.as_connection.index_remove('test', 'age_index1', policy)
         except e.IndexFoundError:
             assert self.server_version <= [6, 0]
 
-        self.as_connection.index_remove('test', 'age_index1', policy)
         ensure_dropped_index(self.as_connection, 'test', 'age_index')
 
     def test_create_integer_index_with_policy(self):
@@ -411,10 +411,10 @@ name
         try:
             retobj = self.as_connection.index_string_create(
 		    'test', 'demo', 'name', 'name_index1', policy)
+            self.as_connection.index_remove('test', 'name_index1', policy)
         except e.IndexFoundError:
             assert self.server_version <= [6, 0]
 
-        self.as_connection.index_remove('test', 'name_index1', policy)
         ensure_dropped_index(self.as_connection, 'test', 'name_index')
 
     def test_create_string_index_with_policy(self):
