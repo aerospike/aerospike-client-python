@@ -119,13 +119,8 @@ class TestListIndex(object):
                 self.as_connection.index_list_create(
                     'test', 'demo', 'numeric_list', aerospike.INDEX_NUMERIC,
                     'test_numeric_list_index', policy)
-                self.as_connection.index_remove(
-                    'test', 'test_numeric_list_index', policy)
-                ensure_dropped_index(self.as_connection, 'test', 'test_numeric_list_index')
             except e.IndexFoundError:
-                assert self.server_version < [6, 0]
-            except e:
-                print(e)
+                assert self.server_version < [6, 1]
             self.as_connection.index_remove(
                 'test', 'test_numeric_list_index', policy)
             ensure_dropped_index(self.as_connection, 'test', 'test_numeric_list_index')
@@ -169,13 +164,8 @@ name
                 retobj = self.as_connection.index_list_create(
                     'test', 'demo', 'string_list', aerospike.INDEX_STRING,
                     'test_string_list_index1', policy)
-                self.as_connection.index_remove(
-                    'test', 'test_string_list_index1', policy)
-                ensure_dropped_index(self.as_connection, 'test', 'test_string_list_index1')
             except e.IndexFoundError:
-                assert self.server_version < [6, 0]
-            except e:
-                print(e)
+                assert self.server_version < [6, 1]
 
             self.as_connection.index_remove('test', 'test_string_list_index',
                                             policy)

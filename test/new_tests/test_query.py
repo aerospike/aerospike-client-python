@@ -191,7 +191,10 @@ class TestQuery(TestBaseClass):
         except e.IndexNotFound:
             pass
 
-        client.index_remove('test', 'numeric_list_cdt_index', policy)
+        try:
+            client.index_remove('test', 'numeric_list_cdt_index', policy)
+        except e.IndexNotFound:
+            pass
         
         client.close()
 

@@ -130,11 +130,9 @@ class TestMapValuesIndex(object):
                 'numeric_map', aerospike.INDEX_NUMERIC,
                 'test_numeric_map_index', policy)
         except e.InvalidRequest:
-            assert self.server_version < [6, 0]
+            assert self.server_version < [6, 1]
         except e.IndexFoundError:
-            assert self.server_version >= [6, 0]
-        except e:
-            print(e)
+            assert self.server_version >= [6, 1]
 
     def test_mapvaluesindex_with_incorrect_set(self):
         """
@@ -230,13 +228,8 @@ class TestMapValuesIndex(object):
             retobj = self.as_connection.index_map_values_create(
                 'test', 'demo', 'numeric_map', aerospike.INDEX_NUMERIC,
                 'test_numeric_map_index', policy)
-            self.as_connection.index_remove(
-                'test', 'test_numeric_map_index', policy)
-            ensure_dropped_index(self.as_connection, 'test', 'test_numeric_map_index')
         except e.IndexFoundError:
-            assert self.server_version < [6, 0]
-        except e:
-            print(e)
+            assert self.server_version < [6, 1]
 
         self.as_connection.index_remove(
             'test', 'test_numeric_map_index', policy)
@@ -288,9 +281,7 @@ class TestMapValuesIndex(object):
                 'test', 'test_string_map_index', policy)
             ensure_dropped_index(self.as_connection, 'test', 'test_string_map_index')
         except e.IndexFoundError:
-            assert self.server_version < [6, 0]
-        except e:
-            print(e)
+            assert self.server_version < [6, 1]
 
         self.as_connection.index_remove(
             'test', 'test_string_map_index', policy)
