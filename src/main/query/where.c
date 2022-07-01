@@ -61,14 +61,14 @@ static int AerospikeQuery_Where_Add(AerospikeQuery *self,
 	if(py_ctx) {
 		as_static_pool static_pool;
 		memset(&static_pool, 0, sizeof(static_pool));
-		pctx = malloc(sizeof(as_cdt_ctx));
+		pctx = cf_malloc(sizeof(as_cdt_ctx));
 		memset(pctx, 0, sizeof(as_cdt_ctx));
 		if (get_cdt_ctx(self->client, &err, pctx, py_ctx, &ctx_in_use, &static_pool,
 						SERIALIZER_PYTHON) != AEROSPIKE_OK) {
 			return err.code;
 		}
 		if(!ctx_in_use) {
-			free(pctx);
+			cf_free(pctx);
 			pctx = NULL;
 		}
 	}
@@ -289,7 +289,7 @@ static int AerospikeQuery_Where_Add(AerospikeQuery *self,
 			as_cdt_ctx_destroy(pctx);
 		}
 		if(pctx) {
-			free(pctx);
+			cf_free(pctx);
 		}
 	}
 	return rc;

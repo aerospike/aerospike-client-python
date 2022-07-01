@@ -246,7 +246,7 @@ static void AerospikeQuery_Type_Dealloc(AerospikeQuery *self)
 		if(i == 0){
 			if(p->ctx){
 				as_cdt_ctx_destroy(p->ctx);
-				free(p->ctx);
+				cf_free(p->ctx);
 			}
 		}
 	}
