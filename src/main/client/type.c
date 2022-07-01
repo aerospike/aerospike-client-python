@@ -470,7 +470,9 @@ Create a string index with index_name on the bin in the specified ns, set.");
 PyDoc_STRVAR(index_cdt_create_doc,
 			 "index_cdt_create(ns, set, bin,  index_type, index_datatype, index_name, ctx, [, policy])\n\
 \n\
-Create a cdt index with index_name on the bin in the specified ns, set.");
+Create an cdt index named index_name for list, map keys or map values (as defined by index_type) and for \
+numeric, string or GeoJSON values (as defined by index_datatype) \
+on records of the specified ns, set whose bin is a list or map.");
 
 
 PyDoc_STRVAR(index_remove_doc, "index_remove(ns, index_name[, policy])\n\
