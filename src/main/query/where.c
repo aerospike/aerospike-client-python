@@ -299,12 +299,7 @@ static int AerospikeQuery_Where_Add(AerospikeQuery *self,
 AerospikeQuery *AerospikeQuery_Where_Invoke(
 	AerospikeQuery *self,
 	PyObject *py_arg1,
-	PyObject *py_arg2,
-	PyObject *py_arg3,
-	PyObject *py_arg4,
-	PyObject *py_arg5,
-	PyObject *py_arg6,
-	PyObject *py_arg7)
+	PyObject *py_arg2)
 {
 	as_error err;
 	int rc = 0;
@@ -371,14 +366,8 @@ AerospikeQuery *AerospikeQuery_Where(AerospikeQuery *self, PyObject *args)
 	PyObject *py_err = NULL;
 
 	PyObject *py_arg1 = NULL;
-	PyObject *py_arg2 = NULL;
-	PyObject *py_arg3 = NULL;
-	PyObject *py_arg4 = NULL;
-	PyObject *py_arg5 = NULL;
-	PyObject *py_arg6 = NULL;
 
-	if (PyArg_ParseTuple(args, "O|OOOOO:where", &py_arg1, &py_arg2, &py_arg3,
-						 &py_arg4, &py_arg5, &py_arg6) == false) {
+	if (PyArg_ParseTuple(args, "O:where", &py_arg1) == false) {
 		return NULL;
 	}
 
@@ -398,12 +387,7 @@ AerospikeQuery *AerospikeQuery_Where(AerospikeQuery *self, PyObject *args)
 	return AerospikeQuery_Where_Invoke(
 		self,
 		NULL,
-		py_arg1,
-		py_arg2,
-		py_arg3,
-		py_arg4,
-		py_arg5,
-		py_arg6);
+		py_arg1);
 
 CLEANUP:
 	error_to_pyobject(&err, &py_err);
@@ -420,14 +404,8 @@ AerospikeQuery *AerospikeQuery_WhereWithCtx(AerospikeQuery *self, PyObject *args
 
 	PyObject *py_arg1 = NULL;
 	PyObject *py_arg2 = NULL;
-	PyObject *py_arg3 = NULL;
-	PyObject *py_arg4 = NULL;
-	PyObject *py_arg5 = NULL;
-	PyObject *py_arg6 = NULL;
-	PyObject *py_arg7 = NULL;
 
-	if (PyArg_ParseTuple(args, "OO|OOOOO:where_with_ctx", &py_arg1, &py_arg2, &py_arg3,
-						 &py_arg4, &py_arg5, &py_arg6, &py_arg7) == false) {
+	if (PyArg_ParseTuple(args, "OO:where_with_ctx", &py_arg1, &py_arg2) == false) {
 		return NULL;
 	}
 
@@ -447,12 +425,7 @@ AerospikeQuery *AerospikeQuery_WhereWithCtx(AerospikeQuery *self, PyObject *args
 	return AerospikeQuery_Where_Invoke(
 		self,
 		py_arg1,
-		py_arg2,
-		py_arg3,
-		py_arg4,
-		py_arg5,
-		py_arg6,
-		py_arg7);
+		py_arg2);
 
 CLEANUP:
 	error_to_pyobject(&err, &py_err);
