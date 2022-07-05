@@ -58,6 +58,12 @@ except:
     print("Please install aerospike python client.")
     sys.exit(1)
 
+from .test_base_class import TestBaseClass
+if TestBaseClass.major_ver < 6 or (TestBaseClass.major_ver == 6 and TestBaseClass.minor_ver == 0):
+    if pytest.__version__ < "3.0.0":
+        pytest.skip('It only applies to >= 6.1 enterprise edition')
+    else:
+        pytestmark = pytest.mark.skip
 
 class TestCDTIndex(object):
 
