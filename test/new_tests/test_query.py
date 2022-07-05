@@ -33,6 +33,27 @@ def add_ctx_op(ctx_type, value):
     ctx_func = ctx_ops[ctx_type]
     return ctx_func(value)
 
+ctx_list_index = []
+ctx_list_index.append(add_ctx_op(list_index, 0))
+
+ctx_list_rank = []
+ctx_list_rank.append(add_ctx_op(list_rank, -1))
+
+ctx_list_value = []
+ctx_list_value.append(add_ctx_op(list_value, 3))
+
+ctx_map_index= []
+ctx_map_index.append(add_ctx_op(map_index, 0))
+
+ctx_map_key = []
+ctx_map_key.append(add_ctx_op(map_key, 'sb'))
+
+ctx_map_rank = []
+ctx_map_rank.append(add_ctx_op(map_rank, -1))
+
+ctx_map_value = []
+ctx_map_value.append(add_ctx_op(map_value, 3))
+
 aerospike = pytest.importorskip("aerospike")
 try:
     import aerospike
@@ -120,13 +141,22 @@ class TestQuery(TestBaseClass):
             pass
 
         try:
-            ctx = []
-            ctx.append(add_ctx_op(list_index, 0))
-            client.index_cdt_create('test', 'demo', 'numeric_list',
-                                     aerospike.INDEX_TYPE_DEFAULT,
-                                     aerospike.INDEX_NUMERIC,
-                                     'numeric_list_cdt_index',
-                                     {'ctx': ctx})
+            client.index_cdt_create('test', 'demo', 
+                                    'numeric_list',
+                                    aerospike.INDEX_TYPE_DEFAULT,
+                                    aerospike.INDEX_NUMERIC,
+                                    'numeric_list_cdt_index', 
+                                    {'ctx': ctx_list_index})
+        except e.IndexFoundError:
+            pass
+
+        try:
+            client.index_cdt_create('test', 'demo', 
+                                    'numeric_map',
+                                    aerospike.INDEX_TYPE_DEFAULT,
+                                    aerospike.INDEX_NUMERIC,
+                                    'numeric_map_cdt_index', 
+                                    {'ctx': ctx_map_index})
         except e.IndexFoundError:
             pass
 
@@ -196,6 +226,11 @@ class TestQuery(TestBaseClass):
         except e.IndexNotFound:
             pass
         
+        try:
+            client.index_remove('test', 'numeric_map_cdt_index', policy)
+        except e.IndexNotFound:
+            pass
+
         client.close()
 
     @pytest.fixture(autouse=True)
@@ -1041,7 +1076,7 @@ class TestQuery(TestBaseClass):
         query.where('numeric_map', "range", aerospike.INDEX_TYPE_MAPVALUES,
                     aerospike.INDEX_NUMERIC, 1)
 
-    def test_query_with_cdt_ctx(self):
+    def test_query_with_list_cdt_ctx(self):
         """
             Invoke query() with cdt_ctx and correct arguments
         """
@@ -1050,13 +1085,42 @@ class TestQuery(TestBaseClass):
             pytest.skip(
                 'It only applies to >= 6.1 enterprise edition')
 
-        ctx = []
-        ctx.append(add_ctx_op(list_index, 0))
+        # ctx = []
+        # ctx.append(add_ctx_op(list_index, 0))
+        # query = self.as_connection.query('test', 'demo')
+        # query.select('numeric_list')
+        # query.where_with_ctx({'ctx':ctx}, p.range('numeric_list', aerospike.INDEX_TYPE_DEFAULT, 2,4))
 
         query = self.as_connection.query('test', 'demo')
         query.select('numeric_list')
+        query.where_with_ctx({'ctx':ctx_list_index}, p.range('numeric_list', aerospike.INDEX_TYPE_DEFAULT, 2,4))
 
-        query.where_with_ctx({'ctx':ctx}, p.range('numeric_list', aerospike.INDEX_TYPE_DEFAULT, 2,4))
+        records = []
+
+        def callback(input_tuple):
+            try:
+                records.append(input_tuple)
+            except Exception as ex:
+                print(ex)
+
+        query.foreach(callback)
+            
+        assert records
+        assert len(records) == 3
+
+    def test_query_with_map_cdt_ctx(self):
+        """
+            Invoke query() with cdt_ctx and correct arguments
+        """
+        from .test_base_class import TestBaseClass
+        if TestBaseClass.major_ver < 6 or (TestBaseClass.major_ver == 6 and TestBaseClass.minor_ver == 0):
+            pytest.skip(
+                'It only applies to >= 6.1 enterprise edition')
+
+        query = self.as_connection.query('test', 'demo')
+        query.select('numeric_map')
+
+        query.where_with_ctx({'ctx':ctx_map_index}, p.range('numeric_map', aerospike.INDEX_TYPE_DEFAULT, 2,4))
 
         records = []
 
