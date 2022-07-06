@@ -768,7 +768,7 @@ class TestQuery(TestBaseClass):
         """
         query = self.as_connection.query('test', 'demo')
         query.select('name', 'test_age')
-        with pytest.raises(e.ParamError):
+        with pytest.raises(TypeError):
             query.where('numeric_map', "range", aerospike.INDEX_TYPE_MAPVALUES,
                         aerospike.INDEX_NUMERIC, 1, 3)
 
@@ -781,7 +781,7 @@ class TestQuery(TestBaseClass):
         """
         query = self.as_connection.query('test', 'demo')
         query.select('name', 'test_age')
-        with pytest.raises(e.ParamError):
+        with pytest.raises(TypeError):
             query.where('string_map', 'contains', aerospike.INDEX_TYPE_MAPVALUES,
                         aerospike.INDEX_STRING, "a1")
 
@@ -792,7 +792,7 @@ class TestQuery(TestBaseClass):
         """
         query = self.as_connection.query('test', 'demo')
         query.select('name', 'test_age')
-        with pytest.raises(e.ParamError):
+        with pytest.raises(TypeError):
             query.where('string_list', "contains", aerospike.INDEX_TYPE_LIST,
                         aerospike.INDEX_STRING, "str3")
 
@@ -802,7 +802,7 @@ class TestQuery(TestBaseClass):
         """
         query = self.as_connection.query('test', 'demo')
         query.select('name', 'test_age')
-        with pytest.raises(e.ParamError):
+        with pytest.raises(TypeError):
             query.where('test_age', 'between', 1, 4)
 
     def test_between_predicate_between_one_arg(self):
@@ -811,7 +811,7 @@ class TestQuery(TestBaseClass):
             arguments
         """
         query = self.as_connection.query('test', 'demo')
-        with pytest.raises(e.ParamError):
+        with pytest.raises(TypeError):
             query.where('test_age', 'between', 1)
 
     def test_between_predicate_between_no_args(self):
@@ -831,7 +831,7 @@ class TestQuery(TestBaseClass):
         policy = {'timeout': 1000}
         query = self.as_connection.query('test', 'demo')
         query.select('name', 'test_age')
-        with pytest.raises(e.ParamError):
+        with pytest.raises(TypeError):
             query.where('test_age', 'equals', 1)
 
     def test_query_with_multiple_results_call_on_same_query_object(self):
@@ -1089,11 +1089,11 @@ class TestQuery(TestBaseClass):
         # ctx.append(add_ctx_op(list_index, 0))
         # query = self.as_connection.query('test', 'demo')
         # query.select('numeric_list')
-        # query.where_with_ctx({'ctx':ctx}, p.range('numeric_list', aerospike.INDEX_TYPE_DEFAULT, 2,4))
+        # query.where(p.range('numeric_list', aerospike.INDEX_TYPE_DEFAULT, 2,4), {'ctx':ctx})
 
         query = self.as_connection.query('test', 'demo')
         query.select('numeric_list')
-        query.where_with_ctx({'ctx':ctx_list_index}, p.range('numeric_list', aerospike.INDEX_TYPE_DEFAULT, 2,4))
+        query.where(p.range('numeric_list', aerospike.INDEX_TYPE_DEFAULT, 2,4), {'ctx':ctx_list_index})
 
         records = []
 
@@ -1120,7 +1120,7 @@ class TestQuery(TestBaseClass):
         query = self.as_connection.query('test', 'demo')
         query.select('numeric_map')
 
-        query.where_with_ctx({'ctx':ctx_map_index}, p.range('numeric_map', aerospike.INDEX_TYPE_DEFAULT, 2,4))
+        query.where(p.range('numeric_map', aerospike.INDEX_TYPE_DEFAULT, 2,4), {'ctx':ctx_map_index})
 
         records = []
 

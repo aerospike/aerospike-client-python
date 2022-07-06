@@ -146,7 +146,7 @@ Query Fields and Methods
         not appear in the *bins* portion of that record tuple.
 
 
-    .. method:: where(predicate)
+    .. method:: where(predicate[, ctx])
 
         Set a where *predicate* for the query, without which the query will \
         behave similar to :class:`aerospike.Scan`. The predicate is produced by \
@@ -154,22 +154,9 @@ Query Fields and Methods
         and :meth:`~aerospike.predicates.between`.
 
         :param tuple predicate: the :py:func:`tuple` produced by one of the :mod:`aerospike.predicates` methods.
-
-        .. note:: Currently, you can assign at most one predicate to the query.
-
-
-    .. method:: where_with_ctx(ctx, predicate)
-
-        Set a where *predicate* for the query with CDT context, without which the query will \
-        behave similar to :class:`aerospike.Scan`. The predicate is produced by \
-        one of the :mod:`aerospike.predicates` methods :meth:`~aerospike.predicates.equals` \
-        and :meth:`~aerospike.predicates.between`.
-
         :param list ctx: the :py:func:`list` produced by one of the :mod:`aerospike_helpers.cdt_ctx` methods.
-        :param tuple predicate: the :py:func:`tuple` produced by one of the :mod:`aerospike.predicates` methods.
 
         .. note:: Currently, you can assign at most one predicate to the query.
-
 
     .. method:: results([,policy [, options]]) -> list of (key, meta, bins)
 

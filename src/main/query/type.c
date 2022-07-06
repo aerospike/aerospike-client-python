@@ -57,15 +57,11 @@ PyDoc_STRVAR(select_doc, "select(bin1[, bin2[, bin3..]])\n\
 Set a filter on the record bins resulting from results() or foreach(). \
 If a selected bin does not exist in a record it will not appear in the bins portion of that record tuple.");
 
-PyDoc_STRVAR(where_doc, "where(predicate)\n\
+PyDoc_STRVAR(where_doc, "where(predicate[, cdt_ctx])\n\
 \n\
 Set a where predicate for the query, without which the query will behave similar to aerospike.Scan. \
-The predicate is produced by one of the aerospike.predicates methods equals() and between().");
-
-PyDoc_STRVAR(where_with_ctx_doc, "where_with_ctx(predicate)\n\
-\n\
-Set a where predicate with cdt context for the query, without which the query will behave similar to aerospike.Scan. \
-The predicate is produced by one of the aerospike.predicates methods equals() and between().");
+The predicate is produced by one of the aerospike.predicates methods equals() and between(). \
+The list cdt_ctx is produced by one of the aerospike_helpers.cdt_ctx methods");
 
 PyDoc_STRVAR(execute_background_doc,
 			 "execute_background([policy]) -> list of (key, meta, bins)\n\
@@ -106,8 +102,6 @@ static PyMethodDef AerospikeQuery_Type_Methods[] = {
 	 select_doc},
 
 	{"where", (PyCFunction)AerospikeQuery_Where, METH_VARARGS, where_doc},
-
-	{"where_with_ctx", (PyCFunction)AerospikeQuery_WhereWithCtx, METH_VARARGS, where_with_ctx_doc},
 
 	{"execute_background", (PyCFunction)AerospikeQuery_ExecuteBackground,
 	 METH_VARARGS | METH_KEYWORDS, execute_background_doc},

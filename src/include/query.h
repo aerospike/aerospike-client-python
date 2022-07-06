@@ -72,7 +72,6 @@ AerospikeQuery *AerospikeQuery_Add_Ops(AerospikeQuery *self, PyObject *args,
  *
  */
 AerospikeQuery *AerospikeQuery_Where(AerospikeQuery *self, PyObject *args);
-AerospikeQuery *AerospikeQuery_WhereWithCtx(AerospikeQuery *self, PyObject *args);
 
 /**
  * Apply the specified udf on the results of the query.

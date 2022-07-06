@@ -299,12 +299,7 @@ static int AerospikeQuery_Where_Add(AerospikeQuery *self,
 AerospikeQuery *AerospikeQuery_Where_Invoke(
 	AerospikeQuery *self,
 	PyObject *py_arg1,
-	PyObject *py_arg2,
-	PyObject *py_arg3,
-	PyObject *py_arg4,
-	PyObject *py_arg5,
-	PyObject *py_arg6,
-	PyObject *py_arg7)
+	PyObject *py_arg2)
 {
 	as_error err;
 	int rc = 0;
@@ -370,15 +365,10 @@ AerospikeQuery *AerospikeQuery_Where(AerospikeQuery *self, PyObject *args)
 	as_error err;
 	PyObject *py_err = NULL;
 
-	PyObject *py_arg1 = NULL;
-	PyObject *py_arg2 = NULL;
-	PyObject *py_arg3 = NULL;
-	PyObject *py_arg4 = NULL;
-	PyObject *py_arg5 = NULL;
-	PyObject *py_arg6 = NULL;
+	PyObject *py_pred = NULL;
+	PyObject *py_cdt_ctx = NULL;
 
-	if (PyArg_ParseTuple(args, "O|OOOOO:where", &py_arg1, &py_arg2, &py_arg3,
-						 &py_arg4, &py_arg5, &py_arg6) == false) {
+	if (PyArg_ParseTuple(args, "O|O:where", &py_pred, &py_cdt_ctx) == false) {
 		return NULL;
 	}
 
@@ -397,62 +387,8 @@ AerospikeQuery *AerospikeQuery_Where(AerospikeQuery *self, PyObject *args)
 	
 	return AerospikeQuery_Where_Invoke(
 		self,
-		NULL,
-		py_arg1,
-		py_arg2,
-		py_arg3,
-		py_arg4,
-		py_arg5,
-		py_arg6);
-
-CLEANUP:
-	error_to_pyobject(&err, &py_err);
-	PyObject *exception_type = raise_exception(&err);
-	PyErr_SetObject(exception_type, py_err);
-	Py_DECREF(py_err);
-	return NULL;
-}
-
-AerospikeQuery *AerospikeQuery_WhereWithCtx(AerospikeQuery *self, PyObject *args)
-{
-	as_error err;
-	PyObject *py_err = NULL;
-
-	PyObject *py_arg1 = NULL;
-	PyObject *py_arg2 = NULL;
-	PyObject *py_arg3 = NULL;
-	PyObject *py_arg4 = NULL;
-	PyObject *py_arg5 = NULL;
-	PyObject *py_arg6 = NULL;
-	PyObject *py_arg7 = NULL;
-
-	if (PyArg_ParseTuple(args, "OO|OOOOO:where_with_ctx", &py_arg1, &py_arg2, &py_arg3,
-						 &py_arg4, &py_arg5, &py_arg6, &py_arg7) == false) {
-		return NULL;
-	}
-
-	as_error_init(&err);
-
-	if (!self || !self->client->as) {
-		as_error_update(&err, AEROSPIKE_ERR_PARAM, "Invalid aerospike object");
-		goto CLEANUP;
-	}
-
-	if (!self->client->is_conn_16) {
-		as_error_update(&err, AEROSPIKE_ERR_CLUSTER,
-						"No connection to aerospike cluster");
-		goto CLEANUP;
-	}
-
-	return AerospikeQuery_Where_Invoke(
-		self,
-		py_arg1,
-		py_arg2,
-		py_arg3,
-		py_arg4,
-		py_arg5,
-		py_arg6,
-		py_arg7);
+		py_cdt_ctx,
+		py_pred);
 
 CLEANUP:
 	error_to_pyobject(&err, &py_err);
