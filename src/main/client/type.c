@@ -467,6 +467,14 @@ PyDoc_STRVAR(index_string_create_doc,
 \n\
 Create a string index with index_name on the bin in the specified ns, set.");
 
+PyDoc_STRVAR(index_cdt_create_doc,
+			 "index_cdt_create(ns, set, bin,  index_type, index_datatype, index_name, ctx, [, policy])\n\
+\n\
+Create an cdt index named index_name for list, map keys or map values (as defined by index_type) and for \
+numeric, string or GeoJSON values (as defined by index_datatype) \
+on records of the specified ns, set whose bin is a list or map.");
+
+
 PyDoc_STRVAR(index_remove_doc, "index_remove(ns, index_name[, policy])\n\
 \n\
 Remove the index with index_name from the namespace.");
@@ -822,6 +830,8 @@ static PyMethodDef AerospikeClient_Type_Methods[] = {
 	 METH_VARARGS | METH_KEYWORDS, index_integer_create_doc},
 	{"index_string_create", (PyCFunction)AerospikeClient_Index_String_Create,
 	 METH_VARARGS | METH_KEYWORDS, index_string_create_doc},
+	{"index_cdt_create", (PyCFunction)AerospikeClient_Index_Cdt_Create,
+	 METH_VARARGS | METH_KEYWORDS, index_cdt_create_doc},
 	{"index_remove", (PyCFunction)AerospikeClient_Index_Remove,
 	 METH_VARARGS | METH_KEYWORDS, index_remove_doc},
 	{"index_list_create", (PyCFunction)AerospikeClient_Index_List_Create,
