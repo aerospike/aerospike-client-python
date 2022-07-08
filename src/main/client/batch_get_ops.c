@@ -57,7 +57,6 @@ static bool batch_read_operate_cb(const as_batch_read *results, uint32_t n,
 	PyObject *py_err = NULL;
 	PyObject *py_arglist = NULL;
 	as_batch_read *r = NULL;
-	PyObject *py_rec = NULL;
 	PyObject *py_exception;
 
 	// Lock Python State
@@ -69,29 +68,36 @@ static bool batch_read_operate_cb(const as_batch_read *results, uint32_t n,
 	PyList_Append(data->py_results, py_err);
 
 	for (uint32_t i = 0; i < n; i++) {
+		PyObject *py_key = NULL;
+		PyObject *py_rec = NULL;
+		PyObject *py_rec_meta = NULL;
+		PyObject *py_rec_bins = NULL;
+		as_record *rec = NULL;
+		as_error err;
+
 		r = (as_batch_read *)&results[i];
+		py_key = PyList_GetItem(data->py_keys, i);
+		rec = &r->record;
 
-		error->code = r->result;
+		as_error_reset(&err);
+		err.code = r->result;
 
-		PyObject *py_key = PyList_GetItem(data->py_keys, i);
-
-		record_to_resultpyobject(data->client, py_key, &r->record, &py_rec);
-
-		error_to_pyobject(error, &py_err);
-
-		if (error->code == AEROSPIKE_OK) {
+		if (err.code == AEROSPIKE_OK) {
+			metadata_to_pyobject(&err, rec, &py_rec_meta);
+			bins_to_pyobject(data->client, &err, rec, &py_rec_bins, false);
+		} else {
+			py_rec_meta = raise_exception(&err);
 			Py_INCREF(Py_None);
-			py_exception = Py_None;
-		}
-		else {
-			py_exception = raise_exception(error);
+			py_rec_bins = Py_None;
 		}
 
-		py_arglist = PyTuple_New(3);
-		PyTuple_SetItem(py_arglist, 0,
-						py_rec); //1-record tuple (key-tuple, meta, bin)
-		PyTuple_SetItem(py_arglist, 1, py_err);		  //2-error tuple
-		PyTuple_SetItem(py_arglist, 2, py_exception); //3-exception
+		py_rec = PyTuple_New(3);
+		PyTuple_SetItem(py_rec, 0, py_key);
+		PyTuple_SetItem(py_rec, 1, py_rec_meta);
+		PyTuple_SetItem(py_rec, 2, py_rec_bins);
+
+		py_arglist = PyTuple_New(1);
+		PyTuple_SetItem(py_arglist, 0, py_rec); //record tuple (key-tuple, meta/exception, bin)
 		PyList_Append(data->py_results, py_arglist);
 	}
 
@@ -265,6 +271,14 @@ PyObject *AerospikeClient_Batch_GetOps(AerospikeClient *self, PyObject *args,
 
 	py_results = AerospikeClient_Batch_GetOps_Invoke(
 		self, &err, py_keys, py_ops, py_meta, py_policy);
+
+	if (py_results == NULL) {
+ 		PyObject *py_err = NULL;
+ 		error_to_pyobject(&err, &py_err);
+ 		PyObject *exception_type = raise_exception(&err);
+ 		PyErr_SetObject(exception_type, py_err);
+ 		Py_DECREF(py_err);
+ 	}
 
 	return py_results;
 }
