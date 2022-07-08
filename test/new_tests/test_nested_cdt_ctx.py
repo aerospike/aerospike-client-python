@@ -1568,8 +1568,8 @@ class TestCTXOperations(object):
             self.as_connection.operate(self.test_key, ops)
 
     @pytest.mark.parametrize("ctx_types, key_start, key_stop, return_type, inverted, list_indexes, expected", [
-        ([map_index], 0, 4, aerospike.MAP_RETURN_VALUE, False, [0], ['v3', 'v1', 'v2']),
-        ([map_index], 7, 9, aerospike.MAP_RETURN_VALUE, False, [2], ['v8', 'v7']),
+        ([map_index], 0, 4, aerospike.MAP_RETURN_VALUE, False, [0], ['v1', 'v2', 'v3']),
+        ([map_index], 7, 9, aerospike.MAP_RETURN_VALUE, False, [2], ['v7', 'v8']),
         ([map_key, map_key], 11, 12, aerospike.MAP_RETURN_VALUE, False, [3, 10], ['v11']),
         ([map_index], 7, 9, aerospike.MAP_RETURN_VALUE, True, [2], ['v9', {11: 'v11'}]),
     ])
@@ -1781,8 +1781,8 @@ class TestCTXOperations(object):
             self.as_connection.operate(self.test_key, ops)
 
     @pytest.mark.parametrize("ctx_types, value_start, value_end, return_type, inverted, list_indexes, expected", [
-        ([map_index], 'v1', 'v4', aerospike.MAP_RETURN_VALUE, False, [0], ['v3', 'v1', 'v2']),
-        ([map_index], 'v5', 'v9', aerospike.MAP_RETURN_VALUE, False, [2], ['v8', 'v7']),
+        ([map_index], 'v1', 'v4', aerospike.MAP_RETURN_VALUE, False, [0], ['v1', 'v2', 'v3']),
+        ([map_index], 'v5', 'v9', aerospike.MAP_RETURN_VALUE, False, [2], ['v7', 'v8']),
         ([map_key, map_key], 'v11', 'v12', aerospike.MAP_RETURN_VALUE, False, [3, 10], ['v11']),
         ([map_index], 'v5', 'v9', aerospike.MAP_RETURN_VALUE, True, [2], ['v9', {11: 'v11'}]),
     ])
@@ -2384,9 +2384,9 @@ class TestCTXOperations(object):
             self.as_connection.operate(self.test_key, ops)
 
     @pytest.mark.parametrize("ctx_types, key_start, key_end, return_type, inverted, list_indexes, expected_val, expected_bin", [
-        ([map_index], 0, 4, aerospike.MAP_RETURN_VALUE, False, [0], ['v3', 'v1', 'v2'], {1: {},
+        ([map_index], 0, 4, aerospike.MAP_RETURN_VALUE, False, [0], ['v1', 'v2', 'v3'], {1: {},
          2: {4: 'v4', 5: 'v5', 6: 'v6'}, 3: {7: 'v7', 8: 'v8', 9: 'v9', 10: {11: 'v11'}}}),
-        ([map_index], 5, 9, aerospike.MAP_RETURN_VALUE, False, [2], ['v8', 'v7'], {1: {1: 'v1', 2: 'v2', 3: 'v3'},
+        ([map_index], 5, 9, aerospike.MAP_RETURN_VALUE, False, [2], ['v7', 'v8'], {1: {1: 'v1', 2: 'v2', 3: 'v3'},
          2: {4: 'v4', 5: 'v5', 6: 'v6'}, 3: {9: 'v9',  10: {11: 'v11'}}}),
         ([map_key, map_key], 11, 12, aerospike.MAP_RETURN_VALUE, False, [3, 10], ['v11'], {1: {1: 'v1', 2: 'v2', 3: 'v3'},
          2: {4: 'v4', 5: 'v5', 6: 'v6'}, 3: {7: 'v7', 8: 'v8', 9: 'v9', 10: {}}}),
@@ -2543,9 +2543,9 @@ class TestCTXOperations(object):
             self.as_connection.operate(self.test_key, ops)
 
     @pytest.mark.parametrize("ctx_types, value_start, value_end, return_type, inverted, list_indexes, expected_val, expected_bin", [
-        ([map_index], 'v1', 'v4', aerospike.MAP_RETURN_VALUE, False, [0], ['v3', 'v1', 'v2'], {1: {},
+        ([map_index], 'v1', 'v4', aerospike.MAP_RETURN_VALUE, False, [0], ['v1', 'v2', 'v3'], {1: {},
          2: {4: 'v4', 5: 'v5', 6: 'v6'}, 3: {7: 'v7', 8: 'v8', 9: 'v9', 10: {11: 'v11'}}}),
-        ([map_index], 'v5', 'v9', aerospike.MAP_RETURN_VALUE, False, [2], ['v8', 'v7'], {1: {1: 'v1', 2: 'v2', 3: 'v3'},
+        ([map_index], 'v5', 'v9', aerospike.MAP_RETURN_VALUE, False, [2], ['v7', 'v8'], {1: {1: 'v1', 2: 'v2', 3: 'v3'},
          2: {4: 'v4', 5: 'v5', 6: 'v6'}, 3: {9: 'v9',  10: {11: 'v11'}}}),
         ([map_key, map_key], 'v11', 'v12', aerospike.MAP_RETURN_VALUE, False, [3, 10], ['v11'], {1: {1: 'v1', 2: 'v2', 3: 'v3'},
          2: {4: 'v4', 5: 'v5', 6: 'v6'}, 3: {7: 'v7', 8: 'v8', 9: 'v9', 10: {}}}),

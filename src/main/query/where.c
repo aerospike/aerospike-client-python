@@ -26,6 +26,7 @@
 #include "query.h"
 #include "conversions.h"
 #include "exceptions.h"
+#include "policy.h"
 
 #undef TRACE
 #define TRACE()
@@ -44,6 +45,7 @@ int64_t pyobject_to_int64(PyObject *py_obj)
 }
 
 static int AerospikeQuery_Where_Add(AerospikeQuery *self,
+									PyObject *py_ctx,
 									as_predicate_type predicate,
 									as_index_datatype in_datatype,
 									PyObject *py_bin, PyObject *py_val1,
@@ -52,6 +54,24 @@ static int AerospikeQuery_Where_Add(AerospikeQuery *self,
 	as_error err;
 	char *val = NULL, *bin = NULL;
 	PyObject *py_ubin = NULL;
+	as_cdt_ctx *pctx = NULL;
+	bool ctx_in_use = false;
+	int rc = 0;
+
+	if(py_ctx) {
+		as_static_pool static_pool;
+		memset(&static_pool, 0, sizeof(static_pool));
+		pctx = cf_malloc(sizeof(as_cdt_ctx));
+		memset(pctx, 0, sizeof(as_cdt_ctx));
+		if (get_cdt_ctx(self->client, &err, pctx, py_ctx, &ctx_in_use, &static_pool,
+						SERIALIZER_PYTHON) != AEROSPIKE_OK) {
+			return err.code;
+		}
+		if(!ctx_in_use) {
+			cf_free(pctx);
+			pctx = NULL;
+		}
+	}
 
 	switch (predicate) {
 	case AS_PREDICATE_EQUAL: {
@@ -67,7 +87,7 @@ static int AerospikeQuery_Where_Add(AerospikeQuery *self,
 				bin = PyByteArray_AsString(py_bin);
 			}
 			else {
-				return 1;
+				rc = 1; break;
 			}
 
 			if (PyUnicode_Check(py_val1)) {
@@ -79,27 +99,27 @@ static int AerospikeQuery_Where_Add(AerospikeQuery *self,
 				val = strdup(PyString_AsString(py_val1));
 			}
 			else {
-				return 1;
+				rc = 1; break;
 			}
 
 			as_query_where_init(&self->query, 1);
 			if (index_type == AS_INDEX_TYPE_DEFAULT) {
-				as_query_where(&self->query, bin, as_equals(STRING, val));
+				as_query_where_with_ctx(&self->query, bin, pctx, as_equals(STRING, val));
 			}
 			else if (index_type == AS_INDEX_TYPE_LIST) {
-				as_query_where(&self->query, bin,
+				as_query_where_with_ctx(&self->query, bin, pctx,
 							   as_contains(LIST, STRING, val));
 			}
 			else if (index_type == AS_INDEX_TYPE_MAPKEYS) {
-				as_query_where(&self->query, bin,
+				as_query_where_with_ctx(&self->query, bin, pctx,
 							   as_contains(MAPKEYS, STRING, val));
 			}
 			else if (index_type == AS_INDEX_TYPE_MAPVALUES) {
-				as_query_where(&self->query, bin,
+				as_query_where_with_ctx(&self->query, bin, pctx,
 							   as_contains(MAPVALUES, STRING, val));
 			}
 			else {
-				return 1;
+				rc = 1; break;
 			}
 			if (py_ubin) {
 				Py_DECREF(py_ubin);
@@ -118,28 +138,28 @@ static int AerospikeQuery_Where_Add(AerospikeQuery *self,
 				bin = PyByteArray_AsString(py_bin);
 			}
 			else {
-				return 1;
+				rc = 1; break;
 			}
 			int64_t val = pyobject_to_int64(py_val1);
 
 			as_query_where_init(&self->query, 1);
 			if (index_type == AS_INDEX_TYPE_DEFAULT) {
-				as_query_where(&self->query, bin, as_equals(NUMERIC, val));
+				as_query_where_with_ctx(&self->query, bin, pctx, as_equals(NUMERIC, val));
 			}
 			else if (index_type == AS_INDEX_TYPE_LIST) {
-				as_query_where(&self->query, bin,
+				as_query_where_with_ctx(&self->query, bin, pctx,
 							   as_contains(LIST, NUMERIC, val));
 			}
 			else if (index_type == AS_INDEX_TYPE_MAPKEYS) {
-				as_query_where(&self->query, bin,
+				as_query_where_with_ctx(&self->query, bin, pctx,
 							   as_contains(MAPKEYS, NUMERIC, val));
 			}
 			else if (index_type == AS_INDEX_TYPE_MAPVALUES) {
-				as_query_where(&self->query, bin,
+				as_query_where_with_ctx(&self->query, bin, pctx,
 							   as_contains(MAPVALUES, NUMERIC, val));
 			}
 			else {
-				return 1;
+				rc = 1; break;
 			}
 			if (py_ubin) {
 				Py_DECREF(py_ubin);
@@ -154,7 +174,7 @@ static int AerospikeQuery_Where_Add(AerospikeQuery *self,
 			PyObject *py_err = NULL;
 			error_to_pyobject(&err, &py_err);
 			PyErr_SetObject(PyExc_Exception, py_err);
-			return 1;
+			rc = 1; break;
 		}
 
 		break;
@@ -172,30 +192,30 @@ static int AerospikeQuery_Where_Add(AerospikeQuery *self,
 				bin = PyByteArray_AsString(py_bin);
 			}
 			else {
-				return 1;
+				rc = 1; break;
 			}
 			int64_t min = pyobject_to_int64(py_val1);
 			int64_t max = pyobject_to_int64(py_val2);
 
 			as_query_where_init(&self->query, 1);
 			if (index_type == 0) {
-				as_query_where(&self->query, bin,
+				as_query_where_with_ctx(&self->query, bin, pctx,
 							   as_range(DEFAULT, NUMERIC, min, max));
 			}
 			else if (index_type == 1) {
-				as_query_where(&self->query, bin,
+				as_query_where_with_ctx(&self->query, bin, pctx,
 							   as_range(LIST, NUMERIC, min, max));
 			}
 			else if (index_type == 2) {
-				as_query_where(&self->query, bin,
+				as_query_where_with_ctx(&self->query, bin, pctx,
 							   as_range(MAPKEYS, NUMERIC, min, max));
 			}
 			else if (index_type == 3) {
-				as_query_where(&self->query, bin,
+				as_query_where_with_ctx(&self->query, bin, pctx,
 							   as_range(MAPVALUES, NUMERIC, min, max));
 			}
 			else {
-				return 1;
+				rc = 1; break;
 			}
 			if (py_ubin) {
 				Py_DECREF(py_ubin);
@@ -218,7 +238,7 @@ static int AerospikeQuery_Where_Add(AerospikeQuery *self,
 				bin = PyByteArray_AsString(py_bin);
 			}
 			else {
-				return 1;
+				rc = 1; break;
 			}
 
 			if (PyUnicode_Check(py_val1)) {
@@ -230,11 +250,11 @@ static int AerospikeQuery_Where_Add(AerospikeQuery *self,
 				val = strdup(PyString_AsString(py_val1));
 			}
 			else {
-				return 1;
+				rc = 1; break;
 			}
 
 			as_query_where_init(&self->query, 1);
-			as_query_where(&self->query, bin, AS_PREDICATE_RANGE, index_type,
+			as_query_where_with_ctx(&self->query, bin, pctx, AS_PREDICATE_RANGE, index_type,
 						   in_datatype, val);
 
 			if (py_ubin) {
@@ -249,7 +269,7 @@ static int AerospikeQuery_Where_Add(AerospikeQuery *self,
 			PyObject *py_err = NULL;
 			error_to_pyobject(&err, &py_err);
 			PyErr_SetObject(PyExc_Exception, py_err);
-			return 1;
+			rc = 1; break;
 		}
 		break;
 	}
@@ -259,49 +279,40 @@ static int AerospikeQuery_Where_Add(AerospikeQuery *self,
 		PyObject *py_err = NULL;
 		error_to_pyobject(&err, &py_err);
 		PyErr_SetObject(PyExc_Exception, py_err);
-		return 1;
+		rc = 1; break;
 	}
 	}
-	return 0;
+
+	if(rc) {
+		assert(false);
+		if (ctx_in_use) {
+			as_cdt_ctx_destroy(pctx);
+		}
+		if(pctx) {
+			cf_free(pctx);
+		}
+	}
+	return rc;
+
 }
 
-AerospikeQuery *AerospikeQuery_Where(AerospikeQuery *self, PyObject *args)
+AerospikeQuery *AerospikeQuery_Where_Invoke(
+	AerospikeQuery *self,
+	PyObject *py_arg1,
+	PyObject *py_arg2)
 {
 	as_error err;
 	int rc = 0;
 
-	PyObject *py_arg1 = NULL;
-	PyObject *py_arg2 = NULL;
-	PyObject *py_arg3 = NULL;
-	PyObject *py_arg4 = NULL;
-	PyObject *py_arg5 = NULL;
-	PyObject *py_arg6 = NULL;
-
-	if (PyArg_ParseTuple(args, "O|OOOOO:where", &py_arg1, &py_arg2, &py_arg3,
-						 &py_arg4, &py_arg5, &py_arg6) == false) {
-		return NULL;
-	}
-
 	as_error_init(&err);
 
-	if (!self || !self->client->as) {
-		as_error_update(&err, AEROSPIKE_ERR_PARAM, "Invalid aerospike object");
-		goto CLEANUP;
-	}
+	if (PyTuple_Check(py_arg2) && PyTuple_Size(py_arg2) > 1 &&
+		PyTuple_Size(py_arg2) <= 6) {
 
-	if (!self->client->is_conn_16) {
-		as_error_update(&err, AEROSPIKE_ERR_CLUSTER,
-						"No connection to aerospike cluster");
-		goto CLEANUP;
-	}
+		Py_ssize_t size = PyTuple_Size(py_arg2);
 
-	if (PyTuple_Check(py_arg1) && PyTuple_Size(py_arg1) > 1 &&
-		PyTuple_Size(py_arg1) <= 6) {
-
-		Py_ssize_t size = PyTuple_Size(py_arg1);
-
-		PyObject *py_op = PyTuple_GetItem(py_arg1, 0);
-		PyObject *py_op_data = PyTuple_GetItem(py_arg1, 1);
+		PyObject *py_op = PyTuple_GetItem(py_arg2, 0);
+		PyObject *py_op_data = PyTuple_GetItem(py_arg2, 1);
 		if (!py_op || !py_op_data) {
 			as_error_update(&err, AEROSPIKE_ERR_CLIENT,
 							"Failed to fetch predicate information");
@@ -312,11 +323,11 @@ AerospikeQuery *AerospikeQuery_Where(AerospikeQuery *self, PyObject *args)
 			as_index_datatype op_data =
 				(as_index_datatype)PyInt_AsLong(py_op_data);
 			rc = AerospikeQuery_Where_Add(
-				self, op, op_data,
-				size > 2 ? PyTuple_GetItem(py_arg1, 2) : Py_None,
-				size > 3 ? PyTuple_GetItem(py_arg1, 3) : Py_None,
-				size > 4 ? PyTuple_GetItem(py_arg1, 4) : Py_None,
-				size > 5 ? PyInt_AsLong(PyTuple_GetItem(py_arg1, 5)) : 0);
+				self, py_arg1, op, op_data,
+				size > 2 ? PyTuple_GetItem(py_arg2, 2) : Py_None,
+				size > 3 ? PyTuple_GetItem(py_arg2, 3) : Py_None,
+				size > 4 ? PyTuple_GetItem(py_arg2, 4) : Py_None,
+				size > 5 ? PyInt_AsLong(PyTuple_GetItem(py_arg2, 5)) : 0);
 			/* Failed to add the predicate for some reason */
 			if (rc != 0) {
 				as_error_update(&err, AEROSPIKE_ERR_PARAM,
@@ -347,4 +358,42 @@ CLEANUP:
 
 	Py_INCREF(self);
 	return self;
+}
+
+AerospikeQuery *AerospikeQuery_Where(AerospikeQuery *self, PyObject *args)
+{
+	as_error err;
+	PyObject *py_err = NULL;
+
+	PyObject *py_pred = NULL;
+	PyObject *py_cdt_ctx = NULL;
+
+	if (PyArg_ParseTuple(args, "O|O:where", &py_pred, &py_cdt_ctx) == false) {
+		return NULL;
+	}
+
+	as_error_init(&err);
+
+	if (!self || !self->client->as) {
+		as_error_update(&err, AEROSPIKE_ERR_PARAM, "Invalid aerospike object");
+		goto CLEANUP;
+	}
+
+	if (!self->client->is_conn_16) {
+		as_error_update(&err, AEROSPIKE_ERR_CLUSTER,
+						"No connection to aerospike cluster");
+		goto CLEANUP;
+	}
+	
+	return AerospikeQuery_Where_Invoke(
+		self,
+		py_cdt_ctx,
+		py_pred);
+
+CLEANUP:
+	error_to_pyobject(&err, &py_err);
+	PyObject *exception_type = raise_exception(&err);
+	PyErr_SetObject(exception_type, py_err);
+	Py_DECREF(py_err);
+	return NULL;
 }
