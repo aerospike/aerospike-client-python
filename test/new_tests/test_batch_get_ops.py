@@ -157,7 +157,6 @@ class TestBatchExpressionsOperations(TestBaseClass):
         scores1 = {"u1": 123, "u2": 234, "u7": 789, "u8": 890, "u9": 901}
         ops = [mh.map_put_items("scores", scores1, map_policy)]
         self.as_connection.operate(key1, ops, policy=policy)
-
         key2 = ("test", "demo", "batch-ops-k2")
         scores2 = {"z1": 321, "z2": 432, "z7": 987, "z8": 98, "z9": 109}
         ops = [mh.map_put_items("scores", scores2, map_policy)]
@@ -166,13 +165,19 @@ class TestBatchExpressionsOperations(TestBaseClass):
         ops = [mh.map_get_by_rank_range("scores", -3, 3, aerospike.MAP_RETURN_KEY_VALUE)]
         non_existent_key = ("test", "demo", "batch-ops-non_existent_key")
         rec = self.as_connection.batch_get_ops([key1, key2, non_existent_key], ops, policy=policy)
-        print("\nThe record coming from batch_get_ops")
-        pp.pprint(rec)
 
+        # print("\nThe record from batch_get_ops")
+        # pp.pprint(rec)
+
+        assert rec[0][-1] != None
+        assert rec[1][-1] != None
+        assert rec[2][-2] == e.RecordNotFound
+        assert rec[2][-1] == None
+        
         # print("\nThe record coming from opreate")
         # rec = self.as_connection.operate(key1, ops, policy=policy)
         # pp.pprint(rec)
 
-        # rec = self.as_connection.get_many([key1, key2], policy)
+        # rec = self.as_connection.get_many([key1, key2, non_existent_key], policy)
         # print("\nFor comparison, here's batch-read (get_many) is an array of records")
         # pp.pprint(rec)

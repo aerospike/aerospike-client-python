@@ -54,18 +54,12 @@ static bool batch_read_operate_cb(const as_batch_read *results, uint32_t n,
 	// Extract callback user-data
 	LocalData *data = (LocalData *)udata;
 	as_error *error = &data->error;
-	PyObject *py_err = NULL;
-	PyObject *py_arglist = NULL;
 	as_batch_read *r = NULL;
 	PyObject *py_exception;
 
 	// Lock Python State
 	PyGILState_STATE gstate;
 	gstate = PyGILState_Ensure();
-
-	error_to_pyobject(error, &py_err);
-
-	PyList_Append(data->py_results, py_err);
 
 	for (uint32_t i = 0; i < n; i++) {
 		PyObject *py_key = NULL;
@@ -79,7 +73,7 @@ static bool batch_read_operate_cb(const as_batch_read *results, uint32_t n,
 		py_key = PyList_GetItem(data->py_keys, i);
 		rec = &r->record;
 
-		as_error_reset(&err);
+		as_error_init(&err);
 		err.code = r->result;
 
 		if (err.code == AEROSPIKE_OK) {
@@ -96,9 +90,7 @@ static bool batch_read_operate_cb(const as_batch_read *results, uint32_t n,
 		PyTuple_SetItem(py_rec, 1, py_rec_meta);
 		PyTuple_SetItem(py_rec, 2, py_rec_bins);
 
-		py_arglist = PyTuple_New(1);
-		PyTuple_SetItem(py_arglist, 0, py_rec); //record tuple (key-tuple, meta/exception, bin)
-		PyList_Append(data->py_results, py_arglist);
+		PyList_Append(data->py_results, py_rec);
 	}
 
 	PyGILState_Release(gstate);

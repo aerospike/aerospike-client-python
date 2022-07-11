@@ -1801,19 +1801,28 @@ as_status do_record_to_pyobject(AerospikeClient *self, as_error *err,
 	return err->code;
 }
 
-as_status record_to_resultpyobject(AerospikeClient *self, PyObject *py_key, 
-									const as_record *rec, PyObject **obj)
+as_status record_to_resultpyobject(AerospikeClient *self, as_error *err,
+								   const as_record *rec, PyObject **obj)
 {
-	as_error err;
-	
-	as_error_reset(&err);
+	as_error_reset(err);
+	*obj = NULL;
+
+	if (!rec) {
+		return as_error_update(err, AEROSPIKE_ERR_CLIENT, "record is null");
+	}
 
 	PyObject *py_rec = NULL;
 	PyObject *py_rec_meta = NULL;
 	PyObject *py_rec_bins = NULL;
 
-	metadata_to_pyobject(&err, rec, &py_rec_meta);
-	bins_to_pyobject(self, &err, rec, &py_rec_bins, false);
+	if (metadata_to_pyobject(err, rec, &py_rec_meta) != AEROSPIKE_OK) {
+		return err->code;
+	}
+
+	if (bins_to_pyobject(self, err, rec, &py_rec_bins, false) != AEROSPIKE_OK) {
+		Py_CLEAR(py_rec_meta);
+		return err->code;
+	}
 
 	if (!py_rec_meta) {
 		Py_INCREF(Py_None);
@@ -1825,13 +1834,12 @@ as_status record_to_resultpyobject(AerospikeClient *self, PyObject *py_key,
 		py_rec_bins = Py_None;
 	}
 
-	py_rec = PyTuple_New(3);
-	PyTuple_SetItem(py_rec, 0, py_key);
-	PyTuple_SetItem(py_rec, 1, py_rec_meta);
-	PyTuple_SetItem(py_rec, 2, py_rec_bins);
+	py_rec = PyTuple_New(2);
+	PyTuple_SetItem(py_rec, 0, py_rec_meta);
+	PyTuple_SetItem(py_rec, 1, py_rec_bins);
 
 	*obj = py_rec;
-	return err.code;
+	return err->code;
 }
 
 as_status record_to_pyobject(AerospikeClient *self, as_error *err,
@@ -2200,7 +2208,7 @@ void initialize_bin_for_strictypes(AerospikeClient *self, as_error *err,
 		binop_bin->valuep = &binop_bin->value;
 	}
 	else if (!strcmp(py_value->ob_type->tp_name, "aerospike.null")) {
-		((as_val *)&binop_bin->value)->type = AS_NIL;
+		((as_val *)&binop_bin->value)->type = AS_UNKNOWN;
 		binop_bin->valuep = (as_bin_value *)&as_nil;
 	}
 	else if (PyByteArray_Check(py_value)) {
