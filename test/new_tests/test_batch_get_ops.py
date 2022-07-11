@@ -110,10 +110,8 @@ class TestBatchExpressionsOperations(TestBaseClass):
         res are in the format of (status-tuple, ((meta-dict, result-dict), status-tuple, exception), ...)
         """
         # print(res)
-        status = res[0]
-        recs = res[1:]
         for i in range(self.rec_count):
-            assert recs[i][0][2] == expected
+            assert res[0][2] == expected
 
     @pytest.mark.parametrize("expr, flags, name, expected", [
         (
