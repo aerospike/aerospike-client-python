@@ -164,6 +164,9 @@ class TestBatchExpressionsOperations(TestBaseClass):
         non_existent_key = ("test", "demo", "batch-ops-non_existent_key")
         rec = self.as_connection.batch_get_ops([key1, key2, non_existent_key], ops, policy=policy)
 
+        self.as_connection.remove(key1)
+        self.as_connection.remove(key2)
+
         # print("\nThe record from batch_get_ops")
         # pp.pprint(rec)
 
