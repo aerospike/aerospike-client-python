@@ -51,22 +51,32 @@ Methods
         .. hlist::
             :columns: 1
 
-            * **hosts** a required :class:`list` of (address, port, [tls-name]) tuples identifying a node (or multiple nodes) in the cluster. 
-                | The client will connect to the first available node in the list, the *seed node*, \ 
-                  and will learn about the cluster and partition map from it. If tls-name is specified, it must match the tls-name specified in the node's \
-                 server configuration file and match the server's CA certificate.
+            * **hosts**
+                A required :class:`list` of (address, port, [tls-name]) tuples identifying a node (or multiple nodes) in the cluster. 
+                
+                The client will connect to the first available node in the list, the *seed node*, \ 
+                and will learn about the cluster and partition map from it. If tls-name is specified, it must match the tls-name specified in the node's \
+                server configuration file and match the server's CA certificate.
 
                 .. note:: TLS usage requires Aerospike Enterprise Edition
 
-            * **lua** an optional :class:`dict` containing the paths to two types of Lua modules
+            * **lua**
+                An optional :class:`dict` containing the paths to two types of Lua modules
+                
                 * **system_path** 
-                    | The location of the system modules such as ``aerospike.lua`` 
-                    | Default: ``/usr/local/aerospike/lua``
+                    The location of the system modules such as ``aerospike.lua``
+                    
+                    Default: ``/usr/local/aerospike/lua``
+
                 * **user_path** 
-                    | The location of the user's record and stream UDFs . 
-                    | Default: ``./``
-            * **policies** a :class:`dict` of policies
-                * **read** (:class:`dict`) 
+                    The location of the user's record and stream UDFs . 
+                    
+                    Default: ``./``
+
+            * **policies**
+                A :class:`dict` of policies
+                
+                * **read** (:class:`dict`)
                     | A dictionary containing :ref:`aerospike_read_policies`.
                 * **write** (:class:`dict`) 
                     | A dictionary containing :ref:`aerospike_write_policies`.
@@ -82,27 +92,43 @@ Methods
                     | A dictionary containing :ref:`aerospike_scan_policies`.
                 * **batch** (:class:`dict`) 
                     | A dictionary containing :ref:`aerospike_batch_policies`.
-                * **total_timeout** default connection timeout in milliseconds 
-                    | **Deprecated**: set this individually in the :ref:`aerospike_polices` dictionaries.
+                * **total_timeout**
+                    Default connection timeout in milliseconds 
+                    
+                    **Deprecated**: set this individually in the :ref:`aerospike_polices` dictionaries.
+
                 * **auth_mode** 
-                    | A value of :ref:`auth_mode` defining how the authentication mode with the server, such as :data:`aerospike.AUTH_INTERNAL`.
-                    | Default: :data:`aerospike.AUTH_INTERNAL`
+                    A value of :ref:`auth_mode` defining how the authentication mode with the server, such as :data:`aerospike.AUTH_INTERNAL`.
+                    
+                    Default: :data:`aerospike.AUTH_INTERNAL`
                 * **login_timeout_ms** (:class:`int`) 
-                    | Representing the node login timeout in milliseconds. 
-                    | Default: ``5000``.
-                * **key** default key policy
-                    | **Deprecated**: set this individually in the :ref:`aerospike_polices` dictionaries.
-                * **exists** default exists policy
-                    | **Deprecated**: set in the :ref:`aerospike_write_policies` dictionary
-                * **max_retries** representing the number of times to retry a transaction 
-                    | **Deprecated**: set this individually in the :ref:`aerospike_polices` dictionaries.
-                * **replica** default replica policy
-                    | **Deprecated**: set this in one or all of the other policies' :ref:`aerospike_read_policies`, :ref:`aerospike_write_policies`, :ref:`aerospike_apply_policies`, :ref:`aerospike_operate_policies`, :ref:`aerospike_remove_policies` dictionaries.
-                * **commit_level** default commit level policy
-                    | **Deprecated**: set this as needed individually in the :ref:`aerospike_write_policies`, :ref:`aerospike_apply_policies`, :ref:`aerospike_operate_policies`, :ref:`aerospike_remove_policies` dictionaries.
-            * **shm** a :class:`dict` with optional shared-memory cluster tending parameters
-                | Shared-memory cluster tending is on if the :class:`dict` is provided. \
-                  If multiple clients are instantiated talking to the same cluster the *shm* cluster-tending should be used.
+                    Representing the node login timeout in milliseconds. 
+                    
+                    Default: ``5000``.
+                * **key**
+                    Default key policy
+                    
+                    **Deprecated**: set this individually in the :ref:`aerospike_polices` dictionaries.
+                * **exists**
+                    Default exists policy
+                    
+                    **Deprecated**: set in the :ref:`aerospike_write_policies` dictionary
+                * **max_retries**
+                    Representing the number of times to retry a transaction 
+                    
+                    **Deprecated**: set this individually in the :ref:`aerospike_polices` dictionaries.
+                * **replica**
+                    default replica policy
+                    
+                    **Deprecated**: set this in one or all of the other policies' :ref:`aerospike_read_policies`, :ref:`aerospike_write_policies`, :ref:`aerospike_apply_policies`, :ref:`aerospike_operate_policies`, :ref:`aerospike_remove_policies` dictionaries.
+                * **commit_level**
+                    default commit level policy
+                    
+                    **Deprecated**: set this as needed individually in the :ref:`aerospike_write_policies`, :ref:`aerospike_apply_policies`, :ref:`aerospike_operate_policies`, :ref:`aerospike_remove_policies` dictionaries.
+            * **shm**
+                a :class:`dict` with optional shared-memory cluster tending parameters
+                Shared-memory cluster tending is on if the :class:`dict` is provided. \
+                If multiple clients are instantiated talking to the same cluster the *shm* cluster-tending should be used.
 
                 * **max_nodes** (:class:`int`)
                     | Maximum number of nodes allowed. Pad so new nodes can be added without configuration changes 
@@ -122,7 +148,8 @@ Methods
             * **use_shared_connection** (:class:`bool`)
                 | Indicating whether this instance should share its connection to the Aerospike cluster with other client instances in the same process. 
                 | Default: ``False``
-            * **tls** a :class:`dict` of optional TLS configuration parameters.
+            * **tls**
+                a :class:`dict` of optional TLS configuration parameters.
             
                 .. note:: TLS usage requires Aerospike Enterprise Edition
 
@@ -156,12 +183,14 @@ Methods
                 * **for_login_only** (:class:`bool`)
                     | Log session information for each connection. Use TLS connections only for login authentication. All other communication with the server will be done with non-TLS connections.
                     | Default: ``False`` (Use TLS connections for all communication with server.)
-            * **send_bool_as** an optional :class:`int` that configures the client to write Python booleans as PY_BYTES_BLOB, integer, or the new server boolean type.
+            * **send_bool_as**
+                an optional :class:`int` that configures the client to write Python booleans as PY_BYTES_BLOB, integer, or the new server boolean type.
                 | One of the :ref:`send_bool_as_constants` constant values.
                 | Example: :code:`{"send_bool_as", aerospike.aerospike.PY_BYTES}`
                 | See :ref:`Data_Mapping` for more information.
                 | Default: aerospike.PY_BYTES
-            * **serialization** an optional instance-level `tuple` of (serializer, deserializer). 
+            * **serialization**
+                an optional instance-level `tuple` of (serializer, deserializer). 
                 | Takes precedence over a class serializer registered with :func:`~aerospike.set_serializer`.
             * **thread_pool_size** (:class:`int`) 
                 | Number of threads in the pool that is used in batch/scan/query commands. 
