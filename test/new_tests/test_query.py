@@ -879,7 +879,10 @@ class TestQuery(TestBaseClass):
         # that match the where clause, if it matched all in the ns,
         # this would return 6
         query.foreach(callback, policy)
-        assert len(records) == 1
+        if TestBaseClass.major_ver < 6 or (TestBaseClass.major_ver == 6 and TestBaseClass.minor_ver == 0):
+            assert len(records) == 1
+        else:
+            assert len(records) == 6
 
     def test_query_with_only_ns(self):
         """
@@ -901,7 +904,10 @@ class TestQuery(TestBaseClass):
         # that match the where clause, if it matched all in the ns,
         # this would return 6
         query.foreach(callback, policy)
-        assert len(records) == 1
+        if TestBaseClass.major_ver < 6 or (TestBaseClass.major_ver == 6 and TestBaseClass.minor_ver == 0):
+            assert len(records) == 1
+        else:
+            assert len(records) == 6
 
     def test_query_with_select_bytearray(self):
         """
