@@ -195,14 +195,59 @@ Record Tuple
 
 .. object:: record
 
-    The record tuple ``(key, meta: dict, bins)`` which is returned by various read operations.
+    The record tuple which is returned by various read operations. It has the structure:
+
+    ``(key, meta, bins)``
 
     .. hlist::
         :columns: 1
 
-        * *key* the :ref:`aerospike_key_tuple`.
-        * *meta* a :class:`dict` containing  ``{'gen' : genration value, 'ttl': ttl value}``.
-        * *bins* a :class:`dict` containing bin-name/bin-value pairs.
+        * key (:class:`tuple`)
+            See :ref:`aerospike_key_tuple`.
+        * **meta** (:class:`dict`)
+            Contains record metadata with the following key-value pairs:
+
+            * **gen** (:class:`int`)
+                Generation value
+
+            * **ttl** (:class:`int`)
+                Time-to-live value
+
+        * bins (:class:`dict`)
+            Contains bin-name/bin-value pairs.
+
+    We reuse the code example in the key-tuple section and print the ``meta`` and ``bins`` values that were returned from ``client.get()``:
+
+        .. code-block:: python
+
+            >>> import aerospike
+
+            # NOTE: change this to your Aerospike server's seed node address
+            >>> seedNode = ('127.0.0.1', 3000)
+            >>> config = config = {'hosts': [seedNode]}
+            >>> client = aerospike.client(config).connect()
+
+            >>> namespaceName = 'test'
+            >>> setName = 'setname'
+            >>> primaryKeyName = 'pkname'
+            >>> keyTuple = (namespaceName, setName, primaryKeyName)
+
+            # Insert a record
+            >>> recordBins = {'bin1':0, 'bin2':1}
+            >>> client.put(keyTuple, recordBins)
+            
+            # Now fetch that record
+            >>> (key, meta, bins) = client.get(keyTuple)
+            
+            # Generation is 1 because this is the first time we wrote the record
+            >>> meta
+            {'ttl': 2592000, 'gen': 1}
+            
+            # The bin-value pairs we inserted
+            >>> bins
+            {'bin1': 0, 'bin2': 1}
+
+            >>> client.close()
 
     .. seealso:: `Data Model: Record <https://www.aerospike.com/docs/architecture/data-model.html#records>`_.
 
